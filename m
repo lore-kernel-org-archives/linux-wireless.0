@@ -1,193 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:36233 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750969AbeCTDgb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Mar 2018 23:36:31 -0400
-MIME-Version: 1.0
-In-Reply-To: <5AB044C0.9060701@broadcom.com>
-References: <20180319014032.9394-1-alexey.roslyakov@gmail.com>
- <20180319014032.9394-3-alexey.roslyakov@gmail.com> <5AAF838D.2030105@broadcom.com>
- <CALFoz4YMKJr40fefczrbjXBROtZxnGikv0Jze-BnefofCB3dyg@mail.gmail.com>
- <817418fd-6446-57ea-b03d-383b4df9a979@gmail.com> <5AB044C0.9060701@broadcom.com>
-From: Alexey Roslyakov <alexey.roslyakov@gmail.com>
-Date: Tue, 20 Mar 2018 10:36:28 +0700
-Message-ID: <CALFoz4bpJMkCQyC1GrJj5QzAgjxUvMjkC=7SnZZu3s3tyiRLWA@mail.gmail.com> (sfid-20180320_043710_982332_8C43E6E1)
-Subject: Re: [PATCH net-next v2 2/2] dt: bindings: add new dt entries for brcmfmac
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Florian Fainelli <f.fainelli@gmail.com>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Kalle Valo <kvalo@codeaurora.org>, robh+dt@kernel.org,
-        mark.rutland@arm.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Ulf Hansson <ulf.hansson@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail.kernel.org ([198.145.29.99]:50000 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751113AbeCJOPL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Mar 2018 09:15:11 -0500
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
+        kubakici@wp.pl, linux-wireless@vger.kernel.org,
+        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
+        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
+        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
+        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v3 00/20] firmware: development for v4.17
+Date: Sat, 10 Mar 2018 06:14:41 -0800
+Message-Id: <20180310141501.2214-1-mcgrof@kernel.org> (sfid-20180310_152218_758283_0267783D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend,
-I use RK3288-firefly, bcm4339 (ap6335).
+Greg,
 
-Regards,
-  Alex
+Here's a respin of what I have queued up for v4.17 for the firmware API. It
+combines the cleanup I've been working on and the addition of the new API call
+request_firmware_cache() for fixing a corner case suspend issue on some type of
+cards with an optimization in place where the firmware is *not* needed on
+reboot.
 
-On 20 March 2018 at 06:16, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> + Uffe
->
-> On 3/19/2018 6:55 PM, Florian Fainelli wrote:
->>
->> On 03/19/2018 07:10 AM, Alexey Roslyakov wrote:
->>>
->>> Hi Arend,
->>> I appreciate your response. In my opinion, it has nothing to do with
->>> SDIO host, because it defines "quirks" in the driver itself.
->>
->>
->> It is not clear to me from your patch series whether the problem is that:
->>
->> - the SDIO device has a specific alignment requirements, which would be
->> either a SDIO device driver limitation/issue or maybe the underlying
->> hardware device/firmware requiring that
->>
->> - the SDIO host controller used is not capable of coping nicely with
->> these said limitations
->>
->> It seems to me like what you are doing here is a) applicable to possibly
->> more SDIO devices and host combinations, and b) should likely be done at
->> the layer between the host and device, such that it is available to more
->> combinations.
->
->
-> Indeed. That was my thought exactly and I can not imagine Uffe would push
-> back on that reasoning.
->
->>> If I get it right, you mean something like this:
->>>
->>> mmc3: mmc@1c12000 {
->>> ...
->>>          broken-sg-support;
->>>          sd-head-align = 4;
->>>          sd-sgentry-align = 512;
->>>
->>>          brcmf: wifi@1 {
->>>                  ...
->>>          };
->>> };
->>>
->>> Where dt: bindings documentation for these entries should reside?
->>> In generic MMC bindings? Well, this is the very special case and
->>> mmc-linux maintainer will unlikely to accept these changes.
->>> Also, extra kernel code modification might be required. It could make
->>> quite trivial change much more complex.
->>
->>
->> If the MMC maintainers are not copied on this patch series, it will
->> likely be hard for them to identify this patch series and chime in...
->
->
-> The main question is whether this is indeed a "very special case" as Alexey
-> claims it to be or that it is likely to be applicable to other device and
-> host combinations as you are suggesting.
->
-> If these properties are imposed by the host or host controller it would make
-> sense to have these in the mmc bindings.
->
->>>
->>>> Also I am not sure if the broken-sg-support is still needed. We added
->>>> that for omap_hsmmc, but that has since changed to scatter-gather emulation
->>>> so it might not be needed anymore.
->>>
->>>
->>> I've experienced the problem with rk3288 (dw-mmc host) and sdio
->>> settings like above solved it.
->>> Frankly, I haven't investigated any deeper which one of the settings
->>> helped in my case yet...
->>> I will try to get rid of broken-sg-support first and let you know if
->>> it does make any difference.
->
->
-> Are you using some chromebook. I have some lying around here so I could also
-> look into it. What broadcom chipset do you have?
->
-> Regards,
-> Arend
->
->
->>> All the best,
->>>    Alex.
->>>
->>> On 19 March 2018 at 16:31, Arend van Spriel
->>> <arend.vanspriel@broadcom.com> wrote:
->>>>
->>>> On 3/19/2018 2:40 AM, Alexey Roslyakov wrote:
->>>>>
->>>>>
->>>>> In case if the host has higher align requirements for SG items, allow
->>>>> setting device-specific aligns for scatterlist items.
->>>>>
->>>>> Signed-off-by: Alexey Roslyakov <alexey.roslyakov@gmail.com>
->>>>> ---
->>>>>    Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->>>>> | 5
->>>>> +++++
->>>>>    1 file changed, 5 insertions(+)
->>>>>
->>>>> diff --git
->>>>> a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->>>>> b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->>>>> index 86602f264dce..187b8c1b52a7 100644
->>>>> ---
->>>>> a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->>>>> +++
->>>>> b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->>>>> @@ -17,6 +17,11 @@ Optional properties:
->>>>>          When not specified the device will use in-band SDIO
->>>>> interrupts.
->>>>>     - interrupt-names : name of the out-of-band interrupt, which must
->>>>> be
->>>>> set
->>>>>          to "host-wake".
->>>>> + - brcm,broken-sg-support : boolean flag to indicate that the SDIO
->>>>> host
->>>>> +       controller has higher align requirement than 32 bytes for each
->>>>> +       scatterlist item.
->>>>> + - brcm,sd-head-align : alignment requirement for start of data
->>>>> buffer.
->>>>> + - brcm,sd-sgentry-align : length alignment requirement for each sg
->>>>> entry.
->>>>
->>>>
->>>>
->>>> Hi Alexey,
->>>>
->>>> Thanks for the patch. However, the problem with these is that they are
->>>> characterizing the host controller and not the wireless device. So from
->>>> device tree perspective , which is to describe the hardware, these
->>>> properties should be SDIO host controller properties. Also I am not sure
->>>> if
->>>> the broken-sg-support is still needed. We added that for omap_hsmmc, but
->>>> that has since changed to scatter-gather emulation so it might not be
->>>> needed
->>>> anymore.
->>>>
->>>> Regards,
->>>> Arend
->>>
->>>
->>>
->>>
->>
->>
->
+The cleanup work allows us to test the firmware API with one kernel
+configuration. I've addressed Kees' feedback on this respin and
+combined the code into drivers/base/firmware_class/.
 
+I've made one new test_firmware change in consideration for one firmware
+change, the patch "firmware: ensure the firmware cache is not used on
+incompatible calls" requires us to modify our tests scripts to use
+the APIs sanely as well.
 
+I've put up these changes on my git tree, refer to the branch
+"20180307-firmware-dev-for-v4.17" based on linux-next [0] and
+the same name based on Linus' tree [1].
+
+Questions, feedback, and specially rants are always welcomed.
+
+[0] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux-next.git/log/?h=20180307-firmware-dev-for-v4.17
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git/log/?h=20180307-firmware-dev-for-v4.17
+
+Luis R. Rodriguez (20):
+  test_firmware: add simple firmware firmware test library
+  test_firmware: enable custom fallback testing on limited kernel
+    configs
+  test_firmware: replace syfs fallback check with kconfig_has helper
+  firmware: enable to split firmware_class into separate target files
+  firmware: simplify CONFIG_FW_LOADER_USER_HELPER_FALLBACK further
+  firmware: use helpers for setting up a temporary cache timeout
+  firmware: move loading timeout under struct firmware_fallback_config
+  firmware: split firmware fallback functionality into its own file
+  firmware: move firmware loader into its own directory
+  firmware: enable run time change of forcing fallback loader
+  firmware: enable to force disable the fallback mechanism at run time
+  test_firmware: expand on library with shared helpers
+  test_firmware: test three firmware kernel configs using a proc knob
+  rename: _request_firmware_load() fw_load_sysfs_fallback()
+  firmware: fix checking for return values for fw_add_devm_name()
+  firmware: add helper to check to see if fw cache is setup
+  test_firmware: modify custom fallback tests to use unique files
+  firmware: ensure the firmware cache is not used on incompatible calls
+  firmware: add request_firmware_cache() to help with cache on reboot
+  mt7601u: use request_firmware_cache() to address cache on reboot
+
+ .../driver-api/firmware/fallback-mechanisms.rst    |   2 +-
+ .../driver-api/firmware/request_firmware.rst       |  14 +
+ MAINTAINERS                                        |   2 +-
+ drivers/base/Makefile                              |   2 +-
+ drivers/base/firmware_loader/Makefile              |   7 +
+ drivers/base/firmware_loader/fallback.c            | 674 +++++++++++++++++
+ drivers/base/firmware_loader/fallback.h            |  67 ++
+ drivers/base/firmware_loader/fallback_table.c      |  55 ++
+ drivers/base/firmware_loader/firmware.h            | 115 +++
+ .../{firmware_class.c => firmware_loader/main.c}   | 833 ++-------------------
+ drivers/net/wireless/mediatek/mt7601u/mcu.c        |   2 +-
+ include/linux/firmware.h                           |   3 +
+ kernel/sysctl.c                                    |  11 +
+ tools/testing/selftests/firmware/Makefile          |   2 +-
+ tools/testing/selftests/firmware/config            |   4 +
+ tools/testing/selftests/firmware/fw_fallback.sh    |  65 +-
+ tools/testing/selftests/firmware/fw_filesystem.sh  |  72 +-
+ tools/testing/selftests/firmware/fw_lib.sh         | 194 +++++
+ tools/testing/selftests/firmware/fw_run_tests.sh   |  70 ++
+ 19 files changed, 1332 insertions(+), 862 deletions(-)
+ create mode 100644 drivers/base/firmware_loader/Makefile
+ create mode 100644 drivers/base/firmware_loader/fallback.c
+ create mode 100644 drivers/base/firmware_loader/fallback.h
+ create mode 100644 drivers/base/firmware_loader/fallback_table.c
+ create mode 100644 drivers/base/firmware_loader/firmware.h
+ rename drivers/base/{firmware_class.c => firmware_loader/main.c} (60%)
+ create mode 100755 tools/testing/selftests/firmware/fw_lib.sh
+ create mode 100755 tools/testing/selftests/firmware/fw_run_tests.sh
 
 -- 
-With best regards,
-  Alexey Roslyakov
-Email: alexey.roslyakov@gmail.com
+2.16.2
