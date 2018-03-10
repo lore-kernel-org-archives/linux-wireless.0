@@ -1,95 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:34498 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752596AbeC3HTs (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40018 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751341AbeCJJLg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Mar 2018 03:19:48 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 17/17] rtlwifi: add halmac to Makefile and Kconfig
-Date: Fri, 30 Mar 2018 15:19:16 +0800
-Message-ID: <20180330071916.23360-18-pkshih@realtek.com> (sfid-20180330_092027_531128_D17224CD)
-In-Reply-To: <20180330071916.23360-1-pkshih@realtek.com>
-References: <20180330071916.23360-1-pkshih@realtek.com>
+        Sat, 10 Mar 2018 04:11:36 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: <yamada.masahiro@socionext.com>
+Cc: <govinds@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 01/13] ath10k: platform driver for WCN3990 SNOC WLAN module
+References: <1518684458-5338-1-git-send-email-govinds@codeaurora.org>
+        <87371kqfda.fsf@kamboji.qca.qualcomm.com>
+        <d396df1b09da4dd7aa14d6af2c2b2b18@aphydexm01b.ap.qualcomm.com>
+        <87tvttl6kp.fsf@kamboji.qca.qualcomm.com>
+        <fb2c04383f024ab8b2c62dd5a4ad20ac@SOC-EX01V.e01.socionext.com>
+Date: Sat, 10 Mar 2018 11:11:31 +0200
+In-Reply-To: <fb2c04383f024ab8b2c62dd5a4ad20ac@SOC-EX01V.e01.socionext.com>
+        (yamada masahiro's message of "Thu, 8 Mar 2018 00:25:36 +0000")
+Message-ID: <87lgf0cn24.fsf@kamboji.qca.qualcomm.com> (sfid-20180310_101350_172270_05B1BFE5)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+<yamada.masahiro@socionext.com> writes:
 
-Add halmac to Makefile and Kconfig, so we can build this module if 8822BE
-is selected.
+>> >> Kbuild bot found an odd problem with this patch:
+>> >>
+>> >>  include/linux/dynamic_debug.h:77:14: error: 'KBUILD_MODNAME'
+>> >>  undeclared (first use in this function); did you mean
+>> 'KBUILD_BASENAME'?
+>> >>
+>> >> Full report:
+>> >>
+>> >>
+>> http://lists.infradead.org/pipermail/ath10k/2018-February/010907.html
+>> >>
+>> >> Any ideas? Is this is some unrelated issue or what? This patch is not
+>> >> even touching hif.h or ce.c.
+>> >
+>> > I didn't encountered this issue as in my defconfig only
+>> > CONFIG_ATH10K_SNOC was defined. This problem is coming when we define
+>> > CONFIG_ATH10K_SNOC and CONFIG_ATH10K_PCI simultaneously in defconfig
+>> > and this is known issue when multiple modules share objects(in this
+>> > case ce.o). I saw similar reported problem and found
+>> > https://patchwork.kernel.org/patch/10060825/.
+>> >
+>> > After picking the below change issue is not seen.
+>> 
+>> Let's ask the kbuild maintainer. Masahiro, any chances of getting this
+>> patch applied anytime soon:
+>> 
+>> kbuild: define KBUILD_MODNAME even if multiple modules share objects
+>> 
+>> https://patchwork.kernel.org/patch/10060825/
+>> 
+>> In ath10k we would need it as otherwise we are not able to link ce.o
+>> both to ath10k_pci.ko and ath10k_snoc.ko. What do you think?
+>> 
+>> Full discussion and the ath10k patch here:
+>> 
+>> https://patchwork.kernel.org/patch/10220657/
+>> 
+>
+> I plan to submit v2, but even if the undefined KBUILD_MODNAME is fixed,
+> I expect another problem from this patch.
+>
+> If both CONFIG_ATH10K_PCI and CONFIG_ATH10_SNOC are 'y'
+> two instances of ce.o would be linked into vmliux,
+> then causes multiple definition error.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/Kconfig       |  5 ++++
- drivers/net/wireless/realtek/rtlwifi/Makefile      |  1 +
- .../net/wireless/realtek/rtlwifi/halmac/Makefile   | 29 ++++++++++++++++++++++
- 3 files changed, 35 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/Makefile
+Oh, I didn't realise this. Thanks for pointing it out. Govind is looking
+at other ways to fix this.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/Kconfig b/drivers/net/wireless/realtek/rtlwifi/Kconfig
-index 73067cac289c..d9aba8fed151 100644
---- a/drivers/net/wireless/realtek/rtlwifi/Kconfig
-+++ b/drivers/net/wireless/realtek/rtlwifi/Kconfig
-@@ -151,4 +151,9 @@ config RTLBTCOEXIST
- 	depends on RTL8723AE || RTL8723BE || RTL8821AE || RTL8192EE
- 	default y
- 
-+config RTLHALMAC
-+	tristate
-+	depends on RTL8822BE
-+	default y
-+
- endif
-diff --git a/drivers/net/wireless/realtek/rtlwifi/Makefile b/drivers/net/wireless/realtek/rtlwifi/Makefile
-index 09c30e428375..a30a73c351d8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/Makefile
-+++ b/drivers/net/wireless/realtek/rtlwifi/Makefile
-@@ -28,6 +28,7 @@ obj-$(CONFIG_RTL8723AE)		+= rtl8723ae/
- obj-$(CONFIG_RTL8723BE)		+= rtl8723be/
- obj-$(CONFIG_RTL8188EE)		+= rtl8188ee/
- obj-$(CONFIG_RTLBTCOEXIST)	+= btcoexist/
-+obj-$(CONFIG_RTLHALMAC)		+= halmac/
- obj-$(CONFIG_RTL8723_COMMON)	+= rtl8723com/
- obj-$(CONFIG_RTL8821AE)		+= rtl8821ae/
- obj-$(CONFIG_RTL8192EE)		+= rtl8192ee/
-diff --git a/drivers/net/wireless/realtek/rtlwifi/halmac/Makefile b/drivers/net/wireless/realtek/rtlwifi/halmac/Makefile
-new file mode 100644
-index 000000000000..41c1ae7e5e53
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtlwifi/halmac/Makefile
-@@ -0,0 +1,29 @@
-+
-+
-+halmac-objs := \
-+	halmac_api.o	\
-+	halmac_88xx/halmac_bb_rf_88xx.o	\
-+	halmac_88xx/halmac_efuse_88xx.o	\
-+	halmac_88xx/halmac_gpio_88xx.o	\
-+	halmac_88xx/halmac_pcie_88xx.o	\
-+	halmac_88xx/halmac_sdio_88xx.o	\
-+	halmac_88xx/halmac_usb_88xx.o	\
-+	halmac_88xx/halmac_cfg_wmac_88xx.o	\
-+	halmac_88xx/halmac_flash_88xx.o	\
-+	halmac_88xx/halmac_init_88xx.o	\
-+	halmac_88xx/halmac_common_88xx.o	\
-+	halmac_88xx/halmac_fw_88xx.o	\
-+	halmac_88xx/halmac_mimo_88xx.o	\
-+	halmac_88xx/halmac_8822b/halmac_gpio_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_pcie_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_sdio_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_usb_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_pwr_seq_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_common_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_cfg_wmac_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_phy_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_init_8822b.o	\
-+	rtl_halmac.o
-+
-+
-+obj-m = halmac.o
 -- 
-2.15.1
+Kalle Valo
