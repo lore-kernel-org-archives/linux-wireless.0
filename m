@@ -1,67 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:38490 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752654AbeCFB0L (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:51552 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750829AbeCJH4P (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Mar 2018 20:26:11 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 00/15] rtlwifi: Add 8822b 1ant/2ant btcoex files
-Date: Tue, 6 Mar 2018 09:25:39 +0800
-Message-ID: <20180306012554.3108-1-pkshih@realtek.com> (sfid-20180306_022639_013343_896A42B9)
+        Sat, 10 Mar 2018 02:56:15 -0500
+Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for
+ various chipsets
+To: Julian Calaby <julian.calaby@gmail.com>,
+        Felix Fietkau <nbd@nbd.name>
+Cc: Pavel Machek <pavel@ucw.cz>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        "open list:LED SUBSYSTEM" <linux-leds@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
+        Sebastian Gottschall <s.gottschall@newmedia-net.de>
+References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
+ <CACna6rzD6z3DC6yjMCgBxgxx+DF+GGu69Ot5QA6xpJ41Ewb2=A@mail.gmail.com>
+ <82d8ac0c-b391-6099-4c7f-991cc35445aa@dd-wrt.com>
+ <20180302090312.GA30267@amd>
+ <e77d25d4-a824-380a-c51a-e81175ba6205@dd-wrt.com>
+ <CACna6rys85VEkzRGDVUAkBy7KgHS2y0DET7YvedboX-YEQHrkg@mail.gmail.com>
+ <890a4dcc-f549-6487-2ce5-3b62874cd266@dd-wrt.com>
+ <20180308090216.GC17761@amd>
+ <d443856e-cfc8-2d50-900d-edf22e5360e3@dd-wrt.com> <20180308140515.GA4889@amd>
+ <1b1f6344-d588-d2f2-4b3d-a0a4043e801f@nbd.name>
+ <CAGRGNgWSnObB8PomPPEGs533dmFyQQkOEsvxzyJ=BfBBcWT2Ug@mail.gmail.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <40dc5bc3-d77e-397d-f3db-2efb70ff82ae@dd-wrt.com> (sfid-20180310_085631_212069_AEB70739)
+Date: Sat, 10 Mar 2018 08:56:07 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAGRGNgWSnObB8PomPPEGs533dmFyQQkOEsvxzyJ=BfBBcWT2Ug@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
 
-This patchset mainly contains 8822b 1ant/2ant btcoex files and related
-materials, and patch 1/15 and 2/15 fix the issues reported by static checker.
-After this patchset, I will start to submit the new component halmac that
-contains many new files, so the patch will be little big.
+>> taken a look at the specific code, and from my point of view the code
+>> that sets up the LED (including callback) is so trivial that it's simply
+>> not worth dealing with adding the leds-gpio driver to the mix.
+>> It adds extra complexity and an extra dependency for no reason at all.
+>> There's no extra functionality to be gained by using it.
+> Stupid question: If the LED driver isn't using the GPIO subsystem
+> (when enabled), what happens if the user uses the GPIO subsystem to
+> fiddle with the pin the LED is connected to?
 
-v2: Don't change content of patch, but only comment log.
-    - fix typo in patch 3/15.
-    - Add Acked-by to patches 1/15, 2/15, 4/15
+in our case here it can coexist and will not have a negative effect 
+since the led will still run. (except if you reconfigure the gpio to input)
+for sure it makes no sense.
+but however i can block the gpio for beeing reused if the led driver 
+took it. this has been made in ath9k for instance.
+in ath10k i did not do it, since there is no technical requirement for it.
+but that might not be the case for all gpio controllers, so there is no 
+generic answer. for ath10k. harmless
 
-Ping-Ke Shih (15):
-  rtlwifi: Add modifier static to functions reported by sparse
-  rtlwifi: remove redundant statement found by static checker
-  rtlwifi: btcoex: Add enum DM_INFO for btcoex to query dm's counters
-  rtlwifi: btcoex: Add customer_id to do special deal to oem vendor
-  rtlwifi: btcoex: Get status of multichannel concurrence
-  rtlwifi: btcoex: Add rate table for the use of btcoex
-  rtlwifi: btcoex: Add interaction with phydm
-  rtlwifi: btcoex: Add pre- and post- normal LPS function
-  rtlwifi: btcoex: add assoc type v2 to connection notify
-  rtlwifi: btcoex: new definitions introduced by 8822be
-  rtlwifi: btcoex: Add new but dummy definitions introduced by 8822b
-  rtlwifi: btcoex: Add 8822b 1ant/2ant coex files
-  rtlwifi: btcoex: Add 8822b header files to precomp.h
-  rtlwifi: btcoex: Add 8822b to Makefile
-  rtlwifi: btcoex: Add 8822b routine to btc interfaces
-
- drivers/net/wireless/realtek/rtlwifi/base.c        |    1 -
- .../wireless/realtek/rtlwifi/btcoexist/Makefile    |    3 +
- .../realtek/rtlwifi/btcoexist/halbt_precomp.h      |    3 +
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    |    1 +
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |    6 +-
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    |   33 -
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    |    4 +-
- .../realtek/rtlwifi/btcoexist/halbtc8822b1ant.c    | 5327 +++++++++++++++++++
- .../realtek/rtlwifi/btcoexist/halbtc8822b1ant.h    |  413 ++
- .../realtek/rtlwifi/btcoexist/halbtc8822b2ant.c    | 5370 ++++++++++++++++++++
- .../realtek/rtlwifi/btcoexist/halbtc8822b2ant.h    |  434 ++
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       |  186 +-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  122 +
- drivers/net/wireless/realtek/rtlwifi/wifi.h        |   33 +
- 14 files changed, 11894 insertions(+), 42 deletions(-)
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b2ant.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b2ant.h
+Sebastian
+>
+> Thanks,
+>
 
 -- 
-2.15.1
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
