@@ -1,241 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:44057 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752173AbeCZRQX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 13:16:23 -0400
-Received: by mail-ot0-f193.google.com with SMTP id x6-v6so19995294otg.11
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:16:23 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v6 02/11] nl80211: Implement TX of control port frames
-Date: Mon, 26 Mar 2018 12:16:05 -0500
-Message-Id: <20180326171614.20373-3-denkenz@gmail.com> (sfid-20180326_191719_704814_6E23BC54)
-In-Reply-To: <20180326171614.20373-1-denkenz@gmail.com>
-References: <20180326171614.20373-1-denkenz@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:50982 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933207AbeCJOPg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Mar 2018 09:15:36 -0500
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
+        kubakici@wp.pl, linux-wireless@vger.kernel.org,
+        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
+        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
+        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
+        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v3 19/20] firmware: add request_firmware_cache() to help with cache on reboot
+Date: Sat, 10 Mar 2018 06:15:00 -0800
+Message-Id: <20180310141501.2214-20-mcgrof@kernel.org> (sfid-20180310_151614_636433_7DCE13D9)
+In-Reply-To: <20180310141501.2214-1-mcgrof@kernel.org>
+References: <20180310141501.2214-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This commit implements the TX side of NL80211_CMD_CONTROL_PORT_FRAME.
-Userspace provides the raw EAPoL frame using NL80211_ATTR_FRAME.
-Userspace should also provide the destination address and the protocol
-type to use when sending the frame.  This is used to implement TX of
-Pre-authentication frames.  If CONTROL_PORT_ETHERTYPE_NO_ENCRYPT is
-specified, then the driver will be asked not to encrypt the outgoing
-frame.
+Some devices have an optimization in place to enable the firmware to
+be retaineed during a system reboot, so after reboot the device can skip
+requesting and loading the firmware. This can save up to 1s in load
+time. The mt7601u 802.11 device happens to be such a device.
 
-A new EXT_FEATURE flag is introduced so that nl80211 code can check
-whether a given wiphy has capability to pass EAPoL frames over NL80211.
+When these devices retain the firmware on a reboot and then suspend
+they can miss looking for the firmware on resume. To help with this we
+need a way to cache the firmware when such an optimization has taken
+place.
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- include/net/cfg80211.h       |  9 ++++++
- include/uapi/linux/nl80211.h |  3 ++
- net/wireless/nl80211.c       | 71 +++++++++++++++++++++++++++++++++++++++++++-
- net/wireless/rdev-ops.h      | 15 ++++++++++
- net/wireless/trace.h         | 26 ++++++++++++++++
- 5 files changed, 123 insertions(+), 1 deletion(-)
+ .../driver-api/firmware/request_firmware.rst       | 14 +++++++++++++
+ drivers/base/firmware_loader/main.c                | 24 ++++++++++++++++++++++
+ include/linux/firmware.h                           |  3 +++
+ 3 files changed, 41 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 6dee630ee66d..76b6783f35f6 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2960,6 +2960,9 @@ struct cfg80211_external_auth_params {
-  *
-  * @external_auth: indicates result of offloaded authentication processing from
-  *     user space
+diff --git a/Documentation/driver-api/firmware/request_firmware.rst b/Documentation/driver-api/firmware/request_firmware.rst
+index cc0aea880824..b554f4338859 100644
+--- a/Documentation/driver-api/firmware/request_firmware.rst
++++ b/Documentation/driver-api/firmware/request_firmware.rst
+@@ -44,6 +44,20 @@ request_firmware_nowait
+ .. kernel-doc:: drivers/base/firmware_class.c
+    :functions: request_firmware_nowait
+ 
++Special optimizations on reboot
++===============================
++
++Some devices have an optimization in place to enable the firmware to be
++retained during system reboot. When such optimizations are used the driver
++author must ensure the firmware is still available on resume from suspend,
++this can be done with request_firmware_cache() insted of requesting for the
++firmare to be loaded.
++
++request_firmware_cache()
++-----------------------
++.. kernel-doc:: drivers/base/firmware_class.c
++   :functions: request_firmware_load
++
+ request firmware API expected driver use
+ ========================================
+ 
+diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
+index 2913bb0e5e7b..04bf853f60e9 100644
+--- a/drivers/base/firmware_loader/main.c
++++ b/drivers/base/firmware_loader/main.c
+@@ -656,6 +656,30 @@ int request_firmware_direct(const struct firmware **firmware_p,
+ }
+ EXPORT_SYMBOL_GPL(request_firmware_direct);
+ 
++/**
++ * request_firmware_cache: - cache firmware for suspend so resume can use it
++ * @name: name of firmware file
++ * @device: device for which firmware should be cached for
 + *
-+ * @tx_control_port: TX a control port frame (EAPoL).  The noencrypt parameter
-+ *	tells the driver that the frame should not be encrypted.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -3255,6 +3258,12 @@ struct cfg80211_ops {
- 			   const u8 *aa);
- 	int     (*external_auth)(struct wiphy *wiphy, struct net_device *dev,
- 				 struct cfg80211_external_auth_params *params);
-+
-+	int	(*tx_control_port)(struct wiphy *wiphy,
-+				   struct net_device *dev,
-+				   const u8 *buf, size_t len,
-+				   const u8 *dest, const __be16 proto,
-+				   const bool noencrypt);
- };
- 
- /*
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 1334f810f7b4..77675ae3e475 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -5012,6 +5012,8 @@ enum nl80211_feature_flags {
-  * @NL80211_EXT_FEATURE_LOW_SPAN_SCAN: Driver supports low span scan.
-  * @NL80211_EXT_FEATURE_LOW_POWER_SCAN: Driver supports low power scan.
-  * @NL80211_EXT_FEATURE_HIGH_ACCURACY_SCAN: Driver supports high accuracy scan.
-+ * @NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211: Driver supports sending and
-+ *     receiving control port frames over NL80211 instead of the netdevice.
-  *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-@@ -5042,6 +5044,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_LOW_SPAN_SCAN,
- 	NL80211_EXT_FEATURE_LOW_POWER_SCAN,
- 	NL80211_EXT_FEATURE_HIGH_ACCURACY_SCAN,
-+	NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211,
- 
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d7dcc2d05025..aadc1f090b65 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -12517,6 +12517,68 @@ static int nl80211_external_auth(struct sk_buff *skb, struct genl_info *info)
- 	return rdev_external_auth(rdev, dev, &params);
- }
- 
-+static int nl80211_tx_control_port(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	const u8 *buf;
-+	size_t len;
-+	u8 *dest;
-+	u16 proto;
-+	bool noencrypt;
-+	int err;
-+
-+	if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+				     NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211))
-+		return -EOPNOTSUPP;
-+
-+	if (!rdev->ops->tx_control_port)
-+		return -EOPNOTSUPP;
-+
-+	if (!info->attrs[NL80211_ATTR_FRAME] ||
-+	    !info->attrs[NL80211_ATTR_MAC] ||
-+	    !info->attrs[NL80211_ATTR_CONTROL_PORT_ETHERTYPE]) {
-+		GENL_SET_ERR_MSG(info, "Frame, MAC or ethertype missing");
-+		return -EINVAL;
-+	}
-+
-+	wdev_lock(wdev);
-+
-+	switch (wdev->iftype) {
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_P2P_GO:
-+	case NL80211_IFTYPE_MESH_POINT:
-+		break;
-+	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_STATION:
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+		if (wdev->current_bss)
-+			break;
-+		err = -ENOTCONN;
-+		goto out;
-+	default:
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	wdev_unlock(wdev);
-+
-+	buf = nla_data(info->attrs[NL80211_ATTR_FRAME]);
-+	len = nla_len(info->attrs[NL80211_ATTR_FRAME]);
-+	dest = nla_data(info->attrs[NL80211_ATTR_MAC]);
-+	proto = nla_get_u16(info->attrs[NL80211_ATTR_CONTROL_PORT_ETHERTYPE]);
-+	noencrypt =
-+		nla_get_flag(info->attrs[NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT]);
-+
-+	return rdev_tx_control_port(rdev, dev, buf, len,
-+				    dest, cpu_to_be16(proto), noencrypt);
-+
-+ out:
-+	wdev_unlock(wdev);
-+	return err;
-+}
-+
- #define NL80211_FLAG_NEED_WIPHY		0x01
- #define NL80211_FLAG_NEED_NETDEV	0x02
- #define NL80211_FLAG_NEED_RTNL		0x04
-@@ -13420,7 +13482,14 @@ static const struct genl_ops nl80211_ops[] = {
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
--
-+	{
-+		.cmd = NL80211_CMD_CONTROL_PORT_FRAME,
-+		.doit = nl80211_tx_control_port,
-+		.policy = nl80211_policy,
-+		.flags = GENL_UNS_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
- };
- 
- static struct genl_family nl80211_fam __ro_after_init = {
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 84f23ae015fc..87479a53411b 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -714,6 +714,21 @@ static inline int rdev_mgmt_tx(struct cfg80211_registered_device *rdev,
- 	return ret;
- }
- 
-+static inline int rdev_tx_control_port(struct cfg80211_registered_device *rdev,
-+				       struct net_device *dev,
-+				       const void *buf, size_t len,
-+				       const u8 *dest, __be16 proto,
-+				       const bool noencrypt)
++ * There are some devices with an optimization that enables the device to not
++ * require loading firmware on system reboot. This optimization may still
++ * require the firmware present on resume from suspend. This routine can be
++ * used to ensure the firmware is present on resume from suspend in these
++ * situations. This helper is not compatible with drivers which use
++ * request_firmware_into_buf() or request_firmware_nowait() with no uevent set.
++ **/
++int request_firmware_cache(struct device *device, const char *name)
 +{
 +	int ret;
-+	trace_rdev_tx_control_port(&rdev->wiphy, dev, buf, len,
-+				   dest, proto, noencrypt);
-+	ret = rdev->ops->tx_control_port(&rdev->wiphy, dev, buf, len,
-+					 dest, proto, noencrypt);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
++
++	mutex_lock(&fw_lock);
++	ret = fw_add_devm_name(device, name);
++	mutex_unlock(&fw_lock);
++
 +	return ret;
 +}
++EXPORT_SYMBOL_GPL(request_firmware_cache);
 +
- static inline int
- rdev_mgmt_tx_cancel_wait(struct cfg80211_registered_device *rdev,
- 			 struct wireless_dev *wdev, u64 cookie)
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 24e84dfe54fd..5794cfa371c7 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -1882,6 +1882,32 @@ TRACE_EVENT(rdev_mgmt_tx,
- 		  BOOL_TO_STR(__entry->dont_wait_for_ack))
- );
+ /**
+  * request_firmware_into_buf - load firmware into a previously allocated buffer
+  * @firmware_p: pointer to firmware image
+diff --git a/include/linux/firmware.h b/include/linux/firmware.h
+index d4508080348d..166867910ebc 100644
+--- a/include/linux/firmware.h
++++ b/include/linux/firmware.h
+@@ -85,4 +85,7 @@ static inline int request_firmware_into_buf(const struct firmware **firmware_p,
+ }
  
-+TRACE_EVENT(rdev_tx_control_port,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
-+		 const u8 *buf, size_t len, const u8 *dest, __be16 proto,
-+		 bool unencrypted),
-+	TP_ARGS(wiphy, netdev, buf, len, dest, proto, unencrypted),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		NETDEV_ENTRY
-+		MAC_ENTRY(dest)
-+		__field(__be16, proto)
-+		__field(bool, unencrypted)
-+	),
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
-+		MAC_ASSIGN(dest, dest);
-+		__entry->proto = proto;
-+		__entry->unencrypted = unencrypted;
-+	),
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " MAC_PR_FMT ","
-+		  " proto: %x, unencrypted: %s",
-+		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(dest),
-+		  be16_to_cpu(__entry->proto),
-+		  BOOL_TO_STR(__entry->unencrypted))
-+);
+ #endif
 +
- TRACE_EVENT(rdev_set_noack_map,
- 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
- 		 u16 noack_map),
++int request_firmware_cache(struct device *device, const char *name);
++
+ #endif
 -- 
-2.13.5
+2.16.2
