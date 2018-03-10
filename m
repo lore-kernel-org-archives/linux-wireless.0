@@ -1,142 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f41.google.com ([209.85.215.41]:44127 "EHLO
-        mail-lf0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751520AbeCLWmy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Mar 2018 18:42:54 -0400
-Subject: Re: Problem with bridge (mcast-to-ucast + hairpin) and Broadcom's
- 802.11f in their FullMAC fw
-To: =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
-        Felix Fietkau <nbd@nbd.name>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-References: <CACna6rz9L09g9oeHhvt209Tg1E3gKgmhGnYF653AdkXfZf=4kw@mail.gmail.com>
-Cc: Network Development <netdev@vger.kernel.org>,
-        bridge@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list@cypress.com
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <a7a21b04-025f-19e1-ec09-69cc355b9215@gmail.com> (sfid-20180312_234258_896199_E5E5C1F0)
-Date: Mon, 12 Mar 2018 23:42:48 +0100
+Received: from mail.kernel.org ([198.145.29.99]:54814 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751190AbeCJOlQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Mar 2018 09:41:16 -0500
 MIME-Version: 1.0
-In-Reply-To: <CACna6rz9L09g9oeHhvt209Tg1E3gKgmhGnYF653AdkXfZf=4kw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <CAB=NE6VY62KqmhzD=zT8od=PhgPi3rGKKKxKz_zad-ZrYW-97A@mail.gmail.com>
+References: <20180309221243.15489-2-andresx7@gmail.com> <20180309230925.3573-1-andresx7@gmail.com>
+ <CAB=NE6VY62KqmhzD=zT8od=PhgPi3rGKKKxKz_zad-ZrYW-97A@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Date: Sat, 10 Mar 2018 06:40:54 -0800
+Message-ID: <CAB=NE6XpY4LuDwnakCa6gZ_HjjhZDnu=gDeHwmpNRaSkqQOB2g@mail.gmail.com> (sfid-20180310_154129_691438_EBB19EFB)
+Subject: Re: [PATCH] firmware: add a function to load optional firmware v2
+To: Andres Rodriguez <andresx7@gmail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/27/2018 11:08 AM, Rafał Miłecki wrote:
-> I've problem when using OpenWrt/LEDE on a home router with Broadcom's
-> FullMAC WiFi chipset.
->
->
-> First of all OpenWrt/LEDE uses bridge interface for LAN network with:
-> 1) IFLA_BRPORT_MCAST_TO_UCAST
-> 2) Clients isolation in hostapd
-> 3) Hairpin mode enabled
->
-> For more details please see Linus's patch description:
-> https://patchwork.kernel.org/patch/9530669/
-> and maybe hairpin mode patch:
-> https://lwn.net/Articles/347344/
->
-> Short version: in that setup packets received from a bridged wireless
-> interface can be handled back to it for transmission.
->
->
-> Now, Broadcom's firmware for their FullMAC chipsets in AP mode
-> supports an obsoleted 802.11f AKA IAPP standard. It's a roaming
-> standard that was replaced by 802.11r.
->
-> Whenever a new station associates, firmware generates a packet like:
-> ff ff ff ff  ff ff ec 10  7b 5f ?? ??  00 06 00 01  af 81 01 00
-> (just masked 2 bytes of my MAC)
->
-> For mode details you can see discussion in my brcmfmac patch thread:
-> https://patchwork.kernel.org/patch/10191451/
->
->
-> The problem is that bridge (in setup as above) handles such a packet
-> back to the device.
->
-> That makes Broadcom's FullMAC firmware believe that a given station
-> just connected to another AP in a network (which doesn't even exist).
-> As a result firmware immediately disassociates that station. It's
-> simply impossible to connect to the router. Every association is
-> followed by immediate disassociation.
->
->
-> Can you see any solution for this problem? Is that an option to stop
-> multicast-to-unicast from touching 802.11f packets? Some other ideas?
-> Obviously I can't modify Broadcom's firmware and drop that obsoleted
-> standard.
+On Sat, Mar 10, 2018 at 6:35 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
+> You also I take it have users in
+> mind? I'd like to see at least one user of the API or this fixing a
+> reported issue. Ie, if users have reported this as issues incorrectly,
+> referring to those incorrect posts as issues and how this created
+> confusion would help.
 
-I kept thinking about this for a bit more. We probably have to start
-with deciding what to blame for this problem. I see two options I'll
-describe below.
+Your patch series then should also have the driver callers who you
+want to modify to use this new API. Collect from the 802.11 folks the
+other drivers which I think they wanted changed as well. The old up on
+that front was that the firmware API was in a huge state of flux and
+debate about *how* we'd evolve the API, either through a data driven
+API or functional driven API, ie whether or not we'd add a flexible
+one API call with a set of options, or keep extending functionality
+with new exported symbols per use case. The later is how we'd keep
+evolving the API as such the way you are doing it is fine. Ie, if
+there is a use case for an optional firmware also for the async case a
+new API call will have to be made. As stupid as this sounds.
 
-Please share your opinions on this.
+Also please take a look at lib/test_firmware.c -- I don't think it
+makes sense to add a new test case for this API call, so at least
+worth documenting why somewhere if you find a suitable place for that.
 
+Also - I forgot to ask you to extend the
+Documentation/driver-api/firmware/ documentation accordingly. Please
+do that.
 
-1) Blame brcmfmac fw for implementing 802.11f
-
-In that case we should add workaround to brcmfmac driver to drop/ignore
-802.11f packets. A slightly improved version of my
-[PATCH] brcmfmac: detect & reject faked packet generated by a firmware
-https://patchwork.kernel.org/patch/10191451/
-should work.
-
-
-2) Blame bridge + mcast-to-ucast + hairpin for 802.11f incompatibility
-
-If we agree that 802.11f support in FullMAC firmware is acceptable, then
-we have to make sure Linux's bridge doesn't break it by passing 802.11f
-(broadcast) frames back to the source interface. That would require a
-check like in below diff + proper code for handling such packets. I'm
-afraid I'm not familiar with bridge code enough to complete that.
-
-diff --git a/net/bridge/br_input.c b/net/bridge/br_input.c
-index edae702..9e5d6ea 100644
---- a/net/bridge/br_input.c
-+++ b/net/bridge/br_input.c
-@@ -126,6 +126,27 @@ static void br_do_proxy_arp(struct sk_buff *skb, struct net_bridge *br,
-  	}
-  }
-
-+static bool br_skb_is_iapp_add_packet(struct sk_buff *skb)
-+{
-+	const u8 iapp_add_packet[6] __aligned(2) = {
-+		0x00, 0x01, 0xaf, 0x81, 0x01, 0x00,
-+	};
-+#if !defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
-+	const u16 *a = (const u16 *)skb->data;
-+	const u16 *b = (const u16 *)iapp_add_packet;
-+#endif
-+
-+	if (skb->len != 6)
-+		return false;
-+
-+#if defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
-+	return !(((*(const u32 *)skb->data) ^ (*(const u32 *)iapp_add_packet)) |
-+	         ((*(const u16 *)(skb->data + 4)) ^ (*(const u16 *)(iapp_add_packet + 4))));
-+#else
-+	return !((a[0] ^ b[0]) | (a[1] ^ b[1]) | (a[2] ^ b[2]));
-+#endif
-+}
-+
-  /* note: already called with rcu_read_lock */
-  int br_handle_frame_finish(struct net *net, struct sock *sk, struct sk_buff *skb)
-  {
-@@ -155,6 +176,8 @@ int br_handle_frame_finish(struct net *net, struct sock *sk, struct sk_buff *skb
-  	if (is_multicast_ether_addr(dest)) {
-  		/* by definition the broadcast is also a multicast address */
-  		if (is_broadcast_ether_addr(dest)) {
-+			if (br_skb_is_iapp_add_packet(skb))
-+				pr_warn("This packet should not be passed back to the source interface!\n");
-  			pkt_type = BR_PKT_BROADCAST;
-  			local_rcv = true;
-  		} else {
+  Luis
