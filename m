@@ -1,89 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:46230 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752399AbeC0RnS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Mar 2018 13:43:18 -0400
-Date: Tue, 27 Mar 2018 19:43:04 +0200
-From: Daniel Golle <daniel@makrotopia.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Mathias Kresin <dev@kresin.me>, Enrico Mioso <mrkiko.rs@gmail.com>,
-        Tom Psyborg <pozega.tomislav@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        Jamie Stuart <jamie@onebillion.org>
-Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
- frame due to full tx queue...?
-Message-ID: <20180327174302.GB1206@makrotopia.org> (sfid-20180327_194333_885175_AE594F6D)
-References: <20180123132234.GC2520@redhat.com>
- <alpine.LNX.2.21.99.1801240917001.13679@mStation.localdomain>
- <20180124100316.GB3101@redhat.com>
- <20180301153006.GJ1233@makrotopia.org>
- <20180307122701.GA10584@redhat.com>
- <20180307122935.GB10584@redhat.com>
- <d462681a-6a85-f76c-85a0-4e51b8529606@kresin.me>
- <20180326103551.GA2069@redhat.com>
- <24f8f4a2-b355-a1b3-d07a-940fc1e50fcc@kresin.me>
- <20180327171815.GA31338@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20180327171815.GA31338@redhat.com>
+Received: from mail.kernel.org ([198.145.29.99]:50204 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932163AbeCJOPT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Mar 2018 09:15:19 -0500
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
+        kubakici@wp.pl, linux-wireless@vger.kernel.org,
+        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
+        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
+        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
+        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v3 04/20] firmware: enable to split firmware_class into separate target files
+Date: Sat, 10 Mar 2018 06:14:45 -0800
+Message-Id: <20180310141501.2214-5-mcgrof@kernel.org> (sfid-20180310_152119_592230_8990E510)
+In-Reply-To: <20180310141501.2214-1-mcgrof@kernel.org>
+References: <20180310141501.2214-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+The firmware loader code has grown quite a bit over the years.
+The practice of stuffing everything we need into one file makes
+the code hard to follow.
 
-On Tue, Mar 27, 2018 at 07:18:16PM +0200, Stanislaw Gruszka wrote:
-> On Tue, Mar 27, 2018 at 09:46:36AM +0200, Mathias Kresin wrote:
-> > > Could you test just RX AMPDU patches, i.e.
-> > > 
-> > > rt2800_change_rx_ampdu_factor.patch
-> > > rt2800_change_rx_ampdu_density.patch
-> > > 
-> > > I have somewhat positive results on RX performance on some devices
-> > > with those. Perhaps you could confirm that :-)
-> > 
-> > This time I've done the test with HT20 only, to not annoy my neighbours.
-> > 
-> > The test setup is the following:
-> > 
-> > ath9k (STA) <=> (AP) o2 Box 6431 (RJ45) <=> desktop
-> > 
-> > With the patches applied the bandwidth is somewhat around 10 MBit/sec lower.
-> > Even if I was able to reliable reproduce it, I'm not sure if it is within
-> > the measuring tolerance.
-> 
-> Ok. I think when BBP/RF is correctly programmed patches will downgrade
-> performance. For not well optimized devices patches might
-> improve things , but this is not preferred solution. For 30+ client
-> scenario I suggest to just disable HT (11n) in OpenWRT config.
-> 
-> Additionally since those errors do not happen frequently perhaps there
-> is possibility to create watchdog and reset the device when problems
-> start to happen.
-> 
-> FWIW: I'm running wt3020 (mt7620 device) as my home router for 3 weeks now
-> and do not see any errors (I have 4 client devices). Performance measured
-> by iperf is not good though - about 40 Mbit/s .
+In order to split the firmware loader code into different components
+we must pick a module name and a first object target file. We must
+keep the firmware_class name to remain compatible with scripts which
+have been relying on the sysfs loader path for years, so the old module
+name stays. We can however rename the C file without affecting the
+module name.
 
-That's great news! Are you running OpenWrt or some self-baked
-vanilla Linux with some of the OpenWrt patchery on top?
-Also note that Tomislav Požega started porting more of the Rt6352
-calibration routines, I'd be happy if you could review those as well
-so they can go upstream right away:
+The firmware_class used to represent the idea that the code was a simple
+sysfs firmware loader, provided by the struct class firmware_class.
+The sysfs firmware loader used to be the default, today its only the
+fallback mechanism.
 
-https://github.com/openwrt/openwrt/pull/626
+This only renames the target code then to make emphasis of what the code
+does these days. With this change new features can also use a new object
+files.
 
-Just in case you are not aware of it, here is my staging tree with some
-experimental changes for MT7620 including the fixes/work-arounds you
-suggested as well as @psyborg55's patches:
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ drivers/base/Makefile                                | 1 +
+ drivers/base/{firmware_class.c => firmware_loader.c} | 0
+ 2 files changed, 1 insertion(+)
+ rename drivers/base/{firmware_class.c => firmware_loader.c} (100%)
 
-https://git.openwrt.org/?p=openwrt/staging/dangole.git;a=summary
-
-
-Cheers
-
-
-Daniel
+diff --git a/drivers/base/Makefile b/drivers/base/Makefile
+index e32a52490051..f261143fafbf 100644
+--- a/drivers/base/Makefile
++++ b/drivers/base/Makefile
+@@ -13,6 +13,7 @@ obj-$(CONFIG_HAS_DMA)	+= dma-mapping.o
+ obj-$(CONFIG_HAVE_GENERIC_DMA_COHERENT) += dma-coherent.o
+ obj-$(CONFIG_ISA_BUS_API)	+= isa.o
+ obj-$(CONFIG_FW_LOADER)	+= firmware_class.o
++firmware_class-objs := firmware_loader.o
+ obj-$(CONFIG_NUMA)	+= node.o
+ obj-$(CONFIG_MEMORY_HOTPLUG_SPARSE) += memory.o
+ ifeq ($(CONFIG_SYSFS),y)
+diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_loader.c
+similarity index 100%
+rename from drivers/base/firmware_class.c
+rename to drivers/base/firmware_loader.c
+-- 
+2.16.2
