@@ -1,307 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:10316 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1425508AbeCBOXo (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 09:23:44 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 07/13] staging: wilc1000: rename pstrHostIFkeyAttr to avoid camelCase issue
-Date: Fri, 2 Mar 2018 19:52:43 +0530
-Message-ID: <1520000569-27738-8-git-send-email-ajay.kathat@microchip.com> (sfid-20180302_152347_959624_A1EA55F4)
-In-Reply-To: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
-References: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.kernel.org ([198.145.29.99]:50376 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751216AbeCJOPW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Mar 2018 09:15:22 -0500
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
+        kubakici@wp.pl, linux-wireless@vger.kernel.org,
+        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
+        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
+        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
+        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v3 07/20] firmware: move loading timeout under struct firmware_fallback_config
+Date: Sat, 10 Mar 2018 06:14:48 -0800
+Message-Id: <20180310141501.2214-8-mcgrof@kernel.org> (sfid-20180310_152037_469065_896D7058)
+In-Reply-To: <20180310141501.2214-1-mcgrof@kernel.org>
+References: <20180310141501.2214-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix 'Avoid camelCase' issue found by checkpatch.pl script.
+The timeout is a fallback construct, so we can just stuff the
+timeout configuration under struct firmware_fallback_config.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+While at it, add a few helpers which vets the use of getting or
+setting the timeout as an int. The main use of the timeout is
+to set a timeout for completion, and that is used as an unsigned
+long. There a few cases however where it makes sense to get or
+set the timeout as an int, the helpers annotate these use cases
+have been properly vetted for.
+
+Acked-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- drivers/staging/wilc1000/host_interface.c | 119 +++++++++++++++---------------
- 1 file changed, 59 insertions(+), 60 deletions(-)
+ drivers/base/firmware_loader.c | 46 ++++++++++++++++++++++++++++++------------
+ 1 file changed, 33 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index a7fa004..5ebb0aa 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1538,8 +1538,7 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
- 	return result;
+diff --git a/drivers/base/firmware_loader.c b/drivers/base/firmware_loader.c
+index 2d819875348d..9757f9fff01e 100644
+--- a/drivers/base/firmware_loader.c
++++ b/drivers/base/firmware_loader.c
+@@ -266,21 +266,38 @@ static inline bool fw_state_is_aborted(struct fw_priv *fw_priv)
+  *
+  * @force_sysfs_fallback: force the sysfs fallback mechanism to be used
+  * 	as if one had enabled CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y.
++ * @old_timeout: for internal use
++ * @loading_timeout: the timeout to wait for the fallback mechanism before
++ * 	giving up, in seconds.
+  */
+ struct firmware_fallback_config {
+-	bool force_sysfs_fallback;
++	const bool force_sysfs_fallback;
++	int old_timeout;
++	int loading_timeout;
+ };
+ 
+-static const struct firmware_fallback_config fw_fallback_config = {
++static struct firmware_fallback_config fw_fallback_config = {
+ 	.force_sysfs_fallback = IS_ENABLED(CONFIG_FW_LOADER_USER_HELPER_FALLBACK),
++	.loading_timeout = 60,
++	.old_timeout = 60,
+ };
+ 
+-static int old_timeout;
+-static int loading_timeout = 60;	/* In seconds */
++/* These getters are vetted to use int properly */
++static inline int __firmware_loading_timeout(void)
++{
++	return fw_fallback_config.loading_timeout;
++}
++
++/* These setters are vetted to use int properly */
++static void __fw_fallback_set_timeout(int timeout)
++{
++	fw_fallback_config.loading_timeout = timeout;
++}
+ 
+ static inline long firmware_loading_timeout(void)
+ {
+-	return loading_timeout > 0 ? loading_timeout * HZ : MAX_JIFFY_OFFSET;
++	return __firmware_loading_timeout() > 0 ?
++		__firmware_loading_timeout() * HZ : MAX_JIFFY_OFFSET;
  }
  
--static int handle_key(struct wilc_vif *vif,
--		      struct key_attr *pstrHostIFkeyAttr)
-+static int handle_key(struct wilc_vif *vif, struct key_attr *hif_key)
+ /*
+@@ -291,14 +308,14 @@ static inline long firmware_loading_timeout(void)
+  */
+ static void fw_fallback_set_cache_timeout(void)
  {
- 	s32 result = 0;
- 	struct wid wid;
-@@ -1550,76 +1549,76 @@ static int handle_key(struct wilc_vif *vif,
- 	s8 ret = 0;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
+-	old_timeout = loading_timeout;
+-	loading_timeout = 10;
++	fw_fallback_config.old_timeout = __firmware_loading_timeout();
++	__fw_fallback_set_timeout(10);
+ }
  
--	switch (pstrHostIFkeyAttr->type) {
-+	switch (hif_key->type) {
- 	case WEP:
+ /* Restores the timeout to the value last configured during normal operation */
+ static void fw_fallback_set_default_timeout(void)
+ {
+-	loading_timeout =  old_timeout;
++	__fw_fallback_set_timeout(fw_fallback_config.old_timeout);
+ }
  
--		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
-+		if (hif_key->action & ADDKEY_AP) {
- 			wid_list[0].id = (u16)WID_11I_MODE;
- 			wid_list[0].type = WID_CHAR;
- 			wid_list[0].size = sizeof(char);
--			wid_list[0].val = (s8 *)&pstrHostIFkeyAttr->attr.wep.mode;
-+			wid_list[0].val = (s8 *)&hif_key->attr.wep.mode;
+ static inline bool fw_sysfs_done(struct fw_priv *fw_priv)
+@@ -677,7 +694,7 @@ static void kill_pending_fw_fallback_reqs(bool only_kill_custom)
+ static ssize_t timeout_show(struct class *class, struct class_attribute *attr,
+ 			    char *buf)
+ {
+-	return sprintf(buf, "%d\n", loading_timeout);
++	return sprintf(buf, "%d\n", __firmware_loading_timeout());
+ }
  
- 			wid_list[1].id = WID_AUTH_TYPE;
- 			wid_list[1].type = WID_CHAR;
- 			wid_list[1].size = sizeof(char);
--			wid_list[1].val = (s8 *)&pstrHostIFkeyAttr->attr.wep.auth_type;
-+			wid_list[1].val = (s8 *)&hif_key->attr.wep.auth_type;
+ /**
+@@ -696,9 +713,12 @@ static ssize_t timeout_show(struct class *class, struct class_attribute *attr,
+ static ssize_t timeout_store(struct class *class, struct class_attribute *attr,
+ 			     const char *buf, size_t count)
+ {
+-	loading_timeout = simple_strtol(buf, NULL, 10);
+-	if (loading_timeout < 0)
+-		loading_timeout = 0;
++	int tmp_loading_timeout = simple_strtol(buf, NULL, 10);
++
++	if (tmp_loading_timeout < 0)
++		tmp_loading_timeout = 0;
++
++	__fw_fallback_set_timeout(tmp_loading_timeout);
  
--			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2,
-+			pu8keybuf = kmalloc(hif_key->attr.wep.key_len + 2,
- 					    GFP_KERNEL);
- 			if (!pu8keybuf)
- 				return -ENOMEM;
- 
--			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
--			pu8keybuf[1] = pstrHostIFkeyAttr->attr.wep.key_len;
-+			pu8keybuf[0] = hif_key->attr.wep.index;
-+			pu8keybuf[1] = hif_key->attr.wep.key_len;
- 
--			memcpy(&pu8keybuf[2], pstrHostIFkeyAttr->attr.wep.key,
--			       pstrHostIFkeyAttr->attr.wep.key_len);
-+			memcpy(&pu8keybuf[2], hif_key->attr.wep.key,
-+			       hif_key->attr.wep.key_len);
- 
--			kfree(pstrHostIFkeyAttr->attr.wep.key);
-+			kfree(hif_key->attr.wep.key);
- 
- 			wid_list[2].id = (u16)WID_WEP_KEY_VALUE;
- 			wid_list[2].type = WID_STR;
--			wid_list[2].size = pstrHostIFkeyAttr->attr.wep.key_len + 2;
-+			wid_list[2].size = hif_key->attr.wep.key_len + 2;
- 			wid_list[2].val = (s8 *)pu8keybuf;
- 
- 			result = wilc_send_config_pkt(vif, SET_CFG,
- 						      wid_list, 3,
- 						      wilc_get_vif_idx(vif));
- 			kfree(pu8keybuf);
--		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
--			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2, GFP_KERNEL);
-+		} else if (hif_key->action & ADDKEY) {
-+			pu8keybuf = kmalloc(hif_key->attr.wep.key_len + 2, GFP_KERNEL);
- 			if (!pu8keybuf)
- 				return -ENOMEM;
--			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
--			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->attr.wep.key_len, 1);
--			memcpy(pu8keybuf + 2, pstrHostIFkeyAttr->attr.wep.key,
--			       pstrHostIFkeyAttr->attr.wep.key_len);
--			kfree(pstrHostIFkeyAttr->attr.wep.key);
-+			pu8keybuf[0] = hif_key->attr.wep.index;
-+			memcpy(pu8keybuf + 1, &hif_key->attr.wep.key_len, 1);
-+			memcpy(pu8keybuf + 2, hif_key->attr.wep.key,
-+			       hif_key->attr.wep.key_len);
-+			kfree(hif_key->attr.wep.key);
- 
- 			wid.id = (u16)WID_ADD_WEP_KEY;
- 			wid.type = WID_STR;
- 			wid.val = (s8 *)pu8keybuf;
--			wid.size = pstrHostIFkeyAttr->attr.wep.key_len + 2;
-+			wid.size = hif_key->attr.wep.key_len + 2;
- 
- 			result = wilc_send_config_pkt(vif, SET_CFG,
- 						      &wid, 1,
- 						      wilc_get_vif_idx(vif));
- 			kfree(pu8keybuf);
--		} else if (pstrHostIFkeyAttr->action & REMOVEKEY) {
-+		} else if (hif_key->action & REMOVEKEY) {
- 			wid.id = (u16)WID_REMOVE_WEP_KEY;
- 			wid.type = WID_STR;
- 
--			s8idxarray[0] = (s8)pstrHostIFkeyAttr->attr.wep.index;
-+			s8idxarray[0] = (s8)hif_key->attr.wep.index;
- 			wid.val = s8idxarray;
- 			wid.size = 1;
- 
- 			result = wilc_send_config_pkt(vif, SET_CFG,
- 						      &wid, 1,
- 						      wilc_get_vif_idx(vif));
--		} else if (pstrHostIFkeyAttr->action & DEFAULTKEY) {
-+		} else if (hif_key->action & DEFAULTKEY) {
- 			wid.id = (u16)WID_KEY_ID;
- 			wid.type = WID_CHAR;
--			wid.val = (s8 *)&pstrHostIFkeyAttr->attr.wep.index;
-+			wid.val = (s8 *)&hif_key->attr.wep.index;
- 			wid.size = sizeof(char);
- 
- 			result = wilc_send_config_pkt(vif, SET_CFG,
-@@ -1630,25 +1629,25 @@ static int handle_key(struct wilc_vif *vif,
- 		break;
- 
- 	case WPA_RX_GTK:
--		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
-+		if (hif_key->action & ADDKEY_AP) {
- 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
- 			if (!pu8keybuf) {
- 				ret = -ENOMEM;
- 				goto out_wpa_rx_gtk;
- 			}
- 
--			if (pstrHostIFkeyAttr->attr.wpa.seq)
--				memcpy(pu8keybuf + 6, pstrHostIFkeyAttr->attr.wpa.seq, 8);
-+			if (hif_key->attr.wpa.seq)
-+				memcpy(pu8keybuf + 6, hif_key->attr.wpa.seq, 8);
- 
--			memcpy(pu8keybuf + 14, &pstrHostIFkeyAttr->attr.wpa.index, 1);
--			memcpy(pu8keybuf + 15, &pstrHostIFkeyAttr->attr.wpa.key_len, 1);
--			memcpy(pu8keybuf + 16, pstrHostIFkeyAttr->attr.wpa.key,
--			       pstrHostIFkeyAttr->attr.wpa.key_len);
-+			memcpy(pu8keybuf + 14, &hif_key->attr.wpa.index, 1);
-+			memcpy(pu8keybuf + 15, &hif_key->attr.wpa.key_len, 1);
-+			memcpy(pu8keybuf + 16, hif_key->attr.wpa.key,
-+			       hif_key->attr.wpa.key_len);
- 
- 			wid_list[0].id = (u16)WID_11I_MODE;
- 			wid_list[0].type = WID_CHAR;
- 			wid_list[0].size = sizeof(char);
--			wid_list[0].val = (s8 *)&pstrHostIFkeyAttr->attr.wpa.mode;
-+			wid_list[0].val = (s8 *)&hif_key->attr.wpa.mode;
- 
- 			wid_list[1].id = (u16)WID_ADD_RX_GTK;
- 			wid_list[1].type = WID_STR;
-@@ -1661,7 +1660,7 @@ static int handle_key(struct wilc_vif *vif,
- 
- 			kfree(pu8keybuf);
- 			complete(&hif_drv->comp_test_key_block);
--		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
-+		} else if (hif_key->action & ADDKEY) {
- 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
- 			if (!pu8keybuf) {
- 				ret = -ENOMEM;
-@@ -1673,11 +1672,11 @@ static int handle_key(struct wilc_vif *vif,
- 			else
- 				netdev_err(vif->ndev, "Couldn't handle\n");
- 
--			memcpy(pu8keybuf + 6, pstrHostIFkeyAttr->attr.wpa.seq, 8);
--			memcpy(pu8keybuf + 14, &pstrHostIFkeyAttr->attr.wpa.index, 1);
--			memcpy(pu8keybuf + 15, &pstrHostIFkeyAttr->attr.wpa.key_len, 1);
--			memcpy(pu8keybuf + 16, pstrHostIFkeyAttr->attr.wpa.key,
--			       pstrHostIFkeyAttr->attr.wpa.key_len);
-+			memcpy(pu8keybuf + 6, hif_key->attr.wpa.seq, 8);
-+			memcpy(pu8keybuf + 14, &hif_key->attr.wpa.index, 1);
-+			memcpy(pu8keybuf + 15, &hif_key->attr.wpa.key_len, 1);
-+			memcpy(pu8keybuf + 16, hif_key->attr.wpa.key,
-+			       hif_key->attr.wpa.key_len);
- 
- 			wid.id = (u16)WID_ADD_RX_GTK;
- 			wid.type = WID_STR;
-@@ -1692,31 +1691,31 @@ static int handle_key(struct wilc_vif *vif,
- 			complete(&hif_drv->comp_test_key_block);
- 		}
- out_wpa_rx_gtk:
--		kfree(pstrHostIFkeyAttr->attr.wpa.key);
--		kfree(pstrHostIFkeyAttr->attr.wpa.seq);
-+		kfree(hif_key->attr.wpa.key);
-+		kfree(hif_key->attr.wpa.seq);
- 		if (ret)
- 			return ret;
- 
- 		break;
- 
- 	case WPA_PTK:
--		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
-+		if (hif_key->action & ADDKEY_AP) {
- 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN + 1, GFP_KERNEL);
- 			if (!pu8keybuf) {
- 				ret = -ENOMEM;
- 				goto out_wpa_ptk;
- 			}
- 
--			memcpy(pu8keybuf, pstrHostIFkeyAttr->attr.wpa.mac_addr, 6);
--			memcpy(pu8keybuf + 6, &pstrHostIFkeyAttr->attr.wpa.index, 1);
--			memcpy(pu8keybuf + 7, &pstrHostIFkeyAttr->attr.wpa.key_len, 1);
--			memcpy(pu8keybuf + 8, pstrHostIFkeyAttr->attr.wpa.key,
--			       pstrHostIFkeyAttr->attr.wpa.key_len);
-+			memcpy(pu8keybuf, hif_key->attr.wpa.mac_addr, 6);
-+			memcpy(pu8keybuf + 6, &hif_key->attr.wpa.index, 1);
-+			memcpy(pu8keybuf + 7, &hif_key->attr.wpa.key_len, 1);
-+			memcpy(pu8keybuf + 8, hif_key->attr.wpa.key,
-+			       hif_key->attr.wpa.key_len);
- 
- 			wid_list[0].id = (u16)WID_11I_MODE;
- 			wid_list[0].type = WID_CHAR;
- 			wid_list[0].size = sizeof(char);
--			wid_list[0].val = (s8 *)&pstrHostIFkeyAttr->attr.wpa.mode;
-+			wid_list[0].val = (s8 *)&hif_key->attr.wpa.mode;
- 
- 			wid_list[1].id = (u16)WID_ADD_PTK;
- 			wid_list[1].type = WID_STR;
-@@ -1728,7 +1727,7 @@ static int handle_key(struct wilc_vif *vif,
- 						      wilc_get_vif_idx(vif));
- 			kfree(pu8keybuf);
- 			complete(&hif_drv->comp_test_key_block);
--		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
-+		} else if (hif_key->action & ADDKEY) {
- 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN, GFP_KERNEL);
- 			if (!pu8keybuf) {
- 				netdev_err(vif->ndev, "No buffer send PTK\n");
-@@ -1736,10 +1735,10 @@ static int handle_key(struct wilc_vif *vif,
- 				goto out_wpa_ptk;
- 			}
- 
--			memcpy(pu8keybuf, pstrHostIFkeyAttr->attr.wpa.mac_addr, 6);
--			memcpy(pu8keybuf + 6, &pstrHostIFkeyAttr->attr.wpa.key_len, 1);
--			memcpy(pu8keybuf + 7, pstrHostIFkeyAttr->attr.wpa.key,
--			       pstrHostIFkeyAttr->attr.wpa.key_len);
-+			memcpy(pu8keybuf, hif_key->attr.wpa.mac_addr, 6);
-+			memcpy(pu8keybuf + 6, &hif_key->attr.wpa.key_len, 1);
-+			memcpy(pu8keybuf + 7, hif_key->attr.wpa.key,
-+			       hif_key->attr.wpa.key_len);
- 
- 			wid.id = (u16)WID_ADD_PTK;
- 			wid.type = WID_STR;
-@@ -1754,28 +1753,28 @@ static int handle_key(struct wilc_vif *vif,
- 		}
- 
- out_wpa_ptk:
--		kfree(pstrHostIFkeyAttr->attr.wpa.key);
-+		kfree(hif_key->attr.wpa.key);
- 		if (ret)
- 			return ret;
- 
- 		break;
- 
- 	case PMKSA:
--		pu8keybuf = kmalloc((pstrHostIFkeyAttr->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1, GFP_KERNEL);
-+		pu8keybuf = kmalloc((hif_key->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1, GFP_KERNEL);
- 		if (!pu8keybuf)
- 			return -ENOMEM;
- 
--		pu8keybuf[0] = pstrHostIFkeyAttr->attr.pmkid.numpmkid;
-+		pu8keybuf[0] = hif_key->attr.pmkid.numpmkid;
- 
--		for (i = 0; i < pstrHostIFkeyAttr->attr.pmkid.numpmkid; i++) {
--			memcpy(pu8keybuf + ((PMKSA_KEY_LEN * i) + 1), pstrHostIFkeyAttr->attr.pmkid.pmkidlist[i].bssid, ETH_ALEN);
--			memcpy(pu8keybuf + ((PMKSA_KEY_LEN * i) + ETH_ALEN + 1), pstrHostIFkeyAttr->attr.pmkid.pmkidlist[i].pmkid, PMKID_LEN);
-+		for (i = 0; i < hif_key->attr.pmkid.numpmkid; i++) {
-+			memcpy(pu8keybuf + ((PMKSA_KEY_LEN * i) + 1), hif_key->attr.pmkid.pmkidlist[i].bssid, ETH_ALEN);
-+			memcpy(pu8keybuf + ((PMKSA_KEY_LEN * i) + ETH_ALEN + 1), hif_key->attr.pmkid.pmkidlist[i].pmkid, PMKID_LEN);
- 		}
- 
- 		wid.id = (u16)WID_PMKID_INFO;
- 		wid.type = WID_STR;
- 		wid.val = (s8 *)pu8keybuf;
--		wid.size = (pstrHostIFkeyAttr->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1;
-+		wid.size = (hif_key->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1;
- 
- 		result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
- 					      wilc_get_vif_idx(vif));
+ 	return count;
+ }
+@@ -721,7 +741,7 @@ static int do_firmware_uevent(struct fw_sysfs *fw_sysfs, struct kobj_uevent_env
+ {
+ 	if (add_uevent_var(env, "FIRMWARE=%s", fw_sysfs->fw_priv->fw_name))
+ 		return -ENOMEM;
+-	if (add_uevent_var(env, "TIMEOUT=%i", loading_timeout))
++	if (add_uevent_var(env, "TIMEOUT=%i", __firmware_loading_timeout()))
+ 		return -ENOMEM;
+ 	if (add_uevent_var(env, "ASYNC=%d", fw_sysfs->nowait))
+ 		return -ENOMEM;
 -- 
-2.7.4
+2.16.2
