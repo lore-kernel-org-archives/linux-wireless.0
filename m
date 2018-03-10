@@ -1,208 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:57968 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752116AbeCZRQc (ORCPT
+Received: from gateway20.websitewelcome.com ([192.185.60.19]:26026 "EHLO
+        gateway20.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751189AbeCJXvL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 13:16:32 -0400
-From: Colin King <colin.king@canonical.com>
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: wilc1000: replace kmalloc + memcpy with kmemdup
-Date: Mon, 26 Mar 2018 18:16:29 +0100
-Message-Id: <20180326171629.28700-1-colin.king@canonical.com> (sfid-20180326_191657_906042_E9F3CFB4)
+        Sat, 10 Mar 2018 18:51:11 -0500
+Received: from cm14.websitewelcome.com (cm14.websitewelcome.com [100.42.49.7])
+        by gateway20.websitewelcome.com (Postfix) with ESMTP id 4209E400D0F70
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Mar 2018 17:26:48 -0600 (CST)
+Subject: Re: [PATCH] drivers: net: wireless: ath: ath9: dfs: remove VLA usage
+To: Kees Cook <keescook@chromium.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Andreas Christoforou <andreaschristofo@gmail.com>,
+        Kernel Hardening <kernel-hardening@lists.openwall.com>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+References: <1520598613-3641-1-git-send-email-andreaschristofo@gmail.com>
+ <5AA464DE.90100@broadcom.com>
+ <CAGXu5jKDA=L5E6Cu_oRe-M=ouuhrccCZHyM+z6_UMAUqe9xnRQ@mail.gmail.com>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Message-ID: <0475443a-5026-e897-bd52-9198f854919f@embeddedor.com> (sfid-20180311_005115_359401_ED2AC95E)
+Date: Sat, 10 Mar 2018 17:26:46 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAGXu5jKDA=L5E6Cu_oRe-M=ouuhrccCZHyM+z6_UMAUqe9xnRQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
 
-Replace several allocation and memcpys with kmemdup and add in some
-missing memory allocation failure checks.  Also fix an incorrect 
--EFAULT return with -ENOMEM.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/staging/wilc1000/host_interface.c | 75 +++++++++++++++++++------------
- 1 file changed, 46 insertions(+), 29 deletions(-)
+On 03/10/2018 05:12 PM, Kees Cook wrote:
+> On Sat, Mar 10, 2018 at 3:06 PM, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> On 3/9/2018 1:30 PM, Andreas Christoforou wrote:
+>>>
+>>> The kernel would like to have all stack VLA usage removed.
+>>
+>>
+>> I think there was a remark made earlier to give more explanation here. It
+>> should explain why we want "VLA on stack" removed.
+>>
+>>> Signed-off-by: Andreas Christoforou <andreaschristofo@gmail.com>
+>>> ---
+>>>    drivers/net/wireless/ath/ath9k/dfs.c | 3 +--
+>>>    1 file changed, 1 insertion(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath9k/dfs.c
+>>> b/drivers/net/wireless/ath/ath9k/dfs.c
+>>> index 6fee9a4..cfb0f84 100644
+>>> --- a/drivers/net/wireless/ath/ath9k/dfs.c
+>>> +++ b/drivers/net/wireless/ath/ath9k/dfs.c
+>>> @@ -41,7 +41,6 @@ static const int BIN_DELTA_MAX                = 10;
+>>>
+>>>    /* we need at least 3 deltas / 4 samples for a reliable chirp detection
+>>> */
+>>>    #define NUM_DIFFS 3
+>>> -static const int FFT_NUM_SAMPLES       = (NUM_DIFFS + 1);
+>>>
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 9b9b86654958..8fd367f87fa5 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -797,6 +797,10 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
- 	for (i = 0; i < hidden_net->n_ssids; i++)
- 		valuesize += ((hidden_net->net_info[i].ssid_len) + 1);
- 	hdn_ntwk_wid_val = kmalloc(valuesize + 1, GFP_KERNEL);
-+	if (!hdn_ntwk_wid_val) {
-+		result = -ENOMEM;
-+		goto error;
-+	}
- 	wid_list[index].val = hdn_ntwk_wid_val;
- 	if (wid_list[index].val) {
- 		buffer = wid_list[index].val;
-@@ -943,39 +947,35 @@ static s32 handle_connect(struct wilc_vif *vif,
- 	}
- 
- 	if (conn_attr->bssid) {
--		hif_drv->usr_conn_req.bssid = kmalloc(6, GFP_KERNEL);
-+		hif_drv->usr_conn_req.bssid = kmemdup(conn_attr->bssid, 6,
-+						      GFP_KERNEL);
- 		if (!hif_drv->usr_conn_req.bssid) {
- 			result = -ENOMEM;
- 			goto error;
- 		}
--		memcpy(hif_drv->usr_conn_req.bssid, conn_attr->bssid, 6);
- 	}
- 
- 	hif_drv->usr_conn_req.ssid_len = conn_attr->ssid_len;
- 	if (conn_attr->ssid) {
--		hif_drv->usr_conn_req.ssid = kmalloc(conn_attr->ssid_len + 1,
-+		hif_drv->usr_conn_req.ssid = kmemdup(conn_attr->ssid,
-+						     conn_attr->ssid_len + 1,
- 						     GFP_KERNEL);
- 		if (!hif_drv->usr_conn_req.ssid) {
- 			result = -ENOMEM;
- 			goto error;
- 		}
--		memcpy(hif_drv->usr_conn_req.ssid,
--		       conn_attr->ssid,
--		       conn_attr->ssid_len);
- 		hif_drv->usr_conn_req.ssid[conn_attr->ssid_len] = '\0';
- 	}
- 
- 	hif_drv->usr_conn_req.ies_len = conn_attr->ies_len;
- 	if (conn_attr->ies) {
--		hif_drv->usr_conn_req.ies = kmalloc(conn_attr->ies_len,
-+		hif_drv->usr_conn_req.ies = kmemdup(conn_attr->ies,
-+						    conn_attr->ies_len,
- 						    GFP_KERNEL);
- 		if (!hif_drv->usr_conn_req.ies) {
- 			result = -ENOMEM;
- 			goto error;
- 		}
--		memcpy(hif_drv->usr_conn_req.ies,
--		       conn_attr->ies,
--		       conn_attr->ies_len);
- 	}
- 
- 	hif_drv->usr_conn_req.security = conn_attr->security;
-@@ -1009,9 +1009,12 @@ static s32 handle_connect(struct wilc_vif *vif,
- 
- 	if (memcmp("DIRECT-", conn_attr->ssid, 7)) {
- 		info_element_size = hif_drv->usr_conn_req.ies_len;
--		info_element = kmalloc(info_element_size, GFP_KERNEL);
--		memcpy(info_element, hif_drv->usr_conn_req.ies,
--		       info_element_size);
-+		info_element = kmemdup(hif_drv->usr_conn_req.ies,
-+				       info_element_size, GFP_KERNEL);
-+		if (!info_element) {
-+			result = -ENOMEM;
-+			goto error;
-+		}
- 	}
- 	wid_list[wid_cnt].id = (u16)WID_11I_MODE;
- 	wid_list[wid_cnt].type = WID_CHAR;
-@@ -1039,9 +1042,13 @@ static s32 handle_connect(struct wilc_vif *vif,
- 	if (memcmp("DIRECT-", conn_attr->ssid, 7)) {
- 		join_req_size = wid_list[wid_cnt].size;
- 		join_req = kmalloc(join_req_size, GFP_KERNEL);
-+		if (!join_req) {
-+			result = -ENOMEM;
-+			goto error;
-+		}
- 	}
- 	if (!wid_list[wid_cnt].val) {
--		result = -EFAULT;
-+		result = -ENOMEM;
- 		goto error;
- 	}
- 
-@@ -1166,11 +1173,13 @@ static s32 handle_connect(struct wilc_vif *vif,
- 
- 			if (conn_attr->ies) {
- 				conn_info.req_ies_len = conn_attr->ies_len;
--				conn_info.req_ies = kmalloc(conn_attr->ies_len,
-+				conn_info.req_ies = kmemdup(conn_attr->ies,
-+							    conn_attr->ies_len,
- 							    GFP_KERNEL);
--				memcpy(conn_info.req_ies,
--				       conn_attr->ies,
--				       conn_attr->ies_len);
-+				if (!conn_info.req_ies) {
-+					result = -ENOMEM;
-+					goto error_free;
-+				}
- 			}
- 
- 			conn_attr->result(CONN_DISCONN_EVENT_CONN_RESP,
-@@ -1187,6 +1196,7 @@ static s32 handle_connect(struct wilc_vif *vif,
- 		}
- 	}
- 
-+error_free:
- 	kfree(conn_attr->bssid);
- 	conn_attr->bssid = NULL;
- 
-@@ -1227,10 +1237,9 @@ static s32 handle_connect_timeout(struct wilc_vif *vif)
- 
- 		if (hif_drv->usr_conn_req.ies) {
- 			info.req_ies_len = hif_drv->usr_conn_req.ies_len;
--			info.req_ies = kmalloc(hif_drv->usr_conn_req.ies_len, GFP_KERNEL);
--			memcpy(info.req_ies,
--			       hif_drv->usr_conn_req.ies,
--			       hif_drv->usr_conn_req.ies_len);
-+			info.req_ies = kmemdup(hif_drv->usr_conn_req.ies,
-+					       hif_drv->usr_conn_req.ies_len,
-+					       GFP_KERNEL);
- 		}
- 
- 		hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_CONN_RESP,
-@@ -1421,9 +1430,11 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
- 
- 						if (conn_info.status == SUCCESSFUL_STATUSCODE && connect_resp_info->ies) {
- 							conn_info.resp_ies_len = connect_resp_info->ies_len;
--							conn_info.resp_ies = kmalloc(connect_resp_info->ies_len, GFP_KERNEL);
--							memcpy(conn_info.resp_ies, connect_resp_info->ies,
--							       connect_resp_info->ies_len);
-+							conn_info.resp_ies = kmemdup(connect_resp_info->ies,
-+										     connect_resp_info->ies_len,
-+										     GFP_KERNEL);
-+							if (!conn_info.resp_ies)
-+								return -ENOMEM;
- 						}
- 
- 						if (connect_resp_info) {
-@@ -3524,8 +3535,11 @@ void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32 length)
- 	msg.vif = vif;
- 
- 	msg.body.net_info.len = length;
--	msg.body.net_info.buffer = kmalloc(length, GFP_KERNEL);
--	memcpy(msg.body.net_info.buffer, buffer, length);
-+	msg.body.net_info.buffer = kmemdup(buffer, length, GFP_KERNEL);
-+	if (!msg.body.net_info.buffer) {
-+		netdev_err(vif->ndev, "message buffer allocation failed\n");
-+		return;
-+	}
- 
- 	result = wilc_enqueue_cmd(&msg);
- 	if (result)
-@@ -3571,8 +3585,11 @@ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length)
- 	msg.vif = vif;
- 
- 	msg.body.async_info.len = length;
--	msg.body.async_info.buffer = kmalloc(length, GFP_KERNEL);
--	memcpy(msg.body.async_info.buffer, buffer, length);
-+	msg.body.async_info.buffer = kmemdup(buffer, length, GFP_KERNEL);
-+	if (!msg.body.async_info.buffer) {
-+		netdev_err(vif->ndev, "message buffer allocation failed\n");
-+		return;
-+	}
- 
- 	result = wilc_enqueue_cmd(&msg);
- 	if (result)
--- 
-2.15.1
+What about this instead?
+
+#define FFT_NUM_SAMPLES	(NUM_DIFFS + 1)
+
+>>>    /* Threshold for difference of delta peaks */
+>>>    static const int MAX_DIFF             = 2;
+>>> @@ -101,7 +100,7 @@ static bool ath9k_check_chirping(struct ath_softc *sc,
+>>> u8 *data,
+>>>                                   int datalen, bool is_ctl, bool is_ext)
+>>>    {
+>>>          int i;
+>>> -       int max_bin[FFT_NUM_SAMPLES];
+>>> +       int max_bin[NUM_DIFFS + 1];
+>>
+>>
+>> Just wondering. Is this actually a VLA. FFT_NUM_SAMPLES was static const so
+>> not really going to show a lot of variation. This array will always have the
+>> same size on the stack.
+> 
+> The problem is that it's not a "constant expression", so the compiler
+> frontend still yells about it under -Wvla. I would characterize this
+> mainly as a fix for "accidental VLA" or "misdetected VLA" or something
+> like that. AIUI, there really isn't a functional change here.
+> 
+> -Kees
+> 
+
+--
+Gustavo
