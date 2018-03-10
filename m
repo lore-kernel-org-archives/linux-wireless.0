@@ -1,113 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:34470 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752655AbeC3HTl (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Mar 2018 03:19:41 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 01/17] rtlwifi: add halmac structure to wifi.h
-Date: Fri, 30 Mar 2018 15:19:00 +0800
-Message-ID: <20180330071916.23360-2-pkshih@realtek.com> (sfid-20180330_092035_603423_DBBBB907)
-In-Reply-To: <20180330071916.23360-1-pkshih@realtek.com>
-References: <20180330071916.23360-1-pkshih@realtek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.kernel.org ([198.145.29.99]:50524 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932171AbeCJOP0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Mar 2018 09:15:26 -0500
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
+        kubakici@wp.pl, linux-wireless@vger.kernel.org,
+        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
+        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
+        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
+        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v3 10/20] firmware: enable run time change of forcing fallback loader
+Date: Sat, 10 Mar 2018 06:14:51 -0800
+Message-Id: <20180310141501.2214-11-mcgrof@kernel.org> (sfid-20180310_151910_662110_595FCDF3)
+In-Reply-To: <20180310141501.2214-1-mcgrof@kernel.org>
+References: <20180310141501.2214-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Currently one requires to test four kernel configurations to test the
+firmware API completely:
 
-Add structure and ops to interact with halmac and other modules.
+0)
+  CONFIG_FW_LOADER=y
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+1)
+  o CONFIG_FW_LOADER=y
+  o CONFIG_FW_LOADER_USER_HELPER=y
+
+2)
+  o CONFIG_FW_LOADER=y
+  o CONFIG_FW_LOADER_USER_HELPER=y
+  o CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y
+
+3) When CONFIG_FW_LOADER=m the built-in stuff is disabled, we have
+   no current tests for this.
+
+We can reduce the requirements to three kernel configurations by making
+fw_config.force_sysfs_fallback a proc knob we flip on off. For kernels that
+disable CONFIG_IKCONFIG_PROC this can also enable one to inspect if
+CONFIG_FW_LOADER_USER_HELPER_FALLBACK was enabled at build time by checking
+the proc value at boot time.
+
+Acked-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/wifi.h | 58 +++++++++++++++++++++++++++++
- 1 file changed, 58 insertions(+)
+ drivers/base/firmware_loader/fallback.c       |  1 +
+ drivers/base/firmware_loader/fallback.h       |  4 +++-
+ drivers/base/firmware_loader/fallback_table.c | 17 +++++++++++++++++
+ kernel/sysctl.c                               | 11 +++++++++++
+ 4 files changed, 32 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index d27e33960e77..b7709b7c8411 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2305,6 +2305,13 @@ struct rtl_hal_ops {
- 	u16 (*get_available_desc)(struct ieee80211_hw *hw, u8 q_idx);
- 	void (*c2h_content_parsing)(struct ieee80211_hw *hw, u8 tag, u8 len,
- 				    u8 *val);
-+	/* ops for halmac cb */
-+	bool (*halmac_cb_init_mac_register)(struct rtl_priv *rtlpriv);
-+	bool (*halmac_cb_init_bb_rf_register)(struct rtl_priv *rtlpriv);
-+	bool (*halmac_cb_write_data_rsvd_page)(struct rtl_priv *rtlpriv,
-+					       u8 *buf, u32 size);
-+	bool (*halmac_cb_write_data_h2c)(struct rtl_priv *rtlpriv, u8 *buf,
-+					 u32 size);
+diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
+index 9b65837256d6..45cc40933a47 100644
+--- a/drivers/base/firmware_loader/fallback.c
++++ b/drivers/base/firmware_loader/fallback.c
+@@ -7,6 +7,7 @@
+ #include <linux/security.h>
+ #include <linux/highmem.h>
+ #include <linux/umh.h>
++#include <linux/sysctl.h>
+ 
+ #include "fallback.h"
+ #include "firmware.h"
+diff --git a/drivers/base/firmware_loader/fallback.h b/drivers/base/firmware_loader/fallback.h
+index 550498c7fa4c..ca7e69a8417b 100644
+--- a/drivers/base/firmware_loader/fallback.h
++++ b/drivers/base/firmware_loader/fallback.h
+@@ -12,12 +12,14 @@
+  *
+  * @force_sysfs_fallback: force the sysfs fallback mechanism to be used
+  * 	as if one had enabled CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y.
++ * 	Useful to help debug a CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y
++ * 	functionality on a kernel where that config entry has been disabled.
+  * @old_timeout: for internal use
+  * @loading_timeout: the timeout to wait for the fallback mechanism before
+  * 	giving up, in seconds.
+  */
+ struct firmware_fallback_config {
+-	const bool force_sysfs_fallback;
++	unsigned int force_sysfs_fallback;
+ 	int old_timeout;
+ 	int loading_timeout;
  };
+diff --git a/drivers/base/firmware_loader/fallback_table.c b/drivers/base/firmware_loader/fallback_table.c
+index 981419044c7e..92365e053e30 100644
+--- a/drivers/base/firmware_loader/fallback_table.c
++++ b/drivers/base/firmware_loader/fallback_table.c
+@@ -19,6 +19,9 @@
+ /* Module or buit-in */
+ #ifdef CONFIG_FW_LOADER_USER_HELPER
  
- struct rtl_intf_ops {
-@@ -2687,6 +2694,54 @@ struct rtl_btc_ops {
- 	bool (*btc_is_bt_lps_on)(struct rtl_priv *rtlpriv);
++static unsigned int zero;
++static unsigned int one = 1;
++
+ struct firmware_fallback_config fw_fallback_config = {
+ 	.force_sysfs_fallback = IS_ENABLED(CONFIG_FW_LOADER_USER_HELPER_FALLBACK),
+ 	.loading_timeout = 60,
+@@ -26,4 +29,18 @@ struct firmware_fallback_config fw_fallback_config = {
  };
+ EXPORT_SYMBOL_GPL(fw_fallback_config);
  
-+struct rtl_halmac_ops {
-+	int (*halmac_init_adapter)(struct rtl_priv *rtlpriv);
-+	int (*halmac_deinit_adapter)(struct rtl_priv *rtlpriv);
-+	int (*halmac_init_hal)(struct rtl_priv *rtlpriv);
-+	int (*halmac_deinit_hal)(struct rtl_priv *rtlpriv);
-+	int (*halmac_poweron)(struct rtl_priv *rtlpriv);
-+	int (*halmac_poweroff)(struct rtl_priv *rtlpriv);
-+
-+	int (*halmac_phy_power_switch)(struct rtl_priv *rtlpriv, u8 enable);
-+	int (*halmac_set_mac_address)(struct rtl_priv *rtlpriv, u8 hwport,
-+				      u8 *addr);
-+	int (*halmac_set_bssid)(struct rtl_priv *rtlpriv, u8 hwport, u8 *addr);
-+
-+	int (*halmac_get_physical_efuse_size)(struct rtl_priv *rtlpriv,
-+					      u32 *size);
-+	int (*halmac_read_physical_efuse_map)(struct rtl_priv *rtlpriv,
-+					      u8 *map, u32 size);
-+	int (*halmac_get_logical_efuse_size)(struct rtl_priv *rtlpriv,
-+					     u32 *size);
-+	int (*halmac_read_logical_efuse_map)(struct rtl_priv *rtlpriv, u8 *map,
-+					     u32 size);
-+
-+	int (*halmac_set_bandwidth)(struct rtl_priv *rtlpriv, u8 channel,
-+				    u8 pri_ch_idx, u8 bw);
-+
-+	int (*halmac_c2h_handle)(struct rtl_priv *rtlpriv, u8 *c2h, u32 size);
-+
-+	int (*halmac_chk_txdesc)(struct rtl_priv *rtlpriv, u8 *txdesc,
-+				 u32 size);
-+	int (*halmac_iqk)(struct rtl_priv *rtlpriv, u8 clear, u8 segment);
++struct ctl_table firmware_config_table[] = {
++	{
++		.procname	= "force_sysfs_fallback",
++		.data		= &fw_fallback_config.force_sysfs_fallback,
++		.maxlen         = sizeof(unsigned int),
++		.mode           = 0644,
++		.proc_handler   = proc_douintvec_minmax,
++		.extra1		= &zero,
++		.extra2		= &one,
++	},
++	{ }
 +};
++EXPORT_SYMBOL_GPL(firmware_config_table);
 +
-+struct rtl_halmac_indicator {
-+	struct completion *comp;
-+	u32 wait_ms;
-+
-+	u8 *buffer;
-+	u32 buf_size;
-+	u32 ret_size;
-+	u32 status;
-+};
-+
-+struct rtl_halmac {
-+	struct rtl_halmac_ops *ops; /* halmac ops (halmac.ko own this object) */
-+	void *internal;	/* internal context of halmac, i.e. PHALMAC_ADAPTER */
-+	struct rtl_halmac_indicator *indicator;	/* size=10 */
-+};
-+
- struct proxim {
- 	bool proxim_on;
+ #endif
+diff --git a/kernel/sysctl.c b/kernel/sysctl.c
+index 6c68e771e11d..7a8aa6866764 100644
+--- a/kernel/sysctl.c
++++ b/kernel/sysctl.c
+@@ -253,6 +253,10 @@ extern struct ctl_table random_table[];
+ extern struct ctl_table epoll_table[];
+ #endif
  
-@@ -2792,6 +2847,9 @@ struct rtl_priv {
- 	/*for bt coexist use*/
- 	struct bt_coexist_info btcoexist;
- 
-+	/* halmac for newer ICs */
-+	struct rtl_halmac halmac;
++#ifdef CONFIG_FW_LOADER_USER_HELPER
++extern struct ctl_table firmware_config_table[];
++#endif
 +
- 	/* separate 92ee from other ICs,
- 	 * 92ee use new trx flow.
- 	 */
+ #ifdef HAVE_ARCH_PICK_MMAP_LAYOUT
+ int sysctl_legacy_va_layout;
+ #endif
+@@ -748,6 +752,13 @@ static struct ctl_table kern_table[] = {
+ 		.mode		= 0555,
+ 		.child		= usermodehelper_table,
+ 	},
++#ifdef CONFIG_FW_LOADER_USER_HELPER
++	{
++		.procname	= "firmware_config",
++		.mode		= 0555,
++		.child		= firmware_config_table,
++	},
++#endif
+ 	{
+ 		.procname	= "overflowuid",
+ 		.data		= &overflowuid,
 -- 
-2.15.1
+2.16.2
