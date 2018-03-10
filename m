@@ -1,276 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52212 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:43534 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752269AbeC3DOL (ORCPT
+        with ESMTP id S1750884AbeCJJpm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 23:14:11 -0400
-From: Carl Huang <cjhuang@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] ath10k: support MAC address randomization in scan
-Date: Fri, 30 Mar 2018 11:14:00 +0800
-Message-Id: <1522379640-6442-3-git-send-email-cjhuang@codeaurora.org> (sfid-20180330_051422_365627_16B63E67)
-In-Reply-To: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org>
-References: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org>
+        Sat, 10 Mar 2018 04:45:42 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Ramon Fried <rfried@codeaurora.org>
+Cc: k.eugene.e@gmail.com, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org, Eyal Ilsar <eilsar@codeaurora.org>
+Subject: Re: [PATCH] wcn36xx: Add support for FTM WLAN
+References: <20180228071328.5605-1-rfried@codeaurora.org>
+Date: Sat, 10 Mar 2018 11:45:37 +0200
+In-Reply-To: <20180228071328.5605-1-rfried@codeaurora.org> (Ramon Fried's
+        message of "Wed, 28 Feb 2018 09:13:28 +0200")
+Message-ID: <878tb0clha.fsf@kamboji.qca.qualcomm.com> (sfid-20180310_104546_284975_687F56EB)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ath10k reports the random_mac_addr capability to upper layer
-based on the service bit firmware reported. Driver sets the
-spoofed flag in scan_ctrl_flag to firmware if upper layer has
-enabled this feature in scan request.
+Ramon Fried <rfried@codeaurora.org> writes:
 
-Test with QCA6174 hw3.0 and firmware-6.bin_WLAN.RM.4.4.1-00102-QCARMSWP-1,
-but QCA9377 is also affected.
+> From: Eyal Ilsar <eilsar@codeaurora.org>
+>
+> Introduced infrastructure for supporting FTM WLAN in user space exposing
+> the netlink channel from the kernel WLAN driver.
 
-Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/mac.c     | 17 +++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-ops.h | 22 ++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 25 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h | 11 +++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c     |  5 +++++
- drivers/net/wireless/ath/ath10k/wmi.h     |  9 +++++++++
- 6 files changed, 89 insertions(+)
+What's FTM WLAN? Don't assume that people know all the acronyms.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index ebb3f1b..c5cd5e5 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -5699,6 +5699,12 @@ static int ath10k_hw_scan(struct ieee80211_hw *hw,
- 		arg.scan_ctrl_flags |= WMI_SCAN_FLAG_PASSIVE;
- 	}
- 
-+	if (req->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
-+		arg.scan_ctrl_flags |=  WMI_SCAN_ADD_SPOOFED_MAC_IN_PROBE_REQ;
-+		ether_addr_copy(arg.mac_addr.addr, req->mac_addr);
-+		ether_addr_copy(arg.mac_mask.addr, req->mac_addr_mask);
-+	}
-+
- 	if (req->n_channels) {
- 		arg.n_channels = req->n_channels;
- 		for (i = 0; i < arg.n_channels; i++)
-@@ -8397,6 +8403,17 @@ int ath10k_mac_register(struct ath10k *ar)
- 		goto err_dfs_detector_exit;
- 	}
- 
-+	if (test_bit(WMI_SERVICE_SPOOF_MAC_SUPPORT, ar->wmi.svc_map)) {
-+		ret = ath10k_wmi_scan_prob_req_oui(ar, ar->mac_addr);
-+		if (ret) {
-+			ath10k_err(ar, "failed to set prob req oui: %i\n", ret);
-+			goto err_dfs_detector_exit;
-+		}
-+
-+		ar->hw->wiphy->features |=
-+			NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
-+	}
-+
- 	ar->hw->wiphy->cipher_suites = cipher_suites;
- 
- 	/* QCA988x and QCA6174 family chips do not support CCMP-256, GCMP-128
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index 86d083d..cf17d91 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -118,6 +118,8 @@ struct wmi_ops {
- 					 u32 value);
- 	struct sk_buff *(*gen_scan_chan_list)(struct ath10k *ar,
- 					      const struct wmi_scan_chan_list_arg *arg);
-+	struct sk_buff *(*gen_scan_prob_req_oui)(struct ath10k *ar,
-+					 u32 prob_req_oui);
- 	struct sk_buff *(*gen_beacon_dma)(struct ath10k *ar, u32 vdev_id,
- 					  const void *bcn, size_t bcn_len,
- 					  u32 bcn_paddr, bool dtim_zero,
-@@ -892,6 +894,26 @@ ath10k_wmi_scan_chan_list(struct ath10k *ar,
- }
- 
- static inline int
-+ath10k_wmi_scan_prob_req_oui(struct ath10k *ar, const u8 mac_addr[ETH_ALEN])
-+{
-+	struct sk_buff *skb;
-+	u32 prob_req_oui;
-+
-+	prob_req_oui = (((u32)mac_addr[0]) << 16) |
-+		       (((u32)mac_addr[1]) << 8) | mac_addr[2];
-+
-+	if (!ar->wmi.ops->gen_scan_prob_req_oui)
-+		return -EOPNOTSUPP;
-+
-+	skb = ar->wmi.ops->gen_scan_prob_req_oui(ar, prob_req_oui);
-+	if (IS_ERR(skb))
-+		return PTR_ERR(skb);
-+
-+	return ath10k_wmi_cmd_send(ar, skb,
-+			ar->wmi.cmd->scan_prob_req_oui_cmdid);
-+}
-+
-+static inline int
- ath10k_wmi_peer_assoc(struct ath10k *ar,
- 		      const struct wmi_peer_assoc_complete_arg *arg)
- {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index cb0d130..20e3fd4 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1573,6 +1573,8 @@ ath10k_wmi_tlv_op_gen_start_scan(struct ath10k *ar,
- 	cmd->num_bssids = __cpu_to_le32(arg->n_bssids);
- 	cmd->ie_len = __cpu_to_le32(arg->ie_len);
- 	cmd->num_probes = __cpu_to_le32(3);
-+	ether_addr_copy(cmd->mac_addr.addr, arg->mac_addr.addr);
-+	ether_addr_copy(cmd->mac_mask.addr, arg->mac_mask.addr);
- 
- 	/* FIXME: There are some scan flag inconsistencies across firmwares,
- 	 * e.g. WMI-TLV inverts the logic behind the following flag.
-@@ -2420,6 +2422,27 @@ ath10k_wmi_tlv_op_gen_scan_chan_list(struct ath10k *ar,
- }
- 
- static struct sk_buff *
-+ath10k_wmi_tlv_op_gen_scan_prob_req_oui(struct ath10k *ar, u32 prob_req_oui)
-+{
-+	struct wmi_scan_prob_req_oui_cmd *cmd;
-+	struct wmi_tlv *tlv;
-+	struct sk_buff *skb;
-+
-+	skb = ath10k_wmi_alloc_skb(ar, sizeof(*tlv) + sizeof(*cmd));
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
-+
-+	tlv = (void *)skb->data;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_SCAN_PROB_REQ_OUI_CMD);
-+	tlv->len = __cpu_to_le16(sizeof(*cmd));
-+	cmd = (void *)tlv->value;
-+	cmd->prob_req_oui = __cpu_to_le32(prob_req_oui);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv scan prob req oui\n");
-+	return skb;
-+}
-+
-+static struct sk_buff *
- ath10k_wmi_tlv_op_gen_beacon_dma(struct ath10k *ar, u32 vdev_id,
- 				 const void *bcn, size_t bcn_len,
- 				 u32 bcn_paddr, bool dtim_zero,
-@@ -3366,6 +3389,7 @@ static struct wmi_cmd_map wmi_tlv_cmd_map = {
- 	.stop_scan_cmdid = WMI_TLV_STOP_SCAN_CMDID,
- 	.scan_chan_list_cmdid = WMI_TLV_SCAN_CHAN_LIST_CMDID,
- 	.scan_sch_prio_tbl_cmdid = WMI_TLV_SCAN_SCH_PRIO_TBL_CMDID,
-+	.scan_prob_req_oui_cmdid = WMI_TLV_SCAN_PROB_REQ_OUI_CMDID,
- 	.pdev_set_regdomain_cmdid = WMI_TLV_PDEV_SET_REGDOMAIN_CMDID,
- 	.pdev_set_channel_cmdid = WMI_TLV_PDEV_SET_CHANNEL_CMDID,
- 	.pdev_set_param_cmdid = WMI_TLV_PDEV_SET_PARAM_CMDID,
-@@ -3734,6 +3758,7 @@ static const struct wmi_ops wmi_tlv_ops = {
- 	.gen_set_sta_ps = ath10k_wmi_tlv_op_gen_set_sta_ps,
- 	.gen_set_ap_ps = ath10k_wmi_tlv_op_gen_set_ap_ps,
- 	.gen_scan_chan_list = ath10k_wmi_tlv_op_gen_scan_chan_list,
-+	.gen_scan_prob_req_oui = ath10k_wmi_tlv_op_gen_scan_prob_req_oui,
- 	.gen_beacon_dma = ath10k_wmi_tlv_op_gen_beacon_dma,
- 	.gen_pdev_set_wmm = ath10k_wmi_tlv_op_gen_pdev_set_wmm,
- 	.gen_request_stats = ath10k_wmi_tlv_op_gen_request_stats,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-index 2889225..e8ec1c3 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-@@ -1695,6 +1695,15 @@ struct wmi_tlv_scan_chan_list_cmd {
- 	__le32 num_scan_chans;
- } __packed;
- 
-+struct wmi_scan_prob_req_oui_cmd {
-+/* OUI to be used in Probe Request frame when random MAC address is
-+ * requested part of scan parameters. This is applied to both FW internal
-+ * scans and host initiated scans. Host can request for random MAC address
-+ * with WMI_SCAN_ADD_SPOOFED_MAC_IN_PROBE_REQ flag.
-+ */
-+	__le32 prob_req_oui;
-+}  __packed;
-+
- struct wmi_tlv_start_scan_cmd {
- 	struct wmi_start_scan_common common;
- 	__le32 burst_duration_ms;
-@@ -1703,6 +1712,8 @@ struct wmi_tlv_start_scan_cmd {
- 	__le32 num_ssids;
- 	__le32 ie_len;
- 	__le32 num_probes;
-+	struct wmi_mac_addr mac_addr;
-+	struct wmi_mac_addr mac_mask;
- } __packed;
- 
- struct wmi_tlv_vdev_start_cmd {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 4aca166..04b5606 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -41,6 +41,7 @@ static struct wmi_cmd_map wmi_cmd_map = {
- 	.stop_scan_cmdid = WMI_STOP_SCAN_CMDID,
- 	.scan_chan_list_cmdid = WMI_SCAN_CHAN_LIST_CMDID,
- 	.scan_sch_prio_tbl_cmdid = WMI_SCAN_SCH_PRIO_TBL_CMDID,
-+	.scan_prob_req_oui_cmdid = WMI_CMD_UNSUPPORTED,
- 	.pdev_set_regdomain_cmdid = WMI_PDEV_SET_REGDOMAIN_CMDID,
- 	.pdev_set_channel_cmdid = WMI_PDEV_SET_CHANNEL_CMDID,
- 	.pdev_set_param_cmdid = WMI_PDEV_SET_PARAM_CMDID,
-@@ -205,6 +206,7 @@ static struct wmi_cmd_map wmi_10x_cmd_map = {
- 	.stop_scan_cmdid = WMI_10X_STOP_SCAN_CMDID,
- 	.scan_chan_list_cmdid = WMI_10X_SCAN_CHAN_LIST_CMDID,
- 	.scan_sch_prio_tbl_cmdid = WMI_CMD_UNSUPPORTED,
-+	.scan_prob_req_oui_cmdid = WMI_CMD_UNSUPPORTED,
- 	.pdev_set_regdomain_cmdid = WMI_10X_PDEV_SET_REGDOMAIN_CMDID,
- 	.pdev_set_channel_cmdid = WMI_10X_PDEV_SET_CHANNEL_CMDID,
- 	.pdev_set_param_cmdid = WMI_10X_PDEV_SET_PARAM_CMDID,
-@@ -371,6 +373,7 @@ static struct wmi_cmd_map wmi_10_2_4_cmd_map = {
- 	.stop_scan_cmdid = WMI_10_2_STOP_SCAN_CMDID,
- 	.scan_chan_list_cmdid = WMI_10_2_SCAN_CHAN_LIST_CMDID,
- 	.scan_sch_prio_tbl_cmdid = WMI_CMD_UNSUPPORTED,
-+	.scan_prob_req_oui_cmdid = WMI_CMD_UNSUPPORTED,
- 	.pdev_set_regdomain_cmdid = WMI_10_2_PDEV_SET_REGDOMAIN_CMDID,
- 	.pdev_set_channel_cmdid = WMI_10_2_PDEV_SET_CHANNEL_CMDID,
- 	.pdev_set_param_cmdid = WMI_10_2_PDEV_SET_PARAM_CMDID,
-@@ -537,6 +540,7 @@ static struct wmi_cmd_map wmi_10_4_cmd_map = {
- 	.stop_scan_cmdid = WMI_10_4_STOP_SCAN_CMDID,
- 	.scan_chan_list_cmdid = WMI_10_4_SCAN_CHAN_LIST_CMDID,
- 	.scan_sch_prio_tbl_cmdid = WMI_10_4_SCAN_SCH_PRIO_TBL_CMDID,
-+	.scan_prob_req_oui_cmdid = WMI_CMD_UNSUPPORTED,
- 	.pdev_set_regdomain_cmdid = WMI_10_4_PDEV_SET_REGDOMAIN_CMDID,
- 	.pdev_set_channel_cmdid = WMI_10_4_PDEV_SET_CHANNEL_CMDID,
- 	.pdev_set_param_cmdid = WMI_10_4_PDEV_SET_PARAM_CMDID,
-@@ -1334,6 +1338,7 @@ static struct wmi_cmd_map wmi_10_2_cmd_map = {
- 	.stop_scan_cmdid = WMI_10_2_STOP_SCAN_CMDID,
- 	.scan_chan_list_cmdid = WMI_10_2_SCAN_CHAN_LIST_CMDID,
- 	.scan_sch_prio_tbl_cmdid = WMI_CMD_UNSUPPORTED,
-+	.scan_prob_req_oui_cmdid = WMI_CMD_UNSUPPORTED,
- 	.pdev_set_regdomain_cmdid = WMI_10_2_PDEV_SET_REGDOMAIN_CMDID,
- 	.pdev_set_channel_cmdid = WMI_10_2_PDEV_SET_CHANNEL_CMDID,
- 	.pdev_set_param_cmdid = WMI_10_2_PDEV_SET_PARAM_CMDID,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 6919618..3dd8f76 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -767,6 +767,7 @@ struct wmi_cmd_map {
- 	u32 stop_scan_cmdid;
- 	u32 scan_chan_list_cmdid;
- 	u32 scan_sch_prio_tbl_cmdid;
-+	u32 scan_prob_req_oui_cmdid;
- 	u32 pdev_set_regdomain_cmdid;
- 	u32 pdev_set_channel_cmdid;
- 	u32 pdev_set_param_cmdid;
-@@ -3144,6 +3145,8 @@ struct wmi_start_scan_arg {
- 	u16 channels[64];
- 	struct wmi_ssid_arg ssids[WLAN_SCAN_PARAMS_MAX_SSID];
- 	struct wmi_bssid_arg bssids[WLAN_SCAN_PARAMS_MAX_BSSID];
-+	struct wmi_mac_addr mac_addr;
-+	struct wmi_mac_addr mac_mask;
- };
- 
- /* scan control flags */
-@@ -3167,6 +3170,12 @@ struct wmi_start_scan_arg {
-  */
- #define WMI_SCAN_CONTINUE_ON_ERROR 0x80
- 
-+/* Use random MAC address for TA for Probe Request frame and add
-+ * OUI specified by WMI_SCAN_PROB_REQ_OUI_CMDID to the Probe Request frame.
-+ * if OUI is not set by WMI_SCAN_PROB_REQ_OUI_CMDID then the flag is ignored.
-+ */
-+#define WMI_SCAN_ADD_SPOOFED_MAC_IN_PROBE_REQ   0x1000
-+
- /* WMI_SCAN_CLASS_MASK must be the same value as IEEE80211_SCAN_CLASS_MASK */
- #define WMI_SCAN_CLASS_MASK 0xFF000000
- 
+This included:
+> 1) Registered wcn36xx driver to testmode callback from netlink
+> 2) Added testmode callback implementation to handle incoming FTM commands
+> 3) Added FTM command packet structure
+> 4) Added handling for GET_BUILD_RELEASE_NUMBER (msgid=0x32A2)
+> 5) Added generic handling for all PTT_MSG packets
+
+I don't remember the english grammar terminology, but in the commit log
+use the form "register", "add" instead of "registered", "added".
+
+> +struct wcn36xx_hal_process_ptt_msg_rsp_msg {
+> +	struct wcn36xx_hal_msg_header header;
+> +
+> +	/* FTM Command response status */
+> +	u32   ptt_msg_resp_status;
+
+Unnecessary whitespace after u32.
+
+> +static int wcn36xx_smd_process_ptt_msg_rsp(void *buf, size_t len,
+> +			void **p_ptt_rsp_msg)
+> +{
+> +	struct wcn36xx_hal_process_ptt_msg_rsp_msg *rsp;
+> +	int ret = 0;
+> +
+> +	ret = wcn36xx_smd_rsp_status_check(buf, len);
+> +	if (ret)
+> +		return ret;
+> +	rsp = (struct wcn36xx_hal_process_ptt_msg_rsp_msg *)buf;
+> +	wcn36xx_dbg(WCN36XX_DBG_HAL, "process ptt msg responded with length %d\n",
+> +			rsp->header.len);
+> +	wcn36xx_dbg_dump(WCN36XX_DBG_HAL_DUMP, "HAL_PTT_MSG_RSP:", rsp->ptt_msg,
+> +			rsp->header.len - sizeof(rsp->ptt_msg_resp_status));
+> +	if (rsp->header.len > 0) {
+> +		*p_ptt_rsp_msg = kmalloc(rsp->header.len, GFP_ATOMIC);
+> +		memcpy(*p_ptt_rsp_msg, rsp->ptt_msg, rsp->header.len);
+> +	}
+> +	return ret;
+> +}
+
+Adding few empty lines to the function would make it more readable.
+
+> @@ -2330,6 +2399,7 @@ int wcn36xx_smd_rsp_process(struct rpmsg_device *rpdev,
+>  	struct ieee80211_hw *hw = priv;
+>  	struct wcn36xx *wcn = hw->priv;
+>  	struct wcn36xx_hal_ind_msg *msg_ind;
+> +
+>  	wcn36xx_dbg_dump(WCN36XX_DBG_SMD_DUMP, "SMD <<< ", buf, len);
+
+Unrelated change.
+
+> +int wcn36xx_tm_cmd(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+> +		  void *data, int len)
+> +{
+> +	struct wcn36xx *wcn = hw->priv;
+> +	struct nlattr *tb[WCN36XX_TM_ATTR_MAX + 1];
+> +	int ret = 0;
+> +	unsigned short attr;
+> +
+> +	wcn36xx_dbg_dump(WCN36XX_DBG_TESTMODE_DUMP, "Data:", data, len);
+> +	ret = nla_parse(tb, WCN36XX_TM_ATTR_MAX, data, len,
+> +			wcn36xx_tm_policy, NULL);
+> +	if (ret)
+> +		return ret;
+> +
+> +	if (!tb[WCN36XX_TM_ATTR_CMD])
+> +		return -EINVAL;
+> +
+> +	attr = nla_get_u16(tb[WCN36XX_TM_ATTR_CMD]);
+> +
+> +	switch (attr) {
+> +	case WCN36XX_TM_CMD_START:
+> +	case WCN36XX_TM_CMD_STOP:
+> +		// N/A to this driver as it does not need to switch state
+> +		break;
+
+[...]
+
+> +enum wcn36xx_tm_cmd {
+> +	/* For backwards compatibility
+> +	 */
+> +	WCN36XX_TM_CMD_START = 1,
+> +
+> +	/* For backwards compatibility
+> +	 */
+> +	WCN36XX_TM_CMD_STOP = 2,
+
+This looks odd. If wcn36xx does not need START and STOP commands why add
+those in the first place?
+
 -- 
-2.7.4
+Kalle Valo
