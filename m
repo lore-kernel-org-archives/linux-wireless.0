@@ -1,216 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42790 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750813AbeCZFj2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 01:39:28 -0400
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org, bjorn.andersson@linaro.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH 03/12] ath10k: Add ath10k QMI client driver
-Date: Mon, 26 Mar 2018 11:09:21 +0530
-Message-Id: <1522042761-25716-1-git-send-email-govinds@codeaurora.org> (sfid-20180326_073931_902612_16D7F621)
+Received: from mail.kernel.org ([198.145.29.99]:50666 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932107AbeCJOP3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Mar 2018 09:15:29 -0500
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
+        kubakici@wp.pl, linux-wireless@vger.kernel.org,
+        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
+        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
+        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
+        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v3 13/20] test_firmware: test three firmware kernel configs using a proc knob
+Date: Sat, 10 Mar 2018 06:14:54 -0800
+Message-Id: <20180310141501.2214-14-mcgrof@kernel.org> (sfid-20180310_151654_811774_240F14DB)
+In-Reply-To: <20180310141501.2214-1-mcgrof@kernel.org>
+References: <20180310141501.2214-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add QMI client driver for Q6 integrated WLAN connectivity
-subsystem. This module is responsible for communicating WLAN
-control messages to FW over QUALCOMM MSM Interface (QMI).
+Since we now have knobs to twiddle what used to be set on kernel
+configurations we can build one base kernel configuration and modify
+behaviour to mimic such kernel configurations to test them.
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
+Provided you build a kernel with:
+
+CONFIG_TEST_FIRMWARE=y
+CONFIG_FW_LOADER=y
+CONFIG_FW_LOADER_USER_HELPER=y
+CONFIG_IKCONFIG=y
+CONFIG_IKCONFIG_PROC=y
+
+We should now be able test all possible kernel configurations
+when FW_LOADER=y. Note that when FW_LOADER=m we just don't provide
+the built-in functionality of the built-in firmware.
+
+If you're on an old kernel and either don't have /proc/config.gz
+(CONFIG_IKCONFIG_PROC) or haven't enabled CONFIG_FW_LOADER_USER_HELPER
+we cannot run these dynamic tests, so just run both scripts just
+as we used to before making blunt assumptions about your setup
+and requirements exactly as we did before.
+
+Acked-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/Kconfig  |   2 +-
- drivers/net/wireless/ath/ath10k/Makefile |   4 +
- drivers/net/wireless/ath/ath10k/qmi.c    | 121 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/qmi.h    |  24 ++++++
- 4 files changed, 150 insertions(+), 1 deletion(-)
- create mode 100644 drivers/net/wireless/ath/ath10k/qmi.c
- create mode 100644 drivers/net/wireless/ath/ath10k/qmi.h
+ tools/testing/selftests/firmware/Makefile        |  2 +-
+ tools/testing/selftests/firmware/fw_lib.sh       | 51 +++++++++++++++++
+ tools/testing/selftests/firmware/fw_run_tests.sh | 70 ++++++++++++++++++++++++
+ 3 files changed, 122 insertions(+), 1 deletion(-)
+ create mode 100755 tools/testing/selftests/firmware/fw_run_tests.sh
 
-diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
-index 84f071a..9978ad5e 100644
---- a/drivers/net/wireless/ath/ath10k/Kconfig
-+++ b/drivers/net/wireless/ath/ath10k/Kconfig
-@@ -42,7 +42,7 @@ config ATH10K_USB
+diff --git a/tools/testing/selftests/firmware/Makefile b/tools/testing/selftests/firmware/Makefile
+index 1894d625af2d..826f38d5dd19 100644
+--- a/tools/testing/selftests/firmware/Makefile
++++ b/tools/testing/selftests/firmware/Makefile
+@@ -3,7 +3,7 @@
+ # No binaries, but make sure arg-less "make" doesn't trigger "run_tests"
+ all:
  
- config ATH10K_SNOC
-         tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
--        depends on ATH10K && ARCH_QCOM
-+        depends on ATH10K && ARCH_QCOM && QCOM_QMI_HELPERS
-         ---help---
-           This module adds support for integrated WCN3990 chip connected
-           to system NOC(SNOC). Currently work in progress and will not
-diff --git a/drivers/net/wireless/ath/ath10k/Makefile b/drivers/net/wireless/ath/ath10k/Makefile
-index 44d60a6..1730d1d 100644
---- a/drivers/net/wireless/ath/ath10k/Makefile
-+++ b/drivers/net/wireless/ath/ath10k/Makefile
-@@ -38,5 +38,9 @@ ath10k_usb-y += usb.o
- obj-$(CONFIG_ATH10K_SNOC) += ath10k_snoc.o
- ath10k_snoc-y += snoc.o
+-TEST_PROGS := fw_filesystem.sh fw_fallback.sh
++TEST_PROGS := fw_run_tests.sh
  
-+obj-$(CONFIG_ATH10K_SNOC) += ath10k_qmi.o
-+ath10k_qmi-y += qmi.o \
-+		qmi_svc_v01.o
+ include ../lib.mk
+ 
+diff --git a/tools/testing/selftests/firmware/fw_lib.sh b/tools/testing/selftests/firmware/fw_lib.sh
+index e3cc4483fdba..98dceb847ba0 100755
+--- a/tools/testing/selftests/firmware/fw_lib.sh
++++ b/tools/testing/selftests/firmware/fw_lib.sh
+@@ -47,6 +47,34 @@ check_setup()
+ {
+ 	HAS_FW_LOADER_USER_HELPER="$(kconfig_has CONFIG_FW_LOADER_USER_HELPER=y)"
+ 	HAS_FW_LOADER_USER_HELPER_FALLBACK="$(kconfig_has CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y)"
++	PROC_FW_IGNORE_SYSFS_FALLBACK="0"
++	PROC_FW_FORCE_SYSFS_FALLBACK="0"
 +
- # for tracing framework to find trace.h
- CFLAGS_trace.o := -I$(src)
-diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
-new file mode 100644
-index 0000000..2235182
++	if [ -z $PROC_SYS_DIR ]; then
++		PROC_SYS_DIR="/proc/sys/kernel"
++	fi
++
++	FW_PROC="${PROC_SYS_DIR}/firmware_config"
++	FW_FORCE_SYSFS_FALLBACK="$FW_PROC/force_sysfs_fallback"
++	FW_IGNORE_SYSFS_FALLBACK="$FW_PROC/ignore_sysfs_fallback"
++
++	if [ -f $FW_FORCE_SYSFS_FALLBACK ]; then
++		PROC_FW_FORCE_SYSFS_FALLBACK="$(cat $FW_FORCE_SYSFS_FALLBACK)"
++	fi
++
++	if [ -f $FW_IGNORE_SYSFS_FALLBACK ]; then
++		PROC_FW_IGNORE_SYSFS_FALLBACK="$(cat $FW_IGNORE_SYSFS_FALLBACK)"
++	fi
++
++	if [ "$PROC_FW_FORCE_SYSFS_FALLBACK" = "1" ]; then
++		HAS_FW_LOADER_USER_HELPER="yes"
++		HAS_FW_LOADER_USER_HELPER_FALLBACK="yes"
++	fi
++
++	if [ "$PROC_FW_IGNORE_SYSFS_FALLBACK" = "1" ]; then
++		HAS_FW_LOADER_USER_HELPER_FALLBACK="no"
++		HAS_FW_LOADER_USER_HELPER="no"
++	fi
+ 
+ 	if [ "$HAS_FW_LOADER_USER_HELPER" = "yes" ]; then
+ 	       OLD_TIMEOUT="$(cat /sys/class/firmware/timeout)"
+@@ -76,6 +104,28 @@ setup_tmp_file()
+ 	fi
+ }
+ 
++proc_set_force_sysfs_fallback()
++{
++	if [ -f $FW_FORCE_SYSFS_FALLBACK ]; then
++		echo -n $1 > $FW_FORCE_SYSFS_FALLBACK
++		check_setup
++	fi
++}
++
++proc_set_ignore_sysfs_fallback()
++{
++	if [ -f $FW_IGNORE_SYSFS_FALLBACK ]; then
++		echo -n $1 > $FW_IGNORE_SYSFS_FALLBACK
++		check_setup
++	fi
++}
++
++proc_restore_defaults()
++{
++	proc_set_force_sysfs_fallback 0
++	proc_set_ignore_sysfs_fallback 0
++}
++
+ test_finish()
+ {
+ 	if [ "$HAS_FW_LOADER_USER_HELPER" = "yes" ]; then
+@@ -93,6 +143,7 @@ test_finish()
+ 	if [ -d $FWPATH ]; then
+ 		rm -rf "$FWPATH"
+ 	fi
++	proc_restore_defaults
+ }
+ 
+ kconfig_has()
+diff --git a/tools/testing/selftests/firmware/fw_run_tests.sh b/tools/testing/selftests/firmware/fw_run_tests.sh
+new file mode 100755
+index 000000000000..06d638e9dc62
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/qmi.c
-@@ -0,0 +1,121 @@
-+/*
-+ * Copyright (c) 2018 The Linux Foundation. All rights reserved.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
++++ b/tools/testing/selftests/firmware/fw_run_tests.sh
+@@ -0,0 +1,70 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-2.0
 +
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/debugfs.h>
-+#include <linux/device.h>
-+#include <linux/platform_device.h>
-+#include <linux/qrtr.h>
-+#include <linux/net.h>
-+#include <linux/completion.h>
-+#include <linux/idr.h>
-+#include <linux/string.h>
-+#include <net/sock.h>
-+#include <linux/soc/qcom/qmi.h>
-+#include "qmi.h"
-+#include "qmi_svc_v01.h"
++# This runs all known tests across all known possible configurations we could
++# emulate in one run.
 +
-+static struct ath10k_qmi *qmi;
++set -e
 +
-+static int ath10k_qmi_new_server(struct qmi_handle *qmi_hdl,
-+				 struct qmi_service *service)
++TEST_DIR=$(dirname $0)
++source $TEST_DIR/fw_lib.sh
++
++export HAS_FW_LOADER_USER_HELPER=""
++export HAS_FW_LOADER_USER_HELPER_FALLBACK=""
++
++run_tests()
 +{
-+	return 0;
++	proc_set_force_sysfs_fallback $1
++	proc_set_ignore_sysfs_fallback $2
++	$TEST_DIR/fw_filesystem.sh
++
++	proc_set_force_sysfs_fallback $1
++	proc_set_ignore_sysfs_fallback $2
++	$TEST_DIR/fw_fallback.sh
 +}
 +
-+static void ath10k_qmi_del_server(struct qmi_handle *qmi_hdl,
-+				  struct qmi_service *service)
++run_test_config_0001()
 +{
++	echo "-----------------------------------------------------"
++	echo "Running kernel configuration test 1 -- rare"
++	echo "Emulates:"
++	echo "CONFIG_FW_LOADER=y"
++	echo "CONFIG_FW_LOADER_USER_HELPER=n"
++	echo "CONFIG_FW_LOADER_USER_HELPER_FALLBACK=n"
++	run_tests 0 1
 +}
 +
-+static struct qmi_ops ath10k_qmi_ops = {
-+	.new_server = ath10k_qmi_new_server,
-+	.del_server = ath10k_qmi_del_server,
-+};
-+
-+static int ath10k_qmi_probe(struct platform_device *pdev)
++run_test_config_0002()
 +{
-+	int ret;
-+
-+	qmi = devm_kzalloc(&pdev->dev, sizeof(*qmi),
-+			   GFP_KERNEL);
-+	if (!qmi)
-+		return -ENOMEM;
-+
-+	qmi->pdev = pdev;
-+	platform_set_drvdata(pdev, qmi);
-+	ret = qmi_handle_init(&qmi->qmi_hdl,
-+			      WLFW_BDF_DOWNLOAD_REQ_MSG_V01_MAX_MSG_LEN,
-+			      &ath10k_qmi_ops, NULL);
-+	if (ret < 0)
-+		goto err;
-+
-+	ret = qmi_add_lookup(&qmi->qmi_hdl, WLFW_SERVICE_ID_V01,
-+			     WLFW_SERVICE_VERS_V01, 0);
-+	if (ret < 0)
-+		goto err;
-+
-+	pr_debug("qmi client driver probed successfully\n");
-+
-+	return 0;
-+
-+err:
-+	return ret;
++	echo "-----------------------------------------------------"
++	echo "Running kernel configuration test 2 -- distro"
++	echo "Emulates:"
++	echo "CONFIG_FW_LOADER=y"
++	echo "CONFIG_FW_LOADER_USER_HELPER=y"
++	echo "CONFIG_FW_LOADER_USER_HELPER_FALLBACK=n"
++	proc_set_ignore_sysfs_fallback 0
++	run_tests 0 0
 +}
 +
-+static int ath10k_qmi_remove(struct platform_device *pdev)
++run_test_config_0003()
 +{
-+	struct ath10k_qmi *qmi = platform_get_drvdata(pdev);
-+
-+	qmi_handle_release(&qmi->qmi_hdl);
-+
-+	return 0;
++	echo "-----------------------------------------------------"
++	echo "Running kernel configuration test 3 -- android"
++	echo "Emulates:"
++	echo "CONFIG_FW_LOADER=y"
++	echo "CONFIG_FW_LOADER_USER_HELPER=y"
++	echo "CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y"
++	run_tests 1 0
 +}
 +
-+static const struct of_device_id ath10k_qmi_dt_match[] = {
-+	{.compatible = "qcom,ath10k-qmi"},
-+	{}
-+};
++check_mods
++check_setup
 +
-+MODULE_DEVICE_TABLE(of, ath10k_qmi_dt_match);
-+
-+static struct platform_driver ath10k_qmi_clinet = {
-+	.probe  = ath10k_qmi_probe,
-+	.remove = ath10k_qmi_remove,
-+	.driver = {
-+		.name = "ath10k QMI client",
-+		.owner = THIS_MODULE,
-+		.of_match_table = ath10k_qmi_dt_match,
-+	},
-+};
-+
-+static int __init ath10k_qmi_init(void)
-+{
-+	return platform_driver_register(&ath10k_qmi_clinet);
-+}
-+
-+static void __exit ath10k_qmi_exit(void)
-+{
-+	platform_driver_unregister(&ath10k_qmi_clinet);
-+}
-+
-+module_init(ath10k_qmi_init);
-+module_exit(ath10k_qmi_exit);
-+
-+MODULE_AUTHOR("Qualcomm");
-+MODULE_LICENSE("Dual BSD/GPL");
-+MODULE_DESCRIPTION("ath10k QMI client driver");
-diff --git a/drivers/net/wireless/ath/ath10k/qmi.h b/drivers/net/wireless/ath/ath10k/qmi.h
-new file mode 100644
-index 0000000..ad256ef
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/qmi.h
-@@ -0,0 +1,24 @@
-+/*
-+ * Copyright (c) 2018 The Linux Foundation. All rights reserved.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+#ifndef _QMI_H_
-+#define _QMI_H_
-+
-+struct ath10k_qmi {
-+	struct platform_device *pdev;
-+	struct qmi_handle qmi_hdl;
-+	struct sockaddr_qrtr sq;
-+};
-+#endif /* _QMI_H_ */
++if [ -f $FW_FORCE_SYSFS_FALLBACK ]; then
++	run_test_config_0001
++	run_test_config_0002
++	run_test_config_0003
++else
++	echo "Running basic kernel configuration, working with your config"
++	run_test
++fi
 -- 
-1.9.1
+2.16.2
