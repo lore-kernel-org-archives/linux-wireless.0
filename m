@@ -1,65 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:44446 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031277AbeCAOU6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:20:58 -0500
-Received: by mail-qt0-f193.google.com with SMTP id g60so7663129qtd.11
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:20:58 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 12/52] ath: Add regulatory mapping for Tanzania
-Date: Thu,  1 Mar 2018 15:18:22 +0100
-Message-Id: <20180301141902.24824-13-sven.eckelmann@openmesh.com> (sfid-20180301_153349_009086_50A61665)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+Received: from mail.kernel.org ([198.145.29.99]:51024 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932107AbeCJOPh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Mar 2018 09:15:37 -0500
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
+        kubakici@wp.pl, linux-wireless@vger.kernel.org,
+        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
+        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
+        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
+        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v3 20/20] mt7601u: use request_firmware_cache() to address cache on reboot
+Date: Sat, 10 Mar 2018 06:15:01 -0800
+Message-Id: <20180310141501.2214-21-mcgrof@kernel.org> (sfid-20180310_151552_593498_681AB7E1)
+In-Reply-To: <20180310141501.2214-1-mcgrof@kernel.org>
+References: <20180310141501.2214-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The country code is used by the ath to detect the ISO 3166-1 alpha-2 name
-and to select the correct conformance test limits (CTL) for a country. If
-the country isn't available and it is still programmed in the EEPROM then
-it will cause an error and stop the initialization with:
+request_firmware_cache() will ensure the firmware is available on resume
+from suspend if on reboot the device retains the firmware.
 
-  Invalid EEPROM contents
+This optimization is in place given otherwise on reboot we have to
+reload the firmware, the opmization saves us about max 1s, minimum 10ms.
 
-The current CTL mappings for this country are:
+Cantabile has reported back this fixes his woes with both suspend and
+hibernation.
 
-* 2.4GHz: ETSI
-* 5GHz: FCC
-
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Reported-by: Cantabile <cantabile.desu@gmail.com>
+Tested-by: Cantabile <cantabile.desu@gmail.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- drivers/net/wireless/ath/regd.h        | 1 +
- drivers/net/wireless/ath/regd_common.h | 1 +
- 2 files changed, 2 insertions(+)
+ drivers/net/wireless/mediatek/mt7601u/mcu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/regd.h b/drivers/net/wireless/ath/regd.h
-index 9fe4857baaae..191502ff043d 100644
---- a/drivers/net/wireless/ath/regd.h
-+++ b/drivers/net/wireless/ath/regd.h
-@@ -176,6 +176,7 @@ enum CountryCode {
- 	CTRY_SWITZERLAND = 756,
- 	CTRY_SYRIA = 760,
- 	CTRY_TAIWAN = 158,
-+	CTRY_TANZANIA = 834,
- 	CTRY_THAILAND = 764,
- 	CTRY_TRINIDAD_Y_TOBAGO = 780,
- 	CTRY_TUNISIA = 788,
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index 4c41308e39c1..27b1c76e912c 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -468,6 +468,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_SWITZERLAND, ETSI1_WORLD, "CH"},
- 	{CTRY_SYRIA, NULL1_WORLD, "SY"},
- 	{CTRY_TAIWAN, APL3_FCCA, "TW"},
-+	{CTRY_TANZANIA, APL1_WORLD, "TZ"},
- 	{CTRY_THAILAND, FCC3_WORLD, "TH"},
- 	{CTRY_TRINIDAD_Y_TOBAGO, FCC3_WORLD, "TT"},
- 	{CTRY_TUNISIA, ETSI3_WORLD, "TN"},
+diff --git a/drivers/net/wireless/mediatek/mt7601u/mcu.c b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+index 65a8004418ea..b90456a4b4d7 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/mcu.c
++++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+@@ -421,7 +421,7 @@ static int mt7601u_load_firmware(struct mt7601u_dev *dev)
+ 					 MT_USB_DMA_CFG_TX_BULK_EN));
+ 
+ 	if (firmware_running(dev))
+-		return 0;
++		return request_firmware_cache(dev->dev, MT7601U_FIRMWARE);
+ 
+ 	ret = request_firmware(&fw, MT7601U_FIRMWARE, dev->dev);
+ 	if (ret)
 -- 
-2.11.0
+2.16.2
