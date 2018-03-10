@@ -1,92 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:35352 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752771AbeC2LbN (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:36760 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751194AbeCJXGI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 07:31:13 -0400
-Received: by mail-wm0-f42.google.com with SMTP id r82so11032129wme.0
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2018 04:31:12 -0700 (PDT)
-Subject: Re: [PATCH] nl80211: Update ERP info using
- NL80211_CMD_UPDATE_CONNECT_PARAMS
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Vidyullatha Kanchanapally <vidyullatha@codeaurora.org>
-References: <1508923248-18848-1-git-send-email-vidyullatha@codeaurora.org>
- <1512990779.26976.69.camel@sipsolutions.net> <5ABCCA33.8070501@broadcom.com>
- <1522322166.5932.13.camel@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
-        amarnath@qti.qualcomm.com, usdutt@qti.qualcomm.com,
-        vamsin@qti.qualcomm.com, Jithu Jance <jithu.jance@broadcom.com>,
-        Eylon Pedinovsky <eylon.pedinovsky@broadcom.com>
+        Sat, 10 Mar 2018 18:06:08 -0500
+Received: by mail-wm0-f66.google.com with SMTP id 188so9781846wme.1
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Mar 2018 15:06:08 -0800 (PST)
+Subject: Re: [PATCH] drivers: net: wireless: ath: ath9: dfs: remove VLA usage
+To: Andreas Christoforou <andreaschristofo@gmail.com>,
+        keescook@chromium.org
+References: <1520598613-3641-1-git-send-email-andreaschristofo@gmail.com>
+Cc: kernel-hardening@lists.openwall.com,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5ABCCE7D.3050702@broadcom.com> (sfid-20180329_133138_938313_5F5A001F)
-Date: Thu, 29 Mar 2018 13:31:09 +0200
+Message-ID: <5AA464DE.90100@broadcom.com> (sfid-20180311_000634_895089_124469C8)
+Date: Sun, 11 Mar 2018 00:06:06 +0100
 MIME-Version: 1.0
-In-Reply-To: <1522322166.5932.13.camel@sipsolutions.net>
+In-Reply-To: <1520598613-3641-1-git-send-email-andreaschristofo@gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ Jithu, Eylon
+On 3/9/2018 1:30 PM, Andreas Christoforou wrote:
+> The kernel would like to have all stack VLA usage removed.
 
-On 3/29/2018 1:16 PM, Johannes Berg wrote:
-> Hi Arend,
->
->> Picking up a somewhat old thread as I did not see a follow-up on this
->> patch. I got queried about it over here by our FILS team. So what is
->> needed for this patch to pass the bar?
->
-> That's indeed a bit old :-)
->
->>>> + * @UPDATE_FILS_ERP_INFO: Indicates that FILS connection parameters (realm,
->>>> + *	username, erp sequence number and rrk) are updated
->>>> + * @UPDATE_AUTH_TYPE: Indicates that Authentication type is updated
->>>
->>> These are new here, but you don't know if they were actually supported:
->>>
->>>> +	if (wiphy_ext_feature_isset(&rdev->wiphy,
->>>> +				    NL80211_EXT_FEATURE_FILS_SK_OFFLOAD) &&
->>>
->>> here.
->>
->> The description of the FILS_SK_OFFLOAD currently says:
->>
->>    * @NL80211_EXT_FEATURE_FILS_SK_OFFLOAD: Driver SME supports FILS
->> shared key
->>    *      authentication with %NL80211_CMD_CONNECT.
->>
->> Are you suggesting a new flag to cover the new update attributes?
->
-> [snip]
->
->>> Again, how do you know the driver will actually look at
->>> UPDATE_AUTH_TYPE?
->>
->> If they don't they are broken, right? And if they are broken, the
->> connection will drop and regular connect will happen anyway, no?
->>
->> We could add a new flag to signal driver will handle the extra
->> parameters in UPDATE_CONNECT_PARAMS, but it is not clear why it would be
->> needed. Seems to me user-space has all the info needed with the existing
->> flag(s).
->
-> Agree, and we don't even have any drivers that are setting the
-> FILS_SK_OFFLOAD flag anyway, so we can still redefine its semantics to
-> some extent.
+I think there was a remark made earlier to give more explanation here. 
+It should explain why we want "VLA on stack" removed.
 
-There is some implied behavior about the UPDATE_AUTH_TYPE. The 
-FILS_SK_OFFLOAD only seems to cover NL80211_AUTHTYPE_FILS_SK. So to me 
-it seems that changing the auth type really means the driver should give 
-up on roaming and let user-space handle it.
-
-> So yeah, I'd argue that what the patch needed was somebody taking a
-> critical look at my review ;-)
+> Signed-off-by: Andreas Christoforou <andreaschristofo@gmail.com>
+> ---
+>   drivers/net/wireless/ath/ath9k/dfs.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
 >
-> And perhaps fixing the weird flags thing I pointed out.
+> diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
+> index 6fee9a4..cfb0f84 100644
+> --- a/drivers/net/wireless/ath/ath9k/dfs.c
+> +++ b/drivers/net/wireless/ath/ath9k/dfs.c
+> @@ -41,7 +41,6 @@ static const int BIN_DELTA_MAX		= 10;
+>
+>   /* we need at least 3 deltas / 4 samples for a reliable chirp detection */
+>   #define NUM_DIFFS 3
+> -static const int FFT_NUM_SAMPLES	= (NUM_DIFFS + 1);
+>
+>   /* Threshold for difference of delta peaks */
+>   static const int MAX_DIFF		= 2;
+> @@ -101,7 +100,7 @@ static bool ath9k_check_chirping(struct ath_softc *sc, u8 *data,
+>   				 int datalen, bool is_ctl, bool is_ext)
+>   {
+>   	int i;
+> -	int max_bin[FFT_NUM_SAMPLES];
+> +	int max_bin[NUM_DIFFS + 1];
 
-Yup. That made sense.
-
-Also there is a DOC section about FILS shared key authentication 
-offload" so I suppose that should be extended as well.
+Just wondering. Is this actually a VLA. FFT_NUM_SAMPLES was static const 
+so not really going to show a lot of variation. This array will always 
+have the same size on the stack.
 
 Regards,
 Arend
