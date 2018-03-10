@@ -1,56 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:47662 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751269AbeCTRiE (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38702 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750884AbeCJI4i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Mar 2018 13:38:04 -0400
-Date: Tue, 20 Mar 2018 18:38:01 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
-        kubakici@wp.pl, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v3 19/20] firmware: add request_firmware_cache() to help
- with cache on reboot
-Message-ID: <20180320173801.GA25040@kroah.com> (sfid-20180320_183820_836376_5EC70D42)
-References: <20180310141501.2214-1-mcgrof@kernel.org>
- <20180310141501.2214-20-mcgrof@kernel.org>
- <20180320083055.GA21640@kroah.com>
- <20180320173409.GD4449@wotan.suse.de>
+        Sat, 10 Mar 2018 03:56:38 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arjav Parikh <parikharjav24@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Dependency required for wil6210 kernel module
+References: <CADoF8+AU991ut3889d0QsxVfKsQ_YXAYQBhQPzLWmxNE1Kn_WA@mail.gmail.com>
+        <87bmfw49kq.fsf@purkki.adurom.net>
+        <CADoF8+Aqk8OSEnby5k6Wq1fyXRtaPwUgtTwxrWmkW_7HBNZiTA@mail.gmail.com>
+Date: Sat, 10 Mar 2018 10:56:34 +0200
+In-Reply-To: <CADoF8+Aqk8OSEnby5k6Wq1fyXRtaPwUgtTwxrWmkW_7HBNZiTA@mail.gmail.com>
+        (Arjav Parikh's message of "Sat, 10 Mar 2018 14:19:37 +0530")
+Message-ID: <874llo8g1p.fsf@codeaurora.org> (sfid-20180310_095642_117319_1E36DDC1)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180320173409.GD4449@wotan.suse.de>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 20, 2018 at 05:34:09PM +0000, Luis R. Rodriguez wrote:
-> On Tue, Mar 20, 2018 at 09:30:55AM +0100, Greg KH wrote:
-> > On Sat, Mar 10, 2018 at 06:15:00AM -0800, Luis R. Rodriguez wrote:
-> > > +EXPORT_SYMBOL_GPL(request_firmware_cache);
-> > 
-> > I know you are just following the existing naming scheme, but please
-> > let's not continue the problem here.  Can you prefix all of the firmware
-> > exported symbols with "firmware_", and then the verb.  So this would be
-> > "firmware_request_cache",
-> 
-> Sure.
-> 
-> >  and the older function would be
-> > "firmware_request_direct".
-> 
-> Sure, so you want to also rename the old exported symbols, and add a macro
-> or static inline to enable use of the older names?
+Arjav Parikh <parikharjav24@gmail.com> writes:
 
-Renaming is best, let's not keep them around for no good reason :)
+> I am using kernel version 4.4.60 built with QSDK.
 
-thanks,
+This list is about upstream kernel, not QSDK. And please don't top post.
 
-greg k-h
+-- 
+Kalle Valo
