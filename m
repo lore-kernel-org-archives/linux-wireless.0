@@ -1,157 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37258 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:46240 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751288AbeCEG7L (ORCPT
+        with ESMTP id S932080AbeCKHM5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Mar 2018 01:59:11 -0500
-From: Anilkumar Kolli <akolli@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Sathishkumar Muruganandam <murugana@codeaurora.org>,
-        Anilkumar Kolli <akolli@codeaurora.org>
-Subject: [PATCH 2/2] ath10k: add debugfs support to configure fwtest parameters
-Date: Mon,  5 Mar 2018 12:29:08 +0530
-Message-Id: <1520233148-26050-3-git-send-email-akolli@codeaurora.org> (sfid-20180305_075914_482002_DF483674)
-In-Reply-To: <1520233148-26050-1-git-send-email-akolli@codeaurora.org>
-References: <1520233148-26050-1-git-send-email-akolli@codeaurora.org>
+        Sun, 11 Mar 2018 03:12:57 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Christian Lamparter <chunkeey@gmail.com>,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix recent bandwidth conversion bug
+References: <20171101200157.27096-1-chunkeey@gmail.com>
+        <1666282.PC3nhpCf9f@debian64>
+        <87tvxpf9i8.fsf@kamboji.qca.qualcomm.com>
+        <1882220.dvZB77Gu54@debian64>
+        <877etpmomh.fsf@kamboji.qca.qualcomm.com>
+        <CACna6ryUYb8ACVaRx3jROgxfUvBV5p4+3UsNEV8FEU1R_2sxdQ@mail.gmail.com>
+Date: Sun, 11 Mar 2018 09:12:53 +0200
+In-Reply-To: <CACna6ryUYb8ACVaRx3jROgxfUvBV5p4+3UsNEV8FEU1R_2sxdQ@mail.gmail.com>
+        (=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Thu, 1 Mar 2018
+ 12:52:55 +0100")
+Message-ID: <87zi3f6q6i.fsf@qca.qualcomm.com> (sfid-20180311_081302_075426_4E962CC2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sathishkumar Muruganandam <murugana@codeaurora.org>
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
 
-Added a debugfs file "fw_test" to configure the tx parameters
-through WMI_FWTEST_CMD
+> On 14 December 2017 at 14:21, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Christian Lamparter <chunkeey@gmail.com> writes:
+>>
+>>> On Monday, November 20, 2017 11:57:21 AM CET Kalle Valo wrote:
+>>>> Christian Lamparter <chunkeey@gmail.com> writes:
+>>>>
+>>>> > On Wednesday, November 1, 2017 9:37:53 PM CET Sebastian Gottschall w=
+rote:
+>>>> >> a additional array bounds check would be good
+>>>> >
+>>>> > Ah, about that:
+>>>> >
+>>>> > the bw variable in ath10k_htt_rx_h_rates() is extracted from info2
+>>>> > in the following way [0]:
+>>>> > |  bw =3D info2 & 3;
+>>>> >
+>>>> > the txrate.bw variable in ath10k_update_per_peer_tx_stats() is set b=
+y [1]:
+>>>> > |  txrate.bw =3D ATH10K_HW_BW(peer_stats->flags);
+>>>> >
+>>>> > ATH10K_HW_BW is a macro defined as [2]:
+>>>> > |  #define ATH10K_HW_BW(flags)             (((flags) >> 3) & 0x3)
+>>>> >
+>>>> > In both cases the bandwidth values already are limited to 0-3 by
+>>>> > the "and 3" operation.
+>>>>
+>>>> Until someone changes that part of the code (and the firmware
+>>>> interface). IMHO a switch is safer as there we don't have any risk of
+>>>> out of bands access.
+>>>
+>>> The kbuild-bot/CI can catch this too.
+>>>
+>>> For example, it will look like this:
+>>> drivers/net/wireless/ath/ath10k//htt_rx.c:710:52: warning: invalid
+>>> access past the end of 'ath10k_bw_to_mac80211' (4 4)
+>>
+>> Sure, but after reading about all these security vulnerabilities I have
+>> become even more cautious and try to avoid all tricky stuff.
+>>
+>>> BTW:
+>>> Have you noticed:
+>>>
+>>> <https://github.com/lede-project/source/blob/master/package/kernel/mac8=
+0211/patches/319-ath10k-fix-recent-bandwidth-conversion-bug.patch>
+>>>
+>>> Is this really your signed-off-by or not?
+>>
+>> I suspect that patch is taken from my pending branch.
+>>
+>>> In any case, you - as the maintainer - can modify the patch as
+>>> you see fit. So, please do so.
+>>
+>> Ok, we'll send v2.
+>
+> Hi Kalle,
+>
+> I'm trying to figure out the fate of that LEDE's patch. I don't think
+> you ever sent V2.
+>
+> Is that fix still needed? Are you planning to send V2?
 
-Usage:
-cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_test
-echo <param id> <val> > /sys/kernel/debug/ieee80211/phy0/ath10k/fw_test
+Anil now sent v2 (he just forgot to mark it as such):
 
-Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
-Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/core.h  |    3 ++
- drivers/net/wireless/ath/ath10k/debug.c |   81 +++++++++++++++++++++++++++++++
- 2 files changed, 84 insertions(+)
+https://patchwork.kernel.org/patch/10273445/
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index fe6b30356d3b..2db734138877 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -1,6 +1,7 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -496,6 +497,8 @@ struct ath10k_debug {
- 	u32 reg_addr;
- 	u32 nf_cal_period;
- 	void *cal_data;
-+	u32 fw_test_param_id;
-+	u32 fw_test_param_value;
- };
- 
- enum ath10k_state {
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 554cd7856cb6..245237a6660b 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -2088,6 +2088,83 @@ static ssize_t ath10k_read_peer_stats(struct file *file, char __user *ubuf,
- 	.open = simple_open
- };
- 
-+static ssize_t ath10k_read_fops_fw_test(struct file *file,
-+					char __user *user_buf,
-+					size_t count, loff_t *ppos)
-+{
-+	const char buf[] =
-+		"Commands used for FW test'\n"
-+		"Syntax example:\n"
-+		"echo 5 0 > /sys/kernel/debug/ieee80211/phy0/ath10k/fw_test'\n";
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
-+}
-+
-+/* fw_test support
-+ */
-+static ssize_t ath10k_write_fw_test(struct file *file,
-+				    const char __user *user_buf,
-+				    size_t count, loff_t *ppos)
-+{
-+	struct ath10k *ar = file->private_data;
-+	char buf[32] = {0};
-+	ssize_t rc;
-+	u32 param_id;
-+	u32 param_value;
-+	int ret;
-+
-+	rc = simple_write_to_buffer(buf, sizeof(buf) - 1,
-+				    ppos, user_buf, count);
-+	if (rc < 0)
-+		return rc;
-+
-+	buf[*ppos - 1] = '\0';
-+
-+	ret = sscanf(buf, "%u %x", &param_id, &param_value);
-+
-+	if (ret != 2)
-+		return -EINVAL;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	if (ar->state != ATH10K_STATE_ON &&
-+	    ar->state != ATH10K_STATE_RESTARTED) {
-+		ret = -ENETDOWN;
-+		goto exit;
-+	}
-+
-+	if (param_id) {
-+		ar->debug.fw_test_param_id = param_id;
-+		ar->debug.fw_test_param_value = param_value;
-+	} else {
-+		ath10k_warn(ar, "Enter a valid param ID!");
-+		ret = -EINVAL;
-+		goto exit;
-+	}
-+
-+	ret = ath10k_wmi_fw_test(ar, ar->debug.fw_test_param_id,
-+				 ar->debug.fw_test_param_value);
-+
-+	if (ret) {
-+		ath10k_warn(ar, "failed to do fw_test: %d\n", ret);
-+		goto exit;
-+	}
-+
-+	ret = count;
-+
-+exit:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static const struct file_operations fops_fw_test = {
-+	.read = ath10k_read_fops_fw_test,
-+	.write = ath10k_write_fw_test,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- static ssize_t ath10k_debug_fw_checksums_read(struct file *file,
- 					      char __user *user_buf,
- 					      size_t count, loff_t *ppos)
-@@ -2258,6 +2335,10 @@ int ath10k_debug_register(struct ath10k *ar)
- 	debugfs_create_file("fw_checksums", 0400, ar->debug.debugfs_phy, ar,
- 			    &fops_fw_checksums);
- 
-+	if (test_bit(WMI_SERVICE_FWTEST, ar->wmi.svc_map))
-+		debugfs_create_file("fw_test", 0600, ar->debug.debugfs_phy, ar,
-+				    &fops_fw_test);
-+
- 	return 0;
- }
- 
--- 
-1.7.9.5
+Thanks for the reminder.
+
+--=20
+Kalle Valo
