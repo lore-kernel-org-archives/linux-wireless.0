@@ -1,44 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:55711 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751481AbeCPUup (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52306 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932126AbeCKMBt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Mar 2018 16:50:45 -0400
-Received: by mail-wm0-f68.google.com with SMTP id q83so5405883wme.5
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Mar 2018 13:50:45 -0700 (PDT)
-Subject: Re: [PATCH] brcmsmac: allocate ucode with GFP_KERNEL
-To: Takashi Iwai <tiwai@suse.de>, linux-wireless@vger.kernel.org
-References: <20180316154149.16891-1-tiwai@suse.de>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AAC2E23.5020505@broadcom.com> (sfid-20180316_215049_412469_29ABD6D8)
-Date: Fri, 16 Mar 2018 21:50:43 +0100
-MIME-Version: 1.0
-In-Reply-To: <20180316154149.16891-1-tiwai@suse.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Sun, 11 Mar 2018 08:01:49 -0400
+From: Ramon Fried <rfried@codeaurora.org>
+To: k.eugene.e@gmail.com, kvalo@codeaurora.org,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: Ramon Fried <rfried@codeaurora.org>
+Subject: [PATCH] wcn36xx: Check DXE IRQ reason
+Date: Sun, 11 Mar 2018 14:01:43 +0200
+Message-Id: <20180311120143.29726-1-rfried@codeaurora.org> (sfid-20180311_130151_964358_C74F33A2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/16/2018 4:41 PM, Takashi Iwai wrote:
-> The brcms_ucode_init_buf() duplicates the ucode chunks via kmemdup()
-> with GFP_ATOMIC as a precondition of wl->lock acquired.  This caused
-> allocation failures sometimes as reported in the bugzilla below.
->
-> When looking at the the real usage, one can find that it's called
-> solely from brcms_request_fw(), and it's obviously outside the lock.
-> Hence we can use GFP_KERNEL there safely for avoiding such allocation
-> errors.
->
-> Bugzilla: http://bugzilla.suse.com/show_bug.cgi?id=1085174
+IRQ reason was not cheked for errors.
+Although error handing is not currently supported, it
+will be nice to output an error value to the log if the
+DMA operation failed.
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Takashi Iwai <tiwai@suse.de>
->
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
+Signed-off-by: Ramon Fried <rfried@codeaurora.org>
+---
+ drivers/net/wireless/ath/wcn36xx/dxe.c | 50 +++++++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/wcn36xx/dxe.h |  4 +++
+ 2 files changed, 47 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
+index 8e4d6d9ea277..7d5ecaf02288 100644
+--- a/drivers/net/wireless/ath/wcn36xx/dxe.c
++++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
+@@ -415,14 +415,31 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
+ 					  WCN36XX_DXE_CH_STATUS_REG_ADDR_TX_H,
+ 					  &int_reason);
+ 
+-		/* TODO: Check int_reason */
+-
+ 		wcn36xx_dxe_write_register(wcn,
+ 					   WCN36XX_DXE_0_INT_CLR,
+ 					   WCN36XX_INT_MASK_CHAN_TX_H);
+ 
+-		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_0_INT_ED_CLR,
+-					   WCN36XX_INT_MASK_CHAN_TX_H);
++		if (int_reason & WCN36XX_CH_STAT_INT_ERR_MASK ) {
++			wcn36xx_dxe_write_register(wcn,
++						   WCN36XX_DXE_0_INT_ERR_CLR,
++						   WCN36XX_INT_MASK_CHAN_TX_H);
++
++			wcn36xx_err("DXE IRQ reported error: 0x%x in high TX channel\n",
++					int_src);
++		}
++
++		if (int_reason & WCN36XX_CH_STAT_INT_DONE_MASK) {
++			wcn36xx_dxe_write_register(wcn,
++						   WCN36XX_DXE_0_INT_DONE_CLR,
++						   WCN36XX_INT_MASK_CHAN_TX_H);
++		}
++
++		if (int_reason & WCN36XX_CH_STAT_INT_ED_MASK) {
++			wcn36xx_dxe_write_register(wcn,
++						   WCN36XX_DXE_0_INT_ED_CLR,
++						   WCN36XX_INT_MASK_CHAN_TX_H);
++		}
++
+ 		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready high\n");
+ 		reap_tx_dxes(wcn, &wcn->dxe_tx_h_ch);
+ 	}
+@@ -431,14 +448,33 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
+ 		wcn36xx_dxe_read_register(wcn,
+ 					  WCN36XX_DXE_CH_STATUS_REG_ADDR_TX_L,
+ 					  &int_reason);
+-		/* TODO: Check int_reason */
+ 
+ 		wcn36xx_dxe_write_register(wcn,
+ 					   WCN36XX_DXE_0_INT_CLR,
+ 					   WCN36XX_INT_MASK_CHAN_TX_L);
+ 
+-		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_0_INT_ED_CLR,
+-					   WCN36XX_INT_MASK_CHAN_TX_L);
++
++		if (int_reason & WCN36XX_CH_STAT_INT_ERR_MASK ) {
++			wcn36xx_dxe_write_register(wcn,
++						   WCN36XX_DXE_0_INT_ERR_CLR,
++						   WCN36XX_INT_MASK_CHAN_TX_L);
++
++			wcn36xx_err("DXE IRQ reported error: 0x%x in low TX channel\n",
++					int_src);
++		}
++
++		if (int_reason & WCN36XX_CH_STAT_INT_DONE_MASK) {
++			wcn36xx_dxe_write_register(wcn,
++						   WCN36XX_DXE_0_INT_DONE_CLR,
++						   WCN36XX_INT_MASK_CHAN_TX_L);
++		}
++
++		if (int_reason & WCN36XX_CH_STAT_INT_ED_MASK) {
++			wcn36xx_dxe_write_register(wcn,
++						   WCN36XX_DXE_0_INT_ED_CLR,
++						   WCN36XX_INT_MASK_CHAN_TX_L);
++		}
++
+ 		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready low\n");
+ 		reap_tx_dxes(wcn, &wcn->dxe_tx_l_ch);
+ 	}
+diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.h b/drivers/net/wireless/ath/wcn36xx/dxe.h
+index feb3cb7ee81f..2bc376c5391b 100644
+--- a/drivers/net/wireless/ath/wcn36xx/dxe.h
++++ b/drivers/net/wireless/ath/wcn36xx/dxe.h
+@@ -262,6 +262,10 @@ H2H_TEST_RX_TX = DMA2
+ #define WCN36XX_DXE_0_INT_DONE_CLR		(WCN36XX_DXE_MEM_REG + 0x38)
+ #define WCN36XX_DXE_0_INT_ERR_CLR		(WCN36XX_DXE_MEM_REG + 0x3C)
+ 
++#define WCN36XX_CH_STAT_INT_DONE_MASK   0x00008000
++#define WCN36XX_CH_STAT_INT_ERR_MASK    0x00004000
++#define WCN36XX_CH_STAT_INT_ED_MASK     0x00002000
++
+ #define WCN36XX_DXE_0_CH0_STATUS		(WCN36XX_DXE_MEM_REG + 0x404)
+ #define WCN36XX_DXE_0_CH1_STATUS		(WCN36XX_DXE_MEM_REG + 0x444)
+ #define WCN36XX_DXE_0_CH2_STATUS		(WCN36XX_DXE_MEM_REG + 0x484)
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
