@@ -1,41 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35746 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:52190 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751082AbeC0GuH (ORCPT
+        with ESMTP id S932126AbeCKMB1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Mar 2018 02:50:07 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [RFC 0/3] cfg80211/mac80211: Notify proper sta opmode change value
-Date: Tue, 27 Mar 2018 12:18:13 +0530
-Message-Id: <1522133296-2583-1-git-send-email-tamizhr@codeaurora.org> (sfid-20180327_085012_075493_81ED3DF6)
+        Sun, 11 Mar 2018 08:01:27 -0400
+From: Ramon Fried <rfried@codeaurora.org>
+To: k.eugene.e@gmail.com, kvalo@codeaurora.org,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: Ramon Fried <rfried@codeaurora.org>
+Subject: [PATCH] wcn36xx: calculate DXE default channel values
+Date: Sun, 11 Mar 2018 14:01:18 +0200
+Message-Id: <20180311120118.29671-1-rfried@codeaurora.org> (sfid-20180311_130132_437389_DB841310)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently bw and smps_mode are u8 type value in sta_opmode_info
-structure. This values filled in mac80211 from ieee80211_sta_rx_bandwidth
-and ieee80211_smps_mode. These enum values are specific to mac80211 and
-userspace/cfg80211 doesn't know about that. This patchset change its
-data type in the sta_opmode_info structure and mapping from mac80211
-specific enum to nl80211 enum value.
+DXE channel defaults used hardcoded magic values.
+Added bit definitions of the control register and
+calculate this values in compilation for clarity.
 
-Tamizh chelvam (3):
-  cfg80211: fix data type of sta_opmode_info parameter
-  mac80211: Use proper smps_mode enum in sta opmode event
-  mac80211: Use proper chan_width enum in sta opmode event
+Signed-off-by: Ramon Fried <rfried@codeaurora.org>
+---
+ drivers/net/wireless/ath/wcn36xx/dxe.h | 104 +++++++++++++++++++++++++++++++--
+ 1 file changed, 99 insertions(+), 5 deletions(-)
 
-Note :
-  * Is this mac80211 approach sufficient ? or whether some more
-    complete cleanup would be preferred ?
-
- include/net/cfg80211.h     |  8 ++++----
- net/mac80211/ht.c          | 15 +++++++++++++++
- net/mac80211/ieee80211_i.h |  4 ++++
- net/mac80211/rx.c          |  6 ++++--
- net/mac80211/vht.c         | 32 +++++++++++++++++++++++++++++++-
- 5 files changed, 58 insertions(+), 7 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.h b/drivers/net/wireless/ath/wcn36xx/dxe.h
+index 73a14953920d..feb3cb7ee81f 100644
+--- a/drivers/net/wireless/ath/wcn36xx/dxe.h
++++ b/drivers/net/wireless/ath/wcn36xx/dxe.h
+@@ -140,12 +140,106 @@ H2H_TEST_RX_TX = DMA2
+ #define WCN36XX_DXE_WQ_RX_L			0xB
+ #define WCN36XX_DXE_WQ_RX_H			0x4
+ 
+-/* TODO This must calculated properly but not hardcoded */
++/* Channel enable or restart */
++#define WCN36xx_DXE_CH_CTRL_EN			BIT(0)
++/* End of packet bit */
++#define WCN36xx_DXE_CH_CTRL_EOP			BIT(3)
++/* BD Handling bit */
++#define WCN36xx_DXE_CH_CTRL_BDH			BIT(4)
++/* Source is queue */
++#define WCN36xx_DXE_CH_CTRL_SIQ			BIT(5)
++/* Destination is queue */
++#define WCN36xx_DXE_CH_CTRL_DIQ			BIT(6)
++/* Pointer descriptor is queue */
++#define WCN36xx_DXE_CH_CTRL_PIQ			BIT(7)
++/* Relase PDU when done */
++#define WCN36xx_DXE_CH_CTRL_PDU_REL		BIT(8)
++/* Stop channel processing */
++#define WCN36xx_DXE_CH_CTRL_STOP		BIT(16)
++/* Enable external descriptor interrupt */
++#define WCN36xx_DXE_CH_CTRL_INE_ED		BIT(17)
++/* Enable channel interrupt on errors */
++#define WCN36xx_DXE_CH_CTRL_INE_ERR		BIT(18)
++/* Enable Channel interrupt when done */
++#define WCN36xx_DXE_CH_CTRL_INE_DONE	BIT(19)
++/* External descriptor enable */
++#define WCN36xx_DXE_CH_CTRL_EDEN		BIT(20)
++/* Wait for valid bit */
++#define WCN36xx_DXE_CH_CTRL_EDVEN		BIT(21)
++/* Endianness is little endian*/
++#define WCN36xx_DXE_CH_CTRL_ENDIANNESS	BIT(26)
++/* Abort transfer */
++#define WCN36xx_DXE_CH_CTRL_ABORT		BIT(27)
++/* Long descriptor format */
++#define WCN36xx_DXE_CH_CTRL_DFMT		BIT(28)
++/* Endian byte swap enable */
++#define WCN36xx_DXE_CH_CTRL_SWAP		BIT(31)
++
++/* Transfer type */
++#define WCN36xx_DXE_CH_CTRL_XTYPE_SHIFT 1
++#define WCN36xx_DXE_CH_CTRL_XTYPE_MASK GENMASK(2, WCN36xx_DXE_CH_CTRL_XTYPE_SHIFT)
++#define WCN36xx_DXE_CH_CTRL_XTYPE_SET(x)	((x) << WCN36xx_DXE_CH_CTRL_XTYPE_SHIFT)
++
++/* Channel BMU Threshold select */
++#define WCN36xx_DXE_CH_CTRL_BTHLD_SEL_SHIFT 9
++#define WCN36xx_DXE_CH_CTRL_BTHLD_SEL_MASK GENMASK(12, WCN36xx_DXE_CH_CTRL_BTHLD_SEL_SHIFT)
++#define WCN36xx_DXE_CH_CTRL_BTHLD_SEL_SET(x) ((x) << WCN36xx_DXE_CH_CTRL_BTHLD_SEL_SHIFT)
++
++/* Channel Priority */
++#define WCN36xx_DXE_CH_CTRL_PRIO_SHIFT 13
++#define WCN36xx_DXE_CH_CTRL_PRIO_MASK GENMASK(15, WCN36xx_DXE_CH_CTRL_PRIO_SHIFT)
++#define WCN36xx_DXE_CH_CTRL_PRIO_SET(x) ((x) << WCN36xx_DXE_CH_CTRL_PRIO_SHIFT)
++
++/* Counter select */
++#define WCN36xx_DXE_CH_CTRL_SEL_SHIFT 22
++#define WCN36xx_DXE_CH_CTRL_SEL_MASK GENMASK(25, WCN36xx_DXE_CH_CTRL_SEL_SHIFT)
++#define WCN36xx_DXE_CH_CTRL_SEL_SET(x)	((x) << WCN36xx_DXE_CH_CTRL_SEL_SHIFT)
++
++/* Channel BD template index */
++#define WCN36xx_DXE_CH_CTRL_BDT_IDX_SHIFT 29
++#define WCN36xx_DXE_CH_CTRL_BDT_IDX_MASK GENMASK(30, WCN36xx_DXE_CH_CTRL_BDT_IDX_SHIFT)
++#define WCN36xx_DXE_CH_CTRL_BDT_IDX_SET(x)	((x) << WCN36xx_DXE_CH_CTRL_BDT_IDX_SHIFT)
++
+ /* DXE default control register values */
+-#define WCN36XX_DXE_CH_DEFAULT_CTL_RX_L		0x847EAD2F
+-#define WCN36XX_DXE_CH_DEFAULT_CTL_RX_H		0x84FED12F
+-#define WCN36XX_DXE_CH_DEFAULT_CTL_TX_H		0x853ECF4D
+-#define WCN36XX_DXE_CH_DEFAULT_CTL_TX_L		0x843e8b4d
++#define WCN36XX_DXE_CH_DEFAULT_CTL_RX_L (WCN36xx_DXE_CH_CTRL_EN | \
++		WCN36xx_DXE_CH_CTRL_XTYPE_SET(WCN36xx_DXE_XTYPE_B2H) | \
++		WCN36xx_DXE_CH_CTRL_EOP | WCN36xx_DXE_CH_CTRL_SIQ | \
++		WCN36xx_DXE_CH_CTRL_PDU_REL | WCN36xx_DXE_CH_CTRL_BTHLD_SEL_SET(6) | \
++		WCN36xx_DXE_CH_CTRL_PRIO_SET(5) | WCN36xx_DXE_CH_CTRL_INE_ED | \
++		WCN36xx_DXE_CH_CTRL_INE_ERR | WCN36xx_DXE_CH_CTRL_INE_DONE | \
++		WCN36xx_DXE_CH_CTRL_EDEN | WCN36xx_DXE_CH_CTRL_EDVEN | \
++		WCN36xx_DXE_CH_CTRL_SEL_SET(1) | WCN36xx_DXE_CH_CTRL_ENDIANNESS | \
++		WCN36xx_DXE_CH_CTRL_SWAP)
++
++#define WCN36XX_DXE_CH_DEFAULT_CTL_RX_H (WCN36xx_DXE_CH_CTRL_EN | \
++		WCN36xx_DXE_CH_CTRL_XTYPE_SET(WCN36xx_DXE_XTYPE_B2H) | \
++		WCN36xx_DXE_CH_CTRL_EOP | WCN36xx_DXE_CH_CTRL_SIQ | \
++		WCN36xx_DXE_CH_CTRL_PDU_REL | WCN36xx_DXE_CH_CTRL_BTHLD_SEL_SET(8) | \
++		WCN36xx_DXE_CH_CTRL_PRIO_SET(6) | WCN36xx_DXE_CH_CTRL_INE_ED | \
++		WCN36xx_DXE_CH_CTRL_INE_ERR | WCN36xx_DXE_CH_CTRL_INE_DONE | \
++		WCN36xx_DXE_CH_CTRL_EDEN | WCN36xx_DXE_CH_CTRL_EDVEN | \
++		WCN36xx_DXE_CH_CTRL_SEL_SET(3) | WCN36xx_DXE_CH_CTRL_ENDIANNESS | \
++		WCN36xx_DXE_CH_CTRL_SWAP)
++
++#define WCN36XX_DXE_CH_DEFAULT_CTL_TX_H	(WCN36xx_DXE_CH_CTRL_EN | \
++		WCN36xx_DXE_CH_CTRL_XTYPE_SET(WCN36xx_DXE_XTYPE_H2B) | \
++		WCN36xx_DXE_CH_CTRL_EOP | WCN36xx_DXE_CH_CTRL_DIQ | \
++		WCN36xx_DXE_CH_CTRL_PDU_REL | WCN36xx_DXE_CH_CTRL_BTHLD_SEL_SET(7) | \
++		WCN36xx_DXE_CH_CTRL_PRIO_SET(6) | WCN36xx_DXE_CH_CTRL_INE_ED | \
++		WCN36xx_DXE_CH_CTRL_INE_ERR | WCN36xx_DXE_CH_CTRL_INE_DONE | \
++		WCN36xx_DXE_CH_CTRL_EDEN | WCN36xx_DXE_CH_CTRL_EDVEN | \
++		WCN36xx_DXE_CH_CTRL_SEL_SET(4) | WCN36xx_DXE_CH_CTRL_ENDIANNESS | \
++		WCN36xx_DXE_CH_CTRL_SWAP)
++
++#define WCN36XX_DXE_CH_DEFAULT_CTL_TX_L (WCN36xx_DXE_CH_CTRL_EN | \
++		WCN36xx_DXE_CH_CTRL_XTYPE_SET(WCN36xx_DXE_XTYPE_H2B) | \
++		WCN36xx_DXE_CH_CTRL_EOP | WCN36xx_DXE_CH_CTRL_DIQ | \
++		WCN36xx_DXE_CH_CTRL_PDU_REL | WCN36xx_DXE_CH_CTRL_BTHLD_SEL_SET(5) | \
++		WCN36xx_DXE_CH_CTRL_PRIO_SET(4) | WCN36xx_DXE_CH_CTRL_INE_ED | \
++		WCN36xx_DXE_CH_CTRL_INE_ERR | WCN36xx_DXE_CH_CTRL_INE_DONE | \
++		WCN36xx_DXE_CH_CTRL_EDEN | WCN36xx_DXE_CH_CTRL_EDVEN | \
++		WCN36xx_DXE_CH_CTRL_SEL_SET(0) | WCN36xx_DXE_CH_CTRL_ENDIANNESS | \
++		WCN36xx_DXE_CH_CTRL_SWAP)
+ 
+ /* Common DXE registers */
+ #define WCN36XX_DXE_MEM_CSR			(WCN36XX_DXE_MEM_REG + 0x00)
 -- 
-1.9.1
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
