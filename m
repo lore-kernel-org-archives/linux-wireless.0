@@ -1,106 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:45535 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752981AbeCMWAE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 18:00:04 -0400
-Received: by mail-pg0-f66.google.com with SMTP id s13so465125pgn.12
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2018 15:00:04 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v5 8/9] mac80211: Add support for tx_control_port
-Date: Tue, 13 Mar 2018 16:59:41 -0500
-Message-Id: <20180313215942.29176-9-denkenz@gmail.com> (sfid-20180313_230011_551967_80502E96)
-In-Reply-To: <20180313215942.29176-1-denkenz@gmail.com>
-References: <20180313215942.29176-1-denkenz@gmail.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:46108 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932161AbeCKVry (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 11 Mar 2018 17:47:54 -0400
+From: Hans de Goede <hdegoede@redhat.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Subject: [PATCH] brcmfmac: Add support for getting nvram contents from EFI variables
+Date: Sun, 11 Mar 2018 22:47:51 +0100
+Message-Id: <20180311214751.12769-1-hdegoede@redhat.com> (sfid-20180311_224758_537066_3259DFE1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- net/mac80211/cfg.c         |  1 +
- net/mac80211/ieee80211_i.h |  3 +++
- net/mac80211/tx.c          | 46 ++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 50 insertions(+)
+Various models Asus laptops with a SDIO attached brcmfmac wifi chip, store
+the nvram contents in a special EFI variable. This commit adds support for
+getting nvram directly from this EFI variable, without the user needing to
+manually copy it.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index fd68f6fb02d7..9294acb495ee 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3786,4 +3786,5 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.add_nan_func = ieee80211_add_nan_func,
- 	.del_nan_func = ieee80211_del_nan_func,
- 	.set_multicast_to_unicast = ieee80211_set_multicast_to_unicast,
-+	.tx_control_port = ieee80211_tx_control_port,
- };
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ae9c33cd8ada..a52bd2a61a27 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1734,6 +1734,9 @@ void ieee80211_check_fast_xmit(struct sta_info *sta);
- void ieee80211_check_fast_xmit_all(struct ieee80211_local *local);
- void ieee80211_check_fast_xmit_iface(struct ieee80211_sub_if_data *sdata);
- void ieee80211_clear_fast_xmit(struct sta_info *sta);
-+int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
-+			      const u8 *buf, size_t len,
-+			      const u8 *dest, __be16 proto, bool unencrypted);
+This makes Wifi / Bluetooth work out of the box on these devices instead of
+requiring manual setup.
+
+Note that at least on the Asus T200TA the nvram from the EFI variable
+wrongly contains "ccode=ALL" which the firmware does not understand, the
+code to fetch the nvram from the EFI variable will fix this up to:
+"ccode=XV" which is the correct way to specify the worldwide broadcast
+regime.
+
+This has been tested on the following models: Asus T100CHI, Asus T100HA,
+Asus T100TA and Asus T200TA
+
+Tested-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ .../broadcom/brcm80211/brcmfmac/firmware.c         | 68 +++++++++++++++++++++-
+ 1 file changed, 67 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index 091b52979e03..cbac407ae132 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -14,6 +14,8 @@
+  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
  
- /* HT */
- void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7643178ef132..6ae8fe121500 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -4749,3 +4749,49 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_xmit(sdata, NULL, skb);
- 	local_bh_enable();
- }
-+
-+int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
-+			      const u8 *buf, size_t len,
-+			      const u8 *dest, __be16 proto, bool unencrypted)
++#include <linux/dmi.h>
++#include <linux/efi.h>
+ #include <linux/kernel.h>
+ #include <linux/slab.h>
+ #include <linux/device.h>
+@@ -446,6 +448,67 @@ struct brcmf_fw {
+ 		     void *nvram_image, u32 nvram_len);
+ };
+ 
++#ifdef CONFIG_EFI
++static u8 *brcmf_fw_nvram_from_efi(size_t *data_len_ret)
 +{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+	struct sk_buff *skb;
-+	struct ethhdr *ehdr;
-+	u32 flags;
++	const u16 name[] = { 'n', 'v', 'r', 'a', 'm', 0 };
++	struct efivar_entry *nvram_efivar;
++	unsigned long data_len = 0;
++	u8 *data = NULL;
++	char *ccode;
++	int err;
 +
-+	/* Only accept CONTROL_PORT_PROTOCOL configured in CONNECT/ASSOCIATE
-+	 * or Pre-Authentication
++	/* So far only Asus devices store the nvram in an EFI var */
++	if (!dmi_name_in_vendors("ASUSTeK COMPUTER INC."))
++		return NULL;
++
++	nvram_efivar = kzalloc(sizeof(*nvram_efivar), GFP_KERNEL);
++	if (!nvram_efivar)
++		return NULL;
++
++	memcpy(&nvram_efivar->var.VariableName, name, sizeof(name));
++	nvram_efivar->var.VendorGuid = EFI_GUID(0x74b00bd9, 0x805a, 0x4d61,
++						0xb5, 0x1f, 0x43, 0x26,
++						0x81, 0x23, 0xd1, 0x13);
++
++	err = efivar_entry_size(nvram_efivar, &data_len);
++	if (err)
++		goto fail;
++
++	data = kmalloc(data_len, GFP_KERNEL);
++	if (!data)
++		goto fail;
++
++	err = efivar_entry_get(nvram_efivar, NULL, &data_len, data);
++	if (err)
++		goto fail;
++
++	/* In some cases the EFI-var stored nvram contains "ccode=ALL" but
++	 * the firmware does not understand "ALL" change this to "XV" which
++	 * is the correct way to specify the "worldwide" compatible settings.
 +	 */
-+	if (proto != sdata->control_port_protocol &&
-+	    proto != cpu_to_be16(ETH_P_PREAUTH))
-+		return -EINVAL;
++	ccode = strnstr((char *)data, "ccode=ALL", data_len);
++	if (ccode) {
++		ccode[6] = 'X';
++		ccode[7] = 'V';
++		ccode[8] = '\n';
++	}
 +
-+	if (unencrypted)
-+		flags = IEEE80211_TX_INTFL_DONT_ENCRYPT;
-+	else
-+		flags = 0;
++	brcmf_info("Using nvram EFI variable\n");
 +
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
-+			    sizeof(struct ethhdr) + len);
-+	if (!skb)
-+		return -ENOMEM;
++	kfree(nvram_efivar);
++	*data_len_ret = data_len;
++	return data;
 +
-+	skb_reserve(skb, local->hw.extra_tx_headroom + sizeof(struct ethhdr));
-+
-+	skb_put_data(skb, buf, len);
-+
-+	ehdr = skb_push(skb, sizeof(struct ethhdr));
-+	memcpy(ehdr->h_dest, dest, ETH_ALEN);
-+	memcpy(ehdr->h_source, sdata->vif.addr, ETH_ALEN);
-+	ehdr->h_proto = proto;
-+
-+	skb->dev = dev;
-+	skb->protocol = htons(ETH_P_802_3);
-+	skb_reset_network_header(skb);
-+	skb_reset_mac_header(skb);
-+
-+	__ieee80211_subif_start_xmit(skb, skb->dev, flags);
-+
-+	return 0;
++fail:
++	kfree(data);
++	kfree(nvram_efivar);
++	return NULL;
 +}
++#else
++static u8 *brcmf_fw_nvram_from_efi(size_t *data_len) { return NULL; }
++#endif
++
+ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+ {
+ 	struct brcmf_fw *fwctx = ctx;
+@@ -462,6 +525,8 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+ 		raw_nvram = false;
+ 	} else {
+ 		data = bcm47xx_nvram_get_contents(&data_len);
++		if (!data)
++			data = brcmf_fw_nvram_from_efi(&data_len);
+ 		if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
+ 			goto fail;
+ 		raw_nvram = true;
+@@ -472,7 +537,8 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+ 					     fwctx->domain_nr, fwctx->bus_nr);
+ 
+ 	if (raw_nvram)
+-		bcm47xx_nvram_release_contents(data);
++		kvfree(data); /* vfree for bcm47xx case / kfree for efi case */
++
+ 	release_firmware(fw);
+ 	if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
+ 		goto fail;
 -- 
-2.13.5
+2.14.3
