@@ -1,50 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:43103 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031181AbeCAOVj (ORCPT
+Received: from mail-it0-f46.google.com ([209.85.214.46]:38796 "EHLO
+        mail-it0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932123AbeCKQF5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:21:39 -0500
-Received: by mail-qt0-f193.google.com with SMTP id d26so7678788qtk.10
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:21:38 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 28/52] ath: Map Colombia to FCC1_FCCA
-Date: Thu,  1 Mar 2018 15:18:38 +0100
-Message-Id: <20180301141902.24824-29-sven.eckelmann@openmesh.com> (sfid-20180301_152143_937241_82DF98D1)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+        Sun, 11 Mar 2018 12:05:57 -0400
+Cc: andresx7@gmail.com,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Ilia Mirkin <imirkin@alum.mit.edu>
+Subject: Re: [PATCH] firmware: add a function to load optional firmware v2
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+References: <20180309221243.15489-2-andresx7@gmail.com>
+ <20180309230925.3573-1-andresx7@gmail.com>
+ <CAB=NE6VY62KqmhzD=zT8od=PhgPi3rGKKKxKz_zad-ZrYW-97A@mail.gmail.com>
+ <CAB=NE6XpY4LuDwnakCa6gZ_HjjhZDnu=gDeHwmpNRaSkqQOB2g@mail.gmail.com>
+From: Andres Rodriguez <andresx7@gmail.com>
+Message-ID: <bbdc304f-edd5-38df-ea88-012fefc54b90@gmail.com> (sfid-20180311_170615_844153_C8300AE2)
+Date: Sun, 11 Mar 2018 12:05:54 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6XpY4LuDwnakCa6gZ_HjjhZDnu=gDeHwmpNRaSkqQOB2g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The regdomain code is used to select the correct the correct conformance
-test limits (CTL) for a country. If the regdomain code isn't correctly
-mapped to the actual CTL entries in EEPROM then it could happen that the
-device violates the regulations. But it can also happen that the device is
-then not able to be used with its full txpower on all rates.
+Hi Luis,
 
-This change itself doesn't change the selected CTL of this country and is
-only required to stay in sync with the QCA mappings.
+Thanks for all your feedback, greatly appreciated.
 
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
----
- drivers/net/wireless/ath/regd_common.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 2018-03-10 09:40 AM, Luis R. Rodriguez wrote:
+> On Sat, Mar 10, 2018 at 6:35 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
+>> You also I take it have users in
+>> mind? I'd like to see at least one user of the API or this fixing a
+>> reported issue. Ie, if users have reported this as issues incorrectly,
+>> referring to those incorrect posts as issues and how this created
+>> confusion would help.
 
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index 3a7fbd3794bc..c28347fac774 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -331,7 +331,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_CANADA2, FCC6_FCCA, "CA"},
- 	{CTRY_CHILE, APL6_WORLD, "CL"},
- 	{CTRY_CHINA, APL1_WORLD, "CN"},
--	{CTRY_COLOMBIA, FCC1_FCCA, "CO"},
-+	{CTRY_COLOMBIA, FCC3_WORLD, "CO"},
- 	{CTRY_COSTA_RICA, FCC1_WORLD, "CR"},
- 	{CTRY_CROATIA, ETSI1_WORLD, "HR"},
- 	{CTRY_CYPRUS, ETSI1_WORLD, "CY"},
--- 
-2.11.0
+The current user I have in mind is amdgpu. I've got some local patches 
+for changing it to use request_firmware_optional() for the optional 
+firmware files. I will include them in the v3 of this series.
+
+I've also queried some devs from the other DRM drivers in case this 
+might be useful to them. So far I've gotten a reply from the nouveau 
+devs who are also interested.
+
+> 
+> Your patch series then should also have the driver callers who you
+> want to modify to use this new API. Collect from the 802.11 folks the
+> other drivers which I think they wanted changed as well.
+
+Arend, Kalle, would love to hear your feedback.
+
+> The old up on
+> that front was that the firmware API was in a huge state of flux and
+> debate about *how* we'd evolve the API, either through a data driven
+> API or functional driven API, ie whether or not we'd add a flexible
+> one API call with a set of options, or keep extending functionality
+> with new exported symbols per use case. The later is how we'd keep
+> evolving the API as such the way you are doing it is fine. Ie, if
+> there is a use case for an optional firmware also for the async case a
+> new API call will have to be made. As stupid as this sounds.
+>
+
+Seems like I got lucky with my timing for this request :)
+
+
+> Also please take a look at lib/test_firmware.c -- I don't think it
+> makes sense to add a new test case for this API call, so at least
+> worth documenting why somewhere if you find a suitable place for that.
+> > Also - I forgot to ask you to extend the
+> Documentation/driver-api/firmware/ documentation accordingly. Please
+> do that.
+> 
+
+Will do, for these and the feedback in the previous Email.
+
+-Andres
+
+>    Luis
+> 
