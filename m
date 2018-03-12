@@ -1,68 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:36019 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752189AbeCZPgL (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:42793 "EHLO
+        shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932458AbeCLD3S (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 11:36:11 -0400
-Date: Mon, 26 Mar 2018 21:05:48 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Colin King <colin.king@canonical.com>
-CC: Joe Perches <joe@perches.com>,
-        Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <kernel-janitors@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] staging: wilc1000: check for kmalloc allocation
- failures
-Message-ID: <20180326210548.791f070a@ajaysk-VirtualBox> (sfid-20180326_173624_668503_5D975753)
-In-Reply-To: <1521662598.7999.33.camel@perches.com>
-References: <20180321191941.4126-1-colin.king@canonical.com>
-        <1521662598.7999.33.camel@perches.com>
+        Sun, 11 Mar 2018 23:29:18 -0400
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+From: Ben Hutchings <ben@decadent.org.uk>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+CC: akpm@linux-foundation.org, kernel-hardening@lists.openwall.com,
+        torvalds@linux-foundation.org,
+        "Elena Reshetova" <elena.reshetova@intel.com>,
+        "Thomas Gleixner" <tglx@linutronix.de>, alan@linux.intel.com,
+        "Dan Williams" <dan.j.williams@intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-arch@vger.kernel.org,
+        "Christian Lamparter" <chunkeey@gmail.com>,
+        linux-wireless@vger.kernel.org, gregkh@linuxfoundation.org,
+        "Johannes Berg" <johannes@sipsolutions.net>
+Date: Mon, 12 Mar 2018 03:06:12 +0000
+Message-ID: <lsq.1520823972.857925406@decadent.org.uk> (sfid-20180312_043130_676878_7F690FC6)
+Subject: [PATCH 3.16 58/76] nl80211: Sanitize array index in parse_txq_params
+In-Reply-To: <lsq.1520823971.5976735@decadent.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for submitting the patch.
+3.16.56-rc1 review patch.  If anyone has any objections, please let me know.
 
-On Wed, 21 Mar 2018 13:03:18 -0700
-Joe Perches <joe@perches.com> wrote:
+------------------
 
-> On Wed, 2018-03-21 at 19:19 +0000, Colin King wrote:
-> > From: Colin Ian King <colin.king@canonical.com>
-> > 
-> > There are three kmalloc allocations that are not null checked which
-> > potentially could lead to null pointer dereference issues. Fix this
-> > by adding null pointer return checks.
-> 
-> looks like all of these should be kmemdup or kstrdup
-> 
-> >  
-> > @@ -951,6 +955,10 @@ static s32 handle_connect(struct wilc_vif *vif,
-> >  	if (conn_attr->ssid) {
-> >  		hif_drv->usr_conn_req.ssid = kmalloc(conn_attr->ssid_len + 1,
-> >  						     GFP_KERNEL);
-> > +		if (!hif_drv->usr_conn_req.ssid) {
-> > +			result = -ENOMEM;
-> > +			goto error;
-> > +		}
-> >  		memcpy(hif_drv->usr_conn_req.ssid,
-> >  		       conn_attr->ssid,
-> >  		       conn_attr->ssid_len);
+From: Dan Williams <dan.j.williams@intel.com>
 
-With this changes the Coverity reported warning is handled correctly.
+commit 259d8c1e984318497c84eef547bbb6b1d9f4eb05 upstream.
 
-For further improvement to the patch, as Joe Perches suggested, its better
-to make use of kmemdup instead of kmalloc & memcpy. As kstrdup requires the
-source string to be NULL terminated('\0') and conn_attr->ssid might not  
-contains the '\0' terminated string. So kmemdup with length of 
-'conn_attr->ssid_len' can be used instead.
+Wireless drivers rely on parse_txq_params to validate that txq_params->ac
+is less than NL80211_NUM_ACS by the time the low-level driver's ->conf_tx()
+handler is called. Use a new helper, array_index_nospec(), to sanitize
+txq_params->ac with respect to speculation. I.e. ensure that any
+speculation into ->conf_tx() handlers is done with a value of
+txq_params->ac that is within the bounds of [0, NL80211_NUM_ACS).
 
-Please include the changes by using kmemdup() for all kmalloc/memcpy in
-this patch.
+Reported-by: Christian Lamparter <chunkeey@gmail.com>
+Reported-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-arch@vger.kernel.org
+Cc: kernel-hardening@lists.openwall.com
+Cc: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Cc: torvalds@linux-foundation.org
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: alan@linux.intel.com
+Link: https://lkml.kernel.org/r/151727419584.33451.7700736761686184303.stgit@dwillia2-desk3.amr.corp.intel.com
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+ net/wireless/nl80211.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-
-
-Regards,
-Ajay
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -14,6 +14,7 @@
+ #include <linux/nl80211.h>
+ #include <linux/rtnetlink.h>
+ #include <linux/netlink.h>
++#include <linux/nospec.h>
+ #include <linux/etherdevice.h>
+ #include <net/net_namespace.h>
+ #include <net/genetlink.h>
+@@ -1829,20 +1830,22 @@ static const struct nla_policy txq_param
+ static int parse_txq_params(struct nlattr *tb[],
+ 			    struct ieee80211_txq_params *txq_params)
+ {
++	u8 ac;
++
+ 	if (!tb[NL80211_TXQ_ATTR_AC] || !tb[NL80211_TXQ_ATTR_TXOP] ||
+ 	    !tb[NL80211_TXQ_ATTR_CWMIN] || !tb[NL80211_TXQ_ATTR_CWMAX] ||
+ 	    !tb[NL80211_TXQ_ATTR_AIFS])
+ 		return -EINVAL;
+ 
+-	txq_params->ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
++	ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
+ 	txq_params->txop = nla_get_u16(tb[NL80211_TXQ_ATTR_TXOP]);
+ 	txq_params->cwmin = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMIN]);
+ 	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
+ 	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
+ 
+-	if (txq_params->ac >= NL80211_NUM_ACS)
++	if (ac >= NL80211_NUM_ACS)
+ 		return -EINVAL;
+-
++	txq_params->ac = array_index_nospec(ac, NL80211_NUM_ACS);
+ 	return 0;
+ }
+ 
