@@ -1,50 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:43632 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751045AbeCIMaq (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55864 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751255AbeCLLkA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Mar 2018 07:30:46 -0500
-From: Andreas Christoforou <andreaschristofo@gmail.com>
-To: keescook@chromium.org
-Cc: kernel-hardening@lists.openwall.com,
-        Andreas Christoforou <andreaschristofo@gmail.com>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] drivers: net: wireless: ath: ath9: dfs: remove VLA usage
-Date: Fri,  9 Mar 2018 14:30:12 +0200
-Message-Id: <1520598613-3641-1-git-send-email-andreaschristofo@gmail.com> (sfid-20180309_133103_780218_4C783843)
+        Mon, 12 Mar 2018 07:40:00 -0400
+From: Karthikeyan Periyasamy <periyasa@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Karthikeyan Periyasamy <periyasa@codeaurora.org>
+Subject: [PATCH] ath10k: Fix kernel panic while using worker (ath10k_sta_rc_update_wk)
+Date: Mon, 12 Mar 2018 17:09:40 +0530
+Message-Id: <1520854780-11823-1-git-send-email-periyasa@codeaurora.org> (sfid-20180312_124005_244279_F253885D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The kernel would like to have all stack VLA usage removed.
+When attempt to run worker (ath10k_sta_rc_update_wk) after the station object
+(ieee80211_sta) delete will trigger the kernel panic.
 
-Signed-off-by: Andreas Christoforou <andreaschristofo@gmail.com>
+This problem arise in AP + Mesh configuration, Where the current node AP VAP
+and neighbor node mesh VAP MAC address are same. When the current mesh node
+try to establish the mesh link with neighbor node, driver peer creation for
+the neighbor mesh node fails due to duplication MAC address. Already the AP
+VAP created with same MAC address.
+
+It is caused by the following scenario steps.
+
+Steps:
+1. In above condition, ath10k driver sta_state callback (ath10k_sta_state)
+   fails to do the state change for a station from IEEE80211_STA_NOTEXIST
+   to IEEE80211_STA_NONE due to peer creation fails. Sta_state callback is
+   called from ieee80211_add_station() to handle the new station
+   (neighbor mesh node) request from the wpa_supplicant.
+2. Concurrently ath10k receive the sta_rc_update callback notification from
+   the mesh_neighbour_update() to handle the beacon frames of the above
+   neighbor mesh node. since its atomic callback, ath10k driver queue the
+   work (ath10k_sta_rc_update_wk) to handle rc update.
+3. Due to driver sta_state callback fails (step 1), mac80211 free the station
+   object.
+4. When the worker (ath10k_sta_rc_update_wk) scheduled to run, it will access
+   the station object which is already deleted. so it will trigger kernel
+   panic.
+
+Added the peer exist check in sta_rc_update callback before queue the work.
+
+Kernel Panic log:
+
+Unable to handle kernel NULL pointer dereference at virtual address 00000000
+pgd = c0204000
+[00000000] *pgd=00000000
+Internal error: Oops: 17 [#1] PREEMPT SMP ARM
+CPU: 1 PID: 1833 Comm: kworker/u4:2 Not tainted 3.14.77 #1
+task: dcef0000 ti: d72b6000 task.ti: d72b6000
+PC is at pwq_activate_delayed_work+0x10/0x40
+LR is at pwq_activate_delayed_work+0xc/0x40
+pc : [<c023f988>]    lr : [<c023f984>]    psr: 40000193
+sp : d72b7f18  ip : 0000007a  fp : d72b6000
+r10: 00000000  r9 : dd404414  r8 : d8c31998
+r7 : d72b6038  r6 : 00000004  r5 : d4907ec8  r4 : dcee1300
+r3 : ffffffe0  r2 : 00000000  r1 : 00000001  r0 : 00000000
+Flags: nZcv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment kernel
+Control: 10c5787d  Table: 595bc06a  DAC: 00000015
+...
+Process kworker/u4:2 (pid: 1833, stack limit = 0xd72b6238)
+Stack: (0xd72b7f18 to 0xd72b8000)
+7f00:                                                       00000001 dcee1300
+7f20: 00000001 c02410dc d8c31980 dd404400 dd404400 c0242790 d8c31980 00000089
+7f40: 00000000 d93e1340 00000000 d8c31980 c0242568 00000000 00000000 00000000
+7f60: 00000000 c02474dc 00000000 00000000 000000f8 d8c31980 00000000 00000000
+7f80: d72b7f80 d72b7f80 00000000 00000000 d72b7f90 d72b7f90 d72b7fac d93e1340
+7fa0: c0247404 00000000 00000000 c0208d20 00000000 00000000 00000000 00000000
+7fc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+7fe0: 00000000 00000000 00000000 00000000 00000013 00000000 00000000 00000000
+[<c023f988>] (pwq_activate_delayed_work) from [<c02410dc>] (pwq_dec_nr_in_flight+0x58/0xc4)
+[<c02410dc>] (pwq_dec_nr_in_flight) from [<c0242790>] (worker_thread+0x228/0x360)
+[<c0242790>] (worker_thread) from [<c02474dc>] (kthread+0xd8/0xec)
+[<c02474dc>] (kthread) from [<c0208d20>] (ret_from_fork+0x14/0x34)
+Code: e92d4038 e1a05000 ebffffbc[69210.619376] SMP: failed to stop secondary CPUs
+Rebooting in 3 seconds..
+
+Signed-off-by: Karthikeyan Periyasamy <periyasa@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath9k/dfs.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
-index 6fee9a4..cfb0f84 100644
---- a/drivers/net/wireless/ath/ath9k/dfs.c
-+++ b/drivers/net/wireless/ath/ath9k/dfs.c
-@@ -41,7 +41,6 @@ static const int BIN_DELTA_MAX		= 10;
- 
- /* we need at least 3 deltas / 4 samples for a reliable chirp detection */
- #define NUM_DIFFS 3
--static const int FFT_NUM_SAMPLES	= (NUM_DIFFS + 1);
- 
- /* Threshold for difference of delta peaks */
- static const int MAX_DIFF		= 2;
-@@ -101,7 +100,7 @@ static bool ath9k_check_chirping(struct ath_softc *sc, u8 *data,
- 				 int datalen, bool is_ctl, bool is_ext)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index ebb3f1b..91ee1eb 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -7085,10 +7085,20 @@ static void ath10k_sta_rc_update(struct ieee80211_hw *hw,
  {
- 	int i;
--	int max_bin[FFT_NUM_SAMPLES];
-+	int max_bin[NUM_DIFFS + 1];
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int prev_delta;
+ 	struct ath10k *ar = hw->priv;
+ 	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
++	struct ath10k_vif *arvif = (void *)vif->drv_priv;
++	struct ath10k_peer *peer;
+ 	u32 bw, smps;
+ 
+ 	spin_lock_bh(&ar->data_lock);
+ 
++	peer = ath10k_peer_find(ar, arvif->vdev_id, sta->addr);
++	if (!peer) {
++		spin_unlock_bh(&ar->data_lock);
++		ath10k_warn(ar, "mac sta rc update failed to find peer %pM on vdev %i\n",
++			    sta->addr, arvif->vdev_id);
++		return;
++	}
++
+ 	ath10k_dbg(ar, ATH10K_DBG_MAC,
+ 		   "mac sta rc update for %pM changed %08x bw %d nss %d smps %d\n",
+ 		   sta->addr, changed, sta->bandwidth, sta->rx_nss,
 -- 
-2.7.4
+1.9.1
