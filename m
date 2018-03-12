@@ -1,308 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:59366 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751325AbeCISUg (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:54671 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752625AbeCLJpD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Mar 2018 13:20:36 -0500
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH 3/3] mwifiex: get_channel from firmware
-Date: Fri, 9 Mar 2018 23:45:26 +0530
-Message-ID: <1520619326-14888-4-git-send-email-gbhat@marvell.com> (sfid-20180309_192040_818681_54B42804)
-In-Reply-To: <1520619326-14888-1-git-send-email-gbhat@marvell.com>
-References: <1520619326-14888-1-git-send-email-gbhat@marvell.com>
+        Mon, 12 Mar 2018 05:45:03 -0400
+Received: by mail-wm0-f65.google.com with SMTP id z81so15042039wmb.4
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Mar 2018 02:45:02 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: Add support for getting nvram contents from EFI
+ variables
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+References: <20180311214751.12769-1-hdegoede@redhat.com>
+ <5AA6409E.6050300@broadcom.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <e98afbfb-35d0-8ae7-1377-d5e31a76dc4c@redhat.com> (sfid-20180312_104508_853447_BBBC2AB4)
+Date: Mon, 12 Mar 2018 10:45:00 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5AA6409E.6050300@broadcom.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-At present driver gets chan_type by referring to
-IEEE80211_HT_PARAM_CHA_SEC_OFFSET, in ASSOC response. Sometimes
-AP shows IEEE80211_HT_PARAM_CHA_SEC_OFFSET as above/below in
-assoc response, even if the association is done on HT20 channel
-only. So, it will be accurate to get econdary channel offset from
-firmware.
+Hi,
 
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c    | 40 ++++++++++++++--------
- drivers/net/wireless/marvell/mwifiex/decl.h        | 17 +++++++++
- drivers/net/wireless/marvell/mwifiex/fw.h          |  7 ++++
- drivers/net/wireless/marvell/mwifiex/main.h        | 16 ++++++++-
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c     | 22 ++++++++++++
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 19 ++++++++++
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c   | 12 +++++++
- 7 files changed, 117 insertions(+), 16 deletions(-)
+On 12-03-18 09:55, Arend van Spriel wrote:
+> On 3/11/2018 10:47 PM, Hans de Goede wrote:
+>> Various models Asus laptops with a SDIO attached brcmfmac wifi chip, store
+>> the nvram contents in a special EFI variable. This commit adds support for
+>> getting nvram directly from this EFI variable, without the user needing to
+>> manually copy it.
+>>
+>> This makes Wifi / Bluetooth work out of the box on these devices instead of
+>> requiring manual setup.
+>>
+>> Note that at least on the Asus T200TA the nvram from the EFI variable
+>> wrongly contains "ccode=ALL" which the firmware does not understand, the
+>> code to fetch the nvram from the EFI variable will fix this up to:
+>> "ccode=XV" which is the correct way to specify the worldwide broadcast
+>> regime.
+>>
+>> This has been tested on the following models: Asus T100CHI, Asus T100HA,
+>> Asus T100TA and Asus T200TA
+> 
+> Hi Hans,
+> 
+> I like to have this as well, but .... (see below)
+> 
+>> Tested-by: Hans de Goede <hdegoede@redhat.com>
+> 
+> Duh. I would expect anyone to have tested their patches although you can not cover every system out there obviously :-p
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index ce4432c..7f7e9de 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -95,18 +95,32 @@ u8 mwifiex_chan_type_to_sec_chan_offset(enum nl80211_channel_type chan_type)
- 
- /* This function maps IEEE HT secondary channel type to NL80211 channel type
-  */
--u8 mwifiex_sec_chan_offset_to_chan_type(u8 second_chan_offset)
-+u8 mwifiex_get_chan_type(struct mwifiex_private *priv)
- {
--	switch (second_chan_offset) {
--	case IEEE80211_HT_PARAM_CHA_SEC_NONE:
--		return NL80211_CHAN_HT20;
--	case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
--		return NL80211_CHAN_HT40PLUS;
--	case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
--		return NL80211_CHAN_HT40MINUS;
--	default:
--		return NL80211_CHAN_HT20;
-+	struct mwifiex_channel_band channel_band;
-+	int ret;
-+
-+	ret = mwifiex_get_chan_info(priv, &channel_band);
-+
-+	if (!ret) {
-+		switch (channel_band.band_config.chan_width) {
-+		case CHAN_BW_20MHZ:
-+			if (IS_11N_ENABLED(priv))
-+				return NL80211_CHAN_HT20;
-+			else
-+				return NL80211_CHAN_NO_HT;
-+		case CHAN_BW_40MHZ:
-+			if (channel_band.band_config.chan2_offset ==
-+			    SEC_CHAN_ABOVE)
-+				return NL80211_CHAN_HT40PLUS;
-+			else
-+				return NL80211_CHAN_HT40MINUS;
-+		default:
-+			return NL80211_CHAN_HT20;
-+		}
- 	}
-+
-+	return NL80211_CHAN_HT20;
- }
- 
- /*
-@@ -3937,7 +3951,6 @@ static int mwifiex_cfg80211_get_channel(struct wiphy *wiphy,
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
- 	struct mwifiex_bssdescriptor *curr_bss;
- 	struct ieee80211_channel *chan;
--	u8 second_chan_offset;
- 	enum nl80211_channel_type chan_type;
- 	enum nl80211_band band;
- 	int freq;
-@@ -3954,10 +3967,7 @@ static int mwifiex_cfg80211_get_channel(struct wiphy *wiphy,
- 		chan = ieee80211_get_channel(wiphy, freq);
- 
- 		if (priv->ht_param_present) {
--			second_chan_offset = priv->assoc_resp_ht_param &
--					IEEE80211_HT_PARAM_CHA_SEC_OFFSET;
--			chan_type = mwifiex_sec_chan_offset_to_chan_type
--							(second_chan_offset);
-+			chan_type = mwifiex_get_chan_type(priv);
- 			cfg80211_chandef_create(chandef, chan, chan_type);
- 		} else {
- 			cfg80211_chandef_create(chandef, chan,
-diff --git a/drivers/net/wireless/marvell/mwifiex/decl.h b/drivers/net/wireless/marvell/mwifiex/decl.h
-index 188e4c3..46696ea 100644
---- a/drivers/net/wireless/marvell/mwifiex/decl.h
-+++ b/drivers/net/wireless/marvell/mwifiex/decl.h
-@@ -294,4 +294,21 @@ enum rdwr_status {
- 	RDWR_STATUS_DONE = 2
- };
- 
-+enum mwifiex_chan_width {
-+	CHAN_BW_20MHZ = 0,
-+	CHAN_BW_10MHZ,
-+	CHAN_BW_40MHZ,
-+	CHAN_BW_80MHZ,
-+	CHAN_BW_8080MHZ,
-+	CHAN_BW_160MHZ,
-+	CHAN_BW_5MHZ,
-+};
-+
-+enum mwifiex_chan_offset {
-+	SEC_CHAN_NONE = 0,
-+	SEC_CHAN_ABOVE = 1,
-+	SEC_CHAN_5MHZ = 2,
-+	SEC_CHAN_BELOW = 3
-+};
-+
- #endif /* !_MWIFIEX_DECL_H_ */
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 9c2cdef..c5dc518 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -411,6 +411,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define HostCmd_CMD_TDLS_OPER                         0x0122
- #define HostCmd_CMD_FW_DUMP_EVENT		      0x0125
- #define HostCmd_CMD_SDIO_SP_RX_AGGR_CFG               0x0223
-+#define HostCmd_CMD_STA_CONFIGURE		      0x023f
- #define HostCmd_CMD_CHAN_REGION_CFG		      0x0242
- #define HostCmd_CMD_PACKET_AGGR_CTRL		      0x0251
- 
-@@ -2285,6 +2286,11 @@ struct host_cmd_ds_pkt_aggr_ctrl {
- 	__le16 tx_aggr_align;
- } __packed;
- 
-+struct host_cmd_ds_sta_configure {
-+	__le16 action;
-+	u8 tlv_buffer[0];
-+} __packed;
-+
- struct host_cmd_ds_command {
- 	__le16 command;
- 	__le16 size;
-@@ -2361,6 +2367,7 @@ struct host_cmd_ds_command {
- 		struct host_cmd_ds_gtk_rekey_params rekey;
- 		struct host_cmd_ds_chan_region_cfg reg_cfg;
- 		struct host_cmd_ds_pkt_aggr_ctrl pkt_aggr_ctrl;
-+		struct host_cmd_ds_sta_configure sta_cfg;
- 	} params;
- } __packed;
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index f550528..19a23f8 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -517,6 +517,18 @@ enum mwifiex_iface_work_flags {
- 	MWIFIEX_IFACE_WORK_CARD_RESET,
- };
- 
-+struct mwifiex_band_config {
-+	u8 chan_band:2;
-+	u8 chan_width:2;
-+	u8 chan2_offset:2;
-+	u8 scan_mode:2;
-+} __packed;
-+
-+struct mwifiex_channel_band {
-+	struct mwifiex_band_config band_config;
-+	u8 channel;
-+};
-+
- struct mwifiex_private {
- 	struct mwifiex_adapter *adapter;
- 	u8 bss_type;
-@@ -1546,7 +1558,7 @@ int mwifiex_check_network_compatibility(struct mwifiex_private *priv,
- 					struct mwifiex_bssdescriptor *bss_desc);
- 
- u8 mwifiex_chan_type_to_sec_chan_offset(enum nl80211_channel_type chan_type);
--u8 mwifiex_sec_chan_offset_to_chan_type(u8 second_chan_offset);
-+u8 mwifiex_get_chan_type(struct mwifiex_private *priv);
- 
- struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 					      const char *name,
-@@ -1673,6 +1685,8 @@ u8 mwifiex_adjust_data_rate(struct mwifiex_private *priv,
- int mwifiex_get_wakeup_reason(struct mwifiex_private *priv, u16 action,
- 			      int cmd_type,
- 			      struct mwifiex_ds_wakeup_reason *wakeup_reason);
-+int mwifiex_get_chan_info(struct mwifiex_private *priv,
-+			  struct mwifiex_channel_band *channel_band);
- int mwifiex_ret_wakeup_reason(struct mwifiex_private *priv,
- 			      struct host_cmd_ds_command *resp,
- 			      struct host_cmd_ds_wakeup_reason *wakeup_reason);
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index 211e47d..4ed10cf 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -1898,6 +1898,25 @@ static int mwifiex_cmd_get_wakeup_reason(struct mwifiex_private *priv,
- 	return 0;
- }
- 
-+static int mwifiex_cmd_get_chan_info(struct host_cmd_ds_command *cmd,
-+				     u16 cmd_action)
-+{
-+	struct host_cmd_ds_sta_configure *sta_cfg_cmd = &cmd->params.sta_cfg;
-+	struct host_cmd_tlv_channel_band *tlv_band_channel =
-+	(struct host_cmd_tlv_channel_band *)sta_cfg_cmd->tlv_buffer;
-+
-+	cmd->command = cpu_to_le16(HostCmd_CMD_STA_CONFIGURE);
-+	cmd->size = cpu_to_le16(sizeof(*sta_cfg_cmd) +
-+				sizeof(*tlv_band_channel) + S_DS_GEN);
-+	sta_cfg_cmd->action = cpu_to_le16(cmd_action);
-+	memset(tlv_band_channel, 0, sizeof(*tlv_band_channel));
-+	tlv_band_channel->header.type = cpu_to_le16(TLV_TYPE_CHANNELBANDLIST);
-+	tlv_band_channel->header.len  = cpu_to_le16(sizeof(*tlv_band_channel) -
-+					sizeof(struct mwifiex_ie_types_header));
-+
-+	return 0;
-+}
-+
- /* This function check if the command is supported by firmware */
- static int mwifiex_is_cmd_supported(struct mwifiex_private *priv, u16 cmd_no)
- {
-@@ -2210,6 +2229,9 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
- 		cmd_ptr->command = cpu_to_le16(cmd_no);
- 		cmd_ptr->size = cpu_to_le16(S_DS_GEN);
- 		break;
-+	case HostCmd_CMD_STA_CONFIGURE:
-+		ret = mwifiex_cmd_get_chan_info(cmd_ptr, cmd_action);
-+		break;
- 	default:
- 		mwifiex_dbg(priv->adapter, ERROR,
- 			    "PREP_CMD: unknown cmd- %#x\n", cmd_no);
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-index 1bd4e13..69e3b62 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-@@ -1170,6 +1170,22 @@ static int mwifiex_ret_pkt_aggr_ctrl(struct mwifiex_private *priv,
- 	return 0;
- }
- 
-+static int mwifiex_ret_get_chan_info(struct mwifiex_private *priv,
-+				     struct host_cmd_ds_command *resp,
-+				     struct mwifiex_channel_band *channel_band)
-+{
-+	struct host_cmd_ds_sta_configure *sta_cfg_cmd = &resp->params.sta_cfg;
-+	struct host_cmd_tlv_channel_band *tlv_band_channel;
-+
-+	tlv_band_channel =
-+	(struct host_cmd_tlv_channel_band *)sta_cfg_cmd->tlv_buffer;
-+	memcpy(&channel_band->band_config, &tlv_band_channel->band_config,
-+	       sizeof(struct mwifiex_band_config));
-+	channel_band->channel = tlv_band_channel->channel;
-+
-+	return 0;
-+}
-+
- /*
-  * This function handles the command responses.
-  *
-@@ -1393,6 +1409,9 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
- 	case HostCmd_CMD_CHAN_REGION_CFG:
- 		ret = mwifiex_ret_chan_region_cfg(priv, resp);
- 		break;
-+	case HostCmd_CMD_STA_CONFIGURE:
-+		ret = mwifiex_ret_get_chan_info(priv, resp, data_buf);
-+		break;
- 	default:
- 		mwifiex_dbg(adapter, ERROR,
- 			    "CMD_RESP: unknown cmd response %#x\n",
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-index ed66f12..5414b75 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-@@ -1481,3 +1481,15 @@ int mwifiex_get_wakeup_reason(struct mwifiex_private *priv, u16 action,
- 
- 	return status;
- }
-+
-+int mwifiex_get_chan_info(struct mwifiex_private *priv,
-+			  struct mwifiex_channel_band *channel_band)
-+{
-+	int status = 0;
-+
-+	status = mwifiex_send_cmd(priv, HostCmd_CMD_STA_CONFIGURE,
-+				  HostCmd_ACT_GEN_GET, 0, channel_band,
-+				  MWIFIEX_SYNC_CMD);
-+
-+	return status;
-+}
--- 
-1.9.1
+Heh, I added it in this case as I went to the trouble of finding 4 devices
+which use this and test it on all 4 devices.
+
+>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>> ---
+>>   .../broadcom/brcm80211/brcmfmac/firmware.c         | 68 +++++++++++++++++++++-
+>>   1 file changed, 67 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+>> index 091b52979e03..cbac407ae132 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+>> @@ -14,6 +14,8 @@
+>>    * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+>>    */
+>>
+>> +#include <linux/dmi.h>
+>> +#include <linux/efi.h>
+>>   #include <linux/kernel.h>
+>>   #include <linux/slab.h>
+>>   #include <linux/device.h>
+>> @@ -446,6 +448,67 @@ struct brcmf_fw {
+>>                void *nvram_image, u32 nvram_len);
+>>   };
+>>
+>> +#ifdef CONFIG_EFI
+>> +static u8 *brcmf_fw_nvram_from_efi(size_t *data_len_ret)
+>> +{
+>> +    const u16 name[] = { 'n', 'v', 'r', 'a', 'm', 0 };
+> 
+> Isn't there some helper function to make this conversion to u16 array? Hmm, maybe it is my itch to scratch later :-)
+
+Nope, I copied this style from existing code under drivers/firmware/efi
+
+>> +    struct efivar_entry *nvram_efivar;
+>> +    unsigned long data_len = 0;
+>> +    u8 *data = NULL;
+>> +    char *ccode;
+>> +    int err;
+>> +
+>> +    /* So far only Asus devices store the nvram in an EFI var */
+>> +    if (!dmi_name_in_vendors("ASUSTeK COMPUTER INC."))
+>> +        return NULL;
+> 
+> Actually had a Sony device with nvram in EFI. Why not just drop this optimization.
+
+Ok, do you know if that variable had the same name and guid though ? Because
+if it doesn't then this code is not going to work for the Sony case.
+
+Anyways the overhead is small and this only runs once, so I will drop the
+check for v2.
+
+>> +    nvram_efivar = kzalloc(sizeof(*nvram_efivar), GFP_KERNEL);
+>> +    if (!nvram_efivar)
+>> +        return NULL;
+>> +
+>> +    memcpy(&nvram_efivar->var.VariableName, name, sizeof(name));
+>> +    nvram_efivar->var.VendorGuid = EFI_GUID(0x74b00bd9, 0x805a, 0x4d61,
+>> +                        0xb5, 0x1f, 0x43, 0x26,
+>> +                        0x81, 0x23, 0xd1, 0x13);
+>> +
+>> +    err = efivar_entry_size(nvram_efivar, &data_len);
+>> +    if (err)
+>> +        goto fail;
+>> +
+>> +    data = kmalloc(data_len, GFP_KERNEL);
+>> +    if (!data)
+>> +        goto fail;
+>> +
+>> +    err = efivar_entry_get(nvram_efivar, NULL, &data_len, data);
+>> +    if (err)
+>> +        goto fail;
+>> +
+>> +    /* In some cases the EFI-var stored nvram contains "ccode=ALL" but
+>> +     * the firmware does not understand "ALL" change this to "XV" which
+>> +     * is the correct way to specify the "worldwide" compatible settings.
+>> +     */
+> 
+> This is actually quite bad. The ALL ccode should never end up on the market as it is intended for internal use only during bringup project phase so these seems to be programmed wrong.
+
+I see lots of cheap Windows 10 and ARM devices with brcmfmac sdio wifi
+which ship with on disk nvram files using the "ALL" ccode. I actually have
+pinned my home wifi at channel 13 to catch this, because channel 13 does
+not work with the ALL ccode. If I understand correctly the worldwide
+domain starts with channel 13/14 in passive/listen only mode and allows
+using them once it has seen valid wifi traffic on them, so they do allow
+communicating with an AP on channel 13 here in the Netherlands where that
+is allowed?
+
+> Also simply selecting XV instead is not correct. There is not just one worldwide domain in the regulatory database of the firmware image.
+
+Right, I've read elsewhere that "X2" is the right magic value to use and
+I've tested that on some other devices and that does seem to work.
+
+I've also seen "XY" but the other Asus devices all use "XV" and that
+works (makes channel 13 work) so it seemed like a good value.
+
+Can you help me understand this problem a bit better? Is the problem with
+"XV" that it may not work with all firmware versions, so on some firmware
+versions it will be as bad as using ALL which the firmware also does not
+understand? Or do all firmwares understand XV / XY / X2 but are there
+subtle differences?
+
+So how do you suggest we deal with this?
+
+One solution I see is:
+
+1) check for ccode=ALL
+2) if found use DMI strings to match the specific model and set a different
+ccode based on the model (so for now use XV for the T200TA only)
+3) if found and the model is not known, warn about this and do nothing
+
+Would that work for you ?
+
+>> +    ccode = strnstr((char *)data, "ccode=ALL", data_len);
+>> +    if (ccode) {
+>> +        ccode[6] = 'X';
+>> +        ccode[7] = 'V';
+>> +        ccode[8] = '\n';
+>> +    }
+>> +
+>> +    brcmf_info("Using nvram EFI variable\n");
+>> +
+>> +    kfree(nvram_efivar);
+>> +    *data_len_ret = data_len;
+>> +    return data;
+>> +
+>> +fail:
+>> +    kfree(data);
+>> +    kfree(nvram_efivar);
+>> +    return NULL;
+>> +}
+>> +#else
+>> +static u8 *brcmf_fw_nvram_from_efi(size_t *data_len) { return NULL; }
+>> +#endif
+>> +
+>>   static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+>>   {
+>>       struct brcmf_fw *fwctx = ctx;
+>> @@ -462,6 +525,8 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+>>           raw_nvram = false;
+>>       } else {
+>>           data = bcm47xx_nvram_get_contents(&data_len);
+>> +        if (!data)
+>> +            data = brcmf_fw_nvram_from_efi(&data_len);
+>>           if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
+>>               goto fail;
+>>           raw_nvram = true;
+>> @@ -472,7 +537,8 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+>>                            fwctx->domain_nr, fwctx->bus_nr);
+>>
+>>       if (raw_nvram)
+>> -        bcm47xx_nvram_release_contents(data);
+>> +        kvfree(data); /* vfree for bcm47xx case / kfree for efi case */
+> 
+> While this clearly works I can not say I like this. If you want to do it this way, please submit a patch to remove bcm47xx_nvram_release_contents() as it is no longer needed since we now have kvfree(). From maintainance perspective also drop the postfix comment. We just might end up doing vmalloc in efi case at some point and this would likely be forgotten.
+
+It might be better if I replace the raw_nvram variable which is poorly named with
+a "bool free_bcm47xx_nvram = false;" and add a "bool kfree_nvram = false;"
+
+Would that work for you ?
+
+Regards,
+
+Hans
