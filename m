@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:33005 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753208AbeCPOp6 (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:42989 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751180AbeCLNUQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Mar 2018 10:45:58 -0400
-Received: by mail-wr0-f196.google.com with SMTP id z73so7724316wrb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Mar 2018 07:45:58 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, arnd@arndb.de
-Subject: [PATCH] mt76: enable MAC80211_LEDS by default
-Date: Fri, 16 Mar 2018 15:45:48 +0100
-Message-Id: <a159566d0970fb5c43da7758d8281b594b6ca48e.1521209538.git.lorenzo.bianconi@redhat.com> (sfid-20180316_154622_034123_84A96CF1)
-In-Reply-To: <cover.1521209538.git.lorenzo.bianconi@redhat.com>
-References: <cover.1521209538.git.lorenzo.bianconi@redhat.com>
+        Mon, 12 Mar 2018 09:20:16 -0400
+From: hariprasath.elango@gmail.com
+To: aditya.shankar@microchip.com
+Cc: hariprasath.elango@gmail.com, vbabu3@visteon.com,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: wilc1000: Destroy mutex object in deinitialization
+Date: Mon, 12 Mar 2018 18:49:49 +0530
+Message-Id: <20180312131950.12854-1-hariprasath.elango@gmail.com> (sfid-20180312_142035_368405_05F66633)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Select mac80211 led support by default in order to fix the following
-compilation error that occurs when CONFIG_LEDS_CLASS/CONFIG_MAC80211_LEDS
-options are not enabled on the system
+From: HariPrasath Elango <hariprasath.elango@gmail.com>
 
-ERROR: "devm_of_led_classdev_register" undefined!
+Destroy the mutex object that is initialized in wlan_init_locks()
 
-Fixes: 17f1de56df05 ("mt76: add common code shared between multiple chipsets")
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: HariPrasath Elango <hariprasath.elango@gmail.com>
 ---
- drivers/net/wireless/mediatek/mt76/Kconfig | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/staging/wilc1000/linux_wlan.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
-index fc05d79c80d0..0bbd492c2c2b 100644
---- a/drivers/net/wireless/mediatek/mt76/Kconfig
-+++ b/drivers/net/wireless/mediatek/mt76/Kconfig
-@@ -1,5 +1,8 @@
- config MT76_CORE
- 	tristate
-+	select MAC80211_LEDS
-+	select LEDS_CLASS
-+	select NEW_LEDS
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 1af3c14..38a83bd 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -678,6 +678,7 @@ static int wlan_deinit_locks(struct net_device *dev)
  
- config MT76x2E
- 	tristate "MediaTek MT76x2E (PCIe) support"
+ 	mutex_destroy(&wilc->hif_cs);
+ 	mutex_destroy(&wilc->rxq_cs);
++	mutex_destroy(&wilc->txq_add_to_head_cs);
+ 
+ 	return 0;
+ }
 -- 
-2.14.3
+2.10.0.GIT
