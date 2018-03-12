@@ -1,145 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:46108 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932161AbeCKVry (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Mar 2018 17:47:54 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:38833 "EHLO
+        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932231AbeCLJqq (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Mar 2018 05:46:46 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180227090556.02a24a0d@xeon-e3>
+References: <CACna6rz9L09g9oeHhvt209Tg1E3gKgmhGnYF653AdkXfZf=4kw@mail.gmail.com>
+ <20180227090556.02a24a0d@xeon-e3>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Mon, 12 Mar 2018 10:46:45 +0100
+Message-ID: <CACna6rxP4ATE2f6XJi7XKDLe2L_Z43aLreEHDCfGicksYTb0xg@mail.gmail.com> (sfid-20180312_104657_472878_63444DD3)
+Subject: Re: Problem with bridge (mcast-to-ucast + hairpin) and Broadcom's
+ 802.11f in their FullMAC fw
+To: Stephen Hemminger <stephen@networkplumber.org>
+Cc: =?UTF-8?Q?Linus_L=C3=BCssing?= <linus.luessing@c0d3.blue>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Hans de Goede <hdegoede@redhat.com>,
         Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
         Wright Feng <wright.feng@cypress.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Subject: [PATCH] brcmfmac: Add support for getting nvram contents from EFI variables
-Date: Sun, 11 Mar 2018 22:47:51 +0100
-Message-Id: <20180311214751.12769-1-hdegoede@redhat.com> (sfid-20180311_224758_537066_3259DFE1)
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Network Development <netdev@vger.kernel.org>,
+        bridge@lists.linux-foundation.org,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
+        <brcm80211-dev-list.pdl@broadcom.com>,"
+        <brcm80211-dev-list@cypress.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Various models Asus laptops with a SDIO attached brcmfmac wifi chip, store
-the nvram contents in a special EFI variable. This commit adds support for
-getting nvram directly from this EFI variable, without the user needing to
-manually copy it.
+On 27 February 2018 at 18:05, Stephen Hemminger
+<stephen@networkplumber.org> wrote:
+> On Tue, 27 Feb 2018 11:08:20 +0100
+> Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+>
+>> I've problem when using OpenWrt/LEDE on a home router with Broadcom's
+>> FullMAC WiFi chipset.
+>>
+>>
+>> First of all OpenWrt/LEDE uses bridge interface for LAN network with:
+>> 1) IFLA_BRPORT_MCAST_TO_UCAST
+>> 2) Clients isolation in hostapd
+>> 3) Hairpin mode enabled
+>>
+>> For more details please see Linus's patch description:
+>> https://patchwork.kernel.org/patch/9530669/
+>> and maybe hairpin mode patch:
+>> https://lwn.net/Articles/347344/
+>>
+>> Short version: in that setup packets received from a bridged wireless
+>> interface can be handled back to it for transmission.
+>>
+>>
+>> Now, Broadcom's firmware for their FullMAC chipsets in AP mode
+>> supports an obsoleted 802.11f AKA IAPP standard. It's a roaming
+>> standard that was replaced by 802.11r.
+>>
+>> Whenever a new station associates, firmware generates a packet like:
+>> ff ff ff ff  ff ff ec 10  7b 5f ?? ??  00 06 00 01  af 81 01 00
+>> (just masked 2 bytes of my MAC)
+>>
+>> For mode details you can see discussion in my brcmfmac patch thread:
+>> https://patchwork.kernel.org/patch/10191451/
+>>
+>>
+>> The problem is that bridge (in setup as above) handles such a packet
+>> back to the device.
+>>
+>> That makes Broadcom's FullMAC firmware believe that a given station
+>> just connected to another AP in a network (which doesn't even exist).
+>> As a result firmware immediately disassociates that station. It's
+>> simply impossible to connect to the router. Every association is
+>> followed by immediate disassociation.
+>>
+>>
+>> Can you see any solution for this problem? Is that an option to stop
+>> multicast-to-unicast from touching 802.11f packets? Some other ideas?
+>> Obviously I can't modify Broadcom's firmware and drop that obsoleted
+>> standard.
+>>
+>
+> ebtables is your friend in dealing with weird and broken devices.
 
-This makes Wifi / Bluetooth work out of the box on these devices instead of
-requiring manual setup.
+It may be weird, not sure if actually broken. Anyway I'd like to have
+some generic solution instead of telling every user to use ebtables to
+workaround the problem.
 
-Note that at least on the Asus T200TA the nvram from the EFI variable
-wrongly contains "ccode=ALL" which the firmware does not understand, the
-code to fetch the nvram from the EFI variable will fix this up to:
-"ccode=XV" which is the correct way to specify the worldwide broadcast
-regime.
-
-This has been tested on the following models: Asus T100CHI, Asus T100HA,
-Asus T100TA and Asus T200TA
-
-Tested-by: Hans de Goede <hdegoede@redhat.com>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- .../broadcom/brcm80211/brcmfmac/firmware.c         | 68 +++++++++++++++++++++-
- 1 file changed, 67 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index 091b52979e03..cbac407ae132 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -14,6 +14,8 @@
-  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+#include <linux/dmi.h>
-+#include <linux/efi.h>
- #include <linux/kernel.h>
- #include <linux/slab.h>
- #include <linux/device.h>
-@@ -446,6 +448,67 @@ struct brcmf_fw {
- 		     void *nvram_image, u32 nvram_len);
- };
- 
-+#ifdef CONFIG_EFI
-+static u8 *brcmf_fw_nvram_from_efi(size_t *data_len_ret)
-+{
-+	const u16 name[] = { 'n', 'v', 'r', 'a', 'm', 0 };
-+	struct efivar_entry *nvram_efivar;
-+	unsigned long data_len = 0;
-+	u8 *data = NULL;
-+	char *ccode;
-+	int err;
-+
-+	/* So far only Asus devices store the nvram in an EFI var */
-+	if (!dmi_name_in_vendors("ASUSTeK COMPUTER INC."))
-+		return NULL;
-+
-+	nvram_efivar = kzalloc(sizeof(*nvram_efivar), GFP_KERNEL);
-+	if (!nvram_efivar)
-+		return NULL;
-+
-+	memcpy(&nvram_efivar->var.VariableName, name, sizeof(name));
-+	nvram_efivar->var.VendorGuid = EFI_GUID(0x74b00bd9, 0x805a, 0x4d61,
-+						0xb5, 0x1f, 0x43, 0x26,
-+						0x81, 0x23, 0xd1, 0x13);
-+
-+	err = efivar_entry_size(nvram_efivar, &data_len);
-+	if (err)
-+		goto fail;
-+
-+	data = kmalloc(data_len, GFP_KERNEL);
-+	if (!data)
-+		goto fail;
-+
-+	err = efivar_entry_get(nvram_efivar, NULL, &data_len, data);
-+	if (err)
-+		goto fail;
-+
-+	/* In some cases the EFI-var stored nvram contains "ccode=ALL" but
-+	 * the firmware does not understand "ALL" change this to "XV" which
-+	 * is the correct way to specify the "worldwide" compatible settings.
-+	 */
-+	ccode = strnstr((char *)data, "ccode=ALL", data_len);
-+	if (ccode) {
-+		ccode[6] = 'X';
-+		ccode[7] = 'V';
-+		ccode[8] = '\n';
-+	}
-+
-+	brcmf_info("Using nvram EFI variable\n");
-+
-+	kfree(nvram_efivar);
-+	*data_len_ret = data_len;
-+	return data;
-+
-+fail:
-+	kfree(data);
-+	kfree(nvram_efivar);
-+	return NULL;
-+}
-+#else
-+static u8 *brcmf_fw_nvram_from_efi(size_t *data_len) { return NULL; }
-+#endif
-+
- static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
- {
- 	struct brcmf_fw *fwctx = ctx;
-@@ -462,6 +525,8 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
- 		raw_nvram = false;
- 	} else {
- 		data = bcm47xx_nvram_get_contents(&data_len);
-+		if (!data)
-+			data = brcmf_fw_nvram_from_efi(&data_len);
- 		if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
- 			goto fail;
- 		raw_nvram = true;
-@@ -472,7 +537,8 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
- 					     fwctx->domain_nr, fwctx->bus_nr);
- 
- 	if (raw_nvram)
--		bcm47xx_nvram_release_contents(data);
-+		kvfree(data); /* vfree for bcm47xx case / kfree for efi case */
-+
- 	release_firmware(fw);
- 	if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
- 		goto fail;
--- 
-2.14.3
+--=20
+Rafa=C5=82
