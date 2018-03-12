@@ -1,197 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46928 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751821AbeCWFEE (ORCPT
+Received: from mail-io0-f193.google.com ([209.85.223.193]:42221 "EHLO
+        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750752AbeCLJiT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Mar 2018 01:04:04 -0400
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH v2 07/13] ath10k: Add hif tx methods for wcn3990
-Date: Fri, 23 Mar 2018 10:33:38 +0530
-Message-Id: <1521781424-24972-8-git-send-email-govinds@codeaurora.org> (sfid-20180323_060411_071284_84D274B2)
-In-Reply-To: <1521781424-24972-1-git-send-email-govinds@codeaurora.org>
-References: <1521781424-24972-1-git-send-email-govinds@codeaurora.org>
+        Mon, 12 Mar 2018 05:38:19 -0400
+From: "<Hariprasath Elango>" <hariprasath.elango@gmail.com>
+Date: Mon, 12 Mar 2018 15:08:08 +0530
+To: hariprasath.elango@gmail.com
+Cc: aditya.shankar@microchip.com, vbabu3@visteon.com,
+        Hari Prasath <hgujulan@visteon.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: wilc1000: use pre-defined macro
+ is_broadcast_ether_addr
+Message-ID: <20180312093808.GA9044@hariprasath> (sfid-20180312_103835_711505_62229C3D)
+References: <20180312084715.30103-1-hariprasath.elango@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180312084715.30103-1-hariprasath.elango@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add hif tx/tx-complete methods for wcn3990
-target.
+On Mon, Mar 12, 2018 at 02:17:15PM +0530, hariprasath.elango@gmail.com wrote:
+> From: Hari Prasath <hgujulan@visteon.com>
+> 
+> Use the kernel pre-defined macro is_broadcast_ether_addr() instead of
+> doing a memcmp here.
+> 
+> Signed-off-by: Hari Prasath <hgujulan@visteon.com>
+> ---
+>  drivers/staging/wilc1000/linux_mon.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+> index bbdfc7a..f93f411 100644
+> --- a/drivers/staging/wilc1000/linux_mon.c
+> +++ b/drivers/staging/wilc1000/linux_mon.c
+> @@ -27,7 +27,6 @@ static struct net_device *wilc_wfi_mon; /* global monitor netdev */
+>  
+>  static u8 srcadd[6];
+>  static u8 bssid[6];
+> -static u8 broadcast[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+>  /**
+>   *  @brief      WILC_WFI_monitor_rx
+>   *  @details
+> @@ -193,7 +192,7 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
+>  
+>  	skb_pull(skb, rtap_len);
+>  
+> -	if (skb->data[0] == 0xc0 && (!(memcmp(broadcast, &skb->data[4], 6)))) {
+> +	if (skb->data[0] == 0xc0 && is_broadcast_ether_addr(&skb->data[4])) {
+>  		skb2 = dev_alloc_skb(skb->len + sizeof(struct wilc_wfi_radiotap_cb_hdr));
+>  		if (!skb2)
+>  			return -ENOMEM;
+> -- 
+> 2.10.0.GIT
+> 
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/snoc.c | 123 ++++++++++++++++++++++++++++++++-
- 1 file changed, 120 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index 9d402e4..899f0a3 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -42,6 +42,9 @@
- 	"WLAN_CE_11",
- };
- 
-+static void ath10k_snoc_htc_tx_cb(struct ath10k_ce_pipe *ce_state);
-+static void ath10k_snoc_htt_tx_cb(struct ath10k_ce_pipe *ce_state);
-+
- static const struct ath10k_snoc_drv_priv drv_priv = {
- 	.hw_rev = ATH10K_HW_WCN3990,
- 	.dma_mask = DMA_BIT_MASK(37),
-@@ -54,7 +57,7 @@
- 		.src_nentries = 16,
- 		.src_sz_max = 2048,
- 		.dest_nentries = 0,
--		.send_cb = NULL,
-+		.send_cb = ath10k_snoc_htc_tx_cb,
- 	},
- 
- 	/* CE1: target->host HTT + HTC control */
-@@ -81,7 +84,7 @@
- 		.src_nentries = 32,
- 		.src_sz_max = 2048,
- 		.dest_nentries = 0,
--		.send_cb = NULL,
-+		.send_cb = ath10k_snoc_htc_tx_cb,
- 	},
- 
- 	/* CE4: host->target HTT */
-@@ -90,7 +93,7 @@
- 		.src_nentries = 256,
- 		.src_sz_max = 256,
- 		.dest_nentries = 0,
--		.send_cb = NULL,
-+		.send_cb = ath10k_snoc_htt_tx_cb,
- 	},
- 
- 	/* CE5: target->host HTT (ipa_uc->target ) */
-@@ -359,6 +362,117 @@ static void ath10k_snoc_rx_post(struct ath10k *ar)
- 		ath10k_snoc_rx_post_pipe(&ar_snoc->pipe_info[i]);
- }
- 
-+static void ath10k_snoc_htc_tx_cb(struct ath10k_ce_pipe *ce_state)
-+{
-+	struct ath10k *ar = ce_state->ar;
-+	struct sk_buff_head list;
-+	struct sk_buff *skb;
-+
-+	__skb_queue_head_init(&list);
-+	while (ath10k_ce_completed_send_next(ce_state, (void **)&skb) == 0) {
-+		if (!skb)
-+			continue;
-+
-+		__skb_queue_tail(&list, skb);
-+	}
-+
-+	while ((skb = __skb_dequeue(&list)))
-+		ath10k_htc_tx_completion_handler(ar, skb);
-+}
-+
-+static void ath10k_snoc_htt_tx_cb(struct ath10k_ce_pipe *ce_state)
-+{
-+	struct ath10k *ar = ce_state->ar;
-+	struct sk_buff *skb;
-+
-+	while (ath10k_ce_completed_send_next(ce_state, (void **)&skb) == 0) {
-+		if (!skb)
-+			continue;
-+
-+		dma_unmap_single(ar->dev, ATH10K_SKB_CB(skb)->paddr,
-+				 skb->len, DMA_TO_DEVICE);
-+		ath10k_htt_hif_tx_complete(ar, skb);
-+	}
-+}
-+
-+static int ath10k_snoc_hif_tx_sg(struct ath10k *ar, u8 pipe_id,
-+				 struct ath10k_hif_sg_item *items, int n_items)
-+{
-+	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
-+	struct ath10k_ce *ce = ath10k_ce_priv(ar);
-+	struct ath10k_snoc_pipe *snoc_pipe;
-+	struct ath10k_ce_pipe *ce_pipe;
-+	int err, i = 0;
-+
-+	snoc_pipe = &ar_snoc->pipe_info[pipe_id];
-+	ce_pipe = snoc_pipe->ce_hdl;
-+	spin_lock_bh(&ce->ce_lock);
-+
-+	for (i = 0; i < n_items - 1; i++) {
-+		ath10k_dbg(ar, ATH10K_DBG_SNOC,
-+			   "snoc tx item %d paddr %pad len %d n_items %d\n",
-+			   i, &items[i].paddr, items[i].len, n_items);
-+
-+		err = ath10k_ce_send_nolock(ce_pipe,
-+					    items[i].transfer_context,
-+					    items[i].paddr,
-+					    items[i].len,
-+					    items[i].transfer_id,
-+					    CE_SEND_FLAG_GATHER);
-+		if (err)
-+			goto err;
-+	}
-+
-+	ath10k_dbg(ar, ATH10K_DBG_SNOC,
-+		   "snoc tx item %d paddr %pad len %d n_items %d\n",
-+		   i, &items[i].paddr, items[i].len, n_items);
-+
-+	err = ath10k_ce_send_nolock(ce_pipe,
-+				    items[i].transfer_context,
-+				    items[i].paddr,
-+				    items[i].len,
-+				    items[i].transfer_id,
-+				    0);
-+	if (err)
-+		goto err;
-+
-+	spin_unlock_bh(&ce->ce_lock);
-+
-+	return 0;
-+
-+err:
-+	for (; i > 0; i--)
-+		__ath10k_ce_send_revert(ce_pipe);
-+
-+	spin_unlock_bh(&ce->ce_lock);
-+	return err;
-+}
-+
-+static u16 ath10k_snoc_hif_get_free_queue_number(struct ath10k *ar, u8 pipe)
-+{
-+	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_SNOC, "hif get free queue number\n");
-+
-+	return ath10k_ce_num_free_src_entries(ar_snoc->pipe_info[pipe].ce_hdl);
-+}
-+
-+static void ath10k_snoc_hif_send_complete_check(struct ath10k *ar, u8 pipe,
-+						int force)
-+{
-+	int resources;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc hif send complete check\n");
-+
-+	if (!force) {
-+		resources = ath10k_snoc_hif_get_free_queue_number(ar, pipe);
-+
-+		if (resources > (host_ce_config_wlan[pipe].src_nentries >> 1))
-+			return;
-+	}
-+	ath10k_ce_per_engine_service(ar, pipe);
-+}
-+
- static int ath10k_snoc_hif_map_service_to_pipe(struct ath10k *ar,
- 					       u16 service_id,
- 					       u8 *ul_pipe, u8 *dl_pipe)
-@@ -587,6 +701,9 @@ static int ath10k_snoc_hif_power_up(struct ath10k *ar)
- 	.get_default_pipe	= ath10k_snoc_hif_get_default_pipe,
- 	.power_up		= ath10k_snoc_hif_power_up,
- 	.power_down		= ath10k_snoc_hif_power_down,
-+	.tx_sg			= ath10k_snoc_hif_tx_sg,
-+	.send_complete_check	= ath10k_snoc_hif_send_complete_check,
-+	.get_free_queue_number	= ath10k_snoc_hif_get_free_queue_number,
- };
- 
- static const struct ath10k_bus_ops ath10k_snoc_bus_ops = {
--- 
-1.9.1
+Kindly discard this patch. I will send a v2 as sent mail ID and
+signed-off are not matching
