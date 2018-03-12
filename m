@@ -1,113 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54305 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751317AbeCTSYP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Mar 2018 14:24:15 -0400
-Date: Tue, 20 Mar 2018 18:24:09 +0000
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Greg KH <gregkh@linuxfoundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Julia Lawall <julia.lawall@lip6.fr>,
-        Nicolas Palix <nicolas.palix@imag.fr>,
-        Joe Perches <joe@perches.com>, Takashi Iwai <tiwai@suse.de>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Jiri Kosina <jikos@kernel.org>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, akpm@linux-foundation.org,
-        cantabile.desu@gmail.com, kubakici@wp.pl,
-        linux-wireless@vger.kernel.org, keescook@chromium.org,
-        shuah@kernel.org, mfuzzey@parkeon.com, zohar@linux.vnet.ibm.com,
-        dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de,
-        arend.vanspriel@broadcom.com, zajec5@gmail.com, nbroeking@me.com,
-        markivx@codeaurora.org, broonie@kernel.org,
-        dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        Abhay_Salunke@dell.com, bjorn.andersson@linaro.org,
-        jewalt@lgsinnovations.com, oneukum@suse.com, ast@fb.com,
-        andresx7@gmail.com, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        Konstantin Ryabitsev <konstantin@linuxfoundation.org>
-Subject: Re: [PATCH v3 19/20] firmware: add request_firmware_cache() to help
- with cache on reboot
-Message-ID: <20180320182409.GF4449@wotan.suse.de> (sfid-20180320_192439_461841_5BE523F5)
-References: <20180310141501.2214-1-mcgrof@kernel.org>
- <20180310141501.2214-20-mcgrof@kernel.org>
- <20180320083055.GA21640@kroah.com>
- <20180320173409.GD4449@wotan.suse.de>
- <20180320173801.GA25040@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180320173801.GA25040@kroah.com>
+Received: from out2-smtp.messagingengine.com ([66.111.4.26]:42477 "EHLO
+        out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932419AbeCLBoE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 11 Mar 2018 21:44:04 -0400
+From: "Tobin C. Harding" <me@tobin.cc>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: "Tobin C. Harding" <me@tobin.cc>,
+        kernel-hardening@lists.openwall.com, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Tycho Andersen <tycho@tycho.ws>,
+        Kees Cook <keescook@chromium.org>
+Subject: [RESEND PATCH] rsi: Remove stack VLA usage
+Date: Mon, 12 Mar 2018 12:43:42 +1100
+Message-Id: <1520819022-15238-1-git-send-email-me@tobin.cc> (sfid-20180312_024419_769597_D402CDBD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 20, 2018 at 06:38:01PM +0100, Greg KH wrote:
-> On Tue, Mar 20, 2018 at 05:34:09PM +0000, Luis R. Rodriguez wrote:
-> > On Tue, Mar 20, 2018 at 09:30:55AM +0100, Greg KH wrote:
-> > > On Sat, Mar 10, 2018 at 06:15:00AM -0800, Luis R. Rodriguez wrote:
-> > > > +EXPORT_SYMBOL_GPL(request_firmware_cache);
-> > > 
-> > > I know you are just following the existing naming scheme, but please
-> > > let's not continue the problem here.  Can you prefix all of the firmware
-> > > exported symbols with "firmware_", and then the verb.  So this would be
-> > > "firmware_request_cache",
-> > 
-> > Sure.
-> > 
-> > >  and the older function would be
-> > > "firmware_request_direct".
-> > 
-> > Sure, so you want to also rename the old exported symbols, and add a macro
-> > or static inline to enable use of the older names?
-> 
-> Renaming is best, let's not keep them around for no good reason :)
+The kernel would like to have all stack VLA usage removed[1].  rsi uses
+a VLA based on 'blksize'.  Elsewhere in the SDIO code maximum block size
+is defined using a magic number.  We can use a pre-processor defined
+constant and declare the array to maximum size.  We add a check before
+accessing the array in case of programmer error.
 
-Sure thing, I'll rename the old firmware calls.
+[1]: https://lkml.org/lkml/2018/3/7/621
 
-Since that would be a cross-tree collateral evolution, as we have discussed
-before over these at kernel summits, I'd prefer to leave that large set of
-renames toward the end of the series, as the last patch. This way the
-Coccinelle SmPL / sed script could be run at the very end, and in case of merge
-conflicts re-run.
+Signed-off-by: Tobin C. Harding <me@tobin.cc>
+---
 
-Which BTW... *long term*, I believe a possible way to address these cross-tree
-collateral evolutions, due to new merge updates and conflicts, could be for us
-to embed the SmPL / sed scripts into git notes, and in turn have an *optional* git
-configuration which could attempt a merge conflict resolution through
-alternative means, one of which -- if enabled -- could be to try to run the SmPL or
-sed script in the attached git note (if you downloaded them). One of the other
-benefits of this is the commit log is no longer visually impaired by such long
-semantic patches or scripts, and gives us a nice way to pull these up through a
-generic tooling mechanism. This could all just be optional, no one would have
-to push or fetch these -- only if they wanted the possible added benefits of
-having them.
+RESEND: add wireless mailing list to CC's (requested by Kalle)
 
-*Iff* this seems sensible, this would only mean kernel.org would have to start
-accepting git notes long term, for those who optionally want to push them or
-fetch them.
+ drivers/net/wireless/rsi/rsi_91x_hal.c  | 13 +++++++------
+ drivers/net/wireless/rsi/rsi_91x_sdio.c |  9 +++++++--
+ 2 files changed, 14 insertions(+), 8 deletions(-)
 
-FWIW I've confirmed with github that they now accepts git notes, the UI for
-github just needs time to develop how to interact with them, for now they just
-hide them. One of the difficulties with a UI interface for them is that by
-default git notes *do not* use a namespace reflective for a branch or anything.
-We could stick to a actual namespace for branch / commit:
-
-"iso" for isomorphism
-
-git note --ref branch/iso-coccinelle/ add commit-id
-vi refs/notes/branch/iso-coccinelle/commit-id
-git note --ref branch/iso-coccinelle/ edit commit-id
-
-This is rather crude though so simple interface such as the following could
-be added as well:
-
-git smpl add sp.cocci commit-id
-git smpl edit commit-id
-git smpl list v4.13..v4.14
-
-Similar thing could be done for crash dumps, if we wanted...
-
-Since this still would need to be discussed, and if agreed then implemented, in
-the meantime I can just do it the old school way of embedding the SmPL and/or
-sed script into the commit log, but left as the last patch in the series.
-
-  Luis
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+index 1176de646942..839ebdd602df 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -641,7 +641,7 @@ static int ping_pong_write(struct rsi_hw *adapter, u8 cmd, u8 *addr, u32 size)
+ 	u32 cmd_addr;
+ 	u16 cmd_resp, cmd_req;
+ 	u8 *str;
+-	int status;
++	int status, ret;
+ 
+ 	if (cmd == PING_WRITE) {
+ 		cmd_addr = PING_BUFFER_ADDRESS;
+@@ -655,12 +655,13 @@ static int ping_pong_write(struct rsi_hw *adapter, u8 cmd, u8 *addr, u32 size)
+ 		str = "PONG_VALID";
+ 	}
+ 
+-	status = hif_ops->load_data_master_write(adapter, cmd_addr, size,
++	ret = hif_ops->load_data_master_write(adapter, cmd_addr, size,
+ 					    block_size, addr);
+-	if (status) {
+-		rsi_dbg(ERR_ZONE, "%s: Unable to write blk at addr %0x\n",
+-			__func__, *addr);
+-		return status;
++	if (ret) {
++		if (ret != -EINVAL)
++			rsi_dbg(ERR_ZONE, "%s: Unable to write blk at addr %0x\n",
++				__func__, *addr);
++		return ret;
+ 	}
+ 
+ 	status = bl_cmd(adapter, cmd_req, cmd_resp, str);
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index b0cf41195051..b766578b591a 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -20,6 +20,8 @@
+ #include "rsi_common.h"
+ #include "rsi_hal.h"
+ 
++#define RSI_MAX_BLOCK_SIZE 256
++
+ /**
+  * rsi_sdio_set_cmd52_arg() - This function prepares cmd 52 read/write arg.
+  * @rw: Read/write
+@@ -362,7 +364,7 @@ static int rsi_setblocklength(struct rsi_hw *adapter, u32 length)
+ 	rsi_dbg(INIT_ZONE, "%s: Setting the block length\n", __func__);
+ 
+ 	status = sdio_set_block_size(dev->pfunction, length);
+-	dev->pfunction->max_blksize = 256;
++	dev->pfunction->max_blksize = RSI_MAX_BLOCK_SIZE;
+ 	adapter->block_size = dev->pfunction->max_blksize;
+ 
+ 	rsi_dbg(INFO_ZONE,
+@@ -567,9 +569,12 @@ static int rsi_sdio_load_data_master_write(struct rsi_hw *adapter,
+ {
+ 	u32 num_blocks, offset, i;
+ 	u16 msb_address, lsb_address;
+-	u8 temp_buf[block_size];
++	u8 temp_buf[RSI_MAX_BLOCK_SIZE];
+ 	int status;
+ 
++	if (block_size > RSI_MAX_BLOCK_SIZE)
++		return -EINVAL;
++
+ 	num_blocks = instructions_sz / block_size;
+ 	msb_address = base_address >> 16;
+ 
+-- 
+2.7.4
