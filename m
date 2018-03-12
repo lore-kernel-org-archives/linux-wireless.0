@@ -1,64 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f65.google.com ([209.85.160.65]:38598 "EHLO
-        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754397AbeCGSWO (ORCPT
+Received: from mail.aperture-lab.de ([138.201.29.205]:42746 "EHLO
+        mail.aperture-lab.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751232AbeCLLSI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Mar 2018 13:22:14 -0500
-Subject: Re: [PATCH] ssb:: use put_device() if device_register fail
-To: =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>
-References: <bdd20c00cba68044d82e387072b39f0176448e97.1520416785.git.arvind.yadav.cs@gmail.com>
- <20180307174700.013e20ae@wiggum> <5AA01E5E.8070002@gmail.com>
- <20180307183858.63172de9@wiggum>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-From: arvindY <arvind.yadav.cs@gmail.com>
-Message-ID: <5AA02DD2.2090709@gmail.com> (sfid-20180307_192244_509114_98CD476D)
-Date: Wed, 7 Mar 2018 23:52:10 +0530
+        Mon, 12 Mar 2018 07:18:08 -0400
+Date: Mon, 12 Mar 2018 12:08:56 +0100
+From: Linus =?utf-8?Q?L=C3=BCssing?= <linus.luessing@c0d3.blue>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Network Development <netdev@vger.kernel.org>,
+        bridge@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com
+Subject: Re: Problem with bridge (mcast-to-ucast + hairpin) and Broadcom's
+ 802.11f in their FullMAC fw
+Message-ID: <20180312110856.GL2470@otheros> (sfid-20180312_121817_945380_07C1CABE)
+References: <CACna6rz9L09g9oeHhvt209Tg1E3gKgmhGnYF653AdkXfZf=4kw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180307183858.63172de9@wiggum>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rz9L09g9oeHhvt209Tg1E3gKgmhGnYF653AdkXfZf=4kw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Feb 27, 2018 at 11:08:20AM +0100, Rafał Miłecki wrote:
+> I've problem when using OpenWrt/LEDE on a home router with Broadcom's
+> FullMAC WiFi chipset.
 
+Hi Rafał,
 
-On Wednesday 07 March 2018 11:08 PM, Michael B�sch wrote:
-> On Wed, 7 Mar 2018 22:46:14 +0530
-> arvindY <arvind.yadav.cs@gmail.com> wrote:
->>>> diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
->>>> index 65420a9..c4449e0 100644
->>>> --- a/drivers/ssb/main.c
->>>> +++ b/drivers/ssb/main.c
->>>> @@ -521,6 +521,7 @@ static int ssb_devices_register(struct ssb_bus *bus)
->>>>    			ssb_err("Could not register %s\n", dev_name(dev));
->>>>    			/* Set dev to NULL to not unregister
->>>>    			 * dev on error unwinding. */
->>>> +			put_device(dev);
->>>>    			sdev->dev = NULL;
->>>>    			kfree(devwrap);
->>>>    			goto error;
->>> I don't think this is correct.
->>> The dev structure is allocated as part of devwrap, which is freed here.
->>>
->>> Why do you think we need put_device here?
->>>   
->> Yes this patch is not correct, We must not use kfree() after you called
->> device_register() (even
->> if it was not successful!) -- see the comment for device_register().
->> I will delete kfree() and send updated patch.
->
-> Is device_put() going to call ssb_release_dev() to free the structure?
->
-> Can you please elaborate on why device_put() must be used? The comment
-> is not really of any use here.
->
-put_device() will call kobject_put(). By calling this, The kobject core 
-will automatically
-clean up all of the memory allocated with the kobject. Internally 
-kobject_put() will call
-kobject_cleanup() which is responsible to call 'dev -> release' and also 
-free other
-kobject resources. we should always avoid kfree() if device_register() 
-returned an error.
-Otherwise it'll not do clean up of other kobject resources.
+Thanks for reporting this issue!
 
-~arvind
+> Can you see any solution for this problem? Is that an option to stop
+> multicast-to-unicast from touching 802.11f packets? Some other ideas?
+> Obviously I can't modify Broadcom's firmware and drop that obsoleted
+> standard.
+
+Just to avoid some potential confusion: This is more an issue of
+hairpinning than it is an issue of multicast-to-unicast per se,
+right?
+
+That is, if you set this to 0 manually:
+/sys/class/net/<ap-iface>/brport/multicast_to_unicast
+Then the issue still occurs, right?
+
+Regards, Linus
