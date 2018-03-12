@@ -1,65 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:42314 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031277AbeCAOUx (ORCPT
+Received: from mail-ot0-f180.google.com ([74.125.82.180]:46815 "EHLO
+        mail-ot0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752481AbeCLJtG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:20:53 -0500
-Received: by mail-qk0-f193.google.com with SMTP id b130so7666990qkg.9
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:20:53 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 10/52] ath: Add regulatory mapping for Rwanda
-Date: Thu,  1 Mar 2018 15:18:20 +0100
-Message-Id: <20180301141902.24824-11-sven.eckelmann@openmesh.com> (sfid-20180301_153349_776380_DD722073)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+        Mon, 12 Mar 2018 05:49:06 -0400
+MIME-Version: 1.0
+In-Reply-To: <5A969313.5050501@broadcom.com>
+References: <CACna6rz9L09g9oeHhvt209Tg1E3gKgmhGnYF653AdkXfZf=4kw@mail.gmail.com>
+ <88d080df-4cce-98d1-6482-0408a3dcb015@gmail.com> <5A969313.5050501@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Mon, 12 Mar 2018 10:49:04 +0100
+Message-ID: <CACna6rwbEAshSi4hFHFu5dAinwbXKrwoSkB0NWmQki7-VkX0Rg@mail.gmail.com> (sfid-20180312_104918_960052_6C5B52BA)
+Subject: Re: Problem with bridge (mcast-to-ucast + hairpin) and Broadcom's
+ 802.11f in their FullMAC fw
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: =?UTF-8?Q?Linus_L=C3=BCssing?= <linus.luessing@c0d3.blue>,
+        Felix Fietkau <nbd@nbd.name>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Network Development <netdev@vger.kernel.org>,
+        bridge@lists.linux-foundation.org,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
+        <brcm80211-dev-list.pdl@broadcom.com>,"
+        <brcm80211-dev-list@cypress.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The country code is used by the ath to detect the ISO 3166-1 alpha-2 name
-and to select the correct conformance test limits (CTL) for a country. If
-the country isn't available and it is still programmed in the EEPROM then
-it will cause an error and stop the initialization with:
+On 28 February 2018 at 12:31, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 2/27/2018 11:14 AM, Rafa=C5=82 Mi=C5=82ecki wrote:
+>>
+>> Sending with a fixed linux-wireless ML address. Please kindly send your
+>> replies using linux-wireless@
+>>
+>> On 02/27/2018 11:08 AM, Rafa=C5=82 Mi=C5=82ecki wrote:
+>>>
+>>> I've problem when using OpenWrt/LEDE on a home router with Broadcom's
+>>> FullMAC WiFi chipset.
+>>>
+>>>
+>>> First of all OpenWrt/LEDE uses bridge interface for LAN network with:
+>>> 1) IFLA_BRPORT_MCAST_TO_UCAST
+>>> 2) Clients isolation in hostapd
+>>> 3) Hairpin mode enabled
+>>>
+>>> For more details please see Linus's patch description:
+>>> https://patchwork.kernel.org/patch/9530669/
+>>> and maybe hairpin mode patch:
+>>> https://lwn.net/Articles/347344/
+>>>
+>>> Short version: in that setup packets received from a bridged wireless
+>>> interface can be handled back to it for transmission.
+>>>
+>>>
+>>> Now, Broadcom's firmware for their FullMAC chipsets in AP mode
+>>> supports an obsoleted 802.11f AKA IAPP standard. It's a roaming
+>>> standard that was replaced by 802.11r.
+>>>
+>>> Whenever a new station associates, firmware generates a packet like:
+>>> ff ff ff ff  ff ff ec 10  7b 5f ?? ??  00 06 00 01  af 81 01 00
+>>> (just masked 2 bytes of my MAC)
+>>>
+>>> For mode details you can see discussion in my brcmfmac patch thread:
+>>> https://patchwork.kernel.org/patch/10191451/
+>>>
+>>>
+>>> The problem is that bridge (in setup as above) handles such a packet
+>>> back to the device.
+>
+>
+> From reading the referenced links I understand the hairpin mode is causin=
+g
+> the packet to be sent back to the device, and the hairpin mode is require=
+d
+> for MCAST_TO_UCAST, right?
+>
+>>> That makes Broadcom's FullMAC firmware believe that a given station
+>>> just connected to another AP in a network (which doesn't even exist).
+>>> As a result firmware immediately disassociates that station. It's
+>>> simply impossible to connect to the router. Every association is
+>>> followed by immediate disassociation.
+>>>
+>>>
+>>> Can you see any solution for this problem? Is that an option to stop
+>>> multicast-to-unicast from touching 802.11f packets? Some other ideas?
+>>> Obviously I can't modify Broadcom's firmware and drop that obsoleted
+>>> standard.
+>
+>
+> As far as I can tell you are correct that the 802.11f amendment was never
+> adopted into the 802.11 standard. I will ask internally if we still have =
+a
+> reason for carrying it in our firmware.
 
-  Invalid EEPROM contents
+Thanks! Having at least a way to disable it would be nice.
 
-The current CTL mappings for this country are:
+That said I think we still should look for a solution for existing
+firmwares. I guess it may takes months to years to never to release
+new firmwares for all supported chipsets.
 
-* 2.4GHz: ETSI
-* 5GHz: FCC
-
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
----
- drivers/net/wireless/ath/regd.h        | 1 +
- drivers/net/wireless/ath/regd_common.h | 1 +
- 2 files changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/regd.h b/drivers/net/wireless/ath/regd.h
-index 8575718425b6..3021ba5d7ef5 100644
---- a/drivers/net/wireless/ath/regd.h
-+++ b/drivers/net/wireless/ath/regd.h
-@@ -162,6 +162,7 @@ enum CountryCode {
- 	CTRY_QATAR = 634,
- 	CTRY_ROMANIA = 642,
- 	CTRY_RUSSIA = 643,
-+	CTRY_RWANDA = 646,
- 	CTRY_SAUDI_ARABIA = 682,
- 	CTRY_SERBIA_MONTENEGRO = 891,
- 	CTRY_SINGAPORE = 702,
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index 679c6bc9035e..89a3a9104428 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -454,6 +454,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_QATAR, APL1_WORLD, "QA"},
- 	{CTRY_ROMANIA, NULL1_WORLD, "RO"},
- 	{CTRY_RUSSIA, NULL1_WORLD, "RU"},
-+	{CTRY_RWANDA, APL1_WORLD, "RW"},
- 	{CTRY_SAUDI_ARABIA, NULL1_WORLD, "SA"},
- 	{CTRY_SERBIA_MONTENEGRO, ETSI1_WORLD, "CS"},
- 	{CTRY_SINGAPORE, APL6_WORLD, "SG"},
--- 
-2.11.0
+--=20
+Rafa=C5=82
