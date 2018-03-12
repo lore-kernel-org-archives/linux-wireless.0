@@ -1,51 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:30127 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1425508AbeCBOXs (ORCPT
+Received: from mail-lf0-f41.google.com ([209.85.215.41]:44127 "EHLO
+        mail-lf0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751520AbeCLWmy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 09:23:48 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 08/13] staging: wilc1000: fix line over 80 char in wilc_add_ptk()
-Date: Fri, 2 Mar 2018 19:52:44 +0530
-Message-ID: <1520000569-27738-9-git-send-email-ajay.kathat@microchip.com> (sfid-20180302_152351_472071_C15F737B)
-In-Reply-To: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
-References: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
+        Mon, 12 Mar 2018 18:42:54 -0400
+Subject: Re: Problem with bridge (mcast-to-ucast + hairpin) and Broadcom's
+ 802.11f in their FullMAC fw
+To: =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+References: <CACna6rz9L09g9oeHhvt209Tg1E3gKgmhGnYF653AdkXfZf=4kw@mail.gmail.com>
+Cc: Network Development <netdev@vger.kernel.org>,
+        bridge@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <a7a21b04-025f-19e1-ec09-69cc355b9215@gmail.com> (sfid-20180312_234258_896199_E5E5C1F0)
+Date: Mon, 12 Mar 2018 23:42:48 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CACna6rz9L09g9oeHhvt209Tg1E3gKgmhGnYF653AdkXfZf=4kw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix 'line over 80 characters' issue found by checkpatch.pl script.
+On 02/27/2018 11:08 AM, Rafał Miłecki wrote:
+> I've problem when using OpenWrt/LEDE on a home router with Broadcom's
+> FullMAC WiFi chipset.
+>
+>
+> First of all OpenWrt/LEDE uses bridge interface for LAN network with:
+> 1) IFLA_BRPORT_MCAST_TO_UCAST
+> 2) Clients isolation in hostapd
+> 3) Hairpin mode enabled
+>
+> For more details please see Linus's patch description:
+> https://patchwork.kernel.org/patch/9530669/
+> and maybe hairpin mode patch:
+> https://lwn.net/Articles/347344/
+>
+> Short version: in that setup packets received from a bridged wireless
+> interface can be handled back to it for transmission.
+>
+>
+> Now, Broadcom's firmware for their FullMAC chipsets in AP mode
+> supports an obsoleted 802.11f AKA IAPP standard. It's a roaming
+> standard that was replaced by 802.11r.
+>
+> Whenever a new station associates, firmware generates a packet like:
+> ff ff ff ff  ff ff ec 10  7b 5f ?? ??  00 06 00 01  af 81 01 00
+> (just masked 2 bytes of my MAC)
+>
+> For mode details you can see discussion in my brcmfmac patch thread:
+> https://patchwork.kernel.org/patch/10191451/
+>
+>
+> The problem is that bridge (in setup as above) handles such a packet
+> back to the device.
+>
+> That makes Broadcom's FullMAC firmware believe that a given station
+> just connected to another AP in a network (which doesn't even exist).
+> As a result firmware immediately disassociates that station. It's
+> simply impossible to connect to the router. Every association is
+> followed by immediate disassociation.
+>
+>
+> Can you see any solution for this problem? Is that an option to stop
+> multicast-to-unicast from touching 802.11f packets? Some other ideas?
+> Obviously I can't modify Broadcom's firmware and drop that obsoleted
+> standard.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+I kept thinking about this for a bit more. We probably have to start
+with deciding what to blame for this problem. I see two options I'll
+describe below.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 5ebb0aa..57f90e4 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2858,10 +2858,12 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
- 		return -ENOMEM;
- 
- 	if (rx_mic)
--		memcpy(msg.body.key_info.attr.wpa.key + 16, rx_mic, RX_MIC_KEY_LEN);
-+		memcpy(msg.body.key_info.attr.wpa.key + 16, rx_mic,
-+		       RX_MIC_KEY_LEN);
- 
- 	if (tx_mic)
--		memcpy(msg.body.key_info.attr.wpa.key + 24, tx_mic, TX_MIC_KEY_LEN);
-+		memcpy(msg.body.key_info.attr.wpa.key + 24, tx_mic,
-+		       TX_MIC_KEY_LEN);
- 
- 	msg.body.key_info.attr.wpa.key_len = key_len;
- 	msg.body.key_info.attr.wpa.mac_addr = mac_addr;
--- 
-2.7.4
+Please share your opinions on this.
+
+
+1) Blame brcmfmac fw for implementing 802.11f
+
+In that case we should add workaround to brcmfmac driver to drop/ignore
+802.11f packets. A slightly improved version of my
+[PATCH] brcmfmac: detect & reject faked packet generated by a firmware
+https://patchwork.kernel.org/patch/10191451/
+should work.
+
+
+2) Blame bridge + mcast-to-ucast + hairpin for 802.11f incompatibility
+
+If we agree that 802.11f support in FullMAC firmware is acceptable, then
+we have to make sure Linux's bridge doesn't break it by passing 802.11f
+(broadcast) frames back to the source interface. That would require a
+check like in below diff + proper code for handling such packets. I'm
+afraid I'm not familiar with bridge code enough to complete that.
+
+diff --git a/net/bridge/br_input.c b/net/bridge/br_input.c
+index edae702..9e5d6ea 100644
+--- a/net/bridge/br_input.c
++++ b/net/bridge/br_input.c
+@@ -126,6 +126,27 @@ static void br_do_proxy_arp(struct sk_buff *skb, struct net_bridge *br,
+  	}
+  }
+
++static bool br_skb_is_iapp_add_packet(struct sk_buff *skb)
++{
++	const u8 iapp_add_packet[6] __aligned(2) = {
++		0x00, 0x01, 0xaf, 0x81, 0x01, 0x00,
++	};
++#if !defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
++	const u16 *a = (const u16 *)skb->data;
++	const u16 *b = (const u16 *)iapp_add_packet;
++#endif
++
++	if (skb->len != 6)
++		return false;
++
++#if defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
++	return !(((*(const u32 *)skb->data) ^ (*(const u32 *)iapp_add_packet)) |
++	         ((*(const u16 *)(skb->data + 4)) ^ (*(const u16 *)(iapp_add_packet + 4))));
++#else
++	return !((a[0] ^ b[0]) | (a[1] ^ b[1]) | (a[2] ^ b[2]));
++#endif
++}
++
+  /* note: already called with rcu_read_lock */
+  int br_handle_frame_finish(struct net *net, struct sock *sk, struct sk_buff *skb)
+  {
+@@ -155,6 +176,8 @@ int br_handle_frame_finish(struct net *net, struct sock *sk, struct sk_buff *skb
+  	if (is_multicast_ether_addr(dest)) {
+  		/* by definition the broadcast is also a multicast address */
+  		if (is_broadcast_ether_addr(dest)) {
++			if (br_skb_is_iapp_add_packet(skb))
++				pr_warn("This packet should not be passed back to the source interface!\n");
+  			pkt_type = BR_PKT_BROADCAST;
+  			local_rcv = true;
+  		} else {
