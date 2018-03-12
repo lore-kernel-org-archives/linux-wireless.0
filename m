@@ -1,52 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:43499 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031181AbeCAOVs (ORCPT
+Received: from mail.aperture-lab.de ([138.201.29.205]:42862 "EHLO
+        mail.aperture-lab.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750794AbeCLLsR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:21:48 -0500
-Received: by mail-qk0-f196.google.com with SMTP id j4so7667085qke.10
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:21:48 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 32/52] ath: Map Isreal to ETSI3_WORLD
-Date: Thu,  1 Mar 2018 15:18:42 +0100
-Message-Id: <20180301141902.24824-33-sven.eckelmann@openmesh.com> (sfid-20180301_152152_890202_17B99C2C)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+        Mon, 12 Mar 2018 07:48:17 -0400
+Date: Mon, 12 Mar 2018 12:48:15 +0100
+From: Linus =?utf-8?Q?L=C3=BCssing?= <linus.luessing@c0d3.blue>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Network Development <netdev@vger.kernel.org>,
+        bridge@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com
+Subject: Re: Problem with bridge (mcast-to-ucast + hairpin) and Broadcom's
+ 802.11f in their FullMAC fw
+Message-ID: <20180312114815.GN2470@otheros> (sfid-20180312_124821_319010_9E673A8C)
+References: <CACna6rz9L09g9oeHhvt209Tg1E3gKgmhGnYF653AdkXfZf=4kw@mail.gmail.com>
+ <20180312110856.GL2470@otheros>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180312110856.GL2470@otheros>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The regdomain code is used to select the correct the correct conformance
-test limits (CTL) for a country. If the regdomain code isn't correctly
-mapped to the actual CTL entries in EEPROM then it could happen that the
-device violates the regulations. But it can also happen that the device is
-then not able to be used with its full txpower on all rates.
+On Mon, Mar 12, 2018 at 12:08:56PM +0100, Linus Lüssing wrote:
+> On Tue, Feb 27, 2018 at 11:08:20AM +0100, Rafał Miłecki wrote:
+> > I've problem when using OpenWrt/LEDE on a home router with Broadcom's
+> > FullMAC WiFi chipset.
+> 
+> Hi Rafał,
+> 
+> Thanks for reporting this issue!
+> 
+> > Can you see any solution for this problem? Is that an option to stop
+> > multicast-to-unicast from touching 802.11f packets? Some other ideas?
+> > Obviously I can't modify Broadcom's firmware and drop that obsoleted
+> > standard.
+> 
+> Just to avoid some potential confusion: This is more an issue of
+> hairpinning than it is an issue of multicast-to-unicast per se,
+> right?
+> 
+> That is, if you set this to 0 manually:
+> /sys/class/net/<ap-iface>/brport/multicast_to_unicast
+> Then the issue still occurs, right?
 
-The CTL mappings for this regdomain code were now changed to:
+Btw., if in OpenWRT/LEDE you set 'option multicast_to_unicast 0'
+in /etc/config/network for the bridge (and not bridge port)
+then netifd should refrain from setting the bridge hairpinning and
+AP isolation on wireless devices, too, if I remember correctly.
 
-* 2.4GHz: ETSI
-* 5GHz: NO_CTL -> ETSI
-
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
----
- drivers/net/wireless/ath/regd_common.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index 6a325213c163..59145decdb2b 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -360,7 +360,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_INDONESIA, APL2_WORLD, "ID"},
- 	{CTRY_IRAN, APL1_WORLD, "IR"},
- 	{CTRY_IRELAND, ETSI1_WORLD, "IE"},
--	{CTRY_ISRAEL, NULL1_WORLD, "IL"},
-+	{CTRY_ISRAEL, ETSI3_WORLD, "IL"},
- 	{CTRY_ITALY, ETSI1_WORLD, "IT"},
- 	{CTRY_JAMAICA, FCC3_WORLD, "JM"},
- 
--- 
-2.11.0
+Can you confirm that the issue disappears for you then?
