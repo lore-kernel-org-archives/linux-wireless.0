@@ -1,37 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f172.google.com ([209.85.220.172]:43823 "EHLO
-        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932332AbeCMVAt (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45760 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752954AbeCMNfY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 17:00:49 -0400
+        Tue, 13 Mar 2018 09:35:24 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Andres Rodriguez <andresx7@gmail.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Ilia Mirkin <imirkin@alum.mit.edu>, luciano.coelho@intel.com
+Subject: Re: [PATCH] firmware: add a function to load optional firmware v2
+References: <20180309221243.15489-2-andresx7@gmail.com>
+        <20180309230925.3573-1-andresx7@gmail.com>
+        <CAB=NE6VY62KqmhzD=zT8od=PhgPi3rGKKKxKz_zad-ZrYW-97A@mail.gmail.com>
+        <CAB=NE6XpY4LuDwnakCa6gZ_HjjhZDnu=gDeHwmpNRaSkqQOB2g@mail.gmail.com>
+        <bbdc304f-edd5-38df-ea88-012fefc54b90@gmail.com>
+        <5AA5B777.5020106@broadcom.com>
+Date: Tue, 13 Mar 2018 15:35:18 +0200
+In-Reply-To: <5AA5B777.5020106@broadcom.com> (Arend van Spriel's message of
+        "Mon, 12 Mar 2018 00:10:47 +0100")
+Message-ID: <87vae09jzd.fsf@kamboji.qca.qualcomm.com> (sfid-20180313_143603_822930_3A9958AE)
 MIME-Version: 1.0
-In-Reply-To: <20180313201757.GK8631@eros>
-References: <1520819022-15238-1-git-send-email-me@tobin.cc>
- <20180312094606.8192B6081A@smtp.codeaurora.org> <20180313201757.GK8631@eros>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Tue, 13 Mar 2018 23:00:47 +0200
-Message-ID: <CAHp75VeM1zNyNtHvsn0=rg_xibcitVHREY73cAk=KCSK3Ti3vw@mail.gmail.com> (sfid-20180313_220132_606303_F8B5ECDA)
-Subject: Re: [RESEND] rsi: Remove stack VLA usage
-To: tcharding <me@tobin.cc>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        kernel-hardening@lists.openwall.com,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        Tycho Andersen <tycho@tycho.ws>,
-        Kees Cook <keescook@chromium.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 13, 2018 at 10:17 PM, tcharding <me@tobin.cc> wrote:
-> On Mon, Mar 12, 2018 at 09:46:06AM +0000, Kalle Valo wrote:
->> tcharding <me@tobin.cc> wrote:
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-I'm pretty much sure it depends on the original email headers, like
-above ^^^ =E2=80=94 no name.
-Perhaps git config on your side should be done.
+> On 3/11/2018 5:05 PM, Andres Rodriguez wrote:
+>>> Your patch series then should also have the driver callers who you
+>>> want to modify to use this new API. Collect from the 802.11 folks the
+>>> other drivers which I think they wanted changed as well.
+>>
+>> Arend, Kalle, would love to hear your feedback.
+>
+> I am not sure if it was ath10k, but Kalle will surely know. The other
+> driver firing a whole batch of firmware requests is iwlwifi. These
+> basically try to get latest firmware version and if not there try an
+> older one.
 
---=20
-With Best Regards,
-Andy Shevchenko
+Oh yeah, ath10k definitely needs this! It tries different firmware API
+versions from latest to older (firmware-6.bin, firmware-5.bin,
+firmware-4.bin and so on) to find a compatible firmware and the error
+messages from request_firmware() are constantly confusing the users, I
+think the latest query about these errors from last week on IRC. So
+having request_firmware_nowarn() (or similar) would help users a lot.
+
+We tried to workaround this by using request_firmware_direct() (which
+oddly doesn't print anything) but that caused issues with OpenWRT/LEDE:
+
+https://git.kernel.org/linus/c0cc00f250e1
+
+And iwlwifi has a similar problem, adding Luca to the loop.
+
+-- 
+Kalle Valo
