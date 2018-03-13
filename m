@@ -1,122 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:1969 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1425214AbeCBOYD (ORCPT
+Received: from mail-qt0-f173.google.com ([209.85.216.173]:34298 "EHLO
+        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752063AbeCMJSO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 09:24:03 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 12/13] staging: wilc1000: fix line over 80 char in handle_rcvd_ntwrk_info()
-Date: Fri, 2 Mar 2018 19:52:48 +0530
-Message-ID: <1520000569-27738-13-git-send-email-ajay.kathat@microchip.com> (sfid-20180302_153349_281849_7EB1349F)
-In-Reply-To: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
-References: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 13 Mar 2018 05:18:14 -0400
+Received: by mail-qt0-f173.google.com with SMTP id l25so21932739qtj.1
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2018 02:18:14 -0700 (PDT)
+Subject: Re: Problem with bridge (mcast-to-ucast + hairpin) and Broadcom's
+ 802.11f in their FullMAC fw
+To: Felix Fietkau <nbd@nbd.name>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+References: <CACna6rz9L09g9oeHhvt209Tg1E3gKgmhGnYF653AdkXfZf=4kw@mail.gmail.com>
+ <c24304cf-7e0d-137a-94b1-d8f4e61a3b70@nbd.name>
+Cc: Network Development <netdev@vger.kernel.org>,
+        bridge@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AA79752.8070200@broadcom.com> (sfid-20180313_101822_507879_CB2050A3)
+Date: Tue, 13 Mar 2018 10:18:10 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <c24304cf-7e0d-137a-94b1-d8f4e61a3b70@nbd.name>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix 'line over 80 character' issues found by checkpatch.pl script by
-use of temporary variable and avoided leading tab.
+On 3/13/2018 8:20 AM, Felix Fietkau wrote:
+> [resent with fixed typo in linux-wireless address]
+>
+> On 2018-02-27 11:08, Rafał Miłecki wrote:
+>> I've problem when using OpenWrt/LEDE on a home router with Broadcom's
+>> FullMAC WiFi chipset.
+>>
+>>
+>> First of all OpenWrt/LEDE uses bridge interface for LAN network with:
+>> 1) IFLA_BRPORT_MCAST_TO_UCAST
+>> 2) Clients isolation in hostapd
+>> 3) Hairpin mode enabled
+>>
+>> For more details please see Linus's patch description:
+>> https://patchwork.kernel.org/patch/9530669/
+>> and maybe hairpin mode patch:
+>> https://lwn.net/Articles/347344/
+>>
+>> Short version: in that setup packets received from a bridged wireless
+>> interface can be handled back to it for transmission.
+>>
+>>
+>> Now, Broadcom's firmware for their FullMAC chipsets in AP mode
+>> supports an obsoleted 802.11f AKA IAPP standard. It's a roaming
+>> standard that was replaced by 802.11r.
+>>
+>> Whenever a new station associates, firmware generates a packet like:
+>> ff ff ff ff  ff ff ec 10  7b 5f ?? ??  00 06 00 01  af 81 01 00
+>> (just masked 2 bytes of my MAC)
+>>
+>> For mode details you can see discussion in my brcmfmac patch thread:
+>> https://patchwork.kernel.org/patch/10191451/
+>>
+>>
+>> The problem is that bridge (in setup as above) handles such a packet
+>> back to the device.
+>>
+>> That makes Broadcom's FullMAC firmware believe that a given station
+>> just connected to another AP in a network (which doesn't even exist).
+>> As a result firmware immediately disassociates that station. It's
+>> simply impossible to connect to the router. Every association is
+>> followed by immediate disassociation.
+>>
+>>
+>> Can you see any solution for this problem? Is that an option to stop
+>> multicast-to-unicast from touching 802.11f packets? Some other ideas?
+>> Obviously I can't modify Broadcom's firmware and drop that obsoleted
+>> standard.
+> Let's look at it from a different angle: Since these packets are
+> forwarded as normal packets by the bridge, and the Broadcom firmware
+> reacts to them in this nasty way, that's basically local DoS security
+> issue. In my opinion that matters a lot more than having support for an
+> obsolete feature that almost nobody will ever want to use.
+>
+> I think the right approach to deal with this issue is to drop these
+> garbage packets in both the receive and transmit path of brcmfmac.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 66 +++++++++++++++----------------
- 1 file changed, 33 insertions(+), 33 deletions(-)
+My approach was to get rid of it in firmware as this never made it into 
+the 802.11 spec. So I asked internally whether it was still used. Turns 
+out that we still rely on it for some customers. I am fine with dropping 
+these "garbage" packets, but given that there is still use for it I 
+would like to see that under a Kconfig flag. Dropping it may be the default.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 19c7483..2354666 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1267,51 +1267,51 @@ static s32 handle_rcvd_ntwrk_info(struct wilc_vif *vif,
- 	struct network_info *info = NULL;
- 	void *params = NULL;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
-+	struct user_scan_req *scan_req = &hif_drv->usr_scan_req;
- 
- 	found = true;
- 
--	if (hif_drv->usr_scan_req.scan_result) {
--		wilc_parse_network_info(rcvd_info->buffer, &info);
--		if (!info || !hif_drv->usr_scan_req.scan_result) {
--			netdev_err(vif->ndev, "driver is null\n");
--			result = -EINVAL;
--			goto done;
--		}
-+	if (!scan_req->scan_result)
-+		goto done;
- 
--		for (i = 0; i < hif_drv->usr_scan_req.rcvd_ch_cnt; i++) {
--			if (memcmp(hif_drv->usr_scan_req.net_info[i].bssid,
--				   info->bssid, 6) == 0) {
--				if (info->rssi <= hif_drv->usr_scan_req.net_info[i].rssi) {
--					goto done;
--				} else {
--					hif_drv->usr_scan_req.net_info[i].rssi = info->rssi;
--					found = false;
--					break;
--				}
-+	wilc_parse_network_info(rcvd_info->buffer, &info);
-+	if (!info || !scan_req->scan_result) {
-+		netdev_err(vif->ndev, "driver is null\n");
-+		result = -EINVAL;
-+		goto done;
-+	}
-+
-+	for (i = 0; i < scan_req->rcvd_ch_cnt; i++) {
-+		if (memcmp(scan_req->net_info[i].bssid, info->bssid, 6) == 0) {
-+			if (info->rssi <= scan_req->net_info[i].rssi) {
-+				goto done;
-+			} else {
-+				scan_req->net_info[i].rssi = info->rssi;
-+				found = false;
-+				break;
- 			}
- 		}
-+	}
- 
--		if (found) {
--			if (hif_drv->usr_scan_req.rcvd_ch_cnt < MAX_NUM_SCANNED_NETWORKS) {
--				hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.rcvd_ch_cnt].rssi = info->rssi;
-+	if (found) {
-+		if (scan_req->rcvd_ch_cnt < MAX_NUM_SCANNED_NETWORKS) {
-+			scan_req->net_info[scan_req->rcvd_ch_cnt].rssi = info->rssi;
- 
--				memcpy(hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.rcvd_ch_cnt].bssid,
--				       info->bssid, 6);
-+			memcpy(scan_req->net_info[scan_req->rcvd_ch_cnt].bssid,
-+			       info->bssid, 6);
- 
--				hif_drv->usr_scan_req.rcvd_ch_cnt++;
-+			scan_req->rcvd_ch_cnt++;
- 
--				info->new_network = true;
--				params = host_int_parse_join_bss_param(info);
-+			info->new_network = true;
-+			params = host_int_parse_join_bss_param(info);
- 
--				hif_drv->usr_scan_req.scan_result(SCAN_EVENT_NETWORK_FOUND, info,
--								  hif_drv->usr_scan_req.arg,
--								  params);
--			}
--		} else {
--			info->new_network = false;
--			hif_drv->usr_scan_req.scan_result(SCAN_EVENT_NETWORK_FOUND, info,
--							  hif_drv->usr_scan_req.arg, NULL);
-+			scan_req->scan_result(SCAN_EVENT_NETWORK_FOUND, info,
-+					       scan_req->arg, params);
- 		}
-+	} else {
-+		info->new_network = false;
-+		scan_req->scan_result(SCAN_EVENT_NETWORK_FOUND, info,
-+				      scan_req->arg, NULL);
- 	}
- 
- done:
--- 
-2.7.4
+Regards,
+Arend
