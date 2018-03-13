@@ -1,56 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:50112 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S934468AbeCSQkQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Mar 2018 12:40:16 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Hans de Goede <hdegoede@redhat.com>,
-        =?UTF-8?q?Micha=C5=82=20Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>,
-        Michael Thalmeier <michael.thalmeier@hale.at>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] NFC: pn533: Fix wrong GFP flag usage
-Date: Mon, 19 Mar 2018 17:40:12 +0100
-Message-Id: <20180319164012.31714-2-hdegoede@redhat.com> (sfid-20180319_174035_735699_9DEB10F7)
-In-Reply-To: <20180319164012.31714-1-hdegoede@redhat.com>
-References: <20180319164012.31714-1-hdegoede@redhat.com>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:38671 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752778AbeCMWAC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Mar 2018 18:00:02 -0400
+Received: by mail-pf0-f195.google.com with SMTP id d26so491151pfn.5
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2018 15:00:01 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [RFC v5 6/9] nl80211: Add SOCKET_OWNER support to JOIN_MESH
+Date: Tue, 13 Mar 2018 16:59:39 -0500
+Message-Id: <20180313215942.29176-7-denkenz@gmail.com> (sfid-20180313_230010_413215_4D4AA164)
+In-Reply-To: <20180313215942.29176-1-denkenz@gmail.com>
+References: <20180313215942.29176-1-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pn533_recv_response() is an urb completion handler, so it must use
-GFP_ATOMIC. pn533_usb_send_frame() OTOH runs from a regular sleeping
-context, so the pn533_submit_urb_for_response() there (and only there)
-can use the regular GFP_KERNEL flags.
-
-BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1514134
-Fixes: 9815c7cf22da ("NFC: pn533: Separate physical layer from ...")
-Cc: Michael Thalmeier <michael.thalmeier@hale.at>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
 ---
- drivers/nfc/pn533/usb.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ include/uapi/linux/nl80211.h |  2 ++
+ net/wireless/mesh.c          |  1 +
+ net/wireless/nl80211.c       | 10 +++++++++-
+ 3 files changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/nfc/pn533/usb.c b/drivers/nfc/pn533/usb.c
-index c9398712ba31..2aff1ddadc1d 100644
---- a/drivers/nfc/pn533/usb.c
-+++ b/drivers/nfc/pn533/usb.c
-@@ -75,7 +75,7 @@ static void pn533_recv_response(struct urb *urb)
- 	struct sk_buff *skb = NULL;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 877fab2836ec..e3329bc4644b 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1987,6 +1987,8 @@ enum nl80211_commands {
+  *	station will deauthenticate when the socket is closed.
+  *	If set during %NL80211_CMD_JOIN_IBSS the IBSS will be automatically
+  *	torn down when the socket is closed.
++ *	If set during %NL80211_CMD_JOIN_MESH the mesh setup will be
++ *	automatically torn down when the socket is closed.
+  *
+  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
+  *	the TDLS link initiator.
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index b12da6ef3c12..e91a5078615b 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -286,6 +286,7 @@ int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
  
- 	if (!urb->status) {
--		skb = alloc_skb(urb->actual_length, GFP_KERNEL);
-+		skb = alloc_skb(urb->actual_length, GFP_ATOMIC);
- 		if (!skb) {
- 			nfc_err(&phy->udev->dev, "failed to alloc memory\n");
- 		} else {
-@@ -185,7 +185,7 @@ static int pn533_usb_send_frame(struct pn533 *dev,
+ 	err = rdev_leave_mesh(rdev, dev);
+ 	if (!err) {
++		wdev->conn_owner_nlportid = 0;
+ 		wdev->mesh_id_len = 0;
+ 		wdev->beacon_interval = 0;
+ 		memset(&wdev->chandef, 0, sizeof(wdev->chandef));
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e678dc510f3a..e38d55cf34f7 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -10140,7 +10140,15 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
+ 	setup.userspace_handles_dfs =
+ 		nla_get_flag(info->attrs[NL80211_ATTR_HANDLE_DFS]);
  
- 	if (dev->protocol_type == PN533_PROTO_REQ_RESP) {
- 		/* request for response for sent packet directly */
--		rc = pn533_submit_urb_for_response(phy, GFP_ATOMIC);
-+		rc = pn533_submit_urb_for_response(phy, GFP_KERNEL);
- 		if (rc)
- 			goto error;
- 	} else if (dev->protocol_type == PN533_PROTO_REQ_ACK_RESP) {
+-	return cfg80211_join_mesh(rdev, dev, &setup, &cfg);
++	err = cfg80211_join_mesh(rdev, dev, &setup, &cfg);
++
++	if (!err && info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
++		wdev_lock(dev->ieee80211_ptr);
++		dev->ieee80211_ptr->conn_owner_nlportid = info->snd_portid;
++		wdev_unlock(dev->ieee80211_ptr);
++	}
++
++	return err;
+ }
+ 
+ static int nl80211_leave_mesh(struct sk_buff *skb, struct genl_info *info)
 -- 
-2.14.3
+2.13.5
