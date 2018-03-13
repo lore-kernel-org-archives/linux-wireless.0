@@ -1,50 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54341 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751671AbeCTSYW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Mar 2018 14:24:22 -0400
-Date: Tue, 20 Mar 2018 19:24:20 +0100
-From: Michal Kubecek <mkubecek@suse.cz>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        netdev@vger.kernel.org
-Subject: Re: [RFC] ethtool: Support ETHTOOL_GSTATS2 command.
-Message-ID: <20180320182420.u5aa7eny3fbix7fj@unicorn.suse.cz> (sfid-20180320_192434_900303_77597501)
-References: <1520452289-14172-1-git-send-email-greearb@candelatech.com>
- <20180320103747.7kcfdu4yzof6bwxw@unicorn.suse.cz>
- <37830d46-762b-2a92-4506-5792a65d2ebd@candelatech.com>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33906 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751731AbeCMTm2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Mar 2018 15:42:28 -0400
+Received: by mail-wm0-f65.google.com with SMTP id a20so15593144wmd.1
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2018 12:42:28 -0700 (PDT)
+Subject: Re: [2/3] mwifiex: support sysfs initiated device coredump
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1519210220-22437-3-git-send-email-arend.vanspriel@broadcom.com>
+ <20180312094115.2E1C1606DB@smtp.codeaurora.org>
+ <5AA67616.2000602@broadcom.com> <87efkoazow.fsf@kamboji.qca.qualcomm.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+        linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AA829A1.1090209@broadcom.com> (sfid-20180313_204246_718128_8610AFC9)
+Date: Tue, 13 Mar 2018 20:42:25 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <37830d46-762b-2a92-4506-5792a65d2ebd@candelatech.com>
+In-Reply-To: <87efkoazow.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 20, 2018 at 08:39:33AM -0700, Ben Greear wrote:
-> On 03/20/2018 03:37 AM, Michal Kubecek wrote:
-> > 
-> > IMHO it would be more practical to set "0 means same as GSTATS" as a
-> > rule and make ethtool_get_stats() a wrapper for ethtool_get_stats2() to
-> > avoid code duplication (or perhaps a use fall-through in the switch). It
-> > would also allow drivers to provide only one of the callbacks.
-> 
-> Yes, but that would require changing all drivers at once, and would make backporting
-> and out-of-tree drivers harder to manage.  I had low hopes that this feature would
-> make it upstream, so I didn't want to propose any large changes up front.
+On 3/13/2018 2:10 PM, Kalle Valo wrote:
+> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+>
+>> On 3/12/2018 10:41 AM, Kalle Valo wrote:
+>>> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+>>>
+>>>> Since commit 3c47d19ff4dc ("drivers: base: add coredump driver ops")
+>>>> it is possible to initiate a device coredump from user-space. This
+>>>> patch adds support for it adding the .coredump() driver callback.
+>>>> As there is no longer a need to initiate it through debugfs remove
+>>>> that code.
+>>>>
+>>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>>
+>>> Based on the discussion I assume this is ok to take to w-d-next. If that's not
+>>> the case, please let me know ASAP.
+>>
+>> It is up to the mwifiex maintainers to decide, I guess. The ABI
+>> documentation need to be revised and change the callback to void
+>> return type. I am not sure what the best approach is. 1) apply this
+>> and fix return type later, or 2) fix return type and resubmit this.
+>> What is your opinion?
+>
+> I guess the callback change will go through Greg's tree? Then I suspect
+> it's easier that you submit the callback change to Greg first and wait
+> for it to trickle down to wireless-drivers-next (after the next merge
+> window) and then I can apply the driver patches. Otherwise there might
+> be a conflict between my and Greg's tree.
 
-I don't think so. What I mean is:
+That was my assessment, but unfortunately Marcel already applied the 
+btmrvl patch before I could reply. So how do I move from here? Option 1) 
+revert brmrvl and fix callback return type, or 2) apply mwifiex patch 
+and fix callback return type later for both drivers.
 
-(a) driver implements ->get_ethtool_stats2() callback; then we use it
-    for GSTATS2
-(b) driver does not implement get_ethtool_stats2() but implements
-    ->get_ethtool_stats(); then we call for GSTATS2 if level is zero,
-    otherwise GSTATS2 returns -EINVAL
-
-and GSTATS is always translated to GSTATS2 with level 0, either by
-defining ethtool_get_stats() as a wrapper or by fall-through in the
-switch statement.
-
-This way, most drivers could be left untouched and only those which
-would implement non-default levels would provide ->get_ethtool_stats2()
-callback instead of ->get_ethtool_stats().
-
-Michal Kubecek
+Regards,
+Arend
