@@ -1,76 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:35332 "EHLO
-        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967543AbeCAKvC (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35520 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751758AbeCMNQk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 05:51:02 -0500
-Received: by mail-io0-f193.google.com with SMTP id 30so6690421iog.2
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 02:51:02 -0800 (PST)
+        Tue, 13 Mar 2018 09:16:40 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Andres Rodriguez <andresx7@gmail.com>,
+        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>
+Subject: Re: [PATCH] firmware: add a function to load optional firmware v2
+References: <20180309221243.15489-2-andresx7@gmail.com>
+        <20180309230925.3573-1-andresx7@gmail.com>
+        <CAB=NE6VY62KqmhzD=zT8od=PhgPi3rGKKKxKz_zad-ZrYW-97A@mail.gmail.com>
+Date: Tue, 13 Mar 2018 15:16:34 +0200
+In-Reply-To: <CAB=NE6VY62KqmhzD=zT8od=PhgPi3rGKKKxKz_zad-ZrYW-97A@mail.gmail.com>
+        (Luis R. Rodriguez's message of "Sat, 10 Mar 2018 06:35:30 -0800")
+Message-ID: <87a7vcazf1.fsf@kamboji.qca.qualcomm.com> (sfid-20180313_141655_368298_8D3B2B71)
 MIME-Version: 1.0
-In-Reply-To: <f914ce85-5492-ad24-9ce9-ebcd0a79af04@blackstar.nl>
-References: <cover.1519827461.git.lorenzo.bianconi@redhat.com>
- <2850551da4495924bde846dd237b736e41913d0f.1519827461.git.lorenzo.bianconi@redhat.com>
- <3263f88f-daec-837c-e58c-bee907295d47@blackstar.nl> <f914ce85-5492-ad24-9ce9-ebcd0a79af04@blackstar.nl>
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Date: Thu, 1 Mar 2018 11:51:01 +0100
-Message-ID: <CAJ0CqmWanWyqu8dzwx2UVBYaCwiXqDOUKzx9eNaoR0U2v3s1JA@mail.gmail.com> (sfid-20180301_115112_401005_74EBCBEB)
-Subject: Re: [PATCH] mt7601u: remove a warning in mt7601u_efuse_physical_size_check()
-To: Bas Vermeulen <bvermeul@blackstar.nl>
-Cc: Jakub Kicinski <kubakici@wp.pl>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Nevermind. round_up instead of DIV_ROUND_UP.
->
-> Bas Vermeulen
->
->
->
-> On 01-03-18 11:22, Bas Vermeulen wrote:
->>
->>
->>
->> On 28-02-18 15:26, Lorenzo Bianconi wrote:
->>>
->>> Fix the following sparse warning in mt7601u_efuse_physical_size_check:
->>> - drivers/net/wireless/mediatek/mt7601u/eeprom.c:77:27: warning:
->>>    Variable length array is used
->>>
->>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
->>> ---
->>>   drivers/net/wireless/mediatek/mt7601u/eeprom.c | 2 +-
->>>   1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/net/wireless/mediatek/mt7601u/eeprom.c
->>> b/drivers/net/wireless/mediatek/mt7601u/eeprom.c
->>> index da6faea092d6..a462064b5c91 100644
->>> --- a/drivers/net/wireless/mediatek/mt7601u/eeprom.c
->>> +++ b/drivers/net/wireless/mediatek/mt7601u/eeprom.c
->>> @@ -74,7 +74,7 @@ static int
->>>   mt7601u_efuse_physical_size_check(struct mt7601u_dev *dev)
->>>   {
->>>       const int map_reads = DIV_ROUND_UP(MT_EFUSE_USAGE_MAP_SIZE, 16);
->>> -    u8 data[map_reads * 16];
->>> +    u8 data[round_up(MT_EFUSE_USAGE_MAP_SIZE, 16)];
->>
->> Shouldn't this be u8 data[round_up(MT_EFUSE_USAGE_MAP_SIZE,16)*16]; to get
->> the
->> same array size as before?
->>
->> Bas Vermeulen
->>
+"Luis R. Rodriguez" <mcgrof@kernel.org> writes:
 
-round_up(MT_EFUSE_USAGE_MAP_SIZE, 16) =
-(DIV_ROUND_UP(MT_EFUSE_USAGE_MAP_SIZE, 16) * 16) = 32
+>> +/**
+>> + * request_firmware_optional: - request for an optional fw module
+>> + * @firmware_p: pointer to firmware image
+>> + * @name: name of firmware file
+>> + * @device: device for which firmware is being loaded
+>> + *
+>> + * This function is similar in behaviour to request_firmware(), except
+>> + * it doesn't produce warning messages when the file is not found.
+>> + **/
+>> +int
+>> +request_firmware_optional(const struct firmware **firmware_p, const char *name,
+>> +                         struct device *device)
+>> +{
+>> +       int ret;
+>> +
+>> +       /* Need to pin this module until return */
+>> +       __module_get(THIS_MODULE);
+>> +               ret = _request_firmware(firmware_p, name, device, NULL, 0,
+>> +                               FW_OPT_UEVENT | FW_OPT_NO_WARN );
+>> +       module_put(THIS_MODULE);
+>> +       return ret;
+>> +}
+>> +EXPORT_SYMBOL(request_firmware_optional);
+>
+> New exported symbols for the firmware API should be EXPORT_SYMBOL_GPL().
 
-Regards,
-Lorenzo
+To me the word optional feels weird to me. For example, in ath10k I
+suspect we would be only calling request_firmware_optional() with all
+firmware and not request_firmware() at all.
 
->
->
-> --
-> This message has been scanned for viruses and
-> dangerous content by MailScanner, and is
-> believed to be clean.
->
+How about request_firmware_nowarn()? That would even match the
+documentation above.
+
+-- 
+Kalle Valo
