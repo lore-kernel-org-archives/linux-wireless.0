@@ -1,55 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:43396 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932395AbeCOP52 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53656 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751556AbeCMPQE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Mar 2018 11:57:28 -0400
+        Tue, 13 Mar 2018 11:16:04 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: Re: [PATCH 01/10] rsi: add support for hardware scan offload
+References: <1520260620-4694-1-git-send-email-amitkarwar@gmail.com>
+        <1520260620-4694-2-git-send-email-amitkarwar@gmail.com>
+Date: Tue, 13 Mar 2018 17:16:00 +0200
+In-Reply-To: <1520260620-4694-2-git-send-email-amitkarwar@gmail.com>
+        (Amitkumar Karwar's message of "Mon, 5 Mar 2018 20:06:51 +0530")
+Message-ID: <87ina00zwv.fsf@purkki.adurom.net> (sfid-20180313_161608_346212_6304D4F4)
 MIME-Version: 1.0
-In-Reply-To: <EE0D5CBE-0867-4FE0-B157-CA4086C84233@holtmann.org>
-References: <20180315154312.3941446-1-arnd@arndb.de> <EE0D5CBE-0867-4FE0-B157-CA4086C84233@holtmann.org>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Thu, 15 Mar 2018 16:57:26 +0100
-Message-ID: <CAK8P3a3y00nUVuYopxXWaJjo_OxXhVsATyiSOfXz5b09JFq2dA@mail.gmail.com> (sfid-20180315_165749_010223_363C43D1)
-Subject: Re: [PATCH] Bluetooth: btrsi: rework dependencies
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johan Hedberg <johan.hedberg@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Linux Bluetooth mailing list
-        <linux-bluetooth@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Networking <netdev@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 15, 2018 at 4:50 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
+Amitkumar Karwar <amitkarwar@gmail.com> writes:
 
->> diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
->> index 03cfc1b20c4a..9e8d22712ff3 100644
->> --- a/drivers/bluetooth/Makefile
->> +++ b/drivers/bluetooth/Makefile
->> @@ -28,7 +28,7 @@ obj-$(CONFIG_BT_QCA)                += btqca.o
->>
->> obj-$(CONFIG_BT_HCIUART_NOKIA)        += hci_nokia.o
->>
->> -obj-$(CONFIG_BT_HCIRSI)              += btrsi.o
->> +obj-$(CONFIG_BT_HCIRSI_MODULE)       += btrsi.o
+> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 >
-> do we need this new option? I have avoided these kind of complex things multi config entries. Can we not just select the RSI_91X?
->
+> With the current approach of scanning, roaming delays
+> are observed. Firmware has support for back ground scanning.
+> To get this advantage, mac80211 hardware scan is implemented.
+> In this method, foreground scan is performed in driver and
+> back ground scan is configured to firmware.
 
-I couldn't come up with a simpler way to do this.
-Selecting RSI_91X is not possible unless we make the BT
-driver 'depend on WLAN_VENDOR_RSI && MAC80211',
-which is even more backwards.
+To me doesn't like a good idea to duplicate scan functionality in the
+driver.
 
-The problem here is that it's actually a reverse dependency:
-the wlan driver calls into the bt driver.
+> --- a/drivers/net/wireless/rsi/rsi_91x_main.c
+> +++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+> @@ -324,6 +324,14 @@ struct rsi_hw *rsi_91x_init(u16 oper_mode)
+>  	mutex_init(&common->rx_lock);
+>  	mutex_init(&common->tx_bus_mutex);
+>  
+> +	rsi_init_event(&common->chan_set_event);
+> +	rsi_init_event(&common->probe_cfm_event);
+> +	rsi_init_event(&common->chan_change_event);
+> +	rsi_init_event(&common->cancel_hw_scan_event);
 
-What we could do is to make BT_HCIRSI a silent symbol
-and have that selected by RSI_COEX, which can then
-be user-visible. With that, the Kconfig structure would follow
-what the code does.
+And I'm starting to dislike this rsi_init_event() even more (see my
+other mail). In upstream driver's custom abstractions are very much
+frowned upon, especially that it makes review harder.
 
-       Arnd
+-- 
+Kalle Valo
