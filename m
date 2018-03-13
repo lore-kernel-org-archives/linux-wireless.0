@@ -1,136 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:38492 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752691AbeCFB0L (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:40261 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751615AbeCMHnM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Mar 2018 20:26:11 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 06/15] rtlwifi: btcoex: Add rate table for the use of btcoex
-Date: Tue, 6 Mar 2018 09:25:45 +0800
-Message-ID: <20180306012554.3108-7-pkshih@realtek.com> (sfid-20180306_023349_110565_415791DA)
-In-Reply-To: <20180306012554.3108-1-pkshih@realtek.com>
-References: <20180306012554.3108-1-pkshih@realtek.com>
+        Tue, 13 Mar 2018 03:43:12 -0400
+Date: Tue, 13 Mar 2018 13:13:04 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <hariprasath.elango@gmail.com>, <linux-kernel@vger.kernel.org>
+CC: <aditya.shankar@microchip.com>, <vbabu3@visteon.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>
+Subject: Re: [PATCH] staging: wilc1000: use kmemdup instead of kmalloc and
+ memcpy
+Message-ID: <20180313131304.47d457e3@ajaysk-VirtualBox> (sfid-20180313_084327_491697_596DC594)
+In-Reply-To: <20180313062049.6200-1-hariprasath.elango@gmail.com>
+References: <20180313062049.6200-1-hariprasath.elango@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On Tue, 13 Mar 2018 11:50:48 +0530
+<hariprasath.elango@gmail.com> wrote:
 
-The btcoex use the rate to rsolve IOT issue that some APs reduce TX
-rate quickly, so it uses the RX rate as a clue to decide TDMA.
+> From: HariPrasath Elango <hariprasath.elango@gmail.com>
+> 
+> Kmalloc followed by memcpy can be replaced by kmemdup.
+> 
+> Signed-off-by: HariPrasath Elango <hariprasath.elango@gmail.com>
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       | 94 ++++++++++++++++++++++
- 1 file changed, 94 insertions(+)
+Reviewed-by: Ajay Singh <ajay.kathat@microchip.com>
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index fe793b787716..bc2388f3f953 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -437,6 +437,100 @@ enum btc_notify_type_stack_operation {
- 	BTC_STACK_OP_MAX
- };
- 
-+enum {
-+	BTC_CCK_1,
-+	BTC_CCK_2,
-+	BTC_CCK_5_5,
-+	BTC_CCK_11,
-+	BTC_OFDM_6,
-+	BTC_OFDM_9,
-+	BTC_OFDM_12,
-+	BTC_OFDM_18,
-+	BTC_OFDM_24,
-+	BTC_OFDM_36,
-+	BTC_OFDM_48,
-+	BTC_OFDM_54,
-+	BTC_MCS_0,
-+	BTC_MCS_1,
-+	BTC_MCS_2,
-+	BTC_MCS_3,
-+	BTC_MCS_4,
-+	BTC_MCS_5,
-+	BTC_MCS_6,
-+	BTC_MCS_7,
-+	BTC_MCS_8,
-+	BTC_MCS_9,
-+	BTC_MCS_10,
-+	BTC_MCS_11,
-+	BTC_MCS_12,
-+	BTC_MCS_13,
-+	BTC_MCS_14,
-+	BTC_MCS_15,
-+	BTC_MCS_16,
-+	BTC_MCS_17,
-+	BTC_MCS_18,
-+	BTC_MCS_19,
-+	BTC_MCS_20,
-+	BTC_MCS_21,
-+	BTC_MCS_22,
-+	BTC_MCS_23,
-+	BTC_MCS_24,
-+	BTC_MCS_25,
-+	BTC_MCS_26,
-+	BTC_MCS_27,
-+	BTC_MCS_28,
-+	BTC_MCS_29,
-+	BTC_MCS_30,
-+	BTC_MCS_31,
-+	BTC_VHT_1SS_MCS_0,
-+	BTC_VHT_1SS_MCS_1,
-+	BTC_VHT_1SS_MCS_2,
-+	BTC_VHT_1SS_MCS_3,
-+	BTC_VHT_1SS_MCS_4,
-+	BTC_VHT_1SS_MCS_5,
-+	BTC_VHT_1SS_MCS_6,
-+	BTC_VHT_1SS_MCS_7,
-+	BTC_VHT_1SS_MCS_8,
-+	BTC_VHT_1SS_MCS_9,
-+	BTC_VHT_2SS_MCS_0,
-+	BTC_VHT_2SS_MCS_1,
-+	BTC_VHT_2SS_MCS_2,
-+	BTC_VHT_2SS_MCS_3,
-+	BTC_VHT_2SS_MCS_4,
-+	BTC_VHT_2SS_MCS_5,
-+	BTC_VHT_2SS_MCS_6,
-+	BTC_VHT_2SS_MCS_7,
-+	BTC_VHT_2SS_MCS_8,
-+	BTC_VHT_2SS_MCS_9,
-+	BTC_VHT_3SS_MCS_0,
-+	BTC_VHT_3SS_MCS_1,
-+	BTC_VHT_3SS_MCS_2,
-+	BTC_VHT_3SS_MCS_3,
-+	BTC_VHT_3SS_MCS_4,
-+	BTC_VHT_3SS_MCS_5,
-+	BTC_VHT_3SS_MCS_6,
-+	BTC_VHT_3SS_MCS_7,
-+	BTC_VHT_3SS_MCS_8,
-+	BTC_VHT_3SS_MCS_9,
-+	BTC_VHT_4SS_MCS_0,
-+	BTC_VHT_4SS_MCS_1,
-+	BTC_VHT_4SS_MCS_2,
-+	BTC_VHT_4SS_MCS_3,
-+	BTC_VHT_4SS_MCS_4,
-+	BTC_VHT_4SS_MCS_5,
-+	BTC_VHT_4SS_MCS_6,
-+	BTC_VHT_4SS_MCS_7,
-+	BTC_VHT_4SS_MCS_8,
-+	BTC_VHT_4SS_MCS_9,
-+	BTC_MCS_32,
-+	BTC_UNKNOWN,
-+	BTC_PKT_MGNT,
-+	BTC_PKT_CTRL,
-+	BTC_PKT_UNKNOWN,
-+	BTC_PKT_NOT_FOR_ME,
-+	BTC_RATE_MAX
-+};
-+
- enum {
- 	BTC_MULTIPORT_SCC,
- 	BTC_MULTIPORT_MCC_2CHANNEL,
--- 
-2.15.1
+
+Regards,
+Ajay
