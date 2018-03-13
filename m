@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:39494 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751908AbeC0QtH (ORCPT
+Received: from mail-pl0-f66.google.com ([209.85.160.66]:37193 "EHLO
+        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751462AbeCMGVP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Mar 2018 12:49:07 -0400
-Received: by mail-wm0-f67.google.com with SMTP id f125so79562wme.4
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Mar 2018 09:49:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1522140171-10926-1-git-send-email-vthiagar@codeaurora.org>
-References: <1522140171-10926-1-git-send-email-vthiagar@codeaurora.org>
-From: Steve deRosier <derosier@gmail.com>
-Date: Tue, 27 Mar 2018 09:48:25 -0700
-Message-ID: <CALLGbR+d8gCS0-_NV8i0K6ktL14OEiDjxVG4bvubmti7Yp5OoQ@mail.gmail.com> (sfid-20180327_184938_281447_DA3C4F6E)
-Subject: Re: [RFC 0/4] wireless: Per-sta NoAck and offload support
-To: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 13 Mar 2018 02:21:15 -0400
+From: hariprasath.elango@gmail.com
+To: aditya.shankar@microchip.com
+Cc: hariprasath.elango@gmail.com, vbabu3@visteon.com,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: wilc1000: use kmemdup instead of kmalloc and memcpy
+Date: Tue, 13 Mar 2018 11:50:48 +0530
+Message-Id: <20180313062049.6200-1-hariprasath.elango@gmail.com> (sfid-20180313_072130_052534_504BACC2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Vasanthakumar,
+From: HariPrasath Elango <hariprasath.elango@gmail.com>
 
-On Tue, Mar 27, 2018 at 1:42 AM, Vasanthakumar Thiagarajan
-<vthiagar@codeaurora.org> wrote:
-> Adds infrastructure for driver to offload NoAck functionality, driver
-> like ath10k could make use of it. Also extends the current ndev wide
+Kmalloc followed by memcpy can be replaced by kmemdup.
 
-I'm not really much of a fan of adding a feature without some use of
-the feature. Perhaps if drivers "like" ath10k could use it, maybe you
-should add a patch(s) to the series where one of those drivers
-actually uses the feature.  An API without an example of use is also
-harder to evaluate effectively.
+Signed-off-by: HariPrasath Elango <hariprasath.elango@gmail.com>
+---
+ drivers/staging/wilc1000/linux_mon.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Additionally, if it's relevant, adding use of the feature to hwsim
-would both serve the above comment as well as provide testing
-capability.
-
-
-> NoAck policy to per-station, with sta level NoAck policy configuration
-> userspace could selectively turn off/on Noack based on various connection
-> parameters of the station.
->
-
-This is my own ignorance, perhaps from missing recent netdev
-conferences - can you send a link to some documentation of what NoAck
-is? Certain things in 802.11 use ack transmissions and
-interoperability would be compromised if we didn't conform to spec. I
-don't imagine that's what's going on here but I'd like to understand
-what the heck NoAck is and I failed to bring up anything useful when I
-Googled it.
-
-- Steve
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index f93f411..c6fd6b3 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -146,7 +146,7 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
+ 	if (!mgmt_tx)
+ 		return -ENOMEM;
+ 
+-	mgmt_tx->buff = kmalloc(len, GFP_ATOMIC);
++	mgmt_tx->buff = kmemdup(buf, len, GFP_ATOMIC);
+ 	if (!mgmt_tx->buff) {
+ 		kfree(mgmt_tx);
+ 		return -ENOMEM;
+@@ -154,7 +154,6 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
+ 
+ 	mgmt_tx->size = len;
+ 
+-	memcpy(mgmt_tx->buff, buf, len);
+ 	wilc_wlan_txq_add_mgmt_pkt(dev, mgmt_tx, mgmt_tx->buff, mgmt_tx->size,
+ 				   mgmt_tx_complete);
+ 
+-- 
+2.10.0.GIT
