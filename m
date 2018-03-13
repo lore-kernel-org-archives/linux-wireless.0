@@ -1,137 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:14434 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751204AbeCZLql (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:41715 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752598AbeCMWAG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 07:46:41 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 9/9] staging: wilc1000: free memory allocated for general info message from firmware
-Date: Mon, 26 Mar 2018 17:16:03 +0530
-Message-ID: <1522064763-11576-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180326_134643_951011_5571ED87)
-In-Reply-To: <1522064763-11576-1-git-send-email-ajay.kathat@microchip.com>
-References: <1522064763-11576-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 13 Mar 2018 18:00:06 -0400
+Received: by mail-pf0-f194.google.com with SMTP id f80so484972pfa.8
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2018 15:00:06 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [RFC v5 9/9] mac80211: Send control port frames over nl80211
+Date: Tue, 13 Mar 2018 16:59:42 -0500
+Message-Id: <20180313215942.29176-10-denkenz@gmail.com> (sfid-20180313_230017_250040_BB0462AA)
+In-Reply-To: <20180313215942.29176-1-denkenz@gmail.com>
+References: <20180313215942.29176-1-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Free allocated memory for failure scenario while processing the
-information message received from the firmware. Added NULL check and used
-kmemdup in the flow of handling information message.
+If userspace requested control port frames to go over 80211, then do so.
+The control packets are intercepted just prior to delivery of the packet
+to the underlying network device.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+Pre-authentication type frames (protocol: 0x88c7) are also forwarded
+over nl80211.
+
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 48 ++++++++++++++++++++-----------
- 1 file changed, 31 insertions(+), 17 deletions(-)
+ net/mac80211/cfg.c         |  4 ++++
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/iface.c       |  2 ++
+ net/mac80211/main.c        |  2 ++
+ net/mac80211/mlme.c        |  2 ++
+ net/mac80211/rx.c          | 33 ++++++++++++++++++++++++++++-----
+ 6 files changed, 39 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 73bdd24..c06920b 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1346,16 +1346,15 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 9294acb495ee..180653fcdb94 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -925,6 +925,8 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	 */
+ 	sdata->control_port_protocol = params->crypto.control_port_ethertype;
+ 	sdata->control_port_no_encrypt = params->crypto.control_port_no_encrypt;
++	sdata->control_port_over_nl80211 =
++				params->crypto.control_port_over_nl80211;
+ 	sdata->encrypt_headroom = ieee80211_cs_headroom(sdata->local,
+ 							&params->crypto,
+ 							sdata->vif.type);
+@@ -934,6 +936,8 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 			params->crypto.control_port_ethertype;
+ 		vlan->control_port_no_encrypt =
+ 			params->crypto.control_port_no_encrypt;
++		vlan->control_port_over_nl80211 =
++			params->crypto.control_port_over_nl80211;
+ 		vlan->encrypt_headroom =
+ 			ieee80211_cs_headroom(sdata->local,
+ 					      &params->crypto,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index a52bd2a61a27..00dbc6a1b79d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -899,6 +899,7 @@ struct ieee80211_sub_if_data {
+ 	u16 sequence_number;
+ 	__be16 control_port_protocol;
+ 	bool control_port_no_encrypt;
++	bool control_port_over_nl80211;
+ 	int encrypt_headroom;
  
- 				if (conn_info.status == SUCCESSFUL_STATUSCODE &&
- 				    connect_resp_info->ies) {
--					conn_info.resp_ies_len = connect_resp_info->ies_len;
--					conn_info.resp_ies = kmalloc(connect_resp_info->ies_len, GFP_KERNEL);
--					memcpy(conn_info.resp_ies, connect_resp_info->ies,
--					       connect_resp_info->ies_len);
-+					conn_info.resp_ies = kmemdup(connect_resp_info->ies,
-+								     connect_resp_info->ies_len,
-+								     GFP_KERNEL);
-+					if (conn_info.resp_ies)
-+						conn_info.resp_ies_len = connect_resp_info->ies_len;
- 				}
+ 	atomic_t num_tx_queued;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index d13ba064951f..555e389b7dfa 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -519,6 +519,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 			master->control_port_protocol;
+ 		sdata->control_port_no_encrypt =
+ 			master->control_port_no_encrypt;
++		sdata->control_port_over_nl80211 =
++			master->control_port_over_nl80211;
+ 		sdata->vif.cab_queue = master->vif.cab_queue;
+ 		memcpy(sdata->vif.hw_queue, master->vif.hw_queue,
+ 		       sizeof(sdata->vif.hw_queue));
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 0785d04a80bc..e5a51267c75d 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -554,6 +554,8 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 			   NL80211_FEATURE_USERSPACE_MPM |
+ 			   NL80211_FEATURE_FULL_AP_CLIENT_STATE;
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_FILS_STA);
++	wiphy_ext_feature_set(wiphy,
++			      NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211);
  
--				if (connect_resp_info) {
--					kfree(connect_resp_info->ies);
--					kfree(connect_resp_info);
--				}
-+				kfree(connect_resp_info->ies);
-+				kfree(connect_resp_info);
- 			}
- 		}
- 	}
-@@ -1381,11 +1380,11 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
- 	}
+ 	if (!ops->hw_scan)
+ 		wiphy->features |= NL80211_FEATURE_LOW_PRIORITY_SCAN |
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 0024eff9bb84..b3665b857883 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4844,6 +4844,8 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
  
- 	if (hif_drv->usr_conn_req.ies) {
--		conn_info.req_ies_len = hif_drv->usr_conn_req.ies_len;
--		conn_info.req_ies = kmalloc(hif_drv->usr_conn_req.ies_len,
-+		conn_info.req_ies = kmemdup(conn_info.req_ies,
-+					    hif_drv->usr_conn_req.ies_len,
- 					    GFP_KERNEL);
--		memcpy(conn_info.req_ies, hif_drv->usr_conn_req.ies,
--		       hif_drv->usr_conn_req.ies_len);
-+		if (conn_info.req_ies)
-+			conn_info.req_ies_len = hif_drv->usr_conn_req.ies_len;
- 	}
+ 	sdata->control_port_protocol = req->crypto.control_port_ethertype;
+ 	sdata->control_port_no_encrypt = req->crypto.control_port_no_encrypt;
++	sdata->control_port_over_nl80211 =
++					req->crypto.control_port_over_nl80211;
+ 	sdata->encrypt_headroom = ieee80211_cs_headroom(local, &req->crypto,
+ 							sdata->vif.type);
  
- 	del_timer(&hif_drv->connect_timer);
-@@ -1463,17 +1462,25 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
- 	u8 mac_status_additional_info;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
- 
-+	if (!rcvd_info->buffer) {
-+		netdev_err(vif->ndev, "Received buffer is NULL\n");
-+		return -EINVAL;
-+	}
-+
- 	if (!hif_drv) {
- 		netdev_err(vif->ndev, "Driver handler is NULL\n");
-+		kfree(rcvd_info->buffer);
-+		rcvd_info->buffer = NULL;
- 		return -ENODEV;
- 	}
- 
- 	if (hif_drv->hif_state == HOST_IF_WAITING_CONN_RESP ||
- 	    hif_drv->hif_state == HOST_IF_CONNECTED ||
- 	    hif_drv->usr_scan_req.scan_result) {
--		if (!rcvd_info->buffer ||
--		    !hif_drv->usr_conn_req.conn_result) {
-+		if (!hif_drv->usr_conn_req.conn_result) {
- 			netdev_err(vif->ndev, "driver is null\n");
-+			kfree(rcvd_info->buffer);
-+			rcvd_info->buffer = NULL;
- 			return -EINVAL;
- 		}
- 
-@@ -1481,6 +1488,8 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
- 
- 		if ('I' != msg_type) {
- 			netdev_err(vif->ndev, "Received Message incorrect.\n");
-+			kfree(rcvd_info->buffer);
-+			rcvd_info->buffer = NULL;
- 			return -EFAULT;
- 		}
- 
-@@ -3527,12 +3536,17 @@ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length)
- 	msg.vif = vif;
- 
- 	msg.body.async_info.len = length;
--	msg.body.async_info.buffer = kmalloc(length, GFP_KERNEL);
--	memcpy(msg.body.async_info.buffer, buffer, length);
-+	msg.body.async_info.buffer = kmemdup(buffer, length, GFP_KERNEL);
-+	if (!msg.body.async_info.buffer) {
-+		mutex_unlock(&hif_deinit_lock);
-+		return;
-+	}
- 
- 	result = wilc_enqueue_cmd(&msg);
--	if (result)
-+	if (result) {
- 		netdev_err(vif->ndev, "synchronous info (%d)\n", result);
-+		kfree(msg.body.async_info.buffer);
-+	}
- 
- 	mutex_unlock(&hif_deinit_lock);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index de7d10732fd5..bbb8bc6cac2a 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2245,6 +2245,32 @@ static bool ieee80211_frame_allowed(struct ieee80211_rx_data *rx, __le16 fc)
+ 	return true;
  }
+ 
++static void ieee80211_deliver_skb_to_local_stack(struct sk_buff *skb,
++						 struct ieee80211_rx_data *rx)
++{
++	struct ieee80211_sub_if_data *sdata = rx->sdata;
++	struct net_device *dev = sdata->dev;
++
++	if (unlikely((skb->protocol == sdata->control_port_protocol ||
++		      skb->protocol == cpu_to_be16(ETH_P_PREAUTH)) &&
++		     sdata->control_port_over_nl80211)) {
++		struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
++		bool noencrypt = status->flag & RX_FLAG_DECRYPTED;
++		struct ethhdr *ehdr = eth_hdr(skb);
++
++		cfg80211_rx_control_port(dev, skb->data, skb->len,
++					 ehdr->h_source,
++					 be16_to_cpu(skb->protocol), noencrypt);
++		dev_kfree_skb(skb);
++	} else {
++		/* deliver to local stack */
++		if (rx->napi)
++			napi_gro_receive(rx->napi, skb);
++		else
++			netif_receive_skb(skb);
++	}
++}
++
+ /*
+  * requires that rx->skb is a frame with ethernet header
+  */
+@@ -2329,13 +2355,10 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+ #endif
+ 
+ 	if (skb) {
+-		/* deliver to local stack */
+ 		skb->protocol = eth_type_trans(skb, dev);
+ 		memset(skb->cb, 0, sizeof(skb->cb));
+-		if (rx->napi)
+-			napi_gro_receive(rx->napi, skb);
+-		else
+-			netif_receive_skb(skb);
++
++		ieee80211_deliver_skb_to_local_stack(skb, rx);
+ 	}
+ 
+ 	if (xmit_skb) {
 -- 
-2.7.4
+2.13.5
