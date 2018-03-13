@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:54826 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751024AbeCZMZQ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60300 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932338AbeCMPYK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 08:25:16 -0400
-Date: Mon, 26 Mar 2018 15:24:57 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
-        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
-        aditya.shankar@microchip.com
-Subject: Re: [PATCH 9/9] staging: wilc1000: free memory allocated for general
- info message from firmware
-Message-ID: <20180326122457.ktd3kirdwjopelln@mwanda> (sfid-20180326_142519_838445_67D2DF81)
-References: <1521817738-7557-1-git-send-email-ajay.kathat@microchip.com>
- <1521817738-7557-10-git-send-email-ajay.kathat@microchip.com>
- <20180326083241.y4bdt7r7et2twmy4@mwanda>
- <20180326170150.4ab5ad00@ajaysk-VirtualBox>
+        Tue, 13 Mar 2018 11:24:10 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: Re: [PATCH 05/10] rsi: roaming enhancements
+References: <1520260620-4694-1-git-send-email-amitkarwar@gmail.com>
+        <1520260620-4694-6-git-send-email-amitkarwar@gmail.com>
+Date: Tue, 13 Mar 2018 17:24:06 +0200
+In-Reply-To: <1520260620-4694-6-git-send-email-amitkarwar@gmail.com>
+        (Amitkumar Karwar's message of "Mon, 5 Mar 2018 20:06:55 +0530")
+Message-ID: <878taw0zjd.fsf@purkki.adurom.net> (sfid-20180313_162421_254423_FE20A8B9)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180326170150.4ab5ad00@ajaysk-VirtualBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 26, 2018 at 05:01:50PM +0530, Ajay Singh wrote:
-> On Mon, 26 Mar 2018 11:32:41 +0300
-> Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> 
-> > What happened to patch 8/9?  Anyway, I can't apply this patch and it
-> > could be my fault or it could be the missing patch.  I don't know...
-> 
-> I rechecked by applying the patches in order and didn't face any conflict.
-> I am going to send the v2 for this patch series by including the review
-> comments.
+Amitkumar Karwar <amitkarwar@gmail.com> writes:
 
-The problem was on my end.  Sorry.  Gmail's spam filtering messed up.
-I should have checked better.
+> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>
+> To support roaming below changes are done:
+> * Station notify frame is send to firmware after sending assoc
+>   request. This will avoid dropping of first EAPOL frame due to
+>   delay in creation of station control block in firmware.
+> * Data queues are unblocked after sending station notify in open
+>   mode, after configuring key in WEP mode, and after receiving
+>   EAPOL4 confirm in WPA mode.
+> * Initial EAPOL frames priority is chaged to MGMT, rekey EAPOL
+>   frames priority changed to VO.
+> * Data frames with wrong BSSID are dropped.
 
-regards,
-dan carpenter
+I don't know what Johannes thinks but IMHO the driver should not drop
+any data frames, it should just submit what mac80211 gives to it. All
+filtering should happen in mac80211 (or controlled by it).
+
+-- 
+Kalle Valo
