@@ -1,78 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0207.hostedemail.com ([216.40.44.207]:39944 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751483AbeCaHFg (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:58030 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751976AbeCMOp2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 31 Mar 2018 03:05:36 -0400
-From: Joe Perches <joe@perches.com>
-To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        b43-dev@lists.infradead.org, bridge@lists.linux-foundation.org,
-        netfilter-devel@vger.kernel.org, coreteam@netfilter.org
-Cc: linux-kernel@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com
-Subject: [PATCH 00/12] Ethernet: Add and use ether_<type>_addr globals
-Date: Sat, 31 Mar 2018 00:05:15 -0700
-Message-Id: <cover.1522479607.git.joe@perches.com> (sfid-20180331_090929_007569_A904B895)
+        Tue, 13 Mar 2018 10:45:28 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Tamizh chelvam <tamizhr@codeaurora.org>, johannes@sipsolutions.net,
+        Marcel Holtmann <marcel@holtmann.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux Bluetooth mailing list
+        <linux-bluetooth@vger.kernel.org>
+Subject: Re: [PATCH 1/2] cfg80211: Add support to enable or disable btcoex
+References: <1519927170-11920-1-git-send-email-tamizhr@codeaurora.org>
+        <5A9856CE.8000005@broadcom.com> <87po4ndpos.fsf@purkki.adurom.net>
+        <5A991D2B.60303@broadcom.com>
+Date: Tue, 13 Mar 2018 16:45:22 +0200
+In-Reply-To: <5A991D2B.60303@broadcom.com> (Arend van Spriel's message of
+        "Fri, 2 Mar 2018 10:45:15 +0100")
+Message-ID: <87k1ug9gql.fsf@kamboji.qca.qualcomm.com> (sfid-20180313_154532_835490_CE976F32)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are many local static and non-static arrays that are used for
-Ethernet broadcast address output or comparison.
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-Centralize the array into a single separate file and remove the local
-arrays.
+> + Marcel
+>
+> On 3/2/2018 6:14 AM, Kalle Valo wrote:
+>> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+>>
+>>> On 3/1/2018 6:59 PM, Tamizh chelvam wrote:
+>>>> From: Tamizh chelvam <tamizhr@codeaurora.org>
+>>>>
+>>>> This patch introduces NL80211_CMD_SET_BTCOEX command and
+>>>> NL80211_ATTR_BTCOEX_OP attribute to enable or disable btcoex.
+>>>
+>>> What kind of btcoex are we talking about here? Is it signalling
+>>> between wlan and bt to get access to the shared RF.
+>>
+>> Yes, at least that's how I understand this.
+>>
+>>> Why would it require user-space interaction? Are there no options for
+>>> wlan to detect bt is in use, ie. bt hci is setup, and vice versa. Can
+>>> it be indicated in platform data or device tree. Trying to understand
+>>> the use-case here.
+>>
+>> One use case is being able to disable btcoex in case of problems or to
+>> test if it's btcoex related. I think during the last five years the need
+>> for this interface has come every once in a while.
+>
+> Well, you would want to disable btcoex *and* bt to verify wlan is
+> working properly on its own. And similarly disable btcoex *and* wlan
+> to verify bt works properly.
 
-Joe Perches (12):
-  ethernet: Add generic ether_<foo>_addr addresses
-  treewide/net: Rename eth_stp_addr to ether_stp_addr
-  net: mac80211: Use global ether_broadcast_addr
-  bridge: netfilter: Use the new global ether_<foo>_addr arrays
-  net: atm: Use ether_broadcast_addr
-  wireless: Convert simple uses of a static const Ethernet broadcast address
-  brcmfmac: Convert ALLFFMAC to ether_broadcast_addr
-  iwlegacy: Remove EXPORT_SYMBOL(il_bcast_addr) and use ether_broadcast_addr
-  iwlwifi: Remove local iwl_bcast_addr and use ether_broadcast_addr
-  mvpp2: Use ether_broadcast_addr instead of a local array
-  qlogic: Convert local bcast_addr to global ether_broadcast_addr
-  ethernet: Use ether_zero_addr instead of local statics
+Sure. But my main motiviation with this is to replace the module
+parameters we already have:
 
- drivers/net/dsa/lan9303-core.c                        |  4 ++--
- drivers/net/ethernet/broadcom/b44.c                   |  5 ++---
- drivers/net/ethernet/freescale/gianfar.c              |  3 +--
- drivers/net/ethernet/marvell/mvpp2.c                  |  4 +---
- drivers/net/ethernet/qlogic/netxen/netxen_nic_hw.c    |  5 +----
- drivers/net/ethernet/qlogic/qlcnic/qlcnic_hw.c        |  6 ++----
- .../net/ethernet/qlogic/qlcnic/qlcnic_sriov_common.c  |  6 ++----
- drivers/net/wireless/admtek/adm8211.c                 |  3 +--
- drivers/net/wireless/ath/carl9170/mac.c               |  4 +---
- drivers/net/wireless/broadcom/b43/main.c              |  3 +--
- .../net/wireless/broadcom/brcm80211/brcmfmac/common.c |  2 --
- .../net/wireless/broadcom/brcm80211/brcmfmac/common.h |  2 --
- .../wireless/broadcom/brcm80211/brcmfmac/flowring.c   |  8 ++++----
- drivers/net/wireless/intel/iwlegacy/3945-mac.c        |  2 +-
- drivers/net/wireless/intel/iwlegacy/4965-mac.c        |  2 +-
- drivers/net/wireless/intel/iwlegacy/common.c          |  3 ---
- drivers/net/wireless/intel/iwlegacy/common.h          |  1 -
- drivers/net/wireless/intel/iwlwifi/dvm/dev.h          |  1 -
- drivers/net/wireless/intel/iwlwifi/dvm/scan.c         |  2 +-
- drivers/net/wireless/intel/iwlwifi/dvm/sta.c          |  4 +---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c       |  3 +--
- drivers/net/wireless/realtek/rtlwifi/core.c           |  5 ++---
- drivers/net/wireless/rndis_wlan.c                     |  6 +-----
- drivers/net/wireless/ti/wl1251/main.c                 |  5 +----
- drivers/net/wireless/ti/wlcore/main.c                 |  5 +----
- include/linux/etherdevice.h                           | 13 +++++++++----
- net/atm/lec.c                                         | 12 +++++-------
- net/bridge/br_device.c                                |  4 ++--
- net/bridge/netfilter/ebt_stp.c                        |  6 ++----
- net/ethernet/Makefile                                 |  2 +-
- net/ethernet/ether_addrs.c                            | 19 +++++++++++++++++++
- net/mac80211/iface.c                                  |  5 +----
- net/mac80211/key.c                                    |  6 ++----
- net/mac80211/mesh_hwmp.c                              | 19 ++++++++++---------
- net/mac80211/mesh_pathtbl.c                           |  8 ++++----
- 35 files changed, 83 insertions(+), 105 deletions(-)
- create mode 100644 net/ethernet/ether_addrs.c
+drivers/net/wireless/ath/ath9k/htc_drv_init.c:module_param_named(btcoex_enable, ath9k_htc_btcoex_enable, int, 0444);
+drivers/net/wireless/ath/ath9k/htc_drv_init.c:MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
+
+drivers/net/wireless/ath/ath9k/init.c:module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
+drivers/net/wireless/ath/ath9k/init.c:MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
+
+drivers/net/wireless/broadcom/b43/main.c:module_param_named(btcoex, modparam_btcoex, int, 0444);
+drivers/net/wireless/broadcom/b43/main.c:MODULE_PARM_DESC(btcoex, "Enable Bluetooth coexistence (default on)");
+
+But looking closely in ath9k cases it doesn't actually sound doable as
+IIRC the ath9k module parameters are off by default. In b43 it's enabled
+by default, though.
+
+> Now I do recall a thread between you and Marcel. Looked it up and it
+> was this thread [1], but did not see a follow-up on it. I suspect it
+> involves more than just an enable/disable state. That may be fine for
+> devices in which BT and WLAN are integrated and coordination of RF use
+> is done on the device. The "btcoex subsystem" thread seems to aim for
+> more like providing the coordination logic so independent BT device
+> and WLAN device can still use the same RF. So before adopting the api
+> in nl80211 it would be good to revive that thread.
+
+I think that "btcoex subsystem" is a holy grail which will be never
+implemented :) But who knows, miracles can happen...
 
 -- 
-2.15.0
+Kalle Valo
