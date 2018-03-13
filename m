@@ -1,219 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33448 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1427599AbeCBMbY (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34662 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932498AbeCMP1y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 07:31:24 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+        Tue, 13 Mar 2018 11:27:54 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
 Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  2 Mar 2018 14:31:12 +0200
-Message-Id: <20180302123112.27416-5-luca@coelho.fi> (sfid-20180302_133129_064220_2E5B7D7D)
-In-Reply-To: <20180302123112.27416-1-luca@coelho.fi>
-References: <20180302123112.27416-1-luca@coelho.fi>
-Subject: [PATCH 4/4] iwlwifi: add shared clock PHY config flag for some devices
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: Re: [PATCH 08/10] rsi: device disconnect changes
+References: <1520260620-4694-1-git-send-email-amitkarwar@gmail.com>
+        <1520260620-4694-9-git-send-email-amitkarwar@gmail.com>
+Date: Tue, 13 Mar 2018 17:27:50 +0200
+In-Reply-To: <1520260620-4694-9-git-send-email-amitkarwar@gmail.com>
+        (Amitkumar Karwar's message of "Mon, 5 Mar 2018 20:06:58 +0530")
+Message-ID: <87zi3cyozt.fsf@purkki.adurom.net> (sfid-20180313_180638_087683_6F168DA7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Amitkumar Karwar <amitkarwar@gmail.com> writes:
 
-Some devices use a shared clock which is very sensitive to variations
-and cause trouble in some situations.  We need to set a bit in the phy
-configuration to indicate that to the FW.  To make this generic, add a
-extra_phy_config_flags element to the device configuration and OR it
-into the phy_cfg before sending it to the firmware.  And also create a
-set of configurations for devices that use shared clocks and need this
-extra bit to be set.
+> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>
+> Below changes are done:
+> 1. When HCI detach is called, making bt_adapter null and checking
+> for this variable where ever required.
+> 2. In USB case, one extra register write is added to disable
+> firmware watchdog.
+> 3. When interface down is called as part of disconnect, don't
+> send RX filter frame.
 
-Fixes: c62446d2b028 ("iwlwifi: add new 9460 series PCI IDs")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c   | 62 +++++++++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/fw/file.h    |  1 +
- drivers/net/wireless/intel/iwlwifi/iwl-config.h |  5 ++
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c     |  4 ++
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c   | 38 +++++++--------
- 5 files changed, 91 insertions(+), 19 deletions(-)
+Why? What does this patch fix? Please explain that (symptoms) in the
+commit log.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-index 90a1d14cf7d2..ab1469473e4f 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-@@ -53,6 +53,7 @@
- #include <linux/stringify.h>
- #include "iwl-config.h"
- #include "iwl-agn-hw.h"
-+#include "fw/file.h"
- 
- /* Highest firmware API version supported */
- #define IWL9000_UCODE_API_MAX	36
-@@ -265,6 +266,67 @@ const struct iwl_cfg iwl9560_2ac_cfg_soc = {
- 	.integrated = true,
- 	.soc_latency = 5000,
- };
-+
-+const struct iwl_cfg iwl9460_2ac_cfg_shared_clk = {
-+	.name = "Intel(R) Dual Band Wireless AC 9460",
-+	.fw_name_pre = IWL9000A_FW_PRE,
-+	.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
-+	.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
-+	IWL_DEVICE_9000,
-+	.ht_params = &iwl9000_ht_params,
-+	.nvm_ver = IWL9000_NVM_VERSION,
-+	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
-+	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+	.integrated = true,
-+	.soc_latency = 5000,
-+	.extra_phy_cfg_flags = FW_PHY_CFG_SHARED_CLK
-+};
-+
-+const struct iwl_cfg iwl9461_2ac_cfg_shared_clk = {
-+	.name = "Intel(R) Dual Band Wireless AC 9461",
-+	.fw_name_pre = IWL9000A_FW_PRE,
-+	.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
-+	.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
-+	IWL_DEVICE_9000,
-+	.ht_params = &iwl9000_ht_params,
-+	.nvm_ver = IWL9000_NVM_VERSION,
-+	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
-+	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+	.integrated = true,
-+	.soc_latency = 5000,
-+	.extra_phy_cfg_flags = FW_PHY_CFG_SHARED_CLK
-+};
-+
-+const struct iwl_cfg iwl9462_2ac_cfg_shared_clk = {
-+	.name = "Intel(R) Dual Band Wireless AC 9462",
-+	.fw_name_pre = IWL9000A_FW_PRE,
-+	.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
-+	.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
-+	IWL_DEVICE_9000,
-+	.ht_params = &iwl9000_ht_params,
-+	.nvm_ver = IWL9000_NVM_VERSION,
-+	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
-+	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+	.integrated = true,
-+	.soc_latency = 5000,
-+	.extra_phy_cfg_flags = FW_PHY_CFG_SHARED_CLK
-+};
-+
-+const struct iwl_cfg iwl9560_2ac_cfg_shared_clk = {
-+	.name = "Intel(R) Dual Band Wireless AC 9560",
-+	.fw_name_pre = IWL9000A_FW_PRE,
-+	.fw_name_pre_b_or_c_step = IWL9000B_FW_PRE,
-+	.fw_name_pre_rf_next_step = IWL9000RFB_FW_PRE,
-+	IWL_DEVICE_9000,
-+	.ht_params = &iwl9000_ht_params,
-+	.nvm_ver = IWL9000_NVM_VERSION,
-+	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
-+	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+	.integrated = true,
-+	.soc_latency = 5000,
-+	.extra_phy_cfg_flags = FW_PHY_CFG_SHARED_CLK
-+};
-+
- MODULE_FIRMWARE(IWL9000A_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL9000B_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL9000RFB_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index 1a05d506ac9a..2cb303c5c42e 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -441,6 +441,7 @@ enum iwl_fw_phy_cfg {
- 	FW_PHY_CFG_TX_CHAIN = 0xf << FW_PHY_CFG_TX_CHAIN_POS,
- 	FW_PHY_CFG_RX_CHAIN_POS = 20,
- 	FW_PHY_CFG_RX_CHAIN = 0xf << FW_PHY_CFG_RX_CHAIN_POS,
-+	FW_PHY_CFG_SHARED_CLK = BIT(31),
- };
- 
- #define IWL_UCODE_MAX_CS		1
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 258d439bb0a9..f0f5636dd3ea 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -398,6 +398,7 @@ struct iwl_cfg {
- 	u8 ucode_api_max;
- 	u8 ucode_api_min;
- 	u32 min_umac_error_event_table;
-+	u32 extra_phy_cfg_flags;
- };
- 
- /*
-@@ -477,6 +478,10 @@ extern const struct iwl_cfg iwl9460_2ac_cfg_soc;
- extern const struct iwl_cfg iwl9461_2ac_cfg_soc;
- extern const struct iwl_cfg iwl9462_2ac_cfg_soc;
- extern const struct iwl_cfg iwl9560_2ac_cfg_soc;
-+extern const struct iwl_cfg iwl9460_2ac_cfg_shared_clk;
-+extern const struct iwl_cfg iwl9461_2ac_cfg_shared_clk;
-+extern const struct iwl_cfg iwl9462_2ac_cfg_shared_clk;
-+extern const struct iwl_cfg iwl9560_2ac_cfg_shared_clk;
- extern const struct iwl_cfg iwl22000_2ac_cfg_hr;
- extern const struct iwl_cfg iwl22000_2ac_cfg_hr_cdb;
- extern const struct iwl_cfg iwl22000_2ac_cfg_jf;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 0920be637b57..3c59109bea20 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -433,6 +433,10 @@ static int iwl_send_phy_cfg_cmd(struct iwl_mvm *mvm)
- 
- 	/* Set parameters */
- 	phy_cfg_cmd.phy_cfg = cpu_to_le32(iwl_mvm_get_phy_config(mvm));
-+
-+	/* set flags extra PHY configuration flags from the device's cfg */
-+	phy_cfg_cmd.phy_cfg |= cpu_to_le32(mvm->cfg->extra_phy_cfg_flags);
-+
- 	phy_cfg_cmd.calib_control.event_trigger =
- 		mvm->fw->default_calib[ucode_type].event_trigger;
- 	phy_cfg_cmd.calib_control.flow_trigger =
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 56fc28750a41..e323d3abb6ac 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -579,25 +579,25 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x30DC, 0x0264, iwl9461_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x30DC, 0x02A0, iwl9462_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x30DC, 0x02A4, iwl9462_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x0030, iwl9560_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x0034, iwl9560_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x0038, iwl9560_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x003C, iwl9560_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x0060, iwl9460_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x0064, iwl9461_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x00A0, iwl9462_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x00A4, iwl9462_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x0230, iwl9560_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x0234, iwl9560_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x0238, iwl9560_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x023C, iwl9560_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x0260, iwl9461_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x0264, iwl9461_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x02A0, iwl9462_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x02A4, iwl9462_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x4030, iwl9560_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x4034, iwl9560_2ac_cfg_soc)},
--	{IWL_PCI_DEVICE(0x31DC, 0x40A4, iwl9462_2ac_cfg_soc)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0030, iwl9560_2ac_cfg_shared_clk)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0034, iwl9560_2ac_cfg_shared_clk)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0038, iwl9560_2ac_cfg_shared_clk)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x003C, iwl9560_2ac_cfg_shared_clk)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0060, iwl9460_2ac_cfg_shared_clk)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0064, iwl9461_2ac_cfg_shared_clk)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x00A0, iwl9462_2ac_cfg_shared_clk)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x00A4, iwl9462_2ac_cfg_shared_clk)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0230, iwl9560_2ac_cfg_shared_clk)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0234, iwl9560_2ac_cfg_shared_clk)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0238, iwl9560_2ac_cfg_shared_clk)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x023C, iwl9560_2ac_cfg_shared_clk)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0260, iwl9461_2ac_cfg_shared_clk)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x0264, iwl9461_2ac_cfg_shared_clk)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x02A0, iwl9462_2ac_cfg_shared_clk)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x02A4, iwl9462_2ac_cfg_shared_clk)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x4030, iwl9560_2ac_cfg_shared_clk)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x4034, iwl9560_2ac_cfg_shared_clk)},
-+	{IWL_PCI_DEVICE(0x31DC, 0x40A4, iwl9462_2ac_cfg_shared_clk)},
- 	{IWL_PCI_DEVICE(0x34F0, 0x0030, iwl9560_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x34F0, 0x0034, iwl9560_2ac_cfg_soc)},
- 	{IWL_PCI_DEVICE(0x34F0, 0x02A4, iwl9462_2ac_cfg_soc)},
 -- 
-2.16.1
+Kalle Valo
