@@ -1,57 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:39698 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750946AbeC2O0g (ORCPT
+Received: from mail-qk0-f172.google.com ([209.85.220.172]:43823 "EHLO
+        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932332AbeCMVAt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 10:26:36 -0400
-Message-ID: <1522333593.24162.12.camel@sipsolutions.net> (sfid-20180329_162639_174385_528B12A1)
-Subject: Re: nested structs parsing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-Cc: linux-doc@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Thu, 29 Mar 2018 16:26:33 +0200
-In-Reply-To: <20180329112209.5c0e0320@vento.lan>
-References: <1522316775.5932.10.camel@sipsolutions.net>
-         <1522316827.5932.11.camel@sipsolutions.net>
-         <20180329112209.5c0e0320@vento.lan>
+        Tue, 13 Mar 2018 17:00:49 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180313201757.GK8631@eros>
+References: <1520819022-15238-1-git-send-email-me@tobin.cc>
+ <20180312094606.8192B6081A@smtp.codeaurora.org> <20180313201757.GK8631@eros>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Tue, 13 Mar 2018 23:00:47 +0200
+Message-ID: <CAHp75VeM1zNyNtHvsn0=rg_xibcitVHREY73cAk=KCSK3Ti3vw@mail.gmail.com> (sfid-20180313_220132_606303_F8B5ECDA)
+Subject: Re: [RESEND] rsi: Remove stack VLA usage
+To: tcharding <me@tobin.cc>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        kernel-hardening@lists.openwall.com,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        Tycho Andersen <tycho@tycho.ws>,
+        Kees Cook <keescook@chromium.org>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Mar 13, 2018 at 10:17 PM, tcharding <me@tobin.cc> wrote:
+> On Mon, Mar 12, 2018 at 09:46:06AM +0000, Kalle Valo wrote:
+>> tcharding <me@tobin.cc> wrote:
 
-> The original patchset for nested structs was supporting it only 
-> when not inlined. This should be fixed on this patchset:
-> 
-> 	https://lkml.org/lkml/2018/2/19/387
-> 
-> Do you have those patches on your tree?
+I'm pretty much sure it depends on the original email headers, like
+above ^^^ =E2=80=94 no name.
+Perhaps git config on your side should be done.
 
-No, looks like I don't have those yet. I'll wait for those then.
-
-> With regards to duplicated warnings, that use to happen if the same header
-> is included several times (with is a common pratice at the net subsystem).
-
-Yeah, doesn't really matter anyway. I think I have to, in a sense,
-because I'm getting lots of functions separately from the headers.
-
-> Could you please merge from docs-next and see if those problems
-> get solved?
-
-No, that doesn't seem to address it fully:
-
-net/mac80211/sta_info.h:586: warning: Function parameter or member 'tx_stats.packets' not described in 'sta_info'
-net/mac80211/sta_info.h:586: warning: Function parameter or member 'tx_stats.bytes' not described in 'sta_info'
-net/mac80211/sta_info.h:586: warning: Function parameter or member 'tx_stats.last_rate' not described in 'sta_info'
-net/mac80211/sta_info.h:586: warning: Function parameter or member 'msdu' not described in 'sta_info'
-
-You can reproduce this in
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
-
-(merging with docs-next) and running
-
-  make SPHINXDIRS=driver-api/80211 htmldocs
-
-johannes
+--=20
+With Best Regards,
+Andy Shevchenko
