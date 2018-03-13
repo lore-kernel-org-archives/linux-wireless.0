@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:46329 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751427AbeCDR0f (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39100 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932909AbeCMQn1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 4 Mar 2018 12:26:35 -0500
-Date: Sun, 4 Mar 2018 18:26:20 +0100 (CET)
-From: Stefan Wahren <stefan.wahren@i2se.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-Message-ID: <56656292.178955.1520184380348@email.1und1.de> (sfid-20180304_183027_935622_3114F197)
-Subject: [Regression] brcmfmac: brcmf_cfg80211_reg_notifier: not an ISO3166
- code
+        Tue, 13 Mar 2018 12:43:27 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [1/3] rsi: improve RX handling in SDIO interface
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1519803508-27737-2-git-send-email-amitkarwar@gmail.com>
+References: <1519803508-27737-2-git-send-email-amitkarwar@gmail.com>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Message-Id: <20180313164327.32A0760848@smtp.codeaurora.org> (sfid-20180313_174339_487844_C35C9143)
+Date: Tue, 13 Mar 2018 16:43:27 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Amitkumar Karwar <amitkarwar@gmail.com> wrote:
 
-the commit "regulatory: add NUL to request alpha2" in linux-next-20180302 causes a regression with brcmfmac (Platform: Raspberry Pi 3 B). During driver probe i will get this error:
+> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> 
+> Currently, RX packets are handled in interrupt context in SDIO
+> interface. To improve the efficiency of processing RX packets,
+> RX thread and RX skb queues are introduced.
+> When the packet is read from device, driver prepares skb, add to
+> RX queue and trigger RX thread event. RX thread processes the
+> packets from RX queue.
+> 
+> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-brcmfmac: brcmf_cfg80211_reg_notifier: not an ISO3166 code (0x44 0x45)
+3 patches applied to wireless-drivers-next.git, thanks.
 
-But 0x44 0x45 ( = DE ) is a valid ISO3166 code.
+50117605770c rsi: improve RX handling in SDIO interface
+8809f08cdc0b rsi: use dynamic RX control blocks instead of MAX_RX_URB
+a1854fae1414 rsi: improve RX packet handling in USB interface
 
-The reason for this behavior is that the function checks the complete array, not just the first 2 elements.
+-- 
+https://patchwork.kernel.org/patch/10246955/
 
-IMO at least the functions brcmf_cfg80211_reg_notifier() and brcmf_translate_country_code() should be fixed.
-
-Regards
-Stefan
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
