@@ -1,54 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36398 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751908AbeC2JDf (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:44186 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752636AbeCMWAA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 05:03:35 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: fix recent bandwidth conversion bug
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1520684438-9233-1-git-send-email-akolli@codeaurora.org>
-References: <1520684438-9233-1-git-send-email-akolli@codeaurora.org>
-To: akolli@codeaurora.org
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Message-Id: <20180329090335.8A89760C55@smtp.codeaurora.org> (sfid-20180329_110339_623454_C821AE97)
-Date: Thu, 29 Mar 2018 09:03:35 +0000 (UTC)
+        Tue, 13 Mar 2018 18:00:00 -0400
+Received: by mail-pf0-f196.google.com with SMTP id m68so484333pfm.11
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2018 15:00:00 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [RFC v5 5/9] nl80211: Add SOCKET_OWNER support to JOIN_IBSS
+Date: Tue, 13 Mar 2018 16:59:38 -0500
+Message-Id: <20180313215942.29176-6-denkenz@gmail.com> (sfid-20180313_230017_817218_80EFACF3)
+In-Reply-To: <20180313215942.29176-1-denkenz@gmail.com>
+References: <20180313215942.29176-1-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-akolli@codeaurora.org wrote:
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+---
+ include/uapi/linux/nl80211.h | 2 ++
+ net/wireless/ibss.c          | 1 +
+ net/wireless/nl80211.c       | 6 ++++++
+ 3 files changed, 9 insertions(+)
 
-> The commit "cfg80211: make RATE_INFO_BW_20 the default" changed
-> the index of RATE_INFO_BW_20, but the updates to ath10k missed
-> the special bandwidth calculation case in
-> ath10k_update_per_peer_tx_stats().
-> 
-> This will fix below warning,
-> 
->  WARNING: CPU: 0 PID: 609 at net/wireless/util.c:1254
->  cfg80211_calculate_bitrate+0x174/0x220
->  invalid rate bw=1, mcs=9, nss=2
-> 
->  (unwind_backtrace) from
->  (cfg80211_calculate_bitrate+0x174/0x220)
->  (cfg80211_calculate_bitrate) from
->  (nl80211_put_sta_rate+0x44/0x1dc)from
->  (nl80211_put_sta_rate) from
->  (nl80211_send_station+0x388/0xaf0)
->  (nl80211_get_station+0xa8/0xec)
->  [ end trace da8257d6a850e91a ]
-> 
-> Fixes: 842be75c77cb ("cfg80211: make RATE_INFO_BW_20 the default")
-> Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
-> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-
-Patch applied to ath-next branch of ath.git, thanks.
-
-91493e8e10f0 ath10k: fix recent bandwidth conversion bug
-
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 1cdac3d732c1..877fab2836ec 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1985,6 +1985,8 @@ enum nl80211_commands {
+  *	multicast group.
+  *	If set during %NL80211_CMD_ASSOCIATE or %NL80211_CMD_CONNECT the
+  *	station will deauthenticate when the socket is closed.
++ *	If set during %NL80211_CMD_JOIN_IBSS the IBSS will be automatically
++ *	torn down when the socket is closed.
+  *
+  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
+  *	the TDLS link initiator.
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index a1d10993d08a..d5d26fc5b853 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -224,6 +224,7 @@ int __cfg80211_leave_ibss(struct cfg80211_registered_device *rdev,
+ 	if (err)
+ 		return err;
+ 
++	wdev->conn_owner_nlportid = 0;
+ 	__cfg80211_clear_ibss(dev, nowext);
+ 
+ 	return 0;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 24b1bd940fca..e678dc510f3a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8691,6 +8691,12 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 	err = cfg80211_join_ibss(rdev, dev, &ibss, connkeys);
+ 	if (err)
+ 		kzfree(connkeys);
++	else if (info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
++		wdev_lock(dev->ieee80211_ptr);
++		dev->ieee80211_ptr->conn_owner_nlportid = info->snd_portid;
++		wdev_unlock(dev->ieee80211_ptr);
++	}
++
+ 	return err;
+ }
+ 
 -- 
-https://patchwork.kernel.org/patch/10273445/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.13.5
