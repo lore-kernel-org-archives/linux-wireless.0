@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53718 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1163289AbeCBBKE (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:47170 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752181AbeCMJ6Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 20:10:04 -0500
-Subject: Re: [Make-wifi-fast] [PATCH] mac80211: Adjust TSQ pacing shift
-To: Jonathan Morton <chromatix99@gmail.com>,
-        =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>
-References: <20180202151105.30043-1-toke@toke.dk>
- <40f644f6-ecfa-c31b-ce98-3491c954d6b1@qti.qualcomm.com>
- <41B51538-B1F5-4611-AAB4-923C585FF3DA@toke.dk>
- <AF418EFD-681C-4845-A114-23F54F100A9D@gmail.com>
-Cc: "make-wifi-fast@lists.bufferbloat.net"
-        <make-wifi-fast@lists.bufferbloat.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ryan Hsu <ryanhsu@codeaurora.org>
-Message-ID: <cf67c430-d1e7-ef40-5c43-5f9557876fd8@codeaurora.org> (sfid-20180302_021238_100892_2DCB73D0)
-Date: Thu, 1 Mar 2018 17:09:47 -0800
+        Tue, 13 Mar 2018 05:58:16 -0400
+Date: Tue, 13 Mar 2018 10:58:16 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Ajay Singh <ajay.kathat@microchip.com>
+Cc: hariprasath.elango@gmail.com, linux-kernel@vger.kernel.org,
+        devel@driverdev.osuosl.org, vbabu3@visteon.com,
+        linux-wireless@vger.kernel.org,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        aditya.shankar@microchip.com
+Subject: Re: [PATCHv2] staging: wilc1000: use pre-defined macro
+ is_broadcast_ether_addr
+Message-ID: <20180313095816.GA1656@kroah.com> (sfid-20180313_105827_795304_461724D2)
+References: <20180312093903.9147-1-hariprasath.elango@gmail.com>
+ <20180313130051.43b087dd@ajaysk-VirtualBox>
 MIME-Version: 1.0
-In-Reply-To: <AF418EFD-681C-4845-A114-23F54F100A9D@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180313130051.43b087dd@ajaysk-VirtualBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/14/2018 12:23 AM, Jonathan Morton wrote:
+On Tue, Mar 13, 2018 at 01:00:51PM +0530, Ajay Singh wrote:
+> 
+> Reviewed-by: Ajay Singh <ajay.kathat@microchip.com>
+> 
+> On Mon, 12 Mar 2018 15:09:03 +0530
+> <hariprasath.elango@gmail.com> wrote:
+> 
+> > From: HariPrasath Elango <hariprasath.elango@gmail.com>
+> >
+> 
+> Please avoid use of 'From' tag specially when there is only one
+> 'Signed-off-by' tag and its same.
 
->> On 14 Feb, 2018, at 10:18 am, Toke Høiland-Jørgensen <toke@toke.dk> wrote:
->>
->> Why does the CPU usage go up >7?
-> Just as a guess, it's generating extra packets which are then laboriously discarded and retransmitted.
->
->  - Jonathan Morton
+But the email client isn't putting the correct info in the email header,
+so this line is needed.
 
-I think for 11n, like ath9k, it might be good enough for 8, but for 11ac could
-aggregate a little more.
+And if it's redundant, not a problem, git handles it just fine, better
+to be safe.
 
-Yes, and CPU usage goes up after 6 or 7, might due to it generates extra
-packets but the physical bus is capping the throughput, so that we can't see
-much throughput difference after (or maybe my setup is not optimal, assumed we
-should be seeing around 550-600Mbps for TCP in 11ac), but only the CPU usage
-increased.
+thanks,
 
--- 
-Ryan Hsu
+greg k-h
