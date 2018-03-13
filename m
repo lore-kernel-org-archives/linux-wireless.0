@@ -1,89 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.14]:42983 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751161AbeCJVdp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Mar 2018 16:33:45 -0500
-Subject: [PATCH 3/3] wlcore: Use common error handling code in
- wl1271_acx_sta_rate_policies()
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Colin Ian King <colin.king@canonical.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-References: <b5db0825-394a-1d6d-351a-43be14e4c6b4@users.sourceforge.net>
-Message-ID: <7d5cc7b4-f0ce-192a-3e5e-c2944c1e3e3d@users.sourceforge.net> (sfid-20180310_223404_458657_CB34810B)
-Date: Sat, 10 Mar 2018 22:33:39 +0100
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:53358 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752746AbeCMUVX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Mar 2018 16:21:23 -0400
+Received: by mail-wm0-f66.google.com with SMTP id e194so293961wmd.3
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2018 13:21:22 -0700 (PDT)
+Subject: Re: [2/3] mwifiex: support sysfs initiated device coredump
+To: Marcel Holtmann <marcel@holtmann.org>
+References: <1519210220-22437-3-git-send-email-arend.vanspriel@broadcom.com>
+ <20180312094115.2E1C1606DB@smtp.codeaurora.org>
+ <5AA67616.2000602@broadcom.com> <87efkoazow.fsf@kamboji.qca.qualcomm.com>
+ <5AA829A1.1090209@broadcom.com>
+ <24B25258-E680-490C-B7FF-D34CEBBA8566@holtmann.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux Bluetooth mailing list
+        <linux-bluetooth@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AA832B7.2010007@broadcom.com> (sfid-20180313_212135_545517_9E86720E)
+Date: Tue, 13 Mar 2018 21:21:11 +0100
 MIME-Version: 1.0
-In-Reply-To: <b5db0825-394a-1d6d-351a-43be14e4c6b4@users.sourceforge.net>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <24B25258-E680-490C-B7FF-D34CEBBA8566@holtmann.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sat, 10 Mar 2018 22:18:45 +0100
+On 3/13/2018 9:19 PM, Marcel Holtmann wrote:
+> Hi Arend,
+>
+>>>>>> Since commit 3c47d19ff4dc ("drivers: base: add coredump driver ops")
+>>>>>> it is possible to initiate a device coredump from user-space. This
+>>>>>> patch adds support for it adding the .coredump() driver callback.
+>>>>>> As there is no longer a need to initiate it through debugfs remove
+>>>>>> that code.
+>>>>>>
+>>>>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>>>>
+>>>>> Based on the discussion I assume this is ok to take to w-d-next. If that's not
+>>>>> the case, please let me know ASAP.
+>>>>
+>>>> It is up to the mwifiex maintainers to decide, I guess. The ABI
+>>>> documentation need to be revised and change the callback to void
+>>>> return type. I am not sure what the best approach is. 1) apply this
+>>>> and fix return type later, or 2) fix return type and resubmit this.
+>>>> What is your opinion?
+>>>
+>>> I guess the callback change will go through Greg's tree? Then I suspect
+>>> it's easier that you submit the callback change to Greg first and wait
+>>> for it to trickle down to wireless-drivers-next (after the next merge
+>>> window) and then I can apply the driver patches. Otherwise there might
+>>> be a conflict between my and Greg's tree.
+>>
+>> That was my assessment, but unfortunately Marcel already applied the btmrvl patch before I could reply. So how do I move from here? Option 1) revert brmrvl and fix callback return type, or 2) apply mwifiex patch and fix callback return type later for both drivers.
+>
+> I can take the patch back out of bluetooth-next if needed. It is your call.
 
-Add a jump target so that a bit of exception handling can be better reused
-at the end of this function.
+Thanks, Marcel
 
-This issue was detected by using the Coccinelle software.
+Let's go for that. Please revert/remove the patch.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/net/wireless/ti/wlcore/acx.c | 24 +++++++++++-------------
- 1 file changed, 11 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
-index 1cc5bba670e1..7d37a417c756 100644
---- a/drivers/net/wireless/ti/wlcore/acx.c
-+++ b/drivers/net/wireless/ti/wlcore/acx.c
-@@ -757,10 +757,8 @@ int wl1271_acx_sta_rate_policies(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	acx->rate_policy.aflags = c->aflags;
- 
- 	ret = wl1271_cmd_configure(wl, ACX_RATE_POLICY, acx, sizeof(*acx));
--	if (ret < 0) {
--		wl1271_warning("Setting of rate policies failed: %d", ret);
--		goto out;
--	}
-+	if (ret < 0)
-+		goto report_failure;
- 
- 	/* configure one AP supported rate class */
- 	acx->rate_policy_idx = cpu_to_le32(wlvif->sta.ap_rate_idx);
-@@ -773,10 +771,8 @@ int wl1271_acx_sta_rate_policies(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	acx->rate_policy.aflags = c->aflags;
- 
- 	ret = wl1271_cmd_configure(wl, ACX_RATE_POLICY, acx, sizeof(*acx));
--	if (ret < 0) {
--		wl1271_warning("Setting of rate policies failed: %d", ret);
--		goto out;
--	}
-+	if (ret < 0)
-+		goto report_failure;
- 
- 	/*
- 	 * configure one rate class for basic p2p operations.
-@@ -791,14 +787,16 @@ int wl1271_acx_sta_rate_policies(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	acx->rate_policy.aflags = c->aflags;
- 
- 	ret = wl1271_cmd_configure(wl, ACX_RATE_POLICY, acx, sizeof(*acx));
--	if (ret < 0) {
--		wl1271_warning("Setting of rate policies failed: %d", ret);
--		goto out;
--	}
-+	if (ret < 0)
-+		goto report_failure;
- 
--out:
-+free_acx:
- 	kfree(acx);
- 	return ret;
-+
-+report_failure:
-+	wl1271_warning("Setting of rate policies failed: %d", ret);
-+	goto free_acx;
- }
- 
- int wl1271_acx_ap_rate_policy(struct wl1271 *wl, struct conf_tx_rate_class *c,
--- 
-2.16.2
+Regards,
+Arend
