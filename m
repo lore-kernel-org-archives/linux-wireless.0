@@ -1,75 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33432 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1424003AbeCBMbW (ORCPT
+Received: from coyote.holtmann.net ([212.227.132.17]:59108 "EHLO
+        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751903AbeCMUTU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 07:31:22 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Beni Lev <beni.lev@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  2 Mar 2018 14:31:10 +0200
-Message-Id: <20180302123112.27416-3-luca@coelho.fi> (sfid-20180302_133126_744999_7A9C6117)
-In-Reply-To: <20180302123112.27416-1-luca@coelho.fi>
-References: <20180302123112.27416-1-luca@coelho.fi>
-Subject: [PATCH 2/4] iwlwifi: mvm: Correctly set IGTK for AP
+        Tue, 13 Mar 2018 16:19:20 -0400
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
+Subject: Re: [2/3] mwifiex: support sysfs initiated device coredump
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <5AA829A1.1090209@broadcom.com>
+Date: Tue, 13 Mar 2018 21:19:18 +0100
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux Bluetooth mailing list
+        <linux-bluetooth@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Message-Id: <24B25258-E680-490C-B7FF-D34CEBBA8566@holtmann.org> (sfid-20180313_211941_927592_7A96F1EB)
+References: <1519210220-22437-3-git-send-email-arend.vanspriel@broadcom.com>
+ <20180312094115.2E1C1606DB@smtp.codeaurora.org>
+ <5AA67616.2000602@broadcom.com> <87efkoazow.fsf@kamboji.qca.qualcomm.com>
+ <5AA829A1.1090209@broadcom.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Beni Lev <beni.lev@intel.com>
+Hi Arend,
 
-Currently when an IGTK is set for an AP, it is set as a regular key.
-Since the cipher is set to CMAC, the STA_KEY_FLG_EXT flag is added to
-the host command, which causes assert 0x253D on NICs that do not support
-this.
+>>>>> Since commit 3c47d19ff4dc ("drivers: base: add coredump driver ops")
+>>>>> it is possible to initiate a device coredump from user-space. This
+>>>>> patch adds support for it adding the .coredump() driver callback.
+>>>>> As there is no longer a need to initiate it through debugfs remove
+>>>>> that code.
+>>>>> 
+>>>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>>> 
+>>>> Based on the discussion I assume this is ok to take to w-d-next. If that's not
+>>>> the case, please let me know ASAP.
+>>> 
+>>> It is up to the mwifiex maintainers to decide, I guess. The ABI
+>>> documentation need to be revised and change the callback to void
+>>> return type. I am not sure what the best approach is. 1) apply this
+>>> and fix return type later, or 2) fix return type and resubmit this.
+>>> What is your opinion?
+>> 
+>> I guess the callback change will go through Greg's tree? Then I suspect
+>> it's easier that you submit the callback change to Greg first and wait
+>> for it to trickle down to wireless-drivers-next (after the next merge
+>> window) and then I can apply the driver patches. Otherwise there might
+>> be a conflict between my and Greg's tree.
+> 
+> That was my assessment, but unfortunately Marcel already applied the btmrvl patch before I could reply. So how do I move from here? Option 1) revert brmrvl and fix callback return type, or 2) apply mwifiex patch and fix callback return type later for both drivers.
 
-Fixes: 85aeb58cec1a ("iwlwifi: mvm: Enable security on new TX API")
-Signed-off-by: Beni Lev <beni.lev@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
+I can take the patch back out of bluetooth-next if needed. It is your call.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 630e23cb0ffb..5be4bae5b70d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -3233,17 +3233,9 @@ int iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
- 		}
- 		sta_id = mvm_sta->sta_id;
- 
--		if (keyconf->cipher == WLAN_CIPHER_SUITE_AES_CMAC ||
--		    keyconf->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_128 ||
--		    keyconf->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_256) {
--			ret = iwl_mvm_send_sta_igtk(mvm, keyconf, sta_id,
--						    false);
--			goto end;
--		}
--
- 		/*
- 		 * It is possible that the 'sta' parameter is NULL, and thus
--		 * there is a need to retrieve  the sta from the local station
-+		 * there is a need to retrieve the sta from the local station
- 		 * table.
- 		 */
- 		if (!sta) {
-@@ -3258,6 +3250,17 @@ int iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
- 
- 		if (WARN_ON_ONCE(iwl_mvm_sta_from_mac80211(sta)->vif != vif))
- 			return -EINVAL;
-+	} else {
-+		struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+
-+		sta_id = mvmvif->mcast_sta.sta_id;
-+	}
-+
-+	if (keyconf->cipher == WLAN_CIPHER_SUITE_AES_CMAC ||
-+	    keyconf->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_128 ||
-+	    keyconf->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_256) {
-+		ret = iwl_mvm_send_sta_igtk(mvm, keyconf, sta_id, false);
-+		goto end;
- 	}
- 
- 	/* If the key_offset is not pre-assigned, we need to find a
--- 
-2.16.1
+Regards
+
+Marcel
