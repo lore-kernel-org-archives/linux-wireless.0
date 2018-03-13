@@ -1,34 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from skyhawk.myhost.co.nz ([120.138.17.237]:34188 "EHLO
-        skyhawk.myhost.co.nz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754155AbeCRXhI (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36006 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752914AbeCMQkG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Mar 2018 19:37:08 -0400
-Subject: Re: [PATCH] mac80211: add ieee80211_hw flag for QoS NDP support
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-References: <20180317205118.21227-1-ben@transient.nz>
- <201803190525.Ycp9pnWN%fengguang.wu@intel.com>
-From: Ben Caradoc-Davies <ben@transient.nz>
-Message-ID: <65743b46-85e2-6833-ea2b-372d24055108@transient.nz> (sfid-20180319_003711_545715_5212EACA)
-Date: Mon, 19 Mar 2018 12:36:58 +1300
+        Tue, 13 Mar 2018 12:40:06 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <201803190525.Ycp9pnWN%fengguang.wu@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [v9,1/8] rsi: add rx control block to handle rx packets in USB
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1519741578-12640-2-git-send-email-amitkarwar@gmail.com>
+References: <1519741578-12640-2-git-send-email-amitkarwar@gmail.com>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        linux-bluetooth@vger.kernel.org,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Message-Id: <20180313164006.381A060390@smtp.codeaurora.org> (sfid-20180313_174030_536174_E20AF6B8)
+Date: Tue, 13 Mar 2018 16:40:06 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19/03/18 11:12, kbuild test robot wrote:
->     net/mac80211/debugfs.c: In function 'hwflags_read':
->>> include/linux/compiler.h:339:38: error: call to '__compiletime_assert_234' declared with attribute error: BUILD_BUG_ON failed: ARRAY_SIZE(hw_flag_names) != NUM_IEEE80211_HW_FLAGS
+Amitkumar Karwar <amitkarwar@gmail.com> wrote:
 
-Please reject this patch. I will submit a revised patch that adds the 
-new flag to hw_flag_names in net/mac80211/debugfs.c.
+> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> 
+> Rx bluetooth endpoint shall be added in further patches. Rx control
+> block is introduced here to handle Rx packets properly. Separate
+> function is written to initialize the RX control blocks.
+> 
+> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-Kind regards,
+8 patches applied to wireless-drivers-next.git, thanks.
+
+1100f81bbcd1 rsi: add rx control block to handle rx packets in USB
+a4302bff28e2 rsi: add bluetooth rx endpoint
+4c10d56a76bb rsi: add header file rsi_91x
+2108df3c4b18 rsi: add coex support
+38aa4da50483 Bluetooth: btrsi: add new rsi bluetooth driver
+716b840c7641 rsi: handle BT traffic in driver
+898b25533931 rsi: add module parameter operating mode
+681805b1401b rsi: sdio changes to support BT
 
 -- 
-Ben Caradoc-Davies <ben@transient.nz>
-Director
-Transient Software Limited <https://transient.nz/>
-New Zealand
+https://patchwork.kernel.org/patch/10245547/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
