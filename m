@@ -1,112 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:38498 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752900AbeCFB0M (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57796 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752967AbeCMQwr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Mar 2018 20:26:12 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 07/15] rtlwifi: btcoex: Add interaction with phydm
-Date: Tue, 6 Mar 2018 09:25:46 +0800
-Message-ID: <20180306012554.3108-8-pkshih@realtek.com> (sfid-20180306_022631_165435_6015387D)
-In-Reply-To: <20180306012554.3108-1-pkshih@realtek.com>
-References: <20180306012554.3108-1-pkshih@realtek.com>
+        Tue, 13 Mar 2018 12:52:47 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: net/wireless: fix spaces and grammar copy/paste in vendor Kconfig
+ help text
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1627081c-ef0c-1d55-ca2e-898f22b98d72@infradead.org>
+References: <1627081c-ef0c-1d55-ca2e-898f22b98d72@infradead.org>
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Message-Id: <20180313165247.371B8600C1@smtp.codeaurora.org> (sfid-20180313_175304_142214_6785416C)
+Date: Tue, 13 Mar 2018 16:52:47 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Randy Dunlap <rdunlap@infradead.org> wrote:
 
-Get phydm's counter and version from the module phydm that is not
-submitted so we implement dummy functions.
+> From: Randy Dunlap <rdunlap@infradead.org>
+> 
+> Lots of the wireless driver vendor Kconfig symol help text says
+> "questions about  cards." (2 spaces between "about" and "cards")
+> 
+> Besides dropping one of those spaces, it also needs some other word
+> inserted there. Instead of putting each vendor's name there, I chose
+> to say "these" cards in all of the Kconfig help text.
+> 
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 38 ++++++++++++++++++++++
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  6 ++++
- 2 files changed, 44 insertions(+)
+Patch applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index 1a24aed34094..bfb32d476a70 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -680,6 +680,21 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
- 	case BTC_GET_U4_BT_FORBIDDEN_SLOT_VAL:
- 		*u32_tmp = halbtc_get_bt_forbidden_slot_val(btcoexist);
- 		break;
-+	case BTC_GET_U4_WIFI_IQK_TOTAL:
-+		*u32_tmp =
-+			btcoexist->btc_phydm_query_phy_counter(btcoexist,
-+							       DM_INFO_IQK_ALL);
-+		break;
-+	case BTC_GET_U4_WIFI_IQK_OK:
-+		*u32_tmp =
-+			btcoexist->btc_phydm_query_phy_counter(btcoexist,
-+							       DM_INFO_IQK_OK);
-+		break;
-+	case BTC_GET_U4_WIFI_IQK_FAIL:
-+		*u32_tmp =
-+			btcoexist->btc_phydm_query_phy_counter(btcoexist,
-+							       DM_INFO_IQK_NG);
-+		break;
- 	case BTC_GET_U1_WIFI_DOT11_CHNL:
- 		*u8_tmp = rtlphy->current_channel;
- 		break;
-@@ -1122,6 +1137,25 @@ static bool halbtc_under_ips(struct btc_coexist *btcoexist)
- 	return false;
- }
- 
-+static
-+u32 halbtc_get_phydm_version(void *btc_context)
-+{
-+	return 0;
-+}
-+
-+static
-+void halbtc_phydm_modify_ra_pcr_threshold(void *btc_context,
-+					  u8 ra_offset_direction,
-+					  u8 ra_threshold_offset)
-+{
-+}
-+
-+static
-+u32 halbtc_phydm_query_phy_counter(void *btc_context, enum dm_info_query dm_id)
-+{
-+	return 0;
-+}
-+
- static u8 halbtc_get_ant_det_val_from_bt(void *btc_context)
- {
- 	struct btc_coexist *btcoexist = (struct btc_coexist *)btc_context;
-@@ -1245,6 +1279,10 @@ bool exhalbtc_initlize_variables(struct rtl_priv *rtlpriv)
- 					halbtc_get_bt_coex_supported_feature;
- 	btcoexist->btc_get_bt_coex_supported_version =
- 					halbtc_get_bt_coex_supported_version;
-+	btcoexist->btc_get_bt_phydm_version = halbtc_get_phydm_version;
-+	btcoexist->btc_phydm_modify_ra_pcr_threshold =
-+					halbtc_phydm_modify_ra_pcr_threshold;
-+	btcoexist->btc_phydm_query_phy_counter = halbtc_phydm_query_phy_counter;
- 	btcoexist->btc_get_ant_det_val_from_bt = halbtc_get_ant_det_val_from_bt;
- 	btcoexist->btc_get_ble_scan_type_from_bt =
- 					halbtc_get_ble_scan_type_from_bt;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index bc2388f3f953..1f12449363c2 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -730,6 +730,12 @@ struct btc_coexist {
- 			       u32 value);
- 	u32 (*btc_get_bt_coex_supported_feature)(void *btcoexist);
- 	u32 (*btc_get_bt_coex_supported_version)(void *btcoexist);
-+	u32 (*btc_get_bt_phydm_version)(void *btcoexist);
-+	void (*btc_phydm_modify_ra_pcr_threshold)(void *btcoexist,
-+						  u8 ra_offset_direction,
-+						  u8 ra_threshold_offset);
-+	u32 (*btc_phydm_query_phy_counter)(void *btcoexist,
-+					   enum dm_info_query dm_id);
- 	u8 (*btc_get_ant_det_val_from_bt)(void *btcoexist);
- 	u8 (*btc_get_ble_scan_type_from_bt)(void *btcoexist);
- 	u32 (*btc_get_ble_scan_para_from_bt)(void *btcoexist, u8 scan_type);
+a6cf02e6485a net/wireless: fix spaces and grammar copy/paste in vendor Kconfig help text
+
 -- 
-2.15.1
+https://patchwork.kernel.org/patch/10255933/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
