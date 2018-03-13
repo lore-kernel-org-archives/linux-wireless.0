@@ -1,238 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36942 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752572AbeC1OMI (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:45054 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751750AbeCMGXg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 10:12:08 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Mar 2018 17:11:46 +0300
-Message-Id: <20180328141157.5427-4-luca@coelho.fi> (sfid-20180328_161218_538777_335BD997)
-In-Reply-To: <20180328141157.5427-1-luca@coelho.fi>
-References: <20180328141157.5427-1-luca@coelho.fi>
-Subject: [PATCH 03/14] iwlwifi: mvm: move TSO segment to a separate function
+        Tue, 13 Mar 2018 02:23:36 -0400
+Subject: Re: Problem with bridge (mcast-to-ucast + hairpin) and Broadcom's
+ 802.11f in their FullMAC fw
+To: Stephen Hemminger <stephen@networkplumber.org>
+References: <CACna6rz9L09g9oeHhvt209Tg1E3gKgmhGnYF653AdkXfZf=4kw@mail.gmail.com>
+ <a7a21b04-025f-19e1-ec09-69cc355b9215@gmail.com>
+ <20180312160103.1a043936@xeon-e3>
+Cc: =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Network Development <netdev@vger.kernel.org>,
+        bridge@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <30949d84-862f-3685-7884-750edf4e9cf4@gmail.com> (sfid-20180313_072343_860147_592DC464)
+Date: Tue, 13 Mar 2018 07:23:31 +0100
+MIME-Version: 1.0
+In-Reply-To: <20180312160103.1a043936@xeon-e3>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On 03/13/2018 12:01 AM, Stephen Hemminger wrote:
+> On Mon, 12 Mar 2018 23:42:48 +0100
+> Rafał Miłecki <zajec5@gmail.com> wrote:
+>
+>> 2) Blame bridge + mcast-to-ucast + hairpin for 802.11f incompatibility
+>>
+>> If we agree that 802.11f support in FullMAC firmware is acceptable, then
+>> we have to make sure Linux's bridge doesn't break it by passing 802.11f
+>> (broadcast) frames back to the source interface. That would require a
+>> check like in below diff + proper code for handling such packets. I'm
+>> afraid I'm not familiar with bridge code enough to complete that.
+>>
+>> diff --git a/net/bridge/br_input.c b/net/bridge/br_input.c
+>> index edae702..9e5d6ea 100644
+>> --- a/net/bridge/br_input.c
+>> +++ b/net/bridge/br_input.c
+>> @@ -126,6 +126,27 @@ static void br_do_proxy_arp(struct sk_buff *skb, struct net_bridge *br,
+>>   	}
+>>   }
+>>
+>> +static bool br_skb_is_iapp_add_packet(struct sk_buff *skb)
+>> +{
+>> +	const u8 iapp_add_packet[6] __aligned(2) = {
+>> +		0x00, 0x01, 0xaf, 0x81, 0x01, 0x00,
+>> +	};
+>> +#if !defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
+>> +	const u16 *a = (const u16 *)skb->data;
+>> +	const u16 *b = (const u16 *)iapp_add_packet;
+>> +#endif
+>> +
+>> +	if (skb->len != 6)
+>> +		return false;
+>> +
+>> +#if defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
+>> +	return !(((*(const u32 *)skb->data) ^ (*(const u32 *)iapp_add_packet)) |
+>> +	         ((*(const u16 *)(skb->data + 4)) ^ (*(const u16 *)(iapp_add_packet + 4))));
+>> +#else
+>> +	return !((a[0] ^ b[0]) | (a[1] ^ b[1]) | (a[2] ^ b[2]));
+>> +#endif
+>> +}
+>> +
+>>   /* note: already called with rcu_read_lock */
+>>   int br_handle_frame_finish(struct net *net, struct sock *sk, struct sk_buff *skb)
+>>   {
+>> @@ -155,6 +176,8 @@ int br_handle_frame_finish(struct net *net, struct sock *sk, struct sk_buff *skb
+>>   	if (is_multicast_ether_addr(dest)) {
+>>   		/* by definition the broadcast is also a multicast address */
+>>   		if (is_broadcast_ether_addr(dest)) {
+>> +			if (br_skb_is_iapp_add_packet(skb))
+>> +				pr_warn("This packet should not be passed back to the source interface!\n");
+>>   			pkt_type = BR_PKT_BROADCAST;
+>>   			local_rcv = true;
+>>   		} else {
+>
+>
+> Don't like bridge doing special case code for magic received values directly in input path.
+> Really needs to be generic which is why I suggested ebtables.
 
-This makes future bail-outs from transmitting an AMSDU more
-readable.
+We need in-bridge solution only if we decide to support FullMAC
+firmwares with 802.11f implementation.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 158 +++++++++++++++-------------
- 1 file changed, 83 insertions(+), 75 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 7dfe4cde55e3..795065974d78 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -687,6 +687,74 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
- }
- 
- #ifdef CONFIG_INET
-+
-+static int
-+iwl_mvm_tx_tso_segment(struct sk_buff *skb, unsigned int num_subframes,
-+		       netdev_features_t netdev_flags,
-+		       struct sk_buff_head *mpdus_skb)
-+{
-+	struct sk_buff *tmp, *next;
-+	struct ieee80211_hdr *hdr = (void *)skb->data;
-+	char cb[sizeof(skb->cb)];
-+	u16 i = 0;
-+	unsigned int tcp_payload_len;
-+	unsigned int mss = skb_shinfo(skb)->gso_size;
-+	bool ipv4 = (skb->protocol == htons(ETH_P_IP));
-+	u16 ip_base_id = ipv4 ? ntohs(ip_hdr(skb)->id) : 0;
-+
-+	skb_shinfo(skb)->gso_size = num_subframes * mss;
-+	memcpy(cb, skb->cb, sizeof(cb));
-+
-+	next = skb_gso_segment(skb, netdev_flags);
-+	skb_shinfo(skb)->gso_size = mss;
-+	if (WARN_ON_ONCE(IS_ERR(next)))
-+		return -EINVAL;
-+	else if (next)
-+		consume_skb(skb);
-+
-+	while (next) {
-+		tmp = next;
-+		next = tmp->next;
-+
-+		memcpy(tmp->cb, cb, sizeof(tmp->cb));
-+		/*
-+		 * Compute the length of all the data added for the A-MSDU.
-+		 * This will be used to compute the length to write in the TX
-+		 * command. We have: SNAP + IP + TCP for n -1 subframes and
-+		 * ETH header for n subframes.
-+		 */
-+		tcp_payload_len = skb_tail_pointer(tmp) -
-+			skb_transport_header(tmp) -
-+			tcp_hdrlen(tmp) + tmp->data_len;
-+
-+		if (ipv4)
-+			ip_hdr(tmp)->id = htons(ip_base_id + i * num_subframes);
-+
-+		if (tcp_payload_len > mss) {
-+			skb_shinfo(tmp)->gso_size = mss;
-+		} else {
-+			if (ieee80211_is_data_qos(hdr->frame_control)) {
-+				u8 *qc;
-+
-+				if (ipv4)
-+					ip_send_check(ip_hdr(tmp));
-+
-+				qc = ieee80211_get_qos_ctl((void *)tmp->data);
-+				*qc &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
-+			}
-+			skb_shinfo(tmp)->gso_size = 0;
-+		}
-+
-+		tmp->prev = NULL;
-+		tmp->next = NULL;
-+
-+		__skb_queue_tail(mpdus_skb, tmp);
-+		i++;
-+	}
-+
-+	return 0;
-+}
-+
- static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
- 			  struct ieee80211_tx_info *info,
- 			  struct ieee80211_sta *sta,
-@@ -695,14 +763,10 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
- 	unsigned int mss = skb_shinfo(skb)->gso_size;
--	struct sk_buff *tmp, *next;
--	char cb[sizeof(skb->cb)];
- 	unsigned int num_subframes, tcp_payload_len, subf_len, max_amsdu_len;
--	bool ipv4 = (skb->protocol == htons(ETH_P_IP));
--	u16 ip_base_id = ipv4 ? ntohs(ip_hdr(skb)->id) : 0;
--	u16 snap_ip_tcp, pad, i = 0;
-+	u16 snap_ip_tcp, pad;
- 	unsigned int dbg_max_amsdu_len;
--	netdev_features_t netdev_features = NETIF_F_CSUM_MASK | NETIF_F_SG;
-+	netdev_features_t netdev_flags = NETIF_F_CSUM_MASK | NETIF_F_SG;
- 	u8 *qc, tid, txf;
- 
- 	snap_ip_tcp = 8 + skb_transport_header(skb) - skb_network_header(skb) +
-@@ -712,16 +776,8 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
- 
- 	if (!sta->max_amsdu_len ||
- 	    !ieee80211_is_data_qos(hdr->frame_control) ||
--	    (!mvmsta->tlc_amsdu && !dbg_max_amsdu_len)) {
--		num_subframes = 1;
--		pad = 0;
--		goto segment;
--	}
--
--	qc = ieee80211_get_qos_ctl(hdr);
--	tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
--	if (WARN_ON_ONCE(tid >= IWL_MAX_TID_COUNT))
--		return -EINVAL;
-+	    (!mvmsta->tlc_amsdu && !dbg_max_amsdu_len))
-+		return iwl_mvm_tx_tso_segment(skb, 1, netdev_flags, mpdus_skb);
- 
- 	/*
- 	 * Do not build AMSDU for IPv6 with extension headers.
-@@ -730,22 +786,22 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	if (skb->protocol == htons(ETH_P_IPV6) &&
- 	    ((struct ipv6hdr *)skb_network_header(skb))->nexthdr !=
- 	    IPPROTO_TCP) {
--		num_subframes = 1;
--		pad = 0;
--		netdev_features &= ~NETIF_F_CSUM_MASK;
--		goto segment;
-+		netdev_flags &= ~NETIF_F_CSUM_MASK;
-+		return iwl_mvm_tx_tso_segment(skb, 1, netdev_flags, mpdus_skb);
- 	}
- 
-+	qc = ieee80211_get_qos_ctl(hdr);
-+	tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
-+	if (WARN_ON_ONCE(tid >= IWL_MAX_TID_COUNT))
-+		return -EINVAL;
-+
- 	/*
- 	 * No need to lock amsdu_in_ampdu_allowed since it can't be modified
- 	 * during an BA session.
- 	 */
- 	if (info->flags & IEEE80211_TX_CTL_AMPDU &&
--	    !mvmsta->tid_data[tid].amsdu_in_ampdu_allowed) {
--		num_subframes = 1;
--		pad = 0;
--		goto segment;
--	}
-+	    !mvmsta->tid_data[tid].amsdu_in_ampdu_allowed)
-+		return iwl_mvm_tx_tso_segment(skb, 1, netdev_flags, mpdus_skb);
- 
- 	max_amsdu_len = sta->max_amsdu_len;
- 
-@@ -811,56 +867,8 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	 * Trick the segmentation function to make it
- 	 * create SKBs that can fit into one A-MSDU.
- 	 */
--segment:
--	skb_shinfo(skb)->gso_size = num_subframes * mss;
--	memcpy(cb, skb->cb, sizeof(cb));
--
--	next = skb_gso_segment(skb, netdev_features);
--	skb_shinfo(skb)->gso_size = mss;
--	if (WARN_ON_ONCE(IS_ERR(next)))
--		return -EINVAL;
--	else if (next)
--		consume_skb(skb);
--
--	while (next) {
--		tmp = next;
--		next = tmp->next;
--
--		memcpy(tmp->cb, cb, sizeof(tmp->cb));
--		/*
--		 * Compute the length of all the data added for the A-MSDU.
--		 * This will be used to compute the length to write in the TX
--		 * command. We have: SNAP + IP + TCP for n -1 subframes and
--		 * ETH header for n subframes.
--		 */
--		tcp_payload_len = skb_tail_pointer(tmp) -
--			skb_transport_header(tmp) -
--			tcp_hdrlen(tmp) + tmp->data_len;
--
--		if (ipv4)
--			ip_hdr(tmp)->id = htons(ip_base_id + i * num_subframes);
--
--		if (tcp_payload_len > mss) {
--			skb_shinfo(tmp)->gso_size = mss;
--		} else {
--			if (ieee80211_is_data_qos(hdr->frame_control)) {
--				qc = ieee80211_get_qos_ctl((void *)tmp->data);
--
--				if (ipv4)
--					ip_send_check(ip_hdr(tmp));
--				*qc &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
--			}
--			skb_shinfo(tmp)->gso_size = 0;
--		}
--
--		tmp->prev = NULL;
--		tmp->next = NULL;
--
--		__skb_queue_tail(mpdus_skb, tmp);
--		i++;
--	}
--
--	return 0;
-+	return iwl_mvm_tx_tso_segment(skb, num_subframes, netdev_flags,
-+				      mpdus_skb);
- }
- #else /* CONFIG_INET */
- static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
--- 
-2.16.2
+In that case is this possible to use ebtables as a workaround at all?
+Can I really use ebtables to set switch to don't pass 802.11f ADD frames
+back to the original interface?
