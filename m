@@ -1,79 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:38465 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750991AbeCTD4g (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:42711 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752748AbeCMUSB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Mar 2018 23:56:36 -0400
-Received: by mail-ot0-f195.google.com with SMTP id 95-v6so283897ote.5
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2018 20:56:36 -0700 (PDT)
-Subject: Re: [PATCH v2 05/15] rtlwifi: btcoex: Get status of multichannel
- concurrence
-To: pkshih@realtek.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-References: <20180306012554.3108-1-pkshih@realtek.com>
- <20180306012554.3108-6-pkshih@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <96051650-7c79-57d1-dcb3-9b102eb46790@lwfinger.net> (sfid-20180320_045640_596555_59E257F1)
-Date: Mon, 19 Mar 2018 22:56:34 -0500
+        Tue, 13 Mar 2018 16:18:01 -0400
+Date: Wed, 14 Mar 2018 07:17:57 +1100
+From: tcharding <me@tobin.cc>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: kernel-hardening@lists.openwall.com, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Tycho Andersen <tycho@tycho.ws>,
+        Kees Cook <keescook@chromium.org>
+Subject: Re: [RESEND] rsi: Remove stack VLA usage
+Message-ID: <20180313201757.GK8631@eros> (sfid-20180313_211821_614478_9DC78394)
+References: <1520819022-15238-1-git-send-email-me@tobin.cc>
+ <20180312094606.8192B6081A@smtp.codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <20180306012554.3108-6-pkshih@realtek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180312094606.8192B6081A@smtp.codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/05/2018 07:25 PM, pkshih@realtek.com wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
+On Mon, Mar 12, 2018 at 09:46:06AM +0000, Kalle Valo wrote:
+> tcharding <me@tobin.cc> wrote:
 > 
-> btcoex does different decision according to MCC or SCC status, but
-> driver is still SCC currently.
+> > The kernel would like to have all stack VLA usage removed[1].  rsi uses
+> > a VLA based on 'blksize'.  Elsewhere in the SDIO code maximum block size
+> > is defined using a magic number.  We can use a pre-processor defined
+> > constant and declare the array to maximum size.  We add a check before
+> > accessing the array in case of programmer error.
+> > 
+> > [1]: https://lkml.org/lkml/2018/3/7/621
+> > 
+> > Signed-off-by: Tobin C. Harding <me@tobin.cc>
 > 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Tobin, your name in patchwork.kernel.org is just "tcharding" then it should be
+> "Tobin C. Harding". Patchwork is braindead in a way as it takes the name from
+> it's database instead of the From header of the patch in question.
+> 
+> I can fix that manually but it would be helpful if you could register to
+> patchwork and fix your name during registration. You have only one chance to
+> fix your name (another braindead feature!) so be careful :)
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Hi Kalle,
 
-> ---
->   drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 3 +++
->   drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 8 ++++++++
->   2 files changed, 11 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> index 823694cb4fdb..1a24aed34094 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-> @@ -577,6 +577,9 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
->   			tmp = true;
->   		*bool_tmp = tmp;
->   		break;
-> +	case BTC_GET_BL_WIFI_DUAL_BAND_CONNECTED:
-> +		*u8_tmp = BTC_MULTIPORT_SCC;
-> +		break;
->   	case BTC_GET_BL_WIFI_BUSY:
->   		if (halbtc_is_wifi_busy(rtlpriv))
->   			*bool_tmp = true;
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-> index 3c6a1e8851ec..fe793b787716 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-> @@ -251,6 +251,7 @@ enum btc_get_type {
->   	BTC_GET_BL_HS_OPERATION,
->   	BTC_GET_BL_HS_CONNECTING,
->   	BTC_GET_BL_WIFI_CONNECTED,
-> +	BTC_GET_BL_WIFI_DUAL_BAND_CONNECTED,
->   	BTC_GET_BL_WIFI_BUSY,
->   	BTC_GET_BL_WIFI_SCAN,
->   	BTC_GET_BL_WIFI_LINK,
-> @@ -436,6 +437,13 @@ enum btc_notify_type_stack_operation {
->   	BTC_STACK_OP_MAX
->   };
->   
-> +enum {
-> +	BTC_MULTIPORT_SCC,
-> +	BTC_MULTIPORT_MCC_2CHANNEL,
-> +	BTC_MULTIPORT_MCC_2BAND,
-> +	BTC_MULTIPORT_MAX
-> +};
-> +
->   struct btc_bt_info {
->   	bool bt_disabled;
->   	u8 rssi_adjust_for_agc_table_on;
-> 
+I logged into my patchwork account but I don't see any way to set the
+name.  Within 'profile' there is only 'change password' and 'link
+email'.  I thought I could unregister then re-register but I can't see
+how to do that either.  Is there a maintainer of patchwork.kernel.org
+who I can email to manually remove me from the system?
+
+thanks,
+Tobin.
