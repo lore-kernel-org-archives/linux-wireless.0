@@ -1,62 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37536 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:58654 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753243AbeCFPPP (ORCPT
+        with ESMTP id S932637AbeCMQy3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Mar 2018 10:15:15 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
-Subject: Re: pull-request: iwlwifi 2018-03-02
-References: <1519981045.6017.4.camel@coelho.fi>
-Date: Tue, 06 Mar 2018 17:15:06 +0200
-In-Reply-To: <1519981045.6017.4.camel@coelho.fi> (Luca Coelho's message of
-        "Fri, 02 Mar 2018 10:57:25 +0200")
-Message-ID: <877eqpjkw5.fsf@kamboji.qca.qualcomm.com> (sfid-20180306_161518_912829_C4088D2C)
+        Tue, 13 Mar 2018 12:54:29 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [1/3] Revert "mwifiex: fix incorrect ht capability problem"
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1520619326-14888-2-git-send-email-gbhat@marvell.com>
+References: <1520619326-14888-2-git-send-email-gbhat@marvell.com>
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Message-Id: <20180313165429.7185360849@smtp.codeaurora.org> (sfid-20180313_175436_317849_ACAF8797)
+Date: Tue, 13 Mar 2018 16:54:29 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Ganapathi Bhat <gbhat@marvell.com> wrote:
 
-> Hi Kalle,
->
-> Here is my second set of fixes for 4.16.  More details in the tag
-> description.
->
-> I have sent this out before and kbuildbot didn't find any issues. 
-> Please let me know if there are any issues.
->
-> Cheers,
-> Luca.
->
->
-> The following changes since commit 78dc897b7ee67205423dbbc6b56be49fb18d15b5:
->
->   rtlwifi: rtl8723be: Fix loss of signal (2018-02-25 09:47:15 +0200)
->
-> are available in the Git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2018-03-02
->
-> for you to fetch changes up to de655fa8fb237d0eaf838e8833b464c1dec90070:
->
->   iwlwifi: fix malformed CONFIG_IWLWIFI_PCIE_RTPM default (2018-03-02 10:20:03 +0200)
->
-> ----------------------------------------------------------------
-> Second batch of iwlwifi fixes intended for 4.16:
->
-> * Fix CSA issues with count 0 and 1;
-> * Some firmware debugging fixes;
-> * Removed a wrong error message when removing keys;
-> * Fix a firmware sysassert most usually triggered in IBSS;
-> * A couple of fixes on multicast queues;
-> * A fix with CCMP 256;
->
-> ----------------------------------------------------------------
+> This reverts commit bcc920e8f08336cbbdcdba7c4449c27137e6b4b9.
+> 
+> Drivers gets hardware info and updates ht_cap field of
+> wiphy->bands during initialization. Once updated during init,
+> ht_cap must not be modified as it reflects the capability
+> supported by hardwawre. Above patch tries to modify the ht_cap
+> field and this results in wrongly advertising capabilities during
+> association.
+> 
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 
-Pulled, thanks.
+3 patches applied to wireless-drivers-next.git, thanks.
+
+53a7094204b7 Revert "mwifiex: fix incorrect ht capability problem"
+77423fa73927 mwifiex: fix incorrect ht capability problem
+28bf8312a983 mwifiex: get_channel from firmware
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/10271595/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
