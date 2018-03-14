@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:6089 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1425508AbeCBOXg (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:34322 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751379AbeCNUz0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 09:23:36 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 05/13] staging: wilc1000: fix line over 80 char for wilc_gnrl_async_info_received()
-Date: Fri, 2 Mar 2018 19:52:41 +0530
-Message-ID: <1520000569-27738-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180302_152339_840022_78364D13)
-In-Reply-To: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
-References: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
+        Wed, 14 Mar 2018 16:55:26 -0400
+Received: by mail-wm0-f50.google.com with SMTP id a20so20214349wmd.1
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Mar 2018 13:55:25 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: drop Inter-Access Point Protocol packets by
+ default
+To: Kalle Valo <kvalo@codeaurora.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+References: <20180314110119.13631-1-zajec5@gmail.com>
+ <878tau7n23.fsf@codeaurora.org> <52b1812dd3e843adb63ff67fbe95975f@milecki.pl>
+ <877eqe63kr.fsf@codeaurora.org>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        James Hughes <james.hughes@raspberrypi.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
+        Felix Fietkau <nbd@nbd.name>, bridge@lists.linux-foundation.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AA98C3B.2070406@broadcom.com> (sfid-20180314_215529_956986_F47430AC)
+Date: Wed, 14 Mar 2018 21:55:23 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <877eqe63kr.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix 'line over 80 char' issue found by checkpatch.pl script.
+On 3/14/2018 5:10 PM, Kalle Valo wrote:
+> Rafał Miłecki <rafal@milecki.pl> writes:
+>
+>>>> +	unsigned char *eth_data = skb_mac_header(skb) + ETH_HLEN;
+>>>> +#if !defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
+>>>
+>>> #ifndef?
+>>
+>> I followed what is used in the include/linux/etherdevice.h. Is that a
+>> good exceuse? Could it be there any some good reason for #if defined()?
+>
+> Don't know, maybe just a matter of taste? But it would be nice to know
+> the background behind #ifdef vs #if defined(), never figured it out why
+> two different forms.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Well. In this case you could use either one, but if you have more 
+conditions #if defined() is bit more efficient:
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index a44ddb2..a15c087 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3520,7 +3520,10 @@ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length)
- 
- 	mutex_lock(&hif_deinit_lock);
- 
--	id = ((buffer[length - 4]) | (buffer[length - 3] << 8) | (buffer[length - 2] << 16) | (buffer[length - 1] << 24));
-+	id = buffer[length - 4];
-+	id |= (buffer[length - 3] << 8);
-+	id |= (buffer[length - 2] << 16);
-+	id |= (buffer[length - 1] << 24);
- 	vif = wilc_get_vif_from_idx(wilc, id);
- 	if (!vif) {
- 		mutex_unlock(&hif_deinit_lock);
--- 
-2.7.4
+#ifdef A
+#ifdef B
+#endif
+#endif
+
+vs.
+
+#if defined(A) && defined(B)
+
+Regards,
+Arend
