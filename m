@@ -1,155 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:14434 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751035AbeCZLqO (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34264 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750779AbeCNVn2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 07:46:14 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 1/9] staging: wilc1000: remove unused global variables related to p2p
-Date: Mon, 26 Mar 2018 17:15:55 +0530
-Message-ID: <1522064763-11576-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180326_134617_048755_73F69A78)
-In-Reply-To: <1522064763-11576-1-git-send-email-ajay.kathat@microchip.com>
-References: <1522064763-11576-1-git-send-email-ajay.kathat@microchip.com>
+        Wed, 14 Mar 2018 17:43:28 -0400
+Received: by mail-oi0-f67.google.com with SMTP id e79so44278oih.1
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Mar 2018 14:43:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1521054179-4030-1-git-send-email-stefan.wahren@i2se.com>
+References: <1521054179-4030-1-git-send-email-stefan.wahren@i2se.com>
+From: Franky Lin <franky.lin@broadcom.com>
+Date: Wed, 14 Mar 2018 14:43:06 -0700
+Message-ID: <CA+8PC_eb1hDyWKGh1HEYqoqookT6wuRTcGPm00srtFLxhUktYg@mail.gmail.com> (sfid-20180314_224331_921252_791AC33E)
+Subject: Re: [PATCH] wireless: brcmfmac: cfg80211: Fix check for ISO3166 code
+To: Stefan Wahren <stefan.wahren@i2se.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to remove the unused global variables defined for p2p.
-
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 59 -------------------------------
- 1 file changed, 59 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 5082ede..a13998d 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -254,13 +254,6 @@ static u32 inactive_time;
- static u8 del_beacon;
- static u32 clients_count;
- 
--static u8 *join_req;
--static u8 *info_element;
--static u8 mode_11i;
--static u8 auth_type;
--static u32 join_req_size;
--static u32 info_element_size;
--static struct wilc_vif *join_req_vif;
- #define REAL_JOIN_REQ 0
- #define FLUSHED_JOIN_REQ 1
- #define FLUSHED_BYTE_POS 79
-@@ -995,39 +988,23 @@ static s32 handle_connect(struct wilc_vif *vif,
- 	wid_list[wid_cnt].size = hif_drv->usr_conn_req.ies_len;
- 	wid_cnt++;
- 
--	if (memcmp("DIRECT-", conn_attr->ssid, 7)) {
--		info_element_size = hif_drv->usr_conn_req.ies_len;
--		info_element = kmalloc(info_element_size, GFP_KERNEL);
--		memcpy(info_element, hif_drv->usr_conn_req.ies,
--		       info_element_size);
--	}
- 	wid_list[wid_cnt].id = (u16)WID_11I_MODE;
- 	wid_list[wid_cnt].type = WID_CHAR;
- 	wid_list[wid_cnt].size = sizeof(char);
- 	wid_list[wid_cnt].val = (s8 *)&hif_drv->usr_conn_req.security;
- 	wid_cnt++;
- 
--	if (memcmp("DIRECT-", conn_attr->ssid, 7))
--		mode_11i = hif_drv->usr_conn_req.security;
--
- 	wid_list[wid_cnt].id = (u16)WID_AUTH_TYPE;
- 	wid_list[wid_cnt].type = WID_CHAR;
- 	wid_list[wid_cnt].size = sizeof(char);
- 	wid_list[wid_cnt].val = (s8 *)&hif_drv->usr_conn_req.auth_type;
- 	wid_cnt++;
- 
--	if (memcmp("DIRECT-", conn_attr->ssid, 7))
--		auth_type = (u8)hif_drv->usr_conn_req.auth_type;
--
- 	wid_list[wid_cnt].id = (u16)WID_JOIN_REQ_EXTENDED;
- 	wid_list[wid_cnt].type = WID_STR;
- 	wid_list[wid_cnt].size = 112;
- 	wid_list[wid_cnt].val = kmalloc(wid_list[wid_cnt].size, GFP_KERNEL);
- 
--	if (memcmp("DIRECT-", conn_attr->ssid, 7)) {
--		join_req_size = wid_list[wid_cnt].size;
--		join_req = kmalloc(join_req_size, GFP_KERNEL);
--	}
- 	if (!wid_list[wid_cnt].val) {
- 		result = -EFAULT;
- 		goto error;
-@@ -1120,11 +1097,6 @@ static s32 handle_connect(struct wilc_vif *vif,
- 	cur_byte = wid_list[wid_cnt].val;
- 	wid_cnt++;
- 
--	if (memcmp("DIRECT-", conn_attr->ssid, 7)) {
--		memcpy(join_req, cur_byte, join_req_size);
--		join_req_vif = vif;
--	}
--
- 	if (conn_attr->bssid)
- 		memcpy(wilc_connected_ssid,
- 		       conn_attr->bssid, ETH_ALEN);
-@@ -1254,16 +1226,6 @@ static s32 handle_connect_timeout(struct wilc_vif *vif)
- 
- 	eth_zero_addr(wilc_connected_ssid);
- 
--	if (join_req && join_req_vif == vif) {
--		kfree(join_req);
--		join_req = NULL;
--	}
--
--	if (info_element && join_req_vif == vif) {
--		kfree(info_element);
--		info_element = NULL;
--	}
--
- 	return result;
- }
- 
-@@ -1519,17 +1481,6 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
- 			hif_drv->usr_conn_req.ies_len = 0;
- 			kfree(hif_drv->usr_conn_req.ies);
- 			hif_drv->usr_conn_req.ies = NULL;
--
--			if (join_req && join_req_vif == vif) {
--				kfree(join_req);
--				join_req = NULL;
--			}
--
--			if (info_element && join_req_vif == vif) {
--				kfree(info_element);
--				info_element = NULL;
--			}
--
- 			hif_drv->hif_state = HOST_IF_IDLE;
- 			scan_while_connected = false;
- 
-@@ -1866,16 +1817,6 @@ static void handle_disconnect(struct wilc_vif *vif)
- 	kfree(conn_req->ies);
- 	conn_req->ies = NULL;
- 
--	if (join_req && join_req_vif == vif) {
--		kfree(join_req);
--		join_req = NULL;
--	}
--
--	if (info_element && join_req_vif == vif) {
--		kfree(info_element);
--		info_element = NULL;
--	}
--
- out:
- 
- 	complete(&hif_drv->comp_test_disconn_block);
--- 
-2.7.4
+On Wed, Mar 14, 2018 at 12:02 PM, Stefan Wahren <stefan.wahren@i2se.com> wrote:
+> The commit "regulatory: add NUL to request alpha2" increases the length of
+> alpha2 to 3. This causes a regression on brcmfmac, because
+> brcmf_cfg80211_reg_notifier() expect valid ISO3166 codes in the complete
+> array. So fix this accordingly.
+>
+> Signed-off-by: Stefan Wahren <stefan.wahren@i2se.com>
+Acked-by: Franky Lin <franky.lin@broadcom.com>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index 74a8302..5ed718d 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -6805,7 +6805,7 @@ static void brcmf_cfg80211_reg_notifier(struct wiphy *wiphy,
+>                 return;
+>
+>         /* ignore non-ISO3166 country codes */
+> -       for (i = 0; i < sizeof(req->alpha2); i++)
+> +       for (i = 0; i < 2; i++)
+>                 if (req->alpha2[i] < 'A' || req->alpha2[i] > 'Z') {
+>                         brcmf_err("not an ISO3166 code (0x%02x 0x%02x)\n",
+>                                   req->alpha2[0], req->alpha2[1]);
+> --
+> 2.7.4
+>
