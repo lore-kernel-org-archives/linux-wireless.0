@@ -1,115 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr20041.outbound.protection.outlook.com ([40.107.2.41]:61506
-        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751903AbeCWNPg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Mar 2018 09:15:36 -0400
-From: Vanessa Maegima <vanessa.maegima@nxp.com>
-To: "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
-        "festevam@gmail.com" <festevam@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "van.ayumi@gmail.com" <van.ayumi@gmail.com>,
-        "embed3d@gmail.com" <embed3d@gmail.com>
-Subject: Re: AP6335 with mainline kernel
-Date: Fri, 23 Mar 2018 13:15:32 +0000
-Message-ID: <1521810882.19239.1.camel@nxp.com> (sfid-20180323_141548_789693_ED8B13F0)
-References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
-         <85717463-11e2-e2e3-b08e-b758986687b5@broadcom.com>
-         <1510916848.26896.2.camel@nxp.com> <5A0EDC25.7030505@broadcom.com>
-         <1510932224.22506.0.camel@nxp.com>
-         <d9a80a75-b3d4-d78e-a5bf-ab31732f040d@broadcom.com>
-         <e14bdc26-5092-18c9-4caa-c45fd1d12984@broadcom.com>
-         <1511347672.18886.2.camel@nxp.com> <5A15584A.9090601@broadcom.com>
-         <1511450638.9102.1.camel@nxp.com> <5A1FFA17.6000703@broadcom.com>
-         <1512413992.18900.3.camel@nxp.com>
-         <CAF7Mx6q6mTOXc=4OFVCHAHd26pyfv5e6pK=TMNmb1S6=FBWUWQ@mail.gmail.com>
-         <1512485878.9392.1.camel@nxp.com>
-         <CAOMZO5DXoCFgTtuRRAq_jFjzkzFp6chMCwczXF5Z0bFaNfQnog@mail.gmail.com>
-         <5A5E5EBE.7040301@broadcom.com> <1516276016.8817.1.camel@nxp.com>
-         <5A61B43C.4000305@broadcom.com> <1521646672.13983.1.camel@nxp.com>
-         <5AB4C8D5.40203@broadcom.com>
-In-Reply-To: <5AB4C8D5.40203@broadcom.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:37965 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751480AbeCNMp1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Mar 2018 08:45:27 -0400
+From: hariprasath.elango@gmail.com
+To: aditya.shankar@microchip.com, gregkh@linuxfoundation.org,
+        ganesh.krishna@microchip.com
+Cc: hariprasath.elango@gmail.com, linux-wireless@vger.kernel.org,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/7] staging: wilc1000: Destroy mutex object in deinitialization
+Date: Wed, 14 Mar 2018 18:15:00 +0530
+Message-Id: <6997c01b44d8dbc67e53e340014d10d7a0ad7adb.1521030891.git.hariprasath.elango@gmail.com> (sfid-20180314_134657_302446_39723C95)
+In-Reply-To: <cover.1521030891.git.hariprasath.elango@gmail.com>
+References: <cover.1521030891.git.hariprasath.elango@gmail.com>
+In-Reply-To: <cover.1521030891.git.hariprasath.elango@gmail.com>
+References: <cover.1521030891.git.hariprasath.elango@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQXJlbmQsDQoNCk9uIFNleCwgMjAxOC0wMy0yMyBhdCAxMDoyOCArMDEwMCwgQXJlbmQgdmFu
-IFNwcmllbCB3cm90ZToNCj4gT24gMy8yMS8yMDE4IDQ6MzggUE0sIFZhbmVzc2EgTWFlZ2ltYSB3
-cm90ZToNCj4gPiANCj4gPiBIaSBBcmVuZCwNCj4gPiANCj4gPiBPbiBTZXgsIDIwMTgtMDEtMTkg
-YXQgMTA6MDIgKzAxMDAsIEFyZW5kIHZhbiBTcHJpZWwgd3JvdGU6DQo+ID4gPiANCj4gPiA+IE9u
-IDEvMTgvMjAxOCAxMjo0NyBQTSwgVmFuZXNzYSBNYWVnaW1hIHdyb3RlOg0KPiA+ID4gPiANCj4g
-PiA+ID4gDQo+ID4gPiA+IEhpIEFyZW5kLA0KPiA+ID4gPiANCj4gPiA+ID4gT24gVGVyLCAyMDE4
-LTAxLTE2IGF0IDIxOjIxICswMTAwLCBBcmVuZCB2YW4gU3ByaWVsIHdyb3RlOg0KPiA+ID4gPiA+
-IA0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+IE9uIDEvMTUvMjAxOCA5OjA4IFBNLCBGYWJpbyBFc3Rl
-dmFtIHdyb3RlOg0KPiA+ID4gPiA+ID4gDQo+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+IA0KPiA+
-ID4gPiA+ID4gSGkgQXJlbmQsDQo+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+IE9uIFR1ZSwgRGVj
-IDUsIDIwMTcgYXQgMTI6NTggUE0sIFZhbmVzc2EgTWFlZ2ltYQ0KPiA+ID4gPiA+ID4gPHZhbmVz
-c2EubWFlZ2ltYUBueHAuY29tPiB3cm90ZToNCj4gPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gPiAN
-Cj4gPiA+ID4gPiA+ID4gDQo+ID4gPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gPiBIaSBBcmVuZCwN
-Cj4gPiA+ID4gPiA+ID4gDQo+ID4gPiA+ID4gPiA+IFNvcnJ5IGZvciB0aGlzIQ0KPiA+ID4gPiA+
-ID4gPiANCj4gPiA+ID4gPiA+ID4gSSB1cGRhdGVkIHRoZSBmb2xkZXIgb24gaHR0cHM6Ly9lbWVh
-MDEuc2FmZWxpbmtzLnByb3RlY3RpDQo+ID4gPiA+ID4gPiA+IG9uLm91dGxvb2suY29tLz91cmw9
-aHR0cHMlM0ElMkYlMkZlbWVhMDEuc2FmZWxpbmtzLnByb3RlYw0KPiA+ID4gPiA+ID4gPiB0aW9u
-Lm8mZGF0YT0wMiU3QzAxJTdDdmFuZXNzYS5tYWVnaW1hJTQwbnhwLmNvbSU3Q2ZhNDdiYTUNCj4g
-PiA+ID4gPiA+ID4gMjE5YTk0MGM0ODJiYzA4ZDU5MGEwODA4YSU3QzY4NmVhMWQzYmMyYjRjNmZh
-OTJjZDk5YzVjMzAxDQo+ID4gPiA+ID4gPiA+IDYzNSU3QzAlN0MwJTdDNjM2NTczOTQxMzgzMDE0
-NzM0JnNkYXRhPVhzempwN2pIb1h5aEZXVUVsNg0KPiA+ID4gPiA+ID4gPiBMTjRtY0JoT2dNUkNq
-dXJNc1dtRSUyQjVnWlUlM0QmcmVzZXJ2ZWQ9MA0KPiA+ID4gPiA+ID4gPiB1dGxvb2suY29tLz91
-cmw9aHR0cHMlM0ElMkYlMkZlbWVhMDEuc2FmZWxpbmtzLnByb3RlY3Rpb24NCj4gPiA+ID4gPiA+
-ID4gLm91dA0KPiA+ID4gPiA+ID4gPiBsbyZkYXRhPTAyJTdDMDElN0N2YW5lc3NhLm1hZWdpbWEl
-NDBueHAuY29tJTdDMzkwNDAyMjk0NzUNCj4gPiA+ID4gPiA+ID4gNDQxZA0KPiA+ID4gPiA+ID4g
-PiA3YjVhYTA4ZDU1ZjFiNmNkMyU3QzY4NmVhMWQzYmMyYjRjNmZhOTJjZDk5YzVjMzAxNjM1JTdD
-MCUNCj4gPiA+ID4gPiA+ID4gN0MxJQ0KPiA+ID4gPiA+ID4gPiA3QzYzNjUxOTQ5Mzc1NTI5ODM0
-OCZzZGF0YT1ad3M0QUVsbTRMYTk2UTRwaksxNTJuSDJsUDZ2NG0NCj4gPiA+ID4gPiA+ID4gUEpK
-Tg0KPiA+ID4gPiA+ID4gPiB4U0d6N1RMQkElM0QmcmVzZXJ2ZWQ9MA0KPiA+ID4gPiA+ID4gPiBv
-ay5jb20vP3VybD1odHRwcyUzQSUyRiUyRmRyaXZlLmdvb2dsZS5jb20lMkZkcml2ZSUyRmZvbGQN
-Cj4gPiA+ID4gPiA+ID4gZXJzJQ0KPiA+ID4gPiA+ID4gPiAyRjFmDQo+ID4gPiA+ID4gPiA+IG9z
-YWhqTCZkYXRhPTAyJTdDMDElN0N2YW5lc3NhLm1hZWdpbWElNDBueHAuY29tJTdDZjA3Y2QxYQ0K
-PiA+ID4gPiA+ID4gPiA2ZmZiDQo+ID4gPiA+ID4gPiA+IDM0YzANCj4gPiA+ID4gPiA+ID4gOTYx
-ZjYwOGQ1NWQxZWI5MDElN0M2ODZlYTFkM2JjMmI0YzZmYTkyY2Q5OWM1YzMwMTYzNSU3QzAlDQo+
-ID4gPiA+ID4gPiA+IDdDMCUNCj4gPiA+ID4gPiA+ID4gN0M2Mw0KPiA+ID4gPiA+ID4gPiA2NTE3
-MzA4OTAxNjQzMjQ0JnNkYXRhPTZKQXFTTiUyQlZQSiUyRkNGN2NibkJqbThnZU1LV3lkV2sNCj4g
-PiA+ID4gPiA+ID4gRzlKYw0KPiA+ID4gPiA+ID4gPiBVaEdCDQo+ID4gPiA+ID4gPiA+IFBqNjQ0
-JTNEJnJlc2VydmVkPTANCj4gPiA+ID4gPiA+ID4gTjFLSTVOS1M1OV9hUFpkSExwRU5QRkh0Sw0K
-PiA+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+ID4gVGhhbmtzIQ0KPiA+ID4gPiA+ID4gQW55IGlk
-ZWFzLCBwbGVhc2U/DQo+ID4gPiA+ID4gV2VsbCwgdGhlIGR1bXBzIGNvbmZpcm0gYSBjcmFzaCBl
-YXJseSBpbiB0aGUgZmlybXdhcmUgYm9vdC4NCj4gPiA+ID4gPiBIb3dldmVyLA0KPiA+ID4gPiA+
-IEkNCj4gPiA+ID4gPiBjb3VsZCBub3Qgb2J0YWluIG1vcmUgaW5mb3JtYXRpb24gZnJvbSBpdC4g
-VG8gY2FwdHVyZSB0aGUNCj4gPiA+ID4gPiBmYWlsdXJlDQo+ID4gPiA+ID4gSQ0KPiA+ID4gPiA+
-IG5lZWQNCj4gPiA+ID4gPiB0byByZXdvcmsgc29tZSBmaXJtd2FyZSBmdW5jdGlvbmFsaXR5IHdo
-aWNoIGlzIG5vdCB0cml2aWFsDQo+ID4gPiA+ID4gYW5kIEkNCj4gPiA+ID4gPiBjYW4NCj4gPiA+
-ID4gPiBub3QNCj4gPiA+ID4gPiBjbGFpbSB0aW1lIGZvciBpdCByaWdodCBub3cuDQo+ID4gPiA+
-ID4gDQo+ID4gPiA+ID4gUmVnYXJkcywNCj4gPiA+ID4gPiBBcmVuZA0KPiA+ID4gPiA+IA0KPiA+
-ID4gPiBUaGFua3MgZm9yIGFsbCB5b3VyIGludmVzdGlnYXRpb24gaGVyZSENCj4gPiA+ID4gDQo+
-ID4gPiA+IEkganVzdCB3YW50IHRvIHJlcG9ydCBvbmUgbW9yZSB0aGluZyB0aGF0IEkgbm90aWNl
-ZCBmcm9tIG15DQo+ID4gPiA+IHRlc3RzLg0KPiA+ID4gPiANCj4gPiA+ID4gSSBoYXZlIHRyaWVk
-IHRvIHVzZSBhbiBodG1sIGZpbGUgdGhhdCBJIGRvd25sb2FkZWQgdXNpbmcgd2dldA0KPiA+ID4g
-PiBhcw0KPiA+ID4gPiB0aGUNCj4gPiA+ID4gbnZyYW0gZmlsZSAoaHR0cHM6Ly9lbWVhMDEuc2Fm
-ZWxpbmtzLnByb3RlY3Rpb24ub3V0bG9vay5jb20vP3VyDQo+ID4gPiA+IGw9aHQNCj4gPiA+ID4g
-dHBzJTNBJTJGJTJGZ2l0aHViLmNvbSUyRk9wZW5FTEVDJTJGd2xhbi0NCj4gPiA+ID4gZmlybXdh
-cmUlMkZibG9iJTJGbWFzdGVyJTJGZmlybXcmZGF0YT0wMiU3QzAxJTdDdmFuZXNzYS5tYWVnaW1h
-DQo+ID4gPiA+ICU0MG4NCj4gPiA+ID4geHAuY29tJTdDMzkwNDAyMjk0NzU0NDFkN2I1YWEwOGQ1
-NWYxYjZjZDMlN0M2ODZlYTFkM2JjMmI0YzZmYTkyDQo+ID4gPiA+IGNkOTkNCj4gPiA+ID4gYzVj
-MzAxNjM1JTdDMCU3QzElN0M2MzY1MTk0OTM3NTUyOTgzNDgmc2RhdGE9RVpGVlYzcWJTdGpIOUVx
-ZTZ1DQo+ID4gPiA+IFZWWEoNCj4gPiA+ID4gZjdMbVFsTUxJVVJYSGFRSU1JcG1zJTNEJnJlc2Vy
-dmVkPTANCj4gPiA+ID4gYXJlL2JyY20vbnZyYW1fYXA2MzM1LnR4dCkgYW5kIHRoZSB3aWZpIHNl
-ZW1zIHRvIHdvcmsuIEkgaGF2ZQ0KPiA+ID4gPiBub3QNCj4gPiA+ID4gbm90aWNlZCB0aGUgd3Jv
-bmcgZm9ybWF0IGZpbGUgdW50aWwgdGVzdGluZyBpdC4NCj4gPiA+IEludGVyZXN0aW5nLiBJbiBi
-cmNtZm1hYyB0aGUgZmlsZSBpcyBwYXJzZWQgYmVmb3JlIHNlbmRpbmcgaXQgdG8NCj4gPiA+IHRo
-ZQ0KPiA+ID4gZmlybXdhcmUgc28gSSBhbSB3b25kZXJpbmcgd2hhdCBpcyBlZmZlY3RpdmVseSBz
-ZW5kIHRvIHRoZQ0KPiA+ID4gZGV2aWNlLg0KPiA+ID4gDQo+ID4gPiBDYW4geW91IGR1bXAgdGhl
-IG52cmFtIHRoYXQgaXMgc2VudCB0byB0aGUgZGV2aWNlLiBKdXN0IGFkZA0KPiA+ID4gaGV4ZHVt
-cA0KPiA+ID4gY2FsbA0KPiA+ID4gb2YgbnZyYW0gaW4gYnJjbWZfZndfcmVxdWVzdF9udnJhbV9k
-b25lKCkgaW4gZmlybXdhcmUuYyBqdXN0DQo+ID4gPiBiZWZvcmUNCj4gPiA+IGZ3Y3R4LT5kb25l
-KCkgaXMgY2FsbGVkLg0KPiA+ID4gDQo+ID4gPiBSZWdhcmRzLA0KPiA+ID4gQXJlbmQNCj4gPiBT
-b3JyeSBmb3IgbXkgZGVsYXllZCByZXNwb25zZSwgYnV0IEkgY291bGQgbm90IGdldCB0aGUgaGV4
-ZHVtcCBmcm9tDQo+ID4gdGhlDQo+ID4gbnZyYW0uIEkgaGF2ZSB0cmllZCBzZXZlcmFsIGhleGR1
-bXAgZnVuY3Rpb25zIEkgZm91bmQgb24ga2VybmVsIGFuZA0KPiA+IG9uDQo+ID4gdGhlIGJyY21m
-bWFjIGRyaXZlciBidXQgbm9uZSBvZiB0aGVtIHByaW50ZWQgYW55IG91dHB1dC4NCj4gPiANCj4g
-PiBJcyB0aGVyZSBhbnkgQ09ORklHIEkgbmVlZCB0byBlbmFibGUgdG8gZ2V0IHRob3NlIHdvcmtp
-bmc/DQo+IENPTkZJR19CUkNNREJHIHNob3VsZCBiZSBlbmFibGVkLiBPciBqdXN0IGFkZCAnI2Rl
-ZmluZSBERUJVRycgaW7CoA0KPiBmaXJtd2FyZS5jIGJlZm9yZSB0aGUgaW5jbHVkZSBzdGF0ZW1l
-bnRzLg0KPiANCj4gUmVnYXJkcywNCj4gQXJlbmQNCg0KVGhhbmtzLCB0aGlzIHdvcmtlZCENCg0K
-SGVyZSdzIHRoZSBoZXhkdW1wOsKgaHR0cDovL2NvZGUuYnVsaXgub3JnL3RydjNvNy0zMDYyNTQN
-Cg0KQmVzdCBSZWdhcmRzLA0KVmFuZXNzYQ==
+From: HariPrasath Elango <hariprasath.elango@gmail.com>
+
+Destroy the mutex object that is initialized in wlan_init_locks()
+
+Signed-off-by: HariPrasath Elango <hariprasath.elango@gmail.com>
+Reviewed-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 1af3c14..38a83bd 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -678,6 +678,7 @@ static int wlan_deinit_locks(struct net_device *dev)
+ 
+ 	mutex_destroy(&wilc->hif_cs);
+ 	mutex_destroy(&wilc->rxq_cs);
++	mutex_destroy(&wilc->txq_add_to_head_cs);
+ 
+ 	return 0;
+ }
+-- 
+2.10.0.GIT
