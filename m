@@ -1,52 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:42280 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031301AbeCAOUl (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42852 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750751AbeCNJFi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:20:41 -0500
-Received: by mail-qk0-f195.google.com with SMTP id b130so7666022qkg.9
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:20:41 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 05/52] ath: Add regulatory mapping for Kenya
-Date: Thu,  1 Mar 2018 15:18:15 +0100
-Message-Id: <20180301141902.24824-6-sven.eckelmann@openmesh.com> (sfid-20180301_152044_364735_58FD7490)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+        Wed, 14 Mar 2018 05:05:38 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: tcharding <me@tobin.cc>
+Cc: kernel-hardening@lists.openwall.com, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Tycho Andersen <tycho@tycho.ws>,
+        Kees Cook <keescook@chromium.org>
+Subject: Re: [RESEND] rsi: Remove stack VLA usage
+References: <1520819022-15238-1-git-send-email-me@tobin.cc>
+        <20180312094606.8192B6081A@smtp.codeaurora.org>
+        <20180313201757.GK8631@eros>
+Date: Wed, 14 Mar 2018 11:05:32 +0200
+In-Reply-To: <20180313201757.GK8631@eros> (tcharding's message of "Wed, 14 Mar
+        2018 07:17:57 +1100")
+Message-ID: <87o9jr6n8j.fsf@codeaurora.org> (sfid-20180314_100556_719541_80E68852)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The country code is used by the ath to detect the ISO 3166-1 alpha-2 name
-and to select the correct conformance test limits (CTL) for a country. If
-the country isn't available and it is still programmed in the EEPROM then
-it will cause an error and stop the initialization with:
+tcharding <me@tobin.cc> writes:
 
-  Invalid EEPROM contents
+> On Mon, Mar 12, 2018 at 09:46:06AM +0000, Kalle Valo wrote:
+>> tcharding <me@tobin.cc> wrote:
+>> 
+>> > The kernel would like to have all stack VLA usage removed[1].  rsi uses
+>> > a VLA based on 'blksize'.  Elsewhere in the SDIO code maximum block size
+>> > is defined using a magic number.  We can use a pre-processor defined
+>> > constant and declare the array to maximum size.  We add a check before
+>> > accessing the array in case of programmer error.
+>> > 
+>> > [1]: https://lkml.org/lkml/2018/3/7/621
+>> > 
+>> > Signed-off-by: Tobin C. Harding <me@tobin.cc>
+>> 
+>> Tobin, your name in patchwork.kernel.org is just "tcharding" then it should be
+>> "Tobin C. Harding". Patchwork is braindead in a way as it takes the name from
+>> it's database instead of the From header of the patch in question.
+>> 
+>> I can fix that manually but it would be helpful if you could register to
+>> patchwork and fix your name during registration. You have only one chance to
+>> fix your name (another braindead feature!) so be careful :)
+>
+> Hi Kalle,
+>
+> I logged into my patchwork account but I don't see any way to set the
+> name.  Within 'profile' there is only 'change password' and 'link
+> email'.  I thought I could unregister then re-register but I can't see
+> how to do that either.
 
-The current CTL mappings for this country are:
+Ok, maybe you have registered (=logged on for the first time) already
+earlier so it's not possible to change the name anymore.
 
-* 2.4GHz: ETSI
-* 5GHz: FCC
+> Is there a maintainer of patchwork.kernel.org who I can email to
+> manually remove me from the system?
 
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
----
- drivers/net/wireless/ath/regd_common.h | 1 +
- 1 file changed, 1 insertion(+)
+helpdesk@kernel.org should be able to fix your name in patchwork, at
+least they have done it in the past. This is not the first time this has
+happened.
 
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index e430e12f90e8..bdc1ff191264 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -415,6 +415,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 
- 	{CTRY_JORDAN, ETSI2_WORLD, "JO"},
- 	{CTRY_KAZAKHSTAN, NULL1_WORLD, "KZ"},
-+	{CTRY_KENYA, APL1_WORLD, "KE"},
- 	{CTRY_KOREA_NORTH, APL9_WORLD, "KP"},
- 	{CTRY_KOREA_ROC, APL9_WORLD, "KR"},
- 	{CTRY_KOREA_ROC2, APL2_WORLD, "K2"},
 -- 
-2.11.0
+Kalle Valo
