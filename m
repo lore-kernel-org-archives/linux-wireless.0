@@ -1,56 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52634 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752642AbeC0Nry (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:54972 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751426AbeCNOMp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Mar 2018 09:47:54 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCH 1/3] cfg80211: fix data type of sta_opmode_info parameter
-Date: Tue, 27 Mar 2018 19:16:15 +0530
-Message-Id: <1522158377-3566-2-git-send-email-tamizhr@codeaurora.org> (sfid-20180327_154809_570963_67664C49)
-In-Reply-To: <1522158377-3566-1-git-send-email-tamizhr@codeaurora.org>
-References: <1522158377-3566-1-git-send-email-tamizhr@codeaurora.org>
+        Wed, 14 Mar 2018 10:12:45 -0400
+From: Colin King <colin.king@canonical.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH][next] rsi: remove redundant duplicate assignment of buffer_size
+Date: Wed, 14 Mar 2018 14:12:39 +0000
+Message-Id: <20180314141239.8321-1-colin.king@canonical.com> (sfid-20180314_151311_521590_A3F7AE31)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently bw and smps_mode are u8 type value in sta_opmode_info
-structure. This values filled in mac80211 from ieee80211_sta_rx_bandwidth
-and ieee80211_smps_mode. These enum values are specific to mac80211 and
-userspace/cfg80211 doesn't know about that. This will lead to incorrect
-result/assumption by the user space application.
-Change bw and smps_mode parameters to their respective enums in nl80211.
+From: Colin Ian King <colin.king@canonical.com>
 
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+Variable buffer_size is re-assigned the same value, this duplicated
+assignment is redundant and can be removed.
+
+Cleans up clang warning:
+drivers/net/wireless/rsi/rsi_91x_usb.c:140:4: warning: Value stored
+to 'buffer_size' is never read
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- include/net/cfg80211.h | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_usb.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index fc40843..4341508 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3572,15 +3572,15 @@ enum wiphy_opmode_flag {
- /**
-  * struct sta_opmode_info - Station's ht/vht operation mode information
-  * @changed: contains value from &enum wiphy_opmode_flag
-- * @smps_mode: New SMPS mode of a station
-- * @bw: new max bandwidth value of a station
-+ * @smps_mode: New SMPS mode value from &enum nl80211_smps_mode of a station
-+ * @bw: new max bandwidth value from &enum nl80211_chan_width of a station
-  * @rx_nss: new rx_nss value of a station
-  */
- 
- struct sta_opmode_info {
- 	u32 changed;
--	u8 smps_mode;
--	u8 bw;
-+	enum nl80211_smps_mode smps_mode;
-+	enum nl80211_chan_width bw;
- 	u8 rx_nss;
- };
- 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index be8236f404b5..7b8bae313aa9 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -140,7 +140,6 @@ static int rsi_find_bulk_in_and_out_endpoints(struct usb_interface *interface,
+ 			buffer_size = endpoint->wMaxPacketSize;
+ 			dev->bulkout_endpoint_addr[bout_found] =
+ 				endpoint->bEndpointAddress;
+-			buffer_size = endpoint->wMaxPacketSize;
+ 			dev->bulkout_size[bout_found] = buffer_size;
+ 			bout_found++;
+ 		}
 -- 
-1.9.1
+2.15.1
