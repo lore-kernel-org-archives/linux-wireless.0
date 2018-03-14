@@ -1,53 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blackstar.xs4all.nl ([83.163.96.30]:46459 "EHLO
-        blackstar.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966302AbeCAKXG (ORCPT
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:42933 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932680AbeCNBjG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 05:23:06 -0500
-Subject: Re: [PATCH] mt7601u: remove a warning in
- mt7601u_efuse_physical_size_check()
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>, kubakici@wp.pl
-Cc: linux-wireless@vger.kernel.org
-References: <cover.1519827461.git.lorenzo.bianconi@redhat.com>
- <2850551da4495924bde846dd237b736e41913d0f.1519827461.git.lorenzo.bianconi@redhat.com>
-From: Bas Vermeulen <bvermeul@blackstar.nl>
-Message-ID: <3263f88f-daec-837c-e58c-bee907295d47@blackstar.nl> (sfid-20180301_112412_306938_B25EF930)
-Date: Thu, 1 Mar 2018 11:22:12 +0100
+        Tue, 13 Mar 2018 21:39:06 -0400
 MIME-Version: 1.0
-In-Reply-To: <2850551da4495924bde846dd237b736e41913d0f.1519827461.git.lorenzo.bianconi@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <CAGXu5jKDA=L5E6Cu_oRe-M=ouuhrccCZHyM+z6_UMAUqe9xnRQ@mail.gmail.com>
+References: <1520598613-3641-1-git-send-email-andreaschristofo@gmail.com>
+ <5AA464DE.90100@broadcom.com> <CAGXu5jKDA=L5E6Cu_oRe-M=ouuhrccCZHyM+z6_UMAUqe9xnRQ@mail.gmail.com>
+From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
+Date: Wed, 14 Mar 2018 02:38:45 +0100
+Message-ID: <CANiq72=W0=DwZq_SGAHTnbvofPPKUgSOXhJtHDj0CReu5d17hw@mail.gmail.com> (sfid-20180314_023914_314560_7136D8E7)
+Subject: Re: [PATCH] drivers: net: wireless: ath: ath9: dfs: remove VLA usage
+To: Kees Cook <keescook@chromium.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Andreas Christoforou <andreaschristofo@gmail.com>,
+        Kernel Hardening <kernel-hardening@lists.openwall.com>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 28-02-18 15:26, Lorenzo Bianconi wrote:
-> Fix the following sparse warning in mt7601u_efuse_physical_size_check:
-> - drivers/net/wireless/mediatek/mt7601u/eeprom.c:77:27: warning:
->    Variable length array is used
+On Sun, Mar 11, 2018 at 12:12 AM, Kees Cook <keescook@chromium.org> wrote:
 >
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-> ---
->   drivers/net/wireless/mediatek/mt7601u/eeprom.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/mediatek/mt7601u/eeprom.c b/drivers/net/wireless/mediatek/mt7601u/eeprom.c
-> index da6faea092d6..a462064b5c91 100644
-> --- a/drivers/net/wireless/mediatek/mt7601u/eeprom.c
-> +++ b/drivers/net/wireless/mediatek/mt7601u/eeprom.c
-> @@ -74,7 +74,7 @@ static int
->   mt7601u_efuse_physical_size_check(struct mt7601u_dev *dev)
->   {
->   	const int map_reads = DIV_ROUND_UP(MT_EFUSE_USAGE_MAP_SIZE, 16);
-> -	u8 data[map_reads * 16];
-> +	u8 data[round_up(MT_EFUSE_USAGE_MAP_SIZE, 16)];
-Shouldn't this be u8 data[round_up(MT_EFUSE_USAGE_MAP_SIZE,16)*16]; to 
-get the
-same array size as before?
+> The problem is that it's not a "constant expression", so the compiler
+> frontend still yells about it under -Wvla. I would characterize this
+> mainly as a fix for "accidental VLA" or "misdetected VLA" or something
+> like that. AIUI, there really isn't a functional change here.
 
-Bas Vermeulen
+C++11's constexpr variables would be nice to have.
 
--- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
+Cheers,
+Miguel
