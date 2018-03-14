@@ -1,44 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49166 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751619AbeCOJPY (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:43605 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933027AbeCNDnI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Mar 2018 05:15:24 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stefan Wahren <stefan.wahren@i2se.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-Subject: Re: [PATCH] wireless: brcmfmac: cfg80211: Fix check for ISO3166 code
-References: <1521054179-4030-1-git-send-email-stefan.wahren@i2se.com>
-Date: Thu, 15 Mar 2018 11:15:18 +0200
-In-Reply-To: <1521054179-4030-1-git-send-email-stefan.wahren@i2se.com> (Stefan
-        Wahren's message of "Wed, 14 Mar 2018 20:02:59 +0100")
-Message-ID: <87o9jp7l95.fsf@kamboji.qca.qualcomm.com> (sfid-20180315_101528_344195_5EDBEC6A)
+        Tue, 13 Mar 2018 23:43:08 -0400
+Date: Wed, 14 Mar 2018 14:43:03 +1100
+From: "Tobin C. Harding" <me@tobin.cc>
+To: Kees Cook <keescook@chromium.org>
+Cc: Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Kernel Hardening <kernel-hardening@lists.openwall.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        Tycho Andersen <tycho@tycho.ws>,
+        Konstantin Ryabitsev <konstantin@linuxfoundation.org>
+Subject: Re: [RESEND] rsi: Remove stack VLA usage
+Message-ID: <20180314034303.GB11666@eros> (sfid-20180314_044325_151839_9B09B05B)
+References: <1520819022-15238-1-git-send-email-me@tobin.cc>
+ <20180312094606.8192B6081A@smtp.codeaurora.org>
+ <20180313201757.GK8631@eros>
+ <CAHp75VeM1zNyNtHvsn0=rg_xibcitVHREY73cAk=KCSK3Ti3vw@mail.gmail.com>
+ <20180314021151.GA11666@eros>
+ <CAGXu5jJsDsegY+EZFq1Hip+sRNLR5SS+-Euf1rm22okAq7REJw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAGXu5jJsDsegY+EZFq1Hip+sRNLR5SS+-Euf1rm22okAq7REJw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stefan Wahren <stefan.wahren@i2se.com> writes:
+Added Konstantin in case he is in charge of administering patchwork.kernel.org?
 
-> The commit "regulatory: add NUL to request alpha2" increases the length of
-> alpha2 to 3. This causes a regression on brcmfmac, because
-> brcmf_cfg80211_reg_notifier() expect valid ISO3166 codes in the complete
-> array. So fix this accordingly.
+On Tue, Mar 13, 2018 at 07:53:34PM -0700, Kees Cook wrote:
+> On Tue, Mar 13, 2018 at 7:11 PM, Tobin C. Harding <me@tobin.cc> wrote:
+> > On Tue, Mar 13, 2018 at 11:00:47PM +0200, Andy Shevchenko wrote:
+> >> On Tue, Mar 13, 2018 at 10:17 PM, tcharding <me@tobin.cc> wrote:
+> >> > On Mon, Mar 12, 2018 at 09:46:06AM +0000, Kalle Valo wrote:
+> >> >> tcharding <me@tobin.cc> wrote:
+> >>
+> >> I'm pretty much sure it depends on the original email headers, like
+> >> above ^^^ — no name.
+> >> Perhaps git config on your side should be done.
+> >
+> > Thanks for the suggestion Andy but the 'tcharding' as the name was
+> > munged by either Kalle or patchwork.  I'm guessing patchwork.
+> 
+> Something you're sending from is using "tcharding" (see the email Andy
+> quotes). I see the headers as:
+> 
+> Date: Wed, 14 Mar 2018 07:17:57 +1100
+> From: tcharding <me@tobin.cc>
+> ...
+> Message-ID: <20180313201757.GK8631@eros>
+> X-Mailer: Mutt 1.5.24 (2015-08-30)
+> User-Agent: Mutt/1.5.24 (2015-08-30)
+> 
+> Your most recently email shows "Tobin C. Harding" though, and also
+> sent with Mutt...
 >
-> Signed-off-by: Stefan Wahren <stefan.wahren@i2se.com>
+> Do you have multiple Mutt configurations? Is something lacking a
+> "From" header insertion and your MTA is filling it in for you from
+> your username?
 
-Arend, the first release for 657308f73e67 is v4.16-rc3 so should this go
-to v4.16 as well?
+Thanks for taking the time to respond Kees (and Tycho).  I have mutt
+configured to reply from whichever email address I receive from so if
+patchwork sent an email to 'tcharding <me@tobin.cc>' (which is the
+details it has) and I hit reply it would have come from 'tcharding',
+hence Andy's reply.  I wouldn't bet my life on it but I'm kinda
+confident that I cannot initiate an email from 'tcharding' with my
+current set up.
 
-And "wireless:" in the title is useless, I can remove that.
+Super bad form to blame someone (or something else) but I think this is
+a problem with how my patchwork account is configured.  Either way, that
+is still my fault I should have added my real name to patchwork when I
+signed up (not just username 'tcharding').
 
--- 
-Kalle Valo
+Is patchwork.kernel.org administered by Konstantin Ryabitsev? Added
+Konstantin to CC's.
+
+thanks,
+Tobin.
