@@ -1,76 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33014 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751554AbeCTJzY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Mar 2018 05:55:24 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Florian Fainelli <f.fainelli@gmail.com>,
-        Alexey Roslyakov <alexey.roslyakov@gmail.com>,
-        Andrew Lunn <andrew@lunn.ch>, robh+dt@kernel.org,
-        mark.rutland@arm.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Ulf Hansson <ulf.hansson@linaro.org>
-Subject: Re: [PATCH net-next v2 2/2] dt: bindings: add new dt entries for brcmfmac
-References: <20180319014032.9394-1-alexey.roslyakov@gmail.com>
-        <20180319014032.9394-3-alexey.roslyakov@gmail.com>
-        <5AAF838D.2030105@broadcom.com>
-        <CALFoz4YMKJr40fefczrbjXBROtZxnGikv0Jze-BnefofCB3dyg@mail.gmail.com>
-        <817418fd-6446-57ea-b03d-383b4df9a979@gmail.com>
-        <5AB044C0.9060701@broadcom.com>
-Date: Tue, 20 Mar 2018 11:55:16 +0200
-In-Reply-To: <5AB044C0.9060701@broadcom.com> (Arend van Spriel's message of
-        "Tue, 20 Mar 2018 00:16:16 +0100")
-Message-ID: <87po3zxe9n.fsf@kamboji.qca.qualcomm.com> (sfid-20180320_105542_897625_45EFE29F)
+Received: from mail.kernel.org ([198.145.29.99]:39146 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751314AbeCNWgy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Mar 2018 18:36:54 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180314185347.GA15837@kroah.com>
+References: <20180310141501.2214-1-mcgrof@kernel.org> <20180310141501.2214-6-mcgrof@kernel.org>
+ <20180314185347.GA15837@kroah.com>
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Date: Wed, 14 Mar 2018 15:36:32 -0700
+Message-ID: <CAB=NE6Ur+hHN6HHBzafJXQ_G9AJggHPKd-jvrPmB79k98aTMDw@mail.gmail.com> (sfid-20180314_233709_672270_C5F914E9)
+Subject: Re: [PATCH v3 05/20] firmware: simplify CONFIG_FW_LOADER_USER_HELPER_FALLBACK
+ further
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+        cantabile.desu@gmail.com, kubakici@wp.pl,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Kees Cook <keescook@chromium.org>, shuah@kernel.org,
+        Martin Fuzzey <mfuzzey@parkeon.com>,
+        Mimi Zohar <zohar@linux.vnet.ibm.com>,
+        David Howells <dhowells@redhat.com>,
+        =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>,
+        Takashi Iwai <tiwai@suse.de>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Nicolas Broeking <nbroeking@me.com>,
+        Vikram Mulukutla <markivx@codeaurora.org>,
+        Mark Brown <broonie@kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Abhay Salunke <Abhay_Salunke@dell.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        jewalt@lgsinnovations.com, oneukum@suse.com,
+        Alexei Starovoitov <ast@fb.com>,
+        Andres Rodriguez <andresx7@gmail.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Linux FS Devel <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
-
->>> If I get it right, you mean something like this:
->>>
->>> mmc3: mmc@1c12000 {
->>> ...
->>>          broken-sg-support;
->>>          sd-head-align = 4;
->>>          sd-sgentry-align = 512;
->>>
->>>          brcmf: wifi@1 {
->>>                  ...
->>>          };
->>> };
->>>
->>> Where dt: bindings documentation for these entries should reside?
->>> In generic MMC bindings? Well, this is the very special case and
->>> mmc-linux maintainer will unlikely to accept these changes.
->>> Also, extra kernel code modification might be required. It could make
->>> quite trivial change much more complex.
+On Wed, Mar 14, 2018 at 11:53 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> On Sat, Mar 10, 2018 at 06:14:46AM -0800, Luis R. Rodriguez wrote:
+>> All CONFIG_FW_LOADER_USER_HELPER_FALLBACK really is, is just a bool,
+>> initailized at build time. Define it as such. This simplifies the
+>> logic even further, removing now all explicit #ifdefs around the code.
 >>
->> If the MMC maintainers are not copied on this patch series, it will
->> likely be hard for them to identify this patch series and chime in...
+>> Acked-by: Kees Cook <keescook@chromium.org>
+>> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+>> ---
+>>  drivers/base/firmware_loader.c | 25 ++++++++++++++++++-------
+>>  1 file changed, 18 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/base/firmware_loader.c b/drivers/base/firmware_loader.c
+>> index 7dd36ace6152..59dba794ce1a 100644
+>> --- a/drivers/base/firmware_loader.c
+>> +++ b/drivers/base/firmware_loader.c
+>> @@ -266,6 +266,22 @@ static inline bool fw_state_is_aborted(struct fw_priv *fw_priv)
+>>
+>>  #ifdef CONFIG_FW_LOADER_USER_HELPER
+>>
+>> +/**
+>> + * struct firmware_fallback_config - firmware fallback configuratioon settings
+>> + *
+>> + * Helps describe and fine tune the fallback mechanism.
+>> + *
+>> + * @force_sysfs_fallback: force the sysfs fallback mechanism to be used
+>> + *   as if one had enabled CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y.
+>> + */
+>> +struct firmware_fallback_config {
+>> +     bool force_sysfs_fallback;
+>> +};
 >
-> The main question is whether this is indeed a "very special case" as
-> Alexey claims it to be or that it is likely to be applicable to other
-> device and host combinations as you are suggesting.
+> This is C, why are you messing around with a structure and "getters and
+> setters" for a set of simple values?
 >
-> If these properties are imposed by the host or host controller it
-> would make sense to have these in the mmc bindings.
+>> +static const struct firmware_fallback_config fw_fallback_config = {
+>> +     .force_sysfs_fallback = IS_ENABLED(CONFIG_FW_LOADER_USER_HELPER_FALLBACK),
+>> +};
+>
+> static bool force_sysfs_fallback = IS_ENABLED(CONFIG_FW_LOADER_USER_HELPER_FALLBACK);
 
-BTW, last year we were discussing something similar (I mean related to
-alignment requirements) with ath10k SDIO patches and at the time the
-patch submitter was proposing to have a bounce buffer in ath10k to
-workaround that. I don't remember the details anymore, they are on the
-ath10k mailing list archive if anyone is curious to know, but I would
-not be surprised if they are similar as here. So there might be a need
-to solve this in a generic way (but not sure of course as I haven't
-checked the details).
+For this case yes, but I later expand on this structure for all
+fallback configuration items. So we have to start it somewhere.
 
--- 
-Kalle Valo
+> Then just read/write the foolish thing, don't make this more complex
+> than is needed please.
+
+Please read the final results and let me know what you think.
+
+> There is a "getter and setters are evil" rant somewhere out there
+> online, if you really need me to dig up the old tired arguments :)
+
+I don't use them for sport, I use them given the fallback stuff *is*
+not something the direct core firmware code should use openly, it will
+really depend on if the fallback interface was enabled. As such we
+provide wrapper for access into them.
+
+  Luis
