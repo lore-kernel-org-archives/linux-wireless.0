@@ -1,67 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.socionext.com ([202.248.49.38]:16441 "EHLO mx.socionext.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932905AbeCHAZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Mar 2018 19:25:40 -0500
-From: <yamada.masahiro@socionext.com>
-To: <kvalo@codeaurora.org>, <govinds@codeaurora.org>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: RE: [PATCH 01/13] ath10k: platform driver for WCN3990 SNOC WLAN
- module
-Date: Thu, 8 Mar 2018 00:25:36 +0000
-Message-ID: <fb2c04383f024ab8b2c62dd5a4ad20ac@SOC-EX01V.e01.socionext.com> (sfid-20180308_012544_499475_47331CB0)
-References: <1518684458-5338-1-git-send-email-govinds@codeaurora.org>
-        <87371kqfda.fsf@kamboji.qca.qualcomm.com>
-        <d396df1b09da4dd7aa14d6af2c2b2b18@aphydexm01b.ap.qualcomm.com>
- <87tvttl6kp.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87tvttl6kp.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="iso-2022-jp"
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:54541 "EHLO
+        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751378AbeCNM6T (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Mar 2018 08:58:19 -0400
+Received: by mail-wm0-f41.google.com with SMTP id h76so3900489wme.4
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Mar 2018 05:58:18 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: drop Inter-Access Point Protocol packets by
+ default
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20180314110119.13631-1-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        James Hughes <james.hughes@raspberrypi.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
+        Felix Fietkau <nbd@nbd.name>,
+        bridge@lists.linux-foundation.org,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AA91C67.90001@broadcom.com> (sfid-20180314_135827_434438_D36D51DA)
+Date: Wed, 14 Mar 2018 13:58:15 +0100
 MIME-Version: 1.0
+In-Reply-To: <20180314110119.13631-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS2FsbGUgVmFsbyBbbWFp
-bHRvOmt2YWxvQGNvZGVhdXJvcmEub3JnXQ0KPiBTZW50OiBUdWVzZGF5LCBNYXJjaCAwNiwgMjAx
-OCA5OjQxIFBNDQo+IFRvOiBHb3ZpbmQgU2luZ2ggPGdvdmluZHNAY29kZWF1cm9yYS5vcmc+OyBZ
-YW1hZGEsIE1hc2FoaXJvLxskQjszRUQbKEIgGyRCPz85MBsoQg0KPiA8eWFtYWRhLm1hc2FoaXJv
-QHNvY2lvbmV4dC5jb20+DQo+IENjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IGF0
-aDEwa0BsaXN0cy5pbmZyYWRlYWQub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMDEvMTNdIGF0
-aDEwazogcGxhdGZvcm0gZHJpdmVyIGZvciBXQ04zOTkwIFNOT0MgV0xBTg0KPiBtb2R1bGUNCj4g
-DQo+IChGaXhlZCBHb3ZpbmQncyB0b3AgcG9zdGluZyBhbmQgYWRkaW5nIE1hc2FoaXJvKQ0KPiAN
-Cj4gPj4+IFdDTjM5OTAgaXMgaW50ZWdyYXRlZCA4MDIuMTFhYyBjaGlwc2V0IHdpdGggU05PQyBi
-dXMgaW50ZXJmYWNlLiBBZGQNCj4gPj4+IHNub2MgbGF5ZXIgZHJpdmVyIHJlZ2lzdHJhdGlvbiBh
-bmQgYXNzb2NpYXRlZCBvcHMuDQo+ID4+Pg0KPiA+Pj4gV0NOMzk5MCBzdXBwb3J0IGlzIG5vdCB5
-ZXQgY29tcGxldGUgYXMgY29sZC1ib290IGhhbmRzaGFrZSBpcyBkb25lDQo+ID4+PiB1c2luZyBx
-bWkoUXVhbGNvbW0tTVNNLUludGVyZmFjZSkgYW5kIHFtaSBjbGllbnQgc3VwcG9ydCB3aWxsIGJl
-IGFkZGVkDQo+ID4+PiBvbmNlIHFtaSBmcmFtZXdvcmsgaXMgYXZhaWxhYmxlLg0KPiA+Pj4NCj4g
-Pj4+IFNpZ25lZC1vZmYtYnk6IEdvdmluZCBTaW5naCA8Z292aW5kc0Bjb2RlYXVyb3JhLm9yZz4N
-Cj4gPj4NCj4gPj4gS2J1aWxkIGJvdCBmb3VuZCBhbiBvZGQgcHJvYmxlbSB3aXRoIHRoaXMgcGF0
-Y2g6DQo+ID4+DQo+ID4+ICBpbmNsdWRlL2xpbnV4L2R5bmFtaWNfZGVidWcuaDo3NzoxNDogZXJy
-b3I6ICdLQlVJTERfTU9ETkFNRScNCj4gPj4gIHVuZGVjbGFyZWQgKGZpcnN0IHVzZSBpbiB0aGlz
-IGZ1bmN0aW9uKTsgZGlkIHlvdSBtZWFuDQo+ICdLQlVJTERfQkFTRU5BTUUnPw0KPiA+Pg0KPiA+
-PiBGdWxsIHJlcG9ydDoNCj4gPj4NCj4gPj4NCj4gaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcv
-cGlwZXJtYWlsL2F0aDEway8yMDE4LUZlYnJ1YXJ5LzAxMDkwNy5odG1sDQo+ID4+DQo+ID4+IEFu
-eSBpZGVhcz8gSXMgdGhpcyBpcyBzb21lIHVucmVsYXRlZCBpc3N1ZSBvciB3aGF0PyBUaGlzIHBh
-dGNoIGlzIG5vdA0KPiA+PiBldmVuIHRvdWNoaW5nIGhpZi5oIG9yIGNlLmMuDQo+ID4NCj4gPiBJ
-IGRpZG4ndCBlbmNvdW50ZXJlZCB0aGlzIGlzc3VlIGFzIGluIG15IGRlZmNvbmZpZyBvbmx5DQo+
-ID4gQ09ORklHX0FUSDEwS19TTk9DIHdhcyBkZWZpbmVkLiBUaGlzIHByb2JsZW0gaXMgY29taW5n
-IHdoZW4gd2UgZGVmaW5lDQo+ID4gQ09ORklHX0FUSDEwS19TTk9DIGFuZCBDT05GSUdfQVRIMTBL
-X1BDSSBzaW11bHRhbmVvdXNseSBpbiBkZWZjb25maWcNCj4gPiBhbmQgdGhpcyBpcyBrbm93biBp
-c3N1ZSB3aGVuIG11bHRpcGxlIG1vZHVsZXMgc2hhcmUgb2JqZWN0cyhpbiB0aGlzDQo+ID4gY2Fz
-ZSBjZS5vKS4gSSBzYXcgc2ltaWxhciByZXBvcnRlZCBwcm9ibGVtIGFuZCBmb3VuZA0KPiA+IGh0
-dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcvcGF0Y2gvMTAwNjA4MjUvLg0KPiA+DQo+ID4gQWZ0
-ZXIgcGlja2luZyB0aGUgYmVsb3cgY2hhbmdlIGlzc3VlIGlzIG5vdCBzZWVuLg0KPiANCj4gTGV0
-J3MgYXNrIHRoZSBrYnVpbGQgbWFpbnRhaW5lci4gTWFzYWhpcm8sIGFueSBjaGFuY2VzIG9mIGdl
-dHRpbmcgdGhpcw0KPiBwYXRjaCBhcHBsaWVkIGFueXRpbWUgc29vbjoNCj4gDQo+IGtidWlsZDog
-ZGVmaW5lIEtCVUlMRF9NT0ROQU1FIGV2ZW4gaWYgbXVsdGlwbGUgbW9kdWxlcyBzaGFyZSBvYmpl
-Y3RzDQo+IA0KPiBodHRwczovL3BhdGNod29yay5rZXJuZWwub3JnL3BhdGNoLzEwMDYwODI1Lw0K
-PiANCj4gSW4gYXRoMTBrIHdlIHdvdWxkIG5lZWQgaXQgYXMgb3RoZXJ3aXNlIHdlIGFyZSBub3Qg
-YWJsZSB0byBsaW5rIGNlLm8NCj4gYm90aCB0byBhdGgxMGtfcGNpLmtvIGFuZCBhdGgxMGtfc25v
-Yy5rby4gV2hhdCBkbyB5b3UgdGhpbms/DQo+IA0KPiBGdWxsIGRpc2N1c3Npb24gYW5kIHRoZSBh
-dGgxMGsgcGF0Y2ggaGVyZToNCj4gDQo+IGh0dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcvcGF0
-Y2gvMTAyMjA2NTcvDQo+IA0KDQpJIHBsYW4gdG8gc3VibWl0IHYyLCBidXQgZXZlbiBpZiB0aGUg
-dW5kZWZpbmVkIEtCVUlMRF9NT0ROQU1FIGlzIGZpeGVkLA0KSSBleHBlY3QgYW5vdGhlciBwcm9i
-bGVtIGZyb20gdGhpcyBwYXRjaC4NCg0KSWYgYm90aCBDT05GSUdfQVRIMTBLX1BDSSBhbmQgQ09O
-RklHX0FUSDEwX1NOT0MgYXJlICd5Jw0KdHdvIGluc3RhbmNlcyBvZiBjZS5vIHdvdWxkIGJlIGxp
-bmtlZCBpbnRvIHZtbGl1eCwNCnRoZW4gY2F1c2VzIG11bHRpcGxlIGRlZmluaXRpb24gZXJyb3Iu
-DQoNCg==
+On 3/14/2018 12:01 PM, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+>
+> Testing brcmfmac with more recent firmwares resulted in AP interfaces
+> not working in some specific setups. Debugging resulted in discovering
+> support for IAPP in Broadcom's firmwares. This is an obsoleted standard
+> and its implementation is something that:
+> 1) Most people don't need / want to use
+> 2) Can allow local DoS attacks
+> 3) Breaks AP interfaces in some specific bridge setups
+>
+> To solve issues it can cause this commit modifies brcmfmac to drop IAPP
+> packets. If affects:
+> 1) Rx path: driver won't be sending these unwanted packets up.
+> 2) Tx path: driver will reject packets that would trigger STA
+>     disassociation perfromed by a firmware (possible local DoS attack).
+>
+> It appears there are some Broadcom's clients/users who care about this
+> feature despite the drawbacks. They can switch it on by a newly added
+> Kconfig option.
+
+Thanks for taking this approach. Looks fine except for .... (see below)
+
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+>   drivers/net/wireless/broadcom/brcm80211/Kconfig    | 20 +++++++++++
+>   .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 39 ++++++++++++++++++++++
+>   2 files changed, 59 insertions(+)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/Kconfig b/drivers/net/wireless/broadcom/brcm80211/Kconfig
+> index 9d99eb42d917..876787ef991a 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/Kconfig
+> +++ b/drivers/net/wireless/broadcom/brcm80211/Kconfig
+> @@ -68,6 +68,26 @@ config BRCMFMAC_PCIE
+>   	  IEEE802.11ac embedded FullMAC WLAN driver. Say Y if you want to
+>   	  use the driver for an PCIE wireless card.
+>
+> +config BRCMFMAC_IAPP
+> +	bool "Partial support for obsoleted Inter-Access Point Protocol"
+> +	depends on BRCMFMAC
+> +	---help---
+> +	  Most of Broadcom's firmwares can send 802.11f ADD frame every
+> +	  time new STA connects to the AP interface. Some recent ones
+> +	  can also disassociate STA when they receive such a frame.
+
+I do not see any evidence that this would occur only for recent 
+firmware. That stuff is old and not touched recently.
+
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> index 19048526b4af..db6987015fb1 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+
+[...]
+
+>   static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
+>   					   struct net_device *ndev)
+>   {
+> @@ -250,6 +278,12 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
+>   		goto done;
+>   	}
+>
+> +	if (!IS_ENABLED(CONFIG_BRCMFMAC_IAPP) && brcmf_skb_is_iapp(skb)) {
+> +		dev_kfree_skb(skb);
+> +		ret = -EINVAL;
+> +		goto done;
+> +	}
+
+This is not right. The function must return netdev_tx_t type. Here is 
+kerneldoc of .start_xmit():
+
+  * netdev_tx_t (*ndo_start_xmit)(struct sk_buff *skb,
+  *                               struct net_device *dev);
+  *	Called when a packet needs to be transmitted.
+  *	Returns NETDEV_TX_OK.  Can return NETDEV_TX_BUSY, but you should stop
+  *	the queue before that can happen; it's for obsolete devices and weird
+  *	corner cases, but the stack really does a non-trivial amount
+  *	of useless work if you return NETDEV_TX_BUSY.
+  *	Required; cannot be NULL.
+
+You may want to increase dropped netstat or add driver internal 
+statistic counter so there is visibility of IAPP packets being dropped.
+
+Regards,
+Arend
