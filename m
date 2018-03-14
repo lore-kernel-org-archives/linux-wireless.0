@@ -1,28 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from skyhawk.myhost.co.nz ([120.138.17.237]:50598 "EHLO
-        skyhawk.myhost.co.nz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754537AbeCRXu2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37194 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750844AbeCNJwv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Mar 2018 19:50:28 -0400
-Subject: Re: [PATCH] mac80211: add ieee80211_hw flag for QoS NDP support
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-References: <20180318233805.2778-1-ben@transient.nz>
-From: Ben Caradoc-Davies <ben@transient.nz>
-Message-ID: <1bc19070-419b-e798-eeec-deb60f53ac7b@transient.nz> (sfid-20180319_005034_221467_CE7960F5)
-Date: Mon, 19 Mar 2018 12:50:21 +1300
+        Wed, 14 Mar 2018 05:52:51 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180318233805.2778-1-ben@transient.nz>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: ath10k: dma unmap mgmt tx buffer if wmi cmd send fails
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1518169330-4934-1-git-send-email-pillair@codeaurora.org>
+References: <1518169330-4934-1-git-send-email-pillair@codeaurora.org>
+To: Rakesh Pillai <pillair@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>
+Message-Id: <20180314095251.004B460300@smtp.codeaurora.org> (sfid-20180314_105255_222563_3C3B7C68)
+Date: Wed, 14 Mar 2018 09:52:50 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Good grief. Typo. Please reject this one too.
+Rakesh Pillai <pillair@codeaurora.org> wrote:
 
-Kind regards,
+> WCN3990 sends mgmt frames by reference via WMI.
+> The host dma maps the mgmt frame and sends the physical
+> address to the firmware in the wmi command. Since the
+> dma mapping is done in the gen_mgmt_tx and if the wmi
+> command send fails, the corresponding mgmt frame is
+> not being dma unmapped.
+> 
+> Fix the missing dma unmapping of mgmt tx frame when
+> wmi command sending fails for mgmt tx by reference
+> via WMI. The already exisiting mgmt tx using copy by
+> value does not need such dma unmapping.
+> Add a separate wmi-tlv op for mgmt tx via ref, which
+> takes care of unmapping the dma address, in case of
+> wmi command sending failure.
+> 
+> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+
+Patch applied to ath-next branch of ath.git, thanks.
+
+38a1390e02b7 ath10k: dma unmap mgmt tx buffer if wmi cmd send fails
 
 -- 
-Ben Caradoc-Davies <ben@transient.nz>
-Director
-Transient Software Limited <https://transient.nz/>
-New Zealand
+https://patchwork.kernel.org/patch/10208681/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
