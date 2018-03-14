@@ -1,84 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:14434 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751174AbeCZLq1 (ORCPT
+Received: from 10.mo5.mail-out.ovh.net ([46.105.52.148]:34660 "EHLO
+        10.mo5.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750779AbeCNQUz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 07:46:27 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 5/9] staging: wilc1000: free allocated memory after processing wilc_send_config_pkt()
-Date: Mon, 26 Mar 2018 17:15:59 +0530
-Message-ID: <1522064763-11576-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180326_134630_324300_057D18DC)
-In-Reply-To: <1522064763-11576-1-git-send-email-ajay.kathat@microchip.com>
-References: <1522064763-11576-1-git-send-email-ajay.kathat@microchip.com>
+        Wed, 14 Mar 2018 12:20:55 -0400
+Received: from player695.ha.ovh.net (unknown [10.109.105.213])
+        by mo5.mail-out.ovh.net (Postfix) with ESMTP id D2DEF19419C
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Mar 2018 16:45:05 +0100 (CET)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Wed, 14 Mar 2018 16:44:43 +0100
+From: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        James Hughes <james.hughes@raspberrypi.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        =?UTF-8?Q?Linus_L=C3=BCssing?= <linus.luessing@c0d3.blue>,
+        Felix Fietkau <nbd@nbd.name>, bridge@lists.linux-foundation.org
+Subject: Re: [PATCH] brcmfmac: drop Inter-Access Point Protocol packets by
+ default
+In-Reply-To: <878tau7n23.fsf@codeaurora.org>
+References: <20180314110119.13631-1-zajec5@gmail.com>
+ <878tau7n23.fsf@codeaurora.org>
+Message-ID: <52b1812dd3e843adb63ff67fbe95975f@milecki.pl> (sfid-20180314_172100_188594_2677C7DE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Free allocated memory after completing wilc_send_config_pkt() function.
-Remove unncessary use of 'stamac' pointer in handle_get_inactive_time().
+On 2018-03-14 15:24, Kalle Valo wrote:
+> Rafał Miłecki <zajec5@gmail.com> writes:
+> 
+>> From: Rafał Miłecki <rafal@milecki.pl>
+>> 
+>> Testing brcmfmac with more recent firmwares resulted in AP interfaces
+>> not working in some specific setups. Debugging resulted in discovering
+>> support for IAPP in Broadcom's firmwares. This is an obsoleted 
+>> standard
+>> and its implementation is something that:
+>> 1) Most people don't need / want to use
+>> 2) Can allow local DoS attacks
+>> 3) Breaks AP interfaces in some specific bridge setups
+>> 
+>> To solve issues it can cause this commit modifies brcmfmac to drop 
+>> IAPP
+>> packets. If affects:
+>> 1) Rx path: driver won't be sending these unwanted packets up.
+>> 2) Tx path: driver will reject packets that would trigger STA
+>>    disassociation perfromed by a firmware (possible local DoS attack).
+>> 
+>> It appears there are some Broadcom's clients/users who care about this
+>> feature despite the drawbacks. They can switch it on by a newly added
+>> Kconfig option.
+>> 
+>> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> 
+> [...]
+> 
+>> --- a/drivers/net/wireless/broadcom/brcm80211/Kconfig
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/Kconfig
+>> @@ -68,6 +68,26 @@ config BRCMFMAC_PCIE
+>>  	  IEEE802.11ac embedded FullMAC WLAN driver. Say Y if you want to
+>>  	  use the driver for an PCIE wireless card.
+>> 
+>> +config BRCMFMAC_IAPP
+>> +	bool "Partial support for obsoleted Inter-Access Point Protocol"
+>> +	depends on BRCMFMAC
+>> +	---help---
+>> +	  Most of Broadcom's firmwares can send 802.11f ADD frame every
+>> +	  time new STA connects to the AP interface. Some recent ones
+>> +	  can also disassociate STA when they receive such a frame.
+>> +
+>> +	  It's important to understand this behavior can lead to a local
+>> +	  DoS security issue. Attacker may trigger disassociation of any
+>> +	  STA by sending a proper Ethernet frame to the wireless
+>> +	  interface.
+>> +
+>> +	  Moreover this feature may break AP interfaces in some specific
+>> +	  setups. This applies e.g. to the bridge with hairpin mode
+>> +	  enabled and IFLA_BRPORT_MCAST_TO_UCAST set. IAPP packet
+>> +	  generated by a firmware will get passed back to the wireless
+>> +	  interface and cause immediate disassociation of just-connected
+>> +	  STA.
+> 
+> Sorry for jumping late, but does it really make sense to have a Kconfig
+> option for this? I don't think we should add a Kconfig option for every
+> strange feature, there should be stronger reasons (size savings etc)
+> before adding a Kconfig option.
+> 
+> And in this case the size savings can't be much. Wouldn't a module
+> parameter be simpler for a functionality change like this?
+> 
+>> +/**
+>> + * brcmf_skb_is_iapp - checks if skb is an IAPP packet
+>> + *
+>> + * @skb: skb to check
+>> + */
+>> +static bool brcmf_skb_is_iapp(struct sk_buff *skb)
+>> +{
+>> +	const u8 iapp_l2_update_packet[6] __aligned(2) = {
+>> +		0x00, 0x01, 0xaf, 0x81, 0x01, 0x00,
+>> +	};
+> 
+> static?
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+Sure
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 4db15c7..0494234 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1909,7 +1909,6 @@ static s32 handle_get_inactive_time(struct wilc_vif *vif,
- 				    struct sta_inactive_t *hif_sta_inactive)
- {
- 	s32 result = 0;
--	u8 *stamac;
- 	struct wid wid;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
- 
-@@ -1920,11 +1919,11 @@ static s32 handle_get_inactive_time(struct wilc_vif *vif,
- 	if (!wid.val)
- 		return -ENOMEM;
- 
--	stamac = wid.val;
--	ether_addr_copy(stamac, hif_sta_inactive->mac);
-+	ether_addr_copy(wid.val, hif_sta_inactive->mac);
- 
- 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
- 				      wilc_get_vif_idx(vif));
-+	kfree(wid.val);
- 
- 	if (result) {
- 		netdev_err(vif->ndev, "Failed to SET inactive time\n");
-@@ -2225,6 +2224,7 @@ static int handle_remain_on_chan(struct wilc_vif *vif,
- 
- 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
- 				      wilc_get_vif_idx(vif));
-+	kfree(wid.val);
- 	if (result != 0)
- 		netdev_err(vif->ndev, "Failed to set remain on channel\n");
- 
-@@ -2269,6 +2269,7 @@ static int handle_register_frame(struct wilc_vif *vif,
- 
- 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
- 				      wilc_get_vif_idx(vif));
-+	kfree(wid.val);
- 	if (result) {
- 		netdev_err(vif->ndev, "Failed to frame register\n");
- 		result = -EINVAL;
-@@ -2300,6 +2301,7 @@ static u32 handle_listen_state_expired(struct wilc_vif *vif,
- 
- 		result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
- 					      wilc_get_vif_idx(vif));
-+		kfree(wid.val);
- 		if (result != 0) {
- 			netdev_err(vif->ndev, "Failed to set remain channel\n");
- 			goto _done_;
--- 
-2.7.4
+
+>> +	unsigned char *eth_data = skb_mac_header(skb) + ETH_HLEN;
+>> +#if !defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
+> 
+> #ifndef?
+
+I followed what is used in the include/linux/etherdevice.h. Is that a
+good exceuse? Could it be there any some good reason for #if defined()?
+
+
+>> +	const u16 *a = (const u16 *)eth_data;
+>> +	const u16 *b = (const u16 *)iapp_l2_update_packet;
+>> +#endif
+>> +
+>> +	if (skb->len - skb->mac_len != 6 ||
+>> +	    !is_multicast_ether_addr(eth_hdr(skb)->h_dest))
+>> +		return false;
+>> +
+>> +#if defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
+> 
+> #ifdef?
