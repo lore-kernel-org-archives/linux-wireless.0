@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35282 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752167AbeCPNlU (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:57176 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750779AbeCNOIM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Mar 2018 09:41:20 -0400
-Message-ID: <1521207676.3786.27.camel@coelho.fi> (sfid-20180316_144123_837717_AE4A7485)
-From: Luca Coelho <luca@coelho.fi>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Avraham Stern <avraham.stern@intel.com>
-Date: Fri, 16 Mar 2018 15:41:16 +0200
-In-Reply-To: <87a7v82o23.fsf@kamboji.qca.qualcomm.com>
-References: <20180316115136.1234-1-luca@coelho.fi>
-         <20180316115136.1234-5-luca@coelho.fi>
-         <87a7v82o23.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 4/5] iwlwifi: mvm: fix array out of bounds reference
+        Wed, 14 Mar 2018 10:08:12 -0400
+Date: Wed, 14 Mar 2018 19:38:03 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <hariprasath.elango@gmail.com>
+CC: <aditya.shankar@microchip.com>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <linux-wireless@vger.kernel.org>,
+        <devel@driverdev.osuosl.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 6/7] staging: wilc1000: remove unwanted braces and
+ correct code alignment
+Message-ID: <20180314193803.39bdd142@ajaysk-VirtualBox> (sfid-20180314_150855_067777_CC47E114)
+In-Reply-To: <31227bdc32df8b76d6a81ca224e1381020f681df.1521030891.git.hariprasath.elango@gmail.com>
+References: <cover.1521030891.git.hariprasath.elango@gmail.com>
+ <31227bdc32df8b76d6a81ca224e1381020f681df.1521030891.git.hariprasath.elango@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+On Wed, 14 Mar 2018 18:15:04 +0530
+<hariprasath.elango@gmail.com> wrote:
 
-On Fri, 2018-03-16 at 14:38 +0200, Kalle Valo wrote:
-> Luca Coelho <luca@coelho.fi> writes:
+> From: HariPrasath Elango <hariprasath.elango@gmail.com>
 > 
-> > From: Avraham Stern <avraham.stern@intel.com>
-> > 
-> > When starting aggregation, the code checks the status of the queue
-> > allocated to the aggregation tid, which might not yet be allocated
-> > and thus the queue index may be invalid.
-> > Fix this by reserving a new queue in case the queue id is invalid.
-> > 
-> > While at it, clean up some unreachable code (a condition that is
-> > already handled earlier) and remove all the non-DQA comments since
-> > non-DQA mode is no longer supported.
-> 
-> Doing cleanup on a patch for 4.16 is not really a good idea, I guess
-> it's ok this time. But please do try to avoid that.
+> Remove the unwated brace and corrected the code block alignment
+> accordingly
 
-Yeah, I noticed this cleanup in the fix patch, but since it just
-removed dead code, I didn't think it would be an issue.
+Changes done in this patch are already taken care. Today, Greg has
+applied the patch which had these changes. This patch can be ignore from
+the patchset.
 
---
-Cheers,
-Luca.
+
+Regards,
+Ajay
