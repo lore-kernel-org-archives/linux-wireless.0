@@ -1,47 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f182.google.com ([209.85.128.182]:33588 "EHLO
-        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751753AbeCOLqm (ORCPT
+Received: from mail-pl0-f66.google.com ([209.85.160.66]:34451 "EHLO
+        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751470AbeCNMpo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Mar 2018 07:46:42 -0400
-Received: by mail-wr0-f182.google.com with SMTP id z73so3690623wrb.0
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2018 04:46:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87vae0yox2.fsf@purkki.adurom.net>
-References: <1520260620-4694-1-git-send-email-amitkarwar@gmail.com>
- <1520260620-4694-10-git-send-email-amitkarwar@gmail.com> <87vae0yox2.fsf@purkki.adurom.net>
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-Date: Thu, 15 Mar 2018 17:16:40 +0530
-Message-ID: <CAEhWJF=pWgyO3HYq9RaO_Au97jJGHyE8toNSaNnM0AN+CVSaig@mail.gmail.com> (sfid-20180315_124645_902645_D842D852)
-Subject: Re: [PATCH 09/10] rsi: tx improvements
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+        Wed, 14 Mar 2018 08:45:44 -0400
+From: hariprasath.elango@gmail.com
+To: aditya.shankar@microchip.com, gregkh@linuxfoundation.org,
+        ganesh.krishna@microchip.com
+Cc: hariprasath.elango@gmail.com, linux-wireless@vger.kernel.org,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 5/7] staging: wilc1000: replace switch statement by simple if condition
+Date: Wed, 14 Mar 2018 18:15:03 +0530
+Message-Id: <2a46a5cc8ab69c1143c480bbac1f7e921011d982.1521030891.git.hariprasath.elango@gmail.com> (sfid-20180314_134633_911747_C2E22B03)
+In-Reply-To: <cover.1521030891.git.hariprasath.elango@gmail.com>
+References: <cover.1521030891.git.hariprasath.elango@gmail.com>
+In-Reply-To: <cover.1521030891.git.hariprasath.elango@gmail.com>
+References: <cover.1521030891.git.hariprasath.elango@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 13, 2018 at 8:59 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Amitkumar Karwar <amitkarwar@gmail.com> writes:
->
->> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->>
->> Changes done to improve TX path:
->> 1. Max number of frames to aggregate is increased to 8
->> 2. Bootup parameters updated.
->> 3. registering 5g band is done only when device supports
->> 4. Vif is properly taken to enable power save.
->> 5. When coex mode exist, power save on by default is set
->
-> If you have a list of changes in the commit log to me that's a strong
-> indication that you need to split the patches.
->
-> Also I don't see any answers to question "Why?".
+From: HariPrasath Elango <hariprasath.elango@gmail.com>
 
-Sure. I will split into multiple incremental patches and submit with
-proper commit log.
+In this case,there is only a single switch case statement.So replacing
+by a simple if condition.
 
-Regards,
-Amitkumar
+Signed-off-by: HariPrasath Elango <hariprasath.elango@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index c901108..17bd762 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -772,14 +772,8 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	}
+ 
+ 	if (sme->crypto.n_akm_suites) {
+-		switch (sme->crypto.akm_suites[0]) {
+-		case WLAN_AKM_SUITE_8021X:
++		if (sme->crypto.akm_suites[0] == WLAN_AKM_SUITE_8021X)
+ 			auth_type = IEEE8021;
+-			break;
+-
+-		default:
+-			break;
+-		}
+ 	}
+ 
+ 	curr_channel = pstrNetworkInfo->ch;
+-- 
+2.10.0.GIT
