@@ -1,106 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:34208 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751908AbeCZRxI (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:36878 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750950AbeCNR60 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 13:53:08 -0400
-Received: by mail-ot0-f193.google.com with SMTP id m7-v6so21598197otd.1
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:53:08 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [PATCH v7 10/11] mac80211: Add support for tx_control_port
-Date: Mon, 26 Mar 2018 12:52:50 -0500
-Message-Id: <20180326175251.20666-11-denkenz@gmail.com> (sfid-20180326_195319_880810_A4978C2E)
-In-Reply-To: <20180326175251.20666-1-denkenz@gmail.com>
-References: <20180326175251.20666-1-denkenz@gmail.com>
+        Wed, 14 Mar 2018 13:58:26 -0400
+Date: Wed, 14 Mar 2018 18:58:24 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+        Kees Cook <keescook@chromium.org>,
+        Bitterblue of Monsea <cantabile.desu@gmail.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Shuah Khan <shuah@kernel.org>,
+        Martin Fuzzey <mfuzzey@parkeon.com>,
+        Mimi Zohar <zohar@linux.vnet.ibm.com>,
+        David Howells <dhowells@redhat.com>, pali.rohar@gmail.com,
+        Takashi Iwai <tiwai@suse.de>, arend.vanspriel@broadcom.com,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Nicolas Broeking <nbroeking@me.com>,
+        Vikram Mulukutla <markivx@codeaurora.org>,
+        Mark Brown <broonie@kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Abhay_Salunke@dell.com, bjorn.andersson@linaro.org,
+        jewalt@lgsinnovations.com, oneukum@suse.com, ast@fb.com,
+        andresx7@gmail.com, LKML <linux-kernel@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+Subject: Re: [PATCH v3 00/20] firmware: development for v4.17
+Message-ID: <20180314175824.GA23883@kroah.com> (sfid-20180314_185842_529991_9962FC64)
+References: <20180310141501.2214-1-mcgrof@kernel.org>
+ <CAGXu5jJqzahD=iwv8_ipvebi8kQ=UVPiMrHOtQL5iLyviFm6jQ@mail.gmail.com>
+ <20180314174403.GJ4449@wotan.suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180314174403.GJ4449@wotan.suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- net/mac80211/cfg.c         |  1 +
- net/mac80211/ieee80211_i.h |  3 +++
- net/mac80211/tx.c          | 46 ++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 50 insertions(+)
+On Wed, Mar 14, 2018 at 05:44:03PM +0000, Luis R. Rodriguez wrote:
+> On Sat, Mar 10, 2018 at 09:16:36AM -0800, Kees Cook wrote:
+> > On Sat, Mar 10, 2018 at 6:14 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
+> > > Greg,
+> > >
+> > > Here's a respin of what I have queued up for v4.17 for the firmware API. It
+> > > combines the cleanup I've been working on and the addition of the new API call
+> > > request_firmware_cache() for fixing a corner case suspend issue on some type of
+> > > cards with an optimization in place where the firmware is *not* needed on
+> > > reboot.
+> > >
+> > > The cleanup work allows us to test the firmware API with one kernel
+> > > configuration. I've addressed Kees' feedback on this respin and
+> > > combined the code into drivers/base/firmware_class/.
+> > >
+> > > I've made one new test_firmware change in consideration for one firmware
+> > > change, the patch "firmware: ensure the firmware cache is not used on
+> > > incompatible calls" requires us to modify our tests scripts to use
+> > > the APIs sanely as well.
+> > >
+> > > I've put up these changes on my git tree, refer to the branch
+> > > "20180307-firmware-dev-for-v4.17" based on linux-next [0] and
+> > > the same name based on Linus' tree [1].
+> > >
+> > > Questions, feedback, and specially rants are always welcomed.
+> > 
+> > This all looks good to me! Thanks for respinning. :)
+> 
+> Greg,
+> 
+> I'd like to get these baked a bit through linux-next. Let me know if its
+> easier for you if I go through Andrew for the firmware API changes.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index fd68f6fb02d7..9294acb495ee 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3786,4 +3786,5 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.add_nan_func = ieee80211_add_nan_func,
- 	.del_nan_func = ieee80211_del_nan_func,
- 	.set_multicast_to_unicast = ieee80211_set_multicast_to_unicast,
-+	.tx_control_port = ieee80211_tx_control_port,
- };
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ae9c33cd8ada..a52bd2a61a27 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1734,6 +1734,9 @@ void ieee80211_check_fast_xmit(struct sta_info *sta);
- void ieee80211_check_fast_xmit_all(struct ieee80211_local *local);
- void ieee80211_check_fast_xmit_iface(struct ieee80211_sub_if_data *sdata);
- void ieee80211_clear_fast_xmit(struct sta_info *sta);
-+int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
-+			      const u8 *buf, size_t len,
-+			      const u8 *dest, __be16 proto, bool unencrypted);
- 
- /* HT */
- void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7643178ef132..6ae8fe121500 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -4749,3 +4749,49 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_xmit(sdata, NULL, skb);
- 	local_bh_enable();
- }
-+
-+int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
-+			      const u8 *buf, size_t len,
-+			      const u8 *dest, __be16 proto, bool unencrypted)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+	struct sk_buff *skb;
-+	struct ethhdr *ehdr;
-+	u32 flags;
-+
-+	/* Only accept CONTROL_PORT_PROTOCOL configured in CONNECT/ASSOCIATE
-+	 * or Pre-Authentication
-+	 */
-+	if (proto != sdata->control_port_protocol &&
-+	    proto != cpu_to_be16(ETH_P_PREAUTH))
-+		return -EINVAL;
-+
-+	if (unencrypted)
-+		flags = IEEE80211_TX_INTFL_DONT_ENCRYPT;
-+	else
-+		flags = 0;
-+
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
-+			    sizeof(struct ethhdr) + len);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	skb_reserve(skb, local->hw.extra_tx_headroom + sizeof(struct ethhdr));
-+
-+	skb_put_data(skb, buf, len);
-+
-+	ehdr = skb_push(skb, sizeof(struct ethhdr));
-+	memcpy(ehdr->h_dest, dest, ETH_ALEN);
-+	memcpy(ehdr->h_source, sdata->vif.addr, ETH_ALEN);
-+	ehdr->h_proto = proto;
-+
-+	skb->dev = dev;
-+	skb->protocol = htons(ETH_P_802_3);
-+	skb_reset_network_header(skb);
-+	skb_reset_mac_header(skb);
-+
-+	__ieee80211_subif_start_xmit(skb, skb->dev, flags);
-+
-+	return 0;
-+}
--- 
-2.13.5
+I'm just about to queue up all of the firmware patches right now, so no
+need to bother Andrew :)
+
+thanks,
+
+greg k-h
