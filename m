@@ -1,42 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:51784 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750964AbeCNLiU (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46906 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750827AbeCNOYN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Mar 2018 07:38:20 -0400
-Date: Wed, 14 Mar 2018 12:38:18 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: hariprasath.elango@gmail.com
-Cc: aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
-        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: wilc1000: use kmemdup to replace kmalloc/memcpy
-Message-ID: <20180314113818.GA7169@kroah.com> (sfid-20180314_123837_285416_DF6E6FE1)
-References: <20180313124932.15038-1-hariprasath.elango@gmail.com>
+        Wed, 14 Mar 2018 10:24:13 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        James Hughes <james.hughes@raspberrypi.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        Linus =?utf-8?Q?L=C3=BCssing?= <linus.luessing@c0d3.blue>,
+        Felix Fietkau <nbd@nbd.name>,
+        bridge@lists.linux-foundation.org,
+        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: Re: [PATCH] brcmfmac: drop Inter-Access Point Protocol packets by default
+References: <20180314110119.13631-1-zajec5@gmail.com>
+Date: Wed, 14 Mar 2018 16:24:04 +0200
+In-Reply-To: <20180314110119.13631-1-zajec5@gmail.com> (=?utf-8?Q?=22Rafa?=
+ =?utf-8?Q?=C5=82_Mi=C5=82ecki=22's?=
+        message of "Wed, 14 Mar 2018 12:01:19 +0100")
+Message-ID: <878tau7n23.fsf@codeaurora.org> (sfid-20180314_152420_420190_FBB32029)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180313124932.15038-1-hariprasath.elango@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 13, 2018 at 06:19:32PM +0530, hariprasath.elango@gmail.com wrote:
-> From: HariPrasath Elango <hariprasath.elango@gmail.com>
-> 
-> kmalloc followed by memcpy can be replaced by kmemdup.Also added the
-> related error handling part
-> 
-> Signed-off-by: HariPrasath Elango <hariprasath.elango@gmail.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 10 +++++++---
->  1 file changed, 7 insertions(+), 3 deletions(-)
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
 
-You have sent at least 8 patches for this driver over the past day, yet
-I have no idea what order to apply these in at all.
+> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>
+> Testing brcmfmac with more recent firmwares resulted in AP interfaces
+> not working in some specific setups. Debugging resulted in discovering
+> support for IAPP in Broadcom's firmwares. This is an obsoleted standard
+> and its implementation is something that:
+> 1) Most people don't need / want to use
+> 2) Can allow local DoS attacks
+> 3) Breaks AP interfaces in some specific bridge setups
+>
+> To solve issues it can cause this commit modifies brcmfmac to drop IAPP
+> packets. If affects:
+> 1) Rx path: driver won't be sending these unwanted packets up.
+> 2) Tx path: driver will reject packets that would trigger STA
+>    disassociation perfromed by a firmware (possible local DoS attack).
+>
+> It appears there are some Broadcom's clients/users who care about this
+> feature despite the drawbacks. They can switch it on by a newly added
+> Kconfig option.
+>
+> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
 
-Please resend them all as a proper patch series, numbered so I have a
-clue as to what order to apply them in.  Also preserve the acks/reviews
-that others have provided so they don't have to provide that again.
+[...]
 
-thanks,
+> --- a/drivers/net/wireless/broadcom/brcm80211/Kconfig
+> +++ b/drivers/net/wireless/broadcom/brcm80211/Kconfig
+> @@ -68,6 +68,26 @@ config BRCMFMAC_PCIE
+>  	  IEEE802.11ac embedded FullMAC WLAN driver. Say Y if you want to
+>  	  use the driver for an PCIE wireless card.
+>=20=20
+> +config BRCMFMAC_IAPP
+> +	bool "Partial support for obsoleted Inter-Access Point Protocol"
+> +	depends on BRCMFMAC
+> +	---help---
+> +	  Most of Broadcom's firmwares can send 802.11f ADD frame every
+> +	  time new STA connects to the AP interface. Some recent ones
+> +	  can also disassociate STA when they receive such a frame.
+> +
+> +	  It's important to understand this behavior can lead to a local
+> +	  DoS security issue. Attacker may trigger disassociation of any
+> +	  STA by sending a proper Ethernet frame to the wireless
+> +	  interface.
+> +
+> +	  Moreover this feature may break AP interfaces in some specific
+> +	  setups. This applies e.g. to the bridge with hairpin mode
+> +	  enabled and IFLA_BRPORT_MCAST_TO_UCAST set. IAPP packet
+> +	  generated by a firmware will get passed back to the wireless
+> +	  interface and cause immediate disassociation of just-connected
+> +	  STA.
 
-greg k-h
+Sorry for jumping late, but does it really make sense to have a Kconfig
+option for this? I don't think we should add a Kconfig option for every
+strange feature, there should be stronger reasons (size savings etc)
+before adding a Kconfig option.
+
+And in this case the size savings can't be much. Wouldn't a module
+parameter be simpler for a functionality change like this?
+
+> +/**
+> + * brcmf_skb_is_iapp - checks if skb is an IAPP packet
+> + *
+> + * @skb: skb to check
+> + */
+> +static bool brcmf_skb_is_iapp(struct sk_buff *skb)
+> +{
+> +	const u8 iapp_l2_update_packet[6] __aligned(2) =3D {
+> +		0x00, 0x01, 0xaf, 0x81, 0x01, 0x00,
+> +	};
+
+static?
+
+> +	unsigned char *eth_data =3D skb_mac_header(skb) + ETH_HLEN;
+> +#if !defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
+
+#ifndef?
+
+> +	const u16 *a =3D (const u16 *)eth_data;
+> +	const u16 *b =3D (const u16 *)iapp_l2_update_packet;
+> +#endif
+> +
+> +	if (skb->len - skb->mac_len !=3D 6 ||
+> +	    !is_multicast_ether_addr(eth_hdr(skb)->h_dest))
+> +		return false;
+> +
+> +#if defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
+
+#ifdef?
+
+--=20
+Kalle Valo
