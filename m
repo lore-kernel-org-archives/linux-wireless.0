@@ -1,76 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:38500 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752857AbeCFB0N (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:57487 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932809AbeCNCL4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Mar 2018 20:26:13 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 10/15] rtlwifi: btcoex: new definitions introduced by 8822be
-Date: Tue, 6 Mar 2018 09:25:49 +0800
-Message-ID: <20180306012554.3108-11-pkshih@realtek.com> (sfid-20180306_022622_556508_E3EBE4F3)
-In-Reply-To: <20180306012554.3108-1-pkshih@realtek.com>
-References: <20180306012554.3108-1-pkshih@realtek.com>
+        Tue, 13 Mar 2018 22:11:56 -0400
+Date: Wed, 14 Mar 2018 13:11:51 +1100
+From: "Tobin C. Harding" <me@tobin.cc>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        kernel-hardening@lists.openwall.com,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        Tycho Andersen <tycho@tycho.ws>,
+        Kees Cook <keescook@chromium.org>
+Subject: Re: [RESEND] rsi: Remove stack VLA usage
+Message-ID: <20180314021151.GA11666@eros> (sfid-20180314_031216_561910_442DBADF)
+References: <1520819022-15238-1-git-send-email-me@tobin.cc>
+ <20180312094606.8192B6081A@smtp.codeaurora.org>
+ <20180313201757.GK8631@eros>
+ <CAHp75VeM1zNyNtHvsn0=rg_xibcitVHREY73cAk=KCSK3Ti3vw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAHp75VeM1zNyNtHvsn0=rg_xibcitVHREY73cAk=KCSK3Ti3vw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On Tue, Mar 13, 2018 at 11:00:47PM +0200, Andy Shevchenko wrote:
+> On Tue, Mar 13, 2018 at 10:17 PM, tcharding <me@tobin.cc> wrote:
+> > On Mon, Mar 12, 2018 at 09:46:06AM +0000, Kalle Valo wrote:
+> >> tcharding <me@tobin.cc> wrote:
+> 
+> I'm pretty much sure it depends on the original email headers, like
+> above ^^^ — no name.
+> Perhaps git config on your side should be done.
 
-New constant and variables definitions are used by btcoex of 8822b, so
-this commit add them.
+Thanks for the suggestion Andy but the 'tcharding' as the name was
+munged by either Kalle or patchwork.  I'm guessing patchwork.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 6 ++++++
- 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index 0a7b09305bc3..049e92a8afbe 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -62,6 +62,8 @@
- #define		BTC_ANT_PATH_WIFI			0
- #define		BTC_ANT_PATH_BT				1
- #define		BTC_ANT_PATH_PTA			2
-+#define		BTC_ANT_PATH_WIFI5G			3
-+#define		BTC_ANT_PATH_AUTO			4
- /* dual Antenna definition */
- #define		BTC_ANT_WIFI_AT_MAIN			0
- #define		BTC_ANT_WIFI_AT_AUX			1
-@@ -205,6 +207,7 @@ enum btc_wifi_traffic_dir {
- enum btc_wifi_pnp {
- 	BTC_WIFI_PNP_WAKE_UP = 0x0,
- 	BTC_WIFI_PNP_SLEEP = 0x1,
-+	BTC_WIFI_PNP_SLEEP_KEEP_ANT = 0x2,
- 	BTC_WIFI_PNP_MAX
- };
- 
-@@ -387,6 +390,7 @@ enum btc_notify_type_lps {
- enum btc_notify_type_scan {
- 	BTC_SCAN_FINISH = 0x0,
- 	BTC_SCAN_START = 0x1,
-+	BTC_SCAN_START_2G = 0x2,
- 	BTC_SCAN_MAX
- };
- 
-@@ -561,6 +565,7 @@ struct btc_bt_info {
- 	u16 bt_hci_ver;
- 	u16 bt_real_fw_ver;
- 	u8 bt_fw_ver;
-+	u32 bt_get_fw_ver;
- 
- 	bool bt_disable_low_pwr;
- 
-@@ -632,6 +637,7 @@ struct btc_bt_link_info {
- 	bool pan_exist;
- 	bool pan_only;
- 	bool slave_role;
-+	bool acl_busy;
- };
- 
- enum btc_antenna_pos {
--- 
-2.15.1
+thanks,
+Tobin.
