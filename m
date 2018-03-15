@@ -1,80 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:36878 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750950AbeCNR60 (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.10]:51445 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750715AbeCOH5l (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Mar 2018 13:58:26 -0400
-Date: Wed, 14 Mar 2018 18:58:24 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-        Kees Cook <keescook@chromium.org>,
-        Bitterblue of Monsea <cantabile.desu@gmail.com>,
-        Jakub Kicinski <kubakici@wp.pl>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Shuah Khan <shuah@kernel.org>,
-        Martin Fuzzey <mfuzzey@parkeon.com>,
-        Mimi Zohar <zohar@linux.vnet.ibm.com>,
-        David Howells <dhowells@redhat.com>, pali.rohar@gmail.com,
-        Takashi Iwai <tiwai@suse.de>, arend.vanspriel@broadcom.com,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Nicolas Broeking <nbroeking@me.com>,
-        Vikram Mulukutla <markivx@codeaurora.org>,
-        Mark Brown <broonie@kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Abhay_Salunke@dell.com, bjorn.andersson@linaro.org,
-        jewalt@lgsinnovations.com, oneukum@suse.com, ast@fb.com,
-        andresx7@gmail.com, LKML <linux-kernel@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH v3 00/20] firmware: development for v4.17
-Message-ID: <20180314175824.GA23883@kroah.com> (sfid-20180314_185842_529991_9962FC64)
-References: <20180310141501.2214-1-mcgrof@kernel.org>
- <CAGXu5jJqzahD=iwv8_ipvebi8kQ=UVPiMrHOtQL5iLyviFm6jQ@mail.gmail.com>
- <20180314174403.GJ4449@wotan.suse.de>
+        Thu, 15 Mar 2018 03:57:41 -0400
+Subject: Re: [PATCH] wireless: brcmfmac: cfg80211: Fix check for ISO3166 code
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com
+References: <1521054179-4030-1-git-send-email-stefan.wahren@i2se.com>
+ <CACna6ryiAqeW7Awr=o5yydBaTY=+TQmW0DvB6wFO+fQOwFJSgQ@mail.gmail.com>
+From: Stefan Wahren <stefan.wahren@i2se.com>
+Message-ID: <9de41438-ab95-9fe5-e414-1790de888a84@i2se.com> (sfid-20180315_085745_102795_7782B434)
+Date: Thu, 15 Mar 2018 08:57:18 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180314174403.GJ4449@wotan.suse.de>
+In-Reply-To: <CACna6ryiAqeW7Awr=o5yydBaTY=+TQmW0DvB6wFO+fQOwFJSgQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 14, 2018 at 05:44:03PM +0000, Luis R. Rodriguez wrote:
-> On Sat, Mar 10, 2018 at 09:16:36AM -0800, Kees Cook wrote:
-> > On Sat, Mar 10, 2018 at 6:14 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> > > Greg,
-> > >
-> > > Here's a respin of what I have queued up for v4.17 for the firmware API. It
-> > > combines the cleanup I've been working on and the addition of the new API call
-> > > request_firmware_cache() for fixing a corner case suspend issue on some type of
-> > > cards with an optimization in place where the firmware is *not* needed on
-> > > reboot.
-> > >
-> > > The cleanup work allows us to test the firmware API with one kernel
-> > > configuration. I've addressed Kees' feedback on this respin and
-> > > combined the code into drivers/base/firmware_class/.
-> > >
-> > > I've made one new test_firmware change in consideration for one firmware
-> > > change, the patch "firmware: ensure the firmware cache is not used on
-> > > incompatible calls" requires us to modify our tests scripts to use
-> > > the APIs sanely as well.
-> > >
-> > > I've put up these changes on my git tree, refer to the branch
-> > > "20180307-firmware-dev-for-v4.17" based on linux-next [0] and
-> > > the same name based on Linus' tree [1].
-> > >
-> > > Questions, feedback, and specially rants are always welcomed.
-> > 
-> > This all looks good to me! Thanks for respinning. :)
-> 
-> Greg,
-> 
-> I'd like to get these baked a bit through linux-next. Let me know if its
-> easier for you if I go through Andrew for the firmware API changes.
+Am 15.03.2018 um 07:27 schrieb Rafał Miłecki:
+> On 14 March 2018 at 20:02, Stefan Wahren <stefan.wahren@i2se.com> wrote:
+>> The commit "regulatory: add NUL to request alpha2" increases the length of
+>> alpha2 to 3. This causes a regression on brcmfmac, because
+>> brcmf_cfg80211_reg_notifier() expect valid ISO3166 codes in the complete
+>> array. So fix this accordingly.
+>>
+>> Signed-off-by: Stefan Wahren <stefan.wahren@i2se.com>
+> It sounds like it's worth a:
+> Fixes: <sha> ("regulatory: add NUL to request alpha2")
 
-I'm just about to queue up all of the firmware patches right now, so no
-need to bother Andrew :)
+I wasn't sure that i can take the hash from linux-next. I will add this.
 
-thanks,
-
-greg k-h
+Thanks
+Stefan
