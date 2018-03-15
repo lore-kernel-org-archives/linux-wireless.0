@@ -1,75 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-he1eur01on0069.outbound.protection.outlook.com ([104.47.0.69]:35072
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751040AbeCUH3s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Mar 2018 03:29:48 -0400
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: Bharat Bhushan <bharat.bhushan@nxp.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "hch@lst.de" <hch@lst.de>,
-        "linux@armlinux.org.uk" <linux@armlinux.org.uk>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "zajec5@gmail.com" <zajec5@gmail.com>,
-        "andy.gross@linaro.org" <andy.gross@linaro.org>,
-        "david.brown@linaro.org" <david.brown@linaro.org>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "vinod.koul@intel.com" <vinod.koul@intel.com>,
-        "thierry.reding@gmail.com" <thierry.reding@gmail.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        "jarkko.sakkinen@linux.intel.com" <jarkko.sakkinen@linux.intel.com>,
-        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
-        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
-        "johan@kernel.org" <johan@kernel.org>,
-        "msuchanek@suse.de" <msuchanek@suse.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-soc@vger.kernel.org" <linux-soc@vger.kernel.org>,
-        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Leo Li <leoyang.li@nxp.com>
-Subject: RE: [PATCH v2 1/2] dma-mapping: move dma configuration to bus
- infrastructure
-Date: Wed, 21 Mar 2018 07:29:38 +0000
-Message-ID: <HE1PR0401MB24254A28553F17384BC9F785E6AA0@HE1PR0401MB2425.eurprd04.prod.outlook.com> (sfid-20180321_083006_202234_59491DFF)
-References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
- <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com>
- <AM5PR0401MB254503027680DE6A23355D909AAA0@AM5PR0401MB2545.eurprd04.prod.outlook.com>
-In-Reply-To: <AM5PR0401MB254503027680DE6A23355D909AAA0@AM5PR0401MB2545.eurprd04.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-wr0-f174.google.com ([209.85.128.174]:37341 "EHLO
+        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751523AbeCOHKL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Mar 2018 03:10:11 -0400
+Received: by mail-wr0-f174.google.com with SMTP id z12so7131748wrg.4
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2018 00:10:11 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <87efko0zsk.fsf@purkki.adurom.net>
+References: <1520260620-4694-1-git-send-email-amitkarwar@gmail.com>
+ <1520260620-4694-2-git-send-email-amitkarwar@gmail.com> <87ina00zwv.fsf@purkki.adurom.net>
+ <87efko0zsk.fsf@purkki.adurom.net>
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+Date: Thu, 15 Mar 2018 12:40:10 +0530
+Message-ID: <CAEhWJF=w5rYKfFS1egCG30rdNafAJT9o2+bmhUcuQ-w=JkY2VA@mail.gmail.com> (sfid-20180315_081230_679563_13A117B2)
+Subject: Re: [PATCH 01/10] rsi: add support for hardware scan offload
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Mar 13, 2018 at 8:48 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Kalle Valo <kvalo@codeaurora.org> writes:
+>
+>> Amitkumar Karwar <amitkarwar@gmail.com> writes:
+>>
+>>> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>>>
+>>> With the current approach of scanning, roaming delays
+>>> are observed. Firmware has support for back ground scanning.
+>>> To get this advantage, mac80211 hardware scan is implemented.
+>>> In this method, foreground scan is performed in driver and
+>>> back ground scan is configured to firmware.
+>>
+>> To me doesn't like a good idea to duplicate scan functionality in the
+>> driver.
+>
+> Also a pro tip: Don't place controversial patches as the first patch in
+> a big patchset, instead put them last so that I can apply rest of
+> patches anyway. Even better to submit them separately as RFC.
 
+Got it. I will follow this.
 
-> -----Original Message-----
-> From: Bharat Bhushan
-> Sent: Wednesday, March 21, 2018 12:49
-
-> >
-> > +int dma_configure(struct device *dev)
-> > +{
-> > +	if (dev->bus->dma_configure)
-> > +		return dev->bus->dma_configure(dev);
->=20
-> What if dma_common_configure() is called in case "bus->dma_configure" is
-> not defined?
->=20
-> Thanks
-> -Bharat
-
-I think it is cleaner for bus to call '/dma_common_configure/' rather
-than this been called implicitly, but Robin/Christoph can comment
-better on this.
-
-Thanks,
-Nipun
+Regards,
+Amitkumar Karwar
