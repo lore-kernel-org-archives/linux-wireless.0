@@ -1,68 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0092.outbound.protection.outlook.com ([104.47.41.92]:4384
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751783AbeCPKM6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Mar 2018 06:12:58 -0400
-From: Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        "Hante Meuleman" <hante.meuleman@broadcom.com>,
-        Wright Feng <Wright.Feng@cypress.com>
-Subject: RE: [PATCH 0/6] Update brcm firmware files
-Date: Fri, 16 Mar 2018 10:12:54 +0000
-Message-ID: <BY1PR0601MB1436B116087CA9D3E41601D6BBD70@BY1PR0601MB1436.namprd06.prod.outlook.com> (sfid-20180316_111302_645277_5129521E)
-References: <1521194806-71801-1-git-send-email-chi-hsien.lin@cypress.com>
-In-Reply-To: <1521194806-71801-1-git-send-email-chi-hsien.lin@cypress.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-To: unlisted-recipients:; (no To-header on input)
+Received: from smtprelay0102.hostedemail.com ([216.40.44.102]:57754 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750987AbeCORNt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Mar 2018 13:13:49 -0400
+Message-ID: <1521134022.22221.38.camel@perches.com> (sfid-20180315_181410_470824_BAA19020)
+Subject: Re: rfc: remove print_vma_addr ? (was Re: [PATCH 00/16] remove
+ eight obsolete architectures)
+From: Joe Perches <joe@perches.com>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
+        David Howells <dhowells@redhat.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Linux-Arch <linux-arch@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-doc@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-input@vger.kernel.org,
+        netdev <netdev@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux PWM List <linux-pwm@vger.kernel.org>,
+        linux-rtc@vger.kernel.org, linux-spi <linux-spi@vger.kernel.org>,
+        USB list <linux-usb@vger.kernel.org>,
+        DRI Development <dri-devel@lists.freedesktop.org>,
+        Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
+        Linux Watchdog Mailing List <linux-watchdog@vger.kernel.org>,
+        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+        Linux MM <linux-mm@kvack.org>
+Date: Thu, 15 Mar 2018 10:13:42 -0700
+In-Reply-To: <20180315170830.GA17574@bombadil.infradead.org>
+References: <20180314143529.1456168-1-arnd@arndb.de>
+         <2929.1521106970@warthog.procyon.org.uk>
+         <CAMuHMdXcxuzCOnFCNm4NXDv-wfYJDO5GQpB_ECu7j=2BjMhNpA@mail.gmail.com>
+         <1521133006.22221.35.camel@perches.com>
+         <20180315170830.GA17574@bombadil.infradead.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The linux-firmware email is wrong for this submission. I'll send another on=
-e with the correct address. Sorry for the spam.
+On Thu, 2018-03-15 at 10:08 -0700, Matthew Wilcox wrote:
+> On Thu, Mar 15, 2018 at 09:56:46AM -0700, Joe Perches wrote:
+> > I have a patchset that creates a vsprintf extension for
+> > print_vma_addr and removes all the uses similar to the
+> > print_symbol() removal.
+> > 
+> > This now avoids any possible printk interleaving.
+> > 
+> > Unfortunately, without some #ifdef in vsprintf, which
+> > I would like to avoid, it increases the nommu kernel
+> > size by ~500 bytes.
+> > 
+> > Anyone think this is acceptable?
+[]
+> This doesn't feel like a huge win since it's only called ~once per
+> architecture.  I'd be more excited if it made the printing of the whole
+> thing standardised; eg we have a print_fault() function in mm/memory.c
+> which takes a suitable set of arguments.
 
-Regards,
-Chi-hsien Lin
+Sure but perhaps that's not feasible as the surrounding output
+is per-arch specific.
 
-> -----Original Message-----
-> From: Chi-Hsien Lin
-> Sent: 16 March 2018 6:07
-> To: linux-firmware@vger.kernel.org
-> Cc: linux-wireless@vger.kernel.org; brcm80211-dev-list.pdl@broadcom.com;
-> brcm80211-dev-list <brcm80211-dev-list@cypress.com>; Arend van Spriel
-> <arend.vanspriel@broadcom.com>; Franky Lin <franky.lin@broadcom.com>;
-> Hante Meuleman <hante.meuleman@broadcom.com>; Wright Feng
-> <Wright.Feng@cypress.com>; Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
-> Subject: [PATCH 0/6] Update brcm firmware files
->
-> Update brcm firmware files and WHENCE accordingly.
->
-> Chi-Hsien Lin (6):
->   brcm: update firmware for bcm43340
->   brcm: update firmware for bcm43362
->   brcm: update firmware for bcm43430
->   brcm: update firmware for bcm4354
->   brcm: update firmware for bcm4356 pcie
->   Update license for brcm firmware
->
->  WHENCE                      |  10 +++++-----
->  brcm/brcmfmac43340-sdio.bin | Bin 402210 -> 400864 bytes
->  brcm/brcmfmac43362-sdio.bin | Bin 219557 -> 200801 bytes
->  brcm/brcmfmac43430-sdio.bin | Bin 369577 -> 388739 bytes
->  brcm/brcmfmac4354-sdio.bin  | Bin 626589 -> 605388 bytes
->  brcm/brcmfmac4356-pcie.bin  | Bin 661999 -> 648770 bytes
->  6 files changed, 5 insertions(+), 5 deletions(-)
->
-> --
-> 2.1.0
-
-
-This message and any attachments may contain confidential information from =
-Cypress or its subsidiaries. If it has been received in error, please advis=
-e the sender and immediately delete this message.
+What could be a standardized fault message here?
