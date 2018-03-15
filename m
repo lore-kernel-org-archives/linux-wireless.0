@@ -1,56 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36056 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751114AbeC0GuP (ORCPT
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:39147 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751362AbeCOIge (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Mar 2018 02:50:15 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [RFC 1/3] cfg80211: fix data type of sta_opmode_info parameter
-Date: Tue, 27 Mar 2018 12:18:14 +0530
-Message-Id: <1522133296-2583-2-git-send-email-tamizhr@codeaurora.org> (sfid-20180327_085019_467993_3E89D540)
-In-Reply-To: <1522133296-2583-1-git-send-email-tamizhr@codeaurora.org>
-References: <1522133296-2583-1-git-send-email-tamizhr@codeaurora.org>
+        Thu, 15 Mar 2018 04:36:34 -0400
+Received: by mail-qt0-f196.google.com with SMTP id a26so6359323qtj.6
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2018 01:36:33 -0700 (PDT)
+Subject: Re: [PATCH V2] brcmfmac: drop Inter-Access Point Protocol packets by
+ default
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20180315072909.1512-1-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        James Hughes <james.hughes@raspberrypi.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
+        Felix Fietkau <nbd@nbd.name>,
+        bridge@lists.linux-foundation.org,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AAA308D.4090100@broadcom.com> (sfid-20180315_093640_758619_7D079457)
+Date: Thu, 15 Mar 2018 09:36:29 +0100
+MIME-Version: 1.0
+In-Reply-To: <20180315072909.1512-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently bw and smps_mode are u8 type value in sta_opmode_info
-structure. This values filled in mac80211 from ieee80211_sta_rx_bandwidth
-and ieee80211_smps_mode. These enum values are specific to mac80211 and
-userspace/cfg80211 doesn't know about that. This will lead to incorrect
-result/assumption by the user space application.
-Change bw and smps_mode parameters to their respective enums in nl80211.
+On 3/15/2018 8:29 AM, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+>
+> Testing brcmfmac with more recent firmwares resulted in AP interfaces
+> not working in some specific setups. Debugging resulted in discovering
+> support for IAPP in Broadcom's firmwares.
+>
+> Older firmwares were only generating 802.11f frames. Newer ones like:
+> 1) 10.10 (TOB) (r663589)
+> 2) 10.10.122.20 (r683106)
+> for 4366b1 and 4366c0 respectively seem to also /respect/ 802.11f frames
+> in the Tx path by performing a STA disassociation.
+>
+> This obsoleted standard and its implementation is something that:
+> 1) Most people don't need / want to use
+> 2) Can allow local DoS attacks
+> 3) Breaks AP interfaces in some specific bridge setups
+>
+> To solve issues it can cause this commit modifies brcmfmac to drop IAPP
+> packets. If affects:
+> 1) Rx path: driver won't be sending these unwanted packets up.
+> 2) Tx path: driver will reject packets that would trigger STA
+>     disassociation perfromed by a firmware (possible local DoS attack).
+>
+> It appears there are some Broadcom's clients/users who care about this
+> feature despite the drawbacks. They can switch it on using a new module
+> param.
+>
+> This change results in only two more comparisons (check for module param
+> and check for Ethernet packet length) for 99.9% of packets. Its overhead
+> should be very minimal.
 
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
----
- include/net/cfg80211.h | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Hi Rafał,
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index fc40843..4341508 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3572,15 +3572,15 @@ enum wiphy_opmode_flag {
- /**
-  * struct sta_opmode_info - Station's ht/vht operation mode information
-  * @changed: contains value from &enum wiphy_opmode_flag
-- * @smps_mode: New SMPS mode of a station
-- * @bw: new max bandwidth value of a station
-+ * @smps_mode: New SMPS mode value from &enum nl80211_smps_mode of a station
-+ * @bw: new max bandwidth value from &enum nl80211_chan_width of a station
-  * @rx_nss: new rx_nss value of a station
-  */
- 
- struct sta_opmode_info {
- 	u32 changed;
--	u8 smps_mode;
--	u8 bw;
-+	enum nl80211_smps_mode smps_mode;
-+	enum nl80211_chan_width bw;
- 	u8 rx_nss;
- };
- 
--- 
-1.9.1
+Thanks for this patch.
+
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+>   .../wireless/broadcom/brcm80211/brcmfmac/common.c  |  5 ++
+>   .../wireless/broadcom/brcm80211/brcmfmac/common.h  |  1 +
+>   .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 57 ++++++++++++++++++++++
+>   3 files changed, 63 insertions(+)
