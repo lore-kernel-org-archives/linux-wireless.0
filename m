@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50988 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:41002 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755182AbeCHIks (ORCPT
+        with ESMTP id S1751770AbeCOM7S (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Mar 2018 03:40:48 -0500
-Received: from x230.qca.qualcomm.com (88-114-240-52.elisa-laajakaista.fi [88.114.240.52])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id EB1266024C
-        for <linux-wireless@vger.kernel.org>; Thu,  8 Mar 2018 08:40:46 +0000 (UTC)
+        Thu, 15 Mar 2018 08:59:18 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Subject: Variable-length arrays considered bad
-Date: Thu, 08 Mar 2018 10:40:44 +0200
-Message-ID: <87zi3j9cz7.fsf@codeaurora.org> (sfid-20180308_094052_456787_72248763)
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>
+Subject: Re: [PATCH] mwifiex: remove warnings in mwifiex_cmd_append_11n_tlv()
+References: <1521094832-6311-1-git-send-email-gbhat@marvell.com>
+Date: Thu, 15 Mar 2018 14:59:14 +0200
+In-Reply-To: <1521094832-6311-1-git-send-email-gbhat@marvell.com> (Ganapathi
+        Bhat's message of "Thu, 15 Mar 2018 11:50:32 +0530")
+Message-ID: <87y3itxzod.fsf@purkki.adurom.net> (sfid-20180315_135922_765787_59E510F2)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Ganapathi Bhat <gbhat@marvell.com> writes:
 
-in an lkml discussion[1] it was mentioned that variable-length arrays
-should not be used. Few warnings were found[2] from wireless:
+> Fix the following sparse warning in mwifiex_cmd_append_11n_tlv:
+> drivers/net/wireless/marvell/mwifiex/11n.c:358:65: warning: invalid assignment: &=
+> drivers/net/wireless/marvell/mwifiex/11n.c:358:65:    left side has type restricted __le16
+> drivers/net/wireless/marvell/mwifiex/11n.c:358:65:    right side has type int
+> drivers/net/wireless/marvell/mwifiex/11n.c:360:65: warning: invalid assignment: &=
+> drivers/net/wireless/marvell/mwifiex/11n.c:360:65:    left side has type restricted __le16
+> drivers/net/wireless/marvell/mwifiex/11n.c:360:65:    right side has type int
+> drivers/net/wireless/marvell/mwifiex/11n.c:366:65: warning: invalid assignment: &=
+> drivers/net/wireless/marvell/mwifiex/11n.c:366:65:    left side has type restricted __le16
+> drivers/net/wireless/marvell/mwifiex/11n.c:366:65:    right side has type int
+> drivers/net/wireless/marvell/mwifiex/11n.c:368:65: warning: invalid assignment: &=
+> drivers/net/wireless/marvell/mwifiex/11n.c:368:65:    left side has type restricted __le16
+> drivers/net/wireless/marvell/mwifiex/11n.c:368:65:    right side has type int
+>
+> This is a follow up to commit 77423fa73927
+> ("mwifiex: fix incorrect ht capability problem")
 
-drivers/net/wireless/ath/ath9k/dfs.c:104:2: warning: ISO C90 forbids variable length array 'max_bin' [-Wvla]
-drivers/net/wireless/rsi/rsi_91x_sdio.c:570:2: warning: ISO C90 forbids variable length array 'temp_buf' [-Wvla]
+I'll replace this sentence with:
 
-Patches welcome.
-
-[1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
-
-[2] http://paste.ubuntu.com/p/srQxwPQS9s/
+Fixes: 77423fa73927 ("mwifiex: fix incorrect ht capability problem")
 
 -- 
 Kalle Valo
