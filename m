@@ -1,65 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f47.google.com ([209.85.218.47]:35490 "EHLO
-        mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751294AbeCWNna (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:54742 "EHLO
+        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750745AbeCOH3y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Mar 2018 09:43:30 -0400
+        Thu, 15 Mar 2018 03:29:54 -0400
+Received: by mail-wm0-f41.google.com with SMTP id h76so8501746wme.4
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2018 00:29:54 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20180323094740.GA5942@localhost.localdomain>
-References: <20180323094740.GA5942@localhost.localdomain>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Fri, 23 Mar 2018 14:43:28 +0100
-Message-ID: <CACna6rx-QNQhVNkwFSabwAY9vM1qV_gTcWywsHFuP5B4NH4NXA@mail.gmail.com> (sfid-20180323_144351_022332_27EF09D1)
-Subject: Re: [QUESTION] Mainline support for B43_PHY_AC wifi cards
-To: Juri Lelli <juri.lelli@gmail.com>
-Cc: b43-dev <b43-dev@lists.infradead.org>,
-        Network Development <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+In-Reply-To: <878taw0zjd.fsf@purkki.adurom.net>
+References: <1520260620-4694-1-git-send-email-amitkarwar@gmail.com>
+ <1520260620-4694-6-git-send-email-amitkarwar@gmail.com> <878taw0zjd.fsf@purkki.adurom.net>
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+Date: Thu, 15 Mar 2018 12:59:53 +0530
+Message-ID: <CAEhWJFm9rq0+hm3_JnC=nmCSoSPi6_k=Xx0RAtuVnp-H6ibs9g@mail.gmail.com> (sfid-20180315_083009_593175_B97BE971)
+Subject: Re: [PATCH 05/10] rsi: roaming enhancements
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On 23 March 2018 at 10:47, Juri Lelli <juri.lelli@gmail.com> wrote:
-> I've got a Dell XPS 13 9343/0TM99H (BIOS A15 01/23/2018) mounting a
-> BCM4352 802.11ac (rev 03) wireless card and so far I've been using it on
-> Fedora with broadcom-wl package (which I believe installs Broadcom's STA
-> driver?). It works good apart from occasional hiccups after suspend.
+On Tue, Mar 13, 2018 at 8:54 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Amitkumar Karwar <amitkarwar@gmail.com> writes:
 >
-> I'd like to get rid of that dependency (you can understand that it's
-> particularly annoying when testing mainline kernels), but I found out
-> that support for my card is BROKEN in mainline [1]. Just to see what
-> happens, I forcibly enabled it witnessing that it indeed crashes like
-> below as Kconfig warns. :)
+>> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>>
+>> To support roaming below changes are done:
+>> * Station notify frame is send to firmware after sending assoc
+>>   request. This will avoid dropping of first EAPOL frame due to
+>>   delay in creation of station control block in firmware.
+>> * Data queues are unblocked after sending station notify in open
+>>   mode, after configuring key in WEP mode, and after receiving
+>>   EAPOL4 confirm in WPA mode.
+>> * Initial EAPOL frames priority is chaged to MGMT, rekey EAPOL
+>>   frames priority changed to VO.
+>> * Data frames with wrong BSSID are dropped.
 >
->  bcma: bus0: Found chip with id 0x4352, rev 0x03 and package 0x00
->  bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x2B, class 0x0)
->  bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x2A, class 0x0)
->  bcma: bus0: Core 2 found: ARM CR4 (manuf 0x4BF, id 0x83E, rev 0x02, class 0x0)
->  bcma: bus0: Core 3 found: PCIe Gen2 (manuf 0x4BF, id 0x83C, rev 0x01, class 0x0)
->  bcma: bus0: Core 4 found: USB 2.0 Device (manuf 0x4BF, id 0x81A, rev 0x11, class 0x0)
->  bcma: Unsupported SPROM revision: 11
->  bcma: bus0: Invalid SPROM read from the PCIe card, trying to use fallback SPROM
->  bcma: bus0: Using fallback SPROM failed (err -2)
->  bcma: bus0: No SPROM available
->  bcma: bus0: Bus registered
->  b43-phy0: Broadcom 4352 WLAN found (core revision 42)
->  b43-phy0: Found PHY: Analog 12, Type 11 (AC), Revision 1
->  b43-phy0: Found Radio: Manuf 0x17F, ID 0x2069, Revision 4, Version 0
->  BUG: unable to handle kernel NULL pointer dereference at 0000000000000000
+> I don't know what Johannes thinks but IMHO the driver should not drop
+> any data frames, it should just submit what mac80211 gives to it. All
+> filtering should happen in mac80211 (or controlled by it).
 
-This isn't really useful without a full backtrace.
+This was just an extra check to ensure that when we roam from one AP
+to another, we should drop frames for previous AP. We don't have any
+evidence that such are received.
+I will remove this change in next version.
 
-
-> So, question: is replacing my card the only way I can get rid of this
-> downstream dependency? :(
-
-It's definitely the cheapest way. Getting AC PHY into anything usable
-(proper setup that will allow Tx & Rx anything) would probably take
-weeks or months of development. I'm not even going to estimate cost of
-adding support for 802.11n and 802.11ac features. I was the last
-person actively working on b43, right now I spend my free time on
-other hobby projects. Few people were planning to help but it seems it
-never worked out for them.
+Regards,
+Amitkumar Karwar
