@@ -1,145 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50376 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751216AbeCJOPW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Mar 2018 09:15:22 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
-        kubakici@wp.pl, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v3 07/20] firmware: move loading timeout under struct firmware_fallback_config
-Date: Sat, 10 Mar 2018 06:14:48 -0800
-Message-Id: <20180310141501.2214-8-mcgrof@kernel.org> (sfid-20180310_152037_469065_896D7058)
-In-Reply-To: <20180310141501.2214-1-mcgrof@kernel.org>
-References: <20180310141501.2214-1-mcgrof@kernel.org>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:55595 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751929AbeCORY0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Mar 2018 13:24:26 -0400
+Received: by mail-wm0-f65.google.com with SMTP id q83so11987468wme.5
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2018 10:24:25 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76: use mt76_poll_msec routine in mt76pci_load_firmware()
+Date: Thu, 15 Mar 2018 18:24:20 +0100
+Message-Id: <b2abf42bbd5e5f41082bd17df018dcb203aa2f86.1521128408.git.lorenzo.bianconi@redhat.com> (sfid-20180315_182429_828869_1CFEE3C6)
+In-Reply-To: <cover.1521128408.git.lorenzo.bianconi@redhat.com>
+References: <cover.1521128408.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The timeout is a fallback construct, so we can just stuff the
-timeout configuration under struct firmware_fallback_config.
+Use mt76_poll_msec() in mt76pci_load_firmware to check if the firmware
+has been started instead of explicitly poll MCU running register
 
-While at it, add a few helpers which vets the use of getting or
-setting the timeout as an int. The main use of the timeout is
-to set a timeout for completion, and that is used as an unsigned
-long. There a few cases however where it makes sense to get or
-set the timeout as an int, the helpers annotate these use cases
-have been properly vetted for.
-
-Acked-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/base/firmware_loader.c | 46 ++++++++++++++++++++++++++++++------------
- 1 file changed, 33 insertions(+), 13 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c | 13 ++-----------
+ 1 file changed, 2 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/base/firmware_loader.c b/drivers/base/firmware_loader.c
-index 2d819875348d..9757f9fff01e 100644
---- a/drivers/base/firmware_loader.c
-+++ b/drivers/base/firmware_loader.c
-@@ -266,21 +266,38 @@ static inline bool fw_state_is_aborted(struct fw_priv *fw_priv)
-  *
-  * @force_sysfs_fallback: force the sysfs fallback mechanism to be used
-  * 	as if one had enabled CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y.
-+ * @old_timeout: for internal use
-+ * @loading_timeout: the timeout to wait for the fallback mechanism before
-+ * 	giving up, in seconds.
-  */
- struct firmware_fallback_config {
--	bool force_sysfs_fallback;
-+	const bool force_sysfs_fallback;
-+	int old_timeout;
-+	int loading_timeout;
- };
- 
--static const struct firmware_fallback_config fw_fallback_config = {
-+static struct firmware_fallback_config fw_fallback_config = {
- 	.force_sysfs_fallback = IS_ENABLED(CONFIG_FW_LOADER_USER_HELPER_FALLBACK),
-+	.loading_timeout = 60,
-+	.old_timeout = 60,
- };
- 
--static int old_timeout;
--static int loading_timeout = 60;	/* In seconds */
-+/* These getters are vetted to use int properly */
-+static inline int __firmware_loading_timeout(void)
-+{
-+	return fw_fallback_config.loading_timeout;
-+}
-+
-+/* These setters are vetted to use int properly */
-+static void __fw_fallback_set_timeout(int timeout)
-+{
-+	fw_fallback_config.loading_timeout = timeout;
-+}
- 
- static inline long firmware_loading_timeout(void)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
+index 15820b11f9db..dfd36d736b06 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
+@@ -187,7 +187,7 @@ mt76pci_load_firmware(struct mt76x2_dev *dev)
  {
--	return loading_timeout > 0 ? loading_timeout * HZ : MAX_JIFFY_OFFSET;
-+	return __firmware_loading_timeout() > 0 ?
-+		__firmware_loading_timeout() * HZ : MAX_JIFFY_OFFSET;
- }
+ 	const struct firmware *fw;
+ 	const struct mt76x2_fw_header *hdr;
+-	int i, len, ret;
++	int len, ret;
+ 	__le32 *cur;
+ 	u32 offset, val;
  
- /*
-@@ -291,14 +308,14 @@ static inline long firmware_loading_timeout(void)
-  */
- static void fw_fallback_set_cache_timeout(void)
- {
--	old_timeout = loading_timeout;
--	loading_timeout = 10;
-+	fw_fallback_config.old_timeout = __firmware_loading_timeout();
-+	__fw_fallback_set_timeout(10);
- }
+@@ -240,16 +240,7 @@ mt76pci_load_firmware(struct mt76x2_dev *dev)
  
- /* Restores the timeout to the value last configured during normal operation */
- static void fw_fallback_set_default_timeout(void)
- {
--	loading_timeout =  old_timeout;
-+	__fw_fallback_set_timeout(fw_fallback_config.old_timeout);
- }
- 
- static inline bool fw_sysfs_done(struct fw_priv *fw_priv)
-@@ -677,7 +694,7 @@ static void kill_pending_fw_fallback_reqs(bool only_kill_custom)
- static ssize_t timeout_show(struct class *class, struct class_attribute *attr,
- 			    char *buf)
- {
--	return sprintf(buf, "%d\n", loading_timeout);
-+	return sprintf(buf, "%d\n", __firmware_loading_timeout());
- }
- 
- /**
-@@ -696,9 +713,12 @@ static ssize_t timeout_show(struct class *class, struct class_attribute *attr,
- static ssize_t timeout_store(struct class *class, struct class_attribute *attr,
- 			     const char *buf, size_t count)
- {
--	loading_timeout = simple_strtol(buf, NULL, 10);
--	if (loading_timeout < 0)
--		loading_timeout = 0;
-+	int tmp_loading_timeout = simple_strtol(buf, NULL, 10);
-+
-+	if (tmp_loading_timeout < 0)
-+		tmp_loading_timeout = 0;
-+
-+	__fw_fallback_set_timeout(tmp_loading_timeout);
- 
- 	return count;
- }
-@@ -721,7 +741,7 @@ static int do_firmware_uevent(struct fw_sysfs *fw_sysfs, struct kobj_uevent_env
- {
- 	if (add_uevent_var(env, "FIRMWARE=%s", fw_sysfs->fw_priv->fw_name))
- 		return -ENOMEM;
--	if (add_uevent_var(env, "TIMEOUT=%i", loading_timeout))
-+	if (add_uevent_var(env, "TIMEOUT=%i", __firmware_loading_timeout()))
- 		return -ENOMEM;
- 	if (add_uevent_var(env, "ASYNC=%d", fw_sysfs->nowait))
- 		return -ENOMEM;
+ 	/* trigger firmware */
+ 	mt76_wr(dev, MT_MCU_INT_LEVEL, 2);
+-	for (i = 200; i > 0; i--) {
+-		val = mt76_rr(dev, MT_MCU_COM_REG0);
+-
+-		if (val & 1)
+-			break;
+-
+-		msleep(10);
+-	}
+-
+-	if (!i) {
++	if (!mt76_poll_msec(dev, MT_MCU_COM_REG0, 1, 1, 200)) {
+ 		dev_err(dev->mt76.dev, "Firmware failed to start\n");
+ 		release_firmware(fw);
+ 		return -ETIMEDOUT;
 -- 
-2.16.2
+2.14.3
