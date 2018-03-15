@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:47086 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751069AbeCTED4 (ORCPT
+Received: from coyote.holtmann.net ([212.227.132.17]:43224 "EHLO
+        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932094AbeCOQDz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Mar 2018 00:03:56 -0400
-Received: by mail-ot0-f196.google.com with SMTP id g97-v6so281482otg.13
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2018 21:03:55 -0700 (PDT)
-Subject: Re: [PATCH v2 13/15] rtlwifi: btcoex: Add 8822b header files to
- precomp.h
-To: pkshih@realtek.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-References: <20180306012554.3108-1-pkshih@realtek.com>
- <20180306012554.3108-14-pkshih@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <7f6711cf-5779-cd30-8da2-d92be666aead@lwfinger.net> (sfid-20180320_050400_040474_BC6F44CF)
-Date: Mon, 19 Mar 2018 23:03:54 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180306012554.3108-14-pkshih@realtek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Thu, 15 Mar 2018 12:03:55 -0400
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
+Subject: Re: [PATCH] Bluetooth: btrsi: rework dependencies
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <CAK8P3a3y00nUVuYopxXWaJjo_OxXhVsATyiSOfXz5b09JFq2dA@mail.gmail.com>
+Date: Thu, 15 Mar 2018 17:03:52 +0100
+Cc: Johan Hedberg <johan.hedberg@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Linux Bluetooth mailing list
+        <linux-bluetooth@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Networking <netdev@vger.kernel.org>
+Message-Id: <F9369C84-62C6-4881-8089-40F3F912F871@holtmann.org> (sfid-20180315_170439_581186_9559AD5C)
+References: <20180315154312.3941446-1-arnd@arndb.de>
+ <EE0D5CBE-0867-4FE0-B157-CA4086C84233@holtmann.org>
+ <CAK8P3a3y00nUVuYopxXWaJjo_OxXhVsATyiSOfXz5b09JFq2dA@mail.gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/05/2018 07:25 PM, pkshih@realtek.com wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> Add 8822b header files to precomp.h for routing functions.
-> 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Hi Arnd,
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>> diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
+>>> index 03cfc1b20c4a..9e8d22712ff3 100644
+>>> --- a/drivers/bluetooth/Makefile
+>>> +++ b/drivers/bluetooth/Makefile
+>>> @@ -28,7 +28,7 @@ obj-$(CONFIG_BT_QCA)                += btqca.o
+>>> 
+>>> obj-$(CONFIG_BT_HCIUART_NOKIA)        += hci_nokia.o
+>>> 
+>>> -obj-$(CONFIG_BT_HCIRSI)              += btrsi.o
+>>> +obj-$(CONFIG_BT_HCIRSI_MODULE)       += btrsi.o
+>> 
+>> do we need this new option? I have avoided these kind of complex things multi config entries. Can we not just select the RSI_91X?
+>> 
+> 
+> I couldn't come up with a simpler way to do this.
+> Selecting RSI_91X is not possible unless we make the BT
+> driver 'depend on WLAN_VENDOR_RSI && MAC80211',
+> which is even more backwards.
+> 
+> The problem here is that it's actually a reverse dependency:
+> the wlan driver calls into the bt driver.
+> 
+> What we could do is to make BT_HCIRSI a silent symbol
+> and have that selected by RSI_COEX, which can then
+> be user-visible. With that, the Kconfig structure would follow
+> what the code does.
 
-> ---
->   drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h | 3 +++
->   1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-> index 02dff4c3f664..858318fd3d63 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-> @@ -48,6 +48,9 @@
->   #include "halbtc8723b2ant.h"
->   #include "halbtc8821a2ant.h"
->   #include "halbtc8821a1ant.h"
-> +#include "halbtc8822b1ant.h"
-> +#include "halbtc8822b2ant.h"
-> +#include "halbtc8822bwifionly.h"
->   
->   #define GetDefaultAdapter(padapter)	padapter
->   
-> 
+that sounds a bit better to me. If the RSI driver maintainers don’t like that, then they should re-architect the code to make this more dynamic and flexible.
+
+Regards
+
+Marcel
