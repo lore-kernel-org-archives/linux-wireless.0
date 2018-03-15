@@ -1,49 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:34175 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751923AbeCXNpN (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:34048 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751770AbeCOGZq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Mar 2018 09:45:13 -0400
-Received: by mail-qt0-f196.google.com with SMTP id l25so15410731qtj.1
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Mar 2018 06:45:12 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: sameo@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, christophe.ricard@gmail.com,
-        linux-nfc@lists.01.org, Fabio Estevam <fabio.estevam@nxp.com>
-Subject: [PATCH 2/2] nfc: st21nfca: Remove unnecessary devm_kzalloc() cast
-Date: Sat, 24 Mar 2018 10:44:59 -0300
-Message-Id: <1521899099-23634-2-git-send-email-festevam@gmail.com> (sfid-20180324_144516_841626_875E1145)
-In-Reply-To: <1521899099-23634-1-git-send-email-festevam@gmail.com>
-References: <1521899099-23634-1-git-send-email-festevam@gmail.com>
+        Thu, 15 Mar 2018 02:25:46 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH] mwifiex: remove warnings in mwifiex_cmd_append_11n_tlv()
+Date: Thu, 15 Mar 2018 11:50:32 +0530
+Message-ID: <1521094832-6311-1-git-send-email-gbhat@marvell.com> (sfid-20180315_072553_279100_14403DC3)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@nxp.com>
+Fix the following sparse warning in mwifiex_cmd_append_11n_tlv:
+drivers/net/wireless/marvell/mwifiex/11n.c:358:65: warning: invalid assignment: &=
+drivers/net/wireless/marvell/mwifiex/11n.c:358:65:    left side has type restricted __le16
+drivers/net/wireless/marvell/mwifiex/11n.c:358:65:    right side has type int
+drivers/net/wireless/marvell/mwifiex/11n.c:360:65: warning: invalid assignment: &=
+drivers/net/wireless/marvell/mwifiex/11n.c:360:65:    left side has type restricted __le16
+drivers/net/wireless/marvell/mwifiex/11n.c:360:65:    right side has type int
+drivers/net/wireless/marvell/mwifiex/11n.c:366:65: warning: invalid assignment: &=
+drivers/net/wireless/marvell/mwifiex/11n.c:366:65:    left side has type restricted __le16
+drivers/net/wireless/marvell/mwifiex/11n.c:366:65:    right side has type int
+drivers/net/wireless/marvell/mwifiex/11n.c:368:65: warning: invalid assignment: &=
+drivers/net/wireless/marvell/mwifiex/11n.c:368:65:    left side has type restricted __le16
+drivers/net/wireless/marvell/mwifiex/11n.c:368:65:    right side has type int
 
-There is no need to use cast for the returned value
-from memory allocation functions, so remove the unnecessary cast.
+This is a follow up to commit 77423fa73927
+("mwifiex: fix incorrect ht capability problem")
 
-Detected via Coccinelle script:
-scripts/coccinelle/api/alloc/alloc_cast.cocci.
-
-Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 ---
- drivers/nfc/st21nfca/se.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/11n.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/nfc/st21nfca/se.c b/drivers/nfc/st21nfca/se.c
-index fd967a3..5b63549 100644
---- a/drivers/nfc/st21nfca/se.c
-+++ b/drivers/nfc/st21nfca/se.c
-@@ -326,8 +326,7 @@ int st21nfca_connectivity_event_received(struct nfc_hci_dev *hdev, u8 host,
- 		    skb->data[0] != NFC_EVT_TRANSACTION_AID_TAG)
- 			return -EPROTO;
- 
--		transaction = (struct nfc_evt_transaction *)devm_kzalloc(dev,
--						   skb->len - 2, GFP_KERNEL);
-+		transaction = devm_kzalloc(dev, skb->len - 2, GFP_KERNEL);
- 		if (!transaction)
- 			return -ENOMEM;
- 
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n.c b/drivers/net/wireless/marvell/mwifiex/11n.c
+index feebfdc..5d75c97 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n.c
+@@ -356,17 +356,19 @@ int mwifiex_cmd_11n_cfg(struct mwifiex_private *priv,
+ 			case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
+ 				if (chan->flags & IEEE80211_CHAN_NO_HT40PLUS) {
+ 					ht_cap->ht_cap.cap_info &=
+-					~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
++					cpu_to_le16
++					(~IEEE80211_HT_CAP_SUP_WIDTH_20_40);
+ 					ht_cap->ht_cap.cap_info &=
+-					~IEEE80211_HT_CAP_SGI_40;
++					cpu_to_le16(~IEEE80211_HT_CAP_SGI_40);
+ 				}
+ 				break;
+ 			case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
+ 				if (chan->flags & IEEE80211_CHAN_NO_HT40MINUS) {
+ 					ht_cap->ht_cap.cap_info &=
+-					~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
++					cpu_to_le16
++					(~IEEE80211_HT_CAP_SUP_WIDTH_20_40);
+ 					ht_cap->ht_cap.cap_info &=
+-					~IEEE80211_HT_CAP_SGI_40;
++					cpu_to_le16(~IEEE80211_HT_CAP_SGI_40);
+ 				}
+ 				break;
+ 			}
 -- 
-2.7.4
+1.9.1
