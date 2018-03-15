@@ -1,63 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blackstar.xs4all.nl ([83.163.96.30]:46471 "EHLO
-        blackstar.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966305AbeCAK0l (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47014 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750731AbeCOJHd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 05:26:41 -0500
-Subject: Re: [PATCH] mt7601u: remove a warning in
- mt7601u_efuse_physical_size_check()
-From: Bas Vermeulen <bvermeul@blackstar.nl>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>, kubakici@wp.pl
-Cc: linux-wireless@vger.kernel.org
-References: <cover.1519827461.git.lorenzo.bianconi@redhat.com>
- <2850551da4495924bde846dd237b736e41913d0f.1519827461.git.lorenzo.bianconi@redhat.com>
- <3263f88f-daec-837c-e58c-bee907295d47@blackstar.nl>
-Message-ID: <f914ce85-5492-ad24-9ce9-ebcd0a79af04@blackstar.nl> (sfid-20180301_112649_909572_56B7367B)
-Date: Thu, 1 Mar 2018 11:25:47 +0100
+        Thu, 15 Mar 2018 05:07:33 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Tobin C. Harding" <me@tobin.cc>
+Cc: Kees Cook <keescook@chromium.org>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Kernel Hardening <kernel-hardening@lists.openwall.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        "open list\:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        Tycho Andersen <tycho@tycho.ws>,
+        Konstantin Ryabitsev <konstantin@linuxfoundation.org>
+Subject: Re: [RESEND] rsi: Remove stack VLA usage
+References: <1520819022-15238-1-git-send-email-me@tobin.cc>
+        <20180312094606.8192B6081A@smtp.codeaurora.org>
+        <20180313201757.GK8631@eros>
+        <CAHp75VeM1zNyNtHvsn0=rg_xibcitVHREY73cAk=KCSK3Ti3vw@mail.gmail.com>
+        <20180314021151.GA11666@eros>
+        <CAGXu5jJsDsegY+EZFq1Hip+sRNLR5SS+-Euf1rm22okAq7REJw@mail.gmail.com>
+        <20180314034303.GB11666@eros> <87fu536mkm.fsf@codeaurora.org>
+        <20180314201944.GC11666@eros>
+Date: Thu, 15 Mar 2018 11:07:28 +0200
+In-Reply-To: <20180314201944.GC11666@eros> (Tobin C. Harding's message of
+        "Thu, 15 Mar 2018 07:19:44 +1100")
+Message-ID: <87woyd7lm7.fsf@kamboji.qca.qualcomm.com> (sfid-20180315_100753_768216_55196144)
 MIME-Version: 1.0
-In-Reply-To: <3263f88f-daec-837c-e58c-bee907295d47@blackstar.nl>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nevermind. round_up instead of DIV_ROUND_UP.
+"Tobin C. Harding" <me@tobin.cc> writes:
 
-Bas Vermeulen
-
-
-On 01-03-18 11:22, Bas Vermeulen wrote:
+> On Wed, Mar 14, 2018 at 11:19:53AM +0200, Kalle Valo wrote:
+>> "Tobin C. Harding" <me@tobin.cc> writes:
+>>=20
+>> > Added Konstantin in case he is in charge of administering patchwork.ke=
+rnel.org?
+>> >
+>> > On Tue, Mar 13, 2018 at 07:53:34PM -0700, Kees Cook wrote:
+>> >> On Tue, Mar 13, 2018 at 7:11 PM, Tobin C. Harding <me@tobin.cc> wrote:
+>> >> > On Tue, Mar 13, 2018 at 11:00:47PM +0200, Andy Shevchenko wrote:
+>> >> >> On Tue, Mar 13, 2018 at 10:17 PM, tcharding <me@tobin.cc> wrote:
+>> >> >> > On Mon, Mar 12, 2018 at 09:46:06AM +0000, Kalle Valo wrote:
+>> >> >> >> tcharding <me@tobin.cc> wrote:
+>> >> >>
+>> >> >> I'm pretty much sure it depends on the original email headers, like
+>> >> >> above ^^^ =E2=80=94 no name.
+>> >> >> Perhaps git config on your side should be done.
+>> >> >
+>> >> > Thanks for the suggestion Andy but the 'tcharding' as the name was
+>> >> > munged by either Kalle or patchwork.  I'm guessing patchwork.
+>> >>=20
+>> >> Something you're sending from is using "tcharding" (see the email Andy
+>> >> quotes). I see the headers as:
+>> >>=20
+>> >> Date: Wed, 14 Mar 2018 07:17:57 +1100
+>> >> From: tcharding <me@tobin.cc>
+>> >> ...
+>> >> Message-ID: <20180313201757.GK8631@eros>
+>> >> X-Mailer: Mutt 1.5.24 (2015-08-30)
+>> >> User-Agent: Mutt/1.5.24 (2015-08-30)
+>> >>=20
+>> >> Your most recently email shows "Tobin C. Harding" though, and also
+>> >> sent with Mutt...
+>> >>
+>> >> Do you have multiple Mutt configurations? Is something lacking a
+>> >> "From" header insertion and your MTA is filling it in for you from
+>> >> your username?
+>> >
+>> > Thanks for taking the time to respond Kees (and Tycho).  I have mutt
+>> > configured to reply from whichever email address I receive from so if
+>> > patchwork sent an email to 'tcharding <me@tobin.cc>' (which is the
+>> > details it has) and I hit reply it would have come from 'tcharding',
+>> > hence Andy's reply.  I wouldn't bet my life on it but I'm kinda
+>> > confident that I cannot initiate an email from 'tcharding' with my
+>> > current set up.
+>> >
+>> > Super bad form to blame someone (or something else) but I think this is
+>> > a problem with how my patchwork account is configured.  Either way, th=
+at
+>> > is still my fault I should have added my real name to patchwork when I
+>> > signed up (not just username 'tcharding').
+>> >
+>> > Is patchwork.kernel.org administered by Konstantin Ryabitsev? Added
+>> > Konstantin to CC's.
+>>=20
+>> Like I said earlier, just send a request to helpdesk@kernel.org and
+>> admins should fix your name.
 >
->
-> On 28-02-18 15:26, Lorenzo Bianconi wrote:
->> Fix the following sparse warning in mt7601u_efuse_physical_size_check:
->> - drivers/net/wireless/mediatek/mt7601u/eeprom.c:77:27: warning:
->>    Variable length array is used
->>
->> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
->> ---
->>   drivers/net/wireless/mediatek/mt7601u/eeprom.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/mediatek/mt7601u/eeprom.c 
->> b/drivers/net/wireless/mediatek/mt7601u/eeprom.c
->> index da6faea092d6..a462064b5c91 100644
->> --- a/drivers/net/wireless/mediatek/mt7601u/eeprom.c
->> +++ b/drivers/net/wireless/mediatek/mt7601u/eeprom.c
->> @@ -74,7 +74,7 @@ static int
->>   mt7601u_efuse_physical_size_check(struct mt7601u_dev *dev)
->>   {
->>       const int map_reads = DIV_ROUND_UP(MT_EFUSE_USAGE_MAP_SIZE, 16);
->> -    u8 data[map_reads * 16];
->> +    u8 data[round_up(MT_EFUSE_USAGE_MAP_SIZE, 16)];
-> Shouldn't this be u8 data[round_up(MT_EFUSE_USAGE_MAP_SIZE,16)*16]; to 
-> get the
-> same array size as before?
->
-> Bas Vermeulen
->
+> thanks Kalle, I'm on it.
 
+Thanks. Looks to be fixed, now patchwork gives me:
 
--- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
+From: Tobin C. Harding <me@tobin.cc>
+
+--=20
+Kalle Valo
