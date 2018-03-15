@@ -1,42 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:60480 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752343AbeC0M4i (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:40781 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751495AbeCOCbp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Mar 2018 08:56:38 -0400
-Message-ID: <1522155394.3050.9.camel@sipsolutions.net> (sfid-20180327_145645_963601_DFACEB0D)
-Subject: Re: [RFC 0/3] cfg80211/mac80211: Notify proper sta opmode change
- value
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tamizh chelvam <tamizhr@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 27 Mar 2018 14:56:34 +0200
-In-Reply-To: <1522133296-2583-1-git-send-email-tamizhr@codeaurora.org>
-References: <1522133296-2583-1-git-send-email-tamizhr@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 14 Mar 2018 22:31:45 -0400
+From: "Tobin C. Harding" <me@tobin.cc>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: "Tobin C. Harding" <me@tobin.cc>,
+        kernel-hardening@lists.openwall.com, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Tycho Andersen <tycho@tycho.ws>,
+        Kees Cook <keescook@chromium.org>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH v2] rsi: Remove stack VLA usage
+Date: Thu, 15 Mar 2018 13:31:25 +1100
+Message-Id: <1521081085-16404-1-git-send-email-me@tobin.cc> (sfid-20180315_033203_603952_5F653F10)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-03-27 at 12:18 +0530, Tamizh chelvam wrote:
-> Currently bw and smps_mode are u8 type value in sta_opmode_info
-> structure. This values filled in mac80211 from ieee80211_sta_rx_bandwidth
-> and ieee80211_smps_mode. These enum values are specific to mac80211 and
-> userspace/cfg80211 doesn't know about that. This patchset change its
-> data type in the sta_opmode_info structure and mapping from mac80211
-> specific enum to nl80211 enum value.
+The use of stack Variable Length Arrays needs to be avoided, as they
+can be a vector for stack exhaustion, which can be both a runtime bug
+(kernel Oops) or a security flaw (overwriting memory beyond the
+stack). Also, in general, as code evolves it is easy to lose track of
+how big a VLA can get. Thus, we can end up having runtime failures
+that are hard to debug. As part of the directive[1] to remove all VLAs
+from the kernel, and build with -Wvla.
 
-Good catch.
+Currently rsi code uses a VLA based on a function argument to
+`rsi_sdio_load_data_master_write()`.  The function call chain is
 
-> Tamizh chelvam (3):
->   cfg80211: fix data type of sta_opmode_info parameter
->   mac80211: Use proper smps_mode enum in sta opmode event
->   mac80211: Use proper chan_width enum in sta opmode event
-> 
-> Note :
->   * Is this mac80211 approach sufficient ? or whether some more
->     complete cleanup would be preferred ?
+Both these functions
 
-Not sure what you mean? The patches look good to me.
+	rsi_sdio_reinit_device()
+	rsi_probe()
 
-johannes
+start the call chain:
+
+	rsi_hal_device_init()
+	rsi_load_fw()
+	auto_fw_upgrade()
+	ping_pong_write()
+	rsi_sdio_load_data_master_write()
+
+[Without familiarity with the code] it appears that none of the 4 locks
+
+	mutex
+	rx_mutex
+	tx_mutex
+	tx_bus_mutex
+
+are held when `rsi_sdio_load_data_master_write()` is called.  It is therefore
+safe to use kmalloc with GFP_KERNEL.
+
+We can avoid using the VLA by using `kmalloc()` and free'ing the memory on all
+exit paths.
+
+Change buffer from 'u8 array' to 'u8 *'.  Call `kmalloc()` to allocate memory for
+the buffer.  Using goto statement to call `kfree()` on all return paths.
+
+It can be expected that this patch will result in a small increase in overhead
+due to the use of `kmalloc()` however this code is only called on initialization
+(and re-initialization) so this overhead should not degrade performance.
+
+[1] https://lkml.org/lkml/2018/3/7/621
+
+Signed-off-by: Tobin C. Harding <me@tobin.cc>
+---
+
+This applies onto tip of wireless-drivers next, commit
+
+	(28bf8312a983 mwifiex: get_channel from firmware 
+
+v2:
+ - Use kmalloc instead of #define (suggested by Larry)
+ - (Apply on top of wireless-drivers-next tree)
+ - (Fix up user name on patchwork.kernel.org)
+
+ drivers/net/wireless/rsi/rsi_91x_sdio.c | 20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index 98c7d1dae18e..13705fca59dd 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -576,7 +576,7 @@ static int rsi_sdio_load_data_master_write(struct rsi_hw *adapter,
+ {
+ 	u32 num_blocks, offset, i;
+ 	u16 msb_address, lsb_address;
+-	u8 temp_buf[block_size];
++	u8 *temp_buf;
+ 	int status;
+ 
+ 	num_blocks = instructions_sz / block_size;
+@@ -585,11 +585,15 @@ static int rsi_sdio_load_data_master_write(struct rsi_hw *adapter,
+ 	rsi_dbg(INFO_ZONE, "ins_size: %d, num_blocks: %d\n",
+ 		instructions_sz, num_blocks);
+ 
++	temp_buf = kmalloc(block_size, GFP_KERNEL);
++	if (!temp_buf)
++		return -ENOMEM;
++
+ 	/* Loading DM ms word in the sdio slave */
+ 	status = rsi_sdio_master_access_msword(adapter, msb_address);
+ 	if (status < 0) {
+ 		rsi_dbg(ERR_ZONE, "%s: Unable to set ms word reg\n", __func__);
+-		return status;
++		goto out_free;
+ 	}
+ 
+ 	for (offset = 0, i = 0; i < num_blocks; i++, offset += block_size) {
+@@ -601,7 +605,7 @@ static int rsi_sdio_load_data_master_write(struct rsi_hw *adapter,
+ 					 temp_buf, block_size);
+ 		if (status < 0) {
+ 			rsi_dbg(ERR_ZONE, "%s: failed to write\n", __func__);
+-			return status;
++			goto out_free;
+ 		}
+ 		rsi_dbg(INFO_ZONE, "%s: loading block: %d\n", __func__, i);
+ 		base_address += block_size;
+@@ -616,7 +620,7 @@ static int rsi_sdio_load_data_master_write(struct rsi_hw *adapter,
+ 				rsi_dbg(ERR_ZONE,
+ 					"%s: Unable to set ms word reg\n",
+ 					__func__);
+-				return status;
++				goto out_free;
+ 			}
+ 		}
+ 	}
+@@ -632,12 +636,16 @@ static int rsi_sdio_load_data_master_write(struct rsi_hw *adapter,
+ 					 temp_buf,
+ 					 instructions_sz % block_size);
+ 		if (status < 0)
+-			return status;
++			goto out_free;
+ 		rsi_dbg(INFO_ZONE,
+ 			"Written Last Block in Address 0x%x Successfully\n",
+ 			offset | RSI_SD_REQUEST_MASTER);
+ 	}
+-	return 0;
++
++	status = 0;
++out_free:
++	kfree(temp_buf);
++	return status;
+ }
+ 
+ #define FLASH_SIZE_ADDR                 0x04000016
+-- 
+2.7.4
