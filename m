@@ -1,114 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from osg.samsung.com ([64.30.133.232]:56030 "EHLO osg.samsung.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751164AbeC2OWV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 10:22:21 -0400
-Date: Thu, 29 Mar 2018 11:22:09 -0300
-From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-doc@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: nested structs parsing
-Message-ID: <20180329112209.5c0e0320@vento.lan> (sfid-20180329_162224_620844_49469442)
-In-Reply-To: <1522316827.5932.11.camel@sipsolutions.net>
-References: <1522316775.5932.10.camel@sipsolutions.net>
-        <1522316827.5932.11.camel@sipsolutions.net>
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:43330 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751414AbeCOJsh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Mar 2018 05:48:37 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <2929.1521106970@warthog.procyon.org.uk>
+References: <20180314143529.1456168-1-arnd@arndb.de> <2929.1521106970@warthog.procyon.org.uk>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Thu, 15 Mar 2018 10:48:35 +0100
+Message-ID: <CAMuHMdXcxuzCOnFCNm4NXDv-wfYJDO5GQpB_ECu7j=2BjMhNpA@mail.gmail.com> (sfid-20180315_104851_565060_B42BDE8A)
+Subject: Re: [PATCH 00/16] remove eight obsolete architectures
+To: David Howells <dhowells@redhat.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        Linux-Arch <linux-arch@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-doc@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-input@vger.kernel.org,
+        netdev <netdev@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux PWM List <linux-pwm@vger.kernel.org>,
+        linux-rtc@vger.kernel.org, linux-spi <linux-spi@vger.kernel.org>,
+        USB list <linux-usb@vger.kernel.org>,
+        DRI Development <dri-devel@lists.freedesktop.org>,
+        Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
+        Linux Watchdog Mailing List <linux-watchdog@vger.kernel.org>,
+        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+        Linux MM <linux-mm@kvack.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Thu, 29 Mar 2018 11:47:07 +0200
-Johannes Berg <johannes@sipsolutions.net> escreveu:
+Hi David,
 
-> On Thu, 2018-03-29 at 11:46 +0200, Johannes Berg wrote:
-> > Hi,
-> > 
-> > For a while I haven't looked at my documentation for 802.11, and now I
-> > noticed I'm getting warnings due to the nested parsing.
-> > 
-> > However, something seems to be wrong? I have, for example, this (in
-> > net/mac80211/sta_info.h)
-> > 
-> > struct sta_info {
-> > 	...
-> >         struct {
-> >                 u64 packets[IEEE80211_NUM_ACS];
-> >                 u64 bytes[IEEE80211_NUM_ACS];
-> >                 struct ieee80211_tx_rate last_rate;
-> >                 u64 msdu[IEEE80211_NUM_TIDS + 1];
-> >         } tx_stats;
-> > };
-> > 
-> > but I'm getting the following warnings now, with only "@tx_stats" being
-> > described in the documentation:
-> > 
-> > net/mac80211/sta_info.h:590: warning: Function parameter or member 'status_stats.last_ack' not described in 'sta_info'
-> > net/mac80211/sta_info.h:590: warning: Function parameter or member 'status_stats.last_ack_signal' not described in 'sta_info'
-> > net/mac80211/sta_info.h:590: warning: Function parameter or member 'status_stats.ack_signal_filled' not described in 'sta_info'
-> > net/mac80211/sta_info.h:590: warning: Function parameter or member 'msdu' not described in 'sta_info'
-> > 
-> > I can understand the first three of those, but not the last one? Why is
-> > the last one not qualified?
-> > 
-> > If I change it to this:
-> > 
-> >         struct {
-> >                 u64 packets[IEEE80211_NUM_ACS];
-> >                 u64 bytes[IEEE80211_NUM_ACS];
-> >                 /**
-> >                  * @last_rate: last TX rate
-> >                  */
-> >                 struct ieee80211_tx_rate last_rate;
-> >                 /**
-> >                  * @msdu: # of MSDUs per TID
-> >                  */
-> >                 u64 msdu[IEEE80211_NUM_TIDS + 1];
-> >         } tx_stats;
-> > 
-> > I still get a warning on "tx_stats.last_rate", but not on "msdu", which
-> > is sort of obvious from the warning text, but also rather unexpected.
-> > 
-> > Normally I'd say that the "msdu" warning is originally wrong
-> > 
-> > However, I'd also argue that if I'm using inline declarations, I
-> > shouldn't have to write it like this:
-> > 
-> >         struct {
-> >                 u64 packets[IEEE80211_NUM_ACS];
-> >                 u64 bytes[IEEE80211_NUM_ACS];
-> >                 /**
-> >                  * @tx_stats.last_rate: last TX rate
-> >                  */
-> >                 struct ieee80211_tx_rate last_rate;
-> > 	...
-> > 	} tx_stats;  
-> 
-> Whoops, sent a fraction of a second too early - this actually causes a
-> warning too (no idea why four times):
-> 
-> net/mac80211/sta_info.h:560: warning: Incorrect use of kernel-doc format:                  * @tx_stats.last_rate: last TX rate
-> net/mac80211/sta_info.h:560: warning: Incorrect use of kernel-doc format:                  * @tx_stats.last_rate: last TX rate
-> net/mac80211/sta_info.h:560: warning: Incorrect use of kernel-doc format:                  * @tx_stats.last_rate: last TX rate
-> net/mac80211/sta_info.h:560: warning: Incorrect use of kernel-doc format:                  * @tx_stats.last_rate: last TX rate
+On Thu, Mar 15, 2018 at 10:42 AM, David Howells <dhowells@redhat.com> wrote:
+> Do we have anything left that still implements NOMMU?
 
-The original patchset for nested structs was supporting it only 
-when not inlined. This should be fixed on this patchset:
+Sure: arm, c6x, m68k, microblaze, and  sh.
 
-	https://lkml.org/lkml/2018/2/19/387
+Gr{oetje,eeting}s,
 
-Do you have those patches on your tree?
+                        Geert
 
-With regards to duplicated warnings, that use to happen if the same header
-is included several times (with is a common pratice at the net subsystem).
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-I also submitted some patches to linux-next addressing it.
-
-Could you please merge from docs-next and see if those problems
-get solved?
-
-It is located at:
-
-	git://git.lwn.net/linux.git docs-next
-
-Thanks,
-Mauro
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
