@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:45198 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751926AbeCZShy (ORCPT
+Received: from mail-wr0-f182.google.com ([209.85.128.182]:33588 "EHLO
+        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751753AbeCOLqm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 14:37:54 -0400
-Received: by mail-ot0-f193.google.com with SMTP id h26-v6so14272815otj.12
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 11:37:54 -0700 (PDT)
+        Thu, 15 Mar 2018 07:46:42 -0400
+Received: by mail-wr0-f182.google.com with SMTP id z73so3690623wrb.0
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2018 04:46:41 -0700 (PDT)
 MIME-Version: 1.0
-From: David Dean <daviddean166@gmail.com>
-Date: Mon, 26 Mar 2018 14:37:53 -0400
-Message-ID: <CAFnQ7os8AQGwJfkunZG-x9f9jdnOw=tjGCHE9wNxNwLfqka_tQ@mail.gmail.com> (sfid-20180326_203758_018010_BDFC36DB)
-Subject: wil6210: low level sector API
-To: linux-wireless@vger.kernel.org
+In-Reply-To: <87vae0yox2.fsf@purkki.adurom.net>
+References: <1520260620-4694-1-git-send-email-amitkarwar@gmail.com>
+ <1520260620-4694-10-git-send-email-amitkarwar@gmail.com> <87vae0yox2.fsf@purkki.adurom.net>
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+Date: Thu, 15 Mar 2018 17:16:40 +0530
+Message-ID: <CAEhWJF=pWgyO3HYq9RaO_Au97jJGHyE8toNSaNnM0AN+CVSaig@mail.gmail.com> (sfid-20180315_124645_902645_D842D852)
+Subject: Re: [PATCH 09/10] rsi: tx improvements
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Mar 13, 2018 at 8:59 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Amitkumar Karwar <amitkarwar@gmail.com> writes:
+>
+>> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>>
+>> Changes done to improve TX path:
+>> 1. Max number of frames to aggregate is increased to 8
+>> 2. Bootup parameters updated.
+>> 3. registering 5g band is done only when device supports
+>> 4. Vif is properly taken to enable power save.
+>> 5. When coex mode exist, power save on by default is set
+>
+> If you have a list of changes in the commit log to me that's a strong
+> indication that you need to split the patches.
+>
+> Also I don't see any answers to question "Why?".
 
-I am working on wil6210 sector control. Now I think I can successfully
-call these 4 functions( set_cfg, get_cfg, set_selected and get
-selected index) but it looks like it does not work well because, in
-the next Beacon Interval, TXSS will set a new TX sector again. My
-question is how I can disable TXSS. One way I found in the wmi.h is
-setting the number of sectors of TXSS to 0 or 1 by using
-wmi_prio_tx_sectors_num_cmd so that the TXSS will only use 1 sector.
-However, when I called this cmd, I got this error:
+Sure. I will split into multiple incremental patches and submit with
+proper commit log.
 
-wil6210 0000:03:00.0 wlp3s0: wil6210_irq_misc: Firmware error
-detected, assert codes FW 0x00001038, UCODE 0x00000000
-wil6210 0000:03:00.0 wlp3s0: wil_fw_core_dump: fw core dumped, size 823296 bytes
-wil6210 0000:03:00.0 wlp3s0: wil_notify_fw_error: Notify about firmware error
-
-So I am wondering whether the firmware does not support these kinds of
-wmi commands. Does anyone have any experience on this? Thank you.
-
-Thanks,
-David
+Regards,
+Amitkumar
