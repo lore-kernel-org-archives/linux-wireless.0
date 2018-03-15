@@ -1,73 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f172.google.com ([74.125.82.172]:33352 "EHLO
-        mail-ot0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932265AbeCLVwQ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48786 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751492AbeCOJNG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Mar 2018 17:52:16 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180312114815.GN2470@otheros>
-References: <CACna6rz9L09g9oeHhvt209Tg1E3gKgmhGnYF653AdkXfZf=4kw@mail.gmail.com>
- <20180312110856.GL2470@otheros> <20180312114815.GN2470@otheros>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Mon, 12 Mar 2018 22:52:15 +0100
-Message-ID: <CACna6ryTv0XOREodnERjA4irX0_XdoG95bjQVShqDC+BA3fRLQ@mail.gmail.com> (sfid-20180312_225224_180253_0F3B5A74)
-Subject: Re: Problem with bridge (mcast-to-ucast + hairpin) and Broadcom's
- 802.11f in their FullMAC fw
-To: =?UTF-8?Q?Linus_L=C3=BCssing?= <linus.luessing@c0d3.blue>
-Cc: Felix Fietkau <nbd@nbd.name>,
+        Thu, 15 Mar 2018 05:13:06 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stefan Wahren <stefan.wahren@i2se.com>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
         Arend van Spriel <arend.vanspriel@broadcom.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
         Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Network Development <netdev@vger.kernel.org>,
-        bridge@lists.linux-foundation.org,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        Johannes Berg <johannes.berg@intel.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list\:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
         <brcm80211-dev-list.pdl@broadcom.com>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
-        <brcm80211-dev-list.pdl@broadcom.com>,"
-        <brcm80211-dev-list@cypress.com>
-Content-Type: text/plain; charset="UTF-8"
+        brcm80211-dev-list@cypress.com
+Subject: Re: [PATCH] wireless: brcmfmac: cfg80211: Fix check for ISO3166 code
+References: <1521054179-4030-1-git-send-email-stefan.wahren@i2se.com>
+        <CACna6ryiAqeW7Awr=o5yydBaTY=+TQmW0DvB6wFO+fQOwFJSgQ@mail.gmail.com>
+        <9de41438-ab95-9fe5-e414-1790de888a84@i2se.com>
+Date: Thu, 15 Mar 2018 11:13:00 +0200
+In-Reply-To: <9de41438-ab95-9fe5-e414-1790de888a84@i2se.com> (Stefan Wahren's
+        message of "Thu, 15 Mar 2018 08:57:18 +0100")
+Message-ID: <87sh917lcz.fsf@kamboji.qca.qualcomm.com> (sfid-20180315_101311_911440_41F93263)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12 March 2018 at 12:48, Linus L=C3=BCssing <linus.luessing@c0d3.blue> wr=
-ote:
-> On Mon, Mar 12, 2018 at 12:08:56PM +0100, Linus L=C3=BCssing wrote:
->> On Tue, Feb 27, 2018 at 11:08:20AM +0100, Rafa=C5=82 Mi=C5=82ecki wrote:
->> > I've problem when using OpenWrt/LEDE on a home router with Broadcom's
->> > FullMAC WiFi chipset.
->>
->> Hi Rafa=C5=82,
->>
->> Thanks for reporting this issue!
->>
->> > Can you see any solution for this problem? Is that an option to stop
->> > multicast-to-unicast from touching 802.11f packets? Some other ideas?
->> > Obviously I can't modify Broadcom's firmware and drop that obsoleted
->> > standard.
->>
->> Just to avoid some potential confusion: This is more an issue of
->> hairpinning than it is an issue of multicast-to-unicast per se,
->> right?
->>
->> That is, if you set this to 0 manually:
->> /sys/class/net/<ap-iface>/brport/multicast_to_unicast
->> Then the issue still occurs, right?
->
-> Btw., if in OpenWRT/LEDE you set 'option multicast_to_unicast 0'
-> in /etc/config/network for the bridge (and not bridge port)
-> then netifd should refrain from setting the bridge hairpinning and
-> AP isolation on wireless devices, too, if I remember correctly.
->
-> Can you confirm that the issue disappears for you then?
+Stefan Wahren <stefan.wahren@i2se.com> writes:
 
-Yes, absolutely. This reverts OpenWrt/LEDE to the old setup (no
-mcast-to-ucast + hairpin) and it works. I was hoping we can make
-mcast-to-ucast + hairpin work with Broadcom's 802.11f however instead
-of moving OpenWrt/LEDE back to the old setup.
+> Am 15.03.2018 um 07:27 schrieb Rafa=C5=82 Mi=C5=82ecki:
+>> On 14 March 2018 at 20:02, Stefan Wahren <stefan.wahren@i2se.com> wrote:
+>>> The commit "regulatory: add NUL to request alpha2" increases the length=
+ of
+>>> alpha2 to 3. This causes a regression on brcmfmac, because
+>>> brcmf_cfg80211_reg_notifier() expect valid ISO3166 codes in the complete
+>>> array. So fix this accordingly.
+>>>
+>>> Signed-off-by: Stefan Wahren <stefan.wahren@i2se.com>
+>> It sounds like it's worth a:
+>> Fixes: <sha> ("regulatory: add NUL to request alpha2")
+>
+> I wasn't sure that i can take the hash from linux-next. I will add this.
+
+Yeah, taking commit id from linux-next is not always safe. It depends on
+the maintainer as some people never rebase and some do it quite often.
+But in this case commit 657308f73e67 ("regulatory: add NUL to request
+alpha2") is already in Linus' tree so the commit id won't change
+anymore.
 
 --=20
-Rafa=C5=82
+Kalle Valo
