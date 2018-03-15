@@ -1,44 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42178 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751193AbeC1QSS (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:49888 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752217AbeCOS3B (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 12:18:18 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        "Zamir\, Roee" <roee.zamir@intel.com>,
-        Beni Lev <beni.lev@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH 06/14] iwlwifi: mvm: add adaptive dwell support
-References: <20180328141157.5427-1-luca@coelho.fi>
-        <20180328142517.8940-1-luca@coelho.fi>
-Date: Wed, 28 Mar 2018 19:18:13 +0300
-In-Reply-To: <20180328142517.8940-1-luca@coelho.fi> (Luca Coelho's message of
-        "Wed, 28 Mar 2018 17:25:17 +0300")
-Message-ID: <87r2o4mawq.fsf@kamboji.qca.qualcomm.com> (sfid-20180328_181822_428655_C4A825D8)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 15 Mar 2018 14:29:01 -0400
+Date: Thu, 15 Mar 2018 14:28:58 -0400 (EDT)
+Message-Id: <20180315.142858.86991621405874666.davem@davemloft.net> (sfid-20180315_192919_464417_1DD91CD1)
+To: joe@perches.com
+Cc: inaky.perez-gonzalez@intel.com, linux-wimax@intel.com,
+        johannes@sipsolutions.net, pablo@netfilter.org,
+        kadlec@blackhole.kfki.hu, fw@strlen.de, kvalo@codeaurora.org,
+        balbi@kernel.org, gregkh@linuxfoundation.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netfilter-devel@vger.kernel.org, coreteam@netfilter.org
+Subject: Re: [PATCH] net: drivers/net: Remove unnecessary skb_copy_expand
+ OOM messages
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <782fa75ab2e443d275f19d97f2f3a073b6074517.1520867179.git.joe@perches.com>
+References: <782fa75ab2e443d275f19d97f2f3a073b6074517.1520867179.git.joe@perches.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+From: Joe Perches <joe@perches.com>
+Date: Mon, 12 Mar 2018 08:07:12 -0700
 
-> From: "Zamir, Roee" <roee.zamir@intel.com>
->
-> Update the scan command API with support for adaptive dwell
-> and add a debugfs entry to configure max budget parameter.
->
-> Signed-off-by: Roee Zamir <roee.zamir@intel.com>
-> Signed-off-by: Beni Lev <beni.lev@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> ---
->  drivers/net/wireless/intel/iwlwifi/mvm/constants.h |  2 +
->  drivers/net/wireless/intel/iwlwifi/mvm/scan.c      | 98 ++++++++++++++--------
->  2 files changed, 67 insertions(+), 33 deletions(-)
+> skb_copy_expand without __GFP_NOWARN already does a dump_stack
+> on OOM so these messages are redundant.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-I don't see any debugfs entry? To be honest that's good, not sure if
-debugfs is correct place.
-
--- 
-Kalle Valo
+Ok, applied to net-next, thanks.
