@@ -1,73 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33424 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1424069AbeCBMbV (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55176 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751095AbeCOJa3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 07:31:21 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  2 Mar 2018 14:31:09 +0200
-Message-Id: <20180302123112.27416-2-luca@coelho.fi> (sfid-20180302_133125_580753_D433CF29)
-In-Reply-To: <20180302123112.27416-1-luca@coelho.fi>
-References: <20180302123112.27416-1-luca@coelho.fi>
-Subject: [PATCH 1/4] iwlwifi: mvm: set the correct tid when we flush the MCAST sta
+        Thu, 15 Mar 2018 05:30:29 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Stefan Wahren <stefan.wahren@i2se.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Subject: Re: [PATCH] wireless: brcmfmac: cfg80211: Fix check for ISO3166 code
+References: <1521054179-4030-1-git-send-email-stefan.wahren@i2se.com>
+        <87o9jp7l95.fsf@kamboji.qca.qualcomm.com>
+        <5AAA3C9A.3040907@broadcom.com>
+Date: Thu, 15 Mar 2018 11:30:22 +0200
+In-Reply-To: <5AAA3C9A.3040907@broadcom.com> (Arend van Spriel's message of
+        "Thu, 15 Mar 2018 10:27:54 +0100")
+Message-ID: <87fu517kk1.fsf@kamboji.qca.qualcomm.com> (sfid-20180315_103033_044581_7D1A1442)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-The tid being used for the queue (cab_queue) for the MCAST
-station has been changed recently to be 0 (for BE).
-The flush path still flushed only the special tid (15)
-which means that the firmware wasn't flushing the right
-queue and we could get a firmware crash upon remove
-station if we had an MCAST packet on the ring.
+> On 3/15/2018 10:15 AM, Kalle Valo wrote:
+>> Stefan Wahren <stefan.wahren@i2se.com> writes:
+>>
+>>> The commit "regulatory: add NUL to request alpha2" increases the length of
+>>> alpha2 to 3. This causes a regression on brcmfmac, because
+>>> brcmf_cfg80211_reg_notifier() expect valid ISO3166 codes in the complete
+>>> array. So fix this accordingly.
+>>>
+>>> Signed-off-by: Stefan Wahren <stefan.wahren@i2se.com>
+>>
+>> Arend, the first release for 657308f73e67 is v4.16-rc3 so should this go
+>> to v4.16 as well?
+>>
+>> And "wireless:" in the title is useless, I can remove that.
+>
+> And ": cfg80211" as well?
 
-The current code that flushes queues for a station only
-differentiates between internal stations (stations that
-aren't instantiated in mac80211, like the MCAST station)
-and the non-internal ones.
-Internal stations can be either: BCAST (beacons), MCAST
-(for cab_queue), GENERAL_PURPOSE (p2p dev, and sniffer
-injection). The internal stations can use different tids.
+Ok, I'll remove that.
 
-To make the code simpler, just flush all the tids always
-and add the special internal tid (15) for internal
-stations. The firmware will know how to handle this even
-if we hadn't any queue mapped that that tid.
-
-Fixes: e340c1a6ef4b ("iwlwifi: mvm: Correctly set the tid for mcast queue")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index af6dfceab6b8..7dfe4cde55e3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1894,14 +1894,12 @@ int iwl_mvm_flush_sta(struct iwl_mvm *mvm, void *sta, bool internal, u32 flags)
- 	struct iwl_mvm_int_sta *int_sta = sta;
- 	struct iwl_mvm_sta *mvm_sta = sta;
- 
--	if (iwl_mvm_has_new_tx_api(mvm)) {
--		if (internal)
--			return iwl_mvm_flush_sta_tids(mvm, int_sta->sta_id,
--						      BIT(IWL_MGMT_TID), flags);
-+	BUILD_BUG_ON(offsetof(struct iwl_mvm_int_sta, sta_id) !=
-+		     offsetof(struct iwl_mvm_sta, sta_id));
- 
-+	if (iwl_mvm_has_new_tx_api(mvm))
- 		return iwl_mvm_flush_sta_tids(mvm, mvm_sta->sta_id,
--					      0xFF, flags);
--	}
-+					      0xff | BIT(IWL_MGMT_TID), flags);
- 
- 	if (internal)
- 		return iwl_mvm_flush_tx_path(mvm, int_sta->tfd_queue_msk,
 -- 
-2.16.1
+Kalle Valo
