@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:35094 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751106AbeC2IwK (ORCPT
+Received: from mail-qk0-f174.google.com ([209.85.220.174]:35085 "EHLO
+        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751687AbeCOJdY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 04:52:10 -0400
-Message-ID: <1522313528.5932.1.camel@sipsolutions.net> (sfid-20180329_105213_649908_92D8C66F)
-Subject: Re: [PATCH v3 2/3] mac80211: limit wmm params to comply with ETSI
- requirements
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 29 Mar 2018 10:52:08 +0200
-In-Reply-To: <20180328102411.25677-3-luca@coelho.fi>
-References: <20180328102411.25677-1-luca@coelho.fi>
-         <20180328102411.25677-3-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 15 Mar 2018 05:33:24 -0400
+Received: by mail-qk0-f174.google.com with SMTP id s188so6563707qkb.2
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2018 02:33:24 -0700 (PDT)
+Subject: Re: [PATCH] wireless: brcmfmac: cfg80211: Fix check for ISO3166 code
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1521054179-4030-1-git-send-email-stefan.wahren@i2se.com>
+ <87o9jp7l95.fsf@kamboji.qca.qualcomm.com> <5AAA3C9A.3040907@broadcom.com>
+ <87fu517kk1.fsf@kamboji.qca.qualcomm.com>
+Cc: Stefan Wahren <stefan.wahren@i2se.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AAA3DE0.5040108@broadcom.com> (sfid-20180315_103328_648353_67B157FB)
+Date: Thu, 15 Mar 2018 10:33:20 +0100
+MIME-Version: 1.0
+In-Reply-To: <87fu517kk1.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-03-28 at 13:24 +0300, Luca Coelho wrote:
-> 
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -135,12 +135,12 @@ static void restore_regulatory_settings(bool reset_user);
->  
->  static const struct ieee80211_regdomain *get_cfg80211_regdom(void)
->  {
-> -	return rtnl_dereference(cfg80211_regdomain);
-> +	return rcu_dereference_rtnl(cfg80211_regdomain);
->  }
->  
->  const struct ieee80211_regdomain *get_wiphy_regdom(struct wiphy *wiphy)
->  {
-> -	return rtnl_dereference(wiphy->regd);
-> +	return rcu_dereference_rtnl(wiphy->regd);
->  }
->  
->  static const char *reg_dfs_region_str(enum nl80211_dfs_regions dfs_region)
+On 3/15/2018 10:30 AM, Kalle Valo wrote:
+> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+>
+>> On 3/15/2018 10:15 AM, Kalle Valo wrote:
+>>> Stefan Wahren <stefan.wahren@i2se.com> writes:
+>>>
+>>>> The commit "regulatory: add NUL to request alpha2" increases the length of
+>>>> alpha2 to 3. This causes a regression on brcmfmac, because
+>>>> brcmf_cfg80211_reg_notifier() expect valid ISO3166 codes in the complete
+>>>> array. So fix this accordingly.
+>>>>
+>>>> Signed-off-by: Stefan Wahren <stefan.wahren@i2se.com>
+>>>
+>>> Arend, the first release for 657308f73e67 is v4.16-rc3 so should this go
+>>> to v4.16 as well?
+>>>
+>>> And "wireless:" in the title is useless, I can remove that.
+>>
+>> And ": cfg80211" as well?
+>
+> Ok, I'll remove that.
 
-This should've stayed a separate commit, I'll take that from our tree.
-
-johannes
+Thanks
