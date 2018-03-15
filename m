@@ -1,77 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:7249 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967338AbeCAKNn (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44548 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750726AbeCOJAX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 05:13:43 -0500
-From: Govind Singh <govinds@qti.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Govind Singh <govinds@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: RE: [PATCH 01/13] ath10k: platform driver for WCN3990 SNOC WLAN
- module
-Date: Thu, 1 Mar 2018 10:13:35 +0000
-Message-ID: <d396df1b09da4dd7aa14d6af2c2b2b18@aphydexm01b.ap.qualcomm.com> (sfid-20180301_111349_682595_65433EBC)
-References: <1518684458-5338-1-git-send-email-govinds@codeaurora.org>
- <87371kqfda.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87371kqfda.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
+        Thu, 15 Mar 2018 05:00:23 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: Re: [PATCH 01/10] rsi: add support for hardware scan offload
+References: <1520260620-4694-1-git-send-email-amitkarwar@gmail.com>
+        <1520260620-4694-2-git-send-email-amitkarwar@gmail.com>
+        <87ina00zwv.fsf@purkki.adurom.net>
+        <CAEhWJFk3CGJ9-QJZJt23-vvrwXgVq9GeY9AhXbPy2=FAUMUnOw@mail.gmail.com>
+Date: Thu, 15 Mar 2018 11:00:17 +0200
+In-Reply-To: <CAEhWJFk3CGJ9-QJZJt23-vvrwXgVq9GeY9AhXbPy2=FAUMUnOw@mail.gmail.com>
+        (Amitkumar Karwar's message of "Thu, 15 Mar 2018 12:38:08 +0530")
+Message-ID: <871sgl90im.fsf@kamboji.qca.qualcomm.com> (sfid-20180315_100027_511766_27701EA3)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+Amitkumar Karwar <amitkarwar@gmail.com> writes:
 
-I didn't encountered this issue as in my defconfig only CONFIG_ATH10K_SNOC =
-was defined.
-This problem is coming when we define CONFIG_ATH10K_SNOC and CONFIG_ATH10K_=
-PCI simultaneously in defconfig and this is=20
-known issue when multiple modules share objects(in this case ce.o). I saw s=
-imilar reported problem and found https://patchwork.kernel.org/patch/100608=
-25/.
-
-After picking the below change issue is not seen.
-
-BR,
-Govind
-
------Original Message-----
-From: ath10k [mailto:ath10k-bounces@lists.infradead.org] On Behalf Of Kalle=
- Valo
-Sent: Thursday, March 1, 2018 3:37 PM
-To: Govind Singh <govinds@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org; ath10k@lists.infradead.org
-Subject: Re: [PATCH 01/13] ath10k: platform driver for WCN3990 SNOC WLAN mo=
-dule
-
-Govind Singh <govinds@codeaurora.org> writes:
-
-> WCN3990 is integrated 802.11ac chipset with SNOC bus interface. Add=20
-> snoc layer driver registration and associated ops.
+> On Tue, Mar 13, 2018 at 8:46 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Amitkumar Karwar <amitkarwar@gmail.com> writes:
+>>
+>>> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>>>
+>>> With the current approach of scanning, roaming delays
+>>> are observed. Firmware has support for back ground scanning.
+>>> To get this advantage, mac80211 hardware scan is implemented.
+>>> In this method, foreground scan is performed in driver and
+>>> back ground scan is configured to firmware.
+>>
+>> To me doesn't like a good idea to duplicate scan functionality in the
+>> driver.
 >
-> WCN3990 support is not yet complete as cold-boot handshake is done=20
-> using qmi(Qualcomm-MSM-Interface) and qmi client support will be added=20
-> once qmi framework is available.
->
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> There is a limitation with our device. We need to configure background
+> scan parameters to firmware when device is connected. 
 
-Kbuild bot found an odd problem with this patch:
+Yeah, I guessed that.
 
- include/linux/dynamic_debug.h:77:14: error: 'KBUILD_MODNAME'
- undeclared (first use in this function); did you mean  'KBUILD_BASENAME'?
+> In non-connected state, we can directly dump probe requests received
+> from mac80211 as a part of software scan. Some synchronization issues
+> are with existing software scan when device is connected. This patch
+> implements hw_scan where these issues are no seen, as driver has more
+> control on scan state machine
 
-Full report:
+What I don't like here is that you are duplicating functionality already
+existing in mac80211 and I hope there is a better way to solve the
+problem. Just as a a crazy idea what if the driver returns -EOPNOTSUPP
+when hardware scan is not possible and mac80211 falls back to software
+scan? But of course this depends on what Johannes thinks.
 
-http://lists.infradead.org/pipermail/ath10k/2018-February/010907.html
-
-Any ideas? Is this is some unrelated issue or what? This patch is not even =
-touching hif.h or ce.c.
-
---
+-- 
 Kalle Valo
-
-_______________________________________________
-ath10k mailing list
-ath10k@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/ath10k
