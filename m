@@ -1,33 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:46380 "EHLO
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:43396 "EHLO
         mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751135AbeCJXoh (ORCPT
+        with ESMTP id S932395AbeCOP52 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Mar 2018 18:44:37 -0500
+        Thu, 15 Mar 2018 11:57:28 -0400
 MIME-Version: 1.0
-In-Reply-To: <5AA464DE.90100@broadcom.com>
-References: <1520598613-3641-1-git-send-email-andreaschristofo@gmail.com> <5AA464DE.90100@broadcom.com>
-From: Daniel Micay <danielmicay@gmail.com>
-Date: Sat, 10 Mar 2018 18:44:35 -0500
-Message-ID: <CA+DvKQ+hbMoWJdOuQB5n+eVF4ePf=kVuRiMbdtTUZ8ars4Pz4A@mail.gmail.com> (sfid-20180311_004502_229360_1A74CFAD)
-Subject: Re: [PATCH] drivers: net: wireless: ath: ath9: dfs: remove VLA usage
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Andreas Christoforou <andreaschristofo@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+In-Reply-To: <EE0D5CBE-0867-4FE0-B157-CA4086C84233@holtmann.org>
+References: <20180315154312.3941446-1-arnd@arndb.de> <EE0D5CBE-0867-4FE0-B157-CA4086C84233@holtmann.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 15 Mar 2018 16:57:26 +0100
+Message-ID: <CAK8P3a3y00nUVuYopxXWaJjo_OxXhVsATyiSOfXz5b09JFq2dA@mail.gmail.com> (sfid-20180315_165749_010223_363C43D1)
+Subject: Re: [PATCH] Bluetooth: btrsi: rework dependencies
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Johan Hedberg <johan.hedberg@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
-        kernel list <linux-kernel@vger.kernel.org>
+        Linux Bluetooth mailing list
+        <linux-bluetooth@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Networking <netdev@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Just wondering. Is this actually a VLA. FFT_NUM_SAMPLES was static const so
-> not really going to show a lot of variation. This array will always have the
-> same size on the stack.
+On Thu, Mar 15, 2018 at 4:50 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
 
-The issue is that unlike in C++, a `static const` can't be used in a
-constant expression in C. It's unclear why C is defined that way but
-it's how it is and there isn't currently a GCC extension making more
-things into constant expressions like C++.
+>> diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
+>> index 03cfc1b20c4a..9e8d22712ff3 100644
+>> --- a/drivers/bluetooth/Makefile
+>> +++ b/drivers/bluetooth/Makefile
+>> @@ -28,7 +28,7 @@ obj-$(CONFIG_BT_QCA)                += btqca.o
+>>
+>> obj-$(CONFIG_BT_HCIUART_NOKIA)        += hci_nokia.o
+>>
+>> -obj-$(CONFIG_BT_HCIRSI)              += btrsi.o
+>> +obj-$(CONFIG_BT_HCIRSI_MODULE)       += btrsi.o
+>
+> do we need this new option? I have avoided these kind of complex things multi config entries. Can we not just select the RSI_91X?
+>
+
+I couldn't come up with a simpler way to do this.
+Selecting RSI_91X is not possible unless we make the BT
+driver 'depend on WLAN_VENDOR_RSI && MAC80211',
+which is even more backwards.
+
+The problem here is that it's actually a reverse dependency:
+the wlan driver calls into the bt driver.
+
+What we could do is to make BT_HCIRSI a silent symbol
+and have that selected by RSI_COEX, which can then
+be user-visible. With that, the Kconfig structure would follow
+what the code does.
+
+       Arnd
