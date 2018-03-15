@@ -1,90 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49390 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751295AbeCNJT7 (ORCPT
+Received: from mail-qk0-f172.google.com ([209.85.220.172]:44376 "EHLO
+        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932372AbeCOQls (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Mar 2018 05:19:59 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Tobin C. Harding" <me@tobin.cc>
-Cc: Kees Cook <keescook@chromium.org>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        "open list\:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        Tycho Andersen <tycho@tycho.ws>,
-        Konstantin Ryabitsev <konstantin@linuxfoundation.org>
-Subject: Re: [RESEND] rsi: Remove stack VLA usage
-References: <1520819022-15238-1-git-send-email-me@tobin.cc>
-        <20180312094606.8192B6081A@smtp.codeaurora.org>
-        <20180313201757.GK8631@eros>
-        <CAHp75VeM1zNyNtHvsn0=rg_xibcitVHREY73cAk=KCSK3Ti3vw@mail.gmail.com>
-        <20180314021151.GA11666@eros>
-        <CAGXu5jJsDsegY+EZFq1Hip+sRNLR5SS+-Euf1rm22okAq7REJw@mail.gmail.com>
-        <20180314034303.GB11666@eros>
-Date: Wed, 14 Mar 2018 11:19:53 +0200
-In-Reply-To: <20180314034303.GB11666@eros> (Tobin C. Harding's message of
-        "Wed, 14 Mar 2018 14:43:03 +1100")
-Message-ID: <87fu536mkm.fsf@codeaurora.org> (sfid-20180314_102016_202956_C0967375)
+        Thu, 15 Mar 2018 12:41:48 -0400
+Received: by mail-qk0-f172.google.com with SMTP id h14so2498579qkj.11
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2018 09:41:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CADsGw2a+u7dW3H3PF7jgJmj0A5oiQ1BbNuASW7v6192CC-U2gA@mail.gmail.com>
+References: <CADsGw2ZBPK1hBY-a+v_1mVUOaFP3Uu5A4euyTc-070E4vSUrBg@mail.gmail.com>
+ <CADjYELzsP37RWTqJOSoevNy32E38e4=bkjDkY6A4F3exnDYadQ@mail.gmail.com> <CADsGw2a+u7dW3H3PF7jgJmj0A5oiQ1BbNuASW7v6192CC-U2gA@mail.gmail.com>
+From: Phani Siriki <yvsg.phanis@gmail.com>
+Date: Thu, 15 Mar 2018 11:41:46 -0500
+Message-ID: <CADsGw2a9zqVEeT_w1r_41ufO5oK14D3naYwNFS+4fv-ezDnMww@mail.gmail.com> (sfid-20180315_174208_725329_DF2BC50A)
+Subject: Re: Query on queues in mesh mode
+To: Thomas Pedersen <thomas@eero.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Tobin C. Harding" <me@tobin.cc> writes:
+Could someone help me on this?
 
-> Added Konstantin in case he is in charge of administering patchwork.kerne=
-l.org?
+On Wed, Mar 7, 2018 at 10:39 AM, Phani Siriki <yvsg.phanis@gmail.com> wrote:
+> Hi Thomas
 >
-> On Tue, Mar 13, 2018 at 07:53:34PM -0700, Kees Cook wrote:
->> On Tue, Mar 13, 2018 at 7:11 PM, Tobin C. Harding <me@tobin.cc> wrote:
->> > On Tue, Mar 13, 2018 at 11:00:47PM +0200, Andy Shevchenko wrote:
->> >> On Tue, Mar 13, 2018 at 10:17 PM, tcharding <me@tobin.cc> wrote:
->> >> > On Mon, Mar 12, 2018 at 09:46:06AM +0000, Kalle Valo wrote:
->> >> >> tcharding <me@tobin.cc> wrote:
->> >>
->> >> I'm pretty much sure it depends on the original email headers, like
->> >> above ^^^ =E2=80=94 no name.
->> >> Perhaps git config on your side should be done.
->> >
->> > Thanks for the suggestion Andy but the 'tcharding' as the name was
->> > munged by either Kalle or patchwork.  I'm guessing patchwork.
->>=20
->> Something you're sending from is using "tcharding" (see the email Andy
->> quotes). I see the headers as:
->>=20
->> Date: Wed, 14 Mar 2018 07:17:57 +1100
->> From: tcharding <me@tobin.cc>
->> ...
->> Message-ID: <20180313201757.GK8631@eros>
->> X-Mailer: Mutt 1.5.24 (2015-08-30)
->> User-Agent: Mutt/1.5.24 (2015-08-30)
->>=20
->> Your most recently email shows "Tobin C. Harding" though, and also
->> sent with Mutt...
+> Thank you for your reply.
+>
+> Could you please let me know how can I verify these queues on a mesh
+> router? (I am using TPLink router with Ath9k chipset).
+>
+> Also, the TXQ parameters can only be set if device is in AP or P2P
+> mode. Do you have any idea why this restriction is in place?
+>
+> https://github.com/torvalds/linux/blob/master/net/wireless/nl80211.c
+>
+> static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+> {
+>
+>            if (info->attrs[NL80211_ATTR_WIPHY_TXQ_PARAMS]) {
+>            ....
+>                    if (netdev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+>                        netdev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
+>                                  return -EINVAL;
+>            ...
+> }
+>
+> Best Regards
+> Phani
+>
+> On Tue, Mar 6, 2018 at 11:59 PM, Thomas Pedersen <thomas@eero.com> wrote:
+>> On Thu, Mar 1, 2018 at 7:27 AM, Phani Siriki <yvsg.phanis@gmail.com> wrote:
+>>> Hi All
+>>>
+>>> I am trying to understand the queuing mechanism wireless mesh networks.
+>>>
+>>> As per AP mode is concerned, there are four queues (BK, BE, Vi, VO)
+>>> and traffic is controlled based on CWmin, CWmax, AIFS and TxOP.
+>>>
+>>> Does, mesh mode also involve these queues? Does mesh mode have any
+>>> queue or it is just a single queue?
 >>
->> Do you have multiple Mutt configurations? Is something lacking a
->> "From" header insertion and your MTA is filling it in for you from
->> your username?
->
-> Thanks for taking the time to respond Kees (and Tycho).  I have mutt
-> configured to reply from whichever email address I receive from so if
-> patchwork sent an email to 'tcharding <me@tobin.cc>' (which is the
-> details it has) and I hit reply it would have come from 'tcharding',
-> hence Andy's reply.  I wouldn't bet my life on it but I'm kinda
-> confident that I cannot initiate an email from 'tcharding' with my
-> current set up.
->
-> Super bad form to blame someone (or something else) but I think this is
-> a problem with how my patchwork account is configured.  Either way, that
-> is still my fault I should have added my real name to patchwork when I
-> signed up (not just username 'tcharding').
->
-> Is patchwork.kernel.org administered by Konstantin Ryabitsev? Added
-> Konstantin to CC's.
-
-Like I said earlier, just send a request to helpdesk@kernel.org and
-admins should fix your name.
-
---=20
-Kalle Valo
+>> mesh mode maps to the different ACs like AP mode. The only additional
+>> queue in mesh is the mpath->frame_queue, which may be used if an
+>> active mpath for a given RA can't be found.
+>>
+>> --
+>> thomas
