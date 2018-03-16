@@ -1,73 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57896 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751239AbeCHO3l (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:35196 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752554AbeCPKuQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Mar 2018 09:29:41 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        =?utf-8?Q?Rafa=C5=82?= =?utf-8?Q?_Mi=C5=82ecki?=
-        <zajec5@gmail.com>,
-        "open list\:LED SUBSYSTEM" <linux-leds@vger.kernel.org>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath10k@lists.infradead.org,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>
-Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for various chipsets
-References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
-        <CACna6rzD6z3DC6yjMCgBxgxx+DF+GGu69Ot5QA6xpJ41Ewb2=A@mail.gmail.com>
-        <82d8ac0c-b391-6099-4c7f-991cc35445aa@dd-wrt.com>
-        <20180302090312.GA30267@amd>
-        <e77d25d4-a824-380a-c51a-e81175ba6205@dd-wrt.com>
-        <CACna6rys85VEkzRGDVUAkBy7KgHS2y0DET7YvedboX-YEQHrkg@mail.gmail.com>
-        <890a4dcc-f549-6487-2ce5-3b62874cd266@dd-wrt.com>
-        <20180308090216.GC17761@amd>
-        <d443856e-cfc8-2d50-900d-edf22e5360e3@dd-wrt.com>
-        <20180308140515.GA4889@amd>
-Date: Thu, 08 Mar 2018 16:29:36 +0200
-In-Reply-To: <20180308140515.GA4889@amd> (Pavel Machek's message of "Thu, 8
-        Mar 2018 15:05:16 +0100")
-Message-ID: <87371ahc8f.fsf@kamboji.qca.qualcomm.com> (sfid-20180308_152944_715951_A82FCD19)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 16 Mar 2018 06:50:16 -0400
+Message-ID: <1521197408.3786.26.camel@coelho.fi> (sfid-20180316_115020_616137_7FFCE940)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
+Date: Fri, 16 Mar 2018 12:50:08 +0200
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-cPHvy5Xr9JggbT630bu8"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi 2018-03-16
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Machek <pavel@ucw.cz> writes:
 
->> >>>ath10k_leds.gpio = ar->hw_params.led_pin;
->> >>>gpio_led_register_device(0, &ath10k_leds);
->> >>
->> >>the problem are other architectures which have already registered gpio_led
->> >>at system start like ar71xx
->> >>you cannot register a second one. so a independend led driver is a
->> >>requirement for direct control
->> >
->> >If the limitation indeed exists, please fix the limitation rather than
->> >working around it in each and every driver.
->> see ath9k. its exact the same implementation.
->
-> Ok, so one more driver to fix.
->
->> in addition my variant does also work without gpiolib support. so it
->> can be used even if the kernel is configured without gpio support.
->> and not to forget, using a own led driver is more ligthweight from
->> the call path for each led on / off event which is important for low
->> performance embedded devices
->
-> We are not going to copy&paste code because such code works without
-> libraries, and we are not going to copy&paste code because that uses
-> less cache during calls. Sorry.
->
-> NAK. Please fix your patch. 
+--=-cPHvy5Xr9JggbT630bu8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-To me it's not that black and white, sometimes copying code is simpler
-than trying to bring up complicated or restricting frameworks (talking
-in general here).
+Hi Kalle,
 
-I haven't been able to review this patch in detail yet but from a quick
-look most of the code is about standard ath10k infrastructure code. How
-many lines of code would using leds-gpio save?
+Here is my third set of fixes for 4.16.  More details in the tag
+description.
 
--- 
-Kalle Valo
+I have sent this out before and kbuildbot didn't find any issues.=20
+Please let me know if there are any issues.
+
+Cheers,
+Luca.
+
+
+The following changes since commit 87de1201ddaa39d4f3fafa9f35ac143e582517e6=
+:
+
+  Merge branch 'erspan-fixes' (2018-03-09 13:03:57 -0500)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git t=
+ags/iwlwifi-for-kalle-2018-03-16
+
+for you to fetch changes up to 86a2b2043af79deff5cf000c5a08847faa4f2ee0:
+
+  iwlwifi: add shared clock PHY config flag for some devices (2018-03-16 12=
+:34:54 +0200)
+
+----------------------------------------------------------------
+Third batch of iwlwifi fixes intended for 4.16:
+
+* Fix an issue with the multicast queue;
+* Fix IGTK handling;
+* Fix some missing return value checks;
+* Add support for a HW workaround for issues on some platforms;
+
+----------------------------------------------------------------
+Beni Lev (1):
+      iwlwifi: mvm: Correctly set IGTK for AP
+
+Emmanuel Grumbach (1):
+      iwlwifi: mvm: set the correct tid when we flush the MCAST sta
+
+Johannes Berg (1):
+      iwlwifi: mvm: fix error checking for multi/broadcast sta
+
+Luca Coelho (1):
+      iwlwifi: add shared clock PHY config flag for some devices
+
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c     | 62 +++++++++++++++++++=
++++++++++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/file.h      |  1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h   |  5 +++++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c       |  4 ++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 21 ++++++++++++-------=
+--
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c       | 10 ++++------
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c     | 38 +++++++++++++++++++=
+-------------------
+ 8 files changed, 109 insertions(+), 36 deletions(-)
+--=-cPHvy5Xr9JggbT630bu8
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlqroWAACgkQoUecoho8
+xfrx1RAAiRnHhCh9mA/kWsi4PvgVnyu8sgzkRcHFqZe6g+hMchUSzTZAl3YWi52e
+TEv/h5LTHFiR376KPrhoQ1mqjxiUjIX1dJhNoTq5VfdxByWp2qbsWEJ3ndTEYNd1
+lPkhKhehvJJ1+bU8Cuy2sEtxfqSsuJaxkrgcSb6RCqztcMwzM6l/ggMDqBC7H6bX
+TgVfUwD8rQvoO56YcPM4Y5u2aejRXLF0derkhlLoBOggUC9TZ8DqfM6o8w5yqRg6
+NTDNWEfcKAS+W8XLXGztg5Mj5iyuVT+/UxlrDRW3Ma2X4FxNyg/n/P2FFxWCaU+x
+XlQ/DOiMaM+gn86fTHIHOX46QPB1DeaRVgUyhvgW2fCe5ShGEDgONqYxrLUK/X1b
+0X2BEFbpoUR29tn5iIehIcR1nObjJEgea3TutuPVluPllqDJG9uRcbBH/XvsToPu
+W7NU8VoWfDEK9wiuyGg4bwSFR8XxHn/ch4MmIDgUqlIcmNv2OswEjADVX9CzeYy+
+3OC09gj8gm4kO+HxqeCF+8ccch7ZOJYGgr2FZ24pDC4yO6X/9Ozyl1WfSHNkzOVL
+Hz+LoaXn8uGj8BS5CHBvditLpImWSmRjpQjUdLXDI12Cp+G9CuOKKyePMt0i9wHg
+OLI2/PPUXiyBb1ECVAtr+tE6n/TRJxGnZ0D/jd0IPHOcAZMXrHg=
+=U1Yv
+-----END PGP SIGNATURE-----
+
+--=-cPHvy5Xr9JggbT630bu8--
