@@ -1,248 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56964 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751680AbeCUGyV (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:45718 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752872AbeCPKLf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Mar 2018 02:54:21 -0400
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org
+        Fri, 16 Mar 2018 06:11:35 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH] ath10k: build ce layer in ath10k core module
-Date: Wed, 21 Mar 2018 12:24:07 +0530
-Message-Id: <1521615247-3715-1-git-send-email-govinds@codeaurora.org> (sfid-20180321_075425_821048_C41F315C)
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 01/12] brcmfmac: do not convert linux error to firmware error string
+Date: Fri, 16 Mar 2018 11:11:14 +0100
+Message-Id: <1521195085-439-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180316_111304_018919_338057AE)
+In-Reply-To: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CE layer is shared between pci and snoc target and results
-in duplicate object inclusion if both modules are compiled
-together statically and undefined KBUILD_MODNAME if
-compiled as module.
+In case of a linux error brcmf_fil_cmd_data() blurts an error message
+in which the error code is translated to an error string. However, it
+maps it to a firmware error string which should not happen. Simply
+print only the numeric error code and be done with it.
 
-Fix this by building ce layer in ath10k core module by
-adding ce object inclusion with ATH10K_CE boolean CONFIG.
-
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/ath/ath10k/Kconfig  |  4 ++++
- drivers/net/wireless/ath/ath10k/Makefile |  4 ++--
- drivers/net/wireless/ath/ath10k/ce.c     | 22 ++++++++++++++++++++++
- 3 files changed, 28 insertions(+), 2 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
-index deb5ae2..d266f27 100644
---- a/drivers/net/wireless/ath/ath10k/Kconfig
-+++ b/drivers/net/wireless/ath/ath10k/Kconfig
-@@ -4,12 +4,16 @@ config ATH10K
- 	select ATH_COMMON
- 	select CRC32
- 	select WANT_DEV_COREDUMP
-+	select ATH10K_CE
-         ---help---
-           This module adds support for wireless adapters based on
-           Atheros IEEE 802.11ac family of chipsets.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
+index f2cfdd3..f527edc 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c
+@@ -124,8 +124,7 @@ static const char *brcmf_fil_get_errstr(u32 err)
+ 					     data, len, &fwerr);
  
-           If you choose to build a module, it'll be called ath10k.
- 
-+config ATH10K_CE
-+	bool
-+
- config ATH10K_PCI
- 	tristate "Atheros ath10k PCI support"
- 	depends on ATH10K && PCI
-diff --git a/drivers/net/wireless/ath/ath10k/Makefile b/drivers/net/wireless/ath/ath10k/Makefile
-index 6739ac2..536f3df 100644
---- a/drivers/net/wireless/ath/ath10k/Makefile
-+++ b/drivers/net/wireless/ath/ath10k/Makefile
-@@ -22,10 +22,10 @@ ath10k_core-$(CONFIG_THERMAL) += thermal.o
- ath10k_core-$(CONFIG_MAC80211_DEBUGFS) += debugfs_sta.o
- ath10k_core-$(CONFIG_PM) += wow.o
- ath10k_core-$(CONFIG_DEV_COREDUMP) += coredump.o
-+ath10k_core-$(CONFIG_ATH10K_CE) += ce.o
- 
- obj-$(CONFIG_ATH10K_PCI) += ath10k_pci.o
--ath10k_pci-y += pci.o \
--		ce.o
-+ath10k_pci-y += pci.o
- 
- ath10k_pci-$(CONFIG_ATH10K_AHB) += ahb.o
- 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index b9def7b..e7e7b34 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -464,6 +464,7 @@ int ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
- 	return ce_state->ops->ce_send_nolock(ce_state, per_transfer_context,
- 				    buffer, nbytes, transfer_id, flags);
- }
-+EXPORT_SYMBOL(ath10k_ce_send_nolock);
- 
- void __ath10k_ce_send_revert(struct ath10k_ce_pipe *pipe)
- {
-@@ -491,6 +492,7 @@ void __ath10k_ce_send_revert(struct ath10k_ce_pipe *pipe)
- 
- 	src_ring->per_transfer_context[src_ring->write_index] = NULL;
- }
-+EXPORT_SYMBOL(__ath10k_ce_send_revert);
- 
- int ath10k_ce_send(struct ath10k_ce_pipe *ce_state,
- 		   void *per_transfer_context,
-@@ -510,6 +512,7 @@ int ath10k_ce_send(struct ath10k_ce_pipe *ce_state,
- 
- 	return ret;
- }
-+EXPORT_SYMBOL(ath10k_ce_send);
- 
- int ath10k_ce_num_free_src_entries(struct ath10k_ce_pipe *pipe)
- {
-@@ -525,6 +528,7 @@ int ath10k_ce_num_free_src_entries(struct ath10k_ce_pipe *pipe)
- 
- 	return delta;
- }
-+EXPORT_SYMBOL(ath10k_ce_num_free_src_entries);
- 
- int __ath10k_ce_rx_num_free_bufs(struct ath10k_ce_pipe *pipe)
- {
-@@ -539,6 +543,7 @@ int __ath10k_ce_rx_num_free_bufs(struct ath10k_ce_pipe *pipe)
- 
- 	return CE_RING_DELTA(nentries_mask, write_index, sw_index - 1);
- }
-+EXPORT_SYMBOL(__ath10k_ce_rx_num_free_bufs);
- 
- static int __ath10k_ce_rx_post_buf(struct ath10k_ce_pipe *pipe, void *ctx,
- 				   dma_addr_t paddr)
-@@ -622,6 +627,7 @@ void ath10k_ce_rx_update_write_idx(struct ath10k_ce_pipe *pipe, u32 nentries)
- 	ath10k_ce_dest_ring_write_index_set(ar, ctrl_addr, write_index);
- 	dest_ring->write_index = write_index;
- }
-+EXPORT_SYMBOL(ath10k_ce_rx_update_write_idx);
- 
- int ath10k_ce_rx_post_buf(struct ath10k_ce_pipe *pipe, void *ctx,
- 			  dma_addr_t paddr)
-@@ -636,6 +642,7 @@ int ath10k_ce_rx_post_buf(struct ath10k_ce_pipe *pipe, void *ctx,
- 
- 	return ret;
- }
-+EXPORT_SYMBOL(ath10k_ce_rx_post_buf);
- 
- /*
-  * Guts of ath10k_ce_completed_recv_next.
-@@ -748,6 +755,7 @@ int ath10k_ce_completed_recv_next_nolock(struct ath10k_ce_pipe *ce_state,
- 							    per_transfer_ctx,
- 							    nbytesp);
- }
-+EXPORT_SYMBOL(ath10k_ce_completed_recv_next_nolock);
- 
- int ath10k_ce_completed_recv_next(struct ath10k_ce_pipe *ce_state,
- 				  void **per_transfer_contextp,
-@@ -766,6 +774,7 @@ int ath10k_ce_completed_recv_next(struct ath10k_ce_pipe *ce_state,
- 
- 	return ret;
- }
-+EXPORT_SYMBOL(ath10k_ce_completed_recv_next);
- 
- static int _ath10k_ce_revoke_recv_next(struct ath10k_ce_pipe *ce_state,
- 				       void **per_transfer_contextp,
-@@ -882,6 +891,7 @@ int ath10k_ce_revoke_recv_next(struct ath10k_ce_pipe *ce_state,
- 						  per_transfer_contextp,
- 						  bufferp);
- }
-+EXPORT_SYMBOL(ath10k_ce_revoke_recv_next);
- 
- /*
-  * Guts of ath10k_ce_completed_send_next.
-@@ -936,6 +946,7 @@ int ath10k_ce_completed_send_next_nolock(struct ath10k_ce_pipe *ce_state,
- 
- 	return 0;
- }
-+EXPORT_SYMBOL(ath10k_ce_completed_send_next_nolock);
- 
- static void ath10k_ce_extract_desc_data(struct ath10k *ar,
- 					struct ath10k_ce_ring *src_ring,
-@@ -1025,6 +1036,7 @@ int ath10k_ce_cancel_send_next(struct ath10k_ce_pipe *ce_state,
- 
- 	return ret;
- }
-+EXPORT_SYMBOL(ath10k_ce_cancel_send_next);
- 
- int ath10k_ce_completed_send_next(struct ath10k_ce_pipe *ce_state,
- 				  void **per_transfer_contextp)
-@@ -1040,6 +1052,7 @@ int ath10k_ce_completed_send_next(struct ath10k_ce_pipe *ce_state,
- 
- 	return ret;
- }
-+EXPORT_SYMBOL(ath10k_ce_completed_send_next);
- 
- /*
-  * Guts of interrupt handler for per-engine interrupts on a particular CE.
-@@ -1078,6 +1091,7 @@ void ath10k_ce_per_engine_service(struct ath10k *ar, unsigned int ce_id)
- 
- 	spin_unlock_bh(&ce->ce_lock);
- }
-+EXPORT_SYMBOL(ath10k_ce_per_engine_service);
- 
- /*
-  * Handler for per-engine interrupts on ALL active CEs.
-@@ -1102,6 +1116,7 @@ void ath10k_ce_per_engine_service_any(struct ath10k *ar)
- 		ath10k_ce_per_engine_service(ar, ce_id);
- 	}
- }
-+EXPORT_SYMBOL(ath10k_ce_per_engine_service_any);
- 
- /*
-  * Adjust interrupts for the copy complete handler.
-@@ -1139,6 +1154,7 @@ int ath10k_ce_disable_interrupts(struct ath10k *ar)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL(ath10k_ce_disable_interrupts);
- 
- void ath10k_ce_enable_interrupts(struct ath10k *ar)
- {
-@@ -1154,6 +1170,7 @@ void ath10k_ce_enable_interrupts(struct ath10k *ar)
- 		ath10k_ce_per_engine_handler_adjust(ce_state);
- 	}
- }
-+EXPORT_SYMBOL(ath10k_ce_enable_interrupts);
- 
- static int ath10k_ce_init_src_ring(struct ath10k *ar,
- 				   unsigned int ce_id,
-@@ -1454,6 +1471,7 @@ int ath10k_ce_init_pipe(struct ath10k *ar, unsigned int ce_id,
- 
- 	return 0;
- }
-+EXPORT_SYMBOL(ath10k_ce_init_pipe);
- 
- static void ath10k_ce_deinit_src_ring(struct ath10k *ar, unsigned int ce_id)
- {
-@@ -1479,6 +1497,7 @@ void ath10k_ce_deinit_pipe(struct ath10k *ar, unsigned int ce_id)
- 	ath10k_ce_deinit_src_ring(ar, ce_id);
- 	ath10k_ce_deinit_dest_ring(ar, ce_id);
- }
-+EXPORT_SYMBOL(ath10k_ce_deinit_pipe);
- 
- static void _ath10k_ce_free_pipe(struct ath10k *ar, int ce_id)
- {
-@@ -1545,6 +1564,7 @@ void ath10k_ce_free_pipe(struct ath10k *ar, int ce_id)
- 
- 	ce_state->ops->ce_free_pipe(ar, ce_id);
- }
-+EXPORT_SYMBOL(ath10k_ce_free_pipe);
- 
- void ath10k_ce_dump_registers(struct ath10k *ar,
- 			      struct ath10k_fw_crash_data *crash_data)
-@@ -1584,6 +1604,7 @@ void ath10k_ce_dump_registers(struct ath10k *ar,
- 
- 	spin_unlock_bh(&ce->ce_lock);
- }
-+EXPORT_SYMBOL(ath10k_ce_dump_registers);
- 
- static const struct ath10k_ce_ops ce_ops = {
- 	.ce_alloc_src_ring = ath10k_ce_alloc_src_ring,
-@@ -1680,3 +1701,4 @@ int ath10k_ce_alloc_pipe(struct ath10k *ar, int ce_id,
- 
- 	return 0;
- }
-+EXPORT_SYMBOL(ath10k_ce_alloc_pipe);
+ 	if (err) {
+-		brcmf_dbg(FIL, "Failed: %s (%d)\n",
+-			  brcmf_fil_get_errstr((u32)(-err)), err);
++		brcmf_dbg(FIL, "Failed: error=%d\n", err);
+ 	} else if (fwerr < 0) {
+ 		brcmf_dbg(FIL, "Firmware error: %s (%d)\n",
+ 			  brcmf_fil_get_errstr((u32)(-fwerr)), fwerr);
 -- 
 1.9.1
