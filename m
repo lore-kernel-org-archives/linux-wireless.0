@@ -1,95 +1,352 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:59228 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751279AbeCNSzP (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:45708 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752826AbeCPKLe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Mar 2018 14:55:15 -0400
-Date: Wed, 14 Mar 2018 19:55:14 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
-        kubakici@wp.pl, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v3 06/20] firmware: use helpers for setting up a
- temporary cache timeout
-Message-ID: <20180314185514.GB15837@kroah.com> (sfid-20180314_195614_509297_EAE2B523)
-References: <20180310141501.2214-1-mcgrof@kernel.org>
- <20180310141501.2214-7-mcgrof@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180310141501.2214-7-mcgrof@kernel.org>
+        Fri, 16 Mar 2018 06:11:34 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 08/12] brcmfmac: introduce brcmf_fw_alloc_request() function
+Date: Fri, 16 Mar 2018 11:11:21 +0100
+Message-Id: <1521195085-439-9-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180316_111248_441774_2437032B)
+In-Reply-To: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 10, 2018 at 06:14:47AM -0800, Luis R. Rodriguez wrote:
-> We only use the timeout for the firmware fallback mechanism
-> except for trying to set the timeout during the cache setup
-> for resume/suspend. For those cases, setting the timeout should
-> be a no-op, so just reflect this in code by adding helpers for it.
-> 
-> This change introduces no functional changes.
-> 
-> Acked-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> ---
->  drivers/base/firmware_loader.c | 49 ++++++++++++++++++++++++++----------------
->  1 file changed, 30 insertions(+), 19 deletions(-)
-> 
-> diff --git a/drivers/base/firmware_loader.c b/drivers/base/firmware_loader.c
-> index 59dba794ce1a..2d819875348d 100644
-> --- a/drivers/base/firmware_loader.c
-> +++ b/drivers/base/firmware_loader.c
-> @@ -191,13 +191,6 @@ static inline bool fw_is_builtin_firmware(const struct firmware *fw)
->  }
->  #endif
->  
-> -static int loading_timeout = 60;	/* In seconds */
-> -
-> -static inline long firmware_loading_timeout(void)
-> -{
-> -	return loading_timeout > 0 ? loading_timeout * HZ : MAX_JIFFY_OFFSET;
-> -}
-> -
->  static void fw_state_init(struct fw_priv *fw_priv)
->  {
->  	struct fw_state *fw_st = &fw_priv->fw_st;
-> @@ -282,6 +275,32 @@ static const struct firmware_fallback_config fw_fallback_config = {
->  	.force_sysfs_fallback = IS_ENABLED(CONFIG_FW_LOADER_USER_HELPER_FALLBACK),
->  };
->  
-> +static int old_timeout;
-> +static int loading_timeout = 60;	/* In seconds */
-> +
-> +static inline long firmware_loading_timeout(void)
-> +{
-> +	return loading_timeout > 0 ? loading_timeout * HZ : MAX_JIFFY_OFFSET;
-> +}
-> +
-> +/*
-> + * use small loading timeout for caching devices' firmware because all these
-> + * firmware images have been loaded successfully at lease once, also system is
-> + * ready for completing firmware loading now. The maximum size of firmware in
-> + * current distributions is about 2M bytes, so 10 secs should be enough.
-> + */
-> +static void fw_fallback_set_cache_timeout(void)
-> +{
-> +	old_timeout = loading_timeout;
-> +	loading_timeout = 10;
-> +}
-> +
-> +/* Restores the timeout to the value last configured during normal operation */
-> +static void fw_fallback_set_default_timeout(void)
-> +{
-> +	loading_timeout =  old_timeout;
+The function brcmf_fw_alloc_request() takes a list of required files
+and allocated the struct brcmf_fw_request instance accordingly. The
+request can be modified by the caller before being passed to the
+brcmf_fw_request_firmwares() function.
 
-extra space?
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../broadcom/brcm80211/brcmfmac/firmware.c         | 58 ++++++++++++++++++++++
+ .../broadcom/brcm80211/brcmfmac/firmware.h         | 11 ++++
+ .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    | 58 ++++++++++++----------
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 38 ++++++++------
+ .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 42 +++++++++-------
+ 5 files changed, 147 insertions(+), 60 deletions(-)
 
-Yeah, nit, I know :)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index b5f9430..598cdb1 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -688,3 +688,61 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
+ 	return 0;
+ }
+ 
++struct brcmf_fw_request *
++brcmf_fw_alloc_request(u32 chip, u32 chiprev,
++		       struct brcmf_firmware_mapping mapping_table[],
++		       u32 table_size, struct brcmf_fw_name *fwnames,
++		       u32 n_fwnames)
++{
++	struct brcmf_fw_request *fwreq;
++	char chipname[12];
++	const char *mp_path;
++	u32 i, j;
++	char end;
++	size_t reqsz;
++
++	for (i = 0; i < table_size; i++) {
++		if (mapping_table[i].chipid == chip &&
++		    mapping_table[i].revmask & BIT(chiprev))
++			break;
++	}
++
++	if (i == table_size) {
++		brcmf_err("Unknown chipid %d [%d]\n", chip, chiprev);
++		return NULL;
++	}
++
++	reqsz = sizeof(*fwreq) + n_fwnames * sizeof(struct brcmf_fw_item);
++	fwreq = kzalloc(reqsz, GFP_KERNEL);
++	if (!fwreq)
++		return NULL;
++
++	brcmf_chip_name(chip, chiprev, chipname, sizeof(chipname));
++
++	brcmf_info("using %s for chip %s\n",
++		   mapping_table[i].fw_base, chipname);
++
++	mp_path = brcmf_mp_global.firmware_path;
++	end = mp_path[strlen(mp_path) - 1];
++	fwreq->n_items = n_fwnames;
++
++	for (j = 0; j < n_fwnames; j++) {
++		fwreq->items[j].path = fwnames[j].path;
++		/* check if firmware path is provided by module parameter */
++		if (brcmf_mp_global.firmware_path[0] != '\0') {
++			strlcpy(fwnames[j].path, mp_path,
++				BRCMF_FW_NAME_LEN);
++
++			if (end != '/') {
++				strlcat(fwnames[j].path, "/",
++					BRCMF_FW_NAME_LEN);
++			}
++		}
++		brcmf_fw_get_full_name(fwnames[j].path,
++				       mapping_table[i].fw_base,
++				       fwnames[j].extension);
++		fwreq->items[j].path = fwnames[j].path;
++	}
++
++	return fwreq;
++}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+index 1ca630e..1416fbb 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+@@ -77,6 +77,17 @@ struct brcmf_fw_request {
+ 	struct brcmf_fw_item items[0];
+ };
+ 
++struct brcmf_fw_name {
++	const char *extension;
++	char *path;
++};
++
++struct brcmf_fw_request *
++brcmf_fw_alloc_request(u32 chip, u32 chiprev,
++		       struct brcmf_firmware_mapping mapping_table[],
++		       u32 table_size, struct brcmf_fw_name *fwnames,
++		       u32 n_fwnames);
++
+ /*
+  * Request firmware(s) asynchronously. When the asynchronous request
+  * fails it will not use the callback, but call device_release_driver()
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index a3fe29e..179177a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -1735,6 +1735,31 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
+ 	device_release_driver(dev);
+ }
+ 
++static struct brcmf_fw_request *
++brcmf_pcie_prepare_fw_request(struct brcmf_pciedev_info *devinfo)
++{
++	struct brcmf_fw_request *fwreq;
++	struct brcmf_fw_name fwnames[] = {
++		{ ".bin", devinfo->fw_name },
++		{ ".txt", devinfo->nvram_name },
++	};
++
++	fwreq = brcmf_fw_alloc_request(devinfo->ci->chip, devinfo->ci->chiprev,
++				       brcmf_pcie_fwnames,
++				       ARRAY_SIZE(brcmf_pcie_fwnames),
++				       fwnames, ARRAY_SIZE(fwnames));
++	if (!fwreq)
++		return NULL;
++
++	fwreq->items[BRCMF_PCIE_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
++	fwreq->items[BRCMF_PCIE_FW_NVRAM].type = BRCMF_FW_TYPE_NVRAM;
++	fwreq->items[BRCMF_PCIE_FW_NVRAM].flags = BRCMF_FW_REQF_OPTIONAL;
++	fwreq->domain_nr = pci_domain_nr(devinfo->pdev->bus);
++	fwreq->bus_nr = devinfo->pdev->bus->number;
++
++	return fwreq;
++}
++
+ static int
+ brcmf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+@@ -1743,13 +1768,8 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
+ 	struct brcmf_pciedev_info *devinfo;
+ 	struct brcmf_pciedev *pcie_bus_dev;
+ 	struct brcmf_bus *bus;
+-	u16 domain_nr;
+-	u16 bus_nr;
+ 
+-	domain_nr = pci_domain_nr(pdev->bus) + 1;
+-	bus_nr = pdev->bus->number;
+-	brcmf_dbg(PCIE, "Enter %x:%x (%d/%d)\n", pdev->vendor, pdev->device,
+-		  domain_nr, bus_nr);
++	brcmf_dbg(PCIE, "Enter %x:%x\n", pdev->vendor, pdev->device);
+ 
+ 	ret = -ENOMEM;
+ 	devinfo = kzalloc(sizeof(*devinfo), GFP_KERNEL);
+@@ -1803,33 +1823,19 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
+ 	bus->wowl_supported = pci_pme_capable(pdev, PCI_D3hot);
+ 	dev_set_drvdata(&pdev->dev, bus);
+ 
+-	ret = brcmf_fw_map_chip_to_name(devinfo->ci->chip, devinfo->ci->chiprev,
+-					brcmf_pcie_fwnames,
+-					ARRAY_SIZE(brcmf_pcie_fwnames),
+-					devinfo->fw_name, devinfo->nvram_name);
+-	if (ret)
+-		goto fail_bus;
+-
+-	fwreq = kzalloc(sizeof(*fwreq) + 2 * sizeof(struct brcmf_fw_item),
+-			GFP_KERNEL);
++	fwreq = brcmf_pcie_prepare_fw_request(devinfo);
+ 	if (!fwreq) {
+ 		ret = -ENOMEM;
+ 		goto fail_bus;
+ 	}
+ 
+-	fwreq->items[BRCMF_PCIE_FW_CODE].path = devinfo->fw_name;
+-	fwreq->items[BRCMF_PCIE_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
+-	fwreq->items[BRCMF_PCIE_FW_NVRAM].path = devinfo->nvram_name;
+-	fwreq->items[BRCMF_PCIE_FW_NVRAM].type = BRCMF_FW_TYPE_NVRAM;
+-	fwreq->items[BRCMF_PCIE_FW_NVRAM].flags = BRCMF_FW_REQF_OPTIONAL;
+-	fwreq->n_items = 2;
+-	fwreq->domain_nr = domain_nr;
+-	fwreq->bus_nr = bus_nr;
+ 	ret = brcmf_fw_get_firmwares(bus->dev, fwreq, brcmf_pcie_setup);
+-	if (ret == 0)
+-		return 0;
++	if (ret < 0) {
++		kfree(fwreq);
++		goto fail_bus;
++	}
++	return 0;
+ 
+-	kfree(fwreq);
+ fail_bus:
+ 	kfree(bus->msgbuf);
+ 	kfree(bus);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index ab68eb1..24dbf7e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -4155,6 +4155,28 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	device_release_driver(dev);
+ }
+ 
++static struct brcmf_fw_request *
++brcmf_sdio_prepare_fw_request(struct brcmf_sdio *bus)
++{
++	struct brcmf_fw_request *fwreq;
++	struct brcmf_fw_name fwnames[] = {
++		{ ".bin", bus->sdiodev->fw_name },
++		{ ".txt", bus->sdiodev->nvram_name },
++	};
++
++	fwreq = brcmf_fw_alloc_request(bus->ci->chip, bus->ci->chiprev,
++				       brcmf_sdio_fwnames,
++				       ARRAY_SIZE(brcmf_sdio_fwnames),
++				       fwnames, ARRAY_SIZE(fwnames));
++	if (!fwreq)
++		return NULL;
++
++	fwreq->items[BRCMF_SDIO_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
++	fwreq->items[BRCMF_SDIO_FW_NVRAM].type = BRCMF_FW_TYPE_NVRAM;
++
++	return fwreq;
++}
++
+ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ {
+ 	int ret;
+@@ -4243,26 +4265,12 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 
+ 	brcmf_dbg(INFO, "completed!!\n");
+ 
+-	ret = brcmf_fw_map_chip_to_name(bus->ci->chip, bus->ci->chiprev,
+-					brcmf_sdio_fwnames,
+-					ARRAY_SIZE(brcmf_sdio_fwnames),
+-					sdiodev->fw_name, sdiodev->nvram_name);
+-	if (ret)
+-		goto fail;
+-
+-	fwreq = kzalloc(sizeof(fwreq) + 2 * sizeof(struct brcmf_fw_item),
+-			GFP_KERNEL);
++	fwreq = brcmf_sdio_prepare_fw_request(bus);
+ 	if (!fwreq) {
+ 		ret = -ENOMEM;
+ 		goto fail;
+ 	}
+ 
+-	fwreq->items[BRCMF_SDIO_FW_CODE].path = sdiodev->fw_name;
+-	fwreq->items[BRCMF_SDIO_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
+-	fwreq->items[BRCMF_SDIO_FW_NVRAM].path = sdiodev->nvram_name;
+-	fwreq->items[BRCMF_SDIO_FW_NVRAM].type = BRCMF_FW_TYPE_NVRAM;
+-	fwreq->n_items = 2;
+-
+ 	ret = brcmf_fw_get_firmwares(sdiodev->dev, fwreq,
+ 				     brcmf_sdio_firmware_callback);
+ 	if (ret != 0) {
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+index 055db11..1c5f135 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+@@ -1200,6 +1200,27 @@ static void brcmf_usb_probe_phase2(struct device *dev, int ret,
+ 	device_release_driver(dev);
+ }
+ 
++static struct brcmf_fw_request *
++brcmf_usb_prepare_fw_request(struct brcmf_usbdev_info *devinfo)
++{
++	struct brcmf_fw_request *fwreq;
++	struct brcmf_fw_name fwnames[] = {
++		{ ".bin", devinfo->fw_name },
++	};
++
++	fwreq = brcmf_fw_alloc_request(devinfo->bus_pub.devid,
++				       devinfo->bus_pub.chiprev,
++				       brcmf_usb_fwnames,
++				       ARRAY_SIZE(brcmf_usb_fwnames),
++				       fwnames, ARRAY_SIZE(fwnames));
++	if (!fwreq)
++		return NULL;
++
++	fwreq->items[BRCMF_USB_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
++
++	return fwreq;
++}
++
+ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
+ {
+ 	struct brcmf_bus *bus = NULL;
+@@ -1249,24 +1270,12 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
+ 	bus->chip = bus_pub->devid;
+ 	bus->chiprev = bus_pub->chiprev;
+ 
+-	ret = brcmf_fw_map_chip_to_name(bus_pub->devid, bus_pub->chiprev,
+-					brcmf_usb_fwnames,
+-					ARRAY_SIZE(brcmf_usb_fwnames),
+-					devinfo->fw_name, NULL);
+-	if (ret)
+-		goto fail;
+-
+-	fwreq = kzalloc(sizeof(*fwreq) + sizeof(struct brcmf_fw_item),
+-			GFP_KERNEL);
++	fwreq = brcmf_usb_prepare_fw_request(devinfo);
+ 	if (!fwreq) {
+ 		ret = -ENOMEM;
+ 		goto fail;
+ 	}
+ 
+-	fwreq->items[BRCMF_USB_FW_CODE].path = devinfo->fw_name;
+-	fwreq->items[BRCMF_USB_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
+-	fwreq->n_items = 1;
+-
+ 	/* request firmware here */
+ 	ret = brcmf_fw_get_firmwares(dev, fwreq, brcmf_usb_probe_phase2);
+ 	if (ret) {
+@@ -1469,15 +1478,10 @@ static int brcmf_usb_reset_resume(struct usb_interface *intf)
+ 
+ 	brcmf_dbg(USB, "Enter\n");
+ 
+-	fwreq = kzalloc(sizeof(*fwreq) + sizeof(struct brcmf_fw_item),
+-			GFP_KERNEL);
++	fwreq = brcmf_usb_prepare_fw_request(devinfo);
+ 	if (!fwreq)
+ 		return -ENOMEM;
+ 
+-	fwreq->items[BRCMF_USB_FW_CODE].path = devinfo->fw_name;
+-	fwreq->items[BRCMF_USB_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
+-	fwreq->n_items = 1;
+-
+ 	ret = brcmf_fw_get_firmwares(&usb->dev, fwreq, brcmf_usb_probe_phase2);
+ 	if (ret < 0)
+ 		kfree(fwreq);
+-- 
+1.9.1
