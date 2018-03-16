@@ -1,52 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:37774 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752200AbeCUPJ3 (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:46110 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753155AbeCPKMJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Mar 2018 11:09:29 -0400
-Message-ID: <1521644967.2645.31.camel@sipsolutions.net> (sfid-20180321_160932_497562_3AC8CB4D)
-Subject: Re: [RFC v5 3/9] nl80211: Add CONTROL_PORT_OVER_NL80211 attribute
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
-Date: Wed, 21 Mar 2018 16:09:27 +0100
-In-Reply-To: <286ad6b3-479c-0294-b123-7f68b5e6349a@gmail.com> (sfid-20180321_160157_210862_1F091AE6)
-References: <20180313215942.29176-1-denkenz@gmail.com>
-         <20180313215942.29176-4-denkenz@gmail.com>
-         <1521618479.2645.1.camel@sipsolutions.net>
-         <286ad6b3-479c-0294-b123-7f68b5e6349a@gmail.com>
-         (sfid-20180321_160157_210862_1F091AE6)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Fri, 16 Mar 2018 06:12:09 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 11/12] brcmfmac: get rid of brcmf_fw_get_full_name()
+Date: Fri, 16 Mar 2018 11:11:24 +0100
+Message-Id: <1521195085-439-12-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180316_111220_747651_B7EAA578)
+In-Reply-To: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-03-21 at 10:01 -0500, Denis Kenzior wrote:
-> Hi Johannes,
-> 
-> On 03/21/2018 02:47 AM, Johannes Berg wrote:
-> > On Tue, 2018-03-13 at 16:59 -0500, Denis Kenzior wrote:
-> > > 
-> > > +	if (info->attrs[NL80211_ATTR_CONTROL_PORT_OVER_NL80211]) {
-> > > +		if (!info->attrs[NL80211_ATTR_SOCKET_OWNER])
-> > > +			return -EINVAL;
-> > > 
-> > 
-> > There might be value in adding GENL_SET_ERR_MSG() calls to new
-> > instances of -EINVAL, but if you don't want to do that now I won't
-> > insist (and perhaps add some when I apply the patches).
-> > 
-> 
-> Sure, that sounds easy enough.  Did you see the TODO comments I added in 
-> RFC v5 0/9 message?  I need your help figuring out how you want to 
-> handle those.  Those are pretty esoteric though and would require more 
-> surgery.
+The function was pretty minimal and now it is called only from one
+place so just get rid of it.
 
-Sorry, I hadn't. I'll take a look now.
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../net/wireless/broadcom/brcm80211/brcmfmac/firmware.c    | 14 ++++----------
+ 1 file changed, 4 insertions(+), 10 deletions(-)
 
-> Any chance that we can merge the non-controversial bits of this RFC so 
-> that we can get some wider testing and start encouraging non-mac80211 
-> based drivers to support these mechanisms?
-
-Yeah, sure, we can do that.
-
-johannes
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index 1ea9451..486d771 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -628,13 +628,6 @@ int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
+ 	return 0;
+ }
+ 
+-static void brcmf_fw_get_full_name(char fw_name[BRCMF_FW_NAME_LEN],
+-				   const char *fw_base, const char *extension)
+-{
+-	strlcat(fw_name, fw_base, BRCMF_FW_NAME_LEN);
+-	strlcat(fw_name, extension, BRCMF_FW_NAME_LEN);
+-}
+-
+ struct brcmf_fw_request *
+ brcmf_fw_alloc_request(u32 chip, u32 chiprev,
+ 		       struct brcmf_firmware_mapping mapping_table[],
+@@ -685,9 +678,10 @@ struct brcmf_fw_request *
+ 					BRCMF_FW_NAME_LEN);
+ 			}
+ 		}
+-		brcmf_fw_get_full_name(fwnames[j].path,
+-				       mapping_table[i].fw_base,
+-				       fwnames[j].extension);
++		strlcat(fwnames[j].path, mapping_table[i].fw_base,
++			BRCMF_FW_NAME_LEN);
++		strlcat(fwnames[j].path, fwnames[j].extension,
++			BRCMF_FW_NAME_LEN);
+ 		fwreq->items[j].path = fwnames[j].path;
+ 	}
+ 
+-- 
+1.9.1
