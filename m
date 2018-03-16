@@ -1,68 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:47092 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752598AbeCMWAD (ORCPT
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:33005 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753208AbeCPOp6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 18:00:03 -0400
-Received: by mail-pg0-f65.google.com with SMTP id r26so462833pgv.13
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2018 15:00:03 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v5 7/9] nl80211: Add SOCKET_OWNER support to START_AP
-Date: Tue, 13 Mar 2018 16:59:40 -0500
-Message-Id: <20180313215942.29176-8-denkenz@gmail.com> (sfid-20180313_230010_980808_4F67563D)
-In-Reply-To: <20180313215942.29176-1-denkenz@gmail.com>
-References: <20180313215942.29176-1-denkenz@gmail.com>
+        Fri, 16 Mar 2018 10:45:58 -0400
+Received: by mail-wr0-f196.google.com with SMTP id z73so7724316wrb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Mar 2018 07:45:58 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, arnd@arndb.de
+Subject: [PATCH] mt76: enable MAC80211_LEDS by default
+Date: Fri, 16 Mar 2018 15:45:48 +0100
+Message-Id: <a159566d0970fb5c43da7758d8281b594b6ca48e.1521209538.git.lorenzo.bianconi@redhat.com> (sfid-20180316_154622_034123_84A96CF1)
+In-Reply-To: <cover.1521209538.git.lorenzo.bianconi@redhat.com>
+References: <cover.1521209538.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- include/uapi/linux/nl80211.h | 2 ++
- net/wireless/ap.c            | 1 +
- net/wireless/nl80211.c       | 4 ++++
- 3 files changed, 7 insertions(+)
+Select mac80211 led support by default in order to fix the following
+compilation error that occurs when CONFIG_LEDS_CLASS/CONFIG_MAC80211_LEDS
+options are not enabled on the system
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index e3329bc4644b..9b4fd4bca141 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1989,6 +1989,8 @@ enum nl80211_commands {
-  *	torn down when the socket is closed.
-  *	If set during %NL80211_CMD_JOIN_MESH the mesh setup will be
-  *	automatically torn down when the socket is closed.
-+ *	If set during %NL80211_CMD_START_AP the AP will be automatically
-+ *	disabled when the socket is closed.
-  *
-  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
-  *	the TDLS link initiator.
-diff --git a/net/wireless/ap.c b/net/wireless/ap.c
-index 63682176c96c..882d97bdc6bf 100644
---- a/net/wireless/ap.c
-+++ b/net/wireless/ap.c
-@@ -27,6 +27,7 @@ int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
+ERROR: "devm_of_led_classdev_register" undefined!
+
+Fixes: 17f1de56df05 ("mt76: add common code shared between multiple chipsets")
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/Kconfig | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
+index fc05d79c80d0..0bbd492c2c2b 100644
+--- a/drivers/net/wireless/mediatek/mt76/Kconfig
++++ b/drivers/net/wireless/mediatek/mt76/Kconfig
+@@ -1,5 +1,8 @@
+ config MT76_CORE
+ 	tristate
++	select MAC80211_LEDS
++	select LEDS_CLASS
++	select NEW_LEDS
  
- 	err = rdev_stop_ap(rdev, dev);
- 	if (!err) {
-+		wdev->conn_owner_nlportid = 0;
- 		wdev->beacon_interval = 0;
- 		memset(&wdev->chandef, 0, sizeof(wdev->chandef));
- 		wdev->ssid_len = 0;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e38d55cf34f7..bbdcc61a738c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4135,6 +4135,10 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 		wdev->chandef = params.chandef;
- 		wdev->ssid_len = params.ssid_len;
- 		memcpy(wdev->ssid, params.ssid, wdev->ssid_len);
-+
-+		if (info->attrs[NL80211_ATTR_SOCKET_OWNER])
-+			wdev->conn_owner_nlportid = info->snd_portid;
-+
- 	}
- 	wdev_unlock(wdev);
- 
+ config MT76x2E
+ 	tristate "MediaTek MT76x2E (PCIe) support"
 -- 
-2.13.5
+2.14.3
