@@ -1,104 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:44115 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752693AbeCOPnT (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:45700 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751783AbeCPKLe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Mar 2018 11:43:19 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Marcel Holtmann <marcel@holtmann.org>,
-        Johan Hedberg <johan.hedberg@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Arnd Bergmann <arnd@arndb.de>
-Cc: linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] Bluetooth: btrsi: rework dependencies
-Date: Thu, 15 Mar 2018 16:42:29 +0100
-Message-Id: <20180315154312.3941446-1-arnd@arndb.de> (sfid-20180315_164343_924498_11801428)
+        Fri, 16 Mar 2018 06:11:34 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 00/12] brcmfmac: data structure and firmware loading rework
+Date: Fri, 16 Mar 2018 11:11:13 +0100
+Message-Id: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180316_111243_681137_A3BFBE91)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The linkage between the bluetooth driver and the wireless
-driver is not defined properly, leading to build problems
-such as:
+This patch series is intended for 4.17 containing the following:
 
-warning: (BT_HCIRSI) selects RSI_COEX which has unmet direct dependencies (NETDEVICES && WLAN && WLAN_VENDOR_RSI && BT_HCIRSI && RSI_91X)
-drivers/net/wireless/rsi/rsi_91x_main.o: In function `rsi_read_pkt':
-(.text+0x205): undefined reference to `rsi_bt_ops'
+  * use wiphy_priv() for storing main driver instance.
+  * add driver debugfs entries under wiphy debugfsdir.
+  * rework firmware loading module.
+  * rework clm_blob loading.
 
-To actually make it work, we need the following steps:
+The patches apply to the master branch of the wireless-drivers-next
+repository.
 
-- remove the bogus 'select RSI_COEX', this is already covered
-  by the default
-- change RSI_COEX to a 'bool' symbol so that the #ifdefs work
-  all the time
-- ensure that BT_HCIRSI is built-in whenever RSI_91X is built-in
-- prevent BT_HCIRSI from being enabled when CONFIG_BT=m and
-  RSI_91X=y, as this cannot work
+Arend van Spriel (12):
+  brcmfmac: do not convert linux error to firmware error string
+  brcmfmac: use brcmf_chip_name() to store name in revinfo
+  brcmfmac: use brcmf_chip_name() for consistency
+  brcmfmac: allocate struct brcmf_pub instance using wiphy_new()
+  brcmfmac: use wiphy debugfs dir entry
+  brcmfmac: derive firmware filenames from basename mapping
+  brcmfmac: pass struct in brcmf_fw_get_firmwares()
+  brcmfmac: introduce brcmf_fw_alloc_request() function
+  brcmfmac: add extension to .get_fwname() callbacks
+  brcmfmac: get rid of brcmf_fw_map_chip_to_name()
+  brcmfmac: get rid of brcmf_fw_get_full_name()
+  brcmfmac: add kerneldoc for struct brcmf_bus::msgbuf
 
-Fixes: 38aa4da50483 ("Bluetooth: btrsi: add new rsi bluetooth driver")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/bluetooth/Kconfig        | 9 ++++++++-
- drivers/bluetooth/Makefile       | 2 +-
- drivers/net/wireless/rsi/Kconfig | 6 +-----
- 3 files changed, 10 insertions(+), 7 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/bcdc.c    |   6 +
+ .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h |   7 +-
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         |  88 ++++----
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         |  17 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/chip.c    |  14 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/chip.h    |   3 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/common.c  |  71 ++----
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    |  48 ++--
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   4 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/debug.c   |  42 +---
+ .../wireless/broadcom/brcm80211/brcmfmac/debug.h   |  17 --
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c |   3 +
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.h |   7 +
+ .../broadcom/brcm80211/brcmfmac/firmware.c         | 242 ++++++++++++++-------
+ .../broadcom/brcm80211/brcmfmac/firmware.h         |  82 ++++---
+ .../wireless/broadcom/brcm80211/brcmfmac/fwil.c    |   3 +-
+ .../broadcom/brcm80211/brcmfmac/fwsignal.c         |  11 +-
+ .../broadcom/brcm80211/brcmfmac/fwsignal.h         |   1 +
+ .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  |   8 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    | 157 +++++++------
+ .../wireless/broadcom/brcm80211/brcmfmac/proto.c   |   3 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/proto.h   |   7 +
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 151 ++++++++-----
+ .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |  96 +++++---
+ 24 files changed, 618 insertions(+), 470 deletions(-)
 
-diff --git a/drivers/bluetooth/Kconfig b/drivers/bluetooth/Kconfig
-index d8bbd661dbdb..6b3e8bf69d07 100644
---- a/drivers/bluetooth/Kconfig
-+++ b/drivers/bluetooth/Kconfig
-@@ -394,8 +394,9 @@ config BT_QCOMSMD
- 
- config BT_HCIRSI
- 	tristate "Redpine HCI support"
-+	depends on RSI_91X
-+	depends on !(BT=m && RSI_91X=y)
- 	default n
--	select RSI_COEX
- 	help
- 	  Redpine BT driver.
- 	  This driver handles BT traffic from upper layers and pass
-@@ -404,4 +405,10 @@ config BT_HCIRSI
- 	  Say Y here to compile support for HCI over Redpine into the
- 	  kernel or say M to compile as a module.
- 
-+config BT_HCIRSI_MODULE
-+	tristate
-+	# ensure that the BT_HCIRSI driver is visible to the core
-+	default y if BT_HCIRSI=m && RSI_91X=y
-+	default BT_HCIRSI
-+
- endmenu
-diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
-index 03cfc1b20c4a..9e8d22712ff3 100644
---- a/drivers/bluetooth/Makefile
-+++ b/drivers/bluetooth/Makefile
-@@ -28,7 +28,7 @@ obj-$(CONFIG_BT_QCA)		+= btqca.o
- 
- obj-$(CONFIG_BT_HCIUART_NOKIA)	+= hci_nokia.o
- 
--obj-$(CONFIG_BT_HCIRSI)		+= btrsi.o
-+obj-$(CONFIG_BT_HCIRSI_MODULE)	+= btrsi.o
- 
- btmrvl-y			:= btmrvl_main.o
- btmrvl-$(CONFIG_DEBUG_FS)	+= btmrvl_debugfs.o
-diff --git a/drivers/net/wireless/rsi/Kconfig b/drivers/net/wireless/rsi/Kconfig
-index f004be33fcfa..bc6195767c61 100644
---- a/drivers/net/wireless/rsi/Kconfig
-+++ b/drivers/net/wireless/rsi/Kconfig
-@@ -43,12 +43,8 @@ config RSI_USB
- 	  Select M (recommended), if you have a RSI 1x1 wireless module.
- 
- config RSI_COEX
--	bool "Redpine Signals WLAN BT Coexistence support"
--	depends on BT_HCIRSI && RSI_91X
--	default y
-+	def_bool BT_HCIRSI && RSI_91X
- 	---help---
- 	  This option enables the WLAN BT coex support in rsi drivers.
--	  Select M (recommended), if you have want to use this feature
--	  and you have RS9113 module.
- 
- endif # WLAN_VENDOR_RSI
--- 
-2.9.0
+--
+1.9.1
