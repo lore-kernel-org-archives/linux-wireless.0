@@ -1,58 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:46117 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752542AbeCVIT3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Mar 2018 04:19:29 -0400
-Date: Thu, 22 Mar 2018 09:19:26 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Nipun Gupta <nipun.gupta@nxp.com>
-Cc: robin.murphy@arm.com, hch@lst.de, linux@armlinux.org.uk,
-        gregkh@linuxfoundation.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, zajec5@gmail.com, andy.gross@linaro.org,
-        david.brown@linaro.org, dan.j.williams@intel.com,
-        vinod.koul@intel.com, thierry.reding@gmail.com, robh+dt@kernel.org,
-        frowand.list@gmail.com, jarkko.sakkinen@linux.intel.com,
-        rafael.j.wysocki@intel.com, dmitry.torokhov@gmail.com,
-        johan@kernel.org, msuchanek@suse.de, linux-kernel@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
-        dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, bharat.bhushan@nxp.com,
-        leoyang.li@nxp.com
-Subject: Re: [PATCH v2 2/2] drivers: remove force dma flag from buses
-Message-ID: <20180322081926.GC29444@lst.de> (sfid-20180322_092005_315497_733E7992)
-References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com> <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com> <1521615323-4752-2-git-send-email-nipun.gupta@nxp.com>
+Received: from mail-co1nam03on0121.outbound.protection.outlook.com ([104.47.40.121]:22688
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753115AbeCPKTZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Mar 2018 06:19:25 -0400
+From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+To: linux-firmware@kernel.org
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Subject: [PATCH V2 6/6] Update license for brcm firmware
+Date: Fri, 16 Mar 2018 05:18:07 -0500
+Message-Id: <1521195487-176486-7-git-send-email-chi-hsien.lin@cypress.com> (sfid-20180316_112006_158509_125DEB85)
+In-Reply-To: <1521195487-176486-1-git-send-email-chi-hsien.lin@cypress.com>
+References: <1521195487-176486-1-git-send-email-chi-hsien.lin@cypress.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1521615323-4752-2-git-send-email-nipun.gupta@nxp.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> --- a/drivers/dma/qcom/hidma_mgmt.c
-> +++ b/drivers/dma/qcom/hidma_mgmt.c
-> @@ -398,7 +398,7 @@ static int __init hidma_mgmt_of_populate_channels(struct device_node *np)
->  		}
->  		of_node_get(child);
->  		new_pdev->dev.of_node = child;
-> -		of_dma_configure(&new_pdev->dev, child);
-> +		of_dma_configure(&new_pdev->dev, child, true);
->  		/*
->  		 * It is assumed that calling of_msi_configure is safe on
->  		 * platforms with or without MSI support.
+Upload a Cypress version of below firmware and hence update the
+license:
 
-Where did we mark this bus as force_dma before?
+brcm/brcmfmac43340-sdio.bin
+brcm/brcmfmac43362-sdio.bin
+brcm/brcmfmac43430-sdio.bin
+brcm/brcmfmac4354-sdio.bin
+brcm/brcmfmac4356-pcie.bin
 
-> diff --git a/drivers/of/of_reserved_mem.c b/drivers/of/of_reserved_mem.c
-> index 9a4f4246..895c83e 100644
-> --- a/drivers/of/of_reserved_mem.c
-> +++ b/drivers/of/of_reserved_mem.c
-> @@ -353,7 +353,7 @@ int of_reserved_mem_device_init_by_idx(struct device *dev,
->  		/* ensure that dma_ops is set for virtual devices
->  		 * using reserved memory
->  		 */
-> -		of_dma_configure(dev, np);
-> +		of_dma_configure(dev, np, true);
+Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+---
+ WHENCE | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Did all the callers of this one really force dma?  I have a hard time
-untangling the call stacks unfortunately.
+diff --git a/WHENCE b/WHENCE
+index 2fb6048..e9ca599 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -2226,9 +2226,7 @@ File: brcm/brcmfmac43236b.bin
+ File: brcm/brcmfmac4329-sdio.bin
+ File: brcm/brcmfmac4330-sdio.bin
+ File: brcm/brcmfmac4334-sdio.bin
+-File: brcm/brcmfmac43340-sdio.bin
+ File: brcm/brcmfmac4335-sdio.bin
+-File: brcm/brcmfmac43362-sdio.bin
+ File: brcm/brcmfmac4339-sdio.bin
+ File: brcm/brcmfmac43241b0-sdio.bin
+ File: brcm/brcmfmac43241b4-sdio.bin
+@@ -2236,13 +2234,10 @@ File: brcm/brcmfmac43241b5-sdio.bin
+ File: brcm/brcmfmac43242a.bin
+ File: brcm/brcmfmac43143.bin
+ File: brcm/brcmfmac43143-sdio.bin
+-File: brcm/brcmfmac43430-sdio.bin
+ File: brcm/brcmfmac43430a0-sdio.bin
+ File: brcm/brcmfmac43455-sdio.bin
+ File: brcm/brcmfmac4350c2-pcie.bin
+ File: brcm/brcmfmac4350-pcie.bin
+-File: brcm/brcmfmac4354-sdio.bin
+-File: brcm/brcmfmac4356-pcie.bin
+ File: brcm/brcmfmac4356-sdio.bin
+ File: brcm/brcmfmac43569.bin
+ File: brcm/brcmfmac43570-pcie.bin
+@@ -2254,6 +2249,11 @@ File: brcm/brcmfmac4371-pcie.bin
+ 
+ Licence: Redistributable. See LICENCE.broadcom_bcm43xx for details.
+ 
++File: brcm/brcmfmac43340-sdio.bin
++File: brcm/brcmfmac43362-sdio.bin
++File: brcm/brcmfmac43430-sdio.bin
++File: brcm/brcmfmac4354-sdio.bin
++File: brcm/brcmfmac4356-pcie.bin
+ File: brcm/brcmfmac4373-sdio.bin
+ File: brcm/brcmfmac4373.bin
+ 
+-- 
+2.1.0
