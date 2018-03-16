@@ -1,76 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:46360 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751341AbeC1IGD (ORCPT
+Received: from mail-qt0-f170.google.com ([209.85.216.170]:37473 "EHLO
+        mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754556AbeCPPlR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 04:06:03 -0400
-Message-ID: <1522224360.4222.3.camel@sipsolutions.net> (sfid-20180328_100610_053235_30DE2B06)
-Subject: Re: [RFC 2/4] nl80211/mac80211: Extend NoAck policy command with
- peer MAC address
-From: Johannes Berg <johannes@sipsolutions.net>
-To: vthiagar@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-Date: Wed, 28 Mar 2018 10:06:00 +0200
-In-Reply-To: <bf1c7f4dc442e0e2807b520fe94d7ca2@codeaurora.org>
-References: <1522140171-10926-1-git-send-email-vthiagar@codeaurora.org>
-         <1522140171-10926-3-git-send-email-vthiagar@codeaurora.org>
-         <1522154870.3050.2.camel@sipsolutions.net>
-         <bf1c7f4dc442e0e2807b520fe94d7ca2@codeaurora.org>
+        Fri, 16 Mar 2018 11:41:17 -0400
+Received: by mail-qt0-f170.google.com with SMTP id a23so11305921qtm.4
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Mar 2018 08:41:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CADjYELxj5J3U4EvXP=wrr24manop824RVgauGXN5eRXATYL7Jg@mail.gmail.com>
+References: <CADsGw2ZBPK1hBY-a+v_1mVUOaFP3Uu5A4euyTc-070E4vSUrBg@mail.gmail.com>
+ <CADjYELzsP37RWTqJOSoevNy32E38e4=bkjDkY6A4F3exnDYadQ@mail.gmail.com>
+ <CADsGw2a+u7dW3H3PF7jgJmj0A5oiQ1BbNuASW7v6192CC-U2gA@mail.gmail.com> <CADjYELxj5J3U4EvXP=wrr24manop824RVgauGXN5eRXATYL7Jg@mail.gmail.com>
+From: Phani Siriki <yvsg.phanis@gmail.com>
+Date: Fri, 16 Mar 2018 10:41:16 -0500
+Message-ID: <CADsGw2YsVrTMtqbw08L=2UX0QX2vDFpL66jQqmgqJYh-QkrBOw@mail.gmail.com> (sfid-20180316_164205_973181_137D0630)
+Subject: Re: Query on queues in mesh mode
+To: Thomas Pedersen <thomas@eero.com>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-03-28 at 10:24 +0530, vthiagar@codeaurora.org wrote:
+Thanks Thomas. I will try to hack the code and let you know.
 
-> > The question is how that interacts with having enough space - are you
-> > sure this is a concern?
-> 
-> This will not be an issue at lest for ath10k. This is mainly for a 
-> (new)driver
-> which implements the offload but has limitation in supporting more than 
-> certain
-> number of peers. Perhaps we can remove it now and add it when such 
-> driver is
-> available?
+Best Regards
+Phani
 
-Ok, that's good. Yes, I think that sounds better - I have a hard time
-imagining a firmware/driver that has space for the station, but doesn't
-automatically allocate a u16 bitmap as part of the station :-)
-
-> > >   * @NL80211_CMD_SET_NOACK_MAP: sets a bitmap for the individual TIDs 
-> > > whether
-> > > - *      No Acknowledgement Policy should be applied.
-> > > + *	No Acknowledgement Policy should be applied. %NL80211_ATTR_MAC is 
-> > > used
-> > > + *	to apply No Acknowledgement policy for a particular connected 
-> > > station.
-> > > + *	Station specific NoAck policy configuration is valid only for 
-> > > STA's
-> > > + *	current connection, i.e. the configuration will not be used when 
-> > > the
-> > > + *	station connects back after disconnection/roaming.
-> > > + *	When user-space does not include %NL80211_ATTR_MAC, the No
-> > > + *	Acknowledgement Policy setting should be treated as per-netdev
-> > > + *	configuration.
-> > 
-> > Here you describe different semantics - i.e. you didn't describe the
-> > "previous per-station settings are kept" part. I'm not sure that part
-> > makes much sense anyhow?
-> 
-> Not sure I got this comment right. As mentioned in the doc, the previous 
-> settings
-> would be reset upon reconnection of the station and any ndev wide 
-> configuration
-> will be used. As mentioned above, additionally default value will be set 
-> to the
-> station to mark no per-station configuration is given so far.
-
-I just thought that there was a difference in how this applies to a
-certain station.
-
-Btw, we should probably also have a way to *delete* the per-station
-configuration, so it uses the default again?
-
-johannes
+On Thu, Mar 15, 2018 at 5:31 PM, Thomas Pedersen <thomas@eero.com> wrote:
+> On Wed, Mar 7, 2018 at 8:39 AM, Phani Siriki <yvsg.phanis@gmail.com> wrote:
+>> Hi Thomas
+>>
+>> Thank you for your reply.
+>>
+>> Could you please let me know how can I verify these queues on a mesh
+>> router? (I am using TPLink router with Ath9k chipset).
+>
+> try
+>
+> $ iw mesh0 mpath dump
+>
+> The mpath queue length is under the "QLEN" heading.
+>
+>> Also, the TXQ parameters can only be set if device is in AP or P2P
+>> mode. Do you have any idea why this restriction is in place?
+>
+> I don't think there is any reason modifying the queue parameters wouldn't work
+> in mesh mode. Why don't you hack up that code and give it a try.
+>
+>> https://github.com/torvalds/linux/blob/master/net/wireless/nl80211.c
+>>
+>> static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+>> {
+>>
+>>            if (info->attrs[NL80211_ATTR_WIPHY_TXQ_PARAMS]) {
+>>            ....
+>>                    if (netdev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+>>                        netdev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
+>>                                  return -EINVAL;
+>>            ...
+>> }
+>>
+>> Best Regards
+>> Phani
+>>
+>> On Tue, Mar 6, 2018 at 11:59 PM, Thomas Pedersen <thomas@eero.com> wrote:
+>>> On Thu, Mar 1, 2018 at 7:27 AM, Phani Siriki <yvsg.phanis@gmail.com> wrote:
+>>>> Hi All
+>>>>
+>>>> I am trying to understand the queuing mechanism wireless mesh networks.
+>>>>
+>>>> As per AP mode is concerned, there are four queues (BK, BE, Vi, VO)
+>>>> and traffic is controlled based on CWmin, CWmax, AIFS and TxOP.
+>>>>
+>>>> Does, mesh mode also involve these queues? Does mesh mode have any
+>>>> queue or it is just a single queue?
+>>>
+>>> mesh mode maps to the different ACs like AP mode. The only additional
+>>> queue in mesh is the mpath->frame_queue, which may be used if an
+>>> active mpath for a given RA can't be found.
+>>>
+>>> --
+>>> thomas
+>
+>
+>
+> --
+> thomas
