@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f44.google.com ([209.85.213.44]:33327 "EHLO
-        mail-vk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751595AbeCWS2n (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:35208 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750731AbeCPLvq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Mar 2018 14:28:43 -0400
-Received: by mail-vk0-f44.google.com with SMTP id j85so7858604vke.0
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Mar 2018 11:28:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1521822366.28252.5.camel@sipsolutions.net>
-References: <CAEo4QHxp3w=PKJ0jgvLNHarw92Ynt=eZNmoWE8w7ZMf_HP9MGw@mail.gmail.com>
- <1521793079.4175.12.camel@sipsolutions.net> <CAEo4QHwLarcoui=oh+2zX++TBh0juVjp1dV8Gjq77x=W+enAVQ@mail.gmail.com>
- <1521822366.28252.5.camel@sipsolutions.net>
-From: Tyler Gray <graytfg@gmail.com>
-Date: Fri, 23 Mar 2018 14:28:42 -0400
-Message-ID: <CAEo4QHxEwahfRxETqAKAmH5=pYnb99xxg0A3Rao5dsgnTSm6cQ@mail.gmail.com> (sfid-20180323_192847_583858_AE994F75)
-Subject: Re: iwlwifi intermittent beacon capture in monitor mode?
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 16 Mar 2018 07:51:46 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 16 Mar 2018 13:51:31 +0200
+Message-Id: <20180316115136.1234-1-luca@coelho.fi> (sfid-20180316_125151_179995_2669ADB6)
+Subject: [PATCH 0/5] iwlwifi: fixes intended for 4.16 2018-03-16
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 23, 2018 at 12:26 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2018-03-23 at 11:02 -0400, Tyler Gray wrote:
->> You mentioned the firmware can suppress beacons for powersaving.  Is
->> there any debug I could look at to see if that was happening?  I
->> posted some fw_rx_stats, would those counters be incremented before
->> that filtering would happen?  I just watched the counters during a
->> good period and a bad period.  In the "good" period I saw 15 CCK
->> packets/second, which is what I'd expect for my AP beaconing plus some
->> some probe responses and some beacons from the adjacent channel.
->> During the bad period the firmware saw 2 CCK packets in 7 seconds, and
->> none of the error counters for the bad period showed an additional 100
->> packets lost for any reason.  The two periods had fairly similar
->> plcp_err stats.
->
-> I'd have to check.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-It'd be great to know, or any other kind of debugging you'd suggest to
-pin it down to the packet isn't received at all, it isn't making it
-out of firmware, or it isn't making it out of the driver.  We did set
-the debug level to 0xffffffff and that seems to generate 3-4 syslog
-entries per packet received, and I again see no activity when the
-beacons aren't showing up, so I'm pretty sure we're getting lost
-before the driver level.
+Hi,
 
-> ISTR being told that 8260 devices would make much better sniffers - any
-> chances you have one of those to try?
+This is my fourth batch of fixes inteded for 4.16.
 
-The 7265 seems to be really popular in that 12x16mm soldered down
-package, so we're kind of tied to it because it's in hardware we want
-to use and there's no easy way to replace it.
+These are the fixes:
 
-> Perhaps you could file a bug on bugzilla.kernel.org so we can track this
-> better.
+* a couple of fixes for channel-switch;
+* a few fixes for the aggregation handling code;
 
-Thanks, I'll submit something next week.
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Andrei Otcheretianski (2):
+  iwlwifi: mvm: Increase session protection time after CS
+  iwlwifi: mvm: Move unused phy's to a default channel
+
+Avraham Stern (3):
+  iwlwifi: mvm: clear tx queue id when unreserving aggregation queue
+  iwlwifi: mvm: make sure internal station has a valid id
+  iwlwifi: mvm: fix array out of bounds reference
+
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  5 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  3 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c  | 21 +++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       | 53 +++++++++-------------
+ .../net/wireless/intel/iwlwifi/mvm/time-event.c    | 15 +++---
+ 5 files changed, 52 insertions(+), 45 deletions(-)
+
+-- 
+2.16.2
