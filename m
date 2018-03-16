@@ -1,33 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f176.google.com ([209.85.216.176]:35038 "EHLO
-        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932634AbeCNBWJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 21:22:09 -0400
-MIME-Version: 1.0
-In-Reply-To: <CA+DvKQK9jRe5YOk_K4DzBYkh2VUys56XbaYZRGs0fn2WJNT+nQ@mail.gmail.com>
-References: <1520598613-3641-1-git-send-email-andreaschristofo@gmail.com>
- <5AA464DE.90100@broadcom.com> <CA+DvKQ+hbMoWJdOuQB5n+eVF4ePf=kVuRiMbdtTUZ8ars4Pz4A@mail.gmail.com>
- <423b529d48c54eba9f7ed51922814d46@AcuMS.aculab.com> <CA+DvKQK9jRe5YOk_K4DzBYkh2VUys56XbaYZRGs0fn2WJNT+nQ@mail.gmail.com>
-From: Daniel Micay <danielmicay@gmail.com>
-Date: Tue, 13 Mar 2018 21:22:08 -0400
-Message-ID: <CA+DvKQJYMYCVgxZPxqCnkZn2u-sunSUF6ZTTDJ0sauhX-1qEzw@mail.gmail.com> (sfid-20180314_022228_216480_ED49D2E8)
-Subject: Re: [PATCH] drivers: net: wireless: ath: ath9: dfs: remove VLA usage
-To: David Laight <David.Laight@aculab.com>
+Received: from mx2.suse.de ([195.135.220.15]:44931 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754802AbeCPPl5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Mar 2018 11:41:57 -0400
+From: Takashi Iwai <tiwai@suse.de>
+To: linux-wireless@vger.kernel.org
 Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Andreas Christoforou <andreaschristofo@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Netdev <netdev@vger.kernel.org>,
-        kernel list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Subject: [PATCH] brcmsmac: allocate ucode with GFP_KERNEL
+Date: Fri, 16 Mar 2018 16:41:49 +0100
+Message-Id: <20180316154149.16891-1-tiwai@suse.de> (sfid-20180316_170535_734572_834ABD71)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I don't think the difference between C and C++ const pointer
-> conversions
+The brcms_ucode_init_buf() duplicates the ucode chunks via kmemdup()
+with GFP_ATOMIC as a precondition of wl->lock acquired.  This caused
+allocation failures sometimes as reported in the bugzilla below.
 
-I mean I don't think the difference between them was intended.
+When looking at the the real usage, one can find that it's called
+solely from brcms_request_fw(), and it's obviously outside the lock.
+Hence we can use GFP_KERNEL there safely for avoiding such allocation
+errors.
+
+Bugzilla: http://bugzilla.suse.com/show_bug.cgi?id=1085174
+Signed-off-by: Takashi Iwai <tiwai@suse.de>
+
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+index ddfdfe177e24..a14fccf8a902 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+@@ -1563,7 +1563,7 @@ void brcms_free_timer(struct brcms_timer *t)
+ }
+ 
+ /*
+- * precondition: perimeter lock has been acquired
++ * precondition: no locking required
+  */
+ int brcms_ucode_init_buf(struct brcms_info *wl, void **pbuf, u32 idx)
+ {
+@@ -1578,7 +1578,7 @@ int brcms_ucode_init_buf(struct brcms_info *wl, void **pbuf, u32 idx)
+ 			if (le32_to_cpu(hdr->idx) == idx) {
+ 				pdata = wl->fw.fw_bin[i]->data +
+ 					le32_to_cpu(hdr->offset);
+-				*pbuf = kmemdup(pdata, len, GFP_ATOMIC);
++				*pbuf = kmemdup(pdata, len, GFP_KERNEL);
+ 				if (*pbuf == NULL)
+ 					goto fail;
+ 
+-- 
+2.16.2
