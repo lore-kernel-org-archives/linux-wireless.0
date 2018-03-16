@@ -1,229 +1,597 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:35198 "EHLO
-        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752397AbeCMUT1 (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:46112 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753158AbeCPKMJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 16:19:27 -0400
-Received: by mail-wm0-f41.google.com with SMTP id x7so280528wmc.0
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2018 13:19:26 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: Add support for getting nvram contents from EFI
- variables
-To: Hans de Goede <hdegoede@redhat.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20180311214751.12769-1-hdegoede@redhat.com>
- <5AA6409E.6050300@broadcom.com>
- <e98afbfb-35d0-8ae7-1377-d5e31a76dc4c@redhat.com>
-Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+        Fri, 16 Mar 2018 06:12:09 -0400
 From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AA8324C.4030505@broadcom.com> (sfid-20180313_211933_644660_A3C3ABB4)
-Date: Tue, 13 Mar 2018 21:19:24 +0100
-MIME-Version: 1.0
-In-Reply-To: <e98afbfb-35d0-8ae7-1377-d5e31a76dc4c@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 07/12] brcmfmac: pass struct in brcmf_fw_get_firmwares()
+Date: Fri, 16 Mar 2018 11:11:20 +0100
+Message-Id: <1521195085-439-8-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180316_111218_850086_881A17C8)
+In-Reply-To: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/12/2018 10:45 AM, Hans de Goede wrote:
-> Hi,
->
-> On 12-03-18 09:55, Arend van Spriel wrote:
->> On 3/11/2018 10:47 PM, Hans de Goede wrote:
->>> Various models Asus laptops with a SDIO attached brcmfmac wifi chip,
->>> store
->>> the nvram contents in a special EFI variable. This commit adds
->>> support for
->>> getting nvram directly from this EFI variable, without the user
->>> needing to
->>> manually copy it.
->>>
->>> This makes Wifi / Bluetooth work out of the box on these devices
->>> instead of
->>> requiring manual setup.
->>>
->>> Note that at least on the Asus T200TA the nvram from the EFI variable
->>> wrongly contains "ccode=ALL" which the firmware does not understand, the
->>> code to fetch the nvram from the EFI variable will fix this up to:
->>> "ccode=XV" which is the correct way to specify the worldwide broadcast
->>> regime.
->>>
->>> This has been tested on the following models: Asus T100CHI, Asus T100HA,
->>> Asus T100TA and Asus T200TA
->>
->> Hi Hans,
->>
->> I like to have this as well, but .... (see below)
->>
->>> Tested-by: Hans de Goede <hdegoede@redhat.com>
->>
->> Duh. I would expect anyone to have tested their patches although you
->> can not cover every system out there obviously :-p
->
-> Heh, I added it in this case as I went to the trouble of finding 4 devices
-> which use this and test it on all 4 devices.
+Make the function brcmf_fw_get_firmwares() a bit more easy to extend
+using a structure to pass the request parameters.
 
-Not really a problem, but it looked funny :-)
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../broadcom/brcm80211/brcmfmac/firmware.c         | 175 ++++++++++++++-------
+ .../broadcom/brcm80211/brcmfmac/firmware.h         |  43 +++--
+ .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |  38 ++++-
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  32 +++-
+ .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |  43 ++++-
+ 5 files changed, 245 insertions(+), 86 deletions(-)
 
->>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
->>> ---
->>>   .../broadcom/brcm80211/brcmfmac/firmware.c         | 68
->>> +++++++++++++++++++++-
->>>   1 file changed, 67 insertions(+), 1 deletion(-)
->>>
->>> diff --git
->>> a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
->>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
->>> index 091b52979e03..cbac407ae132 100644
->>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
->>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
->>> @@ -14,6 +14,8 @@
->>>    * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
->>>    */
->>>
->>> +#include <linux/dmi.h>
->>> +#include <linux/efi.h>
->>>   #include <linux/kernel.h>
->>>   #include <linux/slab.h>
->>>   #include <linux/device.h>
->>> @@ -446,6 +448,67 @@ struct brcmf_fw {
->>>                void *nvram_image, u32 nvram_len);
->>>   };
->>>
->>> +#ifdef CONFIG_EFI
->>> +static u8 *brcmf_fw_nvram_from_efi(size_t *data_len_ret)
->>> +{
->>> +    const u16 name[] = { 'n', 'v', 'r', 'a', 'm', 0 };
->>
->> Isn't there some helper function to make this conversion to u16 array?
->> Hmm, maybe it is my itch to scratch later :-)
->
-> Nope, I copied this style from existing code under drivers/firmware/efi
-
-Maybe I add a helper function at some point.
-
->>> +    struct efivar_entry *nvram_efivar;
->>> +    unsigned long data_len = 0;
->>> +    u8 *data = NULL;
->>> +    char *ccode;
->>> +    int err;
->>> +
->>> +    /* So far only Asus devices store the nvram in an EFI var */
->>> +    if (!dmi_name_in_vendors("ASUSTeK COMPUTER INC."))
->>> +        return NULL;
->>
->> Actually had a Sony device with nvram in EFI. Why not just drop this
->> optimization.
->
-> Ok, do you know if that variable had the same name and guid though ?
-> Because
-> if it doesn't then this code is not going to work for the Sony case.
-
-If I am not mistaken the name and guid are defined by Broadcom/Microsoft.
-
-> Anyways the overhead is small and this only runs once, so I will drop the
-> check for v2.
-
-Due to XV issue we may want to keep the check for now.
-
->>> +    nvram_efivar = kzalloc(sizeof(*nvram_efivar), GFP_KERNEL);
->>> +    if (!nvram_efivar)
->>> +        return NULL;
->>> +
->>> +    memcpy(&nvram_efivar->var.VariableName, name, sizeof(name));
->>> +    nvram_efivar->var.VendorGuid = EFI_GUID(0x74b00bd9, 0x805a, 0x4d61,
->>> +                        0xb5, 0x1f, 0x43, 0x26,
->>> +                        0x81, 0x23, 0xd1, 0x13);
->>> +
->>> +    err = efivar_entry_size(nvram_efivar, &data_len);
->>> +    if (err)
->>> +        goto fail;
->>> +
->>> +    data = kmalloc(data_len, GFP_KERNEL);
->>> +    if (!data)
->>> +        goto fail;
->>> +
->>> +    err = efivar_entry_get(nvram_efivar, NULL, &data_len, data);
->>> +    if (err)
->>> +        goto fail;
->>> +
->>> +    /* In some cases the EFI-var stored nvram contains "ccode=ALL" but
->>> +     * the firmware does not understand "ALL" change this to "XV" which
->>> +     * is the correct way to specify the "worldwide" compatible
->>> settings.
->>> +     */
->>
->> This is actually quite bad. The ALL ccode should never end up on the
->> market as it is intended for internal use only during bringup project
->> phase so these seems to be programmed wrong.
->
-> I see lots of cheap Windows 10 and ARM devices with brcmfmac sdio wifi
-> which ship with on disk nvram files using the "ALL" ccode. I actually have
-> pinned my home wifi at channel 13 to catch this, because channel 13 does
-> not work with the ALL ccode. If I understand correctly the worldwide
-> domain starts with channel 13/14 in passive/listen only mode and allows
-> using them once it has seen valid wifi traffic on them, so they do allow
-> communicating with an AP on channel 13 here in the Netherlands where that
-> is allowed?
-
-*sigh* (regarding ALL being shipped)
-
->> Also simply selecting XV instead is not correct. There is not just one
->> worldwide domain in the regulatory database of the firmware image.
->
-> Right, I've read elsewhere that "X2" is the right magic value to use and
-> I've tested that on some other devices and that does seem to work.
->
-> I've also seen "XY" but the other Asus devices all use "XV" and that
-> works (makes channel 13 work) so it seemed like a good value.
->
-> Can you help me understand this problem a bit better? Is the problem with
-> "XV" that it may not work with all firmware versions, so on some firmware
-> versions it will be as bad as using ALL which the firmware also does not
-> understand? Or do all firmwares understand XV / XY / X2 but are there
-> subtle differences?
-
-The firmware has a per-device recipe of what should be in the regulatory 
-database and per release branch it can differ. So for the same device 
-customer A could get XV and XY in the firmware regdb and customer B 
-could get XY and X2.
-
-> So how do you suggest we deal with this?
->
-> One solution I see is:
->
-> 1) check for ccode=ALL
-> 2) if found use DMI strings to match the specific model and set a different
-> ccode based on the model (so for now use XV for the T200TA only)
-> 3) if found and the model is not known, warn about this and do nothing
->
-> Would that work for you ?
-
-I think so. I hope to get some more clarification from our regulatory 
-team about the use of ALL and XV. Could you tell me what happens with 
-T200TA when you leave ccode=ALL in place. What output do you get from 
-"iw list"? Only channels 1 to 11 and no 5G? Or does it only have 2G.
-
->>>       if (raw_nvram)
->>> -        bcm47xx_nvram_release_contents(data);
->>> +        kvfree(data); /* vfree for bcm47xx case / kfree for efi case */
->>
->> While this clearly works I can not say I like this. If you want to do
->> it this way, please submit a patch to remove
->> bcm47xx_nvram_release_contents() as it is no longer needed since we
->> now have kvfree(). From maintainance perspective also drop the postfix
->> comment. We just might end up doing vmalloc in efi case at some point
->> and this would likely be forgotten.
->
-> It might be better if I replace the raw_nvram variable which is poorly
-> named with
-> a "bool free_bcm47xx_nvram = false;" and add a "bool kfree_nvram = false;"
->
-> Would that work for you ?
-
-Sure.
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index 6945f58..b5f9430 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -438,18 +438,31 @@ void brcmf_fw_nvram_free(void *nvram)
+ 
+ struct brcmf_fw {
+ 	struct device *dev;
+-	u16 flags;
+-	const struct firmware *code;
+-	const char *nvram_name;
+-	u16 domain_nr;
+-	u16 bus_nr;
+-	void (*done)(struct device *dev, int err, const struct firmware *fw,
+-		     void *nvram_image, u32 nvram_len);
++	struct brcmf_fw_request *req;
++	u32 curpos;
++	void (*done)(struct device *dev, int err, struct brcmf_fw_request *req);
+ };
+ 
++static void brcmf_fw_request_done(const struct firmware *fw, void *ctx);
++
++static void brcmf_fw_free_request(struct brcmf_fw_request *req)
++{
++	struct brcmf_fw_item *item;
++	int i;
++
++	for (i = 0, item = &req->items[0]; i < req->n_items; i++, item++) {
++		if (item->type == BRCMF_FW_TYPE_BINARY)
++			release_firmware(item->binary);
++		else if (item->type == BRCMF_FW_TYPE_NVRAM)
++			brcmf_fw_nvram_free(item->nv_data.data);
++	}
++	kfree(req);
++}
++
+ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+ {
+ 	struct brcmf_fw *fwctx = ctx;
++	struct brcmf_fw_item *cur;
+ 	u32 nvram_length = 0;
+ 	void *nvram = NULL;
+ 	u8 *data = NULL;
+@@ -457,83 +470,150 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+ 	bool raw_nvram;
+ 
+ 	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
++
++	cur = &fwctx->req->items[fwctx->curpos];
++
+ 	if (fw && fw->data) {
+ 		data = (u8 *)fw->data;
+ 		data_len = fw->size;
+ 		raw_nvram = false;
+ 	} else {
+ 		data = bcm47xx_nvram_get_contents(&data_len);
+-		if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
++		if (!data && !(cur->flags & BRCMF_FW_REQF_OPTIONAL))
+ 			goto fail;
+ 		raw_nvram = true;
+ 	}
+ 
+ 	if (data)
+ 		nvram = brcmf_fw_nvram_strip(data, data_len, &nvram_length,
+-					     fwctx->domain_nr, fwctx->bus_nr);
++					     fwctx->req->domain_nr,
++					     fwctx->req->bus_nr);
+ 
+ 	if (raw_nvram)
+ 		bcm47xx_nvram_release_contents(data);
+ 	release_firmware(fw);
+-	if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
++	if (!nvram && !(cur->flags & BRCMF_FW_REQF_OPTIONAL))
+ 		goto fail;
+ 
+-	fwctx->done(fwctx->dev, 0, fwctx->code, nvram, nvram_length);
+-	kfree(fwctx);
++	brcmf_dbg(TRACE, "nvram %p len %d\n", nvram, nvram_length);
++	cur->nv_data.data = nvram;
++	cur->nv_data.len = nvram_length;
+ 	return;
+ 
+ fail:
+ 	brcmf_dbg(TRACE, "failed: dev=%s\n", dev_name(fwctx->dev));
+-	release_firmware(fwctx->code);
+-	fwctx->done(fwctx->dev, -ENOENT, NULL, NULL, 0);
++	fwctx->done(fwctx->dev, -ENOENT, NULL);
++	brcmf_fw_free_request(fwctx->req);
+ 	kfree(fwctx);
+ }
+ 
+-static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
++static int brcmf_fw_request_next_item(struct brcmf_fw *fwctx, bool async)
++{
++	struct brcmf_fw_item *cur;
++	const struct firmware *fw = NULL;
++	int ret;
++
++	cur = &fwctx->req->items[fwctx->curpos];
++
++	brcmf_dbg(TRACE, "%srequest for %s\n", async ? "async " : "",
++		  cur->path);
++
++	if (async)
++		ret = request_firmware_nowait(THIS_MODULE, true, cur->path,
++					      fwctx->dev, GFP_KERNEL, fwctx,
++					      brcmf_fw_request_done);
++	else
++		ret = request_firmware(&fw, cur->path, fwctx->dev);
++
++	if (ret < 0) {
++		brcmf_fw_request_done(NULL, fwctx);
++	} else if (!async && fw) {
++		brcmf_dbg(TRACE, "firmware %s %sfound\n", cur->path,
++			  fw ? "" : "not ");
++		if (cur->type == BRCMF_FW_TYPE_BINARY)
++			cur->binary = fw;
++		else if (cur->type == BRCMF_FW_TYPE_NVRAM)
++			brcmf_fw_request_nvram_done(fw, fwctx);
++		else
++			release_firmware(fw);
++
++		return -EAGAIN;
++	}
++	return 0;
++}
++
++static void brcmf_fw_request_done(const struct firmware *fw, void *ctx)
+ {
+ 	struct brcmf_fw *fwctx = ctx;
++	struct brcmf_fw_item *cur;
+ 	int ret = 0;
+ 
+-	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
+-	if (!fw) {
++	cur = &fwctx->req->items[fwctx->curpos];
++
++	brcmf_dbg(TRACE, "enter: firmware %s %sfound\n", cur->path,
++		  fw ? "" : "not ");
++
++	if (fw) {
++		if (cur->type == BRCMF_FW_TYPE_BINARY)
++			cur->binary = fw;
++		else if (cur->type == BRCMF_FW_TYPE_NVRAM)
++			brcmf_fw_request_nvram_done(fw, fwctx);
++		else
++			release_firmware(fw);
++	} else if (cur->type == BRCMF_FW_TYPE_NVRAM) {
++		brcmf_fw_request_nvram_done(NULL, fwctx);
++	} else if (!(cur->flags & BRCMF_FW_REQF_OPTIONAL)) {
+ 		ret = -ENOENT;
+ 		goto fail;
+ 	}
+-	/* only requested code so done here */
+-	if (!(fwctx->flags & BRCMF_FW_REQUEST_NVRAM))
+-		goto done;
+ 
+-	fwctx->code = fw;
+-	ret = request_firmware_nowait(THIS_MODULE, true, fwctx->nvram_name,
+-				      fwctx->dev, GFP_KERNEL, fwctx,
+-				      brcmf_fw_request_nvram_done);
++	do {
++		if (++fwctx->curpos == fwctx->req->n_items) {
++			ret = 0;
++			goto done;
++		}
++
++		ret = brcmf_fw_request_next_item(fwctx, false);
++	} while (ret == -EAGAIN);
+ 
+-	/* pass NULL to nvram callback for bcm47xx fallback */
+-	if (ret)
+-		brcmf_fw_request_nvram_done(NULL, fwctx);
+ 	return;
+ 
+ fail:
+-	brcmf_dbg(TRACE, "failed: dev=%s\n", dev_name(fwctx->dev));
++	brcmf_dbg(TRACE, "failed err=%d: dev=%s, fw=%s\n", ret,
++		  dev_name(fwctx->dev), cur->path);
++	brcmf_fw_free_request(fwctx->req);
++	fwctx->req = NULL;
+ done:
+-	fwctx->done(fwctx->dev, ret, fw, NULL, 0);
++	fwctx->done(fwctx->dev, ret, fwctx->req);
+ 	kfree(fwctx);
+ }
+ 
+-int brcmf_fw_get_firmwares_pcie(struct device *dev, u16 flags,
+-				const char *code, const char *nvram,
+-				void (*fw_cb)(struct device *dev, int err,
+-					      const struct firmware *fw,
+-					      void *nvram_image, u32 nvram_len),
+-				u16 domain_nr, u16 bus_nr)
++bool brcmf_fw_request_is_valid(struct brcmf_fw_request *req)
++{
++	struct brcmf_fw_item *item;
++	int i;
++
++	if (!req->n_items)
++		return false;
++
++	for (i = 0, item = &req->items[0]; i < req->n_items; i++, item++) {
++		if (!item->path)
++			return false;
++	}
++	return true;
++}
++
++int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
++			   void (*fw_cb)(struct device *dev, int err,
++					 struct brcmf_fw_request *req))
+ {
+ 	struct brcmf_fw *fwctx;
+ 
+ 	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(dev));
+-	if (!fw_cb || !code)
++	if (!fw_cb)
+ 		return -EINVAL;
+ 
+-	if ((flags & BRCMF_FW_REQUEST_NVRAM) && !nvram)
++	if (!brcmf_fw_request_is_valid(req))
+ 		return -EINVAL;
+ 
+ 	fwctx = kzalloc(sizeof(*fwctx), GFP_KERNEL);
+@@ -541,26 +621,11 @@ int brcmf_fw_get_firmwares_pcie(struct device *dev, u16 flags,
+ 		return -ENOMEM;
+ 
+ 	fwctx->dev = dev;
+-	fwctx->flags = flags;
++	fwctx->req = req;
+ 	fwctx->done = fw_cb;
+-	if (flags & BRCMF_FW_REQUEST_NVRAM)
+-		fwctx->nvram_name = nvram;
+-	fwctx->domain_nr = domain_nr;
+-	fwctx->bus_nr = bus_nr;
+-
+-	return request_firmware_nowait(THIS_MODULE, true, code, dev,
+-				       GFP_KERNEL, fwctx,
+-				       brcmf_fw_request_code_done);
+-}
+ 
+-int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
+-			   const char *code, const char *nvram,
+-			   void (*fw_cb)(struct device *dev, int err,
+-					 const struct firmware *fw,
+-					 void *nvram_image, u32 nvram_len))
+-{
+-	return brcmf_fw_get_firmwares_pcie(dev, flags, code, nvram, fw_cb, 0,
+-					   0);
++	brcmf_fw_request_next_item(fwctx, true);
++	return 0;
+ }
+ 
+ static void brcmf_fw_get_full_name(char fw_name[BRCMF_FW_NAME_LEN],
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+index 50218e9..1ca630e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+@@ -16,10 +16,7 @@
+ #ifndef BRCMFMAC_FIRMWARE_H
+ #define BRCMFMAC_FIRMWARE_H
+ 
+-#define BRCMF_FW_REQUEST		0x000F
+-#define  BRCMF_FW_REQUEST_NVRAM		0x0001
+-#define BRCMF_FW_REQ_FLAGS		0x00F0
+-#define  BRCMF_FW_REQ_NV_OPTIONAL	0x0010
++#define BRCMF_FW_REQF_OPTIONAL		0x0001
+ 
+ #define	BRCMF_FW_NAME_LEN		320
+ 
+@@ -54,21 +51,39 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
+ 			      u32 table_size, char fw_name[BRCMF_FW_NAME_LEN],
+ 			      char nvram_name[BRCMF_FW_NAME_LEN]);
+ void brcmf_fw_nvram_free(void *nvram);
++
++enum brcmf_fw_type {
++	BRCMF_FW_TYPE_BINARY,
++	BRCMF_FW_TYPE_NVRAM
++};
++
++struct brcmf_fw_item {
++	const char *path;
++	enum brcmf_fw_type type;
++	u16 flags;
++	union {
++		const struct firmware *binary;
++		struct {
++			void *data;
++			u32 len;
++		} nv_data;
++	};
++};
++
++struct brcmf_fw_request {
++	u16 domain_nr;
++	u16 bus_nr;
++	u32 n_items;
++	struct brcmf_fw_item items[0];
++};
++
+ /*
+  * Request firmware(s) asynchronously. When the asynchronous request
+  * fails it will not use the callback, but call device_release_driver()
+  * instead which will call the driver .remove() callback.
+  */
+-int brcmf_fw_get_firmwares_pcie(struct device *dev, u16 flags,
+-				const char *code, const char *nvram,
+-				void (*fw_cb)(struct device *dev, int err,
+-					      const struct firmware *fw,
+-					      void *nvram_image, u32 nvram_len),
+-				u16 domain_nr, u16 bus_nr);
+-int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
+-			   const char *code, const char *nvram,
++int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
+ 			   void (*fw_cb)(struct device *dev, int err,
+-					 const struct firmware *fw,
+-					 void *nvram_image, u32 nvram_len));
++					 struct brcmf_fw_request *req));
+ 
+ #endif /* BRCMFMAC_FIRMWARE_H */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index ca95f6c..a3fe29e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -1651,15 +1651,19 @@ static void brcmf_pcie_buscore_activate(void *ctx, struct brcmf_chip *chip,
+ 	.write32 = brcmf_pcie_buscore_write32,
+ };
+ 
++#define BRCMF_PCIE_FW_CODE	0
++#define BRCMF_PCIE_FW_NVRAM	1
++
+ static void brcmf_pcie_setup(struct device *dev, int ret,
+-			     const struct firmware *fw,
+-			     void *nvram, u32 nvram_len)
++			     struct brcmf_fw_request *fwreq)
+ {
++	const struct firmware *fw;
++	void *nvram;
+ 	struct brcmf_bus *bus;
+ 	struct brcmf_pciedev *pcie_bus_dev;
+ 	struct brcmf_pciedev_info *devinfo;
+ 	struct brcmf_commonring **flowrings;
+-	u32 i;
++	u32 i, nvram_len;
+ 
+ 	/* check firmware loading result */
+ 	if (ret)
+@@ -1670,6 +1674,11 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
+ 	devinfo = pcie_bus_dev->devinfo;
+ 	brcmf_pcie_attach(devinfo);
+ 
++	fw = fwreq->items[BRCMF_PCIE_FW_CODE].binary;
++	nvram = fwreq->items[BRCMF_PCIE_FW_NVRAM].nv_data.data;
++	nvram_len = fwreq->items[BRCMF_PCIE_FW_NVRAM].nv_data.len;
++	kfree(fwreq);
++
+ 	/* Some of the firmwares have the size of the memory of the device
+ 	 * defined inside the firmware. This is because part of the memory in
+ 	 * the device is shared and the devision is determined by FW. Parse
+@@ -1730,6 +1739,7 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
+ brcmf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+ 	int ret;
++	struct brcmf_fw_request *fwreq;
+ 	struct brcmf_pciedev_info *devinfo;
+ 	struct brcmf_pciedev *pcie_bus_dev;
+ 	struct brcmf_bus *bus;
+@@ -1800,12 +1810,26 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
+ 	if (ret)
+ 		goto fail_bus;
+ 
+-	ret = brcmf_fw_get_firmwares_pcie(bus->dev, BRCMF_FW_REQUEST_NVRAM |
+-						    BRCMF_FW_REQ_NV_OPTIONAL,
+-					  devinfo->fw_name, devinfo->nvram_name,
+-					  brcmf_pcie_setup, domain_nr, bus_nr);
++	fwreq = kzalloc(sizeof(*fwreq) + 2 * sizeof(struct brcmf_fw_item),
++			GFP_KERNEL);
++	if (!fwreq) {
++		ret = -ENOMEM;
++		goto fail_bus;
++	}
++
++	fwreq->items[BRCMF_PCIE_FW_CODE].path = devinfo->fw_name;
++	fwreq->items[BRCMF_PCIE_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
++	fwreq->items[BRCMF_PCIE_FW_NVRAM].path = devinfo->nvram_name;
++	fwreq->items[BRCMF_PCIE_FW_NVRAM].type = BRCMF_FW_TYPE_NVRAM;
++	fwreq->items[BRCMF_PCIE_FW_NVRAM].flags = BRCMF_FW_REQF_OPTIONAL;
++	fwreq->n_items = 2;
++	fwreq->domain_nr = domain_nr;
++	fwreq->bus_nr = bus_nr;
++	ret = brcmf_fw_get_firmwares(bus->dev, fwreq, brcmf_pcie_setup);
+ 	if (ret == 0)
+ 		return 0;
++
++	kfree(fwreq);
+ fail_bus:
+ 	kfree(bus->msgbuf);
+ 	kfree(bus);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 3f7fd6f..ab68eb1 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -4031,14 +4031,19 @@ static int brcmf_sdio_get_fwname(struct device *dev, u32 chip, u32 chiprev,
+ 	.get_fwname = brcmf_sdio_get_fwname,
+ };
+ 
++#define BRCMF_SDIO_FW_CODE	0
++#define BRCMF_SDIO_FW_NVRAM	1
++
+ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+-					 const struct firmware *code,
+-					 void *nvram, u32 nvram_len)
++					 struct brcmf_fw_request *fwreq)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+ 	struct brcmf_sdio_dev *sdiod = bus_if->bus_priv.sdio;
+ 	struct brcmf_sdio *bus = sdiod->bus;
+ 	struct brcmf_core *core = bus->sdio_core;
++	const struct firmware *code;
++	void *nvram;
++	u32 nvram_len;
+ 	u8 saveclk;
+ 
+ 	brcmf_dbg(TRACE, "Enter: dev=%s, err=%d\n", dev_name(dev), err);
+@@ -4046,6 +4051,11 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	if (err)
+ 		goto fail;
+ 
++	code = fwreq->items[BRCMF_SDIO_FW_CODE].binary;
++	nvram = fwreq->items[BRCMF_SDIO_FW_NVRAM].nv_data.data;
++	nvram_len = fwreq->items[BRCMF_SDIO_FW_NVRAM].nv_data.len;
++	kfree(fwreq);
++
+ 	/* try to download image and nvram to the dongle */
+ 	bus->alp_only = true;
+ 	err = brcmf_sdio_download_firmware(bus, code, nvram, nvram_len);
+@@ -4150,6 +4160,7 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 	int ret;
+ 	struct brcmf_sdio *bus;
+ 	struct workqueue_struct *wq;
++	struct brcmf_fw_request *fwreq;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+@@ -4239,11 +4250,24 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 	if (ret)
+ 		goto fail;
+ 
+-	ret = brcmf_fw_get_firmwares(sdiodev->dev, BRCMF_FW_REQUEST_NVRAM,
+-				     sdiodev->fw_name, sdiodev->nvram_name,
++	fwreq = kzalloc(sizeof(fwreq) + 2 * sizeof(struct brcmf_fw_item),
++			GFP_KERNEL);
++	if (!fwreq) {
++		ret = -ENOMEM;
++		goto fail;
++	}
++
++	fwreq->items[BRCMF_SDIO_FW_CODE].path = sdiodev->fw_name;
++	fwreq->items[BRCMF_SDIO_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
++	fwreq->items[BRCMF_SDIO_FW_NVRAM].path = sdiodev->nvram_name;
++	fwreq->items[BRCMF_SDIO_FW_NVRAM].type = BRCMF_FW_TYPE_NVRAM;
++	fwreq->n_items = 2;
++
++	ret = brcmf_fw_get_firmwares(sdiodev->dev, fwreq,
+ 				     brcmf_sdio_firmware_callback);
+ 	if (ret != 0) {
+ 		brcmf_err("async firmware request failed: %d\n", ret);
++		kfree(fwreq);
+ 		goto fail;
+ 	}
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+index f8968cf..055db11 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+@@ -1155,18 +1155,23 @@ static int brcmf_usb_get_fwname(struct device *dev, u32 chip, u32 chiprev,
+ 	.get_fwname = brcmf_usb_get_fwname,
+ };
+ 
++#define BRCMF_USB_FW_CODE	0
++
+ static void brcmf_usb_probe_phase2(struct device *dev, int ret,
+-				   const struct firmware *fw,
+-				   void *nvram, u32 nvlen)
++				   struct brcmf_fw_request *fwreq)
+ {
+ 	struct brcmf_bus *bus = dev_get_drvdata(dev);
+ 	struct brcmf_usbdev_info *devinfo = bus->bus_priv.usb->devinfo;
++	const struct firmware *fw;
+ 
+ 	if (ret)
+ 		goto error;
+ 
+ 	brcmf_dbg(USB, "Start fw downloading\n");
+ 
++	fw = fwreq->items[BRCMF_USB_FW_CODE].binary;
++	kfree(fwreq);
++
+ 	ret = check_file(fw->data);
+ 	if (ret < 0) {
+ 		brcmf_err("invalid firmware\n");
+@@ -1200,6 +1205,7 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
+ 	struct brcmf_bus *bus = NULL;
+ 	struct brcmf_usbdev *bus_pub = NULL;
+ 	struct device *dev = devinfo->dev;
++	struct brcmf_fw_request *fwreq;
+ 	int ret;
+ 
+ 	brcmf_dbg(USB, "Enter\n");
+@@ -1250,11 +1256,22 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
+ 	if (ret)
+ 		goto fail;
+ 
++	fwreq = kzalloc(sizeof(*fwreq) + sizeof(struct brcmf_fw_item),
++			GFP_KERNEL);
++	if (!fwreq) {
++		ret = -ENOMEM;
++		goto fail;
++	}
++
++	fwreq->items[BRCMF_USB_FW_CODE].path = devinfo->fw_name;
++	fwreq->items[BRCMF_USB_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
++	fwreq->n_items = 1;
++
+ 	/* request firmware here */
+-	ret = brcmf_fw_get_firmwares(dev, 0, devinfo->fw_name, NULL,
+-				     brcmf_usb_probe_phase2);
++	ret = brcmf_fw_get_firmwares(dev, fwreq, brcmf_usb_probe_phase2);
+ 	if (ret) {
+ 		brcmf_err("firmware request failed: %d\n", ret);
++		kfree(fwreq);
+ 		goto fail;
+ 	}
+ 
+@@ -1447,11 +1464,25 @@ static int brcmf_usb_reset_resume(struct usb_interface *intf)
+ {
+ 	struct usb_device *usb = interface_to_usbdev(intf);
+ 	struct brcmf_usbdev_info *devinfo = brcmf_usb_get_businfo(&usb->dev);
++	struct brcmf_fw_request *fwreq;
++	int ret;
+ 
+ 	brcmf_dbg(USB, "Enter\n");
+ 
+-	return brcmf_fw_get_firmwares(&usb->dev, 0, devinfo->fw_name, NULL,
+-				      brcmf_usb_probe_phase2);
++	fwreq = kzalloc(sizeof(*fwreq) + sizeof(struct brcmf_fw_item),
++			GFP_KERNEL);
++	if (!fwreq)
++		return -ENOMEM;
++
++	fwreq->items[BRCMF_USB_FW_CODE].path = devinfo->fw_name;
++	fwreq->items[BRCMF_USB_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
++	fwreq->n_items = 1;
++
++	ret = brcmf_fw_get_firmwares(&usb->dev, fwreq, brcmf_usb_probe_phase2);
++	if (ret < 0)
++		kfree(fwreq);
++
++	return ret;
+ }
+ 
+ #define BRCMF_USB_DEVICE(dev_id)	\
+-- 
+1.9.1
