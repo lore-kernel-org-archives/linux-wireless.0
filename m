@@ -1,161 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:35310 "EHLO
-        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752173AbeCZRQ0 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:35236 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751459AbeCPLvu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 13:16:26 -0400
-Received: by mail-oi0-f53.google.com with SMTP id x20-v6so16483704oie.2
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:16:26 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v6 00/11] EAPoL over NL80211
-Date: Mon, 26 Mar 2018 12:16:03 -0500
-Message-Id: <20180326171614.20373-1-denkenz@gmail.com> (sfid-20180326_191704_664125_70C06DD9)
+        Fri, 16 Mar 2018 07:51:50 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Avraham Stern <avraham.stern@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 16 Mar 2018 13:51:35 +0200
+Message-Id: <20180316115136.1234-5-luca@coelho.fi> (sfid-20180316_125200_625592_9A4C8E00)
+In-Reply-To: <20180316115136.1234-1-luca@coelho.fi>
+References: <20180316115136.1234-1-luca@coelho.fi>
+Subject: [PATCH 4/5] iwlwifi: mvm: fix array out of bounds reference
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds support for running 802.11 authentication mechanisms (e.g.
-802.1X, 4-Way Handshake, etc) over NL80211 instead of putting them onto the
-network device.  This has the advantage of fixing several long-standing race
-conditions that result from userspace operating on multiple transports in order
-to manage a 802.11 connection (e.g. NL80211 and wireless netdev, wlan0, etc).
+From: Avraham Stern <avraham.stern@intel.com>
 
-For example, userspace would sometimes see 4-Way handshake packets before
-NL80211 signaled that the connection has been established.  Leading to ugly
-hacks or having the STA wait for retransmissions from the AP.
+When starting aggregation, the code checks the status of the queue
+allocated to the aggregation tid, which might not yet be allocated
+and thus the queue index may be invalid.
+Fix this by reserving a new queue in case the queue id is invalid.
 
-This also provides a way to mitigate a particularly nasty race condition where
-the encryption key could be set prior to the 4-way handshake packet 4/4 being
-sent.  This would result in the packet being sent encrypted and discarded by
-the peer.  The mitigation strategy for this race is for userspace to explicitly
-tell the kernel that a particular EAPoL packet should not be encrypted.
+While at it, clean up some unreachable code (a condition that is
+already handled earlier) and remove all the non-DQA comments since
+non-DQA mode is no longer supported.
 
-To make this possible this patchset introduces a new NL80211 command and several
-new attributes.  A userspace that is capable of processing EAPoL packets over
-NL80211 includes a new NL80211_ATTR_CONTROL_PORT_OVER_NL80211 attribute in its
-NL80211_CMD_ASSOCIATE or NL80211_CMD_CONNECT requests being sent to the kernel.
-The previously added NL80211_ATTR_SOCKET_OWNER attribute must also be included.
-The latter is used by the kernel to send NL80211_CMD_CONTROL_PORT_FRAME
-notifications back to userspace via a netlink unicast.  If the
-NL80211_ATTR_CONTROL_PORT_OVER_NL80211 attribute is not specified, then legacy
-behavior is kept and control port packets continue to flow over the network
-interface.
+Fixes: cf961e16620f ("iwlwifi: mvm: support dqa-mode agg on non-shared queue")
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 38 ++++++++--------------------
+ 1 file changed, 11 insertions(+), 27 deletions(-)
 
-If control port over nl80211 transport is requested, then control port packets
-are intercepted just prior to being handed to the network device and sent over
-netlink via the NL80211_CMD_CONTROL_PORT_FRAME notification.
-NL80211_ATTR_CONTROL_PORT_ETHERTYPE and NL80211_ATTR_MAC are included to
-specify the control port frame protocol and source address respectively.  If
-the control port frame was received unencrypted then
-NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT flag is also included.  NL80211_ATTR_FRAME
-attribute contains the raw control port frame with all transport layer headers
-stripped (e.g. this would be the raw EAPoL frame).
-
-Userspace can reply to control port frames either via legacy methods (by sending
-frames to the network device) or via NL80211_CMD_CONTROL_PORT_FRAME request.
-Userspace would included NL80211_ATTR_FRAME with the raw control port frame as
-well as NL80211_Attr_MAC and NL80211_ATTR_CONTROL_PORT_ETHERTYPE attributes to
-specify the destination address and protocol respectively.  This allows
-Pre-Authentication (protocol 0x88c7) frames to be sent via this mechanism as
-well.  Finally, NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT flag can be included to
-tell the driver to send the frame unencrypted, e.g. for 4-Way handshake 4/4
-frames.
-
-The proposed patchset has been tested in a mac80211_hwsim based environment with
-hostapd and iwd.
-
-ChangeLog
-
-v6
-
-- Dropped AP_VLAN from supported interface types in patch 2 per mailing list
-discussion with Johannes
-- Added GENL_SET_ERR_MSG where appropriate
-- Added control_port_over_nl80211 parameter to ibss_params and mesh_config
-- Last patch updated to set sdata->control_port_over_nl80211 for ibss and mesh
-
-v5
-
-- Johannes' main comment was that we're not handling interface types other than
-STATION inside tx_control_port (patch 2).  This patch was modified to support
-all interface types that seemed relevant.
-- Since tx_control_port relies on wdev->conn_owner_nlportid being set,
-SOCKET_OWNER support was added to JOIN_IBSS, JOIN_MESH and START_AP
-- SOCKET_OWNER auto-destruction logic was updated to support interface types
-other than STATION/P2P_CLIENT
-- Last patch was modified to support control_port_over_nl80211 for mac80211
-based AP mode.  It also copies necessary bits for AP_VLAN interfaces.
-
-This version has been tested on both STATION and AP mode interfaces with
-SOCKET_OWNER & CONTROL_PORT_OVER_NL80211 attributes provided to CMD_CONNECT
-and CMD_START_AP.
-
-TODO:
-
-- It is unclear to me how AP_VLAN and AP interfaces should synchronize on
-conn_owner_nlportid.  This is required for tx_control_port to work.
-- JOIN_IBSS & JOIN_MESH don't seem to support control_port_ethertype or
-control_port_no_encrypt.  Should struct cfg80211_crypto_settings parsed inside
-nl80211_crypto_settings be added to ibss_params or mesh_config/mesh_setup?
-
-v4
-
-- Reordered the patches to make sure that: when CONTROL_PORT_OVER_NL80211 is
-provided by userspace, nl80211 checks that both EXT_FEATURE bit is set and
-the tx_control_port is present in rdev ops.
-- Fixed up various issues Johannes found in his review
-
-v3
-
-- Added ETH_P_PREAUTH to if_ether.h
-- Moved NL80211 feature bit from wiphy features to ext features
-- Addressed various comments from Johannes
-
-v2
-
-- Added WIPHY_FLAG_CONTROL_PORT_OVER_NL80211 flag.  This is a capability flag
-used by the drivers, e.g. that the driver supports control port over nl80211
-capability.  This capability is now checked when CONTROL_PORT_OVER_NL80211 is
-requested.
-
-- mac80211 rx path now forwards Pre-Authentication frames over NL80211 as well,
-if requested.  Tweaked the signature of cfg80211_rx_control_port.
-
-- TX path reworked completely.  tx_control_port method has been introduced to
-cfg80211_ops.  An implementation of tx_control_port for mac80211 was added.
-
-Denis Kenzior (11):
-  nl80211: Add CMD_CONTROL_PORT_FRAME API
-  nl80211: Implement TX of control port frames
-  nl80211: Add CONTROL_PORT_OVER_NL80211 attribute
-  cfg80211: Support all iftypes in autodisconnect_wk
-  nl80211: Add SOCKET_OWNER support to JOIN_IBSS
-  nl80211: Add SOCKET_OWNER support to JOIN_MESH
-  nl80211: Add SOCKET_OWNER support to START_AP
-  nl80211: Add control_port_over_nl80211 for ibss
-  nl80211: Add control_port_over_nl80211 to mesh_setup
-  mac80211: Add support for tx_control_port
-  mac80211: Send control port frames over nl80211
-
- include/net/cfg80211.h       |  40 +++++++++
- include/uapi/linux/nl80211.h |  36 +++++++-
- net/mac80211/cfg.c           |   7 ++
- net/mac80211/ibss.c          |   1 +
- net/mac80211/ieee80211_i.h   |   4 +
- net/mac80211/iface.c         |   2 +
- net/mac80211/main.c          |   2 +
- net/mac80211/mlme.c          |   2 +
- net/mac80211/rx.c            |  33 ++++++--
- net/mac80211/tx.c            |  46 +++++++++++
- net/wireless/ap.c            |   1 +
- net/wireless/ibss.c          |   1 +
- net/wireless/mesh.c          |   1 +
- net/wireless/nl80211.c       | 193 ++++++++++++++++++++++++++++++++++++++++++-
- net/wireless/rdev-ops.h      |  15 ++++
- net/wireless/sme.c           |  43 +++++++---
- net/wireless/trace.h         |  47 +++++++++++
- 17 files changed, 455 insertions(+), 19 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index fc13f6291c06..80067eb9ea05 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -2479,28 +2479,12 @@ int iwl_mvm_sta_tx_agg_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 
+ 	/*
+ 	 * Note the possible cases:
+-	 *  1. In DQA mode with an enabled TXQ - TXQ needs to become agg'ed
+-	 *  2. Non-DQA mode: the TXQ hasn't yet been enabled, so find a free
+-	 *	one and mark it as reserved
+-	 *  3. In DQA mode, but no traffic yet on this TID: same treatment as in
+-	 *	non-DQA mode, since the TXQ hasn't yet been allocated
+-	 * Don't support case 3 for new TX path as it is not expected to happen
+-	 * and aggregation will be offloaded soon anyway
++	 *  1. An enabled TXQ - TXQ needs to become agg'ed
++	 *  2. The TXQ hasn't yet been enabled, so find a free one and mark
++	 *	it as reserved
+ 	 */
+ 	txq_id = mvmsta->tid_data[tid].txq_id;
+-	if (iwl_mvm_has_new_tx_api(mvm)) {
+-		if (txq_id == IWL_MVM_INVALID_QUEUE) {
+-			ret = -ENXIO;
+-			goto release_locks;
+-		}
+-	} else if (unlikely(mvm->queue_info[txq_id].status ==
+-			    IWL_MVM_QUEUE_SHARED)) {
+-		ret = -ENXIO;
+-		IWL_DEBUG_TX_QUEUES(mvm,
+-				    "Can't start tid %d agg on shared queue!\n",
+-				    tid);
+-		goto release_locks;
+-	} else if (mvm->queue_info[txq_id].status != IWL_MVM_QUEUE_READY) {
++	if (txq_id == IWL_MVM_INVALID_QUEUE) {
+ 		txq_id = iwl_mvm_find_free_queue(mvm, mvmsta->sta_id,
+ 						 IWL_MVM_DQA_MIN_DATA_QUEUE,
+ 						 IWL_MVM_DQA_MAX_DATA_QUEUE);
+@@ -2509,16 +2493,16 @@ int iwl_mvm_sta_tx_agg_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 			IWL_ERR(mvm, "Failed to allocate agg queue\n");
+ 			goto release_locks;
+ 		}
+-		/*
+-		 * TXQ shouldn't be in inactive mode for non-DQA, so getting
+-		 * an inactive queue from iwl_mvm_find_free_queue() is
+-		 * certainly a bug
+-		 */
+-		WARN_ON(mvm->queue_info[txq_id].status ==
+-			IWL_MVM_QUEUE_INACTIVE);
+ 
+ 		/* TXQ hasn't yet been enabled, so mark it only as reserved */
+ 		mvm->queue_info[txq_id].status = IWL_MVM_QUEUE_RESERVED;
++	} else if (unlikely(mvm->queue_info[txq_id].status ==
++			    IWL_MVM_QUEUE_SHARED)) {
++		ret = -ENXIO;
++		IWL_DEBUG_TX_QUEUES(mvm,
++				    "Can't start tid %d agg on shared queue!\n",
++				    tid);
++		goto release_locks;
+ 	}
+ 
+ 	spin_unlock(&mvm->queue_info_lock);
 -- 
-2.13.5
+2.16.2
