@@ -1,53 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59720 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750918AbeC0HMX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Mar 2018 03:12:23 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-by2nam01on0106.outbound.protection.outlook.com ([104.47.34.106]:48608
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751736AbeCPKHa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Mar 2018 06:07:30 -0400
+From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+To: linux-firmware@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Subject: [PATCH 6/6] Update license for brcm firmware
+Date: Fri, 16 Mar 2018 05:06:46 -0500
+Message-Id: <1521194806-71801-7-git-send-email-chi-hsien.lin@cypress.com> (sfid-20180316_110735_447423_A9EA57A9)
+In-Reply-To: <1521194806-71801-1-git-send-email-chi-hsien.lin@cypress.com>
+References: <1521194806-71801-1-git-send-email-chi-hsien.lin@cypress.com>
 MIME-Version: 1.0
-Subject: Re: [v3] Bluetooth: btrsi: rework dependencies
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180315211904.2256817-1-arnd@arndb.de>
-References: <20180315211904.2256817-1-arnd@arndb.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Johan Hedberg <johan.hedberg@gmail.com>,
-        Johan Hovold <johan@kernel.org>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Message-Id: <20180327071222.D744660AFB@smtp.codeaurora.org> (sfid-20180327_091239_970137_DE6AF987)
-Date: Tue, 27 Mar 2018 07:12:22 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> wrote:
+Upload a Cypress version of below firmware and hence update the
+license:
 
-> The linkage between the bluetooth driver and the wireless
-> driver is not defined properly, leading to build problems
-> such as:
-> 
-> warning: (BT_HCIRSI) selects RSI_COEX which has unmet direct dependencies (NETDEVICES && WLAN && WLAN_VENDOR_RSI && BT_HCIRSI && RSI_91X)
-> drivers/net/wireless/rsi/rsi_91x_main.o: In function `rsi_read_pkt':
-> (.text+0x205): undefined reference to `rsi_bt_ops'
-> 
-> As the dependency is actually the reverse (RSI_91X uses
-> the BT_RSI driver, not the other way round), this changes
-> the dependency to match, and enables the bluetooth driver
-> from the RSI_COEX symbol.
-> 
-> Fixes: 38aa4da50483 ("Bluetooth: btrsi: add new rsi bluetooth driver")
-> Acked-by; Marcel Holtmann <marcel@holtmann.org>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+brcm/brcmfmac43340-sdio.bin
+brcm/brcmfmac43362-sdio.bin
+brcm/brcmfmac43430-sdio.bin
+brcm/brcmfmac4354-sdio.bin
+brcm/brcmfmac4356-pcie.bin
 
-Patch applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+---
+ WHENCE | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-255dd5b79d54 Bluetooth: btrsi: rework dependencies
-
+diff --git a/WHENCE b/WHENCE
+index 2fb6048..e9ca599 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -2226,9 +2226,7 @@ File: brcm/brcmfmac43236b.bin
+ File: brcm/brcmfmac4329-sdio.bin
+ File: brcm/brcmfmac4330-sdio.bin
+ File: brcm/brcmfmac4334-sdio.bin
+-File: brcm/brcmfmac43340-sdio.bin
+ File: brcm/brcmfmac4335-sdio.bin
+-File: brcm/brcmfmac43362-sdio.bin
+ File: brcm/brcmfmac4339-sdio.bin
+ File: brcm/brcmfmac43241b0-sdio.bin
+ File: brcm/brcmfmac43241b4-sdio.bin
+@@ -2236,13 +2234,10 @@ File: brcm/brcmfmac43241b5-sdio.bin
+ File: brcm/brcmfmac43242a.bin
+ File: brcm/brcmfmac43143.bin
+ File: brcm/brcmfmac43143-sdio.bin
+-File: brcm/brcmfmac43430-sdio.bin
+ File: brcm/brcmfmac43430a0-sdio.bin
+ File: brcm/brcmfmac43455-sdio.bin
+ File: brcm/brcmfmac4350c2-pcie.bin
+ File: brcm/brcmfmac4350-pcie.bin
+-File: brcm/brcmfmac4354-sdio.bin
+-File: brcm/brcmfmac4356-pcie.bin
+ File: brcm/brcmfmac4356-sdio.bin
+ File: brcm/brcmfmac43569.bin
+ File: brcm/brcmfmac43570-pcie.bin
+@@ -2254,6 +2249,11 @@ File: brcm/brcmfmac4371-pcie.bin
+ 
+ Licence: Redistributable. See LICENCE.broadcom_bcm43xx for details.
+ 
++File: brcm/brcmfmac43340-sdio.bin
++File: brcm/brcmfmac43362-sdio.bin
++File: brcm/brcmfmac43430-sdio.bin
++File: brcm/brcmfmac4354-sdio.bin
++File: brcm/brcmfmac4356-pcie.bin
+ File: brcm/brcmfmac4373-sdio.bin
+ File: brcm/brcmfmac4373.bin
+ 
 -- 
-https://patchwork.kernel.org/patch/10285795/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.1.0
