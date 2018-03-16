@@ -1,148 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:51075 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934059AbeCGXb3 (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:46096 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753150AbeCPKMJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Mar 2018 18:31:29 -0500
-Received: by mail-wm0-f52.google.com with SMTP id w128so8003296wmw.0
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Mar 2018 15:31:28 -0800 (PST)
-Date: Thu, 8 Mar 2018 00:31:25 +0100 (CET)
-From: Enrico Mioso <mrkiko.rs@gmail.com>
-To: Jamie Stuart <jamie@onebillion.org>
-cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Tom Psyborg <pozega.tomislav@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
-        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
-Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
- frame due to full tx queue...?
-In-Reply-To: <7B51BD3B-CAC3-479B-B06E-637A1C3A678A@onebillion.org>
-Message-ID: <alpine.LNX.2.21.99.1803080030390.13982@mStation.localdomain> (sfid-20180308_003133_474535_66761680)
-References: <20171221142558.GB4655@redhat.com> <alpine.LNX.2.21.99.1712241311370.28605@localhost.localdomain> <20180103113540.GA10306@redhat.com> <alpine.LNX.2.21.99.1801031503370.8405@localhost.localdomain> <CAKR_QVLRwAA0NJSarX46J4A8XSp8h5SuTEtSBQ4ydpEPh_-aUw@mail.gmail.com>
- <alpine.LNX.2.21.99.1801220643400.32225@mStation.localdomain> <20180123132234.GC2520@redhat.com> <alpine.LNX.2.21.99.1801240917001.13679@mStation.localdomain> <20180124100316.GB3101@redhat.com> <20180301153006.GJ1233@makrotopia.org> <20180307122701.GA10584@redhat.com>
- <7B51BD3B-CAC3-479B-B06E-637A1C3A678A@onebillion.org>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323329-918397886-1520465487=:13982"
+        Fri, 16 Mar 2018 06:12:09 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 10/12] brcmfmac: get rid of brcmf_fw_map_chip_to_name()
+Date: Fri, 16 Mar 2018 11:11:23 +0100
+Message-Id: <1521195085-439-11-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180316_111218_043403_3D63713C)
+In-Reply-To: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+The function is no longer used so removing it.
 
---8323329-918397886-1520465487=:13982
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8BIT
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../broadcom/brcm80211/brcmfmac/firmware.c         | 53 ----------------------
+ .../broadcom/brcm80211/brcmfmac/firmware.h         |  4 --
+ 2 files changed, 57 deletions(-)
 
-And BTW, thank you to all of you involved on this, for the testing and the work involved. And all.
-
-BTW - happy woman fest to all of you wimen, and the ones you know.
-
-Enrico
-
-
-On Wed, 7 Mar 2018, Jamie Stuart wrote:
-
-> Date: Wed, 7 Mar 2018 16:47:34
-> From: Jamie Stuart <jamie@onebillion.org>
-> To: Stanislaw Gruszka <sgruszka@redhat.com>
-> Cc: Daniel Golle <daniel@makrotopia.org>, Enrico Mioso <mrkiko.rs@gmail.com>,
->     Tom Psyborg <pozega.tomislav@gmail.com>,
->     linux-wireless <linux-wireless@vger.kernel.org>,
->     Johannes Berg <johannes.berg@intel.com>, Arnd Bergmann <arnd@arndb.de>,
->     John Crispin <john@phrozen.org>, Felix Fietkau <nbd@nbd.name>,
->     Mathias Kresin <dev@kresin.me>
-> Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
->     frame due to full tx queue...?
-> 
-> Hi Stanis,
->
-> Our environment has the following wireless config (MT7620A):
->
-> config wifi-device 'radio0'
-> 	option type 'mac80211'
-> 	option channel 'auto'
-> 	option hwmode '11g'
-> 	option path 'platform/10180000.wmac'
-> 	option txpower '20'
-> 	option country 'GB'
-> 	option htmode 'HT40'
-> 	option noscan '1'
->
-> config wifi-iface 'default_radio0'
-> 	option device 'radio0'
-> 	option network 'lan'
-> 	option mode 'ap'
-> 	option encryption 'psk2+aes'
-> 	option key ‘KEY'
-> 	option maxassoc '96'
-> 	option ssid ’SSID'
-> 	option disassoc_low_ack ‘0'
->
->
-> The 30 clients are all Apple iPads (a mixture of iPad mini and mini 2, running iOS 9-11). During this testing period, all clients were simultaneously downloading files from the devices’ sdcard (served via nginx running on the device). Although this is not a typical use-case, it was useful in stress-testing the wireless setup.
->
-> We’ll try your patches Stanis.
-> Daniel - forgive the stupid question, but how do we apply Stanis’ patches atop your staging tree (or both yours and Stanis’ atop trunk?)
->
->
->
->> On 7 Mar 2018, at 14:27, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->>
->> On Thu, Mar 01, 2018 at 04:30:10PM +0100, Daniel Golle wrote:
->>> [forwarding to all other involved players]
->>>
->>> On Thu, Mar 01, 2018 at 05:50:51PM +0300, Jamie Stuart wrote:
->>>> Hi Daniel,
->>>> The driver seems much improved after this fix.
->>>
->>> it's about those two
->>> [PATCH 1/2] rt2x00: pause almost full queue early
->>> [PATCH 2/2] rt2x00: do not pause queue unconditionally on error path
->>>
->>>> Under very heavy load (30 clients downloading multi-GB files from SD card on the server concurrently), wifi dies with errors:
->>
->> This is some testbed? Could you share how did you setup such
->> environment and what are client devices ?
->>
->>>> [ 7794.230376] ieee80211 phy0: rt2x00lib_rxdone_read_signal: Warning - Frame received with unrecognized signal, mode=0x0001, signal=0x010c, type=4
->>
->> This is indicator that HW/FW has a problem. There could be various
->> reasons for that. One possible I can also observe in my setup,is strange
->> mishmash of seq  on frames which were not acked in BlockACK and
->> had to be resent. This can happen when many frames are wrongly decoded
->> (i.e. when there is bad radio condition or we have not correct low level
->> RF/BBP setup for a Ralink device). To mitigate that problem we can
->> limit length of agreggeted AMPDU frame.
->>
->> I attached two patches which do that. One for RX side second for TX side.
->> Please check if they make a diffrent. You can also hardcode ba_size = 0
->> for those 30 clients setup.
->>
->> Note the patches can cause (possibly small) perfromance degradation on
->> good setups.
->>
->> Mathias, could you check them as well and see if they do not cause
->> performance regression on your device ? Lastly when I changed ba_size
->> setting, it was a problem on your setup.
->>
->>>> Thu Mar  1 16:36:47 2018 kern.err kernel: [ 8702.146403] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 2
->>>> Thu Mar  1 16:36:47 2018 kern.err kernel: [ 8702.146403] Please file bug report to http://rt2x00.serialmonkey.com
->>>> Thu Mar  1 16:36:48 2018 kern.err kernel: [ 8702.288149] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 2
->>>> Thu Mar  1 16:36:48 2018 kern.err kernel: [ 8702.288149] Please file bug report to http://rt2x00.serialmonkey.com
->>>> Thu Mar  1 16:36:48 2018 kern.err kernel: [ 8702.380761] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 2
->>>> Thu Mar  1 16:36:48 2018 kern.err kernel: [ 8702.380761] Please file bug report to http://rt2x00.serialmonkey.com
->>
->> For those errors I recommend to remove
->>
->> 600-23-rt2x00-rt2800mmio-add-a-workaround-for-spurious-TX_F.patch
->>
->> patch. Whould be good if OpenWRT developers could apply this patch only
->> on target where it is really needed, not for all rt2800 devices.
->>
->> Thanks
->> Stanislaw
->
->
---8323329-918397886-1520465487=:13982--
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index 598cdb1..1ea9451 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -635,59 +635,6 @@ static void brcmf_fw_get_full_name(char fw_name[BRCMF_FW_NAME_LEN],
+ 	strlcat(fw_name, extension, BRCMF_FW_NAME_LEN);
+ }
+ 
+-int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
+-			      struct brcmf_firmware_mapping mapping_table[],
+-			      u32 table_size, char fw_name[BRCMF_FW_NAME_LEN],
+-			      char nvram_name[BRCMF_FW_NAME_LEN])
+-{
+-	char chipname[12];
+-	u32 i;
+-	char end;
+-
+-	for (i = 0; i < table_size; i++) {
+-		if (mapping_table[i].chipid == chip &&
+-		    mapping_table[i].revmask & BIT(chiprev))
+-			break;
+-	}
+-
+-	if (i == table_size) {
+-		brcmf_err("Unknown chipid %d [%d]\n", chip, chiprev);
+-		return -ENODEV;
+-	}
+-
+-	brcmf_chip_name(chip, chiprev, chipname, sizeof(chipname));
+-
+-	/* check if firmware path is provided by module parameter */
+-	if (brcmf_mp_global.firmware_path[0] != '\0') {
+-		if (fw_name)
+-			strlcpy(fw_name, brcmf_mp_global.firmware_path,
+-				BRCMF_FW_NAME_LEN);
+-		if (nvram_name)
+-			strlcpy(nvram_name, brcmf_mp_global.firmware_path,
+-				BRCMF_FW_NAME_LEN);
+-
+-		end = brcmf_mp_global.firmware_path[
+-				strlen(brcmf_mp_global.firmware_path) - 1];
+-		if (end != '/') {
+-			if (fw_name)
+-				strlcat(fw_name, "/", BRCMF_FW_NAME_LEN);
+-			if (nvram_name)
+-				strlcat(nvram_name, "/", BRCMF_FW_NAME_LEN);
+-		}
+-	}
+-
+-	brcmf_info("using %s for chip %s\n",
+-		   mapping_table[i].fw_base, chipname);
+-	if (fw_name)
+-		brcmf_fw_get_full_name(fw_name,
+-				       mapping_table[i].fw_base, ".bin");
+-	if (nvram_name)
+-		brcmf_fw_get_full_name(nvram_name,
+-				       mapping_table[i].fw_base, ".txt");
+-
+-	return 0;
+-}
+-
+ struct brcmf_fw_request *
+ brcmf_fw_alloc_request(u32 chip, u32 chiprev,
+ 		       struct brcmf_firmware_mapping mapping_table[],
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+index 1416fbb..79a2109 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+@@ -46,10 +46,6 @@ struct brcmf_firmware_mapping {
+ #define BRCMF_FW_ENTRY(chipid, mask, name) \
+ 	{ chipid, mask, BRCM_ ## name ## _FIRMWARE_BASENAME }
+ 
+-int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
+-			      struct brcmf_firmware_mapping mapping_table[],
+-			      u32 table_size, char fw_name[BRCMF_FW_NAME_LEN],
+-			      char nvram_name[BRCMF_FW_NAME_LEN]);
+ void brcmf_fw_nvram_free(void *nvram);
+ 
+ enum brcmf_fw_type {
+-- 
+1.9.1
