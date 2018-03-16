@@ -1,89 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59924 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752447AbeC1Iuf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 04:50:35 -0400
+Received: from mail.bugwerft.de ([46.23.86.59]:47596 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751888AbeCPLig (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Mar 2018 07:38:36 -0400
+Subject: Re: [PATCH] wcn36xx: dequeue all pending indicator messages
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: wcn36xx@lists.infradead.org, Ramon Fried <rfried@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+References: <20180315223725.28283-1-daniel@zonque.org>
+ <3d6783ea-837c-a314-dea9-63906aeb0793@codeaurora.org>
+ <e4dfbb05-10c7-2dc5-6995-ea34bd5945bc@zonque.org>
+ <87y3is2ubq.fsf@kamboji.qca.qualcomm.com>
+From: Daniel Mack <daniel@zonque.org>
+Message-ID: <f972e34a-7b56-5750-f86d-710cb046a8b1@zonque.org> (sfid-20180316_123840_155054_9607C033)
+Date: Fri, 16 Mar 2018 12:38:34 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 28 Mar 2018 14:20:34 +0530
-From: vthiagar@codeaurora.org
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [RFC 2/4] nl80211/mac80211: Extend NoAck policy command with peer
- MAC address
-In-Reply-To: <1522224360.4222.3.camel@sipsolutions.net>
-References: <1522140171-10926-1-git-send-email-vthiagar@codeaurora.org>
- <1522140171-10926-3-git-send-email-vthiagar@codeaurora.org>
- <1522154870.3050.2.camel@sipsolutions.net>
- <bf1c7f4dc442e0e2807b520fe94d7ca2@codeaurora.org>
- <1522224360.4222.3.camel@sipsolutions.net>
-Message-ID: <7031cf9c458fd53091e74dec2ee83d82@codeaurora.org> (sfid-20180328_105041_763644_542DD801)
+In-Reply-To: <87y3is2ubq.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-03-28 13:36, Johannes Berg wrote:
-> On Wed, 2018-03-28 at 10:24 +0530, vthiagar@codeaurora.org wrote:
+On Friday, March 16, 2018 11:22 AM, Kalle Valo wrote:
+> Daniel Mack <daniel@zonque.org> writes:
 > 
->> > The question is how that interacts with having enough space - are you
->> > sure this is a concern?
->> 
->> This will not be an issue at lest for ath10k. This is mainly for a
->> (new)driver
->> which implements the offload but has limitation in supporting more 
->> than
->> certain
->> number of peers. Perhaps we can remove it now and add it when such
->> driver is
->> available?
+>> Hi,
+>>
+>> On Friday, March 16, 2018 10:09 AM, Ramon Fried wrote:
+>>> On 3/16/2018 12:37 AM, Daniel Mack wrote:
+>>>> In case wcn36xx_smd_rsp_process() is called more than once before
+>>>> hal_ind_work was dispatched, the messages will end up in hal_ind_queue,
+>>>> but wcn36xx_ind_smd_work() will only look at the first message in that
+>>>> list.
+>>>>
+>>>> Fix this by dequeing the messages from the list in a loop, and only stop
+>>>> when it's empty.
+>>> Interesting. does it solve a specific bug ? can you elaborate ?
+>>
+>> I'm poking around in the driver to hopefully find issues that cause
+>> instability and failures in joining networks, which I am seeing a lot.
+>> There are a number of bug reports regarding this, for instance
+>>
+>>   https://bugs.96boards.org/show_bug.cgi?id=538
+>>   https://bugs.96boards.org/show_bug.cgi?id=319
+>>
+>> I'm following your patches and also started to look into the driver
+>> myself, and during review, I noticed that list handling issue. I have a
+>> big fat warning locally that would tell me if the list ever contains
+>> more than one entry, but that never happens, as the indicator messages
+>> are way too infrequent to trigger the race. So this isn't a real-world
+>> issue as far as I can tell, but it is still quite obviously a bug. Hence
+>> I considered posting a patch.
 > 
-> Ok, that's good. Yes, I think that sounds better - I have a hard time
-> imagining a firmware/driver that has space for the station, but doesn't
-> automatically allocate a u16 bitmap as part of the station :-)
+> It's a good idea to mention in the commit log if the fix is for a
+> theoretical issue and does not necessarily fix anything visible. Helps
+> to understand the background, prioritise which release the fix should go
+> etc.
 > 
->> > >   * @NL80211_CMD_SET_NOACK_MAP: sets a bitmap for the individual TIDs
->> > > whether
->> > > - *      No Acknowledgement Policy should be applied.
->> > > + *	No Acknowledgement Policy should be applied. %NL80211_ATTR_MAC is
->> > > used
->> > > + *	to apply No Acknowledgement policy for a particular connected
->> > > station.
->> > > + *	Station specific NoAck policy configuration is valid only for
->> > > STA's
->> > > + *	current connection, i.e. the configuration will not be used when
->> > > the
->> > > + *	station connects back after disconnection/roaming.
->> > > + *	When user-space does not include %NL80211_ATTR_MAC, the No
->> > > + *	Acknowledgement Policy setting should be treated as per-netdev
->> > > + *	configuration.
->> >
->> > Here you describe different semantics - i.e. you didn't describe the
->> > "previous per-station settings are kept" part. I'm not sure that part
->> > makes much sense anyhow?
->> 
->> Not sure I got this comment right. As mentioned in the doc, the 
->> previous
->> settings
->> would be reset upon reconnection of the station and any ndev wide
->> configuration
->> will be used. As mentioned above, additionally default value will be 
->> set
->> to the
->> station to mark no per-station configuration is given so far.
-> 
-> I just thought that there was a difference in how this applies to a
-> certain station.
 
-May be the doc needs more update
+Well, it's a race which can (theoretically) happen anytime.
+But sure, I will add another sentence to the commit log and resend.
 
-> 
-> Btw, we should probably also have a way to *delete* the per-station
-> configuration, so it uses the default again?
 
-Sure. How about setting it to default when the command is received with 
-no
-NL80211_ATTR_NOACK_MAP attribute for a station?
-
-Vasanth
+Thanks,
+Daniel
