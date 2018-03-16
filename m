@@ -1,60 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:24922 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934342AbeCHPwj (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:46116 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753164AbeCPKMK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Mar 2018 10:52:39 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 10/10] staging: wilc1000: fix line over 80 char issue in handle_scan_done()
-Date: Wed, 7 Mar 2018 07:43:59 +0530
-Message-ID: <1520388839-7048-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180308_170349_176834_67AF7EFF)
-In-Reply-To: <1520388839-7048-1-git-send-email-ajay.kathat@microchip.com>
-References: <1520388839-7048-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 16 Mar 2018 06:12:10 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 12/12] brcmfmac: add kerneldoc for struct brcmf_bus::msgbuf
+Date: Fri, 16 Mar 2018 11:11:25 +0100
+Message-Id: <1521195085-439-13-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180316_111229_268036_0831B899)
+In-Reply-To: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix 'line over 80 characters' issue found by checkpatch.pl script in
-handle_scan_done().
+This field did not have kerneldoc description so adding it now.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d822b15..5082ede 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -886,6 +886,7 @@ static s32 handle_scan_done(struct wilc_vif *vif, enum scan_event evt)
- 	u8 abort_running_scan;
- 	struct wid wid;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
-+	struct user_scan_req *scan_req;
- 
- 	if (evt == SCAN_EVENT_ABORTED) {
- 		abort_running_scan = 1;
-@@ -908,10 +909,10 @@ static s32 handle_scan_done(struct wilc_vif *vif, enum scan_event evt)
- 		return result;
- 	}
- 
--	if (hif_drv->usr_scan_req.scan_result) {
--		hif_drv->usr_scan_req.scan_result(evt, NULL,
--						  hif_drv->usr_scan_req.arg, NULL);
--		hif_drv->usr_scan_req.scan_result = NULL;
-+	scan_req = &hif_drv->usr_scan_req;
-+	if (scan_req->scan_result) {
-+		scan_req->scan_result(evt, NULL, scan_req->arg, NULL);
-+		scan_req->scan_result = NULL;
- 	}
- 
- 	return result;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+index 31858a2..27e693e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+@@ -140,6 +140,7 @@ struct brcmf_bus_stats {
+  * @always_use_fws_queue: bus wants use queue also when fwsignal is inactive.
+  * @wowl_supported: is wowl supported by bus driver.
+  * @chiprev: revision of the dongle chip.
++ * @msgbuf: msgbuf protocol parameters provided by bus layer.
+  */
+ struct brcmf_bus {
+ 	union {
 -- 
-2.7.4
+1.9.1
