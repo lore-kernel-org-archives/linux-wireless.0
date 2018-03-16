@@ -1,60 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:55595 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751929AbeCORY0 (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:46070 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753066AbeCPKMI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Mar 2018 13:24:26 -0400
-Received: by mail-wm0-f65.google.com with SMTP id q83so11987468wme.5
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2018 10:24:25 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76: use mt76_poll_msec routine in mt76pci_load_firmware()
-Date: Thu, 15 Mar 2018 18:24:20 +0100
-Message-Id: <b2abf42bbd5e5f41082bd17df018dcb203aa2f86.1521128408.git.lorenzo.bianconi@redhat.com> (sfid-20180315_182429_828869_1CFEE3C6)
-In-Reply-To: <cover.1521128408.git.lorenzo.bianconi@redhat.com>
-References: <cover.1521128408.git.lorenzo.bianconi@redhat.com>
+        Fri, 16 Mar 2018 06:12:08 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 03/12] brcmfmac: use brcmf_chip_name() for consistency
+Date: Fri, 16 Mar 2018 11:11:16 +0100
+Message-Id: <1521195085-439-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180316_111224_599073_863B4EF7)
+In-Reply-To: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use mt76_poll_msec() in mt76pci_load_firmware to check if the firmware
-has been started instead of explicitly poll MCU running register
+When logging the chip id/revision information make use of
+brcmf_chip_name() so it is always the same.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c | 13 ++-----------
- 1 file changed, 2 insertions(+), 11 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c     | 5 ++---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 7 +++++--
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
-index 15820b11f9db..dfd36d736b06 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
-@@ -187,7 +187,7 @@ mt76pci_load_firmware(struct mt76x2_dev *dev)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+index bf45369..3b829fe 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+@@ -926,9 +926,8 @@ static int brcmf_chip_recognition(struct brcmf_chip_priv *ci)
+ 
+ 	brcmf_chip_name(ci->pub.chip, ci->pub.chiprev,
+ 			ci->pub.name, sizeof(ci->pub.name));
+-	brcmf_dbg(INFO, "found %s chip: BCM%s, rev=%d\n",
+-		  socitype == SOCI_SB ? "SB" : "AXI", ci->pub.name,
+-		  ci->pub.chiprev);
++	brcmf_dbg(INFO, "found %s chip: %s\n",
++		  socitype == SOCI_SB ? "SB" : "AXI", ci->pub.name);
+ 
+ 	if (socitype == SOCI_SB) {
+ 		if (ci->pub.chip != BRCM_CC_4329_CHIP_ID) {
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index 091b529..e2199f5 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -25,6 +25,7 @@
+ #include "firmware.h"
+ #include "core.h"
+ #include "common.h"
++#include "chip.h"
+ 
+ #define BRCMF_FW_MAX_NVRAM_SIZE			64000
+ #define BRCMF_FW_NVRAM_DEVPATH_LEN		19	/* devpath0=pcie/1/4/ */
+@@ -567,6 +568,7 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
+ 			      u32 table_size, char fw_name[BRCMF_FW_NAME_LEN],
+ 			      char nvram_name[BRCMF_FW_NAME_LEN])
  {
- 	const struct firmware *fw;
- 	const struct mt76x2_fw_header *hdr;
--	int i, len, ret;
-+	int len, ret;
- 	__le32 *cur;
- 	u32 offset, val;
++	char chipname[12];
+ 	u32 i;
+ 	char end;
  
-@@ -240,16 +240,7 @@ mt76pci_load_firmware(struct mt76x2_dev *dev)
+@@ -581,6 +583,8 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
+ 		return -ENODEV;
+ 	}
  
- 	/* trigger firmware */
- 	mt76_wr(dev, MT_MCU_INT_LEVEL, 2);
--	for (i = 200; i > 0; i--) {
--		val = mt76_rr(dev, MT_MCU_COM_REG0);
--
--		if (val & 1)
--			break;
--
--		msleep(10);
--	}
--
--	if (!i) {
-+	if (!mt76_poll_msec(dev, MT_MCU_COM_REG0, 1, 1, 200)) {
- 		dev_err(dev->mt76.dev, "Firmware failed to start\n");
- 		release_firmware(fw);
- 		return -ETIMEDOUT;
++	brcmf_chip_name(chip, chiprev, chipname, sizeof(chipname));
++
+ 	/* check if firmware path is provided by module parameter */
+ 	if (brcmf_mp_global.firmware_path[0] != '\0') {
+ 		strlcpy(fw_name, brcmf_mp_global.firmware_path,
+@@ -601,8 +605,7 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
+ 	if ((nvram_name) && (mapping_table[i].nvram))
+ 		strlcat(nvram_name, mapping_table[i].nvram, BRCMF_FW_NAME_LEN);
+ 
+-	brcmf_info("using %s for chip %#08x(%d) rev %#08x\n",
+-		   fw_name, chip, chip, chiprev);
++	brcmf_info("using %s for chip %s\n", fw_name, chipname);
+ 
+ 	return 0;
+ }
 -- 
-2.14.3
+1.9.1
