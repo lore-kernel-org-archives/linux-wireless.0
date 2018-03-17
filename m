@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40230 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751173AbeCIOuK (ORCPT
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:33091 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751304AbeCQL3f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Mar 2018 09:50:10 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Andreas Christoforou <andreaschristofo@gmail.com>
-Cc: keescook@chromium.org, kernel-hardening@lists.openwall.com,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] drivers: net: wireless: ath: ath9k: dfs: remove VLA usage
-References: <1520601833-4952-1-git-send-email-andreaschristofo@gmail.com>
-Date: Fri, 09 Mar 2018 16:50:05 +0200
-In-Reply-To: <1520601833-4952-1-git-send-email-andreaschristofo@gmail.com>
-        (Andreas Christoforou's message of "Fri, 9 Mar 2018 15:23:53 +0200")
-Message-ID: <87zi3hcnhe.fsf@kamboji.qca.qualcomm.com> (sfid-20180309_155715_434271_97086244)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sat, 17 Mar 2018 07:29:35 -0400
+Received: by mail-wr0-f193.google.com with SMTP id z73so9771976wrb.0
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Mar 2018 04:29:35 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76x2: fix possible NULL pointer dereferencing in mt76x2_tx()
+Date: Sat, 17 Mar 2018 12:29:27 +0100
+Message-Id: <20180317112927.18299-1-lorenzo.bianconi@redhat.com> (sfid-20180317_123042_008421_8EBF6EF6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andreas Christoforou <andreaschristofo@gmail.com> writes:
+Fix a theoretical NULL pointer dereferencing in mt76x2_tx routine that
+can occurs for injected frames in a monitor vif since vif pointer could
+be NULL for that interfaces
 
-> The kernel would like to have all stack VLA usage removed.
->
-> This is the correct patch.
->
-> Signed-off-by: Andreas Christoforou <andreaschristofo@gmail.com>
+Fixes: 23405236460b ("mt76: fix transmission of encrypted mgmt frames")
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x2_tx.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Please use versioning in the patches:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#patch_version_missing
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
+index 534e4bf9a34c..e46eafc4c436 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
+@@ -36,9 +36,12 @@ void mt76x2_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
+ 
+ 		msta = (struct mt76x2_sta *) control->sta->drv_priv;
+ 		wcid = &msta->wcid;
++		/* sw encrypted frames */
++		if (!info->control.hw_key && wcid->hw_key_idx != -1)
++			control->sta = NULL;
+ 	}
+ 
+-	if (vif || (!info->control.hw_key && wcid->hw_key_idx != -1)) {
++	if (vif && !control->sta) {
+ 		struct mt76x2_vif *mvif;
+ 
+ 		mvif = (struct mt76x2_vif *) vif->drv_priv;
 -- 
-Kalle Valo
+2.16.2
