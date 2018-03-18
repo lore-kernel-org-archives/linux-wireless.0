@@ -1,101 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f177.google.com ([209.85.216.177]:45144 "EHLO
-        mail-qt0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752548AbeC2LMz (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:39956 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750766AbeCRSla (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 07:12:55 -0400
-Received: by mail-qt0-f177.google.com with SMTP id f8so5770341qtg.12
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2018 04:12:55 -0700 (PDT)
-Subject: Re: [PATCH] nl80211: Update ERP info using
- NL80211_CMD_UPDATE_CONNECT_PARAMS
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Vidyullatha Kanchanapally <vidyullatha@codeaurora.org>
-References: <1508923248-18848-1-git-send-email-vidyullatha@codeaurora.org>
- <1512990779.26976.69.camel@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
-        vkanchan@qti.qualcomm.com, amarnath@qti.qualcomm.com,
-        usdutt@qti.qualcomm.com, vamsin@qti.qualcomm.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5ABCCA33.8070501@broadcom.com> (sfid-20180329_131312_679481_E3E6908E)
-Date: Thu, 29 Mar 2018 13:12:51 +0200
-MIME-Version: 1.0
-In-Reply-To: <1512990779.26976.69.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Sun, 18 Mar 2018 14:41:30 -0400
+From: Alexey Roslyakov <alexey.roslyakov@gmail.com>
+To: kvalo@codeaurora.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        wright.feng@cypress.com, netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Alexey Roslyakov <alexey.roslyakov@gmail.com>
+Subject: [PATCH 1/2] brcmfmac: add new dt entries for SG SDIO settings
+Date: Mon, 19 Mar 2018 01:41:00 +0700
+Message-Id: <20180318184101.26951-1-alexey.roslyakov@gmail.com> (sfid-20180318_194212_546637_BD145646)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+There are 3 fields in SDIO settings (quirks) to workaround some of
+the SG SDIO host particularities, i.e higher align requirements for
+SG items.
+All coding is done the long time ago, but there is no way to change the
+driver behavior without patching the kernel.
+Add missing devicetree entries.
 
-Picking up a somewhat old thread as I did not see a follow-up on this 
-patch. I got queried about it over here by our FILS team. So what is 
-needed for this patch to pass the bar?
+Signed-off-by: Alexey Roslyakov <alexey.roslyakov@gmail.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-On 12/11/2017 12:12 PM, Johannes Berg wrote:
-> On Wed, 2017-10-25 at 14:50 +0530, Vidyullatha Kanchanapally wrote:
->
->> + * @UPDATE_FILS_ERP_INFO: Indicates that FILS connection parameters (realm,
->> + *	username, erp sequence number and rrk) are updated
->> + * @UPDATE_AUTH_TYPE: Indicates that Authentication type is updated
->
-> These are new here, but you don't know if they were actually supported:
->
->> +	if (wiphy_ext_feature_isset(&rdev->wiphy,
->> +				    NL80211_EXT_FEATURE_FILS_SK_OFFLOAD) &&
->
-> here.
-
-The description of the FILS_SK_OFFLOAD currently says:
-
-  * @NL80211_EXT_FEATURE_FILS_SK_OFFLOAD: Driver SME supports FILS 
-shared key
-  *      authentication with %NL80211_CMD_CONNECT.
-
-Are you suggesting a new flag to cover the new update attributes?
-
-Drivers reporting FILS_SK_OFFLOAD *and* WIPHY_FLAG_SUPPORTS_FW_ROAM 
-really need this info to have any luck roaming.
-
->> +	    info->attrs[NL80211_ATTR_FILS_ERP_USERNAME] &&
->> +	    info->attrs[NL80211_ATTR_FILS_ERP_REALM] &&
->> +	    info->attrs[NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM] &&
->> +	    info->attrs[NL80211_ATTR_FILS_ERP_RRK]) {
-> [...]
->> +	} else if (info->attrs[NL80211_ATTR_FILS_ERP_USERNAME] ||
->> +		   info->attrs[NL80211_ATTR_FILS_ERP_REALM] ||
->> +		   info->attrs[NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM] ||
->> +		   info->attrs[NL80211_ATTR_FILS_ERP_RRK]) {
->> +		return -EINVAL;
->> +	}
->
-> This logic is also really odd, why not
->
-> if (attrs) {
-> 	if (not flag)
-> 		return -EINVAL;
-> 	/* use attrs etc. */
-> }
->
->> +
->> +	if (info->attrs[NL80211_ATTR_AUTH_TYPE]) {
->> +		u32 auth_type =
->> +			nla_get_u32(info->attrs[NL80211_ATTR_AUTH_TYPE]);
->> +		if (!nl80211_valid_auth_type(rdev, auth_type,
->> +					     NL80211_CMD_CONNECT))
->> +			return -EINVAL;
->> +		connect.auth_type = auth_type;
->> +		changed |= UPDATE_AUTH_TYPE;
->> +	}
->
-> Again, how do you know the driver will actually look at
-> UPDATE_AUTH_TYPE?
-
-If they don't they are broken, right? And if they are broken, the 
-connection will drop and regular connect will happen anyway, no?
-
-We could add a new flag to signal driver will handle the extra 
-parameters in UPDATE_CONNECT_PARAMS, but it is not clear why it would be 
-needed. Seems to me user-space has all the info needed with the existing 
-flag(s).
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
+index aee6e5937c41..0718ca09a40d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
+@@ -31,6 +31,7 @@ void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
+ 	int irq;
+ 	u32 irqf;
+ 	u32 val;
++	u16 align;
+ 
+ 	if (!np || bus_type != BRCMF_BUSTYPE_SDIO ||
+ 	    !of_device_is_compatible(np, "brcm,bcm4329-fmac"))
+@@ -39,6 +40,15 @@ void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
+ 	if (of_property_read_u32(np, "brcm,drive-strength", &val) == 0)
+ 		sdio->drive_strength = val;
+ 
++	sdio->broken_sg_support =
++		of_property_read_bool(np, "brcm,broken-sg-support");
++
++	if (of_property_read_u16(np, "brcm,sd-head-align", &align) == 0)
++		sdio->sd_head_align = align;
++
++	if (of_property_read_u16(np, "brcm,sd-sgentry-align", &align) == 0)
++		sdio->sd_sgentry_align = align;
++
+ 	/* make sure there are interrupts defined in the node */
+ 	if (!of_find_property(np, "interrupts", NULL))
+ 		return;
+-- 
+2.16.1
