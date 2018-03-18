@@ -1,302 +1,214 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-he1eur01on0046.outbound.protection.outlook.com ([104.47.0.46]:52096
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750744AbeC3HzY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Mar 2018 03:55:24 -0400
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: robin.murphy@arm.com, hch@lst.de, linux@armlinux.org.uk,
-        gregkh@linuxfoundation.org, m.szyprowski@samsung.com
-Cc: bhelgaas@google.com, zajec5@gmail.com, andy.gross@linaro.org,
-        david.brown@linaro.org, dan.j.williams@intel.com,
-        vinod.koul@intel.com, thierry.reding@gmail.com, robh+dt@kernel.org,
-        frowand.list@gmail.com, jarkko.sakkinen@linux.intel.com,
-        rafael.j.wysocki@intel.com, dmitry.torokhov@gmail.com,
-        johan@kernel.org, msuchanek@suse.de, linux-kernel@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
-        dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, bharat.bhushan@nxp.com,
-        leoyang.li@nxp.com, Nipun Gupta <nipun.gupta@nxp.com>
-Subject: [PATCH v3 1/2] dma-mapping: move dma configuration to bus infrastructure
-Date: Fri, 30 Mar 2018 13:24:44 +0530
-Message-Id: <1522396485-10248-1-git-send-email-nipun.gupta@nxp.com> (sfid-20180330_095615_292379_A9FCE72B)
-In-Reply-To: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
-References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from skyhawk.myhost.co.nz ([120.138.17.237]:57048 "EHLO
+        skyhawk.myhost.co.nz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754675AbeCRXit (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Mar 2018 19:38:49 -0400
+From: Ben Caradoc-Davies <ben@transient.nz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        Ben Caradoc-Davies <ben@transient.nz>
+Subject: [PATCH] mac80211: add ieee80211_hw flag for QoS NDP support
+Date: Mon, 19 Mar 2018 12:38:05 +1300
+Message-Id: <20180318233805.2778-1-ben@transient.nz> (sfid-20180319_003852_721930_8D86B853)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is bus specific aspect to map a given device on the bus and
-relevant firmware description of its DMA configuration.
-So, this change introduces 'dma_configure' as bus callback
-giving flexibility to busses for implementing its own dma
-configuration function.
+Commit 7b6ddeaf27ec ("mac80211: use QoS NDP for AP probing") adds an
+argument qos_ok to ieee80211_nullfunc_get to support QoS NDP. Despite
+the claim in the commit log "Change all the drivers to *not* allow
+QoS NDP for now, even though it looks like most of them should be OK
+with that", this commit enables QoS NDP in response to beacons (see
+change to mlme.c:ieee80211_send_nullfunc), causing ath9k_htc to lose
+IP connectivity. See:
+https://patchwork.kernel.org/patch/10241109/
+https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891060
 
-The change eases the addition of new busses w.r.t. adding the dma
-configuration functionality.
+This patch replaces the argument qos_ok of ieee80211_nullfunc_get
+with an ieee80211_hw flag that drivers can use to declare support for
+QoS NDP, allowing consistent behaviour between mlme.c and drivers.
 
-This patch also updates the PCI, Platform, ACPI and host1x bus to
-use new introduced callbacks.
-
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Ben Caradoc-Davies <ben@transient.nz>
 ---
- - The patches are based on the comments on:
-   https://patchwork.kernel.org/patch/10259087/
+ drivers/net/wireless/ath/ath9k/channel.c |  2 +-
+ drivers/net/wireless/st/cw1200/sta.c     |  4 ++--
+ drivers/net/wireless/ti/wl1251/main.c    |  2 +-
+ drivers/net/wireless/ti/wlcore/cmd.c     |  5 ++---
+ include/net/mac80211.h                   | 12 +++++-------
+ net/mac80211/debugfs.c                   |  1 +
+ net/mac80211/mlme.c                      |  2 +-
+ net/mac80211/tx.c                        |  5 ++---
+ 8 files changed, 15 insertions(+), 18 deletions(-)
 
-Changes in v2:
-  - Do not have dma_deconfigure callback
-  - Have '/dma_common_configure/' API to provide a common DMA
-    configuration which can be used by busses if it suits them.
-  - Platform and ACPI bus to use '/dma_common_configure/' in
-    '/dma_configure/' callback.
-  - Updated commit message
-  - Updated pci_dma_configure API with changes suggested by Robin
-
-Changes in v3
-  - Move dma_common_configure() within platform_dma_configure() and
-    reuse platofrm_dma_configure() for AMBA bus too
-  - Declare 'attr' in pci_dma_configure() inside the else statement
-    where it is used.
-
- drivers/amba/bus.c              |  4 ++++
- drivers/base/dma-mapping.c      | 31 ++++---------------------------
- drivers/base/platform.c         | 17 +++++++++++++++++
- drivers/gpu/host1x/bus.c        |  8 ++++++++
- drivers/pci/pci-driver.c        | 32 ++++++++++++++++++++++++++++++++
- include/linux/device.h          |  4 ++++
- include/linux/platform_device.h |  2 ++
- 7 files changed, 71 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/amba/bus.c b/drivers/amba/bus.c
-index 594c228..867dc2b 100644
---- a/drivers/amba/bus.c
-+++ b/drivers/amba/bus.c
-@@ -20,6 +20,7 @@
- #include <linux/sizes.h>
- #include <linux/limits.h>
- #include <linux/clk/clk-conf.h>
-+#include <linux/platform_device.h>
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 1b05b5d7a038..dfb26f03c1a2 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -1113,7 +1113,7 @@ ath_chanctx_send_vif_ps_frame(struct ath_softc *sc, struct ath_vif *avp,
+ 		if (!avp->assoc)
+ 			return false;
  
- #include <asm/irq.h>
+-		skb = ieee80211_nullfunc_get(sc->hw, vif, false);
++		skb = ieee80211_nullfunc_get(sc->hw, vif);
+ 		if (!skb)
+ 			return false;
  
-@@ -188,12 +189,15 @@ static int amba_pm_runtime_resume(struct device *dev)
- /*
-  * Primecells are part of the Advanced Microcontroller Bus Architecture,
-  * so we call the bus "amba".
-+ * DMA configuration for platform and AMBA bus is same. So here we reuse
-+ * platform's DMA config routine.
-  */
- struct bus_type amba_bustype = {
- 	.name		= "amba",
- 	.dev_groups	= amba_dev_groups,
- 	.match		= amba_match,
- 	.uevent		= amba_uevent,
-+	.dma_configure	= platform_dma_configure,
- 	.pm		= &amba_pm,
- 	.force_dma	= true,
- };
-diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
-index 3b11835..fdc1502 100644
---- a/drivers/base/dma-mapping.c
-+++ b/drivers/base/dma-mapping.c
-@@ -331,36 +331,13 @@ void dma_common_free_remap(void *cpu_addr, size_t size, unsigned long vm_flags)
- #endif
+diff --git a/drivers/net/wireless/st/cw1200/sta.c b/drivers/net/wireless/st/cw1200/sta.c
+index 38678e9a0562..03687a80d6e9 100644
+--- a/drivers/net/wireless/st/cw1200/sta.c
++++ b/drivers/net/wireless/st/cw1200/sta.c
+@@ -198,7 +198,7 @@ void __cw1200_cqm_bssloss_sm(struct cw1200_common *priv,
  
- /*
-- * Common configuration to enable DMA API use for a device
-+ * enables DMA API use for a device
-  */
--#include <linux/pci.h>
--
- int dma_configure(struct device *dev)
- {
--	struct device *bridge = NULL, *dma_dev = dev;
--	enum dev_dma_attr attr;
--	int ret = 0;
--
--	if (dev_is_pci(dev)) {
--		bridge = pci_get_host_bridge_device(to_pci_dev(dev));
--		dma_dev = bridge;
--		if (IS_ENABLED(CONFIG_OF) && dma_dev->parent &&
--		    dma_dev->parent->of_node)
--			dma_dev = dma_dev->parent;
--	}
--
--	if (dma_dev->of_node) {
--		ret = of_dma_configure(dev, dma_dev->of_node);
--	} else if (has_acpi_companion(dma_dev)) {
--		attr = acpi_get_dma_attr(to_acpi_device_node(dma_dev->fwnode));
--		if (attr != DEV_DMA_NOT_SUPPORTED)
--			ret = acpi_dma_configure(dev, attr);
--	}
--
--	if (bridge)
--		pci_put_host_bridge_device(bridge);
--
--	return ret;
-+	if (dev->bus->dma_configure)
-+		return dev->bus->dma_configure(dev);
-+	return 0;
- }
+ 		priv->bss_loss_state++;
  
- void dma_deconfigure(struct device *dev)
-diff --git a/drivers/base/platform.c b/drivers/base/platform.c
-index f1bf7b3..72fdbf6 100644
---- a/drivers/base/platform.c
-+++ b/drivers/base/platform.c
-@@ -1130,6 +1130,22 @@ int platform_pm_restore(struct device *dev)
+-		skb = ieee80211_nullfunc_get(priv->hw, priv->vif, false);
++		skb = ieee80211_nullfunc_get(priv->hw, priv->vif);
+ 		WARN_ON(!skb);
+ 		if (skb)
+ 			cw1200_tx(priv->hw, NULL, skb);
+@@ -2265,7 +2265,7 @@ static int cw1200_upload_null(struct cw1200_common *priv)
+ 		.rate = 0xFF,
+ 	};
  
- #endif /* CONFIG_HIBERNATE_CALLBACKS */
+-	frame.skb = ieee80211_nullfunc_get(priv->hw, priv->vif, false);
++	frame.skb = ieee80211_nullfunc_get(priv->hw, priv->vif);
+ 	if (!frame.skb)
+ 		return -ENOMEM;
  
-+int platform_dma_configure(struct device *dev)
-+{
-+	enum dev_dma_attr attr;
-+	int ret = 0;
-+
-+	if (dev->of_node) {
-+		ret = of_dma_configure(dev, dev->of_node);
-+	} else if (has_acpi_companion(dev)) {
-+		attr = acpi_get_dma_attr(to_acpi_device_node(dev->fwnode));
-+		if (attr != DEV_DMA_NOT_SUPPORTED)
-+			ret = acpi_dma_configure(dev, attr);
-+	}
-+
-+	return ret;
-+}
-+
- static const struct dev_pm_ops platform_dev_pm_ops = {
- 	.runtime_suspend = pm_generic_runtime_suspend,
- 	.runtime_resume = pm_generic_runtime_resume,
-@@ -1141,6 +1157,7 @@ struct bus_type platform_bus_type = {
- 	.dev_groups	= platform_dev_groups,
- 	.match		= platform_match,
- 	.uevent		= platform_uevent,
-+	.dma_configure	= platform_dma_configure,
- 	.pm		= &platform_dev_pm_ops,
- 	.force_dma	= true,
- };
-diff --git a/drivers/gpu/host1x/bus.c b/drivers/gpu/host1x/bus.c
-index 88a3558..a9ec99d 100644
---- a/drivers/gpu/host1x/bus.c
-+++ b/drivers/gpu/host1x/bus.c
-@@ -314,6 +314,13 @@ static int host1x_device_match(struct device *dev, struct device_driver *drv)
- 	return strcmp(dev_name(dev), drv->name) == 0;
- }
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index 037defd10b91..99a6889a6540 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -566,7 +566,7 @@ static int wl1251_build_null_data(struct wl1251 *wl)
+ 		size = sizeof(struct wl12xx_null_data_template);
+ 		ptr = NULL;
+ 	} else {
+-		skb = ieee80211_nullfunc_get(wl->hw, wl->vif, false);
++		skb = ieee80211_nullfunc_get(wl->hw, wl->vif);
+ 		if (!skb)
+ 			goto out;
+ 		size = skb->len;
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index 761cf8573a80..2bfc12fdc929 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -1069,8 +1069,7 @@ int wl12xx_cmd_build_null_data(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 		ptr = NULL;
+ 	} else {
+ 		skb = ieee80211_nullfunc_get(wl->hw,
+-					     wl12xx_wlvif_to_vif(wlvif),
+-					     false);
++					     wl12xx_wlvif_to_vif(wlvif));
+ 		if (!skb)
+ 			goto out;
+ 		size = skb->len;
+@@ -1097,7 +1096,7 @@ int wl12xx_cmd_build_klv_null_data(struct wl1271 *wl,
+ 	struct sk_buff *skb = NULL;
+ 	int ret = -ENOMEM;
  
-+static int host1x_dma_configure(struct device *dev)
-+{
-+	if (dev->of_node)
-+		return of_dma_configure(dev, dev->of_node);
-+	return 0;
-+}
-+
- static const struct dev_pm_ops host1x_device_pm_ops = {
- 	.suspend = pm_generic_suspend,
- 	.resume = pm_generic_resume,
-@@ -326,6 +333,7 @@ static int host1x_device_match(struct device *dev, struct device_driver *drv)
- struct bus_type host1x_bus_type = {
- 	.name = "host1x",
- 	.match = host1x_device_match,
-+	.dma_configure	= host1x_dma_configure,
- 	.pm = &host1x_device_pm_ops,
- 	.force_dma = true,
- };
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 3bed6be..78e507f 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -18,6 +18,8 @@
- #include <linux/pm_runtime.h>
- #include <linux/suspend.h>
- #include <linux/kexec.h>
-+#include <linux/of_device.h>
-+#include <linux/acpi.h>
- #include "pci.h"
+-	skb = ieee80211_nullfunc_get(wl->hw, vif, false);
++	skb = ieee80211_nullfunc_get(wl->hw, vif);
+ 	if (!skb)
+ 		goto out;
  
- struct pci_dynid {
-@@ -1522,6 +1524,35 @@ static int pci_bus_num_vf(struct device *dev)
- 	return pci_num_vf(to_pci_dev(dev));
- }
- 
-+/**
-+ * pci_dma_configure - Setup DMA configuration
-+ * @dev: ptr to dev structure
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index c96511fa9198..985f32c76ba9 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2063,6 +2063,9 @@ struct ieee80211_txq {
+  * @IEEE80211_HW_SUPPORTS_TDLS_BUFFER_STA: Hardware supports buffer STA on
+  *	TDLS links.
+  *
++ * @IEEE80211_HW_SUPPORTS_QOS_NDP: The driver (or firmware) supports QoS NDP
++ *	for AP probing.
 + *
-+ * Function to update PCI devices's DMA configuration using the same
-+ * info from the OF node or ACPI node of host bridge's parent (if any).
-+ */
-+static int pci_dma_configure(struct device *dev)
-+{
-+	struct device *bridge;
-+	int ret = 0;
-+
-+	bridge = pci_get_host_bridge_device(to_pci_dev(dev));
-+
-+	if (IS_ENABLED(CONFIG_OF) && bridge->parent &&
-+	    bridge->parent->of_node) {
-+		ret = of_dma_configure(dev, bridge->parent->of_node);
-+	} else if (has_acpi_companion(bridge)) {
-+		struct acpi_device *adev = to_acpi_device_node(bridge->fwnode);
-+		enum dev_dma_attr attr = acpi_get_dma_attr(adev);
-+
-+		if (attr != DEV_DMA_NOT_SUPPORTED)
-+			ret = acpi_dma_configure(dev, attr);
-+	}
-+
-+	pci_put_host_bridge_device(bridge);
-+	return ret;
-+}
-+
- struct bus_type pci_bus_type = {
- 	.name		= "pci",
- 	.match		= pci_bus_match,
-@@ -1534,6 +1565,7 @@ struct bus_type pci_bus_type = {
- 	.drv_groups	= pci_drv_groups,
- 	.pm		= PCI_PM_OPS_PTR,
- 	.num_vf		= pci_bus_num_vf,
-+	.dma_configure	= pci_dma_configure,
- 	.force_dma	= true,
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+@@ -2106,6 +2109,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_REPORTS_LOW_ACK,
+ 	IEEE80211_HW_SUPPORTS_TX_FRAG,
+ 	IEEE80211_HW_SUPPORTS_TDLS_BUFFER_STA,
++	IEEE80211_HW_SUPPORTS_QOS_NDP,
+ 
+ 	/* keep last, obviously */
+ 	NUM_IEEE80211_HW_FLAGS
+@@ -4478,24 +4482,18 @@ struct sk_buff *ieee80211_pspoll_get(struct ieee80211_hw *hw,
+  * ieee80211_nullfunc_get - retrieve a nullfunc template
+  * @hw: pointer obtained from ieee80211_alloc_hw().
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+- * @qos_ok: QoS NDP is acceptable to the caller, this should be set
+- *	if at all possible
+  *
+  * Creates a Nullfunc template which can, for example, uploaded to
+  * hardware. The template must be updated after association so that correct
+  * BSSID and address is used.
+  *
+- * If @qos_ndp is set and the association is to an AP with QoS/WMM, the
+- * returned packet will be QoS NDP.
+- *
+  * Note: Caller (or hardware) is responsible for setting the
+  * &IEEE80211_FCTL_PM bit as well as Duration and Sequence Control fields.
+  *
+  * Return: The nullfunc template. %NULL on error.
+  */
+ struct sk_buff *ieee80211_nullfunc_get(struct ieee80211_hw *hw,
+-				       struct ieee80211_vif *vif,
+-				       bool qos_ok);
++				       struct ieee80211_vif *vif);
+ 
+ /**
+  * ieee80211_probereq_get - retrieve a Probe Request template
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 1f466d12a6bc..8e5713f292dc 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -212,6 +212,7 @@ static const char *hw_flag_names[] = {
+ 	FLAG(REPORTS_LOW_ACK),
+ 	FLAG(SUPPORTS_TX_FRAG),
+ 	FLAG(SUPPORTS_TDLS_BUFFER_STA),
++	FLAG(SUPPORTS_SUPPORTS_QOS_NDP),
+ #undef FLAG
  };
- EXPORT_SYMBOL(pci_bus_type);
-diff --git a/include/linux/device.h b/include/linux/device.h
-index b093405..1832d90 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -88,6 +88,8 @@ extern int __must_check bus_create_file(struct bus_type *,
-  * @resume:	Called to bring a device on this bus out of sleep mode.
-  * @num_vf:	Called to find out how many virtual functions a device on this
-  *		bus supports.
-+ * @dma_configure:	Called to setup DMA configuration on a device on
-+			this bus.
-  * @pm:		Power management operations of this bus, callback the specific
-  *		device driver's pm-ops.
-  * @iommu_ops:  IOMMU specific operations for this bus, used to attach IOMMU
-@@ -130,6 +132,8 @@ struct bus_type {
  
- 	int (*num_vf)(struct device *dev);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 39b660b9a908..cc55ff8ae979 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -896,7 +896,7 @@ void ieee80211_send_nullfunc(struct ieee80211_local *local,
+ 	struct ieee80211_hdr_3addr *nullfunc;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
  
-+	int (*dma_configure)(struct device *dev);
-+
- 	const struct dev_pm_ops *pm;
+-	skb = ieee80211_nullfunc_get(&local->hw, &sdata->vif, true);
++	skb = ieee80211_nullfunc_get(&local->hw, &sdata->vif);
+ 	if (!skb)
+ 		return;
  
- 	const struct iommu_ops *iommu_ops;
-diff --git a/include/linux/platform_device.h b/include/linux/platform_device.h
-index 49f634d..3097c94 100644
---- a/include/linux/platform_device.h
-+++ b/include/linux/platform_device.h
-@@ -356,6 +356,8 @@ static inline char *early_platform_driver_setup_func(void)		\
- #define platform_pm_restore		NULL
- #endif
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 69722504e3e1..885285dd247b 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -4448,8 +4448,7 @@ struct sk_buff *ieee80211_pspoll_get(struct ieee80211_hw *hw,
+ EXPORT_SYMBOL(ieee80211_pspoll_get);
  
-+extern int platform_dma_configure(struct device *dev);
-+
- #ifdef CONFIG_PM_SLEEP
- #define USE_PLATFORM_PM_SLEEP_OPS \
- 	.suspend = platform_pm_suspend, \
+ struct sk_buff *ieee80211_nullfunc_get(struct ieee80211_hw *hw,
+-				       struct ieee80211_vif *vif,
+-				       bool qos_ok)
++				       struct ieee80211_vif *vif)
+ {
+ 	struct ieee80211_hdr_3addr *nullfunc;
+ 	struct ieee80211_sub_if_data *sdata;
+@@ -4465,7 +4464,7 @@ struct sk_buff *ieee80211_nullfunc_get(struct ieee80211_hw *hw,
+ 	ifmgd = &sdata->u.mgd;
+ 	local = sdata->local;
+ 
+-	if (qos_ok) {
++	if (ieee80211_hw_check(hw, SUPPORTS_QOS_NDP)) {
+ 		struct sta_info *sta;
+ 
+ 		rcu_read_lock();
 -- 
-1.9.1
+Ben Caradoc-Davies <ben@transient.nz>
+Director
+Transient Software Limited <https://transient.nz/>
+New Zealand
