@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:33258 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750984AbeCZHnb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 03:43:31 -0400
-Subject: Re: [PATCH] mac80211: Fix wlan freezes under load at rekey
-To: Ben Greear <greearb@candelatech.com>,
-        Alexander Wetzel <alexander.wetzel@web.de>,
-        johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-References: <20180324102921.9814-1-alexander.wetzel@web.de>
- <7bbb4246-324e-1d6d-245f-2642badb034d@candelatech.com>
- <27aca99e-a521-be4a-9fd4-51c557f9777d@web.de>
- <3e433bd6-d13e-f71c-d3ff-7163c2b59226@candelatech.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <caa084b9-ae86-af58-6295-637b549ad5b7@dd-wrt.com> (sfid-20180326_094335_379111_2BD32508)
-Date: Mon, 26 Mar 2018 09:43:28 +0200
+Received: from vps0.lunn.ch ([185.16.172.187]:34480 "EHLO vps0.lunn.ch"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751750AbeCRUBc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Mar 2018 16:01:32 -0400
+Date: Sun, 18 Mar 2018 21:01:26 +0100
+From: Andrew Lunn <andrew@lunn.ch>
+To: Alexey Roslyakov <alexey.roslyakov@gmail.com>
+Cc: kvalo@codeaurora.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        wright.feng@cypress.com, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com
+Subject: Re: [PATCH 1/2] brcmfmac: add new dt entries for SG SDIO settings
+Message-ID: <20180318200126.GQ1188@lunn.ch> (sfid-20180318_210136_850313_F593CAAC)
+References: <20180318184101.26951-1-alexey.roslyakov@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <3e433bd6-d13e-f71c-d3ff-7163c2b59226@candelatech.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180318184101.26951-1-alexey.roslyakov@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> +	if (of_property_read_u16(np, "brcm,sd-head-align", &align) == 0)
+> +		sdio->sd_head_align = align;
 
->
-> So I really don't know enough to properly review
-> your patch.  Just be aware that ath10k is weird about sw-crypt, maybe 
-> make
-> sure your patch is tested on it to make sure it doesn't out-right 
-> break something.
-i will test it today in sta and ap mode. lets see whats the result after 
-some hours
+Hi Alexey
 
-Sebastian
+I think you can make this:
 
+	of_property_read_u16(np, "brcm,sd-head-align", &sdio->sd_head_align);
 
--- 
-Mit freundlichen Grüssen / Regards
+of_property_read_u16() should not touch the destination variable if
+the properties does not exist, or if there is an error.
 
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+    Andrew
