@@ -1,222 +1,214 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:14310 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751184AbeC0IoW (ORCPT
+Received: from skyhawk.myhost.co.nz ([120.138.17.237]:58578 "EHLO
+        skyhawk.myhost.co.nz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754230AbeCRX6G (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Mar 2018 04:44:22 -0400
-Subject: Re: [PATCH] staging: wilc1000: replace kmalloc + memcpy with kmemdup
-To: Colin King <colin.king@canonical.com>,
-        Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>
-CC: <kernel-janitors@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20180326171629.28700-1-colin.king@canonical.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <f674c9e0-e67f-885f-cdd8-ce5da1fcc262@microchip.com> (sfid-20180327_104433_053201_060104AB)
-Date: Tue, 27 Mar 2018 11:44:18 +0300
-MIME-Version: 1.0
-In-Reply-To: <20180326171629.28700-1-colin.king@canonical.com>
-Content-Type: text/plain; charset="utf-8"
+        Sun, 18 Mar 2018 19:58:06 -0400
+From: Ben Caradoc-Davies <ben@transient.nz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        Ben Caradoc-Davies <ben@transient.nz>
+Subject: [PATCH] mac80211: add ieee80211_hw flag for QoS NDP support
+Date: Mon, 19 Mar 2018 12:57:44 +1300
+Message-Id: <20180318235744.3527-1-ben@transient.nz> (sfid-20180319_005810_500268_5A2703C0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Commit 7b6ddeaf27ec ("mac80211: use QoS NDP for AP probing") adds an
+argument qos_ok to ieee80211_nullfunc_get to support QoS NDP. Despite
+the claim in the commit log "Change all the drivers to *not* allow
+QoS NDP for now, even though it looks like most of them should be OK
+with that", this commit enables QoS NDP in response to beacons (see
+change to mlme.c:ieee80211_send_nullfunc), causing ath9k_htc to lose
+IP connectivity. See:
+https://patchwork.kernel.org/patch/10241109/
+https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891060
 
+This patch replaces the argument qos_ok of ieee80211_nullfunc_get
+with an ieee80211_hw flag that drivers can use to declare support for
+QoS NDP, allowing consistent behaviour between mlme.c and drivers.
 
-On 26.03.2018 20:16, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Replace several allocation and memcpys with kmemdup and add in some
-> missing memory allocation failure checks.  Also fix an incorrect 
-> -EFAULT return with -ENOMEM.
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 75 +++++++++++++++++++------------
->  1 file changed, 46 insertions(+), 29 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index 9b9b86654958..8fd367f87fa5 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -797,6 +797,10 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
->  	for (i = 0; i < hidden_net->n_ssids; i++)
->  		valuesize += ((hidden_net->net_info[i].ssid_len) + 1);
->  	hdn_ntwk_wid_val = kmalloc(valuesize + 1, GFP_KERNEL);
-> +	if (!hdn_ntwk_wid_val) {
-> +		result = -ENOMEM;
-> +		goto error;
-> +	}
->  	wid_list[index].val = hdn_ntwk_wid_val;
->  	if (wid_list[index].val) {
->  		buffer = wid_list[index].val;
-> @@ -943,39 +947,35 @@ static s32 handle_connect(struct wilc_vif *vif,
->  	}
->  
->  	if (conn_attr->bssid) {
+Signed-off-by: Ben Caradoc-Davies <ben@transient.nz>
+---
+ drivers/net/wireless/ath/ath9k/channel.c |  2 +-
+ drivers/net/wireless/st/cw1200/sta.c     |  4 ++--
+ drivers/net/wireless/ti/wl1251/main.c    |  2 +-
+ drivers/net/wireless/ti/wlcore/cmd.c     |  5 ++---
+ include/net/mac80211.h                   | 12 +++++-------
+ net/mac80211/debugfs.c                   |  1 +
+ net/mac80211/mlme.c                      |  2 +-
+ net/mac80211/tx.c                        |  5 ++---
+ 8 files changed, 15 insertions(+), 18 deletions(-)
 
-These:
-> -		hif_drv->usr_conn_req.bssid = kmalloc(6, GFP_KERNEL);
-> +		hif_drv->usr_conn_req.bssid = kmemdup(conn_attr->bssid, 6,
-> +						      GFP_KERNEL);
->  		if (!hif_drv->usr_conn_req.bssid) {
->  			result = -ENOMEM;
->  			goto error;
->  		}
-> -		memcpy(hif_drv->usr_conn_req.bssid, conn_attr->bssid, 6);
->  	}
->  
->  	hif_drv->usr_conn_req.ssid_len = conn_attr->ssid_len;
->  	if (conn_attr->ssid) {
-> -		hif_drv->usr_conn_req.ssid = kmalloc(conn_attr->ssid_len + 1,
-> +		hif_drv->usr_conn_req.ssid = kmemdup(conn_attr->ssid,
-> +						     conn_attr->ssid_len + 1,
->  						     GFP_KERNEL);
->  		if (!hif_drv->usr_conn_req.ssid) {
->  			result = -ENOMEM;
->  			goto error;
->  		}
-> -		memcpy(hif_drv->usr_conn_req.ssid,
-> -		       conn_attr->ssid,
-> -		       conn_attr->ssid_len);
->  		hif_drv->usr_conn_req.ssid[conn_attr->ssid_len] = '\0';
->  	}
->  
->  	hif_drv->usr_conn_req.ies_len = conn_attr->ies_len;
->  	if (conn_attr->ies) {
-
-and these:
-> -		hif_drv->usr_conn_req.ies = kmalloc(conn_attr->ies_len,
-> +		hif_drv->usr_conn_req.ies = kmemdup(conn_attr->ies,
-> +						    conn_attr->ies_len,
->  						    GFP_KERNEL);
-
-were already done in [1]. I don't know which was the first...
-
-[1] https://patchwork.kernel.org/patch/10308575/
-
->  		if (!hif_drv->usr_conn_req.ies) {
->  			result = -ENOMEM;
->  			goto error;
->  		}
-> -		memcpy(hif_drv->usr_conn_req.ies,
-> -		       conn_attr->ies,
-> -		       conn_attr->ies_len);
->  	}
->  
->  	hif_drv->usr_conn_req.security = conn_attr->security;
-> @@ -1009,9 +1009,12 @@ static s32 handle_connect(struct wilc_vif *vif,
->  
->  	if (memcmp("DIRECT-", conn_attr->ssid, 7)) {
->  		info_element_size = hif_drv->usr_conn_req.ies_len;
-> -		info_element = kmalloc(info_element_size, GFP_KERNEL);
-> -		memcpy(info_element, hif_drv->usr_conn_req.ies,
-> -		       info_element_size);
-> +		info_element = kmemdup(hif_drv->usr_conn_req.ies,
-> +				       info_element_size, GFP_KERNEL);
-> +		if (!info_element) {
-> +			result = -ENOMEM;
-> +			goto error;
-> +		}
->  	}
->  	wid_list[wid_cnt].id = (u16)WID_11I_MODE;
->  	wid_list[wid_cnt].type = WID_CHAR;
-> @@ -1039,9 +1042,13 @@ static s32 handle_connect(struct wilc_vif *vif,
->  	if (memcmp("DIRECT-", conn_attr->ssid, 7)) {
->  		join_req_size = wid_list[wid_cnt].size;
->  		join_req = kmalloc(join_req_size, GFP_KERNEL);
-> +		if (!join_req) {
-> +			result = -ENOMEM;
-> +			goto error;
-> +		}
->  	}
->  	if (!wid_list[wid_cnt].val) {
-> -		result = -EFAULT;
-> +		result = -ENOMEM;
->  		goto error;
->  	}
->  
-> @@ -1166,11 +1173,13 @@ static s32 handle_connect(struct wilc_vif *vif,
->  
->  			if (conn_attr->ies) {
->  				conn_info.req_ies_len = conn_attr->ies_len;
-> -				conn_info.req_ies = kmalloc(conn_attr->ies_len,
-> +				conn_info.req_ies = kmemdup(conn_attr->ies,
-> +							    conn_attr->ies_len,
->  							    GFP_KERNEL);
-> -				memcpy(conn_info.req_ies,
-> -				       conn_attr->ies,
-> -				       conn_attr->ies_len);
-> +				if (!conn_info.req_ies) {
-> +					result = -ENOMEM;
-> +					goto error_free;
-> +				}
->  			}
->  
->  			conn_attr->result(CONN_DISCONN_EVENT_CONN_RESP,
-> @@ -1187,6 +1196,7 @@ static s32 handle_connect(struct wilc_vif *vif,
->  		}
->  	}
->  
-> +error_free:
->  	kfree(conn_attr->bssid);
->  	conn_attr->bssid = NULL;
->  
-> @@ -1227,10 +1237,9 @@ static s32 handle_connect_timeout(struct wilc_vif *vif)
->  
->  		if (hif_drv->usr_conn_req.ies) {
->  			info.req_ies_len = hif_drv->usr_conn_req.ies_len;
-> -			info.req_ies = kmalloc(hif_drv->usr_conn_req.ies_len, GFP_KERNEL);
-> -			memcpy(info.req_ies,
-> -			       hif_drv->usr_conn_req.ies,
-> -			       hif_drv->usr_conn_req.ies_len);
-> +			info.req_ies = kmemdup(hif_drv->usr_conn_req.ies,
-> +					       hif_drv->usr_conn_req.ies_len,
-> +					       GFP_KERNEL);
->  		}
->  
->  		hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_CONN_RESP,
-> @@ -1421,9 +1430,11 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
->  
->  						if (conn_info.status == SUCCESSFUL_STATUSCODE && connect_resp_info->ies) {
->  							conn_info.resp_ies_len = connect_resp_info->ies_len;
-> -							conn_info.resp_ies = kmalloc(connect_resp_info->ies_len, GFP_KERNEL);
-> -							memcpy(conn_info.resp_ies, connect_resp_info->ies,
-> -							       connect_resp_info->ies_len);
-> +							conn_info.resp_ies = kmemdup(connect_resp_info->ies,
-> +										     connect_resp_info->ies_len,
-> +										     GFP_KERNEL);
-> +							if (!conn_info.resp_ies)
-> +								return -ENOMEM;
->  						}
->  
->  						if (connect_resp_info) {
-> @@ -3524,8 +3535,11 @@ void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32 length)
->  	msg.vif = vif;
->  
->  	msg.body.net_info.len = length;
-> -	msg.body.net_info.buffer = kmalloc(length, GFP_KERNEL);
-> -	memcpy(msg.body.net_info.buffer, buffer, length);
-> +	msg.body.net_info.buffer = kmemdup(buffer, length, GFP_KERNEL);
-> +	if (!msg.body.net_info.buffer) {
-> +		netdev_err(vif->ndev, "message buffer allocation failed\n");
-> +		return;
-> +	}
->  
->  	result = wilc_enqueue_cmd(&msg);
->  	if (result)
-> @@ -3571,8 +3585,11 @@ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length)
->  	msg.vif = vif;
->  
->  	msg.body.async_info.len = length;
-> -	msg.body.async_info.buffer = kmalloc(length, GFP_KERNEL);
-> -	memcpy(msg.body.async_info.buffer, buffer, length);
-> +	msg.body.async_info.buffer = kmemdup(buffer, length, GFP_KERNEL);
-> +	if (!msg.body.async_info.buffer) {
-> +		netdev_err(vif->ndev, "message buffer allocation failed\n");
-> +		return;
-> +	}
->  
->  	result = wilc_enqueue_cmd(&msg);
->  	if (result)
-> 
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index 1b05b5d7a038..dfb26f03c1a2 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -1113,7 +1113,7 @@ ath_chanctx_send_vif_ps_frame(struct ath_softc *sc, struct ath_vif *avp,
+ 		if (!avp->assoc)
+ 			return false;
+ 
+-		skb = ieee80211_nullfunc_get(sc->hw, vif, false);
++		skb = ieee80211_nullfunc_get(sc->hw, vif);
+ 		if (!skb)
+ 			return false;
+ 
+diff --git a/drivers/net/wireless/st/cw1200/sta.c b/drivers/net/wireless/st/cw1200/sta.c
+index 38678e9a0562..03687a80d6e9 100644
+--- a/drivers/net/wireless/st/cw1200/sta.c
++++ b/drivers/net/wireless/st/cw1200/sta.c
+@@ -198,7 +198,7 @@ void __cw1200_cqm_bssloss_sm(struct cw1200_common *priv,
+ 
+ 		priv->bss_loss_state++;
+ 
+-		skb = ieee80211_nullfunc_get(priv->hw, priv->vif, false);
++		skb = ieee80211_nullfunc_get(priv->hw, priv->vif);
+ 		WARN_ON(!skb);
+ 		if (skb)
+ 			cw1200_tx(priv->hw, NULL, skb);
+@@ -2265,7 +2265,7 @@ static int cw1200_upload_null(struct cw1200_common *priv)
+ 		.rate = 0xFF,
+ 	};
+ 
+-	frame.skb = ieee80211_nullfunc_get(priv->hw, priv->vif, false);
++	frame.skb = ieee80211_nullfunc_get(priv->hw, priv->vif);
+ 	if (!frame.skb)
+ 		return -ENOMEM;
+ 
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index 037defd10b91..99a6889a6540 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -566,7 +566,7 @@ static int wl1251_build_null_data(struct wl1251 *wl)
+ 		size = sizeof(struct wl12xx_null_data_template);
+ 		ptr = NULL;
+ 	} else {
+-		skb = ieee80211_nullfunc_get(wl->hw, wl->vif, false);
++		skb = ieee80211_nullfunc_get(wl->hw, wl->vif);
+ 		if (!skb)
+ 			goto out;
+ 		size = skb->len;
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index 761cf8573a80..2bfc12fdc929 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -1069,8 +1069,7 @@ int wl12xx_cmd_build_null_data(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 		ptr = NULL;
+ 	} else {
+ 		skb = ieee80211_nullfunc_get(wl->hw,
+-					     wl12xx_wlvif_to_vif(wlvif),
+-					     false);
++					     wl12xx_wlvif_to_vif(wlvif));
+ 		if (!skb)
+ 			goto out;
+ 		size = skb->len;
+@@ -1097,7 +1096,7 @@ int wl12xx_cmd_build_klv_null_data(struct wl1271 *wl,
+ 	struct sk_buff *skb = NULL;
+ 	int ret = -ENOMEM;
+ 
+-	skb = ieee80211_nullfunc_get(wl->hw, vif, false);
++	skb = ieee80211_nullfunc_get(wl->hw, vif);
+ 	if (!skb)
+ 		goto out;
+ 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index c96511fa9198..985f32c76ba9 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2063,6 +2063,9 @@ struct ieee80211_txq {
+  * @IEEE80211_HW_SUPPORTS_TDLS_BUFFER_STA: Hardware supports buffer STA on
+  *	TDLS links.
+  *
++ * @IEEE80211_HW_SUPPORTS_QOS_NDP: The driver (or firmware) supports QoS NDP
++ *	for AP probing.
++ *
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+@@ -2106,6 +2109,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_REPORTS_LOW_ACK,
+ 	IEEE80211_HW_SUPPORTS_TX_FRAG,
+ 	IEEE80211_HW_SUPPORTS_TDLS_BUFFER_STA,
++	IEEE80211_HW_SUPPORTS_QOS_NDP,
+ 
+ 	/* keep last, obviously */
+ 	NUM_IEEE80211_HW_FLAGS
+@@ -4478,24 +4482,18 @@ struct sk_buff *ieee80211_pspoll_get(struct ieee80211_hw *hw,
+  * ieee80211_nullfunc_get - retrieve a nullfunc template
+  * @hw: pointer obtained from ieee80211_alloc_hw().
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+- * @qos_ok: QoS NDP is acceptable to the caller, this should be set
+- *	if at all possible
+  *
+  * Creates a Nullfunc template which can, for example, uploaded to
+  * hardware. The template must be updated after association so that correct
+  * BSSID and address is used.
+  *
+- * If @qos_ndp is set and the association is to an AP with QoS/WMM, the
+- * returned packet will be QoS NDP.
+- *
+  * Note: Caller (or hardware) is responsible for setting the
+  * &IEEE80211_FCTL_PM bit as well as Duration and Sequence Control fields.
+  *
+  * Return: The nullfunc template. %NULL on error.
+  */
+ struct sk_buff *ieee80211_nullfunc_get(struct ieee80211_hw *hw,
+-				       struct ieee80211_vif *vif,
+-				       bool qos_ok);
++				       struct ieee80211_vif *vif);
+ 
+ /**
+  * ieee80211_probereq_get - retrieve a Probe Request template
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 1f466d12a6bc..8718d7e9ad9d 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -212,6 +212,7 @@ static const char *hw_flag_names[] = {
+ 	FLAG(REPORTS_LOW_ACK),
+ 	FLAG(SUPPORTS_TX_FRAG),
+ 	FLAG(SUPPORTS_TDLS_BUFFER_STA),
++	FLAG(SUPPORTS_QOS_NDP),
+ #undef FLAG
+ };
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 39b660b9a908..cc55ff8ae979 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -896,7 +896,7 @@ void ieee80211_send_nullfunc(struct ieee80211_local *local,
+ 	struct ieee80211_hdr_3addr *nullfunc;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 
+-	skb = ieee80211_nullfunc_get(&local->hw, &sdata->vif, true);
++	skb = ieee80211_nullfunc_get(&local->hw, &sdata->vif);
+ 	if (!skb)
+ 		return;
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 69722504e3e1..885285dd247b 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -4448,8 +4448,7 @@ struct sk_buff *ieee80211_pspoll_get(struct ieee80211_hw *hw,
+ EXPORT_SYMBOL(ieee80211_pspoll_get);
+ 
+ struct sk_buff *ieee80211_nullfunc_get(struct ieee80211_hw *hw,
+-				       struct ieee80211_vif *vif,
+-				       bool qos_ok)
++				       struct ieee80211_vif *vif)
+ {
+ 	struct ieee80211_hdr_3addr *nullfunc;
+ 	struct ieee80211_sub_if_data *sdata;
+@@ -4465,7 +4464,7 @@ struct sk_buff *ieee80211_nullfunc_get(struct ieee80211_hw *hw,
+ 	ifmgd = &sdata->u.mgd;
+ 	local = sdata->local;
+ 
+-	if (qos_ok) {
++	if (ieee80211_hw_check(hw, SUPPORTS_QOS_NDP)) {
+ 		struct sta_info *sta;
+ 
+ 		rcu_read_lock();
+-- 
+Ben Caradoc-Davies <ben@transient.nz>
+Director
+Transient Software Limited <https://transient.nz/>
+New Zealand
