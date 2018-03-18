@@ -1,37 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43320 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751135AbeC1QVC (ORCPT
+Received: from skyhawk.myhost.co.nz ([120.138.17.237]:34188 "EHLO
+        skyhawk.myhost.co.nz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754155AbeCRXhI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 12:21:02 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        "Zamir\, Roee" <roee.zamir@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH 07/14] iwlwifi: mvm: add support for oce
-References: <20180328141157.5427-1-luca@coelho.fi>
-        <20180328142533.9017-1-luca@coelho.fi>
-Date: Wed, 28 Mar 2018 19:20:56 +0300
-In-Reply-To: <20180328142533.9017-1-luca@coelho.fi> (Luca Coelho's message of
-        "Wed, 28 Mar 2018 17:25:33 +0300")
-Message-ID: <87k1twmas7.fsf@kamboji.qca.qualcomm.com> (sfid-20180328_182106_156590_1687184D)
+        Sun, 18 Mar 2018 19:37:08 -0400
+Subject: Re: [PATCH] mac80211: add ieee80211_hw flag for QoS NDP support
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+References: <20180317205118.21227-1-ben@transient.nz>
+ <201803190525.Ycp9pnWN%fengguang.wu@intel.com>
+From: Ben Caradoc-Davies <ben@transient.nz>
+Message-ID: <65743b46-85e2-6833-ea2b-372d24055108@transient.nz> (sfid-20180319_003711_545715_5212EACA)
+Date: Mon, 19 Mar 2018 12:36:58 +1300
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <201803190525.Ycp9pnWN%fengguang.wu@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+On 19/03/18 11:12, kbuild test robot wrote:
+>     net/mac80211/debugfs.c: In function 'hwflags_read':
+>>> include/linux/compiler.h:339:38: error: call to '__compiletime_assert_234' declared with attribute error: BUILD_BUG_ON failed: ARRAY_SIZE(hw_flag_names) != NUM_IEEE80211_HW_FLAGS
 
-> From: "Zamir, Roee" <roee.zamir@intel.com>
->
-> Get capabilities from the fw, expose them with nl80211, and enable them
-> in UMAC scan if the relevant nl80211 flags are set by the userspace.
->
-> Signed-off-by: Roee Zamir <roee.zamir@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Please reject this patch. I will submit a revised patch that adds the 
+new flag to hw_flag_names in net/mac80211/debugfs.c.
 
-OCE is?
+Kind regards,
 
 -- 
-Kalle Valo
+Ben Caradoc-Davies <ben@transient.nz>
+Director
+Transient Software Limited <https://transient.nz/>
+New Zealand
