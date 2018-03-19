@@ -1,56 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:30127 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1425214AbeCBOXw (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:53002 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754166AbeCSOKY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 09:23:52 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 09/13] staging: wilc1000: fix line over 80 char in wilc_del_allstation() & wilc_deinit()
-Date: Fri, 2 Mar 2018 19:52:45 +0530
-Message-ID: <1520000569-27738-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180302_152355_367863_B7AD9EF0)
-In-Reply-To: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
-References: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
+        Mon, 19 Mar 2018 10:10:24 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5AAF838D.2030105@broadcom.com>
+References: <20180319014032.9394-1-alexey.roslyakov@gmail.com>
+ <20180319014032.9394-3-alexey.roslyakov@gmail.com> <5AAF838D.2030105@broadcom.com>
+From: Alexey Roslyakov <alexey.roslyakov@gmail.com>
+Date: Mon, 19 Mar 2018 21:10:21 +0700
+Message-ID: <CALFoz4YMKJr40fefczrbjXBROtZxnGikv0Jze-BnefofCB3dyg@mail.gmail.com> (sfid-20180319_151048_184221_47892B55)
+Subject: Re: [PATCH net-next v2 2/2] dt: bindings: add new dt entries for brcmfmac
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Andrew Lunn <andrew@lunn.ch>, kvalo@codeaurora.org,
+        robh+dt@kernel.org, mark.rutland@arm.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        wright.feng@cypress.com, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix 'line over 80 characters' issue found by checkpatch.pl script.
+Hi Arend,
+I appreciate your response. In my opinion, it has nothing to do with
+SDIO host, because it defines "quirks" in the driver itself.
+If I get it right, you mean something like this:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+mmc3: mmc@1c12000 {
+...
+        broken-sg-support;
+        sd-head-align = 4;
+        sd-sgentry-align = 512;
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 57f90e4..e071eaf 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3444,7 +3444,8 @@ int wilc_deinit(struct wilc_vif *vif)
- 
- 	if (hif_drv->usr_scan_req.scan_result) {
- 		hif_drv->usr_scan_req.scan_result(SCAN_EVENT_ABORTED, NULL,
--						  hif_drv->usr_scan_req.arg, NULL);
-+						  hif_drv->usr_scan_req.arg,
-+						  NULL);
- 		hif_drv->usr_scan_req.scan_result = NULL;
- 	}
- 
-@@ -3796,7 +3797,8 @@ int wilc_del_allstation(struct wilc_vif *vif, u8 mac_addr[][ETH_ALEN])
- 
- 	for (i = 0; i < MAX_NUM_STA; i++) {
- 		if (memcmp(mac_addr[i], zero_addr, ETH_ALEN)) {
--			memcpy(del_all_sta_info->del_all_sta[i], mac_addr[i], ETH_ALEN);
-+			memcpy(del_all_sta_info->del_all_sta[i], mac_addr[i],
-+			       ETH_ALEN);
- 			assoc_sta++;
- 		}
- 	}
+        brcmf: wifi@1 {
+                ...
+        };
+};
+
+Where dt: bindings documentation for these entries should reside?
+In generic MMC bindings? Well, this is the very special case and
+mmc-linux maintainer will unlikely to accept these changes.
+Also, extra kernel code modification might be required. It could make
+quite trivial change much more complex.
+
+>Also I am not sure if the broken-sg-support is still needed. We added that for omap_hsmmc, but that has since changed to scatter-gather emulation so it might not be needed anymore.
+
+I've experienced the problem with rk3288 (dw-mmc host) and sdio
+settings like above solved it.
+Frankly, I haven't investigated any deeper which one of the settings
+helped in my case yet...
+I will try to get rid of broken-sg-support first and let you know if
+it does make any difference.
+
+All the best,
+  Alex.
+
+On 19 March 2018 at 16:31, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 3/19/2018 2:40 AM, Alexey Roslyakov wrote:
+>>
+>> In case if the host has higher align requirements for SG items, allow
+>> setting device-specific aligns for scatterlist items.
+>>
+>> Signed-off-by: Alexey Roslyakov <alexey.roslyakov@gmail.com>
+>> ---
+>>   Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt | 5
+>> +++++
+>>   1 file changed, 5 insertions(+)
+>>
+>> diff --git
+>> a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>> b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>> index 86602f264dce..187b8c1b52a7 100644
+>> --- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>> @@ -17,6 +17,11 @@ Optional properties:
+>>         When not specified the device will use in-band SDIO interrupts.
+>>    - interrupt-names : name of the out-of-band interrupt, which must be
+>> set
+>>         to "host-wake".
+>> + - brcm,broken-sg-support : boolean flag to indicate that the SDIO host
+>> +       controller has higher align requirement than 32 bytes for each
+>> +       scatterlist item.
+>> + - brcm,sd-head-align : alignment requirement for start of data buffer.
+>> + - brcm,sd-sgentry-align : length alignment requirement for each sg
+>> entry.
+>
+>
+> Hi Alexey,
+>
+> Thanks for the patch. However, the problem with these is that they are
+> characterizing the host controller and not the wireless device. So from
+> device tree perspective , which is to describe the hardware, these
+> properties should be SDIO host controller properties. Also I am not sure if
+> the broken-sg-support is still needed. We added that for omap_hsmmc, but
+> that has since changed to scatter-gather emulation so it might not be needed
+> anymore.
+>
+> Regards,
+> Arend
+
+
+
 -- 
-2.7.4
+With best regards,
+  Alexey Roslyakov
+Email: alexey.roslyakov@gmail.com
