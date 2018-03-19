@@ -1,62 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from coyote.holtmann.net ([212.227.132.17]:43224 "EHLO
-        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932094AbeCOQDz (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:58308 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967586AbeCSSpr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Mar 2018 12:03:55 -0400
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
-Subject: Re: [PATCH] Bluetooth: btrsi: rework dependencies
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <CAK8P3a3y00nUVuYopxXWaJjo_OxXhVsATyiSOfXz5b09JFq2dA@mail.gmail.com>
-Date: Thu, 15 Mar 2018 17:03:52 +0100
-Cc: Johan Hedberg <johan.hedberg@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Linux Bluetooth mailing list
-        <linux-bluetooth@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Networking <netdev@vger.kernel.org>
-Message-Id: <F9369C84-62C6-4881-8089-40F3F912F871@holtmann.org> (sfid-20180315_170439_581186_9559AD5C)
-References: <20180315154312.3941446-1-arnd@arndb.de>
- <EE0D5CBE-0867-4FE0-B157-CA4086C84233@holtmann.org>
- <CAK8P3a3y00nUVuYopxXWaJjo_OxXhVsATyiSOfXz5b09JFq2dA@mail.gmail.com>
-To: Arnd Bergmann <arnd@arndb.de>
+        Mon, 19 Mar 2018 14:45:47 -0400
+Date: Mon, 19 Mar 2018 19:45:46 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: hariprasath.elango@gmail.com
+Cc: aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
+        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 5/7] staging: wilc1000: replace switch statement by
+ simple if condition
+Message-ID: <20180319184546.GA17337@kroah.com> (sfid-20180319_194608_903378_EB8F6B43)
+References: <cover.1521030891.git.hariprasath.elango@gmail.com>
+ <2a46a5cc8ab69c1143c480bbac1f7e921011d982.1521030891.git.hariprasath.elango@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2a46a5cc8ab69c1143c480bbac1f7e921011d982.1521030891.git.hariprasath.elango@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arnd,
-
->>> diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
->>> index 03cfc1b20c4a..9e8d22712ff3 100644
->>> --- a/drivers/bluetooth/Makefile
->>> +++ b/drivers/bluetooth/Makefile
->>> @@ -28,7 +28,7 @@ obj-$(CONFIG_BT_QCA)                += btqca.o
->>> 
->>> obj-$(CONFIG_BT_HCIUART_NOKIA)        += hci_nokia.o
->>> 
->>> -obj-$(CONFIG_BT_HCIRSI)              += btrsi.o
->>> +obj-$(CONFIG_BT_HCIRSI_MODULE)       += btrsi.o
->> 
->> do we need this new option? I have avoided these kind of complex things multi config entries. Can we not just select the RSI_91X?
->> 
+On Wed, Mar 14, 2018 at 06:15:03PM +0530, hariprasath.elango@gmail.com wrote:
+> From: HariPrasath Elango <hariprasath.elango@gmail.com>
 > 
-> I couldn't come up with a simpler way to do this.
-> Selecting RSI_91X is not possible unless we make the BT
-> driver 'depend on WLAN_VENDOR_RSI && MAC80211',
-> which is even more backwards.
+> In this case,there is only a single switch case statement.So replacing
+> by a simple if condition.
 > 
-> The problem here is that it's actually a reverse dependency:
-> the wlan driver calls into the bt driver.
-> 
-> What we could do is to make BT_HCIRSI a silent symbol
-> and have that selected by RSI_COEX, which can then
-> be user-visible. With that, the Kconfig structure would follow
-> what the code does.
+> Signed-off-by: HariPrasath Elango <hariprasath.elango@gmail.com>
+> ---
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 +-------
+>  1 file changed, 1 insertion(+), 7 deletions(-)
 
-that sounds a bit better to me. If the RSI driver maintainers don’t like that, then they should re-architect the code to make this more dynamic and flexible.
-
-Regards
-
-Marcel
+Does not apply to my tree :(
