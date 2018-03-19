@@ -1,43 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:38146 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751679AbeCMHa7 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 03:30:59 -0400
-Date: Tue, 13 Mar 2018 13:00:51 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <hariprasath.elango@gmail.com>, <linux-kernel@vger.kernel.org>
-CC: <aditya.shankar@microchip.com>, <vbabu3@visteon.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>
-Subject: Re: [PATCHv2] staging: wilc1000: use pre-defined macro
- is_broadcast_ether_addr
-Message-ID: <20180313130051.43b087dd@ajaysk-VirtualBox> (sfid-20180313_083114_574157_6A096C54)
-In-Reply-To: <20180312093903.9147-1-hariprasath.elango@gmail.com>
-References: <20180312093903.9147-1-hariprasath.elango@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:50112 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S934468AbeCSQkQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Mar 2018 12:40:16 -0400
+From: Hans de Goede <hdegoede@redhat.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+        =?UTF-8?q?Micha=C5=82=20Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>,
+        Michael Thalmeier <michael.thalmeier@hale.at>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] NFC: pn533: Fix wrong GFP flag usage
+Date: Mon, 19 Mar 2018 17:40:12 +0100
+Message-Id: <20180319164012.31714-2-hdegoede@redhat.com> (sfid-20180319_174035_735699_9DEB10F7)
+In-Reply-To: <20180319164012.31714-1-hdegoede@redhat.com>
+References: <20180319164012.31714-1-hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+pn533_recv_response() is an urb completion handler, so it must use
+GFP_ATOMIC. pn533_usb_send_frame() OTOH runs from a regular sleeping
+context, so the pn533_submit_urb_for_response() there (and only there)
+can use the regular GFP_KERNEL flags.
 
-Reviewed-by: Ajay Singh <ajay.kathat@microchip.com>
+BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1514134
+Fixes: 9815c7cf22da ("NFC: pn533: Separate physical layer from ...")
+Cc: Michael Thalmeier <michael.thalmeier@hale.at>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/nfc/pn533/usb.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-On Mon, 12 Mar 2018 15:09:03 +0530
-<hariprasath.elango@gmail.com> wrote:
-
-> From: HariPrasath Elango <hariprasath.elango@gmail.com>
->
-
-Please avoid use of 'From' tag specially when there is only one
-'Signed-off-by' tag and its same.
-
-> Use the kernel pre-defined macro is_broadcast_ether_addr() instead of
-> doing a memcmp here.
-> 
-> Signed-off-by: HariPrasath Elango <hariprasath.elango@gmail.com>
-> ---
-
-Regards,
-Ajay
+diff --git a/drivers/nfc/pn533/usb.c b/drivers/nfc/pn533/usb.c
+index c9398712ba31..2aff1ddadc1d 100644
+--- a/drivers/nfc/pn533/usb.c
++++ b/drivers/nfc/pn533/usb.c
+@@ -75,7 +75,7 @@ static void pn533_recv_response(struct urb *urb)
+ 	struct sk_buff *skb = NULL;
+ 
+ 	if (!urb->status) {
+-		skb = alloc_skb(urb->actual_length, GFP_KERNEL);
++		skb = alloc_skb(urb->actual_length, GFP_ATOMIC);
+ 		if (!skb) {
+ 			nfc_err(&phy->udev->dev, "failed to alloc memory\n");
+ 		} else {
+@@ -185,7 +185,7 @@ static int pn533_usb_send_frame(struct pn533 *dev,
+ 
+ 	if (dev->protocol_type == PN533_PROTO_REQ_RESP) {
+ 		/* request for response for sent packet directly */
+-		rc = pn533_submit_urb_for_response(phy, GFP_ATOMIC);
++		rc = pn533_submit_urb_for_response(phy, GFP_KERNEL);
+ 		if (rc)
+ 			goto error;
+ 	} else if (dev->protocol_type == PN533_PROTO_REQ_ACK_RESP) {
+-- 
+2.14.3
