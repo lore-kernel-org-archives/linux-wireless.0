@@ -1,394 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44396 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750783AbeCZFki (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34631 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755328AbeCSXQS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 01:40:38 -0400
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org, bjorn.andersson@linaro.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH 07/12] ath10k: Add MSA handshake QMI mgs support
-Date: Mon, 26 Mar 2018 11:10:32 +0530
-Message-Id: <1522042832-25975-1-git-send-email-govinds@codeaurora.org> (sfid-20180326_074041_319439_CB1662CF)
+        Mon, 19 Mar 2018 19:16:18 -0400
+Received: by mail-wm0-f67.google.com with SMTP id a20so14807626wmd.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2018 16:16:17 -0700 (PDT)
+Subject: Re: [PATCH net-next v2 2/2] dt: bindings: add new dt entries for
+ brcmfmac
+To: Florian Fainelli <f.fainelli@gmail.com>,
+        Alexey Roslyakov <alexey.roslyakov@gmail.com>
+References: <20180319014032.9394-1-alexey.roslyakov@gmail.com>
+ <20180319014032.9394-3-alexey.roslyakov@gmail.com>
+ <5AAF838D.2030105@broadcom.com>
+ <CALFoz4YMKJr40fefczrbjXBROtZxnGikv0Jze-BnefofCB3dyg@mail.gmail.com>
+ <817418fd-6446-57ea-b03d-383b4df9a979@gmail.com>
+Cc: Andrew Lunn <andrew@lunn.ch>, kvalo@codeaurora.org,
+        robh+dt@kernel.org, mark.rutland@arm.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        wright.feng@cypress.com, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Ulf Hansson <ulf.hansson@linaro.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AB044C0.9060701@broadcom.com> (sfid-20180320_001637_367073_AA7D38EB)
+Date: Tue, 20 Mar 2018 00:16:16 +0100
+MIME-Version: 1.0
+In-Reply-To: <817418fd-6446-57ea-b03d-383b4df9a979@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HOST allocates 2mb of region for modem and WCN3990
-secure access and provides the address and access
-control to target for secure access.
-Add MSA handshake request/response messages.
++ Uffe
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/qmi.c | 288 +++++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/qmi.h |  14 ++
- 2 files changed, 300 insertions(+), 2 deletions(-)
+On 3/19/2018 6:55 PM, Florian Fainelli wrote:
+> On 03/19/2018 07:10 AM, Alexey Roslyakov wrote:
+>> Hi Arend,
+>> I appreciate your response. In my opinion, it has nothing to do with
+>> SDIO host, because it defines "quirks" in the driver itself.
+>
+> It is not clear to me from your patch series whether the problem is that:
+>
+> - the SDIO device has a specific alignment requirements, which would be
+> either a SDIO device driver limitation/issue or maybe the underlying
+> hardware device/firmware requiring that
+>
+> - the SDIO host controller used is not capable of coping nicely with
+> these said limitations
+>
+> It seems to me like what you are doing here is a) applicable to possibly
+> more SDIO devices and host combinations, and b) should likely be done at
+> the layer between the host and device, such that it is available to more
+> combinations.
 
-diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
-index bc80b8f..763b812 100644
---- a/drivers/net/wireless/ath/ath10k/qmi.c
-+++ b/drivers/net/wireless/ath/ath10k/qmi.c
-@@ -26,6 +26,8 @@
- #include <linux/string.h>
- #include <net/sock.h>
- #include <linux/soc/qcom/qmi.h>
-+#include <linux/qcom_scm.h>
-+#include <linux/of.h>
- #include "qmi.h"
- #include "qmi_svc_v01.h"
- 
-@@ -35,6 +37,240 @@
- static struct ath10k_qmi *qmi;
- 
- static int
-+ath10k_qmi_map_msa_permissions(struct ath10k_msa_mem_region_info *mem_region)
-+{
-+	struct qcom_scm_vmperm dst_perms[3];
-+	unsigned int src_perms;
-+	phys_addr_t addr;
-+	u32 perm_count;
-+	u32 size;
-+	int ret;
-+
-+	addr = mem_region->reg_addr;
-+	size = mem_region->size;
-+
-+	src_perms = BIT(QCOM_SCM_VMID_HLOS);
-+
-+	dst_perms[0].vmid = QCOM_SCM_VMID_MSS_MSA;
-+	dst_perms[0].perm = QCOM_SCM_PERM_RW;
-+	dst_perms[1].vmid = QCOM_SCM_VMID_WLAN;
-+	dst_perms[1].perm = QCOM_SCM_PERM_RW;
-+
-+	if (!mem_region->secure_flag) {
-+		dst_perms[2].vmid = QCOM_SCM_VMID_WLAN_CE;
-+		dst_perms[2].perm = QCOM_SCM_PERM_RW;
-+		perm_count = 3;
-+	} else {
-+		dst_perms[2].vmid = 0;
-+		dst_perms[2].perm = 0;
-+		perm_count = 2;
-+	}
-+
-+	ret = qcom_scm_assign_mem(addr, size, &src_perms,
-+				  dst_perms, perm_count);
-+	if (ret < 0)
-+		pr_err("msa map permission failed=%d\n", ret);
-+
-+	return ret;
-+}
-+
-+static int
-+ath10k_qmi_unmap_msa_permissions(struct ath10k_msa_mem_region_info *mem_region)
-+{
-+	struct qcom_scm_vmperm dst_perms;
-+	unsigned int src_perms;
-+	phys_addr_t addr;
-+	u32 size;
-+	int ret;
-+
-+	addr = mem_region->reg_addr;
-+	size = mem_region->size;
-+
-+	src_perms = BIT(QCOM_SCM_VMID_MSS_MSA) | BIT(QCOM_SCM_VMID_WLAN);
-+
-+	if (!mem_region->secure_flag)
-+		src_perms |= BIT(QCOM_SCM_VMID_WLAN_CE);
-+
-+	dst_perms.vmid = QCOM_SCM_VMID_HLOS;
-+	dst_perms.perm = QCOM_SCM_PERM_RW;
-+
-+	ret = qcom_scm_assign_mem(addr, size, &src_perms, &dst_perms, 1);
-+	if (ret < 0)
-+		pr_err("msa unmap permission failed=%d\n", ret);
-+
-+	return ret;
-+}
-+
-+static int ath10k_qmi_setup_msa_permissions(struct ath10k_qmi *qmi)
-+{
-+	int ret;
-+	int i;
-+
-+	for (i = 0; i < qmi->nr_mem_region; i++) {
-+		ret = ath10k_qmi_map_msa_permissions(&qmi->mem_region[i]);
-+		if (ret)
-+			goto err_unmap;
-+	}
-+
-+	return 0;
-+
-+err_unmap:
-+	for (i--; i >= 0; i--)
-+		ath10k_qmi_unmap_msa_permissions(&qmi->mem_region[i]);
-+	return ret;
-+}
-+
-+static void ath10k_qmi_remove_msa_permissions(struct ath10k_qmi *qmi)
-+{
-+	int i;
-+
-+	for (i = 0; i < qmi->nr_mem_region; i++)
-+		ath10k_qmi_unmap_msa_permissions(&qmi->mem_region[i]);
-+}
-+
-+static int
-+	ath10k_qmi_msa_mem_info_send_sync_msg(struct ath10k_qmi *qmi)
-+{
-+	struct wlfw_msa_info_resp_msg_v01 *resp;
-+	struct wlfw_msa_info_req_msg_v01 *req;
-+	struct qmi_txn txn;
-+	int ret;
-+	int i;
-+
-+	req = kzalloc(sizeof(*req), GFP_KERNEL);
-+	if (!req)
-+		return -ENOMEM;
-+
-+	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
-+	if (!resp) {
-+		kfree(req);
-+		return -ENOMEM;
-+	}
-+
-+	req->msa_addr = qmi->msa_pa;
-+	req->size = qmi->msa_mem_size;
-+
-+	ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
-+			   wlfw_msa_info_resp_msg_v01_ei, resp);
-+	if (ret < 0) {
-+		pr_err("fail to init txn for MSA mem info resp %d\n",
-+		       ret);
-+		goto out;
-+	}
-+
-+	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
-+			       QMI_WLFW_MSA_INFO_REQ_V01,
-+			       WLFW_MSA_INFO_REQ_MSG_V01_MAX_MSG_LEN,
-+			       wlfw_msa_info_req_msg_v01_ei, req);
-+	if (ret < 0) {
-+		qmi_txn_cancel(&txn);
-+		pr_err("fail to send MSA mem info req %d\n", ret);
-+		goto out;
-+	}
-+
-+	ret = qmi_txn_wait(&txn, WLFW_TIMEOUT * HZ);
-+	if (ret < 0)
-+		goto out;
-+
-+	if (resp->resp.result != QMI_RESULT_SUCCESS_V01) {
-+		pr_err("MSA mem info request rejected, result:%d error:%d\n",
-+		       resp->resp.result, resp->resp.error);
-+		ret = -resp->resp.result;
-+		goto out;
-+	}
-+
-+	pr_debug("receive mem_region_info_len: %d\n",
-+		 resp->mem_region_info_len);
-+
-+	if (resp->mem_region_info_len > QMI_WLFW_MAX_NUM_MEMORY_REGIONS_V01) {
-+		pr_err("invalid memory region length received: %d\n",
-+		       resp->mem_region_info_len);
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	qmi->nr_mem_region = resp->mem_region_info_len;
-+	for (i = 0; i < resp->mem_region_info_len; i++) {
-+		qmi->mem_region[i].reg_addr =
-+			resp->mem_region_info[i].region_addr;
-+		qmi->mem_region[i].size =
-+			resp->mem_region_info[i].size;
-+		qmi->mem_region[i].secure_flag =
-+			resp->mem_region_info[i].secure_flag;
-+		pr_debug("mem region: %d Addr: 0x%llx Size: 0x%x Flag: 0x%08x\n",
-+			 i, qmi->mem_region[i].reg_addr,
-+			 qmi->mem_region[i].size,
-+			 qmi->mem_region[i].secure_flag);
-+	}
-+
-+	pr_debug("MSA mem info request completed\n");
-+	kfree(resp);
-+	kfree(req);
-+	return 0;
-+
-+out:
-+	kfree(resp);
-+	kfree(req);
-+	return ret;
-+}
-+
-+static int ath10k_qmi_msa_ready_send_sync_msg(struct ath10k_qmi *qmi)
-+{
-+	struct wlfw_msa_ready_resp_msg_v01 *resp;
-+	struct wlfw_msa_ready_req_msg_v01 *req;
-+	struct qmi_txn txn;
-+	int ret;
-+
-+	req = kzalloc(sizeof(*req), GFP_KERNEL);
-+	if (!req)
-+		return -ENOMEM;
-+
-+	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
-+	if (!resp) {
-+		kfree(req);
-+		return -ENOMEM;
-+	}
-+
-+	ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
-+			   wlfw_msa_ready_resp_msg_v01_ei, resp);
-+	if (ret < 0) {
-+		pr_err("fail to init txn for MSA mem ready resp %d\n",
-+		       ret);
-+		goto out;
-+	}
-+
-+	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
-+			       QMI_WLFW_MSA_READY_REQ_V01,
-+			       WLFW_MSA_READY_REQ_MSG_V01_MAX_MSG_LEN,
-+			       wlfw_msa_ready_req_msg_v01_ei, req);
-+	if (ret < 0) {
-+		qmi_txn_cancel(&txn);
-+		pr_err("fail to send MSA mem ready req %d\n", ret);
-+		goto out;
-+	}
-+
-+	ret = qmi_txn_wait(&txn, WLFW_TIMEOUT * HZ);
-+	if (ret < 0)
-+		goto out;
-+
-+	if (resp->resp.result != QMI_RESULT_SUCCESS_V01) {
-+		pr_err("qmi MSA mem ready request rejected, result:%d error:%d\n",
-+		       resp->resp.result, resp->resp.error);
-+		ret = -resp->resp.result;
-+	}
-+
-+	pr_debug("MSA mem ready request completed\n");
-+	kfree(resp);
-+	kfree(req);
-+	return 0;
-+
-+out:
-+	kfree(resp);
-+	kfree(req);
-+	return ret;
-+}
-+
-+static int
- ath10k_qmi_ind_register_send_sync_msg(struct ath10k_qmi *qmi)
- {
- 	struct wlfw_ind_register_resp_msg_v01 *resp;
-@@ -173,7 +409,27 @@ static void ath10k_qmi_event_server_arrive(struct work_struct *work)
- 	if (ret)
- 		return;
- 
--	ath10k_qmi_ind_register_send_sync_msg(qmi);
-+	ret = ath10k_qmi_ind_register_send_sync_msg(qmi);
-+	if (ret)
-+		return;
-+
-+	ret = ath10k_qmi_msa_mem_info_send_sync_msg(qmi);
-+	if (ret)
-+		return;
-+
-+	ret = ath10k_qmi_setup_msa_permissions(qmi);
-+	if (ret)
-+		return;
-+
-+	ret = ath10k_qmi_msa_ready_send_sync_msg(qmi);
-+	if (ret)
-+		goto err_setup_msa;
-+
-+	return;
-+
-+err_setup_msa:
-+	ath10k_qmi_remove_msa_permissions(qmi);
-+	return;
- }
- 
- static void ath10k_qmi_event_server_exit(struct work_struct *work)
-@@ -252,6 +508,34 @@ static int ath10k_alloc_qmi_resources(struct ath10k_qmi *qmi)
- 	return ret;
- }
- 
-+static int ath10k_qmi_setup_msa_resources(struct device *dev,
-+					  struct ath10k_qmi *qmi)
-+{
-+	int ret;
-+
-+	ret = of_property_read_u32(dev->of_node, "qcom,wlan-msa-memory",
-+				   &qmi->msa_mem_size);
-+
-+	if (ret || qmi->msa_mem_size == 0) {
-+		pr_err("fail to get MSA memory size: %u, ret: %d\n",
-+		       qmi->msa_mem_size, ret);
-+		return -ENOMEM;
-+	}
-+
-+	qmi->msa_va = dmam_alloc_coherent(dev, qmi->msa_mem_size,
-+					  &qmi->msa_pa, GFP_KERNEL);
-+	if (!qmi->msa_va) {
-+		pr_err("dma alloc failed for MSA\n");
-+		return -ENOMEM;
-+	}
-+
-+	pr_debug("MSA pa: %pa, MSA va: 0x%p\n",
-+		 &qmi->msa_pa,
-+		 qmi->msa_va);
-+
-+	return 0;
-+}
-+
- static void ath10k_remove_qmi_resources(struct ath10k_qmi *qmi)
- {
- 	cancel_work_sync(&qmi->work_svc_arrive);
-@@ -272,7 +556,7 @@ static int ath10k_qmi_probe(struct platform_device *pdev)
- 
- 	qmi->pdev = pdev;
- 	platform_set_drvdata(pdev, qmi);
--
-+	ath10k_qmi_setup_msa_resources(&pdev->dev, qmi);
- 	ret = ath10k_alloc_qmi_resources(qmi);
- 	if (ret < 0)
- 		goto err;
-diff --git a/drivers/net/wireless/ath/ath10k/qmi.h b/drivers/net/wireless/ath/ath10k/qmi.h
-index 7697d24..47af020 100644
---- a/drivers/net/wireless/ath/ath10k/qmi.h
-+++ b/drivers/net/wireless/ath/ath10k/qmi.h
-@@ -16,6 +16,8 @@
- #ifndef _QMI_H_
- #define _QMI_H_
- 
-+#define MAX_NUM_MEMORY_REGIONS			2
-+
- enum ath10k_qmi_driver_event_type {
- 	ATH10K_QMI_EVENT_SERVER_ARRIVE,
- 	ATH10K_QMI_EVENT_SERVER_EXIT,
-@@ -23,6 +25,12 @@ enum ath10k_qmi_driver_event_type {
- 	ATH10K_QMI_EVENT_MAX,
- };
- 
-+struct ath10k_msa_mem_region_info {
-+	u64 reg_addr;
-+	u32 size;
-+	u8 secure_flag;
-+};
-+
- struct ath10k_qmi {
- 	struct platform_device *pdev;
- 	struct qmi_handle qmi_hdl;
-@@ -33,5 +41,11 @@ struct ath10k_qmi {
- 	struct work_struct work_svc_exit;
- 	struct workqueue_struct *event_wq;
- 	spinlock_t event_lock; /* spinlock for fw ready status*/
-+	u32 nr_mem_region;
-+	struct ath10k_msa_mem_region_info
-+		mem_region[MAX_NUM_MEMORY_REGIONS];
-+	phys_addr_t msa_pa;
-+	u32 msa_mem_size;
-+	void *msa_va;
- };
- #endif /* _QMI_H_ */
--- 
-1.9.1
+Indeed. That was my thought exactly and I can not imagine Uffe would 
+push back on that reasoning.
+
+>> If I get it right, you mean something like this:
+>>
+>> mmc3: mmc@1c12000 {
+>> ...
+>>          broken-sg-support;
+>>          sd-head-align = 4;
+>>          sd-sgentry-align = 512;
+>>
+>>          brcmf: wifi@1 {
+>>                  ...
+>>          };
+>> };
+>>
+>> Where dt: bindings documentation for these entries should reside?
+>> In generic MMC bindings? Well, this is the very special case and
+>> mmc-linux maintainer will unlikely to accept these changes.
+>> Also, extra kernel code modification might be required. It could make
+>> quite trivial change much more complex.
+>
+> If the MMC maintainers are not copied on this patch series, it will
+> likely be hard for them to identify this patch series and chime in...
+
+The main question is whether this is indeed a "very special case" as 
+Alexey claims it to be or that it is likely to be applicable to other 
+device and host combinations as you are suggesting.
+
+If these properties are imposed by the host or host controller it would 
+make sense to have these in the mmc bindings.
+
+>>
+>>> Also I am not sure if the broken-sg-support is still needed. We added that for omap_hsmmc, but that has since changed to scatter-gather emulation so it might not be needed anymore.
+>>
+>> I've experienced the problem with rk3288 (dw-mmc host) and sdio
+>> settings like above solved it.
+>> Frankly, I haven't investigated any deeper which one of the settings
+>> helped in my case yet...
+>> I will try to get rid of broken-sg-support first and let you know if
+>> it does make any difference.
+
+Are you using some chromebook. I have some lying around here so I could 
+also look into it. What broadcom chipset do you have?
+
+Regards,
+Arend
+
+>> All the best,
+>>    Alex.
+>>
+>> On 19 March 2018 at 16:31, Arend van Spriel
+>> <arend.vanspriel@broadcom.com> wrote:
+>>> On 3/19/2018 2:40 AM, Alexey Roslyakov wrote:
+>>>>
+>>>> In case if the host has higher align requirements for SG items, allow
+>>>> setting device-specific aligns for scatterlist items.
+>>>>
+>>>> Signed-off-by: Alexey Roslyakov <alexey.roslyakov@gmail.com>
+>>>> ---
+>>>>    Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt | 5
+>>>> +++++
+>>>>    1 file changed, 5 insertions(+)
+>>>>
+>>>> diff --git
+>>>> a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>>> b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>>> index 86602f264dce..187b8c1b52a7 100644
+>>>> --- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>>> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>>> @@ -17,6 +17,11 @@ Optional properties:
+>>>>          When not specified the device will use in-band SDIO interrupts.
+>>>>     - interrupt-names : name of the out-of-band interrupt, which must be
+>>>> set
+>>>>          to "host-wake".
+>>>> + - brcm,broken-sg-support : boolean flag to indicate that the SDIO host
+>>>> +       controller has higher align requirement than 32 bytes for each
+>>>> +       scatterlist item.
+>>>> + - brcm,sd-head-align : alignment requirement for start of data buffer.
+>>>> + - brcm,sd-sgentry-align : length alignment requirement for each sg
+>>>> entry.
+>>>
+>>>
+>>> Hi Alexey,
+>>>
+>>> Thanks for the patch. However, the problem with these is that they are
+>>> characterizing the host controller and not the wireless device. So from
+>>> device tree perspective , which is to describe the hardware, these
+>>> properties should be SDIO host controller properties. Also I am not sure if
+>>> the broken-sg-support is still needed. We added that for omap_hsmmc, but
+>>> that has since changed to scatter-gather emulation so it might not be needed
+>>> anymore.
+>>>
+>>> Regards,
+>>> Arend
+>>
+>>
+>>
+>
+>
