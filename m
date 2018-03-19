@@ -1,85 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:46055 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751414AbeCOVTS (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:35468 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932792AbeCSIyH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Mar 2018 17:19:18 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Johan Hedberg <johan.hedberg@gmail.com>,
-        Johan Hovold <johan@kernel.org>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] [v3] Bluetooth: btrsi: rework dependencies
-Date: Thu, 15 Mar 2018 22:18:24 +0100
-Message-Id: <20180315211904.2256817-1-arnd@arndb.de> (sfid-20180315_221940_782196_4E35117F)
+        Mon, 19 Mar 2018 04:54:07 -0400
+Message-ID: <1521449644.3786.110.camel@coelho.fi> (sfid-20180319_095425_122417_E2108843)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
+Date: Mon, 19 Mar 2018 10:54:04 +0200
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-KI78u6B9cRCICV/ib1I3"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi 2018-03-19
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The linkage between the bluetooth driver and the wireless
-driver is not defined properly, leading to build problems
-such as:
 
-warning: (BT_HCIRSI) selects RSI_COEX which has unmet direct dependencies (NETDEVICES && WLAN && WLAN_VENDOR_RSI && BT_HCIRSI && RSI_91X)
-drivers/net/wireless/rsi/rsi_91x_main.o: In function `rsi_read_pkt':
-(.text+0x205): undefined reference to `rsi_bt_ops'
+--=-KI78u6B9cRCICV/ib1I3
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-As the dependency is actually the reverse (RSI_91X uses
-the BT_RSI driver, not the other way round), this changes
-the dependency to match, and enables the bluetooth driver
-from the RSI_COEX symbol.
+Hi Kalle,
 
-Fixes: 38aa4da50483 ("Bluetooth: btrsi: add new rsi bluetooth driver")
-Acked-by; Marcel Holtmann <marcel@holtmann.org>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
-v2: Pick a different approach from v1
-v3: fix typo: s/BT_RSI/BT_HCIRSI/
----
- drivers/bluetooth/Kconfig        | 4 +---
- drivers/net/wireless/rsi/Kconfig | 4 +++-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+Here is my fourth set of fixes for 4.16.  More details in the tag
+description.
 
-diff --git a/drivers/bluetooth/Kconfig b/drivers/bluetooth/Kconfig
-index d8bbd661dbdb..149a38ee1fce 100644
---- a/drivers/bluetooth/Kconfig
-+++ b/drivers/bluetooth/Kconfig
-@@ -393,9 +393,7 @@ config BT_QCOMSMD
- 	  kernel or say M to compile as a module.
- 
- config BT_HCIRSI
--	tristate "Redpine HCI support"
--	default n
--	select RSI_COEX
-+	tristate
- 	help
- 	  Redpine BT driver.
- 	  This driver handles BT traffic from upper layers and pass
-diff --git a/drivers/net/wireless/rsi/Kconfig b/drivers/net/wireless/rsi/Kconfig
-index f004be33fcfa..976c21866230 100644
---- a/drivers/net/wireless/rsi/Kconfig
-+++ b/drivers/net/wireless/rsi/Kconfig
-@@ -13,6 +13,7 @@ if WLAN_VENDOR_RSI
- 
- config RSI_91X
- 	tristate "Redpine Signals Inc 91x WLAN driver support"
-+	select BT_HCIRSI if RSI_COEX
- 	depends on MAC80211
- 	---help---
- 	  This option enabes support for RSI 1x1 devices.
-@@ -44,7 +45,8 @@ config RSI_USB
- 
- config RSI_COEX
- 	bool "Redpine Signals WLAN BT Coexistence support"
--	depends on BT_HCIRSI && RSI_91X
-+	depends on BT && RSI_91X
-+	depends on !(BT=m && RSI_91X=y)
- 	default y
- 	---help---
- 	  This option enables the WLAN BT coex support in rsi drivers.
--- 
-2.9.0
+I have sent this out before and kbuildbot didn't find any issues.=20
+Please let me know if there are any issues.
+
+Cheers,
+Luca.
+
+
+The following changes since commit 1259055170287a350cad453e9eac139c81609860=
+:
+
+  brcmfmac: drop Inter-Access Point Protocol packets by default (2018-03-16=
+ 15:00:24 +0200)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git t=
+ags/iwlwifi-for-kalle-2018-03-19
+
+
+for you to fetch changes up to 9f4ef1d70f05ebb7f0755545c05ea383be0eeb0f:
+
+  iwlwifi: mvm: Move unused phy's to a default channel (2018-03-19 10:50:38=
+ +0200)
+
+----------------------------------------------------------------
+Fourth batch of iwlwifi fixes intended for 4.16:
+
+* a couple of fixes for channel-switch;
+* a few fixes for the aggregation handling code;
+
+----------------------------------------------------------------
+Andrei Otcheretianski (2):
+      iwlwifi: mvm: Increase session protection time after CS
+      iwlwifi: mvm: Move unused phy's to a default channel
+
+Avraham Stern (3):
+      iwlwifi: mvm: clear tx queue id when unreserving aggregation queue
+      iwlwifi: mvm: make sure internal station has a valid id
+      iwlwifi: mvm: fix array out of bounds reference
+
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c   |  5 ++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h        |  3 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c   | 21 ++++++++++++++++-=
+----
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c        | 53 +++++++++++++++++=
+++++--------------------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/time-event.c | 15 ++++++++-------
+ 5 files changed, 52 insertions(+), 45 deletions(-)
+--=-KI78u6B9cRCICV/ib1I3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlqveqwACgkQoUecoho8
+xfrzYA//VL1KBplpK5GNc63VYCDkLMltNepOW5fKCbhfABAmjMlAmk2XHaY8VyUw
+3gjh3BBnBnVt00EsnSs3qwKRo9YSFQZAO7r+rFchd3oZBRb+AZqi9vKDf5sW09+A
+AIvOsx4So3k1omVrSzMEB6WMkccqRSykdcHpFydsWLGTdXtzhW3p6DWsYl466rad
+eqjfVmVnudMZ01TK7Vmkm0sGL9Hv+kubHO9n9EsqI5MOB/QTMEhOPCx7EGYDAunn
+UwWOpbPA1GNnh45ncHWqdKtXerVl1Zx12twT7hz89guWPU4Wwv3T+TPkl/3dPx/Y
+ZMlTL6PmRDGgoMUyxEzJVO1whgW0sRHy6vUU1QKjK0wOgbMWX2JzYYD2NLaeonFi
+LlaW2CsSp5QXLBYym0Q/YNIiuDAqI/lCMSq41cr7yGozHYWdC2r2FeslNL0L9np3
+SdNSGzbtiqO3Z5QDdThUB4cwCkyalEbKvs1tVs3mPe++00JPkckD6VgazGocWEem
+vfbBjWCky6EoNrUWFP1WUb/noi/fOUGUOXLn5dr3jjAM1WsISrHXK8zIfxpz8eVX
+o/jjZPH3vLrcqwZvZw/1dFRdrRVRLTSYlu/ZyEcjr+6jlvFp91kOh9FdlLNMKOPl
+nshkhiiMg3gOjA+hc0ejvgdKikTLCde8F3iV71wV95oYotGGa9g=
+=YdEb
+-----END PGP SIGNATURE-----
+
+--=-KI78u6B9cRCICV/ib1I3--
