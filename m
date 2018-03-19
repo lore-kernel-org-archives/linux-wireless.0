@@ -1,53 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.uni-rostock.de ([139.30.22.71]:55371 "EHLO
-        mx1.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1032915AbeCARWa (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 12:22:30 -0500
-Subject: Re: [PATCH net-next 1/2] mac80211_hwsim: Make hwsim_netgroup IDA
-To: Kirill Tkhai <ktkhai@virtuozzo.com>, <davem@davemloft.net>,
-        <johannes@sipsolutions.net>, <kvalo@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-References: <151990341305.5011.3514278630677194656.stgit@localhost.localdomain>
- <151990380915.5011.5476607741974762054.stgit@localhost.localdomain>
-From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
-Message-ID: <9a826ac0-1354-567b-ec4c-ac8511bf89f6@uni-rostock.de> (sfid-20180301_182239_275280_49D7FEA9)
-Date: Thu, 1 Mar 2018 18:22:26 +0100
-MIME-Version: 1.0
-In-Reply-To: <151990380915.5011.5476607741974762054.stgit@localhost.localdomain>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.bugwerft.de ([46.23.86.59]:37532 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755289AbeCSGaJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Mar 2018 02:30:09 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
+        rfried@codeaurora.org, bjorn.andersson@linaro.org,
+        Daniel Mack <daniel@zonque.org>
+Subject: [PATCH] wcn36xx: allocate skbs with GFP_KERNEL during init
+Date: Mon, 19 Mar 2018 07:30:02 +0100
+Message-Id: <20180319063002.24665-1-daniel@zonque.org> (sfid-20180319_073013_338904_B47F97E2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 01.03.2018 um 12:30 schrieb Kirill Tkhai:
+GFP_ATOMIC should only be used when the allocation is done from atomic
+context. Introduce a new flag to wcn36xx_dxe_fill_skb() and use GFP_KERNEL
+when pre-allocating buffers during init.
 
-> Out of bounds of this patch, just as a report to wireless subsystem
-> maintainer, destroy_radio() increaments hwsim_radios_generation
-> without hwsim_radio_lock, so this may need one more patch to fix.
->
-The lock is here implicit, because the value only could change at init
-(where netlink callbacks are deactivated and always happens sequential)
-or in netlink callbacks. The only reader of this variable is the dump
-callback, and the only other writers are also netlink callbacks and
-because they are implicitly not parallel (because the parallel flag is
-not set), there could be no race condition. Maybe this should be
-documented somehow, especially if somebody got the idea to allow
-parallel callbacks :-)
+This doesn't fix an issue that was observed in the wild, but it reduces
+the chance of failed allocations under memory pressure.
 
---=20
-M.Sc. Benjamin Beichler
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+---
+ drivers/net/wireless/ath/wcn36xx/dxe.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-Universit=C3=A4t Rostock, Fakult=C3=A4t f=C3=BCr Informatik und Elektrote=
-chnik
-Institut f=C3=BCr Angewandte Mikroelektronik und Datentechnik
-
-University of Rostock, Department of CS and EE
-Institute of Applied Microelectronics and CE
-
-Richard-Wagner-Stra=C3=9Fe 31
-18119 Rostock
-Deutschland/Germany
-
-phone: +49 (0) 381 498 - 7278
-email: Benjamin.Beichler@uni-rostock.de
-www: http://www.imd.uni-rostock.de/
+diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
+index 5672154948c3..3e180828fbfa 100644
+--- a/drivers/net/wireless/ath/wcn36xx/dxe.c
++++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
+@@ -275,12 +275,14 @@ static int wcn36xx_dxe_enable_ch_int(struct wcn36xx *wcn, u16 wcn_ch)
+ 	return 0;
+ }
+ 
+-static int wcn36xx_dxe_fill_skb(struct device *dev, struct wcn36xx_dxe_ctl *ctl)
++static int wcn36xx_dxe_fill_skb(struct device *dev,
++				struct wcn36xx_dxe_ctl *ctl,
++				gfp_t gfp)
+ {
+ 	struct wcn36xx_dxe_desc *dxe = ctl->desc;
+ 	struct sk_buff *skb;
+ 
+-	skb = alloc_skb(WCN36XX_PKT_SIZE, GFP_ATOMIC);
++	skb = alloc_skb(WCN36XX_PKT_SIZE, gfp);
+ 	if (skb == NULL)
+ 		return -ENOMEM;
+ 
+@@ -307,7 +309,7 @@ static int wcn36xx_dxe_ch_alloc_skb(struct wcn36xx *wcn,
+ 	cur_ctl = wcn_ch->head_blk_ctl;
+ 
+ 	for (i = 0; i < wcn_ch->desc_num; i++) {
+-		wcn36xx_dxe_fill_skb(wcn->dev, cur_ctl);
++		wcn36xx_dxe_fill_skb(wcn->dev, cur_ctl, GFP_KERNEL);
+ 		cur_ctl = cur_ctl->next;
+ 	}
+ 
+@@ -533,7 +535,7 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
+ 	while (!(dxe->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)) {
+ 		skb = ctl->skb;
+ 		dma_addr = dxe->dst_addr_l;
+-		ret = wcn36xx_dxe_fill_skb(wcn->dev, ctl);
++		ret = wcn36xx_dxe_fill_skb(wcn->dev, ctl, GFP_ATOMIC);
+ 		if (0 == ret) {
+ 			/* new skb allocation ok. Use the new one and queue
+ 			 * the old one to network system.
+-- 
+2.14.3
