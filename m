@@ -1,56 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:3080 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751763AbeBTO60 (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:37044 "EHLO
+        li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932659AbeCSLTh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Feb 2018 09:58:26 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 05/12] staging: wilc1000: rename Handle_SetMulticastFilter to avoid camelCase
-Date: Tue, 20 Feb 2018 20:27:54 +0530
-Message-ID: <1519138681-1982-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180220_155830_223284_29F32177)
-In-Reply-To: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
-References: <1519138681-1982-1-git-send-email-ajay.kathat@microchip.com>
+        Mon, 19 Mar 2018 07:19:37 -0400
+Date: Mon, 19 Mar 2018 13:09:56 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v4 1/3] mac80211_hwsim: add permanent mac address option
+ for new radios
+Message-ID: <20180319110956.GA11426@w1.fi> (sfid-20180319_121941_476616_A0A95E82)
+References: <20180122170437.14213-1-benjamin.beichler@uni-rostock.de>
+ <20180122170437.14213-2-benjamin.beichler@uni-rostock.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180122170437.14213-2-benjamin.beichler@uni-rostock.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix "Avoid camelCase" issue found by checkpatch.pl script.
+On Mon, Jan 22, 2018 at 06:04:35PM +0100, Benjamin Beichler wrote:
+> If simulation needs predictable permanent mac addresses of hwsim wireless
+> phy, this patch add the ability to create a new radio with a user defined
+> permanent mac address. Allowed mac addresses needs to be locally
+> administrated mac addresses (as also the former fixed 42:* and 02:* were).
+> 
+> To do not break the operation with legacy software using hwsim, the new
+> address is set twice. The problem here is, the netlink call backs use
+> wiphy->addresses[1] as identification of a radio and not the proposed
+> permanent address (wiphy->addresses[0]). This design decision is not
+> documented in the kernel repo, therefore this patch simply reproduces this,
+> but with the same address.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+But this patch does break operation with legacy software.. Namely, some
+mac80211_hwsim test cases in hostap.git. However, that seems to be due
+to a strange swapping of operations here:
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index fd21765..57f0201 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2404,8 +2404,8 @@ static void handle_power_management(struct wilc_vif *vif,
- 		netdev_err(vif->ndev, "Failed to send power management\n");
- }
- 
--static void Handle_SetMulticastFilter(struct wilc_vif *vif,
--				      struct set_multicast *hif_set_mc)
-+static void handle_set_mcast_filter(struct wilc_vif *vif,
-+				    struct set_multicast *hif_set_mc)
- {
- 	s32 result = 0;
- 	struct wid wid;
-@@ -2621,7 +2621,7 @@ static void host_if_work(struct work_struct *work)
- 		break;
- 
- 	case HOST_IF_MSG_SET_MULTICAST_FILTER:
--		Handle_SetMulticastFilter(msg->vif, &msg->body.multicast_info);
-+		handle_set_mcast_filter(msg->vif, &msg->body.multicast_info);
- 		break;
- 
- 	case HOST_IF_MSG_DEL_ALL_STA:
+> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+> @@ -2571,15 +2573,25 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+
+> -	eth_zero_addr(addr);
+> -	addr[0] = 0x02;
+> -	addr[3] = idx >> 8;
+> -	addr[4] = idx;
+> -	memcpy(data->addresses[0].addr, addr, ETH_ALEN);
+> -	memcpy(data->addresses[1].addr, addr, ETH_ALEN);
+> -	data->addresses[1].addr[0] |= 0x40;
+> -	hw->wiphy->n_addresses = 2;
+> -	hw->wiphy->addresses = data->addresses;
+> +	if (!param->perm_addr) {
+> +		eth_zero_addr(addr);
+> +		addr[0] = 0x02;
+> +		addr[3] = idx >> 8;
+> +		addr[4] = idx;
+> +		memcpy(data->addresses[0].addr, addr, ETH_ALEN);
+> +		/* Why need here second address ? */
+> +		data->addresses[1].addr[0] |= 0x40;
+> +		memcpy(data->addresses[1].addr, addr, ETH_ALEN);
+> +		hw->wiphy->n_addresses = 2;
+> +		hw->wiphy->addresses = data->addresses;
+
+Why did that ORing of 0x40 got moved to be before the memcpy()?
+Effectively, that removes the OR operation completely since the
+following memcpy() overrides the first octets of
+data->addresses[1].addr. Restoring the order of those two lines seems to
+fix the behavior.
+
 -- 
-2.7.4
+Jouni Malinen                                            PGP id EFC895FA
