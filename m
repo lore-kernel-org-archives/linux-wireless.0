@@ -1,101 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47014 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750731AbeCOJHd (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:34456 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754785AbeCSCNk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Mar 2018 05:07:33 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Tobin C. Harding" <me@tobin.cc>
-Cc: Kees Cook <keescook@chromium.org>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        "open list\:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        Tycho Andersen <tycho@tycho.ws>,
-        Konstantin Ryabitsev <konstantin@linuxfoundation.org>
-Subject: Re: [RESEND] rsi: Remove stack VLA usage
-References: <1520819022-15238-1-git-send-email-me@tobin.cc>
-        <20180312094606.8192B6081A@smtp.codeaurora.org>
-        <20180313201757.GK8631@eros>
-        <CAHp75VeM1zNyNtHvsn0=rg_xibcitVHREY73cAk=KCSK3Ti3vw@mail.gmail.com>
-        <20180314021151.GA11666@eros>
-        <CAGXu5jJsDsegY+EZFq1Hip+sRNLR5SS+-Euf1rm22okAq7REJw@mail.gmail.com>
-        <20180314034303.GB11666@eros> <87fu536mkm.fsf@codeaurora.org>
-        <20180314201944.GC11666@eros>
-Date: Thu, 15 Mar 2018 11:07:28 +0200
-In-Reply-To: <20180314201944.GC11666@eros> (Tobin C. Harding's message of
-        "Thu, 15 Mar 2018 07:19:44 +1100")
-Message-ID: <87woyd7lm7.fsf@kamboji.qca.qualcomm.com> (sfid-20180315_100753_768216_55196144)
+        Sun, 18 Mar 2018 22:13:40 -0400
+From: Pkshih <pkshih@realtek.com>
+To: "kevlo@kevlo.org" <kevlo@kevlo.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] rtlwifi: correct comment
+Date: Mon, 19 Mar 2018 02:13:28 +0000
+Message-ID: <1521425608.3080.7.camel@realtek.com> (sfid-20180319_031410_944404_1341E154)
+References: <20180317142607.GA11027@ns.kevlo.org>
+In-Reply-To: <20180317142607.GA11027@ns.kevlo.org>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Tobin C. Harding" <me@tobin.cc> writes:
-
-> On Wed, Mar 14, 2018 at 11:19:53AM +0200, Kalle Valo wrote:
->> "Tobin C. Harding" <me@tobin.cc> writes:
->>=20
->> > Added Konstantin in case he is in charge of administering patchwork.ke=
-rnel.org?
->> >
->> > On Tue, Mar 13, 2018 at 07:53:34PM -0700, Kees Cook wrote:
->> >> On Tue, Mar 13, 2018 at 7:11 PM, Tobin C. Harding <me@tobin.cc> wrote:
->> >> > On Tue, Mar 13, 2018 at 11:00:47PM +0200, Andy Shevchenko wrote:
->> >> >> On Tue, Mar 13, 2018 at 10:17 PM, tcharding <me@tobin.cc> wrote:
->> >> >> > On Mon, Mar 12, 2018 at 09:46:06AM +0000, Kalle Valo wrote:
->> >> >> >> tcharding <me@tobin.cc> wrote:
->> >> >>
->> >> >> I'm pretty much sure it depends on the original email headers, like
->> >> >> above ^^^ =E2=80=94 no name.
->> >> >> Perhaps git config on your side should be done.
->> >> >
->> >> > Thanks for the suggestion Andy but the 'tcharding' as the name was
->> >> > munged by either Kalle or patchwork.  I'm guessing patchwork.
->> >>=20
->> >> Something you're sending from is using "tcharding" (see the email Andy
->> >> quotes). I see the headers as:
->> >>=20
->> >> Date: Wed, 14 Mar 2018 07:17:57 +1100
->> >> From: tcharding <me@tobin.cc>
->> >> ...
->> >> Message-ID: <20180313201757.GK8631@eros>
->> >> X-Mailer: Mutt 1.5.24 (2015-08-30)
->> >> User-Agent: Mutt/1.5.24 (2015-08-30)
->> >>=20
->> >> Your most recently email shows "Tobin C. Harding" though, and also
->> >> sent with Mutt...
->> >>
->> >> Do you have multiple Mutt configurations? Is something lacking a
->> >> "From" header insertion and your MTA is filling it in for you from
->> >> your username?
->> >
->> > Thanks for taking the time to respond Kees (and Tycho).  I have mutt
->> > configured to reply from whichever email address I receive from so if
->> > patchwork sent an email to 'tcharding <me@tobin.cc>' (which is the
->> > details it has) and I hit reply it would have come from 'tcharding',
->> > hence Andy's reply.  I wouldn't bet my life on it but I'm kinda
->> > confident that I cannot initiate an email from 'tcharding' with my
->> > current set up.
->> >
->> > Super bad form to blame someone (or something else) but I think this is
->> > a problem with how my patchwork account is configured.  Either way, th=
-at
->> > is still my fault I should have added my real name to patchwork when I
->> > signed up (not just username 'tcharding').
->> >
->> > Is patchwork.kernel.org administered by Konstantin Ryabitsev? Added
->> > Konstantin to CC's.
->>=20
->> Like I said earlier, just send a request to helpdesk@kernel.org and
->> admins should fix your name.
->
-> thanks Kalle, I'm on it.
-
-Thanks. Looks to be fixed, now patchwork gives me:
-
-From: Tobin C. Harding <me@tobin.cc>
-
---=20
-Kalle Valo
+T24gU2F0LCAyMDE4LTAzLTE3IGF0IDIyOjI2ICswODAwLCBLZXZpbiBMbyB3cm90ZToNCj4gQ29y
+cmVjdCBjb21tZW50LsKgwqBTZXQgYml0IDMgYW5kIGJpdCA0IG9mIDB4MDAwNSByZWdpc3RlciAo
+UkVHX0FQU19GU01DTyArIDEpDQo+IHRvIDAgd2hpY2ggbWVhbnMgZGlzYWJsZSBXTCBzdXNwZW5k
+LCBub3QgZW5hYmxlIFdMIHN1c3BlbmQuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBLZXZpbiBMbyA8
+a2V2bG9Aa2V2bG8ub3JnPg0KQWNrZWQtYnk6IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsu
+Y29tPg0KPiAtLS0NCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsv
+cnRsd2lmaS9ydGw4MTg4ZWUvcHdyc2VxLmgNCj4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFs
+dGVrL3J0bHdpZmkvcnRsODE4OGVlL3B3cnNlcS5oDQo+IGluZGV4IGYyZDljNjExNmU1Yy4uODM3
+OWEzZTUxOThjIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0
+bHdpZmkvcnRsODE4OGVlL3B3cnNlcS5oDQo+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3Jl
+YWx0ZWsvcnRsd2lmaS9ydGw4MTg4ZWUvcHdyc2VxLmgNCj4gQEAgLTE0Miw3ICsxNDIsNyBAQA0K
+PiDCoAkvKndhaXQgcG93ZXIgc3RhdGUgdG8gc3VzcGVuZCovfSwJCQkJXA0KPiDCoAl7MHgwMDA1
+LCBQV1JfQ1VUX0FMTF9NU0ssIFBXUl9GQUJfQUxMX01TSywgUFdSX0lOVEZfQUxMX01TSywJXA0K
+PiDCoAlQV1JfQkFTRUFERFJfTUFDLCBQV1JfQ01EX1dSSVRFLCBCSVQoMykgfCBCSVQoNCksIDAJ
+CVwNCj4gLQkvKjB4MDRbMTI6MTFdID0gMmInMDFlbmFibGUgV0wgc3VzcGVuZCovfSwNCj4gKwkv
+KjB4MDRbMTI6MTFdID0gMmInMDAgZGlzYWJsZSBXTCBzdXNwZW5kKi99LA0KPiDCoA0KDQpbLi4u
+XQ0KDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkv
+cnRsODE5MmVlL3B3cnNlcS5oDQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3
+aWZpL3J0bDgxOTJlZS9wd3JzZXEuaA0KPiBpbmRleCA3ODFlZWFhNmFmNDkuLmM1NzA4MDE1MDhj
+YyAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3J0
+bDgxOTJlZS9wd3JzZXEuaA0KPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0
+bHdpZmkvcnRsODE5MmVlL3B3cnNlcS5oDQo+IEBAIC0xMzQsNyArMTM0LDcgQEANCj4gwqAJLyp3
+YWl0IHBvd2VyIHN0YXRlIHRvIHN1c3BlbmQqLwkJCQkJXA0KPiDCoAl7MHgwMDg2LCBQV1JfQ1VU
+X0FMTF9NU0ssIFBXUl9GQUJfQUxMX01TSywgUFdSX0lOVEZfU0RJT19NU0ssCVwNCj4gwqAJwqBQ
+V1JfQkFTRUFERFJfU0RJTyAsIFBXUl9DTURfUE9MTElORywgQklUKDEpLCBCSVQoMSl9LAkJXA0K
+PiAtCS8qMHgwNFsxMjoxMV0gPSAyYicwMWVuYWJsZSBXTCBzdXNwZW5kKi8JCQlcDQo+ICsJLyow
+eDA0WzEyOjExXSA9IDJiJzAwIGRpc2FibGUgV0wgc3VzcGVuZCovCQkJXA0KPiDCoAl7MHgwMDA1
+LCBQV1JfQ1VUX0FMTF9NU0ssIFBXUl9GQUJfQUxMX01TSywgUFdSX0lOVEZfQUxMX01TSywJXA0K
+PiDCoAnCoFBXUl9CQVNFQUREUl9NQUMgLCBQV1JfQ01EX1dSSVRFLCBCSVQoMykgfCBCSVQoNCks
+IDB9LA0KPiDCoA0KDQpGb3IgZnVydGhlciByZXZpZXdlcnMsIHBsZWFzZSBwYXkgYXR0ZW50aW9u
+IHRvIGNvbW1lbnRzIGV4aXN0IGFib3ZlIG9ywqANCmJlbG93IHRoZSBzdGF0ZW1lbnRzLg0KDQo=
