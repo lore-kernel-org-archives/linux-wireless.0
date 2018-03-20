@@ -1,76 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49606 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753007AbeCMQrJ (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:59372 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751531AbeCTPjf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 12:47:09 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Andres Rodriguez <andresx7@gmail.com>,
-        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [PATCH] firmware: add a function to load optional firmware v2
-References: <20180309221243.15489-2-andresx7@gmail.com>
-        <20180309230925.3573-1-andresx7@gmail.com>
-        <CAB=NE6VY62KqmhzD=zT8od=PhgPi3rGKKKxKz_zad-ZrYW-97A@mail.gmail.com>
-        <87a7vcazf1.fsf@kamboji.qca.qualcomm.com>
-        <20180313164026.GG4449@wotan.suse.de>
-Date: Tue, 13 Mar 2018 18:46:58 +0200
-In-Reply-To: <20180313164026.GG4449@wotan.suse.de> (Luis R. Rodriguez's
-        message of "Tue, 13 Mar 2018 16:40:26 +0000")
-Message-ID: <87fu53apod.fsf@kamboji.qca.qualcomm.com> (sfid-20180313_174727_797779_6CB73065)
+        Tue, 20 Mar 2018 11:39:35 -0400
+Subject: Re: [RFC] ethtool: Support ETHTOOL_GSTATS2 command.
+To: Michal Kubecek <mkubecek@suse.cz>
+References: <1520452289-14172-1-git-send-email-greearb@candelatech.com>
+ <20180320103747.7kcfdu4yzof6bwxw@unicorn.suse.cz>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        netdev@vger.kernel.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <37830d46-762b-2a92-4506-5792a65d2ebd@candelatech.com> (sfid-20180320_163946_668037_E0BA11C9)
+Date: Tue, 20 Mar 2018 08:39:33 -0700
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180320103747.7kcfdu4yzof6bwxw@unicorn.suse.cz>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <mcgrof@kernel.org> writes:
-
-> On Tue, Mar 13, 2018 at 03:16:34PM +0200, Kalle Valo wrote:
->> "Luis R. Rodriguez" <mcgrof@kernel.org> writes:
->> 
->> >> +/**
->> >> + * request_firmware_optional: - request for an optional fw module
->> >> + * @firmware_p: pointer to firmware image
->> >> + * @name: name of firmware file
->> >> + * @device: device for which firmware is being loaded
->> >> + *
->> >> + * This function is similar in behaviour to request_firmware(), except
->> >> + * it doesn't produce warning messages when the file is not found.
->> >> + **/
->> >> +int
->> >> +request_firmware_optional(const struct firmware **firmware_p, const char *name,
->> >> +                         struct device *device)
->> >> +{
->> >> +       int ret;
->> >> +
->> >> +       /* Need to pin this module until return */
->> >> +       __module_get(THIS_MODULE);
->> >> +               ret = _request_firmware(firmware_p, name, device, NULL, 0,
->> >> +                               FW_OPT_UEVENT | FW_OPT_NO_WARN );
->> >> +       module_put(THIS_MODULE);
->> >> +       return ret;
->> >> +}
->> >> +EXPORT_SYMBOL(request_firmware_optional);
->> >
->> > New exported symbols for the firmware API should be EXPORT_SYMBOL_GPL().
->> 
->> To me the word optional feels weird to me. For example, in ath10k I
->> suspect we would be only calling request_firmware_optional() with all
->> firmware and not request_firmware() at all.
->> 
->> How about request_firmware_nowarn()? That would even match the
->> documentation above.
+On 03/20/2018 03:37 AM, Michal Kubecek wrote:
+> On Wed, Mar 07, 2018 at 11:51:29AM -0800, greearb@candelatech.com wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> This is similar to ETHTOOL_GSTATS, but it allows you to specify
+>> a 'level'.  This level can be used by the driver to decrease the
+>> amount of stats refreshed.  In particular, this helps with ath10k
+>> since getting the firmware stats can be slow.
+>>
+>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>> ---
+>>
+>> NOTE:  I know to make it upstream I would need to split the patch and
+>> remove the #define for 'backporting' that I added.  But, is the
+>> feature in general wanted?  If so, I'll do the patch split and
+>> other tweaks that might be suggested.
 >
-> _nowarn() works with me. Do you at least want the return value to give
-> an error value if no file was found? This way the driver can decide
-> when to issue an error if it wants to.
+> I'm not familiar enough with the technical background of stats
+> collecting to comment on usefulness and desirability of this feature.
+> Adding a new command just to add a numeric parameter certainly doesn't
+> feel right but it's how the ioctl interface works. I take it as
+> a reminder to find some time to get back to the netlink interface.
+>
+>> diff --git a/net/core/ethtool.c b/net/core/ethtool.c
+>> index 674b6c9..d3b709f 100644
+>> --- a/net/core/ethtool.c
+>> +++ b/net/core/ethtool.c
+>> @@ -1947,6 +1947,54 @@ static int ethtool_get_stats(struct net_device *dev, void __user *useraddr)
+>>  	return ret;
+>>  }
+>>
+>> +static int ethtool_get_stats2(struct net_device *dev, void __user *useraddr)
+>> +{
+>> +	struct ethtool_stats stats;
+>> +	const struct ethtool_ops *ops = dev->ethtool_ops;
+>> +	u64 *data;
+>> +	int ret, n_stats;
+>> +	u32 stats_level = 0;
+>> +
+>> +	if (!ops->get_ethtool_stats2 || !ops->get_sset_count)
+>> +		return -EOPNOTSUPP;
+>> +
+>> +	n_stats = ops->get_sset_count(dev, ETH_SS_STATS);
+>> +	if (n_stats < 0)
+>> +		return n_stats;
+>> +	if (n_stats > S32_MAX / sizeof(u64))
+>> +		return -ENOMEM;
+>> +	WARN_ON_ONCE(!n_stats);
+>> +	if (copy_from_user(&stats, useraddr, sizeof(stats)))
+>> +		return -EFAULT;
+>> +
+>> +	/* User can specify the level of stats to query.  How the
+>> +	 * level value is used is up to the driver, but in general,
+>> +	 * 0 means 'all', 1 means least, and higher means more.
+>> +	 * The idea is that some stats may be expensive to query, so user
+>> +	 * space could just ask for the cheap ones...
+>> +	 */
+>> +	stats_level = stats.n_stats;
+>> +
+>> +	stats.n_stats = n_stats;
+>> +	data = vzalloc(n_stats * sizeof(u64));
+>> +	if (n_stats && !data)
+>> +		return -ENOMEM;
+>> +
+>> +	ops->get_ethtool_stats2(dev, &stats, data, stats_level);
+>> +
+>> +	ret = -EFAULT;
+>> +	if (copy_to_user(useraddr, &stats, sizeof(stats)))
+>> +		goto out;
+>> +	useraddr += sizeof(stats);
+>> +	if (n_stats && copy_to_user(useraddr, data, n_stats * sizeof(u64)))
+>> +		goto out;
+>> +	ret = 0;
+>> +
+>> + out:
+>> +	vfree(data);
+>> +	return ret;
+>> +}
+>> +
+>>  static int ethtool_get_phy_stats(struct net_device *dev, void __user *useraddr)
+>>  {
+>>  	struct ethtool_stats stats;
+>
+> IMHO it would be more practical to set "0 means same as GSTATS" as a
+> rule and make ethtool_get_stats() a wrapper for ethtool_get_stats2() to
+> avoid code duplication (or perhaps a use fall-through in the switch). It
+> would also allow drivers to provide only one of the callbacks.
 
-Yes, it would be very good to return the error value to ath10k. That way
-we can give a proper error message to the user if we can't find a
-suitable firmware image.
+Yes, but that would require changing all drivers at once, and would make backporting
+and out-of-tree drivers harder to manage.  I had low hopes that this feature would
+make it upstream, so I didn't want to propose any large changes up front.
+
+Thanks,
+Ben
+
+
 
 -- 
-Kalle Valo
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
