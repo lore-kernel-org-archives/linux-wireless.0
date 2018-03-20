@@ -1,146 +1,276 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0033.hostedemail.com ([216.40.44.33]:45533 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751339AbeCLPHS (ORCPT
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:36627 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751310AbeCTEH5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Mar 2018 11:07:18 -0400
-From: Joe Perches <joe@perches.com>
-To: Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>,
-        linux-wimax@intel.com, Johannes Berg <johannes@sipsolutions.net>,
-        Pablo Neira Ayuso <pablo@netfilter.org>,
-        Jozsef Kadlecsik <kadlec@blackhole.kfki.hu>,
-        Florian Westphal <fw@strlen.de>
-Cc: Kalle Valo <kvalo@codeaurora.org>, Felipe Balbi <balbi@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org,
-        coreteam@netfilter.org
-Subject: [PATCH] net: drivers/net: Remove unnecessary skb_copy_expand OOM messages
-Date: Mon, 12 Mar 2018 08:07:12 -0700
-Message-Id: <782fa75ab2e443d275f19d97f2f3a073b6074517.1520867179.git.joe@perches.com> (sfid-20180312_160737_080898_D57A4E7C)
+        Tue, 20 Mar 2018 00:07:57 -0400
+Received: by mail-ot0-f195.google.com with SMTP id 108-v6so307109otv.3
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2018 21:07:56 -0700 (PDT)
+Subject: Re: [PATCH v2 15/15] rtlwifi: btcoex: Add 8822b routine to btc
+ interfaces
+To: pkshih@realtek.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+References: <20180306012554.3108-1-pkshih@realtek.com>
+ <20180306012554.3108-16-pkshih@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <c9b9fd19-ee5a-9464-7e43-f1c4790de91f@lwfinger.net> (sfid-20180320_050803_623597_5058B035)
+Date: Mon, 19 Mar 2018 23:05:45 -0500
+MIME-Version: 1.0
+In-Reply-To: <20180306012554.3108-16-pkshih@realtek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-skb_copy_expand without __GFP_NOWARN already does a dump_stack
-on OOM so these messages are redundant.
+On 03/05/2018 07:25 PM, pkshih@realtek.com wrote:
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> Add 8822b routines to run btcoex algorithm
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/ethernet/qualcomm/qca_spi.c | 1 -
- drivers/net/usb/lg-vl600.c              | 6 +-----
- drivers/net/wimax/i2400m/usb-rx.c       | 3 ---
- drivers/net/wireless/ti/wl1251/tx.c     | 4 +---
- drivers/usb/gadget/function/f_eem.c     | 1 -
- net/mac80211/rx.c                       | 5 +----
- net/netfilter/nfnetlink_queue.c         | 5 +----
- 7 files changed, 4 insertions(+), 21 deletions(-)
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-diff --git a/drivers/net/ethernet/qualcomm/qca_spi.c b/drivers/net/ethernet/qualcomm/qca_spi.c
-index 9c236298fe21..5803cd6db406 100644
---- a/drivers/net/ethernet/qualcomm/qca_spi.c
-+++ b/drivers/net/ethernet/qualcomm/qca_spi.c
-@@ -705,7 +705,6 @@ qcaspi_netdev_xmit(struct sk_buff *skb, struct net_device *dev)
- 		tskb = skb_copy_expand(skb, QCAFRM_HEADER_LEN,
- 				       QCAFRM_FOOTER_LEN + pad_len, GFP_ATOMIC);
- 		if (!tskb) {
--			netdev_dbg(qca->net_dev, "could not allocate tx_buff\n");
- 			qca->stats.out_of_mem++;
- 			return NETDEV_TX_BUSY;
- 		}
-diff --git a/drivers/net/usb/lg-vl600.c b/drivers/net/usb/lg-vl600.c
-index dbabd7ca5268..257916f172cd 100644
---- a/drivers/net/usb/lg-vl600.c
-+++ b/drivers/net/usb/lg-vl600.c
-@@ -157,12 +157,8 @@ static int vl600_rx_fixup(struct usbnet *dev, struct sk_buff *skb)
- 
- 		s->current_rx_buf = skb_copy_expand(skb, 0,
- 				le32_to_cpup(&frame->len), GFP_ATOMIC);
--		if (!s->current_rx_buf) {
--			netif_err(dev, ifup, dev->net, "Reserving %i bytes "
--					"for packet assembly failed.\n",
--					le32_to_cpup(&frame->len));
-+		if (!s->current_rx_buf)
- 			dev->net->stats.rx_errors++;
--		}
- 
- 		return 0;
- 	}
-diff --git a/drivers/net/wimax/i2400m/usb-rx.c b/drivers/net/wimax/i2400m/usb-rx.c
-index b78ee676e102..5b64bda7d9e7 100644
---- a/drivers/net/wimax/i2400m/usb-rx.c
-+++ b/drivers/net/wimax/i2400m/usb-rx.c
-@@ -263,9 +263,6 @@ struct sk_buff *i2400mu_rx(struct i2400mu *i2400mu, struct sk_buff *rx_skb)
- 		new_skb = skb_copy_expand(rx_skb, 0, rx_size - rx_skb->len,
- 					  GFP_KERNEL);
- 		if (new_skb == NULL) {
--			if (printk_ratelimit())
--				dev_err(dev, "RX: Can't reallocate skb to %d; "
--					"RX dropped\n", rx_size);
- 			kfree_skb(rx_skb);
- 			rx_skb = NULL;
- 			goto out;	/* drop it...*/
-diff --git a/drivers/net/wireless/ti/wl1251/tx.c b/drivers/net/wireless/ti/wl1251/tx.c
-index de2fa6705574..12ed14ebc307 100644
---- a/drivers/net/wireless/ti/wl1251/tx.c
-+++ b/drivers/net/wireless/ti/wl1251/tx.c
-@@ -221,10 +221,8 @@ static int wl1251_tx_send_packet(struct wl1251 *wl, struct sk_buff *skb,
- 			struct sk_buff *newskb = skb_copy_expand(skb, 0, 3,
- 								 GFP_KERNEL);
- 
--			if (unlikely(newskb == NULL)) {
--				wl1251_error("Can't allocate skb!");
-+			if (unlikely(newskb == NULL))
- 				return -EINVAL;
--			}
- 
- 			tx_hdr = (struct tx_double_buffer_desc *) newskb->data;
- 
-diff --git a/drivers/usb/gadget/function/f_eem.c b/drivers/usb/gadget/function/f_eem.c
-index 37557651b600..c13befa31110 100644
---- a/drivers/usb/gadget/function/f_eem.c
-+++ b/drivers/usb/gadget/function/f_eem.c
-@@ -507,7 +507,6 @@ static int eem_unwrap(struct gether *port,
- 						0,
- 						GFP_ATOMIC);
- 			if (unlikely(!skb3)) {
--				DBG(cdev, "unable to realign EEM packet\n");
- 				dev_kfree_skb_any(skb2);
- 				continue;
- 			}
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index d01743234cf6..9c898a3688c6 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2549,11 +2549,8 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 
- 	fwd_skb = skb_copy_expand(skb, local->tx_headroom +
- 				       sdata->encrypt_headroom, 0, GFP_ATOMIC);
--	if (!fwd_skb) {
--		net_info_ratelimited("%s: failed to clone mesh frame\n",
--				    sdata->name);
-+	if (!fwd_skb)
- 		goto out;
--	}
- 
- 	fwd_hdr =  (struct ieee80211_hdr *) fwd_skb->data;
- 	fwd_hdr->frame_control &= ~cpu_to_le16(IEEE80211_FCTL_RETRY);
-diff --git a/net/netfilter/nfnetlink_queue.c b/net/netfilter/nfnetlink_queue.c
-index 59e2833c17f1..9f572ed56208 100644
---- a/net/netfilter/nfnetlink_queue.c
-+++ b/net/netfilter/nfnetlink_queue.c
-@@ -833,11 +833,8 @@ nfqnl_mangle(void *data, int data_len, struct nf_queue_entry *e, int diff)
- 		if (diff > skb_tailroom(e->skb)) {
- 			nskb = skb_copy_expand(e->skb, skb_headroom(e->skb),
- 					       diff, GFP_ATOMIC);
--			if (!nskb) {
--				printk(KERN_WARNING "nf_queue: OOM "
--				      "in mangle, dropping packet\n");
-+			if (!nskb)
- 				return -ENOMEM;
--			}
- 			kfree_skb(e->skb);
- 			e->skb = nskb;
- 		}
--- 
-2.15.0
+> ---
+>   .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 100 +++++++++++++++++++++
+>   1 file changed, 100 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> index 8b6b07a936f5..e0f9985582f9 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+> @@ -1441,6 +1441,11 @@ void exhalbtc_power_on_setting(struct btc_coexist *btcoexist)
+>   			ex_btc8723b2ant_power_on_setting(btcoexist);
+>   		else if (btcoexist->board_info.btdm_ant_num == 1)
+>   			ex_btc8723b1ant_power_on_setting(btcoexist);
+> +	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
+> +		if (btcoexist->board_info.btdm_ant_num == 1)
+> +			ex_btc8822b1ant_power_on_setting(btcoexist);
+> +		else if (btcoexist->board_info.btdm_ant_num == 2)
+> +			ex_btc8822b2ant_power_on_setting(btcoexist);
+>   	}
+>   }
+>   
+> @@ -1454,6 +1459,11 @@ void exhalbtc_pre_load_firmware(struct btc_coexist *btcoexist)
+>   	if (IS_HARDWARE_TYPE_8723B(btcoexist->adapter)) {
+>   		if (btcoexist->board_info.btdm_ant_num == 2)
+>   			ex_btc8723b2ant_pre_load_firmware(btcoexist);
+> +	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
+> +		if (btcoexist->board_info.btdm_ant_num == 1)
+> +			ex_btc8822b1ant_pre_load_firmware(btcoexist);
+> +		else if (btcoexist->board_info.btdm_ant_num == 2)
+> +			ex_btc8822b2ant_pre_load_firmware(btcoexist);
+>   	}
+>   }
+>   
+> @@ -1479,11 +1489,21 @@ void exhalbtc_init_hw_config(struct btc_coexist *btcoexist, bool wifi_only)
+>   	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+>   		if (btcoexist->board_info.btdm_ant_num == 2)
+>   			ex_btc8192e2ant_init_hwconfig(btcoexist);
+> +	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
+> +		if (btcoexist->board_info.btdm_ant_num == 1)
+> +			ex_btc8822b1ant_init_hw_config(btcoexist, wifi_only);
+> +		else if (btcoexist->board_info.btdm_ant_num == 2)
+> +			ex_btc8822b2ant_init_hw_config(btcoexist, wifi_only);
+> +
+> +		halbtc_set_default_port_id_cmd(btcoexist);
+> +		halbtc_send_wifi_port_id_cmd(btcoexist);
+>   	}
+>   }
+>   
+>   void exhalbtc_init_hw_config_wifi_only(struct wifi_only_cfg *wifionly_cfg)
+>   {
+> +	if (IS_HARDWARE_TYPE_8822B(wifionly_cfg->adapter))
+> +		ex_hal8822b_wifi_only_hw_config(wifionly_cfg);
+>   }
+>   
+>   void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist)
+> @@ -1506,6 +1526,11 @@ void exhalbtc_init_coex_dm(struct btc_coexist *btcoexist)
+>   	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+>   		if (btcoexist->board_info.btdm_ant_num == 2)
+>   			ex_btc8192e2ant_init_coex_dm(btcoexist);
+> +	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
+> +		if (btcoexist->board_info.btdm_ant_num == 1)
+> +			ex_btc8822b1ant_init_coex_dm(btcoexist);
+> +		else if (btcoexist->board_info.btdm_ant_num == 2)
+> +			ex_btc8822b2ant_init_coex_dm(btcoexist);
+>   	}
+>   
+>   	btcoexist->initilized = true;
+> @@ -1541,6 +1566,11 @@ void exhalbtc_ips_notify(struct btc_coexist *btcoexist, u8 type)
+>   	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+>   		if (btcoexist->board_info.btdm_ant_num == 2)
+>   			ex_btc8192e2ant_ips_notify(btcoexist, ips_type);
+> +	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
+> +		if (btcoexist->board_info.btdm_ant_num == 1)
+> +			ex_btc8822b1ant_ips_notify(btcoexist, ips_type);
+> +		else if (btcoexist->board_info.btdm_ant_num == 2)
+> +			ex_btc8822b2ant_ips_notify(btcoexist, ips_type);
+>   	}
+>   
+>   	halbtc_normal_low_power(btcoexist);
+> @@ -1574,6 +1604,11 @@ void exhalbtc_lps_notify(struct btc_coexist *btcoexist, u8 type)
+>   	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+>   		if (btcoexist->board_info.btdm_ant_num == 2)
+>   			ex_btc8192e2ant_lps_notify(btcoexist, lps_type);
+> +	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
+> +		if (btcoexist->board_info.btdm_ant_num == 1)
+> +			ex_btc8822b1ant_lps_notify(btcoexist, lps_type);
+> +		else if (btcoexist->board_info.btdm_ant_num == 2)
+> +			ex_btc8822b2ant_lps_notify(btcoexist, lps_type);
+>   	}
+>   }
+>   
+> @@ -1607,6 +1642,11 @@ void exhalbtc_scan_notify(struct btc_coexist *btcoexist, u8 type)
+>   	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+>   		if (btcoexist->board_info.btdm_ant_num == 2)
+>   			ex_btc8192e2ant_scan_notify(btcoexist, scan_type);
+> +	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
+> +		if (btcoexist->board_info.btdm_ant_num == 1)
+> +			ex_btc8822b1ant_scan_notify(btcoexist, scan_type);
+> +		else if (btcoexist->board_info.btdm_ant_num == 2)
+> +			ex_btc8822b2ant_scan_notify(btcoexist, scan_type);
+>   	}
+>   
+>   	halbtc_normal_low_power(btcoexist);
+> @@ -1615,6 +1655,8 @@ void exhalbtc_scan_notify(struct btc_coexist *btcoexist, u8 type)
+>   void exhalbtc_scan_notify_wifi_only(struct wifi_only_cfg *wifionly_cfg,
+>   				    u8 is_5g)
+>   {
+> +	if (IS_HARDWARE_TYPE_8822B(wifionly_cfg->adapter))
+> +		ex_hal8822b_wifi_only_scannotify(wifionly_cfg, is_5g);
+>   }
+>   
+>   void exhalbtc_connect_notify(struct btc_coexist *btcoexist, u8 action)
+> @@ -1655,6 +1697,11 @@ void exhalbtc_connect_notify(struct btc_coexist *btcoexist, u8 action)
+>   	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+>   		if (btcoexist->board_info.btdm_ant_num == 2)
+>   			ex_btc8192e2ant_connect_notify(btcoexist, asso_type);
+> +	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
+> +		if (btcoexist->board_info.btdm_ant_num == 1)
+> +			ex_btc8822b1ant_connect_notify(btcoexist, asso_type_v2);
+> +		else if (btcoexist->board_info.btdm_ant_num == 2)
+> +			ex_btc8822b2ant_connect_notify(btcoexist, asso_type_v2);
+>   	}
+>   
+>   	halbtc_normal_low_power(btcoexist);
+> @@ -1691,6 +1738,11 @@ void exhalbtc_mediastatus_notify(struct btc_coexist *btcoexist,
+>   	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+>   		if (btcoexist->board_info.btdm_ant_num == 2)
+>   			ex_btc8192e2ant_media_status_notify(btcoexist, status);
+> +	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
+> +		if (btcoexist->board_info.btdm_ant_num == 1)
+> +			ex_btc8822b1ant_media_status_notify(btcoexist, status);
+> +		else if (btcoexist->board_info.btdm_ant_num == 2)
+> +			ex_btc8822b2ant_media_status_notify(btcoexist, status);
+>   	}
+>   
+>   	halbtc_normal_low_power(btcoexist);
+> @@ -1737,6 +1789,13 @@ void exhalbtc_special_packet_notify(struct btc_coexist *btcoexist, u8 pkt_type)
+>   		if (btcoexist->board_info.btdm_ant_num == 2)
+>   			ex_btc8192e2ant_special_packet_notify(btcoexist,
+>   							      packet_type);
+> +	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
+> +		if (btcoexist->board_info.btdm_ant_num == 1)
+> +			ex_btc8822b1ant_specific_packet_notify(btcoexist,
+> +							       packet_type);
+> +		else if (btcoexist->board_info.btdm_ant_num == 2)
+> +			ex_btc8822b2ant_specific_packet_notify(btcoexist,
+> +							       packet_type);
+>   	}
+>   
+>   	halbtc_normal_low_power(btcoexist);
+> @@ -1769,6 +1828,13 @@ void exhalbtc_bt_info_notify(struct btc_coexist *btcoexist,
+>   		if (btcoexist->board_info.btdm_ant_num == 2)
+>   			ex_btc8192e2ant_bt_info_notify(btcoexist, tmp_buf,
+>   						       length);
+> +	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
+> +		if (btcoexist->board_info.btdm_ant_num == 1)
+> +			ex_btc8822b1ant_bt_info_notify(btcoexist, tmp_buf,
+> +						       length);
+> +		else if (btcoexist->board_info.btdm_ant_num == 2)
+> +			ex_btc8822b2ant_bt_info_notify(btcoexist, tmp_buf,
+> +						       length);
+>   	}
+>   
+>   	halbtc_normal_low_power(btcoexist);
+> @@ -1784,6 +1850,11 @@ void exhalbtc_rf_status_notify(struct btc_coexist *btcoexist, u8 type)
+>   		if (btcoexist->board_info.btdm_ant_num == 1)
+>   			ex_btc8723b1ant_rf_status_notify(btcoexist, type);
+>   	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+> +	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
+> +		if (btcoexist->board_info.btdm_ant_num == 1)
+> +			ex_btc8822b1ant_rf_status_notify(btcoexist, type);
+> +		else if (btcoexist->board_info.btdm_ant_num == 2)
+> +			ex_btc8822b2ant_rf_status_notify(btcoexist, type);
+>   	}
+>   }
+>   
+> @@ -1829,6 +1900,11 @@ void exhalbtc_halt_notify(struct btc_coexist *btcoexist)
+>   	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+>   		if (btcoexist->board_info.btdm_ant_num == 2)
+>   			ex_btc8192e2ant_halt_notify(btcoexist);
+> +	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
+> +		if (btcoexist->board_info.btdm_ant_num == 1)
+> +			ex_btc8822b1ant_halt_notify(btcoexist);
+> +		else if (btcoexist->board_info.btdm_ant_num == 2)
+> +			ex_btc8822b2ant_halt_notify(btcoexist);
+>   	}
+>   
+>   	btcoexist->binded = false;
+> @@ -1855,6 +1931,11 @@ void exhalbtc_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
+>   		else if (btcoexist->board_info.btdm_ant_num == 2)
+>   			ex_btc8821a2ant_pnp_notify(btcoexist, pnp_state);
+>   	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+> +	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
+> +		if (btcoexist->board_info.btdm_ant_num == 1)
+> +			ex_btc8822b1ant_pnp_notify(btcoexist, pnp_state);
+> +		else if (btcoexist->board_info.btdm_ant_num == 2)
+> +			ex_btc8822b2ant_pnp_notify(btcoexist, pnp_state);
+>   	}
+>   }
+>   
+> @@ -1905,6 +1986,11 @@ void exhalbtc_periodical(struct btc_coexist *btcoexist)
+>   	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+>   		if (btcoexist->board_info.btdm_ant_num == 2)
+>   			ex_btc8192e2ant_periodical(btcoexist);
+> +	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
+> +		if (btcoexist->board_info.btdm_ant_num == 1)
+> +			ex_btc8822b1ant_periodical(btcoexist);
+> +		else if (btcoexist->board_info.btdm_ant_num == 2)
+> +			ex_btc8822b2ant_periodical(btcoexist);
+>   	}
+>   
+>   	halbtc_normal_low_power(btcoexist);
+> @@ -2038,6 +2124,11 @@ void exhalbtc_display_bt_coex_info(struct btc_coexist *btcoexist,
+>   	} else if (IS_HARDWARE_TYPE_8192E(btcoexist->adapter)) {
+>   		if (btcoexist->board_info.btdm_ant_num == 2)
+>   			ex_btc8192e2ant_display_coex_info(btcoexist, m);
+> +	} else if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
+> +		if (btcoexist->board_info.btdm_ant_num == 1)
+> +			ex_btc8822b1ant_display_coex_info(btcoexist, m);
+> +		else if (btcoexist->board_info.btdm_ant_num == 2)
+> +			ex_btc8822b2ant_display_coex_info(btcoexist, m);
+>   	}
+>   
+>   	halbtc_normal_low_power(btcoexist);
+> @@ -2053,10 +2144,19 @@ void exhalbtc_switch_band_notify(struct btc_coexist *btcoexist, u8 type)
+>   
+>   	halbtc_leave_low_power(btcoexist);
+>   
+> +	if (IS_HARDWARE_TYPE_8822B(btcoexist->adapter)) {
+> +		if (btcoexist->board_info.btdm_ant_num == 1)
+> +			ex_btc8822b1ant_switchband_notify(btcoexist, type);
+> +		else if (btcoexist->board_info.btdm_ant_num == 2)
+> +			ex_btc8822b2ant_switchband_notify(btcoexist, type);
+> +	}
+> +
+>   	halbtc_normal_low_power(btcoexist);
+>   }
+>   
+>   void exhalbtc_switch_band_notify_wifi_only(struct wifi_only_cfg *wifionly_cfg,
+>   					   u8 is_5g)
+>   {
+> +	if (IS_HARDWARE_TYPE_8822B(wifionly_cfg->adapter))
+> +		ex_hal8822b_wifi_only_switchbandnotify(wifionly_cfg, is_5g);
+>   }
+> 
