@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:47362 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752829AbeC1H17 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:55898 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751372AbeCTWzL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 03:27:59 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/9] rtlwifi: btcoex: Add 8822b to Makefile
-Date: Wed, 28 Mar 2018 15:27:37 +0800
-Message-ID: <20180328072741.23349-6-pkshih@realtek.com> (sfid-20180328_092812_249586_69E255E6)
-In-Reply-To: <20180328072741.23349-1-pkshih@realtek.com>
-References: <20180328072741.23349-1-pkshih@realtek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 20 Mar 2018 18:55:11 -0400
+Message-ID: <1521586508.19123.4.camel@sipsolutions.net> (sfid-20180320_235515_465678_002C2B87)
+Subject: Re: [PATCH 10/10] rsi: drop RX broadcast/multicast packets with
+ invalid PN
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Amitkumar Karwar <amitkarwar@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Date: Tue, 20 Mar 2018 23:55:08 +0100
+In-Reply-To: <1520260620-4694-11-git-send-email-amitkarwar@gmail.com> (sfid-20180305_154940_119357_8A3160E9)
+References: <1520260620-4694-1-git-send-email-amitkarwar@gmail.com>
+         <1520260620-4694-11-git-send-email-amitkarwar@gmail.com>
+         (sfid-20180305_154940_119357_8A3160E9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On Mon, 2018-03-05 at 20:07 +0530, Amitkumar Karwar wrote:
+> From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+> 
+> This patch adds a check to drop received broadcast/multicast frames
+> if
+> PN is invalid (i.e. not greater than last PN). bc_mc_pn
+> variable added for each interface
+> 
+Can you say why you do this rather than letting mac80211 do it?
 
-Add btcoex of 8822b to Makefile.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile b/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile
-index d15c58737388..37108c379bd0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile
-@@ -4,6 +4,9 @@ btcoexist-objs :=	halbtc8192e2ant.o	\
- 			halbtc8723b2ant.o	\
- 			halbtc8821a1ant.o	\
- 			halbtc8821a2ant.o	\
-+			halbtc8822b1ant.o	\
-+			halbtc8822b2ant.o	\
-+			halbtc8822bwifionly.o	\
- 			halbtcoutsrc.o		\
- 			rtl_btc.o
- 
--- 
-2.15.1
+johannes
