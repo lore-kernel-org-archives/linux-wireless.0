@@ -1,65 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37010 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753116AbeC1OZz (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:29807 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751782AbeCTQ4R (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 10:25:55 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Mar 2018 17:25:50 +0300
-Message-Id: <20180328142550.9101-1-luca@coelho.fi> (sfid-20180328_162558_113660_AEEFE981)
-In-Reply-To: <20180328141157.5427-1-luca@coelho.fi>
-References: <20180328141157.5427-1-luca@coelho.fi>
-Subject: [PATCH 08/14] iwlwifi: mvm: Allow iwl_mvm_mac_mgd_prepare_tx() when associated
+        Tue, 20 Mar 2018 12:56:17 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 07/11] staging: wilc1000: rename hAgingTimer to avoid camelCase issue
+Date: Tue, 20 Mar 2018 22:25:40 +0530
+Message-ID: <1521564944-3565-8-git-send-email-ajay.kathat@microchip.com> (sfid-20180320_175621_372573_F8E4DAC0)
+In-Reply-To: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
+References: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Peer <ilan.peer@intel.com>
+Fix 'Avoid camelCase' issue found by checkpatch.pl script.
 
-The FW does not allocate quota air time for the binding of a station
-MAC before iwlmvm indicates that it is associated. Currently iwlmvm
-indicates that the MAC is associated only after hearing a beacon from
-the AP. In case a deauthentication frame is sent before the MAC is
-associated, the frame might not be sent as the corresponding binding
-is not scheduled.
-
-To handle such cases, set IEEE80211_HW_DEAUTH_NEED_MGD_TX_PREP in the
-HW flags, requesting mac80211 to call the mgd_prepare_tx() callback
-before transmitting a deauthentication frame if associated but no
-beacon was heard from the AP.
-
-In addition, do not warn in iwl_mvm_mac_mgd_prepare_tx() when already
-associated as now the callback can be called also when associated.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 82dc9dec4160..51b30424575b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -421,6 +421,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 	ieee80211_hw_set(hw, SUPPORTS_CLONED_SKBS);
- 	ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
- 	ieee80211_hw_set(hw, NEEDS_UNIQUE_STA_ADDR);
-+	ieee80211_hw_set(hw, DEAUTH_NEED_MGD_TX_PREP);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 9950ca5..ebebdc3 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -90,7 +90,7 @@ static const struct wiphy_wowlan_support wowlan_support = {
+ static struct network_info last_scanned_shadow[MAX_NUM_SCANNED_NETWORKS_SHADOW];
+ static u32 last_scanned_cnt;
+ struct timer_list wilc_during_ip_timer;
+-static struct timer_list hAgingTimer;
++static struct timer_list aging_timer;
+ static u8 op_ifcs;
  
- 	if (iwl_mvm_has_tlc_offload(mvm)) {
- 		ieee80211_hw_set(hw, TX_AMPDU_SETUP_IN_HW);
-@@ -2815,9 +2816,6 @@ static void iwl_mvm_mac_mgd_prepare_tx(struct ieee80211_hw *hw,
- 	u32 duration = IWL_MVM_TE_SESSION_PROTECTION_MAX_TIME_MS;
- 	u32 min_duration = IWL_MVM_TE_SESSION_PROTECTION_MIN_TIME_MS;
+ #define CHAN2G(_channel, _freq, _flags) {	 \
+@@ -174,7 +174,7 @@ static void clear_shadow_scan(void)
+ 	int i;
  
--	if (WARN_ON_ONCE(vif->bss_conf.assoc))
--		return;
--
- 	/*
- 	 * iwl_mvm_protect_session() reads directly from the device
- 	 * (the system time), so make sure it is available.
+ 	if (op_ifcs == 0) {
+-		del_timer_sync(&hAgingTimer);
++		del_timer_sync(&aging_timer);
+ 
+ 		for (i = 0; i < last_scanned_cnt; i++) {
+ 			if (last_scanned_shadow[last_scanned_cnt].ies) {
+@@ -276,7 +276,7 @@ static void remove_network_from_shadow(struct timer_list *unused)
+ 	}
+ 
+ 	if (last_scanned_cnt != 0) {
+-		mod_timer(&hAgingTimer, jiffies + msecs_to_jiffies(AGING_TIME));
++		mod_timer(&aging_timer, jiffies + msecs_to_jiffies(AGING_TIME));
+ 	}
+ }
+ 
+@@ -291,7 +291,7 @@ static int is_network_in_shadow(struct network_info *nw_info, void *user_void)
+ 	int i;
+ 
+ 	if (last_scanned_cnt == 0) {
+-		mod_timer(&hAgingTimer, jiffies + msecs_to_jiffies(AGING_TIME));
++		mod_timer(&aging_timer, jiffies + msecs_to_jiffies(AGING_TIME));
+ 		state = -1;
+ 	} else {
+ 		for (i = 0; i < last_scanned_cnt; i++) {
+@@ -2282,7 +2282,7 @@ int wilc_init_host_int(struct net_device *net)
+ 
+ 	priv = wdev_priv(net->ieee80211_ptr);
+ 	if (op_ifcs == 0) {
+-		timer_setup(&hAgingTimer, remove_network_from_shadow, 0);
++		timer_setup(&aging_timer, remove_network_from_shadow, 0);
+ 		timer_setup(&wilc_during_ip_timer, clear_duringIP, 0);
+ 	}
+ 	op_ifcs++;
 -- 
-2.16.2
+2.7.4
