@@ -1,85 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:35220 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751153AbeCPLvs (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:34268 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751653AbeCTQ4V (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Mar 2018 07:51:48 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Avraham Stern <avraham.stern@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 16 Mar 2018 13:51:33 +0200
-Message-Id: <20180316115136.1234-3-luca@coelho.fi> (sfid-20180316_125155_493302_07B39F61)
-In-Reply-To: <20180316115136.1234-1-luca@coelho.fi>
-References: <20180316115136.1234-1-luca@coelho.fi>
-Subject: [PATCH 2/5] iwlwifi: mvm: clear tx queue id when unreserving aggregation queue
+        Tue, 20 Mar 2018 12:56:21 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 08/11] staging: wilc1000: fix line over 80 char issue in clear_shadow_scan()
+Date: Tue, 20 Mar 2018 22:25:41 +0530
+Message-ID: <1521564944-3565-9-git-send-email-ajay.kathat@microchip.com> (sfid-20180320_175624_618200_E931B6C7)
+In-Reply-To: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
+References: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+Remove 'line over 80 char' issue found by checkpatch.pl script.
 
-When a queue is reserved for aggregation, the queue id is assigned
-to the tid_data. This is fine since iwl_mvm_sta_tx_agg_oper()
-takes care of allocating the queue before actual tx starts.
-When the reservation is cancelled (e.g. when the AP declined the
-aggregation request) the tid_data is not cleared. As a result,
-following tx for this tid was trying to use an unallocated queue.
-
-Fix this by setting the txq_id for the tid to invalid when unreserving
-the queue.
-
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 5be4bae5b70d..0b3a780aee12 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -2696,8 +2696,10 @@ int iwl_mvm_sta_tx_agg_oper(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 
- static void iwl_mvm_unreserve_agg_queue(struct iwl_mvm *mvm,
- 					struct iwl_mvm_sta *mvmsta,
--					u16 txq_id)
-+					struct iwl_mvm_tid_data *tid_data)
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index ebebdc3..1b6fe64 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -173,20 +173,21 @@ static void clear_shadow_scan(void)
  {
-+	u16 txq_id = tid_data->txq_id;
+ 	int i;
+ 
+-	if (op_ifcs == 0) {
+-		del_timer_sync(&aging_timer);
++	if (op_ifcs != 0)
++		return;
+ 
+-		for (i = 0; i < last_scanned_cnt; i++) {
+-			if (last_scanned_shadow[last_scanned_cnt].ies) {
+-				kfree(last_scanned_shadow[i].ies);
+-				last_scanned_shadow[last_scanned_cnt].ies = NULL;
+-			}
++	del_timer_sync(&aging_timer);
+ 
+-			kfree(last_scanned_shadow[i].join_params);
+-			last_scanned_shadow[i].join_params = NULL;
++	for (i = 0; i < last_scanned_cnt; i++) {
++		if (last_scanned_shadow[last_scanned_cnt].ies) {
++			kfree(last_scanned_shadow[i].ies);
++			last_scanned_shadow[last_scanned_cnt].ies = NULL;
+ 		}
+-		last_scanned_cnt = 0;
 +
- 	if (iwl_mvm_has_new_tx_api(mvm))
- 		return;
- 
-@@ -2709,8 +2711,10 @@ static void iwl_mvm_unreserve_agg_queue(struct iwl_mvm *mvm,
- 	 * allocated through iwl_mvm_enable_txq, so we can just mark it back as
- 	 * free.
- 	 */
--	if (mvm->queue_info[txq_id].status == IWL_MVM_QUEUE_RESERVED)
-+	if (mvm->queue_info[txq_id].status == IWL_MVM_QUEUE_RESERVED) {
- 		mvm->queue_info[txq_id].status = IWL_MVM_QUEUE_FREE;
-+		tid_data->txq_id = IWL_MVM_INVALID_QUEUE;
-+	}
- 
- 	spin_unlock_bh(&mvm->queue_info_lock);
++		kfree(last_scanned_shadow[i].join_params);
++		last_scanned_shadow[i].join_params = NULL;
+ 	}
++	last_scanned_cnt = 0;
  }
-@@ -2741,7 +2745,7 @@ int iwl_mvm_sta_tx_agg_stop(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
  
- 	mvmsta->agg_tids &= ~BIT(tid);
- 
--	iwl_mvm_unreserve_agg_queue(mvm, mvmsta, txq_id);
-+	iwl_mvm_unreserve_agg_queue(mvm, mvmsta, tid_data);
- 
- 	switch (tid_data->state) {
- 	case IWL_AGG_ON:
-@@ -2808,7 +2812,7 @@ int iwl_mvm_sta_tx_agg_flush(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	mvmsta->agg_tids &= ~BIT(tid);
- 	spin_unlock_bh(&mvmsta->lock);
- 
--	iwl_mvm_unreserve_agg_queue(mvm, mvmsta, txq_id);
-+	iwl_mvm_unreserve_agg_queue(mvm, mvmsta, tid_data);
- 
- 	if (old_state >= IWL_AGG_ON) {
- 		iwl_mvm_drain_sta(mvm, mvmsta, true);
+ static u32 get_rssi_avg(struct network_info *network_info)
 -- 
-2.16.2
+2.7.4
