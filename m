@@ -1,72 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 7.mo69.mail-out.ovh.net ([46.105.50.32]:33193 "EHLO
-        7.mo69.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751843AbeCXLHD (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:47662 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751269AbeCTRiE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Mar 2018 07:07:03 -0400
-Received: from player687.ha.ovh.net (unknown [10.109.120.203])
-        by mo69.mail-out.ovh.net (Postfix) with ESMTP id D11609966
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Mar 2018 11:29:46 +0100 (CET)
-From: Alexander Wetzel <alexander.wetzel@web.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Alexander Wetzel <alexander.wetzel@web.de>
-Subject: [PATCH] mac80211: Fix wlan freezes under load at rekey
-Date: Sat, 24 Mar 2018 11:29:21 +0100
-Message-Id: <20180324102921.9814-1-alexander.wetzel@web.de> (sfid-20180324_120707_602854_78A3B9EA)
+        Tue, 20 Mar 2018 13:38:04 -0400
+Date: Tue, 20 Mar 2018 18:38:01 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
+        kubakici@wp.pl, linux-wireless@vger.kernel.org,
+        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
+        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
+        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
+        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v3 19/20] firmware: add request_firmware_cache() to help
+ with cache on reboot
+Message-ID: <20180320173801.GA25040@kroah.com> (sfid-20180320_183820_836376_5EC70D42)
+References: <20180310141501.2214-1-mcgrof@kernel.org>
+ <20180310141501.2214-20-mcgrof@kernel.org>
+ <20180320083055.GA21640@kroah.com>
+ <20180320173409.GD4449@wotan.suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180320173409.GD4449@wotan.suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rekeying a pairwise key with encryption offload and only keyid 0 has two
-potential races which can freeze the wlan conection till rekeyed again:
+On Tue, Mar 20, 2018 at 05:34:09PM +0000, Luis R. Rodriguez wrote:
+> On Tue, Mar 20, 2018 at 09:30:55AM +0100, Greg KH wrote:
+> > On Sat, Mar 10, 2018 at 06:15:00AM -0800, Luis R. Rodriguez wrote:
+> > > +EXPORT_SYMBOL_GPL(request_firmware_cache);
+> > 
+> > I know you are just following the existing naming scheme, but please
+> > let's not continue the problem here.  Can you prefix all of the firmware
+> > exported symbols with "firmware_", and then the verb.  So this would be
+> > "firmware_request_cache",
+> 
+> Sure.
+> 
+> >  and the older function would be
+> > "firmware_request_direct".
+> 
+> Sure, so you want to also rename the old exported symbols, and add a macro
+> or static inline to enable use of the older names?
 
- 1) For incomming packets:
-    If the local STA installs the key prior to the remote STA we still
-    have the old key active in the hardware for a short time after
-    mac80211 switched to the new key.
-    The card can still hand over packets decoded with the old key to
-    mac80211, bumping the new PN (IV) value to an incorrect high number and
-    tricking the local replay detection to drop all packets really sent
-    with the new key.
+Renaming is best, let's not keep them around for no good reason :)
 
- 2) For outgoing packets:
-    If mac80211 is providing the PN (IV) and hands over the cleartext
-    packets for encryption to the hardware immediately prior to a key
-    change the driver/card may process the queued packets after
-    switching to the new key.
-    This will immediatelly bump the PN (IV) value on the remote STA to
-    an incorrect high number, also freezing the connection.
+thanks,
 
-Both issues can be prevented by deleting the key from the hardware prior
-to switching to the new key in mac80211, falling back to software
-encryption/decryption till the switch to the new key is completed.
-
-Signed-off-by: Alexander Wetzel <alexander.wetzel@web.de>
----
- net/mac80211/key.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index aee05ec3f7ea..266ea0b507e7 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -332,10 +332,15 @@ static void ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 
- 	WARN_ON(new && old && new->conf.keyidx != old->conf.keyidx);
- 
--	if (old)
-+	if (old) {
- 		idx = old->conf.keyidx;
--	else
-+		/* Make sure the card can't encrypt/decrypt packets with
-+		 * the old key prior to switching to new key in mac80211.
-+		 */
-+		ieee80211_key_disable_hw_accel(old);
-+	} else {
- 		idx = new->conf.keyidx;
-+	}
- 
- 	if (sta) {
- 		if (pairwise) {
--- 
-2.16.2
+greg k-h
