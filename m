@@ -1,45 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:41832 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751923AbeCXNpK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Mar 2018 09:45:10 -0400
-Received: by mail-qt0-f195.google.com with SMTP id d18so2982585qtl.8
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Mar 2018 06:45:10 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: sameo@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, christophe.ricard@gmail.com,
-        linux-nfc@lists.01.org, Fabio Estevam <fabio.estevam@nxp.com>
-Subject: [PATCH 1/2] nfc: st21nfca: Check for devm_kzalloc() failure
-Date: Sat, 24 Mar 2018 10:44:58 -0300
-Message-Id: <1521899099-23634-1-git-send-email-festevam@gmail.com> (sfid-20180324_144514_535190_270F9631)
+Received: from mx2.suse.de ([195.135.220.15]:47910 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752252AbeCTKht (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Mar 2018 06:37:49 -0400
+Date: Tue, 20 Mar 2018 11:37:47 +0100
+From: Michal Kubecek <mkubecek@suse.cz>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        netdev@vger.kernel.org
+Subject: Re: [RFC] ethtool:  Support ETHTOOL_GSTATS2 command.
+Message-ID: <20180320103747.7kcfdu4yzof6bwxw@unicorn.suse.cz> (sfid-20180320_113759_019814_DC42A255)
+References: <1520452289-14172-1-git-send-email-greearb@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1520452289-14172-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@nxp.com>
+On Wed, Mar 07, 2018 at 11:51:29AM -0800, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> This is similar to ETHTOOL_GSTATS, but it allows you to specify
+> a 'level'.  This level can be used by the driver to decrease the
+> amount of stats refreshed.  In particular, this helps with ath10k
+> since getting the firmware stats can be slow.
+> 
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+> 
+> NOTE:  I know to make it upstream I would need to split the patch and
+> remove the #define for 'backporting' that I added.  But, is the
+> feature in general wanted?  If so, I'll do the patch split and
+> other tweaks that might be suggested.
 
-devm_kzalloc() may fail, so we should better check for error and
-propagate the error in the case of allocation failure.
+I'm not familiar enough with the technical background of stats
+collecting to comment on usefulness and desirability of this feature.
+Adding a new command just to add a numeric parameter certainly doesn't
+feel right but it's how the ioctl interface works. I take it as
+a reminder to find some time to get back to the netlink interface.
 
-This avoids a potential NULL pointer dereference later on.
+> diff --git a/net/core/ethtool.c b/net/core/ethtool.c
+> index 674b6c9..d3b709f 100644
+> --- a/net/core/ethtool.c
+> +++ b/net/core/ethtool.c
+> @@ -1947,6 +1947,54 @@ static int ethtool_get_stats(struct net_device *dev, void __user *useraddr)
+>  	return ret;
+>  }
+>  
+> +static int ethtool_get_stats2(struct net_device *dev, void __user *useraddr)
+> +{
+> +	struct ethtool_stats stats;
+> +	const struct ethtool_ops *ops = dev->ethtool_ops;
+> +	u64 *data;
+> +	int ret, n_stats;
+> +	u32 stats_level = 0;
+> +
+> +	if (!ops->get_ethtool_stats2 || !ops->get_sset_count)
+> +		return -EOPNOTSUPP;
+> +
+> +	n_stats = ops->get_sset_count(dev, ETH_SS_STATS);
+> +	if (n_stats < 0)
+> +		return n_stats;
+> +	if (n_stats > S32_MAX / sizeof(u64))
+> +		return -ENOMEM;
+> +	WARN_ON_ONCE(!n_stats);
+> +	if (copy_from_user(&stats, useraddr, sizeof(stats)))
+> +		return -EFAULT;
+> +
+> +	/* User can specify the level of stats to query.  How the
+> +	 * level value is used is up to the driver, but in general,
+> +	 * 0 means 'all', 1 means least, and higher means more.
+> +	 * The idea is that some stats may be expensive to query, so user
+> +	 * space could just ask for the cheap ones...
+> +	 */
+> +	stats_level = stats.n_stats;
+> +
+> +	stats.n_stats = n_stats;
+> +	data = vzalloc(n_stats * sizeof(u64));
+> +	if (n_stats && !data)
+> +		return -ENOMEM;
+> +
+> +	ops->get_ethtool_stats2(dev, &stats, data, stats_level);
+> +
+> +	ret = -EFAULT;
+> +	if (copy_to_user(useraddr, &stats, sizeof(stats)))
+> +		goto out;
+> +	useraddr += sizeof(stats);
+> +	if (n_stats && copy_to_user(useraddr, data, n_stats * sizeof(u64)))
+> +		goto out;
+> +	ret = 0;
+> +
+> + out:
+> +	vfree(data);
+> +	return ret;
+> +}
+> +
+>  static int ethtool_get_phy_stats(struct net_device *dev, void __user *useraddr)
+>  {
+>  	struct ethtool_stats stats;
 
-Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
----
- drivers/nfc/st21nfca/se.c | 2 ++
- 1 file changed, 2 insertions(+)
+IMHO it would be more practical to set "0 means same as GSTATS" as a
+rule and make ethtool_get_stats() a wrapper for ethtool_get_stats2() to
+avoid code duplication (or perhaps a use fall-through in the switch). It
+would also allow drivers to provide only one of the callbacks.
 
-diff --git a/drivers/nfc/st21nfca/se.c b/drivers/nfc/st21nfca/se.c
-index 4bed9e84..fd967a3 100644
---- a/drivers/nfc/st21nfca/se.c
-+++ b/drivers/nfc/st21nfca/se.c
-@@ -328,6 +328,8 @@ int st21nfca_connectivity_event_received(struct nfc_hci_dev *hdev, u8 host,
- 
- 		transaction = (struct nfc_evt_transaction *)devm_kzalloc(dev,
- 						   skb->len - 2, GFP_KERNEL);
-+		if (!transaction)
-+			return -ENOMEM;
- 
- 		transaction->aid_len = skb->data[1];
- 		memcpy(transaction->aid, &skb->data[2],
--- 
-2.7.4
+Michal Kubecek
