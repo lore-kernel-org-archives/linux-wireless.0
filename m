@@ -1,111 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:53002 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754166AbeCSOKY (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:43561 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753098AbeCTNxB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Mar 2018 10:10:24 -0400
-MIME-Version: 1.0
-In-Reply-To: <5AAF838D.2030105@broadcom.com>
-References: <20180319014032.9394-1-alexey.roslyakov@gmail.com>
- <20180319014032.9394-3-alexey.roslyakov@gmail.com> <5AAF838D.2030105@broadcom.com>
-From: Alexey Roslyakov <alexey.roslyakov@gmail.com>
-Date: Mon, 19 Mar 2018 21:10:21 +0700
-Message-ID: <CALFoz4YMKJr40fefczrbjXBROtZxnGikv0Jze-BnefofCB3dyg@mail.gmail.com> (sfid-20180319_151048_184221_47892B55)
-Subject: Re: [PATCH net-next v2 2/2] dt: bindings: add new dt entries for brcmfmac
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Andrew Lunn <andrew@lunn.ch>, kvalo@codeaurora.org,
-        robh+dt@kernel.org, mark.rutland@arm.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 20 Mar 2018 09:53:01 -0400
+Received: by mail-pg0-f65.google.com with SMTP id i9so631200pgq.10
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2018 06:53:00 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Subject: [PATCH 1/2] rsi: fix error path handling in SDIO probe
+Date: Tue, 20 Mar 2018 19:10:40 +0530
+Message-Id: <1521553241-12676-1-git-send-email-amitkarwar@gmail.com> (sfid-20180320_145305_211288_D4815162)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
-I appreciate your response. In my opinion, it has nothing to do with
-SDIO host, because it defines "quirks" in the driver itself.
-If I get it right, you mean something like this:
+From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-mmc3: mmc@1c12000 {
-...
-        broken-sg-support;
-        sd-head-align = 4;
-        sd-sgentry-align = 512;
+We miss to release IRQ in certain error path in SDIO probe which
+causes following kernel panic. This patch corrects error path
+handling
 
-        brcmf: wifi@1 {
-                ...
-        };
-};
+BUG: unable to handle kernel NULL pointer dereference at        (null)
+IP:           (null)
+PGD 0 P4D 0
+Oops: 0010 [#1] SMP PTI
+Call Trace:
+ <IRQ>
+ ? call_timer_fn+0x29/0x120
+ ? run_timer_softirq+0x1da/0x420
+ ? timer_interrupt+0x11/0x20
+ ? __do_softirq+0xef/0x26e
+ ? irq_exit+0xbe/0xd0
+ ? do_IRQ+0x4a/0xc0
+ ? common_interrupt+0xa2/0xa2
+ </IRQ>
+ ? cpuidle_enter_state+0x118/0x250
+ ? do_idle+0x186/0x1e0
+ ? cpu_startup_entry+0x6f/0x80
+ ? start_kernel+0x47c/0x49c
+ ? secondary_startup_64+0xa5/0xb0
 
-Where dt: bindings documentation for these entries should reside?
-In generic MMC bindings? Well, this is the very special case and
-mmc-linux maintainer will unlikely to accept these changes.
-Also, extra kernel code modification might be required. It could make
-quite trivial change much more complex.
+Fixes: 50117605770c ("rsi: improve RX handling in SDIO interface")
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_sdio.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
->Also I am not sure if the broken-sg-support is still needed. We added that for omap_hsmmc, but that has since changed to scatter-gather emulation so it might not be needed anymore.
-
-I've experienced the problem with rk3288 (dw-mmc host) and sdio
-settings like above solved it.
-Frankly, I haven't investigated any deeper which one of the settings
-helped in my case yet...
-I will try to get rid of broken-sg-support first and let you know if
-it does make any difference.
-
-All the best,
-  Alex.
-
-On 19 March 2018 at 16:31, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 3/19/2018 2:40 AM, Alexey Roslyakov wrote:
->>
->> In case if the host has higher align requirements for SG items, allow
->> setting device-specific aligns for scatterlist items.
->>
->> Signed-off-by: Alexey Roslyakov <alexey.roslyakov@gmail.com>
->> ---
->>   Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt | 5
->> +++++
->>   1 file changed, 5 insertions(+)
->>
->> diff --git
->> a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->> b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->> index 86602f264dce..187b8c1b52a7 100644
->> --- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->> @@ -17,6 +17,11 @@ Optional properties:
->>         When not specified the device will use in-band SDIO interrupts.
->>    - interrupt-names : name of the out-of-band interrupt, which must be
->> set
->>         to "host-wake".
->> + - brcm,broken-sg-support : boolean flag to indicate that the SDIO host
->> +       controller has higher align requirement than 32 bytes for each
->> +       scatterlist item.
->> + - brcm,sd-head-align : alignment requirement for start of data buffer.
->> + - brcm,sd-sgentry-align : length alignment requirement for each sg
->> entry.
->
->
-> Hi Alexey,
->
-> Thanks for the patch. However, the problem with these is that they are
-> characterizing the host controller and not the wireless device. So from
-> device tree perspective , which is to describe the hardware, these
-> properties should be SDIO host controller properties. Also I am not sure if
-> the broken-sg-support is still needed. We added that for omap_hsmmc, but
-> that has since changed to scatter-gather emulation so it might not be needed
-> anymore.
->
-> Regards,
-> Arend
-
-
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index 13705fc..9ce2edb 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -967,7 +967,7 @@ static int rsi_probe(struct sdio_func *pfunction,
+ 				    rsi_sdio_rx_thread, "SDIO-RX-Thread");
+ 	if (status) {
+ 		rsi_dbg(ERR_ZONE, "%s: Unable to init rx thrd\n", __func__);
+-		goto fail_free_adapter;
++		goto fail_kill_thread;
+ 	}
+ 	skb_queue_head_init(&sdev->rx_q.head);
+ 	sdev->rx_q.num_rx_pkts = 0;
+@@ -977,7 +977,7 @@ static int rsi_probe(struct sdio_func *pfunction,
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to request IRQ\n", __func__);
+ 		sdio_release_host(pfunction);
+ 		status = -EIO;
+-		goto fail_kill_thread;
++		goto fail_claim_irq;
+ 	}
+ 	sdio_release_host(pfunction);
+ 	rsi_dbg(INIT_ZONE, "%s: Registered Interrupt handler\n", __func__);
+@@ -985,7 +985,7 @@ static int rsi_probe(struct sdio_func *pfunction,
+ 	if (rsi_hal_device_init(adapter)) {
+ 		rsi_dbg(ERR_ZONE, "%s: Failed in device init\n", __func__);
+ 		status = -EINVAL;
+-		goto fail_kill_thread;
++		goto fail_dev_init;
+ 	}
+ 	rsi_dbg(INFO_ZONE, "===> RSI Device Init Done <===\n");
+ 
+@@ -1002,10 +1002,13 @@ static int rsi_probe(struct sdio_func *pfunction,
+ fail_dev_init:
+ 	sdio_claim_host(pfunction);
+ 	sdio_release_irq(pfunction);
+-	sdio_disable_func(pfunction);
+ 	sdio_release_host(pfunction);
+-fail_kill_thread:
++fail_claim_irq:
+ 	rsi_kill_thread(&sdev->rx_thread);
++fail_kill_thread:
++	sdio_claim_host(pfunction);
++	sdio_disable_func(pfunction);
++	sdio_release_host(pfunction);
+ fail_free_adapter:
+ 	rsi_91x_deinit(adapter);
+ 	rsi_dbg(ERR_ZONE, "%s: Failed in probe...Exiting\n", __func__);
 -- 
-With best regards,
-  Alexey Roslyakov
-Email: alexey.roslyakov@gmail.com
+2.7.4
