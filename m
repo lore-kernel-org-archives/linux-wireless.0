@@ -1,65 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f202.google.com ([209.85.161.202]:43224 "EHLO
-        mail-yw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753309AbeCUWoh (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:22755 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751653AbeCTQ4Y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Mar 2018 18:44:37 -0400
-Received: by mail-yw0-f202.google.com with SMTP id f185so1395401ywd.10
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Mar 2018 15:44:37 -0700 (PDT)
+        Tue, 20 Mar 2018 12:56:24 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 09/11] staging: wilc1000: remove line over 80 char in cfg_connect_result()
+Date: Tue, 20 Mar 2018 22:25:42 +0530
+Message-ID: <1521564944-3565-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180320_175628_198723_23AD6975)
+In-Reply-To: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
+References: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Message-ID: <00000000000080af470567f3ef29@google.com> (sfid-20180321_234441_374247_F40B62AD)
-Date: Wed, 21 Mar 2018 22:44:36 +0000
-Subject: [PATCH] brcmfmac: Add timestamp to scan results report
-From: dimitrysh@google.com
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, franky.lin@broadcom.com
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- From 01da9ee11ce6e0973972b2ffd37eef660714f71a Mon Sep 17 00:00:00 2001
-From: Dmitry Shmidt <dimitrysh@google.com>
-Date: Wed, 21 Mar 2018 15:35:45 -0700
-Subject: [PATCH] brcmfmac: Add timestamp to scan results report
+Fix 'line over 80 characters' issues reported by checkpatch.pl script in
+cfg_connect_result().
 
-Monotonic time from boot is good timestamp indicator
-and it can be used by kernel and userspace.
-
-Change-Id: I122374fa79c6dbd7967b2c30553cb04dee032ebc
-Signed-off-by: Dmitry Shmidt <dimitrysh@google.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
-  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 6 +++++-
-  1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 34 +++++++++++++++--------
+ 1 file changed, 22 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c  
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 4157c90ad973..76d6ed553b7c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -2845,6 +2845,8 @@ static s32 brcmf_inform_single_bss(struct  
-brcmf_cfg80211_info *cfg,
-  	struct cfg80211_bss *bss;
-  	struct ieee80211_supported_band *band;
-  	struct brcmu_chan ch;
-+	struct timespec ts;
-+	u64 timestamp;
-  	u16 channel;
-  	u32 freq;
-  	u16 notify_capability;
-@@ -2885,10 +2887,12 @@ static s32 brcmf_inform_single_bss(struct  
-brcmf_cfg80211_info *cfg,
-  	brcmf_dbg(CONN, "Beacon interval: %d\n", notify_interval);
-  	brcmf_dbg(CONN, "Signal: %d\n", notify_signal);
-
-+	get_monotonic_boottime(&ts);
-+	timestamp = (u64)ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
-  	bss = cfg80211_inform_bss(wiphy, notify_channel,
-  				  CFG80211_BSS_FTYPE_UNKNOWN,
-  				  (const u8 *)bi->BSSID,
--				  0, notify_capability,
-+				  timestamp, notify_capability,
-  				  notify_interval, notify_ie,
-  				  notify_ielen, notify_signal,
-  				  GFP_KERNEL);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 1b6fe64..af1b8aa 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -460,6 +460,17 @@ static void cfg_scan_result(enum scan_event scan_event,
+ 	}
+ }
+ 
++static inline bool wilc_wfi_cfg_scan_time_expired(int i)
++{
++	unsigned long now = jiffies;
++
++	if (time_after(now, last_scanned_shadow[i].time_scan_cached +
++		       (unsigned long)(nl80211_SCAN_RESULT_EXPIRE - (1 * HZ))))
++		return true;
++	else
++		return false;
++}
++
+ int wilc_connecting;
+ 
+ static void cfg_connect_result(enum conn_event conn_disconn_evt,
+@@ -505,17 +516,14 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
+ 			bool scan_refresh = false;
+ 			u32 i;
+ 
+-			memcpy(priv->associated_bss, conn_info->bssid, ETH_ALEN);
++			memcpy(priv->associated_bss, conn_info->bssid,
++			       ETH_ALEN);
+ 
+ 			for (i = 0; i < last_scanned_cnt; i++) {
+ 				if (memcmp(last_scanned_shadow[i].bssid,
+ 					   conn_info->bssid,
+ 					   ETH_ALEN) == 0) {
+-					unsigned long now = jiffies;
+-
+-					if (time_after(now,
+-						       last_scanned_shadow[i].time_scan_cached +
+-						       (unsigned long)(nl80211_SCAN_RESULT_EXPIRE - (1 * HZ))))
++					if (wilc_wfi_cfg_scan_time_expired(i))
+ 						scan_refresh = true;
+ 
+ 					break;
+@@ -527,9 +535,11 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
+ 		}
+ 
+ 		cfg80211_connect_result(dev, conn_info->bssid,
+-					conn_info->req_ies, conn_info->req_ies_len,
+-					conn_info->resp_ies, conn_info->resp_ies_len,
+-					connect_status, GFP_KERNEL);
++					conn_info->req_ies,
++					conn_info->req_ies_len,
++					conn_info->resp_ies,
++					conn_info->resp_ies_len, connect_status,
++					GFP_KERNEL);
+ 	} else if (conn_disconn_evt == CONN_DISCONN_EVENT_DISCONN_NOTIF)    {
+ 		wilc_optaining_ip = false;
+ 		p2p_local_random = 0x01;
+@@ -546,9 +556,9 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
+ 		else if (!wfi_drv->IFC_UP && dev == wl->vif[1]->ndev)
+ 			disconn_info->reason = 1;
+ 
+-		cfg80211_disconnected(dev, disconn_info->reason, disconn_info->ie,
+-				      disconn_info->ie_len, false,
+-				      GFP_KERNEL);
++		cfg80211_disconnected(dev, disconn_info->reason,
++				      disconn_info->ie, disconn_info->ie_len,
++				      false, GFP_KERNEL);
+ 	}
+ }
+ 
 -- 
-2.17.0.rc0.231.g781580f067-goog
+2.7.4
