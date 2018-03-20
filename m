@@ -1,79 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36928 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752654AbeC1OMG (ORCPT
+Received: from mail-it0-f68.google.com ([209.85.214.68]:35197 "EHLO
+        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752774AbeCTLmb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 10:12:06 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Mar 2018 17:11:44 +0300
-Message-Id: <20180328141157.5427-2-luca@coelho.fi> (sfid-20180328_161211_884193_FD56B4B4)
-In-Reply-To: <20180328141157.5427-1-luca@coelho.fi>
-References: <20180328141157.5427-1-luca@coelho.fi>
-Subject: [PATCH 01/14] iwlwifi: mvm: flip AMSDU addresses only for 9000 family
+        Tue, 20 Mar 2018 07:42:31 -0400
+From: "<Hariprasath Elango>" <hariprasath.elango@gmail.com>
+Date: Tue, 20 Mar 2018 17:12:23 +0530
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "<Hariprasath Elango>" <hariprasath.elango@gmail.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ganesh.krishna@microchip.com,
+        aditya.shankar@microchip.com
+Subject: Re: [PATCH 5/7] staging: wilc1000: replace switch statement by
+ simple if condition
+Message-ID: <20180320114223.GA4033@hariprasath> (sfid-20180320_124245_738478_D7DBEACC)
+References: <cover.1521030891.git.hariprasath.elango@gmail.com>
+ <2a46a5cc8ab69c1143c480bbac1f7e921011d982.1521030891.git.hariprasath.elango@gmail.com>
+ <20180319184546.GA17337@kroah.com>
+ <20180320061227.GA4866@hariprasath>
+ <20180320112951.wgrd76pxsu3qgk6r@mwanda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180320112951.wgrd76pxsu3qgk6r@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On Tue, Mar 20, 2018 at 02:29:51PM +0300, Dan Carpenter wrote:
+> On Tue, Mar 20, 2018 at 11:42:27AM +0530, <Hariprasath Elango> wrote:
+> > On Mon, Mar 19, 2018 at 07:45:46PM +0100, Greg KH wrote:
+> > > On Wed, Mar 14, 2018 at 06:15:03PM +0530, hariprasath.elango@gmail.com wrote:
+> > > > From: HariPrasath Elango <hariprasath.elango@gmail.com>
+> > > > 
+> > > > In this case,there is only a single switch case statement.So replacing
+> > > > by a simple if condition.
+> > > > 
+> > > > Signed-off-by: HariPrasath Elango <hariprasath.elango@gmail.com>
+> > > > ---
+> > > >  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 +-------
+> > > >  1 file changed, 1 insertion(+), 7 deletions(-)
+> > > 
+> > > Does not apply to my tree :(
+> > 
+> > Hi Greg,
+> > 
+> > Sorry about that.
+> 
+> Probably there were other patches on the list that were applied first.
+> It's likely not your fault, but just part of the process.
+> 
+> > Shall I sent a v2 after rebasing my repo ? Will that
+> > be fine ? 
+> 
+> Yes.
+> 
+> regards,
+> dan carpenter
 
-Hardware bug was fixed in later generation.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 25 +++++++++++++++----------
- 1 file changed, 15 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 580de5851fc7..4a4ccfd11e5b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -831,6 +831,16 @@ static void iwl_mvm_agg_rx_received(struct iwl_mvm *mvm,
- 	rcu_read_unlock();
- }
- 
-+static void iwl_mvm_flip_address(u8 *addr)
-+{
-+	int i;
-+	u8 mac_addr[ETH_ALEN];
-+
-+	for (i = 0; i < ETH_ALEN; i++)
-+		mac_addr[i] = addr[ETH_ALEN - i - 1];
-+	ether_addr_copy(addr, mac_addr);
-+}
-+
- void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 			struct iwl_rx_cmd_buffer *rxb, int queue)
- {
-@@ -985,21 +995,16 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 		 */
- 		if ((desc->mac_flags2 & IWL_RX_MPDU_MFLG2_AMSDU) &&
- 		    !WARN_ON(!ieee80211_is_data_qos(hdr->frame_control))) {
--			int i;
- 			u8 *qc = ieee80211_get_qos_ctl(hdr);
--			u8 mac_addr[ETH_ALEN];
- 
- 			*qc &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
- 
--			for (i = 0; i < ETH_ALEN; i++)
--				mac_addr[i] = hdr->addr3[ETH_ALEN - i - 1];
--			ether_addr_copy(hdr->addr3, mac_addr);
-+			if (mvm->trans->cfg->device_family ==
-+			    IWL_DEVICE_FAMILY_9000) {
-+				iwl_mvm_flip_address(hdr->addr3);
- 
--			if (ieee80211_has_a4(hdr->frame_control)) {
--				for (i = 0; i < ETH_ALEN; i++)
--					mac_addr[i] =
--						hdr->addr4[ETH_ALEN - i - 1];
--				ether_addr_copy(hdr->addr4, mac_addr);
-+				if (ieee80211_has_a4(hdr->frame_control))
-+					iwl_mvm_flip_address(hdr->addr4);
- 			}
- 		}
- 		if (baid != IWL_RX_REORDER_DATA_INVALID_BAID) {
--- 
-2.16.2
+Hi dan,thanks for the feedback. I will send a new version of the patch
