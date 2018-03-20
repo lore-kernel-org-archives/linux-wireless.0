@@ -1,165 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45366 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751527AbeCOLbj (ORCPT
+Received: from mail-ot0-f178.google.com ([74.125.82.178]:44574 "EHLO
+        mail-ot0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751093AbeCTEMq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Mar 2018 07:31:39 -0400
-From: Ramon Fried <rfried@codeaurora.org>
-To: k.eugene.e@gmail.com, kvalo@codeaurora.org,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc: Loic Poulain <loic.poulain@linaro.org>,
-        Ramon Fried <rfried@codeaurora.org>
-Subject: [PATCH] wcn36xx: Fix firmware crash due to corrupted buffer address
-Date: Thu, 15 Mar 2018 13:31:33 +0200
-Message-Id: <20180315113133.28791-1-rfried@codeaurora.org> (sfid-20180315_123143_295874_C2D0A0EC)
+        Tue, 20 Mar 2018 00:12:46 -0400
+Received: by mail-ot0-f178.google.com with SMTP id 79-v6so300707oth.11
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2018 21:12:46 -0700 (PDT)
+Subject: Re: [PATCH v2 12/15] rtlwifi: btcoex: Add 8822b 1ant/2ant coex files
+To: pkshih@realtek.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+References: <20180306012554.3108-1-pkshih@realtek.com>
+ <20180306012554.3108-13-pkshih@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <798b99a6-a09b-7167-fbfd-e42c43aa2270@lwfinger.net> (sfid-20180320_051250_440767_9DFD48C2)
+Date: Mon, 19 Mar 2018 23:12:45 -0500
+MIME-Version: 1.0
+In-Reply-To: <20180306012554.3108-13-pkshih@realtek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Loic Poulain <loic.poulain@linaro.org>
+On 03/05/2018 07:25 PM, pkshih@realtek.com wrote:
+> From: Ping-Ke Shih <pkshih@realtek.com>
 
-wcn36xx_start_tx function retrieves the buffer descriptor from the
-channel control queue to start filling tx buffer information. However,
-nothing prevents this same buffer to be concurrently accessed in a
-concurent tx call, leading to potential buffer coruption and firmware
-crash (observed during iperf test). The channel control queue should
-only be accessed and updated with the channel lock.
-
-Fix this issue by using a local buffer descriptor which will be copied
-in the thread-safe wcn36xx_dxe_tx_frame.
-
-Note that buffer descriptor size is few bytes so the introduced copy
-overhead is insignificant. Moreover, this allows to keep the locked
-section minimal.
-
-Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
-Signed-off-by: Ramon Fried <rfried@codeaurora.org>
----
- drivers/net/wireless/ath/wcn36xx/dxe.c  | 13 ++++---------
- drivers/net/wireless/ath/wcn36xx/dxe.h  |  3 ++-
- drivers/net/wireless/ath/wcn36xx/txrx.c | 32 ++++++++++----------------------
- 3 files changed, 16 insertions(+), 32 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index 7d5ecaf02288..2c3b899a88fa 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -27,15 +27,6 @@
- #include "wcn36xx.h"
- #include "txrx.h"
- 
--void *wcn36xx_dxe_get_next_bd(struct wcn36xx *wcn, bool is_low)
--{
--	struct wcn36xx_dxe_ch *ch = is_low ?
--		&wcn->dxe_tx_l_ch :
--		&wcn->dxe_tx_h_ch;
--
--	return ch->head_blk_ctl->bd_cpu_addr;
--}
--
- static void wcn36xx_ccu_write_register(struct wcn36xx *wcn, int addr, int data)
- {
- 	wcn36xx_dbg(WCN36XX_DBG_DXE,
-@@ -648,6 +639,7 @@ void wcn36xx_dxe_free_mem_pools(struct wcn36xx *wcn)
- 
- int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
- 			 struct wcn36xx_vif *vif_priv,
-+			 struct wcn36xx_tx_bd *bd,
- 			 struct sk_buff *skb,
- 			 bool is_low)
- {
-@@ -681,6 +673,9 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
- 	ctl->skb = NULL;
- 	desc = ctl->desc;
- 
-+	/* write buffer descriptor */
-+	memcpy(ctl->bd_cpu_addr, bd, sizeof(*bd));
-+
- 	/* Set source address of the BD we send */
- 	desc->src_addr_l = ctl->bd_phy_addr;
- 
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.h b/drivers/net/wireless/ath/wcn36xx/dxe.h
-index 2bc376c5391b..ce580960d109 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.h
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.h
-@@ -452,6 +452,7 @@ struct wcn36xx_dxe_mem_pool {
- 	dma_addr_t	phy_addr;
- };
- 
-+struct wcn36xx_tx_bd;
- struct wcn36xx_vif;
- int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn);
- void wcn36xx_dxe_free_mem_pools(struct wcn36xx *wcn);
-@@ -463,8 +464,8 @@ void wcn36xx_dxe_deinit(struct wcn36xx *wcn);
- int wcn36xx_dxe_init_channels(struct wcn36xx *wcn);
- int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
- 			 struct wcn36xx_vif *vif_priv,
-+			 struct wcn36xx_tx_bd *bd,
- 			 struct sk_buff *skb,
- 			 bool is_low);
- void wcn36xx_dxe_tx_ack_ind(struct wcn36xx *wcn, u32 status);
--void *wcn36xx_dxe_get_next_bd(struct wcn36xx *wcn, bool is_low);
- #endif	/* _DXE_H_ */
-diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
-index 22304edc5948..b1768ed6b0be 100644
---- a/drivers/net/wireless/ath/wcn36xx/txrx.c
-+++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
-@@ -272,21 +272,9 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
- 	bool is_low = ieee80211_is_data(hdr->frame_control);
- 	bool bcast = is_broadcast_ether_addr(hdr->addr1) ||
- 		is_multicast_ether_addr(hdr->addr1);
--	struct wcn36xx_tx_bd *bd = wcn36xx_dxe_get_next_bd(wcn, is_low);
--
--	if (!bd) {
--		/*
--		 * TX DXE are used in pairs. One for the BD and one for the
--		 * actual frame. The BD DXE's has a preallocated buffer while
--		 * the skb ones does not. If this isn't true something is really
--		 * wierd. TODO: Recover from this situation
--		 */
--
--		wcn36xx_err("bd address may not be NULL for BD DXE\n");
--		return -EINVAL;
--	}
-+	struct wcn36xx_tx_bd bd;
- 
--	memset(bd, 0, sizeof(*bd));
-+	memset(&bd, 0, sizeof(bd));
- 
- 	wcn36xx_dbg(WCN36XX_DBG_TX,
- 		    "tx skb %p len %d fc %04x sn %d %s %s\n",
-@@ -296,10 +284,10 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
- 
- 	wcn36xx_dbg_dump(WCN36XX_DBG_TX_DUMP, "", skb->data, skb->len);
- 
--	bd->dpu_rf = WCN36XX_BMU_WQ_TX;
-+	bd.dpu_rf = WCN36XX_BMU_WQ_TX;
- 
--	bd->tx_comp = !!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS);
--	if (bd->tx_comp) {
-+	bd.tx_comp = !!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS);
-+	if (bd.tx_comp) {
- 		wcn36xx_dbg(WCN36XX_DBG_DXE, "TX_ACK status requested\n");
- 		spin_lock_irqsave(&wcn->dxe_lock, flags);
- 		if (wcn->tx_ack_skb) {
-@@ -321,13 +309,13 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
- 
- 	/* Data frames served first*/
- 	if (is_low)
--		wcn36xx_set_tx_data(bd, wcn, &vif_priv, sta_priv, skb, bcast);
-+		wcn36xx_set_tx_data(&bd, wcn, &vif_priv, sta_priv, skb, bcast);
- 	else
- 		/* MGMT and CTRL frames are handeld here*/
--		wcn36xx_set_tx_mgmt(bd, wcn, &vif_priv, skb, bcast);
-+		wcn36xx_set_tx_mgmt(&bd, wcn, &vif_priv, skb, bcast);
- 
--	buff_to_be((u32 *)bd, sizeof(*bd)/sizeof(u32));
--	bd->tx_bd_sign = 0xbdbdbdbd;
-+	buff_to_be((u32 *)&bd, sizeof(bd)/sizeof(u32));
-+	bd.tx_bd_sign = 0xbdbdbdbd;
- 
--	return wcn36xx_dxe_tx_frame(wcn, vif_priv, skb, is_low);
-+	return wcn36xx_dxe_tx_frame(wcn, vif_priv, &bd, skb, is_low);
- }
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
