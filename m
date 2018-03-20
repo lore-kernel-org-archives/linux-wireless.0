@@ -1,82 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50722 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933073AbeCJOPa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Mar 2018 09:15:30 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
-        kubakici@wp.pl, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v3 14/20] rename: _request_firmware_load() fw_load_sysfs_fallback()
-Date: Sat, 10 Mar 2018 06:14:55 -0800
-Message-Id: <20180310141501.2214-15-mcgrof@kernel.org> (sfid-20180310_151823_456398_4E6AE6B7)
-In-Reply-To: <20180310141501.2214-1-mcgrof@kernel.org>
-References: <20180310141501.2214-1-mcgrof@kernel.org>
+Received: from mail2.candelatech.com ([208.74.158.173]:35862 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751481AbeCTS35 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Mar 2018 14:29:57 -0400
+Subject: Re: [RFC] ethtool: Support ETHTOOL_GSTATS2 command.
+To: Michal Kubecek <mkubecek@suse.cz>
+References: <1520452289-14172-1-git-send-email-greearb@candelatech.com>
+ <20180320103747.7kcfdu4yzof6bwxw@unicorn.suse.cz>
+ <37830d46-762b-2a92-4506-5792a65d2ebd@candelatech.com>
+ <20180320182420.u5aa7eny3fbix7fj@unicorn.suse.cz>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        netdev@vger.kernel.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <da10fdf8-80a7-9a8a-e56d-92319152fd5e@candelatech.com> (sfid-20180320_193000_747269_192E256D)
+Date: Tue, 20 Mar 2018 11:29:54 -0700
+MIME-Version: 1.0
+In-Reply-To: <20180320182420.u5aa7eny3fbix7fj@unicorn.suse.cz>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reflects much clearer what is being done.
-While at it, kdoc'ify it.
+On 03/20/2018 11:24 AM, Michal Kubecek wrote:
+> On Tue, Mar 20, 2018 at 08:39:33AM -0700, Ben Greear wrote:
+>> On 03/20/2018 03:37 AM, Michal Kubecek wrote:
+>>>
+>>> IMHO it would be more practical to set "0 means same as GSTATS" as a
+>>> rule and make ethtool_get_stats() a wrapper for ethtool_get_stats2() to
+>>> avoid code duplication (or perhaps a use fall-through in the switch). It
+>>> would also allow drivers to provide only one of the callbacks.
+>>
+>> Yes, but that would require changing all drivers at once, and would make backporting
+>> and out-of-tree drivers harder to manage.  I had low hopes that this feature would
+>> make it upstream, so I didn't want to propose any large changes up front.
+>
+> I don't think so. What I mean is:
+>
+> (a) driver implements ->get_ethtool_stats2() callback; then we use it
+>     for GSTATS2
+> (b) driver does not implement get_ethtool_stats2() but implements
+>     ->get_ethtool_stats(); then we call for GSTATS2 if level is zero,
+>     otherwise GSTATS2 returns -EINVAL
+>
+> and GSTATS is always translated to GSTATS2 with level 0, either by
+> defining ethtool_get_stats() as a wrapper or by fall-through in the
+> switch statement.
+>
+> This way, most drivers could be left untouched and only those which
+> would implement non-default levels would provide ->get_ethtool_stats2()
+> callback instead of ->get_ethtool_stats().
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- Documentation/driver-api/firmware/fallback-mechanisms.rst |  2 +-
- drivers/base/firmware_loader/fallback.c                   | 13 ++++++++++---
- 2 files changed, 11 insertions(+), 4 deletions(-)
+OK, that makes sense.  I'll wait on feedback from the flags or #defined levels
+and re-spin the patch accordingly.
 
-diff --git a/Documentation/driver-api/firmware/fallback-mechanisms.rst b/Documentation/driver-api/firmware/fallback-mechanisms.rst
-index 4055ac76b288..f353783ae0be 100644
---- a/Documentation/driver-api/firmware/fallback-mechanisms.rst
-+++ b/Documentation/driver-api/firmware/fallback-mechanisms.rst
-@@ -112,7 +112,7 @@ Since a device is created for the sysfs interface to help load firmware as a
- fallback mechanism userspace can be informed of the addition of the device by
- relying on kobject uevents. The addition of the device into the device
- hierarchy means the fallback mechanism for firmware loading has been initiated.
--For details of implementation refer to _request_firmware_load(), in particular
-+For details of implementation refer to fw_load_sysfs_fallback(), in particular
- on the use of dev_set_uevent_suppress() and kobject_uevent().
- 
- The kernel's kobject uevent mechanism is implemented in lib/kobject_uevent.c,
-diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
-index d6838e7ec00c..0a8ec7fec585 100644
---- a/drivers/base/firmware_loader/fallback.c
-+++ b/drivers/base/firmware_loader/fallback.c
-@@ -535,8 +535,15 @@ fw_create_instance(struct firmware *firmware, const char *fw_name,
- 	return fw_sysfs;
- }
- 
--/* load a firmware via user helper */
--static int _request_firmware_load(struct fw_sysfs *fw_sysfs,
-+/**
-+ * fw_load_sysfs_fallback - load a firmware via the syfs fallback mechanism
-+ * @fw_sysfs: firmware syfs information for the firmware to load
-+ * @opt_flags: flags of options, FW_OPT_*
-+ * @timeout: timeout to wait for the load
-+ *
-+ * In charge of constructing a sysfs fallback interface for firmware loading.
-+ **/
-+static int fw_load_sysfs_fallback(struct fw_sysfs *fw_sysfs,
- 				  unsigned int opt_flags, long timeout)
- {
- 	int retval = 0;
-@@ -621,7 +628,7 @@ static int fw_load_from_user_helper(struct firmware *firmware,
- 	}
- 
- 	fw_sysfs->fw_priv = firmware->priv;
--	ret = _request_firmware_load(fw_sysfs, opt_flags, timeout);
-+	ret = fw_load_sysfs_fallback(fw_sysfs, opt_flags, timeout);
- 
- 	if (!ret)
- 		ret = assign_fw(firmware, device, opt_flags);
+Thanks,
+Ben
+
+
 -- 
-2.16.2
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
