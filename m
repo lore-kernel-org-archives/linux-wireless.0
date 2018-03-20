@@ -1,68 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:46537 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751060AbeCIMvc (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35725 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751396AbeCTVOa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Mar 2018 07:51:32 -0500
-Date: Fri, 9 Mar 2018 18:21:24 +0530
-From: Himanshu Jha <morganfreeman6991@gmail.com>
-To: Andreas Christoforou <andreaschristofo@gmail.com>
-Cc: keescook@chromium.org, kernel-hardening@lists.openwall.com,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] drivers: net: wireless: ath: ath9: dfs: remove VLA usage
-Message-ID: <20180309125124.GA17968@himanshu-Vostro-3559> (sfid-20180309_135148_591326_EFD5126D)
-References: <1520598613-3641-1-git-send-email-andreaschristofo@gmail.com>
+        Tue, 20 Mar 2018 17:14:30 -0400
+Received: by mail-oi0-f66.google.com with SMTP id x20-v6so2361532oie.2
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2018 14:14:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1520598613-3641-1-git-send-email-andreaschristofo@gmail.com>
+In-Reply-To: <CACna6rzJs0d_q42OSv8E_qgGa_TKmTsq5tC823Su41MPtbWOZg@mail.gmail.com>
+References: <20180226090917.7iabysywbv6h4rqr@alienware17> <87y3jgt6sp.fsf@kamboji.qca.qualcomm.com>
+ <7d6af051-2724-5dfc-cf69-376c0b501626@blackstar.nl> <87a7vvu7ke.fsf@kamboji.qca.qualcomm.com>
+ <6404ec30-b7f6-ff26-a668-2e656799b69b@blackstar.nl> <874lli7mk5.fsf@codeaurora.org>
+ <5AA99559.2070605@broadcom.com> <CAFBinCB_eLN8Gn0fRmKSFWSa_Yrw3+BB05Hwp_yNyYwhsS+s5w@mail.gmail.com>
+ <CACna6rzJs0d_q42OSv8E_qgGa_TKmTsq5tC823Su41MPtbWOZg@mail.gmail.com>
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date: Tue, 20 Mar 2018 22:14:08 +0100
+Message-ID: <CAFBinCDAW9=VdvDn3-xtOAb-DkQYPiRsiP+hgtjV6AfMs__Pvg@mail.gmail.com> (sfid-20180320_221435_513650_89B1BB9F)
+Subject: Re: [PATCH] ath9k: introduce endian_check module parameter
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Bas Vermeulen <bvermeul@blackstar.nl>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Felix Fietkau <nbd@nbd.name>, dev@kresin.me
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 09, 2018 at 02:30:12PM +0200, Andreas Christoforou wrote:
-> The kernel would like to have all stack VLA usage removed.
-> 
-> Signed-off-by: Andreas Christoforou <andreaschristofo@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath9k/dfs.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
-> index 6fee9a4..cfb0f84 100644
-> --- a/drivers/net/wireless/ath/ath9k/dfs.c
-> +++ b/drivers/net/wireless/ath/ath9k/dfs.c
-> @@ -41,7 +41,6 @@ static const int BIN_DELTA_MAX		= 10;
->  
->  /* we need at least 3 deltas / 4 samples for a reliable chirp detection */
->  #define NUM_DIFFS 3
-> -static const int FFT_NUM_SAMPLES	= (NUM_DIFFS + 1);
+Hi Rafal,
 
-Are you sure it is correct ?
-Look for other users of "FFT_NUM_SAMPLES".
+On Tue, Mar 20, 2018 at 10:07 PM, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com=
+> wrote:
+> On 19 March 2018 at 09:11, Martin Blumenstingl
+> <martin.blumenstingl@googlemail.com> wrote:
+>> - some ship with a broken EEPROM that enables the 5GHz band on a
+>> 2.4GHz-only card, which is why we need "qca,disable-5ghz"
+>
+> No. You just need to use ieee80211-freq-limit.
+you are right with this one, "qca,disable-5ghz" is an out-of-tree
+patch and ieee80211-freq-limit support should be added upstream
+instead
+however, the cause is still the same (devices are shipped with an
+EEPROM which has the 5GHz band enabled while it shouldn't have)
 
->  /* Threshold for difference of delta peaks */
->  static const int MAX_DIFF		= 2;
-> @@ -101,7 +100,7 @@ static bool ath9k_check_chirping(struct ath_softc *sc, u8 *data,
->  				 int datalen, bool is_ctl, bool is_ext)
->  {
->  	int i;
-> -	int max_bin[FFT_NUM_SAMPLES];
-> +	int max_bin[NUM_DIFFS + 1];
->  	struct ath_hw *ah = sc->sc_ah;
->  	struct ath_common *common = ath9k_hw_common(ah);
->  	int prev_delta;
 
-Always compile test the driver before sending a patch.
-Also, patch title seems incorrect *ath9k*
-
-himanshu@himanshu-Vostro-3559:~/linux-next$ git log --oneline drivers/net/wireless/ath/ath9k/dfs.c
-626ab67 ath9k: dfs: use swap macro in ath9k_check_chirping
-50c8cd4 ath9k: remove cast to void pointer
-8fc2b61 ath9k: DFS - add pulse chirp detection for FCC
-....
-
--- 
-Thanks
-Himanshu Jha
+Regards
+Martin
