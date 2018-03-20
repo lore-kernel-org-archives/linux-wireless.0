@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:38178 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751280AbeCLMoH (ORCPT
+Received: from mail-pl0-f65.google.com ([209.85.160.65]:42903 "EHLO
+        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751084AbeCTMR1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Mar 2018 08:44:07 -0400
-Received: by mail-wm0-f68.google.com with SMTP id z9so15784119wmb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Mar 2018 05:44:06 -0700 (PDT)
-Subject: Re: [2/3] mwifiex: support sysfs initiated device coredump
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <1519210220-22437-3-git-send-email-arend.vanspriel@broadcom.com>
- <20180312094115.2E1C1606DB@smtp.codeaurora.org>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-        linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AA67616.2000602@broadcom.com> (sfid-20180312_134421_106115_F6643297)
-Date: Mon, 12 Mar 2018 13:44:06 +0100
-MIME-Version: 1.0
-In-Reply-To: <20180312094115.2E1C1606DB@smtp.codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Tue, 20 Mar 2018 08:17:27 -0400
+From: hariprasath.elango@gmail.com
+To: aditya.shankar@microchip.com, gregkh@linuxfoundation.org,
+        ganesh.krishna@microchip.com, dan.carpenter@oracle.com
+Cc: gehariprasath@gmail.com,
+        HariPrasath Elango <hariprasath.elango@gmail.com>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCHv3] staging: wilc1000: replace switch statement by simple if condition
+Date: Tue, 20 Mar 2018 17:44:49 +0530
+Message-Id: <20180320121450.4599-1-hariprasath.elango@gmail.com> (sfid-20180320_131731_472567_80FC6015)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/12/2018 10:41 AM, Kalle Valo wrote:
-> Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
->
->> Since commit 3c47d19ff4dc ("drivers: base: add coredump driver ops")
->> it is possible to initiate a device coredump from user-space. This
->> patch adds support for it adding the .coredump() driver callback.
->> As there is no longer a need to initiate it through debugfs remove
->> that code.
->>
->> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->
-> Based on the discussion I assume this is ok to take to w-d-next. If that's not
-> the case, please let me know ASAP.
+From: HariPrasath Elango <hariprasath.elango@gmail.com>
 
-It is up to the mwifiex maintainers to decide, I guess. The ABI 
-documentation need to be revised and change the callback to void return 
-type. I am not sure what the best approach is. 1) apply this and fix 
-return type later, or 2) fix return type and resubmit this. What is your 
-opinion?
+In this case,there is only a single switch case statement.So replacing
+by a simple if condition
 
-Regards,
-Arend
+Signed-off-by: HariPrasath Elango <hariprasath.elango@gmail.com>
+---
+ changes since v3:
+	*rebase on latest code
+	*missed revision history in v2
+
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 9d8d5d0..730d64f 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -776,14 +776,8 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	}
+ 
+ 	if (sme->crypto.n_akm_suites) {
+-		switch (sme->crypto.akm_suites[0]) {
+-		case WLAN_AKM_SUITE_8021X:
++		if (sme->crypto.akm_suites[0] == WLAN_AKM_SUITE_8021X)
+ 			auth_type = IEEE8021;
+-			break;
+-
+-		default:
+-			break;
+-		}
+ 	}
+ 
+ 	curr_channel = nw_info->ch;
+-- 
+2.10.0.GIT
