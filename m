@@ -1,42 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56862 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750767AbeCPHFy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Mar 2018 03:05:54 -0400
-From: ryanhsu@codeaurora.org
-To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc: ryanhsu@codeaurora.org
-Subject: [PATCH 2/2] ath10k: add FW API 6 firmware image for QCA9377
-Date: Fri, 16 Mar 2018 00:05:42 -0700
-Message-Id: <1521183942-4291-2-git-send-email-ryanhsu@codeaurora.org> (sfid-20180316_080558_641104_3F1E67AD)
-In-Reply-To: <1521183942-4291-1-git-send-email-ryanhsu@codeaurora.org>
-References: <1521183942-4291-1-git-send-email-ryanhsu@codeaurora.org>
+Received: from mx2.suse.de ([195.135.220.15]:58671 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751269AbeCTTvy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Mar 2018 15:51:54 -0400
+Date: Tue, 20 Mar 2018 19:51:48 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Konstantin Ryabitsev <konstantin@linuxfoundation.org>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Julia Lawall <julia.lawall@lip6.fr>,
+        Nicolas Palix <nicolas.palix@imag.fr>,
+        Joe Perches <joe@perches.com>, Takashi Iwai <tiwai@suse.de>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Jiri Kosina <jikos@kernel.org>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        akpm@linux-foundation.org, cantabile.desu@gmail.com,
+        kubakici@wp.pl, linux-wireless@vger.kernel.org,
+        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
+        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
+        pali.rohar@gmail.com, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        Abhay_Salunke@dell.com, bjorn.andersson@linaro.org,
+        jewalt@lgsinnovations.com, oneukum@suse.com, ast@fb.com,
+        andresx7@gmail.com, linux-kernel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v3 19/20] firmware: add request_firmware_cache() to help
+ with cache on reboot
+Message-ID: <20180320195148.GH4449@wotan.suse.de> (sfid-20180320_205200_186828_940D4432)
+References: <20180310141501.2214-1-mcgrof@kernel.org>
+ <20180310141501.2214-20-mcgrof@kernel.org>
+ <20180320083055.GA21640@kroah.com>
+ <20180320173409.GD4449@wotan.suse.de>
+ <20180320173801.GA25040@kroah.com>
+ <20180320182409.GF4449@wotan.suse.de>
+ <5dc49c7f-56f6-28df-38da-bfa998afbdbb@linuxfoundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5dc49c7f-56f6-28df-38da-bfa998afbdbb@linuxfoundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ryan Hsu <ryanhsu@codeaurora.org>
+On Tue, Mar 20, 2018 at 02:54:44PM -0400, Konstantin Ryabitsev wrote:
+> On 03/20/18 14:24, Luis R. Rodriguez wrote:
+> > *Iff* this seems sensible, this would only mean kernel.org would have to start
+> > accepting git notes long term, for those who optionally want to push them or
+> > fetch them.
+> 
+> We don't disallow them. You just need to make sure you're fetching and
+> pushing them, because they aren't by default. You can set this in your
+> kernel.org origin section of .git/config:
+> 
+> [remote origin]
+>   ...
+>   fetch = +refs/notes/*:refs/notes/*
+> 
+> And then push them separately as "git push origin refs/notes/*".
 
-Firmware WLAN.TF.2.1-00014-QCARMSWP-1 now supports reading the board ID
-information and also required 9 IRAM bank, which older ath10k version
-don't have the support will fail to be enabled, so in order to maintain
-the backward compatibility, we need to update the FW API to 6.
+Superb, thanks!
 
-Signed-off-by: Ryan Hsu <ryanhsu@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/pci.c | 1 +
- 1 file changed, 1 insertion(+)
+> Since frontends clone with --mirror, the notes will be available on all
+> git.kernel.org nodes (e.g. see
+> https://git.kernel.org/mricon/hook-test/c/a8d310d4c13)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index e9c3162..d2a3acd 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -3496,5 +3496,6 @@ static void __exit ath10k_pci_exit(void)
- MODULE_FIRMWARE(QCA6174_HW_3_0_FW_DIR "/" ATH10K_BOARD_API2_FILE);
- 
- /* QCA9377 1.0 firmware files */
-+MODULE_FIRMWARE(QCA9377_HW_1_0_FW_DIR "/" ATH10K_FW_API6_FILE);
- MODULE_FIRMWARE(QCA9377_HW_1_0_FW_DIR "/" ATH10K_FW_API5_FILE);
- MODULE_FIRMWARE(QCA9377_HW_1_0_FW_DIR "/" QCA9377_HW_1_0_BOARD_DATA_FILE);
--- 
-1.9.1
+Good to know thanks, and it looks good!
+
+> If you do start using notes, I strongly suggest you pick a dedicated
+> refspace for it instead of putting things into the default
+> refs/notes/commits, e.g.:
+> 
+> git notes --ref crosstree [...]
+> 
+> This will create refs/notes/crosstree that has less of a chance to be
+> clobbered by someone else's use of notes.
+
+Indeed, the default is crap. I was suggesting perhaps having it also be
+per branch, so:
+
+git note --ref branch/iso-coccinelle/ add commit-id
+
+If it was required sed I guess
+
+git note --ref branch/sed/ add commit-id
+
+And if we wanted a resolution handler which could manage the above for you:
+
+git note --ref branch/merger-script add commit-id
+
+Which could use the above two to run what is needed to mimic the commit.
+
+  Luis
