@@ -1,35 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:46838 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1428753AbeCBOvb (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:26331 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751542AbeCTQ4D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 09:51:31 -0500
-Date: Fri, 02 Mar 2018 09:51:30 -0500 (EST)
-Message-Id: <20180302.095130.1497212812516999950.davem@davemloft.net> (sfid-20180302_155138_698288_45923BF6)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2018-03-02
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20180302090655.31669-1-johannes@sipsolutions.net>
-References: <20180302090655.31669-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Tue, 20 Mar 2018 12:56:03 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 03/11] staging: wilc1000: remove line over 80 char warnings in set_wiphy_params()
+Date: Tue, 20 Mar 2018 22:25:36 +0530
+Message-ID: <1521564944-3565-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180320_175607_239833_3852D5CA)
+In-Reply-To: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
+References: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Fri,  2 Mar 2018 10:06:54 +0100
+Fix 'line over 80 character' issue reported by checkpatch.pl script in
+set_wiphy_params(). Directly used the 'wiphy' pointer received as
+function argument instead of using 'priv->dev->ieee80211_ptr->wiphy'.
 
-> Like before... Thanks for pulling net into net-next, the Add-BA patch
-> below would otherwise not really be possible :-)
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-No problem.
-
-> The only sort of interesting thing is the fast-RX improvements from
-> Felix, they help on routers where these things (A-MSDU and 4-addr mode)
-> are more important and where fast-RX really helps due to the reduced
-> CPU load.
-> 
-> Please pull and let me know if there's any problem.
-
-Ok, pulled, thanks Johannes.
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index cd5ad9b..9d35a08 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1192,20 +1192,20 @@ static int set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ 
+ 	if (changed & WIPHY_PARAM_RETRY_SHORT) {
+ 		cfg_param_val.flag  |= RETRY_SHORT;
+-		cfg_param_val.short_retry_limit = priv->dev->ieee80211_ptr->wiphy->retry_short;
++		cfg_param_val.short_retry_limit = wiphy->retry_short;
+ 	}
+ 	if (changed & WIPHY_PARAM_RETRY_LONG) {
+ 		cfg_param_val.flag |= RETRY_LONG;
+-		cfg_param_val.long_retry_limit = priv->dev->ieee80211_ptr->wiphy->retry_long;
++		cfg_param_val.long_retry_limit = wiphy->retry_long;
+ 	}
+ 	if (changed & WIPHY_PARAM_FRAG_THRESHOLD) {
+ 		cfg_param_val.flag |= FRAG_THRESHOLD;
+-		cfg_param_val.frag_threshold = priv->dev->ieee80211_ptr->wiphy->frag_threshold;
++		cfg_param_val.frag_threshold = wiphy->frag_threshold;
+ 	}
+ 
+ 	if (changed & WIPHY_PARAM_RTS_THRESHOLD) {
+ 		cfg_param_val.flag |= RTS_THRESHOLD;
+-		cfg_param_val.rts_threshold = priv->dev->ieee80211_ptr->wiphy->rts_threshold;
++		cfg_param_val.rts_threshold = wiphy->rts_threshold;
+ 	}
+ 
+ 	ret = wilc_hif_set_cfg(vif, &cfg_param_val);
+-- 
+2.7.4
