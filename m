@@ -1,123 +1,294 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0084.outbound.protection.outlook.com ([104.47.32.84]:28030
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751374AbeCZNg4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 09:36:56 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Dmitry Lebed <dlebed@quantenna.com>,
-        Dmitry Lebed <lebed.dmitry@gmail.com>
-Subject: [PATCH 3/3] qtnfmac: add DFS offload support
-Date: Mon, 26 Mar 2018 16:36:33 +0300
-Message-Id: <20180326133633.8771-4-sergey.matyukevich.os@quantenna.com> (sfid-20180326_153702_007190_5CF7F0AE)
-In-Reply-To: <20180326133633.8771-1-sergey.matyukevich.os@quantenna.com>
-References: <20180326133633.8771-1-sergey.matyukevich.os@quantenna.com>
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:38072 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751508AbeCTJfu (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Mar 2018 05:35:50 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5AB0CE6B.2050109@broadcom.com>
+References: <20180319014032.9394-1-alexey.roslyakov@gmail.com>
+ <20180319014032.9394-3-alexey.roslyakov@gmail.com> <5AAF838D.2030105@broadcom.com>
+ <CALFoz4YMKJr40fefczrbjXBROtZxnGikv0Jze-BnefofCB3dyg@mail.gmail.com>
+ <817418fd-6446-57ea-b03d-383b4df9a979@gmail.com> <5AB044C0.9060701@broadcom.com>
+ <CALFoz4aaEshpmyCxzut1t6cqSOSee4YP6vsi5G4Eei9m8hkZ3A@mail.gmail.com> <5AB0CE6B.2050109@broadcom.com>
+From: Alexey Roslyakov <alexey.roslyakov@gmail.com>
+Date: Tue, 20 Mar 2018 16:35:48 +0700
+Message-ID: <CALFoz4bug5h=p_FFFf_Xa=yBibkepY7H6spAUg4+zFLhX9tgUA@mail.gmail.com> (sfid-20180320_103612_651470_AADE7AE6)
+Subject: Re: [PATCH net-next v2 2/2] dt: bindings: add new dt entries for brcmfmac
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Florian Fainelli <f.fainelli@gmail.com>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Kalle Valo <kvalo@codeaurora.org>, robh+dt@kernel.org,
+        mark.rutland@arm.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        wright.feng@cypress.com, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Ulf Hansson <ulf.hansson@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dmitry Lebed <dlebed@quantenna.com>
+Arend,
 
-DFS offload support implemented:
-- DFS_OFFLOAD feature is advertised depending on HW capabilities
-- CAC_STARTED event forwarding from HW implemented
-- start_radar_detection() callback now returning -ENOTSUPP
-  if DFS_OFFLOAD is enabled
+Agreed. Let's dismiss these patches.
+Now I'm curious if I can get the information about DMA SG limitations
+from MMC layer, I'll try to figure out something.
 
-Signed-off-by: Dmitry Lebed <dlebed@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c |  9 +++++++++
- drivers/net/wireless/quantenna/qtnfmac/event.c    | 11 +++++++++++
- drivers/net/wireless/quantenna/qtnfmac/qlink.h    |  7 +++++--
- 3 files changed, 25 insertions(+), 2 deletions(-)
+BTW, my specific setup (with default alignments) triggers kernel panic
+(I see brcm_* in backtrace). It's better if I create separate email
+chain for the issue.
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 0398bece5782..5122dc798064 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -813,6 +813,9 @@ static int qtnf_start_radar_detection(struct wiphy *wiphy,
- 	struct qtnf_vif *vif = qtnf_netdev_get_priv(ndev);
- 	int ret;
- 
-+	if (wiphy_ext_feature_isset(wiphy, NL80211_EXT_FEATURE_DFS_OFFLOAD))
-+		return -ENOTSUPP;
-+
- 	ret = qtnf_cmd_start_cac(vif, chandef, cac_time_ms);
- 	if (ret)
- 		pr_err("%s: failed to start CAC ret=%d\n", ndev->name, ret);
-@@ -909,6 +912,9 @@ struct wiphy *qtnf_wiphy_allocate(struct qtnf_bus *bus)
- {
- 	struct wiphy *wiphy;
- 
-+	if (bus->hw_info.hw_capab & QLINK_HW_CAPAB_DFS_OFFLOAD)
-+		qtn_cfg80211_ops.start_radar_detection = NULL;
-+
- 	wiphy = wiphy_new(&qtn_cfg80211_ops, sizeof(struct qtnf_wmac));
- 	if (!wiphy)
- 		return NULL;
-@@ -982,6 +988,9 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
- 			WIPHY_FLAG_AP_UAPSD |
- 			WIPHY_FLAG_HAS_CHANNEL_SWITCH;
- 
-+	if (hw_info->hw_capab & QLINK_HW_CAPAB_DFS_OFFLOAD)
-+		wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_DFS_OFFLOAD);
-+
- 	wiphy->probe_resp_offload = NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS |
- 				    NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2;
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
-index bcd415f96412..cb2a6c12f870 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -443,6 +443,17 @@ static int qtnf_event_handle_radar(struct qtnf_vif *vif,
- 		cfg80211_cac_event(vif->netdev, &chandef,
- 				   NL80211_RADAR_CAC_ABORTED, GFP_KERNEL);
- 		break;
-+	case QLINK_RADAR_CAC_STARTED:
-+		if (vif->wdev.cac_started)
-+			break;
-+
-+		if (!wiphy_ext_feature_isset(wiphy,
-+					     NL80211_EXT_FEATURE_DFS_OFFLOAD))
-+			break;
-+
-+		cfg80211_cac_event(vif->netdev, &chandef,
-+				   NL80211_RADAR_CAC_STARTED, GFP_KERNEL);
-+		break;
- 	default:
- 		pr_warn("%s: unhandled radar event %u\n",
- 			vif->netdev->name, ev->event);
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index 9bf3ae4d1b3b..9ab27e158023 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -68,10 +68,12 @@ struct qlink_msg_header {
-  * @QLINK_HW_CAPAB_STA_INACT_TIMEOUT: device implements a logic to kick-out
-  *	associated STAs due to inactivity. Inactivity timeout period is taken
-  *	from QLINK_CMD_START_AP parameters.
-+ * @QLINK_HW_CAPAB_DFS_OFFLOAD: device implements DFS offload functionality
-  */
- enum qlink_hw_capab {
--	QLINK_HW_CAPAB_REG_UPDATE = BIT(0),
--	QLINK_HW_CAPAB_STA_INACT_TIMEOUT = BIT(1),
-+	QLINK_HW_CAPAB_REG_UPDATE		= BIT(0),
-+	QLINK_HW_CAPAB_STA_INACT_TIMEOUT	= BIT(1),
-+	QLINK_HW_CAPAB_DFS_OFFLOAD		= BIT(2),
- };
- 
- enum qlink_iface_type {
-@@ -1031,6 +1033,7 @@ enum qlink_radar_event {
- 	QLINK_RADAR_CAC_ABORTED,
- 	QLINK_RADAR_NOP_FINISHED,
- 	QLINK_RADAR_PRE_CAC_EXPIRED,
-+	QLINK_RADAR_CAC_STARTED,
- };
- 
- /**
+Thanks,
+  Alex.
+
+On 20 March 2018 at 16:03, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 3/20/2018 8:58 AM, Alexey Roslyakov wrote:
+>>
+>> Arend,
+>>
+>>> Also I am not sure if the broken-sg-support is still needed. We added
+>>> that for omap_hsmmc, but that has since changed to scatter-gather emulation
+>>> so it might not be needed anymore.
+>>
+>> I can confirm it doesn't impact wifi performance in case of rk3288+ap6335.
+>>
+>> But I still have to set settings->bus.sdio.sd_head_align = 4 and
+>> settings->bus.sdio.sd_sgentry_align = 512, otherwise
+>> brcmf_sdiod_sglist_rw fails:
+>>
+>>    974.888452] net_ratelimit: 8 callbacks suppressed
+>> [  974.888457] brcmfmac: brcmf_sdiod_sglist_rw: CMD53 sg block read failed
+>> -84
+>> [  974.901527] brcmfmac: brcmf_sdio_rxglom: glom read of 6144 bytes
+>> failed: -5
+>> [  974.910248] brcmfmac: brcmf_sdio_rxfail: abort command, terminate frame
+>> [  975.018041] brcmfmac: brcmf_sdiod_sglist_rw: CMD53 sg block read failed
+>> -84
+>> [  975.025833] brcmfmac: brcmf_sdio_rxglom: glom read of 6144 bytes
+>> failed: -5
+>> [  975.033634] brcmfmac: brcmf_sdio_rxfail: abort command, terminate frame
+>> [  975.033924] dwmmc_rockchip ff0d0000.dwmmc: Unexpected command
+>> timeout, state 0
+>> [  975.049209] brcmfmac: brcmf_sdio_readframes: RXHEADER FAILED: -84
+>> [  975.056034] brcmfmac: brcmf_sdio_rxfail: abort command, terminate
+>> frame, send NAK
+>> [  975.068367] brcmfmac: brcmf_sdio_hdparse: HW header length too long
+>> [  975.075379] brcmfmac: brcmf_sdio_rxfail: terminate frame
+>
+>
+> Hi Alex,
+>
+> Thanks for checking. In your case I think you do not need sd_head_align as
+> it will default to either 4 or 8:
+>
+> #ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+> #define ALIGNMENT  8
+> #else
+> #define ALIGNMENT  4
+> #endif
+>
+> I am not saying you should not be needing this. When it comes to DT people
+> are often tempted to accommodate a driver solution especially when such a
+> solution is already in place. However, DT is a hardware description and
+> these do not describe the wifi device. They are applicable to the wifi
+> device because it is a limitation of the host controller and as such should
+> be described in the DT binding of the host controller.
+>
+> Regards,
+> Arend
+>
+>
+>> Regards,
+>>    Alex
+>>
+>> On 20 March 2018 at 06:16, Arend van Spriel
+>> <arend.vanspriel@broadcom.com> wrote:
+>>>
+>>> + Uffe
+>>>
+>>> On 3/19/2018 6:55 PM, Florian Fainelli wrote:
+>>>>
+>>>>
+>>>> On 03/19/2018 07:10 AM, Alexey Roslyakov wrote:
+>>>>>
+>>>>>
+>>>>> Hi Arend,
+>>>>> I appreciate your response. In my opinion, it has nothing to do with
+>>>>> SDIO host, because it defines "quirks" in the driver itself.
+>>>>
+>>>>
+>>>>
+>>>> It is not clear to me from your patch series whether the problem is
+>>>> that:
+>>>>
+>>>> - the SDIO device has a specific alignment requirements, which would be
+>>>> either a SDIO device driver limitation/issue or maybe the underlying
+>>>> hardware device/firmware requiring that
+>>>>
+>>>> - the SDIO host controller used is not capable of coping nicely with
+>>>> these said limitations
+>>>>
+>>>> It seems to me like what you are doing here is a) applicable to possibly
+>>>> more SDIO devices and host combinations, and b) should likely be done at
+>>>> the layer between the host and device, such that it is available to more
+>>>> combinations.
+>>>
+>>>
+>>>
+>>> Indeed. That was my thought exactly and I can not imagine Uffe would push
+>>> back on that reasoning.
+>>>
+>>>>> If I get it right, you mean something like this:
+>>>>>
+>>>>> mmc3: mmc@1c12000 {
+>>>>> ...
+>>>>>           broken-sg-support;
+>>>>>           sd-head-align = 4;
+>>>>>           sd-sgentry-align = 512;
+>>>>>
+>>>>>           brcmf: wifi@1 {
+>>>>>                   ...
+>>>>>           };
+>>>>> };
+>>>>>
+>>>>> Where dt: bindings documentation for these entries should reside?
+>>>>> In generic MMC bindings? Well, this is the very special case and
+>>>>> mmc-linux maintainer will unlikely to accept these changes.
+>>>>> Also, extra kernel code modification might be required. It could make
+>>>>> quite trivial change much more complex.
+>>>>
+>>>>
+>>>>
+>>>> If the MMC maintainers are not copied on this patch series, it will
+>>>> likely be hard for them to identify this patch series and chime in...
+>>>
+>>>
+>>>
+>>> The main question is whether this is indeed a "very special case" as
+>>> Alexey
+>>> claims it to be or that it is likely to be applicable to other device and
+>>> host combinations as you are suggesting.
+>>>
+>>> If these properties are imposed by the host or host controller it would
+>>> make
+>>> sense to have these in the mmc bindings.
+>>>
+>>>>>
+>>>>>> Also I am not sure if the broken-sg-support is still needed. We added
+>>>>>> that for omap_hsmmc, but that has since changed to scatter-gather
+>>>>>> emulation
+>>>>>> so it might not be needed anymore.
+>>>>>
+>>>>>
+>>>>>
+>>>>> I've experienced the problem with rk3288 (dw-mmc host) and sdio
+>>>>> settings like above solved it.
+>>>>> Frankly, I haven't investigated any deeper which one of the settings
+>>>>> helped in my case yet...
+>>>>> I will try to get rid of broken-sg-support first and let you know if
+>>>>> it does make any difference.
+>>>
+>>>
+>>>
+>>> Are you using some chromebook. I have some lying around here so I could
+>>> also
+>>> look into it. What broadcom chipset do you have?
+>>>
+>>> Regards,
+>>> Arend
+>>>
+>>>
+>>>>> All the best,
+>>>>>     Alex.
+>>>>>
+>>>>> On 19 March 2018 at 16:31, Arend van Spriel
+>>>>> <arend.vanspriel@broadcom.com> wrote:
+>>>>>>
+>>>>>>
+>>>>>> On 3/19/2018 2:40 AM, Alexey Roslyakov wrote:
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> In case if the host has higher align requirements for SG items, allow
+>>>>>>> setting device-specific aligns for scatterlist items.
+>>>>>>>
+>>>>>>> Signed-off-by: Alexey Roslyakov <alexey.roslyakov@gmail.com>
+>>>>>>> ---
+>>>>>>>
+>>>>>>> Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>>>>>> | 5
+>>>>>>> +++++
+>>>>>>>     1 file changed, 5 insertions(+)
+>>>>>>>
+>>>>>>> diff --git
+>>>>>>>
+>>>>>>> a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>>>>>>
+>>>>>>> b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>>>>>> index 86602f264dce..187b8c1b52a7 100644
+>>>>>>> ---
+>>>>>>>
+>>>>>>> a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>>>>>> +++
+>>>>>>>
+>>>>>>> b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>>>>>>> @@ -17,6 +17,11 @@ Optional properties:
+>>>>>>>           When not specified the device will use in-band SDIO
+>>>>>>> interrupts.
+>>>>>>>      - interrupt-names : name of the out-of-band interrupt, which
+>>>>>>> must
+>>>>>>> be
+>>>>>>> set
+>>>>>>>           to "host-wake".
+>>>>>>> + - brcm,broken-sg-support : boolean flag to indicate that the SDIO
+>>>>>>> host
+>>>>>>> +       controller has higher align requirement than 32 bytes for
+>>>>>>> each
+>>>>>>> +       scatterlist item.
+>>>>>>> + - brcm,sd-head-align : alignment requirement for start of data
+>>>>>>> buffer.
+>>>>>>> + - brcm,sd-sgentry-align : length alignment requirement for each sg
+>>>>>>> entry.
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>> Hi Alexey,
+>>>>>>
+>>>>>> Thanks for the patch. However, the problem with these is that they are
+>>>>>> characterizing the host controller and not the wireless device. So
+>>>>>> from
+>>>>>> device tree perspective , which is to describe the hardware, these
+>>>>>> properties should be SDIO host controller properties. Also I am not
+>>>>>> sure
+>>>>>> if
+>>>>>> the broken-sg-support is still needed. We added that for omap_hsmmc,
+>>>>>> but
+>>>>>> that has since changed to scatter-gather emulation so it might not be
+>>>>>> needed
+>>>>>> anymore.
+>>>>>>
+>>>>>> Regards,
+>>>>>> Arend
+>>>>>
+>>>>>
+>>>>>
+>>>>>
+>>>>>
+>>>>
+>>>>
+>>>
+>>
+>>
+>>
+>
+
+
+
 -- 
-2.11.0
+With best regards,
+  Alexey Roslyakov
+Email: alexey.roslyakov@gmail.com
