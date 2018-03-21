@@ -1,68 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:41470 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752712AbeCZRxH (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:27940 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752368AbeCUOEd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 13:53:07 -0400
-Received: by mail-oi0-f67.google.com with SMTP id 188-v6so354626oih.8
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:53:07 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [PATCH v7 09/11] nl80211: Add control_port_over_nl80211 to mesh_setup
-Date: Mon, 26 Mar 2018 12:52:49 -0500
-Message-Id: <20180326175251.20666-10-denkenz@gmail.com> (sfid-20180326_195311_229773_6A6D819E)
-In-Reply-To: <20180326175251.20666-1-denkenz@gmail.com>
-References: <20180326175251.20666-1-denkenz@gmail.com>
+        Wed, 21 Mar 2018 10:04:33 -0400
+Subject: Re: [PATCH 00/11] staging: wilc1000: fix for checkpatch and handled
+ malloc memory properly
+To: Ajay Singh <ajay.kathat@microchip.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <venkateswara.kaja@microchip.com>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <adham.abozaeid@microchip.com>,
+        <aditya.shankar@microchip.com>
+References: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
+ <20180321075116.bm6x3c53bahw3c2i@mwanda>
+ <20180321145021.044f4536@ajaysk-VirtualBox>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <53a25901-754c-bfe9-169e-d2ed4cb34583@microchip.com> (sfid-20180321_150446_045488_C2EDB9B4)
+Date: Wed, 21 Mar 2018 16:04:28 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180321145021.044f4536@ajaysk-VirtualBox>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- include/net/cfg80211.h | 3 +++
- net/wireless/nl80211.c | 9 +++++++++
- 2 files changed, 12 insertions(+)
+Patch 6 may be reworked a bit. Other than this:
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2a28f446648e..bdb1a3c2661e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1453,6 +1453,8 @@ struct mesh_config {
-  * @userspace_handles_dfs: whether user space controls DFS operation, i.e.
-  *	changes the channel when a radar is detected. This is required
-  *	to operate on DFS channels.
-+ * @control_port_over_nl80211: TRUE if userspace expects to exchange control
-+ *	port frames over NL80211 instead of the network interface.
-  *
-  * These parameters are fixed when the mesh is created.
-  */
-@@ -1475,6 +1477,7 @@ struct mesh_setup {
- 	u32 basic_rates;
- 	struct cfg80211_bitrate_mask beacon_rate;
- 	bool userspace_handles_dfs;
-+	bool control_port_over_nl80211;
- };
- 
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 774f5d6ba8e4..3947ec7bc3a0 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -10166,6 +10166,15 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
- 	setup.userspace_handles_dfs =
- 		nla_get_flag(info->attrs[NL80211_ATTR_HANDLE_DFS]);
- 
-+	if (info->attrs[NL80211_ATTR_CONTROL_PORT_OVER_NL80211]) {
-+		int r = validate_pae_over_nl80211(rdev, info);
-+
-+		if (r < 0)
-+			return r;
-+
-+		setup.control_port_over_nl80211 = true;
-+	}
-+
- 	err = cfg80211_join_mesh(rdev, dev, &setup, &cfg);
- 
- 	if (!err && info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
--- 
-2.13.5
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+
+On 21.03.2018 11:20, Ajay Singh wrote:
+> Hi Dan,
+> 
+> On Wed, 21 Mar 2018 10:51:16 +0300
+> Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> 
+>> These look good.  I've reviewed them all.
+>>
+>> Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> Thanks for reviewing all the patches.
+> 
+>>
+>> I had some small process complaints but it doesn't make life easier for
+>> me if you resend them and I have to review everything twice.... :P
+>>
+> 
+> In future patches, I will take care as per your suggestions. Instead of
+> resubmitting this patch series, I will include the additional changes
+> required for [PATCH 01/11] in separate patch series.
+> 
+> 
+> Regards,
+> Ajay
+> 
