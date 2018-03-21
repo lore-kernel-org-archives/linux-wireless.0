@@ -1,62 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:42756 "EHLO
+Received: from s3.sipsolutions.net ([144.76.63.242]:33844 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1424959AbeCBJEw (ORCPT
+        with ESMTP id S1751825AbeCUKBq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 04:04:52 -0500
+        Wed, 21 Mar 2018 06:01:46 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2018-03-02
-Date: Fri,  2 Mar 2018 10:04:46 +0100
-Message-Id: <20180302090447.31036-1-johannes@sipsolutions.net> (sfid-20180302_101714_768554_715D24D4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] ath9k_htc: use non-QoS NDP for AP probing
+Date: Wed, 21 Mar 2018 11:01:43 +0100
+Message-Id: <20180321100143.28080-1-johannes@sipsolutions.net> (sfid-20180321_110149_938306_F6A004BC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+From: Johannes Berg <johannes.berg@intel.com>
 
-Just a few more patches, but I'll be travelling over the next
-week and probably won't be able to send things to you then.
+When switching mac80211 to use QoS NDP, it turned out that
+ath9k_htc is somehow broken by this, e.g. see
+https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891060.
 
-Please pull and let me know if there's any problem.
+Fix this by using the new mac80211 flag to go back to the
+old, incorrect, behaviour for this driver.
 
-Thanks,
-johannes
+Fixes: 7b6ddeaf27ec ("mac80211: use QoS NDP for AP probing")
+Reported-by: Ben Caradoc-Davies <ben@transient.nz>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-
-
-The following changes since commit 93c62c45ed5fad1b87e3a45835b251cd68de9c46:
-
-  rxrpc: Fix send in rxrpc_send_data_packet() (2018-02-22 15:37:47 -0500)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2018-03-02
-
-for you to fetch changes up to a78872363614367c3f37e3a5b4181c7a6b207b37:
-
-  cfg80211: add missing dependency to CFG80211 suboptions (2018-02-27 10:54:12 +0100)
-
-----------------------------------------------------------------
-Three more patches:
- * fix for a regression in 4-addr mode with fast-RX
- * fix for a Kconfig problem with the new regdb
- * fix for the long-standing TCP performance issue in
-   wifi using the new sk_pacing_shift_update()
-
-----------------------------------------------------------------
-Felix Fietkau (1):
-      mac80211: drop frames with unexpected DS bits from fast-rx to slow path
-
-Romain Naour (1):
-      cfg80211: add missing dependency to CFG80211 suboptions
-
-Toke Høiland-Jørgensen (1):
-      mac80211: Adjust TSQ pacing shift
-
- net/mac80211/rx.c    |  2 +-
- net/mac80211/tx.c    |  8 ++++++++
- net/wireless/Kconfig | 13 +++++--------
- 3 files changed, 14 insertions(+), 9 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index e89e5ef2c2a4..f246e9ed4a81 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -729,6 +729,7 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 	ieee80211_hw_set(hw, SPECTRUM_MGMT);
+ 	ieee80211_hw_set(hw, SIGNAL_DBM);
+ 	ieee80211_hw_set(hw, AMPDU_AGGREGATION);
++	ieee80211_hw_set(hw, DOESNT_SUPPORT_QOS_NDP);
+ 
+ 	if (ath9k_ps_enable)
+ 		ieee80211_hw_set(hw, SUPPORTS_PS);
+-- 
+2.15.1
