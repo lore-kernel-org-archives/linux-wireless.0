@@ -1,71 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46712 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751755AbeCWFD6 (ORCPT
+Received: from mail-pf0-f171.google.com ([209.85.192.171]:36202 "EHLO
+        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752385AbeCUPS3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Mar 2018 01:03:58 -0400
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH v2 04/13] ath10k: Add HTC services for WCN3990
-Date: Fri, 23 Mar 2018 10:33:35 +0530
-Message-Id: <1521781424-24972-5-git-send-email-govinds@codeaurora.org> (sfid-20180323_060405_117732_51CCFFC8)
-In-Reply-To: <1521781424-24972-1-git-send-email-govinds@codeaurora.org>
-References: <1521781424-24972-1-git-send-email-govinds@codeaurora.org>
+        Wed, 21 Mar 2018 11:18:29 -0400
+Received: by mail-pf0-f171.google.com with SMTP id 68so2095973pfx.3
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Mar 2018 08:18:29 -0700 (PDT)
+Subject: Re: [RFC v5 0/9] EAPoL over NL80211
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20180313215942.29176-1-denkenz@gmail.com>
+ <1521645199.2645.34.camel@sipsolutions.net>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <6c4a389a-55e1-5af2-cac2-1754fce7fabf@gmail.com> (sfid-20180321_161837_247987_B2B77DE7)
+Date: Wed, 21 Mar 2018 10:18:26 -0500
+MIME-Version: 1.0
+In-Reply-To: <1521645199.2645.34.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WCN3990 target uses 3 Copy engine(CE1/CE9/CE10) in RX path
-and CE 11 for pktlog.
-Add data path HTC ep services and PKTLOG services for WCN3990.
+Hi Johannes,
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/htc.c | 6 ++++++
- drivers/net/wireless/ath/ath10k/htc.h | 4 ++++
- 2 files changed, 10 insertions(+)
+On 03/21/2018 10:13 AM, Johannes Berg wrote:
+> 
+>> TODO:
+> 
+> That was well-hidden :)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 492dc5b..8902720 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -542,8 +542,14 @@ static const char *htc_service_name(enum ath10k_htc_svc_id id)
- 		return "NMI Data";
- 	case ATH10K_HTC_SVC_ID_HTT_DATA_MSG:
- 		return "HTT Data";
-+	case ATH10K_HTC_SVC_ID_HTT_DATA2_MSG:
-+		return "HTT Data";
-+	case ATH10K_HTC_SVC_ID_HTT_DATA3_MSG:
-+		return "HTT Data";
- 	case ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS:
- 		return "RAW";
-+	case ATH10K_HTC_SVC_ID_HTT_LOG_MSG:
-+		return "PKTLOG";
- 	}
- 
- 	return "Unknown";
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index a2f8814..3487759 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -248,6 +248,7 @@ enum ath10k_htc_svc_gid {
- 	ATH10K_HTC_SVC_GRP_WMI = 1,
- 	ATH10K_HTC_SVC_GRP_NMI = 2,
- 	ATH10K_HTC_SVC_GRP_HTT = 3,
-+	ATH10K_LOG_SERVICE_GROUP = 6,
- 
- 	ATH10K_HTC_SVC_GRP_TEST = 254,
- 	ATH10K_HTC_SVC_GRP_LAST = 255,
-@@ -273,6 +274,9 @@ enum ath10k_htc_svc_id {
- 
- 	ATH10K_HTC_SVC_ID_HTT_DATA_MSG	= SVC(ATH10K_HTC_SVC_GRP_HTT, 0),
- 
-+	ATH10K_HTC_SVC_ID_HTT_DATA2_MSG = SVC(ATH10K_HTC_SVC_GRP_HTT, 1),
-+	ATH10K_HTC_SVC_ID_HTT_DATA3_MSG = SVC(ATH10K_HTC_SVC_GRP_HTT, 2),
-+	ATH10K_HTC_SVC_ID_HTT_LOG_MSG = SVC(ATH10K_LOG_SERVICE_GROUP, 0),
- 	/* raw stream service (i.e. flash, tcmd, calibration apps) */
- 	ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS = SVC(ATH10K_HTC_SVC_GRP_TEST, 0),
- };
--- 
-1.9.1
+Sorry.  I assumed people read the change log :)
+
+> 
+>> - It is unclear to me how AP_VLAN and AP interfaces should synchronize on
+>> conn_owner_nlportid.  This is required for tx_control_port to work.
+> 
+> I'm not really sure what you mean? Technically I guess an AP_VLAN could
+> have a different owner from an AP, but if the AP goes down all the
+> AP_VLANs go down with it already anyway.
+
+So the issue is that when mac80211 calls cfg80211_rx_control_port and 
+subsequently __nl80211_rx_control_port, we grab the nlportid from the 
+wdev.  So if that isn't synchronized, then AP_VLAN devices won't be 
+sending the EAPoL frames to the right place.
+
+> 
+>> - JOIN_IBSS & JOIN_MESH don't seem to support control_port_ethertype or
+>> control_port_no_encrypt.  Should struct cfg80211_crypto_settings parsed inside
+>> nl80211_crypto_settings be added to ibss_params or mesh_config/mesh_setup?
+> 
+> I don't think it matters - they just don't support this now and don't
+> really need to.
+> 
+
+Except that the eapol over nl80211 flag is being sent in security 
+settings.  This covers STA/AP/P2P_GO/P2P_CLIENT.  We need some way of 
+passing this information for mesh & ibss.
+
+Regards,
+-Denis
