@@ -1,84 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from baptiste.telenet-ops.be ([195.130.132.51]:42880 "EHLO
-        baptiste.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1423331AbeCBNn1 (ORCPT
+Received: from gateway24.websitewelcome.com ([192.185.51.209]:41309 "EHLO
+        gateway24.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751805AbeCUOHM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 08:43:27 -0500
-From: Geert Uytterhoeven <geert+renesas@glider.be>
-To: Jiri Kosina <trivial@kernel.org>,
-        "David S . Miller" <davem@davemloft.net>
-Cc: Samuel Chessman <chessman@tux.org>,
-        Simon Kelley <simon@thekelleys.org.uk>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Wed, 21 Mar 2018 10:07:12 -0400
+Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
+        by gateway24.websitewelcome.com (Postfix) with ESMTP id 8A24E12C80
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Mar 2018 08:42:49 -0500 (CDT)
+Date: Wed, 21 Mar 2018 08:42:47 -0500
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org,
-        Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH trivial resend^2] net: Spelling s/stucture/structure/
-Date: Fri,  2 Mar 2018 14:43:23 +0100
-Message-Id: <1519998203-13020-1-git-send-email-geert+renesas@glider.be> (sfid-20180302_144348_982626_619031DB)
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] mac80211: aes-cmac: remove VLA usage
+Message-ID: <20180321134247.GA1275@embeddedgus> (sfid-20180321_150716_224488_0F7B07E9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
----
- drivers/net/ethernet/ti/tlan.c     | 2 +-
- drivers/net/wireless/atmel/atmel.c | 2 +-
- include/net/iw_handler.h           | 2 +-
- net/socket.c                       | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+In preparation to enabling -Wvla, remove VLAs and replace them
+with dynamic memory allocation instead.
 
-diff --git a/drivers/net/ethernet/ti/tlan.c b/drivers/net/ethernet/ti/tlan.c
-index 5a4e78fde530ad4a..c769cd9d11e74948 100644
---- a/drivers/net/ethernet/ti/tlan.c
-+++ b/drivers/net/ethernet/ti/tlan.c
-@@ -1901,7 +1901,7 @@ ThunderLAN driver adapter related routines
-  *		Nothing
-  *	Parms:
-  *		dev	The device structure with the list
-- *			stuctures to be reset.
-+ *			structures to be reset.
-  *
-  *	This routine sets the variables associated with managing
-  *	the TLAN lists to their initial values.
-diff --git a/drivers/net/wireless/atmel/atmel.c b/drivers/net/wireless/atmel/atmel.c
-index c9dd5e44c9c6de6d..d122386c382bcef2 100644
---- a/drivers/net/wireless/atmel/atmel.c
-+++ b/drivers/net/wireless/atmel/atmel.c
-@@ -3861,7 +3861,7 @@ static int reset_atmel_card(struct net_device *dev)
+The use of stack Variable Length Arrays needs to be avoided, as they
+can be a vector for stack exhaustion, which can be both a runtime bug
+or a security flaw. Also, in general, as code evolves it is easy to
+lose track of how big a VLA can get. Thus, we can end up having runtime
+failures that are hard to debug.
+
+Also, fixed as part of the directive to remove all VLAs from
+the kernel: https://lkml.org/lkml/2018/3/7/621
+
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ net/mac80211/aes_cmac.c | 36 ++++++++++++++++++++++++------------
+ 1 file changed, 24 insertions(+), 12 deletions(-)
+
+diff --git a/net/mac80211/aes_cmac.c b/net/mac80211/aes_cmac.c
+index 2fb6558..c9444bf 100644
+--- a/net/mac80211/aes_cmac.c
++++ b/net/mac80211/aes_cmac.c
+@@ -27,30 +27,42 @@ static const u8 zero[CMAC_TLEN_256];
+ void ieee80211_aes_cmac(struct crypto_shash *tfm, const u8 *aad,
+ 			const u8 *data, size_t data_len, u8 *mic)
+ {
+-	SHASH_DESC_ON_STACK(desc, tfm);
++	struct shash_desc *shash;
+ 	u8 out[AES_BLOCK_SIZE];
  
- 	   set all the Mib values which matter in the card to match
- 	   their settings in the atmel_private structure. Some of these
--	   can be altered on the fly, but many (WEP, infrastucture or ad-hoc)
-+	   can be altered on the fly, but many (WEP, infrastructure or ad-hoc)
- 	   can only be changed by tearing down the world and coming back through
- 	   here.
+-	desc->tfm = tfm;
++	shash = kmalloc(sizeof(*shash) + crypto_shash_descsize(tfm),
++			GFP_KERNEL);
++	if (!shash)
++		return;
  
-diff --git a/include/net/iw_handler.h b/include/net/iw_handler.h
-index 725282095840b853..d2ea5863eedca5ce 100644
---- a/include/net/iw_handler.h
-+++ b/include/net/iw_handler.h
-@@ -364,7 +364,7 @@ struct iw_handler_def {
-  * defined in struct iw_priv_args.
-  *
-  * For standard IOCTLs, things are quite different and we need to
-- * use the stuctures below. Actually, this struct is also more
-+ * use the structures below. Actually, this struct is also more
-  * efficient, but that's another story...
-  */
+-	crypto_shash_init(desc);
+-	crypto_shash_update(desc, aad, AAD_LEN);
+-	crypto_shash_update(desc, data, data_len - CMAC_TLEN);
+-	crypto_shash_finup(desc, zero, CMAC_TLEN, out);
++	shash->tfm = tfm;
++
++	crypto_shash_init(shash);
++	crypto_shash_update(shash, aad, AAD_LEN);
++	crypto_shash_update(shash, data, data_len - CMAC_TLEN);
++	crypto_shash_finup(shash, zero, CMAC_TLEN, out);
  
-diff --git a/net/socket.c b/net/socket.c
-index 645d32b4872cb5d8..63e0a6e17cc54e58 100644
---- a/net/socket.c
-+++ b/net/socket.c
-@@ -1516,7 +1516,7 @@ SYSCALL_DEFINE2(listen, int, fd, int, backlog)
-  *
-  *	1003.1g adds the ability to recvmsg() to query connection pending
-  *	status to recvmsg. We need to add that support in a way thats
-- *	clean when we restucture accept also.
-+ *	clean when we restructure accept also.
-  */
+ 	memcpy(mic, out, CMAC_TLEN);
++	kfree(shash);
+ }
  
- SYSCALL_DEFINE4(accept4, int, fd, struct sockaddr __user *, upeer_sockaddr,
+ void ieee80211_aes_cmac_256(struct crypto_shash *tfm, const u8 *aad,
+ 			    const u8 *data, size_t data_len, u8 *mic)
+ {
+-	SHASH_DESC_ON_STACK(desc, tfm);
++	struct shash_desc *shash;
++
++	shash = kmalloc(sizeof(*shash) + crypto_shash_descsize(tfm),
++			GFP_KERNEL);
++	if (!shash)
++		return;
+ 
+-	desc->tfm = tfm;
++	shash->tfm = tfm;
+ 
+-	crypto_shash_init(desc);
+-	crypto_shash_update(desc, aad, AAD_LEN);
+-	crypto_shash_update(desc, data, data_len - CMAC_TLEN_256);
+-	crypto_shash_finup(desc, zero, CMAC_TLEN_256, mic);
++	crypto_shash_init(shash);
++	crypto_shash_update(shash, aad, AAD_LEN);
++	crypto_shash_update(shash, data, data_len - CMAC_TLEN_256);
++	crypto_shash_finup(shash, zero, CMAC_TLEN_256, mic);
++	kfree(shash);
+ }
+ 
+ struct crypto_shash *ieee80211_aes_cmac_key_setup(const u8 key[],
 -- 
 2.7.4
