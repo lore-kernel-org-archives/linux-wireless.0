@@ -1,57 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:34176 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751777AbeCWPJQ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Mar 2018 11:09:16 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 2/9] staging: wilc1000: avoid 'NULL' pointer access in wilc_network_info_received()
-Date: Fri, 23 Mar 2018 20:38:51 +0530
-Message-ID: <1521817738-7557-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180323_160919_473710_D1AD75FA)
-In-Reply-To: <1521817738-7557-1-git-send-email-ajay.kathat@microchip.com>
-References: <1521817738-7557-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.kernel.org ([198.145.29.99]:52564 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753761AbeCUWee (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Mar 2018 18:34:34 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
+        kubakici@wp.pl, linux-wireless@vger.kernel.org,
+        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
+        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
+        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
+        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v4 0/3] firmware: add firmware_request_cache()
+Date: Wed, 21 Mar 2018 15:34:27 -0700
+Message-Id: <20180321223430.21388-1-mcgrof@kernel.org> (sfid-20180321_233552_495117_985584FE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added 'NULL' check before accessing the allocated memory. Free up the
-memory incase of failure to enqueue the command. Used kmemdup instead of
-kmalloc & memcpy.
+Greg,
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+Here are the last straggler patches to clean up what was left which you
+requested and to add the new firmware_request_cache() call to fix a
+corner case suspend issue.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index a13998d..70c10bc 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3453,12 +3453,15 @@ void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32 length)
- 	msg.vif = vif;
- 
- 	msg.body.net_info.len = length;
--	msg.body.net_info.buffer = kmalloc(length, GFP_KERNEL);
--	memcpy(msg.body.net_info.buffer, buffer, length);
-+	msg.body.net_info.buffer = kmemdup(buffer, length, GFP_KERNEL);
-+	if (!msg.body.net_info.buffer)
-+		return;
- 
- 	result = wilc_enqueue_cmd(&msg);
--	if (result)
-+	if (result) {
- 		netdev_err(vif->ndev, "message parameters (%d)\n", result);
-+		kfree(msg.body.net_info.buffer);
-+	}
- }
- 
- void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length)
+The extra space character you found in earlier patches no longer needs
+to be fixed as that assignement was replaced with a new line in later
+patches which does not have the extra space in the assignment. The only
+other straggler fix needed which you had pointed out was the debugfs typo.
+
+The new API call was renamed as suggested to firmware_request_cache(),
+with the API name first. I'll use a separate series to start addressing
+the firmware API rename for the rest of the callers. That will take some
+time as I'm running quite a bit of tests on those changes and I am going
+to wait for 0-day to give me its blesssings.
+
+Question, feedback, and specially rants are greatly appreciated.
+
+  Luis
+
+Luis R. Rodriguez (3):
+  firmware: fix typo on pr_info_once() when ignore_sysfs_fallback is
+    used
+  firmware: add firmware_request_cache() to help with cache on reboot
+  mt7601u: use firmware_request_cache() to address cache on reboot
+
+ .../driver-api/firmware/request_firmware.rst       | 14 +++++++++++++
+ drivers/base/firmware_loader/fallback.c            |  2 +-
+ drivers/base/firmware_loader/main.c                | 24 ++++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt7601u/mcu.c        |  2 +-
+ include/linux/firmware.h                           |  3 +++
+ 5 files changed, 43 insertions(+), 2 deletions(-)
+
 -- 
-2.7.4
+2.16.2
