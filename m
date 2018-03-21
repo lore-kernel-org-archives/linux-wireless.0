@@ -1,60 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:40621 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751920AbeCTQMD (ORCPT
+Received: from smtprelay0155.hostedemail.com ([216.40.44.155]:53752 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752954AbeCUUDX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Mar 2018 12:12:03 -0400
-MIME-Version: 1.0
-In-Reply-To: <37830d46-762b-2a92-4506-5792a65d2ebd@candelatech.com>
-References: <1520452289-14172-1-git-send-email-greearb@candelatech.com>
- <20180320103747.7kcfdu4yzof6bwxw@unicorn.suse.cz> <37830d46-762b-2a92-4506-5792a65d2ebd@candelatech.com>
-From: Steve deRosier <derosier@gmail.com>
-Date: Tue, 20 Mar 2018 09:11:21 -0700
-Message-ID: <CALLGbRKU_PCk-3ZMBRu6CC-QyaEEPTAOavGVzPpQUdEMQ+s9BQ@mail.gmail.com> (sfid-20180320_171225_323212_10BEFBC8)
-Subject: Re: [RFC] ethtool: Support ETHTOOL_GSTATS2 command.
-To: Ben Greear <greearb@candelatech.com>
-Cc: Michal Kubecek <mkubecek@suse.cz>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        ath10k@lists.infradead.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Wed, 21 Mar 2018 16:03:23 -0400
+Message-ID: <1521662598.7999.33.camel@perches.com> (sfid-20180321_210346_479527_056BBF8A)
+Subject: Re: [PATCH] staging: wilc1000: check for kmalloc allocation failures
+From: Joe Perches <joe@perches.com>
+To: Colin King <colin.king@canonical.com>,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 21 Mar 2018 13:03:18 -0700
+In-Reply-To: <20180321191941.4126-1-colin.king@canonical.com>
+References: <20180321191941.4126-1-colin.king@canonical.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 20, 2018 at 8:39 AM, Ben Greear <greearb@candelatech.com> wrote:
-> On 03/20/2018 03:37 AM, Michal Kubecek wrote:
->>
->> On Wed, Mar 07, 2018 at 11:51:29AM -0800, greearb@candelatech.com wrote:
->>>
->>> From: Ben Greear <greearb@candelatech.com>
->>>
->>> This is similar to ETHTOOL_GSTATS, but it allows you to specify
->>> a 'level'.  This level can be used by the driver to decrease the
->>> amount of stats refreshed.  In particular, this helps with ath10k
->>> since getting the firmware stats can be slow.
->>>
->>> Signed-off-by: Ben Greear <greearb@candelatech.com>
->>> ---
->>>
->>> NOTE:  I know to make it upstream I would need to split the patch and
->>> remove the #define for 'backporting' that I added.  But, is the
->>> feature in general wanted?  If so, I'll do the patch split and
->>> other tweaks that might be suggested.
->>
->>
->
-> Yes, but that would require changing all drivers at once, and would make
-> backporting
-> and out-of-tree drivers harder to manage.  I had low hopes that this feature
-> would
-> make it upstream, so I didn't want to propose any large changes up front.
->
+On Wed, 2018-03-21 at 19:19 +0000, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> There are three kmalloc allocations that are not null checked which
+> potentially could lead to null pointer dereference issues. Fix this
+> by adding null pointer return checks.
 
-Hi Ben,
+looks like all of these should be kmemdup or kstrdup
 
-I find the feature OK, but I'm not thrilled with the arbitrary scale
-of "level". Maybe there could be some named values, either on a
-spectrum as level already is, similar to the kernel log DEBUG, WARN,
-INFO....  type levels. Or named bit flags like the way the ath drivers
-do their debug flags for granular results.  Thoughts?
-
-- Steve
+> Detected by CoverityScan, CID#1466025-27 ("Dereference null return")
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 5082ede720f0..9b9b86654958 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -944,6 +944,10 @@ static s32 handle_connect(struct wilc_vif *vif,
+>  
+>  	if (conn_attr->bssid) {
+>  		hif_drv->usr_conn_req.bssid = kmalloc(6, GFP_KERNEL);
+> +		if (!hif_drv->usr_conn_req.bssid) {
+> +			result = -ENOMEM;
+> +			goto error;
+> +		}
+>  		memcpy(hif_drv->usr_conn_req.bssid, conn_attr->bssid, 6);
+>  	}
+>  
+> @@ -951,6 +955,10 @@ static s32 handle_connect(struct wilc_vif *vif,
+>  	if (conn_attr->ssid) {
+>  		hif_drv->usr_conn_req.ssid = kmalloc(conn_attr->ssid_len + 1,
+>  						     GFP_KERNEL);
+> +		if (!hif_drv->usr_conn_req.ssid) {
+> +			result = -ENOMEM;
+> +			goto error;
+> +		}
+>  		memcpy(hif_drv->usr_conn_req.ssid,
+>  		       conn_attr->ssid,
+>  		       conn_attr->ssid_len);
+> @@ -961,6 +969,10 @@ static s32 handle_connect(struct wilc_vif *vif,
+>  	if (conn_attr->ies) {
+>  		hif_drv->usr_conn_req.ies = kmalloc(conn_attr->ies_len,
+>  						    GFP_KERNEL);
+> +		if (!hif_drv->usr_conn_req.ies) {
+> +			result = -ENOMEM;
+> +			goto error;
+> +		}
+>  		memcpy(hif_drv->usr_conn_req.ies,
+>  		       conn_attr->ies,
+>  		       conn_attr->ies_len);
