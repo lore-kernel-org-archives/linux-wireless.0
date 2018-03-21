@@ -1,103 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:47361 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752828AbeC1H17 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:53676 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751617AbeCUQbN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 03:27:59 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 8/9] rtlwifi: btcoex: Add struct members to replace global varaibles
-Date: Wed, 28 Mar 2018 15:27:40 +0800
-Message-ID: <20180328072741.23349-9-pkshih@realtek.com> (sfid-20180328_092847_537586_6C951EFC)
-In-Reply-To: <20180328072741.23349-1-pkshih@realtek.com>
-References: <20180328072741.23349-1-pkshih@realtek.com>
+        Wed, 21 Mar 2018 12:31:13 -0400
+Subject: Re: [ath10k throughput] low throughput in multi-user mode
+To: gary <guohuizou2000@sina.com>, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+References: <072101d3c0b6$1a954f50$4fbfedf0$@sina.com>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <18864c97-63f9-3bfe-190c-24fda424c882@candelatech.com> (sfid-20180321_173119_258557_B2FF08AE)
+Date: Wed, 21 Mar 2018 09:31:10 -0700
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <072101d3c0b6$1a954f50$4fbfedf0$@sina.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On 03/20/2018 06:44 PM, gary wrote:
+>
+> Hi all,
+> I have run the throughput test on veriwave.(from Ethernet to wireless)
+> My AP suports 4*4, 11ac, mu-mimo.,wireless chip is QCA9984.
+> At first, the throughput is about 80Mbps only with 16 users, so I force to
+> return true in function ath10k_mac_tx_can_push().
+> As a result, when the user number is 1~16, the udp throughput is about
+> 1.2Gbps ~1.4Gbps.
+> But when the user number is 32, the udp throughput is only 520Mbps.
+>
+> So I try to substitute ath10k-firmware.
+> With firmware 10.4-3.4-0082 and above, the throughput is around 520Mbps.
+> But with firmware 10.4-3.4-0072, the throughput gets 1.1Gbps.
+>
+> Do I miss something in configuration?
+> Any comment is appreciated.
 
-Chip specific context plays as global variables that will not support
-multiple devices simultaneously. This patch adds 'union' fields to hold
-the variables, and next patch will remove all of them.
+What kernel version (or backports, if you are using that?) are you using?
 
-To use the declaration of fields in halbtcoutsrc.h, I move the including
-order in header file halbt_precomp.h, and declare two struct terms for
-chip specific header files.
+And, I'd be curious how the latest ath10k-CT (beta) firmware compares
+if you have time to try that:
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- .../realtek/rtlwifi/btcoexist/halbt_precomp.h      |  6 +++++-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       | 24 ++++++++++++++++++++++
- 2 files changed, 29 insertions(+), 1 deletion(-)
+http://www.candelatech.com/ath10k-10.4.php
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-index 858318fd3d63..e21222b48c2c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-@@ -35,7 +35,6 @@
- #include "../ps.h"
- #include "../pci.h"
- 
--#include "halbtcoutsrc.h"
- 
- /* Interface type */
- #define RT_PCI_INTERFACE	1
-@@ -43,6 +42,9 @@
- #define RT_SDIO_INTERFACE	3
- #define DEV_BUS_TYPE		RT_PCI_INTERFACE
- 
-+struct btc_coexist;
-+struct wifi_only_cfg;
-+
- #include "halbtc8192e2ant.h"
- #include "halbtc8723b1ant.h"
- #include "halbtc8723b2ant.h"
-@@ -52,6 +54,8 @@
- #include "halbtc8822b2ant.h"
- #include "halbtc8822bwifionly.h"
- 
-+#include "halbtcoutsrc.h"
-+
- #define GetDefaultAdapter(padapter)	padapter
- 
- #define BIT0	0x00000001
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index 9eae87d19120..46355ce32f1b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -693,6 +693,30 @@ struct btc_coexist {
- 	enum btc_chip_interface	chip_interface;
- 	struct btc_bt_link_info bt_link_info;
- 
-+	/* context for each chip */
-+	union {
-+		struct coex_dm_8192e_2ant coex_dm_8192e_2ant;
-+		struct coex_dm_8723b_1ant coex_dm_8723b_1ant;
-+		struct coex_dm_8723b_2ant coex_dm_8723b_2ant;
-+		struct coex_dm_8821a_1ant coex_dm_8821a_1ant;
-+		struct coex_dm_8821a_2ant coex_dm_8821a_2ant;
-+		struct coex_dm_8822b_1ant coex_dm_8822b_1ant;
-+		struct coex_dm_8822b_2ant coex_dm_8822b_2ant;
-+	};
-+	union {
-+		struct coex_sta_8192e_2ant coex_sta_8192e_2ant;
-+		struct coex_sta_8723b_1ant coex_sta_8723b_1ant;
-+		struct coex_sta_8723b_2ant coex_sta_8723b_2ant;
-+		struct coex_sta_8821a_1ant coex_sta_8821a_1ant;
-+		struct coex_sta_8821a_2ant coex_sta_8821a_2ant;
-+		struct coex_sta_8822b_1ant coex_sta_8822b_1ant;
-+		struct coex_sta_8822b_2ant coex_sta_8822b_2ant;
-+	};
-+	union {
-+		struct rfe_type_8822b_1ant rfe_type_8822b_1ant;
-+		struct rfe_type_8822b_2ant rfe_type_8822b_2ant;
-+	};
-+
- 	/* boolean variables to replace BT_AUTO_REPORT_ONLY_XXXXY_ZANT
- 	 * configuration parameters
- 	 */
+At least in upload testing, we get better throughput with lots of
+virtual stations if we tune the number of tx descriptors to be larger
+as that will generate larger AMPDUs on air.
+
+You might also check your rate-ctrl logic to make sure all of your
+stations are using higher MCS rates.
+
+Thanks,
+Ben
+
 -- 
-2.15.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
