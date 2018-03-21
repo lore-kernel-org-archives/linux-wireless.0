@@ -1,156 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:34631 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755328AbeCSXQS (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:36552 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751666AbeCUNsT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Mar 2018 19:16:18 -0400
-Received: by mail-wm0-f67.google.com with SMTP id a20so14807626wmd.1
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2018 16:16:17 -0700 (PDT)
-Subject: Re: [PATCH net-next v2 2/2] dt: bindings: add new dt entries for
- brcmfmac
-To: Florian Fainelli <f.fainelli@gmail.com>,
-        Alexey Roslyakov <alexey.roslyakov@gmail.com>
-References: <20180319014032.9394-1-alexey.roslyakov@gmail.com>
- <20180319014032.9394-3-alexey.roslyakov@gmail.com>
- <5AAF838D.2030105@broadcom.com>
- <CALFoz4YMKJr40fefczrbjXBROtZxnGikv0Jze-BnefofCB3dyg@mail.gmail.com>
- <817418fd-6446-57ea-b03d-383b4df9a979@gmail.com>
-Cc: Andrew Lunn <andrew@lunn.ch>, kvalo@codeaurora.org,
-        robh+dt@kernel.org, mark.rutland@arm.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Ulf Hansson <ulf.hansson@linaro.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AB044C0.9060701@broadcom.com> (sfid-20180320_001637_367073_AA7D38EB)
-Date: Tue, 20 Mar 2018 00:16:16 +0100
-MIME-Version: 1.0
-In-Reply-To: <817418fd-6446-57ea-b03d-383b4df9a979@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Wed, 21 Mar 2018 09:48:19 -0400
+Message-ID: <1521640094.2645.29.camel@sipsolutions.net> (sfid-20180321_144841_267533_56C31815)
+Subject: Re: [PATCH] mac80211: aes-cmac: remove VLA usage
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Wed, 21 Mar 2018 14:48:14 +0100
+In-Reply-To: <20180321134247.GA1275@embeddedgus>
+References: <20180321134247.GA1275@embeddedgus>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ Uffe
+On Wed, 2018-03-21 at 08:42 -0500, Gustavo A. R. Silva wrote:
+> In preparation to enabling -Wvla, remove VLAs and replace them
+> with dynamic memory allocation instead.
+> 
+> The use of stack Variable Length Arrays needs to be avoided, as they
+> can be a vector for stack exhaustion, which can be both a runtime bug
+> or a security flaw. Also, in general, as code evolves it is easy to
+> lose track of how big a VLA can get. Thus, we can end up having runtime
+> failures that are hard to debug.
+> 
+> Also, fixed as part of the directive to remove all VLAs from
+> the kernel: https://lkml.org/lkml/2018/3/7/621
+> 
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> ---
+>  net/mac80211/aes_cmac.c | 36 ++++++++++++++++++++++++------------
+>  1 file changed, 24 insertions(+), 12 deletions(-)
+> 
+> diff --git a/net/mac80211/aes_cmac.c b/net/mac80211/aes_cmac.c
+> index 2fb6558..c9444bf 100644
+> --- a/net/mac80211/aes_cmac.c
+> +++ b/net/mac80211/aes_cmac.c
+> @@ -27,30 +27,42 @@ static const u8 zero[CMAC_TLEN_256];
+>  void ieee80211_aes_cmac(struct crypto_shash *tfm, const u8 *aad,
+>  			const u8 *data, size_t data_len, u8 *mic)
+>  {
+> -	SHASH_DESC_ON_STACK(desc, tfm);
+> +	struct shash_desc *shash;
+>  	u8 out[AES_BLOCK_SIZE];
+>  
+> -	desc->tfm = tfm;
+> +	shash = kmalloc(sizeof(*shash) + crypto_shash_descsize(tfm),
+> +			GFP_KERNEL);
+> +	if (!shash)
+> +		return;
 
-On 3/19/2018 6:55 PM, Florian Fainelli wrote:
-> On 03/19/2018 07:10 AM, Alexey Roslyakov wrote:
->> Hi Arend,
->> I appreciate your response. In my opinion, it has nothing to do with
->> SDIO host, because it defines "quirks" in the driver itself.
->
-> It is not clear to me from your patch series whether the problem is that:
->
-> - the SDIO device has a specific alignment requirements, which would be
-> either a SDIO device driver limitation/issue or maybe the underlying
-> hardware device/firmware requiring that
->
-> - the SDIO host controller used is not capable of coping nicely with
-> these said limitations
->
-> It seems to me like what you are doing here is a) applicable to possibly
-> more SDIO devices and host combinations, and b) should likely be done at
-> the layer between the host and device, such that it is available to more
-> combinations.
+Honestly, this seems like a really bad idea - you're now hitting
+kmalloc for every TX/RX frame here.
 
-Indeed. That was my thought exactly and I can not imagine Uffe would 
-push back on that reasoning.
+SHA_DESC_ON_STACK() should just be fixed to not need a VLA, but take
+some sort of maximum, I guess?
 
->> If I get it right, you mean something like this:
->>
->> mmc3: mmc@1c12000 {
->> ...
->>          broken-sg-support;
->>          sd-head-align = 4;
->>          sd-sgentry-align = 512;
->>
->>          brcmf: wifi@1 {
->>                  ...
->>          };
->> };
->>
->> Where dt: bindings documentation for these entries should reside?
->> In generic MMC bindings? Well, this is the very special case and
->> mmc-linux maintainer will unlikely to accept these changes.
->> Also, extra kernel code modification might be required. It could make
->> quite trivial change much more complex.
->
-> If the MMC maintainers are not copied on this patch series, it will
-> likely be hard for them to identify this patch series and chime in...
-
-The main question is whether this is indeed a "very special case" as 
-Alexey claims it to be or that it is likely to be applicable to other 
-device and host combinations as you are suggesting.
-
-If these properties are imposed by the host or host controller it would 
-make sense to have these in the mmc bindings.
-
->>
->>> Also I am not sure if the broken-sg-support is still needed. We added that for omap_hsmmc, but that has since changed to scatter-gather emulation so it might not be needed anymore.
->>
->> I've experienced the problem with rk3288 (dw-mmc host) and sdio
->> settings like above solved it.
->> Frankly, I haven't investigated any deeper which one of the settings
->> helped in my case yet...
->> I will try to get rid of broken-sg-support first and let you know if
->> it does make any difference.
-
-Are you using some chromebook. I have some lying around here so I could 
-also look into it. What broadcom chipset do you have?
-
-Regards,
-Arend
-
->> All the best,
->>    Alex.
->>
->> On 19 March 2018 at 16:31, Arend van Spriel
->> <arend.vanspriel@broadcom.com> wrote:
->>> On 3/19/2018 2:40 AM, Alexey Roslyakov wrote:
->>>>
->>>> In case if the host has higher align requirements for SG items, allow
->>>> setting device-specific aligns for scatterlist items.
->>>>
->>>> Signed-off-by: Alexey Roslyakov <alexey.roslyakov@gmail.com>
->>>> ---
->>>>    Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt | 5
->>>> +++++
->>>>    1 file changed, 5 insertions(+)
->>>>
->>>> diff --git
->>>> a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->>>> b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->>>> index 86602f264dce..187b8c1b52a7 100644
->>>> --- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->>>> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
->>>> @@ -17,6 +17,11 @@ Optional properties:
->>>>          When not specified the device will use in-band SDIO interrupts.
->>>>     - interrupt-names : name of the out-of-band interrupt, which must be
->>>> set
->>>>          to "host-wake".
->>>> + - brcm,broken-sg-support : boolean flag to indicate that the SDIO host
->>>> +       controller has higher align requirement than 32 bytes for each
->>>> +       scatterlist item.
->>>> + - brcm,sd-head-align : alignment requirement for start of data buffer.
->>>> + - brcm,sd-sgentry-align : length alignment requirement for each sg
->>>> entry.
->>>
->>>
->>> Hi Alexey,
->>>
->>> Thanks for the patch. However, the problem with these is that they are
->>> characterizing the host controller and not the wireless device. So from
->>> device tree perspective , which is to describe the hardware, these
->>> properties should be SDIO host controller properties. Also I am not sure if
->>> the broken-sg-support is still needed. We added that for omap_hsmmc, but
->>> that has since changed to scatter-gather emulation so it might not be needed
->>> anymore.
->>>
->>> Regards,
->>> Arend
->>
->>
->>
->
->
+johannes
