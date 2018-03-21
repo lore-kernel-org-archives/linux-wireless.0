@@ -1,201 +1,301 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:34887 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751305AbeCMV7y (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 17:59:54 -0400
-Received: by mail-pl0-f66.google.com with SMTP id w22-v6so603244pll.2
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2018 14:59:53 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v5 1/9] nl80211: Add CMD_CONTROL_PORT_FRAME API
-Date: Tue, 13 Mar 2018 16:59:34 -0500
-Message-Id: <20180313215942.29176-2-denkenz@gmail.com> (sfid-20180313_230003_779075_2C010BE3)
-In-Reply-To: <20180313215942.29176-1-denkenz@gmail.com>
-References: <20180313215942.29176-1-denkenz@gmail.com>
+Received: from mail-ve1eur01on0047.outbound.protection.outlook.com ([104.47.1.47]:3180
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751661AbeCUG4K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Mar 2018 02:56:10 -0400
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: robin.murphy@arm.com, hch@lst.de, linux@armlinux.org.uk,
+        gregkh@linuxfoundation.org, m.szyprowski@samsung.com
+Cc: bhelgaas@google.com, zajec5@gmail.com, andy.gross@linaro.org,
+        david.brown@linaro.org, dan.j.williams@intel.com,
+        vinod.koul@intel.com, thierry.reding@gmail.com, robh+dt@kernel.org,
+        frowand.list@gmail.com, jarkko.sakkinen@linux.intel.com,
+        rafael.j.wysocki@intel.com, dmitry.torokhov@gmail.com,
+        johan@kernel.org, msuchanek@suse.de, linux-kernel@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
+        dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, bharat.bhushan@nxp.com,
+        leoyang.li@nxp.com, Nipun Gupta <nipun.gupta@nxp.com>
+Subject: [PATCH v2 1/2] dma-mapping: move dma configuration to bus infrastructure
+Date: Wed, 21 Mar 2018 12:25:22 +0530
+Message-Id: <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com> (sfid-20180321_075619_801298_B0326B3C)
+In-Reply-To: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
+References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This commit also adds cfg80211_rx_control_port function.  This is used
-to generate a CMD_CONTROL_PORT_FRAME event out to userspace.  The
-conn_owner_nlportid is used as the unicast destination.  This means that
-userspace must specify NL80211_ATTR_SOCKET_OWNER flag if control port
-over nl80211 routing is requested in NL80211_CMD_CONNECT,
-NL80211_CMD_ASSOCIATE or NL80211_CMD_START_AP
+It's bus specific aspect to map a given device on the bus and
+relevant firmware description of its DMA configuration.
+So, this change introduces '/dma_configure/' as bus callback
+giving flexibility to busses for implementing its own dma
+configuration function.
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+The change eases the addition of new busses w.r.t. adding the dma
+configuration functionality.
+
+This patch also updates the PCI, Platform, ACPI and host1x bus to
+use new introduced callbacks.
+
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
 ---
- include/net/cfg80211.h       | 22 +++++++++++++++++
- include/uapi/linux/nl80211.h | 13 ++++++++++
- net/wireless/nl80211.c       | 58 ++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/trace.h         | 21 ++++++++++++++++
- 4 files changed, 114 insertions(+)
+ - The patches are based on the comments on:
+   https://patchwork.kernel.org/patch/10259087/
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index fc40843baed3..6dee630ee66d 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5694,6 +5694,28 @@ void cfg80211_mgmt_tx_status(struct wireless_dev *wdev, u64 cookie,
+Changes in v2:
+  - Do not have dma_deconfigure callback
+  - Have '/dma_common_configure/' API to provide a common DMA
+    configuration which can be used by busses if it suits them.
+  - Platform and ACPI bus to use '/dma_common_configure/' in
+    '/dma_configure/' callback.
+  - Updated commit message
+  - Updated pci_dma_configure API with changes suggested by Robin
+
+ drivers/amba/bus.c          |  7 +++++++
+ drivers/base/dma-mapping.c  | 35 +++++++++++++++--------------------
+ drivers/base/platform.c     |  6 ++++++
+ drivers/gpu/host1x/bus.c    |  9 +++++++++
+ drivers/pci/pci-driver.c    | 32 ++++++++++++++++++++++++++++++++
+ include/linux/device.h      |  4 ++++
+ include/linux/dma-mapping.h |  1 +
+ 7 files changed, 74 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/amba/bus.c b/drivers/amba/bus.c
+index 594c228..2fa1e8b 100644
+--- a/drivers/amba/bus.c
++++ b/drivers/amba/bus.c
+@@ -20,6 +20,7 @@
+ #include <linux/sizes.h>
+ #include <linux/limits.h>
+ #include <linux/clk/clk-conf.h>
++#include <linux/dma-mapping.h>
  
+ #include <asm/irq.h>
  
- /**
-+ * cfg80211_rx_control_port - notification about a received control port frame
-+ * @dev: The device the frame matched to
-+ * @buf: control port frame
-+ * @len: length of the frame data
-+ * @addr: The peer from which the frame was received
-+ * @proto: frame protocol, typically PAE or Pre-authentication
-+ * @unencrypted: Whether the frame was received unencrypted
-+ *
-+ * This function is used to inform userspace about a received control port
-+ * frame.  It should only be used if userspace indicated it wants to receive
-+ * control port frames over NL80211.
-+ *
-+ * The frame is the data portion of the 802.3 or 802.11 data frame with all
-+ * network layer headers removed (e.g. the raw EAPoL frame).
-+ *
-+ * Return: %true if the frame was passed to userspace
-+ */
-+bool cfg80211_rx_control_port(struct net_device *dev,
-+			      const u8 *buf, size_t len,
-+			      const u8 *addr, u16 proto, bool unencrypted);
-+
-+/**
-  * cfg80211_cqm_rssi_notify - connection quality monitoring rssi event
-  * @dev: network device
-  * @rssi_event: the triggered RSSI event
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index c13c84304be3..1334f810f7b4 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -990,6 +990,17 @@
-  *	&NL80211_CMD_CONNECT or &NL80211_CMD_ROAM. If the 4 way handshake failed
-  *	&NL80211_CMD_DISCONNECT should be indicated instead.
-  *
-+ * @NL80211_CMD_CONTROL_PORT_FRAME: Control Port (e.g. PAE) frame TX request
-+ *	and RX notification.  This command is used both as a request to transmit
-+ *	a control port frame and as a notification that a control port frame
-+ *	has been received. %NL80211_ATTR_FRAME is used to specify the
-+ *	frame contents.  The frame is the raw EAPoL data, without ethernet or
-+ *	802.11 headers.
-+ *	When used as an event indication %NL80211_ATTR_CONTROL_PORT_ETHERTYPE,
-+ *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT and %NL80211_ATTR_MAC are added
-+ *	indicating the protocol type of the received frame; whether the frame
-+ *	was received unencrypted and the MAC address of the peer respectively.
-+ *
-  * @NL80211_CMD_RELOAD_REGDB: Request that the regdb firmware file is reloaded.
-  *
-  * @NL80211_CMD_EXTERNAL_AUTH: This interface is exclusively defined for host
-@@ -1228,6 +1239,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_STA_OPMODE_CHANGED,
- 
-+	NL80211_CMD_CONTROL_PORT_FRAME,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a910150f8169..d7dcc2d05025 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -14535,6 +14535,64 @@ void cfg80211_mgmt_tx_status(struct wireless_dev *wdev, u64 cookie,
+@@ -171,6 +172,11 @@ static int amba_pm_runtime_resume(struct device *dev)
  }
- EXPORT_SYMBOL(cfg80211_mgmt_tx_status);
+ #endif /* CONFIG_PM */
  
-+static int __nl80211_rx_control_port(struct net_device *dev,
-+				     const u8 *buf, size_t len,
-+				     const u8 *addr, u16 proto,
-+				     bool unencrypted, gfp_t gfp)
++static int amba_dma_configure(struct device *dev)
 +{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-+	struct sk_buff *msg;
-+	void *hdr;
-+	u32 nlportid = READ_ONCE(wdev->conn_owner_nlportid);
++	return dma_common_configure(dev);
++}
 +
-+	if (!nlportid)
-+		return -ENOENT;
+ static const struct dev_pm_ops amba_pm = {
+ 	.suspend	= pm_generic_suspend,
+ 	.resume		= pm_generic_resume,
+@@ -194,6 +200,7 @@ struct bus_type amba_bustype = {
+ 	.dev_groups	= amba_dev_groups,
+ 	.match		= amba_match,
+ 	.uevent		= amba_uevent,
++	.dma_configure	= amba_dma_configure,
+ 	.pm		= &amba_pm,
+ 	.force_dma	= true,
+ };
+diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
+index 3b11835..48f9af0 100644
+--- a/drivers/base/dma-mapping.c
++++ b/drivers/base/dma-mapping.c
+@@ -331,38 +331,33 @@ void dma_common_free_remap(void *cpu_addr, size_t size, unsigned long vm_flags)
+ #endif
+ 
+ /*
+- * Common configuration to enable DMA API use for a device
++ * Common configuration to enable DMA API use for a device.
++ * A bus can use this function in its 'dma_configure' callback, if
++ * suitable for the bus.
+  */
+-#include <linux/pci.h>
+-
+-int dma_configure(struct device *dev)
++int dma_common_configure(struct device *dev)
+ {
+-	struct device *bridge = NULL, *dma_dev = dev;
+ 	enum dev_dma_attr attr;
+ 	int ret = 0;
+ 
+-	if (dev_is_pci(dev)) {
+-		bridge = pci_get_host_bridge_device(to_pci_dev(dev));
+-		dma_dev = bridge;
+-		if (IS_ENABLED(CONFIG_OF) && dma_dev->parent &&
+-		    dma_dev->parent->of_node)
+-			dma_dev = dma_dev->parent;
+-	}
+-
+-	if (dma_dev->of_node) {
+-		ret = of_dma_configure(dev, dma_dev->of_node);
+-	} else if (has_acpi_companion(dma_dev)) {
+-		attr = acpi_get_dma_attr(to_acpi_device_node(dma_dev->fwnode));
++	if (dev->of_node) {
++		ret = of_dma_configure(dev, dev->of_node);
++	} else if (has_acpi_companion(dev)) {
++		attr = acpi_get_dma_attr(to_acpi_device_node(dev->fwnode));
+ 		if (attr != DEV_DMA_NOT_SUPPORTED)
+ 			ret = acpi_dma_configure(dev, attr);
+ 	}
+ 
+-	if (bridge)
+-		pci_put_host_bridge_device(bridge);
+-
+ 	return ret;
+ }
+ 
++int dma_configure(struct device *dev)
++{
++	if (dev->bus->dma_configure)
++		return dev->bus->dma_configure(dev);
 +
-+	msg = nlmsg_new(100 + len, gfp);
-+	if (!msg)
-+		return -ENOMEM;
++	return 0;
++}
+ void dma_deconfigure(struct device *dev)
+ {
+ 	of_dma_deconfigure(dev);
+diff --git a/drivers/base/platform.c b/drivers/base/platform.c
+index f1bf7b3..d2d5891 100644
+--- a/drivers/base/platform.c
++++ b/drivers/base/platform.c
+@@ -1130,6 +1130,11 @@ int platform_pm_restore(struct device *dev)
+ 
+ #endif /* CONFIG_HIBERNATE_CALLBACKS */
+ 
++static int platform_dma_configure(struct device *dev)
++{
++	return dma_common_configure(dev);
++}
 +
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_CONTROL_PORT_FRAME);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return -ENOMEM;
+ static const struct dev_pm_ops platform_dev_pm_ops = {
+ 	.runtime_suspend = pm_generic_runtime_suspend,
+ 	.runtime_resume = pm_generic_runtime_resume,
+@@ -1141,6 +1146,7 @@ struct bus_type platform_bus_type = {
+ 	.dev_groups	= platform_dev_groups,
+ 	.match		= platform_match,
+ 	.uevent		= platform_uevent,
++	.dma_configure	= platform_dma_configure,
+ 	.pm		= &platform_dev_pm_ops,
+ 	.force_dma	= true,
+ };
+diff --git a/drivers/gpu/host1x/bus.c b/drivers/gpu/host1x/bus.c
+index 88a3558..fa9896d 100644
+--- a/drivers/gpu/host1x/bus.c
++++ b/drivers/gpu/host1x/bus.c
+@@ -314,6 +314,14 @@ static int host1x_device_match(struct device *dev, struct device_driver *drv)
+ 	return strcmp(dev_name(dev), drv->name) == 0;
+ }
+ 
++static int host1x_dma_configure(struct device *dev)
++{
++	if (dev->of_node)
++		return of_dma_configure(dev, dev->of_node);
++
++	return 0;
++}
++
+ static const struct dev_pm_ops host1x_device_pm_ops = {
+ 	.suspend = pm_generic_suspend,
+ 	.resume = pm_generic_resume,
+@@ -326,6 +334,7 @@ static int host1x_device_match(struct device *dev, struct device_driver *drv)
+ struct bus_type host1x_bus_type = {
+ 	.name = "host1x",
+ 	.match = host1x_device_match,
++	.dma_configure	= host1x_dma_configure,
+ 	.pm = &host1x_device_pm_ops,
+ 	.force_dma = true,
+ };
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 3bed6be..b473a4c 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -18,6 +18,8 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/suspend.h>
+ #include <linux/kexec.h>
++#include <linux/of_device.h>
++#include <linux/acpi.h>
+ #include "pci.h"
+ 
+ struct pci_dynid {
+@@ -1522,6 +1524,35 @@ static int pci_bus_num_vf(struct device *dev)
+ 	return pci_num_vf(to_pci_dev(dev));
+ }
+ 
++/**
++ * pci_dma_configure - Setup DMA configuration
++ * @dev: ptr to dev structure
++ *
++ * Function to update PCI devices's DMA configuration using the same
++ * info from the OF node or ACPI node of host bridge's parent (if any).
++ */
++static int pci_dma_configure(struct device *dev)
++{
++	struct device *bridge;
++	enum dev_dma_attr attr;
++	int ret = 0;
++
++	bridge = pci_get_host_bridge_device(to_pci_dev(dev));
++
++	if (IS_ENABLED(CONFIG_OF) && bridge->parent &&
++	    bridge->parent->of_node) {
++		ret = of_dma_configure(dev, bridge->parent->of_node);
++	} else if (has_acpi_companion(bridge)) {
++		attr = acpi_get_dma_attr(to_acpi_device_node(bridge->fwnode));
++		if (attr != DEV_DMA_NOT_SUPPORTED)
++			ret = acpi_dma_configure(dev, attr);
 +	}
 +
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
-+	    nla_put_u64_64bit(msg, NL80211_ATTR_WDEV, wdev_id(wdev),
-+			      NL80211_ATTR_PAD) ||
-+	    nla_put(msg, NL80211_ATTR_FRAME, len, buf) ||
-+	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, addr) ||
-+	    nla_put_u16(msg, NL80211_ATTR_CONTROL_PORT_ETHERTYPE, proto) ||
-+	    (unencrypted && nla_put_flag(msg,
-+					 NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT)))
-+		goto nla_put_failure;
++	pci_put_host_bridge_device(bridge);
 +
-+	genlmsg_end(msg, hdr);
-+
-+	return genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, nlportid);
-+
-+ nla_put_failure:
-+	nlmsg_free(msg);
-+	return -ENOBUFS;
-+}
-+
-+bool cfg80211_rx_control_port(struct net_device *dev,
-+			      const u8 *buf, size_t len,
-+			      const u8 *addr, u16 proto, bool unencrypted)
-+{
-+	int ret;
-+
-+	trace_cfg80211_rx_control_port(dev, buf, len, addr, proto, unencrypted);
-+	ret = __nl80211_rx_control_port(dev, buf, len, addr, proto,
-+					unencrypted, GFP_ATOMIC);
-+	trace_cfg80211_return_bool(ret == 0);
 +	return ret;
 +}
-+EXPORT_SYMBOL(cfg80211_rx_control_port);
 +
- static struct sk_buff *cfg80211_prepare_cqm(struct net_device *dev,
- 					    const char *mac, gfp_t gfp)
- {
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 5152938b358d..24e84dfe54fd 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2600,6 +2600,27 @@ TRACE_EVENT(cfg80211_mgmt_tx_status,
- 		  WDEV_PR_ARG, __entry->cookie, BOOL_TO_STR(__entry->ack))
- );
+ struct bus_type pci_bus_type = {
+ 	.name		= "pci",
+ 	.match		= pci_bus_match,
+@@ -1534,6 +1565,7 @@ struct bus_type pci_bus_type = {
+ 	.drv_groups	= pci_drv_groups,
+ 	.pm		= PCI_PM_OPS_PTR,
+ 	.num_vf		= pci_bus_num_vf,
++	.dma_configure	= pci_dma_configure,
+ 	.force_dma	= true,
+ };
+ EXPORT_SYMBOL(pci_bus_type);
+diff --git a/include/linux/device.h b/include/linux/device.h
+index b093405..1832d90 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -88,6 +88,8 @@ extern int __must_check bus_create_file(struct bus_type *,
+  * @resume:	Called to bring a device on this bus out of sleep mode.
+  * @num_vf:	Called to find out how many virtual functions a device on this
+  *		bus supports.
++ * @dma_configure:	Called to setup DMA configuration on a device on
++			this bus.
+  * @pm:		Power management operations of this bus, callback the specific
+  *		device driver's pm-ops.
+  * @iommu_ops:  IOMMU specific operations for this bus, used to attach IOMMU
+@@ -130,6 +132,8 @@ struct bus_type {
  
-+TRACE_EVENT(cfg80211_rx_control_port,
-+	TP_PROTO(struct net_device *netdev, const u8 *buf, size_t len,
-+		 const u8 *addr, u16 proto, bool unencrypted),
-+	TP_ARGS(netdev, buf, len, addr, proto, unencrypted),
-+	TP_STRUCT__entry(
-+		NETDEV_ENTRY
-+		MAC_ENTRY(addr)
-+		__field(u16, proto)
-+		__field(bool, unencrypted)
-+	),
-+	TP_fast_assign(
-+		NETDEV_ASSIGN;
-+		MAC_ASSIGN(addr, addr);
-+		__entry->proto = proto;
-+		__entry->unencrypted = unencrypted;
-+	),
-+	TP_printk(NETDEV_PR_FMT ", " MAC_PR_FMT " proto: %x, unencrypted: %s",
-+		  NETDEV_PR_ARG, MAC_PR_ARG(addr),
-+		  __entry->proto, BOOL_TO_STR(__entry->unencrypted))
-+);
+ 	int (*num_vf)(struct device *dev);
+ 
++	int (*dma_configure)(struct device *dev);
 +
- TRACE_EVENT(cfg80211_cqm_rssi_notify,
- 	TP_PROTO(struct net_device *netdev,
- 		 enum nl80211_cqm_rssi_threshold_event rssi_event,
+ 	const struct dev_pm_ops *pm;
+ 
+ 	const struct iommu_ops *iommu_ops;
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index eb9eab4..c15986b 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -761,6 +761,7 @@ void *dma_mark_declared_memory_occupied(struct device *dev,
+ }
+ #endif /* CONFIG_HAVE_GENERIC_DMA_COHERENT */
+ 
++int dma_common_configure(struct device *dev);
+ #ifdef CONFIG_HAS_DMA
+ int dma_configure(struct device *dev);
+ void dma_deconfigure(struct device *dev);
 -- 
-2.13.5
+1.9.1
