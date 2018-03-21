@@ -1,208 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:64085 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751628AbeCTQ4H (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:36632 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752237AbeCUN6N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Mar 2018 12:56:07 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 04/11] staging: wilc1000: refactor WILC_WFI_p2p_rx() to avoid line over 80 char
-Date: Tue, 20 Mar 2018 22:25:37 +0530
-Message-ID: <1521564944-3565-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180320_175610_974837_07D8CE46)
-In-Reply-To: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
-References: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 21 Mar 2018 09:58:13 -0400
+Message-ID: <1521640687.2645.30.camel@sipsolutions.net> (sfid-20180321_145834_047696_08BB431C)
+Subject: Re: [PATCH] mac80211: aes-cmac: remove VLA usage
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Wed, 21 Mar 2018 14:58:07 +0100
+In-Reply-To: <b367cf76-e6c5-3d6d-5d81-a68ae245e6b9@embeddedor.com>
+References: <20180321134247.GA1275@embeddedgus>
+         <1521640094.2645.29.camel@sipsolutions.net>
+         <b367cf76-e6c5-3d6d-5d81-a68ae245e6b9@embeddedor.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix 'line over 80 characters' issue found by checkpatch.pl script.
-Refactor and split the function to avoid the checkpatch reported issues.
+On Wed, 2018-03-21 at 08:57 -0500, Gustavo A. R. Silva wrote:
+> 
+> SHA_DESC_ON_STACK is currently being used in multiple places. But, yeah, 
+> I think we can define multiple macros of the same kind and adjust to the 
+> characteristics of each the component.
+> 
+> How big do you think tfm can get?
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 145 ++++++++++++----------
- 1 file changed, 82 insertions(+), 63 deletions(-)
+I have no idea, I guess you'll have to take that with Herbert.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 9d35a08..090d59d 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1365,12 +1365,49 @@ static void wilc_wfi_cfg_parse_tx_action(u8 *buf, u32 len, bool oper_ch,
- 					   op_channel_attr_index);
- }
- 
-+static void wilc_wfi_cfg_parse_rx_vendor_spec(struct wilc_priv *priv, u8 *buff,
-+					      u32 size)
-+{
-+	int i;
-+	u8 subtype;
-+	struct wilc_vif *vif = netdev_priv(priv->dev);
-+
-+	subtype = buff[P2P_PUB_ACTION_SUBTYPE];
-+	if ((subtype == GO_NEG_REQ || subtype == GO_NEG_RSP) && !wilc_ie) {
-+		for (i = P2P_PUB_ACTION_SUBTYPE; i < size; i++) {
-+			if (!memcmp(p2p_vendor_spec, &buff[i], 6)) {
-+				p2p_recv_random = buff[i + 6];
-+				wilc_ie = true;
-+				break;
-+			}
-+		}
-+	}
-+
-+	if (p2p_local_random <= p2p_recv_random) {
-+		netdev_dbg(vif->ndev,
-+			   "PEER WILL BE GO LocaRand=%02x RecvRand %02x\n",
-+			   p2p_local_random, p2p_recv_random);
-+		return;
-+	}
-+
-+	if (subtype == GO_NEG_REQ || subtype == GO_NEG_RSP ||
-+	    subtype == P2P_INV_REQ || subtype == P2P_INV_RSP) {
-+		for (i = P2P_PUB_ACTION_SUBTYPE + 2; i < size; i++) {
-+			if (buff[i] == P2PELEM_ATTR_ID &&
-+			    !(memcmp(p2p_oui, &buff[i + 2], 4))) {
-+				wilc_wfi_cfg_parse_rx_action(&buff[i + 6],
-+							     size - (i + 6));
-+				break;
-+			}
-+		}
-+	}
-+}
-+
- void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size)
- {
- 	struct wilc_priv *priv;
- 	u32 header, pkt_offset;
- 	struct host_if_drv *wfi_drv;
--	u32 i = 0;
- 	s32 s32Freq;
- 
- 	priv = wiphy_priv(dev->ieee80211_ptr->wiphy);
-@@ -1381,75 +1418,57 @@ void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size)
- 	pkt_offset = GET_PKT_OFFSET(header);
- 
- 	if (pkt_offset & IS_MANAGMEMENT_CALLBACK) {
--		if (buff[FRAME_TYPE_ID] == IEEE80211_STYPE_PROBE_RESP) {
--			cfg80211_mgmt_tx_status(priv->wdev, priv->tx_cookie, buff, size, true, GFP_KERNEL);
--			return;
--		} else {
--			if (pkt_offset & IS_MGMT_STATUS_SUCCES)
--				cfg80211_mgmt_tx_status(priv->wdev, priv->tx_cookie, buff, size, true, GFP_KERNEL);
--			else
--				cfg80211_mgmt_tx_status(priv->wdev, priv->tx_cookie, buff, size, false, GFP_KERNEL);
--			return;
--		}
--	} else {
--		s32Freq = ieee80211_channel_to_frequency(curr_channel, NL80211_BAND_2GHZ);
-+		bool ack = false;
- 
--		if (ieee80211_is_action(buff[FRAME_TYPE_ID])) {
--			if (priv->cfg_scanning && time_after_eq(jiffies, (unsigned long)wfi_drv->p2p_timeout)) {
--				netdev_dbg(dev, "Receiving action wrong ch\n");
--				return;
--			}
--			if (buff[ACTION_CAT_ID] == PUB_ACTION_ATTR_ID) {
--				switch (buff[ACTION_SUBTYPE_ID]) {
--				case GAS_INITIAL_REQ:
--					break;
-+		if (buff[FRAME_TYPE_ID] == IEEE80211_STYPE_PROBE_RESP ||
-+		    pkt_offset & IS_MGMT_STATUS_SUCCES)
-+			ack = true;
- 
--				case GAS_INITIAL_RSP:
--					break;
-+		cfg80211_mgmt_tx_status(priv->wdev, priv->tx_cookie, buff, size,
-+					ack, GFP_KERNEL);
-+		return;
-+	}
- 
--				case PUBLIC_ACT_VENDORSPEC:
--					if (!memcmp(p2p_oui, &buff[ACTION_SUBTYPE_ID + 1], 4)) {
--						if ((buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP))	{
--							if (!wilc_ie) {
--								for (i = P2P_PUB_ACTION_SUBTYPE; i < size; i++)	{
--									if (!memcmp(p2p_vendor_spec, &buff[i], 6)) {
--										p2p_recv_random = buff[i + 6];
--										wilc_ie = true;
--										break;
--									}
--								}
--							}
--						}
--						if (p2p_local_random > p2p_recv_random)	{
--							if ((buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP ||
--							     buff[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == P2P_INV_RSP)) {
--								for (i = P2P_PUB_ACTION_SUBTYPE + 2; i < size; i++) {
--									if (buff[i] == P2PELEM_ATTR_ID && !(memcmp(p2p_oui, &buff[i + 2], 4))) {
--										wilc_wfi_cfg_parse_rx_action(&buff[i + 6], size - (i + 6));
--										break;
--									}
--								}
--							}
--						} else {
--							netdev_dbg(dev, "PEER WILL BE GO LocaRand=%02x RecvRand %02x\n", p2p_local_random, p2p_recv_random);
--						}
--					}
-+	s32Freq = ieee80211_channel_to_frequency(curr_channel, NL80211_BAND_2GHZ);
- 
--					if ((buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_REQ || buff[P2P_PUB_ACTION_SUBTYPE] == GO_NEG_RSP) && (wilc_ie))	{
--						cfg80211_rx_mgmt(priv->wdev, s32Freq, 0, buff, size - 7, 0);
--						return;
--					}
--					break;
-+	if (!ieee80211_is_action(buff[FRAME_TYPE_ID])) {
-+		cfg80211_rx_mgmt(priv->wdev, s32Freq, 0, buff, size, 0);
-+		return;
-+	}
- 
--				default:
--					netdev_dbg(dev, "NOT HANDLED PUBLIC ACTION FRAME TYPE:%x\n", buff[ACTION_SUBTYPE_ID]);
--					break;
--				}
--			}
--		}
-+	if (priv->cfg_scanning &&
-+	    time_after_eq(jiffies, (unsigned long)wfi_drv->p2p_timeout)) {
-+		netdev_dbg(dev, "Receiving action wrong ch\n");
-+		return;
-+	}
-+	if (buff[ACTION_CAT_ID] == PUB_ACTION_ATTR_ID) {
-+		u8 subtype = buff[P2P_PUB_ACTION_SUBTYPE];
- 
--		cfg80211_rx_mgmt(priv->wdev, s32Freq, 0, buff, size, 0);
-+		switch (buff[ACTION_SUBTYPE_ID]) {
-+		case GAS_INITIAL_REQ:
-+		case GAS_INITIAL_RSP:
-+			break;
-+
-+		case PUBLIC_ACT_VENDORSPEC:
-+			if (!memcmp(p2p_oui, &buff[ACTION_SUBTYPE_ID + 1], 4))
-+				wilc_wfi_cfg_parse_rx_vendor_spec(priv, buff,
-+								  size);
-+
-+			if ((subtype == GO_NEG_REQ || subtype == GO_NEG_RSP) &&
-+			    wilc_ie)
-+				size -= 7;
-+
-+			break;
-+
-+		default:
-+			netdev_dbg(dev,
-+				   "NOT HANDLED PUBLIC ACTION FRAME TYPE:%x\n",
-+				   buff[ACTION_SUBTYPE_ID]);
-+			break;
-+		}
- 	}
-+
-+	cfg80211_rx_mgmt(priv->wdev, s32Freq, 0, buff, size, 0);
- }
- 
- static void wilc_wfi_mgmt_tx_complete(void *priv, int status)
--- 
-2.7.4
+johannes
