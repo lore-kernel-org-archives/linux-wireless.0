@@ -1,65 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:45484 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031277AbeCAOU4 (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:57070 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752122AbeCURt0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:20:56 -0500
-Received: by mail-qt0-f194.google.com with SMTP id v90so7650602qte.12
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:20:56 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 11/52] ath: Add regulatory mapping for Serbia
-Date: Thu,  1 Mar 2018 15:18:21 +0100
-Message-Id: <20180301141902.24824-12-sven.eckelmann@openmesh.com> (sfid-20180301_153349_492413_3FF64967)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+        Wed, 21 Mar 2018 13:49:26 -0400
+Date: Wed, 21 Mar 2018 18:49:24 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Nipun Gupta <nipun.gupta@nxp.com>
+Cc: "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        "hch@lst.de" <hch@lst.de>,
+        "linux@armlinux.org.uk" <linux@armlinux.org.uk>,
+        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "zajec5@gmail.com" <zajec5@gmail.com>,
+        "andy.gross@linaro.org" <andy.gross@linaro.org>,
+        "david.brown@linaro.org" <david.brown@linaro.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "vinod.koul@intel.com" <vinod.koul@intel.com>,
+        "thierry.reding@gmail.com" <thierry.reding@gmail.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "frowand.list@gmail.com" <frowand.list@gmail.com>,
+        "jarkko.sakkinen@linux.intel.com" <jarkko.sakkinen@linux.intel.com>,
+        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
+        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
+        "johan@kernel.org" <johan@kernel.org>,
+        "msuchanek@suse.de" <msuchanek@suse.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "linux-soc@vger.kernel.org" <linux-soc@vger.kernel.org>,
+        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Bharat Bhushan <bharat.bhushan@nxp.com>,
+        Leo Li <leoyang.li@nxp.com>
+Subject: Re: [PATCH v2 2/2] drivers: remove force dma flag from buses
+Message-ID: <20180321174924.GA11141@kroah.com> (sfid-20180321_184940_838298_AEA73011)
+References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
+ <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com>
+ <1521615323-4752-2-git-send-email-nipun.gupta@nxp.com>
+ <20180321093525.GT14085@kroah.com>
+ <HE1PR0401MB2425644F72A063ED42B79D5FE6AA0@HE1PR0401MB2425.eurprd04.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <HE1PR0401MB2425644F72A063ED42B79D5FE6AA0@HE1PR0401MB2425.eurprd04.prod.outlook.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The country code is used by the ath to detect the ISO 3166-1 alpha-2 name
-and to select the correct conformance test limits (CTL) for a country. If
-the country isn't available and it is still programmed in the EEPROM then
-it will cause an error and stop the initialization with:
+On Wed, Mar 21, 2018 at 04:28:46PM +0000, Nipun Gupta wrote:
+> 
+> 
+> > -----Original Message-----
+> > From: Greg KH [mailto:gregkh@linuxfoundation.org]
+> > Sent: Wednesday, March 21, 2018 15:05
+> > To: Nipun Gupta <nipun.gupta@nxp.com>
+> > Cc: robin.murphy@arm.com; hch@lst.de; linux@armlinux.org.uk;
+> > m.szyprowski@samsung.com; bhelgaas@google.com; zajec5@gmail.com;
+> > andy.gross@linaro.org; david.brown@linaro.org; dan.j.williams@intel.com;
+> > vinod.koul@intel.com; thierry.reding@gmail.com; robh+dt@kernel.org;
+> > frowand.list@gmail.com; jarkko.sakkinen@linux.intel.com;
+> > rafael.j.wysocki@intel.com; dmitry.torokhov@gmail.com; johan@kernel.org;
+> > msuchanek@suse.de; linux-kernel@vger.kernel.org; iommu@lists.linux-
+> > foundation.org; linux-wireless@vger.kernel.org; linux-arm-
+> > msm@vger.kernel.org; linux-soc@vger.kernel.org; dmaengine@vger.kernel.org;
+> > dri-devel@lists.freedesktop.org; linux-tegra@vger.kernel.org;
+> > devicetree@vger.kernel.org; linux-pci@vger.kernel.org; Bharat Bhushan
+> > <bharat.bhushan@nxp.com>; Leo Li <leoyang.li@nxp.com>
+> > Subject: Re: [PATCH v2 2/2] drivers: remove force dma flag from buses
+> > 
+> > On Wed, Mar 21, 2018 at 12:25:23PM +0530, Nipun Gupta wrote:
+> > > With each bus implementing its own DMA configuration callback,
+> > > there is no need for bus to explicitly have force_dma in its
+> > > global structure. This patch modifies of_dma_configure API to
+> > > accept an input parameter which specifies if implicit DMA
+> > > configuration is required even when it is not described by the
+> > > firmware.
+> > 
+> > Having to "remember" what that bool variable means on the end of the
+> > function call is a royal pain over time, right?
+> > 
+> > Why not just create a new function:
+> > 	dma_common_configure_force(dma)
+> > that always does this?  Leave "dma_common_configure()" alone, and then
+> > wrap the old code with these two helper functions that call the 'core'
+> > code with the bool set properly?
+> > 
+> > That way you do not have to "know" what that parameter is, the function
+> > name just documents it automatically, so when you see it in the
+> > bus-specific code, no need to go and have to hunt for anything.  And if
+> > you are reading the dma core code, it's obvious what is happening as the
+> > functions are all right there.
+> 
+> How about we do not pass any flag in 'dma_common_configure()', and inside this
+> API we pass "true" to 'of_dma_configure()'? I am saying this because currently
+> both the busses (platform and AMBA) which uses 'dma_common_configure()' passes
+> "true" value. If we create additional 'dma_common_configure_force()', then
+> 'dma_common_configure()' will not be used anytime and will become redundant.
+> 
+> If someday new busses come and they needs to use similar functionality which
+> 'dma_common_configure()' provides, but with passing "false" to 'of_dma_configure()',
+> then what you suggests of having two separate such API's will be more reasonable
+> and can be implemented?
 
-  Invalid EEPROM contents
+If that makes things "simple", yes, sounds good.
 
-The current CTL mappings for this country are:
-
-* 2.4GHz: ETSI
-* 5GHz: ETSI
-
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
----
- drivers/net/wireless/ath/regd.h        | 1 +
- drivers/net/wireless/ath/regd_common.h | 1 +
- 2 files changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/regd.h b/drivers/net/wireless/ath/regd.h
-index 3021ba5d7ef5..9fe4857baaae 100644
---- a/drivers/net/wireless/ath/regd.h
-+++ b/drivers/net/wireless/ath/regd.h
-@@ -164,6 +164,7 @@ enum CountryCode {
- 	CTRY_RUSSIA = 643,
- 	CTRY_RWANDA = 646,
- 	CTRY_SAUDI_ARABIA = 682,
-+	CTRY_SERBIA = 688,
- 	CTRY_SERBIA_MONTENEGRO = 891,
- 	CTRY_SINGAPORE = 702,
- 	CTRY_SLOVAKIA = 703,
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index 89a3a9104428..4c41308e39c1 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -456,6 +456,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_RUSSIA, NULL1_WORLD, "RU"},
- 	{CTRY_RWANDA, APL1_WORLD, "RW"},
- 	{CTRY_SAUDI_ARABIA, NULL1_WORLD, "SA"},
-+	{CTRY_SERBIA, ETSI1_WORLD, "RS"},
- 	{CTRY_SERBIA_MONTENEGRO, ETSI1_WORLD, "CS"},
- 	{CTRY_SINGAPORE, APL6_WORLD, "SG"},
- 	{CTRY_SLOVAKIA, ETSI1_WORLD, "SK"},
--- 
-2.11.0
+greg k-h
