@@ -1,130 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:45958 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750884AbeC2O1l (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 10:27:41 -0400
-Received: by mail-pg0-f66.google.com with SMTP id y63so3154015pgy.12
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2018 07:27:41 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v2 RESEND 1/4] rsi: move xtend_desc structure from rsi_main.h to rsi_mgmt.h
-Date: Thu, 29 Mar 2018 19:44:49 +0530
-Message-Id: <1522332892-5251-2-git-send-email-amitkarwar@gmail.com> (sfid-20180329_162744_448223_33F0CD08)
-In-Reply-To: <1522332892-5251-1-git-send-email-amitkarwar@gmail.com>
-References: <1522332892-5251-1-git-send-email-amitkarwar@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:52694 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753761AbeCUWeg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Mar 2018 18:34:36 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
+        kubakici@wp.pl, linux-wireless@vger.kernel.org,
+        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
+        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
+        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
+        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v4 2/3] firmware: add firmware_request_cache() to help with cache on reboot
+Date: Wed, 21 Mar 2018 15:34:29 -0700
+Message-Id: <20180321223430.21388-3-mcgrof@kernel.org> (sfid-20180321_233534_305325_0AB90D3A)
+In-Reply-To: <20180321223430.21388-1-mcgrof@kernel.org>
+References: <20180321223430.21388-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Some devices have an optimization in place to enable the firmware to
+be retaineed during a system reboot, so after reboot the device can skip
+requesting and loading the firmware. This can save up to 1s in load
+time. The mt7601u 802.11 device happens to be such a device.
 
-All descriptor structures are in rsi_mgmt.h except this
-extended descriptor structure. Hence moving it to rsi_mgmt.h
-and also renaming to rsi_xtend_desc.
+When these devices retain the firmware on a reboot and then suspend
+they can miss looking for the firmware on resume. To help with this we
+need a way to cache the firmware when such an optimization has taken
+place.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- drivers/net/wireless/rsi/rsi_91x_hal.c | 12 ++++++------
- drivers/net/wireless/rsi/rsi_main.h    |  6 ------
- drivers/net/wireless/rsi/rsi_mgmt.h    |  6 ++++++
- 3 files changed, 12 insertions(+), 12 deletions(-)
+ .../driver-api/firmware/request_firmware.rst       | 14 +++++++++++++
+ drivers/base/firmware_loader/main.c                | 24 ++++++++++++++++++++++
+ include/linux/firmware.h                           |  3 +++
+ 3 files changed, 41 insertions(+)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
-index de608ae..ce6a86d 100644
---- a/drivers/net/wireless/rsi/rsi_91x_hal.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
-@@ -55,7 +55,7 @@ static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
- 	struct rsi_mgmt_desc *mgmt_desc;
- 	struct skb_info *tx_params;
- 	struct ieee80211_bss_conf *bss = NULL;
--	struct xtended_desc *xtend_desc = NULL;
-+	struct rsi_xtended_desc *xtend_desc = NULL;
- 	u8 header_size;
- 	u32 dword_align_bytes = 0;
+diff --git a/Documentation/driver-api/firmware/request_firmware.rst b/Documentation/driver-api/firmware/request_firmware.rst
+index cc0aea880824..cf4516dfbf96 100644
+--- a/Documentation/driver-api/firmware/request_firmware.rst
++++ b/Documentation/driver-api/firmware/request_firmware.rst
+@@ -44,6 +44,20 @@ request_firmware_nowait
+ .. kernel-doc:: drivers/base/firmware_class.c
+    :functions: request_firmware_nowait
  
-@@ -69,7 +69,7 @@ static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
- 	vif = tx_params->vif;
- 
- 	/* Update header size */
--	header_size = FRAME_DESC_SZ + sizeof(struct xtended_desc);
-+	header_size = FRAME_DESC_SZ + sizeof(struct rsi_xtended_desc);
- 	if (header_size > skb_headroom(skb)) {
- 		rsi_dbg(ERR_ZONE,
- 			"%s: Failed to add extended descriptor\n",
-@@ -92,7 +92,7 @@ static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
- 	wh = (struct ieee80211_hdr *)&skb->data[header_size];
- 
- 	mgmt_desc = (struct rsi_mgmt_desc *)skb->data;
--	xtend_desc = (struct xtended_desc *)&skb->data[FRAME_DESC_SZ];
-+	xtend_desc = (struct rsi_xtended_desc *)&skb->data[FRAME_DESC_SZ];
- 
- 	rsi_set_len_qno(&mgmt_desc->len_qno, (skb->len - FRAME_DESC_SZ),
- 			RSI_WIFI_MGMT_Q);
-@@ -158,7 +158,7 @@ static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
- 	struct skb_info *tx_params;
- 	struct ieee80211_bss_conf *bss;
- 	struct rsi_data_desc *data_desc;
--	struct xtended_desc *xtend_desc;
-+	struct rsi_xtended_desc *xtend_desc;
- 	u8 ieee80211_size = MIN_802_11_HDR_LEN;
- 	u8 header_size;
- 	u8 vap_id = 0;
-@@ -170,7 +170,7 @@ static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
- 	bss = &vif->bss_conf;
- 	tx_params = (struct skb_info *)info->driver_data;
- 
--	header_size = FRAME_DESC_SZ + sizeof(struct xtended_desc);
-+	header_size = FRAME_DESC_SZ + sizeof(struct rsi_xtended_desc);
- 	if (header_size > skb_headroom(skb)) {
- 		rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
- 		return -ENOSPC;
-@@ -188,7 +188,7 @@ static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
- 	data_desc = (struct rsi_data_desc *)skb->data;
- 	memset(data_desc, 0, header_size);
- 
--	xtend_desc = (struct xtended_desc *)&skb->data[FRAME_DESC_SZ];
-+	xtend_desc = (struct rsi_xtended_desc *)&skb->data[FRAME_DESC_SZ];
- 	wh = (struct ieee80211_hdr *)&skb->data[header_size];
- 	seq_num = IEEE80211_SEQ_TO_SN(le16_to_cpu(wh->seq_ctrl));
- 
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index ef4fa32..b81cdbf 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -190,12 +190,6 @@ struct cqm_info {
- 	u32 rssi_hyst;
- };
- 
--struct xtended_desc {
--	u8 confirm_frame_type;
--	u8 retry_cnt;
--	u16 reserved;
--};
--
- enum rsi_dfs_regions {
- 	RSI_REGION_FCC = 0,
- 	RSI_REGION_ETSI,
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index cf6567a..6726e84 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -301,6 +301,12 @@ struct rsi_mac_frame {
- #define ENCAP_MGMT_PKT			BIT(7)
- #define DESC_IMMEDIATE_WAKEUP		BIT(15)
- 
-+struct rsi_xtended_desc {
-+	u8 confirm_frame_type;
-+	u8 retry_cnt;
-+	u16 reserved;
-+};
++Special optimizations on reboot
++===============================
 +
- struct rsi_cmd_desc_dword0 {
- 	__le16 len_qno;
- 	u8 frame_type;
++Some devices have an optimization in place to enable the firmware to be
++retained during system reboot. When such optimizations are used the driver
++author must ensure the firmware is still available on resume from suspend,
++this can be done with firmware_request_cache() insted of requesting for the
++firmare to be loaded.
++
++firmware_request_cache()
++-----------------------
++.. kernel-doc:: drivers/base/firmware_class.c
++   :functions: firmware_request_cache
++
+ request firmware API expected driver use
+ ========================================
+ 
+diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
+index 2913bb0e5e7b..eb34089e4299 100644
+--- a/drivers/base/firmware_loader/main.c
++++ b/drivers/base/firmware_loader/main.c
+@@ -656,6 +656,30 @@ int request_firmware_direct(const struct firmware **firmware_p,
+ }
+ EXPORT_SYMBOL_GPL(request_firmware_direct);
+ 
++/**
++ * firmware_request_cache: - cache firmware for suspend so resume can use it
++ * @name: name of firmware file
++ * @device: device for which firmware should be cached for
++ *
++ * There are some devices with an optimization that enables the device to not
++ * require loading firmware on system reboot. This optimization may still
++ * require the firmware present on resume from suspend. This routine can be
++ * used to ensure the firmware is present on resume from suspend in these
++ * situations. This helper is not compatible with drivers which use
++ * request_firmware_into_buf() or request_firmware_nowait() with no uevent set.
++ **/
++int firmware_request_cache(struct device *device, const char *name)
++{
++	int ret;
++
++	mutex_lock(&fw_lock);
++	ret = fw_add_devm_name(device, name);
++	mutex_unlock(&fw_lock);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(firmware_request_cache);
++
+ /**
+  * request_firmware_into_buf - load firmware into a previously allocated buffer
+  * @firmware_p: pointer to firmware image
+diff --git a/include/linux/firmware.h b/include/linux/firmware.h
+index d4508080348d..41050417cafb 100644
+--- a/include/linux/firmware.h
++++ b/include/linux/firmware.h
+@@ -85,4 +85,7 @@ static inline int request_firmware_into_buf(const struct firmware **firmware_p,
+ }
+ 
+ #endif
++
++int firmware_request_cache(struct device *device, const char *name);
++
+ #endif
 -- 
-2.7.4
+2.16.2
