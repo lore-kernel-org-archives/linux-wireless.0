@@ -1,72 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:57547 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1424959AbeCBOXU (ORCPT
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:33202 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751372AbeCUHFj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 09:23:20 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 01/13] staging: wilc1000: rename enuEvent to avoid camelCase
-Date: Fri, 2 Mar 2018 19:52:37 +0530
-Message-ID: <1520000569-27738-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180302_152326_674447_8A0F691F)
-In-Reply-To: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
-References: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 21 Mar 2018 03:05:39 -0400
+Received: by mail-wr0-f196.google.com with SMTP id z73so4054351wrb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Mar 2018 00:05:38 -0700 (PDT)
+Received: from iss.Home (static.183.55.0.81.ibercom.com. [81.0.55.183])
+        by smtp.gmail.com with ESMTPSA id x18sm2996551wmc.2.2018.03.21.00.05.36
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 21 Mar 2018 00:05:37 -0700 (PDT)
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211_hwsim: Set wmediumd for new radios
+Date: Wed, 21 Mar 2018 08:05:18 +0100
+Message-Id: <20180321070518.29732-1-andrew.zaborowski@intel.com> (sfid-20180321_080542_837919_631A825D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix "Avoid camelCase" issue found by checkpatch.pl script.
+Set the wmediumd to the net's wmediumd when the radio gets created.
+Radios created after HWSIM_CMD_REGISTER don't currently get their
+data->wmediumd set and the userspace would need to reconnect to
+netlink to be able to call HWSIM_CMD_REGISTER again.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Alternatively I think data->netgroup and data->wmedium could be
+replaced with a pointer to hwsim_net.
+
+Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 253225c..b46a759 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -267,7 +267,7 @@ static struct wilc_vif *join_req_vif;
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 7b6c3640a9..100cf42db6 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2742,6 +2742,7 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 	mutex_init(&data->mutex);
  
- static void *host_int_parse_join_bss_param(struct network_info *info);
- static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
--static s32 handle_scan_done(struct wilc_vif *vif, enum scan_event enuEvent);
-+static s32 handle_scan_done(struct wilc_vif *vif, enum scan_event evt);
- static void host_if_work(struct work_struct *work);
+ 	data->netgroup = hwsim_net_get_netgroup(net);
++	data->wmediumd = hwsim_net_get_wmediumd(net);
  
- /*!
-@@ -863,15 +863,14 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
- 	return result;
- }
- 
--static s32 handle_scan_done(struct wilc_vif *vif,
--			    enum scan_event enuEvent)
-+static s32 handle_scan_done(struct wilc_vif *vif, enum scan_event evt)
- {
- 	s32 result = 0;
- 	u8 u8abort_running_scan;
- 	struct wid wid;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
- 
--	if (enuEvent == SCAN_EVENT_ABORTED) {
-+	if (evt == SCAN_EVENT_ABORTED) {
- 		u8abort_running_scan = 1;
- 		wid.id = (u16)WID_ABORT_RUNNING_SCAN;
- 		wid.type = WID_CHAR;
-@@ -893,7 +892,7 @@ static s32 handle_scan_done(struct wilc_vif *vif,
- 	}
- 
- 	if (hif_drv->usr_scan_req.scan_result) {
--		hif_drv->usr_scan_req.scan_result(enuEvent, NULL,
-+		hif_drv->usr_scan_req.scan_result(evt, NULL,
- 						  hif_drv->usr_scan_req.arg, NULL);
- 		hif_drv->usr_scan_req.scan_result = NULL;
- 	}
+ 	/* Enable frame retransmissions for lossy channels */
+ 	hw->max_rates = 4;
 -- 
-2.7.4
+2.14.1
