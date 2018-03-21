@@ -1,80 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:60674 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751317AbeCTQYz (ORCPT
+Received: from smtprelay0061.hostedemail.com ([216.40.44.61]:38906 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751464AbeCUKc5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Mar 2018 12:24:55 -0400
-Subject: Re: [RFC] ethtool: Support ETHTOOL_GSTATS2 command.
-To: Steve deRosier <derosier@gmail.com>
-References: <1520452289-14172-1-git-send-email-greearb@candelatech.com>
- <20180320103747.7kcfdu4yzof6bwxw@unicorn.suse.cz>
- <37830d46-762b-2a92-4506-5792a65d2ebd@candelatech.com>
- <CALLGbRKU_PCk-3ZMBRu6CC-QyaEEPTAOavGVzPpQUdEMQ+s9BQ@mail.gmail.com>
-Cc: Michal Kubecek <mkubecek@suse.cz>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        ath10k@lists.infradead.org, netdev@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <1db22103-4f4c-18e9-e03c-6f8b69b9f74f@candelatech.com> (sfid-20180320_172459_926613_BF10BF6E)
-Date: Tue, 20 Mar 2018 09:24:52 -0700
-MIME-Version: 1.0
-In-Reply-To: <CALLGbRKU_PCk-3ZMBRu6CC-QyaEEPTAOavGVzPpQUdEMQ+s9BQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Wed, 21 Mar 2018 06:32:57 -0400
+From: Joe Perches <joe@perches.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Jiri Slaby <jirislaby@gmail.com>,
+        Nick Kossifidis <mickflemm@gmail.com>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath: Remove unnecessary ath_bcast_mac and use eth_broadcast_addr
+Date: Wed, 21 Mar 2018 03:32:52 -0700
+Message-Id: <3ed8112986ba6f538cb45df6ea67e0c027a3dc12.1521628278.git.joe@perches.com> (sfid-20180321_113317_867891_BA916569)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/20/2018 09:11 AM, Steve deRosier wrote:
-> On Tue, Mar 20, 2018 at 8:39 AM, Ben Greear <greearb@candelatech.com> wrote:
->> On 03/20/2018 03:37 AM, Michal Kubecek wrote:
->>>
->>> On Wed, Mar 07, 2018 at 11:51:29AM -0800, greearb@candelatech.com wrote:
->>>>
->>>> From: Ben Greear <greearb@candelatech.com>
->>>>
->>>> This is similar to ETHTOOL_GSTATS, but it allows you to specify
->>>> a 'level'.  This level can be used by the driver to decrease the
->>>> amount of stats refreshed.  In particular, this helps with ath10k
->>>> since getting the firmware stats can be slow.
->>>>
->>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
->>>> ---
->>>>
->>>> NOTE:  I know to make it upstream I would need to split the patch and
->>>> remove the #define for 'backporting' that I added.  But, is the
->>>> feature in general wanted?  If so, I'll do the patch split and
->>>> other tweaks that might be suggested.
->>>
->>>
->>
->> Yes, but that would require changing all drivers at once, and would make
->> backporting
->> and out-of-tree drivers harder to manage.  I had low hopes that this feature
->> would
->> make it upstream, so I didn't want to propose any large changes up front.
->>
->
-> Hi Ben,
->
-> I find the feature OK, but I'm not thrilled with the arbitrary scale
-> of "level". Maybe there could be some named values, either on a
-> spectrum as level already is, similar to the kernel log DEBUG, WARN,
-> INFO....  type levels. Or named bit flags like the way the ath drivers
-> do their debug flags for granular results.  Thoughts?
+Remove the static array and use the generic routine to set the
+Ethernet broadcast address.
 
-Yes, that would be easier to code too.  If there are any other drivers
-out there that might take advantage of this, maybe they could chime in with
-what levels and/or bit-fields they would like to see.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/ath/ath.h                | 2 --
+ drivers/net/wireless/ath/ath5k/attach.c       | 2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 2 +-
+ drivers/net/wireless/ath/ath9k/init.c         | 2 +-
+ 4 files changed, 3 insertions(+), 5 deletions(-)
 
-For instance a bit that says 'refresh-stats-from-firmware' would be great for ath10k,
-but maybe useless for everyone else....
-
-Thanks,
-Ben
-
->
-> - Steve
->
-
-
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index f3f2784f6ebd..7a364eca46d6 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -33,8 +33,6 @@
+  */
+ #define	ATH_KEYMAX	        128     /* max key cache size we handle */
+ 
+-static const u8 ath_bcast_mac[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+-
+ struct ath_ani {
+ 	bool caldone;
+ 	unsigned int longcal_timer;
+diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
+index 233054bd6b52..12d3a6c92ba4 100644
+--- a/drivers/net/wireless/ath/ath5k/attach.c
++++ b/drivers/net/wireless/ath/ath5k/attach.c
+@@ -327,7 +327,7 @@ int ath5k_hw_init(struct ath5k_hw *ah)
+ 	ath5k_hw_set_lladdr(ah, zero_mac);
+ 
+ 	/* Set BSSID to bcast address: ff:ff:ff:ff:ff:ff for now */
+-	memcpy(common->curbssid, ath_bcast_mac, ETH_ALEN);
++	eth_broadcast_addr(common->curbssid);
+ 	ath5k_hw_set_bssid(ah);
+ 	ath5k_hw_set_opmode(ah, ah->opmode);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index e89e5ef2c2a4..bf36bb2821b4 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -591,7 +591,7 @@ static void ath9k_init_misc(struct ath9k_htc_priv *priv)
+ {
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 
+-	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
++	eth_broadcast_addr(common->bssidmask);
+ 
+ 	common->last_rssi = ATH_RSSI_DUMMY_MARKER;
+ 	priv->ah->opmode = NL80211_IFTYPE_STATION;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index e479fae5aab9..748becee3ecf 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -427,7 +427,7 @@ static void ath9k_init_misc(struct ath_softc *sc)
+ 	timer_setup(&common->ani.timer, ath_ani_calibrate, 0);
+ 
+ 	common->last_rssi = ATH_RSSI_DUMMY_MARKER;
+-	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
++	eth_broadcast_addr(common->bssidmask);
+ 	sc->beacon.slottime = 9;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(sc->beacon.bslot); i++)
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.15.0
