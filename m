@@ -1,38 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.unikorn.me ([176.9.143.13]:42224 "EHLO mail.unikorn.me"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750898AbeC0MDi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Mar 2018 08:03:38 -0400
-Message-ID: <2c826451177bbcb8fe033631dc7b87eb92f5e42d.camel@unikorn.me> (sfid-20180327_140342_964180_66D2575B)
-Subject: Re: [PATCH] iwlwifi: add device ID for Rivet Networks Killer
- Wireless-AC 1550
-From: Izzy Kulbe <kernel@unikorn.me>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: luciano.coelho@intel.com, linux-wireless@vger.kernel.org
-Date: Tue, 27 Mar 2018 14:03:31 +0200
-In-Reply-To: <87370lrb7y.fsf@kamboji.qca.qualcomm.com>
-References: <1522148065.12122.5.camel@unikorn.me>
-         <87370lrb7y.fsf@kamboji.qca.qualcomm.com>
+Received: from s3.sipsolutions.net ([144.76.63.242]:34004 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751480AbeCUKPy (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Mar 2018 06:15:54 -0400
+Message-ID: <1521627352.2645.27.camel@sipsolutions.net> (sfid-20180321_111558_049044_A7A1A312)
+Subject: Re: [PATCH 2/2] cfg80211: Modify wiphy registration semantics for
+ self managed hints
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amar Singhal <asinghal@codeaurora.org>,
+        Kiran Kumar Lokere <klokere@codeaurora.org>
+Date: Wed, 21 Mar 2018 11:15:52 +0100
+In-Reply-To: <1520106021-16836-2-git-send-email-jouni@codeaurora.org>
+References: <1520106021-16836-1-git-send-email-jouni@codeaurora.org>
+         <1520106021-16836-2-git-send-email-jouni@codeaurora.org>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-03-27 at 14:48 +0300, Kalle Valo wrote:
-> Izzy Kulbe <kernel@unikorn.me> writes:
-> 
-> > nvm the last message, attached the wrong file using the 9270 instead of the 9260 firmware, which obviously wouldn't work. Here's the working patch:
-> > 
-> > 
-> > Add support for Rivet Networks Killer Wireless-AC 1550 chipset, 
-> > which is using the Intel Wireless-AC 9260 chip
-> > 
-> > Signed-off-by: Izzy Kulbe <kernel@unikorn.me>
-> > 
-> > ---
-> 
-> You should put the comment "nvm the last message..." under the "---"
-> line so that git-am can ignore it.
+So I really think this should just be one patch - it's not about
+"registration semantics" but about which types of requests get passed
+to reg_notifier(), and if you do it in one place you'd better also do
+it in the other.
 
-Sorry, still new to the whole process. should i just resend 
-that message with the proper order? 
+Secondly, this changes behaviour - not only for ath which presumably is
+what you want, but also for
+ * brcmfmac
+ * brcmsmac
+ * libertas
+ * mwifiex
+ * mt76
+ * qtnfmac
+ * rtlwifi (& its staging cousin)
+ * rsi
+ * wlcore
+ * rtl8723bs (staging)
+
+So I'm not really convinced we should do this unconditionally.
+
+johannes
