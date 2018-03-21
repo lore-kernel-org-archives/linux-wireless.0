@@ -1,67 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:62621 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932085AbeCHPK4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Mar 2018 10:10:56 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 03/10] staging: wilc1000: rename CfgScanResult to avoid camelCase
-Date: Wed, 7 Mar 2018 07:02:23 +0530
-Message-ID: <1520386350-31607-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180308_161059_122935_3693BDEB)
-In-Reply-To: <1520386350-31607-1-git-send-email-ajay.kathat@microchip.com>
-References: <1520386350-31607-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.kernel.org ([198.145.29.99]:52608 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753984AbeCUWef (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Mar 2018 18:34:35 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
+        kubakici@wp.pl, linux-wireless@vger.kernel.org,
+        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
+        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
+        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
+        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v4 1/3] firmware: fix typo on pr_info_once() when ignore_sysfs_fallback is used
+Date: Wed, 21 Mar 2018 15:34:28 -0700
+Message-Id: <20180321223430.21388-2-mcgrof@kernel.org> (sfid-20180321_233533_582388_11539F10)
+In-Reply-To: <20180321223430.21388-1-mcgrof@kernel.org>
+References: <20180321223430.21388-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix 'Avoid camelCase' issue found by checkpatch.pl script.
+When the sysctl knob is used ignore the fallback mechanism we pr_info_once()
+to ensure its noted the knob was used. The print incorrectly states its a
+debugfs knob, its a sysctl knob, so correct this typo.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ drivers/base/firmware_loader/fallback.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 2fda90d..051ba12 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -363,10 +363,9 @@ static void add_network_to_shadow(struct network_info *nw_info,
- 	last_scanned_shadow[ap_index].join_params = pJoinParams;
- }
- 
--static void CfgScanResult(enum scan_event scan_event,
--			  struct network_info *network_info,
--			  void *user_void,
--			  void *join_params)
-+static void cfg_scan_result(enum scan_event scan_event,
-+			    struct network_info *network_info,
-+			    void *user_void, void *join_params)
+diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
+index d231bbcb95d7..31b5015b59fe 100644
+--- a/drivers/base/firmware_loader/fallback.c
++++ b/drivers/base/firmware_loader/fallback.c
+@@ -652,7 +652,7 @@ static bool fw_force_sysfs_fallback(unsigned int opt_flags)
+ static bool fw_run_sysfs_fallback(unsigned int opt_flags)
  {
- 	struct wilc_priv *priv;
- 	struct wiphy *wiphy;
-@@ -622,14 +621,14 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
- 					au8ScanChanList,
- 					request->n_channels,
- 					(const u8 *)request->ie,
--					request->ie_len, CfgScanResult,
-+					request->ie_len, cfg_scan_result,
- 					(void *)priv, &hidden_ntwk);
- 		} else {
- 			ret = wilc_scan(vif, USER_SCAN, ACTIVE_SCAN,
- 					au8ScanChanList,
- 					request->n_channels,
- 					(const u8 *)request->ie,
--					request->ie_len, CfgScanResult,
-+					request->ie_len, cfg_scan_result,
- 					(void *)priv, NULL);
- 		}
- 	} else {
+ 	if (fw_fallback_config.ignore_sysfs_fallback) {
+-		pr_info_once("Ignoring firmware sysfs fallback due to debugfs knob\n");
++		pr_info_once("Ignoring firmware sysfs fallback due to sysctl knob\n");
+ 		return false;
+ 	}
+ 
 -- 
-2.7.4
+2.16.2
