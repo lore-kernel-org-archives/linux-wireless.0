@@ -1,30 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:49504 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751207AbeC2UXy (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:11186 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751736AbeCUNzu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 16:23:54 -0400
-Date: Thu, 29 Mar 2018 16:23:52 -0400 (EDT)
-Message-Id: <20180329.162352.679784489406644905.davem@davemloft.net> (sfid-20180329_222412_520307_0FA5CE34)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2018-03-29
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20180329131003.21687-1-johannes@sipsolutions.net>
-References: <20180329131003.21687-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Wed, 21 Mar 2018 09:55:50 -0400
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Subject: Re: [PATCH 04/11] staging: wilc1000: refactor WILC_WFI_p2p_rx() to
+ avoid line over 80 char
+To: Ajay Singh <ajay.kathat@microchip.com>,
+        <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <adham.abozaeid@microchip.com>
+References: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
+ <1521564944-3565-5-git-send-email-ajay.kathat@microchip.com>
+Message-ID: <24234901-20d9-aef4-49ed-df9d3d4a6dee@microchip.com> (sfid-20180321_145554_708213_99A37208)
+Date: Wed, 21 Mar 2018 15:55:46 +0200
+MIME-Version: 1.0
+In-Reply-To: <1521564944-3565-5-git-send-email-ajay.kathat@microchip.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 29 Mar 2018 15:10:02 +0200
+Also good for me, only one minor thing mentioned below.
 
-> Last update for -next, I guess, but I wanted to get the ETSI adaptivity
-> requirements code and the eapol-over-nl80211 thing out - both have been
-> around for a while. A number of other smaller things are also there, of
-> course.
-> 
-> Please pull and let me know if there's any problem.
+On 20.03.2018 18:55, Ajay Singh wrote:
+> +	if (subtype == GO_NEG_REQ || subtype == GO_NEG_RSP ||
+> +	    subtype == P2P_INV_REQ || subtype == P2P_INV_RSP) {
+> +		for (i = P2P_PUB_ACTION_SUBTYPE + 2; i < size; i++) {
+> +			if (buff[i] == P2PELEM_ATTR_ID &&
+> +			    !(memcmp(p2p_oui, &buff[i + 2], 4))) {
+You can remove  "(" ")" around memcmp. Your choice.
 
-Pulled, thanks Johannes.
+> +				wilc_wfi_cfg_parse_rx_action(&buff[i + 6],
+> +							     size - (i + 6));
+> +				break;
+> +			}
+> +		}
+> +	}
