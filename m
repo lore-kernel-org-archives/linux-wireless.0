@@ -1,107 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46820 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751821AbeCWFEB (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52568 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751674AbeCVU2g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Mar 2018 01:04:01 -0400
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org
+        Thu, 22 Mar 2018 16:28:36 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH v2 06/13] ath10k: Add hif power-up/power-down methods
-Date: Fri, 23 Mar 2018 10:33:37 +0530
-Message-Id: <1521781424-24972-7-git-send-email-govinds@codeaurora.org> (sfid-20180323_060407_008249_36045D92)
-In-Reply-To: <1521781424-24972-1-git-send-email-govinds@codeaurora.org>
-References: <1521781424-24972-1-git-send-email-govinds@codeaurora.org>
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 00/12] brcmfmac: data structure and firmware loading rework
+Date: Thu, 22 Mar 2018 21:28:19 +0100
+Message-Id: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180322_212905_928073_1D19BF77)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add hif power-up/power-down methods for wcn3990
-target.
+This patch series is intended for 4.17 containing the following:
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/snoc.c | 61 ++++++++++++++++++++++++++++++++++
- 1 file changed, 61 insertions(+)
+  * use wiphy_priv() for storing main driver instance.
+  * add driver debugfs entries under wiphy debugfsdir.
+  * rework firmware loading module.
+  * rework clm_blob loading.
 
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index a39eee7..9d402e4 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -519,6 +519,65 @@ static int ath10k_snoc_hif_start(struct ath10k *ar)
- 	return 0;
- }
- 
-+static int ath10k_snoc_init_pipes(struct ath10k *ar)
-+{
-+	int i, ret;
-+
-+	for (i = 0; i < CE_COUNT; i++) {
-+		ret = ath10k_ce_init_pipe(ar, i, &host_ce_config_wlan[i]);
-+		if (ret) {
-+			ath10k_err(ar, "failed to initialize copy engine pipe %d: %d\n",
-+				   i, ret);
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int ath10k_snoc_wlan_enable(struct ath10k *ar)
-+{
-+	return 0;
-+}
-+
-+static void ath10k_snoc_wlan_disable(struct ath10k *ar)
-+{
-+}
-+
-+static void ath10k_snoc_hif_power_down(struct ath10k *ar)
-+{
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif power down\n");
-+
-+	ath10k_snoc_wlan_disable(ar);
-+}
-+
-+static int ath10k_snoc_hif_power_up(struct ath10k *ar)
-+{
-+	int ret;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_SNOC, "%s:WCN3990 driver state = %d\n",
-+		   __func__, ar->state);
-+
-+	ret = ath10k_snoc_wlan_enable(ar);
-+	if (ret) {
-+		ath10k_err(ar, "failed to enable wcn3990: %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = ath10k_snoc_init_pipes(ar);
-+	if (ret) {
-+		ath10k_err(ar, "failed to initialize CE: %d\n", ret);
-+		goto err_wlan_enable;
-+	}
-+
-+	return 0;
-+
-+err_wlan_enable:
-+	ath10k_snoc_wlan_disable(ar);
-+
-+	return ret;
-+}
-+
- static const struct ath10k_hif_ops ath10k_snoc_hif_ops = {
- 	.read32		= ath10k_snoc_read32,
- 	.write32	= ath10k_snoc_write32,
-@@ -526,6 +585,8 @@ static int ath10k_snoc_hif_start(struct ath10k *ar)
- 	.stop		= ath10k_snoc_hif_stop,
- 	.map_service_to_pipe	= ath10k_snoc_hif_map_service_to_pipe,
- 	.get_default_pipe	= ath10k_snoc_hif_get_default_pipe,
-+	.power_up		= ath10k_snoc_hif_power_up,
-+	.power_down		= ath10k_snoc_hif_power_down,
- };
- 
- static const struct ath10k_bus_ops ath10k_snoc_bus_ops = {
+The patches apply to the master branch of the wireless-drivers-next
+repository.
+
+Changelog:
+ V2:
+  - fixes for patch 4 and patch 7.
+
+Arend van Spriel (12):
+  brcmfmac: do not convert linux error to firmware error string
+  brcmfmac: use brcmf_chip_name() to store name in revinfo
+  brcmfmac: use brcmf_chip_name() for consistency
+  brcmfmac: allocate struct brcmf_pub instance using wiphy_new()
+  brcmfmac: use wiphy debugfs dir entry
+  brcmfmac: derive firmware filenames from basename mapping
+  brcmfmac: pass struct in brcmf_fw_get_firmwares()
+  brcmfmac: introduce brcmf_fw_alloc_request() function
+  brcmfmac: add extension to .get_fwname() callbacks
+  brcmfmac: get rid of brcmf_fw_map_chip_to_name()
+  brcmfmac: get rid of brcmf_fw_get_full_name()
+  brcmfmac: add kerneldoc for struct brcmf_bus::msgbuf
+
+ .../wireless/broadcom/brcm80211/brcmfmac/bcdc.c    |   6 +
+ .../wireless/broadcom/brcm80211/brcmfmac/btcoex.c  |   2 +-
+ .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h |   7 +-
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         |  86 ++++----
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         |  17 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/chip.c    |  14 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/chip.h    |   3 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/common.c  |  71 ++----
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    |  48 ++--
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   4 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/debug.c   |  42 +---
+ .../wireless/broadcom/brcm80211/brcmfmac/debug.h   |  17 --
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c |   3 +
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.h |   7 +
+ .../broadcom/brcm80211/brcmfmac/firmware.c         | 242 ++++++++++++++-------
+ .../broadcom/brcm80211/brcmfmac/firmware.h         |  82 ++++---
+ .../wireless/broadcom/brcm80211/brcmfmac/fwil.c    |   3 +-
+ .../broadcom/brcm80211/brcmfmac/fwsignal.c         |  11 +-
+ .../broadcom/brcm80211/brcmfmac/fwsignal.h         |   1 +
+ .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  |   8 +-
+ .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c |   2 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    | 157 +++++++------
+ .../wireless/broadcom/brcm80211/brcmfmac/proto.c   |   3 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/proto.h   |   7 +
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 151 ++++++++-----
+ .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |  96 +++++---
+ 26 files changed, 619 insertions(+), 471 deletions(-)
+
 -- 
 1.9.1
