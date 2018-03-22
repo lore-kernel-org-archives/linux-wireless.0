@@ -1,210 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f170.google.com ([209.85.216.170]:35214 "EHLO
-        mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031110AbeCAOU3 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:52122 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751964AbeCVK2Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:20:29 -0500
-Received: by mail-qt0-f170.google.com with SMTP id z14so7696070qti.2
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:20:28 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 00/52] ath: Synchronize regd mappings with qcacld-2.0 4.0.11.181
-Date: Thu,  1 Mar 2018 15:18:10 +0100
-Message-Id: <20180301141902.24824-1-sven.eckelmann@openmesh.com> (sfid-20180301_152034_654861_334205CF)
+        Thu, 22 Mar 2018 06:28:16 -0400
+Message-ID: <1521714493.19621.5.camel@sipsolutions.net> (sfid-20180322_112856_188603_3297E89A)
+Subject: Re: [RFC v5 0/9] EAPoL over NL80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
+Date: Thu, 22 Mar 2018 11:28:13 +0100
+In-Reply-To: <6c4a389a-55e1-5af2-cac2-1754fce7fabf@gmail.com> (sfid-20180321_161830_319006_32337E45)
+References: <20180313215942.29176-1-denkenz@gmail.com>
+         <1521645199.2645.34.camel@sipsolutions.net>
+         <6c4a389a-55e1-5af2-cac2-1754fce7fabf@gmail.com>
+         (sfid-20180321_161830_319006_32337E45)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mappings from ath was not synced with the QCA driver since 2009. Only
-two minor fixes were integrated in 2011. Since then, a lot of regd changes
-were integrated in the close source QCA driver which are now used but not
-supported by the Open Source driver. This either prevents the use of the
-OSS driver on such devices or the wrong conformance test limits (CTLs) may
-be used.
+On Wed, 2018-03-21 at 10:18 -0500, Denis Kenzior wrote:
+> 
+> Sorry.  I assumed people read the change log :)
 
-To get the integrated we would first get access to the closed source QCA
-driver and a special OSS-NDA with QCA. This doesn't seem to be possible at
-the moment and thus other sources for the changes have to be found. One of
-them is the qcacld-2.0 source repository [1] which contains the QCA
-regdomain.h and regdomain_common.h which was relicensed by QCA as ISC. It
-isn't the newest version from the QCA driver but at least received some
-updates which are not present in ath's regd.
+And I should :-)
 
-This repository [1] (commit 48f9ab5d5c161549be098997fa0e3602c1547213 to be
-more precise) was now used to find differences and ad some missing
-mappings.
+> > > - It is unclear to me how AP_VLAN and AP interfaces should synchronize on
+> > > conn_owner_nlportid.  This is required for tx_control_port to work.
+> > 
+> > I'm not really sure what you mean? Technically I guess an AP_VLAN could
+> > have a different owner from an AP, but if the AP goes down all the
+> > AP_VLANs go down with it already anyway.
+> 
+> So the issue is that when mac80211 calls cfg80211_rx_control_port and 
+> subsequently __nl80211_rx_control_port, we grab the nlportid from the 
+> wdev.  So if that isn't synchronized, then AP_VLAN devices won't be 
+> sending the EAPoL frames to the right place.
 
-The title of the mappings describe what exactly was changed. The "Add
-regulatory mapping for" patches introduce new country codes/mappings and
-thus don't change old mappings. The "Add regulatory mapping for" patches
-are similar but for regulatory code mappings instead of country code
-mappings.
+Oh, ok, gotcha. I guess mac80211 would have to sync over the data, just
+like it does for other things? You also copied over the
+control_port_over_nl80211 setting, so could do the same here?
 
-More interesting might be the "Map XXXX to YYYY" patches because they
-modify already existing mappings. The result are following changes to the
-selected CTLs:
+But no, maybe that doesn't make sense, since ...
 
-* CTRY_ALBANIA:             5GHz: NO_CTL -> ETSI
-* CTRY_ALGERIA:             5GHz: NO_CTL -> ETSI
-* CTRY_BANGLADESH:          5GHz: NO_CTL -> FCC
-* CTRY_BRUNEI_DARUSSALAM:   5GHz: FCC -> ETSI
-* CTRY_HONDURAS:            5GHz: NO_CTL -> FCC
-* CTRY_INDONESIA:           5GHz: NO_CTL -> FCC
-* CTRY_ISRAEL:              5GHz: NO_CTL -> ETSI
-* CTRY_KOREA_NORTH:       2.4GHz: ETSI -> MKK
-* CTRY_KOREA_ROC:         2.4GHz: ETSI -> MKK
-* CTRY_KOREA_ROC3:        2.4GHz: ETSI -> MKK
-* CTRY_LEBANON:             5GHz: NO_CTL -> FCC
-* CTRY_MACEDONIA:           5GHz: NO_CTL -> ETSI
-* CTRY_MALAYSIA:            5GHz: ETSI -> FCC
-* CTRY_MEXICO:            2.4GHz: FCC-> ETSI
-* CTRY_PAKISTAN:            5GHz: NO_CTL -> FCC
-* CTRY_ROMANIA:             5GHz: NO_CTL -> ETSI
-* CTRY_RUSSIA:              5GHz: NO_CTL -> ETSI
-* CTRY_SAUDI_ARABIA:        5GHz: NO_CTL -> FCC
-* CTRY_SINGAPORE:           5GHz: ETSI -> FCC
-* CTRY_UKRAINE:             5GHz: NO_CTL -> ETSI
-* CTRY_UAE:                 5GHz: NO_CTL -> ETSI
-* CTRY_VIET_NAM:            5GHz: NO_CTL -> ETSI
-* CTRY_ZIMBABWE:            5GHz: NO_CTL -> ETSI
+Hmm. Ok, I think I see what you're getting at.
+
+The key point seems to be that we don't have any sort of "add VLAN to
+AP operation" - it's auto-detected based on the MAC address.
+
+However, it doesn't actually matter at all - we shouldn't get there
+with VLAN interface. EAPOL frames are always sent out to the
+corresponding AP interface, see ieee80211_rx_h_data:
+
+        if (rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+            unlikely(port_control) && sdata->bss) {
+                sdata = container_of(sdata->bss, struct ieee80211_sub_if_data,
+                                     u.ap);
+                dev = sdata->dev;
+                rx->sdata = sdata;
+        }
 
 
-Btw. I have not removed CTRY_SERBIA_MONTENEGRO, CTRY_KOREA_ROC2 or
-APL2_APLD because this might break devices which have these programmed in
-the EEPROM. And I have not added APL11_FCCA, APL12_WORLD and CTRY_MALDIVES
-because only the code was in the qcacld-2.0 source code but not the actual
-mapping.
+> > > - JOIN_IBSS & JOIN_MESH don't seem to support control_port_ethertype or
+> > > control_port_no_encrypt.  Should struct cfg80211_crypto_settings parsed inside
+> > > nl80211_crypto_settings be added to ibss_params or mesh_config/mesh_setup?
+> > 
+> > I don't think it matters - they just don't support this now and don't
+> > really need to.
+> > 
+> 
+> Except that the eapol over nl80211 flag is being sent in security 
+> settings.  This covers STA/AP/P2P_GO/P2P_CLIENT.  We need some way of 
+> passing this information for mesh & ibss.
 
-I am relative confident that QCA also has following extra countries:
+Not sure I understand what you're saying. Can't we just say the flag
+isn't permitted in those modes?
 
-* Afghanistan
-* American Samoa
-* Anguilla
-* Bhutan
-* Burkina Faso
-* Cayman Islands
-* Central Africa Republic
-* Chad
-* Christmas Islands
-* Dominica
-* Ethiopia
-* French Guiana
-* French Polynesia
-* Ghana
-* Guadeloupe
-* Guyana
-* Cote d'Ivoire
-* Lesotho
-* Malawi
-* Maldives
-* Marshall Islands
-* Martinique
-* Mauitania
-* Mayotte
-* Micronesia
-* Moldova
-* Mongolia
-* Namibia
-* Nigeria
-* Northern Mariana Islands
-* Palau
-* Reunion
-* St Barthelemy
-* St Kitts Nevis
-* St Lucia
-* St Martin
-* St Pierre Miquelon
-* St Vincent Grenadiens
-* Samoa
-* Senegal
-* Suriname
-* Togo
-* Turks Caicos
-* Vanuatu
-* Virgin Islands
-* Wallis Futuna
-
-+ a lot of extra regdomain codes (0x15, 0x16, 0x17, 0x18, 0x19, 0x3c, 0x4f,
-0x51, 0x57, 0x59) and the corresponding mappings.
-
-There might be even a lot more. But we will miss out on them unless QCA
-somehow opensources their current:
-
-* regdomain_common.h or at least:
-
-  - enum EnumRd
-  - ahCmnRegDomainPairs
-  - ahCmnAllCountries
-  - ahCmnRegDomains
-
-* regdomain.h or at least:
-
-  - enum CountryCode
-
-Kind regards,
-	Sven
-
-[1] https://source.codeaurora.org/quic/la/platform/vendor/qcom-opensource/wlan/qcacld-2.0
-
-Sven Eckelmann (52):
-  ath: Add regulatory mapping for Bahamas
-  ath: Add regulatory mapping for Bermuda
-  ath: Add regulatory mapping for Japan (J56)
-  ath: Add regulatory mapping for Japan KDDI
-  ath: Add regulatory mapping for Kenya
-  ath: Add regulatory mapping for Mauritius
-  ath: Add regulatory mapping for Montenegro
-  ath: Add regulatory mapping for Nicaragua
-  ath: Add regulatory mapping for Paraguya
-  ath: Add regulatory mapping for Rwanda
-  ath: Add regulatory mapping for Serbia
-  ath: Add regulatory mapping for Tanzania
-  ath: Add regulatory mapping for Uganda
-  ath: Add regulatory mapping for United States for AP
-  ath: Add regulatory mapping for APL2_FCCA
-  ath: Add regulatory mapping for APL10_MKKC
-  ath: Add regulatory mapping for APL13_WORLD
-  ath: Add regulatory mapping for ETSI8_WORLD
-  ath: Add regulatory mapping for ETSI9_WORLD
-  ath: Add regulatory mapping for FCC3_ETSIC
-  ath: Switch APL9_WORLD to 2.4GHz MKK CTL
-  ath: Map Albania to ETSI1_WORLD
-  ath: Map Algeria to APL13_WORLD
-  ath: Map Australia to FCC3_WORLD
-  ath: Map Bangladesh to APL1_WORLD
-  ath: Map Brunei Darussalam to APL6_WORLD
-  ath: Map Bulgaria to ETSI1_WORLD
-  ath: Map Colombia to FCC1_FCCA
-  ath: Map Czech to ETSI1_WORLD
-  ath: Map Honduras to FCC3_WORLD
-  ath: Map Indonesia to APL2_WORLD
-  ath: Map Isreal to ETSI3_WORLD
-  ath: Map Japan to MKK5_MKKA2
-  ath: Map South Korea to APL10_MKKC
-  ath: Map Lebanon to APL1_WORLD
-  ath: Map Macedonia to ETSI1_WORLD
-  ath: Map Malasia to FCC1_WORLD
-  ath: Map Mexico to FCC1_WORLD
-  ath: Map New Zealand to FCC3_ETSIC
-  ath: Map Pakistan to APL1_WORLD
-  ath: Map Peru to APL1_WORLD
-  ath: Map Philippines to FCC3_WORLD
-  ath: Map Romania to ETSI1_WORLD
-  ath: Map Russia to ETSI8_WORLD
-  ath: Map Saudi Arabia to FCC2_WORLD
-  ath: Map Singapore to FCC3_WORLD
-  ath: Map Taiwan to APL7_FCCA
-  ath: Map Ukraine to ETSI9_WORLD
-  ath: Map U.A.E. to ETSI1_WORLD
-  ath: Map Venezuela to FCC1_WORLD
-  ath: Map Vietnam to ETSI3_WORLD
-  ath: Map Zimbabwe to ETSI1_WORLD
-
- drivers/net/wireless/ath/regd.h        | 10 ++++
- drivers/net/wireless/ath/regd_common.h | 98 ++++++++++++++++++++++------------
- 2 files changed, 73 insertions(+), 35 deletions(-)
-
--- 
-2.11.0
+johannes
