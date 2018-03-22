@@ -1,350 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45952 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751002AbeCZFlx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 01:41:53 -0400
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org, bjorn.andersson@linaro.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH 11/12] ath10k: Add wlan mode on/off qmi message
-Date: Mon, 26 Mar 2018 11:11:44 +0530
-Message-Id: <1522042904-26559-1-git-send-email-govinds@codeaurora.org> (sfid-20180326_074156_344736_3A3A4353)
+Received: from mail-eopbgr10088.outbound.protection.outlook.com ([40.107.1.88]:15291
+        "EHLO EUR02-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753181AbeCVPNz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Mar 2018 11:13:55 -0400
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: Christoph Hellwig <hch@lst.de>
+CC: "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        "linux@armlinux.org.uk" <linux@armlinux.org.uk>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "zajec5@gmail.com" <zajec5@gmail.com>,
+        "andy.gross@linaro.org" <andy.gross@linaro.org>,
+        "david.brown@linaro.org" <david.brown@linaro.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "vinod.koul@intel.com" <vinod.koul@intel.com>,
+        "thierry.reding@gmail.com" <thierry.reding@gmail.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "frowand.list@gmail.com" <frowand.list@gmail.com>,
+        "jarkko.sakkinen@linux.intel.com" <jarkko.sakkinen@linux.intel.com>,
+        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
+        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
+        "johan@kernel.org" <johan@kernel.org>,
+        "msuchanek@suse.de" <msuchanek@suse.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "linux-soc@vger.kernel.org" <linux-soc@vger.kernel.org>,
+        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Bharat Bhushan <bharat.bhushan@nxp.com>,
+        Leo Li <leoyang.li@nxp.com>
+Subject: RE: [PATCH v2 2/2] drivers: remove force dma flag from buses
+Date: Thu, 22 Mar 2018 15:13:49 +0000
+Message-ID: <HE1PR0401MB2425407DADB19FCF6E016456E6A90@HE1PR0401MB2425.eurprd04.prod.outlook.com> (sfid-20180322_161513_578894_2980FDD9)
+References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
+ <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com>
+ <1521615323-4752-2-git-send-email-nipun.gupta@nxp.com>
+ <20180322081926.GC29444@lst.de>
+In-Reply-To: <20180322081926.GC29444@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add qmi message required for enabling and disabling
-target to qmi server running in Q6.
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/qmi.c | 226 +++++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/qmi.h |  62 ++++++----
- 2 files changed, 264 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
-index f23d0fe..331a528 100644
---- a/drivers/net/wireless/ath/ath10k/qmi.c
-+++ b/drivers/net/wireless/ath/ath10k/qmi.c
-@@ -35,7 +35,30 @@
- #define WLFW_CLIENT_ID			0x4b4e454c
- #define WLFW_TIMEOUT			500
- 
--static struct ath10k_qmi *qmi;
-+static struct ath10k_qmi {
-+	struct platform_device *pdev;
-+	struct qmi_handle qmi_hdl;
-+	struct sockaddr_qrtr sq;
-+	bool fw_ready;
-+	bool msa_ready;
-+	struct work_struct work_svc_arrive;
-+	struct work_struct work_svc_exit;
-+	struct work_struct work_msa_ready;
-+	struct workqueue_struct *event_wq;
-+	spinlock_t event_lock; /* spinlock for fw ready status*/
-+	u32 nr_mem_region;
-+	struct ath10k_msa_mem_region_info
-+		mem_region[MAX_NUM_MEMORY_REGIONS];
-+	phys_addr_t msa_pa;
-+	u32 msa_mem_size;
-+	void *msa_va;
-+	struct ath10k_qmi_chip_info chip_info;
-+	struct ath10k_qmi_board_info board_info;
-+	struct ath10k_qmi_soc_info soc_info;
-+	struct ath10k_qmi_fw_version_info fw_version_info;
-+	char fw_build_id[MAX_BUILD_ID_LEN + 1];
-+	struct ath10k_qmi_cal_data cal_data[MAX_NUM_CAL_V01];
-+} *qmi;
- 
- static int
- ath10k_qmi_map_msa_permissions(struct ath10k_msa_mem_region_info *mem_region)
-@@ -444,6 +467,207 @@ int ath10k_qmi_send_cal_report_req(struct ath10k_qmi *qmi)
- 	return ret;
- }
- 
-+static int
-+ath10k_qmi_mode_send_sync_msg(enum wlfw_driver_mode_enum_v01 mode)
-+{
-+	struct wlfw_wlan_mode_resp_msg_v01 *resp;
-+	struct wlfw_wlan_mode_req_msg_v01 *req;
-+	struct qmi_txn txn;
-+	int ret;
-+
-+	req = kzalloc(sizeof(*req), GFP_KERNEL);
-+	if (!req)
-+		return -ENOMEM;
-+
-+	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
-+	if (!resp) {
-+		kfree(req);
-+		return -ENOMEM;
-+	}
-+
-+	ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
-+			   wlfw_wlan_mode_resp_msg_v01_ei,
-+			   resp);
-+	if (ret < 0) {
-+		pr_err("fail to init txn for mode req %d ret %d\n", mode, ret);
-+		goto out;
-+	}
-+
-+	req->mode = mode;
-+	req->hw_debug_valid = 1;
-+	req->hw_debug = 0;
-+
-+	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
-+			       QMI_WLFW_WLAN_MODE_REQ_V01,
-+			       WLFW_WLAN_MODE_REQ_MSG_V01_MAX_MSG_LEN,
-+			       wlfw_wlan_mode_req_msg_v01_ei, req);
-+	if (ret < 0) {
-+		qmi_txn_cancel(&txn);
-+		pr_err("send mode req failed, mode: %d ret: %d\n",
-+		       mode, ret);
-+		goto out;
-+	}
-+
-+	ret = qmi_txn_wait(&txn, WLFW_TIMEOUT * HZ);
-+	if (ret < 0)
-+		goto out;
-+
-+	if (resp->resp.result != QMI_RESULT_SUCCESS_V01) {
-+		pr_err("qmi mode request rejected:");
-+		pr_err("mode:%d result:%d error:%d\n",
-+		       mode, resp->resp.result, resp->resp.error);
-+		ret = resp->resp.result;
-+		goto out;
-+	}
-+
-+	pr_debug("wlan Mode request completed, mode: %d\n", mode);
-+	kfree(resp);
-+	kfree(req);
-+	return 0;
-+
-+out:
-+	kfree(resp);
-+	kfree(req);
-+	return ret;
-+}
-+
-+static int
-+ath10k_qmi_cfg_send_sync_msg(struct wlfw_wlan_cfg_req_msg_v01 *data)
-+{
-+	struct wlfw_wlan_cfg_resp_msg_v01 *resp;
-+	struct wlfw_wlan_cfg_req_msg_v01 *req;
-+	struct qmi_txn txn;
-+	int ret;
-+
-+	req = kzalloc(sizeof(*req), GFP_KERNEL);
-+	if (!req)
-+		return -ENOMEM;
-+
-+	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
-+	if (!resp) {
-+		kfree(req);
-+		return -ENOMEM;
-+	}
-+
-+	ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
-+			   wlfw_wlan_cfg_resp_msg_v01_ei,
-+			   resp);
-+	if (ret < 0) {
-+		pr_err("fail to init txn for config req %d\n", ret);
-+		goto out;
-+	}
-+
-+	memcpy(req, data, sizeof(*req));
-+
-+	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
-+			       QMI_WLFW_WLAN_CFG_REQ_V01,
-+			       WLFW_WLAN_CFG_REQ_MSG_V01_MAX_MSG_LEN,
-+			       wlfw_wlan_cfg_req_msg_v01_ei, req);
-+	if (ret < 0) {
-+		qmi_txn_cancel(&txn);
-+		pr_err("send config req failed %d\n", ret);
-+		goto out;
-+	}
-+
-+	ret = qmi_txn_wait(&txn, WLFW_TIMEOUT * HZ);
-+	if (ret < 0)
-+		goto out;
-+
-+	if (resp->resp.result != QMI_RESULT_SUCCESS_V01) {
-+		pr_err("qmi cfg request rejected:");
-+		pr_err("result:%d error:%d\n",
-+		       resp->resp.result, resp->resp.error);
-+		ret = resp->resp.result;
-+		goto out;
-+	}
-+
-+	pr_debug("wlan config request completed\n");
-+	kfree(resp);
-+	kfree(req);
-+	return 0;
-+
-+out:
-+	kfree(resp);
-+	kfree(req);
-+	return ret;
-+}
-+
-+int ath10k_qmi_wlan_enable(struct ath10k_qmi_wlan_enable_cfg *config,
-+			   enum ath10k_qmi_driver_mode mode,
-+			   const char *host_version)
-+{
-+	struct wlfw_wlan_cfg_req_msg_v01 req;
-+	int ret;
-+	u32 i;
-+
-+	pr_debug("mode: %d, config: %p:\n",
-+		 mode, config);
-+	memset(&req, 0, sizeof(req));
-+	if (!config) {
-+		pr_err("wlan enable Config Invalid:%p\n",
-+		       config);
-+		ret = -EINVAL;
-+		return ret;
-+	}
-+
-+	req.host_version_valid = 0;
-+
-+	req.tgt_cfg_valid = 1;
-+	if (config->num_ce_tgt_cfg > QMI_WLFW_MAX_NUM_CE_V01)
-+		req.tgt_cfg_len = QMI_WLFW_MAX_NUM_CE_V01;
-+	else
-+		req.tgt_cfg_len = config->num_ce_tgt_cfg;
-+	for (i = 0; i < req.tgt_cfg_len; i++) {
-+		req.tgt_cfg[i].pipe_num = config->ce_tgt_cfg[i].pipe_num;
-+		req.tgt_cfg[i].pipe_dir = config->ce_tgt_cfg[i].pipe_dir;
-+		req.tgt_cfg[i].nentries = config->ce_tgt_cfg[i].nentries;
-+		req.tgt_cfg[i].nbytes_max = config->ce_tgt_cfg[i].nbytes_max;
-+		req.tgt_cfg[i].flags = config->ce_tgt_cfg[i].flags;
-+	}
-+
-+	req.svc_cfg_valid = 1;
-+	if (config->num_ce_svc_pipe_cfg > QMI_WLFW_MAX_NUM_SVC_V01)
-+		req.svc_cfg_len = QMI_WLFW_MAX_NUM_SVC_V01;
-+	else
-+		req.svc_cfg_len = config->num_ce_svc_pipe_cfg;
-+	for (i = 0; i < req.svc_cfg_len; i++) {
-+		req.svc_cfg[i].service_id = config->ce_svc_cfg[i].service_id;
-+		req.svc_cfg[i].pipe_dir = config->ce_svc_cfg[i].pipe_dir;
-+		req.svc_cfg[i].pipe_num = config->ce_svc_cfg[i].pipe_num;
-+	}
-+
-+	req.shadow_reg_valid = 1;
-+	if (config->num_shadow_reg_cfg >
-+	    QMI_WLFW_MAX_NUM_SHADOW_REG_V01)
-+		req.shadow_reg_len = QMI_WLFW_MAX_NUM_SHADOW_REG_V01;
-+	else
-+		req.shadow_reg_len = config->num_shadow_reg_cfg;
-+
-+	memcpy(req.shadow_reg, config->shadow_reg_cfg,
-+	       sizeof(struct wlfw_shadow_reg_cfg_s_v01) * req.shadow_reg_len);
-+
-+	ret = ath10k_qmi_cfg_send_sync_msg(&req);
-+	if (ret) {
-+		pr_err("wlan qmi config send failed\n");
-+		return ret;
-+	}
-+
-+	ret = ath10k_qmi_mode_send_sync_msg(mode);
-+	if (ret) {
-+		pr_err("wlan qmi mode send failed\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(ath10k_qmi_wlan_enable);
-+
-+int ath10k_qmi_wlan_disable(void)
-+{
-+	return ath10k_qmi_mode_send_sync_msg(QMI_WLFW_OFF_V01);
-+}
-+EXPORT_SYMBOL_GPL(ath10k_qmi_wlan_disable);
-+
- static int ath10k_qmi_cap_send_sync_msg(struct ath10k_qmi *qmi)
- {
- 	struct wlfw_cap_resp_msg_v01 *resp;
-diff --git a/drivers/net/wireless/ath/ath10k/qmi.h b/drivers/net/wireless/ath/ath10k/qmi.h
-index 94f14d4..4d456c8 100644
---- a/drivers/net/wireless/ath/ath10k/qmi.h
-+++ b/drivers/net/wireless/ath/ath10k/qmi.h
-@@ -29,6 +29,13 @@ enum ath10k_qmi_driver_event_type {
- 	ATH10K_QMI_EVENT_MAX,
- };
- 
-+enum ath10k_qmi_driver_mode {
-+	QMI_MISSION,
-+	QMI_FTM,
-+	QMI_EPPING,
-+	QMI_OFF,
-+};
-+
- struct ath10k_msa_mem_region_info {
- 	u64 reg_addr;
- 	u32 size;
-@@ -59,28 +66,37 @@ struct ath10k_qmi_cal_data {
- 	u8 *data;
- };
- 
--struct ath10k_qmi {
--	struct platform_device *pdev;
--	struct qmi_handle qmi_hdl;
--	struct sockaddr_qrtr sq;
--	bool fw_ready;
--	bool msa_ready;
--	struct work_struct work_svc_arrive;
--	struct work_struct work_svc_exit;
--	struct work_struct work_msa_ready;
--	struct workqueue_struct *event_wq;
--	spinlock_t event_lock; /* spinlock for fw ready status*/
--	u32 nr_mem_region;
--	struct ath10k_msa_mem_region_info
--		mem_region[MAX_NUM_MEMORY_REGIONS];
--	phys_addr_t msa_pa;
--	u32 msa_mem_size;
--	void *msa_va;
--	struct ath10k_qmi_chip_info chip_info;
--	struct ath10k_qmi_board_info board_info;
--	struct ath10k_qmi_soc_info soc_info;
--	struct ath10k_qmi_fw_version_info fw_version_info;
--	char fw_build_id[MAX_BUILD_ID_LEN + 1];
--	struct ath10k_qmi_cal_data cal_data[MAX_NUM_CAL_V01];
-+struct ath10k_tgt_pipe_cfg {
-+	u32 pipe_num;
-+	u32 pipe_dir;
-+	u32 nentries;
-+	u32 nbytes_max;
-+	u32 flags;
-+	u32 reserved;
- };
-+
-+struct ath10k_svc_pipe_cfg {
-+	u32 service_id;
-+	u32 pipe_dir;
-+	u32 pipe_num;
-+};
-+
-+struct ath10k_shadow_reg_cfg {
-+	u16 ce_id;
-+	u16 reg_offset;
-+};
-+
-+struct ath10k_qmi_wlan_enable_cfg {
-+	u32 num_ce_tgt_cfg;
-+	struct ath10k_tgt_pipe_cfg *ce_tgt_cfg;
-+	u32 num_ce_svc_pipe_cfg;
-+	struct ath10k_svc_pipe_cfg *ce_svc_cfg;
-+	u32 num_shadow_reg_cfg;
-+	struct ath10k_shadow_reg_cfg *shadow_reg_cfg;
-+};
-+
-+int ath10k_qmi_wlan_enable(struct ath10k_qmi_wlan_enable_cfg *config,
-+			   enum ath10k_qmi_driver_mode mode,
-+			   const char *host_version);
-+int ath10k_qmi_wlan_disable(void);
- #endif /* _QMI_H_ */
--- 
-1.9.1
+> -----Original Message-----
+> From: Christoph Hellwig [mailto:hch@lst.de]
+> Sent: Thursday, March 22, 2018 13:49
+> To: Nipun Gupta <nipun.gupta@nxp.com>
+>=20
+> > --- a/drivers/dma/qcom/hidma_mgmt.c
+> > +++ b/drivers/dma/qcom/hidma_mgmt.c
+> > @@ -398,7 +398,7 @@ static int __init
+> hidma_mgmt_of_populate_channels(struct device_node *np)
+> >  		}
+> >  		of_node_get(child);
+> >  		new_pdev->dev.of_node =3D child;
+> > -		of_dma_configure(&new_pdev->dev, child);
+> > +		of_dma_configure(&new_pdev->dev, child, true);
+> >  		/*
+> >  		 * It is assumed that calling of_msi_configure is safe on
+> >  		 * platforms with or without MSI support.
+>=20
+> Where did we mark this bus as force_dma before?
+
+I thought these devices to be on the platform bus as the device is of type
+'struct platform_device', though I am not sure then why 'of_dma_configure()=
+'
+is called here. Is this not on platform bus?
+
+>=20
+> > diff --git a/drivers/of/of_reserved_mem.c b/drivers/of/of_reserved_mem.=
+c
+> > index 9a4f4246..895c83e 100644
+> > --- a/drivers/of/of_reserved_mem.c
+> > +++ b/drivers/of/of_reserved_mem.c
+> > @@ -353,7 +353,7 @@ int of_reserved_mem_device_init_by_idx(struct devic=
+e
+> *dev,
+> >  		/* ensure that dma_ops is set for virtual devices
+> >  		 * using reserved memory
+> >  		 */
+> > -		of_dma_configure(dev, np);
+> > +		of_dma_configure(dev, np, true);
+>=20
+> Did all the callers of this one really force dma?  I have a hard time
+> untangling the call stacks unfortunately.
+
+I see this API being called indirectly from NXP DPAA device driver which
+is for platform bus devices. So I marked 'true' out here. There are more pl=
+aces
+from where it is being called.
+
+Thanks,
+Nipun
