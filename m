@@ -1,109 +1,484 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 4.mo173.mail-out.ovh.net ([46.105.34.219]:58622 "EHLO
-        4.mo173.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751481AbeCNQRx (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52616 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751896AbeCVU2h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Mar 2018 12:17:53 -0400
-Received: from player774.ha.ovh.net (unknown [10.109.122.233])
-        by mo173.mail-out.ovh.net (Postfix) with ESMTP id EC958B2138
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Mar 2018 16:40:40 +0100 (CET)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Wed, 14 Mar 2018 16:40:22 +0100
-From: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        James Hughes <james.hughes@raspberrypi.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        =?UTF-8?Q?Linus_L=C3=BCssing?= <linus.luessing@c0d3.blue>,
-        Felix Fietkau <nbd@nbd.name>, bridge@lists.linux-foundation.org
-Subject: Re: [PATCH] brcmfmac: drop Inter-Access Point Protocol packets by
- default
-In-Reply-To: <f145e568e9033db57a436ed3e2dad2c8@milecki.pl>
-References: <20180314110119.13631-1-zajec5@gmail.com>
- <5AA91C67.90001@broadcom.com> <f145e568e9033db57a436ed3e2dad2c8@milecki.pl>
-Message-ID: <9499f70ecb942df0df95512565a8f428@milecki.pl> (sfid-20180314_171758_388844_5C85CCE5)
+        Thu, 22 Mar 2018 16:28:37 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 04/12] brcmfmac: allocate struct brcmf_pub instance using wiphy_new()
+Date: Thu, 22 Mar 2018 21:28:23 +0100
+Message-Id: <1521750511-12345-5-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180322_212906_455235_3321EF8A)
+In-Reply-To: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-03-14 16:39, Rafał Miłecki wrote:
-> On 2018-03-14 13:58, Arend van Spriel wrote:
->> On 3/14/2018 12:01 PM, Rafał Miłecki wrote:
->>> From: Rafał Miłecki <rafal@milecki.pl>
->>> 
->>> Testing brcmfmac with more recent firmwares resulted in AP interfaces
->>> not working in some specific setups. Debugging resulted in 
->>> discovering
->>> support for IAPP in Broadcom's firmwares. This is an obsoleted 
->>> standard
->>> and its implementation is something that:
->>> 1) Most people don't need / want to use
->>> 2) Can allow local DoS attacks
->>> 3) Breaks AP interfaces in some specific bridge setups
->>> 
->>> To solve issues it can cause this commit modifies brcmfmac to drop 
->>> IAPP
->>> packets. If affects:
->>> 1) Rx path: driver won't be sending these unwanted packets up.
->>> 2) Tx path: driver will reject packets that would trigger STA
->>>     disassociation perfromed by a firmware (possible local DoS 
->>> attack).
->>> 
->>> It appears there are some Broadcom's clients/users who care about 
->>> this
->>> feature despite the drawbacks. They can switch it on by a newly added
->>> Kconfig option.
->> 
->> Thanks for taking this approach. Looks fine except for .... (see 
->> below)
->> 
->> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
->>> ---
->>>   drivers/net/wireless/broadcom/brcm80211/Kconfig    | 20 +++++++++++
->>>   .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 39 
->>> ++++++++++++++++++++++
->>>   2 files changed, 59 insertions(+)
->>> 
->>> diff --git a/drivers/net/wireless/broadcom/brcm80211/Kconfig 
->>> b/drivers/net/wireless/broadcom/brcm80211/Kconfig
->>> index 9d99eb42d917..876787ef991a 100644
->>> --- a/drivers/net/wireless/broadcom/brcm80211/Kconfig
->>> +++ b/drivers/net/wireless/broadcom/brcm80211/Kconfig
->>> @@ -68,6 +68,26 @@ config BRCMFMAC_PCIE
->>>   	  IEEE802.11ac embedded FullMAC WLAN driver. Say Y if you want to
->>>   	  use the driver for an PCIE wireless card.
->>> 
->>> +config BRCMFMAC_IAPP
->>> +	bool "Partial support for obsoleted Inter-Access Point Protocol"
->>> +	depends on BRCMFMAC
->>> +	---help---
->>> +	  Most of Broadcom's firmwares can send 802.11f ADD frame every
->>> +	  time new STA connects to the AP interface. Some recent ones
->>> +	  can also disassociate STA when they receive such a frame.
->> 
->> I do not see any evidence that this would occur only for recent
->> firmware. That stuff is old and not touched recently.
-> 
-> My evidence is comparing firmwares for 4366b1: 10.10.69.3309 (r610991)
-> vs. 10.10 (TOB) (r663589).
-> 
-> The first one is from linux-firmware.git and it doesn't implement IAPP
-> in the TX path. The later one is what I got from you privately and it
-> implements it.
-> 
-> Also a firmware for 4366c0: 10.10.122.20 (r683106) which is relatively
-> new implements IAPP in the TX path.
+Rework the driver so the wiphy instance holds the main driver information
+in its private buffer. Previously it held struct brcmf_cfg80211_info
+instance so a bit of reorg was needed. This was done so that the wiphy
+name or its parent device can be shown in debug output.
 
-Please also take a look at my original patch
-[PATCH] brcmfmac: detect & reject faked packet generated by a firmware
-https://patchwork.kernel.org/patch/10191451/
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+changelog
+  V2:
+   - keep brcmf_cfg80211_ops static (kbuild robot).
+   - fix wrong use of wiphy_priv() (Franky Lin).
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/btcoex.c  |  2 +-
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 86 ++++++++++------------
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         | 17 +++--
+ .../wireless/broadcom/brcm80211/brcmfmac/common.c  |  2 +
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 27 +++++--
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  1 +
+ .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c |  2 +-
+ 7 files changed, 76 insertions(+), 61 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
+index 03aae6b..372363a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
+@@ -462,7 +462,7 @@ static void brcmf_btcoex_dhcp_end(struct brcmf_btcoex_info *btci)
+ int brcmf_btcoex_set_mode(struct brcmf_cfg80211_vif *vif,
+ 			  enum brcmf_btcoex_mode mode, u16 duration)
+ {
+-	struct brcmf_cfg80211_info *cfg = wiphy_priv(vif->wdev.wiphy);
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(vif->wdev.wiphy);
+ 	struct brcmf_btcoex_info *btci = cfg->btcoex;
+ 	struct brcmf_if *ifp = brcmf_get_ifp(cfg->pub, 0);
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 74a8302..4133d66 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -753,7 +753,7 @@ s32 brcmf_notify_escan_complete(struct brcmf_cfg80211_info *cfg,
+ static int brcmf_cfg80211_del_ap_iface(struct wiphy *wiphy,
+ 				       struct wireless_dev *wdev)
+ {
+-	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+ 	struct net_device *ndev = wdev->netdev;
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	int ret;
+@@ -786,7 +786,7 @@ static int brcmf_cfg80211_del_ap_iface(struct wiphy *wiphy,
+ static
+ int brcmf_cfg80211_del_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
+ {
+-	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+ 	struct net_device *ndev = wdev->netdev;
+ 
+ 	if (ndev && ndev == cfg_to_ndev(cfg))
+@@ -831,7 +831,7 @@ int brcmf_cfg80211_del_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 			 enum nl80211_iftype type,
+ 			 struct vif_params *params)
+ {
+-	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	struct brcmf_cfg80211_vif *vif = ifp->vif;
+ 	s32 infra = 0;
+@@ -2127,17 +2127,15 @@ static void brcmf_set_join_pref(struct brcmf_if *ifp,
+ brcmf_cfg80211_get_tx_power(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			    s32 *dbm)
+ {
+-	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+-	struct net_device *ndev = cfg_to_ndev(cfg);
+-	struct brcmf_if *ifp = netdev_priv(ndev);
++	struct brcmf_cfg80211_vif *vif = wdev_to_vif(wdev);
+ 	s32 qdbm = 0;
+ 	s32 err;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+-	if (!check_vif_up(ifp->vif))
++	if (!check_vif_up(vif))
+ 		return -EIO;
+ 
+-	err = brcmf_fil_iovar_int_get(ifp, "qtxpower", &qdbm);
++	err = brcmf_fil_iovar_int_get(vif->ifp, "qtxpower", &qdbm);
+ 	if (err) {
+ 		brcmf_err("error (%d)\n", err);
+ 		goto done;
+@@ -3358,7 +3356,7 @@ static int brcmf_start_internal_escan(struct brcmf_if *ifp, u32 fwmap,
+ 				struct cfg80211_sched_scan_request *req)
+ {
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+-	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+ 
+ 	brcmf_dbg(SCAN, "Enter: n_match_sets=%d n_ssids=%d\n",
+ 		  req->n_match_sets, req->n_ssids);
+@@ -5190,6 +5188,12 @@ static int brcmf_cfg80211_del_pmk(struct wiphy *wiphy, struct net_device *dev,
+ 	.del_pmk = brcmf_cfg80211_del_pmk,
+ };
+ 
++struct cfg80211_ops *brcmf_cfg80211_get_ops(void)
++{
++	return kmemdup(&brcmf_cfg80211_ops, sizeof(brcmf_cfg80211_ops),
++		       GFP_KERNEL);
++}
++
+ struct brcmf_cfg80211_vif *brcmf_alloc_vif(struct brcmf_cfg80211_info *cfg,
+ 					   enum nl80211_iftype type)
+ {
+@@ -5897,7 +5901,7 @@ static void brcmf_update_bw40_channel_flag(struct ieee80211_channel *channel,
+ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
+ 				    u32 bw_cap[])
+ {
+-	struct brcmf_if *ifp = netdev_priv(cfg_to_ndev(cfg));
++	struct brcmf_if *ifp = brcmf_get_ifp(cfg->pub, 0);
+ 	struct ieee80211_supported_band *band;
+ 	struct ieee80211_channel *channel;
+ 	struct wiphy *wiphy;
+@@ -6012,7 +6016,7 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
+ 
+ static int brcmf_enable_bw40_2g(struct brcmf_cfg80211_info *cfg)
+ {
+-	struct brcmf_if *ifp = netdev_priv(cfg_to_ndev(cfg));
++	struct brcmf_if *ifp = brcmf_get_ifp(cfg->pub, 0);
+ 	struct ieee80211_supported_band *band;
+ 	struct brcmf_fil_bwcap_le band_bwcap;
+ 	struct brcmf_chanspec_list *list;
+@@ -6197,10 +6201,10 @@ static void brcmf_update_vht_cap(struct ieee80211_supported_band *band,
+ 	}
+ }
+ 
+-static int brcmf_setup_wiphybands(struct wiphy *wiphy)
++static int brcmf_setup_wiphybands(struct brcmf_cfg80211_info *cfg)
+ {
+-	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
+-	struct brcmf_if *ifp = netdev_priv(cfg_to_ndev(cfg));
++	struct brcmf_if *ifp = brcmf_get_ifp(cfg->pub, 0);
++	struct wiphy *wiphy;
+ 	u32 nmode = 0;
+ 	u32 vhtmode = 0;
+ 	u32 bw_cap[2] = { WLC_BW_20MHZ_BIT, WLC_BW_20MHZ_BIT };
+@@ -6794,8 +6798,8 @@ static s32 brcmf_translate_country_code(struct brcmf_pub *drvr, char alpha2[2],
+ static void brcmf_cfg80211_reg_notifier(struct wiphy *wiphy,
+ 					struct regulatory_request *req)
+ {
+-	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
+-	struct brcmf_if *ifp = netdev_priv(cfg_to_ndev(cfg));
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
++	struct brcmf_if *ifp = brcmf_get_ifp(cfg->pub, 0);
+ 	struct brcmf_fil_country_le ccreq;
+ 	s32 err;
+ 	int i;
+@@ -6830,7 +6834,7 @@ static void brcmf_cfg80211_reg_notifier(struct wiphy *wiphy,
+ 		brcmf_err("Firmware rejected country setting\n");
+ 		return;
+ 	}
+-	brcmf_setup_wiphybands(wiphy);
++	brcmf_setup_wiphybands(cfg);
+ }
+ 
+ static void brcmf_free_wiphy(struct wiphy *wiphy)
+@@ -6857,17 +6861,15 @@ static void brcmf_free_wiphy(struct wiphy *wiphy)
+ 	if (wiphy->wowlan != &brcmf_wowlan_support)
+ 		kfree(wiphy->wowlan);
+ #endif
+-	wiphy_free(wiphy);
+ }
+ 
+ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+-						  struct device *busdev,
++						  struct cfg80211_ops *ops,
+ 						  bool p2pdev_forced)
+ {
++	struct wiphy *wiphy = drvr->wiphy;
+ 	struct net_device *ndev = brcmf_get_ifp(drvr, 0)->ndev;
+ 	struct brcmf_cfg80211_info *cfg;
+-	struct wiphy *wiphy;
+-	struct cfg80211_ops *ops;
+ 	struct brcmf_cfg80211_vif *vif;
+ 	struct brcmf_if *ifp;
+ 	s32 err = 0;
+@@ -6879,26 +6881,13 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 		return NULL;
+ 	}
+ 
+-	ops = kmemdup(&brcmf_cfg80211_ops, sizeof(*ops), GFP_KERNEL);
+-	if (!ops)
+-		return NULL;
+-
+-	ifp = netdev_priv(ndev);
+-#ifdef CONFIG_PM
+-	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL_GTK))
+-		ops->set_rekey_data = brcmf_cfg80211_set_rekey_data;
+-#endif
+-	wiphy = wiphy_new(ops, sizeof(struct brcmf_cfg80211_info));
+-	if (!wiphy) {
++	cfg = kzalloc(sizeof(*cfg), GFP_KERNEL);
++	if (!cfg) {
+ 		brcmf_err("Could not allocate wiphy device\n");
+-		goto ops_out;
++		return NULL;
+ 	}
+-	memcpy(wiphy->perm_addr, drvr->mac, ETH_ALEN);
+-	set_wiphy_dev(wiphy, busdev);
+ 
+-	cfg = wiphy_priv(wiphy);
+ 	cfg->wiphy = wiphy;
+-	cfg->ops = ops;
+ 	cfg->pub = drvr;
+ 	init_vif_event(&cfg->vif_event);
+ 	INIT_LIST_HEAD(&cfg->vif_list);
+@@ -6907,6 +6896,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 	if (IS_ERR(vif))
+ 		goto wiphy_out;
+ 
++	ifp = netdev_priv(ndev);
+ 	vif->ifp = ifp;
+ 	vif->wdev.netdev = ndev;
+ 	ndev->ieee80211_ptr = &vif->wdev;
+@@ -6933,6 +6923,11 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 	if (err < 0)
+ 		goto priv_out;
+ 
++	/* regulatory notifer below needs access to cfg so
++	 * assign it now.
++	 */
++	drvr->config = cfg;
++
+ 	brcmf_dbg(INFO, "Registering custom regulatory\n");
+ 	wiphy->reg_notifier = brcmf_cfg80211_reg_notifier;
+ 	wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG;
+@@ -6946,13 +6941,17 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 		cap = &wiphy->bands[NL80211_BAND_2GHZ]->ht_cap.cap;
+ 		*cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+ 	}
++#ifdef CONFIG_PM
++	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL_GTK))
++		ops->set_rekey_data = brcmf_cfg80211_set_rekey_data;
++#endif
+ 	err = wiphy_register(wiphy);
+ 	if (err < 0) {
+ 		brcmf_err("Could not register wiphy device (%d)\n", err);
+ 		goto priv_out;
+ 	}
+ 
+-	err = brcmf_setup_wiphybands(wiphy);
++	err = brcmf_setup_wiphybands(cfg);
+ 	if (err) {
+ 		brcmf_err("Setting wiphy bands failed (%d)\n", err);
+ 		goto wiphy_unreg_out;
+@@ -6969,12 +6968,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 		else
+ 			*cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+ 	}
+-	/* p2p might require that "if-events" get processed by fweh. So
+-	 * activate the already registered event handlers now and activate
+-	 * the rest when initialization has completed. drvr->config needs to
+-	 * be assigned before activating events.
+-	 */
+-	drvr->config = cfg;
++
+ 	err = brcmf_fweh_activate_events(ifp);
+ 	if (err) {
+ 		brcmf_err("FWEH activation failed (%d)\n", err);
+@@ -7042,8 +7036,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 	ifp->vif = NULL;
+ wiphy_out:
+ 	brcmf_free_wiphy(wiphy);
+-ops_out:
+-	kfree(ops);
++	kfree(cfg);
+ 	return NULL;
+ }
+ 
+@@ -7058,4 +7051,5 @@ void brcmf_cfg80211_detach(struct brcmf_cfg80211_info *cfg)
+ 	kfree(cfg->ops);
+ 	wl_deinit_priv(cfg);
+ 	brcmf_free_wiphy(cfg->wiphy);
++	kfree(cfg);
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index b5b5f0f..a4aec00 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -355,20 +355,24 @@ static inline struct wiphy *cfg_to_wiphy(struct brcmf_cfg80211_info *cfg)
+ 
+ static inline struct brcmf_cfg80211_info *wiphy_to_cfg(struct wiphy *w)
+ {
+-	return (struct brcmf_cfg80211_info *)(wiphy_priv(w));
++	struct brcmf_pub *drvr = wiphy_priv(w);
++	return drvr->config;
+ }
+ 
+ static inline struct brcmf_cfg80211_info *wdev_to_cfg(struct wireless_dev *wd)
+ {
+-	return (struct brcmf_cfg80211_info *)(wdev_priv(wd));
++	return wiphy_to_cfg(wd->wiphy);
++}
++
++static inline struct brcmf_cfg80211_vif *wdev_to_vif(struct wireless_dev *wdev)
++{
++	return container_of(wdev, struct brcmf_cfg80211_vif, wdev);
+ }
+ 
+ static inline
+ struct net_device *cfg_to_ndev(struct brcmf_cfg80211_info *cfg)
+ {
+-	struct brcmf_cfg80211_vif *vif;
+-	vif = list_first_entry(&cfg->vif_list, struct brcmf_cfg80211_vif, list);
+-	return vif->wdev.netdev;
++	return brcmf_get_ifp(cfg->pub, 0)->ndev;
+ }
+ 
+ static inline struct brcmf_cfg80211_info *ndev_to_cfg(struct net_device *ndev)
+@@ -395,11 +399,12 @@ brcmf_cfg80211_connect_info *cfg_to_conn(struct brcmf_cfg80211_info *cfg)
+ }
+ 
+ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+-						  struct device *busdev,
++						  struct cfg80211_ops *ops,
+ 						  bool p2pdev_forced);
+ void brcmf_cfg80211_detach(struct brcmf_cfg80211_info *cfg);
+ s32 brcmf_cfg80211_up(struct net_device *ndev);
+ s32 brcmf_cfg80211_down(struct net_device *ndev);
++struct cfg80211_ops *brcmf_cfg80211_get_ops(void);
+ enum nl80211_iftype brcmf_cfg80211_get_iftype(struct brcmf_if *ifp);
+ 
+ struct brcmf_cfg80211_vif *brcmf_alloc_vif(struct brcmf_cfg80211_info *cfg,
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index 09601f8..23affb5 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -248,6 +248,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ 		brcmf_err("Retreiving cur_etheraddr failed, %d\n", err);
+ 		goto done;
+ 	}
++	memcpy(ifp->drvr->wiphy->perm_addr, ifp->drvr->mac, ETH_ALEN);
+ 	memcpy(ifp->drvr->mac, ifp->mac_addr, sizeof(ifp->drvr->mac));
+ 
+ 	bus = ifp->drvr->bus_if;
+@@ -275,6 +276,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ 		ri->chippkg = le32_to_cpu(revinfo.chippkg);
+ 		ri->nvramrev = le32_to_cpu(revinfo.nvramrev);
+ 
++		/* use revinfo if not known yet */
+ 		if (!bus->chip) {
+ 			bus->chip = le32_to_cpu(revinfo.chipnum);
+ 			bus->chiprev = le32_to_cpu(revinfo.chiprev);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index e8c16d7..8039732 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -943,7 +943,7 @@ static int brcmf_revinfo_read(struct seq_file *s, void *data)
+ 	return 0;
+ }
+ 
+-static int brcmf_bus_started(struct brcmf_pub *drvr)
++static int brcmf_bus_started(struct brcmf_pub *drvr, struct cfg80211_ops *ops)
+ {
+ 	int ret = -1;
+ 	struct brcmf_bus *bus_if = drvr->bus_if;
+@@ -982,7 +982,7 @@ static int brcmf_bus_started(struct brcmf_pub *drvr)
+ 
+ 	brcmf_proto_add_if(drvr, ifp);
+ 
+-	drvr->config = brcmf_cfg80211_attach(drvr, bus_if->dev,
++	drvr->config = brcmf_cfg80211_attach(drvr, ops,
+ 					     drvr->settings->p2p_enable);
+ 	if (drvr->config == NULL) {
+ 		ret = -ENOMEM;
+@@ -1037,17 +1037,26 @@ static int brcmf_bus_started(struct brcmf_pub *drvr)
+ 
+ int brcmf_attach(struct device *dev, struct brcmf_mp_device *settings)
+ {
++	struct wiphy *wiphy;
++	struct cfg80211_ops *ops;
+ 	struct brcmf_pub *drvr = NULL;
+ 	int ret = 0;
+ 	int i;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	/* Allocate primary brcmf_info */
+-	drvr = kzalloc(sizeof(*drvr), GFP_ATOMIC);
+-	if (!drvr)
++	ops = brcmf_cfg80211_get_ops();
++	if (!ops)
+ 		return -ENOMEM;
+ 
++	wiphy = wiphy_new(ops, sizeof(*drvr));
++	if (!wiphy)
++		return -ENOMEM;
++
++	set_wiphy_dev(wiphy, dev);
++	drvr = wiphy_priv(wiphy);
++	drvr->wiphy = wiphy;
++
+ 	for (i = 0; i < ARRAY_SIZE(drvr->if2bss); i++)
+ 		drvr->if2bss[i] = BRCMF_BSSIDX_INVALID;
+ 
+@@ -1076,15 +1085,18 @@ int brcmf_attach(struct device *dev, struct brcmf_mp_device *settings)
+ 	/* attach firmware event handler */
+ 	brcmf_fweh_attach(drvr);
+ 
+-	ret = brcmf_bus_started(drvr);
++	ret = brcmf_bus_started(drvr, ops);
+ 	if (ret != 0) {
+ 		brcmf_err("dongle is not responding: err=%d\n", ret);
+ 		goto fail;
+ 	}
++
++	drvr->config->ops = ops;
+ 	return 0;
+ 
+ fail:
+ 	brcmf_detach(dev);
++	kfree(ops);
+ 
+ 	return ret;
+ }
+@@ -1142,6 +1154,7 @@ void brcmf_detach(struct device *dev)
+ 		brcmf_remove_interface(drvr->iflist[i], false);
+ 
+ 	brcmf_cfg80211_detach(drvr->config);
++	drvr->config = NULL;
+ 
+ 	brcmf_bus_stop(drvr->bus_if);
+ 
+@@ -1149,7 +1162,7 @@ void brcmf_detach(struct device *dev)
+ 
+ 	brcmf_debug_detach(drvr);
+ 	bus_if->drvr = NULL;
+-	kfree(drvr);
++	wiphy_free(drvr->wiphy);
+ }
+ 
+ s32 brcmf_iovar_data_set(struct device *dev, char *name, void *data, u32 len)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+index 6fd6745..ee9b3ac 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+@@ -107,6 +107,7 @@ struct brcmf_pub {
+ 	/* Linkage ponters */
+ 	struct brcmf_bus *bus_if;
+ 	struct brcmf_proto *proto;
++	struct wiphy *wiphy;
+ 	struct brcmf_cfg80211_info *config;
+ 
+ 	/* Internal brcmf items */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index 2ee5413..bc1ea41 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -2229,7 +2229,7 @@ struct wireless_dev *brcmf_p2p_add_vif(struct wiphy *wiphy, const char *name,
+  */
+ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
+ {
+-	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+ 	struct brcmf_p2p_info *p2p = &cfg->p2p;
+ 	struct brcmf_cfg80211_vif *vif;
+ 	enum nl80211_iftype iftype;
+-- 
+1.9.1
