@@ -1,76 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39552 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751102AbeCIOsr (ORCPT
+Received: from mail-qk0-f178.google.com ([209.85.220.178]:36714 "EHLO
+        mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752527AbeCVBng (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Mar 2018 09:48:47 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Himanshu Jha <morganfreeman6991@gmail.com>
-Cc: Andreas Christoforou <andreaschristofo@gmail.com>,
-        keescook@chromium.org, kernel-hardening@lists.openwall.com,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] drivers: net: wireless: ath: ath9: dfs: remove VLA usage
-References: <1520598613-3641-1-git-send-email-andreaschristofo@gmail.com>
-        <20180309125124.GA17968@himanshu-Vostro-3559>
-Date: Fri, 09 Mar 2018 16:48:41 +0200
-In-Reply-To: <20180309125124.GA17968@himanshu-Vostro-3559> (Himanshu Jha's
-        message of "Fri, 9 Mar 2018 18:21:24 +0530")
-Message-ID: <874llpe246.fsf@kamboji.qca.qualcomm.com> (sfid-20180309_154911_755272_E09C343D)
+        Wed, 21 Mar 2018 21:43:36 -0400
+Received: by mail-qk0-f178.google.com with SMTP id d206so7637026qkb.3
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Mar 2018 18:43:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: Mohamed Khalfella <khalfella@gmail.com>
+Date: Wed, 21 Mar 2018 19:43:35 -0600
+Message-ID: <CAMaOPvZCg0YMzhR2KR7dMTkuphV2T-mDtyageaJPr+cB5jGbCQ@mail.gmail.com> (sfid-20180322_024345_303463_BED30831)
+Subject: Intel Corporation Wireless 8260 [8086:24f3] (rev 3a) - Hardware error
+ in PCI passthrough
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Himanshu Jha <morganfreeman6991@gmail.com> writes:
+Hi,
 
-> On Fri, Mar 09, 2018 at 02:30:12PM +0200, Andreas Christoforou wrote:
->> The kernel would like to have all stack VLA usage removed.
->> 
->> Signed-off-by: Andreas Christoforou <andreaschristofo@gmail.com>
->> ---
->>  drivers/net/wireless/ath/ath9k/dfs.c | 3 +--
->>  1 file changed, 1 insertion(+), 2 deletions(-)
->> 
->> diff --git a/drivers/net/wireless/ath/ath9k/dfs.c
->> b/drivers/net/wireless/ath/ath9k/dfs.c
->> index 6fee9a4..cfb0f84 100644
->> --- a/drivers/net/wireless/ath/ath9k/dfs.c
->> +++ b/drivers/net/wireless/ath/ath9k/dfs.c
->> @@ -41,7 +41,6 @@ static const int BIN_DELTA_MAX		= 10;
->>  
->>  /* we need at least 3 deltas / 4 samples for a reliable chirp detection */
->>  #define NUM_DIFFS 3
->> -static const int FFT_NUM_SAMPLES	= (NUM_DIFFS + 1);
->
-> Are you sure it is correct ?
-> Look for other users of "FFT_NUM_SAMPLES".
->
->>  /* Threshold for difference of delta peaks */
->>  static const int MAX_DIFF		= 2;
->> @@ -101,7 +100,7 @@ static bool ath9k_check_chirping(struct ath_softc *sc, u8 *data,
->>  				 int datalen, bool is_ctl, bool is_ext)
->>  {
->>  	int i;
->> -	int max_bin[FFT_NUM_SAMPLES];
->> +	int max_bin[NUM_DIFFS + 1];
->>  	struct ath_hw *ah = sc->sc_ah;
->>  	struct ath_common *common = ath9k_hw_common(ah);
->>  	int prev_delta;
->
-> Always compile test the driver before sending a patch.
-> Also, patch title seems incorrect *ath9k*
->
-> himanshu@himanshu-Vostro-3559:~/linux-next$ git log --oneline
-> drivers/net/wireless/ath/ath9k/dfs.c
-> 626ab67 ath9k: dfs: use swap macro in ath9k_check_chirping
-> 50c8cd4 ath9k: remove cast to void pointer
-> 8fc2b61 ath9k: DFS - add pulse chirp detection for FCC
-> ....
+I am working in pci passthrough for qemu under SmartOS. My test
+machine is Intel NUC Kit NUC6i3SYH BOXNUC6I3SYH which comes with Intel
+Wireless 8260 [8086:24f3]. So far the guest OS recognize the PCI
+device and the driver, iwlwifi reports an error when it tries to
+initialize the device.
 
-Yeah, just "ath9k:" is enough as the prefix, no need to have full
-directory path in the title.
+Here is what I see in linux guest console https://pastebin.com/cCzEUgGz.
+lspci from the guest OS https://pastebin.com/pPS7c1HT
+lspci from the host OS, running the same iso image
+https://pastebin.com/xLTpw9fz. Host OS regencies the device perfectly.
 
--- 
-Kalle Valo
+I did mmio tracing and here are the results
+https://docs.google.com/spreadsheets/d/1GFW1JTA9Q5OVh4CQMYYHSQ378j45nP078juewogBIp0/edit?usp=sharing.
+For some reason, which I don't know, the guest gets different result
+when it reads register 3C. I don't know why does that happen.
+
+My implementation doesn't present PCI extended capabilities, I am not
+sure if this is stopping the device to work or not.
+
+Unfortunately, I don't have the device specification to dig deeper
+into the issue. The code I am working on is accessible in upci branch
+in
+
+upci driver https://github.com/khalfella/illumos-gate
+qemu https://github.com/khalfella/illumos-kvm-cmd
+
+Appreciate any hints or ideas.
+
+
+Thanks,
+Mohamed A. Khalfella
