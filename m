@@ -1,99 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46240 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932080AbeCKHM5 (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52612 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751839AbeCVU2h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Mar 2018 03:12:57 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Christian Lamparter <chunkeey@gmail.com>,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix recent bandwidth conversion bug
-References: <20171101200157.27096-1-chunkeey@gmail.com>
-        <1666282.PC3nhpCf9f@debian64>
-        <87tvxpf9i8.fsf@kamboji.qca.qualcomm.com>
-        <1882220.dvZB77Gu54@debian64>
-        <877etpmomh.fsf@kamboji.qca.qualcomm.com>
-        <CACna6ryUYb8ACVaRx3jROgxfUvBV5p4+3UsNEV8FEU1R_2sxdQ@mail.gmail.com>
-Date: Sun, 11 Mar 2018 09:12:53 +0200
-In-Reply-To: <CACna6ryUYb8ACVaRx3jROgxfUvBV5p4+3UsNEV8FEU1R_2sxdQ@mail.gmail.com>
-        (=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Thu, 1 Mar 2018
- 12:52:55 +0100")
-Message-ID: <87zi3f6q6i.fsf@qca.qualcomm.com> (sfid-20180311_081302_075426_4E962CC2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Thu, 22 Mar 2018 16:28:37 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 10/12] brcmfmac: get rid of brcmf_fw_map_chip_to_name()
+Date: Thu, 22 Mar 2018 21:28:29 +0100
+Message-Id: <1521750511-12345-11-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180322_212907_058342_C01A3FF4)
+In-Reply-To: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
+The function is no longer used so removing it.
 
-> On 14 December 2017 at 14:21, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Christian Lamparter <chunkeey@gmail.com> writes:
->>
->>> On Monday, November 20, 2017 11:57:21 AM CET Kalle Valo wrote:
->>>> Christian Lamparter <chunkeey@gmail.com> writes:
->>>>
->>>> > On Wednesday, November 1, 2017 9:37:53 PM CET Sebastian Gottschall w=
-rote:
->>>> >> a additional array bounds check would be good
->>>> >
->>>> > Ah, about that:
->>>> >
->>>> > the bw variable in ath10k_htt_rx_h_rates() is extracted from info2
->>>> > in the following way [0]:
->>>> > |  bw =3D info2 & 3;
->>>> >
->>>> > the txrate.bw variable in ath10k_update_per_peer_tx_stats() is set b=
-y [1]:
->>>> > |  txrate.bw =3D ATH10K_HW_BW(peer_stats->flags);
->>>> >
->>>> > ATH10K_HW_BW is a macro defined as [2]:
->>>> > |  #define ATH10K_HW_BW(flags)             (((flags) >> 3) & 0x3)
->>>> >
->>>> > In both cases the bandwidth values already are limited to 0-3 by
->>>> > the "and 3" operation.
->>>>
->>>> Until someone changes that part of the code (and the firmware
->>>> interface). IMHO a switch is safer as there we don't have any risk of
->>>> out of bands access.
->>>
->>> The kbuild-bot/CI can catch this too.
->>>
->>> For example, it will look like this:
->>> drivers/net/wireless/ath/ath10k//htt_rx.c:710:52: warning: invalid
->>> access past the end of 'ath10k_bw_to_mac80211' (4 4)
->>
->> Sure, but after reading about all these security vulnerabilities I have
->> become even more cautious and try to avoid all tricky stuff.
->>
->>> BTW:
->>> Have you noticed:
->>>
->>> <https://github.com/lede-project/source/blob/master/package/kernel/mac8=
-0211/patches/319-ath10k-fix-recent-bandwidth-conversion-bug.patch>
->>>
->>> Is this really your signed-off-by or not?
->>
->> I suspect that patch is taken from my pending branch.
->>
->>> In any case, you - as the maintainer - can modify the patch as
->>> you see fit. So, please do so.
->>
->> Ok, we'll send v2.
->
-> Hi Kalle,
->
-> I'm trying to figure out the fate of that LEDE's patch. I don't think
-> you ever sent V2.
->
-> Is that fix still needed? Are you planning to send V2?
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../broadcom/brcm80211/brcmfmac/firmware.c         | 53 ----------------------
+ .../broadcom/brcm80211/brcmfmac/firmware.h         |  4 --
+ 2 files changed, 57 deletions(-)
 
-Anil now sent v2 (he just forgot to mark it as such):
-
-https://patchwork.kernel.org/patch/10273445/
-
-Thanks for the reminder.
-
---=20
-Kalle Valo
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index f495d22..c14a02a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -635,59 +635,6 @@ static void brcmf_fw_get_full_name(char fw_name[BRCMF_FW_NAME_LEN],
+ 	strlcat(fw_name, extension, BRCMF_FW_NAME_LEN);
+ }
+ 
+-int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
+-			      struct brcmf_firmware_mapping mapping_table[],
+-			      u32 table_size, char fw_name[BRCMF_FW_NAME_LEN],
+-			      char nvram_name[BRCMF_FW_NAME_LEN])
+-{
+-	char chipname[12];
+-	u32 i;
+-	char end;
+-
+-	for (i = 0; i < table_size; i++) {
+-		if (mapping_table[i].chipid == chip &&
+-		    mapping_table[i].revmask & BIT(chiprev))
+-			break;
+-	}
+-
+-	if (i == table_size) {
+-		brcmf_err("Unknown chipid %d [%d]\n", chip, chiprev);
+-		return -ENODEV;
+-	}
+-
+-	brcmf_chip_name(chip, chiprev, chipname, sizeof(chipname));
+-
+-	/* check if firmware path is provided by module parameter */
+-	if (brcmf_mp_global.firmware_path[0] != '\0') {
+-		if (fw_name)
+-			strlcpy(fw_name, brcmf_mp_global.firmware_path,
+-				BRCMF_FW_NAME_LEN);
+-		if (nvram_name)
+-			strlcpy(nvram_name, brcmf_mp_global.firmware_path,
+-				BRCMF_FW_NAME_LEN);
+-
+-		end = brcmf_mp_global.firmware_path[
+-				strlen(brcmf_mp_global.firmware_path) - 1];
+-		if (end != '/') {
+-			if (fw_name)
+-				strlcat(fw_name, "/", BRCMF_FW_NAME_LEN);
+-			if (nvram_name)
+-				strlcat(nvram_name, "/", BRCMF_FW_NAME_LEN);
+-		}
+-	}
+-
+-	brcmf_info("using %s for chip %s\n",
+-		   mapping_table[i].fw_base, chipname);
+-	if (fw_name)
+-		brcmf_fw_get_full_name(fw_name,
+-				       mapping_table[i].fw_base, ".bin");
+-	if (nvram_name)
+-		brcmf_fw_get_full_name(nvram_name,
+-				       mapping_table[i].fw_base, ".txt");
+-
+-	return 0;
+-}
+-
+ struct brcmf_fw_request *
+ brcmf_fw_alloc_request(u32 chip, u32 chiprev,
+ 		       struct brcmf_firmware_mapping mapping_table[],
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+index 1416fbb..79a2109 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+@@ -46,10 +46,6 @@ struct brcmf_firmware_mapping {
+ #define BRCMF_FW_ENTRY(chipid, mask, name) \
+ 	{ chipid, mask, BRCM_ ## name ## _FIRMWARE_BASENAME }
+ 
+-int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
+-			      struct brcmf_firmware_mapping mapping_table[],
+-			      u32 table_size, char fw_name[BRCMF_FW_NAME_LEN],
+-			      char nvram_name[BRCMF_FW_NAME_LEN]);
+ void brcmf_fw_nvram_free(void *nvram);
+ 
+ enum brcmf_fw_type {
+-- 
+1.9.1
