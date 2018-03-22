@@ -1,87 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52610 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751890AbeCVU2h (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56548 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752004AbeCVGVd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Mar 2018 16:28:37 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 03/12] brcmfmac: use brcmf_chip_name() for consistency
-Date: Thu, 22 Mar 2018 21:28:22 +0100
-Message-Id: <1521750511-12345-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180322_212842_295057_892AF372)
-In-Reply-To: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com>
+        Thu, 22 Mar 2018 02:21:33 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 22 Mar 2018 11:51:22 +0530
+From: mpubbise@codeaurora.org
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: advertise supported interface types for sw
+ encryption
+In-Reply-To: <1521618788.2645.5.camel@sipsolutions.net>
+References: <1520576822-1954-1-git-send-email-mpubbise@codeaurora.org>
+ <1521618788.2645.5.camel@sipsolutions.net>
+Message-ID: <089d864c1d6bb9218191dad53713f148@codeaurora.org> (sfid-20180322_072138_500645_71BB59C5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When logging the chip id/revision information make use of
-brcmf_chip_name() so it is always the same.
+On 2018-03-21 13:23, Johannes Berg wrote:
+> On Fri, 2018-03-09 at 11:57 +0530, mpubbise@codeaurora.org wrote:
+>> From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+>> 
+>> Extending SW_CRYPTO_CONTROL interface so that drivers can advertise
+>> the interface types on which they can support software encryption.
+>> Driver's job is not done by advertising the supported vif types alone,
+>> they should also return -EOPNOTSUPP from set_key.
+>> 
+>> Mac80211 will make the fallback decision to sw ecryption based
+>> on the return type of set_key callback and the driver's support for
+>> software encryption.
+>> 
+>> This change is done with the sole reason of adding the support of
+>> VLANs for drivers which enable SW_CRYPTO_CONTROL(ex:ath10k).
+>> 
+>> With the current logic, configuring GTKs for specific VLAN groups will
+>> always fail with the drivers enabling SW_CRYPTO_CONTROL. I understand
+>> that the driver can return 1 from set_key to enable software 
+>> encryption
+>> in mac80211, but GTKs for VLANs are never passed down to the driver.
+>> Since the return value is initialized to -EOPNOTSUPP, with this 
+>> approach,
+>> we get away with the failure.
+> 
+> Is there much value in having this control to start with, rather than
+> saying it's *always* allowed for AP_VLAN interfaces?
+> 
+> I mean - if the driver wants to support (encryption on) AP_VLAN
+> interfaces with SW_CRYPTO_CONTROL it basically has to set this to allow
+> it, which is kinda pointless - it's hard to imagine a driver that wants
+> to support AP_VLAN only for unencrypted, so if it doesn't support this
+> it might as well just disable AP_VLAN support entirely.
+> 
+> So IMHO - just get rid of the bitmap and hard-code AP_VLAN.
+> 
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c     | 5 ++---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 7 +++++--
- 2 files changed, 7 insertions(+), 5 deletions(-)
+I agree with you only partially.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index bf45369..3b829fe 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -926,9 +926,8 @@ static int brcmf_chip_recognition(struct brcmf_chip_priv *ci)
- 
- 	brcmf_chip_name(ci->pub.chip, ci->pub.chiprev,
- 			ci->pub.name, sizeof(ci->pub.name));
--	brcmf_dbg(INFO, "found %s chip: BCM%s, rev=%d\n",
--		  socitype == SOCI_SB ? "SB" : "AXI", ci->pub.name,
--		  ci->pub.chiprev);
-+	brcmf_dbg(INFO, "found %s chip: %s\n",
-+		  socitype == SOCI_SB ? "SB" : "AXI", ci->pub.name);
- 
- 	if (socitype == SOCI_SB) {
- 		if (ci->pub.chip != BRCM_CC_4329_CHIP_ID) {
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index 091b529..e2199f5 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -25,6 +25,7 @@
- #include "firmware.h"
- #include "core.h"
- #include "common.h"
-+#include "chip.h"
- 
- #define BRCMF_FW_MAX_NVRAM_SIZE			64000
- #define BRCMF_FW_NVRAM_DEVPATH_LEN		19	/* devpath0=pcie/1/4/ */
-@@ -567,6 +568,7 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
- 			      u32 table_size, char fw_name[BRCMF_FW_NAME_LEN],
- 			      char nvram_name[BRCMF_FW_NAME_LEN])
- {
-+	char chipname[12];
- 	u32 i;
- 	char end;
- 
-@@ -581,6 +583,8 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
- 		return -ENODEV;
- 	}
- 
-+	brcmf_chip_name(chip, chiprev, chipname, sizeof(chipname));
-+
- 	/* check if firmware path is provided by module parameter */
- 	if (brcmf_mp_global.firmware_path[0] != '\0') {
- 		strlcpy(fw_name, brcmf_mp_global.firmware_path,
-@@ -601,8 +605,7 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
- 	if ((nvram_name) && (mapping_table[i].nvram))
- 		strlcat(nvram_name, mapping_table[i].nvram, BRCMF_FW_NAME_LEN);
- 
--	brcmf_info("using %s for chip %#08x(%d) rev %#08x\n",
--		   fw_name, chip, chip, chiprev);
-+	brcmf_info("using %s for chip %s\n", fw_name, chipname);
- 
- 	return 0;
- }
--- 
-1.9.1
+Today, I do not see any driver advertising SW_CRYPTO_CONTROL other than 
+ath10k. There could be some driver which would want to advertise 
+SW_CRYPTO_CONTROL and do not support the software encryption for VLAN 
+devices. In that case, hard-coding doesn't seem to solve the problem 
+completely right? No?
+
+In some way driver has to advertise that it supports encryption on 
+AP_VLANs, No?
+Or you meant to say that driver should advertise the support for 
+AP_VLANs only if it can support encryption on AP_VLAN devices? If this 
+the case, then I could see some code in ieee80211_register_hw which says 
+this,
+
+         /* if low-level driver supports AP, we also support VLAN */
+         if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_AP)) {
+                 hw->wiphy->interface_modes |= 
+BIT(NL80211_IFTYPE_AP_VLAN);
+                 hw->wiphy->software_iftypes |= 
+BIT(NL80211_IFTYPE_AP_VLAN);
+         }
+
+Please correct if I misinterpreted your comment.
+
+
+--
+mkp
