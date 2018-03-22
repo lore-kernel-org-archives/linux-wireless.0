@@ -1,26 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.11]:20237 "EHLO mx4.wp.pl"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754441AbeCGSSV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Mar 2018 13:18:21 -0500
-Date: Wed, 7 Mar 2018 10:18:13 -0800
-From: Jakub Kicinski <kubakici@wp.pl>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Received: from s3.sipsolutions.net ([144.76.63.242]:52928 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752613AbeCVKmf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Mar 2018 06:42:35 -0400
+Message-ID: <1521715353.19621.6.camel@sipsolutions.net> (sfid-20180322_114342_955594_AA28927B)
+Subject: Re: [PATCH v2] mac80211: notify driver for change in multicast rates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mt7601u: simplify mt7601u_mcu_msg_alloc signature
-Message-ID: <20180307101813.43ede1b9@cakuba.netronome.com> (sfid-20180307_191825_615334_EA6CBC06)
-In-Reply-To: <bfc6bf9aa8dc2fe89ad283c457030797d75ec3b8.1520414446.git.lorenzo.bianconi@redhat.com>
-References: <cover.1520414446.git.lorenzo.bianconi@redhat.com>
-        <bfc6bf9aa8dc2fe89ad283c457030797d75ec3b8.1520414446.git.lorenzo.bianconi@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Date: Thu, 22 Mar 2018 11:42:33 +0100
+In-Reply-To: <1521676490-25366-1-git-send-email-pradeepc@codeaurora.org>
+References: <1521676490-25366-1-git-send-email-pradeepc@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed,  7 Mar 2018 10:25:50 +0100, Lorenzo Bianconi wrote:
-> Remove mt7601u_dev parameter from mt7601u_mcu_msg_alloc signature since
-> dev pointer is never used in routine body
+On Wed, 2018-03-21 at 16:54 -0700, Pradeep Kumar Chitrapu wrote:
 > 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> index 4c99c13..4360765 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -336,6 +336,7 @@ enum ieee80211_bss_change {
+>  	BSS_CHANGED_OCB                 = 1<<22,
+>  	BSS_CHANGED_MU_GROUPS		= 1<<23,
+>  	BSS_CHANGED_KEEP_ALIVE		= 1<<24,
+> +	BSS_CHANGED_MCAST_RATE		= 1<<25,
 
-Acked-by: Jakub Kicinski <kubakici@wp.pl>
+Not sure why I missed this before, but you need to add documentation
+for this.
+
+johannes
