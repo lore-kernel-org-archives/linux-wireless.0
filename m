@@ -1,54 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:39117 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751470AbeCNMpe (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52638 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751825AbeCVU2h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Mar 2018 08:45:34 -0400
-From: hariprasath.elango@gmail.com
-To: aditya.shankar@microchip.com, gregkh@linuxfoundation.org,
-        ganesh.krishna@microchip.com
-Cc: hariprasath.elango@gmail.com, linux-wireless@vger.kernel.org,
-        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 3/7] staging: wilc1000: use kmemdup instead of kmalloc and memcpy
-Date: Wed, 14 Mar 2018 18:15:01 +0530
-Message-Id: <eb6f1bd272febe81ba4d632e377f4e3a6ca27cf4.1521030891.git.hariprasath.elango@gmail.com> (sfid-20180314_134545_035164_401D699A)
-In-Reply-To: <cover.1521030891.git.hariprasath.elango@gmail.com>
-References: <cover.1521030891.git.hariprasath.elango@gmail.com>
-In-Reply-To: <cover.1521030891.git.hariprasath.elango@gmail.com>
-References: <cover.1521030891.git.hariprasath.elango@gmail.com>
+        Thu, 22 Mar 2018 16:28:37 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 11/12] brcmfmac: get rid of brcmf_fw_get_full_name()
+Date: Thu, 22 Mar 2018 21:28:30 +0100
+Message-Id: <1521750511-12345-12-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180322_212904_616365_1A3708DD)
+In-Reply-To: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: HariPrasath Elango <hariprasath.elango@gmail.com>
+The function was pretty minimal and now it is called only from one
+place so just get rid of it.
 
-Kmalloc followed by memcpy can be replaced by kmemdup.
-
-Signed-off-by: HariPrasath Elango <hariprasath.elango@gmail.com>
-Reviewed-by: Ajay Singh <ajay.kathat@microchip.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/staging/wilc1000/linux_mon.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ .../net/wireless/broadcom/brcm80211/brcmfmac/firmware.c    | 14 ++++----------
+ 1 file changed, 4 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index f93f411..c6fd6b3 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -146,7 +146,7 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
- 	if (!mgmt_tx)
- 		return -ENOMEM;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index c14a02a..9277f4c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -628,13 +628,6 @@ int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
+ 	return 0;
+ }
  
--	mgmt_tx->buff = kmalloc(len, GFP_ATOMIC);
-+	mgmt_tx->buff = kmemdup(buf, len, GFP_ATOMIC);
- 	if (!mgmt_tx->buff) {
- 		kfree(mgmt_tx);
- 		return -ENOMEM;
-@@ -154,7 +154,6 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
- 
- 	mgmt_tx->size = len;
- 
--	memcpy(mgmt_tx->buff, buf, len);
- 	wilc_wlan_txq_add_mgmt_pkt(dev, mgmt_tx, mgmt_tx->buff, mgmt_tx->size,
- 				   mgmt_tx_complete);
+-static void brcmf_fw_get_full_name(char fw_name[BRCMF_FW_NAME_LEN],
+-				   const char *fw_base, const char *extension)
+-{
+-	strlcat(fw_name, fw_base, BRCMF_FW_NAME_LEN);
+-	strlcat(fw_name, extension, BRCMF_FW_NAME_LEN);
+-}
+-
+ struct brcmf_fw_request *
+ brcmf_fw_alloc_request(u32 chip, u32 chiprev,
+ 		       struct brcmf_firmware_mapping mapping_table[],
+@@ -685,9 +678,10 @@ struct brcmf_fw_request *
+ 					BRCMF_FW_NAME_LEN);
+ 			}
+ 		}
+-		brcmf_fw_get_full_name(fwnames[j].path,
+-				       mapping_table[i].fw_base,
+-				       fwnames[j].extension);
++		strlcat(fwnames[j].path, mapping_table[i].fw_base,
++			BRCMF_FW_NAME_LEN);
++		strlcat(fwnames[j].path, fwnames[j].extension,
++			BRCMF_FW_NAME_LEN);
+ 		fwreq->items[j].path = fwnames[j].path;
+ 	}
  
 -- 
-2.10.0.GIT
+1.9.1
