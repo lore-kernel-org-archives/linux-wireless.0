@@ -1,73 +1,255 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43691 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751711AbeCMQio (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 12:38:44 -0400
-Date: Tue, 13 Mar 2018 16:38:42 +0000
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52614 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751883AbeCVU2h (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Mar 2018 16:28:37 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Andres Rodriguez <andresx7@gmail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Ilia Mirkin <imirkin@alum.mit.edu>
-Subject: Re: [PATCH] firmware: add a function to load optional firmware v2
-Message-ID: <20180313163842.GF4449@wotan.suse.de> (sfid-20180313_173917_931318_B13867C2)
-References: <20180309221243.15489-2-andresx7@gmail.com>
- <20180309230925.3573-1-andresx7@gmail.com>
- <CAB=NE6VY62KqmhzD=zT8od=PhgPi3rGKKKxKz_zad-ZrYW-97A@mail.gmail.com>
- <CAB=NE6XpY4LuDwnakCa6gZ_HjjhZDnu=gDeHwmpNRaSkqQOB2g@mail.gmail.com>
- <bbdc304f-edd5-38df-ea88-012fefc54b90@gmail.com>
- <5AA5B777.5020106@broadcom.com>
- <20180312192704.GX4449@wotan.suse.de>
- <87r2oo9jsk.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87r2oo9jsk.fsf@kamboji.qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 09/12] brcmfmac: add extension to .get_fwname() callbacks
+Date: Thu, 22 Mar 2018 21:28:28 +0100
+Message-Id: <1521750511-12345-10-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180322_212843_515709_7F7F4FA4)
+In-Reply-To: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 13, 2018 at 03:39:23PM +0200, Kalle Valo wrote:
-> "Luis R. Rodriguez" <mcgrof@kernel.org> writes:
-> 
-> > On Mon, Mar 12, 2018 at 12:10:47AM +0100, Arend van Spriel wrote:
-> >> On 3/11/2018 5:05 PM, Andres Rodriguez wrote:
-> >> > > Your patch series then should also have the driver callers who you
-> >> > > want to modify to use this new API. Collect from the 802.11 folks the
-> >> > > other drivers which I think they wanted changed as well.
-> >> > 
-> >> > Arend, Kalle, would love to hear your feedback.
-> >> 
-> >> I am not sure if it was ath10k, but Kalle will surely know. The other driver
-> >> firing a whole batch of firmware requests is iwlwifi. These basically try to
-> >> get latest firmware version and if not there try an older one.
-> >
-> > Ah I recall now. At least for iwlwifi its that it requests firmware with a
-> > range of api files, and we don't need information about files in the middle
-> > not found, given all we need to know if is if at lest one file was found
-> > or not.
-> >
-> > I have future code to also enable use of a range request which would replace
-> > the recursive nature of iwlwifi's firmware API request, so it simplifies it
-> > considerably.
-> >
-> > Once we get this flag to be silent in, this can be used later. Ie, the new
-> > API I'd add would replace the complex api revision thing for an internal set.
-> 
-> TBH I doubt we would use this kind of "range" request in ath10k, 
+This changes the bus layer api by having the caller provide an
+extension. With this the callback can use brcmf_fw_alloc_request()
+to get the needed firmware name.
 
-Well it doesn't have the form to use a range either so it wouldn't make sense.
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h |  6 +--
+ .../wireless/broadcom/brcm80211/brcmfmac/common.c  | 43 +++-------------------
+ .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    | 27 +++++++-------
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 26 +++++++------
+ .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 27 ++++++++------
+ 5 files changed, 51 insertions(+), 78 deletions(-)
 
-> the
-> current code works just fine only if we can get rid of the annoying
-> warning from request_firmware(). Unless if it's significantly faster or
-> something.
-
-Thanks, I see ath10k uses the sync request_firmware() call, so indeed it
-would be a trivial conversion.
-
-Andres can you roll that in for your patch series?
-
-  Luis
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+index 0b90a63b..31858a2 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+@@ -88,7 +88,7 @@ struct brcmf_bus_ops {
+ 	void (*wowl_config)(struct device *dev, bool enabled);
+ 	size_t (*get_ramsize)(struct device *dev);
+ 	int (*get_memdump)(struct device *dev, void *data, size_t len);
+-	int (*get_fwname)(struct device *dev, uint chip, uint chiprev,
++	int (*get_fwname)(struct device *dev, const char *ext,
+ 			  unsigned char *fw_name);
+ };
+ 
+@@ -228,10 +228,10 @@ int brcmf_bus_get_memdump(struct brcmf_bus *bus, void *data, size_t len)
+ }
+ 
+ static inline
+-int brcmf_bus_get_fwname(struct brcmf_bus *bus, uint chip, uint chiprev,
++int brcmf_bus_get_fwname(struct brcmf_bus *bus, const char *ext,
+ 			 unsigned char *fw_name)
+ {
+-	return bus->ops->get_fwname(bus->dev, chip, chiprev, fw_name);
++	return bus->ops->get_fwname(bus->dev, ext, fw_name);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index 6c54cae..76788e9 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -125,42 +125,9 @@ static int brcmf_c_download(struct brcmf_if *ifp, u16 flag,
+ 	return err;
+ }
+ 
+-static int brcmf_c_get_clm_name(struct brcmf_if *ifp, u8 *clm_name)
+-{
+-	struct brcmf_bus *bus = ifp->drvr->bus_if;
+-	u8 fw_name[BRCMF_FW_NAME_LEN];
+-	u8 *ptr;
+-	size_t len;
+-	s32 err;
+-
+-	memset(fw_name, 0, BRCMF_FW_NAME_LEN);
+-	err = brcmf_bus_get_fwname(bus, bus->chip, bus->chiprev, fw_name);
+-	if (err) {
+-		brcmf_err("get firmware name failed (%d)\n", err);
+-		goto done;
+-	}
+-
+-	/* generate CLM blob file name */
+-	ptr = strrchr(fw_name, '.');
+-	if (!ptr) {
+-		err = -ENOENT;
+-		goto done;
+-	}
+-
+-	len = ptr - fw_name + 1;
+-	if (len + strlen(".clm_blob") > BRCMF_FW_NAME_LEN) {
+-		err = -E2BIG;
+-	} else {
+-		strlcpy(clm_name, fw_name, len);
+-		strlcat(clm_name, ".clm_blob", BRCMF_FW_NAME_LEN);
+-	}
+-done:
+-	return err;
+-}
+-
+ static int brcmf_c_process_clm_blob(struct brcmf_if *ifp)
+ {
+-	struct device *dev = ifp->drvr->bus_if->dev;
++	struct brcmf_bus *bus = ifp->drvr->bus_if;
+ 	struct brcmf_dload_data_le *chunk_buf;
+ 	const struct firmware *clm = NULL;
+ 	u8 clm_name[BRCMF_FW_NAME_LEN];
+@@ -173,16 +140,16 @@ static int brcmf_c_process_clm_blob(struct brcmf_if *ifp)
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	memset(clm_name, 0, BRCMF_FW_NAME_LEN);
+-	err = brcmf_c_get_clm_name(ifp, clm_name);
++	memset(clm_name, 0, sizeof(clm_name));
++	err = brcmf_bus_get_fwname(bus, ".clm_blob", clm_name);
+ 	if (err) {
+ 		brcmf_err("get CLM blob file name failed (%d)\n", err);
+ 		return err;
+ 	}
+ 
+-	err = request_firmware(&clm, clm_name, dev);
++	err = request_firmware(&clm, clm_name, bus->dev);
+ 	if (err) {
+-		brcmf_info("no clm_blob available(err=%d), device may have limited channels available\n",
++		brcmf_info("no clm_blob available (err=%d), device may have limited channels available\n",
+ 			   err);
+ 		return 0;
+ 	}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 179177a..091c191 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -1350,23 +1350,24 @@ static int brcmf_pcie_get_memdump(struct device *dev, void *data, size_t len)
+ 	return 0;
+ }
+ 
+-static int brcmf_pcie_get_fwname(struct device *dev, u32 chip, u32 chiprev,
+-				 u8 *fw_name)
++static
++int brcmf_pcie_get_fwname(struct device *dev, const char *ext, u8 *fw_name)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+-	struct brcmf_pciedev *buspub = bus_if->bus_priv.pcie;
+-	struct brcmf_pciedev_info *devinfo = buspub->devinfo;
+-	int ret = 0;
++	struct brcmf_fw_request *fwreq;
++	struct brcmf_fw_name fwnames[] = {
++		{ ext, fw_name },
++	};
+ 
+-	if (devinfo->fw_name[0] != '\0')
+-		strlcpy(fw_name, devinfo->fw_name, BRCMF_FW_NAME_LEN);
+-	else
+-		ret = brcmf_fw_map_chip_to_name(chip, chiprev,
+-						brcmf_pcie_fwnames,
+-						ARRAY_SIZE(brcmf_pcie_fwnames),
+-						fw_name, NULL);
++	fwreq = brcmf_fw_alloc_request(bus_if->chip, bus_if->chiprev,
++				       brcmf_pcie_fwnames,
++				       ARRAY_SIZE(brcmf_pcie_fwnames),
++				       fwnames, ARRAY_SIZE(fwnames));
++	if (!fwreq)
++		return -ENOMEM;
+ 
+-	return ret;
++	kfree(fwreq);
++	return 0;
+ }
+ 
+ static const struct brcmf_bus_ops brcmf_pcie_bus_ops = {
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 24dbf7e..1037df7 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -4000,22 +4000,24 @@ static void brcmf_sdio_buscore_write32(void *ctx, u32 addr, u32 val)
+ 	}
+ }
+ 
+-static int brcmf_sdio_get_fwname(struct device *dev, u32 chip, u32 chiprev,
+-				 u8 *fw_name)
++static
++int brcmf_sdio_get_fwname(struct device *dev, const char *ext, u8 *fw_name)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+-	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+-	int ret = 0;
++	struct brcmf_fw_request *fwreq;
++	struct brcmf_fw_name fwnames[] = {
++		{ ext, fw_name },
++	};
+ 
+-	if (sdiodev->fw_name[0] != '\0')
+-		strlcpy(fw_name, sdiodev->fw_name, BRCMF_FW_NAME_LEN);
+-	else
+-		ret = brcmf_fw_map_chip_to_name(chip, chiprev,
+-						brcmf_sdio_fwnames,
+-						ARRAY_SIZE(brcmf_sdio_fwnames),
+-						fw_name, NULL);
++	fwreq = brcmf_fw_alloc_request(bus_if->chip, bus_if->chiprev,
++				       brcmf_sdio_fwnames,
++				       ARRAY_SIZE(brcmf_sdio_fwnames),
++				       fwnames, ARRAY_SIZE(fwnames));
++	if (!fwreq)
++		return -ENOMEM;
+ 
+-	return ret;
++	kfree(fwreq);
++	return 0;
+ }
+ 
+ static const struct brcmf_bus_ops brcmf_sdio_bus_ops = {
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+index 1c5f135..a0873ad 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+@@ -1128,21 +1128,24 @@ static void brcmf_usb_wowl_config(struct device *dev, bool enabled)
+ 		device_set_wakeup_enable(devinfo->dev, false);
+ }
+ 
+-static int brcmf_usb_get_fwname(struct device *dev, u32 chip, u32 chiprev,
+-				u8 *fw_name)
++static
++int brcmf_usb_get_fwname(struct device *dev, const char *ext, u8 *fw_name)
+ {
+-	struct brcmf_usbdev_info *devinfo = brcmf_usb_get_businfo(dev);
+-	int ret = 0;
++	struct brcmf_bus *bus = dev_get_drvdata(dev);
++	struct brcmf_fw_request *fwreq;
++	struct brcmf_fw_name fwnames[] = {
++		{ ext, fw_name },
++	};
+ 
+-	if (devinfo->fw_name[0] != '\0')
+-		strlcpy(fw_name, devinfo->fw_name, BRCMF_FW_NAME_LEN);
+-	else
+-		ret = brcmf_fw_map_chip_to_name(chip, chiprev,
+-						brcmf_usb_fwnames,
+-						ARRAY_SIZE(brcmf_usb_fwnames),
+-						fw_name, NULL);
++	fwreq = brcmf_fw_alloc_request(bus->chip, bus->chiprev,
++				       brcmf_usb_fwnames,
++				       ARRAY_SIZE(brcmf_usb_fwnames),
++				       fwnames, ARRAY_SIZE(fwnames));
++	if (!fwreq)
++		return -ENOMEM;
+ 
+-	return ret;
++	kfree(fwreq);
++	return 0;
+ }
+ 
+ static const struct brcmf_bus_ops brcmf_usb_bus_ops = {
+-- 
+1.9.1
