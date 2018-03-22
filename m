@@ -1,70 +1,601 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:44186 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752636AbeCMWAA (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52582 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751739AbeCVU2g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 18:00:00 -0400
-Received: by mail-pf0-f196.google.com with SMTP id m68so484333pfm.11
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2018 15:00:00 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v5 5/9] nl80211: Add SOCKET_OWNER support to JOIN_IBSS
-Date: Tue, 13 Mar 2018 16:59:38 -0500
-Message-Id: <20180313215942.29176-6-denkenz@gmail.com> (sfid-20180313_230017_817218_80EFACF3)
-In-Reply-To: <20180313215942.29176-1-denkenz@gmail.com>
-References: <20180313215942.29176-1-denkenz@gmail.com>
+        Thu, 22 Mar 2018 16:28:36 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 07/12] brcmfmac: pass struct in brcmf_fw_get_firmwares()
+Date: Thu, 22 Mar 2018 21:28:26 +0100
+Message-Id: <1521750511-12345-8-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180322_212907_842545_5ACA1EAE)
+In-Reply-To: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- include/uapi/linux/nl80211.h | 2 ++
- net/wireless/ibss.c          | 1 +
- net/wireless/nl80211.c       | 6 ++++++
- 3 files changed, 9 insertions(+)
+Make the function brcmf_fw_get_firmwares() a bit more easy to extend
+using a structure to pass the request parameters.
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 1cdac3d732c1..877fab2836ec 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1985,6 +1985,8 @@ enum nl80211_commands {
-  *	multicast group.
-  *	If set during %NL80211_CMD_ASSOCIATE or %NL80211_CMD_CONNECT the
-  *	station will deauthenticate when the socket is closed.
-+ *	If set during %NL80211_CMD_JOIN_IBSS the IBSS will be automatically
-+ *	torn down when the socket is closed.
-  *
-  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
-  *	the TDLS link initiator.
-diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
-index a1d10993d08a..d5d26fc5b853 100644
---- a/net/wireless/ibss.c
-+++ b/net/wireless/ibss.c
-@@ -224,6 +224,7 @@ int __cfg80211_leave_ibss(struct cfg80211_registered_device *rdev,
- 	if (err)
- 		return err;
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+changelog
+  V2:
+   - brcmf_fw_request_is_valid() can be static (kbuild robot).
+---
+ .../broadcom/brcm80211/brcmfmac/firmware.c         | 175 ++++++++++++++-------
+ .../broadcom/brcm80211/brcmfmac/firmware.h         |  43 +++--
+ .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |  38 ++++-
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  32 +++-
+ .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |  43 ++++-
+ 5 files changed, 245 insertions(+), 86 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index 6945f58..95004db 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -438,18 +438,31 @@ void brcmf_fw_nvram_free(void *nvram)
  
-+	wdev->conn_owner_nlportid = 0;
- 	__cfg80211_clear_ibss(dev, nowext);
+ struct brcmf_fw {
+ 	struct device *dev;
+-	u16 flags;
+-	const struct firmware *code;
+-	const char *nvram_name;
+-	u16 domain_nr;
+-	u16 bus_nr;
+-	void (*done)(struct device *dev, int err, const struct firmware *fw,
+-		     void *nvram_image, u32 nvram_len);
++	struct brcmf_fw_request *req;
++	u32 curpos;
++	void (*done)(struct device *dev, int err, struct brcmf_fw_request *req);
+ };
  
- 	return 0;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 24b1bd940fca..e678dc510f3a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8691,6 +8691,12 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 	err = cfg80211_join_ibss(rdev, dev, &ibss, connkeys);
- 	if (err)
- 		kzfree(connkeys);
-+	else if (info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
-+		wdev_lock(dev->ieee80211_ptr);
-+		dev->ieee80211_ptr->conn_owner_nlportid = info->snd_portid;
-+		wdev_unlock(dev->ieee80211_ptr);
-+	}
++static void brcmf_fw_request_done(const struct firmware *fw, void *ctx);
 +
- 	return err;
++static void brcmf_fw_free_request(struct brcmf_fw_request *req)
++{
++	struct brcmf_fw_item *item;
++	int i;
++
++	for (i = 0, item = &req->items[0]; i < req->n_items; i++, item++) {
++		if (item->type == BRCMF_FW_TYPE_BINARY)
++			release_firmware(item->binary);
++		else if (item->type == BRCMF_FW_TYPE_NVRAM)
++			brcmf_fw_nvram_free(item->nv_data.data);
++	}
++	kfree(req);
++}
++
+ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+ {
+ 	struct brcmf_fw *fwctx = ctx;
++	struct brcmf_fw_item *cur;
+ 	u32 nvram_length = 0;
+ 	void *nvram = NULL;
+ 	u8 *data = NULL;
+@@ -457,83 +470,150 @@ static void brcmf_fw_request_nvram_done(const struct firmware *fw, void *ctx)
+ 	bool raw_nvram;
+ 
+ 	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
++
++	cur = &fwctx->req->items[fwctx->curpos];
++
+ 	if (fw && fw->data) {
+ 		data = (u8 *)fw->data;
+ 		data_len = fw->size;
+ 		raw_nvram = false;
+ 	} else {
+ 		data = bcm47xx_nvram_get_contents(&data_len);
+-		if (!data && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
++		if (!data && !(cur->flags & BRCMF_FW_REQF_OPTIONAL))
+ 			goto fail;
+ 		raw_nvram = true;
+ 	}
+ 
+ 	if (data)
+ 		nvram = brcmf_fw_nvram_strip(data, data_len, &nvram_length,
+-					     fwctx->domain_nr, fwctx->bus_nr);
++					     fwctx->req->domain_nr,
++					     fwctx->req->bus_nr);
+ 
+ 	if (raw_nvram)
+ 		bcm47xx_nvram_release_contents(data);
+ 	release_firmware(fw);
+-	if (!nvram && !(fwctx->flags & BRCMF_FW_REQ_NV_OPTIONAL))
++	if (!nvram && !(cur->flags & BRCMF_FW_REQF_OPTIONAL))
+ 		goto fail;
+ 
+-	fwctx->done(fwctx->dev, 0, fwctx->code, nvram, nvram_length);
+-	kfree(fwctx);
++	brcmf_dbg(TRACE, "nvram %p len %d\n", nvram, nvram_length);
++	cur->nv_data.data = nvram;
++	cur->nv_data.len = nvram_length;
+ 	return;
+ 
+ fail:
+ 	brcmf_dbg(TRACE, "failed: dev=%s\n", dev_name(fwctx->dev));
+-	release_firmware(fwctx->code);
+-	fwctx->done(fwctx->dev, -ENOENT, NULL, NULL, 0);
++	fwctx->done(fwctx->dev, -ENOENT, NULL);
++	brcmf_fw_free_request(fwctx->req);
+ 	kfree(fwctx);
  }
  
+-static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
++static int brcmf_fw_request_next_item(struct brcmf_fw *fwctx, bool async)
++{
++	struct brcmf_fw_item *cur;
++	const struct firmware *fw = NULL;
++	int ret;
++
++	cur = &fwctx->req->items[fwctx->curpos];
++
++	brcmf_dbg(TRACE, "%srequest for %s\n", async ? "async " : "",
++		  cur->path);
++
++	if (async)
++		ret = request_firmware_nowait(THIS_MODULE, true, cur->path,
++					      fwctx->dev, GFP_KERNEL, fwctx,
++					      brcmf_fw_request_done);
++	else
++		ret = request_firmware(&fw, cur->path, fwctx->dev);
++
++	if (ret < 0) {
++		brcmf_fw_request_done(NULL, fwctx);
++	} else if (!async && fw) {
++		brcmf_dbg(TRACE, "firmware %s %sfound\n", cur->path,
++			  fw ? "" : "not ");
++		if (cur->type == BRCMF_FW_TYPE_BINARY)
++			cur->binary = fw;
++		else if (cur->type == BRCMF_FW_TYPE_NVRAM)
++			brcmf_fw_request_nvram_done(fw, fwctx);
++		else
++			release_firmware(fw);
++
++		return -EAGAIN;
++	}
++	return 0;
++}
++
++static void brcmf_fw_request_done(const struct firmware *fw, void *ctx)
+ {
+ 	struct brcmf_fw *fwctx = ctx;
++	struct brcmf_fw_item *cur;
+ 	int ret = 0;
+ 
+-	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(fwctx->dev));
+-	if (!fw) {
++	cur = &fwctx->req->items[fwctx->curpos];
++
++	brcmf_dbg(TRACE, "enter: firmware %s %sfound\n", cur->path,
++		  fw ? "" : "not ");
++
++	if (fw) {
++		if (cur->type == BRCMF_FW_TYPE_BINARY)
++			cur->binary = fw;
++		else if (cur->type == BRCMF_FW_TYPE_NVRAM)
++			brcmf_fw_request_nvram_done(fw, fwctx);
++		else
++			release_firmware(fw);
++	} else if (cur->type == BRCMF_FW_TYPE_NVRAM) {
++		brcmf_fw_request_nvram_done(NULL, fwctx);
++	} else if (!(cur->flags & BRCMF_FW_REQF_OPTIONAL)) {
+ 		ret = -ENOENT;
+ 		goto fail;
+ 	}
+-	/* only requested code so done here */
+-	if (!(fwctx->flags & BRCMF_FW_REQUEST_NVRAM))
+-		goto done;
+ 
+-	fwctx->code = fw;
+-	ret = request_firmware_nowait(THIS_MODULE, true, fwctx->nvram_name,
+-				      fwctx->dev, GFP_KERNEL, fwctx,
+-				      brcmf_fw_request_nvram_done);
++	do {
++		if (++fwctx->curpos == fwctx->req->n_items) {
++			ret = 0;
++			goto done;
++		}
++
++		ret = brcmf_fw_request_next_item(fwctx, false);
++	} while (ret == -EAGAIN);
+ 
+-	/* pass NULL to nvram callback for bcm47xx fallback */
+-	if (ret)
+-		brcmf_fw_request_nvram_done(NULL, fwctx);
+ 	return;
+ 
+ fail:
+-	brcmf_dbg(TRACE, "failed: dev=%s\n", dev_name(fwctx->dev));
++	brcmf_dbg(TRACE, "failed err=%d: dev=%s, fw=%s\n", ret,
++		  dev_name(fwctx->dev), cur->path);
++	brcmf_fw_free_request(fwctx->req);
++	fwctx->req = NULL;
+ done:
+-	fwctx->done(fwctx->dev, ret, fw, NULL, 0);
++	fwctx->done(fwctx->dev, ret, fwctx->req);
+ 	kfree(fwctx);
+ }
+ 
+-int brcmf_fw_get_firmwares_pcie(struct device *dev, u16 flags,
+-				const char *code, const char *nvram,
+-				void (*fw_cb)(struct device *dev, int err,
+-					      const struct firmware *fw,
+-					      void *nvram_image, u32 nvram_len),
+-				u16 domain_nr, u16 bus_nr)
++static bool brcmf_fw_request_is_valid(struct brcmf_fw_request *req)
++{
++	struct brcmf_fw_item *item;
++	int i;
++
++	if (!req->n_items)
++		return false;
++
++	for (i = 0, item = &req->items[0]; i < req->n_items; i++, item++) {
++		if (!item->path)
++			return false;
++	}
++	return true;
++}
++
++int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
++			   void (*fw_cb)(struct device *dev, int err,
++					 struct brcmf_fw_request *req))
+ {
+ 	struct brcmf_fw *fwctx;
+ 
+ 	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(dev));
+-	if (!fw_cb || !code)
++	if (!fw_cb)
+ 		return -EINVAL;
+ 
+-	if ((flags & BRCMF_FW_REQUEST_NVRAM) && !nvram)
++	if (!brcmf_fw_request_is_valid(req))
+ 		return -EINVAL;
+ 
+ 	fwctx = kzalloc(sizeof(*fwctx), GFP_KERNEL);
+@@ -541,26 +621,11 @@ int brcmf_fw_get_firmwares_pcie(struct device *dev, u16 flags,
+ 		return -ENOMEM;
+ 
+ 	fwctx->dev = dev;
+-	fwctx->flags = flags;
++	fwctx->req = req;
+ 	fwctx->done = fw_cb;
+-	if (flags & BRCMF_FW_REQUEST_NVRAM)
+-		fwctx->nvram_name = nvram;
+-	fwctx->domain_nr = domain_nr;
+-	fwctx->bus_nr = bus_nr;
+-
+-	return request_firmware_nowait(THIS_MODULE, true, code, dev,
+-				       GFP_KERNEL, fwctx,
+-				       brcmf_fw_request_code_done);
+-}
+ 
+-int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
+-			   const char *code, const char *nvram,
+-			   void (*fw_cb)(struct device *dev, int err,
+-					 const struct firmware *fw,
+-					 void *nvram_image, u32 nvram_len))
+-{
+-	return brcmf_fw_get_firmwares_pcie(dev, flags, code, nvram, fw_cb, 0,
+-					   0);
++	brcmf_fw_request_next_item(fwctx, true);
++	return 0;
+ }
+ 
+ static void brcmf_fw_get_full_name(char fw_name[BRCMF_FW_NAME_LEN],
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+index 50218e9..1ca630e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+@@ -16,10 +16,7 @@
+ #ifndef BRCMFMAC_FIRMWARE_H
+ #define BRCMFMAC_FIRMWARE_H
+ 
+-#define BRCMF_FW_REQUEST		0x000F
+-#define  BRCMF_FW_REQUEST_NVRAM		0x0001
+-#define BRCMF_FW_REQ_FLAGS		0x00F0
+-#define  BRCMF_FW_REQ_NV_OPTIONAL	0x0010
++#define BRCMF_FW_REQF_OPTIONAL		0x0001
+ 
+ #define	BRCMF_FW_NAME_LEN		320
+ 
+@@ -54,21 +51,39 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
+ 			      u32 table_size, char fw_name[BRCMF_FW_NAME_LEN],
+ 			      char nvram_name[BRCMF_FW_NAME_LEN]);
+ void brcmf_fw_nvram_free(void *nvram);
++
++enum brcmf_fw_type {
++	BRCMF_FW_TYPE_BINARY,
++	BRCMF_FW_TYPE_NVRAM
++};
++
++struct brcmf_fw_item {
++	const char *path;
++	enum brcmf_fw_type type;
++	u16 flags;
++	union {
++		const struct firmware *binary;
++		struct {
++			void *data;
++			u32 len;
++		} nv_data;
++	};
++};
++
++struct brcmf_fw_request {
++	u16 domain_nr;
++	u16 bus_nr;
++	u32 n_items;
++	struct brcmf_fw_item items[0];
++};
++
+ /*
+  * Request firmware(s) asynchronously. When the asynchronous request
+  * fails it will not use the callback, but call device_release_driver()
+  * instead which will call the driver .remove() callback.
+  */
+-int brcmf_fw_get_firmwares_pcie(struct device *dev, u16 flags,
+-				const char *code, const char *nvram,
+-				void (*fw_cb)(struct device *dev, int err,
+-					      const struct firmware *fw,
+-					      void *nvram_image, u32 nvram_len),
+-				u16 domain_nr, u16 bus_nr);
+-int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
+-			   const char *code, const char *nvram,
++int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
+ 			   void (*fw_cb)(struct device *dev, int err,
+-					 const struct firmware *fw,
+-					 void *nvram_image, u32 nvram_len));
++					 struct brcmf_fw_request *req));
+ 
+ #endif /* BRCMFMAC_FIRMWARE_H */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index ca95f6c..a3fe29e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -1651,15 +1651,19 @@ static void brcmf_pcie_buscore_activate(void *ctx, struct brcmf_chip *chip,
+ 	.write32 = brcmf_pcie_buscore_write32,
+ };
+ 
++#define BRCMF_PCIE_FW_CODE	0
++#define BRCMF_PCIE_FW_NVRAM	1
++
+ static void brcmf_pcie_setup(struct device *dev, int ret,
+-			     const struct firmware *fw,
+-			     void *nvram, u32 nvram_len)
++			     struct brcmf_fw_request *fwreq)
+ {
++	const struct firmware *fw;
++	void *nvram;
+ 	struct brcmf_bus *bus;
+ 	struct brcmf_pciedev *pcie_bus_dev;
+ 	struct brcmf_pciedev_info *devinfo;
+ 	struct brcmf_commonring **flowrings;
+-	u32 i;
++	u32 i, nvram_len;
+ 
+ 	/* check firmware loading result */
+ 	if (ret)
+@@ -1670,6 +1674,11 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
+ 	devinfo = pcie_bus_dev->devinfo;
+ 	brcmf_pcie_attach(devinfo);
+ 
++	fw = fwreq->items[BRCMF_PCIE_FW_CODE].binary;
++	nvram = fwreq->items[BRCMF_PCIE_FW_NVRAM].nv_data.data;
++	nvram_len = fwreq->items[BRCMF_PCIE_FW_NVRAM].nv_data.len;
++	kfree(fwreq);
++
+ 	/* Some of the firmwares have the size of the memory of the device
+ 	 * defined inside the firmware. This is because part of the memory in
+ 	 * the device is shared and the devision is determined by FW. Parse
+@@ -1730,6 +1739,7 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
+ brcmf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+ 	int ret;
++	struct brcmf_fw_request *fwreq;
+ 	struct brcmf_pciedev_info *devinfo;
+ 	struct brcmf_pciedev *pcie_bus_dev;
+ 	struct brcmf_bus *bus;
+@@ -1800,12 +1810,26 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
+ 	if (ret)
+ 		goto fail_bus;
+ 
+-	ret = brcmf_fw_get_firmwares_pcie(bus->dev, BRCMF_FW_REQUEST_NVRAM |
+-						    BRCMF_FW_REQ_NV_OPTIONAL,
+-					  devinfo->fw_name, devinfo->nvram_name,
+-					  brcmf_pcie_setup, domain_nr, bus_nr);
++	fwreq = kzalloc(sizeof(*fwreq) + 2 * sizeof(struct brcmf_fw_item),
++			GFP_KERNEL);
++	if (!fwreq) {
++		ret = -ENOMEM;
++		goto fail_bus;
++	}
++
++	fwreq->items[BRCMF_PCIE_FW_CODE].path = devinfo->fw_name;
++	fwreq->items[BRCMF_PCIE_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
++	fwreq->items[BRCMF_PCIE_FW_NVRAM].path = devinfo->nvram_name;
++	fwreq->items[BRCMF_PCIE_FW_NVRAM].type = BRCMF_FW_TYPE_NVRAM;
++	fwreq->items[BRCMF_PCIE_FW_NVRAM].flags = BRCMF_FW_REQF_OPTIONAL;
++	fwreq->n_items = 2;
++	fwreq->domain_nr = domain_nr;
++	fwreq->bus_nr = bus_nr;
++	ret = brcmf_fw_get_firmwares(bus->dev, fwreq, brcmf_pcie_setup);
+ 	if (ret == 0)
+ 		return 0;
++
++	kfree(fwreq);
+ fail_bus:
+ 	kfree(bus->msgbuf);
+ 	kfree(bus);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 3f7fd6f..ab68eb1 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -4031,14 +4031,19 @@ static int brcmf_sdio_get_fwname(struct device *dev, u32 chip, u32 chiprev,
+ 	.get_fwname = brcmf_sdio_get_fwname,
+ };
+ 
++#define BRCMF_SDIO_FW_CODE	0
++#define BRCMF_SDIO_FW_NVRAM	1
++
+ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+-					 const struct firmware *code,
+-					 void *nvram, u32 nvram_len)
++					 struct brcmf_fw_request *fwreq)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+ 	struct brcmf_sdio_dev *sdiod = bus_if->bus_priv.sdio;
+ 	struct brcmf_sdio *bus = sdiod->bus;
+ 	struct brcmf_core *core = bus->sdio_core;
++	const struct firmware *code;
++	void *nvram;
++	u32 nvram_len;
+ 	u8 saveclk;
+ 
+ 	brcmf_dbg(TRACE, "Enter: dev=%s, err=%d\n", dev_name(dev), err);
+@@ -4046,6 +4051,11 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	if (err)
+ 		goto fail;
+ 
++	code = fwreq->items[BRCMF_SDIO_FW_CODE].binary;
++	nvram = fwreq->items[BRCMF_SDIO_FW_NVRAM].nv_data.data;
++	nvram_len = fwreq->items[BRCMF_SDIO_FW_NVRAM].nv_data.len;
++	kfree(fwreq);
++
+ 	/* try to download image and nvram to the dongle */
+ 	bus->alp_only = true;
+ 	err = brcmf_sdio_download_firmware(bus, code, nvram, nvram_len);
+@@ -4150,6 +4160,7 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 	int ret;
+ 	struct brcmf_sdio *bus;
+ 	struct workqueue_struct *wq;
++	struct brcmf_fw_request *fwreq;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+@@ -4239,11 +4250,24 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 	if (ret)
+ 		goto fail;
+ 
+-	ret = brcmf_fw_get_firmwares(sdiodev->dev, BRCMF_FW_REQUEST_NVRAM,
+-				     sdiodev->fw_name, sdiodev->nvram_name,
++	fwreq = kzalloc(sizeof(fwreq) + 2 * sizeof(struct brcmf_fw_item),
++			GFP_KERNEL);
++	if (!fwreq) {
++		ret = -ENOMEM;
++		goto fail;
++	}
++
++	fwreq->items[BRCMF_SDIO_FW_CODE].path = sdiodev->fw_name;
++	fwreq->items[BRCMF_SDIO_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
++	fwreq->items[BRCMF_SDIO_FW_NVRAM].path = sdiodev->nvram_name;
++	fwreq->items[BRCMF_SDIO_FW_NVRAM].type = BRCMF_FW_TYPE_NVRAM;
++	fwreq->n_items = 2;
++
++	ret = brcmf_fw_get_firmwares(sdiodev->dev, fwreq,
+ 				     brcmf_sdio_firmware_callback);
+ 	if (ret != 0) {
+ 		brcmf_err("async firmware request failed: %d\n", ret);
++		kfree(fwreq);
+ 		goto fail;
+ 	}
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+index f8968cf..055db11 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+@@ -1155,18 +1155,23 @@ static int brcmf_usb_get_fwname(struct device *dev, u32 chip, u32 chiprev,
+ 	.get_fwname = brcmf_usb_get_fwname,
+ };
+ 
++#define BRCMF_USB_FW_CODE	0
++
+ static void brcmf_usb_probe_phase2(struct device *dev, int ret,
+-				   const struct firmware *fw,
+-				   void *nvram, u32 nvlen)
++				   struct brcmf_fw_request *fwreq)
+ {
+ 	struct brcmf_bus *bus = dev_get_drvdata(dev);
+ 	struct brcmf_usbdev_info *devinfo = bus->bus_priv.usb->devinfo;
++	const struct firmware *fw;
+ 
+ 	if (ret)
+ 		goto error;
+ 
+ 	brcmf_dbg(USB, "Start fw downloading\n");
+ 
++	fw = fwreq->items[BRCMF_USB_FW_CODE].binary;
++	kfree(fwreq);
++
+ 	ret = check_file(fw->data);
+ 	if (ret < 0) {
+ 		brcmf_err("invalid firmware\n");
+@@ -1200,6 +1205,7 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
+ 	struct brcmf_bus *bus = NULL;
+ 	struct brcmf_usbdev *bus_pub = NULL;
+ 	struct device *dev = devinfo->dev;
++	struct brcmf_fw_request *fwreq;
+ 	int ret;
+ 
+ 	brcmf_dbg(USB, "Enter\n");
+@@ -1250,11 +1256,22 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
+ 	if (ret)
+ 		goto fail;
+ 
++	fwreq = kzalloc(sizeof(*fwreq) + sizeof(struct brcmf_fw_item),
++			GFP_KERNEL);
++	if (!fwreq) {
++		ret = -ENOMEM;
++		goto fail;
++	}
++
++	fwreq->items[BRCMF_USB_FW_CODE].path = devinfo->fw_name;
++	fwreq->items[BRCMF_USB_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
++	fwreq->n_items = 1;
++
+ 	/* request firmware here */
+-	ret = brcmf_fw_get_firmwares(dev, 0, devinfo->fw_name, NULL,
+-				     brcmf_usb_probe_phase2);
++	ret = brcmf_fw_get_firmwares(dev, fwreq, brcmf_usb_probe_phase2);
+ 	if (ret) {
+ 		brcmf_err("firmware request failed: %d\n", ret);
++		kfree(fwreq);
+ 		goto fail;
+ 	}
+ 
+@@ -1447,11 +1464,25 @@ static int brcmf_usb_reset_resume(struct usb_interface *intf)
+ {
+ 	struct usb_device *usb = interface_to_usbdev(intf);
+ 	struct brcmf_usbdev_info *devinfo = brcmf_usb_get_businfo(&usb->dev);
++	struct brcmf_fw_request *fwreq;
++	int ret;
+ 
+ 	brcmf_dbg(USB, "Enter\n");
+ 
+-	return brcmf_fw_get_firmwares(&usb->dev, 0, devinfo->fw_name, NULL,
+-				      brcmf_usb_probe_phase2);
++	fwreq = kzalloc(sizeof(*fwreq) + sizeof(struct brcmf_fw_item),
++			GFP_KERNEL);
++	if (!fwreq)
++		return -ENOMEM;
++
++	fwreq->items[BRCMF_USB_FW_CODE].path = devinfo->fw_name;
++	fwreq->items[BRCMF_USB_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
++	fwreq->n_items = 1;
++
++	ret = brcmf_fw_get_firmwares(&usb->dev, fwreq, brcmf_usb_probe_phase2);
++	if (ret < 0)
++		kfree(fwreq);
++
++	return ret;
+ }
+ 
+ #define BRCMF_USB_DEVICE(dev_id)	\
 -- 
-2.13.5
+1.9.1
