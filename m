@@ -1,109 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45374 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751002AbeCZFlP (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 01:41:15 -0400
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org, bjorn.andersson@linaro.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH 09/12] ath10k: Add QMI HOST CAP request support
-Date: Mon, 26 Mar 2018 11:11:06 +0530
-Message-Id: <1522042866-26304-1-git-send-email-govinds@codeaurora.org> (sfid-20180326_074118_661217_529B3C92)
+Received: from verein.lst.de ([213.95.11.211]:46117 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752542AbeCVIT3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Mar 2018 04:19:29 -0400
+Date: Thu, 22 Mar 2018 09:19:26 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Nipun Gupta <nipun.gupta@nxp.com>
+Cc: robin.murphy@arm.com, hch@lst.de, linux@armlinux.org.uk,
+        gregkh@linuxfoundation.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, zajec5@gmail.com, andy.gross@linaro.org,
+        david.brown@linaro.org, dan.j.williams@intel.com,
+        vinod.koul@intel.com, thierry.reding@gmail.com, robh+dt@kernel.org,
+        frowand.list@gmail.com, jarkko.sakkinen@linux.intel.com,
+        rafael.j.wysocki@intel.com, dmitry.torokhov@gmail.com,
+        johan@kernel.org, msuchanek@suse.de, linux-kernel@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
+        dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, bharat.bhushan@nxp.com,
+        leoyang.li@nxp.com
+Subject: Re: [PATCH v2 2/2] drivers: remove force dma flag from buses
+Message-ID: <20180322081926.GC29444@lst.de> (sfid-20180322_092005_315497_733E7992)
+References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com> <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com> <1521615323-4752-2-git-send-email-nipun.gupta@nxp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1521615323-4752-2-git-send-email-nipun.gupta@nxp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for host capablity request
-qmi message for wcn3990 target.
+> --- a/drivers/dma/qcom/hidma_mgmt.c
+> +++ b/drivers/dma/qcom/hidma_mgmt.c
+> @@ -398,7 +398,7 @@ static int __init hidma_mgmt_of_populate_channels(struct device_node *np)
+>  		}
+>  		of_node_get(child);
+>  		new_pdev->dev.of_node = child;
+> -		of_dma_configure(&new_pdev->dev, child);
+> +		of_dma_configure(&new_pdev->dev, child, true);
+>  		/*
+>  		 * It is assumed that calling of_msi_configure is safe on
+>  		 * platforms with or without MSI support.
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/qmi.c | 65 +++++++++++++++++++++++++++++++++++
- 1 file changed, 65 insertions(+)
+Where did we mark this bus as force_dma before?
 
-diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
-index 65a43af..a33681d 100644
---- a/drivers/net/wireless/ath/ath10k/qmi.c
-+++ b/drivers/net/wireless/ath/ath10k/qmi.c
-@@ -357,6 +357,67 @@ static int ath10k_qmi_cap_send_sync_msg(struct ath10k_qmi *qmi)
- 	return ret;
- }
- 
-+static int ath10k_qmi_host_cap_send_sync(struct ath10k_qmi *qmi)
-+{
-+	struct wlfw_host_cap_resp_msg_v01 *resp;
-+	struct wlfw_host_cap_req_msg_v01 *req;
-+	struct qmi_txn txn;
-+	int ret;
-+
-+	req = kzalloc(sizeof(*req), GFP_KERNEL);
-+	if (!req)
-+		return -ENOMEM;
-+
-+	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
-+	if (!resp) {
-+		kfree(req);
-+		return -ENOMEM;
-+	}
-+
-+	req->daemon_support_valid = 1;
-+	req->daemon_support = 0;
-+
-+	pr_debug("daemon_support is %d\n", req->daemon_support);
-+
-+	ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
-+			   wlfw_host_cap_resp_msg_v01_ei, resp);
-+	if (ret < 0) {
-+		pr_err("Fail to init txn for Capability resp %d\n", ret);
-+		goto out;
-+	}
-+
-+	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
-+			       QMI_WLFW_HOST_CAP_REQ_V01,
-+			       WLFW_HOST_CAP_REQ_MSG_V01_MAX_MSG_LEN,
-+			       wlfw_host_cap_req_msg_v01_ei, req);
-+	if (ret < 0) {
-+		qmi_txn_cancel(&txn);
-+		pr_err("Fail to send Capability req %d\n", ret);
-+		goto out;
-+	}
-+
-+	ret = qmi_txn_wait(&txn, WLFW_TIMEOUT * HZ);
-+	if (ret < 0)
-+		goto out;
-+
-+	if (resp->resp.result != QMI_RESULT_SUCCESS_V01) {
-+		pr_err("qmi host capability req rejected, result:%d error:%d\n",
-+		       resp->resp.result, resp->resp.error);
-+		ret = -resp->resp.result;
-+		goto out;
-+	}
-+
-+	pr_debug("host cap request completed\n");
-+	kfree(resp);
-+	kfree(req);
-+	return 0;
-+
-+out:
-+	kfree(resp);
-+	kfree(req);
-+	return ret;
-+}
-+
- static int
- ath10k_qmi_ind_register_send_sync_msg(struct ath10k_qmi *qmi)
- {
-@@ -500,6 +561,10 @@ static void ath10k_qmi_event_server_arrive(struct work_struct *work)
- 	if (ret)
- 		return;
- 
-+	ret = ath10k_qmi_host_cap_send_sync(qmi);
-+	if (ret)
-+		return;
-+
- 	ret = ath10k_qmi_msa_mem_info_send_sync_msg(qmi);
- 	if (ret)
- 		return;
--- 
-1.9.1
+> diff --git a/drivers/of/of_reserved_mem.c b/drivers/of/of_reserved_mem.c
+> index 9a4f4246..895c83e 100644
+> --- a/drivers/of/of_reserved_mem.c
+> +++ b/drivers/of/of_reserved_mem.c
+> @@ -353,7 +353,7 @@ int of_reserved_mem_device_init_by_idx(struct device *dev,
+>  		/* ensure that dma_ops is set for virtual devices
+>  		 * using reserved memory
+>  		 */
+> -		of_dma_configure(dev, np);
+> +		of_dma_configure(dev, np, true);
+
+Did all the callers of this one really force dma?  I have a hard time
+untangling the call stacks unfortunately.
