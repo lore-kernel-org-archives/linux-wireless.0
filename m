@@ -1,130 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:32976 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750707AbeC2OPZ (ORCPT
+Received: from mail-io0-f194.google.com ([209.85.223.194]:46150 "EHLO
+        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751792AbeCVK3z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 10:15:25 -0400
-Received: by mail-pf0-f196.google.com with SMTP id f15so3320839pfn.0
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2018 07:15:25 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
+        Thu, 22 Mar 2018 06:29:55 -0400
+Received: by mail-io0-f194.google.com with SMTP id g14so10321414iob.13
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Mar 2018 03:29:54 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87po3zxe9n.fsf@kamboji.qca.qualcomm.com>
+References: <20180319014032.9394-1-alexey.roslyakov@gmail.com>
+ <20180319014032.9394-3-alexey.roslyakov@gmail.com> <5AAF838D.2030105@broadcom.com>
+ <CALFoz4YMKJr40fefczrbjXBROtZxnGikv0Jze-BnefofCB3dyg@mail.gmail.com>
+ <817418fd-6446-57ea-b03d-383b4df9a979@gmail.com> <5AB044C0.9060701@broadcom.com>
+ <87po3zxe9n.fsf@kamboji.qca.qualcomm.com>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Thu, 22 Mar 2018 11:29:53 +0100
+Message-ID: <CAPDyKFr2GVB0+UUpT3GgGBT17TMcrky6X4L_pw+ztTL6ejbCwQ@mail.gmail.com> (sfid-20180322_113104_353629_27CF71AE)
+Subject: Re: [PATCH net-next v2 2/2] dt: bindings: add new dt entries for brcmfmac
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [v2 1/4] rsi: move xtend_desc structure from rsi_main.h to rsi_mgmt.h
-Date: Thu, 29 Mar 2018 19:32:26 +0530
-Message-Id: <1522332149-5100-2-git-send-email-amitkarwar@gmail.com> (sfid-20180329_161529_348561_8A873BDC)
-In-Reply-To: <1522332149-5100-1-git-send-email-amitkarwar@gmail.com>
-References: <1522332149-5100-1-git-send-email-amitkarwar@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Alexey Roslyakov <alexey.roslyakov@gmail.com>,
+        Andrew Lunn <andrew@lunn.ch>, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+On 20 March 2018 at 10:55, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+>
+>>>> If I get it right, you mean something like this:
+>>>>
+>>>> mmc3: mmc@1c12000 {
+>>>> ...
+>>>>          broken-sg-support;
+>>>>          sd-head-align = 4;
+>>>>          sd-sgentry-align = 512;
+>>>>
+>>>>          brcmf: wifi@1 {
+>>>>                  ...
+>>>>          };
+>>>> };
+>>>>
+>>>> Where dt: bindings documentation for these entries should reside?
+>>>> In generic MMC bindings? Well, this is the very special case and
+>>>> mmc-linux maintainer will unlikely to accept these changes.
+>>>> Also, extra kernel code modification might be required. It could make
+>>>> quite trivial change much more complex.
+>>>
+>>> If the MMC maintainers are not copied on this patch series, it will
+>>> likely be hard for them to identify this patch series and chime in...
+>>
+>> The main question is whether this is indeed a "very special case" as
+>> Alexey claims it to be or that it is likely to be applicable to other
+>> device and host combinations as you are suggesting.
+>>
+>> If these properties are imposed by the host or host controller it
+>> would make sense to have these in the mmc bindings.
+>
+> BTW, last year we were discussing something similar (I mean related to
+> alignment requirements) with ath10k SDIO patches and at the time the
+> patch submitter was proposing to have a bounce buffer in ath10k to
+> workaround that. I don't remember the details anymore, they are on the
+> ath10k mailing list archive if anyone is curious to know, but I would
+> not be surprised if they are similar as here. So there might be a need
+> to solve this in a generic way (but not sure of course as I haven't
+> checked the details).
 
-All descriptor structures are in rsi_mgmt.h except this
-extended descriptor structure. Hence moving it to rsi_mgmt.h
-and also renaming to rsi_xtend_desc.
+I re-call something about these as well, here are the patches. Perhaps
+I should pick some of them up...
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_hal.c | 12 ++++++------
- drivers/net/wireless/rsi/rsi_main.h    |  6 ------
- drivers/net/wireless/rsi/rsi_mgmt.h    |  6 ++++++
- 3 files changed, 12 insertions(+), 12 deletions(-)
+https://patchwork.kernel.org/patch/10123137/
+https://patchwork.kernel.org/patch/10123139/
+https://patchwork.kernel.org/patch/10123141/
+https://patchwork.kernel.org/patch/10123143/
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
-index de608ae..ce6a86d 100644
---- a/drivers/net/wireless/rsi/rsi_91x_hal.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
-@@ -55,7 +55,7 @@ static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
- 	struct rsi_mgmt_desc *mgmt_desc;
- 	struct skb_info *tx_params;
- 	struct ieee80211_bss_conf *bss = NULL;
--	struct xtended_desc *xtend_desc = NULL;
-+	struct rsi_xtended_desc *xtend_desc = NULL;
- 	u8 header_size;
- 	u32 dword_align_bytes = 0;
- 
-@@ -69,7 +69,7 @@ static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
- 	vif = tx_params->vif;
- 
- 	/* Update header size */
--	header_size = FRAME_DESC_SZ + sizeof(struct xtended_desc);
-+	header_size = FRAME_DESC_SZ + sizeof(struct rsi_xtended_desc);
- 	if (header_size > skb_headroom(skb)) {
- 		rsi_dbg(ERR_ZONE,
- 			"%s: Failed to add extended descriptor\n",
-@@ -92,7 +92,7 @@ static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
- 	wh = (struct ieee80211_hdr *)&skb->data[header_size];
- 
- 	mgmt_desc = (struct rsi_mgmt_desc *)skb->data;
--	xtend_desc = (struct xtended_desc *)&skb->data[FRAME_DESC_SZ];
-+	xtend_desc = (struct rsi_xtended_desc *)&skb->data[FRAME_DESC_SZ];
- 
- 	rsi_set_len_qno(&mgmt_desc->len_qno, (skb->len - FRAME_DESC_SZ),
- 			RSI_WIFI_MGMT_Q);
-@@ -158,7 +158,7 @@ static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
- 	struct skb_info *tx_params;
- 	struct ieee80211_bss_conf *bss;
- 	struct rsi_data_desc *data_desc;
--	struct xtended_desc *xtend_desc;
-+	struct rsi_xtended_desc *xtend_desc;
- 	u8 ieee80211_size = MIN_802_11_HDR_LEN;
- 	u8 header_size;
- 	u8 vap_id = 0;
-@@ -170,7 +170,7 @@ static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
- 	bss = &vif->bss_conf;
- 	tx_params = (struct skb_info *)info->driver_data;
- 
--	header_size = FRAME_DESC_SZ + sizeof(struct xtended_desc);
-+	header_size = FRAME_DESC_SZ + sizeof(struct rsi_xtended_desc);
- 	if (header_size > skb_headroom(skb)) {
- 		rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
- 		return -ENOSPC;
-@@ -188,7 +188,7 @@ static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
- 	data_desc = (struct rsi_data_desc *)skb->data;
- 	memset(data_desc, 0, header_size);
- 
--	xtend_desc = (struct xtended_desc *)&skb->data[FRAME_DESC_SZ];
-+	xtend_desc = (struct rsi_xtended_desc *)&skb->data[FRAME_DESC_SZ];
- 	wh = (struct ieee80211_hdr *)&skb->data[header_size];
- 	seq_num = IEEE80211_SEQ_TO_SN(le16_to_cpu(wh->seq_ctrl));
- 
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index ef4fa32..b81cdbf 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -190,12 +190,6 @@ struct cqm_info {
- 	u32 rssi_hyst;
- };
- 
--struct xtended_desc {
--	u8 confirm_frame_type;
--	u8 retry_cnt;
--	u16 reserved;
--};
--
- enum rsi_dfs_regions {
- 	RSI_REGION_FCC = 0,
- 	RSI_REGION_ETSI,
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index cf6567a..6726e84 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -301,6 +301,12 @@ struct rsi_mac_frame {
- #define ENCAP_MGMT_PKT			BIT(7)
- #define DESC_IMMEDIATE_WAKEUP		BIT(15)
- 
-+struct rsi_xtended_desc {
-+	u8 confirm_frame_type;
-+	u8 retry_cnt;
-+	u16 reserved;
-+};
-+
- struct rsi_cmd_desc_dword0 {
- 	__le16 len_qno;
- 	u8 frame_type;
--- 
-2.7.4
+Kind regards
+Uffe
