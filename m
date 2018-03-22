@@ -1,136 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:33545 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751012AbeCJHo4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Mar 2018 02:44:56 -0500
+Received: from verein.lst.de ([213.95.11.211]:46071 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752476AbeCVIPd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Mar 2018 04:15:33 -0400
+Date: Thu, 22 Mar 2018 09:15:30 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Nipun Gupta <nipun.gupta@nxp.com>
+Cc: robin.murphy@arm.com, hch@lst.de, linux@armlinux.org.uk,
+        gregkh@linuxfoundation.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, zajec5@gmail.com, andy.gross@linaro.org,
+        david.brown@linaro.org, dan.j.williams@intel.com,
+        vinod.koul@intel.com, thierry.reding@gmail.com, robh+dt@kernel.org,
+        frowand.list@gmail.com, jarkko.sakkinen@linux.intel.com,
+        rafael.j.wysocki@intel.com, dmitry.torokhov@gmail.com,
+        johan@kernel.org, msuchanek@suse.de, linux-kernel@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
+        dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, bharat.bhushan@nxp.com,
+        leoyang.li@nxp.com
+Subject: Re: [PATCH v2 1/2] dma-mapping: move dma configuration to bus
+        infrastructure
+Message-ID: <20180322081530.GA29444@lst.de> (sfid-20180322_091546_264615_93C66FE2)
+References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com> <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <1b1f6344-d588-d2f2-4b3d-a0a4043e801f@nbd.name>
-References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
- <CACna6rzD6z3DC6yjMCgBxgxx+DF+GGu69Ot5QA6xpJ41Ewb2=A@mail.gmail.com>
- <82d8ac0c-b391-6099-4c7f-991cc35445aa@dd-wrt.com> <20180302090312.GA30267@amd>
- <e77d25d4-a824-380a-c51a-e81175ba6205@dd-wrt.com> <CACna6rys85VEkzRGDVUAkBy7KgHS2y0DET7YvedboX-YEQHrkg@mail.gmail.com>
- <890a4dcc-f549-6487-2ce5-3b62874cd266@dd-wrt.com> <20180308090216.GC17761@amd>
- <d443856e-cfc8-2d50-900d-edf22e5360e3@dd-wrt.com> <20180308140515.GA4889@amd> <1b1f6344-d588-d2f2-4b3d-a0a4043e801f@nbd.name>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Sat, 10 Mar 2018 18:44:34 +1100
-Message-ID: <CAGRGNgWSnObB8PomPPEGs533dmFyQQkOEsvxzyJ=BfBBcWT2Ug@mail.gmail.com> (sfid-20180310_084507_809845_5E1DD9BA)
-Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for
- various chipsets
-To: Felix Fietkau <nbd@nbd.name>
-Cc: Pavel Machek <pavel@ucw.cz>,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        "open list:LED SUBSYSTEM" <linux-leds@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Felix,
+> +static int amba_dma_configure(struct device *dev)
+> +{
+> +	return dma_common_configure(dev);
+> +}
 
-On Fri, Mar 9, 2018 at 2:46 AM, Felix Fietkau <nbd@nbd.name> wrote:
-> On 2018-03-08 15:05, Pavel Machek wrote:
->> On Thu 2018-03-08 13:33:29, Sebastian Gottschall wrote:
->>> Am 08.03.2018 um 10:02 schrieb Pavel Machek:
->>> >On Wed 2018-03-07 18:54:41, Sebastian Gottschall wrote:
->>> >>Am 07.03.2018 um 17:22 schrieb Rafa=C5=82 Mi=C5=82ecki:
->>> >>>On 2 March 2018 at 10:22, Sebastian Gottschall <s.gottschall@dd-wrt.=
-com> wrote:
->>> >>>>>>leds-gpio is crap and limited. you can just register one platform=
- data at
->>> >>>>>>kernel runtime since its identified by its object name "led-gpio"=
- but the
->>> >>>>>>kernel forbidds to register 2 platform datas with the same name
->>> >>>>>>consider the ar71xx devices with qca988x wifi chipsets. they all =
-have
->>> >>>>>>already a led platform data registered
->>> >>>>>>at boottime. a second can't be registered anymore so gpio_led is =
-useless
->>> >>>>>>at
->>> >>>>>>all for most developers on such platforms. its mainly used for ea=
-rly
->>> >>>>>>kernel
->>> >>>>>>platform data initialisation for system leds.
->>> >>>>>If leds-gpio has limitations, please fix those, rather then
->>> >>>>>introducing duplicated code.
->>> >>>>there is no duplicated code introduced and there is no solution for=
- it.
->>> >>>>consider that all wifi drivers with softled support
->>> >>>>are going that way with registering a own led driver. see ath9k for
->>> >>>>instance. gpio-led cannot be used for it and there is no way to
->>> >>>>support multiple platform datas with the same name. its a kernel li=
-mitation
->>> >>>I just reviewed some mips arch patch adding support for more LEDs fo=
-r
->>> >>>selected devices:
->>> >>>[PATCH] MIPS: BCM47XX: Add Luxul XAP1500/XWR1750 WiFi LEDs
->>> >>>https://patchwork.linux-mips.org/patch/18681/
->>> >>>
->>> >>>It seems to be simply adding another call to the
->>> >>>gpio_led_register_device(). It seems to me you can call that functio=
-n
->>> >>>multiple times and register multiple structs with LEDs.
->>> >>>
->>> >>>Isn't all you need something like this?
->>> >>>
->>> >>>static const struct gpio_led ath10k_leds[] =3D {
->>> >>>         {
->>> >>>                 .name =3D "ath10k:color:function",
->>> >>>                 .active_low =3D 1,
->>> >>>                 .default_state =3D LEDS_GPIO_DEFSTATE_KEEP,
->>> >>>         }
->>> >>>};
->>> >>>
->>> >>>static struct gpio_led_platform_data bcm47xx_leds_pdata_extra =3D {
->>> >>>         leds =3D ath10k_leds;
->>> >>>         num_leds =3D ARRAY_SIZE(ath10k_leds);
->>> >>>};
->>> >>>
->>> >>>ath10k_leds.gpio =3D ar->hw_params.led_pin;
->>> >>>gpio_led_register_device(0, &ath10k_leds);
->>> >>the problem are other architectures which have already registered gpi=
-o_led
->>> >>at system start like ar71xx
->>> >>you cannot register a second one. so a independend led driver is a
->>> >>requirement for direct control
->>> >If the limitation indeed exists, please fix the limitation rather than
->>> >working around it in each and every driver.
->>> see ath9k. its exact the same implementation.
->>
->> Ok, so one more driver to fix.
->>
->>> in addition my variant does also work without gpiolib support. so it ca=
-n be
->>> used even if the kernel is configured
->>> without gpio support.
->>> and not to forget, using a own led driver is more ligthweight from the =
-call
->>> path for each led on / off event which is important for
->>> low performance embedded devices
->>
->> We are not going to copy&paste code because such code works without
->> libraries, and we are not going to copy&paste code because that uses
->> less cache during calls. Sorry.
->>
->> NAK. Please fix your patch. Since this discussion seems to have taken a =
-rather weird turn, I've
-> taken a look at the specific code, and from my point of view the code
-> that sets up the LED (including callback) is so trivial that it's simply
-> not worth dealing with adding the leds-gpio driver to the mix.
-> It adds extra complexity and an extra dependency for no reason at all.
-> There's no extra functionality to be gained by using it.
+So it turns out we only end with two callers of dma_common_configure
+after this series.  Based ont hat I'm tempted with the suggestion
+from Robin to just have amba call platform_dma_configure, and move
+the code from dma_common_configure to platform_dma_configure.
 
-Stupid question: If the LED driver isn't using the GPIO subsystem
-(when enabled), what happens if the user uses the GPIO subsystem to
-fiddle with the pin the LED is connected to?
+> +int dma_configure(struct device *dev)
+> +{
+> +	if (dev->bus->dma_configure)
+> +		return dev->bus->dma_configure(dev);
+> +
+> +	return 0;
+> +}
+>  void dma_deconfigure(struct device *dev)
 
-Thanks,
+As grep pointed out this wants a blank line after the function, and while
+in nitpicking mode I'd suggest to remove the blank line above the return
+statement while at it.
 
---=20
-Julian Calaby
+> diff --git a/drivers/gpu/host1x/bus.c b/drivers/gpu/host1x/bus.c
+> index 88a3558..fa9896d 100644
+> --- a/drivers/gpu/host1x/bus.c
+> +++ b/drivers/gpu/host1x/bus.c
+> @@ -314,6 +314,14 @@ static int host1x_device_match(struct device *dev, struct device_driver *drv)
+>  	return strcmp(dev_name(dev), drv->name) == 0;
+>  }
+>  
+> +static int host1x_dma_configure(struct device *dev)
+> +{
+> +	if (dev->of_node)
+> +		return of_dma_configure(dev, dev->of_node);
+> +
+> +	return 0;
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Same here.
+
+> + */
+> +static int pci_dma_configure(struct device *dev)
+> +{
+> +	struct device *bridge;
+> +	enum dev_dma_attr attr;
+> +	int ret = 0;
+> +
+> +	bridge = pci_get_host_bridge_device(to_pci_dev(dev));
+> +
+> +	if (IS_ENABLED(CONFIG_OF) && bridge->parent &&
+> +	    bridge->parent->of_node) {
+> +		ret = of_dma_configure(dev, bridge->parent->of_node);
+> +	} else if (has_acpi_companion(bridge)) {
+> +		attr = acpi_get_dma_attr(to_acpi_device_node(bridge->fwnode));
+> +		if (attr != DEV_DMA_NOT_SUPPORTED)
+> +			ret = acpi_dma_configure(dev, attr);
+> +	}
+
+The attr declaration can be moved into the inner scope here.
+
+> +	pci_put_host_bridge_device(bridge);
+> +
+> +	return ret;
+
+Drop the blank line after the return, please.
