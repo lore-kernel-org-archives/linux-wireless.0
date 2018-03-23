@@ -1,48 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:42140 "EHLO
-        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751619AbeCOKm1 (ORCPT
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:38034 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751632AbeCWXBH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Mar 2018 06:42:27 -0400
+        Fri, 23 Mar 2018 19:01:07 -0400
 MIME-Version: 1.0
-In-Reply-To: <6c9d075c-d7a8-72a5-9b2d-af1feaa06c6c@suse.de>
-References: <20180314143529.1456168-1-arnd@arndb.de> <2929.1521106970@warthog.procyon.org.uk>
- <6c9d075c-d7a8-72a5-9b2d-af1feaa06c6c@suse.de>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Thu, 15 Mar 2018 11:42:25 +0100
-Message-ID: <CAK8P3a01pfvsdM1mR8raU9dA7p4H-jRJz2Y8-+KEY76W_Mukpg@mail.gmail.com> (sfid-20180315_114244_129859_00F58CDF)
-Subject: Re: [PATCH 00/16] remove eight obsolete architectures
-To: Hannes Reinecke <hare@suse.de>
-Cc: David Howells <dhowells@redhat.com>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        IDE-ML <linux-ide@vger.kernel.org>,
-        "open list:HID CORE LAYER" <linux-input@vger.kernel.org>,
-        Networking <netdev@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linux-pwm@vger.kernel.org, linux-rtc@vger.kernel.org,
-        linux-spi <linux-spi@vger.kernel.org>, linux-usb@vger.kernel.org,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        linux-fbdev@vger.kernel.org, linux-watchdog@vger.kernel.org,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
-        Linux-MM <linux-mm@kvack.org>
+In-Reply-To: <20180323140919.GB5942@localhost.localdomain>
+References: <20180323094740.GA5942@localhost.localdomain> <CACna6rx-QNQhVNkwFSabwAY9vM1qV_gTcWywsHFuP5B4NH4NXA@mail.gmail.com>
+ <20180323140919.GB5942@localhost.localdomain>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Sat, 24 Mar 2018 00:01:05 +0100
+Message-ID: <CACna6rwk04dn2oVYsQMhmzvRTmuDv8_AKPK7+kBwbjB_CLRALg@mail.gmail.com> (sfid-20180324_000127_726660_6CB66F40)
+Subject: Re: [QUESTION] Mainline support for B43_PHY_AC wifi cards
+To: Juri Lelli <juri.lelli@gmail.com>
+Cc: b43-dev <b43-dev@lists.infradead.org>,
+        Network Development <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 15, 2018 at 10:59 AM, Hannes Reinecke <hare@suse.de> wrote:
-> On 03/15/2018 10:42 AM, David Howells wrote:
->> Do we have anything left that still implements NOMMU?
+On 23 March 2018 at 15:09, Juri Lelli <juri.lelli@gmail.com> wrote:
+> On 23/03/18 14:43, Rafa=C5=82 Mi=C5=82ecki wrote:
+>> Hi,
 >>
-> RISC-V ?
-> (evil grin :-)
+>> On 23 March 2018 at 10:47, Juri Lelli <juri.lelli@gmail.com> wrote:
+>> > I've got a Dell XPS 13 9343/0TM99H (BIOS A15 01/23/2018) mounting a
+>> > BCM4352 802.11ac (rev 03) wireless card and so far I've been using it =
+on
+>> > Fedora with broadcom-wl package (which I believe installs Broadcom's S=
+TA
+>> > driver?). It works good apart from occasional hiccups after suspend.
+>> >
+>> > I'd like to get rid of that dependency (you can understand that it's
+>> > particularly annoying when testing mainline kernels), but I found out
+>> > that support for my card is BROKEN in mainline [1]. Just to see what
+>> > happens, I forcibly enabled it witnessing that it indeed crashes like
+>> > below as Kconfig warns. :)
+>> >
+>> >  bcma: bus0: Found chip with id 0x4352, rev 0x03 and package 0x00
+>> >  bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x2B=
+, class 0x0)
+>> >  bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x2=
+A, class 0x0)
+>> >  bcma: bus0: Core 2 found: ARM CR4 (manuf 0x4BF, id 0x83E, rev 0x02, c=
+lass 0x0)
+>> >  bcma: bus0: Core 3 found: PCIe Gen2 (manuf 0x4BF, id 0x83C, rev 0x01,=
+ class 0x0)
+>> >  bcma: bus0: Core 4 found: USB 2.0 Device (manuf 0x4BF, id 0x81A, rev =
+0x11, class 0x0)
+>> >  bcma: Unsupported SPROM revision: 11
+>> >  bcma: bus0: Invalid SPROM read from the PCIe card, trying to use fall=
+back SPROM
+>> >  bcma: bus0: Using fallback SPROM failed (err -2)
+>> >  bcma: bus0: No SPROM available
+>> >  bcma: bus0: Bus registered
+>> >  b43-phy0: Broadcom 4352 WLAN found (core revision 42)
+>> >  b43-phy0: Found PHY: Analog 12, Type 11 (AC), Revision 1
+>> >  b43-phy0: Found Radio: Manuf 0x17F, ID 0x2069, Revision 4, Version 0
+>> >  BUG: unable to handle kernel NULL pointer dereference at 000000000000=
+0000
+>>
+>> This isn't really useful without a full backtrace.
+>
+> Sure. I cut it here because I didn't expect people to debug what is
+> already known to be broken (but still it seemed to carry useful
+> information about the hw). :)
 
-Is anyone producing a chip that includes enough of the Privileged ISA spec
-to have things like system calls, but not the MMU parts?
+Please paste the remaining part if you still got it.
 
-I thought at least initially the kernel only supports hardware that has a rather
-complete feature set.
 
-       Arnd
+>> > So, question: is replacing my card the only way I can get rid of this
+>> > downstream dependency? :(
+>>
+>> It's definitely the cheapest way. Getting AC PHY into anything usable
+>> (proper setup that will allow Tx & Rx anything) would probably take
+>> weeks or months of development. I'm not even going to estimate cost of
+>> adding support for 802.11n and 802.11ac features. I was the last
+>> person actively working on b43, right now I spend my free time on
+>> other hobby projects. Few people were planning to help but it seems it
+>> never worked out for them.
+>
+> I see. Just wondering why even if Broadcom's STA solution seems to work
+> fine, it is not mainline. Maybe a maintenance problem? But Fedora ships
+> with very recent kernels, so I'd expect the driver to work with mainline
+> (I tried compiling that against mainline, but I got errors that I didn't
+> spend time figuring out how to fix).
+>
+> Do you know what's the deal w.r.t. the STA driver?
+
+Driver being closed source and company not willing to open source it
+is usually a big problem getting it mainline...
+
+--=20
+Rafa=C5=82
