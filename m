@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36246 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751916AbeCTKCe (ORCPT
+Received: from mail-vk0-f44.google.com ([209.85.213.44]:33327 "EHLO
+        mail-vk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751595AbeCWS2n (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Mar 2018 06:02:34 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
-Subject: Re: pull-request: iwlwifi 2018-03-19
-References: <1521449644.3786.110.camel@coelho.fi>
-Date: Tue, 20 Mar 2018 12:02:30 +0200
-In-Reply-To: <1521449644.3786.110.camel@coelho.fi> (Luca Coelho's message of
-        "Mon, 19 Mar 2018 10:54:04 +0200")
-Message-ID: <87lgenxdxl.fsf@kamboji.qca.qualcomm.com> (sfid-20180320_110237_979443_DCA3E658)
+        Fri, 23 Mar 2018 14:28:43 -0400
+Received: by mail-vk0-f44.google.com with SMTP id j85so7858604vke.0
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Mar 2018 11:28:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1521822366.28252.5.camel@sipsolutions.net>
+References: <CAEo4QHxp3w=PKJ0jgvLNHarw92Ynt=eZNmoWE8w7ZMf_HP9MGw@mail.gmail.com>
+ <1521793079.4175.12.camel@sipsolutions.net> <CAEo4QHwLarcoui=oh+2zX++TBh0juVjp1dV8Gjq77x=W+enAVQ@mail.gmail.com>
+ <1521822366.28252.5.camel@sipsolutions.net>
+From: Tyler Gray <graytfg@gmail.com>
+Date: Fri, 23 Mar 2018 14:28:42 -0400
+Message-ID: <CAEo4QHxEwahfRxETqAKAmH5=pYnb99xxg0A3Rao5dsgnTSm6cQ@mail.gmail.com> (sfid-20180323_192847_583858_AE994F75)
+Subject: Re: iwlwifi intermittent beacon capture in monitor mode?
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+On Fri, Mar 23, 2018 at 12:26 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2018-03-23 at 11:02 -0400, Tyler Gray wrote:
+>> You mentioned the firmware can suppress beacons for powersaving.  Is
+>> there any debug I could look at to see if that was happening?  I
+>> posted some fw_rx_stats, would those counters be incremented before
+>> that filtering would happen?  I just watched the counters during a
+>> good period and a bad period.  In the "good" period I saw 15 CCK
+>> packets/second, which is what I'd expect for my AP beaconing plus some
+>> some probe responses and some beacons from the adjacent channel.
+>> During the bad period the firmware saw 2 CCK packets in 7 seconds, and
+>> none of the error counters for the bad period showed an additional 100
+>> packets lost for any reason.  The two periods had fairly similar
+>> plcp_err stats.
+>
+> I'd have to check.
 
-> Here is my fourth set of fixes for 4.16.  More details in the tag
-> description.
->
-> I have sent this out before and kbuildbot didn't find any issues. 
-> Please let me know if there are any issues.
->
-> Cheers,
-> Luca.
->
->
-> The following changes since commit 1259055170287a350cad453e9eac139c81609860:
->
->   brcmfmac: drop Inter-Access Point Protocol packets by default (2018-03-16 15:00:24 +0200)
->
-> are available in the Git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2018-03-19
->
->
-> for you to fetch changes up to 9f4ef1d70f05ebb7f0755545c05ea383be0eeb0f:
->
->   iwlwifi: mvm: Move unused phy's to a default channel (2018-03-19 10:50:38 +0200)
->
-> ----------------------------------------------------------------
-> Fourth batch of iwlwifi fixes intended for 4.16:
->
-> * a couple of fixes for channel-switch;
-> * a few fixes for the aggregation handling code;
->
-> ----------------------------------------------------------------
+It'd be great to know, or any other kind of debugging you'd suggest to
+pin it down to the packet isn't received at all, it isn't making it
+out of firmware, or it isn't making it out of the driver.  We did set
+the debug level to 0xffffffff and that seems to generate 3-4 syslog
+entries per packet received, and I again see no activity when the
+beacons aren't showing up, so I'm pretty sure we're getting lost
+before the driver level.
 
-Pulled, thanks.
+> ISTR being told that 8260 devices would make much better sniffers - any
+> chances you have one of those to try?
 
--- 
-Kalle Valo
+The 7265 seems to be really popular in that 12x16mm soldered down
+package, so we're kind of tied to it because it's in hardware we want
+to use and there's no easy way to replace it.
+
+> Perhaps you could file a bug on bugzilla.kernel.org so we can track this
+> better.
+
+Thanks, I'll submit something next week.
