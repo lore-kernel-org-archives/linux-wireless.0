@@ -1,55 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 8.mo179.mail-out.ovh.net ([46.105.75.26]:42784 "EHLO
-        8.mo179.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751805AbeC0ABr (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:54194 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752307AbeCWQ0J (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 20:01:47 -0400
-Received: from player762.ha.ovh.net (unknown [10.109.108.187])
-        by mo179.mail-out.ovh.net (Postfix) with ESMTP id 1012AAC2BE
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 22:24:51 +0200 (CEST)
-Subject: Re: [PATCH] mac80211: Fix wlan freezes under load at rekey
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        Ben Greear <greearb@candelatech.com>, johannes@sipsolutions.net
+        Fri, 23 Mar 2018 12:26:09 -0400
+Message-ID: <1521822366.28252.5.camel@sipsolutions.net> (sfid-20180323_172612_499084_61BA96FE)
+Subject: Re: iwlwifi intermittent beacon capture in monitor mode?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tyler Gray <graytfg@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-References: <20180324102921.9814-1-alexander.wetzel@web.de>
- <7bbb4246-324e-1d6d-245f-2642badb034d@candelatech.com>
- <27aca99e-a521-be4a-9fd4-51c557f9777d@web.de>
- <3e433bd6-d13e-f71c-d3ff-7163c2b59226@candelatech.com>
- <692de5e6-24d8-e1fe-c345-2ba3df91c9da@dd-wrt.com>
-From: Alexander Wetzel <alexander.wetzel@web.de>
-Message-ID: <313d0742-2b61-40cd-4b41-7fe263221321@web.de> (sfid-20180327_020152_054256_5BD93121)
-Date: Mon, 26 Mar 2018 22:24:38 +0200
-MIME-Version: 1.0
-In-Reply-To: <692de5e6-24d8-e1fe-c345-2ba3df91c9da@dd-wrt.com>
-Content-Type: text/plain; charset=windows-1252
+Date: Fri, 23 Mar 2018 17:26:06 +0100
+In-Reply-To: <CAEo4QHwLarcoui=oh+2zX++TBh0juVjp1dV8Gjq77x=W+enAVQ@mail.gmail.com> (sfid-20180323_160239_305970_44135ABA)
+References: <CAEo4QHxp3w=PKJ0jgvLNHarw92Ynt=eZNmoWE8w7ZMf_HP9MGw@mail.gmail.com>
+         <1521793079.4175.12.camel@sipsolutions.net>
+         <CAEo4QHwLarcoui=oh+2zX++TBh0juVjp1dV8Gjq77x=W+enAVQ@mail.gmail.com>
+         (sfid-20180323_160239_305970_44135ABA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> so far i see no regressions with 9984 with that patch
+On Fri, 2018-03-23 at 11:02 -0400, Tyler Gray wrote:
+
+> I'm positive we're just in monitor mode. [snip]
+
+Ok, it was just a thought.
+
+> To be clear, I'm not claiming I can set two devices up anywhere,
+> anytime, and run this test and see huge gaps in beacons, but we've
+> tested across multiple devices and multiple brands of devices with
+> 7265 cards, and we have data collected in locations that are miles
+> apart that show the same behavior, so I'm confident this isn't just
+> one bad card or one incredibly unlucky setup that shows the problem.
+> I have determined spots where I'm far more likely to see the issue,
+> but I'll maintain that outside of a pathologically bad environment, I
+> should be able to see beacons from 6 feet away.
 > 
-> except that 9984 has a rekeying problem at all. with wds ap -> wds sta
-> mode rekeying will fail and it will reauthenticate at each interval. (it
-> disconnects and reconnects)
-> but this is a long term issue qca never fixed for years. 988x doesnt
-> suffer from that issue
+> You mentioned the firmware can suppress beacons for powersaving.  Is
+> there any debug I could look at to see if that was happening?  I
+> posted some fw_rx_stats, would those counters be incremented before
+> that filtering would happen?  I just watched the counters during a
+> good period and a bad period.  In the "good" period I saw 15 CCK
+> packets/second, which is what I'd expect for my AP beaconing plus some
+> some probe responses and some beacons from the adjacent channel.
+> During the bad period the firmware saw 2 CCK packets in 7 seconds, and
+> none of the error counters for the bad period showed an additional 100
+> packets lost for any reason.  The two periods had fairly similar
+> plcp_err stats.
 
-Thanks for testing, sounds promising.
+I'd have to check.
 
-If anyone is interested how it looks in my test environment I've
-uploaded two sample captures to
-https://www.awhome.eu/index.php/s/abxgp9pfi2ssCNy, showing how the
-unpatched and patched mac80211 are reacting to the rekey. The WPA
-Password is Induction and the AP rekeys all 30s.
+ISTR being told that 8260 devices would make much better sniffers - any
+chances you have one of those to try?
 
-The AP is running lede 17.01.4, so it's way off from the current
-kernel/mac80211.
-The client is a HTC 10 phone running Lineageos. (The phone also has a
-WLAN card which has problems when rekeying.)
+> As a side note, if I have a device connect to the AP and run iperf to
+> generate data, I'll capture an average of 99% of the data packets, yet
+> I'll often see 0 beacons while the transfer is happening.  So it's not
+> that I can't receive packets at all, and capturing those data packets
+> should be a far harder task, but it seems beacons get dropped in a
+> variety of cases and I can't determine why.
 
-There are quite many interesting things visible here, not the least one
-that ath9k leaks unencrypted frames for both patched and unpatched
-mac80211 which at least for my patched variant probably allow to
-calculate the TK key and encrypt all frames.
+Interesting.
 
-I'm now experimenting now with KEY_FLAG_TAINTED, but it's not as
-straight forward as I expected.
+> Are there any known conflicts between the bluetooth and the wifi?  Is
+> there an easy answer to the best (lowest level) way to disable
+> bluetooth if so?
+
+rmmod btusb ;-)
+
+I don't really know for sure, but I wouldn't really expect BT to affect
+single-chain RX performance much.
+
+Perhaps you could file a bug on bugzilla.kernel.org so we can track this
+better.
+
+johannes
