@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:41131 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750860AbeCMMtw (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:50080 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751793AbeCWNWz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 08:49:52 -0400
-From: hariprasath.elango@gmail.com
-To: aditya.shankar@microchip.com, ganesh.krishna@microchip.com
-Cc: hariprasath.elango@gmail.com,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: wilc1000: use kmemdup to replace kmalloc/memcpy
-Date: Tue, 13 Mar 2018 18:19:32 +0530
-Message-Id: <20180313124932.15038-1-hariprasath.elango@gmail.com> (sfid-20180313_135013_537077_FEFAD571)
+        Fri, 23 Mar 2018 09:22:55 -0400
+Message-ID: <1521811372.11491.3.camel@sipsolutions.net> (sfid-20180323_142258_713223_3A02DFFB)
+Subject: Re: [PATCHv4 2/3] mac80211: enable setting cqm rssi config for AP
+ mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tamizh chelvam <tamizhr@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Date: Fri, 23 Mar 2018 14:22:52 +0100
+In-Reply-To: <1519544998-2621-3-git-send-email-tamizhr@codeaurora.org> (sfid-20180225_085011_885309_75C5EC6D)
+References: <1519544998-2621-1-git-send-email-tamizhr@codeaurora.org>
+         <1519544998-2621-3-git-send-email-tamizhr@codeaurora.org>
+         (sfid-20180225_085011_885309_75C5EC6D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: HariPrasath Elango <hariprasath.elango@gmail.com>
+>  
+> +static void ieee80211_update_rssi_config(struct
+> ieee80211_sub_if_data *sdata)
+> +{
+> +	if (!(sdata->vif.driver_flags &
+> IEEE80211_VIF_SUPPORTS_CQM_RSSI))
+> +		return;
+> +
+> +	/* tell the driver upon association, unless already
+> associated */
+> +	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+> +	    !sdata->u.mgd.associated)
+> +		return;
+> +
+> +	/* if AP, always tell the driver by checking beacon status
+> */
+> +	if (!sdata->vif.bss_conf.enable_beacon ||
+> +	    !wiphy_ext_feature_isset(sdata->local->hw.wiphy,
+> +				NL80211_EXT_FEATURE_AP_STA_CQM_RSSI_
+> CONFIG))
+> +		return;
 
-kmalloc followed by memcpy can be replaced by kmemdup.Also added the
-related error handling part
+This probably should check for AP mode as well - not sure we use
+enable_beacon for e.g. IBSS but I guess we could.
 
-Signed-off-by: HariPrasath Elango <hariprasath.elango@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 0fac8e1..4ae2da6 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -992,9 +992,13 @@ static s32 handle_connect(struct wilc_vif *vif,
- 
- 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
- 		info_element_size = hif_drv->usr_conn_req.ies_len;
--		info_element = kmalloc(info_element_size, GFP_KERNEL);
--		memcpy(info_element, hif_drv->usr_conn_req.ies,
--				info_element_size);
-+		info_element = kmemdup(hif_drv->usr_conn_req.ies,
-+				       info_element_size,
-+				       GFP_KERNEL);
-+		if (!info_element) {
-+			result = -ENOMEM;
-+			goto ERRORHANDLER;
-+		}
- 	}
- 
- 	wid_list[wid_cnt].id = (u16)WID_11I_MODE;
--- 
-2.10.0.GIT
+johannes
