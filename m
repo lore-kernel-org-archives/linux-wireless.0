@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:41440 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031339AbeCAOVN (ORCPT
+Received: from mail-wr0-f181.google.com ([209.85.128.181]:40621 "EHLO
+        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751491AbeCWO5z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:21:13 -0500
-Received: by mail-qt0-f196.google.com with SMTP id j4so7673956qth.8
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:21:13 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
+        Fri, 23 Mar 2018 10:57:55 -0400
+Received: by mail-wr0-f181.google.com with SMTP id z8so12419902wrh.7
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Mar 2018 07:57:54 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1521586508.19123.4.camel@sipsolutions.net>
+References: <1520260620-4694-1-git-send-email-amitkarwar@gmail.com>
+ <1520260620-4694-11-git-send-email-amitkarwar@gmail.com> <1521586508.19123.4.camel@sipsolutions.net>
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+Date: Fri, 23 Mar 2018 20:27:53 +0530
+Message-ID: <CAEhWJFnNxUJ-D0TjZWRe_q5hB0UnFmTTxhUX1LpRLYARwYJdcg@mail.gmail.com> (sfid-20180323_155759_176146_10DA856F)
+Subject: Re: [PATCH 10/10] rsi: drop RX broadcast/multicast packets with
+ invalid PN
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 18/52] ath: Add regulatory mapping for ETSI8_WORLD
-Date: Thu,  1 Mar 2018 15:18:28 +0100
-Message-Id: <20180301141902.24824-19-sven.eckelmann@openmesh.com> (sfid-20180301_152118_982355_DBF03B23)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The regdomain code is used to select the correct the correct conformance
-test limits (CTL) for a country. If the regdomain code isn't available and
-it is still programmed in the EEPROM then it will cause an error and stop
-the initialization with:
+On Wed, Mar 21, 2018 at 4:25 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2018-03-05 at 20:07 +0530, Amitkumar Karwar wrote:
+>> From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+>>
+>> This patch adds a check to drop received broadcast/multicast frames
+>> if
+>> PN is invalid (i.e. not greater than last PN). bc_mc_pn
+>> variable added for each interface
+>>
+> Can you say why you do this rather than letting mac80211 do it?
 
-  Invalid EEPROM contents
+Thanks for your comment.
+I wasn't aware that mac80211 can do this even for decrypted Rx
+packets. Only thing is we need to avoid IV stripping. I will create a
+patch for it.
 
-The current CTL mappings for this regdomain code are:
-
-* 2.4GHz: ETSI
-* 5GHz: ETSI
-
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
----
- drivers/net/wireless/ath/regd_common.h | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index 14332b84443b..88913c67fed2 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -44,6 +44,7 @@ enum EnumRd {
- 	ETSI4_ETSIC = 0x38,
- 	ETSI5_WORLD = 0x39,
- 	ETSI6_WORLD = 0x34,
-+	ETSI8_WORLD = 0x3D,
- 	ETSI_RESERVED = 0x33,
- 
- 	MKK1_MKKA = 0x40,
-@@ -183,6 +184,7 @@ static struct reg_dmn_pair_mapping regDomainPairs[] = {
- 	{ETSI4_WORLD, CTL_ETSI, CTL_ETSI},
- 	{ETSI5_WORLD, CTL_ETSI, CTL_ETSI},
- 	{ETSI6_WORLD, CTL_ETSI, CTL_ETSI},
-+	{ETSI8_WORLD, CTL_ETSI, CTL_ETSI},
- 
- 	/* XXX: For ETSI3_ETSIA, Was NO_CTL meant for the 2 GHz band ? */
- 	{ETSI3_ETSIA, CTL_ETSI, CTL_ETSI},
--- 
-2.11.0
+Regards,
+Amitkumar
