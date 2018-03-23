@@ -1,93 +1,346 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:38833 "EHLO
-        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932231AbeCLJqq (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:34176 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751832AbeCWPJh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Mar 2018 05:46:46 -0400
+        Fri, 23 Mar 2018 11:09:37 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 8/9] staging: wilc1000: split handle_rcvd_gnrl_async_info() to avoid leading tabs
+Date: Fri, 23 Mar 2018 20:38:57 +0530
+Message-ID: <1521817738-7557-9-git-send-email-ajay.kathat@microchip.com> (sfid-20180323_160948_315353_48557C23)
+In-Reply-To: <1521817738-7557-1-git-send-email-ajay.kathat@microchip.com>
+References: <1521817738-7557-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <20180227090556.02a24a0d@xeon-e3>
-References: <CACna6rz9L09g9oeHhvt209Tg1E3gKgmhGnYF653AdkXfZf=4kw@mail.gmail.com>
- <20180227090556.02a24a0d@xeon-e3>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Mon, 12 Mar 2018 10:46:45 +0100
-Message-ID: <CACna6rxP4ATE2f6XJi7XKDLe2L_Z43aLreEHDCfGicksYTb0xg@mail.gmail.com> (sfid-20180312_104657_472878_63444DD3)
-Subject: Re: Problem with bridge (mcast-to-ucast + hairpin) and Broadcom's
- 802.11f in their FullMAC fw
-To: Stephen Hemminger <stephen@networkplumber.org>
-Cc: =?UTF-8?Q?Linus_L=C3=BCssing?= <linus.luessing@c0d3.blue>,
-        Felix Fietkau <nbd@nbd.name>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Network Development <netdev@vger.kernel.org>,
-        bridge@lists.linux-foundation.org,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
-        <brcm80211-dev-list.pdl@broadcom.com>,"
-        <brcm80211-dev-list@cypress.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 February 2018 at 18:05, Stephen Hemminger
-<stephen@networkplumber.org> wrote:
-> On Tue, 27 Feb 2018 11:08:20 +0100
-> Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
->
->> I've problem when using OpenWrt/LEDE on a home router with Broadcom's
->> FullMAC WiFi chipset.
->>
->>
->> First of all OpenWrt/LEDE uses bridge interface for LAN network with:
->> 1) IFLA_BRPORT_MCAST_TO_UCAST
->> 2) Clients isolation in hostapd
->> 3) Hairpin mode enabled
->>
->> For more details please see Linus's patch description:
->> https://patchwork.kernel.org/patch/9530669/
->> and maybe hairpin mode patch:
->> https://lwn.net/Articles/347344/
->>
->> Short version: in that setup packets received from a bridged wireless
->> interface can be handled back to it for transmission.
->>
->>
->> Now, Broadcom's firmware for their FullMAC chipsets in AP mode
->> supports an obsoleted 802.11f AKA IAPP standard. It's a roaming
->> standard that was replaced by 802.11r.
->>
->> Whenever a new station associates, firmware generates a packet like:
->> ff ff ff ff  ff ff ec 10  7b 5f ?? ??  00 06 00 01  af 81 01 00
->> (just masked 2 bytes of my MAC)
->>
->> For mode details you can see discussion in my brcmfmac patch thread:
->> https://patchwork.kernel.org/patch/10191451/
->>
->>
->> The problem is that bridge (in setup as above) handles such a packet
->> back to the device.
->>
->> That makes Broadcom's FullMAC firmware believe that a given station
->> just connected to another AP in a network (which doesn't even exist).
->> As a result firmware immediately disassociates that station. It's
->> simply impossible to connect to the router. Every association is
->> followed by immediate disassociation.
->>
->>
->> Can you see any solution for this problem? Is that an option to stop
->> multicast-to-unicast from touching 802.11f packets? Some other ideas?
->> Obviously I can't modify Broadcom's firmware and drop that obsoleted
->> standard.
->>
->
-> ebtables is your friend in dealing with weird and broken devices.
+Fix 'Too many leading tabs' issue found by checkpatch.pl script in
+handle_rcvd_gnrl_async_info().
 
-It may be weird, not sure if actually broken. Anyway I'd like to have
-some generic solution instead of telling every user to use ebtables to
-workaround the problem.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 286 ++++++++++++++++--------------
+ 1 file changed, 149 insertions(+), 137 deletions(-)
 
---=20
-Rafa=C5=82
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 74095ec..bb13adb 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1302,6 +1302,153 @@ static s32 host_int_get_assoc_res_info(struct wilc_vif *vif,
+ 				       u32 max_assoc_resp_info_len,
+ 				       u32 *rcvd_assoc_resp_info_len);
+ 
++static inline void host_int_free_user_conn_req(struct host_if_drv *hif_drv)
++{
++	hif_drv->usr_conn_req.ssid_len = 0;
++	kfree(hif_drv->usr_conn_req.ssid);
++	hif_drv->usr_conn_req.ssid = NULL;
++	kfree(hif_drv->usr_conn_req.bssid);
++	hif_drv->usr_conn_req.bssid = NULL;
++	hif_drv->usr_conn_req.ies_len = 0;
++	kfree(hif_drv->usr_conn_req.ies);
++	hif_drv->usr_conn_req.ies = NULL;
++}
++
++static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
++						  u8 mac_status)
++{
++	struct connect_resp_info *connect_resp_info = NULL;
++	struct connect_info conn_info;
++	struct host_if_drv *hif_drv = vif->hif_drv;
++
++	memset(&conn_info, 0, sizeof(struct connect_info));
++
++	if (mac_status == MAC_CONNECTED) {
++		u32 rcvd_assoc_resp_info_len;
++
++		memset(rcv_assoc_resp, 0, MAX_ASSOC_RESP_FRAME_SIZE);
++
++		host_int_get_assoc_res_info(vif, rcv_assoc_resp,
++					    MAX_ASSOC_RESP_FRAME_SIZE,
++					    &rcvd_assoc_resp_info_len);
++
++		if (rcvd_assoc_resp_info_len != 0) {
++			s32 err = 0;
++
++			err = wilc_parse_assoc_resp_info(rcv_assoc_resp, rcvd_assoc_resp_info_len,
++							 &connect_resp_info);
++			if (err) {
++				netdev_err(vif->ndev,
++					   "wilc_parse_assoc_resp_info() returned error %d\n",
++					   err);
++			} else {
++				conn_info.status = connect_resp_info->status;
++
++				if (conn_info.status == SUCCESSFUL_STATUSCODE &&
++				    connect_resp_info->ies) {
++					conn_info.resp_ies_len = connect_resp_info->ies_len;
++					conn_info.resp_ies = kmalloc(connect_resp_info->ies_len, GFP_KERNEL);
++					memcpy(conn_info.resp_ies, connect_resp_info->ies,
++					       connect_resp_info->ies_len);
++				}
++
++				if (connect_resp_info) {
++					kfree(connect_resp_info->ies);
++					kfree(connect_resp_info);
++				}
++			}
++		}
++	}
++
++	if (mac_status == MAC_CONNECTED &&
++	    conn_info.status != SUCCESSFUL_STATUSCODE) {
++		netdev_err(vif->ndev,
++			   "Received MAC status is MAC_CONNECTED while the received status code in Asoc Resp is not SUCCESSFUL_STATUSCODE\n");
++		eth_zero_addr(wilc_connected_ssid);
++	} else if (mac_status == MAC_DISCONNECTED)    {
++		netdev_err(vif->ndev, "Received MAC status is MAC_DISCONNECTED\n");
++		eth_zero_addr(wilc_connected_ssid);
++	}
++
++	if (hif_drv->usr_conn_req.bssid) {
++		memcpy(conn_info.bssid, hif_drv->usr_conn_req.bssid, 6);
++
++		if (mac_status == MAC_CONNECTED &&
++		    conn_info.status == SUCCESSFUL_STATUSCODE) {
++			memcpy(hif_drv->assoc_bssid,
++			       hif_drv->usr_conn_req.bssid, ETH_ALEN);
++		}
++	}
++
++	if (hif_drv->usr_conn_req.ies) {
++		conn_info.req_ies_len = hif_drv->usr_conn_req.ies_len;
++		conn_info.req_ies = kmalloc(hif_drv->usr_conn_req.ies_len,
++					    GFP_KERNEL);
++		memcpy(conn_info.req_ies, hif_drv->usr_conn_req.ies,
++		       hif_drv->usr_conn_req.ies_len);
++	}
++
++	del_timer(&hif_drv->connect_timer);
++	hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_CONN_RESP,
++					  &conn_info, mac_status, NULL,
++					  hif_drv->usr_conn_req.arg);
++
++	if (mac_status == MAC_CONNECTED &&
++	    conn_info.status == SUCCESSFUL_STATUSCODE) {
++		wilc_set_power_mgmt(vif, 0, 0);
++
++		hif_drv->hif_state = HOST_IF_CONNECTED;
++
++		wilc_optaining_ip = true;
++		mod_timer(&wilc_during_ip_timer,
++			  jiffies + msecs_to_jiffies(10000));
++	} else {
++		hif_drv->hif_state = HOST_IF_IDLE;
++		scan_while_connected = false;
++	}
++
++	kfree(conn_info.resp_ies);
++	conn_info.resp_ies = NULL;
++
++	kfree(conn_info.req_ies);
++	conn_info.req_ies = NULL;
++	host_int_free_user_conn_req(hif_drv);
++}
++
++static inline void host_int_handle_disconnect(struct wilc_vif *vif)
++{
++	struct disconnect_info disconn_info;
++	struct host_if_drv *hif_drv = vif->hif_drv;
++
++	memset(&disconn_info, 0, sizeof(struct disconnect_info));
++
++	if (hif_drv->usr_scan_req.scan_result) {
++		del_timer(&hif_drv->scan_timer);
++		handle_scan_done(vif, SCAN_EVENT_ABORTED);
++	}
++
++	disconn_info.reason = 0;
++	disconn_info.ie = NULL;
++	disconn_info.ie_len = 0;
++
++	if (hif_drv->usr_conn_req.conn_result) {
++		wilc_optaining_ip = false;
++		wilc_set_power_mgmt(vif, 0, 0);
++
++		hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_DISCONN_NOTIF,
++						  NULL, 0, &disconn_info,
++						  hif_drv->usr_conn_req.arg);
++	} else {
++		netdev_err(vif->ndev, "Connect result NULL\n");
++	}
++
++	eth_zero_addr(hif_drv->assoc_bssid);
++
++	host_int_free_user_conn_req(hif_drv);
++	hif_drv->hif_state = HOST_IF_IDLE;
++	scan_while_connected = false;
++}
++
+ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
+ 				       struct rcvd_async_info *rcvd_info)
+ {
+@@ -1314,9 +1461,6 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
+ 	u8 mac_status;
+ 	u8 mac_status_reason_code;
+ 	u8 mac_status_additional_info;
+-	struct connect_info conn_info;
+-	struct disconnect_info disconn_info;
+-	s32 err = 0;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+@@ -1348,142 +1492,10 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
+ 		mac_status_reason_code = rcvd_info->buffer[8];
+ 		mac_status_additional_info = rcvd_info->buffer[9];
+ 		if (hif_drv->hif_state == HOST_IF_WAITING_CONN_RESP) {
+-			u32 rcvd_assoc_resp_info_len = 0;
+-			struct connect_resp_info *connect_resp_info = NULL;
+-
+-			memset(&conn_info, 0, sizeof(struct connect_info));
+-
+-			if (mac_status == MAC_CONNECTED) {
+-				memset(rcv_assoc_resp, 0, MAX_ASSOC_RESP_FRAME_SIZE);
+-
+-				host_int_get_assoc_res_info(vif,
+-							    rcv_assoc_resp,
+-							    MAX_ASSOC_RESP_FRAME_SIZE,
+-							    &rcvd_assoc_resp_info_len);
+-
+-				if (rcvd_assoc_resp_info_len != 0) {
+-					err = wilc_parse_assoc_resp_info(rcv_assoc_resp, rcvd_assoc_resp_info_len,
+-									 &connect_resp_info);
+-					if (err) {
+-						netdev_err(vif->ndev, "wilc_parse_assoc_resp_info() returned error %d\n", err);
+-					} else {
+-						conn_info.status = connect_resp_info->status;
+-
+-						if (conn_info.status == SUCCESSFUL_STATUSCODE && connect_resp_info->ies) {
+-							conn_info.resp_ies_len = connect_resp_info->ies_len;
+-							conn_info.resp_ies = kmalloc(connect_resp_info->ies_len, GFP_KERNEL);
+-							memcpy(conn_info.resp_ies, connect_resp_info->ies,
+-							       connect_resp_info->ies_len);
+-						}
+-
+-						if (connect_resp_info) {
+-							kfree(connect_resp_info->ies);
+-							kfree(connect_resp_info);
+-						}
+-					}
+-				}
+-			}
+-
+-			if (mac_status == MAC_CONNECTED &&
+-			    conn_info.status != SUCCESSFUL_STATUSCODE)	{
+-				netdev_err(vif->ndev, "Received MAC status is MAC_CONNECTED while the received status code in Asoc Resp is not SUCCESSFUL_STATUSCODE\n");
+-				eth_zero_addr(wilc_connected_ssid);
+-			} else if (mac_status == MAC_DISCONNECTED)    {
+-				netdev_err(vif->ndev, "Received MAC status is MAC_DISCONNECTED\n");
+-				eth_zero_addr(wilc_connected_ssid);
+-			}
+-
+-			if (hif_drv->usr_conn_req.bssid) {
+-				memcpy(conn_info.bssid, hif_drv->usr_conn_req.bssid, 6);
+-
+-				if (mac_status == MAC_CONNECTED &&
+-				    conn_info.status == SUCCESSFUL_STATUSCODE)	{
+-					memcpy(hif_drv->assoc_bssid,
+-					       hif_drv->usr_conn_req.bssid, ETH_ALEN);
+-				}
+-			}
+-
+-			if (hif_drv->usr_conn_req.ies) {
+-				conn_info.req_ies_len = hif_drv->usr_conn_req.ies_len;
+-				conn_info.req_ies = kmalloc(hif_drv->usr_conn_req.ies_len, GFP_KERNEL);
+-				memcpy(conn_info.req_ies,
+-				       hif_drv->usr_conn_req.ies,
+-				       hif_drv->usr_conn_req.ies_len);
+-			}
+-
+-			del_timer(&hif_drv->connect_timer);
+-			hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_CONN_RESP,
+-							  &conn_info,
+-							  mac_status,
+-							  NULL,
+-							  hif_drv->usr_conn_req.arg);
+-
+-			if (mac_status == MAC_CONNECTED &&
+-			    conn_info.status == SUCCESSFUL_STATUSCODE)	{
+-				wilc_set_power_mgmt(vif, 0, 0);
+-
+-				hif_drv->hif_state = HOST_IF_CONNECTED;
+-
+-				wilc_optaining_ip = true;
+-				mod_timer(&wilc_during_ip_timer,
+-					  jiffies + msecs_to_jiffies(10000));
+-			} else {
+-				hif_drv->hif_state = HOST_IF_IDLE;
+-				scan_while_connected = false;
+-			}
+-
+-			kfree(conn_info.resp_ies);
+-			conn_info.resp_ies = NULL;
+-
+-			kfree(conn_info.req_ies);
+-			conn_info.req_ies = NULL;
+-			hif_drv->usr_conn_req.ssid_len = 0;
+-			kfree(hif_drv->usr_conn_req.ssid);
+-			hif_drv->usr_conn_req.ssid = NULL;
+-			kfree(hif_drv->usr_conn_req.bssid);
+-			hif_drv->usr_conn_req.bssid = NULL;
+-			hif_drv->usr_conn_req.ies_len = 0;
+-			kfree(hif_drv->usr_conn_req.ies);
+-			hif_drv->usr_conn_req.ies = NULL;
++			host_int_parse_assoc_resp_info(vif, mac_status);
+ 		} else if ((mac_status == MAC_DISCONNECTED) &&
+ 			   (hif_drv->hif_state == HOST_IF_CONNECTED)) {
+-			memset(&disconn_info, 0, sizeof(struct disconnect_info));
+-
+-			if (hif_drv->usr_scan_req.scan_result) {
+-				del_timer(&hif_drv->scan_timer);
+-				handle_scan_done(vif, SCAN_EVENT_ABORTED);
+-			}
+-
+-			disconn_info.reason = 0;
+-			disconn_info.ie = NULL;
+-			disconn_info.ie_len = 0;
+-
+-			if (hif_drv->usr_conn_req.conn_result) {
+-				wilc_optaining_ip = false;
+-				wilc_set_power_mgmt(vif, 0, 0);
+-
+-				hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_DISCONN_NOTIF,
+-								  NULL,
+-								  0,
+-								  &disconn_info,
+-								  hif_drv->usr_conn_req.arg);
+-			} else {
+-				netdev_err(vif->ndev, "Connect result NULL\n");
+-			}
+-
+-			eth_zero_addr(hif_drv->assoc_bssid);
+-
+-			hif_drv->usr_conn_req.ssid_len = 0;
+-			kfree(hif_drv->usr_conn_req.ssid);
+-			hif_drv->usr_conn_req.ssid = NULL;
+-			kfree(hif_drv->usr_conn_req.bssid);
+-			hif_drv->usr_conn_req.bssid = NULL;
+-			hif_drv->usr_conn_req.ies_len = 0;
+-			kfree(hif_drv->usr_conn_req.ies);
+-			hif_drv->usr_conn_req.ies = NULL;
+-			hif_drv->hif_state = HOST_IF_IDLE;
+-			scan_while_connected = false;
+-
++			host_int_handle_disconnect(vif);
+ 		} else if ((mac_status == MAC_DISCONNECTED) &&
+ 			   (hif_drv->usr_scan_req.scan_result)) {
+ 			del_timer(&hif_drv->scan_timer);
+-- 
+2.7.4
