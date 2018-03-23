@@ -1,67 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:35957 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932514AbeCMKxA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47016 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751821AbeCWFEH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 06:53:00 -0400
-From: hariprasath.elango@gmail.com
-To: aditya.shankar@microchip.com, ganesh.krishna@microchip.com
-Cc: hariprasath.elango@gmail.com,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: wilc1000: remove unwanted braces and correct code alignment
-Date: Tue, 13 Mar 2018 16:22:38 +0530
-Message-Id: <20180313105238.12838-1-hariprasath.elango@gmail.com> (sfid-20180313_115315_029920_5433B66D)
+        Fri, 23 Mar 2018 01:04:07 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH v2 09/13] ath10k: Modify hif tx paddr to dma_addr_t type
+Date: Fri, 23 Mar 2018 10:33:40 +0530
+Message-Id: <1521781424-24972-10-git-send-email-govinds@codeaurora.org> (sfid-20180323_060416_477543_B32A628E)
+In-Reply-To: <1521781424-24972-1-git-send-email-govinds@codeaurora.org>
+References: <1521781424-24972-1-git-send-email-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: HariPrasath Elango <hariprasath.elango@gmail.com>
+Change type of hif sg tx paddr to dma_addr_t for
+supporting target having addressing mode greater than
+32 bit.
 
-Remove the unwated brace and corrected the code block alignment
-accordingly
-
-Signed-off-by: HariPrasath Elango <hariprasath.elango@gmail.com>
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
 ---
- drivers/staging/wilc1000/host_interface.c | 25 ++++++++++++-------------
- 1 file changed, 12 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath10k/hif.h | 2 +-
+ drivers/net/wireless/ath/ath10k/pci.c | 8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index a4ee175..0fac8e1 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -984,20 +984,19 @@ static s32 handle_connect(struct wilc_vif *vif,
- 	wid_list[wid_cnt].val = (s8 *)(&(dummyval));
- 	wid_cnt++;
+diff --git a/drivers/net/wireless/ath/ath10k/hif.h b/drivers/net/wireless/ath/ath10k/hif.h
+index 6da4e33..7abb13c 100644
+--- a/drivers/net/wireless/ath/ath10k/hif.h
++++ b/drivers/net/wireless/ath/ath10k/hif.h
+@@ -26,7 +26,7 @@ struct ath10k_hif_sg_item {
+ 	u16 transfer_id;
+ 	void *transfer_context; /* NULL = tx completion callback not called */
+ 	void *vaddr; /* for debugging mostly */
+-	u32 paddr;
++	dma_addr_t paddr;
+ 	u16 len;
+ };
  
--	{
--		wid_list[wid_cnt].id = WID_INFO_ELEMENT_ASSOCIATE;
--		wid_list[wid_cnt].type = WID_BIN_DATA;
--		wid_list[wid_cnt].val = hif_drv->usr_conn_req.ies;
--		wid_list[wid_cnt].size = hif_drv->usr_conn_req.ies_len;
--		wid_cnt++;
--
--		if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
--			info_element_size = hif_drv->usr_conn_req.ies_len;
--			info_element = kmalloc(info_element_size, GFP_KERNEL);
--			memcpy(info_element, hif_drv->usr_conn_req.ies,
--			       info_element_size);
--		}
-+	wid_list[wid_cnt].id = WID_INFO_ELEMENT_ASSOCIATE;
-+	wid_list[wid_cnt].type = WID_BIN_DATA;
-+	wid_list[wid_cnt].val = hif_drv->usr_conn_req.ies;
-+	wid_list[wid_cnt].size = hif_drv->usr_conn_req.ies_len;
-+	wid_cnt++;
-+
-+	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7)) {
-+		info_element_size = hif_drv->usr_conn_req.ies_len;
-+		info_element = kmalloc(info_element_size, GFP_KERNEL);
-+		memcpy(info_element, hif_drv->usr_conn_req.ies,
-+				info_element_size);
- 	}
-+
- 	wid_list[wid_cnt].id = (u16)WID_11I_MODE;
- 	wid_list[wid_cnt].type = WID_CHAR;
- 	wid_list[wid_cnt].size = sizeof(char);
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 808f3d6..e7c544b 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1379,8 +1379,8 @@ int ath10k_pci_hif_tx_sg(struct ath10k *ar, u8 pipe_id,
+ 
+ 	for (i = 0; i < n_items - 1; i++) {
+ 		ath10k_dbg(ar, ATH10K_DBG_PCI,
+-			   "pci tx item %d paddr 0x%08x len %d n_items %d\n",
+-			   i, items[i].paddr, items[i].len, n_items);
++			   "pci tx item %d paddr %pad len %d n_items %d\n",
++			   i, &items[i].paddr, items[i].len, n_items);
+ 		ath10k_dbg_dump(ar, ATH10K_DBG_PCI_DUMP, NULL, "pci tx data: ",
+ 				items[i].vaddr, items[i].len);
+ 
+@@ -1397,8 +1397,8 @@ int ath10k_pci_hif_tx_sg(struct ath10k *ar, u8 pipe_id,
+ 	/* `i` is equal to `n_items -1` after for() */
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_PCI,
+-		   "pci tx item %d paddr 0x%08x len %d n_items %d\n",
+-		   i, items[i].paddr, items[i].len, n_items);
++		   "pci tx item %d paddr %pad len %d n_items %d\n",
++		   i, &items[i].paddr, items[i].len, n_items);
+ 	ath10k_dbg_dump(ar, ATH10K_DBG_PCI_DUMP, NULL, "pci tx data: ",
+ 			items[i].vaddr, items[i].len);
+ 
 -- 
-2.10.0.GIT
+1.9.1
