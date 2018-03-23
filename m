@@ -1,84 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0061.hostedemail.com ([216.40.44.61]:38906 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751464AbeCUKc5 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:50170 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751776AbeCWN1b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Mar 2018 06:32:57 -0400
-From: Joe Perches <joe@perches.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Jiri Slaby <jirislaby@gmail.com>,
-        Nick Kossifidis <mickflemm@gmail.com>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ath: Remove unnecessary ath_bcast_mac and use eth_broadcast_addr
-Date: Wed, 21 Mar 2018 03:32:52 -0700
-Message-Id: <3ed8112986ba6f538cb45df6ea67e0c027a3dc12.1521628278.git.joe@perches.com> (sfid-20180321_113317_867891_BA916569)
+        Fri, 23 Mar 2018 09:27:31 -0400
+Message-ID: <1521811648.11491.8.camel@sipsolutions.net> (sfid-20180323_142734_468698_A120C039)
+Subject: Re: [PATCHv4 1/3] cfg80211: enable setting cqm rssi config for AP
+ mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tamizh chelvam <tamizhr@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 23 Mar 2018 14:27:28 +0100
+In-Reply-To: <1519544998-2621-2-git-send-email-tamizhr@codeaurora.org> (sfid-20180225_085010_994165_1F9FF330)
+References: <1519544998-2621-1-git-send-email-tamizhr@codeaurora.org>
+         <1519544998-2621-2-git-send-email-tamizhr@codeaurora.org>
+         (sfid-20180225_085010_994165_1F9FF330)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the static array and use the generic routine to set the
-Ethernet broadcast address.
+On Sun, 2018-02-25 at 13:19 +0530, Tamizh chelvam wrote:
+> From: Tamizh chelvam <tamizhr@codeaurora.org>
+> 
+> This patch extend cqm rssi config and notifier feature to AP mode
+> by introducing NL80211_EXT_FEATURE_AP_STA_CQM_RSSI_CONFIG ext
+> feature bit. And this patch introduces NL80211_MCGRP_AP_STA_CQM
+> for notifying station's low/high rssi event to userspace application.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/ath/ath.h                | 2 --
- drivers/net/wireless/ath/ath5k/attach.c       | 2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 2 +-
- drivers/net/wireless/ath/ath9k/init.c         | 2 +-
- 4 files changed, 3 insertions(+), 5 deletions(-)
+So, I guess I can sort of see how this could be useful.
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index f3f2784f6ebd..7a364eca46d6 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -33,8 +33,6 @@
-  */
- #define	ATH_KEYMAX	        128     /* max key cache size we handle */
- 
--static const u8 ath_bcast_mac[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
--
- struct ath_ani {
- 	bool caldone;
- 	unsigned int longcal_timer;
-diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
-index 233054bd6b52..12d3a6c92ba4 100644
---- a/drivers/net/wireless/ath/ath5k/attach.c
-+++ b/drivers/net/wireless/ath/ath5k/attach.c
-@@ -327,7 +327,7 @@ int ath5k_hw_init(struct ath5k_hw *ah)
- 	ath5k_hw_set_lladdr(ah, zero_mac);
- 
- 	/* Set BSSID to bcast address: ff:ff:ff:ff:ff:ff for now */
--	memcpy(common->curbssid, ath_bcast_mac, ETH_ALEN);
-+	eth_broadcast_addr(common->curbssid);
- 	ath5k_hw_set_bssid(ah);
- 	ath5k_hw_set_opmode(ah, ah->opmode);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index e89e5ef2c2a4..bf36bb2821b4 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -591,7 +591,7 @@ static void ath9k_init_misc(struct ath9k_htc_priv *priv)
- {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 
--	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
-+	eth_broadcast_addr(common->bssidmask);
- 
- 	common->last_rssi = ATH_RSSI_DUMMY_MARKER;
- 	priv->ah->opmode = NL80211_IFTYPE_STATION;
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index e479fae5aab9..748becee3ecf 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -427,7 +427,7 @@ static void ath9k_init_misc(struct ath_softc *sc)
- 	timer_setup(&common->ani.timer, ath_ani_calibrate, 0);
- 
- 	common->last_rssi = ATH_RSSI_DUMMY_MARKER;
--	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
-+	eth_broadcast_addr(common->bssidmask);
- 	sc->beacon.slottime = 9;
- 
- 	for (i = 0; i < ARRAY_SIZE(sc->beacon.bslot); i++)
--- 
-2.15.0
+However, is it really best in this current form?
+
+For example, it seems trivial to imagine that one might want to have
+different thresholds for different stations, and nothing in the current
+implementation would prevent that, just the CQM API isn't very suited
+to that.
+
+There was also an extension to CQM to support different levels - not
+sure where that ended up, but we should take that into account I guess.
+
+
+Overall, I'm still not really convinced CQM is the right approach here.
+
+One thing I could even imagine would be to just not have this
+capability at all, but build it into a little BPF program you install.
+I had - and still want to revive - the code to insert a "programming
+point" into the wireless stack, and one could then easily build a hash
+table of TAs vs. signal strength in BPF code.
+
+We may not want to go that far, but I think the current approach is too
+short-sighted. This might solve a specific problem today, but I don't
+think it'll serve us well into the future if we don't make it more
+flexible.
+
+johannes
