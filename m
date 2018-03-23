@@ -1,113 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:40496 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751395AbeCWIJz (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46928 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751821AbeCWFEE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Mar 2018 04:09:55 -0400
-Received: by mail-qk0-f196.google.com with SMTP id o64so12042098qkl.7
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Mar 2018 01:09:55 -0700 (PDT)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+        Fri, 23 Mar 2018 01:04:04 -0400
+From: Govind Singh <govinds@codeaurora.org>
 To: ath10k@lists.infradead.org
-Cc: Anilkumar Kolli <akolli@codeaurora.org>,
-        linux-wireless@vger.kernel.org, Antonio Quartulli <a@unstable.cc>,
-        Felix Fietkau <nbd@nbd.name>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: Re: [PATCH] ath10k: Implement get_expected_throughput callback
-Date: Fri, 23 Mar 2018 09:09:48 +0100
-Message-ID: <2667699.TbZPxW0hJB@bentobox> (sfid-20180323_090959_886867_E7A9AD1C)
-In-Reply-To: <1521790620-12267-1-git-send-email-akolli@codeaurora.org>
-References: <1521790620-12267-1-git-send-email-akolli@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart4071528.lBNJH1k9ki"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH v2 07/13] ath10k: Add hif tx methods for wcn3990
+Date: Fri, 23 Mar 2018 10:33:38 +0530
+Message-Id: <1521781424-24972-8-git-send-email-govinds@codeaurora.org> (sfid-20180323_060411_071284_84D274B2)
+In-Reply-To: <1521781424-24972-1-git-send-email-govinds@codeaurora.org>
+References: <1521781424-24972-1-git-send-email-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart4071528.lBNJH1k9ki
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"
+Add hif tx/tx-complete methods for wcn3990
+target.
 
-On Freitag, 23. M=E4rz 2018 13:07:00 CET Anilkumar Kolli wrote:
-[...]
-> +static u32 ath10k_get_expected_throughput(struct ieee80211_hw *hw,
-> +                                         struct ieee80211_sta *sta)
-> +{
-> +       struct ath10k_sta *arsta =3D (struct ath10k_sta *)sta->drv_priv;
-> +       u32 tx_bitrate;
-> +
-> +       tx_bitrate =3D cfg80211_calculate_bitrate(&arsta->txrate);
-> +       ewma_sta_txrate_add(&arsta->ave_sta_txrate, tx_bitrate);
-> +
-> +       return ewma_sta_txrate_read(&arsta->ave_sta_txrate);
->  }
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/snoc.c | 123 ++++++++++++++++++++++++++++++++-
+ 1 file changed, 120 insertions(+), 3 deletions(-)
 
-Antonio and Felix, please correct me when this statement is incorrect.
-
-The expected_throughput as initially implemented for minstrel(_ht) is not=20
-about the raw physical bitrate but about the throughput which is expected f=
-or=20
-things running on top of the wifi link. See=20
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?=
-id=3Dcca674d47e59665630f3005291b61bb883015fc5=20
-for more details
-
-when I interpret your change correctly then your it doesn't get the=20
-information about packet loss or aggregation and doesn't do anything convert
-from=20raw physical rate to something the user could get see. It will just=20
-overestimate the throughput for ath10k links and thus give wrong informatio=
-n=20
-to routing algorithms. This could for example cause them to prefer links ov=
-er=20
-ath10k based hw when mt76 would actually provide a significant better=20
-throughput.
-
-Beside that - why is the ave_sta_txrate only filled when with new informati=
-on=20
-when someone requests the current expected_throughput via=20
-get_expected_throughput. I would have expected that it is filled everytime =
-you=20
-get new information about the current rate from the firmware=20
-(ath10k_sta_statistics).
-
-> @@ -7686,6 +7686,22 @@ static void ath10k_sta_statistics(struct ieee80211=
-_hw *hw,
->         }
->         sinfo->txrate.flags =3D arsta->txrate.flags;
->         sinfo->filled |=3D 1ULL << NL80211_STA_INFO_TX_BITRATE;
-> +
-> +       sinfo->expected_throughput =3D
-> +                               ewma_sta_txrate_read(&arsta->ave_sta_txra=
-te);
-> +       sinfo->filled |=3D BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
-> +}
-
-This brings me directly to the next point. Why are you changing these value=
-s=20
-here? Isn't sta_set_sinfo is expected to do that? This is at least what we
-expect how it works when we call cfg80211_get_station() in batman-adv.
-
-Kind regards,
-	Sven
---nextPart4071528.lBNJH1k9ki
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlq0tkwACgkQXYcKB8Em
-e0YCuA//fyJqSprnik/Qx0+tw1M7r6+FCWVM0yUT8m8tw3JOZH/C9I8mavQ+72lk
-evs+2gDjPAKfXBUc/gDOfFcaFRn6sLzwBcd8+Yw2JNQDxjNH2mEZVAccrH1wVUTX
-4UIZaInz9vsNwSzUZE0vtfKKithWJSkYQ2Q3VlEYqo7rMddsGNEJNKPsf8iYd92S
-aJp+eYEonyGxKOKiDcs8Vi0itGQSFQ+/TAfxJY0NiXrwyJUBH4mM1jfouTS7qM+j
-i0eGudiRbYkxlrsmSELmM+PQJu+HaxVjLkb/iHsUQt8DoZzxOPRpwikLwSe7GILr
-xThSgm1PNy/3wMFG8FlYfGdJPRrTYb6V5CxUvdtVyV+j8CV4gcDWI5GEBRyDF6IJ
-XSUhZ26Wa4xounu1U8ELCNmL9k5VpxHpLP0SsBkdy2ONmTuke/HTxLvnvnKple0I
-AP4XAS+X0JrwwxVvmwVL0eZkXLAMXCVvd0mZ0ytuKSdskIixgeJ/TNsy00qF29hW
-MeYU6AN+DNjOxFgrL3nDuyCVD0LLvHTKyGyt8xMafW2v2k/riof23UjzevKxQLq8
-pX5VM6tjB1OeT1xRhR5HQUXd6ei+7k/N1SktvWZI9M2KCRUtJtRVbAwnqNPs501o
-MpBulnmHn+wdKaisWAy4zF5AkD5PoqB4kZPA8mFDXFMThOxb3gY=
-=cHjY
------END PGP SIGNATURE-----
-
---nextPart4071528.lBNJH1k9ki--
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index 9d402e4..899f0a3 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -42,6 +42,9 @@
+ 	"WLAN_CE_11",
+ };
+ 
++static void ath10k_snoc_htc_tx_cb(struct ath10k_ce_pipe *ce_state);
++static void ath10k_snoc_htt_tx_cb(struct ath10k_ce_pipe *ce_state);
++
+ static const struct ath10k_snoc_drv_priv drv_priv = {
+ 	.hw_rev = ATH10K_HW_WCN3990,
+ 	.dma_mask = DMA_BIT_MASK(37),
+@@ -54,7 +57,7 @@
+ 		.src_nentries = 16,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 0,
+-		.send_cb = NULL,
++		.send_cb = ath10k_snoc_htc_tx_cb,
+ 	},
+ 
+ 	/* CE1: target->host HTT + HTC control */
+@@ -81,7 +84,7 @@
+ 		.src_nentries = 32,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 0,
+-		.send_cb = NULL,
++		.send_cb = ath10k_snoc_htc_tx_cb,
+ 	},
+ 
+ 	/* CE4: host->target HTT */
+@@ -90,7 +93,7 @@
+ 		.src_nentries = 256,
+ 		.src_sz_max = 256,
+ 		.dest_nentries = 0,
+-		.send_cb = NULL,
++		.send_cb = ath10k_snoc_htt_tx_cb,
+ 	},
+ 
+ 	/* CE5: target->host HTT (ipa_uc->target ) */
+@@ -359,6 +362,117 @@ static void ath10k_snoc_rx_post(struct ath10k *ar)
+ 		ath10k_snoc_rx_post_pipe(&ar_snoc->pipe_info[i]);
+ }
+ 
++static void ath10k_snoc_htc_tx_cb(struct ath10k_ce_pipe *ce_state)
++{
++	struct ath10k *ar = ce_state->ar;
++	struct sk_buff_head list;
++	struct sk_buff *skb;
++
++	__skb_queue_head_init(&list);
++	while (ath10k_ce_completed_send_next(ce_state, (void **)&skb) == 0) {
++		if (!skb)
++			continue;
++
++		__skb_queue_tail(&list, skb);
++	}
++
++	while ((skb = __skb_dequeue(&list)))
++		ath10k_htc_tx_completion_handler(ar, skb);
++}
++
++static void ath10k_snoc_htt_tx_cb(struct ath10k_ce_pipe *ce_state)
++{
++	struct ath10k *ar = ce_state->ar;
++	struct sk_buff *skb;
++
++	while (ath10k_ce_completed_send_next(ce_state, (void **)&skb) == 0) {
++		if (!skb)
++			continue;
++
++		dma_unmap_single(ar->dev, ATH10K_SKB_CB(skb)->paddr,
++				 skb->len, DMA_TO_DEVICE);
++		ath10k_htt_hif_tx_complete(ar, skb);
++	}
++}
++
++static int ath10k_snoc_hif_tx_sg(struct ath10k *ar, u8 pipe_id,
++				 struct ath10k_hif_sg_item *items, int n_items)
++{
++	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
++	struct ath10k_ce *ce = ath10k_ce_priv(ar);
++	struct ath10k_snoc_pipe *snoc_pipe;
++	struct ath10k_ce_pipe *ce_pipe;
++	int err, i = 0;
++
++	snoc_pipe = &ar_snoc->pipe_info[pipe_id];
++	ce_pipe = snoc_pipe->ce_hdl;
++	spin_lock_bh(&ce->ce_lock);
++
++	for (i = 0; i < n_items - 1; i++) {
++		ath10k_dbg(ar, ATH10K_DBG_SNOC,
++			   "snoc tx item %d paddr %pad len %d n_items %d\n",
++			   i, &items[i].paddr, items[i].len, n_items);
++
++		err = ath10k_ce_send_nolock(ce_pipe,
++					    items[i].transfer_context,
++					    items[i].paddr,
++					    items[i].len,
++					    items[i].transfer_id,
++					    CE_SEND_FLAG_GATHER);
++		if (err)
++			goto err;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_SNOC,
++		   "snoc tx item %d paddr %pad len %d n_items %d\n",
++		   i, &items[i].paddr, items[i].len, n_items);
++
++	err = ath10k_ce_send_nolock(ce_pipe,
++				    items[i].transfer_context,
++				    items[i].paddr,
++				    items[i].len,
++				    items[i].transfer_id,
++				    0);
++	if (err)
++		goto err;
++
++	spin_unlock_bh(&ce->ce_lock);
++
++	return 0;
++
++err:
++	for (; i > 0; i--)
++		__ath10k_ce_send_revert(ce_pipe);
++
++	spin_unlock_bh(&ce->ce_lock);
++	return err;
++}
++
++static u16 ath10k_snoc_hif_get_free_queue_number(struct ath10k *ar, u8 pipe)
++{
++	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
++
++	ath10k_dbg(ar, ATH10K_DBG_SNOC, "hif get free queue number\n");
++
++	return ath10k_ce_num_free_src_entries(ar_snoc->pipe_info[pipe].ce_hdl);
++}
++
++static void ath10k_snoc_hif_send_complete_check(struct ath10k *ar, u8 pipe,
++						int force)
++{
++	int resources;
++
++	ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc hif send complete check\n");
++
++	if (!force) {
++		resources = ath10k_snoc_hif_get_free_queue_number(ar, pipe);
++
++		if (resources > (host_ce_config_wlan[pipe].src_nentries >> 1))
++			return;
++	}
++	ath10k_ce_per_engine_service(ar, pipe);
++}
++
+ static int ath10k_snoc_hif_map_service_to_pipe(struct ath10k *ar,
+ 					       u16 service_id,
+ 					       u8 *ul_pipe, u8 *dl_pipe)
+@@ -587,6 +701,9 @@ static int ath10k_snoc_hif_power_up(struct ath10k *ar)
+ 	.get_default_pipe	= ath10k_snoc_hif_get_default_pipe,
+ 	.power_up		= ath10k_snoc_hif_power_up,
+ 	.power_down		= ath10k_snoc_hif_power_down,
++	.tx_sg			= ath10k_snoc_hif_tx_sg,
++	.send_complete_check	= ath10k_snoc_hif_send_complete_check,
++	.get_free_queue_number	= ath10k_snoc_hif_get_free_queue_number,
+ };
+ 
+ static const struct ath10k_bus_ops ath10k_snoc_bus_ops = {
+-- 
+1.9.1
