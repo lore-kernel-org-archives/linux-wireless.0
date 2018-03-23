@@ -1,78 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:48844 "EHLO bues.ch"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933937AbeCGQr1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Mar 2018 11:47:27 -0500
-Date: Wed, 7 Mar 2018 17:47:00 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ssb:: use put_device() if device_register fail
-Message-ID: <20180307174700.013e20ae@wiggum> (sfid-20180307_174732_830008_40A85F08)
-In-Reply-To: <bdd20c00cba68044d82e387072b39f0176448e97.1520416785.git.arvind.yadav.cs@gmail.com>
-References: <bdd20c00cba68044d82e387072b39f0176448e97.1520416785.git.arvind.yadav.cs@gmail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:53934 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752175AbeCWLy4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Mar 2018 07:54:56 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
- boundary="Sig_/e7s3cKLiB+CjWA0fZIySKos"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 23 Mar 2018 17:24:55 +0530
+From: govinds@codeaurora.org
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: yamada.masahiro@socionext.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH 01/13] ath10k: platform driver for WCN3990 SNOC WLAN
+ module
+In-Reply-To: <87lgf0cn24.fsf@kamboji.qca.qualcomm.com>
+References: <1518684458-5338-1-git-send-email-govinds@codeaurora.org>
+ <87371kqfda.fsf@kamboji.qca.qualcomm.com>
+ <d396df1b09da4dd7aa14d6af2c2b2b18@aphydexm01b.ap.qualcomm.com>
+ <87tvttl6kp.fsf@kamboji.qca.qualcomm.com>
+ <fb2c04383f024ab8b2c62dd5a4ad20ac@SOC-EX01V.e01.socionext.com>
+ <87lgf0cn24.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <eccd10c7db468515fe255b75f102e301@codeaurora.org> (sfid-20180323_125504_233225_BC6F3908)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/e7s3cKLiB+CjWA0fZIySKos
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 2018-03-10 14:41, Kalle Valo wrote:
+> <yamada.masahiro@socionext.com> writes:
+> 
+>>> >> Kbuild bot found an odd problem with this patch:
+>>> >>
+>>> >>  include/linux/dynamic_debug.h:77:14: error: 'KBUILD_MODNAME'
+>>> >>  undeclared (first use in this function); did you mean
+>>> 'KBUILD_BASENAME'?
+>>> >>
+>>> >> Full report:
+>>> >>
+>>> >>
+>>> http://lists.infradead.org/pipermail/ath10k/2018-February/010907.html
+>>> >>
+>>> >> Any ideas? Is this is some unrelated issue or what? This patch is not
+>>> >> even touching hif.h or ce.c.
+>>> >
+>>> > I didn't encountered this issue as in my defconfig only
+>>> > CONFIG_ATH10K_SNOC was defined. This problem is coming when we define
+>>> > CONFIG_ATH10K_SNOC and CONFIG_ATH10K_PCI simultaneously in defconfig
+>>> > and this is known issue when multiple modules share objects(in this
+>>> > case ce.o). I saw similar reported problem and found
+>>> > https://patchwork.kernel.org/patch/10060825/.
+>>> >
+>>> > After picking the below change issue is not seen.
+>>> 
+>>> Let's ask the kbuild maintainer. Masahiro, any chances of getting 
+>>> this
+>>> patch applied anytime soon:
+>>> 
+>>> kbuild: define KBUILD_MODNAME even if multiple modules share objects
+>>> 
+>>> https://patchwork.kernel.org/patch/10060825/
+>>> 
+>>> In ath10k we would need it as otherwise we are not able to link ce.o
+>>> both to ath10k_pci.ko and ath10k_snoc.ko. What do you think?
+>>> 
+>>> Full discussion and the ath10k patch here:
+>>> 
+>>> https://patchwork.kernel.org/patch/10220657/
+>>> 
+>> 
+>> I plan to submit v2, but even if the undefined KBUILD_MODNAME is 
+>> fixed,
+>> I expect another problem from this patch.
+>> 
+>> If both CONFIG_ATH10K_PCI and CONFIG_ATH10_SNOC are 'y'
+>> two instances of ce.o would be linked into vmliux,
+>> then causes multiple definition error.
+> 
+> Oh, I didn't realise this. Thanks for pointing it out. Govind is 
+> looking
+> at other ways to fix this.
 
-On Wed,  7 Mar 2018 15:31:30 +0530
-Arvind Yadav <arvind.yadav.cs@gmail.com> wrote:
+https://patchwork.kernel.org/patch/10298659/ is raised to address this 
+problem.
 
-> if device_register() returned an error! Always use put_device()
-> to give up the reference initialized.
->=20
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
-> ---
->  drivers/ssb/main.c | 1 +
->  1 file changed, 1 insertion(+)
->=20
-> diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-> index 65420a9..c4449e0 100644
-> --- a/drivers/ssb/main.c
-> +++ b/drivers/ssb/main.c
-> @@ -521,6 +521,7 @@ static int ssb_devices_register(struct ssb_bus *bus)
->  			ssb_err("Could not register %s\n", dev_name(dev));
->  			/* Set dev to NULL to not unregister
->  			 * dev on error unwinding. */
-> +			put_device(dev);
->  			sdev->dev =3D NULL;
->  			kfree(devwrap);
->  			goto error;
-
-
-I don't think this is correct.
-The dev structure is allocated as part of devwrap, which is freed here.
-
-Why do you think we need put_device here?
-
---=20
-Michael
-
---Sig_/e7s3cKLiB+CjWA0fZIySKos
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlqgF4QACgkQ9TK+HZCN
-iw7wZA//XZn6QV6ecZwJmJhg11XAtrPXpucxihVmvFufvps54O14uEEqxAaX4vJb
-+7OHM8PEyzXBfpdZeARR5SJDmpa+7aVbB/ZFw0yDPD6saMDwbmvd/lkvSbMGTmJZ
-SqHsx1s/HU5P0a2lL6cpfe2TPgb/H9ipcI5/xf2w46gp4wmSx2Am2VQ17lrF7bqp
-14vQTTWKPLChS8oqXVX36kyuNFw6GDnrdh/wh+2uW6l7LQ/LrShHipg9JsZHTPqZ
-XL+hcAvUQEXtKRG5R30XpQlEEUllP9FTE3fJHfE3hUHqqwayg7h7ljCHUFw9r+2K
-ndCYCZzO8Aj0XJ+RLF7Ib4GwImjEzPup/IF36sFljOjwG5UwaRNMdfJaQMBLAPY8
-lXjI3ydcv8kd+kMgs/K7y9wXF22rtEPBJg1i6PqsBVUWewc1gOztP7ZvdUSmjedK
-HiEPJqxj7lBxFggAfvEDwx21w1dPxA94BeQEoeUMtnmWq5opKdKiFp0X6aWQdhED
-IveG5XOYBXdZNZ2O1ub+VlBeaMikJmD2+9dCSr/1jeAmd64TVxXlu9axZ/3oz+ah
-z0Kij0+KNURcZi3u+S8WcraaCHw5I3Q5csDjndsb1CI8neOsieWxwRsvO4w11AP8
-xgjPpM3P2xV9VeXux1Am1kn8DjWA/B+Ucdie5naqZKwGfdCEhe0=
-=k5O2
------END PGP SIGNATURE-----
-
---Sig_/e7s3cKLiB+CjWA0fZIySKos--
+Thanks,
+Govind
