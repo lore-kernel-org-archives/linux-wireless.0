@@ -1,169 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:57423 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1428567AbeCBOR6 (ORCPT
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:37284 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752066AbeCWJro (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 09:17:58 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 3/3] staging: wilc1000: fix line over 80 char in wilc_wlan_handle_rxq()
-Date: Fri, 2 Mar 2018 19:47:20 +0530
-Message-ID: <1520000240-27519-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180302_151803_159528_59062885)
-In-Reply-To: <1520000240-27519-1-git-send-email-ajay.kathat@microchip.com>
-References: <1520000240-27519-1-git-send-email-ajay.kathat@microchip.com>
+        Fri, 23 Mar 2018 05:47:44 -0400
+Date: Fri, 23 Mar 2018 10:47:40 +0100
+From: Juri Lelli <juri.lelli@gmail.com>
+To: b43-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [QUESTION] Mainline support for B43_PHY_AC wifi cards
+Message-ID: <20180323094740.GA5942@localhost.localdomain> (sfid-20180323_104803_638724_A6E67129)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Refactor wilc_wlan_handle_rxq() to fix line over 80 character issue
-found by checkpatch.pl script. Added a new function to split
-'wilc_wlan_handle_rxq' function code.
+Hi,
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 114 +++++++++++++++++++----------------
- 1 file changed, 63 insertions(+), 51 deletions(-)
+I've got a Dell XPS 13 9343/0TM99H (BIOS A15 01/23/2018) mounting a
+BCM4352 802.11ac (rev 03) wireless card and so far I've been using it on
+Fedora with broadcom-wl package (which I believe installs Broadcom's STA
+driver?). It works good apart from occasional hiccups after suspend.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 8490407..bcbb923 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -773,9 +773,70 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 	return ret;
- }
- 
-+static void wilc_wlan_handle_rx_buff(struct wilc *wilc, u8 *buffer, int size)
-+{
-+	int offset = 0;
-+	u32 header;
-+	u32 pkt_len, pkt_offset, tp_len;
-+	int is_cfg_packet;
-+	u8 *buff_ptr;
-+
-+	do {
-+		buff_ptr = buffer + offset;
-+		memcpy(&header, buff_ptr, 4);
-+		header = cpu_to_le32(header);
-+
-+		is_cfg_packet = (header >> 31) & 0x1;
-+		pkt_offset = (header >> 22) & 0x1ff;
-+		tp_len = (header >> 11) & 0x7ff;
-+		pkt_len = header & 0x7ff;
-+
-+		if (pkt_len == 0 || tp_len == 0)
-+			break;
-+
-+		if (pkt_offset & IS_MANAGMEMENT) {
-+			pkt_offset &= ~(IS_MANAGMEMENT |
-+					IS_MANAGMEMENT_CALLBACK |
-+					IS_MGMT_STATUS_SUCCES);
-+			buff_ptr += HOST_HDR_OFFSET;
-+			wilc_wfi_mgmt_rx(wilc, buff_ptr, pkt_len);
-+		} else {
-+			if (!is_cfg_packet) {
-+				if (pkt_len > 0) {
-+					wilc_frmw_to_linux(wilc, buff_ptr,
-+							   pkt_len,
-+							   pkt_offset);
-+				}
-+			} else {
-+				struct wilc_cfg_rsp rsp;
-+
-+				buff_ptr += pkt_offset;
-+
-+				wilc_wlan_cfg_indicate_rx(wilc, buff_ptr,
-+							  pkt_len,
-+							  &rsp);
-+				if (rsp.type == WILC_CFG_RSP) {
-+					if (wilc->cfg_seq_no == rsp.seq_no)
-+						complete(&wilc->cfg_event);
-+				} else if (rsp.type == WILC_CFG_RSP_STATUS) {
-+					wilc_mac_indicate(wilc,
-+							  WILC_MAC_INDICATE_STATUS);
-+
-+				} else if (rsp.type == WILC_CFG_RSP_SCAN) {
-+					wilc_mac_indicate(wilc,
-+							  WILC_MAC_INDICATE_SCAN);
-+				}
-+			}
-+		}
-+		offset += tp_len;
-+		if (offset >= size)
-+			break;
-+	} while (1);
-+}
-+
- static void wilc_wlan_handle_rxq(struct wilc *wilc)
- {
--	int offset = 0, size;
-+	int size;
- 	u8 *buffer;
- 	struct rxq_entry_t *rqe;
- 
-@@ -792,57 +853,8 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
- 
- 		buffer = rqe->buffer;
- 		size = rqe->buffer_size;
--		offset = 0;
--
--		do {
--			u32 header;
--			u32 pkt_len, pkt_offset, tp_len;
--			int is_cfg_packet;
--
--			memcpy(&header, &buffer[offset], 4);
--			header = cpu_to_le32(header);
--
--			is_cfg_packet = (header >> 31) & 0x1;
--			pkt_offset = (header >> 22) & 0x1ff;
--			tp_len = (header >> 11) & 0x7ff;
--			pkt_len = header & 0x7ff;
--
--			if (pkt_len == 0 || tp_len == 0)
--				break;
-+		wilc_wlan_handle_rx_buff(wilc, buffer, size);
- 
--			if (pkt_offset & IS_MANAGMEMENT) {
--				pkt_offset &= ~(IS_MANAGMEMENT |
--						IS_MANAGMEMENT_CALLBACK |
--						IS_MGMT_STATUS_SUCCES);
--
--				wilc_wfi_mgmt_rx(wilc, &buffer[offset + HOST_HDR_OFFSET], pkt_len);
--			} else {
--				if (!is_cfg_packet) {
--					if (pkt_len > 0) {
--						wilc_frmw_to_linux(wilc,
--								   &buffer[offset],
--								   pkt_len,
--								   pkt_offset);
--					}
--				} else {
--					struct wilc_cfg_rsp rsp;
--
--					wilc_wlan_cfg_indicate_rx(wilc, &buffer[pkt_offset + offset], pkt_len, &rsp);
--					if (rsp.type == WILC_CFG_RSP) {
--						if (wilc->cfg_seq_no == rsp.seq_no)
--							complete(&wilc->cfg_event);
--					} else if (rsp.type == WILC_CFG_RSP_STATUS) {
--						wilc_mac_indicate(wilc, WILC_MAC_INDICATE_STATUS);
--
--					} else if (rsp.type == WILC_CFG_RSP_SCAN) {
--						wilc_mac_indicate(wilc, WILC_MAC_INDICATE_SCAN);
--					}
--				}
--			}
--			offset += tp_len;
--			if (offset >= size)
--				break;
--		} while (1);
- 		kfree(rqe);
- 	} while (1);
- 
--- 
-2.7.4
+I'd like to get rid of that dependency (you can understand that it's
+particularly annoying when testing mainline kernels), but I found out
+that support for my card is BROKEN in mainline [1]. Just to see what
+happens, I forcibly enabled it witnessing that it indeed crashes like
+below as Kconfig warns. :)
+
+ bcma: bus0: Found chip with id 0x4352, rev 0x03 and package 0x00
+ bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x2B, class 0x0)
+ bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x2A, class 0x0)
+ bcma: bus0: Core 2 found: ARM CR4 (manuf 0x4BF, id 0x83E, rev 0x02, class 0x0)
+ bcma: bus0: Core 3 found: PCIe Gen2 (manuf 0x4BF, id 0x83C, rev 0x01, class 0x0)
+ bcma: bus0: Core 4 found: USB 2.0 Device (manuf 0x4BF, id 0x81A, rev 0x11, class 0x0)
+ bcma: Unsupported SPROM revision: 11
+ bcma: bus0: Invalid SPROM read from the PCIe card, trying to use fallback SPROM
+ bcma: bus0: Using fallback SPROM failed (err -2)
+ bcma: bus0: No SPROM available
+ bcma: bus0: Bus registered
+ b43-phy0: Broadcom 4352 WLAN found (core revision 42)
+ b43-phy0: Found PHY: Analog 12, Type 11 (AC), Revision 1
+ b43-phy0: Found Radio: Manuf 0x17F, ID 0x2069, Revision 4, Version 0
+ BUG: unable to handle kernel NULL pointer dereference at 0000000000000000
+
+So, question: is replacing my card the only way I can get rid of this
+downstream dependency? :(
+
+Thanks a lot.
+
+Best,
+
+- Juri
+
+[1] https://elixir.bootlin.com/linux/v4.16-rc6/source/drivers/net/wireless/broadcom/b43/Kconfig#L151
