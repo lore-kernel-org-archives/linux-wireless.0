@@ -1,120 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr30089.outbound.protection.outlook.com ([40.107.3.89]:43136
-        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751423AbeCUQ2x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Mar 2018 12:28:53 -0400
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "hch@lst.de" <hch@lst.de>,
-        "linux@armlinux.org.uk" <linux@armlinux.org.uk>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "zajec5@gmail.com" <zajec5@gmail.com>,
-        "andy.gross@linaro.org" <andy.gross@linaro.org>,
-        "david.brown@linaro.org" <david.brown@linaro.org>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "vinod.koul@intel.com" <vinod.koul@intel.com>,
-        "thierry.reding@gmail.com" <thierry.reding@gmail.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        "jarkko.sakkinen@linux.intel.com" <jarkko.sakkinen@linux.intel.com>,
-        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
-        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
-        "johan@kernel.org" <johan@kernel.org>,
-        "msuchanek@suse.de" <msuchanek@suse.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-soc@vger.kernel.org" <linux-soc@vger.kernel.org>,
-        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Bharat Bhushan <bharat.bhushan@nxp.com>,
-        Leo Li <leoyang.li@nxp.com>
-Subject: RE: [PATCH v2 2/2] drivers: remove force dma flag from buses
-Date: Wed, 21 Mar 2018 16:28:46 +0000
-Message-ID: <HE1PR0401MB2425644F72A063ED42B79D5FE6AA0@HE1PR0401MB2425.eurprd04.prod.outlook.com> (sfid-20180321_172908_255484_8C495665)
-References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
- <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com>
- <1521615323-4752-2-git-send-email-nipun.gupta@nxp.com>
- <20180321093525.GT14085@kroah.com>
-In-Reply-To: <20180321093525.GT14085@kroah.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:47352 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751935AbeCWFEP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Mar 2018 01:04:15 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH v2 13/13] dt: bindings: add bindings for wcn3990 wifi block
+Date: Fri, 23 Mar 2018 10:33:44 +0530
+Message-Id: <1521781424-24972-14-git-send-email-govinds@codeaurora.org> (sfid-20180323_060440_088267_BA3D551F)
+In-Reply-To: <1521781424-24972-1-git-send-email-govinds@codeaurora.org>
+References: <1521781424-24972-1-git-send-email-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add device tree binding documentation details for wcn3990
+wifi block present in Qualcomm SDM845/APQ8098 SoC into
+"qcom,ath10k.txt".
 
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+---
+ .../bindings/net/wireless/qcom,ath10k.txt          | 31 ++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
-> -----Original Message-----
-> From: Greg KH [mailto:gregkh@linuxfoundation.org]
-> Sent: Wednesday, March 21, 2018 15:05
-> To: Nipun Gupta <nipun.gupta@nxp.com>
-> Cc: robin.murphy@arm.com; hch@lst.de; linux@armlinux.org.uk;
-> m.szyprowski@samsung.com; bhelgaas@google.com; zajec5@gmail.com;
-> andy.gross@linaro.org; david.brown@linaro.org; dan.j.williams@intel.com;
-> vinod.koul@intel.com; thierry.reding@gmail.com; robh+dt@kernel.org;
-> frowand.list@gmail.com; jarkko.sakkinen@linux.intel.com;
-> rafael.j.wysocki@intel.com; dmitry.torokhov@gmail.com; johan@kernel.org;
-> msuchanek@suse.de; linux-kernel@vger.kernel.org; iommu@lists.linux-
-> foundation.org; linux-wireless@vger.kernel.org; linux-arm-
-> msm@vger.kernel.org; linux-soc@vger.kernel.org; dmaengine@vger.kernel.org=
-;
-> dri-devel@lists.freedesktop.org; linux-tegra@vger.kernel.org;
-> devicetree@vger.kernel.org; linux-pci@vger.kernel.org; Bharat Bhushan
-> <bharat.bhushan@nxp.com>; Leo Li <leoyang.li@nxp.com>
-> Subject: Re: [PATCH v2 2/2] drivers: remove force dma flag from buses
->=20
-> On Wed, Mar 21, 2018 at 12:25:23PM +0530, Nipun Gupta wrote:
-> > With each bus implementing its own DMA configuration callback,
-> > there is no need for bus to explicitly have force_dma in its
-> > global structure. This patch modifies of_dma_configure API to
-> > accept an input parameter which specifies if implicit DMA
-> > configuration is required even when it is not described by the
-> > firmware.
->=20
-> Having to "remember" what that bool variable means on the end of the
-> function call is a royal pain over time, right?
->=20
-> Why not just create a new function:
-> 	dma_common_configure_force(dma)
-> that always does this?  Leave "dma_common_configure()" alone, and then
-> wrap the old code with these two helper functions that call the 'core'
-> code with the bool set properly?
->=20
-> That way you do not have to "know" what that parameter is, the function
-> name just documents it automatically, so when you see it in the
-> bus-specific code, no need to go and have to hunt for anything.  And if
-> you are reading the dma core code, it's obvious what is happening as the
-> functions are all right there.
-
-How about we do not pass any flag in 'dma_common_configure()', and inside t=
-his
-API we pass "true" to 'of_dma_configure()'? I am saying this because curren=
-tly
-both the busses (platform and AMBA) which uses 'dma_common_configure()' pas=
-ses
-"true" value. If we create additional 'dma_common_configure_force()', then
-'dma_common_configure()' will not be used anytime and will become redundant=
-.
-
-If someday new busses come and they needs to use similar functionality whic=
-h
-'dma_common_configure()' provides, but with passing "false" to 'of_dma_conf=
-igure()',
-then what you suggests of having two separate such API's will be more reaso=
-nable
-and can be implemented?
-
-Thanks,
-Nipun
-
->=20
-> thanks,
->=20
-> greg k-h
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+index 3d2a031..34e4f98 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+@@ -4,6 +4,7 @@ Required properties:
+ - compatible: Should be one of the following:
+ 	* "qcom,ath10k"
+ 	* "qcom,ipq4019-wifi"
++	* "qcom,wcn3990-wifi"
+ 
+ PCI based devices uses compatible string "qcom,ath10k" and takes calibration
+ data along with board specific data via "qcom,ath10k-calibration-data".
+@@ -18,8 +19,12 @@ In general, entry "qcom,ath10k-pre-calibration-data" and
+ "qcom,ath10k-calibration-data" conflict with each other and only one
+ can be provided per device.
+ 
++SNOC based devices (i.e. wcn3990) uses compatible string "qcom,wcn3990-wifi".
++
+ Optional properties:
+ - reg: Address and length of the register set for the device.
++- reg-names: Must include the list of following reg names,
++	     "membase"
+ - resets: Must contain an entry for each entry in reset-names.
+           See ../reset/reseti.txt for details.
+ - reset-names: Must include the list of following reset names,
+@@ -49,6 +54,8 @@ Optional properties:
+ 				 hw versions.
+ - qcom,ath10k-pre-calibration-data : pre calibration data as an array,
+ 				     the length can vary between hw versions.
++- <supply-name>-supply: handle to the regulator device tree node
++			   optional "supply-name" is "vdd-0.8-cx-mx".
+ 
+ Example (to supply the calibration data alone):
+ 
+@@ -119,3 +126,27 @@ wifi0: wifi@a000000 {
+ 	qcom,msi_base = <0x40>;
+ 	qcom,ath10k-pre-calibration-data = [ 01 02 03 ... ];
+ };
++
++Example (to supply wcn3990 SoC wifi block details):
++
++qcom,wifi@18000000 {
++		compatible = "qcom,wcn3990-wifi";
++		reg = <0x18800000 0x800000>;
++		reg-names = "membase";
++		clocks = <&clock_gcc clk_aggre2_noc_clk>;
++		clock-names = "smmu_aggre2_noc_clk"
++		interrupts =
++			   <0 130 0 /* CE0 */ >,
++			   <0 131 0 /* CE1 */ >,
++			   <0 132 0 /* CE2 */ >,
++			   <0 133 0 /* CE3 */ >,
++			   <0 134 0 /* CE4 */ >,
++			   <0 135 0 /* CE5 */ >,
++			   <0 136 0 /* CE6 */ >,
++			   <0 137 0 /* CE7 */ >,
++			   <0 138 0 /* CE8 */ >,
++			   <0 139 0 /* CE9 */ >,
++			   <0 140 0 /* CE10 */ >,
++			   <0 141 0 /* CE11 */ >;
++		vdd-0.8-cx-mx-supply = <&pm8998_l5>;
++};
+-- 
+1.9.1
