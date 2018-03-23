@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:33658 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031275AbeCAOWD (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:50104 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752043AbeCWNYY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:22:03 -0500
-Received: by mail-qk0-f194.google.com with SMTP id f25so7718846qkm.0
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:22:03 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 38/52] ath: Map Mexico to FCC1_WORLD
-Date: Thu,  1 Mar 2018 15:18:48 +0100
-Message-Id: <20180301141902.24824-39-sven.eckelmann@openmesh.com> (sfid-20180301_152211_022977_04C5CB07)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+        Fri, 23 Mar 2018 09:24:24 -0400
+Message-ID: <1521811462.11491.5.camel@sipsolutions.net> (sfid-20180323_142428_098244_7863DF79)
+Subject: Re: [PATCHv4 3/3] mac80211: implement cqm rssi check using rx data
+ signal
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tamizh chelvam <tamizhr@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 23 Mar 2018 14:24:22 +0100
+In-Reply-To: <1519544998-2621-4-git-send-email-tamizhr@codeaurora.org> (sfid-20180225_085019_022021_682626EC)
+References: <1519544998-2621-1-git-send-email-tamizhr@codeaurora.org>
+         <1519544998-2621-4-git-send-email-tamizhr@codeaurora.org>
+         (sfid-20180225_085019_022021_682626EC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The regdomain code is used to select the correct the correct conformance
-test limits (CTL) for a country. If the regdomain code isn't correctly
-mapped to the actual CTL entries in EEPROM then it could happen that the
-device violates the regulations. But it can also happen that the device is
-then not able to be used with its full txpower on all rates.
 
-The CTL mappings for this regdomain code were now changed to:
+> +/*
+> + * How many frames need to have been used in average station's
+> + * signal strength before checking against the threshold
+> + */
+> +#define IEEE80211_STA_SIGNAL_AVE_MIN_COUNT	4
 
-* 2.4GHz: FCC-> ETSI
-* 5GHz: FCC
+This seems OK - you want something to start up from?
 
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
----
- drivers/net/wireless/ath/regd_common.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+However, I don't think we do that in "normal" CQM, and building
+different behaviour here seems a bit odd.
 
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index efc363af5e41..ca1f07e55aec 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -443,7 +443,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_MALAYSIA, FCC1_WORLD, "MY"},
- 	{CTRY_MALTA, ETSI1_WORLD, "MT"},
- 	{CTRY_MAURITIUS, ETSI1_WORLD, "MU"},
--	{CTRY_MEXICO, FCC1_FCCA, "MX"},
-+	{CTRY_MEXICO, FCC1_WORLD, "MX"},
- 	{CTRY_MONACO, ETSI4_WORLD, "MC"},
- 	{CTRY_MONTENEGRO, ETSI1_WORLD, "ME"},
- 	{CTRY_MOROCCO, APL4_WORLD, "MA"},
--- 
-2.11.0
+> +	if (sig < thold && last_event == 0) {
+> +		sta->last_cqm_event_signal = sig;
+> +		cfg80211_ap_sta_cqm_rssi_notify(
+> +				rx->sdata->dev, sta->addr,
+> +				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW
+> ,
+> +				sig, GFP_ATOMIC);
+> +		sta->count_rx_signal = 0;
+
+In particular, resetting it all the time seems even stranger, since
+then you can only react at a granularity of these 4 frames. EWMA
+catches fluctuations already, so I don't think you should do it this
+way.
+
+johannes
