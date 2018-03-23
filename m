@@ -1,146 +1,221 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57938 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:46787 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752946AbeCPJJ4 (ORCPT
+        with ESMTP id S1751541AbeCWFEA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Mar 2018 05:09:56 -0400
-Subject: Re: [PATCH] wcn36xx: dequeue all pending indicator messages
-To: Daniel Mack <daniel@zonque.org>, linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org
-References: <20180315223725.28283-1-daniel@zonque.org>
-From: Ramon Fried <rfried@codeaurora.org>
-Message-ID: <3d6783ea-837c-a314-dea9-63906aeb0793@codeaurora.org> (sfid-20180316_101002_898093_AE960021)
-Date: Fri, 16 Mar 2018 11:09:52 +0200
-MIME-Version: 1.0
-In-Reply-To: <20180315223725.28283-1-daniel@zonque.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Fri, 23 Mar 2018 01:04:00 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH v2 05/13] ath10k: Map HTC services to tx/rx pipes for wcn3990
+Date: Fri, 23 Mar 2018 10:33:36 +0530
+Message-Id: <1521781424-24972-6-git-send-email-govinds@codeaurora.org> (sfid-20180323_060438_775685_39E52F75)
+In-Reply-To: <1521781424-24972-1-git-send-email-govinds@codeaurora.org>
+References: <1521781424-24972-1-git-send-email-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add mapping of HTC endpoint services supported
+by wcn3990 target to tx/rx pipe.
 
-On 3/16/2018 12:37 AM, Daniel Mack wrote:
-> In case wcn36xx_smd_rsp_process() is called more than once before
-> hal_ind_work was dispatched, the messages will end up in hal_ind_queue,
-> but wcn36xx_ind_smd_work() will only look at the first message in that
-> list.
->
-> Fix this by dequeing the messages from the list in a loop, and only stop
-> when it's empty.
-Interesting. does it solve a specific bug ? can you elaborate ?
->
-> Signed-off-by: Daniel Mack <daniel@zonque.org>
-> ---
->   drivers/net/wireless/ath/wcn36xx/smd.c | 95 +++++++++++++++++++---------------
->   1 file changed, 52 insertions(+), 43 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-> index 7cc29285e052..a6b5352f59e9 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-> @@ -2409,54 +2409,63 @@ static void wcn36xx_ind_smd_work(struct work_struct *work)
->   {
->   	struct wcn36xx *wcn =
->   		container_of(work, struct wcn36xx, hal_ind_work);
-> -	struct wcn36xx_hal_msg_header *msg_header;
-> -	struct wcn36xx_hal_ind_msg *hal_ind_msg;
-> -	unsigned long flags;
->   
-> -	spin_lock_irqsave(&wcn->hal_ind_lock, flags);
-> +	for (;;) {
-> +		struct wcn36xx_hal_msg_header *msg_header;
-> +		struct wcn36xx_hal_ind_msg *hal_ind_msg;
-> +		unsigned long flags;
->   
-> -	hal_ind_msg = list_first_entry(&wcn->hal_ind_queue,
-> -				       struct wcn36xx_hal_ind_msg,
-> -				       list);
-> -	list_del(wcn->hal_ind_queue.next);
-> -	spin_unlock_irqrestore(&wcn->hal_ind_lock, flags);
-> +		spin_lock_irqsave(&wcn->hal_ind_lock, flags);
->   
-> -	msg_header = (struct wcn36xx_hal_msg_header *)hal_ind_msg->msg;
-> +		if (list_empty(&wcn->hal_ind_queue)) {
-> +			spin_unlock_irqrestore(&wcn->hal_ind_lock, flags);
-> +			return;
-> +		}
->   
-> -	switch (msg_header->msg_type) {
-> -	case WCN36XX_HAL_COEX_IND:
-> -	case WCN36XX_HAL_DEL_BA_IND:
-> -	case WCN36XX_HAL_AVOID_FREQ_RANGE_IND:
-> -		break;
-> -	case WCN36XX_HAL_OTA_TX_COMPL_IND:
-> -		wcn36xx_smd_tx_compl_ind(wcn,
-> -					 hal_ind_msg->msg,
-> -					 hal_ind_msg->msg_len);
-> -		break;
-> -	case WCN36XX_HAL_MISSED_BEACON_IND:
-> -		wcn36xx_smd_missed_beacon_ind(wcn,
-> -					      hal_ind_msg->msg,
-> -					      hal_ind_msg->msg_len);
-> -		break;
-> -	case WCN36XX_HAL_DELETE_STA_CONTEXT_IND:
-> -		wcn36xx_smd_delete_sta_context_ind(wcn,
-> -						   hal_ind_msg->msg,
-> -						   hal_ind_msg->msg_len);
-> -		break;
-> -	case WCN36XX_HAL_PRINT_REG_INFO_IND:
-> -		wcn36xx_smd_print_reg_info_ind(wcn,
-> -					       hal_ind_msg->msg,
-> -					       hal_ind_msg->msg_len);
-> -		break;
-> -	case WCN36XX_HAL_SCAN_OFFLOAD_IND:
-> -		wcn36xx_smd_hw_scan_ind(wcn, hal_ind_msg->msg,
-> -					hal_ind_msg->msg_len);
-> -		break;
-> -	default:
-> -		wcn36xx_err("SMD_EVENT (%d) not supported\n",
-> -			      msg_header->msg_type);
-> +		hal_ind_msg = list_first_entry(&wcn->hal_ind_queue,
-> +					       struct wcn36xx_hal_ind_msg,
-> +					       list);
-> +		list_del(&hal_ind_msg->list);
-> +		spin_unlock_irqrestore(&wcn->hal_ind_lock, flags);
-> +
-> +		msg_header = (struct wcn36xx_hal_msg_header *)hal_ind_msg->msg;
-> +
-> +		switch (msg_header->msg_type) {
-> +		case WCN36XX_HAL_COEX_IND:
-> +		case WCN36XX_HAL_DEL_BA_IND:
-> +		case WCN36XX_HAL_AVOID_FREQ_RANGE_IND:
-> +			break;
-> +		case WCN36XX_HAL_OTA_TX_COMPL_IND:
-> +			wcn36xx_smd_tx_compl_ind(wcn,
-> +						 hal_ind_msg->msg,
-> +						 hal_ind_msg->msg_len);
-> +			break;
-> +		case WCN36XX_HAL_MISSED_BEACON_IND:
-> +			wcn36xx_smd_missed_beacon_ind(wcn,
-> +						      hal_ind_msg->msg,
-> +						      hal_ind_msg->msg_len);
-> +			break;
-> +		case WCN36XX_HAL_DELETE_STA_CONTEXT_IND:
-> +			wcn36xx_smd_delete_sta_context_ind(wcn,
-> +							   hal_ind_msg->msg,
-> +							   hal_ind_msg->msg_len);
-> +			break;
-> +		case WCN36XX_HAL_PRINT_REG_INFO_IND:
-> +			wcn36xx_smd_print_reg_info_ind(wcn,
-> +						       hal_ind_msg->msg,
-> +						       hal_ind_msg->msg_len);
-> +			break;
-> +		case WCN36XX_HAL_SCAN_OFFLOAD_IND:
-> +			wcn36xx_smd_hw_scan_ind(wcn, hal_ind_msg->msg,
-> +						hal_ind_msg->msg_len);
-> +			break;
-> +		default:
-> +			wcn36xx_err("SMD_EVENT (%d) not supported\n",
-> +				    msg_header->msg_type);
-> +		}
-> +
-> +		kfree(hal_ind_msg);
->   	}
-> -	kfree(hal_ind_msg);
->   }
->   int wcn36xx_smd_open(struct wcn36xx *wcn)
->   {
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/snoc.c | 168 +++++++++++++++++++++++++++++++++
+ 1 file changed, 168 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index dcd8bb7..a39eee7 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -154,6 +154,116 @@
+ 	},
+ };
+ 
++static struct service_to_pipe target_service_to_ce_map_wlan[] = {
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_VO),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(3),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_VO),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_BK),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(3),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_BK),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_BE),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(3),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_BE),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_VI),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(3),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_VI),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_CONTROL),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(3),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_CONTROL),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_RSVD_CTRL),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(0),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_RSVD_CTRL),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++	{ /* not used */
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(0),
++	},
++	{ /* not used */
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(2),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_HTT_DATA_MSG),
++		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
++		__cpu_to_le32(4),
++	},
++	{
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_HTT_DATA_MSG),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(1),
++	},
++	{ /* not used */
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS),
++		__cpu_to_le32(PIPEDIR_OUT),
++		__cpu_to_le32(5),
++	},
++	{ /* in = DL = target -> host */
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_HTT_DATA2_MSG),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(9),
++	},
++	{ /* in = DL = target -> host */
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_HTT_DATA3_MSG),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(10),
++	},
++	{ /* in = DL = target -> host pktlog */
++		__cpu_to_le32(ATH10K_HTC_SVC_ID_HTT_LOG_MSG),
++		__cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
++		__cpu_to_le32(11),
++	},
++	/* (Additions here) */
++
++	{ /* must be last */
++		__cpu_to_le32(0),
++		__cpu_to_le32(0),
++		__cpu_to_le32(0),
++	},
++};
++
+ void ath10k_snoc_write32(struct ath10k *ar, u32 offset, u32 value)
+ {
+ 	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
+@@ -249,6 +359,62 @@ static void ath10k_snoc_rx_post(struct ath10k *ar)
+ 		ath10k_snoc_rx_post_pipe(&ar_snoc->pipe_info[i]);
+ }
+ 
++static int ath10k_snoc_hif_map_service_to_pipe(struct ath10k *ar,
++					       u16 service_id,
++					       u8 *ul_pipe, u8 *dl_pipe)
++{
++	const struct service_to_pipe *entry;
++	bool ul_set = false, dl_set = false;
++	int i;
++
++	ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc hif map service\n");
++
++	for (i = 0; i < ARRAY_SIZE(target_service_to_ce_map_wlan); i++) {
++		entry = &target_service_to_ce_map_wlan[i];
++
++		if (__le32_to_cpu(entry->service_id) != service_id)
++			continue;
++
++		switch (__le32_to_cpu(entry->pipedir)) {
++		case PIPEDIR_NONE:
++			break;
++		case PIPEDIR_IN:
++			WARN_ON(dl_set);
++			*dl_pipe = __le32_to_cpu(entry->pipenum);
++			dl_set = true;
++			break;
++		case PIPEDIR_OUT:
++			WARN_ON(ul_set);
++			*ul_pipe = __le32_to_cpu(entry->pipenum);
++			ul_set = true;
++			break;
++		case PIPEDIR_INOUT:
++			WARN_ON(dl_set);
++			WARN_ON(ul_set);
++			*dl_pipe = __le32_to_cpu(entry->pipenum);
++			*ul_pipe = __le32_to_cpu(entry->pipenum);
++			dl_set = true;
++			ul_set = true;
++			break;
++		}
++	}
++
++	if (WARN_ON(!ul_set || !dl_set))
++		return -ENOENT;
++
++	return 0;
++}
++
++static void ath10k_snoc_hif_get_default_pipe(struct ath10k *ar,
++					     u8 *ul_pipe, u8 *dl_pipe)
++{
++	ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc hif get default pipe\n");
++
++	(void)ath10k_snoc_hif_map_service_to_pipe(ar,
++						 ATH10K_HTC_SVC_ID_RSVD_CTRL,
++						 ul_pipe, dl_pipe);
++}
++
+ static inline void ath10k_snoc_irq_disable(struct ath10k *ar)
+ {
+ 	ath10k_ce_disable_interrupts(ar);
+@@ -358,6 +524,8 @@ static int ath10k_snoc_hif_start(struct ath10k *ar)
+ 	.write32	= ath10k_snoc_write32,
+ 	.start		= ath10k_snoc_hif_start,
+ 	.stop		= ath10k_snoc_hif_stop,
++	.map_service_to_pipe	= ath10k_snoc_hif_map_service_to_pipe,
++	.get_default_pipe	= ath10k_snoc_hif_get_default_pipe,
+ };
+ 
+ static const struct ath10k_bus_ops ath10k_snoc_bus_ops = {
+-- 
+1.9.1
