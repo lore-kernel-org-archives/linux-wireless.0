@@ -1,81 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:44280 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755478AbeCHJjn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Mar 2018 04:39:43 -0500
-Date: Thu, 8 Mar 2018 10:39:39 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Jamie Stuart <jamie@onebillion.org>
-Cc: Daniel Golle <daniel@makrotopia.org>,
-        Enrico Mioso <mrkiko.rs@gmail.com>,
-        Tom Psyborg <pozega.tomislav@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
-        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
-Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
- frame due to full tx queue...?
-Message-ID: <20180308093938.GA2266@redhat.com> (sfid-20180308_103948_214911_47964E2A)
-References: <20180103113540.GA10306@redhat.com>
- <alpine.LNX.2.21.99.1801031503370.8405@localhost.localdomain>
- <CAKR_QVLRwAA0NJSarX46J4A8XSp8h5SuTEtSBQ4ydpEPh_-aUw@mail.gmail.com>
- <alpine.LNX.2.21.99.1801220643400.32225@mStation.localdomain>
- <20180123132234.GC2520@redhat.com>
- <alpine.LNX.2.21.99.1801240917001.13679@mStation.localdomain>
- <20180124100316.GB3101@redhat.com>
- <20180301153006.GJ1233@makrotopia.org>
- <20180307122701.GA10584@redhat.com>
- <7B51BD3B-CAC3-479B-B06E-637A1C3A678A@onebillion.org>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="NzB8fVQJ5HfG6fxh"
-In-Reply-To: <7B51BD3B-CAC3-479B-B06E-637A1C3A678A@onebillion.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:46712 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751755AbeCWFD6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Mar 2018 01:03:58 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH v2 04/13] ath10k: Add HTC services for WCN3990
+Date: Fri, 23 Mar 2018 10:33:35 +0530
+Message-Id: <1521781424-24972-5-git-send-email-govinds@codeaurora.org> (sfid-20180323_060405_117732_51CCFFC8)
+In-Reply-To: <1521781424-24972-1-git-send-email-govinds@codeaurora.org>
+References: <1521781424-24972-1-git-send-email-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+WCN3990 target uses 3 Copy engine(CE1/CE9/CE10) in RX path
+and CE 11 for pktlog.
+Add data path HTC ep services and PKTLOG services for WCN3990.
 
---NzB8fVQJ5HfG6fxh
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/htc.c | 6 ++++++
+ drivers/net/wireless/ath/ath10k/htc.h | 4 ++++
+ 2 files changed, 10 insertions(+)
 
-Hi
-
-On Wed, Mar 07, 2018 at 05:47:34PM +0200, Jamie Stuart wrote:
-> config wifi-device 'radio0'
-> 	option type 'mac80211'
-> 	option channel 'auto'
-
-To make reproducible testing results I would suggest to setup a channel,
-(choose one that is the less used by other wireless networks),
-problem may happen on some channels and not happen on other.
-
-> The 30 clients are all Apple iPads (a mixture of iPad mini and mini 2, running iOS 9-11). During this testing period, all clients were simultaneously downloading files from the devices’ sdcard (served via nginx running on the device). Although this is not a typical use-case, it was useful in stress-testing the wireless setup.
-
-For such scenario I would suggest hardcode ba_size = 0 and see if that
-would help.
-
-I also attach another patch, can be applied on top of two previous.
-This one should give RX hardware more time to provide proper BlockACK
-frame, so hopefully could help with seq mismashes.
-
-Stanislaw
-
---NzB8fVQJ5HfG6fxh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="rt2800_change_rx_ampdu_density.patch"
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index e68f7f9d48f8..95f20072a219 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -9286,7 +9286,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	spec->ht.cap |= rx_chains << IEEE80211_HT_CAP_RX_STBC_SHIFT;
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 492dc5b..8902720 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -542,8 +542,14 @@ static const char *htc_service_name(enum ath10k_htc_svc_id id)
+ 		return "NMI Data";
+ 	case ATH10K_HTC_SVC_ID_HTT_DATA_MSG:
+ 		return "HTT Data";
++	case ATH10K_HTC_SVC_ID_HTT_DATA2_MSG:
++		return "HTT Data";
++	case ATH10K_HTC_SVC_ID_HTT_DATA3_MSG:
++		return "HTT Data";
+ 	case ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS:
+ 		return "RAW";
++	case ATH10K_HTC_SVC_ID_HTT_LOG_MSG:
++		return "PKTLOG";
+ 	}
  
- 	spec->ht.ampdu_factor = 0;
--	spec->ht.ampdu_density = 4;
-+	spec->ht.ampdu_density = 7;
- 	spec->ht.mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
- 	if (tx_chains != rx_chains) {
- 		spec->ht.mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
-
---NzB8fVQJ5HfG6fxh--
+ 	return "Unknown";
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index a2f8814..3487759 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -248,6 +248,7 @@ enum ath10k_htc_svc_gid {
+ 	ATH10K_HTC_SVC_GRP_WMI = 1,
+ 	ATH10K_HTC_SVC_GRP_NMI = 2,
+ 	ATH10K_HTC_SVC_GRP_HTT = 3,
++	ATH10K_LOG_SERVICE_GROUP = 6,
+ 
+ 	ATH10K_HTC_SVC_GRP_TEST = 254,
+ 	ATH10K_HTC_SVC_GRP_LAST = 255,
+@@ -273,6 +274,9 @@ enum ath10k_htc_svc_id {
+ 
+ 	ATH10K_HTC_SVC_ID_HTT_DATA_MSG	= SVC(ATH10K_HTC_SVC_GRP_HTT, 0),
+ 
++	ATH10K_HTC_SVC_ID_HTT_DATA2_MSG = SVC(ATH10K_HTC_SVC_GRP_HTT, 1),
++	ATH10K_HTC_SVC_ID_HTT_DATA3_MSG = SVC(ATH10K_HTC_SVC_GRP_HTT, 2),
++	ATH10K_HTC_SVC_ID_HTT_LOG_MSG = SVC(ATH10K_LOG_SERVICE_GROUP, 0),
+ 	/* raw stream service (i.e. flash, tcmd, calibration apps) */
+ 	ATH10K_HTC_SVC_ID_TEST_RAW_STREAMS = SVC(ATH10K_HTC_SVC_GRP_TEST, 0),
+ };
+-- 
+1.9.1
