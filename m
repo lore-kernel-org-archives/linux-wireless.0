@@ -1,110 +1,358 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49138 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932085AbeCHPqR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Mar 2018 10:46:17 -0500
-Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for
- various chipsets
-To: Pavel Machek <pavel@ucw.cz>,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        "open list:LED SUBSYSTEM" <linux-leds@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>
-References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
- <CACna6rzD6z3DC6yjMCgBxgxx+DF+GGu69Ot5QA6xpJ41Ewb2=A@mail.gmail.com>
- <82d8ac0c-b391-6099-4c7f-991cc35445aa@dd-wrt.com>
- <20180302090312.GA30267@amd>
- <e77d25d4-a824-380a-c51a-e81175ba6205@dd-wrt.com>
- <CACna6rys85VEkzRGDVUAkBy7KgHS2y0DET7YvedboX-YEQHrkg@mail.gmail.com>
- <890a4dcc-f549-6487-2ce5-3b62874cd266@dd-wrt.com>
- <20180308090216.GC17761@amd>
- <d443856e-cfc8-2d50-900d-edf22e5360e3@dd-wrt.com> <20180308140515.GA4889@amd>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <1b1f6344-d588-d2f2-4b3d-a0a4043e801f@nbd.name> (sfid-20180308_164621_949287_CE40A981)
-Date: Thu, 8 Mar 2018 16:46:11 +0100
-MIME-Version: 1.0
-In-Reply-To: <20180308140515.GA4889@amd>
-Content-Type: text/plain; charset=utf-8
+Received: from smtp.codeaurora.org ([198.145.29.96]:46988 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751841AbeCWFEG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Mar 2018 01:04:06 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH v2 08/13] ath10k: Add hif rx methods for wcn3990
+Date: Fri, 23 Mar 2018 10:33:39 +0530
+Message-Id: <1521781424-24972-9-git-send-email-govinds@codeaurora.org> (sfid-20180323_060440_656877_5A5FDADA)
+In-Reply-To: <1521781424-24972-1-git-send-email-govinds@codeaurora.org>
+References: <1521781424-24972-1-git-send-email-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-03-08 15:05, Pavel Machek wrote:
-> On Thu 2018-03-08 13:33:29, Sebastian Gottschall wrote:
->> Am 08.03.2018 um 10:02 schrieb Pavel Machek:
->> >On Wed 2018-03-07 18:54:41, Sebastian Gottschall wrote:
->> >>Am 07.03.2018 um 17:22 schrieb Rafał Miłecki:
->> >>>On 2 March 2018 at 10:22, Sebastian Gottschall <s.gottschall@dd-wrt.com> wrote:
->> >>>>>>leds-gpio is crap and limited. you can just register one platform data at
->> >>>>>>kernel runtime since its identified by its object name "led-gpio" but the
->> >>>>>>kernel forbidds to register 2 platform datas with the same name
->> >>>>>>consider the ar71xx devices with qca988x wifi chipsets. they all have
->> >>>>>>already a led platform data registered
->> >>>>>>at boottime. a second can't be registered anymore so gpio_led is useless
->> >>>>>>at
->> >>>>>>all for most developers on such platforms. its mainly used for early
->> >>>>>>kernel
->> >>>>>>platform data initialisation for system leds.
->> >>>>>If leds-gpio has limitations, please fix those, rather then
->> >>>>>introducing duplicated code.
->> >>>>there is no duplicated code introduced and there is no solution for it.
->> >>>>consider that all wifi drivers with softled support
->> >>>>are going that way with registering a own led driver. see ath9k for
->> >>>>instance. gpio-led cannot be used for it and there is no way to
->> >>>>support multiple platform datas with the same name. its a kernel limitation
->> >>>I just reviewed some mips arch patch adding support for more LEDs for
->> >>>selected devices:
->> >>>[PATCH] MIPS: BCM47XX: Add Luxul XAP1500/XWR1750 WiFi LEDs
->> >>>https://patchwork.linux-mips.org/patch/18681/
->> >>>
->> >>>It seems to be simply adding another call to the
->> >>>gpio_led_register_device(). It seems to me you can call that function
->> >>>multiple times and register multiple structs with LEDs.
->> >>>
->> >>>Isn't all you need something like this?
->> >>>
->> >>>static const struct gpio_led ath10k_leds[] = {
->> >>>         {
->> >>>                 .name = "ath10k:color:function",
->> >>>                 .active_low = 1,
->> >>>                 .default_state = LEDS_GPIO_DEFSTATE_KEEP,
->> >>>         }
->> >>>};
->> >>>
->> >>>static struct gpio_led_platform_data bcm47xx_leds_pdata_extra = {
->> >>>         leds = ath10k_leds;
->> >>>         num_leds = ARRAY_SIZE(ath10k_leds);
->> >>>};
->> >>>
->> >>>ath10k_leds.gpio = ar->hw_params.led_pin;
->> >>>gpio_led_register_device(0, &ath10k_leds);
->> >>the problem are other architectures which have already registered gpio_led
->> >>at system start like ar71xx
->> >>you cannot register a second one. so a independend led driver is a
->> >>requirement for direct control
->> >If the limitation indeed exists, please fix the limitation rather than
->> >working around it in each and every driver.
->> see ath9k. its exact the same implementation.
-> 
-> Ok, so one more driver to fix.
-> 
->> in addition my variant does also work without gpiolib support. so it can be
->> used even if the kernel is configured
->> without gpio support.
->> and not to forget, using a own led driver is more ligthweight from the call
->> path for each led on / off event which is important for
->> low performance embedded devices
-> 
-> We are not going to copy&paste code because such code works without
-> libraries, and we are not going to copy&paste code because that uses
-> less cache during calls. Sorry.
-> 
-> NAK. Please fix your patch. Since this discussion seems to have taken a rather weird turn, I've
-taken a look at the specific code, and from my point of view the code
-that sets up the LED (including callback) is so trivial that it's simply
-not worth dealing with adding the leds-gpio driver to the mix.
-It adds extra complexity and an extra dependency for no reason at all.
-There's no extra functionality to be gained by using it.
+Add hif rx methods in rx path for wcn3990
+target.
 
-- Felix
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/snoc.c | 171 +++++++++++++++++++++++++++++----
+ 1 file changed, 153 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index 899f0a3..6d9ccce 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -26,6 +26,7 @@
+ #include <linux/platform_device.h>
+ #define  WCN3990_CE_ATTR_FLAGS 0
+ #define ATH10K_SNOC_RX_POST_RETRY_MS 50
++#define CE_POLL_PIPE 4
+ 
+ static char *const ce_name[] = {
+ 	"WLAN_CE_0",
+@@ -44,6 +45,9 @@
+ 
+ static void ath10k_snoc_htc_tx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_snoc_htt_tx_cb(struct ath10k_ce_pipe *ce_state);
++static void ath10k_snoc_htc_rx_cb(struct ath10k_ce_pipe *ce_state);
++static void ath10k_snoc_htt_rx_cb(struct ath10k_ce_pipe *ce_state);
++static void ath10k_snoc_htt_htc_rx_cb(struct ath10k_ce_pipe *ce_state);
+ 
+ static const struct ath10k_snoc_drv_priv drv_priv = {
+ 	.hw_rev = ATH10K_HW_WCN3990,
+@@ -53,7 +57,7 @@
+ static struct ce_attr host_ce_config_wlan[] = {
+ 	/* CE0: host->target HTC control streams */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 16,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 0,
+@@ -62,25 +66,25 @@
+ 
+ 	/* CE1: target->host HTT + HTC control */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 0,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 512,
+-		.recv_cb = NULL,
++		.recv_cb = ath10k_snoc_htt_htc_rx_cb,
+ 	},
+ 
+ 	/* CE2: target->host WMI */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 0,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 64,
+-		.recv_cb = NULL,
++		.recv_cb = ath10k_snoc_htc_rx_cb,
+ 	},
+ 
+ 	/* CE3: host->target WMI */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 32,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 0,
+@@ -89,7 +93,7 @@
+ 
+ 	/* CE4: host->target HTT */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
++		.flags = CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
+ 		.src_nentries = 256,
+ 		.src_sz_max = 256,
+ 		.dest_nentries = 0,
+@@ -98,16 +102,16 @@
+ 
+ 	/* CE5: target->host HTT (ipa_uc->target ) */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 0,
+ 		.src_sz_max = 512,
+ 		.dest_nentries = 512,
+-		.recv_cb = NULL,
++		.recv_cb = ath10k_snoc_htt_rx_cb,
+ 	},
+ 
+ 	/* CE6: target autonomous hif_memcpy */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 0,
+ 		.src_sz_max = 0,
+ 		.dest_nentries = 0,
+@@ -115,7 +119,7 @@
+ 
+ 	/* CE7: ce_diag, the Diagnostic Window */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 2,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 2,
+@@ -123,7 +127,7 @@
+ 
+ 	/* CE8: Target to uMC */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 0,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 128,
+@@ -131,29 +135,29 @@
+ 
+ 	/* CE9 target->host HTT */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 0,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 512,
+-		.recv_cb = NULL,
++		.recv_cb = ath10k_snoc_htt_htc_rx_cb,
+ 	},
+ 
+ 	/* CE10: target->host HTT */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 0,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 512,
+-		.recv_cb = NULL,
++		.recv_cb = ath10k_snoc_htt_htc_rx_cb,
+ 	},
+ 
+ 	/* CE11: target -> host PKTLOG */
+ 	{
+-		.flags = WCN3990_CE_ATTR_FLAGS,
++		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 0,
+ 		.src_sz_max = 2048,
+ 		.dest_nentries = 512,
+-		.recv_cb = NULL,
++		.recv_cb = ath10k_snoc_htt_htc_rx_cb,
+ 	},
+ };
+ 
+@@ -362,6 +366,82 @@ static void ath10k_snoc_rx_post(struct ath10k *ar)
+ 		ath10k_snoc_rx_post_pipe(&ar_snoc->pipe_info[i]);
+ }
+ 
++static void ath10k_snoc_process_rx_cb(struct ath10k_ce_pipe *ce_state,
++				      void (*callback)(struct ath10k *ar,
++						       struct sk_buff *skb))
++{
++	struct ath10k *ar = ce_state->ar;
++	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
++	struct ath10k_snoc_pipe *pipe_info =  &ar_snoc->pipe_info[ce_state->id];
++	struct sk_buff *skb;
++	struct sk_buff_head list;
++	void *transfer_context;
++	unsigned int nbytes, max_nbytes;
++
++	__skb_queue_head_init(&list);
++	while (ath10k_ce_completed_recv_next(ce_state, &transfer_context,
++					     &nbytes) == 0) {
++		skb = transfer_context;
++		max_nbytes = skb->len + skb_tailroom(skb);
++		dma_unmap_single(ar->dev, ATH10K_SKB_RXCB(skb)->paddr,
++				 max_nbytes, DMA_FROM_DEVICE);
++
++		if (unlikely(max_nbytes < nbytes)) {
++			ath10k_warn(ar, "rxed more than expected (nbytes %d, max %d)",
++				    nbytes, max_nbytes);
++			dev_kfree_skb_any(skb);
++			continue;
++		}
++
++		skb_put(skb, nbytes);
++		__skb_queue_tail(&list, skb);
++	}
++
++	while ((skb = __skb_dequeue(&list))) {
++		ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc rx ce pipe %d len %d\n",
++			   ce_state->id, skb->len);
++
++		callback(ar, skb);
++	}
++
++	ath10k_snoc_rx_post_pipe(pipe_info);
++}
++
++static void ath10k_snoc_htc_rx_cb(struct ath10k_ce_pipe *ce_state)
++{
++	ath10k_snoc_process_rx_cb(ce_state, ath10k_htc_rx_completion_handler);
++}
++
++static void ath10k_snoc_htt_htc_rx_cb(struct ath10k_ce_pipe *ce_state)
++{
++	/* CE4 polling needs to be done whenever CE pipe which transports
++	 * HTT Rx (target->host) is processed.
++	 */
++	ath10k_ce_per_engine_service(ce_state->ar, CE_POLL_PIPE);
++
++	ath10k_snoc_process_rx_cb(ce_state, ath10k_htc_rx_completion_handler);
++}
++
++static void ath10k_snoc_htt_rx_deliver(struct ath10k *ar, struct sk_buff *skb)
++{
++	skb_pull(skb, sizeof(struct ath10k_htc_hdr));
++	ath10k_htt_t2h_msg_handler(ar, skb);
++}
++
++static void ath10k_snoc_htt_rx_cb(struct ath10k_ce_pipe *ce_state)
++{
++	ath10k_ce_per_engine_service(ce_state->ar, CE_POLL_PIPE);
++	ath10k_snoc_process_rx_cb(ce_state, ath10k_snoc_htt_rx_deliver);
++}
++
++static void ath10k_snoc_rx_replenish_retry(struct timer_list *t)
++{
++	struct ath10k_pci *ar_snoc = from_timer(ar_snoc, t, rx_post_retry);
++	struct ath10k *ar = ar_snoc->ar;
++
++	ath10k_snoc_rx_post(ar);
++}
++
+ static void ath10k_snoc_htc_tx_cb(struct ath10k_ce_pipe *ce_state)
+ {
+ 	struct ath10k *ar = ce_state->ar;
+@@ -620,6 +700,8 @@ static void ath10k_snoc_hif_stop(struct ath10k *ar)
+ {
+ 	ath10k_snoc_irq_disable(ar);
+ 	ath10k_snoc_buffer_cleanup(ar);
++	napi_synchronize(&ar->napi);
++	napi_disable(&ar->napi);
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif stop\n");
+ }
+ 
+@@ -684,6 +766,7 @@ static int ath10k_snoc_hif_power_up(struct ath10k *ar)
+ 		goto err_wlan_enable;
+ 	}
+ 
++	napi_enable(&ar->napi);
+ 	return 0;
+ 
+ err_wlan_enable:
+@@ -711,11 +794,60 @@ static int ath10k_snoc_hif_power_up(struct ath10k *ar)
+ 	.write32	= ath10k_snoc_write32,
+ };
+ 
++int ath10k_snoc_get_ce_id_from_irq(struct ath10k *ar, int irq)
++{
++	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
++	int i;
++
++	for (i = 0; i < CE_COUNT_MAX; i++) {
++		if (ar_snoc->ce_irqs[i].irq_line == irq)
++			return i;
++	}
++	ath10k_err(ar, "No matching CE id for irq %d\n", irq);
++
++	return -EINVAL;
++}
++
+ static irqreturn_t ath10k_snoc_per_engine_handler(int irq, void *arg)
+ {
++	struct ath10k *ar = arg;
++	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
++	int ce_id = ath10k_snoc_get_ce_id_from_irq(ar, irq);
++
++	if (ce_id < 0 || ce_id >= ARRAY_SIZE(ar_snoc->pipe_info)) {
++		ath10k_warn(ar, "unexpected/invalid irq %d ce_id %d\n", irq,
++			    ce_id);
++		return IRQ_HANDLED;
++	}
++
++	ath10k_snoc_irq_disable(ar);
++	napi_schedule(&ar->napi);
++
+ 	return IRQ_HANDLED;
+ }
+ 
++static int ath10k_snoc_napi_poll(struct napi_struct *ctx, int budget)
++{
++	struct ath10k *ar = container_of(ctx, struct ath10k, napi);
++	int done = 0;
++
++	ath10k_ce_per_engine_service_any(ar);
++	done = ath10k_htt_txrx_compl_task(ar, budget);
++
++	if (done < budget) {
++		napi_complete(ctx);
++		ath10k_snoc_irq_enable(ar);
++	}
++
++	return done;
++}
++
++void ath10k_snoc_init_napi(struct ath10k *ar)
++{
++	netif_napi_add(&ar->napi_dev, &ar->napi, ath10k_snoc_napi_poll,
++		       ATH10K_NAPI_BUDGET);
++}
++
+ static int ath10k_snoc_request_irq(struct ath10k *ar)
+ {
+ 	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
+@@ -796,6 +928,7 @@ static int ath10k_snoc_setup_resource(struct ath10k *ar)
+ 	struct ath10k_snoc_pipe *pipe;
+ 	int i, ret;
+ 
++	timer_setup(&ar_snoc->rx_post_retry, ath10k_snoc_rx_replenish_retry, 0);
+ 	spin_lock_init(&ce->ce_lock);
+ 	for (i = 0; i < CE_COUNT; i++) {
+ 		pipe = &ar_snoc->pipe_info[i];
+@@ -812,6 +945,7 @@ static int ath10k_snoc_setup_resource(struct ath10k *ar)
+ 
+ 		pipe->buf_sz = host_ce_config_wlan[i].src_sz_max;
+ 	}
++	ath10k_snoc_init_napi(ar);
+ 
+ 	return 0;
+ }
+@@ -820,6 +954,7 @@ static void ath10k_snoc_release_resource(struct ath10k *ar)
+ {
+ 	int i;
+ 
++	netif_napi_del(&ar->napi);
+ 	for (i = 0; i < CE_COUNT; i++)
+ 		ath10k_ce_free_pipe(ar, i);
+ }
+-- 
+1.9.1
