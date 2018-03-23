@@ -1,62 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36934 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752945AbeC1OMH (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:34176 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751777AbeCWPJQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 10:12:07 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Mar 2018 17:11:45 +0300
-Message-Id: <20180328141157.5427-3-luca@coelho.fi> (sfid-20180328_161213_899795_F2E219AC)
-In-Reply-To: <20180328141157.5427-1-luca@coelho.fi>
-References: <20180328141157.5427-1-luca@coelho.fi>
-Subject: [PATCH 02/14] iwlwifi: mvm: take RCU lock before dereferencing
+        Fri, 23 Mar 2018 11:09:16 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 2/9] staging: wilc1000: avoid 'NULL' pointer access in wilc_network_info_received()
+Date: Fri, 23 Mar 2018 20:38:51 +0530
+Message-ID: <1521817738-7557-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180323_160919_473710_D1AD75FA)
+In-Reply-To: <1521817738-7557-1-git-send-email-ajay.kathat@microchip.com>
+References: <1521817738-7557-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Added 'NULL' check before accessing the allocated memory. Free up the
+memory incase of failure to enqueue the command. Used kmemdup instead of
+kmalloc & memcpy.
 
-RCU isn't properly locked.
-
-Fixes: 46d372af9935 ("iwlwifi: mvm: rs: new rate scale API - add FW notifications")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-index 55d1274c6092..fb5745660509 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-@@ -234,13 +234,15 @@ void iwl_mvm_tlc_update_notif(struct iwl_mvm *mvm, struct iwl_rx_packet *pkt)
- 	struct iwl_mvm_sta *mvmsta;
- 	struct iwl_lq_sta_rs_fw *lq_sta;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index a13998d..70c10bc 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3453,12 +3453,15 @@ void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32 length)
+ 	msg.vif = vif;
  
-+	rcu_read_lock();
-+
- 	notif = (void *)pkt->data;
- 	mvmsta = iwl_mvm_sta_from_staid_rcu(mvm, notif->sta_id);
+ 	msg.body.net_info.len = length;
+-	msg.body.net_info.buffer = kmalloc(length, GFP_KERNEL);
+-	memcpy(msg.body.net_info.buffer, buffer, length);
++	msg.body.net_info.buffer = kmemdup(buffer, length, GFP_KERNEL);
++	if (!msg.body.net_info.buffer)
++		return;
  
- 	if (!mvmsta) {
- 		IWL_ERR(mvm, "Invalid sta id (%d) in FW TLC notification\n",
- 			notif->sta_id);
--		return;
-+		goto out;
- 	}
- 
- 	lq_sta = &mvmsta->lq_sta.rs_fw;
-@@ -251,6 +253,8 @@ void iwl_mvm_tlc_update_notif(struct iwl_mvm *mvm, struct iwl_rx_packet *pkt)
- 		IWL_DEBUG_RATE(mvm, "new rate_n_flags: 0x%X\n",
- 			       lq_sta->last_rate_n_flags);
- 	}
-+out:
-+	rcu_read_unlock();
+ 	result = wilc_enqueue_cmd(&msg);
+-	if (result)
++	if (result) {
+ 		netdev_err(vif->ndev, "message parameters (%d)\n", result);
++		kfree(msg.body.net_info.buffer);
++	}
  }
  
- void rs_fw_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length)
 -- 
-2.16.2
+2.7.4
