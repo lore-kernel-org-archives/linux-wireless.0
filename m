@@ -1,120 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50108 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751194AbeCJOPQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Mar 2018 09:15:16 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
-        kubakici@wp.pl, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v3 02/20] test_firmware: enable custom fallback testing on limited kernel configs
-Date: Sat, 10 Mar 2018 06:14:43 -0800
-Message-Id: <20180310141501.2214-3-mcgrof@kernel.org> (sfid-20180310_152151_921292_BE2A261B)
-In-Reply-To: <20180310141501.2214-1-mcgrof@kernel.org>
-References: <20180310141501.2214-1-mcgrof@kernel.org>
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:34175 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751923AbeCXNpN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 24 Mar 2018 09:45:13 -0400
+Received: by mail-qt0-f196.google.com with SMTP id l25so15410731qtj.1
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Mar 2018 06:45:12 -0700 (PDT)
+From: Fabio Estevam <festevam@gmail.com>
+To: sameo@linux.intel.com
+Cc: linux-wireless@vger.kernel.org, christophe.ricard@gmail.com,
+        linux-nfc@lists.01.org, Fabio Estevam <fabio.estevam@nxp.com>
+Subject: [PATCH 2/2] nfc: st21nfca: Remove unnecessary devm_kzalloc() cast
+Date: Sat, 24 Mar 2018 10:44:59 -0300
+Message-Id: <1521899099-23634-2-git-send-email-festevam@gmail.com> (sfid-20180324_144516_841626_875E1145)
+In-Reply-To: <1521899099-23634-1-git-send-email-festevam@gmail.com>
+References: <1521899099-23634-1-git-send-email-festevam@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a kernel is not built with:
+From: Fabio Estevam <fabio.estevam@nxp.com>
 
-CONFIG_HAS_FW_LOADER_USER_HELPER_FALLBACK=y
+There is no need to use cast for the returned value
+from memory allocation functions, so remove the unnecessary cast.
 
-We don't currently enable testing fw_fallback.sh. For kernels that
-still enable the fallback mechanism, its possible to use the async
-request firmware API call request_firmware_nowait() using the custom
-interface to use the fallback mechanism, so we should be able to test
-this but we currently cannot.
+Detected via Coccinelle script:
+scripts/coccinelle/api/alloc/alloc_cast.cocci.
 
-We can enable testing without CONFIG_HAS_FW_LOADER_USER_HELPER_FALLBACK=y
-by relying on /proc/config.gz (CONFIG_IKCONFIG_PROC), if present. If you
-don't have this we'll have no option but to rely on old heuristics for now.
-
-We stuff the new kconfig_has() helper into our shared library as we'll
-later expando on its use elsewhere.
-
-Acked-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
 ---
- tools/testing/selftests/firmware/config         |  4 ++++
- tools/testing/selftests/firmware/fw_fallback.sh |  6 +++++-
- tools/testing/selftests/firmware/fw_lib.sh      | 24 ++++++++++++++++++++++++
- 3 files changed, 33 insertions(+), 1 deletion(-)
+ drivers/nfc/st21nfca/se.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/tools/testing/selftests/firmware/config b/tools/testing/selftests/firmware/config
-index c8137f70e291..bf634dda0720 100644
---- a/tools/testing/selftests/firmware/config
-+++ b/tools/testing/selftests/firmware/config
-@@ -1 +1,5 @@
- CONFIG_TEST_FIRMWARE=y
-+CONFIG_FW_LOADER=y
-+CONFIG_FW_LOADER_USER_HELPER=y
-+CONFIG_IKCONFIG=y
-+CONFIG_IKCONFIG_PROC=y
-diff --git a/tools/testing/selftests/firmware/fw_fallback.sh b/tools/testing/selftests/firmware/fw_fallback.sh
-index 755147a8c967..bf850050e5e9 100755
---- a/tools/testing/selftests/firmware/fw_fallback.sh
-+++ b/tools/testing/selftests/firmware/fw_fallback.sh
-@@ -15,6 +15,7 @@ check_mods
- # These days no one enables CONFIG_FW_LOADER_USER_HELPER so check for that
- # as an indicator for CONFIG_FW_LOADER_USER_HELPER.
- HAS_FW_LOADER_USER_HELPER=$(if [ -d /sys/class/firmware/ ]; then echo yes; else echo no; fi)
-+HAS_FW_LOADER_USER_HELPER_FALLBACK=$(kconfig_has CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y)
+diff --git a/drivers/nfc/st21nfca/se.c b/drivers/nfc/st21nfca/se.c
+index fd967a3..5b63549 100644
+--- a/drivers/nfc/st21nfca/se.c
++++ b/drivers/nfc/st21nfca/se.c
+@@ -326,8 +326,7 @@ int st21nfca_connectivity_event_received(struct nfc_hci_dev *hdev, u8 host,
+ 		    skb->data[0] != NFC_EVT_TRANSACTION_AID_TAG)
+ 			return -EPROTO;
  
- if [ "$HAS_FW_LOADER_USER_HELPER" = "yes" ]; then
-        OLD_TIMEOUT=$(cat /sys/class/firmware/timeout)
-@@ -287,7 +288,10 @@ run_sysfs_custom_load_tests()
- 	fi
- }
+-		transaction = (struct nfc_evt_transaction *)devm_kzalloc(dev,
+-						   skb->len - 2, GFP_KERNEL);
++		transaction = devm_kzalloc(dev, skb->len - 2, GFP_KERNEL);
+ 		if (!transaction)
+ 			return -ENOMEM;
  
--run_sysfs_main_tests
-+if [ "$HAS_FW_LOADER_USER_HELPER_FALLBACK" = "yes" ]; then
-+	run_sysfs_main_tests
-+fi
-+
- run_sysfs_custom_load_tests
- 
- exit 0
-diff --git a/tools/testing/selftests/firmware/fw_lib.sh b/tools/testing/selftests/firmware/fw_lib.sh
-index c14bbca7ecf9..467567c758b9 100755
---- a/tools/testing/selftests/firmware/fw_lib.sh
-+++ b/tools/testing/selftests/firmware/fw_lib.sh
-@@ -42,3 +42,27 @@ check_mods()
- 		fi
- 	fi
- }
-+
-+kconfig_has()
-+{
-+	if [ -f $PROC_CONFIG ]; then
-+		if zgrep -q $1 $PROC_CONFIG 2>/dev/null; then
-+			echo "yes"
-+		else
-+			echo "no"
-+		fi
-+	else
-+		# We currently don't have easy heuristics to infer this
-+		# so best we can do is just try to use the kernel assuming
-+		# you had enabled it. This matches the old behaviour.
-+		if [ "$1" = "CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y" ]; then
-+			echo "yes"
-+		elif [ "$1" = "CONFIG_FW_LOADER_USER_HELPER=y" ]; then
-+			if [ -d /sys/class/firmware/ ]; then
-+				echo yes
-+			else
-+				echo no
-+			fi
-+		fi
-+	fi
-+}
 -- 
-2.16.2
+2.7.4
