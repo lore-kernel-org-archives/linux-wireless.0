@@ -1,73 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:46317 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751965AbeCaOCL (ORCPT
+Received: from 7.mo69.mail-out.ovh.net ([46.105.50.32]:33193 "EHLO
+        7.mo69.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751843AbeCXLHD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 31 Mar 2018 10:02:11 -0400
-From: Pkshih <pkshih@realtek.com>
-To: "huxm@marvell.com" <huxm@marvell.com>,
-        "gbhat@marvell.com" <gbhat@marvell.com>,
-        "jussi.kivilinna@iki.fi" <jussi.kivilinna@iki.fi>,
-        "nishants@marvell.com" <nishants@marvell.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "joe@perches.com" <joe@perches.com>,
-        "amitkarwar@gmail.com" <amitkarwar@gmail.com>,
-        "chunkeey@googlemail.com" <chunkeey@googlemail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
-Subject: Re: [PATCH 06/12] wireless: Convert simple uses of a static const Ethernet broadcast address
-Date: Sat, 31 Mar 2018 14:01:12 +0000
-Message-ID: <1522504872.1910.17.camel@realtek.com> (sfid-20180331_160232_149143_0CB25E18)
-References: <cover.1522479607.git.joe@perches.com>
-         <79196f134a513d50968e8e208a0e56b3c0236ee3.1522479607.git.joe@perches.com>
-In-Reply-To: <79196f134a513d50968e8e208a0e56b3c0236ee3.1522479607.git.joe@perches.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Sat, 24 Mar 2018 07:07:03 -0400
+Received: from player687.ha.ovh.net (unknown [10.109.120.203])
+        by mo69.mail-out.ovh.net (Postfix) with ESMTP id D11609966
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Mar 2018 11:29:46 +0100 (CET)
+From: Alexander Wetzel <alexander.wetzel@web.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Alexander Wetzel <alexander.wetzel@web.de>
+Subject: [PATCH] mac80211: Fix wlan freezes under load at rekey
+Date: Sat, 24 Mar 2018 11:29:21 +0100
+Message-Id: <20180324102921.9814-1-alexander.wetzel@web.de> (sfid-20180324_120707_602854_78A3B9EA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gU2F0LCAyMDE4LTAzLTMxIGF0IDAwOjA1IC0wNzAwLCBKb2UgUGVyY2hlcyB3cm90ZToNCj4g
-VXNlIHRoZSBuZXcgZXRoZXJfYnJvYWRjYXN0X2FkZHIgZ2xvYmFsIGluc3RlYWQgdG8gc2F2ZSBz
-b21lIG9iamVjdCBjb2RlLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogSm9lIFBlcmNoZXMgPGpvZUBw
-ZXJjaGVzLmNvbT4NCj4gLS0tDQo+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3MvYWRtdGVrL2FkbTgy
-MTEuY8KgwqDCoMKgwqDCoMKgwqDCoMKgwqB8IDMgKy0tDQo+IMKgZHJpdmVycy9uZXQvd2lyZWxl
-c3MvYXRoL2Nhcmw5MTcwL21hYy5jwqDCoMKgwqDCoMKgwqDCoMKgfCA0ICstLS0NCj4gwqBkcml2
-ZXJzL25ldC93aXJlbGVzcy9icm9hZGNvbS9iNDMvbWFpbi5jwqDCoMKgwqDCoMKgwqDCoHwgMyAr
-LS0NCj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvY2ZnODAyMTEuYyB8
-IDMgKy0tDQo+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2NvcmUuY8Kg
-wqDCoMKgwqB8IDUgKystLS0NCj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9ybmRpc193bGFuLmPC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqB8IDYgKy0tLS0tDQo+IMKgZHJpdmVycy9uZXQv
-d2lyZWxlc3MvdGkvd2wxMjUxL21haW4uY8KgwqDCoMKgwqDCoMKgwqDCoMKgwqB8IDUgKy0tLS0N
-Cj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy90aS93bGNvcmUvbWFpbi5jwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoHwgNSArLS0tLQ0KPiDCoDggZmlsZXMgY2hhbmdlZCwgOSBpbnNlcnRpb25zKCspLCAy
-NSBkZWxldGlvbnMoLSkNCj4gDQo+IMKgDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJl
-bGVzcy9yZWFsdGVrL3J0bHdpZmkvY29yZS5jDQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVh
-bHRlay9ydGx3aWZpL2NvcmUuYw0KPiBpbmRleCBjZmVhNTdlZmE3ZjQuLjhjNTM0YTkzZGFkNSAx
-MDA2NDQNCj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2NvcmUu
-Yw0KPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvY29yZS5jDQo+
-IEBAIC0xNTI3LDcgKzE1MjcsNiBAQCBzdGF0aWMgaW50IHJ0bF9vcF9zZXRfa2V5KHN0cnVjdCBp
-ZWVlODAyMTFfaHcgKmh3LCBlbnVtIHNldF9rZXlfY21kIGNtZCwNCj4gwqAJYm9vbCB3ZXBfb25s
-eSA9IGZhbHNlOw0KPiDCoAlpbnQgZXJyID0gMDsNCj4gwqAJdTggbWFjX2FkZHJbRVRIX0FMRU5d
-Ow0KPiAtCXU4IGJjYXN0X2FkZHJbRVRIX0FMRU5dID0geyAweGZmLCAweGZmLCAweGZmLCAweGZm
-LCAweGZmLCAweGZmIH07DQo+IMKgDQo+IMKgCXJ0bHByaXYtPmJ0Y29leGlzdC5idGNfaW5mby5p
-bl80d2F5ID0gZmFsc2U7DQo+IMKgDQo+IEBAIC0xNTQ0LDcgKzE1NDMsNyBAQCBzdGF0aWMgaW50
-IHJ0bF9vcF9zZXRfa2V5KHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3LCBlbnVtIHNldF9rZXlfY21k
-IGNtZCwNCj4gwqAJUlRfVFJBQ0UocnRscHJpdiwgQ09NUF9TRUMsIERCR19ETUVTRywNCj4gwqAJ
-CcKgIiVzIGhhcmR3YXJlIGJhc2VkIGVuY3J5cHRpb24gZm9yIGtleWlkeDogJWQsIG1hYzogJXBN
-XG4iLA0KPiDCoAkJwqDCoGNtZCA9PSBTRVRfS0VZID8gIlVzaW5nIiA6ICJEaXNhYmxpbmciLCBr
-ZXktPmtleWlkeCwNCj4gLQkJwqDCoHN0YSA/IHN0YS0+YWRkciA6IGJjYXN0X2FkZHIpOw0KPiAr
-CQnCoMKgc3RhID8gc3RhLT5hZGRyIDogZXRoZXJfYnJvYWRjYXN0X2FkZHIpOw0KPiDCoAlydGxw
-cml2LT5zZWMuYmVpbmdfc2V0a2V5ID0gdHJ1ZTsNCj4gwqAJcnRsX2lwc19uaWNfb24oaHcpOw0K
-PiDCoAltdXRleF9sb2NrKCZydGxwcml2LT5sb2Nrcy5jb25mX211dGV4KTsNCj4gQEAgLTE2NDks
-NyArMTY0OCw3IEBAIHN0YXRpYyBpbnQgcnRsX29wX3NldF9rZXkoc3RydWN0IGllZWU4MDIxMV9o
-dyAqaHcsIGVudW0gc2V0X2tleV9jbWQgY21kLA0KPiDCoAkJCW1lbWNweShydGxwcml2LT5zZWMu
-a2V5X2J1ZltrZXlfaWR4XSwNCj4gwqAJCQnCoMKgwqDCoMKgwqDCoGtleS0+a2V5LCBrZXktPmtl
-eWxlbik7DQo+IMKgCQkJcnRscHJpdi0+c2VjLmtleV9sZW5ba2V5X2lkeF0gPSBrZXktPmtleWxl
-bjsNCj4gLQkJCW1lbWNweShtYWNfYWRkciwgYmNhc3RfYWRkciwgRVRIX0FMRU4pOw0KPiArCQkJ
-bWVtY3B5KG1hY19hZGRyLCBldGhlcl9icm9hZGNhc3RfYWRkciwgRVRIX0FMRU4pOw0KDQpVc2XC
-oGV0aGVyX2FkZHJfY29weShtYWNfYWRkciwgZXRoZXJfYnJvYWRjYXN0X2FkZHIpID8NCg0KDQo+
-IMKgCQl9IGVsc2UgewkvKiBwYWlyd2lzZSBrZXkgKi8NCj4gwqAJCQlSVF9UUkFDRShydGxwcml2
-LCBDT01QX1NFQywgREJHX0RNRVNHLA0KPiDCoAkJCQnCoCJzZXQgcGFpcndpc2Uga2V5XG4iKTsN
-Cg==
+Rekeying a pairwise key with encryption offload and only keyid 0 has two
+potential races which can freeze the wlan conection till rekeyed again:
+
+ 1) For incomming packets:
+    If the local STA installs the key prior to the remote STA we still
+    have the old key active in the hardware for a short time after
+    mac80211 switched to the new key.
+    The card can still hand over packets decoded with the old key to
+    mac80211, bumping the new PN (IV) value to an incorrect high number and
+    tricking the local replay detection to drop all packets really sent
+    with the new key.
+
+ 2) For outgoing packets:
+    If mac80211 is providing the PN (IV) and hands over the cleartext
+    packets for encryption to the hardware immediately prior to a key
+    change the driver/card may process the queued packets after
+    switching to the new key.
+    This will immediatelly bump the PN (IV) value on the remote STA to
+    an incorrect high number, also freezing the connection.
+
+Both issues can be prevented by deleting the key from the hardware prior
+to switching to the new key in mac80211, falling back to software
+encryption/decryption till the switch to the new key is completed.
+
+Signed-off-by: Alexander Wetzel <alexander.wetzel@web.de>
+---
+ net/mac80211/key.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index aee05ec3f7ea..266ea0b507e7 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -332,10 +332,15 @@ static void ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
+ 
+ 	WARN_ON(new && old && new->conf.keyidx != old->conf.keyidx);
+ 
+-	if (old)
++	if (old) {
+ 		idx = old->conf.keyidx;
+-	else
++		/* Make sure the card can't encrypt/decrypt packets with
++		 * the old key prior to switching to new key in mac80211.
++		 */
++		ieee80211_key_disable_hw_accel(old);
++	} else {
+ 		idx = new->conf.keyidx;
++	}
+ 
+ 	if (sta) {
+ 		if (pairwise) {
+-- 
+2.16.2
