@@ -1,63 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:44452 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752853AbeC1LUY (ORCPT
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:39164 "EHLO
+        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752801AbeCXVXG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 07:20:24 -0400
-Date: Wed, 28 Mar 2018 16:50:14 +0530
-From: Himanshu Jha <himanshujha199640@gmail.com>
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com
-Cc: kvalo@codeaurora.org, johannes.berg@intel.com,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: Passing uninitialised local variable
-Message-ID: <20180328112014.GA11484@himanshu-Vostro-3559> (sfid-20180328_132033_984311_221AF2AC)
+        Sat, 24 Mar 2018 17:23:06 -0400
+Subject: Re: [PATCH 1/3] ieee80211: Replace bit shifts with the BIT() macro
+ for WLAN_CAPABILITY_*.
+To: Quytelda Kahja <quytelda@tamalin.org>, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20180324041027.6498-1-quytelda@tamalin.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <e31eb13b-598b-e7c7-607b-c98664818563@lwfinger.net> (sfid-20180324_222324_502645_AA9620DF)
+Date: Sat, 24 Mar 2018 16:23:02 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180324041027.6498-1-quytelda@tamalin.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello everyone,
+On 03/23/2018 11:10 PM, Quytelda Kahja wrote:
+> It is neater and more consistent with the rest of the document to use the
+> BIT() macro from 'linux/bitops.h' to define the WLAN_CAPABILITY_*
+> bitmasks.  In the case of WLAN_CAPABILITY_DMG_TYPE_{IBSS, PBSS, AP},
+> bitshifting integers by 0 does nothing, so there is no reason to do it in
+> the code; replace these values with plain integers.
+> 
+> Signed-off-by: Quytelda Kahja <quytelda@tamalin.org>
 
+In the commit message for all of these, what is the "document" to which you refer?
 
-I recently found that a local variable in passed uninitialised to the
-function at 
+I'm not quite sure why you split these changes into 3 parts, but I guess that is OK.
 
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:2950
-
-                u32 var; 
-                err = brcmf_fil_iovar_int_get(ifp, "dtim_assoc", &var);
-                if (err) {
-                        brcmf_err("wl dtim_assoc failed (%d)\n", err);
-                        goto update_bss_info_out;
-                }
-                dtim_period = (u8)var;
-
-
-Now, the brcmf_fil_iovar_int_get() is defined as:
-
-s32
-brcmf_fil_iovar_int_get(struct brcmf_if *ifp, char *name, u32 *data)
-{
-        __le32 data_le = cpu_to_le32(*data);
-        s32 err;
-
-        err = brcmf_fil_iovar_data_get(ifp, name, &data_le, sizeof(data_le));
-        if (err == 0)
-                *data = le32_to_cpu(data_le);
-        return err;
-}
-
-We can cleary see that 'var' in used uninitialised in the very first line
-which is an undefined behavior.
-
-So, what could be a possible fix for the above ?
-
-I'm not sure initialising 'var' to 0 would be the correct solution.
-
--- 
-Thanks
-Himanshu Jha
+Larry
