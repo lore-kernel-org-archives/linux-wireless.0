@@ -1,67 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48438 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752118AbeCCTkj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Mar 2018 14:40:39 -0500
-From: Jouni Malinen <jouni@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Amar Singhal <asinghal@codeaurora.org>,
-        Kiran Kumar Lokere <klokere@codeaurora.org>,
-        Jouni Malinen <jouni@codeaurora.org>
-Subject: [PATCH 2/2] cfg80211: Modify wiphy registration semantics for self managed hints
-Date: Sat,  3 Mar 2018 21:40:21 +0200
-Message-Id: <1520106021-16836-2-git-send-email-jouni@codeaurora.org> (sfid-20180303_204115_173622_33C29487)
-In-Reply-To: <1520106021-16836-1-git-send-email-jouni@codeaurora.org>
-References: <1520106021-16836-1-git-send-email-jouni@codeaurora.org>
+Received: from mail.toke.dk ([52.28.52.200]:46463 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751755AbeCXKdl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 24 Mar 2018 06:33:41 -0400
+Date: Sat, 24 Mar 2018 10:33:35 +0000
+In-Reply-To: <155ca60c-48eb-5e64-b514-d9d5556b405c@candelatech.com>
+References: <20180202103645.12215-1-toke@toke.dk> <155ca60c-48eb-5e64-b514-d9d5556b405c@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
+Subject: Re: [PATCH] ath9k: Protect queue draining by rcu_read_lock()
+To: Ben Greear <greearb@candelatech.com>,
+        linux-wireless@vger.kernel.org
+CC: stable@vger.kernel.org
+From: =?ISO-8859-1?Q?Toke_H=F8iland-J=F8rgensen?= <toke@toke.dk>
+Message-ID: <AB398EDA-5C30-4FB5-8040-4961954E2127@toke.dk> (sfid-20180324_113344_969426_B2E93A6C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amar Singhal <asinghal@codeaurora.org>
 
-Call regulatory notifier conditionally for self managed hints during
-wiphy registration. Call when regulatory hint source is
-NL80211_REGDOM_SET_BY_USER and sub-type is
-NL80211_USER_REG_HINT_CELL_BASE. Call the notifier with last
-reg-domain request. This is needed to allow trusted regulatory domain
-changes to be processed by the driver.
 
-Signed-off-by: Amar Singhal <asinghal@codeaurora.org>
-Signed-off-by: Kiran Kumar Lokere <klokere@codeaurora.org>
-Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
----
- net/wireless/reg.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+On 24 March 2018 00:00:39 GMT, Ben Greear <greearb@candelatech=2Ecom> wrot=
+e:
+>On 02/02/2018 02:36 AM, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> When ath9k was switched over to use the mac80211 intermediate queues,
+>> node cleanup now drains the mac80211 queues=2E However, this call path
+>is
+>> not protected by rcu_read_lock() as it was previously entirely
+>internal
+>> to the driver which uses its own locking=2E
+>
+>As far as I can tell, this is not currently in Linus' tree=2E
+>
+>Was this dropped on purpose?
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 4f25a11b..48eaa8d 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -3518,15 +3518,21 @@ void wiphy_regulatory_register(struct wiphy *wiphy)
- {
- 	struct regulatory_request *lr;
- 
--	/* self-managed devices ignore external hints */
--	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
-+	lr = get_last_request();
-+
-+	/* self-managed devices ignore beacon hints and 11d IE */
-+	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
- 		wiphy->regulatory_flags |= REGULATORY_DISABLE_BEACON_HINTS |
- 					   REGULATORY_COUNTRY_IE_IGNORE;
- 
-+		if (lr->initiator == NL80211_REGDOM_SET_BY_USER &&
-+		    lr->user_reg_hint_type == NL80211_USER_REG_HINT_CELL_BASE)
-+			reg_call_notifier(wiphy, lr);
-+	}
-+
- 	if (!reg_dev_ignore_cell_hint(wiphy))
- 		reg_num_devs_support_basehint++;
- 
--	lr = get_last_request();
- 	wiphy_update_regulatory(wiphy, lr->initiator);
- 	wiphy_all_share_dfs_chan_state(wiphy);
- }
--- 
-2.7.4
+It was merged quite recently, but hasn't propagated yet:
+
+https://git=2Ekernel=2Eorg/pub/scm/linux/kernel/git/kvalo/ath=2Egit/commit=
+/?h=3Dath-next
+
+-Toke
