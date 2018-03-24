@@ -1,115 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:46461 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751822AbeCHJCT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Mar 2018 04:02:19 -0500
-Date: Thu, 8 Mar 2018 10:02:16 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        "open list:LED SUBSYSTEM" <linux-leds@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>
-Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for
- various chipsets
-Message-ID: <20180308090216.GC17761@amd> (sfid-20180308_100232_346701_AC3DF8F5)
-References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
- <CACna6rzD6z3DC6yjMCgBxgxx+DF+GGu69Ot5QA6xpJ41Ewb2=A@mail.gmail.com>
- <82d8ac0c-b391-6099-4c7f-991cc35445aa@dd-wrt.com>
- <20180302090312.GA30267@amd>
- <e77d25d4-a824-380a-c51a-e81175ba6205@dd-wrt.com>
- <CACna6rys85VEkzRGDVUAkBy7KgHS2y0DET7YvedboX-YEQHrkg@mail.gmail.com>
- <890a4dcc-f549-6487-2ce5-3b62874cd266@dd-wrt.com>
+Received: from mout.perfora.net ([74.208.4.197]:58447 "EHLO mout.perfora.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752174AbeCXXC1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 24 Mar 2018 19:02:27 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="B4IIlcmfBL/1gGOG"
-In-Reply-To: <890a4dcc-f549-6487-2ce5-3b62874cd266@dd-wrt.com>
+In-Reply-To: <e31eb13b-598b-e7c7-607b-c98664818563@lwfinger.net>
+References: <20180324041027.6498-1-quytelda@tamalin.org> <e31eb13b-598b-e7c7-607b-c98664818563@lwfinger.net>
+From: Quytelda Kahja <quytelda@tamalin.org>
+Date: Sat, 24 Mar 2018 16:02:24 -0700
+Message-ID: <CAFLvi20sgO4aKTLYutvwUr5aN9TLaqLWVghC9Y9MrKZvcixAYA@mail.gmail.com> (sfid-20180325_000243_986718_CE4BD109)
+Subject: Re: [PATCH 1/3] ieee80211: Replace bit shifts with the BIT() macro
+ for WLAN_CAPABILITY_*.
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The "document" refers to the file in which the changes were made
+('include/linux/ieee80211.h').
 
---B4IIlcmfBL/1gGOG
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I tend to try to split my commits into the smallest logically related
+changes possible, hence the three patch series.  This particular case
+may be a little on the extreme side, but if the maintainer desires,
+they can always squash them together or ask me to resubmit as one
+patch.
 
-On Wed 2018-03-07 18:54:41, Sebastian Gottschall wrote:
-> Am 07.03.2018 um 17:22 schrieb Rafa=C5=82 Mi=C5=82ecki:
-> >On 2 March 2018 at 10:22, Sebastian Gottschall <s.gottschall@dd-wrt.com>=
- wrote:
-> >>>>leds-gpio is crap and limited. you can just register one platform dat=
-a at
-> >>>>kernel runtime since its identified by its object name "led-gpio" but=
- the
-> >>>>kernel forbidds to register 2 platform datas with the same name
-> >>>>consider the ar71xx devices with qca988x wifi chipsets. they all have
-> >>>>already a led platform data registered
-> >>>>at boottime. a second can't be registered anymore so gpio_led is usel=
-ess
-> >>>>at
-> >>>>all for most developers on such platforms. its mainly used for early
-> >>>>kernel
-> >>>>platform data initialisation for system leds.
-> >>>If leds-gpio has limitations, please fix those, rather then
-> >>>introducing duplicated code.
-> >>there is no duplicated code introduced and there is no solution for it.
-> >>consider that all wifi drivers with softled support
-> >>are going that way with registering a own led driver. see ath9k for
-> >>instance. gpio-led cannot be used for it and there is no way to
-> >>support multiple platform datas with the same name. its a kernel limita=
-tion
-> >I just reviewed some mips arch patch adding support for more LEDs for
-> >selected devices:
-> >[PATCH] MIPS: BCM47XX: Add Luxul XAP1500/XWR1750 WiFi LEDs
-> >https://patchwork.linux-mips.org/patch/18681/
-> >
-> >It seems to be simply adding another call to the
-> >gpio_led_register_device(). It seems to me you can call that function
-> >multiple times and register multiple structs with LEDs.
-> >
-> >Isn't all you need something like this?
-> >
-> >static const struct gpio_led ath10k_leds[] =3D {
-> >         {
-> >                 .name =3D "ath10k:color:function",
-> >                 .active_low =3D 1,
-> >                 .default_state =3D LEDS_GPIO_DEFSTATE_KEEP,
-> >         }
-> >};
-> >
-> >static struct gpio_led_platform_data bcm47xx_leds_pdata_extra =3D {
-> >         leds =3D ath10k_leds;
-> >         num_leds =3D ARRAY_SIZE(ath10k_leds);
-> >};
-> >
-> >ath10k_leds.gpio =3D ar->hw_params.led_pin;
-> >gpio_led_register_device(0, &ath10k_leds);
-> the problem are other architectures which have already registered gpio_led
-> at system start like ar71xx
-> you cannot register a second one. so a independend led driver is a
-> requirement for direct control
-
-If the limitation indeed exists, please fix the limitation rather than
-working around it in each and every driver.
-									Pavel
-
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---B4IIlcmfBL/1gGOG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlqg/BgACgkQMOfwapXb+vKFTACfdAlCxTIZdugucfyiKtdULBKM
-hNgAniR8fH5pWZJQ21aAEP3MrAQSszOO
-=A/Xe
------END PGP SIGNATURE-----
-
---B4IIlcmfBL/1gGOG--
+On 3/24/18, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 03/23/2018 11:10 PM, Quytelda Kahja wrote:
+>> It is neater and more consistent with the rest of the document to use the
+>> BIT() macro from 'linux/bitops.h' to define the WLAN_CAPABILITY_*
+>> bitmasks.  In the case of WLAN_CAPABILITY_DMG_TYPE_{IBSS, PBSS, AP},
+>> bitshifting integers by 0 does nothing, so there is no reason to do it in
+>> the code; replace these values with plain integers.
+>>
+>> Signed-off-by: Quytelda Kahja <quytelda@tamalin.org>
+>
+> In the commit message for all of these, what is the "document" to which you
+> refer?
+>
+> I'm not quite sure why you split these changes into 3 parts, but I guess
+> that is OK.
+>
+> Larry
+>
+-- 
+Thank you,
+Quytelda Kahja
