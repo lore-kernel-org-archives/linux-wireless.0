@@ -1,121 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:59372 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751531AbeCTPjf (ORCPT
+Received: from 1.mo69.mail-out.ovh.net ([178.33.251.173]:56619 "EHLO
+        1.mo69.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751049AbeCYUB7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Mar 2018 11:39:35 -0400
-Subject: Re: [RFC] ethtool: Support ETHTOOL_GSTATS2 command.
-To: Michal Kubecek <mkubecek@suse.cz>
-References: <1520452289-14172-1-git-send-email-greearb@candelatech.com>
- <20180320103747.7kcfdu4yzof6bwxw@unicorn.suse.cz>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        netdev@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <37830d46-762b-2a92-4506-5792a65d2ebd@candelatech.com> (sfid-20180320_163946_668037_E0BA11C9)
-Date: Tue, 20 Mar 2018 08:39:33 -0700
+        Sun, 25 Mar 2018 16:01:59 -0400
+Received: from player763.ha.ovh.net (unknown [10.109.120.149])
+        by mo69.mail-out.ovh.net (Postfix) with ESMTP id E42B89B93
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Mar 2018 21:45:18 +0200 (CEST)
+From: Alexander Wetzel <alexander.wetzel@web.de>
+Subject: Re: [PATCH] mac80211: Fix wlan freezes under load at rekey
+To: Ben Greear <greearb@candelatech.com>, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+References: <20180324102921.9814-1-alexander.wetzel@web.de>
+ <7bbb4246-324e-1d6d-245f-2642badb034d@candelatech.com>
+Message-ID: <27aca99e-a521-be4a-9fd4-51c557f9777d@web.de> (sfid-20180325_220206_212068_56669A68)
+Date: Sun, 25 Mar 2018 21:45:10 +0200
 MIME-Version: 1.0
-In-Reply-To: <20180320103747.7kcfdu4yzof6bwxw@unicorn.suse.cz>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <7bbb4246-324e-1d6d-245f-2642badb034d@candelatech.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/20/2018 03:37 AM, Michal Kubecek wrote:
-> On Wed, Mar 07, 2018 at 11:51:29AM -0800, greearb@candelatech.com wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> This is similar to ETHTOOL_GSTATS, but it allows you to specify
->> a 'level'.  This level can be used by the driver to decrease the
->> amount of stats refreshed.  In particular, this helps with ath10k
->> since getting the firmware stats can be slow.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->> ---
->>
->> NOTE:  I know to make it upstream I would need to split the patch and
->> remove the #define for 'backporting' that I added.  But, is the
->> feature in general wanted?  If so, I'll do the patch split and
->> other tweaks that might be suggested.
+
+> What will happen to drivers like ath10k that cannot do software
+encrypt/decrypt?
 >
-> I'm not familiar enough with the technical background of stats
-> collecting to comment on usefulness and desirability of this feature.
-> Adding a new command just to add a numeric parameter certainly doesn't
-> feel right but it's how the ioctl interface works. I take it as
-> a reminder to find some time to get back to the netlink interface.
->
->> diff --git a/net/core/ethtool.c b/net/core/ethtool.c
->> index 674b6c9..d3b709f 100644
->> --- a/net/core/ethtool.c
->> +++ b/net/core/ethtool.c
->> @@ -1947,6 +1947,54 @@ static int ethtool_get_stats(struct net_device *dev, void __user *useraddr)
->>  	return ret;
->>  }
->>
->> +static int ethtool_get_stats2(struct net_device *dev, void __user *useraddr)
->> +{
->> +	struct ethtool_stats stats;
->> +	const struct ethtool_ops *ops = dev->ethtool_ops;
->> +	u64 *data;
->> +	int ret, n_stats;
->> +	u32 stats_level = 0;
->> +
->> +	if (!ops->get_ethtool_stats2 || !ops->get_sset_count)
->> +		return -EOPNOTSUPP;
->> +
->> +	n_stats = ops->get_sset_count(dev, ETH_SS_STATS);
->> +	if (n_stats < 0)
->> +		return n_stats;
->> +	if (n_stats > S32_MAX / sizeof(u64))
->> +		return -ENOMEM;
->> +	WARN_ON_ONCE(!n_stats);
->> +	if (copy_from_user(&stats, useraddr, sizeof(stats)))
->> +		return -EFAULT;
->> +
->> +	/* User can specify the level of stats to query.  How the
->> +	 * level value is used is up to the driver, but in general,
->> +	 * 0 means 'all', 1 means least, and higher means more.
->> +	 * The idea is that some stats may be expensive to query, so user
->> +	 * space could just ask for the cheap ones...
->> +	 */
->> +	stats_level = stats.n_stats;
->> +
->> +	stats.n_stats = n_stats;
->> +	data = vzalloc(n_stats * sizeof(u64));
->> +	if (n_stats && !data)
->> +		return -ENOMEM;
->> +
->> +	ops->get_ethtool_stats2(dev, &stats, data, stats_level);
->> +
->> +	ret = -EFAULT;
->> +	if (copy_to_user(useraddr, &stats, sizeof(stats)))
->> +		goto out;
->> +	useraddr += sizeof(stats);
->> +	if (n_stats && copy_to_user(useraddr, data, n_stats * sizeof(u64)))
->> +		goto out;
->> +	ret = 0;
->> +
->> + out:
->> +	vfree(data);
->> +	return ret;
->> +}
->> +
->>  static int ethtool_get_phy_stats(struct net_device *dev, void __user *useraddr)
->>  {
->>  	struct ethtool_stats stats;
->
-> IMHO it would be more practical to set "0 means same as GSTATS" as a
-> rule and make ethtool_get_stats() a wrapper for ethtool_get_stats2() to
-> avoid code duplication (or perhaps a use fall-through in the switch). It
-> would also allow drivers to provide only one of the callbacks.
+> ath10k can support multiple key-ids as far as I can tell,
+> so maybe it would just never hit this code?
 
-Yes, but that would require changing all drivers at once, and would make backporting
-and out-of-tree drivers harder to manage.  I had low hopes that this feature would
-make it upstream, so I didn't want to propose any large changes up front.
+Still learning how that all fits together, but I'm sure any card using
+mac80211 will also use ieee80211_key_replace, including ath10k.
 
-Thanks,
-Ben
+We are in a race with the remote station there is no chance that we can
+switch over exactly at the same time. If we can't fall pack to software
+encryption we'll just have to drop some more packets.
+
+I'm pretty sure mac80211 will just encrypt a frame in software and
+send it to ath10 for processing once we have removed the key from the hw
+in the same way as for any other card.
+My expectation here would be, that the driver detects and drops the
+pre-encrypted frames it no longer has a hw key for.
+
+Unfortunately this is just an assumption, since I haven't found the code
+handling this case in ath10k. And even if true this could well cause
+some undesired warning messages.
+
+I guess we should therefore make sure we do not send out any packets in
+the critical time window.
+
+Now stopping and flushing the queues seems to be bad idea which could
+cause a real performance impact for on a busy AP with many stations and
+rekeys enabled...
+Luckily it looks like we can instead just set KEY_FLAG_TAINTED for the
+old key to make sure we stop sending packets till the rekey is done.
+
+That should cause ieee80211_tx_h_select_key to drop all packets without
+a new per-packet check and also should cover potential undesired side
+effects, isn't it?
 
 
+Regards,
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Alexander
