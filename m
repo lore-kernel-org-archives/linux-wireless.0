@@ -1,53 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.14]:43801 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750732AbeCJVct (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Mar 2018 16:32:49 -0500
-Subject: [PATCH 2/3] wlcore: Return directly after a failed kzalloc() in
- wl1271_acx_sta_rate_policies()
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Colin Ian King <colin.king@canonical.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-References: <b5db0825-394a-1d6d-351a-43be14e4c6b4@users.sourceforge.net>
-Message-ID: <8ef461f4-5103-9181-b68d-e31720206ee3@users.sourceforge.net> (sfid-20180310_223311_005577_156402B8)
-Date: Sat, 10 Mar 2018 22:32:43 +0100
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:14434 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751214AbeCZLqY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Mar 2018 07:46:24 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 4/9] staging: wilc1000: free memory allocated in add wep key functions
+Date: Mon, 26 Mar 2018 17:15:58 +0530
+Message-ID: <1522064763-11576-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180326_134627_071701_FD910C2D)
+In-Reply-To: <1522064763-11576-1-git-send-email-ajay.kathat@microchip.com>
+References: <1522064763-11576-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <b5db0825-394a-1d6d-351a-43be14e4c6b4@users.sourceforge.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sat, 10 Mar 2018 22:00:31 +0100
+Free memory allocated for wep key when command enqueue is failed.
 
-Return directly after a call of the function "kzalloc" failed
-at the beginning.
-
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
 ---
- drivers/net/wireless/ti/wlcore/acx.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 24 ++++++++++++++----------
+ 1 file changed, 14 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
-index 6991fee8fe61..1cc5bba670e1 100644
---- a/drivers/net/wireless/ti/wlcore/acx.c
-+++ b/drivers/net/wireless/ti/wlcore/acx.c
-@@ -743,11 +743,8 @@ int wl1271_acx_sta_rate_policies(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	wl1271_debug(DEBUG_ACX, "acx rate policies");
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 1cc4c08..4db15c7 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2704,7 +2704,7 @@ int wilc_set_wep_default_keyid(struct wilc_vif *vif, u8 index)
+ int wilc_add_wep_key_bss_sta(struct wilc_vif *vif, const u8 *key, u8 len,
+ 			     u8 index)
+ {
+-	int result = 0;
++	int result;
+ 	struct host_if_msg msg;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
  
- 	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
+@@ -2727,17 +2727,20 @@ int wilc_add_wep_key_bss_sta(struct wilc_vif *vif, const u8 *key, u8 len,
+ 	msg.body.key_info.attr.wep.index = index;
+ 
+ 	result = wilc_enqueue_cmd(&msg);
+-	if (result)
++	if (result) {
+ 		netdev_err(vif->ndev, "STA - WEP Key\n");
+-	wait_for_completion(&hif_drv->comp_test_key_block);
++		kfree(msg.body.key_info.attr.wep.key);
++		return result;
++	}
+ 
+-	return result;
++	wait_for_completion(&hif_drv->comp_test_key_block);
++	return 0;
+ }
+ 
+ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
+ 			    u8 index, u8 mode, enum AUTHTYPE auth_type)
+ {
+-	int result = 0;
++	int result;
+ 	struct host_if_msg msg;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+@@ -2762,13 +2765,14 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
+ 	msg.body.key_info.attr.wep.auth_type = auth_type;
+ 
+ 	result = wilc_enqueue_cmd(&msg);
 -
--	if (!acx) {
--		ret = -ENOMEM;
--		goto out;
--	}
-+	if (!acx)
-+		return -ENOMEM;
+-	if (result)
++	if (result) {
+ 		netdev_err(vif->ndev, "AP - WEP Key\n");
+-	else
+-		wait_for_completion(&hif_drv->comp_test_key_block);
++		kfree(msg.body.key_info.attr.wep.key);
++		return result;
++	}
  
- 	wl1271_debug(DEBUG_ACX, "basic_rate: 0x%x, full_rate: 0x%x",
- 		wlvif->basic_rate, wlvif->rate_set);
+-	return result;
++	wait_for_completion(&hif_drv->comp_test_key_block);
++	return 0;
+ }
+ 
+ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
 -- 
-2.16.2
+2.7.4
