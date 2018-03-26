@@ -1,227 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:46094 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753106AbeCPKMJ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39860 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751171AbeCZPPA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Mar 2018 06:12:09 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 02/12] brcmfmac: use brcmf_chip_name() to store name in revinfo
-Date: Fri, 16 Mar 2018 11:11:15 +0100
-Message-Id: <1521195085-439-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180316_111226_965667_B0D2E72C)
-In-Reply-To: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
+        Mon, 26 Mar 2018 11:15:00 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: ath10k: Fix kernel panic while using worker
+ (ath10k_sta_rc_update_wk)
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1520854780-11823-1-git-send-email-periyasa@codeaurora.org>
+References: <1520854780-11823-1-git-send-email-periyasa@codeaurora.org>
+To: Karthikeyan Periyasamy <periyasa@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Karthikeyan Periyasamy <periyasa@codeaurora.org>
+Message-Id: <20180326151459.C152860AE0@smtp.codeaurora.org> (sfid-20180326_171503_868721_FC78B539)
+Date: Mon, 26 Mar 2018 15:14:59 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The chip id can either be four or five digits. For the chip name either
-the hexadecimal value needs to be taken (four digits) or the decimal
-value (five digits). The function brcmf_chip_name() does this conversion
-so use it to store the name in driver revision info.
+Karthikeyan Periyasamy <periyasa@codeaurora.org> wrote:
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../wireless/broadcom/brcm80211/brcmfmac/chip.c    |  9 +++++----
- .../wireless/broadcom/brcm80211/brcmfmac/chip.h    |  3 ++-
- .../wireless/broadcom/brcm80211/brcmfmac/common.c  | 23 ++++++++++++++++------
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 10 +---------
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  3 +--
- 5 files changed, 26 insertions(+), 22 deletions(-)
+> When attempt to run worker (ath10k_sta_rc_update_wk) after the station object
+> (ieee80211_sta) delete will trigger the kernel panic.
+> 
+> This problem arise in AP + Mesh configuration, Where the current node AP VAP
+> and neighbor node mesh VAP MAC address are same. When the current mesh node
+> try to establish the mesh link with neighbor node, driver peer creation for
+> the neighbor mesh node fails due to duplication MAC address. Already the AP
+> VAP created with same MAC address.
+> 
+> It is caused by the following scenario steps.
+> 
+> Steps:
+> 1. In above condition, ath10k driver sta_state callback (ath10k_sta_state)
+>    fails to do the state change for a station from IEEE80211_STA_NOTEXIST
+>    to IEEE80211_STA_NONE due to peer creation fails. Sta_state callback is
+>    called from ieee80211_add_station() to handle the new station
+>    (neighbor mesh node) request from the wpa_supplicant.
+> 2. Concurrently ath10k receive the sta_rc_update callback notification from
+>    the mesh_neighbour_update() to handle the beacon frames of the above
+>    neighbor mesh node. since its atomic callback, ath10k driver queue the
+>    work (ath10k_sta_rc_update_wk) to handle rc update.
+> 3. Due to driver sta_state callback fails (step 1), mac80211 free the station
+>    object.
+> 4. When the worker (ath10k_sta_rc_update_wk) scheduled to run, it will access
+>    the station object which is already deleted. so it will trigger kernel
+>    panic.
+> 
+> Added the peer exist check in sta_rc_update callback before queue the work.
+> 
+> Kernel Panic log:
+> 
+> Unable to handle kernel NULL pointer dereference at virtual address 00000000
+> pgd = c0204000
+> [00000000] *pgd=00000000
+> Internal error: Oops: 17 [#1] PREEMPT SMP ARM
+> CPU: 1 PID: 1833 Comm: kworker/u4:2 Not tainted 3.14.77 #1
+> task: dcef0000 ti: d72b6000 task.ti: d72b6000
+> PC is at pwq_activate_delayed_work+0x10/0x40
+> LR is at pwq_activate_delayed_work+0xc/0x40
+> pc : [<c023f988>]    lr : [<c023f984>]    psr: 40000193
+> sp : d72b7f18  ip : 0000007a  fp : d72b6000
+> r10: 00000000  r9 : dd404414  r8 : d8c31998
+> r7 : d72b6038  r6 : 00000004  r5 : d4907ec8  r4 : dcee1300
+> r3 : ffffffe0  r2 : 00000000  r1 : 00000001  r0 : 00000000
+> Flags: nZcv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment kernel
+> Control: 10c5787d  Table: 595bc06a  DAC: 00000015
+> ...
+> Process kworker/u4:2 (pid: 1833, stack limit = 0xd72b6238)
+> Stack: (0xd72b7f18 to 0xd72b8000)
+> 7f00:                                                       00000001 dcee1300
+> 7f20: 00000001 c02410dc d8c31980 dd404400 dd404400 c0242790 d8c31980 00000089
+> 7f40: 00000000 d93e1340 00000000 d8c31980 c0242568 00000000 00000000 00000000
+> 7f60: 00000000 c02474dc 00000000 00000000 000000f8 d8c31980 00000000 00000000
+> 7f80: d72b7f80 d72b7f80 00000000 00000000 d72b7f90 d72b7f90 d72b7fac d93e1340
+> 7fa0: c0247404 00000000 00000000 c0208d20 00000000 00000000 00000000 00000000
+> 7fc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+> 7fe0: 00000000 00000000 00000000 00000000 00000013 00000000 00000000 00000000
+> [<c023f988>] (pwq_activate_delayed_work) from [<c02410dc>] (pwq_dec_nr_in_flight+0x58/0xc4)
+> [<c02410dc>] (pwq_dec_nr_in_flight) from [<c0242790>] (worker_thread+0x228/0x360)
+> [<c0242790>] (worker_thread) from [<c02474dc>] (kthread+0xd8/0xec)
+> [<c02474dc>] (kthread) from [<c0208d20>] (ret_from_fork+0x14/0x34)
+> Code: e92d4038 e1a05000 ebffffbc[69210.619376] SMP: failed to stop secondary CPUs
+> Rebooting in 3 seconds..
+> 
+> Signed-off-by: Karthikeyan Periyasamy <periyasa@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index f7b30ce..bf45369 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -464,12 +464,12 @@ static void brcmf_chip_ai_resetcore(struct brcmf_core_priv *core, u32 prereset,
- 	ci->ops->read32(ci->ctx, core->wrapbase + BCMA_IOCTL);
- }
- 
--static char *brcmf_chip_name(uint chipid, char *buf, uint len)
-+char *brcmf_chip_name(u32 id, u32 rev, char *buf, uint len)
- {
- 	const char *fmt;
- 
--	fmt = ((chipid > 0xa000) || (chipid < 0x4000)) ? "%d" : "%x";
--	snprintf(buf, len, fmt, chipid);
-+	fmt = ((id > 0xa000) || (id < 0x4000)) ? "BCM%d/%u" : "BCM%x/%u";
-+	snprintf(buf, len, fmt, id, rev);
- 	return buf;
- }
- 
-@@ -924,7 +924,8 @@ static int brcmf_chip_recognition(struct brcmf_chip_priv *ci)
- 	ci->pub.chiprev = (regdata & CID_REV_MASK) >> CID_REV_SHIFT;
- 	socitype = (regdata & CID_TYPE_MASK) >> CID_TYPE_SHIFT;
- 
--	brcmf_chip_name(ci->pub.chip, ci->pub.name, sizeof(ci->pub.name));
-+	brcmf_chip_name(ci->pub.chip, ci->pub.chiprev,
-+			ci->pub.name, sizeof(ci->pub.name));
- 	brcmf_dbg(INFO, "found %s chip: BCM%s, rev=%d\n",
- 		  socitype == SOCI_SB ? "SB" : "AXI", ci->pub.name,
- 		  ci->pub.chiprev);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
-index dd0ec3e..0ae3b33 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
-@@ -45,7 +45,7 @@ struct brcmf_chip {
- 	u32 rambase;
- 	u32 ramsize;
- 	u32 srsize;
--	char name[8];
-+	char name[12];
- };
- 
- /**
-@@ -93,5 +93,6 @@ void brcmf_chip_resetcore(struct brcmf_core *core, u32 prereset, u32 reset,
- void brcmf_chip_set_passive(struct brcmf_chip *ci);
- bool brcmf_chip_set_active(struct brcmf_chip *ci, u32 rstvec);
- bool brcmf_chip_sr_capable(struct brcmf_chip *pub);
-+char *brcmf_chip_name(u32 chipid, u32 chiprev, char *buf, uint len);
- 
- #endif /* BRCMF_AXIDMP_H */
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 70ef983..09601f8 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -30,6 +30,7 @@
- #include "common.h"
- #include "of.h"
- #include "firmware.h"
-+#include "chip.h"
- 
- MODULE_AUTHOR("Broadcom Corporation");
- MODULE_DESCRIPTION("Broadcom 802.11 wireless LAN fullmac driver.");
-@@ -127,14 +128,13 @@ static int brcmf_c_download(struct brcmf_if *ifp, u16 flag,
- static int brcmf_c_get_clm_name(struct brcmf_if *ifp, u8 *clm_name)
- {
- 	struct brcmf_bus *bus = ifp->drvr->bus_if;
--	struct brcmf_rev_info *ri = &ifp->drvr->revinfo;
- 	u8 fw_name[BRCMF_FW_NAME_LEN];
- 	u8 *ptr;
- 	size_t len;
- 	s32 err;
- 
- 	memset(fw_name, 0, BRCMF_FW_NAME_LEN);
--	err = brcmf_bus_get_fwname(bus, ri->chipnum, ri->chiprev, fw_name);
-+	err = brcmf_bus_get_fwname(bus, bus->chip, bus->chiprev, fw_name);
- 	if (err) {
- 		brcmf_err("get firmware name failed (%d)\n", err);
- 		goto done;
-@@ -234,6 +234,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- {
- 	s8 eventmask[BRCMF_EVENTING_MASK_LEN];
- 	u8 buf[BRCMF_DCMD_SMLEN];
-+	struct brcmf_bus *bus;
- 	struct brcmf_rev_info_le revinfo;
- 	struct brcmf_rev_info *ri;
- 	char *clmver;
-@@ -249,16 +250,18 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- 	}
- 	memcpy(ifp->drvr->mac, ifp->mac_addr, sizeof(ifp->drvr->mac));
- 
-+	bus = ifp->drvr->bus_if;
-+	ri = &ifp->drvr->revinfo;
-+
- 	err = brcmf_fil_cmd_data_get(ifp, BRCMF_C_GET_REVINFO,
- 				     &revinfo, sizeof(revinfo));
--	ri = &ifp->drvr->revinfo;
- 	if (err < 0) {
- 		brcmf_err("retrieving revision info failed, %d\n", err);
-+		strlcpy(ri->chipname, "UNKNOWN", sizeof(ri->chipname));
- 	} else {
- 		ri->vendorid = le32_to_cpu(revinfo.vendorid);
- 		ri->deviceid = le32_to_cpu(revinfo.deviceid);
- 		ri->radiorev = le32_to_cpu(revinfo.radiorev);
--		ri->chiprev = le32_to_cpu(revinfo.chiprev);
- 		ri->corerev = le32_to_cpu(revinfo.corerev);
- 		ri->boardid = le32_to_cpu(revinfo.boardid);
- 		ri->boardvendor = le32_to_cpu(revinfo.boardvendor);
-@@ -266,15 +269,23 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- 		ri->driverrev = le32_to_cpu(revinfo.driverrev);
- 		ri->ucoderev = le32_to_cpu(revinfo.ucoderev);
- 		ri->bus = le32_to_cpu(revinfo.bus);
--		ri->chipnum = le32_to_cpu(revinfo.chipnum);
- 		ri->phytype = le32_to_cpu(revinfo.phytype);
- 		ri->phyrev = le32_to_cpu(revinfo.phyrev);
- 		ri->anarev = le32_to_cpu(revinfo.anarev);
- 		ri->chippkg = le32_to_cpu(revinfo.chippkg);
- 		ri->nvramrev = le32_to_cpu(revinfo.nvramrev);
-+
-+		if (!bus->chip) {
-+			bus->chip = le32_to_cpu(revinfo.chipnum);
-+			bus->chiprev = le32_to_cpu(revinfo.chiprev);
-+		}
- 	}
- 	ri->result = err;
- 
-+	if (bus->chip)
-+		brcmf_chip_name(bus->chip, bus->chiprev,
-+				ri->chipname, sizeof(ri->chipname));
-+
- 	/* Do any CLM downloading */
- 	err = brcmf_c_process_clm_blob(ifp);
- 	if (err < 0) {
-@@ -295,7 +306,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- 	strsep(&ptr, "\n");
- 
- 	/* Print fw version info */
--	brcmf_info("Firmware version = %s\n", buf);
-+	brcmf_info("Firmware: %s %s\n", ri->chipname, buf);
- 
- 	/* locate firmware version number for ethtool */
- 	ptr = strrchr(buf, ' ') + 1;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 1904852..e8c16d7 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -924,8 +924,7 @@ static int brcmf_revinfo_read(struct seq_file *s, void *data)
- 	seq_printf(s, "vendorid: 0x%04x\n", ri->vendorid);
- 	seq_printf(s, "deviceid: 0x%04x\n", ri->deviceid);
- 	seq_printf(s, "radiorev: %s\n", brcmu_dotrev_str(ri->radiorev, drev));
--	seq_printf(s, "chipnum: %u (%x)\n", ri->chipnum, ri->chipnum);
--	seq_printf(s, "chiprev: %u\n", ri->chiprev);
-+	seq_printf(s, "chip: %s\n", ri->chipname);
- 	seq_printf(s, "chippkg: %u\n", ri->chippkg);
- 	seq_printf(s, "corerev: %u\n", ri->corerev);
- 	seq_printf(s, "boardid: 0x%04x\n", ri->boardid);
-@@ -975,13 +974,6 @@ static int brcmf_bus_started(struct brcmf_pub *drvr)
- 
- 	brcmf_debugfs_add_entry(drvr, "revinfo", brcmf_revinfo_read);
- 
--	/* assure we have chipid before feature attach */
--	if (!bus_if->chip) {
--		bus_if->chip = drvr->revinfo.chipnum;
--		bus_if->chiprev = drvr->revinfo.chiprev;
--		brcmf_dbg(INFO, "firmware revinfo: chip %x (%d) rev %d\n",
--			  bus_if->chip, bus_if->chip, bus_if->chiprev);
--	}
- 	brcmf_feat_attach(drvr);
- 
- 	ret = brcmf_proto_init_done(drvr);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-index df8a1ec..6fd6745 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-@@ -87,7 +87,6 @@ struct brcmf_rev_info {
- 	u32 vendorid;
- 	u32 deviceid;
- 	u32 radiorev;
--	u32 chiprev;
- 	u32 corerev;
- 	u32 boardid;
- 	u32 boardvendor;
-@@ -95,7 +94,7 @@ struct brcmf_rev_info {
- 	u32 driverrev;
- 	u32 ucoderev;
- 	u32 bus;
--	u32 chipnum;
-+	char chipname[12];
- 	u32 phytype;
- 	u32 phyrev;
- 	u32 anarev;
+Patch applied to ath-next branch of ath.git, thanks.
+
+8b2d93dd2261 ath10k: Fix kernel panic while using worker (ath10k_sta_rc_update_wk)
+
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/10276043/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
