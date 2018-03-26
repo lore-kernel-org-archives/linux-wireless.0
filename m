@@ -1,49 +1,309 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35725 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751396AbeCTVOa (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45602 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751002AbeCZFlc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Mar 2018 17:14:30 -0400
-Received: by mail-oi0-f66.google.com with SMTP id x20-v6so2361532oie.2
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2018 14:14:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACna6rzJs0d_q42OSv8E_qgGa_TKmTsq5tC823Su41MPtbWOZg@mail.gmail.com>
-References: <20180226090917.7iabysywbv6h4rqr@alienware17> <87y3jgt6sp.fsf@kamboji.qca.qualcomm.com>
- <7d6af051-2724-5dfc-cf69-376c0b501626@blackstar.nl> <87a7vvu7ke.fsf@kamboji.qca.qualcomm.com>
- <6404ec30-b7f6-ff26-a668-2e656799b69b@blackstar.nl> <874lli7mk5.fsf@codeaurora.org>
- <5AA99559.2070605@broadcom.com> <CAFBinCB_eLN8Gn0fRmKSFWSa_Yrw3+BB05Hwp_yNyYwhsS+s5w@mail.gmail.com>
- <CACna6rzJs0d_q42OSv8E_qgGa_TKmTsq5tC823Su41MPtbWOZg@mail.gmail.com>
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date: Tue, 20 Mar 2018 22:14:08 +0100
-Message-ID: <CAFBinCDAW9=VdvDn3-xtOAb-DkQYPiRsiP+hgtjV6AfMs__Pvg@mail.gmail.com> (sfid-20180320_221435_513650_89B1BB9F)
-Subject: Re: [PATCH] ath9k: introduce endian_check module parameter
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Bas Vermeulen <bvermeul@blackstar.nl>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Felix Fietkau <nbd@nbd.name>, dev@kresin.me
-Content-Type: text/plain; charset="UTF-8"
+        Mon, 26 Mar 2018 01:41:32 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org, bjorn.andersson@linaro.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH 10/12] ath10k: add bdf/cal indication support
+Date: Mon, 26 Mar 2018 11:11:26 +0530
+Message-Id: <1522042886-26343-1-git-send-email-govinds@codeaurora.org> (sfid-20180326_074135_504214_2FC6428C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rafal,
+Add support for bdf download and cold boot
+calibration trigger qmi message support.
 
-On Tue, Mar 20, 2018 at 10:07 PM, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com=
-> wrote:
-> On 19 March 2018 at 09:11, Martin Blumenstingl
-> <martin.blumenstingl@googlemail.com> wrote:
->> - some ship with a broken EEPROM that enables the 5GHz band on a
->> 2.4GHz-only card, which is why we need "qca,disable-5ghz"
->
-> No. You just need to use ieee80211-freq-limit.
-you are right with this one, "qca,disable-5ghz" is an out-of-tree
-patch and ieee80211-freq-limit support should be added upstream
-instead
-however, the cause is still the same (devices are shipped with an
-EEPROM which has the 5GHz band enabled while it shouldn't have)
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/qmi.c | 195 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/qmi.h |  10 ++
+ 2 files changed, 205 insertions(+)
 
-
-Regards
-Martin
+diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
+index a33681d..f23d0fe 100644
+--- a/drivers/net/wireless/ath/ath10k/qmi.c
++++ b/drivers/net/wireless/ath/ath10k/qmi.c
+@@ -28,6 +28,7 @@
+ #include <linux/soc/qcom/qmi.h>
+ #include <linux/qcom_scm.h>
+ #include <linux/of.h>
++#include <linux/firmware.h>
+ #include "qmi.h"
+ #include "qmi_svc_v01.h"
+ 
+@@ -270,6 +271,179 @@ static int ath10k_qmi_msa_ready_send_sync_msg(struct ath10k_qmi *qmi)
+ 	return ret;
+ }
+ 
++int ath10k_qmi_bdf_dnld_send_sync(struct ath10k_qmi *qmi)
++{
++	struct wlfw_bdf_download_resp_msg_v01 *resp;
++	struct wlfw_bdf_download_req_msg_v01 *req;
++	const struct firmware *fw_entry;
++	unsigned int remaining;
++	struct qmi_txn txn;
++	const u8 *temp;
++	int ret;
++
++	req = kzalloc(sizeof(*req), GFP_KERNEL);
++	if (!req)
++		return -ENOMEM;
++
++	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
++	if (!resp) {
++		kfree(req);
++		return -ENOMEM;
++	}
++
++	ret = request_firmware(&fw_entry, BDF_FILE_NAME, &qmi->pdev->dev);
++	if (ret < 0) {
++		pr_err("fail to load bdf: %s\n", BDF_FILE_NAME);
++		goto err_req_fw;
++	}
++
++	temp = fw_entry->data;
++	remaining = fw_entry->size;
++
++	pr_debug("downloading bdf: %s, size: %u\n",
++		 BDF_FILE_NAME, remaining);
++
++	while (remaining) {
++		req->valid = 1;
++		req->file_id_valid = 1;
++		req->file_id = 0;
++		req->total_size_valid = 1;
++		req->total_size = fw_entry->size;
++		req->seg_id_valid = 1;
++		req->data_valid = 1;
++		req->end_valid = 1;
++
++		if (remaining > QMI_WLFW_MAX_DATA_SIZE_V01) {
++			req->data_len = QMI_WLFW_MAX_DATA_SIZE_V01;
++		} else {
++			req->data_len = remaining;
++			req->end = 1;
++		}
++
++		memcpy(req->data, temp, req->data_len);
++
++		ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
++				   wlfw_bdf_download_resp_msg_v01_ei,
++				   resp);
++		if (ret < 0) {
++			pr_err("fail to init txn for bdf download %d\n", ret);
++			goto out;
++		}
++
++		ret =
++		qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
++				 QMI_WLFW_BDF_DOWNLOAD_REQ_V01,
++				 WLFW_BDF_DOWNLOAD_REQ_MSG_V01_MAX_MSG_LEN,
++				 wlfw_bdf_download_req_msg_v01_ei, req);
++		if (ret < 0) {
++			qmi_txn_cancel(&txn);
++			goto err_send;
++		}
++
++		ret = qmi_txn_wait(&txn, WLFW_TIMEOUT * HZ);
++
++		if (ret < 0)
++			goto err_send;
++
++		if (resp->resp.result != QMI_RESULT_SUCCESS_V01) {
++			pr_err("bdf download failed, res:%d, err:%d\n",
++			       resp->resp.result, resp->resp.error);
++			ret = resp->resp.result;
++			goto err_send;
++		}
++
++		remaining -= req->data_len;
++		temp += req->data_len;
++		req->seg_id++;
++	}
++
++	pr_debug("bdf download request completed\n");
++
++	kfree(resp);
++	kfree(req);
++	return 0;
++
++err_send:
++	release_firmware(fw_entry);
++
++err_req_fw:
++	kfree(req);
++	kfree(resp);
++
++out:
++	return ret;
++}
++
++int ath10k_qmi_send_cal_report_req(struct ath10k_qmi *qmi)
++{
++	struct wlfw_cal_report_resp_msg_v01 *resp;
++	struct wlfw_cal_report_req_msg_v01 *req;
++	struct qmi_txn txn;
++	int i, j = 0;
++	int ret;
++
++	pr_debug("sending cal report\n");
++
++	req = kzalloc(sizeof(*req), GFP_KERNEL);
++	if (!req)
++		return -ENOMEM;
++
++	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
++	if (!resp) {
++		kfree(req);
++		return -ENOMEM;
++	}
++
++	ret = qmi_txn_init(&qmi->qmi_hdl, &txn, wlfw_cal_report_resp_msg_v01_ei,
++			   resp);
++	if (ret < 0) {
++		pr_err("fail to init txn for bdf download req %d\n", ret);
++		goto out;
++	}
++
++	for (i = 0; i < QMI_WLFW_MAX_NUM_CAL_V01; i++) {
++		if (qmi->cal_data[i].total_size &&
++		    qmi->cal_data[i].data) {
++			req->meta_data[j] = qmi->cal_data[i].cal_id;
++			j++;
++		}
++	}
++	req->meta_data_len = j;
++
++	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
++			       QMI_WLFW_CAL_REPORT_REQ_V01,
++			       WLFW_CAL_REPORT_REQ_MSG_V01_MAX_MSG_LEN,
++			       wlfw_cal_report_req_msg_v01_ei, req);
++	if (ret < 0) {
++		qmi_txn_cancel(&txn);
++		pr_err("fail to send cal req %d\n", ret);
++		goto out;
++	}
++
++	ret = qmi_txn_wait(&txn, WLFW_TIMEOUT * HZ);
++	if (ret < 0)
++		goto out;
++
++	if (resp->resp.result != QMI_RESULT_SUCCESS_V01) {
++		pr_err("qmi cal reoprt request rejected:");
++		pr_err("resut:%d error:%d\n",
++		       resp->resp.result, resp->resp.error);
++		ret = resp->resp.result;
++		goto out;
++	}
++
++	pr_debug("cal report request completed\n");
++
++	kfree(resp);
++	kfree(req);
++	return 0;
++
++out:
++	kfree(resp);
++	kfree(req);
++	return ret;
++}
++
+ static int ath10k_qmi_cap_send_sync_msg(struct ath10k_qmi *qmi)
+ {
+ 	struct wlfw_cap_resp_msg_v01 *resp;
+@@ -509,6 +683,7 @@ static void ath10k_qmi_msa_ready_ind(struct qmi_handle *qmi_hdl,
+ 	struct ath10k_qmi *qmi = container_of(qmi_hdl, struct ath10k_qmi, qmi_hdl);
+ 
+ 	qmi->msa_ready = true;
++	queue_work(qmi->event_wq, &qmi->work_msa_ready);
+ }
+ 
+ static struct qmi_msg_handler qmi_msg_handler[] = {
+@@ -599,6 +774,24 @@ static void ath10k_qmi_event_server_exit(struct work_struct *work)
+ 	pr_info("wlan fw service disconnected\n");
+ }
+ 
++static void ath10k_qmi_event_msa_ready(struct work_struct *work)
++{
++	struct ath10k_qmi *qmi = container_of(work, struct ath10k_qmi,
++					      work_msa_ready);
++	int ret;
++
++	ret = ath10k_qmi_bdf_dnld_send_sync(qmi);
++	if (ret)
++		goto out;
++
++	ret = ath10k_qmi_send_cal_report_req(qmi);
++	if (ret)
++		goto out;
++
++out:
++	return;
++}
++
+ static int ath10k_qmi_new_server(struct qmi_handle *qmi_hdl,
+ 				 struct qmi_service *service)
+ {
+@@ -649,6 +842,7 @@ static int ath10k_alloc_qmi_resources(struct ath10k_qmi *qmi)
+ 	spin_lock_init(&qmi->event_lock);
+ 	INIT_WORK(&qmi->work_svc_arrive, ath10k_qmi_event_server_arrive);
+ 	INIT_WORK(&qmi->work_svc_exit, ath10k_qmi_event_server_exit);
++	INIT_WORK(&qmi->work_msa_ready, ath10k_qmi_event_msa_ready);
+ 
+ 	ret = qmi_add_lookup(&qmi->qmi_hdl, WLFW_SERVICE_ID_V01,
+ 			     WLFW_SERVICE_VERS_V01, 0);
+@@ -696,6 +890,7 @@ static void ath10k_remove_qmi_resources(struct ath10k_qmi *qmi)
+ {
+ 	cancel_work_sync(&qmi->work_svc_arrive);
+ 	cancel_work_sync(&qmi->work_svc_exit);
++	cancel_work_sync(&qmi->work_msa_ready);
+ 	destroy_workqueue(qmi->event_wq);
+ 	qmi_handle_release(&qmi->qmi_hdl);
+ 	qmi = NULL;
+diff --git a/drivers/net/wireless/ath/ath10k/qmi.h b/drivers/net/wireless/ath/ath10k/qmi.h
+index 09d20a0..94f14d4 100644
+--- a/drivers/net/wireless/ath/ath10k/qmi.h
++++ b/drivers/net/wireless/ath/ath10k/qmi.h
+@@ -19,6 +19,8 @@
+ #define MAX_NUM_MEMORY_REGIONS			2
+ #define MAX_TIMESTAMP_LEN			32
+ #define MAX_BUILD_ID_LEN			128
++#define BDF_FILE_NAME			"bdwlan.bin"
++#define MAX_NUM_CAL_V01			5
+ 
+ enum ath10k_qmi_driver_event_type {
+ 	ATH10K_QMI_EVENT_SERVER_ARRIVE,
+@@ -51,6 +53,12 @@ struct ath10k_qmi_fw_version_info {
+ 	char fw_build_timestamp[MAX_TIMESTAMP_LEN + 1];
+ };
+ 
++struct ath10k_qmi_cal_data {
++	u32 cal_id;
++	u32 total_size;
++	u8 *data;
++};
++
+ struct ath10k_qmi {
+ 	struct platform_device *pdev;
+ 	struct qmi_handle qmi_hdl;
+@@ -59,6 +67,7 @@ struct ath10k_qmi {
+ 	bool msa_ready;
+ 	struct work_struct work_svc_arrive;
+ 	struct work_struct work_svc_exit;
++	struct work_struct work_msa_ready;
+ 	struct workqueue_struct *event_wq;
+ 	spinlock_t event_lock; /* spinlock for fw ready status*/
+ 	u32 nr_mem_region;
+@@ -72,5 +81,6 @@ struct ath10k_qmi {
+ 	struct ath10k_qmi_soc_info soc_info;
+ 	struct ath10k_qmi_fw_version_info fw_version_info;
+ 	char fw_build_id[MAX_BUILD_ID_LEN + 1];
++	struct ath10k_qmi_cal_data cal_data[MAX_NUM_CAL_V01];
+ };
+ #endif /* _QMI_H_ */
+-- 
+1.9.1
