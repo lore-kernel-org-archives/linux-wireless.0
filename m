@@ -1,56 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51187 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751790AbeCTReM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Mar 2018 13:34:12 -0400
-Date: Tue, 20 Mar 2018 17:34:09 +0000
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, akpm@linux-foundation.org,
-        cantabile.desu@gmail.com, kubakici@wp.pl,
-        linux-wireless@vger.kernel.org, keescook@chromium.org,
-        shuah@kernel.org, mfuzzey@parkeon.com, zohar@linux.vnet.ibm.com,
-        dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de,
-        arend.vanspriel@broadcom.com, zajec5@gmail.com, nbroeking@me.com,
-        markivx@codeaurora.org, broonie@kernel.org,
-        dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v3 19/20] firmware: add request_firmware_cache() to help
- with cache on reboot
-Message-ID: <20180320173409.GD4449@wotan.suse.de> (sfid-20180320_183439_530014_715FCC69)
-References: <20180310141501.2214-1-mcgrof@kernel.org>
- <20180310141501.2214-20-mcgrof@kernel.org>
- <20180320083055.GA21640@kroah.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:34132 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752221AbeCZPFK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Mar 2018 11:05:10 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Ramon Fried <rfried@codeaurora.org>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3] wcn36xx: reduce verbosity of drivers messages
+References: <20180227140535.4794-1-rfried@codeaurora.org>
+        <21c7106f-e84a-18fb-e2d1-989073034e2a@codeaurora.org>
+Date: Mon, 26 Mar 2018 18:04:57 +0300
+In-Reply-To: <21c7106f-e84a-18fb-e2d1-989073034e2a@codeaurora.org> (Ramon
+        Fried's message of "Mon, 26 Mar 2018 15:29:31 +0300")
+Message-ID: <87370mri7a.fsf@purkki.adurom.net> (sfid-20180326_170514_576553_5AA4C7FD)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180320083055.GA21640@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 20, 2018 at 09:30:55AM +0100, Greg KH wrote:
-> On Sat, Mar 10, 2018 at 06:15:00AM -0800, Luis R. Rodriguez wrote:
-> > +EXPORT_SYMBOL_GPL(request_firmware_cache);
-> 
-> I know you are just following the existing naming scheme, but please
-> let's not continue the problem here.  Can you prefix all of the firmware
-> exported symbols with "firmware_", and then the verb.  So this would be
-> "firmware_request_cache",
+Ramon Fried <rfried@codeaurora.org> writes:
 
-Sure.
+> Kind reminder. Is the patch ok ?
 
->  and the older function would be
-> "firmware_request_direct".
+First of all, please don't top most as it makes using patchwork
+annoying. I wish it would detect these top posts somehow.
 
-Sure, so you want to also rename the old exported symbols, and add a macro
-or static inline to enable use of the older names?
+And for checking the state of patch I have a written instructions to the
+wiki:
 
-> I've stopped here in the patch series, applying the others now, so feel
-> free to rebase and resend what I've missed, and the minor fixups for the
-> prior patches.
+https://wireless.wiki.kernel.org/doku.php?id=en/developers/documentation/submittingpatches#checking_state_of_patches_from_patchwork
 
-Sure thing.
+And the actual answer: I'm lagging behind with ath.git patches but
+should catch up soon.
 
-   Luis
+-- 
+Kalle Valo
