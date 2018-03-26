@@ -1,36 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:52114 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751944AbeCMHjK (ORCPT
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:42895 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752116AbeCZRQY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 03:39:10 -0400
-Date: Tue, 13 Mar 2018 13:09:03 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <hariprasath.elango@gmail.com>, <linux-kernel@vger.kernel.org>
-CC: <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>
-Subject: Re: [PATCH] staging: wilc1000: Fix code block alignment
-Message-ID: <20180313130903.5d9c45a9@ajaysk-VirtualBox> (sfid-20180313_083925_629172_5918031B)
-In-Reply-To: <20180312130044.11815-1-hariprasath.elango@gmail.com>
-References: <20180312130044.11815-1-hariprasath.elango@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+        Mon, 26 Mar 2018 13:16:24 -0400
+Received: by mail-ot0-f196.google.com with SMTP id v23-v6so21447821oth.9
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:16:24 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [RFC v6 03/11] nl80211: Add CONTROL_PORT_OVER_NL80211 attribute
+Date: Mon, 26 Mar 2018 12:16:06 -0500
+Message-Id: <20180326171614.20373-4-denkenz@gmail.com> (sfid-20180326_191628_706449_04D73E71)
+In-Reply-To: <20180326171614.20373-1-denkenz@gmail.com>
+References: <20180326171614.20373-1-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 12 Mar 2018 18:30:44 +0530
-<hariprasath.elango@gmail.com> wrote:
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+---
+ include/net/cfg80211.h       |  3 +++
+ include/uapi/linux/nl80211.h | 14 +++++++++++++-
+ net/wireless/nl80211.c       | 26 ++++++++++++++++++++++++++
+ 3 files changed, 42 insertions(+), 1 deletion(-)
 
-> From: HariPrasath Elango <hariprasath.elango@gmail.com>
-> 
-> Fix the code alignment for a block of code to adhere to coding
-> guidelines
-> 
-> Signed-off-by: HariPrasath Elango <hariprasath.elango@gmail.com>
-
-Reviewed-by: Ajay Singh <ajay.kathat@microchip.com>
-
-Regards,
-Ajay
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 76b6783f35f6..2e7f30c66913 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -646,6 +646,8 @@ struct survey_info {
+  *	allowed through even on unauthorized ports
+  * @control_port_no_encrypt: TRUE to prevent encryption of control port
+  *	protocol frames.
++ * @control_port_over_nl80211: TRUE if userspace expects to exchange control
++ *	port frames over NL80211 instead of the network interface.
+  * @wep_keys: static WEP keys, if not NULL points to an array of
+  *	CFG80211_MAX_WEP_KEYS WEP keys
+  * @wep_tx_key: key index (0..3) of the default TX static WEP key
+@@ -661,6 +663,7 @@ struct cfg80211_crypto_settings {
+ 	bool control_port;
+ 	__be16 control_port_ethertype;
+ 	bool control_port_no_encrypt;
++	bool control_port_over_nl80211;
+ 	struct key_params *wep_keys;
+ 	int wep_tx_key;
+ 	const u8 *psk;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 77675ae3e475..1cdac3d732c1 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -542,7 +542,8 @@
+  *	IEs in %NL80211_ATTR_IE, %NL80211_ATTR_AUTH_TYPE, %NL80211_ATTR_USE_MFP,
+  *	%NL80211_ATTR_MAC, %NL80211_ATTR_WIPHY_FREQ, %NL80211_ATTR_CONTROL_PORT,
+  *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE,
+- *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT, %NL80211_ATTR_MAC_HINT, and
++ *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT,
++ *	%NL80211_ATTR_CONTROL_PORT_OVER_NL80211, %NL80211_ATTR_MAC_HINT, and
+  *	%NL80211_ATTR_WIPHY_FREQ_HINT.
+  *	If included, %NL80211_ATTR_MAC and %NL80211_ATTR_WIPHY_FREQ are
+  *	restrictions on BSS selection, i.e., they effectively prevent roaming
+@@ -1488,6 +1489,15 @@ enum nl80211_commands {
+  * @NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT: When included along with
+  *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE, indicates that the custom
+  *	ethertype frames used for key negotiation must not be encrypted.
++ * @NL80211_ATTR_CONTROL_PORT_OVER_NL80211: A flag indicating whether control
++ *	port frames (e.g. of type given in %NL80211_ATTR_CONTROL_PORT_ETHERTYPE)
++ *	will be sent directly to the network interface or sent via the NL80211
++ *	socket.  If this attribute is missing, then legacy behavior of sending
++ *	control port frames directly to the network interface is used.  If the
++ *	flag is included, then control port frames are sent over NL80211 instead
++ *	using %CMD_CONTROL_PORT_FRAME.  If control port routing over NL80211 is
++ *	to be used then userspace must also use the %NL80211_ATTR_SOCKET_OWNER
++ *	flag.
+  *
+  * @NL80211_ATTR_TESTDATA: Testmode data blob, passed through to the driver.
+  *	We recommend using nested, driver-specific attributes within this.
+@@ -2641,6 +2651,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_NSS,
+ 	NL80211_ATTR_ACK_SIGNAL,
+ 
++	NL80211_ATTR_CONTROL_PORT_OVER_NL80211,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index aadc1f090b65..234f6a41aa03 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -287,6 +287,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_CONTROL_PORT] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_CONTROL_PORT_ETHERTYPE] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT] = { .type = NLA_FLAG },
++	[NL80211_ATTR_CONTROL_PORT_OVER_NL80211] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_PRIVACY] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_CIPHER_SUITE_GROUP] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_WPA_VERSIONS] = { .type = NLA_U32 },
+@@ -8204,6 +8205,22 @@ static int nl80211_authenticate(struct sk_buff *skb, struct genl_info *info)
+ 	return err;
+ }
+ 
++static int validate_pae_over_nl80211(struct cfg80211_registered_device *rdev,
++				     struct genl_info *info)
++{
++	if (!info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
++		GENL_SET_ERR_MSG(info, "SOCKET_OWNER not set");
++		return -EINVAL;
++	}
++
++	if (!rdev->ops->tx_control_port ||
++	    !wiphy_ext_feature_isset(&rdev->wiphy,
++				     NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211))
++		return -EOPNOTSUPP;
++
++	return 0;
++}
++
+ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
+ 				   struct genl_info *info,
+ 				   struct cfg80211_crypto_settings *settings,
+@@ -8227,6 +8244,15 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
+ 	} else
+ 		settings->control_port_ethertype = cpu_to_be16(ETH_P_PAE);
+ 
++	if (info->attrs[NL80211_ATTR_CONTROL_PORT_OVER_NL80211]) {
++		int r = validate_pae_over_nl80211(rdev, info);
++
++		if (r < 0)
++			return r;
++
++		settings->control_port_over_nl80211 = true;
++	}
++
+ 	if (info->attrs[NL80211_ATTR_CIPHER_SUITES_PAIRWISE]) {
+ 		void *data;
+ 		int len, i;
+-- 
+2.13.5
