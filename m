@@ -1,84 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:49954 "EHLO bues.ch"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965207AbeCHGMU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Mar 2018 01:12:20 -0500
-Date: Thu, 8 Mar 2018 07:11:49 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] ssb: use put_device() if device_register fail
-Message-ID: <20180308071149.75f3c872@wiggum> (sfid-20180308_071238_713560_E8F037AC)
-In-Reply-To: <1520485789-8550-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1520485789-8550-1-git-send-email-arvind.yadav.cs@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
- boundary="Sig_/YpWQxs8wW6p/c029KPOf7O/"; protocol="application/pgp-signature"
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:38573 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752116AbeCZRQ3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Mar 2018 13:16:29 -0400
+Received: by mail-ot0-f194.google.com with SMTP id o9-v6so3452963otj.5
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:16:29 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [RFC v6 07/11] nl80211: Add SOCKET_OWNER support to START_AP
+Date: Mon, 26 Mar 2018 12:16:10 -0500
+Message-Id: <20180326171614.20373-8-denkenz@gmail.com> (sfid-20180326_191633_051314_FBC86F21)
+In-Reply-To: <20180326171614.20373-1-denkenz@gmail.com>
+References: <20180326171614.20373-1-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/YpWQxs8wW6p/c029KPOf7O/
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+---
+ include/uapi/linux/nl80211.h | 2 ++
+ net/wireless/ap.c            | 1 +
+ net/wireless/nl80211.c       | 4 ++++
+ 3 files changed, 7 insertions(+)
 
-On Thu,  8 Mar 2018 10:39:49 +0530
-Arvind Yadav <arvind.yadav.cs@gmail.com> wrote:
-
-> Never directly free @dev after calling device_register(), even
-> if it returned an error! Always use put_device() to give up the
-> reference initialized.
->=20
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
-> ---
-> changes in v2:
->              Removed kfree() call for @dev.
->=20
->  drivers/ssb/main.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-> index 65420a9..a7a062b 100644
-> --- a/drivers/ssb/main.c
-> +++ b/drivers/ssb/main.c
-> @@ -521,8 +521,8 @@ static int ssb_devices_register(struct ssb_bus *bus)
->  			ssb_err("Could not register %s\n", dev_name(dev));
->  			/* Set dev to NULL to not unregister
->  			 * dev on error unwinding. */
-> +			put_device(dev);
->  			sdev->dev =3D NULL;
-> -			kfree(devwrap);
->  			goto error;
->  		}
->  		dev_idx++;
-
-
-Would you please put the put_device where the kfree was?
-So that the comment still matches.
-Thanks.
-
-
---=20
-Michael
-
---Sig_/YpWQxs8wW6p/c029KPOf7O/
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlqg1CUACgkQ9TK+HZCN
-iw5sSBAAw3XKYDfxFMPby85iueyKrVC3BA8mW7ExSG8dmmzKQT+8GVBDeBVWQ/Pe
-4fq8DLIxfSi1ONvW7ulSFCqkVlRaDKXWYy2a45q/zSq3HCgocsed2uxPioEKV9Yk
-1KFb/5GhKlBRRkYy50wCXcC4oo5SNcfD2Mlbb9bo3ZE9HFZwgOmdNp1PWjmXuA1O
-6NCKNlg8++gh6g7T8iVF/CyXBwjD0Y18qrr6anJ6J9LrjhndHGZRlcFw+gtVdyuX
-BIgDumUb0TC7h4Z9UvCfvPM9CfGbY7ZEqq9FFdqiLXTwu5HRbwm6SurVsSU7fXB0
-ssHTjGF93DFw4OfyrpZkQSoinZj6xOL3eABrHhdNTxGTVZk5C25XybWXAtFpxvkW
-adNKMw555WQcuzLYLd4/8a9Ty+YOoBRhIrcKpcTXC8Nae58giHp0DlSg9g9t9ywx
-AUhBYp/0bU7Nyn9wQ+8pTQaDHjFSrALrX8+SYM4O3USuyE91x6+7F6LrJJt5eHvj
-hbb0X848zsOgUk9h84IcP1zbcx+CJh4jjjYKm9cBgfNtDfAfDIToX4CkY7+wdrGz
-IXq0usbB11D7cAzuaHXG6SEi7WOO9UjZZdlW8efgRpjjjD8TbmU+VCkw+/USSuMN
-vm6KFyo0Fh/eAvuaOzD8MmMc/XWCuQCyRQtlo2RJ63aGtG0ZYOk=
-=Z4k3
------END PGP SIGNATURE-----
-
---Sig_/YpWQxs8wW6p/c029KPOf7O/--
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index e3329bc4644b..9b4fd4bca141 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1989,6 +1989,8 @@ enum nl80211_commands {
+  *	torn down when the socket is closed.
+  *	If set during %NL80211_CMD_JOIN_MESH the mesh setup will be
+  *	automatically torn down when the socket is closed.
++ *	If set during %NL80211_CMD_START_AP the AP will be automatically
++ *	disabled when the socket is closed.
+  *
+  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
+  *	the TDLS link initiator.
+diff --git a/net/wireless/ap.c b/net/wireless/ap.c
+index 63682176c96c..882d97bdc6bf 100644
+--- a/net/wireless/ap.c
++++ b/net/wireless/ap.c
+@@ -27,6 +27,7 @@ int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
+ 
+ 	err = rdev_stop_ap(rdev, dev);
+ 	if (!err) {
++		wdev->conn_owner_nlportid = 0;
+ 		wdev->beacon_interval = 0;
+ 		memset(&wdev->chandef, 0, sizeof(wdev->chandef));
+ 		wdev->ssid_len = 0;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 05b903958894..34e8435f0c43 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4135,6 +4135,10 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 		wdev->chandef = params.chandef;
+ 		wdev->ssid_len = params.ssid_len;
+ 		memcpy(wdev->ssid, params.ssid, wdev->ssid_len);
++
++		if (info->attrs[NL80211_ATTR_SOCKET_OWNER])
++			wdev->conn_owner_nlportid = info->snd_portid;
++
+ 	}
+ 	wdev_unlock(wdev);
+ 
+-- 
+2.13.5
