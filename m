@@ -1,42 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:56441 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752090AbeC1LDu (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:14434 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751035AbeCZLqO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 07:03:50 -0400
-Subject: Re: [PATCH v3] ath9k: fix crash in spectral scan
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-References: <20180303041044.26372-1-s.gottschall@dd-wrt.com>
- <87vadgo6vw.fsf@purkki.adurom.net>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <bf40cf99-a105-e0a7-750e-8f212df1a610@dd-wrt.com> (sfid-20180328_130354_874390_F6284454)
-Date: Wed, 28 Mar 2018 13:03:49 +0200
+        Mon, 26 Mar 2018 07:46:14 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 1/9] staging: wilc1000: remove unused global variables related to p2p
+Date: Mon, 26 Mar 2018 17:15:55 +0530
+Message-ID: <1522064763-11576-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180326_134617_048755_73F69A78)
+In-Reply-To: <1522064763-11576-1-git-send-email-ajay.kathat@microchip.com>
+References: <1522064763-11576-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <87vadgo6vw.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Apparently the automatic email was not sent, no idea why. But this was
-> applied to ath-next few days ago:
->
-> 221b6ec69ed9 ath9k: fix crash in spectral scan
-i have seen it. thx
-any idea about my led code for ath10k?
+Cleanup patch to remove the unused global variables defined for p2p.
 
-Sebastian
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 59 -------------------------------
+ 1 file changed, 59 deletions(-)
 
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 5082ede..a13998d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -254,13 +254,6 @@ static u32 inactive_time;
+ static u8 del_beacon;
+ static u32 clients_count;
+ 
+-static u8 *join_req;
+-static u8 *info_element;
+-static u8 mode_11i;
+-static u8 auth_type;
+-static u32 join_req_size;
+-static u32 info_element_size;
+-static struct wilc_vif *join_req_vif;
+ #define REAL_JOIN_REQ 0
+ #define FLUSHED_JOIN_REQ 1
+ #define FLUSHED_BYTE_POS 79
+@@ -995,39 +988,23 @@ static s32 handle_connect(struct wilc_vif *vif,
+ 	wid_list[wid_cnt].size = hif_drv->usr_conn_req.ies_len;
+ 	wid_cnt++;
+ 
+-	if (memcmp("DIRECT-", conn_attr->ssid, 7)) {
+-		info_element_size = hif_drv->usr_conn_req.ies_len;
+-		info_element = kmalloc(info_element_size, GFP_KERNEL);
+-		memcpy(info_element, hif_drv->usr_conn_req.ies,
+-		       info_element_size);
+-	}
+ 	wid_list[wid_cnt].id = (u16)WID_11I_MODE;
+ 	wid_list[wid_cnt].type = WID_CHAR;
+ 	wid_list[wid_cnt].size = sizeof(char);
+ 	wid_list[wid_cnt].val = (s8 *)&hif_drv->usr_conn_req.security;
+ 	wid_cnt++;
+ 
+-	if (memcmp("DIRECT-", conn_attr->ssid, 7))
+-		mode_11i = hif_drv->usr_conn_req.security;
+-
+ 	wid_list[wid_cnt].id = (u16)WID_AUTH_TYPE;
+ 	wid_list[wid_cnt].type = WID_CHAR;
+ 	wid_list[wid_cnt].size = sizeof(char);
+ 	wid_list[wid_cnt].val = (s8 *)&hif_drv->usr_conn_req.auth_type;
+ 	wid_cnt++;
+ 
+-	if (memcmp("DIRECT-", conn_attr->ssid, 7))
+-		auth_type = (u8)hif_drv->usr_conn_req.auth_type;
+-
+ 	wid_list[wid_cnt].id = (u16)WID_JOIN_REQ_EXTENDED;
+ 	wid_list[wid_cnt].type = WID_STR;
+ 	wid_list[wid_cnt].size = 112;
+ 	wid_list[wid_cnt].val = kmalloc(wid_list[wid_cnt].size, GFP_KERNEL);
+ 
+-	if (memcmp("DIRECT-", conn_attr->ssid, 7)) {
+-		join_req_size = wid_list[wid_cnt].size;
+-		join_req = kmalloc(join_req_size, GFP_KERNEL);
+-	}
+ 	if (!wid_list[wid_cnt].val) {
+ 		result = -EFAULT;
+ 		goto error;
+@@ -1120,11 +1097,6 @@ static s32 handle_connect(struct wilc_vif *vif,
+ 	cur_byte = wid_list[wid_cnt].val;
+ 	wid_cnt++;
+ 
+-	if (memcmp("DIRECT-", conn_attr->ssid, 7)) {
+-		memcpy(join_req, cur_byte, join_req_size);
+-		join_req_vif = vif;
+-	}
+-
+ 	if (conn_attr->bssid)
+ 		memcpy(wilc_connected_ssid,
+ 		       conn_attr->bssid, ETH_ALEN);
+@@ -1254,16 +1226,6 @@ static s32 handle_connect_timeout(struct wilc_vif *vif)
+ 
+ 	eth_zero_addr(wilc_connected_ssid);
+ 
+-	if (join_req && join_req_vif == vif) {
+-		kfree(join_req);
+-		join_req = NULL;
+-	}
+-
+-	if (info_element && join_req_vif == vif) {
+-		kfree(info_element);
+-		info_element = NULL;
+-	}
+-
+ 	return result;
+ }
+ 
+@@ -1519,17 +1481,6 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
+ 			hif_drv->usr_conn_req.ies_len = 0;
+ 			kfree(hif_drv->usr_conn_req.ies);
+ 			hif_drv->usr_conn_req.ies = NULL;
+-
+-			if (join_req && join_req_vif == vif) {
+-				kfree(join_req);
+-				join_req = NULL;
+-			}
+-
+-			if (info_element && join_req_vif == vif) {
+-				kfree(info_element);
+-				info_element = NULL;
+-			}
+-
+ 			hif_drv->hif_state = HOST_IF_IDLE;
+ 			scan_while_connected = false;
+ 
+@@ -1866,16 +1817,6 @@ static void handle_disconnect(struct wilc_vif *vif)
+ 	kfree(conn_req->ies);
+ 	conn_req->ies = NULL;
+ 
+-	if (join_req && join_req_vif == vif) {
+-		kfree(join_req);
+-		join_req = NULL;
+-	}
+-
+-	if (info_element && join_req_vif == vif) {
+-		kfree(info_element);
+-		info_element = NULL;
+-	}
+-
+ out:
+ 
+ 	complete(&hif_drv->comp_test_disconn_block);
 -- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+2.7.4
