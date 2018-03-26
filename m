@@ -1,56 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0064.outbound.protection.outlook.com ([104.47.38.64]:4699
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S965940AbeCAIqq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 03:46:46 -0500
-Date: Thu, 1 Mar 2018 11:46:25 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Dmitry Lebed <dlebed@quantenna.com>,
-        Dmitry Lebed <lebed.dmitry@gmail.com>
-Subject: Re: [PATCH v2] cfg80211/nl80211: add DFS offload flag
-Message-ID: <20180301084619.noxh64db73lrklwp@bars> (sfid-20180301_094709_579746_D8D15532)
-References: <20180222091513.25456-1-sergey.matyukevich.os@quantenna.com>
- <1519385531.2231.12.camel@sipsolutions.net>
+Received: from smtp.codeaurora.org ([198.145.29.96]:39236 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751171AbeCZPNq (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Mar 2018 11:13:46 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1519385531.2231.12.camel@sipsolutions.net>
+Subject: Re: [v2] ath10k: fix use-after-free in ath10k_wmi_cmd_send_nowait
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1520232242-24132-1-git-send-email-cjhuang@codeaurora.org>
+References: <1520232242-24132-1-git-send-email-cjhuang@codeaurora.org>
+To: Carl Huang <cjhuang@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Message-Id: <20180326151345.B70C660251@smtp.codeaurora.org> (sfid-20180326_171349_825972_BA3E6B7C)
+Date: Mon, 26 Mar 2018 15:13:45 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Carl Huang <cjhuang@codeaurora.org> wrote:
 
-Hello Johannes,
-
-> > Add wiphy EXT_FEATURE flag to indicate that HW or driver does
-> > all DFS actions by itself.
-> > User-space functionality already implemented in hostapd using
-> > vendor-specific (QCA) OUI to advertise DFS offload support.
-> > Need to introduce generic flag to inform about DFS offload support.
-> > For deivces with DFS_OFFLOAD flag set user-space will no longer
-> > need to issue CAC or do any actions in response to
-> > "radar detected" events. HW will do everything by itself and send
-> > events to user-space to indicate that CAC was started/finished, etc.
-> >
-> > + * @NL80211_EXT_FEATURE_DFS_OFFLOAD: HW/driver will offload DFS actions.
-> > + *   Device or driver will do all DFS-related actions by itself,
-> > + *   informing user-space about CAC progress, radar detection event,
-> > + *   channel change triggered by radar detection event.
-> > + *   No need to start CAC from user-space, no need to react to
-> > + *   "radar detected" event.
+> The skb may be freed in tx completion context before
+> trace_ath10k_wmi_cmd is called. This can be easily captured when
+> KASAN(Kernel Address Sanitizer) is enabled. The fix is to move
+> trace_ath10k_wmi_cmd before the send operation. As the ret has no
+> meaning in trace_ath10k_wmi_cmd then, so remove this parameter too.
 > 
-> The "channel change" part bothers me a bit - isn't normally hostapd
-> very much in control of the channel? How does it even get notified of
-> the new channel? How can you configure the parameters like how many
-> beacons to include the (E)CSA IE for, and whether to add ECSA or not
-> etc?
+> Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
+> Tested-by: Brian Norris <briannorris@chromium.org>
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-We are about to send v3 for this feature. Could you please clarify
-your preferences in terms of patchwork procedure ? Should we mark
-previous patch versions as superseded for nl80211/cfg80211 patches ?
+Patch applied to ath-next branch of ath.git, thanks.
 
-Regards,
-Sergey
+9ef0f58ed7b4 ath10k: fix use-after-free in ath10k_wmi_cmd_send_nowait
+
+-- 
+https://patchwork.kernel.org/patch/10258179/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
