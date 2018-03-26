@@ -1,17 +1,17 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:32951 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752654AbeCZRQd (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:39933 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752173AbeCZRQ2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 13:16:33 -0400
-Received: by mail-ot0-f195.google.com with SMTP id 23-v6so10931781otj.0
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:16:33 -0700 (PDT)
+        Mon, 26 Mar 2018 13:16:28 -0400
+Received: by mail-oi0-f66.google.com with SMTP id q71-v6so16726093oic.6
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:16:28 -0700 (PDT)
 From: Denis Kenzior <denkenz@gmail.com>
 To: linux-wireless@vger.kernel.org
 Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v6 10/11] mac80211: Add support for tx_control_port
-Date: Mon, 26 Mar 2018 12:16:13 -0500
-Message-Id: <20180326171614.20373-11-denkenz@gmail.com> (sfid-20180326_191637_324761_3F9EFCC4)
+Subject: [RFC v6 06/11] nl80211: Add SOCKET_OWNER support to JOIN_MESH
+Date: Mon, 26 Mar 2018 12:16:09 -0500
+Message-Id: <20180326171614.20373-7-denkenz@gmail.com> (sfid-20180326_191716_616859_74A59A41)
 In-Reply-To: <20180326171614.20373-1-denkenz@gmail.com>
 References: <20180326171614.20373-1-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
@@ -19,88 +19,56 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 Signed-off-by: Denis Kenzior <denkenz@gmail.com>
 ---
- net/mac80211/cfg.c         |  1 +
- net/mac80211/ieee80211_i.h |  3 +++
- net/mac80211/tx.c          | 46 ++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 50 insertions(+)
+ include/uapi/linux/nl80211.h |  2 ++
+ net/wireless/mesh.c          |  1 +
+ net/wireless/nl80211.c       | 10 +++++++++-
+ 3 files changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index fd68f6fb02d7..9294acb495ee 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3786,4 +3786,5 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.add_nan_func = ieee80211_add_nan_func,
- 	.del_nan_func = ieee80211_del_nan_func,
- 	.set_multicast_to_unicast = ieee80211_set_multicast_to_unicast,
-+	.tx_control_port = ieee80211_tx_control_port,
- };
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ae9c33cd8ada..a52bd2a61a27 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1734,6 +1734,9 @@ void ieee80211_check_fast_xmit(struct sta_info *sta);
- void ieee80211_check_fast_xmit_all(struct ieee80211_local *local);
- void ieee80211_check_fast_xmit_iface(struct ieee80211_sub_if_data *sdata);
- void ieee80211_clear_fast_xmit(struct sta_info *sta);
-+int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
-+			      const u8 *buf, size_t len,
-+			      const u8 *dest, __be16 proto, bool unencrypted);
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 877fab2836ec..e3329bc4644b 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1987,6 +1987,8 @@ enum nl80211_commands {
+  *	station will deauthenticate when the socket is closed.
+  *	If set during %NL80211_CMD_JOIN_IBSS the IBSS will be automatically
+  *	torn down when the socket is closed.
++ *	If set during %NL80211_CMD_JOIN_MESH the mesh setup will be
++ *	automatically torn down when the socket is closed.
+  *
+  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
+  *	the TDLS link initiator.
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index b12da6ef3c12..e91a5078615b 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -286,6 +286,7 @@ int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
  
- /* HT */
- void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7643178ef132..6ae8fe121500 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -4749,3 +4749,49 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_xmit(sdata, NULL, skb);
- 	local_bh_enable();
+ 	err = rdev_leave_mesh(rdev, dev);
+ 	if (!err) {
++		wdev->conn_owner_nlportid = 0;
+ 		wdev->mesh_id_len = 0;
+ 		wdev->beacon_interval = 0;
+ 		memset(&wdev->chandef, 0, sizeof(wdev->chandef));
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 2f630ee3240b..05b903958894 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -10153,7 +10153,15 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
+ 	setup.userspace_handles_dfs =
+ 		nla_get_flag(info->attrs[NL80211_ATTR_HANDLE_DFS]);
+ 
+-	return cfg80211_join_mesh(rdev, dev, &setup, &cfg);
++	err = cfg80211_join_mesh(rdev, dev, &setup, &cfg);
++
++	if (!err && info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
++		wdev_lock(dev->ieee80211_ptr);
++		dev->ieee80211_ptr->conn_owner_nlportid = info->snd_portid;
++		wdev_unlock(dev->ieee80211_ptr);
++	}
++
++	return err;
  }
-+
-+int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
-+			      const u8 *buf, size_t len,
-+			      const u8 *dest, __be16 proto, bool unencrypted)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+	struct sk_buff *skb;
-+	struct ethhdr *ehdr;
-+	u32 flags;
-+
-+	/* Only accept CONTROL_PORT_PROTOCOL configured in CONNECT/ASSOCIATE
-+	 * or Pre-Authentication
-+	 */
-+	if (proto != sdata->control_port_protocol &&
-+	    proto != cpu_to_be16(ETH_P_PREAUTH))
-+		return -EINVAL;
-+
-+	if (unencrypted)
-+		flags = IEEE80211_TX_INTFL_DONT_ENCRYPT;
-+	else
-+		flags = 0;
-+
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
-+			    sizeof(struct ethhdr) + len);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	skb_reserve(skb, local->hw.extra_tx_headroom + sizeof(struct ethhdr));
-+
-+	skb_put_data(skb, buf, len);
-+
-+	ehdr = skb_push(skb, sizeof(struct ethhdr));
-+	memcpy(ehdr->h_dest, dest, ETH_ALEN);
-+	memcpy(ehdr->h_source, sdata->vif.addr, ETH_ALEN);
-+	ehdr->h_proto = proto;
-+
-+	skb->dev = dev;
-+	skb->protocol = htons(ETH_P_802_3);
-+	skb_reset_network_header(skb);
-+	skb_reset_mac_header(skb);
-+
-+	__ieee80211_subif_start_xmit(skb, skb->dev, flags);
-+
-+	return 0;
-+}
+ 
+ static int nl80211_leave_mesh(struct sk_buff *skb, struct genl_info *info)
 -- 
 2.13.5
