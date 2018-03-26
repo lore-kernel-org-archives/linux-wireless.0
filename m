@@ -1,62 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33418 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1424003AbeCBMbU (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44052 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751002AbeCZFk0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 07:31:20 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+        Mon, 26 Mar 2018 01:40:26 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org, bjorn.andersson@linaro.org
 Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  2 Mar 2018 14:31:08 +0200
-Message-Id: <20180302123112.27416-1-luca@coelho.fi> (sfid-20180302_133124_563275_088610C6)
-Subject: [PATCH 0/4] iwlwifi: fixes intended for 4.16 2018-03-02
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH 06/12] firmware: qcom: scm: Add WLAN VMID for Qualcomm SCM interface
+Date: Mon, 26 Mar 2018 11:10:19 +0530
+Message-Id: <1522042819-25916-1-git-send-email-govinds@codeaurora.org> (sfid-20180326_074029_505470_941EC49D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Add WLAN related VMID's to support wlan driver to set up
+the remote's permissions call via TrustZone.
 
-Hi,
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+---
+ include/linux/qcom_scm.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-This is my third batch of fixes inteded for 4.16.
-
-These are the fixes:
-
-* Fix an issue with the multicast queue;
-* Fix IGTK handling;
-* Fix some missing return value checks;
-* Add support for a HW workaround for issues on some platforms;
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Beni Lev (1):
-  iwlwifi: mvm: Correctly set IGTK for AP
-
-Emmanuel Grumbach (1):
-  iwlwifi: mvm: set the correct tid when we flush the MCAST sta
-
-Johannes Berg (1):
-  iwlwifi: mvm: fix error checking for multi/broadcast sta
-
-Luca Coelho (1):
-  iwlwifi: add shared clock PHY config flag for some devices
-
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c     | 62 +++++++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/fw/file.h      |  1 +
- drivers/net/wireless/intel/iwlwifi/iwl-config.h   |  5 ++
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c       |  4 ++
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 21 ++++----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c       | 10 ++--
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c     | 38 +++++++-------
- 8 files changed, 109 insertions(+), 36 deletions(-)
-
+diff --git a/include/linux/qcom_scm.h b/include/linux/qcom_scm.h
+index b401b96..da63d84 100644
+--- a/include/linux/qcom_scm.h
++++ b/include/linux/qcom_scm.h
+@@ -1,4 +1,4 @@
+-/* Copyright (c) 2010-2015, The Linux Foundation. All rights reserved.
++/* Copyright (c) 2010-2015, 2018, The Linux Foundation. All rights reserved.
+  * Copyright (C) 2015 Linaro Ltd.
+  *
+  * This program is free software; you can redistribute it and/or modify
+@@ -33,6 +33,8 @@ struct qcom_scm_vmperm {
+ 
+ #define QCOM_SCM_VMID_HLOS       0x3
+ #define QCOM_SCM_VMID_MSS_MSA    0xF
++#define QCOM_SCM_VMID_WLAN       0x18
++#define QCOM_SCM_VMID_WLAN_CE    0x19
+ #define QCOM_SCM_PERM_READ       0x4
+ #define QCOM_SCM_PERM_WRITE      0x2
+ #define QCOM_SCM_PERM_EXEC       0x1
 -- 
-2.16.1
+1.9.1
