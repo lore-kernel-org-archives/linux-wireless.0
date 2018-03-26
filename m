@@ -1,75 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:55744 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751380AbeCZQP4 (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:14434 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751204AbeCZLql (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 12:15:56 -0400
-Subject: Re: [PATCH] staging: wilc1000: check for kmalloc allocation failures
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: Joe Perches <joe@perches.com>,
-        Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20180321191941.4126-1-colin.king@canonical.com>
- <1521662598.7999.33.camel@perches.com>
- <20180326210548.791f070a@ajaysk-VirtualBox>
-From: Colin Ian King <colin.king@canonical.com>
-Message-ID: <ebe99f8e-5e55-c5cd-59d5-ec618164604a@canonical.com> (sfid-20180326_181612_957023_E6FA8389)
-Date: Mon, 26 Mar 2018 17:15:53 +0100
+        Mon, 26 Mar 2018 07:46:41 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 9/9] staging: wilc1000: free memory allocated for general info message from firmware
+Date: Mon, 26 Mar 2018 17:16:03 +0530
+Message-ID: <1522064763-11576-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180326_134643_951011_5571ED87)
+In-Reply-To: <1522064763-11576-1-git-send-email-ajay.kathat@microchip.com>
+References: <1522064763-11576-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <20180326210548.791f070a@ajaysk-VirtualBox>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26/03/18 16:35, Ajay Singh wrote:
-> Thanks for submitting the patch.
-> 
-> On Wed, 21 Mar 2018 13:03:18 -0700
-> Joe Perches <joe@perches.com> wrote:
-> 
->> On Wed, 2018-03-21 at 19:19 +0000, Colin King wrote:
->>> From: Colin Ian King <colin.king@canonical.com>
->>>
->>> There are three kmalloc allocations that are not null checked which
->>> potentially could lead to null pointer dereference issues. Fix this
->>> by adding null pointer return checks.
->>
->> looks like all of these should be kmemdup or kstrdup
->>
->>>  
->>> @@ -951,6 +955,10 @@ static s32 handle_connect(struct wilc_vif *vif,
->>>  	if (conn_attr->ssid) {
->>>  		hif_drv->usr_conn_req.ssid = kmalloc(conn_attr->ssid_len + 1,
->>>  						     GFP_KERNEL);
->>> +		if (!hif_drv->usr_conn_req.ssid) {
->>> +			result = -ENOMEM;
->>> +			goto error;
->>> +		}
->>>  		memcpy(hif_drv->usr_conn_req.ssid,
->>>  		       conn_attr->ssid,
->>>  		       conn_attr->ssid_len);
-> 
-> With this changes the Coverity reported warning is handled correctly.
-> 
-> For further improvement to the patch, as Joe Perches suggested, its better
-> to make use of kmemdup instead of kmalloc & memcpy. As kstrdup requires the
-> source string to be NULL terminated('\0') and conn_attr->ssid might not  
-> contains the '\0' terminated string. So kmemdup with length of 
-> 'conn_attr->ssid_len' can be used instead.
-> 
-> Please include the changes by using kmemdup() for all kmalloc/memcpy in
-> this patch.
+Free allocated memory for failure scenario while processing the
+information message received from the firmware. Added NULL check and used
+kmemdup in the flow of handling information message.
 
-The original has been included into Greg's staging repo, so I'll send a
-send patch that addresses the kmemdup.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 48 ++++++++++++++++++++-----------
+ 1 file changed, 31 insertions(+), 17 deletions(-)
 
-Colin
-> 
-> 
-> 
-> Regards,
-> Ajay
-> 
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 73bdd24..c06920b 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1346,16 +1346,15 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
+ 
+ 				if (conn_info.status == SUCCESSFUL_STATUSCODE &&
+ 				    connect_resp_info->ies) {
+-					conn_info.resp_ies_len = connect_resp_info->ies_len;
+-					conn_info.resp_ies = kmalloc(connect_resp_info->ies_len, GFP_KERNEL);
+-					memcpy(conn_info.resp_ies, connect_resp_info->ies,
+-					       connect_resp_info->ies_len);
++					conn_info.resp_ies = kmemdup(connect_resp_info->ies,
++								     connect_resp_info->ies_len,
++								     GFP_KERNEL);
++					if (conn_info.resp_ies)
++						conn_info.resp_ies_len = connect_resp_info->ies_len;
+ 				}
+ 
+-				if (connect_resp_info) {
+-					kfree(connect_resp_info->ies);
+-					kfree(connect_resp_info);
+-				}
++				kfree(connect_resp_info->ies);
++				kfree(connect_resp_info);
+ 			}
+ 		}
+ 	}
+@@ -1381,11 +1380,11 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
+ 	}
+ 
+ 	if (hif_drv->usr_conn_req.ies) {
+-		conn_info.req_ies_len = hif_drv->usr_conn_req.ies_len;
+-		conn_info.req_ies = kmalloc(hif_drv->usr_conn_req.ies_len,
++		conn_info.req_ies = kmemdup(conn_info.req_ies,
++					    hif_drv->usr_conn_req.ies_len,
+ 					    GFP_KERNEL);
+-		memcpy(conn_info.req_ies, hif_drv->usr_conn_req.ies,
+-		       hif_drv->usr_conn_req.ies_len);
++		if (conn_info.req_ies)
++			conn_info.req_ies_len = hif_drv->usr_conn_req.ies_len;
+ 	}
+ 
+ 	del_timer(&hif_drv->connect_timer);
+@@ -1463,17 +1462,25 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
+ 	u8 mac_status_additional_info;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
++	if (!rcvd_info->buffer) {
++		netdev_err(vif->ndev, "Received buffer is NULL\n");
++		return -EINVAL;
++	}
++
+ 	if (!hif_drv) {
+ 		netdev_err(vif->ndev, "Driver handler is NULL\n");
++		kfree(rcvd_info->buffer);
++		rcvd_info->buffer = NULL;
+ 		return -ENODEV;
+ 	}
+ 
+ 	if (hif_drv->hif_state == HOST_IF_WAITING_CONN_RESP ||
+ 	    hif_drv->hif_state == HOST_IF_CONNECTED ||
+ 	    hif_drv->usr_scan_req.scan_result) {
+-		if (!rcvd_info->buffer ||
+-		    !hif_drv->usr_conn_req.conn_result) {
++		if (!hif_drv->usr_conn_req.conn_result) {
+ 			netdev_err(vif->ndev, "driver is null\n");
++			kfree(rcvd_info->buffer);
++			rcvd_info->buffer = NULL;
+ 			return -EINVAL;
+ 		}
+ 
+@@ -1481,6 +1488,8 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
+ 
+ 		if ('I' != msg_type) {
+ 			netdev_err(vif->ndev, "Received Message incorrect.\n");
++			kfree(rcvd_info->buffer);
++			rcvd_info->buffer = NULL;
+ 			return -EFAULT;
+ 		}
+ 
+@@ -3527,12 +3536,17 @@ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length)
+ 	msg.vif = vif;
+ 
+ 	msg.body.async_info.len = length;
+-	msg.body.async_info.buffer = kmalloc(length, GFP_KERNEL);
+-	memcpy(msg.body.async_info.buffer, buffer, length);
++	msg.body.async_info.buffer = kmemdup(buffer, length, GFP_KERNEL);
++	if (!msg.body.async_info.buffer) {
++		mutex_unlock(&hif_deinit_lock);
++		return;
++	}
+ 
+ 	result = wilc_enqueue_cmd(&msg);
+-	if (result)
++	if (result) {
+ 		netdev_err(vif->ndev, "synchronous info (%d)\n", result);
++		kfree(msg.body.async_info.buffer);
++	}
+ 
+ 	mutex_unlock(&hif_deinit_lock);
+ }
+-- 
+2.7.4
