@@ -1,90 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:38597 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752941AbeC1PNg (ORCPT
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:34208 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751908AbeCZRxI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 11:13:36 -0400
-Received: by mail-wr0-f194.google.com with SMTP id m13so2595851wrj.5
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Mar 2018 08:13:36 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <94497d97976ff1934a08e70cc118bf56@codeaurora.org>
-References: <1522140171-10926-1-git-send-email-vthiagar@codeaurora.org>
- <CALLGbR+d8gCS0-_NV8i0K6ktL14OEiDjxVG4bvubmti7Yp5OoQ@mail.gmail.com> <94497d97976ff1934a08e70cc118bf56@codeaurora.org>
-From: Steve deRosier <derosier@gmail.com>
-Date: Wed, 28 Mar 2018 08:12:54 -0700
-Message-ID: <CALLGbRJHrYr0ErBEaGtL8MdumgwFeCcjV3PtG9Gv5_dtgxqQqg@mail.gmail.com> (sfid-20180328_171340_676330_54405A6D)
-Subject: Re: [RFC 0/4] wireless: Per-sta NoAck and offload support
-To: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Mon, 26 Mar 2018 13:53:08 -0400
+Received: by mail-ot0-f193.google.com with SMTP id m7-v6so21598197otd.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:53:08 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [PATCH v7 10/11] mac80211: Add support for tx_control_port
+Date: Mon, 26 Mar 2018 12:52:50 -0500
+Message-Id: <20180326175251.20666-11-denkenz@gmail.com> (sfid-20180326_195319_880810_A4978C2E)
+In-Reply-To: <20180326175251.20666-1-denkenz@gmail.com>
+References: <20180326175251.20666-1-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 27, 2018 at 11:09 PM,  <vthiagar@codeaurora.org> wrote:
-> On 2018-03-27 22:18, Steve deRosier wrote:
->>
->> Hi Vasanthakumar,
->>
->> On Tue, Mar 27, 2018 at 1:42 AM, Vasanthakumar Thiagarajan
->> <vthiagar@codeaurora.org> wrote:
->>>
->>> Adds infrastructure for driver to offload NoAck functionality, driver
->>> like ath10k could make use of it. Also extends the current ndev wide
->>
->>
->> I'm not really much of a fan of adding a feature without some use of
->> the feature. Perhaps if drivers "like" ath10k could use it, maybe you
->> should add a patch(s) to the series where one of those drivers
->> actually uses the feature.  An API without an example of use is also
->> harder to evaluate effectively.
->
->
-> I agree driver patch using the new NoAck infrastructure would help with
-> understanding, ill post it once it is ready. But not sure the driver patch
-> can be part of the same series.
->
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+---
+ net/mac80211/cfg.c         |  1 +
+ net/mac80211/ieee80211_i.h |  3 +++
+ net/mac80211/tx.c          | 46 ++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 50 insertions(+)
 
-It can. I think both Arend and Johannes already covered it.
-
-
->>
->> Additionally, if it's relevant, adding use of the feature to hwsim
->> would both serve the above comment as well as provide testing
->> capability.
->
->
-> Does not seem like this offload feature is something applicable for hwsim
-> especially mac80211 already offers the same functionality.
->
-
-Well, if we desire hwsim to be able to test all the features of
-mac80211 (which I don't know if that's true), then it would be
-appropriate to place the functionality in hwsim as an optional
-turn-on-able feature and have it utilize this API if it's turned on.
-It actually would be nice to add it for that purpose. But, admittedly
-it's a bit of work as you have to replicate the "hardware" offload
-portion in hwsim which obviously you don't if you're working with
-actual hardware that implements this feature.
-
-I'd say it's a nice-to-have. If only to keep hwsim in-sync with
-mac80211 features for testing. But, I admit I'm asking for work that
-is perhaps out-of-scope.
-
-All I really want is a driver that actually uses this as an example of use.
-
->
-> The NoAck configuration is a bitmap of tid which is used to set NoAck in Qos
-> control field of the data frame for that particular tid. Perhaps you could
-> look at Ack policy subfield section in 802.11 spec.
->
-
-Thank you. Because you gave it a name, I thought we were talking about
-something more...involved. I'd appreciate if you pointed out that
-context in the commit comment of the first patch in the series.
-Something mentioning the Ack policy subfield specifically would give
-context for those of us trying to tie it to specific 802.11
-specifications.
-
-Thanks,
-- Steve
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index fd68f6fb02d7..9294acb495ee 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3786,4 +3786,5 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_nan_func = ieee80211_add_nan_func,
+ 	.del_nan_func = ieee80211_del_nan_func,
+ 	.set_multicast_to_unicast = ieee80211_set_multicast_to_unicast,
++	.tx_control_port = ieee80211_tx_control_port,
+ };
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ae9c33cd8ada..a52bd2a61a27 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1734,6 +1734,9 @@ void ieee80211_check_fast_xmit(struct sta_info *sta);
+ void ieee80211_check_fast_xmit_all(struct ieee80211_local *local);
+ void ieee80211_check_fast_xmit_iface(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_clear_fast_xmit(struct sta_info *sta);
++int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
++			      const u8 *buf, size_t len,
++			      const u8 *dest, __be16 proto, bool unencrypted);
+ 
+ /* HT */
+ void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 7643178ef132..6ae8fe121500 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -4749,3 +4749,49 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_xmit(sdata, NULL, skb);
+ 	local_bh_enable();
+ }
++
++int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
++			      const u8 *buf, size_t len,
++			      const u8 *dest, __be16 proto, bool unencrypted)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++	struct sk_buff *skb;
++	struct ethhdr *ehdr;
++	u32 flags;
++
++	/* Only accept CONTROL_PORT_PROTOCOL configured in CONNECT/ASSOCIATE
++	 * or Pre-Authentication
++	 */
++	if (proto != sdata->control_port_protocol &&
++	    proto != cpu_to_be16(ETH_P_PREAUTH))
++		return -EINVAL;
++
++	if (unencrypted)
++		flags = IEEE80211_TX_INTFL_DONT_ENCRYPT;
++	else
++		flags = 0;
++
++	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
++			    sizeof(struct ethhdr) + len);
++	if (!skb)
++		return -ENOMEM;
++
++	skb_reserve(skb, local->hw.extra_tx_headroom + sizeof(struct ethhdr));
++
++	skb_put_data(skb, buf, len);
++
++	ehdr = skb_push(skb, sizeof(struct ethhdr));
++	memcpy(ehdr->h_dest, dest, ETH_ALEN);
++	memcpy(ehdr->h_source, sdata->vif.addr, ETH_ALEN);
++	ehdr->h_proto = proto;
++
++	skb->dev = dev;
++	skb->protocol = htons(ETH_P_802_3);
++	skb_reset_network_header(skb);
++	skb_reset_mac_header(skb);
++
++	__ieee80211_subif_start_xmit(skb, skb->dev, flags);
++
++	return 0;
++}
+-- 
+2.13.5
