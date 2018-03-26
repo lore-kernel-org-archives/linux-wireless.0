@@ -1,49 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:36279 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754314AbeCRSlf (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:44452 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750832AbeCZB0a (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Mar 2018 14:41:35 -0400
-From: Alexey Roslyakov <alexey.roslyakov@gmail.com>
-To: kvalo@codeaurora.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com, netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Alexey Roslyakov <alexey.roslyakov@gmail.com>
-Subject: [PATCH 2/2] dt: bindings: add new dt entries for brcmfmac
-Date: Mon, 19 Mar 2018 01:41:01 +0700
-Message-Id: <20180318184101.26951-2-alexey.roslyakov@gmail.com> (sfid-20180318_194202_958606_05CBA802)
-In-Reply-To: <20180318184101.26951-1-alexey.roslyakov@gmail.com>
-References: <20180318184101.26951-1-alexey.roslyakov@gmail.com>
+        Sun, 25 Mar 2018 21:26:30 -0400
+Date: Sun, 25 Mar 2018 21:26:28 -0400 (EDT)
+Message-Id: <20180325.212628.11799971939351101.davem@davemloft.net> (sfid-20180326_032647_156407_2BB3BB4F)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers 2018-03-24
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87sh8prb0u.fsf@kamboji.qca.qualcomm.com>
+References: <87sh8prb0u.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case if the host has higher align requirements for SG items, allow
-setting device-specific aligns for scatterlist items.
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Sat, 24 Mar 2018 13:03:13 +0200
 
-Signed-off-by: Alexey Roslyakov <alexey.roslyakov@gmail.com>
----
- Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt | 5 +++++
- 1 file changed, 5 insertions(+)
+> This is a pull request to the net tree for 4.16. I'm not planning to
+> send anything more in this cycle for 4.16, unless something really major
+> comes up.
+> 
+> Please let me know if you have any problems.
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-index 86602f264dce..187b8c1b52a7 100644
---- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-@@ -17,6 +17,11 @@ Optional properties:
- 	When not specified the device will use in-band SDIO interrupts.
-  - interrupt-names : name of the out-of-band interrupt, which must be set
- 	to "host-wake".
-+ - brcm,broken-sg-support : boolean flag to indicate that the SDIO host
-+	controller has higher align requirement than 32 bytes for each
-+	scatterlist item.
-+ - brcm,sd-head-align : alignment requirement for start of data buffer.
-+ - brcm,sd-sgentry-align : length alignment requirement for each sg entry.
- 
- Example:
- 
--- 
-2.16.1
+Pulled.
