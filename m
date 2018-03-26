@@ -1,60 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:46629 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031161AbeCAOVI (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:14434 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750984AbeCZLqV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:21:08 -0500
-Received: by mail-qt0-f195.google.com with SMTP id m13so7661359qtg.13
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:21:08 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 16/52] ath: Add regulatory mapping for APL10_MKKC
-Date: Thu,  1 Mar 2018 15:18:26 +0100
-Message-Id: <20180301141902.24824-17-sven.eckelmann@openmesh.com> (sfid-20180301_152112_123649_549D6C53)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+        Mon, 26 Mar 2018 07:46:21 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 3/9] staging: wilc1000: free allocated memory in edit and add station functions
+Date: Mon, 26 Mar 2018 17:15:57 +0530
+Message-ID: <1522064763-11576-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180326_134623_817947_254567AC)
+In-Reply-To: <1522064763-11576-1-git-send-email-ajay.kathat@microchip.com>
+References: <1522064763-11576-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The regdomain code is used to select the correct the correct conformance
-test limits (CTL) for a country. If the regdomain code isn't available and
-it is still programmed in the EEPROM then it will cause an error and stop
-the initialization with:
+Added fix to free the allocated memory in case of failure to enqueue
+the command.
 
-  Invalid EEPROM contents
-
-The current CTL mappings for this regdomain code are:
-
-* 2.4GHz: MKK
-* 5GHz: ETSI
-
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
 ---
- drivers/net/wireless/ath/regd_common.h | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/staging/wilc1000/host_interface.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index 07c966ad7a67..44e3831c13b1 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -72,6 +72,7 @@ enum EnumRd {
- 	APL7_FCCA = 0x5C,
- 	APL8_WORLD = 0x5D,
- 	APL9_WORLD = 0x5E,
-+	APL10_MKKC = 0x5F,
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 70c10bc..1cc4c08 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3709,8 +3709,10 @@ int wilc_add_station(struct wilc_vif *vif, struct add_sta_param *sta_param)
+ 	}
  
- 	WOR0_WORLD = 0x60,
- 	WOR1_WORLD = 0x61,
-@@ -198,6 +199,7 @@ static struct reg_dmn_pair_mapping regDomainPairs[] = {
- 	{APL8_WORLD, CTL_ETSI, CTL_ETSI},
- 	{APL9_WORLD, CTL_ETSI, CTL_ETSI},
+ 	result = wilc_enqueue_cmd(&msg);
+-	if (result)
++	if (result) {
+ 		netdev_err(vif->ndev, "wilc_mq_send fail\n");
++		kfree(add_sta_info->rates);
++	}
+ 	return result;
+ }
  
-+	{APL10_MKKC, CTL_ETSI, CTL_MKK},
- 	{APL3_FCCA, CTL_FCC, CTL_FCC},
- 	{APL7_FCCA, CTL_FCC, CTL_FCC},
- 	{APL1_ETSIC, CTL_FCC, CTL_ETSI},
+@@ -3793,8 +3795,10 @@ int wilc_edit_station(struct wilc_vif *vif,
+ 	}
+ 
+ 	result = wilc_enqueue_cmd(&msg);
+-	if (result)
++	if (result) {
+ 		netdev_err(vif->ndev, "wilc_mq_send fail\n");
++		kfree(add_sta_info->rates);
++	}
+ 
+ 	return result;
+ }
 -- 
-2.11.0
+2.7.4
