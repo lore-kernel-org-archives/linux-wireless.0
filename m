@@ -1,30 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:44452 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750832AbeCZB0a (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Mar 2018 21:26:30 -0400
-Date: Sun, 25 Mar 2018 21:26:28 -0400 (EDT)
-Message-Id: <20180325.212628.11799971939351101.davem@davemloft.net> (sfid-20180326_032647_156407_2BB3BB4F)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers 2018-03-24
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87sh8prb0u.fsf@kamboji.qca.qualcomm.com>
-References: <87sh8prb0u.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail-ve1eur01on0059.outbound.protection.outlook.com ([104.47.1.59]:62304
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751076AbeCZUV1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Mar 2018 16:21:27 -0400
+Subject: Re: [PATCH v3 00/12] *** Add support for wifi QMI client driver ***
+To: Govind Singh <govinds@codeaurora.org>, ath10k@lists.infradead.org,
+        bjorn.andersson@linaro.org
+References: <1522042636-25516-1-git-send-email-govinds@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+From: Peter Oh <peter.oh@bowerswilkins.com>
+Message-ID: <d8e017b6-8642-919f-8c8c-ca322bed90fd@bowerswilkins.com> (sfid-20180326_222131_930131_190C9210)
+Date: Mon, 26 Mar 2018 13:21:11 -0700
+MIME-Version: 1.0
+In-Reply-To: <1522042636-25516-1-git-send-email-govinds@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Sat, 24 Mar 2018 13:03:13 +0200
 
-> This is a pull request to the net tree for 4.16. I'm not planning to
-> send anything more in this cycle for 4.16, unless something really major
-> comes up.
-> 
-> Please let me know if you have any problems.
+> Add QMI client driver for Q6 integrated WLAN connectivity subsystem.
+Can you give an example which chipset series is Q6 integrated WLAN ?
 
-Pulled.
+Thanks,
+Peter
