@@ -1,191 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42560 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751742AbeCDQcG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 4 Mar 2018 11:32:06 -0500
-From: Ramon Fried <rfried@codeaurora.org>
-To: k.eugene.e@gmail.com, kvalo@codeaurora.org,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc: Ramon Fried <rfried@codeaurora.org>
-Subject: [PATCH] wcn36xx: calculate DXE control registers values
-Date: Sun,  4 Mar 2018 18:31:34 +0200
-Message-Id: <20180304163134.4464-1-rfried@codeaurora.org> (sfid-20180304_173232_086900_92C051E0)
+Received: from mail-sn1nam01on0060.outbound.protection.outlook.com ([104.47.32.60]:20425
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751374AbeCZNgv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Mar 2018 09:36:51 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Dmitry Lebed <dlebed@quantenna.com>,
+        Dmitry Lebed <lebed.dmitry@gmail.com>
+Subject: [PATCH 1/3] cfg80211: fix CAC_STARTED event handling
+Date: Mon, 26 Mar 2018 16:36:31 +0300
+Message-Id: <20180326133633.8771-2-sergey.matyukevich.os@quantenna.com> (sfid-20180326_153656_256809_9984F89C)
+In-Reply-To: <20180326133633.8771-1-sergey.matyukevich.os@quantenna.com>
+References: <20180326133633.8771-1-sergey.matyukevich.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DXE descriptor control registers used hardcoded magic
-values.
-Added bit definitions of the control register and
-calculate this values in compilation for clarity.
+From: Dmitry Lebed <dlebed@quantenna.com>
 
-Signed-off-by: Ramon Fried <rfried@codeaurora.org>
+Exclude CAC_STARTED event from !wdev->cac_started check,
+since cac_started will be set later in the same function.
+
+Signed-off-by: Dmitry Lebed <dlebed@quantenna.com>
 ---
- drivers/net/wireless/ath/wcn36xx/dxe.c |   6 +-
- drivers/net/wireless/ath/wcn36xx/dxe.h | 112 +++++++++++++++++++++++++++++----
- 2 files changed, 103 insertions(+), 15 deletions(-)
+ net/wireless/mlme.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index a3f1f7d042a4..8e4d6d9ea277 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -376,7 +376,7 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
- 	spin_lock_irqsave(&ch->lock, flags);
- 	ctl = ch->tail_blk_ctl;
- 	do {
--		if (ctl->desc->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)
-+		if (ctl->desc->ctrl & WCN36xx_DXE_CTRL_VLD)
- 			break;
- 		if (ctl->skb) {
- 			dma_unmap_single(wcn->dev, ctl->desc->src_addr_l,
-@@ -397,7 +397,7 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
- 		}
- 		ctl = ctl->next;
- 	} while (ctl != ch->head_blk_ctl &&
--	       !(ctl->desc->ctrl & WCN36XX_DXE_CTRL_VALID_MASK));
-+	       !(ctl->desc->ctrl & WCN36xx_DXE_CTRL_VLD));
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 6b6818dd76bd..12b3edf70a7b 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -872,7 +872,7 @@ void cfg80211_cac_event(struct net_device *netdev,
  
- 	ch->tail_blk_ctl = ctl;
- 	spin_unlock_irqrestore(&ch->lock, flags);
-@@ -503,7 +503,7 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
- 		int_mask = WCN36XX_DXE_INT_CH3_MASK;
- 	}
+ 	trace_cfg80211_cac_event(netdev, event);
  
--	while (!(dxe->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)) {
-+	while (!(dxe->ctrl & WCN36xx_DXE_CTRL_VLD)) {
- 		skb = ctl->skb;
- 		dma_addr = dxe->dst_addr_l;
- 		ret = wcn36xx_dxe_fill_skb(wcn->dev, ctl);
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.h b/drivers/net/wireless/ath/wcn36xx/dxe.h
-index c012e807753b..73a14953920d 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.h
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.h
-@@ -33,15 +33,106 @@ H2H_TEST_RX_TX = DMA2
- #define WCN36XX_CCU_DXE_INT_SELECT_RIVA		0x310
- #define WCN36XX_CCU_DXE_INT_SELECT_PRONTO	0x10dc
+-	if (WARN_ON(!wdev->cac_started))
++	if (WARN_ON(!wdev->cac_started && event != NL80211_RADAR_CAC_STARTED))
+ 		return;
  
--/* TODO This must calculated properly but not hardcoded */
--#define WCN36XX_DXE_CTRL_TX_L			0x328a44
--#define WCN36XX_DXE_CTRL_TX_H			0x32ce44
--#define WCN36XX_DXE_CTRL_RX_L			0x12ad2f
--#define WCN36XX_DXE_CTRL_RX_H			0x12d12f
--#define WCN36XX_DXE_CTRL_TX_H_BD		0x30ce45
--#define WCN36XX_DXE_CTRL_TX_H_SKB		0x32ce4d
--#define WCN36XX_DXE_CTRL_TX_L_BD		0x308a45
--#define WCN36XX_DXE_CTRL_TX_L_SKB		0x328a4d
-+/* Descriptor valid */
-+#define WCN36xx_DXE_CTRL_VLD		BIT(0)
-+/* End of packet */
-+#define WCN36xx_DXE_CTRL_EOP		BIT(3)
-+/* BD handling bit */
-+#define WCN36xx_DXE_CTRL_BDH		BIT(4)
-+/* Source is a queue */
-+#define WCN36xx_DXE_CTRL_SIQ		BIT(5)
-+/* Destination is a queue */
-+#define WCN36xx_DXE_CTRL_DIQ		BIT(6)
-+/* Pointer address is a queue */
-+#define WCN36xx_DXE_CTRL_PIQ		BIT(7)
-+/* Release PDU when done */
-+#define WCN36xx_DXE_CTRL_PDU_REL	BIT(8)
-+/* STOP channel processing */
-+#define WCN36xx_DXE_CTRL_STOP		BIT(16)
-+/* INT on descriptor done */
-+#define WCN36xx_DXE_CTRL_INT		BIT(17)
-+/* Endian byte swap enable */
-+#define WCN36xx_DXE_CTRL_SWAP		BIT(20)
-+/* Master endianness */
-+#define WCN36xx_DXE_CTRL_ENDIANNESS	BIT(21)
-+
-+/* Transfer type */
-+#define WCN36xx_DXE_CTRL_XTYPE_SHIFT 1
-+#define WCN36xx_DXE_CTRL_XTYPE_MASK GENMASK(2, WCN36xx_DXE_CTRL_XTYPE_SHIFT)
-+#define WCN36xx_DXE_CTRL_XTYPE_SET(x)	((x) << WCN36xx_DXE_CTRL_XTYPE_SHIFT)
-+
-+/* BMU Threshold select */
-+#define WCN36xx_DXE_CTRL_BTHLD_SEL_SHIFT 9
-+#define WCN36xx_DXE_CTRL_BTHLD_SEL_MASK GENMASK(12, WCN36xx_DXE_CTRL_BTHLD_SEL_SHIFT)
-+#define WCN36xx_DXE_CTRL_BTHLD_SEL_SET(x) ((x) << WCN36xx_DXE_CTRL_BTHLD_SEL_SHIFT)
-+
-+/* Priority */
-+#define WCN36xx_DXE_CTRL_PRIO_SHIFT 13
-+#define WCN36xx_DXE_CTRL_PRIO_MASK GENMASK(15, WCN36xx_DXE_CTRL_PRIO_SHIFT)
-+#define WCN36xx_DXE_CTRL_PRIO_SET(x) ((x) << WCN36xx_DXE_CTRL_PRIO_SHIFT)
-+
-+/* BD Template index */
-+#define WCN36xx_DXE_CTRL_BDT_IDX_SHIFT 18
-+#define WCN36xx_DXE_CTRL_BDT_IDX_MASK GENMASK(19, WCN36xx_DXE_CTRL_BDT_IDX_SHIFT)
-+#define WCN36xx_DXE_CTRL_BDT_IDX_SET(x) ((x) << WCN36xx_DXE_CTRL_BDT_IDX_SHIFT)
-+
-+/* Transfer types: */
-+/* Host to host */
-+#define WCN36xx_DXE_XTYPE_H2H (0)
-+/* Host to BMU */
-+#define WCN36xx_DXE_XTYPE_H2B (2)
-+/* BMU to host */
-+#define WCN36xx_DXE_XTYPE_B2H (3)
-+
-+#define WCN36XX_DXE_CTRL_TX_L	(WCN36xx_DXE_CTRL_XTYPE_SET(WCN36xx_DXE_XTYPE_H2B) | \
-+	WCN36xx_DXE_CTRL_DIQ | WCN36xx_DXE_CTRL_BTHLD_SEL_SET(5) | \
-+	WCN36xx_DXE_CTRL_PRIO_SET(4) | WCN36xx_DXE_CTRL_INT | \
-+	WCN36xx_DXE_CTRL_SWAP | WCN36xx_DXE_CTRL_ENDIANNESS)
-+
-+#define WCN36XX_DXE_CTRL_TX_H	 (WCN36xx_DXE_CTRL_XTYPE_SET(WCN36xx_DXE_XTYPE_H2B) | \
-+	WCN36xx_DXE_CTRL_DIQ | WCN36xx_DXE_CTRL_BTHLD_SEL_SET(7) | \
-+	WCN36xx_DXE_CTRL_PRIO_SET(6) | WCN36xx_DXE_CTRL_INT | \
-+	WCN36xx_DXE_CTRL_SWAP | WCN36xx_DXE_CTRL_ENDIANNESS)
-+
-+#define WCN36XX_DXE_CTRL_RX_L	(WCN36xx_DXE_CTRL_VLD | \
-+	WCN36xx_DXE_CTRL_XTYPE_SET(WCN36xx_DXE_XTYPE_B2H) | \
-+	WCN36xx_DXE_CTRL_EOP | WCN36xx_DXE_CTRL_SIQ | \
-+	WCN36xx_DXE_CTRL_PDU_REL | WCN36xx_DXE_CTRL_BTHLD_SEL_SET(6) | \
-+	WCN36xx_DXE_CTRL_PRIO_SET(5) | WCN36xx_DXE_CTRL_INT | \
-+	WCN36xx_DXE_CTRL_SWAP)
-+
-+#define WCN36XX_DXE_CTRL_RX_H	(WCN36xx_DXE_CTRL_VLD | \
-+	WCN36xx_DXE_CTRL_XTYPE_SET(WCN36xx_DXE_XTYPE_B2H) | \
-+	WCN36xx_DXE_CTRL_EOP | WCN36xx_DXE_CTRL_SIQ | \
-+	WCN36xx_DXE_CTRL_PDU_REL |  WCN36xx_DXE_CTRL_BTHLD_SEL_SET(8) | \
-+	WCN36xx_DXE_CTRL_PRIO_SET(6) | WCN36xx_DXE_CTRL_INT | \
-+	WCN36xx_DXE_CTRL_SWAP)
-+
-+#define WCN36XX_DXE_CTRL_TX_H_BD	(WCN36xx_DXE_CTRL_VLD | \
-+	WCN36xx_DXE_CTRL_XTYPE_SET(WCN36xx_DXE_XTYPE_H2B) | \
-+	WCN36xx_DXE_CTRL_DIQ | WCN36xx_DXE_CTRL_BTHLD_SEL_SET(7) | \
-+	WCN36xx_DXE_CTRL_PRIO_SET(6) | WCN36xx_DXE_CTRL_SWAP | \
-+	WCN36xx_DXE_CTRL_ENDIANNESS)
-+
-+#define WCN36XX_DXE_CTRL_TX_H_SKB	(WCN36xx_DXE_CTRL_VLD | \
-+	WCN36xx_DXE_CTRL_XTYPE_SET(WCN36xx_DXE_XTYPE_H2B) | \
-+	WCN36xx_DXE_CTRL_EOP | WCN36xx_DXE_CTRL_DIQ | \
-+	WCN36xx_DXE_CTRL_BTHLD_SEL_SET(7) | WCN36xx_DXE_CTRL_PRIO_SET(6) | \
-+	WCN36xx_DXE_CTRL_INT | WCN36xx_DXE_CTRL_SWAP | \
-+	WCN36xx_DXE_CTRL_ENDIANNESS)
-+
-+#define WCN36XX_DXE_CTRL_TX_L_BD	 (WCN36xx_DXE_CTRL_VLD | \
-+	WCN36xx_DXE_CTRL_XTYPE_SET(WCN36xx_DXE_XTYPE_H2B) | \
-+	WCN36xx_DXE_CTRL_DIQ | WCN36xx_DXE_CTRL_BTHLD_SEL_SET(5) | \
-+	WCN36xx_DXE_CTRL_PRIO_SET(4) | WCN36xx_DXE_CTRL_SWAP | \
-+	WCN36xx_DXE_CTRL_ENDIANNESS)
-+
-+#define WCN36XX_DXE_CTRL_TX_L_SKB	(WCN36xx_DXE_CTRL_VLD | \
-+	WCN36xx_DXE_CTRL_XTYPE_SET(WCN36xx_DXE_XTYPE_H2B) | \
-+	WCN36xx_DXE_CTRL_EOP | WCN36xx_DXE_CTRL_DIQ | \
-+	WCN36xx_DXE_CTRL_BTHLD_SEL_SET(5) | WCN36xx_DXE_CTRL_PRIO_SET(4) | \
-+	WCN36xx_DXE_CTRL_INT | WCN36xx_DXE_CTRL_SWAP | \
-+	WCN36xx_DXE_CTRL_ENDIANNESS)
- 
- /* TODO This must calculated properly but not hardcoded */
- #define WCN36XX_DXE_WQ_TX_L			0x17
-@@ -49,9 +140,6 @@ H2H_TEST_RX_TX = DMA2
- #define WCN36XX_DXE_WQ_RX_L			0xB
- #define WCN36XX_DXE_WQ_RX_H			0x4
- 
--/* DXE descriptor control filed */
--#define WCN36XX_DXE_CTRL_VALID_MASK (0x00000001)
--
- /* TODO This must calculated properly but not hardcoded */
- /* DXE default control register values */
- #define WCN36XX_DXE_CH_DEFAULT_CTL_RX_L		0x847EAD2F
+ 	if (WARN_ON(!wdev->chandef.chan))
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+2.11.0
