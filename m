@@ -1,232 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58692 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752096AbeC3DSe (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:33279 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750783AbeCZHhh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 23:18:34 -0400
-From: Wen Gong <wgong@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath10k: Convert wow pattern from 802.3 to 802.11
-Date: Fri, 30 Mar 2018 11:18:19 +0800
-Message-Id: <1522379899-31969-1-git-send-email-wgong@codeaurora.org> (sfid-20180330_051918_131148_A3809BFF)
+        Mon, 26 Mar 2018 03:37:37 -0400
+Received: by mail-lf0-f65.google.com with SMTP id x205-v6so26648539lfa.0
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 00:37:36 -0700 (PDT)
+Date: Mon, 26 Mar 2018 09:37:25 +0200
+From: Marcus Folkesson <marcus.folkesson@gmail.com>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: ath10k@lists.infradead.org, bjorn.andersson@linaro.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 10/12] ath10k: add bdf/cal indication support
+Message-ID: <20180326073725.GA3689@gmail.com> (sfid-20180326_093740_925174_433EA603)
+References: <1522042886-26343-1-git-send-email-govinds@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="GvXjxJ+pjyke8COw"
+In-Reply-To: <1522042886-26343-1-git-send-email-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When trying to set wow wakeup patterns it fails with this command:
 
-iw phyxx wowlan enable patterns offset xx+ IP address xx.xx.xx.xx
+--GvXjxJ+pjyke8COw
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The reason is that the wow pattern from upper layer is in 802.3 format
-for this case, it need to convert it to 802.11 format. The input
-offset parameter is used for 802.3, but the actual offset firmware
-need depends on rx_decap_mode, so that it needs to be recalculated.
-Pattern of 802.3 packet is not same with 802.11 packet. If the
-rx_decap_mode is ATH10K_HW_TXRX_NATIVE_WIFI, then firmware will
-receive data packet with 802.11 format from hardware.
+Hi Govind,
 
-Convert graph:
------------------------------------------------------------------------
-802.3  |dest mac(6B)|src mac(6B)|type(2B)|     body...    |
-             |__         |_______    |_____________  |___________
-                |                |                 |             |
-802.11 |4B|dest mac(6B)| 6B |src mac(6B)|  8B  |type(2B)|  body...  |
------------------------------------------------------------------------
+On Mon, Mar 26, 2018 at 11:11:26AM +0530, Govind Singh wrote:
+> Add support for bdf download and cold boot
+> calibration trigger qmi message support.
+>=20
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> ---
+>  drivers/net/wireless/ath/ath10k/qmi.c | 195 ++++++++++++++++++++++++++++=
+++++++
+>  drivers/net/wireless/ath/ath10k/qmi.h |  10 ++
+>  2 files changed, 205 insertions(+)
+>=20
+> diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless=
+/ath/ath10k/qmi.c
+> index a33681d..f23d0fe 100644
+> --- a/drivers/net/wireless/ath/ath10k/qmi.c
+> +++ b/drivers/net/wireless/ath/ath10k/qmi.c
+> @@ -28,6 +28,7 @@
+>  #include <linux/soc/qcom/qmi.h>
+>  #include <linux/qcom_scm.h>
+>  #include <linux/of.h>
+> +#include <linux/firmware.h>
+>  #include "qmi.h"
+>  #include "qmi_svc_v01.h"
+> =20
+> @@ -270,6 +271,179 @@ static int ath10k_qmi_msa_ready_send_sync_msg(struc=
+t ath10k_qmi *qmi)
+>  	return ret;
+>  }
+> =20
+> +int ath10k_qmi_bdf_dnld_send_sync(struct ath10k_qmi *qmi)
+> +{
+> +	struct wlfw_bdf_download_resp_msg_v01 *resp;
+> +	struct wlfw_bdf_download_req_msg_v01 *req;
+> +	const struct firmware *fw_entry;
+> +	unsigned int remaining;
+> +	struct qmi_txn txn;
+> +	const u8 *temp;
+> +	int ret;
+> +
+> +	req =3D kzalloc(sizeof(*req), GFP_KERNEL);
+> +	if (!req)
+> +		return -ENOMEM;
+> +
+> +	resp =3D kzalloc(sizeof(*resp), GFP_KERNEL);
+> +	if (!resp) {
+> +		kfree(req);
+> +		return -ENOMEM;
+> +	}
+> +
+> +	ret =3D request_firmware(&fw_entry, BDF_FILE_NAME, &qmi->pdev->dev);
+> +	if (ret < 0) {
+> +		pr_err("fail to load bdf: %s\n", BDF_FILE_NAME);
 
-Tested with QCA6174 hw3.0 with firmware
-WLAN.RM.4.4.1-00099-QCARMSWPZ-1, but this will also affect QCA9377.
-This has always failed, so it's not a regression with new firmware
-releases.
+Do we want to use the dev_* family print functions instead?
 
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/wmi.h |   4 ++
- drivers/net/wireless/ath/ath10k/wow.c | 128 ++++++++++++++++++++++++++++++++--
- 2 files changed, 126 insertions(+), 6 deletions(-)
+For example:
+dev_err(&qmi->pdev->dev,"fail to load bdf: %s\n", BDF_FILE_NAME);
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index c7b30ed..389f9c7 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -6724,6 +6724,10 @@ struct wmi_wow_ev_arg {
- #define WOW_MIN_PATTERN_SIZE	1
- #define WOW_MAX_PATTERN_SIZE	148
- #define WOW_MAX_PKT_OFFSET	128
-+#define WOW_HDR_LEN	(sizeof(struct ieee80211_hdr_3addr) + \
-+	sizeof(struct rfc1042_hdr))
-+#define WOW_MAX_REDUCE	(WOW_HDR_LEN - sizeof(struct ethhdr) - \
-+	offsetof(struct ieee80211_hdr_3addr, addr1))
- 
- enum wmi_tdls_state {
- 	WMI_TDLS_DISABLE,
-diff --git a/drivers/net/wireless/ath/ath10k/wow.c b/drivers/net/wireless/ath/ath10k/wow.c
-index c4cbccb..9b56a41 100644
---- a/drivers/net/wireless/ath/ath10k/wow.c
-+++ b/drivers/net/wireless/ath/ath10k/wow.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2015-2017 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -76,6 +77,98 @@ static int ath10k_wow_cleanup(struct ath10k *ar)
- 	return 0;
- }
- 
-+static void ath10k_wow_convert_8023_to_80211
-+					(struct cfg80211_pkt_pattern *new,
-+					const struct cfg80211_pkt_pattern *old)
-+{
-+	u8 hdr_8023_pattern[ETH_HLEN] = {};
-+	u8 hdr_8023_bit_mask[ETH_HLEN] = {};
-+	u8 hdr_80211_pattern[WOW_HDR_LEN] = {};
-+	u8 hdr_80211_bit_mask[WOW_HDR_LEN] = {};
-+
-+	int total_len = old->pkt_offset + old->pattern_len;
-+	int hdr_80211_end_offset;
-+
-+	struct ieee80211_hdr_3addr *new_hdr_pattern =
-+		(struct ieee80211_hdr_3addr *)hdr_80211_pattern;
-+	struct ieee80211_hdr_3addr *new_hdr_mask =
-+		(struct ieee80211_hdr_3addr *)hdr_80211_bit_mask;
-+	struct ethhdr *old_hdr_pattern = (struct ethhdr *)hdr_8023_pattern;
-+	struct ethhdr *old_hdr_mask = (struct ethhdr *)hdr_8023_bit_mask;
-+	int hdr_len = sizeof(*new_hdr_pattern);
-+
-+	struct rfc1042_hdr *new_rfc_pattern =
-+		(struct rfc1042_hdr *)(hdr_80211_pattern + hdr_len);
-+	struct rfc1042_hdr *new_rfc_mask =
-+		(struct rfc1042_hdr *)(hdr_80211_bit_mask + hdr_len);
-+	int rfc_len = sizeof(*new_rfc_pattern);
-+
-+	memcpy(hdr_8023_pattern + old->pkt_offset,
-+	       old->pattern, ETH_HLEN - old->pkt_offset);
-+	memcpy(hdr_8023_bit_mask + old->pkt_offset,
-+	       old->mask, ETH_HLEN - old->pkt_offset);
-+
-+	/* Copy destination address */
-+	memcpy(new_hdr_pattern->addr1, old_hdr_pattern->h_dest, ETH_ALEN);
-+	memcpy(new_hdr_mask->addr1, old_hdr_mask->h_dest, ETH_ALEN);
-+
-+	/* Copy source address */
-+	memcpy(new_hdr_pattern->addr3, old_hdr_pattern->h_source, ETH_ALEN);
-+	memcpy(new_hdr_mask->addr3, old_hdr_mask->h_source, ETH_ALEN);
-+
-+	/* Copy logic link type */
-+	memcpy(&new_rfc_pattern->snap_type,
-+	       &old_hdr_pattern->h_proto,
-+	       sizeof(old_hdr_pattern->h_proto));
-+	memcpy(&new_rfc_mask->snap_type,
-+	       &old_hdr_mask->h_proto,
-+	       sizeof(old_hdr_mask->h_proto));
-+
-+	/* Caculate new pkt_offset */
-+	if (old->pkt_offset < ETH_ALEN)
-+		new->pkt_offset = old->pkt_offset +
-+			offsetof(struct ieee80211_hdr_3addr, addr1);
-+	else if (old->pkt_offset < offsetof(struct ethhdr, h_proto))
-+		new->pkt_offset = old->pkt_offset +
-+			offsetof(struct ieee80211_hdr_3addr, addr3) -
-+			offsetof(struct ethhdr, h_source);
-+	else
-+		new->pkt_offset = old->pkt_offset + hdr_len + rfc_len - ETH_HLEN;
-+
-+	/* Caculate new hdr end offset */
-+	if (total_len > ETH_HLEN)
-+		hdr_80211_end_offset = hdr_len + rfc_len;
-+	else if (total_len > offsetof(struct ethhdr, h_proto))
-+		hdr_80211_end_offset = hdr_len + rfc_len + total_len - ETH_HLEN;
-+	else if (total_len > ETH_ALEN)
-+		hdr_80211_end_offset = total_len - ETH_ALEN +
-+			offsetof(struct ieee80211_hdr_3addr, addr3);
-+	else
-+		hdr_80211_end_offset = total_len +
-+			offsetof(struct ieee80211_hdr_3addr, addr1);
-+
-+	new->pattern_len = hdr_80211_end_offset - new->pkt_offset;
-+
-+	memcpy((u8 *)new->pattern,
-+	       hdr_80211_pattern + new->pkt_offset,
-+	       new->pattern_len);
-+	memcpy((u8 *)new->mask,
-+	       hdr_80211_bit_mask + new->pkt_offset,
-+	       new->pattern_len);
-+
-+	if (total_len > ETH_HLEN) {
-+		/* Copy frame body */
-+		memcpy((u8 *)new->pattern + new->pattern_len,
-+		       (void *)old->pattern + ETH_HLEN - old->pkt_offset,
-+		       total_len - ETH_HLEN);
-+		memcpy((u8 *)new->mask + new->pattern_len,
-+		       (void *)old->mask + ETH_HLEN - old->pkt_offset,
-+		       total_len - ETH_HLEN);
-+
-+		new->pattern_len += total_len - ETH_HLEN;
-+	}
-+}
-+
- static int ath10k_vif_wow_set_wakeups(struct ath10k_vif *arvif,
- 				      struct cfg80211_wowlan *wowlan)
- {
-@@ -116,22 +209,39 @@ static int ath10k_vif_wow_set_wakeups(struct ath10k_vif *arvif,
- 
- 	for (i = 0; i < wowlan->n_patterns; i++) {
- 		u8 bitmask[WOW_MAX_PATTERN_SIZE] = {};
-+		u8 ath_pattern[WOW_MAX_PATTERN_SIZE] = {};
-+		u8 ath_bitmask[WOW_MAX_PATTERN_SIZE] = {};
-+		struct cfg80211_pkt_pattern new_pattern = {};
-+		struct cfg80211_pkt_pattern old_pattern = patterns[i];
- 		int j;
--
-+		new_pattern.pattern = ath_pattern;
-+		new_pattern.mask = ath_bitmask;
- 		if (patterns[i].pattern_len > WOW_MAX_PATTERN_SIZE)
- 			continue;
--
- 		/* convert bytemask to bitmask */
- 		for (j = 0; j < patterns[i].pattern_len; j++)
- 			if (patterns[i].mask[j / 8] & BIT(j % 8))
- 				bitmask[j] = 0xff;
-+		old_pattern.mask = bitmask;
-+		new_pattern = old_pattern;
-+
-+		if (ar->wmi.rx_decap_mode == ATH10K_HW_TXRX_NATIVE_WIFI) {
-+			if (patterns[i].pkt_offset < ETH_HLEN)
-+				ath10k_wow_convert_8023_to_80211(&new_pattern,
-+								 &old_pattern);
-+			else
-+				new_pattern.pkt_offset += WOW_HDR_LEN - ETH_HLEN;
-+		}
-+
-+		if (WARN_ON(new_pattern.pattern_len > WOW_MAX_PATTERN_SIZE))
-+			return -EINVAL;
- 
- 		ret = ath10k_wmi_wow_add_pattern(ar, arvif->vdev_id,
- 						 pattern_id,
--						 patterns[i].pattern,
--						 bitmask,
--						 patterns[i].pattern_len,
--						 patterns[i].pkt_offset);
-+						 new_pattern.pattern,
-+						 new_pattern.mask,
-+						 new_pattern.pattern_len,
-+						 new_pattern.pkt_offset);
- 		if (ret) {
- 			ath10k_warn(ar, "failed to add pattern %i to vdev %i: %d\n",
- 				    pattern_id,
-@@ -345,6 +455,12 @@ int ath10k_wow_init(struct ath10k *ar)
- 		return -EINVAL;
- 
- 	ar->wow.wowlan_support = ath10k_wowlan_support;
-+
-+	if (ar->wmi.rx_decap_mode == ATH10K_HW_TXRX_NATIVE_WIFI) {
-+		ar->wow.wowlan_support.pattern_max_len -= WOW_MAX_REDUCE;
-+		ar->wow.wowlan_support.max_pkt_offset -= WOW_MAX_REDUCE;
-+	}
-+
- 	ar->wow.wowlan_support.n_patterns = ar->wow.max_num_patterns;
- 	ar->hw->wiphy->wowlan = &ar->wow.wowlan_support;
- 
--- 
-2.7.4
+
+> +		goto err_req_fw;
+> +	}
+> +
+> +	temp =3D fw_entry->data;
+> +	remaining =3D fw_entry->size;
+> +
+> +	pr_debug("downloading bdf: %s, size: %u\n",
+> +		 BDF_FILE_NAME, remaining);
+> +
+> +	while (remaining) {
+> +		req->valid =3D 1;
+> +		req->file_id_valid =3D 1;
+> +		req->file_id =3D 0;
+> +		req->total_size_valid =3D 1;
+> +		req->total_size =3D fw_entry->size;
+> +		req->seg_id_valid =3D 1;
+> +		req->data_valid =3D 1;
+> +		req->end_valid =3D 1;
+> +
+> +		if (remaining > QMI_WLFW_MAX_DATA_SIZE_V01) {
+> +			req->data_len =3D QMI_WLFW_MAX_DATA_SIZE_V01;
+> +		} else {
+> +			req->data_len =3D remaining;
+> +			req->end =3D 1;
+> +		}
+> +
+> +		memcpy(req->data, temp, req->data_len);
+> +
+> +		ret =3D qmi_txn_init(&qmi->qmi_hdl, &txn,
+> +				   wlfw_bdf_download_resp_msg_v01_ei,
+> +				   resp);
+> +		if (ret < 0) {
+> +			pr_err("fail to init txn for bdf download %d\n", ret);
+> +			goto out;
+> +		}
+> +
+> +		ret =3D
+> +		qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
+> +				 QMI_WLFW_BDF_DOWNLOAD_REQ_V01,
+> +				 WLFW_BDF_DOWNLOAD_REQ_MSG_V01_MAX_MSG_LEN,
+> +				 wlfw_bdf_download_req_msg_v01_ei, req);
+> +		if (ret < 0) {
+> +			qmi_txn_cancel(&txn);
+> +			goto err_send;
+> +		}
+> +
+> +		ret =3D qmi_txn_wait(&txn, WLFW_TIMEOUT * HZ);
+> +
+> +		if (ret < 0)
+> +			goto err_send;
+> +
+> +		if (resp->resp.result !=3D QMI_RESULT_SUCCESS_V01) {
+> +			pr_err("bdf download failed, res:%d, err:%d\n",
+> +			       resp->resp.result, resp->resp.error);
+> +			ret =3D resp->resp.result;
+> +			goto err_send;
+> +		}
+> +
+> +		remaining -=3D req->data_len;
+> +		temp +=3D req->data_len;
+> +		req->seg_id++;
+> +	}
+> +
+> +	pr_debug("bdf download request completed\n");
+> +
+> +	kfree(resp);
+> +	kfree(req);
+
+release_firmware(fw_entry);
+
+I think we need to release firmware before return?
+
+> +	return 0;
+> +
+> +err_send:
+> +	release_firmware(fw_entry);
+> +
+> +err_req_fw:
+> +	kfree(req);
+> +	kfree(resp);
+> +
+> +out:
+> +	return ret;
+> +}
+
+Best regards
+Marcus Folkesson
+
+--GvXjxJ+pjyke8COw
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEBVGi6LZstU1kwSxliIBOb1ldUjIFAlq4ozAACgkQiIBOb1ld
+UjJTnRAAz9p9dZeHVGHVW9r8babfEbzCXxn0tE7G9cklHDhIKZzbGqlcy4ojYMz5
+ZaTKaErEIe39vy/QYPU6YfhB+nJG5kCzezQ1L34fBabP/yElSWb9OHsWuALH9atY
+i4ZAA/svKOwRAlUxfMVuJVWCOf7aQHBMjSnTk5rvQQUMWxbtYQDC1C8Z7K9esKK2
+V6x3Fwi3k+G4zoaXKDJBoEfcOpZsONUHQjkbVHh6zTR9EqLy0I7bsEhPnoGxkiMS
+nR87E1RZVug6grgiFsDF5kwrhVQkzgiP098u/BYmpm+06w74uqxpazIfNrKaqizX
+OybwnUElyldUV1/NbcBjvAqjRnAdW+zUf4ePOyPMdjBu00FaV/MKAYu27g3+fqtB
+U9NtJALsuUuQV3U8Xg/lYEd0WEqnKj1IwYshj5e9+i178UemvyB1S+MLVIQCSAlh
+G+DQTCzR3H0umKfhcQyQPizM6klwGwYoi9vmbpvuXn4mvX+yLHeqimo+mOni/fIH
+RWHitUlZU2opV1VRx4fwX8sYTIaxkFNnGHSv9UurS4FdiLsV+mbkMepShWJu76Jn
+slE2vbaR97PGWtPk/O2i0Jk3QocekN6NhWMQBpSSkCCYFA7n1i2HntxaD4/3OGns
+cMlTWaaavRk4sWZ7N5XtJ7Py7Gy/AGXx8o2EXwnGdtJ0aXvCFS4=
+=Pzxb
+-----END PGP SIGNATURE-----
+
+--GvXjxJ+pjyke8COw--
