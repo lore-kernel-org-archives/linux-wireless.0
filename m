@@ -1,71 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f180.google.com ([209.85.220.180]:33419 "EHLO
-        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934574AbeCHKrJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Mar 2018 05:47:09 -0500
-Received: by mail-qk0-f180.google.com with SMTP id f25so6272311qkm.0
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2018 02:47:08 -0800 (PST)
-Subject: Re: brcmfmac signal/interference issues
-To: Daniel Drake <drake@endlessm.com>
-References: <CAD8Lp46dbsn2qyzYE6N-6quJXc2xUeO4Fi=UhZz=P2Q=G7A41A@mail.gmail.com>
- <5A8D36B7.1010201@broadcom.com>
- <CAD8Lp44MdsO_F0xEYhdjF=hAj4h26561VQJepubEEmtdWoQ-vA@mail.gmail.com>
- <CAD8Lp44Y-sNqm8_5=1pvBy-3zvVVQSCQ+Qye-2xP8vGmkvrjng@mail.gmail.com>
- <5A8FE4D9.80608@broadcom.com>
- <CAD8Lp44Q0=jS0gqnt1mMfjRe6sTx3Z7n9=iGvk3VFGK2549V7g@mail.gmail.com>
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
-        chi-hsien.lin@cypress.com, wright.feng@cypress.com,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Linux Upstreaming Team <linux@endlessm.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AA114A9.8050801@broadcom.com> (sfid-20180308_114714_437626_EBCAC0AE)
-Date: Thu, 8 Mar 2018 11:47:05 +0100
+Received: from mail-sn1nam01on0058.outbound.protection.outlook.com ([104.47.32.58]:44249
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751141AbeCZNgu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Mar 2018 09:36:50 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Dmitry Lebed <dlebed@quantenna.com>,
+        Dmitry Lebed <lebed.dmitry@gmail.com>
+Subject: [PATCH 0/3] cfg80211: further work on DFS offload enablement
+Date: Mon, 26 Mar 2018 16:36:30 +0300
+Message-Id: <20180326133633.8771-1-sergey.matyukevich.os@quantenna.com> (sfid-20180326_153655_023044_A4789788)
 MIME-Version: 1.0
-In-Reply-To: <CAD8Lp44Q0=jS0gqnt1mMfjRe6sTx3Z7n9=iGvk3VFGK2549V7g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/23/2018 2:49 PM, Daniel Drake wrote:
-> On Fri, Feb 23, 2018 at 12:54 PM, Arend van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->> Yup. Windows firmware talks NDIS. If you run 'strings 4345r6rtecdc.bin |
->> tail -1' you can see the firmware build target and it likely has 'ndis' in
->> it.
+Hello Johannes and all,
 
-Hi Daniel,
+Here is a patch set with minor cleanups/updates needed to enable
+DFS offload in cfg80211. 
 
-Bit late response. Sorry.
+Note that the third patch enables DFS offload for qtnfmac driver.
+We assume that it should go through wireless-drivers tree after
+all cfg80211/nl80211 changes are reviewed and merged. So it is
+posted here for reference purposes only.
 
-> 43455c0-roml/sdio-ag-ndis-vista-pktfilter-d0c-pno-aoe-p2p-dhdoid-ndoe-gtkoe-mfp-proptxstatus-dmatxrc-keepalive-ap-ampduretry-pclose-txbf
->
-> Yes, ndis. So no easy way to run the same firmware on the 2 OSes.
+Besides, minimal set of user-space changes for hostapd has been
+already posted to hostapd mailing list.
 
-Indeed. I could try building nearly same firmware target. Can you 
-provide the firmware version as well.
+Thanks,
+Sergey
 
-Now reading over your orignal email again:
+Dmitrii Lebed (3):
+  cfg80211: fix CAC_STARTED event handling
+  cfg80211: enable use of non-cleared DFS channels for DFS
+  qtnfmac: add DFS offload support
 
- > If I place both antenna terminals inside the Linux MiniPC case, the
- > Linux pings are bad but the Windows pings are fine.
- >
- > If I place both antenna terminals inside the Windows MiniPC case, it
- > is the same: Linux pings are bad, but the Windows pings are fine.
- >
- > And when the Linux antenna is placed outside of both cases, the Linux
- > pings are fine. I've repeated these tests a handful of times in quick
- > succession to make sure that I'm not going crazy and that this is not
- > a case of the problem intermittency causing misleading results. These
- > findings appear very solid.
-
-So it picks up something in the PC. Some sources of interference that I 
-have seen before are USB3 and HDMI. Maybe try to shield those if present 
-and see if that helps. The nvram contains sensitivity parameters, but as 
-you stated you are using the same nvram for windows and linux for now we 
-can rule it out for debugging the issue.
-
-Regards,
-Arend
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c |    9 +++++++++
+ drivers/net/wireless/quantenna/qtnfmac/event.c    |   11 +++++++++++
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h    |    7 +++++--
+ net/wireless/chan.c                               |    9 +++++++--
+ net/wireless/mlme.c                               |    2 +-
+ 5 files changed, 33 insertions(+), 5 deletions(-)
