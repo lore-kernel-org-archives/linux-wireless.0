@@ -1,72 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:38487 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752162AbeCFB0K (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44816 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750885AbeCZFkx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Mar 2018 20:26:10 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 05/15] rtlwifi: btcoex: Get status of multichannel concurrence
-Date: Tue, 6 Mar 2018 09:25:44 +0800
-Message-ID: <20180306012554.3108-6-pkshih@realtek.com> (sfid-20180306_022636_172774_93DB45A9)
-In-Reply-To: <20180306012554.3108-1-pkshih@realtek.com>
-References: <20180306012554.3108-1-pkshih@realtek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 26 Mar 2018 01:40:53 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org, bjorn.andersson@linaro.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH 08/12] ath10k: Add QMI CAP request support
+Date: Mon, 26 Mar 2018 11:10:47 +0530
+Message-Id: <1522042847-26245-1-git-send-email-govinds@codeaurora.org> (sfid-20180326_074056_506866_921FDE5E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Add support for target capablity request
+qmi message for wcn3990 target.
 
-btcoex does different decision according to MCC or SCC status, but
-driver is still SCC currently.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 3 +++
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 8 ++++++++
- 2 files changed, 11 insertions(+)
+ drivers/net/wireless/ath/ath10k/qmi.c | 91 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/qmi.h | 25 ++++++++++
+ 2 files changed, 116 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index 823694cb4fdb..1a24aed34094 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -577,6 +577,9 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
- 			tmp = true;
- 		*bool_tmp = tmp;
- 		break;
-+	case BTC_GET_BL_WIFI_DUAL_BAND_CONNECTED:
-+		*u8_tmp = BTC_MULTIPORT_SCC;
-+		break;
- 	case BTC_GET_BL_WIFI_BUSY:
- 		if (halbtc_is_wifi_busy(rtlpriv))
- 			*bool_tmp = true;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index 3c6a1e8851ec..fe793b787716 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -251,6 +251,7 @@ enum btc_get_type {
- 	BTC_GET_BL_HS_OPERATION,
- 	BTC_GET_BL_HS_CONNECTING,
- 	BTC_GET_BL_WIFI_CONNECTED,
-+	BTC_GET_BL_WIFI_DUAL_BAND_CONNECTED,
- 	BTC_GET_BL_WIFI_BUSY,
- 	BTC_GET_BL_WIFI_SCAN,
- 	BTC_GET_BL_WIFI_LINK,
-@@ -436,6 +437,13 @@ enum btc_notify_type_stack_operation {
- 	BTC_STACK_OP_MAX
+diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
+index 763b812..65a43af 100644
+--- a/drivers/net/wireless/ath/ath10k/qmi.c
++++ b/drivers/net/wireless/ath/ath10k/qmi.c
+@@ -270,6 +270,93 @@ static int ath10k_qmi_msa_ready_send_sync_msg(struct ath10k_qmi *qmi)
+ 	return ret;
+ }
+ 
++static int ath10k_qmi_cap_send_sync_msg(struct ath10k_qmi *qmi)
++{
++	struct wlfw_cap_resp_msg_v01 *resp;
++	struct wlfw_cap_req_msg_v01 *req;
++	struct qmi_txn txn;
++	int ret;
++
++	req = kzalloc(sizeof(*req), GFP_KERNEL);
++	if (!req)
++		return -ENOMEM;
++
++	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
++	if (!resp) {
++		kfree(req);
++		return -ENOMEM;
++	}
++
++	ret = qmi_txn_init(&qmi->qmi_hdl, &txn, wlfw_cap_resp_msg_v01_ei, resp);
++	if (ret < 0) {
++		pr_err("fail to init txn for capability resp %d\n", ret);
++		goto out;
++	}
++
++	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
++			       QMI_WLFW_CAP_REQ_V01,
++			       WLFW_CAP_REQ_MSG_V01_MAX_MSG_LEN,
++			       wlfw_cap_req_msg_v01_ei, req);
++	if (ret < 0) {
++		qmi_txn_cancel(&txn);
++		pr_err("fail to send capability req %d\n", ret);
++		goto out;
++	}
++
++	ret = qmi_txn_wait(&txn, WLFW_TIMEOUT * HZ);
++	if (ret < 0)
++		goto out;
++
++	if (resp->resp.result != QMI_RESULT_SUCCESS_V01) {
++		pr_err("qmi capability request rejected, result:%d error:%d\n",
++		       resp->resp.result, resp->resp.error);
++		ret = -resp->resp.result;
++		goto out;
++	}
++
++	if (resp->chip_info_valid) {
++		qmi->chip_info.chip_id = resp->chip_info.chip_id;
++		qmi->chip_info.chip_family = resp->chip_info.chip_family;
++	}
++
++	if (resp->board_info_valid)
++		qmi->board_info.board_id = resp->board_info.board_id;
++	else
++		qmi->board_info.board_id = 0xFF;
++
++	if (resp->soc_info_valid)
++		qmi->soc_info.soc_id = resp->soc_info.soc_id;
++
++	if (resp->fw_version_info_valid) {
++		qmi->fw_version_info.fw_version =
++			resp->fw_version_info.fw_version;
++		strlcpy(qmi->fw_version_info.fw_build_timestamp,
++			resp->fw_version_info.fw_build_timestamp,
++			MAX_TIMESTAMP_LEN + 1);
++	}
++
++	if (resp->fw_build_id_valid)
++		strlcpy(qmi->fw_build_id, resp->fw_build_id,
++			MAX_BUILD_ID_LEN + 1);
++
++	pr_debug("chip_id: 0x%x, chip_family: 0x%x, board_id: 0x%x, soc_id: 0x%x, fw_version: 0x%x, fw_build_timestamp: %s, fw_build_id: %s",
++		 qmi->chip_info.chip_id, qmi->chip_info.chip_family,
++		 qmi->board_info.board_id, qmi->soc_info.soc_id,
++		 qmi->fw_version_info.fw_version,
++		 qmi->fw_version_info.fw_build_timestamp,
++		 qmi->fw_build_id);
++
++	pr_debug("target cap request completed\n");
++	kfree(resp);
++	kfree(req);
++
++	return 0;
++out:
++	kfree(resp);
++	kfree(req);
++	return ret;
++}
++
+ static int
+ ath10k_qmi_ind_register_send_sync_msg(struct ath10k_qmi *qmi)
+ {
+@@ -425,6 +512,10 @@ static void ath10k_qmi_event_server_arrive(struct work_struct *work)
+ 	if (ret)
+ 		goto err_setup_msa;
+ 
++	ret = ath10k_qmi_cap_send_sync_msg(qmi);
++	if (ret)
++		goto err_setup_msa;
++
+ 	return;
+ 
+ err_setup_msa:
+diff --git a/drivers/net/wireless/ath/ath10k/qmi.h b/drivers/net/wireless/ath/ath10k/qmi.h
+index 47af020..09d20a0 100644
+--- a/drivers/net/wireless/ath/ath10k/qmi.h
++++ b/drivers/net/wireless/ath/ath10k/qmi.h
+@@ -17,6 +17,8 @@
+ #define _QMI_H_
+ 
+ #define MAX_NUM_MEMORY_REGIONS			2
++#define MAX_TIMESTAMP_LEN			32
++#define MAX_BUILD_ID_LEN			128
+ 
+ enum ath10k_qmi_driver_event_type {
+ 	ATH10K_QMI_EVENT_SERVER_ARRIVE,
+@@ -31,6 +33,24 @@ struct ath10k_msa_mem_region_info {
+ 	u8 secure_flag;
  };
  
-+enum {
-+	BTC_MULTIPORT_SCC,
-+	BTC_MULTIPORT_MCC_2CHANNEL,
-+	BTC_MULTIPORT_MCC_2BAND,
-+	BTC_MULTIPORT_MAX
++struct ath10k_qmi_chip_info {
++	u32 chip_id;
++	u32 chip_family;
 +};
 +
- struct btc_bt_info {
- 	bool bt_disabled;
- 	u8 rssi_adjust_for_agc_table_on;
++struct ath10k_qmi_board_info {
++	u32 board_id;
++};
++
++struct ath10k_qmi_soc_info {
++	u32 soc_id;
++};
++
++struct ath10k_qmi_fw_version_info {
++	u32 fw_version;
++	char fw_build_timestamp[MAX_TIMESTAMP_LEN + 1];
++};
++
+ struct ath10k_qmi {
+ 	struct platform_device *pdev;
+ 	struct qmi_handle qmi_hdl;
+@@ -47,5 +67,10 @@ struct ath10k_qmi {
+ 	phys_addr_t msa_pa;
+ 	u32 msa_mem_size;
+ 	void *msa_va;
++	struct ath10k_qmi_chip_info chip_info;
++	struct ath10k_qmi_board_info board_info;
++	struct ath10k_qmi_soc_info soc_info;
++	struct ath10k_qmi_fw_version_info fw_version_info;
++	char fw_build_id[MAX_BUILD_ID_LEN + 1];
+ };
+ #endif /* _QMI_H_ */
 -- 
-2.15.1
+1.9.1
