@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:43085 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031365AbeCAOVd (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:21666 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751024AbeCZLcA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:21:33 -0500
-Received: by mail-qt0-f194.google.com with SMTP id d26so7678265qtk.10
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:21:33 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 26/52] ath: Map Brunei Darussalam to APL6_WORLD
-Date: Thu,  1 Mar 2018 15:18:36 +0100
-Message-Id: <20180301141902.24824-27-sven.eckelmann@openmesh.com> (sfid-20180301_152138_449118_2AF7AFAF)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+        Mon, 26 Mar 2018 07:32:00 -0400
+Date: Mon, 26 Mar 2018 17:01:50 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <venkateswara.kaja@microchip.com>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <adham.abozaeid@microchip.com>,
+        <aditya.shankar@microchip.com>
+Subject: Re: [PATCH 9/9] staging: wilc1000: free memory allocated for
+ general info message from firmware
+Message-ID: <20180326170150.4ab5ad00@ajaysk-VirtualBox> (sfid-20180326_133204_302038_BAE8FC4A)
+In-Reply-To: <20180326083241.y4bdt7r7et2twmy4@mwanda>
+References: <1521817738-7557-1-git-send-email-ajay.kathat@microchip.com>
+        <1521817738-7557-10-git-send-email-ajay.kathat@microchip.com>
+        <20180326083241.y4bdt7r7et2twmy4@mwanda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The regdomain code is used to select the correct the correct conformance
-test limits (CTL) for a country. If the regdomain code isn't correctly
-mapped to the actual CTL entries in EEPROM then it could happen that the
-device violates the regulations. But it can also happen that the device is
-then not able to be used with its full txpower on all rates.
+On Mon, 26 Mar 2018 11:32:41 +0300
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
-The CTL mappings for this regdomain code were now changed to:
+> What happened to patch 8/9?  Anyway, I can't apply this patch and it
+> could be my fault or it could be the missing patch.  I don't know...
 
-* 2.4GHz: ETSI
-* 5GHz: FCC -> ETSI
+I rechecked by applying the patches in order and didn't face any conflict.
+I am going to send the v2 for this patch series by including the review
+comments.
 
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
----
- drivers/net/wireless/ath/regd_common.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index a5d528367082..4edd4c1d99fa 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -324,7 +324,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_BOLIVIA, APL1_ETSIC, "BO"},
- 	{CTRY_BOSNIA_HERZ, ETSI1_WORLD, "BA"},
- 	{CTRY_BRAZIL, FCC3_WORLD, "BR"},
--	{CTRY_BRUNEI_DARUSSALAM, APL1_WORLD, "BN"},
-+	{CTRY_BRUNEI_DARUSSALAM, APL6_WORLD, "BN"},
- 	{CTRY_BULGARIA, ETSI6_WORLD, "BG"},
- 	{CTRY_CAMBODIA, ETSI1_WORLD, "KH"},
- 	{CTRY_CANADA, FCC3_FCCA, "CA"},
--- 
-2.11.0
+Regards,
+Ajay
