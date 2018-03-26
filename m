@@ -1,74 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52568 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751674AbeCVU2g (ORCPT
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:32951 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752654AbeCZRQd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Mar 2018 16:28:36 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 00/12] brcmfmac: data structure and firmware loading rework
-Date: Thu, 22 Mar 2018 21:28:19 +0100
-Message-Id: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180322_212905_928073_1D19BF77)
+        Mon, 26 Mar 2018 13:16:33 -0400
+Received: by mail-ot0-f195.google.com with SMTP id 23-v6so10931781otj.0
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:16:33 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [RFC v6 10/11] mac80211: Add support for tx_control_port
+Date: Mon, 26 Mar 2018 12:16:13 -0500
+Message-Id: <20180326171614.20373-11-denkenz@gmail.com> (sfid-20180326_191637_324761_3F9EFCC4)
+In-Reply-To: <20180326171614.20373-1-denkenz@gmail.com>
+References: <20180326171614.20373-1-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series is intended for 4.17 containing the following:
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+---
+ net/mac80211/cfg.c         |  1 +
+ net/mac80211/ieee80211_i.h |  3 +++
+ net/mac80211/tx.c          | 46 ++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 50 insertions(+)
 
-  * use wiphy_priv() for storing main driver instance.
-  * add driver debugfs entries under wiphy debugfsdir.
-  * rework firmware loading module.
-  * rework clm_blob loading.
-
-The patches apply to the master branch of the wireless-drivers-next
-repository.
-
-Changelog:
- V2:
-  - fixes for patch 4 and patch 7.
-
-Arend van Spriel (12):
-  brcmfmac: do not convert linux error to firmware error string
-  brcmfmac: use brcmf_chip_name() to store name in revinfo
-  brcmfmac: use brcmf_chip_name() for consistency
-  brcmfmac: allocate struct brcmf_pub instance using wiphy_new()
-  brcmfmac: use wiphy debugfs dir entry
-  brcmfmac: derive firmware filenames from basename mapping
-  brcmfmac: pass struct in brcmf_fw_get_firmwares()
-  brcmfmac: introduce brcmf_fw_alloc_request() function
-  brcmfmac: add extension to .get_fwname() callbacks
-  brcmfmac: get rid of brcmf_fw_map_chip_to_name()
-  brcmfmac: get rid of brcmf_fw_get_full_name()
-  brcmfmac: add kerneldoc for struct brcmf_bus::msgbuf
-
- .../wireless/broadcom/brcm80211/brcmfmac/bcdc.c    |   6 +
- .../wireless/broadcom/brcm80211/brcmfmac/btcoex.c  |   2 +-
- .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h |   7 +-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         |  86 ++++----
- .../broadcom/brcm80211/brcmfmac/cfg80211.h         |  17 +-
- .../wireless/broadcom/brcm80211/brcmfmac/chip.c    |  14 +-
- .../wireless/broadcom/brcm80211/brcmfmac/chip.h    |   3 +-
- .../wireless/broadcom/brcm80211/brcmfmac/common.c  |  71 ++----
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    |  48 ++--
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   4 +-
- .../wireless/broadcom/brcm80211/brcmfmac/debug.c   |  42 +---
- .../wireless/broadcom/brcm80211/brcmfmac/debug.h   |  17 --
- .../wireless/broadcom/brcm80211/brcmfmac/feature.c |   3 +
- .../wireless/broadcom/brcm80211/brcmfmac/feature.h |   7 +
- .../broadcom/brcm80211/brcmfmac/firmware.c         | 242 ++++++++++++++-------
- .../broadcom/brcm80211/brcmfmac/firmware.h         |  82 ++++---
- .../wireless/broadcom/brcm80211/brcmfmac/fwil.c    |   3 +-
- .../broadcom/brcm80211/brcmfmac/fwsignal.c         |  11 +-
- .../broadcom/brcm80211/brcmfmac/fwsignal.h         |   1 +
- .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  |   8 +-
- .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c |   2 +-
- .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    | 157 +++++++------
- .../wireless/broadcom/brcm80211/brcmfmac/proto.c   |   3 +-
- .../wireless/broadcom/brcm80211/brcmfmac/proto.h   |   7 +
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 151 ++++++++-----
- .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |  96 +++++---
- 26 files changed, 619 insertions(+), 471 deletions(-)
-
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index fd68f6fb02d7..9294acb495ee 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3786,4 +3786,5 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_nan_func = ieee80211_add_nan_func,
+ 	.del_nan_func = ieee80211_del_nan_func,
+ 	.set_multicast_to_unicast = ieee80211_set_multicast_to_unicast,
++	.tx_control_port = ieee80211_tx_control_port,
+ };
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ae9c33cd8ada..a52bd2a61a27 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1734,6 +1734,9 @@ void ieee80211_check_fast_xmit(struct sta_info *sta);
+ void ieee80211_check_fast_xmit_all(struct ieee80211_local *local);
+ void ieee80211_check_fast_xmit_iface(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_clear_fast_xmit(struct sta_info *sta);
++int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
++			      const u8 *buf, size_t len,
++			      const u8 *dest, __be16 proto, bool unencrypted);
+ 
+ /* HT */
+ void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 7643178ef132..6ae8fe121500 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -4749,3 +4749,49 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_xmit(sdata, NULL, skb);
+ 	local_bh_enable();
+ }
++
++int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
++			      const u8 *buf, size_t len,
++			      const u8 *dest, __be16 proto, bool unencrypted)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++	struct sk_buff *skb;
++	struct ethhdr *ehdr;
++	u32 flags;
++
++	/* Only accept CONTROL_PORT_PROTOCOL configured in CONNECT/ASSOCIATE
++	 * or Pre-Authentication
++	 */
++	if (proto != sdata->control_port_protocol &&
++	    proto != cpu_to_be16(ETH_P_PREAUTH))
++		return -EINVAL;
++
++	if (unencrypted)
++		flags = IEEE80211_TX_INTFL_DONT_ENCRYPT;
++	else
++		flags = 0;
++
++	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
++			    sizeof(struct ethhdr) + len);
++	if (!skb)
++		return -ENOMEM;
++
++	skb_reserve(skb, local->hw.extra_tx_headroom + sizeof(struct ethhdr));
++
++	skb_put_data(skb, buf, len);
++
++	ehdr = skb_push(skb, sizeof(struct ethhdr));
++	memcpy(ehdr->h_dest, dest, ETH_ALEN);
++	memcpy(ehdr->h_source, sdata->vif.addr, ETH_ALEN);
++	ehdr->h_proto = proto;
++
++	skb->dev = dev;
++	skb->protocol = htons(ETH_P_802_3);
++	skb_reset_network_header(skb);
++	skb_reset_mac_header(skb);
++
++	__ieee80211_subif_start_xmit(skb, skb->dev, flags);
++
++	return 0;
++}
 -- 
-1.9.1
+2.13.5
