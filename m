@@ -1,60 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58484 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751736AbeCPKW4 (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:54725 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751024AbeCZMWc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Mar 2018 06:22:56 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Daniel Mack <daniel@zonque.org>
-Cc: Ramon Fried <rfried@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org
-Subject: Re: [PATCH] wcn36xx: dequeue all pending indicator messages
-References: <20180315223725.28283-1-daniel@zonque.org>
-        <3d6783ea-837c-a314-dea9-63906aeb0793@codeaurora.org>
-        <e4dfbb05-10c7-2dc5-6995-ea34bd5945bc@zonque.org>
-Date: Fri, 16 Mar 2018 12:22:49 +0200
-In-Reply-To: <e4dfbb05-10c7-2dc5-6995-ea34bd5945bc@zonque.org> (Daniel Mack's
-        message of "Fri, 16 Mar 2018 10:28:48 +0100")
-Message-ID: <87y3is2ubq.fsf@kamboji.qca.qualcomm.com> (sfid-20180316_112300_176582_33624AF5)
+        Mon, 26 Mar 2018 08:22:32 -0400
+Subject: Re: [PATCH] mac80211: Fix wlan freezes under load at rekey
+To: Ben Greear <greearb@candelatech.com>,
+        Alexander Wetzel <alexander.wetzel@web.de>,
+        johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+References: <20180324102921.9814-1-alexander.wetzel@web.de>
+ <7bbb4246-324e-1d6d-245f-2642badb034d@candelatech.com>
+ <27aca99e-a521-be4a-9fd4-51c557f9777d@web.de>
+ <3e433bd6-d13e-f71c-d3ff-7163c2b59226@candelatech.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <692de5e6-24d8-e1fe-c345-2ba3df91c9da@dd-wrt.com> (sfid-20180326_142236_871173_20C0AC3C)
+Date: Mon, 26 Mar 2018 14:22:32 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <3e433bd6-d13e-f71c-d3ff-7163c2b59226@candelatech.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Mack <daniel@zonque.org> writes:
+so far i see no regressions with 9984 with that patch
 
-> Hi,
+except that 9984 has a rekeying problem at all. with wds ap -> wds sta 
+mode rekeying will fail and it will reauthenticate at each interval. (it 
+disconnects and reconnects)
+but this is a long term issue qca never fixed for years. 988x doesnt 
+suffer from that issue
+
+Am 25.03.2018 um 23:59 schrieb Ben Greear:
 >
-> On Friday, March 16, 2018 10:09 AM, Ramon Fried wrote:
->> On 3/16/2018 12:37 AM, Daniel Mack wrote:
->>> In case wcn36xx_smd_rsp_process() is called more than once before
->>> hal_ind_work was dispatched, the messages will end up in hal_ind_queue,
->>> but wcn36xx_ind_smd_work() will only look at the first message in that
->>> list.
+>
+> On 03/25/2018 12:45 PM, Alexander Wetzel wrote:
+>>
+>>> What will happen to drivers like ath10k that cannot do software
+>> encrypt/decrypt?
 >>>
->>> Fix this by dequeing the messages from the list in a loop, and only stop
->>> when it's empty.
->> Interesting. does it solve a specific bug ? can you elaborate ?
+>>> ath10k can support multiple key-ids as far as I can tell,
+>>> so maybe it would just never hit this code?
+>>
+>> Still learning how that all fits together, but I'm sure any card using
+>> mac80211 will also use ieee80211_key_replace, including ath10k.
+>>
+>> We are in a race with the remote station there is no chance that we can
+>> switch over exactly at the same time. If we can't fall pack to software
+>> encryption we'll just have to drop some more packets.
+>>
+>> I'm pretty sure mac80211 will just encrypt a frame in software and
+>> send it to ath10 for processing once we have removed the key from the hw
+>> in the same way as for any other card.
 >
-> I'm poking around in the driver to hopefully find issues that cause
-> instability and failures in joining networks, which I am seeing a lot.
-> There are a number of bug reports regarding this, for instance
+> I don't think ath10k can handle sending already-encrypted data packets,
+> but possibly it works with newer upstream firmware/driver.
 >
->   https://bugs.96boards.org/show_bug.cgi?id=538
->   https://bugs.96boards.org/show_bug.cgi?id=319
+> Either way, as long as it does not fundamentally break something (like
+> a non-recoverable data stall), then maybe your patch is fine anyway
+> and ath10k may just drop a few extra frames.
 >
-> I'm following your patches and also started to look into the driver
-> myself, and during review, I noticed that list handling issue. I have a
-> big fat warning locally that would tell me if the list ever contains
-> more than one entry, but that never happens, as the indicator messages
-> are way too infrequent to trigger the race. So this isn't a real-world
-> issue as far as I can tell, but it is still quite obviously a bug. Hence
-> I considered posting a patch.
-
-It's a good idea to mention in the commit log if the fix is for a
-theoretical issue and does not necessarily fix anything visible. Helps
-to understand the background, prioritise which release the fix should go
-etc.
+>> My expectation here would be, that the driver detects and drops the
+>> pre-encrypted frames it no longer has a hw key for.
+>>
+>> Unfortunately this is just an assumption, since I haven't found the code
+>> handling this case in ath10k. And even if true this could well cause
+>> some undesired warning messages.
+>>
+>> I guess we should therefore make sure we do not send out any packets in
+>> the critical time window.
+>>
+>> Now stopping and flushing the queues seems to be bad idea which could
+>> cause a real performance impact for on a busy AP with many stations and
+>> rekeys enabled...
+>> Luckily it looks like we can instead just set KEY_FLAG_TAINTED for the
+>> old key to make sure we stop sending packets till the rekey is done.
+>>
+>> That should cause ieee80211_tx_h_select_key to drop all packets without
+>> a new per-packet check and also should cover potential undesired side
+>> effects, isn't it?
+>
+> I get lost in the weeds when trying to understand all of this, and some
+> previous attempts of mine to fix some of this evidently wasn't correct
+> enough to accept upstream:
+>
+> https://www.spinics.net/lists/hostap/msg03677.html
+>
+> So I really don't know enough to properly review
+> your patch.  Just be aware that ath10k is weird about sw-crypt, maybe 
+> make
+> sure your patch is tested on it to make sure it doesn't out-right 
+> break something.
+>
+> Thanks,
+> Ben
+>
+>
 
 -- 
-Kalle Valo
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
