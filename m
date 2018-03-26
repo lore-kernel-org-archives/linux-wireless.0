@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from james.theweblords.de ([217.11.55.87]:46092 "EHLO
-        james.theweblords.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753243AbeCFPEG (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:33258 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750984AbeCZHnb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Mar 2018 10:04:06 -0500
-From: =?UTF-8?q?Peter=20Gro=C3=9Fe?= <pegro@friiks.de>
-To: kvalo@codeaurora.org
+        Mon, 26 Mar 2018 03:43:31 -0400
+Subject: Re: [PATCH] mac80211: Fix wlan freezes under load at rekey
+To: Ben Greear <greearb@candelatech.com>,
+        Alexander Wetzel <alexander.wetzel@web.de>,
+        johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: spelling s/premble/preamble/
-Date: Tue,  6 Mar 2018 15:57:18 +0100
-Message-Id: <20180306145718.4617-1-pegro@friiks.de> (sfid-20180306_160411_204714_9A623EBD)
+References: <20180324102921.9814-1-alexander.wetzel@web.de>
+ <7bbb4246-324e-1d6d-245f-2642badb034d@candelatech.com>
+ <27aca99e-a521-be4a-9fd4-51c557f9777d@web.de>
+ <3e433bd6-d13e-f71c-d3ff-7163c2b59226@candelatech.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <caa084b9-ae86-af58-6295-637b549ad5b7@dd-wrt.com> (sfid-20180326_094335_379111_2BD32508)
+Date: Mon, 26 Mar 2018 09:43:28 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <3e433bd6-d13e-f71c-d3ff-7163c2b59226@candelatech.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Peter GroÃŸe <pegro@friiks.de>
----
- drivers/net/wireless/ath/ath9k/common-init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/common-init.c b/drivers/net/wireless/ath/ath9k/common-init.c
-index 8b4f7fdabf58..82de0fadbc95 100644
---- a/drivers/net/wireless/ath/ath9k/common-init.c
-+++ b/drivers/net/wireless/ath/ath9k/common-init.c
-@@ -88,7 +88,7 @@ static const struct ieee80211_channel ath9k_5ghz_chantable[] = {
- 	CHAN5G(5825, 37), /* Channel 165 */
- };
- 
--/* Atheros hardware rate code addition for short premble */
-+/* Atheros hardware rate code addition for short preamble */
- #define SHPCHECK(__hw_rate, __flags) \
- 	((__flags & IEEE80211_RATE_SHORT_PREAMBLE) ? (__hw_rate | 0x04 ) : 0)
- 
+>
+> So I really don't know enough to properly review
+> your patch.  Just be aware that ath10k is weird about sw-crypt, maybe 
+> make
+> sure your patch is tested on it to make sure it doesn't out-right 
+> break something.
+i will test it today in sta and ap mode. lets see whats the result after 
+some hours
+
+Sebastian
+
+
 -- 
-2.16.1
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
