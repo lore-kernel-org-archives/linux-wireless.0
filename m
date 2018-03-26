@@ -1,49 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:32854 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754547AbeCHPEd (ORCPT
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:36995 "EHLO
+        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751908AbeCZRw6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Mar 2018 10:04:33 -0500
-Date: Thu, 8 Mar 2018 16:04:31 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Cc: Rafa?? Mi??ecki <zajec5@gmail.com>,
-        "open list:LED SUBSYSTEM" <linux-leds@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>
-Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for
- various chipsets
-Message-ID: <20180308150431.GA12475@localhost> (sfid-20180308_160436_995342_29C89E0B)
-References: <CACna6rzD6z3DC6yjMCgBxgxx+DF+GGu69Ot5QA6xpJ41Ewb2=A@mail.gmail.com>
- <82d8ac0c-b391-6099-4c7f-991cc35445aa@dd-wrt.com>
- <20180302090312.GA30267@amd>
- <e77d25d4-a824-380a-c51a-e81175ba6205@dd-wrt.com>
- <CACna6rys85VEkzRGDVUAkBy7KgHS2y0DET7YvedboX-YEQHrkg@mail.gmail.com>
- <890a4dcc-f549-6487-2ce5-3b62874cd266@dd-wrt.com>
- <20180308090216.GC17761@amd>
- <d443856e-cfc8-2d50-900d-edf22e5360e3@dd-wrt.com>
- <20180308140515.GA4889@amd>
- <c2d75791-5822-ac55-35ad-734947e22d45@dd-wrt.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c2d75791-5822-ac55-35ad-734947e22d45@dd-wrt.com>
+        Mon, 26 Mar 2018 13:52:58 -0400
+Received: by mail-oi0-f51.google.com with SMTP id e8-v6so3105490oii.4
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:52:58 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [PATCH v7 00/11] EAPoL over NL80211
+Date: Mon, 26 Mar 2018 12:52:40 -0500
+Message-Id: <20180326175251.20666-1-denkenz@gmail.com> (sfid-20180326_195302_257283_57F90D59)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+This patchset adds support for running 802.11 authentication mechanisms (e.g.
+802.1X, 4-Way Handshake, etc) over NL80211 instead of putting them onto the
+network device.  This has the advantage of fixing several long-standing race
+conditions that result from userspace operating on multiple transports in order
+to manage a 802.11 connection (e.g. NL80211 and wireless netdev, wlan0, etc).
 
-> show me a proof that its copy & paste. because its not
+For example, userspace would sometimes see 4-Way handshake packets before
+NL80211 signaled that the connection has been established.  Leading to ugly
+hacks or having the STA wait for retransmissions from the AP.
 
-I don't have to prove you anything. Sorry.
+This also provides a way to mitigate a particularly nasty race condition where
+the encryption key could be set prior to the 4-way handshake packet 4/4 being
+sent.  This would result in the packet being sent encrypted and discarded by
+the peer.  The mitigation strategy for this race is for userspace to explicitly
+tell the kernel that a particular EAPoL packet should not be encrypted.
 
-But you said:
+To make this possible this patchset introduces a new NL80211 command and several
+new attributes.  A userspace that is capable of processing EAPoL packets over
+NL80211 includes a new NL80211_ATTR_CONTROL_PORT_OVER_NL80211 attribute in its
+NL80211_CMD_ASSOCIATE or NL80211_CMD_CONNECT requests being sent to the kernel.
+The previously added NL80211_ATTR_SOCKET_OWNER attribute must also be included.
+The latter is used by the kernel to send NL80211_CMD_CONTROL_PORT_FRAME
+notifications back to userspace via a netlink unicast.  If the
+NL80211_ATTR_CONTROL_PORT_OVER_NL80211 attribute is not specified, then legacy
+behavior is kept and control port packets continue to flow over the network
+interface.
 
-> >>see ath9k. its exact the same implementation.
+If control port over nl80211 transport is requested, then control port packets
+are intercepted just prior to being handed to the network device and sent over
+netlink via the NL80211_CMD_CONTROL_PORT_FRAME notification.
+NL80211_ATTR_CONTROL_PORT_ETHERTYPE and NL80211_ATTR_MAC are included to
+specify the control port frame protocol and source address respectively.  If
+the control port frame was received unencrypted then
+NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT flag is also included.  NL80211_ATTR_FRAME
+attribute contains the raw control port frame with all transport layer headers
+stripped (e.g. this would be the raw EAPoL frame).
 
-We don't want to have exact same code multiple times in the tree.
- 
-									Pavel
+Userspace can reply to control port frames either via legacy methods (by sending
+frames to the network device) or via NL80211_CMD_CONTROL_PORT_FRAME request.
+Userspace would included NL80211_ATTR_FRAME with the raw control port frame as
+well as NL80211_Attr_MAC and NL80211_ATTR_CONTROL_PORT_ETHERTYPE attributes to
+specify the destination address and protocol respectively.  This allows
+Pre-Authentication (protocol 0x88c7) frames to be sent via this mechanism as
+well.  Finally, NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT flag can be included to
+tell the driver to send the frame unencrypted, e.g. for 4-Way handshake 4/4
+frames.
+
+The proposed patchset has been tested in a mac80211_hwsim based environment with
+hostapd and iwd.
+
+ChangeLog
+
+v7
+
+- Resubmission dropping RFC tag
+
+v6
+
+- Dropped AP_VLAN from supported interface types in patch 2 per mailing list
+discussion with Johannes
+- Added GENL_SET_ERR_MSG where appropriate
+- Added control_port_over_nl80211 parameter to ibss_params and mesh_config
+- Last patch updated to set sdata->control_port_over_nl80211 for ibss and mesh
+
+v5
+
+- Johannes' main comment was that we're not handling interface types other than
+STATION inside tx_control_port (patch 2).  This patch was modified to support
+all interface types that seemed relevant.
+- Since tx_control_port relies on wdev->conn_owner_nlportid being set,
+SOCKET_OWNER support was added to JOIN_IBSS, JOIN_MESH and START_AP
+- SOCKET_OWNER auto-destruction logic was updated to support interface types
+other than STATION/P2P_CLIENT
+- Last patch was modified to support control_port_over_nl80211 for mac80211
+based AP mode.  It also copies necessary bits for AP_VLAN interfaces.
+
+This version has been tested on both STATION and AP mode interfaces with
+SOCKET_OWNER & CONTROL_PORT_OVER_NL80211 attributes provided to CMD_CONNECT
+and CMD_START_AP.
+
+TODO:
+
+- It is unclear to me how AP_VLAN and AP interfaces should synchronize on
+conn_owner_nlportid.  This is required for tx_control_port to work.
+- JOIN_IBSS & JOIN_MESH don't seem to support control_port_ethertype or
+control_port_no_encrypt.  Should struct cfg80211_crypto_settings parsed inside
+nl80211_crypto_settings be added to ibss_params or mesh_config/mesh_setup?
+
+v4
+
+- Reordered the patches to make sure that: when CONTROL_PORT_OVER_NL80211 is
+provided by userspace, nl80211 checks that both EXT_FEATURE bit is set and
+the tx_control_port is present in rdev ops.
+- Fixed up various issues Johannes found in his review
+
+v3
+
+- Added ETH_P_PREAUTH to if_ether.h
+- Moved NL80211 feature bit from wiphy features to ext features
+- Addressed various comments from Johannes
+
+v2
+
+- Added WIPHY_FLAG_CONTROL_PORT_OVER_NL80211 flag.  This is a capability flag
+used by the drivers, e.g. that the driver supports control port over nl80211
+capability.  This capability is now checked when CONTROL_PORT_OVER_NL80211 is
+requested.
+
+- mac80211 rx path now forwards Pre-Authentication frames over NL80211 as well,
+if requested.  Tweaked the signature of cfg80211_rx_control_port.
+
+- TX path reworked completely.  tx_control_port method has been introduced to
+cfg80211_ops.  An implementation of tx_control_port for mac80211 was added.
+
+Denis Kenzior (11):
+  nl80211: Add CMD_CONTROL_PORT_FRAME API
+  nl80211: Implement TX of control port frames
+  nl80211: Add CONTROL_PORT_OVER_NL80211 attribute
+  cfg80211: Support all iftypes in autodisconnect_wk
+  nl80211: Add SOCKET_OWNER support to JOIN_IBSS
+  nl80211: Add SOCKET_OWNER support to JOIN_MESH
+  nl80211: Add SOCKET_OWNER support to START_AP
+  nl80211: Add control_port_over_nl80211 for ibss
+  nl80211: Add control_port_over_nl80211 to mesh_setup
+  mac80211: Add support for tx_control_port
+  mac80211: Send control port frames over nl80211
+
+ include/net/cfg80211.h       |  40 +++++++++
+ include/uapi/linux/nl80211.h |  36 +++++++-
+ net/mac80211/cfg.c           |   7 ++
+ net/mac80211/ibss.c          |   1 +
+ net/mac80211/ieee80211_i.h   |   4 +
+ net/mac80211/iface.c         |   2 +
+ net/mac80211/main.c          |   2 +
+ net/mac80211/mlme.c          |   2 +
+ net/mac80211/rx.c            |  33 ++++++--
+ net/mac80211/tx.c            |  46 +++++++++++
+ net/wireless/ap.c            |   1 +
+ net/wireless/ibss.c          |   1 +
+ net/wireless/mesh.c          |   1 +
+ net/wireless/nl80211.c       | 193 ++++++++++++++++++++++++++++++++++++++++++-
+ net/wireless/rdev-ops.h      |  15 ++++
+ net/wireless/sme.c           |  43 +++++++---
+ net/wireless/trace.h         |  47 +++++++++++
+ 17 files changed, 455 insertions(+), 19 deletions(-)
+
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+2.13.5
