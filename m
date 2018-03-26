@@ -1,136 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 10.mo5.mail-out.ovh.net ([46.105.52.148]:34660 "EHLO
-        10.mo5.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750779AbeCNQUz (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35772 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751750AbeCZPJ1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Mar 2018 12:20:55 -0400
-Received: from player695.ha.ovh.net (unknown [10.109.105.213])
-        by mo5.mail-out.ovh.net (Postfix) with ESMTP id D2DEF19419C
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Mar 2018 16:45:05 +0100 (CET)
+        Mon, 26 Mar 2018 11:09:27 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Wed, 14 Mar 2018 16:44:43 +0100
-From: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        James Hughes <james.hughes@raspberrypi.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        =?UTF-8?Q?Linus_L=C3=BCssing?= <linus.luessing@c0d3.blue>,
-        Felix Fietkau <nbd@nbd.name>, bridge@lists.linux-foundation.org
-Subject: Re: [PATCH] brcmfmac: drop Inter-Access Point Protocol packets by
- default
-In-Reply-To: <878tau7n23.fsf@codeaurora.org>
-References: <20180314110119.13631-1-zajec5@gmail.com>
- <878tau7n23.fsf@codeaurora.org>
-Message-ID: <52b1812dd3e843adb63ff67fbe95975f@milecki.pl> (sfid-20180314_172100_188594_2677C7DE)
+Subject: Re: [v2] ath10k: debugfs support to get final TPC stats for 10.4
+ variants
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1519634437-6672-1-git-send-email-mkenna@codeaurora.org>
+References: <1519634437-6672-1-git-send-email-mkenna@codeaurora.org>
+To: mkenna@codeaurora.org
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Maharaja Kennadyrajan <mkenna@codeaurora.org>
+Message-Id: <20180326150927.4D92E60710@smtp.codeaurora.org> (sfid-20180326_170931_356880_F379E86F)
+Date: Mon, 26 Mar 2018 15:09:27 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-03-14 15:24, Kalle Valo wrote:
-> Rafał Miłecki <zajec5@gmail.com> writes:
+mkenna@codeaurora.org wrote:
+
+> Export the final Transmit Power Control (TPC) value, which is the
+> minimum of control power and existing TPC value to user space via
+> a new debugfs file "tpc_stats_final" to help with debugging.
+> It works with the new wmi cmd and event introduced in 10.4 firmware
+> branch.
 > 
->> From: Rafał Miłecki <rafal@milecki.pl>
->> 
->> Testing brcmfmac with more recent firmwares resulted in AP interfaces
->> not working in some specific setups. Debugging resulted in discovering
->> support for IAPP in Broadcom's firmwares. This is an obsoleted 
->> standard
->> and its implementation is something that:
->> 1) Most people don't need / want to use
->> 2) Can allow local DoS attacks
->> 3) Breaks AP interfaces in some specific bridge setups
->> 
->> To solve issues it can cause this commit modifies brcmfmac to drop 
->> IAPP
->> packets. If affects:
->> 1) Rx path: driver won't be sending these unwanted packets up.
->> 2) Tx path: driver will reject packets that would trigger STA
->>    disassociation perfromed by a firmware (possible local DoS attack).
->> 
->> It appears there are some Broadcom's clients/users who care about this
->> feature despite the drawbacks. They can switch it on by a newly added
->> Kconfig option.
->> 
->> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> WMI command ID: WMI_PDEV_GET_TPC_TABLE_CMDID
+> WMI event ID: WMI_PDEV_TPC_TABLE_EVENTID
 > 
+> cat /sys/kernel/debug/ieee80211/phyX/ath10k/tpc_stats_final
+> 
+> $ cat /sys/kernel/debug/ieee80211/phyX/ath10k/tpc_stats_final
+> 
+> TPC config for channel 5180 mode 10
+> 
+> CTL             =  0x 0 Reg. Domain             = 58
+> Antenna Gain    =  0 Reg. Max Antenna Gain      =   0
+> Power Limit     = 60 Reg. Max Power             = 60
+> Num tx chains   =  2 Num supported rates        = 109
+> 
+> ******************* CDD POWER TABLE ****************
+> 
+> No.  Preamble Rate_code tpc_value1 tpc_value2 tpc_value3
+> 0    CCK      0x40        0          0
+> 1    CCK      0x41        0          0
 > [...]
+> 107  HTCUP    0x 0       46          46
+> 108  HTCUP    0x 0       46          46
 > 
->> --- a/drivers/net/wireless/broadcom/brcm80211/Kconfig
->> +++ b/drivers/net/wireless/broadcom/brcm80211/Kconfig
->> @@ -68,6 +68,26 @@ config BRCMFMAC_PCIE
->>  	  IEEE802.11ac embedded FullMAC WLAN driver. Say Y if you want to
->>  	  use the driver for an PCIE wireless card.
->> 
->> +config BRCMFMAC_IAPP
->> +	bool "Partial support for obsoleted Inter-Access Point Protocol"
->> +	depends on BRCMFMAC
->> +	---help---
->> +	  Most of Broadcom's firmwares can send 802.11f ADD frame every
->> +	  time new STA connects to the AP interface. Some recent ones
->> +	  can also disassociate STA when they receive such a frame.
->> +
->> +	  It's important to understand this behavior can lead to a local
->> +	  DoS security issue. Attacker may trigger disassociation of any
->> +	  STA by sending a proper Ethernet frame to the wireless
->> +	  interface.
->> +
->> +	  Moreover this feature may break AP interfaces in some specific
->> +	  setups. This applies e.g. to the bridge with hairpin mode
->> +	  enabled and IFLA_BRPORT_MCAST_TO_UCAST set. IAPP packet
->> +	  generated by a firmware will get passed back to the wireless
->> +	  interface and cause immediate disassociation of just-connected
->> +	  STA.
+> ******************* STBC POWER TABLE ****************
 > 
-> Sorry for jumping late, but does it really make sense to have a Kconfig
-> option for this? I don't think we should add a Kconfig option for every
-> strange feature, there should be stronger reasons (size savings etc)
-> before adding a Kconfig option.
+> No.  Preamble Rate_code tpc_value1 tpc_value2 tpc_value3
+> 0    CCK      0x40        0          0
+> 1    CCK      0x41        0          0
+> [...]
+> 107  HTCUP    0x 0        46         46
+> 108  HTCUP    0x 0        46         46
 > 
-> And in this case the size savings can't be much. Wouldn't a module
-> parameter be simpler for a functionality change like this?
+> ***********************************
+> TXBF not supported
+> **********************************
 > 
->> +/**
->> + * brcmf_skb_is_iapp - checks if skb is an IAPP packet
->> + *
->> + * @skb: skb to check
->> + */
->> +static bool brcmf_skb_is_iapp(struct sk_buff *skb)
->> +{
->> +	const u8 iapp_l2_update_packet[6] __aligned(2) = {
->> +		0x00, 0x01, 0xaf, 0x81, 0x01, 0x00,
->> +	};
+> The existing tpc_stats debugfs file provides the dump
+> which is minimum of target power and regulatory domain.
 > 
-> static?
+> cat /sys/kernel/debug/ieee80211/phyX/ath10k/tpc_stats
+> 
+> Hardware_used: QCA4019
+> Firmware version: firmware-5.bin_10.4-3.0-00209
+> 
+> Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Sure
+Patch applied to ath-next branch of ath.git, thanks.
 
+bc64d05220f3 ath10k: debugfs support to get final TPC stats for 10.4 variants
 
->> +	unsigned char *eth_data = skb_mac_header(skb) + ETH_HLEN;
->> +#if !defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
-> 
-> #ifndef?
+-- 
+https://patchwork.kernel.org/patch/10241601/
 
-I followed what is used in the include/linux/etherdevice.h. Is that a
-good exceuse? Could it be there any some good reason for #if defined()?
-
-
->> +	const u16 *a = (const u16 *)eth_data;
->> +	const u16 *b = (const u16 *)iapp_l2_update_packet;
->> +#endif
->> +
->> +	if (skb->len - skb->mac_len != 6 ||
->> +	    !is_multicast_ether_addr(eth_hdr(skb)->h_dest))
->> +		return false;
->> +
->> +#if defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
-> 
-> #ifdef?
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
