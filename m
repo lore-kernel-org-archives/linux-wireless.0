@@ -1,54 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f174.google.com ([209.85.220.174]:35085 "EHLO
-        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751687AbeCOJdY (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:35764 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750983AbeCZNWF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Mar 2018 05:33:24 -0400
-Received: by mail-qk0-f174.google.com with SMTP id s188so6563707qkb.2
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2018 02:33:24 -0700 (PDT)
-Subject: Re: [PATCH] wireless: brcmfmac: cfg80211: Fix check for ISO3166 code
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <1521054179-4030-1-git-send-email-stefan.wahren@i2se.com>
- <87o9jp7l95.fsf@kamboji.qca.qualcomm.com> <5AAA3C9A.3040907@broadcom.com>
- <87fu517kk1.fsf@kamboji.qca.qualcomm.com>
-Cc: Stefan Wahren <stefan.wahren@i2se.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AAA3DE0.5040108@broadcom.com> (sfid-20180315_103328_648353_67B157FB)
-Date: Thu, 15 Mar 2018 10:33:20 +0100
-MIME-Version: 1.0
-In-Reply-To: <87fu517kk1.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Mon, 26 Mar 2018 09:22:05 -0400
+From: hariprasath.elango@gmail.com
+To: aditya.shankar@microchip.com, gregkh@linuxfoundation.org,
+        ganesh.krishna@microchip.com
+Cc: gehariprasath@gmail.com,
+        HariPrasath Elango <hariprasath.elango@gmail.com>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: wilc1000: remove unused return variable
+Date: Mon, 26 Mar 2018 18:51:55 +0530
+Message-Id: <20180326132155.24612-1-hariprasath.elango@gmail.com> (sfid-20180326_152219_883932_AE3C2B44)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/15/2018 10:30 AM, Kalle Valo wrote:
-> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
->
->> On 3/15/2018 10:15 AM, Kalle Valo wrote:
->>> Stefan Wahren <stefan.wahren@i2se.com> writes:
->>>
->>>> The commit "regulatory: add NUL to request alpha2" increases the length of
->>>> alpha2 to 3. This causes a regression on brcmfmac, because
->>>> brcmf_cfg80211_reg_notifier() expect valid ISO3166 codes in the complete
->>>> array. So fix this accordingly.
->>>>
->>>> Signed-off-by: Stefan Wahren <stefan.wahren@i2se.com>
->>>
->>> Arend, the first release for 657308f73e67 is v4.16-rc3 so should this go
->>> to v4.16 as well?
->>>
->>> And "wireless:" in the title is useless, I can remove that.
->>
->> And ": cfg80211" as well?
->
-> Ok, I'll remove that.
+From: HariPrasath Elango <hariprasath.elango@gmail.com>
 
-Thanks
+In this function,removed the unused integer variable as it is not
+actually used to return function success or failure. Return is a pointer
+to net_device structure.
+
+Signed-off-by: HariPrasath Elango <hariprasath.elango@gmail.com>
+---
+ drivers/staging/wilc1000/linux_mon.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 47e3025..169213f 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -252,7 +252,7 @@ static const struct net_device_ops wilc_wfi_netdev_ops = {
+  *  @brief      WILC_WFI_init_mon_interface
+  *  @details
+  *  @param[in]
+- *  @return     int : Return 0 on Success
++ *  @return     Pointer to net_device
+  *  @author	mdaftedar
+  *  @date	12 JUL 2012
+  *  @version	1.0
+@@ -260,7 +260,6 @@ static const struct net_device_ops wilc_wfi_netdev_ops = {
+ struct net_device *WILC_WFI_init_mon_interface(const char *name,
+ 					       struct net_device *real_dev)
+ {
+-	u32 ret = 0;
+ 	struct WILC_WFI_mon_priv *priv;
+ 
+ 	/*If monitor interface is already initialized, return it*/
+@@ -275,8 +274,7 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name,
+ 	wilc_wfi_mon->name[IFNAMSIZ - 1] = 0;
+ 	wilc_wfi_mon->netdev_ops = &wilc_wfi_netdev_ops;
+ 
+-	ret = register_netdevice(wilc_wfi_mon);
+-	if (ret) {
++	if (register_netdevice(wilc_wfi_mon)) {
+ 		netdev_err(real_dev, "register_netdevice failed\n");
+ 		return NULL;
+ 	}
+-- 
+2.10.0.GIT
