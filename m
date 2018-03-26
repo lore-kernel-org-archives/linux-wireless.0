@@ -1,100 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:37547 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932232AbeCKVB7 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Mar 2018 17:01:59 -0400
-Received: by mail-oi0-f67.google.com with SMTP id f186so10786300oig.4
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Mar 2018 14:01:58 -0700 (PDT)
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56492 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751115AbeCZKf4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Mar 2018 06:35:56 -0400
+Date: Mon, 26 Mar 2018 12:35:52 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Mathias Kresin <dev@kresin.me>
+Cc: Daniel Golle <daniel@makrotopia.org>,
+        Enrico Mioso <mrkiko.rs@gmail.com>,
+        Tom Psyborg <pozega.tomislav@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        Jamie Stuart <jamie@onebillion.org>
+Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+ frame due to full tx queue...?
+Message-ID: <20180326103551.GA2069@redhat.com> (sfid-20180326_123559_933503_8F2CBC08)
+References: <alpine.LNX.2.21.99.1801031503370.8405@localhost.localdomain>
+ <CAKR_QVLRwAA0NJSarX46J4A8XSp8h5SuTEtSBQ4ydpEPh_-aUw@mail.gmail.com>
+ <alpine.LNX.2.21.99.1801220643400.32225@mStation.localdomain>
+ <20180123132234.GC2520@redhat.com>
+ <alpine.LNX.2.21.99.1801240917001.13679@mStation.localdomain>
+ <20180124100316.GB3101@redhat.com>
+ <20180301153006.GJ1233@makrotopia.org>
+ <20180307122701.GA10584@redhat.com>
+ <20180307122935.GB10584@redhat.com>
+ <d462681a-6a85-f76c-85a0-4e51b8529606@kresin.me>
 MIME-Version: 1.0
-In-Reply-To: <87zi3f6q6i.fsf@qca.qualcomm.com>
-References: <20171101200157.27096-1-chunkeey@gmail.com> <1666282.PC3nhpCf9f@debian64>
- <87tvxpf9i8.fsf@kamboji.qca.qualcomm.com> <1882220.dvZB77Gu54@debian64>
- <877etpmomh.fsf@kamboji.qca.qualcomm.com> <CACna6ryUYb8ACVaRx3jROgxfUvBV5p4+3UsNEV8FEU1R_2sxdQ@mail.gmail.com>
- <87zi3f6q6i.fsf@qca.qualcomm.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Sun, 11 Mar 2018 22:01:58 +0100
-Message-ID: <CACna6rx+WpTRUVdseW_vO7MXZ3FWrLPPKAcGfrAQ8V8oXSsu5g@mail.gmail.com> (sfid-20180311_220203_153564_F4301299)
-Subject: Re: [PATCH] ath10k: fix recent bandwidth conversion bug
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Christian Lamparter <chunkeey@gmail.com>,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d462681a-6a85-f76c-85a0-4e51b8529606@kresin.me>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11 March 2018 at 08:12, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
->
->> On 14 December 2017 at 14:21, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->>> Christian Lamparter <chunkeey@gmail.com> writes:
->>>
->>>> On Monday, November 20, 2017 11:57:21 AM CET Kalle Valo wrote:
->>>>> Christian Lamparter <chunkeey@gmail.com> writes:
->>>>>
->>>>> > On Wednesday, November 1, 2017 9:37:53 PM CET Sebastian Gottschall =
-wrote:
->>>>> >> a additional array bounds check would be good
->>>>> >
->>>>> > Ah, about that:
->>>>> >
->>>>> > the bw variable in ath10k_htt_rx_h_rates() is extracted from info2
->>>>> > in the following way [0]:
->>>>> > |  bw =3D info2 & 3;
->>>>> >
->>>>> > the txrate.bw variable in ath10k_update_per_peer_tx_stats() is set =
-by [1]:
->>>>> > |  txrate.bw =3D ATH10K_HW_BW(peer_stats->flags);
->>>>> >
->>>>> > ATH10K_HW_BW is a macro defined as [2]:
->>>>> > |  #define ATH10K_HW_BW(flags)             (((flags) >> 3) & 0x3)
->>>>> >
->>>>> > In both cases the bandwidth values already are limited to 0-3 by
->>>>> > the "and 3" operation.
->>>>>
->>>>> Until someone changes that part of the code (and the firmware
->>>>> interface). IMHO a switch is safer as there we don't have any risk of
->>>>> out of bands access.
->>>>
->>>> The kbuild-bot/CI can catch this too.
->>>>
->>>> For example, it will look like this:
->>>> drivers/net/wireless/ath/ath10k//htt_rx.c:710:52: warning: invalid
->>>> access past the end of 'ath10k_bw_to_mac80211' (4 4)
->>>
->>> Sure, but after reading about all these security vulnerabilities I have
->>> become even more cautious and try to avoid all tricky stuff.
->>>
->>>> BTW:
->>>> Have you noticed:
->>>>
->>>> <https://github.com/lede-project/source/blob/master/package/kernel/mac=
-80211/patches/319-ath10k-fix-recent-bandwidth-conversion-bug.patch>
->>>>
->>>> Is this really your signed-off-by or not?
->>>
->>> I suspect that patch is taken from my pending branch.
->>>
->>>> In any case, you - as the maintainer - can modify the patch as
->>>> you see fit. So, please do so.
->>>
->>> Ok, we'll send v2.
->>
->> Hi Kalle,
->>
->> I'm trying to figure out the fate of that LEDE's patch. I don't think
->> you ever sent V2.
->>
->> Is that fix still needed? Are you planning to send V2?
->
-> Anil now sent v2 (he just forgot to mark it as such):
->
-> https://patchwork.kernel.org/patch/10273445/
->
-> Thanks for the reminder.
+Hi Mathias 
 
-Thanks!
+> sorry for the delayed testing. I had to create a new test setup
+> first, fought with buggy hardware and was busy with other stuff.
 
---=20
-Rafa=C5=82
+Thanks for doing it.
+
+> The two attached patches are causing a performance regression for me again:
+> 
+> OpenWrt head (forced HT40, 100Mbit wired interface)
+> 
+> wireless (iperf client) to wired (iperf server)
+>   Interval           Transfer     Bitrate         Retr
+>     0.00-60.00  sec   584 MBytes  81.6 Mbits/sec  666           sender
+>     0.00-60.00  sec   584 MBytes  81.6 Mbits/sec                receiver
+> 
+> wired (iperf client) to wireless (iperf server)
+>   Interval           Transfer     Bitrate         Retr
+>     0.00-60.00  sec   620 MBytes  86.7 Mbits/sec   33           sender
+>     0.00-60.00  sec   617 MBytes  86.2 Mbits/sec                receiver
+> 
+> 
+> 
+> OpenWrt head (forced HT40, 100Mbit wired interface)
+>   + rt2800_change_rx_ampdu_factor.patch
+>   + rt2800_change_ba_size.patch
+> 
+> wireless (iperf client) to wired (iperf server)
+>   Interval           Transfer     Bitrate         Retr
+>     0.00-60.00  sec   356 MBytes  49.8 Mbits/sec    6           sender
+>     0.00-60.00  sec   356 MBytes  49.7 Mbits/sec                receiver
+> 
+> wired (iperf client) to wireless (iperf server)
+>   Interval           Transfer     Bitrate         Retr
+>     0.00-60.00  sec   627 MBytes  87.7 Mbits/sec    5           sender
+>     0.00-60.00  sec   626 MBytes  87.5 Mbits/sec                receiver
+> 
+> 
+> Due to the regression I haven't tested your ampdu_density patch so
+> far. Let me hear if you want to see more tests done.
+
+Could you test just RX AMPDU patches, i.e.
+
+rt2800_change_rx_ampdu_factor.patch
+rt2800_change_rx_ampdu_density.patch
+
+I have somewhat positive results on RX performance on some devices
+with those. Perhaps you could confirm that :-)
+
+Regards
+Stanislaw
