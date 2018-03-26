@@ -1,52 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:33867 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031424AbeCAOWS (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:42177 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752627AbeCZRQa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:22:18 -0500
-Received: by mail-qt0-f195.google.com with SMTP id l25so7717116qtj.1
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:22:18 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+        Mon, 26 Mar 2018 13:16:30 -0400
+Received: by mail-oi0-f66.google.com with SMTP id l190-v6so8496915oig.9
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:16:29 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 44/52] ath: Map Russia to ETSI8_WORLD
-Date: Thu,  1 Mar 2018 15:18:54 +0100
-Message-Id: <20180301141902.24824-45-sven.eckelmann@openmesh.com> (sfid-20180301_152221_601043_3E36D9A1)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [RFC v6 04/11] cfg80211: Support all iftypes in autodisconnect_wk
+Date: Mon, 26 Mar 2018 12:16:07 -0500
+Message-Id: <20180326171614.20373-5-denkenz@gmail.com> (sfid-20180326_191644_316397_58B11DFE)
+In-Reply-To: <20180326171614.20373-1-denkenz@gmail.com>
+References: <20180326171614.20373-1-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The regdomain code is used to select the correct the correct conformance
-test limits (CTL) for a country. If the regdomain code isn't correctly
-mapped to the actual CTL entries in EEPROM then it could happen that the
-device violates the regulations. But it can also happen that the device is
-then not able to be used with its full txpower on all rates.
+Currently autodisconnect_wk assumes that only interface types of
+P2P_CLIENT and STATION use conn_owner_nlportid.  Change this so all
+interface types are supported.
 
-The CTL mappings for this regdomain code were now changed to:
-
-* 2.4GHz: ETSI
-* 5GHz: NO_CTL -> ETSI
-
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
 ---
- drivers/net/wireless/ath/regd_common.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/wireless/sme.c | 43 ++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 32 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index 0baa028ce7a2..ba5f112333b8 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -465,7 +465,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_PUERTO_RICO, FCC1_FCCA, "PR"},
- 	{CTRY_QATAR, APL1_WORLD, "QA"},
- 	{CTRY_ROMANIA, ETSI1_WORLD, "RO"},
--	{CTRY_RUSSIA, NULL1_WORLD, "RU"},
-+	{CTRY_RUSSIA, ETSI8_WORLD, "RU"},
- 	{CTRY_RWANDA, APL1_WORLD, "RW"},
- 	{CTRY_SAUDI_ARABIA, NULL1_WORLD, "SA"},
- 	{CTRY_SERBIA, ETSI1_WORLD, "RS"},
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 701cfd7acc1b..5df6b33db786 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -1239,17 +1239,38 @@ void cfg80211_autodisconnect_wk(struct work_struct *work)
+ 	wdev_lock(wdev);
+ 
+ 	if (wdev->conn_owner_nlportid) {
+-		/*
+-		 * Use disconnect_bssid if still connecting and ops->disconnect
+-		 * not implemented.  Otherwise we can use cfg80211_disconnect.
+-		 */
+-		if (rdev->ops->disconnect || wdev->current_bss)
+-			cfg80211_disconnect(rdev, wdev->netdev,
+-					    WLAN_REASON_DEAUTH_LEAVING, true);
+-		else
+-			cfg80211_mlme_deauth(rdev, wdev->netdev,
+-					     wdev->disconnect_bssid, NULL, 0,
+-					     WLAN_REASON_DEAUTH_LEAVING, false);
++		switch (wdev->iftype) {
++		case NL80211_IFTYPE_ADHOC:
++			cfg80211_leave_ibss(rdev, wdev->netdev, false);
++			break;
++		case NL80211_IFTYPE_AP:
++		case NL80211_IFTYPE_P2P_GO:
++			cfg80211_stop_ap(rdev, wdev->netdev, false);
++			break;
++		case NL80211_IFTYPE_MESH_POINT:
++			cfg80211_leave_mesh(rdev, wdev->netdev);
++			break;
++		case NL80211_IFTYPE_STATION:
++		case NL80211_IFTYPE_P2P_CLIENT:
++			/*
++			 * Use disconnect_bssid if still connecting and
++			 * ops->disconnect not implemented.  Otherwise we can
++			 * use cfg80211_disconnect.
++			 */
++			if (rdev->ops->disconnect || wdev->current_bss)
++				cfg80211_disconnect(rdev, wdev->netdev,
++						    WLAN_REASON_DEAUTH_LEAVING,
++						    true);
++			else
++				cfg80211_mlme_deauth(rdev, wdev->netdev,
++						     wdev->disconnect_bssid,
++						     NULL, 0,
++						     WLAN_REASON_DEAUTH_LEAVING,
++						     false);
++			break;
++		default:
++			break;
++		}
+ 	}
+ 
+ 	wdev_unlock(wdev);
 -- 
-2.11.0
+2.13.5
