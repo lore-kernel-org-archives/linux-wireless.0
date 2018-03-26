@@ -1,71 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:37920 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750800AbeCIJlw (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:45725 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752651AbeCZRQe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Mar 2018 04:41:52 -0500
-Received: by mail-wr0-f194.google.com with SMTP id n7so8372277wrn.5
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2018 01:41:52 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: kubakici@wp.pl
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mt7601u: let mac80211 validate rx CCMP PN
-Date: Fri,  9 Mar 2018 10:41:41 +0100
-Message-Id: <9ccb187ffdba10f63148402aa38a5db436c52935.1520588242.git.lorenzo.bianconi@redhat.com> (sfid-20180309_104156_948645_1DB3EC31)
-In-Reply-To: <cover.1520588242.git.lorenzo.bianconi@redhat.com>
-References: <cover.1520588242.git.lorenzo.bianconi@redhat.com>
+        Mon, 26 Mar 2018 13:16:34 -0400
+Received: by mail-oi0-f68.google.com with SMTP id 71-v6so16717998oie.12
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:16:34 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [RFC v6 11/11] mac80211: Send control port frames over nl80211
+Date: Mon, 26 Mar 2018 12:16:14 -0500
+Message-Id: <20180326171614.20373-12-denkenz@gmail.com> (sfid-20180326_191639_725518_76D9D181)
+In-Reply-To: <20180326171614.20373-1-denkenz@gmail.com>
+References: <20180326171614.20373-1-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Apparently the hardware does not perform CCMP PN validation so
-let mac80211 take care of possible replay attacks in sw.
-Moreover indicate ICV and MIC had been stripped setting corresponding
-bits in ieee80211_rx_status.
-The fix has been validated using 4.2.1 and 4.1.3 tests from the WiFi
-Alliance vulnerability detection tool.
+If userspace requested control port frames to go over 80211, then do so.
+The control packets are intercepted just prior to delivery of the packet
+to the underlying network device.
 
-Fixes: c869f77d6abb ("add mt7601u driver")
-Acked-by: Jakub Kicinski <kubakici@wp.pl>
-Tested-by: David Park <david.park@hitemengineering.com>
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Pre-authentication type frames (protocol: 0x88c7) are also forwarded
+over nl80211.
+
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
 ---
- drivers/net/wireless/mediatek/mt7601u/initvals.h |  1 +
- drivers/net/wireless/mediatek/mt7601u/mac.c      | 10 +++++++++-
- 2 files changed, 10 insertions(+), 1 deletion(-)
+ net/mac80211/cfg.c         |  6 ++++++
+ net/mac80211/ibss.c        |  1 +
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/iface.c       |  2 ++
+ net/mac80211/main.c        |  2 ++
+ net/mac80211/mlme.c        |  2 ++
+ net/mac80211/rx.c          | 33 ++++++++++++++++++++++++++++-----
+ 7 files changed, 42 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/initvals.h b/drivers/net/wireless/mediatek/mt7601u/initvals.h
-index ec11ff66969d..2dc6b68e7fb9 100644
---- a/drivers/net/wireless/mediatek/mt7601u/initvals.h
-+++ b/drivers/net/wireless/mediatek/mt7601u/initvals.h
-@@ -139,6 +139,7 @@ static const struct mt76_reg_pair mac_common_vals[] = {
- 	{ MT_TXOP_HLDR_ET,		0x00000002 },
- 	{ MT_XIFS_TIME_CFG,		0x33a41010 },
- 	{ MT_PWR_PIN_CFG,		0x00000000 },
-+	{ MT_PN_PAD_MODE,		0x00000001 },
- };
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 9294acb495ee..49112378e503 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -925,6 +925,8 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	 */
+ 	sdata->control_port_protocol = params->crypto.control_port_ethertype;
+ 	sdata->control_port_no_encrypt = params->crypto.control_port_no_encrypt;
++	sdata->control_port_over_nl80211 =
++				params->crypto.control_port_over_nl80211;
+ 	sdata->encrypt_headroom = ieee80211_cs_headroom(sdata->local,
+ 							&params->crypto,
+ 							sdata->vif.type);
+@@ -934,6 +936,8 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 			params->crypto.control_port_ethertype;
+ 		vlan->control_port_no_encrypt =
+ 			params->crypto.control_port_no_encrypt;
++		vlan->control_port_over_nl80211 =
++			params->crypto.control_port_over_nl80211;
+ 		vlan->encrypt_headroom =
+ 			ieee80211_cs_headroom(sdata->local,
+ 					      &params->crypto,
+@@ -2019,6 +2023,8 @@ static int ieee80211_join_mesh(struct wiphy *wiphy, struct net_device *dev,
+ 	if (err)
+ 		return err;
  
- static const struct mt76_reg_pair mac_chip_vals[] = {
-diff --git a/drivers/net/wireless/mediatek/mt7601u/mac.c b/drivers/net/wireless/mediatek/mt7601u/mac.c
-index 4d3077941138..d55d7040a56d 100644
---- a/drivers/net/wireless/mediatek/mt7601u/mac.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/mac.c
-@@ -480,8 +480,16 @@ u32 mt76_mac_process_rx(struct mt7601u_dev *dev, struct sk_buff *skb,
++	sdata->control_port_over_nl80211 = setup.control_port_over_nl80211;
++
+ 	/* can mesh use other SMPS modes? */
+ 	sdata->smps_mode = IEEE80211_SMPS_OFF;
+ 	sdata->needed_rx_chains = sdata->local->rx_chains;
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index db07e0de9a03..05ddc9291ec5 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -1844,6 +1844,7 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
  
- 	if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_DECRYPT)) {
- 		status->flag |= RX_FLAG_DECRYPTED;
--		status->flag |= RX_FLAG_IV_STRIPPED | RX_FLAG_MMIC_STRIPPED;
-+		status->flag |= RX_FLAG_MMIC_STRIPPED;
-+		status->flag |= RX_FLAG_MIC_STRIPPED;
-+		status->flag |= RX_FLAG_ICV_STRIPPED;
-+		status->flag |= RX_FLAG_IV_STRIPPED;
+ 	sdata->smps_mode = IEEE80211_SMPS_OFF;
+ 	sdata->needed_rx_chains = local->rx_chains;
++	sdata->control_port_over_nl80211 = params->control_port_over_nl80211;
+ 
+ 	ieee80211_queue_work(&local->hw, &sdata->work);
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index a52bd2a61a27..00dbc6a1b79d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -899,6 +899,7 @@ struct ieee80211_sub_if_data {
+ 	u16 sequence_number;
+ 	__be16 control_port_protocol;
+ 	bool control_port_no_encrypt;
++	bool control_port_over_nl80211;
+ 	int encrypt_headroom;
+ 
+ 	atomic_t num_tx_queued;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index d13ba064951f..555e389b7dfa 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -519,6 +519,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 			master->control_port_protocol;
+ 		sdata->control_port_no_encrypt =
+ 			master->control_port_no_encrypt;
++		sdata->control_port_over_nl80211 =
++			master->control_port_over_nl80211;
+ 		sdata->vif.cab_queue = master->vif.cab_queue;
+ 		memcpy(sdata->vif.hw_queue, master->vif.hw_queue,
+ 		       sizeof(sdata->vif.hw_queue));
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 0785d04a80bc..e5a51267c75d 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -554,6 +554,8 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 			   NL80211_FEATURE_USERSPACE_MPM |
+ 			   NL80211_FEATURE_FULL_AP_CLIENT_STATE;
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_FILS_STA);
++	wiphy_ext_feature_set(wiphy,
++			      NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211);
+ 
+ 	if (!ops->hw_scan)
+ 		wiphy->features |= NL80211_FEATURE_LOW_PRIORITY_SCAN |
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 0024eff9bb84..b3665b857883 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4844,6 +4844,8 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	sdata->control_port_protocol = req->crypto.control_port_ethertype;
+ 	sdata->control_port_no_encrypt = req->crypto.control_port_no_encrypt;
++	sdata->control_port_over_nl80211 =
++					req->crypto.control_port_over_nl80211;
+ 	sdata->encrypt_headroom = ieee80211_cs_headroom(local, &req->crypto,
+ 							sdata->vif.type);
+ 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index de7d10732fd5..bbb8bc6cac2a 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2245,6 +2245,32 @@ static bool ieee80211_frame_allowed(struct ieee80211_rx_data *rx, __le16 fc)
+ 	return true;
+ }
+ 
++static void ieee80211_deliver_skb_to_local_stack(struct sk_buff *skb,
++						 struct ieee80211_rx_data *rx)
++{
++	struct ieee80211_sub_if_data *sdata = rx->sdata;
++	struct net_device *dev = sdata->dev;
++
++	if (unlikely((skb->protocol == sdata->control_port_protocol ||
++		      skb->protocol == cpu_to_be16(ETH_P_PREAUTH)) &&
++		     sdata->control_port_over_nl80211)) {
++		struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
++		bool noencrypt = status->flag & RX_FLAG_DECRYPTED;
++		struct ethhdr *ehdr = eth_hdr(skb);
++
++		cfg80211_rx_control_port(dev, skb->data, skb->len,
++					 ehdr->h_source,
++					 be16_to_cpu(skb->protocol), noencrypt);
++		dev_kfree_skb(skb);
++	} else {
++		/* deliver to local stack */
++		if (rx->napi)
++			napi_gro_receive(rx->napi, skb);
++		else
++			netif_receive_skb(skb);
++	}
++}
++
+ /*
+  * requires that rx->skb is a frame with ethernet header
+  */
+@@ -2329,13 +2355,10 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+ #endif
+ 
+ 	if (skb) {
+-		/* deliver to local stack */
+ 		skb->protocol = eth_type_trans(skb, dev);
+ 		memset(skb->cb, 0, sizeof(skb->cb));
+-		if (rx->napi)
+-			napi_gro_receive(rx->napi, skb);
+-		else
+-			netif_receive_skb(skb);
++
++		ieee80211_deliver_skb_to_local_stack(skb, rx);
  	}
-+	/* let mac80211 take care of PN validation since apparently
-+	 * the hardware does not support it
-+	 */
-+	if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_PN_LEN))
-+		status->flag &= ~RX_FLAG_IV_STRIPPED;
  
- 	status->chains = BIT(0);
- 	rssi = mt7601u_phy_get_rssi(dev, rxwi, rate);
+ 	if (xmit_skb) {
 -- 
-2.14.3
+2.13.5
