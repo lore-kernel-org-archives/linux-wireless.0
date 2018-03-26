@@ -1,146 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:34899 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934158AbeCGXaf (ORCPT
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:39056 "EHLO
+        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750864AbeCZF4s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Mar 2018 18:30:35 -0500
-Received: by mail-wm0-f51.google.com with SMTP id x7so7817198wmc.0
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Mar 2018 15:30:35 -0800 (PST)
-Date: Thu, 8 Mar 2018 00:30:31 +0100 (CET)
-From: Enrico Mioso <mrkiko.rs@gmail.com>
-To: Jamie Stuart <jamie@onebillion.org>
-cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Tom Psyborg <pozega.tomislav@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
-        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>
-Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
- frame due to full tx queue...?
-In-Reply-To: <7B51BD3B-CAC3-479B-B06E-637A1C3A678A@onebillion.org>
-Message-ID: <alpine.LNX.2.21.99.1803080028590.13982@mStation.localdomain> (sfid-20180308_003040_422858_405B7EF3)
-References: <20171221142558.GB4655@redhat.com> <alpine.LNX.2.21.99.1712241311370.28605@localhost.localdomain> <20180103113540.GA10306@redhat.com> <alpine.LNX.2.21.99.1801031503370.8405@localhost.localdomain> <CAKR_QVLRwAA0NJSarX46J4A8XSp8h5SuTEtSBQ4ydpEPh_-aUw@mail.gmail.com>
- <alpine.LNX.2.21.99.1801220643400.32225@mStation.localdomain> <20180123132234.GC2520@redhat.com> <alpine.LNX.2.21.99.1801240917001.13679@mStation.localdomain> <20180124100316.GB3101@redhat.com> <20180301153006.GJ1233@makrotopia.org> <20180307122701.GA10584@redhat.com>
- <7B51BD3B-CAC3-479B-B06E-637A1C3A678A@onebillion.org>
+        Mon, 26 Mar 2018 01:56:48 -0400
+Date: Mon, 26 Mar 2018 07:56:43 +0200
+From: Juri Lelli <juri.lelli@gmail.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: b43-dev <b43-dev@lists.infradead.org>,
+        Network Development <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [QUESTION] Mainline support for B43_PHY_AC wifi cards
+Message-ID: <20180326055643.GD5942@localhost.localdomain> (sfid-20180326_075705_854962_4A5C5CD7)
+References: <20180323094740.GA5942@localhost.localdomain>
+ <CACna6rx-QNQhVNkwFSabwAY9vM1qV_gTcWywsHFuP5B4NH4NXA@mail.gmail.com>
+ <20180323140919.GB5942@localhost.localdomain>
+ <CACna6rwk04dn2oVYsQMhmzvRTmuDv8_AKPK7+kBwbjB_CLRALg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323329-1255982535-1520465433=:13982"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rwk04dn2oVYsQMhmzvRTmuDv8_AKPK7+kBwbjB_CLRALg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---8323329-1255982535-1520465433=:13982
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8BIT
-
-Thank you very very much guys for keeping me up to date with the progress, it's important for me.
-Even if I am not subscribed to the list.
-Thank you for all guys.
-
-
-On Wed, 7 Mar 2018, Jamie Stuart wrote:
-
-> Date: Wed, 7 Mar 2018 16:47:34
-> From: Jamie Stuart <jamie@onebillion.org>
-> To: Stanislaw Gruszka <sgruszka@redhat.com>
-> Cc: Daniel Golle <daniel@makrotopia.org>, Enrico Mioso <mrkiko.rs@gmail.com>,
->     Tom Psyborg <pozega.tomislav@gmail.com>,
->     linux-wireless <linux-wireless@vger.kernel.org>,
->     Johannes Berg <johannes.berg@intel.com>, Arnd Bergmann <arnd@arndb.de>,
->     John Crispin <john@phrozen.org>, Felix Fietkau <nbd@nbd.name>,
->     Mathias Kresin <dev@kresin.me>
-> Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
->     frame due to full tx queue...?
+On 24/03/18 00:01, Rafał Miłecki wrote:
+> On 23 March 2018 at 15:09, Juri Lelli <juri.lelli@gmail.com> wrote:
+> > On 23/03/18 14:43, Rafał Miłecki wrote:
+> >> Hi,
+> >>
+> >> On 23 March 2018 at 10:47, Juri Lelli <juri.lelli@gmail.com> wrote:
+> >> > I've got a Dell XPS 13 9343/0TM99H (BIOS A15 01/23/2018) mounting a
+> >> > BCM4352 802.11ac (rev 03) wireless card and so far I've been using it on
+> >> > Fedora with broadcom-wl package (which I believe installs Broadcom's STA
+> >> > driver?). It works good apart from occasional hiccups after suspend.
+> >> >
+> >> > I'd like to get rid of that dependency (you can understand that it's
+> >> > particularly annoying when testing mainline kernels), but I found out
+> >> > that support for my card is BROKEN in mainline [1]. Just to see what
+> >> > happens, I forcibly enabled it witnessing that it indeed crashes like
+> >> > below as Kconfig warns. :)
+> >> >
+> >> >  bcma: bus0: Found chip with id 0x4352, rev 0x03 and package 0x00
+> >> >  bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x2B, class 0x0)
+> >> >  bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x2A, class 0x0)
+> >> >  bcma: bus0: Core 2 found: ARM CR4 (manuf 0x4BF, id 0x83E, rev 0x02, class 0x0)
+> >> >  bcma: bus0: Core 3 found: PCIe Gen2 (manuf 0x4BF, id 0x83C, rev 0x01, class 0x0)
+> >> >  bcma: bus0: Core 4 found: USB 2.0 Device (manuf 0x4BF, id 0x81A, rev 0x11, class 0x0)
+> >> >  bcma: Unsupported SPROM revision: 11
+> >> >  bcma: bus0: Invalid SPROM read from the PCIe card, trying to use fallback SPROM
+> >> >  bcma: bus0: Using fallback SPROM failed (err -2)
+> >> >  bcma: bus0: No SPROM available
+> >> >  bcma: bus0: Bus registered
+> >> >  b43-phy0: Broadcom 4352 WLAN found (core revision 42)
+> >> >  b43-phy0: Found PHY: Analog 12, Type 11 (AC), Revision 1
+> >> >  b43-phy0: Found Radio: Manuf 0x17F, ID 0x2069, Revision 4, Version 0
+> >> >  BUG: unable to handle kernel NULL pointer dereference at 0000000000000000
+> >>
+> >> This isn't really useful without a full backtrace.
+> >
+> > Sure. I cut it here because I didn't expect people to debug what is
+> > already known to be broken (but still it seemed to carry useful
+> > information about the hw). :)
 > 
-> Hi Stanis,
->
-> Our environment has the following wireless config (MT7620A):
->
-> config wifi-device 'radio0'
-> 	option type 'mac80211'
-> 	option channel 'auto'
-> 	option hwmode '11g'
-> 	option path 'platform/10180000.wmac'
-> 	option txpower '20'
-> 	option country 'GB'
-> 	option htmode 'HT40'
-> 	option noscan '1'
->
-> config wifi-iface 'default_radio0'
-> 	option device 'radio0'
-> 	option network 'lan'
-> 	option mode 'ap'
-> 	option encryption 'psk2+aes'
-> 	option key ‘KEY'
-> 	option maxassoc '96'
-> 	option ssid ’SSID'
-> 	option disassoc_low_ack ‘0'
->
->
-> The 30 clients are all Apple iPads (a mixture of iPad mini and mini 2, running iOS 9-11). During this testing period, all clients were simultaneously downloading files from the devices’ sdcard (served via nginx running on the device). Although this is not a typical use-case, it was useful in stress-testing the wireless setup.
->
-> We’ll try your patches Stanis.
-> Daniel - forgive the stupid question, but how do we apply Stanis’ patches atop your staging tree (or both yours and Stanis’ atop trunk?)
->
->
->
->> On 7 Mar 2018, at 14:27, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->>
->> On Thu, Mar 01, 2018 at 04:30:10PM +0100, Daniel Golle wrote:
->>> [forwarding to all other involved players]
->>>
->>> On Thu, Mar 01, 2018 at 05:50:51PM +0300, Jamie Stuart wrote:
->>>> Hi Daniel,
->>>> The driver seems much improved after this fix.
->>>
->>> it's about those two
->>> [PATCH 1/2] rt2x00: pause almost full queue early
->>> [PATCH 2/2] rt2x00: do not pause queue unconditionally on error path
->>>
->>>> Under very heavy load (30 clients downloading multi-GB files from SD card on the server concurrently), wifi dies with errors:
->>
->> This is some testbed? Could you share how did you setup such
->> environment and what are client devices ?
->>
->>>> [ 7794.230376] ieee80211 phy0: rt2x00lib_rxdone_read_signal: Warning - Frame received with unrecognized signal, mode=0x0001, signal=0x010c, type=4
->>
->> This is indicator that HW/FW has a problem. There could be various
->> reasons for that. One possible I can also observe in my setup,is strange
->> mishmash of seq  on frames which were not acked in BlockACK and
->> had to be resent. This can happen when many frames are wrongly decoded
->> (i.e. when there is bad radio condition or we have not correct low level
->> RF/BBP setup for a Ralink device). To mitigate that problem we can
->> limit length of agreggeted AMPDU frame.
->>
->> I attached two patches which do that. One for RX side second for TX side.
->> Please check if they make a diffrent. You can also hardcode ba_size = 0
->> for those 30 clients setup.
->>
->> Note the patches can cause (possibly small) perfromance degradation on
->> good setups.
->>
->> Mathias, could you check them as well and see if they do not cause
->> performance regression on your device ? Lastly when I changed ba_size
->> setting, it was a problem on your setup.
->>
->>>> Thu Mar  1 16:36:47 2018 kern.err kernel: [ 8702.146403] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 2
->>>> Thu Mar  1 16:36:47 2018 kern.err kernel: [ 8702.146403] Please file bug report to http://rt2x00.serialmonkey.com
->>>> Thu Mar  1 16:36:48 2018 kern.err kernel: [ 8702.288149] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 2
->>>> Thu Mar  1 16:36:48 2018 kern.err kernel: [ 8702.288149] Please file bug report to http://rt2x00.serialmonkey.com
->>>> Thu Mar  1 16:36:48 2018 kern.err kernel: [ 8702.380761] ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 2
->>>> Thu Mar  1 16:36:48 2018 kern.err kernel: [ 8702.380761] Please file bug report to http://rt2x00.serialmonkey.com
->>
->> For those errors I recommend to remove
->>
->> 600-23-rt2x00-rt2800mmio-add-a-workaround-for-spurious-TX_F.patch
->>
->> patch. Whould be good if OpenWRT developers could apply this patch only
->> on target where it is really needed, not for all rt2800 devices.
->>
->> Thanks
->> Stanislaw
->
->
---8323329-1255982535-1520465433=:13982--
+> Please paste the remaining part if you still got it.
+
+Sure, please find it below.
+
+Thanks!
+
+- Juri
+
+--->8---
+
+[   60.732180] cfg80211: Loading compiled-in X.509 certificates for regulatory database
+[   60.733048] cfg80211: Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+[   60.733303] platform regulatory.0: Direct firmware load for regulatory.db failed with error -2
+[   60.733305] cfg80211: failed to load regulatory.db
+[   61.047277] bcma: bus0: Found chip with id 0x4352, rev 0x03 and package 0x00
+[   61.047302] bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x2B, class 0x0)
+[   61.047316] bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x2A, class 0x0)
+[   61.047340] bcma: bus0: Core 2 found: ARM CR4 (manuf 0x4BF, id 0x83E, rev 0x02, class 0x0)
+[   61.047366] bcma: bus0: Core 3 found: PCIe Gen2 (manuf 0x4BF, id 0x83C, rev 0x01, class 0x0)
+[   61.047380] bcma: bus0: Core 4 found: USB 2.0 Device (manuf 0x4BF, id 0x81A, rev 0x11, class 0x0)
+[   61.107321] bcma: Unsupported SPROM revision: 11
+[   61.107325] bcma: bus0: Invalid SPROM read from the PCIe card, trying to use fallback SPROM
+[   61.107326] bcma: bus0: Using fallback SPROM failed (err -2)
+[   61.107327] bcma: bus0: No SPROM available
+[   61.109830] bcma: bus0: Bus registered
+[   61.242068] b43-phy0: Broadcom 4352 WLAN found (core revision 42)
+[   61.242481] b43-phy0: Found PHY: Analog 12, Type 11 (AC), Revision 1
+[   61.242487] b43-phy0: Found Radio: Manuf 0x17F, ID 0x2069, Revision 4, Version 0
+[   61.242909] BUG: unable to handle kernel NULL pointer dereference at 0000000000000000
+[   61.242916] IP:           (null)
+[   61.242919] PGD 0 P4D 0 
+[   61.242924] Oops: 0010 [#1] PREEMPT SMP PTI
+[   61.242926] Modules linked in: b43(+) bcma mac80211 cfg80211 ssb mmc_core rfcomm fuse nf_conntrack_netbios_ns nf_conntrack_broadcast xt_CT ip6t_rpfilter ip6t_REJECT nf_reject_ipv6 xt_conntrack ip_set nfnetlink ebtable_nat ebtable_broute bridge stp llc ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_raw ip6table_security iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack libcrc32c iptable_mangle iptable_raw iptable_security ebtable_filter ebtables ip6table_filter ip6_tables cmac bnep sunrpc intel_rapl x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm snd_hda_codec_realtek snd_hda_codec_hdmi snd_hda_codec_generic snd_hda_intel btusb snd_hda_codec uvcvideo btrtl btbcm btintel snd_hda_core bluetooth snd_hwdep videobuf2_vmalloc snd_seq
+[   61.242989]  videobuf2_memops videobuf2_v4l2 iTCO_wdt snd_seq_device snd_pcm videobuf2_common iTCO_vendor_support dell_laptop dell_wmi irqbypass videodev wmi_bmof sparse_keymap dell_smbios intel_cstate dell_wmi_descriptor intel_uncore dcdbas ecdh_generic snd_timer intel_rapl_perf snd rfkill mei_me media pcspkr mei i2c_i801 shpchp joydev tpm_crb soundcore intel_pch_thermal processor_thermal_device lpc_ich tpm_tis intel_soc_dts_iosf wmi tpm_tis_core tpm int3403_thermal dw_dmac int3402_thermal int3400_thermal int340x_thermal_zone acpi_pad acpi_thermal_rel dm_crypt i915 i2c_algo_bit drm_kms_helper drm hid_multitouch crct10dif_pclmul crc32_pclmul crc32c_intel ghash_clmulni_intel serio_raw video i2c_hid
+[   61.243044] CPU: 1 PID: 2410 Comm: modprobe Not tainted 4.16.0-rc6+ #2
+[   61.243046] Hardware name: Dell Inc. XPS 13 9343/0TM99H, BIOS A15 01/23/2018
+[   61.243049] RIP: 0010:          (null)
+[   61.243051] RSP: 0018:ffffaaa6c2afbaf0 EFLAGS: 00010282
+[   61.243054] RAX: 0000000000000000 RBX: ffff908d0b3c4800 RCX: ffff908d0b3c2800
+[   61.243057] RDX: ffff908d0b3c2800 RSI: 0000000000000001 RDI: ffff908d0b3c4800
+[   61.243059] RBP: 0000000000000001 R08: 0000000000000001 R09: 0000000000000000
+[   61.243061] R10: 0000000000000000 R11: 000000000000008b R12: 0000000000000001
+[   61.243064] R13: ffff908d082b9f00 R14: ffff908d0b3c4800 R15: 0000000000000004
+[   61.243067] FS:  00007feb59ec30c0(0000) GS:ffff908d1f480000(0000) knlGS:0000000000000000
+[   61.243069] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   61.243071] CR2: 0000000000000000 CR3: 000000020caaa002 CR4: 00000000003606e0
+[   61.243074] Call Trace:
+[   61.243089]  ? b43_wireless_core_reset+0x38/0x230 [b43]
+[   61.243099]  ? b43_one_core_attach+0x368/0xd00 [b43]
+[   61.243109]  ? b43_bcma_probe+0x54/0xf0 [b43]
+[   61.243115]  ? bcma_device_probe+0x31/0x60 [bcma]
+[   61.243120]  ? preempt_count_sub+0x9b/0xd0
+[   61.243125]  ? driver_probe_device+0x30b/0x480
+[   61.243129]  ? __driver_attach+0xb8/0xe0
+[   61.243133]  ? driver_probe_device+0x480/0x480
+[   61.243136]  ? driver_probe_device+0x480/0x480
+[   61.243140]  ? bus_for_each_dev+0x76/0xc0
+[   61.243144]  ? bus_add_driver+0x161/0x260
+[   61.243147]  ? 0xffffffffc0ab5000
+[   61.243151]  ? driver_register+0x57/0xc0
+[   61.243154]  ? 0xffffffffc0ab5000
+[   61.243163]  ? b43_init+0x24/0x1000 [b43]
+[   61.243167]  ? do_one_initcall+0x4e/0x192
+[   61.243172]  ? kmem_cache_alloc_trace+0xa1/0x1c0
+[   61.243177]  ? do_init_module+0x5b/0x20b
+[   61.243180]  ? load_module+0x257b/0x2bb0
+[   61.243185]  ? vfs_read+0x113/0x130
+[   61.243191]  ? SYSC_finit_module+0xe9/0x110
+[   61.243194]  ? SYSC_finit_module+0xe9/0x110
+[   61.243200]  ? do_syscall_64+0x79/0x190
+[   61.243205]  ? entry_SYSCALL_64_after_hwframe+0x42/0xb7
+[   61.243209] Code:  Bad RIP value.
+[   61.243217] RIP:           (null) RSP: ffffaaa6c2afbaf0
+[   61.243218] CR2: 0000000000000000
+[   61.243222] ---[ end trace 3e3c52c383af1049 ]---
