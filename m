@@ -1,114 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:51683 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752392AbeCMUKB (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35736 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752289AbeCZRxG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 16:10:01 -0400
-Date: Wed, 14 Mar 2018 07:09:57 +1100
-From: "Tobin C. Harding" <me@tobin.cc>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        kernel-hardening@lists.openwall.com, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Tycho Andersen <tycho@tycho.ws>,
-        Kees Cook <keescook@chromium.org>
-Subject: Re: [RESEND PATCH] rsi: Remove stack VLA usage
-Message-ID: <20180313200957.GJ8631@eros> (sfid-20180313_211018_429888_329AC99D)
-References: <1520819022-15238-1-git-send-email-me@tobin.cc>
- <ff9309bf-4c3d-b0f9-cdd0-429dacd3177b@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <ff9309bf-4c3d-b0f9-cdd0-429dacd3177b@lwfinger.net>
+        Mon, 26 Mar 2018 13:53:06 -0400
+Received: by mail-oi0-f68.google.com with SMTP id x20-v6so16586582oie.2
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:53:05 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [PATCH v7 07/11] nl80211: Add SOCKET_OWNER support to START_AP
+Date: Mon, 26 Mar 2018 12:52:47 -0500
+Message-Id: <20180326175251.20666-8-denkenz@gmail.com> (sfid-20180326_195316_172497_B7C39428)
+In-Reply-To: <20180326175251.20666-1-denkenz@gmail.com>
+References: <20180326175251.20666-1-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 11, 2018 at 09:06:10PM -0500, Larry Finger wrote:
-> On 03/11/2018 08:43 PM, Tobin C. Harding wrote:
-> >The kernel would like to have all stack VLA usage removed[1].  rsi uses
-> >a VLA based on 'blksize'.  Elsewhere in the SDIO code maximum block size
-> >is defined using a magic number.  We can use a pre-processor defined
-> >constant and declare the array to maximum size.  We add a check before
-> >accessing the array in case of programmer error.
-> >
-> >[1]: https://lkml.org/lkml/2018/3/7/621
-> >
-> >Signed-off-by: Tobin C. Harding <me@tobin.cc>
-> >---
-> >
-> >RESEND: add wireless mailing list to CC's (requested by Kalle)
-> >
-> >  drivers/net/wireless/rsi/rsi_91x_hal.c  | 13 +++++++------
-> >  drivers/net/wireless/rsi/rsi_91x_sdio.c |  9 +++++++--
-> >  2 files changed, 14 insertions(+), 8 deletions(-)
-> >
-> >diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
-> >index 1176de646942..839ebdd602df 100644
-> >--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
-> >+++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
-> >@@ -641,7 +641,7 @@ static int ping_pong_write(struct rsi_hw *adapter, u8 cmd, u8 *addr, u32 size)
-> >  	u32 cmd_addr;
-> >  	u16 cmd_resp, cmd_req;
-> >  	u8 *str;
-> >-	int status;
-> >+	int status, ret;
-> >  	if (cmd == PING_WRITE) {
-> >  		cmd_addr = PING_BUFFER_ADDRESS;
-> >@@ -655,12 +655,13 @@ static int ping_pong_write(struct rsi_hw *adapter, u8 cmd, u8 *addr, u32 size)
-> >  		str = "PONG_VALID";
-> >  	}
-> >-	status = hif_ops->load_data_master_write(adapter, cmd_addr, size,
-> >+	ret = hif_ops->load_data_master_write(adapter, cmd_addr, size,
-> >  					    block_size, addr);
-> >-	if (status) {
-> >-		rsi_dbg(ERR_ZONE, "%s: Unable to write blk at addr %0x\n",
-> >-			__func__, *addr);
-> >-		return status;
-> >+	if (ret) {
-> >+		if (ret != -EINVAL)
-> >+			rsi_dbg(ERR_ZONE, "%s: Unable to write blk at addr %0x\n",
-> >+				__func__, *addr);
-> >+		return ret;
-> >  	}
-> >  	status = bl_cmd(adapter, cmd_req, cmd_resp, str);
-> >diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-> >index b0cf41195051..b766578b591a 100644
-> >--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-> >+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-> >@@ -20,6 +20,8 @@
-> >  #include "rsi_common.h"
-> >  #include "rsi_hal.h"
-> >+#define RSI_MAX_BLOCK_SIZE 256
-> >+
-> >  /**
-> >   * rsi_sdio_set_cmd52_arg() - This function prepares cmd 52 read/write arg.
-> >   * @rw: Read/write
-> >@@ -362,7 +364,7 @@ static int rsi_setblocklength(struct rsi_hw *adapter, u32 length)
-> >  	rsi_dbg(INIT_ZONE, "%s: Setting the block length\n", __func__);
-> >  	status = sdio_set_block_size(dev->pfunction, length);
-> >-	dev->pfunction->max_blksize = 256;
-> >+	dev->pfunction->max_blksize = RSI_MAX_BLOCK_SIZE;
-> >  	adapter->block_size = dev->pfunction->max_blksize;
-> >  	rsi_dbg(INFO_ZONE,
-> >@@ -567,9 +569,12 @@ static int rsi_sdio_load_data_master_write(struct rsi_hw *adapter,
-> >  {
-> >  	u32 num_blocks, offset, i;
-> >  	u16 msb_address, lsb_address;
-> >-	u8 temp_buf[block_size];
-> >+	u8 temp_buf[RSI_MAX_BLOCK_SIZE];
-> >  	int status;
-> >+	if (block_size > RSI_MAX_BLOCK_SIZE)
-> >+		return -EINVAL;
-> >+
-> >  	num_blocks = instructions_sz / block_size;
-> >  	msb_address = base_address >> 16;
-> 
-> I am not giving this patch a negative review, but my solution to the same
-> problem has been to change the on-stack array into a u8 pointer, use
-> kmalloc() to assign the space, and then free that space at the end. That way
-> large stack allocations are avoided, with a minimum of changes.
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+---
+ include/uapi/linux/nl80211.h | 2 ++
+ net/wireless/ap.c            | 1 +
+ net/wireless/nl80211.c       | 4 ++++
+ 3 files changed, 7 insertions(+)
 
-Your idea is better Larry, have you got a patch done already or do you
-want me to knock one up?
-
-thanks,
-Tobin.
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index e3329bc4644b..9b4fd4bca141 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1989,6 +1989,8 @@ enum nl80211_commands {
+  *	torn down when the socket is closed.
+  *	If set during %NL80211_CMD_JOIN_MESH the mesh setup will be
+  *	automatically torn down when the socket is closed.
++ *	If set during %NL80211_CMD_START_AP the AP will be automatically
++ *	disabled when the socket is closed.
+  *
+  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
+  *	the TDLS link initiator.
+diff --git a/net/wireless/ap.c b/net/wireless/ap.c
+index 63682176c96c..882d97bdc6bf 100644
+--- a/net/wireless/ap.c
++++ b/net/wireless/ap.c
+@@ -27,6 +27,7 @@ int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
+ 
+ 	err = rdev_stop_ap(rdev, dev);
+ 	if (!err) {
++		wdev->conn_owner_nlportid = 0;
+ 		wdev->beacon_interval = 0;
+ 		memset(&wdev->chandef, 0, sizeof(wdev->chandef));
+ 		wdev->ssid_len = 0;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 05b903958894..34e8435f0c43 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4135,6 +4135,10 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 		wdev->chandef = params.chandef;
+ 		wdev->ssid_len = params.ssid_len;
+ 		memcpy(wdev->ssid, params.ssid, wdev->ssid_len);
++
++		if (info->attrs[NL80211_ATTR_SOCKET_OWNER])
++			wdev->conn_owner_nlportid = info->snd_portid;
++
+ 	}
+ 	wdev_unlock(wdev);
+ 
+-- 
+2.13.5
