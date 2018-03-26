@@ -1,73 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:38612 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751459AbeCNWdq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Mar 2018 18:33:46 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180314185634.GC15837@kroah.com>
-References: <20180310141501.2214-1-mcgrof@kernel.org> <20180310141501.2214-8-mcgrof@kernel.org>
- <20180314185634.GC15837@kroah.com>
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Date: Wed, 14 Mar 2018 15:33:23 -0700
-Message-ID: <CAB=NE6V378RCJ+sYvtfRe01HMyjVOwJOmjYWU8qnec9B_s4+9Q@mail.gmail.com> (sfid-20180314_233401_673906_A96D6A69)
-Subject: Re: [PATCH v3 07/20] firmware: move loading timeout under struct firmware_fallback_config
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-        cantabile.desu@gmail.com, kubakici@wp.pl,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Kees Cook <keescook@chromium.org>, shuah@kernel.org,
-        Martin Fuzzey <mfuzzey@parkeon.com>,
-        Mimi Zohar <zohar@linux.vnet.ibm.com>,
-        David Howells <dhowells@redhat.com>,
-        =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>,
-        Takashi Iwai <tiwai@suse.de>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Nicolas Broeking <nbroeking@me.com>,
-        Vikram Mulukutla <markivx@codeaurora.org>,
-        Mark Brown <broonie@kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Abhay Salunke <Abhay_Salunke@dell.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        Alexei Starovoitov <ast@fb.com>,
-        Andres Rodriguez <andresx7@gmail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Linux FS Devel <linux-fsdevel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Received: from smtp.codeaurora.org ([198.145.29.96]:45374 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751002AbeCZFlP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Mar 2018 01:41:15 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org, bjorn.andersson@linaro.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH 09/12] ath10k: Add QMI HOST CAP request support
+Date: Mon, 26 Mar 2018 11:11:06 +0530
+Message-Id: <1522042866-26304-1-git-send-email-govinds@codeaurora.org> (sfid-20180326_074118_661217_529B3C92)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 14, 2018 at 11:56 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> On Sat, Mar 10, 2018 at 06:14:48AM -0800, Luis R. Rodriguez wrote:
->> The timeout is a fallback construct, so we can just stuff the
->> timeout configuration under struct firmware_fallback_config.
->
-> Why?  What does it matter?
+Add support for host capablity request
+qmi message for wcn3990 target.
 
-Because we want to remove direct access to things which the direct
-firmware loader should not care about, and instead have proper
-wrappers so that the fallback code implements it when needed. Part of
-the motivation for this then was to move all fallback code into its
-own file therefore compartmentalizing it.
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/qmi.c | 65 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 65 insertions(+)
 
->> While at it, add a few helpers which vets the use of getting or
->> setting the timeout as an int. The main use of the timeout is
->> to set a timeout for completion, and that is used as an unsigned
->> long. There a few cases however where it makes sense to get or
->> set the timeout as an int, the helpers annotate these use cases
->> have been properly vetted for.
->
-> This feels really odd to me.  Why would you want to use it as an int,
-> just keep it the same "size" everywhere and it should be simpler and
-> easier to keep working correctly over time.
-
-One is the input/output we provide for it uses ints all over so its
-much easier to handle this as an int consistently in most places and
-only deal with the long where needed. See above uses of
-simple_strtol(), add_uevent_var(). Otherwise the inverse has to be
-done. This was easier to deal with and vet for.
-
- Luis
+diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
+index 65a43af..a33681d 100644
+--- a/drivers/net/wireless/ath/ath10k/qmi.c
++++ b/drivers/net/wireless/ath/ath10k/qmi.c
+@@ -357,6 +357,67 @@ static int ath10k_qmi_cap_send_sync_msg(struct ath10k_qmi *qmi)
+ 	return ret;
+ }
+ 
++static int ath10k_qmi_host_cap_send_sync(struct ath10k_qmi *qmi)
++{
++	struct wlfw_host_cap_resp_msg_v01 *resp;
++	struct wlfw_host_cap_req_msg_v01 *req;
++	struct qmi_txn txn;
++	int ret;
++
++	req = kzalloc(sizeof(*req), GFP_KERNEL);
++	if (!req)
++		return -ENOMEM;
++
++	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
++	if (!resp) {
++		kfree(req);
++		return -ENOMEM;
++	}
++
++	req->daemon_support_valid = 1;
++	req->daemon_support = 0;
++
++	pr_debug("daemon_support is %d\n", req->daemon_support);
++
++	ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
++			   wlfw_host_cap_resp_msg_v01_ei, resp);
++	if (ret < 0) {
++		pr_err("Fail to init txn for Capability resp %d\n", ret);
++		goto out;
++	}
++
++	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
++			       QMI_WLFW_HOST_CAP_REQ_V01,
++			       WLFW_HOST_CAP_REQ_MSG_V01_MAX_MSG_LEN,
++			       wlfw_host_cap_req_msg_v01_ei, req);
++	if (ret < 0) {
++		qmi_txn_cancel(&txn);
++		pr_err("Fail to send Capability req %d\n", ret);
++		goto out;
++	}
++
++	ret = qmi_txn_wait(&txn, WLFW_TIMEOUT * HZ);
++	if (ret < 0)
++		goto out;
++
++	if (resp->resp.result != QMI_RESULT_SUCCESS_V01) {
++		pr_err("qmi host capability req rejected, result:%d error:%d\n",
++		       resp->resp.result, resp->resp.error);
++		ret = -resp->resp.result;
++		goto out;
++	}
++
++	pr_debug("host cap request completed\n");
++	kfree(resp);
++	kfree(req);
++	return 0;
++
++out:
++	kfree(resp);
++	kfree(req);
++	return ret;
++}
++
+ static int
+ ath10k_qmi_ind_register_send_sync_msg(struct ath10k_qmi *qmi)
+ {
+@@ -500,6 +561,10 @@ static void ath10k_qmi_event_server_arrive(struct work_struct *work)
+ 	if (ret)
+ 		return;
+ 
++	ret = ath10k_qmi_host_cap_send_sync(qmi);
++	if (ret)
++		return;
++
+ 	ret = ath10k_qmi_msa_mem_info_send_sync_msg(qmi);
+ 	if (ret)
+ 		return;
+-- 
+1.9.1
