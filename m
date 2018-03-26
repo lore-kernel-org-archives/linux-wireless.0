@@ -1,63 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:44469 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932246AbeCBWM6 (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:40265 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752651AbeCZRQb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 17:12:58 -0500
-Received: by mail-oi0-f65.google.com with SMTP id b8so8124989oib.11
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Mar 2018 14:12:57 -0800 (PST)
-Subject: Re: [PATCH 04/15] rtlwifi: btcoex: Add customer_id to do special deal
- to oem vendor
-To: pkshih@realtek.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-References: <20180228030718.19510-1-pkshih@realtek.com>
- <20180228030718.19510-5-pkshih@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <8bc3c805-7e12-c8d1-9843-f9505926d8de@lwfinger.net> (sfid-20180302_231311_546695_69CDEE80)
-Date: Fri, 2 Mar 2018 16:12:56 -0600
-MIME-Version: 1.0
-In-Reply-To: <20180228030718.19510-5-pkshih@realtek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 26 Mar 2018 13:16:31 -0400
+Received: by mail-oi0-f68.google.com with SMTP id x9-v6so257806oig.7
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:16:31 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [RFC v6 09/11] nl80211: Add control_port_over_nl80211 to mesh_setup
+Date: Mon, 26 Mar 2018 12:16:12 -0500
+Message-Id: <20180326171614.20373-10-denkenz@gmail.com> (sfid-20180326_191635_721317_98CA3EEF)
+In-Reply-To: <20180326171614.20373-1-denkenz@gmail.com>
+References: <20180326171614.20373-1-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/27/2018 09:07 PM, pkshih@realtek.com wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> Add customer_id field in structure, and then this is a clue to implement
-> the behavior defined by vendor LENOVO_CHINA.
-> 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+---
+ include/net/cfg80211.h | 3 +++
+ net/wireless/nl80211.c | 9 +++++++++
+ 2 files changed, 12 insertions(+)
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-> ---
->   drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 1 +
->   drivers/net/wireless/realtek/rtlwifi/wifi.h                   | 1 +
->   2 files changed, 2 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-> index f5d8159a88eb..3c6a1e8851ec 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-> @@ -154,6 +154,7 @@ struct btc_board_info {
->   
->   	u8 rfe_type;
->   	u8 ant_div_cfg;
-> +	u8 customer_id;
->   };
->   
->   enum btc_dbg_opcode {
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-> index 438678c2d14a..d27e33960e77 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-> @@ -556,6 +556,7 @@ enum rt_oem_id {
->   	RT_CID_NETGEAR = 36,
->   	RT_CID_PLANEX = 37,
->   	RT_CID_CC_C = 38,
-> +	RT_CID_LENOVO_CHINA = 40,
->   };
->   
->   enum hw_descs {
-> 
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 2a28f446648e..bdb1a3c2661e 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1453,6 +1453,8 @@ struct mesh_config {
+  * @userspace_handles_dfs: whether user space controls DFS operation, i.e.
+  *	changes the channel when a radar is detected. This is required
+  *	to operate on DFS channels.
++ * @control_port_over_nl80211: TRUE if userspace expects to exchange control
++ *	port frames over NL80211 instead of the network interface.
+  *
+  * These parameters are fixed when the mesh is created.
+  */
+@@ -1475,6 +1477,7 @@ struct mesh_setup {
+ 	u32 basic_rates;
+ 	struct cfg80211_bitrate_mask beacon_rate;
+ 	bool userspace_handles_dfs;
++	bool control_port_over_nl80211;
+ };
+ 
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 774f5d6ba8e4..3947ec7bc3a0 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -10166,6 +10166,15 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
+ 	setup.userspace_handles_dfs =
+ 		nla_get_flag(info->attrs[NL80211_ATTR_HANDLE_DFS]);
+ 
++	if (info->attrs[NL80211_ATTR_CONTROL_PORT_OVER_NL80211]) {
++		int r = validate_pae_over_nl80211(rdev, info);
++
++		if (r < 0)
++			return r;
++
++		setup.control_port_over_nl80211 = true;
++	}
++
+ 	err = cfg80211_join_mesh(rdev, dev, &setup, &cfg);
+ 
+ 	if (!err && info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
+-- 
+2.13.5
