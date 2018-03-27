@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:38502 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752069AbeCFB0P (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52614 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752538AbeC0Nry (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Mar 2018 20:26:15 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 13/15] rtlwifi: btcoex: Add 8822b header files to precomp.h
-Date: Tue, 6 Mar 2018 09:25:52 +0800
-Message-ID: <20180306012554.3108-14-pkshih@realtek.com> (sfid-20180306_022621_082773_2C53E2AD)
-In-Reply-To: <20180306012554.3108-1-pkshih@realtek.com>
-References: <20180306012554.3108-1-pkshih@realtek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 27 Mar 2018 09:47:54 -0400
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [PATCH 0/3] cfg80211/mac80211: Notify proper sta opmode change value
+Date: Tue, 27 Mar 2018 19:16:14 +0530
+Message-Id: <1522158377-3566-1-git-send-email-tamizhr@codeaurora.org> (sfid-20180327_154807_807865_C6B0CDA2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Currently bw and smps_mode are u8 type value in sta_opmode_info
+structure. This values filled in mac80211 from ieee80211_sta_rx_bandwidth
+and ieee80211_smps_mode. These enum values are specific to mac80211 and
+userspace/cfg80211 doesn't know about that. This patchset change its
+data type in the sta_opmode_info structure and mapping from mac80211
+specific enum to nl80211 enum value.
 
-Add 8822b header files to precomp.h for routing functions.
+Tamizh chelvam (3):
+  cfg80211: fix data type of sta_opmode_info parameter
+  mac80211: Use proper smps_mode enum in sta opmode event
+  mac80211: Use proper chan_width enum in sta opmode event
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h | 3 +++
- 1 file changed, 3 insertions(+)
+ include/net/cfg80211.h     |  8 ++++----
+ net/mac80211/ht.c          | 15 +++++++++++++++
+ net/mac80211/ieee80211_i.h |  4 ++++
+ net/mac80211/rx.c          |  6 ++++--
+ net/mac80211/vht.c         | 32 +++++++++++++++++++++++++++++++-
+ 5 files changed, 58 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-index 02dff4c3f664..858318fd3d63 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
-@@ -48,6 +48,9 @@
- #include "halbtc8723b2ant.h"
- #include "halbtc8821a2ant.h"
- #include "halbtc8821a1ant.h"
-+#include "halbtc8822b1ant.h"
-+#include "halbtc8822b2ant.h"
-+#include "halbtc8822bwifionly.h"
- 
- #define GetDefaultAdapter(padapter)	padapter
- 
 -- 
-2.15.1
+1.9.1
