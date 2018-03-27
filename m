@@ -1,210 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:12582 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751137AbeCII1N (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53886 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750913AbeC0Gj4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Mar 2018 03:27:13 -0500
-Subject: Re: [PATCH 10/10] staging: wilc1000: fix line over 80 char in
- cfg_scan_result()
-To: Ajay Singh <ajay.kathat@microchip.com>,
-        <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <adham.abozaeid@Microchip.com>
-References: <1520386350-31607-1-git-send-email-ajay.kathat@microchip.com>
- <1520386350-31607-11-git-send-email-ajay.kathat@microchip.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <b24958e8-5a56-bfde-f0bd-1476bd47bd11@microchip.com> (sfid-20180309_092718_009149_A24B1A4F)
-Date: Fri, 9 Mar 2018 10:27:09 +0200
+        Tue, 27 Mar 2018 02:39:56 -0400
 MIME-Version: 1.0
-In-Reply-To: <1520386350-31607-11-git-send-email-ajay.kathat@microchip.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 27 Mar 2018 12:09:54 +0530
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv2] ath10k: fix kernel panic while reading tpc_stats
+In-Reply-To: <87d0zqrg5c.fsf@kamboji.qca.qualcomm.com>
+References: <1521739904-17927-1-git-send-email-tamizhr@codeaurora.org>
+ <87d0zqrg5c.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <091e88a3479502f30683054f89c9da33@codeaurora.org> (sfid-20180327_084001_749523_92CBBDD5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 2018-03-26 21:19, Kalle Valo wrote:
+> Tamizh chelvam <tamizhr@codeaurora.org> writes:
+> 
+>> When attempt to read tpc_stats for the chipsets which support
+>> more than 3 tx chain will trigger kernel panic(kernel stack is 
+>> corrupted)
+>> due to writing values on rate_code array out of range.
+>> This patch changes the array size depends on the WMI_TPC_TX_N_CHAIN 
+>> and
+>> added check to avoid write values on the array if the num tx chain
+>> get in tpc config event is greater than WMI_TPC_TX_N_CHAIN.
+>> 
+>> Tested on QCA9984 with firmware-5.bin_10.4-3.5.3-00057
+>> 
+>> Kernel panic log :
+>> 
+>> [  323.510944] Kernel panic - not syncing: stack-protector: Kernel 
+>> stack is corrupted in: bf90c654
+>> [  323.510944]
+>> [  323.524390] CPU: 0 PID: 1908 Comm: cat Not tainted 3.14.77 #31
+>> [  323.530224] [<c021db48>] (unwind_backtrace) from [<c021ac08>] 
+>> (show_stack+0x10/0x14)
+>> [  323.537941] [<c021ac08>] (show_stack) from [<c03c53c0>] 
+>> (dump_stack+0x80/0xa0)
+>> [  323.545146] [<c03c53c0>] (dump_stack) from [<c022e4ac>] 
+>> (panic+0x84/0x1e4)
+>> [  323.552000] [<c022e4ac>] (panic) from [<c022e61c>] 
+>> (__stack_chk_fail+0x10/0x14)
+>> [  323.559350] [<c022e61c>] (__stack_chk_fail) from [<bf90c654>] 
+>> (ath10k_wmi_event_pdev_tpc_config+0x424/0x438 [ath10k_core])
+>> [  323.570471] [<bf90c654>] (ath10k_wmi_event_pdev_tpc_config 
+>> [ath10k_core]) from [<bf90d800>] (ath10k_wmi_10_4_op_rx+0x2f0/0x39c 
+>> [ath10k_core])
+>> [  323.583047] [<bf90d800>] (ath10k_wmi_10_4_op_rx [ath10k_core]) from 
+>> [<bf8fcc18>] (ath10k_htc_rx_completion_handler+0x170/0x1a0 
+>> [ath10k_core])
+>> [  323.595702] [<bf8fcc18>] (ath10k_htc_rx_completion_handler 
+>> [ath10k_core]) from [<bf961f44>] 
+>> (ath10k_pci_hif_send_complete_check+0x1f0/0x220 [ath10k_pci])
+>> [  323.609421] [<bf961f44>] (ath10k_pci_hif_send_complete_check 
+>> [ath10k_pci]) from [<bf96562c>] 
+>> (ath10k_ce_per_engine_service+0x74/0xc4 [ath10k_pci])
+>> [  323.622490] [<bf96562c>] (ath10k_ce_per_engine_service 
+>> [ath10k_pci]) from [<bf9656f0>] 
+>> (ath10k_ce_per_engine_service_any+0x74/0x80 [ath10k_pci])
+>> [  323.635423] [<bf9656f0>] (ath10k_ce_per_engine_service_any 
+>> [ath10k_pci]) from [<bf96365c>] (ath10k_pci_napi_poll+0x44/0xe8 
+>> [ath10k_pci])
+>> [  323.647665] [<bf96365c>] (ath10k_pci_napi_poll [ath10k_pci]) from 
+>> [<c0599994>] (net_rx_action+0xac/0x160)
+>> [  323.657208] [<c0599994>] (net_rx_action) from [<c02324a4>] 
+>> (__do_softirq+0x104/0x294)
+>> [  323.665017] [<c02324a4>] (__do_softirq) from [<c0232920>] 
+>> (irq_exit+0x9c/0x11c)
+>> [  323.672314] [<c0232920>] (irq_exit) from [<c0217fc0>] 
+>> (handle_IRQ+0x6c/0x90)
+>> [  323.679341] [<c0217fc0>] (handle_IRQ) from [<c02084e0>] 
+>> (gic_handle_irq+0x3c/0x60)
+>> [  323.686893] [<c02084e0>] (gic_handle_irq) from [<c02095c0>] 
+>> (__irq_svc+0x40/0x70)
+>> [  323.694349] Exception stack(0xdd489c58 to 0xdd489ca0)
+>> [  323.699384] 9c40:                                                   
+>>     00000000 a0000013
+>> [  323.707547] 9c60: 00000000 dc4bce40 60000013 ddc1d800 dd488000 
+>> 00000990 00000000 c085c800
+>> [  323.715707] 9c80: 00000000 dd489d44 0000092d dd489ca0 c026e664 
+>> c026e668 60000013 ffffffff
+>> [  323.723877] [<c02095c0>] (__irq_svc) from [<c026e668>] 
+>> (rcu_note_context_switch+0x170/0x184)
+>> [  323.732298] [<c026e668>] (rcu_note_context_switch) from 
+>> [<c020e928>] (__schedule+0x50/0x4d4)
+>> [  323.740716] [<c020e928>] (__schedule) from [<c020e490>] 
+>> (schedule_timeout+0x148/0x178)
+>> [  323.748611] [<c020e490>] (schedule_timeout) from [<c020f804>] 
+>> (wait_for_common+0x114/0x154)
+>> [  323.756972] [<c020f804>] (wait_for_common) from [<bf8f6ef0>] 
+>> (ath10k_tpc_stats_open+0xc8/0x340 [ath10k_core])
+>> [  323.766873] [<bf8f6ef0>] (ath10k_tpc_stats_open [ath10k_core]) from 
+>> [<c02bb598>] (do_dentry_open+0x1ac/0x274)
+>> [  323.776741] [<c02bb598>] (do_dentry_open) from [<c02c838c>] 
+>> (do_last+0x8c0/0xb08)
+>> [  323.784201] [<c02c838c>] (do_last) from [<c02c87e4>] 
+>> (path_openat+0x210/0x598)
+>> [  323.791408] [<c02c87e4>] (path_openat) from [<c02c9d1c>] 
+>> (do_filp_open+0x2c/0x78)
+>> [  323.798873] [<c02c9d1c>] (do_filp_open) from [<c02bc85c>] 
+>> (do_sys_open+0x114/0x1b4)
+>> [  323.806509] [<c02bc85c>] (do_sys_open) from [<c0208c80>] 
+>> (ret_fast_syscall+0x0/0x44)
+>> [  323.814241] CPU1: stopping
+>> [  323.816927] CPU: 1 PID: 0 Comm: swapper/1 Not tainted 3.14.77 #31
+>> [  323.823008] [<c021db48>] (unwind_backtrace) from [<c021ac08>] 
+>> (show_stack+0x10/0x14)
+>> [  323.830731] [<c021ac08>] (show_stack) from [<c03c53c0>] 
+>> (dump_stack+0x80/0xa0)
+>> [  323.837934] [<c03c53c0>] (dump_stack) from [<c021cfac>] 
+>> (handle_IPI+0xb8/0x140)
+>> [  323.845224] [<c021cfac>] (handle_IPI) from [<c02084fc>] 
+>> (gic_handle_irq+0x58/0x60)
+>> [  323.852774] [<c02084fc>] (gic_handle_irq) from [<c02095c0>] 
+>> (__irq_svc+0x40/0x70)
+>> [  323.860233] Exception stack(0xdd499fa0 to 0xdd499fe8)
+>> [  323.865273] 9fa0: ffffffed 00000000 1d3c9000 00000000 dd498000 
+>> dd498030 10c0387d c08b62c8
+>> [  323.873432] 9fc0: 4220406a 512f04d0 00000000 00000000 00000001 
+>> dd499fe8 c021838c c0218390
+>> [  323.881588] 9fe0: 60000013 ffffffff
+>> [  323.885070] [<c02095c0>] (__irq_svc) from [<c0218390>] 
+>> (arch_cpu_idle+0x30/0x50)
+>> [  323.892454] [<c0218390>] (arch_cpu_idle) from [<c026500c>] 
+>> (cpu_startup_entry+0xa4/0x108)
+>> [  323.900690] [<c026500c>] (cpu_startup_entry) from [<422085a4>] 
+>> (0x422085a4)
+>> 
+>> Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+> 
+> In v1 kbuild reported this warning:
+> 
+> drivers/net/wireless/ath/ath10k/wmi.c:4465:14: error: 'struct ath10k'
+> has no member named 'debug'
+> 
+> Did you fix it?
+> 
+oops:( sorry, I'll send next version of the patch by fixing it.
 
-
-On 07.03.2018 03:32, Ajay Singh wrote:
-> Refactor cfg_scan_result() API to avoid 'line over 80 chars' issue
-> reported by checkpatch.pl script.
+>> @@ -4455,6 +4461,8 @@ void ath10k_wmi_event_pdev_tpc_config(struct 
+>> ath10k *ar, struct sk_buff *skb)
+>>  		   __le32_to_cpu(ev->twice_max_rd_power) / 2,
+>>  		   __le32_to_cpu(ev->num_tx_chain),
+>>  		   __le32_to_cpu(ev->rate_max));
+>> +exit:
+>> +	complete(&ar->debug.tpc_complete);
+>>  }
 > 
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> ---
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 148 +++++++++++-----------
->  1 file changed, 77 insertions(+), 71 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> index 9da686b..5395648 100644
-> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> @@ -374,91 +374,97 @@ static void cfg_scan_result(enum scan_event scan_event,
->  	struct cfg80211_bss *bss = NULL;
->  
->  	priv = user_void;
-> -	if (priv->cfg_scanning) {
-> -		if (scan_event == SCAN_EVENT_NETWORK_FOUND) {
-> -			wiphy = priv->dev->ieee80211_ptr->wiphy;
-> +	if (!priv->cfg_scanning)
-> +		return;
-> +
-> +	if (scan_event == SCAN_EVENT_NETWORK_FOUND) {
-> +		wiphy = priv->dev->ieee80211_ptr->wiphy;
-> +
-> +		if (!wiphy || !network_info)
-> +			return;
->  
-> -			if (!wiphy)
-> +		if (wiphy->signal_type == CFG80211_SIGNAL_TYPE_UNSPEC &&
-> +		    (((s32)network_info->rssi * 100) < 0 ||
-> +		    ((s32)network_info->rssi * 100) > 100))
-> +			return;
-> +
-> +		s32Freq = ieee80211_channel_to_frequency((s32)network_info->ch,
-> +							 NL80211_BAND_2GHZ);
-> +		channel = ieee80211_get_channel(wiphy, s32Freq);
-> +
-> +		if (!channel)
-> +			return;
-> +
-> +		if (network_info->new_network) {
-> +			if (priv->rcvd_ch_cnt >= MAX_NUM_SCANNED_NETWORKS)
->  				return;
->  
-> -			if (wiphy->signal_type == CFG80211_SIGNAL_TYPE_UNSPEC &&
-> -			    (((s32)network_info->rssi * 100) < 0 ||
-> -			    ((s32)network_info->rssi * 100) > 100))
-> +			priv->rcvd_ch_cnt++;
-> +
-> +			add_network_to_shadow(network_info, priv, join_params);
-> +
-> +			if (memcmp("DIRECT-", network_info->ssid, 7))
->  				return;
->  
-> -			if (network_info) {
-> -				s32Freq = ieee80211_channel_to_frequency((s32)network_info->ch, NL80211_BAND_2GHZ);
-> -				channel = ieee80211_get_channel(wiphy, s32Freq);
-> -
-> -				if (!channel)
-> -					return;
-> -
-> -				if (network_info->new_network) {
-> -					if (priv->rcvd_ch_cnt < MAX_NUM_SCANNED_NETWORKS) {
-> -						priv->rcvd_ch_cnt++;
-> -
-> -						add_network_to_shadow(network_info, priv, join_params);
-> -
-> -						if (!(memcmp("DIRECT-", network_info->ssid, 7))) {
-> -							bss = cfg80211_inform_bss(wiphy,
-> -										  channel,
-> -										  CFG80211_BSS_FTYPE_UNKNOWN,
-> -										  network_info->bssid,
-> -										  network_info->tsf_hi,
-> -										  network_info->cap_info,
-> -										  network_info->beacon_period,
-> -										  (const u8 *)network_info->ies,
-> -										  (size_t)network_info->ies_len,
-> -										  (s32)network_info->rssi * 100,
-> -										  GFP_KERNEL);
-> -							cfg80211_put_bss(wiphy, bss);
-> -						}
-> -					}
-> -				} else {
-> -					u32 i;
-> +			bss = cfg80211_inform_bss(wiphy,
-> +						  channel,
-> +						  CFG80211_BSS_FTYPE_UNKNOWN,
-> +						  network_info->bssid,
-> +						  network_info->tsf_hi,
-> +						  network_info->cap_info,
-> +						  network_info->beacon_period,
-> +						  (const u8 *)network_info->ies,
-> +						  (size_t)network_info->ies_len,
-> +						  (s32)network_info->rssi * 100,
-> +						  GFP_KERNEL);
-> +			cfg80211_put_bss(wiphy, bss);
-> +		} else {
-> +			u32 i;
->  
-> -					for (i = 0; i < priv->rcvd_ch_cnt; i++) {
-> -						if (memcmp(last_scanned_shadow[i].bssid, network_info->bssid, 6) == 0) {
-> -							last_scanned_shadow[i].rssi = network_info->rssi;
-> -							last_scanned_shadow[i].time_scan = jiffies;
-> -							break;
-> -						}
-> -					}
-> -				}
-> +			for (i = 0; i < priv->rcvd_ch_cnt; i++) {
-> +				if (memcmp(last_scanned_shadow[i].bssid,
-> +					   network_info->bssid, 6) == 0)
-> +					break;
->  			}
-> -		} else if (scan_event == SCAN_EVENT_DONE) {
-> -			refresh_scan(priv, false);
->  
-> -			mutex_lock(&priv->scan_req_lock);
-> +			if (i >= priv->rcvd_ch_cnt)
-> +				return;
-This complicates a little the logic... I don't now if it's worth...
->  
-> -			if (priv->scan_req) {
-> -				struct cfg80211_scan_info info = {
-> -					.aborted = false,
-> -				};
-> +			last_scanned_shadow[i].rssi = network_info->rssi;
-> +			last_scanned_shadow[i].time_scan = jiffies;
-> +		}
-> +	} else if (scan_event == SCAN_EVENT_DONE) {
-> +		refresh_scan(priv, false);
->  
-> -				cfg80211_scan_done(priv->scan_req, &info);
-> -				priv->rcvd_ch_cnt = 0;
-> -				priv->cfg_scanning = false;
-> -				priv->scan_req = NULL;
-> -			}
-> -			mutex_unlock(&priv->scan_req_lock);
-> -		} else if (scan_event == SCAN_EVENT_ABORTED) {
-> -			mutex_lock(&priv->scan_req_lock);
-> +		mutex_lock(&priv->scan_req_lock);
->  
-> -			if (priv->scan_req) {
-> -				struct cfg80211_scan_info info = {
-> -					.aborted = false,
-> -				};
-> +		if (priv->scan_req) {
-> +			struct cfg80211_scan_info info = {
-> +				.aborted = false,
-> +			};
->  
-> -				update_scan_time();
-> -				refresh_scan(priv, false);
-> +			cfg80211_scan_done(priv->scan_req, &info);
-> +			priv->rcvd_ch_cnt = 0;
-> +			priv->cfg_scanning = false;
-> +			priv->scan_req = NULL;
-> +		}
-> +		mutex_unlock(&priv->scan_req_lock);
-> +	} else if (scan_event == SCAN_EVENT_ABORTED) {
-> +		mutex_lock(&priv->scan_req_lock);
->  
-> -				cfg80211_scan_done(priv->scan_req, &info);
-> -				priv->cfg_scanning = false;
-> -				priv->scan_req = NULL;
-> -			}
-> -			mutex_unlock(&priv->scan_req_lock);
-> +		if (priv->scan_req) {
-> +			struct cfg80211_scan_info info = {
-> +				.aborted = false,
-> +			};
-> +
-> +			update_scan_time();
-> +			refresh_scan(priv, false);
-> +
-> +			cfg80211_scan_done(priv->scan_req, &info);
-> +			priv->cfg_scanning = false;
-> +			priv->scan_req = NULL;
->  		}
-> +		mutex_unlock(&priv->scan_req_lock);
->  	}
->  }
->  
-> 
+> And why do you need this anyway? The commit log doesn't explain that.
+Previously this complete call was not there in the error case and 
+without this we will get "failed to request tpc config stats: -110" 
+along with the error message and this is a timeout warning. I've added 
+this since we have received the event and the warning message is 
+incorrect. I'll remove this complete call here since it is a harmless 
+message and send the next version of a patch.
