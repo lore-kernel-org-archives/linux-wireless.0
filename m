@@ -1,68 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f194.google.com ([74.125.82.194]:38573 "EHLO
-        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752116AbeCZRQ3 (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:46230 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752399AbeC0RnS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 13:16:29 -0400
-Received: by mail-ot0-f194.google.com with SMTP id o9-v6so3452963otj.5
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:16:29 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v6 07/11] nl80211: Add SOCKET_OWNER support to START_AP
-Date: Mon, 26 Mar 2018 12:16:10 -0500
-Message-Id: <20180326171614.20373-8-denkenz@gmail.com> (sfid-20180326_191633_051314_FBC86F21)
-In-Reply-To: <20180326171614.20373-1-denkenz@gmail.com>
-References: <20180326171614.20373-1-denkenz@gmail.com>
+        Tue, 27 Mar 2018 13:43:18 -0400
+Date: Tue, 27 Mar 2018 19:43:04 +0200
+From: Daniel Golle <daniel@makrotopia.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Mathias Kresin <dev@kresin.me>, Enrico Mioso <mrkiko.rs@gmail.com>,
+        Tom Psyborg <pozega.tomislav@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        Jamie Stuart <jamie@onebillion.org>
+Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+ frame due to full tx queue...?
+Message-ID: <20180327174302.GB1206@makrotopia.org> (sfid-20180327_194333_885175_AE594F6D)
+References: <20180123132234.GC2520@redhat.com>
+ <alpine.LNX.2.21.99.1801240917001.13679@mStation.localdomain>
+ <20180124100316.GB3101@redhat.com>
+ <20180301153006.GJ1233@makrotopia.org>
+ <20180307122701.GA10584@redhat.com>
+ <20180307122935.GB10584@redhat.com>
+ <d462681a-6a85-f76c-85a0-4e51b8529606@kresin.me>
+ <20180326103551.GA2069@redhat.com>
+ <24f8f4a2-b355-a1b3-d07a-940fc1e50fcc@kresin.me>
+ <20180327171815.GA31338@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180327171815.GA31338@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- include/uapi/linux/nl80211.h | 2 ++
- net/wireless/ap.c            | 1 +
- net/wireless/nl80211.c       | 4 ++++
- 3 files changed, 7 insertions(+)
+Hi Stanislaw,
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index e3329bc4644b..9b4fd4bca141 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1989,6 +1989,8 @@ enum nl80211_commands {
-  *	torn down when the socket is closed.
-  *	If set during %NL80211_CMD_JOIN_MESH the mesh setup will be
-  *	automatically torn down when the socket is closed.
-+ *	If set during %NL80211_CMD_START_AP the AP will be automatically
-+ *	disabled when the socket is closed.
-  *
-  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
-  *	the TDLS link initiator.
-diff --git a/net/wireless/ap.c b/net/wireless/ap.c
-index 63682176c96c..882d97bdc6bf 100644
---- a/net/wireless/ap.c
-+++ b/net/wireless/ap.c
-@@ -27,6 +27,7 @@ int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
- 
- 	err = rdev_stop_ap(rdev, dev);
- 	if (!err) {
-+		wdev->conn_owner_nlportid = 0;
- 		wdev->beacon_interval = 0;
- 		memset(&wdev->chandef, 0, sizeof(wdev->chandef));
- 		wdev->ssid_len = 0;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 05b903958894..34e8435f0c43 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4135,6 +4135,10 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 		wdev->chandef = params.chandef;
- 		wdev->ssid_len = params.ssid_len;
- 		memcpy(wdev->ssid, params.ssid, wdev->ssid_len);
-+
-+		if (info->attrs[NL80211_ATTR_SOCKET_OWNER])
-+			wdev->conn_owner_nlportid = info->snd_portid;
-+
- 	}
- 	wdev_unlock(wdev);
- 
--- 
-2.13.5
+On Tue, Mar 27, 2018 at 07:18:16PM +0200, Stanislaw Gruszka wrote:
+> On Tue, Mar 27, 2018 at 09:46:36AM +0200, Mathias Kresin wrote:
+> > > Could you test just RX AMPDU patches, i.e.
+> > > 
+> > > rt2800_change_rx_ampdu_factor.patch
+> > > rt2800_change_rx_ampdu_density.patch
+> > > 
+> > > I have somewhat positive results on RX performance on some devices
+> > > with those. Perhaps you could confirm that :-)
+> > 
+> > This time I've done the test with HT20 only, to not annoy my neighbours.
+> > 
+> > The test setup is the following:
+> > 
+> > ath9k (STA) <=> (AP) o2 Box 6431 (RJ45) <=> desktop
+> > 
+> > With the patches applied the bandwidth is somewhat around 10 MBit/sec lower.
+> > Even if I was able to reliable reproduce it, I'm not sure if it is within
+> > the measuring tolerance.
+> 
+> Ok. I think when BBP/RF is correctly programmed patches will downgrade
+> performance. For not well optimized devices patches might
+> improve things , but this is not preferred solution. For 30+ client
+> scenario I suggest to just disable HT (11n) in OpenWRT config.
+> 
+> Additionally since those errors do not happen frequently perhaps there
+> is possibility to create watchdog and reset the device when problems
+> start to happen.
+> 
+> FWIW: I'm running wt3020 (mt7620 device) as my home router for 3 weeks now
+> and do not see any errors (I have 4 client devices). Performance measured
+> by iperf is not good though - about 40 Mbit/s .
+
+That's great news! Are you running OpenWrt or some self-baked
+vanilla Linux with some of the OpenWrt patchery on top?
+Also note that Tomislav Požega started porting more of the Rt6352
+calibration routines, I'd be happy if you could review those as well
+so they can go upstream right away:
+
+https://github.com/openwrt/openwrt/pull/626
+
+Just in case you are not aware of it, here is my staging tree with some
+experimental changes for MT7620 including the fixes/work-arounds you
+suggested as well as @psyborg55's patches:
+
+https://git.openwrt.org/?p=openwrt/staging/dangole.git;a=summary
+
+
+Cheers
+
+
+Daniel
