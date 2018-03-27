@@ -1,79 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:38499 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752162AbeCFB0M (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:60218 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751066AbeC0Mrx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Mar 2018 20:26:12 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 09/15] rtlwifi: btcoex: add assoc type v2 to connection notify
-Date: Tue, 6 Mar 2018 09:25:48 +0800
-Message-ID: <20180306012554.3108-10-pkshih@realtek.com> (sfid-20180306_022617_484513_F91AAC10)
-In-Reply-To: <20180306012554.3108-1-pkshih@realtek.com>
-References: <20180306012554.3108-1-pkshih@realtek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 27 Mar 2018 08:47:53 -0400
+Message-ID: <1522154870.3050.2.camel@sipsolutions.net> (sfid-20180327_144756_755417_C649AFBC)
+Subject: Re: [RFC 2/4] nl80211/mac80211: Extend NoAck policy command with
+ peer MAC address
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 27 Mar 2018 14:47:50 +0200
+In-Reply-To: <1522140171-10926-3-git-send-email-vthiagar@codeaurora.org>
+References: <1522140171-10926-1-git-send-email-vthiagar@codeaurora.org>
+         <1522140171-10926-3-git-send-email-vthiagar@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On Tue, 2018-03-27 at 14:12 +0530, Vasanthakumar Thiagarajan wrote:
+> 
+> - * @set_noack_map: Set the NoAck Map for the TIDs.
+> + * @set_noack_map: Set the NoAck Map for the TIDs. When peer is not %NULL NoAck
+> + *	map will be applied for that particular peer. When peer is %NULL NoAck
+> + *	map will be applied for all the connected stations (except the ones
+> + *	which already have per-peer TID map configured) on the netdev.
+> + *	Driver should return -ENOSPC when the it does not have room for
+> + *	additional entries for per-peer NoAck map.
 
-In connection notify v1, btcoex only need to know start/end association,
-and it will discriminate 2G and 5G band in v2.
+I guess it should also set the default for new stations when the peer is
+not given? At least that's how mac80211 would behave now, afaict.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c  | 14 +++++++++++---
- .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h  |  2 ++
- 2 files changed, 13 insertions(+), 3 deletions(-)
+The question is how that interacts with having enough space - are you
+sure this is a concern?
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index 0f664a0490a7..05300b466d34 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -1610,7 +1610,8 @@ void exhalbtc_scan_notify_wifi_only(struct wifi_only_cfg *wifionly_cfg,
- 
- void exhalbtc_connect_notify(struct btc_coexist *btcoexist, u8 action)
- {
--	u8 asso_type;
-+	u8 asso_type, asso_type_v2;
-+	bool wifi_under_5g;
- 
- 	if (!halbtc_is_bt_coexist_available(btcoexist))
- 		return;
-@@ -1618,10 +1619,17 @@ void exhalbtc_connect_notify(struct btc_coexist *btcoexist, u8 action)
- 	if (btcoexist->manual_control)
- 		return;
- 
--	if (action)
-+	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_UNDER_5G, &wifi_under_5g);
-+
-+	if (action) {
- 		asso_type = BTC_ASSOCIATE_START;
--	else
-+		asso_type_v2 = wifi_under_5g ? BTC_ASSOCIATE_5G_START :
-+					       BTC_ASSOCIATE_START;
-+	} else {
- 		asso_type = BTC_ASSOCIATE_FINISH;
-+		asso_type_v2 = wifi_under_5g ? BTC_ASSOCIATE_5G_FINISH :
-+					       BTC_ASSOCIATE_FINISH;
-+	}
- 
- 	halbtc_leave_low_power(btcoexist);
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index ad80ec05975e..0a7b09305bc3 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -401,6 +401,8 @@ enum btc_notify_type_switchband {
- enum btc_notify_type_associate {
- 	BTC_ASSOCIATE_FINISH = 0x0,
- 	BTC_ASSOCIATE_START = 0x1,
-+	BTC_ASSOCIATE_5G_FINISH = 0x2,
-+	BTC_ASSOCIATE_5G_START = 0x3,
- 	BTC_ASSOCIATE_MAX
- };
- 
--- 
-2.15.1
+>   * @NL80211_CMD_SET_NOACK_MAP: sets a bitmap for the individual TIDs whether
+> - *      No Acknowledgement Policy should be applied.
+> + *	No Acknowledgement Policy should be applied. %NL80211_ATTR_MAC is used
+> + *	to apply No Acknowledgement policy for a particular connected station.
+> + *	Station specific NoAck policy configuration is valid only for STA's
+> + *	current connection, i.e. the configuration will not be used when the
+> + *	station connects back after disconnection/roaming.
+> + *	When user-space does not include %NL80211_ATTR_MAC, the No
+> + *	Acknowledgement Policy setting should be treated as per-netdev
+> + *	configuration.
+
+Here you describe different semantics - i.e. you didn't describe the
+"previous per-station settings are kept" part. I'm not sure that part
+makes much sense anyhow?
+
+johannes
