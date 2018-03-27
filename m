@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0084.outbound.protection.outlook.com ([104.47.32.84]:28030
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751249AbeCZNgy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 09:36:54 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Dmitry Lebed <dlebed@quantenna.com>,
-        Dmitry Lebed <lebed.dmitry@gmail.com>
-Subject: [PATCH 2/3] cfg80211: enable use of non-cleared DFS channels for DFS offload
-Date: Mon, 26 Mar 2018 16:36:32 +0300
-Message-Id: <20180326133633.8771-3-sergey.matyukevich.os@quantenna.com> (sfid-20180326_153700_450616_F8BEF9AA)
-In-Reply-To: <20180326133633.8771-1-sergey.matyukevich.os@quantenna.com>
-References: <20180326133633.8771-1-sergey.matyukevich.os@quantenna.com>
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:39743 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751046AbeC0Izz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Mar 2018 04:55:55 -0400
+Subject: Re: [PATCH 00/11] staging: wilc1000: fix for checkpatch and handled
+ malloc memory properly
+To: Ajay Singh <ajay.kathat@microchip.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <venkateswara.kaja@microchip.com>,
+        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
+        <adham.abozaeid@microchip.com>, <aditya.shankar@microchip.com>
+References: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
+ <20180321075116.bm6x3c53bahw3c2i@mwanda>
+ <20180321145021.044f4536@ajaysk-VirtualBox>
+ <53a25901-754c-bfe9-169e-d2ed4cb34583@microchip.com>
+ <20180327125213.0594ff79@ajaysk-VirtualBox>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <0546cfdf-8767-8309-2bf2-ab5ad96f2c27@microchip.com> (sfid-20180327_105600_416005_14B03F07)
+Date: Tue, 27 Mar 2018 11:55:52 +0300
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180327125213.0594ff79@ajaysk-VirtualBox>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dmitry Lebed <dlebed@quantenna.com>
 
-Currently channel switch/start_ap to DFS channel cannot be done to
-non-CAC-cleared channel even if DFS offload if enabled.
-Make non-cleared DFS channels available if DFS offload is enabled.
-CAC will be started by HW after channel change, start_ap call, etc.
 
-Signed-off-by: Dmitry Lebed <dlebed@quantenna.com>
----
- net/wireless/chan.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+On 27.03.2018 10:22, Ajay Singh wrote:
+> 
+> Please let me know, in case I have to rework and resubmit this patch
+> series to make them into staging branch.
+> 
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index a48859982a32..2db713d18f71 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -579,6 +579,10 @@ static bool cfg80211_get_chans_dfs_available(struct wiphy *wiphy,
- {
- 	struct ieee80211_channel *c;
- 	u32 freq, start_freq, end_freq;
-+	bool dfs_offload;
-+
-+	dfs_offload = wiphy_ext_feature_isset(wiphy,
-+					      NL80211_EXT_FEATURE_DFS_OFFLOAD);
- 
- 	start_freq = cfg80211_get_start_freq(center_freq, bandwidth);
- 	end_freq = cfg80211_get_end_freq(center_freq, bandwidth);
-@@ -596,8 +600,9 @@ static bool cfg80211_get_chans_dfs_available(struct wiphy *wiphy,
- 		if (c->flags & IEEE80211_CHAN_DISABLED)
- 			return false;
- 
--		if ((c->flags & IEEE80211_CHAN_RADAR)  &&
--		    (c->dfs_state != NL80211_DFS_AVAILABLE))
-+		if ((c->flags & IEEE80211_CHAN_RADAR) &&
-+		    (c->dfs_state != NL80211_DFS_AVAILABLE) &&
-+		    !(c->dfs_state == NL80211_DFS_USABLE && dfs_offload))
- 			return false;
- 	}
- 
--- 
-2.11.0
+As I suggested in patch 6, I prefer having the same format for
+wilc_wfi_cfg_tx_vendor_spec() and wilc_wfi_cfg_parse_rx_vendor_spec(). I
+think this could be achieved. To merge them I don't think would be feasible.
+
+This series could go as is but I would like to see another future patch to
+treat the format of wilc_wfi_cfg_tx_vendor_spec().
+
+Thank you,
+Claudiu
+
+> Regards,
+> Ajay
+> 
