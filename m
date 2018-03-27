@@ -1,164 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:42453 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754258AbeCRWt2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Mar 2018 18:49:28 -0400
-Received: by mail-pl0-f66.google.com with SMTP id w15-v6so9102966plq.9
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Mar 2018 15:49:27 -0700 (PDT)
-Date: Sun, 18 Mar 2018 15:49:29 -0700
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Daniel Mack <daniel@zonque.org>
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        rfried@codeaurora.org, kvalo@codeaurora.org
-Subject: Re: [PATCH] wcn36xx: dequeue all pending indicator messages
-Message-ID: <20180318224929.GN5626@tuxbook-pro> (sfid-20180318_234936_791860_DA989FA2)
-References: <20180315223725.28283-1-daniel@zonque.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180315223725.28283-1-daniel@zonque.org>
+Received: from mail.unikorn.me ([176.9.143.13]:46372 "EHLO mail.unikorn.me"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750914AbeC0Ms0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Mar 2018 08:48:26 -0400
+Message-ID: <a7f17e2bd232252004f71cbbc719781d68e735a4.camel@unikorn.me> (sfid-20180327_144830_544794_F2B69BC8)
+Subject: Re: [PATCH] iwlwifi: add device ID for Rivet Networks Killer
+ Wireless-AC 1550
+From: Izzy Kulbe <kernel@unikorn.me>
+To: Luciano Coelho <luciano.coelho@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 27 Mar 2018 14:48:16 +0200
+In-Reply-To: <1522154331.3786.270.camel@intel.com>
+References: <1522148065.12122.5.camel@unikorn.me>
+         <87370lrb7y.fsf@kamboji.qca.qualcomm.com>
+         <2c826451177bbcb8fe033631dc7b87eb92f5e42d.camel@unikorn.me>
+         <1522154254.3786.269.camel@intel.com> <1522154331.3786.270.camel@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu 15 Mar 15:37 PDT 2018, Daniel Mack wrote:
-
-> In case wcn36xx_smd_rsp_process() is called more than once before
-> hal_ind_work was dispatched, the messages will end up in hal_ind_queue,
-> but wcn36xx_ind_smd_work() will only look at the first message in that
-> list.
+On Tue, 2018-03-27 at 15:38 +0300, Luciano Coelho wrote:
+> On Tue, 2018-03-27 at 15:37 +0300, Luciano Coelho wrote:
+> > On Tue, 2018-03-27 at 14:03 +0200, Izzy Kulbe wrote:
+> > Wait a bit.  This ID looks strange, someone else reported this
+> > already
+> > and it looked strange, with an incorrect subsystem vendor ID.
+> > 
+> > Can you run lspci like this and let us know the results?
+> > weird 
+> > lspci -nv -s 3b:00.0
 > 
-> Fix this by dequeing the messages from the list in a loop, and only stop
-> when it's empty.
+> Sorry, please substitute the 3b:00.0 with the correct PCI slot in your
+> system.  If you're not sure, remove the '-s 3b:00.0' entirely so we'll
+> get the results for all devices.
 > 
+> --
+> Luca.
 
-Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+The subsystem device in lspci itself reports "Bigfoot Networks, 
+Inc. Wireless-AC 9260" instead of when lookup is enabled. AFAIR this
+was a company that was bought by Qualcomm? So not Rivet/Killer. 
 
-Thanks for fixing this, I thought I already had done that.
+Here's the lspci output:
 
-Regards,
-Bjorn
-
-> Signed-off-by: Daniel Mack <daniel@zonque.org>
-> ---
->  drivers/net/wireless/ath/wcn36xx/smd.c | 95 +++++++++++++++++++---------------
->  1 file changed, 52 insertions(+), 43 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-> index 7cc29285e052..a6b5352f59e9 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-> @@ -2409,54 +2409,63 @@ static void wcn36xx_ind_smd_work(struct work_struct *work)
->  {
->  	struct wcn36xx *wcn =
->  		container_of(work, struct wcn36xx, hal_ind_work);
-> -	struct wcn36xx_hal_msg_header *msg_header;
-> -	struct wcn36xx_hal_ind_msg *hal_ind_msg;
-> -	unsigned long flags;
->  
-> -	spin_lock_irqsave(&wcn->hal_ind_lock, flags);
-> +	for (;;) {
-> +		struct wcn36xx_hal_msg_header *msg_header;
-> +		struct wcn36xx_hal_ind_msg *hal_ind_msg;
-> +		unsigned long flags;
->  
-> -	hal_ind_msg = list_first_entry(&wcn->hal_ind_queue,
-> -				       struct wcn36xx_hal_ind_msg,
-> -				       list);
-> -	list_del(wcn->hal_ind_queue.next);
-> -	spin_unlock_irqrestore(&wcn->hal_ind_lock, flags);
-> +		spin_lock_irqsave(&wcn->hal_ind_lock, flags);
->  
-> -	msg_header = (struct wcn36xx_hal_msg_header *)hal_ind_msg->msg;
-> +		if (list_empty(&wcn->hal_ind_queue)) {
-> +			spin_unlock_irqrestore(&wcn->hal_ind_lock, flags);
-> +			return;
-> +		}
->  
-> -	switch (msg_header->msg_type) {
-> -	case WCN36XX_HAL_COEX_IND:
-> -	case WCN36XX_HAL_DEL_BA_IND:
-> -	case WCN36XX_HAL_AVOID_FREQ_RANGE_IND:
-> -		break;
-> -	case WCN36XX_HAL_OTA_TX_COMPL_IND:
-> -		wcn36xx_smd_tx_compl_ind(wcn,
-> -					 hal_ind_msg->msg,
-> -					 hal_ind_msg->msg_len);
-> -		break;
-> -	case WCN36XX_HAL_MISSED_BEACON_IND:
-> -		wcn36xx_smd_missed_beacon_ind(wcn,
-> -					      hal_ind_msg->msg,
-> -					      hal_ind_msg->msg_len);
-> -		break;
-> -	case WCN36XX_HAL_DELETE_STA_CONTEXT_IND:
-> -		wcn36xx_smd_delete_sta_context_ind(wcn,
-> -						   hal_ind_msg->msg,
-> -						   hal_ind_msg->msg_len);
-> -		break;
-> -	case WCN36XX_HAL_PRINT_REG_INFO_IND:
-> -		wcn36xx_smd_print_reg_info_ind(wcn,
-> -					       hal_ind_msg->msg,
-> -					       hal_ind_msg->msg_len);
-> -		break;
-> -	case WCN36XX_HAL_SCAN_OFFLOAD_IND:
-> -		wcn36xx_smd_hw_scan_ind(wcn, hal_ind_msg->msg,
-> -					hal_ind_msg->msg_len);
-> -		break;
-> -	default:
-> -		wcn36xx_err("SMD_EVENT (%d) not supported\n",
-> -			      msg_header->msg_type);
-> +		hal_ind_msg = list_first_entry(&wcn->hal_ind_queue,
-> +					       struct wcn36xx_hal_ind_msg,
-> +					       list);
-> +		list_del(&hal_ind_msg->list);
-> +		spin_unlock_irqrestore(&wcn->hal_ind_lock, flags);
-> +
-> +		msg_header = (struct wcn36xx_hal_msg_header *)hal_ind_msg->msg;
-> +
-> +		switch (msg_header->msg_type) {
-> +		case WCN36XX_HAL_COEX_IND:
-> +		case WCN36XX_HAL_DEL_BA_IND:
-> +		case WCN36XX_HAL_AVOID_FREQ_RANGE_IND:
-> +			break;
-> +		case WCN36XX_HAL_OTA_TX_COMPL_IND:
-> +			wcn36xx_smd_tx_compl_ind(wcn,
-> +						 hal_ind_msg->msg,
-> +						 hal_ind_msg->msg_len);
-> +			break;
-> +		case WCN36XX_HAL_MISSED_BEACON_IND:
-> +			wcn36xx_smd_missed_beacon_ind(wcn,
-> +						      hal_ind_msg->msg,
-> +						      hal_ind_msg->msg_len);
-> +			break;
-> +		case WCN36XX_HAL_DELETE_STA_CONTEXT_IND:
-> +			wcn36xx_smd_delete_sta_context_ind(wcn,
-> +							   hal_ind_msg->msg,
-> +							   hal_ind_msg->msg_len);
-> +			break;
-> +		case WCN36XX_HAL_PRINT_REG_INFO_IND:
-> +			wcn36xx_smd_print_reg_info_ind(wcn,
-> +						       hal_ind_msg->msg,
-> +						       hal_ind_msg->msg_len);
-> +			break;
-> +		case WCN36XX_HAL_SCAN_OFFLOAD_IND:
-> +			wcn36xx_smd_hw_scan_ind(wcn, hal_ind_msg->msg,
-> +						hal_ind_msg->msg_len);
-> +			break;
-> +		default:
-> +			wcn36xx_err("SMD_EVENT (%d) not supported\n",
-> +				    msg_header->msg_type);
-> +		}
-> +
-> +		kfree(hal_ind_msg);
->  	}
-> -	kfree(hal_ind_msg);
->  }
->  int wcn36xx_smd_open(struct wcn36xx *wcn)
->  {
-> -- 
-> 2.14.3
-> 
-> 
-> _______________________________________________
-> wcn36xx mailing list
-> wcn36xx@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/wcn36xx
+root@dokidoki $> # lspci-nv -s 04:00.0
+04:00.0 0280: 8086:2526 (rev 29)
+	Subsystem: 1a56:1550
+	Flags: bus master, fast devsel, latency 0, IRQ 17
+	Memory at d3d00000 (64-bit, non-prefetchable) [size=16K]
+	Capabilities: [c8] Power Management version 3
+	Capabilities: [d0] MSI: Enable- Count=1/1 Maskable- 64bit+
+	Capabilities: [40] Express Endpoint, MSI 00
+	Capabilities: [80] MSI-X: Enable+ Count=16 Masked-
+	Capabilities: [100] Advanced Error Reporting
+	Capabilities: [14c] Latency Tolerance Reporting
+	Capabilities: [154] L1 PM Substates
+	Kernel driver in use: iwlwifi
+	Kernel modules: iwlwifi
