@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:60642 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751434AbeC1Ljy (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59082 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751732AbeC0JJi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 07:39:54 -0400
-Date: Wed, 28 Mar 2018 13:39:51 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Colin King <colin.king@canonical.com>
-Cc: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: wilc1000: replace kmalloc + memcpy with kmemdup
-Message-ID: <20180328113951.GA11213@kroah.com> (sfid-20180328_134020_870832_85BED69C)
-References: <20180326171629.28700-1-colin.king@canonical.com>
+        Tue, 27 Mar 2018 05:09:38 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180326171629.28700-1-colin.king@canonical.com>
+Subject: Re: brcmsmac: allocate ucode with GFP_KERNEL
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180316154149.16891-1-tiwai@suse.de>
+References: <20180316154149.16891-1-tiwai@suse.de>
+To: Takashi Iwai <tiwai@suse.de>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Message-Id: <20180327090937.91DE86030F@smtp.codeaurora.org> (sfid-20180327_110942_452306_4A7F8BDF)
+Date: Tue, 27 Mar 2018 09:09:37 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 26, 2018 at 06:16:29PM +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Replace several allocation and memcpys with kmemdup and add in some
-> missing memory allocation failure checks.  Also fix an incorrect 
-> -EFAULT return with -ENOMEM.
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 75 +++++++++++++++++++------------
->  1 file changed, 46 insertions(+), 29 deletions(-)
+Takashi Iwai <tiwai@suse.de> wrote:
 
-Doesn't apply to my tree anymore, due to patches submitted before yours
-:(
+> The brcms_ucode_init_buf() duplicates the ucode chunks via kmemdup()
+> with GFP_ATOMIC as a precondition of wl->lock acquired.  This caused
+> allocation failures sometimes as reported in the bugzilla below.
+> 
+> When looking at the the real usage, one can find that it's called
+> solely from brcms_request_fw(), and it's obviously outside the lock.
+> Hence we can use GFP_KERNEL there safely for avoiding such allocation
+> errors.
+> 
+> Bugzilla: http://bugzilla.suse.com/show_bug.cgi?id=1085174
+> Signed-off-by: Takashi Iwai <tiwai@suse.de>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-greg k-h
+Patch applied to wireless-drivers-next.git, thanks.
+
+b1c2d0f2507b brcmsmac: allocate ucode with GFP_KERNEL
+
+-- 
+https://patchwork.kernel.org/patch/10288881/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
