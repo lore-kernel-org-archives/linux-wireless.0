@@ -1,43 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57796 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752967AbeCMQwr (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:11729 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751046AbeC0HWV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 12:52:47 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 27 Mar 2018 03:22:21 -0400
+Date: Tue, 27 Mar 2018 12:52:13 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Claudiu Beznea <Claudiu.Beznea@microchip.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <venkateswara.kaja@microchip.com>,
+        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
+        <adham.abozaeid@microchip.com>, <aditya.shankar@microchip.com>
+Subject: Re: [PATCH 00/11] staging: wilc1000: fix for checkpatch and handled
+ malloc memory properly
+Message-ID: <20180327125213.0594ff79@ajaysk-VirtualBox> (sfid-20180327_092225_040195_B526A797)
+In-Reply-To: <53a25901-754c-bfe9-169e-d2ed4cb34583@microchip.com>
+References: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
+ <20180321075116.bm6x3c53bahw3c2i@mwanda>
+ <20180321145021.044f4536@ajaysk-VirtualBox>
+ <53a25901-754c-bfe9-169e-d2ed4cb34583@microchip.com>
 MIME-Version: 1.0
-Subject: Re: net/wireless: fix spaces and grammar copy/paste in vendor Kconfig
- help text
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1627081c-ef0c-1d55-ca2e-898f22b98d72@infradead.org>
-References: <1627081c-ef0c-1d55-ca2e-898f22b98d72@infradead.org>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Message-Id: <20180313165247.371B8600C1@smtp.codeaurora.org> (sfid-20180313_175304_142214_6785416C)
-Date: Tue, 13 Mar 2018 16:52:47 +0000 (UTC)
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Randy Dunlap <rdunlap@infradead.org> wrote:
 
-> From: Randy Dunlap <rdunlap@infradead.org>
-> 
-> Lots of the wireless driver vendor Kconfig symol help text says
-> "questions about  cards." (2 spaces between "about" and "cards")
-> 
-> Besides dropping one of those spaces, it also needs some other word
-> inserted there. Instead of putting each vendor's name there, I chose
-> to say "these" cards in all of the Kconfig help text.
-> 
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Please let me know, in case I have to rework and resubmit this patch
+series to make them into staging branch.
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-a6cf02e6485a net/wireless: fix spaces and grammar copy/paste in vendor Kconfig help text
-
--- 
-https://patchwork.kernel.org/patch/10255933/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Regards,
+Ajay
