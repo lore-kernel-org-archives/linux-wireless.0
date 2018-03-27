@@ -1,118 +1,276 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:56070 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1424124AbeCBKnK (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40904 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751732AbeC0IoT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 05:43:10 -0500
-Received: by mail-wm0-f67.google.com with SMTP id q83so2264881wme.5
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Mar 2018 02:43:10 -0800 (PST)
-Subject: Re: [PATCH] mt7601u: Fix system freeze after resuming from
- hibernation
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Jakub Kicinski <kubakici@wp.pl>, linux-wireless@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Andrew Morton <akpm@linux-foundation.org>
-References: <20180227165451.GS14069@wotan.suse.de>
- <20180227102253.04a3a01c@cakuba.netronome.com>
- <20180227204240.GW14069@wotan.suse.de>
- <498eb998-0dce-83c6-87c9-76cb83b148ea@gmail.com>
- <20180228184820.GL14069@wotan.suse.de>
- <ba4c6079-ca45-2048-1e7d-3cb4e1a80cdb@gmail.com>
- <20180301002813.GQ14069@wotan.suse.de>
- <9088ab38-5a88-f479-1225-5988f9890aaa@gmail.com>
- <20180301172920.GV14069@wotan.suse.de>
- <877eb47d-5750-c3ef-0238-bbfc73476ed2@gmail.com>
- <20180301210139.GX14069@wotan.suse.de>
-From: cantabile <cantabile.desu@gmail.com>
-Message-ID: <a06f4131-cb0b-677e-b096-801f31b1089a@gmail.com> (sfid-20180302_114324_332980_953D2F5B)
-Date: Fri, 2 Mar 2018 12:43:07 +0200
-MIME-Version: 1.0
-In-Reply-To: <20180301210139.GX14069@wotan.suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Tue, 27 Mar 2018 04:44:19 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+Subject: [RFC 3/4] mac80211: Apply per-peer NoAck tid bitmap configuration
+Date: Tue, 27 Mar 2018 14:12:50 +0530
+Message-Id: <1522140171-10926-4-git-send-email-vthiagar@codeaurora.org> (sfid-20180327_104427_610034_DD84A167)
+In-Reply-To: <1522140171-10926-1-git-send-email-vthiagar@codeaurora.org>
+References: <1522140171-10926-1-git-send-email-vthiagar@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/03/18 23:01, Luis R. Rodriguez wrote:
-> On Thu, Mar 01, 2018 at 10:11:01PM +0200, cantabile wrote:
->> On 01/03/18 19:29, Luis R. Rodriguez wrote:
->>>
->>> Correct?
->>>
->>
->> The above log is from "20180227-firmware-cache" kernel plus your suggested
->> change that makes it always upload the firmware:
->>
->> diff --git a/drivers/net/wireless/mediatek/mt7601u/mcu.c
->> b/drivers/net/wireless/mediatek/mt7601u/mcu.c
->> index 65a8004418ea..04cbffd225a1 100644
->> --- a/drivers/net/wireless/mediatek/mt7601u/mcu.c
->> +++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c
->> @@ -421,7 +421,7 @@ static int mt7601u_load_firmware(struct mt7601u_dev
->> *dev)
->>   					 MT_USB_DMA_CFG_TX_BULK_EN));
->>
->>   	if (firmware_running(dev))
->> -		return 0;
->> +		pr_info("Firmware already loaded but going to reload...");
->>
->>   	ret = request_firmware(&fw, MT7601U_FIRMWARE, dev->dev);
->>   	if (ret)
-> 
-> Huh, if you are using 20180227-firmware-cache, then your diff should instead
-> be this no?
-> 
-> diff --git a/drivers/net/wireless/mediatek/mt7601u/mcu.c b/drivers/net/wireless/mediatek/mt7601u/mcu.c
-> index b90456a4b4d7..04cbffd225a1 100644
-> --- a/drivers/net/wireless/mediatek/mt7601u/mcu.c
-> +++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c
-> @@ -421,7 +421,7 @@ static int mt7601u_load_firmware(struct mt7601u_dev *dev)
->   					 MT_USB_DMA_CFG_TX_BULK_EN));
->   
->   	if (firmware_running(dev))
-> -		return request_firmware_cache(dev->dev, MT7601U_FIRMWARE);
-> +		pr_info("Firmware already loaded but going to reload...");
->   
->   	ret = request_firmware(&fw, MT7601U_FIRMWARE, dev->dev);
->   	if (ret)
-> 
-> 
+Use per-peer noack tid bitmap, if it is configured,
+when setting up the qos header. If no per-peer configuration
+is set, use the existing nedev wide noack policy configuration.
+Also modifies callback set_noack_tid_bitmap() with the provision
+to send per-peer NoAck policy configuration to the drivers supporting
+the NoAck offload functionality (IEEE80211_HW_SUPPORTS_NOACK_POLICY).
 
-Right, yes. I just copied the diff from your email instead of git diff.
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+---
+ include/net/mac80211.h    |  7 +++++--
+ net/mac80211/cfg.c        | 42 +++++++++++++++++++++++++++++++++++++-----
+ net/mac80211/driver-ops.h |  5 +++--
+ net/mac80211/iface.c      |  2 +-
+ net/mac80211/sta_info.h   |  3 +++
+ net/mac80211/trace.h      |  9 ++++++---
+ net/mac80211/tx.c         |  2 +-
+ net/mac80211/wme.c        | 34 +++++++++++++++++++++++++++++++++-
+ 8 files changed, 89 insertions(+), 15 deletions(-)
 
->> I recompiled the kernel with CONFIG_DEBUG_INFO=y, but the messages in
->> journalctl look pretty much the same as before. There are still question
->> marks in the call traces, there are no line numbers, and it still says
->> "verbose debug info unavailable". /proc/config.gz contains
->> CONFIG_DEBUG_INFO=y. What else do I need to do?
-> 
-> Hrm, odd.
-> 
-> CONFIG_FRAME_POINTER=y
-> 
-> Maybe.
-
-That doesn't exist in /proc/config.gz, not even commented out. I used 
-SymSearch in 'make nconfig', and it finds "FRAME_POINTER":
-
-Symbol: FRAME_POINTER [=n]
-Type  : bool
-Prompt: Compile the kernel with frame pointers
-Location:
--> Kernel hacking
-    -> Compile-time checks and compiler options
-
-But when I go to that location, there is no such prompt.
-
-I don't know what's going on here.
-
-> 
->>> But if the patches I posted help, I guess we already have a solution, The rest of
->>> these email exchanges are all just hypothetical exercises.
->>>
->>
->> Your patches definitely fix the problem I reported in my initial email.
-> 
-> Ah OK :)
-> 
->    Luis
-> 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5a49c90..a5ed552 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3499,7 +3499,9 @@ enum ieee80211_reconfig_type {
+  *	ieee80211_nan_func_terminated() with
+  *	NL80211_NAN_FUNC_TERM_REASON_USER_REQUEST reason code upon removal.
+  *
+- * @set_noack_tid_bitmap: Set NoAck policy TID bitmap for a virtual interface.
++ * @set_noack_tid_bitmap: Set NoAck policy TID bitmap. Apply the TID NoAck
++ *	configuration for a particular station when @sta is non-NULL. When @sta
++ *	is NULL, apply TID NoAck configuration at virtual interface level.
+  *	Drivers advertising NoAck policy handing support
+  *	(%IEEE80211_HW_SUPPORTS_NOACK_POLICY) must implement this callback.
+  */
+@@ -3785,7 +3787,8 @@ struct ieee80211_ops {
+ 			    u8 instance_id);
+ 
+ 	int (*set_noack_tid_bitmap)(struct ieee80211_hw *hw,
+-				    struct ieee80211_vif *vif, u8 noack_map);
++				    struct ieee80211_vif *vif,
++				    struct ieee80211_sta *sta, u8 noack_map);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 621ef38..1efc9cf 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -345,18 +345,50 @@ static int ieee80211_set_noack_map(struct wiphy *wiphy,
+ 				  u16 noack_map)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct sta_info *sta;
++	int ret;
+ 
+-	sdata->noack_map = noack_map;
++	if (!peer) {
++		sdata->noack_map = noack_map;
+ 
+-	if (!ieee80211_hw_check(&sdata->local->hw, SUPPORTS_NOACK_POLICY)) {
+-		ieee80211_check_fast_xmit_iface(sdata);
+-		return 0;
++		if (!ieee80211_hw_check(&sdata->local->hw, SUPPORTS_NOACK_POLICY)) {
++			ieee80211_check_fast_xmit_iface(sdata);
++			return 0;
++		}
++
++		if (!ieee80211_sdata_running(sdata))
++			return 0;
++
++		return drv_set_noack_tid_bitmap(sdata->local, sdata, NULL,
++						noack_map);
+ 	}
+ 
++	/* NoAck policy is for a connected client on the dev */
++
+ 	if (!ieee80211_sdata_running(sdata))
++		return -ENETDOWN;
++
++	mutex_lock(&sdata->local->sta_mtx);
++
++	sta = sta_info_get_bss(sdata, peer);
++	if (!sta) {
++		mutex_unlock(&sdata->local->sta_mtx);
++		return -ENOENT;
++	}
++
++	sta->noack_map = noack_map;
++
++	if (!ieee80211_hw_check(&sdata->local->hw, SUPPORTS_NOACK_POLICY)) {
++		ieee80211_check_fast_xmit(sta);
++		mutex_unlock(&sdata->local->sta_mtx);
+ 		return 0;
++	}
++
++	ret = drv_set_noack_tid_bitmap(sdata->local, sdata, sta, noack_map);
+ 
+-	return drv_set_noack_tid_bitmap(sdata->local, sdata, noack_map);
++	mutex_unlock(&sdata->local->sta_mtx);
++
++	return ret;
+ }
+ 
+ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index a0a2d3c..8a2154a 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1252,6 +1252,7 @@ static inline void drv_del_nan_func(struct ieee80211_local *local,
+ 
+ static inline int drv_set_noack_tid_bitmap(struct ieee80211_local *local,
+ 					   struct ieee80211_sub_if_data *sdata,
++					   struct sta_info *sta,
+ 					   u16 noack_map)
+ {
+ 	int ret;
+@@ -1263,9 +1264,9 @@ static inline int drv_set_noack_tid_bitmap(struct ieee80211_local *local,
+ 	if (!local->ops->set_noack_tid_bitmap)
+ 		return -EOPNOTSUPP;
+ 
+-	trace_drv_set_noack_tid_bitmap(local, sdata, noack_map);
++	trace_drv_set_noack_tid_bitmap(local, sdata, &sta->sta, noack_map);
+ 	ret = local->ops->set_noack_tid_bitmap(&local->hw, &sdata->vif,
+-					       noack_map);
++					       &sta->sta, noack_map);
+ 	trace_drv_return_int(local, ret);
+ 
+ 	return ret;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 4e120b9..1172bed 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -633,7 +633,7 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 				goto err_del_interface;
+ 
+ 			if (sdata->noack_map)
+-				drv_set_noack_tid_bitmap(local, sdata,
++				drv_set_noack_tid_bitmap(local, sdata, NULL,
+ 							 sdata->noack_map);
+ 		}
+ 
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index f64eb86..01bee75 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -581,6 +581,9 @@ struct sta_info {
+ 
+ 	struct cfg80211_chan_def tdls_chandef;
+ 
++	/* TID bitmap for station's NoAck policy */
++	u16 noack_map;
++
+ 	/* keep last! */
+ 	struct ieee80211_sta sta;
+ };
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 3b55569..84089f7 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -1866,25 +1866,28 @@ struct trace_switch_entry {
+ TRACE_EVENT(drv_set_noack_tid_bitmap,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sub_if_data *sdata,
++		 struct ieee80211_sta *sta,
+ 		 u16 noack_map),
+ 
+-	TP_ARGS(local, sdata, noack_map),
++	TP_ARGS(local, sdata, sta, noack_map),
+ 	TP_STRUCT__entry(
+ 		LOCAL_ENTRY
+ 		VIF_ENTRY
++		STA_ENTRY
+ 		__field(u16, noack_map)
+ 	),
+ 
+ 	TP_fast_assign(
+ 		LOCAL_ASSIGN;
+ 		VIF_ASSIGN;
++		STA_ASSIGN;
+ 		__entry->noack_map = noack_map;
+ 	),
+ 
+ 	TP_printk(
+-		LOCAL_PR_FMT  VIF_PR_FMT
++		LOCAL_PR_FMT  VIF_PR_FMT STA_PR_FMT
+ 		", noack_map: %u",
+-		LOCAL_PR_ARG, VIF_PR_ARG, __entry->noack_map
++		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, __entry->noack_map
+ 	)
+ );
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 27fcef3..5abe73b 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2817,7 +2817,7 @@ void ieee80211_check_fast_xmit(struct sta_info *sta)
+ 	    test_sta_flag(sta, WLAN_STA_CLEAR_PS_FILT))
+ 		goto out;
+ 
+-	if (sdata->noack_map &&
++	if ((sdata->noack_map || sta->noack_map) &&
+ 	    !ieee80211_hw_check(&local->hw, SUPPORTS_NOACK_POLICY))
+ 		goto out;
+ 
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 6512a47..645c50b 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -227,6 +227,38 @@ u16 ieee80211_select_queue(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ /**
++ * ieee80211_get_noack_map - Get TID bitmap of NoAck policy. NoAck policy
++ * could be device wide or per-station.
++ *
++ * @sdata: local subif
++ * @mac: MAC address of the receiver
++ */
++u16 ieee80211_get_noack_map(struct ieee80211_sub_if_data *sdata, const u8 *mac)
++{
++	struct sta_info *sta;
++	u16 noack_map = 0;
++
++	/* Retrieve per-station noack_map config for the receiver, if any */
++
++	rcu_read_lock();
++
++	sta = sta_info_get(sdata, mac);
++	if (!sta) {
++		rcu_read_unlock();
++		return noack_map;
++	}
++
++	noack_map = sta->noack_map;
++
++	rcu_read_unlock();
++
++	if (!noack_map)
++		noack_map = sdata->noack_map;
++
++	return noack_map;
++}
++
++/**
+  * ieee80211_set_qos_hdr - Fill in the QoS header if there is one.
+  *
+  * @sdata: local subif
+@@ -257,7 +289,7 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (is_multicast_ether_addr(hdr->addr1) ||
+ 	    (!ieee80211_hw_check(&sdata->local->hw, SUPPORTS_NOACK_POLICY) &&
+-	    sdata->noack_map & BIT(tid))) {
++	    ieee80211_get_noack_map(sdata, hdr->addr1) & BIT(tid))) {
+ 		flags |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
+ 		info->flags |= IEEE80211_TX_CTL_NO_ACK;
+ 	}
+-- 
+1.9.1
