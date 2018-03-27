@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:39759 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751317AbeCUG7S (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51292 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752271AbeC0NMF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Mar 2018 02:59:18 -0400
-Received: by mail-qt0-f196.google.com with SMTP id v11so4250659qtj.6
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2018 23:59:18 -0700 (PDT)
+        Tue, 27 Mar 2018 09:12:05 -0400
 MIME-Version: 1.0
-In-Reply-To: <1521585916.19123.3.camel@sipsolutions.net>
-References: <cover.1521209538.git.lorenzo.bianconi@redhat.com>
- <a159566d0970fb5c43da7758d8281b594b6ca48e.1521209538.git.lorenzo.bianconi@redhat.com>
- <1521585916.19123.3.camel@sipsolutions.net>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Wed, 21 Mar 2018 14:59:17 +0800
-Message-ID: <CAK8P3a1aHXPzvpZET=d2+snMPvsKx=rwfMN-r1_F2HK-KvjC0g@mail.gmail.com> (sfid-20180321_075922_465429_621C8763)
-Subject: Re: [PATCH] mt76: enable MAC80211_LEDS by default
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 27 Mar 2018 18:42:04 +0530
+From: Tamizh chelvam <tamizhr@codeaurora.org>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>, nbd@nbd.name,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 0/3] cfg80211/mac80211: Notify proper sta opmode change
+ value
+In-Reply-To: <1522155394.3050.9.camel@sipsolutions.net>
+References: <1522133296-2583-1-git-send-email-tamizhr@codeaurora.org>
+ <1522155394.3050.9.camel@sipsolutions.net>
+Message-ID: <ad1804a2f049eb172a77b7c8935b4956@codeaurora.org> (sfid-20180327_151209_108092_0B9A4DA5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 21, 2018 at 6:45 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2018-03-16 at 15:45 +0100, Lorenzo Bianconi wrote:
->> --- a/drivers/net/wireless/mediatek/mt76/Kconfig
->> +++ b/drivers/net/wireless/mediatek/mt76/Kconfig
->> @@ -1,5 +1,8 @@
->>  config MT76_CORE
->>       tristate
->> +     select MAC80211_LEDS
->
-> Should drivers really mess with mac80211's configuration that way? I
-> believe this is a user-visible config, no?
-
-We have a couple of drivers using 'select LEDS_CLASS' and others
-doing 'depends on LEDS_CLASS'. I think the latter is what we should
-have here for all those drivers.
-
-MAC80211_LEDS looks like it's designed to be optional, so nothing
-should select or depend on that.
-
-          Arnd
+On 2018-03-27 18:26, Johannes Berg wrote:
+> On Tue, 2018-03-27 at 12:18 +0530, Tamizh chelvam wrote:
+>> Currently bw and smps_mode are u8 type value in sta_opmode_info
+>> structure. This values filled in mac80211 from 
+>> ieee80211_sta_rx_bandwidth
+>> and ieee80211_smps_mode. These enum values are specific to mac80211 
+>> and
+>> userspace/cfg80211 doesn't know about that. This patchset change its
+>> data type in the sta_opmode_info structure and mapping from mac80211
+>> specific enum to nl80211 enum value.
+> 
+> Good catch.
+> 
+>> Tamizh chelvam (3):
+>>   cfg80211: fix data type of sta_opmode_info parameter
+>>   mac80211: Use proper smps_mode enum in sta opmode event
+>>   mac80211: Use proper chan_width enum in sta opmode event
+>> 
+>> Note :
+>>   * Is this mac80211 approach sufficient ? or whether some more
+>>     complete cleanup would be preferred ?
+> 
+> Not sure what you mean? The patches look good to me.
+> 
+I just wanted to confirm is this approach fine or not! I'll send a patch 
+format
