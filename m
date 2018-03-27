@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:58983 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750823AbeCCFMa (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47328 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751192AbeC0Ixk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Mar 2018 00:12:30 -0500
-From: Pkshih <pkshih@realtek.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 03/15] rtlwifi: btcoex: Add enum DM_INFO for btcoex to query dm's counters
-Date: Sat, 3 Mar 2018 05:12:12 +0000
-Message-ID: <1520053932.1841.2.camel@realtek.com> (sfid-20180303_061323_481176_75CDE070)
-References: <20180228030718.19510-1-pkshih@realtek.com>
-         <20180228030718.19510-4-pkshih@realtek.com>
-         <1ee67725-5198-9dae-3f46-331774f8003b@lwfinger.net>
-In-Reply-To: <1ee67725-5198-9dae-3f46-331774f8003b@lwfinger.net>
+        Tue, 27 Mar 2018 04:53:40 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: [next] rsi: remove redundant duplicate assignment of buffer_size
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180314141239.8321-1-colin.king@canonical.com>
+References: <20180314141239.8321-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20180327085340.1059260251@smtp.codeaurora.org> (sfid-20180327_105406_185454_FBAD1D65)
+Date: Tue, 27 Mar 2018 08:53:39 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gRnJpLCAyMDE4LTAzLTAyIGF0IDE2OjE5IC0wNjAwLCBMYXJyeSBGaW5nZXIgd3JvdGU6DQo+
-IE9uIDAyLzI3LzIwMTggMDk6MDcgUE0sIHBrc2hpaEByZWFsdGVrLmNvbSB3cm90ZToNCj4gPiBG
-cm9tOiBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4NCj4gPsKgDQo+ID4gYnRjb2V4
-IHVzZXMgZG0ncyBjb3VudGVycyB0byBjaGVjayB0aGUgZW52b3JpbWVudCBpcyBub3NpeSBvciBu
-b3QuIElmIGl0DQo+ID4gaXMgY2xlYW4sIGJ0Y29leCBzZXQgbW9yZSB0aW1lIHNvbHRzIHRvIFdp
-Rmkgc28gdGhhdCBpdCBjYW4gdHJhbnNpbXQgYXMNCj4gPiBzb29uIGFzIHBvc3NpYmxlLiBUaGF0
-IHdpbGwgc2F2ZSB0aW1lLCBhbmQgQlQgd2lsbCBoYXZlIG1vcmUgdGltZSBzb2x0cw0KPiA+IGFm
-dGVyIFdpRmkgdHJhZmZpYyBpcyBjb21wbGV0ZS4NCj4gPsKgDQo+ID4gU2lnbmVkLW9mZi1ieTog
-UGluZy1LZSBTaGloIDxwa3NoaWhAcmVhbHRlay5jb20+DQo+IA0KPiBUaGUgY29tbWl0IG1lc3Nh
-Z2UgbmVlZHMgdG8gaGF2ZSB0aGUgZm9sbG93aW5nIHR5cG9zIGZpeGVkOg0KPiBlbnZvcmltZW50
-IHNob3VsZCBiZSBlbnZpcm9ubWVudA0KPiBub3NpeSBzaG91bGQgYmUgbm9pc3kNCj4gc29sdHMg
-c2hvdWxkIGJlIHNsb3RzICgyIHBsYWNlcykNCj4gdHJhbnNpbXQgc2hvdWxkIGJlIHRyYW5zbWl0
-DQo+IA0KSSBtdXN0IGJlIHRpcmVkIGF0IHRoYXQgdGltZSA6LSgNCkknbGwgZml4IHRoZW0gaW4g
-djIuDQoNCj4gWWVzLCBJIGtub3cgaXQgaXMgZGlmZmljdWx0IHRvIHdyaXRlIGluIGEgc2Vjb25k
-IGxhbmd1YWdlLg0KPiANCkluZGVlZC4gSSdsbCBrZWVwIHRvIHByYWN0aWNlLg0KDQpQSw0KDQo=
+Colin Ian King <colin.king@canonical.com> wrote:
+
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Variable buffer_size is re-assigned the same value, this duplicated
+> assignment is redundant and can be removed.
+> 
+> Cleans up clang warning:
+> drivers/net/wireless/rsi/rsi_91x_usb.c:140:4: warning: Value stored
+> to 'buffer_size' is never read
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+
+Patch applied to wireless-drivers-next.git, thanks.
+
+a31f9314114c rsi: remove redundant duplicate assignment of buffer_size
+
+-- 
+https://patchwork.kernel.org/patch/10282247/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
