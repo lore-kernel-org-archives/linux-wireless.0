@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from skyhawk.myhost.co.nz ([120.138.17.237]:60804 "EHLO
-        skyhawk.myhost.co.nz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750895AbeCCECC (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36056 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751114AbeC0GuP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 23:02:02 -0500
-Subject: Re: [PATCH] Revert "mac80211: use QoS NDP for AP probing"
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-References: <20180225211541.29931-1-ben@transient.nz>
- <1519725888.4086.3.camel@sipsolutions.net>
-From: Ben Caradoc-Davies <ben@transient.nz>
-Message-ID: <6110331d-bf2b-8aa5-29b9-ef29074f43ed@transient.nz> (sfid-20180303_050208_976416_F3B28CDE)
-Date: Sat, 3 Mar 2018 17:01:54 +1300
-MIME-Version: 1.0
-In-Reply-To: <1519725888.4086.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Tue, 27 Mar 2018 02:50:15 -0400
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [RFC 1/3] cfg80211: fix data type of sta_opmode_info parameter
+Date: Tue, 27 Mar 2018 12:18:14 +0530
+Message-Id: <1522133296-2583-2-git-send-email-tamizhr@codeaurora.org> (sfid-20180327_085019_467993_3E89D540)
+In-Reply-To: <1522133296-2583-1-git-send-email-tamizhr@codeaurora.org>
+References: <1522133296-2583-1-git-send-email-tamizhr@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27/02/18 23:04, Johannes Berg wrote:
-> Perhaps we can set some sort of flag in the driver that says "don't use
-> QoS" frames. In fact, ath9k already says it doesn't like QoS frames:
-> -		skb = ieee80211_nullfunc_get(sc->hw, vif, false);
-> so which place creates them?
+Currently bw and smps_mode are u8 type value in sta_opmode_info
+structure. This values filled in mac80211 from ieee80211_sta_rx_bandwidth
+and ieee80211_smps_mode. These enum values are specific to mac80211 and
+userspace/cfg80211 doesn't know about that. This will lead to incorrect
+result/assumption by the user space application.
+Change bw and smps_mode parameters to their respective enums in nl80211.
 
-Thy only place I see QoS frames created is net/mac80211/mlme.c:899 on 
-master, in ieee80211_send_nullfunc, where the "true" flag was added by 
-commit 7b6ddeaf27ec ("mac80211: use QoS NDP for AP probing"):
+Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+---
+ include/net/cfg80211.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-skb = ieee80211_nullfunc_get(&local->hw, &sdata->vif, true);
-
-This enables QoS for any driver, including those that do not like QoS 
-frames. I guess this gets called in response to a beacon, which would 
-explain the intermittent nature of the failure.
-
-Kind regards,
-
-
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index fc40843..4341508 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3572,15 +3572,15 @@ enum wiphy_opmode_flag {
+ /**
+  * struct sta_opmode_info - Station's ht/vht operation mode information
+  * @changed: contains value from &enum wiphy_opmode_flag
+- * @smps_mode: New SMPS mode of a station
+- * @bw: new max bandwidth value of a station
++ * @smps_mode: New SMPS mode value from &enum nl80211_smps_mode of a station
++ * @bw: new max bandwidth value from &enum nl80211_chan_width of a station
+  * @rx_nss: new rx_nss value of a station
+  */
+ 
+ struct sta_opmode_info {
+ 	u32 changed;
+-	u8 smps_mode;
+-	u8 bw;
++	enum nl80211_smps_mode smps_mode;
++	enum nl80211_chan_width bw;
+ 	u8 rx_nss;
+ };
+ 
 -- 
-Ben Caradoc-Davies <ben@transient.nz>
-Director
-Transient Software Limited <https://transient.nz/>
-New Zealand
+1.9.1
