@@ -1,57 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:50170 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751776AbeCWN1b (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33850 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750937AbeC0JNJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Mar 2018 09:27:31 -0400
-Message-ID: <1521811648.11491.8.camel@sipsolutions.net> (sfid-20180323_142734_468698_A120C039)
-Subject: Re: [PATCHv4 1/3] cfg80211: enable setting cqm rssi config for AP
- mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tamizh chelvam <tamizhr@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 23 Mar 2018 14:27:28 +0100
-In-Reply-To: <1519544998-2621-2-git-send-email-tamizhr@codeaurora.org> (sfid-20180225_085010_994165_1F9FF330)
-References: <1519544998-2621-1-git-send-email-tamizhr@codeaurora.org>
-         <1519544998-2621-2-git-send-email-tamizhr@codeaurora.org>
-         (sfid-20180225_085010_994165_1F9FF330)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 27 Mar 2018 05:13:09 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mt76x2: fix warning in ieee80211_get_key_rx_seq()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180317140139.24724-1-lorenzo.bianconi@redhat.com>
+References: <20180317140139.24724-1-lorenzo.bianconi@redhat.com>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: nbd@nbd.name, linux-wireless@vger.kernel.org
+Message-Id: <20180327091308.DE294607DD@smtp.codeaurora.org> (sfid-20180327_111313_609465_5AD5857D)
+Date: Tue, 27 Mar 2018 09:13:08 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2018-02-25 at 13:19 +0530, Tamizh chelvam wrote:
-> From: Tamizh chelvam <tamizhr@codeaurora.org>
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
+
+> Fall back to software encryption for hw unsupported ciphers in order
+> to fix the following warning in ieee80211_get_key_rx_seq routine:
 > 
-> This patch extend cqm rssi config and notifier feature to AP mode
-> by introducing NL80211_EXT_FEATURE_AP_STA_CQM_RSSI_CONFIG ext
-> feature bit. And this patch introduces NL80211_MCGRP_AP_STA_CQM
-> for notifying station's low/high rssi event to userspace application.
+> WARNING: CPU: 1 PID: 1277 at backports-2017-11-01/net/mac80211/key.c:
+> 1010 mt76_wcid_key_setup+0x6c/0x138 [mt76]
+> CPU: 1 PID: 1277 Comm: hostapd Tainted: G        W       4.9.86 #0
+> Stack : 00000000 00000000 80527b4a 00000042 80523824 00000000 00000000 80520000
+>         8fd79a9c 804bbda7 80454c84 00000001 000004fd 80523824 8f7e4ba0 8eceda12
+>         00000010 8006af94 00000001 80520000 804c1f04 804c1f08 80459890 8ec999b4
+>         00000003 800a7840 8f7e4ba0 8eceda12 8121de20 00000000 00000001 00c999b4
+>         00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+>         ...
+> Call Trace:
+> [<8000f52c>] show_stack+0x70/0x8c
+> [<801d8d04>] dump_stack+0x94/0xd0
+> [<8002bcd4>] __warn+0x110/0x118
+> [<8002bd70>] warn_slowpath_null+0x1c/0x2c
+> [<8f0415cc>] mt76_wcid_key_setup+0x6c/0x138 [mt76]
+> [<8f1311b4>] mt76x2_dma_cleanup+0xa38/0x1048 [mt76x2e]
+> 
+> Fixes: 30ce7f4456ae ("mt76: validate rx CCMP PN")
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> Acked-by: Felix Fietkau <nbd@nbd.name>
 
-So, I guess I can sort of see how this could be useful.
+Patch applied to wireless-drivers-next.git, thanks.
 
-However, is it really best in this current form?
+c03a5aacde0c mt76x2: fix warning in ieee80211_get_key_rx_seq()
 
-For example, it seems trivial to imagine that one might want to have
-different thresholds for different stations, and nothing in the current
-implementation would prevent that, just the CQM API isn't very suited
-to that.
+-- 
+https://patchwork.kernel.org/patch/10290833/
 
-There was also an extension to CQM to support different levels - not
-sure where that ended up, but we should take that into account I guess.
-
-
-Overall, I'm still not really convinced CQM is the right approach here.
-
-One thing I could even imagine would be to just not have this
-capability at all, but build it into a little BPF program you install.
-I had - and still want to revive - the code to insert a "programming
-point" into the wireless stack, and one could then easily build a hash
-table of TAs vs. signal strength in BPF code.
-
-We may not want to go that far, but I think the current approach is too
-short-sighted. This might solve a specific problem today, but I don't
-think it'll serve us well into the future if we don't make it more
-flexible.
-
-johannes
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
