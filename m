@@ -1,54 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 9pmail.ess.barracuda.com ([64.235.150.225]:33909 "EHLO
-        9pmail.ess.barracuda.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967338AbeCAKNM (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:60536 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752347AbeC0NDa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 05:13:12 -0500
-From: Matt Redfearn <matt.redfearn@mips.com>
-To: <kvalo@codeaurora.org>
-CC: <zajec5@gmail.com>, <linux-wireless@vger.kernel.org>,
-        <linux-mips@linux-mips.org>, <jhogan@kernel.org>,
-        Matt Redfearn <matt.redfearn@mips.com>
-Subject: [PATCH v2] bcma: Prevent build of PCI host features in module
-Date: Thu, 1 Mar 2018 09:58:12 +0000
-Message-ID: <1519898292-12155-1-git-send-email-matt.redfearn@mips.com> (sfid-20180301_111339_320599_FE5448DF)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 27 Mar 2018 09:03:30 -0400
+Message-ID: <1522155805.3050.11.camel@sipsolutions.net> (sfid-20180327_150334_109550_FD146D9E)
+Subject: Re: [PATCH] mac80211: Fix wlan freezes under load at rekey
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alexander Wetzel <alexander.wetzel@web.de>,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 27 Mar 2018 15:03:25 +0200
+In-Reply-To: <313d0742-2b61-40cd-4b41-7fe263221321@web.de>
+References: <20180324102921.9814-1-alexander.wetzel@web.de>
+         <7bbb4246-324e-1d6d-245f-2642badb034d@candelatech.com>
+         <27aca99e-a521-be4a-9fd4-51c557f9777d@web.de>
+         <3e433bd6-d13e-f71c-d3ff-7163c2b59226@candelatech.com>
+         <692de5e6-24d8-e1fe-c345-2ba3df91c9da@dd-wrt.com>
+         <313d0742-2b61-40cd-4b41-7fe263221321@web.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Attempting to build bcma.ko with BCMA_DRIVER_PCI_HOSTMODE=y results in
-a build error due to use of symbols not exported from vmlinux:
+On Mon, 2018-03-26 at 22:24 +0200, Alexander Wetzel wrote:
 
-ERROR: "pcibios_enable_device" [drivers/bcma/bcma.ko] undefined!
-ERROR: "register_pci_controller" [drivers/bcma/bcma.ko] undefined!
-make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
+> There are quite many interesting things visible here, not the least one
+> that ath9k leaks unencrypted frames for both patched and unpatched
+> mac80211 which at least for my patched variant probably allow to
+> calculate the TK key and encrypt all frames.
 
-To prevent this, don't allow the host mode feature to be built if
-CONFIG_BCMA=m
+That's odd - any thoughts on how that might be happening?
 
-Signed-off-by: Matt Redfearn <matt.redfearn@mips.com>
 
----
-
-Changes in v2:
-Rebase on v4.16-rc1
-
- drivers/bcma/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-index ba8acca036df..cb0f1aad20b7 100644
---- a/drivers/bcma/Kconfig
-+++ b/drivers/bcma/Kconfig
-@@ -55,7 +55,7 @@ config BCMA_DRIVER_PCI
- 
- config BCMA_DRIVER_PCI_HOSTMODE
- 	bool "Driver for PCI core working in hostmode"
--	depends on MIPS && BCMA_DRIVER_PCI && PCI_DRIVERS_LEGACY
-+	depends on MIPS && BCMA_DRIVER_PCI && PCI_DRIVERS_LEGACY && BCMA = y
- 	help
- 	  PCI core hostmode operation (external PCI bus).
- 
--- 
-2.7.4
+johannes
