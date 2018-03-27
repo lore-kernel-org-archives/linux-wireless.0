@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0060.outbound.protection.outlook.com ([104.47.32.60]:20425
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751374AbeCZNgv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 09:36:51 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Dmitry Lebed <dlebed@quantenna.com>,
-        Dmitry Lebed <lebed.dmitry@gmail.com>
-Subject: [PATCH 1/3] cfg80211: fix CAC_STARTED event handling
-Date: Mon, 26 Mar 2018 16:36:31 +0300
-Message-Id: <20180326133633.8771-2-sergey.matyukevich.os@quantenna.com> (sfid-20180326_153656_256809_9984F89C)
-In-Reply-To: <20180326133633.8771-1-sergey.matyukevich.os@quantenna.com>
-References: <20180326133633.8771-1-sergey.matyukevich.os@quantenna.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:53762 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751114AbeC0JDk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Mar 2018 05:03:40 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: rtlwifi: rtl8821ae: fix spelling mistake: "Aboslute" -> "Absolute"
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180319104054.32564-1-colin.king@canonical.com>
+References: <20180319104054.32564-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Ping-Ke Shih <pkshih@realtek.com>,
+        Tsang-Shian Lin <thlin@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20180327090339.7DB3060588@smtp.codeaurora.org> (sfid-20180327_110409_284184_0D93ACCA)
+Date: Tue, 27 Mar 2018 09:03:39 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dmitry Lebed <dlebed@quantenna.com>
+Colin Ian King <colin.king@canonical.com> wrote:
 
-Exclude CAC_STARTED event from !wdev->cac_started check,
-since cac_started will be set later in the same function.
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Trivial fix to spelling mistake in RT_TRACE message text.
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net?
 
-Signed-off-by: Dmitry Lebed <dlebed@quantenna.com>
----
- net/wireless/mlme.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Patch applied to wireless-drivers-next.git, thanks.
 
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 6b6818dd76bd..12b3edf70a7b 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -872,7 +872,7 @@ void cfg80211_cac_event(struct net_device *netdev,
- 
- 	trace_cfg80211_cac_event(netdev, event);
- 
--	if (WARN_ON(!wdev->cac_started))
-+	if (WARN_ON(!wdev->cac_started && event != NL80211_RADAR_CAC_STARTED))
- 		return;
- 
- 	if (WARN_ON(!wdev->chandef.chan))
+e153292ae4d1 rtlwifi: rtl8821ae: fix spelling mistake: "Aboslute" -> "Absolute"
+
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/10292111/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
