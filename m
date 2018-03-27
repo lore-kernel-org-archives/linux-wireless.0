@@ -1,107 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:58992 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751390AbeCNSxs (ORCPT
+Received: from mail-ua0-f176.google.com ([209.85.217.176]:36981 "EHLO
+        mail-ua0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932508AbeC0QlO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Mar 2018 14:53:48 -0400
-Date: Wed, 14 Mar 2018 19:53:47 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
-        kubakici@wp.pl, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v3 05/20] firmware: simplify
- CONFIG_FW_LOADER_USER_HELPER_FALLBACK further
-Message-ID: <20180314185347.GA15837@kroah.com> (sfid-20180314_195414_587732_CB74FE93)
-References: <20180310141501.2214-1-mcgrof@kernel.org>
- <20180310141501.2214-6-mcgrof@kernel.org>
+        Tue, 27 Mar 2018 12:41:14 -0400
+Received: by mail-ua0-f176.google.com with SMTP id q12so14750986uae.4
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Mar 2018 09:41:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180310141501.2214-6-mcgrof@kernel.org>
+From: "ojab //" <ojab@ojab.ru>
+Date: Tue, 27 Mar 2018 16:41:12 +0000
+Message-ID: <CAKzrAgSbYN1znJi8qM0QEfCniw2AGEKnrh-vJcUcXW0rVmo9tQ@mail.gmail.com> (sfid-20180327_190326_198477_68B40D10)
+Subject: Compex WLE1216V2-20 (QCA9984) firmware is missing
+To: linux-wireless@vger.kernel.org, linux-firmware@kernel.org,
+        kvalo@qca.qualcomm.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 10, 2018 at 06:14:46AM -0800, Luis R. Rodriguez wrote:
-> All CONFIG_FW_LOADER_USER_HELPER_FALLBACK really is, is just a bool,
-> initailized at build time. Define it as such. This simplifies the
-> logic even further, removing now all explicit #ifdefs around the code.
-> 
-> Acked-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> ---
->  drivers/base/firmware_loader.c | 25 ++++++++++++++++++-------
->  1 file changed, 18 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/base/firmware_loader.c b/drivers/base/firmware_loader.c
-> index 7dd36ace6152..59dba794ce1a 100644
-> --- a/drivers/base/firmware_loader.c
-> +++ b/drivers/base/firmware_loader.c
-> @@ -266,6 +266,22 @@ static inline bool fw_state_is_aborted(struct fw_priv *fw_priv)
->  
->  #ifdef CONFIG_FW_LOADER_USER_HELPER
->  
-> +/**
-> + * struct firmware_fallback_config - firmware fallback configuratioon settings
-> + *
-> + * Helps describe and fine tune the fallback mechanism.
-> + *
-> + * @force_sysfs_fallback: force the sysfs fallback mechanism to be used
-> + * 	as if one had enabled CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y.
-> + */
-> +struct firmware_fallback_config {
-> +	bool force_sysfs_fallback;
-> +};
+[please CC me since I'm not subscribed to the lists and terribly sorry
+for HTML mails]
 
-This is C, why are you messing around with a structure and "getters and
-setters" for a set of simple values?
+Oh hai!
 
-> +static const struct firmware_fallback_config fw_fallback_config = {
-> +	.force_sysfs_fallback = IS_ENABLED(CONFIG_FW_LOADER_USER_HELPER_FALLBACK),
-> +};
+I have Compex WLE1216V2-20 (based on QCA9984 chip) that isn't
+supported by linux-firmware (git master), card init fails with
 
-static bool force_sysfs_fallback = IS_ENABLED(CONFIG_FW_LOADER_USER_HELPER_FALLBACK);
+>[Mon Mar 26 17:18:47 2018] ath10k_pci 0000:05:00.0: failed to fetch board data for bus=pci,bmi-chip-id=0,bmi-board-id=30 from ath10k/QCA9984/hw1.0/board-2.bin
 
-Then just read/write the foolish thing, don't make this more complex
-than is needed please.
+It works fine with board-2.bin from the compex website [1] (can be
+downloaded directly from
+https://bugzilla.kernel.org/attachment.cgi?id=274959).
+What should be done to have it upstreamed?
 
-There is a "getter and setters are evil" rant somewhere out there
-online, if you really need me to dig up the old tired arguments :)
+[1] https://downloads.compex.com.sg/?dir=uploads/boardData/For_Building_New_Firmware
 
-thanks,
-
-greg k-h
-
-
-
-> +
->  static inline bool fw_sysfs_done(struct fw_priv *fw_priv)
->  {
->  	return __fw_state_check(fw_priv, FW_STATUS_DONE);
-> @@ -1151,19 +1167,14 @@ static int fw_load_from_user_helper(struct firmware *firmware,
->  	return ret;
->  }
->  
-> -#ifdef CONFIG_FW_LOADER_USER_HELPER_FALLBACK
-> -static bool fw_force_sysfs_fallback(unsigned int opt_flags)
-> -{
-> -	return true;
-> -}
-> -#else
->  static bool fw_force_sysfs_fallback(unsigned int opt_flags)
->  {
-> +	if (fw_fallback_config.force_sysfs_fallback)
-
-Ok, you directly access it here, but your later patches get a lot more
-"complex" it seems...
-
-thanks,
-
-greg k-h
+//wbr ojab
