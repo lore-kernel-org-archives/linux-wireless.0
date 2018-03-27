@@ -1,48 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:28205 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1425214AbeCBOX4 (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:57023 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752377AbeC0JdN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Mar 2018 09:23:56 -0500
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 10/13] staging: wilc1000: fix line over 80 char in wilc_scan_complete_received()
-Date: Fri, 2 Mar 2018 19:52:46 +0530
-Message-ID: <1520000569-27738-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180302_153349_513814_0D8B337B)
-In-Reply-To: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
-References: <1520000569-27738-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 27 Mar 2018 05:33:13 -0400
+From: Pkshih <pkshih@realtek.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 12/15] rtlwifi: btcoex: Add 8822b 1ant/2ant coex files
+Date: Tue, 27 Mar 2018 09:32:56 +0000
+Message-ID: <1522143176.19618.14.camel@realtek.com> (sfid-20180327_113326_009391_64770B0F)
+References: <20180228030718.19510-1-pkshih@realtek.com>
+         <20180228030718.19510-13-pkshih@realtek.com>
+         <87h8p2otxh.fsf@purkki.adurom.net>
+In-Reply-To: <87h8p2otxh.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix 'line over 80 character' issue found by checkpatch.pl script.
-
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index e071eaf..ce04622 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3569,7 +3569,10 @@ void wilc_scan_complete_received(struct wilc *wilc, u8 *buffer, u32 length)
- 	struct host_if_drv *hif_drv = NULL;
- 	struct wilc_vif *vif;
- 
--	id = ((buffer[length - 4]) | (buffer[length - 3] << 8) | (buffer[length - 2] << 16) | (buffer[length - 1] << 24));
-+	id = buffer[length - 4];
-+	id |= buffer[length - 3] << 8;
-+	id |= buffer[length - 2] << 16;
-+	id |= buffer[length - 1] << 24;
- 	vif = wilc_get_vif_from_idx(wilc, id);
- 	if (!vif)
- 		return;
--- 
-2.7.4
+T24gVHVlLCAyMDE4LTAzLTI3IGF0IDEwOjMyICswMzAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiA8
+cGtzaGloQHJlYWx0ZWsuY29tPiB3cml0ZXM6DQo+IA0KPiA+IEZyb206IFBpbmctS2UgU2hpaCA8
+cGtzaGloQHJlYWx0ZWsuY29tPg0KPiA+DQo+ID4gVGhlcmUgYXJlIHR3byBvciB0aHJlZSBwaHlz
+aWNhbCBhbnRlbm5hIGluIDg4MjJiZSBXaUZpIG1vZHVsZXMsIHNvIGJ0Y29leA0KPiA+IGludHJv
+ZHVjZSB0d28gY29leCBmaWxlcyB0byBoYW5kbGUgdGhlc2UgdHdvIGNhc2VzLg0KPiA+DQo+ID4g
+U2lnbmVkLW9mZi1ieTogUGluZy1LZSBTaGloIDxwa3NoaWhAcmVhbHRlay5jb20+DQo+ID4gLS0t
+DQo+ID7CoMKgLi4uL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjODgyMmIxYW50LmPC
+oMKgwqDCoHwgNTMyNyArKysrKysrKysrKysrKysrKysrDQo+ID7CoMKgLi4uL3JlYWx0ZWsvcnRs
+d2lmaS9idGNvZXhpc3QvaGFsYnRjODgyMmIxYW50LmjCoMKgwqDCoHzCoMKgNDEzICsrDQo+ID7C
+oMKgLi4uL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjODgyMmIyYW50LmPCoMKgwqDC
+oHwgNTM3MCArKysrKysrKysrKysrKysrKysrKw0KPiA+wqDCoC4uLi9yZWFsdGVrL3J0bHdpZmkv
+YnRjb2V4aXN0L2hhbGJ0Yzg4MjJiMmFudC5owqDCoMKgwqB8wqDCoDQzNCArKw0KPiA+wqDCoDQg
+ZmlsZXMgY2hhbmdlZCwgMTE1NDQgaW5zZXJ0aW9ucygrKQ0KPiANCj4gSHVnZSBwYXRjaGVzIGxp
+a2UgdGhpcyBhcmUgcGFpbiB0byByZXZpZXcuIEknbSBnb2luZyB0byBzcGxpdCB0aGlzIGludG8N
+Cj4gdHdvIHNldHMsIHBhdGNoZXMgMS0xMSBhbmQgcGF0Y2hlcyAxMi0xNS4NCj4gDQpEbyBJIG5l
+ZWQgdG8gc3BsaXQgdGhlIGZvdXIgZmlsZXMgaW50byBmb3VyIHBhdGNoZXM/DQoNCg0KPiA+ICsv
+KiAqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
+KioqKioNCj4gPiArICogRGVzY3JpcHRpb246DQo+ID4gKyAqDQo+ID4gKyAqIFRoaXMgZmlsZSBp
+cyBmb3IgUlRMODgyMkIgQ28tZXhpc3QgbWVjaGFuaXNtDQo+ID4gKyAqDQo+ID4gKyAqIEhpc3Rv
+cnkNCj4gPiArICogMjAxMi8xMS8xNSBDb3NhIGZpcnN0IGNoZWNrIGluLg0KPiANCj4gVGhlIGhp
+c3RvcnkgZmVlbHMgdXNlbGVzcyB0byBtZS4NCj4gDQpJJ2xsIGRlbGV0ZSBpdC4NCg0KPiA+ICsg
+Kg0KPiA+ICsgKiAqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
+KioqKioqKioqKioqKioqLw0KPiA+ICsNCj4gPiArLyogKioqKioqKioqKioqKioqKioqKioqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqDQo+ID4gKyAqIGluY2x1ZGUgZmls
+ZXMNCj4gPiArICogKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
+KioqKioqKioqKioqKioqKi8NCj4gPiArLypvbmx5IGZvciByZjRjZSovDQo+ID4gKyNpbmNsdWRl
+ICJoYWxidF9wcmVjb21wLmgiDQo+ID4gKw0KPiA+ICsvKiAqKioqKioqKioqKioqKioqKioqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioNCj4gPiArICogR2xvYmFsIHZh
+cmlhYmxlcywgdGhlc2UgYXJlIHN0YXRpYyB2YXJpYWJsZXMNCj4gPiArICogKioqKioqKioqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKi8NCj4gDQo+
+IEFsc28gZXh0ZW5zaXZlIHVzZSBvZiAiKioqKioqIiBsaW5lcyBpcyBub3QgcmVhbGx5IHVwc3Ry
+ZWFtIHN0eWxlLg0KPiANClRoZXkncmUgbm90IG1lYW5pbmdmdWwsIHNvIEknbGwgZGVsZXRlIHRo
+ZW0uDQoNCj4gPiArc3RhdGljIHN0cnVjdCBjb2V4X2RtXzg4MjJiXzFhbnQJZ2xjb2V4X2RtXzg4
+MjJiXzFhbnQ7DQo+ID4gK3N0YXRpYyBzdHJ1Y3QgY29leF9kbV84ODIyYl8xYW50CSpjb2V4X2Rt
+ID0gJmdsY29leF9kbV84ODIyYl8xYW50Ow0KPiA+ICtzdGF0aWMgc3RydWN0IGNvZXhfc3RhXzg4
+MjJiXzFhbnQJZ2xjb2V4X3N0YV84ODIyYl8xYW50Ow0KPiA+ICtzdGF0aWMgc3RydWN0IGNvZXhf
+c3RhXzg4MjJiXzFhbnQJKmNvZXhfc3RhID0gJmdsY29leF9zdGFfODgyMmJfMWFudDsNCj4gPiAr
+c3RhdGljIHN0cnVjdCByZmVfdHlwZV84ODIyYl8xYW50CWdsX3JmZV90eXBlXzg4MjJiXzFhbnQ7
+DQo+ID4gK3N0YXRpYyBzdHJ1Y3QgcmZlX3R5cGVfODgyMmJfMWFudAkqcmZlX3R5cGUgPSAmZ2xf
+cmZlX3R5cGVfODgyMmJfMWFudDsNCj4gPiArDQo+ID4gK3N0YXRpYyBjb25zdCBjaGFyICpjb25z
+dCBnbGJ0X2luZm9fc3JjXzg4MjJiXzFhbnRbXSA9IHsNCj4gPiArCSJCVCBJbmZvW3dpZmkgZndd
+IiwNCj4gPiArCSJCVCBJbmZvW2J0IHJzcF0iLA0KPiA+ICsJIkJUIEluZm9bYnQgYXV0byByZXBv
+cnRdIiwNCj4gPiArfTsNCj4gPiArDQo+ID4gK3N0YXRpYyB1MzIgZ2xjb2V4X3Zlcl9kYXRlXzg4
+MjJiXzFhbnQgPSAyMDE4MDExMjsNCj4gPiArc3RhdGljIHUzMiBnbGNvZXhfdmVyXzg4MjJiXzFh
+bnQgPSAweDU5Ow0KPiA+ICtzdGF0aWMgdTMyIGdsY29leF92ZXJfYnRkZXNpcmVkXzg4MjJiXzFh
+bnQgPSAweDU2Ow0KPiANCj4gSGF2aW5nIHN0YXRpYyB2YXJpYWJsZXMgbGlrZSB0aGlzIG1lYW5z
+IHRoYXQgdGhpcyB3aWxsIG5vdCB3b3JrIGlmIHRoZXJlDQo+IGFyZSB0d28gb3IgbW9yZSBkZXZp
+Y2UgcGVyIGhvc3QsIHJpZ2h0PyBJSVJDIHdlIGRpc2N1c3NlZCB0aGlzIGJlZm9yZSwNCj4gc28g
+d2hhdCdzIHRoZSBwbGFuIHRvIHNvbHZlIHRoYXQ/wqANCj4gDQo+IEluIHVwc3RyZWFtIGRyaXZl
+cnMgdGhlcmUgc2hvdWxkIG5vdCBiZSBhcnRpZmljaWFsIGxpbWl0YXRpb25zIGxpa2Ugb25lDQo+
+IGRldmljZSBwZXIgaG9zdC4gSXMgdGhhdCBldmVuIGNoZWNrZWQgYW55d2hlcmUgb3Igd2lsbCBp
+dCBqdXN0IGJlIGJ1Z2d5DQo+IGlmIHRoZXJlIGFyZSBtb3JlIHRoYW4gb25lIGRldmljZT8NCj4g
+DQoNClRoZSB2YXJpYWJsZXPCoGNvZXhfZG0vY29leF9zdGEvcmZlX3R5cGUgc2hvdWxkIG1vdmUg
+dG8gc3RydWN0IGJ0Y29leGlzdCwgYnV0DQpvdGhlciBidGNvZXggZmlsZXMgYWxzbyB1c2UgdGhp
+cyBzdHlsZS4gU28sIG15IHBsYW4gaXMgdG8ga2VlcCBzdGF0aWMgdmFyaWFibGVzDQppbiB0aGlz
+IHBhdGNoLCBhbmQgdXNlIGFub3RoZXIgcGF0Y2ggdG8gcmVtb3ZlIGFsbCBvZiB0aGVtLiBTaW5j
+ZSB0aGlzIHRha2VzDQphIGxpdHRsZSB0aW1lIHRvIGRpc2N1c3Mgd2l0aCBvdXIgYnRjb2V4IGd1
+eXMsIGNvdWxkIEkgc2VuZCBwYXRjaGVzIDEyLTE1IGZpcnN0Pw0KVGhlIHZlcnNpb24gcmVsYXRl
+ZCB2YXJpYWJsZXMgYXJlIHVzZWQgdG8gZGlzcGxheSBpbiBkZWJ1ZyBtZXNzYWdlLCBzbyB0aGV5
+DQp3b3JrIG9uIG11bHRpcGxlIGRldmljZXMuwqANCg0KVGhhbmtzDQpQSw0KDQo=
