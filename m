@@ -1,129 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:58812 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751269AbeCTTqt (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:14310 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751184AbeC0IoW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Mar 2018 15:46:49 -0400
-Date: Tue, 20 Mar 2018 22:46:32 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
-        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
-        aditya.shankar@microchip.com
-Subject: Re: [PATCH 01/11] staging: wilc1000: refactor scan() to free kmalloc
- memory on failure cases
-Message-ID: <20180320194632.2dwmzdx5h4mvnksk@mwanda> (sfid-20180320_204653_616169_E01F2580)
-References: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
- <1521564944-3565-2-git-send-email-ajay.kathat@microchip.com>
+        Tue, 27 Mar 2018 04:44:22 -0400
+Subject: Re: [PATCH] staging: wilc1000: replace kmalloc + memcpy with kmemdup
+To: Colin King <colin.king@canonical.com>,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>
+CC: <kernel-janitors@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20180326171629.28700-1-colin.king@canonical.com>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <f674c9e0-e67f-885f-cdd8-ce5da1fcc262@microchip.com> (sfid-20180327_104433_053201_060104AB)
+Date: Tue, 27 Mar 2018 11:44:18 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1521564944-3565-2-git-send-email-ajay.kathat@microchip.com>
+In-Reply-To: <20180326171629.28700-1-colin.king@canonical.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 20, 2018 at 10:25:34PM +0530, Ajay Singh wrote:
-> Added changes to free the allocated memory in scan() for error condition.
-> Also added 'NULL' check validation before accessing allocated memory.
+
+
+On 26.03.2018 20:16, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> Replace several allocation and memcpys with kmemdup and add in some
+> missing memory allocation failure checks.  Also fix an incorrect 
+> -EFAULT return with -ENOMEM.
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 > ---
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 62 +++++++++++++++++------
->  1 file changed, 46 insertions(+), 16 deletions(-)
+>  drivers/staging/wilc1000/host_interface.c | 75 +++++++++++++++++++------------
+>  1 file changed, 46 insertions(+), 29 deletions(-)
 > 
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> index 9d8d5d0..b784e15 100644
-> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> @@ -582,6 +582,49 @@ static int set_channel(struct wiphy *wiphy,
->  	return result;
->  }
->  
-> +static inline bool
-
-This shouldn't be a bool function.  It should return 0 and -ENOMEM.
-Bool functions should kind of have the return values built into the name
-like access_ok() or IS_ERR().
-
-> +wilc_wfi_cfg_alloc_fill_ssid(struct cfg80211_scan_request *request,
-> +			     struct hidden_network *ntwk)
-> +{
-> +	int i = 0;
-
-No need to initialize "i".
-
-> +
-> +	ntwk->net_info = kcalloc(request->n_ssids,
-> +				 sizeof(struct hidden_network), GFP_KERNEL);
-> +
-> +	if (!ntwk->net_info)
-> +		goto out;
-
-Don't put a blank line between the alloc and the check.  They're as
-connected as can be.  I hate "goto out;" but that is a personal
-preference which I would never push on to other developers...
-
-> +
-> +	ntwk->n_ssids = request->n_ssids;
-> +
-> +	for (i = 0; i < request->n_ssids; i++) {
-> +		if (request->ssids[i].ssid_len > 0) {
-> +			struct hidden_net_info *info = &ntwk->net_info[i];
-> +
-> +			info->ssid = kmemdup(request->ssids[i].ssid,
-> +					     request->ssids[i].ssid_len,
-> +					     GFP_KERNEL);
-> +
-> +			if (!info->ssid)
-> +				goto out_free;
-> +
-> +			info->ssid_len = request->ssids[i].ssid_len;
-> +		} else {
-> +			ntwk->n_ssids -= 1;
-> +		}
-
-You didn't introduce the problem, but this loop seems kind of buggy.  We
-should have two iterators, one for request->ssids[i] and one for
-ntwk->net_info[i].  Otherwise we're copying the array information but
-we're leaving holes in the destination array.  Which would be fine
-except we're not saving the totaly number of elements in the destination
-array, we're saving the number of elements with stuff in them.
-
-So imagine that we have a request->n_ssids == 10 but only the last
-three elements have request->ssids[i].ssid_len > 0.  Then we record that
-ntwk->n_ssids is 3 but wthose elements are all holes.  So that can't
-work.  See handle_scan():
-
-	for (i = 0; i < hidden_net->n_ssids; i++)
-		valuesize += ((hidden_net->net_info[i].ssid_len) + 1);
-
-"valuesize" is wrong because it's looking at holes.
-
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 9b9b86654958..8fd367f87fa5 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -797,6 +797,10 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
+>  	for (i = 0; i < hidden_net->n_ssids; i++)
+>  		valuesize += ((hidden_net->net_info[i].ssid_len) + 1);
+>  	hdn_ntwk_wid_val = kmalloc(valuesize + 1, GFP_KERNEL);
+> +	if (!hdn_ntwk_wid_val) {
+> +		result = -ENOMEM;
+> +		goto error;
 > +	}
-> +	return true;
-> +
-> +out_free:
-> +
-> +	for (; i >= 0 ; i--)
-> +		kfree(ntwk->net_info[i].ssid);
+>  	wid_list[index].val = hdn_ntwk_wid_val;
+>  	if (wid_list[index].val) {
+>  		buffer = wid_list[index].val;
+> @@ -943,39 +947,35 @@ static s32 handle_connect(struct wilc_vif *vif,
+>  	}
+>  
+>  	if (conn_attr->bssid) {
 
-The first kfree(ntwk->net_info[i].ssid); is a no-op.  You could write
-this like:
+These:
+> -		hif_drv->usr_conn_req.bssid = kmalloc(6, GFP_KERNEL);
+> +		hif_drv->usr_conn_req.bssid = kmemdup(conn_attr->bssid, 6,
+> +						      GFP_KERNEL);
+>  		if (!hif_drv->usr_conn_req.bssid) {
+>  			result = -ENOMEM;
+>  			goto error;
+>  		}
+> -		memcpy(hif_drv->usr_conn_req.bssid, conn_attr->bssid, 6);
+>  	}
+>  
+>  	hif_drv->usr_conn_req.ssid_len = conn_attr->ssid_len;
+>  	if (conn_attr->ssid) {
+> -		hif_drv->usr_conn_req.ssid = kmalloc(conn_attr->ssid_len + 1,
+> +		hif_drv->usr_conn_req.ssid = kmemdup(conn_attr->ssid,
+> +						     conn_attr->ssid_len + 1,
+>  						     GFP_KERNEL);
+>  		if (!hif_drv->usr_conn_req.ssid) {
+>  			result = -ENOMEM;
+>  			goto error;
+>  		}
+> -		memcpy(hif_drv->usr_conn_req.ssid,
+> -		       conn_attr->ssid,
+> -		       conn_attr->ssid_len);
+>  		hif_drv->usr_conn_req.ssid[conn_attr->ssid_len] = '\0';
+>  	}
+>  
+>  	hif_drv->usr_conn_req.ies_len = conn_attr->ies_len;
+>  	if (conn_attr->ies) {
 
-	while (--i >= 0)
-		kfree(ntwk->net_info[i].ssid);
+and these:
+> -		hif_drv->usr_conn_req.ies = kmalloc(conn_attr->ies_len,
+> +		hif_drv->usr_conn_req.ies = kmemdup(conn_attr->ies,
+> +						    conn_attr->ies_len,
+>  						    GFP_KERNEL);
 
-Or:
+were already done in [1]. I don't know which was the first...
 
-	while (i--)
-		kfree(ntwk->net_info[i].ssid);
+[1] https://patchwork.kernel.org/patch/10308575/
 
-Or you could do:
-
-	for (i--; i >= 0 ; i--)
-		kfree(ntwk->net_info[i].ssid);
-
-I don't care...
-
-regards,
-dan carpenter
+>  		if (!hif_drv->usr_conn_req.ies) {
+>  			result = -ENOMEM;
+>  			goto error;
+>  		}
+> -		memcpy(hif_drv->usr_conn_req.ies,
+> -		       conn_attr->ies,
+> -		       conn_attr->ies_len);
+>  	}
+>  
+>  	hif_drv->usr_conn_req.security = conn_attr->security;
+> @@ -1009,9 +1009,12 @@ static s32 handle_connect(struct wilc_vif *vif,
+>  
+>  	if (memcmp("DIRECT-", conn_attr->ssid, 7)) {
+>  		info_element_size = hif_drv->usr_conn_req.ies_len;
+> -		info_element = kmalloc(info_element_size, GFP_KERNEL);
+> -		memcpy(info_element, hif_drv->usr_conn_req.ies,
+> -		       info_element_size);
+> +		info_element = kmemdup(hif_drv->usr_conn_req.ies,
+> +				       info_element_size, GFP_KERNEL);
+> +		if (!info_element) {
+> +			result = -ENOMEM;
+> +			goto error;
+> +		}
+>  	}
+>  	wid_list[wid_cnt].id = (u16)WID_11I_MODE;
+>  	wid_list[wid_cnt].type = WID_CHAR;
+> @@ -1039,9 +1042,13 @@ static s32 handle_connect(struct wilc_vif *vif,
+>  	if (memcmp("DIRECT-", conn_attr->ssid, 7)) {
+>  		join_req_size = wid_list[wid_cnt].size;
+>  		join_req = kmalloc(join_req_size, GFP_KERNEL);
+> +		if (!join_req) {
+> +			result = -ENOMEM;
+> +			goto error;
+> +		}
+>  	}
+>  	if (!wid_list[wid_cnt].val) {
+> -		result = -EFAULT;
+> +		result = -ENOMEM;
+>  		goto error;
+>  	}
+>  
+> @@ -1166,11 +1173,13 @@ static s32 handle_connect(struct wilc_vif *vif,
+>  
+>  			if (conn_attr->ies) {
+>  				conn_info.req_ies_len = conn_attr->ies_len;
+> -				conn_info.req_ies = kmalloc(conn_attr->ies_len,
+> +				conn_info.req_ies = kmemdup(conn_attr->ies,
+> +							    conn_attr->ies_len,
+>  							    GFP_KERNEL);
+> -				memcpy(conn_info.req_ies,
+> -				       conn_attr->ies,
+> -				       conn_attr->ies_len);
+> +				if (!conn_info.req_ies) {
+> +					result = -ENOMEM;
+> +					goto error_free;
+> +				}
+>  			}
+>  
+>  			conn_attr->result(CONN_DISCONN_EVENT_CONN_RESP,
+> @@ -1187,6 +1196,7 @@ static s32 handle_connect(struct wilc_vif *vif,
+>  		}
+>  	}
+>  
+> +error_free:
+>  	kfree(conn_attr->bssid);
+>  	conn_attr->bssid = NULL;
+>  
+> @@ -1227,10 +1237,9 @@ static s32 handle_connect_timeout(struct wilc_vif *vif)
+>  
+>  		if (hif_drv->usr_conn_req.ies) {
+>  			info.req_ies_len = hif_drv->usr_conn_req.ies_len;
+> -			info.req_ies = kmalloc(hif_drv->usr_conn_req.ies_len, GFP_KERNEL);
+> -			memcpy(info.req_ies,
+> -			       hif_drv->usr_conn_req.ies,
+> -			       hif_drv->usr_conn_req.ies_len);
+> +			info.req_ies = kmemdup(hif_drv->usr_conn_req.ies,
+> +					       hif_drv->usr_conn_req.ies_len,
+> +					       GFP_KERNEL);
+>  		}
+>  
+>  		hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_CONN_RESP,
+> @@ -1421,9 +1430,11 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
+>  
+>  						if (conn_info.status == SUCCESSFUL_STATUSCODE && connect_resp_info->ies) {
+>  							conn_info.resp_ies_len = connect_resp_info->ies_len;
+> -							conn_info.resp_ies = kmalloc(connect_resp_info->ies_len, GFP_KERNEL);
+> -							memcpy(conn_info.resp_ies, connect_resp_info->ies,
+> -							       connect_resp_info->ies_len);
+> +							conn_info.resp_ies = kmemdup(connect_resp_info->ies,
+> +										     connect_resp_info->ies_len,
+> +										     GFP_KERNEL);
+> +							if (!conn_info.resp_ies)
+> +								return -ENOMEM;
+>  						}
+>  
+>  						if (connect_resp_info) {
+> @@ -3524,8 +3535,11 @@ void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32 length)
+>  	msg.vif = vif;
+>  
+>  	msg.body.net_info.len = length;
+> -	msg.body.net_info.buffer = kmalloc(length, GFP_KERNEL);
+> -	memcpy(msg.body.net_info.buffer, buffer, length);
+> +	msg.body.net_info.buffer = kmemdup(buffer, length, GFP_KERNEL);
+> +	if (!msg.body.net_info.buffer) {
+> +		netdev_err(vif->ndev, "message buffer allocation failed\n");
+> +		return;
+> +	}
+>  
+>  	result = wilc_enqueue_cmd(&msg);
+>  	if (result)
+> @@ -3571,8 +3585,11 @@ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length)
+>  	msg.vif = vif;
+>  
+>  	msg.body.async_info.len = length;
+> -	msg.body.async_info.buffer = kmalloc(length, GFP_KERNEL);
+> -	memcpy(msg.body.async_info.buffer, buffer, length);
+> +	msg.body.async_info.buffer = kmemdup(buffer, length, GFP_KERNEL);
+> +	if (!msg.body.async_info.buffer) {
+> +		netdev_err(vif->ndev, "message buffer allocation failed\n");
+> +		return;
+> +	}
+>  
+>  	result = wilc_enqueue_cmd(&msg);
+>  	if (result)
+> 
