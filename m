@@ -1,60 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34264 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750779AbeCNVn2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47500 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751686AbeC0IyM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Mar 2018 17:43:28 -0400
-Received: by mail-oi0-f67.google.com with SMTP id e79so44278oih.1
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Mar 2018 14:43:27 -0700 (PDT)
+        Tue, 27 Mar 2018 04:54:12 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1521054179-4030-1-git-send-email-stefan.wahren@i2se.com>
-References: <1521054179-4030-1-git-send-email-stefan.wahren@i2se.com>
-From: Franky Lin <franky.lin@broadcom.com>
-Date: Wed, 14 Mar 2018 14:43:06 -0700
-Message-ID: <CA+8PC_eb1hDyWKGh1HEYqoqookT6wuRTcGPm00srtFLxhUktYg@mail.gmail.com> (sfid-20180314_224331_921252_791AC33E)
-Subject: Re: [PATCH] wireless: brcmfmac: cfg80211: Fix check for ISO3166 code
-To: Stefan Wahren <stefan.wahren@i2se.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list@cypress.com
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [1/2] rsi: fix error path handling in SDIO probe
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1521553241-12676-1-git-send-email-amitkarwar@gmail.com>
+References: <1521553241-12676-1-git-send-email-amitkarwar@gmail.com>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Message-Id: <20180327085411.ACD946055D@smtp.codeaurora.org> (sfid-20180327_105417_285805_15F8A884)
+Date: Tue, 27 Mar 2018 08:54:11 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 14, 2018 at 12:02 PM, Stefan Wahren <stefan.wahren@i2se.com> wrote:
-> The commit "regulatory: add NUL to request alpha2" increases the length of
-> alpha2 to 3. This causes a regression on brcmfmac, because
-> brcmf_cfg80211_reg_notifier() expect valid ISO3166 codes in the complete
-> array. So fix this accordingly.
->
-> Signed-off-by: Stefan Wahren <stefan.wahren@i2se.com>
-Acked-by: Franky Lin <franky.lin@broadcom.com>
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> index 74a8302..5ed718d 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> @@ -6805,7 +6805,7 @@ static void brcmf_cfg80211_reg_notifier(struct wiphy *wiphy,
->                 return;
->
->         /* ignore non-ISO3166 country codes */
-> -       for (i = 0; i < sizeof(req->alpha2); i++)
-> +       for (i = 0; i < 2; i++)
->                 if (req->alpha2[i] < 'A' || req->alpha2[i] > 'Z') {
->                         brcmf_err("not an ISO3166 code (0x%02x 0x%02x)\n",
->                                   req->alpha2[0], req->alpha2[1]);
-> --
-> 2.7.4
->
+Amitkumar Karwar <amitkarwar@gmail.com> wrote:
+
+> From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> 
+> We miss to release IRQ in certain error path in SDIO probe which
+> causes following kernel panic. This patch corrects error path
+> handling
+> 
+> BUG: unable to handle kernel NULL pointer dereference at        (null)
+> IP:           (null)
+> PGD 0 P4D 0
+> Oops: 0010 [#1] SMP PTI
+> Call Trace:
+>  <IRQ>
+>  ? call_timer_fn+0x29/0x120
+>  ? run_timer_softirq+0x1da/0x420
+>  ? timer_interrupt+0x11/0x20
+>  ? __do_softirq+0xef/0x26e
+>  ? irq_exit+0xbe/0xd0
+>  ? do_IRQ+0x4a/0xc0
+>  ? common_interrupt+0xa2/0xa2
+>  </IRQ>
+>  ? cpuidle_enter_state+0x118/0x250
+>  ? do_idle+0x186/0x1e0
+>  ? cpu_startup_entry+0x6f/0x80
+>  ? start_kernel+0x47c/0x49c
+>  ? secondary_startup_64+0xa5/0xb0
+> 
+> Fixes: 50117605770c ("rsi: improve RX handling in SDIO interface")
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+
+2 patches applied to wireless-drivers-next.git, thanks.
+
+90b12aebe54b rsi: fix error path handling in SDIO probe
+864db4d50853 rsi: fix kernel panic observed on 64bit machine
+
+-- 
+https://patchwork.kernel.org/patch/10297201/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
