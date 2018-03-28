@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46288 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751840AbeCZP1v (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:60642 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751434AbeC1Ljy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 11:27:51 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 28 Mar 2018 07:39:54 -0400
+Date: Wed, 28 Mar 2018 13:39:51 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Colin King <colin.king@canonical.com>
+Cc: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: wilc1000: replace kmalloc + memcpy with kmemdup
+Message-ID: <20180328113951.GA11213@kroah.com> (sfid-20180328_134020_870832_85BED69C)
+References: <20180326171629.28700-1-colin.king@canonical.com>
 MIME-Version: 1.0
-Subject: Re: wcn36xx: Check DXE IRQ reason
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180311120143.29726-1-rfried@codeaurora.org>
-References: <20180311120143.29726-1-rfried@codeaurora.org>
-To: Ramon Fried <rfried@codeaurora.org>
-Cc: k.eugene.e@gmail.com, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org, Ramon Fried <rfried@codeaurora.org>
-Message-Id: <20180326152750.B25EF60AFB@smtp.codeaurora.org> (sfid-20180326_172754_155032_D3F113D3)
-Date: Mon, 26 Mar 2018 15:27:50 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180326171629.28700-1-colin.king@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ramon Fried <rfried@codeaurora.org> wrote:
-
-> IRQ reason was not cheked for errors.
-> Although error handing is not currently supported, it
-> will be nice to output an error value to the log if the
-> DMA operation failed.
+On Mon, Mar 26, 2018 at 06:16:29PM +0100, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> Signed-off-by: Ramon Fried <rfried@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> Replace several allocation and memcpys with kmemdup and add in some
+> missing memory allocation failure checks.  Also fix an incorrect 
+> -EFAULT return with -ENOMEM.
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 75 +++++++++++++++++++------------
+>  1 file changed, 46 insertions(+), 29 deletions(-)
 
-Patch applied to ath-next branch of ath.git, thanks.
+Doesn't apply to my tree anymore, due to patches submitted before yours
+:(
 
-6767b302e1c9 wcn36xx: Check DXE IRQ reason
-
--- 
-https://patchwork.kernel.org/patch/10274695/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+greg k-h
