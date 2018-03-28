@@ -1,65 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp06.smtpout.orange.fr ([80.12.242.128]:22217 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751908AbeCZRuu (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37366 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750733AbeC1Eyo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 13:50:50 -0400
-Subject: Re: [PATCH] staging: wilc1000: replace kmalloc + memcpy with kmemdup
-To: Colin King <colin.king@canonical.com>,
-        Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20180326171629.28700-1-colin.king@canonical.com>
-From: Christophe Jaillet <christophe.jaillet@wanadoo.fr>
-Message-ID: <c65d1ac5-d5bc-3703-9516-45173a37bac4@wanadoo.fr> (sfid-20180326_195104_574983_46E1D648)
-Date: Mon, 26 Mar 2018 19:50:44 +0200
+        Wed, 28 Mar 2018 00:54:44 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180326171629.28700-1-colin.king@canonical.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 28 Mar 2018 10:24:43 +0530
+From: vthiagar@codeaurora.org
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [RFC 2/4] nl80211/mac80211: Extend NoAck policy command with peer
+ MAC address
+In-Reply-To: <1522154870.3050.2.camel@sipsolutions.net>
+References: <1522140171-10926-1-git-send-email-vthiagar@codeaurora.org>
+ <1522140171-10926-3-git-send-email-vthiagar@codeaurora.org>
+ <1522154870.3050.2.camel@sipsolutions.net>
+Message-ID: <bf1c7f4dc442e0e2807b520fe94d7ca2@codeaurora.org> (sfid-20180328_065447_872647_1FE68032)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le 26/03/2018 à 19:16, Colin King a écrit :
-> From: Colin Ian King <colin.king@canonical.com>
+On 2018-03-27 18:17, Johannes Berg wrote:
+> On Tue, 2018-03-27 at 14:12 +0530, Vasanthakumar Thiagarajan wrote:
+>> 
+>> - * @set_noack_map: Set the NoAck Map for the TIDs.
+>> + * @set_noack_map: Set the NoAck Map for the TIDs. When peer is not 
+>> %NULL NoAck
+>> + *	map will be applied for that particular peer. When peer is %NULL 
+>> NoAck
+>> + *	map will be applied for all the connected stations (except the 
+>> ones
+>> + *	which already have per-peer TID map configured) on the netdev.
+>> + *	Driver should return -ENOSPC when the it does not have room for
+>> + *	additional entries for per-peer NoAck map.
 > 
-> Replace several allocation and memcpys with kmemdup and add in some
-> missing memory allocation failure checks.  Also fix an incorrect
-> -EFAULT return with -ENOMEM.
+> I guess it should also set the default for new stations when the peer 
+> is
+> not given? At least that's how mac80211 would behave now, afaict.
+
+Sure. May be setting -1 as the default value when the per-peer NoAck 
+policy is not
+set would work.
+
 > 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->   drivers/staging/wilc1000/host_interface.c | 75 +++++++++++++++++++------------
->   1 file changed, 46 insertions(+), 29 deletions(-)
+> The question is how that interacts with having enough space - are you
+> sure this is a concern?
+
+This will not be an issue at lest for ath10k. This is mainly for a 
+(new)driver
+which implements the offload but has limitation in supporting more than 
+certain
+number of peers. Perhaps we can remove it now and add it when such 
+driver is
+available?
+
 > 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index 9b9b86654958..8fd367f87fa5 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-[...]
->   
->   	hif_drv->usr_conn_req.ssid_len = conn_attr->ssid_len;
->   	if (conn_attr->ssid) {
-> -		hif_drv->usr_conn_req.ssid = kmalloc(conn_attr->ssid_len + 1,
-> +		hif_drv->usr_conn_req.ssid = kmemdup(conn_attr->ssid,
-> +						     conn_attr->ssid_len + 1,
->   						     GFP_KERNEL);
->   		if (!hif_drv->usr_conn_req.ssid) {
->   			result = -ENOMEM;
->   			goto error;
->   		}
-> -		memcpy(hif_drv->usr_conn_req.ssid,
-> -		       conn_attr->ssid,
-> -		       conn_attr->ssid_len);
- >               hif_drv->usr_conn_req.ssid[conn_attr->ssid_len] = '\0';
+>>   * @NL80211_CMD_SET_NOACK_MAP: sets a bitmap for the individual TIDs 
+>> whether
+>> - *      No Acknowledgement Policy should be applied.
+>> + *	No Acknowledgement Policy should be applied. %NL80211_ATTR_MAC is 
+>> used
+>> + *	to apply No Acknowledgement policy for a particular connected 
+>> station.
+>> + *	Station specific NoAck policy configuration is valid only for 
+>> STA's
+>> + *	current connection, i.e. the configuration will not be used when 
+>> the
+>> + *	station connects back after disconnection/roaming.
+>> + *	When user-space does not include %NL80211_ATTR_MAC, the No
+>> + *	Acknowledgement Policy setting should be treated as per-netdev
+>> + *	configuration.
+> 
+> Here you describe different semantics - i.e. you didn't describe the
+> "previous per-station settings are kept" part. I'm not sure that part
+> makes much sense anyhow?
 
-I don't know if it is an issue, but now the memcpy is 1 more byte 
-(conn_attr->ssid_len   vs   conn_attr->ssid_len + 1)
+Not sure I got this comment right. As mentioned in the doc, the previous 
+settings
+would be reset upon reconnection of the station and any ndev wide 
+configuration
+will be used. As mentioned above, additionally default value will be set 
+to the
+station to mark no per-station configuration is given so far.
 
-kmemdup_nul(conn_attr->ssid, conn_attr->ssid_len, GFP_KERNEL)
-and remove hif_drv->usr_conn_req.ssid[conn_attr->ssid_len] = '\0'  ?
-
-CJ
-
-[...]
+Vasanth
