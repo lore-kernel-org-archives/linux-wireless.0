@@ -1,53 +1,214 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:43251 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751418AbeCLIrh (ORCPT
+Received: from mail-qt0-f176.google.com ([209.85.216.176]:45410 "EHLO
+        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752370AbeC1AfL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Mar 2018 04:47:37 -0400
-From: hariprasath.elango@gmail.com
-To: aditya.shankar@microchip.com
-Cc: hariprasath.elango@gmail.com, vbabu3@visteon.com,
-        Hari Prasath <hgujulan@visteon.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: wilc1000: use pre-defined macro is_broadcast_ether_addr
-Date: Mon, 12 Mar 2018 14:17:15 +0530
-Message-Id: <20180312084715.30103-1-hariprasath.elango@gmail.com> (sfid-20180312_094757_873563_BCAB43F2)
+        Tue, 27 Mar 2018 20:35:11 -0400
+Received: by mail-qt0-f176.google.com with SMTP id f8so799372qtg.12
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Mar 2018 17:35:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CADsGw2Y-xKNeOOSeUrHJ5qSqTBN2PspqCL188mFKU7hXc7P5Ag@mail.gmail.com>
+References: <CADsGw2ZBPK1hBY-a+v_1mVUOaFP3Uu5A4euyTc-070E4vSUrBg@mail.gmail.com>
+ <CADjYELzsP37RWTqJOSoevNy32E38e4=bkjDkY6A4F3exnDYadQ@mail.gmail.com>
+ <CADsGw2a+u7dW3H3PF7jgJmj0A5oiQ1BbNuASW7v6192CC-U2gA@mail.gmail.com>
+ <CADjYELxj5J3U4EvXP=wrr24manop824RVgauGXN5eRXATYL7Jg@mail.gmail.com>
+ <CADsGw2YsVrTMtqbw08L=2UX0QX2vDFpL66jQqmgqJYh-QkrBOw@mail.gmail.com> <CADsGw2Y-xKNeOOSeUrHJ5qSqTBN2PspqCL188mFKU7hXc7P5Ag@mail.gmail.com>
+From: Phani Siriki <yvsg.phanis@gmail.com>
+Date: Tue, 27 Mar 2018 19:35:10 -0500
+Message-ID: <CADsGw2YSW4rG_bz0eXvjSeir-CUZm4doFSd9FvRLrp7i65pCQg@mail.gmail.com> (sfid-20180328_023515_858722_84C670DF)
+Subject: Re: Query on queues in mesh mode
+To: Thomas Pedersen <thomas@eero.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hari Prasath <hgujulan@visteon.com>
+Hi Thomas
 
-Use the kernel pre-defined macro is_broadcast_ether_addr() instead of
-doing a memcmp here.
+I am able to see the correct values after I enable the wifi interface
+and with the following changes.
 
-Signed-off-by: Hari Prasath <hgujulan@visteon.com>
----
- drivers/staging/wilc1000/linux_mon.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Index: compat-wireless-2015-03-09/drivers/net/wireless/ath/ath9k/debug.c
+===================================================================
+--- compat-wireless-2015-03-09.orig/drivers/net/wireless/ath/ath9k/debug.c
++++ compat-wireless-2015-03-09/drivers/net/wireless/ath/ath9k/debug.c
+@@ -624,8 +624,13 @@ static int read_file_xmit(struct seq_fil
+ static void print_queue(struct ath_softc *sc, struct ath_txq *txq,
+                        struct seq_file *file)
+ {
++       seq_printf(file, "(%s): %d ", "cwmin",
+sc->sc_ah->txq[txq->axq_qnum].tqi_cwmin);
++       seq_printf(file, "(%s): %d ", "cwmax",
+sc->sc_ah->txq[txq->axq_qnum].tqi_cwmax);
++       seq_printf(file, "(%s): %d ", "aifs",
+sc->sc_ah->txq[txq->axq_qnum].tqi_aifs);
++       seq_printf(file, "(%s): %d ", "burst",
+sc->sc_ah->txq[txq->axq_qnum].tqi_burstTime);
+        ath_txq_lock(sc, txq);
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index bbdfc7a..f93f411 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -27,7 +27,6 @@ static struct net_device *wilc_wfi_mon; /* global monitor netdev */
- 
- static u8 srcadd[6];
- static u8 bssid[6];
--static u8 broadcast[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
- /**
-  *  @brief      WILC_WFI_monitor_rx
-  *  @details
-@@ -193,7 +192,7 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 
- 	skb_pull(skb, rtap_len);
- 
--	if (skb->data[0] == 0xc0 && (!(memcmp(broadcast, &skb->data[4], 6)))) {
-+	if (skb->data[0] == 0xc0 && is_broadcast_ether_addr(&skb->data[4])) {
- 		skb2 = dev_alloc_skb(skb->len + sizeof(struct wilc_wfi_radiotap_cb_hdr));
- 		if (!skb2)
- 			return -ENOMEM;
--- 
-2.10.0.GIT
++       seq_printf(file, "%s: %d ", "mac qnum", txq->mac80211_qnum);
+        seq_printf(file, "%s: %d ", "qnum", txq->axq_qnum);
+        seq_printf(file, "%s: %2d ", "qdepth", txq->axq_depth);
+        seq_printf(file, "%s: %2d ", "ampdu-depth", txq->axq_ampdu_depth);
+@@ -639,6 +644,7 @@ static int read_file_queues(struct seq_f
+
+Default values:
+===========
+
+root@OpenWrt:~# cat /sys/kernel/debug/ieee80211/phy0/ath9k/queues
+(VO):  (cwmin): 3 (cwmax): 7 (aifs): 2 (burst): 1504 mac qnum: 0 qnum:
+3 qdepth:  0 ampdu-depth:  0 pending:   0 stopped: 0
+(VI):  (cwmin): 7 (cwmax): 15 (aifs): 2 (burst): 3008 mac qnum: 1
+qnum: 2 qdepth:  0 ampdu-depth:  0 pending:   0 stopped: 0
+(BE):  (cwmin): 15 (cwmax): 1023 (aifs): 3 (burst): 0 mac qnum: 2
+qnum: 1 qdepth:  0 ampdu-depth:  0 pending:   0 stopped: 0
+(BK):  (cwmin): 15 (cwmax): 1023 (aifs): 7 (burst): 0 mac qnum: 3
+qnum: 0 qdepth:  0 ampdu-depth:  0 pending:   0 stopped: 0
+(CAB): (cwmin): -1 (cwmax): 1023 (aifs): 2 (burst): 0 mac qnum: -1
+qnum: 8 qdepth:  0 ampdu-depth:  0 pending:   0 stopped: 0
+
+Modified Queue 0 values:
+===================
+
+root@OpenWrt:~# cat /sys/kernel/debug/ieee80211/phy0/ath9k/queues
+(VO):  (cwmin): 7 (cwmax): 63 (aifs): 7 (burst): 0 mac qnum: 0 qnum: 3
+qdepth:  0 ampdu-depth:  0 pending:   0 stopped: 0
+(VI):  (cwmin): 7 (cwmax): 15 (aifs): 2 (burst): 3008 mac qnum: 1
+qnum: 2 qdepth:  0 ampdu-depth:  0 pending:   0 stopped: 0
+(BE):  (cwmin): 15 (cwmax): 1023 (aifs): 3 (burst): 0 mac qnum: 2
+qnum: 1 qdepth:  0 ampdu-depth:  0 pending:   0 stopped: 0
+(BK):  (cwmin): 15 (cwmax): 1023 (aifs): 7 (burst): 0 mac qnum: 3
+qnum: 0 qdepth:  0 ampdu-depth:  0 pending:   0 stopped: 0
+(CAB): (cwmin): -1 (cwmax): 1023 (aifs): 2 (burst): 0 mac qnum: -1
+qnum: 8 qdepth:  0 ampdu-depth:  0 pending:   0 stopped: 0
+
+
+Best Regards
+Phani
+
+
+
+On Fri, Mar 23, 2018 at 10:39 PM, Phani Siriki <yvsg.phanis@gmail.com> wrote:
+> Hi Thomas
+>
+> I modified the code and tried to set the TXQ parameters for mesh
+> interface. I didn't observe any error.
+>
+> However, I modified the ath9k driver code to verify default TXQ
+> parameters. But I am observing same values for all the queues and the
+> cwmin is looks different.
+>
+> To my understanding, the configured parameters using netlink library
+> will get effect in driver queues..
+>
+> nl80211 - cfg80211 - mac80211 - ath9k
+>
+> Could you please let me know if I am doing something wrong.
+>
+>
+> wifi@wifi-VirtualBox:~/chaos/get_txq_code/chaos_calmer-15.05.1/build_dir/target-mips_34kc_uClibc-0.9.33.2/linux-ar71xx_generic/compat-wireless-2015-03-09$
+> quilt diff
+> Index: compat-wireless-2015-03-09/drivers/net/wireless/ath/ath9k/debug.c
+> ===================================================================
+> --- compat-wireless-2015-03-09.orig/drivers/net/wireless/ath/ath9k/debug.c
+> +++ compat-wireless-2015-03-09/drivers/net/wireless/ath/ath9k/debug.c
+> @@ -639,6 +639,7 @@ static int read_file_queues(struct seq_f
+>  {
+>         struct ieee80211_hw *hw = dev_get_drvdata(file->private);
+>         struct ath_softc *sc = hw->priv;
+> +        struct ath_hw *ah = sc->sc_ah;
+>         struct ath_txq *txq;
+>         int i;
+>         static const char *qname[4] = {
+> @@ -648,6 +649,10 @@ static int read_file_queues(struct seq_f
+>         for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+>                 txq = sc->tx.txq_map[i];
+>                 seq_printf(file, "(%s):  ", qname[i]);
+> +               seq_printf(file, "(%s): %u ", "cwmin", ah->txq[i].tqi_cwmin);
+> +               seq_printf(file, "(%s): %u ", "cwmax", ah->txq[i].tqi_cwmax);
+> +               seq_printf(file, "(%s): %u ", "aifs", ah->txq[i].tqi_aifs);
+> +               seq_printf(file, "(%s): %u ", "burst",
+> ah->txq[i].tqi_burstTime);
+>                 print_queue(sc, txq, file);
+>         }
+>
+> root@OpenWrt:~# cat /sys/kernel/debug/ieee80211/phy0/ath9k/queues
+> (VO):  (cwmin): 4294967295 (cwmax): 1023 (aifs): 2 (burst): 0 qnum: 3
+> qdepth:  0 ampdu-depth:  0 pending:   0 stopped: 0
+> (VI):  (cwmin): 4294967295 (cwmax): 1023 (aifs): 2 (burst): 0 qnum: 2
+> qdepth:  0 ampdu-depth:  0 pending:   0 stopped: 0
+> (BE):  (cwmin): 4294967295 (cwmax): 1023 (aifs): 2 (burst): 0 qnum: 1
+> qdepth:  0 ampdu-depth:  0 pending:   0 stopped: 0
+> (BK):  (cwmin): 4294967295 (cwmax): 1023 (aifs): 2 (burst): 0 qnum: 0
+> qdepth:  0 ampdu-depth:  0 pending:   0 stopped: 0
+> (CAB): qnum: 8 qdepth:  0 ampdu-depth:  0 pending:   0 stopped: 0
+>
+> Best Regards
+> Phani
+>
+> On Fri, Mar 16, 2018 at 10:41 AM, Phani Siriki <yvsg.phanis@gmail.com> wrote:
+>> Thanks Thomas. I will try to hack the code and let you know.
+>>
+>> Best Regards
+>> Phani
+>>
+>> On Thu, Mar 15, 2018 at 5:31 PM, Thomas Pedersen <thomas@eero.com> wrote:
+>>> On Wed, Mar 7, 2018 at 8:39 AM, Phani Siriki <yvsg.phanis@gmail.com> wrote:
+>>>> Hi Thomas
+>>>>
+>>>> Thank you for your reply.
+>>>>
+>>>> Could you please let me know how can I verify these queues on a mesh
+>>>> router? (I am using TPLink router with Ath9k chipset).
+>>>
+>>> try
+>>>
+>>> $ iw mesh0 mpath dump
+>>>
+>>> The mpath queue length is under the "QLEN" heading.
+>>>
+>>>> Also, the TXQ parameters can only be set if device is in AP or P2P
+>>>> mode. Do you have any idea why this restriction is in place?
+>>>
+>>> I don't think there is any reason modifying the queue parameters wouldn't work
+>>> in mesh mode. Why don't you hack up that code and give it a try.
+>>>
+>>>> https://github.com/torvalds/linux/blob/master/net/wireless/nl80211.c
+>>>>
+>>>> static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+>>>> {
+>>>>
+>>>>            if (info->attrs[NL80211_ATTR_WIPHY_TXQ_PARAMS]) {
+>>>>            ....
+>>>>                    if (netdev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+>>>>                        netdev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
+>>>>                                  return -EINVAL;
+>>>>            ...
+>>>> }
+>>>>
+>>>> Best Regards
+>>>> Phani
+>>>>
+>>>> On Tue, Mar 6, 2018 at 11:59 PM, Thomas Pedersen <thomas@eero.com> wrote:
+>>>>> On Thu, Mar 1, 2018 at 7:27 AM, Phani Siriki <yvsg.phanis@gmail.com> wrote:
+>>>>>> Hi All
+>>>>>>
+>>>>>> I am trying to understand the queuing mechanism wireless mesh networks.
+>>>>>>
+>>>>>> As per AP mode is concerned, there are four queues (BK, BE, Vi, VO)
+>>>>>> and traffic is controlled based on CWmin, CWmax, AIFS and TxOP.
+>>>>>>
+>>>>>> Does, mesh mode also involve these queues? Does mesh mode have any
+>>>>>> queue or it is just a single queue?
+>>>>>
+>>>>> mesh mode maps to the different ACs like AP mode. The only additional
+>>>>> queue in mesh is the mpath->frame_queue, which may be used if an
+>>>>> active mpath for a given RA can't be found.
+>>>>>
+>>>>> --
+>>>>> thomas
+>>>
+>>>
+>>>
+>>> --
+>>> thomas
