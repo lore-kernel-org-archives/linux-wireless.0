@@ -1,45 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:45508 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751137AbeCII1p (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:37050 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753199AbeC1O1F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Mar 2018 03:27:45 -0500
-Subject: Re: [PATCH 00/10] staging: wilc1000: fixes related to camelCase &
- line over 80 chars
-To: Ajay Singh <ajay.kathat@microchip.com>,
-        <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <adham.abozaeid@Microchip.com>
-References: <1520386350-31607-1-git-send-email-ajay.kathat@microchip.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <12c693ce-e096-5462-0d7f-859867f76379@microchip.com> (sfid-20180309_092748_477379_1BF8C181)
-Date: Fri, 9 Mar 2018 10:27:40 +0200
-MIME-Version: 1.0
-In-Reply-To: <1520386350-31607-1-git-send-email-ajay.kathat@microchip.com>
-Content-Type: text/plain; charset="utf-8"
+        Wed, 28 Mar 2018 10:27:05 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 28 Mar 2018 17:27:00 +0300
+Message-Id: <20180328142700.9443-1-luca@coelho.fi> (sfid-20180328_162708_462902_9DF4CC2A)
+In-Reply-To: <20180328141157.5427-1-luca@coelho.fi>
+References: <20180328141157.5427-1-luca@coelho.fi>
+Subject: [PATCH 12/14] iwlwifi: bump the max API version for 9000 and 22000 devices
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-On 07.03.2018 03:32, Ajay Singh wrote:
-> Patch series contains fixes to remove checkpatch reported warnings.
-> 
-> Ajay Singh (10):
->   staging: wilc1000: rename strHiddenNetwork to avoid camelCase
->   staging: wilc1000: rename pstrNetworkInfo to avoid camelCase
->   staging: wilc1000: rename CfgScanResult to avoid camelCase
->   staging: wilc1000: rename au8ScanChanList to avoid camelCase
->   staging: wilc1000: fix line over 80 char in change_virtual_intf()
->   staging: wilc1000: fix line over 80 char in get_key() &
->     set_default_key()
->   staging: wilc1000: fix line over 80 char for cfg parse RX and TX
->     function
->   staging: wilc1000: fix line over 80 char in mgmt_tx_cancel_wait()
->   staging: wilc1000: rename pJoinParams to avoid camelCase
->   staging: wilc1000: fix line over 80 char in cfg_scan_result()
-> 
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 329 +++++++++++-----------
->  1 file changed, 168 insertions(+), 161 deletions(-)
-> 
+We are now ready to load 38.ucode
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c | 4 +++-
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c  | 4 +++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index 48f6f80eb24b..dffd9df782b0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -6,6 +6,7 @@
+  * GPL LICENSE SUMMARY
+  *
+  * Copyright(c) 2015-2017 Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -19,6 +20,7 @@
+  * BSD LICENSE
+  *
+  * Copyright(c) 2015-2017 Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -55,7 +57,7 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL_22000_UCODE_API_MAX	36
++#define IWL_22000_UCODE_API_MAX	38
+ 
+ /* Lowest firmware API version supported */
+ #define IWL_22000_UCODE_API_MIN	24
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+index ab1469473e4f..e1c869a1f8cc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+@@ -6,6 +6,7 @@
+  * GPL LICENSE SUMMARY
+  *
+  * Copyright(c) 2015-2017 Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -19,6 +20,7 @@
+  * BSD LICENSE
+  *
+  * Copyright(c) 2015-2017 Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -56,7 +58,7 @@
+ #include "fw/file.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL9000_UCODE_API_MAX	36
++#define IWL9000_UCODE_API_MAX	38
+ 
+ /* Lowest firmware API version supported */
+ #define IWL9000_UCODE_API_MIN	30
+-- 
+2.16.2
