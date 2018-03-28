@@ -1,90 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-he1eur01on0077.outbound.protection.outlook.com ([104.47.0.77]:52596
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752890AbeCUPiq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Mar 2018 11:38:46 -0400
-From: Vanessa Maegima <vanessa.maegima@nxp.com>
-To: "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
-        "festevam@gmail.com" <festevam@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "van.ayumi@gmail.com" <van.ayumi@gmail.com>,
-        "embed3d@gmail.com" <embed3d@gmail.com>
-Subject: Re: AP6335 with mainline kernel
-Date: Wed, 21 Mar 2018 15:38:42 +0000
-Message-ID: <1521646672.13983.1.camel@nxp.com> (sfid-20180321_164000_273281_AD8D40F4)
-References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
-         <85717463-11e2-e2e3-b08e-b758986687b5@broadcom.com>
-         <1510916848.26896.2.camel@nxp.com> <5A0EDC25.7030505@broadcom.com>
-         <1510932224.22506.0.camel@nxp.com>
-         <d9a80a75-b3d4-d78e-a5bf-ab31732f040d@broadcom.com>
-         <e14bdc26-5092-18c9-4caa-c45fd1d12984@broadcom.com>
-         <1511347672.18886.2.camel@nxp.com> <5A15584A.9090601@broadcom.com>
-         <1511450638.9102.1.camel@nxp.com> <5A1FFA17.6000703@broadcom.com>
-         <1512413992.18900.3.camel@nxp.com>
-         <CAF7Mx6q6mTOXc=4OFVCHAHd26pyfv5e6pK=TMNmb1S6=FBWUWQ@mail.gmail.com>
-         <1512485878.9392.1.camel@nxp.com>
-         <CAOMZO5DXoCFgTtuRRAq_jFjzkzFp6chMCwczXF5Z0bFaNfQnog@mail.gmail.com>
-         <5A5E5EBE.7040301@broadcom.com> <1516276016.8817.1.camel@nxp.com>
-         <5A61B43C.4000305@broadcom.com>
-In-Reply-To: <5A61B43C.4000305@broadcom.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:37138 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752416AbeC1TxC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Mar 2018 15:53:02 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        "Zamir, Roee" <roee.zamir@intel.com>,
+        Beni Lev <beni.lev@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 28 Mar 2018 22:52:53 +0300
+Message-Id: <20180328195253.24380-1-luca@coelho.fi> (sfid-20180328_215306_695436_58830B0F)
+In-Reply-To: <20180328142517.8940-1-luca@coelho.fi>
+References: <20180328142517.8940-1-luca@coelho.fi>
+Subject: [PATCH v2 06/14] iwlwifi: mvm: add adaptive dwell support
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQXJlbmQsDQoNCk9uIFNleCwgMjAxOC0wMS0xOSBhdCAxMDowMiArMDEwMCwgQXJlbmQgdmFu
-IFNwcmllbCB3cm90ZToNCj4gT24gMS8xOC8yMDE4IDEyOjQ3IFBNLCBWYW5lc3NhIE1hZWdpbWEg
-d3JvdGU6DQo+ID4gDQo+ID4gSGkgQXJlbmQsDQo+ID4gDQo+ID4gT24gVGVyLCAyMDE4LTAxLTE2
-IGF0IDIxOjIxICswMTAwLCBBcmVuZCB2YW4gU3ByaWVsIHdyb3RlOg0KPiA+ID4gDQo+ID4gPiBP
-biAxLzE1LzIwMTggOTowOCBQTSwgRmFiaW8gRXN0ZXZhbSB3cm90ZToNCj4gPiA+ID4gDQo+ID4g
-PiA+IA0KPiA+ID4gPiBIaSBBcmVuZCwNCj4gPiA+ID4gDQo+ID4gPiA+IE9uIFR1ZSwgRGVjIDUs
-IDIwMTcgYXQgMTI6NTggUE0sIFZhbmVzc2EgTWFlZ2ltYQ0KPiA+ID4gPiA8dmFuZXNzYS5tYWVn
-aW1hQG54cC5jb20+IHdyb3RlOg0KPiA+ID4gPiANCj4gPiA+ID4gPiANCj4gPiA+ID4gPiANCj4g
-PiA+ID4gPiBIaSBBcmVuZCwNCj4gPiA+ID4gPiANCj4gPiA+ID4gPiBTb3JyeSBmb3IgdGhpcyEN
-Cj4gPiA+ID4gPiANCj4gPiA+ID4gPiBJIHVwZGF0ZWQgdGhlIGZvbGRlciBvbiBodHRwczovL2Vt
-ZWEwMS5zYWZlbGlua3MucHJvdGVjdGlvbi5vDQo+ID4gPiA+ID4gdXRsb29rLmNvbS8/dXJsPWh0
-dHBzJTNBJTJGJTJGZW1lYTAxLnNhZmVsaW5rcy5wcm90ZWN0aW9uLm91dA0KPiA+ID4gPiA+IGxv
-JmRhdGE9MDIlN0MwMSU3Q3ZhbmVzc2EubWFlZ2ltYSU0MG54cC5jb20lN0MzOTA0MDIyOTQ3NTQ0
-MWQNCj4gPiA+ID4gPiA3YjVhYTA4ZDU1ZjFiNmNkMyU3QzY4NmVhMWQzYmMyYjRjNmZhOTJjZDk5
-YzVjMzAxNjM1JTdDMCU3QzElDQo+ID4gPiA+ID4gN0M2MzY1MTk0OTM3NTUyOTgzNDgmc2RhdGE9
-WndzNEFFbG00TGE5NlE0cGpLMTUybkgybFA2djRtUEpKTg0KPiA+ID4gPiA+IHhTR3o3VExCQSUz
-RCZyZXNlcnZlZD0wDQo+ID4gPiA+ID4gb2suY29tLz91cmw9aHR0cHMlM0ElMkYlMkZkcml2ZS5n
-b29nbGUuY29tJTJGZHJpdmUlMkZmb2xkZXJzJQ0KPiA+ID4gPiA+IDJGMWYNCj4gPiA+ID4gPiBv
-c2FoakwmZGF0YT0wMiU3QzAxJTdDdmFuZXNzYS5tYWVnaW1hJTQwbnhwLmNvbSU3Q2YwN2NkMWE2
-ZmZiDQo+ID4gPiA+ID4gMzRjMA0KPiA+ID4gPiA+IDk2MWY2MDhkNTVkMWViOTAxJTdDNjg2ZWEx
-ZDNiYzJiNGM2ZmE5MmNkOTljNWMzMDE2MzUlN0MwJTdDMCUNCj4gPiA+ID4gPiA3QzYzDQo+ID4g
-PiA+ID4gNjUxNzMwODkwMTY0MzI0NCZzZGF0YT02SkFxU04lMkJWUEolMkZDRjdjYm5Cam04Z2VN
-S1d5ZFdrRzlKYw0KPiA+ID4gPiA+IFVoR0INCj4gPiA+ID4gPiBQajY0NCUzRCZyZXNlcnZlZD0w
-DQo+ID4gPiA+ID4gTjFLSTVOS1M1OV9hUFpkSExwRU5QRkh0Sw0KPiA+ID4gPiA+IA0KPiA+ID4g
-PiA+IFRoYW5rcyENCj4gPiA+ID4gQW55IGlkZWFzLCBwbGVhc2U/DQo+ID4gPiBXZWxsLCB0aGUg
-ZHVtcHMgY29uZmlybSBhIGNyYXNoIGVhcmx5IGluIHRoZSBmaXJtd2FyZSBib290Lg0KPiA+ID4g
-SG93ZXZlciwNCj4gPiA+IEkNCj4gPiA+IGNvdWxkIG5vdCBvYnRhaW4gbW9yZSBpbmZvcm1hdGlv
-biBmcm9tIGl0LiBUbyBjYXB0dXJlIHRoZSBmYWlsdXJlDQo+ID4gPiBJDQo+ID4gPiBuZWVkDQo+
-ID4gPiB0byByZXdvcmsgc29tZSBmaXJtd2FyZSBmdW5jdGlvbmFsaXR5IHdoaWNoIGlzIG5vdCB0
-cml2aWFsIGFuZCBJDQo+ID4gPiBjYW4NCj4gPiA+IG5vdA0KPiA+ID4gY2xhaW0gdGltZSBmb3Ig
-aXQgcmlnaHQgbm93Lg0KPiA+ID4gDQo+ID4gPiBSZWdhcmRzLA0KPiA+ID4gQXJlbmQNCj4gPiA+
-IA0KPiA+IFRoYW5rcyBmb3IgYWxsIHlvdXIgaW52ZXN0aWdhdGlvbiBoZXJlIQ0KPiA+IA0KPiA+
-IEkganVzdCB3YW50IHRvIHJlcG9ydCBvbmUgbW9yZSB0aGluZyB0aGF0IEkgbm90aWNlZCBmcm9t
-IG15IHRlc3RzLg0KPiA+IA0KPiA+IEkgaGF2ZSB0cmllZCB0byB1c2UgYW4gaHRtbCBmaWxlIHRo
-YXQgSSBkb3dubG9hZGVkIHVzaW5nIHdnZXQgYXMNCj4gPiB0aGUNCj4gPiBudnJhbSBmaWxlICho
-dHRwczovL2VtZWEwMS5zYWZlbGlua3MucHJvdGVjdGlvbi5vdXRsb29rLmNvbS8/dXJsPWh0DQo+
-ID4gdHBzJTNBJTJGJTJGZ2l0aHViLmNvbSUyRk9wZW5FTEVDJTJGd2xhbi0NCj4gPiBmaXJtd2Fy
-ZSUyRmJsb2IlMkZtYXN0ZXIlMkZmaXJtdyZkYXRhPTAyJTdDMDElN0N2YW5lc3NhLm1hZWdpbWEl
-NDBuDQo+ID4geHAuY29tJTdDMzkwNDAyMjk0NzU0NDFkN2I1YWEwOGQ1NWYxYjZjZDMlN0M2ODZl
-YTFkM2JjMmI0YzZmYTkyY2Q5OQ0KPiA+IGM1YzMwMTYzNSU3QzAlN0MxJTdDNjM2NTE5NDkzNzU1
-Mjk4MzQ4JnNkYXRhPUVaRlZWM3FiU3RqSDlFcWU2dVZWWEoNCj4gPiBmN0xtUWxNTElVUlhIYVFJ
-TUlwbXMlM0QmcmVzZXJ2ZWQ9MA0KPiA+IGFyZS9icmNtL252cmFtX2FwNjMzNS50eHQpIGFuZCB0
-aGUgd2lmaSBzZWVtcyB0byB3b3JrLiBJIGhhdmUgbm90DQo+ID4gbm90aWNlZCB0aGUgd3Jvbmcg
-Zm9ybWF0IGZpbGUgdW50aWwgdGVzdGluZyBpdC4NCj4gSW50ZXJlc3RpbmcuIEluIGJyY21mbWFj
-IHRoZSBmaWxlIGlzIHBhcnNlZCBiZWZvcmUgc2VuZGluZyBpdCB0byB0aGXCoA0KPiBmaXJtd2Fy
-ZSBzbyBJIGFtIHdvbmRlcmluZyB3aGF0IGlzIGVmZmVjdGl2ZWx5IHNlbmQgdG8gdGhlIGRldmlj
-ZS4NCj4gDQo+IENhbiB5b3UgZHVtcCB0aGUgbnZyYW0gdGhhdCBpcyBzZW50IHRvIHRoZSBkZXZp
-Y2UuIEp1c3QgYWRkIGhleGR1bXANCj4gY2FsbMKgDQo+IG9mIG52cmFtIGluIGJyY21mX2Z3X3Jl
-cXVlc3RfbnZyYW1fZG9uZSgpIGluIGZpcm13YXJlLmMganVzdCBiZWZvcmXCoA0KPiBmd2N0eC0+
-ZG9uZSgpIGlzIGNhbGxlZC4NCj4gDQo+IFJlZ2FyZHMsDQo+IEFyZW5kDQoNClNvcnJ5IGZvciBt
-eSBkZWxheWVkIHJlc3BvbnNlLCBidXQgSSBjb3VsZCBub3QgZ2V0IHRoZSBoZXhkdW1wIGZyb20g
-dGhlDQpudnJhbS4gSSBoYXZlIHRyaWVkIHNldmVyYWwgaGV4ZHVtcCBmdW5jdGlvbnMgSSBmb3Vu
-ZCBvbiBrZXJuZWwgYW5kIG9uDQp0aGUgYnJjbWZtYWMgZHJpdmVyIGJ1dCBub25lIG9mIHRoZW0g
-cHJpbnRlZCBhbnkgb3V0cHV0Lg0KDQpJcyB0aGVyZSBhbnkgQ09ORklHIEkgbmVlZCB0byBlbmFi
-bGUgdG8gZ2V0IHRob3NlIHdvcmtpbmc/DQoNClRoYW5rcyENCg0KQmVzdCwNClZhbmVzc2E=
+From: "Zamir, Roee" <roee.zamir@intel.com>
+
+Update the scan command API with support for adaptive dwell.  Adaptive
+dwell is a type of scan that dynamically changes the time it remains
+on each channel listening for beacons or probe responses.
+
+Signed-off-by: Roee Zamir <roee.zamir@intel.com>
+Signed-off-by: Beni Lev <beni.lev@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/constants.h |  2 +
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c      | 98 ++++++++++++++--------
+ 2 files changed, 67 insertions(+), 33 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
+index 976640fed334..96b52a275ee3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
+@@ -110,6 +110,8 @@
+ #define IWL_MVM_SW_TX_CSUM_OFFLOAD		0
+ #define IWL_MVM_HW_CSUM_DISABLE			0
+ #define IWL_MVM_PARSE_NVM			0
++#define IWL_MVM_ADWELL_ENABLE			1
++#define IWL_MVM_ADWELL_MAX_BUDGET		0
+ #define IWL_MVM_RS_NUM_TRY_BEFORE_ANT_TOGGLE    1
+ #define IWL_MVM_RS_HT_VHT_RETRIES_PER_RATE      2
+ #define IWL_MVM_RS_HT_VHT_RETRIES_PER_RATE_TW   1
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+index 356b16f40e78..f910098e9531 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+@@ -86,6 +86,15 @@ enum iwl_mvm_traffic_load {
+ #define IWL_SCAN_DWELL_FRAGMENTED	44
+ #define IWL_SCAN_DWELL_EXTENDED		90
+ 
++/* adaptive dwell max budget time [TU] for full scan */
++#define IWL_SCAN_ADWELL_MAX_BUDGET_FULL_SCAN 300
++/* adaptive dwell max budget time [TU] for directed scan */
++#define IWL_SCAN_ADWELL_MAX_BUDGET_DIRECTED_SCAN 100
++/* adaptive dwell default APs number */
++#define IWL_SCAN_ADWELL_DEFAULT_N_APS 2
++/* adaptive dwell default APs number in social channels (1, 6, 11) */
++#define IWL_SCAN_ADWELL_DEFAULT_N_APS_SOCIAL 10
++
+ struct iwl_mvm_scan_timing_params {
+ 	u32 suspend_time;
+ 	u32 max_out_time;
+@@ -1115,11 +1124,6 @@ static void iwl_mvm_scan_umac_dwell(struct iwl_mvm *mvm,
+ {
+ 	struct iwl_mvm_scan_timing_params *timing = &scan_timing[params->type];
+ 
+-	if (iwl_mvm_is_regular_scan(params))
+-		cmd->ooc_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
+-	else
+-		cmd->ooc_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_2);
+-
+ 	if (iwl_mvm_is_adaptive_dwell_supported(mvm)) {
+ 		if (params->measurement_dwell) {
+ 			cmd->v7.active_dwell = params->measurement_dwell;
+@@ -1129,6 +1133,21 @@ static void iwl_mvm_scan_umac_dwell(struct iwl_mvm *mvm,
+ 			cmd->v7.passive_dwell = IWL_SCAN_DWELL_PASSIVE;
+ 		}
+ 		cmd->v7.fragmented_dwell = IWL_SCAN_DWELL_FRAGMENTED;
++		cmd->v7.adwell_default_n_aps_social =
++			IWL_SCAN_ADWELL_DEFAULT_N_APS_SOCIAL;
++		cmd->v7.adwell_default_n_aps =
++			IWL_SCAN_ADWELL_DEFAULT_N_APS;
++
++		/* if custom max budget was configured with debugfs */
++		if (IWL_MVM_ADWELL_MAX_BUDGET)
++			cmd->v7.adwell_max_budget =
++				cpu_to_le16(IWL_MVM_ADWELL_MAX_BUDGET);
++		else if (params->ssids && params->ssids[0].ssid_len)
++			cmd->v7.adwell_max_budget =
++				cpu_to_le16(IWL_SCAN_ADWELL_MAX_BUDGET_DIRECTED_SCAN);
++		else
++			cmd->v7.adwell_max_budget =
++				cpu_to_le16(IWL_SCAN_ADWELL_MAX_BUDGET_FULL_SCAN);
+ 
+ 		cmd->v7.scan_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
+ 		cmd->v7.max_out_time[SCAN_LB_LMAC_IDX] =
+@@ -1136,43 +1155,47 @@ static void iwl_mvm_scan_umac_dwell(struct iwl_mvm *mvm,
+ 		cmd->v7.suspend_time[SCAN_LB_LMAC_IDX] =
+ 			cpu_to_le32(timing->suspend_time);
+ 		if (iwl_mvm_is_cdb_supported(mvm)) {
+-			cmd->v7.max_out_time[SCAN_HB_LMAC_IDX] =
++			cmd->v6.max_out_time[SCAN_HB_LMAC_IDX] =
+ 				cpu_to_le32(timing->max_out_time);
+-			cmd->v7.suspend_time[SCAN_HB_LMAC_IDX] =
++			cmd->v6.suspend_time[SCAN_HB_LMAC_IDX] =
+ 				cpu_to_le32(timing->suspend_time);
+ 		}
+-
+-		return;
+-	}
+-
+-	if (params->measurement_dwell) {
+-		cmd->v1.active_dwell = params->measurement_dwell;
+-		cmd->v1.passive_dwell = params->measurement_dwell;
+-		cmd->v1.extended_dwell = params->measurement_dwell;
+ 	} else {
+-		cmd->v1.active_dwell = IWL_SCAN_DWELL_ACTIVE;
+-		cmd->v1.passive_dwell = IWL_SCAN_DWELL_PASSIVE;
+-		cmd->v1.extended_dwell = IWL_SCAN_DWELL_EXTENDED;
+-	}
+-	cmd->v1.fragmented_dwell = IWL_SCAN_DWELL_FRAGMENTED;
+-
+-	if (iwl_mvm_has_new_tx_api(mvm)) {
+-		cmd->v6.scan_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
+-		cmd->v6.max_out_time[SCAN_LB_LMAC_IDX] =
+-			cpu_to_le32(timing->max_out_time);
+-		cmd->v6.suspend_time[SCAN_LB_LMAC_IDX] =
+-			cpu_to_le32(timing->suspend_time);
++		if (params->measurement_dwell) {
++			cmd->v1.active_dwell = params->measurement_dwell;
++			cmd->v1.passive_dwell = params->measurement_dwell;
++			cmd->v1.extended_dwell = params->measurement_dwell;
++		} else {
++			cmd->v1.active_dwell = IWL_SCAN_DWELL_ACTIVE;
++			cmd->v1.passive_dwell = IWL_SCAN_DWELL_PASSIVE;
++			cmd->v1.extended_dwell = IWL_SCAN_DWELL_EXTENDED;
++		}
++		cmd->v1.fragmented_dwell = IWL_SCAN_DWELL_FRAGMENTED;
+ 		if (iwl_mvm_is_cdb_supported(mvm)) {
++			struct iwl_mvm_scan_timing_params *hb_timing =
++				&scan_timing[params->type];
++
+ 			cmd->v6.max_out_time[SCAN_HB_LMAC_IDX] =
+-				cpu_to_le32(timing->max_out_time);
++					cpu_to_le32(hb_timing->max_out_time);
+ 			cmd->v6.suspend_time[SCAN_HB_LMAC_IDX] =
++					cpu_to_le32(hb_timing->suspend_time);
++		}
++
++		if (iwl_mvm_has_new_tx_api(mvm)) {
++			cmd->v6.scan_priority =
++				cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
++			cmd->v6.max_out_time[SCAN_LB_LMAC_IDX] =
++				cpu_to_le32(timing->max_out_time);
++			cmd->v6.suspend_time[SCAN_LB_LMAC_IDX] =
++				cpu_to_le32(timing->suspend_time);
++		} else {
++			cmd->v1.scan_priority =
++				cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
++			cmd->v1.max_out_time =
++				cpu_to_le32(timing->max_out_time);
++			cmd->v1.suspend_time =
+ 				cpu_to_le32(timing->suspend_time);
+ 		}
+-	} else {
+-		cmd->v1.max_out_time = cpu_to_le32(timing->max_out_time);
+-		cmd->v1.suspend_time = cpu_to_le32(timing->suspend_time);
+-		cmd->v1.scan_priority =
+-			cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
+ 	}
+ }
+ 
+@@ -1234,6 +1257,15 @@ static u16 iwl_mvm_scan_umac_flags(struct iwl_mvm *mvm,
+ 	if (mvm->sched_scan_pass_all == SCHED_SCAN_PASS_ALL_ENABLED)
+ 		flags |= IWL_UMAC_SCAN_GEN_FLAGS_ITER_COMPLETE;
+ 
++	if (iwl_mvm_is_adaptive_dwell_supported(mvm) && IWL_MVM_ADWELL_ENABLE &&
++	    vif->type != NL80211_IFTYPE_P2P_DEVICE)
++		flags |= IWL_UMAC_SCAN_GEN_FLAGS_ADAPTIVE_DWELL;
++
++	/*
++	 * Extended dwell is relevant only for low band to start with, as it is
++	 * being used for social channles only (1, 6, 11), so we can check
++	 * only scan type on low band also for CDB.
++	 */
+ 	if (iwl_mvm_is_regular_scan(params) &&
+ 	    vif->type != NL80211_IFTYPE_P2P_DEVICE &&
+ 	    params->type != IWL_SCAN_TYPE_FRAGMENTED)
+-- 
+2.16.2
