@@ -1,44 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-db5eur01on0063.outbound.protection.outlook.com ([104.47.2.63]:19904
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751141AbeCZMZo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 08:25:44 -0400
-From: Vanessa Maegima <vanessa.maegima@nxp.com>
-To: "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>,
-        "festevam@gmail.com" <festevam@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "van.ayumi@gmail.com" <van.ayumi@gmail.com>,
-        "embed3d@gmail.com" <embed3d@gmail.com>
-Subject: Re: AP6335 with mainline kernel
-Date: Mon, 26 Mar 2018 12:25:41 +0000
-Message-ID: <1522067092.4780.3.camel@nxp.com> (sfid-20180326_142548_047062_3745C3D5)
-References: <CABACg+yVE+fuzT-qwjNnACqq24KQbNJOae22=v+J+0Q=8kuKRQ@mail.gmail.com>
-         <85717463-11e2-e2e3-b08e-b758986687b5@broadcom.com>
-         <1510916848.26896.2.camel@nxp.com> <5A0EDC25.7030505@broadcom.com>
-         <1510932224.22506.0.camel@nxp.com>
-         <d9a80a75-b3d4-d78e-a5bf-ab31732f040d@broadcom.com>
-         <e14bdc26-5092-18c9-4caa-c45fd1d12984@broadcom.com>
-         <1511347672.18886.2.camel@nxp.com> <5A15584A.9090601@broadcom.com>
-         <1511450638.9102.1.camel@nxp.com> <5A1FFA17.6000703@broadcom.com>
-         <1512413992.18900.3.camel@nxp.com>
-         <CAF7Mx6q6mTOXc=4OFVCHAHd26pyfv5e6pK=TMNmb1S6=FBWUWQ@mail.gmail.com>
-         <1512485878.9392.1.camel@nxp.com>
-         <CAOMZO5DXoCFgTtuRRAq_jFjzkzFp6chMCwczXF5Z0bFaNfQnog@mail.gmail.com>
-         <5A5E5EBE.7040301@broadcom.com> <1516276016.8817.1.camel@nxp.com>
-         <5A61B43C.4000305@broadcom.com> <1521646672.13983.1.camel@nxp.com>
-         <5AB4C8D5.40203@broadcom.com> <1521810882.19239.1.camel@nxp.com>
-In-Reply-To: <1521810882.19239.1.camel@nxp.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:47708 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752447AbeC1NEh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Mar 2018 09:04:37 -0400
+From: mpubbise@codeaurora.org
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Subject: [PATCH] mac80211: allow AP_VLAN operation on crypto controlled devices
+Date: Wed, 28 Mar 2018 18:34:19 +0530
+Message-Id: <1522242259-16166-1-git-send-email-mpubbise@codeaurora.org> (sfid-20180328_150441_720201_36719BEC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQXJlbmQsDQoNCj4gSGVyZSdzIHRoZSBoZXhkdW1wOsKgaHR0cDovL2NvZGUuYnVsaXgub3Jn
-L3RydjNvNy0zMDYyNTQNCj4gDQoNClRoZSBsaW5rIGFib3ZlIHByb3ZpZGVzIHRoZSBoZXhkdW1w
-IGZyb20gdGhlIGh0bWwgbnZyYW0sIHdoaWNoIG1ha2VzDQp3aWZpIHdvcmsgb24gcGljby1pbXg3
-ZC4NCg0KSSBhbHNvIGdvdCB0aGUgaGV4ZHVtcCBvZiB0aGUgbnZyYW0gZmlsZSBwcm92aWRlZCBi
-eSBUZWNoTmV4aW9uIGZvcg0KY29tcGFyaXNvbiwgd2hpY2ggcmV0dXJucyB0aGUgZXJyb3IgImJy
-Y21mbWFjOiBicmNtZl9zZGlvX2h0Y2xrOiBIVA0KQXZhaWwgdGltZW91dCAoMTAwMDAwMCk6IGNs
-a2N0bCAweDUwIjrCoGh0dHA6Ly9jb2RlLmJ1bGl4Lm9yZy9tdzR4NjItMzA5DQowOTUNCg0KVGhh
-bmtzIQ0KDQpCZXN0IFJlZ2FyZHMsDQpWYW5lc3Nh
+From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+
+In the current implementation, mac80211 advertises the support of
+AP_VLANs based on the driver's support for AP mode; it also
+blocks encrypted AP_VLAN operation on devices advertising
+SW_CRYPTO_CONTROL.
+
+The implementation seems weird in it's current form and could be
+often confusing, this is because there can be drivers advertising
+both SW_CRYPTO_CONTROL and AP mode support (ex: ath10k) in which case
+AP_VLAN will still be supported but only in open BSS and not in
+secured BSS.
+
+When SW_CRYPTO_CONTROL is enabled, it makes more sense if the decision
+to support AP_VLANs is left to the driver. Mac80211 can then allow
+AP_VLAN operations depending on the driver support.
+
+Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+---
+ net/mac80211/key.c  | 8 +++++---
+ net/mac80211/main.c | 8 ++++++--
+ 2 files changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index aee05ec..ee0d0cc 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -126,7 +126,7 @@ static void decrease_tailroom_need_count(struct ieee80211_sub_if_data *sdata,
+ 
+ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ {
+-	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_sub_if_data *sdata = key->sdata;
+ 	struct sta_info *sta;
+ 	int ret = -EOPNOTSUPP;
+ 
+@@ -162,7 +162,6 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 	if (sta && !sta->uploaded)
+ 		goto out_unsupported;
+ 
+-	sdata = key->sdata;
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
+ 		/*
+ 		 * The driver doesn't know anything about VLAN interfaces.
+@@ -214,8 +213,11 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 		/* all of these we can do in software - if driver can */
+ 		if (ret == 1)
+ 			return 0;
+-		if (ieee80211_hw_check(&key->local->hw, SW_CRYPTO_CONTROL))
++		if (ieee80211_hw_check(&key->local->hw, SW_CRYPTO_CONTROL)) {
++			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++				return 0;
+ 			return -EINVAL;
++		}
+ 		return 0;
+ 	default:
+ 		return -EINVAL;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 0785d04..8d0333b 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -930,8 +930,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 			             IEEE80211_HT_CAP_SM_PS_SHIFT;
+ 	}
+ 
+-	/* if low-level driver supports AP, we also support VLAN */
+-	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_AP)) {
++	/* if low-level driver supports AP, we also support VLAN.
++	 * drivers advertising SW_CRYPTO_CONTROL should enable AP_VLAN
++	 * based on their support to transmit SW encrypted packets.
++	 */
++	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_AP) &&
++	    !ieee80211_hw_check(&local->hw, SW_CRYPTO_CONTROL)) {
+ 		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
+ 		hw->wiphy->software_iftypes |= BIT(NL80211_IFTYPE_AP_VLAN);
+ 	}
+-- 
+2.7.4
