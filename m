@@ -1,33 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:11729 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751046AbeC0HWV (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:56441 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752090AbeC1LDu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Mar 2018 03:22:21 -0400
-Date: Tue, 27 Mar 2018 12:52:13 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Claudiu Beznea <Claudiu.Beznea@microchip.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <venkateswara.kaja@microchip.com>,
-        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
-        <adham.abozaeid@microchip.com>, <aditya.shankar@microchip.com>
-Subject: Re: [PATCH 00/11] staging: wilc1000: fix for checkpatch and handled
- malloc memory properly
-Message-ID: <20180327125213.0594ff79@ajaysk-VirtualBox> (sfid-20180327_092225_040195_B526A797)
-In-Reply-To: <53a25901-754c-bfe9-169e-d2ed4cb34583@microchip.com>
-References: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
- <20180321075116.bm6x3c53bahw3c2i@mwanda>
- <20180321145021.044f4536@ajaysk-VirtualBox>
- <53a25901-754c-bfe9-169e-d2ed4cb34583@microchip.com>
+        Wed, 28 Mar 2018 07:03:50 -0400
+Subject: Re: [PATCH v3] ath9k: fix crash in spectral scan
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+References: <20180303041044.26372-1-s.gottschall@dd-wrt.com>
+ <87vadgo6vw.fsf@purkki.adurom.net>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <bf40cf99-a105-e0a7-750e-8f212df1a610@dd-wrt.com> (sfid-20180328_130354_874390_F6284454)
+Date: Wed, 28 Mar 2018 13:03:49 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <87vadgo6vw.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> Apparently the automatic email was not sent, no idea why. But this was
+> applied to ath-next few days ago:
+>
+> 221b6ec69ed9 ath9k: fix crash in spectral scan
+i have seen it. thx
+any idea about my led code for ath10k?
 
-Please let me know, in case I have to rework and resubmit this patch
-series to make them into staging branch.
+Sebastian
 
-Regards,
-Ajay
+
+-- 
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
