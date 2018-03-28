@@ -1,63 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:39956 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750766AbeCRSla (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:34545 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751224AbeC1Hh2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Mar 2018 14:41:30 -0400
-From: Alexey Roslyakov <alexey.roslyakov@gmail.com>
-To: kvalo@codeaurora.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com, netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Alexey Roslyakov <alexey.roslyakov@gmail.com>
-Subject: [PATCH 1/2] brcmfmac: add new dt entries for SG SDIO settings
-Date: Mon, 19 Mar 2018 01:41:00 +0700
-Message-Id: <20180318184101.26951-1-alexey.roslyakov@gmail.com> (sfid-20180318_194212_546637_BD145646)
+        Wed, 28 Mar 2018 03:37:28 -0400
+Received: by mail-wm0-f66.google.com with SMTP id a20so24470808wmd.1
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Mar 2018 00:37:28 -0700 (PDT)
+Subject: Re: [RFC 0/4] wireless: Per-sta NoAck and offload support
+To: vthiagar@codeaurora.org, Steve deRosier <derosier@gmail.com>
+References: <1522140171-10926-1-git-send-email-vthiagar@codeaurora.org>
+ <CALLGbR+d8gCS0-_NV8i0K6ktL14OEiDjxVG4bvubmti7Yp5OoQ@mail.gmail.com>
+ <94497d97976ff1934a08e70cc118bf56@codeaurora.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        steve.derosier@gmail.com
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5ABB4636.2040900@broadcom.com> (sfid-20180328_093732_268506_5415193C)
+Date: Wed, 28 Mar 2018 09:37:26 +0200
+MIME-Version: 1.0
+In-Reply-To: <94497d97976ff1934a08e70cc118bf56@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are 3 fields in SDIO settings (quirks) to workaround some of
-the SG SDIO host particularities, i.e higher align requirements for
-SG items.
-All coding is done the long time ago, but there is no way to change the
-driver behavior without patching the kernel.
-Add missing devicetree entries.
+On 3/28/2018 8:09 AM, vthiagar@codeaurora.org wrote:
+> On 2018-03-27 22:18, Steve deRosier wrote:
+>> Hi Vasanthakumar,
+>>
+>> On Tue, Mar 27, 2018 at 1:42 AM, Vasanthakumar Thiagarajan
+>> <vthiagar@codeaurora.org> wrote:
+>>> Adds infrastructure for driver to offload NoAck functionality, driver
+>>> like ath10k could make use of it. Also extends the current ndev wide
+>>
+>> I'm not really much of a fan of adding a feature without some use of
+>> the feature. Perhaps if drivers "like" ath10k could use it, maybe you
+>> should add a patch(s) to the series where one of those drivers
+>> actually uses the feature.  An API without an example of use is also
+>> harder to evaluate effectively.
+>
+> I agree driver patch using the new NoAck infrastructure would help with
+> understanding, ill post it once it is ready. But not sure the driver patch
+> can be part of the same series.
 
-Signed-off-by: Alexey Roslyakov <alexey.roslyakov@gmail.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+The API patches would go in mac80211-next tree and indeed the driver 
+patch would go through wireless-drivers-next tree. However, an option 
+would be to add the driver patch(es) as RFC in the series so Johannes 
+can ignore it and we still have an example to look at.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-index aee6e5937c41..0718ca09a40d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-@@ -31,6 +31,7 @@ void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
- 	int irq;
- 	u32 irqf;
- 	u32 val;
-+	u16 align;
- 
- 	if (!np || bus_type != BRCMF_BUSTYPE_SDIO ||
- 	    !of_device_is_compatible(np, "brcm,bcm4329-fmac"))
-@@ -39,6 +40,15 @@ void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
- 	if (of_property_read_u32(np, "brcm,drive-strength", &val) == 0)
- 		sdio->drive_strength = val;
- 
-+	sdio->broken_sg_support =
-+		of_property_read_bool(np, "brcm,broken-sg-support");
-+
-+	if (of_property_read_u16(np, "brcm,sd-head-align", &align) == 0)
-+		sdio->sd_head_align = align;
-+
-+	if (of_property_read_u16(np, "brcm,sd-sgentry-align", &align) == 0)
-+		sdio->sd_sgentry_align = align;
-+
- 	/* make sure there are interrupts defined in the node */
- 	if (!of_find_property(np, "interrupts", NULL))
- 		return;
--- 
-2.16.1
+Regards,
+Arend
