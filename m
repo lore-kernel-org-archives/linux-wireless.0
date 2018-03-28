@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52652 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751901AbeCVU2i (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57434 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753164AbeC1PRA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Mar 2018 16:28:38 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 12/12] brcmfmac: add kerneldoc for struct brcmf_bus::msgbuf
-Date: Thu, 22 Mar 2018 21:28:31 +0100
-Message-Id: <1521750511-12345-13-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180322_212903_990428_ACF0548F)
-In-Reply-To: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com>
+        Wed, 28 Mar 2018 11:17:00 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [01/12] ath10k: Add qmi service for wlan qmi client
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1522042736-25618-1-git-send-email-govinds@codeaurora.org>
+References: <1522042736-25618-1-git-send-email-govinds@codeaurora.org>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: ath10k@lists.infradead.org, bjorn.andersson@linaro.org,
+        linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Message-Id: <20180328151659.9DC3F60AFB@smtp.codeaurora.org> (sfid-20180328_171703_812365_EDA1D174)
+Date: Wed, 28 Mar 2018 15:16:59 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This field did not have kerneldoc description so adding it now.
+Govind Singh <govinds@codeaurora.org> wrote:
 
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h | 1 +
- 1 file changed, 1 insertion(+)
+> WLAN qmi server running in Q6 dsp exposes host
+> to target cold boot qmi handshake.
+> Add WLAN QMI service helpers for WLAN serivice.
+> 
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-index 31858a2..27e693e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-@@ -140,6 +140,7 @@ struct brcmf_bus_stats {
-  * @always_use_fws_queue: bus wants use queue also when fwsignal is inactive.
-  * @wowl_supported: is wowl supported by bus driver.
-  * @chiprev: revision of the dongle chip.
-+ * @msgbuf: msgbuf protocol parameters provided by bus layer.
-  */
- struct brcmf_bus {
- 	union {
+This introduced two new ath10k-check warnings:
+
+drivers/net/wireless/ath/ath10k/qmi_svc_v01.h:304: line over 90 characters
+drivers/net/wireless/ath/ath10k/qmi_svc_v01.h:464: line over 90 characters
+
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/10307161/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
