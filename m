@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f172.google.com ([209.85.128.172]:42062 "EHLO
-        mail-wr0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750897AbeCIH24 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Mar 2018 02:28:56 -0500
-Received: by mail-wr0-f172.google.com with SMTP id k9so8008445wre.9
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2018 23:28:55 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87zi3j9cz7.fsf@codeaurora.org>
-References: <87zi3j9cz7.fsf@codeaurora.org>
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-Date: Fri, 9 Mar 2018 12:58:54 +0530
-Message-ID: <CAEhWJF=s=gHJ-yKn+VW2Hs6Nj9KbfF59-1Tk=fkzQk6wFFddNw@mail.gmail.com> (sfid-20180309_082900_218322_15776AB4)
-Subject: Re: Variable-length arrays considered bad
+Received: from mga14.intel.com ([192.55.52.115]:45492 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753295AbeC1Tou (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Mar 2018 15:44:50 -0400
+Message-ID: <1522266284.3786.288.camel@intel.com> (sfid-20180328_214454_387266_4A799B2B)
+Subject: Re: [PATCH 07/14] iwlwifi: mvm: add support for oce
+From: Luciano Coelho <luciano.coelho@intel.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: linux-wireless@vger.kernel.org,
+        "Zamir, Roee" <roee.zamir@intel.com>
+Date: Wed, 28 Mar 2018 22:44:44 +0300
+In-Reply-To: <87k1twmas7.fsf@kamboji.qca.qualcomm.com>
+References: <20180328141157.5427-1-luca@coelho.fi>
+         <20180328142533.9017-1-luca@coelho.fi>
+         <87k1twmas7.fsf@kamboji.qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 8, 2018 at 2:10 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Hi,
->
-> in an lkml discussion[1] it was mentioned that variable-length arrays
-> should not be used. Few warnings were found[2] from wireless:
->
-> drivers/net/wireless/ath/ath9k/dfs.c:104:2: warning: ISO C90 forbids variable length array 'max_bin' [-Wvla]
-> drivers/net/wireless/rsi/rsi_91x_sdio.c:570:2: warning: ISO C90 forbids variable length array 'temp_buf' [-Wvla]
->
-> Patches welcome.
->
-> [1] https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
->
-> [2] http://paste.ubuntu.com/p/srQxwPQS9s/
->
+On Wed, 2018-03-28 at 19:20 +0300, Kalle Valo wrote:
+> Luca Coelho <luca@coelho.fi> writes:
+> 
+> > From: "Zamir, Roee" <roee.zamir@intel.com>
+> > 
+> > Get capabilities from the fw, expose them with nl80211, and enable
+> > them
+> > in UMAC scan if the relevant nl80211 flags are set by the
+> > userspace.
+> > 
+> > Signed-off-by: Roee Zamir <roee.zamir@intel.com>
+> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> 
+> OCE is?
 
-I will submit a cleanup patch for RSI warning
+OCE is Optimized Connectivity Experience.  It's WFA's version of
+802.11ai (FILS).  I'll clarify in the commit message.
 
-Regards,
-Amitkumar Karwar
+--
+Cheers,
+Luca.
