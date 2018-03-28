@@ -1,50 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:53504 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S965957AbeCHFyW (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36928 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752654AbeC1OMG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Mar 2018 00:54:22 -0500
-From: Xinming Hu <huxm@marvell.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH] mwifiex: correct antenna number with high bits reserved
-Date: Thu, 8 Mar 2018 13:54:02 +0800
-Message-ID: <1520488442-10729-1-git-send-email-huxm@marvell.com> (sfid-20180308_065439_716744_4B87FF53)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 28 Mar 2018 10:12:06 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 28 Mar 2018 17:11:44 +0300
+Message-Id: <20180328141157.5427-2-luca@coelho.fi> (sfid-20180328_161211_884193_FD56B4B4)
+In-Reply-To: <20180328141157.5427-1-luca@coelho.fi>
+References: <20180328141157.5427-1-luca@coelho.fi>
+Subject: [PATCH 01/14] iwlwifi: mvm: flip AMSDU addresses only for 9000 family
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-High bits of antenna number are reserved in hardware spec,
-using low 4 bits represent supported antenna.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Xinming Hu <huxm@marvell.com>
+Hardware bug was fixed in later generation.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cmdevt.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 25 +++++++++++++++----------
+ 1 file changed, 15 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index dcc529e..78a4a6a 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -1526,7 +1526,8 @@ int mwifiex_ret_get_hw_spec(struct mwifiex_private *priv,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 580de5851fc7..4a4ccfd11e5b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -831,6 +831,16 @@ static void iwl_mvm_agg_rx_received(struct iwl_mvm *mvm,
+ 	rcu_read_unlock();
+ }
  
- 	adapter->fw_release_number = le32_to_cpu(hw_spec->fw_release_number);
- 	adapter->fw_api_ver = (adapter->fw_release_number >> 16) & 0xff;
--	adapter->number_of_antenna = le16_to_cpu(hw_spec->number_of_antenna);
-+	adapter->number_of_antenna =
-+			le16_to_cpu(hw_spec->number_of_antenna) & 0xf;
++static void iwl_mvm_flip_address(u8 *addr)
++{
++	int i;
++	u8 mac_addr[ETH_ALEN];
++
++	for (i = 0; i < ETH_ALEN; i++)
++		mac_addr[i] = addr[ETH_ALEN - i - 1];
++	ether_addr_copy(addr, mac_addr);
++}
++
+ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			struct iwl_rx_cmd_buffer *rxb, int queue)
+ {
+@@ -985,21 +995,16 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 		 */
+ 		if ((desc->mac_flags2 & IWL_RX_MPDU_MFLG2_AMSDU) &&
+ 		    !WARN_ON(!ieee80211_is_data_qos(hdr->frame_control))) {
+-			int i;
+ 			u8 *qc = ieee80211_get_qos_ctl(hdr);
+-			u8 mac_addr[ETH_ALEN];
  
- 	if (le32_to_cpu(hw_spec->dot_11ac_dev_cap)) {
- 		adapter->is_hw_11ac_capable = true;
+ 			*qc &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
+ 
+-			for (i = 0; i < ETH_ALEN; i++)
+-				mac_addr[i] = hdr->addr3[ETH_ALEN - i - 1];
+-			ether_addr_copy(hdr->addr3, mac_addr);
++			if (mvm->trans->cfg->device_family ==
++			    IWL_DEVICE_FAMILY_9000) {
++				iwl_mvm_flip_address(hdr->addr3);
+ 
+-			if (ieee80211_has_a4(hdr->frame_control)) {
+-				for (i = 0; i < ETH_ALEN; i++)
+-					mac_addr[i] =
+-						hdr->addr4[ETH_ALEN - i - 1];
+-				ether_addr_copy(hdr->addr4, mac_addr);
++				if (ieee80211_has_a4(hdr->frame_control))
++					iwl_mvm_flip_address(hdr->addr4);
+ 			}
+ 		}
+ 		if (baid != IWL_RX_REORDER_DATA_INVALID_BAID) {
 -- 
-1.9.1
+2.16.2
