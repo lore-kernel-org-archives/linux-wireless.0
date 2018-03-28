@@ -1,86 +1,238 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:38718 "EHLO
-        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752525AbeCWOJY (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36942 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752572AbeC1OMI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Mar 2018 10:09:24 -0400
-Date: Fri, 23 Mar 2018 15:09:19 +0100
-From: Juri Lelli <juri.lelli@gmail.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: b43-dev <b43-dev@lists.infradead.org>,
-        Network Development <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [QUESTION] Mainline support for B43_PHY_AC wifi cards
-Message-ID: <20180323140919.GB5942@localhost.localdomain> (sfid-20180323_150947_849167_06F4637E)
-References: <20180323094740.GA5942@localhost.localdomain>
- <CACna6rx-QNQhVNkwFSabwAY9vM1qV_gTcWywsHFuP5B4NH4NXA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CACna6rx-QNQhVNkwFSabwAY9vM1qV_gTcWywsHFuP5B4NH4NXA@mail.gmail.com>
+        Wed, 28 Mar 2018 10:12:08 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 28 Mar 2018 17:11:46 +0300
+Message-Id: <20180328141157.5427-4-luca@coelho.fi> (sfid-20180328_161218_538777_335BD997)
+In-Reply-To: <20180328141157.5427-1-luca@coelho.fi>
+References: <20180328141157.5427-1-luca@coelho.fi>
+Subject: [PATCH 03/14] iwlwifi: mvm: move TSO segment to a separate function
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Sara Sharon <sara.sharon@intel.com>
 
-thanks a lot for your reply!
+This makes future bail-outs from transmitting an AMSDU more
+readable.
 
-On 23/03/18 14:43, Rafał Miłecki wrote:
-> Hi,
-> 
-> On 23 March 2018 at 10:47, Juri Lelli <juri.lelli@gmail.com> wrote:
-> > I've got a Dell XPS 13 9343/0TM99H (BIOS A15 01/23/2018) mounting a
-> > BCM4352 802.11ac (rev 03) wireless card and so far I've been using it on
-> > Fedora with broadcom-wl package (which I believe installs Broadcom's STA
-> > driver?). It works good apart from occasional hiccups after suspend.
-> >
-> > I'd like to get rid of that dependency (you can understand that it's
-> > particularly annoying when testing mainline kernels), but I found out
-> > that support for my card is BROKEN in mainline [1]. Just to see what
-> > happens, I forcibly enabled it witnessing that it indeed crashes like
-> > below as Kconfig warns. :)
-> >
-> >  bcma: bus0: Found chip with id 0x4352, rev 0x03 and package 0x00
-> >  bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x2B, class 0x0)
-> >  bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x2A, class 0x0)
-> >  bcma: bus0: Core 2 found: ARM CR4 (manuf 0x4BF, id 0x83E, rev 0x02, class 0x0)
-> >  bcma: bus0: Core 3 found: PCIe Gen2 (manuf 0x4BF, id 0x83C, rev 0x01, class 0x0)
-> >  bcma: bus0: Core 4 found: USB 2.0 Device (manuf 0x4BF, id 0x81A, rev 0x11, class 0x0)
-> >  bcma: Unsupported SPROM revision: 11
-> >  bcma: bus0: Invalid SPROM read from the PCIe card, trying to use fallback SPROM
-> >  bcma: bus0: Using fallback SPROM failed (err -2)
-> >  bcma: bus0: No SPROM available
-> >  bcma: bus0: Bus registered
-> >  b43-phy0: Broadcom 4352 WLAN found (core revision 42)
-> >  b43-phy0: Found PHY: Analog 12, Type 11 (AC), Revision 1
-> >  b43-phy0: Found Radio: Manuf 0x17F, ID 0x2069, Revision 4, Version 0
-> >  BUG: unable to handle kernel NULL pointer dereference at 0000000000000000
-> 
-> This isn't really useful without a full backtrace.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 158 +++++++++++++++-------------
+ 1 file changed, 83 insertions(+), 75 deletions(-)
 
-Sure. I cut it here because I didn't expect people to debug what is
-already known to be broken (but still it seemed to carry useful
-information about the hw). :)
-
-> > So, question: is replacing my card the only way I can get rid of this
-> > downstream dependency? :(
-> 
-> It's definitely the cheapest way. Getting AC PHY into anything usable
-> (proper setup that will allow Tx & Rx anything) would probably take
-> weeks or months of development. I'm not even going to estimate cost of
-> adding support for 802.11n and 802.11ac features. I was the last
-> person actively working on b43, right now I spend my free time on
-> other hobby projects. Few people were planning to help but it seems it
-> never worked out for them.
-
-I see. Just wondering why even if Broadcom's STA solution seems to work
-fine, it is not mainline. Maybe a maintenance problem? But Fedora ships
-with very recent kernels, so I'd expect the driver to work with mainline
-(I tried compiling that against mainline, but I got errors that I didn't
-spend time figuring out how to fix).
-
-Do you know what's the deal w.r.t. the STA driver?
-
-Best,
-
-- Juri
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 7dfe4cde55e3..795065974d78 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -687,6 +687,74 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
+ }
+ 
+ #ifdef CONFIG_INET
++
++static int
++iwl_mvm_tx_tso_segment(struct sk_buff *skb, unsigned int num_subframes,
++		       netdev_features_t netdev_flags,
++		       struct sk_buff_head *mpdus_skb)
++{
++	struct sk_buff *tmp, *next;
++	struct ieee80211_hdr *hdr = (void *)skb->data;
++	char cb[sizeof(skb->cb)];
++	u16 i = 0;
++	unsigned int tcp_payload_len;
++	unsigned int mss = skb_shinfo(skb)->gso_size;
++	bool ipv4 = (skb->protocol == htons(ETH_P_IP));
++	u16 ip_base_id = ipv4 ? ntohs(ip_hdr(skb)->id) : 0;
++
++	skb_shinfo(skb)->gso_size = num_subframes * mss;
++	memcpy(cb, skb->cb, sizeof(cb));
++
++	next = skb_gso_segment(skb, netdev_flags);
++	skb_shinfo(skb)->gso_size = mss;
++	if (WARN_ON_ONCE(IS_ERR(next)))
++		return -EINVAL;
++	else if (next)
++		consume_skb(skb);
++
++	while (next) {
++		tmp = next;
++		next = tmp->next;
++
++		memcpy(tmp->cb, cb, sizeof(tmp->cb));
++		/*
++		 * Compute the length of all the data added for the A-MSDU.
++		 * This will be used to compute the length to write in the TX
++		 * command. We have: SNAP + IP + TCP for n -1 subframes and
++		 * ETH header for n subframes.
++		 */
++		tcp_payload_len = skb_tail_pointer(tmp) -
++			skb_transport_header(tmp) -
++			tcp_hdrlen(tmp) + tmp->data_len;
++
++		if (ipv4)
++			ip_hdr(tmp)->id = htons(ip_base_id + i * num_subframes);
++
++		if (tcp_payload_len > mss) {
++			skb_shinfo(tmp)->gso_size = mss;
++		} else {
++			if (ieee80211_is_data_qos(hdr->frame_control)) {
++				u8 *qc;
++
++				if (ipv4)
++					ip_send_check(ip_hdr(tmp));
++
++				qc = ieee80211_get_qos_ctl((void *)tmp->data);
++				*qc &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
++			}
++			skb_shinfo(tmp)->gso_size = 0;
++		}
++
++		tmp->prev = NULL;
++		tmp->next = NULL;
++
++		__skb_queue_tail(mpdus_skb, tmp);
++		i++;
++	}
++
++	return 0;
++}
++
+ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 			  struct ieee80211_tx_info *info,
+ 			  struct ieee80211_sta *sta,
+@@ -695,14 +763,10 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	unsigned int mss = skb_shinfo(skb)->gso_size;
+-	struct sk_buff *tmp, *next;
+-	char cb[sizeof(skb->cb)];
+ 	unsigned int num_subframes, tcp_payload_len, subf_len, max_amsdu_len;
+-	bool ipv4 = (skb->protocol == htons(ETH_P_IP));
+-	u16 ip_base_id = ipv4 ? ntohs(ip_hdr(skb)->id) : 0;
+-	u16 snap_ip_tcp, pad, i = 0;
++	u16 snap_ip_tcp, pad;
+ 	unsigned int dbg_max_amsdu_len;
+-	netdev_features_t netdev_features = NETIF_F_CSUM_MASK | NETIF_F_SG;
++	netdev_features_t netdev_flags = NETIF_F_CSUM_MASK | NETIF_F_SG;
+ 	u8 *qc, tid, txf;
+ 
+ 	snap_ip_tcp = 8 + skb_transport_header(skb) - skb_network_header(skb) +
+@@ -712,16 +776,8 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 
+ 	if (!sta->max_amsdu_len ||
+ 	    !ieee80211_is_data_qos(hdr->frame_control) ||
+-	    (!mvmsta->tlc_amsdu && !dbg_max_amsdu_len)) {
+-		num_subframes = 1;
+-		pad = 0;
+-		goto segment;
+-	}
+-
+-	qc = ieee80211_get_qos_ctl(hdr);
+-	tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
+-	if (WARN_ON_ONCE(tid >= IWL_MAX_TID_COUNT))
+-		return -EINVAL;
++	    (!mvmsta->tlc_amsdu && !dbg_max_amsdu_len))
++		return iwl_mvm_tx_tso_segment(skb, 1, netdev_flags, mpdus_skb);
+ 
+ 	/*
+ 	 * Do not build AMSDU for IPv6 with extension headers.
+@@ -730,22 +786,22 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	if (skb->protocol == htons(ETH_P_IPV6) &&
+ 	    ((struct ipv6hdr *)skb_network_header(skb))->nexthdr !=
+ 	    IPPROTO_TCP) {
+-		num_subframes = 1;
+-		pad = 0;
+-		netdev_features &= ~NETIF_F_CSUM_MASK;
+-		goto segment;
++		netdev_flags &= ~NETIF_F_CSUM_MASK;
++		return iwl_mvm_tx_tso_segment(skb, 1, netdev_flags, mpdus_skb);
+ 	}
+ 
++	qc = ieee80211_get_qos_ctl(hdr);
++	tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
++	if (WARN_ON_ONCE(tid >= IWL_MAX_TID_COUNT))
++		return -EINVAL;
++
+ 	/*
+ 	 * No need to lock amsdu_in_ampdu_allowed since it can't be modified
+ 	 * during an BA session.
+ 	 */
+ 	if (info->flags & IEEE80211_TX_CTL_AMPDU &&
+-	    !mvmsta->tid_data[tid].amsdu_in_ampdu_allowed) {
+-		num_subframes = 1;
+-		pad = 0;
+-		goto segment;
+-	}
++	    !mvmsta->tid_data[tid].amsdu_in_ampdu_allowed)
++		return iwl_mvm_tx_tso_segment(skb, 1, netdev_flags, mpdus_skb);
+ 
+ 	max_amsdu_len = sta->max_amsdu_len;
+ 
+@@ -811,56 +867,8 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	 * Trick the segmentation function to make it
+ 	 * create SKBs that can fit into one A-MSDU.
+ 	 */
+-segment:
+-	skb_shinfo(skb)->gso_size = num_subframes * mss;
+-	memcpy(cb, skb->cb, sizeof(cb));
+-
+-	next = skb_gso_segment(skb, netdev_features);
+-	skb_shinfo(skb)->gso_size = mss;
+-	if (WARN_ON_ONCE(IS_ERR(next)))
+-		return -EINVAL;
+-	else if (next)
+-		consume_skb(skb);
+-
+-	while (next) {
+-		tmp = next;
+-		next = tmp->next;
+-
+-		memcpy(tmp->cb, cb, sizeof(tmp->cb));
+-		/*
+-		 * Compute the length of all the data added for the A-MSDU.
+-		 * This will be used to compute the length to write in the TX
+-		 * command. We have: SNAP + IP + TCP for n -1 subframes and
+-		 * ETH header for n subframes.
+-		 */
+-		tcp_payload_len = skb_tail_pointer(tmp) -
+-			skb_transport_header(tmp) -
+-			tcp_hdrlen(tmp) + tmp->data_len;
+-
+-		if (ipv4)
+-			ip_hdr(tmp)->id = htons(ip_base_id + i * num_subframes);
+-
+-		if (tcp_payload_len > mss) {
+-			skb_shinfo(tmp)->gso_size = mss;
+-		} else {
+-			if (ieee80211_is_data_qos(hdr->frame_control)) {
+-				qc = ieee80211_get_qos_ctl((void *)tmp->data);
+-
+-				if (ipv4)
+-					ip_send_check(ip_hdr(tmp));
+-				*qc &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
+-			}
+-			skb_shinfo(tmp)->gso_size = 0;
+-		}
+-
+-		tmp->prev = NULL;
+-		tmp->next = NULL;
+-
+-		__skb_queue_tail(mpdus_skb, tmp);
+-		i++;
+-	}
+-
+-	return 0;
++	return iwl_mvm_tx_tso_segment(skb, num_subframes, netdev_flags,
++				      mpdus_skb);
+ }
+ #else /* CONFIG_INET */
+ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
+-- 
+2.16.2
