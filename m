@@ -1,139 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:42895 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752116AbeCZRQY (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:47363 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752841AbeC1H2A (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 13:16:24 -0400
-Received: by mail-ot0-f196.google.com with SMTP id v23-v6so21447821oth.9
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:16:24 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v6 03/11] nl80211: Add CONTROL_PORT_OVER_NL80211 attribute
-Date: Mon, 26 Mar 2018 12:16:06 -0500
-Message-Id: <20180326171614.20373-4-denkenz@gmail.com> (sfid-20180326_191628_706449_04D73E71)
-In-Reply-To: <20180326171614.20373-1-denkenz@gmail.com>
-References: <20180326171614.20373-1-denkenz@gmail.com>
+        Wed, 28 Mar 2018 03:28:00 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 7/9] rtlwifi: btcoex: Add modifier const to version related variables
+Date: Wed, 28 Mar 2018 15:27:39 +0800
+Message-ID: <20180328072741.23349-8-pkshih@realtek.com> (sfid-20180328_092802_418422_80FE030D)
+In-Reply-To: <20180328072741.23349-1-pkshih@realtek.com>
+References: <20180328072741.23349-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- include/net/cfg80211.h       |  3 +++
- include/uapi/linux/nl80211.h | 14 +++++++++++++-
- net/wireless/nl80211.c       | 26 ++++++++++++++++++++++++++
- 3 files changed, 42 insertions(+), 1 deletion(-)
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 76b6783f35f6..2e7f30c66913 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -646,6 +646,8 @@ struct survey_info {
-  *	allowed through even on unauthorized ports
-  * @control_port_no_encrypt: TRUE to prevent encryption of control port
-  *	protocol frames.
-+ * @control_port_over_nl80211: TRUE if userspace expects to exchange control
-+ *	port frames over NL80211 instead of the network interface.
-  * @wep_keys: static WEP keys, if not NULL points to an array of
-  *	CFG80211_MAX_WEP_KEYS WEP keys
-  * @wep_tx_key: key index (0..3) of the default TX static WEP key
-@@ -661,6 +663,7 @@ struct cfg80211_crypto_settings {
- 	bool control_port;
- 	__be16 control_port_ethertype;
- 	bool control_port_no_encrypt;
-+	bool control_port_over_nl80211;
- 	struct key_params *wep_keys;
- 	int wep_tx_key;
- 	const u8 *psk;
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 77675ae3e475..1cdac3d732c1 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -542,7 +542,8 @@
-  *	IEs in %NL80211_ATTR_IE, %NL80211_ATTR_AUTH_TYPE, %NL80211_ATTR_USE_MFP,
-  *	%NL80211_ATTR_MAC, %NL80211_ATTR_WIPHY_FREQ, %NL80211_ATTR_CONTROL_PORT,
-  *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE,
-- *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT, %NL80211_ATTR_MAC_HINT, and
-+ *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT,
-+ *	%NL80211_ATTR_CONTROL_PORT_OVER_NL80211, %NL80211_ATTR_MAC_HINT, and
-  *	%NL80211_ATTR_WIPHY_FREQ_HINT.
-  *	If included, %NL80211_ATTR_MAC and %NL80211_ATTR_WIPHY_FREQ are
-  *	restrictions on BSS selection, i.e., they effectively prevent roaming
-@@ -1488,6 +1489,15 @@ enum nl80211_commands {
-  * @NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT: When included along with
-  *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE, indicates that the custom
-  *	ethertype frames used for key negotiation must not be encrypted.
-+ * @NL80211_ATTR_CONTROL_PORT_OVER_NL80211: A flag indicating whether control
-+ *	port frames (e.g. of type given in %NL80211_ATTR_CONTROL_PORT_ETHERTYPE)
-+ *	will be sent directly to the network interface or sent via the NL80211
-+ *	socket.  If this attribute is missing, then legacy behavior of sending
-+ *	control port frames directly to the network interface is used.  If the
-+ *	flag is included, then control port frames are sent over NL80211 instead
-+ *	using %CMD_CONTROL_PORT_FRAME.  If control port routing over NL80211 is
-+ *	to be used then userspace must also use the %NL80211_ATTR_SOCKET_OWNER
-+ *	flag.
-  *
-  * @NL80211_ATTR_TESTDATA: Testmode data blob, passed through to the driver.
-  *	We recommend using nested, driver-specific attributes within this.
-@@ -2641,6 +2651,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_NSS,
- 	NL80211_ATTR_ACK_SIGNAL,
+The variables declared as 'static' look a little weird. Since they are
+version of btcoex and only used to display in debug message, this patch
+changes them to 'static const' to make it clear.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c | 4 ++--
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c | 4 ++--
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c | 4 ++--
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c | 4 ++--
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c | 4 ++--
+ 5 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
+index 959af05117d7..a4704b2fbeb9 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
+@@ -36,8 +36,8 @@ static const char *const glbt_info_src_8192e_2ant[] = {
+ 	"BT Info[bt auto report]",
+ };
  
-+	NL80211_ATTR_CONTROL_PORT_OVER_NL80211,
-+
- 	/* add attributes here, update the policy in nl80211.c */
+-static u32 glcoex_ver_date_8192e_2ant = 20130902;
+-static u32 glcoex_ver_8192e_2ant = 0x34;
++static const u32 glcoex_ver_date_8192e_2ant = 20130902;
++static const u32 glcoex_ver_8192e_2ant = 0x34;
  
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index aadc1f090b65..234f6a41aa03 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -287,6 +287,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_CONTROL_PORT] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_CONTROL_PORT_ETHERTYPE] = { .type = NLA_U16 },
- 	[NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_CONTROL_PORT_OVER_NL80211] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_PRIVACY] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_CIPHER_SUITE_GROUP] = { .type = NLA_U32 },
- 	[NL80211_ATTR_WPA_VERSIONS] = { .type = NLA_U32 },
-@@ -8204,6 +8205,22 @@ static int nl80211_authenticate(struct sk_buff *skb, struct genl_info *info)
- 	return err;
- }
+ static u8 btc8192e2ant_bt_rssi_state(struct btc_coexist *btcoexist,
+ 				     u8 level_num, u8 rssi_thresh,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index e97e907e66cd..31b716fa2524 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -36,8 +36,8 @@ static const char *const glbt_info_src_8723b_1ant[] = {
+ 	"BT Info[bt auto report]",
+ };
  
-+static int validate_pae_over_nl80211(struct cfg80211_registered_device *rdev,
-+				     struct genl_info *info)
-+{
-+	if (!info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
-+		GENL_SET_ERR_MSG(info, "SOCKET_OWNER not set");
-+		return -EINVAL;
-+	}
-+
-+	if (!rdev->ops->tx_control_port ||
-+	    !wiphy_ext_feature_isset(&rdev->wiphy,
-+				     NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211))
-+		return -EOPNOTSUPP;
-+
-+	return 0;
-+}
-+
- static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
- 				   struct genl_info *info,
- 				   struct cfg80211_crypto_settings *settings,
-@@ -8227,6 +8244,15 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
- 	} else
- 		settings->control_port_ethertype = cpu_to_be16(ETH_P_PAE);
+-static u32 glcoex_ver_date_8723b_1ant = 20130918;
+-static u32 glcoex_ver_8723b_1ant = 0x47;
++static const u32 glcoex_ver_date_8723b_1ant = 20130918;
++static const u32 glcoex_ver_8723b_1ant = 0x47;
  
-+	if (info->attrs[NL80211_ATTR_CONTROL_PORT_OVER_NL80211]) {
-+		int r = validate_pae_over_nl80211(rdev, info);
-+
-+		if (r < 0)
-+			return r;
-+
-+		settings->control_port_over_nl80211 = true;
-+	}
-+
- 	if (info->attrs[NL80211_ATTR_CIPHER_SUITES_PAIRWISE]) {
- 		void *data;
- 		int len, i;
+ static void halbtc8723b1ant_updatera_mask(struct btc_coexist *btcoexist,
+ 					  bool force_exec, u32 dis_rate_mask)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index e9a7f303cdda..8c1cec306bf1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -36,8 +36,8 @@ static const char *const glbt_info_src_8723b_2ant[] = {
+ 	"BT Info[bt auto report]",
+ };
+ 
+-static u32 glcoex_ver_date_8723b_2ant = 20131113;
+-static u32 glcoex_ver_8723b_2ant = 0x3f;
++static const u32 glcoex_ver_date_8723b_2ant = 20131113;
++static const u32 glcoex_ver_8723b_2ant = 0x3f;
+ 
+ static u8 btc8723b2ant_bt_rssi_state(struct btc_coexist *btcoexist,
+ 				     u8 level_num, u8 rssi_thresh,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index 39dc5966700b..cb34a33ae99a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -38,8 +38,8 @@ static const char *const glbt_info_src_8821a_1ant[] = {
+ 	  "BT Info[bt auto report]",
+ };
+ 
+-static u32 glcoex_ver_date_8821a_1ant = 20130816;
+-static u32 glcoex_ver_8821a_1ant = 0x41;
++static const u32 glcoex_ver_date_8821a_1ant = 20130816;
++static const u32 glcoex_ver_8821a_1ant = 0x41;
+ 
+ static u8 btc8821a1ant_bt_rssi_state(struct btc_coexist *btcoexist,
+ 				     u8 level_num, u8 rssi_thresh,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 264796616d8a..14510d514e2f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -36,8 +36,8 @@ static const char *const glbt_info_src_8821a_2ant[] = {
+ 	"BT Info[bt auto report]",
+ };
+ 
+-static u32 glcoex_ver_date_8821a_2ant = 20130618;
+-static u32 glcoex_ver_8821a_2ant = 0x5050;
++static const u32 glcoex_ver_date_8821a_2ant = 20130618;
++static const u32 glcoex_ver_8821a_2ant = 0x5050;
+ 
+ static u8 btc8821a2ant_bt_rssi_state(struct btc_coexist *btcoexist,
+ 				     u8 level_num, u8 rssi_thresh,
 -- 
-2.13.5
+2.15.1
