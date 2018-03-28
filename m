@@ -1,51 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:34456 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754785AbeCSCNk (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:37040 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753684AbeC1O0z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Mar 2018 22:13:40 -0400
-From: Pkshih <pkshih@realtek.com>
-To: "kevlo@kevlo.org" <kevlo@kevlo.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] rtlwifi: correct comment
-Date: Mon, 19 Mar 2018 02:13:28 +0000
-Message-ID: <1521425608.3080.7.camel@realtek.com> (sfid-20180319_031410_944404_1341E154)
-References: <20180317142607.GA11027@ns.kevlo.org>
-In-Reply-To: <20180317142607.GA11027@ns.kevlo.org>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Wed, 28 Mar 2018 10:26:55 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 28 Mar 2018 17:26:50 +0300
+Message-Id: <20180328142650.9377-1-luca@coelho.fi> (sfid-20180328_162657_767751_09ECC035)
+In-Reply-To: <20180328141157.5427-1-luca@coelho.fi>
+References: <20180328141157.5427-1-luca@coelho.fi>
+Subject: [PATCH 11/14] iwlwifi: api: Add geographic profile information to MCC_UPDATE_CMD
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gU2F0LCAyMDE4LTAzLTE3IGF0IDIyOjI2ICswODAwLCBLZXZpbiBMbyB3cm90ZToNCj4gQ29y
-cmVjdCBjb21tZW50LsKgwqBTZXQgYml0IDMgYW5kIGJpdCA0IG9mIDB4MDAwNSByZWdpc3RlciAo
-UkVHX0FQU19GU01DTyArIDEpDQo+IHRvIDAgd2hpY2ggbWVhbnMgZGlzYWJsZSBXTCBzdXNwZW5k
-LCBub3QgZW5hYmxlIFdMIHN1c3BlbmQuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBLZXZpbiBMbyA8
-a2V2bG9Aa2V2bG8ub3JnPg0KQWNrZWQtYnk6IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsu
-Y29tPg0KPiAtLS0NCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsv
-cnRsd2lmaS9ydGw4MTg4ZWUvcHdyc2VxLmgNCj4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFs
-dGVrL3J0bHdpZmkvcnRsODE4OGVlL3B3cnNlcS5oDQo+IGluZGV4IGYyZDljNjExNmU1Yy4uODM3
-OWEzZTUxOThjIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0
-bHdpZmkvcnRsODE4OGVlL3B3cnNlcS5oDQo+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3Jl
-YWx0ZWsvcnRsd2lmaS9ydGw4MTg4ZWUvcHdyc2VxLmgNCj4gQEAgLTE0Miw3ICsxNDIsNyBAQA0K
-PiDCoAkvKndhaXQgcG93ZXIgc3RhdGUgdG8gc3VzcGVuZCovfSwJCQkJXA0KPiDCoAl7MHgwMDA1
-LCBQV1JfQ1VUX0FMTF9NU0ssIFBXUl9GQUJfQUxMX01TSywgUFdSX0lOVEZfQUxMX01TSywJXA0K
-PiDCoAlQV1JfQkFTRUFERFJfTUFDLCBQV1JfQ01EX1dSSVRFLCBCSVQoMykgfCBCSVQoNCksIDAJ
-CVwNCj4gLQkvKjB4MDRbMTI6MTFdID0gMmInMDFlbmFibGUgV0wgc3VzcGVuZCovfSwNCj4gKwkv
-KjB4MDRbMTI6MTFdID0gMmInMDAgZGlzYWJsZSBXTCBzdXNwZW5kKi99LA0KPiDCoA0KDQpbLi4u
-XQ0KDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkv
-cnRsODE5MmVlL3B3cnNlcS5oDQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3
-aWZpL3J0bDgxOTJlZS9wd3JzZXEuaA0KPiBpbmRleCA3ODFlZWFhNmFmNDkuLmM1NzA4MDE1MDhj
-YyAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3J0
-bDgxOTJlZS9wd3JzZXEuaA0KPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0
-bHdpZmkvcnRsODE5MmVlL3B3cnNlcS5oDQo+IEBAIC0xMzQsNyArMTM0LDcgQEANCj4gwqAJLyp3
-YWl0IHBvd2VyIHN0YXRlIHRvIHN1c3BlbmQqLwkJCQkJXA0KPiDCoAl7MHgwMDg2LCBQV1JfQ1VU
-X0FMTF9NU0ssIFBXUl9GQUJfQUxMX01TSywgUFdSX0lOVEZfU0RJT19NU0ssCVwNCj4gwqAJwqBQ
-V1JfQkFTRUFERFJfU0RJTyAsIFBXUl9DTURfUE9MTElORywgQklUKDEpLCBCSVQoMSl9LAkJXA0K
-PiAtCS8qMHgwNFsxMjoxMV0gPSAyYicwMWVuYWJsZSBXTCBzdXNwZW5kKi8JCQlcDQo+ICsJLyow
-eDA0WzEyOjExXSA9IDJiJzAwIGRpc2FibGUgV0wgc3VzcGVuZCovCQkJXA0KPiDCoAl7MHgwMDA1
-LCBQV1JfQ1VUX0FMTF9NU0ssIFBXUl9GQUJfQUxMX01TSywgUFdSX0lOVEZfQUxMX01TSywJXA0K
-PiDCoAnCoFBXUl9CQVNFQUREUl9NQUMgLCBQV1JfQ01EX1dSSVRFLCBCSVQoMykgfCBCSVQoNCks
-IDB9LA0KPiDCoA0KDQpGb3IgZnVydGhlciByZXZpZXdlcnMsIHBsZWFzZSBwYXkgYXR0ZW50aW9u
-IHRvIGNvbW1lbnRzIGV4aXN0IGFib3ZlIG9ywqANCmJlbG93IHRoZSBzdGF0ZW1lbnRzLg0KDQo=
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+
+Some geographic profiles require specific handling.  For example ETSI
+profile requires special channel access handling.  Add geographic
+profile information to MCC_UPDATE response to allow it.
+
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
+index 3fd07bc80f54..37c57bcbfb4a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
+@@ -8,6 +8,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -30,6 +31,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -310,6 +312,17 @@ struct iwl_mcc_update_resp_v1  {
+ 	__le32 channels[0];
+ } __packed; /* LAR_UPDATE_MCC_CMD_RESP_S_VER_1 */
+ 
++/**
++ * enum iwl_geo_information - geographic information.
++ * @GEO_NO_INFO: no special info for this geo profile.
++ * @GEO_WMM_ETSI_5GHZ_INFO: this geo profile limits the WMM params
++ *	for the 5 GHz band.
++ */
++enum iwl_geo_information {
++	GEO_NO_INFO =			0,
++	GEO_WMM_ETSI_5GHZ_INFO =	BIT(0),
++};
++
+ /**
+  * struct iwl_mcc_update_resp - response to MCC_UPDATE_CMD.
+  * Contains the new channel control profile map, if changed, and the new MCC
+@@ -320,7 +333,8 @@ struct iwl_mcc_update_resp_v1  {
+  * @cap: capabilities for all channels which matches the MCC
+  * @source_id: the MCC source, see iwl_mcc_source
+  * @time: time elapsed from the MCC test start (in 30 seconds TU)
+- * @reserved: reserved.
++ * @geo_info: geographic specific profile information
++ *	see &enum iwl_geo_information.
+  * @n_channels: number of channels in @channels_data (may be 14, 39, 50 or 51
+  *		channels, depending on platform)
+  * @channels: channel control data map, DWORD for each channel. Only the first
+@@ -332,10 +346,10 @@ struct iwl_mcc_update_resp {
+ 	u8 cap;
+ 	u8 source_id;
+ 	__le16 time;
+-	__le16 reserved;
++	__le16 geo_info;
+ 	__le32 n_channels;
+ 	__le32 channels[0];
+-} __packed; /* LAR_UPDATE_MCC_CMD_RESP_S_VER_2 */
++} __packed; /* LAR_UPDATE_MCC_CMD_RESP_S_VER_3 */
+ 
+ /**
+  * struct iwl_mcc_chub_notif - chub notifies of mcc change
+-- 
+2.16.2
