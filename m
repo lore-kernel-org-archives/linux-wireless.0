@@ -1,64 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:39711 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752144AbeCEOtL (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:59797 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751072AbeC1MqQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Mar 2018 09:49:11 -0500
-Received: by mail-pl0-f67.google.com with SMTP id s13-v6so9759012plq.6
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2018 06:49:10 -0800 (PST)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
+        Wed, 28 Mar 2018 08:46:16 -0400
+Subject: Re: [PATCH v3] ath9k: fix crash in spectral scan
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [PATCH 06/10] rsi: add module parameter rsi_reg
-Date: Mon,  5 Mar 2018 20:06:56 +0530
-Message-Id: <1520260620-4694-7-git-send-email-amitkarwar@gmail.com> (sfid-20180305_154917_028931_C6C07345)
-In-Reply-To: <1520260620-4694-1-git-send-email-amitkarwar@gmail.com>
-References: <1520260620-4694-1-git-send-email-amitkarwar@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+References: <20180303041044.26372-1-s.gottschall@dd-wrt.com>
+ <87vadgo6vw.fsf@purkki.adurom.net>
+ <bf40cf99-a105-e0a7-750e-8f212df1a610@dd-wrt.com>
+ <87d0zophri.fsf@kamboji.qca.qualcomm.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <11a31133-ef28-b003-2f84-fb01f1fda7bb@dd-wrt.com> (sfid-20180328_144904_015403_F2DBD65F)
+Date: Wed, 28 Mar 2018 14:46:15 +0200
+MIME-Version: 1.0
+In-Reply-To: <87d0zophri.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Am 28.03.2018 um 13:21 schrieb Kalle Valo:
+> Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
+>
+>>> Apparently the automatic email was not sent, no idea why. But this was
+>>> applied to ath-next few days ago:
+>>>
+>>> 221b6ec69ed9 ath9k: fix crash in spectral scan
+>> i have seen it. thx
+>>
+>> any idea about my led code for ath10k?
+> I should get to it this or next week.
+thank you. i have other usefull enhancements in my local pipeline which 
+i start to rewrite for
+latest next tree once its merged
 
-For few regulatory customizations, we are taking rsi_reg
-as module parameter.
+Sebastian
+>
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_main.c | 4 ++++
- drivers/net/wireless/rsi/rsi_common.h   | 3 +++
- 2 files changed, 7 insertions(+)
-
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index bf05242..e290779 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -24,6 +24,10 @@
- #include "rsi_coex.h"
- #include "rsi_hal.h"
- 
-+static u16 rsi_reg = RSI_REG_DEF;
-+module_param(rsi_reg, ushort, 0444);
-+MODULE_PARM_DESC(rsi_reg, "0 - RSI_REG_DEF, 1 - RSI_REG_DLCAR");
-+
- u32 rsi_zone_enabled = /* INFO_ZONE |
- 			INIT_ZONE |
- 			MGMT_TX_ZONE |
-diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
-index d9ff3b8..df40556 100644
---- a/drivers/net/wireless/rsi/rsi_common.h
-+++ b/drivers/net/wireless/rsi/rsi_common.h
-@@ -24,6 +24,9 @@
- #define QUEUE_NOT_FULL                  1
- #define QUEUE_FULL                      0
- 
-+#define RSI_REG_DEF			0
-+#define RSI_REG_DLCAR			1
-+
- static inline int rsi_init_event(struct rsi_event *pevent)
- {
- 	atomic_set(&pevent->event_condition, 1);
 -- 
-2.7.4
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
