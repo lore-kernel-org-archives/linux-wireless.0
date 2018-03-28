@@ -1,88 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50296 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932171AbeCJOPU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Mar 2018 09:15:20 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
-        kubakici@wp.pl, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v3 05/20] firmware: simplify CONFIG_FW_LOADER_USER_HELPER_FALLBACK further
-Date: Sat, 10 Mar 2018 06:14:46 -0800
-Message-Id: <20180310141501.2214-6-mcgrof@kernel.org> (sfid-20180310_152005_833166_5BE1145A)
-In-Reply-To: <20180310141501.2214-1-mcgrof@kernel.org>
-References: <20180310141501.2214-1-mcgrof@kernel.org>
+Received: from paleale.coelho.fi ([176.9.41.70]:36952 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753302AbeC1OMJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Mar 2018 10:12:09 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Mordechay Goodstein <mordechay.goodstein@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 28 Mar 2018 17:11:47 +0300
+Message-Id: <20180328141157.5427-5-luca@coelho.fi> (sfid-20180328_161215_009469_AA64DA18)
+In-Reply-To: <20180328141157.5427-1-luca@coelho.fi>
+References: <20180328141157.5427-1-luca@coelho.fi>
+Subject: [PATCH 04/14] iwlwifi: set default timstamp marker cmd
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All CONFIG_FW_LOADER_USER_HELPER_FALLBACK really is, is just a bool,
-initailized at build time. Define it as such. This simplifies the
-logic even further, removing now all explicit #ifdefs around the code.
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-Acked-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+In case debug configuration is started with LDBG cmd also start timestamp
+marker for syncing logs witn the FW.
+
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/base/firmware_loader.c | 25 ++++++++++++++++++-------
- 1 file changed, 18 insertions(+), 7 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c     |  4 ++++
+ drivers/net/wireless/intel/iwlwifi/fw/debugfs.c | 24 +++++++++++++++---------
+ drivers/net/wireless/intel/iwlwifi/fw/debugfs.h |  5 +++++
+ 3 files changed, 24 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/base/firmware_loader.c b/drivers/base/firmware_loader.c
-index 7dd36ace6152..59dba794ce1a 100644
---- a/drivers/base/firmware_loader.c
-+++ b/drivers/base/firmware_loader.c
-@@ -266,6 +266,22 @@ static inline bool fw_state_is_aborted(struct fw_priv *fw_priv)
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index 7bd704a3e640..d27a43ea0d7c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -68,6 +68,7 @@
+ #include "iwl-drv.h"
+ #include "runtime.h"
+ #include "dbg.h"
++#include "debugfs.h"
+ #include "iwl-io.h"
+ #include "iwl-prph.h"
+ #include "iwl-csr.h"
+@@ -1080,6 +1081,9 @@ int iwl_fw_start_dbg_conf(struct iwl_fw_runtime *fwrt, u8 conf_id)
+ 		IWL_WARN(fwrt, "FW already configured (%d) - re-configuring\n",
+ 			 fwrt->dump.conf);
  
- #ifdef CONFIG_FW_LOADER_USER_HELPER
- 
-+/**
-+ * struct firmware_fallback_config - firmware fallback configuratioon settings
-+ *
-+ * Helps describe and fine tune the fallback mechanism.
-+ *
-+ * @force_sysfs_fallback: force the sysfs fallback mechanism to be used
-+ * 	as if one had enabled CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y.
-+ */
-+struct firmware_fallback_config {
-+	bool force_sysfs_fallback;
-+};
++	/* start default config marker cmd for syncing logs */
++	iwl_fw_trigger_timestamp(fwrt, 1);
 +
-+static const struct firmware_fallback_config fw_fallback_config = {
-+	.force_sysfs_fallback = IS_ENABLED(CONFIG_FW_LOADER_USER_HELPER_FALLBACK),
-+};
-+
- static inline bool fw_sysfs_done(struct fw_priv *fw_priv)
- {
- 	return __fw_state_check(fw_priv, FW_STATUS_DONE);
-@@ -1151,19 +1167,14 @@ static int fw_load_from_user_helper(struct firmware *firmware,
- 	return ret;
+ 	/* Send all HCMDs for configuring the FW debug */
+ 	ptr = (void *)&fwrt->fw->dbg_conf_tlv[conf_id]->hcmd;
+ 	for (i = 0; i < fwrt->fw->dbg_conf_tlv[conf_id]->num_of_hcmds; i++) {
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
+index baec2fbaaf68..8f005cd69559 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
+@@ -157,6 +157,20 @@ static void iwl_fw_timestamp_marker_wk(struct work_struct *work)
+ 			 ret, jiffies_to_msecs(delay) / 1000);
  }
  
--#ifdef CONFIG_FW_LOADER_USER_HELPER_FALLBACK
--static bool fw_force_sysfs_fallback(unsigned int opt_flags)
--{
--	return true;
--}
--#else
- static bool fw_force_sysfs_fallback(unsigned int opt_flags)
- {
-+	if (fw_fallback_config.force_sysfs_fallback)
-+		return true;
- 	if (!(opt_flags & FW_OPT_USERHELPER))
- 		return false;
- 	return true;
- }
--#endif
++void iwl_fw_trigger_timestamp(struct iwl_fw_runtime *fwrt, u32 delay)
++{
++	IWL_INFO(fwrt,
++		 "starting timestamp_marker trigger with delay: %us\n",
++		 delay);
++
++	iwl_fw_cancel_timestamp(fwrt);
++
++	fwrt->timestamp.delay = msecs_to_jiffies(delay * 1000);
++
++	schedule_delayed_work(&fwrt->timestamp.wk,
++			      round_jiffies_relative(fwrt->timestamp.delay));
++}
++
+ static ssize_t iwl_dbgfs_timestamp_marker_write(struct iwl_fw_runtime *fwrt,
+ 						char *buf, size_t count,
+ 						loff_t *ppos)
+@@ -168,16 +182,8 @@ static ssize_t iwl_dbgfs_timestamp_marker_write(struct iwl_fw_runtime *fwrt,
+ 	if (ret < 0)
+ 		return ret;
  
- static bool fw_run_sysfs_fallback(unsigned int opt_flags)
- {
+-	IWL_INFO(fwrt,
+-		 "starting timestamp_marker trigger with delay: %us\n",
+-		 delay);
++	iwl_fw_trigger_timestamp(fwrt, delay);
+ 
+-	iwl_fw_cancel_timestamp(fwrt);
+-
+-	fwrt->timestamp.delay = msecs_to_jiffies(delay * 1000);
+-
+-	schedule_delayed_work(&fwrt->timestamp.wk,
+-			      round_jiffies_relative(fwrt->timestamp.delay));
+ 	return count;
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.h b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.h
+index 3da468d2cc92..d93f6a4bb22d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.h
+@@ -89,6 +89,8 @@ static inline void iwl_fw_resume_timestamp(struct iwl_fw_runtime *fwrt)
+ 			      round_jiffies_relative(fwrt->timestamp.delay));
+ }
+ 
++void iwl_fw_trigger_timestamp(struct iwl_fw_runtime *fwrt, u32 delay);
++
+ #else
+ static inline int iwl_fwrt_dbgfs_register(struct iwl_fw_runtime *fwrt,
+ 					  struct dentry *dbgfs_dir)
+@@ -102,4 +104,7 @@ static inline void iwl_fw_suspend_timestamp(struct iwl_fw_runtime *fwrt) {}
+ 
+ static inline void iwl_fw_resume_timestamp(struct iwl_fw_runtime *fwrt) {}
+ 
++static inline void iwl_fw_trigger_timestamp(struct iwl_fw_runtime *fwrt,
++					    u32 delay) {}
++
+ #endif /* CONFIG_IWLWIFI_DEBUGFS */
 -- 
 2.16.2
