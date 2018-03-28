@@ -1,50 +1,279 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:36670 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031365AbeCAOVg (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:37032 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753156AbeC1O0r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:21:36 -0500
-Received: by mail-qt0-f196.google.com with SMTP id c7so7703419qtn.3
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:21:35 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 27/52] ath: Map Bulgaria to ETSI1_WORLD
-Date: Thu,  1 Mar 2018 15:18:37 +0100
-Message-Id: <20180301141902.24824-28-sven.eckelmann@openmesh.com> (sfid-20180301_152140_891266_D66E8124)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+        Wed, 28 Mar 2018 10:26:47 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>, stable@vger.kernel.org
+Date: Wed, 28 Mar 2018 17:26:40 +0300
+Message-Id: <20180328142640.9312-1-luca@coelho.fi> (sfid-20180328_162650_562604_CB49FDA8)
+In-Reply-To: <20180328141157.5427-1-luca@coelho.fi>
+References: <20180328141157.5427-1-luca@coelho.fi>
+Subject: [PATCH 10/14] iwlwifi: add a bunch of new 9000 PCI IDs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The regdomain code is used to select the correct the correct conformance
-test limits (CTL) for a country. If the regdomain code isn't correctly
-mapped to the actual CTL entries in EEPROM then it could happen that the
-device violates the regulations. But it can also happen that the device is
-then not able to be used with its full txpower on all rates.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-This change itself doesn't change the selected CTL of this country and is
-only required to stay in sync with the QCA mappings.
+A lot of new PCI IDs were added for the 9000 series.  Add them to the
+list of supported PCI IDs.
 
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Cc: stable@vger.kernel.org # 4.13+
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/regd_common.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 157 +++++++++++++++++++++++++-
+ 1 file changed, 155 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index 4edd4c1d99fa..3a7fbd3794bc 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -325,7 +325,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_BOSNIA_HERZ, ETSI1_WORLD, "BA"},
- 	{CTRY_BRAZIL, FCC3_WORLD, "BR"},
- 	{CTRY_BRUNEI_DARUSSALAM, APL6_WORLD, "BN"},
--	{CTRY_BULGARIA, ETSI6_WORLD, "BG"},
-+	{CTRY_BULGARIA, ETSI1_WORLD, "BG"},
- 	{CTRY_CAMBODIA, ETSI1_WORLD, "KH"},
- 	{CTRY_CANADA, FCC3_FCCA, "CA"},
- 	{CTRY_CANADA2, FCC6_FCCA, "CA"},
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index e323d3abb6ac..959de2f8bb28 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -8,6 +8,7 @@
+  * Copyright(c) 2007 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016-2017 Intel Deutschland GmbH
++ * Copyright(c) 2018        Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -36,6 +37,7 @@
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * All rights reserved.
+  * Copyright(c) 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018        Intel Corporation
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions
+@@ -517,9 +519,9 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x24FD, 0x9074, iwl8265_2ac_cfg)},
+ 
+ /* 9000 Series */
+-	{IWL_PCI_DEVICE(0x2526, 0x0000, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x0010, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x0014, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0018, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x0030, iwl9560_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x0034, iwl9560_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x0038, iwl9560_2ac_cfg)},
+@@ -544,11 +546,15 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x2526, 0x1410, iwl9270_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x1420, iwl9460_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x1610, iwl9270_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x2030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2526, 0x2034, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x4010, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x4030, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x4034, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x40A4, iwl9460_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x2526, 0xA014, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x4234, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x42A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2526, 0xA014, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x271B, 0x0010, iwl9160_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x271B, 0x0014, iwl9160_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x271B, 0x0210, iwl9160_2ac_cfg)},
+@@ -569,16 +575,42 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x2720, 0x0264, iwl9461_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x2720, 0x02A0, iwl9462_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x2720, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x1010, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x1030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x1210, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x2030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x2034, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x2720, 0x4030, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2720, 0x4034, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x2720, 0x40A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x4234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x2720, 0x42A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x0030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x0034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x0038, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x003C, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x30DC, 0x0060, iwl9460_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x30DC, 0x0064, iwl9461_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x30DC, 0x00A0, iwl9462_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x30DC, 0x00A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x0230, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x0234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x0238, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x023C, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x30DC, 0x0260, iwl9461_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x30DC, 0x0264, iwl9461_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x30DC, 0x02A0, iwl9462_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x30DC, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x1010, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x30DC, 0x1030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x1210, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x30DC, 0x2030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x2034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x4030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x4034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x40A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x4234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x30DC, 0x42A4, iwl9462_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x31DC, 0x0030, iwl9560_2ac_cfg_shared_clk)},
+ 	{IWL_PCI_DEVICE(0x31DC, 0x0034, iwl9560_2ac_cfg_shared_clk)},
+ 	{IWL_PCI_DEVICE(0x31DC, 0x0038, iwl9560_2ac_cfg_shared_clk)},
+@@ -595,12 +627,94 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x31DC, 0x0264, iwl9461_2ac_cfg_shared_clk)},
+ 	{IWL_PCI_DEVICE(0x31DC, 0x02A0, iwl9462_2ac_cfg_shared_clk)},
+ 	{IWL_PCI_DEVICE(0x31DC, 0x02A4, iwl9462_2ac_cfg_shared_clk)},
++	{IWL_PCI_DEVICE(0x31DC, 0x1010, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x31DC, 0x1030, iwl9560_2ac_cfg_shared_clk)},
++	{IWL_PCI_DEVICE(0x31DC, 0x1210, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x31DC, 0x2030, iwl9560_2ac_cfg_shared_clk)},
++	{IWL_PCI_DEVICE(0x31DC, 0x2034, iwl9560_2ac_cfg_shared_clk)},
+ 	{IWL_PCI_DEVICE(0x31DC, 0x4030, iwl9560_2ac_cfg_shared_clk)},
+ 	{IWL_PCI_DEVICE(0x31DC, 0x4034, iwl9560_2ac_cfg_shared_clk)},
+ 	{IWL_PCI_DEVICE(0x31DC, 0x40A4, iwl9462_2ac_cfg_shared_clk)},
++	{IWL_PCI_DEVICE(0x31DC, 0x4234, iwl9560_2ac_cfg_shared_clk)},
++	{IWL_PCI_DEVICE(0x31DC, 0x42A4, iwl9462_2ac_cfg_shared_clk)},
+ 	{IWL_PCI_DEVICE(0x34F0, 0x0030, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x34F0, 0x0034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0038, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x003C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0060, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0064, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x00A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x00A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0230, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0238, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x023C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0260, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x0264, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x02A0, iwl9462_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x34F0, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x1010, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x34F0, 0x1030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x1210, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x34F0, 0x2030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x2034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x4030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x4034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x40A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x4234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x34F0, 0x42A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x0030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x0034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x0038, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x003C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x0060, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x0064, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x00A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x00A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x0230, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x0234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x0238, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x023C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x0260, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x0264, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x02A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x1010, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x1030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x1210, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x2030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x2034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x4030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x4034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x40A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x4234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x3DF0, 0x42A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x0030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x0034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x0038, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x003C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x0060, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x0064, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x00A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x00A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x0230, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x0234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x0238, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x023C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x0260, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x0264, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x02A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x1010, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x43F0, 0x1030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x1210, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x43F0, 0x2030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x2034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x4030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x4034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x40A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x4234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x43F0, 0x42A4, iwl9462_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0000, iwl9460_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9460_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0030, iwl9560_2ac_cfg_soc)},
+@@ -626,11 +740,44 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0610, iwl9460_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0710, iwl9460_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x1010, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x1030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x1210, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x2010, iwl9460_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x2030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x2034, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl9460_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x4030, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x4034, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x40A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x4234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x42A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x0030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x0034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x0038, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x003C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x0060, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x0064, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x00A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x00A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x0230, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x0234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x0238, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x023C, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x0260, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x0264, iwl9461_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x02A0, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x1010, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x1030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x1210, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x2030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x2034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x4030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x4034, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x40A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x4234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA0F0, 0x42A4, iwl9462_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0xA370, 0x0030, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0xA370, 0x0034, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0xA370, 0x0038, iwl9560_2ac_cfg_soc)},
+@@ -647,10 +794,16 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0xA370, 0x0264, iwl9461_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0xA370, 0x02A0, iwl9462_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0xA370, 0x02A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x1010, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0xA370, 0x1030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x1210, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0xA370, 0x2030, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x2034, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0xA370, 0x4030, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0xA370, 0x4034, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0xA370, 0x40A4, iwl9462_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x4234, iwl9560_2ac_cfg_soc)},
++	{IWL_PCI_DEVICE(0xA370, 0x42A4, iwl9462_2ac_cfg_soc)},
+ 
+ /* 22000 Series */
+ 	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwl22000_2ac_cfg_hr_cdb)},
 -- 
-2.11.0
+2.16.2
