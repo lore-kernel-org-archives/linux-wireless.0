@@ -1,187 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f52.google.com ([209.85.215.52]:33535 "EHLO
-        mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750950AbeCOHa0 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:37170 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753047AbeC1UCz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Mar 2018 03:30:26 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        James Hughes <james.hughes@raspberrypi.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        =?UTF-8?q?Linus=20L=C3=BCssing?= <linus.luessing@c0d3.blue>,
-        Felix Fietkau <nbd@nbd.name>,
-        bridge@lists.linux-foundation.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH V2] brcmfmac: drop Inter-Access Point Protocol packets by default
-Date: Thu, 15 Mar 2018 08:29:09 +0100
-Message-Id: <20180315072909.1512-1-zajec5@gmail.com> (sfid-20180315_083037_972695_EA4AB181)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Wed, 28 Mar 2018 16:02:55 -0400
+Message-ID: <1522267371.3786.294.camel@coelho.fi> (sfid-20180328_220259_285286_72055975)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com,
+        david.e.box@intel.com, janet.morgan@intel.com, joe.konno@intel.com
+Date: Wed, 28 Mar 2018 23:02:51 +0300
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-ON/fOrqkQawDzbopbeoO"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi-next 2018-03-28
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
 
-Testing brcmfmac with more recent firmwares resulted in AP interfaces
-not working in some specific setups. Debugging resulted in discovering
-support for IAPP in Broadcom's firmwares.
+--=-ON/fOrqkQawDzbopbeoO
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Older firmwares were only generating 802.11f frames. Newer ones like:
-1) 10.10 (TOB) (r663589)
-2) 10.10.122.20 (r683106)
-for 4366b1 and 4366c0 respectively seem to also /respect/ 802.11f frames
-in the Tx path by performing a STA disassociation.
+Hi Kalle,
 
-This obsoleted standard and its implementation is something that:
-1) Most people don't need / want to use
-2) Can allow local DoS attacks
-3) Breaks AP interfaces in some specific bridge setups
+This is a batch of patches intended for v4.17.  Nothing major here,
+just the usual continued development, bugfixes, new FW APIs and some
+minor features.  More details about the contents in the tag
+description.
 
-To solve issues it can cause this commit modifies brcmfmac to drop IAPP
-packets. If affects:
-1) Rx path: driver won't be sending these unwanted packets up.
-2) Tx path: driver will reject packets that would trigger STA
-   disassociation perfromed by a firmware (possible local DoS attack).
+The commit messages you commented on have been fixed, as you can see in
+v2 of those patches that I sent to the list.
 
-It appears there are some Broadcom's clients/users who care about this
-feature despite the drawbacks. They can switch it on using a new module
-param.
+I have sent this out before and kbuildbot reported success.
 
-This change results in only two more comparisons (check for module param
-and check for Ethernet packet length) for 99.9% of packets. Its overhead
-should be very minimal.
+Please let me know if there are any issues.
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
- .../wireless/broadcom/brcm80211/brcmfmac/common.c  |  5 ++
- .../wireless/broadcom/brcm80211/brcmfmac/common.h  |  1 +
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 57 ++++++++++++++++++++++
- 3 files changed, 63 insertions(+)
+Cheers,
+Luca.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 70ef9835b647..5532ef39439f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -75,6 +75,10 @@ static int brcmf_roamoff;
- module_param_named(roamoff, brcmf_roamoff, int, S_IRUSR);
- MODULE_PARM_DESC(roamoff, "Do not use internal roaming engine");
- 
-+static int brcmf_iapp_enable;
-+module_param_named(iapp, brcmf_iapp_enable, int, 0);
-+MODULE_PARM_DESC(iapp, "Enable partial support for the obsoleted Inter-Access Point Protocol");
-+
- #ifdef DEBUG
- /* always succeed brcmf_bus_started() */
- static int brcmf_ignore_probe_fail;
-@@ -438,6 +442,7 @@ struct brcmf_mp_device *brcmf_get_module_param(struct device *dev,
- 	settings->feature_disable = brcmf_feature_disable;
- 	settings->fcmode = brcmf_fcmode;
- 	settings->roamoff = !!brcmf_roamoff;
-+	settings->iapp = !!brcmf_iapp_enable;
- #ifdef DEBUG
- 	settings->ignore_probe_fail = !!brcmf_ignore_probe_fail;
- #endif
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-index a62f8e70b320..ef914619e8e1 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-@@ -58,6 +58,7 @@ struct brcmf_mp_device {
- 	unsigned int	feature_disable;
- 	int		fcmode;
- 	bool		roamoff;
-+	bool		iapp;
- 	bool		ignore_probe_fail;
- 	struct brcmfmac_pd_cc *country_codes;
- 	union {
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 19048526b4af..ca97a8b4c59f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -230,6 +230,37 @@ static void brcmf_netdev_set_multicast_list(struct net_device *ndev)
- 	schedule_work(&ifp->multicast_work);
- }
- 
-+/**
-+ * brcmf_skb_is_iapp - checks if skb is an IAPP packet
-+ *
-+ * @skb: skb to check
-+ */
-+static bool brcmf_skb_is_iapp(struct sk_buff *skb)
-+{
-+	static const u8 iapp_l2_update_packet[6] __aligned(2) = {
-+		0x00, 0x01, 0xaf, 0x81, 0x01, 0x00,
-+	};
-+	unsigned char *eth_data;
-+#if !defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
-+	const u16 *a, *b;
-+#endif
-+
-+	if (skb->len - skb->mac_len != 6 ||
-+	    !is_multicast_ether_addr(eth_hdr(skb)->h_dest))
-+		return false;
-+
-+	eth_data = skb_mac_header(skb) + ETH_HLEN;
-+#if defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
-+	return !(((*(const u32 *)eth_data) ^ (*(const u32 *)iapp_l2_update_packet)) |
-+		 ((*(const u16 *)(eth_data + 4)) ^ (*(const u16 *)(iapp_l2_update_packet + 4))));
-+#else
-+	a = (const u16 *)eth_data;
-+	b = (const u16 *)iapp_l2_update_packet;
-+
-+	return !((a[0] ^ b[0]) | (a[1] ^ b[1]) | (a[2] ^ b[2]));
-+#endif
-+}
-+
- static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
- 					   struct net_device *ndev)
- {
-@@ -250,6 +281,23 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
- 		goto done;
- 	}
- 
-+	/* Some recent Broadcom's firmwares disassociate STA when they receive
-+	 * an 802.11f ADD frame. This behavior can lead to a local DoS security
-+	 * issue. Attacker may trigger disassociation of any STA by sending a
-+	 * proper Ethernet frame to the wireless interface.
-+	 *
-+	 * Moreover this feature may break AP interfaces in some specific
-+	 * setups. This applies e.g. to the bridge with hairpin mode enabled and
-+	 * IFLA_BRPORT_MCAST_TO_UCAST set. IAPP packet generated by a firmware
-+	 * will get passed back to the wireless interface and cause immediate
-+	 * disassociation of a just-connected STA.
-+	 */
-+	if (!drvr->settings->iapp && brcmf_skb_is_iapp(skb)) {
-+		dev_kfree_skb(skb);
-+		ret = -EINVAL;
-+		goto done;
-+	}
-+
- 	/* Make sure there's enough writeable headroom */
- 	if (skb_headroom(skb) < drvr->hdrlen || skb_header_cloned(skb)) {
- 		head_delta = max_t(int, drvr->hdrlen - skb_headroom(skb), 0);
-@@ -325,6 +373,15 @@ void brcmf_txflowblock_if(struct brcmf_if *ifp,
- 
- void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb)
- {
-+	/* Most of Broadcom's firmwares send 802.11f ADD frame every time a new
-+	 * STA connects to the AP interface. This is an obsoleted standard most
-+	 * users don't use, so don't pass these frames up unless requested.
-+	 */
-+	if (!ifp->drvr->settings->iapp && brcmf_skb_is_iapp(skb)) {
-+		brcmu_pkt_buf_free_skb(skb);
-+		return;
-+	}
-+
- 	if (skb->pkt_type == PACKET_MULTICAST)
- 		ifp->ndev->stats.multicast++;
- 
--- 
-2.11.0
+
+The following changes since commit 6b7d5c0745905b71127d0c1ae6eeddc09bbdaad8=
+:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-driver=
+s.git (2018-03-28 11:57:34 +0300)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
+gs/iwlwifi-next-for-kalle-2018-03-28
+
+for you to fetch changes up to 378c8931342f99c5a6fce21e38ef46ac39395464:
+
+  iwlwifi: wrt: add fw force restart via triggers (2018-03-28 22:43:40 +030=
+0)
+
+----------------------------------------------------------------
+iwlwifi patches for 4.14
+
+* Fix a UBSAN warning;
+* Improvement in the net-stack/driver log syncing
+* An RCU lock fix in the new rate-scaling code;
+* Support for new PCI IDs for the 9000 family;
+* Support for a new API version;
+* Initial work for supporting the new ETSI rules;
+* Support for advanced dwell in scanning;
+* Support for OCE in scanning;
+* Some debugging improvements;
+* Other small improvements and cleanups here and there.
+
+----------------------------------------------------------------
+Ayala Beker (1):
+      iwlwifi: fw api: support the new scan request FW API version
+
+Emmanuel Grumbach (1):
+      iwlwifi: bump the max API version for 9000 and 22000 devices
+
+Haim Dreyfuss (1):
+      iwlwifi: api: Add geographic profile information to MCC_UPDATE_CMD
+
+Ilan Peer (1):
+      iwlwifi: mvm: Allow iwl_mvm_mac_mgd_prepare_tx() when associated
+
+Luca Coelho (2):
+      iwlwifi: mvm: check if mac80211_queue is valid in iwl_mvm_disable_txq
+      iwlwifi: add a bunch of new 9000 PCI IDs
+
+Mordechay Goodstein (1):
+      iwlwifi: set default timstamp marker cmd
+
+Sara Sharon (4):
+      iwlwifi: mvm: flip AMSDU addresses only for 9000 family
+      iwlwifi: mvm: take RCU lock before dereferencing
+      iwlwifi: mvm: move TSO segment to a separate function
+      iwlwifi: mvm: save low latency causes in an enum
+
+Shahar S Matityahu (1):
+      iwlwifi: wrt: add fw force restart via triggers
+
+Zamir, Roee (2):
+      iwlwifi: mvm: add adaptive dwell support
+      iwlwifi: mvm: add support for oce
+
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c       |   4 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c        |   4 +-
+ drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h  |  20 ++++++++--
+ drivers/net/wireless/intel/iwlwifi/fw/api/scan.h     |  73 +++++++++++++++=
+++++++++++++---------
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c          |  10 +++++
+ drivers/net/wireless/intel/iwlwifi/fw/debugfs.c      |  24 +++++++-----
+ drivers/net/wireless/intel/iwlwifi/fw/debugfs.h      |   5 +++
+ drivers/net/wireless/intel/iwlwifi/fw/file.h         |  16 +++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/constants.h   |   2 +
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c |  11 ++----
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c    |  15 ++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h         |  48 +++++++++++++++=
++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c       |   6 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c        |  25 ++++++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c        | 199 +++++++++++++++=
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++-------------------=
+-------
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c          | 158 +++++++++++++++=
++++++++++++++++++++++++++-------------------------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c       |  19 ++++++++--
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c        | 157 +++++++++++++++=
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 18 files changed, 600 insertions(+), 196 deletions(-)
+--=-ON/fOrqkQawDzbopbeoO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF3LNfgb2BPWm68smoUecoho8xfoFAlq79OsACgkQoUecoho8
+xforeg//QfFd+4PEFOQSP0beVz7A4sLqK0N9MKoRvMiSzwXjlWoEl1hvdX2SwBtN
+HrpIrAQ/ZSBgEljtcnETFLpKh/oebAN6qdxdZMOP2r/jqu3breAB2ARoxwmAXtX1
+cHis4j82ZtVKnd1jFoVacse5lq1+Bo6fiTl67OWFyTNF8S2LVyKb5TBZ55rbZJP3
+9kz8srLWDTH7aYO7M5t5CcuZErOCJkpXgdJZdUiJblElm9/CeJkqAh+1aR9kYyYE
+2wQJ75uTG3/Poj/dk72GIbDoNwlnlyWB8VUE3RRGjRafCF/+eO/YziWwKO8F32Sq
+3/VD6KtLgeW7U8+i41+8ygG9pn6iZmDMKAcQMJe6nLuu5A9c/JwLVmqySl6+7o9I
+qe2hqEGK9zqweqhjZ5EVdjMEgLiDb5tGQkdnu6Bo5GduCCm8rnfSmlmOCnzqx7tc
+eiJu/bm/x08acSgaW8ruEkEm7boPc3I9lRxynzNyLaWKvCWQUmAjeV9cvEngPdyQ
+TQvSYXGj1rpfcvasn6NU/N8wS5GgGB8yzU5gYpCavSw5Md0grqFd/SxGv4/MyuTj
+rHuTQZTIcrg54x0izyXrncm6yxgvjA+K2Ocyk421XRKzeJZ4m3xKnVpgSERHcEd/
+LMdKY9zc9zh6yD622IanOlqq+gkUlkNVRulGUF/uXbapK9vFpsw=
+=pTSE
+-----END PGP SIGNATURE-----
+
+--=-ON/fOrqkQawDzbopbeoO--
