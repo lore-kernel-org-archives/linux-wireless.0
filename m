@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59342 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751906AbeCJIaA (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:49754 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752349AbeC1Rk3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Mar 2018 03:30:00 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arjav Parikh <parikharjav24@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Dependency required for wil6210 kernel module
-References: <CADoF8+AU991ut3889d0QsxVfKsQ_YXAYQBhQPzLWmxNE1Kn_WA@mail.gmail.com>
-Date: Sat, 10 Mar 2018 10:29:56 +0200
-In-Reply-To: <CADoF8+AU991ut3889d0QsxVfKsQ_YXAYQBhQPzLWmxNE1Kn_WA@mail.gmail.com>
-        (Arjav Parikh's message of "Sat, 10 Mar 2018 12:52:07 +0530")
-Message-ID: <87bmfw49kq.fsf@purkki.adurom.net> (sfid-20180310_093014_426121_64C63222)
+        Wed, 28 Mar 2018 13:40:29 -0400
+From: Colin King <colin.king@canonical.com>
+To: Maya Erez <merez@codeaurora.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH][next] wil6210: fix potential null dereference of ndev before null check
+Date: Wed, 28 Mar 2018 18:40:27 +0100
+Message-Id: <20180328174027.31551-1-colin.king@canonical.com> (sfid-20180328_194046_345375_7B0BD302)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arjav Parikh <parikharjav24@gmail.com> writes:
+From: Colin Ian King <colin.king@canonical.com>
 
-> Currently I am working to minimize the filesystem for one of my
-> project. In my project I only want to add support for USB & Wireless
-> (wil6210). To minimize the filesystem I disabled the unwanted things
-> like Iptables, VLAN, VPN, Ethernet support etc from .config and
-> brought my image size from 22 MB to 8.9 MB.
->
-> Now when I did the ifconfig wlan0 up I get below error:
-> wil6210 0000:01:00.0 wlan0: wil_open: Failed to register with NSS
->
-> In Ideal case when I enter the above command I should get below logs:
-> wil6210 0000:01:00.0 wlan0: wil_open: Registered with NSS
->
-> I checked the dependency for wil6210.ko module and they are cfg80211 &
-> compat and they both are enabled.
->
-> Can any one tell me which libraries/modules I have mistakenly disabled
-> which is causing this error.
+The pointer ndev is being dereferenced before it is being null checked,
+hence there is a potential null pointer deference. Fix this by only
+dereferencing ndev after it has been null checked
 
-What kernel are you using? The NSS error messages imply that it's
-something else than upstream (kernel.org) kernel.
+Detected by CoverityScan, CID#1467010 ("Dereference before null check")
 
+Fixes: e00243fab84b ("wil6210: infrastructure for multiple virtual interfaces")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index a4b413e8d55a..82aec6b06d09 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -391,7 +391,7 @@ static void wil_fw_error_worker(struct work_struct *work)
+ 	struct wil6210_priv *wil = container_of(work, struct wil6210_priv,
+ 						fw_error_worker);
+ 	struct net_device *ndev = wil->main_ndev;
+-	struct wireless_dev *wdev = ndev->ieee80211_ptr;
++	struct wireless_dev *wdev;
+ 
+ 	wil_dbg_misc(wil, "fw error worker\n");
+ 
+@@ -399,6 +399,7 @@ static void wil_fw_error_worker(struct work_struct *work)
+ 		wil_info(wil, "No recovery - interface is down\n");
+ 		return;
+ 	}
++	wdev = ndev->ieee80211_ptr;
+ 
+ 	/* increment @recovery_count if less then WIL6210_FW_RECOVERY_TO
+ 	 * passed since last recovery attempt
 -- 
-Kalle Valo
+2.15.1
