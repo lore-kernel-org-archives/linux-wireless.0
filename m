@@ -1,152 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36882 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751241AbeC1KYX (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:46992 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752715AbeC1Iwc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 06:24:23 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
+        Wed, 28 Mar 2018 04:52:32 -0400
+Message-ID: <1522227148.4222.4.camel@sipsolutions.net> (sfid-20180328_105237_151109_8244F613)
+Subject: Re: [RFC 2/4] nl80211/mac80211: Extend NoAck policy command with
+ peer MAC address
+From: Johannes Berg <johannes@sipsolutions.net>
+To: vthiagar@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Mar 2018 13:24:11 +0300
-Message-Id: <20180328102411.25677-4-luca@coelho.fi> (sfid-20180328_122426_583932_A4EC9565)
-In-Reply-To: <20180328102411.25677-1-luca@coelho.fi>
-References: <20180328102411.25677-1-luca@coelho.fi>
-Subject: [PATCH v3 3/3] cfg80211: Add API to allow querying regdb for wmm_rule
+        linux-wireless-owner@vger.kernel.org
+Date: Wed, 28 Mar 2018 10:52:28 +0200
+In-Reply-To: <7031cf9c458fd53091e74dec2ee83d82@codeaurora.org>
+References: <1522140171-10926-1-git-send-email-vthiagar@codeaurora.org>
+         <1522140171-10926-3-git-send-email-vthiagar@codeaurora.org>
+         <1522154870.3050.2.camel@sipsolutions.net>
+         <bf1c7f4dc442e0e2807b520fe94d7ca2@codeaurora.org>
+         <1522224360.4222.3.camel@sipsolutions.net>
+         <7031cf9c458fd53091e74dec2ee83d82@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+On Wed, 2018-03-28 at 14:20 +0530, vthiagar@codeaurora.org wrote:
+> 
+> > Btw, we should probably also have a way to *delete* the per-station
+> > configuration, so it uses the default again?
+> 
+> Sure. How about setting it to default when the command is received with 
+> no NL80211_ATTR_NOACK_MAP attribute for a station?
 
-In general regulatory self managed devices maintain their own
-regulatory profiles thus it doesn't have to query the regulatory database
-on country change.
+Sounds good to me.
 
-ETSI has recently introduced a new channel access mechanism for 5GHz
-that all wlan devices need to comply with.
-These values are stored in the regulatory database.
-There are self managed devices which can't maintain these
-values on their own. Add API to allow self managed regulatory devices
-to query the regulatory database for high band wmm rule.
-
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/net/cfg80211.h | 28 ++++++++++++++++++++++++++
- net/wireless/reg.c     | 54 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 82 insertions(+)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index fc40843baed3..18f57ae25171 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -6,6 +6,7 @@
-  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014 Intel Mobile Communications GmbH
-  * Copyright 2015-2017	Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -4657,6 +4658,33 @@ const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
-  */
- const char *reg_initiator_name(enum nl80211_reg_initiator initiator);
- 
-+/**
-+ * DOC: Internal regulatory db functions
-+ *
-+ */
-+
-+/**
-+ * reg_query_regdb_wmm -  Query internal regulatory db for wmm rule
-+ * Regulatory self-managed driver can use it to proactively
-+ *
-+ * @alpha2: the ISO/IEC 3166 alpha2 wmm rule to be queried.
-+ * @freq: the freqency(in MHz) to be queried.
-+ * @dbptr: pointer where the regdb wmm data is to be stored (or %NULL if
-+ *	irrelevant). This can be used later for deduplication.
-+ * @rule: pointer to store the wmm rule from the regulatory db.
-+ *
-+ * Self-managed wireless drivers can use this function to  query
-+ * the internal regulatory database to check whether the given
-+ * ISO/IEC 3166 alpha2 country and freq have wmm rule limitations.
-+ *
-+ * Drivers should check the return value, its possible you can get
-+ * an -ENODATA.
-+ *
-+ * Return: 0 on success. -ENODATA.
-+ */
-+int reg_query_regdb_wmm(char *alpha2, int freq, u32 *ptr,
-+			struct ieee80211_wmm_rule *rule);
-+
- /*
-  * callbacks for asynchronous cfg80211 methods, notification
-  * functions and BSS handling helpers
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 2520734bd1db..4f5e7d6c9f62 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -878,6 +878,60 @@ static void set_wmm_rule(struct ieee80211_wmm_rule *rule,
- 	}
- }
- 
-+static int __regdb_query_wmm(const struct fwdb_header *db,
-+			     const struct fwdb_country *country, int freq,
-+			     u32 *dbptr, struct ieee80211_wmm_rule *rule)
-+{
-+	unsigned int ptr = be16_to_cpu(country->coll_ptr) << 2;
-+	struct fwdb_collection *coll = (void *)((u8 *)db + ptr);
-+	int i;
-+
-+	for (i = 0; i < coll->n_rules; i++) {
-+		__be16 *rules_ptr = (void *)((u8 *)coll + ALIGN(coll->len, 2));
-+		unsigned int rule_ptr = be16_to_cpu(rules_ptr[i]) << 2;
-+		struct fwdb_rule *rrule = (void *)((u8 *)db + rule_ptr);
-+		struct fwdb_wmm_rule *wmm;
-+		unsigned int wmm_ptr;
-+
-+		if (rrule->len < offsetofend(struct fwdb_rule, wmm_ptr))
-+			continue;
-+
-+		if (freq >= KHZ_TO_MHZ(be32_to_cpu(rrule->start)) &&
-+		    freq <= KHZ_TO_MHZ(be32_to_cpu(rrule->end))) {
-+			wmm_ptr = be16_to_cpu(rrule->wmm_ptr) << 2;
-+			wmm = (void *)((u8 *)db + wmm_ptr);
-+			set_wmm_rule(rule, wmm);
-+			if (dbptr)
-+				*dbptr = wmm_ptr;
-+			return 0;
-+		}
-+	}
-+
-+	return -ENODATA;
-+}
-+
-+int reg_query_regdb_wmm(char *alpha2, int freq, u32 *dbptr,
-+			struct ieee80211_wmm_rule *rule)
-+{
-+	const struct fwdb_header *hdr = regdb;
-+	const struct fwdb_country *country;
-+
-+	if (IS_ERR(regdb))
-+		return PTR_ERR(regdb);
-+
-+	country = &hdr->country[0];
-+	while (country->coll_ptr) {
-+		if (alpha2_equal(alpha2, country->alpha2))
-+			return __regdb_query_wmm(regdb, country, freq, dbptr,
-+						 rule);
-+
-+		country++;
-+	}
-+
-+	return -ENODATA;
-+}
-+EXPORT_SYMBOL(reg_query_regdb_wmm);
-+
- struct wmm_ptrs {
- 	struct ieee80211_wmm_rule *rule;
- 	u32 ptr;
--- 
-2.16.2
+johannes
