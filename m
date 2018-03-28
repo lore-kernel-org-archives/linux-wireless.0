@@ -1,65 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:45939 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031301AbeCAOUn (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:46332 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750799AbeC1IDf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:20:43 -0500
-Received: by mail-qk0-f195.google.com with SMTP id g2so7667274qkd.12
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:20:43 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 06/52] ath: Add regulatory mapping for Mauritius
-Date: Thu,  1 Mar 2018 15:18:16 +0100
-Message-Id: <20180301141902.24824-7-sven.eckelmann@openmesh.com> (sfid-20180301_152046_977922_B5C2BC6F)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+        Wed, 28 Mar 2018 04:03:35 -0400
+Message-ID: <1522224211.4222.0.camel@sipsolutions.net> (sfid-20180328_100341_236298_2D376DE6)
+Subject: Re: [RFC 0/4] wireless: Per-sta NoAck and offload support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: vthiagar@codeaurora.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Steve deRosier <derosier@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        steve.derosier@gmail.com
+Date: Wed, 28 Mar 2018 10:03:31 +0200
+In-Reply-To: <e4449f3b1dc37f3c91284f284211d1c9@codeaurora.org>
+References: <1522140171-10926-1-git-send-email-vthiagar@codeaurora.org>
+         <CALLGbR+d8gCS0-_NV8i0K6ktL14OEiDjxVG4bvubmti7Yp5OoQ@mail.gmail.com>
+         <94497d97976ff1934a08e70cc118bf56@codeaurora.org>
+         <5ABB4636.2040900@broadcom.com>
+         <e4449f3b1dc37f3c91284f284211d1c9@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The country code is used by the ath to detect the ISO 3166-1 alpha-2 name
-and to select the correct conformance test limits (CTL) for a country. If
-the country isn't available and it is still programmed in the EEPROM then
-it will cause an error and stop the initialization with:
+On Wed, 2018-03-28 at 13:29 +0530, vthiagar@codeaurora.org wrote:
+> On 2018-03-28 13:07, Arend van Spriel wrote:
+> > On 3/28/2018 8:09 AM, vthiagar@codeaurora.org wrote:
+> > > On 2018-03-27 22:18, Steve deRosier wrote:
+> > > > Hi Vasanthakumar,
+> > > > 
+> > > > On Tue, Mar 27, 2018 at 1:42 AM, Vasanthakumar Thiagarajan
+> > > > <vthiagar@codeaurora.org> wrote:
+> > > > > Adds infrastructure for driver to offload NoAck functionality, 
+> > > > > driver
+> > > > > like ath10k could make use of it. Also extends the current ndev wide
+> > > > 
+> > > > I'm not really much of a fan of adding a feature without some use of
+> > > > the feature. Perhaps if drivers "like" ath10k could use it, maybe you
+> > > > should add a patch(s) to the series where one of those drivers
+> > > > actually uses the feature.  An API without an example of use is also
+> > > > harder to evaluate effectively.
+> > > 
+> > > I agree driver patch using the new NoAck infrastructure would help 
+> > > with
+> > > understanding, ill post it once it is ready. But not sure the driver 
+> > > patch
+> > > can be part of the same series.
+> > 
+> > The API patches would go in mac80211-next tree and indeed the driver
+> > patch would go through wireless-drivers-next tree. However, an option
+> > would be to add the driver patch(es) as RFC in the series so Johannes
+> > can ignore it and we still have an example to look at.
 
-  Invalid EEPROM contents
+FWIW, you can just include it as a regular [PATCH] - Kalle and I have a
+way of dealing with that - he just assigns it over to me initially, and
+I assign back once the prerequisites have landed.
 
-The current CTL mappings for this country are:
-
-* 2.4GHz: ETSI
-* 5GHz: ETSI
-
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
----
- drivers/net/wireless/ath/regd.h        | 1 +
- drivers/net/wireless/ath/regd_common.h | 1 +
- 2 files changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/regd.h b/drivers/net/wireless/ath/regd.h
-index a615a878ac40..f38e42703060 100644
---- a/drivers/net/wireless/ath/regd.h
-+++ b/drivers/net/wireless/ath/regd.h
-@@ -138,6 +138,7 @@ enum CountryCode {
- 	CTRY_MACEDONIA = 807,
- 	CTRY_MALAYSIA = 458,
- 	CTRY_MALTA = 470,
-+	CTRY_MAURITIUS = 480,
- 	CTRY_MEXICO = 484,
- 	CTRY_MONACO = 492,
- 	CTRY_MOROCCO = 504,
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index bdc1ff191264..375f9da6955b 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -430,6 +430,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_MACEDONIA, NULL1_WORLD, "MK"},
- 	{CTRY_MALAYSIA, APL8_WORLD, "MY"},
- 	{CTRY_MALTA, ETSI1_WORLD, "MT"},
-+	{CTRY_MAURITIUS, ETSI1_WORLD, "MU"},
- 	{CTRY_MEXICO, FCC1_FCCA, "MX"},
- 	{CTRY_MONACO, ETSI4_WORLD, "MC"},
- 	{CTRY_MOROCCO, APL4_WORLD, "MA"},
--- 
-2.11.0
+johannes
