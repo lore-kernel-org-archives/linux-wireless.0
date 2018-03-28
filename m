@@ -1,57 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:38486 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752460AbeCFB0L (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36644 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753533AbeC1PVQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Mar 2018 20:26:11 -0500
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 04/15] rtlwifi: btcoex: Add customer_id to do special deal to oem vendor
-Date: Tue, 6 Mar 2018 09:25:43 +0800
-Message-ID: <20180306012554.3108-5-pkshih@realtek.com> (sfid-20180306_022618_263357_9A5E5CAF)
-In-Reply-To: <20180306012554.3108-1-pkshih@realtek.com>
-References: <20180306012554.3108-1-pkshih@realtek.com>
+        Wed, 28 Mar 2018 11:21:16 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [07/12] ath10k: Add MSA handshake QMI mgs support
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1522042832-25975-1-git-send-email-govinds@codeaurora.org>
+References: <1522042832-25975-1-git-send-email-govinds@codeaurora.org>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: ath10k@lists.infradead.org, bjorn.andersson@linaro.org,
+        linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Message-Id: <20180328152116.7888B60AFB@smtp.codeaurora.org> (sfid-20180328_172120_409603_88B5D640)
+Date: Wed, 28 Mar 2018 15:21:16 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Govind Singh <govinds@codeaurora.org> wrote:
 
-Add customer_id field in structure, and then this is a clue to implement
-the behavior defined by vendor LENOVO_CHINA.
+> HOST allocates 2mb of region for modem and WCN3990
+> secure access and provides the address and access
+> control to target for secure access.
+> Add MSA handshake request/response messages.
+> 
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 1 +
- drivers/net/wireless/realtek/rtlwifi/wifi.h                   | 1 +
- 2 files changed, 2 insertions(+)
+This added a new ath10k-check warning:
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index f5d8159a88eb..3c6a1e8851ec 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -154,6 +154,7 @@ struct btc_board_info {
- 
- 	u8 rfe_type;
- 	u8 ant_div_cfg;
-+	u8 customer_id;
- };
- 
- enum btc_dbg_opcode {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 438678c2d14a..d27e33960e77 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -556,6 +556,7 @@ enum rt_oem_id {
- 	RT_CID_NETGEAR = 36,
- 	RT_CID_PLANEX = 37,
- 	RT_CID_CC_C = 38,
-+	RT_CID_LENOVO_CHINA = 40,
- };
- 
- enum hw_descs {
+drivers/net/wireless/ath/ath10k/qmi.c:433: void function return statements are not generally useful
+
 -- 
-2.15.1
+https://patchwork.kernel.org/patch/10307183/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
