@@ -1,122 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52306 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932126AbeCKMBt (ORCPT
+Received: from mout.kundenserver.de ([217.72.192.74]:46491 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751976AbeC1WH3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Mar 2018 08:01:49 -0400
-From: Ramon Fried <rfried@codeaurora.org>
-To: k.eugene.e@gmail.com, kvalo@codeaurora.org,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc: Ramon Fried <rfried@codeaurora.org>
-Subject: [PATCH] wcn36xx: Check DXE IRQ reason
-Date: Sun, 11 Mar 2018 14:01:43 +0200
-Message-Id: <20180311120143.29726-1-rfried@codeaurora.org> (sfid-20180311_130151_964358_C74F33A2)
+        Wed, 28 Mar 2018 18:07:29 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        Manikanta Pubbisetty <mpubbise@qti.qualcomm.com>,
+        Anilkumar Kolli <akolli@codeaurora.org>,
+        Carl Huang <cjhuang@codeaurora.org>,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Maharaja Kennadyrajan <mkenna@codeaurora.org>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath10k: avoid possible string overflow
+Date: Thu, 29 Mar 2018 00:06:10 +0200
+Message-Id: <20180328220635.3704458-1-arnd@arndb.de> (sfid-20180329_000749_531903_F7D97EFD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IRQ reason was not cheked for errors.
-Although error handing is not currently supported, it
-will be nice to output an error value to the log if the
-DMA operation failed.
+The way that 'strncat' is used here raised a warning in gcc-8:
 
-Signed-off-by: Ramon Fried <rfried@codeaurora.org>
+drivers/net/wireless/ath/ath10k/wmi.c: In function 'ath10k_wmi_tpc_stats_final_disp_tables':
+drivers/net/wireless/ath/ath10k/wmi.c:4649:4: error: 'strncat' output truncated before terminating nul copying as many bytes from a string as its length [-Werror=stringop-truncation]
+
+Effectively, this is simply a strcat() but the use of strncat() suggests
+some form of overflow check. Regardless of whether this might actually
+overflow, using strlcat() instead of strncat() avoids the warning and
+makes the code more robust.
+
+Fixes: bc64d05220f3 ("ath10k: debugfs support to get final TPC stats for 10.4 variants")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/wireless/ath/wcn36xx/dxe.c | 50 +++++++++++++++++++++++++++++-----
- drivers/net/wireless/ath/wcn36xx/dxe.h |  4 +++
- 2 files changed, 47 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index 8e4d6d9ea277..7d5ecaf02288 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -415,14 +415,31 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
- 					  WCN36XX_DXE_CH_STATUS_REG_ADDR_TX_H,
- 					  &int_reason);
- 
--		/* TODO: Check int_reason */
--
- 		wcn36xx_dxe_write_register(wcn,
- 					   WCN36XX_DXE_0_INT_CLR,
- 					   WCN36XX_INT_MASK_CHAN_TX_H);
- 
--		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_0_INT_ED_CLR,
--					   WCN36XX_INT_MASK_CHAN_TX_H);
-+		if (int_reason & WCN36XX_CH_STAT_INT_ERR_MASK ) {
-+			wcn36xx_dxe_write_register(wcn,
-+						   WCN36XX_DXE_0_INT_ERR_CLR,
-+						   WCN36XX_INT_MASK_CHAN_TX_H);
-+
-+			wcn36xx_err("DXE IRQ reported error: 0x%x in high TX channel\n",
-+					int_src);
-+		}
-+
-+		if (int_reason & WCN36XX_CH_STAT_INT_DONE_MASK) {
-+			wcn36xx_dxe_write_register(wcn,
-+						   WCN36XX_DXE_0_INT_DONE_CLR,
-+						   WCN36XX_INT_MASK_CHAN_TX_H);
-+		}
-+
-+		if (int_reason & WCN36XX_CH_STAT_INT_ED_MASK) {
-+			wcn36xx_dxe_write_register(wcn,
-+						   WCN36XX_DXE_0_INT_ED_CLR,
-+						   WCN36XX_INT_MASK_CHAN_TX_H);
-+		}
-+
- 		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready high\n");
- 		reap_tx_dxes(wcn, &wcn->dxe_tx_h_ch);
- 	}
-@@ -431,14 +448,33 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
- 		wcn36xx_dxe_read_register(wcn,
- 					  WCN36XX_DXE_CH_STATUS_REG_ADDR_TX_L,
- 					  &int_reason);
--		/* TODO: Check int_reason */
- 
- 		wcn36xx_dxe_write_register(wcn,
- 					   WCN36XX_DXE_0_INT_CLR,
- 					   WCN36XX_INT_MASK_CHAN_TX_L);
- 
--		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_0_INT_ED_CLR,
--					   WCN36XX_INT_MASK_CHAN_TX_L);
-+
-+		if (int_reason & WCN36XX_CH_STAT_INT_ERR_MASK ) {
-+			wcn36xx_dxe_write_register(wcn,
-+						   WCN36XX_DXE_0_INT_ERR_CLR,
-+						   WCN36XX_INT_MASK_CHAN_TX_L);
-+
-+			wcn36xx_err("DXE IRQ reported error: 0x%x in low TX channel\n",
-+					int_src);
-+		}
-+
-+		if (int_reason & WCN36XX_CH_STAT_INT_DONE_MASK) {
-+			wcn36xx_dxe_write_register(wcn,
-+						   WCN36XX_DXE_0_INT_DONE_CLR,
-+						   WCN36XX_INT_MASK_CHAN_TX_L);
-+		}
-+
-+		if (int_reason & WCN36XX_CH_STAT_INT_ED_MASK) {
-+			wcn36xx_dxe_write_register(wcn,
-+						   WCN36XX_DXE_0_INT_ED_CLR,
-+						   WCN36XX_INT_MASK_CHAN_TX_L);
-+		}
-+
- 		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready low\n");
- 		reap_tx_dxes(wcn, &wcn->dxe_tx_l_ch);
- 	}
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.h b/drivers/net/wireless/ath/wcn36xx/dxe.h
-index feb3cb7ee81f..2bc376c5391b 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.h
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.h
-@@ -262,6 +262,10 @@ H2H_TEST_RX_TX = DMA2
- #define WCN36XX_DXE_0_INT_DONE_CLR		(WCN36XX_DXE_MEM_REG + 0x38)
- #define WCN36XX_DXE_0_INT_ERR_CLR		(WCN36XX_DXE_MEM_REG + 0x3C)
- 
-+#define WCN36XX_CH_STAT_INT_DONE_MASK   0x00008000
-+#define WCN36XX_CH_STAT_INT_ERR_MASK    0x00004000
-+#define WCN36XX_CH_STAT_INT_ED_MASK     0x00002000
-+
- #define WCN36XX_DXE_0_CH0_STATUS		(WCN36XX_DXE_MEM_REG + 0x404)
- #define WCN36XX_DXE_0_CH1_STATUS		(WCN36XX_DXE_MEM_REG + 0x444)
- #define WCN36XX_DXE_0_CH2_STATUS		(WCN36XX_DXE_MEM_REG + 0x484)
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 9649bb752bbd..42522ed115f3 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4309,7 +4309,7 @@ static void ath10k_tpc_config_disp_tables(struct ath10k *ar,
+ 							    rate_code[i],
+ 							    type);
+ 			snprintf(buff, sizeof(buff), "%8d ", tpc[j]);
+-			strncat(tpc_value, buff, strlen(buff));
++			strlcat(tpc_value, buff, sizeof(tpc_value));
+ 		}
+ 		tpc_stats->tpc_table[type].pream_idx[i] = pream_idx;
+ 		tpc_stats->tpc_table[type].rate_code[i] = rate_code[i];
+@@ -4646,7 +4646,7 @@ ath10k_wmi_tpc_stats_final_disp_tables(struct ath10k *ar,
+ 							       rate_code[i],
+ 							       type, pream_idx);
+ 			snprintf(buff, sizeof(buff), "%8d ", tpc[j]);
+-			strncat(tpc_value, buff, strlen(buff));
++			strlcat(tpc_value, buff, sizeof(tpc_value));
+ 		}
+ 		tpc_stats->tpc_table_final[type].pream_idx[i] = pream_idx;
+ 		tpc_stats->tpc_table_final[type].rate_code[i] = rate_code[i];
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+2.9.0
