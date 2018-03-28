@@ -1,54 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:42711 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752748AbeCMUSB (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:37070 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753385AbeC1O1x (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 16:18:01 -0400
-Date: Wed, 14 Mar 2018 07:17:57 +1100
-From: tcharding <me@tobin.cc>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: kernel-hardening@lists.openwall.com, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Tycho Andersen <tycho@tycho.ws>,
-        Kees Cook <keescook@chromium.org>
-Subject: Re: [RESEND] rsi: Remove stack VLA usage
-Message-ID: <20180313201757.GK8631@eros> (sfid-20180313_211821_614478_9DC78394)
-References: <1520819022-15238-1-git-send-email-me@tobin.cc>
- <20180312094606.8192B6081A@smtp.codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180312094606.8192B6081A@smtp.codeaurora.org>
+        Wed, 28 Mar 2018 10:27:53 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 28 Mar 2018 17:27:38 +0300
+Message-Id: <20180328142738.9621-1-luca@coelho.fi> (sfid-20180328_162756_561986_BC1337C7)
+In-Reply-To: <20180328141157.5427-1-luca@coelho.fi>
+References: <20180328141157.5427-1-luca@coelho.fi>
+Subject: [PATCH 14/14] iwlwifi: wrt: add fw force restart via triggers
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 12, 2018 at 09:46:06AM +0000, Kalle Valo wrote:
-> tcharding <me@tobin.cc> wrote:
-> 
-> > The kernel would like to have all stack VLA usage removed[1].  rsi uses
-> > a VLA based on 'blksize'.  Elsewhere in the SDIO code maximum block size
-> > is defined using a magic number.  We can use a pre-processor defined
-> > constant and declare the array to maximum size.  We add a check before
-> > accessing the array in case of programmer error.
-> > 
-> > [1]: https://lkml.org/lkml/2018/3/7/621
-> > 
-> > Signed-off-by: Tobin C. Harding <me@tobin.cc>
-> 
-> Tobin, your name in patchwork.kernel.org is just "tcharding" then it should be
-> "Tobin C. Harding". Patchwork is braindead in a way as it takes the name from
-> it's database instead of the From header of the patch in question.
-> 
-> I can fix that manually but it would be helpful if you could register to
-> patchwork and fix your name during registration. You have only one chance to
-> fix your name (another braindead feature!) so be careful :)
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Hi Kalle,
+Add support to wrt force restart capability.
 
-I logged into my patchwork account but I don't see any way to set the
-name.  Within 'profile' there is only 'change password' and 'link
-email'.  I thought I could unregister then re-register but I can't see
-how to do that either.  Is there a maintainer of patchwork.kernel.org
-who I can email to manually remove me from the system?
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c  |  6 ++++++
+ drivers/net/wireless/intel/iwlwifi/fw/file.h | 12 +++++++++++-
+ 2 files changed, 17 insertions(+), 1 deletion(-)
 
-thanks,
-Tobin.
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index d27a43ea0d7c..fa283285fcbe 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -1008,6 +1008,12 @@ int iwl_fw_dbg_collect(struct iwl_fw_runtime *fwrt,
+ {
+ 	struct iwl_fw_dump_desc *desc;
+ 
++	if (trigger && trigger->flags & IWL_FW_DBG_FORCE_RESTART) {
++		IWL_WARN(fwrt, "Force restart: trigger %d fired.\n", trig);
++		iwl_force_nmi(fwrt->trans);
++		return 0;
++	}
++
+ 	desc = kzalloc(sizeof(*desc) + len, GFP_ATOMIC);
+ 	if (!desc)
+ 		return -ENOMEM;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index 2bea95bf4fc9..9b2805e1e3b1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -620,6 +620,14 @@ enum iwl_fw_dbg_trigger_mode {
+ 	IWL_FW_DBG_TRIGGER_MONITOR_ONLY = BIT(2),
+ };
+ 
++/**
++ * enum iwl_fw_dbg_trigger_flags - the flags supported by wrt triggers
++ * @IWL_FW_DBG_FORCE_RESTART: force a firmware restart
++ */
++enum iwl_fw_dbg_trigger_flags {
++	IWL_FW_DBG_FORCE_RESTART = BIT(0),
++};
++
+ /**
+  * enum iwl_fw_dbg_trigger_vif_type - define the VIF type for a trigger
+  * @IWL_FW_DBG_CONF_VIF_ANY: any vif type
+@@ -656,6 +664,7 @@ enum iwl_fw_dbg_trigger_vif_type {
+  * @occurrences: number of occurrences. 0 means the trigger will never fire.
+  * @trig_dis_ms: the time, in milliseconds, after an occurrence of this
+  *	trigger in which another occurrence should be ignored.
++ * @flags: &enum iwl_fw_dbg_trigger_flags
+  */
+ struct iwl_fw_dbg_trigger_tlv {
+ 	__le32 id;
+@@ -666,7 +675,8 @@ struct iwl_fw_dbg_trigger_tlv {
+ 	u8 start_conf_id;
+ 	__le16 occurrences;
+ 	__le16 trig_dis_ms;
+-	__le16 reserved[3];
++	u8 flags;
++	u8 reserved[5];
+ 
+ 	u8 data[0];
+ } __packed;
+-- 
+2.16.2
