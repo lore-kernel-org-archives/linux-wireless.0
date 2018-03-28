@@ -1,84 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35772 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751750AbeCZPJ1 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:37060 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753791AbeC1O1d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 11:09:27 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2] ath10k: debugfs support to get final TPC stats for 10.4
- variants
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1519634437-6672-1-git-send-email-mkenna@codeaurora.org>
-References: <1519634437-6672-1-git-send-email-mkenna@codeaurora.org>
-To: mkenna@codeaurora.org
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Maharaja Kennadyrajan <mkenna@codeaurora.org>
-Message-Id: <20180326150927.4D92E60710@smtp.codeaurora.org> (sfid-20180326_170931_356880_F379E86F)
-Date: Mon, 26 Mar 2018 15:09:27 +0000 (UTC)
+        Wed, 28 Mar 2018 10:27:33 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 28 Mar 2018 17:27:28 +0300
+Message-Id: <20180328142728.9547-1-luca@coelho.fi> (sfid-20180328_162749_656073_ED761A5A)
+In-Reply-To: <20180328141157.5427-1-luca@coelho.fi>
+References: <20180328141157.5427-1-luca@coelho.fi>
+Subject: [PATCH 13/14] iwlwifi: mvm: save low latency causes in an enum
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mkenna@codeaurora.org wrote:
+From: Sara Sharon <sara.sharon@intel.com>
 
-> Export the final Transmit Power Control (TPC) value, which is the
-> minimum of control power and existing TPC value to user space via
-> a new debugfs file "tpc_stats_final" to help with debugging.
-> It works with the new wmi cmd and event introduced in 10.4 firmware
-> branch.
-> 
-> WMI command ID: WMI_PDEV_GET_TPC_TABLE_CMDID
-> WMI event ID: WMI_PDEV_TPC_TABLE_EVENTID
-> 
-> cat /sys/kernel/debug/ieee80211/phyX/ath10k/tpc_stats_final
-> 
-> $ cat /sys/kernel/debug/ieee80211/phyX/ath10k/tpc_stats_final
-> 
-> TPC config for channel 5180 mode 10
-> 
-> CTL             =  0x 0 Reg. Domain             = 58
-> Antenna Gain    =  0 Reg. Max Antenna Gain      =   0
-> Power Limit     = 60 Reg. Max Power             = 60
-> Num tx chains   =  2 Num supported rates        = 109
-> 
-> ******************* CDD POWER TABLE ****************
-> 
-> No.  Preamble Rate_code tpc_value1 tpc_value2 tpc_value3
-> 0    CCK      0x40        0          0
-> 1    CCK      0x41        0          0
-> [...]
-> 107  HTCUP    0x 0       46          46
-> 108  HTCUP    0x 0       46          46
-> 
-> ******************* STBC POWER TABLE ****************
-> 
-> No.  Preamble Rate_code tpc_value1 tpc_value2 tpc_value3
-> 0    CCK      0x40        0          0
-> 1    CCK      0x41        0          0
-> [...]
-> 107  HTCUP    0x 0        46         46
-> 108  HTCUP    0x 0        46         46
-> 
-> ***********************************
-> TXBF not supported
-> **********************************
-> 
-> The existing tpc_stats debugfs file provides the dump
-> which is minimum of target power and regulatory domain.
-> 
-> cat /sys/kernel/debug/ieee80211/phyX/ath10k/tpc_stats
-> 
-> Hardware_used: QCA4019
-> Firmware version: firmware-5.bin_10.4-3.0-00209
-> 
-> Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Currently we have a boolean variable for each cause.
 
-Patch applied to ath-next branch of ath.git, thanks.
+This costs space, and requires to check each separately
+when determining low latency.
 
-bc64d05220f3 ath10k: debugfs support to get final TPC stats for 10.4 variants
+Since we have another cause incoming, convert it to an enum.
 
+While at it, move the retrieval of the prev value and the
+assignment of the new value to be inside iwl_mvm_update_low_latency
+and save the need for each caller to do it separately.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../net/wireless/intel/iwlwifi/mvm/debugfs-vif.c   | 11 +++----
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       | 36 +++++++++++++++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |  8 +++--
+ 3 files changed, 38 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
+index 4e9d1792baf3..f7fcf700196b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
+@@ -1276,7 +1276,6 @@ static ssize_t iwl_dbgfs_low_latency_write(struct ieee80211_vif *vif, char *buf,
+ {
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	struct iwl_mvm *mvm = mvmvif->mvm;
+-	bool prev;
+ 	u8 value;
+ 	int ret;
+ 
+@@ -1287,9 +1286,7 @@ static ssize_t iwl_dbgfs_low_latency_write(struct ieee80211_vif *vif, char *buf,
+ 		return -EINVAL;
+ 
+ 	mutex_lock(&mvm->mutex);
+-	prev = iwl_mvm_vif_low_latency(mvmvif);
+-	mvmvif->low_latency_dbgfs = value;
+-	iwl_mvm_update_low_latency(mvm, vif, prev);
++	iwl_mvm_update_low_latency(mvm, vif, value, LOW_LATENCY_DEBUGFS);
+ 	mutex_unlock(&mvm->mutex);
+ 
+ 	return count;
+@@ -1306,9 +1303,9 @@ static ssize_t iwl_dbgfs_low_latency_read(struct file *file,
+ 
+ 	len = scnprintf(buf, sizeof(buf) - 1,
+ 			"traffic=%d\ndbgfs=%d\nvcmd=%d\n",
+-			mvmvif->low_latency_traffic,
+-			mvmvif->low_latency_dbgfs,
+-			mvmvif->low_latency_vcmd);
++			!!(mvmvif->low_latency & LOW_LATENCY_TRAFFIC),
++			!!(mvmvif->low_latency & LOW_LATENCY_DEBUGFS),
++			!!(mvmvif->low_latency & LOW_LATENCY_VCMD));
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 82445e12aacb..d2cf751db68d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -299,6 +299,18 @@ enum iwl_bt_force_ant_mode {
+ 	BT_FORCE_ANT_MAX,
+ };
+ 
++/**
++* struct iwl_mvm_low_latency_cause - low latency set causes
++* @LOW_LATENCY_TRAFFIC: indicates low latency traffic was detected
++* @LOW_LATENCY_DEBUGFS: low latency mode set from debugfs
++* @LOW_LATENCY_VCMD: low latency mode set from vendor command
++*/
++enum iwl_mvm_low_latency_cause {
++	LOW_LATENCY_TRAFFIC = BIT(0),
++	LOW_LATENCY_DEBUGFS = BIT(1),
++	LOW_LATENCY_VCMD = BIT(2),
++};
++
+ /**
+ * struct iwl_mvm_vif_bf_data - beacon filtering related data
+ * @bf_enabled: indicates if beacon filtering is enabled
+@@ -335,9 +347,8 @@ struct iwl_mvm_vif_bf_data {
+  * @pm_enabled - Indicate if MAC power management is allowed
+  * @monitor_active: indicates that monitor context is configured, and that the
+  *	interface should get quota etc.
+- * @low_latency_traffic: indicates low latency traffic was detected
+- * @low_latency_dbgfs: low latency mode set from debugfs
+- * @low_latency_vcmd: low latency mode set from vendor command
++ * @low_latency: indicates low latency is set, see
++ *	enum &iwl_mvm_low_latency_cause for causes.
+  * @ps_disabled: indicates that this interface requires PS to be disabled
+  * @queue_params: QoS params for this MAC
+  * @bcast_sta: station used for broadcast packets. Used by the following
+@@ -367,7 +378,7 @@ struct iwl_mvm_vif {
+ 	bool ap_ibss_active;
+ 	bool pm_enabled;
+ 	bool monitor_active;
+-	bool low_latency_traffic, low_latency_dbgfs, low_latency_vcmd;
++	u8 low_latency;
+ 	bool ps_disabled;
+ 	struct iwl_mvm_vif_bf_data bf_data;
+ 
+@@ -1756,7 +1767,8 @@ bool iwl_mvm_rx_diversity_allowed(struct iwl_mvm *mvm);
+ 
+ /* Low latency */
+ int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+-			       bool value);
++			      bool low_latency,
++			      enum iwl_mvm_low_latency_cause cause);
+ /* get SystemLowLatencyMode - only needed for beacon threshold? */
+ bool iwl_mvm_low_latency(struct iwl_mvm *mvm);
+ /* get VMACLowLatencyMode */
+@@ -1772,9 +1784,17 @@ static inline bool iwl_mvm_vif_low_latency(struct iwl_mvm_vif *mvmvif)
+ 	 * binding, so this has no real impact. For now, just return
+ 	 * the current desired low-latency state.
+ 	 */
+-	return mvmvif->low_latency_dbgfs ||
+-	       mvmvif->low_latency_traffic ||
+-	       mvmvif->low_latency_vcmd;
++	return mvmvif->low_latency;
++}
++
++static inline
++void iwl_mvm_vif_set_low_latency(struct iwl_mvm_vif *mvmvif, bool set,
++				 enum iwl_mvm_low_latency_cause cause)
++{
++	if (set)
++		mvmvif->low_latency |= cause;
++	else
++		mvmvif->low_latency &= ~cause;
+ }
+ 
+ /* hw scheduler queue config */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 70f8b8eb6117..bebcfb44c8c2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -1034,14 +1034,18 @@ bool iwl_mvm_rx_diversity_allowed(struct iwl_mvm *mvm)
+ }
+ 
+ int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+-			       bool prev)
++			       bool low_latency,
++			       enum iwl_mvm_low_latency_cause cause)
+ {
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	int res;
+-	bool low_latency;
++	bool prev;
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
++	prev = iwl_mvm_vif_low_latency(mvmvif);
++	iwl_mvm_vif_set_low_latency(mvmvif, low_latency, cause);
++
+ 	low_latency = iwl_mvm_vif_low_latency(mvmvif);
+ 
+ 	if (low_latency == prev)
 -- 
-https://patchwork.kernel.org/patch/10241601/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.16.2
