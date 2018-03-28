@@ -1,139 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:58297 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935099AbeCHOFS (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36882 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751241AbeC1KYX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Mar 2018 09:05:18 -0500
-Date: Thu, 8 Mar 2018 15:05:16 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        "open list:LED SUBSYSTEM" <linux-leds@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>
-Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for
- various chipsets
-Message-ID: <20180308140515.GA4889@amd> (sfid-20180308_150521_395876_773B33D5)
-References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
- <CACna6rzD6z3DC6yjMCgBxgxx+DF+GGu69Ot5QA6xpJ41Ewb2=A@mail.gmail.com>
- <82d8ac0c-b391-6099-4c7f-991cc35445aa@dd-wrt.com>
- <20180302090312.GA30267@amd>
- <e77d25d4-a824-380a-c51a-e81175ba6205@dd-wrt.com>
- <CACna6rys85VEkzRGDVUAkBy7KgHS2y0DET7YvedboX-YEQHrkg@mail.gmail.com>
- <890a4dcc-f549-6487-2ce5-3b62874cd266@dd-wrt.com>
- <20180308090216.GC17761@amd>
- <d443856e-cfc8-2d50-900d-edf22e5360e3@dd-wrt.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="envbJBWh7q8WU6mo"
-In-Reply-To: <d443856e-cfc8-2d50-900d-edf22e5360e3@dd-wrt.com>
+        Wed, 28 Mar 2018 06:24:23 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 28 Mar 2018 13:24:11 +0300
+Message-Id: <20180328102411.25677-4-luca@coelho.fi> (sfid-20180328_122426_583932_A4EC9565)
+In-Reply-To: <20180328102411.25677-1-luca@coelho.fi>
+References: <20180328102411.25677-1-luca@coelho.fi>
+Subject: [PATCH v3 3/3] cfg80211: Add API to allow querying regdb for wmm_rule
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
---envbJBWh7q8WU6mo
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In general regulatory self managed devices maintain their own
+regulatory profiles thus it doesn't have to query the regulatory database
+on country change.
 
-On Thu 2018-03-08 13:33:29, Sebastian Gottschall wrote:
-> Am 08.03.2018 um 10:02 schrieb Pavel Machek:
-> >On Wed 2018-03-07 18:54:41, Sebastian Gottschall wrote:
-> >>Am 07.03.2018 um 17:22 schrieb Rafa=C5=82 Mi=C5=82ecki:
-> >>>On 2 March 2018 at 10:22, Sebastian Gottschall <s.gottschall@dd-wrt.co=
-m> wrote:
-> >>>>>>leds-gpio is crap and limited. you can just register one platform d=
-ata at
-> >>>>>>kernel runtime since its identified by its object name "led-gpio" b=
-ut the
-> >>>>>>kernel forbidds to register 2 platform datas with the same name
-> >>>>>>consider the ar71xx devices with qca988x wifi chipsets. they all ha=
-ve
-> >>>>>>already a led platform data registered
-> >>>>>>at boottime. a second can't be registered anymore so gpio_led is us=
-eless
-> >>>>>>at
-> >>>>>>all for most developers on such platforms. its mainly used for early
-> >>>>>>kernel
-> >>>>>>platform data initialisation for system leds.
-> >>>>>If leds-gpio has limitations, please fix those, rather then
-> >>>>>introducing duplicated code.
-> >>>>there is no duplicated code introduced and there is no solution for i=
-t.
-> >>>>consider that all wifi drivers with softled support
-> >>>>are going that way with registering a own led driver. see ath9k for
-> >>>>instance. gpio-led cannot be used for it and there is no way to
-> >>>>support multiple platform datas with the same name. its a kernel limi=
-tation
-> >>>I just reviewed some mips arch patch adding support for more LEDs for
-> >>>selected devices:
-> >>>[PATCH] MIPS: BCM47XX: Add Luxul XAP1500/XWR1750 WiFi LEDs
-> >>>https://patchwork.linux-mips.org/patch/18681/
-> >>>
-> >>>It seems to be simply adding another call to the
-> >>>gpio_led_register_device(). It seems to me you can call that function
-> >>>multiple times and register multiple structs with LEDs.
-> >>>
-> >>>Isn't all you need something like this?
-> >>>
-> >>>static const struct gpio_led ath10k_leds[] =3D {
-> >>>         {
-> >>>                 .name =3D "ath10k:color:function",
-> >>>                 .active_low =3D 1,
-> >>>                 .default_state =3D LEDS_GPIO_DEFSTATE_KEEP,
-> >>>         }
-> >>>};
-> >>>
-> >>>static struct gpio_led_platform_data bcm47xx_leds_pdata_extra =3D {
-> >>>         leds =3D ath10k_leds;
-> >>>         num_leds =3D ARRAY_SIZE(ath10k_leds);
-> >>>};
-> >>>
-> >>>ath10k_leds.gpio =3D ar->hw_params.led_pin;
-> >>>gpio_led_register_device(0, &ath10k_leds);
-> >>the problem are other architectures which have already registered gpio_=
-led
-> >>at system start like ar71xx
-> >>you cannot register a second one. so a independend led driver is a
-> >>requirement for direct control
-> >If the limitation indeed exists, please fix the limitation rather than
-> >working around it in each and every driver.
-> see ath9k. its exact the same implementation.
+ETSI has recently introduced a new channel access mechanism for 5GHz
+that all wlan devices need to comply with.
+These values are stored in the regulatory database.
+There are self managed devices which can't maintain these
+values on their own. Add API to allow self managed regulatory devices
+to query the regulatory database for high band wmm rule.
 
-Ok, so one more driver to fix.
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ include/net/cfg80211.h | 28 ++++++++++++++++++++++++++
+ net/wireless/reg.c     | 54 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 82 insertions(+)
 
-> in addition my variant does also work without gpiolib support. so it can =
-be
-> used even if the kernel is configured
-> without gpio support.
-> and not to forget, using a own led driver is more ligthweight from the ca=
-ll
-> path for each led on / off event which is important for
-> low performance embedded devices
-
-We are not going to copy&paste code because such code works without
-libraries, and we are not going to copy&paste code because that uses
-less cache during calls. Sorry.
-
-NAK. Please fix your patch.=20
-
-									Pavel
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---envbJBWh7q8WU6mo
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlqhQxsACgkQMOfwapXb+vLTpgCgks8J+FoLFdyIZz4Vq9wn2xuK
-6ZsAmgPcfT2bOWZcTAIXWKEx1/ySKQdW
-=zvis
------END PGP SIGNATURE-----
-
---envbJBWh7q8WU6mo--
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index fc40843baed3..18f57ae25171 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -6,6 +6,7 @@
+  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014 Intel Mobile Communications GmbH
+  * Copyright 2015-2017	Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -4657,6 +4658,33 @@ const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
+  */
+ const char *reg_initiator_name(enum nl80211_reg_initiator initiator);
+ 
++/**
++ * DOC: Internal regulatory db functions
++ *
++ */
++
++/**
++ * reg_query_regdb_wmm -  Query internal regulatory db for wmm rule
++ * Regulatory self-managed driver can use it to proactively
++ *
++ * @alpha2: the ISO/IEC 3166 alpha2 wmm rule to be queried.
++ * @freq: the freqency(in MHz) to be queried.
++ * @dbptr: pointer where the regdb wmm data is to be stored (or %NULL if
++ *	irrelevant). This can be used later for deduplication.
++ * @rule: pointer to store the wmm rule from the regulatory db.
++ *
++ * Self-managed wireless drivers can use this function to  query
++ * the internal regulatory database to check whether the given
++ * ISO/IEC 3166 alpha2 country and freq have wmm rule limitations.
++ *
++ * Drivers should check the return value, its possible you can get
++ * an -ENODATA.
++ *
++ * Return: 0 on success. -ENODATA.
++ */
++int reg_query_regdb_wmm(char *alpha2, int freq, u32 *ptr,
++			struct ieee80211_wmm_rule *rule);
++
+ /*
+  * callbacks for asynchronous cfg80211 methods, notification
+  * functions and BSS handling helpers
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 2520734bd1db..4f5e7d6c9f62 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -878,6 +878,60 @@ static void set_wmm_rule(struct ieee80211_wmm_rule *rule,
+ 	}
+ }
+ 
++static int __regdb_query_wmm(const struct fwdb_header *db,
++			     const struct fwdb_country *country, int freq,
++			     u32 *dbptr, struct ieee80211_wmm_rule *rule)
++{
++	unsigned int ptr = be16_to_cpu(country->coll_ptr) << 2;
++	struct fwdb_collection *coll = (void *)((u8 *)db + ptr);
++	int i;
++
++	for (i = 0; i < coll->n_rules; i++) {
++		__be16 *rules_ptr = (void *)((u8 *)coll + ALIGN(coll->len, 2));
++		unsigned int rule_ptr = be16_to_cpu(rules_ptr[i]) << 2;
++		struct fwdb_rule *rrule = (void *)((u8 *)db + rule_ptr);
++		struct fwdb_wmm_rule *wmm;
++		unsigned int wmm_ptr;
++
++		if (rrule->len < offsetofend(struct fwdb_rule, wmm_ptr))
++			continue;
++
++		if (freq >= KHZ_TO_MHZ(be32_to_cpu(rrule->start)) &&
++		    freq <= KHZ_TO_MHZ(be32_to_cpu(rrule->end))) {
++			wmm_ptr = be16_to_cpu(rrule->wmm_ptr) << 2;
++			wmm = (void *)((u8 *)db + wmm_ptr);
++			set_wmm_rule(rule, wmm);
++			if (dbptr)
++				*dbptr = wmm_ptr;
++			return 0;
++		}
++	}
++
++	return -ENODATA;
++}
++
++int reg_query_regdb_wmm(char *alpha2, int freq, u32 *dbptr,
++			struct ieee80211_wmm_rule *rule)
++{
++	const struct fwdb_header *hdr = regdb;
++	const struct fwdb_country *country;
++
++	if (IS_ERR(regdb))
++		return PTR_ERR(regdb);
++
++	country = &hdr->country[0];
++	while (country->coll_ptr) {
++		if (alpha2_equal(alpha2, country->alpha2))
++			return __regdb_query_wmm(regdb, country, freq, dbptr,
++						 rule);
++
++		country++;
++	}
++
++	return -ENODATA;
++}
++EXPORT_SYMBOL(reg_query_regdb_wmm);
++
+ struct wmm_ptrs {
+ 	struct ieee80211_wmm_rule *rule;
+ 	u32 ptr;
+-- 
+2.16.2
