@@ -1,60 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f171.google.com ([209.85.192.171]:36202 "EHLO
-        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752385AbeCUPS3 (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:44495 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750881AbeC2QxG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Mar 2018 11:18:29 -0400
-Received: by mail-pf0-f171.google.com with SMTP id 68so2095973pfx.3
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Mar 2018 08:18:29 -0700 (PDT)
-Subject: Re: [RFC v5 0/9] EAPoL over NL80211
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-References: <20180313215942.29176-1-denkenz@gmail.com>
- <1521645199.2645.34.camel@sipsolutions.net>
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <6c4a389a-55e1-5af2-cac2-1754fce7fabf@gmail.com> (sfid-20180321_161837_247987_B2B77DE7)
-Date: Wed, 21 Mar 2018 10:18:26 -0500
+        Thu, 29 Mar 2018 12:53:06 -0400
+From: Colin King <colin.king@canonical.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath6kl: fix spelling mistake: "chache" -> "cache"
+Date: Thu, 29 Mar 2018 17:53:04 +0100
+Message-Id: <20180329165304.26504-1-colin.king@canonical.com> (sfid-20180329_185322_495613_A4BEF909)
 MIME-Version: 1.0
-In-Reply-To: <1521645199.2645.34.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+From: Colin Ian King <colin.king@canonical.com>
 
-On 03/21/2018 10:13 AM, Johannes Berg wrote:
-> 
->> TODO:
-> 
-> That was well-hidden :)
+Trivial fix to spelling mistake in message text
 
-Sorry.  I assumed people read the change log :)
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/ath/ath6kl/debug.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> 
->> - It is unclear to me how AP_VLAN and AP interfaces should synchronize on
->> conn_owner_nlportid.  This is required for tx_control_port to work.
-> 
-> I'm not really sure what you mean? Technically I guess an AP_VLAN could
-> have a different owner from an AP, but if the AP goes down all the
-> AP_VLANs go down with it already anyway.
-
-So the issue is that when mac80211 calls cfg80211_rx_control_port and 
-subsequently __nl80211_rx_control_port, we grab the nlportid from the 
-wdev.  So if that isn't synchronized, then AP_VLAN devices won't be 
-sending the EAPoL frames to the right place.
-
-> 
->> - JOIN_IBSS & JOIN_MESH don't seem to support control_port_ethertype or
->> control_port_no_encrypt.  Should struct cfg80211_crypto_settings parsed inside
->> nl80211_crypto_settings be added to ibss_params or mesh_config/mesh_setup?
-> 
-> I don't think it matters - they just don't support this now and don't
-> really need to.
-> 
-
-Except that the eapol over nl80211 flag is being sent in security 
-settings.  This covers STA/AP/P2P_GO/P2P_CLIENT.  We need some way of 
-passing this information for mesh & ibss.
-
-Regards,
--Denis
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 0f965e9f38a4..4e94b22eaada 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -645,7 +645,7 @@ static ssize_t read_file_tgt_stats(struct file *file, char __user *user_buf,
+ 	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
+ 			 "CRC Err", tgt_stats->rx_crc_err);
+ 	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
+-			 "Key chache miss", tgt_stats->rx_key_cache_miss);
++			 "Key cache miss", tgt_stats->rx_key_cache_miss);
+ 	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
+ 			 "Decrypt Err", tgt_stats->rx_decrypt_err);
+ 	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
+-- 
+2.15.1
