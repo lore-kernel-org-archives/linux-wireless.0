@@ -1,68 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:40162 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031110AbeCAOUg (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40966 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750707AbeC2Igk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:20:36 -0500
-Received: by mail-qt0-f196.google.com with SMTP id y6so7682518qtm.7
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:20:36 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 03/52] ath: Add regulatory mapping for Japan (J56)
-Date: Thu,  1 Mar 2018 15:18:13 +0100
-Message-Id: <20180301141902.24824-4-sven.eckelmann@openmesh.com> (sfid-20180301_152039_737552_37434FC6)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+        Thu, 29 Mar 2018 04:36:40 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com,
+        david.e.box@intel.com, janet.morgan@intel.com, joe.konno@intel.com
+Subject: Re: pull-request: iwlwifi-next 2018-03-28
+References: <1522267371.3786.294.camel@coelho.fi>
+Date: Thu, 29 Mar 2018 11:36:35 +0300
+In-Reply-To: <1522267371.3786.294.camel@coelho.fi> (Luca Coelho's message of
+        "Wed, 28 Mar 2018 23:02:51 +0300")
+Message-ID: <87fu4jl1m4.fsf@kamboji.qca.qualcomm.com> (sfid-20180329_103643_208556_FA8A1581)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The country code is used by the ath to detect the ISO 3166-1 alpha-2 name
-and to select the correct conformance test limits (CTL) for a country. If
-the country isn't available and it is still programmed in the EEPROM then
-it will cause an error and stop the initialization with:
+Luca Coelho <luca@coelho.fi> writes:
 
-  Invalid EEPROM contents
+> This is a batch of patches intended for v4.17.  Nothing major here,
+> just the usual continued development, bugfixes, new FW APIs and some
+> minor features.  More details about the contents in the tag
+> description.
+>
+> The commit messages you commented on have been fixed, as you can see in
+> v2 of those patches that I sent to the list.
+>
+> I have sent this out before and kbuildbot reported success.
+>
+> Please let me know if there are any issues.
+>
+> Cheers,
+> Luca.
+>
+>
+> The following changes since commit 6b7d5c0745905b71127d0c1ae6eeddc09bbdaad8:
+>
+>   Merge git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git (2018-03-28 11:57:34 +0300)
+>
+> are available in the Git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2018-03-28
+>
+> for you to fetch changes up to 378c8931342f99c5a6fce21e38ef46ac39395464:
+>
+>   iwlwifi: wrt: add fw force restart via triggers (2018-03-28 22:43:40 +0300)
+>
+> ----------------------------------------------------------------
+> iwlwifi patches for 4.14
+>
+> * Fix a UBSAN warning;
+> * Improvement in the net-stack/driver log syncing
+> * An RCU lock fix in the new rate-scaling code;
+> * Support for new PCI IDs for the 9000 family;
+> * Support for a new API version;
+> * Initial work for supporting the new ETSI rules;
+> * Support for advanced dwell in scanning;
+> * Support for OCE in scanning;
+> * Some debugging improvements;
+> * Other small improvements and cleanups here and there.
+>
+> ----------------------------------------------------------------
 
-The current CTL mappings for this country are:
+Pulled, thanks.
 
-* 2.4GHz: FCC
-* 5GHz: MKK
-
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
----
- drivers/net/wireless/ath/regd_common.h | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index a8c7f306fd7b..bba2d156cb21 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -99,6 +99,7 @@ enum EnumRd {
- 	MKK5_MKKB = 0x86,
- 	MKK5_MKKA2 = 0x87,
- 	MKK5_MKKC = 0x88,
-+	MKK5_FCCA = 0x9A,
- 
- 	MKK6_MKKB = 0x89,
- 	MKK6_MKKA2 = 0x8A,
-@@ -226,6 +227,7 @@ static struct reg_dmn_pair_mapping regDomainPairs[] = {
- 	{MKK5_MKKB, CTL_MKK, CTL_MKK},
- 	{MKK5_MKKA2, CTL_MKK, CTL_MKK},
- 	{MKK5_MKKC, CTL_MKK, CTL_MKK},
-+	{MKK5_FCCA, CTL_MKK, CTL_FCC},
- 
- 	{MKK6_MKKB, CTL_MKK, CTL_MKK},
- 	{MKK6_MKKA1, CTL_MKK, CTL_MKK},
-@@ -405,6 +407,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_JAPAN52, MKK12_MKKA1, "JP"},
- 	{CTRY_JAPAN53, MKK12_MKKC, "JP"},
- 	{CTRY_JAPAN54, MKK12_MKKA2, "JP"},
-+	{CTRY_JAPAN56, MKK5_FCCA, "JP"},
- 	{CTRY_JAPAN57, MKK13_MKKB, "JP"},
- 	{CTRY_JAPAN58, MKK14_MKKA1, "JP"},
- 	{CTRY_JAPAN59, MKK15_MKKA1, "JP"},
 -- 
-2.11.0
+Kalle Valo
