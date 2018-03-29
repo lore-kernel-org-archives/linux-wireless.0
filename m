@@ -1,84 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:42177 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752627AbeCZRQa (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57738 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750946AbeC2Izo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 13:16:30 -0400
-Received: by mail-oi0-f66.google.com with SMTP id l190-v6so8496915oig.9
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2018 10:16:29 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v6 04/11] cfg80211: Support all iftypes in autodisconnect_wk
-Date: Mon, 26 Mar 2018 12:16:07 -0500
-Message-Id: <20180326171614.20373-5-denkenz@gmail.com> (sfid-20180326_191644_316397_58B11DFE)
-In-Reply-To: <20180326171614.20373-1-denkenz@gmail.com>
-References: <20180326171614.20373-1-denkenz@gmail.com>
+        Thu, 29 Mar 2018 04:55:44 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/2] ath10k: refactor ath10k_pci_dump_memory() in preparation
+ for QCA9984 support
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1522054714-31492-1-git-send-email-kvalo@codeaurora.org>
+References: <1522054714-31492-1-git-send-email-kvalo@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Message-Id: <20180329085544.26983602BA@smtp.codeaurora.org> (sfid-20180329_105547_602767_94381AB9)
+Date: Thu, 29 Mar 2018 08:55:44 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently autodisconnect_wk assumes that only interface types of
-P2P_CLIENT and STATION use conn_owner_nlportid.  Change this so all
-interface types are supported.
+Kalle Valo <kvalo@codeaurora.org> wrote:
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- net/wireless/sme.c | 43 ++++++++++++++++++++++++++++++++-----------
- 1 file changed, 32 insertions(+), 11 deletions(-)
+> As QCA9984 needs two region types refactor the code to make it easier add the
+> new types. No functional changes.
+> 
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 701cfd7acc1b..5df6b33db786 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -1239,17 +1239,38 @@ void cfg80211_autodisconnect_wk(struct work_struct *work)
- 	wdev_lock(wdev);
- 
- 	if (wdev->conn_owner_nlportid) {
--		/*
--		 * Use disconnect_bssid if still connecting and ops->disconnect
--		 * not implemented.  Otherwise we can use cfg80211_disconnect.
--		 */
--		if (rdev->ops->disconnect || wdev->current_bss)
--			cfg80211_disconnect(rdev, wdev->netdev,
--					    WLAN_REASON_DEAUTH_LEAVING, true);
--		else
--			cfg80211_mlme_deauth(rdev, wdev->netdev,
--					     wdev->disconnect_bssid, NULL, 0,
--					     WLAN_REASON_DEAUTH_LEAVING, false);
-+		switch (wdev->iftype) {
-+		case NL80211_IFTYPE_ADHOC:
-+			cfg80211_leave_ibss(rdev, wdev->netdev, false);
-+			break;
-+		case NL80211_IFTYPE_AP:
-+		case NL80211_IFTYPE_P2P_GO:
-+			cfg80211_stop_ap(rdev, wdev->netdev, false);
-+			break;
-+		case NL80211_IFTYPE_MESH_POINT:
-+			cfg80211_leave_mesh(rdev, wdev->netdev);
-+			break;
-+		case NL80211_IFTYPE_STATION:
-+		case NL80211_IFTYPE_P2P_CLIENT:
-+			/*
-+			 * Use disconnect_bssid if still connecting and
-+			 * ops->disconnect not implemented.  Otherwise we can
-+			 * use cfg80211_disconnect.
-+			 */
-+			if (rdev->ops->disconnect || wdev->current_bss)
-+				cfg80211_disconnect(rdev, wdev->netdev,
-+						    WLAN_REASON_DEAUTH_LEAVING,
-+						    true);
-+			else
-+				cfg80211_mlme_deauth(rdev, wdev->netdev,
-+						     wdev->disconnect_bssid,
-+						     NULL, 0,
-+						     WLAN_REASON_DEAUTH_LEAVING,
-+						     false);
-+			break;
-+		default:
-+			break;
-+		}
- 	}
- 
- 	wdev_unlock(wdev);
+2 patches applied to ath-next branch of ath.git, thanks.
+
+10c228843081 ath10k: refactor ath10k_pci_dump_memory() in preparation for QCA9984 support
+219cc084c670 ath10k: add memory dump support QCA9984
+
 -- 
-2.13.5
+https://patchwork.kernel.org/patch/10307431/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
