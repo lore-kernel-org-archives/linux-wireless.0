@@ -1,74 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:38671 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752778AbeCMWAC (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53984 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750971AbeC2ItC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 18:00:02 -0400
-Received: by mail-pf0-f195.google.com with SMTP id d26so491151pfn.5
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2018 15:00:01 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v5 6/9] nl80211: Add SOCKET_OWNER support to JOIN_MESH
-Date: Tue, 13 Mar 2018 16:59:39 -0500
-Message-Id: <20180313215942.29176-7-denkenz@gmail.com> (sfid-20180313_230010_413215_4D4AA164)
-In-Reply-To: <20180313215942.29176-1-denkenz@gmail.com>
-References: <20180313215942.29176-1-denkenz@gmail.com>
+        Thu, 29 Mar 2018 04:49:02 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2] ath9k: fix DFS detector synchronization
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <071245fb726f2842c9a30432b14633e5d665b1d4.1518605287.git.tredaelli@redhat.com>
+References: <071245fb726f2842c9a30432b14633e5d665b1d4.1518605287.git.tredaelli@redhat.com>
+To: Timothy Redaelli <tredaelli@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Message-Id: <20180329084901.B5FDD60C65@smtp.codeaurora.org> (sfid-20180329_104906_048408_3161F0A4)
+Date: Thu, 29 Mar 2018 08:49:01 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- include/uapi/linux/nl80211.h |  2 ++
- net/wireless/mesh.c          |  1 +
- net/wireless/nl80211.c       | 10 +++++++++-
- 3 files changed, 12 insertions(+), 1 deletion(-)
+Timothy Redaelli <tredaelli@redhat.com> wrote:
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 877fab2836ec..e3329bc4644b 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1987,6 +1987,8 @@ enum nl80211_commands {
-  *	station will deauthenticate when the socket is closed.
-  *	If set during %NL80211_CMD_JOIN_IBSS the IBSS will be automatically
-  *	torn down when the socket is closed.
-+ *	If set during %NL80211_CMD_JOIN_MESH the mesh setup will be
-+ *	automatically torn down when the socket is closed.
-  *
-  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
-  *	the TDLS link initiator.
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index b12da6ef3c12..e91a5078615b 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -286,6 +286,7 @@ int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
- 
- 	err = rdev_leave_mesh(rdev, dev);
- 	if (!err) {
-+		wdev->conn_owner_nlportid = 0;
- 		wdev->mesh_id_len = 0;
- 		wdev->beacon_interval = 0;
- 		memset(&wdev->chandef, 0, sizeof(wdev->chandef));
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e678dc510f3a..e38d55cf34f7 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -10140,7 +10140,15 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
- 	setup.userspace_handles_dfs =
- 		nla_get_flag(info->attrs[NL80211_ATTR_HANDLE_DFS]);
- 
--	return cfg80211_join_mesh(rdev, dev, &setup, &cfg);
-+	err = cfg80211_join_mesh(rdev, dev, &setup, &cfg);
-+
-+	if (!err && info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
-+		wdev_lock(dev->ieee80211_ptr);
-+		dev->ieee80211_ptr->conn_owner_nlportid = info->snd_portid;
-+		wdev_unlock(dev->ieee80211_ptr);
-+	}
-+
-+	return err;
- }
- 
- static int nl80211_leave_mesh(struct sk_buff *skb, struct genl_info *info)
+> some userspace programs (e.g. hostapd) need to set the regulatory domain
+> before selecting the operating channel. Synchronize DFS detector regardless of
+> the value of ah->curchan, to avoid situations where wireless scan can't be done
+> on some 5GHz sub-bands, because dfs_region is constantly UNSET.
+> 
+> Acked-by: Felix Fietkau <nbd@nbd.name>
+> Signed-off-by: Timothy Redaelli <tredaelli@redhat.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+
+Patch applied to ath-next branch of ath.git, thanks.
+
+4415d58c47e5 ath9k: fix DFS detector synchronization
+
 -- 
-2.13.5
+https://patchwork.kernel.org/patch/10218409/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
