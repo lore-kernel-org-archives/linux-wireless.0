@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34638 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750946AbeC2JC2 (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:35909 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751398AbeC2OPd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 05:02:28 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: Advertize beacon_int_min_gcd
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1520428356-2762-1-git-send-email-akolli@codeaurora.org>
-References: <1520428356-2762-1-git-send-email-akolli@codeaurora.org>
-To: akolli@codeaurora.org
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Anilkumar Kolli <akolli@codeaurora.org>
-Message-Id: <20180329090228.878C960C55@smtp.codeaurora.org> (sfid-20180329_110233_067075_C5974735)
-Date: Thu, 29 Mar 2018 09:02:28 +0000 (UTC)
+        Thu, 29 Mar 2018 10:15:33 -0400
+Received: by mail-pg0-f65.google.com with SMTP id 201so3146088pgg.3
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2018 07:15:33 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v2 3/4] rsi: enable 80MHz clock by default
+Date: Thu, 29 Mar 2018 19:32:28 +0530
+Message-Id: <1522332149-5100-4-git-send-email-amitkarwar@gmail.com> (sfid-20180329_161537_029650_140F8EDA)
+In-Reply-To: <1522332149-5100-1-git-send-email-amitkarwar@gmail.com>
+References: <1522332149-5100-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-akolli@codeaurora.org wrote:
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-> This patch fixes regression caused by 0c317a02ca98
-> ("cfg80211: support virtual interfaces with different beacon intervals"),
-> with this change cfg80211 expects the driver to advertize
-> 'beacon_int_min_gcd' to support different beacon intervals in multivap
-> scenario. This support is added for, QCA988X/QCA99X0/QCA9984/QCA4019.
-> 
-> Verifed AP + mesh bring up on QCA9984 with beacon interval 100msec and
-> 1000msec respectively.
-> Frimware: firmware-5.bin_10.4-3.5.3-00053
-> 
-> Fixes: 0c317a02ca98 ("cfg80211: support virtual interfaces with different beacon intervals")
-> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+80MHz clock for device should be enabled by default in
+TX command frame radio capabilities.
 
-Patch applied to ath-next branch of ath.git, thanks.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-8ebee73b574a ath10k: advertize beacon_int_min_gcd
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index c21fca7..9207da0 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -325,8 +325,8 @@ static int rsi_load_radio_caps(struct rsi_common *common)
+ 	radio_caps->channel_num = common->channel;
+ 	radio_caps->rf_model = RSI_RF_TYPE;
+ 
++	radio_caps->radio_cfg_info = RSI_LMAC_CLOCK_80MHZ;
+ 	if (common->channel_width == BW_40MHZ) {
+-		radio_caps->radio_cfg_info = RSI_LMAC_CLOCK_80MHZ;
+ 		radio_caps->radio_cfg_info |= RSI_ENABLE_40MHZ;
+ 
+ 		if (common->fsm_state == FSM_MAC_INIT_DONE) {
 -- 
-https://patchwork.kernel.org/patch/10263995/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
