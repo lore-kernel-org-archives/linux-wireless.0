@@ -1,64 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:43132 "EHLO v3-1039.vlinux.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932723AbeCEHmz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Mar 2018 02:42:55 -0500
-From: Sven Eckelmann <sven@narfation.org>
-To: Anilkumar Kolli <akolli@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Sathishkumar Muruganandam <murugana@codeaurora.org>
-Subject: Re: [PATCH 2/2] ath10k: add debugfs support to configure fwtest parameters
-Date: Mon, 05 Mar 2018 08:42:53 +0100
-Message-ID: <1974303.3lPsqGCgIZ@bentobox> (sfid-20180305_084300_022191_ED55700A)
-In-Reply-To: <1520233148-26050-3-git-send-email-akolli@codeaurora.org>
-References: <1520233148-26050-1-git-send-email-akolli@codeaurora.org> <1520233148-26050-3-git-send-email-akolli@codeaurora.org>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:53261 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751213AbeC2QdN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Mar 2018 12:33:13 -0400
+Received: by mail-wm0-f67.google.com with SMTP id p9so11794000wmc.3
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2018 09:33:12 -0700 (PDT)
+Subject: Re: [PATCH 1/2] NFC: pn533: Use kmalloc-ed memory for USB transfer
+ buffers
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: =?UTF-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>,
+        Michael Thalmeier <michael.thalmeier@hale.at>,
+        linux-wireless@vger.kernel.org
+References: <20180319164012.31714-1-hdegoede@redhat.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <96f4d7ee-741f-56f7-907d-92167b8ad160@redhat.com> (sfid-20180329_183317_128201_05FB550B)
+Date: Thu, 29 Mar 2018 18:33:09 +0200
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart2180520.GZCWctjGSx"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+In-Reply-To: <20180319164012.31714-1-hdegoede@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2180520.GZCWctjGSx
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"
+Samuel,
 
-On Montag, 5. M=E4rz 2018 12:29:08 CET Anilkumar Kolli wrote:
-> @@ -496,6 +497,8 @@ struct ath10k_debug {
->         u32 reg_addr;
->         u32 nf_cal_period;
->         void *cal_data;
-> +       u32 fw_test_param_id;
-> +       u32 fw_test_param_value;
->  };
+Can I get an ack for these please?
 
-Why is it necessary to have these two values in ath10k_debug? They seem to =
-be=20
-used only in the context of ath10k_write_fw_test().
+Anything I need to do to get these picked up / merged?
 
-Where can we find the documentation of the possible param_id and param_valu=
-es?
+Regards,
 
-Kind regards,
-	Sven
---nextPart2180520.GZCWctjGSx
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
+Hans
 
------BEGIN PGP SIGNATURE-----
 
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlqc9P0ACgkQXYcKB8Em
-e0ZJWRAAuw8DpbZQ5RRZL46kjbk5cL5Ej/+A0fOl6e5KG97YrbyHp40grRR0EmbW
-Fj8wfLzeE4zUG4y+42hPArnXjIhHLF18VMwGMix/U7wfiQlHou/8kFGulqwovNXy
-qhA5K/DYcHYuOegBXfYeSxGIQqSULo9H2bIIobWlYYHpQHdYzO5ndjfojeJ/apna
-eLgZGlSzJ0fHh30qMr8pdPmsMg9+LAC8M3TKbBvRm9rMG5vyyP3lRqhXoCjR1NVH
-NSbcaaLx//kChoJJxm7H4PN52NcbmEr+0TMGgOriM2YCf+sePejHFmFvsUmVcbw0
-grYrv6XqNz7SY/quRZBQ9bfVcHjMZLhCkDQhCqt0Icn3xlQK90mIROTS1qAP2sPP
-leqHiI9HmqqP/wA3/n5y1v299ndltE7Qb/ZEWOZmBPiYhCcJr9824Cy0jiWYucK0
-gwYfKl1R7DVCajHs+yKWn64Sx3tWJv8DjO5yNVcaWDJ3hMHG7WT30WNsC1OFPBE1
-ka6z7QdhK5DP7QUf/W/GQHjiFPW3bi4H76gkyOiVxfTKzULMrciU+jSDaPxy37Ys
-rjbeCgTbplO4Ze9TxnR5botbXIFuw+o6mlHzqNix/BRnagSAU/J6NCBLlHbQy634
-qq4jMhVc3Trk9P6tQs6EIPxYq0AA2f453paeCHDwnxEMYa40io4=
-=ku7e
------END PGP SIGNATURE-----
-
---nextPart2180520.GZCWctjGSx--
+On 19-03-18 17:40, Hans de Goede wrote:
+> Commit 8b55d7581fc5 ("NFC: pn533: use constant off-stack buffer for sending
+> acks"), fixed the ack case of using on stack mem for the transfer_buffer,
+> by making the ack buffer "static const", which is an unusual solution for
+> this and I wonder if this is not a problem wrt buffer alignment. It also
+> misses fixing the same problem for the cmd buffer in the
+> pn533_acr122_poweron_rdr() function.
+> 
+> This commit introduces an out_buf which gets kmalloc-ed on probe and
+> then memcpy-s the ack / cmd buffer into that buffer before submitting
+> the out urb. Fixing the use of on stack memory for the cmd buffer and
+> moving the ack code-path over to more conventional ways.
+> 
+> While at it this commit also changes the kmalloc of the in_buf to
+> devm_kmalloc, to avoid the need to introduce a new goto in the error-
+> handling of the kmalloc of the introduced out_buf.
+> 
+> BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1514134
+> Fixes: 8b55d7581fc5 ("NFC: pn533: use constant off-stack buffer ...")
+> Cc: Michał Mirosław <mirq-linux@rere.qmqm.pl>
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> ---
+>   drivers/nfc/pn533/usb.c | 22 +++++++++++++++-------
+>   1 file changed, 15 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/nfc/pn533/usb.c b/drivers/nfc/pn533/usb.c
+> index e153e8b64bb8..c9398712ba31 100644
+> --- a/drivers/nfc/pn533/usb.c
+> +++ b/drivers/nfc/pn533/usb.c
+> @@ -42,6 +42,9 @@
+>   #define ACS_VENDOR_ID 0x072f
+>   #define ACR122U_PRODUCT_ID 0x2200
+>   
+> +/* Large enough to hold an ack or the power-on CCID command */
+> +#define OUT_BUF_LEN 16
+> +
+>   static const struct usb_device_id pn533_usb_table[] = {
+>   	{ USB_DEVICE(PN533_VENDOR_ID, PN533_PRODUCT_ID),
+>   	  .driver_info = PN533_DEVICE_STD },
+> @@ -61,6 +64,7 @@ struct pn533_usb_phy {
+>   
+>   	struct urb *out_urb;
+>   	struct urb *in_urb;
+> +	u8 *out_buf;
+>   
+>   	struct pn533 *priv;
+>   };
+> @@ -152,7 +156,8 @@ static int pn533_usb_send_ack(struct pn533 *dev, gfp_t flags)
+>   	/* spec 7.1.1.3:  Preamble, SoPC (2), ACK Code (2), Postamble */
+>   	int rc;
+>   
+> -	phy->out_urb->transfer_buffer = (u8 *)ack;
+> +	memcpy(phy->out_buf, ack, sizeof(ack));
+> +	phy->out_urb->transfer_buffer = phy->out_buf;
+>   	phy->out_urb->transfer_buffer_length = sizeof(ack);
+>   	rc = usb_submit_urb(phy->out_urb, flags);
+>   
+> @@ -373,8 +378,8 @@ static void pn533_acr122_poweron_rdr_resp(struct urb *urb)
+>   static int pn533_acr122_poweron_rdr(struct pn533_usb_phy *phy)
+>   {
+>   	/* Power on th reader (CCID cmd) */
+> -	u8 cmd[10] = {PN533_ACR122_PC_TO_RDR_ICCPOWERON,
+> -		      0, 0, 0, 0, 0, 0, 3, 0, 0};
+> +	static const u8 cmd[10] = { PN533_ACR122_PC_TO_RDR_ICCPOWERON,
+> +				    0, 0, 0, 0, 0, 0, 3, 0, 0 };
+>   	int rc;
+>   	void *cntx;
+>   	struct pn533_acr122_poweron_rdr_arg arg;
+> @@ -387,7 +392,8 @@ static int pn533_acr122_poweron_rdr(struct pn533_usb_phy *phy)
+>   	phy->in_urb->complete = pn533_acr122_poweron_rdr_resp;
+>   	phy->in_urb->context = &arg;
+>   
+> -	phy->out_urb->transfer_buffer = cmd;
+> +	memcpy(phy->out_buf, cmd, sizeof(cmd));
+> +	phy->out_urb->transfer_buffer = phy->out_buf;
+>   	phy->out_urb->transfer_buffer_length = sizeof(cmd);
+>   
+>   	print_hex_dump_debug("ACR122 TX: ", DUMP_PREFIX_NONE, 16, 1,
+> @@ -463,10 +469,14 @@ static int pn533_usb_probe(struct usb_interface *interface,
+>   	if (!phy)
+>   		return -ENOMEM;
+>   
+> -	in_buf = kzalloc(in_buf_len, GFP_KERNEL);
+> +	in_buf = devm_kzalloc(&interface->dev, in_buf_len, GFP_KERNEL);
+>   	if (!in_buf)
+>   		return -ENOMEM;
+>   
+> +	phy->out_buf = devm_kzalloc(&interface->dev, OUT_BUF_LEN, GFP_KERNEL);
+> +	if (!phy->out_buf)
+> +		return -ENOMEM;
+> +
+>   	phy->udev = usb_get_dev(interface_to_usbdev(interface));
+>   	phy->interface = interface;
+>   
+> @@ -555,7 +565,6 @@ static int pn533_usb_probe(struct usb_interface *interface,
+>   	usb_free_urb(phy->in_urb);
+>   	usb_free_urb(phy->out_urb);
+>   	usb_put_dev(phy->udev);
+> -	kfree(in_buf);
+>   
+>   	return rc;
+>   }
+> @@ -574,7 +583,6 @@ static void pn533_usb_disconnect(struct usb_interface *interface)
+>   	usb_kill_urb(phy->in_urb);
+>   	usb_kill_urb(phy->out_urb);
+>   
+> -	kfree(phy->in_urb->transfer_buffer);
+>   	usb_free_urb(phy->in_urb);
+>   	usb_free_urb(phy->out_urb);
+>   
+> 
