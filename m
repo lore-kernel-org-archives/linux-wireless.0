@@ -1,203 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:34478 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752674AbeC3HTn (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:58170 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752040AbeC2I4i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Mar 2018 03:19:43 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 00/17] rtlwifi: halmac: Add new moudle halmac
-Date: Fri, 30 Mar 2018 15:18:59 +0800
-Message-ID: <20180330071916.23360-1-pkshih@realtek.com> (sfid-20180330_091952_311875_2F55E574)
+        Thu, 29 Mar 2018 04:56:38 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: wcn36xx: turn off probe response offloading
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180314122937.14119-1-rfried@codeaurora.org>
+References: <20180314122937.14119-1-rfried@codeaurora.org>
+To: Ramon Fried <rfried@codeaurora.org>
+Cc: k.eugene.e@gmail.com, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org, Ramon Fried <rfried@codeaurora.org>
+Message-Id: <20180329085637.9423760C66@smtp.codeaurora.org> (sfid-20180329_105641_439707_CE6C38CF)
+Date: Thu, 29 Mar 2018 08:56:37 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Ramon Fried <rfried@codeaurora.org> wrote:
 
-Hi Kalle,
-This patchset is to add our new module halmac, so it may be pain you result
-from huge patches. In order to reduce the pain, I try to classify them and
-put related files into a patch, so I hope you can review them easier.
-If you have better way to review this module, please give me the guide.
-Thank you.
+> It appears that the WCN36xx firmware doesn't actually respond to
+> probe requests. Until it's resolved, switch the probe response
+> responsibility to the 802.11 layer to allow creation of
+> hidden SSID AP's.
+> 
+> Signed-off-by: Ramon Fried <rfried@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Patches 1/17-3/17 are added structure to support this module.
-Patches 4/17-16/17 add files.
-Patch 17/17 add this module to Makefile and Kconfig.
+Patch applied to ath-next branch of ath.git, thanks.
 
-Ping-Ke Shih (17):
-  rtlwifi: add halmac structure to wifi.h
-  rtlwifi: add debug ID COMP_HALMAC
-  rtlwifi: add dmdef.h to share with driver and other modules
-  rtlwifi: halmac: add main definition used by halmac
-  rtlwifi: halmac: describe number and size of chip functions
-  rtlwifi: halmac: add definitions of registers and bit fields
-  rtlwifi: halmac: add definition of TX/RX descriptor
-  rtlwifi: halmac: add GPIO pin/pinmux definitions
-  rtlwifi: halmac: add power sequence to turn on/off wifi card
-  rtlwifi: halmac: access efuse through halmac helper functions
-  rtlwifi: halmac: add files to implement halmac ops
-  rtlwifi: halmac: add halmac init/deinit functions
-  rtlwifi: halmac: add firmware related functions and definitions
-  rtlwifi: halmac: add bus interface commands
-  rtlwifi: halmac: add to control WiFi mac functions and registers
-  rtlwifi: halmac: add to support BB and RF functions
-  rtlwifi: add halmac to Makefile and Kconfig
-
- drivers/net/wireless/realtek/rtlwifi/Kconfig       |     5 +
- drivers/net/wireless/realtek/rtlwifi/Makefile      |     1 +
- drivers/net/wireless/realtek/rtlwifi/debug.h       |     1 +
- drivers/net/wireless/realtek/rtlwifi/dmdef.h       |    40 +
- .../net/wireless/realtek/rtlwifi/halmac/Makefile   |    29 +
- .../halmac_88xx/halmac_8822b/halmac_8822b_cfg.h    |    68 +
- .../halmac_8822b/halmac_cfg_wmac_8822b.c           |   144 +
- .../halmac_8822b/halmac_cfg_wmac_8822b.h           |    36 +
- .../halmac_88xx/halmac_8822b/halmac_common_8822b.c |   173 +
- .../halmac_88xx/halmac_8822b/halmac_common_8822b.h |    32 +
- .../halmac_88xx/halmac_8822b/halmac_gpio_8822b.c   |   847 +
- .../halmac_88xx/halmac_8822b/halmac_gpio_8822b.h   |    34 +
- .../halmac_88xx/halmac_8822b/halmac_init_8822b.c   |   688 +
- .../halmac_88xx/halmac_8822b/halmac_init_8822b.h   |    33 +
- .../halmac_88xx/halmac_8822b/halmac_pcie_8822b.c   |   218 +
- .../halmac_88xx/halmac_8822b/halmac_pcie_8822b.h   |    38 +
- .../halmac_88xx/halmac_8822b/halmac_phy_8822b.c    |   148 +
- .../halmac_8822b/halmac_pwr_seq_8822b.c            |   396 +
- .../halmac_8822b/halmac_pwr_seq_8822b.h            |    26 +
- .../halmac_88xx/halmac_8822b/halmac_sdio_8822b.c   |   880 +
- .../halmac_88xx/halmac_8822b/halmac_sdio_8822b.h   |    62 +
- .../halmac_88xx/halmac_8822b/halmac_usb_8822b.c    |   161 +
- .../halmac_88xx/halmac_8822b/halmac_usb_8822b.h    |    38 +
- .../rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h   |    40 +
- .../rtlwifi/halmac/halmac_88xx/halmac_bb_rf_88xx.c |   397 +
- .../rtlwifi/halmac/halmac_88xx/halmac_bb_rf_88xx.h |    53 +
- .../halmac/halmac_88xx/halmac_cfg_wmac_88xx.c      |  1158 ++
- .../halmac/halmac_88xx/halmac_cfg_wmac_88xx.h      |   122 +
- .../halmac/halmac_88xx/halmac_common_88xx.c        |  2931 +++
- .../halmac/halmac_88xx/halmac_common_88xx.h        |   151 +
- .../rtlwifi/halmac/halmac_88xx/halmac_efuse_88xx.c |  1918 ++
- .../rtlwifi/halmac/halmac_88xx/halmac_efuse_88xx.h |   101 +
- .../rtlwifi/halmac/halmac_88xx/halmac_flash_88xx.c |   316 +
- .../rtlwifi/halmac/halmac_88xx/halmac_flash_88xx.h |    35 +
- .../rtlwifi/halmac/halmac_88xx/halmac_fw_88xx.c    |  1149 ++
- .../rtlwifi/halmac/halmac_88xx/halmac_fw_88xx.h    |    57 +
- .../rtlwifi/halmac/halmac_88xx/halmac_gpio_88xx.c  |   415 +
- .../rtlwifi/halmac/halmac_88xx/halmac_gpio_88xx.h  |    55 +
- .../rtlwifi/halmac/halmac_88xx/halmac_init_88xx.c  |  1071 ++
- .../rtlwifi/halmac/halmac_88xx/halmac_init_88xx.h  |    70 +
- .../rtlwifi/halmac/halmac_88xx/halmac_mimo_88xx.c  |   869 +
- .../rtlwifi/halmac/halmac_88xx/halmac_mimo_88xx.h  |    79 +
- .../rtlwifi/halmac/halmac_88xx/halmac_pcie_88xx.c  |   538 +
- .../rtlwifi/halmac/halmac_88xx/halmac_pcie_88xx.h  |    98 +
- .../rtlwifi/halmac/halmac_88xx/halmac_sdio_88xx.c  |   895 +
- .../rtlwifi/halmac/halmac_88xx/halmac_sdio_88xx.h  |    75 +
- .../rtlwifi/halmac/halmac_88xx/halmac_usb_88xx.c   |   522 +
- .../rtlwifi/halmac/halmac_88xx/halmac_usb_88xx.h   |    83 +
- .../wireless/realtek/rtlwifi/halmac/halmac_api.c   |   438 +
- .../wireless/realtek/rtlwifi/halmac/halmac_api.h   |    65 +
- .../wireless/realtek/rtlwifi/halmac/halmac_bit2.h  | 18234 +++++++++++++++++++
- .../realtek/rtlwifi/halmac/halmac_bit_8822b.h      | 17870 ++++++++++++++++++
- .../realtek/rtlwifi/halmac/halmac_fw_info.h        |   119 +
- .../rtlwifi/halmac/halmac_fw_offload_c2h_nic.h     |   371 +
- .../rtlwifi/halmac/halmac_fw_offload_h2c_nic.h     |   694 +
- .../realtek/rtlwifi/halmac/halmac_gpio_cmd.h       |    84 +
- .../rtlwifi/halmac/halmac_h2c_extra_info_nic.h     |   171 +
- .../realtek/rtlwifi/halmac/halmac_intf_phy_cmd.h   |    45 +
- .../rtlwifi/halmac/halmac_original_c2h_nic.h       |   408 +
- .../rtlwifi/halmac/halmac_original_h2c_nic.h       |  1143 ++
- .../realtek/rtlwifi/halmac/halmac_pcie_reg.h       |    36 +
- .../realtek/rtlwifi/halmac/halmac_pwr_seq_cmd.h    |    98 +
- .../wireless/realtek/rtlwifi/halmac/halmac_reg2.h  |  1292 ++
- .../realtek/rtlwifi/halmac/halmac_reg_8822b.h      |   733 +
- .../realtek/rtlwifi/halmac/halmac_rx_bd_nic.h      |    36 +
- .../realtek/rtlwifi/halmac/halmac_rx_desc_chip.h   |   100 +
- .../realtek/rtlwifi/halmac/halmac_rx_desc_nic.h    |   123 +
- .../realtek/rtlwifi/halmac/halmac_sdio_reg.h       |    53 +
- .../realtek/rtlwifi/halmac/halmac_state_machine.h  |   157 +
- .../realtek/rtlwifi/halmac/halmac_tx_bd_nic.h      |   106 +
- .../realtek/rtlwifi/halmac/halmac_tx_desc_chip.h   |   398 +
- .../realtek/rtlwifi/halmac/halmac_tx_desc_nic.h    |   439 +
- .../wireless/realtek/rtlwifi/halmac/halmac_type.h  |  2134 +++
- .../realtek/rtlwifi/halmac/halmac_usb_reg.h        |    19 +
- .../wireless/realtek/rtlwifi/halmac/rtl_halmac.c   |  1408 ++
- .../wireless/realtek/rtlwifi/halmac/rtl_halmac.h   |    77 +
- drivers/net/wireless/realtek/rtlwifi/wifi.h        |    59 +
- 77 files changed, 64206 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/dmdef.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/Makefile
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_cfg.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_cfg_wmac_8822b.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_cfg_wmac_8822b.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_common_8822b.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_common_8822b.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_gpio_8822b.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_gpio_8822b.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_init_8822b.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_init_8822b.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_pcie_8822b.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_pcie_8822b.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_phy_8822b.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_pwr_seq_8822b.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_pwr_seq_8822b.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_sdio_8822b.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_sdio_8822b.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_usb_8822b.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_usb_8822b.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_bb_rf_88xx.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_bb_rf_88xx.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_cfg_wmac_88xx.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_cfg_wmac_88xx.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_common_88xx.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_common_88xx.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_efuse_88xx.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_efuse_88xx.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_flash_88xx.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_flash_88xx.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_fw_88xx.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_fw_88xx.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_gpio_88xx.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_gpio_88xx.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_init_88xx.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_init_88xx.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_mimo_88xx.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_mimo_88xx.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_pcie_88xx.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_pcie_88xx.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_sdio_88xx.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_sdio_88xx.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_usb_88xx.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_usb_88xx.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_api.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_api.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_bit2.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_bit_8822b.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_fw_info.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_fw_offload_c2h_nic.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_fw_offload_h2c_nic.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_gpio_cmd.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_h2c_extra_info_nic.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_intf_phy_cmd.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_original_c2h_nic.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_original_h2c_nic.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_pcie_reg.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_pwr_seq_cmd.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_reg2.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_reg_8822b.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_rx_bd_nic.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_rx_desc_chip.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_rx_desc_nic.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_sdio_reg.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_state_machine.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_tx_bd_nic.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_tx_desc_chip.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_tx_desc_nic.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_type.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_usb_reg.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/rtl_halmac.c
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/rtl_halmac.h
+ee35eecb0822 wcn36xx: turn off probe response offloading
 
 -- 
-2.15.1
+https://patchwork.kernel.org/patch/10282035/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
