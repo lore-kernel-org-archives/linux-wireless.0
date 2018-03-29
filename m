@@ -1,71 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37410 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:54378 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750789AbeCWFvG (ORCPT
+        with ESMTP id S1751325AbeC2Iuc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Mar 2018 01:51:06 -0400
+        Thu, 29 Mar 2018 04:50:32 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 23 Mar 2018 11:21:05 +0530
-From: mpubbise@codeaurora.org
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: advertise supported interface types for sw
- encryption
-In-Reply-To: <1521705975.6713.1.camel@sipsolutions.net>
-References: <1520576822-1954-1-git-send-email-mpubbise@codeaurora.org>
- <1521618788.2645.5.camel@sipsolutions.net>
- <089d864c1d6bb9218191dad53713f148@codeaurora.org>
- <1521705975.6713.1.camel@sipsolutions.net>
-Message-ID: <f85ad2ddb54b6f628f436c3b16eb1146@codeaurora.org> (sfid-20180323_065113_109136_90885FD3)
+Subject: Re: [PATCHv2] Revert "ath10k: send (re)assoc peer command when NSS
+ changed"
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1519999397-8697-1-git-send-email-periyasa@codeaurora.org>
+References: <1519999397-8697-1-git-send-email-periyasa@codeaurora.org>
+To: Karthikeyan Periyasamy <periyasa@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Karthikeyan Periyasamy <periyasa@codeaurora.org>
+Message-Id: <20180329085031.D2B5060C65@smtp.codeaurora.org> (sfid-20180329_105036_266574_27E7BA15)
+Date: Thu, 29 Mar 2018 08:50:31 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-03-22 13:36, Johannes Berg wrote:
-> On Thu, 2018-03-22 at 11:51 +0530, mpubbise@codeaurora.org wrote:
->> 
->> > So IMHO - just get rid of the bitmap and hard-code AP_VLAN.
->> >
->> 
->> I agree with you only partially.
->> 
->> Today, I do not see any driver advertising SW_CRYPTO_CONTROL other 
->> than
->> ath10k. There could be some driver which would want to advertise
->> SW_CRYPTO_CONTROL and do not support the software encryption for VLAN
->> devices. In that case, hard-coding doesn't seem to solve the problem
->> completely right? No?
-> 
-> Well, my point is that such a hypothetical driver is completely
-> irrelevant because it doesn't make any sense to have this behaviour -
-> it would mean it cannot support AP_VLAN with encryption, so it might as
-> well not support AP_VLAN at all.
-> 
->> Or you meant to say that driver should advertise the support for
->> AP_VLANs only if it can support encryption on AP_VLAN devices?
-> 
-> Right.
-> 
->> If this
->> the case, then I could see some code in ieee80211_register_hw which 
->> says
->> this,
->> 
->>          /* if low-level driver supports AP, we also support VLAN */
->>          if (local->hw.wiphy->interface_modes & 
->> BIT(NL80211_IFTYPE_AP)) {
->>                  hw->wiphy->interface_modes |=
->> BIT(NL80211_IFTYPE_AP_VLAN);
->>                  hw->wiphy->software_iftypes |=
->> BIT(NL80211_IFTYPE_AP_VLAN);
->>          }
-> 
-> Yes, but if such a driver comes along we can change this.
-> 
+Karthikeyan Periyasamy <periyasa@codeaurora.org> wrote:
 
-It makes sense, I will send out the change by hard-coding only for 
-AP-VLAN interface.
+> This reverts commit 55884c045d31a29cf69db8332d1064a1b61dd159.
+> 
+> When Ath10k is in AP mode and an unassociated STA sends a VHT action frame
+> (Operating Mode Notification for the NSS change) periodically to AP this causes
+> ath10k to call ath10k_station_assoc() which sends WMI_PEER_ASSOC_CMDID during
+> NSS update. Over the time (with a certain client it can happen within 15 mins
+> when there are over 500 of these VHT action frames) continuous calls of
+> WMI_PEER_ASSOC_CMDID cause firmware to assert due to resource exhaust.
+> 
+> To my knowledge setting WMI_PEER_NSS peer param itself enough to handle NSS
+> updates and no need to call ath10k_station_assoc(). So revert the original
+> commit from 2014 as it's unclear why the change was really needed.
+> Now the firmware assert doesn't happen anymore.
+> 
+> Issue observed in QCA9984 platform with firmware version:10.4-3.5.3-00053.
+> This Change tested in QCA9984 with firmware version: 10.4-3.5.3-00053 and
+> QCA988x platform with firmware version: 10.2.4-1.0-00036.
+> 
+> Firmware Assert log:
+> 
+> ath10k_pci 0002:01:00.0: firmware crashed! (guid e61f1274-9acd-4c5b-bcca-e032ea6e723c)
+> ath10k_pci 0002:01:00.0: qca9984/qca9994 hw1.0 target 0x01000000 chip_id 0x00000000 sub 168c:cafe
+> ath10k_pci 0002:01:00.0: kconfig debug 1 debugfs 1 tracing 0 dfs 1 testmode 1
+> ath10k_pci 0002:01:00.0: firmware ver 10.4-3.5.3-00053 api 5 features no-p2p,mfp,peer-flow-ctrl,btcoex-param,allows-mesh-bcast crc32 4c56a386
+> ath10k_pci 0002:01:00.0: board_file api 2 bmi_id 0:4 crc32 c2271344
+> ath10k_pci 0002:01:00.0: htt-ver 2.2 wmi-op 6 htt-op 4 cal otp max-sta 512 raw 0 hwcrypto 1
+> ath10k_pci 0002:01:00.0: firmware register dump:
+> ath10k_pci 0002:01:00.0: [00]: 0x0000000A 0x000015B3 0x00981E5F 0x00975B31
+> ath10k_pci 0002:01:00.0: [04]: 0x00981E5F 0x00060530 0x00000011 0x00446C60
+> ath10k_pci 0002:01:00.0: [08]: 0x0042F1FC 0x00458080 0x00000017 0x00000000
+> ath10k_pci 0002:01:00.0: [12]: 0x00000009 0x00000000 0x00973ABC 0x00973AD2
+> ath10k_pci 0002:01:00.0: [16]: 0x00973AB0 0x00960E62 0x009606CA 0x00000000
+> ath10k_pci 0002:01:00.0: [20]: 0x40981E5F 0x004066DC 0x00400000 0x00981E34
+> ath10k_pci 0002:01:00.0: [24]: 0x80983B48 0x0040673C 0x000000C0 0xC0981E5F
+> ath10k_pci 0002:01:00.0: [28]: 0x80993DEB 0x0040676C 0x00431AB8 0x0045D0C4
+> ath10k_pci 0002:01:00.0: [32]: 0x80993E5C 0x004067AC 0x004303C0 0x0045D0C4
+> ath10k_pci 0002:01:00.0: [36]: 0x80994AAB 0x004067DC 0x00000000 0x0045D0C4
+> ath10k_pci 0002:01:00.0: [40]: 0x809971A0 0x0040681C 0x004303C0 0x00441B00
+> ath10k_pci 0002:01:00.0: [44]: 0x80991904 0x0040688C 0x004303C0 0x0045D0C4
+> ath10k_pci 0002:01:00.0: [48]: 0x80963AD3 0x00406A7C 0x004303C0 0x009918FC
+> ath10k_pci 0002:01:00.0: [52]: 0x80960E80 0x00406A9C 0x0000001F 0x00400000
+> ath10k_pci 0002:01:00.0: [56]: 0x80960E51 0x00406ACC 0x00400000 0x00000000
+> ath10k_pci 0002:01:00.0: Copy Engine register dump:
+> ath10k_pci 0002:01:00.0: index: addr: sr_wr_idx: sr_r_idx: dst_wr_idx: dst_r_idx:
+> ath10k_pci 0002:01:00.0: [00]: 0x0004a000 15 15 3 3
+> ath10k_pci 0002:01:00.0: [01]: 0x0004a400 17 17 212 213
+> ath10k_pci 0002:01:00.0: [02]: 0x0004a800 21 21 20 21
+> ath10k_pci 0002:01:00.0: [03]: 0x0004ac00 25 25 27 25
+> ath10k_pci 0002:01:00.0: [04]: 0x0004b000 515 515 144 104
+> ath10k_pci 0002:01:00.0: [05]: 0x0004b400 28 28 155 156
+> ath10k_pci 0002:01:00.0: [06]: 0x0004b800 12 12 12 12
+> ath10k_pci 0002:01:00.0: [07]: 0x0004bc00 1 1 1 1
+> ath10k_pci 0002:01:00.0: [08]: 0x0004c000 0 0 127 0
+> ath10k_pci 0002:01:00.0: [09]: 0x0004c400 1 1 1 1
+> ath10k_pci 0002:01:00.0: [10]: 0x0004c800 0 0 0 0
+> ath10k_pci 0002:01:00.0: [11]: 0x0004cc00 0 0 0 0
+> ath10k_pci 0002:01:00.0: CE[1] write_index 212 sw_index 213 hw_index 0 nentries_mask 0x000001ff
+> ath10k_pci 0002:01:00.0: CE[2] write_index 20 sw_index 21 hw_index 0 nentries_mask 0x0000007f
+> ath10k_pci 0002:01:00.0: CE[5] write_index 155 sw_index 156 hw_index 0 nentries_mask 0x000001ff
+> ath10k_pci 0002:01:00.0: DMA addr: nbytes: meta data: byte swap: gather:
+> ath10k_pci 0002:01:00.0: [455]: 0x580c0042 0 0 0 0
+> ath10k_pci 0002:01:00.0: [456]: 0x594a0010 0 0 0 1
+> ath10k_pci 0002:01:00.0: [457]: 0x580c0042 0 0 0 0
+> ath10k_pci 0002:01:00.0: [458]: 0x594a0038 0 0 0 1
+> ath10k_pci 0002:01:00.0: [459]: 0x580c0a42 0 0 0 0
+> ath10k_pci 0002:01:00.0: [460]: 0x594a0060 0 0 0 1
+> ath10k_pci 0002:01:00.0: [461]: 0x580c0c42 0 0 0 0
+> ath10k_pci 0002:01:00.0: [462]: 0x594a0010 0 0 0 1
+> ath10k_pci 0002:01:00.0: [463]: 0x580c0c42 0 0 0 0
+> ath10k_pci 0002:01:00.0: [464]: 0x594a0038 0 0 0 1
+> ath10k_pci 0002:01:00.0: [465]: 0x580c0a42 0 0 0 0
+> ath10k_pci 0002:01:00.0: [466]: 0x594a0060 0 0 0 1
+> ath10k_pci 0002:01:00.0: [467]: 0x580c0042 0 0 0 0
+> ath10k_pci 0002:01:00.0: [468]: 0x594a0010 0 0 0 1
+> ath10k_pci 0002:01:00.0: [469]: 0x580c1c42 0 0 0 0
+> ath10k_pci 0002:01:00.0: [470]: 0x594a0010 0 0 0 1
+> ath10k_pci 0002:01:00.0: [471]: 0x580c1c42 0 0 0 0
+> ath10k_pci 0002:01:00.0: [472]: 0x594a0010 0 0 0 1
+> ath10k_pci 0002:01:00.0: [473]: 0x580c1c42 0 0 0 0
+> ath10k_pci 0002:01:00.0: [474]: 0x594a0010 0 0 0 1
+> ath10k_pci 0002:01:00.0: [475]: 0x580c0642 0 0 0 0
+> ath10k_pci 0002:01:00.0: [476]: 0x594a0038 0 0 0 1
+> ath10k_pci 0002:01:00.0: [477]: 0x580c0842 0 0 0 0
+> ath10k_pci 0002:01:00.0: [478]: 0x594a0060 0 0 0 1
+> ath10k_pci 0002:01:00.0: [479]: 0x580c0042 0 0 0 0
+> ath10k_pci 0002:01:00.0: [480]: 0x594a0010 0 0 0 1
+> ath10k_pci 0002:01:00.0: [481]: 0x580c0042 0 0 0 0
+> ath10k_pci 0002:01:00.0: [482]: 0x594a0038 0 0 0 1
+> ath10k_pci 0002:01:00.0: [483]: 0x580c0842 0 0 0 0
+> ath10k_pci 0002:01:00.0: [484]: 0x594a0060 0 0 0 1
+> ath10k_pci 0002:01:00.0: [485]: 0x580c0642 0 0 0 0
+> ath10k_pci 0002:01:00.0: [486]: 0x594a0010 0 0 0 1
+> ath10k_pci 0002:01:00.0: [487]: 0x580c0642 0 0 0 0
+> ath10k_pci 0002:01:00.0: [488]: 0x594a0038 0 0 0 1
+> ath10k_pci 0002:01:00.0: [489]: 0x580c0842 0 0 0 0
+> ath10k_pci 0002:01:00.0: [490]: 0x594a0060 0 0 0 1
+> ath10k_pci 0002:01:00.0: [491]: 0x580c0042 0 0 0 0
+> ath10k_pci 0002:01:00.0: [492]: 0x58174040 0 1 0 0
+> ath10k_pci 0002:01:00.0: [493]: 0x5a946040 0 1 0 0
+> ath10k_pci 0002:01:00.0: [494]: 0x59909040 0 1 0 0
+> ath10k_pci 0002:01:00.0: [495]: 0x5ae5a040 0 1 0 0
+> ath10k_pci 0002:01:00.0: [496]: 0x58096040 0 1 0 0
+> ath10k_pci 0002:01:00.0: [497]: 0x594a0010 0 0 0 1
+> ath10k_pci 0002:01:00.0: [498]: 0x580c0642 0 0 0 0
+> ath10k_pci 0002:01:00.0: [499]: 0x5c1e0040 0 1 0 0
+> ath10k_pci 0002:01:00.0: [500]: 0x58153040 0 1 0 0
+> ath10k_pci 0002:01:00.0: [501]: 0x58129040 0 1 0 0
+> ath10k_pci 0002:01:00.0: [502]: 0x5952f040 0 1 0 0
+> ath10k_pci 0002:01:00.0: [503]: 0x59535040 0 1 0 0
+> ath10k_pci 0002:01:00.0: [504]: 0x594a0010 0 0 0 1
+> ath10k_pci 0002:01:00.0: [505]: 0x580c0042 0 0 0 0
+> ath10k_pci 0002:01:00.0: [506]: 0x594a0010 0 0 0 1
+> ath10k_pci 0002:01:00.0: [507]: 0x580c0042 0 0 0 0
+> ath10k_pci 0002:01:00.0: [508]: 0x594a0010 0 0 0 1
+> ath10k_pci 0002:01:00.0: [509]: 0x580c0042 0 0 0 0
+> ath10k_pci 0002:01:00.0: [510]: 0x594a0010 0 0 0 1
+> ath10k_pci 0002:01:00.0: [511]: 0x580c0042 0 0 0 0
+> ath10k_pci 0002:01:00.0: [512]: 0x5adcc040 0 1 0 0
+> ath10k_pci 0002:01:00.0: [513]: 0x5cf3d040 0 1 0 0
+> ath10k_pci 0002:01:00.0: [514]: 0x5c1e9040 64 1 0 0
+> ath10k_pci 0002:01:00.0: [515]: 0x00000000 0 0 0 0
+> 
+> Signed-off-by: Karthikeyan Periyasamy <periyasa@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
---
-mkp
+Patch applied to ath-next branch of ath.git, thanks.
+
+55cc11da6989 Revert "ath10k: send (re)assoc peer command when NSS changed"
+
+-- 
+https://patchwork.kernel.org/patch/10254713/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
