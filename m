@@ -1,52 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55020 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751145AbeCIKiE (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:49512 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751207AbeC2UYb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Mar 2018 05:38:04 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Variable-length arrays considered bad
-References: <87zi3j9cz7.fsf@codeaurora.org>
-        <CAEhWJF=s=gHJ-yKn+VW2Hs6Nj9KbfF59-1Tk=fkzQk6wFFddNw@mail.gmail.com>
-Date: Fri, 09 Mar 2018 12:38:01 +0200
-In-Reply-To: <CAEhWJF=s=gHJ-yKn+VW2Hs6Nj9KbfF59-1Tk=fkzQk6wFFddNw@mail.gmail.com>
-        (Amitkumar Karwar's message of "Fri, 9 Mar 2018 12:58:54 +0530")
-Message-ID: <87muzha60m.fsf@codeaurora.org> (sfid-20180309_113808_915188_7E72AF41)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 29 Mar 2018 16:24:31 -0400
+Date: Thu, 29 Mar 2018 16:24:29 -0400 (EDT)
+Message-Id: <20180329.162429.1675522812416621541.davem@davemloft.net> (sfid-20180329_222458_212405_43BEC1CF)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2018-03-29
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87efk3j9uf.fsf@kamboji.qca.qualcomm.com>
+References: <87efk3j9uf.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <amitkarwar@gmail.com> writes:
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Thu, 29 Mar 2018 16:21:44 +0300
 
-> On Thu, Mar 8, 2018 at 2:10 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Hi,
->>
->> in an lkml discussion[1] it was mentioned that variable-length arrays
->> should not be used. Few warnings were found[2] from wireless:
->>
->> drivers/net/wireless/ath/ath9k/dfs.c:104:2: warning: ISO C90 forbids
->> variable length array 'max_bin' [-Wvla]
->> drivers/net/wireless/rsi/rsi_91x_sdio.c:570:2: warning: ISO C90
->> forbids variable length array 'temp_buf' [-Wvla]
->>
->> Patches welcome.
->>
->> [1]
->> https://lkml.kernel.org/r/CA+55aFzCG-zNmZwX4A2FQpadafLfEzK6CC=qPXydAacU1RqZWA@mail.gmail.com
->>
->> [2] http://paste.ubuntu.com/p/srQxwPQS9s/
->>
->
-> I will submit a cleanup patch for RSI warning
+> here's a pull request to net-next for 4.17. If the merge window starts
+> on Sunday this will be the last pull request. Do note that I pulled
+> wireless-drivers into wireless-drivers-next as iwlwifi needed some
+> patches.
+> 
+> Please let me know if you have any problems.
 
-Thanks, but Tobin was faster:
-
-https://lkml.kernel.org/r/1520577493-24603-1-git-send-email-me@tobin.cc
-
-He just forgot to CC linux-wireless.
-
--- 
-Kalle Valo
+Pulled, thank you!
