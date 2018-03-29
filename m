@@ -1,65 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42449 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751337AbeCLT1H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Mar 2018 15:27:07 -0400
-Date: Mon, 12 Mar 2018 19:27:04 +0000
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Andres Rodriguez <andresx7@gmail.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Ilia Mirkin <imirkin@alum.mit.edu>
-Subject: Re: [PATCH] firmware: add a function to load optional firmware v2
-Message-ID: <20180312192704.GX4449@wotan.suse.de> (sfid-20180312_202722_815259_852FFA36)
-References: <20180309221243.15489-2-andresx7@gmail.com>
- <20180309230925.3573-1-andresx7@gmail.com>
- <CAB=NE6VY62KqmhzD=zT8od=PhgPi3rGKKKxKz_zad-ZrYW-97A@mail.gmail.com>
- <CAB=NE6XpY4LuDwnakCa6gZ_HjjhZDnu=gDeHwmpNRaSkqQOB2g@mail.gmail.com>
- <bbdc304f-edd5-38df-ea88-012fefc54b90@gmail.com>
- <5AA5B777.5020106@broadcom.com>
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:35352 "EHLO
+        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752771AbeC2LbN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Mar 2018 07:31:13 -0400
+Received: by mail-wm0-f42.google.com with SMTP id r82so11032129wme.0
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2018 04:31:12 -0700 (PDT)
+Subject: Re: [PATCH] nl80211: Update ERP info using
+ NL80211_CMD_UPDATE_CONNECT_PARAMS
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Vidyullatha Kanchanapally <vidyullatha@codeaurora.org>
+References: <1508923248-18848-1-git-send-email-vidyullatha@codeaurora.org>
+ <1512990779.26976.69.camel@sipsolutions.net> <5ABCCA33.8070501@broadcom.com>
+ <1522322166.5932.13.camel@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
+        amarnath@qti.qualcomm.com, usdutt@qti.qualcomm.com,
+        vamsin@qti.qualcomm.com, Jithu Jance <jithu.jance@broadcom.com>,
+        Eylon Pedinovsky <eylon.pedinovsky@broadcom.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5ABCCE7D.3050702@broadcom.com> (sfid-20180329_133138_938313_5F5A001F)
+Date: Thu, 29 Mar 2018 13:31:09 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5AA5B777.5020106@broadcom.com>
+In-Reply-To: <1522322166.5932.13.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 12, 2018 at 12:10:47AM +0100, Arend van Spriel wrote:
-> On 3/11/2018 5:05 PM, Andres Rodriguez wrote:
-> > > Your patch series then should also have the driver callers who you
-> > > want to modify to use this new API. Collect from the 802.11 folks the
-> > > other drivers which I think they wanted changed as well.
-> > 
-> > Arend, Kalle, would love to hear your feedback.
-> 
-> I am not sure if it was ath10k, but Kalle will surely know. The other driver
-> firing a whole batch of firmware requests is iwlwifi. These basically try to
-> get latest firmware version and if not there try an older one.
++ Jithu, Eylon
 
-Ah I recall now. At least for iwlwifi its that it requests firmware with a
-range of api files, and we don't need information about files in the middle
-not found, given all we need to know if is if at lest one file was found
-or not.
+On 3/29/2018 1:16 PM, Johannes Berg wrote:
+> Hi Arend,
+>
+>> Picking up a somewhat old thread as I did not see a follow-up on this
+>> patch. I got queried about it over here by our FILS team. So what is
+>> needed for this patch to pass the bar?
+>
+> That's indeed a bit old :-)
+>
+>>>> + * @UPDATE_FILS_ERP_INFO: Indicates that FILS connection parameters (realm,
+>>>> + *	username, erp sequence number and rrk) are updated
+>>>> + * @UPDATE_AUTH_TYPE: Indicates that Authentication type is updated
+>>>
+>>> These are new here, but you don't know if they were actually supported:
+>>>
+>>>> +	if (wiphy_ext_feature_isset(&rdev->wiphy,
+>>>> +				    NL80211_EXT_FEATURE_FILS_SK_OFFLOAD) &&
+>>>
+>>> here.
+>>
+>> The description of the FILS_SK_OFFLOAD currently says:
+>>
+>>    * @NL80211_EXT_FEATURE_FILS_SK_OFFLOAD: Driver SME supports FILS
+>> shared key
+>>    *      authentication with %NL80211_CMD_CONNECT.
+>>
+>> Are you suggesting a new flag to cover the new update attributes?
+>
+> [snip]
+>
+>>> Again, how do you know the driver will actually look at
+>>> UPDATE_AUTH_TYPE?
+>>
+>> If they don't they are broken, right? And if they are broken, the
+>> connection will drop and regular connect will happen anyway, no?
+>>
+>> We could add a new flag to signal driver will handle the extra
+>> parameters in UPDATE_CONNECT_PARAMS, but it is not clear why it would be
+>> needed. Seems to me user-space has all the info needed with the existing
+>> flag(s).
+>
+> Agree, and we don't even have any drivers that are setting the
+> FILS_SK_OFFLOAD flag anyway, so we can still redefine its semantics to
+> some extent.
 
-I have future code to also enable use of a range request which would replace
-the recursive nature of iwlwifi's firmware API request, so it simplifies it
-considerably.
+There is some implied behavior about the UPDATE_AUTH_TYPE. The 
+FILS_SK_OFFLOAD only seems to cover NL80211_AUTHTYPE_FILS_SK. So to me 
+it seems that changing the auth type really means the driver should give 
+up on roaming and let user-space handle it.
 
-Once we get this flag to be silent in, this can be used later. Ie, the new
-API I'd add would replace the complex api revision thing for an internal set.
+> So yeah, I'd argue that what the patch needed was somebody taking a
+> critical look at my review ;-)
+>
+> And perhaps fixing the weird flags thing I pointed out.
 
-> The brcmfmac driver I maintain is slightly different. It downloads two
-> distinct pieces of firmware of which one is optional for certain
-> configurations. Currently, my driver does two asynchronous requests for it,
-> but I consider changing it and only make the first request asynchronous and
-> the second request synchronous. You can look at the current code in
-> drivers/net/wireless/broadcom/brcmfmac/firmware.c. However, I did quite some
-> restructuring last week. Anyway, I probably will end up using the "optional"
-> api where appropriate.
+Yup. That made sense.
 
-Thanks for the details.
+Also there is a DOC section about FILS shared key authentication 
+offload" so I suppose that should be extended as well.
 
-  Luis
+Regards,
+Arend
