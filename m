@@ -1,50 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f174.google.com ([209.85.128.174]:37341 "EHLO
-        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751523AbeCOHKL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Mar 2018 03:10:11 -0400
-Received: by mail-wr0-f174.google.com with SMTP id z12so7131748wrg.4
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2018 00:10:11 -0700 (PDT)
+Received: from osg.samsung.com ([64.30.133.232]:42498 "EHLO osg.samsung.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750979AbeC2OsL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Mar 2018 10:48:11 -0400
+Date: Thu, 29 Mar 2018 11:48:06 -0300
+From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-doc@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: nested structs parsing
+Message-ID: <20180329114806.3e7a9a45@vento.lan> (sfid-20180329_164814_271926_333B3DD7)
+In-Reply-To: <1522333593.24162.12.camel@sipsolutions.net>
+References: <1522316775.5932.10.camel@sipsolutions.net>
+        <1522316827.5932.11.camel@sipsolutions.net>
+        <20180329112209.5c0e0320@vento.lan>
+        <1522333593.24162.12.camel@sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <87efko0zsk.fsf@purkki.adurom.net>
-References: <1520260620-4694-1-git-send-email-amitkarwar@gmail.com>
- <1520260620-4694-2-git-send-email-amitkarwar@gmail.com> <87ina00zwv.fsf@purkki.adurom.net>
- <87efko0zsk.fsf@purkki.adurom.net>
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-Date: Thu, 15 Mar 2018 12:40:10 +0530
-Message-ID: <CAEhWJF=w5rYKfFS1egCG30rdNafAJT9o2+bmhUcuQ-w=JkY2VA@mail.gmail.com> (sfid-20180315_081230_679563_13A117B2)
-Subject: Re: [PATCH 01/10] rsi: add support for hardware scan offload
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 13, 2018 at 8:48 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Kalle Valo <kvalo@codeaurora.org> writes:
->
->> Amitkumar Karwar <amitkarwar@gmail.com> writes:
->>
->>> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->>>
->>> With the current approach of scanning, roaming delays
->>> are observed. Firmware has support for back ground scanning.
->>> To get this advantage, mac80211 hardware scan is implemented.
->>> In this method, foreground scan is performed in driver and
->>> back ground scan is configured to firmware.
->>
->> To me doesn't like a good idea to duplicate scan functionality in the
->> driver.
->
-> Also a pro tip: Don't place controversial patches as the first patch in
-> a big patchset, instead put them last so that I can apply rest of
-> patches anyway. Even better to submit them separately as RFC.
+Em Thu, 29 Mar 2018 16:26:33 +0200
+Johannes Berg <johannes@sipsolutions.net> escreveu:
 
-Got it. I will follow this.
+> Hi,
+> 
+> > The original patchset for nested structs was supporting it only 
+> > when not inlined. This should be fixed on this patchset:
+> > 
+> > 	https://lkml.org/lkml/2018/2/19/387
+> > 
+> > Do you have those patches on your tree?  
+> 
+> No, looks like I don't have those yet. I'll wait for those then.
+> 
+> > With regards to duplicated warnings, that use to happen if the same header
+> > is included several times (with is a common pratice at the net subsystem).  
+> 
+> Yeah, doesn't really matter anyway. I think I have to, in a sense,
+> because I'm getting lots of functions separately from the headers.
+> 
+> > Could you please merge from docs-next and see if those problems
+> > get solved?  
+> 
+> No, that doesn't seem to address it fully:
+> 
+> net/mac80211/sta_info.h:586: warning: Function parameter or member 'tx_stats.packets' not described in 'sta_info'
+> net/mac80211/sta_info.h:586: warning: Function parameter or member 'tx_stats.bytes' not described in 'sta_info'
+> net/mac80211/sta_info.h:586: warning: Function parameter or member 'tx_stats.last_rate' not described in 'sta_info'
+> net/mac80211/sta_info.h:586: warning: Function parameter or member 'msdu' not described in 'sta_info'
+> 
+> You can reproduce this in
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
+> 
+> (merging with docs-next) and running
+> 
+>   make SPHINXDIRS=driver-api/80211 htmldocs
 
-Regards,
-Amitkumar Karwar
+No need to run it for checking the errors... you can run just:
+
+	./scripts/kernel-doc -none net/mac80211/sta_info.h 
+
+Applying the enclosed patch seems to work:
+
+<patch>
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index f64eb86ca64b..d81cb6155e8d 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -477,6 +477,10 @@ struct ieee80211_sta_rx_stats {
+  * @tdls_chandef: a TDLS peer can have a wider chandef that is compatible to
+  *	the BSS one.
+  * @tx_stats: TX statistics
++ * @tx_stats.packets: foo
++ * @tx_stats.last_rate: bar
++ * @tx_stats.bytes: foobar
++ * @tx_stats.msdu: foo
+  * @rx_stats: RX statistics
+  * @pcpu_rx_stats: per-CPU RX statistics, assigned only if the driver needs
+  *	this (by advertising the USES_RSS hw flag)
+</patch>
+
+What's weird is that tx_stats.msdu field seems to be parsed wrong.
+I'll take a look on it.
+
+Thanks,
+Mauro
