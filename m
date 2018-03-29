@@ -1,88 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50774 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933128AbeCJOPc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Mar 2018 09:15:32 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
-        kubakici@wp.pl, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v3 15/20] firmware: fix checking for return values for fw_add_devm_name()
-Date: Sat, 10 Mar 2018 06:14:56 -0800
-Message-Id: <20180310141501.2214-16-mcgrof@kernel.org> (sfid-20180310_151750_455753_EA1F04F6)
-In-Reply-To: <20180310141501.2214-1-mcgrof@kernel.org>
-References: <20180310141501.2214-1-mcgrof@kernel.org>
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:35325 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751865AbeC2EeA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Mar 2018 00:34:00 -0400
+MIME-Version: 1.0
+From: YIN Wei <yinwei168@gmail.com>
+Date: Thu, 29 Mar 2018 12:33:59 +0800
+Message-ID: <CAFxU49nekm=8riJyqypGjZ2Hj8HfH5Z2aKfDdZm9UQuM6tfahQ@mail.gmail.com> (sfid-20180329_063410_248493_43A24346)
+Subject: how to disable DIFS and Backoff in 802.11 ath9k or ath5k driver
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently fw_add_devm_name() returns 1 if the firmware cache
-was already set. This makes it complicated for us to check for
-correctness. It is actually non-fatal if the firmware cache
-is already setup, so just return 0, and simplify the checkers.
+Dear All,
 
-fw_add_devm_name() adds device's name onto the devres for the
-device so that prior to suspend we cache the firmware onto memory,
-so that on resume the firmware is reliably available. We never
-were checking for success for this call though, meaning in some
-really rare cases we my have never setup the firmware cache for
-a device, which could in turn make resume fail.
+I am a researcher on 802.11 network security. I am doing a project
+where the first two stations are communicating and the third station
+tries to inject an forged 802.11 ACK if the last data frame is lost.
+The ACK must be arrived to the data sender before the ACK timer
+expires. Therefore the third station should not wait for a DIFS and a
+random backoff to send out the ACK.
+I am using ath9k driver, I found two functions
+ath9k_hw_set_sifs_time() and ath9k_hw_setslottime() in the Hw.c file
+in the ath9k directory, which set the SIFS and  backoff slot time in
+the registers.. I search all the ath9k files and found no register is
+for setting the DIFS. but the DIFS is can be calculated by DIFS = SIFS
++ 2 * Slot Time.  Therefore I thought the wireless chips should
+calculate DIFS this way.  I used to believe that I solved the problem
+by just setting the two registers.  However,when I capture the raw
+frames using the airdump-ng ( an aircrack-ng module) and found that it
+takes more than 80 microseconds to appear after the data, which is
+much longer than the ACK timer out. The ACK timeout is usually 30
+microseconds. So  the third station is forced by me to send out a
+forged ACK at around 25 microsecond.
 
-This is all theoretical, no known issues have been reported.
-This small issue has been present way since the addition of the
-devres firmware cache names on v3.7.
+Can any one tell me whether I am doing the right way to make the third
+station not follow the 802.11 backoff. any suggestion would be much
+appreciated. Thank you.
 
-Fixes: f531f05ae9437 ("firmware loader: store firmware name into devres list")
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- drivers/base/firmware_loader/main.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
-index c8966c84bd44..f5046887e362 100644
---- a/drivers/base/firmware_loader/main.c
-+++ b/drivers/base/firmware_loader/main.c
-@@ -403,7 +403,7 @@ static int fw_add_devm_name(struct device *dev, const char *name)
- 
- 	fwn = fw_find_devm_name(dev, name);
- 	if (fwn)
--		return 1;
-+		return 0;
- 
- 	fwn = devres_alloc(fw_name_devm_release, sizeof(struct fw_name_devm),
- 			   GFP_KERNEL);
-@@ -431,6 +431,7 @@ int assign_fw(struct firmware *fw, struct device *device,
- 	      unsigned int opt_flags)
- {
- 	struct fw_priv *fw_priv = fw->priv;
-+	int ret;
- 
- 	mutex_lock(&fw_lock);
- 	if (!fw_priv->size || fw_state_is_aborted(fw_priv)) {
-@@ -447,8 +448,13 @@ int assign_fw(struct firmware *fw, struct device *device,
- 	 */
- 	/* don't cache firmware handled without uevent */
- 	if (device && (opt_flags & FW_OPT_UEVENT) &&
--	    !(opt_flags & FW_OPT_NOCACHE))
--		fw_add_devm_name(device, fw_priv->fw_name);
-+	    !(opt_flags & FW_OPT_NOCACHE)) {
-+		ret = fw_add_devm_name(device, fw_priv->fw_name);
-+		if (ret) {
-+			mutex_unlock(&fw_lock);
-+			return ret;
-+		}
-+	}
- 
- 	/*
- 	 * After caching firmware image is started, let it piggyback
--- 
-2.16.2
+Regards,
+Wei
