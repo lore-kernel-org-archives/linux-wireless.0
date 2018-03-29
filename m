@@ -1,50 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36006 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752914AbeCMQkG (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:35674 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752334AbeC2JrK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 12:40:06 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v9,1/8] rsi: add rx control block to handle rx packets in USB
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1519741578-12640-2-git-send-email-amitkarwar@gmail.com>
-References: <1519741578-12640-2-git-send-email-amitkarwar@gmail.com>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        linux-bluetooth@vger.kernel.org,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Message-Id: <20180313164006.381A060390@smtp.codeaurora.org> (sfid-20180313_174030_536174_E20AF6B8)
-Date: Tue, 13 Mar 2018 16:40:06 +0000 (UTC)
+        Thu, 29 Mar 2018 05:47:10 -0400
+Message-ID: <1522316827.5932.11.camel@sipsolutions.net> (sfid-20180329_114714_330805_8CAE53F6)
+Subject: Re: nested structs parsing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+Cc: linux-doc@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Thu, 29 Mar 2018 11:47:07 +0200
+In-Reply-To: <1522316775.5932.10.camel@sipsolutions.net>
+References: <1522316775.5932.10.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <amitkarwar@gmail.com> wrote:
-
-> From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+On Thu, 2018-03-29 at 11:46 +0200, Johannes Berg wrote:
+> Hi,
 > 
-> Rx bluetooth endpoint shall be added in further patches. Rx control
-> block is introduced here to handle Rx packets properly. Separate
-> function is written to initialize the RX control blocks.
+> For a while I haven't looked at my documentation for 802.11, and now I
+> noticed I'm getting warnings due to the nested parsing.
 > 
-> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> However, something seems to be wrong? I have, for example, this (in
+> net/mac80211/sta_info.h)
+> 
+> struct sta_info {
+> 	...
+>         struct {
+>                 u64 packets[IEEE80211_NUM_ACS];
+>                 u64 bytes[IEEE80211_NUM_ACS];
+>                 struct ieee80211_tx_rate last_rate;
+>                 u64 msdu[IEEE80211_NUM_TIDS + 1];
+>         } tx_stats;
+> };
+> 
+> but I'm getting the following warnings now, with only "@tx_stats" being
+> described in the documentation:
+> 
+> net/mac80211/sta_info.h:590: warning: Function parameter or member 'status_stats.last_ack' not described in 'sta_info'
+> net/mac80211/sta_info.h:590: warning: Function parameter or member 'status_stats.last_ack_signal' not described in 'sta_info'
+> net/mac80211/sta_info.h:590: warning: Function parameter or member 'status_stats.ack_signal_filled' not described in 'sta_info'
+> net/mac80211/sta_info.h:590: warning: Function parameter or member 'msdu' not described in 'sta_info'
+> 
+> I can understand the first three of those, but not the last one? Why is
+> the last one not qualified?
+> 
+> If I change it to this:
+> 
+>         struct {
+>                 u64 packets[IEEE80211_NUM_ACS];
+>                 u64 bytes[IEEE80211_NUM_ACS];
+>                 /**
+>                  * @last_rate: last TX rate
+>                  */
+>                 struct ieee80211_tx_rate last_rate;
+>                 /**
+>                  * @msdu: # of MSDUs per TID
+>                  */
+>                 u64 msdu[IEEE80211_NUM_TIDS + 1];
+>         } tx_stats;
+> 
+> I still get a warning on "tx_stats.last_rate", but not on "msdu", which
+> is sort of obvious from the warning text, but also rather unexpected.
+> 
+> Normally I'd say that the "msdu" warning is originally wrong
+> 
+> However, I'd also argue that if I'm using inline declarations, I
+> shouldn't have to write it like this:
+> 
+>         struct {
+>                 u64 packets[IEEE80211_NUM_ACS];
+>                 u64 bytes[IEEE80211_NUM_ACS];
+>                 /**
+>                  * @tx_stats.last_rate: last TX rate
+>                  */
+>                 struct ieee80211_tx_rate last_rate;
+> 	...
+> 	} tx_stats;
 
-8 patches applied to wireless-drivers-next.git, thanks.
+Whoops, sent a fraction of a second too early - this actually causes a
+warning too (no idea why four times):
 
-1100f81bbcd1 rsi: add rx control block to handle rx packets in USB
-a4302bff28e2 rsi: add bluetooth rx endpoint
-4c10d56a76bb rsi: add header file rsi_91x
-2108df3c4b18 rsi: add coex support
-38aa4da50483 Bluetooth: btrsi: add new rsi bluetooth driver
-716b840c7641 rsi: handle BT traffic in driver
-898b25533931 rsi: add module parameter operating mode
-681805b1401b rsi: sdio changes to support BT
+net/mac80211/sta_info.h:560: warning: Incorrect use of kernel-doc format:                  * @tx_stats.last_rate: last TX rate
+net/mac80211/sta_info.h:560: warning: Incorrect use of kernel-doc format:                  * @tx_stats.last_rate: last TX rate
+net/mac80211/sta_info.h:560: warning: Incorrect use of kernel-doc format:                  * @tx_stats.last_rate: last TX rate
+net/mac80211/sta_info.h:560: warning: Incorrect use of kernel-doc format:                  * @tx_stats.last_rate: last TX rate
 
--- 
-https://patchwork.kernel.org/patch/10245547/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
