@@ -1,79 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:52122 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751964AbeCVK2Q (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:45928 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751325AbeC2OP3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Mar 2018 06:28:16 -0400
-Message-ID: <1521714493.19621.5.camel@sipsolutions.net> (sfid-20180322_112856_188603_3297E89A)
-Subject: Re: [RFC v5 0/9] EAPoL over NL80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
-Date: Thu, 22 Mar 2018 11:28:13 +0100
-In-Reply-To: <6c4a389a-55e1-5af2-cac2-1754fce7fabf@gmail.com> (sfid-20180321_161830_319006_32337E45)
-References: <20180313215942.29176-1-denkenz@gmail.com>
-         <1521645199.2645.34.camel@sipsolutions.net>
-         <6c4a389a-55e1-5af2-cac2-1754fce7fabf@gmail.com>
-         (sfid-20180321_161830_319006_32337E45)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 29 Mar 2018 10:15:29 -0400
+Received: by mail-pf0-f195.google.com with SMTP id l27so3308862pfk.12
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2018 07:15:29 -0700 (PDT)
+From: Amitkumar Karwar <amitkarwar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [v2 2/4] rsi: move descriptor preparation to core
+Date: Thu, 29 Mar 2018 19:32:27 +0530
+Message-Id: <1522332149-5100-3-git-send-email-amitkarwar@gmail.com> (sfid-20180329_161536_345967_88475B25)
+In-Reply-To: <1522332149-5100-1-git-send-email-amitkarwar@gmail.com>
+References: <1522332149-5100-1-git-send-email-amitkarwar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-03-21 at 10:18 -0500, Denis Kenzior wrote:
-> 
-> Sorry.  I assumed people read the change log :)
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-And I should :-)
+Descriptors preparation is moved to core instead of HAL to
+avoid synchronization issues in sending TX frames
 
-> > > - It is unclear to me how AP_VLAN and AP interfaces should synchronize on
-> > > conn_owner_nlportid.  This is required for tx_control_port to work.
-> > 
-> > I'm not really sure what you mean? Technically I guess an AP_VLAN could
-> > have a different owner from an AP, but if the AP goes down all the
-> > AP_VLANs go down with it already anyway.
-> 
-> So the issue is that when mac80211 calls cfg80211_rx_control_port and 
-> subsequently __nl80211_rx_control_port, we grab the nlportid from the 
-> wdev.  So if that isn't synchronized, then AP_VLAN devices won't be 
-> sending the EAPoL frames to the right place.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_core.c | 11 +++++++++
+ drivers/net/wireless/rsi/rsi_91x_hal.c  | 43 +++++++++++++++++----------------
+ drivers/net/wireless/rsi/rsi_hal.h      |  2 ++
+ 3 files changed, 35 insertions(+), 21 deletions(-)
 
-Oh, ok, gotcha. I guess mac80211 would have to sync over the data, just
-like it does for other things? You also copied over the
-control_port_over_nl80211 setting, so could do the same here?
-
-But no, maybe that doesn't make sense, since ...
-
-Hmm. Ok, I think I see what you're getting at.
-
-The key point seems to be that we don't have any sort of "add VLAN to
-AP operation" - it's auto-detected based on the MAC address.
-
-However, it doesn't actually matter at all - we shouldn't get there
-with VLAN interface. EAPOL frames are always sent out to the
-corresponding AP interface, see ieee80211_rx_h_data:
-
-        if (rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
-            unlikely(port_control) && sdata->bss) {
-                sdata = container_of(sdata->bss, struct ieee80211_sub_if_data,
-                                     u.ap);
-                dev = sdata->dev;
-                rx->sdata = sdata;
-        }
-
-
-> > > - JOIN_IBSS & JOIN_MESH don't seem to support control_port_ethertype or
-> > > control_port_no_encrypt.  Should struct cfg80211_crypto_settings parsed inside
-> > > nl80211_crypto_settings be added to ibss_params or mesh_config/mesh_setup?
-> > 
-> > I don't think it matters - they just don't support this now and don't
-> > really need to.
-> > 
-> 
-> Except that the eapol over nl80211 flag is being sent in security 
-> settings.  This covers STA/AP/P2P_GO/P2P_CLIENT.  We need some way of 
-> passing this information for mesh & ibss.
-
-Not sure I understand what you're saying. Can't we just say the flag
-isn't permitted in those modes?
-
-johannes
+diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
+index 5dafd2e..f5d1756 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_core.c
++++ b/drivers/net/wireless/rsi/rsi_91x_core.c
+@@ -413,6 +413,11 @@ void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb)
+ 	    (ieee80211_is_qos_nullfunc(wh->frame_control))) {
+ 		q_num = MGMT_SOFT_Q;
+ 		skb->priority = q_num;
++
++		if (rsi_prepare_mgmt_desc(common, skb)) {
++			rsi_dbg(ERR_ZONE, "Failed to prepare desc\n");
++			goto xmit_fail;
++		}
+ 	} else {
+ 		if (ieee80211_is_data_qos(wh->frame_control)) {
+ 			tid = (skb->data[24] & IEEE80211_QOS_TID);
+@@ -433,6 +438,8 @@ void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb)
+ 			if (!rsta)
+ 				goto xmit_fail;
+ 			tx_params->sta_id = rsta->sta_id;
++		} else {
++			tx_params->sta_id = 0;
+ 		}
+ 
+ 		if (rsta) {
+@@ -443,6 +450,10 @@ void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb)
+ 							      tid, 0);
+ 			}
+ 		}
++		if (rsi_prepare_data_desc(common, skb)) {
++			rsi_dbg(ERR_ZONE, "Failed to prepare data desc\n");
++			goto xmit_fail;
++		}
+ 	}
+ 
+ 	if ((q_num < MGMT_SOFT_Q) &&
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+index ce6a86d..43d7d6c 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -45,7 +45,7 @@ int rsi_send_pkt_to_bus(struct rsi_common *common, struct sk_buff *skb)
+ 	return status;
+ }
+ 
+-static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
++int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
+ {
+ 	struct rsi_hw *adapter = common->priv;
+ 	struct ieee80211_hdr *wh = NULL;
+@@ -113,17 +113,6 @@ static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
+ 	if (conf_is_ht40(conf))
+ 		mgmt_desc->bbp_info = cpu_to_le16(FULL40M_ENABLE);
+ 
+-	if (ieee80211_is_probe_req(wh->frame_control)) {
+-		if (!bss->assoc) {
+-			rsi_dbg(INFO_ZONE,
+-				"%s: blocking mgmt queue\n", __func__);
+-			mgmt_desc->misc_flags = RSI_DESC_REQUIRE_CFM_TO_HOST;
+-			xtend_desc->confirm_frame_type = PROBEREQ_CONFIRM;
+-			common->mgmt_q_block = true;
+-			rsi_dbg(INFO_ZONE, "Mgmt queue blocked\n");
+-		}
+-	}
+-
+ 	if (ieee80211_is_probe_resp(wh->frame_control)) {
+ 		mgmt_desc->misc_flags |= (RSI_ADD_DELTA_TSF_VAP_ID |
+ 					  RSI_FETCH_RETRY_CNT_FRM_HST);
+@@ -149,7 +138,7 @@ static int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb)
+ }
+ 
+ /* This function prepares descriptor for given data packet */
+-static int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
++int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
+ {
+ 	struct rsi_hw *adapter = common->priv;
+ 	struct ieee80211_vif *vif;
+@@ -301,10 +290,6 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+ 	    (!bss->assoc))
+ 		goto err;
+ 
+-	status = rsi_prepare_data_desc(common, skb);
+-	if (status)
+-		goto err;
+-
+ 	status = rsi_send_pkt_to_bus(common, skb);
+ 	if (status)
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to write pkt\n", __func__);
+@@ -327,12 +312,18 @@ int rsi_send_mgmt_pkt(struct rsi_common *common,
+ 		      struct sk_buff *skb)
+ {
+ 	struct rsi_hw *adapter = common->priv;
++	struct ieee80211_bss_conf *bss;
++	struct ieee80211_hdr *wh;
+ 	struct ieee80211_tx_info *info;
+ 	struct skb_info *tx_params;
++	struct rsi_mgmt_desc *mgmt_desc;
++	struct rsi_xtended_desc *xtend_desc;
+ 	int status = -E2BIG;
++	u8 header_size;
+ 
+ 	info = IEEE80211_SKB_CB(skb);
+ 	tx_params = (struct skb_info *)info->driver_data;
++	header_size = tx_params->internal_hdr_size;
+ 
+ 	if (tx_params->flags & INTERNAL_MGMT_PKT) {
+ 		status = adapter->host_intf_ops->write_pkt(common->priv,
+@@ -346,15 +337,25 @@ int rsi_send_mgmt_pkt(struct rsi_common *common,
+ 		return status;
+ 	}
+ 
+-	if (FRAME_DESC_SZ > skb_headroom(skb))
+-		goto err;
++	bss = &info->control.vif->bss_conf;
++	wh = (struct ieee80211_hdr *)&skb->data[header_size];
++	mgmt_desc = (struct rsi_mgmt_desc *)skb->data;
++	xtend_desc = (struct rsi_xtended_desc *)&skb->data[FRAME_DESC_SZ];
++
++	/* Indicate to firmware to give cfm for probe */
++	if (ieee80211_is_probe_req(wh->frame_control) && !bss->assoc) {
++		rsi_dbg(INFO_ZONE,
++			"%s: blocking mgmt queue\n", __func__);
++		mgmt_desc->misc_flags = RSI_DESC_REQUIRE_CFM_TO_HOST;
++		xtend_desc->confirm_frame_type = PROBEREQ_CONFIRM;
++		common->mgmt_q_block = true;
++		rsi_dbg(INFO_ZONE, "Mgmt queue blocked\n");
++	}
+ 
+-	rsi_prepare_mgmt_desc(common, skb);
+ 	status = rsi_send_pkt_to_bus(common, skb);
+ 	if (status)
+ 		rsi_dbg(ERR_ZONE, "%s: Failed to write the packet\n", __func__);
+ 
+-err:
+ 	rsi_indicate_tx_status(common->priv, skb, status);
+ 	return status;
+ }
+diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
+index 786dccd..d6c2baa 100644
+--- a/drivers/net/wireless/rsi/rsi_hal.h
++++ b/drivers/net/wireless/rsi/rsi_hal.h
+@@ -167,6 +167,8 @@ struct rsi_bt_desc {
+ } __packed;
+ 
+ int rsi_hal_device_init(struct rsi_hw *adapter);
++int rsi_prepare_mgmt_desc(struct rsi_common *common, struct sk_buff *skb);
++int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb);
+ int rsi_prepare_beacon(struct rsi_common *common, struct sk_buff *skb);
+ int rsi_send_pkt_to_bus(struct rsi_common *common, struct sk_buff *skb);
+ int rsi_send_bt_pkt(struct rsi_common *common, struct sk_buff *skb);
+-- 
+2.7.4
