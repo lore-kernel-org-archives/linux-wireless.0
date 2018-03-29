@@ -1,100 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44324 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:53178 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750955AbeCZI6p (ORCPT
+        with ESMTP id S1750716AbeC2HPb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Mar 2018 04:58:45 -0400
+        Thu, 29 Mar 2018 03:15:31 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] ath10k: refactor ath10k_pci_dump_memory() in preparation for QCA9984 support
-Date: Mon, 26 Mar 2018 11:58:33 +0300
-Message-Id: <1522054714-31492-1-git-send-email-kvalo@codeaurora.org> (sfid-20180326_105848_465925_5DBF1D91)
+To: Ramon Fried <rfried@codeaurora.org>
+Cc: loic.poulain@linaro.org, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v2] wcn36xx: Disable 5GHz for wcn3610
+References: <20180329065818.9338-1-rfried@codeaurora.org>
+Date: Thu, 29 Mar 2018 10:15:25 +0300
+In-Reply-To: <20180329065818.9338-1-rfried@codeaurora.org> (Ramon Fried's
+        message of "Thu, 29 Mar 2018 09:58:18 +0300")
+Message-ID: <874lkzmjxu.fsf@kamboji.qca.qualcomm.com> (sfid-20180329_091548_581412_CE5D36FE)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As QCA9984 needs two region types refactor the code to make it easier add the
-new types. No functional changes.
+(adding devicetree list)
 
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/pci.c | 55 +++++++++++++++++++++++------------
- 1 file changed, 36 insertions(+), 19 deletions(-)
+Ramon Fried <rfried@codeaurora.org> writes:
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 808f3d67ba90..977b7dade44e 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1584,6 +1584,36 @@ static int ath10k_pci_set_ram_config(struct ath10k *ar, u32 config)
- 	return 0;
- }
- 
-+/* if an error happened returns < 0, otherwise the length */
-+static int ath10k_pci_dump_memory_generic(struct ath10k *ar,
-+					  const struct ath10k_mem_region *current_region,
-+					  u8 *buf)
-+{
-+	int ret;
-+
-+	if (current_region->section_table.size > 0)
-+		/* Copy each section individually. */
-+		return ath10k_pci_dump_memory_section(ar,
-+						      current_region,
-+						      buf,
-+						      current_region->len);
-+
-+	/* No individiual memory sections defined so we can
-+	 * copy the entire memory region.
-+	 */
-+	ret = ath10k_pci_diag_read_mem(ar,
-+				       current_region->start,
-+				       buf,
-+				       current_region->len);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to copy ramdump region %s: %d\n",
-+			    current_region->name, ret);
-+		return ret;
-+	}
-+
-+	return current_region->len;
-+}
-+
- static void ath10k_pci_dump_memory(struct ath10k *ar,
- 				   struct ath10k_fw_crash_data *crash_data)
- {
-@@ -1642,27 +1672,14 @@ static void ath10k_pci_dump_memory(struct ath10k *ar,
- 		buf += sizeof(*hdr);
- 		buf_len -= sizeof(*hdr);
- 
--		if (current_region->section_table.size > 0) {
--			/* Copy each section individually. */
--			count = ath10k_pci_dump_memory_section(ar,
--							       current_region,
--							       buf,
--							       current_region->len);
--		} else {
--			/* No individiual memory sections defined so we can
--			 * copy the entire memory region.
--			 */
--			ret = ath10k_pci_diag_read_mem(ar,
--						       current_region->start,
--						       buf,
--						       current_region->len);
--			if (ret) {
--				ath10k_warn(ar, "failed to copy ramdump region %s: %d\n",
--					    current_region->name, ret);
-+		switch (current_region->type) {
-+		default:
-+			ret = ath10k_pci_dump_memory_generic(ar, current_region, buf);
-+			if (ret < 0)
- 				break;
--			}
- 
--			count = current_region->len;
-+			count = ret;
-+			break;
- 		}
- 
- 		hdr->region_type = cpu_to_le32(current_region->type);
+> wcn3610 can only operate on 2.4GHz band due to RF limitation.
+> If wcn36xx digital block is associated with an external IRIS
+> RF module, retrieve the id and disable 5GHz band in case of
+> wcn3610 id.
+>
+> Signed-off-by: Ramon Fried <rfried@codeaurora.org>
+> ---
+> v2: fixed wrong assignment, which is logically introduces the 
+> 	same behaviour, but for correctness.
+>
+>  drivers/net/wireless/ath/wcn36xx/main.c    | 4 +++-
+>  drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 1 +
+>  2 files changed, 4 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+> index ab5be6d2c691..833531a68c95 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/main.c
+> +++ b/drivers/net/wireless/ath/wcn36xx/main.c
+> @@ -1146,7 +1146,7 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
+>  		BIT(NL80211_IFTYPE_MESH_POINT);
+>  
+>  	wcn->hw->wiphy->bands[NL80211_BAND_2GHZ] = &wcn_band_2ghz;
+> -	if (wcn->rf_id != RF_IRIS_WCN3620)
+> +	if (wcn->rf_id != RF_IRIS_WCN3610 && wcn->rf_id != RF_IRIS_WCN3620)
+>  		wcn->hw->wiphy->bands[NL80211_BAND_5GHZ] = &wcn_band_5ghz;
+>  
+>  	wcn->hw->wiphy->max_scan_ssids = WCN36XX_MAX_SCAN_SSIDS;
+> @@ -1248,6 +1248,8 @@ static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
+>  	if (iris_node) {
+>  		if (of_device_is_compatible(iris_node, "qcom,wcn3620"))
+>  			wcn->rf_id = RF_IRIS_WCN3620;
+> +		else if (of_device_is_compatible(iris_node, "qcom,wcn3610"))
+> +			wcn->rf_id = RF_IRIS_WCN3610;
+>  		of_node_put(iris_node);
+>  	}
+
+Should we document qcom,wcn3610 just like wcn3620 is:
+
+Documentation/devicetree/bindings/remoteproc/qcom,wcnss-pil.txt:                    "qcom,wcn3620",
+
 -- 
-2.7.4
+Kalle Valo
