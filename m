@@ -1,83 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50934 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933181AbeCJOPf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Mar 2018 09:15:35 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
-        kubakici@wp.pl, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v3 18/20] firmware: ensure the firmware cache is not used on incompatible calls
-Date: Sat, 10 Mar 2018 06:14:59 -0800
-Message-Id: <20180310141501.2214-19-mcgrof@kernel.org> (sfid-20180310_151638_251755_70AA8DC2)
-In-Reply-To: <20180310141501.2214-1-mcgrof@kernel.org>
-References: <20180310141501.2214-1-mcgrof@kernel.org>
+Received: from mail-qk0-f175.google.com ([209.85.220.175]:47004 "EHLO
+        mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751865AbeC2VOe (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Mar 2018 17:14:34 -0400
+Received: by mail-qk0-f175.google.com with SMTP id o184so7415545qkd.13
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2018 14:14:33 -0700 (PDT)
+Subject: Re: Passing uninitialised local variable
+To: Himanshu Jha <himanshujha199640@gmail.com>,
+        franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        chi-hsien.lin@cypress.com, wright.feng@cypress.com
+References: <20180328112014.GA11484@himanshu-Vostro-3559>
+Cc: kvalo@codeaurora.org, johannes.berg@intel.com,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5ABD5735.1050608@broadcom.com> (sfid-20180329_231442_526416_DCA5F429)
+Date: Thu, 29 Mar 2018 23:14:29 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180328112014.GA11484@himanshu-Vostro-3559>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-request_firmware_into_buf() explicitly disables the firmware cache,
-meanwhile the firmware cache cannot be used when request_firmware_nowait()
-is used without the uevent. Enforce a sanity check for this to avoid future
-issues undocumented behaviours should misuses of the firmware cache
-happen later.
+On 3/28/2018 1:20 PM, Himanshu Jha wrote:
+> Hello everyone,
 
-One of the reasons we want to enforce this is the firmware cache is
-used for helping with suspend/resume, and if incompatible calls use it
-they can stall suspend.
+You added everyone, but me :-(
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- drivers/base/firmware_loader/main.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+Not really a problem, but it would help if the driver name was mentioned 
+in the subject.
 
-diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
-index b569d8a09392..2913bb0e5e7b 100644
---- a/drivers/base/firmware_loader/main.c
-+++ b/drivers/base/firmware_loader/main.c
-@@ -431,6 +431,11 @@ static int fw_add_devm_name(struct device *dev, const char *name)
- 	return 0;
- }
- #else
-+static bool fw_cache_is_setup(struct device *dev, const char *name)
-+{
-+	return false;
-+}
-+
- static int fw_add_devm_name(struct device *dev, const char *name)
- {
- 	return 0;
-@@ -672,6 +677,9 @@ request_firmware_into_buf(const struct firmware **firmware_p, const char *name,
- {
- 	int ret;
- 
-+	if (fw_cache_is_setup(device, name))
-+		return -EOPNOTSUPP;
-+
- 	__module_get(THIS_MODULE);
- 	ret = _request_firmware(firmware_p, name, device, buf, size,
- 				FW_OPT_UEVENT | FW_OPT_NOCACHE);
-@@ -769,6 +777,12 @@ request_firmware_nowait(
- 	fw_work->opt_flags = FW_OPT_NOWAIT |
- 		(uevent ? FW_OPT_UEVENT : FW_OPT_USERHELPER);
- 
-+	if (!uevent && fw_cache_is_setup(device, name)) {
-+		kfree_const(fw_work->name);
-+		kfree(fw_work);
-+		return -EOPNOTSUPP;
-+	}
-+
- 	if (!try_module_get(module)) {
- 		kfree_const(fw_work->name);
- 		kfree(fw_work);
--- 
-2.16.2
+> I recently found that a local variable in passed uninitialised to the
+> function at
+>
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:2950
+>
+>                  u32 var;
+>                  err = brcmf_fil_iovar_int_get(ifp, "dtim_assoc", &var);
+>                  if (err) {
+>                          brcmf_err("wl dtim_assoc failed (%d)\n", err);
+>                          goto update_bss_info_out;
+>                  }
+>                  dtim_period = (u8)var;
+>
+>
+> Now, the brcmf_fil_iovar_int_get() is defined as:
+>
+> s32
+> brcmf_fil_iovar_int_get(struct brcmf_if *ifp, char *name, u32 *data)
+> {
+>          __le32 data_le = cpu_to_le32(*data);
+>          s32 err;
+>
+>          err = brcmf_fil_iovar_data_get(ifp, name, &data_le, sizeof(data_le));
+>          if (err == 0)
+>                  *data = le32_to_cpu(data_le);
+>          return err;
+> }
+>
+> We can cleary see that 'var' in used uninitialised in the very first line
+> which is an undefined behavior.
+
+Why undefined? We copy some stack data and we do transfer that to the 
+device. However in this case the device does nothing with it and it is 
+simply overwritten by the response.
+
+> So, what could be a possible fix for the above ?
+>
+> I'm not sure initialising 'var' to 0 would be the correct solution.
+
+Coverity flagged this and probably still does. For this particular 
+instance setting var to '0' is fine. However, there are quite a few 
+other places. For some instances the data contains a selector value for 
+obtaining info from the device, which is what we copy in 
+brcmf_fil_iovar_int_get(). So maybe it would be best to have a separate 
+function for those, eg. brcmf_fil_iovar_int_selget() or so.
+
+Regards,
+Arend
