@@ -1,54 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:44901 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751462AbeCETbg (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:49504 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751207AbeC2UXy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Mar 2018 14:31:36 -0500
-Subject: Re: [PATCH 1/2] ath10k: Add WMI FWTEST command support
-To: Peter Oh <peter.oh@bowerswilkins.com>,
-        Anilkumar Kolli <akolli@codeaurora.org>,
-        ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Sathishkumar Muruganandam <murugana@codeaurora.org>
-References: <1520233148-26050-1-git-send-email-akolli@codeaurora.org>
- <1520233148-26050-2-git-send-email-akolli@codeaurora.org>
- <94f133b3-ee5d-6ed8-d7e8-20dff9aaede2@bowerswilkins.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <fd392368-5535-d10e-b1bb-934e45fd9c43@dd-wrt.com> (sfid-20180305_203139_775167_D2464D24)
-Date: Mon, 5 Mar 2018 20:31:33 +0100
-MIME-Version: 1.0
-In-Reply-To: <94f133b3-ee5d-6ed8-d7e8-20dff9aaede2@bowerswilkins.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Thu, 29 Mar 2018 16:23:54 -0400
+Date: Thu, 29 Mar 2018 16:23:52 -0400 (EDT)
+Message-Id: <20180329.162352.679784489406644905.davem@davemloft.net> (sfid-20180329_222412_520307_0FA5CE34)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2018-03-29
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20180329131003.21687-1-johannes@sipsolutions.net>
+References: <20180329131003.21687-1-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 05.03.2018 um 19:48 schrieb Peter Oh:
-> From: Sathishkumar Muruganandam <murugana@codeaurora.org>
->> This patch adds support for WMI_FWTEST_CMD.
->> This command is used for setting the wifi parameters.
->
-> It's too lack of information in commit message.
-> You should add such what values are acceptable for which purpose by 
-> each param_id and param_value to make this changes meaningful to 
-> community.
-i agree. i reviewed the firmware sourcecode to find out what its doing, 
-but also within the firmware is almost undocumented. its a bunch of 
-undocumented
-numeric parameters with undocumented behaviour.
-if qca is willig to document this feature it might be included.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Thu, 29 Mar 2018 15:10:02 +0200
 
-Sebastian
+> Last update for -next, I guess, but I wanted to get the ETSI adaptivity
+> requirements code and the eapol-over-nl80211 thing out - both have been
+> around for a while. A number of other smaller things are also there, of
+> course.
+> 
+> Please pull and let me know if there's any problem.
 
-
--- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+Pulled, thanks Johannes.
