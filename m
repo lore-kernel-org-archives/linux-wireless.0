@@ -1,51 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f175.google.com ([209.85.220.175]:39304 "EHLO
-        mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750946AbeC2IzL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Mar 2018 04:55:11 -0400
-Received: by mail-qk0-f175.google.com with SMTP id j73so5250011qke.6
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2018 01:55:10 -0700 (PDT)
-Subject: Re: [PATCH v3 2/3] mac80211: limit wmm params to comply with ETSI
- requirements
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Peter Oh <peter.oh@bowerswilkins.com>,
-        Luca Coelho <luca@coelho.fi>
-References: <20180328102411.25677-1-luca@coelho.fi>
- <20180328102411.25677-3-luca@coelho.fi>
- <fc2a88ae-b908-028a-9e3b-1457404d2c06@bowerswilkins.com>
- <1522312501.5932.0.camel@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5ABCA9EB.3060808@broadcom.com> (sfid-20180329_105514_881355_C3C62EE8)
-Date: Thu, 29 Mar 2018 10:55:07 +0200
+Received: from mail-db5eur01on0134.outbound.protection.outlook.com ([104.47.2.134]:38336
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751714AbeC2QVU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Mar 2018 12:21:20 -0400
+Subject: [PATCH net-next 4/5] ovs: Remove rtnl_lock() from ovs_exit_net()
+From: Kirill Tkhai <ktkhai@virtuozzo.com>
+To: dledford@redhat.com, jgg@ziepe.ca, davem@davemloft.net,
+        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
+        pshelar@ovn.org, johannes@sipsolutions.net, paul@paul-moore.com,
+        sds@tycho.nsa.gov, eparis@parisplace.org, jmorris@namei.org,
+        serge@hallyn.com, leon@kernel.org, yuval.shaia@oracle.com,
+        parav@mellanox.com, danielj@mellanox.com, ktkhai@virtuozzo.com,
+        majd@mellanox.com, nicolas.dichtel@6wind.com, vyasevic@redhat.com,
+        paulmck@linux.vnet.ibm.com, vyasevich@gmail.com,
+        gregkh@linuxfoundation.org, daniel@iogearbox.net,
+        jakub.kicinski@netronome.com, ast@kernel.org, brouer@redhat.com,
+        linux@rasmusvillemoes.dk, john.fastabend@gmail.com,
+        dsahern@gmail.com, jiri@mellanox.com, idosch@mellanox.com,
+        vvs@virtuozzo.com, avagin@virtuozzo.com, roman.kapl@sysgo.com,
+        lucien.xin@gmail.com, christian.brauner@ubuntu.com,
+        jbenc@redhat.com, pombredanne@nexb.com, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
+        coreteam@netfilter.org, dev@openvswitch.org,
+        linux-wireless@vger.kernel.org, selinux@tycho.nsa.gov,
+        linux-security-module@vger.kernel.org
+Date: Thu, 29 Mar 2018 19:21:09 +0300
+Message-ID: <152234046913.19153.5014546114733288472.stgit@localhost.localdomain> (sfid-20180329_182147_248183_D0589E86)
+In-Reply-To: <152234005959.19153.17907173734141707348.stgit@localhost.localdomain>
+References: <152234005959.19153.17907173734141707348.stgit@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <1522312501.5932.0.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/29/2018 10:35 AM, Johannes Berg wrote:
-> On Wed, 2018-03-28 at 10:29 -0700, Peter Oh wrote:
->>> +	if (sdata->vif.type == NL80211_IFTYPE_AP)
->>> +		wmm_ac = &rrule->wmm_rule->ap[ac];
->>> +	else
->>> +		wmm_ac = &rrule->wmm_rule->client[ac];
->>> +	qparam->cw_min = max_t(u16, qparam->cw_min, wmm_ac->cw_min);
->>> +	qparam->cw_max = max_t(u16, qparam->cw_max, wmm_ac->cw_max);
->>
->> not min_t() for cw_max?
->
-> No, the regulations say you have to use a long content window, hence
+Here we iterate for_each_net() and removes
+vport from alive net to the exiting net.
 
-Guess you mean "contention window" :-p
+ovs_net::dps are protected by ovs_mutex(),
+and the others, who change it (ovs_dp_cmd_new(),
+__dp_destroy()) also take it.
+The same with datapath::ports list.
 
-> limiting both min and max at the lower end (hence max_t).
+So, we remove rtnl_lock() here.
 
-Do you have any reference to the new ETSI requirements. I would like to 
-know their motivation for putting requirements on WMM parameters.
+Signed-off-by: Kirill Tkhai <ktkhai@virtuozzo.com>
+---
+ net/openvswitch/datapath.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-Regards,
-Arend
+diff --git a/net/openvswitch/datapath.c b/net/openvswitch/datapath.c
+index 9746ee30a99b..015e24e08909 100644
+--- a/net/openvswitch/datapath.c
++++ b/net/openvswitch/datapath.c
+@@ -2363,12 +2363,10 @@ static void __net_exit ovs_exit_net(struct net *dnet)
+ 	list_for_each_entry_safe(dp, dp_next, &ovs_net->dps, list_node)
+ 		__dp_destroy(dp);
+ 
+-	rtnl_lock();
+ 	down_read(&net_rwsem);
+ 	for_each_net(net)
+ 		list_vports_from_net(net, dnet, &head);
+ 	up_read(&net_rwsem);
+-	rtnl_unlock();
+ 
+ 	/* Detach all vports from given namespace. */
+ 	list_for_each_entry_safe(vport, vport_next, &head, detach_list) {
