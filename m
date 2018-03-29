@@ -1,44 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out6.electric.net ([192.162.217.195]:54249 "EHLO
-        smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750903AbeCMNAE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 09:00:04 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Daniel Micay' <danielmicay@gmail.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-CC: Andreas Christoforou <andreaschristofo@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Netdev <netdev@vger.kernel.org>,
-        kernel list <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] drivers: net: wireless: ath: ath9: dfs: remove VLA usage
-Date: Tue, 13 Mar 2018 12:32:17 +0000
-Message-ID: <423b529d48c54eba9f7ed51922814d46@AcuMS.aculab.com> (sfid-20180313_140008_024296_874B03D0)
-References: <1520598613-3641-1-git-send-email-andreaschristofo@gmail.com>
- <5AA464DE.90100@broadcom.com>
- <CA+DvKQ+hbMoWJdOuQB5n+eVF4ePf=kVuRiMbdtTUZ8ars4Pz4A@mail.gmail.com>
-In-Reply-To: <CA+DvKQ+hbMoWJdOuQB5n+eVF4ePf=kVuRiMbdtTUZ8ars4Pz4A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-eopbgr00101.outbound.protection.outlook.com ([40.107.0.101]:50720
+        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751714AbeC2QU7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Mar 2018 12:20:59 -0400
+Subject: [PATCH net-next 2/5] net: Don't take rtnl_lock() in
+ wireless_nlevent_flush()
+From: Kirill Tkhai <ktkhai@virtuozzo.com>
+To: dledford@redhat.com, jgg@ziepe.ca, davem@davemloft.net,
+        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
+        pshelar@ovn.org, johannes@sipsolutions.net, paul@paul-moore.com,
+        sds@tycho.nsa.gov, eparis@parisplace.org, jmorris@namei.org,
+        serge@hallyn.com, leon@kernel.org, yuval.shaia@oracle.com,
+        parav@mellanox.com, danielj@mellanox.com, ktkhai@virtuozzo.com,
+        majd@mellanox.com, nicolas.dichtel@6wind.com, vyasevic@redhat.com,
+        paulmck@linux.vnet.ibm.com, vyasevich@gmail.com,
+        gregkh@linuxfoundation.org, daniel@iogearbox.net,
+        jakub.kicinski@netronome.com, ast@kernel.org, brouer@redhat.com,
+        linux@rasmusvillemoes.dk, john.fastabend@gmail.com,
+        dsahern@gmail.com, jiri@mellanox.com, idosch@mellanox.com,
+        vvs@virtuozzo.com, avagin@virtuozzo.com, roman.kapl@sysgo.com,
+        lucien.xin@gmail.com, christian.brauner@ubuntu.com,
+        jbenc@redhat.com, pombredanne@nexb.com, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
+        coreteam@netfilter.org, dev@openvswitch.org,
+        linux-wireless@vger.kernel.org, selinux@tycho.nsa.gov,
+        linux-security-module@vger.kernel.org
+Date: Thu, 29 Mar 2018 19:20:44 +0300
+Message-ID: <152234044431.19153.15864418521565135021.stgit@localhost.localdomain> (sfid-20180329_182106_853413_E4E27A60)
+In-Reply-To: <152234005959.19153.17907173734141707348.stgit@localhost.localdomain>
+References: <152234005959.19153.17907173734141707348.stgit@localhost.localdomain>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbTogRGFuaWVsIE1pY2F5DQo+IFNlbnQ6IDEwIE1hcmNoIDIwMTggMjM6NDUNCj4gDQo+ID4g
-SnVzdCB3b25kZXJpbmcuIElzIHRoaXMgYWN0dWFsbHkgYSBWTEEuIEZGVF9OVU1fU0FNUExFUyB3
-YXMgc3RhdGljIGNvbnN0IHNvDQo+ID4gbm90IHJlYWxseSBnb2luZyB0byBzaG93IGEgbG90IG9m
-IHZhcmlhdGlvbi4gVGhpcyBhcnJheSB3aWxsIGFsd2F5cyBoYXZlIHRoZQ0KPiA+IHNhbWUgc2l6
-ZSBvbiB0aGUgc3RhY2suDQo+IA0KPiBUaGUgaXNzdWUgaXMgdGhhdCB1bmxpa2UgaW4gQysrLCBh
-IGBzdGF0aWMgY29uc3RgIGNhbid0IGJlIHVzZWQgaW4gYQ0KPiBjb25zdGFudCBleHByZXNzaW9u
-IGluIEMuIEl0J3MgdW5jbGVhciB3aHkgQyBpcyBkZWZpbmVkIHRoYXQgd2F5IGJ1dA0KPiBpdCdz
-IGhvdyBpdCBpcyBhbmQgdGhlcmUgaXNuJ3QgY3VycmVudGx5IGEgR0NDIGV4dGVuc2lvbiBtYWtp
-bmcgbW9yZQ0KPiB0aGluZ3MgaW50byBjb25zdGFudCBleHByZXNzaW9ucyBsaWtlIEMrKy4NCg0K
-J3N0YXRpYycgYW5kICdjb25zdCcgYXJlIGJvdGgganVzdCBxdWFsaWZpZXJzIHRvIGEgJ3Zhcmlh
-YmxlJw0KWW91IGNhbiBzdGlsbCB0YWtlIGl0J3MgYWRkcmVzcy4NClRoZSBsYW5ndWFnZSBhbGxv
-d3MgeW91IHRvIGNhc3QgYXdheSB0aGUgJ2NvbnN0JyBhbmQgd3JpdGUgdG8NCnRoZSB2YXJpYWJs
-ZSAtIHRoZSBlZmZlY3QgaXMgcHJvYmFibHkgJ2ltcGxlbWVudGF0aW9uIGRlZmluZWQnLg0KDQpJ
-dCBpcyBwcm9iYWJseSByZXF1aXJlZCB0byBiZSB2YWxpZCBmb3IgJ3N0YXRpYyBjb25zdCcgaXRl
-bXMNCnRvIGJlIHBhdGNoYWJsZS4NCg0KCURhdmlkDQoNCg==
+This function iterates over net_namespace_list and flushes
+the queue for every of them. What does this rtnl_lock()
+protects?! Since we may add skbs to net::wext_nlevents
+without rtnl_lock(), it does not protects us about queuers.
+
+It guarantees, two threads can't flush the queue in parallel,
+that can change the order, but since skb can be queued
+in any order, it doesn't matter, how many threads do this
+in parallel. In case of several threads, this will be even
+faster.
+
+So, we can remove rtnl_lock() here, as it was used for
+iteration over net_namespace_list only.
+
+Signed-off-by: Kirill Tkhai <ktkhai@virtuozzo.com>
+---
+ net/wireless/wext-core.c |    4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
+index 544d7b62d7ca..5e677dac2a0c 100644
+--- a/net/wireless/wext-core.c
++++ b/net/wireless/wext-core.c
+@@ -347,8 +347,6 @@ void wireless_nlevent_flush(void)
+ 	struct sk_buff *skb;
+ 	struct net *net;
+ 
+-	ASSERT_RTNL();
+-
+ 	down_read(&net_rwsem);
+ 	for_each_net(net) {
+ 		while ((skb = skb_dequeue(&net->wext_nlevents)))
+@@ -412,9 +410,7 @@ subsys_initcall(wireless_nlevent_init);
+ /* Process events generated by the wireless layer or the driver. */
+ static void wireless_nlevent_process(struct work_struct *work)
+ {
+-	rtnl_lock();
+ 	wireless_nlevent_flush();
+-	rtnl_unlock();
+ }
+ 
+ static DECLARE_WORK(wireless_nlevent_work, wireless_nlevent_process);
