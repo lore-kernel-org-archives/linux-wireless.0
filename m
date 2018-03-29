@@ -1,72 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50204 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932163AbeCJOPT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Mar 2018 09:15:19 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, cantabile.desu@gmail.com,
-        kubakici@wp.pl, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, ast@fb.com, andresx7@gmail.com,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v3 04/20] firmware: enable to split firmware_class into separate target files
-Date: Sat, 10 Mar 2018 06:14:45 -0800
-Message-Id: <20180310141501.2214-5-mcgrof@kernel.org> (sfid-20180310_152119_592230_8990E510)
-In-Reply-To: <20180310141501.2214-1-mcgrof@kernel.org>
-References: <20180310141501.2214-1-mcgrof@kernel.org>
+Received: from s3.sipsolutions.net ([144.76.63.242]:36812 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752067AbeC2LQJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Mar 2018 07:16:09 -0400
+Message-ID: <1522322166.5932.13.camel@sipsolutions.net> (sfid-20180329_131613_723858_57BA74F5)
+Subject: Re: [PATCH] nl80211: Update ERP info using
+ NL80211_CMD_UPDATE_CONNECT_PARAMS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Vidyullatha Kanchanapally <vidyullatha@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
+        vkanchan@qti.qualcomm.com, amarnath@qti.qualcomm.com,
+        usdutt@qti.qualcomm.com, vamsin@qti.qualcomm.com
+Date: Thu, 29 Mar 2018 13:16:06 +0200
+In-Reply-To: <5ABCCA33.8070501@broadcom.com> (sfid-20180329_131256_170260_82227DE0)
+References: <1508923248-18848-1-git-send-email-vidyullatha@codeaurora.org>
+         <1512990779.26976.69.camel@sipsolutions.net>
+         <5ABCCA33.8070501@broadcom.com> (sfid-20180329_131256_170260_82227DE0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware loader code has grown quite a bit over the years.
-The practice of stuffing everything we need into one file makes
-the code hard to follow.
+Hi Arend,
 
-In order to split the firmware loader code into different components
-we must pick a module name and a first object target file. We must
-keep the firmware_class name to remain compatible with scripts which
-have been relying on the sysfs loader path for years, so the old module
-name stays. We can however rename the C file without affecting the
-module name.
+> Picking up a somewhat old thread as I did not see a follow-up on this 
+> patch. I got queried about it over here by our FILS team. So what is 
+> needed for this patch to pass the bar?
 
-The firmware_class used to represent the idea that the code was a simple
-sysfs firmware loader, provided by the struct class firmware_class.
-The sysfs firmware loader used to be the default, today its only the
-fallback mechanism.
+That's indeed a bit old :-)
 
-This only renames the target code then to make emphasis of what the code
-does these days. With this change new features can also use a new object
-files.
+> > > + * @UPDATE_FILS_ERP_INFO: Indicates that FILS connection parameters (realm,
+> > > + *	username, erp sequence number and rrk) are updated
+> > > + * @UPDATE_AUTH_TYPE: Indicates that Authentication type is updated
+> > 
+> > These are new here, but you don't know if they were actually supported:
+> > 
+> > > +	if (wiphy_ext_feature_isset(&rdev->wiphy,
+> > > +				    NL80211_EXT_FEATURE_FILS_SK_OFFLOAD) &&
+> > 
+> > here.
+> 
+> The description of the FILS_SK_OFFLOAD currently says:
+> 
+>   * @NL80211_EXT_FEATURE_FILS_SK_OFFLOAD: Driver SME supports FILS 
+> shared key
+>   *      authentication with %NL80211_CMD_CONNECT.
+> 
+> Are you suggesting a new flag to cover the new update attributes?
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- drivers/base/Makefile                                | 1 +
- drivers/base/{firmware_class.c => firmware_loader.c} | 0
- 2 files changed, 1 insertion(+)
- rename drivers/base/{firmware_class.c => firmware_loader.c} (100%)
+[snip]
 
-diff --git a/drivers/base/Makefile b/drivers/base/Makefile
-index e32a52490051..f261143fafbf 100644
---- a/drivers/base/Makefile
-+++ b/drivers/base/Makefile
-@@ -13,6 +13,7 @@ obj-$(CONFIG_HAS_DMA)	+= dma-mapping.o
- obj-$(CONFIG_HAVE_GENERIC_DMA_COHERENT) += dma-coherent.o
- obj-$(CONFIG_ISA_BUS_API)	+= isa.o
- obj-$(CONFIG_FW_LOADER)	+= firmware_class.o
-+firmware_class-objs := firmware_loader.o
- obj-$(CONFIG_NUMA)	+= node.o
- obj-$(CONFIG_MEMORY_HOTPLUG_SPARSE) += memory.o
- ifeq ($(CONFIG_SYSFS),y)
-diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_loader.c
-similarity index 100%
-rename from drivers/base/firmware_class.c
-rename to drivers/base/firmware_loader.c
--- 
-2.16.2
+> > Again, how do you know the driver will actually look at
+> > UPDATE_AUTH_TYPE?
+> 
+> If they don't they are broken, right? And if they are broken, the 
+> connection will drop and regular connect will happen anyway, no?
+> 
+> We could add a new flag to signal driver will handle the extra 
+> parameters in UPDATE_CONNECT_PARAMS, but it is not clear why it would be 
+> needed. Seems to me user-space has all the info needed with the existing 
+> flag(s).
+
+Agree, and we don't even have any drivers that are setting the
+FILS_SK_OFFLOAD flag anyway, so we can still redefine its semantics to
+some extent.
+
+So yeah, I'd argue that what the patch needed was somebody taking a
+critical look at my review ;-)
+
+And perhaps fixing the weird flags thing I pointed out.
+
+johannes
