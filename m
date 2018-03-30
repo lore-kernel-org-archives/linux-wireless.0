@@ -1,87 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:46070 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753066AbeCPKMI (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52152 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751906AbeC3DOJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Mar 2018 06:12:08 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 03/12] brcmfmac: use brcmf_chip_name() for consistency
-Date: Fri, 16 Mar 2018 11:11:16 +0100
-Message-Id: <1521195085-439-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180316_111224_599073_863B4EF7)
-In-Reply-To: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
+        Thu, 29 Mar 2018 23:14:09 -0400
+From: Carl Huang <cjhuang@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/2] ath10k: support MAC address randomization in scan
+Date: Fri, 30 Mar 2018 11:13:58 +0800
+Message-Id: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org> (sfid-20180330_051415_686180_1CB872C4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When logging the chip id/revision information make use of
-brcmf_chip_name() so it is always the same.
+The feature MAC address randomization depends on the firmware
+capability, if the firmware indicates WMI_SERVICE_SPOOF_MAC_SUPPORT
+service the host driver will report it to upper layer. The service
+bit is above the 128 bit limit so a new service check macro is needed.
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c     | 5 ++---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 7 +++++--
- 2 files changed, 7 insertions(+), 5 deletions(-)
+Carl Huang (2):
+  ath10k: Add WMI_SERVICE_AVAILABLE_EVENT support
+  ath10k: support MAC address randomization in scan
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index bf45369..3b829fe 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -926,9 +926,8 @@ static int brcmf_chip_recognition(struct brcmf_chip_priv *ci)
- 
- 	brcmf_chip_name(ci->pub.chip, ci->pub.chiprev,
- 			ci->pub.name, sizeof(ci->pub.name));
--	brcmf_dbg(INFO, "found %s chip: BCM%s, rev=%d\n",
--		  socitype == SOCI_SB ? "SB" : "AXI", ci->pub.name,
--		  ci->pub.chiprev);
-+	brcmf_dbg(INFO, "found %s chip: %s\n",
-+		  socitype == SOCI_SB ? "SB" : "AXI", ci->pub.name);
- 
- 	if (socitype == SOCI_SB) {
- 		if (ci->pub.chip != BRCM_CC_4329_CHIP_ID) {
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index 091b529..e2199f5 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -25,6 +25,7 @@
- #include "firmware.h"
- #include "core.h"
- #include "common.h"
-+#include "chip.h"
- 
- #define BRCMF_FW_MAX_NVRAM_SIZE			64000
- #define BRCMF_FW_NVRAM_DEVPATH_LEN		19	/* devpath0=pcie/1/4/ */
-@@ -567,6 +568,7 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
- 			      u32 table_size, char fw_name[BRCMF_FW_NAME_LEN],
- 			      char nvram_name[BRCMF_FW_NAME_LEN])
- {
-+	char chipname[12];
- 	u32 i;
- 	char end;
- 
-@@ -581,6 +583,8 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
- 		return -ENODEV;
- 	}
- 
-+	brcmf_chip_name(chip, chiprev, chipname, sizeof(chipname));
-+
- 	/* check if firmware path is provided by module parameter */
- 	if (brcmf_mp_global.firmware_path[0] != '\0') {
- 		strlcpy(fw_name, brcmf_mp_global.firmware_path,
-@@ -601,8 +605,7 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
- 	if ((nvram_name) && (mapping_table[i].nvram))
- 		strlcat(nvram_name, mapping_table[i].nvram, BRCMF_FW_NAME_LEN);
- 
--	brcmf_info("using %s for chip %#08x(%d) rev %#08x\n",
--		   fw_name, chip, chip, chiprev);
-+	brcmf_info("using %s for chip %s\n", fw_name, chipname);
- 
- 	return 0;
- }
+ drivers/net/wireless/ath/ath10k/mac.c     |  17 ++
+ drivers/net/wireless/ath/ath10k/wmi-ops.h |  46 ++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  63 ++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h | 357 +++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi.c     |  26 ++-
+ drivers/net/wireless/ath/ath10k/wmi.h     |  18 +-
+ 6 files changed, 520 insertions(+), 7 deletions(-)
+
 -- 
-1.9.1
+2.7.4
