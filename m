@@ -1,45 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:34176 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751427AbeCWPJH (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:34498 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752596AbeC3HTs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Mar 2018 11:09:07 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 0/9] staging: wilc1000: fix memory leaks and checkpatch reported issues
-Date: Fri, 23 Mar 2018 20:38:49 +0530
-Message-ID: <1521817738-7557-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180323_160911_160775_594B328B)
+        Fri, 30 Mar 2018 03:19:48 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 17/17] rtlwifi: add halmac to Makefile and Kconfig
+Date: Fri, 30 Mar 2018 15:19:16 +0800
+Message-ID: <20180330071916.23360-18-pkshih@realtek.com> (sfid-20180330_092027_531128_D17224CD)
+In-Reply-To: <20180330071916.23360-1-pkshih@realtek.com>
+References: <20180330071916.23360-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series contains changes to fix memory leaks, avoid NULL pointer
-exceptions and checkpatch reported issue fixes.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Ajay Singh (9):
-  staging: wilc1000: remove unused global variables related to p2p
-  staging: wilc1000: avoid 'NULL' pointer access in
-    wilc_network_info_received()
-  staging: wilc1000: free allocated memory in edit and add station
-    functions
-  staging: wilc1000: free memory allocated in add wep key functions
-  staging: wilc1000: free allocated memory after processing
-    wilc_send_config_pkt()
-  staging: wilc1000: fix to free allocated memory in wilc_add_ptk()
-  staging: wilc1000: free allocated memory in wilc_add_rx_gtk()
-  staging: wilc1000: split handle_rcvd_gnrl_async_info() to avoid
-    leading tabs
-  staging: wilc1000: free memory allocated for general info message from
-    firmware
+Add halmac to Makefile and Kconfig, so we can build this module if 8822BE
+is selected.
 
- drivers/staging/wilc1000/host_interface.c | 421 +++++++++++++++---------------
- 1 file changed, 204 insertions(+), 217 deletions(-)
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/Kconfig       |  5 ++++
+ drivers/net/wireless/realtek/rtlwifi/Makefile      |  1 +
+ .../net/wireless/realtek/rtlwifi/halmac/Makefile   | 29 ++++++++++++++++++++++
+ 3 files changed, 35 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/Makefile
 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/Kconfig b/drivers/net/wireless/realtek/rtlwifi/Kconfig
+index 73067cac289c..d9aba8fed151 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/Kconfig
++++ b/drivers/net/wireless/realtek/rtlwifi/Kconfig
+@@ -151,4 +151,9 @@ config RTLBTCOEXIST
+ 	depends on RTL8723AE || RTL8723BE || RTL8821AE || RTL8192EE
+ 	default y
+ 
++config RTLHALMAC
++	tristate
++	depends on RTL8822BE
++	default y
++
+ endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/Makefile b/drivers/net/wireless/realtek/rtlwifi/Makefile
+index 09c30e428375..a30a73c351d8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/Makefile
++++ b/drivers/net/wireless/realtek/rtlwifi/Makefile
+@@ -28,6 +28,7 @@ obj-$(CONFIG_RTL8723AE)		+= rtl8723ae/
+ obj-$(CONFIG_RTL8723BE)		+= rtl8723be/
+ obj-$(CONFIG_RTL8188EE)		+= rtl8188ee/
+ obj-$(CONFIG_RTLBTCOEXIST)	+= btcoexist/
++obj-$(CONFIG_RTLHALMAC)		+= halmac/
+ obj-$(CONFIG_RTL8723_COMMON)	+= rtl8723com/
+ obj-$(CONFIG_RTL8821AE)		+= rtl8821ae/
+ obj-$(CONFIG_RTL8192EE)		+= rtl8192ee/
+diff --git a/drivers/net/wireless/realtek/rtlwifi/halmac/Makefile b/drivers/net/wireless/realtek/rtlwifi/halmac/Makefile
+new file mode 100644
+index 000000000000..41c1ae7e5e53
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtlwifi/halmac/Makefile
+@@ -0,0 +1,29 @@
++
++
++halmac-objs := \
++	halmac_api.o	\
++	halmac_88xx/halmac_bb_rf_88xx.o	\
++	halmac_88xx/halmac_efuse_88xx.o	\
++	halmac_88xx/halmac_gpio_88xx.o	\
++	halmac_88xx/halmac_pcie_88xx.o	\
++	halmac_88xx/halmac_sdio_88xx.o	\
++	halmac_88xx/halmac_usb_88xx.o	\
++	halmac_88xx/halmac_cfg_wmac_88xx.o	\
++	halmac_88xx/halmac_flash_88xx.o	\
++	halmac_88xx/halmac_init_88xx.o	\
++	halmac_88xx/halmac_common_88xx.o	\
++	halmac_88xx/halmac_fw_88xx.o	\
++	halmac_88xx/halmac_mimo_88xx.o	\
++	halmac_88xx/halmac_8822b/halmac_gpio_8822b.o	\
++	halmac_88xx/halmac_8822b/halmac_pcie_8822b.o	\
++	halmac_88xx/halmac_8822b/halmac_sdio_8822b.o	\
++	halmac_88xx/halmac_8822b/halmac_usb_8822b.o	\
++	halmac_88xx/halmac_8822b/halmac_pwr_seq_8822b.o	\
++	halmac_88xx/halmac_8822b/halmac_common_8822b.o	\
++	halmac_88xx/halmac_8822b/halmac_cfg_wmac_8822b.o	\
++	halmac_88xx/halmac_8822b/halmac_phy_8822b.o	\
++	halmac_88xx/halmac_8822b/halmac_init_8822b.o	\
++	rtl_halmac.o
++
++
++obj-m = halmac.o
 -- 
-2.7.4
+2.15.1
