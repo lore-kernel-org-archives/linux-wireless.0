@@ -1,52 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:38752 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031181AbeCAOVq (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:34469 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752665AbeC3HTl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 09:21:46 -0500
-Received: by mail-qk0-f196.google.com with SMTP id s198so7705925qke.5
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2018 06:21:46 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>
-Subject: [PATCH 31/52] ath: Map Indonesia to APL2_WORLD
-Date: Thu,  1 Mar 2018 15:18:41 +0100
-Message-Id: <20180301141902.24824-32-sven.eckelmann@openmesh.com> (sfid-20180301_152150_675023_5A564060)
-In-Reply-To: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
-References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+        Fri, 30 Mar 2018 03:19:41 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 05/17] rtlwifi: halmac: describe number and size of chip functions
+Date: Fri, 30 Mar 2018 15:19:04 +0800
+Message-ID: <20180330071916.23360-6-pkshih@realtek.com> (sfid-20180330_092037_435445_9B241D6D)
+In-Reply-To: <20180330071916.23360-1-pkshih@realtek.com>
+References: <20180330071916.23360-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The regdomain code is used to select the correct the correct conformance
-test limits (CTL) for a country. If the regdomain code isn't correctly
-mapped to the actual CTL entries in EEPROM then it could happen that the
-device violates the regulations. But it can also happen that the device is
-then not able to be used with its full txpower on all rates.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-The CTL mappings for this regdomain code were now changed to:
+The number and size of chip fucntions are different, such as TX/RX FIFO
+size, efuse size, etc. So they are defined in an individual file.
 
-* 2.4GHz: ETSI
-* 5GHz: NO_CTL -> FCC
-
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/ath/regd_common.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../halmac_88xx/halmac_8822b/halmac_8822b_cfg.h    | 68 ++++++++++++++++++++++
+ .../rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h   | 40 +++++++++++++
+ 2 files changed, 108 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_cfg.h
+ create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h
 
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index cfa324592271..6a325213c163 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -357,7 +357,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_HUNGARY, ETSI1_WORLD, "HU"},
- 	{CTRY_ICELAND, ETSI1_WORLD, "IS"},
- 	{CTRY_INDIA, APL6_WORLD, "IN"},
--	{CTRY_INDONESIA, NULL1_WORLD, "ID"},
-+	{CTRY_INDONESIA, APL2_WORLD, "ID"},
- 	{CTRY_IRAN, APL1_WORLD, "IR"},
- 	{CTRY_IRELAND, ETSI1_WORLD, "IE"},
- 	{CTRY_ISRAEL, NULL1_WORLD, "IL"},
+diff --git a/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_cfg.h b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_cfg.h
+new file mode 100644
+index 000000000000..f6ed7b44549c
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_cfg.h
+@@ -0,0 +1,68 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2016 - 2018 Realtek Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
++ * more details.
++ *
++ ******************************************************************************/
++
++#ifndef _HALMAC_8822B_CFG_H_
++#define _HALMAC_8822B_CFG_H_
++
++#include "../halmac_88xx_cfg.h"
++
++#define TX_FIFO_SIZE_8822B	262144
++#define RX_FIFO_SIZE_8822B	24576
++#define TRX_SHARE_SIZE_8822B	65536
++
++#define RX_DESC_DUMMY_SIZE_8822B	72 /* 8 * 9 Bytes */
++#define RX_FIFO_EXPANDING_MODE_PKT_SIZE_MAX_8822B	80 /* 8 Byte alignment*/
++
++/* should be 8 Byte alignment*/
++#if (HALMAC_RX_FIFO_EXPANDING_MODE_PKT_SIZE <= \
++	RX_FIFO_EXPANDING_MODE_PKT_SIZE_MAX_8822B)
++#define RX_FIFO_EXPANDING_UNIT_8822B	(RX_DESC_SIZE_88XX + \
++	RX_DESC_DUMMY_SIZE_8822B + HALMAC_RX_FIFO_EXPANDING_MODE_PKT_SIZE)
++#else
++#define RX_FIFO_EXPANDING_UNIT_8822B (RX_DESC_SIZE_88XX + \
++	RX_DESC_DUMMY_SIZE_8822B + RX_FIFO_EXPANDING_MODE_PKT_SIZE_MAX_8822B)
++#endif
++
++#define TX_FIFO_SIZE_LA_8822B	(TX_FIFO_SIZE_8822B >>  1)
++#define TX_FIFO_SIZE_RX_EXPAND_1BLK_8822B	\
++		(TX_FIFO_SIZE_8822B - TRX_SHARE_SIZE_8822B)
++#define RX_FIFO_SIZE_RX_EXPAND_1BLK_8822B	\
++		((((RX_FIFO_EXPANDING_UNIT_8822B << 8) - 1) >> 10) << 10)
++#define TX_FIFO_SIZE_RX_EXPAND_2BLK_8822B	\
++		(TX_FIFO_SIZE_8822B - (2 * TRX_SHARE_SIZE_8822B))
++#define RX_FIFO_SIZE_RX_EXPAND_2BLK_8822B	\
++		(RX_FIFO_SIZE_8822B +  (2 * TRX_SHARE_SIZE_8822B))
++#define TX_FIFO_SIZE_RX_EXPAND_3BLK_8822B	\
++		(TX_FIFO_SIZE_8822B - (3 * TRX_SHARE_SIZE_8822B))
++#define RX_FIFO_SIZE_RX_EXPAND_3BLK_8822B	\
++		(RX_FIFO_SIZE_8822B +  (3 * TRX_SHARE_SIZE_8822B))
++
++#define EFUSE_SIZE_8822B		1024
++#define EEPROM_SIZE_8822B		768
++#define BT_EFUSE_SIZE_8822B		128
++
++#define SEC_CAM_NUM_8822B		64
++
++#define OQT_ENTRY_AC_8822B		32
++#define OQT_ENTRY_NOAC_8822B		32
++#define MACID_MAX_8822B			128
++
++#define WLAN_FW_IRAM_MAX_SIZE_8822B	196608
++#define WLAN_FW_DRAM_MAX_SIZE_8822B	49152
++#define WLAN_FW_ERAM_MAX_SIZE_8822B	0
++#define WLAN_FW_MAX_SIZE_8822B		(WLAN_FW_IRAM_MAX_SIZE_8822B + \
++	WLAN_FW_DRAM_MAX_SIZE_8822B + WLAN_FW_ERAM_MAX_SIZE_8822B)
++
++#endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h
+new file mode 100644
+index 000000000000..22514ef4680d
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h
+@@ -0,0 +1,40 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2016 - 2018 Realtek Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
++ * more details.
++ *
++ ******************************************************************************/
++
++#ifndef _HALMAC_88XX_CFG_H_
++#define _HALMAC_88XX_CFG_H_
++
++#include "../halmac_api.h"
++
++#define TX_PAGE_SIZE_88XX		128
++#define TX_PAGE_SIZE_SHIFT_88XX		7 /* 128 = 2^7 */
++#define TX_ALIGN_SIZE_88XX		8
++#define SDIO_TX_MAX_SIZE_88XX		31744
++#define RX_BUF_FW_88XX			12288
++
++#define TX_DESC_SIZE_88XX		48
++#define RX_DESC_SIZE_88XX		24
++
++#define H2C_PKT_SIZE_88XX		32 /* Only support 32 byte packet now */
++#define H2C_PKT_HDR_SIZE_88XX		8
++#define C2H_DATA_OFFSET_88XX		10
++#define C2H_PKT_BUF_88XX		256
++
++/* HW memory address */
++#define OCPBASE_TXBUF_88XX		0x18780000
++#define OCPBASE_DMEM_88XX		0x00200000
++#define OCPBASE_EMEM_88XX		0x00100000
++
++#endif
 -- 
-2.11.0
+2.15.1
