@@ -1,310 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:46114 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753161AbeCPKMK (ORCPT
+Received: from gateway21.websitewelcome.com ([192.185.45.154]:21793 "EHLO
+        gateway21.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752431AbeC3S6h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Mar 2018 06:12:10 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 06/12] brcmfmac: derive firmware filenames from basename mapping
-Date: Fri, 16 Mar 2018 11:11:19 +0100
-Message-Id: <1521195085-439-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180316_111231_709322_ED8E8B95)
-In-Reply-To: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1521195085-439-1-git-send-email-arend.vanspriel@broadcom.com>
+        Fri, 30 Mar 2018 14:58:37 -0400
+Received: from cm14.websitewelcome.com (cm14.websitewelcome.com [100.42.49.7])
+        by gateway21.websitewelcome.com (Postfix) with ESMTP id 98F54400CA1C3
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Mar 2018 13:34:03 -0500 (CDT)
+Date: Fri, 30 Mar 2018 13:34:01 -0500
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] ath9k: dfs: remove accidental use of stack VLA
+Message-ID: <20180330183401.GA16758@embeddedgus> (sfid-20180330_205841_369934_438630D2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of defining individual filenames for firmware and nvram
-use a basename and derive the names from that.
+In preparation to enabling -Wvla, remove accidental use of stack VLA.
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+This avoids an accidental stack VLA (since the compiler thinks
+the value of FFT_NUM_SAMPLES can change, even when marked
+"const"). This just replaces it with a #define.
+
+Also, fixed as part of the directive to remove all VLAs from
+the kernel: https://lkml.org/lkml/2018/3/7/621
+
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- .../broadcom/brcm80211/brcmfmac/firmware.c         | 31 ++++++---
- .../broadcom/brcm80211/brcmfmac/firmware.h         | 24 ++-----
- .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    | 56 ++++++++---------
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 73 +++++++++++-----------
- .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 10 +--
- 5 files changed, 96 insertions(+), 98 deletions(-)
+ drivers/net/wireless/ath/ath9k/dfs.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index e2199f5..6945f58 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -563,6 +563,13 @@ int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
- 					   0);
- }
+diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
+index 6fee9a4..c8844f5 100644
+--- a/drivers/net/wireless/ath/ath9k/dfs.c
++++ b/drivers/net/wireless/ath/ath9k/dfs.c
+@@ -41,7 +41,7 @@ static const int BIN_DELTA_MAX		= 10;
  
-+static void brcmf_fw_get_full_name(char fw_name[BRCMF_FW_NAME_LEN],
-+				   const char *fw_base, const char *extension)
-+{
-+	strlcat(fw_name, fw_base, BRCMF_FW_NAME_LEN);
-+	strlcat(fw_name, extension, BRCMF_FW_NAME_LEN);
-+}
-+
- int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
- 			      struct brcmf_firmware_mapping mapping_table[],
- 			      u32 table_size, char fw_name[BRCMF_FW_NAME_LEN],
-@@ -587,25 +594,31 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
+ /* we need at least 3 deltas / 4 samples for a reliable chirp detection */
+ #define NUM_DIFFS 3
+-static const int FFT_NUM_SAMPLES	= (NUM_DIFFS + 1);
++#define FFT_NUM_SAMPLES		(NUM_DIFFS + 1)
  
- 	/* check if firmware path is provided by module parameter */
- 	if (brcmf_mp_global.firmware_path[0] != '\0') {
--		strlcpy(fw_name, brcmf_mp_global.firmware_path,
--			BRCMF_FW_NAME_LEN);
--		if ((nvram_name) && (mapping_table[i].nvram))
-+		if (fw_name)
-+			strlcpy(fw_name, brcmf_mp_global.firmware_path,
-+				BRCMF_FW_NAME_LEN);
-+		if (nvram_name)
- 			strlcpy(nvram_name, brcmf_mp_global.firmware_path,
- 				BRCMF_FW_NAME_LEN);
+ /* Threshold for difference of delta peaks */
+ static const int MAX_DIFF		= 2;
+@@ -114,7 +114,7 @@ static bool ath9k_check_chirping(struct ath_softc *sc, u8 *data,
  
- 		end = brcmf_mp_global.firmware_path[
- 				strlen(brcmf_mp_global.firmware_path) - 1];
- 		if (end != '/') {
--			strlcat(fw_name, "/", BRCMF_FW_NAME_LEN);
--			if ((nvram_name) && (mapping_table[i].nvram))
-+			if (fw_name)
-+				strlcat(fw_name, "/", BRCMF_FW_NAME_LEN);
-+			if (nvram_name)
- 				strlcat(nvram_name, "/", BRCMF_FW_NAME_LEN);
+ 		ath_dbg(common, DFS, "HT40: datalen=%d, num_fft_packets=%d\n",
+ 			datalen, num_fft_packets);
+-		if (num_fft_packets < (FFT_NUM_SAMPLES)) {
++		if (num_fft_packets < FFT_NUM_SAMPLES) {
+ 			ath_dbg(common, DFS, "not enough packets for chirp\n");
+ 			return false;
  		}
- 	}
--	strlcat(fw_name, mapping_table[i].fw, BRCMF_FW_NAME_LEN);
--	if ((nvram_name) && (mapping_table[i].nvram))
--		strlcat(nvram_name, mapping_table[i].nvram, BRCMF_FW_NAME_LEN);
- 
--	brcmf_info("using %s for chip %s\n", fw_name, chipname);
-+	brcmf_info("using %s for chip %s\n",
-+		   mapping_table[i].fw_base, chipname);
-+	if (fw_name)
-+		brcmf_fw_get_full_name(fw_name,
-+				       mapping_table[i].fw_base, ".bin");
-+	if (nvram_name)
-+		brcmf_fw_get_full_name(nvram_name,
-+				       mapping_table[i].fw_base, ".txt");
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-index 8fa4b7e..50218e9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-@@ -38,28 +38,16 @@
- struct brcmf_firmware_mapping {
- 	u32 chipid;
- 	u32 revmask;
--	const char *fw;
--	const char *nvram;
-+	const char *fw_base;
- };
- 
--#define BRCMF_FW_NVRAM_DEF(fw_nvram_name, fw, nvram) \
--static const char BRCM_ ## fw_nvram_name ## _FIRMWARE_NAME[] = \
--	BRCMF_FW_DEFAULT_PATH fw; \
--static const char BRCM_ ## fw_nvram_name ## _NVRAM_NAME[] = \
--	BRCMF_FW_DEFAULT_PATH nvram; \
--MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH fw);
--
--#define BRCMF_FW_DEF(fw_name, fw) \
--static const char BRCM_ ## fw_name ## _FIRMWARE_NAME[] = \
--	BRCMF_FW_DEFAULT_PATH fw; \
--MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH fw) \
--
--#define BRCMF_FW_NVRAM_ENTRY(chipid, mask, name) \
--	{ chipid, mask, \
--	  BRCM_ ## name ## _FIRMWARE_NAME, BRCM_ ## name ## _NVRAM_NAME }
-+#define BRCMF_FW_DEF(fw_name, fw_base) \
-+static const char BRCM_ ## fw_name ## _FIRMWARE_BASENAME[] = \
-+	BRCMF_FW_DEFAULT_PATH fw_base; \
-+MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH fw_base ".bin")
- 
- #define BRCMF_FW_ENTRY(chipid, mask, name) \
--	{ chipid, mask, BRCM_ ## name ## _FIRMWARE_NAME, NULL }
-+	{ chipid, mask, BRCM_ ## name ## _FIRMWARE_BASENAME }
- 
- int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
- 			      struct brcmf_firmware_mapping mapping_table[],
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index a7d827c..ca95f6c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -46,36 +46,36 @@ enum brcmf_pcie_state {
- 	BRCMFMAC_PCIE_STATE_UP
- };
- 
--BRCMF_FW_NVRAM_DEF(43602, "brcmfmac43602-pcie.bin", "brcmfmac43602-pcie.txt");
--BRCMF_FW_NVRAM_DEF(4350, "brcmfmac4350-pcie.bin", "brcmfmac4350-pcie.txt");
--BRCMF_FW_NVRAM_DEF(4350C, "brcmfmac4350c2-pcie.bin", "brcmfmac4350c2-pcie.txt");
--BRCMF_FW_NVRAM_DEF(4356, "brcmfmac4356-pcie.bin", "brcmfmac4356-pcie.txt");
--BRCMF_FW_NVRAM_DEF(43570, "brcmfmac43570-pcie.bin", "brcmfmac43570-pcie.txt");
--BRCMF_FW_NVRAM_DEF(4358, "brcmfmac4358-pcie.bin", "brcmfmac4358-pcie.txt");
--BRCMF_FW_NVRAM_DEF(4359, "brcmfmac4359-pcie.bin", "brcmfmac4359-pcie.txt");
--BRCMF_FW_NVRAM_DEF(4365B, "brcmfmac4365b-pcie.bin", "brcmfmac4365b-pcie.txt");
--BRCMF_FW_NVRAM_DEF(4365C, "brcmfmac4365c-pcie.bin", "brcmfmac4365c-pcie.txt");
--BRCMF_FW_NVRAM_DEF(4366B, "brcmfmac4366b-pcie.bin", "brcmfmac4366b-pcie.txt");
--BRCMF_FW_NVRAM_DEF(4366C, "brcmfmac4366c-pcie.bin", "brcmfmac4366c-pcie.txt");
--BRCMF_FW_NVRAM_DEF(4371, "brcmfmac4371-pcie.bin", "brcmfmac4371-pcie.txt");
-+BRCMF_FW_DEF(43602, "brcmfmac43602-pcie");
-+BRCMF_FW_DEF(4350, "brcmfmac4350-pcie");
-+BRCMF_FW_DEF(4350C, "brcmfmac4350c2-pcie");
-+BRCMF_FW_DEF(4356, "brcmfmac4356-pcie");
-+BRCMF_FW_DEF(43570, "brcmfmac43570-pcie");
-+BRCMF_FW_DEF(4358, "brcmfmac4358-pcie");
-+BRCMF_FW_DEF(4359, "brcmfmac4359-pcie");
-+BRCMF_FW_DEF(4365B, "brcmfmac4365b-pcie");
-+BRCMF_FW_DEF(4365C, "brcmfmac4365c-pcie");
-+BRCMF_FW_DEF(4366B, "brcmfmac4366b-pcie");
-+BRCMF_FW_DEF(4366C, "brcmfmac4366c-pcie");
-+BRCMF_FW_DEF(4371, "brcmfmac4371-pcie");
- 
- static struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43602_CHIP_ID, 0xFFFFFFFF, 43602),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43465_CHIP_ID, 0xFFFFFFF0, 4366C),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4350_CHIP_ID, 0x000000FF, 4350C),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4350_CHIP_ID, 0xFFFFFF00, 4350),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43525_CHIP_ID, 0xFFFFFFF0, 4365C),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43567_CHIP_ID, 0xFFFFFFFF, 43570),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43569_CHIP_ID, 0xFFFFFFFF, 43570),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43570_CHIP_ID, 0xFFFFFFFF, 43570),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4358_CHIP_ID, 0xFFFFFFFF, 4358),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4359_CHIP_ID, 0xFFFFFFFF, 4359),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4365_CHIP_ID, 0x0000000F, 4365B),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4365_CHIP_ID, 0xFFFFFFF0, 4365C),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4366_CHIP_ID, 0x0000000F, 4366B),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4366_CHIP_ID, 0xFFFFFFF0, 4366C),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4371_CHIP_ID, 0xFFFFFFFF, 4371),
-+	BRCMF_FW_ENTRY(BRCM_CC_43602_CHIP_ID, 0xFFFFFFFF, 43602),
-+	BRCMF_FW_ENTRY(BRCM_CC_43465_CHIP_ID, 0xFFFFFFF0, 4366C),
-+	BRCMF_FW_ENTRY(BRCM_CC_4350_CHIP_ID, 0x000000FF, 4350C),
-+	BRCMF_FW_ENTRY(BRCM_CC_4350_CHIP_ID, 0xFFFFFF00, 4350),
-+	BRCMF_FW_ENTRY(BRCM_CC_43525_CHIP_ID, 0xFFFFFFF0, 4365C),
-+	BRCMF_FW_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356),
-+	BRCMF_FW_ENTRY(BRCM_CC_43567_CHIP_ID, 0xFFFFFFFF, 43570),
-+	BRCMF_FW_ENTRY(BRCM_CC_43569_CHIP_ID, 0xFFFFFFFF, 43570),
-+	BRCMF_FW_ENTRY(BRCM_CC_43570_CHIP_ID, 0xFFFFFFFF, 43570),
-+	BRCMF_FW_ENTRY(BRCM_CC_4358_CHIP_ID, 0xFFFFFFFF, 4358),
-+	BRCMF_FW_ENTRY(BRCM_CC_4359_CHIP_ID, 0xFFFFFFFF, 4359),
-+	BRCMF_FW_ENTRY(BRCM_CC_4365_CHIP_ID, 0x0000000F, 4365B),
-+	BRCMF_FW_ENTRY(BRCM_CC_4365_CHIP_ID, 0xFFFFFFF0, 4365C),
-+	BRCMF_FW_ENTRY(BRCM_CC_4366_CHIP_ID, 0x0000000F, 4366B),
-+	BRCMF_FW_ENTRY(BRCM_CC_4366_CHIP_ID, 0xFFFFFFF0, 4366C),
-+	BRCMF_FW_ENTRY(BRCM_CC_4371_CHIP_ID, 0xFFFFFFFF, 4371),
- };
- 
- #define BRCMF_PCIE_FW_UP_TIMEOUT		2000 /* msec */
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 4a6459a..3f7fd6f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -600,47 +600,44 @@ struct sdiod_drive_str {
- 	{4,  0x1}
- };
- 
--BRCMF_FW_NVRAM_DEF(43143, "brcmfmac43143-sdio.bin", "brcmfmac43143-sdio.txt");
--BRCMF_FW_NVRAM_DEF(43241B0, "brcmfmac43241b0-sdio.bin",
--		   "brcmfmac43241b0-sdio.txt");
--BRCMF_FW_NVRAM_DEF(43241B4, "brcmfmac43241b4-sdio.bin",
--		   "brcmfmac43241b4-sdio.txt");
--BRCMF_FW_NVRAM_DEF(43241B5, "brcmfmac43241b5-sdio.bin",
--		   "brcmfmac43241b5-sdio.txt");
--BRCMF_FW_NVRAM_DEF(4329, "brcmfmac4329-sdio.bin", "brcmfmac4329-sdio.txt");
--BRCMF_FW_NVRAM_DEF(4330, "brcmfmac4330-sdio.bin", "brcmfmac4330-sdio.txt");
--BRCMF_FW_NVRAM_DEF(4334, "brcmfmac4334-sdio.bin", "brcmfmac4334-sdio.txt");
--BRCMF_FW_NVRAM_DEF(43340, "brcmfmac43340-sdio.bin", "brcmfmac43340-sdio.txt");
--BRCMF_FW_NVRAM_DEF(4335, "brcmfmac4335-sdio.bin", "brcmfmac4335-sdio.txt");
--BRCMF_FW_NVRAM_DEF(43362, "brcmfmac43362-sdio.bin", "brcmfmac43362-sdio.txt");
--BRCMF_FW_NVRAM_DEF(4339, "brcmfmac4339-sdio.bin", "brcmfmac4339-sdio.txt");
--BRCMF_FW_NVRAM_DEF(43430A0, "brcmfmac43430a0-sdio.bin", "brcmfmac43430a0-sdio.txt");
-+BRCMF_FW_DEF(43143, "brcmfmac43143-sdio");
-+BRCMF_FW_DEF(43241B0, "brcmfmac43241b0-sdio");
-+BRCMF_FW_DEF(43241B4, "brcmfmac43241b4-sdio");
-+BRCMF_FW_DEF(43241B5, "brcmfmac43241b5-sdio");
-+BRCMF_FW_DEF(4329, "brcmfmac4329-sdio");
-+BRCMF_FW_DEF(4330, "brcmfmac4330-sdio");
-+BRCMF_FW_DEF(4334, "brcmfmac4334-sdio");
-+BRCMF_FW_DEF(43340, "brcmfmac43340-sdio");
-+BRCMF_FW_DEF(4335, "brcmfmac4335-sdio");
-+BRCMF_FW_DEF(43362, "brcmfmac43362-sdio");
-+BRCMF_FW_DEF(4339, "brcmfmac4339-sdio");
-+BRCMF_FW_DEF(43430A0, "brcmfmac43430a0-sdio");
- /* Note the names are not postfixed with a1 for backward compatibility */
--BRCMF_FW_NVRAM_DEF(43430A1, "brcmfmac43430-sdio.bin", "brcmfmac43430-sdio.txt");
--BRCMF_FW_NVRAM_DEF(43455, "brcmfmac43455-sdio.bin", "brcmfmac43455-sdio.txt");
--BRCMF_FW_NVRAM_DEF(4354, "brcmfmac4354-sdio.bin", "brcmfmac4354-sdio.txt");
--BRCMF_FW_NVRAM_DEF(4356, "brcmfmac4356-sdio.bin", "brcmfmac4356-sdio.txt");
--BRCMF_FW_NVRAM_DEF(4373, "brcmfmac4373-sdio.bin", "brcmfmac4373-sdio.txt");
-+BRCMF_FW_DEF(43430A1, "brcmfmac43430-sdio");
-+BRCMF_FW_DEF(43455, "brcmfmac43455-sdio");
-+BRCMF_FW_DEF(4354, "brcmfmac4354-sdio");
-+BRCMF_FW_DEF(4356, "brcmfmac4356-sdio");
-+BRCMF_FW_DEF(4373, "brcmfmac4373-sdio");
- 
- static struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43143_CHIP_ID, 0xFFFFFFFF, 43143),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43241_CHIP_ID, 0x0000001F, 43241B0),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43241_CHIP_ID, 0x00000020, 43241B4),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43241_CHIP_ID, 0xFFFFFFC0, 43241B5),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4329_CHIP_ID, 0xFFFFFFFF, 4329),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4330_CHIP_ID, 0xFFFFFFFF, 4330),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4334_CHIP_ID, 0xFFFFFFFF, 4334),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43340_CHIP_ID, 0xFFFFFFFF, 43340),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43341_CHIP_ID, 0xFFFFFFFF, 43340),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4335_CHIP_ID, 0xFFFFFFFF, 4335),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43362_CHIP_ID, 0xFFFFFFFE, 43362),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4339_CHIP_ID, 0xFFFFFFFF, 4339),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000001, 43430A0),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFE, 43430A1),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFFC0, 43455),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, 4354),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356),
--	BRCMF_FW_NVRAM_ENTRY(CY_CC_4373_CHIP_ID, 0xFFFFFFFF, 4373)
-+	BRCMF_FW_ENTRY(BRCM_CC_43143_CHIP_ID, 0xFFFFFFFF, 43143),
-+	BRCMF_FW_ENTRY(BRCM_CC_43241_CHIP_ID, 0x0000001F, 43241B0),
-+	BRCMF_FW_ENTRY(BRCM_CC_43241_CHIP_ID, 0x00000020, 43241B4),
-+	BRCMF_FW_ENTRY(BRCM_CC_43241_CHIP_ID, 0xFFFFFFC0, 43241B5),
-+	BRCMF_FW_ENTRY(BRCM_CC_4329_CHIP_ID, 0xFFFFFFFF, 4329),
-+	BRCMF_FW_ENTRY(BRCM_CC_4330_CHIP_ID, 0xFFFFFFFF, 4330),
-+	BRCMF_FW_ENTRY(BRCM_CC_4334_CHIP_ID, 0xFFFFFFFF, 4334),
-+	BRCMF_FW_ENTRY(BRCM_CC_43340_CHIP_ID, 0xFFFFFFFF, 43340),
-+	BRCMF_FW_ENTRY(BRCM_CC_43341_CHIP_ID, 0xFFFFFFFF, 43340),
-+	BRCMF_FW_ENTRY(BRCM_CC_4335_CHIP_ID, 0xFFFFFFFF, 4335),
-+	BRCMF_FW_ENTRY(BRCM_CC_43362_CHIP_ID, 0xFFFFFFFE, 43362),
-+	BRCMF_FW_ENTRY(BRCM_CC_4339_CHIP_ID, 0xFFFFFFFF, 4339),
-+	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0x00000001, 43430A0),
-+	BRCMF_FW_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFE, 43430A1),
-+	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFFC0, 43455),
-+	BRCMF_FW_ENTRY(BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, 4354),
-+	BRCMF_FW_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356),
-+	BRCMF_FW_ENTRY(CY_CC_4373_CHIP_ID, 0xFFFFFFFF, 4373)
- };
- 
- static void pkt_align(struct sk_buff *p, int len, int align)
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index 41642dd..f8968cf 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -46,11 +46,11 @@
- #define BRCMF_USB_CBCTL_READ		1
- #define BRCMF_USB_MAX_PKT_SIZE		1600
- 
--BRCMF_FW_DEF(43143, "brcmfmac43143.bin");
--BRCMF_FW_DEF(43236B, "brcmfmac43236b.bin");
--BRCMF_FW_DEF(43242A, "brcmfmac43242a.bin");
--BRCMF_FW_DEF(43569, "brcmfmac43569.bin");
--BRCMF_FW_DEF(4373, "brcmfmac4373.bin");
-+BRCMF_FW_DEF(43143, "brcmfmac43143");
-+BRCMF_FW_DEF(43236B, "brcmfmac43236b");
-+BRCMF_FW_DEF(43242A, "brcmfmac43242a");
-+BRCMF_FW_DEF(43569, "brcmfmac43569");
-+BRCMF_FW_DEF(4373, "brcmfmac4373");
- 
- static struct brcmf_firmware_mapping brcmf_usb_fwnames[] = {
- 	BRCMF_FW_ENTRY(BRCM_CC_43143_CHIP_ID, 0xFFFFFFFF, 43143),
+@@ -136,7 +136,7 @@ static bool ath9k_check_chirping(struct ath_softc *sc, u8 *data,
+ 			return false;
+ 		ath_dbg(common, DFS, "HT20: datalen=%d, num_fft_packets=%d\n",
+ 			datalen, num_fft_packets);
+-		if (num_fft_packets < (FFT_NUM_SAMPLES)) {
++		if (num_fft_packets < FFT_NUM_SAMPLES) {
+ 			ath_dbg(common, DFS, "not enough packets for chirp\n");
+ 			return false;
+ 		}
 -- 
-1.9.1
+2.7.4
