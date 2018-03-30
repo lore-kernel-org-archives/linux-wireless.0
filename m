@@ -1,150 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f43.google.com ([209.85.160.43]:35249 "EHLO
-        mail-pl0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751305AbeCMV7w (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:39471 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752600AbeC3Upx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 17:59:52 -0400
-Received: by mail-pl0-f43.google.com with SMTP id w22-v6so603211pll.2
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2018 14:59:51 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v5 0/9] EAPoL over NL80211
-Date: Tue, 13 Mar 2018 16:59:33 -0500
-Message-Id: <20180313215942.29176-1-denkenz@gmail.com> (sfid-20180313_225956_569645_D245D7F9)
+        Fri, 30 Mar 2018 16:45:53 -0400
+Received: by mail-lf0-f66.google.com with SMTP id p142-v6so13844857lfd.6
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Mar 2018 13:45:52 -0700 (PDT)
+From: Dmitry Lebed <lebed.dmitry@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        Dmitry Lebed <lebed.dmitry@gmail.com>
+Subject: [PATCH 2/2] iw: add printout of all supported ext_features to phy info
+Date: Fri, 30 Mar 2018 23:45:09 +0300
+Message-Id: <20180330204509.4395-2-lebed.dmitry@gmail.com> (sfid-20180330_224558_262425_DE9A3781)
+In-Reply-To: <20180330204509.4395-1-lebed.dmitry@gmail.com>
+References: <20180330204509.4395-1-lebed.dmitry@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds support for running 802.11 authentication mechanisms (e.g.
-802.1X, 4-Way Handshake, etc) over NL80211 instead of putting them onto the
-network device.  This has the advantage of fixing several long-standing race
-conditions that result from userspace operating on multiple transports in order
-to manage a 802.11 connection (e.g. NL80211 and wireless netdev, wlan0, etc).
+Signed-off-by: Dmitry Lebed <lebed.dmitry@gmail.com>
+---
+ info.c | 86 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 80 insertions(+), 6 deletions(-)
 
-For example, userspace would sometimes see 4-Way handshake packets before
-NL80211 signaled that the connection has been established.  Leading to ugly
-hacks or having the STA wait for retransmissions from the AP.
-
-This also provides a way to mitigate a particularly nasty race condition where
-the encryption key could be set prior to the 4-way handshake packet 4/4 being
-sent.  This would result in the packet being sent encrypted and discarded by
-the peer.  The mitigation strategy for this race is for userspace to explicitly
-tell the kernel that a particular EAPoL packet should not be encrypted.
-
-To make this possible this patchset introduces a new NL80211 command and several
-new attributes.  A userspace that is capable of processing EAPoL packets over
-NL80211 includes a new NL80211_ATTR_CONTROL_PORT_OVER_NL80211 attribute in its
-NL80211_CMD_ASSOCIATE or NL80211_CMD_CONNECT requests being sent to the kernel.
-The previously added NL80211_ATTR_SOCKET_OWNER attribute must also be included.
-The latter is used by the kernel to send NL80211_CMD_CONTROL_PORT_FRAME
-notifications back to userspace via a netlink unicast.  If the
-NL80211_ATTR_CONTROL_PORT_OVER_NL80211 attribute is not specified, then legacy
-behavior is kept and control port packets continue to flow over the network
-interface.
-
-If control port over nl80211 transport is requested, then control port packets
-are intercepted just prior to being handed to the network device and sent over
-netlink via the NL80211_CMD_CONTROL_PORT_FRAME notification.
-NL80211_ATTR_CONTROL_PORT_ETHERTYPE and NL80211_ATTR_MAC are included to
-specify the control port frame protocol and source address respectively.  If
-the control port frame was received unencrypted then
-NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT flag is also included.  NL80211_ATTR_FRAME
-attribute contains the raw control port frame with all transport layer headers
-stripped (e.g. this would be the raw EAPoL frame).
-
-Userspace can reply to control port frames either via legacy methods (by sending
-frames to the network device) or via NL80211_CMD_CONTROL_PORT_FRAME request.
-Userspace would included NL80211_ATTR_FRAME with the raw control port frame as
-well as NL80211_Attr_MAC and NL80211_ATTR_CONTROL_PORT_ETHERTYPE attributes to
-specify the destination address and protocol respectively.  This allows
-Pre-Authentication (protocol 0x88c7) frames to be sent via this mechanism as
-well.  Finally, NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT flag can be included to
-tell the driver to send the frame unencrypted, e.g. for 4-Way handshake 4/4
-frames.
-
-The proposed patchset has been tested in a mac80211_hwsim based environment with
-hostapd and iwd.
-
-ChangeLog
-
-v5
-
-- Johannes' main comment was that we're not handling interface types other than
-STATION inside tx_control_port (patch 2).  This patch was modified to support
-all interface types that seemed relevant.
-- Since tx_control_port relies on wdev->conn_owner_nlportid being set,
-SOCKET_OWNER support was added to JOIN_IBSS, JOIN_MESH and START_AP
-- SOCKET_OWNER auto-destruction logic was updated to support interface types
-other than STATION/P2P_CLIENT
-- Last patch was modified to support control_port_over_nl80211 for mac80211
-based AP mode.  It also copies necessary bits for AP_VLAN interfaces.
-
-This version has been tested on both STATION and AP mode interfaces with
-SOCKET_OWNER & CONTROL_PORT_OVER_NL80211 attributes provided to CMD_CONNECT
-and CMD_START_AP.
-
-TODO:
-
-- It is unclear to me how AP_VLAN and AP interfaces should synchronize on
-conn_owner_nlportid.  This is required for tx_control_port to work.
-- JOIN_IBSS & JOIN_MESH don't seem to support control_port_ethertype or
-control_port_no_encrypt.  Should struct cfg80211_crypto_settings parsed inside
-nl80211_crypto_settings be added to ibss_params or mesh_config/mesh_setup?
-
-v4
-
-- Reordered the patches to make sure that: when CONTROL_PORT_OVER_NL80211 is
-provided by userspace, nl80211 checks that both EXT_FEATURE bit is set and
-the tx_control_port is present in rdev ops.
-- Fixed up various issues Johannes found in his review
-
-v3
-
-- Added ETH_P_PREAUTH to if_ether.h
-- Moved NL80211 feature bit from wiphy features to ext features
-- Addressed various comments from Johannes
-
-v2
-
-- Added WIPHY_FLAG_CONTROL_PORT_OVER_NL80211 flag.  This is a capability flag
-used by the drivers, e.g. that the driver supports control port over nl80211
-capability.  This capability is now checked when CONTROL_PORT_OVER_NL80211 is
-requested.
-
-- mac80211 rx path now forwards Pre-Authentication frames over NL80211 as well,
-if requested.  Tweaked the signature of cfg80211_rx_control_port.
-
-- TX path reworked completely.  tx_control_port method has been introduced to
-cfg80211_ops.  An implementation of tx_control_port for mac80211 was added.
-
-Denis Kenzior (9):
-  nl80211: Add CMD_CONTROL_PORT_FRAME API
-  nl80211: Implement TX of control port frames
-  nl80211: Add CONTROL_PORT_OVER_NL80211 attribute
-  cfg80211: Support all iftypes in autodisconnect_wk
-  nl80211: Add SOCKET_OWNER support to JOIN_IBSS
-  nl80211: Add SOCKET_OWNER support to JOIN_MESH
-  nl80211: Add SOCKET_OWNER support to START_AP
-  mac80211: Add support for tx_control_port
-  mac80211: Send control port frames over nl80211
-
- include/net/cfg80211.h       |  34 +++++++++
- include/uapi/linux/nl80211.h |  36 +++++++++-
- net/mac80211/cfg.c           |   5 ++
- net/mac80211/ieee80211_i.h   |   4 ++
- net/mac80211/iface.c         |   2 +
- net/mac80211/main.c          |   2 +
- net/mac80211/mlme.c          |   2 +
- net/mac80211/rx.c            |  33 +++++++--
- net/mac80211/tx.c            |  46 +++++++++++++
- net/wireless/ap.c            |   1 +
- net/wireless/ibss.c          |   1 +
- net/wireless/mesh.c          |   1 +
- net/wireless/nl80211.c       | 161 ++++++++++++++++++++++++++++++++++++++++++-
- net/wireless/rdev-ops.h      |  15 ++++
- net/wireless/sme.c           |  43 +++++++++---
- net/wireless/trace.h         |  47 +++++++++++++
- 16 files changed, 414 insertions(+), 19 deletions(-)
-
+diff --git a/info.c b/info.c
+index 1eba5c9..be68571 100644
+--- a/info.c
++++ b/info.c
+@@ -69,6 +69,14 @@ static int ext_feature_isset(const unsigned char *ext_features, int ext_features
+ 	return (ft_byte & BIT(ftidx % 8)) != 0;
+ }
+ 
++static void ext_feat_print(const struct nlattr *tb,
++			   enum nl80211_ext_feature_index idx,
++			   const char *feature_name, const char *feature_desc)
++{
++	if (ext_feature_isset(nla_data(tb), nla_len(tb),idx))
++		printf("\t\t* [ %s ]: %s\n", feature_name, feature_desc);
++}
++
+ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ {
+ 	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
+@@ -603,17 +611,83 @@ broken_combination:
+ 			printf("\tDevice supports TDLS channel switching\n");
+ 	}
+ 
++	if (tb_msg[NL80211_ATTR_TDLS_SUPPORT])
++		printf("\tDevice supports T-DLS.\n");
++
+ 	if (tb_msg[NL80211_ATTR_EXT_FEATURES]) {
+ 		struct nlattr *tb = tb_msg[NL80211_ATTR_EXT_FEATURES];
+ 
+-		if (ext_feature_isset(nla_data(tb), nla_len(tb),
+-				      NL80211_EXT_FEATURE_VHT_IBSS))
+-			printf("\tDevice supports VHT-IBSS.\n");
++		printf("\tSupported extended features:\n");
++
++		ext_feat_print(tb, NL80211_EXT_FEATURE_VHT_IBSS,
++			       "VHT_IBSS", "VHT-IBSS");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_RRM,
++			       "RRM", "RRM");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER,
++			       "MU_MIMO_AIR_SNIFFER", "MU-MIMO sniffer");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_SCAN_START_TIME,
++			       "SCAN_START_TIME", "scan start timestamp");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_BSS_PARENT_TSF,
++			       "BSS_PARENT_TSF", "BSS last beacon/probe TSF");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_SET_SCAN_DWELL,
++			       "SET_SCAN_DWELL", "scan dwell setting");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_BEACON_RATE_LEGACY,
++			       "BEACON_RATE_LEGACY", "legacy beacon rate setting");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_BEACON_RATE_HT,
++			       "BEACON_RATE_HT", "HT beacon rate setting");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_BEACON_RATE_VHT,
++			       "BEACON_RATE_VHT", "VHT beacon rate setting");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_FILS_STA,
++			       "FILS_STA", "STA FILS (Fast Initial Link Setup)");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_MGMT_TX_RANDOM_TA,
++			       "MGMT_TX_RANDOM_TA",
++			       "randomized TA while not associated");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_MGMT_TX_RANDOM_TA_CONNECTED,
++			       "MGMT_TX_RANDOM_TA_CONNECTED",
++			       "randomized TA while associated");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_SCHED_SCAN_RELATIVE_RSSI,
++			       "SCHED_SCAN_RELATIVE_RSSI",
++			       "sched_scan for BSS with better RSSI report");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_CQM_RSSI_LIST,
++			       "CQM_RSSI_LIST",
++			       "multiple CQM_RSSI_THOLD records");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_FILS_SK_OFFLOAD,
++			       "FILS_SK_OFFLOAD",
++			       "FILS shared key authentication offload");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_PSK,
++			       "4WAY_HANDSHAKE_STA_PSK",
++			       "4-way handshake with PSK in station mode");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_4WAY_HANDSHAKE_STA_1X,
++			       "4WAY_HANDSHAKE_STA_1X",
++			       "4-way handshake with 802.1X in station mode");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_FILS_MAX_CHANNEL_TIME,
++			       "FILS_MAX_CHANNEL_TIME",
++			       "FILS max channel attribute override with dwell time");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_ACCEPT_BCAST_PROBE_RESP,
++			       "ACCEPT_BCAST_PROBE_RESP",
++			       "accepts broadcast probe response");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_OCE_PROBE_REQ_HIGH_TX_RATE,
++			       "OCE_PROBE_REQ_HIGH_TX_RATE",
++			       "probe request TX at high rate (at least 5.5Mbps)");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION,
++			       "OCE_PROBE_REQ_DEFERRAL_SUPPRESSION",
++			       "probe request tx deferral and suppression");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_MFP_OPTIONAL,
++			       "MFP_OPTIONAL",
++			       "MFP_OPTIONAL value in ATTR_USE_MFP");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_LOW_SPAN_SCAN,
++			       "LOW_SPAN_SCAN", "low span scan");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_LOW_POWER_SCAN,
++			       "LOW_POWER_SCAN", "low power scan");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_HIGH_ACCURACY_SCAN,
++			       "HIGH_ACCURACY_SCAN", "high accuracy scan");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_DFS_OFFLOAD,
++			       "DFS_OFFLOAD", "DFS offload");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211,
++			       "CONTROL_PORT_OVER_NL80211",
++			       "control port over nl80211");
+ 	}
+ 
+-	if (tb_msg[NL80211_ATTR_TDLS_SUPPORT])
+-		printf("\tDevice supports T-DLS.\n");
+-
+ 	if (tb_msg[NL80211_ATTR_COALESCE_RULE]) {
+ 		struct nl80211_coalesce_rule_support *rule;
+ 		struct nl80211_pattern_support *pat;
 -- 
-2.13.5
+2.16.3
