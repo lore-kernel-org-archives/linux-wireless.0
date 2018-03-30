@@ -1,48 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0083.outbound.protection.outlook.com ([104.47.37.83]:58674
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S966675AbeCAJjf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Mar 2018 04:39:35 -0500
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Dmitry Lebed <dlebed@quantenna.com>,
-        Dmitry Lebed <lebed.dmitry@gmail.com>
-Subject: [PATCH v3 0/2] cfg80211/nl80211: prepare DFS offload
-Date: Thu,  1 Mar 2018 12:39:14 +0300
-Message-Id: <20180301093916.14096-1-sergey.matyukevich.os@quantenna.com> (sfid-20180301_103944_734039_DF934F06)
+Received: from szxga07-in.huawei.com ([45.249.212.35]:40816 "EHLO huawei.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752510AbeC3CBm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Mar 2018 22:01:42 -0400
+From: Wei Yongjun <weiyongjun1@huawei.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Wei Yongjun <weiyongjun1@huawei.com>,
+        <linux-wireless@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
+Subject: [PATCH net-next] cfg80211: fix possible memory leak in regdb_query_country()
+Date: Fri, 30 Mar 2018 02:07:05 +0000
+Message-ID: <1522375625-135679-1-git-send-email-weiyongjun1@huawei.com> (sfid-20180330_040147_303459_82E6DBD4)
+Content-Type: text/plain; charset="ISO-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johannes and all,
+'wmm_ptrs' is malloced in regdb_query_country() and should be freed
+before leaving from the error handling cases, otherwise it will cause
+memory leak.
 
-Here is a patch set preparing DFS offload feature. The final purpose is
-to enable DFS offload when hardware/driver does all the DFS activities
-on its own without any support from user-space tools, e.g. hostapd.
-In this case user-space will be only informed about results, e.g.
-when CAC started/stopped, radar detected, etc...
+Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+---
+ net/wireless/reg.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-User-space functionality is already available in hostapd in the form
-of  vendor-specific (QCA) OUI advertising DFS offload support. The
-idea is to add missing pieces to kernel and then to convert relevant
-hostapd functionality into a vendor neutral form.
-
-Thanks,
-Sergey
-
-Changes v2 -> v3
-- add patch with CAC_STARTED event
-
-Dmitrii Lebed (2):
-  cfg80211/nl80211: add DFS offload flag
-  cfg80211/nl80211: add CAC_STARTED event
-
- include/uapi/linux/nl80211.h |   10 ++++++++++
- net/wireless/mlme.c          |    7 +++++--
- net/wireless/nl80211.c       |   12 ++++++++----
- 3 files changed, 23 insertions(+), 6 deletions(-)
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 16c7e4e..ac3e12c 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1026,6 +1026,7 @@ static int regdb_query_country(const struct fwdb_header *db,
+ 
+ 			if (!tmp_rd) {
+ 				kfree(regdom);
++				kfree(wmm_ptrs);
+ 				return -ENOMEM;
+ 			}
+ 			regdom = tmp_rd;
