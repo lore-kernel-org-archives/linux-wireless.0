@@ -1,90 +1,638 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37050 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753199AbeC1O1F (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52180 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751906AbeC3DOL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 10:27:05 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Mar 2018 17:27:00 +0300
-Message-Id: <20180328142700.9443-1-luca@coelho.fi> (sfid-20180328_162708_462902_9DF4CC2A)
-In-Reply-To: <20180328141157.5427-1-luca@coelho.fi>
-References: <20180328141157.5427-1-luca@coelho.fi>
-Subject: [PATCH 12/14] iwlwifi: bump the max API version for 9000 and 22000 devices
+        Thu, 29 Mar 2018 23:14:11 -0400
+From: Carl Huang <cjhuang@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2] ath10k: Add WMI_SERVICE_AVAILABLE_EVENT support
+Date: Fri, 30 Mar 2018 11:13:59 +0800
+Message-Id: <1522379640-6442-2-git-send-email-cjhuang@codeaurora.org> (sfid-20180330_051416_697750_6EAC42CB)
+In-Reply-To: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org>
+References: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Add WMI_SERVICE_AVAILABLE_EVENT to extend WMI_SERVICE_READY_EVENT,
+the 128bit service map in WMI_SERVICE_READY_EVENT is not enough
+for firmware to notice new WLAN service to host driver. Hereby,
+for thoese new WLAN service, firmware will notice host driver by
+WMI_SERVICE_AVAILABLE_EVENT.
 
-We are now ready to load 38.ucode
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Alan Liu <alanliu@codeaurora.org>
+Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c | 4 +++-
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c  | 4 +++-
- 2 files changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi-ops.h |  24 +++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  38 ++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h | 346 +++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi.c     |  21 +-
+ drivers/net/wireless/ath/ath10k/wmi.h     |   9 +-
+ 5 files changed, 431 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index 48f6f80eb24b..dffd9df782b0 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -6,6 +6,7 @@
-  * GPL LICENSE SUMMARY
-  *
-  * Copyright(c) 2015-2017 Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -19,6 +20,7 @@
-  * BSD LICENSE
-  *
-  * Copyright(c) 2015-2017 Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -55,7 +57,7 @@
- #include "iwl-agn-hw.h"
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index 14093cf..86d083d 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -24,6 +24,7 @@ struct sk_buff;
+ struct wmi_ops {
+ 	void (*rx)(struct ath10k *ar, struct sk_buff *skb);
+ 	void (*map_svc)(const __le32 *in, unsigned long *out, size_t len);
++	void (*map_svc_ext)(const __le32 *in, unsigned long *out, size_t len);
  
- /* Highest firmware API version supported */
--#define IWL_22000_UCODE_API_MAX	36
-+#define IWL_22000_UCODE_API_MAX	38
+ 	int (*pull_scan)(struct ath10k *ar, struct sk_buff *skb,
+ 			 struct wmi_scan_ev_arg *arg);
+@@ -53,6 +54,9 @@ struct wmi_ops {
+ 			      struct wmi_wow_ev_arg *arg);
+ 	int (*pull_echo_ev)(struct ath10k *ar, struct sk_buff *skb,
+ 			    struct wmi_echo_ev_arg *arg);
++	int (*pull_svc_avail)(struct ath10k *ar, struct sk_buff *skb,
++			      struct wmi_svc_avail_ev_arg *arg);
++
+ 	enum wmi_txbf_conf (*get_txbf_conf_scheme)(struct ath10k *ar);
  
- /* Lowest firmware API version supported */
- #define IWL_22000_UCODE_API_MIN	24
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-index ab1469473e4f..e1c869a1f8cc 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-@@ -6,6 +6,7 @@
-  * GPL LICENSE SUMMARY
-  *
-  * Copyright(c) 2015-2017 Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -19,6 +20,7 @@
-  * BSD LICENSE
-  *
-  * Copyright(c) 2015-2017 Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -56,7 +58,7 @@
- #include "fw/file.h"
+ 	struct sk_buff *(*gen_pdev_suspend)(struct ath10k *ar, u32 suspend_opt);
+@@ -223,6 +227,17 @@ ath10k_wmi_map_svc(struct ath10k *ar, const __le32 *in, unsigned long *out,
+ }
  
- /* Highest firmware API version supported */
--#define IWL9000_UCODE_API_MAX	36
-+#define IWL9000_UCODE_API_MAX	38
+ static inline int
++ath10k_wmi_map_svc_ext(struct ath10k *ar, const __le32 *in, unsigned long *out,
++		       size_t len)
++{
++	if (!ar->wmi.ops->map_svc_ext)
++		return -EOPNOTSUPP;
++
++	ar->wmi.ops->map_svc_ext(in, out, len);
++	return 0;
++}
++
++static inline int
+ ath10k_wmi_pull_scan(struct ath10k *ar, struct sk_buff *skb,
+ 		     struct wmi_scan_ev_arg *arg)
+ {
+@@ -323,6 +338,15 @@ ath10k_wmi_pull_rdy(struct ath10k *ar, struct sk_buff *skb,
+ }
  
- /* Lowest firmware API version supported */
- #define IWL9000_UCODE_API_MIN	30
+ static inline int
++ath10k_wmi_pull_svc_avail(struct ath10k *ar, struct sk_buff *skb,
++			  struct wmi_svc_avail_ev_arg *arg)
++{
++	if (!ar->wmi.ops->pull_svc_avail)
++		return -EOPNOTSUPP;
++	return ar->wmi.ops->pull_svc_avail(ar, skb, arg);
++}
++
++static inline int
+ ath10k_wmi_pull_fw_stats(struct ath10k *ar, struct sk_buff *skb,
+ 			 struct ath10k_fw_stats *stats)
+ {
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index ae77a00..cb0d130 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -537,6 +537,9 @@ static void ath10k_wmi_tlv_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	case WMI_TLV_READY_EVENTID:
+ 		ath10k_wmi_event_ready(ar, skb);
+ 		break;
++	case WMI_TLV_SERVICE_AVAILABLE_EVENTID:
++		ath10k_wmi_event_service_available(ar, skb);
++		break;
+ 	case WMI_TLV_OFFLOAD_BCN_TX_STATUS_EVENTID:
+ 		ath10k_wmi_tlv_event_bcn_tx_status(ar, skb);
+ 		break;
+@@ -1054,6 +1057,39 @@ static int ath10k_wmi_tlv_op_pull_rdy_ev(struct ath10k *ar,
+ 	return 0;
+ }
+ 
++static int ath10k_wmi_tlv_svc_avail_parse(struct ath10k *ar, u16 tag, u16 len,
++					  const void *ptr, void *data)
++{
++	struct wmi_svc_avail_ev_arg *arg = data;
++
++	switch (tag) {
++	case WMI_TLV_TAG_STRUCT_SERVICE_AVAILABLE_EVENT:
++		arg->service_map_ext_len = *(__le32 *)ptr;
++		arg->service_map_ext = ptr + sizeof(__le32);
++		return 0;
++	default:
++		break;
++	}
++	return -EPROTO;
++}
++
++static int ath10k_wmi_tlv_op_pull_svc_avail(struct ath10k *ar,
++					    struct sk_buff *skb,
++					    struct wmi_svc_avail_ev_arg *arg)
++{
++	int ret;
++
++	ret = ath10k_wmi_tlv_iter(ar, skb->data, skb->len,
++				  ath10k_wmi_tlv_svc_avail_parse, arg);
++
++	if (ret) {
++		ath10k_warn(ar, "failed to parse svc_avail tlv: %d\n", ret);
++		return ret;
++	}
++
++	return 0;
++}
++
+ static void ath10k_wmi_tlv_pull_vdev_stats(const struct wmi_tlv_vdev_stats *src,
+ 					   struct ath10k_fw_stats_vdev *dst)
+ {
+@@ -3654,6 +3690,7 @@ static struct wmi_vdev_param_map wmi_tlv_vdev_param_map = {
+ static const struct wmi_ops wmi_tlv_ops = {
+ 	.rx = ath10k_wmi_tlv_op_rx,
+ 	.map_svc = wmi_tlv_svc_map,
++	.map_svc_ext = wmi_tlv_svc_map_ext,
+ 
+ 	.pull_scan = ath10k_wmi_tlv_op_pull_scan_ev,
+ 	.pull_mgmt_rx = ath10k_wmi_tlv_op_pull_mgmt_rx_ev,
+@@ -3665,6 +3702,7 @@ static const struct wmi_ops wmi_tlv_ops = {
+ 	.pull_phyerr = ath10k_wmi_op_pull_phyerr_ev,
+ 	.pull_svc_rdy = ath10k_wmi_tlv_op_pull_svc_rdy_ev,
+ 	.pull_rdy = ath10k_wmi_tlv_op_pull_rdy_ev,
++	.pull_svc_avail = ath10k_wmi_tlv_op_pull_svc_avail,
+ 	.pull_fw_stats = ath10k_wmi_tlv_op_pull_fw_stats,
+ 	.pull_roam_ev = ath10k_wmi_tlv_op_pull_roam_ev,
+ 	.pull_wow_event = ath10k_wmi_tlv_op_pull_wow_ev,
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+index da89128..2889225 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+@@ -295,6 +295,7 @@ enum wmi_tlv_cmd_id {
+ enum wmi_tlv_event_id {
+ 	WMI_TLV_SERVICE_READY_EVENTID = 0x1,
+ 	WMI_TLV_READY_EVENTID,
++	WMI_TLV_SERVICE_AVAILABLE_EVENTID,
+ 	WMI_TLV_SCAN_EVENTID = WMI_TLV_EV(WMI_TLV_GRP_SCAN),
+ 	WMI_TLV_PDEV_TPC_CONFIG_EVENTID = WMI_TLV_EV(WMI_TLV_GRP_PDEV),
+ 	WMI_TLV_CHAN_INFO_EVENTID,
+@@ -949,6 +950,275 @@ enum wmi_tlv_tag {
+ 	WMI_TLV_TAG_STRUCT_PACKET_FILTER_ENABLE,
+ 	WMI_TLV_TAG_STRUCT_SAP_SET_BLACKLIST_PARAM_CMD,
+ 	WMI_TLV_TAG_STRUCT_MGMT_TX_CMD,
++	WMI_TLV_TAG_STRUCT_MGMT_TX_COMPL_EVENT,
++	WMI_TLV_TAG_STRUCT_SOC_SET_ANTENNA_MODE_CMD,
++	WMI_TLV_TAG_STRUCT_WOW_UDP_SVC_OFLD_CMD,
++	WMI_TLV_TAG_STRUCT_LRO_INFO_CMD,
++	WMI_TLV_TAG_STRUCT_ROAM_EARLYSTOP_RSSI_THRES_PARAM,
++	WMI_TLV_TAG_STRUCT_SERVICE_READY_EXT_EVENT,
++	WMI_TLV_TAG_STRUCT_MAWC_SENSOR_REPORT_IND_CMD,
++	WMI_TLV_TAG_STRUCT_MAWC_ENABLE_SENSOR_EVENT,
++	WMI_TLV_TAG_STRUCT_ROAM_CONFIGURE_MAWC_CMD,
++	WMI_TLV_TAG_STRUCT_NLO_CONFIGURE_MAWC_CMD,
++	WMI_TLV_TAG_STRUCT_EXTSCAN_CONFIGURE_MAWC_CMD,
++	WMI_TLV_TAG_STRUCT_PEER_ASSOC_CONF_EVENT,
++	WMI_TLV_TAG_STRUCT_WOW_HOSTWAKEUP_GPIO_PIN_PATTERN_CONFIG_CMD,
++	WMI_TLV_TAG_STRUCT_AP_PS_EGAP_PARAM_CMD,
++	WMI_TLV_TAG_STRUCT_AP_PS_EGAP_INFO_EVENT,
++	WMI_TLV_TAG_STRUCT_PMF_OFFLOAD_SET_SA_QUERY_CMD,
++	WMI_TLV_TAG_STRUCT_TRANSFER_DATA_TO_FLASH_CMD,
++	WMI_TLV_TAG_STRUCT_TRANSFER_DATA_TO_FLASH_COMPLETE_EVENT,
++	WMI_TLV_TAG_STRUCT_SCPC_EVENT,
++	WMI_TLV_TAG_STRUCT_AP_PS_EGAP_INFO_CHAINMASK_LIST,
++	WMI_TLV_TAG_STRUCT_STA_SMPS_FORCE_MODE_COMPLETE_EVENT,
++	WMI_TLV_TAG_STRUCT_BPF_GET_CAPABILITY_CMD,
++	WMI_TLV_TAG_STRUCT_BPF_CAPABILITY_INFO_EVT,
++	WMI_TLV_TAG_STRUCT_BPF_GET_VDEV_STATS_CMD,
++	WMI_TLV_TAG_STRUCT_BPF_VDEV_STATS_INFO_EVT,
++	WMI_TLV_TAG_STRUCT_BPF_SET_VDEV_INSTRUCTIONS_CMD,
++	WMI_TLV_TAG_STRUCT_BPF_DEL_VDEV_INSTRUCTIONS_CMD,
++	WMI_TLV_TAG_STRUCT_VDEV_DELETE_RESP_EVENT,
++	WMI_TLV_TAG_STRUCT_PEER_DELETE_RESP_EVENT,
++	WMI_TLV_TAG_STRUCT_ROAM_DENSE_THRES_PARAM,
++	WMI_TLV_TAG_STRUCT_ENLO_CANDIDATE_SCORE_PARAM,
++	WMI_TLV_TAG_STRUCT_PEER_UPDATE_WDS_ENTRY_CMD,
++	WMI_TLV_TAG_STRUCT_VDEV_CONFIG_RATEMASK,
++	WMI_TLV_TAG_STRUCT_PDEV_FIPS_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_SMART_ANT_ENABLE_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_SMART_ANT_SET_RX_ANTENNA_CMD,
++	WMI_TLV_TAG_STRUCT_PEER_SMART_ANT_SET_TX_ANTENNA_CMD,
++	WMI_TLV_TAG_STRUCT_PEER_SMART_ANT_SET_TRAIN_ANTENNA_CMD,
++	WMI_TLV_TAG_STRUCT_PEER_SMART_ANT_SET_NODE_CONFIG_OPS_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_SET_ANT_SWITCH_TBL_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_SET_CTL_TABLE_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_SET_MIMOGAIN_TABLE_CMD,
++	WMI_TLV_TAG_STRUCT_FWTEST_SET_PARAM_CMD,
++	WMI_TLV_TAG_STRUCT_PEER_ATF_REQUEST,
++	WMI_TLV_TAG_STRUCT_VDEV_ATF_REQUEST,
++	WMI_TLV_TAG_STRUCT_PDEV_GET_ANI_CCK_CONFIG_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_GET_ANI_OFDM_CONFIG_CMD,
++	WMI_TLV_TAG_STRUCT_INST_RSSI_STATS_RESP,
++	WMI_TLV_TAG_STRUCT_MED_UTIL_REPORT_EVENT,
++	WMI_TLV_TAG_STRUCT_PEER_STA_PS_STATECHANGE_EVENT,
++	WMI_TLV_TAG_STRUCT_WDS_ADDR_EVENT,
++	WMI_TLV_TAG_STRUCT_PEER_RATECODE_LIST_EVENT,
++	WMI_TLV_TAG_STRUCT_PDEV_NFCAL_POWER_ALL_CHANNELS_EVENT,
++	WMI_TLV_TAG_STRUCT_PDEV_TPC_EVENT,
++	WMI_TLV_TAG_STRUCT_ANI_OFDM_EVENT,
++	WMI_TLV_TAG_STRUCT_ANI_CCK_EVENT,
++	WMI_TLV_TAG_STRUCT_PDEV_CHANNEL_HOPPING_EVENT,
++	WMI_TLV_TAG_STRUCT_PDEV_FIPS_EVENT,
++	WMI_TLV_TAG_STRUCT_ATF_PEER_INFO,
++	WMI_TLV_TAG_STRUCT_PDEV_GET_TPC_CMD,
++	WMI_TLV_TAG_STRUCT_VDEV_FILTER_NRP_CONFIG_CMD,
++	WMI_TLV_TAG_STRUCT_QBOOST_CFG_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_SMART_ANT_GPIO_HANDLE,
++	WMI_TLV_TAG_STRUCT_PEER_SMART_ANT_SET_TX_ANTENNA_SERIES,
++	WMI_TLV_TAG_STRUCT_PEER_SMART_ANT_SET_TRAIN_ANTENNA_PARAM,
++	WMI_TLV_TAG_STRUCT_PDEV_SET_ANT_CTRL_CHAIN,
++	WMI_TLV_TAG_STRUCT_PEER_CCK_OFDM_RATE_INFO,
++	WMI_TLV_TAG_STRUCT_PEER_MCS_RATE_INFO,
++	WMI_TLV_TAG_STRUCT_PDEV_NFCAL_POWER_ALL_CHANNELS_NFDBR,
++	WMI_TLV_TAG_STRUCT_PDEV_NFCAL_POWER_ALL_CHANNELS_NFDBM,
++	WMI_TLV_TAG_STRUCT_PDEV_NFCAL_POWER_ALL_CHANNELS_FREQNUM,
++	WMI_TLV_TAG_STRUCT_MU_REPORT_TOTAL_MU,
++	WMI_TLV_TAG_STRUCT_VDEV_SET_DSCP_TID_MAP_CMD,
++	WMI_TLV_TAG_STRUCT_ROAM_SET_MBO,
++	WMI_TLV_TAG_STRUCT_MIB_STATS_ENABLE_CMD,
++	WMI_TLV_TAG_STRUCT_NAN_DISC_IFACE_CREATED_EVENT,
++	WMI_TLV_TAG_STRUCT_NAN_DISC_IFACE_DELETED_EVENT,
++	WMI_TLV_TAG_STRUCT_NAN_STARTED_CLUSTER_EVENT,
++	WMI_TLV_TAG_STRUCT_NAN_JOINED_CLUSTER_EVENT,
++	WMI_TLV_TAG_STRUCT_NDI_GET_CAP_REQ,
++	WMI_TLV_TAG_STRUCT_NDP_INITIATOR_REQ,
++	WMI_TLV_TAG_STRUCT_NDP_RESPONDER_REQ,
++	WMI_TLV_TAG_STRUCT_NDP_END_REQ,
++	WMI_TLV_TAG_STRUCT_NDI_CAP_RSP_EVENT,
++	WMI_TLV_TAG_STRUCT_NDP_INITIATOR_RSP_EVENT,
++	WMI_TLV_TAG_STRUCT_NDP_RESPONDER_RSP_EVENT,
++	WMI_TLV_TAG_STRUCT_NDP_END_RSP_EVENT,
++	WMI_TLV_TAG_STRUCT_NDP_INDICATION_EVENT,
++	WMI_TLV_TAG_STRUCT_NDP_CONFIRM_EVENT,
++	WMI_TLV_TAG_STRUCT_NDP_END_INDICATION_EVENT,
++	WMI_TLV_TAG_STRUCT_VDEV_SET_QUIET_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_SET_PCL_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_SET_HW_MODE_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_SET_MAC_CONFIG_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_SET_ANTENNA_MODE_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_SET_HW_MODE_RESPONSE_EVENT,
++	WMI_TLV_TAG_STRUCT_PDEV_HW_MODE_TRANSITION_EVENT,
++	WMI_TLV_TAG_STRUCT_PDEV_SET_HW_MODE_RESPONSE_VDEV_MAC_ENTRY,
++	WMI_TLV_TAG_STRUCT_PDEV_SET_MAC_CONFIG_RESPONSE_EVENT,
++	WMI_TLV_TAG_STRUCT_COEX_CONFIG_CMD,
++	WMI_TLV_TAG_STRUCT_CONFIG_ENHANCED_MCAST_FILTER,
++	WMI_TLV_TAG_STRUCT_CHAN_AVOID_RPT_ALLOW_CMD,
++	WMI_TLV_TAG_STRUCT_SET_PERIODIC_CHANNEL_STATS_CONFIG,
++	WMI_TLV_TAG_STRUCT_VDEV_SET_CUSTOM_AGGR_SIZE_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_WAL_POWER_DEBUG_CMD,
++	WMI_TLV_TAG_STRUCT_MAC_PHY_CAPABILITIES,
++	WMI_TLV_TAG_STRUCT_HW_MODE_CAPABILITIES,
++	WMI_TLV_TAG_STRUCT_SOC_MAC_PHY_HW_MODE_CAPS,
++	WMI_TLV_TAG_STRUCT_HAL_REG_CAPABILITIES_EXT,
++	WMI_TLV_TAG_STRUCT_SOC_HAL_REG_CAPABILITIES,
++	WMI_TLV_TAG_STRUCT_VDEV_WISA_CMD,
++	WMI_TLV_TAG_STRUCT_TX_POWER_LEVEL_STATS_EVT,
++	WMI_TLV_TAG_STRUCT_SCAN_ADAPTIVE_DWELL_PARAMETERS_TLV,
++	WMI_TLV_TAG_STRUCT_SCAN_ADAPTIVE_DWELL_CONFIG,
++	WMI_TLV_TAG_STRUCT_WOW_SET_ACTION_WAKE_UP_CMD,
++	WMI_TLV_TAG_STRUCT_NDP_END_RSP_PER_NDI,
++	WMI_TLV_TAG_STRUCT_PEER_BWF_REQUEST,
++	WMI_TLV_TAG_STRUCT_BWF_PEER_INFO,
++	WMI_TLV_TAG_STRUCT_DBGLOG_TIME_STAMP_SYNC_CMD,
++	WMI_TLV_TAG_STRUCT_RMC_SET_LEADER_CMD,
++	WMI_TLV_TAG_STRUCT_RMC_MANUAL_LEADER_EVENT,
++	WMI_TLV_TAG_STRUCT_PER_CHAIN_RSSI_STATS,
++	WMI_TLV_TAG_STRUCT_RSSI_STATS,
++	WMI_TLV_TAG_STRUCT_P2P_LO_START_CMD,
++	WMI_TLV_TAG_STRUCT_P2P_LO_STOP_CMD,
++	WMI_TLV_TAG_STRUCT_P2P_LO_STOPPED_EVENT,
++	WMI_TLV_TAG_STRUCT_PEER_REORDER_QUEUE_SETUP_CMD,
++	WMI_TLV_TAG_STRUCT_PEER_REORDER_QUEUE_REMOVE_CMD,
++	WMI_TLV_TAG_STRUCT_SET_MULTIPLE_MCAST_FILTER_CMD,
++	WMI_TLV_TAG_STRUCT_MGMT_TX_COMPL_BUNDLE_EVENT,
++	WMI_TLV_TAG_STRUCT_READ_DATA_FROM_FLASH_CMD,
++	WMI_TLV_TAG_STRUCT_READ_DATA_FROM_FLASH_EVENT,
++	WMI_TLV_TAG_STRUCT_PDEV_SET_REORDER_TIMEOUT_VAL_CMD,
++	WMI_TLV_TAG_STRUCT_PEER_SET_RX_BLOCKSIZE_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_SET_WAKEUP_CONFIG_CMDID,
++	WMI_TLV_TAG_STRUCT_TLV_BUF_LEN_PARAM,
++	WMI_TLV_TAG_STRUCT_SERVICE_AVAILABLE_EVENT,
++	WMI_TLV_TAG_STRUCT_PEER_ANTDIV_INFO_REQ_CMD,
++	WMI_TLV_TAG_STRUCT_PEER_ANTDIV_INFO_EVENT,
++	WMI_TLV_TAG_STRUCT_PEER_ANTDIV_INFO,
++	WMI_TLV_TAG_STRUCT_PDEV_GET_ANTDIV_STATUS_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_ANTDIV_STATUS_EVENT,
++	WMI_TLV_TAG_STRUCT_MNT_FILTER_CMD,
++	WMI_TLV_TAG_STRUCT_GET_CHIP_POWER_STATS_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_CHIP_POWER_STATS_EVENT,
++	WMI_TLV_TAG_STRUCT_COEX_GET_ANTENNA_ISOLATION_CMD,
++	WMI_TLV_TAG_STRUCT_COEX_REPORT_ISOLATION_EVENT,
++	WMI_TLV_TAG_STRUCT_CHAN_CCA_STATS,
++	WMI_TLV_TAG_STRUCT_PEER_SIGNAL_STATS,
++	WMI_TLV_TAG_STRUCT_TX_STATS,
++	WMI_TLV_TAG_STRUCT_PEER_AC_TX_STATS,
++	WMI_TLV_TAG_STRUCT_RX_STATS,
++	WMI_TLV_TAG_STRUCT_PEER_AC_RX_STATS,
++	WMI_TLV_TAG_STRUCT_REPORT_STATS_EVENT,
++	WMI_TLV_TAG_STRUCT_CHAN_CCA_STATS_THRESH,
++	WMI_TLV_TAG_STRUCT_PEER_SIGNAL_STATS_THRESH,
++	WMI_TLV_TAG_STRUCT_TX_STATS_THRESH,
++	WMI_TLV_TAG_STRUCT_RX_STATS_THRESH,
++	WMI_TLV_TAG_STRUCT_PDEV_SET_STATS_THRESHOLD_CMD,
++	WMI_TLV_TAG_STRUCT_REQUEST_WLAN_STATS_CMD,
++	WMI_TLV_TAG_STRUCT_RX_AGGR_FAILURE_EVENT,
++	WMI_TLV_TAG_STRUCT_RX_AGGR_FAILURE_INFO,
++	WMI_TLV_TAG_STRUCT_VDEV_ENCRYPT_DECRYPT_DATA_REQ_CMD,
++	WMI_TLV_TAG_STRUCT_VDEV_ENCRYPT_DECRYPT_DATA_RESP_EVENT,
++	WMI_TLV_TAG_STRUCT_PDEV_BAND_TO_MAC,
++	WMI_TLV_TAG_STRUCT_TBTT_OFFSET_INFO,
++	WMI_TLV_TAG_STRUCT_TBTT_OFFSET_EXT_EVENT,
++	WMI_TLV_TAG_STRUCT_SAR_LIMITS_CMD,
++	WMI_TLV_TAG_STRUCT_SAR_LIMIT_CMD_ROW,
++	WMI_TLV_TAG_STRUCT_PDEV_DFS_PHYERR_OFFLOAD_ENABLE_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_DFS_PHYERR_OFFLOAD_DISABLE_CMD,
++	WMI_TLV_TAG_STRUCT_VDEV_ADFS_CH_CFG_CMD,
++	WMI_TLV_TAG_STRUCT_VDEV_ADFS_OCAC_ABORT_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_DFS_RADAR_DETECTION_EVENT,
++	WMI_TLV_TAG_STRUCT_VDEV_ADFS_OCAC_COMPLETE_EVENT,
++	WMI_TLV_TAG_STRUCT_VDEV_DFS_CAC_COMPLETE_EVENT,
++	WMI_TLV_TAG_STRUCT_VENDOR_OUI,
++	WMI_TLV_TAG_STRUCT_REQUEST_RCPI_CMD,
++	WMI_TLV_TAG_STRUCT_UPDATE_RCPI_EVENT,
++	WMI_TLV_TAG_STRUCT_REQUEST_PEER_STATS_INFO_CMD,
++	WMI_TLV_TAG_STRUCT_PEER_STATS_INFO,
++	WMI_TLV_TAG_STRUCT_PEER_STATS_INFO_EVENT,
++	WMI_TLV_TAG_STRUCT_PKGID_EVENT,
++	WMI_TLV_TAG_STRUCT_CONNECTED_NLO_RSSI_PARAMS,
++	WMI_TLV_TAG_STRUCT_SET_CURRENT_COUNTRY_CMD,
++	WMI_TLV_TAG_STRUCT_REGULATORY_RULE_STRUCT,
++	WMI_TLV_TAG_STRUCT_REG_CHAN_LIST_CC_EVENT,
++	WMI_TLV_TAG_STRUCT_11D_SCAN_START_CMD,
++	WMI_TLV_TAG_STRUCT_11D_SCAN_STOP_CMD,
++	WMI_TLV_TAG_STRUCT_11D_NEW_COUNTRY_EVENT,
++	WMI_TLV_TAG_STRUCT_REQUEST_RADIO_CHAN_STATS_CMD,
++	WMI_TLV_TAG_STRUCT_RADIO_CHAN_STATS,
++	WMI_TLV_TAG_STRUCT_RADIO_CHAN_STATS_EVENT,
++	WMI_TLV_TAG_STRUCT_ROAM_PER_CONFIG,
++	WMI_TLV_TAG_STRUCT_VDEV_ADD_MAC_ADDR_TO_RX_FILTER_CMD,
++	WMI_TLV_TAG_STRUCT_VDEV_ADD_MAC_ADDR_TO_RX_FILTER_STATUS_EVENT,
++	WMI_TLV_TAG_STRUCT_BPF_SET_VDEV_ACTIVE_MODE_CMD,
++	WMI_TLV_TAG_STRUCT_HW_DATA_FILTER_CMD,
++	WMI_TLV_TAG_STRUCT_CONNECTED_NLO_BSS_BAND_RSSI_PREF,
++	WMI_TLV_TAG_STRUCT_PEER_OPER_MODE_CHANGE_EVENT,
++	WMI_TLV_TAG_STRUCT_CHIP_POWER_SAVE_FAILURE_DETECTED,
++	WMI_TLV_TAG_STRUCT_PDEV_MULTIPLE_VDEV_RESTART_REQUEST_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_CSA_SWITCH_COUNT_STATUS_EVENT,
++	WMI_TLV_TAG_STRUCT_PDEV_UPDATE_PKT_ROUTING_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_CHECK_CAL_VERSION_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_CHECK_CAL_VERSION_EVENT,
++	WMI_TLV_TAG_STRUCT_PDEV_SET_DIVERSITY_GAIN_CMD,
++	WMI_TLV_TAG_STRUCT_MAC_PHY_CHAINMASK_COMBO,
++	WMI_TLV_TAG_STRUCT_MAC_PHY_CHAINMASK_CAPABILITY,
++	WMI_TLV_TAG_STRUCT_VDEV_SET_ARP_STATS_CMD,
++	WMI_TLV_TAG_STRUCT_VDEV_GET_ARP_STATS_CMD,
++	WMI_TLV_TAG_STRUCT_VDEV_GET_ARP_STATS_EVENT,
++	WMI_TLV_TAG_STRUCT_IFACE_OFFLOAD_STATS,
++	WMI_TLV_TAG_STRUCT_REQUEST_STATS_CMD_SUB_STRUCT_PARAM,
++	WMI_TLV_TAG_STRUCT_RSSI_CTL_EXT,
++	WMI_TLV_TAG_STRUCT_SINGLE_PHYERR_EXT_RX_HDR,
++	WMI_TLV_TAG_STRUCT_COEX_BT_ACTIVITY_EVENT,
++	WMI_TLV_TAG_STRUCT_VDEV_GET_TX_POWER_CMD,
++	WMI_TLV_TAG_STRUCT_VDEV_TX_POWER_EVENT,
++	WMI_TLV_TAG_STRUCT_OFFCHAN_DATA_TX_COMPL_EVENT,
++	WMI_TLV_TAG_STRUCT_OFFCHAN_DATA_TX_SEND_CMD,
++	WMI_TLV_TAG_STRUCT_TX_SEND_PARAMS,
++	WMI_TLV_TAG_STRUCT_HE_RATE_SET,
++	WMI_TLV_TAG_STRUCT_CONGESTION_STATS,
++	WMI_TLV_TAG_STRUCT_SET_INIT_COUNTRY_CMD,
++	WMI_TLV_TAG_STRUCT_SCAN_DBS_DUTY_CYCLE,
++	WMI_TLV_TAG_STRUCT_SCAN_DBS_DUTY_CYCLE_PARAM_TLV,
++	WMI_TLV_TAG_STRUCT_PDEV_DIV_GET_RSSI_ANTID,
++	WMI_TLV_TAG_STRUCT_THERM_THROT_CONFIG_REQUEST,
++	WMI_TLV_TAG_STRUCT_THERM_THROT_LEVEL_CONFIG_INFO,
++	WMI_TLV_TAG_STRUCT_THERM_THROT_STATS_EVENT,
++	WMI_TLV_TAG_STRUCT_THERM_THROT_LEVEL_STATS_INFO,
++	WMI_TLV_TAG_STRUCT_PDEV_DIV_RSSI_ANTID_EVENT,
++	WMI_TLV_TAG_STRUCT_OEM_DMA_RING_CAPABILITIES,
++	WMI_TLV_TAG_STRUCT_OEM_DMA_RING_CFG_REQ,
++	WMI_TLV_TAG_STRUCT_OEM_DMA_RING_CFG_RSP,
++	WMI_TLV_TAG_STRUCT_OEM_INDIRECT_DATA,
++	WMI_TLV_TAG_STRUCT_OEM_DMA_BUF_RELEASE,
++	WMI_TLV_TAG_STRUCT_OEM_DMA_BUF_RELEASE_ENTRY,
++	WMI_TLV_TAG_STRUCT_PDEV_BSS_CHAN_INFO_REQUEST,
++	WMI_TLV_TAG_STRUCT_PDEV_BSS_CHAN_INFO_EVENT,
++	WMI_TLV_TAG_STRUCT_ROAM_LCA_DISALLOW_CONFIG_TLV_PARAM,
++	WMI_TLV_TAG_STRUCT_VDEV_LIMIT_OFFCHAN_CMD,
++	WMI_TLV_TAG_STRUCT_ROAM_RSSI_REJECTION_OCE_CONFIG_PARAM,
++	WMI_TLV_TAG_STRUCT_UNIT_TEST_EVENT,
++	WMI_TLV_TAG_STRUCT_ROAM_FILS_OFFLOAD_TLV_PARAM,
++	WMI_TLV_TAG_STRUCT_PDEV_UPDATE_PMK_CACHE_CMD,
++	WMI_TLV_TAG_STRUCT_PMK_CACHE,
++	WMI_TLV_TAG_STRUCT_PDEV_UPDATE_FILS_HLP_PKT_CMD,
++	WMI_TLV_TAG_STRUCT_ROAM_FILS_SYNCH_TLV_PARAM,
++	WMI_TLV_TAG_STRUCT_GTK_OFFLOAD_EXTENDED_TLV_PARAM,
++	WMI_TLV_TAG_STRUCT_ROAM_BG_SCAN_ROAMING_PARAM,
++	WMI_TLV_TAG_STRUCT_OIC_PING_OFFLOAD_PARAMS_CMD,
++	WMI_TLV_TAG_STRUCT_OIC_PING_OFFLOAD_SET_ENABLE_CMD,
++	WMI_TLV_TAG_STRUCT_OIC_PING_HANDOFF_EVENT,
++	WMI_TLV_TAG_STRUCT_DHCP_LEASE_RENEW_OFFLOAD_CMD,
++	WMI_TLV_TAG_STRUCT_DHCP_LEASE_RENEW_EVENT,
++	WMI_TLV_TAG_STRUCT_BTM_CONFIG,
++	WMI_TLV_TAG_STRUCT_DEBUG_MESG_FW_DATA_STALL_PARAM,
++	WMI_TLV_TAG_STRUCT_WLM_CONFIG_CMD,
++	WMI_TLV_TAG_STRUCT_PDEV_UPDATE_CTLTABLE_REQUEST,
++	WMI_TLV_TAG_STRUCT_PDEV_UPDATE_CTLTABLE_EVENT,
++	WMI_TLV_TAG_STRUCT_ROAM_CND_SCORING_PARAM,
++	WMI_TLV_TAG_STRUCT_PDEV_CONFIG_VENDOR_OUI_ACTION,
++	WMI_TLV_TAG_STRUCT_VENDOR_OUI_EXT,
++	WMI_TLV_TAG_STRUCT_ROAM_SYNCH_FRAME_EVENT,
++	WMI_TLV_TAG_STRUCT_FD_SEND_FROM_HOST_CMD,
++	WMI_TLV_TAG_STRUCT_ENABLE_FILS_CMD,
++	WMI_TLV_TAG_STRUCT_HOST_SWFDA_EVENT,
+ 
+ 	WMI_TLV_TAG_MAX
+ };
+@@ -1068,16 +1338,74 @@ enum wmi_tlv_service {
+ 	WMI_TLV_SERVICE_WLAN_STATS_REPORT,
+ 	WMI_TLV_SERVICE_TX_MSDU_ID_NEW_PARTITION_SUPPORT,
+ 	WMI_TLV_SERVICE_DFS_PHYERR_OFFLOAD,
++	WMI_TLV_SERVICE_RCPI_SUPPORT,
++	WMI_TLV_SERVICE_FW_MEM_DUMP_SUPPORT,
++	WMI_TLV_SERVICE_PEER_STATS_INFO,
++	WMI_TLV_SERVICE_REGULATORY_DB,
++	WMI_TLV_SERVICE_11D_OFFLOAD,
++	WMI_TLV_SERVICE_HW_DATA_FILTERING,
++	WMI_TLV_SERVICE_MULTIPLE_VDEV_RESTART,
++	WMI_TLV_SERVICE_PKT_ROUTING,
++	WMI_TLV_SERVICE_CHECK_CAL_VERSION,
++	WMI_TLV_SERVICE_OFFCHAN_TX_WMI,
++	WMI_TLV_SERVICE_8SS_TX_BFEE,
++	WMI_TLV_SERVICE_EXTENDED_NSS_SUPPORT,
++	WMI_TLV_SERVICE_ACK_TIMEOUT,
++	WMI_TLV_SERVICE_PDEV_BSS_CHANNEL_INFO_64,
++	WMI_TLV_MAX_SERVICE = 128,
++
++/* NOTE:
++ * The above service flags are delivered in the wmi_service_bitmap field
++ * of the WMI_TLV_SERVICE_READY_EVENT message.
++ * The below service flags are delivered in a WMI_TLV_SERVICE_AVAILABLE_EVENT
++ * message rather than in the WMI_TLV_SERVICE_READY_EVENT message's
++ * wmi_service_bitmap field.
++ * The WMI_TLV_SERVICE_AVAILABLE_EVENT message immediately precedes the
++ * WMI_TLV_SERVICE_READY_EVENT message.
++ */
++
++	WMI_TLV_SERVICE_CHAN_LOAD_INFO = 128,
++	WMI_TLV_SERVICE_TX_PPDU_INFO_STATS_SUPPORT,
++	WMI_TLV_SERVICE_VDEV_LIMIT_OFFCHAN_SUPPORT,
++	WMI_TLV_SERVICE_FILS_SUPPORT,
++	WMI_TLV_SERVICE_WLAN_OIC_PING_OFFLOAD,
++	WMI_TLV_SERVICE_WLAN_DHCP_RENEW,
++	WMI_TLV_SERVICE_MAWC_SUPPORT,
++	WMI_TLV_SERVICE_VDEV_LATENCY_CONFIG,
++	WMI_TLV_SERVICE_PDEV_UPDATE_CTLTABLE_SUPPORT,
++	WMI_TLV_SERVICE_PKTLOG_SUPPORT_OVER_HTT,
++	WMI_TLV_SERVICE_VDEV_MULTI_GROUP_KEY_SUPPORT,
++	WMI_TLV_SERVICE_SCAN_PHYMODE_SUPPORT,
++	WMI_TLV_SERVICE_THERM_THROT,
++	WMI_TLV_SERVICE_BCN_OFFLOAD_START_STOP_SUPPORT,
++	WMI_TLV_SERVICE_WOW_WAKEUP_BY_TIMER_PATTERN,
++	WMI_TLV_SERVICE_PEER_MAP_UNMAP_V2_SUPPORT = 143,
++	WMI_TLV_SERVICE_OFFCHAN_DATA_TID_SUPPORT = 144,
++	WMI_TLV_SERVICE_RX_PROMISC_ENABLE_SUPPORT = 145,
++	WMI_TLV_SERVICE_SUPPORT_DIRECT_DMA = 146,
++	WMI_TLV_SERVICE_AP_OBSS_DETECTION_OFFLOAD = 147,
++	WMI_TLV_SERVICE_11K_NEIGHBOUR_REPORT_SUPPORT = 148,
++	WMI_TLV_SERVICE_LISTEN_INTERVAL_OFFLOAD_SUPPORT = 149,
++	WMI_TLV_SERVICE_BSS_COLOR_OFFLOAD = 150,
++	WMI_TLV_SERVICE_RUNTIME_DPD_RECAL = 151,
++	WMI_TLV_SERVICE_STA_TWT = 152,
++	WMI_TLV_SERVICE_AP_TWT = 153,
++	WMI_TLV_SERVICE_GMAC_OFFLOAD_SUPPORT = 154,
++	WMI_TLV_SERVICE_SPOOF_MAC_SUPPORT = 155,
++
++	WMI_TLV_MAX_EXT_SERVICE = 256,
+ };
+ 
+-#define WMI_SERVICE_IS_ENABLED(wmi_svc_bmap, svc_id, len) \
+-	((svc_id) < (len) && \
+-	 __le32_to_cpu((wmi_svc_bmap)[(svc_id) / (sizeof(u32))]) & \
+-	 BIT((svc_id) % (sizeof(u32))))
++#define WMI_TLV_EXT_SERVICE_IS_ENABLED(wmi_svc_bmap, svc_id, len) \
++	((svc_id) < (WMI_TLV_MAX_EXT_SERVICE) && \
++	 (svc_id) >= (len) && \
++	__le32_to_cpu((wmi_svc_bmap)[((svc_id) - (len)) / 32]) & \
++	BIT(((((svc_id) - (len)) % 32) & 0x1f)))
+ 
+ #define SVCMAP(x, y, len) \
+ 	do { \
+-		if (WMI_SERVICE_IS_ENABLED((in), (x), (len))) \
++		if ((WMI_SERVICE_IS_ENABLED((in), (x), (len))) || \
++			(WMI_TLV_EXT_SERVICE_IS_ENABLED((in), (x), (len)))) \
+ 			__set_bit(y, out); \
+ 	} while (0)
+ 
+@@ -1228,6 +1556,14 @@ wmi_tlv_svc_map(const __le32 *in, unsigned long *out, size_t len)
+ 	       WMI_SERVICE_MGMT_TX_WMI, len);
+ }
+ 
++static inline void
++wmi_tlv_svc_map_ext(const __le32 *in, unsigned long *out, size_t len)
++{
++	SVCMAP(WMI_TLV_SERVICE_SPOOF_MAC_SUPPORT,
++	       WMI_SERVICE_SPOOF_MAC_SUPPORT,
++	       WMI_TLV_MAX_SERVICE);
++}
++
+ #undef SVCMAP
+ 
+ struct wmi_tlv {
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 58dc218..4aca166 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4756,7 +4756,6 @@ static void ath10k_wmi_event_service_ready_work(struct work_struct *work)
+ 		return;
+ 	}
+ 
+-	memset(&ar->wmi.svc_map, 0, sizeof(ar->wmi.svc_map));
+ 	ath10k_wmi_map_svc(ar, arg.service_map, ar->wmi.svc_map,
+ 			   arg.service_map_len);
+ 
+@@ -4966,6 +4965,21 @@ int ath10k_wmi_event_ready(struct ath10k *ar, struct sk_buff *skb)
+ 	return 0;
+ }
+ 
++void ath10k_wmi_event_service_available(struct ath10k *ar, struct sk_buff *skb)
++{
++	int ret;
++	struct wmi_svc_avail_ev_arg arg = {};
++
++	ret = ath10k_wmi_pull_svc_avail(ar, skb, &arg);
++	if (ret) {
++		ath10k_warn(ar, "failed to parse servive available event: %d\n",
++			    ret);
++	}
++
++	ath10k_wmi_map_svc_ext(ar, arg.service_map_ext, ar->wmi.svc_map,
++			       arg.service_map_ext_len);
++}
++
+ static int ath10k_wmi_event_temperature(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	const struct wmi_pdev_temperature_event *ev;
+@@ -5162,6 +5176,9 @@ static void ath10k_wmi_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 		ath10k_wmi_event_ready(ar, skb);
+ 		ath10k_wmi_queue_set_coverage_class_work(ar);
+ 		break;
++	case WMI_SERVICE_AVAILABLE_EVENTID:
++		ath10k_wmi_event_service_available(ar, skb);
++		break;
+ 	default:
+ 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
+ 		break;
+@@ -5573,6 +5590,8 @@ int ath10k_wmi_connect(struct ath10k *ar)
+ 	struct ath10k_htc_svc_conn_req conn_req;
+ 	struct ath10k_htc_svc_conn_resp conn_resp;
+ 
++	memset(&ar->wmi.svc_map, 0, sizeof(ar->wmi.svc_map));
++
+ 	memset(&conn_req, 0, sizeof(conn_req));
+ 	memset(&conn_resp, 0, sizeof(conn_resp));
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index c7b30ed..6919618 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -197,7 +197,7 @@ enum wmi_service {
+ 	WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY,
+ 	WMI_SERVICE_MGMT_TX_WMI,
+ 	WMI_SERVICE_TDLS_WIDER_BANDWIDTH,
+-
++	WMI_SERVICE_SPOOF_MAC_SUPPORT,
+ 	/* keep last */
+ 	WMI_SERVICE_MAX,
+ };
+@@ -1167,6 +1167,7 @@ enum wmi_cmd_id {
+ enum wmi_event_id {
+ 	WMI_SERVICE_READY_EVENTID = 0x1,
+ 	WMI_READY_EVENTID,
++	WMI_SERVICE_AVAILABLE_EVENTID,
+ 
+ 	/* Scan specific events */
+ 	WMI_SCAN_EVENTID = WMI_EVT_GRP_START_ID(WMI_GRP_SCAN),
+@@ -6544,6 +6545,11 @@ struct wmi_svc_rdy_ev_arg {
+ 	const struct wlan_host_mem_req *mem_reqs[WMI_MAX_MEM_REQS];
+ };
+ 
++struct wmi_svc_avail_ev_arg {
++	__le32 service_map_ext_len;
++	const __le32 *service_map_ext;
++};
++
+ struct wmi_rdy_ev_arg {
+ 	__le32 sw_version;
+ 	__le32 abi_version;
+@@ -6963,6 +6969,7 @@ void ath10k_wmi_event_vdev_standby_req(struct ath10k *ar, struct sk_buff *skb);
+ void ath10k_wmi_event_vdev_resume_req(struct ath10k *ar, struct sk_buff *skb);
+ void ath10k_wmi_event_service_ready(struct ath10k *ar, struct sk_buff *skb);
+ int ath10k_wmi_event_ready(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_wmi_event_service_available(struct ath10k *ar, struct sk_buff *skb);
+ int ath10k_wmi_op_pull_phyerr_ev(struct ath10k *ar, const void *phyerr_buf,
+ 				 int left_len, struct wmi_phyerr_ev_arg *arg);
+ void ath10k_wmi_main_op_fw_stats_fill(struct ath10k *ar,
 -- 
-2.16.2
+2.7.4
