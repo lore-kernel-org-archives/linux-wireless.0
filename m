@@ -1,140 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37000 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752743AbeC1OZj (ORCPT
+Received: from smtprelay0056.hostedemail.com ([216.40.44.56]:59783 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752153AbeCaOdc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 10:25:39 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        "Zamir, Roee" <roee.zamir@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 28 Mar 2018 17:25:33 +0300
-Message-Id: <20180328142533.9017-1-luca@coelho.fi> (sfid-20180328_162542_000713_4E482824)
-In-Reply-To: <20180328141157.5427-1-luca@coelho.fi>
-References: <20180328141157.5427-1-luca@coelho.fi>
-Subject: [PATCH 07/14] iwlwifi: mvm: add support for oce
+        Sat, 31 Mar 2018 10:33:32 -0400
+Message-ID: <1522506808.11653.7.camel@perches.com> (sfid-20180331_163402_235647_C68AF8CD)
+Subject: Re: [PATCH 06/12] wireless: Convert simple uses of a static const
+ Ethernet broadcast address
+From: Joe Perches <joe@perches.com>
+To: Pkshih <pkshih@realtek.com>, "huxm@marvell.com" <huxm@marvell.com>,
+        "gbhat@marvell.com" <gbhat@marvell.com>,
+        "jussi.kivilinna@iki.fi" <jussi.kivilinna@iki.fi>,
+        "nishants@marvell.com" <nishants@marvell.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "amitkarwar@gmail.com" <amitkarwar@gmail.com>,
+        "chunkeey@googlemail.com" <chunkeey@googlemail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
+Date: Sat, 31 Mar 2018 07:33:28 -0700
+In-Reply-To: <1522504872.1910.17.camel@realtek.com>
+References: <cover.1522479607.git.joe@perches.com>
+         <79196f134a513d50968e8e208a0e56b3c0236ee3.1522479607.git.joe@perches.com>
+         <1522504872.1910.17.camel@realtek.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Zamir, Roee" <roee.zamir@intel.com>
+On Sat, 2018-03-31 at 14:01 +0000, Pkshih wrote:
+> On Sat, 2018-03-31 at 00:05 -0700, Joe Perches wrote:
+> > Use the new ether_broadcast_addr global instead to save some object code.
+[]
+> > diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c
+[]
+> > @@ -1649,7 +1648,7 @@ static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+> >  			memcpy(rtlpriv->sec.key_buf[key_idx],
+> >  			       key->key, key->keylen);
+> >  			rtlpriv->sec.key_len[key_idx] = key->keylen;
+> > -			memcpy(mac_addr, bcast_addr, ETH_ALEN);
+> > +			memcpy(mac_addr, ether_broadcast_addr, ETH_ALEN);
+> 
+> Use ether_addr_copy(mac_addr, ether_broadcast_addr) ?
 
-Get capabilities from the fw, expose them with nl80211, and enable them
-in UMAC scan if the relevant nl80211 flags are set by the userspace.
+This should use eth_broadcast_addr(mac_addr) instead.
 
-Signed-off-by: Roee Zamir <roee.zamir@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/api/scan.h  |  6 ++++++
- drivers/net/wireless/intel/iwlwifi/fw/file.h      |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 11 +++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  6 ++++++
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c     | 21 ++++++++++++++++++++-
- 5 files changed, 44 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-index 3bfc657f6b42..620862c4c79b 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-@@ -579,8 +579,14 @@ enum iwl_umac_scan_general_flags {
- 	IWL_UMAC_SCAN_GEN_FLAGS_RRM_ENABLED		= BIT(8),
- 	IWL_UMAC_SCAN_GEN_FLAGS_MATCH			= BIT(9),
- 	IWL_UMAC_SCAN_GEN_FLAGS_EXTENDED_DWELL		= BIT(10),
-+	/* Extended dwell is obselete when adaptive dwell is used, making this
-+	 * bit reusable. Hence, probe request defer is used only when adaptive
-+	 * dwell is supported. */
-+	IWL_UMAC_SCAN_GEN_FLAGS_PROB_REQ_DEFER_SUPP	= BIT(10),
- 	IWL_UMAC_SCAN_GEN_FLAGS_LMAC2_FRAGMENTED	= BIT(11),
- 	IWL_UMAC_SCAN_GEN_FLAGS_ADAPTIVE_DWELL		= BIT(13),
-+	IWL_UMAC_SCAN_GEN_FLAGS_MAX_CHNL_TIME		= BIT(14),
-+	IWL_UMAC_SCAN_GEN_FLAGS_PROB_REQ_HIGH_TX_RATE	= BIT(15),
- };
- 
- /**
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index 2cb303c5c42e..f8c2dac12c66 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -265,6 +265,7 @@ enum iwl_ucode_tlv_api {
- 	IWL_UCODE_TLV_API_NAN2_VER2		= (__force iwl_ucode_tlv_api_t)31,
- 	/* API Set 1 */
- 	IWL_UCODE_TLV_API_ADAPTIVE_DWELL	= (__force iwl_ucode_tlv_api_t)32,
-+	IWL_UCODE_TLV_API_OCE			= (__force iwl_ucode_tlv_api_t)33,
- 	IWL_UCODE_TLV_API_NEW_BEACON_TEMPLATE	= (__force iwl_ucode_tlv_api_t)34,
- 	IWL_UCODE_TLV_API_NEW_RX_STATS		= (__force iwl_ucode_tlv_api_t)35,
- 	IWL_UCODE_TLV_API_QUOTA_LOW_LATENCY	= (__force iwl_ucode_tlv_api_t)38,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 7152fdc00fb1..82dc9dec4160 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -661,6 +661,17 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 				      NL80211_EXT_FEATURE_SET_SCAN_DWELL);
- 	}
- 
-+	if (iwl_mvm_is_oce_supported(mvm)) {
-+		wiphy_ext_feature_set(hw->wiphy,
-+			NL80211_EXT_FEATURE_ACCEPT_BCAST_PROBE_RESP);
-+		wiphy_ext_feature_set(hw->wiphy,
-+			NL80211_EXT_FEATURE_FILS_MAX_CHANNEL_TIME);
-+		wiphy_ext_feature_set(hw->wiphy,
-+			NL80211_EXT_FEATURE_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION);
-+		wiphy_ext_feature_set(hw->wiphy,
-+			NL80211_EXT_FEATURE_OCE_PROBE_REQ_HIGH_TX_RATE);
-+	}
-+
- 	mvm->rts_threshold = IEEE80211_MAX_RTS_THRESHOLD;
- 
- #ifdef CONFIG_PM_SLEEP
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 625b238a3f0a..bd87cdb36fb2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1155,6 +1155,12 @@ static inline bool iwl_mvm_is_adaptive_dwell_supported(struct iwl_mvm *mvm)
- 			  IWL_UCODE_TLV_API_ADAPTIVE_DWELL);
- }
- 
-+static inline bool iwl_mvm_is_oce_supported(struct iwl_mvm *mvm)
-+{
-+	/* OCE should never be enabled for LMAC scan FWs */
-+	return fw_has_api(&mvm->fw->ucode_capa, IWL_UCODE_TLV_API_OCE);
-+}
-+
- static inline bool iwl_mvm_enter_d0i3_on_suspend(struct iwl_mvm *mvm)
- {
- 	/* For now we only use this mode to differentiate between
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index f910098e9531..b756d9d0199f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -1268,9 +1268,28 @@ static u16 iwl_mvm_scan_umac_flags(struct iwl_mvm *mvm,
- 	 */
- 	if (iwl_mvm_is_regular_scan(params) &&
- 	    vif->type != NL80211_IFTYPE_P2P_DEVICE &&
--	    params->type != IWL_SCAN_TYPE_FRAGMENTED)
-+	    params->type != IWL_SCAN_TYPE_FRAGMENTED &&
-+	    !iwl_mvm_is_adaptive_dwell_supported(mvm) &&
-+	    !iwl_mvm_is_oce_supported(mvm))
- 		flags |= IWL_UMAC_SCAN_GEN_FLAGS_EXTENDED_DWELL;
- 
-+	if (iwl_mvm_is_oce_supported(mvm)) {
-+		if ((params->flags &
-+		     NL80211_SCAN_FLAG_OCE_PROBE_REQ_HIGH_TX_RATE))
-+			flags |= IWL_UMAC_SCAN_GEN_FLAGS_PROB_REQ_HIGH_TX_RATE;
-+		/* Since IWL_UMAC_SCAN_GEN_FLAGS_EXTENDED_DWELL and
-+		 * NL80211_SCAN_FLAG_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION shares
-+		 * the same bit, we need to make sure that we use this bit here
-+		 * only when IWL_UMAC_SCAN_GEN_FLAGS_EXTENDED_DWELL cannot be
-+		 * used. */
-+		if ((params->flags &
-+		     NL80211_SCAN_FLAG_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION) &&
-+		     !WARN_ON_ONCE(!iwl_mvm_is_adaptive_dwell_supported(mvm)))
-+			flags |= IWL_UMAC_SCAN_GEN_FLAGS_PROB_REQ_DEFER_SUPP;
-+		if ((params->flags & NL80211_SCAN_FLAG_FILS_MAX_CHANNEL_TIME))
-+			flags |= IWL_UMAC_SCAN_GEN_FLAGS_MAX_CHNL_TIME;
-+	}
-+
- 	return flags;
- }
- 
--- 
-2.16.2
+There are similar conversion still possible in the tree.
+One day.
