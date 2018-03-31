@@ -1,57 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:49754 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752349AbeC1Rk3 (ORCPT
+Received: from smtprelay0103.hostedemail.com ([216.40.44.103]:46881 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752967AbeCaHF5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Mar 2018 13:40:29 -0400
-From: Colin King <colin.king@canonical.com>
-To: Maya Erez <merez@codeaurora.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH][next] wil6210: fix potential null dereference of ndev before null check
-Date: Wed, 28 Mar 2018 18:40:27 +0100
-Message-Id: <20180328174027.31551-1-colin.king@canonical.com> (sfid-20180328_194046_345375_7B0BD302)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        Sat, 31 Mar 2018 03:05:57 -0400
+From: Joe Perches <joe@perches.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 08/12] iwlegacy: Remove EXPORT_SYMBOL(il_bcast_addr) and use ether_broadcast_addr
+Date: Sat, 31 Mar 2018 00:05:23 -0700
+Message-Id: <f73cf3f9dc183157573a13736b6178d5ecbc8d9d.1522479608.git.joe@perches.com> (sfid-20180331_090906_215508_A50680EE)
+In-Reply-To: <cover.1522479607.git.joe@perches.com>
+References: <cover.1522479607.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Remove the local array and use the new global instead to save some small
+amount of object code.
 
-The pointer ndev is being dereferenced before it is being null checked,
-hence there is a potential null pointer deference. Fix this by only
-dereferencing ndev after it has been null checked
-
-Detected by CoverityScan, CID#1467010 ("Dereference before null check")
-
-Fixes: e00243fab84b ("wil6210: infrastructure for multiple virtual interfaces")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlegacy/3945-mac.c | 2 +-
+ drivers/net/wireless/intel/iwlegacy/4965-mac.c | 2 +-
+ drivers/net/wireless/intel/iwlegacy/common.c   | 3 ---
+ drivers/net/wireless/intel/iwlegacy/common.h   | 1 -
+ 4 files changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index a4b413e8d55a..82aec6b06d09 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -391,7 +391,7 @@ static void wil_fw_error_worker(struct work_struct *work)
- 	struct wil6210_priv *wil = container_of(work, struct wil6210_priv,
- 						fw_error_worker);
- 	struct net_device *ndev = wil->main_ndev;
--	struct wireless_dev *wdev = ndev->ieee80211_ptr;
-+	struct wireless_dev *wdev;
+diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+index 62a9794f952b..770c7aa13434 100644
+--- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+@@ -2352,7 +2352,7 @@ il3945_alloc_bcast_station(struct il_priv *il)
+ 	u8 sta_id;
  
- 	wil_dbg_misc(wil, "fw error worker\n");
+ 	spin_lock_irqsave(&il->sta_lock, flags);
+-	sta_id = il_prep_station(il, il_bcast_addr, false, NULL);
++	sta_id = il_prep_station(il, ether_broadcast_addr, false, NULL);
+ 	if (sta_id == IL_INVALID_STATION) {
+ 		IL_ERR("Unable to prepare broadcast station\n");
+ 		spin_unlock_irqrestore(&il->sta_lock, flags);
+diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+index 562e94870a9c..5772cbd9291c 100644
+--- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+@@ -3536,7 +3536,7 @@ il4965_alloc_bcast_station(struct il_priv *il)
+ 	u8 sta_id;
  
-@@ -399,6 +399,7 @@ static void wil_fw_error_worker(struct work_struct *work)
- 		wil_info(wil, "No recovery - interface is down\n");
- 		return;
- 	}
-+	wdev = ndev->ieee80211_ptr;
+ 	spin_lock_irqsave(&il->sta_lock, flags);
+-	sta_id = il_prep_station(il, il_bcast_addr, false, NULL);
++	sta_id = il_prep_station(il, ether_broadcast_addr, false, NULL);
+ 	if (sta_id == IL_INVALID_STATION) {
+ 		IL_ERR("Unable to prepare broadcast station\n");
+ 		spin_unlock_irqrestore(&il->sta_lock, flags);
+diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
+index 063e19ced7c8..5853b1dedea1 100644
+--- a/drivers/net/wireless/intel/iwlegacy/common.c
++++ b/drivers/net/wireless/intel/iwlegacy/common.c
+@@ -3378,9 +3378,6 @@ MODULE_PARM_DESC(bt_coex_active, "enable wifi/bluetooth co-exist");
+ u32 il_debug_level;
+ EXPORT_SYMBOL(il_debug_level);
  
- 	/* increment @recovery_count if less then WIL6210_FW_RECOVERY_TO
- 	 * passed since last recovery attempt
+-const u8 il_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+-EXPORT_SYMBOL(il_bcast_addr);
+-
+ #define MAX_BIT_RATE_40_MHZ 150	/* Mbps */
+ #define MAX_BIT_RATE_20_MHZ 72	/* Mbps */
+ static void
+diff --git a/drivers/net/wireless/intel/iwlegacy/common.h b/drivers/net/wireless/intel/iwlegacy/common.h
+index dc6a74a05983..6a6b43c5e4d7 100644
+--- a/drivers/net/wireless/intel/iwlegacy/common.h
++++ b/drivers/net/wireless/intel/iwlegacy/common.h
+@@ -860,7 +860,6 @@ struct il_hw_params {
+  *
+  ****************************************************************************/
+ void il4965_update_chain_flags(struct il_priv *il);
+-extern const u8 il_bcast_addr[ETH_ALEN];
+ int il_queue_space(const struct il_queue *q);
+ static inline int
+ il_queue_used(const struct il_queue *q, int i)
 -- 
-2.15.1
+2.15.0
