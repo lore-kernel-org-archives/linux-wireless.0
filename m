@@ -1,352 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:52590 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751812AbeCVU2g (ORCPT
+Received: from smtprelay0207.hostedemail.com ([216.40.44.207]:39944 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751483AbeCaHFg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Mar 2018 16:28:36 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 08/12] brcmfmac: introduce brcmf_fw_alloc_request() function
-Date: Thu, 22 Mar 2018 21:28:27 +0100
-Message-Id: <1521750511-12345-9-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180322_212912_282203_92510F7C)
-In-Reply-To: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1521750511-12345-1-git-send-email-arend.vanspriel@broadcom.com>
+        Sat, 31 Mar 2018 03:05:36 -0400
+From: Joe Perches <joe@perches.com>
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        b43-dev@lists.infradead.org, bridge@lists.linux-foundation.org,
+        netfilter-devel@vger.kernel.org, coreteam@netfilter.org
+Cc: linux-kernel@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com
+Subject: [PATCH 00/12] Ethernet: Add and use ether_<type>_addr globals
+Date: Sat, 31 Mar 2018 00:05:15 -0700
+Message-Id: <cover.1522479607.git.joe@perches.com> (sfid-20180331_090929_007569_A904B895)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function brcmf_fw_alloc_request() takes a list of required files
-and allocated the struct brcmf_fw_request instance accordingly. The
-request can be modified by the caller before being passed to the
-brcmf_fw_request_firmwares() function.
+There are many local static and non-static arrays that are used for
+Ethernet broadcast address output or comparison.
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../broadcom/brcm80211/brcmfmac/firmware.c         | 58 ++++++++++++++++++++++
- .../broadcom/brcm80211/brcmfmac/firmware.h         | 11 ++++
- .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    | 58 ++++++++++++----------
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 38 ++++++++------
- .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 42 +++++++++-------
- 5 files changed, 147 insertions(+), 60 deletions(-)
+Centralize the array into a single separate file and remove the local
+arrays.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index 95004db..f495d22 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -688,3 +688,61 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
- 	return 0;
- }
- 
-+struct brcmf_fw_request *
-+brcmf_fw_alloc_request(u32 chip, u32 chiprev,
-+		       struct brcmf_firmware_mapping mapping_table[],
-+		       u32 table_size, struct brcmf_fw_name *fwnames,
-+		       u32 n_fwnames)
-+{
-+	struct brcmf_fw_request *fwreq;
-+	char chipname[12];
-+	const char *mp_path;
-+	u32 i, j;
-+	char end;
-+	size_t reqsz;
-+
-+	for (i = 0; i < table_size; i++) {
-+		if (mapping_table[i].chipid == chip &&
-+		    mapping_table[i].revmask & BIT(chiprev))
-+			break;
-+	}
-+
-+	if (i == table_size) {
-+		brcmf_err("Unknown chipid %d [%d]\n", chip, chiprev);
-+		return NULL;
-+	}
-+
-+	reqsz = sizeof(*fwreq) + n_fwnames * sizeof(struct brcmf_fw_item);
-+	fwreq = kzalloc(reqsz, GFP_KERNEL);
-+	if (!fwreq)
-+		return NULL;
-+
-+	brcmf_chip_name(chip, chiprev, chipname, sizeof(chipname));
-+
-+	brcmf_info("using %s for chip %s\n",
-+		   mapping_table[i].fw_base, chipname);
-+
-+	mp_path = brcmf_mp_global.firmware_path;
-+	end = mp_path[strlen(mp_path) - 1];
-+	fwreq->n_items = n_fwnames;
-+
-+	for (j = 0; j < n_fwnames; j++) {
-+		fwreq->items[j].path = fwnames[j].path;
-+		/* check if firmware path is provided by module parameter */
-+		if (brcmf_mp_global.firmware_path[0] != '\0') {
-+			strlcpy(fwnames[j].path, mp_path,
-+				BRCMF_FW_NAME_LEN);
-+
-+			if (end != '/') {
-+				strlcat(fwnames[j].path, "/",
-+					BRCMF_FW_NAME_LEN);
-+			}
-+		}
-+		brcmf_fw_get_full_name(fwnames[j].path,
-+				       mapping_table[i].fw_base,
-+				       fwnames[j].extension);
-+		fwreq->items[j].path = fwnames[j].path;
-+	}
-+
-+	return fwreq;
-+}
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-index 1ca630e..1416fbb 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-@@ -77,6 +77,17 @@ struct brcmf_fw_request {
- 	struct brcmf_fw_item items[0];
- };
- 
-+struct brcmf_fw_name {
-+	const char *extension;
-+	char *path;
-+};
-+
-+struct brcmf_fw_request *
-+brcmf_fw_alloc_request(u32 chip, u32 chiprev,
-+		       struct brcmf_firmware_mapping mapping_table[],
-+		       u32 table_size, struct brcmf_fw_name *fwnames,
-+		       u32 n_fwnames);
-+
- /*
-  * Request firmware(s) asynchronously. When the asynchronous request
-  * fails it will not use the callback, but call device_release_driver()
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index a3fe29e..179177a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -1735,6 +1735,31 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
- 	device_release_driver(dev);
- }
- 
-+static struct brcmf_fw_request *
-+brcmf_pcie_prepare_fw_request(struct brcmf_pciedev_info *devinfo)
-+{
-+	struct brcmf_fw_request *fwreq;
-+	struct brcmf_fw_name fwnames[] = {
-+		{ ".bin", devinfo->fw_name },
-+		{ ".txt", devinfo->nvram_name },
-+	};
-+
-+	fwreq = brcmf_fw_alloc_request(devinfo->ci->chip, devinfo->ci->chiprev,
-+				       brcmf_pcie_fwnames,
-+				       ARRAY_SIZE(brcmf_pcie_fwnames),
-+				       fwnames, ARRAY_SIZE(fwnames));
-+	if (!fwreq)
-+		return NULL;
-+
-+	fwreq->items[BRCMF_PCIE_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
-+	fwreq->items[BRCMF_PCIE_FW_NVRAM].type = BRCMF_FW_TYPE_NVRAM;
-+	fwreq->items[BRCMF_PCIE_FW_NVRAM].flags = BRCMF_FW_REQF_OPTIONAL;
-+	fwreq->domain_nr = pci_domain_nr(devinfo->pdev->bus);
-+	fwreq->bus_nr = devinfo->pdev->bus->number;
-+
-+	return fwreq;
-+}
-+
- static int
- brcmf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- {
-@@ -1743,13 +1768,8 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
- 	struct brcmf_pciedev_info *devinfo;
- 	struct brcmf_pciedev *pcie_bus_dev;
- 	struct brcmf_bus *bus;
--	u16 domain_nr;
--	u16 bus_nr;
- 
--	domain_nr = pci_domain_nr(pdev->bus) + 1;
--	bus_nr = pdev->bus->number;
--	brcmf_dbg(PCIE, "Enter %x:%x (%d/%d)\n", pdev->vendor, pdev->device,
--		  domain_nr, bus_nr);
-+	brcmf_dbg(PCIE, "Enter %x:%x\n", pdev->vendor, pdev->device);
- 
- 	ret = -ENOMEM;
- 	devinfo = kzalloc(sizeof(*devinfo), GFP_KERNEL);
-@@ -1803,33 +1823,19 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
- 	bus->wowl_supported = pci_pme_capable(pdev, PCI_D3hot);
- 	dev_set_drvdata(&pdev->dev, bus);
- 
--	ret = brcmf_fw_map_chip_to_name(devinfo->ci->chip, devinfo->ci->chiprev,
--					brcmf_pcie_fwnames,
--					ARRAY_SIZE(brcmf_pcie_fwnames),
--					devinfo->fw_name, devinfo->nvram_name);
--	if (ret)
--		goto fail_bus;
--
--	fwreq = kzalloc(sizeof(*fwreq) + 2 * sizeof(struct brcmf_fw_item),
--			GFP_KERNEL);
-+	fwreq = brcmf_pcie_prepare_fw_request(devinfo);
- 	if (!fwreq) {
- 		ret = -ENOMEM;
- 		goto fail_bus;
- 	}
- 
--	fwreq->items[BRCMF_PCIE_FW_CODE].path = devinfo->fw_name;
--	fwreq->items[BRCMF_PCIE_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
--	fwreq->items[BRCMF_PCIE_FW_NVRAM].path = devinfo->nvram_name;
--	fwreq->items[BRCMF_PCIE_FW_NVRAM].type = BRCMF_FW_TYPE_NVRAM;
--	fwreq->items[BRCMF_PCIE_FW_NVRAM].flags = BRCMF_FW_REQF_OPTIONAL;
--	fwreq->n_items = 2;
--	fwreq->domain_nr = domain_nr;
--	fwreq->bus_nr = bus_nr;
- 	ret = brcmf_fw_get_firmwares(bus->dev, fwreq, brcmf_pcie_setup);
--	if (ret == 0)
--		return 0;
-+	if (ret < 0) {
-+		kfree(fwreq);
-+		goto fail_bus;
-+	}
-+	return 0;
- 
--	kfree(fwreq);
- fail_bus:
- 	kfree(bus->msgbuf);
- 	kfree(bus);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index ab68eb1..24dbf7e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -4155,6 +4155,28 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 	device_release_driver(dev);
- }
- 
-+static struct brcmf_fw_request *
-+brcmf_sdio_prepare_fw_request(struct brcmf_sdio *bus)
-+{
-+	struct brcmf_fw_request *fwreq;
-+	struct brcmf_fw_name fwnames[] = {
-+		{ ".bin", bus->sdiodev->fw_name },
-+		{ ".txt", bus->sdiodev->nvram_name },
-+	};
-+
-+	fwreq = brcmf_fw_alloc_request(bus->ci->chip, bus->ci->chiprev,
-+				       brcmf_sdio_fwnames,
-+				       ARRAY_SIZE(brcmf_sdio_fwnames),
-+				       fwnames, ARRAY_SIZE(fwnames));
-+	if (!fwreq)
-+		return NULL;
-+
-+	fwreq->items[BRCMF_SDIO_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
-+	fwreq->items[BRCMF_SDIO_FW_NVRAM].type = BRCMF_FW_TYPE_NVRAM;
-+
-+	return fwreq;
-+}
-+
- struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
- {
- 	int ret;
-@@ -4243,26 +4265,12 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
- 
- 	brcmf_dbg(INFO, "completed!!\n");
- 
--	ret = brcmf_fw_map_chip_to_name(bus->ci->chip, bus->ci->chiprev,
--					brcmf_sdio_fwnames,
--					ARRAY_SIZE(brcmf_sdio_fwnames),
--					sdiodev->fw_name, sdiodev->nvram_name);
--	if (ret)
--		goto fail;
--
--	fwreq = kzalloc(sizeof(fwreq) + 2 * sizeof(struct brcmf_fw_item),
--			GFP_KERNEL);
-+	fwreq = brcmf_sdio_prepare_fw_request(bus);
- 	if (!fwreq) {
- 		ret = -ENOMEM;
- 		goto fail;
- 	}
- 
--	fwreq->items[BRCMF_SDIO_FW_CODE].path = sdiodev->fw_name;
--	fwreq->items[BRCMF_SDIO_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
--	fwreq->items[BRCMF_SDIO_FW_NVRAM].path = sdiodev->nvram_name;
--	fwreq->items[BRCMF_SDIO_FW_NVRAM].type = BRCMF_FW_TYPE_NVRAM;
--	fwreq->n_items = 2;
--
- 	ret = brcmf_fw_get_firmwares(sdiodev->dev, fwreq,
- 				     brcmf_sdio_firmware_callback);
- 	if (ret != 0) {
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index 055db11..1c5f135 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -1200,6 +1200,27 @@ static void brcmf_usb_probe_phase2(struct device *dev, int ret,
- 	device_release_driver(dev);
- }
- 
-+static struct brcmf_fw_request *
-+brcmf_usb_prepare_fw_request(struct brcmf_usbdev_info *devinfo)
-+{
-+	struct brcmf_fw_request *fwreq;
-+	struct brcmf_fw_name fwnames[] = {
-+		{ ".bin", devinfo->fw_name },
-+	};
-+
-+	fwreq = brcmf_fw_alloc_request(devinfo->bus_pub.devid,
-+				       devinfo->bus_pub.chiprev,
-+				       brcmf_usb_fwnames,
-+				       ARRAY_SIZE(brcmf_usb_fwnames),
-+				       fwnames, ARRAY_SIZE(fwnames));
-+	if (!fwreq)
-+		return NULL;
-+
-+	fwreq->items[BRCMF_USB_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
-+
-+	return fwreq;
-+}
-+
- static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
- {
- 	struct brcmf_bus *bus = NULL;
-@@ -1249,24 +1270,12 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
- 	bus->chip = bus_pub->devid;
- 	bus->chiprev = bus_pub->chiprev;
- 
--	ret = brcmf_fw_map_chip_to_name(bus_pub->devid, bus_pub->chiprev,
--					brcmf_usb_fwnames,
--					ARRAY_SIZE(brcmf_usb_fwnames),
--					devinfo->fw_name, NULL);
--	if (ret)
--		goto fail;
--
--	fwreq = kzalloc(sizeof(*fwreq) + sizeof(struct brcmf_fw_item),
--			GFP_KERNEL);
-+	fwreq = brcmf_usb_prepare_fw_request(devinfo);
- 	if (!fwreq) {
- 		ret = -ENOMEM;
- 		goto fail;
- 	}
- 
--	fwreq->items[BRCMF_USB_FW_CODE].path = devinfo->fw_name;
--	fwreq->items[BRCMF_USB_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
--	fwreq->n_items = 1;
--
- 	/* request firmware here */
- 	ret = brcmf_fw_get_firmwares(dev, fwreq, brcmf_usb_probe_phase2);
- 	if (ret) {
-@@ -1469,15 +1478,10 @@ static int brcmf_usb_reset_resume(struct usb_interface *intf)
- 
- 	brcmf_dbg(USB, "Enter\n");
- 
--	fwreq = kzalloc(sizeof(*fwreq) + sizeof(struct brcmf_fw_item),
--			GFP_KERNEL);
-+	fwreq = brcmf_usb_prepare_fw_request(devinfo);
- 	if (!fwreq)
- 		return -ENOMEM;
- 
--	fwreq->items[BRCMF_USB_FW_CODE].path = devinfo->fw_name;
--	fwreq->items[BRCMF_USB_FW_CODE].type = BRCMF_FW_TYPE_BINARY;
--	fwreq->n_items = 1;
--
- 	ret = brcmf_fw_get_firmwares(&usb->dev, fwreq, brcmf_usb_probe_phase2);
- 	if (ret < 0)
- 		kfree(fwreq);
+Joe Perches (12):
+  ethernet: Add generic ether_<foo>_addr addresses
+  treewide/net: Rename eth_stp_addr to ether_stp_addr
+  net: mac80211: Use global ether_broadcast_addr
+  bridge: netfilter: Use the new global ether_<foo>_addr arrays
+  net: atm: Use ether_broadcast_addr
+  wireless: Convert simple uses of a static const Ethernet broadcast address
+  brcmfmac: Convert ALLFFMAC to ether_broadcast_addr
+  iwlegacy: Remove EXPORT_SYMBOL(il_bcast_addr) and use ether_broadcast_addr
+  iwlwifi: Remove local iwl_bcast_addr and use ether_broadcast_addr
+  mvpp2: Use ether_broadcast_addr instead of a local array
+  qlogic: Convert local bcast_addr to global ether_broadcast_addr
+  ethernet: Use ether_zero_addr instead of local statics
+
+ drivers/net/dsa/lan9303-core.c                        |  4 ++--
+ drivers/net/ethernet/broadcom/b44.c                   |  5 ++---
+ drivers/net/ethernet/freescale/gianfar.c              |  3 +--
+ drivers/net/ethernet/marvell/mvpp2.c                  |  4 +---
+ drivers/net/ethernet/qlogic/netxen/netxen_nic_hw.c    |  5 +----
+ drivers/net/ethernet/qlogic/qlcnic/qlcnic_hw.c        |  6 ++----
+ .../net/ethernet/qlogic/qlcnic/qlcnic_sriov_common.c  |  6 ++----
+ drivers/net/wireless/admtek/adm8211.c                 |  3 +--
+ drivers/net/wireless/ath/carl9170/mac.c               |  4 +---
+ drivers/net/wireless/broadcom/b43/main.c              |  3 +--
+ .../net/wireless/broadcom/brcm80211/brcmfmac/common.c |  2 --
+ .../net/wireless/broadcom/brcm80211/brcmfmac/common.h |  2 --
+ .../wireless/broadcom/brcm80211/brcmfmac/flowring.c   |  8 ++++----
+ drivers/net/wireless/intel/iwlegacy/3945-mac.c        |  2 +-
+ drivers/net/wireless/intel/iwlegacy/4965-mac.c        |  2 +-
+ drivers/net/wireless/intel/iwlegacy/common.c          |  3 ---
+ drivers/net/wireless/intel/iwlegacy/common.h          |  1 -
+ drivers/net/wireless/intel/iwlwifi/dvm/dev.h          |  1 -
+ drivers/net/wireless/intel/iwlwifi/dvm/scan.c         |  2 +-
+ drivers/net/wireless/intel/iwlwifi/dvm/sta.c          |  4 +---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c       |  3 +--
+ drivers/net/wireless/realtek/rtlwifi/core.c           |  5 ++---
+ drivers/net/wireless/rndis_wlan.c                     |  6 +-----
+ drivers/net/wireless/ti/wl1251/main.c                 |  5 +----
+ drivers/net/wireless/ti/wlcore/main.c                 |  5 +----
+ include/linux/etherdevice.h                           | 13 +++++++++----
+ net/atm/lec.c                                         | 12 +++++-------
+ net/bridge/br_device.c                                |  4 ++--
+ net/bridge/netfilter/ebt_stp.c                        |  6 ++----
+ net/ethernet/Makefile                                 |  2 +-
+ net/ethernet/ether_addrs.c                            | 19 +++++++++++++++++++
+ net/mac80211/iface.c                                  |  5 +----
+ net/mac80211/key.c                                    |  6 ++----
+ net/mac80211/mesh_hwmp.c                              | 19 ++++++++++---------
+ net/mac80211/mesh_pathtbl.c                           |  8 ++++----
+ 35 files changed, 83 insertions(+), 105 deletions(-)
+ create mode 100644 net/ethernet/ether_addrs.c
+
 -- 
-1.9.1
+2.15.0
