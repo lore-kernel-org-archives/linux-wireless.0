@@ -1,279 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39462 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753901AbeDJOX7 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:40478 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751258AbeDBMbm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Apr 2018 10:23:59 -0400
-From: pillair@codeaurora.org
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@codeaurora.org>
-Subject: [PATCH 2/4] ath10k: Add support for shadow register for WNC3990
-Date: Tue, 10 Apr 2018 19:53:30 +0530
-Message-Id: <1523370212-8778-3-git-send-email-pillair@codeaurora.org> (sfid-20180410_162435_066859_A7F2902C)
-In-Reply-To: <1523370212-8778-1-git-send-email-pillair@codeaurora.org>
-References: <1523370212-8778-1-git-send-email-pillair@codeaurora.org>
+        Mon, 2 Apr 2018 08:31:42 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [PATCH 1/2] mwifiex: uap: filter duplicate ERP IE
+Date: Mon, 2 Apr 2018 20:31:22 +0800
+Message-ID: <1522672283-1860-1-git-send-email-huxm@marvell.com> (sfid-20180402_143300_036339_AC1A0786)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rakesh Pillai <pillair@codeaurora.org>
+Firmware parse and attach ERP IE from bss configuration,
+do not set again from tail IE.
 
-WCN3990 needs shadow register write operation support
-for copy engine for regular operation in powersave mode.
-Add support for copy engine shadow register write in
-datapath tx for WCN3990
-
-Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
 ---
- drivers/net/wireless/ath/ath10k/ce.c | 143 ++++++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/ce.h |   4 +
- 2 files changed, 145 insertions(+), 2 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/ie.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index e7e7b342e5b8..5053dd92bf01 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -1,6 +1,7 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018 The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -58,6 +59,74 @@
-  * the buffer is sent/received.
-  */
- 
-+static inline u32 shadow_sr_wr_ind_addr(struct ath10k *ar,
-+					struct ath10k_ce_pipe *ce_state)
-+{
-+	u32 ce_id = ce_state->id;
-+	u32 addr = 0;
-+
-+	switch (ce_id) {
-+	case 0:
-+		addr = 0x00032000;
-+		break;
-+	case 3:
-+		addr = 0x0003200C;
-+		break;
-+	case 4:
-+		addr = 0x00032010;
-+		break;
-+	case 5:
-+		addr = 0x00032014;
-+		break;
-+	case 7:
-+		addr = 0x0003201C;
-+		break;
-+	default:
-+		ath10k_warn(ar, "invalid CE id: %d", ce_id);
-+		break;
-+	}
-+	return addr;
-+}
-+
-+static inline u32 shadow_dst_wr_ind_addr(struct ath10k *ar,
-+					 struct ath10k_ce_pipe *ce_state)
-+{
-+	u32 ce_id = ce_state->id;
-+	u32 addr = 0;
-+
-+	switch (ce_id) {
-+	case 1:
-+		addr = 0x00032034;
-+		break;
-+	case 2:
-+		addr = 0x00032038;
-+		break;
-+	case 5:
-+		addr = 0x00032044;
-+		break;
-+	case 7:
-+		addr = 0x0003204C;
-+		break;
-+	case 8:
-+		addr = 0x00032050;
-+		break;
-+	case 9:
-+		addr = 0x00032054;
-+		break;
-+	case 10:
-+		addr = 0x00032058;
-+		break;
-+	case 11:
-+		addr = 0x0003205C;
-+		break;
-+	default:
-+		ath10k_warn(ar, "invalid CE id: %d", ce_id);
-+		break;
-+	}
-+
-+	return addr;
-+}
-+
- static inline unsigned int
- ath10k_set_ring_byte(unsigned int offset,
- 		     struct ath10k_hw_ce_regs_addr_map *addr_map)
-@@ -123,6 +192,22 @@ static inline u32 ath10k_ce_src_ring_read_index_get(struct ath10k *ar,
- 				ar->hw_ce_regs->current_srri_addr);
- }
- 
-+static inline void
-+ath10k_ce_shadow_src_ring_write_index_set(struct ath10k *ar,
-+					  struct ath10k_ce_pipe *ce_state,
-+					  unsigned int value)
-+{
-+	ath10k_ce_write32(ar, shadow_sr_wr_ind_addr(ar, ce_state), value);
-+}
-+
-+static inline void
-+ath10k_ce_shadow_dest_ring_write_index_set(struct ath10k *ar,
-+					   struct ath10k_ce_pipe *ce_state,
-+					   unsigned int value)
-+{
-+	ath10k_ce_write32(ar, shadow_dst_wr_ind_addr(ar, ce_state), value);
-+}
-+
- static inline void ath10k_ce_src_ring_base_addr_set(struct ath10k *ar,
- 						    u32 ce_ctrl_addr,
- 						    unsigned int addr)
-@@ -376,8 +461,14 @@ static int _ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
- 	write_index = CE_RING_IDX_INCR(nentries_mask, write_index);
- 
- 	/* WORKAROUND */
--	if (!(flags & CE_SEND_FLAG_GATHER))
--		ath10k_ce_src_ring_write_index_set(ar, ctrl_addr, write_index);
-+	if (!(flags & CE_SEND_FLAG_GATHER)) {
-+		if (ar->hw_params.shadow_reg_support)
-+			ath10k_ce_shadow_src_ring_write_index_set(ar, ce_state,
-+								  write_index);
-+		else
-+			ath10k_ce_src_ring_write_index_set(ar, ctrl_addr,
-+							   write_index);
-+	}
- 
- 	src_ring->write_index = write_index;
- exit:
-@@ -1251,6 +1342,22 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
- 	return 0;
- }
- 
-+static int ath10k_ce_alloc_shadow_base(struct ath10k *ar,
-+				       struct ath10k_ce_ring *src_ring,
-+				       u32 nentries)
-+{
-+	src_ring->shadow_base_unaligned = kcalloc(nentries,
-+						  sizeof(struct ce_desc),
-+						  GFP_KERNEL);
-+	if (!src_ring->shadow_base_unaligned)
-+		return -ENOMEM;
-+
-+	src_ring->shadow_base = (struct ce_desc *)
-+			PTR_ALIGN(src_ring->shadow_base_unaligned,
-+				  CE_DESC_RING_ALIGN);
-+	return 0;
-+}
-+
- static struct ath10k_ce_ring *
- ath10k_ce_alloc_src_ring(struct ath10k *ar, unsigned int ce_id,
- 			 const struct ce_attr *attr)
-@@ -1258,6 +1365,7 @@ ath10k_ce_alloc_src_ring(struct ath10k *ar, unsigned int ce_id,
- 	struct ath10k_ce_ring *src_ring;
- 	u32 nentries = attr->src_nentries;
- 	dma_addr_t base_addr;
-+	int ret;
- 
- 	nentries = roundup_pow_of_two(nentries);
- 
-@@ -1294,6 +1402,19 @@ ath10k_ce_alloc_src_ring(struct ath10k *ar, unsigned int ce_id,
- 			ALIGN(src_ring->base_addr_ce_space_unaligned,
- 			      CE_DESC_RING_ALIGN);
- 
-+	if (ar->hw_params.shadow_reg_support) {
-+		ret = ath10k_ce_alloc_shadow_base(ar, src_ring, nentries);
-+		if (ret) {
-+			dma_free_coherent(ar->dev,
-+					  (nentries * sizeof(struct ce_desc) +
-+					   CE_DESC_RING_ALIGN),
-+					  src_ring->base_addr_owner_space_unaligned,
-+					  base_addr);
-+			kfree(src_ring);
-+			return ERR_PTR(ret);
-+		}
-+	}
-+
- 	return src_ring;
- }
- 
-@@ -1304,6 +1425,7 @@ ath10k_ce_alloc_src_ring_64(struct ath10k *ar, unsigned int ce_id,
- 	struct ath10k_ce_ring *src_ring;
- 	u32 nentries = attr->src_nentries;
- 	dma_addr_t base_addr;
-+	int ret;
- 
- 	nentries = roundup_pow_of_two(nentries);
- 
-@@ -1339,6 +1461,19 @@ ath10k_ce_alloc_src_ring_64(struct ath10k *ar, unsigned int ce_id,
- 			ALIGN(src_ring->base_addr_ce_space_unaligned,
- 			      CE_DESC_RING_ALIGN);
- 
-+	if (ar->hw_params.shadow_reg_support) {
-+		ret = ath10k_ce_alloc_shadow_base(ar, src_ring, nentries);
-+		if (ret) {
-+			dma_free_coherent(ar->dev,
-+					  (nentries * sizeof(struct ce_desc) +
-+					   CE_DESC_RING_ALIGN),
-+					  src_ring->base_addr_owner_space_unaligned,
-+					  base_addr);
-+			kfree(src_ring);
-+			return ERR_PTR(ret);
-+		}
-+	}
-+
- 	return src_ring;
- }
- 
-@@ -1505,6 +1640,8 @@ static void _ath10k_ce_free_pipe(struct ath10k *ar, int ce_id)
- 	struct ath10k_ce_pipe *ce_state = &ce->ce_states[ce_id];
- 
- 	if (ce_state->src_ring) {
-+		if (ar->hw_params.shadow_reg_support)
-+			kfree(ce_state->src_ring->shadow_base_unaligned);
- 		dma_free_coherent(ar->dev,
- 				  (ce_state->src_ring->nentries *
- 				   sizeof(struct ce_desc) +
-@@ -1534,6 +1671,8 @@ static void _ath10k_ce_free_pipe_64(struct ath10k *ar, int ce_id)
- 	struct ath10k_ce_pipe *ce_state = &ce->ce_states[ce_id];
- 
- 	if (ce_state->src_ring) {
-+		if (ar->hw_params.shadow_reg_support)
-+			kfree(ce_state->src_ring->shadow_base_unaligned);
- 		dma_free_coherent(ar->dev,
- 				  (ce_state->src_ring->nentries *
- 				   sizeof(struct ce_desc_64) +
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index d8f9da334529..9aea89133209 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -1,6 +1,7 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018 The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -113,6 +114,9 @@ struct ath10k_ce_ring {
- 	/* CE address space */
- 	u32 base_addr_ce_space;
- 
-+	char *shadow_base_unaligned;
-+	struct ce_desc *shadow_base;
-+
- 	/* keep last */
- 	void *per_transfer_context[0];
- };
+diff --git a/drivers/net/wireless/marvell/mwifiex/ie.c b/drivers/net/wireless/marvell/mwifiex/ie.c
+index 922e3d6..b10baac 100644
+--- a/drivers/net/wireless/marvell/mwifiex/ie.c
++++ b/drivers/net/wireless/marvell/mwifiex/ie.c
+@@ -349,6 +349,7 @@ static int mwifiex_uap_parse_tail_ies(struct mwifiex_private *priv,
+ 		case WLAN_EID_SUPP_RATES:
+ 		case WLAN_EID_COUNTRY:
+ 		case WLAN_EID_PWR_CONSTRAINT:
++		case WLAN_EID_ERP_INFO:
+ 		case WLAN_EID_EXT_SUPP_RATES:
+ 		case WLAN_EID_HT_CAPABILITY:
+ 		case WLAN_EID_HT_OPERATION:
 -- 
-2.14.1
+1.9.1
