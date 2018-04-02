@@ -1,35 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34640 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751226AbeDXRcz (ORCPT
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:46074 "EHLO
+        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754046AbeDBBy1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 13:32:55 -0400
-Content-Type: text/plain; charset="utf-8"
+        Sun, 1 Apr 2018 21:54:27 -0400
+Date: Mon, 2 Apr 2018 10:54:22 +0900
+From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+To: Dmitry Vyukov <dvyukov@google.com>
+Cc: syzbot <syzbot+3f28bd18291266ec826b@syzkaller.appspotmail.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Petr Mladek <pmladek@suse.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
+        syzkaller-bugs@googlegroups.com,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        David Miller <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Subject: Re: INFO: rcu detected stall in vprintk_func
+Message-ID: <20180402015422.GA3795@jagdpanzerIV> (sfid-20180402_035455_805093_0E2293F2)
+References: <001a113fe6c0a6ec650568c7384f@google.com>
+ <CACT4Y+YxuvQLZjWau99-7i8dmtxtjnpX6uteabF5rorYMj5v1w@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: mt76x2: set default values in TX_ALC_CFG_{1,
- 2} for tempetaure compensation
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <cca4a0d4fbe58e6ecf0f05b953b2df11e30e75b1.1522830473.git.lorenzo.bianconi@redhat.com>
-References: <cca4a0d4fbe58e6ecf0f05b953b2df11e30e75b1.1522830473.git.lorenzo.bianconi@redhat.com>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: nbd@nbd.name, linux-wireless@vger.kernel.org
-Message-Id: <20180424173255.5517060F5F@smtp.codeaurora.org> (sfid-20180424_193300_544467_E590579E)
-Date: Tue, 24 Apr 2018 17:32:55 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CACT4Y+YxuvQLZjWau99-7i8dmtxtjnpX6uteabF5rorYMj5v1w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
+On (04/01/18 12:51), Dmitry Vyukov wrote:
+[..]
+> > IMPORTANT: if you fix the bug, please add the following tag to the commit:
+> > Reported-by: syzbot+3f28bd18291266ec826b@syzkaller.appspotmail.com
+> > It will help syzbot understand when the bug is fixed. See footer for
+> > details.
+> > If you forward the report, please keep this part and the footer.
+> >
+> > llcp: nfc_llcp_send_ui_frame: Could not allocate PDU
+> > llcp: nfc_llcp_send_ui_frame: Could not allocate PDU
+> > llcp: nfc_llcp_send_ui_frame: Could not allocate PDU
+> > llcp: nfc_llcp_send_ui_frame: Could not allocate PDU
 
-> Initialize default values for temperature compensation in TX_ALC_CFG_{1,2}
-> if tssi has been enabled
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Yes, this thing
 
-Patch applied to wireless-drivers-next.git, thanks.
+	do {
+		remote_miu = sock->remote_miu > LLCP_MAX_MIU ?
+				local->remote_miu : sock->remote_miu;
 
-b9e5d4feb4fc mt76x2: set default values in TX_ALC_CFG_{1, 2} for tempetaure compensation
+		frag_len = min_t(size_t, remote_miu, remaining_len);
 
--- 
-https://patchwork.kernel.org/patch/10322225/
+		pr_debug("Fragment %zd bytes remaining %zd",
+			 frag_len, remaining_len);
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+		pdu = nfc_alloc_send_skb(sock->dev, &sock->sk, MSG_DONTWAIT,
+					 frag_len + LLCP_HEADER_SIZE, &err);
+		if (pdu == NULL) {
+			pr_err("Could not allocate PDU\n");
+			continue;
+			^^^^^^^^
+		}
+
+is basically
+
+	do {
+		pr_err("Could not allocate PDU\n");
+	} while (1)
+
+Can cause problems sometimes. But this loop is a bit worrisome
+even without the printk() call.
+
+>From printk() side, we only can do rate limiting here. Would be
+great if nfc maintainers could take a look and tweak the loop
+maybe.
+
+---
+
+diff --git a/net/nfc/llcp_core.c b/net/nfc/llcp_core.c
+index ef4026a23e80..a309a27581da 100644
+--- a/net/nfc/llcp_core.c
++++ b/net/nfc/llcp_core.c
+@@ -1386,7 +1386,7 @@ static void nfc_llcp_recv_agf(struct nfc_llcp_local *local, struct sk_buff *skb)
+ 
+ 		new_skb = nfc_alloc_recv_skb(pdu_len, GFP_KERNEL);
+ 		if (new_skb == NULL) {
+-			pr_err("Could not allocate PDU\n");
++			pr_err_ratelimited("Could not allocate PDU\n");
+ 			return;
+ 		}
+ 
