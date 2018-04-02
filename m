@@ -1,76 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:40579 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752632AbeDROz5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 10:55:57 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Bernhard Gabler <Bernhard_Gabler@web.de>,
-        Linux-Wireless mailing list <linux-wireless@vger.kernel.org>
-Subject: Re: ath confusing log message "country IE"
-In-Reply-To: <660b1538-0ccb-8f1a-ebe0-632b0e14a46b@web.de>
-References: <660b1538-0ccb-8f1a-ebe0-632b0e14a46b@web.de>
-Date: Wed, 18 Apr 2018 16:55:55 +0200
-Message-ID: <87o9ig1s3o.fsf@toke.dk> (sfid-20180418_165601_687010_B40C35D7)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:33348 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751237AbeDBMbt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Apr 2018 08:31:49 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [PATCH 2/2] mwifiex: uap: support cfg80211 ignore_broadcast_ssid=2
+Date: Mon, 2 Apr 2018 20:31:23 +0800
+Message-ID: <1522672283-1860-2-git-send-email-huxm@marvell.com> (sfid-20180402_143159_253694_C1776FD3)
+In-Reply-To: <1522672283-1860-1-git-send-email-huxm@marvell.com>
+References: <1522672283-1860-1-git-send-email-huxm@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bernhard Gabler <Bernhard_Gabler@web.de> writes:
+Firmware already support hidden ssid and keep ssid length,
+Open the capability in driver.
 
-> Dear all,
->
-> would it be possible to re-write the log message from
->  =C2=A0=C2=A0 "regdomain ... dynamically updated by country IE"
-> in a less ambiguous way, e.g. to:
->  =C2=A0=C2=A0 "regdomain ... dynamically updated by country-IE"
->  =C2=A0=C2=A0 "regdomain ... dynamically updated by country information e=
-lement"
-> , please?
->
-> To the occasional reader, the following system log messages seem to=20
-> convey that
->  =C2=A0-=C2=A0 "DE" (Germany) was intended to be used, but
->  =C2=A0-=C2=A0 "IE" (Ireland) was configured as regdomain.
->
->  =C2=A0=C2=A0=C2=A0 [ 2723.739071] ath: EEPROM regdomain: 0x8114
->  =C2=A0=C2=A0=C2=A0 [ 2723.739072] ath: EEPROM indicates we should expect=
- a country code
->  =C2=A0=C2=A0=C2=A0 [ 2723.739073] ath: doing EEPROM country->regdmn map =
-search
->  =C2=A0=C2=A0=C2=A0 [ 2723.739074] ath: country maps to regdmn code: 0x37
->  =C2=A0=C2=A0=C2=A0 [ 2723.739075] ath: Country alpha2 being used: DE
->  =C2=A0=C2=A0=C2=A0 [ 2723.739076] ath: Regpair used: 0x37
->  =C2=A0=C2=A0=C2=A0 [ 2723.739077] ath: regdomain 0x8114 dynamically upda=
-ted by country IE
->
-> Only after intense googling, I now know that IE stands for "information=20
-> element", not for Ireland. But this is not obvious at. To prevent others=
-=20
-> from confusion and wasting time on a non-problem, could please someone=20
-> rewrite the log message?
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Heh, that is a good point, I think. The patch below should fix it; but I
-worry that the log lines become quite long, then? Maybe better to use
-"country-IE", but that could also be confused. "country inf.elem"
-perhaps?
-
-Ah, the bike-shedding possibilities are endless! :)
-
--Toke
-
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 7b42f0bacfd8..7f432734dbe9 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1464,7 +1464,7 @@ const char *reg_initiator_name(enum nl80211_reg_initi=
-ator initiator)
-        case NL80211_REGDOM_SET_BY_DRIVER:
-                return "driver";
-        case NL80211_REGDOM_SET_BY_COUNTRY_IE:
--               return "country IE";
-+               return "country information element";
-        default:
-                WARN_ON(1);
-                return "bug";
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 52bdb71..8b2aab1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -1959,7 +1959,8 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 		bss_cfg->bcast_ssid_ctl = 0;
+ 		break;
+ 	case NL80211_HIDDEN_SSID_ZERO_CONTENTS:
+-		/* firmware doesn't support this type of hidden SSID */
++		bss_cfg->bcast_ssid_ctl = 2;
++		break;
+ 	default:
+ 		kfree(bss_cfg);
+ 		return -EINVAL;
+-- 
+1.9.1
