@@ -1,63 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50952 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751464AbeD0LcZ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:37742 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754326AbeDBKmp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Apr 2018 07:32:25 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] rsi: fix a bug in rsi_hal_key_config()
-References: <20180427112130.GA27655@mwanda>
-Date: Fri, 27 Apr 2018 14:32:20 +0300
-In-Reply-To: <20180427112130.GA27655@mwanda> (Dan Carpenter's message of "Fri,
-        27 Apr 2018 14:21:30 +0300")
-Message-ID: <87o9i46g1n.fsf@kamboji.qca.qualcomm.com> (sfid-20180427_133229_580041_8814038E)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 2 Apr 2018 06:42:45 -0400
+Message-ID: <1522665761.3786.365.camel@coelho.fi> (sfid-20180402_124249_647955_57842AD7)
+From: Luca Coelho <luca@coelho.fi>
+To: Nye Liu <nyet@nyet.org>, linux-wireless@vger.kernel.org
+Date: Mon, 02 Apr 2018 13:42:41 +0300
+In-Reply-To: <423cffeb-fabc-78fc-c2f6-7d9e226fc051@nyet.org>
+References: <423cffeb-fabc-78fc-c2f6-7d9e226fc051@nyet.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: iwlwifi: completely opaque WARN_ON(1) at
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c:1363. Please remove or fix it
+ (TX_STATUS_FAIL_DEST_PS)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
+Hi,
 
-> Smatch complains that the end of this function is dead code.  I'm pretty
-> sure that this return needs to be changed to only return on error.
->
-> Fixes: 4fd6c4762f37 ("rsi: roaming enhancements")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->
-> diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-> index 766d874cc6e2..80e7f4f4f188 100644
-> --- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-> +++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-> @@ -911,14 +911,14 @@ static int rsi_hal_key_config(struct ieee80211_hw *hw,
->  		}
->  	}
->  
-> -	return rsi_hal_load_key(adapter->priv,
-> -				key->key,
-> -				key->keylen,
-> -				key_type,
-> -				key->keyidx,
-> -				key->cipher,
-> -				sta_id,
-> -				vif);
-> +	status = rsi_hal_load_key(adapter->priv,
-> +				  key->key,
-> +				  key->keylen,
-> +				  key_type,
-> +				  key->keyidx,
-> +				  key->cipher,
-> +				  sta_id,
-> +				  vif);
+Please report this as a bug in the kernel bugzilla[1] and provide the
+logs as explained in our wiki[2].
 
-Gustavo submitted an identical patch also for this one :)
+[1] https://bugzilla.kernel.org/
+[2] https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/debugging
 
-https://patchwork.kernel.org/patch/10365997/
+Thanks.
 
--- 
-Kalle Valo
+--
+Luca.
+
+On Mon, 2018-04-02 at 02:44 -0700, Nye Liu wrote:
+> TX_STATUS_FAIL_DEST_PS
+> 
+> https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=887045
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1733194
+> 
+> Please remove or fix the WARN_ON(1) at 
+> drivers/net/wireless/intel/iwlwifi/mvm/tx.c:1363 it is filling my
+> kernel 
+> logs
+> 
