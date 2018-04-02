@@ -1,57 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:43874 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751361AbeDFIhn (ORCPT
+Received: from mail-io0-f199.google.com ([209.85.223.199]:35537 "EHLO
+        mail-io0-f199.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751231AbeDBGBE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Apr 2018 04:37:43 -0400
-Date: Fri, 6 Apr 2018 11:37:17 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH v2] rsi: remove unecessary PTR_ALIGN()s
-Message-ID: <20180406083717.GA21857@mwanda> (sfid-20180406_103748_451331_55627F0C)
+        Mon, 2 Apr 2018 02:01:04 -0400
+Received: by mail-io0-f199.google.com with SMTP id h132so9802231ioe.2
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Apr 2018 23:01:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87woxletat.fsf@kamboji.qca.qualcomm.com>
+Date: Sun, 01 Apr 2018 23:01:03 -0700
+Message-ID: <000000000000a010b80568d75018@google.com> (sfid-20180402_080139_221496_EEEB068D)
+Subject: WARNING in add_uevent_var
+From: syzbot <syzbot+230d9e642a85d3fec29c@syzkaller.appspotmail.com>
+To: davem@davemloft.net, johannes@sipsolutions.net,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The issue here is that we allocate "data" and then set
-"data = PTR_ALIGN(data, 8);" and then we free the aligned pointer
-instead of the original pointer.
+Hello,
 
-kmalloc() pointers are already ARCH_SLAB_MINALIGN aligned which is 8 or
-more on everything except certain Xtensa variants.  We decided that if
-the Xtensa people ever notice a bug here then we'll tell them the bug is
-on their side.  ;)
+syzbot hit the following crash on upstream commit
+10b84daddbec72c6b440216a69de9a9605127f7a (Sat Mar 31 17:59:00 2018 +0000)
+Merge branch 'perf-urgent-for-linus' of  
+git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
+syzbot dashboard link:  
+https://syzkaller.appspot.com/bug?extid=230d9e642a85d3fec29c
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+So far this crash happened 5 times on net-next, upstream.
+C reproducer: https://syzkaller.appspot.com/x/repro.c?id=6614377067184128
+syzkaller reproducer:  
+https://syzkaller.appspot.com/x/repro.syz?id=6535492073947136
+Raw console output:  
+https://syzkaller.appspot.com/x/log.txt?id=6339348970602496
+Kernel config:  
+https://syzkaller.appspot.com/x/.config?id=-2760467897697295172
+compiler: gcc (GCC) 7.1.1 20170620
+
+IMPORTANT: if you fix the bug, please add the following tag to the commit:
+Reported-by: syzbot+230d9e642a85d3fec29c@syzkaller.appspotmail.com
+It will help syzbot understand when the bug is fixed. See footer for  
+details.
+If you forward the report, please keep this part and the footer.
+
+------------[ cut here ]------------
+add_uevent_var: buffer size too small
+WARNING: CPU: 0 PID: 4431 at lib/kobject_uevent.c:594  
+add_uevent_var+0x2aa/0x2d0 lib/kobject_uevent.c:594
+Kernel panic - not syncing: panic_on_warn set ...
+
+CPU: 0 PID: 4431 Comm: syzkaller678536 Not tainted 4.16.0-rc7+ #374
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
+Google 01/01/2011
+Call Trace:
+  __dump_stack lib/dump_stack.c:17 [inline]
+  dump_stack+0x194/0x24d lib/dump_stack.c:53
+  panic+0x1e4/0x41c kernel/panic.c:183
+  __warn+0x1dc/0x200 kernel/panic.c:547
+  report_bug+0x1f4/0x2b0 lib/bug.c:186
+  fixup_bug.part.10+0x37/0x80 arch/x86/kernel/traps.c:178
+  fixup_bug arch/x86/kernel/traps.c:247 [inline]
+  do_error_trap+0x2d7/0x3e0 arch/x86/kernel/traps.c:296
+  do_invalid_op+0x1b/0x20 arch/x86/kernel/traps.c:315
+  invalid_op+0x1b/0x40 arch/x86/entry/entry_64.S:986
+RIP: 0010:add_uevent_var+0x2aa/0x2d0 lib/kobject_uevent.c:594
+RSP: 0018:ffff8801adba6810 EFLAGS: 00010286
+RAX: dffffc0000000008 RBX: ffff8801ad7a6d40 RCX: ffffffff815b193e
+RDX: 0000000000000000 RSI: 1ffff10035b74cb2 RDI: 1ffff10035b74c87
+RBP: ffff8801adba68d8 R08: 1ffff10035b74c49 R09: 0000000000000000
+R10: 0000000000000002 R11: 0000000000000000 R12: 1ffff10035b74d03
+R13: ffff8801ad7a6e58 R14: 00000000000003e6 R15: 0000000000000438
+  rfkill_dev_uevent+0x31/0x170 net/rfkill/core.c:813
+  dev_uevent+0x2b6/0x7e0 drivers/base/core.c:913
+  kobject_uevent_env+0x3fe/0xd30 lib/kobject_uevent.c:476
+  kobject_uevent+0x1f/0x30 lib/kobject_uevent.c:565
+  device_add+0xd04/0x1650 drivers/base/core.c:1834
+  rfkill_register+0x254/0xd60 net/rfkill/core.c:1019
+  wiphy_register+0x19d1/0x2050 net/wireless/core.c:872
+  ieee80211_register_hw+0x1162/0x3100 net/mac80211/main.c:1041
+  mac80211_hwsim_new_radio+0x1d06/0x2fb0  
+drivers/net/wireless/mac80211_hwsim.c:2757
+  hwsim_new_radio_nl+0x67a/0x8c0 drivers/net/wireless/mac80211_hwsim.c:3214
+  genl_family_rcv_msg+0x7b7/0xfb0 net/netlink/genetlink.c:599
+  genl_rcv_msg+0xb2/0x140 net/netlink/genetlink.c:624
+  netlink_rcv_skb+0x14b/0x380 net/netlink/af_netlink.c:2447
+  genl_rcv+0x28/0x40 net/netlink/genetlink.c:635
+  netlink_unicast_kernel net/netlink/af_netlink.c:1311 [inline]
+  netlink_unicast+0x4c4/0x6b0 net/netlink/af_netlink.c:1337
+  netlink_sendmsg+0xa4a/0xe60 net/netlink/af_netlink.c:1900
+  sock_sendmsg_nosec net/socket.c:630 [inline]
+  sock_sendmsg+0xca/0x110 net/socket.c:640
+  ___sys_sendmsg+0x767/0x8b0 net/socket.c:2046
+  __sys_sendmsg+0xe5/0x210 net/socket.c:2080
+  SYSC_sendmsg net/socket.c:2091 [inline]
+  SyS_sendmsg+0x2d/0x50 net/socket.c:2087
+  do_syscall_64+0x281/0x940 arch/x86/entry/common.c:287
+  entry_SYSCALL_64_after_hwframe+0x42/0xb7
+RIP: 0033:0x43fda9
+RSP: 002b:00007ffde548edb8 EFLAGS: 00000213 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00000000004002c8 RCX: 000000000043fda9
+RDX: 0000000000000000 RSI: 0000000020b3dfc8 RDI: 0000000000000003
+RBP: 00000000006cb018 R08: 00000000004002c8 R09: 00000000004002c8
+R10: 00000000004002c8 R11: 0000000000000213 R12: 00000000004016d0
+R13: 0000000000401760 R14: 0000000000000000 R15: 0000000000000000
+Dumping ftrace buffer:
+    (ftrace buffer empty)
+Kernel Offset: disabled
+Rebooting in 86400 seconds..
+
+
 ---
-v2: Instead of saving the original pointer, just remove the ALIGN()s
+This bug is generated by a dumb bot. It may contain errors.
+See https://goo.gl/tpsmEJ for details.
+Direct all questions to syzkaller@googlegroups.com.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index d76e69c0beaa..8ef00582c6ea 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -660,8 +660,6 @@ static int rsi_sdio_master_reg_read(struct rsi_hw *adapter, u32 addr,
- 	if (!data)
- 		return -ENOMEM;
- 
--	data = PTR_ALIGN(data, 8);
--
- 	ms_addr = (addr >> 16);
- 	status = rsi_sdio_master_access_msword(adapter, ms_addr);
- 	if (status < 0) {
-@@ -724,8 +722,6 @@ static int rsi_sdio_master_reg_write(struct rsi_hw *adapter,
- 	if (!data_aligned)
- 		return -ENOMEM;
- 
--	data_aligned = PTR_ALIGN(data_aligned, 8);
--
- 	if (size == 2) {
- 		*data_aligned = ((data << 16) | (data & 0xFFFF));
- 	} else if (size == 1) {
+syzbot will keep track of this bug report.
+If you forgot to add the Reported-by tag, once the fix for this bug is  
+merged
+into any tree, please reply to this email with:
+#syz fix: exact-commit-title
+If you want to test a patch for this bug, please reply with:
+#syz test: git://repo/address.git branch
+and provide the patch inline or as an attachment.
+To mark this as a duplicate of another syzbot report, please reply with:
+#syz dup: exact-subject-of-another-report
+If it's a one-off invalid bug report, please reply with:
+#syz invalid
+Note: if the crash happens again, it will cause creation of a new bug  
+report.
+Note: all commands must start from beginning of the line in the email body.
