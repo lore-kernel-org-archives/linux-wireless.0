@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:38778 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754274AbeDJPBk (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:53076 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751469AbeDCUaZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Apr 2018 11:01:40 -0400
-Received: by mail-pf0-f193.google.com with SMTP id y69so8530596pfb.5
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Apr 2018 08:01:40 -0700 (PDT)
-From: Siva Rebbagondla <siva8118@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sushant Mishra <sushant.mishra@redpinesignals.com>
-Subject: [v2 0/7] rsi driver improvements
-Date: Tue, 10 Apr 2018 20:34:10 +0530
-Message-Id: <1523372657-6067-1-git-send-email-siva8118@gmail.com> (sfid-20180410_170145_622161_48FFB6D1)
+        Tue, 3 Apr 2018 16:30:25 -0400
+Received: by mail-wm0-f68.google.com with SMTP id g8so12282107wmd.2
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Apr 2018 13:30:25 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2] mt76x2: remove unnecessary MT_TX_ALC_CFG_4 configuration
+Date: Tue,  3 Apr 2018 22:30:19 +0200
+Message-Id: <20180403203019.8988-1-lorenzo.bianconi@redhat.com> (sfid-20180403_223237_768337_443161EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Remove unnecessary MT_TX_ALC_CFG_4 configuration since the register value
+will be properly set according to the usage of an external power amplifier
 
-This patch series brings in some improvements in power save, Tx data
-path etc.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+Changes since v1:
+- remove first initialization in order to have the writes to that register
+  grouped together in the same if/else chunk
+---
+ drivers/net/wireless/mediatek/mt76/mt76x2_phy.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Changes in v2:
-	Below patches are split and created smaller incremental patches[Kalle]
-	[08/10] rsi: device disconnect changes
-	[09/10] rsi: tx improvements
-
-Amitkumar Karwar (7):
-  rsi: disable fw watchdog timer during reset
-  rsi: device bootup parameter configuration
-  rsi: use appropriate interface for power save configuration
-  rsi: increase max supported aggregation subframes
-  rsi: parse TID from data frame correctly
-  rsi: enable power save by default for coex
-  rsi: advertise 5GHz support based on device capability
-
- drivers/net/wireless/rsi/rsi_91x_core.c     |  4 +++-
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 29 ++++++++++++++++++++---------
- drivers/net/wireless/rsi/rsi_91x_usb.c      |  7 +++++++
- drivers/net/wireless/rsi/rsi_boot_params.h  |  3 ++-
- drivers/net/wireless/rsi/rsi_hal.h          |  1 +
- drivers/net/wireless/rsi/rsi_mgmt.h         |  3 +++
- drivers/net/wireless/rsi/rsi_usb.h          |  1 +
- 7 files changed, 37 insertions(+), 11 deletions(-)
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
+index f28c55746cea..42414c5fa01e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
+@@ -257,7 +257,6 @@ mt76x2_phy_set_txpower_regs(struct mt76x2_dev *dev, enum nl80211_band band)
+ 			mt76_wr(dev, MT_TX_ALC_CFG_2, 0x1b0f0400);
+ 			mt76_wr(dev, MT_TX_ALC_CFG_3, 0x1b0f0476);
+ 		}
+-		mt76_wr(dev, MT_TX_ALC_CFG_4, 0);
+ 
+ 		if (mt76x2_ext_pa_enabled(dev, band))
+ 			pa_mode_adj = 0x04000000;
 -- 
-2.7.4
+2.16.3
