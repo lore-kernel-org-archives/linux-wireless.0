@@ -1,60 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:23196 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752406AbeDLII5 (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:33003 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932089AbeDCLYT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 04:08:57 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 04/10] wil6210: fix call to wil6210_disconnect during unload
-Date: Thu, 12 Apr 2018 11:08:40 +0300
-Message-Id: <1523520526-24997-5-git-send-email-merez@codeaurora.org> (sfid-20180412_100920_049496_63406279)
-In-Reply-To: <1523520526-24997-1-git-send-email-merez@codeaurora.org>
-References: <1523520526-24997-1-git-send-email-merez@codeaurora.org>
+        Tue, 3 Apr 2018 07:24:19 -0400
+Received: by mail-wm0-f67.google.com with SMTP id o23so15958260wmf.0
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Apr 2018 04:24:19 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: add support for BCM4366E chipset
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <1521734286-16293-1-git-send-email-dan.haab@luxul.com>
+ <5AB4C986.1090709@broadcom.com>
+ <CACna6rzfCA3VyiG2bCNY5eHRo9LGsvNa5Tmb23gyDeFBJHcQZg@mail.gmail.com>
+ <5AC339B0.6070408@broadcom.com>
+ <CACna6rx+2i+P+F2XRNRm7DrxaiXsoABWARR_XV4rdBXBUFO3bw@mail.gmail.com>
+Cc: Dan Haab <riproute@gmail.com>, Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Double Lo <double.lo@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com, Dan Haab <dhaab@luxul.com>,
+        Dan Haab <dan.haab@luxul.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AC36460.7080902@broadcom.com> (sfid-20180403_132423_197003_97144522)
+Date: Tue, 3 Apr 2018 13:24:16 +0200
+MIME-Version: 1.0
+In-Reply-To: <CACna6rx+2i+P+F2XRNRm7DrxaiXsoABWARR_XV4rdBXBUFO3bw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <liord@codeaurora.org>
+On 4/3/2018 12:17 PM, Rafał Miłecki wrote:
+> On 3 April 2018 at 10:22, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
 
-Move the call to wil6210_disconnect so it will be called
-before unregister_netdevice. This is because it calls
-netif_carrier_off which is forbidden to call on an
-unregistered net device. Calling netif_carrier_off can
-add a link watch event which might be handled after
-net device was freed, causing a kernel oops.
+[...]
 
-Signed-off-by: Lior David <liord@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/netdev.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+>>
+>>
+>> My first reaction to this email needed to some cooldown time, but managed to
+>> swallow it.
+>
+> I'm sorry you keep reacting to my e-mails/patches that way. I can't
+> see how my e-mail was offensive in any way. I assure I didn't mean it
+> to be.
 
-diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
-index 05e9408..eb6c14ed 100644
---- a/drivers/net/wireless/ath/wil6210/netdev.c
-+++ b/drivers/net/wireless/ath/wil6210/netdev.c
-@@ -457,16 +457,16 @@ void wil_vif_remove(struct wil6210_priv *wil, u8 mid)
- 		return;
- 	}
- 
-+	mutex_lock(&wil->mutex);
-+	wil6210_disconnect(vif, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
-+	mutex_unlock(&wil->mutex);
-+
- 	ndev = vif_to_ndev(vif);
- 	/* during unregister_netdevice cfg80211_leave may perform operations
- 	 * such as stop AP, disconnect, so we only clear the VIF afterwards
- 	 */
- 	unregister_netdevice(ndev);
- 
--	mutex_lock(&wil->mutex);
--	wil6210_disconnect(vif, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
--	mutex_unlock(&wil->mutex);
--
- 	if (any_active && vif->mid != 0)
- 		wmi_port_delete(wil, vif->mid);
- 
--- 
-1.9.1
+I can not really say what it is. Anyway it is my fault and have to work 
+on it.
+
+[...]
+
+>> I actually had a couple of issues with the patch and did not
+>> want to waste Dan's time when there was a patch ready. I did not want to add
+>> another device because we are still in the process of releasing the firmware
+>> for it. Fiddling with radar detection causing the delay of that.
+>
+> It's something that I think was never a problem in the past. There is
+> e.g. support for 4366c0 support in the brcmfmac without
+> brcmfmac4366c-pcie.bin officially released.
+
+My rule of thumb is to get the firmware released before/when the driver 
+patch hits mainline. However, sometimes it blows up in my face. Like 
+with the 4366c0. We had to add a new feature to the firmware to get an 
+ok, which caused the delay. Hopefully, I can get it out soon.
+
+Regards,
+Arend
