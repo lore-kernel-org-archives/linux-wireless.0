@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57606 "EHLO mail.kernel.org"
+Received: from mail.bugwerft.de ([46.23.86.59]:44780 "EHLO mail.bugwerft.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755153AbeDPN64 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 09:58:56 -0400
-Received: from mail-qt0-f175.google.com (mail-qt0-f175.google.com [209.85.216.175])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7C5DF217DF
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 13:58:55 +0000 (UTC)
-Received: by mail-qt0-f175.google.com with SMTP id l8so11539151qtp.6
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 06:58:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1523269296-29900-1-git-send-email-merez@codeaurora.org>
-References: <1523269296-29900-1-git-send-email-merez@codeaurora.org>
-From: Josh Boyer <jwboyer@kernel.org>
-Date: Mon, 16 Apr 2018 09:58:54 -0400
-Message-ID: <CA+5PVA7E4r7Dx2kKe15trmS=7iuNvbjcF8LutfmTw10gLVMn-A@mail.gmail.com> (sfid-20180416_155858_869525_91D10CC8)
-Subject: Re: [PATCH] linux-firmware: update wil6210 firmware to 5.2.0.18
-To: Maya Erez <merez@codeaurora.org>
-Cc: Linux Firmware <linux-firmware@kernel.org>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        wil6210@qti.qualcomm.com
-Content-Type: text/plain; charset="UTF-8"
+        id S1751414AbeDCQwC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Apr 2018 12:52:02 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
+        loic.poulain@linaro.org, rfried@codeaurora.org,
+        bjorn.andersson@linaro.org, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH 1/3] wcn36xx: check for DMA mapping errors in wcn36xx_dxe_tx_frame()
+Date: Tue,  3 Apr 2018 18:51:52 +0200
+Message-Id: <20180403165154.18775-1-daniel@zonque.org> (sfid-20180403_185209_819181_D93AF25A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 9, 2018 at 6:21 AM, Maya Erez <merez@codeaurora.org> wrote:
-> This is the latest firmware from wil6210 5.2 firmware branch.
->
-> Signed-off-by: Maya Erez <merez@codeaurora.org>
-> ---
->  WHENCE      |   2 +-
->  wil6210.brd | Bin 3588 -> 3588 bytes
->  wil6210.fw  | Bin 350748 -> 400364 bytes
->  3 files changed, 1 insertion(+), 1 deletion(-)
+Bail out if the mapping fails. Even though this hasn't occured during
+tests, this unlikely case should still be handled.
 
-Applied and pushed out.  Thanks.
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+---
+ drivers/net/wireless/ath/wcn36xx/dxe.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-josh
+diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
+index 6e9a3583c447..e8ad8f989ccd 100644
+--- a/drivers/net/wireless/ath/wcn36xx/dxe.c
++++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
+@@ -707,6 +707,11 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
+ 					  ctl->skb->data,
+ 					  ctl->skb->len,
+ 					  DMA_TO_DEVICE);
++	if (dma_mapping_error(wcn->dev, desc->src_addr_l)) {
++		dev_err(wcn->dev, "unable to DMA map src_addr_l\n");
++		ret = -ENOMEM;
++		goto unlock;
++	}
+ 
+ 	desc->dst_addr_l = ch->dxe_wq;
+ 	desc->fr_len = ctl->skb->len;
+-- 
+2.14.3
