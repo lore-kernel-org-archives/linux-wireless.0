@@ -1,73 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:34644 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753403AbeDZJoH (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:36866 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754899AbeDCHyQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Apr 2018 05:44:07 -0400
-From: s.gottschall@dd-wrt.com
-To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Subject: [PATCH v1] ath10k: fix band_center_freq handling for VHT160 in recent firmwares
-Date: Thu, 26 Apr 2018 11:43:57 +0200
-Message-Id: <20180426094357.24358-1-s.gottschall@dd-wrt.com> (sfid-20180426_114411_950628_55FA3950)
+        Tue, 3 Apr 2018 03:54:16 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 17/17] rtlwifi: add halmac to Makefile and Kconfig
+Date: Tue, 3 Apr 2018 15:53:32 +0800
+Message-ID: <20180403075332.3344-18-pkshih@realtek.com> (sfid-20180403_095420_729399_AF72B9FE)
+In-Reply-To: <20180403075332.3344-1-pkshih@realtek.com>
+References: <20180403075332.3344-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-starting with firmware 10.4.3.4.x series QCA changed the handling of the channel property band_center_freq1 and band_center_freq2 in vht160 operation mode
-likelly for backward compatiblity with vht80 only capable clients.
-this patch adjusts the handling to get vht160 to work again with official qca firmwares newer than 3.3
-consider that this patch will not work with older firmwares anymore. to avoid undefined behaviour this we disable vht160 capability for outdated firmwares
+Add halmac to Makefile and Kconfig, so we can build this module if 8822BE
+is selected.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |  7 -------
- drivers/net/wireless/ath/ath10k/wmi.c | 11 ++++++++---
- 2 files changed, 8 insertions(+), 10 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/Kconfig       |  5 ++++
+ drivers/net/wireless/realtek/rtlwifi/Makefile      |  1 +
+ .../net/wireless/realtek/rtlwifi/halmac/Makefile   | 29 ++++++++++++++++++++++
+ 3 files changed, 35 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/Makefile
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 5be6386ede8f..d1239d40ac19 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4449,13 +4449,6 @@ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
- 		vht_cap.cap |= val;
- 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/Kconfig b/drivers/net/wireless/realtek/rtlwifi/Kconfig
+index 73067cac289c..d9aba8fed151 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/Kconfig
++++ b/drivers/net/wireless/realtek/rtlwifi/Kconfig
+@@ -151,4 +151,9 @@ config RTLBTCOEXIST
+ 	depends on RTL8723AE || RTL8723BE || RTL8821AE || RTL8192EE
+ 	default y
  
--	/* Currently the firmware seems to be buggy, don't enable 80+80
--	 * mode until that's resolved.
--	 */
--	if ((ar->vht_cap_info & IEEE80211_VHT_CAP_SHORT_GI_160) &&
--	    (ar->vht_cap_info & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK) == 0)
--		vht_cap.cap |= IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ;
--
- 	mcs_map = 0;
- 	for (i = 0; i < 8; i++) {
- 		if ((i < ar->num_rf_chains) && (ar->cfg_tx_chainmask & BIT(i)))
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 2c36256a441d..d78b8857a513 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1671,13 +1671,18 @@ void ath10k_wmi_put_wmi_channel(struct wmi_channel *ch,
- 		flags |= WMI_CHAN_FLAG_HT40_PLUS;
- 	if (arg->chan_radar)
- 		flags |= WMI_CHAN_FLAG_DFS;
--
-+	ch->band_center_freq2 = 0;
- 	ch->mhz = __cpu_to_le32(arg->freq);
- 	ch->band_center_freq1 = __cpu_to_le32(arg->band_center_freq1);
- 	if (arg->mode == MODE_11AC_VHT80_80)
- 		ch->band_center_freq2 = __cpu_to_le32(arg->band_center_freq2);
--	else
--		ch->band_center_freq2 = 0;
-+	if (arg->mode == MODE_11AC_VHT160)  {
-+		if (arg->freq < arg->band_center_freq1)
-+			ch->band_center_freq1 = __cpu_to_le32(arg->band_center_freq1 - 40);
-+		else
-+			ch->band_center_freq1 = __cpu_to_le32(arg->band_center_freq1 + 40);		
-+		ch->band_center_freq2 = __cpu_to_le32(arg->band_center_freq1);
-+	}
- 	ch->min_power = arg->min_power;
- 	ch->max_power = arg->max_power;
- 	ch->reg_power = arg->max_reg_power;
++config RTLHALMAC
++	tristate
++	depends on RTL8822BE
++	default y
++
+ endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/Makefile b/drivers/net/wireless/realtek/rtlwifi/Makefile
+index 09c30e428375..a30a73c351d8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/Makefile
++++ b/drivers/net/wireless/realtek/rtlwifi/Makefile
+@@ -28,6 +28,7 @@ obj-$(CONFIG_RTL8723AE)		+= rtl8723ae/
+ obj-$(CONFIG_RTL8723BE)		+= rtl8723be/
+ obj-$(CONFIG_RTL8188EE)		+= rtl8188ee/
+ obj-$(CONFIG_RTLBTCOEXIST)	+= btcoexist/
++obj-$(CONFIG_RTLHALMAC)		+= halmac/
+ obj-$(CONFIG_RTL8723_COMMON)	+= rtl8723com/
+ obj-$(CONFIG_RTL8821AE)		+= rtl8821ae/
+ obj-$(CONFIG_RTL8192EE)		+= rtl8192ee/
+diff --git a/drivers/net/wireless/realtek/rtlwifi/halmac/Makefile b/drivers/net/wireless/realtek/rtlwifi/halmac/Makefile
+new file mode 100644
+index 000000000000..41c1ae7e5e53
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtlwifi/halmac/Makefile
+@@ -0,0 +1,29 @@
++
++
++halmac-objs := \
++	halmac_api.o	\
++	halmac_88xx/halmac_bb_rf_88xx.o	\
++	halmac_88xx/halmac_efuse_88xx.o	\
++	halmac_88xx/halmac_gpio_88xx.o	\
++	halmac_88xx/halmac_pcie_88xx.o	\
++	halmac_88xx/halmac_sdio_88xx.o	\
++	halmac_88xx/halmac_usb_88xx.o	\
++	halmac_88xx/halmac_cfg_wmac_88xx.o	\
++	halmac_88xx/halmac_flash_88xx.o	\
++	halmac_88xx/halmac_init_88xx.o	\
++	halmac_88xx/halmac_common_88xx.o	\
++	halmac_88xx/halmac_fw_88xx.o	\
++	halmac_88xx/halmac_mimo_88xx.o	\
++	halmac_88xx/halmac_8822b/halmac_gpio_8822b.o	\
++	halmac_88xx/halmac_8822b/halmac_pcie_8822b.o	\
++	halmac_88xx/halmac_8822b/halmac_sdio_8822b.o	\
++	halmac_88xx/halmac_8822b/halmac_usb_8822b.o	\
++	halmac_88xx/halmac_8822b/halmac_pwr_seq_8822b.o	\
++	halmac_88xx/halmac_8822b/halmac_common_8822b.o	\
++	halmac_88xx/halmac_8822b/halmac_cfg_wmac_8822b.o	\
++	halmac_88xx/halmac_8822b/halmac_phy_8822b.o	\
++	halmac_88xx/halmac_8822b/halmac_init_8822b.o	\
++	rtl_halmac.o
++
++
++obj-m = halmac.o
 -- 
-2.14.1
+2.15.1
