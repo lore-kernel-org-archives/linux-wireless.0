@@ -1,45 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:64459 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753878AbeDRLko (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:57916 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754926AbeDCIW3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 07:40:44 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 09/22] staging: wilc1000: rename WID_LOGTerminal_Switch to avoid camelCase
-Date: Wed, 18 Apr 2018 17:09:11 +0530
-Message-ID: <1524051564-15497-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180418_134049_215160_CE2DE7E2)
-In-Reply-To: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 3 Apr 2018 04:22:29 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Dan Haab <dhaab@luxul.com>,
+        Dan Haab <dan.haab@luxul.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH] brcmfmac: add support for BCM4366E chipset
+Date: Tue,  3 Apr 2018 10:21:56 +0200
+Message-Id: <1522743716-13628-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180403_102245_953550_578DC5CA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix 'Avoid camelCase' issue found by checkpatch.pl script.
+From: Dan Haab <dhaab@luxul.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+BCM4366E is a wireless chipset with a BCM43664 ChipCommon. It's
+supported by the same firmware as 4366c0.
+
+Signed-off-by: Dan Haab <dan.haab@luxul.com>
+[arend: rebase patch and remove unnecessary definition]
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/staging/wilc1000/wilc_wlan_if.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c       | 1 +
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c       | 1 +
+ drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 1 +
+ 3 files changed, 3 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index e186509..f129d81 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -741,7 +741,7 @@ enum {
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+index 3b829fe..927d62b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+@@ -689,6 +689,7 @@ static u32 brcmf_chip_tcm_rambase(struct brcmf_chip_priv *ci)
+ 	case BRCM_CC_43525_CHIP_ID:
+ 	case BRCM_CC_4365_CHIP_ID:
+ 	case BRCM_CC_4366_CHIP_ID:
++	case BRCM_CC_43664_CHIP_ID:
+ 		return 0x200000;
+ 	case CY_CC_4373_CHIP_ID:
+ 		return 0x160000;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 091c191..6e25ff9 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -75,6 +75,7 @@ enum brcmf_pcie_state {
+ 	BRCMF_FW_ENTRY(BRCM_CC_4365_CHIP_ID, 0xFFFFFFF0, 4365C),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4366_CHIP_ID, 0x0000000F, 4366B),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4366_CHIP_ID, 0xFFFFFFF0, 4366C),
++	BRCMF_FW_ENTRY(BRCM_CC_43664_CHIP_ID, 0xFFFFFFF0, 4366C),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4371_CHIP_ID, 0xFFFFFFFF, 4371),
+ };
  
- 	WID_DEL_BEACON			= 0x00CA,
+diff --git a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
+index 57544a3..686f7a8 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
++++ b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
+@@ -57,6 +57,7 @@
+ #define BRCM_CC_43602_CHIP_ID		43602
+ #define BRCM_CC_4365_CHIP_ID		0x4365
+ #define BRCM_CC_4366_CHIP_ID		0x4366
++#define BRCM_CC_43664_CHIP_ID		43664
+ #define BRCM_CC_4371_CHIP_ID		0x4371
+ #define CY_CC_4373_CHIP_ID		0x4373
  
--	WID_LOGTerminal_Switch		= 0x00CD,
-+	WID_LOG_TERMINAL_SWITCH		= 0x00CD,
- 	WID_TX_POWER			= 0x00CE,
- 	/*  EMAC Short WID list */
- 	/*  RTS Threshold */
 -- 
-2.7.4
+1.9.1
