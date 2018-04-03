@@ -1,124 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:2854 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755619AbeDWQfQ (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:53825 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754768AbeDCH2q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 12:35:16 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [RESEND 12/33] staging: wilc1000: rename WILC_WFI_wep_key & WILC_WFI_wep_key_len
-Date: Mon, 23 Apr 2018 22:03:14 +0530
-Message-ID: <1524501215-4963-13-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183523_161482_F194AAFE)
-In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 3 Apr 2018 03:28:46 -0400
+Received: by mail-wm0-f50.google.com with SMTP id p9so30890618wmc.3
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Apr 2018 00:28:46 -0700 (PDT)
+Subject: Re: brcmfmac signal/interference issues
+To: Daniel Drake <drake@endlessm.com>
+References: <CAD8Lp46dbsn2qyzYE6N-6quJXc2xUeO4Fi=UhZz=P2Q=G7A41A@mail.gmail.com>
+ <5A8D36B7.1010201@broadcom.com>
+ <CAD8Lp44MdsO_F0xEYhdjF=hAj4h26561VQJepubEEmtdWoQ-vA@mail.gmail.com>
+ <CAD8Lp44Y-sNqm8_5=1pvBy-3zvVVQSCQ+Qye-2xP8vGmkvrjng@mail.gmail.com>
+ <5A8FE4D9.80608@broadcom.com>
+ <CAD8Lp44Q0=jS0gqnt1mMfjRe6sTx3Z7n9=iGvk3VFGK2549V7g@mail.gmail.com>
+ <5AA114A9.8050801@broadcom.com>
+ <CAD8Lp4713vwqFXiYK5fD+h_rTnMQCy-uCX54qn1m1+3o-+892g@mail.gmail.com>
+Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        chi-hsien.lin@cypress.com, Wright Feng <wright.feng@cypress.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Linux Upstreaming Team <linux@endlessm.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AC32D2E.8070601@broadcom.com> (sfid-20180403_092850_894406_5439BEDC)
+Date: Tue, 3 Apr 2018 09:28:46 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAD8Lp4713vwqFXiYK5fD+h_rTnMQCy-uCX54qn1m1+3o-+892g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to use lower case for variable name as per linux coding
-style.
+On 3/28/2018 8:43 PM, Daniel Drake wrote:
+> On Thu, Mar 8, 2018 at 4:47 AM, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>>> 43455c0-roml/sdio-ag-ndis-vista-pktfilter-d0c-pno-aoe-p2p-dhdoid-ndoe-gtkoe-mfp-proptxstatus-dmatxrc-keepalive-ap-ampduretry-pclose-txbf
+>>>
+>>> Yes, ndis. So no easy way to run the same firmware on the 2 OSes.
+>>
+>> Indeed. I could try building nearly same firmware target. Can you provide
+>> the firmware version as well.
+>
+> Full string is:
+> 43455c0-roml/sdio-ag-ndis-vista-pktfilter-d0c-pno-aoe-p2p-dhdoid-ndoe-gtkoe-mfp-proptxstatus-dmatxrc-keepalive-ap-ampduretry-pclose-txbf
+> Version: 7.45.87.0 CRC: 7cb2470e Date: Thu 2016-04-21 22:31:44 PDT
+> Ucode Ver: 1043.2070 FWID: 01-f68ec182
+>
+> If you could build that config but for Linux instead of ndis I would
+> love to try it.
+>
+> Also, here is the string for the current one in linux-firmware:
+> 43455c0-roml/sdio-ag-p2p-pno-aoe-pktfilter-keepalive-mchan-pktctx-proptxstatus-ampduhostreorder-lpc-pwropt-txbf-wnm-okc-ccx-ltecx-wfds-wl11u-mfp-tdls-ve
+> Version: 7.45.18.0 CRC: d7226371 Date: Sun 2015-03-01 07:31:57 PST
+> Ucode Ver: 1026.2 FWID: 01-6a2c8ad4
+>
+> I note that the Version and UcodeVer in the linux-firmware version are
+> lower than the windows one. If it's possible to also rebuild the
+> linux-firmware config but with those newer versions (or even the
+> latest, if there is something newer), I will test that too.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 30 +++++++++++------------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  4 +--
- 2 files changed, 17 insertions(+), 17 deletions(-)
+Thanks for the version info. I will look if we could use similar version 
+as window version, but typically they spin from different branches.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index d3818af..963a0e1 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -725,15 +725,15 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 		return ret;
- 	}
- 
--	memset(priv->WILC_WFI_wep_key, 0, sizeof(priv->WILC_WFI_wep_key));
--	memset(priv->WILC_WFI_wep_key_len, 0, sizeof(priv->WILC_WFI_wep_key_len));
-+	memset(priv->wep_key, 0, sizeof(priv->wep_key));
-+	memset(priv->wep_key_len, 0, sizeof(priv->wep_key_len));
- 
- 	if (sme->crypto.cipher_group != NO_ENCRYPT) {
- 		if (sme->crypto.cipher_group == WLAN_CIPHER_SUITE_WEP40) {
- 			u8security = ENCRYPT_ENABLED | WEP;
- 
--			priv->WILC_WFI_wep_key_len[sme->key_idx] = sme->key_len;
--			memcpy(priv->WILC_WFI_wep_key[sme->key_idx], sme->key, sme->key_len);
-+			priv->wep_key_len[sme->key_idx] = sme->key_len;
-+			memcpy(priv->wep_key[sme->key_idx], sme->key, sme->key_len);
- 
- 			wilc_set_wep_default_keyid(vif, sme->key_idx);
- 			wilc_add_wep_key_bss_sta(vif, sme->key, sme->key_len,
-@@ -741,8 +741,8 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 		} else if (sme->crypto.cipher_group == WLAN_CIPHER_SUITE_WEP104)   {
- 			u8security = ENCRYPT_ENABLED | WEP | WEP_EXTENDED;
- 
--			priv->WILC_WFI_wep_key_len[sme->key_idx] = sme->key_len;
--			memcpy(priv->WILC_WFI_wep_key[sme->key_idx], sme->key, sme->key_len);
-+			priv->wep_key_len[sme->key_idx] = sme->key_len;
-+			memcpy(priv->wep_key[sme->key_idx], sme->key, sme->key_len);
- 
- 			wilc_set_wep_default_keyid(vif, sme->key_idx);
- 			wilc_add_wep_key_bss_sta(vif, sme->key, sme->key_len,
-@@ -883,8 +883,8 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 	case WLAN_CIPHER_SUITE_WEP40:
- 	case WLAN_CIPHER_SUITE_WEP104:
- 		if (priv->wdev->iftype == NL80211_IFTYPE_AP) {
--			priv->WILC_WFI_wep_key_len[key_index] = params->key_len;
--			memcpy(priv->WILC_WFI_wep_key[key_index], params->key, params->key_len);
-+			priv->wep_key_len[key_index] = params->key_len;
-+			memcpy(priv->wep_key[key_index], params->key, params->key_len);
- 
- 			auth_type = OPEN_SYSTEM;
- 
-@@ -898,9 +898,9 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 						u8mode, auth_type);
- 			break;
- 		}
--		if (memcmp(params->key, priv->WILC_WFI_wep_key[key_index], params->key_len)) {
--			priv->WILC_WFI_wep_key_len[key_index] = params->key_len;
--			memcpy(priv->WILC_WFI_wep_key[key_index], params->key, params->key_len);
-+		if (memcmp(params->key, priv->wep_key[key_index], params->key_len)) {
-+			priv->wep_key_len[key_index] = params->key_len;
-+			memcpy(priv->wep_key[key_index], params->key, params->key_len);
- 
- 			wilc_add_wep_key_bss_sta(vif, params->key,
- 						 params->key_len, key_index);
-@@ -1059,10 +1059,10 @@ static int del_key(struct wiphy *wiphy, struct net_device *netdev,
- 	}
- 
- 	if (key_index >= 0 && key_index <= 3) {
--		if (priv->WILC_WFI_wep_key_len[key_index]) {
--			memset(priv->WILC_WFI_wep_key[key_index], 0,
--			       priv->WILC_WFI_wep_key_len[key_index]);
--			priv->WILC_WFI_wep_key_len[key_index] = 0;
-+		if (priv->wep_key_len[key_index]) {
-+			memset(priv->wep_key[key_index], 0,
-+			       priv->wep_key_len[key_index]);
-+			priv->wep_key_len[key_index] = 0;
- 			wilc_remove_wep_key(vif, key_index);
- 		}
- 	} else {
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index d62c4f1..bd0c98a 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -124,8 +124,8 @@ struct wilc_priv {
- 	struct host_if_drv *hif_drv;
- 	struct host_if_pmkid_attr pmkid_list;
- 	struct WILC_WFI_stats netstats;
--	u8 WILC_WFI_wep_key[4][WLAN_KEY_LEN_WEP104];
--	u8 WILC_WFI_wep_key_len[4];
-+	u8 wep_key[4][WLAN_KEY_LEN_WEP104];
-+	u8 wep_key_len[4];
- 	/* The real interface that the monitor is on */
- 	struct net_device *real_ndev;
- 	struct wilc_wfi_key *wilc_gtk[MAX_NUM_STA];
--- 
-2.7.4
+>> So it picks up something in the PC. Some sources of interference that I have
+>> seen before are USB3 and HDMI. Maybe try to shield those if present and see
+>> if that helps. The nvram contains sensitivity parameters, but as you stated
+>> you are using the same nvram for windows and linux for now we can rule it
+>> out for debugging the issue.
+>
+> Yeah, there are some options here which we can try to explore. What's
+> still unknown though is why windows appears immune to this exact same
+> interference. A software fix would be much more convenient... :)
+
+Obviously ;-) And the immunity seems to justify that path.
+
+Regards,
+Arend
