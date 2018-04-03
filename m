@@ -1,56 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga12.intel.com ([192.55.52.136]:23047 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750873AbeDNGTu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 14 Apr 2018 02:19:50 -0400
-Message-ID: <68a0f81d7212a652def13b76e250b88872686bb7.camel@intel.com> (sfid-20180414_082127_956084_05BFABB3)
-Subject: Re: [PATCH 01/25] iwlwifi: mvm: add traffic condition monitoring
- (TCM)
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sat, 14 Apr 2018 09:19:47 +0300
-In-Reply-To: <20180413124256.21769-2-luca@coelho.fi>
-References: <20180413124256.21769-1-luca@coelho.fi>
-         <20180413124256.21769-2-luca@coelho.fi>
+Received: from s3.sipsolutions.net ([144.76.63.242]:53868 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932101AbeDCMeK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Apr 2018 08:34:10 -0400
+Message-ID: <1522758845.2961.3.camel@sipsolutions.net> (sfid-20180403_143438_119148_64DE2FD1)
+Subject: Re: WARNING in add_uevent_var
+From: Johannes Berg <johannes@sipsolutions.net>
+To: syzbot <syzbot+230d9e642a85d3fec29c@syzkaller.appspotmail.com>,
+        davem@davemloft.net, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        syzkaller-bugs@googlegroups.com
+Date: Tue, 03 Apr 2018 14:34:05 +0200
+In-Reply-To: <000000000000a010b80568d75018@google.com> (sfid-20180402_080105_275284_9D0A53D3)
+References: <000000000000a010b80568d75018@google.com>
+         (sfid-20180402_080105_275284_9D0A53D3)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2018-04-13 at 15:42 +0300, Luca Coelho wrote:
-> From: Luca Coelho <luciano.coelho@intel.com>
+On Sun, 2018-04-01 at 23:01 -0700, syzbot wrote:
+
+> So far this crash happened 5 times on net-next, upstream.
+> C reproducer: https://syzkaller.appspot.com/x/repro.c?id=6614377067184128
 > 
-> Traffic condition monitor gathers data about the traffic load and
-> other conditions and can be used to make decisions regarding latency,
-> throughput etc.  This patch introduces the code and data structures
-> to
-> collect this data for future use.
-> 
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> ---
 
-[...]
+Huh, fun. Looks like you're basically creating a new HWSIM radio with an
+insanely long name (4k!) and nothing stops you, until we try to generate
+an rfkill instance which sends a uevent and only has a 2k buffer for the
+environment variables, where we put the name ...
 
-> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-> b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+But yeah, we should probably limit the phy name to something sane, I'll
+pick 128 and send a patch.
 
-[...]
-
-> @@ -1906,6 +1956,16 @@ bool iwl_mvm_is_vif_assoc(struct iwl_mvm
-> *mvm);
->  
->  void iwl_mvm_inactivity_check(struct iwl_mvm *mvm);
->  
-> +#define MVM_TCM_PERIOD_MSEC 500
-> +#define MVM_TCM_PERIOD (HZ * MVM_TCM_PERIOD_MSEC / 1000)
-> +#define MVM_LL_PERIOD (10 * HZ)
-> +void iwl_mvm_send_tcm_event(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
-
-I accidentally left this function in, but it only sends a vendor
-command event in our internal driver, so it's undefined in the mainline
-(reported by kbuildbot).  I'll send v2.
-
---
-Cheers,
-Luca.
+johannes
