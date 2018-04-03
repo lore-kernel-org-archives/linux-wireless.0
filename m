@@ -1,56 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga17.intel.com ([192.55.52.151]:11051 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751353AbeDWGUR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 02:20:17 -0400
-Message-ID: <4777fb12da0a71e030cc7b0cf47d5391be2a3efd.camel@intel.com> (sfid-20180423_082032_345398_EC117856)
-Subject: Re: New sparse warning from min_t(): expression using sizeof(void)
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Joey Pabalinas <joeypabalinas@gmail.com>
-Cc: Kees Cook <keescook@chromium.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Mon, 23 Apr 2018 09:20:14 +0300
-In-Reply-To: <87604ley7t.fsf@kamboji.qca.qualcomm.com>
-References: <87a7txf15w.fsf@kamboji.qca.qualcomm.com>
-         <20180421082444.i4eyw2zxl6tipt6i@gmail.com>
-         <87604ley7t.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:48262 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754813AbeDCJ6k (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Apr 2018 05:58:40 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Daniel Mack <daniel@zonque.org>
+Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+        rfried@codeaurora.org, bjorn.andersson@linaro.org
+Subject: Re: [PATCH] wcn36xx: allocate skbs with GFP_KERNEL during init
+References: <20180319063002.24665-1-daniel@zonque.org>
+        <0dafe1f7-6f79-faa7-aff9-3eca532d237e@zonque.org>
+Date: Tue, 03 Apr 2018 12:58:35 +0300
+In-Reply-To: <0dafe1f7-6f79-faa7-aff9-3eca532d237e@zonque.org> (Daniel Mack's
+        message of "Thu, 29 Mar 2018 20:04:10 +0200")
+Message-ID: <87sh8cipbo.fsf@kamboji.qca.qualcomm.com> (sfid-20180403_115847_831076_C7390194)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2018-04-21 at 11:54 +0300, Kalle Valo wrote:
-> Joey Pabalinas <joeypabalinas@gmail.com> writes:
-> 
-> > On Sat, Apr 21, 2018 at 10:50:51AM +0300, Kalle Valo wrote:
-> > > Is there any way to fix it? With ath10k I use sparse a lot and
-> > > because
-> > > of these warnings sparse is now very annoying to use.
-> > 
-> > I submitted a sparse patch [1] for this not too long ago, but in
-> > the
-> > meantime you can still curl the patch [2] and apply it directly to
-> > the v0.5.2 release to suppress the deluge of warnings (-Wpointer-
-> > arith
-> > is off by defaultl so no need to change any of you configurations).
-> > 
-> > [1] https://lkml.org/lkml/2018/4/10/923
-> > [2] https://patchwork.kernel.org/patch/10334353/raw/
-> 
-> Perfect, thanks. Unfortunatelly I need to catch a boat and I can't
-> test
-> it right now, but I'll do that on Monday.
+Daniel Mack <daniel@zonque.org> writes:
 
-Thanks, this solves the problem for me, but I'm still getting a lot of
-this:
+> On Monday, March 19, 2018 07:30 AM, Daniel Mack wrote:
+>> GFP_ATOMIC should only be used when the allocation is done from atomic
+>> context. Introduce a new flag to wcn36xx_dxe_fill_skb() and use GFP_KERNEL
+>> when pre-allocating buffers during init.
+>> 
+>> This doesn't fix an issue that was observed in the wild, but it reduces
+>> the chance of failed allocations under memory pressure.
+>> 
+>> Signed-off-by: Daniel Mack <daniel@zonque.org>
+>
+> Any opinion about this one?
 
-./include/linux/mm.h:533:24: warning: constant 0xffffc90000000000 is so big it is unsigned long
+It's better that you check the state from patchwork, less mail to the
+maintainers:
 
-Is there a patch in sparse to solve this one as well? Or is this an
-actual error that must be fixed in mm.h?
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#checking_state_of_patches_from_patchwork
 
---
-Cheers,
-Luca.
+-- 
+Kalle Valo
