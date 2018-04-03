@@ -1,70 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:55023 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754277AbeDZKOU (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:52329 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751482AbeDCOwi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Apr 2018 06:14:20 -0400
-From: "Reizer, Eyal" <eyalr@ti.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: Eyal Reizer <eyalreizer@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "robh@kernel.org" <robh@kernel.org>,
-        "sre@kernel.org" <sre@kernel.org>,
-        "tony@atomide.com" <tony@atomide.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [EXTERNAL] Re: [PATCH v2] wlcore: sdio: allow pm to handle sdio
- power
-Date: Thu, 26 Apr 2018 10:14:13 +0000
-Message-ID: <d6699a26485443bf8a9a798ddca05e6f@ti.com> (sfid-20180426_121425_215368_95DFEC22)
-References: <1524721631-5983-1-git-send-email-eyalr@ti.com>
-        <87po2m7573.fsf@kamboji.qca.qualcomm.com>
-        <4750eeeedcde47d39cd207a8c21ef802@ti.com>
- <87lgda71zl.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87lgda71zl.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Tue, 3 Apr 2018 10:52:38 -0400
+Received: by mail-wm0-f68.google.com with SMTP id g8so10402887wmd.2
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Apr 2018 07:52:37 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76x2: remove unnecessary MT_TX_ALC_CFG_4 configuration
+Date: Tue,  3 Apr 2018 16:52:15 +0200
+Message-Id: <b38ac7608bc8d7cba2a9b7178bd755fae0fc7c6b.1522766852.git.lorenzo.bianconi@redhat.com> (sfid-20180403_165249_405034_AC9111A9)
+In-Reply-To: <cover.1522766852.git.lorenzo.bianconi@redhat.com>
+References: <cover.1522766852.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->=20
-> >>
-> >> > pm_runtime handles sdio power on and power off transitions.
-> >> > An old workaround for trying to control the power explicitly from th=
-e
-> >> > driver was in fact causing failures on suspend/resume as the mmc lay=
-er
-> >> > already power the module on resume.
-> >> >
-> >> > In case of resume pm_runtime_get sync returns a positive device's
-> usage
-> >> > count causing the driver to try an re-initialize an already initiali=
-zed
-> >> > device. This was causing sdio bus failure on resume.
-> >> >
-> >> > Remove this manual power on/off sequence as it is in-fact not needed=
-.
-> >> >
-> >> > Signed-off-by: Eyal Reizer <eyalr@ti.com>
-> >> > Acked-by: Tony Lindgren <tony@atomide.com>
-> >>
-> >> No changelog.
-> >>
-> >>
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingp
-> >> atches#changelog_missing
-> >>
-> >> No need to resubmit because of this, I guess you just fixed the title
-> >> and added Tony's Acked-by?
-> >
-> > Yes, this is correct. No change in the actual patch hence there was no
-> change
-> > Log.
->=20
-> _Always_ include a change log, even if you didn't actually change
-> anything. Otherwise the maintainer has no clue what has changed and why
-> a new version was submitted.
->=20
-Understood. Thanks!
+Remove unnecessary MT_TX_ALC_CFG_4 configuration since register value
+has already set to 0 on 5GHz band
 
-BR,
-Eyal
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x2_phy.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
+index f28c55746cea..cbf185e9f707 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
+@@ -294,7 +294,6 @@ mt76x2_phy_set_txpower_regs(struct mt76x2_dev *dev, enum nl80211_band band)
+ 		} else {
+ 			mt76_wr(dev, MT_TX0_RF_GAIN_CORR, 0x383c023c);
+ 			mt76_wr(dev, MT_TX1_RF_GAIN_CORR, 0x24282e28);
+-			mt76_wr(dev, MT_TX_ALC_CFG_4, 0);
+ 		}
+ 	}
+ }
+-- 
+2.14.3
