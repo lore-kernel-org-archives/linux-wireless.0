@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:46692 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751602AbeD1WbL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 28 Apr 2018 18:31:11 -0400
-From: Colin King <colin.king@canonical.com>
-To: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] wireless: ipw2100: fix spelling mistake: "decsribed" -> "described"
-Date: Sat, 28 Apr 2018 23:31:08 +0100
-Message-Id: <20180428223108.20458-1-colin.king@canonical.com> (sfid-20180429_003133_988425_18922493)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from nbd.name ([46.4.11.11]:49820 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752639AbeDCTw6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Apr 2018 15:52:58 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 1/7] mt76: stop tx queues from the driver callback instead of common code
+Date: Tue,  3 Apr 2018 21:52:48 +0200
+Message-Id: <20180403195254.87700-1-nbd@nbd.name> (sfid-20180403_215303_795763_8C065383)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Allows the driver to control whether to send a BlockAckReq after waking
+up. MT76x2 needs this set to true, for MT7603 (to be submitted later)
+it needs to be false.
 
-Trivial fix to spelling mistake in comment and in the ord_data text
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/intel/ipw2x00/ipw2100.c | 2 +-
- drivers/net/wireless/intel/ipw2x00/ipw2100.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mac80211.c    | 6 ++----
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c | 1 +
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-index 236b52423506..7c4f550a1475 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-@@ -3732,7 +3732,7 @@ IPW2100_ORD(STAT_TX_HOST_REQUESTS, "requested Host Tx's (MSDU)"),
- 	    IPW2100_ORD(ASSOCIATED_AP_PTR,
- 				"0 if not associated, else pointer to AP table entry"),
- 	    IPW2100_ORD(AVAILABLE_AP_CNT,
--				"AP's decsribed in the AP table"),
-+				"AP's described in the AP table"),
- 	    IPW2100_ORD(AP_LIST_PTR, "Ptr to list of available APs"),
- 	    IPW2100_ORD(STAT_AP_ASSNS, "associations"),
- 	    IPW2100_ORD(STAT_ASSN_FAIL, "association failures"),
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.h b/drivers/net/wireless/intel/ipw2x00/ipw2100.h
-index 193947865efd..ce3e35f6b60f 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2100.h
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.h
-@@ -1009,7 +1009,7 @@ typedef enum _ORDINAL_TABLE_1 {	// NS - means Not Supported by FW
- 	IPW_ORD_STAT_PERCENT_RETRIES,	// current calculation of % missed tx retries
- 	IPW_ORD_ASSOCIATED_AP_PTR,	// If associated, this is ptr to the associated
- 	// AP table entry. set to 0 if not associated
--	IPW_ORD_AVAILABLE_AP_CNT,	// # of AP's decsribed in the AP table
-+	IPW_ORD_AVAILABLE_AP_CNT,	// # of AP's described in the AP table
- 	IPW_ORD_AP_LIST_PTR,	// Ptr to list of available APs
- 	IPW_ORD_STAT_AP_ASSNS,	// # of associations
- 	IPW_ORD_STAT_ASSN_FAIL,	// # of association failures
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index 4f30cdcd2b53..962ed8234065 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -541,12 +541,10 @@ mt76_check_ps(struct mt76_dev *dev, struct sk_buff *skb)
+ 	if (!!test_bit(MT_WCID_FLAG_PS, &wcid->flags) == ps)
+ 		return;
+ 
+-	if (ps) {
++	if (ps)
+ 		set_bit(MT_WCID_FLAG_PS, &wcid->flags);
+-		mt76_stop_tx_queues(dev, sta, true);
+-	} else {
++	else
+ 		clear_bit(MT_WCID_FLAG_PS, &wcid->flags);
+-	}
+ 
+ 	ieee80211_sta_ps_transition(sta, ps);
+ 	dev->drv->sta_ps(dev, sta, ps);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+index 73c127f92613..81c58f865c64 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+@@ -321,6 +321,7 @@ mt76x2_sta_ps(struct mt76_dev *mdev, struct ieee80211_sta *sta, bool ps)
+ 	struct mt76x2_dev *dev = container_of(mdev, struct mt76x2_dev, mt76);
+ 	int idx = msta->wcid.idx;
+ 
++	mt76_stop_tx_queues(&dev->mt76, sta, true);
+ 	mt76x2_mac_wcid_set_drop(dev, idx, ps);
+ }
+ 
 -- 
-2.17.0
+2.14.2
