@@ -1,154 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40874 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751212AbeDVI2D (ORCPT
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:46447 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752813AbeDCXhR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Apr 2018 04:28:03 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>, stable@vger.kernel.org
-Date: Sun, 22 Apr 2018 11:27:40 +0300
-Message-Id: <20180422082745.9743-8-luca@coelho.fi> (sfid-20180422_102809_459034_E6C7EAD3)
-In-Reply-To: <20180422082745.9743-1-luca@coelho.fi>
-References: <20180422082745.9743-1-luca@coelho.fi>
-Subject: [PATCH 07/12] iwlwifi: fw: harden page loading code
+        Tue, 3 Apr 2018 19:37:17 -0400
+Received: by mail-qt0-f193.google.com with SMTP id h4so21230670qtn.13
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Apr 2018 16:37:17 -0700 (PDT)
+From: Joao Dalben <jhdalben@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, lkcamp@lists.libreplanetbr.org,
+        Joao Dalben <jhdalben@gmail.com>
+Subject: [PATCH] staging: rtl8192e: Fixed coding style around a plus sign
+Date: Tue,  3 Apr 2018 20:36:43 -0300
+Message-Id: <20180403233643.9642-1-jhdalben@gmail.com> (sfid-20180404_013721_752017_7F11120E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Added blank spaces between a plus sign in order to standardize the coding
+style.
 
-The page loading code trusts the data provided in the firmware images
-a bit too much and may cause a buffer overflow or copy unknown data if
-the block sizes don't match what we expect.
-
-To prevent potential problems, harden the code by checking if the
-sizes we are copying are what we expect.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Joao Dalben <jhdalben@gmail.com>
 ---
- .../net/wireless/intel/iwlwifi/fw/paging.c    | 49 ++++++++++++++++---
- 1 file changed, 41 insertions(+), 8 deletions(-)
+ drivers/staging/rtl8192e/dot11d.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/paging.c b/drivers/net/wireless/intel/iwlwifi/fw/paging.c
-index 1fec8e3a6b35..6afcfd1f0eec 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/paging.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/paging.c
-@@ -8,6 +8,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018        Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,6 +31,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018        Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -163,7 +165,7 @@ static int iwl_alloc_fw_paging_mem(struct iwl_fw_runtime *fwrt,
- static int iwl_fill_paging_mem(struct iwl_fw_runtime *fwrt,
- 			       const struct fw_img *image)
- {
--	int sec_idx, idx;
-+	int sec_idx, idx, ret;
- 	u32 offset = 0;
+diff --git a/drivers/staging/rtl8192e/dot11d.c b/drivers/staging/rtl8192e/dot11d.c
+index 88f89d77b511..a1c096124683 100644
+--- a/drivers/staging/rtl8192e/dot11d.c
++++ b/drivers/staging/rtl8192e/dot11d.c
+@@ -50,7 +50,7 @@ void dot11d_init(struct rtllib_device *ieee)
  
- 	/*
-@@ -190,17 +192,23 @@ static int iwl_fill_paging_mem(struct iwl_fw_runtime *fwrt,
- 	 */
- 	if (sec_idx >= image->num_sec - 1) {
- 		IWL_ERR(fwrt, "Paging: Missing CSS and/or paging sections\n");
--		iwl_free_fw_paging(fwrt);
--		return -EINVAL;
-+		ret = -EINVAL;
-+		goto err;
- 	}
- 
- 	/* copy the CSS block to the dram */
- 	IWL_DEBUG_FW(fwrt, "Paging: load paging CSS to FW, sec = %d\n",
- 		     sec_idx);
- 
-+	if (image->sec[sec_idx].len > fwrt->fw_paging_db[0].fw_paging_size) {
-+		IWL_ERR(fwrt, "CSS block is larger than paging size\n");
-+		ret = -EINVAL;
-+		goto err;
-+	}
-+
- 	memcpy(page_address(fwrt->fw_paging_db[0].fw_paging_block),
- 	       image->sec[sec_idx].data,
--	       fwrt->fw_paging_db[0].fw_paging_size);
-+	       image->sec[sec_idx].len);
- 	dma_sync_single_for_device(fwrt->trans->dev,
- 				   fwrt->fw_paging_db[0].fw_paging_phys,
- 				   fwrt->fw_paging_db[0].fw_paging_size,
-@@ -221,6 +229,14 @@ static int iwl_fill_paging_mem(struct iwl_fw_runtime *fwrt,
- 	for (idx = 1; idx < fwrt->num_of_paging_blk; idx++) {
- 		struct iwl_fw_paging *block = &fwrt->fw_paging_db[idx];
- 
-+		if (block->fw_paging_size > image->sec[sec_idx].len - offset) {
-+			IWL_ERR(fwrt,
-+				"Paging: paging size is larger than remaining data in block %d\n",
-+				idx);
-+			ret = -EINVAL;
-+			goto err;
-+		}
-+
- 		memcpy(page_address(block->fw_paging_block),
- 		       image->sec[sec_idx].data + offset,
- 		       block->fw_paging_size);
-@@ -231,19 +247,32 @@ static int iwl_fill_paging_mem(struct iwl_fw_runtime *fwrt,
- 
- 		IWL_DEBUG_FW(fwrt,
- 			     "Paging: copied %d paging bytes to block %d\n",
--			     fwrt->fw_paging_db[idx].fw_paging_size,
--			     idx);
-+			     block->fw_paging_size, idx);
- 
--		offset += fwrt->fw_paging_db[idx].fw_paging_size;
-+		offset += block->fw_paging_size;
-+
-+		if (offset > image->sec[sec_idx].len) {
-+			IWL_ERR(fwrt,
-+				"Paging: offset goes over section size\n");
-+			ret = -EINVAL;
-+			goto err;
-+		}
- 	}
- 
- 	/* copy the last paging block */
- 	if (fwrt->num_of_pages_in_last_blk > 0) {
- 		struct iwl_fw_paging *block = &fwrt->fw_paging_db[idx];
- 
-+		if (image->sec[sec_idx].len - offset > block->fw_paging_size) {
-+			IWL_ERR(fwrt,
-+				"Paging: last block is larger than paging size\n");
-+			ret = -EINVAL;
-+			goto err;
-+		}
-+
- 		memcpy(page_address(block->fw_paging_block),
- 		       image->sec[sec_idx].data + offset,
--		       FW_PAGING_SIZE * fwrt->num_of_pages_in_last_blk);
-+		       image->sec[sec_idx].len - offset);
- 		dma_sync_single_for_device(fwrt->trans->dev,
- 					   block->fw_paging_phys,
- 					   block->fw_paging_size,
-@@ -255,6 +284,10 @@ static int iwl_fill_paging_mem(struct iwl_fw_runtime *fwrt,
- 	}
- 
- 	return 0;
-+
-+err:
-+	iwl_free_fw_paging(fwrt);
-+	return ret;
+ 	pDot11dInfo->State = DOT11D_STATE_NONE;
+ 	pDot11dInfo->CountryIeLen = 0;
+-	memset(pDot11dInfo->channel_map, 0, MAX_CHANNEL_NUMBER+1);
++	memset(pDot11dInfo->channel_map, 0, MAX_CHANNEL_NUMBER + 1);
+ 	memset(pDot11dInfo->MaxTxPwrDbmList, 0xFF, MAX_CHANNEL_NUMBER + 1);
+ 	RESET_CIE_WATCHDOG(ieee);
  }
- 
- static int iwl_save_fw_paging(struct iwl_fw_runtime *fwrt,
 -- 
-2.17.0
+2.11.0
