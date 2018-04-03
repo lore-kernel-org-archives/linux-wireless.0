@@ -1,90 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:51008 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751251AbeDDOzY (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:51576 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751178AbeDCOpj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Apr 2018 10:55:24 -0400
-MIME-Version: 1.0
-In-Reply-To: <CA+A7VXX+z8FrDhzW2BQ6AGMJ=_j_53wkUL_YNgkreEbWSh+jCw@mail.gmail.com>
-References: <CA+A7VXX+z8FrDhzW2BQ6AGMJ=_j_53wkUL_YNgkreEbWSh+jCw@mail.gmail.com>
-From: Steve deRosier <derosier@gmail.com>
-Date: Wed, 4 Apr 2018 07:54:42 -0700
-Message-ID: <CALLGbRJqE_ZGbT5w-K39FRHDzBHrH_SfJH-3mPjdZFje5AENYw@mail.gmail.com> (sfid-20180404_165542_386559_4340C201)
-Subject: Re: RTL8723BE performance regression
-To: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>,
-        Steven Ting <steventing@realtek.com>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Daniel Drake <drake@endlessm.com>,
-        =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>,
-        Linux Upstreaming Team <linux@endlessm.com>
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 3 Apr 2018 10:45:39 -0400
+Received: by mail-wm0-f65.google.com with SMTP id v21so34377522wmc.1
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Apr 2018 07:45:38 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76x2: fix tssi initialization for 5GHz band
+Date: Tue,  3 Apr 2018 16:45:31 +0200
+Message-Id: <53d9322f1b5cafb832163b8ef93118aecc1ef3f1.1522766285.git.lorenzo.bianconi@redhat.com> (sfid-20180403_164542_827372_E0497CE3)
+In-Reply-To: <cover.1522766285.git.lorenzo.bianconi@redhat.com>
+References: <cover.1522766285.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 3, 2018 at 6:51 PM, Jo=C3=A3o Paulo Rechi Vita <jprvita@gmail.c=
-om> wrote:
->
-> This are the results (testing with speedtest.net) I got at some key point=
-s:
->
-> Version        Commit        Ping        Down        Up
->
-> v4.11            a351e9b        12        25.44        5.99
-> v4.11            a351e9b        131      17.02        5.89
->
-> v4.13            569dbb8        174      14.08        0.00
-> v4.13            569dbb8        261      8.41          0.00
->
-> v4.15+revert d8a5b80        19        23.86        1.41
-> v4.15+revert d8a5b80        189      18.69        1.39
->
+Fix mcu initial configuration for tssi calibration on 5GHz band
 
-I recommend doing throughput testing in a closed system using iperf.
-speedtest.net is potentially useful for testing your ISP's bandwidth
-at some particular point in time, but little else as it exposes you to
-too many variables. I wouldn't take those numbers to mean much and the
-inconclusive results you're getting could be explained by external
-network loading and having little to do with your bisect effort. I can
-get that spread in numbers from speedtest.net without making any
-changes other than the time of day I do the test.
+Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x2_phy.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Here's how to do it. Install iperf2 (you could use iperf3, personal
-choice) on two machines, one being your device under test (DUT). Setup
-a network configuration that looks similar to this:
-
-server <=3D=3Dhardwire=3D=3D> AP <--wireless link--> DUT
-
-Be sure your hardwire is more bandwidth than your wireless link is
-capable of, or set it up where the server is the AP. What you're
-looking for here is environmental consistency, not maximum throughput
-numbers.
-
-On the computer hardwired to the network, start the server, we'll
-assume it has an ip of 192.168.33.18:
-
-    iperf -s
-
-On your DUT:
-
-    iperf -c 192.168.33.18
-
-That's the most basic setup, check the man page for more options.
-
-You will get best results if you can exclude other computers from your
-test network and other wireless devices from your airspace.
-
-- Steve
-
---
-Steve deRosier
-Cal-Sierra Consulting LLC
-https://www.cal-sierra.com/
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
+index fcc37eb7ce0b..f28c55746cea 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
+@@ -180,7 +180,7 @@ mt76x2_phy_tssi_init_cal(struct mt76x2_dev *dev)
+ 	if (mt76x2_channel_silent(dev))
+ 		return false;
+ 
+-	if (chan->band == NL80211_BAND_2GHZ)
++	if (chan->band == NL80211_BAND_5GHZ)
+ 		flag |= BIT(0);
+ 
+ 	if (mt76x2_ext_pa_enabled(dev, chan->band))
+-- 
+2.14.3
