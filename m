@@ -1,92 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www62.your-server.de ([213.133.104.62]:53016 "EHLO
-        www62.your-server.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751587AbeDHWNL (ORCPT
+Received: from mail-qt0-f177.google.com ([209.85.216.177]:46332 "EHLO
+        mail-qt0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750772AbeDDJVX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 8 Apr 2018 18:13:11 -0400
-Subject: Re: iwlwifi: FW error in SYNC CMD TIME_QUOTA_CMD
-To: Luciano Coelho <luciano.coelho@intel.com>, johannes.berg@intel.com
-Cc: emmanuel.grumbach@intel.com, linux-wireless@vger.kernel.org
-References: <799ecceb-8b2a-bf8c-b408-374a02280306@iogearbox.net>
- <1523084065.4488.11.camel@intel.com>
-From: Daniel Borkmann <daniel@iogearbox.net>
-Message-ID: <71396747-1be5-78de-3ff7-d0df91d37d36@iogearbox.net> (sfid-20180409_001700_470124_5A18D24E)
-Date: Mon, 9 Apr 2018 00:13:09 +0200
+        Wed, 4 Apr 2018 05:21:23 -0400
+Received: by mail-qt0-f177.google.com with SMTP id h4so22333262qtn.13
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Apr 2018 02:21:22 -0700 (PDT)
+Subject: Re: [PATCH] nl80211: Update ERP info using
+ NL80211_CMD_UPDATE_CONNECT_PARAMS
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Vidyullatha Kanchanapally <vidyullatha@codeaurora.org>
+References: <1508923248-18848-1-git-send-email-vidyullatha@codeaurora.org>
+ <1512990779.26976.69.camel@sipsolutions.net> <5ABCCA33.8070501@broadcom.com>
+ <1522322166.5932.13.camel@sipsolutions.net> <5ABCCE7D.3050702@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
+        amarnath@qti.qualcomm.com, usdutt@qti.qualcomm.com,
+        vamsin@qti.qualcomm.com, Jithu Jance <jithu.jance@broadcom.com>,
+        Eylon Pedinovsky <eylon.pedinovsky@broadcom.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AC4990E.7060806@broadcom.com> (sfid-20180404_112127_008769_15CC1A6D)
+Date: Wed, 4 Apr 2018 11:21:18 +0200
 MIME-Version: 1.0
-In-Reply-To: <1523084065.4488.11.camel@intel.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5ABCCE7D.3050702@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luciano,
+On 3/29/2018 1:31 PM, Arend van Spriel wrote:
+>> So yeah, I'd argue that what the patch needed was somebody taking a
+>> critical look at my review ;-)
+>>
+>> And perhaps fixing the weird flags thing I pointed out.
+>
+> Yup. That made sense.
 
-On 04/07/2018 08:54 AM, Luciano Coelho wrote:
-> On Thu, 2018-04-05 at 16:55 +0200, Daniel Borkmann wrote:
-[...]
->> after upgrading to 4608f064532c ("Merge
->> git://git.kernel.org/pub/scm/linux/kernel/git/davem/sparc-next")
->> my kernel log gets constantly flooded with the below message and
->> wireless stops
->> working ... just in case you haven't had a report on this yet.
->> Downgrading back
->> to older v4.16-rcX kernel gets everything back to normal working
->> state; haven't
->> had time for bisection yet, but hopefully the below would provide
->> some clue.
-> 
-> [...]
-> 
->> [  513.429773] iwlwifi 0000:04:00.0: Failed to send quota: -5
->> [  513.429775] iwlwifi 0000:04:00.0: Failed to update quotas after
->> restart (-5)
->> [  514.163758] iwlwifi 0000:04:00.0: Microcode SW error
->> detected.  Restarting 0x82000000.
->> [  514.163987] iwlwifi 0000:04:00.0: Start IWL Error Log Dump:
->> [  514.163988] iwlwifi 0000:04:00.0: Status: 0x00000100, count: 6
->> [  514.163989] iwlwifi 0000:04:00.0: Loaded firmware version:
->> 27.455470.0
->> [  514.163991] iwlwifi 0000:04:00.0: 0x00000038 | BAD_COMMAND
-> 
-> [...]
-> 
-> I did add support for new FW APIs, so maybe some check for the FW
-> version is missing somewhere.
-> 
-> Which NIC are you using? I can see that you're using an older version
-> of the firmware (27.455470.0).  For 7265D and 3168 we already have
-> version 29.  For 8000C and 8260 we have vesion 36.  You can find all
-> the latest versions in our fork of linux-firmware.git[1].  And soon the
-> main linux-firmware.git[2] will also include the latest versions, since
-> I sent a pull request yesteday ago.
-> 
-> Meanwhile, I'll investigate this problem.  It shouldn't happen even if
-> you're using an older firmware.  Maybe I'll have to stop supporting
-> version 27 in newer kernels, let's see.
+Hi Johannes,
 
-Here's from the log on an older (working) kernel:
+Started working on this and actually the "weird flags thing" is done for 
+a reason. Maybe the reason was because it is done like that in the 
+CMD_CONNECT case, but the better reason is that we need to return 
+-EINVAL for "no-fils-offload-support, any-fils-param" *and* 
+"fils-offload-support, not-all-fils-param".
 
-$ dmesg | grep iwlwifi
-[    7.672955] iwlwifi 0000:04:00.0: enabling device (0000 -> 0002)
-[    7.705000] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-36.ucode failed with error -2
-[    7.705208] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-35.ucode failed with error -2
-[    7.705391] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-34.ucode failed with error -2
-[    7.705850] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-33.ucode failed with error -2
-[    7.706118] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-32.ucode failed with error -2
-[    7.706463] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-31.ucode failed with error -2
-[    7.706789] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-30.ucode failed with error -2
-[    7.707182] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-29.ucode failed with error -2
-[    7.707746] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-28.ucode failed with error -2
-[    7.714899] iwlwifi 0000:04:00.0: loaded firmware version 27.455470.0 op_mode iwlmvm
-[    8.400655] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
-[    8.475161] iwlwifi 0000:04:00.0: base HW address: [...]
-[    8.568333] iwlwifi 0000:04:00.0 wlp4s0: renamed from wlan0
+> Also there is a DOC section about FILS shared key authentication
+> offload" so I suppose that should be extended as well.
 
-I'll try to upgrade the FW in the mean time, thanks!
+So looking at the DOC section I am reading the following:
 
-> [1] https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git/
-> [2] https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
-> 
-> --
-> Cheers,
-> Luca.
-> 
+  * When FILS shared key authentication is completed, driver needs to 
+provide the
+  * below additional parameters to userspace.
+  *	%NL80211_ATTR_FILS_KEK - used for key renewal
+  *	%NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM - used in further EAP-RP exchanges
+  *	%NL80211_ATTR_PMKID - used to identify the PMKSA used/generated
+  *	%Nl80211_ATTR_PMK - used to update PMKSA cache in userspace
+  * The PMKSA can be maintained in userspace persistently so that it can 
+be used
+  * later after reboots or wifi turn off/on also.
+
+So to me it seems we need these for the ROAM event as well. Agree?
+
+Regards,
+Arend
