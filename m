@@ -1,149 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37780 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751172AbeDPOtC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 10:49:02 -0400
-From: Balaji Pothunoori <bpothuno@codeaurora.org>
-To: johannes@sipsolutions.net, ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, bpothuno@codeaurora.org
-Subject: [PATCHv2 1/3] cfg80211: average ack rssi support for data frames
-Date: Mon, 16 Apr 2018 20:18:40 +0530
-Message-Id: <1523890122-23952-2-git-send-email-bpothuno@codeaurora.org> (sfid-20180416_164958_378716_9C98BEB5)
-In-Reply-To: <1523890122-23952-1-git-send-email-bpothuno@codeaurora.org>
-References: <1523890122-23952-1-git-send-email-bpothuno@codeaurora.org>
+Received: from mail.bugwerft.de ([46.23.86.59]:48028 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750736AbeDDGjD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Apr 2018 02:39:03 -0400
+Subject: Re: [PATCH 3/3] wcn36xx: don't delete invalid bss indices
+To: Ramon Fried <rfried@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: loic.poulain@linaro.org, bjorn.andersson@linaro.org,
+        kvalo@codeaurora.org, wcn36xx@lists.infradead.org
+References: <20180403165154.18775-1-daniel@zonque.org>
+ <20180403165154.18775-3-daniel@zonque.org>
+ <8ee8943c-ff58-60a1-75da-eaf795ff3234@codeaurora.org>
+From: Daniel Mack <daniel@zonque.org>
+Message-ID: <0b1db61d-a8a2-1099-1dbd-aee67ec5cd63@zonque.org> (sfid-20180404_083907_454226_D849BBEB)
+Date: Wed, 4 Apr 2018 08:39:01 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <8ee8943c-ff58-60a1-75da-eaf795ff3234@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Average ack rssi will be given to userspace via NL80211 interface
-if firmware is capable. Userspace tool ‘iw’ can process this
-information and give the output as one of the fields in
-‘iw dev wlanX station dump’.
+On Wednesday, April 04, 2018 07:40 AM, Ramon Fried wrote:
+> On 4/3/2018 7:51 PM, Daniel Mack wrote:
+>> The firmware code cannot cope with requests to remove BSS indices that have
+>> not previously been added. This primarily happens when the device is
+>> suspended and then resumed. ieee80211_reconfig() then calls into
+>> wcn36xx_bss_info_changed() with an empty bssid and BSS_CHANGED_BSSID set,
+>> which subsequently leads to a firmware crash:
+>>
+>> [   43.647928] qcom-wcnss-pil a204000.wcnss: fatal error received: halMsg.c:4964:halMsg_DelBss: Invalid BSSIndex 0
+>> [   43.647959] remoteproc remoteproc0: crash detected in a204000.wcnss: type fatal error
+>>
+>> To fix this, set bss_index to WCN36XX_HAL_BSS_INVALID_IDX for all bss
+>> that have not been configured in the firmware, and don't call into the
+>> firmware with invalid indices.
+>>
+>> Signed-off-by: Daniel Mack <daniel@zonque.org>
 
-Example output :
+> Interesting. I have never seen this bug before.
+> Do you have a way of recreating it so I can test it on my side ?
 
-localhost ~ #iw dev wlan-5000mhz station dump Station
-34:f3:9a:aa:3b:29 (on wlan-5000mhz)
-        inactive time:  5370 ms
-        rx bytes:       85321
-        rx packets:     576
-        tx bytes:       14225
-        tx packets:     71
-        tx retries:     0
-        tx failed:      2
-        beacon loss:    0
-        rx drop misc:   0
-        signal:         -54 dBm
-        signal avg:     -53 dBm
-        tx bitrate:     866.7 MBit/s VHT-MCS 9 80MHz short GI VHT-NSS 2
-        rx bitrate:     866.7 MBit/s VHT-MCS 9 80MHz short GI VHT-NSS 2
-        avg ack signal: -56 dBm
-        authorized:     yes
-        authenticated:  yes
-        associated:     yes
-        preamble:       short
-        WMM/WME:        yes
-        MFP:            no
-        TDLS peer:      no
-        DTIM period:    2
-        beacon interval:100
-       short preamble: yes
-       short slot time:yes
-       connected time: 203 seconds
+I tested this by putting the machine to suspend with
 
-Main use case is to measure the signal strength of a connected station
-to AP. Data packet transmit rates and bandwidth used by station can vary
-a lot even if the station is at fixed location, especially if the rates
-used are multi stream(2stream, 3stream) rates with different bandwidth(20/40/80 Mhz).
-These multi stream rates are sensitive and station can use different transmit power
-for each of the rate and bandwidth combinations. RSSI measured from these RX packets
-on AP will be not stable and can vary a lot with in a short time.
-Whereas 802.11 ack frames from station are sent relatively at a constant
-rate (6/12/24 Mbps) with constant bandwidth(20 Mhz).
-So average rssi of the ack packets is good and more accurate."
+  # echo freeze >/sys/power/state
 
-Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
----
- include/net/cfg80211.h       | 3 +++
- include/uapi/linux/nl80211.h | 7 +++++++
- net/wireless/nl80211.c       | 3 +++
- 3 files changed, 13 insertions(+)
+right after boot, without connecting to a network before. Resume will
+then fail without this patch. I haven't see it in any other cases either
+though.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 250dac3..5e888ec 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1152,6 +1152,8 @@ struct cfg80211_tid_stats {
-  * @pertid: per-TID statistics, see &struct cfg80211_tid_stats, using the last
-  *	(IEEE80211_NUM_TIDS) index for MSDUs not encapsulated in QoS-MPDUs.
-  * @ack_signal: signal strength (in dBm) of the last ACK frame.
-+ * @avg_ack_signal: average rssi value of ack packet for the no of msdu's has
-+ *	been sent.
-  */
- struct station_info {
- 	u64 filled;
-@@ -1197,6 +1199,7 @@ struct station_info {
- 	u8 rx_beacon_signal_avg;
- 	struct cfg80211_tid_stats pertid[IEEE80211_NUM_TIDS + 1];
- 	s8 ack_signal;
-+	s8 avg_ack_signal;
- };
- 
- #if IS_ENABLED(CONFIG_CFG80211)
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 15daf5e..a41a77b 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2980,6 +2980,8 @@ enum nl80211_sta_bss_param {
-  *	received from the station (u64, usec)
-  * @NL80211_STA_INFO_PAD: attribute used for padding for 64-bit alignment
-  * @NL80211_STA_INFO_ACK_SIGNAL: signal strength of the last ACK frame(u8, dBm)
-+ * @NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG: avg signal strength of data ACK
-+ * frame(s8, dBm)
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -3019,6 +3021,7 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_RX_DURATION,
- 	NL80211_STA_INFO_PAD,
- 	NL80211_STA_INFO_ACK_SIGNAL,
-+	NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG,
- 
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-@@ -5038,6 +5041,9 @@ enum nl80211_feature_flags {
-  *	"radar detected" event.
-  * @NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211: Driver supports sending and
-  *	receiving control port frames over nl80211 instead of the netdevice.
-+ * @NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT: This Driver support data ack
-+ *	rssi if firmware support, this flag is to intimate about ack rssi
-+ *	support to nl80211.
-  *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-@@ -5070,6 +5076,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_HIGH_ACCURACY_SCAN,
- 	NL80211_EXT_FEATURE_DFS_OFFLOAD,
- 	NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211,
-+	NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT,
- 
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ff28f8f..5415e7c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4494,6 +4494,9 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 	PUT_SINFO_U64(BEACON_RX, rx_beacon);
- 	PUT_SINFO(BEACON_SIGNAL_AVG, rx_beacon_signal_avg, u8);
- 	PUT_SINFO(ACK_SIGNAL, ack_signal, u8);
-+	if (wiphy_ext_feature_isset(&rdev->wiphy,
-+				    NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT))
-+		PUT_SINFO(DATA_ACK_SIGNAL_AVG, avg_ack_signal, s8);
- 
- #undef PUT_SINFO
- #undef PUT_SINFO_U64
--- 
-2.7.4
+
+Thanks,
+Daniel
