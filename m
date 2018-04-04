@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38952 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:54702 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750763AbeDLMPO (ORCPT
+        with ESMTP id S1750938AbeDDGLk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 08:15:14 -0400
-From: mpubbise@qti.qualcomm.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Subject: [PATCH] ath10k: correct target assert problem due to CE5 stuck
-Date: Thu, 12 Apr 2018 17:44:59 +0530
-Message-Id: <1523535299-29282-1-git-send-email-mpubbise@qti.qualcomm.com> (sfid-20180412_141516_916913_E0FA32B1)
+        Wed, 4 Apr 2018 02:11:40 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Steve deRosier <derosier@gmail.com>
+Cc: Sunil Dutt Undekari <usdutt@qti.qualcomm.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "johannes\@sipsolutions.net" <johannes@sipsolutions.net>,
+        Jouni Malinen <jouni@qca.qualcomm.com>,
+        Amarnath Hullur Subramanyam <amarnath@qti.qualcomm.com>,
+        Rajesh Chauhan <rajeshc@qti.qualcomm.com>
+Subject: Re: Wi-Fi Disconnection on Suspend for no wowlan triggers
+References: <0663e93cc5ca45e6b7191760414b1189@aphydexm01f.ap.qualcomm.com>
+        <CALLGbRJgAtOdZ1puzfgpWxc_ZrDVmWXtmFrBu=-gA0C++WrLoA@mail.gmail.com>
+Date: Wed, 04 Apr 2018 09:11:34 +0300
+In-Reply-To: <CALLGbRJgAtOdZ1puzfgpWxc_ZrDVmWXtmFrBu=-gA0C++WrLoA@mail.gmail.com>
+        (Steve deRosier's message of "Tue, 3 Apr 2018 09:55:43 -0700")
+Message-ID: <874lkrmrft.fsf@purkki.adurom.net> (sfid-20180404_081144_112246_D4346C2B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Steve deRosier <derosier@gmail.com> writes:
 
-Correct a minor bug in the commit 0628467f97b5 ("ath10k: fix
-copy engine 5 destination ring stuck") which introduced a change to fix
-firmware assert that happens when ring indices of copy engine 5 are stuck
-for a specific duration, problem with this fix is that it did not use
-ring arithmatic. As a result,firmware asserts did not go away entirely
-athough the frequency of occurrence has reduced. Using ring arithmatic
-to fix the issue.
+> On Tue, Apr 3, 2018 at 5:39 AM, Sunil Dutt Undekari
+> <usdutt@qti.qualcomm.com> wrote:
+>> Hi All ,
+>>
+>> I would like to discuss on the commit
+>> 8125696991194aacb1173b6e8196d19098b44e17 (cfg80211/mac80211:
+>> disconnect on suspend) which triggers the STA disconnection on
+>> suspend if no wowlan triggers are registered.
+>
+> This commit went in over five years ago. Sometime around v3.9
 
-Tested on QCA9984(fw version-10.4-3.4-00082).
+Yup, v3.10-rc2 was the first release.
 
-Fixes: 0628467f97b5 ("ath10k: fix copy engine 5 destination ring stuck)
-Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/ce.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index b9def7b..6efa69e 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -615,7 +615,7 @@ void ath10k_ce_rx_update_write_idx(struct ath10k_ce_pipe *pipe, u32 nentries)
- 	/* Prevent CE ring stuck issue that will occur when ring is full.
- 	 * Make sure that write index is 1 less than read index.
- 	 */
--	if ((cur_write_idx + nentries)  == dest_ring->sw_index)
-+	if (((cur_write_idx + nentries) & nentries_mask) == dest_ring->sw_index)
- 		nentries -= 1;
- 
- 	write_index = CE_RING_IDX_ADD(nentries_mask, write_index, nentries);
 -- 
-2.7.4
+Kalle Valo
