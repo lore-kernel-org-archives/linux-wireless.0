@@ -1,58 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:47310 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751329AbeDFIKp (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:47935 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751808AbeDDMp2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Apr 2018 04:10:45 -0400
-Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for
- various chipsets
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>,
-        ath10k@lists.infradead.org
-References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
- <871sftemru.fsf@kamboji.qca.qualcomm.com>
- <c4a1313a-73d2-a028-4fca-09f6fb6e56bd@dd-wrt.com>
- <de9c007f-26e3-a511-e944-91e90aac7787@dd-wrt.com>
- <87h8oosqpg.fsf@codeaurora.org>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <0d1827fa-497d-7cf2-5372-74c2d1f459b2@dd-wrt.com> (sfid-20180406_101051_631443_3D6D62CE)
-Date: Fri, 6 Apr 2018 10:10:42 +0200
+        Wed, 4 Apr 2018 08:45:28 -0400
+From: Pkshih <pkshih@realtek.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/9] rtlwifi: btcoex: Add 8822b1ant coex files
+Date: Wed, 4 Apr 2018 12:45:16 +0000
+Message-ID: <1522845916.1856.7.camel@realtek.com> (sfid-20180404_144620_057260_9E6ADCA9)
+References: <20180328072741.23349-1-pkshih@realtek.com>
+         <20180328072741.23349-2-pkshih@realtek.com>
+         <f4d2fe50-76b0-27a8-a119-018d7d7d1286@lwfinger.net>
+         <1522845666.1856.5.camel@realtek.com>
+In-Reply-To: <1522845666.1856.5.camel@realtek.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <87h8oosqpg.fsf@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 06.04.2018 um 10:07 schrieb Kalle Valo:
-> Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
->
->> i have some comments about your check warnings.
->> some of them are bogus. for instance they advise to use "unsigned int"
->> instead of "unsigned". this might be better, but
->> the original kernel header uses "unsigned" as api definition. so i
->> decided to use the same declarations here.
-> Sure, but using "unsigned int" won't create any harm either.
->
->> for the rest like whitespaces i will make a new version and remove them
-> You missed my comment in my earlier mail that I'll send the next
-> version. I have already fixed all the warnings so let me submit it. I'll
-> do also some other changes.
-
-oh okay. thank you. then forget all the rest. i will take care of these 
-issues with the next patch i submit
-
->
-
--- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+T24gV2VkLCAyMDE4LTA0LTA0IGF0IDIwOjQxICswODAwLCBQa3NoaWggd3JvdGU6DQo+IE9uIFdl
+ZCwgMjAxOC0wNC0wNCBhdCAwMjo0MyArMDAwMCwgTGFycnkgRmluZ2VyIHdyb3RlOg0KPiA+IE9u
+IDAzLzI4LzIwMTggMDI6MjcgQU0sIHBrc2hpaEByZWFsdGVrLmNvbSB3cm90ZToNCj4gPiA+IEZy
+b206IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPg0KPiA+ID7CoA0KPiA+ID4gVGhp
+cyBmaWxlIHN1cHBvcnRzIDg4MjJiZSBXaUZpIG1vZHVsZSB3aXRoIHR3byBwaHlzaWNhbCBhbnRl
+bm5hIHRoYXQNCj4gPiA+IG1lYW5zIG9uZSBhbnRlbm5hIHdpbGwgc2hhcmUgd2l0aCBCVC4NCj4g
+PiA+wqANCj4gPiA+IFNpZ25lZC1vZmYtYnk6IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsu
+Y29tPg0KPiA+ID4gLS0tDQo+ID4gPsKgwqDCoC4uLi9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0
+L2hhbGJ0Yzg4MjJiMWFudC5jwqDCoMKgwqB8IDUzMDMgKysrKysrKysrKysrKysrKysrKysNCj4g
+PiA+wqDCoMKgLi4uL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjODgyMmIxYW50LmjC
+oMKgwqDCoHzCoMKgNDEzICsrDQo+ID4gPsKgwqDCoDIgZmlsZXMgY2hhbmdlZCwgNTcxNiBpbnNl
+cnRpb25zKCspDQo+ID4gPsKgwqDCoGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL25ldC93aXJl
+bGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Yzg4MjJiMWFudC5jDQo+ID4gPsKg
+wqDCoGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdp
+ZmkvYnRjb2V4aXN0L2hhbGJ0Yzg4MjJiMWFudC5oDQo+ID7CoA0KPiA+IC0tc25pcC0tDQo+ID7C
+oA0KPiA+ID4gKy8qYW50dGVubmEgY29udHJvbCBieSBiYiBtYWMgYnQgYW50ZGl2IHB0YSB0byB3
+cml0ZSAweDRjIDB4Y2I0LDB4Y2JkKi8NCj4gPiA+ICsNCj4gPiA+ICtzdGF0aWMNCj4gPiA+ICt2
+b2lkIGhhbGxidGM4ODJiMWFudF9zZXRfYW50X3N3aXRjaChzdHJ1Y3QgYnRjX2NvZXhpc3QgKmJ0
+Y29leGlzdCwNCj4gPiA+ICsJCQkJwqDCoMKgwqBib29sIGZvcmNlX2V4ZWMsIHU4IGN0cmxfdHlw
+ZSwNCj4gPiA+ICsJCQkJwqDCoMKgwqB1OCBwb3NfdHlwZSkNCj4gPiA+ICt7DQo+ID4gPiArCXN0
+cnVjdCBydGxfcHJpdiAqcnRscHJpdiA9IGJ0Y29leGlzdC0+YWRhcHRlcjsNCj4gPiA+ICsJYm9v
+bCBzd2l0Y2hfcG9sYXRpcnlfaW52ZXJzZSA9IGZhbHNlOw0KPiA+ID4gKwl1OCByZWd2YWxfMHhj
+YmQgPSAwLCByZWd2YWxfMHg2NDsNCj4gPiA+ICsJdTMyIHUzMnRtcDEgPSAwLCB1MzJ0bXAyID0g
+MCwgdTMydG1wMyA9IDA7DQo+ID4gPiArDQo+ID4gPiArCS8qIEV4dCBzd2l0Y2ggYnVmZmVyIG11
+eCAqLw0KPiA+ID4gKwlidGNvZXhpc3QtPmJ0Y193cml0ZV8xYnl0ZShidGNvZXhpc3QsIDB4OTc0
+LCAweGZmKTsNCj4gPiA+ICsJYnRjb2V4aXN0LT5idGNfd3JpdGVfMWJ5dGVfYml0bWFzayhidGNv
+ZXhpc3QsIDB4MTk5MSwgMHgzLCAweDApOw0KPiA+ID4gKwlidGNvZXhpc3QtPmJ0Y193cml0ZV8x
+Ynl0ZV9iaXRtYXNrKGJ0Y29leGlzdCwgMHhjYmUsIDB4OCwgMHgwKTsNCj4gPiA+ICsNCj4gPiA+
+ICsJaWYgKCFyZmVfdHlwZS0+ZXh0X2FudF9zd2l0Y2hfZXhpc3QpDQo+ID4gPiArCQlyZXR1cm47
+DQo+ID4gPiArDQo+ID4gPiArCWNvZXhfZG0tPmN1cl9leHRfYW50X3N3aXRjaF9zdGF0dXMgPSAo
+Y3RybF90eXBlIDw8IDgpICsgcG9zX3R5cGU7DQo+ID4gPiArDQo+ID4gPiArCWlmICghZm9yY2Vf
+ZXhlYykgew0KPiA+ID4gKwkJaWYgKGNvZXhfZG0tPnByZV9leHRfYW50X3N3aXRjaF9zdGF0dXMg
+PT0NCj4gPiA+ICsJCcKgwqDCoMKgY29leF9kbS0+Y3VyX2V4dF9hbnRfc3dpdGNoX3N0YXR1cykN
+Cj4gPiA+ICsJCQlyZXR1cm47DQo+ID4gPiArCX0NCj4gPiA+ICsNCj4gPiA+ICsJY29leF9kbS0+
+cHJlX2V4dF9hbnRfc3dpdGNoX3N0YXR1cyA9IGNvZXhfZG0tPmN1cl9leHRfYW50X3N3aXRjaF9z
+dGF0dXM7DQo+ID4gPiArDQo+ID4gPiArCS8qIHN3YXAgY29udHJvbCBwb2xhcml0eSBpZiB1c2Ug
+ZGlmZmVyZW50IHN3aXRjaCBjb250cm9sIHBvbGFyaXR5Ki8NCj4gPiA+ICsJLyogTm9ybWFsIHN3
+aXRjaCBwb2xhcml0eSBmb3IgU1BEVCwNCj4gPiA+ICsJwqAqIDB4Y2JkWzE6MF0gPSAyYicwMSA9
+PiBBbnQgdG8gQlRHLCBXTEENCj4gPiA+ICsJwqAqIDB4Y2JkWzE6MF0gPSAyYicxMCA9PiBBbnQg
+dG8gV0xHDQo+ID4gPiArCcKgKi8NCj4gPiA+ICsJc3dpdGNoX3BvbGF0aXJ5X2ludmVyc2UgPSAo
+cmZlX3R5cGUtPmV4dF9hbnRfc3dpdGNoX2N0cmxfcG9sYXJpdHkgPT0gMSA/DQo+ID4gPiArCQkJ
+CQnCoMKgwqB+c3dpdGNoX3BvbGF0aXJ5X2ludmVyc2UgOg0KPiA+ID4gKwkJCQkJwqDCoMKgc3dp
+dGNoX3BvbGF0aXJ5X2ludmVyc2UpOw0KPiA+wqANCj4gPiBnY2MgNy4zLjEgcmVwb3J0cyB0aGUg
+Zm9sbG93aW5nOg0KPiA+wqANCj4gPiDCoMKgwqBDQyBbTV3CoMKgZHJpdmVycy9uZXQvd2lyZWxl
+c3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGM4ODIyYjFhbnQubw0KPiA+IGRyaXZl
+cnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjODgyMmIxYW50
+LmM6IEluIGZ1bmN0aW9uwqANCj4gPiDigJhoYWxsYnRjODgyYjFhbnRfc2V0X2FudF9zd2l0Y2ji
+gJk6DQo+ID4gZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9o
+YWxidGM4ODIyYjFhbnQuYzoyMTkzOjk6wqANCj4gPiB3YXJuaW5nOiDigJh+4oCZIG9uIGEgYm9v
+bGVhbiBleHByZXNzaW9uIFstV2Jvb2wtb3BlcmF0aW9uXQ0KPiA+IMKgwqDCoMKgwqDCoMKgwqDC
+oMKgfnN3aXRjaF9wb2xhdGlyeV9pbnZlcnNlIDoNCj4gPiDCoMKgwqDCoMKgwqDCoMKgwqDCoF4N
+Cj4gPiBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0
+Yzg4MjJiMWFudC5jOjIxOTM6OTogbm90ZTrCoA0KPiA+IGRpZCB5b3UgbWVhbiB0byB1c2UgbG9n
+aWNhbCBub3Q/DQo+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqB+c3dpdGNoX3BvbGF0aXJ5X2ludmVy
+c2UgOg0KPiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKgXg0KPiA+wqANCj4gPiBGb3IgYSBib29sZWFu
+LCB5b3Ugc2hvdWxkIHVzZSAhYm9vbCwgbm90IC1ib29sLiBJbiBhZGRpdGlvbiwgaXQgd291bGQg
+YmUgYmV0dGVywqANCj4gPiB0byB1c2Ugc3dpdGNoX3BvbGFyaXR5X2ludmVyc2UsIG5vdCBzd2l0
+Y2hfcG9sYXRpcnlfaW52ZXJzZS4gVGhlIHNhbWUgInR5cG8iwqANCj4gPiBoYXBwZW5zIGluIG90
+aGVyIHBsYWNlcyBpbiB0aGlzIGZpbGUuIEkgc3VnZ2VzdA0KPiA+wqANCj4gPiBzZWQgLWkgJ3Mv
+cG9sYXRpcnlfaW52ZXJzZS9wb2xhcml0eV9pbnZlcnNlL2cnIFwNCj4gPiBkcml2ZXJzL25ldC93
+aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Yzg4MjJiMWFudC5jLg0KPiA+
+wqANCj4gDQo+IEknbGwgZml4IHRoZSB0eXBvLCBhbmQgZGVjbGFyZSB0aGUgdmFyaWFibGXCoHN3
+aXRjaF9wb2xhcml0eV9pbnZlcnNlIHdpdGhvdXQNCj4gaW5pdGlhbCB2YWx1ZSwgdGhlbiBhc3Np
+Z24gdmFsdWUgdHJ1ZSBvciBmYWxzZSBpbiB0aGUgbGluZSBtZW50aW9uZWQgaW4gYWJvdmUNCj4g
+d2FybmluZy4gSXQgbG9va3MgbGlrZToNCj4gCWJvb2wgc3dpdGNoX3BvbGF0aXJ5X2ludmVyc2U7
+DQo+IAkuLi4NCj4gCXN3aXRjaF9wb2xhcml0eV9pbnZlcnNlID0gKHJmZV90eXBlLT5leHRfYW50
+X3N3aXRjaF9jdHJsX3BvbGFyaXR5ID09IDEgPwkJDQo+IAnCoMKgwqB0cnVlIDogZmFsc2UpOw0K
+PiANCg0KRml4IHRoZSBsYXN0IGV4cHJlc3Npb24gYWdhaW46DQoNCglzd2l0Y2hfcG9sYXJpdHlf
+aW52ZXJzZSA9IChyZmVfdHlwZS0+ZXh0X2FudF9zd2l0Y2hfY3RybF9wb2xhcml0eSA9PSAxKTsN
+Cg0KDQo=
