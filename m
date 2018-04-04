@@ -1,89 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40612 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754572AbeDTKtg (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:63073 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750853AbeDDFPc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Apr 2018 06:49:36 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 20 Apr 2018 13:49:20 +0300
-Message-Id: <20180420104926.8816-4-luca@coelho.fi> (sfid-20180420_124948_446782_7E969B20)
-In-Reply-To: <20180420104926.8816-1-luca@coelho.fi>
-References: <20180420104926.8816-1-luca@coelho.fi>
-Subject: [PATCH 3/9] mac80211: Adjust SAE authentication timeout
+        Wed, 4 Apr 2018 01:15:32 -0400
+Date: Wed, 4 Apr 2018 10:45:25 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: Claudiu Beznea <Claudiu.Beznea@microchip.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <venkateswara.kaja@microchip.com>, <ganesh.krishna@microchip.com>,
+        <adham.abozaeid@microchip.com>, <aditya.shankar@microchip.com>
+Subject: Re: [PATCH 00/11] staging: wilc1000: fix for checkpatch and handled
+ malloc memory properly
+Message-ID: <20180404104525.22abe3fc@ajaysk-VirtualBox> (sfid-20180404_071538_917761_70461956)
+In-Reply-To: <20180328113101.GC26219@kroah.com>
+References: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
+        <20180321075116.bm6x3c53bahw3c2i@mwanda>
+        <20180321145021.044f4536@ajaysk-VirtualBox>
+        <53a25901-754c-bfe9-169e-d2ed4cb34583@microchip.com>
+        <20180327125213.0594ff79@ajaysk-VirtualBox>
+        <20180328113101.GC26219@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Peer <ilan.peer@intel.com>
+Hi Greg,
 
-The IEEE P802.11-REVmd D1.0 specification updated the SAE authentication
-timeout to be 2000 milliseconds (see dot11RSNASAERetransPeriod). Update
-the SAE timeout setting accordingly.
+On Wed, 28 Mar 2018 13:31:01 +0200
+Greg KH <gregkh@linuxfoundation.org> wrote:
 
-While at it, reduce some code duplication in the timeout configuration.
+> On Tue, Mar 27, 2018 at 12:52:13PM +0530, Ajay Singh wrote:
+> > 
+> > Please let me know, in case I have to rework and resubmit this
+> > patch series to make them into staging branch.  
+> 
+> You already sent a v2 series for this, right?  Why respond to the v1
+> set?
+> 
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/mac80211/mlme.c | 25 ++++++++++++++++++-------
- 1 file changed, 18 insertions(+), 7 deletions(-)
+Sorry for late reply.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 69449db7e283..51021d3d2d18 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -36,6 +36,7 @@
- #define IEEE80211_AUTH_TIMEOUT		(HZ / 5)
- #define IEEE80211_AUTH_TIMEOUT_LONG	(HZ / 2)
- #define IEEE80211_AUTH_TIMEOUT_SHORT	(HZ / 10)
-+#define IEEE80211_AUTH_TIMEOUT_SAE	(HZ * 2)
- #define IEEE80211_AUTH_MAX_TRIES	3
- #define IEEE80211_AUTH_WAIT_ASSOC	(HZ * 5)
- #define IEEE80211_ASSOC_TIMEOUT		(HZ / 5)
-@@ -3814,16 +3815,19 @@ static int ieee80211_auth(struct ieee80211_sub_if_data *sdata)
- 			    tx_flags);
- 
- 	if (tx_flags == 0) {
--		auth_data->timeout = jiffies + IEEE80211_AUTH_TIMEOUT;
--		auth_data->timeout_started = true;
--		run_again(sdata, auth_data->timeout);
-+		if (auth_data->algorithm == WLAN_AUTH_SAE)
-+			auth_data->timeout = jiffies +
-+				IEEE80211_AUTH_TIMEOUT_SAE;
-+		else
-+			auth_data->timeout = jiffies + IEEE80211_AUTH_TIMEOUT;
- 	} else {
- 		auth_data->timeout =
- 			round_jiffies_up(jiffies + IEEE80211_AUTH_TIMEOUT_LONG);
--		auth_data->timeout_started = true;
--		run_again(sdata, auth_data->timeout);
- 	}
- 
-+	auth_data->timeout_started = true;
-+	run_again(sdata, auth_data->timeout);
-+
- 	return 0;
- }
- 
-@@ -3894,8 +3898,15 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 		ifmgd->status_received = false;
- 		if (ifmgd->auth_data && ieee80211_is_auth(fc)) {
- 			if (status_acked) {
--				ifmgd->auth_data->timeout =
--					jiffies + IEEE80211_AUTH_TIMEOUT_SHORT;
-+				if (ifmgd->auth_data->algorithm ==
-+				    WLAN_AUTH_SAE)
-+					ifmgd->auth_data->timeout =
-+						jiffies +
-+						IEEE80211_AUTH_TIMEOUT_SAE;
-+				else
-+					ifmgd->auth_data->timeout =
-+						jiffies +
-+						IEEE80211_AUTH_TIMEOUT_SHORT;
- 				run_again(sdata, ifmgd->auth_data->timeout);
- 			} else {
- 				ifmgd->auth_data->timeout = jiffies - 1;
--- 
-2.17.0
+V2 series was not sent for this patchset. No code updates were 
+submitted for this patch series. It's an independent patch series
+with 11 patches and had changes different from other patch series.
+
+Just for information, the v2 patch series was submitted for different
+patch series which had 9 patches.
+
+Please let me know if any other information/action is required from
+my side to include this patch series to staging.
+
+
+Regards,
+Ajay
