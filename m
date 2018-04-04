@@ -1,44 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:37742 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754326AbeDBKmp (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:47803 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751097AbeDDMlV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Apr 2018 06:42:45 -0400
-Message-ID: <1522665761.3786.365.camel@coelho.fi> (sfid-20180402_124249_647955_57842AD7)
-From: Luca Coelho <luca@coelho.fi>
-To: Nye Liu <nyet@nyet.org>, linux-wireless@vger.kernel.org
-Date: Mon, 02 Apr 2018 13:42:41 +0300
-In-Reply-To: <423cffeb-fabc-78fc-c2f6-7d9e226fc051@nyet.org>
-References: <423cffeb-fabc-78fc-c2f6-7d9e226fc051@nyet.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: iwlwifi: completely opaque WARN_ON(1) at
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c:1363. Please remove or fix it
- (TX_STATUS_FAIL_DEST_PS)
+        Wed, 4 Apr 2018 08:41:21 -0400
+From: Pkshih <pkshih@realtek.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/9] rtlwifi: btcoex: Add 8822b1ant coex files
+Date: Wed, 4 Apr 2018 12:41:07 +0000
+Message-ID: <1522845666.1856.5.camel@realtek.com> (sfid-20180404_144126_093577_5B92B1BF)
+References: <20180328072741.23349-1-pkshih@realtek.com>
+         <20180328072741.23349-2-pkshih@realtek.com>
+         <f4d2fe50-76b0-27a8-a119-018d7d7d1286@lwfinger.net>
+In-Reply-To: <f4d2fe50-76b0-27a8-a119-018d7d7d1286@lwfinger.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-Please report this as a bug in the kernel bugzilla[1] and provide the
-logs as explained in our wiki[2].
-
-[1] https://bugzilla.kernel.org/
-[2] https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/debugging
-
-Thanks.
-
---
-Luca.
-
-On Mon, 2018-04-02 at 02:44 -0700, Nye Liu wrote:
-> TX_STATUS_FAIL_DEST_PS
-> 
-> https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=887045
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1733194
-> 
-> Please remove or fix the WARN_ON(1) at 
-> drivers/net/wireless/intel/iwlwifi/mvm/tx.c:1363 it is filling my
-> kernel 
-> logs
-> 
+T24gV2VkLCAyMDE4LTA0LTA0IGF0IDAyOjQzICswMDAwLCBMYXJyeSBGaW5nZXIgd3JvdGU6DQo+
+IE9uIDAzLzI4LzIwMTggMDI6MjcgQU0sIHBrc2hpaEByZWFsdGVrLmNvbSB3cm90ZToNCj4gPiBG
+cm9tOiBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4NCj4gPsKgDQo+ID4gVGhpcyBm
+aWxlIHN1cHBvcnRzIDg4MjJiZSBXaUZpIG1vZHVsZSB3aXRoIHR3byBwaHlzaWNhbCBhbnRlbm5h
+IHRoYXQNCj4gPiBtZWFucyBvbmUgYW50ZW5uYSB3aWxsIHNoYXJlIHdpdGggQlQuDQo+ID7CoA0K
+PiA+IFNpZ25lZC1vZmYtYnk6IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPg0KPiA+
+IC0tLQ0KPiA+wqDCoMKgLi4uL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjODgyMmIx
+YW50LmPCoMKgwqDCoHwgNTMwMyArKysrKysrKysrKysrKysrKysrKw0KPiA+wqDCoMKgLi4uL3Jl
+YWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjODgyMmIxYW50LmjCoMKgwqDCoHzCoMKgNDEz
+ICsrDQo+ID7CoMKgwqAyIGZpbGVzIGNoYW5nZWQsIDU3MTYgaW5zZXJ0aW9ucygrKQ0KPiA+wqDC
+oMKgY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lm
+aS9idGNvZXhpc3QvaGFsYnRjODgyMmIxYW50LmMNCj4gPsKgwqDCoGNyZWF0ZSBtb2RlIDEwMDY0
+NCBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Yzg4
+MjJiMWFudC5oDQo+IA0KPiAtLXNuaXAtLQ0KPiANCj4gPiArLyphbnR0ZW5uYSBjb250cm9sIGJ5
+IGJiIG1hYyBidCBhbnRkaXYgcHRhIHRvIHdyaXRlIDB4NGMgMHhjYjQsMHhjYmQqLw0KPiA+ICsN
+Cj4gPiArc3RhdGljDQo+ID4gK3ZvaWQgaGFsbGJ0Yzg4MmIxYW50X3NldF9hbnRfc3dpdGNoKHN0
+cnVjdCBidGNfY29leGlzdCAqYnRjb2V4aXN0LA0KPiA+ICsJCQkJwqDCoMKgwqBib29sIGZvcmNl
+X2V4ZWMsIHU4IGN0cmxfdHlwZSwNCj4gPiArCQkJCcKgwqDCoMKgdTggcG9zX3R5cGUpDQo+ID4g
+K3sNCj4gPiArCXN0cnVjdCBydGxfcHJpdiAqcnRscHJpdiA9IGJ0Y29leGlzdC0+YWRhcHRlcjsN
+Cj4gPiArCWJvb2wgc3dpdGNoX3BvbGF0aXJ5X2ludmVyc2UgPSBmYWxzZTsNCj4gPiArCXU4IHJl
+Z3ZhbF8weGNiZCA9IDAsIHJlZ3ZhbF8weDY0Ow0KPiA+ICsJdTMyIHUzMnRtcDEgPSAwLCB1MzJ0
+bXAyID0gMCwgdTMydG1wMyA9IDA7DQo+ID4gKw0KPiA+ICsJLyogRXh0IHN3aXRjaCBidWZmZXIg
+bXV4ICovDQo+ID4gKwlidGNvZXhpc3QtPmJ0Y193cml0ZV8xYnl0ZShidGNvZXhpc3QsIDB4OTc0
+LCAweGZmKTsNCj4gPiArCWJ0Y29leGlzdC0+YnRjX3dyaXRlXzFieXRlX2JpdG1hc2soYnRjb2V4
+aXN0LCAweDE5OTEsIDB4MywgMHgwKTsNCj4gPiArCWJ0Y29leGlzdC0+YnRjX3dyaXRlXzFieXRl
+X2JpdG1hc2soYnRjb2V4aXN0LCAweGNiZSwgMHg4LCAweDApOw0KPiA+ICsNCj4gPiArCWlmICgh
+cmZlX3R5cGUtPmV4dF9hbnRfc3dpdGNoX2V4aXN0KQ0KPiA+ICsJCXJldHVybjsNCj4gPiArDQo+
+ID4gKwljb2V4X2RtLT5jdXJfZXh0X2FudF9zd2l0Y2hfc3RhdHVzID0gKGN0cmxfdHlwZSA8PCA4
+KSArIHBvc190eXBlOw0KPiA+ICsNCj4gPiArCWlmICghZm9yY2VfZXhlYykgew0KPiA+ICsJCWlm
+IChjb2V4X2RtLT5wcmVfZXh0X2FudF9zd2l0Y2hfc3RhdHVzID09DQo+ID4gKwkJwqDCoMKgwqBj
+b2V4X2RtLT5jdXJfZXh0X2FudF9zd2l0Y2hfc3RhdHVzKQ0KPiA+ICsJCQlyZXR1cm47DQo+ID4g
+Kwl9DQo+ID4gKw0KPiA+ICsJY29leF9kbS0+cHJlX2V4dF9hbnRfc3dpdGNoX3N0YXR1cyA9IGNv
+ZXhfZG0tPmN1cl9leHRfYW50X3N3aXRjaF9zdGF0dXM7DQo+ID4gKw0KPiA+ICsJLyogc3dhcCBj
+b250cm9sIHBvbGFyaXR5IGlmIHVzZSBkaWZmZXJlbnQgc3dpdGNoIGNvbnRyb2wgcG9sYXJpdHkq
+Lw0KPiA+ICsJLyogTm9ybWFsIHN3aXRjaCBwb2xhcml0eSBmb3IgU1BEVCwNCj4gPiArCcKgKiAw
+eGNiZFsxOjBdID0gMmInMDEgPT4gQW50IHRvIEJURywgV0xBDQo+ID4gKwnCoCogMHhjYmRbMTow
+XSA9IDJiJzEwID0+IEFudCB0byBXTEcNCj4gPiArCcKgKi8NCj4gPiArCXN3aXRjaF9wb2xhdGly
+eV9pbnZlcnNlID0gKHJmZV90eXBlLT5leHRfYW50X3N3aXRjaF9jdHJsX3BvbGFyaXR5ID09IDEg
+Pw0KPiA+ICsJCQkJCcKgwqDCoH5zd2l0Y2hfcG9sYXRpcnlfaW52ZXJzZSA6DQo+ID4gKwkJCQkJ
+wqDCoMKgc3dpdGNoX3BvbGF0aXJ5X2ludmVyc2UpOw0KPiANCj4gZ2NjIDcuMy4xIHJlcG9ydHMg
+dGhlIGZvbGxvd2luZzoNCj4gDQo+IMKgwqDCoENDIFtNXcKgwqBkcml2ZXJzL25ldC93aXJlbGVz
+cy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Yzg4MjJiMWFudC5vDQo+IGRyaXZlcnMv
+bmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjODgyMmIxYW50LmM6
+IEluIGZ1bmN0aW9uwqANCj4g4oCYaGFsbGJ0Yzg4MmIxYW50X3NldF9hbnRfc3dpdGNo4oCZOg0K
+PiBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Yzg4
+MjJiMWFudC5jOjIxOTM6OTrCoA0KPiB3YXJuaW5nOiDigJh+4oCZIG9uIGEgYm9vbGVhbiBleHBy
+ZXNzaW9uIFstV2Jvb2wtb3BlcmF0aW9uXQ0KPiDCoMKgwqDCoMKgwqDCoMKgwqDCoH5zd2l0Y2hf
+cG9sYXRpcnlfaW52ZXJzZSA6DQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgXg0KPiBkcml2ZXJzL25l
+dC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Yzg4MjJiMWFudC5jOjIx
+OTM6OTogbm90ZTrCoA0KPiBkaWQgeW91IG1lYW4gdG8gdXNlIGxvZ2ljYWwgbm90Pw0KPiDCoMKg
+wqDCoMKgwqDCoMKgwqDCoH5zd2l0Y2hfcG9sYXRpcnlfaW52ZXJzZSA6DQo+IMKgwqDCoMKgwqDC
+oMKgwqDCoMKgXg0KPiANCj4gRm9yIGEgYm9vbGVhbiwgeW91IHNob3VsZCB1c2UgIWJvb2wsIG5v
+dCAtYm9vbC4gSW4gYWRkaXRpb24sIGl0IHdvdWxkIGJlIGJldHRlcsKgDQo+IHRvIHVzZSBzd2l0
+Y2hfcG9sYXJpdHlfaW52ZXJzZSwgbm90IHN3aXRjaF9wb2xhdGlyeV9pbnZlcnNlLiBUaGUgc2Ft
+ZSAidHlwbyLCoA0KPiBoYXBwZW5zIGluIG90aGVyIHBsYWNlcyBpbiB0aGlzIGZpbGUuIEkgc3Vn
+Z2VzdA0KPiANCj4gc2VkIC1pICdzL3BvbGF0aXJ5X2ludmVyc2UvcG9sYXJpdHlfaW52ZXJzZS9n
+JyBcDQo+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFs
+YnRjODgyMmIxYW50LmMuDQo+IA0KDQpJJ2xsIGZpeCB0aGUgdHlwbywgYW5kIGRlY2xhcmUgdGhl
+IHZhcmlhYmxlwqBzd2l0Y2hfcG9sYXJpdHlfaW52ZXJzZSB3aXRob3V0DQppbml0aWFsIHZhbHVl
+LCB0aGVuIGFzc2lnbiB2YWx1ZSB0cnVlIG9yIGZhbHNlIGluIHRoZSBsaW5lIG1lbnRpb25lZCBp
+biBhYm92ZQ0Kd2FybmluZy4gSXQgbG9va3MgbGlrZToNCglib29sIHN3aXRjaF9wb2xhdGlyeV9p
+bnZlcnNlOw0KCS4uLg0KCXN3aXRjaF9wb2xhcml0eV9pbnZlcnNlID0gKHJmZV90eXBlLT5leHRf
+YW50X3N3aXRjaF9jdHJsX3BvbGFyaXR5ID09IDEgPw0KDQoJCQkNCgnCoMKgwqB0cnVlIDogZmFs
+c2UpOw0KDQoNClBLDQo=
