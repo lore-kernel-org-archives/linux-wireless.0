@@ -1,109 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:44704 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752775AbeDLSx0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 14:53:26 -0400
-Received: by mail-oi0-f65.google.com with SMTP id j143-v6so6152556oih.11
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2018 11:53:25 -0700 (PDT)
+Received: from mx.socionext.com ([202.248.49.38]:52185 "EHLO mx.socionext.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754687AbeDDB4P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Apr 2018 21:56:15 -0400
+From: <yamada.masahiro@socionext.com>
+To: <govinds@codeaurora.org>, <kvalo@codeaurora.org>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: RE: [PATCH 01/13] ath10k: platform driver for WCN3990 SNOC WLAN
+ module
+Date: Wed, 4 Apr 2018 01:56:12 +0000
+Message-ID: <cef0a8eddfdc499e8bb34898eb5ed29d@SOC-EX01V.e01.socionext.com> (sfid-20180404_035619_844967_B4EBDA7D)
+References: <1518684458-5338-1-git-send-email-govinds@codeaurora.org>
+ <87371kqfda.fsf@kamboji.qca.qualcomm.com>
+ <d396df1b09da4dd7aa14d6af2c2b2b18@aphydexm01b.ap.qualcomm.com>
+ <87tvttl6kp.fsf@kamboji.qca.qualcomm.com>
+ <fb2c04383f024ab8b2c62dd5a4ad20ac@SOC-EX01V.e01.socionext.com>
+ <87lgf0cn24.fsf@kamboji.qca.qualcomm.com>
+ <eccd10c7db468515fe255b75f102e301@codeaurora.org>
+In-Reply-To: <eccd10c7db468515fe255b75f102e301@codeaurora.org>
+Content-Type: text/plain; charset="iso-2022-jp"
 MIME-Version: 1.0
-In-Reply-To: <4d776721-a590-c9bd-75a4-7cddb00ac091@blackstar.nl>
-References: <20180226090917.7iabysywbv6h4rqr@alienware17> <87y3jgt6sp.fsf@kamboji.qca.qualcomm.com>
- <7d6af051-2724-5dfc-cf69-376c0b501626@blackstar.nl> <87a7vvu7ke.fsf@kamboji.qca.qualcomm.com>
- <6404ec30-b7f6-ff26-a668-2e656799b69b@blackstar.nl> <874lli7mk5.fsf@codeaurora.org>
- <4d776721-a590-c9bd-75a4-7cddb00ac091@blackstar.nl>
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date: Thu, 12 Apr 2018 20:53:04 +0200
-Message-ID: <CAFBinCC7L+jYHL3ur8czG6iwsRFe7Z0UGCfEsEo4npP7c9OPRg@mail.gmail.com> (sfid-20180412_205330_218723_BC320EAA)
-Subject: Re: [PATCH] ath9k: introduce endian_check module parameter
-To: Bas Vermeulen <bvermeul@blackstar.nl>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        ath9k-devel@qca.qualcomm.com, Felix Fietkau <nbd@nbd.name>,
-        arend.vanspriel@broadcom.com
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Bas,
-
-On Tue, Apr 10, 2018 at 11:05 AM, Bas Vermeulen <bvermeul@blackstar.nl> wrote:
-> On 14-03-18 15:34, Kalle Valo wrote:
->>
->> Bas Vermeulen <bvermeul@blackstar.nl> writes:
->>
->>>>>>> --- a/drivers/net/wireless/ath/ath9k/init.c
->>>>>>> +++ b/drivers/net/wireless/ath/ath9k/init.c
->>>>>>> @@ -67,6 +67,9 @@ static int ath9k_ps_enable;
->>>>>>>     module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
->>>>>>>     MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
->>>>>>>     +static int ath9k_endian_check;
->>>>>>> +module_param_named(endian_check, ath9k_endian_check, int, 0444);
->>>>>>> +MODULE_PARM_DESC(endian_check, "Check EEPROM for endianness
->>>>>>> compatibility");
->>>>>>>     #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
->>>>>>>       int ath9k_use_chanctx;
->>>>>>> @@ -587,7 +590,8 @@ static int ath9k_of_init(struct ath_softc *sc)
->>>>>>>                 ether_addr_copy(common->macaddr, mac);
->>>>>>>         ah->ah_flags &= ~AH_USE_EEPROM;
->>>>>>> -       ah->ah_flags |= AH_NO_EEP_SWAP;
->>>>>>> +       if (!ath9k_endian_check)
->>>>>>> +               ah->ah_flags |= AH_NO_EEP_SWAP;
->>>>>>
->>>>>> A bit annoying to have a module parameter, isn't there any automatic
->>>>>> way
->>>>>> to detect/try this? But on the other hand I guess this isn't a common
->>>>>> problem as nobody has reported this before?
->>>>>
->>>>> There is an automatic way to detect this, but that is disabled by the
->>>>> AH_NO_EEP_SWAP flag.
->>>>
->>>> Ah, I didn't check the code at all.
->>>>
->>>>> The platform initialisation does not set this flag if the endian_check
->>>>> member of pdata is set to true, but there is no way to not set this
->>>>> when using a device tree. I used a module parameter instead of a
->>>>> device tree variable because I don't know of a way to modify the
->>>>> device tree my PowerMac boots with.
->>>>
->>>> Ok, makes sense. A module parameter is not an ideal solution I guess
->>>> it's ok in this case.
->>>>
->>> Kalle: Are there any changes you want me to make in order to get this
->>> accepted? I didn't see anything for me to resolve, but I may have
->>> missed something.
->>>
->>> I can submit a patch to not set the AH_NO_EEP_SWAP flag by default if
->>> you prefer, as that would fix my problem as well. I am just not sure
->>> that doesn't break things for some platform/device I don't have.
->>
->> I'm not really sure what to do. Basically this is a choise between bad
->> for user experience (the module parameter) or risk of regressions
->> (disable AH_NO_EEP_SWAP by default). As ath9k is used in very exotic
->> hardware I'm starting to lean towards the module parameter approach
->> (your patch) but would like to know what others think, especially Felix
->> (CCed).
->>
->> Full patch here:
->>
->> https://patchwork.kernel.org/patch/10241731/
->
->
-> Just another ping. As I understood things, all OpenWRT dts' use
-> qca,no-eeprom, and perhaps we could
-> move ~AH_USE_EEPROM and |= AH_NO_EEP_SWAP in that if block.
->
-> This would solve my problem, as I need to have AH_NO_EEP_SWAP removed from
-> flags for my card (which is a
-> little endian eeprom/card used on a big endian machine).
->
-> Would you like me to prepare a patch for this? Is there anyone who can test
-> this on the various OpenWRT
-> boards/soc and or other configurations? I don't want to break things for
-> other people.
-can you please prepare a patch for this?
-if you want I can test it on two OpenWrt devices and see if it breaks
-anything (please give me a few days to test though)
-
-
-Regards
-Martin
+SGkuDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogZ292aW5kc0Bjb2Rl
+YXVyb3JhLm9yZyBbbWFpbHRvOmdvdmluZHNAY29kZWF1cm9yYS5vcmddDQo+IFNlbnQ6IEZyaWRh
+eSwgTWFyY2ggMjMsIDIwMTggODo1NSBQTQ0KPiBUbzogS2FsbGUgVmFsbyA8a3ZhbG9AY29kZWF1
+cm9yYS5vcmc+DQo+IENjOiBZYW1hZGEsIE1hc2FoaXJvLxskQjszRUQbKEIgGyRCPz85MBsoQiA8
+eWFtYWRhLm1hc2FoaXJvQHNvY2lvbmV4dC5jb20+Ow0KPiBsaW51eC13aXJlbGVzc0B2Z2VyLmtl
+cm5lbC5vcmc7IGF0aDEwa0BsaXN0cy5pbmZyYWRlYWQub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFU
+Q0ggMDEvMTNdIGF0aDEwazogcGxhdGZvcm0gZHJpdmVyIGZvciBXQ04zOTkwIFNOT0MgV0xBTg0K
+PiBtb2R1bGUNCj4gDQo+IE9uIDIwMTgtMDMtMTAgMTQ6NDEsIEthbGxlIFZhbG8gd3JvdGU6DQo+
+ID4gPHlhbWFkYS5tYXNhaGlyb0Bzb2Npb25leHQuY29tPiB3cml0ZXM6DQo+ID4NCj4gPj4+ID4+
+IEtidWlsZCBib3QgZm91bmQgYW4gb2RkIHByb2JsZW0gd2l0aCB0aGlzIHBhdGNoOg0KPiA+Pj4g
+Pj4NCj4gPj4+ID4+ICBpbmNsdWRlL2xpbnV4L2R5bmFtaWNfZGVidWcuaDo3NzoxNDogZXJyb3I6
+ICdLQlVJTERfTU9ETkFNRScNCj4gPj4+ID4+ICB1bmRlY2xhcmVkIChmaXJzdCB1c2UgaW4gdGhp
+cyBmdW5jdGlvbik7IGRpZCB5b3UgbWVhbg0KPiA+Pj4gJ0tCVUlMRF9CQVNFTkFNRSc/DQo+ID4+
+PiA+Pg0KPiA+Pj4gPj4gRnVsbCByZXBvcnQ6DQo+ID4+PiA+Pg0KPiA+Pj4gPj4NCj4gPj4+DQo+
+IGh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL3BpcGVybWFpbC9hdGgxMGsvMjAxOC1GZWJydWFy
+eS8wMTA5MDcuaHRtbA0KPiA+Pj4gPj4NCj4gPj4+ID4+IEFueSBpZGVhcz8gSXMgdGhpcyBpcyBz
+b21lIHVucmVsYXRlZCBpc3N1ZSBvciB3aGF0PyBUaGlzIHBhdGNoIGlzDQo+IG5vdA0KPiA+Pj4g
+Pj4gZXZlbiB0b3VjaGluZyBoaWYuaCBvciBjZS5jLg0KPiA+Pj4gPg0KPiA+Pj4gPiBJIGRpZG4n
+dCBlbmNvdW50ZXJlZCB0aGlzIGlzc3VlIGFzIGluIG15IGRlZmNvbmZpZyBvbmx5DQo+ID4+PiA+
+IENPTkZJR19BVEgxMEtfU05PQyB3YXMgZGVmaW5lZC4gVGhpcyBwcm9ibGVtIGlzIGNvbWluZyB3
+aGVuIHdlIGRlZmluZQ0KPiA+Pj4gPiBDT05GSUdfQVRIMTBLX1NOT0MgYW5kIENPTkZJR19BVEgx
+MEtfUENJIHNpbXVsdGFuZW91c2x5IGluIGRlZmNvbmZpZw0KPiA+Pj4gPiBhbmQgdGhpcyBpcyBr
+bm93biBpc3N1ZSB3aGVuIG11bHRpcGxlIG1vZHVsZXMgc2hhcmUgb2JqZWN0cyhpbiB0aGlzDQo+
+ID4+PiA+IGNhc2UgY2UubykuIEkgc2F3IHNpbWlsYXIgcmVwb3J0ZWQgcHJvYmxlbSBhbmQgZm91
+bmQNCj4gPj4+ID4gaHR0cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC8xMDA2MDgyNS8u
+DQo+ID4+PiA+DQo+ID4+PiA+IEFmdGVyIHBpY2tpbmcgdGhlIGJlbG93IGNoYW5nZSBpc3N1ZSBp
+cyBub3Qgc2Vlbi4NCj4gPj4+DQo+ID4+PiBMZXQncyBhc2sgdGhlIGtidWlsZCBtYWludGFpbmVy
+LiBNYXNhaGlybywgYW55IGNoYW5jZXMgb2YgZ2V0dGluZw0KPiA+Pj4gdGhpcw0KPiA+Pj4gcGF0
+Y2ggYXBwbGllZCBhbnl0aW1lIHNvb246DQo+ID4+Pg0KPiA+Pj4ga2J1aWxkOiBkZWZpbmUgS0JV
+SUxEX01PRE5BTUUgZXZlbiBpZiBtdWx0aXBsZSBtb2R1bGVzIHNoYXJlIG9iamVjdHMNCj4gPj4+
+DQo+ID4+PiBodHRwczovL3BhdGNod29yay5rZXJuZWwub3JnL3BhdGNoLzEwMDYwODI1Lw0KPiA+
+Pj4NCj4gPj4+IEluIGF0aDEwayB3ZSB3b3VsZCBuZWVkIGl0IGFzIG90aGVyd2lzZSB3ZSBhcmUg
+bm90IGFibGUgdG8gbGluayBjZS5vDQo+ID4+PiBib3RoIHRvIGF0aDEwa19wY2kua28gYW5kIGF0
+aDEwa19zbm9jLmtvLiBXaGF0IGRvIHlvdSB0aGluaz8NCj4gPj4+DQo+ID4+PiBGdWxsIGRpc2N1
+c3Npb24gYW5kIHRoZSBhdGgxMGsgcGF0Y2ggaGVyZToNCj4gPj4+DQo+ID4+PiBodHRwczovL3Bh
+dGNod29yay5rZXJuZWwub3JnL3BhdGNoLzEwMjIwNjU3Lw0KPiA+Pj4NCj4gPj4NCj4gPj4gSSBw
+bGFuIHRvIHN1Ym1pdCB2MiwgYnV0IGV2ZW4gaWYgdGhlIHVuZGVmaW5lZCBLQlVJTERfTU9ETkFN
+RSBpcw0KPiA+PiBmaXhlZCwNCj4gPj4gSSBleHBlY3QgYW5vdGhlciBwcm9ibGVtIGZyb20gdGhp
+cyBwYXRjaC4NCj4gPj4NCj4gPj4gSWYgYm90aCBDT05GSUdfQVRIMTBLX1BDSSBhbmQgQ09ORklH
+X0FUSDEwX1NOT0MgYXJlICd5Jw0KPiA+PiB0d28gaW5zdGFuY2VzIG9mIGNlLm8gd291bGQgYmUg
+bGlua2VkIGludG8gdm1saXV4LA0KPiA+PiB0aGVuIGNhdXNlcyBtdWx0aXBsZSBkZWZpbml0aW9u
+IGVycm9yLg0KPiA+DQo+ID4gT2gsIEkgZGlkbid0IHJlYWxpc2UgdGhpcy4gVGhhbmtzIGZvciBw
+b2ludGluZyBpdCBvdXQuIEdvdmluZCBpcw0KPiA+IGxvb2tpbmcNCj4gPiBhdCBvdGhlciB3YXlz
+IHRvIGZpeCB0aGlzLg0KPiANCj4gaHR0cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC8x
+MDI5ODY1OS8gaXMgcmFpc2VkIHRvIGFkZHJlc3MgdGhpcw0KPiBwcm9ibGVtLg0KPiANCg0KDQoN
+Cj4gQ0UgbGF5ZXIgaXMgc2hhcmVkIGJldHdlZW4gcGNpIGFuZCBzbm9jIHRhcmdldCBhbmQgcmVz
+dWx0cw0KPiBpbiBkdXBsaWNhdGUgb2JqZWN0IGluY2x1c2lvbiBpZiBib3RoIG1vZHVsZXMgYXJl
+IGNvbXBpbGVkDQo+IHRvZ2V0aGVyIHN0YXRpY2FsbHkgYW5kIHVuZGVmaW5lZCBLQlVJTERfTU9E
+TkFNRSBpZg0KPiBjb21waWxlZCBhcyBtb2R1bGUuDQoNCg0KSWYgeW91IHJlYmFzZSB5b3VyIGRl
+dmVsb3BtZW50IG9uIHY0LjE3LXJjMSwNCnRoaXMgc3RhdGVtZW50IGlzIG5vIGxvbmdlciB0cnVl
+Lg0KDQoNCj4gRml4IHRoaXMgYnkgYnVpbGRpbmcgY2UgbGF5ZXIgaW4gYXRoMTBrIGNvcmUgbW9k
+dWxlIGJ5DQo+IGFkZGluZyBjZSBvYmplY3QgaW5jbHVzaW9uIHdpdGggQVRIMTBLX0NFIGJvb2xl
+YW4gQ09ORklHLg0KDQoNCg0KDQpUb2RheSwgdGhlIHNvbHV0aW9uIGxhbmRlZCBpbiBMaW51cycg
+dHJlZS4NCg0KWzFdIFNvbHV0aW9uIGZvciBtaXNzaW5nIEtCVUlMRF9NT0ROQU1FIGRlZmluaXRp
+b24NCg0KY29tbWl0IGFlYWNiMDE5YjYxYzRlYTc2ODkwODU1NzRiZDAzZDJjMDgxMGYxMTkNCkF1
+dGhvcjogTWFzYWhpcm8gWWFtYWRhIDx5YW1hZGEubWFzYWhpcm9Ac29jaW9uZXh0LmNvbT4NCkRh
+dGU6ICAgTW9uIE1hciAxOSAxODowMToyNCAyMDE4ICswOTAwDQoNCiAgICBrYnVpbGQ6IGRlZmlu
+ZSBLQlVJTERfTU9ETkFNRSBldmVuIGlmIG11bHRpcGxlIG1vZHVsZXMgc2hhcmUgb2JqZWN0cw0K
+DQoNCg0KWzJdIFNvbHV0aW9uIGZvciBtdWx0aXBsZSBkZWZpbml0aW9uIGVycm9yIHdoZW4gYm90
+aCBhcmUgYnVpbHQtaW4NCg0KY29tbWl0IGY5OGZlNDdjZTUxZGVlNmQ5N2RkOTFiYmVjY2RkZTIz
+ZjA0M2M3NTQNCkF1dGhvcjogTWFzYWhpcm8gWWFtYWRhIDx5YW1hZGEubWFzYWhpcm9Ac29jaW9u
+ZXh0LmNvbT4NCkRhdGU6ICAgTW9uIE1hciAxOSAyMDoyNjowOCAyMDE4ICswOTAwDQoNCiAgICBr
+YnVpbGQ6IGxpbmsgJChyZWFsLW9iai15KSBpbnN0ZWFkIG9mICQob2JqLXkpIGludG8gYnVpbHQt
+aW4uYQ0KDQoNCg0KDQpbM10gRXhhbXBsZXMgZm9yIE1ha2VmaWxlIGNsZWFudXBzDQoNCg0KY29t
+bWl0IGY2MDUwMDVhNTBmYzE0NDNhMTRiNGU4YzljMTcyNzg4MWY4Zjk2YWUNCkF1dGhvcjogTWFz
+YWhpcm8gWWFtYWRhIDx5YW1hZGEubWFzYWhpcm9Ac29jaW9uZXh0LmNvbT4NCkRhdGU6ICAgTW9u
+IE1hciAxOSAyMDoyNjoxMCAyMDE4ICswOTAwDQoNCiAgICBuZXQ6IGxpcXVpZGlvOiBjbGVhbiB1
+cCBNYWtlZmlsZSBmb3Igc2ltcGxlciBjb21wb3NpdGUgb2JqZWN0IGhhbmRsaW5nDQoNCg0KDQpj
+b21taXQgZGMzNWRhMTZhMmUyM2RiMDQ4MjJmMDEyOWNkNWIyOGI3YjBlNzJiNA0KQXV0aG9yOiBN
+YXNhaGlybyBZYW1hZGEgPHlhbWFkYS5tYXNhaGlyb0Bzb2Npb25leHQuY29tPg0KRGF0ZTogICBN
+b24gTWFyIDE5IDIwOjI2OjA5IDIwMTggKzA5MDANCg0KICAgIGxpYjogenN0ZDogY2xlYW4gdXAg
+TWFrZWZpbGUgZm9yIHNpbXBsZXIgY29tcG9zaXRlIG9iamVjdCBoYW5kbGluZw0KDQo=
