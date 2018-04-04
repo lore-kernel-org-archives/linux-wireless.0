@@ -1,56 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43928 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750815AbeDFIJR (ORCPT
+Received: from mail-ot0-f175.google.com ([74.125.82.175]:41642 "EHLO
+        mail-ot0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753916AbeDDBwT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Apr 2018 04:09:17 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for various chipsets
-References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
-        <871sftemru.fsf@kamboji.qca.qualcomm.com>
-        <c4a1313a-73d2-a028-4fca-09f6fb6e56bd@dd-wrt.com>
-        <de9c007f-26e3-a511-e944-91e90aac7787@dd-wrt.com>
-        <1d917688-9f59-39ad-46a6-527d9e3dec03@dd-wrt.com>
-Date: Fri, 06 Apr 2018 11:09:12 +0300
-In-Reply-To: <1d917688-9f59-39ad-46a6-527d9e3dec03@dd-wrt.com> (Sebastian
-        Gottschall's message of "Thu, 5 Apr 2018 22:27:18 +0200")
-Message-ID: <87d0zcsqmv.fsf@codeaurora.org> (sfid-20180406_100922_659651_12AE535D)
+        Tue, 3 Apr 2018 21:52:19 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
+Date: Tue, 3 Apr 2018 18:51:38 -0700
+Message-ID: <CA+A7VXX+z8FrDhzW2BQ6AGMJ=_j_53wkUL_YNgkreEbWSh+jCw@mail.gmail.com> (sfid-20180404_035238_428548_8F80D89F)
+Subject: RTL8723BE performance regression
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>,
+        Steven Ting <steventing@realtek.com>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Daniel Drake <drake@endlessm.com>,
+        =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>,
+        linux@endlessm.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(adding back the lists, please don't top post and trim your quotes)
+Hello,
 
-Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
+I've been trying to track a performance regression on the RTL8723BE
+WiFi adapter, which mainly affects the upload bandwidth (although we
+can see a decreased download performance as well, the effect on upload
+is more drastic). This was first reported by users after upgrading
+from our 4.11-based kernel to our 4.13-based kernel, but also
+confirmed to affect our development branch (4.15-based kernel) and
+wireless-drivers-next at the
+wireless-drivers-next-for-davem-2018-03-29 tag. This is happening on
+an HP laptop that needs rtl8723be.ant_sel=3D1 (and all the following
+tests have been made with that param).
 
-> okay. ath10k-check is buggy and doesnt work. so it doesnt help much
-> with code styles
->
-> root@seg-desktop:/xfs/ath10k/ath.gpio# ./ath10k-check
-> global: 'drivers/net/wireless/ath/ath10k/Kconfig' is not a source file.
-> Traceback (most recent call last):
-> =C2=A0 File "./ath10k-check", line 461, in <module>
-> =C2=A0=C2=A0=C2=A0 main()
-> =C2=A0 File "./ath10k-check", line 455, in main
-> =C2=A0=C2=A0=C2=A0 ret =3D run_checkpatch(args)
-> =C2=A0 File "./ath10k-check", line 275, in run_checkpatch
-> =C2=A0=C2=A0=C2=A0 output =3D subprocess.check_output(cmd, shell=3DTrue)
-> =C2=A0 File "/usr/lib/python2.7/subprocess.py", line 219, in check_output
-> =C2=A0=C2=A0=C2=A0 raise CalledProcessError(retcode, cmd, output=3Doutput)
-> subprocess.CalledProcessError: Command 'global -f=20
-> drivers/net/wireless/ath/ath10k/Kconfig' returned non-zero exit status 1
+My first bisect attempt pointed me to the following commit:
 
-You are missing gtags, see 'ath10k-check --help' for how to install:
+bcd37f4a0831 rtlwifi: btcoex: 23b 2ant: let bt transmit when hw
+initialisation done
 
-Requirements (all available in $PATH):
+Which I later found to be already fixed by
 
-* gcc
-* sparse
-* checkpatch.pl
-* gtags (from package global)
+a33fcba6ec01 rtlwifi: btcoexist: Fix breakage of ant_sel for rtl8723be.
 
---=20
-Kalle Valo
+That fix is already included in v4.15 though (and our dev branch as
+well), so I did a second bisect, now cherry-picking a33fcba6ec01 at
+every step, and it pointed me to the following commit:
+
+7937f02d1953 rtlwifi: btcoex: hook external functions for newer chips
+
+Reverting that commit on top of our development branch fixes the
+problem, but on top of v4.15 I get mixed results: a few times getting
+a good upload performance (~5-6Mbps) but most of the time just getting
+~1-1.5Mpbs (which is still better than the 0.0 then test failure I've
+gotten on most bad points of the bisect).
+
+Bisecting the downstream patches we carry on top of v4.15 (we base our
+kernel on Ubuntu's, so there are quite a few downstream changes) did
+not bring any clarity, as at all bisect points (plus reverting
+7937f02d1953) the performance was good, so probably there was some
+other difference in the resulting kernels from my initial revert of
+that patch on top of v4.15 and each step during the bisect. I've
+experimented a bit with fwlps=3D0, but it did not bring any conclusive
+results either. I'll try to look at other things that may have changed
+(configuration perhaps?), but I don't have a clear plan yet.
+
+Have you seen anything similar, or have any other ideas or suggestions
+to track this problem? Even without crystal clear results, it looks
+like 7937f02d1953 is having a negative impact on the RTL8723BE
+performance, so perhaps it is worth reverting it and reworking it a
+later point?
+
+This are the results (testing with speedtest.net) I got at some key points:
+
+Version        Commit        Ping        Down        Up
+
+v4.11            a351e9b        12        25.44        5.99
+v4.11            a351e9b        131      17.02        5.89
+
+v4.13            569dbb8        174      14.08        0.00
+v4.13            569dbb8        261      8.41          0.00
+
+v4.15+revert d8a5b80        19        23.86        1.41
+v4.15+revert d8a5b80        189      18.69        1.39
+
+Best regards,
+
+--
+Jo=C3=A3o Paulo Rechi Vita
+http://about.me/jprvita
