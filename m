@@ -1,151 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:45474 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751461AbeD3Vaz (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:39052 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753340AbeDDDDG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Apr 2018 17:30:55 -0400
-From: s.gottschall@dd-wrt.com
-To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Subject: [PATCH v7] ath10k: fix crash in recent 3.5.3 9984 firmware due wrong handling of peer_bw_rxnss_override parameter
-Date: Mon, 30 Apr 2018 23:30:46 +0200
-Message-Id: <20180430213046.8393-1-s.gottschall@dd-wrt.com> (sfid-20180430_233059_052862_6250A6E2)
+        Tue, 3 Apr 2018 23:03:06 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [PATCH 2/3] mwifiex: always configure firmware mac address during changing virtual interface
+Date: Wed, 4 Apr 2018 11:02:40 +0800
+Message-ID: <1522810961-27521-2-git-send-email-huxm@marvell.com> (sfid-20180404_050310_241904_5C419755)
+In-Reply-To: <1522810961-27521-1-git-send-email-huxm@marvell.com>
+References: <1522810961-27521-1-git-send-email-huxm@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+When interface type changed, firmware using a new connction pointer.
+We need Re-configure the mac address.
 
-current handling of peer_bw_rxnss_override parameter is based on guessing the VHT160/8080 capability by rx rate. this is wrong and may lead
-to a non initialized peer_bw_rxnss_override parameter which is required since VHT160 operation mode only supports 2x2 chainmasks in addition the original code
-initialized the parameter with wrong masked values.
-This patch uses the peer phymode and peer nss information for correct initialisation of the peer_bw_rxnss_override parameter.
-if this peer information is not available, we initialize the parameter by minimum nss which is suggested by QCA as temporary workaround according
-to the QCA sourcecodes.
-
-Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-
-v2: remove debug messages
-v3: apply some cosmetics, update documentation
-v4: fix compile warning and truncate nss to maximum of 2x2 since current chipsets only support 2x2 at vht160
-v5: handle maximum nss for chipsets supportig vht160 with 1x1 only
-v7: use more simple code variant and take care about hw/sw chainmask configuration
+Signed-off-by: Xinming Hu <huxm@marvell.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 40 +++++++++++++++------------
- drivers/net/wireless/ath/ath10k/wmi.c |  7 +----
- drivers/net/wireless/ath/ath10k/wmi.h | 14 +++++++++-
- 3 files changed, 36 insertions(+), 25 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/main.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 5be6386ede8f..0483ebf15e23 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2468,7 +2468,7 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
- 	const u16 *vht_mcs_mask;
- 	u8 ampdu_factor;
- 	u8 max_nss, vht_mcs;
--	int i;
-+	int i, nss160;
- 
- 	if (WARN_ON(ath10k_mac_vif_chan(vif, &def)))
- 		return;
-@@ -2528,23 +2528,27 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
- 		__le16_to_cpu(vht_cap->vht_mcs.tx_highest);
- 	arg->peer_vht_rates.tx_mcs_set = ath10k_peer_assoc_h_vht_limit(
- 		__le16_to_cpu(vht_cap->vht_mcs.tx_mcs_map), vht_mcs_mask);
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index cd3fc4e..cef4dea8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -982,9 +982,6 @@ int mwifiex_set_mac_address(struct mwifiex_private *priv,
+ 			mac_addr ^= BIT_ULL(priv->bss_type + 8);
+ 			mac_addr += priv->bss_num;
+ 		}
 -
--	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
--		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
--
--	if (arg->peer_vht_rates.rx_max_rate &&
--	    (sta->vht_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK)) {
--		switch (arg->peer_vht_rates.rx_max_rate) {
--		case 1560:
--			/* Must be 2x2 at 160Mhz is all it can do. */
--			arg->peer_bw_rxnss_override = 2;
--			break;
--		case 780:
--			/* Can only do 1x1 at 160Mhz (Long Guard Interval) */
--			arg->peer_bw_rxnss_override = 1;
--			break;
--		}
-+	arg->peer_bw_rxnss_override = 0;
-+	nss160 = 1; /* 1x1 default config for VHT160 */
-+
-+	/* only 4x4 configuration do support 2x2 for VHT160, everything else must use 1x1 */
-+	if (ar->cfg_rx_chainmask == 15)
-+		nss160 = arg->peer_num_spatial_streams <= 2 ? arg->peer_num_spatial_streams : 2;
-+
-+	/* in case if peer is connected with vht160 or vht80+80, we need to properly adjust rxnss parameters otherwise firmware will raise a assert */
-+	switch(arg->peer_phymode) {
-+	case MODE_11AC_VHT80_80:
-+		arg->peer_bw_rxnss_override = BW_NSS_FWCONF_80_80(nss160);
-+	/* fall through */
-+	case MODE_11AC_VHT160:
-+		arg->peer_bw_rxnss_override |= BW_NSS_FWCONF_160(nss160);
-+	break;
-+	default:
-+	break;
+-		if (mac_addr == old_mac_addr)
+-			goto done;
  	}
-+
-+	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x peer_bw_rxnss_override 0x%x\n",
-+		   sta->addr, arg->peer_max_mpdu, arg->peer_flags, arg->peer_bw_rxnss_override);
- }
  
- static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
-@@ -2696,9 +2700,9 @@ static int ath10k_peer_assoc_prepare(struct ath10k *ar,
- 	ath10k_peer_assoc_h_crypto(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_rates(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_ht(ar, vif, sta, arg);
-+	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_vht(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_qos(ar, vif, sta, arg);
--	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
+ 	u64_to_ether_addr(mac_addr, priv->curr_addr);
+@@ -1000,7 +997,6 @@ int mwifiex_set_mac_address(struct mwifiex_private *priv,
+ 		return ret;
+ 	}
  
+-done:
+ 	ether_addr_copy(dev->dev_addr, priv->curr_addr);
  	return 0;
  }
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 2c36256a441d..3797dca317ff 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -7211,12 +7211,7 @@ ath10k_wmi_peer_assoc_fill_10_4(struct ath10k *ar, void *buf,
- 	struct wmi_10_4_peer_assoc_complete_cmd *cmd = buf;
- 
- 	ath10k_wmi_peer_assoc_fill_10_2(ar, buf, arg);
--	if (arg->peer_bw_rxnss_override)
--		cmd->peer_bw_rxnss_override =
--			__cpu_to_le32((arg->peer_bw_rxnss_override - 1) |
--				      BIT(PEER_BW_RXNSS_OVERRIDE_OFFSET));
--	else
--		cmd->peer_bw_rxnss_override = 0;
-+	cmd->peer_bw_rxnss_override = __cpu_to_le32(arg->peer_bw_rxnss_override);
- }
- 
- static int
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 46ae19bb2c92..1fe0aa5523a6 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -6380,7 +6380,19 @@ struct wmi_10_2_peer_assoc_complete_cmd {
- 	__le32 info0; /* WMI_PEER_ASSOC_INFO0_ */
- } __packed;
- 
--#define PEER_BW_RXNSS_OVERRIDE_OFFSET  31
-+#define BW_NSS_FWCONF_MAP_ENABLE             (1 << 31)
-+#define BW_NSS_FWCONF_MAP_160MHZ_S           (0)
-+#define BW_NSS_FWCONF_MAP_160MHZ_M           (0x00000007)
-+#define BW_NSS_FWCONF_MAP_80_80MHZ_S         (3)
-+#define BW_NSS_FWCONF_MAP_80_80MHZ_M         (0x00000038)
-+#define BW_NSS_FWCONF_MAP_M                  (0x0000003F)
-+
-+#define GET_BW_NSS_FWCONF_160(x)             ((((x) & BW_NSS_FWCONF_MAP_160MHZ_M) >> BW_NSS_FWCONF_MAP_160MHZ_S) + 1)
-+#define GET_BW_NSS_FWCONF_80_80(x)           ((((x) & BW_NSS_FWCONF_MAP_80_80MHZ_M) >> BW_NSS_FWCONF_MAP_80_80MHZ_S) + 1)
-+
-+/* Values defined to set 160 MHz Bandwidth NSS Mapping into FW*/
-+#define BW_NSS_FWCONF_160(x)          (BW_NSS_FWCONF_MAP_ENABLE | (((x - 1) << BW_NSS_FWCONF_MAP_160MHZ_S) & BW_NSS_FWCONF_MAP_160MHZ_M))
-+#define BW_NSS_FWCONF_80_80(x)        (BW_NSS_FWCONF_MAP_ENABLE | (((x - 1) << BW_NSS_FWCONF_MAP_80_80MHZ_S) & BW_NSS_FWCONF_MAP_80_80MHZ_M))
- 
- struct wmi_10_4_peer_assoc_complete_cmd {
- 	struct wmi_10_2_peer_assoc_complete_cmd cmd;
 -- 
-2.17.0
+1.9.1
