@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38088 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756120AbeDXFzY (ORCPT
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:52148 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750711AbeDDHig (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 01:55:24 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 4 Apr 2018 03:38:36 -0400
+Received: by mail-wm0-f46.google.com with SMTP id u189so3020531wmd.1
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Apr 2018 00:38:35 -0700 (PDT)
+Subject: Re: Request for brcmfmac4366c-pcie.bin
+To: Hubert Wiedeke <info@stackinside.com>
+References: <20180217111959.9548246f2ee99918857b44f8@stackinside.com>
+ <5A8ABA2B.70500@broadcom.com>
+ <20180404051229.f31c6913c9d4d26ae4fb0c1e@stackinside.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AC480F8.7060001@broadcom.com> (sfid-20180404_093844_960043_F4098226)
+Date: Wed, 4 Apr 2018 09:38:32 +0200
 MIME-Version: 1.0
-Subject: Re: [v2] ath10k: Convert wow pattern from 802.3 to 802.11
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1523507057-20650-1-git-send-email-wgong@codeaurora.org>
-References: <1523507057-20650-1-git-send-email-wgong@codeaurora.org>
-To: Wen Gong <wgong@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Message-Id: <20180424055523.CA21D6090E@smtp.codeaurora.org> (sfid-20180424_075543_414669_16CF21F2)
-Date: Tue, 24 Apr 2018 05:55:23 +0000 (UTC)
+In-Reply-To: <20180404051229.f31c6913c9d4d26ae4fb0c1e@stackinside.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wen Gong <wgong@codeaurora.org> wrote:
+On 4/4/2018 4:12 AM, Hubert Wiedeke wrote:
+> On Mon, 19 Feb 2018 12:51:07 +0100
+> Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+>
+>> On 2/17/2018 9:19 AM, Hubert Wiedeke wrote:
+>>> Hi,
+>>>
+>>> I'd like to ask about the current status of 4366c firmware preparation for linux-firmware.git . Is it close to finish? What about DFS? Nothing critical, just a question.
+>>
+>> I have prepared some firmware changes for 4366, but did not manage to
+>> get any test-cycles for it.
+>>
+>> Regards,
+>> Arend
+>>
+>
+> Could you please estimate any possible dates for the tested FW to be released?
 
-> When trying to set wow wakeup patterns it fails with this command:
-> 
-> iw phyxx wowlan enable patterns offset xx+ IP address xx.xx.xx.xx
-> 
-> The reason is that the wow pattern from upper layer is in 802.3 format
-> for this case, it need to convert it to 802.11 format. The input
-> offset parameter is used for 802.3, but the actual offset firmware
-> need depends on rx_decap_mode, so that it needs to be recalculated.
-> Pattern of 802.3 packet is not same with 802.11 packet. If the
-> rx_decap_mode is ATH10K_HW_TXRX_NATIVE_WIFI, then firmware will
-> receive data packet with 802.11 format from hardware.
-> 
-> Tested with QCA6174 hw3.0 with firmware
-> WLAN.RM.4.4.1-00099-QCARMSWPZ-1, but this will also affect QCA9377.
-> This has always failed, so it's not a regression with new firmware
-> releases.
-> 
-> Signed-off-by: Wen Gong <wgong@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Not really. Linux open-source work is getting rather low prio when it 
+comes to claiming test lab resources. Best I can say is somewhere this year.
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-fa3440fa2fa1 ath10k: convert wow pattern from 802.3 to 802.11
-
--- 
-https://patchwork.kernel.org/patch/10337877/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Regards,
+Arend
