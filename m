@@ -1,117 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40840 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751234AbeDVI2A (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:43450 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751104AbeDDKgY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Apr 2018 04:28:00 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 22 Apr 2018 11:27:38 +0300
-Message-Id: <20180422082745.9743-6-luca@coelho.fi> (sfid-20180422_102821_520094_86745BB1)
-In-Reply-To: <20180422082745.9743-1-luca@coelho.fi>
-References: <20180422082745.9743-1-luca@coelho.fi>
-Subject: [PATCH 05/12] iwlwifi: support new csr addresses for hw address
+        Wed, 4 Apr 2018 06:36:24 -0400
+Message-ID: <1522838180.3042.1.camel@sipsolutions.net> (sfid-20180404_123635_188613_A8861AA3)
+Subject: Re: [PATCH] nl80211: Update ERP info using
+ NL80211_CMD_UPDATE_CONNECT_PARAMS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Vidyullatha Kanchanapally <vidyullatha@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
+        amarnath@qti.qualcomm.com, usdutt@qti.qualcomm.com,
+        vamsin@qti.qualcomm.com, Jithu Jance <jithu.jance@broadcom.com>,
+        Eylon Pedinovsky <eylon.pedinovsky@broadcom.com>
+Date: Wed, 04 Apr 2018 12:36:20 +0200
+In-Reply-To: <5AC4990E.7060806@broadcom.com> (sfid-20180404_112123_933188_E2922C74)
+References: <1508923248-18848-1-git-send-email-vidyullatha@codeaurora.org>
+         <1512990779.26976.69.camel@sipsolutions.net>
+         <5ABCCA33.8070501@broadcom.com> <1522322166.5932.13.camel@sipsolutions.net>
+         <5ABCCE7D.3050702@broadcom.com> <5AC4990E.7060806@broadcom.com>
+         (sfid-20180404_112123_933188_E2922C74)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+Hi,
 
-In future devices we use different csr addresses for hw addresses.
-Update csr addresses to support new and legacy devices.
+> Started working on this and actually the "weird flags thing" is done for 
+> a reason. Maybe the reason was because it is done like that in the 
+> CMD_CONNECT case, but the better reason is that we need to return 
+> -EINVAL for "no-fils-offload-support, any-fils-param" *and* 
+> "fils-offload-support, not-all-fils-param".
 
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../net/wireless/intel/iwlwifi/iwl-config.h   | 20 +++++++++++++++++--
- .../wireless/intel/iwlwifi/iwl-nvm-parse.c    | 14 +++++++++----
- 2 files changed, 28 insertions(+), 6 deletions(-)
+Ok, fair enough.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 7752794d0437..cfd14e5ea59c 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -313,6 +313,10 @@ struct iwl_pwr_tx_backoff {
-  * @flag_master_dis: disable master
-  * @flag_stop_master: stop master
-  * @addr_sw_reset: address for resetting the device
-+ * @mac_addr0_otp: first part of MAC address from OTP
-+ * @mac_addr1_otp: second part of MAC address from OTP
-+ * @mac_addr0_strap: first part of MAC address from strap
-+ * @mac_addr1_strap: second part of MAC address from strap
-  */
- struct iwl_csr_params {
- 	u8 flag_sw_reset;
-@@ -323,6 +327,10 @@ struct iwl_csr_params {
- 	u8 flag_master_dis;
- 	u8 flag_stop_master;
- 	u8 addr_sw_reset;
-+	u32 mac_addr0_otp;
-+	u32 mac_addr1_otp;
-+	u32 mac_addr0_strap;
-+	u32 mac_addr1_strap;
- };
- 
- /**
-@@ -451,7 +459,11 @@ static const struct iwl_csr_params iwl_csr_v1 = {
- 	.flag_sw_reset = 7,
- 	.flag_master_dis = 8,
- 	.flag_stop_master = 9,
--	.addr_sw_reset = (CSR_BASE + 0x020)
-+	.addr_sw_reset = (CSR_BASE + 0x020),
-+	.mac_addr0_otp = 0x380,
-+	.mac_addr1_otp = 0x384,
-+	.mac_addr0_strap = 0x388,
-+	.mac_addr1_strap = 0x38C
- };
- 
- static const struct iwl_csr_params iwl_csr_v2 = {
-@@ -462,7 +474,11 @@ static const struct iwl_csr_params iwl_csr_v2 = {
- 	.flag_master_dis = 28,
- 	.flag_stop_master = 29,
- 	.flag_sw_reset = 31,
--	.addr_sw_reset = (CSR_BASE + 0x024)
-+	.addr_sw_reset = (CSR_BASE + 0x024),
-+	.mac_addr0_otp = 0x30,
-+	.mac_addr1_otp = 0x34,
-+	.mac_addr0_strap = 0x38,
-+	.mac_addr1_strap = 0x3C
- };
- 
- /*
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 6d33c14579d9..aa83db5744df 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -579,8 +579,12 @@ static void iwl_flip_hw_address(__le32 mac_addr0, __le32 mac_addr1, u8 *dest)
- static void iwl_set_hw_address_from_csr(struct iwl_trans *trans,
- 					struct iwl_nvm_data *data)
- {
--	__le32 mac_addr0 = cpu_to_le32(iwl_read32(trans, CSR_MAC_ADDR0_STRAP));
--	__le32 mac_addr1 = cpu_to_le32(iwl_read32(trans, CSR_MAC_ADDR1_STRAP));
-+	__le32 mac_addr0 =
-+		cpu_to_le32(iwl_read32(trans,
-+				       trans->cfg->csr->mac_addr0_strap));
-+	__le32 mac_addr1 =
-+		cpu_to_le32(iwl_read32(trans,
-+				       trans->cfg->csr->mac_addr1_strap));
- 
- 	iwl_flip_hw_address(mac_addr0, mac_addr1, data->hw_addr);
- 	/*
-@@ -590,8 +594,10 @@ static void iwl_set_hw_address_from_csr(struct iwl_trans *trans,
- 	if (is_valid_ether_addr(data->hw_addr))
- 		return;
- 
--	mac_addr0 = cpu_to_le32(iwl_read32(trans, CSR_MAC_ADDR0_OTP));
--	mac_addr1 = cpu_to_le32(iwl_read32(trans, CSR_MAC_ADDR1_OTP));
-+	mac_addr0 = cpu_to_le32(iwl_read32(trans,
-+					   trans->cfg->csr->mac_addr0_otp));
-+	mac_addr1 = cpu_to_le32(iwl_read32(trans,
-+					   trans->cfg->csr->mac_addr1_otp));
- 
- 	iwl_flip_hw_address(mac_addr0, mac_addr1, data->hw_addr);
- }
--- 
-2.17.0
+> > Also there is a DOC section about FILS shared key authentication
+> > offload" so I suppose that should be extended as well.
+> 
+> So looking at the DOC section I am reading the following:
+> 
+>   * When FILS shared key authentication is completed, driver needs to 
+> provide the
+>   * below additional parameters to userspace.
+>   *	%NL80211_ATTR_FILS_KEK - used for key renewal
+>   *	%NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM - used in further EAP-RP exchanges
+>   *	%NL80211_ATTR_PMKID - used to identify the PMKSA used/generated
+>   *	%Nl80211_ATTR_PMK - used to update PMKSA cache in userspace
+>   * The PMKSA can be maintained in userspace persistently so that it can 
+> be used
+>   * later after reboots or wifi turn off/on also.
+> 
+> So to me it seems we need these for the ROAM event as well. Agree?
+
+Maybe not all of them, you could be using the same PMKSA, but yes, I
+tend to agree.
+
+johannes
