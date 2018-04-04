@@ -1,111 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:37102 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753070AbeDQNYA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Apr 2018 09:24:00 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
-        loic.poulain@linaro.org, rfried@codeaurora.org,
-        bjorn.andersson@linaro.org, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH v2 5/5] wcn36xx: pass information elements in scan requests
-Date: Tue, 17 Apr 2018 15:23:37 +0200
-Message-Id: <20180417132337.31720-6-daniel@zonque.org> (sfid-20180417_152411_604314_3D0A6EA1)
-In-Reply-To: <20180417132337.31720-1-daniel@zonque.org>
-References: <20180417132337.31720-1-daniel@zonque.org>
+Received: from mail-ot0-f178.google.com ([74.125.82.178]:44722 "EHLO
+        mail-ot0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752750AbeDDC2j (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Apr 2018 22:28:39 -0400
+Subject: Re: RTL8723BE performance regression
+To: =?UTF-8?Q?Jo=c3=a3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>,
+        Steven Ting <steventing@realtek.com>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Daniel Drake <drake@endlessm.com>,
+        =?UTF-8?Q?Jo=c3=a3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>,
+        linux@endlessm.com
+References: <CA+A7VXX+z8FrDhzW2BQ6AGMJ=_j_53wkUL_YNgkreEbWSh+jCw@mail.gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <afdf0498-c0a9-936c-0c9b-1b6da6eb5957@lwfinger.net> (sfid-20180404_042855_186870_26B4955B)
+Date: Tue, 3 Apr 2018 21:28:36 -0500
+MIME-Version: 1.0
+In-Reply-To: <CA+A7VXX+z8FrDhzW2BQ6AGMJ=_j_53wkUL_YNgkreEbWSh+jCw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the wifi driver core passes IE elements in the scan request, append
-them to the firmware message. The driver currently tells the core that
-it is capable of attaching up to WCN36XX_MAX_SCAN_IE_LEN octets, but
-doesn't actually pass them to the the hardware.
+On 04/03/2018 08:51 PM, João Paulo Rechi Vita wrote:
+> Hello,
+> 
+> I've been trying to track a performance regression on the RTL8723BE
+> WiFi adapter, which mainly affects the upload bandwidth (although we
+> can see a decreased download performance as well, the effect on upload
+> is more drastic). This was first reported by users after upgrading
+> from our 4.11-based kernel to our 4.13-based kernel, but also
+> confirmed to affect our development branch (4.15-based kernel) and
+> wireless-drivers-next at the
+> wireless-drivers-next-for-davem-2018-03-29 tag. This is happening on
+> an HP laptop that needs rtl8723be.ant_sel=1 (and all the following
+> tests have been made with that param).
+> 
+> My first bisect attempt pointed me to the following commit:
+> 
+> bcd37f4a0831 rtlwifi: btcoex: 23b 2ant: let bt transmit when hw
+> initialisation done
+> 
+> Which I later found to be already fixed by
+> 
+> a33fcba6ec01 rtlwifi: btcoexist: Fix breakage of ant_sel for rtl8723be.
+> 
+> That fix is already included in v4.15 though (and our dev branch as
+> well), so I did a second bisect, now cherry-picking a33fcba6ec01 at
+> every step, and it pointed me to the following commit:
+> 
+> 7937f02d1953 rtlwifi: btcoex: hook external functions for newer chips
+> 
+> Reverting that commit on top of our development branch fixes the
+> problem, but on top of v4.15 I get mixed results: a few times getting
+> a good upload performance (~5-6Mbps) but most of the time just getting
+> ~1-1.5Mpbs (which is still better than the 0.0 then test failure I've
+> gotten on most bad points of the bisect).
+> 
+> Bisecting the downstream patches we carry on top of v4.15 (we base our
+> kernel on Ubuntu's, so there are quite a few downstream changes) did
+> not bring any clarity, as at all bisect points (plus reverting
+> 7937f02d1953) the performance was good, so probably there was some
+> other difference in the resulting kernels from my initial revert of
+> that patch on top of v4.15 and each step during the bisect. I've
+> experimented a bit with fwlps=0, but it did not bring any conclusive
+> results either. I'll try to look at other things that may have changed
+> (configuration perhaps?), but I don't have a clear plan yet.
+> 
+> Have you seen anything similar, or have any other ideas or suggestions
+> to track this problem? Even without crystal clear results, it looks
+> like 7937f02d1953 is having a negative impact on the RTL8723BE
+> performance, so perhaps it is worth reverting it and reworking it a
+> later point?
+> 
+> This are the results (testing with speedtest.net) I got at some key points:
+> 
+> Version        Commit        Ping        Down        Up
+> 
+> v4.11            a351e9b        12        25.44        5.99
+> v4.11            a351e9b        131      17.02        5.89
+> 
+> v4.13            569dbb8        174      14.08        0.00
+> v4.13            569dbb8        261      8.41          0.00
+> 
+> v4.15+revert d8a5b80        19        23.86        1.41
+> v4.15+revert d8a5b80        189      18.69        1.39
+> 
 
-Note that this patch doesn't fix a bug that was observed. The change is
-merely done for the sake of completeness as the hardware supports
-appending IEs in scans. Tests show that network scans work fine with
-this patch applied.
+As the antenna selection code changes affected your first bisection, do you have 
+one of those HP laptops with only one antenna and the incorrect coding in the 
+FUSE? If so, please make sure that you still have the same signal strength for 
+good and bad cases. I have tried to keep the driver and the btcoex code in sync, 
+but there may be some combinations of antenna configuration and FUSE contents 
+that cause the code to fail.
 
-Some defines were moved around to avoid cyclic include dependencies.
-
-Signed-off-by: Daniel Mack <daniel@zonque.org>
----
- drivers/net/wireless/ath/wcn36xx/hal.h     |  8 +++++++-
- drivers/net/wireless/ath/wcn36xx/smd.c     | 11 +++++++++++
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  6 ------
- 3 files changed, 18 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
-index 182963522941..2aed6c233508 100644
---- a/drivers/net/wireless/ath/wcn36xx/hal.h
-+++ b/drivers/net/wireless/ath/wcn36xx/hal.h
-@@ -88,6 +88,12 @@
- /* version string max length (including NULL) */
- #define WCN36XX_HAL_VERSION_LENGTH  64
- 
-+/* How many frames until we start a-mpdu TX session */
-+#define WCN36XX_AMPDU_START_THRESH	20
-+
-+#define WCN36XX_MAX_SCAN_SSIDS		9
-+#define WCN36XX_MAX_SCAN_IE_LEN		500
-+
- /* message types for messages exchanged between WDI and HAL */
- enum wcn36xx_hal_host_msg_type {
- 	/* Init/De-Init */
-@@ -1170,7 +1176,7 @@ struct wcn36xx_hal_start_scan_offload_req_msg {
- 
- 	/* IE field */
- 	u16 ie_len;
--	u8 ie[0];
-+	u8 ie[WCN36XX_MAX_SCAN_IE_LEN];
- } __packed;
- 
- struct wcn36xx_hal_start_scan_offload_rsp_msg {
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 9c8ce5e0454f..ea74f2b92df5 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -624,6 +624,9 @@ int wcn36xx_smd_start_hw_scan(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 	struct wcn36xx_hal_start_scan_offload_req_msg msg_body;
- 	int ret, i;
- 
-+	if (req->ie_len > WCN36XX_MAX_SCAN_IE_LEN)
-+		return -EINVAL;
-+
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_START_SCAN_OFFLOAD_REQ);
- 
-@@ -648,6 +651,14 @@ int wcn36xx_smd_start_hw_scan(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 	for (i = 0; i < msg_body.num_channel; i++)
- 		msg_body.channels[i] = req->channels[i]->hw_value;
- 
-+	msg_body.header.len -= WCN36XX_MAX_SCAN_IE_LEN;
-+
-+	if (req->ie_len > 0) {
-+		msg_body.ie_len = req->ie_len;
-+		msg_body.header.len += req->ie_len;
-+		memcpy(msg_body.ie, req->ie, req->ie_len);
-+	}
-+
- 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
- 
- 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index 22e05cb4eb98..9343989d1169 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -32,12 +32,6 @@
- #define WLAN_NV_FILE               "wlan/prima/WCNSS_qcom_wlan_nv.bin"
- #define WCN36XX_AGGR_BUFFER_SIZE 64
- 
--/* How many frames until we start a-mpdu TX session */
--#define WCN36XX_AMPDU_START_THRESH	20
--
--#define WCN36XX_MAX_SCAN_SSIDS		9
--#define WCN36XX_MAX_SCAN_IE_LEN		500
--
- extern unsigned int wcn36xx_dbg_mask;
- 
- enum wcn36xx_debug_mask {
--- 
-2.14.3
+Larry
