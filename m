@@ -1,71 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:12542 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753592AbeD3O33 (ORCPT
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:44857 "EHLO
+        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754850AbeDDCnR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Apr 2018 10:29:29 -0400
-Date: Mon, 30 Apr 2018 19:59:16 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-CC: Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
-Subject: Re: [PATCH] staging: wilc1000: fix infinite loop and out-of-bounds
- access
-Message-ID: <20180430195916.596a93eb@ajaysk-VirtualBox> (sfid-20180430_162943_373770_2A10659B)
-In-Reply-To: <20180430125040.GA19050@embeddedor.com>
-References: <20180430125040.GA19050@embeddedor.com>
+        Tue, 3 Apr 2018 22:43:17 -0400
+Received: by mail-oi0-f53.google.com with SMTP id j143-v6so17868833oih.11
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Apr 2018 19:43:17 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 1/9] rtlwifi: btcoex: Add 8822b1ant coex files
+To: pkshih@realtek.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+References: <20180328072741.23349-1-pkshih@realtek.com>
+ <20180328072741.23349-2-pkshih@realtek.com>
+Message-ID: <f4d2fe50-76b0-27a8-a119-018d7d7d1286@lwfinger.net> (sfid-20180404_044321_955939_0A9A3113)
+Date: Tue, 3 Apr 2018 21:43:15 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <20180328072741.23349-2-pkshih@realtek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reviewed-by: Ajay Singh <ajay.kathat@microchip.com>
-
-On Mon, 30 Apr 2018 07:50:40 -0500
-"Gustavo A. R. Silva" <gustavo@embeddedor.com> wrote:
-
-> If i < slot_id is initially true then it will remain true. Also,
-> as i is being decremented it will end up accessing memory out of
-> bounds.
+On 03/28/2018 02:27 AM, pkshih@realtek.com wrote:
+> From: Ping-Ke Shih <pkshih@realtek.com>
 > 
-> Fix this by incrementing *i* instead of decrementing it.
-
-Nice catch!
-Thanks for submitting the changes.
-
+> This file supports 8822be WiFi module with two physical antenna that
+> means one antenna will share with BT.
 > 
-> Addresses-Coverity-ID: 1468454 ("Infinite loop")
-> Fixes: faa657641081 ("staging: wilc1000: refactor scan() to free
-> kmalloc memory on failure cases")
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 > ---
-> 
-> BTW... at first sight it seems to me that variables slot_id
-> and i should be of type unsigned instead of signed.
+>   .../realtek/rtlwifi/btcoexist/halbtc8822b1ant.c    | 5303 ++++++++++++++++++++
+>   .../realtek/rtlwifi/btcoexist/halbtc8822b1ant.h    |  413 ++
+>   2 files changed, 5716 insertions(+)
+>   create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.c
+>   create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.h
 
-Yes, 'slot_id' & 'i' can be changed to unsigned int.
+--snip--
 
-> 
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c index
-> 3ca0c97..67104e8 100644 ---
-> a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c +++
-> b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c @@ -608,7
-> +608,7 @@ wilc_wfi_cfg_alloc_fill_ssid(struct cfg80211_scan_request
-> *request, out_free:
->  
-> -	for (i = 0; i < slot_id ; i--)
-> +	for (i = 0; i < slot_id; i++)
->  		kfree(ntwk->net_info[i].ssid);
->  
->  	kfree(ntwk->net_info);
+> +/*anttenna control by bb mac bt antdiv pta to write 0x4c 0xcb4,0xcbd*/
+> +
+> +static
+> +void hallbtc882b1ant_set_ant_switch(struct btc_coexist *btcoexist,
+> +				    bool force_exec, u8 ctrl_type,
+> +				    u8 pos_type)
+> +{
+> +	struct rtl_priv *rtlpriv = btcoexist->adapter;
+> +	bool switch_polatiry_inverse = false;
+> +	u8 regval_0xcbd = 0, regval_0x64;
+> +	u32 u32tmp1 = 0, u32tmp2 = 0, u32tmp3 = 0;
+> +
+> +	/* Ext switch buffer mux */
+> +	btcoexist->btc_write_1byte(btcoexist, 0x974, 0xff);
+> +	btcoexist->btc_write_1byte_bitmask(btcoexist, 0x1991, 0x3, 0x0);
+> +	btcoexist->btc_write_1byte_bitmask(btcoexist, 0xcbe, 0x8, 0x0);
+> +
+> +	if (!rfe_type->ext_ant_switch_exist)
+> +		return;
+> +
+> +	coex_dm->cur_ext_ant_switch_status = (ctrl_type << 8) + pos_type;
+> +
+> +	if (!force_exec) {
+> +		if (coex_dm->pre_ext_ant_switch_status ==
+> +		    coex_dm->cur_ext_ant_switch_status)
+> +			return;
+> +	}
+> +
+> +	coex_dm->pre_ext_ant_switch_status = coex_dm->cur_ext_ant_switch_status;
+> +
+> +	/* swap control polarity if use different switch control polarity*/
+> +	/* Normal switch polarity for SPDT,
+> +	 * 0xcbd[1:0] = 2b'01 => Ant to BTG, WLA
+> +	 * 0xcbd[1:0] = 2b'10 => Ant to WLG
+> +	 */
+> +	switch_polatiry_inverse = (rfe_type->ext_ant_switch_ctrl_polarity == 1 ?
+> +					   ~switch_polatiry_inverse :
+> +					   switch_polatiry_inverse);
 
+gcc 7.3.1 reports the following:
 
+   CC [M]  drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.o
+drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.c: In function 
+‘hallbtc882b1ant_set_ant_switch’:
+drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.c:2193:9: 
+warning: ‘~’ on a boolean expression [-Wbool-operation]
+          ~switch_polatiry_inverse :
+          ^
+drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.c:2193:9: note: 
+did you mean to use logical not?
+          ~switch_polatiry_inverse :
+          ^
 
-Regards,
-Ajay
+For a boolean, you should use !bool, not -bool. In addition, it would be better 
+to use switch_polarity_inverse, not switch_polatiry_inverse. The same "typo" 
+happens in other places in this file. I suggest
+
+sed -i 's/polatiry_inverse/polarity_inverse/g' \
+drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.c.
+
+> +
+> +	switch (pos_type) {
+
+Larry
