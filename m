@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:37076 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753070AbeDQNX6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Apr 2018 09:23:58 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
-        loic.poulain@linaro.org, rfried@codeaurora.org,
-        bjorn.andersson@linaro.org, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH v2 2/5] wcn36xx: cancel pending scan request when interface goes down
-Date: Tue, 17 Apr 2018 15:23:34 +0200
-Message-Id: <20180417132337.31720-3-daniel@zonque.org> (sfid-20180417_152402_642654_B8E73BFB)
-In-Reply-To: <20180417132337.31720-1-daniel@zonque.org>
-References: <20180417132337.31720-1-daniel@zonque.org>
+Received: from mail-bn3nam01on0054.outbound.protection.outlook.com ([104.47.33.54]:10112
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751275AbeDEQbT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Apr 2018 12:31:19 -0400
+Date: Thu, 5 Apr 2018 19:31:02 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] qtnfmac: pearl: pcie: fix memory leak in
+ qtnf_fw_work_handler
+Message-ID: <20180405163100.cuaedftds47pxdrn@bars> (sfid-20180405_183140_267435_26F24731)
+References: <20180405154949.GA32223@embeddedor.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180405154949.GA32223@embeddedor.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the network interface goes down while a scan request is still
-pending that can't be stopped due to firmware hickups, wcn->scan_req
-remains set, even though the hardware is deinitialized. This results
-in -EBUSY for all scan requests after the interface was brought up
-again.
+Hello Gustavo,
 
-Fix this by explicitly completing pending scan requests in
-wcn36xx_stop().
+> In case memory resources for fw were succesfully allocated, release
+> them before jumping to fw_load_fail.
+> 
+> Addresses-Coverity-ID: 1466092 ("Resource leak")
+> Fixes: c3b2f7ca4186 ("qtnfmac: implement asynchronous firmware loading")
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> ---
+>  drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
----
- drivers/net/wireless/ath/wcn36xx/main.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+Thanks for the patch!
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 749aef3e2b85..08b6939d3f57 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -353,6 +353,19 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
- 
- 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac stop\n");
- 
-+	cancel_work_sync(&wcn->scan_work);
-+
-+	mutex_lock(&wcn->scan_lock);
-+	if (wcn->scan_req) {
-+		struct cfg80211_scan_info scan_info = {
-+			.aborted = true,
-+		};
-+
-+		ieee80211_scan_completed(wcn->hw, &scan_info);
-+	}
-+	wcn->scan_req = NULL;
-+	mutex_unlock(&wcn->scan_lock);
-+
- 	wcn36xx_debugfs_exit(wcn);
- 	wcn36xx_smd_stop(wcn);
- 	wcn36xx_dxe_deinit(wcn);
--- 
-2.14.3
+Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+
+Regards,
+Sergey
