@@ -1,147 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39542 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754755AbeDMMoN (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:46683 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751869AbeDETJP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Apr 2018 08:44:13 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Apr 2018 15:42:52 +0300
-Message-Id: <20180413124256.21769-22-luca@coelho.fi> (sfid-20180413_144416_214507_DDD97C23)
-In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
-References: <20180413124256.21769-1-luca@coelho.fi>
-Subject: [PATCH 21/25] iwlwifi: support api ver2 of NVM_GET_INFO resp
+        Thu, 5 Apr 2018 15:09:15 -0400
+Received: by mail-io0-f196.google.com with SMTP id q80so31845937ioi.13
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Apr 2018 12:09:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87lge1er31.fsf@kamboji.qca.qualcomm.com>
+References: <20180319014032.9394-1-alexey.roslyakov@gmail.com>
+ <20180319014032.9394-3-alexey.roslyakov@gmail.com> <5AAF838D.2030105@broadcom.com>
+ <CALFoz4YMKJr40fefczrbjXBROtZxnGikv0Jze-BnefofCB3dyg@mail.gmail.com>
+ <817418fd-6446-57ea-b03d-383b4df9a979@gmail.com> <5AB044C0.9060701@broadcom.com>
+ <87po3zxe9n.fsf@kamboji.qca.qualcomm.com> <CAPDyKFr2GVB0+UUpT3GgGBT17TMcrky6X4L_pw+ztTL6ejbCwQ@mail.gmail.com>
+ <87lge1er31.fsf@kamboji.qca.qualcomm.com>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Thu, 5 Apr 2018 21:09:14 +0200
+Message-ID: <CAPDyKFog7q2f7rHfm-FFRiGbRvd4NPQrYHP0==Xs-JAGGDKpYQ@mail.gmail.com> (sfid-20180405_211113_592021_44410DB1)
+Subject: Re: [PATCH net-next v2 2/2] dt: bindings: add new dt entries for brcmfmac
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Alexey Roslyakov <alexey.roslyakov@gmail.com>,
+        Andrew Lunn <andrew@lunn.ch>, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+On 5 April 2018 at 15:10, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Ulf Hansson <ulf.hansson@linaro.org> writes:
+>
+>> On 20 March 2018 at 10:55, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+>>>
+>>>>>> If I get it right, you mean something like this:
+>>>>>>
+>>>>>> mmc3: mmc@1c12000 {
+>>>>>> ...
+>>>>>>          broken-sg-support;
+>>>>>>          sd-head-align = 4;
+>>>>>>          sd-sgentry-align = 512;
+>>>>>>
+>>>>>>          brcmf: wifi@1 {
+>>>>>>                  ...
+>>>>>>          };
+>>>>>> };
+>>>>>>
+>>>>>> Where dt: bindings documentation for these entries should reside?
+>>>>>> In generic MMC bindings? Well, this is the very special case and
+>>>>>> mmc-linux maintainer will unlikely to accept these changes.
+>>>>>> Also, extra kernel code modification might be required. It could make
+>>>>>> quite trivial change much more complex.
+>>>>>
+>>>>> If the MMC maintainers are not copied on this patch series, it will
+>>>>> likely be hard for them to identify this patch series and chime in...
+>>>>
+>>>> The main question is whether this is indeed a "very special case" as
+>>>> Alexey claims it to be or that it is likely to be applicable to other
+>>>> device and host combinations as you are suggesting.
+>>>>
+>>>> If these properties are imposed by the host or host controller it
+>>>> would make sense to have these in the mmc bindings.
+>>>
+>>> BTW, last year we were discussing something similar (I mean related to
+>>> alignment requirements) with ath10k SDIO patches and at the time the
+>>> patch submitter was proposing to have a bounce buffer in ath10k to
+>>> workaround that. I don't remember the details anymore, they are on the
+>>> ath10k mailing list archive if anyone is curious to know, but I would
+>>> not be surprised if they are similar as here. So there might be a need
+>>> to solve this in a generic way (but not sure of course as I haven't
+>>> checked the details).
+>>
+>> I re-call something about these as well, here are the patches. Perhaps
+>> I should pick some of them up...
+>>
+>> https://patchwork.kernel.org/patch/10123137/
+>> https://patchwork.kernel.org/patch/10123139/
+>> https://patchwork.kernel.org/patch/10123141/
+>> https://patchwork.kernel.org/patch/10123143/
+>
+> Actually I was talking about a different patch, found it now:
+>
+> ath10k_sdio: DMA bounce buffers for read write
+>
+> https://patchwork.kernel.org/patch/9979543/
 
-NVM_GET_INFO API has changed to support indication
-of 11ax support.
+Ah, yes. This is about buffer alignment, particularly when using DMA.
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../net/wireless/intel/iwlwifi/fw/api/nvm-reg.h    | 42 ++++++++++++++--------
- drivers/net/wireless/intel/iwlwifi/fw/nvm.c        | 14 +++++---
- .../net/wireless/intel/iwlwifi/iwl-eeprom-parse.h  |  1 +
- 3 files changed, 38 insertions(+), 19 deletions(-)
+Normally there should be no constraint on the alignment, if the
+mmc/sdio controller driver would implement a fallback mechanism from
+DMA to PIO mode, in case the buffer can't be used for DMA.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
-index 37c57bcbfb4a..8d6dc9189985 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
-@@ -189,23 +189,37 @@ struct iwl_nvm_get_info_general {
- 	u8 reserved;
- } __packed; /* GRP_REGULATORY_NVM_GET_INFO_GENERAL_S_VER_1 */
- 
-+/**
-+ * enum iwl_nvm_mac_sku_flags - flags in &iwl_nvm_get_info_sku
-+ * @NVM_MAC_SKU_FLAGS_BAND_2_4_ENABLED: true if 2.4 band enabled
-+ * @NVM_MAC_SKU_FLAGS_BAND_5_2_ENABLED: true if 5.2 band enabled
-+ * @NVM_MAC_SKU_FLAGS_802_11N_ENABLED: true if 11n enabled
-+ * @NVM_MAC_SKU_FLAGS_802_11AC_ENABLED: true if 11ac enabled
-+ * @NVM_MAC_SKU_FLAGS_802_11AX_ENABLED: true if 11ax enabled
-+ * @NVM_MAC_SKU_FLAGS_MIMO_DISABLED: true if MIMO disabled
-+ * @NVM_MAC_SKU_FLAGS_WAPI_ENABLED: true if WAPI enabled
-+ * @NVM_MAC_SKU_FLAGS_REG_CHECK_ENABLED: true if regulatory checker enabled
-+ * @NVM_MAC_SKU_FLAGS_API_LOCK_ENABLED: true if API lock enabled
-+ */
-+enum iwl_nvm_mac_sku_flags {
-+	NVM_MAC_SKU_FLAGS_BAND_2_4_ENABLED	= BIT(0),
-+	NVM_MAC_SKU_FLAGS_BAND_5_2_ENABLED	= BIT(1),
-+	NVM_MAC_SKU_FLAGS_802_11N_ENABLED	= BIT(2),
-+	NVM_MAC_SKU_FLAGS_802_11AC_ENABLED	= BIT(3),
-+	NVM_MAC_SKU_FLAGS_802_11AX_ENABLED	= BIT(4),
-+	NVM_MAC_SKU_FLAGS_MIMO_DISABLED		= BIT(5),
-+	NVM_MAC_SKU_FLAGS_WAPI_ENABLED		= BIT(8),
-+	NVM_MAC_SKU_FLAGS_REG_CHECK_ENABLED	= BIT(14),
-+	NVM_MAC_SKU_FLAGS_API_LOCK_ENABLED	= BIT(15),
-+};
-+
- /**
-  * struct iwl_nvm_get_info_sku - mac information
-- * @enable_24g: band 2.4G enabled
-- * @enable_5g: band 5G enabled
-- * @enable_11n: 11n enabled
-- * @enable_11ac: 11ac enabled
-- * @mimo_disable: MIMO enabled
-- * @ext_crypto: Extended crypto enabled
-+ * @mac_sku_flags: flags for SKU, see &enum iwl_nvm_mac_sku_flags
-  */
- struct iwl_nvm_get_info_sku {
--	__le32 enable_24g;
--	__le32 enable_5g;
--	__le32 enable_11n;
--	__le32 enable_11ac;
--	__le32 mimo_disable;
--	__le32 ext_crypto;
--} __packed; /* GRP_REGULATORY_NVM_GET_INFO_MAC_SKU_SECTION_S_VER_1 */
-+	__le32 mac_sku_flags;
-+} __packed; /* REGULATORY_NVM_GET_INFO_MAC_SKU_SECTION_S_VER_2 */
- 
- /**
-  * struct iwl_nvm_get_info_phy - phy information
-@@ -243,7 +257,7 @@ struct iwl_nvm_get_info_rsp {
- 	struct iwl_nvm_get_info_sku mac_sku;
- 	struct iwl_nvm_get_info_phy phy_sku;
- 	struct iwl_nvm_get_info_regulatory regulatory;
--} __packed; /* GRP_REGULATORY_NVM_GET_INFO_CMD_RSP_S_VER_1 */
-+} __packed; /* GRP_REGULATORY_NVM_GET_INFO_CMD_RSP_S_VER_2 */
- 
- /**
-  * struct iwl_nvm_access_complete_cmd - NVM_ACCESS commands are completed
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
-index bd2e1fb43f5a..ff44d9031e1a 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
-@@ -86,6 +86,7 @@ struct iwl_nvm_data *iwl_fw_get_nvm(struct iwl_fw_runtime *fwrt)
- 	bool lar_fw_supported = !iwlwifi_mod_params.lar_disable &&
- 				fw_has_capa(&fwrt->fw->ucode_capa,
- 					    IWL_UCODE_TLV_CAPA_LAR_SUPPORT);
-+	u32 mac_flags;
- 
- 	ret = iwl_trans_send_cmd(trans, &hcmd);
- 	if (ret)
-@@ -125,16 +126,19 @@ struct iwl_nvm_data *iwl_fw_get_nvm(struct iwl_fw_runtime *fwrt)
- 	nvm->nvm_version = le16_to_cpu(rsp->general.nvm_version);
- 
- 	/* Initialize MAC sku data */
-+	mac_flags = le32_to_cpu(rsp->mac_sku.mac_sku_flags);
- 	nvm->sku_cap_11ac_enable =
--		le32_to_cpu(rsp->mac_sku.enable_11ac);
-+		!!(mac_flags & NVM_MAC_SKU_FLAGS_802_11AC_ENABLED);
- 	nvm->sku_cap_11n_enable =
--		le32_to_cpu(rsp->mac_sku.enable_11n);
-+		!!(mac_flags & NVM_MAC_SKU_FLAGS_802_11N_ENABLED);
-+	nvm->sku_cap_11ax_enable =
-+		!!(mac_flags & NVM_MAC_SKU_FLAGS_802_11AX_ENABLED);
- 	nvm->sku_cap_band_24GHz_enable =
--		le32_to_cpu(rsp->mac_sku.enable_24g);
-+		!!(mac_flags & NVM_MAC_SKU_FLAGS_BAND_2_4_ENABLED);
- 	nvm->sku_cap_band_52GHz_enable =
--		le32_to_cpu(rsp->mac_sku.enable_5g);
-+		!!(mac_flags & NVM_MAC_SKU_FLAGS_BAND_5_2_ENABLED);
- 	nvm->sku_cap_mimo_disabled =
--		le32_to_cpu(rsp->mac_sku.mimo_disable);
-+		!!(mac_flags & NVM_MAC_SKU_FLAGS_MIMO_DISABLED);
- 
- 	/* Initialize PHY sku data */
- 	nvm->valid_tx_ant = (u8)le32_to_cpu(rsp->phy_sku.tx_chains);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
-index b33888991b94..16bea75e82f1 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
-@@ -85,6 +85,7 @@ struct iwl_nvm_data {
- 	bool sku_cap_band_52GHz_enable;
- 	bool sku_cap_11n_enable;
- 	bool sku_cap_11ac_enable;
-+	bool sku_cap_11ax_enable;
- 	bool sku_cap_amt_enable;
- 	bool sku_cap_ipan_enable;
- 	bool sku_cap_mimo_disabled;
--- 
-2.16.3
+However, I know about cases where simply PIO doesn't work because of
+broken HW and in many cases the mmc drivers don't implement the
+fallback to PIO even if they could.
+
+Moreover, it seems reasonable to anyway have a way for mmc driver to
+inform upper layers about DMA buffer alignment constraints, as to be
+able to use DMA as long as possible.
+
+Thoughts?
+
+Kind regards
+Uffe
