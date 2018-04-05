@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49420 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750962AbeDYIU1 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41082 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751469AbeDELYk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 04:20:27 -0400
-Content-Type: text/plain; charset="utf-8"
+        Thu, 5 Apr 2018 07:24:40 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+        Steve deRosier <derosier@gmail.com>,
+        Sunil Dutt Undekari <usdutt@qti.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Amarnath Hullur Subramanyam" <amarnath@qti.qualcomm.com>,
+        Rajesh Chauhan <rajeshc@qti.qualcomm.com>
+Subject: Re: Wi-Fi Disconnection on Suspend for no wowlan triggers
+Date: Thu, 5 Apr 2018 11:24:32 +0000
+Message-ID: <20180405112423.GA9248@jouni.qca.qualcomm.com> (sfid-20180405_132444_360054_EB2D10B4)
+References: <0663e93cc5ca45e6b7191760414b1189@aphydexm01f.ap.qualcomm.com>
+ <CALLGbRJgAtOdZ1puzfgpWxc_ZrDVmWXtmFrBu=-gA0C++WrLoA@mail.gmail.com>
+ <5AC5D33F.4090100@broadcom.com> <1522915172.7140.1.camel@sipsolutions.net>
+ <5AC5D928.6020505@broadcom.com>
+In-Reply-To: <5AC5D928.6020505@broadcom.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Subject: Re: [1/3] mwifiex: make firmware mac address consistent with host
- configuration
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1522810961-27521-1-git-send-email-huxm@marvell.com>
-References: <1522810961-27521-1-git-send-email-huxm@marvell.com>
-To: Xinming Hu <huxm@marvell.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Message-Id: <20180425082027.804FD607C6@smtp.codeaurora.org> (sfid-20180425_102032_577167_217172C1)
-Date: Wed, 25 Apr 2018 08:20:27 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Xinming Hu <huxm@marvell.com> wrote:
+On Thu, Apr 05, 2018 at 10:07:04AM +0200, Arend van Spriel wrote:
+> On 4/5/2018 9:59 AM, Johannes Berg wrote:
+> >There's the "any" trigger that might be appropriate for that, or a
+> >"disconnect" trigger.
+> >
+> >But I'm basically thinking the same as Steve - if you're never going to
+> >wake up the host, there's not really much point in keeping the
+> >connection, and if you only suspend briefly like e.g. on Android then
+> >you probably *do* want to wake up the host for pretty much everything
+> >that's going on (hence the "any" trigger).
+>=20
+> Agree, which is why I suggested to look at wowlan triggers. If we already
+> have an appropriate "any" trigger even better ;-)
 
-> For user configurated mac address, directly set to firmware with no change.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
+The "any" trigger sounds like a reasonable thing to use, so the question
+really is on what the default behavior should be if the driver has
+capability of doing this and there is no explicit configuration in user
+space. Currently, the default behavior seems to be to force
+disconnection. Would it make sense to allow drivers to indicate that
+they rather use "any" trigger by default? Or make that the default
+behavior is the driver supports "any"?
 
-Failed to apply:
+For example, wpa_supplicant does not currently set any trigger
+configuration unless explicitly asked to do so. This in combination with
+the kernel default (disconnect) does not seem to result in desired
+behavior in number of Android cases.
 
-fatal: sha1 information is lacking or useless (drivers/net/wireless/marvell/mwifiex/cfg80211.c).
-error: could not build fake ancestor
-Applying: mwifiex: make firmware mac address consistent with host configuration
-Patch failed at 0001 mwifiex: make firmware mac address consistent with host configuration
-The copy of the patch that failed is found in: .git/rebase-apply/patch
+And if the default behavior should be changed, should that behavior
+change be done in the kernel or user space (wpa_supplicant)?
 
-3 patches set to Changes Requested.
-
-10322005 [1/3] mwifiex: make firmware mac address consistent with host configuration
-10322007 [2/3] mwifiex: always configure firmware mac address during changing virtual interface
-10322009 [3/3] mwifiex: keep user configured mac address during changing virtual interface
-
--- 
-https://patchwork.kernel.org/patch/10322005/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+--=20
+Jouni Malinen                                            PGP id EFC895FA=
