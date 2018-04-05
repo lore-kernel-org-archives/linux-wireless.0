@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:37936 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751716AbeDIOxx (ORCPT
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:42897 "EHLO
+        mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751278AbeDEPsy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Apr 2018 10:53:53 -0400
-Received: by mail-pf0-f196.google.com with SMTP id y69so5878841pfb.5
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Apr 2018 07:53:53 -0700 (PDT)
-Date: Mon, 9 Apr 2018 16:53:44 +0200
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        Jakub =?utf-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [ANN] mt76x0 usb driver
-Message-ID: <20180409145342.GB5680@localhost.localdomain> (sfid-20180409_165358_118761_5BCC4F89)
-References: <20180409141032.GA9247@redhat.com>
- <20180409142640.GA5680@localhost.localdomain>
- <20180409144819.GA9253@redhat.com>
+        Thu, 5 Apr 2018 11:48:54 -0400
+Received: by mail-oi0-f47.google.com with SMTP id l190-v6so22996181oig.9
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Apr 2018 08:48:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180409144819.GA9253@redhat.com>
+References: <CAOGAQep2Yj62JDAY0qGwXFYohsje6fuu57Ss4U7+coygBe7u0A@mail.gmail.com>
+ <1522917309.7140.2.camel@sipsolutions.net>
+In-Reply-To: <1522917309.7140.2.camel@sipsolutions.net>
+From: Bjoern Johansson <bjoernj@google.com>
+Date: Thu, 05 Apr 2018 15:48:42 +0000
+Message-ID: <CAL6gjmVQgZNeRKC4Gj5-bdOKgn1Fs+wnrg+1TBKkeHJpygNkyg@mail.gmail.com> (sfid-20180405_174858_088092_E57F3859)
+Subject: Re: PATCH [1/1]: wireless: mac80211_hwsim: support/ignore power state changes
+To: johannes@sipsolutions.net
+Cc: Roman Kiryanov <rkir@google.com>, linux-wireless@vger.kernel.org,
+        gregkh@google.com, Bo Hu <bohu@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Apr 09, Stanislaw Gruszka wrote:
-> On Mon, Apr 09, 2018 at 04:26:42PM +0200, Lorenzo Bianconi wrote:
-> > > I would like to integrate the driver to kernel via mt76 driver, i.e.
-> > > add USB hooks and mt76x0 mac/phy code to mt76. This will open
-> > > possibility to develop support for mt76x2 USB devices as well as mt76x0
-> > > PCIe devices in mt76.
-> > > 
-> > 
-> > I have already started supporting mt76x2 USB devices in mt76 since register map
-> > is pretty similar to PCIe devices:
-> > https://github.com/LorenzoBianconi/wireless-drivers-next/tree/mt76x2u
-> > I added some usb utility routines so I think we can integrate mt76x0 in mt76 as
-> > well
-> 
-> Great, I'll start to integrate mt76x0 on top of your tree.
+On Thu, Apr 5, 2018 at 1:35 AM Johannes Berg <johannes@sipsolutions.net>
+wrote:
 
-Cool :) actually this branch is in under development but what is really
-changing day by day is mt7612u part not usb one so I guess we can use it as
-common ground for mt76x2u and mt76x0.
-Maybe even the mcu code is in common with mt76x2, isn't it?
+
+> > indicate power state support. This in turn causes VTS failures because
+> > the WiFi HAL can't enable power saving mode. The remaining code is
+> > just there to deal with the incoming state change request.
+
+> What's VTS?
+
+> johannes
+
+That message wasn't really intended as a commit message but an internal
+clarification of why we needed this fix but I'll try to give an
+explanation. VTS is the Android Vendor Test Suite (
+https://source.android.com/compatibility/vts/). It's one of the test suites
+required by Google to be able to put the Play Store on an Android device.
+The tests verify that the device and APIs behave in the expected,
+documented way (hopefully) without bugs or unexpected behavior. One of the
+tests requires that WiFi can be placed in power saving mode to improve
+battery life. Battery life is of course not really an issue for an emulator
+but the tests cover other devices where this is important.
 
 Regards,
-Lorenzo
-
-> 
-> Thanks
-> Stanislaw
+Bjoern
