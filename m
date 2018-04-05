@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:39934 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753426AbeDVSyW (ORCPT
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:40061 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752000AbeDEIHH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Apr 2018 14:54:22 -0400
-Date: Sun, 22 Apr 2018 14:54:20 -0400 (EDT)
-Message-Id: <20180422.145420.1197041027922699603.davem@davemloft.net> (sfid-20180422_205426_785810_8822E20A)
-To: johannes@sipsolutions.net
-Cc: greearb@candelatech.com, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH 1/3] ethtool: Support ETHTOOL_GSTATS2 command.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1524151617.3024.25.camel@sipsolutions.net>
-References: <1524119910.3024.12.camel@sipsolutions.net>
-        <173c5f98-36bc-2e52-1e64-3a5f89008d46@candelatech.com>
-        <1524151617.3024.25.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Thu, 5 Apr 2018 04:07:07 -0400
+Received: by mail-wm0-f46.google.com with SMTP id x4so4283235wmh.5
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Apr 2018 01:07:06 -0700 (PDT)
+Subject: Re: Wi-Fi Disconnection on Suspend for no wowlan triggers
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Steve deRosier <derosier@gmail.com>,
+        Sunil Dutt Undekari <usdutt@qti.qualcomm.com>
+References: <0663e93cc5ca45e6b7191760414b1189@aphydexm01f.ap.qualcomm.com>
+ <CALLGbRJgAtOdZ1puzfgpWxc_ZrDVmWXtmFrBu=-gA0C++WrLoA@mail.gmail.com>
+ <5AC5D33F.4090100@broadcom.com> <1522915172.7140.1.camel@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Jouni Malinen <jouni@qca.qualcomm.com>,
+        Amarnath Hullur Subramanyam <amarnath@qti.qualcomm.com>,
+        Rajesh Chauhan <rajeshc@qti.qualcomm.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AC5D928.6020505@broadcom.com> (sfid-20180405_100713_025080_0C2867E4)
+Date: Thu, 5 Apr 2018 10:07:04 +0200
+MIME-Version: 1.0
+In-Reply-To: <1522915172.7140.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 19 Apr 2018 17:26:57 +0200
+On 4/5/2018 9:59 AM, Johannes Berg wrote:
+> On Thu, 2018-04-05 at 09:41 +0200, Arend van Spriel wrote:
+>>
+>> So for a full-mac device or a mac80211 device with certain offloads
+>> (that we may already have, eg. 4way-hs offloads) you could keep up the
+>> connection for a while, but if it is receiving data it probably wants to
+>> wake-up the host at some point. So if such a device has means to do a
+>> host wake-up you could keep the connection upon suspend. You could
+>> consider such behavior a wowlan trigger as well and extend that.
+>
+> There's the "any" trigger that might be appropriate for that, or a
+> "disconnect" trigger.
+>
+> But I'm basically thinking the same as Steve - if you're never going to
+> wake up the host, there's not really much point in keeping the
+> connection, and if you only suspend briefly like e.g. on Android then
+> you probably *do* want to wake up the host for pretty much everything
+> that's going on (hence the "any" trigger).
 
-> On Thu, 2018-04-19 at 08:25 -0700, Ben Greear wrote:
->> 
->> Maybe this could be in followup patches?  It's going to touch a lot of files,
->> and might be hell to get merged all at once, and I've never used spatch, so
->> just maybe someone else will volunteer that part :)
-> 
-> I guess you'll have to ask davem. :)
+Agree, which is why I suggested to look at wowlan triggers. If we 
+already have an appropriate "any" trigger even better ;-)
 
-Well, first of all, I really don't like this.
-
-The first reason is that every time I see interface foo become foo2,
-foo3 is never far behind it.
-
-If foo was not extensible enough such that we needed foo2, we beter
-design the new thing with explicitly better extensibility in mind.
-
-Furthermore, what you want here is a specific filter.  Someone else
-will want to filter on another criteria, and the next person will
-want yet another.
-
-This needs to be properly generalized.
-
-And frankly if we had moved to ethtool netlink/devlink by now, we
-could just add a netlink attribute for filtering and not even be
-having this conversation.
+Regards,
+Arend
