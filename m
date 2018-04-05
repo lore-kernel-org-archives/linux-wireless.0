@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52346 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757413AbeD0FaM (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33078 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752565AbeDETAi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Apr 2018 01:30:12 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [RFCv2 0/6] cfg80211/mac80211: Add support to configure and monitor rssi/txrate threshold
-Date: Fri, 27 Apr 2018 11:00:30 +0530
-Message-Id: <1524807036-28056-1-git-send-email-tamizhr@codeaurora.org> (sfid-20180427_073019_249984_02AD8715)
+        Thu, 5 Apr 2018 15:00:38 -0400
+Received: by mail-wm0-f68.google.com with SMTP id o23so4676244wmf.0
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Apr 2018 12:00:38 -0700 (PDT)
+Subject: Re: [PATCH 07/12] brcmfmac: Convert ALLFFMAC to ether_broadcast_addr
+To: Joe Perches <joe@perches.com>, linux-kernel@vger.kernel.org
+References: <cover.1522479607.git.joe@perches.com>
+ <f60d14eaf9027774cff547b82cfb01d0904f6391.1522479608.git.joe@perches.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AC67254.1000007@broadcom.com> (sfid-20180405_210114_247612_72B40FBF)
+Date: Thu, 5 Apr 2018 21:00:36 +0200
+MIME-Version: 1.0
+In-Reply-To: <f60d14eaf9027774cff547b82cfb01d0904f6391.1522479608.git.joe@perches.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchsets introduced new NL command and api to support
-configuring rssi and txrate for the connected stations.
-And implemented new api to notify the threshold cross event.
-This will be useful/requires for the user application like steering
-to monitor station's activity change.
+On 3/31/2018 9:05 AM, Joe Perches wrote:
+> Remove the local ALLFFMAC extern array and use the new global instead.
 
-Tamizh chelvam (6):
-  cfg80211: Add support to configure station specific rssi threshold for
-    AP mode
-  mac80211: Add support to configure rssi threshold for AP mode
-  mac80211: Implement functionality to monitor station's rssi threshold
-    cross
-  cfg80211: Add support to configure station specific txrate threshold
-    for AP mode
-  mac80211: Add support to configure txrate threshold for station
-  mac80211: Implement functionality to monitor txrate cross event for
-    station
+I stumbled upon this one couple of weeks ago. I moved the definition to 
+flowring.c although I considered for a moment to pick up the task you 
+took here valiantly.
 
-v2:
-  * fixed kbuild warnings
-  * updated commit log
+> Miscellanea:
+>
+> o Convert char *mac to const char *mac as it can't be modified
 
- include/net/cfg80211.h       |  69 ++++++-
- include/net/mac80211.h       |  12 ++
- include/uapi/linux/nl80211.h |  96 +++++++++
- net/mac80211/cfg.c           | 111 +++++++++++
- net/mac80211/rx.c            |  65 +++++-
- net/mac80211/sta_info.h      |  37 ++++
- net/mac80211/status.c        |  40 +++-
- net/wireless/core.c          |  26 ++-
- net/wireless/core.h          |   6 +-
- net/wireless/nl80211.c       | 462 ++++++++++++++++++++++++++++++++++++++-----
- net/wireless/rdev-ops.h      |  48 +++++
- net/wireless/trace.h         | 123 ++++++++++++
- 12 files changed, 1030 insertions(+), 65 deletions(-)
+The real reason is off course that your new global is const and thus mac 
+variable need to be const as well to avoid compiler warning.
 
--- 
-1.9.1
+I have to agree with Kalle regarding the upstream logistics, but for 
+what it is worth...
+
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c   | 2 --
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h   | 2 --
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c | 8 ++++----
+>   3 files changed, 4 insertions(+), 8 deletions(-)
