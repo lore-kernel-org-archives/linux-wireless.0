@@ -1,123 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:51876 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751490AbeDJGAs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Apr 2018 02:00:48 -0400
-Message-ID: <f9a5e31ee39132a686b2cccef52a60f677c2bc39.camel@intel.com> (sfid-20180410_080052_270789_FC4358F1)
-Subject: Re: iwlwifi: FW error in SYNC CMD TIME_QUOTA_CMD
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: Daniel Borkmann <daniel@iogearbox.net>, johannes.berg@intel.com
-Cc: emmanuel.grumbach@intel.com, linux-wireless@vger.kernel.org,
-        iwlwifi@intel.com
-Date: Tue, 10 Apr 2018 09:00:45 +0300
-In-Reply-To: <1a94e616-7dcc-6b70-abb4-684d2f69eb23@iogearbox.net>
-References: <799ecceb-8b2a-bf8c-b408-374a02280306@iogearbox.net>
-         <1523084065.4488.11.camel@intel.com>
-         <71396747-1be5-78de-3ff7-d0df91d37d36@iogearbox.net>
-         <1a94e616-7dcc-6b70-abb4-684d2f69eb23@iogearbox.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from gateway24.websitewelcome.com ([192.185.51.253]:44754 "EHLO
+        gateway24.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751412AbeDEPtw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Apr 2018 11:49:52 -0400
+Received: from cm14.websitewelcome.com (cm14.websitewelcome.com [100.42.49.7])
+        by gateway24.websitewelcome.com (Postfix) with ESMTP id 5D946422DC
+        for <linux-wireless@vger.kernel.org>; Thu,  5 Apr 2018 10:49:51 -0500 (CDT)
+Date: Thu, 5 Apr 2018 10:49:49 -0500
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] qtnfmac: pearl: pcie: fix memory leak in qtnf_fw_work_handler
+Message-ID: <20180405154949.GA32223@embeddedor.com> (sfid-20180405_175005_831392_EC40598E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-04-09 at 15:37 +0200, Daniel Borkmann wrote:
-> On 04/09/2018 12:13 AM, Daniel Borkmann wrote:
-> > Hi Luciano,
-> > 
-> > On 04/07/2018 08:54 AM, Luciano Coelho wrote:
-> > > On Thu, 2018-04-05 at 16:55 +0200, Daniel Borkmann wrote:
-> > 
-> > [...]
-> > > > after upgrading to 4608f064532c ("Merge
-> > > > git://git.kernel.org/pub/scm/linux/kernel/git/davem/sparc-
-> > > > next")
-> > > > my kernel log gets constantly flooded with the below message
-> > > > and
-> > > > wireless stops
-> > > > working ... just in case you haven't had a report on this yet.
-> > > > Downgrading back
-> > > > to older v4.16-rcX kernel gets everything back to normal
-> > > > working
-> > > > state; haven't
-> > > > had time for bisection yet, but hopefully the below would
-> > > > provide
-> > > > some clue.
-> > > 
-> > > [...]
-> > > 
-> > > > [  513.429773] iwlwifi 0000:04:00.0: Failed to send quota: -5
-> > > > [  513.429775] iwlwifi 0000:04:00.0: Failed to update quotas
-> > > > after
-> > > > restart (-5)
-> > > > [  514.163758] iwlwifi 0000:04:00.0: Microcode SW error
-> > > > detected.  Restarting 0x82000000.
-> > > > [  514.163987] iwlwifi 0000:04:00.0: Start IWL Error Log Dump:
-> > > > [  514.163988] iwlwifi 0000:04:00.0: Status: 0x00000100, count:
-> > > > 6
-> > > > [  514.163989] iwlwifi 0000:04:00.0: Loaded firmware version:
-> > > > 27.455470.0
-> > > > [  514.163991] iwlwifi 0000:04:00.0: 0x00000038 | BAD_COMMAND
-> > > 
-> > > [...]
-> > > 
-> > > I did add support for new FW APIs, so maybe some check for the FW
-> > > version is missing somewhere.
-> > > 
-> > > Which NIC are you using? I can see that you're using an older
-> > > version
-> > > of the firmware (27.455470.0).  For 7265D and 3168 we already
-> > > have
-> > > version 29.  For 8000C and 8260 we have vesion 36.  You can find
-> > > all
-> > > the latest versions in our fork of linux-firmware.git[1].  And
-> > > soon the
-> > > main linux-firmware.git[2] will also include the latest versions,
-> > > since
-> > > I sent a pull request yesteday ago.
-> > > 
-> > > Meanwhile, I'll investigate this problem.  It shouldn't happen
-> > > even if
-> > > you're using an older firmware.  Maybe I'll have to stop
-> > > supporting
-> > > version 27 in newer kernels, let's see.
-> > 
-> > Here's from the log on an older (working) kernel:
-> > 
-> > $ dmesg | grep iwlwifi
-> > [    7.672955] iwlwifi 0000:04:00.0: enabling device (0000 -> 0002)
-> > [    7.705000] iwlwifi 0000:04:00.0: Direct firmware load for
-> > iwlwifi-8000C-36.ucode failed with error -2
-> > [    7.705208] iwlwifi 0000:04:00.0: Direct firmware load for
-> > iwlwifi-8000C-35.ucode failed with error -2
-> > [    7.705391] iwlwifi 0000:04:00.0: Direct firmware load for
-> > iwlwifi-8000C-34.ucode failed with error -2
-> > [    7.705850] iwlwifi 0000:04:00.0: Direct firmware load for
-> > iwlwifi-8000C-33.ucode failed with error -2
-> > [    7.706118] iwlwifi 0000:04:00.0: Direct firmware load for
-> > iwlwifi-8000C-32.ucode failed with error -2
-> > [    7.706463] iwlwifi 0000:04:00.0: Direct firmware load for
-> > iwlwifi-8000C-31.ucode failed with error -2
-> > [    7.706789] iwlwifi 0000:04:00.0: Direct firmware load for
-> > iwlwifi-8000C-30.ucode failed with error -2
-> > [    7.707182] iwlwifi 0000:04:00.0: Direct firmware load for
-> > iwlwifi-8000C-29.ucode failed with error -2
-> > [    7.707746] iwlwifi 0000:04:00.0: Direct firmware load for
-> > iwlwifi-8000C-28.ucode failed with error -2
-> > [    7.714899] iwlwifi 0000:04:00.0: loaded firmware version
-> > 27.455470.0 op_mode iwlmvm
-> > [    8.400655] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band
-> > Wireless AC 8260, REV=0x208
-> > [    8.475161] iwlwifi 0000:04:00.0: base HW address: [...]
-> > [    8.568333] iwlwifi 0000:04:00.0 wlp4s0: renamed from wlan0
-> > 
-> > I'll try to upgrade the FW in the mean time, thanks!
-> 
-> Moved to iwlwifi-8000C-36 and that definitely helped. Thanks!
+In case memory resources for fw were succesfully allocated, release
+them before jumping to fw_load_fail.
 
-Great, I'm glad it works for you now!
+Addresses-Coverity-ID: 1466092 ("Resource leak")
+Fixes: c3b2f7ca4186 ("qtnfmac: implement asynchronous firmware loading")
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Thanks for reporting.
-
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+index f117904..6c1e139 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
+@@ -1185,6 +1185,10 @@ static void qtnf_fw_work_handler(struct work_struct *work)
+ 	if (qtnf_poll_state(&priv->bda->bda_ep_state, QTN_EP_FW_LOADRDY,
+ 			    QTN_FW_DL_TIMEOUT_MS)) {
+ 		pr_err("card is not ready\n");
++
++		if (!flashboot)
++			release_firmware(fw);
++
+ 		goto fw_load_fail;
+ 	}
+ 
+-- 
+2.7.4
