@@ -1,112 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.37.59]:50395 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752948AbeDXRqq (ORCPT
+Received: from aserp2120.oracle.com ([141.146.126.78]:52854 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750835AbeDELRd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 13:46:46 -0400
-From: Eugeniy Paltsev <Eugeniy.Paltsev@synopsys.com>
-To: "amit.karwar@redpinesignals.com" <amit.karwar@redpinesignals.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "amitkarwar@gmail.com" <amitkarwar@gmail.com>,
-        Alexey Brodkin <Alexey.Brodkin@synopsys.com>,
-        "linux-snps-arc@lists.infradead.org"
-        <linux-snps-arc@lists.infradead.org>
-Subject: rsi_91x: Failed to read status register / FIRMWARE Assert issues
-Date: Tue, 24 Apr 2018 17:37:35 +0000
-Message-ID: <1524591454.11868.7.camel@synopsys.com> (sfid-20180424_194718_459099_F3050C8C)
-Content-Type: text/plain; charset="utf-8"
+        Thu, 5 Apr 2018 07:17:33 -0400
+Date: Thu, 5 Apr 2018 14:17:19 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] mwifiex: pcie: tighten a check in
+ mwifiex_pcie_process_event_ready()
+Message-ID: <20180405111719.GB4218@mwanda> (sfid-20180405_131737_667067_2241EBA9)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQW1pdGt1bWFyLA0KDQpJJ20gc2VlaW5nIHF1aXRlIGEgc3RyYW5nZSBiZWhhdmlvciBvZiBS
-ZWRQaW5lIFJTOTExM1NCIG1vZHVsZS4NCkkgdHJpZWQgdG8gdXNlIGl0IGFzIHdpZmkgaG90c3Bv
-dCwgYW5kIHNvbWV0aW1lcyBJIGZhaWwgdG8gY29ubmVjdCB0byBpdC4NCk1vcmVvdmVyIGFmdGVy
-IHRoYXQgZmFpbHVyZSBSU0kgZHJpdmVyIHN0YXJ0cyB0byBmbG9vZCBtZSB3aXRoIGZvbGxvd2lu
-ZyBtZXNzYWdlczoNCklzc3VlIDE6DQotLS0tLS0tLS0tLS0tLS0tLS0tLS0+OC0tLS0tLS0tLS0t
-LS0tLS0tLS0tDQpyc2lfOTF4OiByc2lfaGFuZGxlX2NhcmRfcmVhZHk6IGNhcmQgcmVhZHkgaW5k
-aWNhdGlvbiBpbiBpbnZhbGlkIHN0YXRlIDkuDQpyc2lfOTF4OiByc2lfaW50ZXJydXB0X2hhbmRs
-ZXI6ID09PiBGSVJNV0FSRSBBc3NlcnQgPD09DQpyc2lfOTF4OiByc2lfaW50ZXJydXB0X2hhbmRs
-ZXI6IEZpcm13YXJlIFN0YXR1cyBpcyAweDc5DQpyc2lfOTF4OiByc2lfY29yZV94bWl0OiBGU00g
-c3RhdGUgbm90IG9wZW4NCnJzaV85MXg6IHJzaV9jb3JlX3htaXQ6IEZhaWxlZCB0byBxdWV1ZSBw
-YWNrZXQNCnJzaV85MXg6IHJzaV9jb3JlX3htaXQ6IEZTTSBzdGF0ZSBub3Qgb3Blbg0KcnNpXzkx
-eDogcnNpX2NvcmVfeG1pdDogRmFpbGVkIHRvIHF1ZXVlIHBhY2tldA0KLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tPjgtLS0tLS0tLS0tLS0tLS0tLS0tLQ0KDQpTb21ldGltZXMgbWVzc2FnZXMgaW4gc2Ft
-ZSBzaXR1YXRpb24gY2FuIGJlIGRpZmZlcmVudCAoSXNzdWUgMik6DQotLS0tLS0tLS0tLS0tLS0t
-LS0tLS0+OC0tLS0tLS0tLS0tLS0tLS0tLS0tDQpyc2lfOTF4OiByc2lfcmVhZF9wa3Q6IHBrdCBm
-cm9tIGludmFsaWQgcXVldWU6IDINCnJzaV85MXg6IEZhaWxlZCB0byByZWFkIHRoZSBwYWNrZXQN
-CnJzaV85MXg6IHJzaV9zZGlvX3dyaXRlX3JlZ2lzdGVyX211bHRpcGxlOiBTeW5jaCBDbWQ1MyB3
-cml0ZSBmYWlsZWQgLTE2DQpyc2lfOTF4OiByc2lfc2Rpb19ob3N0X2ludGZfd3JpdGVfcGt0OiBV
-bmFibGUgdG8gd3JpdGUgb250byB0aGUgY2FyZDogLTE2DQpyc2lfOTF4OiByc2lfc2VuZF9kYXRh
-X3BrdDogRmFpbGVkIHRvIHdyaXRlIHBrdA0KcnNpXzkxeDogcnNpX3NkaW9fY2hlY2tfYnVmZmVy
-X3N0YXR1czogRmFpbGVkIHRvIHJlYWQgc3RhdHVzIHJlZ2lzdGVyDQpyc2lfOTF4OiByc2lfc2Rp
-b19jaGVja19idWZmZXJfc3RhdHVzOiBGYWlsZWQgdG8gcmVhZCBzdGF0dXMgcmVnaXN0ZXINCi0t
-LS0tLS0tLS0tLS0tLS0tLS0tLT44LS0tLS0tLS0tLS0tLS0tLS0tLS0NCg0KTk9URToNCkkgdXNl
-IHZhbmlsbGEgTGludXgga2VybmVsIHY0LjE3LXJjMg0KICByc2lfOTF4OiBGVyBWZXJzaW9uICAg
-ICA6IDEuNi4xDQogIHJzaV85MXg6IEZpcm13YXJlIGZpbGUgIDogcnNpL3JzOTExM193bGFuX2J0
-X2R1YWxfbW9kZS5ycHMNCkFsc28gdGhlc2UgaXNzdWVzIHJlcHJvZHVjZSBvbiB2YW5pbGxhIHY0
-LjE2IExpbnV4IGtlcm5lbA0KICByc2lfOTF4OiBGVyBWZXJzaW9uICAgICA6IDEuNS4zDQogIHJz
-aV85MXg6IEZpcm13YXJlIGZpbGUgIDogcnNpL3JzOTExM193bGFuX3FzcGkucnBzDQoNCg0KV2lm
-aSBob3RzcG90IGlzIHN0YXJ0ZWQgd2l0aCBuZXh0IGNvbW1hbmRzOg0KLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tPjgtLS0tLS0tLS0tLS0tLS0tLS0tLQ0KIyBlY2hvIDEgPiAvcHJvYy9zeXMvbmV0L2lw
-djQvaXBfZm9yd2FyZA0KIyBpcHRhYmxlcyAtdCBuYXQgLUEgUE9TVFJPVVRJTkcgLW8gZXRoMCAt
-aiBNQVNRVUVSQURFDQojIGlwdGFibGVzIC1BIEZPUldBUkQgLWkgZXRoMCAtbyB3bGFuMCAtbSBj
-b25udHJhY2sgLS1jdHN0YXRlIEVTVEFCTElTSEVELFJFTEFURUQgLWogQUNDRVBUDQojIGlwdGFi
-bGVzIC1BIEZPUldBUkQgLWkgd2xhbjAgLW8gZXRoMCAtaiBBQ0NFUFQNCiMgaG9zdGFwZCAtQiAv
-ZXRjL2hvc3RhcGQuY29uZg0KDQojIGNhdCAvZXRjL2hvc3RhcGQuY29uZg0KaW50ZXJmYWNlPXds
-YW4wDQpsb2dnZXJfc3lzbG9nPS0xDQpsb2dnZXJfc3lzbG9nX2xldmVsPTINCmxvZ2dlcl9zdGRv
-dXQ9LTENCmxvZ2dlcl9zdGRvdXRfbGV2ZWw9Mg0KY3RybF9pbnRlcmZhY2U9L3Zhci9ydW4vaG9z
-dGFwZA0KY3RybF9pbnRlcmZhY2VfZ3JvdXA9MA0Kc3NpZD1IU0RLX3dpZmkNCmh3X21vZGU9Zw0K
-Y2hhbm5lbD0xDQpiZWFjb25faW50PTEwMA0KZHRpbV9wZXJpb2Q9Mg0KbWF4X251bV9zdGE9MjU1
-DQpydHNfdGhyZXNob2xkPS0xDQpmcmFnbV90aHJlc2hvbGQ9LTENCm1hY2FkZHJfYWNsPTANCmF1
-dGhfYWxncz0zDQppZ25vcmVfYnJvYWRjYXN0X3NzaWQ9MA0Kd21tX2VuYWJsZWQ9MQ0Kd21tX2Fj
-X2JrX2N3bWluPTQNCndtbV9hY19ia19jd21heD0xMA0Kd21tX2FjX2JrX2FpZnM9Nw0Kd21tX2Fj
-X2JrX3R4b3BfbGltaXQ9MA0Kd21tX2FjX2JrX2FjbT0wDQp3bW1fYWNfYmVfYWlmcz0zDQp3bW1f
-YWNfYmVfY3dtaW49NA0Kd21tX2FjX2JlX2N3bWF4PTEwDQp3bW1fYWNfYmVfdHhvcF9saW1pdD0w
-DQp3bW1fYWNfYmVfYWNtPTANCndtbV9hY192aV9haWZzPTINCndtbV9hY192aV9jd21pbj0zDQp3
-bW1fYWNfdmlfY3dtYXg9NA0Kd21tX2FjX3ZpX3R4b3BfbGltaXQ9OTQNCndtbV9hY192aV9hY209
-MA0Kd21tX2FjX3ZvX2FpZnM9Mg0Kd21tX2FjX3ZvX2N3bWluPTINCndtbV9hY192b19jd21heD0z
-DQp3bW1fYWNfdm9fdHhvcF9saW1pdD00Nw0Kd21tX2FjX3ZvX2FjbT0wDQplYXBvbF9rZXlfaW5k
-ZXhfd29ya2Fyb3VuZD0wDQpvd25faXBfYWRkcj0xMjcuMC4wLjENCi0tLS0tLS0tLS0tLS0tLS0t
-LS0tLT44LS0tLS0tLS0tLS0tLS0tLS0tLS0NCg0KDQpJIHRyaWVkIHRvIHJlcHJvZHVjZSB0aGlz
-IGlzc3VlcyB3aXRoIGV4dGVuZGVkIFJTSSBsb2cgZW5hYmxlZCwgdGhpcyBpcyBsb2cgdGFpbA0K
-Zm9yICJJc3N1ZSAyIjoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLT44LS0tLS0tLS0tLS0tLS0tLS0t
-LS0NCnJzaV85MXg6IFBrdCBwZW5kaW5nIGludGVycnVwdA0KcnNpXzkxeDogcnNpX21nbXRfcGt0
-X3JlY3Y6IE1zZyBMZW46IDAsIE1zZyBUeXBlOiAgICA4DQpyc2lfOTF4OiByc2lfc2Rpb19ob3N0
-X2ludGZfd3JpdGVfcGt0OiBTdWNjZXNzZnVsbHkgd3JpdHRlbiBvbnRvIGNhcmQNCnJzaV85MXg6
-IEJlYWNvbiBldmVudA0KcnNpXzkxeDogcnNpX2NvcmVfcW9zX3Byb2Nlc3NvcjogUXVldWUgbnVt
-YmVyID0gNA0KcnNpXzkxeDogcnNpX3NlbmRfYmVhY29uOiBBZGRlZCB0byBiZWFjb24gcXVldWUN
-CnJzaV85MXg6IHJzaV9zZGlvX2hvc3RfaW50Zl93cml0ZV9wa3Q6IFN1Y2Nlc3NmdWxseSB3cml0
-dGVuIG9udG8gY2FyZA0KcnNpXzkxeDogcnNpX2NvcmVfcW9zX3Byb2Nlc3NvcjogUXVldWUgbnVt
-YmVyID0gNQ0KcnNpXzkxeDogcnNpX2ludGVycnVwdF9oYW5kbGVyOiBJbnRyX3N0YXR1cyA9IDgg
-OCA0DQpyc2lfOTF4OiBQa3QgcGVuZGluZyBpbnRlcnJ1cHQNCnJzaV85MXg6IHJzaV9tZ210X3Br
-dF9yZWN2OiBNc2cgTGVuOiAwLCBNc2cgVHlwZTogICAgMQ0KcnNpXzkxeDogcnNpX2hhbmRsZV90
-YV9jb25maXJtX3R5cGU6IEludmFsaWQgVEEgY29uZmlybSBwa3QgcmVjZWl2ZWQNCnJzaV85MXg6
-IHJzaV9zZGlvX2hvc3RfaW50Zl93cml0ZV9wa3Q6IFN1Y2Nlc3NmdWxseSB3cml0dGVuIG9udG8g
-Y2FyZA0KcnNpXzkxeDogcnNpX2NvcmVfcW9zX3Byb2Nlc3NvcjogUXVldWUgbnVtYmVyID0gNA0K
-cnNpXzkxeDogcnNpX3NkaW9faG9zdF9pbnRmX3dyaXRlX3BrdDogU3VjY2Vzc2Z1bGx5IHdyaXR0
-ZW4gb250byBjYXJkDQpyc2lfOTF4OiByc2lfY29yZV9xb3NfcHJvY2Vzc29yOiBRdWV1ZSBudW1i
-ZXIgPSA0DQpyc2lfOTF4OiByc2lfaW50ZXJydXB0X2hhbmRsZXI6IEludHJfc3RhdHVzID0gOCA4
-IDQNCnJzaV85MXg6IFBrdCBwZW5kaW5nIGludGVycnVwdA0KcnNpXzkxeDogcnNpX3JlYWRfcGt0
-OiBwa3QgZnJvbSBpbnZhbGlkIHF1ZXVlOiAyDQpyc2lfOTF4OiByc2lfc2Rpb19ob3N0X2ludGZf
-d3JpdGVfcGt0OiBTdWNjZXNzZnVsbHkgd3JpdHRlbiBvbnRvIGNhcmQNCnJzaV85MXg6IEZhaWxl
-ZCB0byByZWFkIHRoZSBwYWNrZXQNCnJzaV85MXg6IHJzaV9jb3JlX3Fvc19wcm9jZXNzb3I6IFF1
-ZXVlIG51bWJlciA9IDI1NQ0KcnNpXzkxeDogcnNpX2NvcmVfcW9zX3Byb2Nlc3NvcjogTm8gTW9y
-ZSBQa3QNCnJzaV85MXg6IHJzaV9jb3JlX3Fvc19wcm9jZXNzb3I6IFF1ZXVlIG51bWJlciA9IDI1
-NQ0KcnNpXzkxeDogcnNpX2NvcmVfcW9zX3Byb2Nlc3NvcjogTm8gTW9yZSBQa3QNCnJzaV85MXg6
-IHJzaV9jb3JlX3htaXQ6ID09PT4gU2NoZWR1bGluZyBUWCB0aGVhZCA8PT09DQpyc2lfOTF4OiBy
-c2lfY29yZV9xb3NfcHJvY2Vzc29yOiBRdWV1ZSBudW1iZXIgPSAxDQpyc2lfOTF4OiByc2lfc2Rp
-b193cml0ZV9yZWdpc3Rlcl9tdWx0aXBsZTogU3luY2ggQ21kNTMgd3JpdGUgZmFpbGVkIC0xNg0K
-cnNpXzkxeDogcnNpX3NkaW9faG9zdF9pbnRmX3dyaXRlX3BrdDogVW5hYmxlIHRvIHdyaXRlIG9u
-dG8gdGhlIGNhcmQ6IC0xNg0KcnNpXzkxeDogcnNpX3NkaW9faG9zdF9pbnRmX3dyaXRlX3BrdDog
-U3VjY2Vzc2Z1bGx5IHdyaXR0ZW4gb250byBjYXJkDQpyc2lfOTF4OiByc2lfc2VuZF9kYXRhX3Br
-dDogRmFpbGVkIHRvIHdyaXRlIHBrdA0KcnNpXzkxeDogcnNpX2NvcmVfeG1pdDogPT09PiBTY2hl
-ZHVsaW5nIFRYIHRoZWFkIDw9PT0NCnJzaV85MXg6IHJzaV9jb3JlX3Fvc19wcm9jZXNzb3I6IFF1
-ZXVlIG51bWJlciA9IDENCnJzaV85MXg6IHJzaV9zZGlvX2NoZWNrX2J1ZmZlcl9zdGF0dXM6IEZh
-aWxlZCB0byByZWFkIHN0YXR1cyByZWdpc3Rlcg0KcnNpXzkxeDogcnNpX2NvcmVfeG1pdDogPT09
-PiBTY2hlZHVsaW5nIFRYIHRoZWFkIDw9PT0NCnJzaV85MXg6IHJzaV9jb3JlX3Fvc19wcm9jZXNz
-b3I6IFF1ZXVlIG51bWJlciA9IDENCnJzaV85MXg6IHJzaV9zZGlvX2NoZWNrX2J1ZmZlcl9zdGF0
-dXM6IEZhaWxlZCB0byByZWFkIHN0YXR1cyByZWdpc3Rlcg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-PjgtLS0tLS0tLS0tLS0tLS0tLS0tLQ0KDQpBbnkgaWRlYXMgd2hhdCBjb3VsZCBiZSB3cm9uZz8N
-Cg0KLS0gDQogRXVnZW5peSBQYWx0c2V2
+If "evt_len" is 1 then we try to memcpy() negative 3 bytes and it would
+cause memory corruption.
+
+Fixes: d930faee141b ("mwifiex: add support for Marvell pcie8766 chipset")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 97a6199692ab..7538543d46fa 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -1881,7 +1881,8 @@ static int mwifiex_pcie_process_event_ready(struct mwifiex_adapter *adapter)
+ 		mwifiex_dbg(adapter, EVENT,
+ 			    "info: Event length: %d\n", evt_len);
+ 
+-		if ((evt_len > 0) && (evt_len  < MAX_EVENT_SIZE))
++		if (evt_len > MWIFIEX_EVENT_HEADER_LEN &&
++		    evt_len < MAX_EVENT_SIZE)
+ 			memcpy(adapter->event_body, skb_cmd->data +
+ 			       MWIFIEX_EVENT_HEADER_LEN, evt_len -
+ 			       MWIFIEX_EVENT_HEADER_LEN);
