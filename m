@@ -1,107 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f54.google.com ([209.85.214.54]:52257 "EHLO
-        mail-it0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752986AbeDLRFg (ORCPT
+Received: from userp2120.oracle.com ([156.151.31.85]:48230 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751437AbeDELjy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 13:05:36 -0400
-Received: by mail-it0-f54.google.com with SMTP id f6-v6so8254795ita.2
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2018 10:05:36 -0700 (PDT)
+        Thu, 5 Apr 2018 07:39:54 -0400
+Date: Thu, 5 Apr 2018 14:39:31 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] rsi: Free the unaligned pointer
+Message-ID: <20180405113931.n6q6ix47quuvklyp@mwanda> (sfid-20180405_133958_865115_7F91E940)
+References: <20180405112311.GD4218@mwanda>
+ <1522927835.7140.8.camel@sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <1517ecac1d85eb746367d9db436beca2d8f47835.camel@redhat.com>
-References: <CAE4vF2fCTEmEX8i+XVpvTJ1sRYDHDLr+fYFAM2PzTQTqkCoXVQ@mail.gmail.com>
- <CAE4vF2f2oXEvOJWDXPjmiWZTC=HOq5+xE_R64-_VvH6zc-Vw+A@mail.gmail.com>
- <5ACF0F5A.3090301@broadcom.com> <CAE4vF2ftgMPhKEUHr2rPaobM9Dtuc-B9rtbF5tWavvrwUXA7Ag@mail.gmail.com>
- <5ACF3A28.4060303@broadcom.com> <CALLGbRLJLxu92S2bYFOk9oJCLanES4Fu6e-9bh9oAupEC0Uw5w@mail.gmail.com>
- <1517ecac1d85eb746367d9db436beca2d8f47835.camel@redhat.com>
-From: "solsTiCe d'Hiver" <solstice.dhiver@gmail.com>
-Date: Thu, 12 Apr 2018 19:05:35 +0200
-Message-ID: <CAE4vF2fvumVELT5rScptjVC4JOqw5cqEu7yLrYZ64ci=5R6ZRQ@mail.gmail.com> (sfid-20180412_190540_583803_D042CFAF)
-Subject: Re: second wifi card enforce CN reg dom
-To: Dan Williams <dcbw@redhat.com>
-Cc: Steve deRosier <derosier@gmail.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1522927835.7140.8.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
+On Thu, Apr 05, 2018 at 01:30:35PM +0200, Johannes Berg wrote:
+> On Thu, 2018-04-05 at 14:23 +0300, Dan Carpenter wrote:
+> > The problem here is that we allocate "data".  Then we do
+> > "data = PTR_ALIGN(data, 8);" and then we free the aligned pointer and
+> > not the one we allocated.
+> 
+> That seems pretty pointless, since kmalloc guarantees such alignment for
+> sure. Better to just remove PTR_ALIGN()?
 
-I thought I made myself clear.
-I leave in France. My system(s) is/are set up to use FR as default
-regulatory domain.
+Yeah.  You're probably right.  I was thinking that maybe
+ARCH_SLAB_MINALIGN was smaller than 8 somewhere but look it it now, I
+think it's always 8 or more.
 
-But when I plug in that tp-link card, I am restricted to use CN
-regulatory domain. Why am I the only one to see this as a problem ?
+Let me resend with the ALIGN() removed.
 
-I know that one can only have one regdom defined on the system. I have
-set it up myself. So why is it changed behind my back by some card or
-whatever ?
-Like I said, I am left with the option, to disable crda, or to use 2
-systems, one for each card !
-
-Or may be try Windows when this is not messed up like that ??? Well,
-it's not on Windows that I will be able to use monitor mode, anyway.
-
-Never mind.
-
-2018-04-12 17:52 GMT+02:00 Dan Williams <dcbw@redhat.com>:
-> On Thu, 2018-04-12 at 08:18 -0700, Steve deRosier wrote:
->> On Thu, Apr 12, 2018 at 3:51 AM, Arend van Spriel
->> <arend.vanspriel@broadcom.com> wrote:
->> > On 4/12/2018 10:42 AM, solsTiCe d'Hiver wrote:
->> > >
->> > > Hi.
->> > >
->> > > This is beyond my comprehension that you could assert this is a
->> > > non issue.
->> >
->> >
->> > Well. I am just saying that it is by design. There is no way for
->> > the
->> > regulatory code to determine where you and your hardware actually
->> > reside so
->> > instead it takes a conservative approach.
->> >
->>
->> To say it another way: mixing regulatory domains on your host system
->> should result in a _smaller_ set of channels - ie only those channels
->> at the intersection of the two.
->>
->> And another wrinkle to consider - one of the 802.11 amendments (can't
->> remember which one) actually causes the radio to listen to the
->
-> 802.11d I believe, from the early 2000s.
->
-> Dan
->
->> beacons
->> around it, determine what the local regulatory domain is based on the
->> beacons it hears, and then lock to that regulatory domain. It's
->> possible for that information to be propagated up to the card's host
->> and the regulatory domain then would affect both cards. That's how
->> it's supposed to work, though I don't factually know Linux does this
->> in all cases.  Could it be you're somewhere where CN is the local
->> regulatory domain and the TL-WN722N has this feature?
->>
->> In any case, as Arend points out, despite the hand-wringing that
->> regulatory domains cause users trying to do something particular,
->> between certain rules and regulations and certain manufacturers bad
->> interpretations and implementations around it, there's little that
->> can
->> be done about it. Fact is, your radio must comply to whatever
->> regulatory domain you are in, otherwise it's breaking the rules. And
->> people breaking the regulatory rules is part of what's gotten
->> governments to pass even worse (for us OSS guys) laws that tighten
->> those rules down further.
->>
->> You asked who to contact. Its not the LKML - it's your relevant
->> government body. And certain manufacturers who improperly interpret
->> said rules because it's easier for them.
->>
->> - Steve
->>
->> --
->> Steve deRosier
->> Cal-Sierra Consulting LLC
->> https://www.cal-sierra.com/
+regards,
+dan carpenter
