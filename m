@@ -1,65 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:57165 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752788AbeDRLrz (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53422 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751061AbeDEMj4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 07:47:55 -0400
-From: Colin King <colin.king@canonical.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] rt2x00: fix spelling mistake in various macros, UKNOWN -> UNKNOWN
-Date: Wed, 18 Apr 2018 12:47:50 +0100
-Message-Id: <20180418114750.1978-1-colin.king@canonical.com> (sfid-20180418_134812_332277_FF5A678A)
+        Thu, 5 Apr 2018 08:39:56 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Joe Perches <joe@perches.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Jussi Kivilinna <jussi.kivilinna@iki.fi>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Re: [PATCH 06/12] wireless: Convert simple uses of a static const Ethernet broadcast address
+References: <cover.1522479607.git.joe@perches.com>
+        <79196f134a513d50968e8e208a0e56b3c0236ee3.1522479607.git.joe@perches.com>
+Date: Thu, 05 Apr 2018 15:39:50 +0300
+In-Reply-To: <79196f134a513d50968e8e208a0e56b3c0236ee3.1522479607.git.joe@perches.com>
+        (Joe Perches's message of "Sat, 31 Mar 2018 00:05:21 -0700")
+Message-ID: <87po3desix.fsf@kamboji.qca.qualcomm.com> (sfid-20180405_144015_561579_48853C09)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Joe Perches <joe@perches.com> writes:
 
-Rename several macros that contain mispellings of UNKNOWN
+> Use the new ether_broadcast_addr global instead to save some object code.
+>
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>  drivers/net/wireless/admtek/adm8211.c           | 3 +--
+>  drivers/net/wireless/ath/carl9170/mac.c         | 4 +---
+>  drivers/net/wireless/broadcom/b43/main.c        | 3 +--
+>  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 3 +--
+>  drivers/net/wireless/realtek/rtlwifi/core.c     | 5 ++---
+>  drivers/net/wireless/rndis_wlan.c               | 6 +-----
+>  drivers/net/wireless/ti/wl1251/main.c           | 5 +----
+>  drivers/net/wireless/ti/wlcore/main.c           | 5 +----
+>  8 files changed, 9 insertions(+), 25 deletions(-)
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800.h | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+It would be really helpful if you could CLEARLY document in the patches
+(or in the cover letter but then you need to cc all parties) to what
+tree the patches are meant for. Otherwise I, and other maintainers as
+well, need to waste time trying to guess what's your plan.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-index 6a8c93fb6a43..8eccfbb5d6f8 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-@@ -1193,10 +1193,10 @@
- #define TX_PWR_CFG_3_MCS13		FIELD32(0x000000f0)
- #define TX_PWR_CFG_3_MCS14		FIELD32(0x00000f00)
- #define TX_PWR_CFG_3_MCS15		FIELD32(0x0000f000)
--#define TX_PWR_CFG_3_UKNOWN1		FIELD32(0x000f0000)
--#define TX_PWR_CFG_3_UKNOWN2		FIELD32(0x00f00000)
--#define TX_PWR_CFG_3_UKNOWN3		FIELD32(0x0f000000)
--#define TX_PWR_CFG_3_UKNOWN4		FIELD32(0xf0000000)
-+#define TX_PWR_CFG_3_UNKNOWN1		FIELD32(0x000f0000)
-+#define TX_PWR_CFG_3_UNKNOWN2		FIELD32(0x00f00000)
-+#define TX_PWR_CFG_3_UNKNOWN3		FIELD32(0x0f000000)
-+#define TX_PWR_CFG_3_UNKNOWN4		FIELD32(0xf0000000)
- /* bits for 3T devices */
- #define TX_PWR_CFG_3_MCS12_CH0		FIELD32(0x0000000f)
- #define TX_PWR_CFG_3_MCS12_CH1		FIELD32(0x000000f0)
-@@ -1216,10 +1216,10 @@
-  * TX_PWR_CFG_4:
-  */
- #define TX_PWR_CFG_4			0x1324
--#define TX_PWR_CFG_4_UKNOWN5		FIELD32(0x0000000f)
--#define TX_PWR_CFG_4_UKNOWN6		FIELD32(0x000000f0)
--#define TX_PWR_CFG_4_UKNOWN7		FIELD32(0x00000f00)
--#define TX_PWR_CFG_4_UKNOWN8		FIELD32(0x0000f000)
-+#define TX_PWR_CFG_4_UNKNOWN5		FIELD32(0x0000000f)
-+#define TX_PWR_CFG_4_UNKNOWN6		FIELD32(0x000000f0)
-+#define TX_PWR_CFG_4_UNKNOWN7		FIELD32(0x00000f00)
-+#define TX_PWR_CFG_4_UNKNOWN8		FIELD32(0x0000f000)
- /* bits for 3T devices */
- #define TX_PWR_CFG_4_STBC4_CH0		FIELD32(0x0000000f)
- #define TX_PWR_CFG_4_STBC4_CH1		FIELD32(0x000000f0)
+I will now drop the four wireless patches from my queue. So if you want
+to me to take them please resubmit.
+
 -- 
-2.17.0
+Kalle Valo
