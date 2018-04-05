@@ -1,43 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33576 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751052AbeDUIyg (ORCPT
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:43855 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751038AbeDEMWh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 Apr 2018 04:54:36 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Joey Pabalinas <joeypabalinas@gmail.com>
-Cc: Kees Cook <keescook@chromium.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        luciano.coelho@intel.com, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: New sparse warning from min_t(): expression using sizeof(void)
-References: <87a7txf15w.fsf@kamboji.qca.qualcomm.com>
-        <20180421082444.i4eyw2zxl6tipt6i@gmail.com>
-Date: Sat, 21 Apr 2018 11:54:30 +0300
-In-Reply-To: <20180421082444.i4eyw2zxl6tipt6i@gmail.com> (Joey Pabalinas's
-        message of "Fri, 20 Apr 2018 22:24:44 -1000")
-Message-ID: <87604ley7t.fsf@kamboji.qca.qualcomm.com> (sfid-20180421_105450_836856_7C41064A)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 5 Apr 2018 08:22:37 -0400
+Received: by mail-wr0-f194.google.com with SMTP id p53so28061830wrc.10
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Apr 2018 05:22:36 -0700 (PDT)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Gertjan van Wingerde <gwingerde@gmail.com>,
+        Jakub Kicinski <jakub.kicinski@netronome.com>,
+        wireless newbie <wnewbie72@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux wireless ml <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wireless: rt2x00: rt2800: add antenna diversity for RT5370G
+Date: Thu,  5 Apr 2018 14:22:32 +0200
+Message-Id: <20180405122232.1694-1-xose.vazquez@gmail.com> (sfid-20180405_142240_977126_7B411586)
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joey Pabalinas <joeypabalinas@gmail.com> writes:
+RT5370G has hardware RX antenna diversity like RT5390R.
+Based on DPO_RT5572_LinuxSTA_2.6.1.3_20121022.tar.bz2 manufacturer driver:
+https://d86o2zu8ugzlg.cloudfront.net/mediatek-craft/drivers/DPO_RT5572_LinuxSTA_2.6.1.3_20121022.tar.bz2
 
-> On Sat, Apr 21, 2018 at 10:50:51AM +0300, Kalle Valo wrote:
->> Is there any way to fix it? With ath10k I use sparse a lot and because
->> of these warnings sparse is now very annoying to use.
->
-> I submitted a sparse patch [1] for this not too long ago, but in the
-> meantime you can still curl the patch [2] and apply it directly to
-> the v0.5.2 release to suppress the deluge of warnings (-Wpointer-arith
-> is off by defaultl so no need to change any of you configurations).
->
-> [1] https://lkml.org/lkml/2018/4/10/923
-> [2] https://patchwork.kernel.org/patch/10334353/raw/
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Jakub Kicinski <jakub.kicinski@netronome.com>
+Cc: wireless newbie <wnewbie72@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux wireless ml <linux-wireless@vger.kernel.org>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800.h    | 1 +
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 9 ++++++---
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-Perfect, thanks. Unfortunatelly I need to catch a boat and I can't test
-it right now, but I'll do that on Monday.
-
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
+index 6a8c93fb6a43..7a133e94b1bf 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
+@@ -94,6 +94,7 @@
+ #define REV_RT3390E			0x0211
+ #define REV_RT3593E			0x0211
+ #define REV_RT5390F			0x0502
++#define REV_RT5370G			0x0503
+ #define REV_RT5390R			0x1502
+ #define REV_RT5592C			0x0221
+ 
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 429d07b651dd..e827dc522580 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -6220,8 +6220,9 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_register_write(rt2x00dev, GPIO_CTRL, reg);
+ 	}
+ 
+-	/* This chip has hardware antenna diversity*/
+-	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R)) {
++	/* These chips have hardware RX antenna diversity */
++	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R) ||
++	    rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5370G)) {
+ 		rt2800_bbp_write(rt2x00dev, 150, 0); /* Disable Antenna Software OFDM */
+ 		rt2800_bbp_write(rt2x00dev, 151, 0); /* Disable Antenna Software CCK */
+ 		rt2800_bbp_write(rt2x00dev, 154, 0); /* Clear previously selected antenna */
+@@ -8748,7 +8749,9 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 		rt2x00dev->default_ant.rx = ANTENNA_A;
+ 	}
+ 
+-	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R)) {
++	/* These chips have hardware RX antenna diversity */
++	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R) ||
++	    rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5370G)) {
+ 		rt2x00dev->default_ant.tx = ANTENNA_HW_DIVERSITY; /* Unused */
+ 		rt2x00dev->default_ant.rx = ANTENNA_HW_DIVERSITY; /* Unused */
+ 	}
 -- 
-Kalle Valo
+2.14.3
