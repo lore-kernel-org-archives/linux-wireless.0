@@ -1,78 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:53825 "EHLO
-        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754768AbeDCH2q (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:42828 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751809AbeDELqu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Apr 2018 03:28:46 -0400
-Received: by mail-wm0-f50.google.com with SMTP id p9so30890618wmc.3
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Apr 2018 00:28:46 -0700 (PDT)
-Subject: Re: brcmfmac signal/interference issues
-To: Daniel Drake <drake@endlessm.com>
-References: <CAD8Lp46dbsn2qyzYE6N-6quJXc2xUeO4Fi=UhZz=P2Q=G7A41A@mail.gmail.com>
- <5A8D36B7.1010201@broadcom.com>
- <CAD8Lp44MdsO_F0xEYhdjF=hAj4h26561VQJepubEEmtdWoQ-vA@mail.gmail.com>
- <CAD8Lp44Y-sNqm8_5=1pvBy-3zvVVQSCQ+Qye-2xP8vGmkvrjng@mail.gmail.com>
- <5A8FE4D9.80608@broadcom.com>
- <CAD8Lp44Q0=jS0gqnt1mMfjRe6sTx3Z7n9=iGvk3VFGK2549V7g@mail.gmail.com>
- <5AA114A9.8050801@broadcom.com>
- <CAD8Lp4713vwqFXiYK5fD+h_rTnMQCy-uCX54qn1m1+3o-+892g@mail.gmail.com>
-Cc: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
-        chi-hsien.lin@cypress.com, Wright Feng <wright.feng@cypress.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Linux Upstreaming Team <linux@endlessm.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AC32D2E.8070601@broadcom.com> (sfid-20180403_092850_894406_5439BEDC)
-Date: Tue, 3 Apr 2018 09:28:46 +0200
-MIME-Version: 1.0
-In-Reply-To: <CAD8Lp4713vwqFXiYK5fD+h_rTnMQCy-uCX54qn1m1+3o-+892g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Thu, 5 Apr 2018 07:46:50 -0400
+Message-ID: <1522928804.7140.10.camel@sipsolutions.net> (sfid-20180405_134654_449960_71F692B6)
+Subject: Re: [PATCH] rsi: Free the unaligned pointer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Date: Thu, 05 Apr 2018 13:46:44 +0200
+In-Reply-To: <20180405114124.v2cgo36uuniirby2@mwanda>
+References: <20180405112311.GD4218@mwanda>
+         <1522927835.7140.8.camel@sipsolutions.net>
+         <20180405113931.n6q6ix47quuvklyp@mwanda>
+         <20180405114124.v2cgo36uuniirby2@mwanda>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/28/2018 8:43 PM, Daniel Drake wrote:
-> On Thu, Mar 8, 2018 at 4:47 AM, Arend van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->>> 43455c0-roml/sdio-ag-ndis-vista-pktfilter-d0c-pno-aoe-p2p-dhdoid-ndoe-gtkoe-mfp-proptxstatus-dmatxrc-keepalive-ap-ampduretry-pclose-txbf
->>>
->>> Yes, ndis. So no easy way to run the same firmware on the 2 OSes.
->>
->> Indeed. I could try building nearly same firmware target. Can you provide
->> the firmware version as well.
->
-> Full string is:
-> 43455c0-roml/sdio-ag-ndis-vista-pktfilter-d0c-pno-aoe-p2p-dhdoid-ndoe-gtkoe-mfp-proptxstatus-dmatxrc-keepalive-ap-ampduretry-pclose-txbf
-> Version: 7.45.87.0 CRC: 7cb2470e Date: Thu 2016-04-21 22:31:44 PDT
-> Ucode Ver: 1043.2070 FWID: 01-f68ec182
->
-> If you could build that config but for Linux instead of ndis I would
-> love to try it.
->
-> Also, here is the string for the current one in linux-firmware:
-> 43455c0-roml/sdio-ag-p2p-pno-aoe-pktfilter-keepalive-mchan-pktctx-proptxstatus-ampduhostreorder-lpc-pwropt-txbf-wnm-okc-ccx-ltecx-wfds-wl11u-mfp-tdls-ve
-> Version: 7.45.18.0 CRC: d7226371 Date: Sun 2015-03-01 07:31:57 PST
-> Ucode Ver: 1026.2 FWID: 01-6a2c8ad4
->
-> I note that the Version and UcodeVer in the linux-firmware version are
-> lower than the windows one. If it's possible to also rebuild the
-> linux-firmware config but with those newer versions (or even the
-> latest, if there is something newer), I will test that too.
+On Thu, 2018-04-05 at 14:41 +0300, Dan Carpenter wrote:
+> On Thu, Apr 05, 2018 at 02:39:31PM +0300, Dan Carpenter wrote:
+> > On Thu, Apr 05, 2018 at 01:30:35PM +0200, Johannes Berg wrote:
+> > > On Thu, 2018-04-05 at 14:23 +0300, Dan Carpenter wrote:
+> > > > The problem here is that we allocate "data".  Then we do
+> > > > "data = PTR_ALIGN(data, 8);" and then we free the aligned pointer and
+> > > > not the one we allocated.
+> > > 
+> > > That seems pretty pointless, since kmalloc guarantees such alignment for
+> > > sure. Better to just remove PTR_ALIGN()?
+> > 
+> > Yeah.  You're probably right.  I was thinking that maybe
+> > ARCH_SLAB_MINALIGN was smaller than 8 somewhere but look it it now, I
+> > think it's always 8 or more.
+> > 
+> 
+> Perhaps on certain xtensa variants?
+> 
+> arch/xtensa/include/asm/processor.h:#define ARCH_SLAB_MINALIGN  XCHAL_DATA_WIDTH
+> arch/xtensa/variants/fsf/include/variant/core.h:#define XCHAL_DATA_WIDTH                4       /* data width in bytes */
 
-Thanks for the version info. I will look if we could use similar version 
-as window version, but typically they spin from different branches.
+That's ... interesting. The comment on the original of this says it's
+supposed to be used for "better alignment" (more zero bits), and I'd
+think that there's lots of code making such assumptions...
 
->> So it picks up something in the PC. Some sources of interference that I have
->> seen before are USB3 and HDMI. Maybe try to shield those if present and see
->> if that helps. The nvram contains sensitivity parameters, but as you stated
->> you are using the same nvram for windows and linux for now we can rule it
->> out for debugging the issue.
->
-> Yeah, there are some options here which we can try to explore. What's
-> still unknown though is why windows appears immune to this exact same
-> interference. A software fix would be much more convenient... :)
+I'd argue it's an xtensa bug, if we need to deal with this everywhere
+then it might get messy. Mostly we don't have to care, since pointer
+alignment is sufficient in many cases, but still...
 
-Obviously ;-) And the immunity seems to justify that path.
+Hmm. Dunno what to do here then.
 
-Regards,
-Arend
+johannes
