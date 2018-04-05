@@ -1,47 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54732 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752722AbeD3TJK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Apr 2018 15:09:10 -0400
-Date: Mon, 30 Apr 2018 12:09:01 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Sriram R <srirrama@codeaurora.org>
-Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org,
-        Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
-Subject: Re: [PATCH 2/2 - linux-stable-4.4] ath10k: rebuild crypto header in
- rx data frames
-Message-ID: <20180430190901.GB8415@kroah.com> (sfid-20180430_210914_480632_F0EFC834)
-References: <1525069587-19281-1-git-send-email-srirrama@codeaurora.org>
- <1525069587-19281-3-git-send-email-srirrama@codeaurora.org>
+Received: from userp2130.oracle.com ([156.151.31.86]:56296 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750835AbeDELX0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Apr 2018 07:23:26 -0400
+Date: Thu, 5 Apr 2018 14:23:11 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Cc: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] rsi: Free the unaligned pointer
+Message-ID: <20180405112311.GD4218@mwanda> (sfid-20180405_132330_784628_CEF256B5)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1525069587-19281-3-git-send-email-srirrama@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 30, 2018 at 11:56:27AM +0530, Sriram R wrote:
-> Rx data frames notified through HTT_T2H_MSG_TYPE_RX_IND and
-> HTT_T2H_MSG_TYPE_RX_FRAG_IND expect PN/TSC check to be done
-> on host (mac80211) rather than firmware. Rebuild cipher header
-> in every received data frames (that are notified through those
-> HTT interfaces) from the rx_hdr_status tlv available in the
-> rx descriptor of the first msdu. Skip setting RX_FLAG_IV_STRIPPED
-> flag for the packets which requires mac80211 PN/TSC check support
-> and set appropriate RX_FLAG for stripped crypto tail. Hw QCA988X,
-> and QCA99X0 currently need the rebuilding of cipher header to
-> perform PN/TSC check for replay attack.
-> 
-> [Upstream Commit : 7eccb738fce57cbe53ed903ccf43f9ab257b15b3]
-> 
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
-> Signed-off-by: Sriram R <srirrama@codeaurora.org>
-> ---
->  drivers/net/wireless/ath/ath10k/htt_rx.c | 98 ++++++++++++++++++++++++++------
->  1 file changed, 82 insertions(+), 16 deletions(-)
+The problem here is that we allocate "data".  Then we do
+"data = PTR_ALIGN(data, 8);" and then we free the aligned pointer and
+not the one we allocated.
 
-This patch breaks the build.  Always test build your patches!
+I don't know if it causes an issue in real life, but it seems like a
+reasonable thing to free the same pointer that we allocated.
 
-thanks,
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-greg k-h
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index d76e69c0beaa..ca4e698ab69b 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -652,11 +652,11 @@ static int rsi_sdio_load_data_master_write(struct rsi_hw *adapter,
+ static int rsi_sdio_master_reg_read(struct rsi_hw *adapter, u32 addr,
+ 				    u32 *read_buf, u16 size)
+ {
+-	u32 addr_on_bus, *data;
++	u32 addr_on_bus, *data, *data_orig;
+ 	u16 ms_addr;
+ 	int status;
+ 
+-	data = kzalloc(RSI_MASTER_REG_BUF_SIZE, GFP_KERNEL);
++	data = data_orig = kzalloc(RSI_MASTER_REG_BUF_SIZE, GFP_KERNEL);
+ 	if (!data)
+ 		return -ENOMEM;
+ 
+@@ -709,7 +709,7 @@ static int rsi_sdio_master_reg_read(struct rsi_hw *adapter, u32 addr,
+ 	}
+ 
+ err:
+-	kfree(data);
++	kfree(data_orig);
+ 	return status;
+ }
+ 
+@@ -717,10 +717,10 @@ static int rsi_sdio_master_reg_write(struct rsi_hw *adapter,
+ 				     unsigned long addr,
+ 				     unsigned long data, u16 size)
+ {
+-	unsigned long *data_aligned;
++	unsigned long *data_aligned, *data_orig;
+ 	int status;
+ 
+-	data_aligned = kzalloc(RSI_MASTER_REG_BUF_SIZE, GFP_KERNEL);
++	data_aligned = data_orig = kzalloc(RSI_MASTER_REG_BUF_SIZE, GFP_KERNEL);
+ 	if (!data_aligned)
+ 		return -ENOMEM;
+ 
+@@ -743,7 +743,7 @@ static int rsi_sdio_master_reg_write(struct rsi_hw *adapter,
+ 		rsi_dbg(ERR_ZONE,
+ 			"%s: Unable to set ms word to common reg\n",
+ 			__func__);
+-		kfree(data_aligned);
++		kfree(data_orig);
+ 		return -EIO;
+ 	}
+ 	addr = addr & 0xFFFF;
+@@ -757,7 +757,7 @@ static int rsi_sdio_master_reg_write(struct rsi_hw *adapter,
+ 		rsi_dbg(ERR_ZONE,
+ 			"%s: Unable to do AHB reg write\n", __func__);
+ 
+-	kfree(data_aligned);
++	kfree(data_orig);
+ 	return status;
+ }
+ 
