@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:40537 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750862AbeDYFWb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 01:22:31 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Nathan Schulte <nmschulte@gmail.com>,
-        Emmanuel Grumbach <egrumbach@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>
-Subject: RE: [linuxwifi] Simultaneous 2.4 GHz WiFi and Bluetooth issue on
- Intel Dual Band Wireless-AC 8260
-Date: Wed, 25 Apr 2018 05:22:26 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB30126BF90DA@HASMSX112.ger.corp.intel.com> (sfid-20180425_072247_309449_A0A96DCB)
-References: <6e4b5e53-0a8d-978c-5cfe-f498c8b15c1a@gmail.com>
- <CANUX_P19ja=XLMs8Vvii1yMvCNAvPnMh7hs=H92M5QRJnJjRfg@mail.gmail.com>
- <30aa1580-7913-a7f8-3f2d-be4d699d6dbc@gmail.com>
-In-Reply-To: <30aa1580-7913-a7f8-3f2d-be4d699d6dbc@gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from aserp2130.oracle.com ([141.146.126.79]:50932 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751262AbeDELln (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Apr 2018 07:41:43 -0400
+Date: Thu, 5 Apr 2018 14:41:24 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] rsi: Free the unaligned pointer
+Message-ID: <20180405114124.v2cgo36uuniirby2@mwanda> (sfid-20180405_134147_724141_43446064)
+References: <20180405112311.GD4218@mwanda>
+ <1522927835.7140.8.camel@sipsolutions.net>
+ <20180405113931.n6q6ix47quuvklyp@mwanda>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180405113931.n6q6ix47quuvklyp@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IA0KPiBPbiAwNC8yMC8yMDE4IDAxOjAzIEFNLCBFbW1hbnVlbCBHcnVtYmFjaCB3cm90ZToNCj4g
-Pj4gVW5kZXIgV2luZG93cyAxMCwgdGhlIGhhcmR3YXJlIGFwcGVhcnMgdG8gd29yayB3aXRob3V0
-IGlzc3VlLg0KPiA+PiBBZGRpdGlvbmFsbHksIEkgYmVsaWV2ZSBJIG1hbmFnZWQgdG8gd2FybS1y
-ZWJvb3QgZnJvbSBXaW5kb3dzIDEwIHRvDQo+ID4+IExpbnV4ICh3aXRoIEJsdWV0b290aCBjb25u
-ZWN0ZWQpLCBhbmQgd2FzIGFibGUgdG8gY29udGludWUgdXNpbmcgdGhlDQo+ID4+IHNhbWUgMi40
-IEdIeiBXaUZpIGFuZCBCbHVldG9vdGggYXVkaW8gc2luayB3aXRob3V0IGlzc3VlLg0KPiA+DQo+
-ID4gVGhpcyB3YXMgcmVwb3J0ZWQgaW4gdGhlIHBhc3QuIFBsZWFzZSBtYWtlIHN1cmUgeW91IGhh
-dmUgdGhlIGxhdGVzdCBCVA0KPiA+IGZpcm13YXJlIGZpbGVzLg0KPiANCj4gVGhpcyBzZWVtcyB0
-byBoYXZlIHJlc29sdmVkIHRoZSBpc3N1ZS4gIEludGVyZXN0aW5nbHksIHRoZSBmaXJtd2FyZQ0K
-PiAodmVyc2lvbi4uLikgc2hpcHBlZCB3aXRoIERlYmlhbiBTaWQgaXMgbm90IGluIHRoZSBvZmZp
-Y2lhbCBsaW51eC1maXJtd2FyZS5naXQNCj4gcmVwb3NpdG9yeTsgaXRzIG1kNXN1bSBkb2Vzbid0
-IG1hdGNoIGFueSBvZiBwcmlvciB2ZXJzaW9ucyBvZiB0aGUgZmlsZToNCg0KR2xhZCB0byBrbm93
-LiBJIGd1ZXNzIHlvdSBjYW4gb3BlbiBhIGJ1ZyBvbiBEZWJpYW4gdG8gdGhhdmUgdGhleSBmaXgg
-dGhpcy4NClRoaXMgaXMgcmF0aGVyIHN0cmFuZ2UgdGhvdWdoLg0KDQo+IA0KPiA+IGh0dHBzOi8v
-Z2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2Zpcm13YXJlL2xpbnV4LWZp
-cm13YXINCj4gPiBlLmdpdC9sb2cvaW50ZWwvaWJ0LTExLTUuc2ZpDQo+IA0KPiBFbW1hbnVlbCwg
-aG93IGNhbiBJIGRldGVybWluZSB0aGUgZmlybXdhcmUgdmVyc2lvbiAoIkZXIEJ1aWxkIiBhbmQv
-b3INCj4gIlJlbGVhc2UgVmVyc2lvbiIpIGZyb20gYSBnaXZlbiBmaWxlIChlLmcuIGlidC0xMS01
-LnNmaS8uZGRjKT8NCg0KSSBoYXZlIG5vIGNsdWUgOikNCkkgYW0gbm90IGEgQlQgZ3V5LCBzb3Jy
-eS4NCg0KPiANCj4gPiBSZWdhcmRsZXNzIG9mIHRoZSBCVCBmaXJtd2FyZSB2ZXJzaW9uIHRoaW5n
-IHdoaWNoIGlzIGEgcHVyZSBJbnRlbA0KPiA+IHByb2JsZW0sIEkgaGF2ZSBoZWFyZCBhYm91dCBw
-cm9ibGVtcyBpbiB0aGUgQlQgc3RhY2sgaXRzZWxmIGJ1dCBJDQo+ID4gY2FuJ3QgaGVscCBhYm91
-dCB0aGlzLg0KPiANCj4gVGhvdWdoIEkndmUgbmV2ZXIgcmVhbGx5IHVzZWQgdGhlIEJsdWV0b290
-aCBzdGFjayB1bnRpbCB0aGlzIGhhcmR3YXJlLCBpdA0KPiBzZWVtcyB0aGUgc3RhY2svYmx1ZW1h
-bi0qIGFwcGxpY2F0aW9ucyBvbmx5IGJlaGF2ZSBvZGRseSB3aGVuIHRoZXJlJ3MNCj4gcHJvYmxl
-bXMgd2l0aCB0aGUgZmlybXdhcmU6IG5ldmVyIGFuIGlzc3VlIHdoZW4gbm90IHVzaW5nIHNpbXVs
-dGFuZW91cw0KPiAyLjQgR0h6IFdpRmkgKyBCbHVldG9vdGgsIG9yIHdpdGggdGhpcyBsYXRlc3Qg
-ZmlybXdhcmUsIG9yIGFwcHJveC4gMiB5ZWFycyBhZ28NCj4gd2hlbiBJIGZpcnN0IHN0YXJ0ZWQg
-dXNpbmcgdGhpcyBzZXR1cC4NCj4gDQoNCg==
+On Thu, Apr 05, 2018 at 02:39:31PM +0300, Dan Carpenter wrote:
+> On Thu, Apr 05, 2018 at 01:30:35PM +0200, Johannes Berg wrote:
+> > On Thu, 2018-04-05 at 14:23 +0300, Dan Carpenter wrote:
+> > > The problem here is that we allocate "data".  Then we do
+> > > "data = PTR_ALIGN(data, 8);" and then we free the aligned pointer and
+> > > not the one we allocated.
+> > 
+> > That seems pretty pointless, since kmalloc guarantees such alignment for
+> > sure. Better to just remove PTR_ALIGN()?
+> 
+> Yeah.  You're probably right.  I was thinking that maybe
+> ARCH_SLAB_MINALIGN was smaller than 8 somewhere but look it it now, I
+> think it's always 8 or more.
+> 
+
+Perhaps on certain xtensa variants?
+
+arch/xtensa/include/asm/processor.h:#define ARCH_SLAB_MINALIGN  XCHAL_DATA_WIDTH
+arch/xtensa/variants/fsf/include/variant/core.h:#define XCHAL_DATA_WIDTH                4       /* data width in bytes */
+
+regards,
+dan carpenter
