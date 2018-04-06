@@ -1,133 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:51580 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752125AbeDLMXn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 08:23:43 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
-        rfried@codeaurora.org, bjorn.andersson@linaro.org,
-        loic.poulain@linaro.org, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH v2] wcn36xx: pass correct BSS index when deleting BSS keys
-Date: Thu, 12 Apr 2018 14:23:30 +0200
-Message-Id: <20180412122330.6916-1-daniel@zonque.org> (sfid-20180412_142347_794319_4182DFE2)
+Received: from smtp.codeaurora.org ([198.145.29.96]:43156 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750815AbeDFIHn (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Apr 2018 04:07:43 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Cc: linux-wireless@vger.kernel.org,
+        Sebastian Gottschall <s.gottschall@newmedia-net.de>,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for various chipsets
+References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
+        <871sftemru.fsf@kamboji.qca.qualcomm.com>
+        <c4a1313a-73d2-a028-4fca-09f6fb6e56bd@dd-wrt.com>
+        <de9c007f-26e3-a511-e944-91e90aac7787@dd-wrt.com>
+Date: Fri, 06 Apr 2018 11:07:39 +0300
+In-Reply-To: <de9c007f-26e3-a511-e944-91e90aac7787@dd-wrt.com> (Sebastian
+        Gottschall's message of "Thu, 5 Apr 2018 22:00:43 +0200")
+Message-ID: <87h8oosqpg.fsf@codeaurora.org> (sfid-20180406_100748_182869_B05C2A19)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware message to delete BSS keys expects a BSS index to be passed.
-This field is currently hard-coded to 0. Fix this by passing in the index
-we received from the firmware when the BSS was configured.
+Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
 
-The encryption type in that message also needs to be set to what was used
-when the key was set, so the assignment of vif_priv->encrypt_type is now
-done after the firmware command was sent. This reportedly fixes the
-following error in AP mode:
+> i have some comments about your check warnings.
+> some of them are bogus. for instance they advise to use "unsigned int"
+> instead of "unsigned". this might be better, but
+> the original kernel header uses "unsigned" as api definition. so i
+> decided to use the same declarations here.
 
-  wcn36xx: ERROR hal_remove_bsskey response failed err=6
+Sure, but using "unsigned int" won't create any harm either.
 
-Also, AFAIU, when a BSS is deleted, the firmware apparently drops all the
-keys associated with it. Trying to remove the key explicitly afterwards
-will hence lead to the following message:
+> for the rest like whitespaces i will make a new version and remove them
 
-  wcn36xx: ERROR hal_remove_bsskey response failed err=16
+You missed my comment in my earlier mail that I'll send the next
+version. I have already fixed all the warnings so let me submit it. I'll
+do also some other changes.
 
-This is now suppressed with an extra check for the BSS index validity.
-
-Signed-off-by: Daniel Mack <daniel@zonque.org>
----
-v2: mention the vif_priv->encrypt_type move in the commit log.
-
- drivers/net/wireless/ath/wcn36xx/main.c | 10 +++++++---
- drivers/net/wireless/ath/wcn36xx/smd.c  |  6 ++++--
- drivers/net/wireless/ath/wcn36xx/smd.h  |  2 ++
- 3 files changed, 13 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 0bc9283e7d8d..1b17c35a7944 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -547,6 +547,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		} else {
- 			wcn36xx_smd_set_bsskey(wcn,
- 				vif_priv->encrypt_type,
-+				vif_priv->bss_index,
- 				key_conf->keyidx,
- 				key_conf->keylen,
- 				key);
-@@ -564,10 +565,13 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		break;
- 	case DISABLE_KEY:
- 		if (!(IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags)) {
-+			if (vif_priv->bss_index != WCN36XX_HAL_BSS_INVALID_IDX)
-+				wcn36xx_smd_remove_bsskey(wcn,
-+					vif_priv->encrypt_type,
-+					vif_priv->bss_index,
-+					key_conf->keyidx);
-+
- 			vif_priv->encrypt_type = WCN36XX_HAL_ED_NONE;
--			wcn36xx_smd_remove_bsskey(wcn,
--				vif_priv->encrypt_type,
--				key_conf->keyidx);
- 		} else {
- 			sta_priv->is_data_encrypted = false;
- 			/* do not remove key if disassociated */
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 9827a1e1124b..297a785d0785 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1636,6 +1636,7 @@ int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
- 
- int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
- 			   enum ani_ed_type enc_type,
-+			   u8 bssidx,
- 			   u8 keyidx,
- 			   u8 keylen,
- 			   u8 *key)
-@@ -1645,7 +1646,7 @@ int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SET_BSSKEY_REQ);
--	msg_body.bss_idx = 0;
-+	msg_body.bss_idx = bssidx;
- 	msg_body.enc_type = enc_type;
- 	msg_body.num_keys = 1;
- 	msg_body.keys[0].id = keyidx;
-@@ -1706,6 +1707,7 @@ int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
- 
- int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
- 			      enum ani_ed_type enc_type,
-+			      u8 bssidx,
- 			      u8 keyidx)
- {
- 	struct wcn36xx_hal_remove_bss_key_req_msg msg_body;
-@@ -1713,7 +1715,7 @@ int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_RMV_BSSKEY_REQ);
--	msg_body.bss_idx = 0;
-+	msg_body.bss_idx = bssidx;
- 	msg_body.enc_type = enc_type;
- 	msg_body.key_id = keyidx;
- 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
-index 8076edf40ac8..61bb8d43138c 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.h
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.h
-@@ -97,6 +97,7 @@ int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
- 			   u8 sta_index);
- int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
- 			   enum ani_ed_type enc_type,
-+			   u8 bssidx,
- 			   u8 keyidx,
- 			   u8 keylen,
- 			   u8 *key);
-@@ -106,6 +107,7 @@ int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
- 			      u8 sta_index);
- int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
- 			      enum ani_ed_type enc_type,
-+			      u8 bssidx,
- 			      u8 keyidx);
- int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif);
- int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif);
 -- 
-2.14.3
+Kalle Valo
