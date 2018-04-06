@@ -1,120 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:51152 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753575AbeDPL41 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 07:56:27 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Jakub Kicinski <kubakici@wp.pl>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 1/2 v2] mt7601u: use EWMA to calculate avg_rssi
-Date: Mon, 16 Apr 2018 13:56:17 +0200
-Message-Id: <1523879778-6455-1-git-send-email-sgruszka@redhat.com> (sfid-20180416_135630_675875_9631F36B)
+Received: from smtps.newmedia-net.de ([185.84.6.167]:40881 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751344AbeDFIMB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Apr 2018 04:12:01 -0400
+Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for
+ various chipsets
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
+ <871sftemru.fsf@kamboji.qca.qualcomm.com>
+ <c4a1313a-73d2-a028-4fca-09f6fb6e56bd@dd-wrt.com>
+ <de9c007f-26e3-a511-e944-91e90aac7787@dd-wrt.com>
+ <1d917688-9f59-39ad-46a6-527d9e3dec03@dd-wrt.com>
+ <87d0zcsqmv.fsf@codeaurora.org>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <41fa794e-d5d5-004e-5403-1e14c77a567a@dd-wrt.com> (sfid-20180406_101206_456759_8FDEF918)
+Date: Fri, 6 Apr 2018 10:11:59 +0200
+MIME-Version: 1.0
+In-Reply-To: <87d0zcsqmv.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-avr_rssi is not calculated correctly as we do not divide result
-by 256 (mt76 sum avg_rssi1 and avg_rssi2 and divide by 512).
-However dividing by 256 will make avg_rssi almost the same as
-last rssi value - not really an average. So use EWMA to calculate
-avg_rssi. I've chosen weight_rcp=4 to convergence quicker on signal
-strength changes.
+Am 06.04.2018 um 10:09 schrieb Kalle Valo:
+> (adding back the lists, please don't top post and trim your quotes)
+>
+> Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
+>
+>> okay. ath10k-check is buggy and doesnt work. so it doesnt help much
+>> with code styles
+>>
+>> root@seg-desktop:/xfs/ath10k/ath.gpio# ./ath10k-check
+>> global: 'drivers/net/wireless/ath/ath10k/Kconfig' is not a source file.
+>> Traceback (most recent call last):
+>>    File "./ath10k-check", line 461, in <module>
+>>      main()
+>>    File "./ath10k-check", line 455, in main
+>>      ret = run_checkpatch(args)
+>>    File "./ath10k-check", line 275, in run_checkpatch
+>>      output = subprocess.check_output(cmd, shell=True)
+>>    File "/usr/lib/python2.7/subprocess.py", line 219, in check_output
+>>      raise CalledProcessError(retcode, cmd, output=output)
+>> subprocess.CalledProcessError: Command 'global -f
+>> drivers/net/wireless/ath/ath10k/Kconfig' returned non-zero exit status 1
+> You are missing gtags, see 'ath10k-check --help' for how to install:
+>
+> Requirements (all available in $PATH):
+>
+> * gcc
+> * sparse
+> * checkpatch.pl
+> * gtags (from package global)
+ahm i did read this and this was all installed. but ath10k-check refuses 
+to work
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Jakub Kicinski <kubakici@wp.pl>
----
- drivers/net/wireless/mediatek/mt7601u/mac.c     |  4 ++--
- drivers/net/wireless/mediatek/mt7601u/mt7601u.h |  5 ++++-
- drivers/net/wireless/mediatek/mt7601u/phy.c     | 10 +++++++---
- 3 files changed, 13 insertions(+), 6 deletions(-)
+root@seg-desktop:/home/seg/DEV# gtags --version
+gtags (GNU GLOBAL) 6.5.7
+Copyright (c) 1996-2017 Tama Communications Corporation
+License GPLv3+: GNU GPL version 3 or later 
+<http://www.gnu.org/licenses/gpl.html>
+This is free software; you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/mac.c b/drivers/net/wireless/mediatek/mt7601u/mac.c
-index d6dc59bb00df..8ec18d69f564 100644
---- a/drivers/net/wireless/mediatek/mt7601u/mac.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/mac.c
-@@ -437,7 +437,7 @@ void mt7601u_mac_set_ampdu_factor(struct mt7601u_dev *dev)
- {
- 	dev->bcn_freq_off = rxwi->freq_off;
- 	dev->bcn_phy_mode = FIELD_GET(MT_RXWI_RATE_PHY, rate);
--	dev->avg_rssi = (dev->avg_rssi * 15) / 16 + (rssi << 8);
-+	ewma_rssi_add(&dev->avg_rssi, -rssi);
- }
- 
- static int
-@@ -479,7 +479,7 @@ u32 mt76_mac_process_rx(struct mt7601u_dev *dev, struct sk_buff *skb,
- 	if (mt7601u_rx_is_our_beacon(dev, data))
- 		mt7601u_rx_monitor_beacon(dev, rxwi, rate, rssi);
- 	else if (rxwi->rxinfo & cpu_to_le32(MT_RXINFO_U2M))
--		dev->avg_rssi = (dev->avg_rssi * 15) / 16 + (rssi << 8);
-+		ewma_rssi_add(&dev->avg_rssi, -rssi);
- 	spin_unlock_bh(&dev->con_mon_lock);
- 
- 	return len;
-diff --git a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
-index c7ec40475a5f..9058b0af7bec 100644
---- a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
-+++ b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
-@@ -23,6 +23,7 @@
- #include <linux/completion.h>
- #include <net/mac80211.h>
- #include <linux/debugfs.h>
-+#include <linux/average.h>
- 
- #include "regs.h"
- 
-@@ -138,6 +139,8 @@ enum {
- 	MT7601U_STATE_MORE_STATS,
- };
- 
-+DECLARE_EWMA(rssi, 10, 4);
-+
- /**
-  * struct mt7601u_dev - adapter structure
-  * @lock:		protects @wcid->tx_rate.
-@@ -219,7 +222,7 @@ struct mt7601u_dev {
- 	s8 bcn_freq_off;
- 	u8 bcn_phy_mode;
- 
--	int avg_rssi; /* starts at 0 and converges */
-+	struct ewma_rssi avg_rssi;
- 
- 	u8 agc_save;
- 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/phy.c b/drivers/net/wireless/mediatek/mt7601u/phy.c
-index ca09a5d4305e..d440c550bdb1 100644
---- a/drivers/net/wireless/mediatek/mt7601u/phy.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/phy.c
-@@ -974,6 +974,7 @@ void mt7601u_agc_restore(struct mt7601u_dev *dev)
- static void mt7601u_agc_tune(struct mt7601u_dev *dev)
- {
- 	u8 val = mt7601u_agc_default(dev);
-+	long avg_rssi;
- 
- 	if (test_bit(MT7601U_STATE_SCANNING, &dev->state))
- 		return;
-@@ -983,9 +984,12 @@ static void mt7601u_agc_tune(struct mt7601u_dev *dev)
- 	 *	 Rssi updates are only on beacons and U2M so should work...
- 	 */
- 	spin_lock_bh(&dev->con_mon_lock);
--	if (dev->avg_rssi <= -70)
-+	avg_rssi = ewma_rssi_read(&dev->avg_rssi);
-+	WARN_ON_ONCE(avg_rssi == 0);
-+	avg_rssi = -avg_rssi;
-+	if (avg_rssi <= -70)
- 		val -= 0x20;
--	else if (dev->avg_rssi <= -60)
-+	else if (avg_rssi <= -60)
- 		val -= 0x10;
- 	spin_unlock_bh(&dev->con_mon_lock);
- 
-@@ -1101,7 +1105,7 @@ void mt7601u_phy_con_cal_onoff(struct mt7601u_dev *dev,
- 	/* Start/stop collecting beacon data */
- 	spin_lock_bh(&dev->con_mon_lock);
- 	ether_addr_copy(dev->ap_bssid, info->bssid);
--	dev->avg_rssi = 0;
-+	ewma_rssi_init(&dev->avg_rssi);
- 	dev->bcn_freq_off = MT_FREQ_OFFSET_INVALID;
- 	spin_unlock_bh(&dev->con_mon_lock);
- 
+>
+
 -- 
-1.9.3
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
