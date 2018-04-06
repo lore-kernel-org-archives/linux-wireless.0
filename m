@@ -1,168 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:34558 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751629AbeDJRmy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Apr 2018 13:42:54 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
-        rfried@codeaurora.org, bjorn.andersson@linaro.org,
-        Daniel Mack <daniel@zonque.org>
-Subject: [PATCH 1/1 RFC] wcn36xx: fix buffer commit logic on TX path
-Date: Tue, 10 Apr 2018 19:42:45 +0200
-Message-Id: <20180410174245.1116-2-daniel@zonque.org> (sfid-20180410_194258_050396_3C1FBFC3)
-In-Reply-To: <20180410174245.1116-1-daniel@zonque.org>
-References: <20180410174245.1116-1-daniel@zonque.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:42652 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751089AbeDFIFg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Apr 2018 04:05:36 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Cc: linux-wireless@vger.kernel.org,
+        Sebastian Gottschall <s.gottschall@newmedia-net.de>,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for various chipsets
+References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
+        <871sftemru.fsf@kamboji.qca.qualcomm.com>
+        <c4a1313a-73d2-a028-4fca-09f6fb6e56bd@dd-wrt.com>
+Date: Fri, 06 Apr 2018 11:05:30 +0300
+In-Reply-To: <c4a1313a-73d2-a028-4fca-09f6fb6e56bd@dd-wrt.com> (Sebastian
+        Gottschall's message of "Thu, 5 Apr 2018 20:01:47 +0200")
+Message-ID: <87lge0sqt1.fsf@codeaurora.org> (sfid-20180406_100544_352534_E87683EA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When wcn36xx_dxe_tx_frame() is entered while the device is still processing
-the queue asyncronously, we are racing against the firmware code with
-updates to the buffer descriptors. Presumably, the firmware scans the ring
-buffer that holds the descriptors and scans for a valid control descriptor,
-and then assumes that the next descriptor contains the payload. If, however,
-the control descriptor is marked valid, but the payload descriptor isn't,
-the packet is not sent out.
+Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
 
-Another issue with the current code is that is lacks memory barriers before
-descriptors are marked valid. This is important because the CPU may reorder
-writes to memory, even if it is allocated as coherent DMA area, and hence
-the device may see incompletely written data.
+> Am 05.04.2018 um 16:44 schrieb Kalle Valo:
+>> s.gottschall@dd-wrt.com writes:
+>>
+>>> Adds LED and GPIO Control support for 988x, 9887, 9888, 99x0, 9984
+>>> based chipsets with on chipset connected led's using WMI Firmware API.
+>>> The LED device will get available named as "ath10k-phyX" at sysfs and
+>>> can be controlled with various triggers. adds also debugfs interface
+>>> for gpio control.
+>>>
+>>> Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+>> [...]
+>>
+>>> @@ -1034,7 +1068,7 @@ ath10k_wmi_pdev_get_temperature(struct ath10k *ar)
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (IS_ERR(skb))
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return PTR_ERR(s=
+kb);
+>>> =C2=A0 -=C2=A0=C2=A0=C2=A0 return ath10k_wmi_cmd_send(ar, skb,
+>>> +=C2=A0=C2=A0=C2=A0 return ath10k_wmi_cmd_send_nowait(ar, skb,
+>>> ar->wmi.cmd->pdev_get_temperature_cmdid);
+>>> =C2=A0 }
+>> This looks odd, I don't think it belongs to this patch.
+>
+> thats true. but due the nature of this function i found it better to
+> use nowait here. better if i split it up?
 
-To fix this, the code in wcn36xx_dxe_tx_frame() was restructured a bit so
-that the payload descriptor is made valid before the control descriptor.
-Memory barriers are added to ensure coherency of shared memory areas.
+Yes, this should be done in a separate patch with a proper commit log
+explaining why it's needed.
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
----
- drivers/net/wireless/ath/wcn36xx/dxe.c | 75 +++++++++++++++++-----------------
- 1 file changed, 38 insertions(+), 37 deletions(-)
+>> Also you made a some sort of record, your patch had 181 checkpatch
+>> warnings! Do you use Word as your editor or what? But please do check
+>> your editor settings and read the coding style documents.
+>
+> no? i use midnight commander for all of my code since more than 20 years
+> and its the first time that i see such warnings. is there any special
+> coding rule for ath10k which differs from the kernel rules?
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index 26e6c42f886a..cb93545a42ce 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -638,8 +638,8 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
- 			 struct sk_buff *skb,
- 			 bool is_low)
- {
--	struct wcn36xx_dxe_ctl *ctl = NULL;
--	struct wcn36xx_dxe_desc *desc = NULL;
-+	struct wcn36xx_dxe_desc *desc_bd, *desc_skb;
-+	struct wcn36xx_dxe_ctl *ctl_bd, *ctl_skb;
- 	struct wcn36xx_dxe_ch *ch = NULL;
- 	unsigned long flags;
- 	int ret;
-@@ -647,74 +647,75 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
- 	ch = is_low ? &wcn->dxe_tx_l_ch : &wcn->dxe_tx_h_ch;
- 
- 	spin_lock_irqsave(&ch->lock, flags);
--	ctl = ch->head_blk_ctl;
-+	ctl_bd = ch->head_blk_ctl;
-+	ctl_skb = ctl_bd->next;
- 
- 	/*
- 	 * If skb is not null that means that we reached the tail of the ring
- 	 * hence ring is full. Stop queues to let mac80211 back off until ring
- 	 * has an empty slot again.
- 	 */
--	if (NULL != ctl->next->skb) {
-+	if (NULL != ctl_skb->skb) {
- 		ieee80211_stop_queues(wcn->hw);
- 		wcn->queues_stopped = true;
- 		spin_unlock_irqrestore(&ch->lock, flags);
- 		return -EBUSY;
- 	}
- 
--	ctl->skb = NULL;
--	desc = ctl->desc;
-+	if (unlikely(ctl_skb->bd_cpu_addr)) {
-+		wcn36xx_err("bd_cpu_addr cannot be NULL for skb DXE\n");
-+		ret = -EINVAL;
-+		goto unlock;
-+	}
-+
-+	desc_bd = ctl_bd->desc;
-+	desc_skb = ctl_skb->desc;
-+
-+	ctl_bd->skb = NULL;
- 
- 	/* write buffer descriptor */
--	memcpy(ctl->bd_cpu_addr, bd, sizeof(*bd));
-+	memcpy(ctl_bd->bd_cpu_addr, bd, sizeof(*bd));
- 
- 	/* Set source address of the BD we send */
--	desc->src_addr_l = ctl->bd_phy_addr;
--
--	desc->dst_addr_l = ch->dxe_wq;
--	desc->fr_len = sizeof(struct wcn36xx_tx_bd);
--	desc->ctrl = ch->ctrl_bd;
-+	desc_bd->src_addr_l = ctl_bd->bd_phy_addr;
-+	desc_bd->dst_addr_l = ch->dxe_wq;
-+	desc_bd->fr_len = sizeof(struct wcn36xx_tx_bd);
- 
- 	wcn36xx_dbg(WCN36XX_DBG_DXE, "DXE TX\n");
- 
- 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "DESC1 >>> ",
--			 (char *)desc, sizeof(*desc));
-+			 (char *)desc_bd, sizeof(*desc_bd));
- 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP,
--			 "BD   >>> ", (char *)ctl->bd_cpu_addr,
-+			 "BD   >>> ", (char *)ctl_bd->bd_cpu_addr,
- 			 sizeof(struct wcn36xx_tx_bd));
- 
--	/* Set source address of the SKB we send */
--	ctl = ctl->next;
--	desc = ctl->desc;
--	if (ctl->bd_cpu_addr) {
--		wcn36xx_err("bd_cpu_addr cannot be NULL for skb DXE\n");
--		ret = -EINVAL;
--		goto unlock;
--	}
--
--	desc->src_addr_l = dma_map_single(wcn->dev,
--					  skb->data,
--					  skb->len,
--					  DMA_TO_DEVICE);
--	if (dma_mapping_error(wcn->dev, desc->src_addr_l)) {
-+	desc_skb->src_addr_l = dma_map_single(wcn->dev,
-+					      skb->data,
-+					      skb->len,
-+					      DMA_TO_DEVICE);
-+	if (dma_mapping_error(wcn->dev, desc_skb->src_addr_l)) {
- 		dev_err(wcn->dev, "unable to DMA map src_addr_l\n");
- 		ret = -ENOMEM;
- 		goto unlock;
- 	}
- 
--	ctl->skb = skb;
--	desc->dst_addr_l = ch->dxe_wq;
--	desc->fr_len = ctl->skb->len;
--
--	/* set dxe descriptor to VALID */
--	desc->ctrl = ch->ctrl_skb;
-+	ctl_skb->skb = skb;
-+	desc_skb->dst_addr_l = ch->dxe_wq;
-+	desc_skb->fr_len = ctl_skb->skb->len;
- 
- 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "DESC2 >>> ",
--			 (char *)desc, sizeof(*desc));
-+			 (char *)desc_skb, sizeof(*desc_skb));
- 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "SKB   >>> ",
--			 (char *)ctl->skb->data, ctl->skb->len);
-+			 (char *)ctl_skb->skb->data, ctl_skb->skb->len);
- 
- 	/* Move the head of the ring to the next empty descriptor */
--	 ch->head_blk_ctl = ctl->next;
-+	 ch->head_blk_ctl = ctl_skb->next;
-+
-+	/* Commit all previous writes and set descriptors to VALID */
-+	wmb();
-+	desc_skb->ctrl = ch->ctrl_skb;
-+	wmb();
-+	desc_bd->ctrl = ch->ctrl_bd;
- 
- 	/*
- 	 * When connected and trying to send data frame chip can be in sleep
--- 
-2.14.3
+You got even the indentation wrong in multiple functions and indentation
+rules have been the same as long as I remember. And checkpatch has been
+around a long time already, that should not be new to anyone submitting
+patches.
+
+> and where is ath10k-check located?
+
+Check the link I provided:
+
+>> https://wireless.wiki.kernel.org/en/users/drivers/ath10k/codingstyle
+
+--=20
+Kalle Valo
