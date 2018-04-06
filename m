@@ -1,156 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:40600 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753172AbeD3OM4 (ORCPT
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:35115 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752114AbeDFLjH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Apr 2018 10:12:56 -0400
-Received: by mail-wm0-f66.google.com with SMTP id j5so14502816wme.5
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2018 07:12:55 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [RFC 03/18] mt76x2: move utility routines in mt76x2.h
-Date: Mon, 30 Apr 2018 16:12:18 +0200
-Message-Id: <ab5fd734e05a9a3d99f250a9064b5d8d0210fd02.1525096206.git.lorenzo.bianconi@redhat.com> (sfid-20180430_161259_688464_93273411)
-In-Reply-To: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
-References: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
+        Fri, 6 Apr 2018 07:39:07 -0400
+Received: by mail-pl0-f67.google.com with SMTP id 61-v6so444699plb.2
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Apr 2018 04:39:07 -0700 (PDT)
+From: Siva Rebbagondla <siva8118@gmail.com>
+To: linux-firmware@kernel.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Sushant Mishra <sushant.mishra@redpinesignals.com>,
+        Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>
+Subject: [PATCH] Added wait event for power save request till confirm form firmware is received
+Date: Fri,  6 Apr 2018 17:11:42 +0530
+Message-Id: <1523014902-23232-1-git-send-email-siva8118@gmail.com> (sfid-20180406_133911_541450_28B8CCF4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to reuse them supporting mt76x2u based devices, move
-mt76x2_wait_for_mac, wait_for_wpdma and mt76x2_channel_silent in
-mt76x2.h
+From: Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2.h      | 40 ++++++++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 28 -----------------
- drivers/net/wireless/mediatek/mt76/mt76x2_phy.c  |  9 ------
- 3 files changed, 40 insertions(+), 37 deletions(-)
+ ubuntu/rsi/rsi_91x_main.c | 1 +
+ ubuntu/rsi/rsi_91x_mgmt.c | 5 +++++
+ ubuntu/rsi/rsi_main.h     | 1 +
+ 3 files changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-index a31602d9310e..ec4396583a94 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-@@ -148,6 +148,23 @@ struct mt76x2_sta {
- 	int n_frames;
- };
+diff --git a/ubuntu/rsi/rsi_91x_main.c b/ubuntu/rsi/rsi_91x_main.c
+index 2350dbb..49b98cd 100644
+--- a/ubuntu/rsi/rsi_91x_main.c
++++ b/ubuntu/rsi/rsi_91x_main.c
+@@ -382,6 +382,7 @@ struct rsi_hw *ven_rsi_91x_init(void)
+ #ifdef CONFIG_HW_SCAN_OFFLOAD
+ 	rsi_init_event(&common->chan_set_event);
+ 	rsi_init_event(&common->probe_cfm_event);
++	rsi_init_event(&common->mgmt_cfm_event);
+ 	rsi_init_event(&common->chan_change_event);
+ 	rsi_init_event(&common->cancel_hw_scan_event);
+ 	common->scan_workqueue = 
+diff --git a/ubuntu/rsi/rsi_91x_mgmt.c b/ubuntu/rsi/rsi_91x_mgmt.c
+index 11b2046..58a9b69 100644
+--- a/ubuntu/rsi/rsi_91x_mgmt.c
++++ b/ubuntu/rsi/rsi_91x_mgmt.c
+@@ -2407,6 +2407,8 @@ void rsi_scan_start(struct work_struct *work)
  
-+static inline bool mt76x2_wait_for_mac(struct mt76x2_dev *dev)
-+{
-+	int i;
-+
-+	for (i = 0; i < 500; i++) {
-+		switch (mt76_rr(dev, MT_MAC_CSR0)) {
-+		case 0:
-+		case ~0:
-+			break;
-+		default:
-+			return true;
-+		}
-+		usleep_range(5000, 10000);
-+	}
-+	return false;
-+}
-+
- static inline bool is_mt7612(struct mt76x2_dev *dev)
- {
- 	return mt76_chip(&dev->mt76) == 0x7612;
-@@ -155,6 +172,14 @@ static inline bool is_mt7612(struct mt76x2_dev *dev)
+ 	common->scan_in_prog = true;
+ 	rsi_disable_ps(common->priv);
++	rsi_reset_event(&common->mgmt_cfm_event);
++	rsi_wait_event(&common->mgmt_cfm_event, msecs_to_jiffies(2000));
+ 	
+ 	for (ii =0; ii < scan_req->n_channels ; ii++) {
+ 		if (common->iface_down)
+@@ -2470,6 +2472,8 @@ void rsi_scan_start(struct work_struct *work)
+ 	del_timer(&common->scan_timer);
+ 	common->scan_in_prog = false;
+ 	rsi_enable_ps(common->priv);
++	rsi_reset_event(&common->mgmt_cfm_event);
++	rsi_wait_event(&common->mgmt_cfm_event, msecs_to_jiffies(2000));
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 9, 0))
+ 	info.aborted = false;
+ 	ieee80211_scan_completed(common->priv->hw, &info);
+@@ -2693,6 +2697,7 @@ static int rsi_handle_ta_confirm(struct rsi_common *common, u8 *msg)
  
- void mt76x2_set_irq_mask(struct mt76x2_dev *dev, u32 clear, u32 set);
+ 	case WAKEUP_SLEEP_REQUEST:
+ 		ven_rsi_dbg(INFO_ZONE, "Wakeup/Sleep confirmation.\n");
++		rsi_set_event(&common->mgmt_cfm_event);
+ 		return rsi_handle_ps_confirm(adapter, msg);
  
-+static inline bool mt76x2_channel_silent(struct mt76x2_dev *dev)
-+{
-+	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
-+
-+	return ((chan->flags & IEEE80211_CHAN_RADAR) &&
-+		chan->dfs_state != NL80211_DFS_AVAILABLE);
-+}
-+
- static inline void mt76x2_irq_enable(struct mt76x2_dev *dev, u32 mask)
- {
- 	mt76x2_set_irq_mask(dev, 0, mask);
-@@ -165,6 +190,21 @@ static inline void mt76x2_irq_disable(struct mt76x2_dev *dev, u32 mask)
- 	mt76x2_set_irq_mask(dev, mask, 0);
- }
- 
-+static inline bool mt76x2_wait_for_bbp(struct mt76x2_dev *dev)
-+{
-+	return mt76_poll_msec(dev, MT_MAC_STATUS,
-+			      MT_MAC_STATUS_TX | MT_MAC_STATUS_RX,
-+			      0, 100);
-+}
-+
-+static inline bool wait_for_wpdma(struct mt76x2_dev *dev)
-+{
-+	return mt76_poll(dev, MT_WPDMA_GLO_CFG,
-+			 MT_WPDMA_GLO_CFG_TX_DMA_BUSY |
-+			 MT_WPDMA_GLO_CFG_RX_DMA_BUSY,
-+			 0, 1000);
-+}
-+
- extern const struct ieee80211_ops mt76x2_ops;
- 
- struct mt76x2_dev *mt76x2_alloc_device(struct device *pdev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index d21e4a7c1bb9..3d4d07485fab 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -24,34 +24,6 @@ struct mt76x2_reg_pair {
- 	u32 value;
- };
- 
--static bool
--mt76x2_wait_for_mac(struct mt76x2_dev *dev)
--{
--	int i;
--
--	for (i = 0; i < 500; i++) {
--		switch (mt76_rr(dev, MT_MAC_CSR0)) {
--		case 0:
--		case ~0:
--			break;
--		default:
--			return true;
--		}
--		usleep_range(5000, 10000);
--	}
--
--	return false;
--}
--
--static bool
--wait_for_wpdma(struct mt76x2_dev *dev)
--{
--	return mt76_poll(dev, MT_WPDMA_GLO_CFG,
--			 MT_WPDMA_GLO_CFG_TX_DMA_BUSY |
--			 MT_WPDMA_GLO_CFG_RX_DMA_BUSY,
--			 0, 1000);
--}
--
- static void
- mt76x2_mac_pbf_init(struct mt76x2_dev *dev)
- {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-index 038d1fe6c726..0ce40887b19f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-@@ -176,15 +176,6 @@ void mt76x2_phy_set_txpower(struct mt76x2_dev *dev)
- 		mt76x2_tx_power_mask(t.ht[6], t.vht[8], t.vht[8], 0));
- }
- 
--static bool
--mt76x2_channel_silent(struct mt76x2_dev *dev)
--{
--	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
--
--	return ((chan->flags & IEEE80211_CHAN_RADAR) &&
--		chan->dfs_state != NL80211_DFS_AVAILABLE);
--}
--
- static bool
- mt76x2_phy_tssi_init_cal(struct mt76x2_dev *dev)
- {
+ 	case BG_SCAN_PROBE_REQ:
+diff --git a/ubuntu/rsi/rsi_main.h b/ubuntu/rsi/rsi_main.h
+index 2aad124..027e9d9 100644
+--- a/ubuntu/rsi/rsi_main.h
++++ b/ubuntu/rsi/rsi_main.h
+@@ -376,6 +376,7 @@ struct rsi_common {
+ 	struct work_struct scan_work;
+ 	struct rsi_event chan_set_event;
+ 	struct rsi_event probe_cfm_event;
++	struct rsi_event mgmt_cfm_event;
+ 	struct rsi_event chan_change_event;
+ 	struct rsi_event cancel_hw_scan_event;
+ 	struct timer_list scan_timer;
 -- 
-2.14.3
+2.7.4
