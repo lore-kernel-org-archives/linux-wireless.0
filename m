@@ -1,104 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f178.google.com ([74.125.82.178]:44722 "EHLO
-        mail-ot0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752750AbeDDC2j (ORCPT
+Received: from mail-wr0-f177.google.com ([209.85.128.177]:41408 "EHLO
+        mail-wr0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752021AbeDFLuk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Apr 2018 22:28:39 -0400
-Subject: Re: RTL8723BE performance regression
-To: =?UTF-8?Q?Jo=c3=a3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>,
-        Steven Ting <steventing@realtek.com>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Daniel Drake <drake@endlessm.com>,
-        =?UTF-8?Q?Jo=c3=a3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>,
-        linux@endlessm.com
-References: <CA+A7VXX+z8FrDhzW2BQ6AGMJ=_j_53wkUL_YNgkreEbWSh+jCw@mail.gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <afdf0498-c0a9-936c-0c9b-1b6da6eb5957@lwfinger.net> (sfid-20180404_042855_186870_26B4955B)
-Date: Tue, 3 Apr 2018 21:28:36 -0500
+        Fri, 6 Apr 2018 07:50:40 -0400
+Received: by mail-wr0-f177.google.com with SMTP id s12so1495256wrc.8
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Apr 2018 04:50:39 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CA+A7VXX+z8FrDhzW2BQ6AGMJ=_j_53wkUL_YNgkreEbWSh+jCw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1523014902-23232-1-git-send-email-siva8118@gmail.com>
+References: <1523014902-23232-1-git-send-email-siva8118@gmail.com>
+From: Siva Rebbagondla <siva8118@gmail.com>
+Date: Fri, 6 Apr 2018 17:20:38 +0530
+Message-ID: <CANGSkXTx7TQkjSTdgkbH8FEUac5opzYj_wr-TogUmGXB6Urgtw@mail.gmail.com> (sfid-20180406_135043_872948_BF66DE76)
+Subject: Re: [PATCH] Added wait event for power save request till confirm form
+ firmware is received
+To: linux-firmware@kernel.org
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Sushant Mishra <sushant.mishra@redpinesignals.com>,
+        Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/03/2018 08:51 PM, João Paulo Rechi Vita wrote:
-> Hello,
-> 
-> I've been trying to track a performance regression on the RTL8723BE
-> WiFi adapter, which mainly affects the upload bandwidth (although we
-> can see a decreased download performance as well, the effect on upload
-> is more drastic). This was first reported by users after upgrading
-> from our 4.11-based kernel to our 4.13-based kernel, but also
-> confirmed to affect our development branch (4.15-based kernel) and
-> wireless-drivers-next at the
-> wireless-drivers-next-for-davem-2018-03-29 tag. This is happening on
-> an HP laptop that needs rtl8723be.ant_sel=1 (and all the following
-> tests have been made with that param).
-> 
-> My first bisect attempt pointed me to the following commit:
-> 
-> bcd37f4a0831 rtlwifi: btcoex: 23b 2ant: let bt transmit when hw
-> initialisation done
-> 
-> Which I later found to be already fixed by
-> 
-> a33fcba6ec01 rtlwifi: btcoexist: Fix breakage of ant_sel for rtl8723be.
-> 
-> That fix is already included in v4.15 though (and our dev branch as
-> well), so I did a second bisect, now cherry-picking a33fcba6ec01 at
-> every step, and it pointed me to the following commit:
-> 
-> 7937f02d1953 rtlwifi: btcoex: hook external functions for newer chips
-> 
-> Reverting that commit on top of our development branch fixes the
-> problem, but on top of v4.15 I get mixed results: a few times getting
-> a good upload performance (~5-6Mbps) but most of the time just getting
-> ~1-1.5Mpbs (which is still better than the 0.0 then test failure I've
-> gotten on most bad points of the bisect).
-> 
-> Bisecting the downstream patches we carry on top of v4.15 (we base our
-> kernel on Ubuntu's, so there are quite a few downstream changes) did
-> not bring any clarity, as at all bisect points (plus reverting
-> 7937f02d1953) the performance was good, so probably there was some
-> other difference in the resulting kernels from my initial revert of
-> that patch on top of v4.15 and each step during the bisect. I've
-> experimented a bit with fwlps=0, but it did not bring any conclusive
-> results either. I'll try to look at other things that may have changed
-> (configuration perhaps?), but I don't have a clear plan yet.
-> 
-> Have you seen anything similar, or have any other ideas or suggestions
-> to track this problem? Even without crystal clear results, it looks
-> like 7937f02d1953 is having a negative impact on the RTL8723BE
-> performance, so perhaps it is worth reverting it and reworking it a
-> later point?
-> 
-> This are the results (testing with speedtest.net) I got at some key points:
-> 
-> Version        Commit        Ping        Down        Up
-> 
-> v4.11            a351e9b        12        25.44        5.99
-> v4.11            a351e9b        131      17.02        5.89
-> 
-> v4.13            569dbb8        174      14.08        0.00
-> v4.13            569dbb8        261      8.41          0.00
-> 
-> v4.15+revert d8a5b80        19        23.86        1.41
-> v4.15+revert d8a5b80        189      18.69        1.39
-> 
+On Fri, Apr 6, 2018 at 5:11 PM, Siva Rebbagondla <siva8118@gmail.com> wrote:
+> From: Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>
+>
+> Signed-off-by: Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>
+> ---
+>  ubuntu/rsi/rsi_91x_main.c | 1 +
+>  ubuntu/rsi/rsi_91x_mgmt.c | 5 +++++
+>  ubuntu/rsi/rsi_main.h     | 1 +
+>  3 files changed, 7 insertions(+)
+>
+> diff --git a/ubuntu/rsi/rsi_91x_main.c b/ubuntu/rsi/rsi_91x_main.c
+> index 2350dbb..49b98cd 100644
+> --- a/ubuntu/rsi/rsi_91x_main.c
+> +++ b/ubuntu/rsi/rsi_91x_main.c
+> @@ -382,6 +382,7 @@ struct rsi_hw *ven_rsi_91x_init(void)
+>  #ifdef CONFIG_HW_SCAN_OFFLOAD
+>         rsi_init_event(&common->chan_set_event);
+>         rsi_init_event(&common->probe_cfm_event);
+> +       rsi_init_event(&common->mgmt_cfm_event);
+>         rsi_init_event(&common->chan_change_event);
+>         rsi_init_event(&common->cancel_hw_scan_event);
+>         common->scan_workqueue =
+> diff --git a/ubuntu/rsi/rsi_91x_mgmt.c b/ubuntu/rsi/rsi_91x_mgmt.c
+> index 11b2046..58a9b69 100644
+> --- a/ubuntu/rsi/rsi_91x_mgmt.c
+> +++ b/ubuntu/rsi/rsi_91x_mgmt.c
+> @@ -2407,6 +2407,8 @@ void rsi_scan_start(struct work_struct *work)
+>
+>         common->scan_in_prog = true;
+>         rsi_disable_ps(common->priv);
+> +       rsi_reset_event(&common->mgmt_cfm_event);
+> +       rsi_wait_event(&common->mgmt_cfm_event, msecs_to_jiffies(2000));
+>
+>         for (ii =0; ii < scan_req->n_channels ; ii++) {
+>                 if (common->iface_down)
+> @@ -2470,6 +2472,8 @@ void rsi_scan_start(struct work_struct *work)
+>         del_timer(&common->scan_timer);
+>         common->scan_in_prog = false;
+>         rsi_enable_ps(common->priv);
+> +       rsi_reset_event(&common->mgmt_cfm_event);
+> +       rsi_wait_event(&common->mgmt_cfm_event, msecs_to_jiffies(2000));
+>  #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 9, 0))
+>         info.aborted = false;
+>         ieee80211_scan_completed(common->priv->hw, &info);
+> @@ -2693,6 +2697,7 @@ static int rsi_handle_ta_confirm(struct rsi_common *common, u8 *msg)
+>
+>         case WAKEUP_SLEEP_REQUEST:
+>                 ven_rsi_dbg(INFO_ZONE, "Wakeup/Sleep confirmation.\n");
+> +               rsi_set_event(&common->mgmt_cfm_event);
+>                 return rsi_handle_ps_confirm(adapter, msg);
+>
+>         case BG_SCAN_PROBE_REQ:
+> diff --git a/ubuntu/rsi/rsi_main.h b/ubuntu/rsi/rsi_main.h
+> index 2aad124..027e9d9 100644
+> --- a/ubuntu/rsi/rsi_main.h
+> +++ b/ubuntu/rsi/rsi_main.h
+> @@ -376,6 +376,7 @@ struct rsi_common {
+>         struct work_struct scan_work;
+>         struct rsi_event chan_set_event;
+>         struct rsi_event probe_cfm_event;
+> +       struct rsi_event mgmt_cfm_event;
+>         struct rsi_event chan_change_event;
+>         struct rsi_event cancel_hw_scan_event;
+>         struct timer_list scan_timer;
+> --
+> 2.7.4
+>
 
-As the antenna selection code changes affected your first bisection, do you have 
-one of those HP laptops with only one antenna and the incorrect coding in the 
-FUSE? If so, please make sure that you still have the same signal strength for 
-good and bad cases. I have tried to keep the driver and the btcoex code in sync, 
-but there may be some combinations of antenna configuration and FUSE contents 
-that cause the code to fail.
+Please ignore this. It got sent by mistake.
 
-Larry
+Thanks,
+Siva Rebbagondla
