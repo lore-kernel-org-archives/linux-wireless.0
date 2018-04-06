@@ -1,49 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60442 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:53214 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750732AbeDPFRM (ORCPT
+        with ESMTP id S1751329AbeDFFqA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 01:17:12 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Mon, 16 Apr 2018 13:17:12 +0800
-From: cjhuang@codeaurora.org
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Brian Norris <briannorris@chromium.org>,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH 2/2] ath10k: support MAC address randomization in scan
-In-Reply-To: <877epbs5v7.fsf@kamboji.qca.qualcomm.com>
-References: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org>
- <1522379640-6442-3-git-send-email-cjhuang@codeaurora.org>
- <20180412205954.GA34456@rodete-desktop-imager.corp.google.com>
- <e16557d0891352ae0b83902faee97023@codeaurora.org>
- <877epbs5v7.fsf@kamboji.qca.qualcomm.com>
-Message-ID: <539b85655d7f700bfcd28a6f698af943@codeaurora.org> (sfid-20180416_071715_908271_B39912D1)
+        Fri, 6 Apr 2018 01:46:00 -0400
+From: pillair@codeaurora.org
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>
+Subject: [PATCH] ath10k: Enable hw checksum for wcn3990
+Date: Fri,  6 Apr 2018 11:15:44 +0530
+Message-Id: <1522993544-15279-1-git-send-email-pillair@codeaurora.org> (sfid-20180406_074604_112233_2ED6A905)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-04-13 19:28, Kalle Valo wrote:
-> cjhuang@codeaurora.org writes:
-> 
->>>> +	if (test_bit(WMI_SERVICE_SPOOF_MAC_SUPPORT, ar->wmi.svc_map)) {
->>>> +		ret = ath10k_wmi_scan_prob_req_oui(ar, ar->mac_addr);
->>>> +		if (ret) {
->>>> +			ath10k_err(ar, "failed to set prob req oui: %i\n", ret);
->>>> +			goto err_dfs_detector_exit;
->>>> +		}
->>>> +
->>>> +		ar->hw->wiphy->features |=
->>>> +			NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
->>> 
->>> Do you support NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR too?
->> 
->> I'll add this flag too.
-> 
-> Are you going to send v2 or what's the plan?
+From: Rakesh Pillai <pillair@codeaurora.org>
 
-Yes I'll send V2.
+By default ath10k driver enables the support for HW_CHECKSUM
+(NETIF_F_HW_CSUM). Since the TCP/UDP checksum calculation is not enabled
+in the wcn3990 firmware the checksum is incorrect in the TCP/UDP packets
+and all patckets are dropped. But due note that wcn3990 support in
+ath10k is still incomplete so this isn't a critical fix (yet).
 
+Enable hw checksum calculations in wcn3990 hardware by
+setting the proper flags in msdu descriptor tso flags.
 
-Thanks,
-Carl
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/htt.h    | 13 +++++++++++++
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  6 ++++--
+ 2 files changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 8cc2a8b..11f52df 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -127,6 +127,19 @@ struct htt_msdu_ext_desc_64 {
+ 				 | HTT_MSDU_EXT_DESC_FLAG_TCP_IPV4_CSUM_ENABLE \
+ 				 | HTT_MSDU_EXT_DESC_FLAG_TCP_IPV6_CSUM_ENABLE)
+ 
++#define HTT_MSDU_EXT_DESC_FLAG_IPV4_CSUM_ENABLE_64		BIT(16)
++#define HTT_MSDU_EXT_DESC_FLAG_UDP_IPV4_CSUM_ENABLE_64		BIT(17)
++#define HTT_MSDU_EXT_DESC_FLAG_UDP_IPV6_CSUM_ENABLE_64		BIT(18)
++#define HTT_MSDU_EXT_DESC_FLAG_TCP_IPV4_CSUM_ENABLE_64		BIT(19)
++#define HTT_MSDU_EXT_DESC_FLAG_TCP_IPV6_CSUM_ENABLE_64		BIT(20)
++#define HTT_MSDU_EXT_DESC_FLAG_PARTIAL_CSUM_ENABLE_64		BIT(21)
++
++#define HTT_MSDU_CHECKSUM_ENABLE_64  (HTT_MSDU_EXT_DESC_FLAG_IPV4_CSUM_ENABLE_64 \
++				     | HTT_MSDU_EXT_DESC_FLAG_UDP_IPV4_CSUM_ENABLE_64 \
++				     | HTT_MSDU_EXT_DESC_FLAG_UDP_IPV6_CSUM_ENABLE_64 \
++				     | HTT_MSDU_EXT_DESC_FLAG_TCP_IPV4_CSUM_ENABLE_64 \
++				     | HTT_MSDU_EXT_DESC_FLAG_TCP_IPV6_CSUM_ENABLE_64)
++
+ enum htt_data_tx_desc_flags0 {
+ 	HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT = 1 << 0,
+ 	HTT_DATA_TX_DESC_FLAGS0_NO_AGGR         = 1 << 1,
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index d334b7b..d97ef72 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -1475,8 +1475,10 @@ static int ath10k_htt_tx_64(struct ath10k_htt *htt,
+ 	    !test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
+ 		flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L3_OFFLOAD;
+ 		flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L4_OFFLOAD;
+-		if (ar->hw_params.continuous_frag_desc)
+-			ext_desc->flags |= HTT_MSDU_CHECKSUM_ENABLE;
++		if (ar->hw_params.continuous_frag_desc) {
++			memset(ext_desc->tso_flag, 0, sizeof(ext_desc->tso_flag));
++			ext_desc->tso_flag[3] |= HTT_MSDU_CHECKSUM_ENABLE_64;
++		}
+ 	}
+ 
+ 	/* Prevent firmware from sending up tx inspection requests. There's
+-- 
+1.9.1
