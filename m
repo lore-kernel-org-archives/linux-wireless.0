@@ -1,131 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f199.google.com ([209.85.223.199]:35537 "EHLO
-        mail-io0-f199.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751231AbeDBGBE (ORCPT
+Received: from www62.your-server.de ([213.133.104.62]:53016 "EHLO
+        www62.your-server.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751587AbeDHWNL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Apr 2018 02:01:04 -0400
-Received: by mail-io0-f199.google.com with SMTP id h132so9802231ioe.2
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Apr 2018 23:01:03 -0700 (PDT)
+        Sun, 8 Apr 2018 18:13:11 -0400
+Subject: Re: iwlwifi: FW error in SYNC CMD TIME_QUOTA_CMD
+To: Luciano Coelho <luciano.coelho@intel.com>, johannes.berg@intel.com
+Cc: emmanuel.grumbach@intel.com, linux-wireless@vger.kernel.org
+References: <799ecceb-8b2a-bf8c-b408-374a02280306@iogearbox.net>
+ <1523084065.4488.11.camel@intel.com>
+From: Daniel Borkmann <daniel@iogearbox.net>
+Message-ID: <71396747-1be5-78de-3ff7-d0df91d37d36@iogearbox.net> (sfid-20180409_001700_470124_5A18D24E)
+Date: Mon, 9 Apr 2018 00:13:09 +0200
 MIME-Version: 1.0
-Date: Sun, 01 Apr 2018 23:01:03 -0700
-Message-ID: <000000000000a010b80568d75018@google.com> (sfid-20180402_080139_221496_EEEB068D)
-Subject: WARNING in add_uevent_var
-From: syzbot <syzbot+230d9e642a85d3fec29c@syzkaller.appspotmail.com>
-To: davem@davemloft.net, johannes@sipsolutions.net,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
+In-Reply-To: <1523084065.4488.11.camel@intel.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Hi Luciano,
 
-syzbot hit the following crash on upstream commit
-10b84daddbec72c6b440216a69de9a9605127f7a (Sat Mar 31 17:59:00 2018 +0000)
-Merge branch 'perf-urgent-for-linus' of  
-git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
-syzbot dashboard link:  
-https://syzkaller.appspot.com/bug?extid=230d9e642a85d3fec29c
+On 04/07/2018 08:54 AM, Luciano Coelho wrote:
+> On Thu, 2018-04-05 at 16:55 +0200, Daniel Borkmann wrote:
+[...]
+>> after upgrading to 4608f064532c ("Merge
+>> git://git.kernel.org/pub/scm/linux/kernel/git/davem/sparc-next")
+>> my kernel log gets constantly flooded with the below message and
+>> wireless stops
+>> working ... just in case you haven't had a report on this yet.
+>> Downgrading back
+>> to older v4.16-rcX kernel gets everything back to normal working
+>> state; haven't
+>> had time for bisection yet, but hopefully the below would provide
+>> some clue.
+> 
+> [...]
+> 
+>> [  513.429773] iwlwifi 0000:04:00.0: Failed to send quota: -5
+>> [  513.429775] iwlwifi 0000:04:00.0: Failed to update quotas after
+>> restart (-5)
+>> [  514.163758] iwlwifi 0000:04:00.0: Microcode SW error
+>> detected.  Restarting 0x82000000.
+>> [  514.163987] iwlwifi 0000:04:00.0: Start IWL Error Log Dump:
+>> [  514.163988] iwlwifi 0000:04:00.0: Status: 0x00000100, count: 6
+>> [  514.163989] iwlwifi 0000:04:00.0: Loaded firmware version:
+>> 27.455470.0
+>> [  514.163991] iwlwifi 0000:04:00.0: 0x00000038 | BAD_COMMAND
+> 
+> [...]
+> 
+> I did add support for new FW APIs, so maybe some check for the FW
+> version is missing somewhere.
+> 
+> Which NIC are you using? I can see that you're using an older version
+> of the firmware (27.455470.0).  For 7265D and 3168 we already have
+> version 29.  For 8000C and 8260 we have vesion 36.  You can find all
+> the latest versions in our fork of linux-firmware.git[1].  And soon the
+> main linux-firmware.git[2] will also include the latest versions, since
+> I sent a pull request yesteday ago.
+> 
+> Meanwhile, I'll investigate this problem.  It shouldn't happen even if
+> you're using an older firmware.  Maybe I'll have to stop supporting
+> version 27 in newer kernels, let's see.
 
-So far this crash happened 5 times on net-next, upstream.
-C reproducer: https://syzkaller.appspot.com/x/repro.c?id=6614377067184128
-syzkaller reproducer:  
-https://syzkaller.appspot.com/x/repro.syz?id=6535492073947136
-Raw console output:  
-https://syzkaller.appspot.com/x/log.txt?id=6339348970602496
-Kernel config:  
-https://syzkaller.appspot.com/x/.config?id=-2760467897697295172
-compiler: gcc (GCC) 7.1.1 20170620
+Here's from the log on an older (working) kernel:
 
-IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+230d9e642a85d3fec29c@syzkaller.appspotmail.com
-It will help syzbot understand when the bug is fixed. See footer for  
-details.
-If you forward the report, please keep this part and the footer.
+$ dmesg | grep iwlwifi
+[    7.672955] iwlwifi 0000:04:00.0: enabling device (0000 -> 0002)
+[    7.705000] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-36.ucode failed with error -2
+[    7.705208] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-35.ucode failed with error -2
+[    7.705391] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-34.ucode failed with error -2
+[    7.705850] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-33.ucode failed with error -2
+[    7.706118] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-32.ucode failed with error -2
+[    7.706463] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-31.ucode failed with error -2
+[    7.706789] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-30.ucode failed with error -2
+[    7.707182] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-29.ucode failed with error -2
+[    7.707746] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-28.ucode failed with error -2
+[    7.714899] iwlwifi 0000:04:00.0: loaded firmware version 27.455470.0 op_mode iwlmvm
+[    8.400655] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
+[    8.475161] iwlwifi 0000:04:00.0: base HW address: [...]
+[    8.568333] iwlwifi 0000:04:00.0 wlp4s0: renamed from wlan0
 
-------------[ cut here ]------------
-add_uevent_var: buffer size too small
-WARNING: CPU: 0 PID: 4431 at lib/kobject_uevent.c:594  
-add_uevent_var+0x2aa/0x2d0 lib/kobject_uevent.c:594
-Kernel panic - not syncing: panic_on_warn set ...
+I'll try to upgrade the FW in the mean time, thanks!
 
-CPU: 0 PID: 4431 Comm: syzkaller678536 Not tainted 4.16.0-rc7+ #374
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
-Google 01/01/2011
-Call Trace:
-  __dump_stack lib/dump_stack.c:17 [inline]
-  dump_stack+0x194/0x24d lib/dump_stack.c:53
-  panic+0x1e4/0x41c kernel/panic.c:183
-  __warn+0x1dc/0x200 kernel/panic.c:547
-  report_bug+0x1f4/0x2b0 lib/bug.c:186
-  fixup_bug.part.10+0x37/0x80 arch/x86/kernel/traps.c:178
-  fixup_bug arch/x86/kernel/traps.c:247 [inline]
-  do_error_trap+0x2d7/0x3e0 arch/x86/kernel/traps.c:296
-  do_invalid_op+0x1b/0x20 arch/x86/kernel/traps.c:315
-  invalid_op+0x1b/0x40 arch/x86/entry/entry_64.S:986
-RIP: 0010:add_uevent_var+0x2aa/0x2d0 lib/kobject_uevent.c:594
-RSP: 0018:ffff8801adba6810 EFLAGS: 00010286
-RAX: dffffc0000000008 RBX: ffff8801ad7a6d40 RCX: ffffffff815b193e
-RDX: 0000000000000000 RSI: 1ffff10035b74cb2 RDI: 1ffff10035b74c87
-RBP: ffff8801adba68d8 R08: 1ffff10035b74c49 R09: 0000000000000000
-R10: 0000000000000002 R11: 0000000000000000 R12: 1ffff10035b74d03
-R13: ffff8801ad7a6e58 R14: 00000000000003e6 R15: 0000000000000438
-  rfkill_dev_uevent+0x31/0x170 net/rfkill/core.c:813
-  dev_uevent+0x2b6/0x7e0 drivers/base/core.c:913
-  kobject_uevent_env+0x3fe/0xd30 lib/kobject_uevent.c:476
-  kobject_uevent+0x1f/0x30 lib/kobject_uevent.c:565
-  device_add+0xd04/0x1650 drivers/base/core.c:1834
-  rfkill_register+0x254/0xd60 net/rfkill/core.c:1019
-  wiphy_register+0x19d1/0x2050 net/wireless/core.c:872
-  ieee80211_register_hw+0x1162/0x3100 net/mac80211/main.c:1041
-  mac80211_hwsim_new_radio+0x1d06/0x2fb0  
-drivers/net/wireless/mac80211_hwsim.c:2757
-  hwsim_new_radio_nl+0x67a/0x8c0 drivers/net/wireless/mac80211_hwsim.c:3214
-  genl_family_rcv_msg+0x7b7/0xfb0 net/netlink/genetlink.c:599
-  genl_rcv_msg+0xb2/0x140 net/netlink/genetlink.c:624
-  netlink_rcv_skb+0x14b/0x380 net/netlink/af_netlink.c:2447
-  genl_rcv+0x28/0x40 net/netlink/genetlink.c:635
-  netlink_unicast_kernel net/netlink/af_netlink.c:1311 [inline]
-  netlink_unicast+0x4c4/0x6b0 net/netlink/af_netlink.c:1337
-  netlink_sendmsg+0xa4a/0xe60 net/netlink/af_netlink.c:1900
-  sock_sendmsg_nosec net/socket.c:630 [inline]
-  sock_sendmsg+0xca/0x110 net/socket.c:640
-  ___sys_sendmsg+0x767/0x8b0 net/socket.c:2046
-  __sys_sendmsg+0xe5/0x210 net/socket.c:2080
-  SYSC_sendmsg net/socket.c:2091 [inline]
-  SyS_sendmsg+0x2d/0x50 net/socket.c:2087
-  do_syscall_64+0x281/0x940 arch/x86/entry/common.c:287
-  entry_SYSCALL_64_after_hwframe+0x42/0xb7
-RIP: 0033:0x43fda9
-RSP: 002b:00007ffde548edb8 EFLAGS: 00000213 ORIG_RAX: 000000000000002e
-RAX: ffffffffffffffda RBX: 00000000004002c8 RCX: 000000000043fda9
-RDX: 0000000000000000 RSI: 0000000020b3dfc8 RDI: 0000000000000003
-RBP: 00000000006cb018 R08: 00000000004002c8 R09: 00000000004002c8
-R10: 00000000004002c8 R11: 0000000000000213 R12: 00000000004016d0
-R13: 0000000000401760 R14: 0000000000000000 R15: 0000000000000000
-Dumping ftrace buffer:
-    (ftrace buffer empty)
-Kernel Offset: disabled
-Rebooting in 86400 seconds..
-
-
----
-This bug is generated by a dumb bot. It may contain errors.
-See https://goo.gl/tpsmEJ for details.
-Direct all questions to syzkaller@googlegroups.com.
-
-syzbot will keep track of this bug report.
-If you forgot to add the Reported-by tag, once the fix for this bug is  
-merged
-into any tree, please reply to this email with:
-#syz fix: exact-commit-title
-If you want to test a patch for this bug, please reply with:
-#syz test: git://repo/address.git branch
-and provide the patch inline or as an attachment.
-To mark this as a duplicate of another syzbot report, please reply with:
-#syz dup: exact-subject-of-another-report
-If it's a one-off invalid bug report, please reply with:
-#syz invalid
-Note: if the crash happens again, it will cause creation of a new bug  
-report.
-Note: all commands must start from beginning of the line in the email body.
+> [1] https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git/
+> [2] https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+> 
+> --
+> Cheers,
+> Luca.
+> 
