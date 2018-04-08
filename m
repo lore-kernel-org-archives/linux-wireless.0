@@ -1,36 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44866 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753089AbeDJOcM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Apr 2018 10:32:12 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mout.gmx.net ([212.227.15.18]:57443 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751826AbeDHIVn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 8 Apr 2018 04:21:43 -0400
+Date: Sun, 8 Apr 2018 10:21:21 +0200
+From: Stefan Lippers-Hollmann <s.l-h@gmx.de>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Sebastian Gottschall <s.gottschall@newmedia-net.de>,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Subject: Re: [PATCH v13] ath10k: add LED and GPIO controlling support for
+ various chipsets
+Message-ID: <20180408102121.63d010bd@mir> (sfid-20180408_102147_951118_1FF41B2D)
+In-Reply-To: <1523027875-5143-1-git-send-email-kvalo@codeaurora.org>
+References: <1523027875-5143-1-git-send-email-kvalo@codeaurora.org>
 MIME-Version: 1.0
-Subject: Re: ath10k: fix spelling mistake: "tiggers" -> "triggers"
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180329165949.29155-1-colin.king@canonical.com>
-References: <20180329165949.29155-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20180410143212.4F86260C64@smtp.codeaurora.org> (sfid-20180410_163240_788766_41273176)
-Date: Tue, 10 Apr 2018 14:32:12 +0000 (UTC)
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
+Hi
 
-> Trivial fix to spelling mistake in message text
+On 2018-04-06, Kalle Valo wrote:
+> From: Sebastian Gottschall <s.gottschall@newmedia-net.de>
 > 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Adds LED and GPIO Control support for 988x, 9887, 9888, 99x0, 9984 based
+> chipsets with on chipset connected led's using WMI Firmware API.  The LED
+> device will get available named as "ath10k-phyX" at sysfs and can be controlled
+> with various triggers.  adds also debugfs interface for gpio control.
+> 
+> Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+> Reviewed-by: Steve deRosier <derosier@cal-sierra.com>
+> [kvalo: major reorg and cleanup]
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Patch applied to ath-next branch of ath.git, thanks.
+Tested-by: Stefan Lippers-Hollmann <s.l-h@gmx.de>
 
-6ce36faeac35 ath10k: fix spelling mistake: "tiggers" -> "triggers"
+[...]
 
--- 
-https://patchwork.kernel.org/patch/10315725/
+I've been able to test v13 of this patch, including the changes regarding 
+removing ath10k_leds_start() and moving the ath10k_wmi_gpio_config() call
+into ath10k_leds_set_brightness_blocking() as raised by Sebastian 
+Gottschall, on a ZyXEL NBG6817 (using two QCA9984 wlan cards and firmware 
+10.4-3.5.3-00053) running OpenWrt/ master r6644-eda27d7557 (ipq8065, 
+kernel 4.9.92 with backports wt-2017-11-01-0-gfe248fc2c180/ 
+v4.14-rc2-1-31-g86cf0e5d).
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+/sys/class/leds/ath10k-phy0/ and /sys/class/leds/ath10k-phy1/ are
+registered correctly and the white wlan LEDs connected to the ath10k 
+GPIOs are now working as designed (controlled via phy0tpt/ phy1tpt).
+
+Thanks a lot to everyone involved!
+
+Regards
+	Stefan Lippers-Hollmann
