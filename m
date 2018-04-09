@@ -1,129 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52480 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754943AbeDWNrr (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35636 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750759AbeDIHon (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 09:47:47 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: pkshih@realtek.com, linux-wireless@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: Re: [PATCH v2] rtlwifi: cleanup 8723be ant_sel definition
-References: <20180420023009.3182-1-pkshih@realtek.com>
-        <87zi1ygk8d.fsf@kamboji.qca.qualcomm.com>
-        <db66387b-9271-2563-ae77-449716795150@lwfinger.net>
-Date: Mon, 23 Apr 2018 16:47:42 +0300
-In-Reply-To: <db66387b-9271-2563-ae77-449716795150@lwfinger.net> (Larry
-        Finger's message of "Fri, 20 Apr 2018 15:56:26 -0500")
-Message-ID: <87o9iadog1.fsf@kamboji.qca.qualcomm.com> (sfid-20180423_154755_774668_DFCD4D8A)
+        Mon, 9 Apr 2018 03:44:43 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [PATCH] mwifiex: parse key management suite from RSN IE
+Date: Mon, 9 Apr 2018 15:44:14 +0800
+Message-ID: <1523259854-23131-1-git-send-email-huxm@marvell.com> (sfid-20180409_094447_926239_A6390C35)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+Association failed when using wpa_supplicant with
+configuration key_mgmt=WPA-PSK-SHA256, and it is noticed
+that wpa_supplicant set WLAN_AKM_SUITE_PSK_SHA256 in
+RSN IE, but miss it in start_ap parameters.
 
-> On 04/20/2018 07:01 AM, Kalle Valo wrote:
->> <pkshih@realtek.com> writes:
->>
->>> From: Ping-Ke Shih <pkshih@realtek.com>
->>>
->>> The module parameter ant_sel is used to control antenna number and path.
->>> There is an existing enum ANT_{X2,X1} defined the antenna number, so
->>> add a new enum ANT_{MAIN,AUX} to make it readable. After this work,
->>> incorrect given values depend on ant_sel were exposed, so refill values
->>> according following definition:
->>>    ant_sel   ant_num   ant_path  print_label
->>>       1      ANT_X1    ANT_AUX        #2
->>>       2      ANT_X2    ANT_MAIN       #1
->>> Then, a workaround resulted from the incorrect values in halbtcoutsrc.c was
->>> removed. These is a existing bug in the workaround while ant_sel=2, but the
->>> case is rare use so user is hard to observe this bug.
->>>
->>> The experimental results with single antenna connected to specific path
->>> are in following:
->>>    ant_sel  ANT_MAIN(#1)  ANT_AUX(#2)
->>>       0        -8            -62
->>>       1        -62           -10
->>>       2        -6            -60
->>>
->>> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
->>> Cc: Stable <stable@vger.kernel.org> # 4.7+
->>> Reviewed-by: Larry Finger <Larry.Finger@lwfinger.net>
->>> ---
->>> v2: Add more description about fixed bugs in end of first paragraph.
->>
->> Sorry, I still don't understand the bug you are fixing. It shouldn't
->> take more than one minute to understand a commit log.
->>
->> I prose that you rewrite the commit log, or at least parts of if it.
->> When you are describing a bug don't talk about enums or source files,
->> that's an implementation detail, and instead talk how the bug looks like
->> from users point of view. For example:
->>
->>    "On HP laptop model 1234 with Realtex 4321 device users are supposed
->>     to use ant_sel module parameter with value 77 to use the correct
->>     antenna. But instead rtlwifi incorrectly chose antenna 88 with lower
->>     transmit power and that caused packet loss. Fix it so that the user
->>     gets better transmit power and..."
->>
->> (that's of course all made up information as I don't know what the
->> actual bug is)
->>
->> And after that you can write rtlwifi internals in the commit log as much
->> as you want :) But there needs to be a clear generic description of the
->> bug first and it needs to understandable in one read.
->>
->> To make this faster I propose that you send the new commit log as a
->> reply to this mail and I can then comment faster.
->
-> Kalle,
->
-> As I have some responsibility in creating this mess, let me try to
-> write a new commit log. I hope this answers your questions.
->
-> Thanks,
->
-> Larry
->
-> ====================================
->
-> Some HP laptops have only a single wifi antenna. This would not be a
-> problem except that they were shipped with an incorrectly encoded
-> EFUSE. It should have been possible to open the computer and transfer
-> the antenna connection to the other terminal except that such action
-> might void the warranty, and moving the antenna broke the Windows
-> driver. The fix was to add a module option that would override the
-> EFUSE encoding. That was done with commit c18d8f509571 ("rtlwifi:
-> rtl8723be: Add antenna select module parameter"). There was still a
-> problem with Bluetooth coexistence, which was addressed with commit
-> baa170229095 ("rtlwifi: btcoexist: Implement antenna selection").
-> There were still problems, thus there were commit 0ff78adeef11
-> ("rtlwifi: rtl8723be: fix ant_sel code") and commit 6d6226928369
-> ("rtlwifi: btcoexist: Fix antenna selection code"). Despite all these
-> attempts at fixing the problem, the code is not yet right. A proper
-> fix is important as there are now instances of laptops having
-> RTL8723DE chips with the same problem.
+This patch parse key management suite from RSN IE, in
+case it is missed.
 
-This looks better, thanks.
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/fw.h      |  1 +
+ drivers/net/wireless/marvell/mwifiex/main.h    | 12 ++++
+ drivers/net/wireless/marvell/mwifiex/uap_cmd.c | 86 ++++++++++++++++++--------
+ 3 files changed, 72 insertions(+), 27 deletions(-)
 
-> The module parameter ant_sel is used to control antenna number and path.
-> At present enum ANT_{X2,X1} is used to define the antenna number, but
-> this choice is not intuitive, thus change to a new enum ANT_{MAIN,AUX}
-> to make it more readable. This change showed examples where incorrect
-> values were used. It was also possible to remove a workaround in
-> halbtcoutsrc.c.
->
-> The experimental results with single antenna connected to specific path
-> are now as follows:
->   ant_sel  ANT_MAIN(#1)  ANT_AUX(#2)
->      0        -8            -62
->      1        -62           -10
->      2        -6            -60
-
-But after reading this I'm still not sure if users are supposed to do
-anything. I guess they will continue using existing values with the
-ant_sel module parameter and nothing changes in that regard?
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 13cd58e9..2be3ce1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -413,6 +413,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define KEY_MGMT_NONE               0x04
+ #define KEY_MGMT_PSK                0x02
+ #define KEY_MGMT_EAP                0x01
++#define KEY_MGMT_PSK_SHA256         0x100
+ #define CIPHER_TKIP                 0x04
+ #define CIPHER_AES_CCMP             0x08
+ #define VALID_CIPHER_BITMAP         0x0c
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 598e58b..db20132 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -364,6 +364,18 @@ struct ieee_types_generic {
+ 	u8 data[IEEE_MAX_IE_SIZE - sizeof(struct ieee_types_header)];
+ } __packed;
+ 
++struct ieee_types_rsn {
++	struct ieee_types_header ieee_hdr;
++	u8  element_id;
++	u8  element_len;
++	u16 rsn_version;
++	u32 cipher_group;
++	u16 n_ciphers_pairwise;
++	u32 ciphers_pairwise[];
++//	u16 n_akm_suites;
++//	u32 *akm_suites;
++} __packed;
++
+ struct ieee_types_bss_co_2040 {
+ 	struct ieee_types_header ieee_hdr;
+ 	u8 bss_2040co;
+diff --git a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
+index 18f7d9b..0a27717 100644
+--- a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
+@@ -26,9 +26,14 @@
+  */
+ int mwifiex_set_secure_params(struct mwifiex_private *priv,
+ 			      struct mwifiex_uap_bss_param *bss_config,
+-			      struct cfg80211_ap_settings *params) {
++			      struct cfg80211_ap_settings *params)
++{
+ 	int i;
+ 	struct mwifiex_wep_key wep_key;
++	const struct ieee_types_rsn *rsn_ie = NULL;
++	const u8 *ie = NULL;
++	u16 n_akm_suites;
++	u32 *akm_suites;
+ 
+ 	if (!params->privacy) {
+ 		bss_config->protocol = PROTOCOL_NO_SECURITY;
+@@ -58,36 +63,63 @@ int mwifiex_set_secure_params(struct mwifiex_private *priv,
+ 
+ 	bss_config->key_mgmt_operation |= KEY_MGMT_ON_HOST;
+ 
+-	for (i = 0; i < params->crypto.n_akm_suites; i++) {
+-		switch (params->crypto.akm_suites[i]) {
+-		case WLAN_AKM_SUITE_8021X:
+-			if (params->crypto.wpa_versions &
+-			    NL80211_WPA_VERSION_1) {
+-				bss_config->protocol = PROTOCOL_WPA;
+-				bss_config->key_mgmt = KEY_MGMT_EAP;
+-			}
+-			if (params->crypto.wpa_versions &
+-			    NL80211_WPA_VERSION_2) {
+-				bss_config->protocol |= PROTOCOL_WPA2;
+-				bss_config->key_mgmt = KEY_MGMT_EAP;
++	if (params->crypto.wpa_versions & NL80211_WPA_VERSION_1)
++		bss_config->protocol = PROTOCOL_WPA;
++
++	if (params->crypto.wpa_versions & NL80211_WPA_VERSION_2)
++		bss_config->protocol |= PROTOCOL_WPA2;
++
++	if (params->crypto.wpa_versions &
++	    (NL80211_WPA_VERSION_1 | NL80211_WPA_VERSION_2)) {
++		for (i = 0; i < params->crypto.n_akm_suites; i++) {
++			switch (params->crypto.akm_suites[i]) {
++			case WLAN_AKM_SUITE_8021X:
++					bss_config->key_mgmt = KEY_MGMT_EAP;
++				break;
++			case WLAN_AKM_SUITE_PSK:
++					bss_config->key_mgmt = KEY_MGMT_PSK;
++				break;
++			case WLAN_AKM_SUITE_PSK_SHA256:
++					bss_config->key_mgmt =
++							KEY_MGMT_PSK_SHA256;
++				break;
++			default:
++				break;
+ 			}
+-			break;
+-		case WLAN_AKM_SUITE_PSK:
+-			if (params->crypto.wpa_versions &
+-			    NL80211_WPA_VERSION_1) {
+-				bss_config->protocol = PROTOCOL_WPA;
+-				bss_config->key_mgmt = KEY_MGMT_PSK;
+-			}
+-			if (params->crypto.wpa_versions &
+-			    NL80211_WPA_VERSION_2) {
+-				bss_config->protocol |= PROTOCOL_WPA2;
+-				bss_config->key_mgmt = KEY_MGMT_PSK;
++		}
++
++		ie = cfg80211_find_ie(WLAN_EID_RSN, params->beacon.tail,
++				      params->beacon.tail_len);
++
++		/* Try to get key management suites from RSN IE */
++		if (!bss_config->key_mgmt && ie) {
++			rsn_ie = (struct ieee_types_rsn *)ie;
++			ie = (u8 *)(rsn_ie->ciphers_pairwise +
++				    rsn_ie->n_ciphers_pairwise);
++			n_akm_suites = *((u16 *)ie);
++			akm_suites = (u32 *)(ie + sizeof(n_akm_suites));
++
++			for (i = 0; i < n_akm_suites; i++) {
++				switch (akm_suites[i]) {
++				case WLAN_AKM_SUITE_8021X:
++						bss_config->key_mgmt =
++								KEY_MGMT_EAP;
++					break;
++				case WLAN_AKM_SUITE_PSK:
++						bss_config->key_mgmt =
++								KEY_MGMT_PSK;
++					break;
++				case WLAN_AKM_SUITE_PSK_SHA256:
++						bss_config->key_mgmt =
++							KEY_MGMT_PSK_SHA256;
++					break;
++				default:
++					break;
++				}
+ 			}
+-			break;
+-		default:
+-			break;
+ 		}
+ 	}
++
+ 	for (i = 0; i < params->crypto.n_ciphers_pairwise; i++) {
+ 		switch (params->crypto.ciphers_pairwise[i]) {
+ 		case WLAN_CIPHER_SUITE_WEP40:
 -- 
-Kalle Valo
+1.9.1
