@@ -1,443 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39648 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753884AbeDJOYD (ORCPT
+Received: from www62.your-server.de ([213.133.104.62]:60857 "EHLO
+        www62.your-server.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751673AbeDINhR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Apr 2018 10:24:03 -0400
-From: pillair@codeaurora.org
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>,
-        Rakesh Pillai <pillair@codeaurora.org>
-Subject: [PATCH 3/4] ath10k: Enable SRRI/DRRI support on ddr for WCN3990
-Date: Tue, 10 Apr 2018 19:53:31 +0530
-Message-Id: <1523370212-8778-4-git-send-email-pillair@codeaurora.org> (sfid-20180410_162411_764747_6506DA53)
-In-Reply-To: <1523370212-8778-1-git-send-email-pillair@codeaurora.org>
-References: <1523370212-8778-1-git-send-email-pillair@codeaurora.org>
+        Mon, 9 Apr 2018 09:37:17 -0400
+Subject: Re: iwlwifi: FW error in SYNC CMD TIME_QUOTA_CMD
+From: Daniel Borkmann <daniel@iogearbox.net>
+To: Luciano Coelho <luciano.coelho@intel.com>, johannes.berg@intel.com
+Cc: emmanuel.grumbach@intel.com, linux-wireless@vger.kernel.org
+References: <799ecceb-8b2a-bf8c-b408-374a02280306@iogearbox.net>
+ <1523084065.4488.11.camel@intel.com>
+ <71396747-1be5-78de-3ff7-d0df91d37d36@iogearbox.net>
+Message-ID: <1a94e616-7dcc-6b70-abb4-684d2f69eb23@iogearbox.net> (sfid-20180409_153721_652978_4582C5AE)
+Date: Mon, 9 Apr 2018 15:37:14 +0200
+MIME-Version: 1.0
+In-Reply-To: <71396747-1be5-78de-3ff7-d0df91d37d36@iogearbox.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Govind Singh <govinds@codeaurora.org>
+On 04/09/2018 12:13 AM, Daniel Borkmann wrote:
+> Hi Luciano,
+> 
+> On 04/07/2018 08:54 AM, Luciano Coelho wrote:
+>> On Thu, 2018-04-05 at 16:55 +0200, Daniel Borkmann wrote:
+> [...]
+>>> after upgrading to 4608f064532c ("Merge
+>>> git://git.kernel.org/pub/scm/linux/kernel/git/davem/sparc-next")
+>>> my kernel log gets constantly flooded with the below message and
+>>> wireless stops
+>>> working ... just in case you haven't had a report on this yet.
+>>> Downgrading back
+>>> to older v4.16-rcX kernel gets everything back to normal working
+>>> state; haven't
+>>> had time for bisection yet, but hopefully the below would provide
+>>> some clue.
+>>
+>> [...]
+>>
+>>> [  513.429773] iwlwifi 0000:04:00.0: Failed to send quota: -5
+>>> [  513.429775] iwlwifi 0000:04:00.0: Failed to update quotas after
+>>> restart (-5)
+>>> [  514.163758] iwlwifi 0000:04:00.0: Microcode SW error
+>>> detected.  Restarting 0x82000000.
+>>> [  514.163987] iwlwifi 0000:04:00.0: Start IWL Error Log Dump:
+>>> [  514.163988] iwlwifi 0000:04:00.0: Status: 0x00000100, count: 6
+>>> [  514.163989] iwlwifi 0000:04:00.0: Loaded firmware version:
+>>> 27.455470.0
+>>> [  514.163991] iwlwifi 0000:04:00.0: 0x00000038 | BAD_COMMAND
+>>
+>> [...]
+>>
+>> I did add support for new FW APIs, so maybe some check for the FW
+>> version is missing somewhere.
+>>
+>> Which NIC are you using? I can see that you're using an older version
+>> of the firmware (27.455470.0).  For 7265D and 3168 we already have
+>> version 29.  For 8000C and 8260 we have vesion 36.  You can find all
+>> the latest versions in our fork of linux-firmware.git[1].  And soon the
+>> main linux-firmware.git[2] will also include the latest versions, since
+>> I sent a pull request yesteday ago.
+>>
+>> Meanwhile, I'll investigate this problem.  It shouldn't happen even if
+>> you're using an older firmware.  Maybe I'll have to stop supporting
+>> version 27 in newer kernels, let's see.
+> 
+> Here's from the log on an older (working) kernel:
+> 
+> $ dmesg | grep iwlwifi
+> [    7.672955] iwlwifi 0000:04:00.0: enabling device (0000 -> 0002)
+> [    7.705000] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-36.ucode failed with error -2
+> [    7.705208] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-35.ucode failed with error -2
+> [    7.705391] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-34.ucode failed with error -2
+> [    7.705850] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-33.ucode failed with error -2
+> [    7.706118] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-32.ucode failed with error -2
+> [    7.706463] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-31.ucode failed with error -2
+> [    7.706789] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-30.ucode failed with error -2
+> [    7.707182] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-29.ucode failed with error -2
+> [    7.707746] iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-28.ucode failed with error -2
+> [    7.714899] iwlwifi 0000:04:00.0: loaded firmware version 27.455470.0 op_mode iwlmvm
+> [    8.400655] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
+> [    8.475161] iwlwifi 0000:04:00.0: base HW address: [...]
+> [    8.568333] iwlwifi 0000:04:00.0 wlp4s0: renamed from wlan0
+> 
+> I'll try to upgrade the FW in the mean time, thanks!
 
-SRRI/DRRI are not mapped in the HW Shadow block and can lead
-to un-clocked access if common subsystem in the target is
-powered down due to idle mode.
+Moved to iwlwifi-8000C-36 and that definitely helped. Thanks!
 
-To mitigate this problem SRRI/DRRI can be read from
-DDR instead of doing an actual hardware read.
-Host allocates non cached memory on ddr and configures
-the physical address of this memory to the CE hardware.
-The hardware updates the RRI on this particular location.
-Read SRRI/DRRI from DDR location instead of
-direct target read.
-
-Enable retention restore on ddr using hw params to enable
-in specific targets.
-
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
-Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/ce.c   | 102 +++++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath10k/ce.h   |  10 ++++
- drivers/net/wireless/ath/ath10k/core.c |  13 +++++
- drivers/net/wireless/ath/ath10k/hw.c   |   9 ++-
- drivers/net/wireless/ath/ath10k/hw.h   |  13 ++++-
- drivers/net/wireless/ath/ath10k/snoc.c |   3 +
- 6 files changed, 141 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 5053dd92bf01..b21fbedd0cad 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -185,11 +185,30 @@ static inline u32 ath10k_ce_src_ring_write_index_get(struct ath10k *ar,
- 				ar->hw_ce_regs->sr_wr_index_addr);
- }
- 
-+static inline u32 ath10k_ce_src_ring_read_index_from_ddr(struct ath10k *ar,
-+							 u32 ce_id)
-+{
-+	struct ath10k_ce *ce = ath10k_ce_priv(ar);
-+
-+	return ce->vaddr_rri[ce_id] & CE_DDR_RRI_MASK;
-+}
-+
- static inline u32 ath10k_ce_src_ring_read_index_get(struct ath10k *ar,
- 						    u32 ce_ctrl_addr)
- {
--	return ath10k_ce_read32(ar, ce_ctrl_addr +
--				ar->hw_ce_regs->current_srri_addr);
-+	struct ath10k_ce *ce = ath10k_ce_priv(ar);
-+	u32 ce_id = COPY_ENGINE_ID(ce_ctrl_addr);
-+	struct ath10k_ce_pipe *ce_state = &ce->ce_states[ce_id];
-+	u32 index;
-+
-+	if (ar->hw_params.rri_on_ddr &&
-+	    (ce_state->attr_flags & CE_ATTR_DIS_INTR))
-+		index = ath10k_ce_src_ring_read_index_from_ddr(ar, ce_id);
-+	else
-+		index = ath10k_ce_read32(ar, ce_ctrl_addr +
-+					 ar->hw_ce_regs->current_srri_addr);
-+
-+	return index;
- }
- 
- static inline void
-@@ -266,11 +285,31 @@ static inline void ath10k_ce_dest_ring_byte_swap_set(struct ath10k *ar,
- 			  ath10k_set_ring_byte(n, ctrl_regs->dst_ring));
- }
- 
-+static inline
-+	u32 ath10k_ce_dest_ring_read_index_from_ddr(struct ath10k *ar, u32 ce_id)
-+{
-+	struct ath10k_ce *ce = ath10k_ce_priv(ar);
-+
-+	return (ce->vaddr_rri[ce_id] >> CE_DDR_DRRI_SHIFT) &
-+		CE_DDR_RRI_MASK;
-+}
-+
- static inline u32 ath10k_ce_dest_ring_read_index_get(struct ath10k *ar,
- 						     u32 ce_ctrl_addr)
- {
--	return ath10k_ce_read32(ar, ce_ctrl_addr +
--				ar->hw_ce_regs->current_drri_addr);
-+	struct ath10k_ce *ce = ath10k_ce_priv(ar);
-+	u32 ce_id = COPY_ENGINE_ID(ce_ctrl_addr);
-+	struct ath10k_ce_pipe *ce_state = &ce->ce_states[ce_id];
-+	u32 index;
-+
-+	if (ar->hw_params.rri_on_ddr &&
-+	    (ce_state->attr_flags & CE_ATTR_DIS_INTR))
-+		index = ath10k_ce_dest_ring_read_index_from_ddr(ar, ce_id);
-+	else
-+		index = ath10k_ce_read32(ar, ce_ctrl_addr +
-+					 ar->hw_ce_regs->current_drri_addr);
-+
-+	return index;
- }
- 
- static inline void ath10k_ce_dest_ring_base_addr_set(struct ath10k *ar,
-@@ -486,7 +525,7 @@ static int _ath10k_ce_send_nolock_64(struct ath10k_ce_pipe *ce_state,
- 	struct ath10k_ce_ring *src_ring = ce_state->src_ring;
- 	struct ce_desc_64 *desc, sdesc;
- 	unsigned int nentries_mask = src_ring->nentries_mask;
--	unsigned int sw_index = src_ring->sw_index;
-+	unsigned int sw_index;
- 	unsigned int write_index = src_ring->write_index;
- 	u32 ctrl_addr = ce_state->ctrl_addr;
- 	__le32 *addr;
-@@ -500,6 +539,11 @@ static int _ath10k_ce_send_nolock_64(struct ath10k_ce_pipe *ce_state,
- 		ath10k_warn(ar, "%s: send more we can (nbytes: %d, max: %d)\n",
- 			    __func__, nbytes, ce_state->src_sz_max);
- 
-+	if (ar->hw_params.rri_on_ddr)
-+		sw_index = ath10k_ce_src_ring_read_index_from_ddr(ar, ce_state->id);
-+	else
-+		sw_index = src_ring->sw_index;
-+
- 	if (unlikely(CE_RING_DELTA(nentries_mask,
- 				   write_index, sw_index - 1) <= 0)) {
- 		ret = -ENOSR;
-@@ -1016,7 +1060,10 @@ int ath10k_ce_completed_send_next_nolock(struct ath10k_ce_pipe *ce_state,
- 		src_ring->hw_index = read_index;
- 	}
- 
--	read_index = src_ring->hw_index;
-+	if (ar->hw_params.rri_on_ddr)
-+		read_index = ath10k_ce_src_ring_read_index_get(ar, ctrl_addr);
-+	else
-+		read_index = src_ring->hw_index;
- 
- 	if (read_index == sw_index)
- 		return -EIO;
-@@ -1841,3 +1888,46 @@ int ath10k_ce_alloc_pipe(struct ath10k *ar, int ce_id,
- 	return 0;
- }
- EXPORT_SYMBOL(ath10k_ce_alloc_pipe);
-+
-+void ath10k_ce_alloc_rri(struct ath10k *ar)
-+{
-+	int i;
-+	u32 ctrl1_regs;
-+	u32 ce_base_addr;
-+	struct ath10k_ce *ce = ath10k_ce_priv(ar);
-+
-+	ce->vaddr_rri = dma_alloc_coherent(ar->dev,
-+					   (CE_COUNT * sizeof(u32)),
-+					   &ce->paddr_rri, GFP_KERNEL);
-+
-+	if (!ce->vaddr_rri)
-+		return;
-+
-+	ath10k_ce_write32(ar, ar->hw_ce_regs->ce_rri_low,
-+			  lower_32_bits(ce->paddr_rri));
-+	ath10k_ce_write32(ar, ar->hw_ce_regs->ce_rri_high,
-+			  (upper_32_bits(ce->paddr_rri) &
-+			  CE_DESC_FLAGS_GET_MASK));
-+
-+	for (i = 0; i < CE_COUNT; i++) {
-+		ctrl1_regs = ar->hw_ce_regs->ctrl1_regs->addr;
-+		ce_base_addr = ath10k_ce_base_address(ar, i);
-+		ath10k_ce_write32(ar, ce_base_addr + ctrl1_regs,
-+				  ath10k_ce_read32(ar,
-+				  ce_base_addr + ctrl1_regs) |
-+				  ar->hw_ce_regs->upd->mask);
-+	}
-+
-+	memset(ce->vaddr_rri, 0, CE_COUNT * sizeof(u32));
-+}
-+EXPORT_SYMBOL(ath10k_ce_alloc_rri);
-+
-+void ath10k_ce_free_rri(struct ath10k *ar)
-+{
-+	struct ath10k_ce *ce = ath10k_ce_priv(ar);
-+
-+	dma_free_coherent(ar->dev, (CE_COUNT * sizeof(u32)),
-+			  ce->vaddr_rri,
-+			  ce->paddr_rri);
-+}
-+EXPORT_SYMBOL(ath10k_ce_free_rri);
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index 9aea89133209..dbeffaef6024 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -49,6 +49,9 @@ struct ath10k_ce_pipe;
- #define CE_DESC_FLAGS_META_DATA_MASK ar->hw_values->ce_desc_meta_data_mask
- #define CE_DESC_FLAGS_META_DATA_LSB  ar->hw_values->ce_desc_meta_data_lsb
- 
-+#define CE_DDR_RRI_MASK			GENMASK(15, 0)
-+#define CE_DDR_DRRI_SHIFT		16
-+
- struct ce_desc {
- 	__le32 addr;
- 	__le16 nbytes;
-@@ -157,6 +160,8 @@ struct ath10k_ce {
- 	spinlock_t ce_lock;
- 	const struct ath10k_bus_ops *bus_ops;
- 	struct ath10k_ce_pipe ce_states[CE_COUNT_MAX];
-+	u32 *vaddr_rri;
-+	dma_addr_t paddr_rri;
- };
- 
- /*==================Send====================*/
-@@ -265,6 +270,8 @@ int ath10k_ce_disable_interrupts(struct ath10k *ar);
- void ath10k_ce_enable_interrupts(struct ath10k *ar);
- void ath10k_ce_dump_registers(struct ath10k *ar,
- 			      struct ath10k_fw_crash_data *crash_data);
-+void ath10k_ce_alloc_rri(struct ath10k *ar);
-+void ath10k_ce_free_rri(struct ath10k *ar);
- 
- /* ce_attr.flags values */
- /* Use NonSnooping PCIe accesses? */
-@@ -331,6 +338,9 @@ static inline u32 ath10k_ce_base_address(struct ath10k *ar, unsigned int ce_id)
- 	return CE0_BASE_ADDRESS + (CE1_BASE_ADDRESS - CE0_BASE_ADDRESS) * ce_id;
- }
- 
-+#define COPY_ENGINE_ID(COPY_ENGINE_BASE_ADDRESS) (((COPY_ENGINE_BASE_ADDRESS) \
-+		- CE0_BASE_ADDRESS) / (CE1_BASE_ADDRESS - CE0_BASE_ADDRESS))
-+
- #define CE_SRC_RING_TO_DESC(baddr, idx) \
- 	(&(((struct ce_desc *)baddr)[idx]))
- 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 7e451b76c8a4..643e4a1c9eac 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -121,6 +121,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
-+		.rri_on_ddr = false,
- 	},
- 	{
- 		.id = QCA9887_HW_1_0_VERSION,
-@@ -152,6 +153,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
-+		.rri_on_ddr = false,
- 	},
- 	{
- 		.id = QCA6174_HW_2_1_VERSION,
-@@ -182,6 +184,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
-+		.rri_on_ddr = false,
- 	},
- 	{
- 		.id = QCA6174_HW_2_1_VERSION,
-@@ -212,6 +215,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
-+		.rri_on_ddr = false,
- 	},
- 	{
- 		.id = QCA6174_HW_3_0_VERSION,
-@@ -242,6 +246,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
-+		.rri_on_ddr = false,
- 	},
- 	{
- 		.id = QCA6174_HW_3_2_VERSION,
-@@ -275,6 +280,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
-+		.rri_on_ddr = false,
- 	},
- 	{
- 		.id = QCA99X0_HW_2_0_DEV_VERSION,
-@@ -311,6 +317,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
-+		.rri_on_ddr = false,
- 	},
- 	{
- 		.id = QCA9984_HW_1_0_DEV_VERSION,
-@@ -352,6 +359,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
-+		.rri_on_ddr = false,
- 	},
- 	{
- 		.id = QCA9888_HW_2_0_DEV_VERSION,
-@@ -392,6 +400,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
-+		.rri_on_ddr = false,
- 	},
- 	{
- 		.id = QCA9377_HW_1_0_DEV_VERSION,
-@@ -422,6 +431,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
-+		.rri_on_ddr = false,
- 	},
- 	{
- 		.id = QCA9377_HW_1_1_DEV_VERSION,
-@@ -454,6 +464,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
-+		.rri_on_ddr = false,
- 	},
- 	{
- 		.id = QCA4019_HW_1_0_DEV_VERSION,
-@@ -491,6 +502,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
- 		.per_ce_irq = false,
- 		.shadow_reg_support = false,
-+		.rri_on_ddr = false,
- 	},
- 	{
- 		.id = WCN3990_HW_1_0_DEV_VERSION,
-@@ -513,6 +525,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL_DUAL_MAC,
- 		.per_ce_irq = true,
- 		.shadow_reg_support = true,
-+		.rri_on_ddr = true,
- 	},
- };
- 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
-index 497ac33e0fbf..677535b3d207 100644
---- a/drivers/net/wireless/ath/ath10k/hw.c
-+++ b/drivers/net/wireless/ath/ath10k/hw.c
-@@ -310,6 +310,12 @@ static struct ath10k_hw_ce_dst_src_wm_regs wcn3990_wm_dst_ring = {
- 	.wm_high	= &wcn3990_dst_wm_high,
- };
- 
-+static struct ath10k_hw_ce_ctrl1_upd wcn3990_ctrl1_upd = {
-+	.shift = 19,
-+	.mask = 0x00080000,
-+	.enable = 0x00000000,
-+};
-+
- const struct ath10k_hw_ce_regs wcn3990_ce_regs = {
- 	.sr_base_addr		= 0x00000000,
- 	.sr_size_addr		= 0x00000008,
-@@ -320,8 +326,6 @@ const struct ath10k_hw_ce_regs wcn3990_ce_regs = {
- 	.dst_wr_index_addr	= 0x00000040,
- 	.current_srri_addr	= 0x00000044,
- 	.current_drri_addr	= 0x00000048,
--	.ddr_addr_for_rri_low	= 0x00000004,
--	.ddr_addr_for_rri_high	= 0x00000008,
- 	.ce_rri_low		= 0x0024C004,
- 	.ce_rri_high		= 0x0024C008,
- 	.host_ie_addr		= 0x0000002c,
-@@ -331,6 +335,7 @@ const struct ath10k_hw_ce_regs wcn3990_ce_regs = {
- 	.misc_regs		= &wcn3990_misc_reg,
- 	.wm_srcr		= &wcn3990_wm_src_ring,
- 	.wm_dstr		= &wcn3990_wm_dst_ring,
-+	.upd			= &wcn3990_ctrl1_upd,
- };
- 
- const struct ath10k_hw_values wcn3990_values = {
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index cf18adda9f20..3d4207818904 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -336,6 +336,12 @@ struct ath10k_hw_ce_dst_src_wm_regs {
- 	struct ath10k_hw_ce_regs_addr_map *wm_low;
- 	struct ath10k_hw_ce_regs_addr_map *wm_high; };
- 
-+struct ath10k_hw_ce_ctrl1_upd {
-+	u32 shift;
-+	u32 mask;
-+	u32 enable;
-+};
-+
- struct ath10k_hw_ce_regs {
- 	u32 sr_base_addr;
- 	u32 sr_size_addr;
-@@ -358,7 +364,9 @@ struct ath10k_hw_ce_regs {
- 	struct ath10k_hw_ce_cmd_halt *cmd_halt;
- 	struct ath10k_hw_ce_host_ie *host_ie;
- 	struct ath10k_hw_ce_dst_src_wm_regs *wm_srcr;
--	struct ath10k_hw_ce_dst_src_wm_regs *wm_dstr; };
-+	struct ath10k_hw_ce_dst_src_wm_regs *wm_dstr;
-+	struct ath10k_hw_ce_ctrl1_upd *upd;
-+};
- 
- struct ath10k_hw_values {
- 	u32 rtc_state_val_on;
-@@ -575,6 +583,9 @@ struct ath10k_hw_params {
- 
- 	/* target supporting shadow register for ce write */
- 	bool shadow_reg_support;
-+
-+	/* target supporting retention restore on ddr */
-+	bool rri_on_ddr;
- };
- 
- struct htt_rx_desc;
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index 2e490ff124f1..47a4d2a5bd4c 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -767,6 +767,7 @@ static void ath10k_snoc_hif_power_down(struct ath10k *ar)
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot hif power down\n");
- 
- 	ath10k_snoc_wlan_disable(ar);
-+	ath10k_ce_free_rri(ar);
- }
- 
- static int ath10k_snoc_hif_power_up(struct ath10k *ar)
-@@ -782,6 +783,8 @@ static int ath10k_snoc_hif_power_up(struct ath10k *ar)
- 		return ret;
- 	}
- 
-+	ath10k_ce_alloc_rri(ar);
-+
- 	ret = ath10k_snoc_init_pipes(ar);
- 	if (ret) {
- 		ath10k_err(ar, "failed to initialize CE: %d\n", ret);
--- 
-2.14.1
+>> [1] https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git/
+>> [2] https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+>>
+>> --
+>> Cheers,
+>> Luca.
+>>
+> 
