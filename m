@@ -1,63 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53210 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751107AbeDPON4 (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:56119 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752283AbeDISVO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 10:13:56 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Daniel Mack <daniel@zonque.org>
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        loic.poulain@linaro.org, rfried@codeaurora.org,
-        bjorn.andersson@linaro.org
-Subject: Re: [PATCH 5/5] wcn36xx: pass information elements in scan requests
-References: <20180416131634.25432-1-daniel@zonque.org>
-        <20180416131634.25432-6-daniel@zonque.org>
-        <87lgdnp7sy.fsf@kamboji.qca.qualcomm.com>
-        <0595a559-8220-bc22-0c33-4580119c774d@zonque.org>
-Date: Mon, 16 Apr 2018 17:13:51 +0300
-In-Reply-To: <0595a559-8220-bc22-0c33-4580119c774d@zonque.org> (Daniel Mack's
-        message of "Mon, 16 Apr 2018 16:06:49 +0200")
-Message-ID: <87h8obp7c0.fsf@kamboji.qca.qualcomm.com> (sfid-20180416_161400_384853_0A8253FA)
+        Mon, 9 Apr 2018 14:21:14 -0400
+Received: by mail-wm0-f52.google.com with SMTP id b127so21142321wmf.5
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Apr 2018 11:21:13 -0700 (PDT)
+Subject: Re: iwlwifi-7265-ucode-25.30.14.0.tgz. in Centos 7
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Dusan Bruncko <dusan.bruncko@cern.ch>,
+        linux-wireless@vger.kernel.org, centos-devel@centos.org
+References: <fe3605be-8ce1-ee6f-7ea2-7f736f5493fb@cern.ch>
+ <238bda30-c983-f4aa-fdaf-a4f06cb83c1d@lwfinger.net>
+ <e01645c5-16eb-aa47-2926-1b2890687b2f@cern.ch>
+ <23bb800e-544c-607e-43ae-6833949167af@lwfinger.net>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5ACBAF17.5050808@broadcom.com> (sfid-20180409_202118_487887_8AE0CC99)
+Date: Mon, 9 Apr 2018 20:21:11 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <23bb800e-544c-607e-43ae-6833949167af@lwfinger.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Mack <daniel@zonque.org> writes:
-
-> On Monday, April 16, 2018 04:03 PM, Kalle Valo wrote:
->> Daniel Mack <daniel@zonque.org> writes:
->> 
->>> When the ieee8022 core passes IE elements in the scan request, append
->> 
->> You mean mac80211?
->> 
->> And yeah, the ieee80211_ prefix is confusing. Many many years I
->> started to change that to mac80211_ but gave up :(
->
-> Ah, yeah. I was just referring to the wifi core driver stack.
-
-We call the components mac80211 and cfg80211, please don't invent new
-names for them.
-
->>> them to the firmware message. The driver currently tells the core that
->>> it is capable of attaching up to WCN36XX_MAX_SCAN_IE_LEN octets, but
->>> doesn't actually pass them to the the hardware.
+On 4/9/2018 6:18 PM, Larry Finger wrote:
+> On 04/08/2018 11:56 PM, Dusan Bruncko wrote:
+>> Dear Larry,
+>>
+>> Thank you for your mail. But concerning to "capa flags index 3", I am
+>> not sure. Please look
+>> following message receiving for command "ps aux",
+>>
+>> /usr/bin/abrt-watch-log -F BUG: WARNING: at WARNING:
+>> CPU: INFO: possible recursive locking detected ernel BUG at list_del
+>> corruption list_add corruption do_IRQ: stack over
+>> flow: ear stack overflow (cur: eneral protection fault nable to handle
+>> kernel ouble fault: RTNL: assertion failed eek!
+>>   page_mapcount(page) went negative! adness at NETDEV WATCHDOG ysctl
+>> table check failed : nobody cared IRQ handler type
+>>   mismatch Machine Check Exception: Machine check events logged divide
+>> error: bounds: coprocessor segment overrun: inva
+>> lid TSS: segment not present: invalid opcode: alignment check: stack
+>> segment: fpu exception: simd exception: iret exce
+>> ption: /var/log/messages -- /usr/bin/abrt-dump-oops -xtD
+>>
+>> I am not software expert, but also looking on message from abrt:
+>>
+>> Subject: [abrt] : divide error: 0000 [#1] SMP => look attachment.
+>>
+>> Maybe it is direct consequence connected with my wi-fi problem...
+>>
+>> Regards,
+>>                    Dusan
+>>
+>> Larry Finger wrote:
+>>> On 04/08/2018 01:58 AM, Dusan Bruncko wrote:
+>>>> Hello,
+>>>>
+>>>> Allow me to ask you the following question:
+>>>>
+>>>> I have laptop with: "02:00.0 Network controller: Intel Corporation
+>>>> Wireless 7265 (rev 59)".
+>>>> For this device I found firmware iwlwifi-7265-ucode-25.30.14.0.tgz.
+>>>>
+>>>> My problem is following: This firmware was created for kernel 4.2+,
+>>>> but I am using
+>>>> Centos 7 with kernels a la 3.10. Therefore I see during booting and
+>>>> after switch off some
+>>>> problematic messages a la:
+>>>> capa flags index 3 larger than supported by driver  or
+>>>> failed to remove key (2, ff:ff:ff:ff:ff:ff) from hardware ...
+>>>>
+>>>> Wi-fi works properly, not to look on the previous messages.
+>>>>
+>>>> My question to you: do you have in schedule to include proper
+>>>> firmware also for
+>>>> centos 7/redhat 7?
 >>>
->>> Some defines were moved around to avoid cyclic include dependencies.
->> 
->> Does this fix anything or change functionality somehow? You should
->> document that also in the commit log.
+>>> If your kernel were newer, I would recommend running the backports
+>>> drivers, but I think 3.10 is too old. That said, this code change
+>>> would not fix the "failed to remove key" message as I get that on my
+>>> 7260 device with kernel 4.16.0. I think you may safely ignore this
+>>> one if for no other reason than it only happens when the device is
+>>> being shut down.
+
+backports works for 3.10 and higher kernels so you are just on the good 
+side of it.
+
+>>> If the "capa flags index 3" message is not causing any problems, I
+>>> would ignore it as well.
 >
-> I don't have a test case for this, no. But as the change was pretty much
-> straight forward, I sent it anyway.
+> On this and most mailing lists, one should not top post. It is most
+> inconvenient to have to continually scroll up and down to get to your
+> comments while writing mine.
+>
+> In your first posting, you said "Wi-fi works properly". That certainly
+> does not imply any problems other than the strange messages in the log.
+> If you are getting BUG and/or WARNING dumps, then the output of the
+> dmesg command will list the traceback. I do not see any of those. They
+> may be a consequence of using such an old kernel. I am only an Intel
+> wifi user, not a developer, and it is unlikely that I will be able to
+> fix any of your problems. In any case, you need to post the full
+> tracebacks of those BUGS/WARNINGS here. Remember, do not post at the top.
 
-Ok, but you should still explain that in the commit log. In other words,
-you should always answer the question "Why?" in the commit log.
+The log shows that the "divide error" occurs in your (proprietary) 
+nvidia driver. There is no relation to the wifi "issues" discussed in 
+this thread.
 
-> I can resend with some more information on this if you like.
-
-No need to resend because of this, I can edit the commit log.
-
--- 
-Kalle Valo
+Regards,
+Arend
