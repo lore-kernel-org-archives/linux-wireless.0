@@ -1,55 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:14322 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932121AbeDWQfy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 12:35:54 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [RESEND 27/33] staging: wilc1000: remove the use of goto label in wilc_spi_read_int()
-Date: Mon, 23 Apr 2018 22:03:29 +0530
-Message-ID: <1524501215-4963-28-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183601_651002_F81F217B)
-In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:59690 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752414AbeDIOKe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Apr 2018 10:10:34 -0400
+Date: Mon, 9 Apr 2018 16:10:32 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@nbd.name>,
+        Jakub =?utf-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org
+Subject: [ANN] mt76x0 usb driver
+Message-ID: <20180409141032.GA9247@redhat.com> (sfid-20180409_161040_019781_C1B42688)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In wilc_spi_read_int() remove the use of goto label '_fail_'. Changes
-are done to avoid the use of '_' in label name.
+Hi
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
----
- drivers/staging/wilc1000/wilc_spi.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+I would like to announce mt76x0 driver for MT7610U USB dongles:
 
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 57e4f11..1db2814 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -946,7 +946,7 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
- 	if (!ret) {
- 		dev_err(&spi->dev,
- 			"Failed read WILC_VMM_TO_HOST_SIZE ...\n");
--		goto _fail_;
-+		return ret;
- 	}
- 	tmp = (byte_cnt >> 2) & IRQ_DMA_WD_CNT_MASK;
- 
-@@ -976,7 +976,6 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
- 
- 	*int_status = tmp;
- 
--_fail_:
- 	return ret;
- }
- 
--- 
-2.7.4
+https://github.com/sgruszka/mt76x0
+
+mt76x0 is based on Jakub's mt7601u mac80211 driver and is intended to be
+integrated in the linux kernel.
+
+Currently only Linksys AE6000 (ID 13b1:003e) in on USB id's list
+and 5GHz does not work.
+
+I would like to integrate the driver to kernel via mt76 driver, i.e.
+add USB hooks and mt76x0 mac/phy code to mt76. This will open
+possibility to develop support for mt76x2 USB devices as well as mt76x0
+PCIe devices in mt76.
+
+I would also like to establish some better collaboration with Mediatek
+in order to having their present and future wireless hardware be
+supported in the mainline kernel.
+
+Thanks
+Stanislaw
