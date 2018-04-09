@@ -1,40 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33388 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752512AbeDMHrA (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:34104 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751416AbeDIHuP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Apr 2018 03:47:00 -0400
-From: mkenna@codeaurora.org
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Maharaja Kennadyrajan <mkenna@codeaurora.org>
-Subject: [PATCH] ath10k: Fix a typo in ath10k_wmi_set_wmm_param()
-Date: Fri, 13 Apr 2018 13:18:31 +0530
-Message-Id: <1523605711-1874-1-git-send-email-mkenna@codeaurora.org> (sfid-20180413_094703_419516_946FA668)
+        Mon, 9 Apr 2018 03:50:15 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [v2 PATCH] mwifiex: parse key management suite from RSN IE
+Date: Mon, 9 Apr 2018 15:49:51 +0800
+Message-ID: <1523260191-29352-1-git-send-email-huxm@marvell.com> (sfid-20180409_095018_850894_AD0006C6)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Maharaja Kennadyrajan <mkenna@codeaurora.org>
+Association failed when using wpa_supplicant with
+configuration key_mgmt=WPA-PSK-SHA256, and it is noticed
+that wpa_supplicant set WLAN_AKM_SUITE_PSK_SHA256 in
+RSN IE, but miss it in start_ap parameters.
 
-Fix a typo in the function ath10k_wmi_set_wmm_param().
+This patch parse key management suite from RSN IE, in
+case it is missed.
 
-Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+v2: Cleanup code in v1
+---
+ drivers/net/wireless/marvell/mwifiex/fw.h      |  1 +
+ drivers/net/wireless/marvell/mwifiex/main.h    | 10 +++
+ drivers/net/wireless/marvell/mwifiex/uap_cmd.c | 86 ++++++++++++++++++--------
+ 3 files changed, 70 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index c5e1ca5..727c965 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -7648,7 +7648,7 @@ void ath10k_wmi_set_wmm_param(struct wmi_wmm_params *params,
- 	cmd->param = __cpu_to_le32(param);
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 13cd58e9..2be3ce1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -413,6 +413,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define KEY_MGMT_NONE               0x04
+ #define KEY_MGMT_PSK                0x02
+ #define KEY_MGMT_EAP                0x01
++#define KEY_MGMT_PSK_SHA256         0x100
+ #define CIPHER_TKIP                 0x04
+ #define CIPHER_AES_CCMP             0x08
+ #define VALID_CIPHER_BITMAP         0x0c
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 598e58b..94b5935 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -364,6 +364,16 @@ struct ieee_types_generic {
+ 	u8 data[IEEE_MAX_IE_SIZE - sizeof(struct ieee_types_header)];
+ } __packed;
  
- 	ath10k_dbg(ar, ATH10K_DBG_WMI,
--		   "wmi pdev get tcp config param:%d\n", param);
-+		   "wmi pdev get tpc config param %d\n", param);
- 	return skb;
- }
++struct ieee_types_rsn {
++	struct ieee_types_header ieee_hdr;
++	u8  element_id;
++	u8  element_len;
++	u16 rsn_version;
++	u32 cipher_group;
++	u16 n_ciphers_pairwise;
++	u32 ciphers_pairwise[];
++} __packed;
++
+ struct ieee_types_bss_co_2040 {
+ 	struct ieee_types_header ieee_hdr;
+ 	u8 bss_2040co;
+diff --git a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
+index 18f7d9b..0a27717 100644
+--- a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
+@@ -26,9 +26,14 @@
+  */
+ int mwifiex_set_secure_params(struct mwifiex_private *priv,
+ 			      struct mwifiex_uap_bss_param *bss_config,
+-			      struct cfg80211_ap_settings *params) {
++			      struct cfg80211_ap_settings *params)
++{
+ 	int i;
+ 	struct mwifiex_wep_key wep_key;
++	const struct ieee_types_rsn *rsn_ie = NULL;
++	const u8 *ie = NULL;
++	u16 n_akm_suites;
++	u32 *akm_suites;
  
+ 	if (!params->privacy) {
+ 		bss_config->protocol = PROTOCOL_NO_SECURITY;
+@@ -58,36 +63,63 @@ int mwifiex_set_secure_params(struct mwifiex_private *priv,
+ 
+ 	bss_config->key_mgmt_operation |= KEY_MGMT_ON_HOST;
+ 
+-	for (i = 0; i < params->crypto.n_akm_suites; i++) {
+-		switch (params->crypto.akm_suites[i]) {
+-		case WLAN_AKM_SUITE_8021X:
+-			if (params->crypto.wpa_versions &
+-			    NL80211_WPA_VERSION_1) {
+-				bss_config->protocol = PROTOCOL_WPA;
+-				bss_config->key_mgmt = KEY_MGMT_EAP;
+-			}
+-			if (params->crypto.wpa_versions &
+-			    NL80211_WPA_VERSION_2) {
+-				bss_config->protocol |= PROTOCOL_WPA2;
+-				bss_config->key_mgmt = KEY_MGMT_EAP;
++	if (params->crypto.wpa_versions & NL80211_WPA_VERSION_1)
++		bss_config->protocol = PROTOCOL_WPA;
++
++	if (params->crypto.wpa_versions & NL80211_WPA_VERSION_2)
++		bss_config->protocol |= PROTOCOL_WPA2;
++
++	if (params->crypto.wpa_versions &
++	    (NL80211_WPA_VERSION_1 | NL80211_WPA_VERSION_2)) {
++		for (i = 0; i < params->crypto.n_akm_suites; i++) {
++			switch (params->crypto.akm_suites[i]) {
++			case WLAN_AKM_SUITE_8021X:
++					bss_config->key_mgmt = KEY_MGMT_EAP;
++				break;
++			case WLAN_AKM_SUITE_PSK:
++					bss_config->key_mgmt = KEY_MGMT_PSK;
++				break;
++			case WLAN_AKM_SUITE_PSK_SHA256:
++					bss_config->key_mgmt =
++							KEY_MGMT_PSK_SHA256;
++				break;
++			default:
++				break;
+ 			}
+-			break;
+-		case WLAN_AKM_SUITE_PSK:
+-			if (params->crypto.wpa_versions &
+-			    NL80211_WPA_VERSION_1) {
+-				bss_config->protocol = PROTOCOL_WPA;
+-				bss_config->key_mgmt = KEY_MGMT_PSK;
+-			}
+-			if (params->crypto.wpa_versions &
+-			    NL80211_WPA_VERSION_2) {
+-				bss_config->protocol |= PROTOCOL_WPA2;
+-				bss_config->key_mgmt = KEY_MGMT_PSK;
++		}
++
++		ie = cfg80211_find_ie(WLAN_EID_RSN, params->beacon.tail,
++				      params->beacon.tail_len);
++
++		/* Try to get key management suites from RSN IE */
++		if (!bss_config->key_mgmt && ie) {
++			rsn_ie = (struct ieee_types_rsn *)ie;
++			ie = (u8 *)(rsn_ie->ciphers_pairwise +
++				    rsn_ie->n_ciphers_pairwise);
++			n_akm_suites = *((u16 *)ie);
++			akm_suites = (u32 *)(ie + sizeof(n_akm_suites));
++
++			for (i = 0; i < n_akm_suites; i++) {
++				switch (akm_suites[i]) {
++				case WLAN_AKM_SUITE_8021X:
++						bss_config->key_mgmt =
++								KEY_MGMT_EAP;
++					break;
++				case WLAN_AKM_SUITE_PSK:
++						bss_config->key_mgmt =
++								KEY_MGMT_PSK;
++					break;
++				case WLAN_AKM_SUITE_PSK_SHA256:
++						bss_config->key_mgmt =
++							KEY_MGMT_PSK_SHA256;
++					break;
++				default:
++					break;
++				}
+ 			}
+-			break;
+-		default:
+-			break;
+ 		}
+ 	}
++
+ 	for (i = 0; i < params->crypto.n_ciphers_pairwise; i++) {
+ 		switch (params->crypto.ciphers_pairwise[i]) {
+ 		case WLAN_CIPHER_SUITE_WEP40:
 -- 
-1.7.9.5
+1.9.1
