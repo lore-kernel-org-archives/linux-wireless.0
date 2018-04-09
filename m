@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:38216 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751172AbeDPXGM (ORCPT
+Received: from mail-ot0-f182.google.com ([74.125.82.182]:36135 "EHLO
+        mail-ot0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756347AbeDIAbj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 19:06:12 -0400
-Received: by mail-wr0-f194.google.com with SMTP id h3so17729113wrh.5
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 16:06:12 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76x2: fix TXD_INFO bitmask definition
-Date: Tue, 17 Apr 2018 01:05:59 +0200
-Message-Id: <20180416230559.11268-1-lorenzo.bianconi@redhat.com> (sfid-20180417_010616_253698_EDF89C2B)
+        Sun, 8 Apr 2018 20:31:39 -0400
+Received: by mail-ot0-f182.google.com with SMTP id n40-v6so6809150otd.3
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Apr 2018 17:31:39 -0700 (PDT)
+Subject: Re: iwlwifi-7265-ucode-25.30.14.0.tgz. in Centos 7
+To: Dusan Bruncko <dusan.bruncko@cern.ch>,
+        linux-wireless@vger.kernel.org, centos-devel@centos.org
+References: <fe3605be-8ce1-ee6f-7ea2-7f736f5493fb@cern.ch>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <238bda30-c983-f4aa-fdaf-a4f06cb83c1d@lwfinger.net> (sfid-20180409_023212_478269_A7149A88)
+Date: Sun, 8 Apr 2018 19:31:37 -0500
+MIME-Version: 1.0
+In-Reply-To: <fe3605be-8ce1-ee6f-7ea2-7f736f5493fb@cern.ch>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Despite this issue is not harmful since it is not actually used in
-mt76 driver, fix DMA txinfo bitmask definition
+On 04/08/2018 01:58 AM, Dusan Bruncko wrote:
+> Hello,
+> 
+> Allow me to ask you the following question:
+> 
+> I have laptop with: "02:00.0 Network controller: Intel Corporation Wireless 7265 
+> (rev 59)".
+> For this device I found firmware iwlwifi-7265-ucode-25.30.14.0.tgz.
+> 
+> My problem is following: This firmware was created for kernel 4.2+, but I am using
+> Centos 7 with kernels a la 3.10. Therefore I see during booting and after switch 
+> off some
+> problematic messages a la:
+> capa flags index 3 larger than supported by driver  or
+> failed to remove key (2, ff:ff:ff:ff:ff:ff) from hardware ...
+> 
+> Wi-fi works properly, not to look on the previous messages.
+> 
+> My question to you: do you have in schedule to include proper firmware also for
+> centos 7/redhat 7?
 
-Fixes: 7bc04215a66b ('mt76: add driver code for MT76x2e')
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x2_dma.h | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+If your kernel were newer, I would recommend running the backports drivers, but 
+I think 3.10 is too old. That said, this code change would not fix the "failed 
+to remove key" message as I get that on my 7260 device with kernel 4.16.0. I 
+think you may safely ignore this one if for no other reason than it only happens 
+when the device is being shut down.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.h b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.h
-index 47f79d83fcb4..e9d426bbf91a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.h
-@@ -19,7 +19,7 @@
- 
- #include "dma.h"
- 
--#define MT_TXD_INFO_LEN			GENMASK(13, 0)
-+#define MT_TXD_INFO_LEN			GENMASK(15, 0)
- #define MT_TXD_INFO_NEXT_VLD		BIT(16)
- #define MT_TXD_INFO_TX_BURST		BIT(17)
- #define MT_TXD_INFO_80211		BIT(19)
-@@ -27,9 +27,8 @@
- #define MT_TXD_INFO_CSO			BIT(21)
- #define MT_TXD_INFO_WIV			BIT(24)
- #define MT_TXD_INFO_QSEL		GENMASK(26, 25)
--#define MT_TXD_INFO_TCO			BIT(29)
--#define MT_TXD_INFO_UCO			BIT(30)
--#define MT_TXD_INFO_ICO			BIT(31)
-+#define MT_TXD_INFO_DPORT		GENMASK(29, 27)
-+#define MT_TXD_INFO_TYPE		GENMASK(31, 30)
- 
- #define MT_RX_FCE_INFO_LEN		GENMASK(13, 0)
- #define MT_RX_FCE_INFO_SELF_GEN		BIT(15)
--- 
-2.16.3
+If the "capa flags index 3" message is not causing any problems, I would ignore 
+it as well.
+
+Larry
