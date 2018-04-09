@@ -1,141 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:39532 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753053AbeD0FgM (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41974 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752947AbeDIQAi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Apr 2018 01:36:12 -0400
-From: s.gottschall@dd-wrt.com
-To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Subject: [PATCH v3] ath10k: fix crash in recent 3.5.3 9984 firmware due wrong handling of peer_bw_rxnss_override parameter
-Date: Fri, 27 Apr 2018 07:36:03 +0200
-Message-Id: <20180427053603.12022-1-s.gottschall@dd-wrt.com> (sfid-20180427_073618_220874_8A23F077)
+        Mon, 9 Apr 2018 12:00:38 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: iwlwifi: mvm: query regdb for wmm rule if needed
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180404062348.31461-1-luca@coelho.fi>
+References: <20180404062348.31461-1-luca@coelho.fi>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Message-Id: <20180409160037.B7A2360AFB@smtp.codeaurora.org> (sfid-20180409_180041_713710_064401DC)
+Date: Mon,  9 Apr 2018 16:00:37 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Luciano Coelho <luca@coelho.fi> wrote:
 
-current handling of peer_bw_rxnss_override parameter is based on guessing the VHT160/8080 capability by rx rate. this is wrong and may lead
-to a non initialized peer_bw_rxnss_override parameter which is required since VHT160 operation mode only supports 2x2 chainmasks in addition the original code
-initialized the parameter with wrong masked values.
-This patch uses the peer phymode and peer nss information for correct initialisation of the peer_bw_rxnss_override parameter.
-if this peer information is not available, we initialize the parameter by minimum nss which is suggested by QCA as temporary workaround according
-to the QCA sourcecodes.
+> From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+> 
+> Since our device is regulatory self managed it maintains its regulatory
+> rules by its own. However the wmm_rules values can't be set by the
+> device itself but only the indication about the need to set it.
+> In case the device set wmm indication, proactively query the regulatory
+> data base to get these values
+> 
+> Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Patch applied to wireless-drivers.git, thanks.
 
-v2: remove debug messages
-v3: apply some cosmetics, update documentation
----
- drivers/net/wireless/ath/ath10k/mac.c | 38 +++++++++++++++++++++--------------
- drivers/net/wireless/ath/ath10k/wmi.c |  7 +------
- drivers/net/wireless/ath/ath10k/wmi.h | 14 ++++++++++++-
- 3 files changed, 37 insertions(+), 22 deletions(-)
+77e30e10ee28 iwlwifi: mvm: query regdb for wmm rule if needed
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 5be6386ede8f..594db0713186 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2528,23 +2528,31 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
- 		__le16_to_cpu(vht_cap->vht_mcs.tx_highest);
- 	arg->peer_vht_rates.tx_mcs_set = ath10k_peer_assoc_h_vht_limit(
- 		__le16_to_cpu(vht_cap->vht_mcs.tx_mcs_map), vht_mcs_mask);
-+	arg->peer_bw_rxnss_override = 0;
- 
--	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
--		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
--
--	if (arg->peer_vht_rates.rx_max_rate &&
--	    (sta->vht_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK)) {
--		switch (arg->peer_vht_rates.rx_max_rate) {
--		case 1560:
--			/* Must be 2x2 at 160Mhz is all it can do. */
--			arg->peer_bw_rxnss_override = 2;
--			break;
--		case 780:
--			/* Can only do 1x1 at 160Mhz (Long Guard Interval) */
--			arg->peer_bw_rxnss_override = 1;
--			break;
-+	if (arg->peer_num_spatial_streams) {
-+		/* in case if peer is connected with vht160 or vht80+80, we need to properly adjust rxnss parameters */
-+		switch(arg->peer_phymode) {
-+		case MODE_11AC_VHT80_80:
-+			arg->peer_bw_rxnss_override = BW_NSS_FWCONF_80_80(arg->peer_num_spatial_streams);
-+		/* fall through */
-+		case MODE_11AC_VHT160:
-+			arg->peer_bw_rxnss_override |= BW_NSS_FWCONF_160(arg->peer_num_spatial_streams);
-+		break;
- 		}
- 	}
-+
-+	/* in case peer has no nss properties for some reasons, we set local nss to minimum (1x1) to avoid a 
-+	 * firmware assert / crash. this applies only to VHT160 or VHT80+80 and is a WAR for clients breaking
-+	 * the spec.
-+	 */
-+
-+	if (!arg->peer_num_spatial_streams && (arg->peer_phymode == MODE_11AC_VHT80_80 || arg->peer_phymode == MODE_11AC_VHT160)) {
-+		arg->peer_bw_rxnss_override = BW_NSS_FWCONF_MAP_ENABLE;
-+	}
-+
-+	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
-+		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
- }
- 
- static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
-@@ -2696,9 +2704,9 @@ static int ath10k_peer_assoc_prepare(struct ath10k *ar,
- 	ath10k_peer_assoc_h_crypto(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_rates(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_ht(ar, vif, sta, arg);
-+	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_vht(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_qos(ar, vif, sta, arg);
--	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 2c36256a441d..3797dca317ff 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -7211,12 +7211,7 @@ ath10k_wmi_peer_assoc_fill_10_4(struct ath10k *ar, void *buf,
- 	struct wmi_10_4_peer_assoc_complete_cmd *cmd = buf;
- 
- 	ath10k_wmi_peer_assoc_fill_10_2(ar, buf, arg);
--	if (arg->peer_bw_rxnss_override)
--		cmd->peer_bw_rxnss_override =
--			__cpu_to_le32((arg->peer_bw_rxnss_override - 1) |
--				      BIT(PEER_BW_RXNSS_OVERRIDE_OFFSET));
--	else
--		cmd->peer_bw_rxnss_override = 0;
-+	cmd->peer_bw_rxnss_override = __cpu_to_le32(arg->peer_bw_rxnss_override);
- }
- 
- static int
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 46ae19bb2c92..1fe0aa5523a6 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -6380,7 +6380,19 @@ struct wmi_10_2_peer_assoc_complete_cmd {
- 	__le32 info0; /* WMI_PEER_ASSOC_INFO0_ */
- } __packed;
- 
--#define PEER_BW_RXNSS_OVERRIDE_OFFSET  31
-+#define BW_NSS_FWCONF_MAP_ENABLE             (1 << 31)
-+#define BW_NSS_FWCONF_MAP_160MHZ_S           (0)
-+#define BW_NSS_FWCONF_MAP_160MHZ_M           (0x00000007)
-+#define BW_NSS_FWCONF_MAP_80_80MHZ_S         (3)
-+#define BW_NSS_FWCONF_MAP_80_80MHZ_M         (0x00000038)
-+#define BW_NSS_FWCONF_MAP_M                  (0x0000003F)
-+
-+#define GET_BW_NSS_FWCONF_160(x)             ((((x) & BW_NSS_FWCONF_MAP_160MHZ_M) >> BW_NSS_FWCONF_MAP_160MHZ_S) + 1)
-+#define GET_BW_NSS_FWCONF_80_80(x)           ((((x) & BW_NSS_FWCONF_MAP_80_80MHZ_M) >> BW_NSS_FWCONF_MAP_80_80MHZ_S) + 1)
-+
-+/* Values defined to set 160 MHz Bandwidth NSS Mapping into FW*/
-+#define BW_NSS_FWCONF_160(x)          (BW_NSS_FWCONF_MAP_ENABLE | (((x - 1) << BW_NSS_FWCONF_MAP_160MHZ_S) & BW_NSS_FWCONF_MAP_160MHZ_M))
-+#define BW_NSS_FWCONF_80_80(x)        (BW_NSS_FWCONF_MAP_ENABLE | (((x - 1) << BW_NSS_FWCONF_MAP_80_80MHZ_S) & BW_NSS_FWCONF_MAP_80_80MHZ_M))
- 
- struct wmi_10_4_peer_assoc_complete_cmd {
- 	struct wmi_10_2_peer_assoc_complete_cmd cmd;
 -- 
-2.14.1
+https://patchwork.kernel.org/patch/10322121/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
