@@ -1,79 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48096 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751027AbeDFIZe (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36085 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754111AbeDIU1r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Apr 2018 04:25:34 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for various chipsets
-References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
-        <871sftemru.fsf@kamboji.qca.qualcomm.com>
-        <c4a1313a-73d2-a028-4fca-09f6fb6e56bd@dd-wrt.com>
-        <de9c007f-26e3-a511-e944-91e90aac7787@dd-wrt.com>
-        <1d917688-9f59-39ad-46a6-527d9e3dec03@dd-wrt.com>
-        <87d0zcsqmv.fsf@codeaurora.org>
-        <41fa794e-d5d5-004e-5403-1e14c77a567a@dd-wrt.com>
-Date: Fri, 06 Apr 2018 11:25:29 +0300
-In-Reply-To: <41fa794e-d5d5-004e-5403-1e14c77a567a@dd-wrt.com> (Sebastian
-        Gottschall's message of "Fri, 6 Apr 2018 10:11:59 +0200")
-Message-ID: <87sh88rbba.fsf@codeaurora.org> (sfid-20180406_102539_992516_F8BD96FA)
+        Mon, 9 Apr 2018 16:27:47 -0400
+Date: Mon, 9 Apr 2018 15:27:45 -0500
+From: Rob Herring <robh@kernel.org>
+To: Nipun Gupta <nipun.gupta@nxp.com>
+Cc: robin.murphy@arm.com, hch@lst.de, linux@armlinux.org.uk,
+        gregkh@linuxfoundation.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, zajec5@gmail.com, andy.gross@linaro.org,
+        david.brown@linaro.org, dan.j.williams@intel.com,
+        vinod.koul@intel.com, thierry.reding@gmail.com,
+        frowand.list@gmail.com, jarkko.sakkinen@linux.intel.com,
+        rafael.j.wysocki@intel.com, dmitry.torokhov@gmail.com,
+        johan@kernel.org, msuchanek@suse.de, linux-kernel@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
+        dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, bharat.bhushan@nxp.com,
+        leoyang.li@nxp.com
+Subject: Re: [PATCH v3 2/2] drivers: remove force dma flag from buses
+Message-ID: <20180409202745.p6hxkyy4n7fin3bd@rob-hp-laptop> (sfid-20180409_223054_484785_A62727B1)
+References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
+ <1522396485-10248-1-git-send-email-nipun.gupta@nxp.com>
+ <1522396485-10248-2-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1522396485-10248-2-git-send-email-nipun.gupta@nxp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
+On Fri, Mar 30, 2018 at 01:24:45PM +0530, Nipun Gupta wrote:
+> With each bus implementing its own DMA configuration callback,
+> there is no need for bus to explicitly have force_dma in its
+> global structure. This patch modifies of_dma_configure API to
+> accept an input parameter which specifies if implicit DMA
+> configuration is required even when it is not described by the
+> firmware.
+> 
+> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+> ---
+> Changes in v2:
+>   - This is a new change suggested by Robin and Christoph
+>     and is added to the series.
+> 
+> Changes in v3:
+>   - Rebase and changes corresponding to the changes in patch 1/2
+> 
+>  drivers/amba/bus.c            | 1 -
+>  drivers/base/platform.c       | 3 +--
+>  drivers/bcma/main.c           | 2 +-
+>  drivers/dma/qcom/hidma_mgmt.c | 2 +-
+>  drivers/gpu/host1x/bus.c      | 5 ++---
+>  drivers/of/device.c           | 6 ++++--
+>  drivers/of/of_reserved_mem.c  | 2 +-
+>  drivers/pci/pci-driver.c      | 3 +--
+>  include/linux/device.h        | 4 ----
+>  include/linux/of_device.h     | 8 ++++++--
+>  10 files changed, 17 insertions(+), 19 deletions(-)
 
-> Am 06.04.2018 um 10:09 schrieb Kalle Valo:
->> (adding back the lists, please don't top post and trim your quotes)
->>
->> Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
->>
->>> okay. ath10k-check is buggy and doesnt work. so it doesnt help much
->>> with code styles
->>>
->>> root@seg-desktop:/xfs/ath10k/ath.gpio# ./ath10k-check
->>> global: 'drivers/net/wireless/ath/ath10k/Kconfig' is not a source file.
->>> Traceback (most recent call last):
->>>  =C2=A0 File "./ath10k-check", line 461, in <module>
->>>  =C2=A0=C2=A0=C2=A0 main()
->>>  =C2=A0 File "./ath10k-check", line 455, in main
->>>  =C2=A0=C2=A0=C2=A0 ret =3D run_checkpatch(args)
->>>  =C2=A0 File "./ath10k-check", line 275, in run_checkpatch
->>>  =C2=A0=C2=A0=C2=A0 output =3D subprocess.check_output(cmd, shell=3DTru=
-e)
->>>  =C2=A0 File "/usr/lib/python2.7/subprocess.py", line 219, in check_out=
-put
->>>  =C2=A0=C2=A0=C2=A0 raise CalledProcessError(retcode, cmd, output=3Dout=
-put)
->>> subprocess.CalledProcessError: Command 'global -f
->>> drivers/net/wireless/ath/ath10k/Kconfig' returned non-zero exit status 1
->>
->> You are missing gtags, see 'ath10k-check --help' for how to install:
->>
->> Requirements (all available in $PATH):
->>
->> * gcc
->> * sparse
->> * checkpatch.pl
->> * gtags (from package global)
->
-> ahm i did read this and this was all installed. but ath10k-check
-> refuses to work
->
-> root@seg-desktop:/home/seg/DEV# gtags --version
-> gtags (GNU GLOBAL) 6.5.7
-> Copyright (c) 1996-2017 Tama Communications Corporation
-> License GPLv3+: GNU GPL version 3 or later
-> <http://www.gnu.org/licenses/gpl.html>
-> This is free software; you are free to change and redistribute it.
-> There is NO WARRANTY, to the extent permitted by law.
-
-Damn, I guess something has changed in gtags as I use older version:
-
-gtags - GNU GLOBAL 5.7.1
-
---=20
-Kalle Valo
+Reviewed-by: Rob Herring <robh@kernel.org>
