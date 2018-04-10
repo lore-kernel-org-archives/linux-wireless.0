@@ -1,46 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:45891 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755481AbeDYQZt (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39378 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753969AbeDJOXx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 12:25:49 -0400
-From: Andres Rodriguez <andresx7@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: andresx7@gmail.com, gregkh@linuxfoundation.org, mcgrof@kernel.org,
-        alexdeucher@gmail.com, christian.koenig@amd.com,
-        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        hdegoede@redhat.com
-Subject: [PATCH 2/2] usb: typec: fix formatting errors that cause build breakage
-Date: Wed, 25 Apr 2018 12:25:40 -0400
-Message-Id: <20180425162540.11574-2-andresx7@gmail.com> (sfid-20180425_182628_468856_132C2DF2)
-In-Reply-To: <20180425162540.11574-1-andresx7@gmail.com>
-References: <20180425152617.GA5058@kroah.com>
- <20180425162540.11574-1-andresx7@gmail.com>
+        Tue, 10 Apr 2018 10:23:53 -0400
+From: pillair@codeaurora.org
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>
+Subject: [PATCH 1/4] ath10k: Add hw params for shadow register support
+Date: Tue, 10 Apr 2018 19:53:29 +0530
+Message-Id: <1523370212-8778-2-git-send-email-pillair@codeaurora.org> (sfid-20180410_162411_028279_E017CE77)
+In-Reply-To: <1523370212-8778-1-git-send-email-pillair@codeaurora.org>
+References: <1523370212-8778-1-git-send-email-pillair@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ASCII art illustration should be marked as a preformatted text
-block. Otherwise the build will fail when attempting to parse it.
+From: Rakesh Pillai <pillair@codeaurora.org>
 
-Fixes: bdecb33af34f ( "usb: typec: API for controlling USB ..." )
-Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
+wcn3990 supports shadow register for ce write.
+
+Add a hw param for shadow register support.
+
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
 ---
- Documentation/driver-api/usb/typec.rst | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/core.c | 13 +++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h   |  4 ++++
+ 2 files changed, 17 insertions(+)
 
-diff --git a/Documentation/driver-api/usb/typec.rst b/Documentation/driver-api/usb/typec.rst
-index feb31946490b..48ff58095f11 100644
---- a/Documentation/driver-api/usb/typec.rst
-+++ b/Documentation/driver-api/usb/typec.rst
-@@ -210,7 +210,7 @@ If the connector is dual-role capable, there may also be a switch for the data
- role. USB Type-C Connector Class does not supply separate API for them. The
- port drivers can use USB Role Class API with those.
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 610bb32ec9f4..7e451b76c8a4 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -120,6 +120,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+ 		.per_ce_irq = false,
++		.shadow_reg_support = false,
+ 	},
+ 	{
+ 		.id = QCA9887_HW_1_0_VERSION,
+@@ -150,6 +151,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+ 		.per_ce_irq = false,
++		.shadow_reg_support = false,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_2_1_VERSION,
+@@ -179,6 +181,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+ 		.per_ce_irq = false,
++		.shadow_reg_support = false,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_2_1_VERSION,
+@@ -208,6 +211,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+ 		.per_ce_irq = false,
++		.shadow_reg_support = false,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_0_VERSION,
+@@ -237,6 +241,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+ 		.per_ce_irq = false,
++		.shadow_reg_support = false,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_2_VERSION,
+@@ -269,6 +274,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+ 		.per_ce_irq = false,
++		.shadow_reg_support = false,
+ 	},
+ 	{
+ 		.id = QCA99X0_HW_2_0_DEV_VERSION,
+@@ -304,6 +310,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+ 		.per_ce_irq = false,
++		.shadow_reg_support = false,
+ 	},
+ 	{
+ 		.id = QCA9984_HW_1_0_DEV_VERSION,
+@@ -344,6 +351,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+ 		.per_ce_irq = false,
++		.shadow_reg_support = false,
+ 	},
+ 	{
+ 		.id = QCA9888_HW_2_0_DEV_VERSION,
+@@ -383,6 +391,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+ 		.per_ce_irq = false,
++		.shadow_reg_support = false,
+ 	},
+ 	{
+ 		.id = QCA9377_HW_1_0_DEV_VERSION,
+@@ -412,6 +421,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+ 		.per_ce_irq = false,
++		.shadow_reg_support = false,
+ 	},
+ 	{
+ 		.id = QCA9377_HW_1_1_DEV_VERSION,
+@@ -443,6 +453,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+ 		.per_ce_irq = false,
++		.shadow_reg_support = false,
+ 	},
+ 	{
+ 		.id = QCA4019_HW_1_0_DEV_VERSION,
+@@ -479,6 +490,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.target_64bit = false,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+ 		.per_ce_irq = false,
++		.shadow_reg_support = false,
+ 	},
+ 	{
+ 		.id = WCN3990_HW_1_0_DEV_VERSION,
+@@ -500,6 +512,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.target_64bit = true,
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL_DUAL_MAC,
+ 		.per_ce_irq = true,
++		.shadow_reg_support = true,
+ 	},
+ };
  
--Illustration of the muxes behind a connector that supports an alternate mode:
-+Illustration of the muxes behind a connector that supports an alternate mode::
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 57dad208ef16..cf18adda9f20 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (c) 2005-2011 Atheros Communications Inc.
+  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
++ * Copyright (c) 2018 The Linux Foundation. All rights reserved.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -571,6 +572,9 @@ struct ath10k_hw_params {
  
-                      ------------------------
-                      |       Connector      |
+ 	/* target supporting per ce IRQ */
+ 	bool per_ce_irq;
++
++	/* target supporting shadow register for ce write */
++	bool shadow_reg_support;
+ };
+ 
+ struct htt_rx_desc;
 -- 
 2.14.1
