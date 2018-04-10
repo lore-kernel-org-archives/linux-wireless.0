@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60928 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753008AbeDSPzM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Apr 2018 11:55:12 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2,01/13] ath10k: platform driver for WCN3990 SNOC WLAN module
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1521781424-24972-2-git-send-email-govinds@codeaurora.org>
-References: <1521781424-24972-2-git-send-email-govinds@codeaurora.org>
-To: Govind Singh <govinds@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Message-Id: <20180419155511.D6F836079B@smtp.codeaurora.org> (sfid-20180419_175515_948269_C73900CB)
-Date: Thu, 19 Apr 2018 15:55:11 +0000 (UTC)
+Received: from mail.bugwerft.de ([46.23.86.59]:34498 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751504AbeDJRgW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Apr 2018 13:36:22 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
+        rfried@codeaurora.org, bjorn.andersson@linaro.org,
+        Daniel Mack <daniel@zonque.org>
+Subject: [PATCH] wcn36xx: use READ_ONCE() to access desc->ctrl
+Date: Tue, 10 Apr 2018 19:35:58 +0200
+Message-Id: <20180410173558.32425-1-daniel@zonque.org> (sfid-20180410_193628_094566_6F340BC2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Govind Singh <govinds@codeaurora.org> wrote:
+When accessing shared memory to check for the stat of submitted
+descriptors, make sure to use READ_ONCE(). This will guarantee the
+compiler treats these memory locations as volatile and doesn't apply
+any caching.
 
-> WCN3990 is integrated 802.11ac chipset with SNOC
-> bus interface. Add snoc layer driver registration
-> and associated ops.
-> 
-> WCN3990 support is not yet complete as cold-boot
-> handshake is done using qmi(Qualcomm-MSM-Interface)
-> and qmi client support will be added once qmi framework
-> is available.
-> 
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+While this doesn't fix any particular problem I ran into, it's best
+practice to do it this way.
 
-13 patches applied to ath-next branch of ath.git, thanks.
+Note that this patch also removes the superflous extra condition check
+in the do-while loop in reap_tx_dxes(), as the loop will break
+instantly anyway in that case.
 
-17f5559e0da5 ath10k: platform driver for WCN3990 SNOC WLAN module
-c963a683e701 ath10k: add resource init and deinit for WCN3990
-a6e149a9ff03 ath10k: add hif start/stop methods for wcn3990 snoc layer
-b8c27e862118 ath10k: add HTC services for WCN3990
-84efe7f6ebc5 ath10k: map HTC services to tx/rx pipes for wcn3990
-0fa4fbe9b8cf ath10k: add hif power-up/power-down methods
-d390509bdf50 ath10k: add hif tx methods for wcn3990
-d915105231ca ath10k: add hif rx methods for wcn3990
-546d407c905b ath10k: modify hif tx paddr to dma_addr_t type
-140d1214ef55 ath10k: add support to get target info from hif ops
-ea66b12e63ac ath10k: check all CE for data if irq summary is not retained
-a6a793f98786 ath10k: vote for hardware resources for WCN3990
-ae316c4cbba2 dt: bindings: add bindings for wcn3990 wifi block
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+---
+ drivers/net/wireless/ath/wcn36xx/dxe.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
+index 26e6c42f886a..c52f1c21ece9 100644
+--- a/drivers/net/wireless/ath/wcn36xx/dxe.c
++++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
+@@ -363,7 +363,7 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
+ 	spin_lock_irqsave(&ch->lock, flags);
+ 	ctl = ch->tail_blk_ctl;
+ 	do {
+-		if (ctl->desc->ctrl & WCN36xx_DXE_CTRL_VLD)
++		if (READ_ONCE(ctl->desc->ctrl) & WCN36xx_DXE_CTRL_VLD)
+ 			break;
+ 		if (ctl->skb) {
+ 			dma_unmap_single(wcn->dev, ctl->desc->src_addr_l,
+@@ -382,8 +382,7 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
+ 			ctl->skb = NULL;
+ 		}
+ 		ctl = ctl->next;
+-	} while (ctl != ch->head_blk_ctl &&
+-	       !(ctl->desc->ctrl & WCN36xx_DXE_CTRL_VLD));
++	} while (ctl != ch->head_blk_ctl);
+ 
+ 	ch->tail_blk_ctl = ctl;
+ 	spin_unlock_irqrestore(&ch->lock, flags);
+@@ -525,7 +524,7 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
+ 		int_mask = WCN36XX_DXE_INT_CH3_MASK;
+ 	}
+ 
+-	while (!(dxe->ctrl & WCN36xx_DXE_CTRL_VLD)) {
++	while (!(READ_ONCE(dxe->ctrl) & WCN36xx_DXE_CTRL_VLD)) {
+ 		skb = ctl->skb;
+ 		dma_addr = dxe->dst_addr_l;
+ 		ret = wcn36xx_dxe_fill_skb(wcn->dev, ctl, GFP_ATOMIC);
 -- 
-https://patchwork.kernel.org/patch/10302661/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.14.3
