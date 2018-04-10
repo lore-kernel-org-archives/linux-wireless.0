@@ -1,69 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:58440 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755236AbeDYRTd (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54498 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751774AbeDJRBt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 13:19:33 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 04/21] staging: wilc1000: remove 'cmd' variable in wilc_spi functions
-Date: Wed, 25 Apr 2018 22:48:09 +0530
-Message-ID: <1524676706-13179-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180425_191942_690104_7F6DCF80)
-In-Reply-To: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 10 Apr 2018 13:01:49 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 10 Apr 2018 22:31:47 +0530
+From: govinds@codeaurora.org
+To: Rob Herring <robh@kernel.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v2] dt: bindings: add bindings for wcn3990 wifi block
+In-Reply-To: <20180219184046.pr6b7r5x5um22vim@rob-hp-laptop>
+References: <1518756228-6773-1-git-send-email-govinds@codeaurora.org>
+ <20180219184046.pr6b7r5x5um22vim@rob-hp-laptop>
+Message-ID: <db67dc847fb6c0e05609455d023eb43d@codeaurora.org> (sfid-20180410_190152_441161_CA1DE64F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to remove the 'cmd' variable in wilc_spi.c. Instead of
-using cmd now passing the command directly.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_spi.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Thanks Rob for the review comments. I have addressed the review comments 
+in [PATCH v2 13/13] dt: bindings: add bindings for wcn3990 wifi block.
 
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index c980d3b..ac8df38b 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -742,7 +742,6 @@ static int wilc_spi_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
- {
- 	struct spi_device *spi = to_spi_device(wilc->dev);
- 	int result;
--	u8 cmd = CMD_DMA_EXT_WRITE;
- 
- 	/*
- 	 * has to be greated than 4
-@@ -750,7 +749,7 @@ static int wilc_spi_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
- 	if (size <= 4)
- 		return 0;
- 
--	result = spi_cmd_complete(wilc, cmd, addr, NULL, size, 0);
-+	result = spi_cmd_complete(wilc, CMD_DMA_EXT_WRITE, addr, NULL, size, 0);
- 	if (result != N_OK) {
- 		dev_err(&spi->dev,
- 			"Failed cmd, write block (%08x)...\n", addr);
-@@ -795,13 +794,12 @@ static int wilc_spi_read_reg(struct wilc *wilc, u32 addr, u32 *data)
- static int wilc_spi_read(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
- {
- 	struct spi_device *spi = to_spi_device(wilc->dev);
--	u8 cmd = CMD_DMA_EXT_READ;
- 	int result;
- 
- 	if (size <= 4)
- 		return 0;
- 
--	result = spi_cmd_complete(wilc, cmd, addr, buf, size, 0);
-+	result = spi_cmd_complete(wilc, CMD_DMA_EXT_READ, addr, buf, size, 0);
- 	if (result != N_OK) {
- 		dev_err(&spi->dev, "Failed cmd, read block (%08x)...\n", addr);
- 		return 0;
--- 
-2.7.4
+
+>> diff --git 
+>> a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt 
+>> b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+>> index 3d2a031..e34d8f8 100644
+>> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+>> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+>> @@ -4,6 +4,7 @@ Required properties:
+>>  - compatible: Should be one of the following:
+>>  	* "qcom,ath10k"
+>>  	* "qcom,ipq4019-wifi"
+>> +	* "qcom,wcn3990-wifi"
+>> 
+>>  PCI based devices uses compatible string "qcom,ath10k" and takes 
+>> calibration
+>>  data along with board specific data via 
+>> "qcom,ath10k-calibration-data".
+>> @@ -18,8 +19,11 @@ In general, entry 
+>> "qcom,ath10k-pre-calibration-data" and
+>>  "qcom,ath10k-calibration-data" conflict with each other and only one
+>>  can be provided per device.
+>> 
+>> +SNOC based devices (i.e. wcn3990) uses compatible string 
+>> "qcom,wcn3990-wifi".
+>> +
+>>  Optional properties:
+>>  - reg: Address and length of the register set for the device.
+>> +- reg-names: Names of the memory regions defined in reg entry.
+> 
+> You must define what the names are and how many (so reg needs updating
+> too if there is more than 1).
+> 
+> Though with only 1 -names, it is kind of pointless.
+
+Updated the names.
+
+> 
+>>  - resets: Must contain an entry for each entry in reset-names.
+>>            See ../reset/reseti.txt for details.
+>>  - reset-names: Must include the list of following reset names,
+>> @@ -49,6 +53,12 @@ Optional properties:
+>>  				 hw versions.
+>>  - qcom,ath10k-pre-calibration-data : pre calibration data as an 
+>> array,
+>>  				     the length can vary between hw versions.
+>> +- qcom,<supply-name>-supply: handle to the regulator device tree node
+>> +			   optional "supply-name" is "vdd-0.8-cx-mx".
+> 
+> You can drop the qcom prefix. Just name this "vdd-0.8-cx-mx-supply".
+
+Updated the same.
+
+>> +- qcom,<supply>-config: Specifies voltage levels for supply. Should 
+>> be
+>> +			  specified in pairs (min, max), units uV.  There can
+>> +			   be optional load in uA and Regulator settle delay in
+>> +			   uS.
+> 
+> We have standard regulator properties for this I think.
+
+Removed the supply config.
+
+>> 
+>>  Example (to supply the calibration data alone):
+>> 
+>> @@ -119,3 +129,28 @@ wifi0: wifi@a000000 {
+>>  	qcom,msi_base = <0x40>;
+>>  	qcom,ath10k-pre-calibration-data = [ 01 02 03 ... ];
+>>  };
+>> +
+>> +Example (to supply wcn3990 SoC wifi block details):
+>> +
+>> +qcom,msm_ath10k@18000000 {
+> 
+> wifi@...
+
+Updated the same.
+
+> 
+>> +		compatible = "qcom,wcn3990-wifi";
+>> +		reg = <0x18800000 0x800000>;
+>> +		reg-names = "membase";
+>> +		clocks = <&clock_gcc clk_aggre2_noc_clk>;
+>> +		clock-names = "smmu_aggre2_noc_clk"
+>> +		interrupts =
+>> +			   <0 130 0 /* CE0 */ >,
+>> +			   <0 131 0 /* CE1 */ >,
+>> +			   <0 132 0 /* CE2 */ >,
+>> +			   <0 133 0 /* CE3 */ >,
+>> +			   <0 134 0 /* CE4 */ >,
+>> +			   <0 135 0 /* CE5 */ >,
+>> +			   <0 136 0 /* CE6 */ >,
+>> +			   <0 137 0 /* CE7 */ >,
+>> +			   <0 138 0 /* CE8 */ >,
+>> +			   <0 139 0 /* CE9 */ >,
+>> +			   <0 140 0 /* CE10 */ >,
+>> +			   <0 141 0 /* CE11 */ >;
+>> +		qcom,vdd-0.8-cx-mx-supply = <&pm8998_l5>;
+>> +		qcom,vdd-0.8-cx-mx-config = <800000 800000 2400 1000>;
+>> +};
+>> --
+>> 1.9.1
+>> 
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe devicetree" 
+>> in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
