@@ -1,87 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40426 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751147AbeDSLKf (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51128 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752024AbeDJHih (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Apr 2018 07:10:35 -0400
-Message-ID: <6dc465be2690a7107c574c7ef2510f6083f5a52d.camel@coelho.fi> (sfid-20180419_131039_054828_D1848777)
-From: Luca Coelho <luca@coelho.fi>
-To: Emmanuel Grumbach <egrumbach@gmail.com>,
-        Scott Register <sreg@sreg.io>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        linuxwifi@intel.com
-Date: Thu, 19 Apr 2018 14:10:30 +0300
-In-Reply-To: <7162b267c0791b871dbd4e1b7b82e1ffaf91a6e5.camel@coelho.fi>
-References: <CANrGCJeTDQ1DTuum-asODLMoY4StspzukkWfTVtb6fJ+yHBGXg@mail.gmail.com>
-         <CANUX_P0VoQHQ1iPsk_u1bZsEU1ny1SxwrZbQeSEBUVGyjKcyVQ@mail.gmail.com>
-         <03793285ba30a7767498feca8229418625dcf111.camel@coelho.fi>
-         <7162b267c0791b871dbd4e1b7b82e1ffaf91a6e5.camel@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: iwlwifi 4.18rc1 SYNC TIME_QUOTA_CMD with fw 31
+        Tue, 10 Apr 2018 03:38:37 -0400
+From: zhichen@codeaurora.org
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, kvalo@qca.qualcomm.com,
+        Zhi Chen <zhichen@codeaurora.org>
+Subject: [PATCH] ath10k: fix tlv 5ghz channel missing issue
+Date: Tue, 10 Apr 2018 15:39:54 +0800
+Message-Id: <1523345994-28800-2-git-send-email-zhichen@codeaurora.org> (sfid-20180410_093842_665305_4195D1D1)
+In-Reply-To: <1523345994-28800-1-git-send-email-zhichen@codeaurora.org>
+References: <1523345994-28800-1-git-send-email-zhichen@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-04-19 at 09:00 +0300, Luca Coelho wrote:
-> On Thu, 2018-04-19 at 08:42 +0300, Luca Coelho wrote:
-> > On Wed, 2018-04-18 at 11:31 +0300, Emmanuel Grumbach wrote:
-> > > On Wed, Apr 18, 2018 at 5:47 AM, Scott Register <sreg@sreg.io>
-> > > wrote:
-> > > > 
-> > > > Hello,
-> > > > 
-> > > > After upgrading to 4.18rc1 iwlwifi is printing a FW error.
-> > > > There
-> > > > was a
-> > > > previous thread with a similar
-> > > > issue but they seemed to resolve it with a ucode update. I
-> > > > think
-> > > > I'm
-> > > > running a newer FW and
-> > > > am still having an issue. 4.13 works--I haven't gone any higher
-> > > > so
-> > > > far.
-> > > 
-> > > Please download the firmware from
-> > > https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/linux-firmwa
-> > > re
-> > > .g
-> > > it/plain/iwlwifi-8265-36.ucode
-> > > This should fix your problem.
-> > 
-> > Yeah, it should work with FW 36.  But if there really is something
-> > in
-> > 4.18 that breaks support on 31, we should either fix it or make
-> > sure
-> > we
-> > don't even try to load this old firmware.
-> 
-> Hmmm, you (and I) obviously meant 4.17-rc1. ;)
+From: Zhi Chen <zhichen@codeaurora.org>
 
-Okay, so the reason was very simple.  We are calculating the size of
-the old version of the scan API incorrectly.  This should solve it:
+The 5ghz channel parameters of TLV target wasn't passed to host, it caused
+host can only use lower channels from 36 to 64.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-index 7af3a0f51b77..21695db51c8a 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-@@ -753,9 +753,7 @@ struct iwl_scan_req_umac {
-                                         4 * sizeof(u8))
- #define IWL_SCAN_REQ_UMAC_SIZE_V6 (sizeof(struct iwl_scan_req_umac) - \
-                                   2 * sizeof(u8) - sizeof(__le16))
--#define IWL_SCAN_REQ_UMAC_SIZE_V1 (sizeof(struct iwl_scan_req_umac) - \
--                                  2 * sizeof(__le32) - 2 * sizeof(u8) - \
--                                  sizeof(__le16))
-+#define IWL_SCAN_REQ_UMAC_SIZE_V1 36
+Signed-off-by: Zhi Chen <zhichen@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-
-Can you try it?
-
-In the beginning, making the size calculation based on the latest
-version made some sense, but it became so complex that it made it very
-prone to errors.  So it's probably just better to hardcode the sizes
-since they never change anyway...
-
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 25efbb5..b8985ce 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1010,6 +1010,8 @@ static int ath10k_wmi_tlv_op_pull_svc_rdy_ev(struct ath10k *ar,
+ 	arg->phy_capab = ev->phy_capability;
+ 	arg->num_rf_chains = ev->num_rf_chains;
+ 	arg->eeprom_rd = reg->eeprom_rd;
++	arg->low_5ghz_chan = reg->low_5ghz_chan;
++	arg->high_5ghz_chan = reg->high_5ghz_chan;
+ 	arg->num_mem_reqs = ev->num_mem_reqs;
+ 	arg->service_map = svc_bmap;
+ 	arg->service_map_len = ath10k_wmi_tlv_len(svc_bmap);
+-- 
+2.1.4
