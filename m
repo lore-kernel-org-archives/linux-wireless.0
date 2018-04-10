@@ -1,92 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:36834 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754378AbeDCHyI (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:40897 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754332AbeDJPB6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Apr 2018 03:54:08 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 03/17] rtlwifi: add dmdef.h to share with driver and other modules
-Date: Tue, 3 Apr 2018 15:53:18 +0800
-Message-ID: <20180403075332.3344-4-pkshih@realtek.com> (sfid-20180403_095414_036430_CDCB7CBC)
-In-Reply-To: <20180403075332.3344-1-pkshih@realtek.com>
-References: <20180403075332.3344-1-pkshih@realtek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 10 Apr 2018 11:01:58 -0400
+Received: by mail-pf0-f196.google.com with SMTP id y66so8520705pfi.7
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Apr 2018 08:01:58 -0700 (PDT)
+From: Siva Rebbagondla <siva8118@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Sushant Mishra <sushant.mishra@redpinesignals.com>
+Subject: [v2 6/7] rsi: enable power save by default for coex
+Date: Tue, 10 Apr 2018 20:34:16 +0530
+Message-Id: <1523372657-6067-7-git-send-email-siva8118@gmail.com> (sfid-20180410_170204_351483_24C8ABD1)
+In-Reply-To: <1523372657-6067-1-git-send-email-siva8118@gmail.com>
+References: <1523372657-6067-1-git-send-email-siva8118@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-This header file is maintained by new module phydm, and share with
-driver and other modules, such as halmac. This patch adds only one
-enumeration, and more information will be added later.
+Power save is by default enabled for WLAN and BT coex mode.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/dmdef.h | 40 ++++++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtlwifi/wifi.h  |  1 +
- 2 files changed, 41 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/dmdef.h
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/dmdef.h b/drivers/net/wireless/realtek/rtlwifi/dmdef.h
-new file mode 100644
-index 000000000000..5560cd1f98ed
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtlwifi/dmdef.h
-@@ -0,0 +1,40 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2007 - 2018 Realtek Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-+ * more details.
-+ *
-+ ******************************************************************************/
-+
-+#ifndef __RTL_DMINFO_H__
-+#define __RTL_DMINFO_H__
-+
-+enum bb_path {
-+	BB_PATH_A = 0x00000001,
-+	BB_PATH_B = 0x00000002,
-+	BB_PATH_C = 0x00000004,
-+	BB_PATH_D = 0x00000008,
-+
-+	BB_PATH_AB = (BB_PATH_A | BB_PATH_B),
-+	BB_PATH_AC = (BB_PATH_A | BB_PATH_C),
-+	BB_PATH_AD = (BB_PATH_A | BB_PATH_D),
-+	BB_PATH_BC = (BB_PATH_B | BB_PATH_C),
-+	BB_PATH_BD = (BB_PATH_B | BB_PATH_D),
-+	BB_PATH_CD = (BB_PATH_C | BB_PATH_D),
-+
-+	BB_PATH_ABC = (BB_PATH_A | BB_PATH_B | BB_PATH_C),
-+	BB_PATH_ABD = (BB_PATH_A | BB_PATH_B | BB_PATH_D),
-+	BB_PATH_ACD = (BB_PATH_A | BB_PATH_C | BB_PATH_D),
-+	BB_PATH_BCD = (BB_PATH_B | BB_PATH_C | BB_PATH_D),
-+
-+	BB_PATH_ABCD = (BB_PATH_A | BB_PATH_B | BB_PATH_C | BB_PATH_D),
-+};
-+
-+#endif
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index c8542b87cc2b..c32985cfe48d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -35,6 +35,7 @@
- #include <linux/usb.h>
- #include <net/mac80211.h>
- #include <linux/completion.h>
-+#include "dmdef.h"
- #include "debug.h"
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index 2a77743..bb497bd 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -2008,6 +2008,9 @@ int rsi_mac80211_attach(struct rsi_common *common)
+ 	wiphy->iface_combinations = rsi_iface_combinations;
+ 	wiphy->n_iface_combinations = ARRAY_SIZE(rsi_iface_combinations);
  
- #define	MASKBYTE0				0xff
++	if (common->coex_mode > 1)
++		wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT;
++
+ 	status = ieee80211_register_hw(hw);
+ 	if (status)
+ 		return status;
 -- 
-2.15.1
+2.7.4
