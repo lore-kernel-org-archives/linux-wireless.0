@@ -1,91 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:39822 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751525AbeDFKLc (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48126 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751884AbeDJQt6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Apr 2018 06:11:32 -0400
-Received: by mail-wm0-f67.google.com with SMTP id f125so2240284wme.4
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Apr 2018 03:11:32 -0700 (PDT)
-From: Loic Poulain <loic.poulain@linaro.org>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, bjorn.andersson@linaro.org,
-        Loic Poulain <loic.poulain@linaro.org>
-Subject: [PATCH] wcn36xx: Remove useless skb spinlock
-Date: Fri,  6 Apr 2018 12:11:28 +0200
-Message-Id: <1523009488-15772-1-git-send-email-loic.poulain@linaro.org> (sfid-20180406_121136_238898_AC28DFB8)
+        Tue, 10 Apr 2018 12:49:58 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH v2 13/13] dt: bindings: add bindings for wcn3990 wifi block
+Date: Tue, 10 Apr 2018 22:19:46 +0530
+Message-Id: <1523378986-11551-1-git-send-email-govinds@codeaurora.org> (sfid-20180410_185001_467401_DE6ED4CC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Each DXE control block is associated to a specific channel.
-The channel lock is always taken before accessing a control block.
-There is no need to have an extra (useless) spinlock for the control
-block skb.
+Add device tree binding documentation details for wcn3990
+wifi block present in Qualcomm SDM845/APQ8098 SoC into
+"qcom,ath10k.txt".
 
-Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
 ---
- drivers/net/wireless/ath/wcn36xx/dxe.c | 8 +-------
- drivers/net/wireless/ath/wcn36xx/dxe.h | 1 -
- 2 files changed, 1 insertion(+), 8 deletions(-)
+ .../bindings/net/wireless/qcom,ath10k.txt          | 31 ++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index 2c3b899..4bb9630 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -78,7 +78,6 @@ static int wcn36xx_dxe_allocate_ctl_block(struct wcn36xx_dxe_ch *ch)
- 		if (!cur_ctl)
- 			goto out_fail;
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+index 3d2a031..34e4f98 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+@@ -4,6 +4,7 @@ Required properties:
+ - compatible: Should be one of the following:
+ 	* "qcom,ath10k"
+ 	* "qcom,ipq4019-wifi"
++	* "qcom,wcn3990-wifi"
  
--		spin_lock_init(&cur_ctl->skb_lock);
- 		cur_ctl->ctl_blk_order = i;
- 		if (i == 0) {
- 			ch->head_blk_ctl = cur_ctl;
-@@ -377,12 +376,11 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
- 				/* Keep frame until TX status comes */
- 				ieee80211_free_txskb(wcn->hw, ctl->skb);
- 			}
--			spin_lock(&ctl->skb_lock);
+ PCI based devices uses compatible string "qcom,ath10k" and takes calibration
+ data along with board specific data via "qcom,ath10k-calibration-data".
+@@ -18,8 +19,12 @@ In general, entry "qcom,ath10k-pre-calibration-data" and
+ "qcom,ath10k-calibration-data" conflict with each other and only one
+ can be provided per device.
+ 
++SNOC based devices (i.e. wcn3990) uses compatible string "qcom,wcn3990-wifi".
 +
- 			if (wcn->queues_stopped) {
- 				wcn->queues_stopped = false;
- 				ieee80211_wake_queues(wcn->hw);
- 			}
--			spin_unlock(&ctl->skb_lock);
+ Optional properties:
+ - reg: Address and length of the register set for the device.
++- reg-names: Must include the list of following reg names,
++	     "membase"
+ - resets: Must contain an entry for each entry in reset-names.
+           See ../reset/reseti.txt for details.
+ - reset-names: Must include the list of following reset names,
+@@ -49,6 +54,8 @@ Optional properties:
+ 				 hw versions.
+ - qcom,ath10k-pre-calibration-data : pre calibration data as an array,
+ 				     the length can vary between hw versions.
++- <supply-name>-supply: handle to the regulator device tree node
++			   optional "supply-name" is "vdd-0.8-cx-mx".
  
- 			ctl->skb = NULL;
- 		}
-@@ -654,8 +652,6 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
- 	spin_lock_irqsave(&ch->lock, flags);
- 	ctl = ch->head_blk_ctl;
+ Example (to supply the calibration data alone):
  
--	spin_lock(&ctl->next->skb_lock);
--
- 	/*
- 	 * If skb is not null that means that we reached the tail of the ring
- 	 * hence ring is full. Stop queues to let mac80211 back off until ring
-@@ -664,11 +660,9 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
- 	if (NULL != ctl->next->skb) {
- 		ieee80211_stop_queues(wcn->hw);
- 		wcn->queues_stopped = true;
--		spin_unlock(&ctl->next->skb_lock);
- 		spin_unlock_irqrestore(&ch->lock, flags);
- 		return -EBUSY;
- 	}
--	spin_unlock(&ctl->next->skb_lock);
- 
- 	ctl->skb = NULL;
- 	desc = ctl->desc;
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.h b/drivers/net/wireless/ath/wcn36xx/dxe.h
-index ce58096..31b81b7 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.h
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.h
-@@ -422,7 +422,6 @@ struct wcn36xx_dxe_ctl {
- 	unsigned int		desc_phy_addr;
- 	int			ctl_blk_order;
- 	struct sk_buff		*skb;
--	spinlock_t              skb_lock;
- 	void			*bd_cpu_addr;
- 	dma_addr_t		bd_phy_addr;
+@@ -119,3 +126,27 @@ wifi0: wifi@a000000 {
+ 	qcom,msi_base = <0x40>;
+ 	qcom,ath10k-pre-calibration-data = [ 01 02 03 ... ];
  };
++
++Example (to supply wcn3990 SoC wifi block details):
++
++qcom,wifi@18000000 {
++		compatible = "qcom,wcn3990-wifi";
++		reg = <0x18800000 0x800000>;
++		reg-names = "membase";
++		clocks = <&clock_gcc clk_aggre2_noc_clk>;
++		clock-names = "smmu_aggre2_noc_clk"
++		interrupts =
++			   <0 130 0 /* CE0 */ >,
++			   <0 131 0 /* CE1 */ >,
++			   <0 132 0 /* CE2 */ >,
++			   <0 133 0 /* CE3 */ >,
++			   <0 134 0 /* CE4 */ >,
++			   <0 135 0 /* CE5 */ >,
++			   <0 136 0 /* CE6 */ >,
++			   <0 137 0 /* CE7 */ >,
++			   <0 138 0 /* CE8 */ >,
++			   <0 139 0 /* CE9 */ >,
++			   <0 140 0 /* CE10 */ >,
++			   <0 141 0 /* CE11 */ >;
++		vdd-0.8-cx-mx-supply = <&pm8998_l5>;
++};
 -- 
-2.7.4
+1.9.1
