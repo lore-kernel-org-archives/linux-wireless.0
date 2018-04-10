@@ -1,89 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f193.google.com ([209.85.213.193]:35607 "EHLO
-        mail-yb0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751183AbeDQIWR (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:38000 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753598AbeDJNya (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Apr 2018 04:22:17 -0400
-Received: by mail-yb0-f193.google.com with SMTP id c1-v6so8061089ybm.2
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2018 01:22:16 -0700 (PDT)
-Subject: Re: [PATCH 2/2] ath10k: support MAC address randomization in scan
-To: Brian Norris <briannorris@chromium.org>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org>
- <1522379640-6442-3-git-send-email-cjhuang@codeaurora.org>
- <20180412205954.GA34456@rodete-desktop-imager.corp.google.com>
- <e16557d0891352ae0b83902faee97023@codeaurora.org>
- <877epbs5v7.fsf@kamboji.qca.qualcomm.com> <5AD11D7C.1030603@broadcom.com>
- <242be71eb87140c9560163c4000255b2@codeaurora.org>
- <8736zvqtcw.fsf@kamboji.qca.qualcomm.com>
- <20180417002854.GA186697@rodete-desktop-imager.corp.google.com>
-Cc: cjhuang@codeaurora.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AD5AEB5.1040808@broadcom.com> (sfid-20180417_102422_978533_3F0004EE)
-Date: Tue, 17 Apr 2018 10:22:13 +0200
-MIME-Version: 1.0
-In-Reply-To: <20180417002854.GA186697@rodete-desktop-imager.corp.google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Tue, 10 Apr 2018 09:54:30 -0400
+From: Jia-Ju Bai <baijiaju1990@gmail.com>
+To: Larry.Finger@lwfinger.net, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: [PATCH] net: wireless: b43legacy: Replace GFP_ATOMIC with GFP_KERNEL in dma_tx_fragment
+Date: Tue, 10 Apr 2018 21:54:19 +0800
+Message-Id: <1523368459-32128-1-git-send-email-baijiaju1990@gmail.com> (sfid-20180410_155516_697681_9CCB3A9C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/17/2018 2:28 AM, Brian Norris wrote:
-> Hi,
->
-> On Mon, Apr 16, 2018 at 02:32:47PM +0300, Kalle Valo wrote:
->> cjhuang@codeaurora.org writes:
->>> On 2018-04-14 05:13, Arend van Spriel wrote:
->>>> On 4/13/2018 1:28 PM, Kalle Valo wrote:
->>>>> cjhuang@codeaurora.org writes:
->>>>>
->>>>>>>> +	if (test_bit(WMI_SERVICE_SPOOF_MAC_SUPPORT, ar->wmi.svc_map)) {
->>>>>>>> +		ret = ath10k_wmi_scan_prob_req_oui(ar, ar->mac_addr);
->>>>>>>> +		if (ret) {
->>>>>>>> +			ath10k_err(ar, "failed to set prob req oui: %i\n", ret);
->>>>>>>> +			goto err_dfs_detector_exit;
->>>>>>>> +		}
->>>>>>>> +
->>>>>>>> +		ar->hw->wiphy->features |=
->>>>>>>> +			NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
->>>>>>>
->>>>>>> Do you support NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR too?
->>>>>>
->>>>>> I'll add this flag too.
->>>>>
->>>>> Are you going to send v2 or what's the plan?
->>>>
->>>> Maybe a stupid question, but does ath10k support scheduled scan?
->
-> Not a stupid question. Sorry for not asking that first.
->
->> AFAICS ath10k does not support it (sched_scan_start() op).
->
-> Right, that seems to be the case.
->
->>> The reason is AVL test case needs this flag to enable random mac
->>> address scan. Maybe Brian Can explain why this flag is necessary.
->
-> I never actually claimed you *needed* this flag; I just wondered how you
-> claimed to pass our test when you did not support this flag, since our
-> network manager currently checks for both
-> NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR and
-> NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR before enabling MAC
-> randomization in scans. But that's no matter to worry about here.
->
->> If ath10k does not support scheduled scan what's the point? Shouldn't
->> the test case then be it fixed instead of making hacks in ath10k?
->
-> Indeed. We're trying to work that out right now.
->
-> It looks like the status quo for looking for SCHED_SCAN support is to
-> check if NL80211_CMD_START_SCHED_SCAN shows up in the command support
-> list. (IOW, that's what wpa_supplicant does.) We'll probably need to
-> imitate that.
+dma_tx_fragment() is never called in atomic context.
 
-I believe checking command support is not really recommended. Instead, 
-you better check NL80211_ATTR_SCHED_SCAN_MAX_REQS being non-zero (since 
-kernel 4.12 that is).
+dma_tx_fragment() is only called by b43legacy_dma_tx(), which is 
+only called by b43legacy_tx_work().
+b43legacy_tx_work() is only set a parameter of INIT_WORK() in 
+b43legacy_wireless_init().
 
-Regards,
-Arend
+Despite never getting called from atomic context,
+dma_tx_fragment() calls alloc_skb() with GFP_ATOMIC,
+which does not sleep for allocation.
+GFP_ATOMIC is not necessary and can be replaced with GFP_KERNEL,
+which can sleep and improve the possibility of sucessful allocation.
+
+This is found by a static analysis tool named DCNS written by myself.
+And I also manually check it.
+
+Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+---
+ drivers/net/wireless/broadcom/b43legacy/dma.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/b43legacy/dma.c b/drivers/net/wireless/broadcom/b43legacy/dma.c
+index cfa617d..2f0c64c 100644
+--- a/drivers/net/wireless/broadcom/b43legacy/dma.c
++++ b/drivers/net/wireless/broadcom/b43legacy/dma.c
+@@ -1064,7 +1064,7 @@ static int dma_tx_fragment(struct b43legacy_dmaring *ring,
+ 	meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
+ 	/* create a bounce buffer in zone_dma on mapping failure. */
+ 	if (b43legacy_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
+-		bounce_skb = alloc_skb(skb->len, GFP_ATOMIC | GFP_DMA);
++		bounce_skb = alloc_skb(skb->len, GFP_KERNEL | GFP_DMA);
+ 		if (!bounce_skb) {
+ 			ring->current_slot = old_top_slot;
+ 			ring->used_slots = old_used_slots;
+-- 
+1.9.1
