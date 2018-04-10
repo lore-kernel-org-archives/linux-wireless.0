@@ -1,49 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:42501 "EHLO
-        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932508AbeDWUMX (ORCPT
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:46833 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754296AbeDJPBt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 16:12:23 -0400
-From: Andres Rodriguez <andresx7@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: andresx7@gmail.com, gregkh@linuxfoundation.org, mcgrof@kernel.org,
-        alexdeucher@gmail.com, christian.koenig@amd.com,
-        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        hdegoede@redhat.com
-Subject: [PATCH 6/9] firmware: print firmware name on fallback path
-Date: Mon, 23 Apr 2018 16:12:02 -0400
-Message-Id: <20180423201205.20533-7-andresx7@gmail.com> (sfid-20180423_221410_855094_BBC5DDA4)
-In-Reply-To: <20180423201205.20533-1-andresx7@gmail.com>
-References: <20180423201205.20533-1-andresx7@gmail.com>
+        Tue, 10 Apr 2018 11:01:49 -0400
+Received: by mail-pl0-f67.google.com with SMTP id 59-v6so7683348plc.13
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Apr 2018 08:01:49 -0700 (PDT)
+From: Siva Rebbagondla <siva8118@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Sushant Mishra <sushant.mishra@redpinesignals.com>
+Subject: [v2 3/7] rsi: use appropriate interface for power save configuration
+Date: Tue, 10 Apr 2018 20:34:13 +0530
+Message-Id: <1523372657-6067-4-git-send-email-siva8118@gmail.com> (sfid-20180410_170153_931829_832A6E76)
+In-Reply-To: <1523372657-6067-1-git-send-email-siva8118@gmail.com>
+References: <1523372657-6067-1-git-send-email-siva8118@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previously, one could assume the firmware name from the preceding
-message: "Direct firmware load for {name} failed with error %d".
+From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 
-However, with the new firmware_request_nowarn() entrypoint, the message
-outlined above will not always be printed.
+Power save request should be sent on station interface. Virtual
+interface which is connected should be preferred. This patch
+resolves device not entering power save problem in certain
+situations
 
-Therefore, we add the firmware name to the fallback path spew in order
-to associate it with the appropriate request.
-
-Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
+Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
 ---
- drivers/base/firmware_loader/fallback.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
-index e75928458489..1a47ddc70c31 100644
---- a/drivers/base/firmware_loader/fallback.c
-+++ b/drivers/base/firmware_loader/fallback.c
-@@ -669,6 +669,6 @@ int fw_sysfs_fallback(struct firmware *fw, const char *name,
- 	if (!fw_run_sysfs_fallback(opt_flags))
- 		return ret;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index 5edc3a9..77aa3bb 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -614,7 +614,7 @@ static int rsi_mac80211_config(struct ieee80211_hw *hw,
  
--	dev_warn(device, "Falling back to user helper\n");
-+	dev_warn(device, "Falling back to user helper for %s\n", name);
- 	return fw_load_from_user_helper(fw, name, device, opt_flags);
- }
+ 	/* Power save parameters */
+ 	if (changed & IEEE80211_CONF_CHANGE_PS) {
+-		struct ieee80211_vif *vif;
++		struct ieee80211_vif *vif, *sta_vif = NULL;
+ 		unsigned long flags;
+ 		int i, set_ps = 1;
+ 
+@@ -628,13 +628,17 @@ static int rsi_mac80211_config(struct ieee80211_hw *hw,
+ 				set_ps = 0;
+ 				break;
+ 			}
++			if ((vif->type == NL80211_IFTYPE_STATION ||
++			     vif->type == NL80211_IFTYPE_P2P_CLIENT) &&
++			    (!sta_vif || vif->bss_conf.assoc))
++				sta_vif = vif;
+ 		}
+-		if (set_ps) {
++		if (set_ps && sta_vif) {
+ 			spin_lock_irqsave(&adapter->ps_lock, flags);
+ 			if (conf->flags & IEEE80211_CONF_PS)
+-				rsi_enable_ps(adapter, vif);
++				rsi_enable_ps(adapter, sta_vif);
+ 			else
+-				rsi_disable_ps(adapter, vif);
++				rsi_disable_ps(adapter, sta_vif);
+ 			spin_unlock_irqrestore(&adapter->ps_lock, flags);
+ 		}
+ 	}
 -- 
-2.14.1
+2.7.4
