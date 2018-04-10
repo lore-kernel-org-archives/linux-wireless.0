@@ -1,101 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:40610 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753172AbeD3OM6 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:55630 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751502AbeDJCTj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Apr 2018 10:12:58 -0400
-Received: by mail-wm0-f68.google.com with SMTP id j5so14503070wme.5
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2018 07:12:58 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [RFC 05/18] mt76x2: move currently mt76x2u unsupported features to mt76x2_init
-Date: Mon, 30 Apr 2018 16:12:20 +0200
-Message-Id: <0cabed92416ee1a751a89acd4e6bc29ff42c48f9.1525096206.git.lorenzo.bianconi@redhat.com> (sfid-20180430_161333_484341_464FF499)
-In-Reply-To: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
-References: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
+        Mon, 9 Apr 2018 22:19:39 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>
+Subject: Re: [v2 PATCH] mwifiex: parse key management suite from RSN IE
+Date: Tue, 10 Apr 2018 02:19:30 +0000
+Message-ID: <c4107389ed724cfeb7bda632cea95c46@SC-EXCH02.marvell.com> (sfid-20180410_041943_130354_9B05FBE2)
+References: <1523260191-29352-1-git-send-email-huxm@marvell.com>
+ <87o9isr6v5.fsf@codeaurora.org>
+In-Reply-To: <87o9isr6v5.fsf@codeaurora.org>
+Content-Type: text/plain; charset="gb2312"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move currently mt76x2u hw unsupported features to mt76x2_init in order
-to reuse mt76_register_device routine supporting mt76x2u based chipsets
-
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mac80211.c    | 15 ---------------
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 16 ++++++++++++++++
- 2 files changed, 16 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 915e61733131..da5254b48cf7 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -284,14 +284,6 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
- 	SET_IEEE80211_DEV(hw, dev->dev);
- 	SET_IEEE80211_PERM_ADDR(hw, dev->macaddr);
- 
--	wiphy->interface_modes =
--		BIT(NL80211_IFTYPE_STATION) |
--		BIT(NL80211_IFTYPE_AP) |
--#ifdef CONFIG_MAC80211_MESH
--		BIT(NL80211_IFTYPE_MESH_POINT) |
--#endif
--		BIT(NL80211_IFTYPE_ADHOC);
--
- 	wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
- 
- 	wiphy->available_antennas_tx = dev->antenna_mask;
-@@ -301,17 +293,10 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
- 	hw->max_tx_fragments = 16;
- 
- 	ieee80211_hw_set(hw, SIGNAL_DBM);
--	ieee80211_hw_set(hw, PS_NULLFUNC_STACK);
--	ieee80211_hw_set(hw, HOST_BROADCAST_PS_BUFFERING);
- 	ieee80211_hw_set(hw, AMPDU_AGGREGATION);
- 	ieee80211_hw_set(hw, SUPPORTS_RC_TABLE);
- 	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
--	ieee80211_hw_set(hw, SUPPORTS_CLONED_SKBS);
--	ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
--	ieee80211_hw_set(hw, TX_AMSDU);
--	ieee80211_hw_set(hw, TX_FRAG_LIST);
- 	ieee80211_hw_set(hw, MFP_CAPABLE);
--	ieee80211_hw_set(hw, AP_LINK_PS);
- 
- 	wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index b53f59803f54..3b081fe2acbe 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -831,6 +831,14 @@ int mt76x2_register_device(struct mt76x2_dev *dev)
- 
- 	wiphy->reg_notifier = mt76x2_regd_notifier;
- 
-+	wiphy->interface_modes =
-+		BIT(NL80211_IFTYPE_STATION) |
-+		BIT(NL80211_IFTYPE_AP) |
-+#ifdef CONFIG_MAC80211_MESH
-+		BIT(NL80211_IFTYPE_MESH_POINT) |
-+#endif
-+		BIT(NL80211_IFTYPE_ADHOC);
-+
- 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
- 
- 	mt76x2_dfs_init_detector(dev);
-@@ -839,6 +847,14 @@ int mt76x2_register_device(struct mt76x2_dev *dev)
- 	dev->mt76.led_cdev.brightness_set = mt76x2_led_set_brightness;
- 	dev->mt76.led_cdev.blink_set = mt76x2_led_set_blink;
- 
-+	ieee80211_hw_set(hw, PS_NULLFUNC_STACK);
-+	ieee80211_hw_set(hw, HOST_BROADCAST_PS_BUFFERING);
-+	ieee80211_hw_set(hw, SUPPORTS_CLONED_SKBS);
-+	ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
-+	ieee80211_hw_set(hw, TX_AMSDU);
-+	ieee80211_hw_set(hw, TX_FRAG_LIST);
-+	ieee80211_hw_set(hw, AP_LINK_PS);
-+
- 	ret = mt76_register_device(&dev->mt76, true, mt76x2_rates,
- 				   ARRAY_SIZE(mt76x2_rates));
- 	if (ret)
--- 
-2.14.3
+SGkgS2FsbGUsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS2FsbGUg
+VmFsbyBbbWFpbHRvOmt2YWxvQGNvZGVhdXJvcmEub3JnXQ0KPiBTZW50OiAyMDE4xOo01MI5yNUg
+MTg6NTENCj4gVG86IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+IENjOiBMaW51eCBX
+aXJlbGVzcyA8bGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnPjsgQnJpYW4gTm9ycmlzDQo+
+IDxicmlhbm5vcnJpc0BjaHJvbWl1bS5vcmc+OyBEbWl0cnkgVG9yb2tob3YgPGR0b3JAZ29vZ2xl
+LmNvbT47DQo+IHJhamF0amFAZ29vZ2xlLmNvbTsgWmhpeXVhbiBZYW5nIDx5YW5nenlAbWFydmVs
+bC5jb20+OyBUaW0gU29uZw0KPiA8c29uZ3Rhb0BtYXJ2ZWxsLmNvbT47IENhdGh5IEx1byA8Y2x1
+b0BtYXJ2ZWxsLmNvbT47IEphbWVzIENhbw0KPiA8amNhb0BtYXJ2ZWxsLmNvbT47IEdhbmFwYXRo
+aSBCaGF0IDxnYmhhdEBtYXJ2ZWxsLmNvbT47IEVsbGllIFJlZXZlcw0KPiA8ZWxsaWVyZXZ2ZXNA
+Z21haWwuY29tPg0KPiBTdWJqZWN0OiBSZTogW3YyIFBBVENIXSBtd2lmaWV4OiBwYXJzZSBrZXkg
+bWFuYWdlbWVudCBzdWl0ZSBmcm9tIFJTTiBJRQ0KPiANCj4gWGlubWluZyBIdSA8aHV4bUBtYXJ2
+ZWxsLmNvbT4gd3JpdGVzOg0KPiANCj4gPiBBc3NvY2lhdGlvbiBmYWlsZWQgd2hlbiB1c2luZyB3
+cGFfc3VwcGxpY2FudCB3aXRoIGNvbmZpZ3VyYXRpb24NCj4gPiBrZXlfbWdtdD1XUEEtUFNLLVNI
+QTI1NiwgYW5kIGl0IGlzIG5vdGljZWQgdGhhdCB3cGFfc3VwcGxpY2FudCBzZXQNCj4gPiBXTEFO
+X0FLTV9TVUlURV9QU0tfU0hBMjU2IGluIFJTTiBJRSwgYnV0IG1pc3MgaXQgaW4gc3RhcnRfYXAN
+Cj4gPiBwYXJhbWV0ZXJzLg0KPiA+DQo+ID4gVGhpcyBwYXRjaCBwYXJzZSBrZXkgbWFuYWdlbWVu
+dCBzdWl0ZSBmcm9tIFJTTiBJRSwgaW4gY2FzZSBpdCBpcw0KPiA+IG1pc3NlZC4NCj4gPg0KPiA+
+IFNpZ25lZC1vZmYtYnk6IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+IA0KPiBTaG91
+bGRuJ3QgeW91IGZpeCB3cGFfc3VwcGxpY2FudCBpbnN0ZWFkIG9mIGFkZGluZyBhIHdvcmthcm91
+bmQgdG8gdGhlIGRyaXZlcj8NCj4gDQoNClllcywgSSBhbSBwcmVwYXJpbmcgYSB3cGFfc3VwcGxp
+Y2FudCBmaXggb24gdGhpcy4NCkV2ZW4gc28sIGRyaXZlciBmaXggaXMgc3RpbGwgbmVlZCB0byBj
+b21wYXRpYmxlIHdpdGggb2xkIHdwYV9zdXBwbGljYW50IHN0YWJsZSByZWxlYXNlDQoNClJlZ2Fy
+ZHMsDQpTaW1vbg0KDQo+IC0tDQo+IEthbGxlIFZhbG8NCg==
