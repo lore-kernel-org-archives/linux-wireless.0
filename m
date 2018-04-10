@@ -1,260 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40988 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750734AbeDMOkb (ORCPT
+Received: from mail-it0-f45.google.com ([209.85.214.45]:33086 "EHLO
+        mail-it0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751611AbeDJT5H (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Apr 2018 10:40:31 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, Thomas Hebb <tommyhebb@gmail.com>
-Subject: [PATCH v2] ath10k: search all IEs for variant before falling back
-Date: Fri, 13 Apr 2018 17:40:26 +0300
-Message-Id: <1523630426-28577-1-git-send-email-kvalo@codeaurora.org> (sfid-20180413_164035_716936_81798941)
+        Tue, 10 Apr 2018 15:57:07 -0400
+Received: by mail-it0-f45.google.com with SMTP id x144-v6so15806453itc.0
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Apr 2018 12:57:07 -0700 (PDT)
+MIME-Version: 1.0
+From: "solsTiCe d'Hiver" <solstice.dhiver@gmail.com>
+Date: Tue, 10 Apr 2018 21:57:06 +0200
+Message-ID: <CAE4vF2fCTEmEX8i+XVpvTJ1sRYDHDLr+fYFAM2PzTQTqkCoXVQ@mail.gmail.com> (sfid-20180410_215711_358040_2BCFD2E2)
+Subject: second wifi card enforce CN reg dom
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Thomas Hebb <tommyhebb@gmail.com>
+hi.
 
-commit f2593cb1b291 ("ath10k: Search SMBIOS for OEM board file
-extension") added a feature to ath10k that allows Board Data File
-(BDF) conflicts between multiple devices that use the same device IDs
-but have different calibration requirements to be resolved by allowing
-a "variant" string to be stored in SMBIOS [and later device tree, added
-by commit d06f26c5c8a4 ("ath10k: search DT for qcom,ath10k-calibration-
-variant")] that gets appended to the ID stored in board-2.bin.
+I am trying to capture on 2 channels at the same time with 2 cards.
 
-This original patch had a regression, however. Namely that devices with
-a variant present in SMBIOS that didn't need custom BDFs could no longer
-find the default BDF, which has no variant appended. The patch was
-reverted and re-applied with a fix for this issue in commit 1657b8f84ed9
-("search SMBIOS for OEM board file extension").
+One card is TP-Link TL-W722N v1 using ath9k_htc and the second one is
+an Alfa AWUS051NH v2 using rt2800usb.
 
-But the fix to fall back to a default BDF introduced another issue: the
-driver currently parses IEs in board-2.bin one by one, and for each one
-it first checks to see if it matches the ID with the variant appended.
-If it doesn't, it checks to see if it matches the "fallback" ID with no
-variant. If a matching BDF is found at any point during this search, the
-search is terminated and that BDF is used. The issue is that it's very
-possible (and is currently the case for board-2.bin files present in the
-ath10k-firmware repository) for the default BDF to occur in an earlier
-IE than the variant-specific BDF. In this case, the current code will
-happily choose the default BDF even though a better-matching BDF is
-present later in the file.
+I have tried this, first, on raspberry pi 0 W  using archlinux-arm and
+reproduced the issue on a netbook using archlinux x64 too using latest
+kernel and drivers. (seems to happen on ubuntu 17.10 on dell laptop
+too)
 
-This patch fixes the issue by first searching the entire file for the ID
-with variant, and searching for the fallback ID only if that search
-fails. It also includes some code cleanup in the area, as
-ath10k_core_fetch_board_data_api_n() no longer does its own string
-mangling to remove the variant from an ID, instead leaving that job to a
-new flag passed to ath10k_core_create_board_name().
+So when the Alfa card is used alone using the default reg dom FR, one
+can change to 112 channel for example (using iw dev wlan1 set channel
+112)
 
-I've tested this patch on a QCA4019 and verified that the driver behaves
-correctly for 1) both fallback and variant BDFs present, 2) only fallback
-BDF present, and 3) no matching BDFs present.
+But once the tp-link is plugged in, reg dom seems to become CN and one
+can't change the alfa card to 112 channel.
 
-Fixes: 1657b8f84ed9 ("ath10k: search SMBIOS for OEM board file extension")
-Signed-off-by: Thomas Hebb <tommyhebb@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
----
+iw reg get output change from
+global
+country FR: DFS-ETSI
+(2402 - 2482 @ 40), (N/A, 20), (N/A)
+(5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW
+(5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW
+(5490 - 5710 @ 160), (N/A, 27), (0 ms), DFS
+(57000 - 66000 @ 2160), (N/A, 40), (N/A)
+to
+global
+country 98: DFS-UNSET
+(2402 - 2482 @ 40), (N/A, 20), (N/A)
+(5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW
+(5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW
+(57240 - 59400 @ 2160), (N/A, 28), (N/A)
+(59400 - 63720 @ 2160), (N/A, 40), (N/A)
+(63720 - 65880 @ 2160), (N/A, 28), (N/A)
 
-v2:
+phy#2
+country CN: DFS-FCC
+(2402 - 2482 @ 40), (N/A, 20), (N/A)
+(5170 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
+(5250 - 5330 @ 80), (N/A, 23), (0 ms), DFS, AUTO-BW
+(5735 - 5835 @ 80), (N/A, 30), (N/A)
+(57240 - 59400 @ 2160), (N/A, 28), (N/A)
+(59400 - 63720 @ 2160), (N/A, 44), (N/A)
+(63720 - 65880 @ 2160), (N/A, 28), (N/A)
 
-* resubmit to CC linux-wireless
 
- drivers/net/wireless/ath/ath10k/core.c | 134 ++++++++++++++++++---------------
- 1 file changed, 72 insertions(+), 62 deletions(-)
+and all the channels above 100 are marked as disabled in iw list
+output (after the plug not before) for the alfa card
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 8a3020dbd4cf..50b52a9e9648 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1253,14 +1253,61 @@ static int ath10k_core_parse_bd_ie_board(struct ath10k *ar,
- 	return ret;
- }
- 
-+static int ath10k_core_search_bd(struct ath10k *ar,
-+				 const char *boardname,
-+				 const u8 *data,
-+				 size_t len)
-+{
-+	size_t ie_len;
-+	struct ath10k_fw_ie *hdr;
-+	int ret = -ENOENT, ie_id;
-+
-+	while (len > sizeof(struct ath10k_fw_ie)) {
-+		hdr = (struct ath10k_fw_ie *)data;
-+		ie_id = le32_to_cpu(hdr->id);
-+		ie_len = le32_to_cpu(hdr->len);
-+
-+		len -= sizeof(*hdr);
-+		data = hdr->data;
-+
-+		if (len < ALIGN(ie_len, 4)) {
-+			ath10k_err(ar, "invalid length for board ie_id %d ie_len %zu len %zu\n",
-+				   ie_id, ie_len, len);
-+			return -EINVAL;
-+		}
-+
-+		switch (ie_id) {
-+		case ATH10K_BD_IE_BOARD:
-+			ret = ath10k_core_parse_bd_ie_board(ar, data, ie_len,
-+							    boardname);
-+			if (ret == -ENOENT)
-+				/* no match found, continue */
-+				break;
-+
-+			/* either found or error, so stop searching */
-+			goto out;
-+		}
-+
-+		/* jump over the padding */
-+		ie_len = ALIGN(ie_len, 4);
-+
-+		len -= ie_len;
-+		data += ie_len;
-+	}
-+
-+out:
-+	/* return result of parse_bd_ie_board() or -ENOENT */
-+	return ret;
-+}
-+
- static int ath10k_core_fetch_board_data_api_n(struct ath10k *ar,
- 					      const char *boardname,
-+					      const char *fallback_boardname,
- 					      const char *filename)
- {
--	size_t len, magic_len, ie_len;
--	struct ath10k_fw_ie *hdr;
-+	size_t len, magic_len;
- 	const u8 *data;
--	int ret, ie_id;
-+	int ret;
- 
- 	ar->normal_mode_fw.board = ath10k_fetch_fw_file(ar,
- 							ar->hw_params.fw.dir,
-@@ -1298,69 +1345,23 @@ static int ath10k_core_fetch_board_data_api_n(struct ath10k *ar,
- 	data += magic_len;
- 	len -= magic_len;
- 
--	while (len > sizeof(struct ath10k_fw_ie)) {
--		hdr = (struct ath10k_fw_ie *)data;
--		ie_id = le32_to_cpu(hdr->id);
--		ie_len = le32_to_cpu(hdr->len);
--
--		len -= sizeof(*hdr);
--		data = hdr->data;
--
--		if (len < ALIGN(ie_len, 4)) {
--			ath10k_err(ar, "invalid length for board ie_id %d ie_len %zu len %zu\n",
--				   ie_id, ie_len, len);
--			ret = -EINVAL;
--			goto err;
--		}
-+	/* attempt to find boardname in the IE list */
-+	ret = ath10k_core_search_bd(ar, boardname, data, len);
- 
--		switch (ie_id) {
--		case ATH10K_BD_IE_BOARD:
--			ret = ath10k_core_parse_bd_ie_board(ar, data, ie_len,
--							    boardname);
--			if (ret == -ENOENT && ar->id.bdf_ext[0] != '\0') {
--				/* try default bdf if variant was not found */
--				char *s, *v = ",variant=";
--				char boardname2[100];
--
--				strlcpy(boardname2, boardname,
--					sizeof(boardname2));
--
--				s = strstr(boardname2, v);
--				if (s)
--					*s = '\0';  /* strip ",variant=%s" */
-+	/* if we didn't find it and have a fallback name, try that */
-+	if (ret == -ENOENT && fallback_boardname)
-+		ret = ath10k_core_search_bd(ar, fallback_boardname, data, len);
- 
--				ret = ath10k_core_parse_bd_ie_board(ar, data,
--								    ie_len,
--								    boardname2);
--			}
--
--			if (ret == -ENOENT)
--				/* no match found, continue */
--				break;
--			else if (ret)
--				/* there was an error, bail out */
--				goto err;
--
--			/* board data found */
--			goto out;
--		}
--
--		/* jump over the padding */
--		ie_len = ALIGN(ie_len, 4);
--
--		len -= ie_len;
--		data += ie_len;
--	}
--
--out:
--	if (!ar->normal_mode_fw.board_data || !ar->normal_mode_fw.board_len) {
-+	if (ret == -ENOENT) {
- 		ath10k_err(ar,
- 			   "failed to fetch board data for %s from %s/%s\n",
- 			   boardname, ar->hw_params.fw.dir, filename);
- 		ret = -ENODATA;
--		goto err;
- 	}
- 
-+	if (ret)
-+		goto err;
-+
- 	return 0;
- 
- err:
-@@ -1369,12 +1370,12 @@ static int ath10k_core_fetch_board_data_api_n(struct ath10k *ar,
- }
- 
- static int ath10k_core_create_board_name(struct ath10k *ar, char *name,
--					 size_t name_len)
-+					 size_t name_len, bool with_variant)
- {
- 	/* strlen(',variant=') + strlen(ar->id.bdf_ext) */
- 	char variant[9 + ATH10K_SMBIOS_BDF_EXT_STR_LENGTH] = { 0 };
- 
--	if (ar->id.bdf_ext[0] != '\0')
-+	if (with_variant && ar->id.bdf_ext[0] != '\0')
- 		scnprintf(variant, sizeof(variant), ",variant=%s",
- 			  ar->id.bdf_ext);
- 
-@@ -1400,17 +1401,26 @@ static int ath10k_core_create_board_name(struct ath10k *ar, char *name,
- 
- static int ath10k_core_fetch_board_file(struct ath10k *ar)
- {
--	char boardname[100];
-+	char boardname[100], fallback_boardname[100];
- 	int ret;
- 
--	ret = ath10k_core_create_board_name(ar, boardname, sizeof(boardname));
-+	ret = ath10k_core_create_board_name(ar, boardname,
-+					    sizeof(boardname), true);
- 	if (ret) {
- 		ath10k_err(ar, "failed to create board name: %d", ret);
- 		return ret;
- 	}
- 
-+	ret = ath10k_core_create_board_name(ar, fallback_boardname,
-+					    sizeof(boardname), false);
-+	if (ret) {
-+		ath10k_err(ar, "failed to create fallback board name: %d", ret);
-+		return ret;
-+	}
-+
- 	ar->bd_api = 2;
- 	ret = ath10k_core_fetch_board_data_api_n(ar, boardname,
-+						 fallback_boardname,
- 						 ATH10K_BOARD_API2_FILE);
- 	if (!ret)
- 		goto success;
--- 
-2.7.4
+It is as if the TL-WN722N has CN reg dom hard-coded and that switches
+it globally to CN too ???
+
+Is this a bug in ath9k_htc ? a bug with the TL-WN722N card ??
