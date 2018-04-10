@@ -1,42 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:51576 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751178AbeDCOpj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Apr 2018 10:45:39 -0400
-Received: by mail-wm0-f65.google.com with SMTP id v21so34377522wmc.1
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Apr 2018 07:45:38 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76x2: fix tssi initialization for 5GHz band
-Date: Tue,  3 Apr 2018 16:45:31 +0200
-Message-Id: <53d9322f1b5cafb832163b8ef93118aecc1ef3f1.1522766285.git.lorenzo.bianconi@redhat.com> (sfid-20180403_164542_827372_E0497CE3)
-In-Reply-To: <cover.1522766285.git.lorenzo.bianconi@redhat.com>
-References: <cover.1522766285.git.lorenzo.bianconi@redhat.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:46398 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753411AbeDJOf1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Apr 2018 10:35:27 -0400
+Message-ID: <93556893316dba0f85be071976ab8c047f0d4aa8.camel@redhat.com> (sfid-20180410_163601_733119_FBBF3C1C)
+Subject: Re: [v2 PATCH] mwifiex: parse key management suite from RSN IE
+From: Dan Williams <dcbw@redhat.com>
+To: Xinming Hu <huxm@marvell.com>, Kalle Valo <kvalo@codeaurora.org>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>
+Date: Tue, 10 Apr 2018 09:35:24 -0500
+In-Reply-To: <c4107389ed724cfeb7bda632cea95c46@SC-EXCH02.marvell.com>
+References: <1523260191-29352-1-git-send-email-huxm@marvell.com>
+         <87o9isr6v5.fsf@codeaurora.org>
+         <c4107389ed724cfeb7bda632cea95c46@SC-EXCH02.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix mcu initial configuration for tssi calibration on 5GHz band
+On Tue, 2018-04-10 at 02:19 +0000, Xinming Hu wrote:
+> Hi Kalle,
+> 
+> > -----Original Message-----
+> > From: Kalle Valo [mailto:kvalo@codeaurora.org]
+> > Sent: 2018年4月9日 18:51
+> > To: Xinming Hu <huxm@marvell.com>
+> > Cc: Linux Wireless <linux-wireless@vger.kernel.org>; Brian Norris
+> > <briannorris@chromium.org>; Dmitry Torokhov <dtor@google.com>;
+> > rajatja@google.com; Zhiyuan Yang <yangzy@marvell.com>; Tim Song
+> > <songtao@marvell.com>; Cathy Luo <cluo@marvell.com>; James Cao
+> > <jcao@marvell.com>; Ganapathi Bhat <gbhat@marvell.com>; Ellie
+> > Reeves
+> > <ellierevves@gmail.com>
+> > Subject: Re: [v2 PATCH] mwifiex: parse key management suite from
+> > RSN IE
+> > 
+> > Xinming Hu <huxm@marvell.com> writes:
+> > 
+> > > Association failed when using wpa_supplicant with configuration
+> > > key_mgmt=WPA-PSK-SHA256, and it is noticed that wpa_supplicant
+> > > set
+> > > WLAN_AKM_SUITE_PSK_SHA256 in RSN IE, but miss it in start_ap
+> > > parameters.
+> > > 
+> > > This patch parse key management suite from RSN IE, in case it is
+> > > missed.
+> > > 
+> > > Signed-off-by: Xinming Hu <huxm@marvell.com>
+> > 
+> > Shouldn't you fix wpa_supplicant instead of adding a workaround to
+> > the driver?
+> > 
+> 
+> Yes, I am preparing a wpa_supplicant fix on this.
+> Even so, driver fix is still need to compatible with old
+> wpa_supplicant stable release
 
-Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x2_phy.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Typically the kernel does not add hacks to work around userspace
+software bugs.  The userspace software needs to be fixed and upgraded.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-index fcc37eb7ce0b..f28c55746cea 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-@@ -180,7 +180,7 @@ mt76x2_phy_tssi_init_cal(struct mt76x2_dev *dev)
- 	if (mt76x2_channel_silent(dev))
- 		return false;
- 
--	if (chan->band == NL80211_BAND_2GHZ)
-+	if (chan->band == NL80211_BAND_5GHZ)
- 		flag |= BIT(0);
- 
- 	if (mt76x2_ext_pa_enabled(dev, chan->band))
--- 
-2.14.3
+Dan
