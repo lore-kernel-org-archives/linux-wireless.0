@@ -1,69 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:57916 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754926AbeDCIW3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Apr 2018 04:22:29 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Dan Haab <dhaab@luxul.com>,
-        Dan Haab <dan.haab@luxul.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH] brcmfmac: add support for BCM4366E chipset
-Date: Tue,  3 Apr 2018 10:21:56 +0200
-Message-Id: <1522743716-13628-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180403_102245_953550_578DC5CA)
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:43326 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752127AbeDJKMO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Apr 2018 06:12:14 -0400
+Date: Tue, 10 Apr 2018 12:12:11 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
+        Jakub =?utf-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [ANN] mt76x0 usb driver
+Message-ID: <20180410101211.GA2174@redhat.com> (sfid-20180410_121218_392944_652CAB4D)
+References: <20180409141032.GA9247@redhat.com>
+ <20180409142640.GA5680@localhost.localdomain>
+ <20180409144819.GA9253@redhat.com>
+ <20180409145342.GB5680@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180409145342.GB5680@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Haab <dhaab@luxul.com>
+On Mon, Apr 09, 2018 at 04:53:44PM +0200, Lorenzo Bianconi wrote:
+> On Apr 09, Stanislaw Gruszka wrote:
+> > On Mon, Apr 09, 2018 at 04:26:42PM +0200, Lorenzo Bianconi wrote:
+> > > > I would like to integrate the driver to kernel via mt76 driver, i.e.
+> > > > add USB hooks and mt76x0 mac/phy code to mt76. This will open
+> > > > possibility to develop support for mt76x2 USB devices as well as mt76x0
+> > > > PCIe devices in mt76.
+> > > > 
+> > > 
+> > > I have already started supporting mt76x2 USB devices in mt76 since register map
+> > > is pretty similar to PCIe devices:
+> > > https://github.com/LorenzoBianconi/wireless-drivers-next/tree/mt76x2u
+> > > I added some usb utility routines so I think we can integrate mt76x0 in mt76 as
+> > > well
+> > 
+> > Great, I'll start to integrate mt76x0 on top of your tree.
+> 
+> Cool :) actually this branch is in under development but what is really
+> changing day by day is mt7612u part not usb one so I guess we can use it as
+> common ground for mt76x2u and mt76x0.
+> Maybe even the mcu code is in common with mt76x2, isn't it?
 
-BCM4366E is a wireless chipset with a BCM43664 ChipCommon. It's
-supported by the same firmware as 4366c0.
+There are some new bits in mcu/mcu_and.c in Mediatek MT7612U driver,
+compared to MT7610U driver, but most of the code there looks pretty
+much the same :-)
 
-Signed-off-by: Dan Haab <dan.haab@luxul.com>
-[arend: rebase patch and remove unnecessary definition]
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c       | 1 +
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c       | 1 +
- drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 1 +
- 3 files changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index 3b829fe..927d62b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -689,6 +689,7 @@ static u32 brcmf_chip_tcm_rambase(struct brcmf_chip_priv *ci)
- 	case BRCM_CC_43525_CHIP_ID:
- 	case BRCM_CC_4365_CHIP_ID:
- 	case BRCM_CC_4366_CHIP_ID:
-+	case BRCM_CC_43664_CHIP_ID:
- 		return 0x200000;
- 	case CY_CC_4373_CHIP_ID:
- 		return 0x160000;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 091c191..6e25ff9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -75,6 +75,7 @@ enum brcmf_pcie_state {
- 	BRCMF_FW_ENTRY(BRCM_CC_4365_CHIP_ID, 0xFFFFFFF0, 4365C),
- 	BRCMF_FW_ENTRY(BRCM_CC_4366_CHIP_ID, 0x0000000F, 4366B),
- 	BRCMF_FW_ENTRY(BRCM_CC_4366_CHIP_ID, 0xFFFFFFF0, 4366C),
-+	BRCMF_FW_ENTRY(BRCM_CC_43664_CHIP_ID, 0xFFFFFFF0, 4366C),
- 	BRCMF_FW_ENTRY(BRCM_CC_4371_CHIP_ID, 0xFFFFFFFF, 4371),
- };
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-index 57544a3..686f7a8 100644
---- a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-@@ -57,6 +57,7 @@
- #define BRCM_CC_43602_CHIP_ID		43602
- #define BRCM_CC_4365_CHIP_ID		0x4365
- #define BRCM_CC_4366_CHIP_ID		0x4366
-+#define BRCM_CC_43664_CHIP_ID		43664
- #define BRCM_CC_4371_CHIP_ID		0x4371
- #define CY_CC_4373_CHIP_ID		0x4373
- 
--- 
-1.9.1
+Regards
+Stanislaw
