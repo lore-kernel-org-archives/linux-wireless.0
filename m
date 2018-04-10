@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:55852 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754824AbeD0BRc (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:33530 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752064AbeDJCwq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Apr 2018 21:17:32 -0400
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>
-Cc: LKML <linux-kernel@vger.kernel.org>
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH] mac80211: fix kernel-doc "bad line" warning
-Message-ID: <a248f969-311b-1a4b-4b11-c0b90134527f@infradead.org> (sfid-20180427_031747_547557_8EAFF5CF)
-Date: Thu, 26 Apr 2018 18:17:31 -0700
+        Mon, 9 Apr 2018 22:52:46 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 3/9] rtlwifi: btcoex: Add 8822b header files to precomp.h
+Date: Tue, 10 Apr 2018 10:52:20 +0800
+Message-ID: <20180410025226.5236-4-pkshih@realtek.com> (sfid-20180410_045252_706547_41BF80E1)
+In-Reply-To: <20180410025226.5236-1-pkshih@realtek.com>
+References: <20180410025226.5236-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <rdunlap@infradead.org>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Fix 88 instances of a kernel-doc warning:
-  ../include/net/mac80211.h:2083: warning: bad line:  >
+Add 8822b header files to precomp.h for routing functions.
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- include/net/mac80211.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
---- linux-next-20180426.orig/include/net/mac80211.h
-+++ linux-next-20180426/include/net/mac80211.h
-@@ -2080,7 +2080,7 @@ struct ieee80211_txq {
-  *	virtual interface might not be given air time for the transmission of
-  *	the frame, as it is not synced with the AP/P2P GO yet, and thus the
-  *	deauthentication frame might not be transmitted.
-- >
-+ *
-  * @IEEE80211_HW_DOESNT_SUPPORT_QOS_NDP: The driver (or firmware) doesn't
-  *	support QoS NDP for AP probing - that's most likely a driver bug.
-  *
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
+index 02dff4c3f664..858318fd3d63 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
+@@ -48,6 +48,9 @@
+ #include "halbtc8723b2ant.h"
+ #include "halbtc8821a2ant.h"
+ #include "halbtc8821a1ant.h"
++#include "halbtc8822b1ant.h"
++#include "halbtc8822b2ant.h"
++#include "halbtc8822bwifionly.h"
+ 
+ #define GetDefaultAdapter(padapter)	padapter
+ 
+-- 
+2.15.1
