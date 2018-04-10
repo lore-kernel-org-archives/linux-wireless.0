@@ -1,63 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44334 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:44866 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750946AbeDPLc6 (ORCPT
+        with ESMTP id S1753089AbeDJOcM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 07:32:58 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: cjhuang@codeaurora.org
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Brian Norris <briannorris@chromium.org>,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH 2/2] ath10k: support MAC address randomization in scan
-References: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org>
-        <1522379640-6442-3-git-send-email-cjhuang@codeaurora.org>
-        <20180412205954.GA34456@rodete-desktop-imager.corp.google.com>
-        <e16557d0891352ae0b83902faee97023@codeaurora.org>
-        <877epbs5v7.fsf@kamboji.qca.qualcomm.com>
-        <5AD11D7C.1030603@broadcom.com>
-        <242be71eb87140c9560163c4000255b2@codeaurora.org>
-Date: Mon, 16 Apr 2018 14:32:47 +0300
-In-Reply-To: <242be71eb87140c9560163c4000255b2@codeaurora.org>
-        (cjhuang@codeaurora.org's message of "Mon, 16 Apr 2018 13:16:10
-        +0800")
-Message-ID: <8736zvqtcw.fsf@kamboji.qca.qualcomm.com> (sfid-20180416_133303_777382_9235A19F)
+        Tue, 10 Apr 2018 10:32:12 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: ath10k: fix spelling mistake: "tiggers" -> "triggers"
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180329165949.29155-1-colin.king@canonical.com>
+References: <20180329165949.29155-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20180410143212.4F86260C64@smtp.codeaurora.org> (sfid-20180410_163240_788766_41273176)
+Date: Tue, 10 Apr 2018 14:32:12 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cjhuang@codeaurora.org writes:
+Colin Ian King <colin.king@canonical.com> wrote:
 
-> On 2018-04-14 05:13, Arend van Spriel wrote:
->> On 4/13/2018 1:28 PM, Kalle Valo wrote:
->>> cjhuang@codeaurora.org writes:
->>>
->>>>>> +	if (test_bit(WMI_SERVICE_SPOOF_MAC_SUPPORT, ar->wmi.svc_map)) {
->>>>>> +		ret = ath10k_wmi_scan_prob_req_oui(ar, ar->mac_addr);
->>>>>> +		if (ret) {
->>>>>> +			ath10k_err(ar, "failed to set prob req oui: %i\n", ret);
->>>>>> +			goto err_dfs_detector_exit;
->>>>>> +		}
->>>>>> +
->>>>>> +		ar->hw->wiphy->features |=
->>>>>> +			NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
->>>>>
->>>>> Do you support NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR too?
->>>>
->>>> I'll add this flag too.
->>>
->>> Are you going to send v2 or what's the plan?
->>
->> Maybe a stupid question, but does ath10k support scheduled scan?
+> Trivial fix to spelling mistake in message text
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-AFAICS ath10k does not support it (sched_scan_start() op).
+Patch applied to ath-next branch of ath.git, thanks.
 
-> The reason is AVL test case needs this flag to enable random mac
-> address scan. Maybe Brian Can explain why this flag is necessary.
-
-If ath10k does not support scheduled scan what's the point? Shouldn't
-the test case then be it fixed instead of making hacks in ath10k?
+6ce36faeac35 ath10k: fix spelling mistake: "tiggers" -> "triggers"
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/10315725/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
