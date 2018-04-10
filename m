@@ -1,2142 +1,2538 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f175.google.com ([209.85.128.175]:45381 "EHLO
-        mail-wr0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753282AbeDQNzq (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:33532 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752168AbeDJCws (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Apr 2018 09:55:46 -0400
-Received: by mail-wr0-f175.google.com with SMTP id u11so35788973wri.12
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2018 06:55:45 -0700 (PDT)
-Date: Tue, 17 Apr 2018 15:55:39 +0200 (CEST)
-From: Enrico Mioso <mrkiko.rs@gmail.com>
-To: Kofi Agor <nenekofi@gmail.com>
-cc: Craig Matsuura <cmatsuura@vivint.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Mathias Kresin <dev@kresin.me>,
-        Tom Psyborg <pozega.tomislav@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        Jamie Stuart <jamie@onebillion.org>
-Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
- frame due to full tx queue...?
-In-Reply-To: <CAOt++SeLh_NxcmM=YEMQSv4y9PabS_dT7k4yTxUiqXbac-=iUQ@mail.gmail.com>
-Message-ID: <alpine.LNX.2.21.99.1804171554290.11111@mStation.localdomain> (sfid-20180417_155728_578771_4B95B5DD)
-References: <20180123132234.GC2520@redhat.com> <alpine.LNX.2.21.99.1801240917001.13679@mStation.localdomain> <20180124100316.GB3101@redhat.com> <20180301153006.GJ1233@makrotopia.org> <20180307122701.GA10584@redhat.com> <20180307122935.GB10584@redhat.com>
- <d462681a-6a85-f76c-85a0-4e51b8529606@kresin.me> <20180326103551.GA2069@redhat.com> <24f8f4a2-b355-a1b3-d07a-940fc1e50fcc@kresin.me> <20180327171815.GA31338@redhat.com> <20180327174302.GB1206@makrotopia.org> <alpine.LNX.2.21.99.1803280605580.2911@mStation.localdomain>
- <CAOt++SeSQ2j1KuVkbqt77LfznXN7JV0Lx5O8d7-m2VBrz8=85g@mail.gmail.com> <alpine.LNX.2.21.99.1803301642110.31428@mStation.localdomain> <MWHPR02MB3326233159B021143D7278F5D4A10@MWHPR02MB3326.namprd02.prod.outlook.com> <alpine.LNX.2.21.99.1803301931300.5692@mStation.localdomain>
- <CAOt++SeLh_NxcmM=YEMQSv4y9PabS_dT7k4yTxUiqXbac-=iUQ@mail.gmail.com>
+        Mon, 9 Apr 2018 22:52:48 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 9/9] rtlwifi: btcoex: Remove global variables of chip specific context
+Date: Tue, 10 Apr 2018 10:52:26 +0800
+Message-ID: <20180410025226.5236-10-pkshih@realtek.com> (sfid-20180410_045255_648709_2311AC01)
+In-Reply-To: <20180410025226.5236-1-pkshih@realtek.com>
+References: <20180410025226.5236-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323329-2143919810-1523973341=:11111"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
---8323329-2143919810-1523973341=:11111
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8BIT
+Remove the global varaibles, and use local varialbes that point the fields
+defined in 'struct btc_coexist' instead, so it is possible to support
+multiple devices.
 
-thank you very vry much for your work guys.
-I at the moment don't have at ready disposal the hw to test this out, sorry.
-But your work is no matter precious and valuable. Thank you very much again for it, and all the effort.
-Can someone help us, and test this out?
-Sorry to all of you.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    | 44 ++++++++--
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 56 +++++++++++--
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 57 +++++++++++--
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 45 +++++++++-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 39 +++++++--
+ .../realtek/rtlwifi/btcoexist/halbtc8822b1ant.c    | 78 ++++++++++++++++--
+ .../realtek/rtlwifi/btcoexist/halbtc8822b2ant.c    | 95 ++++++++++++++++++++--
+ 7 files changed, 376 insertions(+), 38 deletions(-)
 
-Enrico
-
-
-On Tue, 17 Apr 2018, Kofi Agor wrote:
-
-> Date: Tue, 17 Apr 2018 15:32:57
-> From: Kofi Agor <nenekofi@gmail.com>
-> To: Enrico Mioso <mrkiko.rs@gmail.com>
-> Cc: Craig Matsuura <cmatsuura@vivint.com>,
->     Daniel Golle <daniel@makrotopia.org>,
->     Stanislaw Gruszka <sgruszka@redhat.com>, Mathias Kresin <dev@kresin.me>,
->     Tom Psyborg <pozega.tomislav@gmail.com>,
->     linux-wireless <linux-wireless@vger.kernel.org>,
->     Johannes Berg <johannes.berg@intel.com>, Arnd Bergmann <arnd@arndb.de>,
->     John Crispin <john@phrozen.org>, Felix Fietkau <nbd@nbd.name>,
->     Jamie Stuart <jamie@onebillion.org>
-> Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
->     frame due to full tx queue...?
-> 
-> Hi Enrico,
-> Some minor changes to our patch:
->  1. We (Craig Matsuura) found that disabling/enable the txtasklet worked better than tearing down and recreating the txtasklet each time. It also resolved a kernel oops we were experiencing.
->  2. Cleaned up the patch a bit and gave credit to the developers
->  3. There's a companion patch along with the txqueue patch that I forgot to add when I submitted the txqueue patch the first time. It resolves an rtnl deadlock during device unregistration. This should resolve the ifdown issue you were
->     experiencing.
->  -Thanks, Kofi A.
-> 
-> On Fri, Mar 30, 2018 at 11:33 AM, Enrico Mioso <mrkiko.rs@gmail.com> wrote:
->       To turn it off and on I use the OpenWrt wifi command:
->       wifi down
->
->       turns it off.
->
->       wifi up
->
->       turns it back on.
->
->       thank you very much for your help.
->
->       I suspect you're using something nearer to mt7620A, while the Asus WL-330n3G is based on rt305X I guess.
->
->       Enrico
->
->       See attached .config:
->
->       #
->       # Automatically generated file; DO NOT EDIT.
->       # OpenWrt Configuration
->       #
->       CONFIG_MODULES=y
->       CONFIG_HAVE_DOT_CONFIG=y
->       # CONFIG_TARGET_sunxi is not set
->       # CONFIG_TARGET_apm821xx is not set
->       # CONFIG_TARGET_ath25 is not set
->       # CONFIG_TARGET_ar71xx is not set
->       # CONFIG_TARGET_brcm2708 is not set
->       # CONFIG_TARGET_bcm53xx is not set
->       # CONFIG_TARGET_brcm47xx is not set
->       # CONFIG_TARGET_brcm63xx is not set
->       # CONFIG_TARGET_cns3xxx is not set
->       # CONFIG_TARGET_octeon is not set
->       # CONFIG_TARGET_gemini is not set
->       # CONFIG_TARGET_mpc85xx is not set
->       # CONFIG_TARGET_imx6 is not set
->       # CONFIG_TARGET_mxs is not set
->       # CONFIG_TARGET_adm8668 is not set
->       # CONFIG_TARGET_adm5120 is not set
->       # CONFIG_TARGET_xburst is not set
->       # CONFIG_TARGET_ixp4xx is not set
->       # CONFIG_TARGET_lantiq is not set
->       # CONFIG_TARGET_malta is not set
->       # CONFIG_TARGET_pistachio is not set
->       # CONFIG_TARGET_mvebu is not set
->       # CONFIG_TARGET_kirkwood is not set
->       # CONFIG_TARGET_mediatek is not set
->       CONFIG_TARGET_ramips=y
->       # CONFIG_TARGET_at91 is not set
->       # CONFIG_TARGET_rb532 is not set
->       # CONFIG_TARGET_mcs814x is not set
->       # CONFIG_TARGET_layerscape is not set
->       # CONFIG_TARGET_octeontx is not set
->       # CONFIG_TARGET_oxnas is not set
->       # CONFIG_TARGET_armvirt is not set
->       # CONFIG_TARGET_ipq40xx is not set
->       # CONFIG_TARGET_ipq806x is not set
->       # CONFIG_TARGET_au1000 is not set
->       # CONFIG_TARGET_arc770 is not set
->       # CONFIG_TARGET_archs38 is not set
->       # CONFIG_TARGET_ar7 is not set
->       # CONFIG_TARGET_omap is not set
->       # CONFIG_TARGET_uml is not set
->       # CONFIG_TARGET_zynq is not set
->       # CONFIG_TARGET_x86 is not set
->       # CONFIG_TARGET_ramips_mt7620 is not set
->       # CONFIG_TARGET_ramips_mt7621 is not set
->       # CONFIG_TARGET_ramips_mt76x8 is not set
->       # CONFIG_TARGET_ramips_rt288x is not set
->       CONFIG_TARGET_ramips_rt305x=y
->       # CONFIG_TARGET_ramips_rt3883 is not set
->       # CONFIG_TARGET_MULTI_PROFILE is not set
->       # CONFIG_TARGET_ramips_rt305x_Default is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_px-4885-4M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_px-4885-8M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_carambola is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_a5-v11 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_w502u is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_freestation5 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wr6202 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_mr-102n is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_air3gii is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_ALL02393G is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_all0256n-4M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_all0256n-8M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_all5002 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_all5003 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_asl26555-8M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_asl26555-16M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_atp-52b is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_awapn2403 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_awm002-evb-4M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_awm002-evb-8M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_rt-g32-b1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_rt-n10-plus is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_rt-n13u is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wl-330n is not set
->       CONFIG_TARGET_ramips_rt305x_DEVICE_wl-330n3g=y
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_hw550-3g is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_f5d8235-v2 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_f7c027 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_whr-g300n is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dap-1350 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_DCS930 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_DCS930LB1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dir-300-b1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dir-300-b7 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dir-320-b1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dir-600-b1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dir-610-a1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dir-615-d is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dir-615-h1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dir-620-a1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dir-620-d1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dwr-512-b is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wizard8800 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_3g-6200n is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_3g-6200nl is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_esr-9753 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_fonera20n is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_mpr-a1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_mpr-a2 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_broadway is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_hlk-rm04 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_ht-tm02 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_hg255d is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_d105 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_m2m is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_jhr-n805r is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_jhr-n825r is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_jhr-n926r is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_mofi3500-3gn is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_nw718 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wnce2001 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_bc2 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wt1520-4M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wt1520-8M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_nixcore-x1-16M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_nixcore-x1-8M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_miniembplug is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_miniembwifi is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_psr-680w is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_mzk-dp150n is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_mzk-w300nh2 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_mzk-wdpr is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_ip2202 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_m3 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_m4-4M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_m4-8M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_x5 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_x8 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_pwh2004 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_rt5350f-olinuxino is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_rt5350f-olinuxino-evb is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_v22rw-2x2 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_WL-341V3 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wl-351 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_sl-r7205 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wcr-150gn is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_tew-638apb-v2 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_tew-714tru is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_rut5xx is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_3g150b is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_3g300m is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_w150m is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_w306r-v20 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_ur-326n4g is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_ur-336un is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_vocore-16M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_vocore-8M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wizfi630a is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wr512-3gn-4M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wr512-3gn-8M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_ncs601w is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_xdxrn502j is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_kn is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_nbg-419n is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_nbg-419n2 is not set
->       CONFIG_HAS_SUBTARGETS=y
->       CONFIG_HAS_DEVICES=y
->       CONFIG_TARGET_BOARD="ramips"
->       CONFIG_TARGET_SUBTARGET="rt305x"
->       CONFIG_TARGET_PROFILE="DEVICE_wl-330n3g"
->       CONFIG_TARGET_ARCH_PACKAGES="mipsel_24kc"
->       CONFIG_DEFAULT_TARGET_OPTIMIZATION="-Os -pipe -mno-branch-likely -mips32r2 -mtune=24kc"
->       CONFIG_CPU_TYPE="24kc"
->       CONFIG_LINUX_4_9=y
->       CONFIG_DEFAULT_base-files=y
->       CONFIG_DEFAULT_busybox=y
->       CONFIG_DEFAULT_dnsmasq=y
->       CONFIG_DEFAULT_dropbear=y
->       CONFIG_DEFAULT_firewall=y
->       CONFIG_DEFAULT_fstools=y
->       CONFIG_DEFAULT_ip6tables=y
->       CONFIG_DEFAULT_iptables=y
->       CONFIG_DEFAULT_iwinfo=y
->       CONFIG_DEFAULT_kmod-gpio-button-hotplug=y
->       CONFIG_DEFAULT_kmod-ipt-offload=y
->       CONFIG_DEFAULT_kmod-leds-gpio=y
->       CONFIG_DEFAULT_kmod-rt2800-soc=y
->       CONFIG_DEFAULT_libc=y
->       CONFIG_DEFAULT_libgcc=y
->       CONFIG_DEFAULT_logd=y
->       CONFIG_DEFAULT_mtd=y
->       CONFIG_DEFAULT_netifd=y
->       CONFIG_DEFAULT_odhcp6c=y
->       CONFIG_DEFAULT_odhcpd-ipv6only=y
->       CONFIG_DEFAULT_opkg=y
->       CONFIG_DEFAULT_ppp=y
->       CONFIG_DEFAULT_ppp-mod-pppoe=y
->       CONFIG_DEFAULT_swconfig=y
->       CONFIG_DEFAULT_uci=y
->       CONFIG_DEFAULT_uclient-fetch=y
->       CONFIG_DEFAULT_wpad-mini=y
->       CONFIG_AUDIO_SUPPORT=y
->       CONFIG_GPIO_SUPPORT=y
->       CONFIG_USB_SUPPORT=y
->       CONFIG_USES_DEVICETREE=y
->       CONFIG_USES_INITRAMFS=y
->       CONFIG_USES_SQUASHFS=y
->       CONFIG_HAS_MIPS16=y
->       CONFIG_mipsel=y
->       CONFIG_ARCH="mipsel"
->
->       #
->       # Target Images
->       #
->       # CONFIG_TARGET_ROOTFS_INITRAMFS is not set
->       CONFIG_EXTERNAL_CPIO=""
->
->       #
->       # Root filesystem archives
->       #
->       # CONFIG_TARGET_ROOTFS_CPIOGZ is not set
->       # CONFIG_TARGET_ROOTFS_TARGZ is not set
->
->       #
->       # Root filesystem images
->       #
->       # CONFIG_TARGET_ROOTFS_EXT4FS is not set
->       CONFIG_TARGET_ROOTFS_SQUASHFS=y
->       CONFIG_TARGET_SQUASHFS_BLOCK_SIZE=256
->       CONFIG_TARGET_UBIFS_FREE_SPACE_FIXUP=y
->       CONFIG_TARGET_UBIFS_JOURNAL_SIZE=""
->
->       #
->       # Image Options
->       #
->
->       #
->       # Global build settings
->       #
->       # CONFIG_ALL_NONSHARED is not set
->       # CONFIG_ALL_KMODS is not set
->       # CONFIG_ALL is not set
->       # CONFIG_BUILDBOT is not set
->       CONFIG_SIGNED_PACKAGES=y
->
->       #
->       # General build options
->       #
->       # CONFIG_DISPLAY_SUPPORT is not set
->       CONFIG_BUILD_PATENTED=y
->       # CONFIG_BUILD_NLS is not set
->       CONFIG_SHADOW_PASSWORDS=y
->       # CONFIG_CLEAN_IPKG is not set
->       # CONFIG_INCLUDE_CONFIG is not set
->       # CONFIG_COLLECT_KERNEL_DEBUG is not set
->
->       #
->       # Kernel build options
->       #
->       CONFIG_KERNEL_BUILD_USER=""
->       CONFIG_KERNEL_BUILD_DOMAIN=""
->       CONFIG_KERNEL_PRINTK=y
->       # CONFIG_KERNEL_CRASHLOG is not set
->       # CONFIG_KERNEL_SWAP is not set
->       CONFIG_KERNEL_DEBUG_FS=y
->       CONFIG_KERNEL_MIPS_FPU_EMULATOR=y
->       # CONFIG_KERNEL_PERF_EVENTS is not set
->       # CONFIG_KERNEL_PROFILING is not set
->       # CONFIG_KERNEL_KALLSYMS is not set
->       # CONFIG_KERNEL_FTRACE is not set
->       # CONFIG_KERNEL_DEBUG_KERNEL is not set
->       # CONFIG_KERNEL_DEBUG_INFO is not set
->       # CONFIG_KERNEL_DYNAMIC_DEBUG is not set
->       # CONFIG_KERNEL_KPROBES is not set
->       # CONFIG_KERNEL_AIO is not set
->       # CONFIG_KERNEL_FHANDLE is not set
->       # CONFIG_KERNEL_FANOTIFY is not set
->       # CONFIG_KERNEL_BLK_DEV_BSG is not set
->       CONFIG_KERNEL_MAGIC_SYSRQ=y
->       # CONFIG_KERNEL_DEBUG_PINCTRL is not set
->       # CONFIG_KERNEL_DEBUG_GPIO is not set
->       # CONFIG_KERNEL_ELF_CORE is not set
->       # CONFIG_KERNEL_PROVE_LOCKING is not set
->       # CONFIG_KERNEL_PRINTK_TIME is not set
->       # CONFIG_KERNEL_SLABINFO is not set
->       # CONFIG_KERNEL_PROC_PAGE_MONITOR is not set
->       # CONFIG_KERNEL_KEXEC is not set
->       # CONFIG_USE_RFKILL is not set
->       # CONFIG_USE_SPARSE is not set
->       # CONFIG_KERNEL_DEVTMPFS is not set
->       # CONFIG_KERNEL_KEYS is not set
->       # CONFIG_KERNEL_CGROUPS is not set
->       # CONFIG_KERNEL_NAMESPACES is not set
->       # CONFIG_KERNEL_LXC_MISC is not set
->       # CONFIG_KERNEL_SECCOMP_FILTER is not set
->       # CONFIG_KERNEL_SECCOMP is not set
->       # CONFIG_KERNEL_IP_MROUTE is not set
->       CONFIG_KERNEL_IPV6=y
->       CONFIG_KERNEL_IPV6_MULTIPLE_TABLES=y
->       CONFIG_KERNEL_IPV6_SUBTREES=y
->       CONFIG_KERNEL_IPV6_MROUTE=y
->       # CONFIG_KERNEL_IPV6_PIMSM_V2 is not set
->       # CONFIG_KERNEL_IP_PNP is not set
->
->       #
->       # Filesystem ACL and attr support options
->       #
->       # CONFIG_USE_FS_ACL_ATTR is not set
->       # CONFIG_KERNEL_FS_POSIX_ACL is not set
->       # CONFIG_KERNEL_BTRFS_FS_POSIX_ACL is not set
->       # CONFIG_KERNEL_EXT4_FS_POSIX_ACL is not set
->       # CONFIG_KERNEL_F2FS_FS_POSIX_ACL is not set
->       # CONFIG_KERNEL_JFFS2_FS_POSIX_ACL is not set
->       # CONFIG_KERNEL_TMPFS_POSIX_ACL is not set
->       # CONFIG_KERNEL_CIFS_ACL is not set
->       # CONFIG_KERNEL_HFS_FS_POSIX_ACL is not set
->       # CONFIG_KERNEL_HFSPLUG_FS_POSIX_ACL is not set
->       # CONFIG_KERNEL_NFS_ACL_SUPPORT is not set
->       # CONFIG_KERNEL_NFS_V3_ACL_SUPPORT is not set
->       # CONFIG_KERNEL_NFSD_V2_ACL_SUPPORT is not set
->       # CONFIG_KERNEL_NFSD_V3_ACL_SUPPORT is not set
->       # CONFIG_KERNEL_REISER_FS_POSIX_ACL is not set
->       # CONFIG_KERNEL_XFS_POSIX_ACL is not set
->       # CONFIG_KERNEL_JFS_POSIX_ACL is not set
->       # CONFIG_KERNEL_DEVMEM is not set
->       # CONFIG_KERNEL_DEVKMEM is not set
->
->       #
->       # Package build options
->       #
->       # CONFIG_DEBUG is not set
->       CONFIG_IPV6=y
->
->       #
->       # Stripping options
->       #
->       # CONFIG_NO_STRIP is not set
->       # CONFIG_USE_STRIP is not set
->       CONFIG_USE_SSTRIP=y
->       # CONFIG_STRIP_KERNEL_EXPORTS is not set
->       # CONFIG_USE_MKLIBS is not set
->       CONFIG_USE_UCLIBCXX=y
->       # CONFIG_USE_LIBSTDCXX is not set
->
->       #
->       # Hardening build options
->       #
->       CONFIG_PKG_CHECK_FORMAT_SECURITY=y
->       CONFIG_PKG_ASLR_PIE=y
->       CONFIG_PKG_CC_STACKPROTECTOR_NONE=y
->       # CONFIG_PKG_CC_STACKPROTECTOR_STRONG is not set
->       # CONFIG_KERNEL_CC_STACKPROTECTOR_NONE is not set
->       # CONFIG_KERNEL_CC_STACKPROTECTOR_REGULAR is not set
->       CONFIG_KERNEL_CC_STACKPROTECTOR_STRONG=y
->       # CONFIG_PKG_FORTIFY_SOURCE_NONE is not set
->       CONFIG_PKG_FORTIFY_SOURCE_1=y
->       # CONFIG_PKG_FORTIFY_SOURCE_2 is not set
->       # CONFIG_PKG_RELRO_NONE is not set
->       # CONFIG_PKG_RELRO_PARTIAL is not set
->       CONFIG_PKG_RELRO_FULL=y
->       # CONFIG_DEVEL is not set
->       # CONFIG_BROKEN is not set
->       CONFIG_BINARY_FOLDER=""
->       CONFIG_DOWNLOAD_FOLDER=""
->       CONFIG_LOCALMIRROR=""
->       CONFIG_AUTOREBUILD=y
->       # CONFIG_AUTOREMOVE is not set
->       CONFIG_BUILD_SUFFIX=""
->       CONFIG_TARGET_ROOTFS_DIR=""
->       # CONFIG_CCACHE is not set
->       CONFIG_EXTERNAL_KERNEL_TREE=""
->       CONFIG_KERNEL_GIT_CLONE_URI=""
->       CONFIG_EXTRA_OPTIMIZATION="-fno-caller-saves -fno-plt"
->       CONFIG_TARGET_OPTIMIZATION="-Os -pipe -mno-branch-likely -mips32r2 -mtune=24kc"
->       CONFIG_SOFT_FLOAT=y
->       CONFIG_USE_MIPS16=y
->       # CONFIG_EXTRA_TARGET_ARCH is not set
->       CONFIG_EXTRA_BINUTILS_CONFIG_OPTIONS=""
->       CONFIG_EXTRA_GCC_CONFIG_OPTIONS=""
->       # CONFIG_GCC_DEFAULT_PIE is not set
->       # CONFIG_GCC_DEFAULT_SSP is not set
->       # CONFIG_SJLJ_EXCEPTIONS is not set
->       # CONFIG_INSTALL_GFORTRAN is not set
->       CONFIG_GDB=y
->       CONFIG_USE_MUSL=y
->       CONFIG_SSP_SUPPORT=y
->       CONFIG_BINUTILS_VERSION_2_29_1=y
->       CONFIG_BINUTILS_VERSION="2.29.1"
->       CONFIG_GCC_VERSION="7.3.0"
->       CONFIG_LIBC="musl"
->       CONFIG_TARGET_SUFFIX="musl"
->       # CONFIG_IB is not set
->       # CONFIG_SDK is not set
->       # CONFIG_MAKE_TOOLCHAIN is not set
->       # CONFIG_IMAGEOPT is not set
->       # CONFIG_PREINITOPT is not set
->       CONFIG_TARGET_PREINIT_SUPPRESS_STDERR=y
->       # CONFIG_TARGET_PREINIT_DISABLE_FAILSAFE is not set
->       CONFIG_TARGET_PREINIT_TIMEOUT=2
->       # CONFIG_TARGET_PREINIT_SHOW_NETMSG is not set
->       # CONFIG_TARGET_PREINIT_SUPPRESS_FAILSAFE_NETMSG is not set
->       CONFIG_TARGET_PREINIT_IFNAME=""
->       CONFIG_TARGET_PREINIT_IP="192.168.1.1"
->       CONFIG_TARGET_PREINIT_NETMASK="255.255.255.0"
->       CONFIG_TARGET_PREINIT_BROADCAST="192.168.1.255"
->       # CONFIG_INITOPT is not set
->       CONFIG_TARGET_INIT_PATH="/usr/sbin:/usr/bin:/sbin:/bin"
->       CONFIG_TARGET_INIT_ENV=""
->       CONFIG_TARGET_INIT_CMD="/sbin/init"
->       CONFIG_TARGET_INIT_SUPPRESS_STDERR=y
->       # CONFIG_VERSIONOPT is not set
->       CONFIG_PER_FEED_REPO=y
->       CONFIG_PER_FEED_REPO_ADD_DISABLED=y
->       CONFIG_PER_FEED_REPO_ADD_COMMENTED=y
->       # CONFIG_FEED_packages is not set
->       # CONFIG_FEED_luci is not set
->       # CONFIG_FEED_routing is not set
->       # CONFIG_FEED_telephony is not set
->
->       #
->       # Base system
->       #
->       CONFIG_PACKAGE_base-files=y
->       # CONFIG_PACKAGE_block-mount is not set
->       # CONFIG_PACKAGE_blockd is not set
->       CONFIG_PACKAGE_busybox=y
->       # CONFIG_BUSYBOX_CUSTOM is not set
->       CONFIG_BUSYBOX_DEFAULT_HAVE_DOT_CONFIG=y
->       # CONFIG_BUSYBOX_DEFAULT_DESKTOP is not set
->       # CONFIG_BUSYBOX_DEFAULT_EXTRA_COMPAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEDORA_COMPAT is not set
->       CONFIG_BUSYBOX_DEFAULT_INCLUDE_SUSv2=y
->       # CONFIG_BUSYBOX_DEFAULT_USE_PORTABLE_CODE is not set
->       CONFIG_BUSYBOX_DEFAULT_PLATFORM_LINUX=y
->       CONFIG_BUSYBOX_DEFAULT_SHOW_USAGE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VERBOSE_USAGE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_COMPRESS_USAGE=y
->       # CONFIG_BUSYBOX_DEFAULT_BUSYBOX is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INSTALLER is not set
->       # CONFIG_BUSYBOX_DEFAULT_INSTALL_NO_USR is not set
->       # CONFIG_BUSYBOX_DEFAULT_PAM is not set
->       CONFIG_BUSYBOX_DEFAULT_LONG_OPTS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_DEVPTS=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CLEAN_UP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UTMP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_WTMP is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_PIDFILE=y
->       CONFIG_BUSYBOX_DEFAULT_PID_FILE_PATH="/var/run"
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_SUID=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SUID_CONFIG is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SUID_CONFIG_QUIET is not set
->       # CONFIG_BUSYBOX_DEFAULT_SELINUX is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_PREFER_APPLETS=y
->       CONFIG_BUSYBOX_DEFAULT_BUSYBOX_EXEC_PATH="/proc/self/exe"
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_SYSLOG=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HAVE_RPC is not set
->       # CONFIG_BUSYBOX_DEFAULT_STATIC is not set
->       CONFIG_BUSYBOX_DEFAULT_PIE=y
->       # CONFIG_BUSYBOX_DEFAULT_NOMMU is not set
->       # CONFIG_BUSYBOX_DEFAULT_BUILD_LIBBUSYBOX is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INDIVIDUAL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SHARED_BUSYBOX is not set
->       CONFIG_BUSYBOX_DEFAULT_LFS=y
->       CONFIG_BUSYBOX_DEFAULT_CROSS_COMPILER_PREFIX=""
->       CONFIG_BUSYBOX_DEFAULT_SYSROOT=""
->       CONFIG_BUSYBOX_DEFAULT_EXTRA_CFLAGS=""
->       CONFIG_BUSYBOX_DEFAULT_EXTRA_LDFLAGS=""
->       CONFIG_BUSYBOX_DEFAULT_EXTRA_LDLIBS=""
->       CONFIG_BUSYBOX_DEFAULT_INSTALL_APPLET_SYMLINKS=y
->       # CONFIG_BUSYBOX_DEFAULT_INSTALL_APPLET_HARDLINKS is not set
->       # CONFIG_BUSYBOX_DEFAULT_INSTALL_APPLET_SCRIPT_WRAPPERS is not set
->       # CONFIG_BUSYBOX_DEFAULT_INSTALL_APPLET_DONT is not set
->       # CONFIG_BUSYBOX_DEFAULT_INSTALL_SH_APPLET_SYMLINK is not set
->       # CONFIG_BUSYBOX_DEFAULT_INSTALL_SH_APPLET_HARDLINK is not set
->       # CONFIG_BUSYBOX_DEFAULT_INSTALL_SH_APPLET_SCRIPT_WRAPPER is not set
->       CONFIG_BUSYBOX_DEFAULT_PREFIX="./_install"
->       # CONFIG_BUSYBOX_DEFAULT_DEBUG is not set
->       # CONFIG_BUSYBOX_DEFAULT_DEBUG_PESSIMIZE is not set
->       # CONFIG_BUSYBOX_DEFAULT_DEBUG_SANITIZE is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNIT_TEST is not set
->       # CONFIG_BUSYBOX_DEFAULT_WERROR is not set
->       CONFIG_BUSYBOX_DEFAULT_NO_DEBUG_LIB=y
->       # CONFIG_BUSYBOX_DEFAULT_DMALLOC is not set
->       # CONFIG_BUSYBOX_DEFAULT_EFENCE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_USE_BSS_TAIL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_RTMINMAX is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_BUFFERS_USE_MALLOC is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_BUFFERS_GO_ON_STACK=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_BUFFERS_GO_IN_BSS is not set
->       CONFIG_BUSYBOX_DEFAULT_PASSWORD_MINLEN=6
->       CONFIG_BUSYBOX_DEFAULT_MD5_SMALL=1
->       CONFIG_BUSYBOX_DEFAULT_SHA3_SMALL=1
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FAST_TOP=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_ETC_NETWORKS is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_EDITING=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_EDITING_MAX_LEN=512
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_EDITING_VI is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_EDITING_HISTORY=256
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_EDITING_SAVEHISTORY is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_EDITING_SAVE_ON_EXIT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_REVERSE_SEARCH is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TAB_COMPLETION=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_USERNAME_COMPLETION is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_EDITING_FANCY_PROMPT=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_EDITING_ASK_TERMINAL is not set
->       # CONFIG_BUSYBOX_DEFAULT_LOCALE_SUPPORT is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNICODE_SUPPORT is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNICODE_USING_LOCALE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHECK_UNICODE_IN_ENV is not set
->       CONFIG_BUSYBOX_DEFAULT_SUBST_WCHAR=0
->       CONFIG_BUSYBOX_DEFAULT_LAST_SUPPORTED_WCHAR=0
->       # CONFIG_BUSYBOX_DEFAULT_UNICODE_COMBINING_WCHARS is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNICODE_WIDE_WCHARS is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNICODE_BIDI_SUPPORT is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNICODE_NEUTRAL_TABLE is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNICODE_PRESERVE_BROKEN is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_NON_POSIX_CP=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VERBOSE_CP_MESSAGE is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_USE_SENDFILE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_COPYBUF_KB=4
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SKIP_ROOTFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_MONOTONIC_SYSCALL is not set
->       CONFIG_BUSYBOX_DEFAULT_IOCTL_HEX2STR_ERROR=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HWIB is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SEAMLESS_XZ is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SEAMLESS_LZMA is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SEAMLESS_BZ2 is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_SEAMLESS_GZ=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SEAMLESS_Z is not set
->       # CONFIG_BUSYBOX_DEFAULT_AR is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_AR_LONG_FILENAMES is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_AR_CREATE is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNCOMPRESS is not set
->       CONFIG_BUSYBOX_DEFAULT_GUNZIP=y
->       CONFIG_BUSYBOX_DEFAULT_ZCAT=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_GUNZIP_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_BUNZIP2=y
->       CONFIG_BUSYBOX_DEFAULT_BZCAT=y
->       # CONFIG_BUSYBOX_DEFAULT_UNLZMA is not set
->       # CONFIG_BUSYBOX_DEFAULT_LZCAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_LZMA is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LZMA_FAST is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNXZ is not set
->       # CONFIG_BUSYBOX_DEFAULT_XZCAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_XZ is not set
->       # CONFIG_BUSYBOX_DEFAULT_BZIP2 is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_BZIP2_DECOMPRESS=y
->       # CONFIG_BUSYBOX_DEFAULT_CPIO is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CPIO_O is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CPIO_P is not set
->       # CONFIG_BUSYBOX_DEFAULT_DPKG is not set
->       # CONFIG_BUSYBOX_DEFAULT_DPKG_DEB is not set
->       CONFIG_BUSYBOX_DEFAULT_GZIP=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_GZIP_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_GZIP_FAST=0
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_GZIP_LEVELS is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_GZIP_DECOMPRESS=y
->       # CONFIG_BUSYBOX_DEFAULT_LZOP is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNLZOP is not set
->       # CONFIG_BUSYBOX_DEFAULT_LZOPCAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_LZOP_COMPR_HIGH is not set
->       # CONFIG_BUSYBOX_DEFAULT_RPM is not set
->       # CONFIG_BUSYBOX_DEFAULT_RPM2CPIO is not set
->       CONFIG_BUSYBOX_DEFAULT_TAR=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_CREATE=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_AUTODETECT is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_FROM=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_OLDGNU_COMPATIBILITY is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_OLDSUN_COMPATIBILITY is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_GNU_EXTENSIONS=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_TO_COMMAND is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_UNAME_GNAME is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_NOPRESERVE_TIME is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_SELINUX is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNZIP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UNZIP_CDF is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UNZIP_BZIP2 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UNZIP_LZMA is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UNZIP_XZ is not set
->       CONFIG_BUSYBOX_DEFAULT_BASENAME=y
->       CONFIG_BUSYBOX_DEFAULT_CAT=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CATV is not set
->       CONFIG_BUSYBOX_DEFAULT_CHGRP=y
->       CONFIG_BUSYBOX_DEFAULT_CHMOD=y
->       CONFIG_BUSYBOX_DEFAULT_CHOWN=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHOWN_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_CHROOT=y
->       # CONFIG_BUSYBOX_DEFAULT_CKSUM is not set
->       # CONFIG_BUSYBOX_DEFAULT_COMM is not set
->       CONFIG_BUSYBOX_DEFAULT_CP=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CP_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_CUT=y
->       CONFIG_BUSYBOX_DEFAULT_DATE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_DATE_ISOFMT=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DATE_NANO is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DATE_COMPAT is not set
->       CONFIG_BUSYBOX_DEFAULT_DD=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_DD_SIGNAL_HANDLING=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DD_THIRD_STATUS_LINE is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_DD_IBS_OBS=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DD_STATUS is not set
->       CONFIG_BUSYBOX_DEFAULT_DF=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DF_FANCY is not set
->       CONFIG_BUSYBOX_DEFAULT_DIRNAME=y
->       # CONFIG_BUSYBOX_DEFAULT_DOS2UNIX is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNIX2DOS is not set
->       CONFIG_BUSYBOX_DEFAULT_DU=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_DU_DEFAULT_BLOCKSIZE_1K=y
->       CONFIG_BUSYBOX_DEFAULT_ECHO=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FANCY_ECHO=y
->       CONFIG_BUSYBOX_DEFAULT_ENV=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_ENV_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_EXPAND is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_EXPAND_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNEXPAND is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UNEXPAND_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_EXPR=y
->       CONFIG_BUSYBOX_DEFAULT_EXPR_MATH_SUPPORT_64=y
->       # CONFIG_BUSYBOX_DEFAULT_FACTOR is not set
->       CONFIG_BUSYBOX_DEFAULT_FALSE=y
->       # CONFIG_BUSYBOX_DEFAULT_FOLD is not set
->       CONFIG_BUSYBOX_DEFAULT_FSYNC=y
->       CONFIG_BUSYBOX_DEFAULT_HEAD=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FANCY_HEAD=y
->       # CONFIG_BUSYBOX_DEFAULT_HOSTID is not set
->       CONFIG_BUSYBOX_DEFAULT_ID=y
->       # CONFIG_BUSYBOX_DEFAULT_GROUPS is not set
->       # CONFIG_BUSYBOX_DEFAULT_INSTALL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INSTALL_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_LINK is not set
->       CONFIG_BUSYBOX_DEFAULT_LN=y
->       # CONFIG_BUSYBOX_DEFAULT_LOGNAME is not set
->       CONFIG_BUSYBOX_DEFAULT_LS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LS_FILETYPES=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LS_FOLLOWLINKS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LS_RECURSIVE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LS_WIDTH=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LS_SORTFILES=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LS_TIMESTAMPS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LS_USERNAME=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LS_COLOR=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LS_COLOR_IS_DEFAULT=y
->       CONFIG_BUSYBOX_DEFAULT_MD5SUM=y
->       # CONFIG_BUSYBOX_DEFAULT_SHA1SUM is not set
->       CONFIG_BUSYBOX_DEFAULT_SHA256SUM=y
->       # CONFIG_BUSYBOX_DEFAULT_SHA512SUM is not set
->       # CONFIG_BUSYBOX_DEFAULT_SHA3SUM is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_MD5_SHA1_SUM_CHECK=y
->       CONFIG_BUSYBOX_DEFAULT_MKDIR=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MKDIR_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_MKFIFO=y
->       CONFIG_BUSYBOX_DEFAULT_MKNOD=y
->       CONFIG_BUSYBOX_DEFAULT_MV=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MV_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_NICE=y
->       # CONFIG_BUSYBOX_DEFAULT_NL is not set
->       # CONFIG_BUSYBOX_DEFAULT_NOHUP is not set
->       # CONFIG_BUSYBOX_DEFAULT_NPROC is not set
->       # CONFIG_BUSYBOX_DEFAULT_OD is not set
->       # CONFIG_BUSYBOX_DEFAULT_PASTE is not set
->       # CONFIG_BUSYBOX_DEFAULT_PRINTENV is not set
->       CONFIG_BUSYBOX_DEFAULT_PRINTF=y
->       CONFIG_BUSYBOX_DEFAULT_PWD=y
->       CONFIG_BUSYBOX_DEFAULT_READLINK=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_READLINK_FOLLOW=y
->       # CONFIG_BUSYBOX_DEFAULT_REALPATH is not set
->       CONFIG_BUSYBOX_DEFAULT_RM=y
->       CONFIG_BUSYBOX_DEFAULT_RMDIR=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_RMDIR_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_SEQ=y
->       # CONFIG_BUSYBOX_DEFAULT_SHRED is not set
->       # CONFIG_BUSYBOX_DEFAULT_SHUF is not set
->       CONFIG_BUSYBOX_DEFAULT_SLEEP=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FANCY_SLEEP=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FLOAT_SLEEP is not set
->       CONFIG_BUSYBOX_DEFAULT_SORT=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SORT_BIG is not set
->       # CONFIG_BUSYBOX_DEFAULT_SPLIT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SPLIT_FANCY is not set
->       # CONFIG_BUSYBOX_DEFAULT_STAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_STAT_FORMAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_STAT_FILESYSTEM is not set
->       # CONFIG_BUSYBOX_DEFAULT_STTY is not set
->       # CONFIG_BUSYBOX_DEFAULT_SUM is not set
->       CONFIG_BUSYBOX_DEFAULT_SYNC=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SYNC_FANCY is not set
->       # CONFIG_BUSYBOX_DEFAULT_TAC is not set
->       CONFIG_BUSYBOX_DEFAULT_TAIL=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FANCY_TAIL=y
->       CONFIG_BUSYBOX_DEFAULT_TEE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TEE_USE_BLOCK_IO=y
->       CONFIG_BUSYBOX_DEFAULT_TEST=y
->       CONFIG_BUSYBOX_DEFAULT_TEST1=y
->       CONFIG_BUSYBOX_DEFAULT_TEST2=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TEST_64=y
->       CONFIG_BUSYBOX_DEFAULT_TOUCH=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TOUCH_NODEREF is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TOUCH_SUSV3=y
->       CONFIG_BUSYBOX_DEFAULT_TR=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TR_CLASSES is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TR_EQUIV is not set
->       CONFIG_BUSYBOX_DEFAULT_TRUE=y
->       # CONFIG_BUSYBOX_DEFAULT_TRUNCATE is not set
->       # CONFIG_BUSYBOX_DEFAULT_TTY is not set
->       CONFIG_BUSYBOX_DEFAULT_UNAME=y
->       CONFIG_BUSYBOX_DEFAULT_UNAME_OSNAME="GNU/Linux"
->       CONFIG_BUSYBOX_DEFAULT_UNIQ=y
->       # CONFIG_BUSYBOX_DEFAULT_UNLINK is not set
->       # CONFIG_BUSYBOX_DEFAULT_USLEEP is not set
->       # CONFIG_BUSYBOX_DEFAULT_UUDECODE is not set
->       # CONFIG_BUSYBOX_DEFAULT_BASE64 is not set
->       # CONFIG_BUSYBOX_DEFAULT_UUENCODE is not set
->       CONFIG_BUSYBOX_DEFAULT_WC=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_WC_LARGE is not set
->       # CONFIG_BUSYBOX_DEFAULT_WHO is not set
->       # CONFIG_BUSYBOX_DEFAULT_W is not set
->       # CONFIG_BUSYBOX_DEFAULT_USERS is not set
->       # CONFIG_BUSYBOX_DEFAULT_WHOAMI is not set
->       CONFIG_BUSYBOX_DEFAULT_YES=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VERBOSE is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_PRESERVE_HARDLINKS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_HUMAN_READABLE=y
->       # CONFIG_BUSYBOX_DEFAULT_CHVT is not set
->       CONFIG_BUSYBOX_DEFAULT_CLEAR=y
->       # CONFIG_BUSYBOX_DEFAULT_DEALLOCVT is not set
->       # CONFIG_BUSYBOX_DEFAULT_DUMPKMAP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FGCONSOLE is not set
->       # CONFIG_BUSYBOX_DEFAULT_KBD_MODE is not set
->       # CONFIG_BUSYBOX_DEFAULT_LOADFONT is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETFONT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SETFONT_TEXTUAL_MAP is not set
->       CONFIG_BUSYBOX_DEFAULT_DEFAULT_SETFONT_DIR=""
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LOADFONT_PSF2 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LOADFONT_RAW is not set
->       # CONFIG_BUSYBOX_DEFAULT_LOADKMAP is not set
->       # CONFIG_BUSYBOX_DEFAULT_OPENVT is not set
->       CONFIG_BUSYBOX_DEFAULT_RESET=y
->       # CONFIG_BUSYBOX_DEFAULT_RESIZE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_RESIZE_PRINT is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETCONSOLE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SETCONSOLE_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETKEYCODES is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETLOGCONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_SHOWKEY is not set
->       CONFIG_BUSYBOX_DEFAULT_MKTEMP=y
->       # CONFIG_BUSYBOX_DEFAULT_PIPE_PROGRESS is not set
->       # CONFIG_BUSYBOX_DEFAULT_RUN_PARTS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_RUN_PARTS_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_RUN_PARTS_FANCY is not set
->       CONFIG_BUSYBOX_DEFAULT_START_STOP_DAEMON=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_START_STOP_DAEMON_FANCY is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_START_STOP_DAEMON_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_WHICH=y
->       CONFIG_BUSYBOX_DEFAULT_AWK=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_AWK_LIBM=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_AWK_GNU_EXTENSIONS=y
->       CONFIG_BUSYBOX_DEFAULT_CMP=y
->       # CONFIG_BUSYBOX_DEFAULT_DIFF is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DIFF_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DIFF_DIR is not set
->       # CONFIG_BUSYBOX_DEFAULT_ED is not set
->       # CONFIG_BUSYBOX_DEFAULT_PATCH is not set
->       CONFIG_BUSYBOX_DEFAULT_SED=y
->       CONFIG_BUSYBOX_DEFAULT_VI=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_MAX_LEN=1024
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_8BIT is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_COLON=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_YANKMARK=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_SEARCH=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_REGEX_SEARCH is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_USE_SIGNALS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_DOT_CMD=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_READONLY=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_SETOPTS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_SET=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_WIN_RESIZE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_ASK_TERMINAL=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_UNDO is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_UNDO_QUEUE is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_UNDO_QUEUE_MAX=0
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_ALLOW_EXEC=y
->       CONFIG_BUSYBOX_DEFAULT_FIND=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_PRINT0=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_MTIME=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_MMIN is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_PERM=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_TYPE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_XDEV=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_MAXDEPTH=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_NEWER=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_INUM is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_EXEC=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_EXEC_PLUS is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_USER=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_GROUP=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_NOT=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_DEPTH=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_PAREN=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_SIZE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_PRUNE=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_DELETE is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_PATH=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_REGEX=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_CONTEXT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_LINKS is not set
->       CONFIG_BUSYBOX_DEFAULT_GREP=y
->       CONFIG_BUSYBOX_DEFAULT_EGREP=y
->       CONFIG_BUSYBOX_DEFAULT_FGREP=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_GREP_CONTEXT=y
->       CONFIG_BUSYBOX_DEFAULT_XARGS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_XARGS_SUPPORT_CONFIRMATION=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_XARGS_SUPPORT_QUOTES=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_XARGS_SUPPORT_TERMOPT=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_XARGS_SUPPORT_ZERO_TERM=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_XARGS_SUPPORT_REPL_STR is not set
->       # CONFIG_BUSYBOX_DEFAULT_BOOTCHARTD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_BOOTCHARTD_BLOATED_HEADER is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_BOOTCHARTD_CONFIG_FILE is not set
->       CONFIG_BUSYBOX_DEFAULT_HALT=y
->       CONFIG_BUSYBOX_DEFAULT_POWEROFF=y
->       CONFIG_BUSYBOX_DEFAULT_REBOOT=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CALL_TELINIT is not set
->       CONFIG_BUSYBOX_DEFAULT_TELINIT_PATH=""
->       # CONFIG_BUSYBOX_DEFAULT_INIT is not set
->       # CONFIG_BUSYBOX_DEFAULT_LINUXRC is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_USE_INITTAB is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_KILL_REMOVED is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_KILL_DELAY=0
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INIT_SCTTY is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INIT_SYSLOG is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INIT_QUIET is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INIT_COREDUMPS is not set
->       CONFIG_BUSYBOX_DEFAULT_INIT_TERMINAL_TYPE=""
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INIT_MODIFY_CMDLINE is not set
->       # CONFIG_BUSYBOX_DEFAULT_MESG is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MESG_ENABLE_ONLY_GROUP is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_SHADOWPASSWDS=y
->       # CONFIG_BUSYBOX_DEFAULT_USE_BB_PWD_GRP is not set
->       # CONFIG_BUSYBOX_DEFAULT_USE_BB_SHADOW is not set
->       # CONFIG_BUSYBOX_DEFAULT_USE_BB_CRYPT is not set
->       # CONFIG_BUSYBOX_DEFAULT_USE_BB_CRYPT_SHA is not set
->       # CONFIG_BUSYBOX_DEFAULT_ADD_SHELL is not set
->       # CONFIG_BUSYBOX_DEFAULT_REMOVE_SHELL is not set
->       # CONFIG_BUSYBOX_DEFAULT_ADDGROUP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_ADDGROUP_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_ADDUSER_TO_GROUP is not set
->       # CONFIG_BUSYBOX_DEFAULT_ADDUSER is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_ADDUSER_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHECK_NAMES is not set
->       CONFIG_BUSYBOX_DEFAULT_LAST_ID=0
->       CONFIG_BUSYBOX_DEFAULT_FIRST_SYSTEM_ID=0
->       CONFIG_BUSYBOX_DEFAULT_LAST_SYSTEM_ID=0
->       # CONFIG_BUSYBOX_DEFAULT_CHPASSWD is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_DEFAULT_PASSWD_ALGO="md5"
->       # CONFIG_BUSYBOX_DEFAULT_CRYPTPW is not set
->       # CONFIG_BUSYBOX_DEFAULT_MKPASSWD is not set
->       # CONFIG_BUSYBOX_DEFAULT_DELUSER is not set
->       # CONFIG_BUSYBOX_DEFAULT_DELGROUP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DEL_USER_FROM_GROUP is not set
->       # CONFIG_BUSYBOX_DEFAULT_GETTY is not set
->       CONFIG_BUSYBOX_DEFAULT_LOGIN=y
->       CONFIG_BUSYBOX_DEFAULT_LOGIN_SESSION_AS_CHILD=y
->       # CONFIG_BUSYBOX_DEFAULT_LOGIN_SCRIPTS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_NOLOGIN is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SECURETTY is not set
->       CONFIG_BUSYBOX_DEFAULT_PASSWD=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_PASSWD_WEAK_CHECK=y
->       # CONFIG_BUSYBOX_DEFAULT_SU is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SU_SYSLOG is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SU_CHECKS_SHELLS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SU_BLANK_PW_NEEDS_SECURE_TTY is not set
->       # CONFIG_BUSYBOX_DEFAULT_SULOGIN is not set
->       # CONFIG_BUSYBOX_DEFAULT_VLOCK is not set
->       # CONFIG_BUSYBOX_DEFAULT_CHATTR is not set
->       # CONFIG_BUSYBOX_DEFAULT_FSCK is not set
->       # CONFIG_BUSYBOX_DEFAULT_LSATTR is not set
->       # CONFIG_BUSYBOX_DEFAULT_TUNE2FS is not set
->       # CONFIG_BUSYBOX_DEFAULT_MODPROBE_SMALL is not set
->       # CONFIG_BUSYBOX_DEFAULT_DEPMOD is not set
->       # CONFIG_BUSYBOX_DEFAULT_INSMOD is not set
->       # CONFIG_BUSYBOX_DEFAULT_LSMOD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LSMOD_PRETTY_2_6_OUTPUT is not set
->       # CONFIG_BUSYBOX_DEFAULT_MODINFO is not set
->       # CONFIG_BUSYBOX_DEFAULT_MODPROBE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MODPROBE_BLACKLIST is not set
->       # CONFIG_BUSYBOX_DEFAULT_RMMOD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CMDLINE_MODULE_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MODPROBE_SMALL_CHECK_ALREADY_LOADED is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_2_4_MODULES is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INSMOD_VERSION_CHECKING is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INSMOD_KSYMOOPS_SYMBOLS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INSMOD_LOADINKMEM is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INSMOD_LOAD_MAP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INSMOD_LOAD_MAP_FULL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHECK_TAINTED_MODULE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INSMOD_TRY_MMAP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MODUTILS_ALIAS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MODUTILS_SYMBOLS is not set
->       CONFIG_BUSYBOX_DEFAULT_DEFAULT_MODULES_DIR=""
->       CONFIG_BUSYBOX_DEFAULT_DEFAULT_DEPMOD_FILE=""
->       # CONFIG_BUSYBOX_DEFAULT_ACPID is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_ACPID_COMPAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_BLKDISCARD is not set
->       # CONFIG_BUSYBOX_DEFAULT_BLKID is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_BLKID_TYPE is not set
->       # CONFIG_BUSYBOX_DEFAULT_BLOCKDEV is not set
->       # CONFIG_BUSYBOX_DEFAULT_CAL is not set
->       CONFIG_BUSYBOX_DEFAULT_DMESG=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_DMESG_PRETTY=y
->       # CONFIG_BUSYBOX_DEFAULT_FALLOCATE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FATATTR is not set
->       # CONFIG_BUSYBOX_DEFAULT_FBSET is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FBSET_FANCY is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FBSET_READMODE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FDFORMAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FDISK is not set
->       # CONFIG_BUSYBOX_DEFAULT_FDISK_SUPPORT_LARGE_DISKS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FDISK_WRITABLE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_AIX_LABEL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SGI_LABEL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SUN_LABEL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_OSF_LABEL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_GPT_LABEL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FDISK_ADVANCED is not set
->       # CONFIG_BUSYBOX_DEFAULT_FINDFS is not set
->       CONFIG_BUSYBOX_DEFAULT_FLOCK=y
->       # CONFIG_BUSYBOX_DEFAULT_FDFLUSH is not set
->       # CONFIG_BUSYBOX_DEFAULT_FREERAMDISK is not set
->       # CONFIG_BUSYBOX_DEFAULT_FSCK_MINIX is not set
->       # CONFIG_BUSYBOX_DEFAULT_FSFREEZE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FSTRIM is not set
->       # CONFIG_BUSYBOX_DEFAULT_GETOPT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_GETOPT_LONG is not set
->       CONFIG_BUSYBOX_DEFAULT_HEXDUMP=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HEXDUMP_REVERSE is not set
->       # CONFIG_BUSYBOX_DEFAULT_HD is not set
->       # CONFIG_BUSYBOX_DEFAULT_XXD is not set
->       CONFIG_BUSYBOX_DEFAULT_HWCLOCK=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HWCLOCK_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HWCLOCK_ADJTIME_FHS is not set
->       # CONFIG_BUSYBOX_DEFAULT_IPCRM is not set
->       # CONFIG_BUSYBOX_DEFAULT_IPCS is not set
->       # CONFIG_BUSYBOX_DEFAULT_LOSETUP is not set
->       # CONFIG_BUSYBOX_DEFAULT_LSPCI is not set
->       # CONFIG_BUSYBOX_DEFAULT_LSUSB is not set
->       # CONFIG_BUSYBOX_DEFAULT_MDEV is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MDEV_CONF is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MDEV_RENAME is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MDEV_RENAME_REGEXP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MDEV_EXEC is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MDEV_LOAD_FIRMWARE is not set
->       # CONFIG_BUSYBOX_DEFAULT_MKE2FS is not set
->       # CONFIG_BUSYBOX_DEFAULT_MKFS_EXT2 is not set
->       # CONFIG_BUSYBOX_DEFAULT_MKFS_MINIX is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MINIX2 is not set
->       # CONFIG_BUSYBOX_DEFAULT_MKFS_REISER is not set
->       # CONFIG_BUSYBOX_DEFAULT_MKDOSFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_MKFS_VFAT is not set
->       CONFIG_BUSYBOX_DEFAULT_MKSWAP=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MKSWAP_UUID is not set
->       # CONFIG_BUSYBOX_DEFAULT_MORE is not set
->       CONFIG_BUSYBOX_DEFAULT_MOUNT=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_FAKE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_VERBOSE is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_HELPERS=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_LABEL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_NFS is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_CIFS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_FLAGS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_FSTAB=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_OTHERTAB is not set
->       # CONFIG_BUSYBOX_DEFAULT_NSENTER is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_NSENTER_LONG_OPTS is not set
->       CONFIG_BUSYBOX_DEFAULT_PIVOT_ROOT=y
->       # CONFIG_BUSYBOX_DEFAULT_RDATE is not set
->       # CONFIG_BUSYBOX_DEFAULT_RDEV is not set
->       # CONFIG_BUSYBOX_DEFAULT_READPROFILE is not set
->       # CONFIG_BUSYBOX_DEFAULT_REV is not set
->       # CONFIG_BUSYBOX_DEFAULT_RTCWAKE is not set
->       # CONFIG_BUSYBOX_DEFAULT_SCRIPT is not set
->       # CONFIG_BUSYBOX_DEFAULT_SCRIPTREPLAY is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETARCH is not set
->       # CONFIG_BUSYBOX_DEFAULT_LINUX32 is not set
->       # CONFIG_BUSYBOX_DEFAULT_LINUX64 is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETPRIV is not set
->       # CONFIG_BUSYBOX_DEFAULT_SWAPON is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SWAPON_DISCARD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SWAPON_PRI is not set
->       # CONFIG_BUSYBOX_DEFAULT_SWAPOFF is not set
->       CONFIG_BUSYBOX_DEFAULT_SWITCH_ROOT=y
->       # CONFIG_BUSYBOX_DEFAULT_UEVENT is not set
->       CONFIG_BUSYBOX_DEFAULT_UMOUNT=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_UMOUNT_ALL=y
->       # CONFIG_BUSYBOX_DEFAULT_UNSHARE is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_LOOP=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_LOOP_CREATE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MTAB_SUPPORT is not set
->       # CONFIG_BUSYBOX_DEFAULT_VOLUMEID is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_BCACHE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_BTRFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_CRAMFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_EXFAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_EXT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_F2FS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_FAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_HFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_ISO9660 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_JFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_LINUXRAID is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_LINUXSWAP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_LUKS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_NILFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_NTFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_OCFS2 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_REISERFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_ROMFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_SQUASHFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_SYSV is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_UBIFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_UDF is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_XFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_ADJTIMEX is not set
->       # CONFIG_BUSYBOX_DEFAULT_BBCONFIG is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_COMPRESS_BBCONFIG is not set
->       # CONFIG_BUSYBOX_DEFAULT_BEEP is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_BEEP_FREQ=0
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_BEEP_LENGTH_MS=0
->       # CONFIG_BUSYBOX_DEFAULT_CHAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHAT_NOFAIL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHAT_TTY_HIFI is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHAT_IMPLICIT_CR is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHAT_SWALLOW_OPTS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHAT_SEND_ESCAPES is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHAT_VAR_ABORT_LEN is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHAT_CLR_ABORT is not set
->       # CONFIG_BUSYBOX_DEFAULT_CHRT is not set
->       # CONFIG_BUSYBOX_DEFAULT_CONSPY is not set
->       CONFIG_BUSYBOX_DEFAULT_CROND=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CROND_D is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CROND_CALL_SENDMAIL is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_CROND_DIR="/etc"
->       CONFIG_BUSYBOX_DEFAULT_CRONTAB=y
->       # CONFIG_BUSYBOX_DEFAULT_DC is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DC_LIBM is not set
->       # CONFIG_BUSYBOX_DEFAULT_DEVFSD is not set
->       # CONFIG_BUSYBOX_DEFAULT_DEVFSD_MODLOAD is not set
->       # CONFIG_BUSYBOX_DEFAULT_DEVFSD_FG_NP is not set
->       # CONFIG_BUSYBOX_DEFAULT_DEVFSD_VERBOSE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DEVFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_DEVMEM is not set
->       # CONFIG_BUSYBOX_DEFAULT_EJECT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_EJECT_SCSI is not set
->       # CONFIG_BUSYBOX_DEFAULT_FBSPLASH is not set
->       # CONFIG_BUSYBOX_DEFAULT_FLASH_ERASEALL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FLASH_LOCK is not set
->       # CONFIG_BUSYBOX_DEFAULT_FLASH_UNLOCK is not set
->       # CONFIG_BUSYBOX_DEFAULT_FLASHCP is not set
->       # CONFIG_BUSYBOX_DEFAULT_HDPARM is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HDPARM_GET_IDENTITY is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HDPARM_HDIO_SCAN_HWIF is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HDPARM_HDIO_UNREGISTER_HWIF is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HDPARM_HDIO_DRIVE_RESET is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HDPARM_HDIO_TRISTATE_HWIF is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HDPARM_HDIO_GETSET_DMA is not set
->       # CONFIG_BUSYBOX_DEFAULT_I2CGET is not set
->       # CONFIG_BUSYBOX_DEFAULT_I2CSET is not set
->       # CONFIG_BUSYBOX_DEFAULT_I2CDUMP is not set
->       # CONFIG_BUSYBOX_DEFAULT_I2CDETECT is not set
->       # CONFIG_BUSYBOX_DEFAULT_INOTIFYD is not set
->       # CONFIG_BUSYBOX_DEFAULT_IONICE is not set
->       # CONFIG_BUSYBOX_DEFAULT_LAST is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LAST_FANCY is not set
->       CONFIG_BUSYBOX_DEFAULT_LESS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_MAXLINES=9999999
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_BRACKETS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_FLAGS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_TRUNCATE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_MARKS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_REGEXP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_WINCH is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_ASK_TERMINAL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_DASHCMD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_LINENUMS is not set
->       CONFIG_BUSYBOX_DEFAULT_LOCK=y
->       # CONFIG_BUSYBOX_DEFAULT_LSSCSI is not set
->       # CONFIG_BUSYBOX_DEFAULT_MAKEDEVS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MAKEDEVS_LEAF is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MAKEDEVS_TABLE is not set
->       # CONFIG_BUSYBOX_DEFAULT_MAN is not set
->       # CONFIG_BUSYBOX_DEFAULT_MICROCOM is not set
->       # CONFIG_BUSYBOX_DEFAULT_MOUNTPOINT is not set
->       # CONFIG_BUSYBOX_DEFAULT_MT is not set
->       # CONFIG_BUSYBOX_DEFAULT_NANDWRITE is not set
->       # CONFIG_BUSYBOX_DEFAULT_NANDDUMP is not set
->       # CONFIG_BUSYBOX_DEFAULT_PARTPROBE is not set
->       # CONFIG_BUSYBOX_DEFAULT_RAIDAUTORUN is not set
->       # CONFIG_BUSYBOX_DEFAULT_READAHEAD is not set
->       # CONFIG_BUSYBOX_DEFAULT_RFKILL is not set
->       # CONFIG_BUSYBOX_DEFAULT_RUNLEVEL is not set
->       # CONFIG_BUSYBOX_DEFAULT_RX is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETSERIAL is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETSID is not set
->       CONFIG_BUSYBOX_DEFAULT_STRINGS=y
->       # CONFIG_BUSYBOX_DEFAULT_TASKSET is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TASKSET_FANCY is not set
->       CONFIG_BUSYBOX_DEFAULT_TIME=y
->       # CONFIG_BUSYBOX_DEFAULT_TIMEOUT is not set
->       # CONFIG_BUSYBOX_DEFAULT_TTYSIZE is not set
->       # CONFIG_BUSYBOX_DEFAULT_UBIATTACH is not set
->       # CONFIG_BUSYBOX_DEFAULT_UBIDETACH is not set
->       # CONFIG_BUSYBOX_DEFAULT_UBIMKVOL is not set
->       # CONFIG_BUSYBOX_DEFAULT_UBIRMVOL is not set
->       # CONFIG_BUSYBOX_DEFAULT_UBIRSVOL is not set
->       # CONFIG_BUSYBOX_DEFAULT_UBIUPDATEVOL is not set
->       # CONFIG_BUSYBOX_DEFAULT_UBIRENAME is not set
->       # CONFIG_BUSYBOX_DEFAULT_VOLNAME is not set
->       # CONFIG_BUSYBOX_DEFAULT_WALL is not set
->       # CONFIG_BUSYBOX_DEFAULT_WATCHDOG is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IPV6=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UNIX_LOCAL is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_PREFER_IPV4_ADDRESS=y
->       CONFIG_BUSYBOX_DEFAULT_VERBOSE_RESOLUTION_ERRORS=y
->       # CONFIG_BUSYBOX_DEFAULT_ARP is not set
->       # CONFIG_BUSYBOX_DEFAULT_ARPING is not set
->       CONFIG_BUSYBOX_DEFAULT_BRCTL=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_BRCTL_FANCY=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_BRCTL_SHOW=y
->       # CONFIG_BUSYBOX_DEFAULT_DNSD is not set
->       # CONFIG_BUSYBOX_DEFAULT_ETHER_WAKE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FTPD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FTPD_WRITE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FTPD_ACCEPT_BROKEN_LIST is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FTPD_AUTHENTICATION is not set
->       # CONFIG_BUSYBOX_DEFAULT_FTPGET is not set
->       # CONFIG_BUSYBOX_DEFAULT_FTPPUT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FTPGETPUT_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_HOSTNAME is not set
->       # CONFIG_BUSYBOX_DEFAULT_DNSDOMAINNAME is not set
->       # CONFIG_BUSYBOX_DEFAULT_HTTPD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_RANGES is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_SETUID is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_BASIC_AUTH is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_AUTH_MD5 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_CGI is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_CONFIG_WITH_SCRIPT_INTERPR is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_SET_REMOTE_PORT_TO_ENV is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_ENCODE_URL_STR is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_ERROR_PAGES is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_PROXY is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_GZIP is not set
->       CONFIG_BUSYBOX_DEFAULT_IFCONFIG=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IFCONFIG_STATUS=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IFCONFIG_SLIP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IFCONFIG_MEMSTART_IOADDR_IRQ is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IFCONFIG_HW=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IFCONFIG_BROADCAST_PLUS=y
->       # CONFIG_BUSYBOX_DEFAULT_IFENSLAVE is not set
->       # CONFIG_BUSYBOX_DEFAULT_IFPLUGD is not set
->       # CONFIG_BUSYBOX_DEFAULT_IFUP is not set
->       # CONFIG_BUSYBOX_DEFAULT_IFDOWN is not set
->       CONFIG_BUSYBOX_DEFAULT_IFUPDOWN_IFSTATE_PATH=""
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IFUPDOWN_IP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IFUPDOWN_IPV4 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IFUPDOWN_IPV6 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IFUPDOWN_MAPPING is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IFUPDOWN_EXTERNAL_DHCP is not set
->       # CONFIG_BUSYBOX_DEFAULT_INETD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INETD_SUPPORT_BUILTIN_ECHO is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INETD_SUPPORT_BUILTIN_DISCARD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INETD_SUPPORT_BUILTIN_TIME is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INETD_SUPPORT_BUILTIN_DAYTIME is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INETD_SUPPORT_BUILTIN_CHARGEN is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INETD_RPC is not set
->       CONFIG_BUSYBOX_DEFAULT_IP=y
->       # CONFIG_BUSYBOX_DEFAULT_IPADDR is not set
->       # CONFIG_BUSYBOX_DEFAULT_IPLINK is not set
->       # CONFIG_BUSYBOX_DEFAULT_IPROUTE is not set
->       # CONFIG_BUSYBOX_DEFAULT_IPTUNNEL is not set
->       # CONFIG_BUSYBOX_DEFAULT_IPRULE is not set
->       # CONFIG_BUSYBOX_DEFAULT_IPNEIGH is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IP_ADDRESS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IP_LINK=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IP_ROUTE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IP_ROUTE_DIR="/etc/iproute2"
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IP_TUNNEL is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IP_RULE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IP_NEIGH=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IP_RARE_PROTOCOLS is not set
->       # CONFIG_BUSYBOX_DEFAULT_IPCALC is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IPCALC_FANCY is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IPCALC_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FAKEIDENTD is not set
->       # CONFIG_BUSYBOX_DEFAULT_NAMEIF is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_NAMEIF_EXTENDED is not set
->       # CONFIG_BUSYBOX_DEFAULT_NBDCLIENT is not set
->       CONFIG_BUSYBOX_DEFAULT_NC=y
->       # CONFIG_BUSYBOX_DEFAULT_NC_SERVER is not set
->       # CONFIG_BUSYBOX_DEFAULT_NC_EXTRA is not set
->       # CONFIG_BUSYBOX_DEFAULT_NC_110_COMPAT is not set
->       CONFIG_BUSYBOX_DEFAULT_NETMSG=y
->       CONFIG_BUSYBOX_DEFAULT_NETSTAT=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_NETSTAT_WIDE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_NETSTAT_PRG=y
->       # CONFIG_BUSYBOX_DEFAULT_NSLOOKUP is not set
->       CONFIG_BUSYBOX_DEFAULT_NSLOOKUP_OPENWRT=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_NSLOOKUP_OPENWRT_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_NTPD=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_NTPD_SERVER=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_NTPD_CONF is not set
->       CONFIG_BUSYBOX_DEFAULT_PING=y
->       CONFIG_BUSYBOX_DEFAULT_PING6=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FANCY_PING=y
->       # CONFIG_BUSYBOX_DEFAULT_PSCAN is not set
->       CONFIG_BUSYBOX_DEFAULT_ROUTE=y
->       # CONFIG_BUSYBOX_DEFAULT_SLATTACH is not set
->       # CONFIG_BUSYBOX_DEFAULT_SSL_CLIENT is not set
->       # CONFIG_BUSYBOX_DEFAULT_TCPSVD is not set
->       # CONFIG_BUSYBOX_DEFAULT_UDPSVD is not set
->       # CONFIG_BUSYBOX_DEFAULT_TELNET is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TELNET_TTYPE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TELNET_AUTOLOGIN is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TELNET_WIDTH is not set
->       # CONFIG_BUSYBOX_DEFAULT_TELNETD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TELNETD_STANDALONE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TELNETD_INETD_WAIT is not set
->       # CONFIG_BUSYBOX_DEFAULT_TFTP is not set
->       # CONFIG_BUSYBOX_DEFAULT_TFTPD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TFTP_GET is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TFTP_PUT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TFTP_BLOCKSIZE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TFTP_PROGRESS_BAR is not set
->       # CONFIG_BUSYBOX_DEFAULT_TFTP_DEBUG is not set
->       # CONFIG_BUSYBOX_DEFAULT_TLS is not set
->       CONFIG_BUSYBOX_DEFAULT_TRACEROUTE=y
->       CONFIG_BUSYBOX_DEFAULT_TRACEROUTE6=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TRACEROUTE_VERBOSE=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TRACEROUTE_USE_ICMP is not set
->       # CONFIG_BUSYBOX_DEFAULT_TUNCTL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TUNCTL_UG is not set
->       # CONFIG_BUSYBOX_DEFAULT_VCONFIG is not set
->       # CONFIG_BUSYBOX_DEFAULT_WGET is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_WGET_STATUSBAR is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_WGET_AUTHENTICATION is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_WGET_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_WGET_TIMEOUT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_WGET_HTTPS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_WGET_OPENSSL is not set
->       # CONFIG_BUSYBOX_DEFAULT_WHOIS is not set
->       # CONFIG_BUSYBOX_DEFAULT_ZCIP is not set
->       # CONFIG_BUSYBOX_DEFAULT_UDHCPC6 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCPC6_RFC3646 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCPC6_RFC4704 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCPC6_RFC4833 is not set
->       # CONFIG_BUSYBOX_DEFAULT_UDHCPD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCPD_WRITE_LEASES_EARLY is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCPD_BASE_IP_ON_MAC is not set
->       CONFIG_BUSYBOX_DEFAULT_DHCPD_LEASES_FILE=""
->       # CONFIG_BUSYBOX_DEFAULT_DUMPLEASES is not set
->       # CONFIG_BUSYBOX_DEFAULT_DHCPRELAY is not set
->       CONFIG_BUSYBOX_DEFAULT_UDHCPC=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCPC_ARPING is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCPC_SANITIZEOPT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCP_PORT is not set
->       CONFIG_BUSYBOX_DEFAULT_UDHCP_DEBUG=0
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCP_RFC3397=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCP_8021Q is not set
->       CONFIG_BUSYBOX_DEFAULT_UDHCPC_DEFAULT_SCRIPT="/usr/share/udhcpc/default.script"
->       CONFIG_BUSYBOX_DEFAULT_UDHCPC_SLACK_FOR_BUGGY_SERVERS=80
->       CONFIG_BUSYBOX_DEFAULT_IFUPDOWN_UDHCPC_CMD_OPTIONS=""
->       # CONFIG_BUSYBOX_DEFAULT_LPD is not set
->       # CONFIG_BUSYBOX_DEFAULT_LPR is not set
->       # CONFIG_BUSYBOX_DEFAULT_LPQ is not set
->       # CONFIG_BUSYBOX_DEFAULT_MAKEMIME is not set
->       # CONFIG_BUSYBOX_DEFAULT_POPMAILDIR is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_POPMAILDIR_DELIVERY is not set
->       # CONFIG_BUSYBOX_DEFAULT_REFORMIME is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_REFORMIME_COMPAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_SENDMAIL is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_MIME_CHARSET=""
->       CONFIG_BUSYBOX_DEFAULT_FREE=y
->       # CONFIG_BUSYBOX_DEFAULT_FUSER is not set
->       # CONFIG_BUSYBOX_DEFAULT_IOSTAT is not set
->       CONFIG_BUSYBOX_DEFAULT_KILL=y
->       CONFIG_BUSYBOX_DEFAULT_KILLALL=y
->       # CONFIG_BUSYBOX_DEFAULT_KILLALL5 is not set
->       # CONFIG_BUSYBOX_DEFAULT_LSOF is not set
->       # CONFIG_BUSYBOX_DEFAULT_MPSTAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_NMETER is not set
->       CONFIG_BUSYBOX_DEFAULT_PGREP=y
->       # CONFIG_BUSYBOX_DEFAULT_PKILL is not set
->       CONFIG_BUSYBOX_DEFAULT_PIDOF=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_PIDOF_SINGLE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_PIDOF_OMIT is not set
->       # CONFIG_BUSYBOX_DEFAULT_PMAP is not set
->       # CONFIG_BUSYBOX_DEFAULT_POWERTOP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_POWERTOP_INTERACTIVE is not set
->       CONFIG_BUSYBOX_DEFAULT_PS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_PS_WIDE=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_PS_LONG is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_PS_TIME is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_PS_ADDITIONAL_COLUMNS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_PS_UNUSUAL_SYSTEMS is not set
->       # CONFIG_BUSYBOX_DEFAULT_PSTREE is not set
->       # CONFIG_BUSYBOX_DEFAULT_PWDX is not set
->       # CONFIG_BUSYBOX_DEFAULT_RENICE is not set
->       # CONFIG_BUSYBOX_DEFAULT_SMEMCAP is not set
->       CONFIG_BUSYBOX_DEFAULT_BB_SYSCTL=y
->       CONFIG_BUSYBOX_DEFAULT_TOP=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TOP_INTERACTIVE is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TOP_CPU_USAGE_PERCENTAGE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TOP_CPU_GLOBAL_PERCENTS=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TOP_SMP_CPU is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TOP_DECIMALS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TOP_SMP_PROCESS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TOPMEM is not set
->       CONFIG_BUSYBOX_DEFAULT_UPTIME=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UPTIME_UTMP_SUPPORT is not set
->       # CONFIG_BUSYBOX_DEFAULT_WATCH is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SHOW_THREADS is not set
->       # CONFIG_BUSYBOX_DEFAULT_CHPST is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETUIDGID is not set
->       # CONFIG_BUSYBOX_DEFAULT_ENVUIDGID is not set
->       # CONFIG_BUSYBOX_DEFAULT_ENVDIR is not set
->       # CONFIG_BUSYBOX_DEFAULT_SOFTLIMIT is not set
->       # CONFIG_BUSYBOX_DEFAULT_RUNSV is not set
->       # CONFIG_BUSYBOX_DEFAULT_RUNSVDIR is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_RUNSVDIR_LOG is not set
->       # CONFIG_BUSYBOX_DEFAULT_SV is not set
->       CONFIG_BUSYBOX_DEFAULT_SV_DEFAULT_SERVICE_DIR=""
->       # CONFIG_BUSYBOX_DEFAULT_SVC is not set
->       # CONFIG_BUSYBOX_DEFAULT_SVLOGD is not set
->       # CONFIG_BUSYBOX_DEFAULT_CHCON is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHCON_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_GETENFORCE is not set
->       # CONFIG_BUSYBOX_DEFAULT_GETSEBOOL is not set
->       # CONFIG_BUSYBOX_DEFAULT_LOAD_POLICY is not set
->       # CONFIG_BUSYBOX_DEFAULT_MATCHPATHCON is not set
->       # CONFIG_BUSYBOX_DEFAULT_RUNCON is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_RUNCON_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_SELINUXENABLED is not set
->       # CONFIG_BUSYBOX_DEFAULT_SESTATUS is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETENFORCE is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETFILES is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SETFILES_CHECK_OPTION is not set
->       # CONFIG_BUSYBOX_DEFAULT_RESTORECON is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETSEBOOL is not set
->       CONFIG_BUSYBOX_DEFAULT_SH_IS_ASH=y
->       # CONFIG_BUSYBOX_DEFAULT_SH_IS_HUSH is not set
->       # CONFIG_BUSYBOX_DEFAULT_SH_IS_NONE is not set
->       # CONFIG_BUSYBOX_DEFAULT_BASH_IS_ASH is not set
->       # CONFIG_BUSYBOX_DEFAULT_BASH_IS_HUSH is not set
->       CONFIG_BUSYBOX_DEFAULT_BASH_IS_NONE=y
->       CONFIG_BUSYBOX_DEFAULT_ASH=y
->       # CONFIG_BUSYBOX_DEFAULT_ASH_OPTIMIZE_FOR_SIZE is not set
->       CONFIG_BUSYBOX_DEFAULT_ASH_INTERNAL_GLOB=y
->       CONFIG_BUSYBOX_DEFAULT_ASH_BASH_COMPAT=y
->       CONFIG_BUSYBOX_DEFAULT_ASH_JOB_CONTROL=y
->       CONFIG_BUSYBOX_DEFAULT_ASH_ALIAS=y
->       # CONFIG_BUSYBOX_DEFAULT_ASH_RANDOM_SUPPORT is not set
->       CONFIG_BUSYBOX_DEFAULT_ASH_EXPAND_PRMT=y
->       # CONFIG_BUSYBOX_DEFAULT_ASH_IDLE_TIMEOUT is not set
->       # CONFIG_BUSYBOX_DEFAULT_ASH_MAIL is not set
->       CONFIG_BUSYBOX_DEFAULT_ASH_ECHO=y
->       CONFIG_BUSYBOX_DEFAULT_ASH_PRINTF=y
->       CONFIG_BUSYBOX_DEFAULT_ASH_TEST=y
->       # CONFIG_BUSYBOX_DEFAULT_ASH_HELP is not set
->       CONFIG_BUSYBOX_DEFAULT_ASH_GETOPTS=y
->       CONFIG_BUSYBOX_DEFAULT_ASH_CMDCMD=y
->       # CONFIG_BUSYBOX_DEFAULT_CTTYHACK is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_BASH_COMPAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_BRACE_EXPANSION is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_HELP is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_INTERACTIVE is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_SAVEHISTORY is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_JOB is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_TICK is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_IF is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_LOOPS is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_CASE is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_FUNCTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_LOCAL is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_RANDOM_SUPPORT is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_MODE_X is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_ECHO is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_PRINTF is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_TEST is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_EXPORT is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_EXPORT_N is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_KILL is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_WAIT is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_TRAP is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_TYPE is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_READ is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_SET is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_UNSET is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_ULIMIT is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_UMASK is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_MEMLEAK is not set
->       # CONFIG_BUSYBOX_DEFAULT_MSH is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_SH_MATH=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_SH_MATH_64=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SH_EXTRA_QUIET is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SH_STANDALONE is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_SH_NOFORK=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SH_HISTFILESIZE is not set
->       # CONFIG_BUSYBOX_DEFAULT_KLOGD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_KLOGD_KLOGCTL is not set
->       CONFIG_BUSYBOX_DEFAULT_LOGGER=y
->       # CONFIG_BUSYBOX_DEFAULT_LOGREAD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LOGREAD_REDUCED_LOCKING is not set
->       # CONFIG_BUSYBOX_DEFAULT_SYSLOGD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_ROTATE_LOGFILE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_REMOTE_LOG is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SYSLOGD_DUP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SYSLOGD_CFG is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_SYSLOGD_READ_BUFFER_SIZE=0
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IPC_SYSLOG is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IPC_SYSLOG_BUFFER_SIZE=0
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_KMSG_SYSLOG is not set
->       # CONFIG_PACKAGE_ca-bundle is not set
->       # CONFIG_PACKAGE_ca-certificates is not set
->       CONFIG_PACKAGE_dnsmasq=y
->       # CONFIG_PACKAGE_dnsmasq-dhcpv6 is not set
->       # CONFIG_PACKAGE_dnsmasq-full is not set
->       CONFIG_PACKAGE_dropbear=y
->
->       #
->       # Configuration
->       #
->       CONFIG_DROPBEAR_CURVE25519=y
->       CONFIG_DROPBEAR_ECC=y
->       CONFIG_DROPBEAR_ZLIB=y
->       # CONFIG_PACKAGE_ead is not set
->       CONFIG_PACKAGE_firewall=y
->       CONFIG_PACKAGE_fstools=y
->       CONFIG_PACKAGE_fwtool=y
->       CONFIG_PACKAGE_jsonfilter=y
->       CONFIG_PACKAGE_lede-keyring=y
->       # CONFIG_PACKAGE_libatomic is not set
->       CONFIG_PACKAGE_libc=y
->       CONFIG_PACKAGE_libgcc=y
->       # CONFIG_PACKAGE_libgomp is not set
->       CONFIG_PACKAGE_libpthread=y
->       # CONFIG_PACKAGE_librt is not set
->       # CONFIG_PACKAGE_libstdcpp is not set
->       CONFIG_PACKAGE_logd=y
->       CONFIG_PACKAGE_mtd=y
->       CONFIG_PACKAGE_netifd=y
->       # CONFIG_PACKAGE_om-watchdog is not set
->       CONFIG_PACKAGE_opkg=y
->       CONFIG_PACKAGE_procd=y
->
->       #
->       # Configuration
->       #
->       # CONFIG_PROCD_SHOW_BOOT is not set
->       # CONFIG_PROCD_ZRAM_TMPFS is not set
->       # CONFIG_PACKAGE_qos-scripts is not set
->       # CONFIG_PACKAGE_resolveip is not set
->       # CONFIG_PACKAGE_rpcd is not set
->       # CONFIG_PACKAGE_snapshot-tool is not set
->       CONFIG_PACKAGE_swconfig=y
->       CONFIG_PACKAGE_ubox=y
->       CONFIG_PACKAGE_ubus=y
->       CONFIG_PACKAGE_ubusd=y
->       CONFIG_PACKAGE_uci=y
->       CONFIG_PACKAGE_usign=y
->       # CONFIG_PACKAGE_wireless-tools is not set
->       # CONFIG_PACKAGE_zram-swap is not set
->
->       #
->       # Boot Loaders
->       #
->
->       #
->       # Development
->       #
->
->       #
->       # Libraries
->       #
->       # CONFIG_PACKAGE_libncurses-dev is not set
->       # CONFIG_PACKAGE_zlib-dev is not set
->       # CONFIG_PACKAGE_ar is not set
->       # CONFIG_PACKAGE_binutils is not set
->       # CONFIG_PACKAGE_gdb is not set
->       # CONFIG_PACKAGE_gdbserver is not set
->       # CONFIG_PACKAGE_objdump is not set
->       # CONFIG_PACKAGE_trace-cmd is not set
->       # CONFIG_PACKAGE_trace-cmd-extra is not set
->       # CONFIG_PACKAGE_valgrind is not set
->
->       #
->       # Firmware
->       #
->
->       #
->       # ath10k IPQ4019 Boarddata
->       #
->       # CONFIG_PACKAGE_aircard-pcmcia-firmware is not set
->       # CONFIG_PACKAGE_ar3k-firmware is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca4019 is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca4019-ct is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca4019-ct-htt is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca6174 is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca9887 is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca9887-ct is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca9887-ct-htt is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca9888 is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca9888-ct is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca9888-ct-htt is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca988x is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca988x-ct is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca988x-ct-htt is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca9984 is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca9984-ct is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca9984-ct-htt is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca99x0 is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca99x0-ct is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca99x0-ct-htt is not set
->       # CONFIG_PACKAGE_ath6k-firmware is not set
->       # CONFIG_PACKAGE_ath9k-htc-firmware is not set
->       # CONFIG_PACKAGE_b43legacy-firmware is not set
->       # CONFIG_PACKAGE_bnx2-firmware is not set
->       # CONFIG_PACKAGE_brcmfmac-firmware-4329-sdio is not set
->       # CONFIG_PACKAGE_brcmfmac-firmware-43362-sdio is not set
->       # CONFIG_PACKAGE_brcmfmac-firmware-43430-sdio is not set
->       # CONFIG_PACKAGE_brcmfmac-firmware-43602a1-pcie is not set
->       # CONFIG_PACKAGE_brcmfmac-firmware-4366b1-pcie is not set
->       # CONFIG_PACKAGE_brcmfmac-firmware-usb is not set
->       # CONFIG_PACKAGE_brcmsmac-firmware is not set
->       # CONFIG_PACKAGE_carl9170-firmware is not set
->       # CONFIG_PACKAGE_e100-firmware is not set
->       # CONFIG_PACKAGE_edgeport-firmware is not set
->       # CONFIG_PACKAGE_ibt-firmware is not set
->       # CONFIG_PACKAGE_iwl3945-firmware is not set
->       # CONFIG_PACKAGE_iwl4965-firmware is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl100 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl1000 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl105 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl135 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl2000 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl2030 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl3160 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl3168 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl5000 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl5150 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl6000g2 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl6000g2a is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl6000g2b is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl6050 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl7260 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl7265 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl7265d is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl8260c is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl8265 is not set
->       # CONFIG_PACKAGE_jboot-tools is not set
->       # CONFIG_PACKAGE_libertas-sdio-firmware is not set
->       # CONFIG_PACKAGE_libertas-spi-firmware is not set
->       # CONFIG_PACKAGE_libertas-usb-firmware is not set
->       # CONFIG_PACKAGE_mt7601u-firmware is not set
->       # CONFIG_PACKAGE_mwifiex-pcie-firmware is not set
->       # CONFIG_PACKAGE_mwifiex-sdio-firmware is not set
->       # CONFIG_PACKAGE_mwl8k-firmware is not set
->       # CONFIG_PACKAGE_p54-pci-firmware is not set
->       # CONFIG_PACKAGE_p54-spi-firmware is not set
->       # CONFIG_PACKAGE_p54-usb-firmware is not set
->       # CONFIG_PACKAGE_prism54-firmware is not set
->       # CONFIG_PACKAGE_r8169-firmware is not set
->       # CONFIG_PACKAGE_rt2800-pci-firmware is not set
->       # CONFIG_PACKAGE_rt2800-usb-firmware is not set
->       # CONFIG_PACKAGE_rt61-pci-firmware is not set
->       # CONFIG_PACKAGE_rt73-usb-firmware is not set
->       # CONFIG_PACKAGE_rtl8188eu-firmware is not set
->       # CONFIG_PACKAGE_rtl8192ce-firmware is not set
->       # CONFIG_PACKAGE_rtl8192cu-firmware is not set
->       # CONFIG_PACKAGE_rtl8192de-firmware is not set
->       # CONFIG_PACKAGE_rtl8192se-firmware is not set
->       # CONFIG_PACKAGE_rtl8192su-firmware is not set
->       # CONFIG_PACKAGE_rtl8821ae-firmware is not set
->       CONFIG_PACKAGE_wireless-regdb=y
->       # CONFIG_PACKAGE_wl12xx-firmware is not set
->       # CONFIG_PACKAGE_wl18xx-firmware is not set
->
->       #
->       # Kernel modules
->       #
->
->       #
->       # Block Devices
->       #
->       # CONFIG_PACKAGE_kmod-aoe is not set
->       # CONFIG_PACKAGE_kmod-block2mtd is not set
->       # CONFIG_PACKAGE_kmod-dm is not set
->       # CONFIG_PACKAGE_kmod-loop is not set
->       # CONFIG_PACKAGE_kmod-md-mod is not set
->       # CONFIG_PACKAGE_kmod-nbd is not set
->       # CONFIG_PACKAGE_kmod-scsi-cdrom is not set
->       # CONFIG_PACKAGE_kmod-scsi-core is not set
->       # CONFIG_PACKAGE_kmod-scsi-generic is not set
->       # CONFIG_PACKAGE_kmod-scsi-tape is not set
->
->       #
->       # CAN Support
->       #
->       # CONFIG_PACKAGE_kmod-can is not set
->
->       #
->       # Cryptographic API modules
->       #
->       # CONFIG_PACKAGE_kmod-crypto-aead is not set
->       # CONFIG_PACKAGE_kmod-crypto-authenc is not set
->       # CONFIG_PACKAGE_kmod-crypto-cbc is not set
->       # CONFIG_PACKAGE_kmod-crypto-ccm is not set
->       # CONFIG_PACKAGE_kmod-crypto-cmac is not set
->       # CONFIG_PACKAGE_kmod-crypto-crc32c is not set
->       # CONFIG_PACKAGE_kmod-crypto-ctr is not set
->       # CONFIG_PACKAGE_kmod-crypto-cts is not set
->       # CONFIG_PACKAGE_kmod-crypto-deflate is not set
->       # CONFIG_PACKAGE_kmod-crypto-des is not set
->       # CONFIG_PACKAGE_kmod-crypto-ecb is not set
->       # CONFIG_PACKAGE_kmod-crypto-ecdh is not set
->       # CONFIG_PACKAGE_kmod-crypto-echainiv is not set
->       # CONFIG_PACKAGE_kmod-crypto-fcrypt is not set
->       # CONFIG_PACKAGE_kmod-crypto-gcm is not set
->       # CONFIG_PACKAGE_kmod-crypto-gf128 is not set
->       # CONFIG_PACKAGE_kmod-crypto-ghash is not set
->       # CONFIG_PACKAGE_kmod-crypto-hash is not set
->       # CONFIG_PACKAGE_kmod-crypto-hmac is not set
->       # CONFIG_PACKAGE_kmod-crypto-hw-ccp is not set
->       # CONFIG_PACKAGE_kmod-crypto-hw-geode is not set
->       # CONFIG_PACKAGE_kmod-crypto-hw-hifn-795x is not set
->       # CONFIG_PACKAGE_kmod-crypto-hw-padlock is not set
->       # CONFIG_PACKAGE_kmod-crypto-hw-talitos is not set
->       # CONFIG_PACKAGE_kmod-crypto-manager is not set
->       # CONFIG_PACKAGE_kmod-crypto-md4 is not set
->       # CONFIG_PACKAGE_kmod-crypto-md5 is not set
->       # CONFIG_PACKAGE_kmod-crypto-michael-mic is not set
->       # CONFIG_PACKAGE_kmod-crypto-misc is not set
->       # CONFIG_PACKAGE_kmod-crypto-null is not set
->       # CONFIG_PACKAGE_kmod-crypto-pcbc is not set
->       # CONFIG_PACKAGE_kmod-crypto-pcompress is not set
->       # CONFIG_PACKAGE_kmod-crypto-rng is not set
->       # CONFIG_PACKAGE_kmod-crypto-seqiv is not set
->       # CONFIG_PACKAGE_kmod-crypto-sha1 is not set
->       # CONFIG_PACKAGE_kmod-crypto-sha256 is not set
->       # CONFIG_PACKAGE_kmod-crypto-sha512 is not set
->       # CONFIG_PACKAGE_kmod-crypto-test is not set
->       # CONFIG_PACKAGE_kmod-crypto-user is not set
->       # CONFIG_PACKAGE_kmod-crypto-wq is not set
->       # CONFIG_PACKAGE_kmod-crypto-xts is not set
->
->       #
->       # Filesystems
->       #
->       # CONFIG_PACKAGE_kmod-fs-afs is not set
->       # CONFIG_PACKAGE_kmod-fs-autofs4 is not set
->       # CONFIG_PACKAGE_kmod-fs-btrfs is not set
->       # CONFIG_PACKAGE_kmod-fs-cifs is not set
->       # CONFIG_PACKAGE_kmod-fs-configfs is not set
->       # CONFIG_PACKAGE_kmod-fs-cramfs is not set
->       # CONFIG_PACKAGE_kmod-fs-exportfs is not set
->       # CONFIG_PACKAGE_kmod-fs-ext4 is not set
->       # CONFIG_PACKAGE_kmod-fs-f2fs is not set
->       # CONFIG_PACKAGE_kmod-fs-fscache is not set
->       # CONFIG_PACKAGE_kmod-fs-hfs is not set
->       # CONFIG_PACKAGE_kmod-fs-hfsplus is not set
->       # CONFIG_PACKAGE_kmod-fs-isofs is not set
->       # CONFIG_PACKAGE_kmod-fs-jfs is not set
->       # CONFIG_PACKAGE_kmod-fs-minix is not set
->       # CONFIG_PACKAGE_kmod-fs-msdos is not set
->       # CONFIG_PACKAGE_kmod-fs-nfs is not set
->       # CONFIG_PACKAGE_kmod-fs-nfs-common is not set
->       # CONFIG_PACKAGE_kmod-fs-nfs-common-rpcsec is not set
->       # CONFIG_PACKAGE_kmod-fs-nfs-v3 is not set
->       # CONFIG_PACKAGE_kmod-fs-nfs-v4 is not set
->       # CONFIG_PACKAGE_kmod-fs-nfsd is not set
->       # CONFIG_PACKAGE_kmod-fs-ntfs is not set
->       # CONFIG_PACKAGE_kmod-fs-reiserfs is not set
->       # CONFIG_PACKAGE_kmod-fs-squashfs is not set
->       # CONFIG_PACKAGE_kmod-fs-udf is not set
->       # CONFIG_PACKAGE_kmod-fs-vfat is not set
->       # CONFIG_PACKAGE_kmod-fs-xfs is not set
->       # CONFIG_PACKAGE_kmod-fuse is not set
->
->       #
->       # FireWire support
->       #
->
->       #
->       # Hardware Monitoring Support
->       #
->       # CONFIG_PACKAGE_kmod-hwmon-core is not set
->
->       #
->       # I2C support
->       #
->       # CONFIG_PACKAGE_kmod-i2c-core is not set
->       # CONFIG_PACKAGE_kmod-i2c-gpio-custom is not set
->
->       #
->       # Industrial I/O Modules
->       #
->       # CONFIG_PACKAGE_kmod-iio-ad799x is not set
->       # CONFIG_PACKAGE_kmod-iio-bmp280 is not set
->       # CONFIG_PACKAGE_kmod-iio-bmp280-i2c is not set
->       # CONFIG_PACKAGE_kmod-iio-bmp280-spi is not set
->       # CONFIG_PACKAGE_kmod-iio-core is not set
->       # CONFIG_PACKAGE_kmod-iio-dht11 is not set
->
->       #
->       # Input modules
->       #
->       # CONFIG_PACKAGE_kmod-hid is not set
->       # CONFIG_PACKAGE_kmod-hid-generic is not set
->       # CONFIG_PACKAGE_kmod-input-core is not set
->       # CONFIG_PACKAGE_kmod-input-evdev is not set
->       # CONFIG_PACKAGE_kmod-input-gpio-encoder is not set
->       # CONFIG_PACKAGE_kmod-input-gpio-keys is not set
->       # CONFIG_PACKAGE_kmod-input-gpio-keys-polled is not set
->       # CONFIG_PACKAGE_kmod-input-joydev is not set
->       # CONFIG_PACKAGE_kmod-input-matrixkmap is not set
->       # CONFIG_PACKAGE_kmod-input-polldev is not set
->       # CONFIG_PACKAGE_kmod-input-uinput is not set
->
->       #
->       # LED modules
->       #
->       CONFIG_PACKAGE_kmod-leds-gpio=y
->       # CONFIG_PACKAGE_kmod-leds-pca963x is not set
->       # CONFIG_PACKAGE_kmod-ledtrig-default-on is not set
->       # CONFIG_PACKAGE_kmod-ledtrig-gpio is not set
->       # CONFIG_PACKAGE_kmod-ledtrig-heartbeat is not set
->       # CONFIG_PACKAGE_kmod-ledtrig-netdev is not set
->       # CONFIG_PACKAGE_kmod-ledtrig-oneshot is not set
->       # CONFIG_PACKAGE_kmod-ledtrig-timer is not set
->       # CONFIG_PACKAGE_kmod-ledtrig-transient is not set
->
->       #
->       # Libraries
->       #
->       # CONFIG_PACKAGE_kmod-lib-cordic is not set
->       CONFIG_PACKAGE_kmod-lib-crc-ccitt=y
->       CONFIG_PACKAGE_kmod-lib-crc-itu-t=y
->       # CONFIG_PACKAGE_kmod-lib-crc16 is not set
->       # CONFIG_PACKAGE_kmod-lib-crc32c is not set
->       # CONFIG_PACKAGE_kmod-lib-crc7 is not set
->       # CONFIG_PACKAGE_kmod-lib-crc8 is not set
->       # CONFIG_PACKAGE_kmod-lib-textsearch is not set
->
->       #
->       # Native Language Support
->       #
->       CONFIG_PACKAGE_kmod-nls-base=y
->       # CONFIG_PACKAGE_kmod-nls-cp1250 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp1251 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp437 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp775 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp850 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp852 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp862 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp864 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp866 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp932 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp936 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp950 is not set
->       # CONFIG_PACKAGE_kmod-nls-iso8859-1 is not set
->       # CONFIG_PACKAGE_kmod-nls-iso8859-13 is not set
->       # CONFIG_PACKAGE_kmod-nls-iso8859-15 is not set
->       # CONFIG_PACKAGE_kmod-nls-iso8859-2 is not set
->       # CONFIG_PACKAGE_kmod-nls-iso8859-6 is not set
->       # CONFIG_PACKAGE_kmod-nls-iso8859-8 is not set
->       # CONFIG_PACKAGE_kmod-nls-koi8r is not set
->       # CONFIG_PACKAGE_kmod-nls-utf8 is not set
->
->       #
->       # Netfilter Extensions
->       #
->       # CONFIG_PACKAGE_kmod-arptables is not set
->       # CONFIG_PACKAGE_kmod-ebtables is not set
->       CONFIG_PACKAGE_kmod-ip6tables=y
->       # CONFIG_PACKAGE_kmod-ip6tables-extra is not set
->       # CONFIG_PACKAGE_kmod-ipt-checksum is not set
->       # CONFIG_PACKAGE_kmod-ipt-cluster is not set
->       # CONFIG_PACKAGE_kmod-ipt-clusterip is not set
->       CONFIG_PACKAGE_kmod-ipt-conntrack=y
->       # CONFIG_PACKAGE_kmod-ipt-conntrack-extra is not set
->       # CONFIG_PACKAGE_kmod-ipt-conntrack-label is not set
->       CONFIG_PACKAGE_kmod-ipt-core=y
->       # CONFIG_PACKAGE_kmod-ipt-debug is not set
->       # CONFIG_PACKAGE_kmod-ipt-extra is not set
->       # CONFIG_PACKAGE_kmod-ipt-filter is not set
->       # CONFIG_PACKAGE_kmod-ipt-hashlimit is not set
->       # CONFIG_PACKAGE_kmod-ipt-ipopt is not set
->       # CONFIG_PACKAGE_kmod-ipt-iprange is not set
->       # CONFIG_PACKAGE_kmod-ipt-ipsec is not set
->       # CONFIG_PACKAGE_kmod-ipt-ipset is not set
->       # CONFIG_PACKAGE_kmod-ipt-led is not set
->       CONFIG_PACKAGE_kmod-ipt-nat=y
->       # CONFIG_PACKAGE_kmod-ipt-nat-extra is not set
->       # CONFIG_PACKAGE_kmod-ipt-nat6 is not set
->       # CONFIG_PACKAGE_kmod-ipt-nflog is not set
->       # CONFIG_PACKAGE_kmod-ipt-nfqueue is not set
->       CONFIG_PACKAGE_kmod-ipt-raw=y
->       # CONFIG_PACKAGE_kmod-ipt-raw6 is not set
->       # CONFIG_PACKAGE_kmod-ipt-rpfilter is not set
->       # CONFIG_PACKAGE_kmod-ipt-tee is not set
->       # CONFIG_PACKAGE_kmod-ipt-tproxy is not set
->       # CONFIG_PACKAGE_kmod-ipt-u32 is not set
->       # CONFIG_PACKAGE_kmod-ipt-ulog is not set
->       CONFIG_PACKAGE_kmod-nf-conntrack=y
->       # CONFIG_PACKAGE_kmod-nf-conntrack-netlink is not set
->       CONFIG_PACKAGE_kmod-nf-conntrack6=y
->       CONFIG_PACKAGE_kmod-nf-ipt=y
->       CONFIG_PACKAGE_kmod-nf-ipt6=y
->       CONFIG_PACKAGE_kmod-nf-nat=y
->       # CONFIG_PACKAGE_kmod-nf-nat6 is not set
->       # CONFIG_PACKAGE_kmod-nf-nathelper is not set
->       # CONFIG_PACKAGE_kmod-nf-nathelper-extra is not set
->       CONFIG_PACKAGE_kmod-nf-reject=y
->       CONFIG_PACKAGE_kmod-nf-reject6=y
->       # CONFIG_PACKAGE_kmod-nfnetlink is not set
->       # CONFIG_PACKAGE_kmod-nfnetlink-log is not set
->       # CONFIG_PACKAGE_kmod-nfnetlink-queue is not set
->       # CONFIG_PACKAGE_kmod-nft-arp is not set
->       # CONFIG_PACKAGE_kmod-nft-bridge is not set
->       # CONFIG_PACKAGE_kmod-nft-core is not set
->       # CONFIG_PACKAGE_kmod-nft-nat is not set
->       # CONFIG_PACKAGE_kmod-nft-nat6 is not set
->
->       #
->       # Network Devices
->       #
->       # CONFIG_PACKAGE_kmod-dummy is not set
->       # CONFIG_PACKAGE_kmod-ethoc is not set
->       # CONFIG_PACKAGE_kmod-gigaset is not set
->       # CONFIG_PACKAGE_kmod-hfcmulti is not set
->       # CONFIG_PACKAGE_kmod-hfcpci is not set
->       # CONFIG_PACKAGE_kmod-ifb is not set
->       # CONFIG_PACKAGE_kmod-libphy is not set
->       # CONFIG_PACKAGE_kmod-macvlan is not set
->       # CONFIG_PACKAGE_kmod-mii is not set
->       # CONFIG_PACKAGE_kmod-of-mdio is not set
->       # CONFIG_PACKAGE_kmod-phy-broadcom is not set
->       # CONFIG_PACKAGE_kmod-spi-ks8995 is not set
->       # CONFIG_PACKAGE_kmod-swconfig is not set
->       # CONFIG_PACKAGE_kmod-switch-ip17xx is not set
->       # CONFIG_PACKAGE_kmod-switch-mvsw61xx is not set
->       # CONFIG_PACKAGE_kmod-switch-rtl8366-smi is not set
->       # CONFIG_PACKAGE_kmod-switch-rtl8366rb is not set
->       # CONFIG_PACKAGE_kmod-switch-rtl8366s is not set
->       # CONFIG_PACKAGE_kmod-switch-rtl8367b is not set
->       # CONFIG_PACKAGE_kmod-tg3 is not set
->
->       #
->       # Network Support
->       #
->       # CONFIG_PACKAGE_kmod-atm is not set
->       # CONFIG_PACKAGE_kmod-ax25 is not set
->       # CONFIG_PACKAGE_kmod-bonding is not set
->       # CONFIG_PACKAGE_kmod-capi is not set
->       # CONFIG_PACKAGE_kmod-dnsresolver is not set
->       # CONFIG_PACKAGE_kmod-fou is not set
->       # CONFIG_PACKAGE_kmod-geneve is not set
->       # CONFIG_PACKAGE_kmod-gre is not set
->       # CONFIG_PACKAGE_kmod-gre6 is not set
->       # CONFIG_PACKAGE_kmod-ip6-tunnel is not set
->       # CONFIG_PACKAGE_kmod-ipip is not set
->       # CONFIG_PACKAGE_kmod-ipsec is not set
->       # CONFIG_PACKAGE_kmod-iptunnel6 is not set
->       # CONFIG_PACKAGE_kmod-isdn4linux is not set
->       # CONFIG_PACKAGE_kmod-l2tp is not set
->       # CONFIG_PACKAGE_kmod-l2tp-eth is not set
->       # CONFIG_PACKAGE_kmod-l2tp-ip is not set
->       # CONFIG_PACKAGE_kmod-macsec is not set
->       # CONFIG_PACKAGE_kmod-misdn is not set
->       # CONFIG_PACKAGE_kmod-mpls is not set
->       CONFIG_PACKAGE_kmod-ppp=m
->       # CONFIG_PACKAGE_kmod-mppe is not set
->       # CONFIG_PACKAGE_kmod-netem is not set
->       # CONFIG_PACKAGE_kmod-nlmon is not set
->       # CONFIG_PACKAGE_kmod-pktgen is not set
->       # CONFIG_PACKAGE_kmod-ppp-synctty is not set
->       # CONFIG_PACKAGE_kmod-pppoa is not set
->       CONFIG_PACKAGE_kmod-pppoe=m
->       # CONFIG_PACKAGE_kmod-pppol2tp is not set
->       CONFIG_PACKAGE_kmod-pppox=m
->       # CONFIG_PACKAGE_kmod-pptp is not set
->       # CONFIG_PACKAGE_kmod-sched is not set
->       # CONFIG_PACKAGE_kmod-sched-cake is not set
->       # CONFIG_PACKAGE_kmod-sched-connmark is not set
->       # CONFIG_PACKAGE_kmod-sched-core is not set
->       # CONFIG_PACKAGE_kmod-sctp is not set
->       # CONFIG_PACKAGE_kmod-sit is not set
->       CONFIG_PACKAGE_kmod-slhc=m
->       # CONFIG_PACKAGE_kmod-slip is not set
->       # CONFIG_PACKAGE_kmod-trelay is not set
->       # CONFIG_PACKAGE_kmod-tun is not set
->       # CONFIG_PACKAGE_kmod-veth is not set
->       # CONFIG_PACKAGE_kmod-vxlan is not set
->       # CONFIG_PACKAGE_kmod-wireguard is not set
->
->       #
->       # Other modules
->       #
->       # CONFIG_PACKAGE_kmod-6lowpan is not set
->       # CONFIG_PACKAGE_kmod-ath3k is not set
->       # CONFIG_PACKAGE_kmod-bluetooth is not set
->       # CONFIG_PACKAGE_kmod-bluetooth_6lowpan is not set
->       # CONFIG_PACKAGE_kmod-bmp085 is not set
->       # CONFIG_PACKAGE_kmod-bmp085-i2c is not set
->       # CONFIG_PACKAGE_kmod-bmp085-spi is not set
->       # CONFIG_PACKAGE_kmod-btmrvl is not set
->       # CONFIG_PACKAGE_kmod-button-hotplug is not set
->       # CONFIG_PACKAGE_kmod-dma-ralink is not set
->       # CONFIG_PACKAGE_kmod-echo is not set
->       CONFIG_PACKAGE_kmod-eeprom-93cx6=y
->       # CONFIG_PACKAGE_kmod-eeprom-at24 is not set
->       # CONFIG_PACKAGE_kmod-eeprom-at25 is not set
->       # CONFIG_PACKAGE_kmod-gpio-beeper is not set
->       CONFIG_PACKAGE_kmod-gpio-button-hotplug=y
->       # CONFIG_PACKAGE_kmod-gpio-dev is not set
->       # CONFIG_PACKAGE_kmod-gpio-mcp23s08 is not set
->       # CONFIG_PACKAGE_kmod-gpio-nxp-74hc164 is not set
->       # CONFIG_PACKAGE_kmod-gpio-pca953x is not set
->       # CONFIG_PACKAGE_kmod-gpio-pcf857x is not set
->       # CONFIG_PACKAGE_kmod-ikconfig is not set
->       # CONFIG_PACKAGE_kmod-it87-wdt is not set
->       # CONFIG_PACKAGE_kmod-itco-wdt is not set
->       # CONFIG_PACKAGE_kmod-lp is not set
->       # CONFIG_PACKAGE_kmod-mmc is not set
->       # CONFIG_PACKAGE_kmod-mtdoops is not set
->       # CONFIG_PACKAGE_kmod-mtdram is not set
->       # CONFIG_PACKAGE_kmod-mtdtests is not set
->       # CONFIG_PACKAGE_kmod-parport-pc is not set
->       # CONFIG_PACKAGE_kmod-ppdev is not set
->       # CONFIG_PACKAGE_kmod-pps is not set
->       # CONFIG_PACKAGE_kmod-pps-gpio is not set
->       # CONFIG_PACKAGE_kmod-pps-ldisc is not set
->       # CONFIG_PACKAGE_kmod-ptp is not set
->       # CONFIG_PACKAGE_kmod-random-core is not set
->       # CONFIG_PACKAGE_kmod-regmap is not set
->       # CONFIG_PACKAGE_kmod-rtc-ds1307 is not set
->       # CONFIG_PACKAGE_kmod-rtc-ds1374 is not set
->       # CONFIG_PACKAGE_kmod-rtc-ds1672 is not set
->       # CONFIG_PACKAGE_kmod-rtc-isl1208 is not set
->       # CONFIG_PACKAGE_kmod-rtc-pcf2123 is not set
->       # CONFIG_PACKAGE_kmod-rtc-pcf8563 is not set
->       # CONFIG_PACKAGE_kmod-rtc-pt7c4338 is not set
->       # CONFIG_PACKAGE_kmod-rtc-rs5c372a is not set
->       # CONFIG_PACKAGE_kmod-sdhci is not set
->       # CONFIG_PACKAGE_kmod-serial-8250 is not set
->       # CONFIG_PACKAGE_kmod-softdog is not set
->       # CONFIG_PACKAGE_kmod-tpm is not set
->       # CONFIG_PACKAGE_kmod-tpm-i2c-atmel is not set
->       # CONFIG_PACKAGE_kmod-tpm-i2c-infineon is not set
->       # CONFIG_PACKAGE_kmod-w83627hf-wdt is not set
->       # CONFIG_PACKAGE_kmod-zram is not set
->
->       #
->       # PCMCIA support
->       #
->
->       #
->       # SPI Support
->       #
->       # CONFIG_PACKAGE_kmod-mmc-spi is not set
->       # CONFIG_PACKAGE_kmod-spi-bitbang is not set
->       # CONFIG_PACKAGE_kmod-spi-dev is not set
->       # CONFIG_PACKAGE_kmod-spi-gpio is not set
->       # CONFIG_PACKAGE_kmod-spi-gpio-custom is not set
->
->       #
->       # Sound Support
->       #
->       # CONFIG_PACKAGE_kmod-sound-core is not set
->
->       #
->       # USB Support
->       #
->       # CONFIG_PACKAGE_kmod-usb-acm is not set
->       # CONFIG_PACKAGE_kmod-usb-atm is not set
->       # CONFIG_PACKAGE_kmod-usb-cm109 is not set
->       CONFIG_PACKAGE_kmod-usb-core=y
->       CONFIG_PACKAGE_kmod-usb-dwc2=y
->       # CONFIG_PACKAGE_kmod-usb-dwc3 is not set
->       # CONFIG_PACKAGE_kmod-usb-hid is not set
->       CONFIG_PACKAGE_kmod-usb-ledtrig-usbport=y
->       # CONFIG_PACKAGE_kmod-usb-net is not set
->       # CONFIG_PACKAGE_kmod-usb-ohci is not set
->       # CONFIG_PACKAGE_kmod-usb-printer is not set
->       # CONFIG_PACKAGE_kmod-usb-serial is not set
->       # CONFIG_PACKAGE_kmod-usb-storage is not set
->       # CONFIG_PACKAGE_kmod-usb-storage-extras is not set
->       # CONFIG_PACKAGE_kmod-usb-storage-uas is not set
->       # CONFIG_PACKAGE_kmod-usb-uhci is not set
->       # CONFIG_PACKAGE_kmod-usb-wdm is not set
->       # CONFIG_PACKAGE_kmod-usb-yealink is not set
->       # CONFIG_PACKAGE_kmod-usb2 is not set
->       # CONFIG_PACKAGE_kmod-usb3 is not set
->       # CONFIG_PACKAGE_kmod-usbip is not set
->       # CONFIG_PACKAGE_kmod-usbip-client is not set
->       # CONFIG_PACKAGE_kmod-usbip-server is not set
->       # CONFIG_PACKAGE_kmod-usbmon is not set
->
->       #
->       # Video Support
->       #
->       # CONFIG_PACKAGE_kmod-video-core is not set
->
->       #
->       # Virtualization
->       #
->
->       #
->       # Voice over IP
->       #
->
->       #
->       # W1 support
->       #
->       # CONFIG_PACKAGE_kmod-w1 is not set
->
->       #
->       # WPAN 802.15.4 Support
->       #
->       # CONFIG_PACKAGE_kmod-at86rf230 is not set
->       # CONFIG_PACKAGE_kmod-cc2520 is not set
->       # CONFIG_PACKAGE_kmod-fakelb is not set
->       # CONFIG_PACKAGE_kmod-ieee802154 is not set
->       # CONFIG_PACKAGE_kmod-ieee802154_6lowpan is not set
->       # CONFIG_PACKAGE_kmod-mac802154 is not set
->       # CONFIG_PACKAGE_kmod-mrf24j40 is not set
->
->       #
->       # Wireless Drivers
->       #
->       # CONFIG_PACKAGE_kmod-ath is not set
->       # CONFIG_PACKAGE_kmod-ath10k-ct is not set
->       # CONFIG_PACKAGE_kmod-ath6kl-sdio is not set
->       # CONFIG_PACKAGE_kmod-ath6kl-usb is not set
-> 
-> 
-> 
-> 
-> --
-> Regards...
-> 
-> Kofi Agor
-> 
->
---8323329-2143919810-1523973341=:11111--
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
+index a4704b2fbeb9..b85e42628bac 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
+@@ -25,11 +25,6 @@
+ 
+ #include "halbt_precomp.h"
+ 
+-static struct coex_dm_8192e_2ant glcoex_dm_8192e_2ant;
+-static struct coex_dm_8192e_2ant *coex_dm = &glcoex_dm_8192e_2ant;
+-static struct coex_sta_8192e_2ant glcoex_sta_8192e_2ant;
+-static struct coex_sta_8192e_2ant *coex_sta = &glcoex_sta_8192e_2ant;
+-
+ static const char *const glbt_info_src_8192e_2ant[] = {
+ 	"BT Info[wifi fw]",
+ 	"BT Info[bt rsp]",
+@@ -44,6 +39,7 @@ static u8 btc8192e2ant_bt_rssi_state(struct btc_coexist *btcoexist,
+ 				     u8 rssi_thresh1)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8192e_2ant *coex_sta = &btcoexist->coex_sta_8192e_2ant;
+ 	int bt_rssi = 0;
+ 	u8 bt_rssi_state = coex_sta->pre_bt_rssi_state;
+ 
+@@ -106,6 +102,7 @@ static u8 btc8192e2ant_wifi_rssi_state(struct btc_coexist *btcoexist,
+ 				       u8 rssi_thresh1)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8192e_2ant *coex_sta = &btcoexist->coex_sta_8192e_2ant;
+ 	int wifi_rssi = 0;
+ 	u8 wifi_rssi_state = coex_sta->pre_wifi_rssi_state[index];
+ 
+@@ -171,6 +168,7 @@ static void btc8192e2ant_monitor_bt_enable_disable(struct btc_coexist
+ 						   *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8192e_2ant *coex_sta = &btcoexist->coex_sta_8192e_2ant;
+ 	static bool pre_bt_disabled;
+ 	static u32 bt_disable_cnt;
+ 	bool bt_active = true, bt_disabled = false;
+@@ -252,6 +250,7 @@ static u32 btc8192e2ant_decide_ra_mask(struct btc_coexist *btcoexist,
+ static void btc8192e2ant_update_ra_mask(struct btc_coexist *btcoexist,
+ 					bool force_exec, u32 dis_rate_mask)
+ {
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 	coex_dm->cur_ra_mask = dis_rate_mask;
+ 
+ 	if (force_exec || (coex_dm->pre_ra_mask != coex_dm->cur_ra_mask))
+@@ -263,6 +262,7 @@ static void btc8192e2ant_update_ra_mask(struct btc_coexist *btcoexist,
+ static void btc8192e2ant_auto_rate_fallback_retry(struct btc_coexist *btcoexist,
+ 						  bool force_exec, u8 type)
+ {
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 	bool wifi_under_b_mode = false;
+ 
+ 	coex_dm->cur_arfr_type = type;
+@@ -302,6 +302,7 @@ static void btc8192e2ant_auto_rate_fallback_retry(struct btc_coexist *btcoexist,
+ static void btc8192e2ant_retry_limit(struct btc_coexist *btcoexist,
+ 				     bool force_exec, u8 type)
+ {
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 	coex_dm->cur_retry_limit_type = type;
+ 
+ 	if (force_exec || (coex_dm->pre_retry_limit_type !=
+@@ -325,6 +326,7 @@ static void btc8192e2ant_retry_limit(struct btc_coexist *btcoexist,
+ static void btc8192e2ant_ampdu_maxtime(struct btc_coexist *btcoexist,
+ 				       bool force_exec, u8 type)
+ {
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 	coex_dm->cur_ampdu_time_type = type;
+ 
+ 	if (force_exec || (coex_dm->pre_ampdu_time_type !=
+@@ -350,6 +352,7 @@ static void btc8192e2ant_limited_tx(struct btc_coexist *btcoexist,
+ 				    u8 arfr_type, u8 retry_limit_type,
+ 				    u8 ampdu_time_type)
+ {
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 	u32 dis_ra_mask = 0x0;
+ 
+ 	coex_dm->cur_ra_mask_type = ra_mask_type;
+@@ -390,6 +393,7 @@ static void btc8192e2ant_limited_rx(struct btc_coexist *btcoexist,
+ static void btc8192e2ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8192e_2ant *coex_sta = &btcoexist->coex_sta_8192e_2ant;
+ 	u32 reg_hp_txrx, reg_lp_txrx, u32tmp;
+ 	u32 reg_hp_tx = 0, reg_hp_rx = 0, reg_lp_tx = 0, reg_lp_rx = 0;
+ 
+@@ -423,6 +427,7 @@ static void btc8192e2ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ static void btc8192e2ant_query_bt_info(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8192e_2ant *coex_sta = &btcoexist->coex_sta_8192e_2ant;
+ 	u8 h2c_parameter[1] = {0};
+ 
+ 	coex_sta->c2h_bt_info_req_sent = true;
+@@ -471,6 +476,7 @@ bool btc8192e2ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
+ 
+ static void btc8192e2ant_update_bt_link_info(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8192e_2ant *coex_sta = &btcoexist->coex_sta_8192e_2ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool bt_hs_on = false;
+ 
+@@ -769,6 +775,7 @@ static void btc8192e2ant_dec_bt_pwr(struct btc_coexist *btcoexist,
+ 				    bool force_exec, u8 dec_bt_pwr_lvl)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s Dec BT power level = %d\n",
+@@ -809,6 +816,7 @@ static void btc8192e2ant_bt_auto_report(struct btc_coexist *btcoexist,
+ 					bool enable_auto_report)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s BT Auto report = %s\n",
+@@ -835,6 +843,7 @@ static void btc8192e2ant_fw_dac_swing_lvl(struct btc_coexist *btcoexist,
+ 					  bool force_exec, u8 fw_dac_swing_lvl)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s set FW Dac Swing level = %d\n",
+@@ -862,6 +871,7 @@ static void btc8192e2ant_set_sw_rf_rx_lpf_corner(struct btc_coexist *btcoexist,
+ 						 bool rx_rf_shrink_on)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 
+ 	if (rx_rf_shrink_on) {
+ 		/* Shrink RF Rx LPF corner */
+@@ -887,6 +897,7 @@ static void btc8192e2ant_rf_shrink(struct btc_coexist *btcoexist,
+ 				   bool force_exec, bool rx_rf_shrink_on)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s turn Rx RF Shrink = %s\n",
+@@ -936,6 +947,7 @@ static void btc8192e2ant_dac_swing(struct btc_coexist *btcoexist,
+ 				   u32 dac_swing_lvl)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s turn DacSwing=%s, dac_swing_lvl = 0x%x\n",
+@@ -996,6 +1008,7 @@ static void btc8192e2ant_agc_table(struct btc_coexist *btcoexist,
+ 				   bool force_exec, bool agc_table_en)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s %s Agc Table\n",
+@@ -1045,6 +1058,7 @@ static void btc8192e2ant_coex_table(struct btc_coexist *btcoexist,
+ 				    u32 val0x6c8, u8 val0x6cc)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s write Coex Table 0x6c0 = 0x%x, ",
+@@ -1135,6 +1149,7 @@ static void btc8192e2ant_ignore_wlan_act(struct btc_coexist *btcoexist,
+ 					 bool force_exec, bool enable)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s turn Ignore WlanAct %s\n",
+@@ -1162,6 +1177,7 @@ static void btc8192e2ant_set_fw_ps_tdma(struct btc_coexist *btcoexist, u8 byte1,
+ 					u8 byte2, u8 byte3, u8 byte4, u8 byte5)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 
+ 	u8 h2c_parameter[5] = {0};
+ 
+@@ -1206,6 +1222,7 @@ static void btc8192e2ant_ps_tdma(struct btc_coexist *btcoexist,
+ 				 bool force_exec, bool turn_on, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s turn %s PS TDMA, type=%d\n",
+@@ -1345,6 +1362,7 @@ static void btc8192e2ant_set_switch_ss_type(struct btc_coexist *btcoexist,
+ 					    u8 ss_type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 	u8 mimops = BTC_MIMO_PS_DYNAMIC;
+ 	u32 dis_ra_mask = 0x0;
+ 
+@@ -1382,6 +1400,7 @@ static void btc8192e2ant_switch_ss_type(struct btc_coexist *btcoexist,
+ 					bool force_exec, u8 new_ss_type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s Switch SS Type = %d\n",
+@@ -1448,6 +1467,7 @@ static void btc8192e2ant_action_bt_inquiry(struct btc_coexist *btcoexist)
+ static bool btc8192e2ant_is_common_action(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool common = false, wifi_connected = false, wifi_busy = false;
+ 	bool bt_hs_on = false, low_pwr_disable = false;
+@@ -1588,6 +1608,8 @@ static void btc8192e2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
+ 					      u8 max_interval)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8192e_2ant *coex_sta = &btcoexist->coex_sta_8192e_2ant;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 	static int up, dn, m, n, wait_cnt;
+ 	/* 0: no change, +1: increase WiFi duration,
+ 	 * -1: decrease WiFi duration
+@@ -1971,6 +1993,7 @@ static void btc8192e2ant_action_hid(struct btc_coexist *btcoexist)
+ static void btc8192e2ant_action_a2dp(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 	u8 wifi_rssi_state, bt_rssi_state = BTC_RSSI_STATE_HIGH;
+ 	u32 wifi_bw;
+ 	bool long_dist = false;
+@@ -2482,6 +2505,8 @@ static void btc8192e2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ static void btc8192e2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8192e_2ant *coex_sta = &btcoexist->coex_sta_8192e_2ant;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 	u8 algorithm = 0;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+@@ -2594,6 +2619,7 @@ static void btc8192e2ant_init_hwconfig(struct btc_coexist *btcoexist,
+ 				       bool backup)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 	u16 u16tmp = 0;
+ 	u8 u8tmp = 0;
+ 
+@@ -2687,6 +2713,8 @@ void ex_btc8192e2ant_init_coex_dm(struct btc_coexist *btcoexist)
+ void ex_btc8192e2ant_display_coex_info(struct btc_coexist *btcoexist,
+ 				       struct seq_file *m)
+ {
++	struct coex_sta_8192e_2ant *coex_sta = &btcoexist->coex_sta_8192e_2ant;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 	struct btc_board_info *board_info = &btcoexist->board_info;
+ 	struct btc_stack_info *stack_info = &btcoexist->stack_info;
+ 	u8 u8tmp[4], i, bt_info_ext, ps_tdma_case = 0;
+@@ -2894,6 +2922,7 @@ void ex_btc8192e2ant_display_coex_info(struct btc_coexist *btcoexist,
+ void ex_btc8192e2ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8192e_2ant *coex_sta = &btcoexist->coex_sta_8192e_2ant;
+ 
+ 	if (BTC_IPS_ENTER == type) {
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+@@ -2910,6 +2939,7 @@ void ex_btc8192e2ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ void ex_btc8192e2ant_lps_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8192e_2ant *coex_sta = &btcoexist->coex_sta_8192e_2ant;
+ 
+ 	if (BTC_LPS_ENABLE == type) {
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+@@ -2950,6 +2980,7 @@ void ex_btc8192e2ant_media_status_notify(struct btc_coexist *btcoexist,
+ 					 u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 	u8 h2c_parameter[3] = {0};
+ 	u32 wifi_bw;
+ 	u8 wifi_center_chnl;
+@@ -3006,6 +3037,8 @@ void ex_btc8192e2ant_bt_info_notify(struct btc_coexist *btcoexist,
+ 				    u8 *tmp_buf, u8 length)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8192e_2ant *coex_sta = &btcoexist->coex_sta_8192e_2ant;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 	u8 bt_info = 0;
+ 	u8 i, rsp_source = 0;
+ 	bool bt_busy = false, limited_dig = false;
+@@ -3174,6 +3207,7 @@ void ex_btc8192e2ant_halt_notify(struct btc_coexist *btcoexist)
+ void ex_btc8192e2ant_periodical(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8192e_2ant *coex_dm = &btcoexist->coex_dm_8192e_2ant;
+ 	static u8 dis_ver_info_cnt;
+ 	u32 fw_ver = 0, bt_patch_ver = 0;
+ 	struct btc_board_info *board_info = &btcoexist->board_info;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index 31b716fa2524..ef63b1e06d37 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -25,11 +25,6 @@
+ 
+ #include "halbt_precomp.h"
+ 
+-static struct coex_dm_8723b_1ant glcoex_dm_8723b_1ant;
+-static struct coex_dm_8723b_1ant *coex_dm = &glcoex_dm_8723b_1ant;
+-static struct coex_sta_8723b_1ant glcoex_sta_8723b_1ant;
+-static struct coex_sta_8723b_1ant *coex_sta = &glcoex_sta_8723b_1ant;
+-
+ static const char *const glbt_info_src_8723b_1ant[] = {
+ 	"BT Info[wifi fw]",
+ 	"BT Info[bt rsp]",
+@@ -42,6 +37,7 @@ static const u32 glcoex_ver_8723b_1ant = 0x47;
+ static void halbtc8723b1ant_updatera_mask(struct btc_coexist *btcoexist,
+ 					  bool force_exec, u32 dis_rate_mask)
+ {
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	coex_dm->curra_mask = dis_rate_mask;
+ 
+ 	if (force_exec || (coex_dm->prera_mask != coex_dm->curra_mask))
+@@ -54,6 +50,7 @@ static void halbtc8723b1ant_updatera_mask(struct btc_coexist *btcoexist,
+ static void btc8723b1ant_auto_rate_fb_retry(struct btc_coexist *btcoexist,
+ 					    bool force_exec, u8 type)
+ {
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	bool wifi_under_bmode = false;
+ 
+ 	coex_dm->cur_arfr_type = type;
+@@ -93,6 +90,7 @@ static void btc8723b1ant_auto_rate_fb_retry(struct btc_coexist *btcoexist,
+ static void halbtc8723b1ant_retry_limit(struct btc_coexist *btcoexist,
+ 					bool force_exec, u8 type)
+ {
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	coex_dm->cur_retry_limit_type = type;
+ 
+ 	if (force_exec || (coex_dm->pre_retry_limit_type !=
+@@ -116,6 +114,7 @@ static void halbtc8723b1ant_retry_limit(struct btc_coexist *btcoexist,
+ static void halbtc8723b1ant_ampdu_maxtime(struct btc_coexist *btcoexist,
+ 					  bool force_exec, u8 type)
+ {
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	coex_dm->cur_ampdu_time_type = type;
+ 
+ 	if (force_exec || (coex_dm->pre_ampdu_time_type !=
+@@ -190,6 +189,7 @@ static void halbtc8723b1ant_limited_rx(struct btc_coexist *btcoexist,
+ 
+ static void halbtc8723b1ant_query_bt_info(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
+ 	u8 h2c_parameter[1] = {0};
+ 
+ 	coex_sta->c2h_bt_info_req_sent = true;
+@@ -202,6 +202,7 @@ static void halbtc8723b1ant_query_bt_info(struct btc_coexist *btcoexist)
+ 
+ static void halbtc8723b1ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
+ 	u32 reg_hp_txrx, reg_lp_txrx, u32tmp;
+ 	u32 reg_hp_tx = 0, reg_hp_rx = 0;
+ 	u32 reg_lp_tx = 0, reg_lp_rx = 0;
+@@ -253,6 +254,8 @@ static void halbtc8723b1ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ 
+ static void halbtc8723b1ant_monitor_wifi_ctr(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	s32 wifi_rssi = 0;
+ 	bool wifi_busy = false, wifi_under_b_mode = false;
+ 	static u8 cck_lock_counter;
+@@ -375,6 +378,7 @@ static bool btc8723b1ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
+ 
+ static void halbtc8723b1ant_update_bt_link_info(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool bt_hs_on = false;
+ 
+@@ -439,6 +443,7 @@ static void halbtc8723b1ant_bt_auto_report(struct btc_coexist *btcoexist,
+ 					   bool force_exec,
+ 					   bool enable_auto_report)
+ {
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	coex_dm->cur_bt_auto_report = enable_auto_report;
+ 
+ 	if (!force_exec) {
+@@ -478,6 +483,7 @@ static void btc8723b1ant_set_sw_pen_tx_rate_adapt(struct btc_coexist *btcoexist,
+ static void halbtc8723b1ant_low_penalty_ra(struct btc_coexist *btcoexist,
+ 					   bool force_exec, bool low_penalty_ra)
+ {
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	coex_dm->cur_low_penalty_ra = low_penalty_ra;
+ 
+ 	if (!force_exec) {
+@@ -519,6 +525,7 @@ static void halbtc8723b1ant_coex_table(struct btc_coexist *btcoexist,
+ 				       u8 val0x6cc)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s write Coex Table 0x6c0 = 0x%x, 0x6c4 = 0x%x, 0x6cc = 0x%x\n",
+@@ -548,6 +555,7 @@ static void halbtc8723b1ant_coex_table(struct btc_coexist *btcoexist,
+ static void halbtc8723b1ant_coex_table_with_type(struct btc_coexist *btcoexist,
+ 						 bool force_exec, u8 type)
+ {
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
+ 	coex_sta->coex_table_type = type;
+ 
+ 	switch (type) {
+@@ -647,6 +655,7 @@ static void halbtc8723b1ant_ignore_wlan_act(struct btc_coexist *btcoexist,
+ 					    bool force_exec, bool enable)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s turn Ignore WlanAct %s\n",
+@@ -673,6 +682,7 @@ static void halbtc8723b1ant_set_fw_ps_tdma(struct btc_coexist *btcoexist,
+ 					   u8 byte4, u8 byte5)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	u8 h2c_parameter[5] = {0};
+ 	u8 real_byte1 = byte1, real_byte5 = byte5;
+ 	bool ap_enable = false;
+@@ -730,6 +740,7 @@ static void halbtc8723b1ant_lps_rpwm(struct btc_coexist *btcoexist,
+ 				     u8 lps_val, u8 rpwm_val)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s set lps/rpwm = 0x%x/0x%x\n",
+@@ -773,6 +784,7 @@ static void halbtc8723b1ant_set_ant_path(struct btc_coexist *btcoexist,
+ 					 bool init_hw_cfg, bool wifi_off)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	struct btc_board_info *board_info = &btcoexist->board_info;
+ 	u32 fw_ver = 0, u32tmp = 0, cnt_bt_cal_chk = 0;
+ 	bool pg_ext_switch = false;
+@@ -1028,6 +1040,8 @@ static void halbtc8723b1ant_set_ant_path(struct btc_coexist *btcoexist,
+ static void halbtc8723b1ant_ps_tdma(struct btc_coexist *btcoexist,
+ 				    bool force_exec, bool turn_on, u8 type)
+ {
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool wifi_busy = false;
+ 	u8 rssi_adjust_val = 0;
+@@ -1419,6 +1433,8 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
+ 				       u8 wifi_status)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	static s32 up, dn, m, n, wait_count;
+ 	/*  0: no change, +1: increase WiFi duration,
+ 	 * -1: decrease WiFi duration
+@@ -1630,6 +1646,7 @@ static void halbtc8723b1ant_power_save_state(struct btc_coexist *btcoexist,
+ 					     u8 ps_type, u8 lps_val,
+ 					     u8 rpwm_val)
+ {
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
+ 	bool low_pwr_disable = false;
+ 
+ 	switch (ps_type) {
+@@ -1676,6 +1693,7 @@ static void halbtc8723b1ant_monitor_bt_enable_disable(struct btc_coexist
+ 						      *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
+ 	static u32 bt_disable_cnt;
+ 	bool bt_active = true, bt_disabled = false;
+ 
+@@ -1751,6 +1769,7 @@ static void halbtc8723b1ant_action_hs(struct btc_coexist *btcoexist)
+ 
+ static void halbtc8723b1ant_action_bt_inquiry(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool wifi_connected = false, ap_enable = false;
+ 	bool wifi_busy = false, bt_busy = false;
+@@ -1830,6 +1849,8 @@ static void halbtc8723b1ant_action_wifi_connected_bt_acl_busy(
+ 					struct btc_coexist *btcoexist,
+ 					u8 wifi_status)
+ {
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 
+ 	if ((coex_sta->low_priority_rx >= 950) && (!coex_sta->under_ips))
+@@ -1898,6 +1919,7 @@ static void btc8723b1ant_action_wifi_not_conn(struct btc_coexist *btcoexist)
+ static void
+ btc8723b1ant_action_wifi_not_conn_scan(struct btc_coexist *btcoexist)
+ {
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 
+ 	halbtc8723b1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
+@@ -1959,6 +1981,7 @@ btc8723b1ant_act_wifi_not_conn_asso_auth(struct btc_coexist *btcoexist)
+ 
+ static void btc8723b1ant_action_wifi_conn_scan(struct btc_coexist *btcoexist)
+ {
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 
+ 	halbtc8723b1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE,
+@@ -1998,6 +2021,7 @@ static void btc8723b1ant_action_wifi_conn_scan(struct btc_coexist *btcoexist)
+ static void halbtc8723b1ant_action_wifi_connected_special_packet(
+ 						struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool wifi_busy = false;
+ 
+@@ -2032,6 +2056,8 @@ static void halbtc8723b1ant_action_wifi_connected_special_packet(
+ static void halbtc8723b1ant_action_wifi_connected(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	bool wifi_busy = false;
+ 	bool scan = false, link = false, roam = false;
+ 	bool under_4way = false, ap_enable = false;
+@@ -2148,6 +2174,8 @@ static void halbtc8723b1ant_action_wifi_connected(struct btc_coexist *btcoexist)
+ static void halbtc8723b1ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool wifi_connected = false, bt_hs_on = false, wifi_busy = false;
+ 	bool increase_scan_dev_num = false;
+@@ -2308,6 +2336,7 @@ static void halbtc8723b1ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+ /* force coex mechanism to reset */
+ static void halbtc8723b1ant_init_coex_dm(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
+ 	/* sw all off */
+ 	halbtc8723b1ant_sw_mechanism(btcoexist, false);
+ 
+@@ -2318,6 +2347,7 @@ static void halbtc8723b1ant_init_hw_config(struct btc_coexist *btcoexist,
+ 					   bool backup, bool wifi_only)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
+ 	u32 u32tmp = 0;
+ 	u8 u8tmpa = 0, u8tmpb = 0;
+ 
+@@ -2456,6 +2486,8 @@ void ex_btc8723b1ant_init_coex_dm(struct btc_coexist *btcoexist)
+ void ex_btc8723b1ant_display_coex_info(struct btc_coexist *btcoexist,
+ 				       struct seq_file *m)
+ {
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	struct btc_board_info *board_info = &btcoexist->board_info;
+ 	struct btc_stack_info *stack_info = &btcoexist->stack_info;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+@@ -2720,6 +2752,7 @@ void ex_btc8723b1ant_display_coex_info(struct btc_coexist *btcoexist,
+ void ex_btc8723b1ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm)
+ 		return;
+@@ -2749,6 +2782,7 @@ void ex_btc8723b1ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ void ex_btc8723b1ant_lps_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm)
+ 		return;
+@@ -2767,6 +2801,7 @@ void ex_btc8723b1ant_lps_notify(struct btc_coexist *btcoexist, u8 type)
+ void ex_btc8723b1ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
+ 	bool wifi_connected = false, bt_hs_on = false;
+ 	u8 u8tmpa, u8tmpb;
+ 	u32 u32tmp;
+@@ -2853,6 +2888,8 @@ void ex_btc8723b1ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
+ void ex_btc8723b1ant_connect_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	bool wifi_connected = false, bt_hs_on = false;
+ 	u32 wifi_link_status = 0;
+ 	u32 num_of_wifi_link = 0;
+@@ -2924,6 +2961,8 @@ void ex_btc8723b1ant_media_status_notify(struct btc_coexist *btcoexist,
+ 					 u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	u8 h2c_parameter[3] = {0};
+ 	u32 wifi_bw;
+ 	u8 wifi_central_chnl;
+@@ -3005,6 +3044,8 @@ void ex_btc8723b1ant_special_packet_notify(struct btc_coexist *btcoexist,
+ 					   u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	bool bt_hs_on = false;
+ 	u32 wifi_link_status = 0;
+ 	u32 num_of_wifi_link = 0;
+@@ -3082,6 +3123,8 @@ void ex_btc8723b1ant_bt_info_notify(struct btc_coexist *btcoexist,
+ 				    u8 *tmp_buf, u8 length)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	u8 bt_info = 0;
+ 	u8 i, rsp_source = 0;
+ 	bool wifi_connected = false;
+@@ -3385,6 +3428,7 @@ void ex_btc8723b1ant_halt_notify(struct btc_coexist *btcoexist)
+ void ex_btc8723b1ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD, "[BTCoex], Pnp notify\n");
+ 
+@@ -3431,6 +3475,8 @@ void ex_btc8723b1ant_coex_dm_reset(struct btc_coexist *btcoexist)
+ void ex_btc8723b1ant_periodical(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_1ant *coex_sta = &btcoexist->coex_sta_8723b_1ant;
++	struct coex_dm_8723b_1ant *coex_dm = &btcoexist->coex_dm_8723b_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 8c1cec306bf1..5efa9c4a9cbd 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -25,11 +25,6 @@
+ 
+ #include "halbt_precomp.h"
+ 
+-static struct coex_dm_8723b_2ant glcoex_dm_8723b_2ant;
+-static struct coex_dm_8723b_2ant *coex_dm = &glcoex_dm_8723b_2ant;
+-static struct coex_sta_8723b_2ant glcoex_sta_8723b_2ant;
+-static struct coex_sta_8723b_2ant *coex_sta = &glcoex_sta_8723b_2ant;
+-
+ static const char *const glbt_info_src_8723b_2ant[] = {
+ 	"BT Info[wifi fw]",
+ 	"BT Info[bt rsp]",
+@@ -44,6 +39,7 @@ static u8 btc8723b2ant_bt_rssi_state(struct btc_coexist *btcoexist,
+ 				     u8 rssi_thresh1)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
+ 	s32 bt_rssi = 0;
+ 	u8 bt_rssi_state = coex_sta->pre_bt_rssi_state;
+ 
+@@ -133,6 +129,7 @@ static u8 btc8723b2ant_wifi_rssi_state(struct btc_coexist *btcoexist,
+ 				       u8 rssi_thresh, u8 rssi_thresh1)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
+ 	s32 wifi_rssi = 0;
+ 	u8 wifi_rssi_state = coex_sta->pre_wifi_rssi_state[index];
+ 
+@@ -247,6 +244,7 @@ void btc8723b2ant_limited_rx(struct btc_coexist *btcoexist, bool force_exec,
+ static void btc8723b2ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	u32 reg_hp_txrx, reg_lp_txrx, u32tmp;
+ 	u32 reg_hp_tx = 0, reg_hp_rx = 0;
+@@ -292,6 +290,7 @@ static void btc8723b2ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ 
+ static void btc8723b2ant_monitor_wifi_ctr(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
+ 	if (coex_sta->under_ips) {
+ 		coex_sta->crc_ok_cck = 0;
+ 		coex_sta->crc_ok_11g = 0;
+@@ -330,6 +329,7 @@ static void btc8723b2ant_monitor_wifi_ctr(struct btc_coexist *btcoexist)
+ static void btc8723b2ant_query_bt_info(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
+ 	u8 h2c_parameter[1] = {0};
+ 
+ 	coex_sta->c2h_bt_info_req_sent = true;
+@@ -345,6 +345,7 @@ static void btc8723b2ant_query_bt_info(struct btc_coexist *btcoexist)
+ 
+ static bool btc8723b2ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
+ {
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	static bool pre_wifi_busy;
+ 	static bool pre_under_4way;
+ 	static bool pre_bt_hs_on;
+@@ -391,6 +392,7 @@ static bool btc8723b2ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
+ 
+ static void btc8723b2ant_update_bt_link_info(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool bt_hs_on = false;
+ 
+@@ -669,6 +671,7 @@ static void btc8723b2ant_dec_bt_pwr(struct btc_coexist *btcoexist,
+ 				    bool force_exec, u8 dec_bt_pwr_lvl)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], Dec BT power level = %u\n", dec_bt_pwr_lvl);
+@@ -706,6 +709,7 @@ static
+ void btc8723b2ant_bt_auto_report(struct btc_coexist *btcoexist,
+ 				 bool force_exec, bool enable_auto_report)
+ {
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	coex_dm->cur_bt_auto_report = enable_auto_report;
+ 
+ 	if (!force_exec) {
+@@ -722,6 +726,7 @@ static void btc8723b2ant_fw_dac_swing_lvl(struct btc_coexist *btcoexist,
+ 					  bool force_exec, u8 fw_dac_swing_lvl)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s set FW Dac Swing level = %d\n",
+@@ -772,6 +777,7 @@ static void btc8723b2ant_low_penalty_ra(struct btc_coexist *btcoexist,
+ 					bool force_exec, bool low_penalty_ra)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s turn LowPenaltyRA = %s\n",
+@@ -819,6 +825,7 @@ static void btc8723b2ant_dac_swing(struct btc_coexist *btcoexist,
+ 				   u32 dac_swing_lvl)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s turn DacSwing=%s, dac_swing_lvl=0x%x\n",
+@@ -876,6 +883,7 @@ static void btc8723b2ant_coex_table(struct btc_coexist *btcoexist,
+ 				    u8 val0x6cc)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s write Coex Table 0x6c0=0x%x, 0x6c4=0x%x, 0x6c8=0x%x, 0x6cc=0x%x\n",
+@@ -1013,6 +1021,7 @@ static void btc8723b2ant_set_lps_rpwm(struct btc_coexist *btcoexist,
+ static void btc8723b2ant_lps_rpwm(struct btc_coexist *btcoexist,
+ 				  bool force_exec, u8 lps_val, u8 rpwm_val)
+ {
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	coex_dm->cur_lps = lps_val;
+ 	coex_dm->cur_rpwm = rpwm_val;
+ 
+@@ -1031,6 +1040,7 @@ static void btc8723b2ant_ignore_wlan_act(struct btc_coexist *btcoexist,
+ 					 bool force_exec, bool enable)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s turn Ignore WlanAct %s\n",
+@@ -1056,6 +1066,8 @@ static void btc8723b2ant_set_fw_ps_tdma(struct btc_coexist *btcoexist, u8 byte1,
+ 					u8 byte2, u8 byte3, u8 byte4, u8 byte5)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	u8 h2c_parameter[5];
+ 	if ((coex_sta->a2dp_exist) && (coex_sta->hid_exist))
+ 		byte5 = byte5 | 0x1;
+@@ -1210,6 +1222,8 @@ static void btc8723b2ant_ps_tdma(struct btc_coexist *btcoexist, bool force_exec,
+ 				 bool turn_on, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	u8 wifi_rssi_state, bt_rssi_state;
+ 	s8 wifi_duration_adjust = 0x0;
+@@ -1499,6 +1513,7 @@ static void btc8723b2ant_ps_tdma_check_for_power_save_state(
+ static void btc8723b2ant_power_save_state(struct btc_coexist *btcoexist,
+ 					  u8 ps_type, u8 lps_val, u8 rpwm_val)
+ {
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
+ 	bool low_pwr_disable = false;
+ 
+ 	switch (ps_type) {
+@@ -1552,6 +1567,7 @@ static void btc8723b2ant_coex_alloff(struct btc_coexist *btcoexist)
+ 
+ static void btc8723b2ant_init_coex_dm(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
+ 	/* force to reset coex mechanism*/
+ 	btc8723b2ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 0);
+ 	btc8723b2ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE, 0x0, 0x0);
+@@ -1568,6 +1584,7 @@ static void btc8723b2ant_init_coex_dm(struct btc_coexist *btcoexist)
+ static void btc8723b2ant_action_bt_inquiry(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
+ 	bool wifi_connected = false;
+ 	bool low_pwr_disable = true;
+ 	bool scan = false, link = false, roam = false;
+@@ -1630,6 +1647,8 @@ static void btc8723b2ant_action_wifi_link_process(struct btc_coexist
+ static bool btc8723b2ant_action_wifi_idle_process(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u8 ap_num = 0;
+ 	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
+@@ -1671,6 +1690,7 @@ static bool btc8723b2ant_action_wifi_idle_process(struct btc_coexist *btcoexist)
+ static bool btc8723b2ant_is_common_action(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	bool common = false, wifi_connected = false;
+ 	bool wifi_busy = false;
+ 	bool bt_hs_on = false, low_pwr_disable = false;
+@@ -1783,6 +1803,8 @@ static void btc8723b2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
+ 					  u8 max_interval)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	static s32 up, dn, m, n, wait_count;
+ 	/*0: no change, +1: increase WiFi duration, -1: decrease WiFi duration*/
+ 	s32 result;
+@@ -2766,6 +2788,7 @@ static void btc8723b2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
+ /* SCO only or SCO+PAN(HS) */
+ static void btc8723b2ant_action_sco(struct btc_coexist *btcoexist)
+ {
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	u8 wifi_rssi_state, bt_rssi_state;
+ 	u32 wifi_bw;
+ 
+@@ -2821,6 +2844,7 @@ static void btc8723b2ant_action_sco(struct btc_coexist *btcoexist)
+ 
+ static void btc8723b2ant_action_hid(struct btc_coexist *btcoexist)
+ {
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	u8 wifi_rssi_state, bt_rssi_state;
+ 	u32 wifi_bw;
+ 	u8 tmp = BT_8723B_2ANT_BT_RSSI_COEXSWITCH_THRES -
+@@ -2881,6 +2905,7 @@ static void btc8723b2ant_action_hid(struct btc_coexist *btcoexist)
+ /* A2DP only / PAN(EDR) only/ A2DP+PAN(HS) */
+ static void btc8723b2ant_action_a2dp(struct btc_coexist *btcoexist)
+ {
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u32 wifi_bw;
+ 	u8 ap_num = 0;
+@@ -2967,6 +2992,7 @@ static void btc8723b2ant_action_a2dp(struct btc_coexist *btcoexist)
+ 
+ static void btc8723b2ant_action_a2dp_pan_hs(struct btc_coexist *btcoexist)
+ {
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u32 wifi_bw;
+ 	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
+@@ -3026,6 +3052,7 @@ static void btc8723b2ant_action_a2dp_pan_hs(struct btc_coexist *btcoexist)
+ 
+ static void btc8723b2ant_action_pan_edr(struct btc_coexist *btcoexist)
+ {
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u32 wifi_bw;
+ 	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
+@@ -3090,6 +3117,7 @@ static void btc8723b2ant_action_pan_edr(struct btc_coexist *btcoexist)
+ /* PAN(HS) only */
+ static void btc8723b2ant_action_pan_hs(struct btc_coexist *btcoexist)
+ {
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u32 wifi_bw;
+ 	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
+@@ -3140,6 +3168,7 @@ static void btc8723b2ant_action_pan_hs(struct btc_coexist *btcoexist)
+ /* PAN(EDR) + A2DP */
+ static void btc8723b2ant_action_pan_edr_a2dp(struct btc_coexist *btcoexist)
+ {
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u32 wifi_bw;
+ 	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
+@@ -3207,6 +3236,7 @@ static void btc8723b2ant_action_pan_edr_a2dp(struct btc_coexist *btcoexist)
+ 
+ static void btc8723b2ant_action_pan_edr_hid(struct btc_coexist *btcoexist)
+ {
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u32 wifi_bw;
+ 	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
+@@ -3283,6 +3313,7 @@ static void btc8723b2ant_action_pan_edr_hid(struct btc_coexist *btcoexist)
+ /* HID + A2DP + PAN(EDR) */
+ static void btc8723b2ant_action_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
+ {
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u32 wifi_bw;
+ 	u8 tmp = BT_8723B_2ANT_WIFI_RSSI_COEXSWITCH_THRES -
+@@ -3354,6 +3385,7 @@ static void btc8723b2ant_action_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
+ 
+ static void btc8723b2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ {
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u32 wifi_bw;
+ 	u8 ap_num = 0;
+@@ -3470,6 +3502,8 @@ static void btc8723b2ant_action_wifi_multi_port(struct btc_coexist *btcoexist)
+ static void btc8723b2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	u8 algorithm = 0;
+ 	u32 num_of_wifi_link = 0;
+ 	u32 wifi_link_status = 0;
+@@ -3654,6 +3688,8 @@ static void btc8723b2ant_wifioff_hwcfg(struct btc_coexist *btcoexist)
+ void ex_btc8723b2ant_init_hwconfig(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	u8 u8tmp = 0;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+@@ -3764,6 +3800,8 @@ void ex_btc8723b2ant_init_coex_dm(struct btc_coexist *btcoexist)
+ void ex_btc8723b2ant_display_coex_info(struct btc_coexist *btcoexist,
+ 				       struct seq_file *m)
+ {
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	struct btc_board_info *board_info = &btcoexist->board_info;
+ 	struct btc_stack_info *stack_info = &btcoexist->stack_info;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+@@ -3976,6 +4014,7 @@ void ex_btc8723b2ant_display_coex_info(struct btc_coexist *btcoexist,
+ void ex_btc8723b2ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
+ 
+ 	if (BTC_IPS_ENTER == type) {
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+@@ -3997,6 +4036,7 @@ void ex_btc8723b2ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ void ex_btc8723b2ant_lps_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
+ 
+ 	if (BTC_LPS_ENABLE == type) {
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+@@ -4012,6 +4052,7 @@ void ex_btc8723b2ant_lps_notify(struct btc_coexist *btcoexist, u8 type)
+ void ex_btc8723b2ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
+ 	u32 u32tmp;
+ 	u8 u8tmpa, u8tmpb;
+ 
+@@ -4049,6 +4090,7 @@ void ex_btc8723b2ant_media_status_notify(struct btc_coexist *btcoexist,
+ 					 u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	u8 h2c_parameter[3] = {0};
+ 	u32 wifi_bw;
+ 	u8 wifi_central_chnl;
+@@ -4108,6 +4150,8 @@ void ex_btc8723b2ant_bt_info_notify(struct btc_coexist *btcoexist,
+ 				    u8 *tmpbuf, u8 length)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	u8 bt_info = 0;
+ 	u8 i, rsp_source = 0;
+ 	bool bt_busy = false, limited_dig = false;
+@@ -4299,6 +4343,7 @@ void ex_btc8723b2ant_halt_notify(struct btc_coexist *btcoexist)
+ void ex_btc8723b2ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD, "[BTCoex], Pnp notify\n");
+ 
+@@ -4326,6 +4371,8 @@ void ex_btc8723b2ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
+ void ex_btc8723b2ant_periodical(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8723b_2ant *coex_sta = &btcoexist->coex_sta_8723b_2ant;
++	struct coex_dm_8723b_2ant *coex_dm = &btcoexist->coex_dm_8723b_2ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index cb34a33ae99a..d3eb717078bf 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -25,10 +25,6 @@
+ 
+ #include "halbt_precomp.h"
+ 
+-static struct coex_dm_8821a_1ant glcoex_dm_8821a_1ant;
+-static struct coex_dm_8821a_1ant *coex_dm = &glcoex_dm_8821a_1ant;
+-static struct coex_sta_8821a_1ant glcoex_sta_8821a_1ant;
+-static struct coex_sta_8821a_1ant *coex_sta = &glcoex_sta_8821a_1ant;
+ static void btc8821a1ant_act_bt_sco_hid_only_busy(struct btc_coexist *btcoexist,
+ 						  u8 wifi_status);
+ 
+@@ -46,6 +42,7 @@ static u8 btc8821a1ant_bt_rssi_state(struct btc_coexist *btcoexist,
+ 				     u8 rssi_thresh1)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_1ant *coex_sta = &btcoexist->coex_sta_8821a_1ant;
+ 	long bt_rssi = 0;
+ 	u8 bt_rssi_state = coex_sta->pre_bt_rssi_state;
+ 
+@@ -134,6 +131,7 @@ static u8 btc8821a1ant_wifi_rssi_state(struct btc_coexist *btcoexist,
+ 				       u8 rssi_thresh1)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_1ant *coex_sta = &btcoexist->coex_sta_8821a_1ant;
+ 	long	wifi_rssi = 0;
+ 	u8	wifi_rssi_state = coex_sta->pre_wifi_rssi_state[index];
+ 
+@@ -224,6 +222,7 @@ static u8 btc8821a1ant_wifi_rssi_state(struct btc_coexist *btcoexist,
+ static void btc8821a1ant_update_ra_mask(struct btc_coexist *btcoexist,
+ 					bool force_exec, u32 dis_rate_mask)
+ {
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	coex_dm->cur_ra_mask = dis_rate_mask;
+ 
+ 	if (force_exec ||
+@@ -237,6 +236,7 @@ static void btc8821a1ant_update_ra_mask(struct btc_coexist *btcoexist,
+ static void btc8821a1ant_auto_rate_fb_retry(struct btc_coexist *btcoexist,
+ 					    bool force_exec, u8 type)
+ {
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	bool wifi_under_b_mode = false;
+ 
+ 	coex_dm->cur_arfr_type = type;
+@@ -277,6 +277,7 @@ static void btc8821a1ant_auto_rate_fb_retry(struct btc_coexist *btcoexist,
+ static void btc8821a1ant_retry_limit(struct btc_coexist *btcoexist,
+ 				     bool force_exec, u8 type)
+ {
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	coex_dm->cur_retry_limit_type = type;
+ 
+ 	if (force_exec ||
+@@ -299,6 +300,7 @@ static void btc8821a1ant_retry_limit(struct btc_coexist *btcoexist,
+ static void btc8821a1ant_ampdu_max_time(struct btc_coexist *btcoexist,
+ 					bool force_exec, u8 type)
+ {
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	coex_dm->cur_ampdu_time_type = type;
+ 
+ 	if (force_exec ||
+@@ -367,6 +369,7 @@ static void btc8821a1ant_limited_rx(struct btc_coexist *btcoexist,
+ 
+ static void btc8821a1ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8821a_1ant *coex_sta = &btcoexist->coex_sta_8821a_1ant;
+ 	u32 reg_hp_tx_rx, reg_lp_tx_rx, u4_tmp;
+ 	u32 reg_hp_tx = 0, reg_hp_rx = 0, reg_lp_tx = 0, reg_lp_rx = 0;
+ 
+@@ -393,6 +396,7 @@ static void btc8821a1ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ static void btc8821a1ant_query_bt_info(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_1ant *coex_sta = &btcoexist->coex_sta_8821a_1ant;
+ 	u8 h2c_parameter[1] = {0};
+ 
+ 	coex_sta->c2h_bt_info_req_sent = true;
+@@ -408,6 +412,7 @@ static void btc8821a1ant_query_bt_info(struct btc_coexist *btcoexist)
+ 
+ static void btc8821a1ant_update_bt_link_info(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8821a_1ant *coex_sta = &btcoexist->coex_sta_8821a_1ant;
+ 	struct btc_bt_link_info	*bt_link_info = &btcoexist->bt_link_info;
+ 	bool bt_hs_on = false;
+ 
+@@ -672,6 +677,7 @@ static void btc8821a1ant_set_sw_penalty_tx_rate(struct btc_coexist *btcoexist,
+ static void btc8821a1ant_low_penalty_ra(struct btc_coexist *btcoexist,
+ 					bool force_exec, bool low_penalty_ra)
+ {
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	coex_dm->cur_low_penalty_ra = low_penalty_ra;
+ 
+ 	if (!force_exec) {
+@@ -712,6 +718,7 @@ static void btc8821a1ant_coex_table(struct btc_coexist *btcoexist,
+ 				    u32 val0x6c8, u8 val0x6cc)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s write Coex Table 0x6c0 = 0x%x, 0x6c4 = 0x%x, 0x6c8 = 0x%x, 0x6cc = 0x%x\n",
+@@ -799,6 +806,7 @@ static void btc8821a1ant_ignore_wlan_act(struct btc_coexist *btcoexist,
+ 					 bool force_exec, bool enable)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s turn Ignore WlanAct %s\n",
+@@ -824,6 +832,7 @@ static void btc8821a1ant_set_fw_ps_tdma(struct btc_coexist *btcoexist, u8 byte1,
+ 					u8 byte2, u8 byte3, u8 byte4, u8 byte5)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	u8 h2c_parameter[5] = {0};
+ 	u8 real_byte1 = byte1, real_byte5 = byte5;
+ 	bool ap_enable = false;
+@@ -879,6 +888,7 @@ static void btc8821a1ant_lps_rpwm(struct btc_coexist *btcoexist,
+ 				  bool force_exec, u8 lps_val, u8 rpwm_val)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s set lps/rpwm = 0x%x/0x%x\n",
+@@ -1005,6 +1015,7 @@ static void btc8821a1ant_ps_tdma(struct btc_coexist *btcoexist,
+ 				 bool force_exec, bool turn_on, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	u8 rssi_adjust_val = 0;
+ 
+ 	coex_dm->cur_ps_tdma_on = turn_on;
+@@ -1247,6 +1258,7 @@ static void btc8821a1ant_ps_tdma(struct btc_coexist *btcoexist,
+ static bool btc8821a1ant_is_common_action(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	bool common = false, wifi_connected = false, wifi_busy = false;
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_CONNECTED,
+@@ -1452,6 +1464,7 @@ static void btc8821a1ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ static
+ void btc8821a1ant_action_wifi_multi_port(struct btc_coexist *btcoexist)
+ {
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 
+ 	btc8821a1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE, 0x0, 0x0);
+@@ -1513,6 +1526,7 @@ static void btc8821a1ant_action_hs(struct btc_coexist *btcoexist)
+ 
+ static void btc8821a1ant_action_bt_inquiry(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8821a_1ant *coex_sta = &btcoexist->coex_sta_8821a_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool wifi_connected = false;
+ 	bool ap_enable = false;
+@@ -1574,6 +1588,7 @@ static void btc8821a1ant_act_bt_sco_hid_only_busy(struct btc_coexist *btcoexist,
+ static void btc8821a1ant_act_wifi_con_bt_acl_busy(struct btc_coexist *btcoexist,
+ 						  u8 wifi_status)
+ {
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	u8 bt_rssi_state;
+ 
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+@@ -1653,6 +1668,7 @@ void btc8821a1ant_action_wifi_not_connected(struct btc_coexist *btcoexist)
+ 
+ static void btc8821a1ant_act_wifi_not_conn_scan(struct btc_coexist *btcoexist)
+ {
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 
+ 	btc8821a1ant_power_save_state(btcoexist, BTC_PS_WIFI_NATIVE, 0x0, 0x0);
+@@ -1687,6 +1703,7 @@ static void btc8821a1ant_act_wifi_not_conn_scan(struct btc_coexist *btcoexist)
+ static
+ void btc8821a1ant_action_wifi_connected_scan(struct btc_coexist *btcoexist)
+ {
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 
+ 	/* power save state */
+@@ -1744,6 +1761,7 @@ static void btc8821a1ant_act_wifi_conn_sp_pkt(struct btc_coexist *btcoexist)
+ static void btc8821a1ant_action_wifi_connected(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	bool wifi_busy = false;
+ 	bool scan = false, link = false, roam = false;
+ 	bool under_4way = false;
+@@ -1832,6 +1850,7 @@ static void btc8821a1ant_action_wifi_connected(struct btc_coexist *btcoexist)
+ static void btc8821a1ant_run_sw_coex_mech(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	u8 algorithm = 0;
+ 
+ 	algorithm = btc8821a1ant_action_algorithm(btcoexist);
+@@ -1902,6 +1921,8 @@ static void btc8821a1ant_run_sw_coex_mech(struct btc_coexist *btcoexist)
+ static void btc8821a1ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_1ant *coex_sta = &btcoexist->coex_sta_8821a_1ant;
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool wifi_connected = false, bt_hs_on = false;
+ 	bool increase_scan_dev_num = false;
+@@ -2050,6 +2071,7 @@ static void btc8821a1ant_init_hw_config(struct btc_coexist *btcoexist,
+ 					bool back_up, bool wifi_only)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	u8 u1_tmp = 0;
+ 	bool wifi_under_5g = false;
+ 
+@@ -2122,6 +2144,8 @@ void ex_btc8821a1ant_init_coex_dm(struct btc_coexist *btcoexist)
+ void ex_btc8821a1ant_display_coex_info(struct btc_coexist *btcoexist,
+ 				       struct seq_file *m)
+ {
++	struct coex_sta_8821a_1ant *coex_sta = &btcoexist->coex_sta_8821a_1ant;
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	struct btc_board_info *board_info = &btcoexist->board_info;
+ 	struct btc_stack_info *stack_info = &btcoexist->stack_info;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+@@ -2360,6 +2384,7 @@ void ex_btc8821a1ant_display_coex_info(struct btc_coexist *btcoexist,
+ void ex_btc8821a1ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_1ant *coex_sta = &btcoexist->coex_sta_8821a_1ant;
+ 	bool wifi_under_5g = false;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm)
+@@ -2396,6 +2421,7 @@ void ex_btc8821a1ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ void ex_btc8821a1ant_lps_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_1ant *coex_sta = &btcoexist->coex_sta_8821a_1ant;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm)
+ 		return;
+@@ -2414,6 +2440,7 @@ void ex_btc8821a1ant_lps_notify(struct btc_coexist *btcoexist, u8 type)
+ void ex_btc8821a1ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_1ant *coex_sta = &btcoexist->coex_sta_8821a_1ant;
+ 	bool wifi_connected = false, bt_hs_on = false;
+ 	bool bt_ctrl_agg_buf_size = false;
+ 	bool wifi_under_5g = false;
+@@ -2498,6 +2525,8 @@ void ex_btc8821a1ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
+ void ex_btc8821a1ant_connect_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_1ant *coex_sta = &btcoexist->coex_sta_8821a_1ant;
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	bool wifi_connected = false, bt_hs_on = false;
+ 	u32 wifi_link_status = 0;
+ 	u32 num_of_wifi_link = 0;
+@@ -2571,6 +2600,8 @@ void ex_btc8821a1ant_media_status_notify(struct btc_coexist *btcoexist,
+ 					 u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_1ant *coex_sta = &btcoexist->coex_sta_8821a_1ant;
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	u8 h2c_parameter[3] = {0};
+ 	u32 wifi_bw;
+ 	u8 wifi_central_chnl;
+@@ -2628,6 +2659,8 @@ void ex_btc8821a1ant_special_packet_notify(struct btc_coexist *btcoexist,
+ 					   u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_1ant *coex_sta = &btcoexist->coex_sta_8821a_1ant;
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	bool bt_hs_on = false;
+ 	bool bt_ctrl_agg_buf_size = false;
+ 	bool wifi_under_5g = false;
+@@ -2711,6 +2744,8 @@ void ex_btc8821a1ant_bt_info_notify(struct btc_coexist *btcoexist,
+ 				    u8 *tmp_buf, u8 length)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_1ant *coex_sta = &btcoexist->coex_sta_8821a_1ant;
++	struct coex_dm_8821a_1ant *coex_dm = &btcoexist->coex_dm_8821a_1ant;
+ 	u8 i;
+ 	u8 bt_info = 0;
+ 	u8 rsp_source = 0;
+@@ -2906,6 +2941,7 @@ void ex_btc8821a1ant_halt_notify(struct btc_coexist *btcoexist)
+ void ex_btc8821a1ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_1ant *coex_sta = &btcoexist->coex_sta_8821a_1ant;
+ 	bool wifi_under_5g = false;
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_UNDER_5G, &wifi_under_5g);
+@@ -2947,6 +2983,7 @@ void ex_btc8821a1ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
+ void ex_btc8821a1ant_periodical(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_1ant *coex_sta = &btcoexist->coex_sta_8821a_1ant;
+ 	static u8 dis_ver_info_cnt;
+ 	u32 fw_ver = 0, bt_patch_ver = 0;
+ 	struct btc_board_info *board_info = &btcoexist->board_info;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 14510d514e2f..42cb00d47a3e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -25,11 +25,6 @@
+ 
+ #include "halbt_precomp.h"
+ 
+-static struct coex_dm_8821a_2ant glcoex_dm_8821a_2ant;
+-static struct coex_dm_8821a_2ant *coex_dm = &glcoex_dm_8821a_2ant;
+-static struct coex_sta_8821a_2ant glcoex_sta_8821a_2ant;
+-static struct coex_sta_8821a_2ant *coex_sta = &glcoex_sta_8821a_2ant;
+-
+ static const char *const glbt_info_src_8821a_2ant[] = {
+ 	"BT Info[wifi fw]",
+ 	"BT Info[bt rsp]",
+@@ -44,6 +39,7 @@ static u8 btc8821a2ant_bt_rssi_state(struct btc_coexist *btcoexist,
+ 				     u8 rssi_thresh1)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_2ant *coex_sta = &btcoexist->coex_sta_8821a_2ant;
+ 	long bt_rssi = 0;
+ 	u8 bt_rssi_state = coex_sta->pre_bt_rssi_state;
+ 
+@@ -135,6 +131,7 @@ static u8 btc8821a2ant_wifi_rssi_state(struct btc_coexist *btcoexist,
+ 				       u8 rssi_thresh, u8 rssi_thresh1)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_2ant *coex_sta = &btcoexist->coex_sta_8821a_2ant;
+ 	long wifi_rssi = 0;
+ 	u8 wifi_rssi_state = coex_sta->pre_wifi_rssi_state[index];
+ 
+@@ -247,6 +244,7 @@ void btc8821a2ant_limited_rx(struct btc_coexist *btcoexist, bool force_exec,
+ static void btc8821a2ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_2ant *coex_sta = &btcoexist->coex_sta_8821a_2ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	u32 reg_hp_txrx, reg_lp_txrx, u4tmp;
+ 	u32 reg_hp_tx = 0, reg_hp_rx = 0, reg_lp_tx = 0, reg_lp_rx = 0;
+@@ -287,6 +285,7 @@ static void btc8821a2ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ 
+ static void btc8821a2ant_monitor_wifi_ctr(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8821a_2ant *coex_sta = &btcoexist->coex_sta_8821a_2ant;
+ 	if (coex_sta->under_ips) {
+ 		coex_sta->crc_ok_cck = 0;
+ 		coex_sta->crc_ok_11g = 0;
+@@ -325,6 +324,7 @@ static void btc8821a2ant_monitor_wifi_ctr(struct btc_coexist *btcoexist)
+ static void btc8821a2ant_query_bt_info(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_2ant *coex_sta = &btcoexist->coex_sta_8821a_2ant;
+ 	u8 h2c_parameter[1] = {0};
+ 
+ 	coex_sta->c2h_bt_info_req_sent = true;
+@@ -381,6 +381,7 @@ static bool btc8821a2ant_is_wifi_status_changed(struct btc_coexist *btcoexist)
+ 
+ static void btc8821a2ant_update_bt_link_info(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8821a_2ant *coex_sta = &btcoexist->coex_sta_8821a_2ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool bt_hs_on = false;
+ 
+@@ -653,6 +654,7 @@ static void btc8821a2ant_dec_bt_pwr(struct btc_coexist *btcoexist,
+ 				    bool force_exec, u8 dec_bt_pwr_lvl)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_2ant *coex_dm = &btcoexist->coex_dm_8821a_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s Dec BT power level = %u\n",
+@@ -677,6 +679,7 @@ static void btc8821a2ant_fw_dac_swing_lvl(struct btc_coexist *btcoexist,
+ 					  bool force_exec, u8 fw_dac_swing_lvl)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_2ant *coex_dm = &btcoexist->coex_dm_8821a_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s set FW Dac Swing level = %d\n",
+@@ -731,6 +734,7 @@ static void btc8821a2ant_low_penalty_ra(struct btc_coexist *btcoexist,
+ 					bool force_exec, bool low_penalty_ra)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_2ant *coex_dm = &btcoexist->coex_dm_8821a_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s turn LowPenaltyRA = %s\n",
+@@ -779,6 +783,7 @@ static void btc8821a2ant_dac_swing(struct btc_coexist *btcoexist,
+ 				   u32 dac_swing_lvl)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_2ant *coex_dm = &btcoexist->coex_dm_8821a_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s turn DacSwing = %s, dac_swing_lvl = 0x%x\n",
+@@ -837,6 +842,7 @@ static void btc8821a2ant_coex_table(struct btc_coexist *btcoexist,
+ 				    u32 val0x6c4, u32 val0x6c8, u8 val0x6cc)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_2ant *coex_dm = &btcoexist->coex_dm_8821a_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s write Coex Table 0x6c0 = 0x%x, 0x6c4 = 0x%x, 0x6c8 = 0x%x, 0x6cc = 0x%x\n",
+@@ -879,6 +885,7 @@ static void btc8821a2ant_coex_table(struct btc_coexist *btcoexist,
+ static void btc8821a2ant_coex_table_with_type(struct btc_coexist *btcoexist,
+ 					      bool force_exec, u8 type)
+ {
++	struct coex_sta_8821a_2ant *coex_sta = &btcoexist->coex_sta_8821a_2ant;
+ 	coex_sta->coex_table_type = type;
+ 
+ 	switch (type) {
+@@ -988,6 +995,7 @@ static void btc8821a2ant_set_lps_rpwm(struct btc_coexist *btcoexist, u8 lps_val,
+ static void btc8821a2ant_lps_rpwm(struct btc_coexist *btcoexist,
+ 				  bool force_exec, u8 lps_val, u8 rpwm_val)
+ {
++	struct coex_dm_8821a_2ant *coex_dm = &btcoexist->coex_dm_8821a_2ant;
+ 	coex_dm->cur_lps = lps_val;
+ 	coex_dm->cur_rpwm = rpwm_val;
+ 
+@@ -1006,6 +1014,7 @@ static void btc8821a2ant_ignore_wlan_act(struct btc_coexist *btcoexist,
+ 					 bool force_exec, bool enable)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_2ant *coex_dm = &btcoexist->coex_dm_8821a_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], %s turn Ignore WlanAct %s\n",
+@@ -1032,6 +1041,7 @@ static void btc8821a2ant_set_fw_ps_tdma(struct btc_coexist *btcoexist,
+ 					u8 byte4, u8 byte5)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_2ant *coex_dm = &btcoexist->coex_dm_8821a_2ant;
+ 	u8 h2c_parameter[5];
+ 
+ 	h2c_parameter[0] = byte1;
+@@ -1123,6 +1133,7 @@ static void btc8821a2ant_ps_tdma(struct btc_coexist *btcoexist,
+ 				 bool force_exec, bool turn_on, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_2ant *coex_dm = &btcoexist->coex_dm_8821a_2ant;
+ 
+ 	u8 wifi_rssi_state, bt_rssi_state;
+ 
+@@ -1375,6 +1386,7 @@ btc8821a2ant_ps_tdma_check_for_power_save_state(struct btc_coexist *btcoexist,
+ static void btc8821a2ant_power_save_state(struct btc_coexist *btcoexist,
+ 					  u8 ps_type, u8 lps_val, u8 rpwm_val)
+ {
++	struct coex_sta_8821a_2ant *coex_sta = &btcoexist->coex_sta_8821a_2ant;
+ 	bool low_pwr_disable = false;
+ 
+ 	switch (ps_type) {
+@@ -1517,6 +1529,7 @@ static void btc8821a2ant_action_wifi_link_process(struct btc_coexist *btcoexist)
+ static bool btc8821a2ant_action_wifi_idle_process(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_2ant *coex_sta = &btcoexist->coex_sta_8821a_2ant;
+ 	u8 wifi_rssi_state, wifi_rssi_state1, bt_rssi_state;
+ 	u8 ap_num = 0;
+ 
+@@ -1577,6 +1590,7 @@ static bool btc8821a2ant_action_wifi_idle_process(struct btc_coexist *btcoexist)
+ static bool btc8821a2ant_is_common_action(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_2ant *coex_dm = &btcoexist->coex_dm_8821a_2ant;
+ 	bool common = false, wifi_connected = false, wifi_busy = false;
+ 	bool low_pwr_disable = false;
+ 	bool bt_hs_on = false;
+@@ -1700,6 +1714,8 @@ static void btc8821a2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
+ 					      u8 max_interval)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_2ant *coex_sta = &btcoexist->coex_sta_8821a_2ant;
++	struct coex_dm_8821a_2ant *coex_dm = &btcoexist->coex_dm_8821a_2ant;
+ 	static long up, dn, m, n, wait_count;
+ 	 /* 0 : no change
+ 	  * +1: increase WiFi duration
+@@ -3381,6 +3397,8 @@ static void btc8821a2ant_action_wifi_multi_port(struct btc_coexist *btcoexist)
+ static void btc8821a2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_2ant *coex_sta = &btcoexist->coex_sta_8821a_2ant;
++	struct coex_dm_8821a_2ant *coex_dm = &btcoexist->coex_dm_8821a_2ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool wifi_under_5g = false;
+ 	u8 algorithm = 0;
+@@ -3560,6 +3578,8 @@ static void btc8821a2ant_wifi_off_hw_cfg(struct btc_coexist *btcoexist)
+ void ex_btc8821a2ant_init_hwconfig(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_2ant *coex_sta = &btcoexist->coex_sta_8821a_2ant;
++	struct coex_dm_8821a_2ant *coex_dm = &btcoexist->coex_dm_8821a_2ant;
+ 	u8 u1tmp = 0;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+@@ -3639,6 +3659,8 @@ void ex_btc8821a2ant_init_coex_dm(struct btc_coexist *btcoexist)
+ void ex_btc8821a2ant_display_coex_info(struct btc_coexist *btcoexist,
+ 				       struct seq_file *m)
+ {
++	struct coex_sta_8821a_2ant *coex_sta = &btcoexist->coex_sta_8821a_2ant;
++	struct coex_dm_8821a_2ant *coex_dm = &btcoexist->coex_dm_8821a_2ant;
+ 	struct btc_board_info *board_info = &btcoexist->board_info;
+ 	struct btc_stack_info *stack_info = &btcoexist->stack_info;
+ 	u8 u1tmp[4], i, bt_info_ext, ps_tdma_case = 0;
+@@ -3839,6 +3861,7 @@ void ex_btc8821a2ant_display_coex_info(struct btc_coexist *btcoexist,
+ void ex_btc8821a2ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_2ant *coex_sta = &btcoexist->coex_sta_8821a_2ant;
+ 
+ 	if (BTC_IPS_ENTER == type) {
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+@@ -3860,6 +3883,7 @@ void ex_btc8821a2ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ void ex_btc8821a2ant_lps_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_2ant *coex_sta = &btcoexist->coex_sta_8821a_2ant;
+ 
+ 	if (BTC_LPS_ENABLE == type) {
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+@@ -3902,6 +3926,7 @@ void ex_btc8821a2ant_media_status_notify(struct btc_coexist *btcoexist,
+ 					 u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8821a_2ant *coex_dm = &btcoexist->coex_dm_8821a_2ant;
+ 	u8 h2c_parameter[3] = {0};
+ 	u32 wifi_bw;
+ 	u8 wifi_central_chnl;
+@@ -3962,6 +3987,8 @@ void ex_btc8821a2ant_bt_info_notify(struct btc_coexist *btcoexist,
+ 				    u8 *tmp_buf, u8 length)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_2ant *coex_sta = &btcoexist->coex_sta_8821a_2ant;
++	struct coex_dm_8821a_2ant *coex_dm = &btcoexist->coex_dm_8821a_2ant;
+ 	u8 bt_info = 0;
+ 	u8 i, rsp_source = 0;
+ 	bool bt_busy = false, limited_dig = false;
+@@ -4191,6 +4218,8 @@ void ex_btc8821a2ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
+ void ex_btc8821a2ant_periodical(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8821a_2ant *coex_sta = &btcoexist->coex_sta_8821a_2ant;
++	struct coex_dm_8821a_2ant *coex_dm = &btcoexist->coex_dm_8821a_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], ==========================Periodical===========================\n");
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.c
+index 7350a5dcdc99..7c8224fcb2e6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.c
+@@ -15,13 +15,6 @@
+ 
+ #include "halbt_precomp.h"
+ 
+-static struct coex_dm_8822b_1ant	glcoex_dm_8822b_1ant;
+-static struct coex_dm_8822b_1ant	*coex_dm = &glcoex_dm_8822b_1ant;
+-static struct coex_sta_8822b_1ant	glcoex_sta_8822b_1ant;
+-static struct coex_sta_8822b_1ant	*coex_sta = &glcoex_sta_8822b_1ant;
+-static struct rfe_type_8822b_1ant	gl_rfe_type_8822b_1ant;
+-static struct rfe_type_8822b_1ant	*rfe_type = &gl_rfe_type_8822b_1ant;
+-
+ static const char *const glbt_info_src_8822b_1ant[] = {
+ 	"BT Info[wifi fw]",
+ 	"BT Info[bt rsp]",
+@@ -126,6 +119,7 @@ static void halbtc8822b1ant_limited_rx(struct btc_coexist *btcoexist,
+ static void halbtc8822b1ant_query_bt_info(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	u8 h2c_parameter[1] = {0};
+ 
+ 	if (coex_sta->bt_disabled) {
+@@ -145,6 +139,7 @@ static void halbtc8822b1ant_query_bt_info(struct btc_coexist *btcoexist)
+ static void halbtc8822b1ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	u32	reg_hp_txrx, reg_lp_txrx, u32tmp;
+ 	u32	reg_hp_tx = 0, reg_hp_rx = 0, reg_lp_tx = 0, reg_lp_rx = 0;
+ 	static u8	num_of_bt_counter_chk, cnt_slave, cnt_autoslot_hang;
+@@ -237,6 +232,8 @@ static void halbtc8822b1ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ 
+ static void halbtc8822b1ant_monitor_wifi_ctr(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	s32	wifi_rssi = 0;
+ 	bool	wifi_busy = false, wifi_under_b_mode = false, wifi_scan = false;
+ 	static u8 wl_noisy_count0, wl_noisy_count1 = 3, wl_noisy_count2;
+@@ -345,6 +342,7 @@ static bool
+ halbtc8822b1ant_is_wifibt_status_changed(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	static bool pre_wifi_busy, pre_under_4way,
+ 		       pre_bt_hs_on, pre_rf4ce_enabled,
+ 		       pre_bt_off, pre_bt_slave,
+@@ -480,6 +478,8 @@ halbtc8822b1ant_is_wifibt_status_changed(struct btc_coexist *btcoexist)
+ static void halbtc8822b1ant_update_bt_link_info(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool bt_hs_on = false;
+ 	bool bt_busy = false;
+@@ -709,6 +709,8 @@ static void
+ halbtc8822b1ant_update_wifi_ch_info(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	u8 h2c_parameter[3] = {0}, i;
+ 	u32 wifi_bw;
+ 	u8 wifi_central_chnl = 0;
+@@ -956,6 +958,8 @@ static void halbtc8822b1ant_low_penalty_ra(struct btc_coexist *btcoexist,
+ 					   bool force_exec,
+ 					   bool low_penalty_ra)
+ {
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
++
+ 	coex_dm->cur_low_penalty_ra = low_penalty_ra;
+ 
+ 	if (!force_exec) {
+@@ -994,6 +998,7 @@ static void halbtc8822b1ant_write_score_board(struct btc_coexist *btcoexist,
+ 					      u16 bitpos, bool state)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	static u16 originalval = 0x8002, preval;
+ 
+ 	if (state)
+@@ -1029,6 +1034,8 @@ static void halbtc8822b1ant_adjust_wl_tx_power(struct btc_coexist *btcoexist,
+ 					       bool force_exec,
+ 					       u8 fw_dac_swing_lvl)
+ {
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
++
+ 	coex_dm->cur_fw_dac_swing_lvl = fw_dac_swing_lvl;
+ 
+ 	if (!force_exec) {
+@@ -1049,6 +1056,7 @@ static void halbtc8822b1ant_adjust_bt_tx_power(struct btc_coexist *btcoexist,
+ 					       bool force_exec,
+ 					       u8 dec_bt_pwr_lvl)
+ {
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	u8 h2c_parameter[1] = {0};
+ 
+ 	coex_dm->cur_bt_dec_pwr_lvl = dec_bt_pwr_lvl;
+@@ -1070,6 +1078,7 @@ static void halbtc8822b1ant_adjust_wl_rx_gain(struct btc_coexist *btcoexist,
+ 					      bool agc_table_en)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	u32 rx_gain_value_enable[] = {
+ 		0xff000003, 0xea240003, 0xe9260003, 0xe8280003, 0xe72a0003,
+ 		0xe62c0003, 0xaf2e0003, 0xae300003, 0xad320003, 0xac340003,
+@@ -1137,6 +1146,7 @@ static void
+ halbtc8822b1ant_monitor_bt_enable_disable(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	static u32 bt_disable_cnt;
+ 	bool bt_active = true, bt_disabled = false, wifi_under_5g = false;
+ 	u16 u16tmp;
+@@ -1486,6 +1496,8 @@ void halbtc8822b1ant_coex_table(struct btc_coexist *btcoexist,
+ 				bool force_exec, u32 val0x6c0, u32 val0x6c4,
+ 				u32 val0x6c8, u8 val0x6cc)
+ {
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
++
+ 	coex_dm->cur_val0x6c0 = val0x6c0;
+ 	coex_dm->cur_val0x6c4 = val0x6c4;
+ 	coex_dm->cur_val0x6c8 = val0x6c8;
+@@ -1511,6 +1523,7 @@ static
+ void halbtc8822b1ant_coex_table_type(struct btc_coexist *btcoexist,
+ 				     bool force_exec, u8 type)
+ {
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	u32 break_table;
+ 	u8 select_table;
+ 
+@@ -1678,6 +1691,8 @@ static
+ void halbtc8822b1ant_ignore_wlan_act(struct btc_coexist *btcoexist,
+ 				     bool force_exec, bool enable)
+ {
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
++
+ 	coex_dm->cur_ignore_wlan_act = enable;
+ 
+ 	if (!force_exec) {
+@@ -1709,6 +1724,8 @@ static
+ void halbtc8822b1ant_lps_rpwm(struct btc_coexist *btcoexist, bool force_exec,
+ 			      u8 lps_val, u8 rpwm_val)
+ {
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
++
+ 	coex_dm->cur_lps = lps_val;
+ 	coex_dm->cur_rpwm = rpwm_val;
+ 
+@@ -1757,6 +1774,7 @@ static bool
+ halbtc8822b1ant_power_save_state(struct btc_coexist *btcoexist,
+ 				 u8 ps_type, u8 lps_val, u8 rpwm_val)
+ {
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	bool low_pwr_disable = false, result = true;
+ 
+ 	switch (ps_type) {
+@@ -1804,6 +1822,8 @@ void halbtc8822b1ant_set_fw_pstdma(struct btc_coexist *btcoexist, u8 byte1,
+ 				   u8 byte2, u8 byte3, u8 byte4, u8 byte5)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	u8 h2c_parameter[5] = {0};
+ 	u8 real_byte1 = byte1, real_byte5 = byte5;
+ 	bool ap_enable = false, result = false;
+@@ -1889,6 +1909,8 @@ void halbtc8822b1ant_ps_tdma(struct btc_coexist *btcoexist, bool force_exec,
+ 			     bool turn_on, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool wifi_busy = false;
+ 	static u8 tdma_byte4_modify, pre_ps_tdma_byte4_modify;
+@@ -2139,6 +2161,7 @@ void halbtc8822b1ant_ps_tdma(struct btc_coexist *btcoexist, bool force_exec,
+ 
+ static void halbtc8822b1ant_set_rfe_type(struct btc_coexist *btcoexist)
+ {
++	struct rfe_type_8822b_1ant *rfe_type = &btcoexist->rfe_type_8822b_1ant;
+ 	struct btc_board_info *board_info = &btcoexist->board_info;
+ 
+ 	/* Ext switch buffer mux */
+@@ -2162,6 +2185,8 @@ void hallbtc882b1ant_set_ant_switch(struct btc_coexist *btcoexist,
+ 				    u8 pos_type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct rfe_type_8822b_1ant *rfe_type = &btcoexist->rfe_type_8822b_1ant;
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	bool switch_polarity_inverse;
+ 	u8 regval_0xcbd = 0, regval_0x64;
+ 	u32 u32tmp1 = 0, u32tmp2 = 0, u32tmp3 = 0;
+@@ -2317,6 +2342,8 @@ void halbtc8822b1ant_set_ant_path(struct btc_coexist *btcoexist,
+ 
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	u8 u8tmp = 0;
+ 	u32 u32tmp1 = 0;
+ 	u32 u32tmp2 = 0, u32tmp3 = 0;
+@@ -2642,6 +2669,7 @@ void halbtc8822b1ant_set_ant_path(struct btc_coexist *btcoexist,
+ static bool halbtc8822b1ant_is_common_action(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	bool common = false, wifi_connected = false, wifi_busy = false;
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_CONNECTED,
+@@ -2713,6 +2741,7 @@ static void halbtc8822b1ant_action_bt_whql_test(struct btc_coexist *btcoexist)
+ 
+ static void halbtc8822b1ant_action_bt_relink(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 
+ 	if ((!coex_sta->is_bt_multi_link && !bt_link_info->pan_exist) ||
+@@ -2732,6 +2761,7 @@ static void halbtc8822b1ant_action_bt_relink(struct btc_coexist *btcoexist)
+ 
+ static void halbtc8822b1ant_action_bt_idle(struct btc_coexist *btcoexist)
+ {
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	bool wifi_busy = false;
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_BUSY, &wifi_busy);
+@@ -2767,6 +2797,7 @@ static void halbtc8822b1ant_action_bt_idle(struct btc_coexist *btcoexist)
+ static void halbtc8822b1ant_action_bt_inquiry(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool wifi_connected = false, wifi_busy = false, bt_busy = false;
+ 	bool wifi_scan = false, link = false, roam = false;
+@@ -2834,6 +2865,7 @@ static void halbtc8822b1ant_action_bt_inquiry(struct btc_coexist *btcoexist)
+ static
+ void halbtc8822b1ant_action_bt_sco_hid_busy(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool wifi_connected = false, wifi_busy = false;
+ 	u32 wifi_bw = 1;
+@@ -2905,6 +2937,7 @@ void halbtc8822b1ant_action_bt_sco_hid_busy(struct btc_coexist *btcoexist)
+ static void halbtc8822b1ant_action_bt_mr(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], RunCoexistMechanism(), microsoft MR!!\n");
+@@ -3096,6 +3129,7 @@ static void
+ halbtc8822b1ant_action_wifi_bt_acl_busy(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool wifi_busy = false, wifi_turbo = false;
+ 	u32 wifi_bw = 1;
+@@ -3285,6 +3319,7 @@ void halbtc8822b1ant_action_wifi_not_connected(struct btc_coexist *btcoexist)
+ static void halbtc8822b1ant_action_wifi_connected(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool wifi_busy = false, rf4ce_enabled = false;
+ 	bool wifi_under_5g = false;
+@@ -3323,6 +3358,7 @@ static
+ void halbtc8822b1ant_run_sw_coexist_mechanism(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	u8 algorithm = 0;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+@@ -3385,6 +3421,8 @@ void halbtc8822b1ant_run_sw_coexist_mechanism(struct btc_coexist *btcoexist)
+ static void halbtc8822b1ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool wifi_connected = false;
+ 	u8 mcc_dualband = BTC_MULTIPORT_SCC;
+@@ -3595,6 +3633,7 @@ static void halbtc8822b1ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+ 
+ static void halbtc8822b1ant_init_coex_dm(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	/* force to reset coex mechanism */
+ 
+ 	halbtc8822b1ant_low_penalty_ra(btcoexist, NORMAL_EXEC, false);
+@@ -3618,6 +3657,8 @@ static void halbtc8822b1ant_init_hw_config(struct btc_coexist *btcoexist,
+ 					   bool back_up, bool wifi_only)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct rfe_type_8822b_1ant *rfe_type = &btcoexist->rfe_type_8822b_1ant;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	u8 u8tmp = 0, i = 0;
+ 	u32 u32tmp1 = 0, u32tmp2 = 0, u32tmp3 = 0;
+ 
+@@ -3732,6 +3773,7 @@ static void halbtc8822b1ant_init_hw_config(struct btc_coexist *btcoexist,
+ void ex_btc8822b1ant_power_on_setting(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	struct btc_board_info *board_info = &btcoexist->board_info;
+ 	u8 u8tmp = 0x0;
+ 	u16 u16tmp = 0x0;
+@@ -3825,6 +3867,9 @@ void ex_btc8822b1ant_init_coex_dm(struct btc_coexist *btcoexist)
+ void ex_btc8822b1ant_display_simple_coex_info(struct btc_coexist *btcoexist,
+ 					      struct seq_file *m)
+ {
++	struct rfe_type_8822b_1ant *rfe_type = &btcoexist->rfe_type_8822b_1ant;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	struct btc_board_info *board_info = &btcoexist->board_info;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	u32 bt_patch_ver = 0, bt_coex_ver = 0;
+@@ -3940,6 +3985,9 @@ void ex_btc8822b1ant_display_simple_coex_info(struct btc_coexist *btcoexist,
+ void ex_btc8822b1ant_display_coex_info(struct btc_coexist *btcoexist,
+ 				       struct seq_file *m)
+ {
++	struct rfe_type_8822b_1ant *rfe_type = &btcoexist->rfe_type_8822b_1ant;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	struct btc_board_info *board_info = &btcoexist->board_info;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	u8 u8tmp[4], i, ps_tdma_case = 0;
+@@ -4382,6 +4430,7 @@ void ex_btc8822b1ant_display_coex_info(struct btc_coexist *btcoexist,
+ void ex_btc8822b1ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm)
+ 		return;
+@@ -4426,6 +4475,7 @@ void ex_btc8822b1ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ void ex_btc8822b1ant_lps_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	static bool pre_force_lps_on;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm)
+@@ -4474,6 +4524,7 @@ void ex_btc8822b1ant_lps_notify(struct btc_coexist *btcoexist, u8 type)
+ void ex_btc8822b1ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	bool wifi_connected = false;
+ 	bool wifi_under_5g = false;
+ 
+@@ -4562,6 +4613,7 @@ void ex_btc8822b1ant_switchband_notify(struct btc_coexist *btcoexist,
+ 				       u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm)
+ 		return;
+@@ -4604,6 +4656,8 @@ ex_btc8822b1ant_switchband_notify_without_bt(struct btc_coexist *btcoexist,
+ void ex_btc8822b1ant_connect_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm)
+ 		return;
+@@ -4662,6 +4716,8 @@ void ex_btc8822b1ant_media_status_notify(struct btc_coexist *btcoexist,
+ 					 u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	bool wifi_under_b_mode = false;
+ 	bool wifi_under_5g = false;
+ 
+@@ -4744,6 +4800,8 @@ void ex_btc8822b1ant_specific_packet_notify(struct btc_coexist *btcoexist,
+ 					    u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	bool under_4way = false, wifi_under_5g = false;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm)
+@@ -4797,6 +4855,7 @@ void ex_btc8822b1ant_bt_info_notify(struct btc_coexist *btcoexist,
+ 				    u8 *tmp_buf, u8 length)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	u8 i, rsp_source = 0;
+ 	bool wifi_connected = false;
+ 	bool wifi_scan = false, wifi_link = false, wifi_roam = false,
+@@ -5020,6 +5079,7 @@ void ex_btc8822b1ant_wl_fwdbginfo_notify(struct btc_coexist *btcoexist,
+ 					 u8 *tmp_buf, u8 length)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	u8 i = 0;
+ 	static u8 tmp_buf_pre[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+ 
+@@ -5045,6 +5105,8 @@ void ex_btc8822b1ant_rx_rate_change_notify(struct btc_coexist *btcoexist,
+ 					   u8 btc_rate_id)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
++	struct coex_dm_8822b_1ant *coex_dm = &btcoexist->coex_dm_8822b_1ant;
+ 	bool wifi_connected = false;
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_CONNECTED,
+@@ -5104,6 +5166,7 @@ void ex_btc8822b1ant_rx_rate_change_notify(struct btc_coexist *btcoexist,
+ void ex_btc8822b1ant_rf_status_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], RF Status notify\n");
+@@ -5222,6 +5285,7 @@ void ex_btc8822b1ant_coex_dm_reset(struct btc_coexist *btcoexist)
+ void ex_btc8822b1ant_periodical(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_1ant *coex_sta = &btcoexist->coex_sta_8822b_1ant;
+ 	bool bt_relink_finish = false;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b2ant.c
+index 7c12fade5171..085a8800bcbc 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b2ant.c
+@@ -15,13 +15,6 @@
+ 
+ #include "halbt_precomp.h"
+ 
+-static struct coex_dm_8822b_2ant	glcoex_dm_8822b_2ant;
+-static struct coex_dm_8822b_2ant	*coex_dm = &glcoex_dm_8822b_2ant;
+-static struct coex_sta_8822b_2ant	glcoex_sta_8822b_2ant;
+-static struct coex_sta_8822b_2ant	*coex_sta = &glcoex_sta_8822b_2ant;
+-static struct rfe_type_8822b_2ant	gl_rfe_type_8822b_2ant;
+-static struct rfe_type_8822b_2ant	*rfe_type = &gl_rfe_type_8822b_2ant;
+-
+ static const char *const glbt_info_src_8822b_2ant[] = {
+ 	"BT Info[wifi fw]",
+ 	"BT Info[bt rsp]",
+@@ -37,6 +30,7 @@ static u8 halbtc8822b2ant_bt_rssi_state(struct btc_coexist *btcoexist,
+ 					u8 rssi_thresh, u8 rssi_thresh1)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	s32 bt_rssi = 0;
+ 	u8 bt_rssi_state = *ppre_bt_rssi_state;
+ 
+@@ -157,6 +151,7 @@ static u8 halbtc8822b2ant_wifi_rssi_state(struct btc_coexist *btcoexist,
+ static void halbtc8822b2ant_coex_switch_threshold(struct btc_coexist *btcoexist,
+ 						  u8 isolation_measuared)
+ {
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	s8 interference_wl_tx = 0, interference_bt_tx = 0;
+ 
+ 	interference_wl_tx =
+@@ -189,6 +184,7 @@ static void halbtc8822b2ant_coex_switch_threshold(struct btc_coexist *btcoexist,
+ static void halbtc8822b2ant_query_bt_info(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	u8 h2c_parameter[1] = {0};
+ 
+ 	if (coex_sta->bt_disabled) {
+@@ -204,6 +200,7 @@ static void halbtc8822b2ant_query_bt_info(struct btc_coexist *btcoexist)
+ 
+ static void halbtc8822b2ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	u32 reg_hp_txrx, reg_lp_txrx, u32tmp;
+ 	u32 reg_hp_tx = 0, reg_hp_rx = 0, reg_lp_tx = 0, reg_lp_rx = 0;
+ 	static u8 num_of_bt_counter_chk, cnt_slave, cnt_autoslot_hang;
+@@ -300,6 +297,8 @@ static void halbtc8822b2ant_monitor_bt_ctr(struct btc_coexist *btcoexist)
+ 
+ static void halbtc8822b2ant_monitor_wifi_ctr(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	s32 wifi_rssi = 0;
+ 	bool wifi_busy = false, wifi_under_b_mode = false, wifi_scan = false;
+ 	static u8 wl_noisy_count0, wl_noisy_count1 = 3, wl_noisy_count2;
+@@ -431,6 +430,7 @@ static bool
+ halbtc8822b2ant_is_wifibt_status_changed(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	static bool pre_wifi_busy, pre_under_4way,
+ 		       pre_bt_hs_on, pre_bt_off,
+ 		       pre_bt_slave,
+@@ -549,6 +549,8 @@ halbtc8822b2ant_is_wifibt_status_changed(struct btc_coexist *btcoexist)
+ static void halbtc8822b2ant_update_bt_link_info(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool bt_hs_on = false;
+ 	bool bt_busy = false;
+@@ -757,6 +759,8 @@ static void
+ halbtc8822b2ant_update_wifi_ch_info(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	u8 h2c_parameter[3] = {0}, i;
+ 	u32 wifi_bw;
+ 	u8 wifi_central_chnl = 0;
+@@ -814,6 +818,8 @@ static void halbtc8822b2ant_low_penalty_ra(struct btc_coexist *btcoexist,
+ 					   bool force_exec,
+ 					   bool low_penalty_ra)
+ {
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
++
+ 	coex_dm->cur_low_penalty_ra = low_penalty_ra;
+ 
+ 	if (!force_exec) {
+@@ -833,6 +839,7 @@ static void halbtc8822b2ant_write_score_board(struct btc_coexist *btcoexist,
+ 					      u16 bitpos, bool state)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	static u16 originalval = 0x8002, preval;
+ 
+ 	if (state)
+@@ -868,6 +875,8 @@ static void halbtc8822b2ant_adjust_wl_tx_power(struct btc_coexist *btcoexist,
+ 					       bool force_exec,
+ 					       u8 fw_dac_swing_lvl)
+ {
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
++
+ 	coex_dm->cur_fw_dac_swing_lvl = fw_dac_swing_lvl;
+ 
+ 	if (!force_exec) {
+@@ -888,6 +897,7 @@ static void halbtc8822b2ant_adjust_bt_tx_power(struct btc_coexist *btcoexist,
+ 					       bool force_exec,
+ 					       u8 dec_bt_pwr_lvl)
+ {
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	u8 h2c_parameter[1] = {0};
+ 
+ 	coex_dm->cur_bt_dec_pwr_lvl = dec_bt_pwr_lvl;
+@@ -909,6 +919,7 @@ static void halbtc8822b2ant_adjust_wl_rx_gain(struct btc_coexist *btcoexist,
+ 					      bool agc_table_en)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	/*20171116*/
+ 
+ 	u32 rx_gain_value_enable[] = {
+@@ -1010,6 +1021,7 @@ static void
+ halbtc8822b2ant_monitor_bt_enable_disable(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	static u32 bt_disable_cnt;
+ 	bool bt_active = true, bt_disabled = false, wifi_under_5g = false;
+ 	u16 u16tmp;
+@@ -1362,6 +1374,8 @@ static void halbtc8822b2ant_coex_table(struct btc_coexist *btcoexist,
+ 				       bool force_exec, u32 val0x6c0,
+ 				       u32 val0x6c4, u32 val0x6c8, u8 val0x6cc)
+ {
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
++
+ 	coex_dm->cur_val0x6c0 = val0x6c0;
+ 	coex_dm->cur_val0x6c4 = val0x6c4;
+ 	coex_dm->cur_val0x6c8 = val0x6c8;
+@@ -1386,6 +1400,7 @@ static void halbtc8822b2ant_coex_table(struct btc_coexist *btcoexist,
+ static void halbtc8822b2ant_coex_table_type(struct btc_coexist *btcoexist,
+ 					    bool force_exec, u8 type)
+ {
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	u32 break_table;
+ 	u8 select_table;
+ 
+@@ -1495,6 +1510,8 @@ halbtc8822b2ant_set_fw_ignore_wlan_act(struct btc_coexist *btcoexist,
+ static void halbtc8822b2ant_ignore_wlan_act(struct btc_coexist *btcoexist,
+ 					    bool force_exec, bool enable)
+ {
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
++
+ 	coex_dm->cur_ignore_wlan_act = enable;
+ 
+ 	if (!force_exec) {
+@@ -1521,6 +1538,8 @@ static void halbtc8822b2ant_lps_rpwm(struct btc_coexist *btcoexist,
+ 				     bool force_exec, u8 lps_val,
+ 				     u8 rpwm_val)
+ {
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
++
+ 	coex_dm->cur_lps = lps_val;
+ 	coex_dm->cur_rpwm = rpwm_val;
+ 
+@@ -1572,6 +1591,7 @@ static bool halbtc8822b2ant_power_save_state(struct btc_coexist *btcoexist,
+ 					     u8 rpwm_val)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	bool low_pwr_disable = false, result = true;
+ 
+ 	switch (ps_type) {
+@@ -1624,6 +1644,8 @@ static void halbtc8822b2ant_set_fw_pstdma(struct btc_coexist *btcoexist,
+ 					  u8 byte4, u8 byte5)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	u8 h2c_parameter[5] = {0};
+ 	u8 real_byte1 = byte1, real_byte5 = byte5;
+ 	bool ap_enable = false, result = false;
+@@ -1709,6 +1731,8 @@ static void halbtc8822b2ant_ps_tdma(struct btc_coexist *btcoexist,
+ 				    u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	static u8 tdma_byte4_modify, pre_ps_tdma_byte4_modify;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 
+@@ -1939,6 +1963,7 @@ static void halbtc8822b2ant_ps_tdma(struct btc_coexist *btcoexist,
+  */
+ static void halbtc8822b2ant_set_rfe_type(struct btc_coexist *btcoexist)
+ {
++	struct rfe_type_8822b_2ant *rfe_type = &btcoexist->rfe_type_8822b_2ant;
+ 	struct btc_board_info *board_info = &btcoexist->board_info;
+ 
+ 	rfe_type->ext_band_switch_exist = false;
+@@ -1977,6 +2002,8 @@ static void halbtc8822b2ant_set_ant_path(struct btc_coexist *btcoexist,
+ 					 u8 phase)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	u8 u8tmp = 0;
+ 	u32 u32tmp1 = 0;
+ 	u32 u32tmp2 = 0, u32tmp3 = 0;
+@@ -2249,6 +2276,7 @@ static void halbtc8822b2ant_set_ant_path(struct btc_coexist *btcoexist,
+ static u8 halbtc8822b2ant_action_algorithm(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	bool bt_hs_on = false;
+ 	u8 algorithm = BT_8822B_2ANT_COEX_UNDEFINED;
+@@ -2453,6 +2481,7 @@ static u8 halbtc8822b2ant_action_algorithm(struct btc_coexist *btcoexist)
+ static void halbtc8822b2ant_action_wifi_freerun(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	bool wifi_busy = false;
+ 	static u8 pre_bt_rssi_state = BTC_RSSI_STATE_LOW;
+ 	u8 bt_rssi_state;
+@@ -2527,6 +2556,7 @@ static void halbtc8822b2ant_action_bt_whql_test(struct btc_coexist *btcoexist)
+ 
+ static void halbtc8822b2ant_action_bt_relink(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 
+ 	if ((!coex_sta->is_bt_multi_link && !bt_link_info->pan_exist) ||
+@@ -2546,6 +2576,7 @@ static void halbtc8822b2ant_action_bt_relink(struct btc_coexist *btcoexist)
+ 
+ static void halbtc8822b2ant_action_bt_idle(struct btc_coexist *btcoexist)
+ {
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	bool wifi_busy = false;
+ 
+ 	halbtc8822b2ant_adjust_wl_tx_power(btcoexist, NORMAL_EXEC, 0xd8);
+@@ -2580,6 +2611,7 @@ static void halbtc8822b2ant_action_bt_idle(struct btc_coexist *btcoexist)
+ static void halbtc8822b2ant_action_bt_inquiry(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	bool wifi_connected = false;
+ 	bool wifi_scan = false, wifi_link = false, wifi_roam = false;
+ 	bool wifi_busy = false;
+@@ -2645,6 +2677,8 @@ static void halbtc8822b2ant_action_bt_inquiry(struct btc_coexist *btcoexist)
+ /* SCO only or SCO+PAN(HS) */
+ static void halbtc8822b2ant_action_sco(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	static u8 prewifi_rssi_state = BTC_RSSI_STATE_LOW;
+ 	static u8 pre_bt_rssi_state = BTC_RSSI_STATE_LOW;
+ 	u8 wifi_rssi_state, bt_rssi_state;
+@@ -2713,6 +2747,8 @@ static void halbtc8822b2ant_action_sco(struct btc_coexist *btcoexist)
+ 
+ static void halbtc8822b2ant_action_hid(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	static u8 prewifi_rssi_state = BTC_RSSI_STATE_LOW;
+ 	static u8 pre_bt_rssi_state = BTC_RSSI_STATE_LOW;
+ 	u8 wifi_rssi_state, bt_rssi_state;
+@@ -2790,6 +2826,8 @@ static void halbtc8822b2ant_action_hid(struct btc_coexist *btcoexist)
+ static void halbtc8822b2ant_action_a2dpsink(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	static u8 prewifi_rssi_state = BTC_RSSI_STATE_LOW;
+ 	static u8 pre_bt_rssi_state = BTC_RSSI_STATE_LOW;
+ 	u8 wifi_rssi_state, bt_rssi_state;
+@@ -2862,6 +2900,8 @@ static void halbtc8822b2ant_action_a2dpsink(struct btc_coexist *btcoexist)
+ static void halbtc8822b2ant_action_a2dp(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	static u8 prewifi_rssi_state = BTC_RSSI_STATE_LOW;
+ 	static u8 pre_bt_rssi_state = BTC_RSSI_STATE_LOW;
+ 	u8 wifi_rssi_state, bt_rssi_state;
+@@ -2937,6 +2977,8 @@ static void halbtc8822b2ant_action_a2dp(struct btc_coexist *btcoexist)
+ static void halbtc8822b2ant_action_pan_edr(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	static u8 prewifi_rssi_state = BTC_RSSI_STATE_LOW;
+ 	static u8 pre_bt_rssi_state = BTC_RSSI_STATE_LOW;
+ 	u8 wifi_rssi_state, bt_rssi_state;
+@@ -3001,6 +3043,8 @@ static void halbtc8822b2ant_action_pan_edr(struct btc_coexist *btcoexist)
+ static void halbtc8822b2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	static u8 prewifi_rssi_state = BTC_RSSI_STATE_LOW;
+ 	static u8 pre_bt_rssi_state = BTC_RSSI_STATE_LOW;
+ 	u8 wifi_rssi_state, bt_rssi_state;
+@@ -3070,6 +3114,8 @@ static void halbtc8822b2ant_action_hid_a2dp(struct btc_coexist *btcoexist)
+ static void halbtc8822b2ant_action_a2dp_pan_hs(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	static u8 prewifi_rssi_state = BTC_RSSI_STATE_LOW;
+ 	static u8 pre_bt_rssi_state = BTC_RSSI_STATE_LOW;
+ 	u8 wifi_rssi_state, bt_rssi_state;
+@@ -3146,6 +3192,8 @@ static void halbtc8822b2ant_action_a2dp_pan_hs(struct btc_coexist *btcoexist)
+ static void halbtc8822b2ant_action_pan_edr_a2dp(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	static u8 prewifi_rssi_state = BTC_RSSI_STATE_LOW;
+ 	static u8 pre_bt_rssi_state = BTC_RSSI_STATE_LOW;
+ 	u8 wifi_rssi_state, bt_rssi_state;
+@@ -3208,6 +3256,8 @@ static void halbtc8822b2ant_action_pan_edr_a2dp(struct btc_coexist *btcoexist)
+ 
+ static void halbtc8822b2ant_action_pan_edr_hid(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	static u8 prewifi_rssi_state = BTC_RSSI_STATE_LOW;
+ 	static u8 pre_bt_rssi_state = BTC_RSSI_STATE_LOW;
+ 	u8 wifi_rssi_state, bt_rssi_state;
+@@ -3268,6 +3318,8 @@ static void halbtc8822b2ant_action_pan_edr_hid(struct btc_coexist *btcoexist)
+ static void
+ halbtc8822b2ant_action_hid_a2dp_pan_edr(struct btc_coexist *btcoexist)
+ {
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	static u8 prewifi_rssi_state = BTC_RSSI_STATE_LOW;
+ 	static u8 pre_bt_rssi_state = BTC_RSSI_STATE_LOW;
+ 	u8 wifi_rssi_state, bt_rssi_state;
+@@ -3454,6 +3506,7 @@ halbtc8822b2ant_action_wifi_multi_port(struct btc_coexist *btcoexist,
+ static void halbtc8822b2ant_action_wifi_connected(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 
+ 	switch (coex_dm->cur_algorithm) {
+ 	case BT_8822B_2ANT_COEX_SCO:
+@@ -3524,6 +3577,8 @@ static void halbtc8822b2ant_action_wifi_connected(struct btc_coexist *btcoexist)
+ static void halbtc8822b2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	u8 algorithm = 0, mcc_dualband = BTC_MULTIPORT_SCC;
+ 	u32 num_of_wifi_link = 0;
+ 	u32 wifi_link_status = 0;
+@@ -3702,6 +3757,7 @@ static void halbtc8822b2ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
+ static void halbtc8822b2ant_init_coex_dm(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], Coex Mechanism Init!!\n");
+@@ -3724,6 +3780,8 @@ static void halbtc8822b2ant_init_hw_config(struct btc_coexist *btcoexist,
+ 					   bool wifi_only)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct rfe_type_8822b_2ant *rfe_type = &btcoexist->rfe_type_8822b_2ant;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	u32 u32tmp1 = 0, u32tmp2 = 0, u32tmp3 = 0;
+ 	u32 RTL97F_8822B = 0;
+ 	u8 i = 0;
+@@ -3866,6 +3924,7 @@ static void halbtc8822b2ant_init_hw_config(struct btc_coexist *btcoexist,
+ void ex_btc8822b2ant_power_on_setting(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	u8 u8tmp = 0x0;
+ 	u16 u16tmp = 0x0;
+ 
+@@ -3973,6 +4032,9 @@ void ex_btc8822b2ant_init_coex_dm(struct btc_coexist *btcoexist)
+ void ex_btc8822b2ant_display_simple_coex_info(struct btc_coexist *btcoexist,
+ 					      struct seq_file *m)
+ {
++	struct rfe_type_8822b_2ant *rfe_type = &btcoexist->rfe_type_8822b_2ant;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	struct btc_board_info *board_info = &btcoexist->board_info;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	u32 bt_patch_ver = 0, bt_coex_ver = 0;
+@@ -4082,6 +4144,9 @@ void ex_btc8822b2ant_display_simple_coex_info(struct btc_coexist *btcoexist,
+ void ex_btc8822b2ant_display_coex_info(struct btc_coexist *btcoexist,
+ 				       struct seq_file *m)
+ {
++	struct rfe_type_8822b_2ant *rfe_type = &btcoexist->rfe_type_8822b_2ant;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	struct btc_board_info *board_info = &btcoexist->board_info;
+ 	struct btc_bt_link_info *bt_link_info = &btcoexist->bt_link_info;
+ 	u8 u8tmp[4], i, ps_tdma_case = 0;
+@@ -4528,6 +4593,7 @@ void ex_btc8822b2ant_display_coex_info(struct btc_coexist *btcoexist,
+ void ex_btc8822b2ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm)
+ 		return;
+@@ -4565,6 +4631,7 @@ void ex_btc8822b2ant_ips_notify(struct btc_coexist *btcoexist, u8 type)
+ void ex_btc8822b2ant_lps_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	static bool pre_force_lps_on;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm)
+@@ -4611,6 +4678,7 @@ void ex_btc8822b2ant_lps_notify(struct btc_coexist *btcoexist, u8 type)
+ void ex_btc8822b2ant_scan_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	bool wifi_connected = false;
+ 	bool wifi_under_5g = false;
+ 
+@@ -4675,6 +4743,7 @@ void ex_btc8822b2ant_switchband_notify(struct btc_coexist *btcoexist,
+ 				       u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm)
+ 		return;
+@@ -4704,6 +4773,8 @@ void ex_btc8822b2ant_switchband_notify(struct btc_coexist *btcoexist,
+ void ex_btc8822b2ant_connect_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm)
+ 		return;
+@@ -4762,6 +4833,7 @@ void ex_btc8822b2ant_media_status_notify(struct btc_coexist *btcoexist,
+ 					 u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	bool wifi_under_b_mode = false, wifi_under_5g = false;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm)
+@@ -4837,6 +4909,8 @@ void ex_btc8822b2ant_specific_packet_notify(struct btc_coexist *btcoexist,
+ 					    u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	bool under_4way = false, wifi_under_5g = false;
+ 
+ 	if (btcoexist->manual_control || btcoexist->stop_coex_dm)
+@@ -4889,6 +4963,7 @@ void ex_btc8822b2ant_bt_info_notify(struct btc_coexist *btcoexist,
+ 				    u8 *tmp_buf, u8 length)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	u8 i, rsp_source = 0;
+ 	bool wifi_connected = false;
+ 	bool wifi_scan = false, wifi_link = false, wifi_roam = false,
+@@ -5105,6 +5180,7 @@ void ex_btc8822b2ant_wl_fwdbginfo_notify(struct btc_coexist *btcoexist,
+ 					 u8 *tmp_buf, u8 length)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	u8 i = 0;
+ 	static u8 tmp_buf_pre[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+ 
+@@ -5130,6 +5206,8 @@ void ex_btc8822b2ant_rx_rate_change_notify(struct btc_coexist *btcoexist,
+ 					   u8 btc_rate_id)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
++	struct coex_dm_8822b_2ant *coex_dm = &btcoexist->coex_dm_8822b_2ant;
+ 	bool wifi_connected = false;
+ 
+ 	btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_CONNECTED,
+@@ -5189,6 +5267,7 @@ void ex_btc8822b2ant_rx_rate_change_notify(struct btc_coexist *btcoexist,
+ void ex_btc8822b2ant_rf_status_notify(struct btc_coexist *btcoexist, u8 type)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 		 "[BTCoex], RF Status notify\n");
+@@ -5248,6 +5327,7 @@ void ex_btc8822b2ant_halt_notify(struct btc_coexist *btcoexist)
+ void ex_btc8822b2ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	bool wifi_under_5g = false;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD, "[BTCoex], Pnp notify\n");
+@@ -5300,6 +5380,7 @@ void ex_btc8822b2ant_pnp_notify(struct btc_coexist *btcoexist, u8 pnp_state)
+ void ex_btc8822b2ant_periodical(struct btc_coexist *btcoexist)
+ {
+ 	struct rtl_priv *rtlpriv = btcoexist->adapter;
++	struct coex_sta_8822b_2ant *coex_sta = &btcoexist->coex_sta_8822b_2ant;
+ 	bool bt_relink_finish = false;
+ 
+ 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-- 
+2.15.1
