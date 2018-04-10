@@ -1,57 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f48.google.com ([209.85.215.48]:41181 "EHLO
-        mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752622AbeDLREd (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39274 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753246AbeDJOXp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 13:04:33 -0400
-Received: by mail-lf0-f48.google.com with SMTP id o102-v6so8726919lfg.8
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2018 10:04:33 -0700 (PDT)
-MIME-Version: 1.0
-References: <20180411184156.167978-1-rkir@google.com> <87bmepjbna.fsf@purkki.adurom.net>
-In-Reply-To: <87bmepjbna.fsf@purkki.adurom.net>
-From: Roman Kiryanov <rkir@google.com>
-Date: Thu, 12 Apr 2018 17:04:21 +0000
-Message-ID: <CAOGAQeqSha9ZS6fMNJjd8iY+=up+sQgTKN8FmffCpuWZih2Q=A@mail.gmail.com> (sfid-20180412_190437_174616_29042D22)
-Subject: Re: [PATCH] ANDROID: mac80211_hwsim: support/ignore power state changes
-To: kvalo@codeaurora.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org,
-        Bjoern Johansson <bjoernj@google.com>,
-        Lingfeng Yang <lfy@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        Tue, 10 Apr 2018 10:23:45 -0400
+From: pillair@codeaurora.org
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>
+Subject: [PATCH 0/4] Support for STA idle mode power save(IMPS)
+Date: Tue, 10 Apr 2018 19:53:28 +0530
+Message-Id: <1523370212-8778-1-git-send-email-pillair@codeaurora.org> (sfid-20180410_162350_788024_BBCAA0F3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+From: Rakesh Pillai <pillair@codeaurora.org>
 
-thank you for reviewing our patch. I am ok with applying this patch without
-"ANDROID:" prefix. Do you want me to send an updated patch?
+Enable STA idle mode power save(IMPS) for WCN3990 TLV target.
 
-Regards,
-Roman.
+In-order to support STA idle mode ps direct access to CE registers are
+protected via 2 mechanism. As target can power collapse based on idle
+inactivity and any target register access during that state can lead to
+un-clocked access.
 
-On Wed, Apr 11, 2018 at 9:23 PM Kalle Valo <kvalo@codeaurora.org> wrote:
+2) Caching SRRI/DRRI in DDR.
 
-> rkir@google.com writes:
+WN3990 has a shadow block in HW which is always on domain and allows HOST/APPS
+access irrespective of power state of the target(Common subsystem(includes CE block)
+might be down due to idle/inactivity).
+Any operation on the shadow registers are directly reflected back in the actual
+CE registers( SRWI/DRWI) once common subsystem gets up.
+The shadow registers configuration is supplied via QMI message.
 
-> > From: Bjoern Johansson <bjoernj@google.com>
-> >
-> > Indicate support for power state changes and handle them by calling an
-> > empty function.
-> > The important part is "ieee80211_hw_set(hw, SUPPORTS_PS);" at the
-> > bottom of the diff. Without this upper layers in the kernel will return
-an
-> > error code when trying to set the power state because the driver doesn't
-> > indicate power state support. This in turn causes VTS
-> > (Android Vendor Test Suite) failures because the WiFi HAL can't enable
-> > power saving mode. The remaining code is just there to deal with the
-> > incoming state change request.
-> >
-> > Signed-off-by: Bjoern Johansson <bjoernj@google.com>
-> > Signed-off-by: Lingfeng Yang <lfy@google.com>
-> > Signed-off-by: Roman Kiryanov <rkir@google.com>
+WC3990 has 24 shadow registers and mapping of shadow register(0-23) to CE registers(0-12)
+is as following.
 
-> Why the odd "ANDROID:" prefix?
+               -----------------------------------------------------------
+               Shadow Register      |     CE   |    src/dst write index
+               -----------------------------------------------------------
+                              0            |     0    |           src
+                              3            |     3    |           src
+                              4            |     4    |           src
+                              5            |     5    |           src
+                              7            |     7    |           src
+                              13           |     1    |           dst
+                              14           |     2    |           dst
+                              19           |     7    |           dst
+                              20           |     8    |           dst
+                              21           |     9  |             dst
+                              22           |     10   |          dst
+                              23          |     11    |          dst
 
-> --
-> Kalle Valo
+
+1) Caching SRWI/SRWI in HW shadow block.
+
+Since shadow block allows only WRITE access, for read access(SRRI/DRRI) driver allocates
+region in DDR(12CE*half WORD) which is being configured in CE UPD control register.
+CE SRRI/DRRI are restored and replayed on the configured region(DDR) on each update.
+HOST/APPS reads SRRI/DRRI from the DDR to make the access independent of target power state.
+
+Govind Singh (2):
+  ath10k: Enable SRRI/DRRI support on ddr for WCN3990
+  ath10k: Enable sta idle power save
+
+Rakesh Pillai (2):
+  ath10k: Add hw params for shadow register support
+  ath10k: Add support for shadow register for WNC3990
+
+ drivers/net/wireless/ath/ath10k/ce.c   | 245 +++++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/ce.h   |  14 ++
+ drivers/net/wireless/ath/ath10k/core.c |  26 ++++
+ drivers/net/wireless/ath/ath10k/hw.c   |   9 +-
+ drivers/net/wireless/ath/ath10k/hw.h   |  17 ++-
+ drivers/net/wireless/ath/ath10k/mac.c  |   7 +
+ drivers/net/wireless/ath/ath10k/snoc.c |   3 +
+ 7 files changed, 310 insertions(+), 11 deletions(-)
+
+-- 
+2.14.1
