@@ -1,56 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38530 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751918AbeDLMOo (ORCPT
+Received: from blackstar.xs4all.nl ([83.163.96.30]:54071 "EHLO
+        blackstar.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753181AbeDJJGo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 08:14:44 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Daniel Mack <daniel@zonque.org>
-Cc: Loic Poulain <loic.poulain@linaro.org>,
-        wcn36xx@lists.infradead.org, Ramon Fried <rfried@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Bjorn Andersson <bjorn.andersson@linaro.org>
-Subject: Re: [PATCH] wcn36xx: pass correct BSS index when deleting BSS keys
-References: <20180412111311.28809-1-daniel@zonque.org>
-        <CAMZdPi98WH59nxV08wHcyAoDB06T3ptNT=E9C8S6RK_Yg1pKnQ@mail.gmail.com>
-        <62942f8b-3e02-868f-6cb1-7423cd44b828@zonque.org>
-Date: Thu, 12 Apr 2018 15:14:38 +0300
-In-Reply-To: <62942f8b-3e02-868f-6cb1-7423cd44b828@zonque.org> (Daniel Mack's
-        message of "Thu, 12 Apr 2018 14:04:22 +0200")
-Message-ID: <877epcr58x.fsf@codeaurora.org> (sfid-20180412_141447_470624_E8FB42EE)
+        Tue, 10 Apr 2018 05:06:44 -0400
+Subject: Re: [PATCH] ath9k: introduce endian_check module parameter
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        Felix Fietkau <nbd@nbd.name>,
+        martin.blumenstingl@googlemail.com, arend.vanspriel@broadcom.com
+References: <20180226090917.7iabysywbv6h4rqr@alienware17>
+ <87y3jgt6sp.fsf@kamboji.qca.qualcomm.com>
+ <7d6af051-2724-5dfc-cf69-376c0b501626@blackstar.nl>
+ <87a7vvu7ke.fsf@kamboji.qca.qualcomm.com>
+ <6404ec30-b7f6-ff26-a668-2e656799b69b@blackstar.nl>
+ <874lli7mk5.fsf@codeaurora.org>
+From: Bas Vermeulen <bvermeul@blackstar.nl>
+Message-ID: <4d776721-a590-c9bd-75a4-7cddb00ac091@blackstar.nl> (sfid-20180410_110709_272402_96188366)
+Date: Tue, 10 Apr 2018 11:05:58 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <874lli7mk5.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Mack <daniel@zonque.org> writes:
-
-> On Thursday, April 12, 2018 01:46 PM, Loic Poulain wrote:
->> Hi Daniel,
->> 
->>> @@ -564,10 +565,13 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
->>>                 break;
->>>         case DISABLE_KEY:
->>>                 if (!(IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags)) {
->>> +                       if (vif_priv->bss_index != WCN36XX_HAL_BSS_INVALID_IDX)
->>> +                               wcn36xx_smd_remove_bsskey(wcn,
->>> +                                       vif_priv->encrypt_type,
->>> +                                       vif_priv->bss_index,
->>> +                                       key_conf->keyidx);
->>> +
->>>                         vif_priv->encrypt_type = WCN36XX_HAL_ED_NONE;
->>> -                       wcn36xx_smd_remove_bsskey(wcn,
->>> -                               vif_priv->encrypt_type,
->>> -                               key_conf->keyidx);
->> 
->> Note that moving vif_priv->encrypt_type = WCN36XX_HAL_ED_NONE after
->> key removal also fixes an issue I observed in AP mode:
->> wcn36xx: ERROR hal_remove_bsskey response failed err=6
+On 14-03-18 15:34, Kalle Valo wrote:
+> Bas Vermeulen <bvermeul@blackstar.nl> writes:
 >
-> Yeah, sorry. I did that intentionally, but missed to mention it in the
-> commit log.
+>>>>>> --- a/drivers/net/wireless/ath/ath9k/init.c
+>>>>>> +++ b/drivers/net/wireless/ath/ath9k/init.c
+>>>>>> @@ -67,6 +67,9 @@ static int ath9k_ps_enable;
+>>>>>>     module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
+>>>>>>     MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
+>>>>>>     +static int ath9k_endian_check;
+>>>>>> +module_param_named(endian_check, ath9k_endian_check, int, 0444);
+>>>>>> +MODULE_PARM_DESC(endian_check, "Check EEPROM for endianness compatibility");
+>>>>>>     #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
+>>>>>>       int ath9k_use_chanctx;
+>>>>>> @@ -587,7 +590,8 @@ static int ath9k_of_init(struct ath_softc *sc)
+>>>>>>     		ether_addr_copy(common->macaddr, mac);
+>>>>>>       	ah->ah_flags &= ~AH_USE_EEPROM;
+>>>>>> -	ah->ah_flags |= AH_NO_EEP_SWAP;
+>>>>>> +	if (!ath9k_endian_check)
+>>>>>> +		ah->ah_flags |= AH_NO_EEP_SWAP;
+>>>>> A bit annoying to have a module parameter, isn't there any automatic way
+>>>>> to detect/try this? But on the other hand I guess this isn't a common
+>>>>> problem as nobody has reported this before?
+>>>> There is an automatic way to detect this, but that is disabled by the
+>>>> AH_NO_EEP_SWAP flag.
+>>> Ah, I didn't check the code at all.
+>>>
+>>>> The platform initialisation does not set this flag if the endian_check
+>>>> member of pdata is set to true, but there is no way to not set this
+>>>> when using a device tree. I used a module parameter instead of a
+>>>> device tree variable because I don't know of a way to modify the
+>>>> device tree my PowerMac boots with.
+>>> Ok, makes sense. A module parameter is not an ideal solution I guess
+>>> it's ok in this case.
+>>>
+>> Kalle: Are there any changes you want me to make in order to get this
+>> accepted? I didn't see anything for me to resolve, but I may have
+>> missed something.
+>>
+>> I can submit a patch to not set the AH_NO_EEP_SWAP flag by default if
+>> you prefer, as that would fix my problem as well. I am just not sure
+>> that doesn't break things for some platform/device I don't have.
+> I'm not really sure what to do. Basically this is a choise between bad
+> for user experience (the module parameter) or risk of regressions
+> (disable AH_NO_EEP_SWAP by default). As ath9k is used in very exotic
+> hardware I'm starting to lean towards the module parameter approach
+> (your patch) but would like to know what others think, especially Felix
+> (CCed).
+>
+> Full patch here:
+>
+> https://patchwork.kernel.org/patch/10241731/
 
-I can add that to the commit log, just tell me what to add.
+Just another ping. As I understood things, all OpenWRT dts' use 
+qca,no-eeprom, and perhaps we could
+move ~AH_USE_EEPROM and |= AH_NO_EEP_SWAP in that if block.
+
+This would solve my problem, as I need to have AH_NO_EEP_SWAP removed 
+from flags for my card (which is a
+little endian eeprom/card used on a big endian machine).
+
+Would you like me to prepare a patch for this? Is there anyone who can 
+test this on the various OpenWRT
+boards/soc and or other configurations? I don't want to break things for 
+other people.
+
+Bas Vermeulen
 
 -- 
-Kalle Valo
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
