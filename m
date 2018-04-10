@@ -1,73 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44868 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754570AbeDYODU (ORCPT
+Received: from mail-pl0-f68.google.com ([209.85.160.68]:39151 "EHLO
+        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753145AbeDJNab (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 10:03:20 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Anilkumar Kolli <akolli@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [RFC v2] ath10k: report tx rate using ieee80211_tx_status()
-References: <1524291786-30850-1-git-send-email-akolli@codeaurora.org>
-        <87zi1tav6h.fsf@kamboji.qca.qualcomm.com>
-        <6b57525f3edc2b7d06b7662efc5d7e5f@codeaurora.org>
-Date: Wed, 25 Apr 2018 17:03:14 +0300
-In-Reply-To: <6b57525f3edc2b7d06b7662efc5d7e5f@codeaurora.org> (Anilkumar
-        Kolli's message of "Wed, 25 Apr 2018 15:29:37 +0530")
-Message-ID: <87y3hb8jtp.fsf@kamboji.qca.qualcomm.com> (sfid-20180425_160333_070523_74C73F0F)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 10 Apr 2018 09:30:31 -0400
+From: Jia-Ju Bai <baijiaju1990@gmail.com>
+To: kvalo@codeaurora.org, davem@davemloft.net,
+        arvind.yadav.cs@gmail.com, johannes.berg@intel.com,
+        stephen@networkplumber.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: [PATCH 2/2] net: wireless: zydas: Replace GFP_ATOMIC with GFP_KERNEL in zd1201_fw_upload
+Date: Tue, 10 Apr 2018 21:30:23 +0800
+Message-Id: <1523367023-31981-1-git-send-email-baijiaju1990@gmail.com> (sfid-20180410_153100_154401_12B84B7A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Anilkumar Kolli <akolli@codeaurora.org> writes:
+zd1201_probe() is never called in atomic context.
 
-> On 2018-04-24 13:32, Kalle Valo wrote:
->> Anilkumar Kolli <akolli@codeaurora.org> writes:
->>
->>> Mesh path metric needs txrate information from ieee80211_tx_status()
->>> call but in ath10k there is no mechanism to report tx rate information
->>> via ieee80211_tx_status(), the rate is only accessible via
->>> sta_statiscs() op.
->>>
->>> Per peer stats has tx rate info available, this patch stores per peer
->>> last tx rate and updates the tx rate info structures in tx
->>> completition.
->>> The rate updated in ieee80211_tx_status() is not exactly for the last
->>> transmitted frame instead the rate is from one of the previous frames.
->>>
->>> Per peer txrate information is updated through per peer statistics
->>> and is available for QCA9888/QCA9984/QCA4019/QCA998X only
->>>
->>> Tested on QCA9984 with firmware-5.bin_10.4-3.5.3-00053
->>> Tested on QCA998X with firmware-5.bin_10.2.4-1.0-00036
->>>
->>> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
->>
->> BTW, your name in patchwork is "akolli@codeaurora.org" but it should be
->> "Anilkumar Kolli" and that's why my script uses the wrong name. Please
->> fix it by registering to patchwork as it's possible to change your name
->> during registration, but only one time. If that doesn't work then
->> send a
->> request to helpdesk@kernel.org and the admins will fix it.
->
-> I registered and updated name in the patchwork website.
+zd1201_fw_upload() is only called by zd1201_probe(), 
+which is only set as ".probe" in struct usb_driver.
 
-It seems that your name still is "akolli@codeaurora.org" in the
-Submitter field:
+Despite never getting called from atomic context,
+zd1201_fw_upload() calls kmalloc() with GFP_ATOMIC,
+which does not sleep for allocation.
+GFP_ATOMIC is not necessary and can be replaced with GFP_KERNEL,
+which can sleep and improve the possibility of sucessful allocation.
 
-https://patchwork.kernel.org/patch/10353959/
+This is found by a static analysis tool named DCNS written by myself.
+And I also manually check it.
 
-An example how it should look like:
+Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+---
+ drivers/net/wireless/zydas/zd1201.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-https://patchwork.kernel.org/patch/10359823/
-
-I think you need to contact helpdesk now and ask them to fix it.
-
-> Do I need to resend the patch ?
-
-No need to resend because of this.
-
+diff --git a/drivers/net/wireless/zydas/zd1201.c b/drivers/net/wireless/zydas/zd1201.c
+index 581e857..cba2bed 100644
+--- a/drivers/net/wireless/zydas/zd1201.c
++++ b/drivers/net/wireless/zydas/zd1201.c
+@@ -74,7 +74,7 @@ static int zd1201_fw_upload(struct usb_device *dev, int apfw)
+ 	data = fw_entry->data;
+         len = fw_entry->size;
+ 
+-	buf = kmalloc(1024, GFP_ATOMIC);
++	buf = kmalloc(1024, GFP_KERNEL);
+ 	if (!buf) {
+ 		err = -ENOMEM;
+ 		goto exit;
 -- 
-Kalle Valo
+1.9.1
