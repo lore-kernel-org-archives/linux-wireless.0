@@ -1,41 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:46447 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752813AbeDCXhR (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:33523 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752064AbeDJCwl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Apr 2018 19:37:17 -0400
-Received: by mail-qt0-f193.google.com with SMTP id h4so21230670qtn.13
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Apr 2018 16:37:17 -0700 (PDT)
-From: Joao Dalben <jhdalben@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, lkcamp@lists.libreplanetbr.org,
-        Joao Dalben <jhdalben@gmail.com>
-Subject: [PATCH] staging: rtl8192e: Fixed coding style around a plus sign
-Date: Tue,  3 Apr 2018 20:36:43 -0300
-Message-Id: <20180403233643.9642-1-jhdalben@gmail.com> (sfid-20180404_013721_752017_7F11120E)
+        Mon, 9 Apr 2018 22:52:41 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 8/9] rtlwifi: btcoex: Add struct members to replace global varaibles
+Date: Tue, 10 Apr 2018 10:52:25 +0800
+Message-ID: <20180410025226.5236-9-pkshih@realtek.com> (sfid-20180410_045244_755383_2AB8B481)
+In-Reply-To: <20180410025226.5236-1-pkshih@realtek.com>
+References: <20180410025226.5236-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added blank spaces between a plus sign in order to standardize the coding
-style.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Joao Dalben <jhdalben@gmail.com>
+Chip specific context plays as global variables that will not support
+multiple devices simultaneously. This patch adds 'union' fields to hold
+the variables, and next patch will remove all of them.
+
+To use the declaration of fields in halbtcoutsrc.h, I move the including
+order in header file halbt_precomp.h, and declare two struct terms for
+chip specific header files.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/staging/rtl8192e/dot11d.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../realtek/rtlwifi/btcoexist/halbt_precomp.h      |  6 +++++-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       | 24 ++++++++++++++++++++++
+ 2 files changed, 29 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/rtl8192e/dot11d.c b/drivers/staging/rtl8192e/dot11d.c
-index 88f89d77b511..a1c096124683 100644
---- a/drivers/staging/rtl8192e/dot11d.c
-+++ b/drivers/staging/rtl8192e/dot11d.c
-@@ -50,7 +50,7 @@ void dot11d_init(struct rtllib_device *ieee)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
+index 858318fd3d63..e21222b48c2c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
+@@ -35,7 +35,6 @@
+ #include "../ps.h"
+ #include "../pci.h"
  
- 	pDot11dInfo->State = DOT11D_STATE_NONE;
- 	pDot11dInfo->CountryIeLen = 0;
--	memset(pDot11dInfo->channel_map, 0, MAX_CHANNEL_NUMBER+1);
-+	memset(pDot11dInfo->channel_map, 0, MAX_CHANNEL_NUMBER + 1);
- 	memset(pDot11dInfo->MaxTxPwrDbmList, 0xFF, MAX_CHANNEL_NUMBER + 1);
- 	RESET_CIE_WATCHDOG(ieee);
- }
+-#include "halbtcoutsrc.h"
+ 
+ /* Interface type */
+ #define RT_PCI_INTERFACE	1
+@@ -43,6 +42,9 @@
+ #define RT_SDIO_INTERFACE	3
+ #define DEV_BUS_TYPE		RT_PCI_INTERFACE
+ 
++struct btc_coexist;
++struct wifi_only_cfg;
++
+ #include "halbtc8192e2ant.h"
+ #include "halbtc8723b1ant.h"
+ #include "halbtc8723b2ant.h"
+@@ -52,6 +54,8 @@
+ #include "halbtc8822b2ant.h"
+ #include "halbtc8822bwifionly.h"
+ 
++#include "halbtcoutsrc.h"
++
+ #define GetDefaultAdapter(padapter)	padapter
+ 
+ #define BIT0	0x00000001
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index 9eae87d19120..46355ce32f1b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -693,6 +693,30 @@ struct btc_coexist {
+ 	enum btc_chip_interface	chip_interface;
+ 	struct btc_bt_link_info bt_link_info;
+ 
++	/* context for each chip */
++	union {
++		struct coex_dm_8192e_2ant coex_dm_8192e_2ant;
++		struct coex_dm_8723b_1ant coex_dm_8723b_1ant;
++		struct coex_dm_8723b_2ant coex_dm_8723b_2ant;
++		struct coex_dm_8821a_1ant coex_dm_8821a_1ant;
++		struct coex_dm_8821a_2ant coex_dm_8821a_2ant;
++		struct coex_dm_8822b_1ant coex_dm_8822b_1ant;
++		struct coex_dm_8822b_2ant coex_dm_8822b_2ant;
++	};
++	union {
++		struct coex_sta_8192e_2ant coex_sta_8192e_2ant;
++		struct coex_sta_8723b_1ant coex_sta_8723b_1ant;
++		struct coex_sta_8723b_2ant coex_sta_8723b_2ant;
++		struct coex_sta_8821a_1ant coex_sta_8821a_1ant;
++		struct coex_sta_8821a_2ant coex_sta_8821a_2ant;
++		struct coex_sta_8822b_1ant coex_sta_8822b_1ant;
++		struct coex_sta_8822b_2ant coex_sta_8822b_2ant;
++	};
++	union {
++		struct rfe_type_8822b_1ant rfe_type_8822b_1ant;
++		struct rfe_type_8822b_2ant rfe_type_8822b_2ant;
++	};
++
+ 	/* boolean variables to replace BT_AUTO_REPORT_ONLY_XXXXY_ZANT
+ 	 * configuration parameters
+ 	 */
 -- 
-2.11.0
+2.15.1
