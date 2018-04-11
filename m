@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53422 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751061AbeDEMj4 (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:45182 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752906AbeDKNFl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Apr 2018 08:39:56 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Joe Perches <joe@perches.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Jussi Kivilinna <jussi.kivilinna@iki.fi>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: [PATCH 06/12] wireless: Convert simple uses of a static const Ethernet broadcast address
-References: <cover.1522479607.git.joe@perches.com>
-        <79196f134a513d50968e8e208a0e56b3c0236ee3.1522479607.git.joe@perches.com>
-Date: Thu, 05 Apr 2018 15:39:50 +0300
-In-Reply-To: <79196f134a513d50968e8e208a0e56b3c0236ee3.1522479607.git.joe@perches.com>
-        (Joe Perches's message of "Sat, 31 Mar 2018 00:05:21 -0700")
-Message-ID: <87po3desix.fsf@kamboji.qca.qualcomm.com> (sfid-20180405_144015_561579_48853C09)
+        Wed, 11 Apr 2018 09:05:41 -0400
+From: Colin King <colin.king@canonical.com>
+To: Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH][next] iwlwifi: mvm: remove division by size of sizeof(struct ieee80211_wmm_rule)
+Date: Wed, 11 Apr 2018 14:05:33 +0100
+Message-Id: <20180411130533.11827-1-colin.king@canonical.com> (sfid-20180411_150559_919651_572C6363)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
+From: Colin Ian King <colin.king@canonical.com>
 
-> Use the new ether_broadcast_addr global instead to save some object code.
->
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/net/wireless/admtek/adm8211.c           | 3 +--
->  drivers/net/wireless/ath/carl9170/mac.c         | 4 +---
->  drivers/net/wireless/broadcom/b43/main.c        | 3 +--
->  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 3 +--
->  drivers/net/wireless/realtek/rtlwifi/core.c     | 5 ++---
->  drivers/net/wireless/rndis_wlan.c               | 6 +-----
->  drivers/net/wireless/ti/wl1251/main.c           | 5 +----
->  drivers/net/wireless/ti/wlcore/main.c           | 5 +----
->  8 files changed, 9 insertions(+), 25 deletions(-)
+The subtraction of two struct ieee80211_wmm_rule pointers leaves a result
+that is automatically scaled down by the size of the size of pointed-to
+type, hence the division by sizeof(struct ieee80211_wmm_rule) is
+bogus and should be removed.
 
-It would be really helpful if you could CLEARLY document in the patches
-(or in the cover letter but then you need to cc all parties) to what
-tree the patches are meant for. Otherwise I, and other maintainers as
-well, need to waste time trying to guess what's your plan.
+Detected by CoverityScan, CID#1467777 ("Extra sizeof expression")
 
-I will now drop the four wireless patches from my queue. So if you want
-to me to take them please resubmit.
+Fixes: 77e30e10ee28 ("iwlwifi: mvm: query regdb for wmm rule if needed")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index ca0174680af9..e78219057d2f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -1007,8 +1007,7 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+ 			continue;
+ 
+ 		copy_rd->reg_rules[i].wmm_rule = d_wmm +
+-			(regd->reg_rules[i].wmm_rule - s_wmm) /
+-			sizeof(struct ieee80211_wmm_rule);
++			(regd->reg_rules[i].wmm_rule - s_wmm);
+ 	}
+ 
+ out:
 -- 
-Kalle Valo
+2.17.0
