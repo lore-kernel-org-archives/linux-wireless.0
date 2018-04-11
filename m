@@ -1,110 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:57072 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755008AbeDPNQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 09:16:50 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
-        loic.poulain@linaro.org, rfried@codeaurora.org,
-        bjorn.andersson@linaro.org, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH 5/5] wcn36xx: pass information elements in scan requests
-Date: Mon, 16 Apr 2018 15:16:34 +0200
-Message-Id: <20180416131634.25432-6-daniel@zonque.org> (sfid-20180416_151654_275731_1F6043CC)
-In-Reply-To: <20180416131634.25432-1-daniel@zonque.org>
-References: <20180416131634.25432-1-daniel@zonque.org>
+Received: from mail-pl0-f66.google.com ([209.85.160.66]:43802 "EHLO
+        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751797AbeDKXNI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Apr 2018 19:13:08 -0400
+Received: by mail-pl0-f66.google.com with SMTP id a39-v6so2494135pla.10
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2018 16:13:08 -0700 (PDT)
+Date: Wed, 11 Apr 2018 16:13:05 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Wen Gong <wgong@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: Convert wow pattern from 802.3 to 802.11
+Message-ID: <20180411231304.GA121875@rodete-desktop-imager.corp.google.com> (sfid-20180412_011312_952174_33BEA516)
+References: <1522379899-31969-1-git-send-email-wgong@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1522379899-31969-1-git-send-email-wgong@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the ieee8022 core passes IE elements in the scan request, append
-them to the firmware message. The driver currently tells the core that
-it is capable of attaching up to WCN36XX_MAX_SCAN_IE_LEN octets, but
-doesn't actually pass them to the the hardware.
+Hi,
 
-Some defines were moved around to avoid cyclic include dependencies.
+On Fri, Mar 30, 2018 at 11:18:19AM +0800, Wen Gong wrote:
+> When trying to set wow wakeup patterns it fails with this command:
+> 
+> iw phyxx wowlan enable patterns offset xx+ IP address xx.xx.xx.xx
+> 
+> The reason is that the wow pattern from upper layer is in 802.3 format
+> for this case, it need to convert it to 802.11 format. The input
+> offset parameter is used for 802.3, but the actual offset firmware
+> need depends on rx_decap_mode, so that it needs to be recalculated.
+> Pattern of 802.3 packet is not same with 802.11 packet. If the
+> rx_decap_mode is ATH10K_HW_TXRX_NATIVE_WIFI, then firmware will
+> receive data packet with 802.11 format from hardware.
+> 
+> Convert graph:
+> -----------------------------------------------------------------------
+> 802.3  |dest mac(6B)|src mac(6B)|type(2B)|     body...    |
+>              |__         |_______    |_____________  |___________
+>                 |                |                 |             |
+> 802.11 |4B|dest mac(6B)| 6B |src mac(6B)|  8B  |type(2B)|  body...  |
+> -----------------------------------------------------------------------
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
----
- drivers/net/wireless/ath/wcn36xx/hal.h     |  8 +++++++-
- drivers/net/wireless/ath/wcn36xx/smd.c     | 12 ++++++++++++
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  6 ------
- 3 files changed, 19 insertions(+), 7 deletions(-)
+It feels like this could go into the code comments? Or at least some
+short version of it. (But hey, text is cheap, and who doesn't love ASCII
+art?)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
-index 182963522941..2aed6c233508 100644
---- a/drivers/net/wireless/ath/wcn36xx/hal.h
-+++ b/drivers/net/wireless/ath/wcn36xx/hal.h
-@@ -88,6 +88,12 @@
- /* version string max length (including NULL) */
- #define WCN36XX_HAL_VERSION_LENGTH  64
- 
-+/* How many frames until we start a-mpdu TX session */
-+#define WCN36XX_AMPDU_START_THRESH	20
-+
-+#define WCN36XX_MAX_SCAN_SSIDS		9
-+#define WCN36XX_MAX_SCAN_IE_LEN		500
-+
- /* message types for messages exchanged between WDI and HAL */
- enum wcn36xx_hal_host_msg_type {
- 	/* Init/De-Init */
-@@ -1170,7 +1176,7 @@ struct wcn36xx_hal_start_scan_offload_req_msg {
- 
- 	/* IE field */
- 	u16 ie_len;
--	u8 ie[0];
-+	u8 ie[WCN36XX_MAX_SCAN_IE_LEN];
- } __packed;
- 
- struct wcn36xx_hal_start_scan_offload_rsp_msg {
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 09320c3f6bd0..ea74f2b92df5 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -620,9 +620,13 @@ int wcn36xx_smd_finish_scan(struct wcn36xx *wcn,
- int wcn36xx_smd_start_hw_scan(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 			      struct cfg80211_scan_request *req)
- {
-+	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
- 	struct wcn36xx_hal_start_scan_offload_req_msg msg_body;
- 	int ret, i;
- 
-+	if (req->ie_len > WCN36XX_MAX_SCAN_IE_LEN)
-+		return -EINVAL;
-+
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_START_SCAN_OFFLOAD_REQ);
- 
-@@ -647,6 +651,14 @@ int wcn36xx_smd_start_hw_scan(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 	for (i = 0; i < msg_body.num_channel; i++)
- 		msg_body.channels[i] = req->channels[i]->hw_value;
- 
-+	msg_body.header.len -= WCN36XX_MAX_SCAN_IE_LEN;
-+
-+	if (req->ie_len > 0) {
-+		msg_body.ie_len = req->ie_len;
-+		msg_body.header.len += req->ie_len;
-+		memcpy(msg_body.ie, req->ie, req->ie_len);
-+	}
-+
- 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
- 
- 	wcn36xx_dbg(WCN36XX_DBG_HAL,
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index 22e05cb4eb98..9343989d1169 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -32,12 +32,6 @@
- #define WLAN_NV_FILE               "wlan/prima/WCNSS_qcom_wlan_nv.bin"
- #define WCN36XX_AGGR_BUFFER_SIZE 64
- 
--/* How many frames until we start a-mpdu TX session */
--#define WCN36XX_AMPDU_START_THRESH	20
--
--#define WCN36XX_MAX_SCAN_SSIDS		9
--#define WCN36XX_MAX_SCAN_IE_LEN		500
--
- extern unsigned int wcn36xx_dbg_mask;
- 
- enum wcn36xx_debug_mask {
--- 
-2.14.3
+> 
+> Tested with QCA6174 hw3.0 with firmware
+> WLAN.RM.4.4.1-00099-QCARMSWPZ-1, but this will also affect QCA9377.
+> This has always failed, so it's not a regression with new firmware
+> releases.
+> 
+> Signed-off-by: Wen Gong <wgong@codeaurora.org>
+> ---
+>  drivers/net/wireless/ath/ath10k/wmi.h |   4 ++
+>  drivers/net/wireless/ath/ath10k/wow.c | 128 ++++++++++++++++++++++++++++++++--
+>  2 files changed, 126 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+> index c7b30ed..389f9c7 100644
+> --- a/drivers/net/wireless/ath/ath10k/wmi.h
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
+> @@ -6724,6 +6724,10 @@ struct wmi_wow_ev_arg {
+>  #define WOW_MIN_PATTERN_SIZE	1
+>  #define WOW_MAX_PATTERN_SIZE	148
+>  #define WOW_MAX_PKT_OFFSET	128
+> +#define WOW_HDR_LEN	(sizeof(struct ieee80211_hdr_3addr) + \
+> +	sizeof(struct rfc1042_hdr))
+> +#define WOW_MAX_REDUCE	(WOW_HDR_LEN - sizeof(struct ethhdr) - \
+> +	offsetof(struct ieee80211_hdr_3addr, addr1))
+>  
+>  enum wmi_tdls_state {
+>  	WMI_TDLS_DISABLE,
+> diff --git a/drivers/net/wireless/ath/ath10k/wow.c b/drivers/net/wireless/ath/ath10k/wow.c
+> index c4cbccb..9b56a41 100644
+> --- a/drivers/net/wireless/ath/ath10k/wow.c
+> +++ b/drivers/net/wireless/ath/ath10k/wow.c
+> @@ -1,5 +1,6 @@
+>  /*
+>   * Copyright (c) 2015-2017 Qualcomm Atheros, Inc.
+> + * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+>   *
+>   * Permission to use, copy, modify, and/or distribute this software for any
+>   * purpose with or without fee is hereby granted, provided that the above
+> @@ -76,6 +77,98 @@ static int ath10k_wow_cleanup(struct ath10k *ar)
+>  	return 0;
+>  }
+>  
+> +static void ath10k_wow_convert_8023_to_80211
+> +					(struct cfg80211_pkt_pattern *new,
+> +					const struct cfg80211_pkt_pattern *old)
+> +{
+> +	u8 hdr_8023_pattern[ETH_HLEN] = {};
+> +	u8 hdr_8023_bit_mask[ETH_HLEN] = {};
+> +	u8 hdr_80211_pattern[WOW_HDR_LEN] = {};
+> +	u8 hdr_80211_bit_mask[WOW_HDR_LEN] = {};
+> +
+> +	int total_len = old->pkt_offset + old->pattern_len;
+> +	int hdr_80211_end_offset;
+> +
+> +	struct ieee80211_hdr_3addr *new_hdr_pattern =
+> +		(struct ieee80211_hdr_3addr *)hdr_80211_pattern;
+> +	struct ieee80211_hdr_3addr *new_hdr_mask =
+> +		(struct ieee80211_hdr_3addr *)hdr_80211_bit_mask;
+> +	struct ethhdr *old_hdr_pattern = (struct ethhdr *)hdr_8023_pattern;
+> +	struct ethhdr *old_hdr_mask = (struct ethhdr *)hdr_8023_bit_mask;
+> +	int hdr_len = sizeof(*new_hdr_pattern);
+> +
+> +	struct rfc1042_hdr *new_rfc_pattern =
+> +		(struct rfc1042_hdr *)(hdr_80211_pattern + hdr_len);
+> +	struct rfc1042_hdr *new_rfc_mask =
+> +		(struct rfc1042_hdr *)(hdr_80211_bit_mask + hdr_len);
+> +	int rfc_len = sizeof(*new_rfc_pattern);
+> +
+> +	memcpy(hdr_8023_pattern + old->pkt_offset,
+> +	       old->pattern, ETH_HLEN - old->pkt_offset);
+> +	memcpy(hdr_8023_bit_mask + old->pkt_offset,
+> +	       old->mask, ETH_HLEN - old->pkt_offset);
+> +
+> +	/* Copy destination address */
+> +	memcpy(new_hdr_pattern->addr1, old_hdr_pattern->h_dest, ETH_ALEN);
+> +	memcpy(new_hdr_mask->addr1, old_hdr_mask->h_dest, ETH_ALEN);
+> +
+> +	/* Copy source address */
+> +	memcpy(new_hdr_pattern->addr3, old_hdr_pattern->h_source, ETH_ALEN);
+> +	memcpy(new_hdr_mask->addr3, old_hdr_mask->h_source, ETH_ALEN);
+> +
+> +	/* Copy logic link type */
+> +	memcpy(&new_rfc_pattern->snap_type,
+> +	       &old_hdr_pattern->h_proto,
+> +	       sizeof(old_hdr_pattern->h_proto));
+> +	memcpy(&new_rfc_mask->snap_type,
+> +	       &old_hdr_mask->h_proto,
+> +	       sizeof(old_hdr_mask->h_proto));
+> +
+> +	/* Caculate new pkt_offset */
+> +	if (old->pkt_offset < ETH_ALEN)
+> +		new->pkt_offset = old->pkt_offset +
+> +			offsetof(struct ieee80211_hdr_3addr, addr1);
+> +	else if (old->pkt_offset < offsetof(struct ethhdr, h_proto))
+> +		new->pkt_offset = old->pkt_offset +
+> +			offsetof(struct ieee80211_hdr_3addr, addr3) -
+> +			offsetof(struct ethhdr, h_source);
+> +	else
+> +		new->pkt_offset = old->pkt_offset + hdr_len + rfc_len - ETH_HLEN;
+> +
+> +	/* Caculate new hdr end offset */
+> +	if (total_len > ETH_HLEN)
+> +		hdr_80211_end_offset = hdr_len + rfc_len;
+> +	else if (total_len > offsetof(struct ethhdr, h_proto))
+> +		hdr_80211_end_offset = hdr_len + rfc_len + total_len - ETH_HLEN;
+> +	else if (total_len > ETH_ALEN)
+> +		hdr_80211_end_offset = total_len - ETH_ALEN +
+> +			offsetof(struct ieee80211_hdr_3addr, addr3);
+> +	else
+> +		hdr_80211_end_offset = total_len +
+> +			offsetof(struct ieee80211_hdr_3addr, addr1);
+> +
+> +	new->pattern_len = hdr_80211_end_offset - new->pkt_offset;
+> +
+> +	memcpy((u8 *)new->pattern,
+> +	       hdr_80211_pattern + new->pkt_offset,
+> +	       new->pattern_len);
+> +	memcpy((u8 *)new->mask,
+> +	       hdr_80211_bit_mask + new->pkt_offset,
+> +	       new->pattern_len);
+> +
+> +	if (total_len > ETH_HLEN) {
+> +		/* Copy frame body */
+> +		memcpy((u8 *)new->pattern + new->pattern_len,
+> +		       (void *)old->pattern + ETH_HLEN - old->pkt_offset,
+> +		       total_len - ETH_HLEN);
+> +		memcpy((u8 *)new->mask + new->pattern_len,
+> +		       (void *)old->mask + ETH_HLEN - old->pkt_offset,
+> +		       total_len - ETH_HLEN);
+> +
+> +		new->pattern_len += total_len - ETH_HLEN;
+> +	}
+> +}
+> +
+>  static int ath10k_vif_wow_set_wakeups(struct ath10k_vif *arvif,
+>  				      struct cfg80211_wowlan *wowlan)
+>  {
+> @@ -116,22 +209,39 @@ static int ath10k_vif_wow_set_wakeups(struct ath10k_vif *arvif,
+>  
+>  	for (i = 0; i < wowlan->n_patterns; i++) {
+>  		u8 bitmask[WOW_MAX_PATTERN_SIZE] = {};
+> +		u8 ath_pattern[WOW_MAX_PATTERN_SIZE] = {};
+> +		u8 ath_bitmask[WOW_MAX_PATTERN_SIZE] = {};
+
+So now we've got 3 * 148 = 444 bytes on the stack just for this? Seems
+like it's getting a little large for kernel code, but maybe not too bad.
+I guess we can go with this until somebody runs into a real problem...
+
+Otherwise, seems to work for me:
+
+Tested-by: Brian Norris <briannorris@chromium.org>
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+
+> +		struct cfg80211_pkt_pattern new_pattern = {};
+> +		struct cfg80211_pkt_pattern old_pattern = patterns[i];
+>  		int j;
+> -
+> +		new_pattern.pattern = ath_pattern;
+> +		new_pattern.mask = ath_bitmask;
+>  		if (patterns[i].pattern_len > WOW_MAX_PATTERN_SIZE)
+>  			continue;
+> -
+>  		/* convert bytemask to bitmask */
+>  		for (j = 0; j < patterns[i].pattern_len; j++)
+>  			if (patterns[i].mask[j / 8] & BIT(j % 8))
+>  				bitmask[j] = 0xff;
+> +		old_pattern.mask = bitmask;
+> +		new_pattern = old_pattern;
+> +
+> +		if (ar->wmi.rx_decap_mode == ATH10K_HW_TXRX_NATIVE_WIFI) {
+> +			if (patterns[i].pkt_offset < ETH_HLEN)
+> +				ath10k_wow_convert_8023_to_80211(&new_pattern,
+> +								 &old_pattern);
+> +			else
+> +				new_pattern.pkt_offset += WOW_HDR_LEN - ETH_HLEN;
+> +		}
+> +
+> +		if (WARN_ON(new_pattern.pattern_len > WOW_MAX_PATTERN_SIZE))
+> +			return -EINVAL;
+>  
+>  		ret = ath10k_wmi_wow_add_pattern(ar, arvif->vdev_id,
+>  						 pattern_id,
+> -						 patterns[i].pattern,
+> -						 bitmask,
+> -						 patterns[i].pattern_len,
+> -						 patterns[i].pkt_offset);
+> +						 new_pattern.pattern,
+> +						 new_pattern.mask,
+> +						 new_pattern.pattern_len,
+> +						 new_pattern.pkt_offset);
+>  		if (ret) {
+>  			ath10k_warn(ar, "failed to add pattern %i to vdev %i: %d\n",
+>  				    pattern_id,
+> @@ -345,6 +455,12 @@ int ath10k_wow_init(struct ath10k *ar)
+>  		return -EINVAL;
+>  
+>  	ar->wow.wowlan_support = ath10k_wowlan_support;
+> +
+> +	if (ar->wmi.rx_decap_mode == ATH10K_HW_TXRX_NATIVE_WIFI) {
+> +		ar->wow.wowlan_support.pattern_max_len -= WOW_MAX_REDUCE;
+> +		ar->wow.wowlan_support.max_pkt_offset -= WOW_MAX_REDUCE;
+> +	}
+> +
+>  	ar->wow.wowlan_support.n_patterns = ar->wow.max_num_patterns;
+>  	ar->hw->wiphy->wowlan = &ar->wow.wowlan_support;
+>  
+> -- 
+> 2.7.4
+> 
