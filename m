@@ -1,63 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:2854 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932073AbeDWQfb (ORCPT
+Received: from mail-qt0-f201.google.com ([209.85.216.201]:49848 "EHLO
+        mail-qt0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754963AbeDKSmJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 12:35:31 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [RESEND 18/33] staging: wilc1000: use sizeof(variable) for memory allocated to store key info
-Date: Mon, 23 Apr 2018 22:03:20 +0530
-Message-ID: <1524501215-4963-19-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183535_366464_F0114F12)
-In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+        Wed, 11 Apr 2018 14:42:09 -0400
+Received: by mail-qt0-f201.google.com with SMTP id k23so1904926qtj.16
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2018 11:42:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Wed, 11 Apr 2018 11:41:56 -0700
+Message-Id: <20180411184156.167978-1-rkir@google.com> (sfid-20180411_204216_557611_3BD461A7)
+Subject: [PATCH] ANDROID: mac80211_hwsim: support/ignore power state changes
+From: rkir@google.com
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        bjoernj@google.com, lfy@google.com, rkir@google.com
+Cc: Bjoern Johansson <bjoernj@google.com>,
+        Lingfeng Yang <lfy@google.com>,
+        Roman Kiryanov <rkir@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes to fix below checkpatch reported issues.
+From: Bjoern Johansson <bjoernj@google.com>
 
-CHECK: Prefer kmalloc(sizeof(*priv->wilc_gtk[idx])...) over
-kmalloc(sizeof(struct wilc_wfi_key)...)
+Indicate support for power state changes and handle them by calling an
+empty function.
+The important part is "ieee80211_hw_set(hw, SUPPORTS_PS);" at the
+bottom of the diff. Without this upper layers in the kernel will return an
+error code when trying to set the power state because the driver doesn't
+indicate power state support. This in turn causes VTS
+(Android Vendor Test Suite) failures because the WiFi HAL can't enable
+power saving mode. The remaining code is just there to deal with the
+incoming state change request.
 
-CHECK: Prefer kmalloc(sizeof(*priv->wilc_ptk[idx])...) over
-kmalloc(sizeof(struct wilc_wfi_key)...)
-
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+Signed-off-by: Bjoern Johansson <bjoernj@google.com>
+Signed-off-by: Lingfeng Yang <lfy@google.com>
+Signed-off-by: Roman Kiryanov <rkir@google.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 1c9864b..5bd294d 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -870,15 +870,15 @@ static inline void wilc_wfi_cfg_copy_wep_info(struct wilc_priv *priv,
- static int wilc_wfi_cfg_allocate_wpa_entry(struct wilc_priv *priv, u8 idx)
- {
- 	if (!priv->wilc_gtk[idx]) {
--		priv->wilc_gtk[idx] = kzalloc(sizeof(struct wilc_wfi_key),
--					       GFP_KERNEL);
-+		priv->wilc_gtk[idx] = kzalloc(sizeof(*priv->wilc_gtk[idx]),
-+					      GFP_KERNEL);
- 		if (!priv->wilc_gtk[idx])
- 			return -ENOMEM;
- 	}
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 6afe896e5cb8..ff4741188814 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1637,6 +1637,11 @@ static const char * const hwsim_chanwidths[] = {
+ 	[NL80211_CHAN_WIDTH_160] = "vht160",
+ };
  
- 	if (!priv->wilc_ptk[idx]) {
--		priv->wilc_ptk[idx] = kzalloc(sizeof(struct wilc_wfi_key),
--					       GFP_KERNEL);
-+		priv->wilc_ptk[idx] = kzalloc(sizeof(*priv->wilc_ptk[idx]),
-+					      GFP_KERNEL);
- 		if (!priv->wilc_ptk[idx])
- 			return -ENOMEM;
- 	}
++static void mac80211_power_state_changed(bool enabled)
++{
++	/* TODO: Do something when the power state changes */
++}
++
+ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct mac80211_hwsim_data *data = hw->priv;
+@@ -1649,6 +1654,12 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
+ 	};
+ 	int idx;
+ 
++	if (changed & IEEE80211_CONF_CHANGE_PS) {
++		bool enabled = (conf->flags & IEEE80211_CONF_PS) != 0;
++
++		mac80211_power_state_changed(enabled);
++	}
++
+ 	if (conf->chandef.chan)
+ 		wiphy_dbg(hw->wiphy,
+ 			  "%s (freq=%d(%d - %d)/%s idle=%d ps=%d smps=%s)\n",
+@@ -2650,7 +2661,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 	ieee80211_hw_set(hw, AMPDU_AGGREGATION);
+ 	ieee80211_hw_set(hw, MFP_CAPABLE);
+ 	ieee80211_hw_set(hw, SIGNAL_DBM);
++	ieee80211_hw_set(hw, SUPPORTS_PS);
+ 	ieee80211_hw_set(hw, TDLS_WIDER_BW);
++
+ 	if (rctbl)
+ 		ieee80211_hw_set(hw, SUPPORTS_RC_TABLE);
+ 
 -- 
-2.7.4
+2.17.0.484.g0c8726318c-goog
