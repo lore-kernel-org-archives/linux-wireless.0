@@ -1,189 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40598 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754549AbeDTKtf (ORCPT
+Received: from mail-it0-f49.google.com ([209.85.214.49]:40201 "EHLO
+        mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752713AbeDLHAu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Apr 2018 06:49:35 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Date: Fri, 20 Apr 2018 13:49:18 +0300
-Message-Id: <20180420104926.8816-2-luca@coelho.fi> (sfid-20180420_124939_700733_FCD2B0DE)
-In-Reply-To: <20180420104926.8816-1-luca@coelho.fi>
-References: <20180420104926.8816-1-luca@coelho.fi>
-Subject: [PATCH 1/9] mac80211: rename rtap_vendor_space to rtap_space
+        Thu, 12 Apr 2018 03:00:50 -0400
+Received: by mail-it0-f49.google.com with SMTP id u62-v6so5755265ita.5
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2018 00:00:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAE4vF2fCTEmEX8i+XVpvTJ1sRYDHDLr+fYFAM2PzTQTqkCoXVQ@mail.gmail.com>
+References: <CAE4vF2fCTEmEX8i+XVpvTJ1sRYDHDLr+fYFAM2PzTQTqkCoXVQ@mail.gmail.com>
+From: "solsTiCe d'Hiver" <solstice.dhiver@gmail.com>
+Date: Thu, 12 Apr 2018 09:00:49 +0200
+Message-ID: <CAE4vF2f2oXEvOJWDXPjmiWZTC=HOq5+xE_R64-_VvH6zc-Vw+A@mail.gmail.com> (sfid-20180412_090054_939813_E8E9F5ED)
+Subject: Re: second wifi card enforce CN reg dom
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Nobody cares about this ?
 
-Since all the HE data won't fit into struct ieee80211_rx_status,
-we'll (have to) move that into the SKB proper. This means we'll
-need to skip over more things in the future, so rename this to
-remove the vendor-only notion from it.
+Should I report this as a bug to the LKML ? or elsewhere ? to
+ath9k_htc dev ? to crda dev ?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c | 40 +++++++++++++++++++---------------------
- 1 file changed, 19 insertions(+), 21 deletions(-)
+Please.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 03102aff0953..0a38cc1cbebc 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -5,6 +5,7 @@
-  * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -97,27 +98,27 @@ static u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
-  */
- static void remove_monitor_info(struct sk_buff *skb,
- 				unsigned int present_fcs_len,
--				unsigned int rtap_vendor_space)
-+				unsigned int rtap_space)
- {
- 	if (present_fcs_len)
- 		__pskb_trim(skb, skb->len - present_fcs_len);
--	__pskb_pull(skb, rtap_vendor_space);
-+	__pskb_pull(skb, rtap_space);
- }
- 
- static inline bool should_drop_frame(struct sk_buff *skb, int present_fcs_len,
--				     unsigned int rtap_vendor_space)
-+				     unsigned int rtap_space)
- {
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	struct ieee80211_hdr *hdr;
- 
--	hdr = (void *)(skb->data + rtap_vendor_space);
-+	hdr = (void *)(skb->data + rtap_space);
- 
- 	if (status->flag & (RX_FLAG_FAILED_FCS_CRC |
- 			    RX_FLAG_FAILED_PLCP_CRC |
- 			    RX_FLAG_ONLY_MONITOR))
- 		return true;
- 
--	if (unlikely(skb->len < 16 + present_fcs_len + rtap_vendor_space))
-+	if (unlikely(skb->len < 16 + present_fcs_len + rtap_space))
- 		return true;
- 
- 	if (ieee80211_is_ctl(hdr->frame_control) &&
-@@ -199,7 +200,7 @@ ieee80211_rx_radiotap_hdrlen(struct ieee80211_local *local,
- 
- static void ieee80211_handle_mu_mimo_mon(struct ieee80211_sub_if_data *sdata,
- 					 struct sk_buff *skb,
--					 int rtap_vendor_space)
-+					 int rtap_space)
- {
- 	struct {
- 		struct ieee80211_hdr_3addr hdr;
-@@ -212,14 +213,14 @@ static void ieee80211_handle_mu_mimo_mon(struct ieee80211_sub_if_data *sdata,
- 
- 	BUILD_BUG_ON(sizeof(action) != IEEE80211_MIN_ACTION_SIZE + 1);
- 
--	if (skb->len < rtap_vendor_space + sizeof(action) +
-+	if (skb->len < rtap_space + sizeof(action) +
- 		       VHT_MUMIMO_GROUPS_DATA_LEN)
- 		return;
- 
- 	if (!is_valid_ether_addr(sdata->u.mntr.mu_follow_addr))
- 		return;
- 
--	skb_copy_bits(skb, rtap_vendor_space, &action, sizeof(action));
-+	skb_copy_bits(skb, rtap_space, &action, sizeof(action));
- 
- 	if (!ieee80211_is_action(action.hdr.frame_control))
- 		return;
-@@ -545,7 +546,7 @@ static struct sk_buff *
- ieee80211_make_monitor_skb(struct ieee80211_local *local,
- 			   struct sk_buff **origskb,
- 			   struct ieee80211_rate *rate,
--			   int rtap_vendor_space, bool use_origskb)
-+			   int rtap_space, bool use_origskb)
- {
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(*origskb);
- 	int rt_hdrlen, needed_headroom;
-@@ -553,7 +554,7 @@ ieee80211_make_monitor_skb(struct ieee80211_local *local,
- 
- 	/* room for the radiotap header based on driver features */
- 	rt_hdrlen = ieee80211_rx_radiotap_hdrlen(local, status, *origskb);
--	needed_headroom = rt_hdrlen - rtap_vendor_space;
-+	needed_headroom = rt_hdrlen - rtap_space;
- 
- 	if (use_origskb) {
- 		/* only need to expand headroom if necessary */
-@@ -607,7 +608,7 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
- 	struct ieee80211_sub_if_data *sdata;
- 	struct sk_buff *monskb = NULL;
- 	int present_fcs_len = 0;
--	unsigned int rtap_vendor_space = 0;
-+	unsigned int rtap_space = 0;
- 	struct ieee80211_sub_if_data *monitor_sdata =
- 		rcu_dereference(local->monitor_sdata);
- 	bool only_monitor = false;
-@@ -615,7 +616,7 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
- 	if (unlikely(status->flag & RX_FLAG_RADIOTAP_VENDOR_DATA)) {
- 		struct ieee80211_vendor_radiotap *rtap = (void *)origskb->data;
- 
--		rtap_vendor_space = sizeof(*rtap) + rtap->len + rtap->pad;
-+		rtap_space += sizeof(*rtap) + rtap->len + rtap->pad;
- 	}
- 
- 	/*
-@@ -638,13 +639,12 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
- 	}
- 
- 	/* ensure hdr->frame_control and vendor radiotap data are in skb head */
--	if (!pskb_may_pull(origskb, 2 + rtap_vendor_space)) {
-+	if (!pskb_may_pull(origskb, 2 + rtap_space)) {
- 		dev_kfree_skb(origskb);
- 		return NULL;
- 	}
- 
--	only_monitor = should_drop_frame(origskb, present_fcs_len,
--					 rtap_vendor_space);
-+	only_monitor = should_drop_frame(origskb, present_fcs_len, rtap_space);
- 
- 	if (!local->monitors || (status->flag & RX_FLAG_SKIP_MONITOR)) {
- 		if (only_monitor) {
-@@ -652,12 +652,11 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
- 			return NULL;
- 		}
- 
--		remove_monitor_info(origskb, present_fcs_len,
--				    rtap_vendor_space);
-+		remove_monitor_info(origskb, present_fcs_len, rtap_space);
- 		return origskb;
- 	}
- 
--	ieee80211_handle_mu_mimo_mon(monitor_sdata, origskb, rtap_vendor_space);
-+	ieee80211_handle_mu_mimo_mon(monitor_sdata, origskb, rtap_space);
- 
- 	list_for_each_entry_rcu(sdata, &local->mon_list, u.mntr.list) {
- 		bool last_monitor = list_is_last(&sdata->u.mntr.list,
-@@ -665,8 +664,7 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
- 
- 		if (!monskb)
- 			monskb = ieee80211_make_monitor_skb(local, &origskb,
--							    rate,
--							    rtap_vendor_space,
-+							    rate, rtap_space,
- 							    only_monitor &&
- 							    last_monitor);
- 
-@@ -698,7 +696,7 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
- 	if (!origskb)
- 		return NULL;
- 
--	remove_monitor_info(origskb, present_fcs_len, rtap_vendor_space);
-+	remove_monitor_info(origskb, present_fcs_len, rtap_space);
- 	return origskb;
- }
- 
--- 
-2.17.0
+2018-04-10 21:57 GMT+02:00 solsTiCe d'Hiver <solstice.dhiver@gmail.com>:
+> hi.
+>
+> I am trying to capture on 2 channels at the same time with 2 cards.
+>
+> One card is TP-Link TL-W722N v1 using ath9k_htc and the second one is
+> an Alfa AWUS051NH v2 using rt2800usb.
+>
+> I have tried this, first, on raspberry pi 0 W  using archlinux-arm and
+> reproduced the issue on a netbook using archlinux x64 too using latest
+> kernel and drivers. (seems to happen on ubuntu 17.10 on dell laptop
+> too)
+>
+> So when the Alfa card is used alone using the default reg dom FR, one
+> can change to 112 channel for example (using iw dev wlan1 set channel
+> 112)
+>
+> But once the tp-link is plugged in, reg dom seems to become CN and one
+> can't change the alfa card to 112 channel.
+>
+> iw reg get output change from
+> global
+> country FR: DFS-ETSI
+> (2402 - 2482 @ 40), (N/A, 20), (N/A)
+> (5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW
+> (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW
+> (5490 - 5710 @ 160), (N/A, 27), (0 ms), DFS
+> (57000 - 66000 @ 2160), (N/A, 40), (N/A)
+> to
+> global
+> country 98: DFS-UNSET
+> (2402 - 2482 @ 40), (N/A, 20), (N/A)
+> (5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW
+> (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW
+> (57240 - 59400 @ 2160), (N/A, 28), (N/A)
+> (59400 - 63720 @ 2160), (N/A, 40), (N/A)
+> (63720 - 65880 @ 2160), (N/A, 28), (N/A)
+>
+> phy#2
+> country CN: DFS-FCC
+> (2402 - 2482 @ 40), (N/A, 20), (N/A)
+> (5170 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
+> (5250 - 5330 @ 80), (N/A, 23), (0 ms), DFS, AUTO-BW
+> (5735 - 5835 @ 80), (N/A, 30), (N/A)
+> (57240 - 59400 @ 2160), (N/A, 28), (N/A)
+> (59400 - 63720 @ 2160), (N/A, 44), (N/A)
+> (63720 - 65880 @ 2160), (N/A, 28), (N/A)
+>
+>
+> and all the channels above 100 are marked as disabled in iw list
+> output (after the plug not before) for the alfa card
+>
+> It is as if the TL-WN722N has CN reg dom hard-coded and that switches
+> it globally to CN too ???
+>
+> Is this a bug in ath9k_htc ? a bug with the TL-WN722N card ??
