@@ -1,154 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:36837 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754808AbeDCHyI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Apr 2018 03:54:08 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 05/17] rtlwifi: halmac: describe number and size of chip functions
-Date: Tue, 3 Apr 2018 15:53:20 +0800
-Message-ID: <20180403075332.3344-6-pkshih@realtek.com> (sfid-20180403_100506_877476_122CFE9A)
-In-Reply-To: <20180403075332.3344-1-pkshih@realtek.com>
-References: <20180403075332.3344-1-pkshih@realtek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.bugwerft.de ([46.23.86.59]:51580 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752125AbeDLMXn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Apr 2018 08:23:43 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
+        rfried@codeaurora.org, bjorn.andersson@linaro.org,
+        loic.poulain@linaro.org, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH v2] wcn36xx: pass correct BSS index when deleting BSS keys
+Date: Thu, 12 Apr 2018 14:23:30 +0200
+Message-Id: <20180412122330.6916-1-daniel@zonque.org> (sfid-20180412_142347_794319_4182DFE2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+The firmware message to delete BSS keys expects a BSS index to be passed.
+This field is currently hard-coded to 0. Fix this by passing in the index
+we received from the firmware when the BSS was configured.
 
-The number and size of chip fucntions are different, such as TX/RX FIFO
-size, efuse size, etc. So they are defined in an individual file.
+The encryption type in that message also needs to be set to what was used
+when the key was set, so the assignment of vif_priv->encrypt_type is now
+done after the firmware command was sent. This reportedly fixes the
+following error in AP mode:
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+  wcn36xx: ERROR hal_remove_bsskey response failed err=6
+
+Also, AFAIU, when a BSS is deleted, the firmware apparently drops all the
+keys associated with it. Trying to remove the key explicitly afterwards
+will hence lead to the following message:
+
+  wcn36xx: ERROR hal_remove_bsskey response failed err=16
+
+This is now suppressed with an extra check for the BSS index validity.
+
+Signed-off-by: Daniel Mack <daniel@zonque.org>
 ---
- .../halmac_88xx/halmac_8822b/halmac_8822b_cfg.h    | 68 ++++++++++++++++++++++
- .../rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h   | 40 +++++++++++++
- 2 files changed, 108 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_cfg.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h
+v2: mention the vif_priv->encrypt_type move in the commit log.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_cfg.h b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_cfg.h
-new file mode 100644
-index 000000000000..f6ed7b44549c
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_cfg.h
-@@ -0,0 +1,68 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2016 - 2018 Realtek Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-+ * more details.
-+ *
-+ ******************************************************************************/
+ drivers/net/wireless/ath/wcn36xx/main.c | 10 +++++++---
+ drivers/net/wireless/ath/wcn36xx/smd.c  |  6 ++++--
+ drivers/net/wireless/ath/wcn36xx/smd.h  |  2 ++
+ 3 files changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 0bc9283e7d8d..1b17c35a7944 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -547,6 +547,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		} else {
+ 			wcn36xx_smd_set_bsskey(wcn,
+ 				vif_priv->encrypt_type,
++				vif_priv->bss_index,
+ 				key_conf->keyidx,
+ 				key_conf->keylen,
+ 				key);
+@@ -564,10 +565,13 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		break;
+ 	case DISABLE_KEY:
+ 		if (!(IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags)) {
++			if (vif_priv->bss_index != WCN36XX_HAL_BSS_INVALID_IDX)
++				wcn36xx_smd_remove_bsskey(wcn,
++					vif_priv->encrypt_type,
++					vif_priv->bss_index,
++					key_conf->keyidx);
 +
-+#ifndef _HALMAC_8822B_CFG_H_
-+#define _HALMAC_8822B_CFG_H_
-+
-+#include "../halmac_88xx_cfg.h"
-+
-+#define TX_FIFO_SIZE_8822B	262144
-+#define RX_FIFO_SIZE_8822B	24576
-+#define TRX_SHARE_SIZE_8822B	65536
-+
-+#define RX_DESC_DUMMY_SIZE_8822B	72 /* 8 * 9 Bytes */
-+#define RX_FIFO_EXPANDING_MODE_PKT_SIZE_MAX_8822B	80 /* 8 Byte alignment*/
-+
-+/* should be 8 Byte alignment*/
-+#if (HALMAC_RX_FIFO_EXPANDING_MODE_PKT_SIZE <= \
-+	RX_FIFO_EXPANDING_MODE_PKT_SIZE_MAX_8822B)
-+#define RX_FIFO_EXPANDING_UNIT_8822B	(RX_DESC_SIZE_88XX + \
-+	RX_DESC_DUMMY_SIZE_8822B + HALMAC_RX_FIFO_EXPANDING_MODE_PKT_SIZE)
-+#else
-+#define RX_FIFO_EXPANDING_UNIT_8822B (RX_DESC_SIZE_88XX + \
-+	RX_DESC_DUMMY_SIZE_8822B + RX_FIFO_EXPANDING_MODE_PKT_SIZE_MAX_8822B)
-+#endif
-+
-+#define TX_FIFO_SIZE_LA_8822B	(TX_FIFO_SIZE_8822B >>  1)
-+#define TX_FIFO_SIZE_RX_EXPAND_1BLK_8822B	\
-+		(TX_FIFO_SIZE_8822B - TRX_SHARE_SIZE_8822B)
-+#define RX_FIFO_SIZE_RX_EXPAND_1BLK_8822B	\
-+		((((RX_FIFO_EXPANDING_UNIT_8822B << 8) - 1) >> 10) << 10)
-+#define TX_FIFO_SIZE_RX_EXPAND_2BLK_8822B	\
-+		(TX_FIFO_SIZE_8822B - (2 * TRX_SHARE_SIZE_8822B))
-+#define RX_FIFO_SIZE_RX_EXPAND_2BLK_8822B	\
-+		(RX_FIFO_SIZE_8822B +  (2 * TRX_SHARE_SIZE_8822B))
-+#define TX_FIFO_SIZE_RX_EXPAND_3BLK_8822B	\
-+		(TX_FIFO_SIZE_8822B - (3 * TRX_SHARE_SIZE_8822B))
-+#define RX_FIFO_SIZE_RX_EXPAND_3BLK_8822B	\
-+		(RX_FIFO_SIZE_8822B +  (3 * TRX_SHARE_SIZE_8822B))
-+
-+#define EFUSE_SIZE_8822B		1024
-+#define EEPROM_SIZE_8822B		768
-+#define BT_EFUSE_SIZE_8822B		128
-+
-+#define SEC_CAM_NUM_8822B		64
-+
-+#define OQT_ENTRY_AC_8822B		32
-+#define OQT_ENTRY_NOAC_8822B		32
-+#define MACID_MAX_8822B			128
-+
-+#define WLAN_FW_IRAM_MAX_SIZE_8822B	196608
-+#define WLAN_FW_DRAM_MAX_SIZE_8822B	49152
-+#define WLAN_FW_ERAM_MAX_SIZE_8822B	0
-+#define WLAN_FW_MAX_SIZE_8822B		(WLAN_FW_IRAM_MAX_SIZE_8822B + \
-+	WLAN_FW_DRAM_MAX_SIZE_8822B + WLAN_FW_ERAM_MAX_SIZE_8822B)
-+
-+#endif
-diff --git a/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h
-new file mode 100644
-index 000000000000..22514ef4680d
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h
-@@ -0,0 +1,40 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2016 - 2018 Realtek Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-+ * more details.
-+ *
-+ ******************************************************************************/
-+
-+#ifndef _HALMAC_88XX_CFG_H_
-+#define _HALMAC_88XX_CFG_H_
-+
-+#include "../halmac_api.h"
-+
-+#define TX_PAGE_SIZE_88XX		128
-+#define TX_PAGE_SIZE_SHIFT_88XX		7 /* 128 = 2^7 */
-+#define TX_ALIGN_SIZE_88XX		8
-+#define SDIO_TX_MAX_SIZE_88XX		31744
-+#define RX_BUF_FW_88XX			12288
-+
-+#define TX_DESC_SIZE_88XX		48
-+#define RX_DESC_SIZE_88XX		24
-+
-+#define H2C_PKT_SIZE_88XX		32 /* Only support 32 byte packet now */
-+#define H2C_PKT_HDR_SIZE_88XX		8
-+#define C2H_DATA_OFFSET_88XX		10
-+#define C2H_PKT_BUF_88XX		256
-+
-+/* HW memory address */
-+#define OCPBASE_TXBUF_88XX		0x18780000
-+#define OCPBASE_DMEM_88XX		0x00200000
-+#define OCPBASE_EMEM_88XX		0x00100000
-+
-+#endif
+ 			vif_priv->encrypt_type = WCN36XX_HAL_ED_NONE;
+-			wcn36xx_smd_remove_bsskey(wcn,
+-				vif_priv->encrypt_type,
+-				key_conf->keyidx);
+ 		} else {
+ 			sta_priv->is_data_encrypted = false;
+ 			/* do not remove key if disassociated */
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 9827a1e1124b..297a785d0785 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -1636,6 +1636,7 @@ int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
+ 
+ int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
+ 			   enum ani_ed_type enc_type,
++			   u8 bssidx,
+ 			   u8 keyidx,
+ 			   u8 keylen,
+ 			   u8 *key)
+@@ -1645,7 +1646,7 @@ int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
+ 
+ 	mutex_lock(&wcn->hal_mutex);
+ 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SET_BSSKEY_REQ);
+-	msg_body.bss_idx = 0;
++	msg_body.bss_idx = bssidx;
+ 	msg_body.enc_type = enc_type;
+ 	msg_body.num_keys = 1;
+ 	msg_body.keys[0].id = keyidx;
+@@ -1706,6 +1707,7 @@ int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
+ 
+ int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
+ 			      enum ani_ed_type enc_type,
++			      u8 bssidx,
+ 			      u8 keyidx)
+ {
+ 	struct wcn36xx_hal_remove_bss_key_req_msg msg_body;
+@@ -1713,7 +1715,7 @@ int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
+ 
+ 	mutex_lock(&wcn->hal_mutex);
+ 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_RMV_BSSKEY_REQ);
+-	msg_body.bss_idx = 0;
++	msg_body.bss_idx = bssidx;
+ 	msg_body.enc_type = enc_type;
+ 	msg_body.key_id = keyidx;
+ 
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
+index 8076edf40ac8..61bb8d43138c 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.h
++++ b/drivers/net/wireless/ath/wcn36xx/smd.h
+@@ -97,6 +97,7 @@ int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
+ 			   u8 sta_index);
+ int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
+ 			   enum ani_ed_type enc_type,
++			   u8 bssidx,
+ 			   u8 keyidx,
+ 			   u8 keylen,
+ 			   u8 *key);
+@@ -106,6 +107,7 @@ int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
+ 			      u8 sta_index);
+ int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
+ 			      enum ani_ed_type enc_type,
++			      u8 bssidx,
+ 			      u8 keyidx);
+ int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif);
+ int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif);
 -- 
-2.15.1
+2.14.3
