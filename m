@@ -1,50 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33374 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750882AbeD3K1V (ORCPT
+Received: from mail-lf0-f48.google.com ([209.85.215.48]:41181 "EHLO
+        mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752622AbeDLREd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Apr 2018 06:27:21 -0400
-Content-Type: text/plain; charset="utf-8"
+        Thu, 12 Apr 2018 13:04:33 -0400
+Received: by mail-lf0-f48.google.com with SMTP id o102-v6so8726919lfg.8
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2018 10:04:33 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: net: wireless: b43legacy: Replace GFP_ATOMIC with GFP_KERNEL in
- dma_tx_fragment
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1523368459-32128-1-git-send-email-baijiaju1990@gmail.com>
-References: <1523368459-32128-1-git-send-email-baijiaju1990@gmail.com>
-To: Jia-Ju Bai <baijiaju1990@gmail.com>
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-        b43-dev@lists.infradead.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
-Message-Id: <20180430102720.D5FC760710@smtp.codeaurora.org> (sfid-20180430_122734_424121_1B339CCB)
-Date: Mon, 30 Apr 2018 10:27:20 +0000 (UTC)
+References: <20180411184156.167978-1-rkir@google.com> <87bmepjbna.fsf@purkki.adurom.net>
+In-Reply-To: <87bmepjbna.fsf@purkki.adurom.net>
+From: Roman Kiryanov <rkir@google.com>
+Date: Thu, 12 Apr 2018 17:04:21 +0000
+Message-ID: <CAOGAQeqSha9ZS6fMNJjd8iY+=up+sQgTKN8FmffCpuWZih2Q=A@mail.gmail.com> (sfid-20180412_190437_174616_29042D22)
+Subject: Re: [PATCH] ANDROID: mac80211_hwsim: support/ignore power state changes
+To: kvalo@codeaurora.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        Bjoern Johansson <bjoernj@google.com>,
+        Lingfeng Yang <lfy@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jia-Ju Bai <baijiaju1990@gmail.com> wrote:
+Hi Kalle,
 
-> dma_tx_fragment() is never called in atomic context.
-> 
-> dma_tx_fragment() is only called by b43legacy_dma_tx(), which is 
-> only called by b43legacy_tx_work().
-> b43legacy_tx_work() is only set a parameter of INIT_WORK() in 
-> b43legacy_wireless_init().
-> 
-> Despite never getting called from atomic context,
-> dma_tx_fragment() calls alloc_skb() with GFP_ATOMIC,
-> which does not sleep for allocation.
-> GFP_ATOMIC is not necessary and can be replaced with GFP_KERNEL,
-> which can sleep and improve the possibility of sucessful allocation.
-> 
-> This is found by a static analysis tool named DCNS written by myself.
-> And I also manually check it.
-> 
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+thank you for reviewing our patch. I am ok with applying this patch without
+"ANDROID:" prefix. Do you want me to send an updated patch?
 
-Patch applied to wireless-drivers-next.git, thanks.
+Regards,
+Roman.
 
-6e1d8d1470b2 net: wireless: b43legacy: Replace GFP_ATOMIC with GFP_KERNEL in dma_tx_fragment
+On Wed, Apr 11, 2018 at 9:23 PM Kalle Valo <kvalo@codeaurora.org> wrote:
 
--- 
-https://patchwork.kernel.org/patch/10333217/
+> rkir@google.com writes:
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> > From: Bjoern Johansson <bjoernj@google.com>
+> >
+> > Indicate support for power state changes and handle them by calling an
+> > empty function.
+> > The important part is "ieee80211_hw_set(hw, SUPPORTS_PS);" at the
+> > bottom of the diff. Without this upper layers in the kernel will return
+an
+> > error code when trying to set the power state because the driver doesn't
+> > indicate power state support. This in turn causes VTS
+> > (Android Vendor Test Suite) failures because the WiFi HAL can't enable
+> > power saving mode. The remaining code is just there to deal with the
+> > incoming state change request.
+> >
+> > Signed-off-by: Bjoern Johansson <bjoernj@google.com>
+> > Signed-off-by: Lingfeng Yang <lfy@google.com>
+> > Signed-off-by: Roman Kiryanov <rkir@google.com>
+
+> Why the odd "ANDROID:" prefix?
+
+> --
+> Kalle Valo
