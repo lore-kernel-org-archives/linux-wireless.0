@@ -1,82 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:58019 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750841AbeDYC0w (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:50458 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752389AbeDLRLU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 22:26:52 -0400
-From: Pkshih <pkshih@realtek.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH v2 00/17] rtlwifi: halmac: Add new module halmac
-Date: Wed, 25 Apr 2018 02:26:39 +0000
-Message-ID: <1524623197.6255.2.camel@realtek.com> (sfid-20180425_042657_821083_6BD13436)
-References: <20180403075332.3344-1-pkshih@realtek.com>
-         <87muxsbkb4.fsf@purkki.adurom.net>
-In-Reply-To: <87muxsbkb4.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="utf-8"
+        Thu, 12 Apr 2018 13:11:20 -0400
+Subject: Re: second wifi card enforce CN reg dom
+To: solsTiCe d'Hiver <solstice.dhiver@gmail.com>,
+        Dan Williams <dcbw@redhat.com>
+References: <CAE4vF2fCTEmEX8i+XVpvTJ1sRYDHDLr+fYFAM2PzTQTqkCoXVQ@mail.gmail.com>
+ <CAE4vF2f2oXEvOJWDXPjmiWZTC=HOq5+xE_R64-_VvH6zc-Vw+A@mail.gmail.com>
+ <5ACF0F5A.3090301@broadcom.com>
+ <CAE4vF2ftgMPhKEUHr2rPaobM9Dtuc-B9rtbF5tWavvrwUXA7Ag@mail.gmail.com>
+ <5ACF3A28.4060303@broadcom.com>
+ <CALLGbRLJLxu92S2bYFOk9oJCLanES4Fu6e-9bh9oAupEC0Uw5w@mail.gmail.com>
+ <1517ecac1d85eb746367d9db436beca2d8f47835.camel@redhat.com>
+ <CAE4vF2fvumVELT5rScptjVC4JOqw5cqEu7yLrYZ64ci=5R6ZRQ@mail.gmail.com>
+Cc: Steve deRosier <derosier@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <9e644f38-7038-b4cf-1b68-cffd1a56a3f4@candelatech.com> (sfid-20180412_191124_154181_03242119)
+Date: Thu, 12 Apr 2018 10:11:17 -0700
 MIME-Version: 1.0
+In-Reply-To: <CAE4vF2fvumVELT5rScptjVC4JOqw5cqEu7yLrYZ64ci=5R6ZRQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDE4LTA0LTI0IGF0IDE3OjEyICswMDAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiA8
-cGtzaGloQHJlYWx0ZWsuY29tPiB3cml0ZXM6DQo+wqANCj4gPiBGcm9tOiBQaW5nLUtlIFNoaWgg
-PHBrc2hpaEByZWFsdGVrLmNvbT4NCj4gPg0KPiA+IHYyOiByZW1vdmUgaW5kaXJlY3Rpb24gdG8g
-Z2V0IGhhbG1hYyBvcHMNCj4gPsKgwqDCoMKgwqBPbmx5IHBhdGNoZXMgMS8xNyBhbmQgMTEvMTcg
-YXJlIGNoYW5nZWQuDQo+ID4NCj4gPiBQYXRjaGVzIDEvMTctMy8xNyBhcmUgYWRkZWQgc3RydWN0
-dXJlIHRvIHN1cHBvcnQgdGhpcyBtb2R1bGUuDQo+ID4gUGF0Y2hlcyA0LzE3LTE2LzE3IGFkZCBu
-ZXcgZmlsZXMuDQo+ID4gUGF0Y2ggMTcvMTcgYWRkIHRoaXMgbW9kdWxlIHRvIE1ha2VmaWxlIGFu
-ZCBLY29uZmlnLg0KPiA+DQo+ID4gUGluZy1LZSBTaGloICgxNyk6DQo+ID7CoMKgwqBydGx3aWZp
-OiBhZGQgaGFsbWFjIHN0cnVjdHVyZSB0byB3aWZpLmgNCj4gPsKgwqDCoHJ0bHdpZmk6IGFkZCBk
-ZWJ1ZyBJRCBDT01QX0hBTE1BQw0KPiA+wqDCoMKgcnRsd2lmaTogYWRkIGRtZGVmLmggdG8gc2hh
-cmUgd2l0aCBkcml2ZXIgYW5kIG90aGVyIG1vZHVsZXMNCj4gPsKgwqDCoHJ0bHdpZmk6IGhhbG1h
-YzogYWRkIG1haW4gZGVmaW5pdGlvbiB1c2VkIGJ5IGhhbG1hYw0KPiA+wqDCoMKgcnRsd2lmaTog
-aGFsbWFjOiBkZXNjcmliZSBudW1iZXIgYW5kIHNpemUgb2YgY2hpcCBmdW5jdGlvbnMNCj4gPsKg
-wqDCoHJ0bHdpZmk6IGhhbG1hYzogYWRkIGRlZmluaXRpb25zIG9mIHJlZ2lzdGVycyBhbmQgYml0
-IGZpZWxkcw0KPiA+wqDCoMKgcnRsd2lmaTogaGFsbWFjOiBhZGQgZGVmaW5pdGlvbiBvZiBUWC9S
-WCBkZXNjcmlwdG9yDQo+ID7CoMKgwqBydGx3aWZpOiBoYWxtYWM6IGFkZCBHUElPIHBpbi9waW5t
-dXggZGVmaW5pdGlvbnMNCj4gPsKgwqDCoHJ0bHdpZmk6IGhhbG1hYzogYWRkIHBvd2VyIHNlcXVl
-bmNlIHRvIHR1cm4gb24vb2ZmIHdpZmkgY2FyZA0KPiA+wqDCoMKgcnRsd2lmaTogaGFsbWFjOiBh
-Y2Nlc3MgZWZ1c2UgdGhyb3VnaCBoYWxtYWMgaGVscGVyIGZ1bmN0aW9ucw0KPiA+wqDCoMKgcnRs
-d2lmaTogaGFsbWFjOiBhZGQgZmlsZXMgdG8gaW1wbGVtZW50IGhhbG1hYyBvcHMNCj4gPsKgwqDC
-oHJ0bHdpZmk6IGhhbG1hYzogYWRkIGhhbG1hYyBpbml0L2RlaW5pdCBmdW5jdGlvbnMNCj4gPsKg
-wqDCoHJ0bHdpZmk6IGhhbG1hYzogYWRkIGZpcm13YXJlIHJlbGF0ZWQgZnVuY3Rpb25zIGFuZCBk
-ZWZpbml0aW9ucw0KPiA+wqDCoMKgcnRsd2lmaTogaGFsbWFjOiBhZGQgYnVzIGludGVyZmFjZSBj
-b21tYW5kcw0KPiA+wqDCoMKgcnRsd2lmaTogaGFsbWFjOiBhZGQgdG8gY29udHJvbCBXaUZpIG1h
-YyBmdW5jdGlvbnMgYW5kIHJlZ2lzdGVycw0KPiA+wqDCoMKgcnRsd2lmaTogaGFsbWFjOiBhZGQg
-dG8gc3VwcG9ydCBCQiBhbmQgUkYgZnVuY3Rpb25zDQo+ID7CoMKgwqBydGx3aWZpOiBhZGQgaGFs
-bWFjIHRvIE1ha2VmaWxlIGFuZCBLY29uZmlnDQo+wqANCj4gQlRXLCBJIGRvbid0IHNlZSBwYXRj
-aCA2IGluIHBhdGNod29yay4gRGlkIGl0IGdldCBsb3N0Pw0KPsKgDQo+wqDCoMKgwqDCoMKgwqBb
-djIsMDEvMTddIHJ0bHdpZmk6IGFkZCBoYWxtYWMgc3RydWN0dXJlIHRvIHdpZmkuaMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqAyMDE4LTA0LTAzIFBpbmctS2UgU2hpaCBOZXcNCj7CoMKgwqDCoMKgwqDC
-oFt2MiwwMi8xN10gcnRsd2lmaTogYWRkIGRlYnVnIElEIENPTVBfSEFMTUFDwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoDIwMTgtMDQtMDMgUGluZy1LZSBTaGloIE5ldw0KPsKgwqDC
-oMKgwqDCoMKgW3YyLDAzLzE3XSBydGx3aWZpOiBhZGQgZG1kZWYuaCB0byBzaGFyZSB3aXRoIGRy
-aXZlciBhbmQuLi4uIDIwMTgtMDQtMDMgUGluZy1LZSBTaGloIE5ldw0KPsKgwqDCoMKgwqDCoMKg
-W3YyLDA0LzE3XSBydGx3aWZpOiBoYWxtYWM6IGFkZCBtYWluIGRlZmluaXRpb24gdXNlZCBieSBo
-Li4uIDIwMTgtMDQtMDMgUGluZy1LZSBTaGloIE5ldw0KPsKgwqDCoMKgwqDCoMKgW3YyLDA1LzE3
-XSBydGx3aWZpOiBoYWxtYWM6IGRlc2NyaWJlIG51bWJlciBhbmQgc2l6ZSBvZiBjLi4uIDIwMTgt
-MDQtMDMgUGluZy1LZSBTaGloIE5ldw0KPsKgwqDCoMKgwqDCoMKgW3YyLDA3LzE3XSBydGx3aWZp
-OiBoYWxtYWM6IGFkZCBkZWZpbml0aW9uIG9mIFRYL1JYIGRlc2NyLi4uIDIwMTgtMDQtMDMgUGlu
-Zy1LZSBTaGloIE5ldw0KPsKgwqDCoMKgwqDCoMKgW3YyLDA4LzE3XSBydGx3aWZpOiBoYWxtYWM6
-IGFkZCBHUElPIHBpbi9waW5tdXggZGVmaW5pdGlvbnPCoMKgMjAxOC0wNC0wMyBQaW5nLUtlIFNo
-aWggTmV3DQo+wqDCoMKgwqDCoMKgwqBbdjIsMDkvMTddIHJ0bHdpZmk6IGhhbG1hYzogYWRkIHBv
-d2VyIHNlcXVlbmNlIHRvIHR1cm4gb24uLi4gMjAxOC0wNC0wMyBQaW5nLUtlIFNoaWggTmV3DQo+
-wqDCoMKgwqDCoMKgwqBbdjIsMTAvMTddIHJ0bHdpZmk6IGhhbG1hYzogYWNjZXNzIGVmdXNlIHRo
-cm91Z2ggaGFsbWFjIGguLi4gMjAxOC0wNC0wMyBQaW5nLUtlIFNoaWggTmV3DQo+wqDCoMKgwqDC
-oMKgwqBbdjIsMTEvMTddIHJ0bHdpZmk6IGhhbG1hYzogYWRkIGZpbGVzIHRvIGltcGxlbWVudCBo
-YWxtYWMuLi4gMjAxOC0wNC0wMyBQaW5nLUtlIFNoaWggTmV3DQo+wqDCoMKgwqDCoMKgwqBbdjIs
-MTIvMTddIHJ0bHdpZmk6IGhhbG1hYzogYWRkIGhhbG1hYyBpbml0L2RlaW5pdCBmdW5jdGlvbnMg
-MjAxOC0wNC0wMyBQaW5nLUtlIFNoaWggTmV3DQo+wqDCoMKgwqDCoMKgwqBbdjIsMTMvMTddIHJ0
-bHdpZmk6IGhhbG1hYzogYWRkIGZpcm13YXJlIHJlbGF0ZWQgZnVuY3Rpb24uLi4gMjAxOC0wNC0w
-MyBQaW5nLUtlIFNoaWggTmV3DQo+wqDCoMKgwqDCoMKgwqBbdjIsMTQvMTddIHJ0bHdpZmk6IGhh
-bG1hYzogYWRkIGJ1cyBpbnRlcmZhY2UgY29tbWFuZHPCoMKgwqDCoMKgwqDCoDIwMTgtMDQtMDMg
-UGluZy1LZSBTaGloIE5ldw0KPsKgwqDCoMKgwqDCoMKgW3YyLDE1LzE3XSBydGx3aWZpOiBoYWxt
-YWM6IGFkZCB0byBjb250cm9sIFdpRmkgbWFjIGZ1bmN0Li4uIDIwMTgtMDQtMDMgUGluZy1LZSBT
-aGloIE5ldw0KPsKgwqDCoMKgwqDCoMKgW3YyLDE2LzE3XSBydGx3aWZpOiBoYWxtYWM6IGFkZCB0
-byBzdXBwb3J0IEJCIGFuZCBSRiBmdW5jLi4uIDIwMTgtMDQtMDMgUGluZy1LZSBTaGloIE5ldw0K
-PsKgwqDCoMKgwqDCoMKgW3YyLDE3LzE3XSBydGx3aWZpOiBhZGQgaGFsbWFjIHRvIE1ha2VmaWxl
-IGFuZCBLY29uZmlnwqDCoMKgwqDCoMKgwqAyMDE4LTA0LTAzIFBpbmctS2UgU2hpaCBOZXcNCj7C
-oA0KDQpQYXRjaCAwNi8xNyBpbiB2MiBpcyB0b28gYmlnLCBzbyBtYWlsIHNlcnZlciBibG9ja3Mg
-aXQuDQpJIHNwbGl0IHRoZSBwYXRjaCBpbnRvIHRocmVlIHBhdGNoZXMsIGFuZCByZXNlbmQgdjMu
-DQoNClRoYW5rcw0KUEsNCg==
+On 04/12/2018 10:05 AM, solsTiCe d'Hiver wrote:
+> Hi.
+>
+> I thought I made myself clear.
+> I leave in France. My system(s) is/are set up to use FR as default
+> regulatory domain.
+>
+> But when I plug in that tp-link card, I am restricted to use CN
+> regulatory domain. Why am I the only one to see this as a problem ?
+>
+> I know that one can only have one regdom defined on the system. I have
+> set it up myself. So why is it changed behind my back by some card or
+> whatever ?
+> Like I said, I am left with the option, to disable crda, or to use 2
+> systems, one for each card !
+>
+> Or may be try Windows when this is not messed up like that ??? Well,
+> it's not on Windows that I will be able to use monitor mode, anyway.
+
+You can hack the ath9k-htc driver to allow over-riding the regdom
+of the NIC, but that requires an out of tree patch and is probably
+against the law in your country since the NIC may then not be able to
+pass the regulatory requirements.
+
+Thanks,
+Ben
+
+>
+> Never mind.
+>
+> 2018-04-12 17:52 GMT+02:00 Dan Williams <dcbw@redhat.com>:
+>> On Thu, 2018-04-12 at 08:18 -0700, Steve deRosier wrote:
+>>> On Thu, Apr 12, 2018 at 3:51 AM, Arend van Spriel
+>>> <arend.vanspriel@broadcom.com> wrote:
+>>>> On 4/12/2018 10:42 AM, solsTiCe d'Hiver wrote:
+>>>>>
+>>>>> Hi.
+>>>>>
+>>>>> This is beyond my comprehension that you could assert this is a
+>>>>> non issue.
+>>>>
+>>>>
+>>>> Well. I am just saying that it is by design. There is no way for
+>>>> the
+>>>> regulatory code to determine where you and your hardware actually
+>>>> reside so
+>>>> instead it takes a conservative approach.
+>>>>
+>>>
+>>> To say it another way: mixing regulatory domains on your host system
+>>> should result in a _smaller_ set of channels - ie only those channels
+>>> at the intersection of the two.
+>>>
+>>> And another wrinkle to consider - one of the 802.11 amendments (can't
+>>> remember which one) actually causes the radio to listen to the
+>>
+>> 802.11d I believe, from the early 2000s.
+>>
+>> Dan
+>>
+>>> beacons
+>>> around it, determine what the local regulatory domain is based on the
+>>> beacons it hears, and then lock to that regulatory domain. It's
+>>> possible for that information to be propagated up to the card's host
+>>> and the regulatory domain then would affect both cards. That's how
+>>> it's supposed to work, though I don't factually know Linux does this
+>>> in all cases.  Could it be you're somewhere where CN is the local
+>>> regulatory domain and the TL-WN722N has this feature?
+>>>
+>>> In any case, as Arend points out, despite the hand-wringing that
+>>> regulatory domains cause users trying to do something particular,
+>>> between certain rules and regulations and certain manufacturers bad
+>>> interpretations and implementations around it, there's little that
+>>> can
+>>> be done about it. Fact is, your radio must comply to whatever
+>>> regulatory domain you are in, otherwise it's breaking the rules. And
+>>> people breaking the regulatory rules is part of what's gotten
+>>> governments to pass even worse (for us OSS guys) laws that tighten
+>>> those rules down further.
+>>>
+>>> You asked who to contact. Its not the LKML - it's your relevant
+>>> government body. And certain manufacturers who improperly interpret
+>>> said rules because it's easier for them.
+>>>
+>>> - Steve
+>>>
+>>> --
+>>> Steve deRosier
+>>> Cal-Sierra Consulting LLC
+>>> https://www.cal-sierra.com/
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
