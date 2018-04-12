@@ -1,37 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40496 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751633AbeDIP7Y (ORCPT
+Received: from mail-it0-f44.google.com ([209.85.214.44]:33847 "EHLO
+        mail-it0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752389AbeDLRZq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Apr 2018 11:59:24 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] brcmfmac: fix firmware request processing if nvram load fails
-References: <1522743495-13004-1-git-send-email-arend.vanspriel@broadcom.com>
-Date: Mon, 09 Apr 2018 18:59:20 +0300
-In-Reply-To: <1522743495-13004-1-git-send-email-arend.vanspriel@broadcom.com>
-        (Arend van Spriel's message of "Tue, 3 Apr 2018 10:18:15 +0200")
-Message-ID: <87y3hwjrqf.fsf@purkki.adurom.net> (sfid-20180409_175928_160720_29CA8CAB)
+        Thu, 12 Apr 2018 13:25:46 -0400
+Received: by mail-it0-f44.google.com with SMTP id t192-v6so2998015itc.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2018 10:25:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9e644f38-7038-b4cf-1b68-cffd1a56a3f4@candelatech.com>
+References: <CAE4vF2fCTEmEX8i+XVpvTJ1sRYDHDLr+fYFAM2PzTQTqkCoXVQ@mail.gmail.com>
+ <CAE4vF2f2oXEvOJWDXPjmiWZTC=HOq5+xE_R64-_VvH6zc-Vw+A@mail.gmail.com>
+ <5ACF0F5A.3090301@broadcom.com> <CAE4vF2ftgMPhKEUHr2rPaobM9Dtuc-B9rtbF5tWavvrwUXA7Ag@mail.gmail.com>
+ <5ACF3A28.4060303@broadcom.com> <CALLGbRLJLxu92S2bYFOk9oJCLanES4Fu6e-9bh9oAupEC0Uw5w@mail.gmail.com>
+ <1517ecac1d85eb746367d9db436beca2d8f47835.camel@redhat.com>
+ <CAE4vF2fvumVELT5rScptjVC4JOqw5cqEu7yLrYZ64ci=5R6ZRQ@mail.gmail.com> <9e644f38-7038-b4cf-1b68-cffd1a56a3f4@candelatech.com>
+From: "solsTiCe d'Hiver" <solstice.dhiver@gmail.com>
+Date: Thu, 12 Apr 2018 19:25:45 +0200
+Message-ID: <CAE4vF2cjsQAW+jLF9Dxbqt1Bthmj5yXP-kVz17w__nk9=kuRog@mail.gmail.com> (sfid-20180412_192550_646506_7AC40DB2)
+Subject: Re: second wifi card enforce CN reg dom
+To: Ben Greear <greearb@candelatech.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+        Steve deRosier <derosier@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+It's the second time that you (Ben and Steve) are implying that I
+might break the law.
 
-> When nvram loading fails a double free occurred. Fix this and reorg the
-> code a little.
+But why are you saying that ? I am not gonna repeat myself again.
+
+And for the patch, it is also implied that I am able to write one.
+
+2018-04-12 19:11 GMT+02:00 Ben Greear <greearb@candelatech.com>:
+> On 04/12/2018 10:05 AM, solsTiCe d'Hiver wrote:
+>>
+>> Hi.
+>>
+>> I thought I made myself clear.
+>> I leave in France. My system(s) is/are set up to use FR as default
+>> regulatory domain.
+>>
+>> But when I plug in that tp-link card, I am restricted to use CN
+>> regulatory domain. Why am I the only one to see this as a problem ?
+>>
+>> I know that one can only have one regdom defined on the system. I have
+>> set it up myself. So why is it changed behind my back by some card or
+>> whatever ?
+>> Like I said, I am left with the option, to disable crda, or to use 2
+>> systems, one for each card !
+>>
+>> Or may be try Windows when this is not messed up like that ??? Well,
+>> it's not on Windows that I will be able to use monitor mode, anyway.
 >
-> Fixes: commit d09ae51a4b67 ("brcmfmac: pass struct in brcmf_fw_get_firmwares()")
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-
-Applied to wireless-drivers, thanks.
-
-0b5c0305e57c brcmfmac: fix firmware request processing if nvram load fails
-
-(My script failed so sending this mail manually)
-
--- 
-Kalle Valo
+>
+> You can hack the ath9k-htc driver to allow over-riding the regdom
+> of the NIC, but that requires an out of tree patch and is probably
+> against the law in your country since the NIC may then not be able to
+> pass the regulatory requirements.
+>
+> Thanks,
+> Ben
+>
+>
+>>
+>> Never mind.
+>>
+>> 2018-04-12 17:52 GMT+02:00 Dan Williams <dcbw@redhat.com>:
+>>>
+>>> On Thu, 2018-04-12 at 08:18 -0700, Steve deRosier wrote:
+>>>>
+>>>> On Thu, Apr 12, 2018 at 3:51 AM, Arend van Spriel
+>>>> <arend.vanspriel@broadcom.com> wrote:
+>>>>>
+>>>>> On 4/12/2018 10:42 AM, solsTiCe d'Hiver wrote:
+>>>>>>
+>>>>>>
+>>>>>> Hi.
+>>>>>>
+>>>>>> This is beyond my comprehension that you could assert this is a
+>>>>>> non issue.
+>>>>>
+>>>>>
+>>>>>
+>>>>> Well. I am just saying that it is by design. There is no way for
+>>>>> the
+>>>>> regulatory code to determine where you and your hardware actually
+>>>>> reside so
+>>>>> instead it takes a conservative approach.
+>>>>>
+>>>>
+>>>> To say it another way: mixing regulatory domains on your host system
+>>>> should result in a _smaller_ set of channels - ie only those channels
+>>>> at the intersection of the two.
+>>>>
+>>>> And another wrinkle to consider - one of the 802.11 amendments (can't
+>>>> remember which one) actually causes the radio to listen to the
+>>>
+>>>
+>>> 802.11d I believe, from the early 2000s.
+>>>
+>>> Dan
+>>>
+>>>> beacons
+>>>> around it, determine what the local regulatory domain is based on the
+>>>> beacons it hears, and then lock to that regulatory domain. It's
+>>>> possible for that information to be propagated up to the card's host
+>>>> and the regulatory domain then would affect both cards. That's how
+>>>> it's supposed to work, though I don't factually know Linux does this
+>>>> in all cases.  Could it be you're somewhere where CN is the local
+>>>> regulatory domain and the TL-WN722N has this feature?
+>>>>
+>>>> In any case, as Arend points out, despite the hand-wringing that
+>>>> regulatory domains cause users trying to do something particular,
+>>>> between certain rules and regulations and certain manufacturers bad
+>>>> interpretations and implementations around it, there's little that
+>>>> can
+>>>> be done about it. Fact is, your radio must comply to whatever
+>>>> regulatory domain you are in, otherwise it's breaking the rules. And
+>>>> people breaking the regulatory rules is part of what's gotten
+>>>> governments to pass even worse (for us OSS guys) laws that tighten
+>>>> those rules down further.
+>>>>
+>>>> You asked who to contact. Its not the LKML - it's your relevant
+>>>> government body. And certain manufacturers who improperly interpret
+>>>> said rules because it's easier for them.
+>>>>
+>>>> - Steve
+>>>>
+>>>> --
+>>>> Steve deRosier
+>>>> Cal-Sierra Consulting LLC
+>>>> https://www.cal-sierra.com/
+>>
+>>
+>
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+>
