@@ -1,130 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39478 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754735AbeDMMnq (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:23196 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752927AbeDLIJC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Apr 2018 08:43:46 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Apr 2018 15:42:54 +0300
-Message-Id: <20180413124256.21769-24-luca@coelho.fi> (sfid-20180413_144349_922426_F24EA10A)
-In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
-References: <20180413124256.21769-1-luca@coelho.fi>
-Subject: [PATCH 23/25] iwlwifi: remove upper case letters in sku_capa_band_*_enable
+        Thu, 12 Apr 2018 04:09:02 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
+Subject: [PATCH 05/10] wil6210: change reply_size arg to u16 in wmi_call
+Date: Thu, 12 Apr 2018 11:08:41 +0300
+Message-Id: <1523520526-24997-6-git-send-email-merez@codeaurora.org> (sfid-20180412_100915_460710_8C459CF5)
+In-Reply-To: <1523520526-24997-1-git-send-email-merez@codeaurora.org>
+References: <1523520526-24997-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Lior David <liord@codeaurora.org>
 
-The sku_capa_band_24GHz_enable and sku_capa_band_52GHz_enable symbols
-cause checkpatch to complain whenever we use them.  To prevent this,
-convert them to all lower case.
+Change the type of the argument reply_size from u8 to
+u16 in order to support reply sizes > 255 bytes.
+The driver already supports u16 reply size in all
+other places, this was the only missing change.
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Lior David <liord@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/intel/iwlwifi/dvm/main.c         | 8 ++++----
- drivers/net/wireless/intel/iwlwifi/fw/nvm.c           | 4 ++--
- drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c | 4 ++--
- drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h | 4 ++--
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c    | 6 +++---
- 5 files changed, 13 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/wil6210/wil6210.h | 2 +-
+ drivers/net/wireless/ath/wil6210/wmi.c     | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/main.c b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-index e68254e12764..030482b357a3 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-@@ -1200,16 +1200,16 @@ static int iwl_eeprom_init_hw_params(struct iwl_priv *priv)
- 		return -EINVAL;
- 	}
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index c765ff2..c81fe1d 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -987,7 +987,7 @@ int wmi_read_hdr(struct wil6210_priv *wil, __le32 ptr,
+ int wmi_send(struct wil6210_priv *wil, u16 cmdid, u8 mid, void *buf, u16 len);
+ void wmi_recv_cmd(struct wil6210_priv *wil);
+ int wmi_call(struct wil6210_priv *wil, u16 cmdid, u8 mid, void *buf, u16 len,
+-	     u16 reply_id, void *reply, u8 reply_size, int to_msec);
++	     u16 reply_id, void *reply, u16 reply_size, int to_msec);
+ void wmi_event_worker(struct work_struct *work);
+ void wmi_event_flush(struct wil6210_priv *wil);
+ int wmi_set_ssid(struct wil6210_vif *vif, u8 ssid_len, const void *ssid);
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 9f2c21b..cdaf80d 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -1426,7 +1426,7 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
+ }
  
--	if (!data->sku_cap_11n_enable && !data->sku_cap_band_24GHz_enable &&
--	    !data->sku_cap_band_52GHz_enable) {
-+	if (!data->sku_cap_11n_enable && !data->sku_cap_band_24ghz_enable &&
-+	    !data->sku_cap_band_52ghz_enable) {
- 		IWL_ERR(priv, "Invalid device sku\n");
- 		return -EINVAL;
- 	}
- 
- 	IWL_DEBUG_INFO(priv,
- 		       "Device SKU: 24GHz %s %s, 52GHz %s %s, 11.n %s %s\n",
--		       data->sku_cap_band_24GHz_enable ? "" : "NOT", "enabled",
--		       data->sku_cap_band_52GHz_enable ? "" : "NOT", "enabled",
-+		       data->sku_cap_band_24ghz_enable ? "" : "NOT", "enabled",
-+		       data->sku_cap_band_52ghz_enable ? "" : "NOT", "enabled",
- 		       data->sku_cap_11n_enable ? "" : "NOT", "enabled");
- 
- 	priv->hw_params.tx_chains_num =
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
-index beefb89194a9..b8d88df27b18 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
-@@ -134,9 +134,9 @@ struct iwl_nvm_data *iwl_fw_get_nvm(struct iwl_fw_runtime *fwrt)
- 		!!(mac_flags & NVM_MAC_SKU_FLAGS_802_11N_ENABLED);
- 	nvm->sku_cap_11ax_enable =
- 		!!(mac_flags & NVM_MAC_SKU_FLAGS_802_11AX_ENABLED);
--	nvm->sku_cap_band_24GHz_enable =
-+	nvm->sku_cap_band_24ghz_enable =
- 		!!(mac_flags & NVM_MAC_SKU_FLAGS_BAND_2_4_ENABLED);
--	nvm->sku_cap_band_52GHz_enable =
-+	nvm->sku_cap_band_52ghz_enable =
- 		!!(mac_flags & NVM_MAC_SKU_FLAGS_BAND_5_2_ENABLED);
- 	nvm->sku_cap_mimo_disabled =
- 		!!(mac_flags & NVM_MAC_SKU_FLAGS_MIMO_DISABLED);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
-index 3199d345b427..777f5df8a0c6 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
-@@ -899,8 +899,8 @@ iwl_parse_eeprom_data(struct device *dev, const struct iwl_cfg *cfg,
- 				 EEPROM_SKU_CAP);
- 	data->sku_cap_11n_enable = sku & EEPROM_SKU_CAP_11N_ENABLE;
- 	data->sku_cap_amt_enable = sku & EEPROM_SKU_CAP_AMT_ENABLE;
--	data->sku_cap_band_24GHz_enable = sku & EEPROM_SKU_CAP_BAND_24GHZ;
--	data->sku_cap_band_52GHz_enable = sku & EEPROM_SKU_CAP_BAND_52GHZ;
-+	data->sku_cap_band_24ghz_enable = sku & EEPROM_SKU_CAP_BAND_24GHZ;
-+	data->sku_cap_band_52ghz_enable = sku & EEPROM_SKU_CAP_BAND_52GHZ;
- 	data->sku_cap_ipan_enable = sku & EEPROM_SKU_CAP_IPAN_ENABLE;
- 	if (iwlwifi_mod_params.disable_11n & IWL_DISABLE_HT_ALL)
- 		data->sku_cap_11n_enable = false;
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
-index 16bea75e82f1..8be50ed12300 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
-@@ -81,8 +81,8 @@ struct iwl_nvm_data {
- 	__le16 kelvin_voltage;
- 	__le16 xtal_calib[2];
- 
--	bool sku_cap_band_24GHz_enable;
--	bool sku_cap_band_52GHz_enable;
-+	bool sku_cap_band_24ghz_enable;
-+	bool sku_cap_band_52ghz_enable;
- 	bool sku_cap_11n_enable;
- 	bool sku_cap_11ac_enable;
- 	bool sku_cap_11ax_enable;
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 735b211364d2..a6246dc9f025 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -319,7 +319,7 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 
- 		ch_flags = __le16_to_cpup(nvm_ch_flags + ch_idx);
- 
--		if (is_5ghz && !data->sku_cap_band_52GHz_enable)
-+		if (is_5ghz && !data->sku_cap_band_52ghz_enable)
- 			continue;
- 
- 		/* workaround to disable wide channels in 5GHz */
-@@ -745,8 +745,8 @@ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 		rx_chains &= data->valid_rx_ant;
- 
- 	sku = iwl_get_sku(cfg, nvm_sw, phy_sku);
--	data->sku_cap_band_24GHz_enable = sku & NVM_SKU_CAP_BAND_24GHZ;
--	data->sku_cap_band_52GHz_enable = sku & NVM_SKU_CAP_BAND_52GHZ;
-+	data->sku_cap_band_24ghz_enable = sku & NVM_SKU_CAP_BAND_24GHZ;
-+	data->sku_cap_band_52ghz_enable = sku & NVM_SKU_CAP_BAND_52GHZ;
- 	data->sku_cap_11n_enable = sku & NVM_SKU_CAP_11N_ENABLE;
- 	if (iwlwifi_mod_params.disable_11n & IWL_DISABLE_HT_ALL)
- 		data->sku_cap_11n_enable = false;
+ int wmi_call(struct wil6210_priv *wil, u16 cmdid, u8 mid, void *buf, u16 len,
+-	     u16 reply_id, void *reply, u8 reply_size, int to_msec)
++	     u16 reply_id, void *reply, u16 reply_size, int to_msec)
+ {
+ 	int rc;
+ 	unsigned long remain;
 -- 
-2.16.3
+1.9.1
