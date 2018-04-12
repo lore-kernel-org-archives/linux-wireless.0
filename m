@@ -1,62 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f54.google.com ([209.85.213.54]:45070 "EHLO
-        mail-vk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753529AbeDVVPz (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:23199 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752498AbeDLII7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Apr 2018 17:15:55 -0400
-Received: by mail-vk0-f54.google.com with SMTP id 203so8204550vka.12
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Apr 2018 14:15:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180422.145420.1197041027922699603.davem@davemloft.net>
-References: <1524119910.3024.12.camel@sipsolutions.net> <173c5f98-36bc-2e52-1e64-3a5f89008d46@candelatech.com>
- <1524151617.3024.25.camel@sipsolutions.net> <20180422.145420.1197041027922699603.davem@davemloft.net>
-From: Roopa Prabhu <roopa@cumulusnetworks.com>
-Date: Sun, 22 Apr 2018 14:15:53 -0700
-Message-ID: <CAJieiUh8Pnu5GVSWz04WSZ5L0YVpVBmeY+H_MjhL0k6SWwbcqw@mail.gmail.com> (sfid-20180422_231605_297490_E8FF4046)
-Subject: Re: [PATCH 1/3] ethtool: Support ETHTOOL_GSTATS2 command.
-To: David Miller <davem@davemloft.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Ben Greear <greearb@candelatech.com>,
-        netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+        Thu, 12 Apr 2018 04:08:59 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Dedy Lansky <dlansky@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        Maya Erez <merez@codeaurora.org>
+Subject: [PATCH 09/10] wil6210: remove unused rx_reorder members
+Date: Thu, 12 Apr 2018 11:08:45 +0300
+Message-Id: <1523520526-24997-10-git-send-email-merez@codeaurora.org> (sfid-20180412_100923_393402_62FAD9D2)
+In-Reply-To: <1523520526-24997-1-git-send-email-merez@codeaurora.org>
+References: <1523520526-24997-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Apr 22, 2018 at 11:54 AM, David Miller <davem@davemloft.net> wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Thu, 19 Apr 2018 17:26:57 +0200
->
->> On Thu, 2018-04-19 at 08:25 -0700, Ben Greear wrote:
->>>
->>> Maybe this could be in followup patches?  It's going to touch a lot of files,
->>> and might be hell to get merged all at once, and I've never used spatch, so
->>> just maybe someone else will volunteer that part :)
->>
->> I guess you'll have to ask davem. :)
->
-> Well, first of all, I really don't like this.
->
-> The first reason is that every time I see interface foo become foo2,
-> foo3 is never far behind it.
->
-> If foo was not extensible enough such that we needed foo2, we beter
-> design the new thing with explicitly better extensibility in mind.
->
-> Furthermore, what you want here is a specific filter.  Someone else
-> will want to filter on another criteria, and the next person will
-> want yet another.
->
-> This needs to be properly generalized.
->
-> And frankly if we had moved to ethtool netlink/devlink by now, we
-> could just add a netlink attribute for filtering and not even be
-> having this conversation.
+From: Dedy Lansky <dlansky@codeaurora.org>
 
+Remove unused members from struct wil_tid_ampdu_rx
 
-+1.
+Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c    |  3 +--
+ drivers/net/wireless/ath/wil6210/rx_reorder.c |  7 +------
+ drivers/net/wireless/ath/wil6210/wil6210.h    | 10 ----------
+ 3 files changed, 2 insertions(+), 18 deletions(-)
 
-Also, the RTM_GETSTATS api was added to improve stats query efficiency
-(with filters).
- we should look at it  to see if this fits there. Keeping all stats
-queries in one place will help.
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 49d9808..aff819b 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1379,8 +1379,7 @@ static void wil_print_rxtid(struct seq_file *s, struct wil_tid_ampdu_rx *r)
+ 	u16 index = ((r->head_seq_num - r->ssn) & 0xfff) % r->buf_size;
+ 	unsigned long long drop_dup = r->drop_dup, drop_old = r->drop_old;
+ 
+-	seq_printf(s, "([%2d] %3d TU) 0x%03x [", r->buf_size, r->timeout,
+-		   r->head_seq_num);
++	seq_printf(s, "([%2d]) 0x%03x [", r->buf_size, r->head_seq_num);
+ 	for (i = 0; i < r->buf_size; i++) {
+ 		if (i == index)
+ 			seq_printf(s, "%c", r->reorder_buf[i] ? 'O' : '|');
+diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+index 14dcb06..76f8084 100644
+--- a/drivers/net/wireless/ath/wil6210/rx_reorder.c
++++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+@@ -206,7 +206,6 @@ void wil_rx_reorder(struct wil6210_priv *wil, struct sk_buff *skb)
+ 
+ 	/* put the frame in the reordering buffer */
+ 	r->reorder_buf[index] = skb;
+-	r->reorder_time[index] = jiffies;
+ 	r->stored_mpdu_num++;
+ 	wil_reorder_release(ndev, r);
+ 
+@@ -252,11 +251,8 @@ struct wil_tid_ampdu_rx *wil_tid_ampdu_rx_alloc(struct wil6210_priv *wil,
+ 
+ 	r->reorder_buf =
+ 		kcalloc(size, sizeof(struct sk_buff *), GFP_KERNEL);
+-	r->reorder_time =
+-		kcalloc(size, sizeof(unsigned long), GFP_KERNEL);
+-	if (!r->reorder_buf || !r->reorder_time) {
++	if (!r->reorder_buf) {
+ 		kfree(r->reorder_buf);
+-		kfree(r->reorder_time);
+ 		kfree(r);
+ 		return NULL;
+ 	}
+@@ -286,7 +282,6 @@ void wil_tid_ampdu_rx_free(struct wil6210_priv *wil,
+ 		kfree_skb(r->reorder_buf[i]);
+ 
+ 	kfree(r->reorder_buf);
+-	kfree(r->reorder_time);
+ 	kfree(r);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 2f77319..fe58169 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -493,38 +493,28 @@ enum { /* for wil6210_priv.status */
+  * struct tid_ampdu_rx - TID aggregation information (Rx).
+  *
+  * @reorder_buf: buffer to reorder incoming aggregated MPDUs
+- * @reorder_time: jiffies when skb was added
+- * @session_timer: check if peer keeps Tx-ing on the TID (by timeout value)
+- * @reorder_timer: releases expired frames from the reorder buffer.
+  * @last_rx: jiffies of last rx activity
+  * @head_seq_num: head sequence number in reordering buffer.
+  * @stored_mpdu_num: number of MPDUs in reordering buffer
+  * @ssn: Starting Sequence Number expected to be aggregated.
+  * @buf_size: buffer size for incoming A-MPDUs
+- * @timeout: reset timer value (in TUs).
+  * @ssn_last_drop: SSN of the last dropped frame
+  * @total: total number of processed incoming frames
+  * @drop_dup: duplicate frames dropped for this reorder buffer
+  * @drop_old: old frames dropped for this reorder buffer
+- * @dialog_token: dialog token for aggregation session
+  * @first_time: true when this buffer used 1-st time
+  */
+ struct wil_tid_ampdu_rx {
+ 	struct sk_buff **reorder_buf;
+-	unsigned long *reorder_time;
+-	struct timer_list session_timer;
+-	struct timer_list reorder_timer;
+ 	unsigned long last_rx;
+ 	u16 head_seq_num;
+ 	u16 stored_mpdu_num;
+ 	u16 ssn;
+ 	u16 buf_size;
+-	u16 timeout;
+ 	u16 ssn_last_drop;
+ 	unsigned long long total; /* frames processed */
+ 	unsigned long long drop_dup;
+ 	unsigned long long drop_old;
+-	u8 dialog_token;
+ 	bool first_time; /* is it 1-st time this buffer used? */
+ };
+ 
+-- 
+1.9.1
