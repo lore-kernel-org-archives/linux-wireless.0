@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:23196 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752882AbeDLIJA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38952 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750763AbeDLMPO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 04:09:00 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 01/10] wil6210: disable tracing config option
-Date: Thu, 12 Apr 2018 11:08:37 +0300
-Message-Id: <1523520526-24997-2-git-send-email-merez@codeaurora.org> (sfid-20180412_100904_182184_B589622F)
-In-Reply-To: <1523520526-24997-1-git-send-email-merez@codeaurora.org>
-References: <1523520526-24997-1-git-send-email-merez@codeaurora.org>
+        Thu, 12 Apr 2018 08:15:14 -0400
+From: mpubbise@qti.qualcomm.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Subject: [PATCH] ath10k: correct target assert problem due to CE5 stuck
+Date: Thu, 12 Apr 2018 17:44:59 +0530
+Message-Id: <1523535299-29282-1-git-send-email-mpubbise@qti.qualcomm.com> (sfid-20180412_141516_916913_E0FA32B1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
 
-Disable WIL6210_TRACING by default to avoid its performance overhead.
+Correct a minor bug in the commit 0628467f97b5 ("ath10k: fix
+copy engine 5 destination ring stuck") which introduced a change to fix
+firmware assert that happens when ring indices of copy engine 5 are stuck
+for a specific duration, problem with this fix is that it did not use
+ring arithmatic. As a result,firmware asserts did not go away entirely
+athough the frequency of occurrence has reduced. Using ring arithmatic
+to fix the issue.
 
-Signed-off-by: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Tested on QCA9984(fw version-10.4-3.4-00082).
+
+Fixes: 0628467f97b5 ("ath10k: fix copy engine 5 destination ring stuck)
+Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
 ---
- drivers/net/wireless/ath/wil6210/Kconfig | 2 +-
+ drivers/net/wireless/ath/ath10k/ce.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/Kconfig b/drivers/net/wireless/ath/wil6210/Kconfig
-index b448926..3548e8d 100644
---- a/drivers/net/wireless/ath/wil6210/Kconfig
-+++ b/drivers/net/wireless/ath/wil6210/Kconfig
-@@ -33,7 +33,7 @@ config WIL6210_TRACING
- 	bool "wil6210 tracing support"
- 	depends on WIL6210
- 	depends on EVENT_TRACING
--	default y
-+	default n
- 	---help---
- 	  Say Y here to enable tracepoints for the wil6210 driver
- 	  using the kernel tracing infrastructure.  Select this
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index b9def7b..6efa69e 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -615,7 +615,7 @@ void ath10k_ce_rx_update_write_idx(struct ath10k_ce_pipe *pipe, u32 nentries)
+ 	/* Prevent CE ring stuck issue that will occur when ring is full.
+ 	 * Make sure that write index is 1 less than read index.
+ 	 */
+-	if ((cur_write_idx + nentries)  == dest_ring->sw_index)
++	if (((cur_write_idx + nentries) & nentries_mask) == dest_ring->sw_index)
+ 		nentries -= 1;
+ 
+ 	write_index = CE_RING_IDX_ADD(nentries_mask, write_index, nentries);
 -- 
-1.9.1
+2.7.4
