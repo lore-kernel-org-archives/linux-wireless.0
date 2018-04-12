@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44318 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753047AbeDJObK (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:23199 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752930AbeDLIJE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Apr 2018 10:31:10 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: sdio: fix memory leak for probe allocations
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180327203144.8998-1-marcus.folkesson@gmail.com>
-References: <20180327203144.8998-1-marcus.folkesson@gmail.com>
-To: Marcus Folkesson <marcus.folkesson@gmail.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Marcus Folkesson <marcus.folkesson@gmail.com>
-Message-Id: <20180410143110.6F94B60AFB@smtp.codeaurora.org> (sfid-20180410_163136_522878_D7CF8DAD)
-Date: Tue, 10 Apr 2018 14:31:10 +0000 (UTC)
+        Thu, 12 Apr 2018 04:09:04 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Dedy Lansky <dlansky@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        Maya Erez <merez@codeaurora.org>
+Subject: [PATCH 10/10] wil6210: rate limit wil_rx_refill error
+Date: Thu, 12 Apr 2018 11:08:46 +0300
+Message-Id: <1523520526-24997-11-git-send-email-merez@codeaurora.org> (sfid-20180412_100911_513652_20CEB558)
+In-Reply-To: <1523520526-24997-1-git-send-email-merez@codeaurora.org>
+References: <1523520526-24997-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marcus Folkesson <marcus.folkesson@gmail.com> wrote:
+From: Dedy Lansky <dlansky@codeaurora.org>
 
-> These allocations are not freed upon release.
-> When on it; go for managed resources instead.
-> 
-> Signed-off-by: Marcus Folkesson <marcus.folkesson@gmail.com>
-> [kvalo: fix two checkpatch warnings]
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+wil_err inside wil_rx_refill can flood the log buffer.
+Replace it with wil_err_ratelimited.
 
-Patch applied to ath-next branch of ath.git, thanks.
+Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/txrx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-ec2c64e20257 ath10k: sdio: fix memory leak for probe allocations
-
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 411130a..b9a9fa8 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -652,8 +652,8 @@ static int wil_rx_refill(struct wil6210_priv *wil, int count)
+ 			v->swtail = next_tail) {
+ 		rc = wil_vring_alloc_skb(wil, v, v->swtail, headroom);
+ 		if (unlikely(rc)) {
+-			wil_err(wil, "Error %d in wil_rx_refill[%d]\n",
+-				rc, v->swtail);
++			wil_err_ratelimited(wil, "Error %d in rx refill[%d]\n",
++					    rc, v->swtail);
+ 			break;
+ 		}
+ 	}
 -- 
-https://patchwork.kernel.org/patch/10311597/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
