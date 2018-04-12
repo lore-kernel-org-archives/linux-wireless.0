@@ -1,58 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:45426 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751251AbeDEUxH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Apr 2018 16:53:07 -0400
-Received: by mail-pl0-f66.google.com with SMTP id v18-v6so18957809ply.12
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Apr 2018 13:53:06 -0700 (PDT)
-Date: Thu, 5 Apr 2018 13:53:36 -0700
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Loic Poulain <loic.poulain@linaro.org>
-Cc: kvalo@codeaurora.org, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org, dan.carpenter@oracle.com
-Subject: Re: [PATCH] wcn36xx: Add missing fall through comment in smd.c
-Message-ID: <20180405205336.GJ453@tuxbook-pro> (sfid-20180405_225310_801499_0D2628DC)
-References: <1522929109-23271-1-git-send-email-loic.poulain@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1522929109-23271-1-git-send-email-loic.poulain@linaro.org>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:43260 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753100AbeDLPwD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Apr 2018 11:52:03 -0400
+Message-ID: <1517ecac1d85eb746367d9db436beca2d8f47835.camel@redhat.com> (sfid-20180412_175207_026634_6F21B50F)
+Subject: Re: second wifi card enforce CN reg dom
+From: Dan Williams <dcbw@redhat.com>
+To: Steve deRosier <derosier@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: solsTiCe d'Hiver <solstice.dhiver@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 12 Apr 2018 10:52:01 -0500
+In-Reply-To: <CALLGbRLJLxu92S2bYFOk9oJCLanES4Fu6e-9bh9oAupEC0Uw5w@mail.gmail.com>
+References: <CAE4vF2fCTEmEX8i+XVpvTJ1sRYDHDLr+fYFAM2PzTQTqkCoXVQ@mail.gmail.com>
+         <CAE4vF2f2oXEvOJWDXPjmiWZTC=HOq5+xE_R64-_VvH6zc-Vw+A@mail.gmail.com>
+         <5ACF0F5A.3090301@broadcom.com>
+         <CAE4vF2ftgMPhKEUHr2rPaobM9Dtuc-B9rtbF5tWavvrwUXA7Ag@mail.gmail.com>
+         <5ACF3A28.4060303@broadcom.com>
+         <CALLGbRLJLxu92S2bYFOk9oJCLanES4Fu6e-9bh9oAupEC0Uw5w@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu 05 Apr 04:51 PDT 2018, Loic Poulain wrote:
-
-> This prevents GCC warning.
+On Thu, 2018-04-12 at 08:18 -0700, Steve deRosier wrote:
+> On Thu, Apr 12, 2018 at 3:51 AM, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+> > On 4/12/2018 10:42 AM, solsTiCe d'Hiver wrote:
+> > > 
+> > > Hi.
+> > > 
+> > > This is beyond my comprehension that you could assert this is a
+> > > non issue.
+> > 
+> > 
+> > Well. I am just saying that it is by design. There is no way for
+> > the
+> > regulatory code to determine where you and your hardware actually
+> > reside so
+> > instead it takes a conservative approach.
+> > 
 > 
-
-Acked-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-
-Regards,
-Bjorn
-
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
-> ---
->  drivers/net/wireless/ath/wcn36xx/smd.c | 1 +
->  1 file changed, 1 insertion(+)
+> To say it another way: mixing regulatory domains on your host system
+> should result in a _smaller_ set of channels - ie only those channels
+> at the intersection of the two.
 > 
-> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-> index 7cc2928..7b79e0b 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-> @@ -2135,6 +2135,7 @@ static int wcn36xx_smd_hw_scan_ind(struct wcn36xx *wcn, void *buf, size_t len)
->  	switch (rsp->type) {
->  	case WCN36XX_HAL_SCAN_IND_FAILED:
->  		scan_info.aborted = true;
-> +		/* fall through */
->  	case WCN36XX_HAL_SCAN_IND_COMPLETED:
->  		mutex_lock(&wcn->scan_lock);
->  		wcn->scan_req = NULL;
-> -- 
-> 2.7.4
+> And another wrinkle to consider - one of the 802.11 amendments (can't
+> remember which one) actually causes the radio to listen to the 
+
+802.11d I believe, from the early 2000s.
+
+Dan
+
+> beacons
+> around it, determine what the local regulatory domain is based on the
+> beacons it hears, and then lock to that regulatory domain. It's
+> possible for that information to be propagated up to the card's host
+> and the regulatory domain then would affect both cards. That's how
+> it's supposed to work, though I don't factually know Linux does this
+> in all cases.  Could it be you're somewhere where CN is the local
+> regulatory domain and the TL-WN722N has this feature?
 > 
+> In any case, as Arend points out, despite the hand-wringing that
+> regulatory domains cause users trying to do something particular,
+> between certain rules and regulations and certain manufacturers bad
+> interpretations and implementations around it, there's little that
+> can
+> be done about it. Fact is, your radio must comply to whatever
+> regulatory domain you are in, otherwise it's breaking the rules. And
+> people breaking the regulatory rules is part of what's gotten
+> governments to pass even worse (for us OSS guys) laws that tighten
+> those rules down further.
 > 
-> _______________________________________________
-> wcn36xx mailing list
-> wcn36xx@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/wcn36xx
+> You asked who to contact. Its not the LKML - it's your relevant
+> government body. And certain manufacturers who improperly interpret
+> said rules because it's easier for them.
+> 
+> - Steve
+> 
+> --
+> Steve deRosier
+> Cal-Sierra Consulting LLC
+> https://www.cal-sierra.com/
