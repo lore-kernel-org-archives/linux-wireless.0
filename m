@@ -1,89 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:55002 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750924AbeDZFrg (ORCPT
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:43958 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753087AbeDLU77 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Apr 2018 01:47:36 -0400
-From: Eyal Reizer <eyalreizer@gmail.com>
-To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        robh@kernel.org, sre@kernel.org, tony@atomide.com,
-        linux-kernel@vger.kernel.org
-Cc: Eyal Reizer <eyalr@ti.com>
-Subject: [PATCH v2] wlcore: sdio: allow pm to handle sdio power
-Date: Thu, 26 Apr 2018 08:47:11 +0300
-Message-Id: <1524721631-5983-1-git-send-email-eyalr@ti.com> (sfid-20180426_074751_823507_E8AD5FB7)
+        Thu, 12 Apr 2018 16:59:59 -0400
+Received: by mail-pl0-f67.google.com with SMTP id a39-v6so4720809pla.10
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2018 13:59:59 -0700 (PDT)
+Date: Thu, 12 Apr 2018 13:59:56 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Carl Huang <cjhuang@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] ath10k: support MAC address randomization in scan
+Message-ID: <20180412205954.GA34456@rodete-desktop-imager.corp.google.com> (sfid-20180412_230003_322335_E10C4B45)
+References: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org>
+ <1522379640-6442-3-git-send-email-cjhuang@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1522379640-6442-3-git-send-email-cjhuang@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pm_runtime handles sdio power on and power off transitions.
-An old workaround for trying to control the power explicitly from the
-driver was in fact causing failures on suspend/resume as the mmc layer
-already power the module on resume.
+Hi Carl,
 
-In case of resume pm_runtime_get sync returns a positive device's usage
-count causing the driver to try an re-initialize an already initialized
-device. This was causing sdio bus failure on resume.
+On Fri, Mar 30, 2018 at 11:14:00AM +0800, Carl Huang wrote:
+> The ath10k reports the random_mac_addr capability to upper layer
+> based on the service bit firmware reported. Driver sets the
+> spoofed flag in scan_ctrl_flag to firmware if upper layer has
+> enabled this feature in scan request.
+> 
+> Test with QCA6174 hw3.0 and firmware-6.bin_WLAN.RM.4.4.1-00102-QCARMSWP-1,
+> but QCA9377 is also affected.
+> 
+> Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
+> ---
+>  drivers/net/wireless/ath/ath10k/mac.c     | 17 +++++++++++++++++
+>  drivers/net/wireless/ath/ath10k/wmi-ops.h | 22 ++++++++++++++++++++++
+>  drivers/net/wireless/ath/ath10k/wmi-tlv.c | 25 +++++++++++++++++++++++++
+>  drivers/net/wireless/ath/ath10k/wmi-tlv.h | 11 +++++++++++
+>  drivers/net/wireless/ath/ath10k/wmi.c     |  5 +++++
+>  drivers/net/wireless/ath/ath10k/wmi.h     |  9 +++++++++
+>  6 files changed, 89 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index ebb3f1b..c5cd5e5 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -5699,6 +5699,12 @@ static int ath10k_hw_scan(struct ieee80211_hw *hw,
+>  		arg.scan_ctrl_flags |= WMI_SCAN_FLAG_PASSIVE;
+>  	}
+>  
+> +	if (req->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
+> +		arg.scan_ctrl_flags |=  WMI_SCAN_ADD_SPOOFED_MAC_IN_PROBE_REQ;
+> +		ether_addr_copy(arg.mac_addr.addr, req->mac_addr);
+> +		ether_addr_copy(arg.mac_mask.addr, req->mac_addr_mask);
+> +	}
+> +
+>  	if (req->n_channels) {
+>  		arg.n_channels = req->n_channels;
+>  		for (i = 0; i < arg.n_channels; i++)
+> @@ -8397,6 +8403,17 @@ int ath10k_mac_register(struct ath10k *ar)
+>  		goto err_dfs_detector_exit;
+>  	}
+>  
+> +	if (test_bit(WMI_SERVICE_SPOOF_MAC_SUPPORT, ar->wmi.svc_map)) {
+> +		ret = ath10k_wmi_scan_prob_req_oui(ar, ar->mac_addr);
+> +		if (ret) {
+> +			ath10k_err(ar, "failed to set prob req oui: %i\n", ret);
+> +			goto err_dfs_detector_exit;
+> +		}
+> +
+> +		ar->hw->wiphy->features |=
+> +			NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
 
-Remove this manual power on/off sequence as it is in-fact not needed.
+Do you support NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR too?
 
-Signed-off-by: Eyal Reizer <eyalr@ti.com>
-Acked-by: Tony Lindgren <tony@atomide.com>
----
- drivers/net/wireless/ti/wlcore/sdio.c | 27 ++++++---------------------
- 1 file changed, 6 insertions(+), 21 deletions(-)
+> +	}
+> +
 
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index 1f727ba..6dbe61d 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -155,17 +155,11 @@ static int wl12xx_sdio_power_on(struct wl12xx_sdio_glue *glue)
- 	struct mmc_card *card = func->card;
- 
- 	ret = pm_runtime_get_sync(&card->dev);
--	if (ret) {
--		/*
--		 * Runtime PM might be temporarily disabled, or the device
--		 * might have a positive reference counter. Make sure it is
--		 * really powered on.
--		 */
--		ret = mmc_power_restore_host(card->host);
--		if (ret < 0) {
--			pm_runtime_put_sync(&card->dev);
--			goto out;
--		}
-+	if (ret < 0) {
-+		pm_runtime_put_noidle(&card->dev);
-+		dev_err(glue->dev, "%s: failed to get_sync(%d)\n",
-+			__func__, ret);
-+		goto out;
- 	}
- 
- 	sdio_claim_host(func);
-@@ -178,7 +172,6 @@ static int wl12xx_sdio_power_on(struct wl12xx_sdio_glue *glue)
- 
- static int wl12xx_sdio_power_off(struct wl12xx_sdio_glue *glue)
- {
--	int ret;
- 	struct sdio_func *func = dev_to_sdio_func(glue->dev);
- 	struct mmc_card *card = func->card;
- 
-@@ -186,16 +179,8 @@ static int wl12xx_sdio_power_off(struct wl12xx_sdio_glue *glue)
- 	sdio_disable_func(func);
- 	sdio_release_host(func);
- 
--	/* Power off the card manually in case it wasn't powered off above */
--	ret = mmc_power_save_host(card->host);
--	if (ret < 0)
--		goto out;
--
- 	/* Let runtime PM know the card is powered off */
--	pm_runtime_put_sync(&card->dev);
--
--out:
--	return ret;
-+	return pm_runtime_put_sync(&card->dev);
- }
- 
- static int wl12xx_sdio_set_power(struct device *child, bool enable)
--- 
-2.7.4
+
+Brian
