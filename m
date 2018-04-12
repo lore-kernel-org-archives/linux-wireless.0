@@ -1,109 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:40643 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932513AbeDWUMY (ORCPT
+Received: from mail-qt0-f171.google.com ([209.85.216.171]:42241 "EHLO
+        mail-qt0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751272AbeDLKvX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 16:12:24 -0400
-From: Andres Rodriguez <andresx7@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: andresx7@gmail.com, gregkh@linuxfoundation.org, mcgrof@kernel.org,
-        alexdeucher@gmail.com, christian.koenig@amd.com,
-        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        hdegoede@redhat.com
-Subject: [PATCH 7/9] firmware: use rename fw_sysfs_fallback to use the firmware_ prefix
-Date: Mon, 23 Apr 2018 16:12:03 -0400
-Message-Id: <20180423201205.20533-8-andresx7@gmail.com> (sfid-20180423_221404_427378_8244F3E6)
-In-Reply-To: <20180423201205.20533-1-andresx7@gmail.com>
-References: <20180423201205.20533-1-andresx7@gmail.com>
+        Thu, 12 Apr 2018 06:51:23 -0400
+Received: by mail-qt0-f171.google.com with SMTP id j3so5624838qtn.9
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2018 03:51:23 -0700 (PDT)
+Subject: Re: second wifi card enforce CN reg dom
+To: solsTiCe d'Hiver <solstice.dhiver@gmail.com>
+References: <CAE4vF2fCTEmEX8i+XVpvTJ1sRYDHDLr+fYFAM2PzTQTqkCoXVQ@mail.gmail.com>
+ <CAE4vF2f2oXEvOJWDXPjmiWZTC=HOq5+xE_R64-_VvH6zc-Vw+A@mail.gmail.com>
+ <5ACF0F5A.3090301@broadcom.com>
+ <CAE4vF2ftgMPhKEUHr2rPaobM9Dtuc-B9rtbF5tWavvrwUXA7Ag@mail.gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5ACF3A28.4060303@broadcom.com> (sfid-20180412_125132_254760_353B94F8)
+Date: Thu, 12 Apr 2018 12:51:20 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAE4vF2ftgMPhKEUHr2rPaobM9Dtuc-B9rtbF5tWavvrwUXA7Ag@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the correct prefix for symbols exported by firmware_loader(). This
-is done since firmware_sysfs_fallback() is now exposed through
-kernel-doc.
+On 4/12/2018 10:42 AM, solsTiCe d'Hiver wrote:
+> Hi.
+>
+> This is beyond my comprehension that you could assert this is a non issue.
 
-Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
----
- drivers/base/firmware_loader/fallback.c | 8 ++++----
- drivers/base/firmware_loader/fallback.h | 4 ++--
- drivers/base/firmware_loader/firmware.h | 6 +++---
- drivers/base/firmware_loader/main.c     | 2 +-
- 4 files changed, 10 insertions(+), 10 deletions(-)
+Well. I am just saying that it is by design. There is no way for the 
+regulatory code to determine where you and your hardware actually reside 
+so instead it takes a conservative approach.
 
-diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
-index 1a47ddc70c31..fc186b5bccce 100644
---- a/drivers/base/firmware_loader/fallback.c
-+++ b/drivers/base/firmware_loader/fallback.c
-@@ -661,10 +661,10 @@ static bool fw_run_sysfs_fallback(enum fw_opt opt_flags)
- 	return fw_force_sysfs_fallback(opt_flags);
- }
- 
--int fw_sysfs_fallback(struct firmware *fw, const char *name,
--		      struct device *device,
--		      enum fw_opt opt_flags,
--		      int ret)
-+int firmware_sysfs_fallback(struct firmware *fw, const char *name,
-+			    struct device *device,
-+			    enum fw_opt opt_flags,
-+			    int ret)
- {
- 	if (!fw_run_sysfs_fallback(opt_flags))
- 		return ret;
-diff --git a/drivers/base/firmware_loader/fallback.h b/drivers/base/firmware_loader/fallback.h
-index a3b73a09db6c..8cfaa3299bb7 100644
---- a/drivers/base/firmware_loader/fallback.h
-+++ b/drivers/base/firmware_loader/fallback.h
-@@ -31,7 +31,7 @@ struct firmware_fallback_config {
- };
- 
- #ifdef CONFIG_FW_LOADER_USER_HELPER
--int fw_sysfs_fallback(struct firmware *fw, const char *name,
-+int firmware_sysfs_fallback(struct firmware *fw, const char *name,
- 		      struct device *device,
- 		      enum fw_opt opt_flags,
- 		      int ret);
-@@ -43,7 +43,7 @@ void fw_fallback_set_default_timeout(void);
- int register_sysfs_loader(void);
- void unregister_sysfs_loader(void);
- #else /* CONFIG_FW_LOADER_USER_HELPER */
--static inline int fw_sysfs_fallback(struct firmware *fw, const char *name,
-+static inline int firmware_sysfs_fallback(struct firmware *fw, const char *name,
- 				    struct device *device,
- 				    enum fw_opt opt_flags,
- 				    int ret)
-diff --git a/drivers/base/firmware_loader/firmware.h b/drivers/base/firmware_loader/firmware.h
-index a405d400a925..59836d50c5bd 100644
---- a/drivers/base/firmware_loader/firmware.h
-+++ b/drivers/base/firmware_loader/firmware.h
-@@ -15,12 +15,12 @@
-  * enum fw_opt - options to control firmware loading behaviour
-  *
-  * @FW_OPT_UEVENT: Enables the fallback mechanism to send a kobject uevent
-- *                  when the firmware is not found. Userspace is in charge
-- *                  to load the firmware using the sysfs loading facility.
-+ *                 when the firmware is not found. Userspace is in charge
-+ *                 to load the firmware using the sysfs loading facility.
-  * @FW_OPT_NOWAIT: Used to describe the firmware request is asynchronous.
-  * @FW_OPT_USERHELPER: Enable the fallback mechanism, in case the direct
-  *                     filesystem lookup fails at finding the firmware.
-- *                     For details refer to fw_sysfs_fallback().
-+ *                     For details refer to firmware_sysfs_fallback().
-  * @FW_OPT_NO_WARN: Quiet, avoid printing warning messages.
-  * @FW_OPT_NOCACHE: Disables firmware caching. Firmware caching is used to
-  *                  cache the firmware upon suspend, so that upon resume
-diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
-index 58aaadf81e12..f009566acd35 100644
---- a/drivers/base/firmware_loader/main.c
-+++ b/drivers/base/firmware_loader/main.c
-@@ -581,7 +581,7 @@ _firmware_request(const struct firmware **firmware_p, const char *name,
- 			dev_warn(device,
- 				 "Direct firmware load for %s failed with error %d\n",
- 				 name, ret);
--		ret = fw_sysfs_fallback(fw, name, device, opt_flags, ret);
-+		ret = firmware_sysfs_fallback(fw, name, device, opt_flags, ret);
- 	} else
- 		ret = assign_fw(fw, device, opt_flags);
- 
--- 
-2.14.1
+btw. can you change the global reg back to FR using iw reg set?
+
+Regards,
+Arend
+
+> If this is a hint, then someone should take this as a hint , and not
+> enforce it blindly.
+>
+> I loose the capability to use a lot of channels on a card because of
+> the mis-behaving of another. Or the crda framework, or whatever.
+>
+> What is even more stupid is that the TL-W722N is a 2.4GHz only band
+> and that breaks operation on the 5GHz band of the other card.
+>
+> I am not even speaking about the fact that I use this in monitor mode,
+> hence I will never emit anything. But anyway... crda has already
+> broken everyhting even before I am entering monitor mode for the
+> cards.
+>
+> Well, non issue... sight
+>
+> 2018-04-12 9:48 GMT+02:00 Arend van Spriel <arend.vanspriel@broadcom.com>:
+>> On 4/12/2018 9:00 AM, solsTiCe d'Hiver wrote:
+>>>
+>>> Nobody cares about this ?
+>>>
+>>> Should I report this as a bug to the LKML ? or elsewhere ? to
+>>> ath9k_htc dev ? to crda dev ?
+>>>
+>>> Please.
+>>
+>>
+>> Hi,
+>>
+>> I do not think nobody cares, but what you describe is actually no issue as
+>> far as I can determine. Wifi cards are typically programmed with some
+>> country code and both provide that as a regulatory hint to the regulatory
+>> framework, which adapts to a regulatory domain in which only channels and
+>> power limits are set that are allowed for both devices. That is why some of
+>> the rules in the global set #98 are matching the FR set and some rules match
+>> the CN set. And because FR uses ETSI DFS and CN uses FCC DFS you are loosing
+>> all channels that require DFS.
+>>
+>> Regards,
+>> Arend
+>>
+>>
+>>>
+>>> 2018-04-10 21:57 GMT+02:00 solsTiCe d'Hiver <solstice.dhiver@gmail.com>:
+>>>>
+>>>> hi.
+>>>>
+>>>> I am trying to capture on 2 channels at the same time with 2 cards.
+>>>>
+>>>> One card is TP-Link TL-W722N v1 using ath9k_htc and the second one is
+>>>> an Alfa AWUS051NH v2 using rt2800usb.
+>>>>
+>>>> I have tried this, first, on raspberry pi 0 W  using archlinux-arm and
+>>>> reproduced the issue on a netbook using archlinux x64 too using latest
+>>>> kernel and drivers. (seems to happen on ubuntu 17.10 on dell laptop
+>>>> too)
+>>>>
+>>>> So when the Alfa card is used alone using the default reg dom FR, one
+>>>> can change to 112 channel for example (using iw dev wlan1 set channel
+>>>> 112)
+>>>>
+>>>> But once the tp-link is plugged in, reg dom seems to become CN and one
+>>>> can't change the alfa card to 112 channel.
+>>>>
+>>>> iw reg get output change from
+>>>> global
+>>>> country FR: DFS-ETSI
+>>>> (2402 - 2482 @ 40), (N/A, 20), (N/A)
+>>>> (5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW
+>>>> (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW
+>>>> (5490 - 5710 @ 160), (N/A, 27), (0 ms), DFS
+>>>> (57000 - 66000 @ 2160), (N/A, 40), (N/A)
+>>>> to
+>>>> global
+>>>> country 98: DFS-UNSET
+>>>> (2402 - 2482 @ 40), (N/A, 20), (N/A)
+>>>> (5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW
+>>>> (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW
+>>>> (57240 - 59400 @ 2160), (N/A, 28), (N/A)
+>>>> (59400 - 63720 @ 2160), (N/A, 40), (N/A)
+>>>> (63720 - 65880 @ 2160), (N/A, 28), (N/A)
+>>>>
+>>>> phy#2
+>>>> country CN: DFS-FCC
+>>>> (2402 - 2482 @ 40), (N/A, 20), (N/A)
+>>>> (5170 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
+>>>> (5250 - 5330 @ 80), (N/A, 23), (0 ms), DFS, AUTO-BW
+>>>> (5735 - 5835 @ 80), (N/A, 30), (N/A)
+>>>> (57240 - 59400 @ 2160), (N/A, 28), (N/A)
+>>>> (59400 - 63720 @ 2160), (N/A, 44), (N/A)
+>>>> (63720 - 65880 @ 2160), (N/A, 28), (N/A)
+>>>>
+>>>>
+>>>> and all the channels above 100 are marked as disabled in iw list
+>>>> output (after the plug not before) for the alfa card
+>>>>
+>>>> It is as if the TL-WN722N has CN reg dom hard-coded and that switches
+>>>> it globally to CN too ???
+>>>>
+>>>> Is this a bug in ath9k_htc ? a bug with the TL-WN722N card ??
+>>
+>>
