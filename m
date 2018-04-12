@@ -1,256 +1,292 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40656 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754594AbeDTKtk (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44998 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750782AbeDLESI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Apr 2018 06:49:40 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 20 Apr 2018 13:49:25 +0300
-Message-Id: <20180420104926.8816-9-luca@coelho.fi> (sfid-20180420_124945_843914_5F7D6AB1)
-In-Reply-To: <20180420104926.8816-1-luca@coelho.fi>
-References: <20180420104926.8816-1-luca@coelho.fi>
-Subject: [PATCH 8/9] mac80211: Support adding duration for prepare_tx() callback
+        Thu, 12 Apr 2018 00:18:08 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Thu, 12 Apr 2018 12:18:06 +0800
+From: Wen Gong <wgong@codeaurora.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: Convert wow pattern from 802.3 to 802.11
+In-Reply-To: <20180411231304.GA121875@rodete-desktop-imager.corp.google.com>
+References: <1522379899-31969-1-git-send-email-wgong@codeaurora.org>
+ <20180411231304.GA121875@rodete-desktop-imager.corp.google.com>
+Message-ID: <063daa7db1040609ee9f0b3f7e38b02d@codeaurora.org> (sfid-20180412_061842_842532_C31A1E7C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Peer <ilan.peer@intel.com>
+Hi,
 
-There are specific cases, such as SAE authentication exchange, that
-might require long duration to complete. For such cases, add support
-for indicating to the driver the required duration of the prepare_tx()
-operation, so the driver would still be able to complete the frame
-exchange.
+I will move the convert graph from comments to code and send Patch V2.
+And new graph like this:
+/**
++ * Convert a 802.3 format to a 802.11 format.
++ *         +------------+-----------+--------+----------------+
++ * 802.3:  |dest mac(6B)|src mac(6B)|type(2B)|     body...    |
++ *         +------------+-----------+--------+----------------+
++ *                |__         |_______    |____________  |________
++ *                   |                |                |          |
++ * 
+        +--+------------+----+-----------+---------------+-----------+
++ * 802.11: |4B|dest mac(6B)| 6B |src mac(6B)|  8B  |type(2B)|  body... 
+ |
++ * 
+        +--+------------+----+-----------+---------------+-----------+
++ */
++static void ath10k_wow_convert_8023_to_80211
++                    (struct cfg80211_pkt_pattern *new,
++                    const struct cfg80211_pkt_pattern *old)
 
-Currently, indicate the duration only for SAE authentication exchange,
-as SAE authentication can take up to 2000 msec (as defined in IEEE
-P802.11-REVmd D1.0 p. 3504).
 
-As the patch modified the prepare_tx() callback API, also modify
-the relevant code in iwlwifi.
+And the 444 bytes on stack will remain since the comments is: "we can go 
+with this until somebody runs into a real problem"
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/ath/ath9k/main.c         |  3 ++-
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  6 ++++-
- include/net/mac80211.h                        |  5 +++-
- net/mac80211/driver-ops.h                     |  8 +++---
- net/mac80211/mlme.c                           | 17 ++++++++-----
- net/mac80211/trace.h                          | 25 ++++++++++++++++---
- 6 files changed, 49 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index a3be8add56e1..b6663c80e7dd 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2544,7 +2544,8 @@ static void ath9k_unassign_vif_chanctx(struct ieee80211_hw *hw,
- }
- 
- static void ath9k_mgd_prepare_tx(struct ieee80211_hw *hw,
--				 struct ieee80211_vif *vif)
-+				 struct ieee80211_vif *vif,
-+				 u16 duration)
- {
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 51b30424575b..4e428427d1ba 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2810,7 +2810,8 @@ static int iwl_mvm_mac_conf_tx(struct ieee80211_hw *hw,
- }
- 
- static void iwl_mvm_mac_mgd_prepare_tx(struct ieee80211_hw *hw,
--				      struct ieee80211_vif *vif)
-+				       struct ieee80211_vif *vif,
-+				       u16 req_duration)
- {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
- 	u32 duration = IWL_MVM_TE_SESSION_PROTECTION_MAX_TIME_MS;
-@@ -2823,6 +2824,9 @@ static void iwl_mvm_mac_mgd_prepare_tx(struct ieee80211_hw *hw,
- 	if (iwl_mvm_ref_sync(mvm, IWL_MVM_REF_PREPARE_TX))
- 		return;
- 
-+	if (req_duration > duration)
-+		duration = req_duration;
-+
- 	mutex_lock(&mvm->mutex);
- 	/* Try really hard to protect the session and hear a beacon */
- 	iwl_mvm_protect_session(mvm, vif, duration, min_duration, 500, false);
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 52f36c43f35f..cde1db0f6573 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3378,6 +3378,8 @@ enum ieee80211_reconfig_type {
-  *	frame in case that no beacon was heard from the AP/P2P GO.
-  *	The callback will be called before each transmission and upon return
-  *	mac80211 will transmit the frame right away.
-+ *      If duration is greater than zero, mac80211 hints to the driver the
-+ *      duration for which the operation is requested.
-  *	The callback is optional and can (should!) sleep.
-  *
-  * @mgd_protect_tdls_discover: Protect a TDLS discovery session. After sending
-@@ -3697,7 +3699,8 @@ struct ieee80211_ops {
- 				  u32 sset, u8 *data);
- 
- 	void	(*mgd_prepare_tx)(struct ieee80211_hw *hw,
--				  struct ieee80211_vif *vif);
-+				  struct ieee80211_vif *vif,
-+				  u16 duration);
- 
- 	void	(*mgd_protect_tdls_discover)(struct ieee80211_hw *hw,
- 					     struct ieee80211_vif *vif);
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 4d82fe7d627c..8f6998091d26 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -2,6 +2,7 @@
- /*
- * Portions of this file
- * Copyright(c) 2016 Intel Deutschland GmbH
-+* Copyright (C) 2018 Intel Corporation
- */
- 
- #ifndef __MAC80211_DRIVER_OPS
-@@ -813,7 +814,8 @@ drv_allow_buffered_frames(struct ieee80211_local *local,
- }
- 
- static inline void drv_mgd_prepare_tx(struct ieee80211_local *local,
--				      struct ieee80211_sub_if_data *sdata)
-+				      struct ieee80211_sub_if_data *sdata,
-+				      u16 duration)
- {
- 	might_sleep();
- 
-@@ -821,9 +823,9 @@ static inline void drv_mgd_prepare_tx(struct ieee80211_local *local,
- 		return;
- 	WARN_ON_ONCE(sdata->vif.type != NL80211_IFTYPE_STATION);
- 
--	trace_drv_mgd_prepare_tx(local, sdata);
-+	trace_drv_mgd_prepare_tx(local, sdata, duration);
- 	if (local->ops->mgd_prepare_tx)
--		local->ops->mgd_prepare_tx(&local->hw, &sdata->vif);
-+		local->ops->mgd_prepare_tx(&local->hw, &sdata->vif, duration);
- 	trace_drv_return_void(local);
- }
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 51021d3d2d18..e2d254a85bd3 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -864,7 +864,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 		return;
- 	}
- 
--	drv_mgd_prepare_tx(local, sdata);
-+	drv_mgd_prepare_tx(local, sdata, 0);
- 
- 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
- 	if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
-@@ -2022,7 +2022,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 		 */
- 		if (ieee80211_hw_check(&local->hw, DEAUTH_NEED_MGD_TX_PREP) &&
- 		    !ifmgd->have_beacon)
--			drv_mgd_prepare_tx(sdata->local, sdata);
-+			drv_mgd_prepare_tx(sdata->local, sdata, 0);
- 
- 		ieee80211_send_deauth_disassoc(sdata, ifmgd->bssid, stype,
- 					       reason, tx, frame_buf);
-@@ -2560,7 +2560,7 @@ static void ieee80211_auth_challenge(struct ieee80211_sub_if_data *sdata,
- 	if (!elems.challenge)
- 		return;
- 	auth_data->expected_transaction = 4;
--	drv_mgd_prepare_tx(sdata->local, sdata);
-+	drv_mgd_prepare_tx(sdata->local, sdata, 0);
- 	if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
- 		tx_flags = IEEE80211_TX_CTL_REQ_TX_STATUS |
- 			   IEEE80211_TX_INTFL_MLME_CONN_TX;
-@@ -3769,6 +3769,7 @@ static int ieee80211_auth(struct ieee80211_sub_if_data *sdata)
- 	u32 tx_flags = 0;
- 	u16 trans = 1;
- 	u16 status = 0;
-+	u16 prepare_tx_duration = 0;
- 
- 	sdata_assert_lock(sdata);
- 
-@@ -3790,7 +3791,11 @@ static int ieee80211_auth(struct ieee80211_sub_if_data *sdata)
- 		return -ETIMEDOUT;
- 	}
- 
--	drv_mgd_prepare_tx(local, sdata);
-+	if (auth_data->algorithm == WLAN_AUTH_SAE)
-+		prepare_tx_duration =
-+			jiffies_to_msecs(IEEE80211_AUTH_TIMEOUT_SAE);
-+
-+	drv_mgd_prepare_tx(local, sdata, prepare_tx_duration);
- 
- 	sdata_info(sdata, "send auth to %pM (try %d/%d)\n",
- 		   auth_data->bss->bssid, auth_data->tries,
-@@ -4994,7 +4999,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 			   req->bssid, req->reason_code,
- 			   ieee80211_get_reason_code_string(req->reason_code));
- 
--		drv_mgd_prepare_tx(sdata->local, sdata);
-+		drv_mgd_prepare_tx(sdata->local, sdata, 0);
- 		ieee80211_send_deauth_disassoc(sdata, req->bssid,
- 					       IEEE80211_STYPE_DEAUTH,
- 					       req->reason_code, tx,
-@@ -5014,7 +5019,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 			   req->bssid, req->reason_code,
- 			   ieee80211_get_reason_code_string(req->reason_code));
- 
--		drv_mgd_prepare_tx(sdata->local, sdata);
-+		drv_mgd_prepare_tx(sdata->local, sdata, 0);
- 		ieee80211_send_deauth_disassoc(sdata, req->bssid,
- 					       IEEE80211_STYPE_DEAUTH,
- 					       req->reason_code, tx,
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 591ad02e1fa4..80a7edf8d314 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -2,6 +2,7 @@
- /*
- * Portions of this file
- * Copyright(c) 2016 Intel Deutschland GmbH
-+* Copyright (C) 2018 Intel Corporation
- */
- 
- #if !defined(__MAC80211_DRIVER_TRACE) || defined(TRACE_HEADER_MULTI_READ)
-@@ -1413,11 +1414,29 @@ DEFINE_EVENT(release_evt, drv_allow_buffered_frames,
- 	TP_ARGS(local, sta, tids, num_frames, reason, more_data)
- );
- 
--DEFINE_EVENT(local_sdata_evt, drv_mgd_prepare_tx,
-+TRACE_EVENT(drv_mgd_prepare_tx,
- 	TP_PROTO(struct ieee80211_local *local,
--		 struct ieee80211_sub_if_data *sdata),
-+		 struct ieee80211_sub_if_data *sdata,
-+		 u16 duration),
- 
--	TP_ARGS(local, sdata)
-+	TP_ARGS(local, sdata, duration),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		VIF_ENTRY
-+		__field(u32, duration)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
-+		__entry->duration = duration;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT VIF_PR_FMT " duration: %u",
-+		LOCAL_PR_ARG, VIF_PR_ARG, __entry->duration
-+	)
- );
- 
- DEFINE_EVENT(local_sdata_evt, drv_mgd_protect_tdls_discover,
--- 
-2.17.0
+On 2018-04-12 07:13, Brian Norris wrote:
+> Hi,
+> 
+> On Fri, Mar 30, 2018 at 11:18:19AM +0800, Wen Gong wrote:
+>> When trying to set wow wakeup patterns it fails with this command:
+>> 
+>> iw phyxx wowlan enable patterns offset xx+ IP address xx.xx.xx.xx
+>> 
+>> The reason is that the wow pattern from upper layer is in 802.3 format
+>> for this case, it need to convert it to 802.11 format. The input
+>> offset parameter is used for 802.3, but the actual offset firmware
+>> need depends on rx_decap_mode, so that it needs to be recalculated.
+>> Pattern of 802.3 packet is not same with 802.11 packet. If the
+>> rx_decap_mode is ATH10K_HW_TXRX_NATIVE_WIFI, then firmware will
+>> receive data packet with 802.11 format from hardware.
+>> 
+>> Convert graph:
+>> -----------------------------------------------------------------------
+>> 802.3  |dest mac(6B)|src mac(6B)|type(2B)|     body...    |
+>>              |__         |_______    |_____________  |___________
+>>                 |                |                 |             |
+>> 802.11 |4B|dest mac(6B)| 6B |src mac(6B)|  8B  |type(2B)|  body...  |
+>> -----------------------------------------------------------------------
+> 
+> It feels like this could go into the code comments? Or at least some
+> short version of it. (But hey, text is cheap, and who doesn't love 
+> ASCII
+> art?)
+> 
+>> 
+>> Tested with QCA6174 hw3.0 with firmware
+>> WLAN.RM.4.4.1-00099-QCARMSWPZ-1, but this will also affect QCA9377.
+>> This has always failed, so it's not a regression with new firmware
+>> releases.
+>> 
+>> Signed-off-by: Wen Gong <wgong@codeaurora.org>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/wmi.h |   4 ++
+>>  drivers/net/wireless/ath/ath10k/wow.c | 128 
+>> ++++++++++++++++++++++++++++++++--
+>>  2 files changed, 126 insertions(+), 6 deletions(-)
+>> 
+>> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h 
+>> b/drivers/net/wireless/ath/ath10k/wmi.h
+>> index c7b30ed..389f9c7 100644
+>> --- a/drivers/net/wireless/ath/ath10k/wmi.h
+>> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
+>> @@ -6724,6 +6724,10 @@ struct wmi_wow_ev_arg {
+>>  #define WOW_MIN_PATTERN_SIZE	1
+>>  #define WOW_MAX_PATTERN_SIZE	148
+>>  #define WOW_MAX_PKT_OFFSET	128
+>> +#define WOW_HDR_LEN	(sizeof(struct ieee80211_hdr_3addr) + \
+>> +	sizeof(struct rfc1042_hdr))
+>> +#define WOW_MAX_REDUCE	(WOW_HDR_LEN - sizeof(struct ethhdr) - \
+>> +	offsetof(struct ieee80211_hdr_3addr, addr1))
+>> 
+>>  enum wmi_tdls_state {
+>>  	WMI_TDLS_DISABLE,
+>> diff --git a/drivers/net/wireless/ath/ath10k/wow.c 
+>> b/drivers/net/wireless/ath/ath10k/wow.c
+>> index c4cbccb..9b56a41 100644
+>> --- a/drivers/net/wireless/ath/ath10k/wow.c
+>> +++ b/drivers/net/wireless/ath/ath10k/wow.c
+>> @@ -1,5 +1,6 @@
+>>  /*
+>>   * Copyright (c) 2015-2017 Qualcomm Atheros, Inc.
+>> + * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+>>   *
+>>   * Permission to use, copy, modify, and/or distribute this software 
+>> for any
+>>   * purpose with or without fee is hereby granted, provided that the 
+>> above
+>> @@ -76,6 +77,98 @@ static int ath10k_wow_cleanup(struct ath10k *ar)
+>>  	return 0;
+>>  }
+>> 
+>> +static void ath10k_wow_convert_8023_to_80211
+>> +					(struct cfg80211_pkt_pattern *new,
+>> +					const struct cfg80211_pkt_pattern *old)
+>> +{
+>> +	u8 hdr_8023_pattern[ETH_HLEN] = {};
+>> +	u8 hdr_8023_bit_mask[ETH_HLEN] = {};
+>> +	u8 hdr_80211_pattern[WOW_HDR_LEN] = {};
+>> +	u8 hdr_80211_bit_mask[WOW_HDR_LEN] = {};
+>> +
+>> +	int total_len = old->pkt_offset + old->pattern_len;
+>> +	int hdr_80211_end_offset;
+>> +
+>> +	struct ieee80211_hdr_3addr *new_hdr_pattern =
+>> +		(struct ieee80211_hdr_3addr *)hdr_80211_pattern;
+>> +	struct ieee80211_hdr_3addr *new_hdr_mask =
+>> +		(struct ieee80211_hdr_3addr *)hdr_80211_bit_mask;
+>> +	struct ethhdr *old_hdr_pattern = (struct ethhdr *)hdr_8023_pattern;
+>> +	struct ethhdr *old_hdr_mask = (struct ethhdr *)hdr_8023_bit_mask;
+>> +	int hdr_len = sizeof(*new_hdr_pattern);
+>> +
+>> +	struct rfc1042_hdr *new_rfc_pattern =
+>> +		(struct rfc1042_hdr *)(hdr_80211_pattern + hdr_len);
+>> +	struct rfc1042_hdr *new_rfc_mask =
+>> +		(struct rfc1042_hdr *)(hdr_80211_bit_mask + hdr_len);
+>> +	int rfc_len = sizeof(*new_rfc_pattern);
+>> +
+>> +	memcpy(hdr_8023_pattern + old->pkt_offset,
+>> +	       old->pattern, ETH_HLEN - old->pkt_offset);
+>> +	memcpy(hdr_8023_bit_mask + old->pkt_offset,
+>> +	       old->mask, ETH_HLEN - old->pkt_offset);
+>> +
+>> +	/* Copy destination address */
+>> +	memcpy(new_hdr_pattern->addr1, old_hdr_pattern->h_dest, ETH_ALEN);
+>> +	memcpy(new_hdr_mask->addr1, old_hdr_mask->h_dest, ETH_ALEN);
+>> +
+>> +	/* Copy source address */
+>> +	memcpy(new_hdr_pattern->addr3, old_hdr_pattern->h_source, ETH_ALEN);
+>> +	memcpy(new_hdr_mask->addr3, old_hdr_mask->h_source, ETH_ALEN);
+>> +
+>> +	/* Copy logic link type */
+>> +	memcpy(&new_rfc_pattern->snap_type,
+>> +	       &old_hdr_pattern->h_proto,
+>> +	       sizeof(old_hdr_pattern->h_proto));
+>> +	memcpy(&new_rfc_mask->snap_type,
+>> +	       &old_hdr_mask->h_proto,
+>> +	       sizeof(old_hdr_mask->h_proto));
+>> +
+>> +	/* Caculate new pkt_offset */
+>> +	if (old->pkt_offset < ETH_ALEN)
+>> +		new->pkt_offset = old->pkt_offset +
+>> +			offsetof(struct ieee80211_hdr_3addr, addr1);
+>> +	else if (old->pkt_offset < offsetof(struct ethhdr, h_proto))
+>> +		new->pkt_offset = old->pkt_offset +
+>> +			offsetof(struct ieee80211_hdr_3addr, addr3) -
+>> +			offsetof(struct ethhdr, h_source);
+>> +	else
+>> +		new->pkt_offset = old->pkt_offset + hdr_len + rfc_len - ETH_HLEN;
+>> +
+>> +	/* Caculate new hdr end offset */
+>> +	if (total_len > ETH_HLEN)
+>> +		hdr_80211_end_offset = hdr_len + rfc_len;
+>> +	else if (total_len > offsetof(struct ethhdr, h_proto))
+>> +		hdr_80211_end_offset = hdr_len + rfc_len + total_len - ETH_HLEN;
+>> +	else if (total_len > ETH_ALEN)
+>> +		hdr_80211_end_offset = total_len - ETH_ALEN +
+>> +			offsetof(struct ieee80211_hdr_3addr, addr3);
+>> +	else
+>> +		hdr_80211_end_offset = total_len +
+>> +			offsetof(struct ieee80211_hdr_3addr, addr1);
+>> +
+>> +	new->pattern_len = hdr_80211_end_offset - new->pkt_offset;
+>> +
+>> +	memcpy((u8 *)new->pattern,
+>> +	       hdr_80211_pattern + new->pkt_offset,
+>> +	       new->pattern_len);
+>> +	memcpy((u8 *)new->mask,
+>> +	       hdr_80211_bit_mask + new->pkt_offset,
+>> +	       new->pattern_len);
+>> +
+>> +	if (total_len > ETH_HLEN) {
+>> +		/* Copy frame body */
+>> +		memcpy((u8 *)new->pattern + new->pattern_len,
+>> +		       (void *)old->pattern + ETH_HLEN - old->pkt_offset,
+>> +		       total_len - ETH_HLEN);
+>> +		memcpy((u8 *)new->mask + new->pattern_len,
+>> +		       (void *)old->mask + ETH_HLEN - old->pkt_offset,
+>> +		       total_len - ETH_HLEN);
+>> +
+>> +		new->pattern_len += total_len - ETH_HLEN;
+>> +	}
+>> +}
+>> +
+>>  static int ath10k_vif_wow_set_wakeups(struct ath10k_vif *arvif,
+>>  				      struct cfg80211_wowlan *wowlan)
+>>  {
+>> @@ -116,22 +209,39 @@ static int ath10k_vif_wow_set_wakeups(struct 
+>> ath10k_vif *arvif,
+>> 
+>>  	for (i = 0; i < wowlan->n_patterns; i++) {
+>>  		u8 bitmask[WOW_MAX_PATTERN_SIZE] = {};
+>> +		u8 ath_pattern[WOW_MAX_PATTERN_SIZE] = {};
+>> +		u8 ath_bitmask[WOW_MAX_PATTERN_SIZE] = {};
+> 
+> So now we've got 3 * 148 = 444 bytes on the stack just for this? Seems
+> like it's getting a little large for kernel code, but maybe not too 
+> bad.
+> I guess we can go with this until somebody runs into a real problem...
+> 
+> Otherwise, seems to work for me:
+> 
+> Tested-by: Brian Norris <briannorris@chromium.org>
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
+> 
+>> +		struct cfg80211_pkt_pattern new_pattern = {};
+>> +		struct cfg80211_pkt_pattern old_pattern = patterns[i];
+>>  		int j;
+>> -
+>> +		new_pattern.pattern = ath_pattern;
+>> +		new_pattern.mask = ath_bitmask;
+>>  		if (patterns[i].pattern_len > WOW_MAX_PATTERN_SIZE)
+>>  			continue;
+>> -
+>>  		/* convert bytemask to bitmask */
+>>  		for (j = 0; j < patterns[i].pattern_len; j++)
+>>  			if (patterns[i].mask[j / 8] & BIT(j % 8))
+>>  				bitmask[j] = 0xff;
+>> +		old_pattern.mask = bitmask;
+>> +		new_pattern = old_pattern;
+>> +
+>> +		if (ar->wmi.rx_decap_mode == ATH10K_HW_TXRX_NATIVE_WIFI) {
+>> +			if (patterns[i].pkt_offset < ETH_HLEN)
+>> +				ath10k_wow_convert_8023_to_80211(&new_pattern,
+>> +								 &old_pattern);
+>> +			else
+>> +				new_pattern.pkt_offset += WOW_HDR_LEN - ETH_HLEN;
+>> +		}
+>> +
+>> +		if (WARN_ON(new_pattern.pattern_len > WOW_MAX_PATTERN_SIZE))
+>> +			return -EINVAL;
+>> 
+>>  		ret = ath10k_wmi_wow_add_pattern(ar, arvif->vdev_id,
+>>  						 pattern_id,
+>> -						 patterns[i].pattern,
+>> -						 bitmask,
+>> -						 patterns[i].pattern_len,
+>> -						 patterns[i].pkt_offset);
+>> +						 new_pattern.pattern,
+>> +						 new_pattern.mask,
+>> +						 new_pattern.pattern_len,
+>> +						 new_pattern.pkt_offset);
+>>  		if (ret) {
+>>  			ath10k_warn(ar, "failed to add pattern %i to vdev %i: %d\n",
+>>  				    pattern_id,
+>> @@ -345,6 +455,12 @@ int ath10k_wow_init(struct ath10k *ar)
+>>  		return -EINVAL;
+>> 
+>>  	ar->wow.wowlan_support = ath10k_wowlan_support;
+>> +
+>> +	if (ar->wmi.rx_decap_mode == ATH10K_HW_TXRX_NATIVE_WIFI) {
+>> +		ar->wow.wowlan_support.pattern_max_len -= WOW_MAX_REDUCE;
+>> +		ar->wow.wowlan_support.max_pkt_offset -= WOW_MAX_REDUCE;
+>> +	}
+>> +
+>>  	ar->wow.wowlan_support.n_patterns = ar->wow.max_num_patterns;
+>>  	ar->hw->wiphy->wowlan = &ar->wow.wowlan_support;
+>> 
+>> --
+>> 2.7.4
+>> 
