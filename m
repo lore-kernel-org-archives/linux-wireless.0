@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:6278 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753878AbeDRLkl (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:23196 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752474AbeDLIJB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 07:40:41 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 08/22] staging: wilc1000: fix line over 80 chars in change_station()
-Date: Wed, 18 Apr 2018 17:09:10 +0530
-Message-ID: <1524051564-15497-9-git-send-email-ajay.kathat@microchip.com> (sfid-20180418_134048_682486_ADC869CD)
-In-Reply-To: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 12 Apr 2018 04:09:01 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com
+Subject: [PATCH 00/10] wil6210 patches
+Date: Thu, 12 Apr 2018 11:08:36 +0300
+Message-Id: <1523520526-24997-1-git-send-email-merez@codeaurora.org> (sfid-20180412_100905_316783_313EABC1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix 'line over 80 chars' issue found by checkpatch.pl script.
+The following patches include multiple wil6210 fixes.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Ahmad Masri (1):
+  wil6210: align to latest auto generated wmi.h
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 0d3f85d..bddfbcb 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1155,10 +1155,10 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
- 		wilc_get_statistics(vif, &stats);
- 
- 		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL) |
--						BIT(NL80211_STA_INFO_RX_PACKETS) |
--						BIT(NL80211_STA_INFO_TX_PACKETS) |
--						BIT(NL80211_STA_INFO_TX_FAILED) |
--						BIT(NL80211_STA_INFO_TX_BITRATE);
-+				 BIT(NL80211_STA_INFO_RX_PACKETS) |
-+				 BIT(NL80211_STA_INFO_TX_PACKETS) |
-+				 BIT(NL80211_STA_INFO_TX_FAILED) |
-+				 BIT(NL80211_STA_INFO_TX_BITRATE);
- 
- 		sinfo->signal = stats.rssi;
- 		sinfo->rx_packets = stats.rx_cnt;
+Alexei Avshalom Lazar (3):
+  wil6210: disable tracing config option
+  wil6210: set/get EDMG channel through debugfs
+  wil6210: Initialize reply struct of the WMI commands
+
+Dedy Lansky (4):
+  wil6210: use country specific board file upon reg domain change
+  wil6210: move WMI functionality out of wil_cfg80211_mgmt_tx
+  wil6210: remove unused rx_reorder members
+  wil6210: rate limit wil_rx_refill error
+
+Lior David (2):
+  wil6210: fix call to wil6210_disconnect during unload
+  wil6210: change reply_size arg to u16 in wmi_call
+
+ drivers/net/wireless/ath/wil6210/Kconfig      |   2 +-
+ drivers/net/wireless/ath/wil6210/cfg80211.c   | 216 ++++++++++---
+ drivers/net/wireless/ath/wil6210/debugfs.c    |   6 +-
+ drivers/net/wireless/ath/wil6210/main.c       |  39 ++-
+ drivers/net/wireless/ath/wil6210/netdev.c     |   8 +-
+ drivers/net/wireless/ath/wil6210/rx_reorder.c |   7 +-
+ drivers/net/wireless/ath/wil6210/txrx.c       |  12 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h    |  23 +-
+ drivers/net/wireless/ath/wil6210/wmi.c        | 177 ++++++++---
+ drivers/net/wireless/ath/wil6210/wmi.h        | 420 ++++++++++++++++++++++++--
+ 10 files changed, 769 insertions(+), 141 deletions(-)
+
 -- 
-2.7.4
+1.9.1
