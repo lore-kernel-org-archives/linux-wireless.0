@@ -1,57 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:57592 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752308AbeDPO3F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 10:29:05 -0400
-Subject: Re: [PATCH 5/5] wcn36xx: pass information elements in scan requests
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        loic.poulain@linaro.org, rfried@codeaurora.org,
-        bjorn.andersson@linaro.org
-References: <20180416131634.25432-1-daniel@zonque.org>
- <20180416131634.25432-6-daniel@zonque.org>
- <87lgdnp7sy.fsf@kamboji.qca.qualcomm.com>
- <0595a559-8220-bc22-0c33-4580119c774d@zonque.org>
- <87h8obp7c0.fsf@kamboji.qca.qualcomm.com>
-From: Daniel Mack <daniel@zonque.org>
-Message-ID: <384e608f-0f59-8ba6-5223-8a52e2ac86f9@zonque.org> (sfid-20180416_162908_814838_0031A7A4)
-Date: Mon, 16 Apr 2018 16:29:03 +0200
-MIME-Version: 1.0
-In-Reply-To: <87h8obp7c0.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
+Received: from paleale.coelho.fi ([176.9.41.70]:39572 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754589AbeDMMo2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Apr 2018 08:44:28 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 13 Apr 2018 15:42:43 +0300
+Message-Id: <20180413124256.21769-13-luca@coelho.fi> (sfid-20180413_144441_485636_3447BBF7)
+In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
+References: <20180413124256.21769-1-luca@coelho.fi>
+Subject: [PATCH 12/25] iwlwifi: Revert "iwlwifi: pcie: dynamic Tx command queue size"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, April 16, 2018 04:13 PM, Kalle Valo wrote:
-> Daniel Mack <daniel@zonque.org> writes:
->> On Monday, April 16, 2018 04:03 PM, Kalle Valo wrote:
->>> Daniel Mack <daniel@zonque.org> writes:
+From: Sara Sharon <sara.sharon@intel.com>
 
->>>> them to the firmware message. The driver currently tells the core that
->>>> it is capable of attaching up to WCN36XX_MAX_SCAN_IE_LEN octets, but
->>>> doesn't actually pass them to the the hardware.
->>>>
->>>> Some defines were moved around to avoid cyclic include dependencies.
->>>
->>> Does this fix anything or change functionality somehow? You should
->>> document that also in the commit log.
->>
->> I don't have a test case for this, no. But as the change was pretty much
->> straight forward, I sent it anyway.
-> 
-> Ok, but you should still explain that in the commit log. In other words,
-> you should always answer the question "Why?" in the commit log.
-> 
->> I can resend with some more information on this if you like.
-> 
-> No need to resend because of this, I can edit the commit log.
-> 
+This reverts commit dd05f9aab4426ff178b12d601e50d19d336eba30.
 
-Hmm, given that I can't even be sure the firmware does the right thing
-when instructed this way, we should probably just drop this patch from
-the series. The others are more important anyway, as they address bugs
-that hit me on actual hardware.
+Shorter TX queues support was added eventually without the
+need for the parameters this patch added.
 
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c     |  1 -
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h    |  3 ---
+ .../net/wireless/intel/iwlwifi/pcie/ctxt-info.c    |  2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  3 ---
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  |  8 ++------
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 23 ++--------------------
+ 6 files changed, 5 insertions(+), 35 deletions(-)
 
-Thanks,
-Daniel
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index dffd9df782b0..f2b6e0e8d787 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -137,7 +137,6 @@ static const struct iwl_ht_params iwl_22000_ht_params = {
+ 	.gen2 = true,							\
+ 	.nvm_type = IWL_NVM_EXT,					\
+ 	.dbgc_supported = true,						\
+-	.tx_cmd_queue_size = 32,					\
+ 	.min_umac_error_event_table = 0x400000
+ 
+ const struct iwl_cfg iwl22000_2ac_cfg_hr = {
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index f0f5636dd3ea..687bed30c851 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -333,8 +333,6 @@ struct iwl_pwr_tx_backoff {
+  * @gen2: 22000 and on transport operation
+  * @cdb: CDB support
+  * @nvm_type: see &enum iwl_nvm_type
+- * @tx_cmd_queue_size: size of the cmd queue. If zero, use the same value as
+- *	the regular queues
+  *
+  * We enable the driver to be backward compatible wrt. hardware features.
+  * API differences in uCode shouldn't be handled here but through TLVs
+@@ -386,7 +384,6 @@ struct iwl_cfg {
+ 	    gen2:1,
+ 	    cdb:1,
+ 	    dbgc_supported:1;
+-	u16 tx_cmd_queue_size;
+ 	u8 valid_tx_ant;
+ 	u8 valid_rx_ant;
+ 	u8 non_shared_ant;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
+index 5ef216f3a60b..3fc4343581ee 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
+@@ -244,7 +244,7 @@ int iwl_pcie_ctxt_info_init(struct iwl_trans *trans,
+ 	ctxt_info->hcmd_cfg.cmd_queue_addr =
+ 		cpu_to_le64(trans_pcie->txq[trans_pcie->cmd_queue]->dma_addr);
+ 	ctxt_info->hcmd_cfg.cmd_queue_size =
+-		TFD_QUEUE_CB_SIZE(trans_pcie->tx_cmd_queue_size);
++		TFD_QUEUE_CB_SIZE(TFD_CMD_SLOTS);
+ 
+ 	/* allocate ucode sections in dram and set addresses */
+ 	ret = iwl_pcie_ctxt_info_init_fw_sec(trans, fw, ctxt_info);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index ca3b64ff4dad..a8833028e1cf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -383,7 +383,6 @@ struct iwl_self_init_dram {
+  * @hw_init_mask: initial unmasked hw causes
+  * @fh_mask: current unmasked fh causes
+  * @hw_mask: current unmasked hw causes
+- * @tx_cmd_queue_size: the size of the tx command queue
+  */
+ struct iwl_trans_pcie {
+ 	struct iwl_rxq *rxq;
+@@ -465,7 +464,6 @@ struct iwl_trans_pcie {
+ 	u32 fh_mask;
+ 	u32 hw_mask;
+ 	cpumask_t affinity_mask[IWL_MAX_RX_HW_QUEUES];
+-	u16 tx_cmd_queue_size;
+ };
+ 
+ static inline struct iwl_trans_pcie *
+@@ -537,7 +535,6 @@ void iwl_pcie_hcmd_complete(struct iwl_trans *trans,
+ void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
+ 			    struct sk_buff_head *skbs);
+ void iwl_trans_pcie_tx_reset(struct iwl_trans *trans);
+-void iwl_pcie_set_tx_cmd_queue_size(struct iwl_trans *trans);
+ 
+ static inline u16 iwl_pcie_tfd_tb_get_len(struct iwl_trans *trans, void *_tfd,
+ 					  u8 idx)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 734a5fc3584d..7bdb9c9e04b1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -1173,8 +1173,6 @@ int iwl_pcie_gen2_tx_init(struct iwl_trans *trans)
+ 	struct iwl_txq *cmd_queue;
+ 	int txq_id = trans_pcie->cmd_queue, ret;
+ 
+-	iwl_pcie_set_tx_cmd_queue_size(trans);
+-
+ 	/* alloc and init the command queue */
+ 	if (!trans_pcie->txq[txq_id]) {
+ 		cmd_queue = kzalloc(sizeof(*cmd_queue), GFP_KERNEL);
+@@ -1183,8 +1181,7 @@ int iwl_pcie_gen2_tx_init(struct iwl_trans *trans)
+ 			return -ENOMEM;
+ 		}
+ 		trans_pcie->txq[txq_id] = cmd_queue;
+-		ret = iwl_pcie_txq_alloc(trans, cmd_queue,
+-					 trans_pcie->tx_cmd_queue_size, true);
++		ret = iwl_pcie_txq_alloc(trans, cmd_queue, TFD_CMD_SLOTS, true);
+ 		if (ret) {
+ 			IWL_ERR(trans, "Tx %d queue init failed\n", txq_id);
+ 			goto error;
+@@ -1193,8 +1190,7 @@ int iwl_pcie_gen2_tx_init(struct iwl_trans *trans)
+ 		cmd_queue = trans_pcie->txq[txq_id];
+ 	}
+ 
+-	ret = iwl_pcie_txq_init(trans, cmd_queue,
+-				trans_pcie->tx_cmd_queue_size, true);
++	ret = iwl_pcie_txq_init(trans, cmd_queue, TFD_CMD_SLOTS, true);
+ 	if (ret) {
+ 		IWL_ERR(trans, "Tx %d queue alloc failed\n", txq_id);
+ 		goto error;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 4493520aae1e..cf468b9f5a82 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -953,8 +953,7 @@ static int iwl_pcie_tx_alloc(struct iwl_trans *trans)
+ 	     txq_id++) {
+ 		bool cmd_queue = (txq_id == trans_pcie->cmd_queue);
+ 
+-		slots_num = cmd_queue ? trans_pcie->tx_cmd_queue_size :
+-			TFD_TX_CMD_SLOTS;
++		slots_num = cmd_queue ? TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
+ 		trans_pcie->txq[txq_id] = &trans_pcie->txq_memory[txq_id];
+ 		ret = iwl_pcie_txq_alloc(trans, trans_pcie->txq[txq_id],
+ 					 slots_num, cmd_queue);
+@@ -973,21 +972,6 @@ static int iwl_pcie_tx_alloc(struct iwl_trans *trans)
+ 	return ret;
+ }
+ 
+-void iwl_pcie_set_tx_cmd_queue_size(struct iwl_trans *trans)
+-{
+-	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	int queue_size = TFD_CMD_SLOTS;
+-
+-	if (trans->cfg->tx_cmd_queue_size)
+-		queue_size = trans->cfg->tx_cmd_queue_size;
+-
+-	if (WARN_ON(!(is_power_of_2(queue_size) &&
+-		      TFD_QUEUE_CB_SIZE(queue_size) > 0)))
+-		trans_pcie->tx_cmd_queue_size = TFD_CMD_SLOTS;
+-	else
+-		trans_pcie->tx_cmd_queue_size = queue_size;
+-}
+-
+ int iwl_pcie_tx_init(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+@@ -995,8 +979,6 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
+ 	int txq_id, slots_num;
+ 	bool alloc = false;
+ 
+-	iwl_pcie_set_tx_cmd_queue_size(trans);
+-
+ 	if (!trans_pcie->txq_memory) {
+ 		ret = iwl_pcie_tx_alloc(trans);
+ 		if (ret)
+@@ -1020,8 +1002,7 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
+ 	     txq_id++) {
+ 		bool cmd_queue = (txq_id == trans_pcie->cmd_queue);
+ 
+-		slots_num = cmd_queue ? trans_pcie->tx_cmd_queue_size :
+-			TFD_TX_CMD_SLOTS;
++		slots_num = cmd_queue ? TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
+ 		ret = iwl_pcie_txq_init(trans, trans_pcie->txq[txq_id],
+ 					slots_num, cmd_queue);
+ 		if (ret) {
+-- 
+2.16.3
