@@ -1,100 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:44256 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754865AbeDZKRN (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39344 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754610AbeDMMnG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Apr 2018 06:17:13 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
+        Fri, 13 Apr 2018 08:43:06 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 4/6] brcmfmac: constify firmware mapping tables
-Date: Thu, 26 Apr 2018 12:16:49 +0200
-Message-Id: <1524737811-1965-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180426_121724_729732_0B14A30A)
-In-Reply-To: <1524737811-1965-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1524737811-1965-1-git-send-email-arend.vanspriel@broadcom.com>
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 13 Apr 2018 15:42:34 +0300
+Message-Id: <20180413124256.21769-4-luca@coelho.fi> (sfid-20180413_144349_114775_C5D6E2DA)
+In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
+References: <20180413124256.21769-1-luca@coelho.fi>
+Subject: [PATCH 03/25] iwlwifi: mvm: BT Coex - make the primary / secondary pick traffic aware
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The information in the firmware mapping does not need to be modified
-so it can be static const.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+The primary channel is the channel that will be untouched by BT. The
+secondary channel might be touched by BT.  Hence, we want the primary
+to be the most active channel.  To do so, use the TCM infrastructure.
+
+Since the BT keeps sending notifications, we can rely on them to
+trigger the check. Every 10 seconds, we will check what is the most
+active context and chose the right primary.
+
+We need to wait 10 seconds before we modify the settings because
+frequent changes in these settings can confuse BT.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 2 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h | 2 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c     | 2 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c     | 2 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c      | 2 +-
- 5 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/coex.c | 37 +++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index 9277f4c..6e47f14 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -630,7 +630,7 @@ int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
+index 890dbfff3a06..016e03a5034f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
+@@ -279,6 +279,8 @@ struct iwl_bt_iterator_data {
+ 	struct ieee80211_chanctx_conf *primary;
+ 	struct ieee80211_chanctx_conf *secondary;
+ 	bool primary_ll;
++	u8 primary_load;
++	u8 secondary_load;
+ };
  
- struct brcmf_fw_request *
- brcmf_fw_alloc_request(u32 chip, u32 chiprev,
--		       struct brcmf_firmware_mapping mapping_table[],
-+		       const struct brcmf_firmware_mapping mapping_table[],
- 		       u32 table_size, struct brcmf_fw_name *fwnames,
- 		       u32 n_fwnames)
- {
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-index 79a2109..2893e56 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-@@ -80,7 +80,7 @@ struct brcmf_fw_name {
+ static inline
+@@ -295,6 +297,30 @@ void iwl_mvm_bt_coex_enable_rssi_event(struct iwl_mvm *mvm,
+ 		enable ? -IWL_MVM_BT_COEX_DIS_RED_TXP_THRESH : 0;
+ }
  
- struct brcmf_fw_request *
- brcmf_fw_alloc_request(u32 chip, u32 chiprev,
--		       struct brcmf_firmware_mapping mapping_table[],
-+		       const struct brcmf_firmware_mapping mapping_table[],
- 		       u32 table_size, struct brcmf_fw_name *fwnames,
- 		       u32 n_fwnames);
++#define MVM_COEX_TCM_PERIOD (HZ * 10)
++
++static void iwl_mvm_bt_coex_tcm_based_ci(struct iwl_mvm *mvm,
++					 struct iwl_bt_iterator_data *data)
++{
++	unsigned long now = jiffies;
++
++	if (!time_after(now, mvm->bt_coex_last_tcm_ts + MVM_COEX_TCM_PERIOD))
++		return;
++
++	mvm->bt_coex_last_tcm_ts = now;
++
++	/* We assume here that we don't have more than 2 vifs on 2.4GHz */
++
++	/* if the primary is low latency, it will stay primary */
++	if (data->primary_ll)
++		return;
++
++	if (data->primary_load >= data->secondary_load)
++		return;
++
++	swap(data->primary, data->secondary);
++}
++
+ /* must be called under rcu_read_lock */
+ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 				      struct ieee80211_vif *vif)
+@@ -385,6 +411,11 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 			/* there is low latency vif - we will be secondary */
+ 			data->secondary = chanctx_conf;
+ 		}
++
++		if (data->primary == chanctx_conf)
++			data->primary_load = mvm->tcm.result.load[mvmvif->id];
++		else if (data->secondary == chanctx_conf)
++			data->secondary_load = mvm->tcm.result.load[mvmvif->id];
+ 		return;
+ 	}
  
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 6e25ff9..9708647 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -59,7 +59,7 @@ enum brcmf_pcie_state {
- BRCMF_FW_DEF(4366C, "brcmfmac4366c-pcie");
- BRCMF_FW_DEF(4371, "brcmfmac4371-pcie");
+@@ -398,6 +429,10 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
+ 		/* if secondary is not NULL, it might be a GO */
+ 		data->secondary = chanctx_conf;
  
--static struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
-+static const struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
- 	BRCMF_FW_ENTRY(BRCM_CC_43602_CHIP_ID, 0xFFFFFFFF, 43602),
- 	BRCMF_FW_ENTRY(BRCM_CC_43465_CHIP_ID, 0xFFFFFFF0, 4366C),
- 	BRCMF_FW_ENTRY(BRCM_CC_4350_CHIP_ID, 0x000000FF, 4350C),
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 1037df7..412a05b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -619,7 +619,7 @@ struct sdiod_drive_str {
- BRCMF_FW_DEF(4356, "brcmfmac4356-sdio");
- BRCMF_FW_DEF(4373, "brcmfmac4373-sdio");
++	if (data->primary == chanctx_conf)
++		data->primary_load = mvm->tcm.result.load[mvmvif->id];
++	else if (data->secondary == chanctx_conf)
++		data->secondary_load = mvm->tcm.result.load[mvmvif->id];
+ 	/*
+ 	 * don't reduce the Tx power if one of these is true:
+ 	 *  we are in LOOSE
+@@ -449,6 +484,8 @@ static void iwl_mvm_bt_coex_notif_handle(struct iwl_mvm *mvm)
+ 					mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
+ 					iwl_mvm_bt_notif_iterator, &data);
  
--static struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
-+static const struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
- 	BRCMF_FW_ENTRY(BRCM_CC_43143_CHIP_ID, 0xFFFFFFFF, 43143),
- 	BRCMF_FW_ENTRY(BRCM_CC_43241_CHIP_ID, 0x0000001F, 43241B0),
- 	BRCMF_FW_ENTRY(BRCM_CC_43241_CHIP_ID, 0x00000020, 43241B4),
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index a0873ad..a4308c6 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -52,7 +52,7 @@
- BRCMF_FW_DEF(43569, "brcmfmac43569");
- BRCMF_FW_DEF(4373, "brcmfmac4373");
- 
--static struct brcmf_firmware_mapping brcmf_usb_fwnames[] = {
-+static const struct brcmf_firmware_mapping brcmf_usb_fwnames[] = {
- 	BRCMF_FW_ENTRY(BRCM_CC_43143_CHIP_ID, 0xFFFFFFFF, 43143),
- 	BRCMF_FW_ENTRY(BRCM_CC_43235_CHIP_ID, 0x00000008, 43236B),
- 	BRCMF_FW_ENTRY(BRCM_CC_43236_CHIP_ID, 0x00000008, 43236B),
++	iwl_mvm_bt_coex_tcm_based_ci(mvm, &data);
++
+ 	if (data.primary) {
+ 		struct ieee80211_chanctx_conf *chan = data.primary;
+ 		if (WARN_ON(!chan->def.chan)) {
 -- 
-1.9.1
+2.16.3
