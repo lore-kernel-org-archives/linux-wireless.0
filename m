@@ -1,132 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:6278 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753250AbeDRLk2 (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:42550 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753076AbeDMGQm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 07:40:28 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 02/22] staging: wilc1000: rename variable using datatype in their name in add_key()
-Date: Wed, 18 Apr 2018 17:09:04 +0530
-Message-ID: <1524051564-15497-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180418_134030_888184_1E1F3471)
-In-Reply-To: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
+        Fri, 13 Apr 2018 02:16:42 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v4 6/9] rtlwifi: btcoex: remove comments that are not meaningful
+Date: Fri, 13 Apr 2018 14:16:10 +0800
+Message-ID: <20180413061613.8569-7-pkshih@realtek.com> (sfid-20180413_081646_939365_A268651E)
+In-Reply-To: <20180413061613.8569-1-pkshih@realtek.com>
+References: <20180413061613.8569-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup changes to use variable name as per linux coding style.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+The comments aren't meaningful and the use of '***...***' isn't upstream
+style, so remove them. This patch doesn't change any code.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 32 +++++++++++------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    | 22 +-------------------
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 24 +---------------------
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 23 ++-------------------
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 22 +-------------------
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 23 +--------------------
+ 5 files changed, 6 insertions(+), 108 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index bdc6c85..57e7bf6 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -869,9 +869,9 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 	struct wilc_priv *priv;
- 	const u8 *rx_mic = NULL;
- 	const u8 *tx_mic = NULL;
--	u8 u8mode = NO_ENCRYPT;
--	u8 u8gmode = NO_ENCRYPT;
--	u8 u8pmode = NO_ENCRYPT;
-+	u8 mode = NO_ENCRYPT;
-+	u8 gmode = NO_ENCRYPT;
-+	u8 pmode = NO_ENCRYPT;
- 	enum AUTHTYPE auth_type = ANY;
- 	struct wilc *wl;
- 	struct wilc_vif *vif;
-@@ -890,13 +890,13 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 			auth_type = OPEN_SYSTEM;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
+index 8fce371749d3..959af05117d7 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
+@@ -22,23 +22,9 @@
+  * Larry Finger <Larry.Finger@lwfinger.net>
+  *
+  *****************************************************************************/
+-/**************************************************************
+- * Description:
+- *
+- * This file is for RTL8192E Co-exist mechanism
+- *
+- * History
+- * 2012/11/15 Cosa first check in.
+- *
+- **************************************************************/
  
- 			if (params->cipher == WLAN_CIPHER_SUITE_WEP40)
--				u8mode = ENCRYPT_ENABLED | WEP;
-+				mode = ENCRYPT_ENABLED | WEP;
- 			else
--				u8mode = ENCRYPT_ENABLED | WEP | WEP_EXTENDED;
-+				mode = ENCRYPT_ENABLED | WEP | WEP_EXTENDED;
+-/**************************************************************
+- *   include files
+- **************************************************************/
+ #include "halbt_precomp.h"
+-/**************************************************************
+- *   Global variables, these are static variables
+- **************************************************************/
++
+ static struct coex_dm_8192e_2ant glcoex_dm_8192e_2ant;
+ static struct coex_dm_8192e_2ant *coex_dm = &glcoex_dm_8192e_2ant;
+ static struct coex_sta_8192e_2ant glcoex_sta_8192e_2ant;
+@@ -53,12 +39,6 @@ static const char *const glbt_info_src_8192e_2ant[] = {
+ static u32 glcoex_ver_date_8192e_2ant = 20130902;
+ static u32 glcoex_ver_8192e_2ant = 0x34;
  
- 			wilc_add_wep_key_bss_ap(vif, params->key,
- 						params->key_len, key_index,
--						u8mode, auth_type);
-+						mode, auth_type);
- 			break;
- 		}
- 		if (memcmp(params->key, priv->wep_key[key_index], params->key_len)) {
-@@ -925,11 +925,11 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+-/**************************************************************
+- *   local function proto type if needed
+- **************************************************************/
+-/**************************************************************
+- *   local function start with btc8192e2ant_
+- **************************************************************/
+ static u8 btc8192e2ant_bt_rssi_state(struct btc_coexist *btcoexist,
+ 				     u8 level_num, u8 rssi_thresh,
+ 				     u8 rssi_thresh1)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+index 59553db020ef..e97e907e66cd 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
+@@ -23,23 +23,8 @@
+  *
+  *****************************************************************************/
  
- 			if (!pairwise) {
- 				if (params->cipher == WLAN_CIPHER_SUITE_TKIP)
--					u8gmode = ENCRYPT_ENABLED | WPA | TKIP;
-+					gmode = ENCRYPT_ENABLED | WPA | TKIP;
- 				else
--					u8gmode = ENCRYPT_ENABLED | WPA2 | AES;
-+					gmode = ENCRYPT_ENABLED | WPA2 | AES;
+-/***************************************************************
+- * Description:
+- *
+- * This file is for RTL8723B Co-exist mechanism
+- *
+- * History
+- * 2012/11/15 Cosa first check in.
+- *
+- ***************************************************************/
+-
+-/***************************************************************
+- * include files
+- ***************************************************************/
+ #include "halbt_precomp.h"
+-/***************************************************************
+- * Global variables, these are static variables
+- ***************************************************************/
++
+ static struct coex_dm_8723b_1ant glcoex_dm_8723b_1ant;
+ static struct coex_dm_8723b_1ant *coex_dm = &glcoex_dm_8723b_1ant;
+ static struct coex_sta_8723b_1ant glcoex_sta_8723b_1ant;
+@@ -54,13 +39,6 @@ static const char *const glbt_info_src_8723b_1ant[] = {
+ static u32 glcoex_ver_date_8723b_1ant = 20130918;
+ static u32 glcoex_ver_8723b_1ant = 0x47;
  
--				priv->wilc_groupkey = u8gmode;
-+				priv->wilc_groupkey = gmode;
+-/***************************************************************
+- * local function proto type if needed
+- ***************************************************************/
+-/***************************************************************
+- * local function start with halbtc8723b1ant_
+- ***************************************************************/
+-
+ static void halbtc8723b1ant_updatera_mask(struct btc_coexist *btcoexist,
+ 					  bool force_exec, u32 dis_rate_mask)
+ {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 73ec31972944..e9a7f303cdda 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -22,22 +22,9 @@
+  * Larry Finger <Larry.Finger@lwfinger.net>
+  *
+  *****************************************************************************/
+-/***************************************************************
+- * Description:
+- *
+- * This file is for RTL8723B Co-exist mechanism
+- *
+- * History
+- * 2012/11/15 Cosa first check in.
+- *
+- **************************************************************/
+-/**************************************************************
+- * include files
+- **************************************************************/
++
+ #include "halbt_precomp.h"
+-/**************************************************************
+- * Global variables, these are static variables
+- **************************************************************/
++
+ static struct coex_dm_8723b_2ant glcoex_dm_8723b_2ant;
+ static struct coex_dm_8723b_2ant *coex_dm = &glcoex_dm_8723b_2ant;
+ static struct coex_sta_8723b_2ant glcoex_sta_8723b_2ant;
+@@ -52,12 +39,6 @@ static const char *const glbt_info_src_8723b_2ant[] = {
+ static u32 glcoex_ver_date_8723b_2ant = 20131113;
+ static u32 glcoex_ver_8723b_2ant = 0x3f;
  
- 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
- 					tx_mic = params->key + 24;
-@@ -954,13 +954,13 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 				wilc_add_rx_gtk(vif, params->key, keylen,
- 						key_index, params->seq_len,
- 						params->seq, rx_mic,
--						tx_mic, AP_MODE, u8gmode);
-+						tx_mic, AP_MODE, gmode);
+-/**************************************************************
+- * local function proto type if needed
+- **************************************************************/
+-/**************************************************************
+- * local function start with btc8723b2ant_
+- **************************************************************/
+ static u8 btc8723b2ant_bt_rssi_state(struct btc_coexist *btcoexist,
+ 				     u8 level_num, u8 rssi_thresh,
+ 				     u8 rssi_thresh1)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+index 202597cf8915..39dc5966700b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
+@@ -23,23 +23,8 @@
+  *
+  *****************************************************************************/
  
- 			} else {
- 				if (params->cipher == WLAN_CIPHER_SUITE_TKIP)
--					u8pmode = ENCRYPT_ENABLED | WPA | TKIP;
-+					pmode = ENCRYPT_ENABLED | WPA | TKIP;
- 				else
--					u8pmode = priv->wilc_groupkey | AES;
-+					pmode = priv->wilc_groupkey | AES;
+-/**************************************************************
+- * Description:
+- *
+- * This file is for RTL8821A Co-exist mechanism
+- *
+- * History
+- * 2012/11/15 Cosa first check in.
+- *
+- **************************************************************/
+-
+-/**************************************************************
+- * include files
+- **************************************************************/
+ #include "halbt_precomp.h"
+-/**************************************************************
+- * Global variables, these are static variables
+- **************************************************************/
++
+ static struct coex_dm_8821a_1ant glcoex_dm_8821a_1ant;
+ static struct coex_dm_8821a_1ant *coex_dm = &glcoex_dm_8821a_1ant;
+ static struct coex_sta_8821a_1ant glcoex_sta_8821a_1ant;
+@@ -56,11 +41,6 @@ static const char *const glbt_info_src_8821a_1ant[] = {
+ static u32 glcoex_ver_date_8821a_1ant = 20130816;
+ static u32 glcoex_ver_8821a_1ant = 0x41;
  
- 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
- 					tx_mic = params->key + 24;
-@@ -984,13 +984,13 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+-/**************************************************************
+- * local function proto type if needed
+- *
+- * local function start with btc8821a1ant_
+- **************************************************************/
+ static u8 btc8821a1ant_bt_rssi_state(struct btc_coexist *btcoexist,
+ 				     u8 level_num, u8 rssi_thresh,
+ 				     u8 rssi_thresh1)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 2202d5e18977..264796616d8a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -23,24 +23,8 @@
+  *
+  *****************************************************************************/
  
- 				wilc_add_ptk(vif, params->key, keylen,
- 					     mac_addr, rx_mic, tx_mic,
--					     AP_MODE, u8pmode, key_index);
-+					     AP_MODE, pmode, key_index);
- 			}
- 			break;
- 		}
+-/************************************************************
+- * Description:
+- *
+- * This file is for RTL8821A Co-exist mechanism
+- *
+- * History
+- * 2012/08/22 Cosa first check in.
+- * 2012/11/14 Cosa Revise for 8821A 2Ant out sourcing.
+- *
+- ************************************************************/
+-
+-/************************************************************
+- * include files
+- ************************************************************/
+ #include "halbt_precomp.h"
+-/************************************************************
+- * Global variables, these are static variables
+- ************************************************************/
++
+ static struct coex_dm_8821a_2ant glcoex_dm_8821a_2ant;
+ static struct coex_dm_8821a_2ant *coex_dm = &glcoex_dm_8821a_2ant;
+ static struct coex_sta_8821a_2ant glcoex_sta_8821a_2ant;
+@@ -55,11 +39,6 @@ static const char *const glbt_info_src_8821a_2ant[] = {
+ static u32 glcoex_ver_date_8821a_2ant = 20130618;
+ static u32 glcoex_ver_8821a_2ant = 0x5050;
  
- 		{
--			u8mode = 0;
-+			mode = 0;
- 			if (!pairwise) {
- 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
- 					rx_mic = params->key + 24;
-@@ -1002,7 +1002,7 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 						key_index, params->seq_len,
- 						params->seq, rx_mic,
- 						tx_mic, STATION_MODE,
--						u8mode);
-+						mode);
- 			} else {
- 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
- 					rx_mic = params->key + 24;
-@@ -1012,7 +1012,7 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 
- 				wilc_add_ptk(vif, params->key, keylen,
- 					     mac_addr, rx_mic, tx_mic,
--					     STATION_MODE, u8mode, key_index);
-+					     STATION_MODE, mode, key_index);
- 			}
- 		}
- 		break;
+-/************************************************************
+- * local function proto type if needed
+- *
+- * local function start with btc8821a2ant_
+- ************************************************************/
+ static u8 btc8821a2ant_bt_rssi_state(struct btc_coexist *btcoexist,
+ 				     u8 level_num, u8 rssi_thresh,
+ 				     u8 rssi_thresh1)
 -- 
-2.7.4
+2.15.1
