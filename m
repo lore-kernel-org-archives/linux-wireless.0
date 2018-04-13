@@ -1,77 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41332 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1756587AbeDXK4Q (ORCPT
+Received: from mail-wr0-f175.google.com ([209.85.128.175]:45063 "EHLO
+        mail-wr0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750980AbeDMVNe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 06:56:16 -0400
-Message-ID: <a768684127fb8e5f3c62bb62ec80e52950314787.camel@coelho.fi> (sfid-20180424_125619_502573_137F2BA9)
-From: Luca Coelho <luca@coelho.fi>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Rajat Jain <rajatja@google.com>
-Date: Tue, 24 Apr 2018 13:56:12 +0300
-In-Reply-To: <87h8o1os5b.fsf@codeaurora.org>
-References: <20180422082745.9743-1-luca@coelho.fi>
-         <20180422082745.9743-10-luca@coelho.fi> <87h8o1os5b.fsf@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 09/12] iwlwifi: pcie: remove non-responsive device
+        Fri, 13 Apr 2018 17:13:34 -0400
+Received: by mail-wr0-f175.google.com with SMTP id u11so11313624wri.12
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Apr 2018 14:13:34 -0700 (PDT)
+Subject: Re: [PATCH 2/2] ath10k: support MAC address randomization in scan
+To: Kalle Valo <kvalo@codeaurora.org>, cjhuang@codeaurora.org
+References: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org>
+ <1522379640-6442-3-git-send-email-cjhuang@codeaurora.org>
+ <20180412205954.GA34456@rodete-desktop-imager.corp.google.com>
+ <e16557d0891352ae0b83902faee97023@codeaurora.org>
+ <877epbs5v7.fsf@kamboji.qca.qualcomm.com>
+Cc: Brian Norris <briannorris@chromium.org>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AD11D7C.1030603@broadcom.com> (sfid-20180413_231338_263700_C7C5007B)
+Date: Fri, 13 Apr 2018 23:13:32 +0200
+MIME-Version: 1.0
+In-Reply-To: <877epbs5v7.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-04-24 at 12:44 +0300, Kalle Valo wrote:
-> Luca Coelho <luca@coelho.fi> writes:
-> 
-> > From: Luca Coelho <luciano.coelho@intel.com>
-> > 
-> > If we fail to to grab NIC access because the device is not
-> > responding
-> > (i.e. CSR_GP_CNTRL returns 0xFFFFFFFF), remove the device from the
-> > PCI
-> > bus, to avoid any further damage, and to let the user space rescan.
-> > 
-> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> > Signed-off-by: Rajat Jain <rajatja@google.com>
-> 
-> The commit log doesn't mention anything about the module parameter
-> nor
-> about the kobject uevent.
+On 4/13/2018 1:28 PM, Kalle Valo wrote:
+> cjhuang@codeaurora.org writes:
+>
+>>>> +	if (test_bit(WMI_SERVICE_SPOOF_MAC_SUPPORT, ar->wmi.svc_map)) {
+>>>> +		ret = ath10k_wmi_scan_prob_req_oui(ar, ar->mac_addr);
+>>>> +		if (ret) {
+>>>> +			ath10k_err(ar, "failed to set prob req oui: %i\n", ret);
+>>>> +			goto err_dfs_detector_exit;
+>>>> +		}
+>>>> +
+>>>> +		ar->hw->wiphy->features |=
+>>>> +			NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
+>>>
+>>> Do you support NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR too?
+>>
+>> I'll add this flag too.
+>
+> Are you going to send v2 or what's the plan?
 
-Good point.  The uevent and the module parameter were added in later
-patches and I squashed them all into this one, but forgot to update the
-commit message.  I'll fix it.
+Maybe a stupid question, but does ath10k support scheduled scan?
 
-
-> > +static void iwl_trans_pcie_removal_wk(struct work_struct *wk)
-> > +{
-> > +	struct iwl_trans_pcie_removal *removal =
-> > +		container_of(wk, struct iwl_trans_pcie_removal,
-> > work);
-> > +	struct pci_dev *pdev = removal->pdev;
-> > +	char *prop[] = {"EVENT=INACCESSIBLE", NULL};
-> > +
-> > +	dev_err(&pdev->dev, "Device gone - attempting removal\n");
-> > +	kobject_uevent_env(&pdev->dev.kobj, KOBJ_CHANGE, prop);
-> > +	pci_lock_rescan_remove();
-> > +	pci_dev_put(pdev);
-> > +	pci_stop_and_remove_bus_device(pdev);
-> > +	pci_unlock_rescan_remove();
-> > +
-> > +	kfree(removal);
-> > +	module_put(THIS_MODULE);
-> > +}
-> 
-> So is the uevent some standard thing or what? At least grepping
-> INACCESSIBLE for didn't tell me anything.
-
-No, this is not standard.  We didn't find any appropriate standard
-message for this case, so we created a new one.  Also, we didn't want
-to interfere with components that may react to standard messages.
-
-This is disabled by default and the idea is to change this in the
-future to allow the driver to remove and rescan the device
-automatically.  So we will have 3 options in the module parameter: do
-nothing; auto-rescan or; send uevent.
-
---
-Cheers,
-Luca.
+Regards,
+Arend
