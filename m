@@ -1,257 +1,312 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:43802 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751797AbeDKXNI (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39386 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754708AbeDMMnL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Apr 2018 19:13:08 -0400
-Received: by mail-pl0-f66.google.com with SMTP id a39-v6so2494135pla.10
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2018 16:13:08 -0700 (PDT)
-Date: Wed, 11 Apr 2018 16:13:05 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Wen Gong <wgong@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: Convert wow pattern from 802.3 to 802.11
-Message-ID: <20180411231304.GA121875@rodete-desktop-imager.corp.google.com> (sfid-20180412_011312_952174_33BEA516)
-References: <1522379899-31969-1-git-send-email-wgong@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1522379899-31969-1-git-send-email-wgong@codeaurora.org>
+        Fri, 13 Apr 2018 08:43:11 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 13 Apr 2018 15:42:39 +0300
+Message-Id: <20180413124256.21769-9-luca@coelho.fi> (sfid-20180413_144320_163636_6168776A)
+In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
+References: <20180413124256.21769-1-luca@coelho.fi>
+Subject: [PATCH 08/25] iwlwifi: mvm: support offload of AMSDU rate control
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-On Fri, Mar 30, 2018 at 11:18:19AM +0800, Wen Gong wrote:
-> When trying to set wow wakeup patterns it fails with this command:
-> 
-> iw phyxx wowlan enable patterns offset xx+ IP address xx.xx.xx.xx
-> 
-> The reason is that the wow pattern from upper layer is in 802.3 format
-> for this case, it need to convert it to 802.11 format. The input
-> offset parameter is used for 802.3, but the actual offset firmware
-> need depends on rx_decap_mode, so that it needs to be recalculated.
-> Pattern of 802.3 packet is not same with 802.11 packet. If the
-> rx_decap_mode is ATH10K_HW_TXRX_NATIVE_WIFI, then firmware will
-> receive data packet with 802.11 format from hardware.
-> 
-> Convert graph:
-> -----------------------------------------------------------------------
-> 802.3  |dest mac(6B)|src mac(6B)|type(2B)|     body...    |
->              |__         |_______    |_____________  |___________
->                 |                |                 |             |
-> 802.11 |4B|dest mac(6B)| 6B |src mac(6B)|  8B  |type(2B)|  body...  |
-> -----------------------------------------------------------------------
+Support the new APIs and activate AMSDU based on the
+offloaded TLC decisions.
 
-It feels like this could go into the code comments? Or at least some
-short version of it. (But hey, text is cheap, and who doesn't love ASCII
-art?)
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../net/wireless/intel/iwlwifi/fw/api/datapath.h   |  5 +++
+ drivers/net/wireless/intel/iwlwifi/fw/api/rs.h     | 18 ++++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |  8 +++--
+ drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c     | 42 +++++++++++++++++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c        | 15 +++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.h        |  5 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h       |  7 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 11 ++++--
+ 8 files changed, 96 insertions(+), 15 deletions(-)
 
-> 
-> Tested with QCA6174 hw3.0 with firmware
-> WLAN.RM.4.4.1-00099-QCARMSWPZ-1, but this will also affect QCA9377.
-> This has always failed, so it's not a regression with new firmware
-> releases.
-> 
-> Signed-off-by: Wen Gong <wgong@codeaurora.org>
-> ---
->  drivers/net/wireless/ath/ath10k/wmi.h |   4 ++
->  drivers/net/wireless/ath/ath10k/wow.c | 128 ++++++++++++++++++++++++++++++++--
->  2 files changed, 126 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-> index c7b30ed..389f9c7 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.h
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
-> @@ -6724,6 +6724,10 @@ struct wmi_wow_ev_arg {
->  #define WOW_MIN_PATTERN_SIZE	1
->  #define WOW_MAX_PATTERN_SIZE	148
->  #define WOW_MAX_PKT_OFFSET	128
-> +#define WOW_HDR_LEN	(sizeof(struct ieee80211_hdr_3addr) + \
-> +	sizeof(struct rfc1042_hdr))
-> +#define WOW_MAX_REDUCE	(WOW_HDR_LEN - sizeof(struct ethhdr) - \
-> +	offsetof(struct ieee80211_hdr_3addr, addr1))
->  
->  enum wmi_tdls_state {
->  	WMI_TDLS_DISABLE,
-> diff --git a/drivers/net/wireless/ath/ath10k/wow.c b/drivers/net/wireless/ath/ath10k/wow.c
-> index c4cbccb..9b56a41 100644
-> --- a/drivers/net/wireless/ath/ath10k/wow.c
-> +++ b/drivers/net/wireless/ath/ath10k/wow.c
-> @@ -1,5 +1,6 @@
->  /*
->   * Copyright (c) 2015-2017 Qualcomm Atheros, Inc.
-> + * Copyright (c) 2018, The Linux Foundation. All rights reserved.
->   *
->   * Permission to use, copy, modify, and/or distribute this software for any
->   * purpose with or without fee is hereby granted, provided that the above
-> @@ -76,6 +77,98 @@ static int ath10k_wow_cleanup(struct ath10k *ar)
->  	return 0;
->  }
->  
-> +static void ath10k_wow_convert_8023_to_80211
-> +					(struct cfg80211_pkt_pattern *new,
-> +					const struct cfg80211_pkt_pattern *old)
-> +{
-> +	u8 hdr_8023_pattern[ETH_HLEN] = {};
-> +	u8 hdr_8023_bit_mask[ETH_HLEN] = {};
-> +	u8 hdr_80211_pattern[WOW_HDR_LEN] = {};
-> +	u8 hdr_80211_bit_mask[WOW_HDR_LEN] = {};
-> +
-> +	int total_len = old->pkt_offset + old->pattern_len;
-> +	int hdr_80211_end_offset;
-> +
-> +	struct ieee80211_hdr_3addr *new_hdr_pattern =
-> +		(struct ieee80211_hdr_3addr *)hdr_80211_pattern;
-> +	struct ieee80211_hdr_3addr *new_hdr_mask =
-> +		(struct ieee80211_hdr_3addr *)hdr_80211_bit_mask;
-> +	struct ethhdr *old_hdr_pattern = (struct ethhdr *)hdr_8023_pattern;
-> +	struct ethhdr *old_hdr_mask = (struct ethhdr *)hdr_8023_bit_mask;
-> +	int hdr_len = sizeof(*new_hdr_pattern);
-> +
-> +	struct rfc1042_hdr *new_rfc_pattern =
-> +		(struct rfc1042_hdr *)(hdr_80211_pattern + hdr_len);
-> +	struct rfc1042_hdr *new_rfc_mask =
-> +		(struct rfc1042_hdr *)(hdr_80211_bit_mask + hdr_len);
-> +	int rfc_len = sizeof(*new_rfc_pattern);
-> +
-> +	memcpy(hdr_8023_pattern + old->pkt_offset,
-> +	       old->pattern, ETH_HLEN - old->pkt_offset);
-> +	memcpy(hdr_8023_bit_mask + old->pkt_offset,
-> +	       old->mask, ETH_HLEN - old->pkt_offset);
-> +
-> +	/* Copy destination address */
-> +	memcpy(new_hdr_pattern->addr1, old_hdr_pattern->h_dest, ETH_ALEN);
-> +	memcpy(new_hdr_mask->addr1, old_hdr_mask->h_dest, ETH_ALEN);
-> +
-> +	/* Copy source address */
-> +	memcpy(new_hdr_pattern->addr3, old_hdr_pattern->h_source, ETH_ALEN);
-> +	memcpy(new_hdr_mask->addr3, old_hdr_mask->h_source, ETH_ALEN);
-> +
-> +	/* Copy logic link type */
-> +	memcpy(&new_rfc_pattern->snap_type,
-> +	       &old_hdr_pattern->h_proto,
-> +	       sizeof(old_hdr_pattern->h_proto));
-> +	memcpy(&new_rfc_mask->snap_type,
-> +	       &old_hdr_mask->h_proto,
-> +	       sizeof(old_hdr_mask->h_proto));
-> +
-> +	/* Caculate new pkt_offset */
-> +	if (old->pkt_offset < ETH_ALEN)
-> +		new->pkt_offset = old->pkt_offset +
-> +			offsetof(struct ieee80211_hdr_3addr, addr1);
-> +	else if (old->pkt_offset < offsetof(struct ethhdr, h_proto))
-> +		new->pkt_offset = old->pkt_offset +
-> +			offsetof(struct ieee80211_hdr_3addr, addr3) -
-> +			offsetof(struct ethhdr, h_source);
-> +	else
-> +		new->pkt_offset = old->pkt_offset + hdr_len + rfc_len - ETH_HLEN;
-> +
-> +	/* Caculate new hdr end offset */
-> +	if (total_len > ETH_HLEN)
-> +		hdr_80211_end_offset = hdr_len + rfc_len;
-> +	else if (total_len > offsetof(struct ethhdr, h_proto))
-> +		hdr_80211_end_offset = hdr_len + rfc_len + total_len - ETH_HLEN;
-> +	else if (total_len > ETH_ALEN)
-> +		hdr_80211_end_offset = total_len - ETH_ALEN +
-> +			offsetof(struct ieee80211_hdr_3addr, addr3);
-> +	else
-> +		hdr_80211_end_offset = total_len +
-> +			offsetof(struct ieee80211_hdr_3addr, addr1);
-> +
-> +	new->pattern_len = hdr_80211_end_offset - new->pkt_offset;
-> +
-> +	memcpy((u8 *)new->pattern,
-> +	       hdr_80211_pattern + new->pkt_offset,
-> +	       new->pattern_len);
-> +	memcpy((u8 *)new->mask,
-> +	       hdr_80211_bit_mask + new->pkt_offset,
-> +	       new->pattern_len);
-> +
-> +	if (total_len > ETH_HLEN) {
-> +		/* Copy frame body */
-> +		memcpy((u8 *)new->pattern + new->pattern_len,
-> +		       (void *)old->pattern + ETH_HLEN - old->pkt_offset,
-> +		       total_len - ETH_HLEN);
-> +		memcpy((u8 *)new->mask + new->pattern_len,
-> +		       (void *)old->mask + ETH_HLEN - old->pkt_offset,
-> +		       total_len - ETH_HLEN);
-> +
-> +		new->pattern_len += total_len - ETH_HLEN;
-> +	}
-> +}
-> +
->  static int ath10k_vif_wow_set_wakeups(struct ath10k_vif *arvif,
->  				      struct cfg80211_wowlan *wowlan)
->  {
-> @@ -116,22 +209,39 @@ static int ath10k_vif_wow_set_wakeups(struct ath10k_vif *arvif,
->  
->  	for (i = 0; i < wowlan->n_patterns; i++) {
->  		u8 bitmask[WOW_MAX_PATTERN_SIZE] = {};
-> +		u8 ath_pattern[WOW_MAX_PATTERN_SIZE] = {};
-> +		u8 ath_bitmask[WOW_MAX_PATTERN_SIZE] = {};
-
-So now we've got 3 * 148 = 444 bytes on the stack just for this? Seems
-like it's getting a little large for kernel code, but maybe not too bad.
-I guess we can go with this until somebody runs into a real problem...
-
-Otherwise, seems to work for me:
-
-Tested-by: Brian Norris <briannorris@chromium.org>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-
-> +		struct cfg80211_pkt_pattern new_pattern = {};
-> +		struct cfg80211_pkt_pattern old_pattern = patterns[i];
->  		int j;
-> -
-> +		new_pattern.pattern = ath_pattern;
-> +		new_pattern.mask = ath_bitmask;
->  		if (patterns[i].pattern_len > WOW_MAX_PATTERN_SIZE)
->  			continue;
-> -
->  		/* convert bytemask to bitmask */
->  		for (j = 0; j < patterns[i].pattern_len; j++)
->  			if (patterns[i].mask[j / 8] & BIT(j % 8))
->  				bitmask[j] = 0xff;
-> +		old_pattern.mask = bitmask;
-> +		new_pattern = old_pattern;
-> +
-> +		if (ar->wmi.rx_decap_mode == ATH10K_HW_TXRX_NATIVE_WIFI) {
-> +			if (patterns[i].pkt_offset < ETH_HLEN)
-> +				ath10k_wow_convert_8023_to_80211(&new_pattern,
-> +								 &old_pattern);
-> +			else
-> +				new_pattern.pkt_offset += WOW_HDR_LEN - ETH_HLEN;
-> +		}
-> +
-> +		if (WARN_ON(new_pattern.pattern_len > WOW_MAX_PATTERN_SIZE))
-> +			return -EINVAL;
->  
->  		ret = ath10k_wmi_wow_add_pattern(ar, arvif->vdev_id,
->  						 pattern_id,
-> -						 patterns[i].pattern,
-> -						 bitmask,
-> -						 patterns[i].pattern_len,
-> -						 patterns[i].pkt_offset);
-> +						 new_pattern.pattern,
-> +						 new_pattern.mask,
-> +						 new_pattern.pattern_len,
-> +						 new_pattern.pkt_offset);
->  		if (ret) {
->  			ath10k_warn(ar, "failed to add pattern %i to vdev %i: %d\n",
->  				    pattern_id,
-> @@ -345,6 +455,12 @@ int ath10k_wow_init(struct ath10k *ar)
->  		return -EINVAL;
->  
->  	ar->wow.wowlan_support = ath10k_wowlan_support;
-> +
-> +	if (ar->wmi.rx_decap_mode == ATH10K_HW_TXRX_NATIVE_WIFI) {
-> +		ar->wow.wowlan_support.pattern_max_len -= WOW_MAX_REDUCE;
-> +		ar->wow.wowlan_support.max_pkt_offset -= WOW_MAX_REDUCE;
-> +	}
-> +
->  	ar->wow.wowlan_support.n_patterns = ar->wow.max_num_patterns;
->  	ar->hw->wiphy->wowlan = &ar->wow.wowlan_support;
->  
-> -- 
-> 2.7.4
-> 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h b/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h
+index a57c7223df0f..184cee98c359 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h
+@@ -92,6 +92,11 @@ enum iwl_data_path_subcmd_ids {
+ 	 */
+ 	TLC_MNG_NOTIF_REQ_CMD = 0x10,
+ 
++	/**
++	 * @TLC_MNG_AMSDU_ENABLE_NOTIF: &struct iwl_tlc_amsdu_notif
++	 */
++	TLC_MNG_AMSDU_ENABLE_NOTIF = 0xF6,
++
+ 	/**
+ 	 * @TLC_MNG_UPDATE_NOTIF: &struct iwl_tlc_update_notif
+ 	 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
+index e49a6f7be613..1a8f3154a1fe 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
+@@ -205,7 +205,7 @@ enum iwl_tlc_mng_ht_rates {
+  * @non_ht_supp_rates: bitmap of supported legacy rates
+  * @ht_supp_rates: bitmap of supported HT/VHT rates, valid bits are 0-9
+  * @mode: &enum iwl_tlc_mng_cfg_mode
+- * @reserved2: reserved
++ * @amsdu: TX amsdu is supported
+  * @he_supp_rates: bitmap of supported HE rates
+  * @sgi_ch_width_supp: bitmap of SGI support per channel width
+  * @he_gi_support: 11ax HE guard interval
+@@ -222,13 +222,27 @@ struct iwl_tlc_config_cmd {
+ 	__le16 non_ht_supp_rates;
+ 	__le16 ht_supp_rates[MAX_RS_ANT_NUM];
+ 	u8 mode;
+-	u8 reserved2;
++	u8 amsdu;
+ 	__le16 he_supp_rates;
+ 	u8 sgi_ch_width_supp;
+ 	u8 he_gi_support;
+ 	__le32 max_ampdu_cnt;
+ } __packed; /* TLC_MNG_CONFIG_CMD_API_S_VER_1 */
+ 
++/**
++ * struct iwl_tlc_amsdu_notif - TLC AMSDU configuration
++ * @sta_id: station id
++ * @reserved: reserved
++ * @amsdu_size: Max AMSDU size, in bytes
++ * @amsdu_enabled: bitmap for per-TID AMSDU enablement
++ */
++struct iwl_tlc_amsdu_notif {
++	u8 sta_id;
++	u8 reserved[3];
++	__le16 amsdu_size;
++	__le16 amsdu_enabled;
++} __packed; /* TLC_MNG_AMSDU_ENABLE_NTFY_API_S_VER_1 */
++
+ #define IWL_TLC_NOTIF_INIT_RATE_POS 0
+ #define IWL_TLC_NOTIF_INIT_RATE_MSK BIT(IWL_TLC_NOTIF_INIT_RATE_POS)
+ #define IWL_TLC_NOTIF_REQ_INTERVAL (500)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 6a3f557543e4..1ef4ac21f32a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -250,6 +250,9 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
+ 	RX_HANDLER(TX_CMD, iwl_mvm_rx_tx_cmd, RX_HANDLER_SYNC),
+ 	RX_HANDLER(BA_NOTIF, iwl_mvm_rx_ba_notif, RX_HANDLER_SYNC),
+ 
++	RX_HANDLER_GRP(DATA_PATH_GROUP, TLC_MNG_UPDATE_NOTIF,
++		       iwl_mvm_tlc_update_notif, RX_HANDLER_SYNC),
++
+ 	RX_HANDLER(BT_PROFILE_NOTIFICATION, iwl_mvm_rx_bt_coex_notif,
+ 		   RX_HANDLER_ASYNC_LOCKED),
+ 	RX_HANDLER(BEACON_NOTIFICATION, iwl_mvm_rx_beacon_notif,
+@@ -309,6 +312,8 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
+ 		       iwl_mvm_mu_mimo_grp_notif, RX_HANDLER_SYNC),
+ 	RX_HANDLER_GRP(DATA_PATH_GROUP, STA_PM_NOTIF,
+ 		       iwl_mvm_sta_pm_notif, RX_HANDLER_SYNC),
++	RX_HANDLER_GRP(DATA_PATH_GROUP, TLC_MNG_AMSDU_ENABLE_NOTIF,
++		       iwl_mvm_tlc_amsdu_notif, RX_HANDLER_SYNC),
+ };
+ #undef RX_HANDLER
+ #undef RX_HANDLER_GRP
+@@ -445,6 +450,7 @@ static const struct iwl_hcmd_names iwl_mvm_data_path_names[] = {
+ 	HCMD_NAME(DQA_ENABLE_CMD),
+ 	HCMD_NAME(UPDATE_MU_GROUPS_CMD),
+ 	HCMD_NAME(TRIGGER_RX_QUEUES_NOTIF_CMD),
++	HCMD_NAME(TLC_MNG_AMSDU_ENABLE_NOTIF),
+ 	HCMD_NAME(STA_PM_NOTIF),
+ 	HCMD_NAME(MU_GROUP_MGMT_NOTIF),
+ 	HCMD_NAME(RX_QUEUES_NOTIFICATION),
+@@ -1034,8 +1040,6 @@ static void iwl_mvm_rx_mq(struct iwl_op_mode *op_mode,
+ 		iwl_mvm_rx_queue_notif(mvm, rxb, 0);
+ 	else if (cmd == WIDE_ID(LEGACY_GROUP, FRAME_RELEASE))
+ 		iwl_mvm_rx_frame_release(mvm, napi, rxb, 0);
+-	else if (cmd == WIDE_ID(DATA_PATH_GROUP, TLC_MNG_UPDATE_NOTIF))
+-		iwl_mvm_tlc_update_notif(mvm, pkt);
+ 	else
+ 		iwl_mvm_rx_common(mvm, rxb, pkt);
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
+index fb5745660509..4e818bce469b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
+@@ -228,8 +228,47 @@ static void rs_fw_tlc_mng_notif_req_config(struct iwl_mvm *mvm, u8 sta_id)
+ 		IWL_ERR(mvm, "Failed to send TLC notif request (%d)\n", ret);
+ }
+ 
+-void iwl_mvm_tlc_update_notif(struct iwl_mvm *mvm, struct iwl_rx_packet *pkt)
++void iwl_mvm_tlc_amsdu_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ {
++	struct iwl_rx_packet *pkt = rxb_addr(rxb);
++	struct iwl_tlc_amsdu_notif *notif;
++	struct ieee80211_sta *sta;
++	struct iwl_mvm_sta *mvmsta;
++	u16 size;
++
++	notif = (void *)pkt->data;
++
++	if (WARN_ON(notif->sta_id >= ARRAY_SIZE(mvm->fw_id_to_mac_id)))
++		return;
++
++	rcu_read_lock();
++
++	sta = rcu_dereference(mvm->fw_id_to_mac_id[notif->sta_id]);
++	if (IS_ERR_OR_NULL(sta)) {
++		rcu_read_unlock();
++		IWL_ERR(mvm, "Invalid sta id (%d) in FW TLC notification\n",
++			notif->sta_id);
++		return;
++	}
++
++	mvmsta = iwl_mvm_sta_from_mac80211(sta);
++
++	size = min(le16_to_cpu(notif->amsdu_size), sta->max_amsdu_len);
++	mvmsta->amsdu_enabled = le16_to_cpu(notif->amsdu_enabled);
++	mvmsta->max_amsdu_len = size;
++
++	IWL_DEBUG_RATE(mvm,
++		       "AMSDU notification. AMSDU size: %d, AMSDU selected size: %d, AMSDU TID bitmap 0x%X\n",
++		       le16_to_cpu(notif->amsdu_size), size,
++		       mvmsta->amsdu_enabled);
++
++	rcu_read_unlock();
++};
++
++void iwl_mvm_tlc_update_notif(struct iwl_mvm *mvm,
++			      struct iwl_rx_cmd_buffer *rxb)
++{
++	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_tlc_update_notif *notif;
+ 	struct iwl_mvm_sta *mvmsta;
+ 	struct iwl_lq_sta_rs_fw *lq_sta;
+@@ -273,6 +312,7 @@ void rs_fw_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 		.max_supp_ss = sta->rx_nss,
+ 		.max_ampdu_cnt = cpu_to_le32(mvmsta->max_agg_bufsize),
+ 		.sgi_ch_width_supp = rs_fw_sgi_cw_support(sta),
++		.amsdu = iwl_mvm_is_csum_supported(mvm),
+ 	};
+ 	int ret;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index 5d776ec1840f..af7bc3b7b0c3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -1715,12 +1715,18 @@ static void rs_set_amsdu_len(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ {
+ 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+ 
++	/*
++	 * In case TLC offload is not active amsdu_enabled is either 0xFFFF
++	 * or 0, since there is no per-TID alg.
++	 */
+ 	if ((!is_vht(&tbl->rate) && !is_ht(&tbl->rate)) ||
+ 	    tbl->rate.index < IWL_RATE_MCS_5_INDEX ||
+ 	    scale_action == RS_ACTION_DOWNSCALE)
+-		mvmsta->tlc_amsdu = false;
++		mvmsta->amsdu_enabled = 0;
+ 	else
+-		mvmsta->tlc_amsdu = true;
++		mvmsta->amsdu_enabled = 0xFFFF;
++
++	mvmsta->max_amsdu_len = sta->max_amsdu_len;
+ }
+ 
+ /*
+@@ -3134,7 +3140,8 @@ static void rs_drv_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 	sband = hw->wiphy->bands[band];
+ 
+ 	lq_sta->lq.sta_id = mvmsta->sta_id;
+-	mvmsta->tlc_amsdu = false;
++	mvmsta->amsdu_enabled = 0;
++	mvmsta->max_amsdu_len = sta->max_amsdu_len;
+ 
+ 	for (j = 0; j < LQ_SIZE; j++)
+ 		rs_rate_scale_clear_tbl_windows(mvm, &lq_sta->lq_info[j]);
+@@ -3744,7 +3751,7 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 				(rate->sgi) ? "SGI" : "NGI",
+ 				(rate->ldpc) ? "LDPC" : "BCC",
+ 				(lq_sta->is_agg) ? "AGG on" : "",
+-				(mvmsta->tlc_amsdu) ? "AMSDU on" : "");
++				(mvmsta->amsdu_enabled) ? "AMSDU on" : "");
+ 	}
+ 	desc += scnprintf(buff + desc, bufsz - desc, "last tx rate=0x%X\n",
+ 			lq_sta->last_rate_n_flags);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
+index fb18cb8c233d..736ac9642921 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
+@@ -454,5 +454,8 @@ void rs_fw_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 		     enum nl80211_band band);
+ int rs_fw_tx_protection(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta,
+ 			bool enable);
+-void iwl_mvm_tlc_update_notif(struct iwl_mvm *mvm, struct iwl_rx_packet *pkt);
++void iwl_mvm_tlc_update_notif(struct iwl_mvm *mvm,
++			      struct iwl_rx_cmd_buffer *rxb);
++void iwl_mvm_tlc_amsdu_notif(struct iwl_mvm *mvm,
++			     struct iwl_rx_cmd_buffer *rxb);
+ #endif /* __rs__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+index 5ffd6adbc383..60502c81dfce 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+@@ -391,7 +391,9 @@ struct iwl_mvm_rxq_dup_data {
+  * @tx_protection: reference counter for controlling the Tx protection.
+  * @tt_tx_protection: is thermal throttling enable Tx protection?
+  * @disable_tx: is tx to this STA disabled?
+- * @tlc_amsdu: true if A-MSDU is allowed
++ * @amsdu_enabled: bitmap of TX AMSDU allowed TIDs.
++ *	In case TLC offload is not active it is either 0xFFFF or 0.
++ * @max_amsdu_len: max AMSDU length
+  * @agg_tids: bitmap of tids whose status is operational aggregated (IWL_AGG_ON)
+  * @sleep_tx_count: the number of frames that we told the firmware to let out
+  *	even when that station is asleep. This is useful in case the queue
+@@ -436,7 +438,8 @@ struct iwl_mvm_sta {
+ 	bool tt_tx_protection;
+ 
+ 	bool disable_tx;
+-	bool tlc_amsdu;
++	u16 amsdu_enabled;
++	u16 max_amsdu_len;
+ 	bool sleeping;
+ 	bool associated;
+ 	u8 agg_tids;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index f06a0ee7be28..90381348697c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -774,9 +774,9 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 
+ 	dbg_max_amsdu_len = READ_ONCE(mvm->max_amsdu_len);
+ 
+-	if (!sta->max_amsdu_len ||
++	if (!mvmsta->max_amsdu_len ||
+ 	    !ieee80211_is_data_qos(hdr->frame_control) ||
+-	    (!mvmsta->tlc_amsdu && !dbg_max_amsdu_len))
++	    (!mvmsta->amsdu_enabled && !dbg_max_amsdu_len))
+ 		return iwl_mvm_tx_tso_segment(skb, 1, netdev_flags, mpdus_skb);
+ 
+ 	/*
+@@ -803,7 +803,12 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	    !mvmsta->tid_data[tid].amsdu_in_ampdu_allowed)
+ 		return iwl_mvm_tx_tso_segment(skb, 1, netdev_flags, mpdus_skb);
+ 
+-	max_amsdu_len = sta->max_amsdu_len;
++	if (iwl_mvm_vif_low_latency(iwl_mvm_vif_from_mac80211(mvmsta->vif)) ||
++	    tid_to_mac80211_ac[tid] < IEEE80211_AC_BE ||
++	    !(mvmsta->amsdu_enabled & BIT(tid)))
++		return iwl_mvm_tx_tso_segment(skb, 1, netdev_flags, mpdus_skb);
++
++	max_amsdu_len = mvmsta->max_amsdu_len;
+ 
+ 	/* the Tx FIFO to which this A-MSDU will be routed */
+ 	txf = iwl_mvm_mac_ac_to_tx_fifo(mvm, tid_to_mac80211_ac[tid]);
+-- 
+2.16.3
