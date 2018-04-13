@@ -1,43 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:47954 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754320AbeDYPZe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 11:25:34 -0400
-Date: Wed, 25 Apr 2018 17:25:26 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Andres Rodriguez <andresx7@gmail.com>
-Cc: linux-kernel@vger.kernel.org, mcgrof@kernel.org,
-        alexdeucher@gmail.com, christian.koenig@amd.com,
-        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        hdegoede@redhat.com
-Subject: Re: [PATCH 1/9] firmware: some documentation fixes
-Message-ID: <20180425152526.GA4921@kroah.com> (sfid-20180425_172549_180483_DE5DAD60)
-References: <20180423201205.20533-1-andresx7@gmail.com>
- <20180423201205.20533-2-andresx7@gmail.com>
+Received: from mx3.wp.pl ([212.77.101.9]:29504 "EHLO mx3.wp.pl"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750849AbeDMSGV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Apr 2018 14:06:21 -0400
+Date: Fri, 13 Apr 2018 11:06:13 -0700
+From: Jakub Kicinski <kubakici@wp.pl>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] mt7601u: run calibration works after finishing
+ scanning
+Message-ID: <20180413110613.0c13f64f@cakuba.netronome.com> (sfid-20180413_200625_151901_9E1D9901)
+In-Reply-To: <1523630678-8100-2-git-send-email-sgruszka@redhat.com>
+References: <1523630678-8100-1-git-send-email-sgruszka@redhat.com>
+        <1523630678-8100-2-git-send-email-sgruszka@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180423201205.20533-2-andresx7@gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 23, 2018 at 04:11:57PM -0400, Andres Rodriguez wrote:
-> Including:
->  - Fixup outdated kernel-doc paths
->  - Slightly too short title underline
->  - Some typos
+On Fri, 13 Apr 2018 16:44:38 +0200, Stanislaw Gruszka wrote:
+> When finishing scanning we switch to operational channel sill with
+> SCANNING flag. This mean that we never perform calibration works after
+> scanning. To fix the problem cancel and queue calibration works on
+> .sw_scan_start() and .sw_scan_complete() routines.
 > 
-> Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
-> ---
->  Documentation/driver-api/firmware/request_firmware.rst | 16 ++++++++--------
->  drivers/base/firmware_loader/fallback.c                |  4 ++--
->  drivers/base/firmware_loader/fallback.h                |  2 +-
->  3 files changed, 11 insertions(+), 11 deletions(-)
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-This fails to apply to my driver-core-next branch.  Can you please
-rebase it and resend?
+IOW the stack will potentially ask us to return to the original channel
+before calling .sw_scan_complete()?  Hm.  That's unpleasant.
 
-thanks,
-
-greg k-h
+I'm not entirely on board with the patch.  Now normal channel setting
+will happen while calibration is running.  Is that necessary?  Would it
+not be sufficient to make sure work is scheduled
+from .sw_scan_complete()?
