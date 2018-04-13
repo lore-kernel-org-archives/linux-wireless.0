@@ -1,42 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41974 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:34402 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752947AbeDIQAi (ORCPT
+        with ESMTP id S1750849AbeDMGx0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Apr 2018 12:00:38 -0400
-Content-Type: text/plain; charset="utf-8"
+        Fri, 13 Apr 2018 02:53:26 -0400
 MIME-Version: 1.0
-Subject: Re: iwlwifi: mvm: query regdb for wmm rule if needed
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180404062348.31461-1-luca@coelho.fi>
-References: <20180404062348.31461-1-luca@coelho.fi>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Message-Id: <20180409160037.B7A2360AFB@smtp.codeaurora.org> (sfid-20180409_180041_713710_064401DC)
-Date: Mon,  9 Apr 2018 16:00:37 +0000 (UTC)
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 13 Apr 2018 14:53:25 +0800
+From: cjhuang@codeaurora.org
+To: Brian Norris <briannorris@chromium.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] ath10k: support MAC address randomization in scan
+In-Reply-To: <20180412205954.GA34456@rodete-desktop-imager.corp.google.com>
+References: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org>
+ <1522379640-6442-3-git-send-email-cjhuang@codeaurora.org>
+ <20180412205954.GA34456@rodete-desktop-imager.corp.google.com>
+Message-ID: <e16557d0891352ae0b83902faee97023@codeaurora.org> (sfid-20180413_085329_948918_7C126CE5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luciano Coelho <luca@coelho.fi> wrote:
-
-> From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+On 2018-04-13 04:59, Brian Norris wrote:
+> Hi Carl,
 > 
-> Since our device is regulatory self managed it maintains its regulatory
-> rules by its own. However the wmm_rules values can't be set by the
-> device itself but only the indication about the need to set it.
-> In case the device set wmm indication, proactively query the regulatory
-> data base to get these values
+> On Fri, Mar 30, 2018 at 11:14:00AM +0800, Carl Huang wrote:
+>> The ath10k reports the random_mac_addr capability to upper layer
+>> based on the service bit firmware reported. Driver sets the
+>> spoofed flag in scan_ctrl_flag to firmware if upper layer has
+>> enabled this feature in scan request.
+>> 
+>> Test with QCA6174 hw3.0 and 
+>> firmware-6.bin_WLAN.RM.4.4.1-00102-QCARMSWP-1,
+>> but QCA9377 is also affected.
+>> 
+>> Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/mac.c     | 17 +++++++++++++++++
+>>  drivers/net/wireless/ath/ath10k/wmi-ops.h | 22 ++++++++++++++++++++++
+>>  drivers/net/wireless/ath/ath10k/wmi-tlv.c | 25 
+>> +++++++++++++++++++++++++
+>>  drivers/net/wireless/ath/ath10k/wmi-tlv.h | 11 +++++++++++
+>>  drivers/net/wireless/ath/ath10k/wmi.c     |  5 +++++
+>>  drivers/net/wireless/ath/ath10k/wmi.h     |  9 +++++++++
+>>  6 files changed, 89 insertions(+)
+>> 
+>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c 
+>> b/drivers/net/wireless/ath/ath10k/mac.c
+>> index ebb3f1b..c5cd5e5 100644
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -5699,6 +5699,12 @@ static int ath10k_hw_scan(struct ieee80211_hw 
+>> *hw,
+>>  		arg.scan_ctrl_flags |= WMI_SCAN_FLAG_PASSIVE;
+>>  	}
+>> 
+>> +	if (req->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
+>> +		arg.scan_ctrl_flags |=  WMI_SCAN_ADD_SPOOFED_MAC_IN_PROBE_REQ;
+>> +		ether_addr_copy(arg.mac_addr.addr, req->mac_addr);
+>> +		ether_addr_copy(arg.mac_mask.addr, req->mac_addr_mask);
+>> +	}
+>> +
+>>  	if (req->n_channels) {
+>>  		arg.n_channels = req->n_channels;
+>>  		for (i = 0; i < arg.n_channels; i++)
+>> @@ -8397,6 +8403,17 @@ int ath10k_mac_register(struct ath10k *ar)
+>>  		goto err_dfs_detector_exit;
+>>  	}
+>> 
+>> +	if (test_bit(WMI_SERVICE_SPOOF_MAC_SUPPORT, ar->wmi.svc_map)) {
+>> +		ret = ath10k_wmi_scan_prob_req_oui(ar, ar->mac_addr);
+>> +		if (ret) {
+>> +			ath10k_err(ar, "failed to set prob req oui: %i\n", ret);
+>> +			goto err_dfs_detector_exit;
+>> +		}
+>> +
+>> +		ar->hw->wiphy->features |=
+>> +			NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
 > 
-> Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> Do you support NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR too?
 
-Patch applied to wireless-drivers.git, thanks.
+I'll add this flag too.
 
-77e30e10ee28 iwlwifi: mvm: query regdb for wmm rule if needed
-
--- 
-https://patchwork.kernel.org/patch/10322121/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> 
+>> +	}
+>> +
+> 
+> 
+> Brian
