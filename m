@@ -1,88 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43418 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750882AbeDYIBI (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39478 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754735AbeDMMnq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 04:01:08 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, Rajat Jain <rajatja@google.com>
-Subject: Re: [PATCH 09/12] iwlwifi: pcie: remove non-responsive device
-References: <20180422082745.9743-1-luca@coelho.fi>
-        <20180422082745.9743-10-luca@coelho.fi>
-        <87h8o1os5b.fsf@codeaurora.org>
-        <a768684127fb8e5f3c62bb62ec80e52950314787.camel@coelho.fi>
-Date: Wed, 25 Apr 2018 11:01:02 +0300
-In-Reply-To: <a768684127fb8e5f3c62bb62ec80e52950314787.camel@coelho.fi> (Luca
-        Coelho's message of "Tue, 24 Apr 2018 13:56:12 +0300")
-Message-ID: <87efj3af5t.fsf@kamboji.qca.qualcomm.com> (sfid-20180425_100112_725792_B376B93F)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 13 Apr 2018 08:43:46 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 13 Apr 2018 15:42:54 +0300
+Message-Id: <20180413124256.21769-24-luca@coelho.fi> (sfid-20180413_144349_922426_F24EA10A)
+In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
+References: <20180413124256.21769-1-luca@coelho.fi>
+Subject: [PATCH 23/25] iwlwifi: remove upper case letters in sku_capa_band_*_enable
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> On Tue, 2018-04-24 at 12:44 +0300, Kalle Valo wrote:
->> Luca Coelho <luca@coelho.fi> writes:
->> 
->> > From: Luca Coelho <luciano.coelho@intel.com>
->> > 
->> > If we fail to to grab NIC access because the device is not
->> > responding
->> > (i.e. CSR_GP_CNTRL returns 0xFFFFFFFF), remove the device from the
->> > PCI
->> > bus, to avoid any further damage, and to let the user space rescan.
->> > 
->> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
->> > Signed-off-by: Rajat Jain <rajatja@google.com>
->> 
->> The commit log doesn't mention anything about the module parameter
->> nor
->> about the kobject uevent.
->
-> Good point.  The uevent and the module parameter were added in later
-> patches and I squashed them all into this one, but forgot to update the
-> commit message.  I'll fix it.
+The sku_capa_band_24GHz_enable and sku_capa_band_52GHz_enable symbols
+cause checkpatch to complain whenever we use them.  To prevent this,
+convert them to all lower case.
 
-Good, thanks.
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/dvm/main.c         | 8 ++++----
+ drivers/net/wireless/intel/iwlwifi/fw/nvm.c           | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c    | 6 +++---
+ 5 files changed, 13 insertions(+), 13 deletions(-)
 
->> > +static void iwl_trans_pcie_removal_wk(struct work_struct *wk)
->> > +{
->> > +	struct iwl_trans_pcie_removal *removal =
->> > +		container_of(wk, struct iwl_trans_pcie_removal,
->> > work);
->> > +	struct pci_dev *pdev = removal->pdev;
->> > +	char *prop[] = {"EVENT=INACCESSIBLE", NULL};
->> > +
->> > +	dev_err(&pdev->dev, "Device gone - attempting removal\n");
->> > +	kobject_uevent_env(&pdev->dev.kobj, KOBJ_CHANGE, prop);
->> > +	pci_lock_rescan_remove();
->> > +	pci_dev_put(pdev);
->> > +	pci_stop_and_remove_bus_device(pdev);
->> > +	pci_unlock_rescan_remove();
->> > +
->> > +	kfree(removal);
->> > +	module_put(THIS_MODULE);
->> > +}
->> 
->> So is the uevent some standard thing or what? At least grepping
->> INACCESSIBLE for didn't tell me anything.
->
-> No, this is not standard.  We didn't find any appropriate standard
-> message for this case, so we created a new one.  Also, we didn't want
-> to interfere with components that may react to standard messages.
->
-> This is disabled by default and the idea is to change this in the
-> future to allow the driver to remove and rescan the device
-> automatically.  So we will have 3 options in the module parameter: do
-> nothing; auto-rescan or; send uevent.
-
-Ok, I assume you will explain this in the commit log.
-
-In my opinion the driver should not be sending custom events like this
-and instead pci_stop_and_remove_bus_device() should do it, but maybe
-that's just me?
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/main.c b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+index e68254e12764..030482b357a3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+@@ -1200,16 +1200,16 @@ static int iwl_eeprom_init_hw_params(struct iwl_priv *priv)
+ 		return -EINVAL;
+ 	}
+ 
+-	if (!data->sku_cap_11n_enable && !data->sku_cap_band_24GHz_enable &&
+-	    !data->sku_cap_band_52GHz_enable) {
++	if (!data->sku_cap_11n_enable && !data->sku_cap_band_24ghz_enable &&
++	    !data->sku_cap_band_52ghz_enable) {
+ 		IWL_ERR(priv, "Invalid device sku\n");
+ 		return -EINVAL;
+ 	}
+ 
+ 	IWL_DEBUG_INFO(priv,
+ 		       "Device SKU: 24GHz %s %s, 52GHz %s %s, 11.n %s %s\n",
+-		       data->sku_cap_band_24GHz_enable ? "" : "NOT", "enabled",
+-		       data->sku_cap_band_52GHz_enable ? "" : "NOT", "enabled",
++		       data->sku_cap_band_24ghz_enable ? "" : "NOT", "enabled",
++		       data->sku_cap_band_52ghz_enable ? "" : "NOT", "enabled",
+ 		       data->sku_cap_11n_enable ? "" : "NOT", "enabled");
+ 
+ 	priv->hw_params.tx_chains_num =
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
+index beefb89194a9..b8d88df27b18 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
+@@ -134,9 +134,9 @@ struct iwl_nvm_data *iwl_fw_get_nvm(struct iwl_fw_runtime *fwrt)
+ 		!!(mac_flags & NVM_MAC_SKU_FLAGS_802_11N_ENABLED);
+ 	nvm->sku_cap_11ax_enable =
+ 		!!(mac_flags & NVM_MAC_SKU_FLAGS_802_11AX_ENABLED);
+-	nvm->sku_cap_band_24GHz_enable =
++	nvm->sku_cap_band_24ghz_enable =
+ 		!!(mac_flags & NVM_MAC_SKU_FLAGS_BAND_2_4_ENABLED);
+-	nvm->sku_cap_band_52GHz_enable =
++	nvm->sku_cap_band_52ghz_enable =
+ 		!!(mac_flags & NVM_MAC_SKU_FLAGS_BAND_5_2_ENABLED);
+ 	nvm->sku_cap_mimo_disabled =
+ 		!!(mac_flags & NVM_MAC_SKU_FLAGS_MIMO_DISABLED);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
+index 3199d345b427..777f5df8a0c6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
+@@ -899,8 +899,8 @@ iwl_parse_eeprom_data(struct device *dev, const struct iwl_cfg *cfg,
+ 				 EEPROM_SKU_CAP);
+ 	data->sku_cap_11n_enable = sku & EEPROM_SKU_CAP_11N_ENABLE;
+ 	data->sku_cap_amt_enable = sku & EEPROM_SKU_CAP_AMT_ENABLE;
+-	data->sku_cap_band_24GHz_enable = sku & EEPROM_SKU_CAP_BAND_24GHZ;
+-	data->sku_cap_band_52GHz_enable = sku & EEPROM_SKU_CAP_BAND_52GHZ;
++	data->sku_cap_band_24ghz_enable = sku & EEPROM_SKU_CAP_BAND_24GHZ;
++	data->sku_cap_band_52ghz_enable = sku & EEPROM_SKU_CAP_BAND_52GHZ;
+ 	data->sku_cap_ipan_enable = sku & EEPROM_SKU_CAP_IPAN_ENABLE;
+ 	if (iwlwifi_mod_params.disable_11n & IWL_DISABLE_HT_ALL)
+ 		data->sku_cap_11n_enable = false;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
+index 16bea75e82f1..8be50ed12300 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
+@@ -81,8 +81,8 @@ struct iwl_nvm_data {
+ 	__le16 kelvin_voltage;
+ 	__le16 xtal_calib[2];
+ 
+-	bool sku_cap_band_24GHz_enable;
+-	bool sku_cap_band_52GHz_enable;
++	bool sku_cap_band_24ghz_enable;
++	bool sku_cap_band_52ghz_enable;
+ 	bool sku_cap_11n_enable;
+ 	bool sku_cap_11ac_enable;
+ 	bool sku_cap_11ax_enable;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 735b211364d2..a6246dc9f025 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -319,7 +319,7 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
+ 
+ 		ch_flags = __le16_to_cpup(nvm_ch_flags + ch_idx);
+ 
+-		if (is_5ghz && !data->sku_cap_band_52GHz_enable)
++		if (is_5ghz && !data->sku_cap_band_52ghz_enable)
+ 			continue;
+ 
+ 		/* workaround to disable wide channels in 5GHz */
+@@ -745,8 +745,8 @@ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 		rx_chains &= data->valid_rx_ant;
+ 
+ 	sku = iwl_get_sku(cfg, nvm_sw, phy_sku);
+-	data->sku_cap_band_24GHz_enable = sku & NVM_SKU_CAP_BAND_24GHZ;
+-	data->sku_cap_band_52GHz_enable = sku & NVM_SKU_CAP_BAND_52GHZ;
++	data->sku_cap_band_24ghz_enable = sku & NVM_SKU_CAP_BAND_24GHZ;
++	data->sku_cap_band_52ghz_enable = sku & NVM_SKU_CAP_BAND_52GHZ;
+ 	data->sku_cap_11n_enable = sku & NVM_SKU_CAP_11N_ENABLE;
+ 	if (iwlwifi_mod_params.disable_11n & IWL_DISABLE_HT_ALL)
+ 		data->sku_cap_11n_enable = false;
 -- 
-Kalle Valo
+2.16.3
