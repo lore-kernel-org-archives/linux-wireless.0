@@ -1,84 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f174.google.com ([209.85.128.174]:39790 "EHLO
-        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759215AbeD1BsJ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39444 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754648AbeDMMnb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Apr 2018 21:48:09 -0400
-Received: by mail-wr0-f174.google.com with SMTP id q3-v6so3284520wrj.6
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Apr 2018 18:48:09 -0700 (PDT)
-Received: from localhost.localdomain (static.207.35.0.81.ibercom.com. [81.0.35.207])
-        by smtp.gmail.com with ESMTPSA id n49-v6sm3631484wrn.50.2018.04.27.18.48.07
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 27 Apr 2018 18:48:07 -0700 (PDT)
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] nl80211: Reject disconnect commands except from conn_owner
-Date: Sat, 28 Apr 2018 03:47:32 +0200
-Message-Id: <20180428014732.4018-1-andrew.zaborowski@intel.com> (sfid-20180428_035025_399295_EC6E6D21)
+        Fri, 13 Apr 2018 08:43:31 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 13 Apr 2018 15:42:56 +0300
+Message-Id: <20180413124256.21769-26-luca@coelho.fi> (sfid-20180413_144334_912130_B9F4FB85)
+In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
+References: <20180413124256.21769-1-luca@coelho.fi>
+Subject: [PATCH 25/25] iwlwifi: mvm: support 22000 HW opening agg before traffic
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reject NL80211_CMD_DISCONNECT, NL80211_CMD_DISASSOCIATE,
-NL80211_CMD_DEAUTHENTICATE and NL80211_CMD_ASSOCIATE commands
-from clients other than the connection owner set in the connect,
-authenticate or associate commands, if it was set.
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-The main point of this check is to prevent chaos when two processes
-try to use nl80211 at the same time, it's not a security measure.
-The same thing should possibly be done for JOIN_IBSS/LEAVE_IBSS and
-START_AP/STOP_AP.
+When trying to open aggregations on 22000 HW before
+traffic had actually passed, the driver will discover
+it is missing a queue to aggregate on. In such a case -
+allocate a queue.
+
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/wireless/nl80211.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a910150f81..92ddc7d88f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8303,6 +8303,10 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 	const u8 *bssid, *ssid;
- 	int err, ssid_len = 0;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 4f9d3e13d7e5..4ddd2c427b83 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -36,6 +36,7 @@
+  * Copyright(c) 2012 - 2015 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -2467,6 +2468,15 @@ int iwl_mvm_sta_tx_agg_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
  
-+	if (dev->ieee80211_ptr->conn_owner_nlportid &&
-+	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
-+		return -EPERM;
+ 	lockdep_assert_held(&mvm->mutex);
+ 
++	if (mvmsta->tid_data[tid].txq_id == IWL_MVM_INVALID_QUEUE &&
++	    iwl_mvm_has_new_tx_api(mvm)) {
++		u8 ac = tid_to_mac80211_ac[tid];
 +
- 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
- 		return -EINVAL;
- 
-@@ -8425,6 +8429,10 @@ static int nl80211_deauthenticate(struct sk_buff *skb, struct genl_info *info)
- 	u16 reason_code;
- 	bool local_state_change;
- 
-+	if (dev->ieee80211_ptr->conn_owner_nlportid &&
-+	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
-+		return -EPERM;
++		ret = iwl_mvm_sta_alloc_queue_tvqm(mvm, sta, ac, tid);
++		if (ret)
++			return ret;
++	}
 +
- 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
- 		return -EINVAL;
+ 	spin_lock_bh(&mvmsta->lock);
  
-@@ -8472,6 +8480,10 @@ static int nl80211_disassociate(struct sk_buff *skb, struct genl_info *info)
- 	u16 reason_code;
- 	bool local_state_change;
- 
-+	if (dev->ieee80211_ptr->conn_owner_nlportid &&
-+	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
-+		return -EPERM;
-+
- 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
- 		return -EINVAL;
- 
-@@ -9234,6 +9246,10 @@ static int nl80211_disconnect(struct sk_buff *skb, struct genl_info *info)
- 	u16 reason;
- 	int ret;
- 
-+	if (dev->ieee80211_ptr->conn_owner_nlportid &&
-+	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
-+		return -EPERM;
-+
- 	if (!info->attrs[NL80211_ATTR_REASON_CODE])
- 		reason = WLAN_REASON_DEAUTH_LEAVING;
- 	else
+ 	/* possible race condition - we entered D0i3 while starting agg */
 -- 
-2.14.1
+2.16.3
