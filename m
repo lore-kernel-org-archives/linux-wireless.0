@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:48028 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750736AbeDDGjD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Apr 2018 02:39:03 -0400
-Subject: Re: [PATCH 3/3] wcn36xx: don't delete invalid bss indices
-To: Ramon Fried <rfried@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: loic.poulain@linaro.org, bjorn.andersson@linaro.org,
-        kvalo@codeaurora.org, wcn36xx@lists.infradead.org
-References: <20180403165154.18775-1-daniel@zonque.org>
- <20180403165154.18775-3-daniel@zonque.org>
- <8ee8943c-ff58-60a1-75da-eaf795ff3234@codeaurora.org>
-From: Daniel Mack <daniel@zonque.org>
-Message-ID: <0b1db61d-a8a2-1099-1dbd-aee67ec5cd63@zonque.org> (sfid-20180404_083907_454226_D849BBEB)
-Date: Wed, 4 Apr 2018 08:39:01 +0200
-MIME-Version: 1.0
-In-Reply-To: <8ee8943c-ff58-60a1-75da-eaf795ff3234@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+Received: from paleale.coelho.fi ([176.9.41.70]:39488 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754735AbeDMMnu (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Apr 2018 08:43:50 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 13 Apr 2018 15:42:42 +0300
+Message-Id: <20180413124256.21769-12-luca@coelho.fi> (sfid-20180413_144354_727034_5B8FE16B)
+In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
+References: <20180413124256.21769-1-luca@coelho.fi>
+Subject: [PATCH 11/25] iwlwifi: pcie: allocate shorter TX queues for 22000 devices
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, April 04, 2018 07:40 AM, Ramon Fried wrote:
-> On 4/3/2018 7:51 PM, Daniel Mack wrote:
->> The firmware code cannot cope with requests to remove BSS indices that have
->> not previously been added. This primarily happens when the device is
->> suspended and then resumed. ieee80211_reconfig() then calls into
->> wcn36xx_bss_info_changed() with an empty bssid and BSS_CHANGED_BSSID set,
->> which subsequently leads to a firmware crash:
->>
->> [   43.647928] qcom-wcnss-pil a204000.wcnss: fatal error received: halMsg.c:4964:halMsg_DelBss: Invalid BSSIndex 0
->> [   43.647959] remoteproc remoteproc0: crash detected in a204000.wcnss: type fatal error
->>
->> To fix this, set bss_index to WCN36XX_HAL_BSS_INVALID_IDX for all bss
->> that have not been configured in the firmware, and don't call into the
->> firmware with invalid indices.
->>
->> Signed-off-by: Daniel Mack <daniel@zonque.org>
+From: Sara Sharon <sara.sharon@intel.com>
 
-> Interesting. I have never seen this bug before.
-> Do you have a way of recreating it so I can test it on my side ?
+When support for shorter TX queues was introduced, it
+didn't include the actual allocation of shorter queue,
+which is the main motive for the change.
 
-I tested this by putting the machine to suspend with
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c      | 3 +++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-  # echo freeze >/sys/power/state
-
-right after boot, without connecting to a network before. Resume will
-then fail without this patch. I haven't see it in any other cases either
-though.
-
-
-Thanks,
-Daniel
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index b605b364ed3f..734a5fc3584d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -993,7 +993,7 @@ static void iwl_pcie_gen2_txq_free_memory(struct iwl_trans *trans,
+ 	/* De-alloc circular buffer of TFDs */
+ 	if (txq->tfds) {
+ 		dma_free_coherent(dev,
+-				  trans_pcie->tfd_size * TFD_QUEUE_SIZE_MAX,
++				  trans_pcie->tfd_size * txq->n_window,
+ 				  txq->tfds, txq->dma_addr);
+ 		dma_free_coherent(dev,
+ 				  sizeof(*txq->first_tb_bufs) * txq->n_window,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 86873b99e5d7..4493520aae1e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -495,6 +495,9 @@ int iwl_pcie_txq_alloc(struct iwl_trans *trans, struct iwl_txq *txq,
+ 	if (WARN_ON(txq->entries || txq->tfds))
+ 		return -EINVAL;
+ 
++	if (trans->cfg->use_tfh)
++		tfd_sz = trans_pcie->tfd_size * slots_num;
++
+ 	timer_setup(&txq->stuck_timer, iwl_pcie_txq_stuck_timer, 0);
+ 	txq->trans_pcie = trans_pcie;
+ 
+-- 
+2.16.3
