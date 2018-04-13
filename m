@@ -1,49 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from postout2.mail.lrz.de ([129.187.255.138]:53071 "EHLO
-        postout2.mail.lrz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754499AbeDPJKh (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:42547 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752669AbeDMGQl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 05:10:37 -0400
-Received: from lxmhs52.srv.lrz.de (localhost [127.0.0.1])
-        by postout2.mail.lrz.de (Postfix) with ESMTP id 40Pj9X4kVDz10vq
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 11:04:00 +0200 (CEST)
-Received: from postout2.mail.lrz.de ([127.0.0.1])
-        by lxmhs52.srv.lrz.de (lxmhs52.srv.lrz.de [127.0.0.1]) (amavisd-new, port 20024)
-        with LMTP id dhKvR1K565Pv for <linux-wireless@vger.kernel.org>;
-        Mon, 16 Apr 2018 11:04:00 +0200 (CEST)
-Received: from BADWLRZ-SWMBX08.ads.mwn.de (BADWLRZ-SWMBX08.ads.mwn.de [IPv6:2001:4ca0:0:108::164])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (Client CN "BADWLRZ-SWMBX08", Issuer "BADWLRZ-SWMBX08" (not verified))
-        by postout2.mail.lrz.de (Postfix) with ESMTPS id 40Pj9X2xGfz10vx
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 11:04:00 +0200 (CEST)
-From: "Wruck, Felix" <felix.wruck@tum.de>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: ath9k tracing implementation/extension
-Date: Mon, 16 Apr 2018 09:03:59 +0000
-Message-ID: <8701446877534ab7ac743fbf6bcc8593@tum.de> (sfid-20180416_111042_861720_39D66154)
-Content-Type: text/plain; charset="iso-8859-1"
+        Fri, 13 Apr 2018 02:16:41 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v4 8/9] rtlwifi: btcoex: Add struct members to replace global varaibles
+Date: Fri, 13 Apr 2018 14:16:12 +0800
+Message-ID: <20180413061613.8569-9-pkshih@realtek.com> (sfid-20180413_081646_084341_302A3BA9)
+In-Reply-To: <20180413061613.8569-1-pkshih@realtek.com>
+References: <20180413061613.8569-1-pkshih@realtek.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-for an university project i needed to use the debugging mechanisms provided=
- by the ath9k driver.
-However it seems that some options of the debug mask described on  https://=
-wireless.wiki.kernel.org/en/users/drivers/ath9k/debug are currently not imp=
-lemented, e.g. tracing the ATH_DBG_WMI option.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-I implemented some functionality i needed for the project and now want to e=
-xtend this and submit it as a patch.
+Chip specific context plays as global variables that will not support
+multiple devices simultaneously. This patch adds 'union' fields to hold
+the variables, and next patch will remove all of them.
 
-As far as i've seen, the debugging mechanisms used in the ath9k and ath10k =
-are quite different.
-I'm considering porting the ath10k debugging mechanisms to ath9k.
-(a module parameter for the debugging mask and the DEFINE_TRACE_EVENT(), DE=
-CLARE_EVENT_CLASS() macros)
+To use the declaration of fields in halbtcoutsrc.h, I move the including
+order in header file halbt_precomp.h, and declare two struct terms for
+chip specific header files.
 
-I wanted to ask if this is desired, or if you have suggestions, how to exte=
-nd the current debugging/tracing functionality?
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ .../realtek/rtlwifi/btcoexist/halbt_precomp.h      |  6 +++++-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       | 24 ++++++++++++++++++++++
+ 2 files changed, 29 insertions(+), 1 deletion(-)
 
-Best regards,
-Felix=
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
+index 858318fd3d63..e21222b48c2c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbt_precomp.h
+@@ -35,7 +35,6 @@
+ #include "../ps.h"
+ #include "../pci.h"
+ 
+-#include "halbtcoutsrc.h"
+ 
+ /* Interface type */
+ #define RT_PCI_INTERFACE	1
+@@ -43,6 +42,9 @@
+ #define RT_SDIO_INTERFACE	3
+ #define DEV_BUS_TYPE		RT_PCI_INTERFACE
+ 
++struct btc_coexist;
++struct wifi_only_cfg;
++
+ #include "halbtc8192e2ant.h"
+ #include "halbtc8723b1ant.h"
+ #include "halbtc8723b2ant.h"
+@@ -52,6 +54,8 @@
+ #include "halbtc8822b2ant.h"
+ #include "halbtc8822bwifionly.h"
+ 
++#include "halbtcoutsrc.h"
++
+ #define GetDefaultAdapter(padapter)	padapter
+ 
+ #define BIT0	0x00000001
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index 9eae87d19120..46355ce32f1b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -693,6 +693,30 @@ struct btc_coexist {
+ 	enum btc_chip_interface	chip_interface;
+ 	struct btc_bt_link_info bt_link_info;
+ 
++	/* context for each chip */
++	union {
++		struct coex_dm_8192e_2ant coex_dm_8192e_2ant;
++		struct coex_dm_8723b_1ant coex_dm_8723b_1ant;
++		struct coex_dm_8723b_2ant coex_dm_8723b_2ant;
++		struct coex_dm_8821a_1ant coex_dm_8821a_1ant;
++		struct coex_dm_8821a_2ant coex_dm_8821a_2ant;
++		struct coex_dm_8822b_1ant coex_dm_8822b_1ant;
++		struct coex_dm_8822b_2ant coex_dm_8822b_2ant;
++	};
++	union {
++		struct coex_sta_8192e_2ant coex_sta_8192e_2ant;
++		struct coex_sta_8723b_1ant coex_sta_8723b_1ant;
++		struct coex_sta_8723b_2ant coex_sta_8723b_2ant;
++		struct coex_sta_8821a_1ant coex_sta_8821a_1ant;
++		struct coex_sta_8821a_2ant coex_sta_8821a_2ant;
++		struct coex_sta_8822b_1ant coex_sta_8822b_1ant;
++		struct coex_sta_8822b_2ant coex_sta_8822b_2ant;
++	};
++	union {
++		struct rfe_type_8822b_1ant rfe_type_8822b_1ant;
++		struct rfe_type_8822b_2ant rfe_type_8822b_2ant;
++	};
++
+ 	/* boolean variables to replace BT_AUTO_REPORT_ONLY_XXXXY_ZANT
+ 	 * configuration parameters
+ 	 */
+-- 
+2.15.1
