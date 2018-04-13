@@ -1,201 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39572 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754589AbeDMMo2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39136 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754408AbeDMLeN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Apr 2018 08:44:28 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Apr 2018 15:42:43 +0300
-Message-Id: <20180413124256.21769-13-luca@coelho.fi> (sfid-20180413_144441_485636_3447BBF7)
-In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
-References: <20180413124256.21769-1-luca@coelho.fi>
-Subject: [PATCH 12/25] iwlwifi: Revert "iwlwifi: pcie: dynamic Tx command queue size"
+        Fri, 13 Apr 2018 07:34:13 -0400
+From: Balaji Pothunoori <bpothuno@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: bpothuno@codeaurora.org
+Subject: [PATCH 1/3] cfg80211: average ack rssi support for data frames
+Date: Fri, 13 Apr 2018 17:04:01 +0530
+Message-Id: <1523619243-1898-2-git-send-email-bpothuno@codeaurora.org> (sfid-20180413_133445_470777_8133623A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Average ack rssi will be given to userspace via NL80211 interface
+if firmware is capable. Userspace tool ‘iw’ can process this
+information and give the output as one of the fields in
+‘iw dev wlanX station dump’.
 
-This reverts commit dd05f9aab4426ff178b12d601e50d19d336eba30.
+Example output :
 
-Shorter TX queues support was added eventually without the
-need for the parameters this patch added.
+localhost ~ #iw dev wlan-5000mhz station dump Station
+34:f3:9a:aa:3b:29 (on wlan-5000mhz)
+        inactive time:  5370 ms
+        rx bytes:       85321
+        rx packets:     576
+        tx bytes:       14225
+        tx packets:     71
+        tx retries:     0
+        tx failed:      2
+        beacon loss:    0
+        rx drop misc:   0
+        signal:         -54 dBm
+        signal avg:     -53 dBm
+        tx bitrate:     866.7 MBit/s VHT-MCS 9 80MHz short GI VHT-NSS 2
+        rx bitrate:     866.7 MBit/s VHT-MCS 9 80MHz short GI VHT-NSS 2
+        avg ack signal: -56 dBm
+        authorized:     yes
+        authenticated:  yes
+        associated:     yes
+        preamble:       short
+        WMM/WME:        yes
+        MFP:            no
+        TDLS peer:      no
+        DTIM period:    2
+        beacon interval:100
+       short preamble: yes
+       short slot time:yes
+       connected time: 203 seconds
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Main use case is to measure the signal strength of a connected station
+to AP. Data packet transmit rates and bandwidth used by station can vary
+a lot even if the station is at fixed location, especially if the rates
+used are multi stream(2stream, 3stream) rates with different bandwidth(20/40/80 Mhz).
+These multi stream rates are sensitive and station can use different transmit power
+for each of the rate and bandwidth combinations. RSSI measured from these RX packets
+on AP will be not stable and can vary a lot with in a short time.
+Whereas 802.11 ack frames from station are sent relatively at a constant
+rate (6/12/24 Mbps) with constant bandwidth(20 Mhz).
+So average rssi of the ack packets is good and more accurate."
+
+Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c     |  1 -
- drivers/net/wireless/intel/iwlwifi/iwl-config.h    |  3 ---
- .../net/wireless/intel/iwlwifi/pcie/ctxt-info.c    |  2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  3 ---
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  |  8 ++------
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 23 ++--------------------
- 6 files changed, 5 insertions(+), 35 deletions(-)
+ include/net/cfg80211.h       | 3 +++
+ include/uapi/linux/nl80211.h | 7 +++++++
+ net/wireless/nl80211.c       | 3 +++
+ 3 files changed, 13 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index dffd9df782b0..f2b6e0e8d787 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -137,7 +137,6 @@ static const struct iwl_ht_params iwl_22000_ht_params = {
- 	.gen2 = true,							\
- 	.nvm_type = IWL_NVM_EXT,					\
- 	.dbgc_supported = true,						\
--	.tx_cmd_queue_size = 32,					\
- 	.min_umac_error_event_table = 0x400000
- 
- const struct iwl_cfg iwl22000_2ac_cfg_hr = {
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index f0f5636dd3ea..687bed30c851 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -333,8 +333,6 @@ struct iwl_pwr_tx_backoff {
-  * @gen2: 22000 and on transport operation
-  * @cdb: CDB support
-  * @nvm_type: see &enum iwl_nvm_type
-- * @tx_cmd_queue_size: size of the cmd queue. If zero, use the same value as
-- *	the regular queues
-  *
-  * We enable the driver to be backward compatible wrt. hardware features.
-  * API differences in uCode shouldn't be handled here but through TLVs
-@@ -386,7 +384,6 @@ struct iwl_cfg {
- 	    gen2:1,
- 	    cdb:1,
- 	    dbgc_supported:1;
--	u16 tx_cmd_queue_size;
- 	u8 valid_tx_ant;
- 	u8 valid_rx_ant;
- 	u8 non_shared_ant;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-index 5ef216f3a60b..3fc4343581ee 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-@@ -244,7 +244,7 @@ int iwl_pcie_ctxt_info_init(struct iwl_trans *trans,
- 	ctxt_info->hcmd_cfg.cmd_queue_addr =
- 		cpu_to_le64(trans_pcie->txq[trans_pcie->cmd_queue]->dma_addr);
- 	ctxt_info->hcmd_cfg.cmd_queue_size =
--		TFD_QUEUE_CB_SIZE(trans_pcie->tx_cmd_queue_size);
-+		TFD_QUEUE_CB_SIZE(TFD_CMD_SLOTS);
- 
- 	/* allocate ucode sections in dram and set addresses */
- 	ret = iwl_pcie_ctxt_info_init_fw_sec(trans, fw, ctxt_info);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index ca3b64ff4dad..a8833028e1cf 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -383,7 +383,6 @@ struct iwl_self_init_dram {
-  * @hw_init_mask: initial unmasked hw causes
-  * @fh_mask: current unmasked fh causes
-  * @hw_mask: current unmasked hw causes
-- * @tx_cmd_queue_size: the size of the tx command queue
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 250dac3..5e888ec 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1152,6 +1152,8 @@ struct cfg80211_tid_stats {
+  * @pertid: per-TID statistics, see &struct cfg80211_tid_stats, using the last
+  *	(IEEE80211_NUM_TIDS) index for MSDUs not encapsulated in QoS-MPDUs.
+  * @ack_signal: signal strength (in dBm) of the last ACK frame.
++ * @avg_ack_signal: average rssi value of ack packet for the no of msdu's has
++ *	been sent.
   */
- struct iwl_trans_pcie {
- 	struct iwl_rxq *rxq;
-@@ -465,7 +464,6 @@ struct iwl_trans_pcie {
- 	u32 fh_mask;
- 	u32 hw_mask;
- 	cpumask_t affinity_mask[IWL_MAX_RX_HW_QUEUES];
--	u16 tx_cmd_queue_size;
+ struct station_info {
+ 	u64 filled;
+@@ -1197,6 +1199,7 @@ struct station_info {
+ 	u8 rx_beacon_signal_avg;
+ 	struct cfg80211_tid_stats pertid[IEEE80211_NUM_TIDS + 1];
+ 	s8 ack_signal;
++	s8 avg_ack_signal;
  };
  
- static inline struct iwl_trans_pcie *
-@@ -537,7 +535,6 @@ void iwl_pcie_hcmd_complete(struct iwl_trans *trans,
- void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
- 			    struct sk_buff_head *skbs);
- void iwl_trans_pcie_tx_reset(struct iwl_trans *trans);
--void iwl_pcie_set_tx_cmd_queue_size(struct iwl_trans *trans);
+ #if IS_ENABLED(CONFIG_CFG80211)
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 15daf5e..a41a77b 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2980,6 +2980,8 @@ enum nl80211_sta_bss_param {
+  *	received from the station (u64, usec)
+  * @NL80211_STA_INFO_PAD: attribute used for padding for 64-bit alignment
+  * @NL80211_STA_INFO_ACK_SIGNAL: signal strength of the last ACK frame(u8, dBm)
++ * @NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG: avg signal strength of data ACK
++ * frame(s8, dBm)
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -3019,6 +3021,7 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_RX_DURATION,
+ 	NL80211_STA_INFO_PAD,
+ 	NL80211_STA_INFO_ACK_SIGNAL,
++	NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG,
  
- static inline u16 iwl_pcie_tfd_tb_get_len(struct iwl_trans *trans, void *_tfd,
- 					  u8 idx)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index 734a5fc3584d..7bdb9c9e04b1 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -1173,8 +1173,6 @@ int iwl_pcie_gen2_tx_init(struct iwl_trans *trans)
- 	struct iwl_txq *cmd_queue;
- 	int txq_id = trans_pcie->cmd_queue, ret;
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+@@ -5038,6 +5041,9 @@ enum nl80211_feature_flags {
+  *	"radar detected" event.
+  * @NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211: Driver supports sending and
+  *	receiving control port frames over nl80211 instead of the netdevice.
++ * @NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT: This Driver support data ack
++ *	rssi if firmware support, this flag is to intimate about ack rssi
++ *	support to nl80211.
+  *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+@@ -5070,6 +5076,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_HIGH_ACCURACY_SCAN,
+ 	NL80211_EXT_FEATURE_DFS_OFFLOAD,
+ 	NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211,
++	NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT,
  
--	iwl_pcie_set_tx_cmd_queue_size(trans);
--
- 	/* alloc and init the command queue */
- 	if (!trans_pcie->txq[txq_id]) {
- 		cmd_queue = kzalloc(sizeof(*cmd_queue), GFP_KERNEL);
-@@ -1183,8 +1181,7 @@ int iwl_pcie_gen2_tx_init(struct iwl_trans *trans)
- 			return -ENOMEM;
- 		}
- 		trans_pcie->txq[txq_id] = cmd_queue;
--		ret = iwl_pcie_txq_alloc(trans, cmd_queue,
--					 trans_pcie->tx_cmd_queue_size, true);
-+		ret = iwl_pcie_txq_alloc(trans, cmd_queue, TFD_CMD_SLOTS, true);
- 		if (ret) {
- 			IWL_ERR(trans, "Tx %d queue init failed\n", txq_id);
- 			goto error;
-@@ -1193,8 +1190,7 @@ int iwl_pcie_gen2_tx_init(struct iwl_trans *trans)
- 		cmd_queue = trans_pcie->txq[txq_id];
- 	}
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ff28f8f..5415e7c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4494,6 +4494,9 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
+ 	PUT_SINFO_U64(BEACON_RX, rx_beacon);
+ 	PUT_SINFO(BEACON_SIGNAL_AVG, rx_beacon_signal_avg, u8);
+ 	PUT_SINFO(ACK_SIGNAL, ack_signal, u8);
++	if (wiphy_ext_feature_isset(&rdev->wiphy,
++				    NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT))
++		PUT_SINFO(DATA_ACK_SIGNAL_AVG, avg_ack_signal, s8);
  
--	ret = iwl_pcie_txq_init(trans, cmd_queue,
--				trans_pcie->tx_cmd_queue_size, true);
-+	ret = iwl_pcie_txq_init(trans, cmd_queue, TFD_CMD_SLOTS, true);
- 	if (ret) {
- 		IWL_ERR(trans, "Tx %d queue alloc failed\n", txq_id);
- 		goto error;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 4493520aae1e..cf468b9f5a82 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -953,8 +953,7 @@ static int iwl_pcie_tx_alloc(struct iwl_trans *trans)
- 	     txq_id++) {
- 		bool cmd_queue = (txq_id == trans_pcie->cmd_queue);
- 
--		slots_num = cmd_queue ? trans_pcie->tx_cmd_queue_size :
--			TFD_TX_CMD_SLOTS;
-+		slots_num = cmd_queue ? TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
- 		trans_pcie->txq[txq_id] = &trans_pcie->txq_memory[txq_id];
- 		ret = iwl_pcie_txq_alloc(trans, trans_pcie->txq[txq_id],
- 					 slots_num, cmd_queue);
-@@ -973,21 +972,6 @@ static int iwl_pcie_tx_alloc(struct iwl_trans *trans)
- 	return ret;
- }
- 
--void iwl_pcie_set_tx_cmd_queue_size(struct iwl_trans *trans)
--{
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	int queue_size = TFD_CMD_SLOTS;
--
--	if (trans->cfg->tx_cmd_queue_size)
--		queue_size = trans->cfg->tx_cmd_queue_size;
--
--	if (WARN_ON(!(is_power_of_2(queue_size) &&
--		      TFD_QUEUE_CB_SIZE(queue_size) > 0)))
--		trans_pcie->tx_cmd_queue_size = TFD_CMD_SLOTS;
--	else
--		trans_pcie->tx_cmd_queue_size = queue_size;
--}
--
- int iwl_pcie_tx_init(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-@@ -995,8 +979,6 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
- 	int txq_id, slots_num;
- 	bool alloc = false;
- 
--	iwl_pcie_set_tx_cmd_queue_size(trans);
--
- 	if (!trans_pcie->txq_memory) {
- 		ret = iwl_pcie_tx_alloc(trans);
- 		if (ret)
-@@ -1020,8 +1002,7 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
- 	     txq_id++) {
- 		bool cmd_queue = (txq_id == trans_pcie->cmd_queue);
- 
--		slots_num = cmd_queue ? trans_pcie->tx_cmd_queue_size :
--			TFD_TX_CMD_SLOTS;
-+		slots_num = cmd_queue ? TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
- 		ret = iwl_pcie_txq_init(trans, trans_pcie->txq[txq_id],
- 					slots_num, cmd_queue);
- 		if (ret) {
+ #undef PUT_SINFO
+ #undef PUT_SINFO_U64
 -- 
-2.16.3
+2.7.4
