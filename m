@@ -1,120 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39372 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754656AbeDMMnK (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39548 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754416AbeDMLeU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Apr 2018 08:43:10 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Apr 2018 15:42:37 +0300
-Message-Id: <20180413124256.21769-7-luca@coelho.fi> (sfid-20180413_144330_974482_EDCCB287)
-In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
-References: <20180413124256.21769-1-luca@coelho.fi>
-Subject: [PATCH 06/25] iwlwifi: mvm: clean up scan capability checks
+        Fri, 13 Apr 2018 07:34:20 -0400
+From: Balaji Pothunoori <bpothuno@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: bpothuno@codeaurora.org
+Subject: [PATCH 2/3] mac80211: average ack rssi support for data frames
+Date: Fri, 13 Apr 2018 17:04:02 +0530
+Message-Id: <1523619243-1898-3-git-send-email-bpothuno@codeaurora.org> (sfid-20180413_133435_071888_0E36CCD4)
+In-Reply-To: <1523619243-1898-2-git-send-email-bpothuno@codeaurora.org>
+References: <1523619243-1898-2-git-send-email-bpothuno@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The driver will process the RSSI if available and send it to mac80211.
+mac80211 will compute the weighted average of ack RSSI for stations.
 
-Introduce and use iwl_mvm_cdb_scan_api(), which checks the family.
-Most of this will go away once the 22000 firmware supports adaptive
-dwell, after which the V6 scan API won't be used, but the V3 scan
-*config* API will still need to be distinguished.
-
-In any case, this gets rid of the completely bogus has_new_tx_api()
-checks.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  | 10 ++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 15 ++++++++-------
- 2 files changed, 18 insertions(+), 7 deletions(-)
+ net/mac80211/sta_info.c | 10 ++++++++++
+ net/mac80211/sta_info.h |  2 ++
+ net/mac80211/status.c   |  2 ++
+ 3 files changed, 14 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 6f647fdd4e97..1f5ead472c1b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1356,6 +1356,16 @@ static inline bool iwl_mvm_is_cdb_supported(struct iwl_mvm *mvm)
- 			   IWL_UCODE_TLV_CAPA_CDB_SUPPORT);
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 655c3d8..fad6a84 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -357,6 +357,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	sta->last_connected = ktime_get_seconds();
+ 	ewma_signal_init(&sta->rx_stats_avg.signal);
++	ewma_avg_signal_init(&sta->avg_ack_signal);
+ 	for (i = 0; i < ARRAY_SIZE(sta->rx_stats_avg.chain_signal); i++)
+ 		ewma_signal_init(&sta->rx_stats_avg.chain_signal[i]);
+ 
+@@ -2294,6 +2295,15 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 		sinfo->ack_signal = sta->status_stats.last_ack_signal;
+ 		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL);
+ 	}
++	if (ieee80211_hw_check(&sta->local->hw, REPORTS_TX_ACK_STATUS)) {
++		if (!(sinfo->filled &
++			BIT_ULL(NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG))) {
++			sinfo->avg_ack_signal =
++			-(s8)ewma_avg_signal_read(&sta->avg_ack_signal);
++			sinfo->filled |=
++				BIT_ULL(NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG);
++		}
++	}
  }
  
-+static inline bool iwl_mvm_cdb_scan_api(struct iwl_mvm *mvm)
-+{
-+	/*
-+	 * TODO: should this be the same as iwl_mvm_is_cdb_supported()?
-+	 * but then there's a little bit of code in scan that won't make
-+	 * any sense...
-+	 */
-+	return mvm->trans->cfg->device_family >= IWL_DEVICE_FAMILY_22000;
-+}
-+
- static inline bool iwl_mvm_has_new_rx_stats_api(struct iwl_mvm *mvm)
- {
- 	return fw_has_api(&mvm->fw->ucode_capa,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index 8fcd92dcaaa7..8c5f4f96d6d4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -147,7 +147,7 @@ static inline void *iwl_mvm_get_scan_req_umac_data(struct iwl_mvm *mvm)
- 	if (iwl_mvm_is_adaptive_dwell_supported(mvm))
- 		return (void *)&cmd->v7.data;
+ u32 sta_get_expected_throughput(struct sta_info *sta)
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index f64eb86..1028924 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -119,6 +119,7 @@ enum ieee80211_sta_info_flags {
+ #define HT_AGG_STATE_START_CB		6
+ #define HT_AGG_STATE_STOP_CB		7
  
--	if (iwl_mvm_has_new_tx_api(mvm))
-+	if (iwl_mvm_cdb_scan_api(mvm))
- 		return (void *)&cmd->v6.data;
++DECLARE_EWMA(avg_signal, 10, 8)
+ enum ieee80211_agg_stop_reason {
+ 	AGG_STOP_DECLINED,
+ 	AGG_STOP_LOCAL_REQUEST,
+@@ -581,6 +582,7 @@ struct sta_info {
  
- 	return (void *)&cmd->v1.data;
-@@ -164,7 +164,7 @@ iwl_mvm_get_scan_req_umac_channel(struct iwl_mvm *mvm)
- 	if (iwl_mvm_is_adaptive_dwell_supported(mvm))
- 		return &cmd->v7.channel;
+ 	struct cfg80211_chan_def tdls_chandef;
  
--	if (iwl_mvm_has_new_tx_api(mvm))
-+	if (iwl_mvm_cdb_scan_api(mvm))
- 		return &cmd->v6.channel;
- 
- 	return &cmd->v1.channel;
-@@ -1136,7 +1136,7 @@ int iwl_mvm_config_scan(struct iwl_mvm *mvm)
- 			return 0;
++	struct ewma_avg_signal avg_ack_signal;
+ 	/* keep last! */
+ 	struct ieee80211_sta sta;
+ };
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 743e89c..93dc971 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -195,6 +195,8 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
+ 			sta->status_stats.last_ack_signal =
+ 					 (s8)txinfo->status.ack_signal;
+ 			sta->status_stats.ack_signal_filled = true;
++			ewma_avg_signal_add(&sta->avg_ack_signal,
++					    -(txinfo->status.ack_signal));
+ 		}
  	}
  
--	if (iwl_mvm_has_new_tx_api(mvm))
-+	if (iwl_mvm_cdb_scan_api(mvm))
- 		cmd_size = sizeof(struct iwl_scan_config);
- 	else
- 		cmd_size = sizeof(struct iwl_scan_config_v1);
-@@ -1169,7 +1169,7 @@ int iwl_mvm_config_scan(struct iwl_mvm *mvm)
- 	 * Check for fragmented scan on LMAC2 - high band.
- 	 * LMAC1 - low band is checked above.
- 	 */
--	if (iwl_mvm_has_new_tx_api(mvm)) {
-+	if (iwl_mvm_cdb_scan_api(mvm)) {
- 		if (iwl_mvm_is_cdb_supported(mvm))
- 			flags |= (hb_type == IWL_SCAN_TYPE_FRAGMENTED) ?
- 				 SCAN_CONFIG_FLAG_SET_LMAC2_FRAGMENTED :
-@@ -1281,8 +1281,9 @@ static void iwl_mvm_scan_umac_dwell(struct iwl_mvm *mvm,
- 					cpu_to_le32(hb_timing->suspend_time);
- 		}
- 
--		if (iwl_mvm_has_new_tx_api(mvm)) {
--			cmd->v6.scan_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
-+		if (iwl_mvm_cdb_scan_api(mvm)) {
-+			cmd->v6.scan_priority =
-+				cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
- 			cmd->v6.max_out_time[SCAN_LB_LMAC_IDX] =
- 				cpu_to_le32(timing->max_out_time);
- 			cmd->v6.suspend_time[SCAN_LB_LMAC_IDX] =
-@@ -1909,7 +1910,7 @@ int iwl_mvm_scan_size(struct iwl_mvm *mvm)
- 		base_size = IWL_SCAN_REQ_UMAC_SIZE_V8;
- 	else if (iwl_mvm_is_adaptive_dwell_supported(mvm))
- 		base_size = IWL_SCAN_REQ_UMAC_SIZE_V7;
--	else if (iwl_mvm_has_new_tx_api(mvm))
-+	else if (iwl_mvm_cdb_scan_api(mvm))
- 		base_size = IWL_SCAN_REQ_UMAC_SIZE_V6;
- 
- 	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_UMAC_SCAN))
 -- 
-2.16.3
+2.7.4
