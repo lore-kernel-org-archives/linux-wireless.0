@@ -1,81 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36100 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751069AbeDYJL1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 05:11:27 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 3/4] mt76: add rcu locking around tx scheduling
-Date: Wed, 25 Apr 2018 11:11:23 +0200
-Message-Id: <20180425091124.909-3-nbd@nbd.name> (sfid-20180425_111133_812176_EF31DE23)
-In-Reply-To: <20180425091124.909-1-nbd@nbd.name>
-References: <20180425091124.909-1-nbd@nbd.name>
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:46344 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751171AbeDMVxm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Apr 2018 17:53:42 -0400
+Date: Fri, 13 Apr 2018 16:53:40 -0500
+From: Rob Herring <robh@kernel.org>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 13/13] dt: bindings: add bindings for wcn3990 wifi
+ block
+Message-ID: <20180413215340.vhvlhlaapt5uuo7d@rob-hp-laptop> (sfid-20180413_235346_279770_26BA9479)
+References: <1523378986-11551-1-git-send-email-govinds@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1523378986-11551-1-git-send-email-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes a reported lockdep error in mac80211:
+On Tue, Apr 10, 2018 at 10:19:46PM +0530, Govind Singh wrote:
+> Add device tree binding documentation details for wcn3990
+> wifi block present in Qualcomm SDM845/APQ8098 SoC into
+> "qcom,ath10k.txt".
+> 
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> ---
+>  .../bindings/net/wireless/qcom,ath10k.txt          | 31 ++++++++++++++++++++++
+>  1 file changed, 31 insertions(+)
 
-[  179.867321] =============================
-[  179.871510] WARNING: suspicious RCU usage
-[  179.875528] 4.14.32 #0 Not tainted
-[  179.878924] -----------------------------
-[  179.882981] backports-2017-11-01/net/mac80211/tx.c:594 suspicious rcu_dereference_check() usage!
-[  179.891785]
-[  179.891785] other info that might help us debug this:
-[  179.891785]
-[  179.899824]
-[  179.899824] rcu_scheduler_active = 2, debug_locks = 1
-[  179.906343] 2 locks held by ksoftirqd/0/7:
-[  179.910479]  #0:  (&(&q->lock)->rlock){+.-.}, at: [<86b207a4>] mt76_dma_tx_cleanup+0x64/0x354 [mt76]
-[  179.919734]  #1:  (&(&fq->lock)->rlock){+.-.}, at: [<87238410>] ieee80211_tx_dequeue+0x54/0xc3c [mac80211]
-[  179.929890]
-[  179.929890] stack backtrace:
-[  179.934257] CPU: 0 PID: 7 Comm: ksoftirqd/0 Not tainted 4.14.32 #0
-[  179.940421] Stack : 00000000 00000000 00000000 00000000 80e0fce2 00000036 00000000 00000000
-[  179.948864]         87c3d24c 80696377 8061039c 00000000 00000007 00000001 87c5db78 6534689d
-[  179.957306]         00000000 00000000 80e10000 87c5da74 00000001 0000015a 00000007 00000000
-[  179.965748]         00000000 806a0000 000e4171 00000000 00000000 00000000 ffffffff 00000001
-[  179.974189]         806c0000 8692b240 86b000d0 87316fe4 00000001 802c9a68 00000000 80700000
-[  179.982632]         ...
-[  179.985104] Call Trace:
-[  179.987582] [<80010a48>] show_stack+0x58/0x100
-[  179.992040] [<804c2c58>] dump_stack+0xe8/0x170
-[  179.996868] [<87234a04>] ieee80211_tx_h_select_key+0xa8/0x5b8 [mac80211]
-[  180.004299] [<87238d44>] ieee80211_tx_dequeue+0x988/0xc3c [mac80211]
-[  180.011048] [<86b230dc>] mt76_txq_schedule+0x110/0x3a4 [mt76]
-[  180.016821] [<86b209d0>] mt76_dma_tx_cleanup+0x290/0x354 [mt76]
-[  180.022777] [<86be2e60>] mt7603_tx_tasklet+0x40/0x6c [mt7603e]
-[  180.028637] [<80037058>] tasklet_action+0x110/0x1ec
-[  180.033532] [<804e1dac>] __do_softirq+0x164/0x35c
-[  180.038235] [<80037174>] run_ksoftirqd+0x40/0x84
-[  180.042870] [<800580c8>] smpboot_thread_fn+0x1a8/0x1d8
-[  180.048023] [<800542e8>] kthread+0x130/0x144
-[  180.052297] [<8000b1f8>] ret_from_kernel_thread+0x14/0x1c
+One nit, otherwise:
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/tx.c | 2 ++
- 1 file changed, 2 insertions(+)
+Reviewed-by: Rob Herring <robh@kernel.org>
 
-diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
-index 4eef69bd8a9e..6aca794cf998 100644
---- a/drivers/net/wireless/mediatek/mt76/tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/tx.c
-@@ -422,12 +422,14 @@ void mt76_txq_schedule(struct mt76_dev *dev, struct mt76_queue *hwq)
- {
- 	int len;
- 
-+	rcu_read_lock();
- 	do {
- 		if (hwq->swq_queued >= 4 || list_empty(&hwq->swq))
- 			break;
- 
- 		len = mt76_txq_schedule_list(dev, hwq);
- 	} while (len > 0);
-+	rcu_read_unlock();
- }
- EXPORT_SYMBOL_GPL(mt76_txq_schedule);
- 
--- 
-2.14.2
+> 
+> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> index 3d2a031..34e4f98 100644
+> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> @@ -4,6 +4,7 @@ Required properties:
+>  - compatible: Should be one of the following:
+>  	* "qcom,ath10k"
+>  	* "qcom,ipq4019-wifi"
+> +	* "qcom,wcn3990-wifi"
+>  
+>  PCI based devices uses compatible string "qcom,ath10k" and takes calibration
+>  data along with board specific data via "qcom,ath10k-calibration-data".
+> @@ -18,8 +19,12 @@ In general, entry "qcom,ath10k-pre-calibration-data" and
+>  "qcom,ath10k-calibration-data" conflict with each other and only one
+>  can be provided per device.
+>  
+> +SNOC based devices (i.e. wcn3990) uses compatible string "qcom,wcn3990-wifi".
+> +
+>  Optional properties:
+>  - reg: Address and length of the register set for the device.
+> +- reg-names: Must include the list of following reg names,
+> +	     "membase"
+>  - resets: Must contain an entry for each entry in reset-names.
+>            See ../reset/reseti.txt for details.
+>  - reset-names: Must include the list of following reset names,
+> @@ -49,6 +54,8 @@ Optional properties:
+>  				 hw versions.
+>  - qcom,ath10k-pre-calibration-data : pre calibration data as an array,
+>  				     the length can vary between hw versions.
+> +- <supply-name>-supply: handle to the regulator device tree node
+> +			   optional "supply-name" is "vdd-0.8-cx-mx".
+>  
+>  Example (to supply the calibration data alone):
+>  
+> @@ -119,3 +126,27 @@ wifi0: wifi@a000000 {
+>  	qcom,msi_base = <0x40>;
+>  	qcom,ath10k-pre-calibration-data = [ 01 02 03 ... ];
+>  };
+> +
+> +Example (to supply wcn3990 SoC wifi block details):
+> +
+> +qcom,wifi@18000000 {
+
+wifi@...
+
+> +		compatible = "qcom,wcn3990-wifi";
+> +		reg = <0x18800000 0x800000>;
+> +		reg-names = "membase";
+> +		clocks = <&clock_gcc clk_aggre2_noc_clk>;
+> +		clock-names = "smmu_aggre2_noc_clk"
+> +		interrupts =
+> +			   <0 130 0 /* CE0 */ >,
+> +			   <0 131 0 /* CE1 */ >,
+> +			   <0 132 0 /* CE2 */ >,
+> +			   <0 133 0 /* CE3 */ >,
+> +			   <0 134 0 /* CE4 */ >,
+> +			   <0 135 0 /* CE5 */ >,
+> +			   <0 136 0 /* CE6 */ >,
+> +			   <0 137 0 /* CE7 */ >,
+> +			   <0 138 0 /* CE8 */ >,
+> +			   <0 139 0 /* CE9 */ >,
+> +			   <0 140 0 /* CE10 */ >,
+> +			   <0 141 0 /* CE11 */ >;
+> +		vdd-0.8-cx-mx-supply = <&pm8998_l5>;
+> +};
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe devicetree" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
