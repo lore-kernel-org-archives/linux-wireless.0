@@ -1,54 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:42205 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754880AbeDYRT5 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39542 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754755AbeDMMoN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 13:19:57 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 13/21] staging: wilc1000: rename WILC_WFI_stats to avoid uppercase
-Date: Wed, 25 Apr 2018 22:48:18 +0530
-Message-ID: <1524676706-13179-14-git-send-email-ajay.kathat@microchip.com> (sfid-20180425_192002_946960_40C3E972)
-In-Reply-To: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 13 Apr 2018 08:44:13 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 13 Apr 2018 15:42:52 +0300
+Message-Id: <20180413124256.21769-22-luca@coelho.fi> (sfid-20180413_144416_214507_DDD97C23)
+In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
+References: <20180413124256.21769-1-luca@coelho.fi>
+Subject: [PATCH 21/25] iwlwifi: support api ver2 of NVM_GET_INFO resp
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to have struct name as per linux coding style.
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+NVM_GET_INFO API has changed to support indication
+of 11ax support.
+
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ .../net/wireless/intel/iwlwifi/fw/api/nvm-reg.h    | 42 ++++++++++++++--------
+ drivers/net/wireless/intel/iwlwifi/fw/nvm.c        | 14 +++++---
+ .../net/wireless/intel/iwlwifi/iwl-eeprom-parse.h  |  1 +
+ 3 files changed, 38 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 07167637..35bc4df 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -50,7 +50,7 @@ enum stats_flags {
- 	WILC_WFI_TX_PKT = BIT(1),
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
+index 37c57bcbfb4a..8d6dc9189985 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
+@@ -189,23 +189,37 @@ struct iwl_nvm_get_info_general {
+ 	u8 reserved;
+ } __packed; /* GRP_REGULATORY_NVM_GET_INFO_GENERAL_S_VER_1 */
  
--struct WILC_WFI_stats {
-+struct wilc_wfi_stats {
- 	unsigned long rx_packets;
- 	unsigned long tx_packets;
- 	unsigned long rx_bytes;
-@@ -119,7 +119,7 @@ struct wilc_priv {
- 	struct napi_struct napi;
- 	struct host_if_drv *hif_drv;
- 	struct host_if_pmkid_attr pmkid_list;
--	struct WILC_WFI_stats netstats;
-+	struct wilc_wfi_stats netstats;
- 	u8 wep_key[4][WLAN_KEY_LEN_WEP104];
- 	u8 wep_key_len[4];
- 	/* The real interface that the monitor is on */
++/**
++ * enum iwl_nvm_mac_sku_flags - flags in &iwl_nvm_get_info_sku
++ * @NVM_MAC_SKU_FLAGS_BAND_2_4_ENABLED: true if 2.4 band enabled
++ * @NVM_MAC_SKU_FLAGS_BAND_5_2_ENABLED: true if 5.2 band enabled
++ * @NVM_MAC_SKU_FLAGS_802_11N_ENABLED: true if 11n enabled
++ * @NVM_MAC_SKU_FLAGS_802_11AC_ENABLED: true if 11ac enabled
++ * @NVM_MAC_SKU_FLAGS_802_11AX_ENABLED: true if 11ax enabled
++ * @NVM_MAC_SKU_FLAGS_MIMO_DISABLED: true if MIMO disabled
++ * @NVM_MAC_SKU_FLAGS_WAPI_ENABLED: true if WAPI enabled
++ * @NVM_MAC_SKU_FLAGS_REG_CHECK_ENABLED: true if regulatory checker enabled
++ * @NVM_MAC_SKU_FLAGS_API_LOCK_ENABLED: true if API lock enabled
++ */
++enum iwl_nvm_mac_sku_flags {
++	NVM_MAC_SKU_FLAGS_BAND_2_4_ENABLED	= BIT(0),
++	NVM_MAC_SKU_FLAGS_BAND_5_2_ENABLED	= BIT(1),
++	NVM_MAC_SKU_FLAGS_802_11N_ENABLED	= BIT(2),
++	NVM_MAC_SKU_FLAGS_802_11AC_ENABLED	= BIT(3),
++	NVM_MAC_SKU_FLAGS_802_11AX_ENABLED	= BIT(4),
++	NVM_MAC_SKU_FLAGS_MIMO_DISABLED		= BIT(5),
++	NVM_MAC_SKU_FLAGS_WAPI_ENABLED		= BIT(8),
++	NVM_MAC_SKU_FLAGS_REG_CHECK_ENABLED	= BIT(14),
++	NVM_MAC_SKU_FLAGS_API_LOCK_ENABLED	= BIT(15),
++};
++
+ /**
+  * struct iwl_nvm_get_info_sku - mac information
+- * @enable_24g: band 2.4G enabled
+- * @enable_5g: band 5G enabled
+- * @enable_11n: 11n enabled
+- * @enable_11ac: 11ac enabled
+- * @mimo_disable: MIMO enabled
+- * @ext_crypto: Extended crypto enabled
++ * @mac_sku_flags: flags for SKU, see &enum iwl_nvm_mac_sku_flags
+  */
+ struct iwl_nvm_get_info_sku {
+-	__le32 enable_24g;
+-	__le32 enable_5g;
+-	__le32 enable_11n;
+-	__le32 enable_11ac;
+-	__le32 mimo_disable;
+-	__le32 ext_crypto;
+-} __packed; /* GRP_REGULATORY_NVM_GET_INFO_MAC_SKU_SECTION_S_VER_1 */
++	__le32 mac_sku_flags;
++} __packed; /* REGULATORY_NVM_GET_INFO_MAC_SKU_SECTION_S_VER_2 */
+ 
+ /**
+  * struct iwl_nvm_get_info_phy - phy information
+@@ -243,7 +257,7 @@ struct iwl_nvm_get_info_rsp {
+ 	struct iwl_nvm_get_info_sku mac_sku;
+ 	struct iwl_nvm_get_info_phy phy_sku;
+ 	struct iwl_nvm_get_info_regulatory regulatory;
+-} __packed; /* GRP_REGULATORY_NVM_GET_INFO_CMD_RSP_S_VER_1 */
++} __packed; /* GRP_REGULATORY_NVM_GET_INFO_CMD_RSP_S_VER_2 */
+ 
+ /**
+  * struct iwl_nvm_access_complete_cmd - NVM_ACCESS commands are completed
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
+index bd2e1fb43f5a..ff44d9031e1a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
+@@ -86,6 +86,7 @@ struct iwl_nvm_data *iwl_fw_get_nvm(struct iwl_fw_runtime *fwrt)
+ 	bool lar_fw_supported = !iwlwifi_mod_params.lar_disable &&
+ 				fw_has_capa(&fwrt->fw->ucode_capa,
+ 					    IWL_UCODE_TLV_CAPA_LAR_SUPPORT);
++	u32 mac_flags;
+ 
+ 	ret = iwl_trans_send_cmd(trans, &hcmd);
+ 	if (ret)
+@@ -125,16 +126,19 @@ struct iwl_nvm_data *iwl_fw_get_nvm(struct iwl_fw_runtime *fwrt)
+ 	nvm->nvm_version = le16_to_cpu(rsp->general.nvm_version);
+ 
+ 	/* Initialize MAC sku data */
++	mac_flags = le32_to_cpu(rsp->mac_sku.mac_sku_flags);
+ 	nvm->sku_cap_11ac_enable =
+-		le32_to_cpu(rsp->mac_sku.enable_11ac);
++		!!(mac_flags & NVM_MAC_SKU_FLAGS_802_11AC_ENABLED);
+ 	nvm->sku_cap_11n_enable =
+-		le32_to_cpu(rsp->mac_sku.enable_11n);
++		!!(mac_flags & NVM_MAC_SKU_FLAGS_802_11N_ENABLED);
++	nvm->sku_cap_11ax_enable =
++		!!(mac_flags & NVM_MAC_SKU_FLAGS_802_11AX_ENABLED);
+ 	nvm->sku_cap_band_24GHz_enable =
+-		le32_to_cpu(rsp->mac_sku.enable_24g);
++		!!(mac_flags & NVM_MAC_SKU_FLAGS_BAND_2_4_ENABLED);
+ 	nvm->sku_cap_band_52GHz_enable =
+-		le32_to_cpu(rsp->mac_sku.enable_5g);
++		!!(mac_flags & NVM_MAC_SKU_FLAGS_BAND_5_2_ENABLED);
+ 	nvm->sku_cap_mimo_disabled =
+-		le32_to_cpu(rsp->mac_sku.mimo_disable);
++		!!(mac_flags & NVM_MAC_SKU_FLAGS_MIMO_DISABLED);
+ 
+ 	/* Initialize PHY sku data */
+ 	nvm->valid_tx_ant = (u8)le32_to_cpu(rsp->phy_sku.tx_chains);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
+index b33888991b94..16bea75e82f1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
+@@ -85,6 +85,7 @@ struct iwl_nvm_data {
+ 	bool sku_cap_band_52GHz_enable;
+ 	bool sku_cap_11n_enable;
+ 	bool sku_cap_11ac_enable;
++	bool sku_cap_11ax_enable;
+ 	bool sku_cap_amt_enable;
+ 	bool sku_cap_ipan_enable;
+ 	bool sku_cap_mimo_disabled;
 -- 
-2.7.4
+2.16.3
