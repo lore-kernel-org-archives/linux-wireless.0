@@ -1,64 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:33263 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754085AbeDJPBx (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39558 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750940AbeDMMoV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Apr 2018 11:01:53 -0400
-Received: by mail-pl0-f66.google.com with SMTP id s10-v6so7700447plp.0
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Apr 2018 08:01:52 -0700 (PDT)
-From: Siva Rebbagondla <siva8118@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
+        Fri, 13 Apr 2018 08:44:21 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sushant Mishra <sushant.mishra@redpinesignals.com>
-Subject: [v2 4/7] rsi: increase max supported aggregation subframes
-Date: Tue, 10 Apr 2018 20:34:14 +0530
-Message-Id: <1523372657-6067-5-git-send-email-siva8118@gmail.com> (sfid-20180410_170159_242789_F04F7934)
-In-Reply-To: <1523372657-6067-1-git-send-email-siva8118@gmail.com>
-References: <1523372657-6067-1-git-send-email-siva8118@gmail.com>
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 13 Apr 2018 15:42:46 +0300
+Message-Id: <20180413124256.21769-16-luca@coelho.fi> (sfid-20180413_144425_115908_CEA05AB4)
+In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
+References: <20180413124256.21769-1-luca@coelho.fi>
+Subject: [PATCH 15/25] iwlwifi: mvm: use shorter queues for mgmt and auxilary queues
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-Maximum number of supported aggregation subframes has been increased
-to 8. This is the optimal number for the driver.
+In 22000 devices, aka gen2, the TFS is 256 bytes.
+In order to save memory, use shorter TX queue for aux and
+mgmt queues, since there isn't much traffic on them.
 
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 3 ++-
- drivers/net/wireless/rsi/rsi_mgmt.h         | 3 +++
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/fw/api/txq.h | 1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c  | 9 +++++----
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 77aa3bb..2a77743 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -1955,7 +1955,8 @@ int rsi_mac80211_attach(struct rsi_common *common)
- 	hw->uapsd_queues = RSI_IEEE80211_UAPSD_QUEUES;
- 	hw->uapsd_max_sp_len = IEEE80211_WMM_IE_STA_QOSINFO_SP_ALL;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h b/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h
+index 1f45b2ce5295..6ac240b6eace 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h
+@@ -132,6 +132,7 @@ enum iwl_tx_queue_cfg_actions {
+ };
  
--	hw->max_tx_aggregation_subframes = 6;
-+	hw->max_tx_aggregation_subframes = RSI_MAX_TX_AGGR_FRMS;
-+	hw->max_rx_aggregation_subframes = RSI_MAX_RX_AGGR_FRMS;
- 	rsi_register_rates_channels(adapter, NL80211_BAND_2GHZ);
- 	rsi_register_rates_channels(adapter, NL80211_BAND_5GHZ);
- 	hw->rate_control_algorithm = "AARF";
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index 5f946f3..1462093 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -225,6 +225,9 @@
- #define RSI_WOW_DISCONNECT		BIT(5)
- #endif
+ #define IWL_DEFAULT_QUEUE_SIZE 256
++#define IWL_MGMT_QUEUE_SIZE 16
+ /**
+  * struct iwl_tx_queue_cfg_cmd - txq hw scheduler config command
+  * @sta_id: station id
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index f21257dc298b..0ec22f4ddd8c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -728,13 +728,14 @@ int iwl_mvm_tvqm_enable_txq(struct iwl_mvm *mvm, int mac80211_queue,
+ 		.sta_id = sta_id,
+ 		.tid = tid,
+ 	};
+-	int queue;
++	int queue, size = IWL_DEFAULT_QUEUE_SIZE;
  
-+#define RSI_MAX_TX_AGGR_FRMS		8
-+#define RSI_MAX_RX_AGGR_FRMS		8
-+
- enum opmode {
- 	RSI_OPMODE_UNSUPPORTED = -1,
- 	RSI_OPMODE_AP = 0,
+-	if (cmd.tid == IWL_MAX_TID_COUNT)
++	if (cmd.tid == IWL_MAX_TID_COUNT) {
+ 		cmd.tid = IWL_MGMT_TID;
++		size = IWL_MGMT_QUEUE_SIZE;
++	}
+ 	queue = iwl_trans_txq_alloc(mvm->trans, (void *)&cmd,
+-				    SCD_QUEUE_CFG, IWL_DEFAULT_QUEUE_SIZE,
+-				    timeout);
++				    SCD_QUEUE_CFG, size, timeout);
+ 
+ 	if (queue < 0) {
+ 		IWL_DEBUG_TX_QUEUES(mvm,
 -- 
-2.7.4
+2.16.3
