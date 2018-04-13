@@ -1,67 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40592 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754536AbeDTKte (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37012 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750960AbeDMLdL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Apr 2018 06:49:34 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 20 Apr 2018 13:49:17 +0300
-Message-Id: <20180420104926.8816-1-luca@coelho.fi> (sfid-20180420_124937_775100_37B98ADE)
-Subject: [PATCH 0/9] cfg80211/mac80211 patches from our internal tree 2018-04-20
+        Fri, 13 Apr 2018 07:33:11 -0400
+From: Balaji Pothunoori <bpothuno@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: bpothuno@codeaurora.org
+Subject: [PATCH 0/3]: cfg80211/mac80211/ath10k: average ack rssi support for data frames
+Date: Fri, 13 Apr 2018 17:02:54 +0530
+Message-Id: <1523619177-1816-1-git-send-email-bpothuno@codeaurora.org> (sfid-20180413_133316_257608_CF647619)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
-
-Hi,
-
-Some patches with mac80211 and cfg80211 changes from our internal
-tree.
-
-Please review, though you have already reviewed most if not all of
-them ;)
-
-Cheers,
-Luca.
+This patchset introduces the average ack rssi for data frames. 
 
 
-Gregory Greenman (1):
-  mac80211: add api to set CSA counter in mac80211
+Balaji Pothunoori (1):
+  ath10k: average ack rssi support for data frames.
+  mac80211: average ack rssi support for data frames
+  cfg80211: average ack rssi support for data frames  
 
-Haim Dreyfuss (1):
-  nl80211: Add wmm rule attribute to NL80211_CMD_GET_WIPHY dump command.
+ drivers/net/wireless/ath/ath10k/core.c   |  4 ++++
+ drivers/net/wireless/ath/ath10k/htt.h    |  6 +++++-
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 21 +++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/mac.c    |  4 ++++
+ drivers/net/wireless/ath/ath10k/wmi.h    |  8 ++++++++
+ net/mac80211/sta_info.c | 10 ++++++++++
+ net/mac80211/sta_info.h |  2 ++
+ net/mac80211/status.c   |  2 ++
+ include/net/cfg80211.h       | 3 +++
+ include/uapi/linux/nl80211.h | 7 +++++++
+ net/wireless/nl80211.c       | 3 +++
 
-Ilan Peer (2):
-  mac80211: Adjust SAE authentication timeout
-  mac80211: Support adding duration for prepare_tx() callback
-
-Johannes Berg (4):
-  mac80211: rename rtap_vendor_space to rtap_space
-  mac80211: clean up rate info bandwidth setting
-  mac80211: ethtool: memset the whole sinfo struct to 0
-  mac80211: remove pointless flags=0 assignment
-
-Sara Sharon (1):
-  mac80211: use timeout from the AddBA response instead of the request
-
- drivers/net/wireless/ath/ath9k/main.c         |  3 +-
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  6 +-
- include/net/mac80211.h                        | 18 +++++-
- include/uapi/linux/nl80211.h                  | 28 +++++++++
- net/mac80211/agg-tx.c                         |  4 ++
- net/mac80211/driver-ops.h                     |  8 ++-
- net/mac80211/ethtool.c                        |  5 +-
- net/mac80211/mlme.c                           | 42 +++++++++-----
- net/mac80211/rx.c                             | 40 +++++++------
- net/mac80211/sta_info.c                       |  2 +-
- net/mac80211/trace.h                          | 25 +++++++-
- net/mac80211/tx.c                             | 28 ++++++++-
- net/mac80211/util.c                           |  6 +-
- net/wireless/nl80211.c                        | 57 +++++++++++++++++--
- 14 files changed, 217 insertions(+), 55 deletions(-)
+ 11 files changed, 69 insertions(+), 1 deletion(-)
 
 -- 
-2.17.0
+2.7.4
