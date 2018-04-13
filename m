@@ -1,87 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58030 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751976AbeCMOp2 (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:42549 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750960AbeDMGQl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Mar 2018 10:45:28 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Tamizh chelvam <tamizhr@codeaurora.org>, johannes@sipsolutions.net,
-        Marcel Holtmann <marcel@holtmann.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Linux Bluetooth mailing list
-        <linux-bluetooth@vger.kernel.org>
-Subject: Re: [PATCH 1/2] cfg80211: Add support to enable or disable btcoex
-References: <1519927170-11920-1-git-send-email-tamizhr@codeaurora.org>
-        <5A9856CE.8000005@broadcom.com> <87po4ndpos.fsf@purkki.adurom.net>
-        <5A991D2B.60303@broadcom.com>
-Date: Tue, 13 Mar 2018 16:45:22 +0200
-In-Reply-To: <5A991D2B.60303@broadcom.com> (Arend van Spriel's message of
-        "Fri, 2 Mar 2018 10:45:15 +0100")
-Message-ID: <87k1ug9gql.fsf@kamboji.qca.qualcomm.com> (sfid-20180313_154532_835490_CE976F32)
+        Fri, 13 Apr 2018 02:16:41 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v4 0/9] rtlwifi: btcoex: Add 8822b btcoex support
+Date: Fri, 13 Apr 2018 14:16:04 +0800
+Message-ID: <20180413061613.8569-1-pkshih@realtek.com> (sfid-20180413_081650_682091_351CB686)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> + Marcel
->
-> On 3/2/2018 6:14 AM, Kalle Valo wrote:
->> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
->>
->>> On 3/1/2018 6:59 PM, Tamizh chelvam wrote:
->>>> From: Tamizh chelvam <tamizhr@codeaurora.org>
->>>>
->>>> This patch introduces NL80211_CMD_SET_BTCOEX command and
->>>> NL80211_ATTR_BTCOEX_OP attribute to enable or disable btcoex.
->>>
->>> What kind of btcoex are we talking about here? Is it signalling
->>> between wlan and bt to get access to the shared RF.
->>
->> Yes, at least that's how I understand this.
->>
->>> Why would it require user-space interaction? Are there no options for
->>> wlan to detect bt is in use, ie. bt hci is setup, and vice versa. Can
->>> it be indicated in platform data or device tree. Trying to understand
->>> the use-case here.
->>
->> One use case is being able to disable btcoex in case of problems or to
->> test if it's btcoex related. I think during the last five years the need
->> for this interface has come every once in a while.
->
-> Well, you would want to disable btcoex *and* bt to verify wlan is
-> working properly on its own. And similarly disable btcoex *and* wlan
-> to verify bt works properly.
+v4: swap the order of patch 4/9 and 5/9, because kbuild test robot reports
+    undefined reference. No source code change.
+v3: forget to CC wireless mailing list, so resend again. No any change.
+v2: fix misspelling and boolean expression in patch 1/9
 
-Sure. But my main motiviation with this is to replace the module
-parameters we already have:
+Patches 1-2 are revised by patches 12 of previous patchset. 8822b coex
+files are split into two patches, and I remove some comments and apply
+'static const' to version related variables.
+Patches 3-4 aren't changed. (identical to patches 13-15 of previous patchset)
+Patches 6-7 remove comments and apply 'static const' to existing files.
+Patches 8-9 remove global variables, and use local variables instead.
 
-drivers/net/wireless/ath/ath9k/htc_drv_init.c:module_param_named(btcoex_enable, ath9k_htc_btcoex_enable, int, 0444);
-drivers/net/wireless/ath/ath9k/htc_drv_init.c:MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
+Ping-Ke Shih (9):
+  rtlwifi: btcoex: Add 8822b1ant coex files
+  rtlwifi: btcoex: Add 8822b2ant coex files
+  rtlwifi: btcoex: Add 8822b header files to precomp.h
+  rtlwifi: btcoex: Add 8822b to Makefile
+  rtlwifi: btcoex: Add 8822b routine to btc interfaces
+  rtlwifi: btcoex: remove comments that are not meaningful
+  rtlwifi: btcoex: Add modifier const to version related variables
+  rtlwifi: btcoex: Add struct members to replace global varaibles
+  rtlwifi: btcoex: Remove global variables of chip specific context
 
-drivers/net/wireless/ath/ath9k/init.c:module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
-drivers/net/wireless/ath/ath9k/init.c:MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
-
-drivers/net/wireless/broadcom/b43/main.c:module_param_named(btcoex, modparam_btcoex, int, 0444);
-drivers/net/wireless/broadcom/b43/main.c:MODULE_PARM_DESC(btcoex, "Enable Bluetooth coexistence (default on)");
-
-But looking closely in ath9k cases it doesn't actually sound doable as
-IIRC the ath9k module parameters are off by default. In b43 it's enabled
-by default, though.
-
-> Now I do recall a thread between you and Marcel. Looked it up and it
-> was this thread [1], but did not see a follow-up on it. I suspect it
-> involves more than just an enable/disable state. That may be fine for
-> devices in which BT and WLAN are integrated and coordination of RF use
-> is done on the device. The "btcoex subsystem" thread seems to aim for
-> more like providing the coordination logic so independent BT device
-> and WLAN device can still use the same RF. So before adopting the api
-> in nl80211 it would be good to revive that thread.
-
-I think that "btcoex subsystem" is a holy grail which will be never
-implemented :) But who knows, miracles can happen...
+ .../wireless/realtek/rtlwifi/btcoexist/Makefile    |    3 +
+ .../realtek/rtlwifi/btcoexist/halbt_precomp.h      |    9 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    |   68 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    |   82 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |   82 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    |   71 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    |   64 +-
+ .../realtek/rtlwifi/btcoexist/halbtc8822b1ant.c    | 5365 +++++++++++++++++++
+ .../realtek/rtlwifi/btcoexist/halbtc8822b1ant.h    |  413 ++
+ .../realtek/rtlwifi/btcoexist/halbtc8822b2ant.c    | 5429 ++++++++++++++++++++
+ .../realtek/rtlwifi/btcoexist/halbtc8822b2ant.h    |  434 ++
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       |  100 +
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |   24 +
+ 13 files changed, 12005 insertions(+), 139 deletions(-)
+ create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.c
+ create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.h
+ create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b2ant.c
+ create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b2ant.h
 
 -- 
-Kalle Valo
+2.15.1
