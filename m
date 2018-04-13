@@ -1,56 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:5534 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756003AbeDYRTZ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39324 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754147AbeDMMnE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 13:19:25 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 01/21] staging: wilc1000: replace crc7_byte() with inline macro CRC7_BYTE
-Date: Wed, 25 Apr 2018 22:48:06 +0530
-Message-ID: <1524676706-13179-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180425_191933_110745_CB16E4C7)
-In-Reply-To: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 13 Apr 2018 08:43:04 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 13 Apr 2018 15:42:31 +0300
+Message-Id: <20180413124256.21769-1-luca@coelho.fi> (sfid-20180413_144308_813701_E7871892)
+Subject: [PATCH 00/25] iwlwifi: updates intended for v4.18 2018-04-13
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace the function call for crc7_byte() with macro CRC7_BYTE.
-crc7_byte() was called in close while(), so replaced it with macro to
-avoid extra functional call depth.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_spi.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+Hi,
 
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 2cb9f4e..3bb8fec 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -75,15 +75,12 @@ static const u8 crc7_syndrome_table[256] = {
- 	0x46, 0x4f, 0x54, 0x5d, 0x62, 0x6b, 0x70, 0x79
- };
- 
--static u8 crc7_byte(u8 crc, u8 data)
--{
--	return crc7_syndrome_table[(crc << 1) ^ data];
--}
-+#define CRC7_BYTE(crc, data) crc7_syndrome_table[(crc << 1) ^ data]
- 
- static u8 crc7(u8 crc, const u8 *buffer, u32 len)
- {
- 	while (len--)
--		crc = crc7_byte(crc, *buffer++);
-+		crc = CRC7_BYTE(crc, *buffer++);
- 	return crc;
- }
- 
+Here's the first batch of patches intended for 4.18.  The biggest
+change is the inclusion of TCM (Traffic Condition Monitor), which has
+been in our internal tree for ages, but just now we decided to send it
+upstream.  The rest is normal development work.
+
+* implement Traffic Condition Monitor;
+* use TCM for scan and BT coex;
+* use TCM to detect when the AP doesn't support UAPSD properly;
+* some more work for the 22000 family of devices;
+* introduce AMSDU rate control offload;
+* a couple of clean-ups and bugfixes.
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Emmanuel Grumbach (3):
+  iwlwifi: mvm: BT Coex - make the primary / secondary pick traffic
+    aware
+  iwlwifi: pcie: implement the overlow queue for Gen2 devices
+  iwlwifi: mvm: set the MFP flag for keys that are used by MFP stations
+
+Gregory Greenman (1):
+  iwlwifi: mvm: support offload of AMSDU rate control
+
+Haim Dreyfuss (1):
+  iwlwifi: move timestamp functions from debugfs.h to dbg.h
+
+Johannes Berg (2):
+  iwlwifi: mvm: detect U-APSD breaking aggregation
+  iwlwifi: mvm: clean up scan capability checks
+
+Liad Kaufman (2):
+  iwlwifi: support api ver2 of NVM_GET_INFO resp
+  iwlwifi: mvm: support 22000 HW opening agg before traffic
+
+Luca Coelho (5):
+  iwlwifi: mvm: add traffic condition monitoring (TCM)
+  iwlwifi: mvm: use TCM data to decide scan priority
+  iwlwifi: mvm: fix OOC priority in scans
+  iwlwifi: use flags to denote modifiers for the channel maps
+  iwlwifi: remove upper case letters in sku_capa_band_*_enable
+
+Naftali Goldstein (1):
+  iwlwifi: mvm: update rs-fw API
+
+Sara Sharon (7):
+  iwlwifi: mvm: detect low latency and traffic load per band
+  iwlwifi: pcie: allocate shorter TX queues for 22000 devices
+  iwlwifi: Revert "iwlwifi: pcie: dynamic Tx command queue size"
+  iwlwifi: add TX queue size parameter to TX queue allocation
+  iwlwifi: pcie: use the queue size as sent by opmode
+  iwlwifi: mvm: use shorter queues for mgmt and auxilary queues
+  iwlwifi: mvm: use the new get_tid function
+
+Shaul Triebitz (3):
+  iwlwifi: move all NVM parsing code to the common files
+  iwlwifi: pcie: gen2: fix race in cmd fifo write ptr
+  iwlwifi: get rid of fw/nvm.c
+
+ drivers/net/wireless/intel/iwlwifi/Makefile        |   2 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c     |   1 -
+ drivers/net/wireless/intel/iwlwifi/dvm/main.c      |   8 +-
+ .../net/wireless/intel/iwlwifi/fw/api/datapath.h   |   5 -
+ .../net/wireless/intel/iwlwifi/fw/api/nvm-reg.h    |  42 +-
+ drivers/net/wireless/intel/iwlwifi/fw/api/rs.h     | 156 +++-----
+ drivers/net/wireless/intel/iwlwifi/fw/api/txq.h    |   2 +
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h        |  36 ++
+ drivers/net/wireless/intel/iwlwifi/fw/debugfs.c    |   1 +
+ drivers/net/wireless/intel/iwlwifi/fw/debugfs.h    |  31 --
+ drivers/net/wireless/intel/iwlwifi/fw/nvm.c        | 162 --------
+ drivers/net/wireless/intel/iwlwifi/fw/runtime.h    |   1 -
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h    |   5 +-
+ .../net/wireless/intel/iwlwifi/iwl-eeprom-parse.c  |   4 +-
+ .../net/wireless/intel/iwlwifi/iwl-eeprom-parse.h  |   5 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 354 +++++++++++++++--
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h |  56 ++-
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |   8 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/coex.c      |  37 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/constants.h |   7 +
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c        |   7 +
+ .../net/wireless/intel/iwlwifi/mvm/debugfs-vif.c   |   2 +
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   |  25 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        |  10 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  33 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       | 102 ++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c       | 208 +---------
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |  15 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c     | 117 +++---
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c        |  15 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.h        |   3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c        | 103 ++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |  13 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c      | 194 ++++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  28 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h       |   7 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |  57 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     | 437 ++++++++++++++++++++-
+ .../net/wireless/intel/iwlwifi/pcie/ctxt-info.c    |   2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |   5 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  |  55 ++-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       |  28 +-
+ 42 files changed, 1613 insertions(+), 776 deletions(-)
+ delete mode 100644 drivers/net/wireless/intel/iwlwifi/fw/nvm.c
+
 -- 
-2.7.4
+2.16.3
