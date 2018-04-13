@@ -1,261 +1,260 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:38110 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751274AbeDDGX5 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40988 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750734AbeDMOkb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Apr 2018 02:23:57 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  4 Apr 2018 09:23:48 +0300
-Message-Id: <20180404062348.31461-1-luca@coelho.fi> (sfid-20180404_082401_207285_DF48F4C1)
-Subject: [PATCH] iwlwifi: mvm: query regdb for wmm rule if needed
+        Fri, 13 Apr 2018 10:40:31 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, Thomas Hebb <tommyhebb@gmail.com>
+Subject: [PATCH v2] ath10k: search all IEs for variant before falling back
+Date: Fri, 13 Apr 2018 17:40:26 +0300
+Message-Id: <1523630426-28577-1-git-send-email-kvalo@codeaurora.org> (sfid-20180413_164035_716936_81798941)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+From: Thomas Hebb <tommyhebb@gmail.com>
 
-Since our device is regulatory self managed it maintains its regulatory
-rules by its own. However the wmm_rules values can't be set by the
-device itself but only the indication about the need to set it.
-In case the device set wmm indication, proactively query the regulatory
-data base to get these values
+commit f2593cb1b291 ("ath10k: Search SMBIOS for OEM board file
+extension") added a feature to ath10k that allows Board Data File
+(BDF) conflicts between multiple devices that use the same device IDs
+but have different calibration requirements to be resolved by allowing
+a "variant" string to be stored in SMBIOS [and later device tree, added
+by commit d06f26c5c8a4 ("ath10k: search DT for qcom,ath10k-calibration-
+variant")] that gets appended to the ID stored in board-2.bin.
 
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+This original patch had a regression, however. Namely that devices with
+a variant present in SMBIOS that didn't need custom BDFs could no longer
+find the default BDF, which has no variant appended. The patch was
+reverted and re-applied with a fix for this issue in commit 1657b8f84ed9
+("search SMBIOS for OEM board file extension").
+
+But the fix to fall back to a default BDF introduced another issue: the
+driver currently parses IEs in board-2.bin one by one, and for each one
+it first checks to see if it matches the ID with the variant appended.
+If it doesn't, it checks to see if it matches the "fallback" ID with no
+variant. If a matching BDF is found at any point during this search, the
+search is terminated and that BDF is used. The issue is that it's very
+possible (and is currently the case for board-2.bin files present in the
+ath10k-firmware repository) for the default BDF to occur in an earlier
+IE than the variant-specific BDF. In this case, the current code will
+happily choose the default BDF even though a better-matching BDF is
+present later in the file.
+
+This patch fixes the issue by first searching the entire file for the ID
+with variant, and searching for the fallback ID only if that search
+fails. It also includes some code cleanup in the area, as
+ath10k_core_fetch_board_data_api_n() no longer does its own string
+mangling to remove the variant from an ID, instead leaving that job to a
+new flag passed to ath10k_core_create_board_name().
+
+I've tested this patch on a QCA4019 and verified that the driver behaves
+correctly for 1) both fallback and variant BDFs present, 2) only fallback
+BDF present, and 3) no matching BDFs present.
+
+Fixes: 1657b8f84ed9 ("ath10k: search SMBIOS for OEM board file extension")
+Signed-off-by: Thomas Hebb <tommyhebb@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 111 ++++++++++++++++++---
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h |   6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |   3 +-
- 3 files changed, 101 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 8928613e033e..ca0174680af9 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -76,6 +76,7 @@
- #include "iwl-io.h"
- #include "iwl-csr.h"
- #include "fw/acpi.h"
-+#include "fw/api/nvm-reg.h"
- 
- /* NVM offsets (in words) definitions */
- enum nvm_offsets {
-@@ -146,8 +147,8 @@ static const u8 iwl_ext_nvm_channels[] = {
- 	149, 153, 157, 161, 165, 169, 173, 177, 181
- };
- 
--#define IWL_NUM_CHANNELS		ARRAY_SIZE(iwl_nvm_channels)
--#define IWL_NUM_CHANNELS_EXT	ARRAY_SIZE(iwl_ext_nvm_channels)
-+#define IWL_NVM_NUM_CHANNELS		ARRAY_SIZE(iwl_nvm_channels)
-+#define IWL_NVM_NUM_CHANNELS_EXT	ARRAY_SIZE(iwl_ext_nvm_channels)
- #define NUM_2GHZ_CHANNELS		14
- #define NUM_2GHZ_CHANNELS_EXT	14
- #define FIRST_2GHZ_HT_MINUS		5
-@@ -301,11 +302,11 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 	const u8 *nvm_chan;
- 
- 	if (cfg->nvm_type != IWL_NVM_EXT) {
--		num_of_ch = IWL_NUM_CHANNELS;
-+		num_of_ch = IWL_NVM_NUM_CHANNELS;
- 		nvm_chan = &iwl_nvm_channels[0];
- 		num_2ghz_channels = NUM_2GHZ_CHANNELS;
- 	} else {
--		num_of_ch = IWL_NUM_CHANNELS_EXT;
-+		num_of_ch = IWL_NVM_NUM_CHANNELS_EXT;
- 		nvm_chan = &iwl_ext_nvm_channels[0];
- 		num_2ghz_channels = NUM_2GHZ_CHANNELS_EXT;
- 	}
-@@ -720,12 +721,12 @@ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	if (cfg->nvm_type != IWL_NVM_EXT)
- 		data = kzalloc(sizeof(*data) +
- 			       sizeof(struct ieee80211_channel) *
--			       IWL_NUM_CHANNELS,
-+			       IWL_NVM_NUM_CHANNELS,
- 			       GFP_KERNEL);
- 	else
- 		data = kzalloc(sizeof(*data) +
- 			       sizeof(struct ieee80211_channel) *
--			       IWL_NUM_CHANNELS_EXT,
-+			       IWL_NVM_NUM_CHANNELS_EXT,
- 			       GFP_KERNEL);
- 	if (!data)
- 		return NULL;
-@@ -842,24 +843,34 @@ static u32 iwl_nvm_get_regdom_bw_flags(const u8 *nvm_chan,
- 	return flags;
+v2:
+
+* resubmit to CC linux-wireless
+
+ drivers/net/wireless/ath/ath10k/core.c | 134 ++++++++++++++++++---------------
+ 1 file changed, 72 insertions(+), 62 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 8a3020dbd4cf..50b52a9e9648 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1253,14 +1253,61 @@ static int ath10k_core_parse_bd_ie_board(struct ath10k *ar,
+ 	return ret;
  }
  
-+struct regdb_ptrs {
-+	struct ieee80211_wmm_rule *rule;
-+	u32 token;
-+};
++static int ath10k_core_search_bd(struct ath10k *ar,
++				 const char *boardname,
++				 const u8 *data,
++				 size_t len)
++{
++	size_t ie_len;
++	struct ath10k_fw_ie *hdr;
++	int ret = -ENOENT, ie_id;
 +
- struct ieee80211_regdomain *
- iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
--		       int num_of_ch, __le32 *channels, u16 fw_mcc)
-+		       int num_of_ch, __le32 *channels, u16 fw_mcc,
-+		       u16 geo_info)
- {
- 	int ch_idx;
- 	u16 ch_flags;
- 	u32 reg_rule_flags, prev_reg_rule_flags = 0;
- 	const u8 *nvm_chan = cfg->nvm_type == IWL_NVM_EXT ?
- 			     iwl_ext_nvm_channels : iwl_nvm_channels;
--	struct ieee80211_regdomain *regd;
--	int size_of_regd;
-+	struct ieee80211_regdomain *regd, *copy_rd;
-+	int size_of_regd, regd_to_copy, wmms_to_copy;
-+	int size_of_wmms = 0;
- 	struct ieee80211_reg_rule *rule;
-+	struct ieee80211_wmm_rule *wmm_rule, *d_wmm, *s_wmm;
-+	struct regdb_ptrs *regdb_ptrs;
- 	enum nl80211_band band;
- 	int center_freq, prev_center_freq = 0;
--	int valid_rules = 0;
-+	int valid_rules = 0, n_wmms = 0;
-+	int i;
- 	bool new_rule;
- 	int max_num_ch = cfg->nvm_type == IWL_NVM_EXT ?
--			 IWL_NUM_CHANNELS_EXT : IWL_NUM_CHANNELS;
-+			 IWL_NVM_NUM_CHANNELS_EXT : IWL_NVM_NUM_CHANNELS;
- 
- 	if (WARN_ON_ONCE(num_of_ch > NL80211_MAX_SUPP_REG_RULES))
- 		return ERR_PTR(-EINVAL);
-@@ -875,10 +886,26 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
- 		sizeof(struct ieee80211_regdomain) +
- 		num_of_ch * sizeof(struct ieee80211_reg_rule);
- 
--	regd = kzalloc(size_of_regd, GFP_KERNEL);
-+	if (geo_info & GEO_WMM_ETSI_5GHZ_INFO)
-+		size_of_wmms =
-+			num_of_ch * sizeof(struct ieee80211_wmm_rule);
++	while (len > sizeof(struct ath10k_fw_ie)) {
++		hdr = (struct ath10k_fw_ie *)data;
++		ie_id = le32_to_cpu(hdr->id);
++		ie_len = le32_to_cpu(hdr->len);
 +
-+	regd = kzalloc(size_of_regd + size_of_wmms, GFP_KERNEL);
- 	if (!regd)
- 		return ERR_PTR(-ENOMEM);
- 
-+	regdb_ptrs = kcalloc(num_of_ch, sizeof(*regdb_ptrs), GFP_KERNEL);
-+	if (!regdb_ptrs) {
-+		copy_rd = ERR_PTR(-ENOMEM);
-+		goto out;
-+	}
++		len -= sizeof(*hdr);
++		data = hdr->data;
 +
-+	/* set alpha2 from FW. */
-+	regd->alpha2[0] = fw_mcc >> 8;
-+	regd->alpha2[1] = fw_mcc & 0xff;
-+
-+	wmm_rule = (struct ieee80211_wmm_rule *)((u8 *)regd + size_of_regd);
-+
- 	for (ch_idx = 0; ch_idx < num_of_ch; ch_idx++) {
- 		ch_flags = (u16)__le32_to_cpup(channels + ch_idx);
- 		band = (ch_idx < NUM_2GHZ_CHANNELS) ?
-@@ -927,14 +954,66 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
- 
- 		iwl_nvm_print_channel_flags(dev, IWL_DL_LAR,
- 					    nvm_chan[ch_idx], ch_flags);
-+
-+		if (!(geo_info & GEO_WMM_ETSI_5GHZ_INFO) ||
-+		    band == NL80211_BAND_2GHZ)
-+			continue;
-+
-+		if (!reg_query_regdb_wmm(regd->alpha2, center_freq,
-+					 &regdb_ptrs[n_wmms].token, wmm_rule)) {
-+			/* Add only new rules */
-+			for (i = 0; i < n_wmms; i++) {
-+				if (regdb_ptrs[i].token ==
-+				    regdb_ptrs[n_wmms].token) {
-+					rule->wmm_rule = regdb_ptrs[i].rule;
-+					break;
-+				}
-+			}
-+			if (i == n_wmms) {
-+				rule->wmm_rule = wmm_rule;
-+				regdb_ptrs[n_wmms++].rule = wmm_rule;
-+				wmm_rule++;
-+			}
++		if (len < ALIGN(ie_len, 4)) {
++			ath10k_err(ar, "invalid length for board ie_id %d ie_len %zu len %zu\n",
++				   ie_id, ie_len, len);
++			return -EINVAL;
 +		}
++
++		switch (ie_id) {
++		case ATH10K_BD_IE_BOARD:
++			ret = ath10k_core_parse_bd_ie_board(ar, data, ie_len,
++							    boardname);
++			if (ret == -ENOENT)
++				/* no match found, continue */
++				break;
++
++			/* either found or error, so stop searching */
++			goto out;
++		}
++
++		/* jump over the padding */
++		ie_len = ALIGN(ie_len, 4);
++
++		len -= ie_len;
++		data += ie_len;
++	}
++
++out:
++	/* return result of parse_bd_ie_board() or -ENOENT */
++	return ret;
++}
++
+ static int ath10k_core_fetch_board_data_api_n(struct ath10k *ar,
+ 					      const char *boardname,
++					      const char *fallback_boardname,
+ 					      const char *filename)
+ {
+-	size_t len, magic_len, ie_len;
+-	struct ath10k_fw_ie *hdr;
++	size_t len, magic_len;
+ 	const u8 *data;
+-	int ret, ie_id;
++	int ret;
+ 
+ 	ar->normal_mode_fw.board = ath10k_fetch_fw_file(ar,
+ 							ar->hw_params.fw.dir,
+@@ -1298,69 +1345,23 @@ static int ath10k_core_fetch_board_data_api_n(struct ath10k *ar,
+ 	data += magic_len;
+ 	len -= magic_len;
+ 
+-	while (len > sizeof(struct ath10k_fw_ie)) {
+-		hdr = (struct ath10k_fw_ie *)data;
+-		ie_id = le32_to_cpu(hdr->id);
+-		ie_len = le32_to_cpu(hdr->len);
+-
+-		len -= sizeof(*hdr);
+-		data = hdr->data;
+-
+-		if (len < ALIGN(ie_len, 4)) {
+-			ath10k_err(ar, "invalid length for board ie_id %d ie_len %zu len %zu\n",
+-				   ie_id, ie_len, len);
+-			ret = -EINVAL;
+-			goto err;
+-		}
++	/* attempt to find boardname in the IE list */
++	ret = ath10k_core_search_bd(ar, boardname, data, len);
+ 
+-		switch (ie_id) {
+-		case ATH10K_BD_IE_BOARD:
+-			ret = ath10k_core_parse_bd_ie_board(ar, data, ie_len,
+-							    boardname);
+-			if (ret == -ENOENT && ar->id.bdf_ext[0] != '\0') {
+-				/* try default bdf if variant was not found */
+-				char *s, *v = ",variant=";
+-				char boardname2[100];
+-
+-				strlcpy(boardname2, boardname,
+-					sizeof(boardname2));
+-
+-				s = strstr(boardname2, v);
+-				if (s)
+-					*s = '\0';  /* strip ",variant=%s" */
++	/* if we didn't find it and have a fallback name, try that */
++	if (ret == -ENOENT && fallback_boardname)
++		ret = ath10k_core_search_bd(ar, fallback_boardname, data, len);
+ 
+-				ret = ath10k_core_parse_bd_ie_board(ar, data,
+-								    ie_len,
+-								    boardname2);
+-			}
+-
+-			if (ret == -ENOENT)
+-				/* no match found, continue */
+-				break;
+-			else if (ret)
+-				/* there was an error, bail out */
+-				goto err;
+-
+-			/* board data found */
+-			goto out;
+-		}
+-
+-		/* jump over the padding */
+-		ie_len = ALIGN(ie_len, 4);
+-
+-		len -= ie_len;
+-		data += ie_len;
+-	}
+-
+-out:
+-	if (!ar->normal_mode_fw.board_data || !ar->normal_mode_fw.board_len) {
++	if (ret == -ENOENT) {
+ 		ath10k_err(ar,
+ 			   "failed to fetch board data for %s from %s/%s\n",
+ 			   boardname, ar->hw_params.fw.dir, filename);
+ 		ret = -ENODATA;
+-		goto err;
  	}
  
- 	regd->n_reg_rules = valid_rules;
-+	regd->n_wmm_rules = n_wmms;
++	if (ret)
++		goto err;
++
+ 	return 0;
  
--	/* set alpha2 from FW. */
--	regd->alpha2[0] = fw_mcc >> 8;
--	regd->alpha2[1] = fw_mcc & 0xff;
-+	/*
-+	 * Narrow down regdom for unused regulatory rules to prevent hole
-+	 * between reg rules to wmm rules.
-+	 */
-+	regd_to_copy = sizeof(struct ieee80211_regdomain) +
-+		valid_rules * sizeof(struct ieee80211_reg_rule);
-+
-+	wmms_to_copy = sizeof(struct ieee80211_wmm_rule) * n_wmms;
-+
-+	copy_rd = kzalloc(regd_to_copy + wmms_to_copy, GFP_KERNEL);
-+	if (!copy_rd) {
-+		copy_rd = ERR_PTR(-ENOMEM);
-+		goto out;
-+	}
-+
-+	memcpy(copy_rd, regd, regd_to_copy);
-+	memcpy((u8 *)copy_rd + regd_to_copy, (u8 *)regd + size_of_regd,
-+	       wmms_to_copy);
-+
-+	d_wmm = (struct ieee80211_wmm_rule *)((u8 *)copy_rd + regd_to_copy);
-+	s_wmm = (struct ieee80211_wmm_rule *)((u8 *)regd + size_of_regd);
-+
-+	for (i = 0; i < regd->n_reg_rules; i++) {
-+		if (!regd->reg_rules[i].wmm_rule)
-+			continue;
-+
-+		copy_rd->reg_rules[i].wmm_rule = d_wmm +
-+			(regd->reg_rules[i].wmm_rule - s_wmm) /
-+			sizeof(struct ieee80211_wmm_rule);
-+	}
- 
--	return regd;
-+out:
-+	kfree(regdb_ptrs);
-+	kfree(regd);
-+	return copy_rd;
+ err:
+@@ -1369,12 +1370,12 @@ static int ath10k_core_fetch_board_data_api_n(struct ath10k *ar,
  }
- IWL_EXPORT_SYMBOL(iwl_parse_nvm_mcc_info);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-index 306736c7a042..3071a23b7606 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-@@ -101,12 +101,14 @@ void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
-  *
-  * This function parses the regulatory channel data received as a
-  * MCC_UPDATE_CMD command. It returns a newly allocation regulatory domain,
-- * to be fed into the regulatory core. An ERR_PTR is returned on error.
-+ * to be fed into the regulatory core. In case the geo_info is set handle
-+ * accordingly. An ERR_PTR is returned on error.
-  * If not given to the regulatory core, the user is responsible for freeing
-  * the regdomain returned here with kfree.
-  */
- struct ieee80211_regdomain *
- iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
--		       int num_of_ch, __le32 *channels, u16 fw_mcc);
-+		       int num_of_ch, __le32 *channels, u16 fw_mcc,
-+		       u16 geo_info);
  
- #endif /* __iwl_nvm_parse_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 51b30424575b..90f8c89ea59c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -311,7 +311,8 @@ struct ieee80211_regdomain *iwl_mvm_get_regdomain(struct wiphy *wiphy,
- 	regd = iwl_parse_nvm_mcc_info(mvm->trans->dev, mvm->cfg,
- 				      __le32_to_cpu(resp->n_channels),
- 				      resp->channels,
--				      __le16_to_cpu(resp->mcc));
-+				      __le16_to_cpu(resp->mcc),
-+				      __le16_to_cpu(resp->geo_info));
- 	/* Store the return source id */
- 	src_id = resp->source_id;
- 	kfree(resp);
+ static int ath10k_core_create_board_name(struct ath10k *ar, char *name,
+-					 size_t name_len)
++					 size_t name_len, bool with_variant)
+ {
+ 	/* strlen(',variant=') + strlen(ar->id.bdf_ext) */
+ 	char variant[9 + ATH10K_SMBIOS_BDF_EXT_STR_LENGTH] = { 0 };
+ 
+-	if (ar->id.bdf_ext[0] != '\0')
++	if (with_variant && ar->id.bdf_ext[0] != '\0')
+ 		scnprintf(variant, sizeof(variant), ",variant=%s",
+ 			  ar->id.bdf_ext);
+ 
+@@ -1400,17 +1401,26 @@ static int ath10k_core_create_board_name(struct ath10k *ar, char *name,
+ 
+ static int ath10k_core_fetch_board_file(struct ath10k *ar)
+ {
+-	char boardname[100];
++	char boardname[100], fallback_boardname[100];
+ 	int ret;
+ 
+-	ret = ath10k_core_create_board_name(ar, boardname, sizeof(boardname));
++	ret = ath10k_core_create_board_name(ar, boardname,
++					    sizeof(boardname), true);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to create board name: %d", ret);
+ 		return ret;
+ 	}
+ 
++	ret = ath10k_core_create_board_name(ar, fallback_boardname,
++					    sizeof(boardname), false);
++	if (ret) {
++		ath10k_err(ar, "failed to create fallback board name: %d", ret);
++		return ret;
++	}
++
+ 	ar->bd_api = 2;
+ 	ret = ath10k_core_fetch_board_data_api_n(ar, boardname,
++						 fallback_boardname,
+ 						 ATH10K_BOARD_API2_FILE);
+ 	if (!ret)
+ 		goto success;
 -- 
-2.16.2
+2.7.4
