@@ -1,70 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:58647 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751650AbeDIHwB (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39532 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754756AbeDMMoK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Apr 2018 03:52:01 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <gustavo@embeddedor.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH] rtlwifi: btcoex: remove identical statements within if-else branches
-Date: Mon, 9 Apr 2018 15:51:31 +0800
-Message-ID: <20180409075131.7535-1-pkshih@realtek.com> (sfid-20180409_095204_992097_4E7059A9)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 13 Apr 2018 08:44:10 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 13 Apr 2018 15:42:53 +0300
+Message-Id: <20180413124256.21769-23-luca@coelho.fi> (sfid-20180413_144412_940655_D2746105)
+In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
+References: <20180413124256.21769-1-luca@coelho.fi>
+Subject: [PATCH 22/25] iwlwifi: use flags to denote modifiers for the channel maps
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Since the statements are identical, we can safely remove the statements.
-The commit 42e74946f016 ("rtlwifi: btcoexist: Fix if == else warnings in
-halbtc8821a1ant.c") had fixed the statements, but the commit c6821613e653
-("rtlwifi: btcoex: follow linux coding style") that converted coding style
-and upgraded btcoex didn't include the fix.
+Instead of having a boolean for each modifier we need to handle in the
+channel maps, create a bitmask with flags that denote each
+modification.
 
-Reported-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c       | 19 ++++---------------
- 1 file changed, 4 insertions(+), 15 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/nvm.c        | 10 +++++----
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 25 ++++++++++++++--------
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h | 14 ++++++++++--
+ 3 files changed, 34 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-index d3eb717078bf..f29bf4f3a905 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a1ant.c
-@@ -1578,11 +1578,7 @@ static void btc8821a1ant_act_bt_sco_hid_only_busy(struct btc_coexist *btcoexist,
- 	/* tdma and coex table */
- 	btc8821a1ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 5);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
+index ff44d9031e1a..beefb89194a9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
+@@ -87,6 +87,7 @@ struct iwl_nvm_data *iwl_fw_get_nvm(struct iwl_fw_runtime *fwrt)
+ 				fw_has_capa(&fwrt->fw->ucode_capa,
+ 					    IWL_UCODE_TLV_CAPA_LAR_SUPPORT);
+ 	u32 mac_flags;
++	u32 sbands_flags = 0;
  
--	if (BT_8821A_1ANT_WIFI_STATUS_NON_CONNECTED_ASSO_AUTH_SCAN ==
--	    wifi_status)
--		btc8821a1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
--	else
--		btc8821a1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
-+	btc8821a1ant_coex_table_with_type(btcoexist, NORMAL_EXEC, 1);
- }
+ 	ret = iwl_trans_send_cmd(trans, &hcmd);
+ 	if (ret)
+@@ -144,15 +145,16 @@ struct iwl_nvm_data *iwl_fw_get_nvm(struct iwl_fw_runtime *fwrt)
+ 	nvm->valid_tx_ant = (u8)le32_to_cpu(rsp->phy_sku.tx_chains);
+ 	nvm->valid_rx_ant = (u8)le32_to_cpu(rsp->phy_sku.rx_chains);
  
- static void btc8821a1ant_act_wifi_con_bt_acl_busy(struct btc_coexist *btcoexist,
-@@ -1992,16 +1988,9 @@ static void btc8821a1ant_run_coexist_mechanism(struct btc_coexist *btcoexist)
- 			wifi_rssi_state =
- 				btc8821a1ant_wifi_rssi_state(btcoexist, 1, 2,
- 							     30, 0);
--			if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
--			    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
--				btc8821a1ant_limited_tx(btcoexist,
--							NORMAL_EXEC, 1, 1,
--							0, 1);
--			} else {
--				btc8821a1ant_limited_tx(btcoexist,
--							NORMAL_EXEC, 1, 1,
--							0, 1);
--			}
-+			btc8821a1ant_limited_tx(btcoexist,
-+						NORMAL_EXEC, 1, 1,
-+						0, 1);
- 		} else {
- 			btc8821a1ant_limited_tx(btcoexist, NORMAL_EXEC,
- 						0, 0, 0, 0);
+-	/* Initialize regulatory data */
+-	nvm->lar_enabled =
+-		le32_to_cpu(rsp->regulatory.lar_enabled) && lar_fw_supported;
++	if (le32_to_cpu(rsp->regulatory.lar_enabled) && lar_fw_supported) {
++		nvm->lar_enabled = true;
++		sbands_flags |= IWL_NVM_SBANDS_FLAGS_LAR;
++	}
+ 
+ 	iwl_init_sbands(trans->dev, trans->cfg, nvm,
+ 			rsp->regulatory.channel_profile,
+ 			nvm->valid_tx_ant & fwrt->fw->valid_tx_ant,
+ 			nvm->valid_rx_ant & fwrt->fw->valid_rx_ant,
+-			nvm->lar_enabled, false);
++			sbands_flags);
+ 
+ 	iwl_free_resp(&hcmd);
+ 	return nvm;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 3437ed480e31..735b211364d2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -295,7 +295,7 @@ static u32 iwl_get_channel_flags(u8 ch_num, int ch_idx, bool is_5ghz,
+ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
+ 				struct iwl_nvm_data *data,
+ 				const __le16 * const nvm_ch_flags,
+-				bool lar_supported, bool no_wide_in_5ghz)
++				u32 sbands_flags)
+ {
+ 	int ch_idx;
+ 	int n_channels = 0;
+@@ -323,7 +323,8 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
+ 			continue;
+ 
+ 		/* workaround to disable wide channels in 5GHz */
+-		if (no_wide_in_5ghz && is_5ghz) {
++		if ((sbands_flags & IWL_NVM_SBANDS_FLAGS_NO_WIDE_IN_5GHZ) &&
++		    is_5ghz) {
+ 			ch_flags &= ~(NVM_CHANNEL_40MHZ |
+ 				     NVM_CHANNEL_80MHZ |
+ 				     NVM_CHANNEL_160MHZ);
+@@ -332,7 +333,8 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
+ 		if (ch_flags & NVM_CHANNEL_160MHZ)
+ 			data->vht160_supported = true;
+ 
+-		if (!lar_supported && !(ch_flags & NVM_CHANNEL_VALID)) {
++		if (!(sbands_flags & IWL_NVM_SBANDS_FLAGS_LAR) &&
++		    !(ch_flags & NVM_CHANNEL_VALID)) {
+ 			/*
+ 			 * Channels might become valid later if lar is
+ 			 * supported, hence we still want to add them to
+@@ -362,7 +364,7 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
+ 		channel->max_power = IWL_DEFAULT_MAX_TX_POWER;
+ 
+ 		/* don't put limitations in case we're using LAR */
+-		if (!lar_supported)
++		if (!(sbands_flags & IWL_NVM_SBANDS_FLAGS_LAR))
+ 			channel->flags = iwl_get_channel_flags(nvm_chan[ch_idx],
+ 							       ch_idx, is_5ghz,
+ 							       ch_flags, cfg);
+@@ -460,15 +462,14 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
+ 
+ void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
+ 		     struct iwl_nvm_data *data, const __le16 *nvm_ch_flags,
+-		     u8 tx_chains, u8 rx_chains, bool lar_supported,
+-		     bool no_wide_in_5ghz)
++		     u8 tx_chains, u8 rx_chains, u32 sbands_flags)
+ {
+ 	int n_channels;
+ 	int n_used = 0;
+ 	struct ieee80211_supported_band *sband;
+ 
+ 	n_channels = iwl_init_channel_map(dev, cfg, data, nvm_ch_flags,
+-					  lar_supported, no_wide_in_5ghz);
++					  sbands_flags);
+ 	sband = &data->bands[NL80211_BAND_2GHZ];
+ 	sband->band = NL80211_BAND_2GHZ;
+ 	sband->bitrates = &iwl_cfg80211_rates[RATES_24_OFFS];
+@@ -716,8 +717,8 @@ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	struct device *dev = trans->dev;
+ 	struct iwl_nvm_data *data;
+ 	bool lar_enabled;
+-	bool no_wide_in_5ghz = iwl_nvm_no_wide_in_5ghz(dev, cfg, nvm_hw);
+ 	u32 sku, radio_cfg;
++	u32 sbands_flags = 0;
+ 	u16 lar_config;
+ 	const __le16 *ch_section;
+ 
+@@ -790,8 +791,14 @@ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 		return NULL;
+ 	}
+ 
++	if (lar_fw_supported && lar_enabled)
++		sbands_flags |= IWL_NVM_SBANDS_FLAGS_LAR;
++
++	if (iwl_nvm_no_wide_in_5ghz(dev, cfg, nvm_hw))
++		sbands_flags |= IWL_NVM_SBANDS_FLAGS_NO_WIDE_IN_5GHZ;
++
+ 	iwl_init_sbands(dev, cfg, data, ch_section, tx_chains, rx_chains,
+-			lar_fw_supported && lar_enabled, no_wide_in_5ghz);
++			sbands_flags);
+ 	data->calib_version = 255;
+ 
+ 	return data;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
+index 6b108cae61b8..868baa508a16 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
+@@ -69,6 +69,17 @@
+ #include <net/cfg80211.h>
+ #include "iwl-eeprom-parse.h"
+ 
++/**
++ * enum iwl_nvm_sbands_flags - modification flags for the channel profiles
++ *
++ * @IWL_NVM_SBANDS_FLAGS_LAR: LAR is enabled
++ * @IWL_NVM_SBANDS_FLAGS_NO_WIDE_IN_5GHZ: disallow 40, 80 and 160MHz on 5GHz
++ */
++enum iwl_nvm_sbands_flags {
++	IWL_NVM_SBANDS_FLAGS_LAR		= BIT(0),
++	IWL_NVM_SBANDS_FLAGS_NO_WIDE_IN_5GHZ	= BIT(1),
++};
++
+ /**
+  * iwl_parse_nvm_data - parse NVM data and return values
+  *
+@@ -95,8 +106,7 @@ void iwl_set_hw_address_from_csr(struct iwl_trans *trans,
+  */
+ void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
+ 		     struct iwl_nvm_data *data, const __le16 *nvm_ch_flags,
+-		     u8 tx_chains, u8 rx_chains, bool lar_supported,
+-		     bool no_wide_in_5ghz);
++		     u8 tx_chains, u8 rx_chains, u32 sbands_flags);
+ 
+ /**
+  * iwl_parse_mcc_info - parse MCC (mobile country code) info coming from FW
 -- 
-2.15.1
+2.16.3
