@@ -1,49 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41154 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751818AbeDLMRm (ORCPT
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:11848 "EHLO
+        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754352AbeDMKyq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 08:17:42 -0400
-From: mpubbise@codeaurora.org
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Subject: [PATCH] ath10k: correct target assert problem due to CE5 stuck
-Date: Thu, 12 Apr 2018 17:46:50 +0530
-Message-Id: <1523535410-29333-1-git-send-email-mpubbise@codeaurora.org> (sfid-20180412_141745_254616_E1BF6479)
+        Fri, 13 Apr 2018 06:54:46 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: =?utf-8?B?QWxmb25zbyBTw6FuY2hlei1CZWF0bw==?=
+        <alfonso.sanchez-beato@canonical.com>
+CC: "ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: use WMI to set RSN capabilities
+Date: Fri, 13 Apr 2018 10:48:24 +0000
+Message-ID: <87zi27s7pj.fsf@kamboji.qca.qualcomm.com> (sfid-20180413_125450_665304_A27AE4C9)
+References: <20180412154159.13934-1-alfonso.sanchez-beato@canonical.com>
+In-Reply-To: <20180412154159.13934-1-alfonso.sanchez-beato@canonical.com>
+        ("Alfonso \=\?utf-8\?Q\?S\=C3\=A1nchez-Beato\=22's\?\= message of "Thu, 12
+ Apr 2018 17:41:59      +0200")
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
-
-Correct a minor bug in the commit 0628467f97b5 ("ath10k: fix
-copy engine 5 destination ring stuck") which introduced a change to fix
-firmware assert that happens when ring indices of copy engine 5 are stuck
-for a specific duration, problem with this fix is that it did not use
-ring arithmatic. As a result,firmware asserts did not go away entirely
-athough the frequency of occurrence has reduced. Using ring arithmatic
-to fix the issue.
-
-Tested on QCA9984(fw version-10.4-3.4-00082).
-
-Fixes: 0628467f97b5 ("ath10k: fix copy engine 5 destination ring stuck)
-Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/ce.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index b9def7b..6efa69e 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -615,7 +615,7 @@ void ath10k_ce_rx_update_write_idx(struct ath10k_ce_pipe *pipe, u32 nentries)
- 	/* Prevent CE ring stuck issue that will occur when ring is full.
- 	 * Make sure that write index is 1 less than read index.
- 	 */
--	if ((cur_write_idx + nentries)  == dest_ring->sw_index)
-+	if (((cur_write_idx + nentries) & nentries_mask) == dest_ring->sw_index)
- 		nentries -= 1;
- 
- 	write_index = CE_RING_IDX_ADD(nentries_mask, write_index, nentries);
--- 
-2.7.4
+QWxmb25zbyBTw6FuY2hlei1CZWF0byA8YWxmb25zby5zYW5jaGV6LWJlYXRvQGNhbm9uaWNhbC5j
+b20+IHdyaXRlczoNCg0KPiBUaGlzIGZpeGVzIEFQIG1vZGUgd2hlbiB0aGUgQVRINktMX0ZXX0NB
+UEFCSUxJVFlfUlNOX0NBUF9PVkVSUklERSBmbGFnDQo+IGlzIG5vdCBwcmVzZW50IGluIHRoZSBG
+Vy4gVGhlIGlkIG9mIHNvbWUgV01JIGNvbW1hbmRzIGlzIGFsc28gZml4ZWQNCj4gKHRoZXJlIHdh
+cyBhbiBlcnJvciBpbiB0aGUgZW51bSBvcmRlciksIGFuZCBhIGZ1bmN0aW9uIHRvIHNldCBSU04g
+Y2Fwcw0KPiBpcyBhZGRlZC4NCj4NCj4gU2lnbmVkLW9mZi1ieTogQWxmb25zbyBTw6FuY2hlei1C
+ZWF0byA8YWxmb25zby5zYW5jaGV6LWJlYXRvQGNhbm9uaWNhbC5jb20+DQoNCldoYXQgaGFyZHdh
+cmUgYW5kIGZpcm13YXJlIHZlcnNpb24/IERvIG5vdGUgdGhhdCBpZHMgY2FuIGNoYW5nZSBiZXR3
+ZWVuDQphdGg2a2wgZmlybXdhcmUgYnJhbmNoZXMgc28gZXZlbiBpZiBpdCB3b3JrcyBmb3IgeW91
+IGl0IG1pZ2h0IGJyZWFrIHNvbWUNCm90aGVyIGJyYW5jaC4gVGhhdCdzIHdoeSBpdCdzIGdvb2Qg
+dG8gZG9jdW1lbnQgdGhlIHNldHVwIGluIHRoZSBjb21taXQNCmxvZy4NCg0KLS0gDQpLYWxsZSBW
+YWxv
