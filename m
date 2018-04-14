@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:42263 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754786AbeDWNQN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 09:16:13 -0400
-Date: Mon, 23 Apr 2018 16:16:09 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Luciano Coelho <luciano.coelho@intel.com>
-Cc: Ayala Beker <ayala.beker@intel.com>, linux-wireless@vger.kernel.org
-Subject: Re: [BUG] iwlwifi: Microcode SW error detected.  Restarting
- 0x2000000.
-Message-ID: <20180423131609.GT2173@lahna.fi.intel.com> (sfid-20180423_151616_914057_8707857B)
-References: <20180423120513.GS2173@lahna.fi.intel.com>
- <2769dd4501a9132f638202fece264de32218860d.camel@intel.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60978 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751115AbeDNK4J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 14 Apr 2018 06:56:09 -0400
+Date: Sat, 14 Apr 2018 12:56:07 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Jakub Kicinski <kubakici@wp.pl>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] mt7601u: run calibration works after finishing
+ scanning
+Message-ID: <20180414105606.GA9245@redhat.com> (sfid-20180414_125613_630512_F66AF239)
+References: <1523630678-8100-1-git-send-email-sgruszka@redhat.com>
+ <1523630678-8100-2-git-send-email-sgruszka@redhat.com>
+ <20180413110613.0c13f64f@cakuba.netronome.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2769dd4501a9132f638202fece264de32218860d.camel@intel.com>
+In-Reply-To: <20180413110613.0c13f64f@cakuba.netronome.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 23, 2018 at 03:39:45PM +0300, Luciano Coelho wrote:
-> We had a bug in the scan command size for older firmwares.  I have
-> already made a fix for it, but I hadn't sent it out for upstream yet. 
-> I'll send it out now and soon send you a link to it in patchwork.
+On Fri, Apr 13, 2018 at 11:06:13AM -0700, Jakub Kicinski wrote:
+> On Fri, 13 Apr 2018 16:44:38 +0200, Stanislaw Gruszka wrote:
+> > When finishing scanning we switch to operational channel sill with
+> > SCANNING flag. This mean that we never perform calibration works after
+> > scanning. To fix the problem cancel and queue calibration works on
+> > .sw_scan_start() and .sw_scan_complete() routines.
+> > 
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 > 
-> You have two options: recompile the kernel with my patch or; use the
-> latest version of the firmware from linux-firmware.git[1].
-> 
-> I recommend upgrading the firmware, because we have a lot of other
-> fixes and improvements there, but if you want to keep your distro's
-> original firmware package, you can apply my patch instead.
-> 
-> HTH and thanks for reporting!
+> IOW the stack will potentially ask us to return to the original channel
+> before calling .sw_scan_complete()?  Hm.  That's unpleasant.
 
-I upgraded the firmware to iwlwifi-8265-36.ucode and the issue is gone
-now. Thanks Luca!
+I think the stack need to assure we start and end scanning on
+operational channel, otherwise we would have possibility to be on
+undefined channel during normal work.
+
+> I'm not entirely on board with the patch.  Now normal channel setting
+> will happen while calibration is running.  Is that necessary? 
+> Would it not be sufficient to make sure work is scheduled
+> from .sw_scan_complete()?
+
+Yes, that would be sufficient, I'll post v2.
+
+Thanks
+Stanislaw
