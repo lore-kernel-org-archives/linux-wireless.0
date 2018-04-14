@@ -1,118 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:12878 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755308AbeDWQew (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 12:34:52 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [RESEND 01/33] staging: wilc1000: refactor scan() to free kmalloc memory on failure cases
-Date: Mon, 23 Apr 2018 22:03:03 +0530
-Message-ID: <1524501215-4963-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183458_216730_5F5E6547)
-In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga12.intel.com ([192.55.52.136]:23047 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750873AbeDNGTu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 14 Apr 2018 02:19:50 -0400
+Message-ID: <68a0f81d7212a652def13b76e250b88872686bb7.camel@intel.com> (sfid-20180414_082127_956084_05BFABB3)
+Subject: Re: [PATCH 01/25] iwlwifi: mvm: add traffic condition monitoring
+ (TCM)
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+Date: Sat, 14 Apr 2018 09:19:47 +0300
+In-Reply-To: <20180413124256.21769-2-luca@coelho.fi>
+References: <20180413124256.21769-1-luca@coelho.fi>
+         <20180413124256.21769-2-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added changes to free the allocated memory in scan() for error condition.
-Also added 'NULL' check validation before accessing allocated memory.
-Copied the SSID information in consecutive slots to avoid inbetween
-holes while filling into array.
+On Fri, 2018-04-13 at 15:42 +0300, Luca Coelho wrote:
+> From: Luca Coelho <luciano.coelho@intel.com>
+> 
+> Traffic condition monitor gathers data about the traffic load and
+> other conditions and can be used to make decisions regarding latency,
+> throughput etc.  This patch introduces the code and data structures
+> to
+> collect this data for future use.
+> 
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> ---
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
-Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 62 +++++++++++++++++------
- 1 file changed, 46 insertions(+), 16 deletions(-)
+[...]
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 706ba4c..f9a95f2 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -581,6 +581,49 @@ static int set_channel(struct wiphy *wiphy,
- 	return result;
- }
- 
-+static inline int
-+wilc_wfi_cfg_alloc_fill_ssid(struct cfg80211_scan_request *request,
-+			     struct hidden_network *ntwk)
-+{
-+	int i;
-+	int slot_id = 0;
-+
-+	ntwk->net_info = kcalloc(request->n_ssids,
-+				 sizeof(struct hidden_network), GFP_KERNEL);
-+	if (!ntwk->net_info)
-+		goto out;
-+
-+	ntwk->n_ssids = request->n_ssids;
-+
-+	for (i = 0; i < request->n_ssids; i++) {
-+		if (request->ssids[i].ssid_len > 0) {
-+			struct hidden_net_info *info = &ntwk->net_info[slot_id];
-+
-+			info->ssid = kmemdup(request->ssids[i].ssid,
-+					     request->ssids[i].ssid_len,
-+					     GFP_KERNEL);
-+			if (!info->ssid)
-+				goto out_free;
-+
-+			info->ssid_len = request->ssids[i].ssid_len;
-+			slot_id++;
-+		} else {
-+			ntwk->n_ssids -= 1;
-+		}
-+	}
-+	return 0;
-+
-+out_free:
-+
-+	for (i = 0; i < slot_id ; i--)
-+		kfree(ntwk->net_info[i].ssid);
-+
-+	kfree(ntwk->net_info);
-+out:
-+
-+	return -ENOMEM;
-+}
-+
- static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
- {
- 	struct wilc_priv *priv;
-@@ -605,23 +648,10 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
- 			scan_ch_list[i] = (u8)ieee80211_frequency_to_channel(request->channels[i]->center_freq);
- 
- 		if (request->n_ssids >= 1) {
--			hidden_ntwk.net_info =
--				kmalloc_array(request->n_ssids,
--					      sizeof(struct hidden_network),
--					      GFP_KERNEL);
--			if (!hidden_ntwk.net_info)
-+			if (wilc_wfi_cfg_alloc_fill_ssid(request,
-+							 &hidden_ntwk))
- 				return -ENOMEM;
--			hidden_ntwk.n_ssids = request->n_ssids;
--
--			for (i = 0; i < request->n_ssids; i++) {
--				if (request->ssids[i].ssid_len != 0) {
--					hidden_ntwk.net_info[i].ssid = kmalloc(request->ssids[i].ssid_len, GFP_KERNEL);
--					memcpy(hidden_ntwk.net_info[i].ssid, request->ssids[i].ssid, request->ssids[i].ssid_len);
--					hidden_ntwk.net_info[i].ssid_len = request->ssids[i].ssid_len;
--				} else {
--					hidden_ntwk.n_ssids -= 1;
--				}
--			}
-+
- 			ret = wilc_scan(vif, USER_SCAN, ACTIVE_SCAN,
- 					scan_ch_list,
- 					request->n_channels,
--- 
-2.7.4
+> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+> b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+
+[...]
+
+> @@ -1906,6 +1956,16 @@ bool iwl_mvm_is_vif_assoc(struct iwl_mvm
+> *mvm);
+>  
+>  void iwl_mvm_inactivity_check(struct iwl_mvm *mvm);
+>  
+> +#define MVM_TCM_PERIOD_MSEC 500
+> +#define MVM_TCM_PERIOD (HZ * MVM_TCM_PERIOD_MSEC / 1000)
+> +#define MVM_LL_PERIOD (10 * HZ)
+> +void iwl_mvm_send_tcm_event(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+
+I accidentally left this function in, but it only sends a vendor
+command event in our internal driver, so it's undefined in the mainline
+(reported by kbuildbot).  I'll send v2.
+
+--
+Cheers,
+Luca.
