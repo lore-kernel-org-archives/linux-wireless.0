@@ -1,62 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:56604 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751407AbeDRJ6m (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:34873 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752519AbeDOMWu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 05:58:42 -0400
-Message-ID: <1524045517.3024.3.camel@sipsolutions.net> (sfid-20180418_115846_295518_EB1D875D)
-Subject: Re: [PATCH 2/2] ath10k: support MAC address randomization in scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Dan Williams <dcbw@redhat.com>,
-        Brian Norris <briannorris@chromium.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>, cjhuang@codeaurora.org,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Date: Wed, 18 Apr 2018 11:58:37 +0200
-In-Reply-To: <5AD701F0.20504@broadcom.com> (sfid-20180418_102940_926003_EF96FC2A)
-References: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org>
-         <1522379640-6442-3-git-send-email-cjhuang@codeaurora.org>
-         <20180412205954.GA34456@rodete-desktop-imager.corp.google.com>
-         <e16557d0891352ae0b83902faee97023@codeaurora.org>
-         <877epbs5v7.fsf@kamboji.qca.qualcomm.com> <5AD11D7C.1030603@broadcom.com>
-         <242be71eb87140c9560163c4000255b2@codeaurora.org>
-         <8736zvqtcw.fsf@kamboji.qca.qualcomm.com>
-         <20180417002854.GA186697@rodete-desktop-imager.corp.google.com>
-         <5AD5AEB5.1040808@broadcom.com>
-         <20180417160715.GA255263@rodete-desktop-imager.corp.google.com>
-         <5AD66BD9.4000706@broadcom.com>
-         <CA+ASDXOoxMyTq2CVnUwvN1LBWj1Y9wpsRPKuM0tVzA80sDYG-w@mail.gmail.com>
-         <c4f3d20e8c16c8bf8721f0a50fb809781b30b3f7.camel@redhat.com>
-         <5AD701F0.20504@broadcom.com> (sfid-20180418_102940_926003_EF96FC2A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Sun, 15 Apr 2018 08:22:50 -0400
+Received: by mail-lf0-f68.google.com with SMTP id r125-v6so1516380lfe.2
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Apr 2018 05:22:49 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [PATCH 1/2] ath10k: add inlined wrappers for htt tx ops
+Date: Sun, 15 Apr 2018 14:22:27 +0200
+Message-Id: <20180415122228.12565-2-erik.stromdahl@gmail.com> (sfid-20180415_142254_945708_CD7A63D4)
+In-Reply-To: <20180415122228.12565-1-erik.stromdahl@gmail.com>
+References: <20180415122228.12565-1-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+These wrappers makes the HTT ops align better with the HIF ops
+(where similar wrappers are used).
 
-> > > Is there a problem with the "supported commands" list?
-> 
-> My understanding is that in general the "supported commands" list is not 
-> well-maintained. Not every nl80211 command is represented in the list so 
-> user-space can not know whether it is missing or not supported.
-> For this particular START_SCHED_SCAN command it can be used still and 
-> indeed probably for a long time. I just wanted to point out that it is 
-> not recommended for new user-space functionality.
+It also makes it easier for a target to have unsupported ops
+(by letting the corresponding function pointer be NULL).
 
-We used to do it more, but most features are more complex than "command
-is supported" or are simpler than "these 5 commands are supported" (just
-a single bit to indicate the whole feature is enough), so we mostly use
-extended feature flags now.
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htt.c    |  4 +-
+ drivers/net/wireless/ath/ath10k/htt.h    | 51 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 12 +++---
+ drivers/net/wireless/ath/ath10k/mac.c    |  2 +-
+ 4 files changed, 60 insertions(+), 9 deletions(-)
 
-> > It sometimes feels like wpa_supplicant gets treated as a static entity
-> > that can never be changed.  In fact, send a patch to Jouni implementing
-> > the best practice, with a fallback to preserve compat for old kernels,
-> > and I'm sure he'd entertain it.  Just because the supplicant does
-> > something a certain way, doesn't mean it's the *best* way, but it too
-> > evolves.
-
-You also need to consider old supplicant on new kernels though? But I
-didn't really follow this part of the discussion, so you're probably
-taking that into account.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
+index 625198dea18b..21a67f82f037 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.c
++++ b/drivers/net/wireless/ath/ath10k/htt.c
+@@ -257,11 +257,11 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
+ 		return status;
+ 	}
+ 
+-	status = htt->tx_ops->htt_send_frag_desc_bank_cfg(htt);
++	status = ath10k_htt_send_frag_desc_bank_cfg(htt);
+ 	if (status)
+ 		return status;
+ 
+-	status = htt->tx_ops->htt_send_rx_ring_cfg(htt);
++	status = ath10k_htt_send_rx_ring_cfg(htt);
+ 	if (status) {
+ 		ath10k_warn(ar, "failed to setup rx ring: %d\n",
+ 			    status);
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 8cc2a8b278e4..c76f6daafe70 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1848,6 +1848,57 @@ struct ath10k_htt_tx_ops {
+ 	void (*htt_free_txbuff)(struct ath10k_htt *htt);
+ };
+ 
++static inline int ath10k_htt_send_rx_ring_cfg(struct ath10k_htt *htt)
++{
++	if (!htt->tx_ops->htt_send_rx_ring_cfg)
++		return -EOPNOTSUPP;
++
++	return htt->tx_ops->htt_send_rx_ring_cfg(htt);
++}
++
++static inline int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt)
++{
++	if (!htt->tx_ops->htt_send_frag_desc_bank_cfg)
++		return -EOPNOTSUPP;
++
++	return htt->tx_ops->htt_send_frag_desc_bank_cfg(htt);
++}
++
++static inline int ath10k_htt_alloc_frag_desc(struct ath10k_htt *htt)
++{
++	if (!htt->tx_ops->htt_alloc_frag_desc)
++		return -EOPNOTSUPP;
++
++	return htt->tx_ops->htt_alloc_frag_desc(htt);
++}
++
++static inline void ath10k_htt_free_frag_desc(struct ath10k_htt *htt)
++{
++	if (htt->tx_ops->htt_free_frag_desc)
++		htt->tx_ops->htt_free_frag_desc(htt);
++}
++
++static inline int ath10k_htt_tx(struct ath10k_htt *htt,
++				enum ath10k_hw_txrx_mode txmode,
++				struct sk_buff *msdu)
++{
++	return htt->tx_ops->htt_tx(htt, txmode, msdu);
++}
++
++static inline int ath10k_htt_alloc_txbuff(struct ath10k_htt *htt)
++{
++	if (!htt->tx_ops->htt_alloc_txbuff)
++		return -EOPNOTSUPP;
++
++	return htt->tx_ops->htt_alloc_txbuff(htt);
++}
++
++static inline void ath10k_htt_free_txbuff(struct ath10k_htt *htt)
++{
++	if (htt->tx_ops->htt_free_txbuff)
++		htt->tx_ops->htt_free_txbuff(htt);
++}
++
+ struct ath10k_htt_rx_ops {
+ 	size_t (*htt_get_rx_ring_size)(struct ath10k_htt *htt);
+ 	void (*htt_config_paddrs_ring)(struct ath10k_htt *htt, void *vaddr);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index d334b7be1fea..a086958c39b6 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -443,13 +443,13 @@ static int ath10k_htt_tx_alloc_buf(struct ath10k_htt *htt)
+ 	struct ath10k *ar = htt->ar;
+ 	int ret;
+ 
+-	ret = htt->tx_ops->htt_alloc_txbuff(htt);
++	ret = ath10k_htt_alloc_txbuff(htt);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to alloc cont tx buffer: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+-	ret = htt->tx_ops->htt_alloc_frag_desc(htt);
++	ret = ath10k_htt_alloc_frag_desc(htt);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to alloc cont frag desc: %d\n", ret);
+ 		goto free_txbuf;
+@@ -473,10 +473,10 @@ static int ath10k_htt_tx_alloc_buf(struct ath10k_htt *htt)
+ 	ath10k_htt_tx_free_txq(htt);
+ 
+ free_frag_desc:
+-	htt->tx_ops->htt_free_frag_desc(htt);
++	ath10k_htt_free_frag_desc(htt);
+ 
+ free_txbuf:
+-	htt->tx_ops->htt_free_txbuff(htt);
++	ath10k_htt_free_txbuff(htt);
+ 
+ 	return ret;
+ }
+@@ -530,9 +530,9 @@ void ath10k_htt_tx_destroy(struct ath10k_htt *htt)
+ 	if (!htt->tx_mem_allocated)
+ 		return;
+ 
+-	htt->tx_ops->htt_free_txbuff(htt);
++	ath10k_htt_free_txbuff(htt);
+ 	ath10k_htt_tx_free_txq(htt);
+-	htt->tx_ops->htt_free_frag_desc(htt);
++	ath10k_htt_free_frag_desc(htt);
+ 	ath10k_htt_tx_free_txdone_fifo(htt);
+ 	htt->tx_mem_allocated = false;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index bf05a3689558..fc3320f94f45 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3598,7 +3598,7 @@ static int ath10k_mac_tx_submit(struct ath10k *ar,
+ 
+ 	switch (txpath) {
+ 	case ATH10K_MAC_TX_HTT:
+-		ret = htt->tx_ops->htt_tx(htt, txmode, skb);
++		ret = ath10k_htt_tx(htt, txmode, skb);
+ 		break;
+ 	case ATH10K_MAC_TX_HTT_MGMT:
+ 		ret = ath10k_htt_mgmt_tx(htt, skb);
+-- 
+2.17.0
