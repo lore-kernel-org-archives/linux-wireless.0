@@ -1,37 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41342 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1756587AbeDXK5A (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:42774 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752493AbeDOMWv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 06:57:00 -0400
-Message-ID: <995e264c12d5c982f05d4a71206dd2792c384ba6.camel@coelho.fi> (sfid-20180424_125703_409912_DAD6C3B3)
-From: Luca Coelho <luca@coelho.fi>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Eliad Peller <eliadx.peller@intel.com>
-Date: Tue, 24 Apr 2018 13:56:57 +0300
-In-Reply-To: <87d0ypos3l.fsf@codeaurora.org>
-References: <20180422082745.9743-1-luca@coelho.fi>
-         <20180422082745.9743-13-luca@coelho.fi> <87d0ypos3l.fsf@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 12/12] iwlwifi: mvm: set wakeup filters for wowlan "any"
- configuration
+        Sun, 15 Apr 2018 08:22:51 -0400
+Received: by mail-lf0-f65.google.com with SMTP id q9-v6so18239730lfk.9
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Apr 2018 05:22:50 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [PATCH 2/2] ath10k: add inlined wrappers for htt rx ops
+Date: Sun, 15 Apr 2018 14:22:28 +0200
+Message-Id: <20180415122228.12565-3-erik.stromdahl@gmail.com> (sfid-20180415_142257_078492_D3CA6B79)
+In-Reply-To: <20180415122228.12565-1-erik.stromdahl@gmail.com>
+References: <20180415122228.12565-1-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-04-24 at 12:45 +0300, Kalle Valo wrote:
-> Luca Coelho <luca@coelho.fi> writes:
-> 
-> > From: Eliad Peller <eliadx.peller@intel.com>
-> > 
-> > In can of "any" wowlan trigger is configured, no valid wakeup
-> > filter
-> > was configured.
-> 
-> "In case"?
+Added for the same reason as the TX wrappers.
 
-Yeah, I'll fix it and resend.
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htt.h    | 37 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 14 ++++-----
+ 2 files changed, 44 insertions(+), 7 deletions(-)
 
---
-Luca.
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index c76f6daafe70..3fa1be7749b2 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1908,6 +1908,43 @@ struct ath10k_htt_rx_ops {
+ 	void (*htt_reset_paddrs_ring)(struct ath10k_htt *htt, int idx);
+ };
+ 
++static inline size_t ath10k_htt_get_rx_ring_size(struct ath10k_htt *htt)
++{
++	if (!htt->rx_ops->htt_get_rx_ring_size)
++		return 0;
++
++	return htt->rx_ops->htt_get_rx_ring_size(htt);
++}
++
++static inline void ath10k_htt_config_paddrs_ring(struct ath10k_htt *htt,
++						 void *vaddr)
++{
++	if (htt->rx_ops->htt_config_paddrs_ring)
++		htt->rx_ops->htt_config_paddrs_ring(htt, vaddr);
++}
++
++static inline void ath10k_htt_set_paddrs_ring(struct ath10k_htt *htt,
++					      dma_addr_t paddr,
++					      int idx)
++{
++	if (htt->rx_ops->htt_set_paddrs_ring)
++		htt->rx_ops->htt_set_paddrs_ring(htt, paddr, idx);
++}
++
++static inline void *ath10k_htt_get_vaddr_ring(struct ath10k_htt *htt)
++{
++	if (!htt->rx_ops->htt_get_vaddr_ring)
++		return NULL;
++
++	return htt->rx_ops->htt_get_vaddr_ring(htt);
++}
++
++static inline void ath10k_htt_reset_paddrs_ring(struct ath10k_htt *htt, int idx)
++{
++	if (htt->rx_ops->htt_reset_paddrs_ring)
++		htt->rx_ops->htt_reset_paddrs_ring(htt, idx);
++}
++
+ #define RX_HTT_HDR_STATUS_LEN 64
+ 
+ /* This structure layout is programmed via rx ring setup
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 5e02e26158f6..5e8a84fa5422 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -181,7 +181,7 @@ static int __ath10k_htt_rx_ring_fill_n(struct ath10k_htt *htt, int num)
+ 		rxcb = ATH10K_SKB_RXCB(skb);
+ 		rxcb->paddr = paddr;
+ 		htt->rx_ring.netbufs_ring[idx] = skb;
+-		htt->rx_ops->htt_set_paddrs_ring(htt, paddr, idx);
++		ath10k_htt_set_paddrs_ring(htt, paddr, idx);
+ 		htt->rx_ring.fill_cnt++;
+ 
+ 		if (htt->rx_ring.in_ord_rx) {
+@@ -286,8 +286,8 @@ void ath10k_htt_rx_free(struct ath10k_htt *htt)
+ 	ath10k_htt_rx_ring_free(htt);
+ 
+ 	dma_free_coherent(htt->ar->dev,
+-			  htt->rx_ops->htt_get_rx_ring_size(htt),
+-			  htt->rx_ops->htt_get_vaddr_ring(htt),
++			  ath10k_htt_get_rx_ring_size(htt),
++			  ath10k_htt_get_vaddr_ring(htt),
+ 			  htt->rx_ring.base_paddr);
+ 
+ 	dma_free_coherent(htt->ar->dev,
+@@ -314,7 +314,7 @@ static inline struct sk_buff *ath10k_htt_rx_netbuf_pop(struct ath10k_htt *htt)
+ 	idx = htt->rx_ring.sw_rd_idx.msdu_payld;
+ 	msdu = htt->rx_ring.netbufs_ring[idx];
+ 	htt->rx_ring.netbufs_ring[idx] = NULL;
+-	htt->rx_ops->htt_reset_paddrs_ring(htt, idx);
++	ath10k_htt_reset_paddrs_ring(htt, idx);
+ 
+ 	idx++;
+ 	idx &= htt->rx_ring.size_mask;
+@@ -586,13 +586,13 @@ int ath10k_htt_rx_alloc(struct ath10k_htt *htt)
+ 	if (!htt->rx_ring.netbufs_ring)
+ 		goto err_netbuf;
+ 
+-	size = htt->rx_ops->htt_get_rx_ring_size(htt);
++	size = ath10k_htt_get_rx_ring_size(htt);
+ 
+ 	vaddr_ring = dma_alloc_coherent(htt->ar->dev, size, &paddr, GFP_KERNEL);
+ 	if (!vaddr_ring)
+ 		goto err_dma_ring;
+ 
+-	htt->rx_ops->htt_config_paddrs_ring(htt, vaddr_ring);
++	ath10k_htt_config_paddrs_ring(htt, vaddr_ring);
+ 	htt->rx_ring.base_paddr = paddr;
+ 
+ 	vaddr = dma_alloc_coherent(htt->ar->dev,
+@@ -626,7 +626,7 @@ int ath10k_htt_rx_alloc(struct ath10k_htt *htt)
+ 
+ err_dma_idx:
+ 	dma_free_coherent(htt->ar->dev,
+-			  htt->rx_ops->htt_get_rx_ring_size(htt),
++			  ath10k_htt_get_rx_ring_size(htt),
+ 			  vaddr_ring,
+ 			  htt->rx_ring.base_paddr);
+ err_dma_ring:
+-- 
+2.17.0
