@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:38783 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751047AbeDSKab (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Apr 2018 06:30:31 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/3] Export TXQ parameters and statistics via nl80211
-In-Reply-To: <1524131536.3024.16.camel@sipsolutions.net>
-References: <20180219170224.14816-1-toke@toke.dk> <8736zr1rjh.fsf@toke.dk> <1524131536.3024.16.camel@sipsolutions.net>
-Date: Thu, 19 Apr 2018 12:30:30 +0200
-Message-ID: <87o9ifzdx5.fsf@toke.dk> (sfid-20180419_123035_350922_F7861FA5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:39317 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752493AbeDOMWt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 15 Apr 2018 08:22:49 -0400
+Received: by mail-lf0-f67.google.com with SMTP id p142-v6so18241210lfd.6
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Apr 2018 05:22:48 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [PATCH 0/2] ath10k: HTT ops wrappers
+Date: Sun, 15 Apr 2018 14:22:26 +0200
+Message-Id: <20180415122228.12565-1-erik.stromdahl@gmail.com> (sfid-20180415_142253_803483_848C8BE0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+These two patches were included in the High latency v4 RFC
+submitted a few months ago.
 
-> On Thu, 2018-04-19 at 11:20 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
->>=20
->> > This series adds TXQ parameters and statistics that were previously on=
-ly
->> > available through debugfs to the nl80211 userspace interface and the
->> > cfg80211 kernel interface. Patches for iw to print the statistics and
->> > change the settings are included.
->>=20
->> So this patch set is now three months old. Any chance of actually
->> getting it, you know, merged? Or is there something more I need to do? :)
->
-> I was just thinking about it yesterday, "sighing" that I'll need to make
-> a decision even though I don't really know it well and can't even say if
-> another API would be better :-)
+I think it would be appropriate to add them separately since
+they are not really related to the HL patches.
 
-Right. Well, feel free to bikeshed the API if you want. I just went with
-the straight-forward approach :)
+This will make the next HL patch set somewhat smaller.
 
-> I think I'll take it, but I guess I'll need to review it again.
+Erik Stromdahl (2):
+  ath10k: add inlined wrappers for htt tx ops
+  ath10k: add inlined wrappers for htt rx ops
 
-Cool.
+ drivers/net/wireless/ath/ath10k/htt.c    |  4 +-
+ drivers/net/wireless/ath/ath10k/htt.h    | 88 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 14 ++--
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 12 ++--
+ drivers/net/wireless/ath/ath10k/mac.c    |  2 +-
+ 5 files changed, 104 insertions(+), 16 deletions(-)
 
--Toke
+-- 
+2.17.0
