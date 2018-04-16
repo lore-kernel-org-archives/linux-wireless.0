@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40638 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754555AbeDTKti (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:6873 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754834AbeDPNy0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Apr 2018 06:49:38 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Date: Fri, 20 Apr 2018 13:49:23 +0300
-Message-Id: <20180420104926.8816-7-luca@coelho.fi> (sfid-20180420_124943_965196_4A0F0113)
-In-Reply-To: <20180420104926.8816-1-luca@coelho.fi>
-References: <20180420104926.8816-1-luca@coelho.fi>
-Subject: [PATCH 6/9] mac80211: remove pointless flags=0 assignment
+        Mon, 16 Apr 2018 09:54:26 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Josh Boyer <jwboyer@kernel.org>
+CC: ojab // <ojab@ojab.ru>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Linux Firmware <linux-firmware@kernel.org>
+Subject: Re: Compex WLE1216V2-20 (QCA9984) firmware is missing
+Date: Mon, 16 Apr 2018 13:54:15 +0000
+Message-ID: <87po2zp88o.fsf@kamboji.qca.qualcomm.com> (sfid-20180416_155429_766703_BA69177C)
+References: <CAKzrAgSbYN1znJi8qM0QEfCniw2AGEKnrh-vJcUcXW0rVmo9tQ@mail.gmail.com>
+        <CA+5PVA6nkGMzQHVu8LSaOUGU0h16rMeQvPoNORtyAzp8YDidOw@mail.gmail.com>
+In-Reply-To: <CA+5PVA6nkGMzQHVu8LSaOUGU0h16rMeQvPoNORtyAzp8YDidOw@mail.gmail.com>       (Josh
+ Boyer's message of "Mon, 16 Apr 2018 09:48:42 -0400")
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Josh Boyer <jwboyer@kernel.org> writes:
 
-The data structure is initialized to all zeroes, and
-we already rely on that in other places, so remove the
-pointless assignment to 0.
+> On Tue, Mar 27, 2018 at 12:41 PM, ojab // <ojab@ojab.ru> wrote:
+>> [please CC me since I'm not subscribed to the lists and terribly sorry
+>> for HTML mails]
+>>
+>> Oh hai!
+>>
+>> I have Compex WLE1216V2-20 (based on QCA9984 chip) that isn't
+>> supported by linux-firmware (git master), card init fails with
+>>
+>>>[Mon Mar 26 17:18:47 2018] ath10k_pci 0000:05:00.0: failed to fetch
+>> board data for bus=3Dpci,bmi-chip-id=3D0,bmi-board-id=3D30 from
+>> ath10k/QCA9984/hw1.0/board-2.bin
+>>
+>> It works fine with board-2.bin from the compex website [1] (can be
+>> downloaded directly from
+>> https://bugzilla.kernel.org/attachment.cgi?id=3D274959).
+>> What should be done to have it upstreamed?
+>
+> This is likely a question for Kalle.  I would expect an update to the
+> existing board-2.bin file submitted through Qualcomm with support for
+> that device.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/sta_info.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yes, this should have been sent to the ath10k list, not to
+linux-firmware.
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 655c3d8b0d80..2d5ffb0a16f6 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -3,6 +3,7 @@
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -1992,7 +1993,6 @@ static void sta_stats_decode_rate(struct ieee80211_local *local, u16 rate,
- 		int band = STA_STATS_GET(LEGACY_BAND, rate);
- 		int rate_idx = STA_STATS_GET(LEGACY_IDX, rate);
- 
--		rinfo->flags = 0;
- 		sband = local->hw.wiphy->bands[band];
- 		brate = sband->bitrates[rate_idx].bitrate;
- 		if (rinfo->bw == RATE_INFO_BW_5)
--- 
-2.17.0
+https://wireless.wiki.kernel.org/en/users/drivers/ath10k/support
+
+--=20
+Kalle Valo=
