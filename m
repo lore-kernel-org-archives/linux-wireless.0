@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44218 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751264AbeDYJ7i (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 05:59:38 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 25 Apr 2018 15:29:37 +0530
-From: Anilkumar Kolli <akolli@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [RFC v2] ath10k: report tx rate using ieee80211_tx_status()
-In-Reply-To: <87zi1tav6h.fsf@kamboji.qca.qualcomm.com>
-References: <1524291786-30850-1-git-send-email-akolli@codeaurora.org>
- <87zi1tav6h.fsf@kamboji.qca.qualcomm.com>
-Message-ID: <6b57525f3edc2b7d06b7662efc5d7e5f@codeaurora.org> (sfid-20180425_115942_704435_BB947492)
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:55974 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754024AbeDPL42 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Apr 2018 07:56:28 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Jakub Kicinski <kubakici@wp.pl>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 2/2 v2] mt7601u: run calibration works after finishing scanning
+Date: Mon, 16 Apr 2018 13:56:18 +0200
+Message-Id: <1523879778-6455-2-git-send-email-sgruszka@redhat.com> (sfid-20180416_135632_087058_19C75820)
+In-Reply-To: <1523879778-6455-1-git-send-email-sgruszka@redhat.com>
+References: <1523879778-6455-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-04-24 13:32, Kalle Valo wrote:
-> Anilkumar Kolli <akolli@codeaurora.org> writes:
-> 
->> Mesh path metric needs txrate information from ieee80211_tx_status()
->> call but in ath10k there is no mechanism to report tx rate information
->> via ieee80211_tx_status(), the rate is only accessible via
->> sta_statiscs() op.
->> 
->> Per peer stats has tx rate info available, this patch stores per peer
->> last tx rate and updates the tx rate info structures in tx 
->> completition.
->> The rate updated in ieee80211_tx_status() is not exactly for the last
->> transmitted frame instead the rate is from one of the previous frames.
->> 
->> Per peer txrate information is updated through per peer statistics
->> and is available for QCA9888/QCA9984/QCA4019/QCA998X only
->> 
->> Tested on QCA9984 with firmware-5.bin_10.4-3.5.3-00053
->> Tested on QCA998X with firmware-5.bin_10.2.4-1.0-00036
->> 
->> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
-> 
-> BTW, your name in patchwork is "akolli@codeaurora.org" but it should be
-> "Anilkumar Kolli" and that's why my script uses the wrong name. Please
-> fix it by registering to patchwork as it's possible to change your name
-> during registration, but only one time. If that doesn't work then send 
-> a
-> request to helpdesk@kernel.org and the admins will fix it.
+When finishing scanning we switch to operational channel sill with
+SCANNING flag. This mean that we never perform calibration works after
+scanning. To fix the problem queue calibration works on
+.sw_scan_complete() routine.
 
-I registered and updated name in the patchwork website.
-Do I need to resend the patch ?
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt7601u/main.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-
-Thanks
-Anil.
+diff --git a/drivers/net/wireless/mediatek/mt7601u/main.c b/drivers/net/wireless/mediatek/mt7601u/main.c
+index 43ebd460ba86..f2ddefaa29f7 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/main.c
++++ b/drivers/net/wireless/mediatek/mt7601u/main.c
+@@ -285,6 +285,12 @@ static int mt7601u_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 	mt7601u_agc_restore(dev);
+ 	clear_bit(MT7601U_STATE_SCANNING, &dev->state);
++
++	ieee80211_queue_delayed_work(dev->hw, &dev->cal_work,
++				     MT_CALIBRATE_INTERVAL);
++	if (dev->freq_cal.enabled)
++		ieee80211_queue_delayed_work(dev->hw, &dev->freq_cal.work,
++					     MT_FREQ_CAL_INIT_DELAY);
+ }
+ 
+ static int
+-- 
+1.9.3
