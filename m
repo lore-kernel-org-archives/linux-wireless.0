@@ -1,47 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39814 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753717AbeDZIQy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Apr 2018 04:16:54 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Eyal Reizer <eyalreizer@gmail.com>
-Cc: linux-wireless@vger.kernel.org, robh@kernel.org, sre@kernel.org,
-        tony@atomide.com, linux-kernel@vger.kernel.org,
-        Eyal Reizer <eyalr@ti.com>
-Subject: Re: [PATCH v2] wlcore: sdio: allow pm to handle sdio power
-References: <1524721631-5983-1-git-send-email-eyalr@ti.com>
-Date: Thu, 26 Apr 2018 11:16:48 +0300
-In-Reply-To: <1524721631-5983-1-git-send-email-eyalr@ti.com> (Eyal Reizer's
-        message of "Thu, 26 Apr 2018 08:47:11 +0300")
-Message-ID: <87po2m7573.fsf@kamboji.qca.qualcomm.com> (sfid-20180426_101714_603834_68CDB402)
+Received: from mail.bugwerft.de ([46.23.86.59]:57894 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750716AbeDPPDa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Apr 2018 11:03:30 -0400
+Subject: Re: [PATCH 5/5] wcn36xx: pass information elements in scan requests
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+        loic.poulain@linaro.org, rfried@codeaurora.org,
+        bjorn.andersson@linaro.org
+References: <20180416131634.25432-1-daniel@zonque.org>
+ <20180416131634.25432-6-daniel@zonque.org>
+ <87lgdnp7sy.fsf@kamboji.qca.qualcomm.com>
+ <0595a559-8220-bc22-0c33-4580119c774d@zonque.org>
+ <87h8obp7c0.fsf@kamboji.qca.qualcomm.com>
+ <384e608f-0f59-8ba6-5223-8a52e2ac86f9@zonque.org>
+ <87d0yzp61v.fsf@kamboji.qca.qualcomm.com>
+From: Daniel Mack <daniel@zonque.org>
+Message-ID: <65fd4461-91b4-2a42-6f66-7db7c8483fe7@zonque.org> (sfid-20180416_170333_760586_1684DA3C)
+Date: Mon, 16 Apr 2018 17:03:28 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87d0yzp61v.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Eyal Reizer <eyalreizer@gmail.com> writes:
+On Monday, April 16, 2018 04:41 PM, Kalle Valo wrote:
+> Daniel Mack <daniel@zonque.org> writes:
+> 
+>> On Monday, April 16, 2018 04:13 PM, Kalle Valo wrote:
+>>> Daniel Mack <daniel@zonque.org> writes:
+>>>> On Monday, April 16, 2018 04:03 PM, Kalle Valo wrote:
+>>>>> Daniel Mack <daniel@zonque.org> writes:
+>>
+>>>>>> them to the firmware message. The driver currently tells the core that
+>>>>>> it is capable of attaching up to WCN36XX_MAX_SCAN_IE_LEN octets, but
+>>>>>> doesn't actually pass them to the the hardware.
+>>>>>>
+>>>>>> Some defines were moved around to avoid cyclic include dependencies.
+>>>>>
+>>>>> Does this fix anything or change functionality somehow? You should
+>>>>> document that also in the commit log.
+>>>>
+>>>> I don't have a test case for this, no. But as the change was pretty much
+>>>> straight forward, I sent it anyway.
+>>>
+>>> Ok, but you should still explain that in the commit log. In other words,
+>>> you should always answer the question "Why?" in the commit log.
+>>>
+>>>> I can resend with some more information on this if you like.
+>>>
+>>> No need to resend because of this, I can edit the commit log.
+>>
+>> Hmm, given that I can't even be sure the firmware does the right thing
+>> when instructed this way, we should probably just drop this patch from
+>> the series. The others are more important anyway, as they address bugs
+>> that hit me on actual hardware.
+> 
+> IMHO it's useful and if you don't see anything breaking I would prefer
+> to take it anyway. I can't immeadiately say in what use cases this helps
+> or fixes, though. But maybe you (or someone else) could verify that it
+> works correctly by comparing before and after probe requests with a
+> sniffer?
 
-> pm_runtime handles sdio power on and power off transitions.
-> An old workaround for trying to control the power explicitly from the
-> driver was in fact causing failures on suspend/resume as the mmc layer
-> already power the module on resume.
->
-> In case of resume pm_runtime_get sync returns a positive device's usage
-> count causing the driver to try an re-initialize an already initialized
-> device. This was causing sdio bus failure on resume.
->
-> Remove this manual power on/off sequence as it is in-fact not needed.
->
-> Signed-off-by: Eyal Reizer <eyalr@ti.com>
-> Acked-by: Tony Lindgren <tony@atomide.com>
+It's certainly not a regression, no. I'm running extensive stress-tests
+with this driver. Then I guess adding the following to the commit log
+should suffice?
 
-No changelog. 
+"Note that this patch doesn't fix a bug that was observed. The change is
+merely done for the sake of completeness as the hardware supports
+appending IEs in scans. Tests show that network scans work fine with
+this patch applied."
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#changelog_missing
 
-No need to resubmit because of this, I guess you just fixed the title
-and added Tony's Acked-by?
-
--- 
-Kalle Valo
+Thanks,
+Daniel
