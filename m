@@ -1,82 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54524 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:60442 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755458AbeDWOOG (ORCPT
+        with ESMTP id S1750732AbeDPFRM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 10:14:06 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Daniel Mack <daniel@zonque.org>
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        loic.poulain@linaro.org, rfried@codeaurora.org,
-        bjorn.andersson@linaro.org
-Subject: Re: [PATCH 5/5] wcn36xx: pass information elements in scan requests
-References: <20180416131634.25432-1-daniel@zonque.org>
-        <20180416131634.25432-6-daniel@zonque.org>
-        <87lgdnp7sy.fsf@kamboji.qca.qualcomm.com>
-        <0595a559-8220-bc22-0c33-4580119c774d@zonque.org>
-        <87h8obp7c0.fsf@kamboji.qca.qualcomm.com>
-        <384e608f-0f59-8ba6-5223-8a52e2ac86f9@zonque.org>
-        <87d0yzp61v.fsf@kamboji.qca.qualcomm.com>
-        <65fd4461-91b4-2a42-6f66-7db7c8483fe7@zonque.org>
-Date: Mon, 23 Apr 2018 17:14:01 +0300
-In-Reply-To: <65fd4461-91b4-2a42-6f66-7db7c8483fe7@zonque.org> (Daniel Mack's
-        message of "Mon, 16 Apr 2018 17:03:28 +0200")
-Message-ID: <871sf6dn86.fsf@kamboji.qca.qualcomm.com> (sfid-20180423_161502_683766_E2D7865B)
+        Mon, 16 Apr 2018 01:17:12 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 16 Apr 2018 13:17:12 +0800
+From: cjhuang@codeaurora.org
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Brian Norris <briannorris@chromium.org>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 2/2] ath10k: support MAC address randomization in scan
+In-Reply-To: <877epbs5v7.fsf@kamboji.qca.qualcomm.com>
+References: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org>
+ <1522379640-6442-3-git-send-email-cjhuang@codeaurora.org>
+ <20180412205954.GA34456@rodete-desktop-imager.corp.google.com>
+ <e16557d0891352ae0b83902faee97023@codeaurora.org>
+ <877epbs5v7.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <539b85655d7f700bfcd28a6f698af943@codeaurora.org> (sfid-20180416_071715_908271_B39912D1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Mack <daniel@zonque.org> writes:
-
-> On Monday, April 16, 2018 04:41 PM, Kalle Valo wrote:
->> Daniel Mack <daniel@zonque.org> writes:
+On 2018-04-13 19:28, Kalle Valo wrote:
+> cjhuang@codeaurora.org writes:
+> 
+>>>> +	if (test_bit(WMI_SERVICE_SPOOF_MAC_SUPPORT, ar->wmi.svc_map)) {
+>>>> +		ret = ath10k_wmi_scan_prob_req_oui(ar, ar->mac_addr);
+>>>> +		if (ret) {
+>>>> +			ath10k_err(ar, "failed to set prob req oui: %i\n", ret);
+>>>> +			goto err_dfs_detector_exit;
+>>>> +		}
+>>>> +
+>>>> +		ar->hw->wiphy->features |=
+>>>> +			NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
+>>> 
+>>> Do you support NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR too?
 >> 
->>> On Monday, April 16, 2018 04:13 PM, Kalle Valo wrote:
->>>> Daniel Mack <daniel@zonque.org> writes:
->>>>> On Monday, April 16, 2018 04:03 PM, Kalle Valo wrote:
->>>>>> Daniel Mack <daniel@zonque.org> writes:
->>>
->>>>>>> them to the firmware message. The driver currently tells the core that
->>>>>>> it is capable of attaching up to WCN36XX_MAX_SCAN_IE_LEN octets, but
->>>>>>> doesn't actually pass them to the the hardware.
->>>>>>>
->>>>>>> Some defines were moved around to avoid cyclic include dependencies.
->>>>>>
->>>>>> Does this fix anything or change functionality somehow? You should
->>>>>> document that also in the commit log.
->>>>>
->>>>> I don't have a test case for this, no. But as the change was pretty much
->>>>> straight forward, I sent it anyway.
->>>>
->>>> Ok, but you should still explain that in the commit log. In other words,
->>>> you should always answer the question "Why?" in the commit log.
->>>>
->>>>> I can resend with some more information on this if you like.
->>>>
->>>> No need to resend because of this, I can edit the commit log.
->>>
->>> Hmm, given that I can't even be sure the firmware does the right thing
->>> when instructed this way, we should probably just drop this patch from
->>> the series. The others are more important anyway, as they address bugs
->>> that hit me on actual hardware.
->> 
->> IMHO it's useful and if you don't see anything breaking I would prefer
->> to take it anyway. I can't immeadiately say in what use cases this helps
->> or fixes, though. But maybe you (or someone else) could verify that it
->> works correctly by comparing before and after probe requests with a
->> sniffer?
->
-> It's certainly not a regression, no. I'm running extensive stress-tests
-> with this driver. Then I guess adding the following to the commit log
-> should suffice?
->
-> "Note that this patch doesn't fix a bug that was observed. The change is
-> merely done for the sake of completeness as the hardware supports
-> appending IEs in scans. Tests show that network scans work fine with
-> this patch applied."
+>> I'll add this flag too.
+> 
+> Are you going to send v2 or what's the plan?
 
-Looks good, thanks. I see that you submitted v2 already with this added.
+Yes I'll send V2.
 
--- 
-Kalle Valo
+
+Thanks,
+Carl
