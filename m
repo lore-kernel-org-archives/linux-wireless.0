@@ -1,36 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41162 "EHLO mail.kernel.org"
+Received: from mail.bugwerft.de ([46.23.86.59]:57592 "EHLO mail.bugwerft.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753480AbeD3SQ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Apr 2018 14:16:29 -0400
-Date: Mon, 30 Apr 2018 11:16:19 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Sriram R <srirrama@codeaurora.org>
-Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH 0/2 linux-stable-4.4] ath10k: rebuild crypto header in rx
- data frames
-Message-ID: <20180430181619.GA12118@kroah.com> (sfid-20180430_201632_881627_2F509A7C)
-References: <1525069587-19281-1-git-send-email-srirrama@codeaurora.org>
+        id S1752308AbeDPO3F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Apr 2018 10:29:05 -0400
+Subject: Re: [PATCH 5/5] wcn36xx: pass information elements in scan requests
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+        loic.poulain@linaro.org, rfried@codeaurora.org,
+        bjorn.andersson@linaro.org
+References: <20180416131634.25432-1-daniel@zonque.org>
+ <20180416131634.25432-6-daniel@zonque.org>
+ <87lgdnp7sy.fsf@kamboji.qca.qualcomm.com>
+ <0595a559-8220-bc22-0c33-4580119c774d@zonque.org>
+ <87h8obp7c0.fsf@kamboji.qca.qualcomm.com>
+From: Daniel Mack <daniel@zonque.org>
+Message-ID: <384e608f-0f59-8ba6-5223-8a52e2ac86f9@zonque.org> (sfid-20180416_162908_814838_0031A7A4)
+Date: Mon, 16 Apr 2018 16:29:03 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1525069587-19281-1-git-send-email-srirrama@codeaurora.org>
+In-Reply-To: <87h8obp7c0.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 30, 2018 at 11:56:25AM +0530, Sriram R wrote:
-> ath10k has a replay detection issue which was fixed in v4.14 and we would
-> like to get this security fix also to linux-stable-4.4.But for that it
-> depends on 3 mac80211 patches so the below mac80211 commits needs to be
-> picked first in the same order and then apply this patchset.
-> 
-> f980ebc058c2 : mac80211: allow not sending MIC up from driver for HW crypto
-> f631a77ba920 : mac80211: allow same PN for AMSDU sub-frames  
-> cef0acd4d7d4 : mac80211: Add RX flag to indicate ICV stripped
-> 
-> These patches should be applied in that order(commit f980ebc058c2 first)
-> and they should apply cleanly with 3-way merge.
+On Monday, April 16, 2018 04:13 PM, Kalle Valo wrote:
+> Daniel Mack <daniel@zonque.org> writes:
+>> On Monday, April 16, 2018 04:03 PM, Kalle Valo wrote:
+>>> Daniel Mack <daniel@zonque.org> writes:
 
-Thanks, now queued up.
+>>>> them to the firmware message. The driver currently tells the core that
+>>>> it is capable of attaching up to WCN36XX_MAX_SCAN_IE_LEN octets, but
+>>>> doesn't actually pass them to the the hardware.
+>>>>
+>>>> Some defines were moved around to avoid cyclic include dependencies.
+>>>
+>>> Does this fix anything or change functionality somehow? You should
+>>> document that also in the commit log.
+>>
+>> I don't have a test case for this, no. But as the change was pretty much
+>> straight forward, I sent it anyway.
+> 
+> Ok, but you should still explain that in the commit log. In other words,
+> you should always answer the question "Why?" in the commit log.
+> 
+>> I can resend with some more information on this if you like.
+> 
+> No need to resend because of this, I can edit the commit log.
+> 
 
-greg k-h
+Hmm, given that I can't even be sure the firmware does the right thing
+when instructed this way, we should probably just drop this patch from
+the series. The others are more important anyway, as they address bugs
+that hit me on actual hardware.
+
+
+Thanks,
+Daniel
