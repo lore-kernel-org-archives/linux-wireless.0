@@ -1,108 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f194.google.com ([74.125.82.194]:46344 "EHLO
-        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751171AbeDMVxm (ORCPT
+Received: from mail-wr0-f171.google.com ([209.85.128.171]:39584 "EHLO
+        mail-wr0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753099AbeDPSpS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Apr 2018 17:53:42 -0400
-Date: Fri, 13 Apr 2018 16:53:40 -0500
-From: Rob Herring <robh@kernel.org>
-To: Govind Singh <govinds@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 13/13] dt: bindings: add bindings for wcn3990 wifi
- block
-Message-ID: <20180413215340.vhvlhlaapt5uuo7d@rob-hp-laptop> (sfid-20180413_235346_279770_26BA9479)
-References: <1523378986-11551-1-git-send-email-govinds@codeaurora.org>
+        Mon, 16 Apr 2018 14:45:18 -0400
+Received: by mail-wr0-f171.google.com with SMTP id q6so16720570wrd.6
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 11:45:17 -0700 (PDT)
+Subject: Re: [PATCH 2/2] mt7601u: run calibration works after finishing
+ scanning
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Jakub Kicinski <kubakici@wp.pl>
+References: <1523630678-8100-1-git-send-email-sgruszka@redhat.com>
+ <1523630678-8100-2-git-send-email-sgruszka@redhat.com>
+ <20180413110613.0c13f64f@cakuba.netronome.com>
+ <20180414105606.GA9245@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AD4EF3B.30508@broadcom.com> (sfid-20180416_204522_203106_60213E28)
+Date: Mon, 16 Apr 2018 20:45:15 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1523378986-11551-1-git-send-email-govinds@codeaurora.org>
+In-Reply-To: <20180414105606.GA9245@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 10, 2018 at 10:19:46PM +0530, Govind Singh wrote:
-> Add device tree binding documentation details for wcn3990
-> wifi block present in Qualcomm SDM845/APQ8098 SoC into
-> "qcom,ath10k.txt".
-> 
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
-> ---
->  .../bindings/net/wireless/qcom,ath10k.txt          | 31 ++++++++++++++++++++++
->  1 file changed, 31 insertions(+)
+On 4/14/2018 12:56 PM, Stanislaw Gruszka wrote:
+> On Fri, Apr 13, 2018 at 11:06:13AM -0700, Jakub Kicinski wrote:
+>> >On Fri, 13 Apr 2018 16:44:38 +0200, Stanislaw Gruszka wrote:
+>>> > >When finishing scanning we switch to operational channel sill with
+>>> > >SCANNING flag. This mean that we never perform calibration works after
+>>> > >scanning. To fix the problem cancel and queue calibration works on
+>>> > >.sw_scan_start() and .sw_scan_complete() routines.
+>>> > >
+>>> > >Signed-off-by: Stanislaw Gruszka<sgruszka@redhat.com>
+>> >
+>> >IOW the stack will potentially ask us to return to the original channel
+>> >before calling .sw_scan_complete()?  Hm.  That's unpleasant.
+> I think the stack need to assure we start and end scanning on
+> operational channel, otherwise we would have possibility to be on
+> undefined channel during normal work.
 
-One nit, otherwise:
+Returning to the operating channels during scanning is mostly important 
+when connected so you can receive the beacon of your AP and mc/bc 
+traffic and also to handle regular unicast traffic so you are not 
+screwing up your TCP window too much for instance.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
-
-> 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> index 3d2a031..34e4f98 100644
-> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> @@ -4,6 +4,7 @@ Required properties:
->  - compatible: Should be one of the following:
->  	* "qcom,ath10k"
->  	* "qcom,ipq4019-wifi"
-> +	* "qcom,wcn3990-wifi"
->  
->  PCI based devices uses compatible string "qcom,ath10k" and takes calibration
->  data along with board specific data via "qcom,ath10k-calibration-data".
-> @@ -18,8 +19,12 @@ In general, entry "qcom,ath10k-pre-calibration-data" and
->  "qcom,ath10k-calibration-data" conflict with each other and only one
->  can be provided per device.
->  
-> +SNOC based devices (i.e. wcn3990) uses compatible string "qcom,wcn3990-wifi".
-> +
->  Optional properties:
->  - reg: Address and length of the register set for the device.
-> +- reg-names: Must include the list of following reg names,
-> +	     "membase"
->  - resets: Must contain an entry for each entry in reset-names.
->            See ../reset/reseti.txt for details.
->  - reset-names: Must include the list of following reset names,
-> @@ -49,6 +54,8 @@ Optional properties:
->  				 hw versions.
->  - qcom,ath10k-pre-calibration-data : pre calibration data as an array,
->  				     the length can vary between hw versions.
-> +- <supply-name>-supply: handle to the regulator device tree node
-> +			   optional "supply-name" is "vdd-0.8-cx-mx".
->  
->  Example (to supply the calibration data alone):
->  
-> @@ -119,3 +126,27 @@ wifi0: wifi@a000000 {
->  	qcom,msi_base = <0x40>;
->  	qcom,ath10k-pre-calibration-data = [ 01 02 03 ... ];
->  };
-> +
-> +Example (to supply wcn3990 SoC wifi block details):
-> +
-> +qcom,wifi@18000000 {
-
-wifi@...
-
-> +		compatible = "qcom,wcn3990-wifi";
-> +		reg = <0x18800000 0x800000>;
-> +		reg-names = "membase";
-> +		clocks = <&clock_gcc clk_aggre2_noc_clk>;
-> +		clock-names = "smmu_aggre2_noc_clk"
-> +		interrupts =
-> +			   <0 130 0 /* CE0 */ >,
-> +			   <0 131 0 /* CE1 */ >,
-> +			   <0 132 0 /* CE2 */ >,
-> +			   <0 133 0 /* CE3 */ >,
-> +			   <0 134 0 /* CE4 */ >,
-> +			   <0 135 0 /* CE5 */ >,
-> +			   <0 136 0 /* CE6 */ >,
-> +			   <0 137 0 /* CE7 */ >,
-> +			   <0 138 0 /* CE8 */ >,
-> +			   <0 139 0 /* CE9 */ >,
-> +			   <0 140 0 /* CE10 */ >,
-> +			   <0 141 0 /* CE11 */ >;
-> +		vdd-0.8-cx-mx-supply = <&pm8998_l5>;
-> +};
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe devicetree" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards,
+Arend
