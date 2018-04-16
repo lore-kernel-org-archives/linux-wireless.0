@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60978 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751115AbeDNK4J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 14 Apr 2018 06:56:09 -0400
-Date: Sat, 14 Apr 2018 12:56:07 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Jakub Kicinski <kubakici@wp.pl>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mt7601u: run calibration works after finishing
- scanning
-Message-ID: <20180414105606.GA9245@redhat.com> (sfid-20180414_125613_630512_F66AF239)
-References: <1523630678-8100-1-git-send-email-sgruszka@redhat.com>
- <1523630678-8100-2-git-send-email-sgruszka@redhat.com>
- <20180413110613.0c13f64f@cakuba.netronome.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:59132 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750732AbeDPFQL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Apr 2018 01:16:11 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180413110613.0c13f64f@cakuba.netronome.com>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 16 Apr 2018 13:16:10 +0800
+From: cjhuang@codeaurora.org
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@chromium.org>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 2/2] ath10k: support MAC address randomization in scan
+In-Reply-To: <5AD11D7C.1030603@broadcom.com>
+References: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org>
+ <1522379640-6442-3-git-send-email-cjhuang@codeaurora.org>
+ <20180412205954.GA34456@rodete-desktop-imager.corp.google.com>
+ <e16557d0891352ae0b83902faee97023@codeaurora.org>
+ <877epbs5v7.fsf@kamboji.qca.qualcomm.com> <5AD11D7C.1030603@broadcom.com>
+Message-ID: <242be71eb87140c9560163c4000255b2@codeaurora.org> (sfid-20180416_071615_467681_2CF976B5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 13, 2018 at 11:06:13AM -0700, Jakub Kicinski wrote:
-> On Fri, 13 Apr 2018 16:44:38 +0200, Stanislaw Gruszka wrote:
-> > When finishing scanning we switch to operational channel sill with
-> > SCANNING flag. This mean that we never perform calibration works after
-> > scanning. To fix the problem cancel and queue calibration works on
-> > .sw_scan_start() and .sw_scan_complete() routines.
-> > 
-> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+On 2018-04-14 05:13, Arend van Spriel wrote:
+> On 4/13/2018 1:28 PM, Kalle Valo wrote:
+>> cjhuang@codeaurora.org writes:
+>> 
+>>>>> +	if (test_bit(WMI_SERVICE_SPOOF_MAC_SUPPORT, ar->wmi.svc_map)) {
+>>>>> +		ret = ath10k_wmi_scan_prob_req_oui(ar, ar->mac_addr);
+>>>>> +		if (ret) {
+>>>>> +			ath10k_err(ar, "failed to set prob req oui: %i\n", ret);
+>>>>> +			goto err_dfs_detector_exit;
+>>>>> +		}
+>>>>> +
+>>>>> +		ar->hw->wiphy->features |=
+>>>>> +			NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
+>>>> 
+>>>> Do you support NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR too?
+>>> 
+>>> I'll add this flag too.
+>> 
+>> Are you going to send v2 or what's the plan?
 > 
-> IOW the stack will potentially ask us to return to the original channel
-> before calling .sw_scan_complete()?  Hm.  That's unpleasant.
+> Maybe a stupid question, but does ath10k support scheduled scan?
+> 
+The reason is AVL test case needs this flag to enable random mac address 
+scan. Maybe Brian
+Can explain why this flag is necessary.
 
-I think the stack need to assure we start and end scanning on
-operational channel, otherwise we would have possibility to be on
-undefined channel during normal work.
-
-> I'm not entirely on board with the patch.  Now normal channel setting
-> will happen while calibration is running.  Is that necessary? 
-> Would it not be sufficient to make sure work is scheduled
-> from .sw_scan_complete()?
-
-Yes, that would be sufficient, I'll post v2.
-
-Thanks
-Stanislaw
+Thanks,
+Carl
