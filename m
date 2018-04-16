@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:6278 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753878AbeDRLku (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54720 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755024AbeDPNQx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 07:40:50 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 12/22] staging: wilc1000: remove multiple define used for MAX_SSID_LEN
-Date: Wed, 18 Apr 2018 17:09:14 +0530
-Message-ID: <1524051564-15497-13-git-send-email-ajay.kathat@microchip.com> (sfid-20180418_134054_704475_691C05E6)
-In-Reply-To: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
+        Mon, 16 Apr 2018 09:16:53 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: ath10k: Enable hw checksum for wcn3990
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1522993544-15279-1-git-send-email-pillair@codeaurora.org>
+References: <1522993544-15279-1-git-send-email-pillair@codeaurora.org>
+To: Rakesh Pillai <pillair@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>
+Message-Id: <20180416131653.0FECE60F6E@smtp.codeaurora.org> (sfid-20180416_151715_415424_6920F1AE)
+Date: Mon, 16 Apr 2018 13:16:53 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to have commonly used macro in common header file to avoid
-same defination in mulitple file. Removed MAX_SSID_LEN macro from
-coreconfigurator.h header as its already defined in wilc_wlan_if.h.
+Rakesh Pillai <pillair@codeaurora.org> wrote:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/coreconfigurator.h | 1 -
- 1 file changed, 1 deletion(-)
+> By default ath10k driver enables the support for HW_CHECKSUM
+> (NETIF_F_HW_CSUM). Since the TCP/UDP checksum calculation is not enabled
+> in the wcn3990 firmware the checksum is incorrect in the TCP/UDP packets
+> and all patckets are dropped. But due note that wcn3990 support in
+> ath10k is still incomplete so this isn't a critical fix (yet).
+> 
+> Enable hw checksum calculations in wcn3990 hardware by
+> setting the proper flags in msdu descriptor tso flags.
+> 
+> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 5436fd3..1666b7a 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -17,7 +17,6 @@
- #define NUM_RSSI                5
- 
- #define MAC_HDR_LEN             24
--#define MAX_SSID_LEN            33
- #define FCS_LEN                 4
- #define TIME_STAMP_LEN          8
- #define BEACON_INTERVAL_LEN     2
+Introduces a new sparse warning:
+
+potku:~/ath10k/src/ath$ ath10k-check 
+drivers/net/wireless/ath/ath10k/htt_tx.c:1480:47: warning: invalid assignment: |=
+drivers/net/wireless/ath/ath10k/htt_tx.c:1480:47:    left side has type restricted __le32
+drivers/net/wireless/ath/ath10k/htt_tx.c:1480:47:    right side has type unsigned long
+
+Patch set to Changes Requested.
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/10325669/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
