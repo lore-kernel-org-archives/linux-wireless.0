@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33784 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755809AbeDXFq1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 01:46:27 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.kernel.org ([198.145.29.99]:57606 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755153AbeDPN64 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Apr 2018 09:58:56 -0400
+Received: from mail-qt0-f175.google.com (mail-qt0-f175.google.com [209.85.216.175])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7C5DF217DF
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 13:58:55 +0000 (UTC)
+Received: by mail-qt0-f175.google.com with SMTP id l8so11539151qtp.6
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 06:58:55 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [1/2] ath10k: Add WMI_SERVICE_AVAILABLE_EVENT support
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1522379640-6442-2-git-send-email-cjhuang@codeaurora.org>
-References: <1522379640-6442-2-git-send-email-cjhuang@codeaurora.org>
-To: Carl Huang <cjhuang@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Message-Id: <20180424054626.3CC0360881@smtp.codeaurora.org> (sfid-20180424_074637_511793_A4D8DB48)
-Date: Tue, 24 Apr 2018 05:46:26 +0000 (UTC)
+In-Reply-To: <1523269296-29900-1-git-send-email-merez@codeaurora.org>
+References: <1523269296-29900-1-git-send-email-merez@codeaurora.org>
+From: Josh Boyer <jwboyer@kernel.org>
+Date: Mon, 16 Apr 2018 09:58:54 -0400
+Message-ID: <CA+5PVA7E4r7Dx2kKe15trmS=7iuNvbjcF8LutfmTw10gLVMn-A@mail.gmail.com> (sfid-20180416_155858_869525_91D10CC8)
+Subject: Re: [PATCH] linux-firmware: update wil6210 firmware to 5.2.0.18
+To: Maya Erez <merez@codeaurora.org>
+Cc: Linux Firmware <linux-firmware@kernel.org>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        wil6210@qti.qualcomm.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Carl Huang <cjhuang@codeaurora.org> wrote:
+On Mon, Apr 9, 2018 at 6:21 AM, Maya Erez <merez@codeaurora.org> wrote:
+> This is the latest firmware from wil6210 5.2 firmware branch.
+>
+> Signed-off-by: Maya Erez <merez@codeaurora.org>
+> ---
+>  WHENCE      |   2 +-
+>  wil6210.brd | Bin 3588 -> 3588 bytes
+>  wil6210.fw  | Bin 350748 -> 400364 bytes
+>  3 files changed, 1 insertion(+), 1 deletion(-)
 
-> Add WMI_SERVICE_AVAILABLE_EVENT to extend WMI_SERVICE_READY_EVENT,
-> the 128bit service map in WMI_SERVICE_READY_EVENT is not enough
-> for firmware to notice new WLAN service to host driver. Hereby,
-> for thoese new WLAN service, firmware will notice host driver by
-> WMI_SERVICE_AVAILABLE_EVENT.
-> 
-> Signed-off-by: Alan Liu <alanliu@codeaurora.org>
-> Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Applied and pushed out.  Thanks.
 
-2 patches applied to ath-next branch of ath.git, thanks.
-
-cea19a6ce8bf ath10k: add WMI_SERVICE_AVAILABLE_EVENT support
-60e1d0fb2901 ath10k: support MAC address randomization in scan
-
--- 
-https://patchwork.kernel.org/patch/10316767/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+josh
