@@ -1,84 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:46864 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752747AbeDRKFT (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52060 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752750AbeDPOli (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 06:05:19 -0400
-Received: by mail-pf0-f195.google.com with SMTP id h69so660170pfe.13
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2018 03:05:19 -0700 (PDT)
-From: Amit Pundir <amit.pundir@linaro.org>
-To: lkml <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Cc: Samuel Ortiz <sameo@linux.intel.com>,
-        Christophe Ricard <christophe.ricard@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        John Stultz <john.stultz@linaro.org>,
-        Dmitry Shmidt <dimitrysh@google.com>,
-        Todd Kjos <tkjos@google.com>,
-        Android Kernel Team <kernel-team@android.com>,
-        Suren Baghdasaryan <surenb@google.com>
-Subject: [RESEND][PATCH 2/4] NFC: st21nfca: Fix memory OOB and leak issues in connectivity events handler
-Date: Wed, 18 Apr 2018 15:35:02 +0530
-Message-Id: <1524045904-7005-3-git-send-email-amit.pundir@linaro.org> (sfid-20180418_120528_277665_17542FE4)
-In-Reply-To: <1524045904-7005-1-git-send-email-amit.pundir@linaro.org>
-References: <1524045904-7005-1-git-send-email-amit.pundir@linaro.org>
+        Mon, 16 Apr 2018 10:41:38 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Daniel Mack <daniel@zonque.org>
+Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+        loic.poulain@linaro.org, rfried@codeaurora.org,
+        bjorn.andersson@linaro.org
+Subject: Re: [PATCH 5/5] wcn36xx: pass information elements in scan requests
+References: <20180416131634.25432-1-daniel@zonque.org>
+        <20180416131634.25432-6-daniel@zonque.org>
+        <87lgdnp7sy.fsf@kamboji.qca.qualcomm.com>
+        <0595a559-8220-bc22-0c33-4580119c774d@zonque.org>
+        <87h8obp7c0.fsf@kamboji.qca.qualcomm.com>
+        <384e608f-0f59-8ba6-5223-8a52e2ac86f9@zonque.org>
+Date: Mon, 16 Apr 2018 17:41:32 +0300
+In-Reply-To: <384e608f-0f59-8ba6-5223-8a52e2ac86f9@zonque.org> (Daniel Mack's
+        message of "Mon, 16 Apr 2018 16:29:03 +0200")
+Message-ID: <87d0yzp61v.fsf@kamboji.qca.qualcomm.com> (sfid-20180416_164144_093477_70638320)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Suren Baghdasaryan <surenb@google.com>
+Daniel Mack <daniel@zonque.org> writes:
 
-Overflow on memcpy is possible in kernel driver for st21nfca's
-NFC HCI layer when handling connectivity events if aid_len or
-params_len are bigger than the buffer size.
-Memory leak is possible when parameter tag is invalid.
+> On Monday, April 16, 2018 04:13 PM, Kalle Valo wrote:
+>> Daniel Mack <daniel@zonque.org> writes:
+>>> On Monday, April 16, 2018 04:03 PM, Kalle Valo wrote:
+>>>> Daniel Mack <daniel@zonque.org> writes:
+>
+>>>>> them to the firmware message. The driver currently tells the core that
+>>>>> it is capable of attaching up to WCN36XX_MAX_SCAN_IE_LEN octets, but
+>>>>> doesn't actually pass them to the the hardware.
+>>>>>
+>>>>> Some defines were moved around to avoid cyclic include dependencies.
+>>>>
+>>>> Does this fix anything or change functionality somehow? You should
+>>>> document that also in the commit log.
+>>>
+>>> I don't have a test case for this, no. But as the change was pretty much
+>>> straight forward, I sent it anyway.
+>> 
+>> Ok, but you should still explain that in the commit log. In other words,
+>> you should always answer the question "Why?" in the commit log.
+>> 
+>>> I can resend with some more information on this if you like.
+>> 
+>> No need to resend because of this, I can edit the commit log.
+>
+> Hmm, given that I can't even be sure the firmware does the right thing
+> when instructed this way, we should probably just drop this patch from
+> the series. The others are more important anyway, as they address bugs
+> that hit me on actual hardware.
 
-Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
----
- drivers/nfc/st21nfca/se.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+IMHO it's useful and if you don't see anything breaking I would prefer
+to take it anyway. I can't immeadiately say in what use cases this helps
+or fixes, though. But maybe you (or someone else) could verify that it
+works correctly by comparing before and after probe requests with a
+sniffer?
 
-diff --git a/drivers/nfc/st21nfca/se.c b/drivers/nfc/st21nfca/se.c
-index 4bed9e842db3..acdce231e227 100644
---- a/drivers/nfc/st21nfca/se.c
-+++ b/drivers/nfc/st21nfca/se.c
-@@ -322,23 +322,33 @@ int st21nfca_connectivity_event_received(struct nfc_hci_dev *hdev, u8 host,
- 		 * AID		81	5 to 16
- 		 * PARAMETERS	82	0 to 255
- 		 */
--		if (skb->len < NFC_MIN_AID_LENGTH + 2 &&
-+		if (skb->len < NFC_MIN_AID_LENGTH + 2 ||
- 		    skb->data[0] != NFC_EVT_TRANSACTION_AID_TAG)
- 			return -EPROTO;
- 
-+		/*
-+		 * Buffer should have enough space for at least
-+		 * two tag fields + two length fields + aid_len (skb->data[1])
-+		 */
-+		if (skb->len < skb->data[1] + 4)
-+			return -EPROTO;
-+
- 		transaction = (struct nfc_evt_transaction *)devm_kzalloc(dev,
- 						   skb->len - 2, GFP_KERNEL);
- 
- 		transaction->aid_len = skb->data[1];
- 		memcpy(transaction->aid, &skb->data[2],
- 		       transaction->aid_len);
-+		transaction->params_len = skb->data[transaction->aid_len + 3];
- 
--		/* Check next byte is PARAMETERS tag (82) */
-+		/* Check next byte is PARAMETERS tag (82) and the length field */
- 		if (skb->data[transaction->aid_len + 2] !=
--		    NFC_EVT_TRANSACTION_PARAMS_TAG)
-+		    NFC_EVT_TRANSACTION_PARAMS_TAG ||
-+		    skb->len < transaction->aid_len + transaction->params_len + 4) {
-+			devm_kfree(dev, transaction);
- 			return -EPROTO;
-+		}
- 
--		transaction->params_len = skb->data[transaction->aid_len + 3];
- 		memcpy(transaction->params, skb->data +
- 		       transaction->aid_len + 4, transaction->params_len);
- 
 -- 
-2.7.4
+Kalle Valo
