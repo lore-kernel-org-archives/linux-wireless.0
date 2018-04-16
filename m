@@ -1,37 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:57016 "EHLO mail.bugwerft.de"
+Received: from mx4.wp.pl ([212.77.101.11]:16982 "EHLO mx4.wp.pl"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754207AbeDPNQn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 09:16:43 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
-        loic.poulain@linaro.org, rfried@codeaurora.org,
-        bjorn.andersson@linaro.org, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH 0/5] wcn36xx: scan related patches
-Date: Mon, 16 Apr 2018 15:16:29 +0200
-Message-Id: <20180416131634.25432-1-daniel@zonque.org> (sfid-20180416_151647_437096_C9438A78)
+        id S1752481AbeDPRZA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Apr 2018 13:25:00 -0400
+Date: Mon, 16 Apr 2018 10:24:52 -0700
+From: Jakub Kicinski <kubakici@wp.pl>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2 v2] mt7601u: run calibration works after finishing
+ scanning
+Message-ID: <20180416102452.09f0a9bc@cakuba.netronome.com> (sfid-20180416_192503_829874_D1979EEA)
+In-Reply-To: <1523879778-6455-2-git-send-email-sgruszka@redhat.com>
+References: <1523879778-6455-1-git-send-email-sgruszka@redhat.com>
+        <1523879778-6455-2-git-send-email-sgruszka@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's another series of 5 patches for wcn36xx that address some issues
-with scanning. The first one is the most important one.
+On Mon, 16 Apr 2018 13:56:18 +0200, Stanislaw Gruszka wrote:
+> When finishing scanning we switch to operational channel sill with
+> SCANNING flag. This mean that we never perform calibration works after
+> scanning. To fix the problem queue calibration works on
+> .sw_scan_complete() routine.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
+Acked-by: Jakub Kicinski <kubakici@wp.pl>
 
-Daniel
-
-Daniel Mack (5):
-  wcn36xx: abort scan request when 'dequeued' indicator is sent
-  wcn36xx: cancel pending scan request when interface goes down
-  wcn36xx: handle scan cancellation when firmware support is missing
-  wcn36xx: send bss_type in scan requests
-  wcn36xx: pass information elements in scan requests
-
- drivers/net/wireless/ath/wcn36xx/hal.h     |  8 +++++++-
- drivers/net/wireless/ath/wcn36xx/main.c    | 29 +++++++++++++++++++++++++----
- drivers/net/wireless/ath/wcn36xx/smd.c     | 20 +++++++++++++++++---
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  7 +------
- 4 files changed, 50 insertions(+), 14 deletions(-)
-
--- 
-2.14.3
+Thank you!!
