@@ -1,50 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:43818 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754353AbeDXJzT (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60022 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753610AbeDPN1Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 05:55:19 -0400
-Subject: Re: [PATCH] ath10k: add dynamic vlan support
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Manikanta Pubbisetty <mpubbise@codeaurora.org>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-References: <1524232653-22573-1-git-send-email-mpubbise@codeaurora.org>
- <87r2n5auvq.fsf@kamboji.qca.qualcomm.com>
- <aa04534d-9677-f42e-a239-b230093ef2f5@dd-wrt.com>
- <874lk1orsq.fsf@codeaurora.org>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <f3b67b23-8d6d-5bce-718e-d3e198e800d1@dd-wrt.com> (sfid-20180424_115523_244207_7569FBDE)
-Date: Tue, 24 Apr 2018 11:55:17 +0200
+        Mon, 16 Apr 2018 09:27:25 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: pillair@codeaurora.org
+Cc: ath10k@lists.infradead.org, Govind Singh <govinds@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/4] ath10k: Enable SRRI/DRRI support on ddr for WCN3990
+References: <1523370212-8778-1-git-send-email-pillair@codeaurora.org>
+        <1523370212-8778-4-git-send-email-pillair@codeaurora.org>
+Date: Mon, 16 Apr 2018 16:27:20 +0300
+In-Reply-To: <1523370212-8778-4-git-send-email-pillair@codeaurora.org>
+        (pillair@codeaurora.org's message of "Tue, 10 Apr 2018 19:53:31
+        +0530")
+Message-ID: <87y3hnp9hj.fsf@kamboji.qca.qualcomm.com> (sfid-20180416_152728_795178_5703A3D7)
 MIME-Version: 1.0
-In-Reply-To: <874lk1orsq.fsf@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 24.04.2018 um 11:52 schrieb Kalle Valo:
-> Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
+pillair@codeaurora.org writes:
+
+> From: Govind Singh <govinds@codeaurora.org>
 >
->> consider my comment regarding vlan_ap.
-> I am considering comment, I just go one issue at a time and haven't had
-> a time to look at your comment. But PLEASE do not top post, it's very
-> annoying and creates a mess in patchwork.
+> SRRI/DRRI are not mapped in the HW Shadow block and can lead
+> to un-clocked access if common subsystem in the target is
+> powered down due to idle mode.
 >
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#do_not_top_post_and_edit_your_quotes
-i almost do top posts for a single reason. you have to scroll down a 
-long time sometimes to get the essential information.
-i dont know why most people in my country prefer top posting. i will try 
-to remember and change it in future
+> To mitigate this problem SRRI/DRRI can be read from
+> DDR instead of doing an actual hardware read.
+> Host allocates non cached memory on ddr and configures
+> the physical address of this memory to the CE hardware.
+> The hardware updates the RRI on this particular location.
+> Read SRRI/DRRI from DDR location instead of
+> direct target read.
 >
+> Enable retention restore on ddr using hw params to enable
+> in specific targets.
+>
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+
+[...]
+
+> +	for (i = 0; i < CE_COUNT; i++) {
+> +		ctrl1_regs = ar->hw_ce_regs->ctrl1_regs->addr;
+> +		ce_base_addr = ath10k_ce_base_address(ar, i);
+> +		ath10k_ce_write32(ar, ce_base_addr + ctrl1_regs,
+> +				  ath10k_ce_read32(ar,
+> +				  ce_base_addr + ctrl1_regs) |
+> +				  ar->hw_ce_regs->upd->mask);
+> +	}
+
+This gives a checkpatch warning:
+
+drivers/net/wireless/ath/ath10k/ce.c:1917: Alignment should match open parenthesis
+
+You could fix that, and make the code a lot more readable, with
+something like this:
+
+tmp = ath10k_ce_read32(ar, ce_base_addr + ctrl1_regs);
+tmp |= ar->hw_ce_regs->upd->mask;
+ath10k_ce_write32(ar, ce_base_addr + ctrl1_regs, tmp);
+
+Usually it's a good practise avoid making clever tricks, simple code is
+a lot easier to read.
 
 -- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+Kalle Valo
