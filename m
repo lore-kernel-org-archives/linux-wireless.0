@@ -1,279 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43062 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753056AbeDQMH0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Apr 2018 08:07:26 -0400
-From: pillair@codeaurora.org
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@codeaurora.org>
-Subject: [PATCH v2 2/4] ath10k: Add support for shadow register for WNC3990
-Date: Tue, 17 Apr 2018 17:36:59 +0530
-Message-Id: <1523966821-21903-3-git-send-email-pillair@codeaurora.org> (sfid-20180417_140730_949874_DEB19A63)
-In-Reply-To: <1523966821-21903-1-git-send-email-pillair@codeaurora.org>
-References: <1523966821-21903-1-git-send-email-pillair@codeaurora.org>
+Received: from mail.kernel.org ([198.145.29.99]:55520 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753479AbeDPNso (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Apr 2018 09:48:44 -0400
+Received: from mail-qt0-f174.google.com (mail-qt0-f174.google.com [209.85.216.174])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 32CD5217DF
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 13:48:44 +0000 (UTC)
+Received: by mail-qt0-f174.google.com with SMTP id d3so15300372qth.8
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 06:48:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAKzrAgSbYN1znJi8qM0QEfCniw2AGEKnrh-vJcUcXW0rVmo9tQ@mail.gmail.com>
+References: <CAKzrAgSbYN1znJi8qM0QEfCniw2AGEKnrh-vJcUcXW0rVmo9tQ@mail.gmail.com>
+From: Josh Boyer <jwboyer@kernel.org>
+Date: Mon, 16 Apr 2018 09:48:42 -0400
+Message-ID: <CA+5PVA6nkGMzQHVu8LSaOUGU0h16rMeQvPoNORtyAzp8YDidOw@mail.gmail.com> (sfid-20180416_154848_320247_586EFFD8)
+Subject: Re: Compex WLE1216V2-20 (QCA9984) firmware is missing
+To: "ojab //" <ojab@ojab.ru>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Linux Firmware <linux-firmware@kernel.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rakesh Pillai <pillair@codeaurora.org>
+On Tue, Mar 27, 2018 at 12:41 PM, ojab // <ojab@ojab.ru> wrote:
+> [please CC me since I'm not subscribed to the lists and terribly sorry
+> for HTML mails]
+>
+> Oh hai!
+>
+> I have Compex WLE1216V2-20 (based on QCA9984 chip) that isn't
+> supported by linux-firmware (git master), card init fails with
+>
+>>[Mon Mar 26 17:18:47 2018] ath10k_pci 0000:05:00.0: failed to fetch board data for bus=pci,bmi-chip-id=0,bmi-board-id=30 from ath10k/QCA9984/hw1.0/board-2.bin
+>
+> It works fine with board-2.bin from the compex website [1] (can be
+> downloaded directly from
+> https://bugzilla.kernel.org/attachment.cgi?id=274959).
+> What should be done to have it upstreamed?
 
-WCN3990 needs shadow register write operation support
-for copy engine for regular operation in powersave mode.
-Add support for copy engine shadow register write in
-datapath tx for WCN3990
+This is likely a question for Kalle.  I would expect an update to the
+existing board-2.bin file submitted through Qualcomm with support for
+that device.
 
-Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/ce.c | 143 ++++++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/ce.h |   4 +
- 2 files changed, 145 insertions(+), 2 deletions(-)
+josh
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index e7e7b342e5b8..5053dd92bf01 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -1,6 +1,7 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018 The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -58,6 +59,74 @@
-  * the buffer is sent/received.
-  */
- 
-+static inline u32 shadow_sr_wr_ind_addr(struct ath10k *ar,
-+					struct ath10k_ce_pipe *ce_state)
-+{
-+	u32 ce_id = ce_state->id;
-+	u32 addr = 0;
-+
-+	switch (ce_id) {
-+	case 0:
-+		addr = 0x00032000;
-+		break;
-+	case 3:
-+		addr = 0x0003200C;
-+		break;
-+	case 4:
-+		addr = 0x00032010;
-+		break;
-+	case 5:
-+		addr = 0x00032014;
-+		break;
-+	case 7:
-+		addr = 0x0003201C;
-+		break;
-+	default:
-+		ath10k_warn(ar, "invalid CE id: %d", ce_id);
-+		break;
-+	}
-+	return addr;
-+}
-+
-+static inline u32 shadow_dst_wr_ind_addr(struct ath10k *ar,
-+					 struct ath10k_ce_pipe *ce_state)
-+{
-+	u32 ce_id = ce_state->id;
-+	u32 addr = 0;
-+
-+	switch (ce_id) {
-+	case 1:
-+		addr = 0x00032034;
-+		break;
-+	case 2:
-+		addr = 0x00032038;
-+		break;
-+	case 5:
-+		addr = 0x00032044;
-+		break;
-+	case 7:
-+		addr = 0x0003204C;
-+		break;
-+	case 8:
-+		addr = 0x00032050;
-+		break;
-+	case 9:
-+		addr = 0x00032054;
-+		break;
-+	case 10:
-+		addr = 0x00032058;
-+		break;
-+	case 11:
-+		addr = 0x0003205C;
-+		break;
-+	default:
-+		ath10k_warn(ar, "invalid CE id: %d", ce_id);
-+		break;
-+	}
-+
-+	return addr;
-+}
-+
- static inline unsigned int
- ath10k_set_ring_byte(unsigned int offset,
- 		     struct ath10k_hw_ce_regs_addr_map *addr_map)
-@@ -123,6 +192,22 @@ static inline u32 ath10k_ce_src_ring_read_index_get(struct ath10k *ar,
- 				ar->hw_ce_regs->current_srri_addr);
- }
- 
-+static inline void
-+ath10k_ce_shadow_src_ring_write_index_set(struct ath10k *ar,
-+					  struct ath10k_ce_pipe *ce_state,
-+					  unsigned int value)
-+{
-+	ath10k_ce_write32(ar, shadow_sr_wr_ind_addr(ar, ce_state), value);
-+}
-+
-+static inline void
-+ath10k_ce_shadow_dest_ring_write_index_set(struct ath10k *ar,
-+					   struct ath10k_ce_pipe *ce_state,
-+					   unsigned int value)
-+{
-+	ath10k_ce_write32(ar, shadow_dst_wr_ind_addr(ar, ce_state), value);
-+}
-+
- static inline void ath10k_ce_src_ring_base_addr_set(struct ath10k *ar,
- 						    u32 ce_ctrl_addr,
- 						    unsigned int addr)
-@@ -376,8 +461,14 @@ static int _ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
- 	write_index = CE_RING_IDX_INCR(nentries_mask, write_index);
- 
- 	/* WORKAROUND */
--	if (!(flags & CE_SEND_FLAG_GATHER))
--		ath10k_ce_src_ring_write_index_set(ar, ctrl_addr, write_index);
-+	if (!(flags & CE_SEND_FLAG_GATHER)) {
-+		if (ar->hw_params.shadow_reg_support)
-+			ath10k_ce_shadow_src_ring_write_index_set(ar, ce_state,
-+								  write_index);
-+		else
-+			ath10k_ce_src_ring_write_index_set(ar, ctrl_addr,
-+							   write_index);
-+	}
- 
- 	src_ring->write_index = write_index;
- exit:
-@@ -1251,6 +1342,22 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
- 	return 0;
- }
- 
-+static int ath10k_ce_alloc_shadow_base(struct ath10k *ar,
-+				       struct ath10k_ce_ring *src_ring,
-+				       u32 nentries)
-+{
-+	src_ring->shadow_base_unaligned = kcalloc(nentries,
-+						  sizeof(struct ce_desc),
-+						  GFP_KERNEL);
-+	if (!src_ring->shadow_base_unaligned)
-+		return -ENOMEM;
-+
-+	src_ring->shadow_base = (struct ce_desc *)
-+			PTR_ALIGN(src_ring->shadow_base_unaligned,
-+				  CE_DESC_RING_ALIGN);
-+	return 0;
-+}
-+
- static struct ath10k_ce_ring *
- ath10k_ce_alloc_src_ring(struct ath10k *ar, unsigned int ce_id,
- 			 const struct ce_attr *attr)
-@@ -1258,6 +1365,7 @@ ath10k_ce_alloc_src_ring(struct ath10k *ar, unsigned int ce_id,
- 	struct ath10k_ce_ring *src_ring;
- 	u32 nentries = attr->src_nentries;
- 	dma_addr_t base_addr;
-+	int ret;
- 
- 	nentries = roundup_pow_of_two(nentries);
- 
-@@ -1294,6 +1402,19 @@ ath10k_ce_alloc_src_ring(struct ath10k *ar, unsigned int ce_id,
- 			ALIGN(src_ring->base_addr_ce_space_unaligned,
- 			      CE_DESC_RING_ALIGN);
- 
-+	if (ar->hw_params.shadow_reg_support) {
-+		ret = ath10k_ce_alloc_shadow_base(ar, src_ring, nentries);
-+		if (ret) {
-+			dma_free_coherent(ar->dev,
-+					  (nentries * sizeof(struct ce_desc) +
-+					   CE_DESC_RING_ALIGN),
-+					  src_ring->base_addr_owner_space_unaligned,
-+					  base_addr);
-+			kfree(src_ring);
-+			return ERR_PTR(ret);
-+		}
-+	}
-+
- 	return src_ring;
- }
- 
-@@ -1304,6 +1425,7 @@ ath10k_ce_alloc_src_ring_64(struct ath10k *ar, unsigned int ce_id,
- 	struct ath10k_ce_ring *src_ring;
- 	u32 nentries = attr->src_nentries;
- 	dma_addr_t base_addr;
-+	int ret;
- 
- 	nentries = roundup_pow_of_two(nentries);
- 
-@@ -1339,6 +1461,19 @@ ath10k_ce_alloc_src_ring_64(struct ath10k *ar, unsigned int ce_id,
- 			ALIGN(src_ring->base_addr_ce_space_unaligned,
- 			      CE_DESC_RING_ALIGN);
- 
-+	if (ar->hw_params.shadow_reg_support) {
-+		ret = ath10k_ce_alloc_shadow_base(ar, src_ring, nentries);
-+		if (ret) {
-+			dma_free_coherent(ar->dev,
-+					  (nentries * sizeof(struct ce_desc) +
-+					   CE_DESC_RING_ALIGN),
-+					  src_ring->base_addr_owner_space_unaligned,
-+					  base_addr);
-+			kfree(src_ring);
-+			return ERR_PTR(ret);
-+		}
-+	}
-+
- 	return src_ring;
- }
- 
-@@ -1505,6 +1640,8 @@ static void _ath10k_ce_free_pipe(struct ath10k *ar, int ce_id)
- 	struct ath10k_ce_pipe *ce_state = &ce->ce_states[ce_id];
- 
- 	if (ce_state->src_ring) {
-+		if (ar->hw_params.shadow_reg_support)
-+			kfree(ce_state->src_ring->shadow_base_unaligned);
- 		dma_free_coherent(ar->dev,
- 				  (ce_state->src_ring->nentries *
- 				   sizeof(struct ce_desc) +
-@@ -1534,6 +1671,8 @@ static void _ath10k_ce_free_pipe_64(struct ath10k *ar, int ce_id)
- 	struct ath10k_ce_pipe *ce_state = &ce->ce_states[ce_id];
- 
- 	if (ce_state->src_ring) {
-+		if (ar->hw_params.shadow_reg_support)
-+			kfree(ce_state->src_ring->shadow_base_unaligned);
- 		dma_free_coherent(ar->dev,
- 				  (ce_state->src_ring->nentries *
- 				   sizeof(struct ce_desc_64) +
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index d8f9da334529..9aea89133209 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -1,6 +1,7 @@
- /*
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
-  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018 The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -113,6 +114,9 @@ struct ath10k_ce_ring {
- 	/* CE address space */
- 	u32 base_addr_ce_space;
- 
-+	char *shadow_base_unaligned;
-+	struct ce_desc *shadow_base;
-+
- 	/* keep last */
- 	void *per_transfer_context[0];
- };
--- 
-2.14.1
+>
+> [1] https://downloads.compex.com.sg/?dir=uploads/boardData/For_Building_New_Firmware
+>
+> //wbr ojab
