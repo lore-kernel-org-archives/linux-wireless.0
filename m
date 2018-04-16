@@ -1,65 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway36.websitewelcome.com ([192.185.199.121]:11525 "EHLO
-        gateway36.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755207AbeDZNuy (ORCPT
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:40686 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750917AbeDPWYZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Apr 2018 09:50:54 -0400
-Received: from cm13.websitewelcome.com (cm13.websitewelcome.com [100.42.49.6])
-        by gateway36.websitewelcome.com (Postfix) with ESMTP id BAC3A4100B698
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Apr 2018 08:01:40 -0500 (CDT)
-Date: Thu, 26 Apr 2018 08:01:38 -0500
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] rsi_91x_mac80211: fix structurally dead code
-Message-ID: <20180426130138.GA440@embeddedor.com> (sfid-20180426_155058_227145_27EADA82)
+        Mon, 16 Apr 2018 18:24:25 -0400
+Received: by mail-qk0-f195.google.com with SMTP id o64so18366467qkl.7
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 15:24:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180416131634.25432-1-daniel@zonque.org>
+References: <20180416131634.25432-1-daniel@zonque.org>
+From: Ramon Fried <ramon.fried@linaro.org>
+Date: Tue, 17 Apr 2018 01:24:24 +0300
+Message-ID: <CAODu4Nqkqyxh7AXs6zCRKxc1LaxPoBsjEdnBsyZHi70p_u7RDQ@mail.gmail.com> (sfid-20180417_002429_241409_3396AA82)
+Subject: Re: [PATCH 0/5] wcn36xx: scan related patches
+To: Daniel Mack <daniel@zonque.org>
+Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+        kvalo@codeaurora.org, Loic Poulain <loic.poulain@linaro.org>,
+        Ramon Fried <rfried@codeaurora.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Function rsi_hal_key_config returns before reaching code at line
-922 if (status), hence this code is structurally dead.
-
-Fix this by storing the value returned by rsi_hal_load_key
-into _status_ for its further evaluation and use.
-
-Addresses-Coverity-ID: 1468409 ("Structurally dead code")
-Fixes: 4fd6c4762f37 ("rsi: roaming enhancements")
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 766d874..80e7f4f 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -911,14 +911,14 @@ static int rsi_hal_key_config(struct ieee80211_hw *hw,
- 		}
- 	}
- 
--	return rsi_hal_load_key(adapter->priv,
--				key->key,
--				key->keylen,
--				key_type,
--				key->keyidx,
--				key->cipher,
--				sta_id,
--				vif);
-+	status = rsi_hal_load_key(adapter->priv,
-+				  key->key,
-+				  key->keylen,
-+				  key_type,
-+				  key->keyidx,
-+				  key->cipher,
-+				  sta_id,
-+				  vif);
- 	if (status)
- 		return status;
- 
--- 
-2.7.4
+On 16 April 2018 at 16:16, Daniel Mack <daniel@zonque.org> wrote:
+> Here's another series of 5 patches for wcn36xx that address some issues
+> with scanning. The first one is the most important one.
+>
+Nicely done. Thanks !
+>
+> Daniel
+>
+> Daniel Mack (5):
+>   wcn36xx: abort scan request when 'dequeued' indicator is sent
+>   wcn36xx: cancel pending scan request when interface goes down
+>   wcn36xx: handle scan cancellation when firmware support is missing
+>   wcn36xx: send bss_type in scan requests
+>   wcn36xx: pass information elements in scan requests
+>
+>  drivers/net/wireless/ath/wcn36xx/hal.h     |  8 +++++++-
+>  drivers/net/wireless/ath/wcn36xx/main.c    | 29 +++++++++++++++++++++++++----
+>  drivers/net/wireless/ath/wcn36xx/smd.c     | 20 +++++++++++++++++---
+>  drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  7 +------
+>  4 files changed, 50 insertions(+), 14 deletions(-)
+>
+> --
+> 2.14.3
+>
