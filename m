@@ -1,134 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f173.google.com ([74.125.82.173]:36831 "EHLO
-        mail-ot0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932101AbeDWQJc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 12:09:32 -0400
-Subject: Re: [PATCH v2] rtlwifi: cleanup 8723be ant_sel definition
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: pkshih@realtek.com, linux-wireless@vger.kernel.org,
-        stable@vger.kernel.org
-References: <20180420023009.3182-1-pkshih@realtek.com>
- <87zi1ygk8d.fsf@kamboji.qca.qualcomm.com>
- <db66387b-9271-2563-ae77-449716795150@lwfinger.net>
- <87o9iadog1.fsf@kamboji.qca.qualcomm.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <21a952f1-4793-3b09-26ed-dacc67b0bb8e@lwfinger.net> (sfid-20180423_180938_822365_965CD6AD)
-Date: Mon, 23 Apr 2018 11:09:29 -0500
+Received: from narfation.org ([79.140.41.39]:33752 "EHLO v3-1039.vlinux.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750884AbeDPNEu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Apr 2018 09:04:50 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: miaoqing@codeaurora.org
+Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath9k-devel@qca.qualcomm.com, sssa@qti.qualcomm.com,
+        simon.wunderlich@openmesh.com
+Subject: Re: [PATCH 2/2] ath9k: fix tx99 bus error
+Date: Mon, 16 Apr 2018 14:57:20 +0200
+Message-ID: <5841149.Pfrk1JVkns@bentobox> (sfid-20180416_150454_747137_93E2588D)
+In-Reply-To: <1497921220-12940-2-git-send-email-miaoqing@codeaurora.org>
+References: <1497921220-12940-1-git-send-email-miaoqing@codeaurora.org> <1497921220-12940-2-git-send-email-miaoqing@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <87o9iadog1.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: multipart/signed; boundary="nextPart2230415.cd2rnGMftr"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/23/2018 08:47 AM, Kalle Valo wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
-> 
->> On 04/20/2018 07:01 AM, Kalle Valo wrote:
->>> <pkshih@realtek.com> writes:
->>>
->>>> From: Ping-Ke Shih <pkshih@realtek.com>
->>>>
->>>> The module parameter ant_sel is used to control antenna number and path.
->>>> There is an existing enum ANT_{X2,X1} defined the antenna number, so
->>>> add a new enum ANT_{MAIN,AUX} to make it readable. After this work,
->>>> incorrect given values depend on ant_sel were exposed, so refill values
->>>> according following definition:
->>>>     ant_sel   ant_num   ant_path  print_label
->>>>        1      ANT_X1    ANT_AUX        #2
->>>>        2      ANT_X2    ANT_MAIN       #1
->>>> Then, a workaround resulted from the incorrect values in halbtcoutsrc.c was
->>>> removed. These is a existing bug in the workaround while ant_sel=2, but the
->>>> case is rare use so user is hard to observe this bug.
->>>>
->>>> The experimental results with single antenna connected to specific path
->>>> are in following:
->>>>     ant_sel  ANT_MAIN(#1)  ANT_AUX(#2)
->>>>        0        -8            -62
->>>>        1        -62           -10
->>>>        2        -6            -60
->>>>
->>>> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
->>>> Cc: Stable <stable@vger.kernel.org> # 4.7+
->>>> Reviewed-by: Larry Finger <Larry.Finger@lwfinger.net>
->>>> ---
->>>> v2: Add more description about fixed bugs in end of first paragraph.
->>>
->>> Sorry, I still don't understand the bug you are fixing. It shouldn't
->>> take more than one minute to understand a commit log.
->>>
->>> I prose that you rewrite the commit log, or at least parts of if it.
->>> When you are describing a bug don't talk about enums or source files,
->>> that's an implementation detail, and instead talk how the bug looks like
->>> from users point of view. For example:
->>>
->>>     "On HP laptop model 1234 with Realtex 4321 device users are supposed
->>>      to use ant_sel module parameter with value 77 to use the correct
->>>      antenna. But instead rtlwifi incorrectly chose antenna 88 with lower
->>>      transmit power and that caused packet loss. Fix it so that the user
->>>      gets better transmit power and..."
->>>
->>> (that's of course all made up information as I don't know what the
->>> actual bug is)
->>>
->>> And after that you can write rtlwifi internals in the commit log as much
->>> as you want :) But there needs to be a clear generic description of the
->>> bug first and it needs to understandable in one read.
->>>
->>> To make this faster I propose that you send the new commit log as a
->>> reply to this mail and I can then comment faster.
->>
->> Kalle,
->>
->> As I have some responsibility in creating this mess, let me try to
->> write a new commit log. I hope this answers your questions.
->>
->> Thanks,
->>
->> Larry
->>
->> ====================================
->>
->> Some HP laptops have only a single wifi antenna. This would not be a
->> problem except that they were shipped with an incorrectly encoded
->> EFUSE. It should have been possible to open the computer and transfer
->> the antenna connection to the other terminal except that such action
->> might void the warranty, and moving the antenna broke the Windows
->> driver. The fix was to add a module option that would override the
->> EFUSE encoding. That was done with commit c18d8f509571 ("rtlwifi:
->> rtl8723be: Add antenna select module parameter"). There was still a
->> problem with Bluetooth coexistence, which was addressed with commit
->> baa170229095 ("rtlwifi: btcoexist: Implement antenna selection").
->> There were still problems, thus there were commit 0ff78adeef11
->> ("rtlwifi: rtl8723be: fix ant_sel code") and commit 6d6226928369
->> ("rtlwifi: btcoexist: Fix antenna selection code"). Despite all these
->> attempts at fixing the problem, the code is not yet right. A proper
->> fix is important as there are now instances of laptops having
->> RTL8723DE chips with the same problem.
-> 
-> This looks better, thanks.
-> 
->> The module parameter ant_sel is used to control antenna number and path.
->> At present enum ANT_{X2,X1} is used to define the antenna number, but
->> this choice is not intuitive, thus change to a new enum ANT_{MAIN,AUX}
->> to make it more readable. This change showed examples where incorrect
->> values were used. It was also possible to remove a workaround in
->> halbtcoutsrc.c
->>
->> The experimental results with single antenna connected to specific path
->> are now as follows:
->>    ant_sel  ANT_MAIN(#1)  ANT_AUX(#2)
->>       0        -8            -62
->>       1        -62           -10
->>       2        -6            -60
-> 
-> But after reading this I'm still not sure if users are supposed to do
-> anything. I guess they will continue using existing values with the
-> ant_sel module parameter and nothing changes in that regard?
+--nextPart2230415.cd2rnGMftr
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-If users have two antennas, or a vendor that correctly encoded the EFUSE, this 
-patch will change nothing for them. If they have the low-signal problem, then 
-their choice of a value for ant_sel should not change. At least we are now sure 
-that using that module option will provide correct operation.
+On Dienstag, 20. Juni 2017 09:13:40 CEST miaoqing@codeaurora.org wrote:
+> From: Miaoqing Pan <miaoqing@codeaurora.org>
+> 
+> The hard coded register 0x9864 and 0x9924 are invalid
+> for ar9300 chips.
+[...]
+> -	REG_SET_BIT(ah, 0x9864, 0x7f000);
+> -	REG_SET_BIT(ah, 0x9924, 0x7f00fe);
 
-Larry
+Sorry that this messages comes so later after the patch was accepted. But what 
+were these things expected to do? My guess is that 0x9864 is AR_PHY_CCA and 
+the other one is something else (AR_PHY_TIMING5?). But yes, these would be ar9002
+and not AR9003.
+
+What are the problems that we would expect when the CCA threshold and the CYCPWR 
+threshold are no longer be set to the highest possible value? Are we now expecting 
+that the device is not transmitting at 99% when it sees other signals?
+
+Btw. why are you writing that ar9300 chips don't have this? It looks to me 
+like the original code was taken from QCA's 9300 code [1]. Was it always broken
+in the AR9300 hal and how was it now fixed with with the newer HALs?
+
+Could it be that newer chips just have it mapped to a different location? AGC 
+on the 9300 seems to be at 0x9e00 and maybe the cca register should have been 
+0x9e1c (AR_PHY_CCA_0) and should be set to AR_PHY_CCA_THRESH62? And there is 
+also a AR_PHY_TIMING5 (0x9810) which might have to be set to 
+AR_PHY_TIMING5_CYCPWR_THR1 | AR_PHY_TIMING5_CYCPWR_THR1A. Of course, I have 
+absolutely no idea whether these registers actually control the 
+same thing and whether the settings are correct.
+
+Kind regards,
+	Sven
+
+[1] https://github.com/freebsd/freebsd/blob/386ddae58459341ec567604707805814a2128a57/sys/contrib/dev/ath/ath_hal/ar9300/ar9300_tx99_tgt.c#L502
+
+--nextPart2230415.cd2rnGMftr
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlrUnbAACgkQXYcKB8Em
+e0azeA//TgIKnHF90emJubcVeZG7Fci1K5o76Y/GAL7L82ryQQURx92CGZg13Y4z
+T7NJNVLQZxnshu4nqqC5UxDPvL9dgxSUlz7Xf83HreWDCJd/HXXx2yQtDL5ZD9KO
+1+TezyEx0SGywstDFVzU1w37lTBixN41q9ucEDXuQvvtzc91J0o1mfPKXvw+v/pc
+97x5UWFYWhZGjcqjzl3LiCjc3Zl5+07OGM1ltS624xxLYMvK+UFAYdNnd1xpa5e/
+W97f5A6Jx+aRl2U0svWXP+ScaHfHmXgNMbRC1gDW+M1bYO83eC3j7CuCLLDlr3ER
+7OxKFGnPAZVMO+odHedydgUAR3zWWEELOFPLz3AWFPzW9mzOfkwywoJFD+esb52m
+ahxtG7X/y/Bbhxg7szwzqu/kjkuRlPJz859A+8J7s/oO/txIae0/TNqXmNqtJXVA
+bqiOoN5Wk+h1qPiWdEkgOh/vxPydDCaw4SSGe5Y4/jOQ4TbAWv3XdrvAYF19wjyL
+yJtK0pdGZcbjgtg33W/MTqO/9BaoLyoLFhl440OQZbn80v53/HN+etI5Y6fedoae
+3INgHVW5eifSriwTXTYI+F9vOqO/j/ux0lpVG/f89jVP5sBJNT1n8pAO8Ysam8PW
+EmokUZYbY1xPAQysRCRc4ZDPRGeza5nurwBddwZXZRSCbXWpb24=
+=/q42
+-----END PGP SIGNATURE-----
+
+--nextPart2230415.cd2rnGMftr--
