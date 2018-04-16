@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:16615 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932107AbeDWQfw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 12:35:52 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [RESEND 19/33] staging: wilc1000: fix line over 80 chars in change_station()
-Date: Mon, 23 Apr 2018 22:03:21 +0530
-Message-ID: <1524501215-4963-20-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183601_061905_432642B0)
-In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+Received: from mail.kernel.org ([198.145.29.99]:56780 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755146AbeDPNyk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Apr 2018 09:54:40 -0400
+Received: from mail-qk0-f173.google.com (mail-qk0-f173.google.com [209.85.220.173])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5578421834
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 13:54:40 +0000 (UTC)
+Received: by mail-qk0-f173.google.com with SMTP id f9so8670753qkm.12
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 06:54:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1523262987-4650-1-git-send-email-siva8118@gmail.com>
+References: <1523262987-4650-1-git-send-email-siva8118@gmail.com>
+From: Josh Boyer <jwboyer@kernel.org>
+Date: Mon, 16 Apr 2018 09:54:39 -0400
+Message-ID: <CA+5PVA40XQLMa2wY2JwNQCC0GkNL2Bu6XHYDRsb5QKs8kUPYyA@mail.gmail.com> (sfid-20180416_155443_689135_4D14DBA1)
+Subject: Re: [PATCH v2] linux-firmware: rsi: update firmware images for
+ Redpine 9113 chipset
+To: Siva Rebbagondla <siva8118@gmail.com>
+Cc: Linux Firmware <linux-firmware@kernel.org>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Sushant Mishra <sushant.mishra@redpinesignals.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix 'line over 80 chars' issue found by checkpatch.pl script.
+On Mon, Apr 9, 2018 at 4:36 AM, Siva Rebbagondla <siva8118@gmail.com> wrote:
+> From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+>
+> These images will be loaded by rsi driver based on operating mode.
+> Firmware version is 1.6.1
+>
+> rs9113_ap_bt_dual_mode.rps - AP and BT functionality
+> rs9113_wlan_bt_dual_mode.rps - station and BT functionality
+> rs9113_wlan_qspi.rps - AP and station functionality
+>
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+> ---
+> v2: Updated WHENCE file [Josh Boyer]
+> ---
+>  WHENCE                           |   8 +++++++-
+>  rsi/rs9113_ap_bt_dual_mode.rps   | Bin 0 -> 341860 bytes
+>  rsi/rs9113_wlan_bt_dual_mode.rps | Bin 0 -> 331592 bytes
+>  rsi/rs9113_wlan_qspi.rps         | Bin 199180 -> 201052 bytes
+>  4 files changed, 7 insertions(+), 1 deletion(-)
+>  create mode 100644 rsi/rs9113_ap_bt_dual_mode.rps
+>  create mode 100644 rsi/rs9113_wlan_bt_dual_mode.rps
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Thanks.  Applied and pushed out.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 5bd294d..1540511 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1154,10 +1154,10 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
- 		wilc_get_statistics(vif, &stats);
- 
- 		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL) |
--						BIT(NL80211_STA_INFO_RX_PACKETS) |
--						BIT(NL80211_STA_INFO_TX_PACKETS) |
--						BIT(NL80211_STA_INFO_TX_FAILED) |
--						BIT(NL80211_STA_INFO_TX_BITRATE);
-+				 BIT(NL80211_STA_INFO_RX_PACKETS) |
-+				 BIT(NL80211_STA_INFO_TX_PACKETS) |
-+				 BIT(NL80211_STA_INFO_TX_FAILED) |
-+				 BIT(NL80211_STA_INFO_TX_BITRATE);
- 
- 		sinfo->signal = stats.rssi;
- 		sinfo->rx_packets = stats.rx_cnt;
--- 
-2.7.4
+josh
