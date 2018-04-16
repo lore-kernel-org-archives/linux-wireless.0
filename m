@@ -1,61 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:45112 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752983AbeDRKF2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 06:05:28 -0400
-Received: by mail-pg0-f66.google.com with SMTP id z21so626447pgv.12
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2018 03:05:27 -0700 (PDT)
-From: Amit Pundir <amit.pundir@linaro.org>
-To: lkml <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Cc: Samuel Ortiz <sameo@linux.intel.com>,
-        Christophe Ricard <christophe.ricard@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        John Stultz <john.stultz@linaro.org>,
-        Dmitry Shmidt <dimitrysh@google.com>,
-        Todd Kjos <tkjos@google.com>,
-        Android Kernel Team <kernel-team@android.com>,
-        Suren Baghdasaryan <surenb@google.com>
-Subject: [RESEND][PATCH 4/4] NFC: fdp: Fix possible buffer overflow in WCS4000 NFC driver
-Date: Wed, 18 Apr 2018 15:35:04 +0530
-Message-Id: <1524045904-7005-5-git-send-email-amit.pundir@linaro.org> (sfid-20180418_120557_542918_DCD7BD60)
-In-Reply-To: <1524045904-7005-1-git-send-email-amit.pundir@linaro.org>
-References: <1524045904-7005-1-git-send-email-amit.pundir@linaro.org>
+Received: from mail.bugwerft.de ([46.23.86.59]:57028 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754207AbeDPNQo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Apr 2018 09:16:44 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
+        loic.poulain@linaro.org, rfried@codeaurora.org,
+        bjorn.andersson@linaro.org, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH 1/5] wcn36xx: abort scan request when 'dequeued' indicator is sent
+Date: Mon, 16 Apr 2018 15:16:30 +0200
+Message-Id: <20180416131634.25432-2-daniel@zonque.org> (sfid-20180416_151648_036820_6D00ED74)
+In-Reply-To: <20180416131634.25432-1-daniel@zonque.org>
+References: <20180416131634.25432-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Suren Baghdasaryan <surenb@google.com>
+When the firmware sends a WCN36XX_HAL_SCAN_IND_DEQUEUED indication,
+the request is apparently no longer valid. Attempts to stop the hardware
+scan request subsequently will lead to the following error message, and
+the hardware is no longer able to communicate with any AP:
 
-Possible buffer overflow when reading next_read_size bytes into
-tmp buffer after next_read_size was extracted from a previous packet.
+[   57.917186] wcn36xx: ERROR hal_stop_scan_offload response failed err=5
 
-Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
+Interpreting this indicator message as scan abortion fixes this.
+
+While at it, add a newline to a debug print.
+
+Signed-off-by: Daniel Mack <daniel@zonque.org>
 ---
- drivers/nfc/fdp/i2c.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/net/wireless/ath/wcn36xx/smd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/nfc/fdp/i2c.c b/drivers/nfc/fdp/i2c.c
-index c4da50e07bbc..08a4f82a2965 100644
---- a/drivers/nfc/fdp/i2c.c
-+++ b/drivers/nfc/fdp/i2c.c
-@@ -176,6 +176,16 @@ static int fdp_nci_i2c_read(struct fdp_i2c_phy *phy, struct sk_buff **skb)
- 		/* Packet that contains a length */
- 		if (tmp[0] == 0 && tmp[1] == 0) {
- 			phy->next_read_size = (tmp[2] << 8) + tmp[3] + 3;
-+			/*
-+			 * Ensure next_read_size does not exceed sizeof(tmp)
-+			 * for reading that many bytes during next iteration
-+			 */
-+			if (phy->next_read_size > FDP_NCI_I2C_MAX_PAYLOAD) {
-+				dev_dbg(&client->dev, "%s: corrupted packet\n",
-+					__func__);
-+				phy->next_read_size = 5;
-+				goto flush;
-+			}
- 		} else {
- 			phy->next_read_size = FDP_NCI_I2C_MIN_PAYLOAD;
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 297a785d0785..b7964f79d837 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -2140,10 +2140,11 @@ static int wcn36xx_smd_hw_scan_ind(struct wcn36xx *wcn, void *buf, size_t len)
+ 		return -EIO;
+ 	}
  
+-	wcn36xx_dbg(WCN36XX_DBG_HAL, "scan indication (type %x)", rsp->type);
++	wcn36xx_dbg(WCN36XX_DBG_HAL, "scan indication (type %x)\n", rsp->type);
+ 
+ 	switch (rsp->type) {
+ 	case WCN36XX_HAL_SCAN_IND_FAILED:
++	case WCN36XX_HAL_SCAN_IND_DEQUEUED:
+ 		scan_info.aborted = true;
+ 		/* fall through */
+ 	case WCN36XX_HAL_SCAN_IND_COMPLETED:
+@@ -2156,7 +2157,6 @@ static int wcn36xx_smd_hw_scan_ind(struct wcn36xx *wcn, void *buf, size_t len)
+ 		break;
+ 	case WCN36XX_HAL_SCAN_IND_STARTED:
+ 	case WCN36XX_HAL_SCAN_IND_FOREIGN_CHANNEL:
+-	case WCN36XX_HAL_SCAN_IND_DEQUEUED:
+ 	case WCN36XX_HAL_SCAN_IND_PREEMPTED:
+ 	case WCN36XX_HAL_SCAN_IND_RESTARTED:
+ 		break;
 -- 
-2.7.4
+2.14.3
