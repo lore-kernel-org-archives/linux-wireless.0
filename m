@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58810 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755968AbeDXFfI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 01:35:08 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        govinds@codeaurora.org, pillair@codeaurora.org,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH v2 4/4] ath10k: Enable sta idle power save
-References: <1523966821-21903-1-git-send-email-pillair@codeaurora.org>
-        <1523966821-21903-5-git-send-email-pillair@codeaurora.org>
-        <946e582c-2438-872b-eec8-25d9dcb994d9@dd-wrt.com>
-        <7a06a34a5fcb97e07a8d79b4d689e781@codeaurora.org>
-        <87604oodt4.fsf@kamboji.qca.qualcomm.com>
-        <a7dd1b94951725c61034f5be6744b725@codeaurora.org>
-        <8736zrjgq6.fsf@kamboji.qca.qualcomm.com>
-        <c48c1bae-04c9-55d0-fdb9-d9ae8f7cb843@dd-wrt.com>
-        <5AD9A1DF.6060007@broadcom.com>
-        <87wowxdirv.fsf@kamboji.qca.qualcomm.com>
-        <CAJ-Vmoky_ErN447XxvUw4fcHZPptzbBpfLU1eXSCbevhAayy8A@mail.gmail.com>
-Date: Tue, 24 Apr 2018 08:35:03 +0300
-In-Reply-To: <CAJ-Vmoky_ErN447XxvUw4fcHZPptzbBpfLU1eXSCbevhAayy8A@mail.gmail.com>
-        (Adrian Chadd's message of "Mon, 23 Apr 2018 09:41:06 -0700")
-Message-ID: <87bme9cgl4.fsf@kamboji.qca.qualcomm.com> (sfid-20180424_073533_466643_196631EF)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.bugwerft.de ([46.23.86.59]:37084 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753160AbeDQNX7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Apr 2018 09:23:59 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
+        loic.poulain@linaro.org, rfried@codeaurora.org,
+        bjorn.andersson@linaro.org, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH v2 3/5] wcn36xx: handle scan cancellation when firmware support is missing
+Date: Tue, 17 Apr 2018 15:23:35 +0200
+Message-Id: <20180417132337.31720-4-daniel@zonque.org> (sfid-20180417_152408_386568_84368EC7)
+In-Reply-To: <20180417132337.31720-1-daniel@zonque.org>
+References: <20180417132337.31720-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adrian Chadd <adrian@freebsd.org> writes:
+For firmwares that don't have the SCAN_OFFLOAD feature bit set, do
+not call into wcn36xx_smd_stop_hw_scan(). Instead, stop the asynchronous
+work and call into ieee80211_scan_completed() immediately.
 
-> On 23 April 2018 at 08:50, Kalle Valo <kvalo@codeaurora.org> wrote:
->
->>
->> Adrian was also commenting something similar about adding a debugfs
->> interface but I don't really see the point right now while we are adding
->> initial wcn3990 support. If someone wants to run measurements with and
->> without this parameter it's very easy to edit it out from the sources.
->> Later on we can consider making it dynamic if there's really the need
->> for that, but I'm very skeptic that anyone would even need that.
->
-> Hi!
->
-> We have at ${WORK}, because we've found various devices (atheros and
-> qualcomm and QCA and otherwise) have this nasty habit of trying to
-> guess when a good time to clock-gate down is, but we're busy doing low
-> latency audio/video.
->
-> 10, 20ms may not be a lot of latency for bulk data but that's a half
-> to one of a video frame in my world. :-)
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+---
+ drivers/net/wireless/ath/wcn36xx/main.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
-Sure, I get that. But we should discuss making a setting like this
-dynamic once we have a test case and numbers showing that it's needed,
-otherwise it's just unnecessary cruft.
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 08b6939d3f57..e3b91b3b38ef 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -687,10 +687,18 @@ static void wcn36xx_cancel_hw_scan(struct ieee80211_hw *hw,
+ 	wcn->scan_aborted = true;
+ 	mutex_unlock(&wcn->scan_lock);
+ 
+-	/* ieee80211_scan_completed will be called on FW scan indication */
+-	wcn36xx_smd_stop_hw_scan(wcn);
++	if (get_feat_caps(wcn->fw_feat_caps, SCAN_OFFLOAD)) {
++		/* ieee80211_scan_completed will be called on FW scan
++		 * indication */
++		wcn36xx_smd_stop_hw_scan(wcn);
++	} else {
++		struct cfg80211_scan_info scan_info = {
++			.aborted = true,
++		};
+ 
+-	cancel_work_sync(&wcn->scan_work);
++		cancel_work_sync(&wcn->scan_work);
++		ieee80211_scan_completed(wcn->hw, &scan_info);
++	}
+ }
+ 
+ static void wcn36xx_update_allowed_rates(struct ieee80211_sta *sta,
 -- 
-Kalle Valo
+2.14.3
