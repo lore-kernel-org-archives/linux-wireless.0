@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35964 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752727AbeDRKFP (ORCPT
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:46473 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750811AbeDQW10 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 06:05:15 -0400
-Received: by mail-pf0-f194.google.com with SMTP id g14so668654pfh.3
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2018 03:05:15 -0700 (PDT)
-From: Amit Pundir <amit.pundir@linaro.org>
-To: lkml <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Cc: Samuel Ortiz <sameo@linux.intel.com>,
-        Christophe Ricard <christophe.ricard@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        John Stultz <john.stultz@linaro.org>,
-        Dmitry Shmidt <dimitrysh@google.com>,
-        Todd Kjos <tkjos@google.com>,
-        Android Kernel Team <kernel-team@android.com>,
-        Suren Baghdasaryan <surenb@google.com>
-Subject: [RESEND][PATCH 1/4] NFC: st21nfca: Fix out of bounds kernel access when handling ATR_REQ
-Date: Wed, 18 Apr 2018 15:35:01 +0530
-Message-Id: <1524045904-7005-2-git-send-email-amit.pundir@linaro.org> (sfid-20180418_120644_206792_A54C60F1)
-In-Reply-To: <1524045904-7005-1-git-send-email-amit.pundir@linaro.org>
-References: <1524045904-7005-1-git-send-email-amit.pundir@linaro.org>
+        Tue, 17 Apr 2018 18:27:26 -0400
+Received: by mail-wr0-f196.google.com with SMTP id d1so39606765wrj.13
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2018 15:27:25 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76x2: fix is_mt7612 routine
+Date: Wed, 18 Apr 2018 00:27:18 +0200
+Message-Id: <20180417222718.17039-1-lorenzo.bianconi@redhat.com> (sfid-20180418_002729_347399_AF75BCEA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Suren Baghdasaryan <surenb@google.com>
+Fix is_mt7612 routine since asic version is set in mt76_dev revision
+field and not in mt76x2_dev one.
+Moreover remove mt76x2_dev rev field since it is never used in the
+driver
 
-Out of bounds kernel accesses in st21nfca's NFC HCI layer
-might happen when handling ATR_REQ events if user-specified
-atr_req->length is bigger than the buffer size. In
-that case memcpy() inside st21nfca_tm_send_atr_res() will
-read extra bytes resulting in OOB read from the kernel heap.
-
-Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
+Fixes: 7bc04215a66b ('mt76: add driver code for MT76x2e')
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/nfc/st21nfca/dep.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt76x2.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/nfc/st21nfca/dep.c b/drivers/nfc/st21nfca/dep.c
-index fd08be2917e6..3420c5104c94 100644
---- a/drivers/nfc/st21nfca/dep.c
-+++ b/drivers/nfc/st21nfca/dep.c
-@@ -217,7 +217,8 @@ static int st21nfca_tm_recv_atr_req(struct nfc_hci_dev *hdev,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+index 783b8122ec3c..a5d1255e4b9c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+@@ -117,7 +117,6 @@ struct mt76x2_dev {
+ 	u8 beacon_mask;
+ 	u8 beacon_data_mask;
  
- 	atr_req = (struct st21nfca_atr_req *)skb->data;
+-	u32 rev;
+ 	u32 rxfilter;
  
--	if (atr_req->length < sizeof(struct st21nfca_atr_req)) {
-+	if (atr_req->length < sizeof(struct st21nfca_atr_req) ||
-+	    atr_req->length > skb->len) {
- 		r = -EPROTO;
- 		goto exit;
- 	}
+ 	u16 chainmask;
+@@ -151,7 +150,7 @@ struct mt76x2_sta {
+ 
+ static inline bool is_mt7612(struct mt76x2_dev *dev)
+ {
+-	return (dev->rev >> 16) == 0x7612;
++	return mt76_chip(&dev->mt76) == 0x7612;
+ }
+ 
+ void mt76x2_set_irq_mask(struct mt76x2_dev *dev, u32 clear, u32 set);
 -- 
-2.7.4
+2.16.3
