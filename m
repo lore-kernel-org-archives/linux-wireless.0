@@ -1,75 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:35730 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751318AbeDEHlz (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52534 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751907AbeDQJ1h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Apr 2018 03:41:55 -0400
-Received: by mail-wm0-f46.google.com with SMTP id r82so4186900wme.0
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Apr 2018 00:41:55 -0700 (PDT)
-Subject: Re: Wi-Fi Disconnection on Suspend for no wowlan triggers
-To: Steve deRosier <derosier@gmail.com>,
-        Sunil Dutt Undekari <usdutt@qti.qualcomm.com>
-References: <0663e93cc5ca45e6b7191760414b1189@aphydexm01f.ap.qualcomm.com>
- <CALLGbRJgAtOdZ1puzfgpWxc_ZrDVmWXtmFrBu=-gA0C++WrLoA@mail.gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        Jouni Malinen <jouni@qca.qualcomm.com>,
-        Amarnath Hullur Subramanyam <amarnath@qti.qualcomm.com>,
-        Rajesh Chauhan <rajeshc@qti.qualcomm.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AC5D33F.4090100@broadcom.com> (sfid-20180405_094200_504747_90E0C585)
-Date: Thu, 5 Apr 2018 09:41:51 +0200
+        Tue, 17 Apr 2018 05:27:37 -0400
 MIME-Version: 1.0
-In-Reply-To: <CALLGbRJgAtOdZ1puzfgpWxc_ZrDVmWXtmFrBu=-gA0C++WrLoA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 17 Apr 2018 14:57:36 +0530
+From: pillair@codeaurora.org
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: ath10k: Enable hw checksum for wcn3990
+In-Reply-To: <20180416131652.E274C606AC@smtp.codeaurora.org>
+References: <1522993544-15279-1-git-send-email-pillair@codeaurora.org>
+ <20180416131652.E274C606AC@smtp.codeaurora.org>
+Message-ID: <b82378df7d86887170e650305c6f224b@codeaurora.org> (sfid-20180417_112741_243527_A240DCE8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/3/2018 6:55 PM, Steve deRosier wrote:
-> Hi Sunil,
->
-> On Tue, Apr 3, 2018 at 5:39 AM, Sunil Dutt Undekari
-> <usdutt@qti.qualcomm.com> wrote:
->> Hi All ,
->>
->> I would like to discuss on the commit 8125696991194aacb1173b6e8196d19098b44e17 (cfg80211/mac80211: disconnect on suspend) which triggers the STA disconnection on suspend if no wowlan triggers are registered.
->
-> This commit went in over five years ago. Sometime around v3.9
->
->> I guess the intention here is to disconnect from the AP if the device cannot wake up on a packet / not configured with wowlan triggers .
->
-> It being a long time and not feeling like digging too deep into the
-> patch, what I can guess from a quick look is basically this:
->
-> * Before the patch, waking up from suspend would throw warnings into
-> the log. This patch fixes this.
-> * As you can't wake the processor, and you're a thin-mac chip who
-> depends on mac80211, you _can't_ do anything without wowlan.
-> * If your chip is not configured for wowlan, on a suspend, it might as
-> well go to sleep, as there's no sense in wasting power as you can't do
-> anything anyway.
-> * If you're going to sleep and can't respond to the AP, it's polite to
-> disconnect. And the AP is going to forcibly do so to you anyway after
-> some time of not hearing from you.
->
-> Hence the above in general concept seems perfectly correct and I don't
-> see any point in doing anything else with a mac80211 device.
->
->> Can this behavior get enhanced to only do so on driver's preference -  do a disconnect for only the host drivers that would want to do so (through an additional feature capability) ?
->>
->
-> Can? Perhaps. Send a patch. And maybe you could explain in detail what
-> the actual problem is you're trying to solve. Patches that are "maybe,
-> someday, someone might want to..." don't have a terribly high chance
-> of getting merged.  But solutions to real-life actual problems do. And
-> it's really difficult for us to speak on vague hypothetical musings.
+Hi Kalle,
 
-So for a full-mac device or a mac80211 device with certain offloads 
-(that we may already have, eg. 4way-hs offloads) you could keep up the 
-connection for a while, but if it is receiving data it probably wants to 
-wake-up the host at some point. So if such a device has means to do a 
-host wake-up you could keep the connection upon suspend. You could 
-consider such behavior a wowlan trigger as well and extend that.
+The ath10k-check warning has been corrected and I have sent the v2 for 
+the same.
 
-Regards,
-Arend
+Thanks,
+Rakesh Pillai.
+
+On 2018-04-16 18:46, Kalle Valo wrote:
+> Rakesh Pillai <pillair@codeaurora.org> wrote:
+> 
+>> By default ath10k driver enables the support for HW_CHECKSUM
+>> (NETIF_F_HW_CSUM). Since the TCP/UDP checksum calculation is not 
+>> enabled
+>> in the wcn3990 firmware the checksum is incorrect in the TCP/UDP 
+>> packets
+>> and all patckets are dropped. But due note that wcn3990 support in
+>> ath10k is still incomplete so this isn't a critical fix (yet).
+>> 
+>> Enable hw checksum calculations in wcn3990 hardware by
+>> setting the proper flags in msdu descriptor tso flags.
+>> 
+>> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> 
+> Introduces a new sparse warning:
+> 
+> potku:~/ath10k/src/ath$ ath10k-check
+> drivers/net/wireless/ath/ath10k/htt_tx.c:1480:47: warning: invalid
+> assignment: |=
+> drivers/net/wireless/ath/ath10k/htt_tx.c:1480:47:    left side has
+> type restricted __le32
+> drivers/net/wireless/ath/ath10k/htt_tx.c:1480:47:    right side has
+> type unsigned long
+> 
+> Patch set to Changes Requested.
