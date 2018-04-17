@@ -1,54 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:6278 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753727AbeDRLk7 (ORCPT
+Received: from mail-yb0-f193.google.com ([209.85.213.193]:35607 "EHLO
+        mail-yb0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751183AbeDQIWR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 07:40:59 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 16/22] staging: wilc1000: remove the use of goto label in wilc_spi_read_int()
-Date: Wed, 18 Apr 2018 17:09:18 +0530
-Message-ID: <1524051564-15497-17-git-send-email-ajay.kathat@microchip.com> (sfid-20180418_134101_796868_94DC9344)
-In-Reply-To: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 17 Apr 2018 04:22:17 -0400
+Received: by mail-yb0-f193.google.com with SMTP id c1-v6so8061089ybm.2
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2018 01:22:16 -0700 (PDT)
+Subject: Re: [PATCH 2/2] ath10k: support MAC address randomization in scan
+To: Brian Norris <briannorris@chromium.org>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org>
+ <1522379640-6442-3-git-send-email-cjhuang@codeaurora.org>
+ <20180412205954.GA34456@rodete-desktop-imager.corp.google.com>
+ <e16557d0891352ae0b83902faee97023@codeaurora.org>
+ <877epbs5v7.fsf@kamboji.qca.qualcomm.com> <5AD11D7C.1030603@broadcom.com>
+ <242be71eb87140c9560163c4000255b2@codeaurora.org>
+ <8736zvqtcw.fsf@kamboji.qca.qualcomm.com>
+ <20180417002854.GA186697@rodete-desktop-imager.corp.google.com>
+Cc: cjhuang@codeaurora.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AD5AEB5.1040808@broadcom.com> (sfid-20180417_102422_978533_3F0004EE)
+Date: Tue, 17 Apr 2018 10:22:13 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180417002854.GA186697@rodete-desktop-imager.corp.google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In wilc_spi_read_int() remove the use of goto label '_fail_'. Changes
-are done to avoid the use of '_' in label name.
+On 4/17/2018 2:28 AM, Brian Norris wrote:
+> Hi,
+>
+> On Mon, Apr 16, 2018 at 02:32:47PM +0300, Kalle Valo wrote:
+>> cjhuang@codeaurora.org writes:
+>>> On 2018-04-14 05:13, Arend van Spriel wrote:
+>>>> On 4/13/2018 1:28 PM, Kalle Valo wrote:
+>>>>> cjhuang@codeaurora.org writes:
+>>>>>
+>>>>>>>> +	if (test_bit(WMI_SERVICE_SPOOF_MAC_SUPPORT, ar->wmi.svc_map)) {
+>>>>>>>> +		ret = ath10k_wmi_scan_prob_req_oui(ar, ar->mac_addr);
+>>>>>>>> +		if (ret) {
+>>>>>>>> +			ath10k_err(ar, "failed to set prob req oui: %i\n", ret);
+>>>>>>>> +			goto err_dfs_detector_exit;
+>>>>>>>> +		}
+>>>>>>>> +
+>>>>>>>> +		ar->hw->wiphy->features |=
+>>>>>>>> +			NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
+>>>>>>>
+>>>>>>> Do you support NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR too?
+>>>>>>
+>>>>>> I'll add this flag too.
+>>>>>
+>>>>> Are you going to send v2 or what's the plan?
+>>>>
+>>>> Maybe a stupid question, but does ath10k support scheduled scan?
+>
+> Not a stupid question. Sorry for not asking that first.
+>
+>> AFAICS ath10k does not support it (sched_scan_start() op).
+>
+> Right, that seems to be the case.
+>
+>>> The reason is AVL test case needs this flag to enable random mac
+>>> address scan. Maybe Brian Can explain why this flag is necessary.
+>
+> I never actually claimed you *needed* this flag; I just wondered how you
+> claimed to pass our test when you did not support this flag, since our
+> network manager currently checks for both
+> NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR and
+> NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR before enabling MAC
+> randomization in scans. But that's no matter to worry about here.
+>
+>> If ath10k does not support scheduled scan what's the point? Shouldn't
+>> the test case then be it fixed instead of making hacks in ath10k?
+>
+> Indeed. We're trying to work that out right now.
+>
+> It looks like the status quo for looking for SCHED_SCAN support is to
+> check if NL80211_CMD_START_SCHED_SCAN shows up in the command support
+> list. (IOW, that's what wpa_supplicant does.) We'll probably need to
+> imitate that.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_spi.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+I believe checking command support is not really recommended. Instead, 
+you better check NL80211_ATTR_SCHED_SCAN_MAX_REQS being non-zero (since 
+kernel 4.12 that is).
 
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 57e4f11..1db2814 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -946,7 +946,7 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
- 	if (!ret) {
- 		dev_err(&spi->dev,
- 			"Failed read WILC_VMM_TO_HOST_SIZE ...\n");
--		goto _fail_;
-+		return ret;
- 	}
- 	tmp = (byte_cnt >> 2) & IRQ_DMA_WD_CNT_MASK;
- 
-@@ -976,7 +976,6 @@ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
- 
- 	*int_status = tmp;
- 
--_fail_:
- 	return ret;
- }
- 
--- 
-2.7.4
+Regards,
+Arend
