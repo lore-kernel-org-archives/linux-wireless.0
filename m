@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:5534 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756000AbeDYRTW (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39958 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751183AbeDQHGl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 13:19:22 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 00/21] staging: wilc1000: remove unused code and reorder functions 
-Date: Wed, 25 Apr 2018 22:48:05 +0530
-Message-ID: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180425_191932_460216_51B0792D)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 17 Apr 2018 03:06:41 -0400
+Message-ID: <1dfacb56f2ab9a1a38a7cb78326a4f96973cf622.camel@coelho.fi> (sfid-20180417_090643_655588_361E2CEA)
+From: Luca Coelho <luca@coelho.fi>
+To: Colin King <colin.king@canonical.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 17 Apr 2018 10:06:33 +0300
+In-Reply-To: <20180411130533.11827-1-colin.king@canonical.com>
+References: <20180411130533.11827-1-colin.king@canonical.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH][next] iwlwifi: mvm: remove division by size of
+ sizeof(struct ieee80211_wmm_rule)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series contains fixes to remove the unused code. It also has patches
-to reorganize the function and simplify the function logic.
+On Wed, 2018-04-11 at 14:05 +0100, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> The subtraction of two struct ieee80211_wmm_rule pointers leaves a
+> result
+> that is automatically scaled down by the size of the size of pointed-
+> to
+> type, hence the division by sizeof(struct ieee80211_wmm_rule) is
+> bogus and should be removed.
+> 
+> Detected by CoverityScan, CID#1467777 ("Extra sizeof expression")
+> 
+> Fixes: 77e30e10ee28 ("iwlwifi: mvm: query regdb for wmm rule if
+> needed")
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
 
-Ajay Singh (21):
-  staging: wilc1000: replace crc7_byte() with inline macro CRC7_BYTE
-  staging: wilc1000: align the #define in wilc_spi file
-  staging: wilc1000: remove unnecessary assingment from 'if' conditions
-  staging: wilc1000: remove 'cmd' variable in wilc_spi functions
-  staging: wicl1000: removed the unsed variables in
-    wilc_parse_network_info()
-  staging: wilc1000: remove inner {} in wilc_parse_network_info()
-  staging: wilc1000: simplified if conditions in spi_data_write()
-  staging: wilc1000: remove unused variable scan_while_connected
-  staging: wilc1000: remove unsed typedef wilc_debug_func
-  staging: wilc1000: remove used #define HIF_SDIO_GPIO_IRQ
-  staging: wilc1000: remove unused #define related to MAC status
-  staging: wilc1000: rename mac status macros and moved related #define
-    together
-  staging: wilc1000: rename WILC_WFI_stats to avoid uppercase
-  staging: wilc1000: rename num_reg_frame macro to have uppercase in
-    macro name
-  staging: wilc1000: rename wlan init and deinit function prefixed with
-    wil1000
-  staging: wilc1000: remove unused elements in 'wilc_priv' struct
-  staging: wilc1000: remove unused enum 'stats_flags'
-  staging: wilc1000: rename P2P_LISTEN_STATE variable to use lowercase
-  staging: wilc1000: remove inner block '{}' in handle_remain_on_chan()
-  staging: wilc1000: change function to static in linux_wlan
-  staging: wilc1000: reorder functions to avoid forward declaration in
-    linux_wlan
+Thanks, Colin! I've pushed this to our internal tree for review and if
+everything goes fine it will land upstream following our normal
+upstreaming process.
 
- drivers/staging/wilc1000/coreconfigurator.c       |  84 +++++++--------
- drivers/staging/wilc1000/host_interface.c         |  64 ++++--------
- drivers/staging/wilc1000/linux_wlan.c             | 122 ++++++++++------------
- drivers/staging/wilc1000/wilc_sdio.c              |  12 +--
- drivers/staging/wilc1000/wilc_spi.c               |  70 ++++++-------
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |   2 +-
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  23 +---
- drivers/staging/wilc1000/wilc_wlan.h              |   7 --
- drivers/staging/wilc1000/wilc_wlan_if.h           |  11 +-
- 9 files changed, 158 insertions(+), 237 deletions(-)
-
--- 
-2.7.4
+--
+Cheers,
+Luca.
