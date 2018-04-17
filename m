@@ -1,82 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:43855 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751038AbeDEMWh (ORCPT
+Received: from mail-pl0-f66.google.com ([209.85.160.66]:40798 "EHLO
+        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754434AbeDQQHU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Apr 2018 08:22:37 -0400
-Received: by mail-wr0-f194.google.com with SMTP id p53so28061830wrc.10
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Apr 2018 05:22:36 -0700 (PDT)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Gertjan van Wingerde <gwingerde@gmail.com>,
-        Jakub Kicinski <jakub.kicinski@netronome.com>,
-        wireless newbie <wnewbie72@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux wireless ml <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wireless: rt2x00: rt2800: add antenna diversity for RT5370G
-Date: Thu,  5 Apr 2018 14:22:32 +0200
-Message-Id: <20180405122232.1694-1-xose.vazquez@gmail.com> (sfid-20180405_142240_977126_7B411586)
-To: unlisted-recipients:; (no To-header on input)
+        Tue, 17 Apr 2018 12:07:20 -0400
+Received: by mail-pl0-f66.google.com with SMTP id t22-v6so3620242plo.7
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2018 09:07:20 -0700 (PDT)
+Date: Tue, 17 Apr 2018 09:07:17 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, cjhuang@codeaurora.org,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 2/2] ath10k: support MAC address randomization in scan
+Message-ID: <20180417160715.GA255263@rodete-desktop-imager.corp.google.com> (sfid-20180417_180752_052270_468E6995)
+References: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org>
+ <1522379640-6442-3-git-send-email-cjhuang@codeaurora.org>
+ <20180412205954.GA34456@rodete-desktop-imager.corp.google.com>
+ <e16557d0891352ae0b83902faee97023@codeaurora.org>
+ <877epbs5v7.fsf@kamboji.qca.qualcomm.com>
+ <5AD11D7C.1030603@broadcom.com>
+ <242be71eb87140c9560163c4000255b2@codeaurora.org>
+ <8736zvqtcw.fsf@kamboji.qca.qualcomm.com>
+ <20180417002854.GA186697@rodete-desktop-imager.corp.google.com>
+ <5AD5AEB5.1040808@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5AD5AEB5.1040808@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RT5370G has hardware RX antenna diversity like RT5390R.
-Based on DPO_RT5572_LinuxSTA_2.6.1.3_20121022.tar.bz2 manufacturer driver:
-https://d86o2zu8ugzlg.cloudfront.net/mediatek-craft/drivers/DPO_RT5572_LinuxSTA_2.6.1.3_20121022.tar.bz2
+On Tue, Apr 17, 2018 at 10:22:13AM +0200, Arend van Spriel wrote:
+> On 4/17/2018 2:28 AM, Brian Norris wrote:
+> > It looks like the status quo for looking for SCHED_SCAN support is to
+> > check if NL80211_CMD_START_SCHED_SCAN shows up in the command support
+> > list. (IOW, that's what wpa_supplicant does.) We'll probably need to
+> > imitate that.
+> 
+> I believe checking command support is not really recommended. Instead, you
+> better check NL80211_ATTR_SCHED_SCAN_MAX_REQS being non-zero (since kernel
+> 4.12 that is).
 
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Jakub Kicinski <jakub.kicinski@netronome.com>
-Cc: wireless newbie <wnewbie72@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux wireless ml <linux-wireless@vger.kernel.org>
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800.h    | 1 +
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 9 ++++++---
- 2 files changed, 7 insertions(+), 3 deletions(-)
+Why not? Command support checking is what wpa_supplicant is doing.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-index 6a8c93fb6a43..7a133e94b1bf 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-@@ -94,6 +94,7 @@
- #define REV_RT3390E			0x0211
- #define REV_RT3593E			0x0211
- #define REV_RT5390F			0x0502
-+#define REV_RT5370G			0x0503
- #define REV_RT5390R			0x1502
- #define REV_RT5592C			0x0221
- 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 429d07b651dd..e827dc522580 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -6220,8 +6220,9 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
- 		rt2800_register_write(rt2x00dev, GPIO_CTRL, reg);
- 	}
- 
--	/* This chip has hardware antenna diversity*/
--	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R)) {
-+	/* These chips have hardware RX antenna diversity */
-+	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R) ||
-+	    rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5370G)) {
- 		rt2800_bbp_write(rt2x00dev, 150, 0); /* Disable Antenna Software OFDM */
- 		rt2800_bbp_write(rt2x00dev, 151, 0); /* Disable Antenna Software CCK */
- 		rt2800_bbp_write(rt2x00dev, 154, 0); /* Clear previously selected antenna */
-@@ -8748,7 +8749,9 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 		rt2x00dev->default_ant.rx = ANTENNA_A;
- 	}
- 
--	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R)) {
-+	/* These chips have hardware RX antenna diversity */
-+	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R) ||
-+	    rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5370G)) {
- 		rt2x00dev->default_ant.tx = ANTENNA_HW_DIVERSITY; /* Unused */
- 		rt2x00dev->default_ant.rx = ANTENNA_HW_DIVERSITY; /* Unused */
- 	}
--- 
-2.14.3
+I noticed NL80211_ATTR_SCHED_SCAN_MAX_REQS, but unfortunately, we have
+to support older kernels. It looks like randomization was added in
+v3.19, and as you point out, that's only available in v4.12.
+
+I welcome other alternatives if you have them to offer.
+
+Brian
