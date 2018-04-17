@@ -1,88 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f178.google.com ([209.85.192.178]:46074 "EHLO
-        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754046AbeDBBy1 (ORCPT
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:36068 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752684AbeDQVtQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 1 Apr 2018 21:54:27 -0400
-Date: Mon, 2 Apr 2018 10:54:22 +0900
-From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: syzbot <syzbot+3f28bd18291266ec826b@syzkaller.appspotmail.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Petr Mladek <pmladek@suse.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        syzkaller-bugs@googlegroups.com,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        David Miller <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Subject: Re: INFO: rcu detected stall in vprintk_func
-Message-ID: <20180402015422.GA3795@jagdpanzerIV> (sfid-20180402_035455_805093_0E2293F2)
-References: <001a113fe6c0a6ec650568c7384f@google.com>
- <CACT4Y+YxuvQLZjWau99-7i8dmtxtjnpX6uteabF5rorYMj5v1w@mail.gmail.com>
+        Tue, 17 Apr 2018 17:49:16 -0400
+Received: by mail-wr0-f193.google.com with SMTP id q13so36011862wre.3
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2018 14:49:15 -0700 (PDT)
+Subject: Re: [PATCH 2/2] ath10k: support MAC address randomization in scan
+To: Brian Norris <briannorris@chromium.org>
+References: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org>
+ <1522379640-6442-3-git-send-email-cjhuang@codeaurora.org>
+ <20180412205954.GA34456@rodete-desktop-imager.corp.google.com>
+ <e16557d0891352ae0b83902faee97023@codeaurora.org>
+ <877epbs5v7.fsf@kamboji.qca.qualcomm.com> <5AD11D7C.1030603@broadcom.com>
+ <242be71eb87140c9560163c4000255b2@codeaurora.org>
+ <8736zvqtcw.fsf@kamboji.qca.qualcomm.com>
+ <20180417002854.GA186697@rodete-desktop-imager.corp.google.com>
+ <5AD5AEB5.1040808@broadcom.com>
+ <20180417160715.GA255263@rodete-desktop-imager.corp.google.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, cjhuang@codeaurora.org,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AD66BD9.4000706@broadcom.com> (sfid-20180417_234927_986247_705E1FDB)
+Date: Tue, 17 Apr 2018 23:49:13 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACT4Y+YxuvQLZjWau99-7i8dmtxtjnpX6uteabF5rorYMj5v1w@mail.gmail.com>
+In-Reply-To: <20180417160715.GA255263@rodete-desktop-imager.corp.google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On (04/01/18 12:51), Dmitry Vyukov wrote:
-[..]
-> > IMPORTANT: if you fix the bug, please add the following tag to the commit:
-> > Reported-by: syzbot+3f28bd18291266ec826b@syzkaller.appspotmail.com
-> > It will help syzbot understand when the bug is fixed. See footer for
-> > details.
-> > If you forward the report, please keep this part and the footer.
-> >
-> > llcp: nfc_llcp_send_ui_frame: Could not allocate PDU
-> > llcp: nfc_llcp_send_ui_frame: Could not allocate PDU
-> > llcp: nfc_llcp_send_ui_frame: Could not allocate PDU
-> > llcp: nfc_llcp_send_ui_frame: Could not allocate PDU
+On 4/17/2018 6:07 PM, Brian Norris wrote:
+> On Tue, Apr 17, 2018 at 10:22:13AM +0200, Arend van Spriel wrote:
+>> On 4/17/2018 2:28 AM, Brian Norris wrote:
+>>> It looks like the status quo for looking for SCHED_SCAN support is to
+>>> check if NL80211_CMD_START_SCHED_SCAN shows up in the command support
+>>> list. (IOW, that's what wpa_supplicant does.) We'll probably need to
+>>> imitate that.
+>>
+>> I believe checking command support is not really recommended. Instead, you
+>> better check NL80211_ATTR_SCHED_SCAN_MAX_REQS being non-zero (since kernel
+>> 4.12 that is).
+>
+> Why not? Command support checking is what wpa_supplicant is doing.
 
-Yes, this thing
+That's not really a good argument. A couple (or more) years ago 
+wpa_supplicant was not doing nl80211 but wext and some other using 
+driver private ioctls, but that did not make it the best approach.
 
-	do {
-		remote_miu = sock->remote_miu > LLCP_MAX_MIU ?
-				local->remote_miu : sock->remote_miu;
+The START_SCHED_SCAN command is indeed still provided to user-space:
 
-		frag_len = min_t(size_t, remote_miu, remaining_len);
+@@ -1376,7 +1377,7 @@ static int nl80211_add_commands_unsplit(struct 
+cfg80211_r
+                 CMD(tdls_mgmt, TDLS_MGMT);
+                 CMD(tdls_oper, TDLS_OPER);
+         }
+-       if (rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN)
++       if (rdev->wiphy.max_sched_scan_reqs)
+                 CMD(sched_scan_start, START_SCHED_SCAN);
+         CMD(probe_client, PROBE_CLIENT);
+         CMD(set_noack_map, SET_NOACK_MAP);
 
-		pr_debug("Fragment %zd bytes remaining %zd",
-			 frag_len, remaining_len);
+It was left in because existing user-space apps might depend on it.
 
-		pdu = nfc_alloc_send_skb(sock->dev, &sock->sk, MSG_DONTWAIT,
-					 frag_len + LLCP_HEADER_SIZE, &err);
-		if (pdu == NULL) {
-			pr_err("Could not allocate PDU\n");
-			continue;
-			^^^^^^^^
-		}
+> I noticed NL80211_ATTR_SCHED_SCAN_MAX_REQS, but unfortunately, we have
+> to support older kernels. It looks like randomization was added in
+> v3.19, and as you point out, that's only available in v4.12.
 
-is basically
+I figured that would be the issue so I dug up the kernel version.
 
-	do {
-		pr_err("Could not allocate PDU\n");
-	} while (1)
+> I welcome other alternatives if you have them to offer.
 
-Can cause problems sometimes. But this loop is a bit worrisome
-even without the printk() call.
+Nope. Not if you want to be kernel version agnostic.
 
->From printk() side, we only can do rate limiting here. Would be
-great if nfc maintainers could take a look and tweak the loop
-maybe.
-
----
-
-diff --git a/net/nfc/llcp_core.c b/net/nfc/llcp_core.c
-index ef4026a23e80..a309a27581da 100644
---- a/net/nfc/llcp_core.c
-+++ b/net/nfc/llcp_core.c
-@@ -1386,7 +1386,7 @@ static void nfc_llcp_recv_agf(struct nfc_llcp_local *local, struct sk_buff *skb)
- 
- 		new_skb = nfc_alloc_recv_skb(pdu_len, GFP_KERNEL);
- 		if (new_skb == NULL) {
--			pr_err("Could not allocate PDU\n");
-+			pr_err_ratelimited("Could not allocate PDU\n");
- 			return;
- 		}
- 
+Regards,
+Arend
