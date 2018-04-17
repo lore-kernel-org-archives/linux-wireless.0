@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f181.google.com ([74.125.82.181]:44839 "EHLO
-        mail-ot0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751112AbeDLLqt (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 07:46:49 -0400
-Received: by mail-ot0-f181.google.com with SMTP id p33-v6so5605566otp.11
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2018 04:46:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180412111311.28809-1-daniel@zonque.org>
-References: <20180412111311.28809-1-daniel@zonque.org>
-From: Loic Poulain <loic.poulain@linaro.org>
-Date: Thu, 12 Apr 2018 13:46:07 +0200
-Message-ID: <CAMZdPi98WH59nxV08wHcyAoDB06T3ptNT=E9C8S6RK_Yg1pKnQ@mail.gmail.com> (sfid-20180412_134652_854264_0E554EA2)
-Subject: Re: [PATCH] wcn36xx: pass correct BSS index when deleting BSS keys
-To: Daniel Mack <daniel@zonque.org>
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Ramon Fried <rfried@codeaurora.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail.bugwerft.de ([46.23.86.59]:37064 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753337AbeDQNX5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Apr 2018 09:23:57 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
+        loic.poulain@linaro.org, rfried@codeaurora.org,
+        bjorn.andersson@linaro.org, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH v2 1/5] wcn36xx: abort scan request when 'dequeued' indicator is sent
+Date: Tue, 17 Apr 2018 15:23:33 +0200
+Message-Id: <20180417132337.31720-2-daniel@zonque.org> (sfid-20180417_152401_570137_2057B933)
+In-Reply-To: <20180417132337.31720-1-daniel@zonque.org>
+References: <20180417132337.31720-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+When the firmware sends a WCN36XX_HAL_SCAN_IND_DEQUEUED indication,
+the request is apparently no longer valid. Attempts to stop the hardware
+scan request subsequently will lead to the following error message, and
+the hardware is no longer able to communicate with any AP:
 
-> @@ -564,10 +565,13 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
->                 break;
->         case DISABLE_KEY:
->                 if (!(IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags)) {
-> +                       if (vif_priv->bss_index != WCN36XX_HAL_BSS_INVALID_IDX)
-> +                               wcn36xx_smd_remove_bsskey(wcn,
-> +                                       vif_priv->encrypt_type,
-> +                                       vif_priv->bss_index,
-> +                                       key_conf->keyidx);
-> +
->                         vif_priv->encrypt_type = WCN36XX_HAL_ED_NONE;
-> -                       wcn36xx_smd_remove_bsskey(wcn,
-> -                               vif_priv->encrypt_type,
-> -                               key_conf->keyidx);
+[   57.917186] wcn36xx: ERROR hal_stop_scan_offload response failed err=5
 
-Note that moving vif_priv->encrypt_type = WCN36XX_HAL_ED_NONE after
-key removal also fixes an issue I observed in AP mode:
-wcn36xx: ERROR hal_remove_bsskey response failed err=6
+Interpreting this indicator message as scan abortion fixes this.
 
-Indeed, trying to remove a key with non-matching encrypt type fails,
-keeping the right encrypt_type for removal fixes the issue.
+While at it, add a newline to a debug print.
 
-Patch looks good.
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Regards,
-Loic
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 297a785d0785..b7964f79d837 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -2140,10 +2140,11 @@ static int wcn36xx_smd_hw_scan_ind(struct wcn36xx *wcn, void *buf, size_t len)
+ 		return -EIO;
+ 	}
+ 
+-	wcn36xx_dbg(WCN36XX_DBG_HAL, "scan indication (type %x)", rsp->type);
++	wcn36xx_dbg(WCN36XX_DBG_HAL, "scan indication (type %x)\n", rsp->type);
+ 
+ 	switch (rsp->type) {
+ 	case WCN36XX_HAL_SCAN_IND_FAILED:
++	case WCN36XX_HAL_SCAN_IND_DEQUEUED:
+ 		scan_info.aborted = true;
+ 		/* fall through */
+ 	case WCN36XX_HAL_SCAN_IND_COMPLETED:
+@@ -2156,7 +2157,6 @@ static int wcn36xx_smd_hw_scan_ind(struct wcn36xx *wcn, void *buf, size_t len)
+ 		break;
+ 	case WCN36XX_HAL_SCAN_IND_STARTED:
+ 	case WCN36XX_HAL_SCAN_IND_FOREIGN_CHANNEL:
+-	case WCN36XX_HAL_SCAN_IND_DEQUEUED:
+ 	case WCN36XX_HAL_SCAN_IND_PREEMPTED:
+ 	case WCN36XX_HAL_SCAN_IND_RESTARTED:
+ 		break;
+-- 
+2.14.3
