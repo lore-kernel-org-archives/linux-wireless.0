@@ -1,70 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39860 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:36380 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750782AbeDLEEv (ORCPT
+        with ESMTP id S1751085AbeDQH3O (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 00:04:51 -0400
-From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH] ath10k:add support for multicast rate control
-Date: Wed, 11 Apr 2018 21:04:46 -0700
-Message-Id: <1523505886-14695-1-git-send-email-pradeepc@codeaurora.org> (sfid-20180412_060455_943238_89FD7E4F)
+        Tue, 17 Apr 2018 03:29:14 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 17 Apr 2018 15:29:13 +0800
+From: cjhuang@codeaurora.org
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [2/2] ath10k: support MAC address randomization in scan
+In-Reply-To: <20180416134238.B16596076A@smtp.codeaurora.org>
+References: <1522379640-6442-3-git-send-email-cjhuang@codeaurora.org>
+ <20180416134238.B16596076A@smtp.codeaurora.org>
+Message-ID: <607d875c3a6fc806781e7ee5dc73c7e9@codeaurora.org> (sfid-20180417_092918_459997_0EB04ABC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Issues wmi command to firmware when multicast rate change is received
-with the new BSS_CHANGED_MCAST_RATE flag.
+On 2018-04-16 21:42, Kalle Valo wrote:
+> Carl Huang <cjhuang@codeaurora.org> wrote:
+> 
+>> The ath10k reports the random_mac_addr capability to upper layer
+>> based on the service bit firmware reported. Driver sets the
+>> spoofed flag in scan_ctrl_flag to firmware if upper layer has
+>> enabled this feature in scan request.
+>> 
+>> Test with QCA6174 hw3.0 and 
+>> firmware-6.bin_WLAN.RM.4.4.1-00102-QCARMSWP-1,
+>> but QCA9377 is also affected.
+>> 
+>> Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
+>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> 
+> This added a new checkpatch warning:
+> 
+> drivers/net/wireless/ath/ath10k/wmi-ops.h:123: Alignment should match
+> open parenthesis
+> 
+> I fixed it in the pending branch.
 
-Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/mac.c | 25 ++++++++++++++++++++++++-
- 1 file changed, 24 insertions(+), 1 deletion(-)
+Kvalo, as the flag issue NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR will 
+be fixed from
+Brian side, I don't need to submit V2 for it.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index bf05a36..63af46f 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -5419,8 +5419,12 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- {
- 	struct ath10k *ar = hw->priv;
- 	struct ath10k_vif *arvif = (void *)vif->drv_priv;
--	int ret = 0;
-+	struct ieee80211_supported_band *sband;
-+	struct cfg80211_chan_def def;
- 	u32 vdev_param, pdev_param, slottime, preamble;
-+	int rate_index, ret = 0;
-+	u8 rate;
-+	enum nl80211_band band;
- 
- 	mutex_lock(&ar->conf_mutex);
- 
-@@ -5588,6 +5592,25 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 				    arvif->vdev_id, ret);
- 	}
- 
-+	if (changed & BSS_CHANGED_MCAST_RATE &&
-+	    !WARN_ON(ath10k_mac_vif_chan(arvif->vif, &def))) {
-+		band = def.chan->band;
-+		sband = &ar->mac.sbands[band];
-+		vdev_param = ar->wmi.vdev_param->mcast_data_rate;
-+		rate_index = vif->bss_conf.mcast_rate[band] - 1;
-+		rate = ATH10K_HW_MCS_RATE(sband->bitrates[rate_index].hw_value);
-+		ath10k_dbg(ar, ATH10K_DBG_MAC,
-+			   "mac vdev %d mcast_rate %d\n",
-+			   arvif->vdev_id, rate);
-+
-+		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
-+						vdev_param, rate);
-+		if (ret)
-+			ath10k_warn(ar,
-+				    "failed to set mcast rate on vdev"
-+				    " %i: %d\n", arvif->vdev_id,  ret);
-+	}
-+
- 	mutex_unlock(&ar->conf_mutex);
- }
- 
--- 
-1.9.1
+For this alignment warning and sparse warnings in [1/2], as you fixed 
+them in the pending
+branch, so I needn't do anything, right?
+
+
+Thanks,
+Carl
