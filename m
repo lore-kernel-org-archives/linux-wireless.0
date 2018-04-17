@@ -1,70 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f180.google.com ([209.85.220.180]:44967 "EHLO
-        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750853AbeDDNT7 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Apr 2018 09:19:59 -0400
-Received: by mail-qk0-f180.google.com with SMTP id u9so8958091qkk.11
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Apr 2018 06:19:58 -0700 (PDT)
-Subject: Re: [PATCH] nl80211: Update ERP info using
- NL80211_CMD_UPDATE_CONNECT_PARAMS
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Vidyullatha Kanchanapally <vidyullatha@codeaurora.org>
-References: <1508923248-18848-1-git-send-email-vidyullatha@codeaurora.org>
- <1512990779.26976.69.camel@sipsolutions.net> <5ABCCA33.8070501@broadcom.com>
- <1522322166.5932.13.camel@sipsolutions.net> <5ABCCE7D.3050702@broadcom.com>
- <5AC4990E.7060806@broadcom.com> <1522838180.3042.1.camel@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
-        amarnath@qti.qualcomm.com, usdutt@qti.qualcomm.com,
-        vamsin@qti.qualcomm.com, Jithu Jance <jithu.jance@broadcom.com>,
-        Eylon Pedinovsky <eylon.pedinovsky@broadcom.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AC4D0FA.6070306@broadcom.com> (sfid-20180404_152002_715241_C4C97FF3)
-Date: Wed, 4 Apr 2018 15:19:54 +0200
-MIME-Version: 1.0
-In-Reply-To: <1522838180.3042.1.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mail.bugwerft.de ([46.23.86.59]:37076 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753070AbeDQNX6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Apr 2018 09:23:58 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
+        loic.poulain@linaro.org, rfried@codeaurora.org,
+        bjorn.andersson@linaro.org, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH v2 2/5] wcn36xx: cancel pending scan request when interface goes down
+Date: Tue, 17 Apr 2018 15:23:34 +0200
+Message-Id: <20180417132337.31720-3-daniel@zonque.org> (sfid-20180417_152402_642654_B8E73BFB)
+In-Reply-To: <20180417132337.31720-1-daniel@zonque.org>
+References: <20180417132337.31720-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/4/2018 12:36 PM, Johannes Berg wrote:
-> Hi,
->
->> Started working on this and actually the "weird flags thing" is done for
->> a reason. Maybe the reason was because it is done like that in the
->> CMD_CONNECT case, but the better reason is that we need to return
->> -EINVAL for "no-fils-offload-support, any-fils-param" *and*
->> "fils-offload-support, not-all-fils-param".
->
-> Ok, fair enough.
+When the network interface goes down while a scan request is still
+pending that can't be stopped due to firmware hickups, wcn->scan_req
+remains set, even though the hardware is deinitialized. This results
+in -EBUSY for all scan requests after the interface was brought up
+again.
 
-I added a comment for this in the patch.
+Fix this by explicitly completing pending scan requests in
+wcn36xx_stop().
 
->>> Also there is a DOC section about FILS shared key authentication
->>> offload" so I suppose that should be extended as well.
->>
->> So looking at the DOC section I am reading the following:
->>
->>    * When FILS shared key authentication is completed, driver needs to
->> provide the
->>    * below additional parameters to userspace.
->>    *	%NL80211_ATTR_FILS_KEK - used for key renewal
->>    *	%NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM - used in further EAP-RP exchanges
->>    *	%NL80211_ATTR_PMKID - used to identify the PMKSA used/generated
->>    *	%Nl80211_ATTR_PMK - used to update PMKSA cache in userspace
->>    * The PMKSA can be maintained in userspace persistently so that it can
->> be used
->>    * later after reboots or wifi turn off/on also.
->>
->> So to me it seems we need these for the ROAM event as well. Agree?
->
-> Maybe not all of them, you could be using the same PMKSA, but yes, I
-> tend to agree.
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+---
+ drivers/net/wireless/ath/wcn36xx/main.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-I would argue that for the scenario where you do CMD_CONNECT(auth=open) 
-and CMD_UPDATE_CONNECT_PARAMS(auth=fils-sk) the ROAM event should 
-provide all the above. From what I understand from my colleagues this is 
-a supported scenario.
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 749aef3e2b85..08b6939d3f57 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -353,6 +353,19 @@ static void wcn36xx_stop(struct ieee80211_hw *hw)
+ 
+ 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac stop\n");
+ 
++	cancel_work_sync(&wcn->scan_work);
++
++	mutex_lock(&wcn->scan_lock);
++	if (wcn->scan_req) {
++		struct cfg80211_scan_info scan_info = {
++			.aborted = true,
++		};
++
++		ieee80211_scan_completed(wcn->hw, &scan_info);
++	}
++	wcn->scan_req = NULL;
++	mutex_unlock(&wcn->scan_lock);
++
+ 	wcn36xx_debugfs_exit(wcn);
+ 	wcn36xx_smd_stop(wcn);
+ 	wcn36xx_dxe_deinit(wcn);
+-- 
+2.14.3
