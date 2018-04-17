@@ -1,47 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54720 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:42950 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755024AbeDPNQx (ORCPT
+        with ESMTP id S1753049AbeDQMHN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 09:16:53 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: Enable hw checksum for wcn3990
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1522993544-15279-1-git-send-email-pillair@codeaurora.org>
-References: <1522993544-15279-1-git-send-email-pillair@codeaurora.org>
-To: Rakesh Pillai <pillair@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Tue, 17 Apr 2018 08:07:13 -0400
+From: pillair@codeaurora.org
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
         Rakesh Pillai <pillair@codeaurora.org>
-Message-Id: <20180416131653.0FECE60F6E@smtp.codeaurora.org> (sfid-20180416_151715_415424_6920F1AE)
-Date: Mon, 16 Apr 2018 13:16:53 +0000 (UTC)
+Subject: [PATCH v2 0/4] Support for STA idle mode power save(IMPS)
+Date: Tue, 17 Apr 2018 17:36:57 +0530
+Message-Id: <1523966821-21903-1-git-send-email-pillair@codeaurora.org> (sfid-20180417_140719_038134_82602F52)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rakesh Pillai <pillair@codeaurora.org> wrote:
+From: Rakesh Pillai <pillair@codeaurora.org>
 
-> By default ath10k driver enables the support for HW_CHECKSUM
-> (NETIF_F_HW_CSUM). Since the TCP/UDP checksum calculation is not enabled
-> in the wcn3990 firmware the checksum is incorrect in the TCP/UDP packets
-> and all patckets are dropped. But due note that wcn3990 support in
-> ath10k is still incomplete so this isn't a critical fix (yet).
-> 
-> Enable hw checksum calculations in wcn3990 hardware by
-> setting the proper flags in msdu descriptor tso flags.
-> 
-> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Enable STA idle mode power save(IMPS) for WCN3990 TLV target.
 
-Introduces a new sparse warning:
+In-order to support STA idle mode ps direct access to CE registers are
+protected via 2 mechanism. As target can power collapse based on idle
+inactivity and any target register access during that state can lead to
+un-clocked access.
 
-potku:~/ath10k/src/ath$ ath10k-check 
-drivers/net/wireless/ath/ath10k/htt_tx.c:1480:47: warning: invalid assignment: |=
-drivers/net/wireless/ath/ath10k/htt_tx.c:1480:47:    left side has type restricted __le32
-drivers/net/wireless/ath/ath10k/htt_tx.c:1480:47:    right side has type unsigned long
+2) Caching SRRI/DRRI in DDR.
 
-Patch set to Changes Requested.
+WN3990 has a shadow block in HW which is always on domain and allows HOST/APPS
+access irrespective of power state of the target(Common subsystem(includes CE block)
+might be down due to idle/inactivity).
+Any operation on the shadow registers are directly reflected back in the actual
+CE registers( SRWI/DRWI) once common subsystem gets up.
+The shadow registers configuration is supplied via QMI message.
+
+WC3990 has 24 shadow registers and mapping of shadow register(0-23) to CE registers(0-12)
+is as following.
+
+               -----------------------------------------------------------
+               Shadow Register      |     CE   |    src/dst write index
+               -----------------------------------------------------------
+                              0            |     0    |           src
+                              3            |     3    |           src
+                              4            |     4    |           src
+                              5            |     5    |           src
+                              7            |     7    |           src
+                              13           |     1    |           dst
+                              14           |     2    |           dst
+                              19           |     7    |           dst
+                              20           |     8    |           dst
+                              21           |     9    |           dst
+                              22           |     10   |           dst
+                              23           |     11   |           dst
+
+
+1) Caching SRWI/SRWI in HW shadow block.
+
+Since shadow block allows only WRITE access, for read access(SRRI/DRRI) driver allocates
+region in DDR(12CE*half WORD) which is being configured in CE UPD control register.
+CE SRRI/DRRI are restored and replayed on the configured region(DDR) on each update.
+HOST/APPS reads SRRI/DRRI from the DDR to make the access independent of target power state.
+
+
+Changes in v2:
+	- Disabled the shadow_reg_support and rri_on_ddr hw params for QCA988X_HW_2_0_VERSION
+	- Fixed checkpatch warnings
+
+Govind Singh (2):
+  ath10k: Enable SRRI/DRRI support on ddr for WCN3990
+  ath10k: Enable sta idle power save
+
+Rakesh Pillai (2):
+  ath10k: Add hw params for shadow register support
+  ath10k: Add support for shadow register for WNC3990
+
+ drivers/net/wireless/ath/ath10k/ce.c   | 245 +++++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/ce.h   |  14 ++
+ drivers/net/wireless/ath/ath10k/core.c |  28 ++++
+ drivers/net/wireless/ath/ath10k/hw.c   |   9 +-
+ drivers/net/wireless/ath/ath10k/hw.h   |  17 ++-
+ drivers/net/wireless/ath/ath10k/mac.c  |   7 +
+ drivers/net/wireless/ath/ath10k/snoc.c |   3 +
+ 7 files changed, 312 insertions(+), 11 deletions(-)
 
 -- 
-https://patchwork.kernel.org/patch/10325669/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.14.1
