@@ -1,97 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.socionext.com ([202.248.49.38]:52185 "EHLO mx.socionext.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754687AbeDDB4P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Apr 2018 21:56:15 -0400
-From: <yamada.masahiro@socionext.com>
-To: <govinds@codeaurora.org>, <kvalo@codeaurora.org>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: RE: [PATCH 01/13] ath10k: platform driver for WCN3990 SNOC WLAN
- module
-Date: Wed, 4 Apr 2018 01:56:12 +0000
-Message-ID: <cef0a8eddfdc499e8bb34898eb5ed29d@SOC-EX01V.e01.socionext.com> (sfid-20180404_035619_844967_B4EBDA7D)
-References: <1518684458-5338-1-git-send-email-govinds@codeaurora.org>
- <87371kqfda.fsf@kamboji.qca.qualcomm.com>
- <d396df1b09da4dd7aa14d6af2c2b2b18@aphydexm01b.ap.qualcomm.com>
- <87tvttl6kp.fsf@kamboji.qca.qualcomm.com>
- <fb2c04383f024ab8b2c62dd5a4ad20ac@SOC-EX01V.e01.socionext.com>
- <87lgf0cn24.fsf@kamboji.qca.qualcomm.com>
- <eccd10c7db468515fe255b75f102e301@codeaurora.org>
-In-Reply-To: <eccd10c7db468515fe255b75f102e301@codeaurora.org>
-Content-Type: text/plain; charset="iso-2022-jp"
+Received: from mail-wr0-f173.google.com ([209.85.128.173]:35130 "EHLO
+        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750821AbeDQGdS (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Apr 2018 02:33:18 -0400
+Received: by mail-wr0-f173.google.com with SMTP id w3so15490986wrg.2
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 23:33:18 -0700 (PDT)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: pradeepc@codeaurora.org
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k:add support for multicast rate control
+Date: Tue, 17 Apr 2018 08:33:12 +0200
+Message-ID: <8422067.oV49EfR4qE@bentobox> (sfid-20180417_083322_646235_1123123C)
+In-Reply-To: <fe1af65b1042bc3c2b551dcbe7d53f3c@codeaurora.org>
+References: <fe1af65b1042bc3c2b551dcbe7d53f3c@codeaurora.org>
 MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart4779734.HQabqmaVvQ"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkuDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogZ292aW5kc0Bjb2Rl
-YXVyb3JhLm9yZyBbbWFpbHRvOmdvdmluZHNAY29kZWF1cm9yYS5vcmddDQo+IFNlbnQ6IEZyaWRh
-eSwgTWFyY2ggMjMsIDIwMTggODo1NSBQTQ0KPiBUbzogS2FsbGUgVmFsbyA8a3ZhbG9AY29kZWF1
-cm9yYS5vcmc+DQo+IENjOiBZYW1hZGEsIE1hc2FoaXJvLxskQjszRUQbKEIgGyRCPz85MBsoQiA8
-eWFtYWRhLm1hc2FoaXJvQHNvY2lvbmV4dC5jb20+Ow0KPiBsaW51eC13aXJlbGVzc0B2Z2VyLmtl
-cm5lbC5vcmc7IGF0aDEwa0BsaXN0cy5pbmZyYWRlYWQub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFU
-Q0ggMDEvMTNdIGF0aDEwazogcGxhdGZvcm0gZHJpdmVyIGZvciBXQ04zOTkwIFNOT0MgV0xBTg0K
-PiBtb2R1bGUNCj4gDQo+IE9uIDIwMTgtMDMtMTAgMTQ6NDEsIEthbGxlIFZhbG8gd3JvdGU6DQo+
-ID4gPHlhbWFkYS5tYXNhaGlyb0Bzb2Npb25leHQuY29tPiB3cml0ZXM6DQo+ID4NCj4gPj4+ID4+
-IEtidWlsZCBib3QgZm91bmQgYW4gb2RkIHByb2JsZW0gd2l0aCB0aGlzIHBhdGNoOg0KPiA+Pj4g
-Pj4NCj4gPj4+ID4+ICBpbmNsdWRlL2xpbnV4L2R5bmFtaWNfZGVidWcuaDo3NzoxNDogZXJyb3I6
-ICdLQlVJTERfTU9ETkFNRScNCj4gPj4+ID4+ICB1bmRlY2xhcmVkIChmaXJzdCB1c2UgaW4gdGhp
-cyBmdW5jdGlvbik7IGRpZCB5b3UgbWVhbg0KPiA+Pj4gJ0tCVUlMRF9CQVNFTkFNRSc/DQo+ID4+
-PiA+Pg0KPiA+Pj4gPj4gRnVsbCByZXBvcnQ6DQo+ID4+PiA+Pg0KPiA+Pj4gPj4NCj4gPj4+DQo+
-IGh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL3BpcGVybWFpbC9hdGgxMGsvMjAxOC1GZWJydWFy
-eS8wMTA5MDcuaHRtbA0KPiA+Pj4gPj4NCj4gPj4+ID4+IEFueSBpZGVhcz8gSXMgdGhpcyBpcyBz
-b21lIHVucmVsYXRlZCBpc3N1ZSBvciB3aGF0PyBUaGlzIHBhdGNoIGlzDQo+IG5vdA0KPiA+Pj4g
-Pj4gZXZlbiB0b3VjaGluZyBoaWYuaCBvciBjZS5jLg0KPiA+Pj4gPg0KPiA+Pj4gPiBJIGRpZG4n
-dCBlbmNvdW50ZXJlZCB0aGlzIGlzc3VlIGFzIGluIG15IGRlZmNvbmZpZyBvbmx5DQo+ID4+PiA+
-IENPTkZJR19BVEgxMEtfU05PQyB3YXMgZGVmaW5lZC4gVGhpcyBwcm9ibGVtIGlzIGNvbWluZyB3
-aGVuIHdlIGRlZmluZQ0KPiA+Pj4gPiBDT05GSUdfQVRIMTBLX1NOT0MgYW5kIENPTkZJR19BVEgx
-MEtfUENJIHNpbXVsdGFuZW91c2x5IGluIGRlZmNvbmZpZw0KPiA+Pj4gPiBhbmQgdGhpcyBpcyBr
-bm93biBpc3N1ZSB3aGVuIG11bHRpcGxlIG1vZHVsZXMgc2hhcmUgb2JqZWN0cyhpbiB0aGlzDQo+
-ID4+PiA+IGNhc2UgY2UubykuIEkgc2F3IHNpbWlsYXIgcmVwb3J0ZWQgcHJvYmxlbSBhbmQgZm91
-bmQNCj4gPj4+ID4gaHR0cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC8xMDA2MDgyNS8u
-DQo+ID4+PiA+DQo+ID4+PiA+IEFmdGVyIHBpY2tpbmcgdGhlIGJlbG93IGNoYW5nZSBpc3N1ZSBp
-cyBub3Qgc2Vlbi4NCj4gPj4+DQo+ID4+PiBMZXQncyBhc2sgdGhlIGtidWlsZCBtYWludGFpbmVy
-LiBNYXNhaGlybywgYW55IGNoYW5jZXMgb2YgZ2V0dGluZw0KPiA+Pj4gdGhpcw0KPiA+Pj4gcGF0
-Y2ggYXBwbGllZCBhbnl0aW1lIHNvb246DQo+ID4+Pg0KPiA+Pj4ga2J1aWxkOiBkZWZpbmUgS0JV
-SUxEX01PRE5BTUUgZXZlbiBpZiBtdWx0aXBsZSBtb2R1bGVzIHNoYXJlIG9iamVjdHMNCj4gPj4+
-DQo+ID4+PiBodHRwczovL3BhdGNod29yay5rZXJuZWwub3JnL3BhdGNoLzEwMDYwODI1Lw0KPiA+
-Pj4NCj4gPj4+IEluIGF0aDEwayB3ZSB3b3VsZCBuZWVkIGl0IGFzIG90aGVyd2lzZSB3ZSBhcmUg
-bm90IGFibGUgdG8gbGluayBjZS5vDQo+ID4+PiBib3RoIHRvIGF0aDEwa19wY2kua28gYW5kIGF0
-aDEwa19zbm9jLmtvLiBXaGF0IGRvIHlvdSB0aGluaz8NCj4gPj4+DQo+ID4+PiBGdWxsIGRpc2N1
-c3Npb24gYW5kIHRoZSBhdGgxMGsgcGF0Y2ggaGVyZToNCj4gPj4+DQo+ID4+PiBodHRwczovL3Bh
-dGNod29yay5rZXJuZWwub3JnL3BhdGNoLzEwMjIwNjU3Lw0KPiA+Pj4NCj4gPj4NCj4gPj4gSSBw
-bGFuIHRvIHN1Ym1pdCB2MiwgYnV0IGV2ZW4gaWYgdGhlIHVuZGVmaW5lZCBLQlVJTERfTU9ETkFN
-RSBpcw0KPiA+PiBmaXhlZCwNCj4gPj4gSSBleHBlY3QgYW5vdGhlciBwcm9ibGVtIGZyb20gdGhp
-cyBwYXRjaC4NCj4gPj4NCj4gPj4gSWYgYm90aCBDT05GSUdfQVRIMTBLX1BDSSBhbmQgQ09ORklH
-X0FUSDEwX1NOT0MgYXJlICd5Jw0KPiA+PiB0d28gaW5zdGFuY2VzIG9mIGNlLm8gd291bGQgYmUg
-bGlua2VkIGludG8gdm1saXV4LA0KPiA+PiB0aGVuIGNhdXNlcyBtdWx0aXBsZSBkZWZpbml0aW9u
-IGVycm9yLg0KPiA+DQo+ID4gT2gsIEkgZGlkbid0IHJlYWxpc2UgdGhpcy4gVGhhbmtzIGZvciBw
-b2ludGluZyBpdCBvdXQuIEdvdmluZCBpcw0KPiA+IGxvb2tpbmcNCj4gPiBhdCBvdGhlciB3YXlz
-IHRvIGZpeCB0aGlzLg0KPiANCj4gaHR0cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC8x
-MDI5ODY1OS8gaXMgcmFpc2VkIHRvIGFkZHJlc3MgdGhpcw0KPiBwcm9ibGVtLg0KPiANCg0KDQoN
-Cj4gQ0UgbGF5ZXIgaXMgc2hhcmVkIGJldHdlZW4gcGNpIGFuZCBzbm9jIHRhcmdldCBhbmQgcmVz
-dWx0cw0KPiBpbiBkdXBsaWNhdGUgb2JqZWN0IGluY2x1c2lvbiBpZiBib3RoIG1vZHVsZXMgYXJl
-IGNvbXBpbGVkDQo+IHRvZ2V0aGVyIHN0YXRpY2FsbHkgYW5kIHVuZGVmaW5lZCBLQlVJTERfTU9E
-TkFNRSBpZg0KPiBjb21waWxlZCBhcyBtb2R1bGUuDQoNCg0KSWYgeW91IHJlYmFzZSB5b3VyIGRl
-dmVsb3BtZW50IG9uIHY0LjE3LXJjMSwNCnRoaXMgc3RhdGVtZW50IGlzIG5vIGxvbmdlciB0cnVl
-Lg0KDQoNCj4gRml4IHRoaXMgYnkgYnVpbGRpbmcgY2UgbGF5ZXIgaW4gYXRoMTBrIGNvcmUgbW9k
-dWxlIGJ5DQo+IGFkZGluZyBjZSBvYmplY3QgaW5jbHVzaW9uIHdpdGggQVRIMTBLX0NFIGJvb2xl
-YW4gQ09ORklHLg0KDQoNCg0KDQpUb2RheSwgdGhlIHNvbHV0aW9uIGxhbmRlZCBpbiBMaW51cycg
-dHJlZS4NCg0KWzFdIFNvbHV0aW9uIGZvciBtaXNzaW5nIEtCVUlMRF9NT0ROQU1FIGRlZmluaXRp
-b24NCg0KY29tbWl0IGFlYWNiMDE5YjYxYzRlYTc2ODkwODU1NzRiZDAzZDJjMDgxMGYxMTkNCkF1
-dGhvcjogTWFzYWhpcm8gWWFtYWRhIDx5YW1hZGEubWFzYWhpcm9Ac29jaW9uZXh0LmNvbT4NCkRh
-dGU6ICAgTW9uIE1hciAxOSAxODowMToyNCAyMDE4ICswOTAwDQoNCiAgICBrYnVpbGQ6IGRlZmlu
-ZSBLQlVJTERfTU9ETkFNRSBldmVuIGlmIG11bHRpcGxlIG1vZHVsZXMgc2hhcmUgb2JqZWN0cw0K
-DQoNCg0KWzJdIFNvbHV0aW9uIGZvciBtdWx0aXBsZSBkZWZpbml0aW9uIGVycm9yIHdoZW4gYm90
-aCBhcmUgYnVpbHQtaW4NCg0KY29tbWl0IGY5OGZlNDdjZTUxZGVlNmQ5N2RkOTFiYmVjY2RkZTIz
-ZjA0M2M3NTQNCkF1dGhvcjogTWFzYWhpcm8gWWFtYWRhIDx5YW1hZGEubWFzYWhpcm9Ac29jaW9u
-ZXh0LmNvbT4NCkRhdGU6ICAgTW9uIE1hciAxOSAyMDoyNjowOCAyMDE4ICswOTAwDQoNCiAgICBr
-YnVpbGQ6IGxpbmsgJChyZWFsLW9iai15KSBpbnN0ZWFkIG9mICQob2JqLXkpIGludG8gYnVpbHQt
-aW4uYQ0KDQoNCg0KDQpbM10gRXhhbXBsZXMgZm9yIE1ha2VmaWxlIGNsZWFudXBzDQoNCg0KY29t
-bWl0IGY2MDUwMDVhNTBmYzE0NDNhMTRiNGU4YzljMTcyNzg4MWY4Zjk2YWUNCkF1dGhvcjogTWFz
-YWhpcm8gWWFtYWRhIDx5YW1hZGEubWFzYWhpcm9Ac29jaW9uZXh0LmNvbT4NCkRhdGU6ICAgTW9u
-IE1hciAxOSAyMDoyNjoxMCAyMDE4ICswOTAwDQoNCiAgICBuZXQ6IGxpcXVpZGlvOiBjbGVhbiB1
-cCBNYWtlZmlsZSBmb3Igc2ltcGxlciBjb21wb3NpdGUgb2JqZWN0IGhhbmRsaW5nDQoNCg0KDQpj
-b21taXQgZGMzNWRhMTZhMmUyM2RiMDQ4MjJmMDEyOWNkNWIyOGI3YjBlNzJiNA0KQXV0aG9yOiBN
-YXNhaGlybyBZYW1hZGEgPHlhbWFkYS5tYXNhaGlyb0Bzb2Npb25leHQuY29tPg0KRGF0ZTogICBN
-b24gTWFyIDE5IDIwOjI2OjA5IDIwMTggKzA5MDANCg0KICAgIGxpYjogenN0ZDogY2xlYW4gdXAg
-TWFrZWZpbGUgZm9yIHNpbXBsZXIgY29tcG9zaXRlIG9iamVjdCBoYW5kbGluZw0KDQo=
+--nextPart4779734.HQabqmaVvQ
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+
+On Montag, 16. April 2018 22:10:50 CEST pradeepc@codeaurora.org wrote:
+[...]
+> > I see two major problems here without checking the actual 
+> > implementation
+> > details:
+> > 
+> > * hw_value is incorrect for a couple of devices. Some devices use a 
+> > different
+> >   mapping when they receive rates inforamtion (hw_value) then the ones 
+> > you use
+> >   for the mcast/bcast/beacon rate setting. I've handled in my POC patch 
+> > like
+[...]
+> Isn't this already fixed in https://patchwork.kernel.org/patch/9150145/ 
+> ?
+
+No, this is exactly the patch which causes the problem for you. The parameter 
+for these settings stayed the same but this patch changes the order in 
+ieee80211_rate to make it easier for the driver to parse the (reordered) rx 
+status information for CCK rates (maybe also tx - not sure about that right 
+now).
+
+> > * bcast + mcast (+ mgmt) have to be set separately
+> 
+> Can you please let me know why this would be necessary?
+> Although I see minstrel rate control is currently seems using the 
+> mcast_rate
+> setting to set MGMT/BCAST/MCAST rates, will this not be misleading to 
+> user
+> passed value with 'iw set mcast_rate' for MGMT traffic as well?
+
+What about broadcast? MGMT was only mentioned here because it is the third 
+item which can be manipulated the same way. But yes, it would be good to get 
+the mgmt rates in sync with the non-hw-rate-control drivers.
+
+Kind regards,
+	Sven
+--nextPart4779734.HQabqmaVvQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlrVlSgACgkQXYcKB8Em
+e0YLWBAAmfnmrJgumArkUs0UCtPepXD7kU8lvjkyKxCFWPduV7h2RnGlg7ewQB8l
+x64Q622sOMj5q3AEEQ92aMpBygiD7WmqOKdc8vT2ppEKqAUELzXmWu/SzgtZkzDU
+rxfi2rrPu1WxH/gyg4Gf8NvFf/w4585SMNwA0U/PLQsgSqqA6H2a45ZAWdGp9ZXe
+Ttq2dVklkWzlyVDqYaRcACsM0Jl1ZiQpg7xIgeN2L6cTBkW0+LjlB1cDf0LBEJLY
+CLPSR3Eddgdt4aoZ3QMly7VAXN5Nevc3EFKtiGPqG3k/EXYgk+UdZyPrDl+bDGJX
+nvhvKWChyld/WaKioBaQ/MDjxwfXDElG3wMszCFB/HdbdR4D12ggAWI1M/kkBvXU
+eYJLP3bn/BfKjm6xSzOy3wu5l5kZigWzehkIQKPGS9g+0yg/0UmDPfr4F8U+ZaAb
+V84L4G6dVIYEU1Bf7Z0jEieIwl9dxeOZYdyHiruwlydqsf6UY8PLHUsXLt3RHgVn
+1rsyVXBdqtS3dgqfPUon2FSzgVrdvTNErbKnJ1ypoISNrqkp1i454j8dweZzzIZl
+t3bMsQIu464DOk8onxE7zlevkQpHfQwBWYiEe94XLCa5FNynL4fjP6NIihby4oay
+rEqjbam4YeqzOnf1IDFfOA870zY4QbMWH0MbjjN2pBkMtL6C9z8=
+=2FLg
+-----END PGP SIGNATURE-----
+
+--nextPart4779734.HQabqmaVvQ--
