@@ -1,61 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:36839 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750862AbeDXX5z (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:58624 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751865AbeDQE1g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 19:57:55 -0400
-Received: by mail-pg0-f67.google.com with SMTP id i6so12010156pgv.3
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2018 16:57:55 -0700 (PDT)
-Date: Tue, 24 Apr 2018 16:57:52 -0700
-From: Kees Cook <keescook@chromium.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Andreas Christoforou <andreaschristofo@gmail.com>,
-        Rosen Penev <rosenp@gmail.com>,
-        Eric Dumazet <eric.dumazet@gmail.com>,
-        Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        kernel-hardening@lists.openwall.com, linux-kernel@vger.kernel.org
-Subject: [PATCH v3] ath9k: dfs: Remove VLA usage
-Message-ID: <20180424235752.GA37317@beast> (sfid-20180425_015817_606792_BCB40F23)
+        Tue, 17 Apr 2018 00:27:36 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 17 Apr 2018 09:57:35 +0530
+From: govinds@codeaurora.org
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH v2 13/13] dt: bindings: add bindings for wcn3990 wifi
+ block
+In-Reply-To: <878t9np561.fsf@kamboji.qca.qualcomm.com>
+References: <1523378986-11551-1-git-send-email-govinds@codeaurora.org>
+ <20180413215340.vhvlhlaapt5uuo7d@rob-hp-laptop>
+ <878t9np561.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <2807e56b227f483ac343c0e4d098aebe@codeaurora.org> (sfid-20180417_062740_196868_811777B9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the quest to remove all stack VLA usage from the kernel[1], this
-redefines FFT_NUM_SAMPLES as a #define instead of const int, which still
-triggers gcc's VLA checking pass.
 
-[1] https://lkml.org/lkml/2018/3/7/621
+On 2018-04-16 20:30, Kalle Valo wrote:
+> Rob Herring <robh@kernel.org> writes:
+> 
+>> On Tue, Apr 10, 2018 at 10:19:46PM +0530, Govind Singh wrote:
+>>> Add device tree binding documentation details for wcn3990
+>>> wifi block present in Qualcomm SDM845/APQ8098 SoC into
+>>> "qcom,ath10k.txt".
+>>> 
+>>> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+>>> ---
+>>>  .../bindings/net/wireless/qcom,ath10k.txt          | 31 
+>>> ++++++++++++++++++++++
+>>>  1 file changed, 31 insertions(+)
+>> 
+>> One nit, otherwise:
+>> 
+>> Reviewed-by: Rob Herring <robh@kernel.org>
+>> 
+> 
+> [...]
+> 
+>>> @@ -119,3 +126,27 @@ wifi0: wifi@a000000 {
+>>>  	qcom,msi_base = <0x40>;
+>>>  	qcom,ath10k-pre-calibration-data = [ 01 02 03 ... ];
+>>>  };
+>>> +
+>>> +Example (to supply wcn3990 SoC wifi block details):
+>>> +
+>>> +qcom,wifi@18000000 {
+>> 
+>> wifi@...
+> 
+> I added this and Rob's Reviewed-by to the patch in the pending branch:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=20f4accbe76af8f137b4218ce4973bda6fc3d23e
+> 
+> Govind, please check that it's ok.
 
-Co-developed-by: Andreas Christoforou <andreaschristofo@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
-v3: replace FFT_NUM_SAMPLES as a #define (Joe)
----
- drivers/net/wireless/ath/ath9k/dfs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Looks good to me.
 
-diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
-index 6fee9a464cce..e6e56a925121 100644
---- a/drivers/net/wireless/ath/ath9k/dfs.c
-+++ b/drivers/net/wireless/ath/ath9k/dfs.c
-@@ -40,8 +40,8 @@ static const int BIN_DELTA_MIN		= 1;
- static const int BIN_DELTA_MAX		= 10;
- 
- /* we need at least 3 deltas / 4 samples for a reliable chirp detection */
--#define NUM_DIFFS 3
--static const int FFT_NUM_SAMPLES	= (NUM_DIFFS + 1);
-+#define NUM_DIFFS	3
-+#define FFT_NUM_SAMPLES	(NUM_DIFFS + 1)
- 
- /* Threshold for difference of delta peaks */
- static const int MAX_DIFF		= 2;
--- 
-2.7.4
-
-
--- 
-Kees Cook
-Pixel Security
+Thanks,
+Govind
