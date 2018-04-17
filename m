@@ -1,97 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:46043 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751600AbeDJKdO (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44672 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752916AbeDQMKf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Apr 2018 06:33:14 -0400
-Subject: Re: [PATCH v13] ath10k: add LED and GPIO controlling support for
- various chipsets
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>
-References: <1523027875-5143-1-git-send-email-kvalo@codeaurora.org>
- <a249fc31-18bf-96a1-27ee-deea05d2d0ff@dd-wrt.com>
- <87k1tgbcs0.fsf@kamboji.qca.qualcomm.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <faaec345-4f7f-631b-9603-3de0305c58a1@dd-wrt.com> (sfid-20180410_123318_198047_DAAA2EF2)
-Date: Tue, 10 Apr 2018 12:33:09 +0200
+        Tue, 17 Apr 2018 08:10:35 -0400
 MIME-Version: 1.0
-In-Reply-To: <87k1tgbcs0.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 17 Apr 2018 17:40:34 +0530
+From: pillair@codeaurora.org
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: ath10k@lists.infradead.org, Govind Singh <govinds@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/4] ath10k: Enable SRRI/DRRI support on ddr for WCN3990
+In-Reply-To: <87y3hnp9hj.fsf@kamboji.qca.qualcomm.com>
+References: <1523370212-8778-1-git-send-email-pillair@codeaurora.org>
+ <1523370212-8778-4-git-send-email-pillair@codeaurora.org>
+ <87y3hnp9hj.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <6965b5c5716369967813b87705ec2c42@codeaurora.org> (sfid-20180417_141038_611592_67BB2FE4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 09.04.2018 um 17:49 schrieb Kalle Valo:
-> Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
->
->> you removed the call to leds_start from certain locations but you seem
->> to have ignored the comment i wrote above the function call.
-> IIRC I moved the comment to ath10k_leds_start().
->
->> there is a reason why i reinitialize the gpio output state in these
->> locations. the firmware for 9984 and 99xx resets the gpio registers
->> at certain points. this will lead to a non working led code.
-> What are the certain points exactly? I tried to be careful that from
-> firmware's point of view the functionality is the same, even if I moved
-> the call to a different location. Did you test the patch? Is it broken
-> now?
-i reviewed the firmware code as well, but havent found the reason. can 
-be core/chipset specific and not firmware software related.
-i just can say it doesnt happen on 988x, just newer chipsets are affected
-> The naming refers to phases of ath10k initialisation which are:
->
-> create() - destroy()
-> register() - unregister()
-> start() - stop()
->
-> So the naming doesn't mean that every ath10k_foo_start() has to start
-> something, it just describes the phase of driver initialisation it's
-> called in.
-yes, but its not a initialisation too. its just a gpio pin reset. the 
-initialisation is
-the trigger code itself from my point of view
-> Is this really so frequently called that we need to think about CPU
-> time? How often are we expecting the LED state to change?
->
-> But I'm not really following you, from firmware point of view the
-> functionality should be the same as with your patch.
-a typical tpt trigger as used in openwrt for instance may trigger it 
-several times per second.
-i mean it might be really just a micro effect, but i just save cpu time 
-whereever i can since i'm focused in
-embedded development
->
->> so if you want to follow this up. remove ath10k_leds_start
->> and insert
->>
->> ath10k_wmi_gpio_config(ar, ar->hw_params.led_pin, 0,
->>                    WMI_GPIO_PULL_NONE, WMI_GPIO_INTTYPE_DISABLE);
->>
->> in ath10k_leds_set_brightness_blocking
-> Calling ath10k_wmi_gpio_config() every time sounds like quite odd to me
-> and your patch didn't do that either. Are you sure this is really
-> needed?
-yes. i tested this. you must set the gpio to output before setting it to 
-any value, in case the output state was resetted back to input or any 
-other default value. (which it does on 9984 at certain events)
-i tested this on a netgear r7800 which is ipq8064 based with 2 9984 
-chipsets.
-but i cannot reproduce this on mips routers with 988x chipsets.
+Hi Kalle,
 
-but as you say. its odd to call it every time. so i just call it with 
-the reset method when neccessary. in our case, when interface operation 
-starts.
+The checkpatch warning has been addressed in v2 for this patchset.
 
+Thanks,
+Rakesh Pillai.
 
--- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+On 2018-04-16 18:57, Kalle Valo wrote:
+> pillair@codeaurora.org writes:
+> 
+>> From: Govind Singh <govinds@codeaurora.org>
+>> 
+>> SRRI/DRRI are not mapped in the HW Shadow block and can lead
+>> to un-clocked access if common subsystem in the target is
+>> powered down due to idle mode.
+>> 
+>> To mitigate this problem SRRI/DRRI can be read from
+>> DDR instead of doing an actual hardware read.
+>> Host allocates non cached memory on ddr and configures
+>> the physical address of this memory to the CE hardware.
+>> The hardware updates the RRI on this particular location.
+>> Read SRRI/DRRI from DDR location instead of
+>> direct target read.
+>> 
+>> Enable retention restore on ddr using hw params to enable
+>> in specific targets.
+>> 
+>> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+>> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+> 
+> [...]
+> 
+>> +	for (i = 0; i < CE_COUNT; i++) {
+>> +		ctrl1_regs = ar->hw_ce_regs->ctrl1_regs->addr;
+>> +		ce_base_addr = ath10k_ce_base_address(ar, i);
+>> +		ath10k_ce_write32(ar, ce_base_addr + ctrl1_regs,
+>> +				  ath10k_ce_read32(ar,
+>> +				  ce_base_addr + ctrl1_regs) |
+>> +				  ar->hw_ce_regs->upd->mask);
+>> +	}
+> 
+> This gives a checkpatch warning:
+> 
+> drivers/net/wireless/ath/ath10k/ce.c:1917: Alignment should match open
+> parenthesis
+> 
+> You could fix that, and make the code a lot more readable, with
+> something like this:
+> 
+> tmp = ath10k_ce_read32(ar, ce_base_addr + ctrl1_regs);
+> tmp |= ar->hw_ce_regs->upd->mask;
+> ath10k_ce_write32(ar, ce_base_addr + ctrl1_regs, tmp);
+> 
+> Usually it's a good practise avoid making clever tricks, simple code is
+> a lot easier to read.
