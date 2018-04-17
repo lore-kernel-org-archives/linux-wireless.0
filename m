@@ -1,95 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:14322 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932171AbeDWQgA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43202 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752844AbeDQMHh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 12:36:00 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [RESEND 29/33] staging: wilc1000: remove the use of goto label in wilc_init()
-Date: Mon, 23 Apr 2018 22:03:31 +0530
-Message-ID: <1524501215-4963-30-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183606_204038_962E1700)
-In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 17 Apr 2018 08:07:37 -0400
+From: pillair@codeaurora.org
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>,
+        Rakesh Pillai <pillair@codeaurora.org>
+Subject: [PATCH v2 4/4] ath10k: Enable sta idle power save
+Date: Tue, 17 Apr 2018 17:37:01 +0530
+Message-Id: <1523966821-21903-5-git-send-email-pillair@codeaurora.org> (sfid-20180417_140742_170932_152C8BEB)
+In-Reply-To: <1523966821-21903-1-git-send-email-pillair@codeaurora.org>
+References: <1523966821-21903-1-git-send-email-pillair@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added direct return in wilc_init() instead of goto label. Changes
-are done to avoid the use of '_' in label name.
+From: Govind Singh <govinds@codeaurora.org>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+Enable sta power save in fw for the targets that
+supports idle power save. The idle ps enable command
+will be ignored by the firmware which does not support
+this feature.
+
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
 ---
- drivers/staging/wilc1000/host_interface.c | 19 ++++++++-----------
- 1 file changed, 8 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 65caa6d..12414f4 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3331,7 +3331,6 @@ static void get_periodic_rssi(struct timer_list *unused)
- 
- int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- {
--	int result = 0;
- 	struct host_if_drv *hif_drv;
- 	struct wilc_vif *vif;
- 	struct wilc *wilc;
-@@ -3345,10 +3344,9 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 	init_completion(&hif_wait_response);
- 
- 	hif_drv  = kzalloc(sizeof(*hif_drv), GFP_KERNEL);
--	if (!hif_drv) {
--		result = -ENOMEM;
--		goto _fail_;
--	}
-+	if (!hif_drv)
-+		return -ENOMEM;
-+
- 	*hif_drv_handler = hif_drv;
- 	for (i = 0; i < wilc->vif_num; i++)
- 		if (dev == wilc->vif[i]->ndev) {
-@@ -3359,7 +3357,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 
- 	wilc_optaining_ip = false;
- 
--	if (clients_count == 0)	{
-+	if (clients_count == 0) {
- 		init_completion(&hif_thread_comp);
- 		init_completion(&hif_driver_comp);
- 		mutex_init(&hif_deinit_lock);
-@@ -3370,12 +3368,12 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 	init_completion(&hif_drv->comp_get_rssi);
- 	init_completion(&hif_drv->comp_inactive_time);
- 
--	if (clients_count == 0)	{
-+	if (clients_count == 0) {
- 		hif_workqueue = create_singlethread_workqueue("WILC_wq");
- 		if (!hif_workqueue) {
- 			netdev_err(vif->ndev, "Failed to create workqueue\n");
--			result = -ENOMEM;
--			goto _fail_;
-+			kfree(hif_drv);
-+			return -ENOMEM;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 7e02ca02b28e..1d9222af1bb2 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4679,6 +4679,13 @@ static int ath10k_start(struct ieee80211_hw *hw)
  		}
+ 	}
  
- 		periodic_rssi_vif = vif;
-@@ -3403,8 +3401,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
++	param = ar->wmi.pdev_param->idle_ps_config;
++	ret = ath10k_wmi_pdev_set_param(ar, param, 1);
++	if (ret && ret != -EOPNOTSUPP) {
++		ath10k_warn(ar, "failed to enable idle_ps_config: %d\n", ret);
++		goto err_core_stop;
++	}
++
+ 	__ath10k_set_antenna(ar, ar->cfg_tx_chainmask, ar->cfg_rx_chainmask);
  
- 	clients_count++;
- 
--_fail_:
--	return result;
-+	return 0;
- }
- 
- int wilc_deinit(struct wilc_vif *vif)
+ 	/*
 -- 
-2.7.4
+2.14.1
