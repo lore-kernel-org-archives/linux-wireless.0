@@ -1,108 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:39177 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754165AbeD3OND (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:57362 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753333AbeDRBtp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Apr 2018 10:13:03 -0400
-Received: by mail-wr0-f194.google.com with SMTP id q3-v6so8191383wrj.6
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2018 07:13:03 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [RFC 09/18] mt76: introduce tx_queue_skb function pointer in mt76_bus_ops
-Date: Mon, 30 Apr 2018 16:12:24 +0200
-Message-Id: <a367e1a6a7da80b8cd3725c9a691cf941a341cdb.1525096206.git.lorenzo.bianconi@redhat.com> (sfid-20180430_161307_362642_30371C3A)
-In-Reply-To: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
-References: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
+        Tue, 17 Apr 2018 21:49:45 -0400
+From: greearb@candelatech.com
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 3/3] ath10k:  Support ethtool gstats2 API.
+Date: Tue, 17 Apr 2018 18:49:36 -0700
+Message-Id: <1524016176-3881-3-git-send-email-greearb@candelatech.com> (sfid-20180418_034956_655180_6059A7CF)
+In-Reply-To: <1524016176-3881-1-git-send-email-greearb@candelatech.com>
+References: <1524016176-3881-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add tx_queue_skb function pointer in mt76_bus_ops since mt76x2u based
-devices do not map mt76x2_txwi on dma buffers and it is not possible
-to reuse mt76_tx_queue_skb() routine to enqueue tx frames to hw buffers
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Skip a firmware stats update when calling
+code indicates the stats refresh is not needed.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/mediatek/mt76/dma.c  | 1 +
- drivers/net/wireless/mediatek/mt76/mt76.h | 5 +++++
- drivers/net/wireless/mediatek/mt76/tx.c   | 9 +++++----
- 3 files changed, 11 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/debug.c | 18 +++++++++++++++---
+ drivers/net/wireless/ath/ath10k/debug.h |  4 ++++
+ drivers/net/wireless/ath/ath10k/mac.c   |  1 +
+ 3 files changed, 20 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 528132c3d1cd..cebd419ae83a 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -432,6 +432,7 @@ static const struct mt76_queue_ops mt76_dma_ops = {
- 	.init = mt76_dma_init,
- 	.alloc = mt76_dma_alloc_queue,
- 	.add_buf = mt76_dma_add_buf,
-+	.tx_queue_skb = mt76_tx_queue_skb,
- 	.tx_cleanup = mt76_dma_tx_cleanup,
- 	.rx_reset = mt76_dma_rx_reset,
- 	.kick = mt76_dma_kick_queue,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index f4144c3e70d3..9fc11cc4f029 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -30,6 +30,7 @@
- #define MT_RX_BUF_SIZE      2048
- 
- struct mt76_dev;
-+struct mt76_wcid;
- 
- struct mt76_bus_ops {
- 	u32 (*rr)(struct mt76_dev *dev, u32 offset);
-@@ -110,6 +111,10 @@ struct mt76_queue_ops {
- 		       struct mt76_queue_buf *buf, int nbufs, u32 info,
- 		       struct sk_buff *skb, void *txwi);
- 
-+	int (*tx_queue_skb)(struct mt76_dev *dev, struct mt76_queue *q,
-+			    struct sk_buff *skb, struct mt76_wcid *wcid,
-+			    struct ieee80211_sta *sta);
-+
- 	void *(*dequeue)(struct mt76_dev *dev, struct mt76_queue *q, bool flush,
- 			 int *len, u32 *info, bool *more);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
-index 7ecd2d7c5db4..fa6e5854925e 100644
---- a/drivers/net/wireless/mediatek/mt76/tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/tx.c
-@@ -185,7 +185,7 @@ mt76_tx(struct mt76_dev *dev, struct ieee80211_sta *sta,
- 	q = &dev->q_tx[qid];
- 
- 	spin_lock_bh(&q->lock);
--	mt76_tx_queue_skb(dev, q, skb, wcid, sta);
-+	dev->queue_ops->tx_queue_skb(dev, q, skb, wcid, sta);
- 	dev->queue_ops->kick(dev, q);
- 
- 	if (q->queued > q->ndesc - 8)
-@@ -241,7 +241,7 @@ mt76_queue_ps_skb(struct mt76_dev *dev, struct ieee80211_sta *sta,
- 		info->flags |= IEEE80211_TX_STATUS_EOSP;
- 
- 	mt76_skb_set_moredata(skb, !last);
--	mt76_tx_queue_skb(dev, hwq, skb, wcid, sta);
-+	dev->queue_ops->tx_queue_skb(dev, hwq, skb, wcid, sta);
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index bac832c..d559a3f 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1159,9 +1159,10 @@ int ath10k_debug_get_et_sset_count(struct ieee80211_hw *hw,
+ 	return 0;
  }
  
- void
-@@ -321,7 +321,7 @@ mt76_txq_send_burst(struct mt76_dev *dev, struct mt76_queue *hwq,
- 	if (ampdu)
- 		mt76_check_agg_ssn(mtxq, skb);
+-void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
+-			       struct ieee80211_vif *vif,
+-			       struct ethtool_stats *stats, u64 *data)
++void ath10k_debug_get_et_stats2(struct ieee80211_hw *hw,
++				struct ieee80211_vif *vif,
++				struct ethtool_stats *stats, u64 *data,
++				u32 flags)
+ {
+ 	struct ath10k *ar = hw->priv;
+ 	static const struct ath10k_fw_stats_pdev zero_stats = {};
+@@ -1170,6 +1171,9 @@ void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
  
--	idx = mt76_tx_queue_skb(dev, hwq, skb, wcid, txq->sta);
-+	idx = dev->queue_ops->tx_queue_skb(dev, hwq, skb, wcid, txq->sta);
+ 	mutex_lock(&ar->conf_mutex);
  
- 	if (idx < 0)
- 		return idx;
-@@ -356,7 +356,8 @@ mt76_txq_send_burst(struct mt76_dev *dev, struct mt76_queue *hwq,
- 		if (cur_ampdu)
- 			mt76_check_agg_ssn(mtxq, skb);
++	if (flags & ETHTOOL_GS2_SKIP_FW)
++		goto skip_query_fw_stats;
++
+ 	if (ar->state == ATH10K_STATE_ON) {
+ 		ret = ath10k_debug_fw_stats_request(ar);
+ 		if (ret) {
+@@ -1180,6 +1184,7 @@ void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
+ 		}
+ 	}
  
--		idx = mt76_tx_queue_skb(dev, hwq, skb, wcid, txq->sta);
-+		idx = dev->queue_ops->tx_queue_skb(dev, hwq, skb, wcid,
-+						   txq->sta);
- 		if (idx < 0)
- 			return idx;
++skip_query_fw_stats:
+ 	pdev_stats = list_first_entry_or_null(&ar->debug.fw_stats.pdevs,
+ 					      struct ath10k_fw_stats_pdev,
+ 					      list);
+@@ -1244,6 +1249,13 @@ void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
+ 	WARN_ON(i != ATH10K_SSTATS_LEN);
+ }
  
++void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
++			       struct ieee80211_vif *vif,
++			       struct ethtool_stats *stats, u64 *data)
++{
++	ath10k_debug_get_et_stats2(hw, vif, stats, data, 0);
++}
++
+ static const struct file_operations fops_fw_dbglog = {
+ 	.read = ath10k_read_fw_dbglog,
+ 	.write = ath10k_write_fw_dbglog,
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 0afca5c..595d964 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -117,6 +117,10 @@ int ath10k_debug_get_et_sset_count(struct ieee80211_hw *hw,
+ void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
+ 			       struct ieee80211_vif *vif,
+ 			       struct ethtool_stats *stats, u64 *data);
++void ath10k_debug_get_et_stats2(struct ieee80211_hw *hw,
++				struct ieee80211_vif *vif,
++				struct ethtool_stats *stats, u64 *data,
++				u32 level);
+ 
+ static inline u64 ath10k_debug_get_fw_dbglog_mask(struct ath10k *ar)
+ {
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index bf05a36..27b793c 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -7734,6 +7734,7 @@ static const struct ieee80211_ops ath10k_ops = {
+ 	.ampdu_action			= ath10k_ampdu_action,
+ 	.get_et_sset_count		= ath10k_debug_get_et_sset_count,
+ 	.get_et_stats			= ath10k_debug_get_et_stats,
++	.get_et_stats2			= ath10k_debug_get_et_stats2,
+ 	.get_et_strings			= ath10k_debug_get_et_strings,
+ 	.add_chanctx			= ath10k_mac_op_add_chanctx,
+ 	.remove_chanctx			= ath10k_mac_op_remove_chanctx,
 -- 
-2.14.3
+2.4.11
