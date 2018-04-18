@@ -1,75 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:44802 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752246AbeDCQwD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Apr 2018 12:52:03 -0400
-From: Daniel Mack <daniel@zonque.org>
+Received: from mail-wr0-f178.google.com ([209.85.128.178]:32770 "EHLO
+        mail-wr0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750885AbeDRSBQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Apr 2018 14:01:16 -0400
+Received: by mail-wr0-f178.google.com with SMTP id z73-v6so7192093wrb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2018 11:01:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <001901d3c759$8cd5b970$a6812c50$@codeaurora.org>
+References: <CAFnQ7os8AQGwJfkunZG-x9f9jdnOw=tjGCHE9wNxNwLfqka_tQ@mail.gmail.com>
+ <001901d3c759$8cd5b970$a6812c50$@codeaurora.org>
+From: David Dean Zhang <daviddean166@gmail.com>
+Date: Wed, 18 Apr 2018 14:01:14 -0400
+Message-ID: <CAFnQ7oti-cKJxBXyuCCfJeLgHMcw1U0pE1hkdCH_ukN032f90A@mail.gmail.com> (sfid-20180418_200121_646238_650496DE)
+Subject: Re: wil6210: low level sector API
 To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
-        loic.poulain@linaro.org, rfried@codeaurora.org,
-        bjorn.andersson@linaro.org, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH 3/3] wcn36xx: don't delete invalid bss indices
-Date: Tue,  3 Apr 2018 18:51:54 +0200
-Message-Id: <20180403165154.18775-3-daniel@zonque.org> (sfid-20180403_185210_115624_3B1C8AE6)
-In-Reply-To: <20180403165154.18775-1-daniel@zonque.org>
-References: <20180403165154.18775-1-daniel@zonque.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware code cannot cope with requests to remove BSS indices that have
-not previously been added. This primarily happens when the device is
-suspended and then resumed. ieee80211_reconfig() then calls into
-wcn36xx_bss_info_changed() with an empty bssid and BSS_CHANGED_BSSID set,
-which subsequently leads to a firmware crash:
+Hi,
 
-[   43.647928] qcom-wcnss-pil a204000.wcnss: fatal error received: halMsg.c:4964:halMsg_DelBss: Invalid BSSIndex 0
-[   43.647959] remoteproc remoteproc0: crash detected in a204000.wcnss: type fatal error
+I updated the firmware and tried to call some low level functions,
+like WMI_PRIO_TX_SECTORS_NUMBER_CMDID and WMI_SET_RF_SECTOR_ON_CMDID .
+The previous errors have gone but it still has errors:
 
-To fix this, set bss_index to WCN36XX_HAL_BSS_INVALID_IDX for all bss
-that have not been configured in the firmware, and don't call into the
-firmware with invalid indices.
+wil6210 0000:03:00.0 wlp3s0: wmi_event_handle: Unhandled event 0x19a5
+wil6210 0000:03:00.0 wlp3s0: wmi_call: wmi_call(0x09a6->0x19a6)
+timeout 2000 msec
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
----
- drivers/net/wireless/ath/wcn36xx/main.c | 1 +
- drivers/net/wireless/ath/wcn36xx/smd.c  | 6 ++++++
- 2 files changed, 7 insertions(+)
+So I am wondering whether it is because the chipset does not support
+these wmi commands. I just want to know how to use these commands and
+how to disable TXSS. I appreciate if anyone could provide some
+suggestions. Thanks.
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 69d6be59d97f..32bbd6e2fd09 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -953,6 +953,7 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&wcn->conf_mutex);
- 
-+	vif_priv->bss_index = WCN36XX_HAL_BSS_INVALID_IDX;
- 	list_add(&vif_priv->list, &wcn->vif_list);
- 	wcn36xx_smd_add_sta_self(wcn, vif);
- 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 8932af5e4d8d..5be07e40a86d 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1446,6 +1446,10 @@ int wcn36xx_smd_delete_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif)
- 	int ret = 0;
- 
- 	mutex_lock(&wcn->hal_mutex);
-+
-+	if (vif_priv->bss_index == WCN36XX_HAL_BSS_INVALID_IDX)
-+		goto out;
-+
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DELETE_BSS_REQ);
- 
- 	msg_body.bss_index = vif_priv->bss_index;
-@@ -1464,6 +1468,8 @@ int wcn36xx_smd_delete_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif)
- 		wcn36xx_err("hal_delete_bss response failed err=%d\n", ret);
- 		goto out;
- 	}
-+
-+	vif_priv->bss_index = WCN36XX_HAL_BSS_INVALID_IDX;
- out:
- 	mutex_unlock(&wcn->hal_mutex);
- 	return ret;
--- 
-2.14.3
+Bests,
+David
+
+On Thu, Mar 29, 2018 at 8:29 AM, Dedy Lansky <dlansky@codeaurora.org> wrote:
+> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of David Dean
+> Sent: Monday, March 26, 2018 9:38 PM
+>
+>> My question is how I can disable TXSS. One way I found in the wmi.h is setting the number of sectors of TXSS to 0 or 1 > by using wmi_prio_tx_sectors_num_cmd so that the TXSS will only use 1 sector.
+>> However, when I called this cmd, I got this error:
+>> wil6210 0000:03:00.0 wlp3s0: wil6210_irq_misc: Firmware error detected, assert codes FW 0x00001038, UCODE 0x00000000
+>> wil6210 0000:03:00.0 wlp3s0: wil_fw_core_dump: fw core dumped, size 823296 bytes
+>> wil6210 0000:03:00.0 wlp3s0: wil_notify_fw_error: Notify about firmware error
+>> So I am wondering whether the firmware does not support these kinds of wmi commands. Does anyone have any experience on this? Thank you.
+>
+> Indeed this error indicates that FW doesn't support these WMI commands.
+> We are working on releasing new FW version with support for these commands.
+>
+> Thanks,
+>  Dedy.
+>
