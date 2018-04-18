@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:57028 "EHLO mail.bugwerft.de"
+Received: from mout.web.de ([212.227.15.4]:41959 "EHLO mout.web.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754207AbeDPNQo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 09:16:44 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
-        loic.poulain@linaro.org, rfried@codeaurora.org,
-        bjorn.andersson@linaro.org, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH 1/5] wcn36xx: abort scan request when 'dequeued' indicator is sent
-Date: Mon, 16 Apr 2018 15:16:30 +0200
-Message-Id: <20180416131634.25432-2-daniel@zonque.org> (sfid-20180416_151648_036820_6D00ED74)
-In-Reply-To: <20180416131634.25432-1-daniel@zonque.org>
-References: <20180416131634.25432-1-daniel@zonque.org>
+        id S1751305AbeDROqN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Apr 2018 10:46:13 -0400
+Received: from [192.168.178.68] ([188.97.189.171]) by smtp.web.de (mrweb004
+ [213.165.67.108]) with ESMTPSA (Nemesis) id 0LegAQ-1eeiBJ2xOI-00qV7F for
+ <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2018 16:46:11 +0200
+From: Bernhard Gabler <Bernhard_Gabler@web.de>
+Subject: ath confusing log message "country IE"
+To: Linux-Wireless mailing list <linux-wireless@vger.kernel.org>
+Message-ID: <660b1538-0ccb-8f1a-ebe0-632b0e14a46b@web.de> (sfid-20180418_164617_845735_F93BD4F7)
+Date: Wed, 18 Apr 2018 16:46:11 +0200
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the firmware sends a WCN36XX_HAL_SCAN_IND_DEQUEUED indication,
-the request is apparently no longer valid. Attempts to stop the hardware
-scan request subsequently will lead to the following error message, and
-the hardware is no longer able to communicate with any AP:
+Dear all,
 
-[   57.917186] wcn36xx: ERROR hal_stop_scan_offload response failed err=5
+would it be possible to re-write the log message from
+    "regdomain ... dynamically updated by country IE"
+in a less ambiguous way, e.g. to:
+    "regdomain ... dynamically updated by country-IE"
+    "regdomain ... dynamically updated by country information element"
+, please?
 
-Interpreting this indicator message as scan abortion fixes this.
+To the occasional reader, the following system log messages seem to 
+convey that
+  -  "DE" (Germany) was intended to be used, but
+  -  "IE" (Ireland) was configured as regdomain.
 
-While at it, add a newline to a debug print.
+     [ 2723.739071] ath: EEPROM regdomain: 0x8114
+     [ 2723.739072] ath: EEPROM indicates we should expect a country code
+     [ 2723.739073] ath: doing EEPROM country->regdmn map search
+     [ 2723.739074] ath: country maps to regdmn code: 0x37
+     [ 2723.739075] ath: Country alpha2 being used: DE
+     [ 2723.739076] ath: Regpair used: 0x37
+     [ 2723.739077] ath: regdomain 0x8114 dynamically updated by country IE
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
----
- drivers/net/wireless/ath/wcn36xx/smd.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Only after intense googling, I now know that IE stands for "information 
+element", not for Ireland. But this is not obvious at. To prevent others 
+from confusion and wasting time on a non-problem, could please someone 
+rewrite the log message?
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 297a785d0785..b7964f79d837 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -2140,10 +2140,11 @@ static int wcn36xx_smd_hw_scan_ind(struct wcn36xx *wcn, void *buf, size_t len)
- 		return -EIO;
- 	}
- 
--	wcn36xx_dbg(WCN36XX_DBG_HAL, "scan indication (type %x)", rsp->type);
-+	wcn36xx_dbg(WCN36XX_DBG_HAL, "scan indication (type %x)\n", rsp->type);
- 
- 	switch (rsp->type) {
- 	case WCN36XX_HAL_SCAN_IND_FAILED:
-+	case WCN36XX_HAL_SCAN_IND_DEQUEUED:
- 		scan_info.aborted = true;
- 		/* fall through */
- 	case WCN36XX_HAL_SCAN_IND_COMPLETED:
-@@ -2156,7 +2157,6 @@ static int wcn36xx_smd_hw_scan_ind(struct wcn36xx *wcn, void *buf, size_t len)
- 		break;
- 	case WCN36XX_HAL_SCAN_IND_STARTED:
- 	case WCN36XX_HAL_SCAN_IND_FOREIGN_CHANNEL:
--	case WCN36XX_HAL_SCAN_IND_DEQUEUED:
- 	case WCN36XX_HAL_SCAN_IND_PREEMPTED:
- 	case WCN36XX_HAL_SCAN_IND_RESTARTED:
- 		break;
--- 
-2.14.3
+Regards,
+Bernhard
+
+PS: The example log is from a machine with "Qualcomm Atheros QCA6174" 
+but I fancy other drivers may show same/similar messages.
