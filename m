@@ -1,63 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41448 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750737AbeDSEcs (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:6278 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753919AbeDRLky (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Apr 2018 00:32:48 -0400
+        Wed, 18 Apr 2018 07:40:54 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 14/22] staging: wilc1000: remove the use of goto label in spi_cmd_complete()
+Date: Wed, 18 Apr 2018 17:09:16 +0530
+Message-ID: <1524051564-15497-15-git-send-email-ajay.kathat@microchip.com> (sfid-20180418_134119_307717_E96CFD33)
+In-Reply-To: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 19 Apr 2018 10:02:47 +0530
-From: govinds@codeaurora.org
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        linux-wireless@vger.kernel.org, pillair@codeaurora.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH v2 4/4] ath10k: Enable sta idle power save
-In-Reply-To: <87604oodt4.fsf@kamboji.qca.qualcomm.com>
-References: <1523966821-21903-1-git-send-email-pillair@codeaurora.org>
- <1523966821-21903-5-git-send-email-pillair@codeaurora.org>
- <946e582c-2438-872b-eec8-25d9dcb994d9@dd-wrt.com>
- <7a06a34a5fcb97e07a8d79b4d689e781@codeaurora.org>
- <87604oodt4.fsf@kamboji.qca.qualcomm.com>
-Message-ID: <a7dd1b94951725c61034f5be6744b725@codeaurora.org> (sfid-20180419_063252_344873_3DA8F8CF)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-04-18 18:46, Kalle Valo wrote:
-> (fixing top posting)
-> 
-> govinds@codeaurora.org writes:
-> 
->> On 2018-04-18 12:36, Sebastian Gottschall wrote:
->>> from my point of view powersave should be optional and not forced.
->>> 
->>> consider :
->>> iw dev <devname> set power_save on/off
->>> 
->>> so there is already a config option made for that purpose,
->> 
->> Thanks Sebastian for your review. Agree this should not be forced with
->> in driver.
->> 
->> I will check if i can set the idle ps at the end of
->> ath10k_mac_vif_setup_ps by checking arvif->ps.
->> I will update the patch accordingly.
-> 
-> So what power save is this exactly? I assumed it's some bus level power
-> save (turning of clocks etc) but is it actually 802.11 power save?
+In spi_cmd_complete() remove the use of goto label '_error_'. Changes
+were done to avoid the use of '_' in label name.
 
-Yes this is WIFI chip set level power-save(based on idleness) and not 
-related to protocol power save.
-FW will turn off/scale down the resources(clock/rails) based on 
-opportunity(when ever idle mode is detected).
-This power save is mostly done in disconnected state. I am not really 
-sure when framework/user-space
-triggers power-save config(iw dev <devname> set power_save on/off).
-Then doing this from user-space will be unnecessarily toggling this 
-config or may not be setting at disconnected state.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_spi.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-May be you can suggest better here.
-
-BR,
-Govind
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 6b392c9..3e3c774 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -527,8 +527,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 			if (wilc_spi_rx(wilc, &b[ix], nbytes)) {
+ 				dev_err(&spi->dev,
+ 					"Failed block read, bus err\n");
+-				result = N_FAIL;
+-				goto _error_;
++				return N_FAIL;
+ 			}
+ 
+ 			/*
+@@ -537,8 +536,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 			if (!g_spi.crc_off && wilc_spi_rx(wilc, crc, 2)) {
+ 				dev_err(&spi->dev,
+ 					"Failed block crc read, bus err\n");
+-				result = N_FAIL;
+-				goto _error_;
++				return N_FAIL;
+ 			}
+ 
+ 			ix += nbytes;
+@@ -604,7 +602,6 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 			sz -= nbytes;
+ 		}
+ 	}
+-_error_:
+ 	return result;
+ }
+ 
+-- 
+2.7.4
