@@ -1,66 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52060 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752750AbeDPOli (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:56604 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751407AbeDRJ6m (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 10:41:38 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Daniel Mack <daniel@zonque.org>
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        loic.poulain@linaro.org, rfried@codeaurora.org,
-        bjorn.andersson@linaro.org
-Subject: Re: [PATCH 5/5] wcn36xx: pass information elements in scan requests
-References: <20180416131634.25432-1-daniel@zonque.org>
-        <20180416131634.25432-6-daniel@zonque.org>
-        <87lgdnp7sy.fsf@kamboji.qca.qualcomm.com>
-        <0595a559-8220-bc22-0c33-4580119c774d@zonque.org>
-        <87h8obp7c0.fsf@kamboji.qca.qualcomm.com>
-        <384e608f-0f59-8ba6-5223-8a52e2ac86f9@zonque.org>
-Date: Mon, 16 Apr 2018 17:41:32 +0300
-In-Reply-To: <384e608f-0f59-8ba6-5223-8a52e2ac86f9@zonque.org> (Daniel Mack's
-        message of "Mon, 16 Apr 2018 16:29:03 +0200")
-Message-ID: <87d0yzp61v.fsf@kamboji.qca.qualcomm.com> (sfid-20180416_164144_093477_70638320)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 18 Apr 2018 05:58:42 -0400
+Message-ID: <1524045517.3024.3.camel@sipsolutions.net> (sfid-20180418_115846_295518_EB1D875D)
+Subject: Re: [PATCH 2/2] ath10k: support MAC address randomization in scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Dan Williams <dcbw@redhat.com>,
+        Brian Norris <briannorris@chromium.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>, cjhuang@codeaurora.org,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Date: Wed, 18 Apr 2018 11:58:37 +0200
+In-Reply-To: <5AD701F0.20504@broadcom.com> (sfid-20180418_102940_926003_EF96FC2A)
+References: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org>
+         <1522379640-6442-3-git-send-email-cjhuang@codeaurora.org>
+         <20180412205954.GA34456@rodete-desktop-imager.corp.google.com>
+         <e16557d0891352ae0b83902faee97023@codeaurora.org>
+         <877epbs5v7.fsf@kamboji.qca.qualcomm.com> <5AD11D7C.1030603@broadcom.com>
+         <242be71eb87140c9560163c4000255b2@codeaurora.org>
+         <8736zvqtcw.fsf@kamboji.qca.qualcomm.com>
+         <20180417002854.GA186697@rodete-desktop-imager.corp.google.com>
+         <5AD5AEB5.1040808@broadcom.com>
+         <20180417160715.GA255263@rodete-desktop-imager.corp.google.com>
+         <5AD66BD9.4000706@broadcom.com>
+         <CA+ASDXOoxMyTq2CVnUwvN1LBWj1Y9wpsRPKuM0tVzA80sDYG-w@mail.gmail.com>
+         <c4f3d20e8c16c8bf8721f0a50fb809781b30b3f7.camel@redhat.com>
+         <5AD701F0.20504@broadcom.com> (sfid-20180418_102940_926003_EF96FC2A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Mack <daniel@zonque.org> writes:
 
-> On Monday, April 16, 2018 04:13 PM, Kalle Valo wrote:
->> Daniel Mack <daniel@zonque.org> writes:
->>> On Monday, April 16, 2018 04:03 PM, Kalle Valo wrote:
->>>> Daniel Mack <daniel@zonque.org> writes:
->
->>>>> them to the firmware message. The driver currently tells the core that
->>>>> it is capable of attaching up to WCN36XX_MAX_SCAN_IE_LEN octets, but
->>>>> doesn't actually pass them to the the hardware.
->>>>>
->>>>> Some defines were moved around to avoid cyclic include dependencies.
->>>>
->>>> Does this fix anything or change functionality somehow? You should
->>>> document that also in the commit log.
->>>
->>> I don't have a test case for this, no. But as the change was pretty much
->>> straight forward, I sent it anyway.
->> 
->> Ok, but you should still explain that in the commit log. In other words,
->> you should always answer the question "Why?" in the commit log.
->> 
->>> I can resend with some more information on this if you like.
->> 
->> No need to resend because of this, I can edit the commit log.
->
-> Hmm, given that I can't even be sure the firmware does the right thing
-> when instructed this way, we should probably just drop this patch from
-> the series. The others are more important anyway, as they address bugs
-> that hit me on actual hardware.
+> > > Is there a problem with the "supported commands" list?
+> 
+> My understanding is that in general the "supported commands" list is not 
+> well-maintained. Not every nl80211 command is represented in the list so 
+> user-space can not know whether it is missing or not supported.
+> For this particular START_SCHED_SCAN command it can be used still and 
+> indeed probably for a long time. I just wanted to point out that it is 
+> not recommended for new user-space functionality.
 
-IMHO it's useful and if you don't see anything breaking I would prefer
-to take it anyway. I can't immeadiately say in what use cases this helps
-or fixes, though. But maybe you (or someone else) could verify that it
-works correctly by comparing before and after probe requests with a
-sniffer?
+We used to do it more, but most features are more complex than "command
+is supported" or are simpler than "these 5 commands are supported" (just
+a single bit to indicate the whole feature is enough), so we mostly use
+extended feature flags now.
 
--- 
-Kalle Valo
+> > It sometimes feels like wpa_supplicant gets treated as a static entity
+> > that can never be changed.  In fact, send a patch to Jouni implementing
+> > the best practice, with a fallback to preserve compat for old kernels,
+> > and I'm sure he'd entertain it.  Just because the supplicant does
+> > something a certain way, doesn't mean it's the *best* way, but it too
+> > evolves.
+
+You also need to consider old supplicant on new kernels though? But I
+didn't really follow this part of the discussion, so you're probably
+taking that into account.
+
+johannes
