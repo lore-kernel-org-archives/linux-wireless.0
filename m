@@ -1,102 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:44857 "EHLO
-        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754850AbeDDCnR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Apr 2018 22:43:17 -0400
-Received: by mail-oi0-f53.google.com with SMTP id j143-v6so17868833oih.11
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Apr 2018 19:43:17 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 1/9] rtlwifi: btcoex: Add 8822b1ant coex files
-To: pkshih@realtek.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-References: <20180328072741.23349-1-pkshih@realtek.com>
- <20180328072741.23349-2-pkshih@realtek.com>
-Message-ID: <f4d2fe50-76b0-27a8-a119-018d7d7d1286@lwfinger.net> (sfid-20180404_044321_955939_0A9A3113)
-Date: Tue, 3 Apr 2018 21:43:15 -0500
+Received: from mail.toke.dk ([52.28.52.200]:40579 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752632AbeDROz5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Apr 2018 10:55:57 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Bernhard Gabler <Bernhard_Gabler@web.de>,
+        Linux-Wireless mailing list <linux-wireless@vger.kernel.org>
+Subject: Re: ath confusing log message "country IE"
+In-Reply-To: <660b1538-0ccb-8f1a-ebe0-632b0e14a46b@web.de>
+References: <660b1538-0ccb-8f1a-ebe0-632b0e14a46b@web.de>
+Date: Wed, 18 Apr 2018 16:55:55 +0200
+Message-ID: <87o9ig1s3o.fsf@toke.dk> (sfid-20180418_165601_687010_B40C35D7)
 MIME-Version: 1.0
-In-Reply-To: <20180328072741.23349-2-pkshih@realtek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/28/2018 02:27 AM, pkshih@realtek.com wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> This file supports 8822be WiFi module with two physical antenna that
-> means one antenna will share with BT.
-> 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> ---
->   .../realtek/rtlwifi/btcoexist/halbtc8822b1ant.c    | 5303 ++++++++++++++++++++
->   .../realtek/rtlwifi/btcoexist/halbtc8822b1ant.h    |  413 ++
->   2 files changed, 5716 insertions(+)
->   create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.c
->   create mode 100644 drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.h
+Bernhard Gabler <Bernhard_Gabler@web.de> writes:
 
---snip--
+> Dear all,
+>
+> would it be possible to re-write the log message from
+>  =C2=A0=C2=A0 "regdomain ... dynamically updated by country IE"
+> in a less ambiguous way, e.g. to:
+>  =C2=A0=C2=A0 "regdomain ... dynamically updated by country-IE"
+>  =C2=A0=C2=A0 "regdomain ... dynamically updated by country information e=
+lement"
+> , please?
+>
+> To the occasional reader, the following system log messages seem to=20
+> convey that
+>  =C2=A0-=C2=A0 "DE" (Germany) was intended to be used, but
+>  =C2=A0-=C2=A0 "IE" (Ireland) was configured as regdomain.
+>
+>  =C2=A0=C2=A0=C2=A0 [ 2723.739071] ath: EEPROM regdomain: 0x8114
+>  =C2=A0=C2=A0=C2=A0 [ 2723.739072] ath: EEPROM indicates we should expect=
+ a country code
+>  =C2=A0=C2=A0=C2=A0 [ 2723.739073] ath: doing EEPROM country->regdmn map =
+search
+>  =C2=A0=C2=A0=C2=A0 [ 2723.739074] ath: country maps to regdmn code: 0x37
+>  =C2=A0=C2=A0=C2=A0 [ 2723.739075] ath: Country alpha2 being used: DE
+>  =C2=A0=C2=A0=C2=A0 [ 2723.739076] ath: Regpair used: 0x37
+>  =C2=A0=C2=A0=C2=A0 [ 2723.739077] ath: regdomain 0x8114 dynamically upda=
+ted by country IE
+>
+> Only after intense googling, I now know that IE stands for "information=20
+> element", not for Ireland. But this is not obvious at. To prevent others=
+=20
+> from confusion and wasting time on a non-problem, could please someone=20
+> rewrite the log message?
 
-> +/*anttenna control by bb mac bt antdiv pta to write 0x4c 0xcb4,0xcbd*/
-> +
-> +static
-> +void hallbtc882b1ant_set_ant_switch(struct btc_coexist *btcoexist,
-> +				    bool force_exec, u8 ctrl_type,
-> +				    u8 pos_type)
-> +{
-> +	struct rtl_priv *rtlpriv = btcoexist->adapter;
-> +	bool switch_polatiry_inverse = false;
-> +	u8 regval_0xcbd = 0, regval_0x64;
-> +	u32 u32tmp1 = 0, u32tmp2 = 0, u32tmp3 = 0;
-> +
-> +	/* Ext switch buffer mux */
-> +	btcoexist->btc_write_1byte(btcoexist, 0x974, 0xff);
-> +	btcoexist->btc_write_1byte_bitmask(btcoexist, 0x1991, 0x3, 0x0);
-> +	btcoexist->btc_write_1byte_bitmask(btcoexist, 0xcbe, 0x8, 0x0);
-> +
-> +	if (!rfe_type->ext_ant_switch_exist)
-> +		return;
-> +
-> +	coex_dm->cur_ext_ant_switch_status = (ctrl_type << 8) + pos_type;
-> +
-> +	if (!force_exec) {
-> +		if (coex_dm->pre_ext_ant_switch_status ==
-> +		    coex_dm->cur_ext_ant_switch_status)
-> +			return;
-> +	}
-> +
-> +	coex_dm->pre_ext_ant_switch_status = coex_dm->cur_ext_ant_switch_status;
-> +
-> +	/* swap control polarity if use different switch control polarity*/
-> +	/* Normal switch polarity for SPDT,
-> +	 * 0xcbd[1:0] = 2b'01 => Ant to BTG, WLA
-> +	 * 0xcbd[1:0] = 2b'10 => Ant to WLG
-> +	 */
-> +	switch_polatiry_inverse = (rfe_type->ext_ant_switch_ctrl_polarity == 1 ?
-> +					   ~switch_polatiry_inverse :
-> +					   switch_polatiry_inverse);
+Heh, that is a good point, I think. The patch below should fix it; but I
+worry that the log lines become quite long, then? Maybe better to use
+"country-IE", but that could also be confused. "country inf.elem"
+perhaps?
 
-gcc 7.3.1 reports the following:
+Ah, the bike-shedding possibilities are endless! :)
 
-   CC [M]  drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.o
-drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.c: In function 
-‘hallbtc882b1ant_set_ant_switch’:
-drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.c:2193:9: 
-warning: ‘~’ on a boolean expression [-Wbool-operation]
-          ~switch_polatiry_inverse :
-          ^
-drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.c:2193:9: note: 
-did you mean to use logical not?
-          ~switch_polatiry_inverse :
-          ^
+-Toke
 
-For a boolean, you should use !bool, not -bool. In addition, it would be better 
-to use switch_polarity_inverse, not switch_polatiry_inverse. The same "typo" 
-happens in other places in this file. I suggest
 
-sed -i 's/polatiry_inverse/polarity_inverse/g' \
-drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8822b1ant.c.
-
-> +
-> +	switch (pos_type) {
-
-Larry
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 7b42f0bacfd8..7f432734dbe9 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1464,7 +1464,7 @@ const char *reg_initiator_name(enum nl80211_reg_initi=
+ator initiator)
+        case NL80211_REGDOM_SET_BY_DRIVER:
+                return "driver";
+        case NL80211_REGDOM_SET_BY_COUNTRY_IE:
+-               return "country IE";
++               return "country information element";
+        default:
+                WARN_ON(1);
+                return "bug";
