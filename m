@@ -1,52 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:46115 "EHLO
-        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750972AbeDTQpK (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:6278 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753878AbeDRLku (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Apr 2018 12:45:10 -0400
-Date: Fri, 20 Apr 2018 09:45:07 -0700
-From: Mark Greer <mgreer@animalcreek.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Amit Pundir <amit.pundir@linaro.org>,
-        lkml <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Christophe Ricard <christophe.ricard@gmail.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        John Stultz <john.stultz@linaro.org>,
-        Dmitry Shmidt <dimitrysh@google.com>,
-        Todd Kjos <tkjos@google.com>,
-        Android Kernel Team <kernel-team@android.com>,
-        Suren Baghdasaryan <surenb@google.com>
-Subject: Re: [RESEND][PATCH 2/4] NFC: st21nfca: Fix memory OOB and leak
- issues in connectivity events handler
-Message-ID: <20180420164507.GA22666@animalcreek.com> (sfid-20180420_184525_646234_F77B4F73)
-References: <1524045904-7005-1-git-send-email-amit.pundir@linaro.org>
- <1524045904-7005-3-git-send-email-amit.pundir@linaro.org>
- <1524227986.21176.467.camel@linux.intel.com>
+        Wed, 18 Apr 2018 07:40:50 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 12/22] staging: wilc1000: remove multiple define used for MAX_SSID_LEN
+Date: Wed, 18 Apr 2018 17:09:14 +0530
+Message-ID: <1524051564-15497-13-git-send-email-ajay.kathat@microchip.com> (sfid-20180418_134054_704475_691C05E6)
+In-Reply-To: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1524227986.21176.467.camel@linux.intel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 20, 2018 at 03:39:46PM +0300, Andy Shevchenko wrote:
-> On Wed, 2018-04-18 at 15:35 +0530, Amit Pundir wrote:
-> 
-> >  		if (skb->data[transaction->aid_len + 2] !=
-> > -		    NFC_EVT_TRANSACTION_PARAMS_TAG)
-> > +		    NFC_EVT_TRANSACTION_PARAMS_TAG ||
-> > +		    skb->len < transaction->aid_len + transaction-
-> > >params_len + 4) {
-> 
-> > +			devm_kfree(dev, transaction);
-> 
-> Oh, no.
-> 
-> This is not memory leak per se, this is bad choice of devm_ API where it
-> should use plain kmalloc() / kfree().
+Cleanup patch to have commonly used macro in common header file to avoid
+same defination in mulitple file. Removed MAX_SSID_LEN macro from
+coreconfigurator.h header as its already defined in wilc_wlan_if.h.
 
-Also, there is no check to see if the allocation worked at all.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-Mark
---
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 5436fd3..1666b7a 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -17,7 +17,6 @@
+ #define NUM_RSSI                5
+ 
+ #define MAC_HDR_LEN             24
+-#define MAX_SSID_LEN            33
+ #define FCS_LEN                 4
+ #define TIME_STAMP_LEN          8
+ #define BEACON_INTERVAL_LEN     2
+-- 
+2.7.4
