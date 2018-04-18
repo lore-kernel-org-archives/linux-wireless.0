@@ -1,48 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:34997 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751239AbeDDIim (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:54330 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753952AbeDRLlI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Apr 2018 04:38:42 -0400
-Received: by mail-wm0-f68.google.com with SMTP id r82so40491350wme.0
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Apr 2018 01:38:42 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76x2: set default values in TX_ALC_CFG_{1,2} for tempetaure compensation
-Date: Wed,  4 Apr 2018 10:38:32 +0200
-Message-Id: <cca4a0d4fbe58e6ecf0f05b953b2df11e30e75b1.1522830473.git.lorenzo.bianconi@redhat.com> (sfid-20180404_103847_155386_4AED4551)
-In-Reply-To: <cover.1522830473.git.lorenzo.bianconi@redhat.com>
-References: <cover.1522830473.git.lorenzo.bianconi@redhat.com>
+        Wed, 18 Apr 2018 07:41:08 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 20/22] staging: wilc1000: rename goto labels starting with '_' in wilc1000_wlan_init()
+Date: Wed, 18 Apr 2018 17:09:22 +0530
+Message-ID: <1524051564-15497-21-git-send-email-ajay.kathat@microchip.com> (sfid-20180418_134111_502657_A02C7B0C)
+In-Reply-To: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initialize default values for temperature compensation in TX_ALC_CFG_{1,2}
-if tssi has been enabled
+Rename goto labels starting with '_' in wilc1000_wlan_init() to follow
+linux coding style.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2_phy.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/staging/wilc1000/linux_wlan.c | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-index 42414c5fa01e..daecc7ea900a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-@@ -660,6 +660,14 @@ int mt76x2_phy_set_channel(struct mt76x2_dev *dev,
- 	memcpy(dev->cal.agc_gain_cur, dev->cal.agc_gain_init,
- 	       sizeof(dev->cal.agc_gain_cur));
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 8f97c62..26edbb6 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -735,42 +735,42 @@ int wilc1000_wlan_init(struct net_device *dev, struct wilc_vif *vif)
+ 		ret = wilc_wlan_init(dev);
+ 		if (ret < 0) {
+ 			ret = -EIO;
+-			goto _fail_locks_;
++			goto fail_locks;
+ 		}
  
-+	/* init default values for temp compensation */
-+	if (mt76x2_tssi_enabled(dev)) {
-+		mt76_rmw_field(dev, MT_TX_ALC_CFG_1, MT_TX_ALC_CFG_1_TEMP_COMP,
-+			       0x38);
-+		mt76_rmw_field(dev, MT_TX_ALC_CFG_2, MT_TX_ALC_CFG_2_TEMP_COMP,
-+			       0x38);
-+	}
-+
- 	ieee80211_queue_delayed_work(mt76_hw(dev), &dev->cal_work,
- 				     MT_CALIBRATE_INTERVAL);
+ 		if (wl->gpio >= 0 && init_irq(dev)) {
+ 			ret = -EIO;
+-			goto _fail_locks_;
++			goto fail_locks;
+ 		}
  
+ 		ret = wlan_initialize_threads(dev);
+ 		if (ret < 0) {
+ 			ret = -EIO;
+-			goto _fail_wilc_wlan_;
++			goto fail_wilc_wlan;
+ 		}
+ 
+ 		if (!wl->dev_irq_num &&
+ 		    wl->hif_func->enable_interrupt &&
+ 		    wl->hif_func->enable_interrupt(wl)) {
+ 			ret = -EIO;
+-			goto _fail_irq_init_;
++			goto fail_irq_init;
+ 		}
+ 
+ 		if (wilc_wlan_get_firmware(dev)) {
+ 			ret = -EIO;
+-			goto _fail_irq_enable_;
++			goto fail_irq_enable;
+ 		}
+ 
+ 		ret = wilc1000_firmware_download(dev);
+ 		if (ret < 0) {
+ 			ret = -EIO;
+-			goto _fail_irq_enable_;
++			goto fail_irq_enable;
+ 		}
+ 
+ 		ret = linux_wlan_start_firmware(dev);
+ 		if (ret < 0) {
+ 			ret = -EIO;
+-			goto _fail_irq_enable_;
++			goto fail_irq_enable;
+ 		}
+ 
+ 		if (wilc_wlan_cfg_get(vif, 1, WID_FIRMWARE_VERSION, 1, 0)) {
+@@ -788,27 +788,27 @@ int wilc1000_wlan_init(struct net_device *dev, struct wilc_vif *vif)
+ 		if (ret < 0) {
+ 			netdev_err(dev, "Failed to configure firmware\n");
+ 			ret = -EIO;
+-			goto _fail_fw_start_;
++			goto fail_fw_start;
+ 		}
+ 
+ 		wl->initialized = true;
+ 		return 0;
+ 
+-_fail_fw_start_:
++fail_fw_start:
+ 		wilc_wlan_stop(wl);
+ 
+-_fail_irq_enable_:
++fail_irq_enable:
+ 		if (!wl->dev_irq_num &&
+ 		    wl->hif_func->disable_interrupt)
+ 			wl->hif_func->disable_interrupt(wl);
+-_fail_irq_init_:
++fail_irq_init:
+ 		if (wl->dev_irq_num)
+ 			deinit_irq(dev);
+ 
+ 		wlan_deinitialize_threads(dev);
+-_fail_wilc_wlan_:
++fail_wilc_wlan:
+ 		wilc_wlan_cleanup(dev);
+-_fail_locks_:
++fail_locks:
+ 		wlan_deinit_locks(dev);
+ 		netdev_err(dev, "WLAN initialization FAILED\n");
+ 	} else {
 -- 
-2.14.3
+2.7.4
