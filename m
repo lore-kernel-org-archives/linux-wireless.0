@@ -1,71 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47374 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753789AbeDSQSt (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:47368 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750981AbeDRVvj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Apr 2018 12:18:49 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 18 Apr 2018 17:51:39 -0400
+Subject: Re: [PATCH 1/3] ethtool: Support ETHTOOL_GSTATS2 command.
+To: Johannes Berg <johannes@sipsolutions.net>, netdev@vger.kernel.org
+References: <1524016176-3881-1-git-send-email-greearb@candelatech.com>
+ <1524086817.3024.9.camel@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <f43d7ee4-7f27-b145-125e-32dbc31a27f1@candelatech.com> (sfid-20180418_235146_373828_D450586E)
+Date: Wed, 18 Apr 2018 14:51:36 -0700
 MIME-Version: 1.0
-Subject: Re: [v2] ath10k: search all IEs for variant before falling back
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1523630426-28577-1-git-send-email-kvalo@codeaurora.org>
-References: <1523630426-28577-1-git-send-email-kvalo@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Thomas Hebb <tommyhebb@gmail.com>
-Message-Id: <20180419161848.AA48460500@smtp.codeaurora.org> (sfid-20180419_181852_797589_1B4663AB)
-Date: Thu, 19 Apr 2018 16:18:48 +0000 (UTC)
+In-Reply-To: <1524086817.3024.9.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> wrote:
+On 04/18/2018 02:26 PM, Johannes Berg wrote:
+> On Tue, 2018-04-17 at 18:49 -0700, greearb@candelatech.com wrote:
+>>
+>> + * @get_ethtool_stats2: Return extended statistics about the device.
+>> + *	This is only useful if the device maintains statistics not
+>> + *	included in &struct rtnl_link_stats64.
+>> + *      Takes a flags argument:  0 means all (same as get_ethtool_stats),
+>> + *      0x1 (ETHTOOL_GS2_SKIP_FW) means skip firmware stats.
+>> + *      Other flags are reserved for now.
+>
+> It'd be pretty hard to know which flags are firmware stats?
 
-> commit f2593cb1b291 ("ath10k: Search SMBIOS for OEM board file
-> extension") added a feature to ath10k that allows Board Data File
-> (BDF) conflicts between multiple devices that use the same device IDs
-> but have different calibration requirements to be resolved by allowing
-> a "variant" string to be stored in SMBIOS [and later device tree, added
-> by commit d06f26c5c8a4 ("ath10k: search DT for qcom,ath10k-calibration-
-> variant")] that gets appended to the ID stored in board-2.bin.
-> 
-> This original patch had a regression, however. Namely that devices with
-> a variant present in SMBIOS that didn't need custom BDFs could no longer
-> find the default BDF, which has no variant appended. The patch was
-> reverted and re-applied with a fix for this issue in commit 1657b8f84ed9
-> ("search SMBIOS for OEM board file extension").
-> 
-> But the fix to fall back to a default BDF introduced another issue: the
-> driver currently parses IEs in board-2.bin one by one, and for each one
-> it first checks to see if it matches the ID with the variant appended.
-> If it doesn't, it checks to see if it matches the "fallback" ID with no
-> variant. If a matching BDF is found at any point during this search, the
-> search is terminated and that BDF is used. The issue is that it's very
-> possible (and is currently the case for board-2.bin files present in the
-> ath10k-firmware repository) for the default BDF to occur in an earlier
-> IE than the variant-specific BDF. In this case, the current code will
-> happily choose the default BDF even though a better-matching BDF is
-> present later in the file.
-> 
-> This patch fixes the issue by first searching the entire file for the ID
-> with variant, and searching for the fallback ID only if that search
-> fails. It also includes some code cleanup in the area, as
-> ath10k_core_fetch_board_data_api_n() no longer does its own string
-> mangling to remove the variant from an ID, instead leaving that job to a
-> new flag passed to ath10k_core_create_board_name().
-> 
-> I've tested this patch on a QCA4019 and verified that the driver behaves
-> correctly for 1) both fallback and variant BDFs present, 2) only fallback
-> BDF present, and 3) no matching BDFs present.
-> 
-> Fixes: 1657b8f84ed9 ("ath10k: search SMBIOS for OEM board file extension")
-> Signed-off-by: Thomas Hebb <tommyhebb@gmail.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Yes, it is, but ethtool stats are difficult to understand in a generic
+manner anyway, so someone using them is already likely aware of low-level
+details of the driver(s) they are using.
 
-Patch applied to ath-next branch of ath.git, thanks.
+In my case, I have lots of virtual stations (or APs), and I want stats
+for them as well as for the 'radio', so I would probe the first vdev with
+flags of 'skip-none' to get all stats, including radio (firmware) stats.
 
-c8489668065a ath10k: search all IEs for variant before falling back
+And then the rest I would just probe the non-firmware stats.
+
+To be honest, I was slightly amused that anyone expressed interest in
+this patch originally, but maybe other people have similar use case
+and/or drivers with slow-to-acquire stats.
+
+> Anyway, there's no way I'm going to take this patch, so you need to
+> float it on netdev first (best CC us here) and get it applied there
+> before we can do anything on the wifi side.
+
+I posted the patches to netdev, ath10k and linux-wireless.  If I had only
+posted them individually to different lists I figure I'd be hearing about how
+the netdev patch is useless because it has no driver support, etc.
+
+Thanks,
+Ben
 
 -- 
-https://patchwork.kernel.org/patch/10340241/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
