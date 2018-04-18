@@ -1,788 +1,708 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:23202 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752882AbeDLIJD (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:6278 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753952AbeDRLlG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 04:09:03 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Ahmad Masri <amasri@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 03/10] wil6210: align to latest auto generated wmi.h
-Date: Thu, 12 Apr 2018 11:08:39 +0300
-Message-Id: <1523520526-24997-4-git-send-email-merez@codeaurora.org> (sfid-20180412_100908_927367_91E355C6)
-In-Reply-To: <1523520526-24997-1-git-send-email-merez@codeaurora.org>
-References: <1523520526-24997-1-git-send-email-merez@codeaurora.org>
+        Wed, 18 Apr 2018 07:41:06 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 19/22] staging: wilc1000: rename goto label '_fail_' linux naming convension
+Date: Wed, 18 Apr 2018 17:09:21 +0530
+Message-ID: <1524051564-15497-20-git-send-email-ajay.kathat@microchip.com> (sfid-20180418_134110_485400_49DC6F1C)
+In-Reply-To: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ahmad Masri <amasri@codeaurora.org>
+Rename '_fail_' goto label to have name as per linux coding style.
 
-Align to latest version of the auto generated wmi file
-describing the interface with FW
-
-Signed-off-by: Ahmad Masri <amasri@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c |   6 +-
- drivers/net/wireless/ath/wil6210/wmi.h | 387 +++++++++++++++++++++++++++++++--
- 2 files changed, 371 insertions(+), 22 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 92 +++++++++++++++++------------------
+ drivers/staging/wilc1000/wilc_sdio.c  | 84 ++++++++++++++++----------------
+ drivers/staging/wilc1000/wilc_wlan.c  | 16 +++---
+ 3 files changed, 96 insertions(+), 96 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 062ead3..9f2c21b 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -1564,7 +1564,9 @@ int wmi_pcp_start(struct wil6210_vif *vif,
- 		.pcp_max_assoc_sta = max_assoc_sta,
- 		.hidden_ssid = hidden_ssid,
- 		.is_go = is_go,
--		.disable_ap_sme = disable_ap_sme,
-+		.ap_sme_offload_mode = disable_ap_sme ?
-+				       WMI_AP_SME_OFFLOAD_PARTIAL :
-+				       WMI_AP_SME_OFFLOAD_FULL,
- 		.abft_len = wil->abft_len,
- 	};
- 	struct {
-@@ -1593,7 +1595,7 @@ int wmi_pcp_start(struct wil6210_vif *vif,
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 2236967..8f97c62 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -338,16 +338,16 @@ int wilc_wlan_get_firmware(struct net_device *dev)
+ 	netdev_info(dev, "loading firmware %s\n", firmware);
+ 
+ 	if (!(&vif->ndev->dev))
+-		goto _fail_;
++		goto fail;
+ 
+ 	if (request_firmware(&wilc_firmware, firmware, wilc->dev) != 0) {
+ 		netdev_err(dev, "%s - firmware not available\n", firmware);
+ 		ret = -1;
+-		goto _fail_;
++		goto fail;
+ 	}
+ 	wilc->firmware = wilc_firmware;
+ 
+-_fail_:
++fail:
+ 
+ 	return ret;
+ }
+@@ -416,193 +416,193 @@ static int linux_wlan_init_test_config(struct net_device *dev,
+ 	*(int *)c_val = 1;
+ 
+ 	if (!wilc_wlan_cfg_set(vif, 1, WID_SET_DRV_HANDLER, c_val, 4, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = 0;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_PC_TEST_MODE, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = INFRASTRUCTURE;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_BSS_TYPE, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = RATE_AUTO;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_CURRENT_TX_RATE, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = G_MIXED_11B_2_MODE;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_11G_OPERATING_MODE, c_val, 1, 0,
+ 			       0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = 1;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_CURRENT_CHANNEL, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = G_SHORT_PREAMBLE;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_PREAMBLE, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = AUTO_PROT;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_PROT_MECH, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = ACTIVE_SCAN;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_SCAN_TYPE, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = SITE_SURVEY_OFF;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_SITE_SURVEY, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	*((int *)c_val) = 0xffff;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_RTS_THRESHOLD, c_val, 2, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	*((int *)c_val) = 2346;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_FRAG_THRESHOLD, c_val, 2, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = 0;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_BCAST_SSID, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = 1;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_QOS_ENABLE, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = NO_POWERSAVE;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_POWER_MANAGEMENT, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = NO_SECURITY; /* NO_ENCRYPT, 0x79 */
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_11I_MODE, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = OPEN_SYSTEM;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_AUTH_TYPE, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	strcpy(c_val, "123456790abcdef1234567890");
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_WEP_KEY_VALUE, c_val,
+ 			       (strlen(c_val) + 1), 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	strcpy(c_val, "12345678");
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_11I_PSK, c_val, (strlen(c_val)), 0,
+ 			       0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	strcpy(c_val, "password");
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_1X_KEY, c_val, (strlen(c_val) + 1),
+ 			       0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = 192;
+ 	c_val[1] = 168;
+ 	c_val[2] = 1;
+ 	c_val[3] = 112;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_1X_SERV_ADDR, c_val, 4, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = 3;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_LISTEN_INTERVAL, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = 3;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_DTIM_PERIOD, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = NORMAL_ACK;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_ACK_POLICY, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = 0;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_USER_CONTROL_ON_TX_POWER, c_val, 1,
+ 			       0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = 48;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_TX_POWER_LEVEL_11A, c_val, 1, 0,
+ 			       0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = 28;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_TX_POWER_LEVEL_11B, c_val, 1, 0,
+ 			       0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	*((int *)c_val) = 100;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_BEACON_INTERVAL, c_val, 2, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = REKEY_DISABLE;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_REKEY_POLICY, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	*((int *)c_val) = 84600;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_REKEY_PERIOD, c_val, 4, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	*((int *)c_val) = 500;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_REKEY_PACKET_COUNT, c_val, 4, 0,
+ 			       0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = 1;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_SHORT_SLOT_ALLOWED, c_val, 1, 0,
+ 			       0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = G_SELF_CTS_PROT;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_ERP_PROT_TYPE, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = 1;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_ENABLE, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = HT_MIXED_MODE;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_OPERATING_MODE, c_val, 1, 0,
+ 			       0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = 1;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_TXOP_PROT_DISABLE, c_val, 1, 0,
+ 			       0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = DETECT_PROTECT_REPORT;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_OBSS_NONHT_DETECTION, c_val, 1,
+ 			       0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = RTS_CTS_NONHT_PROT;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_HT_PROT_TYPE, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = 0;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_RIFS_PROT_ENABLE, c_val, 1, 0,
+ 			       0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = MIMO_MODE;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_SMPS_MODE, c_val, 1, 0, 0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = 7;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_CURRENT_TX_MCS, c_val, 1, 0,
+ 			       0))
+-		goto _fail_;
++		goto fail;
+ 
+ 	c_val[0] = 1;
+ 	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_IMMEDIATE_BA_ENABLED, c_val, 1,
+ 			       1, 1))
+-		goto _fail_;
++		goto fail;
+ 
+ 	return 0;
+ 
+-_fail_:
++fail:
+ 	return -1;
+ }
+ 
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index a088999..087ad42 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -274,7 +274,7 @@ static int sdio_set_func0_csa_address(struct wilc *wilc, u32 adr)
+ 	ret = wilc_sdio_cmd52(wilc, &cmd);
+ 	if (ret) {
+ 		dev_err(&func->dev, "Failed cmd52, set 0x10c data...\n");
+-		goto _fail_;
++		goto fail;
  	}
  
- 	if (disable_ap_sme &&
--	    !test_bit(WMI_FW_CAPABILITY_DISABLE_AP_SME,
-+	    !test_bit(WMI_FW_CAPABILITY_AP_SME_OFFLOAD_PARTIAL,
- 		      wil->fw_capabilities)) {
- 		wil_err(wil, "disable_ap_sme not supported by FW\n");
- 		return -EOPNOTSUPP;
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
-index ecd4b44..92f63c5 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.h
-+++ b/drivers/net/wireless/ath/wil6210/wmi.h
-@@ -1,4 +1,5 @@
- /*
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-  * Copyright (c) 2012-2017 Qualcomm Atheros, Inc.
-  * Copyright (c) 2006-2012 Wilocity
-  *
-@@ -29,8 +30,6 @@
- #ifndef __WILOCITY_WMI_H__
- #define __WILOCITY_WMI_H__
+ 	cmd.address = 0x10d;
+@@ -282,7 +282,7 @@ static int sdio_set_func0_csa_address(struct wilc *wilc, u32 adr)
+ 	ret = wilc_sdio_cmd52(wilc, &cmd);
+ 	if (ret) {
+ 		dev_err(&func->dev, "Failed cmd52, set 0x10d data...\n");
+-		goto _fail_;
++		goto fail;
+ 	}
  
--/* General */
--#define WMI_MAX_ASSOC_STA		(8)
- #define WMI_DEFAULT_ASSOC_STA		(1)
- #define WMI_MAC_LEN			(6)
- #define WMI_PROX_RANGE_NUM		(3)
-@@ -41,6 +40,19 @@
- #define WMI_RF_ETYPE_LENGTH		(3)
- #define WMI_RF_RX2TX_LENGTH		(3)
- #define WMI_RF_ETYPE_VAL_PER_RANGE	(5)
-+/* DTYPE configuration array size
-+ * must always be kept equal to (WMI_RF_DTYPE_LENGTH+1)
-+ */
-+#define WMI_RF_DTYPE_CONF_LENGTH	(4)
-+/* ETYPE configuration array size
-+ * must always be kept equal to
-+ * (WMI_RF_ETYPE_LENGTH+WMI_RF_ETYPE_VAL_PER_RANGE)
-+ */
-+#define WMI_RF_ETYPE_CONF_LENGTH	(8)
-+/* RX2TX configuration array size
-+ * must always be kept equal to (WMI_RF_RX2TX_LENGTH+1)
-+ */
-+#define WMI_RF_RX2TX_CONF_LENGTH	(4)
+ 	cmd.address = 0x10e;
+@@ -290,11 +290,11 @@ static int sdio_set_func0_csa_address(struct wilc *wilc, u32 adr)
+ 	ret = wilc_sdio_cmd52(wilc, &cmd);
+ 	if (ret) {
+ 		dev_err(&func->dev, "Failed cmd52, set 0x10e data...\n");
+-		goto _fail_;
++		goto fail;
+ 	}
  
- /* Mailbox interface
-  * used for commands and events
-@@ -61,7 +73,7 @@ enum wmi_fw_capability {
- 	WMI_FW_CAPABILITY_PS_CONFIG			= 1,
- 	WMI_FW_CAPABILITY_RF_SECTORS			= 2,
- 	WMI_FW_CAPABILITY_MGMT_RETRY_LIMIT		= 3,
--	WMI_FW_CAPABILITY_DISABLE_AP_SME		= 4,
-+	WMI_FW_CAPABILITY_AP_SME_OFFLOAD_PARTIAL	= 4,
- 	WMI_FW_CAPABILITY_WMI_ONLY			= 5,
- 	WMI_FW_CAPABILITY_THERMAL_THROTTLING		= 7,
- 	WMI_FW_CAPABILITY_D3_SUSPEND			= 8,
-@@ -74,6 +86,7 @@ enum wmi_fw_capability {
- 	WMI_FW_CAPABILITY_PNO				= 15,
- 	WMI_FW_CAPABILITY_CHANNEL_BONDING		= 17,
- 	WMI_FW_CAPABILITY_REF_CLOCK_CONTROL		= 18,
-+	WMI_FW_CAPABILITY_AP_SME_OFFLOAD_NONE		= 19,
- 	WMI_FW_CAPABILITY_MAX,
- };
+ 	return 1;
+-_fail_:
++fail:
+ 	return 0;
+ }
  
-@@ -165,12 +178,14 @@ enum wmi_command_id {
- 	WMI_SET_ACTIVE_SILENT_RSSI_TABLE_CMDID		= 0x85C,
- 	WMI_RF_PWR_ON_DELAY_CMDID			= 0x85D,
- 	WMI_SET_HIGH_POWER_TABLE_PARAMS_CMDID		= 0x85E,
-+	WMI_FIXED_SCHEDULING_UL_CONFIG_CMDID		= 0x85F,
- 	/* Performance monitoring commands */
- 	WMI_BF_CTRL_CMDID				= 0x862,
- 	WMI_NOTIFY_REQ_CMDID				= 0x863,
- 	WMI_GET_STATUS_CMDID				= 0x864,
- 	WMI_GET_RF_STATUS_CMDID				= 0x866,
- 	WMI_GET_BASEBAND_TYPE_CMDID			= 0x867,
-+	WMI_VRING_SWITCH_TIMING_CONFIG_CMDID		= 0x868,
- 	WMI_UNIT_TEST_CMDID				= 0x900,
- 	WMI_FLASH_READ_CMDID				= 0x902,
- 	WMI_FLASH_WRITE_CMDID				= 0x903,
-@@ -203,6 +218,7 @@ enum wmi_command_id {
- 	WMI_GET_THERMAL_THROTTLING_CFG_CMDID		= 0x941,
- 	/* Read Power Save profile type */
- 	WMI_PS_DEV_PROFILE_CFG_READ_CMDID		= 0x942,
-+	WMI_TSF_SYNC_CMDID				= 0x973,
- 	WMI_TOF_SESSION_START_CMDID			= 0x991,
- 	WMI_TOF_GET_CAPABILITIES_CMDID			= 0x992,
- 	WMI_TOF_SET_LCR_CMDID				= 0x993,
-@@ -219,11 +235,16 @@ enum wmi_command_id {
- 	WMI_PRIO_TX_SECTORS_ORDER_CMDID			= 0x9A5,
- 	WMI_PRIO_TX_SECTORS_NUMBER_CMDID		= 0x9A6,
- 	WMI_PRIO_TX_SECTORS_SET_DEFAULT_CFG_CMDID	= 0x9A7,
-+	WMI_BF_CONTROL_CMDID				= 0x9AA,
- 	WMI_SCHEDULING_SCHEME_CMDID			= 0xA01,
- 	WMI_FIXED_SCHEDULING_CONFIG_CMDID		= 0xA02,
- 	WMI_ENABLE_FIXED_SCHEDULING_CMDID		= 0xA03,
- 	WMI_SET_MULTI_DIRECTED_OMNIS_CONFIG_CMDID	= 0xA04,
- 	WMI_SET_LONG_RANGE_CONFIG_CMDID			= 0xA05,
-+	WMI_GET_ASSOC_LIST_CMDID			= 0xA06,
-+	WMI_GET_CCA_INDICATIONS_CMDID			= 0xA07,
-+	WMI_SET_CCA_INDICATIONS_BI_AVG_NUM_CMDID	= 0xA08,
-+	WMI_INTERNAL_FW_IOCTL_CMDID			= 0xA0B,
- 	WMI_SET_MAC_ADDRESS_CMDID			= 0xF003,
- 	WMI_ABORT_SCAN_CMDID				= 0xF007,
- 	WMI_SET_PROMISCUOUS_MODE_CMDID			= 0xF041,
-@@ -502,6 +523,18 @@ enum wmi_rf_mgmt_type {
- 	WMI_RF_MGMT_GET_STATUS	= 0x02,
- };
+@@ -312,7 +312,7 @@ static int sdio_set_func0_block_size(struct wilc *wilc, u32 block_size)
+ 	ret = wilc_sdio_cmd52(wilc, &cmd);
+ 	if (ret) {
+ 		dev_err(&func->dev, "Failed cmd52, set 0x10 data...\n");
+-		goto _fail_;
++		goto fail;
+ 	}
  
-+/* WMI_BF_CONTROL_CMDID */
-+enum wmi_bf_triggers {
-+	WMI_BF_TRIGGER_RS_MCS1_TH_FAILURE		= 0x01,
-+	WMI_BF_TRIGGER_RS_MCS1_NO_BACK_FAILURE		= 0x02,
-+	WMI_BF_TRIGGER_MAX_CTS_FAILURE_IN_TXOP		= 0x04,
-+	WMI_BF_TRIGGER_MAX_BACK_FAILURE			= 0x08,
-+	WMI_BF_TRIGGER_FW				= 0x10,
-+	WMI_BF_TRIGGER_MAX_CTS_FAILURE_IN_KEEP_ALIVE	= 0x20,
-+	WMI_BF_TRIGGER_AOA				= 0x40,
-+	WMI_BF_TRIGGER_MAX_CTS_FAILURE_IN_UPM		= 0x80,
-+};
-+
- /* WMI_RF_MGMT_CMDID */
- struct wmi_rf_mgmt_cmd {
- 	__le32 rf_mgmt_type;
-@@ -537,7 +570,9 @@ struct wmi_bcon_ctrl_cmd {
- 	u8 disable_sec;
- 	u8 hidden_ssid;
- 	u8 is_go;
--	u8 reserved[2];
-+	/* A-BFT length override if non-0 */
-+	u8 abft_len;
-+	u8 reserved;
- } __packed;
+ 	cmd.address = 0x11;
+@@ -320,11 +320,11 @@ static int sdio_set_func0_block_size(struct wilc *wilc, u32 block_size)
+ 	ret = wilc_sdio_cmd52(wilc, &cmd);
+ 	if (ret) {
+ 		dev_err(&func->dev, "Failed cmd52, set 0x11 data...\n");
+-		goto _fail_;
++		goto fail;
+ 	}
  
- /* WMI_PORT_ALLOCATE_CMDID */
-@@ -603,6 +638,16 @@ struct wmi_power_mgmt_cfg_cmd {
- } __packed;
+ 	return 1;
+-_fail_:
++fail:
+ 	return 0;
+ }
  
- /* WMI_PCP_START_CMDID */
-+enum wmi_ap_sme_offload_mode {
-+	/* Full AP SME in FW */
-+	WMI_AP_SME_OFFLOAD_FULL		= 0x00,
-+	/* Probe AP SME in FW */
-+	WMI_AP_SME_OFFLOAD_PARTIAL	= 0x01,
-+	/* AP SME in host */
-+	WMI_AP_SME_OFFLOAD_NONE		= 0x02,
-+};
-+
-+/* WMI_PCP_START_CMDID */
- struct wmi_pcp_start_cmd {
- 	__le16 bcon_interval;
- 	u8 pcp_max_assoc_sta;
-@@ -613,7 +658,8 @@ struct wmi_pcp_start_cmd {
- 	u8 reserved[4];
- 	/* A-BFT length override if non-0 */
- 	u8 abft_len;
--	u8 disable_ap_sme;
-+	/* enum wmi_ap_sme_offload_mode_e */
-+	u8 ap_sme_offload_mode;
- 	u8 network_type;
- 	/* enum wmi_channel WMI_CHANNEL_1..WMI_CHANNEL_6; for EDMG this is
- 	 * the primary channel number
-@@ -630,6 +676,17 @@ struct wmi_sw_tx_req_cmd {
- 	u8 payload[0];
- } __packed;
+@@ -348,18 +348,18 @@ static int sdio_set_func1_block_size(struct wilc *wilc, u32 block_size)
+ 	ret = wilc_sdio_cmd52(wilc, &cmd);
+ 	if (ret) {
+ 		dev_err(&func->dev, "Failed cmd52, set 0x110 data...\n");
+-		goto _fail_;
++		goto fail;
+ 	}
+ 	cmd.address = 0x111;
+ 	cmd.data = (u8)(block_size >> 8);
+ 	ret = wilc_sdio_cmd52(wilc, &cmd);
+ 	if (ret) {
+ 		dev_err(&func->dev, "Failed cmd52, set 0x111 data...\n");
+-		goto _fail_;
++		goto fail;
+ 	}
  
-+/* WMI_VRING_SWITCH_TIMING_CONFIG_CMDID */
-+struct wmi_vring_switch_timing_config_cmd {
-+	/* Set vring timing configuration:
-+	 *
-+	 * defined interval for vring switch
-+	 */
-+	__le32 interval_usec;
-+	/* vring inactivity threshold */
-+	__le32 idle_th_usec;
-+} __packed;
-+
- struct wmi_sw_ring_cfg {
- 	__le64 ring_mem_base;
- 	__le16 ring_size;
-@@ -665,6 +722,7 @@ enum wmi_vring_cfg_schd_params_priority {
- 	WMI_SCH_PRIO_HIGH	= 0x01,
- };
+ 	return 1;
+-_fail_:
++fail:
+ 	return 0;
+ }
  
-+#define CIDXTID_EXTENDED_CID_TID		(0xFF)
- #define CIDXTID_CID_POS				(0)
- #define CIDXTID_CID_LEN				(4)
- #define CIDXTID_CID_MSK				(0xF)
-@@ -685,6 +743,9 @@ struct wmi_vring_cfg {
- 	struct wmi_sw_ring_cfg tx_sw_ring;
- 	/* 0-23 vrings */
- 	u8 ringid;
-+	/* Used for cid less than 8. For higher cid set
-+	 * CIDXTID_EXTENDED_CID_TID here and use cid and tid members instead
-+	 */
- 	u8 cidxtid;
- 	u8 encap_trans_type;
- 	/* 802.3 DS cfg */
-@@ -694,6 +755,11 @@ struct wmi_vring_cfg {
- 	u8 to_resolution;
- 	u8 agg_max_wsize;
- 	struct wmi_vring_cfg_schd schd_params;
-+	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
-+	u8 cid;
-+	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
-+	u8 tid;
-+	u8 reserved[2];
- } __packed;
+@@ -387,7 +387,7 @@ static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data)
+ 		if (ret) {
+ 			dev_err(&func->dev,
+ 				"Failed cmd 52, read reg (%08x) ...\n", addr);
+-			goto _fail_;
++			goto fail;
+ 		}
+ 	} else {
+ 		struct sdio_cmd53 cmd;
+@@ -396,7 +396,7 @@ static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data)
+ 		 *      set the AHB address
+ 		 **/
+ 		if (!sdio_set_func0_csa_address(wilc, addr))
+-			goto _fail_;
++			goto fail;
  
- enum wmi_vring_cfg_cmd_action {
-@@ -891,23 +957,42 @@ struct wmi_cfg_rx_chain_cmd {
+ 		cmd.read_write = 1;
+ 		cmd.function = 0;
+@@ -410,13 +410,13 @@ static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data)
+ 		if (ret) {
+ 			dev_err(&func->dev,
+ 				"Failed cmd53, write reg (%08x)...\n", addr);
+-			goto _fail_;
++			goto fail;
+ 		}
+ 	}
  
- /* WMI_RCP_ADDBA_RESP_CMDID */
- struct wmi_rcp_addba_resp_cmd {
-+	/* Used for cid less than 8. For higher cid set
-+	 * CIDXTID_EXTENDED_CID_TID here and use cid and tid members instead
-+	 */
- 	u8 cidxtid;
- 	u8 dialog_token;
- 	__le16 status_code;
- 	/* ieee80211_ba_parameterset field to send */
- 	__le16 ba_param_set;
- 	__le16 ba_timeout;
-+	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
-+	u8 cid;
-+	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
-+	u8 tid;
-+	u8 reserved[2];
- } __packed;
+ 	return 1;
  
- /* WMI_RCP_DELBA_CMDID */
- struct wmi_rcp_delba_cmd {
-+	/* Used for cid less than 8. For higher cid set
-+	 * CIDXTID_EXTENDED_CID_TID here and use cid and tid members instead
-+	 */
- 	u8 cidxtid;
- 	u8 reserved;
- 	__le16 reason;
-+	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
-+	u8 cid;
-+	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
-+	u8 tid;
-+	u8 reserved2[2];
- } __packed;
+-_fail_:
++fail:
  
- /* WMI_RCP_ADDBA_REQ_CMDID */
- struct wmi_rcp_addba_req_cmd {
-+	/* Used for cid less than 8. For higher cid set
-+	 * CIDXTID_EXTENDED_CID_TID here and use cid and tid members instead
-+	 */
- 	u8 cidxtid;
- 	u8 dialog_token;
- 	/* ieee80211_ba_parameterset field as it received */
-@@ -915,6 +1000,11 @@ struct wmi_rcp_addba_req_cmd {
- 	__le16 ba_timeout;
- 	/* ieee80211_ba_seqstrl field as it received */
- 	__le16 ba_seq_ctrl;
-+	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
-+	u8 cid;
-+	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
-+	u8 tid;
-+	u8 reserved[2];
- } __packed;
+ 	return 0;
+ }
+@@ -470,13 +470,13 @@ static int sdio_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
+ 		cmd.block_size = block_size;
+ 		if (addr > 0) {
+ 			if (!sdio_set_func0_csa_address(wilc, addr))
+-				goto _fail_;
++				goto fail;
+ 		}
+ 		ret = wilc_sdio_cmd53(wilc, &cmd);
+ 		if (ret) {
+ 			dev_err(&func->dev,
+ 				"Failed cmd53 [%x], block send...\n", addr);
+-			goto _fail_;
++			goto fail;
+ 		}
+ 		if (addr > 0)
+ 			addr += nblk * block_size;
+@@ -493,19 +493,19 @@ static int sdio_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
  
- /* WMI_SET_MAC_ADDRESS_CMDID */
-@@ -925,15 +1015,20 @@ struct wmi_set_mac_address_cmd {
+ 		if (addr > 0) {
+ 			if (!sdio_set_func0_csa_address(wilc, addr))
+-				goto _fail_;
++				goto fail;
+ 		}
+ 		ret = wilc_sdio_cmd53(wilc, &cmd);
+ 		if (ret) {
+ 			dev_err(&func->dev,
+ 				"Failed cmd53 [%x], bytes send...\n", addr);
+-			goto _fail_;
++			goto fail;
+ 		}
+ 	}
  
- /* WMI_ECHO_CMDID
-  * Check FW is alive
-- * WMI_DEEP_ECHO_CMDID
-- * Check FW and ucode are alive
-  * Returned event: WMI_ECHO_RSP_EVENTID
-- * same event for both commands
-  */
- struct wmi_echo_cmd {
- 	__le32 value;
- } __packed;
+ 	return 1;
  
-+/* WMI_DEEP_ECHO_CMDID
-+ * Check FW and ucode are alive
-+ * Returned event: WMI_ECHO_RSP_EVENTID
-+ */
-+struct wmi_deep_echo_cmd {
-+	__le32 value;
-+} __packed;
-+
- /* WMI_RF_PWR_ON_DELAY_CMDID
-  * set FW time parameters used through RF resetting
-  *  RF reset consists of bringing its power down for a period of time, then
-@@ -951,7 +1046,7 @@ struct wmi_rf_pwr_on_delay_cmd {
- 	__le16 up_delay_usec;
- } __packed;
+-_fail_:
++fail:
  
--/* \WMI_SET_HIGH_POWER_TABLE_PARAMS_CMDID
-+/* WMI_SET_HIGH_POWER_TABLE_PARAMS_CMDID
-  * This API controls the Tx and Rx gain over temperature.
-  * It controls the Tx D-type, Rx D-type and Rx E-type amplifiers.
-  * It also controls the Tx gain index, by controlling the Rx to Tx gain index
-@@ -965,25 +1060,46 @@ struct wmi_set_high_power_table_params_cmd {
- 	u8 tx_dtype_temp[WMI_RF_DTYPE_LENGTH];
- 	u8 reserved0;
- 	/* Tx D-type values to be used for each temperature range */
--	__le32 tx_dtype_conf[WMI_RF_DTYPE_LENGTH + 1];
-+	__le32 tx_dtype_conf[WMI_RF_DTYPE_CONF_LENGTH];
-+	/* Temperature range for Tx E-type parameters */
-+	u8 tx_etype_temp[WMI_RF_ETYPE_LENGTH];
-+	u8 reserved1;
-+	/* Tx E-type values to be used for each temperature range.
-+	 * The last 4 values of any range are the first 4 values of the next
-+	 * range and so on
-+	 */
-+	__le32 tx_etype_conf[WMI_RF_ETYPE_CONF_LENGTH];
- 	/* Temperature range for Rx D-type parameters */
- 	u8 rx_dtype_temp[WMI_RF_DTYPE_LENGTH];
--	u8 reserved1;
-+	u8 reserved2;
- 	/* Rx D-type values to be used for each temperature range */
--	__le32 rx_dtype_conf[WMI_RF_DTYPE_LENGTH + 1];
-+	__le32 rx_dtype_conf[WMI_RF_DTYPE_CONF_LENGTH];
- 	/* Temperature range for Rx E-type parameters */
- 	u8 rx_etype_temp[WMI_RF_ETYPE_LENGTH];
--	u8 reserved2;
-+	u8 reserved3;
- 	/* Rx E-type values to be used for each temperature range.
- 	 * The last 4 values of any range are the first 4 values of the next
- 	 * range and so on
- 	 */
--	__le32 rx_etype_conf[WMI_RF_ETYPE_VAL_PER_RANGE + WMI_RF_ETYPE_LENGTH];
-+	__le32 rx_etype_conf[WMI_RF_ETYPE_CONF_LENGTH];
- 	/* Temperature range for rx_2_tx_offs parameters */
- 	u8 rx_2_tx_temp[WMI_RF_RX2TX_LENGTH];
--	u8 reserved3;
-+	u8 reserved4;
- 	/* Rx to Tx gain index offset */
--	s8 rx_2_tx_offs[WMI_RF_RX2TX_LENGTH + 1];
-+	s8 rx_2_tx_offs[WMI_RF_RX2TX_CONF_LENGTH];
-+} __packed;
-+
-+/* WMI_FIXED_SCHEDULING_UL_CONFIG_CMDID
-+ * This API sets rd parameter per mcs.
-+ * Relevant only in Fixed Scheduling mode.
-+ * Returned event: WMI_FIXED_SCHEDULING_UL_CONFIG_EVENTID
-+ */
-+struct wmi_fixed_scheduling_ul_config_cmd {
-+	/* Use mcs -1 to set for every mcs */
-+	s8 mcs;
-+	/* Number of frames with rd bit set in a single virtual slot */
-+	u8 rd_count_per_slot;
-+	u8 reserved[2];
- } __packed;
+ 	return 0;
+ }
+@@ -526,14 +526,14 @@ static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data)
+ 		if (ret) {
+ 			dev_err(&func->dev,
+ 				"Failed cmd 52, read reg (%08x) ...\n", addr);
+-			goto _fail_;
++			goto fail;
+ 		}
+ 		*data = cmd.data;
+ 	} else {
+ 		struct sdio_cmd53 cmd;
  
- /* CMD: WMI_RF_XPM_READ_CMDID */
-@@ -1290,6 +1406,93 @@ struct wmi_set_long_range_config_complete_event {
- 	u8 reserved[3];
- } __packed;
+ 		if (!sdio_set_func0_csa_address(wilc, addr))
+-			goto _fail_;
++			goto fail;
  
-+/* payload max size is 236 bytes: max event buffer size (256) - WMI headers
-+ * (16) - prev struct field size (4)
-+ */
-+#define WMI_MAX_IOCTL_PAYLOAD_SIZE		(236)
-+#define WMI_MAX_IOCTL_REPLY_PAYLOAD_SIZE	(236)
-+#define WMI_MAX_INTERNAL_EVENT_PAYLOAD_SIZE	(236)
-+
-+enum wmi_internal_fw_ioctl_code {
-+	WMI_INTERNAL_FW_CODE_NONE	= 0x0,
-+	WMI_INTERNAL_FW_CODE_QCOM	= 0x1,
-+};
-+
-+/* WMI_INTERNAL_FW_IOCTL_CMDID */
-+struct wmi_internal_fw_ioctl_cmd {
-+	/* enum wmi_internal_fw_ioctl_code */
-+	__le16 code;
-+	__le16 length;
-+	/* payload max size is WMI_MAX_IOCTL_PAYLOAD_SIZE
-+	 * Must be the last member of the struct
-+	 */
-+	__le32 payload[0];
-+} __packed;
-+
-+/* WMI_INTERNAL_FW_IOCTL_EVENTID */
-+struct wmi_internal_fw_ioctl_event {
-+	/* wmi_fw_status */
-+	u8 status;
-+	u8 reserved;
-+	__le16 length;
-+	/* payload max size is WMI_MAX_IOCTL_REPLY_PAYLOAD_SIZE
-+	 * Must be the last member of the struct
-+	 */
-+	__le32 payload[0];
-+} __packed;
-+
-+/* WMI_INTERNAL_FW_EVENT_EVENTID */
-+struct wmi_internal_fw_event_event {
-+	__le16 id;
-+	__le16 length;
-+	/* payload max size is WMI_MAX_INTERNAL_EVENT_PAYLOAD_SIZE
-+	 * Must be the last member of the struct
-+	 */
-+	__le32 payload[0];
-+} __packed;
-+
-+/* WMI_BF_CONTROL_CMDID */
-+struct wmi_bf_control_cmd {
-+	/* wmi_bf_triggers */
-+	__le32 triggers;
-+	u8 cid;
-+	/* DISABLED = 0, ENABLED = 1 , DRY_RUN = 2 */
-+	u8 txss_mode;
-+	/* DISABLED = 0, ENABLED = 1, DRY_RUN = 2 */
-+	u8 brp_mode;
-+	/* Max cts threshold (correspond to
-+	 * WMI_BF_TRIGGER_MAX_CTS_FAILURE_IN_TXOP)
-+	 */
-+	u8 bf_trigger_max_cts_failure_thr;
-+	/* Max cts threshold in dense (correspond to
-+	 * WMI_BF_TRIGGER_MAX_CTS_FAILURE_IN_TXOP)
-+	 */
-+	u8 bf_trigger_max_cts_failure_dense_thr;
-+	/* Max b-ack threshold (correspond to
-+	 * WMI_BF_TRIGGER_MAX_BACK_FAILURE)
-+	 */
-+	u8 bf_trigger_max_back_failure_thr;
-+	/* Max b-ack threshold in dense (correspond to
-+	 * WMI_BF_TRIGGER_MAX_BACK_FAILURE)
-+	 */
-+	u8 bf_trigger_max_back_failure_dense_thr;
-+	u8 reserved0;
-+	/* Wrong sectors threshold */
-+	__le32 wrong_sector_bis_thr;
-+	/* BOOL to enable/disable long term trigger */
-+	u8 long_term_enable;
-+	/* 1 = Update long term thresholds from the long_term_mbps_th_tbl and
-+	 * long_term_trig_timeout_per_mcs arrays, 0 = Ignore
-+	 */
-+	u8 long_term_update_thr;
-+	/* Long term throughput threshold [Mbps] */
-+	u8 long_term_mbps_th_tbl[WMI_NUM_MCS];
-+	u8 reserved1;
-+	/* Long term timeout threshold table [msec] */
-+	__le16 long_term_trig_timeout_per_mcs[WMI_NUM_MCS];
-+	u8 reserved2[2];
-+} __packed;
-+
- /* WMI Events
-  * List of Events (target to host)
-  */
-@@ -1348,6 +1551,7 @@ enum wmi_event_id {
- 	WMI_SET_SILENT_RSSI_TABLE_DONE_EVENTID		= 0x185C,
- 	WMI_RF_PWR_ON_DELAY_RSP_EVENTID			= 0x185D,
- 	WMI_SET_HIGH_POWER_TABLE_PARAMS_EVENTID		= 0x185E,
-+	WMI_FIXED_SCHEDULING_UL_CONFIG_EVENTID		= 0x185F,
- 	/* Performance monitoring events */
- 	WMI_DATA_PORT_OPEN_EVENTID			= 0x1860,
- 	WMI_WBE_LINK_DOWN_EVENTID			= 0x1861,
-@@ -1357,6 +1561,7 @@ enum wmi_event_id {
- 	WMI_VRING_EN_EVENTID				= 0x1865,
- 	WMI_GET_RF_STATUS_EVENTID			= 0x1866,
- 	WMI_GET_BASEBAND_TYPE_EVENTID			= 0x1867,
-+	WMI_VRING_SWITCH_TIMING_CONFIG_EVENTID		= 0x1868,
- 	WMI_UNIT_TEST_EVENTID				= 0x1900,
- 	WMI_FLASH_READ_DONE_EVENTID			= 0x1902,
- 	WMI_FLASH_WRITE_DONE_EVENTID			= 0x1903,
-@@ -1386,6 +1591,7 @@ enum wmi_event_id {
- 	WMI_GET_THERMAL_THROTTLING_CFG_EVENTID		= 0x1941,
- 	/* return the Power Save profile */
- 	WMI_PS_DEV_PROFILE_CFG_READ_EVENTID		= 0x1942,
-+	WMI_TSF_SYNC_STATUS_EVENTID			= 0x1973,
- 	WMI_TOF_SESSION_END_EVENTID			= 0x1991,
- 	WMI_TOF_GET_CAPABILITIES_EVENTID		= 0x1992,
- 	WMI_TOF_SET_LCR_EVENTID				= 0x1993,
-@@ -1403,17 +1609,24 @@ enum wmi_event_id {
- 	WMI_PRIO_TX_SECTORS_ORDER_EVENTID		= 0x19A5,
- 	WMI_PRIO_TX_SECTORS_NUMBER_EVENTID		= 0x19A6,
- 	WMI_PRIO_TX_SECTORS_SET_DEFAULT_CFG_EVENTID	= 0x19A7,
-+	WMI_BF_CONTROL_EVENTID				= 0x19AA,
- 	WMI_SCHEDULING_SCHEME_EVENTID			= 0x1A01,
- 	WMI_FIXED_SCHEDULING_CONFIG_COMPLETE_EVENTID	= 0x1A02,
- 	WMI_ENABLE_FIXED_SCHEDULING_COMPLETE_EVENTID	= 0x1A03,
- 	WMI_SET_MULTI_DIRECTED_OMNIS_CONFIG_EVENTID	= 0x1A04,
- 	WMI_SET_LONG_RANGE_CONFIG_COMPLETE_EVENTID	= 0x1A05,
-+	WMI_GET_ASSOC_LIST_RES_EVENTID			= 0x1A06,
-+	WMI_GET_CCA_INDICATIONS_EVENTID			= 0x1A07,
-+	WMI_SET_CCA_INDICATIONS_BI_AVG_NUM_EVENTID	= 0x1A08,
-+	WMI_INTERNAL_FW_EVENT_EVENTID			= 0x1A0A,
-+	WMI_INTERNAL_FW_IOCTL_EVENTID			= 0x1A0B,
- 	WMI_SET_CHANNEL_EVENTID				= 0x9000,
- 	WMI_ASSOC_REQ_EVENTID				= 0x9001,
- 	WMI_EAPOL_RX_EVENTID				= 0x9002,
- 	WMI_MAC_ADDR_RESP_EVENTID			= 0x9003,
- 	WMI_FW_VER_EVENTID				= 0x9004,
- 	WMI_ACS_PASSIVE_SCAN_COMPLETE_EVENTID		= 0x9005,
-+	WMI_INTERNAL_FW_SET_CHANNEL			= 0x9006,
- 	WMI_COMMAND_NOT_SUPPORTED_EVENTID		= 0xFFFF,
- };
+ 		cmd.read_write = 0;
+ 		cmd.function = 0;
+@@ -548,7 +548,7 @@ static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data)
+ 		if (ret) {
+ 			dev_err(&func->dev,
+ 				"Failed cmd53, read reg (%08x)...\n", addr);
+-			goto _fail_;
++			goto fail;
+ 		}
+ 	}
  
-@@ -1485,12 +1698,16 @@ enum rf_type {
- 	RF_UNKNOWN	= 0x00,
- 	RF_MARLON	= 0x01,
- 	RF_SPARROW	= 0x02,
-+	RF_TALYNA1	= 0x03,
-+	RF_TALYNA2	= 0x04,
- };
+@@ -556,7 +556,7 @@ static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data)
  
- /* WMI_GET_RF_STATUS_EVENTID */
- enum board_file_rf_type {
- 	BF_RF_MARLON	= 0x00,
- 	BF_RF_SPARROW	= 0x01,
-+	BF_RF_TALYNA1	= 0x02,
-+	BF_RF_TALYNA2	= 0x03,
- };
+ 	return 1;
  
- /* WMI_GET_RF_STATUS_EVENTID */
-@@ -1530,6 +1747,7 @@ enum baseband_type {
- 	BASEBAND_SPARROW_M_C0	= 0x06,
- 	BASEBAND_SPARROW_M_D0	= 0x07,
- 	BASEBAND_TALYN_M_A0	= 0x08,
-+	BASEBAND_TALYN_M_B0	= 0x09,
- };
+-_fail_:
++fail:
  
- /* WMI_GET_BASEBAND_TYPE_EVENTID */
-@@ -1574,7 +1792,11 @@ struct wmi_ready_event {
- 	u8 numof_additional_mids;
- 	/* rfc read calibration result. 5..15 */
- 	u8 rfc_read_calib_result;
--	u8 reserved[3];
-+	/* Max associated STAs supported by FW in AP mode (default 0 means 8
-+	 * STA)
-+	 */
-+	u8 max_assoc_sta;
-+	u8 reserved[2];
- } __packed;
+ 	return 0;
+ }
+@@ -610,13 +610,13 @@ static int sdio_read(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
+ 		cmd.block_size = block_size;
+ 		if (addr > 0) {
+ 			if (!sdio_set_func0_csa_address(wilc, addr))
+-				goto _fail_;
++				goto fail;
+ 		}
+ 		ret = wilc_sdio_cmd53(wilc, &cmd);
+ 		if (ret) {
+ 			dev_err(&func->dev,
+ 				"Failed cmd53 [%x], block read...\n", addr);
+-			goto _fail_;
++			goto fail;
+ 		}
+ 		if (addr > 0)
+ 			addr += nblk * block_size;
+@@ -633,19 +633,19 @@ static int sdio_read(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
  
- /* WMI_NOTIFY_REQ_DONE_EVENTID */
-@@ -1693,13 +1915,13 @@ enum wmi_pno_result {
- };
+ 		if (addr > 0) {
+ 			if (!sdio_set_func0_csa_address(wilc, addr))
+-				goto _fail_;
++				goto fail;
+ 		}
+ 		ret = wilc_sdio_cmd53(wilc, &cmd);
+ 		if (ret) {
+ 			dev_err(&func->dev,
+ 				"Failed cmd53 [%x], bytes read...\n", addr);
+-			goto _fail_;
++			goto fail;
+ 		}
+ 	}
  
- struct wmi_start_sched_scan_event {
--	/* pno_result */
-+	/* wmi_pno_result */
- 	u8 result;
- 	u8 reserved[3];
- } __packed;
+ 	return 1;
  
- struct wmi_stop_sched_scan_event {
--	/* pno_result */
-+	/* wmi_pno_result */
- 	u8 result;
- 	u8 reserved[3];
- } __packed;
-@@ -1766,9 +1988,17 @@ struct wmi_ba_status_event {
+-_fail_:
++fail:
  
- /* WMI_DELBA_EVENTID */
- struct wmi_delba_event {
-+	/* Used for cid less than 8. For higher cid set
-+	 * CIDXTID_EXTENDED_CID_TID here and use cid and tid members instead
-+	 */
- 	u8 cidxtid;
- 	u8 from_initiator;
- 	__le16 reason;
-+	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
-+	u8 cid;
-+	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
-+	u8 tid;
-+	u8 reserved[2];
- } __packed;
+ 	return 0;
+ }
+@@ -684,7 +684,7 @@ static int sdio_init(struct wilc *wilc, bool resume)
+ 	ret = wilc_sdio_cmd52(wilc, &cmd);
+ 	if (ret) {
+ 		dev_err(&func->dev, "Fail cmd 52, enable csa...\n");
+-		goto _fail_;
++		goto fail;
+ 	}
  
- /* WMI_VRING_CFG_DONE_EVENTID */
-@@ -1781,13 +2011,24 @@ struct wmi_vring_cfg_done_event {
+ 	/**
+@@ -692,7 +692,7 @@ static int sdio_init(struct wilc *wilc, bool resume)
+ 	 **/
+ 	if (!sdio_set_func0_block_size(wilc, WILC_SDIO_BLOCK_SIZE)) {
+ 		dev_err(&func->dev, "Fail cmd 52, set func 0 block size...\n");
+-		goto _fail_;
++		goto fail;
+ 	}
+ 	g_sdio.block_size = WILC_SDIO_BLOCK_SIZE;
  
- /* WMI_RCP_ADDBA_RESP_SENT_EVENTID */
- struct wmi_rcp_addba_resp_sent_event {
-+	/* Used for cid less than 8. For higher cid set
-+	 * CIDXTID_EXTENDED_CID_TID here and use cid and tid members instead
-+	 */
- 	u8 cidxtid;
- 	u8 reserved;
- 	__le16 status;
-+	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
-+	u8 cid;
-+	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
-+	u8 tid;
-+	u8 reserved2[2];
- } __packed;
+@@ -708,7 +708,7 @@ static int sdio_init(struct wilc *wilc, bool resume)
+ 	if (ret) {
+ 		dev_err(&func->dev,
+ 			"Fail cmd 52, set IOE register...\n");
+-		goto _fail_;
++		goto fail;
+ 	}
  
- /* WMI_RCP_ADDBA_REQ_EVENTID */
- struct wmi_rcp_addba_req_event {
-+	/* Used for cid less than 8. For higher cid set
-+	 * CIDXTID_EXTENDED_CID_TID here and use cid and tid members instead
-+	 */
- 	u8 cidxtid;
- 	u8 dialog_token;
- 	/* ieee80211_ba_parameterset as it received */
-@@ -1795,6 +2036,11 @@ struct wmi_rcp_addba_req_event {
- 	__le16 ba_timeout;
- 	/* ieee80211_ba_seqstrl field as it received */
- 	__le16 ba_seq_ctrl;
-+	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
-+	u8 cid;
-+	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
-+	u8 tid;
-+	u8 reserved[2];
- } __packed;
+ 	/**
+@@ -725,7 +725,7 @@ static int sdio_init(struct wilc *wilc, bool resume)
+ 		if (ret) {
+ 			dev_err(&func->dev,
+ 				"Fail cmd 52, get IOR register...\n");
+-			goto _fail_;
++			goto fail;
+ 		}
+ 		if (cmd.data == 0x2)
+ 			break;
+@@ -733,7 +733,7 @@ static int sdio_init(struct wilc *wilc, bool resume)
  
- /* WMI_CFG_RX_CHAIN_DONE_EVENTID */
-@@ -1969,6 +2215,13 @@ struct wmi_set_high_power_table_params_event {
- 	u8 reserved[3];
- } __packed;
+ 	if (loop <= 0) {
+ 		dev_err(&func->dev, "Fail func 1 is not ready...\n");
+-		goto _fail_;
++		goto fail;
+ 	}
  
-+/* WMI_FIXED_SCHEDULING_UL_CONFIG_EVENTID */
-+struct wmi_fixed_scheduling_ul_config_event {
-+	/* wmi_fw_status */
-+	u8 status;
-+	u8 reserved[3];
-+} __packed;
-+
- /* WMI_TEMP_SENSE_DONE_EVENTID
-  *
-  * Measure MAC and radio temperatures
-@@ -2317,6 +2570,8 @@ struct wmi_link_maintain_cfg {
- 	__le32 bad_beacons_num_threshold;
- 	/* SNR limit for bad_beacons_detector */
- 	__le32 bad_beacons_snr_threshold_db;
-+	/* timeout for disassoc response frame in uSec */
-+	__le32 disconnect_timeout;
- } __packed;
+ 	/**
+@@ -741,7 +741,7 @@ static int sdio_init(struct wilc *wilc, bool resume)
+ 	 **/
+ 	if (!sdio_set_func1_block_size(wilc, WILC_SDIO_BLOCK_SIZE)) {
+ 		dev_err(&func->dev, "Fail set func 1 block size...\n");
+-		goto _fail_;
++		goto fail;
+ 	}
  
- /* WMI_LINK_MAINTAIN_CFG_WRITE_CMDID */
-@@ -2546,6 +2801,7 @@ enum wmi_tof_session_end_status {
- 	WMI_TOF_SESSION_END_FAIL		= 0x01,
- 	WMI_TOF_SESSION_END_PARAMS_ERROR	= 0x02,
- 	WMI_TOF_SESSION_END_ABORTED		= 0x03,
-+	WMI_TOF_SESSION_END_BUSY		= 0x04,
- };
+ 	/**
+@@ -755,7 +755,7 @@ static int sdio_init(struct wilc *wilc, bool resume)
+ 	ret = wilc_sdio_cmd52(wilc, &cmd);
+ 	if (ret) {
+ 		dev_err(&func->dev, "Fail cmd 52, set IEN register...\n");
+-		goto _fail_;
++		goto fail;
+ 	}
  
- /* WMI_TOF_SESSION_END_EVENTID */
-@@ -2952,7 +3208,40 @@ struct wmi_set_silent_rssi_table_done_event {
- 	__le32 table;
- } __packed;
+ 	/**
+@@ -764,7 +764,7 @@ static int sdio_init(struct wilc *wilc, bool resume)
+ 	if (!resume) {
+ 		if (!sdio_read_reg(wilc, 0x1000, &chipid)) {
+ 			dev_err(&func->dev, "Fail cmd read chip id...\n");
+-			goto _fail_;
++			goto fail;
+ 		}
+ 		dev_err(&func->dev, "chipid (%08x)\n", chipid);
+ 		if ((chipid & 0xfff) > 0x2a0)
+@@ -777,7 +777,7 @@ static int sdio_init(struct wilc *wilc, bool resume)
  
--/* \WMI_COMMAND_NOT_SUPPORTED_EVENTID */
-+/* WMI_VRING_SWITCH_TIMING_CONFIG_EVENTID */
-+struct wmi_vring_switch_timing_config_event {
-+	/* enum wmi_fw_status */
-+	u8 status;
-+	u8 reserved[3];
-+} __packed;
-+
-+/* WMI_GET_ASSOC_LIST_RES_EVENTID */
-+struct wmi_assoc_sta_info {
-+	u8 mac[WMI_MAC_LEN];
-+	u8 omni_index_address;
-+	u8 reserved;
-+} __packed;
-+
-+#define WMI_GET_ASSOC_LIST_SIZE	(8)
-+
-+/* WMI_GET_ASSOC_LIST_RES_EVENTID
-+ * Returns up to MAX_ASSOC_STA_LIST_SIZE associated STAs
-+ */
-+struct wmi_get_assoc_list_res_event {
-+	struct wmi_assoc_sta_info assoc_sta_list[WMI_GET_ASSOC_LIST_SIZE];
-+	/* STA count */
-+	u8 count;
-+	u8 reserved[3];
-+} __packed;
-+
-+/* WMI_BF_CONTROL_EVENTID */
-+struct wmi_bf_control_event {
-+	/* wmi_fw_status */
-+	u8 status;
-+	u8 reserved[3];
-+} __packed;
-+
-+/* WMI_COMMAND_NOT_SUPPORTED_EVENTID */
- struct wmi_command_not_supported_event {
- 	/* device id */
- 	u8 mid;
-@@ -2963,4 +3252,62 @@ struct wmi_command_not_supported_event {
- 	__le16 reserved1;
- } __packed;
+ 	return 1;
  
-+/* WMI_TSF_SYNC_CMDID */
-+struct wmi_tsf_sync_cmd {
-+	/* The time interval to send announce frame in one BI */
-+	u8 interval_ms;
-+	/* The mcs to send announce frame */
-+	u8 mcs;
-+	u8 reserved[6];
-+} __packed;
-+
-+/* WMI_TSF_SYNC_STATUS_EVENTID */
-+enum wmi_tsf_sync_status {
-+	WMI_TSF_SYNC_SUCCESS	= 0x00,
-+	WMI_TSF_SYNC_FAILED	= 0x01,
-+	WMI_TSF_SYNC_REJECTED	= 0x02,
-+};
-+
-+/* WMI_TSF_SYNC_STATUS_EVENTID */
-+struct wmi_tsf_sync_status_event {
-+	/* enum wmi_tsf_sync_status */
-+	u8 status;
-+	u8 reserved[3];
-+} __packed;
-+
-+/* WMI_GET_CCA_INDICATIONS_EVENTID */
-+struct wmi_get_cca_indications_event {
-+	/* wmi_fw_status */
-+	u8 status;
-+	/* CCA-Energy Detect in percentage over last BI (0..100) */
-+	u8 cca_ed_percent;
-+	/* Averaged CCA-Energy Detect in percent over number of BIs (0..100) */
-+	u8 cca_ed_avg_percent;
-+	/* NAV percent over last BI (0..100) */
-+	u8 nav_percent;
-+	/* Averaged NAV percent over number of BIs (0..100) */
-+	u8 nav_avg_percent;
-+	u8 reserved[3];
-+} __packed;
-+
-+/* WMI_SET_CCA_INDICATIONS_BI_AVG_NUM_CMDID */
-+struct wmi_set_cca_indications_bi_avg_num_cmd {
-+	/* set the number of bis to average cca_ed (0..255) */
-+	u8 bi_number;
-+	u8 reserved[3];
-+} __packed;
-+
-+/* WMI_SET_CCA_INDICATIONS_BI_AVG_NUM_EVENTID */
-+struct wmi_set_cca_indications_bi_avg_num_event {
-+	/* wmi_fw_status */
-+	u8 status;
-+	u8 reserved[3];
-+} __packed;
-+
-+/* WMI_INTERNAL_FW_SET_CHANNEL */
-+struct wmi_internal_fw_set_channel_event {
-+	u8 channel_num;
-+	u8 reserved[3];
-+} __packed;
-+
- #endif /* __WILOCITY_WMI_H__ */
+-_fail_:
++fail:
+ 
+ 	return 0;
+ }
+@@ -907,7 +907,7 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ 				dev_err(&func->dev,
+ 					"Failed cmd52, set 0xf8 data (%d) ...\n",
+ 					__LINE__);
+-				goto _fail_;
++				goto fail;
+ 			}
+ 		}
+ 		return 1;
+@@ -940,7 +940,7 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ 						dev_err(&func->dev,
+ 							"Failed cmd52, set 0xf8 data (%d) ...\n",
+ 							__LINE__);
+-						goto _fail_;
++						goto fail;
+ 					}
+ 				}
+ 				if (!ret)
+@@ -948,7 +948,7 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ 				flags >>= 1;
+ 			}
+ 			if (!ret)
+-				goto _fail_;
++				goto fail;
+ 			for (i = g_sdio.nint; i < MAX_NUM_INT; i++) {
+ 				if (flags & 1)
+ 					dev_err(&func->dev,
+@@ -983,11 +983,11 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ 			dev_err(&func->dev,
+ 				"Failed cmd52, set 0xf6 data (%d) ...\n",
+ 				__LINE__);
+-			goto _fail_;
++			goto fail;
+ 		}
+ 	}
+ 	return 1;
+-_fail_:
++fail:
+ 	return 0;
+ }
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index bcbb923..43cf9b8 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -996,11 +996,11 @@ int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
+ 
+ 		if (!ret) {
+ 			ret = -EIO;
+-			goto _fail_;
++			goto fail;
+ 		}
+ 	} while (offset < buffer_size);
+ 
+-_fail_:
++fail:
+ 
+ 	kfree(dma_buffer);
+ 
+@@ -1421,12 +1421,12 @@ int wilc_wlan_init(struct net_device *dev)
+ 
+ 	if (!wilc->hif_func->hif_init(wilc, false)) {
+ 		ret = -EIO;
+-		goto _fail_;
++		goto fail;
+ 	}
+ 
+ 	if (!wilc_wlan_cfg_init()) {
+ 		ret = -ENOBUFS;
+-		goto _fail_;
++		goto fail;
+ 	}
+ 
+ 	if (!wilc->tx_buffer)
+@@ -1434,7 +1434,7 @@ int wilc_wlan_init(struct net_device *dev)
+ 
+ 	if (!wilc->tx_buffer) {
+ 		ret = -ENOBUFS;
+-		goto _fail_;
++		goto fail;
+ 	}
+ 
+ 	if (!wilc->rx_buffer)
+@@ -1442,17 +1442,17 @@ int wilc_wlan_init(struct net_device *dev)
+ 
+ 	if (!wilc->rx_buffer) {
+ 		ret = -ENOBUFS;
+-		goto _fail_;
++		goto fail;
+ 	}
+ 
+ 	if (!init_chip(dev)) {
+ 		ret = -EIO;
+-		goto _fail_;
++		goto fail;
+ 	}
+ 
+ 	return 1;
+ 
+-_fail_:
++fail:
+ 
+ 	kfree(wilc->rx_buffer);
+ 	wilc->rx_buffer = NULL;
 -- 
-1.9.1
+2.7.4
