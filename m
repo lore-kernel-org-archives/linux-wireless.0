@@ -1,43 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59902 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751339AbeD3KXc (ORCPT
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:40973 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752392AbeDRVHz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Apr 2018 06:23:32 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 18 Apr 2018 17:07:55 -0400
+Subject: Re: [PATCH 1/3] ethtool: Support ETHTOOL_GSTATS2 command.
+To: greearb@candelatech.com, netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+References: <1524016176-3881-1-git-send-email-greearb@candelatech.com>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <21401079-4285-c7fd-bd0f-297083fbd777@gmail.com> (sfid-20180418_230808_459772_B784F392)
+Date: Wed, 18 Apr 2018 14:07:46 -0700
 MIME-Version: 1.0
-Subject: Re: mwifiex: fix mwifiex_hard_start_xmit()'s return type
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180424131802.4913-1-luc.vanoostenryck@gmail.com>
-References: <20180424131802.4913-1-luc.vanoostenryck@gmail.com>
-To: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
-Cc: linux-kernel@vger.kernel.org,
-        Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxm@marvell.com>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Message-Id: <20180430102331.C959D60710@smtp.codeaurora.org> (sfid-20180430_122351_148116_56F1B18B)
-Date: Mon, 30 Apr 2018 10:23:31 +0000 (UTC)
+In-Reply-To: <1524016176-3881-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luc Van Oostenryck <luc.vanoostenryck@gmail.com> wrote:
-
-> The method ndo_start_xmit() is defined as returning an 'netdev_tx_t',
-> which is a typedef for an enum type, but the implementation in this
-> driver returns an 'int'.
+On 04/17/2018 06:49 PM, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
 > 
-> Fix this by returning 'netdev_tx_t' in this driver too.
+> This is similar to ETHTOOL_GSTATS, but it allows you to specify
+> flags.  These flags can be used by the driver to decrease the
+> amount of stats refreshed.  In particular, this helps with ath10k
+> since getting the firmware stats can be slow.
+
+You can configure the statistics refresh rate through the ethtool
+coalescing parameter stats_block_coalesce_usecs, not sure if this is
+exactly what you had in mind, but if it works, then you might as well
+want to use it.
+
 > 
-> Signed-off-by: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+>  include/linux/ethtool.h      | 12 ++++++++++++
+>  include/uapi/linux/ethtool.h | 10 ++++++++++
+>  net/core/ethtool.c           | 40 +++++++++++++++++++++++++++++++++++-----
+>  3 files changed, 57 insertions(+), 5 deletions(-)
+> 
+> diff --git a/include/linux/ethtool.h b/include/linux/ethtool.h
+> index ebe4181..a4aa11f 100644
+> --- a/include/linux/ethtool.h
+> +++ b/include/linux/ethtool.h
+> @@ -243,6 +243,15 @@ bool ethtool_convert_link_mode_to_legacy_u32(u32 *legacy_u32,
+>   * @get_ethtool_stats: Return extended statistics about the device.
+>   *	This is only useful if the device maintains statistics not
+>   *	included in &struct rtnl_link_stats64.
+> + * @get_ethtool_stats2: Return extended statistics about the device.
+> + *	This is only useful if the device maintains statistics not
+> + *	included in &struct rtnl_link_stats64.
+> + *      Takes a flags argument:  0 means all (same as get_ethtool_stats),
+> + *      0x1 (ETHTOOL_GS2_SKIP_FW) means skip firmware stats.
+> + *      Other flags are reserved for now.
+> + *      Same number of stats will be returned, but some of them might
+> + *      not be as accurate/refreshed.  This is to allow not querying
+> + *      firmware or other expensive-to-read stats, for instance.
+>   * @begin: Function to be called before any other operation.  Returns a
+>   *	negative error code or zero.
+>   * @complete: Function to be called after any other operation except
+> @@ -355,6 +364,9 @@ struct ethtool_ops {
+>  	int	(*set_phys_id)(struct net_device *, enum ethtool_phys_id_state);
+>  	void	(*get_ethtool_stats)(struct net_device *,
+>  				     struct ethtool_stats *, u64 *);
+> +	void	(*get_ethtool_stats2)(struct net_device *dev,
+> +				      struct ethtool_stats *gstats, u64 *data,
+> +				      u32 flags);
+>  	int	(*begin)(struct net_device *);
+>  	void	(*complete)(struct net_device *);
+>  	u32	(*get_priv_flags)(struct net_device *);
+> diff --git a/include/uapi/linux/ethtool.h b/include/uapi/linux/ethtool.h
+> index 4ca65b5..1c74f3e 100644
+> --- a/include/uapi/linux/ethtool.h
+> +++ b/include/uapi/linux/ethtool.h
+> @@ -1396,11 +1396,21 @@ enum ethtool_fec_config_bits {
+>  #define ETHTOOL_PHY_STUNABLE	0x0000004f /* Set PHY tunable configuration */
+>  #define ETHTOOL_GFECPARAM	0x00000050 /* Get FEC settings */
+>  #define ETHTOOL_SFECPARAM	0x00000051 /* Set FEC settings */
+> +#define ETHTOOL_GSTATS2		0x00000052 /* get NIC-specific statistics
+> +					    * with ability to specify flags.
+> +					    * See ETHTOOL_GS2* below.
+> +					    */
+>  
+>  /* compatibility with older code */
+>  #define SPARC_ETH_GSET		ETHTOOL_GSET
+>  #define SPARC_ETH_SSET		ETHTOOL_SSET
+>  
+> +/* GSTATS2 flags */
+> +#define ETHTOOL_GS2_SKIP_NONE (0)    /* default is to update all stats */
+> +#define ETHTOOL_GS2_SKIP_FW   (1<<0) /* Skip reading stats that probe firmware,
+> +				      * and thus are slow/expensive.
+> +				      */
+> +
+>  /* Link mode bit indices */
+>  enum ethtool_link_mode_bit_indices {
+>  	ETHTOOL_LINK_MODE_10baseT_Half_BIT	= 0,
+> diff --git a/net/core/ethtool.c b/net/core/ethtool.c
+> index 03416e6..6ec3413 100644
+> --- a/net/core/ethtool.c
+> +++ b/net/core/ethtool.c
+> @@ -1952,16 +1952,14 @@ static int ethtool_phys_id(struct net_device *dev, void __user *useraddr)
+>  	return rc;
+>  }
+>  
+> -static int ethtool_get_stats(struct net_device *dev, void __user *useraddr)
+> +static int _ethtool_get_stats(struct net_device *dev, void __user *useraddr,
+> +			      u32 flags)
+>  {
+>  	struct ethtool_stats stats;
+>  	const struct ethtool_ops *ops = dev->ethtool_ops;
+>  	u64 *data;
+>  	int ret, n_stats;
+>  
+> -	if (!ops->get_ethtool_stats || !ops->get_sset_count)
+> -		return -EOPNOTSUPP;
+> -
+>  	n_stats = ops->get_sset_count(dev, ETH_SS_STATS);
+>  	if (n_stats < 0)
+>  		return n_stats;
+> @@ -1976,7 +1974,10 @@ static int ethtool_get_stats(struct net_device *dev, void __user *useraddr)
+>  	if (n_stats && !data)
+>  		return -ENOMEM;
+>  
+> -	ops->get_ethtool_stats(dev, &stats, data);
+> +	if (flags != ETHTOOL_GS2_SKIP_NONE)
+> +		ops->get_ethtool_stats2(dev, &stats, data, flags);
+> +	else
+> +		ops->get_ethtool_stats(dev, &stats, data);
+>  
+>  	ret = -EFAULT;
+>  	if (copy_to_user(useraddr, &stats, sizeof(stats)))
+> @@ -1991,6 +1992,31 @@ static int ethtool_get_stats(struct net_device *dev, void __user *useraddr)
+>  	return ret;
+>  }
+>  
+> +static int ethtool_get_stats(struct net_device *dev, void __user *useraddr)
+> +{
+> +	const struct ethtool_ops *ops = dev->ethtool_ops;
+> +
+> +	if (!ops->get_ethtool_stats || !ops->get_sset_count)
+> +		return -EOPNOTSUPP;
+> +	return _ethtool_get_stats(dev, useraddr, ETHTOOL_GS2_SKIP_NONE);
+> +}
+> +
+> +static int ethtool_get_stats2(struct net_device *dev, void __user *useraddr)
+> +{
+> +	struct ethtool_stats stats;
+> +	const struct ethtool_ops *ops = dev->ethtool_ops;
+> +	u32 flags = 0;
+> +
+> +	if (!ops->get_ethtool_stats2 || !ops->get_sset_count)
+> +		return -EOPNOTSUPP;
+> +
+> +	if (copy_from_user(&stats, useraddr, sizeof(stats)))
+> +		return -EFAULT;
+> +
+> +	flags = stats.n_stats;
+> +	return _ethtool_get_stats(dev, useraddr, flags);
+> +}
+> +
+>  static int ethtool_get_phy_stats(struct net_device *dev, void __user *useraddr)
+>  {
+>  	struct ethtool_stats stats;
+> @@ -2632,6 +2658,7 @@ int dev_ethtool(struct net *net, struct ifreq *ifr)
+>  	case ETHTOOL_GSSET_INFO:
+>  	case ETHTOOL_GSTRINGS:
+>  	case ETHTOOL_GSTATS:
+> +	case ETHTOOL_GSTATS2:
+>  	case ETHTOOL_GPHYSTATS:
+>  	case ETHTOOL_GTSO:
+>  	case ETHTOOL_GPERMADDR:
+> @@ -2742,6 +2769,9 @@ int dev_ethtool(struct net *net, struct ifreq *ifr)
+>  	case ETHTOOL_GSTATS:
+>  		rc = ethtool_get_stats(dev, useraddr);
+>  		break;
+> +	case ETHTOOL_GSTATS2:
+> +		rc = ethtool_get_stats2(dev, useraddr);
+> +		break;
+>  	case ETHTOOL_GPERMADDR:
+>  		rc = ethtool_get_perm_addr(dev, useraddr);
+>  		break;
+> 
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-c126e1995f79 mwifiex: fix mwifiex_hard_start_xmit()'s return type
 
 -- 
-https://patchwork.kernel.org/patch/10359857/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Florian
