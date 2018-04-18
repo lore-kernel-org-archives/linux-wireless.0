@@ -1,55 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f176.google.com ([209.85.128.176]:33667 "EHLO
-        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751256AbeDROo2 (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:6278 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753328AbeDRLlK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 10:44:28 -0400
-Received: by mail-wr0-f176.google.com with SMTP id z73-v6so5589340wrb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2018 07:44:27 -0700 (PDT)
-Subject: Re: [PATCH v2 4/4] ath10k: Enable sta idle power save
-To: Kalle Valo <kvalo@codeaurora.org>, govinds@codeaurora.org
-References: <1523966821-21903-1-git-send-email-pillair@codeaurora.org>
- <1523966821-21903-5-git-send-email-pillair@codeaurora.org>
- <946e582c-2438-872b-eec8-25d9dcb994d9@dd-wrt.com>
- <7a06a34a5fcb97e07a8d79b4d689e781@codeaurora.org>
- <87604oodt4.fsf@kamboji.qca.qualcomm.com>
-Cc: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        linux-wireless@vger.kernel.org, pillair@codeaurora.org,
-        ath10k@lists.infradead.org
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AD759C7.2070104@broadcom.com> (sfid-20180418_164440_114554_AC4C924E)
-Date: Wed, 18 Apr 2018 16:44:23 +0200
+        Wed, 18 Apr 2018 07:41:10 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 21/22] staging: wilc1000: remove the use of goto label in wilc_spi_clear_int_ext()
+Date: Wed, 18 Apr 2018 17:09:23 +0530
+Message-ID: <1524051564-15497-22-git-send-email-ajay.kathat@microchip.com> (sfid-20180418_134113_412595_91994B2E)
+In-Reply-To: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <87604oodt4.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/18/2018 3:16 PM, Kalle Valo wrote:
-> (fixing top posting)
->
-> govinds@codeaurora.org writes:
->
->> On 2018-04-18 12:36, Sebastian Gottschall wrote:
->>> from my point of view powersave should be optional and not forced.
->>>
->>> consider :
->>> iw dev <devname> set power_save on/off
->>>
->>> so there is already a config option made for that purpose,
->>
->> Thanks Sebastian for your review. Agree this should not be forced with
->> in driver.
->>
->> I will check if i can set the idle ps at the end of
->> ath10k_mac_vif_setup_ps by checking arvif->ps.
->> I will update the patch accordingly.
->
-> So what power save is this exactly? I assumed it's some bus level power
-> save (turning of clocks etc) but is it actually 802.11 power save?
+Remove goto label '_fail_' used in wilc_spi_clear_int_ext(), to avoid
+the label name starting with '_'.
 
-I also suspected bus level power save and I would say runtime-pm 
-framework should be considered for that.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_spi.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 1db2814..2cb9f4e 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -1013,7 +1013,7 @@ static int wilc_spi_clear_int_ext(struct wilc *wilc, u32 val)
+ 			dev_err(&spi->dev,
+ 				"Failed wilc_spi_write_reg, set reg %x ...\n",
+ 				0x10c8 + i * 4);
+-			goto _fail_;
++			return ret;
+ 		}
+ 		for (i = g_spi.nint; i < MAX_NUM_INT; i++) {
+ 			if (flags & 1)
+@@ -1035,7 +1035,7 @@ static int wilc_spi_clear_int_ext(struct wilc *wilc, u32 val)
+ 	ret = wilc_spi_write_reg(wilc, WILC_VMM_TBL_CTL, tbl_ctl);
+ 	if (!ret) {
+ 		dev_err(&spi->dev, "fail write reg vmm_tbl_ctl...\n");
+-		goto _fail_;
++		return ret;
+ 	}
+ 
+ 	if ((val & EN_VMM) == EN_VMM) {
+@@ -1045,10 +1045,10 @@ static int wilc_spi_clear_int_ext(struct wilc *wilc, u32 val)
+ 		ret = wilc_spi_write_reg(wilc, WILC_VMM_CORE_CTL, 1);
+ 		if (!ret) {
+ 			dev_err(&spi->dev, "fail write reg vmm_core_ctl...\n");
+-			goto _fail_;
++			return ret;
+ 		}
+ 	}
+-_fail_:
++
+ 	return ret;
+ }
+ 
+-- 
+2.7.4
