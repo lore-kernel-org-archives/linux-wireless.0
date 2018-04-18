@@ -1,56 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40378 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750737AbeDSGAp (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:6278 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753668AbeDRLkY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Apr 2018 02:00:45 -0400
-Message-ID: <7162b267c0791b871dbd4e1b7b82e1ffaf91a6e5.camel@coelho.fi> (sfid-20180419_080048_862130_D4B355DA)
-From: Luca Coelho <luca@coelho.fi>
-To: Emmanuel Grumbach <egrumbach@gmail.com>,
-        Scott Register <sreg@sreg.io>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        linuxwifi@intel.com
-Date: Thu, 19 Apr 2018 09:00:42 +0300
-In-Reply-To: <03793285ba30a7767498feca8229418625dcf111.camel@coelho.fi>
-References: <CANrGCJeTDQ1DTuum-asODLMoY4StspzukkWfTVtb6fJ+yHBGXg@mail.gmail.com>
-         <CANUX_P0VoQHQ1iPsk_u1bZsEU1ny1SxwrZbQeSEBUVGyjKcyVQ@mail.gmail.com>
-         <03793285ba30a7767498feca8229418625dcf111.camel@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: iwlwifi 4.18rc1 SYNC TIME_QUOTA_CMD with fw 31
+        Wed, 18 Apr 2018 07:40:24 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 00/22] staging: wilc1000: cleanup patches to follow linux coding style
+Date: Wed, 18 Apr 2018 17:09:02 +0530
+Message-ID: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180418_134027_753687_8A7ED488)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-04-19 at 08:42 +0300, Luca Coelho wrote:
-> On Wed, 2018-04-18 at 11:31 +0300, Emmanuel Grumbach wrote:
-> > On Wed, Apr 18, 2018 at 5:47 AM, Scott Register <sreg@sreg.io>
-> > wrote:
-> > > 
-> > > Hello,
-> > > 
-> > > After upgrading to 4.18rc1 iwlwifi is printing a FW error. There
-> > > was a
-> > > previous thread with a similar
-> > > issue but they seemed to resolve it with a ucode update. I think
-> > > I'm
-> > > running a newer FW and
-> > > am still having an issue. 4.13 works--I haven't gone any higher
-> > > so
-> > > far.
-> > 
-> > Please download the firmware from
-> > https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/linux-firmware
-> > .g
-> > it/plain/iwlwifi-8265-36.ucode
-> > This should fix your problem.
-> 
-> Yeah, it should work with FW 36.  But if there really is something in
-> 4.18 that breaks support on 31, we should either fix it or make sure
-> we
-> don't even try to load this old firmware.
+This patch series is based on top of
+"[PATCH 00/11] staging: wilc1000: fix for checkpatch and handled
+malloc memory properly" and its not applied yet.[1]
 
-Hmmm, you (and I) obviously meant 4.17-rc1. ;)
+In this series contains fixes to avoid the checkpatch reported issue.
+Also remove the multiple #define for same macros and changes to
+follow linux coding style.
 
---
-Cheers,
-Luca.
+[1] https://www.mail-archive.com/linux-wireless@vger.kernel.org/msg43998.html
+
+Ajay Singh (22):
+  staging: wilc1000: rename WILC_WFI_wep_key & WILC_WFI_wep_key_len
+  staging: wilc1000: rename variable using datatype in their name in
+    add_key()
+  staging: wilc1000: split add_key() to avoid line over 80 chars
+  staging: wilc1000: remove inner block {} and resetting of mode
+    variable
+  staging: wilc1000: refactor add_key() to avoid duplicated code
+  staging: wilc1000: handle error condition in add_key() and remove
+    auth_type variable
+  staging: wilc1000: use sizeof(variable) for memory allocated to store
+    key info
+  staging: wilc1000: fix line over 80 chars in change_station()
+  staging: wilc1000: rename WID_LOGTerminal_Switch to avoid camelCase
+  staging: wilc1000: added identifiers name in function definations
+  staging: wilc1000: remove unused macros in wilc module
+  staging: wilc1000: remove multiple define used for MAX_SSID_LEN
+  staging: wilc1000: remove multiple define for mac connect and
+    disconnect
+  staging: wilc1000: remove the use of goto label in spi_cmd_complete()
+  staging: wilc1000: remove the use of goto label in
+    wilc_spi_read_size()
+  staging: wilc1000: remove the use of goto label in wilc_spi_read_int()
+  staging: wilc1000: remove goto label '_done_' in
+    handle_listen_state_expired()
+  staging: wilc1000: remove the use of goto label in wilc_init()
+  staging: wilc1000: rename goto label '_fail_' linux naming convension
+  staging: wilc1000: rename goto labels starting with '_' in
+    wilc1000_wlan_init()
+  staging: wilc1000: remove the use of goto label in
+    wilc_spi_clear_int_ext()
+  staging: wilc1000: rename pu32InactiveTime to avoid camelCase issue
+
+ drivers/staging/wilc1000/coreconfigurator.h       |  17 --
+ drivers/staging/wilc1000/host_interface.c         |  25 +--
+ drivers/staging/wilc1000/host_interface.h         |   3 +-
+ drivers/staging/wilc1000/linux_wlan.c             | 118 +++++-----
+ drivers/staging/wilc1000/wilc_sdio.c              |  84 ++++----
+ drivers/staging/wilc1000/wilc_spi.c               |  21 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 250 +++++++++++-----------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |   8 +-
+ drivers/staging/wilc1000/wilc_wlan.c              |  16 +-
+ drivers/staging/wilc1000/wilc_wlan.h              |  26 +--
+ drivers/staging/wilc1000/wilc_wlan_if.h           |   4 +-
+ 11 files changed, 268 insertions(+), 304 deletions(-)
+
+-- 
+2.7.4
