@@ -1,77 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:37094 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753337AbeDQNX7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Apr 2018 09:23:59 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
-        loic.poulain@linaro.org, rfried@codeaurora.org,
-        bjorn.andersson@linaro.org, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH v2 4/5] wcn36xx: send bss_type in scan requests
-Date: Tue, 17 Apr 2018 15:23:36 +0200
-Message-Id: <20180417132337.31720-5-daniel@zonque.org> (sfid-20180417_152404_270701_88B0F701)
-In-Reply-To: <20180417132337.31720-1-daniel@zonque.org>
-References: <20180417132337.31720-1-daniel@zonque.org>
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:6278 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753878AbeDRLkq (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Apr 2018 07:40:46 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 10/22] staging: wilc1000: added identifiers name in function definations
+Date: Wed, 18 Apr 2018 17:09:12 +0530
+Message-ID: <1524051564-15497-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180418_134050_223845_5CEC7780)
+In-Reply-To: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pass the bss_type of the currently configured BSS in the message for the
-scan request. Therefore, that setting needs to be kept in struct
-wcn36xx_vif.
+Fix identifier names required for functions definition issues reported
+by checkpatch.pl script.
 
-This seems to be only interesting when scanning for a specific SSID
-and doesn't matter for regular wildcard scans.
-
-Signed-off-by: Daniel Mack <daniel@zonque.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.c     | 5 ++++-
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 1 +
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_wlan.h | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index b7964f79d837..9c8ce5e0454f 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -620,6 +620,7 @@ int wcn36xx_smd_finish_scan(struct wcn36xx *wcn,
- int wcn36xx_smd_start_hw_scan(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 			      struct cfg80211_scan_request *req)
- {
-+	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
- 	struct wcn36xx_hal_start_scan_offload_req_msg msg_body;
- 	int ret, i;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 4abbfa7..20e4659 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -222,7 +222,7 @@ struct txq_entry_t {
+ 	int buffer_size;
+ 	void *priv;
+ 	int status;
+-	void (*tx_complete_func)(void *, int);
++	void (*tx_complete_func)(void *priv, int status);
+ };
  
-@@ -631,6 +632,7 @@ int wcn36xx_smd_start_hw_scan(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 	msg_body.max_ch_time = 100;
- 	msg_body.scan_hidden = 1;
- 	memcpy(msg_body.mac, vif->addr, ETH_ALEN);
-+	msg_body.bss_type = vif_priv->bss_type;
- 	msg_body.p2p_search = vif->p2p;
- 
- 	msg_body.num_ssid = min_t(u8, req->n_ssids, ARRAY_SIZE(msg_body.ssids));
-@@ -1399,9 +1401,10 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 	bss->spectrum_mgt_enable = 0;
- 	bss->tx_mgmt_power = 0;
- 	bss->max_tx_power = WCN36XX_MAX_POWER(wcn);
--
- 	bss->action = update;
- 
-+	vif_priv->bss_type = bss->bss_type;
-+
- 	wcn36xx_dbg(WCN36XX_DBG_HAL,
- 		    "hal config bss bssid %pM self_mac_addr %pM bss_type %d oper_mode %d nw_type %d\n",
- 		    bss->bssid, bss->self_mac_addr, bss->bss_type,
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index 5854adf43f3a..22e05cb4eb98 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -123,6 +123,7 @@ struct wcn36xx_vif {
- 	bool is_joining;
- 	bool sta_assoc;
- 	struct wcn36xx_hal_mac_ssid ssid;
-+	enum wcn36xx_hal_bss_type bss_type;
- 
- 	/* Power management */
- 	enum wcn36xx_power_state pw_state;
+ struct rxq_entry_t {
+@@ -238,18 +238,18 @@ struct rxq_entry_t {
+  ********************************************/
+ struct wilc;
+ struct wilc_hif_func {
+-	int (*hif_init)(struct wilc *, bool resume);
+-	int (*hif_deinit)(struct wilc *);
+-	int (*hif_read_reg)(struct wilc *, u32, u32 *);
+-	int (*hif_write_reg)(struct wilc *, u32, u32);
+-	int (*hif_block_rx)(struct wilc *, u32, u8 *, u32);
+-	int (*hif_block_tx)(struct wilc *, u32, u8 *, u32);
+-	int (*hif_read_int)(struct wilc *, u32 *);
+-	int (*hif_clear_int_ext)(struct wilc *, u32);
+-	int (*hif_read_size)(struct wilc *, u32 *);
+-	int (*hif_block_tx_ext)(struct wilc *, u32, u8 *, u32);
+-	int (*hif_block_rx_ext)(struct wilc *, u32, u8 *, u32);
+-	int (*hif_sync_ext)(struct wilc *, int);
++	int (*hif_init)(struct wilc *wilc, bool resume);
++	int (*hif_deinit)(struct wilc *wilc);
++	int (*hif_read_reg)(struct wilc *wilc, u32 addr, u32 *data);
++	int (*hif_write_reg)(struct wilc *wilc, u32 addr, u32 data);
++	int (*hif_block_rx)(struct wilc *wilc, u32 addr, u8 *buf, u32 size);
++	int (*hif_block_tx)(struct wilc *wilc, u32 addr, u8 *buf, u32 size);
++	int (*hif_read_int)(struct wilc *wilc, u32 *int_status);
++	int (*hif_clear_int_ext)(struct wilc *wilc, u32 val);
++	int (*hif_read_size)(struct wilc *wilc, u32 *size);
++	int (*hif_block_tx_ext)(struct wilc *wilc, u32 addr, u8 *buf, u32 size);
++	int (*hif_block_rx_ext)(struct wilc *wilc, u32 addr, u8 *buf, u32 size);
++	int (*hif_sync_ext)(struct wilc *wilc, int nint);
+ 	int (*enable_interrupt)(struct wilc *nic);
+ 	void (*disable_interrupt)(struct wilc *nic);
+ };
 -- 
-2.14.3
+2.7.4
