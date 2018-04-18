@@ -1,76 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53214 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751329AbeDFFqA (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:64459 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753923AbeDRLk5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Apr 2018 01:46:00 -0400
-From: pillair@codeaurora.org
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@codeaurora.org>
-Subject: [PATCH] ath10k: Enable hw checksum for wcn3990
-Date: Fri,  6 Apr 2018 11:15:44 +0530
-Message-Id: <1522993544-15279-1-git-send-email-pillair@codeaurora.org> (sfid-20180406_074604_112233_2ED6A905)
+        Wed, 18 Apr 2018 07:40:57 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 15/22] staging: wilc1000: remove the use of goto label in wilc_spi_read_size()
+Date: Wed, 18 Apr 2018 17:09:17 +0530
+Message-ID: <1524051564-15497-16-git-send-email-ajay.kathat@microchip.com> (sfid-20180418_134100_663765_BBB52ED6)
+In-Reply-To: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rakesh Pillai <pillair@codeaurora.org>
+In wilc_spi_read_size() remove the use of goto label '_fail_'. Changes
+are done to avoid the use of '_' in label name.
 
-By default ath10k driver enables the support for HW_CHECKSUM
-(NETIF_F_HW_CSUM). Since the TCP/UDP checksum calculation is not enabled
-in the wcn3990 firmware the checksum is incorrect in the TCP/UDP packets
-and all patckets are dropped. But due note that wcn3990 support in
-ath10k is still incomplete so this isn't a critical fix (yet).
-
-Enable hw checksum calculations in wcn3990 hardware by
-setting the proper flags in msdu descriptor tso flags.
-
-Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/ath/ath10k/htt.h    | 13 +++++++++++++
- drivers/net/wireless/ath/ath10k/htt_tx.c |  6 ++++--
- 2 files changed, 17 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/wilc_spi.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 8cc2a8b..11f52df 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -127,6 +127,19 @@ struct htt_msdu_ext_desc_64 {
- 				 | HTT_MSDU_EXT_DESC_FLAG_TCP_IPV4_CSUM_ENABLE \
- 				 | HTT_MSDU_EXT_DESC_FLAG_TCP_IPV6_CSUM_ENABLE)
- 
-+#define HTT_MSDU_EXT_DESC_FLAG_IPV4_CSUM_ENABLE_64		BIT(16)
-+#define HTT_MSDU_EXT_DESC_FLAG_UDP_IPV4_CSUM_ENABLE_64		BIT(17)
-+#define HTT_MSDU_EXT_DESC_FLAG_UDP_IPV6_CSUM_ENABLE_64		BIT(18)
-+#define HTT_MSDU_EXT_DESC_FLAG_TCP_IPV4_CSUM_ENABLE_64		BIT(19)
-+#define HTT_MSDU_EXT_DESC_FLAG_TCP_IPV6_CSUM_ENABLE_64		BIT(20)
-+#define HTT_MSDU_EXT_DESC_FLAG_PARTIAL_CSUM_ENABLE_64		BIT(21)
-+
-+#define HTT_MSDU_CHECKSUM_ENABLE_64  (HTT_MSDU_EXT_DESC_FLAG_IPV4_CSUM_ENABLE_64 \
-+				     | HTT_MSDU_EXT_DESC_FLAG_UDP_IPV4_CSUM_ENABLE_64 \
-+				     | HTT_MSDU_EXT_DESC_FLAG_UDP_IPV6_CSUM_ENABLE_64 \
-+				     | HTT_MSDU_EXT_DESC_FLAG_TCP_IPV4_CSUM_ENABLE_64 \
-+				     | HTT_MSDU_EXT_DESC_FLAG_TCP_IPV6_CSUM_ENABLE_64)
-+
- enum htt_data_tx_desc_flags0 {
- 	HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT = 1 << 0,
- 	HTT_DATA_TX_DESC_FLAGS0_NO_AGGR         = 1 << 1,
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index d334b7b..d97ef72 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -1475,8 +1475,10 @@ static int ath10k_htt_tx_64(struct ath10k_htt *htt,
- 	    !test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
- 		flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L3_OFFLOAD;
- 		flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L4_OFFLOAD;
--		if (ar->hw_params.continuous_frag_desc)
--			ext_desc->flags |= HTT_MSDU_CHECKSUM_ENABLE;
-+		if (ar->hw_params.continuous_frag_desc) {
-+			memset(ext_desc->tso_flag, 0, sizeof(ext_desc->tso_flag));
-+			ext_desc->tso_flag[3] |= HTT_MSDU_CHECKSUM_ENABLE_64;
-+		}
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 3e3c774..57e4f11 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -917,13 +917,12 @@ static int wilc_spi_read_size(struct wilc *wilc, u32 *size)
+ 		if (!ret) {
+ 			dev_err(&spi->dev,
+ 				"Failed read WILC_VMM_TO_HOST_SIZE ...\n");
+-			goto _fail_;
++			return ret;
+ 		}
+ 		tmp = (byte_cnt >> 2) & IRQ_DMA_WD_CNT_MASK;
+ 		*size = tmp;
  	}
  
- 	/* Prevent firmware from sending up tx inspection requests. There's
+-_fail_:
+ 	return ret;
+ }
+ 
 -- 
-1.9.1
+2.7.4
