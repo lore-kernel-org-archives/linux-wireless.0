@@ -1,75 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43128 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753948AbeDSQgi (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:64459 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753780AbeDRLkf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Apr 2018 12:36:38 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: govinds@codeaurora.org
-Cc: pillair@codeaurora.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        arend.vanspriel@broadcom.com
-Subject: Re: [PATCH v2 4/4] ath10k: Enable sta idle power save
-References: <1523966821-21903-1-git-send-email-pillair@codeaurora.org>
-        <1523966821-21903-5-git-send-email-pillair@codeaurora.org>
-        <946e582c-2438-872b-eec8-25d9dcb994d9@dd-wrt.com>
-        <7a06a34a5fcb97e07a8d79b4d689e781@codeaurora.org>
-        <87604oodt4.fsf@kamboji.qca.qualcomm.com>
-        <a7dd1b94951725c61034f5be6744b725@codeaurora.org>
-Date: Thu, 19 Apr 2018 19:36:33 +0300
-In-Reply-To: <a7dd1b94951725c61034f5be6744b725@codeaurora.org>
-        (govinds@codeaurora.org's message of "Thu, 19 Apr 2018 10:02:47
-        +0530")
-Message-ID: <8736zrjgq6.fsf@kamboji.qca.qualcomm.com> (sfid-20180419_183642_576740_3E152C2D)
+        Wed, 18 Apr 2018 07:40:35 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 05/22] staging: wilc1000: refactor add_key() to avoid duplicated code
+Date: Wed, 18 Apr 2018 17:09:07 +0530
+Message-ID: <1524051564-15497-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180418_134039_285585_191E39F7)
+In-Reply-To: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-govinds@codeaurora.org writes:
+Cleanup fixes by removing the duplicated code in actor add_key().
 
-> On 2018-04-18 18:46, Kalle Valo wrote:
->> (fixing top posting)
->>
->> govinds@codeaurora.org writes:
->>
->>> On 2018-04-18 12:36, Sebastian Gottschall wrote:
->>>> from my point of view powersave should be optional and not forced.
->>>>
->>>> consider :
->>>> iw dev <devname> set power_save on/off
->>>>
->>>> so there is already a config option made for that purpose,
->>>
->>> Thanks Sebastian for your review. Agree this should not be forced with
->>> in driver.
->>>
->>> I will check if i can set the idle ps at the end of
->>> ath10k_mac_vif_setup_ps by checking arvif->ps.
->>> I will update the patch accordingly.
->>
->> So what power save is this exactly? I assumed it's some bus level power
->> save (turning of clocks etc) but is it actually 802.11 power save?
->
-> Yes this is WIFI chip set level power-save(based on idleness) and not
-> related to protocol power save. FW will turn off/scale down the
-> resources(clock/rails) based on opportunity(when ever idle mode is
-> detected). This power save is mostly done in disconnected state. I am
-> not really sure when framework/user-space triggers power-save
-> config(iw dev <devname> set power_save on/off). Then doing this from
-> user-space will be unnecessarily toggling this config or may not be
-> setting at disconnected state.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 64 ++++++++---------------
+ 1 file changed, 23 insertions(+), 41 deletions(-)
 
-I think that 'set power_save' commands affects struct
-ieee80211_bss_conf::ps parameter and I don't think it should be used in
-this case. We already have ath10k_config_ps() for 802.11 level of power
-saving.
-
-Arend again proposed runtime-pm with which I'm not very familiar. But
-why would we want to disable this? Doesn't it make sense to have this
-feature always enabled to save power? wcn3990 is a chip for a mobile
-device anyway.
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index ac4cd58..329899f 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -922,8 +922,7 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 	const u8 *rx_mic = NULL;
+ 	const u8 *tx_mic = NULL;
+ 	u8 mode = NO_ENCRYPT;
+-	u8 gmode = NO_ENCRYPT;
+-	u8 pmode = NO_ENCRYPT;
++	u8 op_mode;
+ 	enum AUTHTYPE auth_type = ANY;
+ 	struct wilc *wl;
+ 	struct wilc_vif *vif;
+@@ -966,71 +965,54 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 		    priv->wdev->iftype == NL80211_IFTYPE_P2P_GO) {
+ 			wilc_wfi_cfg_allocate_wpa_entry(priv, key_index);
+ 
++			if (params->key_len > 16 &&
++			    params->cipher == WLAN_CIPHER_SUITE_TKIP) {
++				tx_mic = params->key + 24;
++				rx_mic = params->key + 16;
++				keylen = params->key_len - 16;
++			}
++
+ 			if (!pairwise) {
+ 				if (params->cipher == WLAN_CIPHER_SUITE_TKIP)
+-					gmode = ENCRYPT_ENABLED | WPA | TKIP;
++					mode = ENCRYPT_ENABLED | WPA | TKIP;
+ 				else
+-					gmode = ENCRYPT_ENABLED | WPA2 | AES;
++					mode = ENCRYPT_ENABLED | WPA2 | AES;
+ 
+-				priv->wilc_groupkey = gmode;
++				priv->wilc_groupkey = mode;
+ 
+-				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
+-					tx_mic = params->key + 24;
+-					rx_mic = params->key + 16;
+-					keylen = params->key_len - 16;
+-				}
+ 				wilc_wfi_cfg_copy_wpa_info(priv->wilc_gtk[key_index],
+ 							   params);
+-
+-				wilc_add_rx_gtk(vif, params->key, keylen,
+-						key_index, params->seq_len,
+-						params->seq, rx_mic,
+-						tx_mic, AP_MODE, gmode);
+-
+ 			} else {
+ 				if (params->cipher == WLAN_CIPHER_SUITE_TKIP)
+-					pmode = ENCRYPT_ENABLED | WPA | TKIP;
++					mode = ENCRYPT_ENABLED | WPA | TKIP;
+ 				else
+-					pmode = priv->wilc_groupkey | AES;
+-
+-				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
+-					tx_mic = params->key + 24;
+-					rx_mic = params->key + 16;
+-					keylen = params->key_len - 16;
+-				}
++					mode = priv->wilc_groupkey | AES;
+ 
+ 				wilc_wfi_cfg_copy_wpa_info(priv->wilc_ptk[key_index],
+ 							   params);
+-
+-				wilc_add_ptk(vif, params->key, keylen,
+-					     mac_addr, rx_mic, tx_mic,
+-					     AP_MODE, pmode, key_index);
+ 			}
+-			break;
+-		}
+-
+-		if (!pairwise) {
+-			if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
++			op_mode = AP_MODE;
++		} else {
++			if (params->key_len > 16 &&
++			    params->cipher == WLAN_CIPHER_SUITE_TKIP) {
+ 				rx_mic = params->key + 24;
+ 				tx_mic = params->key + 16;
+ 				keylen = params->key_len - 16;
+ 			}
+ 
++			op_mode = STATION_MODE;
++		}
++
++		if (!pairwise) {
+ 			wilc_add_rx_gtk(vif, params->key, keylen,
+ 					key_index, params->seq_len,
+ 					params->seq, rx_mic,
+-					tx_mic, STATION_MODE,
++					tx_mic, op_mode,
+ 					mode);
+ 		} else {
+-			if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
+-				rx_mic = params->key + 24;
+-				tx_mic = params->key + 16;
+-				keylen = params->key_len - 16;
+-			}
+-
+ 			wilc_add_ptk(vif, params->key, keylen,
+ 				     mac_addr, rx_mic, tx_mic,
+-				     STATION_MODE, mode, key_index);
++				     op_mode, mode, key_index);
+ 		}
+ 		break;
+ 
 -- 
-Kalle Valo
+2.7.4
