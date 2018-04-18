@@ -1,289 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48220 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751755AbeD3G1n (ORCPT
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:32809 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753087AbeDRI3k (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Apr 2018 02:27:43 -0400
-From: Sriram R <srirrama@codeaurora.org>
-To: stable@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        Sriram R <srirrama@codeaurora.org>,
-        Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
-Subject: [PATCH 2/2 - linux-stable-4.4] ath10k: rebuild crypto header in rx data frames
-Date: Mon, 30 Apr 2018 11:56:27 +0530
-Message-Id: <1525069587-19281-3-git-send-email-srirrama@codeaurora.org> (sfid-20180430_082747_724394_3AD1C53F)
-In-Reply-To: <1525069587-19281-1-git-send-email-srirrama@codeaurora.org>
-References: <1525069587-19281-1-git-send-email-srirrama@codeaurora.org>
+        Wed, 18 Apr 2018 04:29:40 -0400
+Received: by mail-qk0-f193.google.com with SMTP id d206so920642qkb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2018 01:29:39 -0700 (PDT)
+Subject: Re: [PATCH 2/2] ath10k: support MAC address randomization in scan
+To: Dan Williams <dcbw@redhat.com>,
+        Brian Norris <briannorris@chromium.org>
+References: <1522379640-6442-1-git-send-email-cjhuang@codeaurora.org>
+ <1522379640-6442-3-git-send-email-cjhuang@codeaurora.org>
+ <20180412205954.GA34456@rodete-desktop-imager.corp.google.com>
+ <e16557d0891352ae0b83902faee97023@codeaurora.org>
+ <877epbs5v7.fsf@kamboji.qca.qualcomm.com> <5AD11D7C.1030603@broadcom.com>
+ <242be71eb87140c9560163c4000255b2@codeaurora.org>
+ <8736zvqtcw.fsf@kamboji.qca.qualcomm.com>
+ <20180417002854.GA186697@rodete-desktop-imager.corp.google.com>
+ <5AD5AEB5.1040808@broadcom.com>
+ <20180417160715.GA255263@rodete-desktop-imager.corp.google.com>
+ <5AD66BD9.4000706@broadcom.com>
+ <CA+ASDXOoxMyTq2CVnUwvN1LBWj1Y9wpsRPKuM0tVzA80sDYG-w@mail.gmail.com>
+ <c4f3d20e8c16c8bf8721f0a50fb809781b30b3f7.camel@redhat.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, cjhuang@codeaurora.org,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        Johannes Berg <johannes@sipsolutions.net>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AD701F0.20504@broadcom.com> (sfid-20180418_102944_424836_16ED61B1)
+Date: Wed, 18 Apr 2018 10:29:36 +0200
+MIME-Version: 1.0
+In-Reply-To: <c4f3d20e8c16c8bf8721f0a50fb809781b30b3f7.camel@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rx data frames notified through HTT_T2H_MSG_TYPE_RX_IND and
-HTT_T2H_MSG_TYPE_RX_FRAG_IND expect PN/TSC check to be done
-on host (mac80211) rather than firmware. Rebuild cipher header
-in every received data frames (that are notified through those
-HTT interfaces) from the rx_hdr_status tlv available in the
-rx descriptor of the first msdu. Skip setting RX_FLAG_IV_STRIPPED
-flag for the packets which requires mac80211 PN/TSC check support
-and set appropriate RX_FLAG for stripped crypto tail. Hw QCA988X,
-and QCA99X0 currently need the rebuilding of cipher header to
-perform PN/TSC check for replay attack.
++ Johannes (to confirm/correct my understanding regarding "supported 
+commands")
 
-[Upstream Commit : 7eccb738fce57cbe53ed903ccf43f9ab257b15b3]
+On 4/18/2018 4:35 AM, Dan Williams wrote:
+> On Tue, 2018-04-17 at 15:26 -0700, Brian Norris wrote:
+>> On Tue, Apr 17, 2018 at 2:49 PM, Arend van Spriel
+>> <arend.vanspriel@broadcom.com> wrote:
+>>> On 4/17/2018 6:07 PM, Brian Norris wrote:
+>>>> On Tue, Apr 17, 2018 at 10:22:13AM +0200, Arend van Spriel wrote:
+>>>>> I believe checking command support is not really recommended.
+>>>>> Instead, you
+>>>>> better check NL80211_ATTR_SCHED_SCAN_MAX_REQS being non-zero
+>>>>> (since kernel
+>>>>> 4.12 that is).
+>>>>
+>>>>
+>>>> Why not? Command support checking is what wpa_supplicant is
+>>>> doing.
+>>>
+>>>
+>>> That's not really a good argument. A couple (or more) years ago
+>>> wpa_supplicant was not doing nl80211 but wext and some other using
+>>> driver private ioctls, but that did not make it the best approach.
+>>
+>> I see what you're saying (though your comparison doesn't seem that
+>> fair either; private ioctls are nothing like a well-defined nl80211
+>> support list), and I'm totally good on looking at the new flag
+>> eventually. But you still haven't answered my question ("why not?").
+>> Is there a problem with the "supported commands" list?
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
-Signed-off-by: Sriram R <srirrama@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 98 ++++++++++++++++++++++++++------
- 1 file changed, 82 insertions(+), 16 deletions(-)
+My understanding is that in general the "supported commands" list is not 
+well-maintained. Not every nl80211 command is represented in the list so 
+user-space can not know whether it is missing or not supported.
+For this particular START_SCHED_SCAN command it can be used still and 
+indeed probably for a long time. I just wanted to point out that it is 
+not recommended for new user-space functionality.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 8d20ecc..d26cb37 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1076,7 +1076,21 @@ static void ath10k_htt_rx_h_undecap_raw(struct ath10k *ar,
- 	hdr = (void *)msdu->data;
- 
- 	/* Tail */
--	skb_trim(msdu, msdu->len - ath10k_htt_rx_crypto_tail_len(ar, enctype));
-+	if (status->flag & RX_FLAG_IV_STRIPPED) {
-+		skb_trim(msdu, msdu->len -
-+			 ath10k_htt_rx_crypto_tail_len(ar, enctype));
-+	} else {
-+		/* MIC */
-+		if ((status->flag & RX_FLAG_MIC_STRIPPED) &&
-+		    enctype == HTT_RX_MPDU_ENCRYPT_AES_CCM_WPA2)
-+			skb_trim(msdu, msdu->len - 8);
-+
-+		/* ICV */
-+		if (status->flag & RX_FLAG_ICV_STRIPPED &&
-+		    enctype != HTT_RX_MPDU_ENCRYPT_AES_CCM_WPA2)
-+			skb_trim(msdu, msdu->len -
-+				 ath10k_htt_rx_crypto_tail_len(ar, enctype));
-+	}
- 
- 	/* MMIC */
- 	if (!ieee80211_has_morefrags(hdr->frame_control) &&
-@@ -1095,12 +1109,14 @@ static void ath10k_htt_rx_h_undecap_raw(struct ath10k *ar,
- static void ath10k_htt_rx_h_undecap_nwifi(struct ath10k *ar,
- 					  struct sk_buff *msdu,
- 					  struct ieee80211_rx_status *status,
--					  const u8 first_hdr[64])
-+					  const u8 first_hdr[64],
-+					  enum htt_rx_mpdu_encrypt_type enctype)
- {
- 	struct ieee80211_hdr *hdr;
- 	size_t hdr_len;
- 	u8 da[ETH_ALEN];
- 	u8 sa[ETH_ALEN];
-+	int bytes_aligned = ar->hw_params.decap_align_bytes;
- 
- 	/* Delivered decapped frame:
- 	 * [nwifi 802.11 header] <-- replaced with 802.11 hdr
-@@ -1123,6 +1139,14 @@ static void ath10k_htt_rx_h_undecap_nwifi(struct ath10k *ar,
- 	/* push original 802.11 header */
- 	hdr = (struct ieee80211_hdr *)first_hdr;
- 	hdr_len = ieee80211_hdrlen(hdr->frame_control);
-+
-+	if (!(status->flag & RX_FLAG_IV_STRIPPED)) {
-+		memcpy(skb_push(msdu,
-+				ath10k_htt_rx_crypto_param_len(ar, enctype)),
-+		       (void *)hdr + round_up(hdr_len, bytes_aligned),
-+			ath10k_htt_rx_crypto_param_len(ar, enctype));
-+	}
-+
- 	memcpy(skb_push(msdu, hdr_len), hdr, hdr_len);
- 
- 	/* original 802.11 header has a different DA and in
-@@ -1180,6 +1204,7 @@ static void ath10k_htt_rx_h_undecap_eth(struct ath10k *ar,
- 	void *rfc1042;
- 	u8 da[ETH_ALEN];
- 	u8 sa[ETH_ALEN];
-+	int bytes_aligned = ar->hw_params.decap_align_bytes;
- 
- 	/* Delivered decapped frame:
- 	 * [eth header] <-- replaced with 802.11 hdr & rfc1042/llc
-@@ -1203,6 +1228,14 @@ static void ath10k_htt_rx_h_undecap_eth(struct ath10k *ar,
- 	/* push original 802.11 header */
- 	hdr = (struct ieee80211_hdr *)first_hdr;
- 	hdr_len = ieee80211_hdrlen(hdr->frame_control);
-+
-+	if (!(status->flag & RX_FLAG_IV_STRIPPED)) {
-+		memcpy(skb_push(msdu,
-+				ath10k_htt_rx_crypto_param_len(ar, enctype)),
-+		       (void *)hdr + round_up(hdr_len, bytes_aligned),
-+			ath10k_htt_rx_crypto_param_len(ar, enctype));
-+	}
-+
- 	memcpy(skb_push(msdu, hdr_len), hdr, hdr_len);
- 
- 	/* original 802.11 header has a different DA and in
-@@ -1216,10 +1249,12 @@ static void ath10k_htt_rx_h_undecap_eth(struct ath10k *ar,
- static void ath10k_htt_rx_h_undecap_snap(struct ath10k *ar,
- 					 struct sk_buff *msdu,
- 					 struct ieee80211_rx_status *status,
--					 const u8 first_hdr[64])
-+					 const u8 first_hdr[64],
-+					 enum htt_rx_mpdu_encrypt_type enctype)
- {
- 	struct ieee80211_hdr *hdr;
- 	size_t hdr_len;
-+	int bytes_aligned = ar->hw_params.decap_align_bytes;
- 
- 	/* Delivered decapped frame:
- 	 * [amsdu header] <-- replaced with 802.11 hdr
-@@ -1231,6 +1266,14 @@ static void ath10k_htt_rx_h_undecap_snap(struct ath10k *ar,
- 
- 	hdr = (struct ieee80211_hdr *)first_hdr;
- 	hdr_len = ieee80211_hdrlen(hdr->frame_control);
-+
-+	if (!(status->flag & RX_FLAG_IV_STRIPPED)) {
-+		memcpy(skb_push(msdu,
-+				ath10k_htt_rx_crypto_param_len(ar, enctype)),
-+		       (void *)hdr + round_up(hdr_len, bytes_aligned),
-+			ath10k_htt_rx_crypto_param_len(ar, enctype));
-+	}
-+
- 	memcpy(skb_push(msdu, hdr_len), hdr, hdr_len);
- }
- 
-@@ -1265,13 +1308,15 @@ static void ath10k_htt_rx_h_undecap(struct ath10k *ar,
- 					    is_decrypted);
- 		break;
- 	case RX_MSDU_DECAP_NATIVE_WIFI:
--		ath10k_htt_rx_h_undecap_nwifi(ar, msdu, status, first_hdr);
-+		ath10k_htt_rx_h_undecap_nwifi(ar, msdu, status, first_hdr,
-+					      enctype);
- 		break;
- 	case RX_MSDU_DECAP_ETHERNET2_DIX:
- 		ath10k_htt_rx_h_undecap_eth(ar, msdu, status, first_hdr, enctype);
- 		break;
- 	case RX_MSDU_DECAP_8023_SNAP_LLC:
--		ath10k_htt_rx_h_undecap_snap(ar, msdu, status, first_hdr);
-+		ath10k_htt_rx_h_undecap_snap(ar, msdu, status, first_hdr,
-+					     enctype);
- 		break;
- 	}
- }
-@@ -1314,7 +1359,8 @@ static void ath10k_htt_rx_h_csum_offload(struct sk_buff *msdu)
- 
- static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
- 				 struct sk_buff_head *amsdu,
--				 struct ieee80211_rx_status *status)
-+				 struct ieee80211_rx_status *status,
-+				 bool fill_crypt_header)
- {
- 	struct sk_buff *first;
- 	struct sk_buff *last;
-@@ -1324,7 +1370,6 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
- 	enum htt_rx_mpdu_encrypt_type enctype;
- 	u8 first_hdr[64];
- 	u8 *qos;
--	size_t hdr_len;
- 	bool has_fcs_err;
- 	bool has_crypto_err;
- 	bool has_tkip_err;
-@@ -1345,15 +1390,17 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
- 	 * decapped header. It'll be used for undecapping of each MSDU.
- 	 */
- 	hdr = (void *)rxd->rx_hdr_status;
--	hdr_len = ieee80211_hdrlen(hdr->frame_control);
--	memcpy(first_hdr, hdr, hdr_len);
-+	memcpy(first_hdr, hdr, RX_HTT_HDR_STATUS_LEN);
- 
- 	/* Each A-MSDU subframe will use the original header as the base and be
- 	 * reported as a separate MSDU so strip the A-MSDU bit from QoS Ctl.
- 	 */
- 	hdr = (void *)first_hdr;
--	qos = ieee80211_get_qos_ctl(hdr);
--	qos[0] &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
-+
-+	if (ieee80211_is_data_qos(hdr->frame_control)) {
-+		qos = ieee80211_get_qos_ctl(hdr);
-+		qos[0] &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
-+	}
- 
- 	/* Some attention flags are valid only in the last MSDU. */
- 	last = skb_peek_tail(amsdu);
-@@ -1387,11 +1434,17 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
- 	if (has_tkip_err)
- 		status->flag |= RX_FLAG_MMIC_ERROR;
- 
--	if (is_decrypted)
-+	if (is_decrypted) {
- 		status->flag |= RX_FLAG_DECRYPTED |
--				RX_FLAG_IV_STRIPPED |
- 				RX_FLAG_MMIC_STRIPPED;
- 
-+		if (fill_crypt_header)
-+			status->flag |= RX_FLAG_MIC_STRIPPED |
-+					RX_FLAG_ICV_STRIPPED;
-+		else
-+			status->flag |= RX_FLAG_IV_STRIPPED;
-+	}
-+
- 	skb_queue_walk(amsdu, msdu) {
- 		ath10k_htt_rx_h_csum_offload(msdu);
- 		ath10k_htt_rx_h_undecap(ar, msdu, status, first_hdr, enctype,
-@@ -1404,6 +1457,9 @@ static void ath10k_htt_rx_h_mpdu(struct ath10k *ar,
- 		if (!is_decrypted)
- 			continue;
- 
-+		if (fill_crypt_header)
-+			continue;
-+
- 		hdr = (void *)msdu->data;
- 		hdr->frame_control &= ~__cpu_to_le16(IEEE80211_FCTL_PROTECTED);
- 	}
-@@ -1414,6 +1470,9 @@ static void ath10k_htt_rx_h_deliver(struct ath10k *ar,
- 				    struct ieee80211_rx_status *status)
- {
- 	struct sk_buff *msdu;
-+	struct sk_buff *first_subframe;
-+
-+	first_subframe = skb_peek(amsdu);
- 
- 	while ((msdu = __skb_dequeue(amsdu))) {
- 		/* Setup per-MSDU flags */
-@@ -1422,6 +1481,13 @@ static void ath10k_htt_rx_h_deliver(struct ath10k *ar,
- 		else
- 			status->flag |= RX_FLAG_AMSDU_MORE;
- 
-+		if (msdu == first_subframe) {
-+			first_subframe = NULL;
-+			status->flag &= ~RX_FLAG_ALLOW_SAME_PN;
-+		} else {
-+			status->flag |= RX_FLAG_ALLOW_SAME_PN;
-+		}
-+
- 		ath10k_process_rx(ar, status, msdu);
- 	}
- }
-@@ -1607,7 +1673,7 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 		ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status, 0xffff);
- 		ath10k_htt_rx_h_unchain(ar, &amsdu, ret > 0);
- 		ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);
--		ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status);
-+		ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status, true);
- 		ath10k_htt_rx_h_deliver(ar, &amsdu, rx_status);
- 	}
- 
-@@ -1653,7 +1719,7 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
- 
- 	ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status, 0xffff);
- 	ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);
--	ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status);
-+	ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status, true);
- 	ath10k_htt_rx_h_deliver(ar, &amsdu, rx_status);
- 
- 	if (fw_desc_len > 0) {
-@@ -1952,7 +2018,7 @@ static void ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- 			 */
- 			ath10k_htt_rx_h_ppdu(ar, &amsdu, status, vdev_id);
- 			ath10k_htt_rx_h_filter(ar, &amsdu, status);
--			ath10k_htt_rx_h_mpdu(ar, &amsdu, status);
-+			ath10k_htt_rx_h_mpdu(ar, &amsdu, status, false);
- 			ath10k_htt_rx_h_deliver(ar, &amsdu, status);
- 			break;
- 		case -EAGAIN:
--- 
-2.7.4
+>>> The START_SCHED_SCAN command is indeed still provided to user-
+>>> space:
+>>
+>> And as I see it, it probably needs to be for essentially forever. Or
+>> at least a significant amount of time after wpa_supplicant stops
+>> relying on it. (Hint: it's still using it today, with no reference to
+>> NL80211_ATTR_SCHED_SCAN_MAX_REQS.) There's a reason the kernel has
+>> ABI
+>> guarantees. I suspect you only get a chance to rewrite the world
+>> (WEXT
+>> -> nl80211) a few times in the life of kernel ABIs.
+>
+> It sometimes feels like wpa_supplicant gets treated as a static entity
+> that can never be changed.  In fact, send a patch to Jouni implementing
+> the best practice, with a fallback to preserve compat for old kernels,
+> and I'm sure he'd entertain it.  Just because the supplicant does
+> something a certain way, doesn't mean it's the *best* way, but it too
+> evolves.
+
+I was actually considering to do that. The netlink messages are easily 
+checked for presence of an attribute so deciding on whether to use the 
+fallback is trivial.
+
+Regards,
+Arend
