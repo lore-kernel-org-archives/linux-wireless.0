@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:38596 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750863AbeD0G2q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Apr 2018 02:28:46 -0400
-Subject: Re: [PATCH] mac80211_hwsim: fix a possible memory leak in
- hwsim_new_radio_nl()
-To: <johannes@sipsolutions.net>
-References: <20180424030835.21776-1-yuehaibing@huawei.com>
-CC: <netdev@vger.kernel.org>, <kvalo@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>, <ben.hutchings@codethink.co.uk>
-From: YueHaibing <yuehaibing@huawei.com>
-Message-ID: <b67cacdd-0dd6-0c24-e90e-4a2725862e87@huawei.com> (sfid-20180427_082853_616891_6AB22E24)
-Date: Fri, 27 Apr 2018 14:28:36 +0800
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:54330 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753328AbeDRLlM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Apr 2018 07:41:12 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 22/22] staging: wilc1000: rename pu32InactiveTime to avoid camelCase issue
+Date: Wed, 18 Apr 2018 17:09:24 +0530
+Message-ID: <1524051564-15497-23-git-send-email-ajay.kathat@microchip.com> (sfid-20180418_134115_395488_2CF6874E)
+In-Reply-To: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <20180424030835.21776-1-yuehaibing@huawei.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Avoid camelCase issues found by checkpatch.pl script.
 
-cc  Ben Hutchings <ben.hutchings@codethink.co.uk>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On 2018/4/24 11:08, YueHaibing wrote:
-> 'hwname' should be freed before leaving from the error handling cases,
-> otherwise it will cause mem leak
-> 
-> Fixes: cb1a5bae5684 ("mac80211_hwsim: add permanent mac address option for new radios")
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> ---
->  drivers/net/wireless/mac80211_hwsim.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-> index 96d26cf..4a017a0 100644
-> --- a/drivers/net/wireless/mac80211_hwsim.c
-> +++ b/drivers/net/wireless/mac80211_hwsim.c
-> @@ -3236,6 +3236,7 @@ static int hwsim_new_radio_nl(struct sk_buff *msg, struct genl_info *info)
->  			GENL_SET_ERR_MSG(info,"MAC is no valid source addr");
->  			NL_SET_BAD_ATTR(info->extack,
->  					info->attrs[HWSIM_ATTR_PERM_ADDR]);
-> +			kfree(hwname);
->  			return -EINVAL;
->  		}
->  
-> 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 035c537..7a26f34 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -314,7 +314,7 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
+ 		 const u8 *mac_addr, const u8 *rx_mic, const u8 *tx_mic,
+ 		 u8 mode, u8 cipher_mode, u8 index);
+ s32 wilc_get_inactive_time(struct wilc_vif *vif, const u8 *mac,
+-			   u32 *pu32InactiveTime);
++			   u32 *out_val);
+ int wilc_add_rx_gtk(struct wilc_vif *vif, const u8 *rx_gtk, u8 gtk_key_len,
+ 		    u8 index, u32 key_rsc_len, const u8 *key_rsc,
+ 		    const u8 *rx_mic, const u8 *tx_mic, u8 mode,
+-- 
+2.7.4
