@@ -1,78 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:37013 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751130AbeDSMxs (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:64459 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753878AbeDRLks (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Apr 2018 08:53:48 -0400
-From: Pkshih <pkshih@realtek.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: Re: [PATCH] rtlwifi: cleanup 8723be ant_sel definition
-Date: Thu, 19 Apr 2018 12:53:33 +0000
-Message-ID: <1524142404.2012.20.camel@realtek.com> (sfid-20180419_145425_331040_FFAA8D6D)
-References: <20180419083100.5254-1-pkshih@realtek.com>
-         <87k1t3mskj.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87k1t3mskj.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="utf-8"
+        Wed, 18 Apr 2018 07:40:48 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 11/22] staging: wilc1000: remove unused macros in wilc module
+Date: Wed, 18 Apr 2018 17:09:13 +0530
+Message-ID: <1524051564-15497-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180418_134051_492502_C30E463C)
+In-Reply-To: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCAyMDE4LTA0LTE5IGF0IDEyOjUyICswMzAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiA8
-cGtzaGloQHJlYWx0ZWsuY29tPiB3cml0ZXM6DQo+IA0KPiA+IEZyb206IFBpbmctS2UgU2hpaCA8
-cGtzaGloQHJlYWx0ZWsuY29tPg0KPiA+DQo+ID4gVGhlIG1vZHVsZSBwYXJhbWV0ZXIgYW50X3Nl
-bCBpcyB1c2VkIHRvIGNvbnRyb2wgYW50ZW5uYSBudW1iZXIgYW5kIHBhdGguDQo+ID4gVGhlcmUg
-aXMgYW4gZXhpc3RpbmcgZW51bSBBTlRfe1gyLFgxfSBkZWZpbmVkIHRoZSBhbnRlbm5hIG51bWJl
-ciwgc28NCj4gPiBhZGQgYSBuZXcgZW51bSBBTlRfe01BSU4sQVVYfSB0byBtYWtlIGl0IHJlYWRh
-YmxlLiBBZnRlciB0aGlzIHdvcmssDQo+ID4gaW5jb3JyZWN0IGdpdmVuIHZhbHVlcyBkZXBlbmQg
-b24gYW50X3NlbCB3ZXJlIGV4cG9zZWQsIHNvIHJlZmlsbCB2YWx1ZXMNCj4gPiBhY2NvcmRpbmcg
-Zm9sbG93aW5nIGRlZmluaXRpb246DQo+ID7CoMKgwqBhbnRfc2VswqDCoMKgYW50X251bcKgwqDC
-oGFudF9wYXRowqDCoHByaW50X2xhYmVsDQo+ID7CoMKgwqDCoMKgwqAxwqDCoMKgwqDCoMKgQU5U
-X1gxwqDCoMKgwqBBTlRfQVVYwqDCoMKgwqDCoMKgwqDCoCMyDQo+ID7CoMKgwqDCoMKgwqAywqDC
-oMKgwqDCoMKgQU5UX1gywqDCoMKgwqBBTlRfTUFJTsKgwqDCoMKgwqDCoMKgIzENCj4gPiBUaGVu
-LCB0aGUgd29ya2Fyb3VuZCBpbiBoYWxidGNvdXRzcmMuYyB3YXMgcmVtb3ZlZC4NCj4gPg0KPiA+
-IFRoZSBleHBlcmltZW50YWwgcmVzdWx0cyB3aXRoIHNpbmdsZSBhbnRlbm5hIGNvbm5lY3RlZCB0
-byBzcGVjaWZpYyBwYXRoDQo+ID4gYXJlIGluIGZvbGxvd2luZzoNCj4gPsKgwqDCoGFudF9zZWzC
-oMKgQU5UX01BSU4oIzEpwqDCoEFOVF9BVVgoIzIpDQo+ID7CoMKgwqDCoMKgwqAwwqDCoMKgwqDC
-oMKgwqDCoC04wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgLTYyDQo+ID7CoMKgwqDCoMKgwqAxwqDC
-oMKgwqDCoMKgwqDCoC02MsKgwqDCoMKgwqDCoMKgwqDCoMKgwqAtMTANCj4gPsKgwqDCoMKgwqDC
-oDLCoMKgwqDCoMKgwqDCoMKgLTbCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAtNjANCj4gPg0KPiA+
-IFNpZ25lZC1vZmYtYnk6IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPg0KPiA+IENj
-OiBTdGFibGUgPHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmc+ICMgNC43Kw0KPiA+IFJldmlld2VkLWJ5
-OiBMYXJyeSBGaW5nZXIgPExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ+DQo+ID4gLS0tDQo+ID4g
-SGkgS2FsbGUsDQo+ID4NCj4gPiBUaGlzIHBhdGNoIHdvdWxkIHNlbmQgdG8gNC4xNy4NCj4gDQo+
-IEZvciAtcmMgcmVsZWFzZXMgSSByZXF1aXJlIGEgcXVpdGUgY2xlYXIgYnVnIHJlcG9ydCBidXQg
-SSBkbyBub3QNCj4gdW5kZXJzdGFuZCB3aGF0IHlvdSBhcmUgZml4aW5nIGhlcmUsIGV2ZW4gYWZ0
-ZXIgcmVhZGluZyB0aGUgY29tbWl0IGxvZw0KPiB0d2ljZS4gQ291bGQgeW91IHRyeSB0byBpbXBy
-b3ZlIGl0PyBFc3BlY2lhbGx5IGZvY3VzIG9uIGRlc2NyaWJpbmcgdGhlDQo+IGJ1ZyBpbiBzaW1w
-bGUgdGVybXMgYW5kIGhvdyB0aGlzIHBhdGNoIGNoYW5nZXMgdGhlIGZ1bmN0aW9uYWxpdHkgZnJv
-bQ0KPiB1c2VyJ3MgcG9pbnQgb2Ygdmlldy4NCj4gDQpUaGUgcGF0Y2ggbWFpbmx5IGZpeCB0aGUg
-d3JvbmcgdmFsdWUgb2bCoGFudF9udW0gYW5kwqBzaW5nbGVfYW50X3BhdGggd2hlbg0KYW50X3Nl
-bCBpcyBzZXQuDQoNCsKgIMKgIMKgIMKgIGlmIChtb2RfcGFyYW1zLT5hbnRfc2VsKSB7IMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgDQrCoMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgcnRscHJpdi0+YnRjb2V4aXN0LmJ0Y19p
-bmZvLmFudF9udW0gPSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoMKgDQot
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoChtb2RfcGFyYW1z
-LT5hbnRfc2VsID09IDEgPyBBTlRfWDIgOiBBTlRfWDEpOyDCoCDCoCDCoCDCoCDCoMKgDQorwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoChtb2RfcGFyYW1zLT5h
-bnRfc2VsID09IDEgPyBBTlRfWDEgOiBBTlRfWDIpOyDCoCDCoCDCoCDCoCDCoMKgDQrCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoMKg
-DQrCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBydGxwcml2LT5idGNvZXhpc3QuYnRjX2luZm8uc2lu
-Z2xlX2FudF9wYXRoID0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqDCoA0KLcKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAobW9kX3BhcmFtcy0+YW50X3NlbCA9
-PSAxID8gMCA6IDEpOyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoMKgDQorwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoChtb2RfcGFyYW1zLT5hbnRfc2Vs
-ID09IDEgPyBBTlRfQVVYIDogQU5UX01BSU4pOyDCoCDCoCDCoCDCoA0KwqDCoCDCoCDCoCDCoH0g
-wqAgwqANClNvLCBuZWVkIHdvcmthcm91bmQgdG8gZml4IHRoZSBwcm9ibGVtLg0KDQpGb3IgZW5k
-IHVzZXIsIG1vc3QgcGVvcGxlIGRvbid0IG5lZWQgYW50X3NlbCwgYnV0IEhQIHVzZXIgbmVlZHMg
-dG8gc2V0IHRvIDEuDQpJbiBjYXNlIGFudF9zZWw9MSwgdGhlIHJlc3VsdCBpcyBhbG1vc3QgdGhl
-IHNhbWUsIGJ1dCBhbnRfc2VsPTIgdGhhdCBpcyByYXJlDQp1c2VkIGlzIGJyb2tlbi4gU28sIHRo
-aXMgYnVnIG1heSBiZSBub3Qgc2VlbiBieSB1c2VyLg0KDQpBbm90aGVyIHRoaW5nIGlzIHdlIHdh
-bnQgdG8gYXBwbHkgdGhpcyBwYXRjaCB0byBzdGFibGUgcmVsZWFzZSB0byBnaXZlIGNvcnJlY3QN
-CnZhbHVlcyBhbmQgcmVtb3ZlIHRoZSB3b3JrYXJvdW5kLCBzbyBJIHRoaW5rIGl0IGNhbiBhcHBs
-eSB0byAtcmMgdG9vLg0KDQpBbnl3YXksIEknbGwgYWRkIG1vcmUgZGVzY3JpcHRpb24gdG8gY29t
-bWl0IGxvZywgYW5kIHlvdSBjYW4gZGVjaWRlIHRvDQphcHBseSB0aGlzIHBhdGNoIHRvIDQuMTcg
-b3IgcXVldWUgdG8gNC4xOC4NCg0KVGhhbmtzDQpQSw0K
+Cleanup patch to remove the macros which are defined by not used.
+Below mentioned macros are removed:
+SCAN_DONE
+SCAN_EVENT_DONE_ABORTED
+WILC_WFI_RX_INTR
+WILC_WFI_TX_INTR
+WILC_WFI_TIMEOUT
+WILC_WFI_DWELL_PASSIVE
+WILC_WFI_DWELL_ACTIVE
+MAX_SURVEY_RESULT_FRAG_SIZE
+SURVEY_RESULT_LENGTH
+NUM_BASIC_SWITCHES
+NUM_FHSS_SWITCHES
+NUM_11N_BASIC_SWITCHES
+NUM_11N_HUT_SWITCHES
+BA_SESSION_DEFAULT_BUFFER_SIZE
+BA_SESSION_DEFAULT_TIMEOUT
+BLOCK_ACK_REQ_SIZE
+
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.h       | 13 -------------
+ drivers/staging/wilc1000/host_interface.c         |  3 ---
+ drivers/staging/wilc1000/host_interface.h         |  1 -
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  3 ---
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  4 ----
+ drivers/staging/wilc1000/wilc_wlan_if.h           |  2 --
+ 6 files changed, 26 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 3f5da8c..5436fd3 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -14,19 +14,8 @@
+ 
+ #include "wilc_wlan_if.h"
+ 
+-#define NUM_BASIC_SWITCHES      45
+-#define NUM_FHSS_SWITCHES       0
+-
+ #define NUM_RSSI                5
+ 
+-#ifdef MAC_802_11N
+-#define NUM_11N_BASIC_SWITCHES  25
+-#define NUM_11N_HUT_SWITCHES    47
+-#else
+-#define NUM_11N_BASIC_SWITCHES  0
+-#define NUM_11N_HUT_SWITCHES    0
+-#endif
+-
+ #define MAC_HDR_LEN             24
+ #define MAX_SSID_LEN            33
+ #define FCS_LEN                 4
+@@ -41,8 +30,6 @@
+ #define GET_CFG              1
+ 
+ #define MAX_STRING_LEN               256
+-#define MAX_SURVEY_RESULT_FRAG_SIZE  MAX_STRING_LEN
+-#define SURVEY_RESULT_LENGTH         44
+ #define MAX_ASSOC_RESP_FRAME_SIZE    MAX_STRING_LEN
+ 
+ #define MAC_CONNECTED                1
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6b5300c..1117705 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -53,9 +53,6 @@
+ #define HOST_IF_SCAN_TIMEOUT                    4000
+ #define HOST_IF_CONNECT_TIMEOUT                 9500
+ 
+-#define BA_SESSION_DEFAULT_BUFFER_SIZE          16
+-#define BA_SESSION_DEFAULT_TIMEOUT              1000
+-#define BLOCK_ACK_REQ_SIZE                      0x14
+ #define FALSE_FRMWR_CHANNEL			100
+ 
+ #define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 4b60b18..035c537 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -49,7 +49,6 @@
+ #define PMKID_LEN				16
+ #define WILC_MAX_NUM_PMKIDS			16
+ #define WILC_ADD_STA_LENGTH			40
+-#define SCAN_EVENT_DONE_ABORTED
+ #define NUM_CONCURRENT_IFC			2
+ #define DRV_HANDLER_SIZE			5
+ #define DRV_HANDLER_MASK			0x000000FF
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index bddfbcb..9cd6be5 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -79,9 +79,6 @@ static const struct wiphy_wowlan_support wowlan_support = {
+ 	.flags = WIPHY_WOWLAN_ANY
+ };
+ 
+-#define WILC_WFI_DWELL_PASSIVE 100
+-#define WILC_WFI_DWELL_ACTIVE  40
+-
+ #define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
+ #define DEFAULT_LINK_SPEED			72
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index bd0c98a..07167637 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -9,10 +9,6 @@
+ #ifndef WILC_WFI_NETDEVICE
+ #define WILC_WFI_NETDEVICE
+ 
+-#define WILC_WFI_RX_INTR 0x0001
+-#define WILC_WFI_TX_INTR 0x0002
+-
+-#define WILC_WFI_TIMEOUT 5
+ #define WILC_MAX_NUM_PMKIDS  16
+ #define PMKID_LEN  16
+ #define PMKID_FOUND 1
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index f129d81..eb8d819 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -122,8 +122,6 @@ enum {
+ 
+ #define MAC_CONNECTED		1
+ #define MAC_DISCONNECTED	0
+-
+-#define SCAN_DONE		TRUE
+ enum {
+ 	PASSIVE_SCAN		= 0,
+ 	ACTIVE_SCAN		= 1,
+-- 
+2.7.4
