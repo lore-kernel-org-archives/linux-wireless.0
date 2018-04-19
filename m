@@ -1,89 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48126 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751884AbeDJQt6 (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:53345 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751149AbeDSIb3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Apr 2018 12:49:58 -0400
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH v2 13/13] dt: bindings: add bindings for wcn3990 wifi block
-Date: Tue, 10 Apr 2018 22:19:46 +0530
-Message-Id: <1523378986-11551-1-git-send-email-govinds@codeaurora.org> (sfid-20180410_185001_467401_DE6ED4CC)
+        Thu, 19 Apr 2018 04:31:29 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
+        <stable@vger.kernel.org>
+Subject: [PATCH] rtlwifi: cleanup 8723be ant_sel definition
+Date: Thu, 19 Apr 2018 16:31:00 +0800
+Message-ID: <20180419083100.5254-1-pkshih@realtek.com> (sfid-20180419_103133_967674_2EB627E5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add device tree binding documentation details for wcn3990
-wifi block present in Qualcomm SDM845/APQ8098 SoC into
-"qcom,ath10k.txt".
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
+The module parameter ant_sel is used to control antenna number and path.
+There is an existing enum ANT_{X2,X1} defined the antenna number, so
+add a new enum ANT_{MAIN,AUX} to make it readable. After this work,
+incorrect given values depend on ant_sel were exposed, so refill values
+according following definition:
+  ant_sel   ant_num   ant_path  print_label
+     1      ANT_X1    ANT_AUX        #2
+     2      ANT_X2    ANT_MAIN       #1
+Then, the workaround in halbtcoutsrc.c was removed.
+
+The experimental results with single antenna connected to specific path
+are in following:
+  ant_sel  ANT_MAIN(#1)  ANT_AUX(#2)
+     0        -8            -62
+     1        -62           -10
+     2        -6            -60
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Stable <stable@vger.kernel.org> # 4.7+
+Reviewed-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- .../bindings/net/wireless/qcom,ath10k.txt          | 31 ++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
+Hi Kalle,
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-index 3d2a031..34e4f98 100644
---- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-@@ -4,6 +4,7 @@ Required properties:
- - compatible: Should be one of the following:
- 	* "qcom,ath10k"
- 	* "qcom,ipq4019-wifi"
-+	* "qcom,wcn3990-wifi"
+This patch would send to 4.17.
+
+Thanks
+PK
+
+---
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 15 ---------------
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c       | 11 +++++++----
+ drivers/net/wireless/realtek/rtlwifi/wifi.h               |  5 +++++
+ 3 files changed, 12 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index e0f9985582f9..738a7ea7dc4a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -158,16 +158,6 @@ static u8 halbtc_get_wifi_central_chnl(struct btc_coexist *btcoexist)
  
- PCI based devices uses compatible string "qcom,ath10k" and takes calibration
- data along with board specific data via "qcom,ath10k-calibration-data".
-@@ -18,8 +19,12 @@ In general, entry "qcom,ath10k-pre-calibration-data" and
- "qcom,ath10k-calibration-data" conflict with each other and only one
- can be provided per device.
+ static u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
+ {
+-	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
+-
+-	/* override ant_num / ant_path */
+-	if (mod_params->ant_sel) {
+-		rtlpriv->btcoexist.btc_info.ant_num =
+-			(mod_params->ant_sel == 1 ? ANT_X2 : ANT_X1);
+-
+-		rtlpriv->btcoexist.btc_info.single_ant_path =
+-			(mod_params->ant_sel == 1 ? 0 : 1);
+-	}
+ 	return rtlpriv->btcoexist.btc_info.single_ant_path;
+ }
  
-+SNOC based devices (i.e. wcn3990) uses compatible string "qcom,wcn3990-wifi".
+@@ -178,7 +168,6 @@ static u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv)
+ 
+ static u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
+ {
+-	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
+ 	u8 num;
+ 
+ 	if (rtlpriv->btcoexist.btc_info.ant_num == ANT_X2)
+@@ -186,10 +175,6 @@ static u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
+ 	else
+ 		num = 1;
+ 
+-	/* override ant_num / ant_path */
+-	if (mod_params->ant_sel)
+-		num = (mod_params->ant_sel == 1 ? ANT_X2 : ANT_X1) + 1;
+-
+ 	return num;
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+index e7bbbc95cdb1..b4f3f91b590e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+@@ -848,6 +848,9 @@ static bool _rtl8723be_init_mac(struct ieee80211_hw *hw)
+ 		return false;
+ 	}
+ 
++	if (rtlpriv->cfg->ops->get_btc_status())
++		rtlpriv->btcoexist.btc_ops->btc_power_on_setting(rtlpriv);
 +
- Optional properties:
- - reg: Address and length of the register set for the device.
-+- reg-names: Must include the list of following reg names,
-+	     "membase"
- - resets: Must contain an entry for each entry in reset-names.
-           See ../reset/reseti.txt for details.
- - reset-names: Must include the list of following reset names,
-@@ -49,6 +54,8 @@ Optional properties:
- 				 hw versions.
- - qcom,ath10k-pre-calibration-data : pre calibration data as an array,
- 				     the length can vary between hw versions.
-+- <supply-name>-supply: handle to the regulator device tree node
-+			   optional "supply-name" is "vdd-0.8-cx-mx".
+ 	bytetmp = rtl_read_byte(rtlpriv, REG_MULTI_FUNC_CTRL);
+ 	rtl_write_byte(rtlpriv, REG_MULTI_FUNC_CTRL, bytetmp | BIT(3));
  
- Example (to supply the calibration data alone):
+@@ -2696,21 +2699,21 @@ void rtl8723be_read_bt_coexist_info_from_hwpg(struct ieee80211_hw *hw,
+ 		rtlpriv->btcoexist.btc_info.bt_type = BT_RTL8723B;
+ 		rtlpriv->btcoexist.btc_info.ant_num = (value & 0x1);
+ 		rtlpriv->btcoexist.btc_info.single_ant_path =
+-			 (value & 0x40);	/*0xc3[6]*/
++			 (value & 0x40 ? ANT_AUX : ANT_MAIN);	/*0xc3[6]*/
+ 	} else {
+ 		rtlpriv->btcoexist.btc_info.btcoexist = 0;
+ 		rtlpriv->btcoexist.btc_info.bt_type = BT_RTL8723B;
+ 		rtlpriv->btcoexist.btc_info.ant_num = ANT_X2;
+-		rtlpriv->btcoexist.btc_info.single_ant_path = 0;
++		rtlpriv->btcoexist.btc_info.single_ant_path = ANT_MAIN;
+ 	}
  
-@@ -119,3 +126,27 @@ wifi0: wifi@a000000 {
- 	qcom,msi_base = <0x40>;
- 	qcom,ath10k-pre-calibration-data = [ 01 02 03 ... ];
+ 	/* override ant_num / ant_path */
+ 	if (mod_params->ant_sel) {
+ 		rtlpriv->btcoexist.btc_info.ant_num =
+-			(mod_params->ant_sel == 1 ? ANT_X2 : ANT_X1);
++			(mod_params->ant_sel == 1 ? ANT_X1 : ANT_X2);
+ 
+ 		rtlpriv->btcoexist.btc_info.single_ant_path =
+-			(mod_params->ant_sel == 1 ? 0 : 1);
++			(mod_params->ant_sel == 1 ? ANT_AUX : ANT_MAIN);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index c32985cfe48d..ab32a62ead81 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2882,6 +2882,11 @@ enum bt_ant_num {
+ 	ANT_X1 = 1,
  };
-+
-+Example (to supply wcn3990 SoC wifi block details):
-+
-+qcom,wifi@18000000 {
-+		compatible = "qcom,wcn3990-wifi";
-+		reg = <0x18800000 0x800000>;
-+		reg-names = "membase";
-+		clocks = <&clock_gcc clk_aggre2_noc_clk>;
-+		clock-names = "smmu_aggre2_noc_clk"
-+		interrupts =
-+			   <0 130 0 /* CE0 */ >,
-+			   <0 131 0 /* CE1 */ >,
-+			   <0 132 0 /* CE2 */ >,
-+			   <0 133 0 /* CE3 */ >,
-+			   <0 134 0 /* CE4 */ >,
-+			   <0 135 0 /* CE5 */ >,
-+			   <0 136 0 /* CE6 */ >,
-+			   <0 137 0 /* CE7 */ >,
-+			   <0 138 0 /* CE8 */ >,
-+			   <0 139 0 /* CE9 */ >,
-+			   <0 140 0 /* CE10 */ >,
-+			   <0 141 0 /* CE11 */ >;
-+		vdd-0.8-cx-mx-supply = <&pm8998_l5>;
+ 
++enum bt_ant_path {
++	ANT_MAIN = 0,
++	ANT_AUX = 1,
 +};
++
+ enum bt_co_type {
+ 	BT_2WIRE = 0,
+ 	BT_ISSC_3WIRE = 1,
 -- 
-1.9.1
+2.15.1
