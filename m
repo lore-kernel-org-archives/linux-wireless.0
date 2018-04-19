@@ -1,36 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42182 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933450AbeD1NHN (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:49224 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750884AbeDSJwV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 28 Apr 2018 09:07:13 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Andrew Zaborowski <andrew.zaborowski@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] nl80211: Reject disconnect commands except from conn_owner
-References: <20180428014732.4018-1-andrew.zaborowski@intel.com>
-Date: Sat, 28 Apr 2018 16:07:09 +0300
-In-Reply-To: <20180428014732.4018-1-andrew.zaborowski@intel.com> (Andrew
-        Zaborowski's message of "Sat, 28 Apr 2018 03:47:32 +0200")
-Message-ID: <87in8b8ooy.fsf@purkki.adurom.net> (sfid-20180428_150718_701077_8533F92E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Thu, 19 Apr 2018 05:52:21 -0400
+Message-ID: <1524131536.3024.16.camel@sipsolutions.net> (sfid-20180419_115225_323370_CE152715)
+Subject: Re: [PATCH 0/3] Export TXQ parameters and statistics via nl80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Date: Thu, 19 Apr 2018 11:52:16 +0200
+In-Reply-To: <8736zr1rjh.fsf@toke.dk> (sfid-20180419_112023_143492_C28A4BC7)
+References: <20180219170224.14816-1-toke@toke.dk> <8736zr1rjh.fsf@toke.dk>
+         (sfid-20180419_112023_143492_C28A4BC7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrew Zaborowski <andrew.zaborowski@intel.com> writes:
+On Thu, 2018-04-19 at 11:20 +0200, Toke Høiland-Jørgensen wrote:
+> Toke Høiland-Jørgensen <toke@toke.dk> writes:
+> 
+> > This series adds TXQ parameters and statistics that were previously only
+> > available through debugfs to the nl80211 userspace interface and the
+> > cfg80211 kernel interface. Patches for iw to print the statistics and
+> > change the settings are included.
+> 
+> So this patch set is now three months old. Any chance of actually
+> getting it, you know, merged? Or is there something more I need to do? :)
 
-> Reject NL80211_CMD_DISCONNECT, NL80211_CMD_DISASSOCIATE,
-> NL80211_CMD_DEAUTHENTICATE and NL80211_CMD_ASSOCIATE commands
-> from clients other than the connection owner set in the connect,
-> authenticate or associate commands, if it was set.
->
-> The main point of this check is to prevent chaos when two processes
-> try to use nl80211 at the same time, it's not a security measure.
-> The same thing should possibly be done for JOIN_IBSS/LEAVE_IBSS and
-> START_AP/STOP_AP.
+I was just thinking about it yesterday, "sighing" that I'll need to make
+a decision even though I don't really know it well and can't even say if
+another API would be better :-)
 
-s-o-b missing.
+I think I'll take it, but I guess I'll need to review it again.
 
--- 
-Kalle Valo
+johannes
