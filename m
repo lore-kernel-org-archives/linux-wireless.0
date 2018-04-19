@@ -1,67 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:38350 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751528AbeDZIOw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Apr 2018 04:14:52 -0400
-Date: Thu, 26 Apr 2018 11:14:48 +0300
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Johan Hovold <johan@kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable <stable@vger.kernel.org>
-Subject: Re: [PATCH] net: rfkill: gpio: fix memory leak in probe error path
-Message-ID: <20180426081448.GB17550@kuha.fi.intel.com> (sfid-20180426_101525_628405_900B7ABA)
-References: <20180426073152.7953-1-johan@kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:43990 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753728AbeDSQPG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 19 Apr 2018 12:15:06 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180426073152.7953-1-johan@kernel.org>
+Subject: Re: [02/10] wil6210: set/get EDMG channel through debugfs
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1523520526-24997-3-git-send-email-merez@codeaurora.org>
+References: <1523520526-24997-3-git-send-email-merez@codeaurora.org>
+To: Maya Erez <merez@codeaurora.org>
+Cc: Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        Maya Erez <merez@codeaurora.org>
+Message-Id: <20180419161506.868FA60A06@smtp.codeaurora.org> (sfid-20180419_181513_591413_62B97059)
+Date: Thu, 19 Apr 2018 16:15:06 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 26, 2018 at 09:31:52AM +0200, Johan Hovold wrote:
-> Make sure to free the rfkill device in case registration fails during
-> probe.
-> 
-> Fixes: 5e7ca3937fbe ("net: rfkill: gpio: convert to resource managed allocation")
-> Cc: stable <stable@vger.kernel.org>	# 3.13
-> Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Maya Erez <merez@codeaurora.org> wrote:
 
-Good catch. FWIW:
+> Setting EDMG channel through debugfs for connect and PCP start
+> commands.
 
-Reviewed-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Why? And what is an EDMG channel?
 
-> Signed-off-by: Johan Hovold <johan@kernel.org>
-> ---
->  net/rfkill/rfkill-gpio.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-> index 41bd496531d4..00192a996be0 100644
-> --- a/net/rfkill/rfkill-gpio.c
-> +++ b/net/rfkill/rfkill-gpio.c
-> @@ -137,13 +137,18 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
->  
->  	ret = rfkill_register(rfkill->rfkill_dev);
->  	if (ret < 0)
-> -		return ret;
-> +		goto err_destroy;
->  
->  	platform_set_drvdata(pdev, rfkill);
->  
->  	dev_info(&pdev->dev, "%s device registered.\n", rfkill->name);
->  
->  	return 0;
-> +
-> +err_destroy:
-> +	rfkill_destroy(rfkill->rfkill_dev);
-> +
-> +	return ret;
->  }
->  
->  static int rfkill_gpio_remove(struct platform_device *pdev)
-> -- 
-> 2.17.0
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#commit_log_does_not_answer_why
+
+I get bad vibes that this debugfs file is just a workaround for not adding this
+to nl80211, a proper commit log would not give me such vibes in the first place :)
 
 -- 
-heikki
+https://patchwork.kernel.org/patch/10338031/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
