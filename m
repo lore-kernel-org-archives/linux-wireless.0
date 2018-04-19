@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53252 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:52596 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757451AbeD0LfR (ORCPT
+        with ESMTP id S1753949AbeDSQXi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Apr 2018 07:35:17 -0400
+        Thu, 19 Apr 2018 12:23:38 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: ath6kl: fix ath6kl_data_tx()'s return type
+Subject: Re: wcn36xx: use READ_ONCE() to access desc->ctrl
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180424131900.5718-1-luc.vanoostenryck@gmail.com>
-References: <20180424131900.5718-1-luc.vanoostenryck@gmail.com>
-To: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
-Cc: linux-kernel@vger.kernel.org,
-        Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Message-Id: <20180427113517.656D360767@smtp.codeaurora.org> (sfid-20180427_133535_337214_55D3156D)
-Date: Fri, 27 Apr 2018 11:35:17 +0000 (UTC)
+In-Reply-To: <20180410173558.32425-1-daniel@zonque.org>
+References: <20180410173558.32425-1-daniel@zonque.org>
+To: Daniel Mack <daniel@zonque.org>
+Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+        rfried@codeaurora.org, bjorn.andersson@linaro.org,
+        Daniel Mack <daniel@zonque.org>
+Message-Id: <20180419162338.01C7360C55@smtp.codeaurora.org> (sfid-20180419_182345_516800_4A7495FD)
+Date: Thu, 19 Apr 2018 16:23:37 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luc Van Oostenryck <luc.vanoostenryck@gmail.com> wrote:
+Daniel Mack <daniel@zonque.org> wrote:
 
-> The method ndo_start_xmit() is defined as returning an 'netdev_tx_t',
-> which is a typedef for an enum type, but the implementation in this
-> driver returns an 'int'.
+> When accessing shared memory to check for the stat of submitted
+> descriptors, make sure to use READ_ONCE(). This will guarantee the
+> compiler treats these memory locations as volatile and doesn't apply
+> any caching.
 > 
-> Fix this by returning 'netdev_tx_t' in this driver too.
+> While this doesn't fix any particular problem I ran into, it's best
+> practice to do it this way.
 > 
-> Signed-off-by: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
+> Note that this patch also removes the superflous extra condition check
+> in the do-while loop in reap_tx_dxes(), as the loop will break
+> instantly anyway in that case.
+> 
+> Signed-off-by: Daniel Mack <daniel@zonque.org>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-378b1d65070f ath6kl: fix ath6kl_data_tx()'s return type
+9ff6fde86fd2 wcn36xx: use READ_ONCE() to access desc->ctrl
 
 -- 
-https://patchwork.kernel.org/patch/10359823/
+https://patchwork.kernel.org/patch/10333551/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
