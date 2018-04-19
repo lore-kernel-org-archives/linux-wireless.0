@@ -1,114 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:54594 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754165AbeD3ONB (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:53346 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751170AbeDSPHL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Apr 2018 10:13:01 -0400
-Received: by mail-wm0-f66.google.com with SMTP id f6so13431620wmc.4
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2018 07:13:00 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [RFC 07/18] mt76x2: add napi struct to mt76_rx_poll_complete/mt76_rx_complete signatures
-Date: Mon, 30 Apr 2018 16:12:22 +0200
-Message-Id: <eadbb6c315ca05e06c0fd26a26519fe662266ead.1525096206.git.lorenzo.bianconi@redhat.com> (sfid-20180430_161304_475711_32FDC0C4)
-In-Reply-To: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
-References: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
+        Thu, 19 Apr 2018 11:07:11 -0400
+Message-ID: <1524150429.3024.24.camel@sipsolutions.net> (sfid-20180419_170715_398609_8172992F)
+Subject: Re: [PATCH 2/2] cfg80211: Modify wiphy registration semantics for
+ self managed hints
+From: Johannes Berg <johannes@sipsolutions.net>
+To: asinghal@codeaurora.org
+Cc: Jouni Malinen <jouni@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Kiran Kumar Lokere <klokere@codeaurora.org>,
+        jjohnson@codeaurora.org
+Date: Thu, 19 Apr 2018 17:07:09 +0200
+In-Reply-To: <5f8caab7e7cfb88072c2e221ea45063e@codeaurora.org>
+References: <1520106021-16836-1-git-send-email-jouni@codeaurora.org>
+         <1520106021-16836-2-git-send-email-jouni@codeaurora.org>
+         <1521627352.2645.27.camel@sipsolutions.net>
+         <5f8caab7e7cfb88072c2e221ea45063e@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-in order to reuse mt76_rx_complete routine supporting mt76x2u based
-devices add napi struct to mt76_rx_poll_complete and mt76_rx_complete
-routine signatures and do not fetch it according to the rx queue index
+On Fri, 2018-04-13 at 13:32 -0700, asinghal@codeaurora.org wrote:
+> hi Johannes,
+>              please fine some replies inline:
+> 
+> On 2018-03-21 03:15, Johannes Berg wrote:
+> > So I really think this should just be one patch - it's not about
+> > "registration semantics" but about which types of requests get passed
+> > to reg_notifier(), and if you do it in one place you'd better also do
+> > it in the other.
+> 
+> Sure, I have combined the two patches in one patch now:
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/agg-rx.c   |  2 +-
- drivers/net/wireless/mediatek/mt76/dma.c      |  2 +-
- drivers/net/wireless/mediatek/mt76/mac80211.c | 12 +++++-------
- drivers/net/wireless/mediatek/mt76/mt76.h     |  5 +++--
- 4 files changed, 10 insertions(+), 11 deletions(-)
+So now you should probably resend it properly, with a new subject that
+explains it better? Just "modify" doesn't really seem all that
+appropriate - what's the modification?
 
-diff --git a/drivers/net/wireless/mediatek/mt76/agg-rx.c b/drivers/net/wireless/mediatek/mt76/agg-rx.c
-index b67acc6189bf..8df0d41f7317 100644
---- a/drivers/net/wireless/mediatek/mt76/agg-rx.c
-+++ b/drivers/net/wireless/mediatek/mt76/agg-rx.c
-@@ -113,7 +113,7 @@ mt76_rx_aggr_reorder_work(struct work_struct *work)
- 	if (nframes)
- 		ieee80211_queue_delayed_work(tid->dev->hw, &tid->reorder_work,
- 					     REORDER_TIMEOUT);
--	mt76_rx_complete(dev, &frames, -1);
-+	mt76_rx_complete(dev, &frames, NULL);
- 
- 	rcu_read_unlock();
- 	local_bh_enable();
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 3518703524e7..528132c3d1cd 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -396,7 +396,7 @@ mt76_dma_rx_poll(struct napi_struct *napi, int budget)
- 
- 	do {
- 		cur = mt76_dma_rx_process(dev, &dev->q_rx[qid], budget - done);
--		mt76_rx_poll_complete(dev, qid);
-+		mt76_rx_poll_complete(dev, qid, napi);
- 		done += cur;
- 	} while (cur && done < budget);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index da5254b48cf7..600db8e689aa 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -537,15 +537,11 @@ mt76_check_ps(struct mt76_dev *dev, struct sk_buff *skb)
- }
- 
- void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
--		      int queue)
-+		      struct napi_struct *napi)
- {
--	struct napi_struct *napi = NULL;
- 	struct ieee80211_sta *sta;
- 	struct sk_buff *skb;
- 
--	if (queue >= 0)
--	    napi = &dev->napi[queue];
--
- 	spin_lock(&dev->rx_lock);
- 	while ((skb = __skb_dequeue(frames)) != NULL) {
- 		if (mt76_check_ccmp_pn(skb)) {
-@@ -559,7 +555,8 @@ void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
- 	spin_unlock(&dev->rx_lock);
- }
- 
--void mt76_rx_poll_complete(struct mt76_dev *dev, enum mt76_rxq_id q)
-+void mt76_rx_poll_complete(struct mt76_dev *dev, enum mt76_rxq_id q,
-+			   struct napi_struct *napi)
- {
- 	struct sk_buff_head frames;
- 	struct sk_buff *skb;
-@@ -571,5 +568,6 @@ void mt76_rx_poll_complete(struct mt76_dev *dev, enum mt76_rxq_id q)
- 		mt76_rx_aggr_reorder(skb, &frames);
- 	}
- 
--	mt76_rx_complete(dev, &frames, q);
-+	mt76_rx_complete(dev, &frames, napi);
- }
-+EXPORT_SYMBOL_GPL(mt76_rx_poll_complete);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index a74e6eef51e9..f4144c3e70d3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -439,8 +439,9 @@ void mt76_wcid_key_setup(struct mt76_dev *dev, struct mt76_wcid *wcid,
- void mt76_tx_free(struct mt76_dev *dev);
- void mt76_put_txwi(struct mt76_dev *dev, struct mt76_txwi_cache *t);
- void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
--		      int queue);
--void mt76_rx_poll_complete(struct mt76_dev *dev, enum mt76_rxq_id q);
-+		      struct napi_struct *napi);
-+void mt76_rx_poll_complete(struct mt76_dev *dev, enum mt76_rxq_id q,
-+			   struct napi_struct *napi);
- void mt76_rx_aggr_reorder(struct sk_buff *skb, struct sk_buff_head *frames);
- 
- #endif
--- 
-2.14.3
+Patchwork also lost half the patch for some reason, probably you
+copy/pasted it and lost some whitespace at an empty line.
+
+> Call the regulatory notifier for self managed hints only if
+> initiator is NL80211_REGDOM_SET_BY_USER and hint type is
+> NL80211_USER_REG_HINT_CELL_BASE. Also call regulatory
+> notifier when wiphy is registered under similar conditions.
+
+I guess this should say why.
+
+>   	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
+>   		wiphy = &rdev->wiphy;
+> -		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
+> +		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
+>   			self_managed_found = true;
+> -		else
+> -			return false;
+> +			if (request->initiator == NL80211_REGDOM_SET_BY_USER &&
+> +			    request->user_reg_hint_type ==
+> +			    NL80211_USER_REG_HINT_CELL_BASE)
+> +				reg_call_notifier(wiphy, request);
+> +		} else {
+> +			self_managed_found = false;
+> +		}
+>   	}
+
+This is awkward now - how about
+
+self_managed_found = regulatory_flags & SELF_MANAGED;
+if (self_managed_found &&
+    request->initiator == ... &&
+    ...)
+        reg_call_notifier(...)
+
+
+> @@ -3700,15 +3705,21 @@ void wiphy_regulatory_register(struct wiphy 
+> *wiphy)
+>   {
+>   	struct regulatory_request *lr;
+> 
+> -	/* self-managed devices ignore external hints */
+> -	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
+> +	lr = get_last_request();
+> +
+> +	/* self-managed devices ignore beacon hints and 11d IE */
+> +	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
+>   		wiphy->regulatory_flags |= REGULATORY_DISABLE_BEACON_HINTS |
+> -					   REGULATORY_COUNTRY_IE_IGNORE;
+> +			REGULATORY_COUNTRY_IE_IGNORE;
+
+no need to change the indentation here
+
+johannes
