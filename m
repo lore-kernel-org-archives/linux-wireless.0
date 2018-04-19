@@ -1,34 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:44290 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751157AbeDQOvL (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48114 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753641AbeDSQUw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Apr 2018 10:51:11 -0400
-Message-ID: <1523976667.3473.2.camel@sipsolutions.net> (sfid-20180417_165134_550387_C19C18E0)
-Subject: Re: [PATCH] mac80211: don't WARN on bad WMM parameters from buggy
- APs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@gmail.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Apr 2018 16:51:07 +0200
-In-Reply-To: <50803899.jTqZALSPQ5@debian64> (sfid-20180417_141102_898998_85452A55)
-References: <20180326132104.26709-1-emmanuel.grumbach@intel.com>
-         <50803899.jTqZALSPQ5@debian64> (sfid-20180417_141102_898998_85452A55)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 19 Apr 2018 12:20:52 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/2] ath10k: add inlined wrappers for htt tx ops
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180415122228.12565-2-erik.stromdahl@gmail.com>
+References: <20180415122228.12565-2-erik.stromdahl@gmail.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org,
+        Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-Id: <20180419162051.B21156079B@smtp.codeaurora.org> (sfid-20180419_182055_799021_4858815F)
+Date: Thu, 19 Apr 2018 16:20:51 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-04-17 at 14:11 +0200, Christian Lamparter wrote:
+Erik Stromdahl <erik.stromdahl@gmail.com> wrote:
+
+> These wrappers makes the HTT ops align better with the HIF ops
+> (where similar wrappers are used).
 > 
-> > -		if (params[ac].cw_min > params[ac].cw_max) {
-> > +		if (params->cw_min == 0 ||
+> It also makes it easier for a target to have unsupported ops
+> (by letting the corresponding function pointer be NULL).
+> 
+> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Yeah. We already have a fix pending
+2 patches applied to ath-next branch of ath.git, thanks.
 
-https://patchwork.kernel.org/patch/10320823/
+5df6e1313044 ath10k: add inlined wrappers for htt tx ops
+9a5511d5f24f ath10k: add inlined wrappers for htt rx ops
 
-I just haven't been keeping up during the merge window.
+-- 
+https://patchwork.kernel.org/patch/10341545/
 
-johannes
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
