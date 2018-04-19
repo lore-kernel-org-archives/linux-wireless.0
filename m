@@ -1,89 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:46496 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752851AbeDYNmL (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:45040 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751130AbeDSGid (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 09:42:11 -0400
-From: Eyal Reizer <eyalreizer@gmail.com>
-To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        robh@kernel.org, sre@kernel.org, tony@atomide.com,
-        linux-kernel@vger.kernel.org
-Cc: Eyal Reizer <eyalr@ti.com>, stable@vger.kernel.org
-Subject: [PATCH] net: wireless: ti: wlcore: sdio: allow pm to handle sdio power
-Date: Wed, 25 Apr 2018 16:41:50 +0300
-Message-Id: <1524663710-31927-1-git-send-email-eyalr@ti.com> (sfid-20180425_154231_189962_CFF85660)
+        Thu, 19 Apr 2018 02:38:33 -0400
+Message-ID: <1524119910.3024.12.camel@sipsolutions.net> (sfid-20180419_083840_700659_AE9A2398)
+Subject: Re: [PATCH 1/3] ethtool: Support ETHTOOL_GSTATS2 command.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>, netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Date: Thu, 19 Apr 2018 08:38:30 +0200
+In-Reply-To: <f43d7ee4-7f27-b145-125e-32dbc31a27f1@candelatech.com>
+References: <1524016176-3881-1-git-send-email-greearb@candelatech.com>
+         <1524086817.3024.9.camel@sipsolutions.net>
+         <f43d7ee4-7f27-b145-125e-32dbc31a27f1@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pm_runtime handles sdio power on and power off transitions.
-An old workaround for trying to control the power explicitly from the
-driver was in fact causing failures on suspend/resume as the mmc layer
-already power the module on resume.
+On Wed, 2018-04-18 at 14:51 -0700, Ben Greear wrote:
 
-In case of resume pm_runtime_get sync returns a positive device's usage
-count causing the driver to try an re-initialize an already initialized
-device. This was causing sdio bus failure on resume.
+> > It'd be pretty hard to know which flags are firmware stats?
+> 
+> Yes, it is, but ethtool stats are difficult to understand in a generic
+> manner anyway, so someone using them is already likely aware of low-level
+> details of the driver(s) they are using.
 
-Remove this manual power on/off sequence as it is in-fact not needed.
+Right. Come to think of it though,
 
-Signed-off-by: Eyal Reizer <eyalr@ti.com>
-Cc: stable@vger.kernel.org
----
- drivers/net/wireless/ti/wlcore/sdio.c | 27 ++++++---------------------
- 1 file changed, 6 insertions(+), 21 deletions(-)
+> + * @get_ethtool_stats2: Return extended statistics about the device.
+> + *     This is only useful if the device maintains statistics not
+> + *     included in &struct rtnl_link_stats64.
+> + *      Takes a flags argument:  0 means all (same as get_ethtool_stats),
+> + *      0x1 (ETHTOOL_GS2_SKIP_FW) means skip firmware stats.
+> + *      Other flags are reserved for now.
+> + *      Same number of stats will be returned, but some of them might
+> + *      not be as accurate/refreshed.  This is to allow not querying
+> + *      firmware or other expensive-to-read stats, for instance.
 
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index 1f727ba..6dbe61d 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -155,17 +155,11 @@ static int wl12xx_sdio_power_on(struct wl12xx_sdio_glue *glue)
- 	struct mmc_card *card = func->card;
- 
- 	ret = pm_runtime_get_sync(&card->dev);
--	if (ret) {
--		/*
--		 * Runtime PM might be temporarily disabled, or the device
--		 * might have a positive reference counter. Make sure it is
--		 * really powered on.
--		 */
--		ret = mmc_power_restore_host(card->host);
--		if (ret < 0) {
--			pm_runtime_put_sync(&card->dev);
--			goto out;
--		}
-+	if (ret < 0) {
-+		pm_runtime_put_noidle(&card->dev);
-+		dev_err(glue->dev, "%s: failed to get_sync(%d)\n",
-+			__func__, ret);
-+		goto out;
- 	}
- 
- 	sdio_claim_host(func);
-@@ -178,7 +172,6 @@ static int wl12xx_sdio_power_on(struct wl12xx_sdio_glue *glue)
- 
- static int wl12xx_sdio_power_off(struct wl12xx_sdio_glue *glue)
- {
--	int ret;
- 	struct sdio_func *func = dev_to_sdio_func(glue->dev);
- 	struct mmc_card *card = func->card;
- 
-@@ -186,16 +179,8 @@ static int wl12xx_sdio_power_off(struct wl12xx_sdio_glue *glue)
- 	sdio_disable_func(func);
- 	sdio_release_host(func);
- 
--	/* Power off the card manually in case it wasn't powered off above */
--	ret = mmc_power_save_host(card->host);
--	if (ret < 0)
--		goto out;
--
- 	/* Let runtime PM know the card is powered off */
--	pm_runtime_put_sync(&card->dev);
--
--out:
--	return ret;
-+	return pm_runtime_put_sync(&card->dev);
- }
- 
- static int wl12xx_sdio_set_power(struct device *child, bool enable)
--- 
-2.7.4
+"skip" vs. "don't refresh" is a bit ambiguous - I'd argue better to
+either really skip and not return the non-refreshed ones (also helps
+with the identifying), or rename the flag.
+
+Also, wrt. the rest of the patch, I'd argue that it'd be worthwhile to
+write the spatch and just add the flags argument to "get_ethtool_stats"
+instead of adding a separate method - internally to the kernel it's not
+that hard to change.
+
+> I posted the patches to netdev, ath10k and linux-wireless.  If I had only
+> posted them individually to different lists I figure I'd be hearing about how
+> the netdev patch is useless because it has no driver support, etc.
+
+Sure. I missed netdev, perhaps because it was in To, or more likely
+because I was too sleepy. Sorry for the noise.
+
+johannes
