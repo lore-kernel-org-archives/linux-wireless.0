@@ -1,91 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f65.google.com ([209.85.160.65]:34766 "EHLO
-        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752212AbeDKG46 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43128 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753948AbeDSQgi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Apr 2018 02:56:58 -0400
-Received: by mail-pl0-f65.google.com with SMTP id y12-v6so694378plt.1
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Apr 2018 23:56:58 -0700 (PDT)
-From: Amitkumar Karwar <amitkarwar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Subject: [PATCH 2/2] rsi: Fix 'invalid vdd' warning in mmc
-Date: Wed, 11 Apr 2018 12:13:32 +0530
-Message-Id: <1523429012-3978-2-git-send-email-amitkarwar@gmail.com> (sfid-20180411_085705_747200_11D2AB65)
-In-Reply-To: <1523429012-3978-1-git-send-email-amitkarwar@gmail.com>
-References: <1523429012-3978-1-git-send-email-amitkarwar@gmail.com>
+        Thu, 19 Apr 2018 12:36:38 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: govinds@codeaurora.org
+Cc: pillair@codeaurora.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        arend.vanspriel@broadcom.com
+Subject: Re: [PATCH v2 4/4] ath10k: Enable sta idle power save
+References: <1523966821-21903-1-git-send-email-pillair@codeaurora.org>
+        <1523966821-21903-5-git-send-email-pillair@codeaurora.org>
+        <946e582c-2438-872b-eec8-25d9dcb994d9@dd-wrt.com>
+        <7a06a34a5fcb97e07a8d79b4d689e781@codeaurora.org>
+        <87604oodt4.fsf@kamboji.qca.qualcomm.com>
+        <a7dd1b94951725c61034f5be6744b725@codeaurora.org>
+Date: Thu, 19 Apr 2018 19:36:33 +0300
+In-Reply-To: <a7dd1b94951725c61034f5be6744b725@codeaurora.org>
+        (govinds@codeaurora.org's message of "Thu, 19 Apr 2018 10:02:47
+        +0530")
+Message-ID: <8736zrjgq6.fsf@kamboji.qca.qualcomm.com> (sfid-20180419_183642_576740_3E152C2D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+govinds@codeaurora.org writes:
 
-While performing cleanup, driver is messing with card->ocr
-value by not masking rocr against ocr_avail. Below panic
-is observed with some of the SDIO host controllers due to
-this. Issue is resolved by reverting incorrect modifications
-to vdd.
+> On 2018-04-18 18:46, Kalle Valo wrote:
+>> (fixing top posting)
+>>
+>> govinds@codeaurora.org writes:
+>>
+>>> On 2018-04-18 12:36, Sebastian Gottschall wrote:
+>>>> from my point of view powersave should be optional and not forced.
+>>>>
+>>>> consider :
+>>>> iw dev <devname> set power_save on/off
+>>>>
+>>>> so there is already a config option made for that purpose,
+>>>
+>>> Thanks Sebastian for your review. Agree this should not be forced with
+>>> in driver.
+>>>
+>>> I will check if i can set the idle ps at the end of
+>>> ath10k_mac_vif_setup_ps by checking arvif->ps.
+>>> I will update the patch accordingly.
+>>
+>> So what power save is this exactly? I assumed it's some bus level power
+>> save (turning of clocks etc) but is it actually 802.11 power save?
+>
+> Yes this is WIFI chip set level power-save(based on idleness) and not
+> related to protocol power save. FW will turn off/scale down the
+> resources(clock/rails) based on opportunity(when ever idle mode is
+> detected). This power save is mostly done in disconnected state. I am
+> not really sure when framework/user-space triggers power-save
+> config(iw dev <devname> set power_save on/off). Then doing this from
+> user-space will be unnecessarily toggling this config or may not be
+> setting at disconnected state.
 
-[  927.423821] mmc1: Invalid vdd 0x1f
-[  927.423925] Modules linked in: rsi_sdio(+) cmac bnep arc4 rsi_91x
-	       mac80211 cfg80211 btrsi rfcomm bluetooth ecdh_generic
-[  927.424073] CPU: 0 PID: 1624 Comm: insmod Tainted: G		W        4.15.0-1000-caracalla #1
-[  927.424075] Hardware name: Dell Inc. Edge Gateway	3003/      , BIOS 01.00.06 01/22/2018
-[  927.424082] RIP: 0010:sdhci_set_power_noreg+0xdd/0x190[sdhci]
-[  927.424085] RSP: 0018:ffffac3fc064b930 EFLAGS:  00010282
-[  927.424107] Call Trace:
-[  927.424118]  sdhci_set_power+0x5a/0x60 [sdhci]
-[  927.424125]  sdhci_set_ios+0x360/0x3b0 [sdhci]
-[  927.424133]  mmc_set_initial_state+0x92/0x120
-[  927.424137]  mmc_power_up.part.34+0x33/0x1d0
-[  927.424141]  mmc_power_up+0x17/0x20
-[  927.424147]  mmc_sdio_runtime_resume+0x2d/0x50
-[  927.424151]  mmc_runtime_resume+0x17/0x20
-[  927.424156]  __rpm_callback+0xc4/0x200
-[  927.424161]  ? idr_alloc_cyclic+0x57/0xd0
-[  927.424165]  ? mmc_runtime_suspend+0x20/0x20
-[  927.424169]  rpm_callback+0x24/0x80
-[  927.424172]  ? mmc_runtime_suspend+0x20/0x20
-[  927.424176]  rpm_resume+0x4b3/0x6c0
-[  927.424181]  __pm_runtime_resume+0x4e/0x80
-[  927.424188]  driver_probe_device+0x41/0x490
-[  927.424192]  __driver_attach+0xdf/0xf0
-[  927.424196]  ? driver_probe_device+0x490/0x490
-[  927.424201]  bus_for_each_dev+0x6c/0xc0
-[  927.424205]  driver_attach+0x1e/0x20
-[  927.424209]  bus_add_driver+0x1f4/0x270
-[  927.424217]  ? rsi_sdio_ack_intr+0x50/0x50 [rsi_sdio]
-[  927.424221]  driver_register+0x60/0xe0
-[  927.424227]  ? rsi_sdio_ack_intr+0x50/0x50 [rsi_sdio]
-[  927.424231]  sdio_register_driver+0x20/0x30
-[  927.424237]  rsi_module_init+0x16/0x40 [rsi_sdio]
+I think that 'set power_save' commands affects struct
+ieee80211_bss_conf::ps parameter and I don't think it should be used in
+this case. We already have ath10k_config_ps() for 802.11 level of power
+saving.
 
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_sdio.c | 2 --
- 1 file changed, 2 deletions(-)
+Arend again proposed runtime-pm with which I'm not very familiar. But
+why would we want to disable this? Doesn't it make sense to have this
+feature always enabled to save power? wcn3990 is a chip for a mobile
+device anyway.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index f7f2820..416981d 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -170,7 +170,6 @@ static void rsi_reset_card(struct sdio_func *pfunction)
- 	int err;
- 	struct mmc_card *card = pfunction->card;
- 	struct mmc_host *host = card->host;
--	s32 bit = (fls(host->ocr_avail) - 1);
- 	u8 cmd52_resp;
- 	u32 clock, resp, i;
- 	u16 rca;
-@@ -190,7 +189,6 @@ static void rsi_reset_card(struct sdio_func *pfunction)
- 	msleep(20);
- 
- 	/* Initialize the SDIO card */
--	host->ios.vdd = bit;
- 	host->ios.chip_select = MMC_CS_DONTCARE;
- 	host->ios.bus_mode = MMC_BUSMODE_OPENDRAIN;
- 	host->ios.power_mode = MMC_POWER_UP;
 -- 
-2.7.4
+Kalle Valo
