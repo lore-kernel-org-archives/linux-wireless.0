@@ -1,35 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:24046 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750757AbeDXRHa (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55496 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752332AbeDSPvV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 13:07:30 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 0/2] staging: wilc1000: TODO list updates
-Date: Tue, 24 Apr 2018 22:37:01 +0530
-Message-ID: <1524589623-1534-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180424_190733_902176_10B438E6)
+        Thu, 19 Apr 2018 11:51:21 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: ath10k: build ce layer in ath10k core module
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1521615247-3715-1-git-send-email-govinds@codeaurora.org>
+References: <1521615247-3715-1-git-send-email-govinds@codeaurora.org>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Message-Id: <20180419155121.5D7AE60F6E@smtp.codeaurora.org> (sfid-20180419_175125_571349_EC64E8D3)
+Date: Thu, 19 Apr 2018 15:51:21 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Updated the TODO list by removing items, which are already addressed.
-Also remove the code to handle IOCTL(SIOCSIWPRIV) as Wext support is
-not present in the driver.
+Govind Singh <govinds@codeaurora.org> wrote:
 
-Ajay Singh (2):
-  staging: wilc1000: remove registering of ndo_do_ioctl callback
-  staging: wilc1000: updated TODO list
+> CE layer is shared between pci and snoc target and results
+> in duplicate object inclusion if both modules are compiled
+> together statically and undefined KBUILD_MODNAME if
+> compiled as module.
+> 
+> Fix this by building ce layer in ath10k core module by
+> adding ce object inclusion with ATH10K_CE boolean CONFIG.
+> 
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
- drivers/staging/wilc1000/TODO         |  8 -----
- drivers/staging/wilc1000/linux_wlan.c | 63 -----------------------------------
- 2 files changed, 71 deletions(-)
+Patch applied to ath-next branch of ath.git, thanks.
+
+a0aedd6e0b57 ath10k: build ce layer in ath10k core module
 
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/10298657/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
