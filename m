@@ -1,123 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:64459 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753724AbeDRLk1 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:37034 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753038AbeDSSR7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 07:40:27 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 01/22] staging: wilc1000: rename WILC_WFI_wep_key & WILC_WFI_wep_key_len
-Date: Wed, 18 Apr 2018 17:09:03 +0530
-Message-ID: <1524051564-15497-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180418_134030_316892_686A7438)
-In-Reply-To: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 19 Apr 2018 14:17:59 -0400
+From: greearb@candelatech.com
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 3/3] ath10k:  Support ethtool gstats2 API.
+Date: Thu, 19 Apr 2018 11:17:43 -0700
+Message-Id: <1524161863-30860-3-git-send-email-greearb@candelatech.com> (sfid-20180419_201812_780658_139C36EC)
+In-Reply-To: <1524161863-30860-1-git-send-email-greearb@candelatech.com>
+References: <1524161863-30860-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to use lower case for variable name as per linux coding
-style.
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Skip a firmware stats update when calling
+code indicates the stats refresh is not needed.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 30 +++++++++++------------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  4 +--
- 2 files changed, 17 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 3139ead..bdc6c85 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -726,15 +726,15 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 		return ret;
+v2:  Convert to new flag name, attempt to fix build
+   when there is not DEBUGFS enabled for ath10k.
+
+ drivers/net/wireless/ath/ath10k/debug.c | 18 +++++++++++++++---
+ drivers/net/wireless/ath/ath10k/debug.h |  5 +++++
+ drivers/net/wireless/ath/ath10k/mac.c   |  1 +
+ 3 files changed, 21 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index bac832c..235cd04 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1159,9 +1159,10 @@ int ath10k_debug_get_et_sset_count(struct ieee80211_hw *hw,
+ 	return 0;
+ }
+ 
+-void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
+-			       struct ieee80211_vif *vif,
+-			       struct ethtool_stats *stats, u64 *data)
++void ath10k_debug_get_et_stats2(struct ieee80211_hw *hw,
++				struct ieee80211_vif *vif,
++				struct ethtool_stats *stats, u64 *data,
++				u32 flags)
+ {
+ 	struct ath10k *ar = hw->priv;
+ 	static const struct ath10k_fw_stats_pdev zero_stats = {};
+@@ -1170,6 +1171,9 @@ void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 
++	if (flags & ETHTOOL_GS2_NO_REFRESH_FW)
++		goto skip_query_fw_stats;
++
+ 	if (ar->state == ATH10K_STATE_ON) {
+ 		ret = ath10k_debug_fw_stats_request(ar);
+ 		if (ret) {
+@@ -1180,6 +1184,7 @@ void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
+ 		}
  	}
  
--	memset(priv->WILC_WFI_wep_key, 0, sizeof(priv->WILC_WFI_wep_key));
--	memset(priv->WILC_WFI_wep_key_len, 0, sizeof(priv->WILC_WFI_wep_key_len));
-+	memset(priv->wep_key, 0, sizeof(priv->wep_key));
-+	memset(priv->wep_key_len, 0, sizeof(priv->wep_key_len));
++skip_query_fw_stats:
+ 	pdev_stats = list_first_entry_or_null(&ar->debug.fw_stats.pdevs,
+ 					      struct ath10k_fw_stats_pdev,
+ 					      list);
+@@ -1244,6 +1249,13 @@ void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
+ 	WARN_ON(i != ATH10K_SSTATS_LEN);
+ }
  
- 	if (sme->crypto.cipher_group != NO_ENCRYPT) {
- 		if (sme->crypto.cipher_group == WLAN_CIPHER_SUITE_WEP40) {
- 			u8security = ENCRYPT_ENABLED | WEP;
++void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
++			       struct ieee80211_vif *vif,
++			       struct ethtool_stats *stats, u64 *data)
++{
++	ath10k_debug_get_et_stats2(hw, vif, stats, data, 0);
++}
++
+ static const struct file_operations fops_fw_dbglog = {
+ 	.read = ath10k_read_fw_dbglog,
+ 	.write = ath10k_write_fw_dbglog,
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 0afca5c..e953dd0 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -117,6 +117,10 @@ int ath10k_debug_get_et_sset_count(struct ieee80211_hw *hw,
+ void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
+ 			       struct ieee80211_vif *vif,
+ 			       struct ethtool_stats *stats, u64 *data);
++void ath10k_debug_get_et_stats2(struct ieee80211_hw *hw,
++				struct ieee80211_vif *vif,
++				struct ethtool_stats *stats, u64 *data,
++				u32 level);
  
--			priv->WILC_WFI_wep_key_len[sme->key_idx] = sme->key_len;
--			memcpy(priv->WILC_WFI_wep_key[sme->key_idx], sme->key, sme->key_len);
-+			priv->wep_key_len[sme->key_idx] = sme->key_len;
-+			memcpy(priv->wep_key[sme->key_idx], sme->key, sme->key_len);
+ static inline u64 ath10k_debug_get_fw_dbglog_mask(struct ath10k *ar)
+ {
+@@ -195,6 +199,7 @@ static inline u32 ath10k_debug_get_fw_dbglog_level(struct ath10k *ar)
+ #define ath10k_debug_get_et_strings NULL
+ #define ath10k_debug_get_et_sset_count NULL
+ #define ath10k_debug_get_et_stats NULL
++#define ath10k_debug_get_et_stats2 NULL
  
- 			wilc_set_wep_default_keyid(vif, sme->key_idx);
- 			wilc_add_wep_key_bss_sta(vif, sme->key, sme->key_len,
-@@ -742,8 +742,8 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 		} else if (sme->crypto.cipher_group == WLAN_CIPHER_SUITE_WEP104)   {
- 			u8security = ENCRYPT_ENABLED | WEP | WEP_EXTENDED;
- 
--			priv->WILC_WFI_wep_key_len[sme->key_idx] = sme->key_len;
--			memcpy(priv->WILC_WFI_wep_key[sme->key_idx], sme->key, sme->key_len);
-+			priv->wep_key_len[sme->key_idx] = sme->key_len;
-+			memcpy(priv->wep_key[sme->key_idx], sme->key, sme->key_len);
- 
- 			wilc_set_wep_default_keyid(vif, sme->key_idx);
- 			wilc_add_wep_key_bss_sta(vif, sme->key, sme->key_len,
-@@ -884,8 +884,8 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 	case WLAN_CIPHER_SUITE_WEP40:
- 	case WLAN_CIPHER_SUITE_WEP104:
- 		if (priv->wdev->iftype == NL80211_IFTYPE_AP) {
--			priv->WILC_WFI_wep_key_len[key_index] = params->key_len;
--			memcpy(priv->WILC_WFI_wep_key[key_index], params->key, params->key_len);
-+			priv->wep_key_len[key_index] = params->key_len;
-+			memcpy(priv->wep_key[key_index], params->key, params->key_len);
- 
- 			auth_type = OPEN_SYSTEM;
- 
-@@ -899,9 +899,9 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 						u8mode, auth_type);
- 			break;
- 		}
--		if (memcmp(params->key, priv->WILC_WFI_wep_key[key_index], params->key_len)) {
--			priv->WILC_WFI_wep_key_len[key_index] = params->key_len;
--			memcpy(priv->WILC_WFI_wep_key[key_index], params->key, params->key_len);
-+		if (memcmp(params->key, priv->wep_key[key_index], params->key_len)) {
-+			priv->wep_key_len[key_index] = params->key_len;
-+			memcpy(priv->wep_key[key_index], params->key, params->key_len);
- 
- 			wilc_add_wep_key_bss_sta(vif, params->key,
- 						 params->key_len, key_index);
-@@ -1060,10 +1060,10 @@ static int del_key(struct wiphy *wiphy, struct net_device *netdev,
- 	}
- 
- 	if (key_index >= 0 && key_index <= 3) {
--		if (priv->WILC_WFI_wep_key_len[key_index]) {
--			memset(priv->WILC_WFI_wep_key[key_index], 0,
--			       priv->WILC_WFI_wep_key_len[key_index]);
--			priv->WILC_WFI_wep_key_len[key_index] = 0;
-+		if (priv->wep_key_len[key_index]) {
-+			memset(priv->wep_key[key_index], 0,
-+			       priv->wep_key_len[key_index]);
-+			priv->wep_key_len[key_index] = 0;
- 			wilc_remove_wep_key(vif, key_index);
- 		}
- 	} else {
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index d62c4f1..bd0c98a 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -124,8 +124,8 @@ struct wilc_priv {
- 	struct host_if_drv *hif_drv;
- 	struct host_if_pmkid_attr pmkid_list;
- 	struct WILC_WFI_stats netstats;
--	u8 WILC_WFI_wep_key[4][WLAN_KEY_LEN_WEP104];
--	u8 WILC_WFI_wep_key_len[4];
-+	u8 wep_key[4][WLAN_KEY_LEN_WEP104];
-+	u8 wep_key_len[4];
- 	/* The real interface that the monitor is on */
- 	struct net_device *real_ndev;
- 	struct wilc_wfi_key *wilc_gtk[MAX_NUM_STA];
+ #endif /* CONFIG_ATH10K_DEBUGFS */
+ #ifdef CONFIG_MAC80211_DEBUGFS
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index bf05a36..27b793c 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -7734,6 +7734,7 @@ static const struct ieee80211_ops ath10k_ops = {
+ 	.ampdu_action			= ath10k_ampdu_action,
+ 	.get_et_sset_count		= ath10k_debug_get_et_sset_count,
+ 	.get_et_stats			= ath10k_debug_get_et_stats,
++	.get_et_stats2			= ath10k_debug_get_et_stats2,
+ 	.get_et_strings			= ath10k_debug_get_et_strings,
+ 	.add_chanctx			= ath10k_mac_op_add_chanctx,
+ 	.remove_chanctx			= ath10k_mac_op_remove_chanctx,
 -- 
-2.7.4
+2.4.11
