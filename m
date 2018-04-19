@@ -1,95 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:53346 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751170AbeDSPHL (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:37018 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752490AbeDSSRz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Apr 2018 11:07:11 -0400
-Message-ID: <1524150429.3024.24.camel@sipsolutions.net> (sfid-20180419_170715_398609_8172992F)
-Subject: Re: [PATCH 2/2] cfg80211: Modify wiphy registration semantics for
- self managed hints
-From: Johannes Berg <johannes@sipsolutions.net>
-To: asinghal@codeaurora.org
-Cc: Jouni Malinen <jouni@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Kiran Kumar Lokere <klokere@codeaurora.org>,
-        jjohnson@codeaurora.org
-Date: Thu, 19 Apr 2018 17:07:09 +0200
-In-Reply-To: <5f8caab7e7cfb88072c2e221ea45063e@codeaurora.org>
-References: <1520106021-16836-1-git-send-email-jouni@codeaurora.org>
-         <1520106021-16836-2-git-send-email-jouni@codeaurora.org>
-         <1521627352.2645.27.camel@sipsolutions.net>
-         <5f8caab7e7cfb88072c2e221ea45063e@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 19 Apr 2018 14:17:55 -0400
+From: greearb@candelatech.com
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 1/3] ethtool: Support ETHTOOL_GSTATS2 command.
+Date: Thu, 19 Apr 2018 11:17:41 -0700
+Message-Id: <1524161863-30860-1-git-send-email-greearb@candelatech.com> (sfid-20180419_201802_522867_3A8C588E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2018-04-13 at 13:32 -0700, asinghal@codeaurora.org wrote:
-> hi Johannes,
->              please fine some replies inline:
-> 
-> On 2018-03-21 03:15, Johannes Berg wrote:
-> > So I really think this should just be one patch - it's not about
-> > "registration semantics" but about which types of requests get passed
-> > to reg_notifier(), and if you do it in one place you'd better also do
-> > it in the other.
-> 
-> Sure, I have combined the two patches in one patch now:
+From: Ben Greear <greearb@candelatech.com>
 
-So now you should probably resend it properly, with a new subject that
-explains it better? Just "modify" doesn't really seem all that
-appropriate - what's the modification?
+This is similar to ETHTOOL_GSTATS, but it allows you to specify
+flags.  These flags can be used by the driver to decrease the
+amount of stats refreshed.  In particular, this helps with ath10k
+since getting the firmware stats can be slow.
 
-Patchwork also lost half the patch for some reason, probably you
-copy/pasted it and lost some whitespace at an empty line.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
 
-> Call the regulatory notifier for self managed hints only if
-> initiator is NL80211_REGDOM_SET_BY_USER and hint type is
-> NL80211_USER_REG_HINT_CELL_BASE. Also call regulatory
-> notifier when wiphy is registered under similar conditions.
+v2:  Change flag names to ETHTOOL_GS_NO_REFRESH_FW,
+     ETHTOOL_GS2_REFRESH_ALL.
 
-I guess this should say why.
+ include/linux/ethtool.h      | 12 ++++++++++++
+ include/uapi/linux/ethtool.h | 11 +++++++++++
+ net/core/ethtool.c           | 40 +++++++++++++++++++++++++++++++++++-----
+ 3 files changed, 58 insertions(+), 5 deletions(-)
 
->   	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
->   		wiphy = &rdev->wiphy;
-> -		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
-> +		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
->   			self_managed_found = true;
-> -		else
-> -			return false;
-> +			if (request->initiator == NL80211_REGDOM_SET_BY_USER &&
-> +			    request->user_reg_hint_type ==
-> +			    NL80211_USER_REG_HINT_CELL_BASE)
-> +				reg_call_notifier(wiphy, request);
-> +		} else {
-> +			self_managed_found = false;
-> +		}
->   	}
-
-This is awkward now - how about
-
-self_managed_found = regulatory_flags & SELF_MANAGED;
-if (self_managed_found &&
-    request->initiator == ... &&
-    ...)
-        reg_call_notifier(...)
-
-
-> @@ -3700,15 +3705,21 @@ void wiphy_regulatory_register(struct wiphy 
-> *wiphy)
->   {
->   	struct regulatory_request *lr;
-> 
-> -	/* self-managed devices ignore external hints */
-> -	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
-> +	lr = get_last_request();
-> +
-> +	/* self-managed devices ignore beacon hints and 11d IE */
-> +	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
->   		wiphy->regulatory_flags |= REGULATORY_DISABLE_BEACON_HINTS |
-> -					   REGULATORY_COUNTRY_IE_IGNORE;
-> +			REGULATORY_COUNTRY_IE_IGNORE;
-
-no need to change the indentation here
-
-johannes
+diff --git a/include/linux/ethtool.h b/include/linux/ethtool.h
+index ebe4181..c90bc6f6 100644
+--- a/include/linux/ethtool.h
++++ b/include/linux/ethtool.h
+@@ -243,6 +243,15 @@ bool ethtool_convert_link_mode_to_legacy_u32(u32 *legacy_u32,
+  * @get_ethtool_stats: Return extended statistics about the device.
+  *	This is only useful if the device maintains statistics not
+  *	included in &struct rtnl_link_stats64.
++ * @get_ethtool_stats2: Return extended statistics about the device.
++ *	This is only useful if the device maintains statistics not
++ *	included in &struct rtnl_link_stats64.
++ *      Takes a flags argument:  0 means all (same as get_ethtool_stats),
++ *      0x1 (ETHTOOL_GS2_NO_REFRESH_FW) means skip refreshing firmware stats.
++ *      Other flags are reserved for now.
++ *      Same number of stats will be returned, but some of them might
++ *      not be as accurate/refreshed.  This is to allow not querying
++ *      firmware or other expensive-to-read stats, for instance.
+  * @begin: Function to be called before any other operation.  Returns a
+  *	negative error code or zero.
+  * @complete: Function to be called after any other operation except
+@@ -355,6 +364,9 @@ struct ethtool_ops {
+ 	int	(*set_phys_id)(struct net_device *, enum ethtool_phys_id_state);
+ 	void	(*get_ethtool_stats)(struct net_device *,
+ 				     struct ethtool_stats *, u64 *);
++	void	(*get_ethtool_stats2)(struct net_device *dev,
++				      struct ethtool_stats *gstats, u64 *data,
++				      u32 flags);
+ 	int	(*begin)(struct net_device *);
+ 	void	(*complete)(struct net_device *);
+ 	u32	(*get_priv_flags)(struct net_device *);
+diff --git a/include/uapi/linux/ethtool.h b/include/uapi/linux/ethtool.h
+index 4ca65b5..75c753d 100644
+--- a/include/uapi/linux/ethtool.h
++++ b/include/uapi/linux/ethtool.h
+@@ -1396,11 +1396,22 @@ enum ethtool_fec_config_bits {
+ #define ETHTOOL_PHY_STUNABLE	0x0000004f /* Set PHY tunable configuration */
+ #define ETHTOOL_GFECPARAM	0x00000050 /* Get FEC settings */
+ #define ETHTOOL_SFECPARAM	0x00000051 /* Set FEC settings */
++#define ETHTOOL_GSTATS2		0x00000052 /* get NIC-specific statistics
++					    * with ability to specify flags.
++					    * See ETHTOOL_GS2* below.
++					    */
+ 
+ /* compatibility with older code */
+ #define SPARC_ETH_GSET		ETHTOOL_GSET
+ #define SPARC_ETH_SSET		ETHTOOL_SSET
+ 
++/* GSTATS2 flags */
++#define ETHTOOL_GS2_REFRESH_ALL     (0)    /* default is to update all stats */
++#define ETHTOOL_GS2_NO_REFRESH_FW   (1<<0) /* Skip refreshing stats that probe
++					    * firmware, and thus are
++					    * slow/expensive.
++					    */
++
+ /* Link mode bit indices */
+ enum ethtool_link_mode_bit_indices {
+ 	ETHTOOL_LINK_MODE_10baseT_Half_BIT	= 0,
+diff --git a/net/core/ethtool.c b/net/core/ethtool.c
+index 03416e6..dd16f15 100644
+--- a/net/core/ethtool.c
++++ b/net/core/ethtool.c
+@@ -1952,16 +1952,14 @@ static int ethtool_phys_id(struct net_device *dev, void __user *useraddr)
+ 	return rc;
+ }
+ 
+-static int ethtool_get_stats(struct net_device *dev, void __user *useraddr)
++static int _ethtool_get_stats(struct net_device *dev, void __user *useraddr,
++			      u32 flags)
+ {
+ 	struct ethtool_stats stats;
+ 	const struct ethtool_ops *ops = dev->ethtool_ops;
+ 	u64 *data;
+ 	int ret, n_stats;
+ 
+-	if (!ops->get_ethtool_stats || !ops->get_sset_count)
+-		return -EOPNOTSUPP;
+-
+ 	n_stats = ops->get_sset_count(dev, ETH_SS_STATS);
+ 	if (n_stats < 0)
+ 		return n_stats;
+@@ -1976,7 +1974,10 @@ static int ethtool_get_stats(struct net_device *dev, void __user *useraddr)
+ 	if (n_stats && !data)
+ 		return -ENOMEM;
+ 
+-	ops->get_ethtool_stats(dev, &stats, data);
++	if (flags != ETHTOOL_GS2_REFRESH_ALL)
++		ops->get_ethtool_stats2(dev, &stats, data, flags);
++	else
++		ops->get_ethtool_stats(dev, &stats, data);
+ 
+ 	ret = -EFAULT;
+ 	if (copy_to_user(useraddr, &stats, sizeof(stats)))
+@@ -1991,6 +1992,31 @@ static int ethtool_get_stats(struct net_device *dev, void __user *useraddr)
+ 	return ret;
+ }
+ 
++static int ethtool_get_stats(struct net_device *dev, void __user *useraddr)
++{
++	const struct ethtool_ops *ops = dev->ethtool_ops;
++
++	if (!ops->get_ethtool_stats || !ops->get_sset_count)
++		return -EOPNOTSUPP;
++	return _ethtool_get_stats(dev, useraddr, ETHTOOL_GS2_REFRESH_ALL);
++}
++
++static int ethtool_get_stats2(struct net_device *dev, void __user *useraddr)
++{
++	struct ethtool_stats stats;
++	const struct ethtool_ops *ops = dev->ethtool_ops;
++	u32 flags = 0;
++
++	if (!ops->get_ethtool_stats2 || !ops->get_sset_count)
++		return -EOPNOTSUPP;
++
++	if (copy_from_user(&stats, useraddr, sizeof(stats)))
++		return -EFAULT;
++
++	flags = stats.n_stats;
++	return _ethtool_get_stats(dev, useraddr, flags);
++}
++
+ static int ethtool_get_phy_stats(struct net_device *dev, void __user *useraddr)
+ {
+ 	struct ethtool_stats stats;
+@@ -2632,6 +2658,7 @@ int dev_ethtool(struct net *net, struct ifreq *ifr)
+ 	case ETHTOOL_GSSET_INFO:
+ 	case ETHTOOL_GSTRINGS:
+ 	case ETHTOOL_GSTATS:
++	case ETHTOOL_GSTATS2:
+ 	case ETHTOOL_GPHYSTATS:
+ 	case ETHTOOL_GTSO:
+ 	case ETHTOOL_GPERMADDR:
+@@ -2742,6 +2769,9 @@ int dev_ethtool(struct net *net, struct ifreq *ifr)
+ 	case ETHTOOL_GSTATS:
+ 		rc = ethtool_get_stats(dev, useraddr);
+ 		break;
++	case ETHTOOL_GSTATS2:
++		rc = ethtool_get_stats2(dev, useraddr);
++		break;
+ 	case ETHTOOL_GPERMADDR:
+ 		rc = ethtool_get_perm_addr(dev, useraddr);
+ 		break;
+-- 
+2.4.11
