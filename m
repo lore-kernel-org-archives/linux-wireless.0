@@ -1,37 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55176 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750757AbeDXRXa (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40426 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751147AbeDSLKf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 13:23:30 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: cw1200: fix spelling mistake: "Mailformed" -> "Malformed"
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180329153818.29538-1-colin.king@canonical.com>
-References: <20180329153818.29538-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: Solomon Peachy <pizza@shaftnet.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20180424172330.0FA6460881@smtp.codeaurora.org> (sfid-20180424_192348_717583_300B8FCD)
-Date: Tue, 24 Apr 2018 17:23:30 +0000 (UTC)
+        Thu, 19 Apr 2018 07:10:35 -0400
+Message-ID: <6dc465be2690a7107c574c7ef2510f6083f5a52d.camel@coelho.fi> (sfid-20180419_131039_054828_D1848777)
+From: Luca Coelho <luca@coelho.fi>
+To: Emmanuel Grumbach <egrumbach@gmail.com>,
+        Scott Register <sreg@sreg.io>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        linuxwifi@intel.com
+Date: Thu, 19 Apr 2018 14:10:30 +0300
+In-Reply-To: <7162b267c0791b871dbd4e1b7b82e1ffaf91a6e5.camel@coelho.fi>
+References: <CANrGCJeTDQ1DTuum-asODLMoY4StspzukkWfTVtb6fJ+yHBGXg@mail.gmail.com>
+         <CANUX_P0VoQHQ1iPsk_u1bZsEU1ny1SxwrZbQeSEBUVGyjKcyVQ@mail.gmail.com>
+         <03793285ba30a7767498feca8229418625dcf111.camel@coelho.fi>
+         <7162b267c0791b871dbd4e1b7b82e1ffaf91a6e5.camel@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: iwlwifi 4.18rc1 SYNC TIME_QUOTA_CMD with fw 31
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
-
-> From: Colin Ian King <colin.king@canonical.com>
+On Thu, 2018-04-19 at 09:00 +0300, Luca Coelho wrote:
+> On Thu, 2018-04-19 at 08:42 +0300, Luca Coelho wrote:
+> > On Wed, 2018-04-18 at 11:31 +0300, Emmanuel Grumbach wrote:
+> > > On Wed, Apr 18, 2018 at 5:47 AM, Scott Register <sreg@sreg.io>
+> > > wrote:
+> > > > 
+> > > > Hello,
+> > > > 
+> > > > After upgrading to 4.18rc1 iwlwifi is printing a FW error.
+> > > > There
+> > > > was a
+> > > > previous thread with a similar
+> > > > issue but they seemed to resolve it with a ucode update. I
+> > > > think
+> > > > I'm
+> > > > running a newer FW and
+> > > > am still having an issue. 4.13 works--I haven't gone any higher
+> > > > so
+> > > > far.
+> > > 
+> > > Please download the firmware from
+> > > https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/linux-firmwa
+> > > re
+> > > .g
+> > > it/plain/iwlwifi-8265-36.ucode
+> > > This should fix your problem.
+> > 
+> > Yeah, it should work with FW 36.  But if there really is something
+> > in
+> > 4.18 that breaks support on 31, we should either fix it or make
+> > sure
+> > we
+> > don't even try to load this old firmware.
 > 
-> Trivial fix to spelling mistake in wiphy_warn warning message text
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Hmmm, you (and I) obviously meant 4.17-rc1. ;)
 
-Patch applied to wireless-drivers-next.git, thanks.
+Okay, so the reason was very simple.  We are calculating the size of
+the old version of the scan API incorrectly.  This should solve it:
 
-0fb1abc3a0b8 cw1200: fix spelling mistake: "Mailformed" -> "Malformed"
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
+index 7af3a0f51b77..21695db51c8a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
+@@ -753,9 +753,7 @@ struct iwl_scan_req_umac {
+                                         4 * sizeof(u8))
+ #define IWL_SCAN_REQ_UMAC_SIZE_V6 (sizeof(struct iwl_scan_req_umac) - \
+                                   2 * sizeof(u8) - sizeof(__le16))
+-#define IWL_SCAN_REQ_UMAC_SIZE_V1 (sizeof(struct iwl_scan_req_umac) - \
+-                                  2 * sizeof(__le32) - 2 * sizeof(u8) - \
+-                                  sizeof(__le16))
++#define IWL_SCAN_REQ_UMAC_SIZE_V1 36
 
--- 
-https://patchwork.kernel.org/patch/10315587/
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Can you try it?
+
+In the beginning, making the size calculation based on the latest
+version made some sense, but it became so complex that it made it very
+prone to errors.  So it's probably just better to hardcode the sizes
+since they never change anyway...
+
+--
+Cheers,
+Luca.
