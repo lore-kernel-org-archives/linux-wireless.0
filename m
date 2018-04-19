@@ -1,90 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:54952 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751496AbeDZUyj (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:37013 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751130AbeDSMxs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Apr 2018 16:54:39 -0400
-Received: by mail-wm0-f67.google.com with SMTP id f6so85947wmc.4
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Apr 2018 13:54:38 -0700 (PDT)
-From: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
-To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Cc: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
-Subject: [PATCH v2] staging/wilc1000: fix wilc_mac_xmit()'s return type
-Date: Thu, 26 Apr 2018 22:54:33 +0200
-Message-Id: <20180426205433.30308-1-luc.vanoostenryck@gmail.com> (sfid-20180426_225444_291140_A184B0C6)
-In-Reply-To: <3c4bbd52-5af9-72b9-732b-f83f0bd23905@microchip.com>
-References: <3c4bbd52-5af9-72b9-732b-f83f0bd23905@microchip.com>
+        Thu, 19 Apr 2018 08:53:48 -0400
+From: Pkshih <pkshih@realtek.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH] rtlwifi: cleanup 8723be ant_sel definition
+Date: Thu, 19 Apr 2018 12:53:33 +0000
+Message-ID: <1524142404.2012.20.camel@realtek.com> (sfid-20180419_145425_331040_FFAA8D6D)
+References: <20180419083100.5254-1-pkshih@realtek.com>
+         <87k1t3mskj.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87k1t3mskj.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The method ndo_start_xmit() is defined as returning an 'netdev_tx_t',
-which is a typedef for an enum type, but the implementation in this
-driver returns an 'int'.
-
-Fix this by returning 'netdev_tx_t' in this driver too
-and accordingly change 'return 0;' by 'return NETDEV_TX_OK;'
-
-Signed-off-by: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 8 ++++----
- drivers/staging/wilc1000/wilc_wlan.h  | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 38a83bd31..d95b9750b 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -941,7 +941,7 @@ static void linux_wlan_tx_complete(void *priv, int status)
- 	kfree(pv_data);
- }
- 
--int wilc_mac_xmit(struct sk_buff *skb, struct net_device *ndev)
-+netdev_tx_t wilc_mac_xmit(struct sk_buff *skb, struct net_device *ndev)
- {
- 	struct wilc_vif *vif;
- 	struct tx_complete_data *tx_data = NULL;
-@@ -956,14 +956,14 @@ int wilc_mac_xmit(struct sk_buff *skb, struct net_device *ndev)
- 
- 	if (skb->dev != ndev) {
- 		netdev_err(ndev, "Packet not destined to this device\n");
--		return 0;
-+		return NETDEV_TX_OK;
- 	}
- 
- 	tx_data = kmalloc(sizeof(*tx_data), GFP_ATOMIC);
- 	if (!tx_data) {
- 		dev_kfree_skb(skb);
- 		netif_wake_queue(ndev);
--		return 0;
-+		return NETDEV_TX_OK;
- 	}
- 
- 	tx_data->buff = skb->data;
-@@ -994,7 +994,7 @@ int wilc_mac_xmit(struct sk_buff *skb, struct net_device *ndev)
- 		netif_stop_queue(wilc->vif[1]->ndev);
- 	}
- 
--	return 0;
-+	return NETDEV_TX_OK;
- }
- 
- static int wilc_mac_close(struct net_device *ndev)
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index fa157a67b..d3b5a6b38 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -298,7 +298,7 @@ void wilc_chip_sleep_manually(struct wilc *wilc);
- 
- void wilc_enable_tcp_ack_filter(bool value);
- int wilc_wlan_get_num_conn_ifcs(struct wilc *wilc);
--int wilc_mac_xmit(struct sk_buff *skb, struct net_device *dev);
-+netdev_tx_t wilc_mac_xmit(struct sk_buff *skb, struct net_device *dev);
- 
- void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size);
- void host_wakeup_notify(struct wilc *wilc);
--- 
-2.17.0
+T24gVGh1LCAyMDE4LTA0LTE5IGF0IDEyOjUyICswMzAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiA8
+cGtzaGloQHJlYWx0ZWsuY29tPiB3cml0ZXM6DQo+IA0KPiA+IEZyb206IFBpbmctS2UgU2hpaCA8
+cGtzaGloQHJlYWx0ZWsuY29tPg0KPiA+DQo+ID4gVGhlIG1vZHVsZSBwYXJhbWV0ZXIgYW50X3Nl
+bCBpcyB1c2VkIHRvIGNvbnRyb2wgYW50ZW5uYSBudW1iZXIgYW5kIHBhdGguDQo+ID4gVGhlcmUg
+aXMgYW4gZXhpc3RpbmcgZW51bSBBTlRfe1gyLFgxfSBkZWZpbmVkIHRoZSBhbnRlbm5hIG51bWJl
+ciwgc28NCj4gPiBhZGQgYSBuZXcgZW51bSBBTlRfe01BSU4sQVVYfSB0byBtYWtlIGl0IHJlYWRh
+YmxlLiBBZnRlciB0aGlzIHdvcmssDQo+ID4gaW5jb3JyZWN0IGdpdmVuIHZhbHVlcyBkZXBlbmQg
+b24gYW50X3NlbCB3ZXJlIGV4cG9zZWQsIHNvIHJlZmlsbCB2YWx1ZXMNCj4gPiBhY2NvcmRpbmcg
+Zm9sbG93aW5nIGRlZmluaXRpb246DQo+ID7CoMKgwqBhbnRfc2VswqDCoMKgYW50X251bcKgwqDC
+oGFudF9wYXRowqDCoHByaW50X2xhYmVsDQo+ID7CoMKgwqDCoMKgwqAxwqDCoMKgwqDCoMKgQU5U
+X1gxwqDCoMKgwqBBTlRfQVVYwqDCoMKgwqDCoMKgwqDCoCMyDQo+ID7CoMKgwqDCoMKgwqAywqDC
+oMKgwqDCoMKgQU5UX1gywqDCoMKgwqBBTlRfTUFJTsKgwqDCoMKgwqDCoMKgIzENCj4gPiBUaGVu
+LCB0aGUgd29ya2Fyb3VuZCBpbiBoYWxidGNvdXRzcmMuYyB3YXMgcmVtb3ZlZC4NCj4gPg0KPiA+
+IFRoZSBleHBlcmltZW50YWwgcmVzdWx0cyB3aXRoIHNpbmdsZSBhbnRlbm5hIGNvbm5lY3RlZCB0
+byBzcGVjaWZpYyBwYXRoDQo+ID4gYXJlIGluIGZvbGxvd2luZzoNCj4gPsKgwqDCoGFudF9zZWzC
+oMKgQU5UX01BSU4oIzEpwqDCoEFOVF9BVVgoIzIpDQo+ID7CoMKgwqDCoMKgwqAwwqDCoMKgwqDC
+oMKgwqDCoC04wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgLTYyDQo+ID7CoMKgwqDCoMKgwqAxwqDC
+oMKgwqDCoMKgwqDCoC02MsKgwqDCoMKgwqDCoMKgwqDCoMKgwqAtMTANCj4gPsKgwqDCoMKgwqDC
+oDLCoMKgwqDCoMKgwqDCoMKgLTbCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAtNjANCj4gPg0KPiA+
+IFNpZ25lZC1vZmYtYnk6IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPg0KPiA+IENj
+OiBTdGFibGUgPHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmc+ICMgNC43Kw0KPiA+IFJldmlld2VkLWJ5
+OiBMYXJyeSBGaW5nZXIgPExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ+DQo+ID4gLS0tDQo+ID4g
+SGkgS2FsbGUsDQo+ID4NCj4gPiBUaGlzIHBhdGNoIHdvdWxkIHNlbmQgdG8gNC4xNy4NCj4gDQo+
+IEZvciAtcmMgcmVsZWFzZXMgSSByZXF1aXJlIGEgcXVpdGUgY2xlYXIgYnVnIHJlcG9ydCBidXQg
+SSBkbyBub3QNCj4gdW5kZXJzdGFuZCB3aGF0IHlvdSBhcmUgZml4aW5nIGhlcmUsIGV2ZW4gYWZ0
+ZXIgcmVhZGluZyB0aGUgY29tbWl0IGxvZw0KPiB0d2ljZS4gQ291bGQgeW91IHRyeSB0byBpbXBy
+b3ZlIGl0PyBFc3BlY2lhbGx5IGZvY3VzIG9uIGRlc2NyaWJpbmcgdGhlDQo+IGJ1ZyBpbiBzaW1w
+bGUgdGVybXMgYW5kIGhvdyB0aGlzIHBhdGNoIGNoYW5nZXMgdGhlIGZ1bmN0aW9uYWxpdHkgZnJv
+bQ0KPiB1c2VyJ3MgcG9pbnQgb2Ygdmlldy4NCj4gDQpUaGUgcGF0Y2ggbWFpbmx5IGZpeCB0aGUg
+d3JvbmcgdmFsdWUgb2bCoGFudF9udW0gYW5kwqBzaW5nbGVfYW50X3BhdGggd2hlbg0KYW50X3Nl
+bCBpcyBzZXQuDQoNCsKgIMKgIMKgIMKgIGlmIChtb2RfcGFyYW1zLT5hbnRfc2VsKSB7IMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgDQrCoMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgcnRscHJpdi0+YnRjb2V4aXN0LmJ0Y19p
+bmZvLmFudF9udW0gPSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoMKgDQot
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoChtb2RfcGFyYW1z
+LT5hbnRfc2VsID09IDEgPyBBTlRfWDIgOiBBTlRfWDEpOyDCoCDCoCDCoCDCoCDCoMKgDQorwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoChtb2RfcGFyYW1zLT5h
+bnRfc2VsID09IDEgPyBBTlRfWDEgOiBBTlRfWDIpOyDCoCDCoCDCoCDCoCDCoMKgDQrCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoMKg
+DQrCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBydGxwcml2LT5idGNvZXhpc3QuYnRjX2luZm8uc2lu
+Z2xlX2FudF9wYXRoID0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqDCoA0KLcKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAobW9kX3BhcmFtcy0+YW50X3NlbCA9
+PSAxID8gMCA6IDEpOyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoMKgDQorwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoChtb2RfcGFyYW1zLT5hbnRfc2Vs
+ID09IDEgPyBBTlRfQVVYIDogQU5UX01BSU4pOyDCoCDCoCDCoCDCoA0KwqDCoCDCoCDCoCDCoH0g
+wqAgwqANClNvLCBuZWVkIHdvcmthcm91bmQgdG8gZml4IHRoZSBwcm9ibGVtLg0KDQpGb3IgZW5k
+IHVzZXIsIG1vc3QgcGVvcGxlIGRvbid0IG5lZWQgYW50X3NlbCwgYnV0IEhQIHVzZXIgbmVlZHMg
+dG8gc2V0IHRvIDEuDQpJbiBjYXNlIGFudF9zZWw9MSwgdGhlIHJlc3VsdCBpcyBhbG1vc3QgdGhl
+IHNhbWUsIGJ1dCBhbnRfc2VsPTIgdGhhdCBpcyByYXJlDQp1c2VkIGlzIGJyb2tlbi4gU28sIHRo
+aXMgYnVnIG1heSBiZSBub3Qgc2VlbiBieSB1c2VyLg0KDQpBbm90aGVyIHRoaW5nIGlzIHdlIHdh
+bnQgdG8gYXBwbHkgdGhpcyBwYXRjaCB0byBzdGFibGUgcmVsZWFzZSB0byBnaXZlIGNvcnJlY3QN
+CnZhbHVlcyBhbmQgcmVtb3ZlIHRoZSB3b3JrYXJvdW5kLCBzbyBJIHRoaW5rIGl0IGNhbiBhcHBs
+eSB0byAtcmMgdG9vLg0KDQpBbnl3YXksIEknbGwgYWRkIG1vcmUgZGVzY3JpcHRpb24gdG8gY29t
+bWl0IGxvZywgYW5kIHlvdSBjYW4gZGVjaWRlIHRvDQphcHBseSB0aGlzIHBhdGNoIHRvIDQuMTcg
+b3IgcXVldWUgdG8gNC4xOC4NCg0KVGhhbmtzDQpQSw0K
