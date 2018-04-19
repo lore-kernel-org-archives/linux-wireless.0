@@ -1,64 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47874 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750882AbeD3KEd (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40378 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750737AbeDSGAp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Apr 2018 06:04:33 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com,
-        david.e.box@intel.com, joe.konno@intel.com
-Subject: Re: pull-request: iwlwifi-next 2018-04-26
-References: <d70efddcc5ef39561504f61eb0069281b76d8ce2.camel@coelho.fi>
-Date: Mon, 30 Apr 2018 13:04:27 +0300
-In-Reply-To: <d70efddcc5ef39561504f61eb0069281b76d8ce2.camel@coelho.fi> (Luca
-        Coelho's message of "Thu, 26 Apr 2018 15:45:34 +0300")
-Message-ID: <87r2mx3t90.fsf@kamboji.qca.qualcomm.com> (sfid-20180430_120437_414210_C987AD05)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 19 Apr 2018 02:00:45 -0400
+Message-ID: <7162b267c0791b871dbd4e1b7b82e1ffaf91a6e5.camel@coelho.fi> (sfid-20180419_080048_862130_D4B355DA)
+From: Luca Coelho <luca@coelho.fi>
+To: Emmanuel Grumbach <egrumbach@gmail.com>,
+        Scott Register <sreg@sreg.io>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        linuxwifi@intel.com
+Date: Thu, 19 Apr 2018 09:00:42 +0300
+In-Reply-To: <03793285ba30a7767498feca8229418625dcf111.camel@coelho.fi>
+References: <CANrGCJeTDQ1DTuum-asODLMoY4StspzukkWfTVtb6fJ+yHBGXg@mail.gmail.com>
+         <CANUX_P0VoQHQ1iPsk_u1bZsEU1ny1SxwrZbQeSEBUVGyjKcyVQ@mail.gmail.com>
+         <03793285ba30a7767498feca8229418625dcf111.camel@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: iwlwifi 4.18rc1 SYNC TIME_QUOTA_CMD with fw 31
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+On Thu, 2018-04-19 at 08:42 +0300, Luca Coelho wrote:
+> On Wed, 2018-04-18 at 11:31 +0300, Emmanuel Grumbach wrote:
+> > On Wed, Apr 18, 2018 at 5:47 AM, Scott Register <sreg@sreg.io>
+> > wrote:
+> > > 
+> > > Hello,
+> > > 
+> > > After upgrading to 4.18rc1 iwlwifi is printing a FW error. There
+> > > was a
+> > > previous thread with a similar
+> > > issue but they seemed to resolve it with a ucode update. I think
+> > > I'm
+> > > running a newer FW and
+> > > am still having an issue. 4.13 works--I haven't gone any higher
+> > > so
+> > > far.
+> > 
+> > Please download the firmware from
+> > https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/linux-firmware
+> > .g
+> > it/plain/iwlwifi-8265-36.ucode
+> > This should fix your problem.
+> 
+> Yeah, it should work with FW 36.  But if there really is something in
+> 4.18 that breaks support on 31, we should either fix it or make sure
+> we
+> don't even try to load this old firmware.
 
-> This is the second batch of patches intended for v4.18.  Nothing major
-> here, just the usual continued development, bugfixes, new FW APIs and
-> some new features.  More details about the contents in the tag
-> description.
->
-> I have sent this out before and kbuildbot reported success.
->
-> Please let me know if there are any issues.
->
-> Cheers,
-> Luca.
->
->
-> The following changes since commit 0ddcf3e76ae4d02918e609342a1020b50258fadd:
->
->   Merge git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git (2018-04-26 13:26:37 +0300)
->
-> are available in the Git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2018-04-26
->
-> for you to fetch changes up to d3a6f7fb97fc34a38e40cc56392e701598f99863:
->
->   iwlwifi: mvm: set wakeup filters for wowlan "any" configuration (2018-04-26 15:18:07 +0300)
->
-> ----------------------------------------------------------------
-> Second batch of iwlwifi patches for 4.18
->
-> * Some preparations for new hardware;
-> * A workaround to rescan the bus for the rare situation when older
->   devices become irresponsive,
-> * Hardening of the firmware loading code to avoid issues with
->   corrupted files;
-> * A few clean-ups and bugfixes.
->
-> ----------------------------------------------------------------
+Hmmm, you (and I) obviously meant 4.17-rc1. ;)
 
-Pulled, thanks.
-
--- 
-Kalle Valo
+--
+Cheers,
+Luca.
