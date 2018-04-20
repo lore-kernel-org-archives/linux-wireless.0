@@ -1,85 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53810 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753105AbeDPNoI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 09:44:08 -0400
-Received: from mail-qk0-f181.google.com (mail-qk0-f181.google.com [209.85.220.181])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E36E421834
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 13:44:07 +0000 (UTC)
-Received: by mail-qk0-f181.google.com with SMTP id c188so16553081qkg.2
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 06:44:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1522996476.4488.4.camel@coelho.fi>
-References: <1522996476.4488.4.camel@coelho.fi>
-From: Josh Boyer <jwboyer@kernel.org>
-Date: Mon, 16 Apr 2018 09:44:06 -0400
-Message-ID: <CA+5PVA6meJ+enpe0MyYsAfg4PFWNAMX7jxau=QfFaKNXsqP+Nw@mail.gmail.com> (sfid-20180416_154411_797628_422C7483)
-Subject: Re: pull-request: iwlwifi firmwares update 2018-04-06
-To: Luca Coelho <luca@coelho.fi>
-Cc: Linux Firmware <linux-firmware@kernel.org>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>,
-        Kyle McMartin <kyle@infradead.org>,
-        Ben Hutchings <ben@decadent.org.uk>
-Content-Type: text/plain; charset="UTF-8"
+Received: from smtp.codeaurora.org ([198.145.29.96]:35998 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753483AbeDTGyg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 20 Apr 2018 02:54:36 -0400
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [RFC 3/6] mac80211: implement station's rssi check using rx data signal
+Date: Fri, 20 Apr 2018 12:22:48 +0530
+Message-Id: <1524207171-3325-4-git-send-email-tamizhr@codeaurora.org> (sfid-20180420_085440_861012_6B5C7A55)
+In-Reply-To: <1524207171-3325-1-git-send-email-tamizhr@codeaurora.org>
+References: <1524207171-3325-1-git-send-email-tamizhr@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 6, 2018 at 2:34 AM, Luca Coelho <luca@coelho.fi> wrote:
-> Hi,
->
-> I have updated all the firmwares we currently support.
->
-> Please pull or let me know if there are any issues.
->
-> Cheers,
-> Luca.
->
->
-> The following changes since commit 8c1e439c967a50f0698d61aafdba3841aff10db0:
->
->   amdgpu: update vce firmware for Polaris (2018-04-02 09:26:24 -0400)
->
-> are available in the Git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git tags/iwlwifi-fw-2018-04-06
+Triggers cfg80211_sta_mon_rssi_notify with the corresponding event when
+station signal goes out of configured threshold. It uses rx data signal
+and compare with rssi value given by user. This rssi threshold is
+station specific. This event will be useful for the user application
+like steering to take decision on the particular station.
 
-Pulled and pushed out.
+Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+---
+ include/net/mac80211.h  |  7 ++++++
+ net/mac80211/rx.c       | 65 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/sta_info.h |  4 +++
+ 3 files changed, 75 insertions(+), 1 deletion(-)
 
-josh
-
->
-> for you to fetch changes up to 50c132306e524dc9038d4a42205921730a3add24:
->
->   iwlwifi: update firmwares for 3160, 3168 and 7265 (2018-04-04 00:15:23 +0300)
->
-> ----------------------------------------------------------------
-> iwlwifi: updata all currently supported FWs
->
-> * Update FWs for 3160, 7260 and 7265;
-> * Update FWs for 3168 and 7265D;
-> * Update FWs for 8000C and 8265;
-> * Update FWs for 9000 and 9260.
->
-> ----------------------------------------------------------------
-> Luca Coelho (2):
->       iwlwifi: add some new FW versions and update older ones
->       iwlwifi: update firmwares for 3160, 3168 and 7265
->
->  WHENCE                            |  26 +++++++++++++++++++-------
->  iwlwifi-3160-17.ucode             | Bin 918268 -> 918268 bytes
->  iwlwifi-3168-29.ucode             | Bin 1036372 -> 1036276 bytes
->  iwlwifi-7260-17.ucode             | Bin 1049340 -> 1049340 bytes
->  iwlwifi-7265-17.ucode             | Bin 1180412 -> 1180412 bytes
->  iwlwifi-7265D-29.ucode            | Bin 1036528 -> 1036432 bytes
->  iwlwifi-8000C-36.ucode            | Bin 0 -> 2486572 bytes
->  iwlwifi-8265-36.ucode             | Bin 0 -> 2498044 bytes
->  iwlwifi-9000-pu-b0-jf-b0-38.ucode | Bin 0 -> 2520568 bytes
->  iwlwifi-9260-th-b0-jf-b0-38.ucode | Bin 0 -> 2521412 bytes
->  10 files changed, 19 insertions(+), 7 deletions(-)
->  create mode 100644 iwlwifi-8000C-36.ucode
->  create mode 100644 iwlwifi-8265-36.ucode
->  create mode 100644 iwlwifi-9000-pu-b0-jf-b0-38.ucode
->  create mode 100644 iwlwifi-9260-th-b0-jf-b0-38.ucode
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d2279b2..7b3d505 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -803,6 +803,13 @@ enum mac80211_rate_control_flags {
+ };
+ 
+ 
++/*
++ * How many frames need to have been used in average station's
++ * signal strength before checking against the threshold
++ */
++#define IEEE80211_STA_SIGNAL_AVE_MIN_COUNT	4
++
++
+ /* there are 40 bytes if you don't need the rateset to be kept */
+ #define IEEE80211_TX_INFO_DRIVER_DATA_SIZE 40
+ 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 03102af..d21f5b1 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1536,6 +1536,66 @@ void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *pubsta, u8 tid)
+ 	return RX_CONTINUE;
+ }
+ 
++static void ieee80211_sta_rx_signal_thold_check(struct ieee80211_rx_data *rx)
++{
++	struct sta_info *sta = rx->sta;
++	struct ieee80211_bss_conf *bss_conf = &rx->sdata->vif.bss_conf;
++
++	if (!wiphy_ext_feature_isset(rx->local->hw.wiphy,
++				NL80211_EXT_FEATURE_STA_MON_RSSI_CONFIG))
++		return;
++
++	sta->count_rx_signal++;
++	if (sta->count_rx_signal < IEEE80211_STA_SIGNAL_AVE_MIN_COUNT)
++		return;
++
++	if (sta->rssi_thold && bss_conf->enable_beacon) {
++		int last_event = sta->last_sta_mon_event_signal;
++		int thold = sta->rssi_thold;
++		int hyst = sta->rssi_hyst;
++		int sig = -ewma_signal_read(&sta->rx_stats_avg.signal);
++
++		if (sig < thold &&
++		    (last_event == 0 || sig < last_event - hyst)) {
++			sta->last_sta_mon_event_signal = sig;
++			cfg80211_sta_mon_rssi_notify(
++				rx->sdata->dev, sta->addr,
++				NL80211_STA_MON_RSSI_THRESHOLD_EVENT_LOW,
++				sig, GFP_ATOMIC);
++		} else if (sig > thold &&
++			   (last_event == 0 || sig > last_event + hyst)) {
++			sta->last_sta_mon_event_signal = sig;
++			cfg80211_sta_mon_rssi_notify(
++				rx->sdata->dev, sta->addr,
++				NL80211_STA_MON_RSSI_THRESHOLD_EVENT_HIGH,
++				sig, GFP_ATOMIC);
++		}
++	}
++
++	if (sta->rssi_low) {
++		int last_event = sta->last_sta_mon_event_signal;
++		int sig = -ewma_signal_read(&sta->rx_stats_avg.signal);
++		int low = sta->rssi_low;
++		int high = sta->rssi_high;
++
++		if (sig < low &&
++		    (last_event == 0 || last_event >= low)) {
++			sta->last_sta_mon_event_signal = sig;
++			cfg80211_sta_mon_rssi_notify(
++				rx->sdata->dev, sta->addr,
++				NL80211_STA_MON_RSSI_THRESHOLD_EVENT_LOW,
++				sig, GFP_ATOMIC);
++		} else if (sig > high &&
++			   (last_event == 0 || last_event <= high)) {
++			sta->last_sta_mon_event_signal = sig;
++			cfg80211_sta_mon_rssi_notify(
++				rx->sdata->dev, sta->addr,
++				NL80211_STA_MON_RSSI_THRESHOLD_EVENT_HIGH,
++				sig, GFP_ATOMIC);
++		}
++	}
++}
++
+ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ {
+@@ -1591,6 +1651,7 @@ void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *pubsta, u8 tid)
+ 	if (!(status->flag & RX_FLAG_NO_SIGNAL_VAL)) {
+ 		sta->rx_stats.last_signal = status->signal;
+ 		ewma_signal_add(&sta->rx_stats_avg.signal, -status->signal);
++		ieee80211_sta_rx_signal_thold_check(rx);
+ 	}
+ 
+ 	if (status->chains) {
+@@ -4032,9 +4093,11 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
+ 	/* statistics part of ieee80211_rx_h_sta_process() */
+ 	if (!(status->flag & RX_FLAG_NO_SIGNAL_VAL)) {
+ 		stats->last_signal = status->signal;
+-		if (!fast_rx->uses_rss)
++		if (!fast_rx->uses_rss) {
+ 			ewma_signal_add(&sta->rx_stats_avg.signal,
+ 					-status->signal);
++			ieee80211_sta_rx_signal_thold_check(rx);
++		}
+ 	}
+ 
+ 	if (status->chains) {
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 701eb37..5d6b763 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -493,6 +493,9 @@ struct ieee80211_sta_rx_stats {
+  * @last_sta_mon_event_signal: Last signal strength average for a station
+  *	that triggered a sta_mon event. 0 indicates that no event has been
+  *	generated for the current association
++ * @count_rx_signal: Number of data frames used in ave_sta_signal. This can be
++ *	used to avoid generating less reliable station rssi cross events that
++ *	would be based only on couple of received frames.
+  */
+ struct sta_info {
+ 	/* General information, mostly static */
+@@ -598,6 +601,7 @@ struct sta_info {
+ 	s32 rssi_low;
+ 	s32 rssi_high;
+ 	int last_sta_mon_event_signal;
++	unsigned int count_rx_signal;
+ 
+ 	/* keep last! */
+ 	struct ieee80211_sta sta;
+-- 
+1.9.1
