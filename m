@@ -1,197 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40668 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754675AbeDTKtm (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41814 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754711AbeDTMnk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Apr 2018 06:49:42 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 20 Apr 2018 13:49:26 +0300
-Message-Id: <20180420104926.8816-10-luca@coelho.fi> (sfid-20180420_124947_905807_A86BC056)
-In-Reply-To: <20180420104926.8816-1-luca@coelho.fi>
-References: <20180420104926.8816-1-luca@coelho.fi>
-Subject: [PATCH 9/9] nl80211: Add wmm rule attribute to NL80211_CMD_GET_WIPHY dump command.
+        Fri, 20 Apr 2018 08:43:40 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 20 Apr 2018 18:13:39 +0530
+From: govinds@codeaurora.org
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        Kalle Valo <kvalo@codeaurora.org>, pillair@codeaurora.org,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH v2 4/4] ath10k: Enable sta idle power save
+In-Reply-To: <5AD9A1DF.6060007@broadcom.com>
+References: <1523966821-21903-1-git-send-email-pillair@codeaurora.org>
+ <1523966821-21903-5-git-send-email-pillair@codeaurora.org>
+ <946e582c-2438-872b-eec8-25d9dcb994d9@dd-wrt.com>
+ <7a06a34a5fcb97e07a8d79b4d689e781@codeaurora.org>
+ <87604oodt4.fsf@kamboji.qca.qualcomm.com>
+ <a7dd1b94951725c61034f5be6744b725@codeaurora.org>
+ <8736zrjgq6.fsf@kamboji.qca.qualcomm.com>
+ <c48c1bae-04c9-55d0-fdb9-d9ae8f7cb843@dd-wrt.com>
+ <5AD9A1DF.6060007@broadcom.com>
+Message-ID: <0c70fb177d5ca9be7b81384b06d60949@codeaurora.org> (sfid-20180420_144344_891287_31535B84)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+On 2018-04-20 13:46, Arend van Spriel wrote:
+> On 4/20/2018 9:21 AM, Sebastian Gottschall wrote:
+>> 
+>>>> Yes this is WIFI chip set level power-save(based on idleness) and 
+>>>> not
+>>>> related to protocol power save. FW will turn off/scale down the
+>>>> resources(clock/rails) based on opportunity(when ever idle mode is
+>>>> detected). This power save is mostly done in disconnected state. I 
+>>>> am
+>>>> not really sure when framework/user-space triggers power-save
+>>>> config(iw dev <devname> set power_save on/off). Then doing this from
+>>>> user-space will be unnecessarily toggling this config or may not be
+>>>> setting at disconnected state.
+>>> I think that 'set power_save' commands affects struct
+>>> ieee80211_bss_conf::ps parameter and I don't think it should be used 
+>>> in
+>>> this case. We already have ath10k_config_ps() for 802.11 level of 
+>>> power
+>>> saving.
+>>> 
+>>> Arend again proposed runtime-pm with which I'm not very familiar. But
+>>> why would we want to disable this? Doesn't it make sense to have this
+>>> feature always enabled to save power? wcn3990 is a chip for a mobile
+>>> device anyway.
+>> it might be made for mobile devices but who knows how it is used by 
+>> the
+>> market.
 
-This will serve userspace entity to maintain its regulatory limitation.
-More specifcally APs can use this data to calculate the WMM IE when
-building: beacons, probe responses, assoc responses etc...
+I guess having this enabled by default is safe as 
+WMI_PDEV_PARAM_UNSUPPORTED
+protects for those version which does not support this pdev param.
 
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/uapi/linux/nl80211.h | 28 ++++++++++++++++++
- net/wireless/nl80211.c       | 57 +++++++++++++++++++++++++++++++++---
- 2 files changed, 81 insertions(+), 4 deletions(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 15daf5e2638d..04c9b97aa5fc 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -11,6 +11,7 @@
-  * Copyright 2008 Jouni Malinen <jouni.malinen@atheros.com>
-  * Copyright 2008 Colin McCabe <colin@cozybit.com>
-  * Copyright 2015-2017	Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -3141,6 +3142,29 @@ enum nl80211_band_attr {
- 
- #define NL80211_BAND_ATTR_HT_CAPA NL80211_BAND_ATTR_HT_CAPA
- 
-+/**
-+ * enum nl80211_wmm_rule - regulatory wmm rule
-+ *
-+ * @__NL80211_WMMR_INVALID: attribute number 0 is reserved
-+ * @NL80211_WMMR_CW_MIN: Minimum contention window slot.
-+ * @NL80211_WMMR_CW_MAX: Maximum contention window slot.
-+ * @NL80211_WMMR_AIFSN: Arbitration Inter Frame Space.
-+ * @NL80211_WMMR_TXOP: Maximum allowed tx operation time.
-+ * @nl80211_WMMR_MAX: highest possible wmm rule.
-+ * @__NL80211_WMMR_LAST: Internal use.
-+ */
-+enum nl80211_wmm_rule {
-+	__NL80211_WMMR_INVALID,
-+	NL80211_WMMR_CW_MIN,
-+	NL80211_WMMR_CW_MAX,
-+	NL80211_WMMR_AIFSN,
-+	NL80211_WMMR_TXOP,
-+
-+	/* keep last */
-+	__NL80211_WMMR_LAST,
-+	NL80211_WMMR_MAX = __NL80211_WMMR_LAST - 1
-+};
-+
- /**
-  * enum nl80211_frequency_attr - frequency attributes
-  * @__NL80211_FREQUENCY_ATTR_INVALID: attribute number 0 is reserved
-@@ -3190,6 +3214,9 @@ enum nl80211_band_attr {
-  *	on this channel in current regulatory domain.
-  * @NL80211_FREQUENCY_ATTR_NO_10MHZ: 10 MHz operation is not allowed
-  *	on this channel in current regulatory domain.
-+ * @NL80211_FREQUENCY_ATTR_WMM: this channel has wmm limitations.
-+ *	This is a nested attribute that contains the wmm limitation per AC.
-+ *	(see &enum nl80211_wmm_rule)
-  * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
-  *	currently defined
-  * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
-@@ -3218,6 +3245,7 @@ enum nl80211_frequency_attr {
- 	NL80211_FREQUENCY_ATTR_IR_CONCURRENT,
- 	NL80211_FREQUENCY_ATTR_NO_20MHZ,
- 	NL80211_FREQUENCY_ATTR_NO_10MHZ,
-+	NL80211_FREQUENCY_ATTR_WMM,
- 
- 	/* keep last */
- 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ff28f8feeb09..016d0a1de576 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4,6 +4,7 @@
-  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright 2015-2017	Intel Deutschland GmbH
-+ * Copyright (C) 2018 Intel Corporation
-  */
- 
- #include <linux/if.h>
-@@ -645,7 +646,43 @@ static inline void *nl80211hdr_put(struct sk_buff *skb, u32 portid, u32 seq,
- 	return genlmsg_put(skb, portid, seq, &nl80211_fam, flags, cmd);
- }
- 
--static int nl80211_msg_put_channel(struct sk_buff *msg,
-+static int nl80211_msg_put_wmm_rules(struct sk_buff *msg,
-+				     const struct ieee80211_reg_rule *rule)
-+{
-+	int j;
-+	struct nlattr *nl_wmm_rules =
-+		nla_nest_start(msg, NL80211_FREQUENCY_ATTR_WMM);
-+
-+	if (!nl_wmm_rules)
-+		goto nla_put_failure;
-+
-+	for (j = 0; j < IEEE80211_NUM_ACS; j++) {
-+		struct nlattr *nl_wmm_rule = nla_nest_start(msg, j);
-+
-+		if (!nl_wmm_rule)
-+			goto nla_put_failure;
-+
-+		if (nla_put_u16(msg, NL80211_WMMR_CW_MIN,
-+				rule->wmm_rule->client[j].cw_min) ||
-+		    nla_put_u16(msg, NL80211_WMMR_CW_MAX,
-+				rule->wmm_rule->client[j].cw_max) ||
-+		    nla_put_u8(msg, NL80211_WMMR_AIFSN,
-+			       rule->wmm_rule->client[j].aifsn) ||
-+		    nla_put_u8(msg, NL80211_WMMR_TXOP,
-+			       rule->wmm_rule->client[j].cot))
-+			goto nla_put_failure;
-+
-+		nla_nest_end(msg, nl_wmm_rule);
-+	}
-+	nla_nest_end(msg, nl_wmm_rules);
-+
-+	return 0;
-+
-+nla_put_failure:
-+	return -ENOBUFS;
-+}
-+
-+static int nl80211_msg_put_channel(struct sk_buff *msg, struct wiphy *wiphy,
- 				   struct ieee80211_channel *chan,
- 				   bool large)
- {
-@@ -721,6 +758,16 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
- 			DBM_TO_MBM(chan->max_power)))
- 		goto nla_put_failure;
- 
-+	if (large) {
-+		const struct ieee80211_reg_rule *rule =
-+			freq_reg_info(wiphy, chan->center_freq);
-+
-+		if (!IS_ERR(rule) && rule->wmm_rule) {
-+			if (nl80211_msg_put_wmm_rules(msg, rule))
-+				goto nla_put_failure;
-+		}
-+	}
-+
- 	return 0;
- 
-  nla_put_failure:
-@@ -1631,7 +1678,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 					chan = &sband->channels[i];
- 
- 					if (nl80211_msg_put_channel(
--							msg, chan,
-+							msg, &rdev->wiphy, chan,
- 							state->split))
- 						goto nla_put_failure;
- 
-@@ -14320,7 +14367,8 @@ void nl80211_send_beacon_hint_event(struct wiphy *wiphy,
- 	nl_freq = nla_nest_start(msg, NL80211_ATTR_FREQ_BEFORE);
- 	if (!nl_freq)
- 		goto nla_put_failure;
--	if (nl80211_msg_put_channel(msg, channel_before, false))
-+
-+	if (nl80211_msg_put_channel(msg, wiphy, channel_before, false))
- 		goto nla_put_failure;
- 	nla_nest_end(msg, nl_freq);
- 
-@@ -14328,7 +14376,8 @@ void nl80211_send_beacon_hint_event(struct wiphy *wiphy,
- 	nl_freq = nla_nest_start(msg, NL80211_ATTR_FREQ_AFTER);
- 	if (!nl_freq)
- 		goto nla_put_failure;
--	if (nl80211_msg_put_channel(msg, channel_after, false))
-+
-+	if (nl80211_msg_put_channel(msg, wiphy, channel_after, false))
- 		goto nla_put_failure;
- 	nla_nest_end(msg, nl_freq);
- 
--- 
-2.17.0
+> Reading the explanation above it does not make sense to use
+> runtime-pm. That would only come into play if the host driver would
+> actually control the resources being turned off/scaled down.
+> 
+> So this is purely reducing power-consumption of the chip. However, it
+> would be good to know the consequences in terms of responsiveness to
+> firmware commands for instance when requesting a scan operation.
+
+Exit latency is around 8-10 ms, so i guess this delta should be ok.
+
+> Another thing to consider is to provide user-space with possibility to
+> change this configuration (maybe through debugfs?).
+
+
+In case any one wants to measure power no's with/without this config, 
+just giving
+provision to disable may be useful.
+
+
+BR,
+Govind
