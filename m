@@ -1,133 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:12719 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755376AbeDWQfS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 12:35:18 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [RESEND 13/33] staging: wilc1000: rename variable using datatype in their name in add_key()
-Date: Mon, 23 Apr 2018 22:03:15 +0530
-Message-ID: <1524501215-4963-14-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183526_646176_C1AA73EA)
-In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga06.intel.com ([134.134.136.31]:38882 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754591AbeDTMju (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 20 Apr 2018 08:39:50 -0400
+Message-ID: <1524227986.21176.467.camel@linux.intel.com> (sfid-20180420_144004_488034_1A1270D7)
+Subject: Re: [RESEND][PATCH 2/4] NFC: st21nfca: Fix memory OOB and leak
+ issues in connectivity events handler
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Amit Pundir <amit.pundir@linaro.org>,
+        lkml <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org
+Cc: Samuel Ortiz <sameo@linux.intel.com>,
+        Christophe Ricard <christophe.ricard@gmail.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        John Stultz <john.stultz@linaro.org>,
+        Dmitry Shmidt <dimitrysh@google.com>,
+        Todd Kjos <tkjos@google.com>,
+        Android Kernel Team <kernel-team@android.com>,
+        Suren Baghdasaryan <surenb@google.com>
+Date: Fri, 20 Apr 2018 15:39:46 +0300
+In-Reply-To: <1524045904-7005-3-git-send-email-amit.pundir@linaro.org>
+References: <1524045904-7005-1-git-send-email-amit.pundir@linaro.org>
+         <1524045904-7005-3-git-send-email-amit.pundir@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup changes to use variable name as per linux coding style.
+On Wed, 2018-04-18 at 15:35 +0530, Amit Pundir wrote:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 32 +++++++++++------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+>  		if (skb->data[transaction->aid_len + 2] !=
+> -		    NFC_EVT_TRANSACTION_PARAMS_TAG)
+> +		    NFC_EVT_TRANSACTION_PARAMS_TAG ||
+> +		    skb->len < transaction->aid_len + transaction-
+> >params_len + 4) {
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 963a0e1..0f63c43 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -868,9 +868,9 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 	struct wilc_priv *priv;
- 	const u8 *rx_mic = NULL;
- 	const u8 *tx_mic = NULL;
--	u8 u8mode = NO_ENCRYPT;
--	u8 u8gmode = NO_ENCRYPT;
--	u8 u8pmode = NO_ENCRYPT;
-+	u8 mode = NO_ENCRYPT;
-+	u8 gmode = NO_ENCRYPT;
-+	u8 pmode = NO_ENCRYPT;
- 	enum AUTHTYPE auth_type = ANY;
- 	struct wilc *wl;
- 	struct wilc_vif *vif;
-@@ -889,13 +889,13 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 			auth_type = OPEN_SYSTEM;
- 
- 			if (params->cipher == WLAN_CIPHER_SUITE_WEP40)
--				u8mode = ENCRYPT_ENABLED | WEP;
-+				mode = ENCRYPT_ENABLED | WEP;
- 			else
--				u8mode = ENCRYPT_ENABLED | WEP | WEP_EXTENDED;
-+				mode = ENCRYPT_ENABLED | WEP | WEP_EXTENDED;
- 
- 			wilc_add_wep_key_bss_ap(vif, params->key,
- 						params->key_len, key_index,
--						u8mode, auth_type);
-+						mode, auth_type);
- 			break;
- 		}
- 		if (memcmp(params->key, priv->wep_key[key_index], params->key_len)) {
-@@ -924,11 +924,11 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 
- 			if (!pairwise) {
- 				if (params->cipher == WLAN_CIPHER_SUITE_TKIP)
--					u8gmode = ENCRYPT_ENABLED | WPA | TKIP;
-+					gmode = ENCRYPT_ENABLED | WPA | TKIP;
- 				else
--					u8gmode = ENCRYPT_ENABLED | WPA2 | AES;
-+					gmode = ENCRYPT_ENABLED | WPA2 | AES;
- 
--				priv->wilc_groupkey = u8gmode;
-+				priv->wilc_groupkey = gmode;
- 
- 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
- 					tx_mic = params->key + 24;
-@@ -953,13 +953,13 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 				wilc_add_rx_gtk(vif, params->key, keylen,
- 						key_index, params->seq_len,
- 						params->seq, rx_mic,
--						tx_mic, AP_MODE, u8gmode);
-+						tx_mic, AP_MODE, gmode);
- 
- 			} else {
- 				if (params->cipher == WLAN_CIPHER_SUITE_TKIP)
--					u8pmode = ENCRYPT_ENABLED | WPA | TKIP;
-+					pmode = ENCRYPT_ENABLED | WPA | TKIP;
- 				else
--					u8pmode = priv->wilc_groupkey | AES;
-+					pmode = priv->wilc_groupkey | AES;
- 
- 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
- 					tx_mic = params->key + 24;
-@@ -983,13 +983,13 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 
- 				wilc_add_ptk(vif, params->key, keylen,
- 					     mac_addr, rx_mic, tx_mic,
--					     AP_MODE, u8pmode, key_index);
-+					     AP_MODE, pmode, key_index);
- 			}
- 			break;
- 		}
- 
- 		{
--			u8mode = 0;
-+			mode = 0;
- 			if (!pairwise) {
- 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
- 					rx_mic = params->key + 24;
-@@ -1001,7 +1001,7 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 						key_index, params->seq_len,
- 						params->seq, rx_mic,
- 						tx_mic, STATION_MODE,
--						u8mode);
-+						mode);
- 			} else {
- 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
- 					rx_mic = params->key + 24;
-@@ -1011,7 +1011,7 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 
- 				wilc_add_ptk(vif, params->key, keylen,
- 					     mac_addr, rx_mic, tx_mic,
--					     STATION_MODE, u8mode, key_index);
-+					     STATION_MODE, mode, key_index);
- 			}
- 		}
- 		break;
+> +			devm_kfree(dev, transaction);
+
+Oh, no.
+
+This is not memory leak per se, this is bad choice of devm_ API where it
+should use plain kmalloc() / kfree().
+
+>  			return -EPROTO;
+> +		}
+
 -- 
-2.7.4
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
