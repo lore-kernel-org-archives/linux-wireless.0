@@ -1,45 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f175.google.com ([209.85.223.175]:43858 "EHLO
-        mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753584AbeD2SaG (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40638 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754555AbeDTKti (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Apr 2018 14:30:06 -0400
-Received: by mail-io0-f175.google.com with SMTP id t23-v6so7939135ioc.10
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Apr 2018 11:30:05 -0700 (PDT)
-Received: from mail-it0-f42.google.com (mail-it0-f42.google.com. [209.85.214.42])
-        by smtp.gmail.com with ESMTPSA id k92-v6sm2972115iod.22.2018.04.29.11.30.04
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 29 Apr 2018 11:30:05 -0700 (PDT)
-Received: by mail-it0-f42.google.com with SMTP id f65-v6so3526357itd.3
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Apr 2018 11:30:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87in8b8ooy.fsf@purkki.adurom.net>
-References: <20180428014732.4018-1-andrew.zaborowski@intel.com> <87in8b8ooy.fsf@purkki.adurom.net>
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-Date: Sun, 29 Apr 2018 20:30:04 +0200
-Message-ID: <CAOq732JPfbJWyR0RROY-t67p7dOuoHoHS6eaMrZ1j39F1Q0zmg@mail.gmail.com> (sfid-20180429_203012_488292_838F025C)
-Subject: Re: [PATCH] nl80211: Reject disconnect commands except from conn_owner
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 20 Apr 2018 06:49:38 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Date: Fri, 20 Apr 2018 13:49:23 +0300
+Message-Id: <20180420104926.8816-7-luca@coelho.fi> (sfid-20180420_124943_965196_4A0F0113)
+In-Reply-To: <20180420104926.8816-1-luca@coelho.fi>
+References: <20180420104926.8816-1-luca@coelho.fi>
+Subject: [PATCH 6/9] mac80211: remove pointless flags=0 assignment
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 April 2018 at 15:07, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Andrew Zaborowski <andrew.zaborowski@intel.com> writes:
->> Reject NL80211_CMD_DISCONNECT, NL80211_CMD_DISASSOCIATE,
->> NL80211_CMD_DEAUTHENTICATE and NL80211_CMD_ASSOCIATE commands
->> from clients other than the connection owner set in the connect,
->> authenticate or associate commands, if it was set.
->>
->> The main point of this check is to prevent chaos when two processes
->> try to use nl80211 at the same time, it's not a security measure.
->> The same thing should possibly be done for JOIN_IBSS/LEAVE_IBSS and
->> START_AP/STOP_AP.
->
-> s-o-b missing.
+From: Johannes Berg <johannes.berg@intel.com>
 
-True, thanks.  Also I was going to send this as an RFC.
+The data structure is initialized to all zeroes, and
+we already rely on that in other places, so remove the
+pointless assignment to 0.
 
-Best regards
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/sta_info.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 655c3d8b0d80..2d5ffb0a16f6 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -3,6 +3,7 @@
+  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
+  * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -1992,7 +1993,6 @@ static void sta_stats_decode_rate(struct ieee80211_local *local, u16 rate,
+ 		int band = STA_STATS_GET(LEGACY_BAND, rate);
+ 		int rate_idx = STA_STATS_GET(LEGACY_IDX, rate);
+ 
+-		rinfo->flags = 0;
+ 		sband = local->hw.wiphy->bands[band];
+ 		brate = sband->bitrates[rate_idx].bitrate;
+ 		if (rinfo->bw == RATE_INFO_BW_5)
+-- 
+2.17.0
