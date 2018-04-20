@@ -1,54 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:37548 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750778AbeDXOdW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 10:33:22 -0400
-Subject: Re: [PATCH 1/1 RFC] wcn36xx: fix buffer commit logic on TX path
-To: Loic Poulain <loic.poulain@linaro.org>
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Ramon Fried <rfried@codeaurora.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>
-References: <20180410174245.1116-1-daniel@zonque.org>
- <20180410174245.1116-2-daniel@zonque.org>
- <CAMZdPi8C84SC6RPS6yHfAgP7Xukdvw0m=Vqm4cV6HaOh7DX=Gg@mail.gmail.com>
-From: Daniel Mack <daniel@zonque.org>
-Message-ID: <f268b78d-b2f7-5500-1fd1-02ef04e28723@zonque.org> (sfid-20180424_163327_245616_DE38B20C)
-Date: Tue, 24 Apr 2018 16:33:19 +0200
+Received: from smtps.newmedia-net.de ([185.84.6.167]:57505 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753539AbeDTHVh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 20 Apr 2018 03:21:37 -0400
+Subject: Re: [PATCH v2 4/4] ath10k: Enable sta idle power save
+To: Kalle Valo <kvalo@codeaurora.org>, govinds@codeaurora.org
+Cc: pillair@codeaurora.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org, arend.vanspriel@broadcom.com
+References: <1523966821-21903-1-git-send-email-pillair@codeaurora.org>
+ <1523966821-21903-5-git-send-email-pillair@codeaurora.org>
+ <946e582c-2438-872b-eec8-25d9dcb994d9@dd-wrt.com>
+ <7a06a34a5fcb97e07a8d79b4d689e781@codeaurora.org>
+ <87604oodt4.fsf@kamboji.qca.qualcomm.com>
+ <a7dd1b94951725c61034f5be6744b725@codeaurora.org>
+ <8736zrjgq6.fsf@kamboji.qca.qualcomm.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <c48c1bae-04c9-55d0-fdb9-d9ae8f7cb843@dd-wrt.com> (sfid-20180420_092141_417458_99FA3298)
+Date: Fri, 20 Apr 2018 09:21:33 +0200
 MIME-Version: 1.0
-In-Reply-To: <CAMZdPi8C84SC6RPS6yHfAgP7Xukdvw0m=Vqm4cV6HaOh7DX=Gg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <8736zrjgq6.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Loic,
 
-On Wednesday, April 11, 2018 03:30 PM, Loic Poulain wrote:
->>         /* Move the head of the ring to the next empty descriptor */
->> -        ch->head_blk_ctl = ctl->next;
->> +        ch->head_blk_ctl = ctl_skb->next;
->> +
->> +       /* Commit all previous writes and set descriptors to VALID */
->> +       wmb();
-> 
-> Is this first memory barrier really needed? from what I understand, we
-> only need to ensure that the control descriptor is marked valid at the
-> end of the procedure and we don't really care about the paylod one.
-> 
->> +       desc_skb->ctrl = ch->ctrl_skb;
->> +       wmb();
->> +       desc_bd->ctrl = ch->ctrl_bd;
->>
->>         /*
->>          * When connected and trying to send data frame chip can be in sleep
-> 
-> Otherwise, patch makes sense.
+>> Yes this is WIFI chip set level power-save(based on idleness) and not
+>> related to protocol power save. FW will turn off/scale down the
+>> resources(clock/rails) based on opportunity(when ever idle mode is
+>> detected). This power save is mostly done in disconnected state. I am
+>> not really sure when framework/user-space triggers power-save
+>> config(iw dev <devname> set power_save on/off). Then doing this from
+>> user-space will be unnecessarily toggling this config or may not be
+>> setting at disconnected state.
+> I think that 'set power_save' commands affects struct
+> ieee80211_bss_conf::ps parameter and I don't think it should be used in
+> this case. We already have ath10k_config_ps() for 802.11 level of power
+> saving.
+>
+> Arend again proposed runtime-pm with which I'm not very familiar. But
+> why would we want to disable this? Doesn't it make sense to have this
+> feature always enabled to save power? wcn3990 is a chip for a mobile
+> device anyway.
+it might be made for mobile devices but who knows how it is used by the 
+market.
 
-This patch has somehow vanished from patchwork. I am running it since I
-posted it and I can't see it causing any regressions, so I'd like to
-repost. Given that you seem to be in favor of it, can I have your
-Reviewed-by?
+Sebastian
+>
 
+-- 
+Mit freundlichen Grüssen / Regards
 
-Thanks,
-Daniel
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
