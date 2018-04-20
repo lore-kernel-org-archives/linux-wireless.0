@@ -1,71 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f169.google.com ([209.85.128.169]:37650 "EHLO
-        mail-wr0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753178AbeDRPCw (ORCPT
+Received: from mail-it0-f66.google.com ([209.85.214.66]:40655 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750858AbeDTTdk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 11:02:52 -0400
-Received: by mail-wr0-f169.google.com with SMTP id f14-v6so5744735wre.4
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2018 08:02:51 -0700 (PDT)
+        Fri, 20 Apr 2018 15:33:40 -0400
+Cc: andresx7@gmail.com, linux-kernel@vger.kernel.org,
+        gregkh@linuxfoundation.org, mcgrof@kernel.org,
+        alexdeucher@gmail.com, ckoenig.leichtzumerken@gmail.com,
+        arend.vanspriel@broadcom.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 9/9] brcmfmac: use request_firmware_nowait2 to load
+ firmware without warnings
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <20180417153307.3693-1-andresx7@gmail.com>
+ <20180417153307.3693-10-andresx7@gmail.com>
+ <87h8o6i36l.fsf@kamboji.qca.qualcomm.com>
+From: Andres Rodriguez <andresx7@gmail.com>
+Message-ID: <65954790-8579-66ee-9b67-d44e18b4abb3@gmail.com> (sfid-20180420_213358_619559_EDDCBEE8)
+Date: Fri, 20 Apr 2018 15:33:36 -0400
 MIME-Version: 1.0
-In-Reply-To: <87o9ig1s3o.fsf@toke.dk>
-References: <660b1538-0ccb-8f1a-ebe0-632b0e14a46b@web.de> <87o9ig1s3o.fsf@toke.dk>
-From: Steve deRosier <derosier@gmail.com>
-Date: Wed, 18 Apr 2018 08:02:10 -0700
-Message-ID: <CALLGbRJ5RL1POFDcJp9A-1Vb4cq1yHxOCZ-vTwRgq9UWsSSZuw@mail.gmail.com> (sfid-20180418_170314_076002_EDFC3901)
-Subject: Re: ath confusing log message "country IE"
-To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Cc: Bernhard Gabler <Bernhard_Gabler@web.de>,
-        Linux-Wireless mailing list <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <87h8o6i36l.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 18, 2018 at 7:55 AM, Toke H=C3=B8iland-J=C3=B8rgensen <toke@tok=
-e.dk> wrote:
-> Bernhard Gabler <Bernhard_Gabler@web.de> writes:
->
->> Dear all,
->>
->> would it be possible to re-write the log message from
->>     "regdomain ... dynamically updated by country IE"
->> in a less ambiguous way, e.g. to:
->>     "regdomain ... dynamically updated by country-IE"
->>     "regdomain ... dynamically updated by country information element"
->> , please?
->>
->> To the occasional reader, the following system log messages seem to
->> convey that
->>   -  "DE" (Germany) was intended to be used, but
->>   -  "IE" (Ireland) was configured as regdomain.
->>
->>      [ 2723.739071] ath: EEPROM regdomain: 0x8114
->>      [ 2723.739072] ath: EEPROM indicates we should expect a country cod=
-e
->>      [ 2723.739073] ath: doing EEPROM country->regdmn map search
->>      [ 2723.739074] ath: country maps to regdmn code: 0x37
->>      [ 2723.739075] ath: Country alpha2 being used: DE
->>      [ 2723.739076] ath: Regpair used: 0x37
->>      [ 2723.739077] ath: regdomain 0x8114 dynamically updated by country=
- IE
->>
->> Only after intense googling, I now know that IE stands for "information
->> element", not for Ireland. But this is not obvious at. To prevent others
->> from confusion and wasting time on a non-problem, could please someone
->> rewrite the log message?
->
-> Heh, that is a good point, I think. The patch below should fix it; but I
-> worry that the log lines become quite long, then? Maybe better to use
-> "country-IE", but that could also be confused. "country inf.elem"
-> perhaps?
->
 
-Instead of just rewording the message, perhaps adjusting it to show
-more information would make it more clear:
 
-    `regdomain 0x8114 dynamically updated by country I.E. to DE`
+On 2018-04-20 06:26 AM, Kalle Valo wrote:
+> Andres Rodriguez <andresx7@gmail.com> writes:
+> 
+>> This reduces the unnecessary spew when trying to load optional firmware:
+>> "Direct firmware load for ... failed with error -2"
+>>
+>> Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
+>> ---
+>>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 7 ++++---
+>>   1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> With wireless patches always CC linux-wireless list, please. Adding it
+> now.
+> 
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+>> index 091b52979e03..26db3ebd52dc 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+>> @@ -503,8 +503,9 @@ static void brcmf_fw_request_code_done(const struct firmware *fw, void *ctx)
+>>   		goto done;
+>>   
+>>   	fwctx->code = fw;
+>> -	ret = request_firmware_nowait(THIS_MODULE, true, fwctx->nvram_name,
+>> -				      fwctx->dev, GFP_KERNEL, fwctx,
+>> +	ret = request_firmware_nowait(THIS_MODULE, true, false,
+> 
+> A perfect example why enums should be in function calls instead of
+> booleans, that "true, false" tells nothing to me and it would be time
+> consuming to check from headers files what it means. If you had proper
+> enums, for example "FIRMWARE_MODE_FOO, FIRMWARE_STATE_BAR", it would be
+> immediately obvious for the reader what the parameters are. Of course
+> the first boolean was already there before, but maybe change the new
+> boolean to an enum >
 
-Assuming the message two lines higher is related, I know the
-information is already there, but this way the line stands on its own,
-is more information rich, and is also clear.
+Anyone else got any feedback before I re-spin the _nowait() API. I'm on 
+board for the boolean->enum change.
 
-- Steve
+
+>> +				      fwctx->nvram_name, fwctx->dev,
+>> +				      GFP_KERNEL, fwctx,
+>>   				      brcmf_fw_request_nvram_done);
+>>   
+>>   	/* pass NULL to nvram callback for bcm47xx fallback */
+>> @@ -547,7 +548,7 @@ int brcmf_fw_get_firmwares_pcie(struct device *dev, u16 flags,
+>>   	fwctx->domain_nr = domain_nr;
+>>   	fwctx->bus_nr = bus_nr;
+>>   
+>> -	return request_firmware_nowait(THIS_MODULE, true, code, dev,
+>> +	return request_firmware_nowait2(THIS_MODULE, true, false, code, dev,
+>>   				       GFP_KERNEL, fwctx,
+>>   				       brcmf_fw_request_code_done);
+>>   }
+> 
+> Also the number two in the function name is not really telling anything.
+> I think that something like request_firmware_nowait_nowarn() would be
+> better, even if it's so ugly.
+> 
+
+The 2 is meant to signify that this is an new version of the api with 
+different parameters. I don't think we need to codify into the name what 
+the new parameters mean (mostly because when a 2 version of an api is 
+implemented, usage of the original version tends to be discouraged).
+
+If we go for something like _nowait_nowarn(), then we would need to drop 
+the warn parameter altogether.
+
+Another alternative, drop both bool warn and bool uevent and expose take 
+in enum fw_opt directly.
+
+Any thought on exposing the enum directly Luis for _nowait(). I know you 
+mentioned this was for some reason decided against for the rest of the API.
+
+Regards,
+Andres
