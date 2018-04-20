@@ -1,45 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33986 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751360AbeD3K2z (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40606 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754536AbeDTKtf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Apr 2018 06:28:55 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: qtnfmac: fix qtnf_netdev_hard_start_xmit()'s return type
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180424131810.4963-1-luc.vanoostenryck@gmail.com>
-References: <20180424131810.4963-1-luc.vanoostenryck@gmail.com>
-To: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
-Cc: linux-kernel@vger.kernel.org,
-        Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
-        Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Vasily Ulyanov <vulyanov@quantenna.com>,
-        Kees Cook <keescook@chromium.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Message-Id: <20180430102854.CA14360558@smtp.codeaurora.org> (sfid-20180430_122914_879781_DC38CCC2)
-Date: Mon, 30 Apr 2018 10:28:54 +0000 (UTC)
+        Fri, 20 Apr 2018 06:49:35 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 20 Apr 2018 13:49:19 +0300
+Message-Id: <20180420104926.8816-3-luca@coelho.fi> (sfid-20180420_125011_827054_7CCBD552)
+In-Reply-To: <20180420104926.8816-1-luca@coelho.fi>
+References: <20180420104926.8816-1-luca@coelho.fi>
+Subject: [PATCH 2/9] mac80211: use timeout from the AddBA response instead of the request
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luc Van Oostenryck <luc.vanoostenryck@gmail.com> wrote:
+From: Sara Sharon <sara.sharon@intel.com>
 
-> The method ndo_start_xmit() is defined as returning an 'netdev_tx_t',
-> which is a typedef for an enum type, but the implementation in this
-> driver returns an 'int'.
-> 
-> Fix this by returning 'netdev_tx_t' in this driver too.
-> 
-> Signed-off-by: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
-> Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+2016 spec, section 10.24.2 specifies that the block ack
+timeout in the ADD BA request is advisory.
 
-Patch applied to wireless-drivers-next.git, thanks.
+That means we should check the value in the response and
+act upon it (same as buffer size).
 
-3ff6ee28535f qtnfmac: fix qtnf_netdev_hard_start_xmit()'s return type
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/agg-tx.c | 4 ++++
+ net/mac80211/tx.c     | 3 ++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 595c662a61e8..ac4295296514 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -8,6 +8,7 @@
+  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
+  * Copyright 2007-2010, Intel Corporation
+  * Copyright(c) 2015-2017 Intel Deutschland GmbH
++ * Copyright (C) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -970,6 +971,9 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+ 
+ 		sta->ampdu_mlme.addba_req_num[tid] = 0;
+ 
++		tid_tx->timeout =
++			le16_to_cpu(mgmt->u.action.u.addba_resp.timeout);
++
+ 		if (tid_tx->timeout) {
+ 			mod_timer(&tid_tx->session_timer,
+ 				  TU_TO_EXP_TIME(tid_tx->timeout));
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 535de3161a78..05a265cd573d 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -4,6 +4,7 @@
+  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
++ * Copyright (C) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -1135,7 +1136,7 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
+ 	}
+ 
+ 	/* reset session timer */
+-	if (reset_agg_timer && tid_tx->timeout)
++	if (reset_agg_timer)
+ 		tid_tx->last_tx = jiffies;
+ 
+ 	return queued;
 -- 
-https://patchwork.kernel.org/patch/10359851/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.17.0
