@@ -1,69 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46604 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:51856 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751038AbeDEMXN (ORCPT
+        with ESMTP id S1754591AbeDTMBb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Apr 2018 08:23:13 -0400
+        Fri, 20 Apr 2018 08:01:31 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] rsi: Free the unaligned pointer
-References: <20180405112311.GD4218@mwanda>
-        <1522927835.7140.8.camel@sipsolutions.net>
-        <20180405113931.n6q6ix47quuvklyp@mwanda>
-        <20180405114124.v2cgo36uuniirby2@mwanda>
-        <1522928804.7140.10.camel@sipsolutions.net>
-Date: Thu, 05 Apr 2018 15:23:06 +0300
-In-Reply-To: <1522928804.7140.10.camel@sipsolutions.net> (Johannes Berg's
-        message of "Thu, 05 Apr 2018 13:46:44 +0200")
-Message-ID: <87woxletat.fsf@kamboji.qca.qualcomm.com> (sfid-20180405_142316_347510_AF3FB7C2)
+To: <pkshih@realtek.com>
+Cc: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
+        <stable@vger.kernel.org>
+Subject: Re: [PATCH v2] rtlwifi: cleanup 8723be ant_sel definition
+References: <20180420023009.3182-1-pkshih@realtek.com>
+Date: Fri, 20 Apr 2018 15:01:22 +0300
+In-Reply-To: <20180420023009.3182-1-pkshih@realtek.com> (pkshih@realtek.com's
+        message of "Fri, 20 Apr 2018 10:30:09 +0800")
+Message-ID: <87zi1ygk8d.fsf@kamboji.qca.qualcomm.com> (sfid-20180420_140134_562229_27C94695)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+<pkshih@realtek.com> writes:
 
-> On Thu, 2018-04-05 at 14:41 +0300, Dan Carpenter wrote:
->> On Thu, Apr 05, 2018 at 02:39:31PM +0300, Dan Carpenter wrote:
->> > On Thu, Apr 05, 2018 at 01:30:35PM +0200, Johannes Berg wrote:
->> > > On Thu, 2018-04-05 at 14:23 +0300, Dan Carpenter wrote:
->> > > > The problem here is that we allocate "data".  Then we do
->> > > > "data = PTR_ALIGN(data, 8);" and then we free the aligned pointer and
->> > > > not the one we allocated.
->> > > 
->> > > That seems pretty pointless, since kmalloc guarantees such alignment for
->> > > sure. Better to just remove PTR_ALIGN()?
->> > 
->> > Yeah.  You're probably right.  I was thinking that maybe
->> > ARCH_SLAB_MINALIGN was smaller than 8 somewhere but look it it now, I
->> > think it's always 8 or more.
->> > 
->> 
->> Perhaps on certain xtensa variants?
->> 
->> arch/xtensa/include/asm/processor.h:#define ARCH_SLAB_MINALIGN  XCHAL_DATA_WIDTH
->> arch/xtensa/variants/fsf/include/variant/core.h:#define
->> XCHAL_DATA_WIDTH 4 /* data width in bytes */
+> From: Ping-Ke Shih <pkshih@realtek.com>
 >
-> That's ... interesting. The comment on the original of this says it's
-> supposed to be used for "better alignment" (more zero bits), and I'd
-> think that there's lots of code making such assumptions...
+> The module parameter ant_sel is used to control antenna number and path.
+> There is an existing enum ANT_{X2,X1} defined the antenna number, so
+> add a new enum ANT_{MAIN,AUX} to make it readable. After this work,
+> incorrect given values depend on ant_sel were exposed, so refill values
+> according following definition:
+>   ant_sel   ant_num   ant_path  print_label
+>      1      ANT_X1    ANT_AUX        #2
+>      2      ANT_X2    ANT_MAIN       #1
+> Then, a workaround resulted from the incorrect values in halbtcoutsrc.c was
+> removed. These is a existing bug in the workaround while ant_sel=2, but the
+> case is rare use so user is hard to observe this bug.
 >
-> I'd argue it's an xtensa bug, if we need to deal with this everywhere
-> then it might get messy. Mostly we don't have to care, since pointer
-> alignment is sufficient in many cases, but still...
+> The experimental results with single antenna connected to specific path
+> are in following:
+>   ant_sel  ANT_MAIN(#1)  ANT_AUX(#2)
+>      0        -8            -62
+>      1        -62           -10
+>      2        -6            -60
 >
-> Hmm. Dunno what to do here then.
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Cc: Stable <stable@vger.kernel.org> # 4.7+
+> Reviewed-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> v2: Add more description about fixed bugs in end of first paragraph.
 
-IMHO let's just get rid of the ugly PTR_ALIGN(), I strongly doubt it was
-added because of this xtensa "feature" :) If we ever get a bug report
-about this we can then talk with the xtensa folks.
+Sorry, I still don't understand the bug you are fixing. It shouldn't
+take more than one minute to understand a commit log.
+
+I prose that you rewrite the commit log, or at least parts of if it.
+When you are describing a bug don't talk about enums or source files,
+that's an implementation detail, and instead talk how the bug looks like
+from users point of view. For example:
+
+  "On HP laptop model 1234 with Realtex 4321 device users are supposed
+   to use ant_sel module parameter with value 77 to use the correct
+   antenna. But instead rtlwifi incorrectly chose antenna 88 with lower
+   transmit power and that caused packet loss. Fix it so that the user
+   gets better transmit power and..."
+
+(that's of course all made up information as I don't know what the
+actual bug is)
+
+And after that you can write rtlwifi internals in the commit log as much
+as you want :) But there needs to be a clear generic description of the
+bug first and it needs to understandable in one read.
+
+To make this faster I propose that you send the new commit log as a
+reply to this mail and I can then comment faster.
 
 -- 
 Kalle Valo
