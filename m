@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36030 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752467AbeDIKup (ORCPT
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:46115 "EHLO
+        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750972AbeDTQpK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Apr 2018 06:50:45 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Xinming Hu <huxm@marvell.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>
-Subject: Re: [v2 PATCH] mwifiex: parse key management suite from RSN IE
-References: <1523260191-29352-1-git-send-email-huxm@marvell.com>
-Date: Mon, 09 Apr 2018 13:50:38 +0300
-In-Reply-To: <1523260191-29352-1-git-send-email-huxm@marvell.com> (Xinming
-        Hu's message of "Mon, 9 Apr 2018 15:49:51 +0800")
-Message-ID: <87o9isr6v5.fsf@codeaurora.org> (sfid-20180409_125051_508800_C27B20CB)
+        Fri, 20 Apr 2018 12:45:10 -0400
+Date: Fri, 20 Apr 2018 09:45:07 -0700
+From: Mark Greer <mgreer@animalcreek.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Amit Pundir <amit.pundir@linaro.org>,
+        lkml <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Christophe Ricard <christophe.ricard@gmail.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        John Stultz <john.stultz@linaro.org>,
+        Dmitry Shmidt <dimitrysh@google.com>,
+        Todd Kjos <tkjos@google.com>,
+        Android Kernel Team <kernel-team@android.com>,
+        Suren Baghdasaryan <surenb@google.com>
+Subject: Re: [RESEND][PATCH 2/4] NFC: st21nfca: Fix memory OOB and leak
+ issues in connectivity events handler
+Message-ID: <20180420164507.GA22666@animalcreek.com> (sfid-20180420_184525_646234_F77B4F73)
+References: <1524045904-7005-1-git-send-email-amit.pundir@linaro.org>
+ <1524045904-7005-3-git-send-email-amit.pundir@linaro.org>
+ <1524227986.21176.467.camel@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1524227986.21176.467.camel@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Xinming Hu <huxm@marvell.com> writes:
+On Fri, Apr 20, 2018 at 03:39:46PM +0300, Andy Shevchenko wrote:
+> On Wed, 2018-04-18 at 15:35 +0530, Amit Pundir wrote:
+> 
+> >  		if (skb->data[transaction->aid_len + 2] !=
+> > -		    NFC_EVT_TRANSACTION_PARAMS_TAG)
+> > +		    NFC_EVT_TRANSACTION_PARAMS_TAG ||
+> > +		    skb->len < transaction->aid_len + transaction-
+> > >params_len + 4) {
+> 
+> > +			devm_kfree(dev, transaction);
+> 
+> Oh, no.
+> 
+> This is not memory leak per se, this is bad choice of devm_ API where it
+> should use plain kmalloc() / kfree().
 
-> Association failed when using wpa_supplicant with
-> configuration key_mgmt=WPA-PSK-SHA256, and it is noticed
-> that wpa_supplicant set WLAN_AKM_SUITE_PSK_SHA256 in
-> RSN IE, but miss it in start_ap parameters.
->
-> This patch parse key management suite from RSN IE, in
-> case it is missed.
->
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
+Also, there is no check to see if the allocation worked at all.
 
-Shouldn't you fix wpa_supplicant instead of adding a workaround to the
-driver?
-
--- 
-Kalle Valo
+Mark
+--
