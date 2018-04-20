@@ -1,53 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:12177 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754519AbeDWIwf (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40648 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754651AbeDTKtj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 04:52:35 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH v2 00/10] wil6210 patches
-Date: Mon, 23 Apr 2018 11:52:03 +0300
-Message-Id: <1524473533-24524-1-git-send-email-merez@codeaurora.org> (sfid-20180423_105251_494598_50E74BA8)
+        Fri, 20 Apr 2018 06:49:39 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 20 Apr 2018 13:49:24 +0300
+Message-Id: <20180420104926.8816-8-luca@coelho.fi> (sfid-20180420_125008_193590_3311D303)
+In-Reply-To: <20180420104926.8816-1-luca@coelho.fi>
+References: <20180420104926.8816-1-luca@coelho.fi>
+Subject: [PATCH 7/9] mac80211: add api to set CSA counter in mac80211
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes from v1:
-Updated the commit text of "wil6210: force EDMG channel through debugfs"
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-The following patches include multiple wil6210 fixes.
+Sometimes the most updated CSA counter values are known only
+to the device. Add an API to pass this data to mac80211.
 
-Ahmad Masri (1):
-  wil6210: align to latest auto generated wmi.h
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ include/net/mac80211.h | 13 +++++++++++++
+ net/mac80211/tx.c      | 25 +++++++++++++++++++++++++
+ 2 files changed, 38 insertions(+)
 
-Alexei Avshalom Lazar (3):
-  wil6210: disable tracing config option
-  wil6210: force EDMG channel through debugfs
-  wil6210: Initialize reply struct of the WMI commands
-
-Dedy Lansky (4):
-  wil6210: use country specific board file upon reg domain change
-  wil6210: move WMI functionality out of wil_cfg80211_mgmt_tx
-  wil6210: remove unused rx_reorder members
-  wil6210: rate limit wil_rx_refill error
-
-Lior David (2):
-  wil6210: fix call to wil6210_disconnect during unload
-  wil6210: change reply_size arg to u16 in wmi_call
-
- drivers/net/wireless/ath/wil6210/Kconfig      |   2 +-
- drivers/net/wireless/ath/wil6210/cfg80211.c   | 216 ++++++++++---
- drivers/net/wireless/ath/wil6210/debugfs.c    |   6 +-
- drivers/net/wireless/ath/wil6210/main.c       |  39 ++-
- drivers/net/wireless/ath/wil6210/netdev.c     |   8 +-
- drivers/net/wireless/ath/wil6210/rx_reorder.c |   7 +-
- drivers/net/wireless/ath/wil6210/txrx.c       |  12 +-
- drivers/net/wireless/ath/wil6210/wil6210.h    |  23 +-
- drivers/net/wireless/ath/wil6210/wmi.c        | 177 ++++++++---
- drivers/net/wireless/ath/wil6210/wmi.h        | 420 ++++++++++++++++++++++++--
- 10 files changed, 769 insertions(+), 141 deletions(-)
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d2279b2d61aa..52f36c43f35f 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4449,6 +4449,19 @@ static inline struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
+  */
+ u8 ieee80211_csa_update_counter(struct ieee80211_vif *vif);
+ 
++/**
++ * ieee80211_csa_set_counter - request mac80211 to set csa counter
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ * @counter: the new value for the counter
++ *
++ * The csa counter can be changed by the device, this API should be
++ * used by the device driver to update csa counter in mac80211.
++ *
++ * It should never be used together with ieee80211_csa_update_counter(),
++ * as it will cause a race condition around the counter value.
++ */
++void ieee80211_csa_set_counter(struct ieee80211_vif *vif, u8 counter);
++
+ /**
+  * ieee80211_csa_finish - notify mac80211 about channel switch
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 05a265cd573d..34499f6300d8 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -4085,6 +4085,31 @@ u8 ieee80211_csa_update_counter(struct ieee80211_vif *vif)
+ }
+ EXPORT_SYMBOL(ieee80211_csa_update_counter);
+ 
++void ieee80211_csa_set_counter(struct ieee80211_vif *vif, u8 counter)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct beacon_data *beacon = NULL;
++
++	rcu_read_lock();
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP)
++		beacon = rcu_dereference(sdata->u.ap.beacon);
++	else if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
++		beacon = rcu_dereference(sdata->u.ibss.presp);
++	else if (ieee80211_vif_is_mesh(&sdata->vif))
++		beacon = rcu_dereference(sdata->u.mesh.beacon);
++
++	if (!beacon)
++		goto unlock;
++
++	if (counter < beacon->csa_current_counter)
++		beacon->csa_current_counter = counter;
++
++unlock:
++	rcu_read_unlock();
++}
++EXPORT_SYMBOL(ieee80211_csa_set_counter);
++
+ bool ieee80211_csa_is_complete(struct ieee80211_vif *vif)
+ {
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
 -- 
-1.9.1
+2.17.0
