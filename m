@@ -1,60 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:12209 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754308AbeDWIw1 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36090 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753685AbeDTGyk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 04:52:27 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
-Subject: [PATCH v2 05/10] wil6210: change reply_size arg to u16 in wmi_call
-Date: Mon, 23 Apr 2018 11:52:08 +0300
-Message-Id: <1524473533-24524-6-git-send-email-merez@codeaurora.org> (sfid-20180423_105243_006023_A8CF781E)
-In-Reply-To: <1524473533-24524-1-git-send-email-merez@codeaurora.org>
-References: <1524473533-24524-1-git-send-email-merez@codeaurora.org>
+        Fri, 20 Apr 2018 02:54:40 -0400
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [RFC 5/6] mac80211: Add support to configure txrate threshold for station
+Date: Fri, 20 Apr 2018 12:22:50 +0530
+Message-Id: <1524207171-3325-6-git-send-email-tamizhr@codeaurora.org> (sfid-20180420_085444_668222_3C7B34B5)
+In-Reply-To: <1524207171-3325-1-git-send-email-tamizhr@codeaurora.org>
+References: <1524207171-3325-1-git-send-email-tamizhr@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <liord@codeaurora.org>
+This patch add new api to support to configure low and high txrate
+threshold for the connected stations.
 
-Change the type of the argument reply_size from u8 to
-u16 in order to support reply sizes > 255 bytes.
-The driver already supports u16 reply size in all
-other places, this was the only missing change.
-
-Signed-off-by: Lior David <liord@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
 ---
- drivers/net/wireless/ath/wil6210/wil6210.h | 2 +-
- drivers/net/wireless/ath/wil6210/wmi.c     | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/cfg.c      | 36 ++++++++++++++++++++++++++++++++++++
+ net/mac80211/sta_info.h |  5 +++++
+ 2 files changed, 41 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index c765ff2..c81fe1d 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -987,7 +987,7 @@ int wmi_read_hdr(struct wil6210_priv *wil, __le32 ptr,
- int wmi_send(struct wil6210_priv *wil, u16 cmdid, u8 mid, void *buf, u16 len);
- void wmi_recv_cmd(struct wil6210_priv *wil);
- int wmi_call(struct wil6210_priv *wil, u16 cmdid, u8 mid, void *buf, u16 len,
--	     u16 reply_id, void *reply, u8 reply_size, int to_msec);
-+	     u16 reply_id, void *reply, u16 reply_size, int to_msec);
- void wmi_event_worker(struct work_struct *work);
- void wmi_event_flush(struct wil6210_priv *wil);
- int wmi_set_ssid(struct wil6210_vif *vif, u8 ssid_len, const void *ssid);
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 9f2c21b..cdaf80d 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -1426,7 +1426,7 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 0e2047c..0f06b0b 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3778,6 +3778,41 @@ static int ieee80211_set_sta_mon_rssi_range_confg(struct wiphy *wiphy,
+ 	return 0;
  }
  
- int wmi_call(struct wil6210_priv *wil, u16 cmdid, u8 mid, void *buf, u16 len,
--	     u16 reply_id, void *reply, u8 reply_size, int to_msec)
-+	     u16 reply_id, void *reply, u16 reply_size, int to_msec)
- {
- 	int rc;
- 	unsigned long remain;
++static int ieee80211_set_sta_mon_txrate_config(struct wiphy *wiphy,
++					       struct net_device *dev,
++					       const u8 *peer,
++					       u32 low_txrate_thold,
++					       u32 high_txrate_thold)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct sta_info *sta;
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP &&
++	    !wiphy_ext_feature_isset(sdata->local->hw.wiphy,
++			NL80211_EXT_FEATURE_STA_MON_TXRATE_CONFIG))
++		return -EOPNOTSUPP;
++
++	mutex_lock(&sdata->local->sta_mtx);
++
++	sta = sta_info_get_bss(sdata, peer);
++	if (!sta) {
++		mutex_unlock(&sdata->local->sta_mtx);
++		return -ENOENT;
++	}
++
++	if (sta->txrate_low == low_txrate_thold &&
++	    sta->txrate_high == high_txrate_thold)
++		goto unlock;
++
++	sta->txrate_low = low_txrate_thold;
++	sta->txrate_high = high_txrate_thold;
++	sta->last_txrate_event = 0;
++
++unlock:
++	mutex_unlock(&sdata->local->sta_mtx);
++	return 0;
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -3873,4 +3908,5 @@ static int ieee80211_set_sta_mon_rssi_range_confg(struct wiphy *wiphy,
+ 	.tx_control_port = ieee80211_tx_control_port,
+ 	.set_sta_mon_rssi_config = ieee80211_set_sta_mon_rssi_config,
+ 	.set_sta_mon_rssi_range_config = ieee80211_set_sta_mon_rssi_range_confg,
++	.set_sta_mon_txrate_config = ieee80211_set_sta_mon_txrate_config,
+ };
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 5d6b763..14431c7 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -496,6 +496,8 @@ struct ieee80211_sta_rx_stats {
+  * @count_rx_signal: Number of data frames used in ave_sta_signal. This can be
+  *	used to avoid generating less reliable station rssi cross events that
+  *	would be based only on couple of received frames.
++ * @txrate_low: Lower txrate threshold for a station to monitor
++ * @txrate_high: Upper txrate threshold for a station to monitor
+  */
+ struct sta_info {
+ 	/* General information, mostly static */
+@@ -603,6 +605,9 @@ struct sta_info {
+ 	int last_sta_mon_event_signal;
+ 	unsigned int count_rx_signal;
+ 
++	u32 txrate_low;
++	u32 txrate_high;
++
+ 	/* keep last! */
+ 	struct ieee80211_sta sta;
+ };
 -- 
 1.9.1
