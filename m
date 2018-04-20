@@ -1,187 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35636 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750759AbeDIHon (ORCPT
+Received: from ch3vs01.rockwellcollins.com ([205.175.226.27]:64191 "EHLO
+        ch3vs01.rockwellcollins.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755836AbeDTPte (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Apr 2018 03:44:43 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH] mwifiex: parse key management suite from RSN IE
-Date: Mon, 9 Apr 2018 15:44:14 +0800
-Message-ID: <1523259854-23131-1-git-send-email-huxm@marvell.com> (sfid-20180409_094447_926239_A6390C35)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 20 Apr 2018 11:49:34 -0400
+From: Jared Bents <jared.bents@rockwellcollins.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Jared Bents <jared.bents@rockwellcollins.com>
+Subject: [PATCH v1 1/1] ath10k: convert kmemdup to dma_alloc_coherent
+Date: Fri, 20 Apr 2018 10:39:53 -0500
+Message-Id: <1524238793-24481-1-git-send-email-jared.bents@rockwellcollins.com> (sfid-20180420_174943_437333_A0233C6C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Association failed when using wpa_supplicant with
-configuration key_mgmt=WPA-PSK-SHA256, and it is noticed
-that wpa_supplicant set WLAN_AKM_SUITE_PSK_SHA256 in
-RSN IE, but miss it in start_ap parameters.
+Update to convert the use of kmemdup to dma_alloc_coherent as
+dma_alloc_coherent will consider DMA region limits such as
+those seen with CONFIG_FSL_PCI && CONFIG_ZONE_DMA32 whereas
+kmemdup does not take those limitations into account.
 
-This patch parse key management suite from RSN IE, in
-case it is missed.
-
-Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Jared Bents <jared.bents@rockwellcollins.com>
 ---
- drivers/net/wireless/marvell/mwifiex/fw.h      |  1 +
- drivers/net/wireless/marvell/mwifiex/main.h    | 12 ++++
- drivers/net/wireless/marvell/mwifiex/uap_cmd.c | 86 ++++++++++++++++++--------
- 3 files changed, 72 insertions(+), 27 deletions(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 36 ++++++++++-------------------------
+ 1 file changed, 10 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 13cd58e9..2be3ce1 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -413,6 +413,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define KEY_MGMT_NONE               0x04
- #define KEY_MGMT_PSK                0x02
- #define KEY_MGMT_EAP                0x01
-+#define KEY_MGMT_PSK_SHA256         0x100
- #define CIPHER_TKIP                 0x04
- #define CIPHER_AES_CCMP             0x08
- #define VALID_CIPHER_BITMAP         0x0c
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 598e58b..db20132 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -364,6 +364,18 @@ struct ieee_types_generic {
- 	u8 data[IEEE_MAX_IE_SIZE - sizeof(struct ieee_types_header)];
- } __packed;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 3c4c800..8637bfe 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1372,28 +1372,16 @@ static int ath10k_pci_hif_exchange_bmi_msg(struct ath10k *ar,
+ 	if (resp && resp_len && *resp_len == 0)
+ 		return -EINVAL;
  
-+struct ieee_types_rsn {
-+	struct ieee_types_header ieee_hdr;
-+	u8  element_id;
-+	u8  element_len;
-+	u16 rsn_version;
-+	u32 cipher_group;
-+	u16 n_ciphers_pairwise;
-+	u32 ciphers_pairwise[];
-+//	u16 n_akm_suites;
-+//	u32 *akm_suites;
-+} __packed;
-+
- struct ieee_types_bss_co_2040 {
- 	struct ieee_types_header ieee_hdr;
- 	u8 bss_2040co;
-diff --git a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-index 18f7d9b..0a27717 100644
---- a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-@@ -26,9 +26,14 @@
-  */
- int mwifiex_set_secure_params(struct mwifiex_private *priv,
- 			      struct mwifiex_uap_bss_param *bss_config,
--			      struct cfg80211_ap_settings *params) {
-+			      struct cfg80211_ap_settings *params)
-+{
- 	int i;
- 	struct mwifiex_wep_key wep_key;
-+	const struct ieee_types_rsn *rsn_ie = NULL;
-+	const u8 *ie = NULL;
-+	u16 n_akm_suites;
-+	u32 *akm_suites;
- 
- 	if (!params->privacy) {
- 		bss_config->protocol = PROTOCOL_NO_SECURITY;
-@@ -58,36 +63,63 @@ int mwifiex_set_secure_params(struct mwifiex_private *priv,
- 
- 	bss_config->key_mgmt_operation |= KEY_MGMT_ON_HOST;
- 
--	for (i = 0; i < params->crypto.n_akm_suites; i++) {
--		switch (params->crypto.akm_suites[i]) {
--		case WLAN_AKM_SUITE_8021X:
--			if (params->crypto.wpa_versions &
--			    NL80211_WPA_VERSION_1) {
--				bss_config->protocol = PROTOCOL_WPA;
--				bss_config->key_mgmt = KEY_MGMT_EAP;
--			}
--			if (params->crypto.wpa_versions &
--			    NL80211_WPA_VERSION_2) {
--				bss_config->protocol |= PROTOCOL_WPA2;
--				bss_config->key_mgmt = KEY_MGMT_EAP;
-+	if (params->crypto.wpa_versions & NL80211_WPA_VERSION_1)
-+		bss_config->protocol = PROTOCOL_WPA;
-+
-+	if (params->crypto.wpa_versions & NL80211_WPA_VERSION_2)
-+		bss_config->protocol |= PROTOCOL_WPA2;
-+
-+	if (params->crypto.wpa_versions &
-+	    (NL80211_WPA_VERSION_1 | NL80211_WPA_VERSION_2)) {
-+		for (i = 0; i < params->crypto.n_akm_suites; i++) {
-+			switch (params->crypto.akm_suites[i]) {
-+			case WLAN_AKM_SUITE_8021X:
-+					bss_config->key_mgmt = KEY_MGMT_EAP;
-+				break;
-+			case WLAN_AKM_SUITE_PSK:
-+					bss_config->key_mgmt = KEY_MGMT_PSK;
-+				break;
-+			case WLAN_AKM_SUITE_PSK_SHA256:
-+					bss_config->key_mgmt =
-+							KEY_MGMT_PSK_SHA256;
-+				break;
-+			default:
-+				break;
- 			}
--			break;
--		case WLAN_AKM_SUITE_PSK:
--			if (params->crypto.wpa_versions &
--			    NL80211_WPA_VERSION_1) {
--				bss_config->protocol = PROTOCOL_WPA;
--				bss_config->key_mgmt = KEY_MGMT_PSK;
--			}
--			if (params->crypto.wpa_versions &
--			    NL80211_WPA_VERSION_2) {
--				bss_config->protocol |= PROTOCOL_WPA2;
--				bss_config->key_mgmt = KEY_MGMT_PSK;
-+		}
-+
-+		ie = cfg80211_find_ie(WLAN_EID_RSN, params->beacon.tail,
-+				      params->beacon.tail_len);
-+
-+		/* Try to get key management suites from RSN IE */
-+		if (!bss_config->key_mgmt && ie) {
-+			rsn_ie = (struct ieee_types_rsn *)ie;
-+			ie = (u8 *)(rsn_ie->ciphers_pairwise +
-+				    rsn_ie->n_ciphers_pairwise);
-+			n_akm_suites = *((u16 *)ie);
-+			akm_suites = (u32 *)(ie + sizeof(n_akm_suites));
-+
-+			for (i = 0; i < n_akm_suites; i++) {
-+				switch (akm_suites[i]) {
-+				case WLAN_AKM_SUITE_8021X:
-+						bss_config->key_mgmt =
-+								KEY_MGMT_EAP;
-+					break;
-+				case WLAN_AKM_SUITE_PSK:
-+						bss_config->key_mgmt =
-+								KEY_MGMT_PSK;
-+					break;
-+				case WLAN_AKM_SUITE_PSK_SHA256:
-+						bss_config->key_mgmt =
-+							KEY_MGMT_PSK_SHA256;
-+					break;
-+				default:
-+					break;
-+				}
- 			}
--			break;
--		default:
--			break;
- 		}
+-	treq = kmemdup(req, req_len, GFP_KERNEL);
+-	if (!treq)
+-		return -ENOMEM;
+-
+-	req_paddr = dma_map_single(ar->dev, treq, req_len, DMA_TO_DEVICE);
+-	ret = dma_mapping_error(ar->dev, req_paddr);
+-	if (ret) {
++	treq = dma_alloc_coherent(ar->dev, req_len, &req_paddr, GFP_KERNEL);
++	if (!treq) {
+ 		ret = -EIO;
+ 		goto err_dma;
  	}
-+
- 	for (i = 0; i < params->crypto.n_ciphers_pairwise; i++) {
- 		switch (params->crypto.ciphers_pairwise[i]) {
- 		case WLAN_CIPHER_SUITE_WEP40:
++	memcpy(treq, req, req_len);
+ 
+ 	if (resp && resp_len) {
+-		tresp = kzalloc(*resp_len, GFP_KERNEL);
++		tresp = dma_alloc_coherent(ar->dev, *resp_len, &resp_paddr, GFP_KERNEL);
+ 		if (!tresp) {
+-			ret = -ENOMEM;
+-			goto err_req;
+-		}
+-
+-		resp_paddr = dma_map_single(ar->dev, tresp, *resp_len,
+-					    DMA_FROM_DEVICE);
+-		ret = dma_mapping_error(ar->dev, resp_paddr);
+-		if (ret) {
+ 			ret = EIO;
+ 			goto err_req;
+ 		}
+@@ -1422,23 +1410,19 @@ static int ath10k_pci_hif_exchange_bmi_msg(struct ath10k *ar,
+ 	}
+ 
+ err_resp:
++	if (ret == 0 && resp_len) {
++		*resp_len = min(*resp_len, xfer.resp_len);
++		memcpy(resp, tresp, xfer.resp_len);
++	}
+ 	if (resp) {
+ 		u32 unused_buffer;
+ 
+ 		ath10k_ce_revoke_recv_next(ce_rx, NULL, &unused_buffer);
+-		dma_unmap_single(ar->dev, resp_paddr,
+-				 *resp_len, DMA_FROM_DEVICE);
++		dma_free_coherent(ar->dev, *resp_len, tresp, resp_paddr);
+ 	}
+ err_req:
+-	dma_unmap_single(ar->dev, req_paddr, req_len, DMA_TO_DEVICE);
+-
+-	if (ret == 0 && resp_len) {
+-		*resp_len = min(*resp_len, xfer.resp_len);
+-		memcpy(resp, tresp, xfer.resp_len);
+-	}
++	dma_free_coherent(ar->dev, req_len, treq, req_paddr);
+ err_dma:
+-	kfree(treq);
+-	kfree(tresp);
+ 
+ 	return ret;
+ }
 -- 
 1.9.1
