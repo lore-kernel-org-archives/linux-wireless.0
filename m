@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:45608 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753686AbeDZKUG (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47440 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753130AbeDUHu4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Apr 2018 06:20:06 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 0/6] brcmfmac: new pcie fw-api support and cleanup
-Date: Thu, 26 Apr 2018 12:19:59 +0200
-Message-Id: <1524737999-2277-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180426_122010_590761_B68A8D9C)
+        Sat, 21 Apr 2018 03:50:56 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Kees Cook <keescook@chromium.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc: luciano.coelho@intel.com, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: New sparse warning from min_t(): expression using sizeof(void)
+Date: Sat, 21 Apr 2018 10:50:51 +0300
+Message-ID: <87a7txf15w.fsf@kamboji.qca.qualcomm.com> (sfid-20180421_095134_836656_1D9E896B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series contains following:
-  * support for PCIe rev7 firmware api.
-  * include boottime stamp for bss.
-  * check user-space provided P2P DEVICE mac address.
+Hi Kees&Linus,
 
-The series applies to the master branch of wireless-drivers-next repository.
+after upgrading to v4.17-rc1 I started to see this sparse warning from
+min_t():
 
-Arend van Spriel (2):
-  brcmfmac: check p2pdev mac address uniqueness
-  brcmfmac: constify firmware mapping tables
+drivers/net/wireless/ath/ath10k/wmi.c:4620:31: warning: expression using sizeof(void)
 
-Franky Lin (4):
-  brcmfmac: reports boottime_ns while informing bss
-  brcmfmac: use nl80211_band directly to get ieee80211 channel
-  brcmfmac: add hostready indication
-  brcmfmac: coarse support for PCIe shared structure rev7
+I counted 167 such warnings just from ath10k alone and Luca told me that
+he sees similar sparse warnings with iwlwifi as well. My sparse is
+pretty old (v0.5.0-44-g40791b94c56b) but Luca said updating sparse to
+0.5.2 didn't help. I also see this with latest commit from Linus' tree
+(83beed7b2b26).
 
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 34 +++++++++----------
- .../broadcom/brcm80211/brcmfmac/firmware.c         |  2 +-
- .../broadcom/brcm80211/brcmfmac/firmware.h         |  2 +-
- .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.h  |  6 ++--
- .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c |  7 ++++
- .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    | 39 ++++++++++++++++++----
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  2 +-
- .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |  2 +-
- 8 files changed, 64 insertions(+), 30 deletions(-)
+After reverting these two commits the sparse warnings go away:
 
---
-1.9.1
+e9092d0d9796 Fix subtle macro variable shadowing in min_not_zero()
+3c8ba0d61d04 kernel.h: Retain constant expression output for max()/min()
+
+I had to revert e9092d0d9796 due to conflicts but it seems 3c8ba0d61d04
+is the actual commit causing these warnings.
+
+Is there any way to fix it? With ath10k I use sparse a lot and because
+of these warnings sparse is now very annoying to use.
+
+-- 
+Kalle Valo
