@@ -1,54 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:58708 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753602AbeDMLTO (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40816 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750847AbeDVI16 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Apr 2018 07:19:14 -0400
-Received: from mail-lf0-f72.google.com ([209.85.215.72])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <alfonso.sanchez-beato@canonical.com>)
-        id 1f6wjZ-000594-5A
-        for linux-wireless@vger.kernel.org; Fri, 13 Apr 2018 11:19:13 +0000
-Received: by mail-lf0-f72.google.com with SMTP id h22-v6so1868070lfj.21
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Apr 2018 04:19:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87zi27s7pj.fsf@kamboji.qca.qualcomm.com>
-References: <20180412154159.13934-1-alfonso.sanchez-beato@canonical.com> <87zi27s7pj.fsf@kamboji.qca.qualcomm.com>
-From: Alfonso Sanchez-Beato <alfonso.sanchez-beato@canonical.com>
-Date: Fri, 13 Apr 2018 13:19:11 +0200
-Message-ID: <CACM4vuDrEu0fz_hqh17kzuaQ8F8TCCr-uqt1rZttk1m8_fPTaA@mail.gmail.com> (sfid-20180413_131917_357391_F8E68E81)
-Subject: Re: [PATCH] ath6kl: use WMI to set RSN capabilities
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Sun, 22 Apr 2018 04:27:58 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Golan Ben-Ami <golan.ben.ami@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 22 Apr 2018 11:27:35 +0300
+Message-Id: <20180422082745.9743-3-luca@coelho.fi> (sfid-20180422_102820_963905_7BA30AC4)
+In-Reply-To: <20180422082745.9743-1-luca@coelho.fi>
+References: <20180422082745.9743-1-luca@coelho.fi>
+Subject: [PATCH 02/12] iwlwifi: introduce Image Loader (IML) - new firmware image
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 13, 2018 at 12:48 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->
-> Alfonso Sánchez-Beato <alfonso.sanchez-beato@canonical.com> writes:
->
-> > This fixes AP mode when the ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE flag
-> > is not present in the FW. The id of some WMI commands is also fixed
-> > (there was an error in the enum order), and a function to set RSN caps
-> > is added.
-> >
-> > Signed-off-by: Alfonso Sánchez-Beato <alfonso.sanchez-beato@canonical.com>
->
-> What hardware and firmware version? Do note that ids can change between
-> ath6kl firmware branches so even if it works for you it might break some
-> other branch. That's why it's good to document the setup in the commit
-> log.
+From: Golan Ben-Ami <golan.ben.ami@intel.com>
 
-I have tested this in an Atheros QCA6234. kmsg shows this about the fw:
+In future devices a new image will be introduced - IML. The IML, image
+loader, is loaded by the ROM, and as part of the new self-init flow,
+loads the rest of the firmware images to the device.
 
-ath6kl: ar6004 hw 3.0 sdio fw 3.5.0.604 api 1
-ath6kl: firmware supports: 64bit-rates,ap-inactivity-mins
+Store the image, so the ROM can load it to the device.
 
-The fw file is AR6004/hw3.0/fw.ram.bin
+Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/file.h   | 3 +++
+ drivers/net/wireless/intel/iwlwifi/fw/img.h    | 6 ++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c   | 8 ++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 5 +++++
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c   | 3 +++
+ 5 files changed, 25 insertions(+)
 
->
-> --
-> Kalle Valo
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index 9b2805e1e3b1..9d939cbaf6c6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -8,6 +8,7 @@
+  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -35,6 +36,7 @@
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -143,6 +145,7 @@ enum iwl_ucode_tlv_type {
+ 	IWL_UCODE_TLV_FW_DBG_TRIGGER	= 40,
+ 	IWL_UCODE_TLV_FW_GSCAN_CAPA	= 50,
+ 	IWL_UCODE_TLV_FW_MEM_SEG	= 51,
++	IWL_UCODE_TLV_IML		= 52,
+ };
+ 
+ struct iwl_ucode_tlv {
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/img.h b/drivers/net/wireless/intel/iwlwifi/fw/img.h
+index b23ffe12ad84..f4912382b6af 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/img.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/img.h
+@@ -8,6 +8,7 @@
+  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016        Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -35,6 +36,7 @@
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016        Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -241,6 +243,8 @@ enum iwl_fw_type {
+  * @ucode_ver: ucode version from the ucode file
+  * @fw_version: firmware version string
+  * @img: ucode image like ucode_rt, ucode_init, ucode_wowlan.
++ * @iml_len: length of the image loader image
++ * @iml: image loader fw image
+  * @ucode_capa: capabilities parsed from the ucode file.
+  * @enhance_sensitivity_table: device can do enhanced sensitivity.
+  * @init_evtlog_ptr: event log offset for init ucode.
+@@ -267,6 +271,8 @@ struct iwl_fw {
+ 
+ 	/* ucode images */
+ 	struct fw_img img[IWL_UCODE_TYPE_MAX];
++	size_t iml_len;
++	u8 *iml;
+ 
+ 	struct iwl_ucode_capabilities ucode_capa;
+ 	bool enhance_sensitivity_table;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index aa2d5c14e202..4f451a6f20b9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -179,6 +179,7 @@ static void iwl_dealloc_ucode(struct iwl_drv *drv)
+ 	for (i = 0; i < ARRAY_SIZE(drv->fw.dbg_trigger_tlv); i++)
+ 		kfree(drv->fw.dbg_trigger_tlv[i]);
+ 	kfree(drv->fw.dbg_mem_tlv);
++	kfree(drv->fw.iml);
+ 
+ 	for (i = 0; i < IWL_UCODE_TYPE_MAX; i++)
+ 		iwl_free_fw_img(drv, drv->fw.img + i);
+@@ -1126,6 +1127,13 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 			pieces->n_dbg_mem_tlv++;
+ 			break;
+ 			}
++		case IWL_UCODE_TLV_IML: {
++			drv->fw.iml_len = tlv_len;
++			drv->fw.iml = kmemdup(tlv_data, tlv_len, GFP_KERNEL);
++			if (!drv->fw.iml)
++				return -ENOMEM;
++			break;
++			}
+ 		default:
+ 			IWL_DEBUG_INFO(drv, "unknown TLV: %d\n", tlv_type);
+ 			break;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index a92832711683..1b9c627ee34d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -691,6 +691,8 @@ enum iwl_plat_pm_mode {
+  * @wide_cmd_header: true when ucode supports wide command header format
+  * @num_rx_queues: number of RX queues allocated by the transport;
+  *	the transport must set this before calling iwl_drv_start()
++ * @iml_len: the length of the image loader
++ * @iml: a pointer to the image loader itself
+  * @dev_cmd_pool: pool for Tx cmd allocation - for internal use only.
+  *	The user should use iwl_trans_{alloc,free}_tx_cmd.
+  * @rx_mpdu_cmd: MPDU RX command ID, must be assigned by opmode before
+@@ -735,6 +737,9 @@ struct iwl_trans {
+ 
+ 	u8 num_rx_queues;
+ 
++	size_t iml_len;
++	u8 *iml;
++
+ 	/* The following fields are internal only */
+ 	struct kmem_cache *dev_cmd_pool;
+ 	char dev_cmd_pool_name[50];
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index de46e6258a5c..ff1e518096c5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -739,6 +739,9 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	       sizeof(trans->dbg_conf_tlv));
+ 	trans->dbg_trigger_tlv = mvm->fw->dbg_trigger_tlv;
+ 
++	trans->iml = mvm->fw->iml;
++	trans->iml_len = mvm->fw->iml_len;
++
+ 	/* set up notification wait support */
+ 	iwl_notification_wait_init(&mvm->notif_wait);
+ 
+-- 
+2.17.0
