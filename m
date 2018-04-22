@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga18.intel.com ([134.134.136.126]:1993 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754851AbeDTMle (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Apr 2018 08:41:34 -0400
-Message-ID: <1524228089.21176.469.camel@linux.intel.com> (sfid-20180420_144138_767109_3DC500D6)
-Subject: Re: [RESEND][PATCH 4/4] NFC: fdp: Fix possible buffer overflow in
- WCS4000 NFC driver
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Amit Pundir <amit.pundir@linaro.org>,
-        lkml <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Cc: Samuel Ortiz <sameo@linux.intel.com>,
-        Christophe Ricard <christophe.ricard@gmail.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        John Stultz <john.stultz@linaro.org>,
-        Dmitry Shmidt <dimitrysh@google.com>,
-        Todd Kjos <tkjos@google.com>,
-        Android Kernel Team <kernel-team@android.com>,
-        Suren Baghdasaryan <surenb@google.com>
-Date: Fri, 20 Apr 2018 15:41:29 +0300
-In-Reply-To: <1524045904-7005-5-git-send-email-amit.pundir@linaro.org>
-References: <1524045904-7005-1-git-send-email-amit.pundir@linaro.org>
-         <1524045904-7005-5-git-send-email-amit.pundir@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:40906 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751700AbeDVI2T (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 22 Apr 2018 04:28:19 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 22 Apr 2018 11:27:43 +0300
+Message-Id: <20180422082745.9743-11-luca@coelho.fi> (sfid-20180422_102822_131573_3F9540DC)
+In-Reply-To: <20180422082745.9743-1-luca@coelho.fi>
+References: <20180422082745.9743-1-luca@coelho.fi>
+Subject: [PATCH 10/12] iwlwifi: make bitfield a u32 instead of u16
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-04-18 at 15:35 +0530, Amit Pundir wrote:
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> +			if (phy->next_read_size >
-> FDP_NCI_I2C_MAX_PAYLOAD) {
+The bitfield we use in struct iwl_cfg contains 17 bits, but we declare
+it as u16.  The compiler doesn't seem to have any problems with that
+(it probably automatically makes it u32), but it's cleaner to use a
+type that is long enough for all the flags.
 
-> +				dev_dbg(&client->dev, "%s: corrupted
-> packet\n",
-> +					__func__);
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-If Android people would follow the kernel in reasonable time they may
-have noticed Dynamic Debug functionality and how it works.
-
-In this case the __func__ is superfluous.
-
-> +				phy->next_read_size = 5;
-> +				goto flush;
-> +			}
->  		} else {
->  			phy->next_read_size =
-> FDP_NCI_I2C_MIN_PAYLOAD;
->  
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index cfd14e5ea59c..c503b26793f6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -420,7 +420,7 @@ struct iwl_cfg {
+ 	u32 soc_latency;
+ 	u16 nvm_ver;
+ 	u16 nvm_calib_ver;
+-	u16 rx_with_siso_diversity:1,
++	u32 rx_with_siso_diversity:1,
+ 	    bt_shared_single_ant:1,
+ 	    internal_wimax_coex:1,
+ 	    host_interrupt_operation_mode:1,
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+2.17.0
