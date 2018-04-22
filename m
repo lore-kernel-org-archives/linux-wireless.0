@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60846 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756046AbeDXIJS (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:39934 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753426AbeDVSyW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 04:09:18 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: add dynamic vlan support
-References: <1524232653-22573-1-git-send-email-mpubbise@codeaurora.org>
-Date: Tue, 24 Apr 2018 11:09:13 +0300
-In-Reply-To: <1524232653-22573-1-git-send-email-mpubbise@codeaurora.org>
-        (Manikanta Pubbisetty's message of "Fri, 20 Apr 2018 19:27:33 +0530")
-Message-ID: <87r2n5auvq.fsf@kamboji.qca.qualcomm.com> (sfid-20180424_100935_301087_46D88A40)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 22 Apr 2018 14:54:22 -0400
+Date: Sun, 22 Apr 2018 14:54:20 -0400 (EDT)
+Message-Id: <20180422.145420.1197041027922699603.davem@davemloft.net> (sfid-20180422_205426_785810_8822E20A)
+To: johannes@sipsolutions.net
+Cc: greearb@candelatech.com, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 1/3] ethtool: Support ETHTOOL_GSTATS2 command.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1524151617.3024.25.camel@sipsolutions.net>
+References: <1524119910.3024.12.camel@sipsolutions.net>
+        <173c5f98-36bc-2e52-1e64-3a5f89008d46@candelatech.com>
+        <1524151617.3024.25.camel@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Manikanta Pubbisetty <mpubbise@codeaurora.org> writes:
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Thu, 19 Apr 2018 17:26:57 +0200
 
-> Mutlicast/broadcast traffic destined for a particular vlan group will
-> always be encrypted in software. To enable dynamic VLANs, it requires
-> driver support for sending software encrypted packets.
->
-> In ath10k, sending sw encrypted frames is allowed only when we insmod
-> the driver with cryptmode param set to 1, this configuration disables
-> hardware crypto and enables RAW mode implicitly. Since, enabling raw
-> mode has performance impact, this cannot be considered as an ideal
-> solution for supporting VLANs in the driver.
->
-> As an alternative take, in this approach, cryptographic keys for
-> unicast traffic(per peer PTKs) and keys for non-vlan group traffic
-> will be configured in hardware, allowing hardware encryption for unicast
-> and non-vlan group traffic. Only vlan group traffic will be encrypted in
-> software and pushed to the target with encap mode set to RAW in the TX
-> descriptors.
->
-> Not all firmwares can support this type of key configuration(having few
-> keys installed in hardware and few only in software); for this purpose a
-> new WMI service flag "WMI_SERVICE_PER_PACKET_SW_ENCRYPT" is introduced to
-> advertise this support.
->
-> Also, adding the logic required to send sw encrypted frames in raw mode.
->
-> Tested this change on QCA9984(firmware version 10.4-3.5.3-00057).
->
-> Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+> On Thu, 2018-04-19 at 08:25 -0700, Ben Greear wrote:
+>> 
+>> Maybe this could be in followup patches?  It's going to touch a lot of files,
+>> and might be hell to get merged all at once, and I've never used spatch, so
+>> just maybe someone else will volunteer that part :)
+> 
+> I guess you'll have to ask davem. :)
 
-Your name in patchwork is wrong and hence my script uses the wrong
-name. Please fix it by registering to patchwork[1] where it's possible
-to change your name during registration, but only one time. If that
-doesn't work then send a request to helpdesk@kernel.org and the admins
-can fix it.
+Well, first of all, I really don't like this.
 
-[1] https://patchwork.kernel.org/register/
+The first reason is that every time I see interface foo become foo2,
+foo3 is never far behind it.
 
--- 
-Kalle Valo
+If foo was not extensible enough such that we needed foo2, we beter
+design the new thing with explicitly better extensibility in mind.
+
+Furthermore, what you want here is a specific filter.  Someone else
+will want to filter on another criteria, and the next person will
+want yet another.
+
+This needs to be properly generalized.
+
+And frankly if we had moved to ethtool netlink/devlink by now, we
+could just add a netlink attribute for filtering and not even be
+having this conversation.
