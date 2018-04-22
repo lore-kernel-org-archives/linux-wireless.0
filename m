@@ -1,59 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:39052 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753340AbeDDDDG (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40872 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750916AbeDVI2D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Apr 2018 23:03:06 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH 2/3] mwifiex: always configure firmware mac address during changing virtual interface
-Date: Wed, 4 Apr 2018 11:02:40 +0800
-Message-ID: <1522810961-27521-2-git-send-email-huxm@marvell.com> (sfid-20180404_050310_241904_5C419755)
-In-Reply-To: <1522810961-27521-1-git-send-email-huxm@marvell.com>
-References: <1522810961-27521-1-git-send-email-huxm@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 22 Apr 2018 04:28:03 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Rajat Jain <rajatja@google.com>
+Date: Sun, 22 Apr 2018 11:27:42 +0300
+Message-Id: <20180422082745.9743-10-luca@coelho.fi> (sfid-20180422_102811_216551_4BFFFE4E)
+In-Reply-To: <20180422082745.9743-1-luca@coelho.fi>
+References: <20180422082745.9743-1-luca@coelho.fi>
+Subject: [PATCH 09/12] iwlwifi: pcie: remove non-responsive device
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When interface type changed, firmware using a new connction pointer.
-We need Re-configure the mac address.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
+If we fail to to grab NIC access because the device is not responding
+(i.e. CSR_GP_CNTRL returns 0xFFFFFFFF), remove the device from the PCI
+bus, to avoid any further damage, and to let the user space rescan.
+
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Rajat Jain <rajatja@google.com>
 ---
- drivers/net/wireless/marvell/mwifiex/main.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  6 ++
+ .../wireless/intel/iwlwifi/iwl-modparams.h    |  2 +
+ .../wireless/intel/iwlwifi/pcie/internal.h    |  5 ++
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   | 74 ++++++++++++++++++-
+ 4 files changed, 84 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index cd3fc4e..cef4dea8 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -982,9 +982,6 @@ int mwifiex_set_mac_address(struct mwifiex_private *priv,
- 			mac_addr ^= BIT_ULL(priv->bss_type + 8);
- 			mac_addr += priv->bss_num;
- 		}
--
--		if (mac_addr == old_mac_addr)
--			goto done;
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 4f451a6f20b9..c59ce4f8a5ed 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1850,3 +1850,9 @@ MODULE_PARM_DESC(d0i3_timeout, "Timeout to D0i3 entry when idle (ms)");
  
- 	u64_to_ether_addr(mac_addr, priv->curr_addr);
-@@ -1000,7 +997,6 @@ int mwifiex_set_mac_address(struct mwifiex_private *priv,
- 		return ret;
- 	}
+ module_param_named(disable_11ac, iwlwifi_mod_params.disable_11ac, bool, 0444);
+ MODULE_PARM_DESC(disable_11ac, "Disable VHT capabilities (default: false)");
++
++module_param_named(remove_when_gone,
++		   iwlwifi_mod_params.remove_when_gone, bool,
++		   0444);
++MODULE_PARM_DESC(remove_when_gone,
++		 "Remove dev from PCIe bus if it is deemed inaccessible (default: false)");
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
+index a41c46e63eb1..a7dd8a8cddf9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
+@@ -122,6 +122,7 @@ enum iwl_uapsd_disable {
+  * @lar_disable: disable LAR (regulatory), default = 0
+  * @fw_monitor: allow to use firmware monitor
+  * @disable_11ac: disable VHT capabilities, default = false.
++ * @remove_when_gone: remove an inaccessible device from the PCIe bus.
+  */
+ struct iwl_mod_params {
+ 	int swcrypto;
+@@ -143,6 +144,7 @@ struct iwl_mod_params {
+ 	bool lar_disable;
+ 	bool fw_monitor;
+ 	bool disable_11ac;
++	bool remove_when_gone;
+ };
  
--done:
- 	ether_addr_copy(dev->dev_addr, priv->curr_addr);
- 	return 0;
+ #endif /* #__iwl_modparams_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index cda66340d357..45ea32796cda 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -383,6 +383,8 @@ struct iwl_self_init_dram {
+  * @hw_init_mask: initial unmasked hw causes
+  * @fh_mask: current unmasked fh causes
+  * @hw_mask: current unmasked hw causes
++ * @in_rescan: true if we have triggered a device rescan
++ * @scheduled_for_removal: true if we have scheduled a device removal
+  */
+ struct iwl_trans_pcie {
+ 	struct iwl_rxq *rxq;
+@@ -464,6 +466,9 @@ struct iwl_trans_pcie {
+ 	u32 fh_mask;
+ 	u32 hw_mask;
+ 	cpumask_t affinity_mask[IWL_MAX_RX_HW_QUEUES];
++	u16 tx_cmd_queue_size;
++	bool in_rescan;
++	bool scheduled_for_removal;
+ };
+ 
+ static inline struct iwl_trans_pcie *
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 623476603cd4..6e9a9ecfb11c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -75,6 +75,7 @@
+ #include <linux/gfp.h>
+ #include <linux/vmalloc.h>
+ #include <linux/pm_runtime.h>
++#include <linux/module.h>
+ 
+ #include "iwl-drv.h"
+ #include "iwl-trans.h"
+@@ -1935,6 +1936,29 @@ static void iwl_trans_pcie_set_pmi(struct iwl_trans *trans, bool state)
+ 		clear_bit(STATUS_TPOWER_PMI, &trans->status);
  }
+ 
++struct iwl_trans_pcie_removal {
++	struct pci_dev *pdev;
++	struct work_struct work;
++};
++
++static void iwl_trans_pcie_removal_wk(struct work_struct *wk)
++{
++	struct iwl_trans_pcie_removal *removal =
++		container_of(wk, struct iwl_trans_pcie_removal, work);
++	struct pci_dev *pdev = removal->pdev;
++	char *prop[] = {"EVENT=INACCESSIBLE", NULL};
++
++	dev_err(&pdev->dev, "Device gone - attempting removal\n");
++	kobject_uevent_env(&pdev->dev.kobj, KOBJ_CHANGE, prop);
++	pci_lock_rescan_remove();
++	pci_dev_put(pdev);
++	pci_stop_and_remove_bus_device(pdev);
++	pci_unlock_rescan_remove();
++
++	kfree(removal);
++	module_put(THIS_MODULE);
++}
++
+ static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans,
+ 					   unsigned long *flags)
+ {
+@@ -1977,11 +2001,55 @@ static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans,
+ 			   (BIT(trans->cfg->csr->flag_mac_clock_ready) |
+ 			    CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP), 15000);
+ 	if (unlikely(ret < 0)) {
+-		iwl_trans_pcie_dump_regs(trans);
+-		iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_FORCE_NMI);
++		u32 cntrl = iwl_read32(trans, CSR_GP_CNTRL);
++
+ 		WARN_ONCE(1,
+ 			  "Timeout waiting for hardware access (CSR_GP_CNTRL 0x%08x)\n",
+-			  iwl_read32(trans, CSR_GP_CNTRL));
++			  cntrl);
++
++		iwl_trans_pcie_dump_regs(trans);
++
++		if (iwlwifi_mod_params.remove_when_gone && cntrl == ~0U) {
++			struct iwl_trans_pcie_removal *removal;
++
++			if (trans_pcie->scheduled_for_removal)
++				goto err;
++
++			IWL_ERR(trans, "Device gone - scheduling removal!\n");
++
++			/*
++			 * get a module reference to avoid doing this
++			 * while unloading anyway and to avoid
++			 * scheduling a work with code that's being
++			 * removed.
++			 */
++			if (!try_module_get(THIS_MODULE)) {
++				IWL_ERR(trans,
++					"Module is being unloaded - abort\n");
++				goto err;
++			}
++
++			removal = kzalloc(sizeof(*removal), GFP_ATOMIC);
++			if (!removal) {
++				module_put(THIS_MODULE);
++				goto err;
++			}
++			/*
++			 * we don't need to clear this flag, because
++			 * the trans will be freed and reallocated.
++			*/
++			trans_pcie->scheduled_for_removal = true;
++
++			removal->pdev = to_pci_dev(trans->dev);
++			INIT_WORK(&removal->work, iwl_trans_pcie_removal_wk);
++			pci_dev_get(removal->pdev);
++			schedule_work(&removal->work);
++		} else {
++			iwl_write32(trans, CSR_RESET,
++				    CSR_RESET_REG_FLAG_FORCE_NMI);
++		}
++
++err:
+ 		spin_unlock_irqrestore(&trans_pcie->reg_lock, *flags);
+ 		return false;
+ 	}
 -- 
-1.9.1
+2.17.0
