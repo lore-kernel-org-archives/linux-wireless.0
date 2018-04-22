@@ -1,2139 +1,994 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:39348 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753654AbeDQN5Z (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40810 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750791AbeDVI15 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Apr 2018 09:57:25 -0400
-Received: by mail-wr0-f195.google.com with SMTP id q6so23731804wrd.6
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2018 06:57:24 -0700 (PDT)
-Date: Tue, 17 Apr 2018 15:57:18 +0200 (CEST)
-From: Enrico Mioso <mrkiko.rs@gmail.com>
-To: Kofi Agor <nenekofi@gmail.com>
-cc: Craig Matsuura <cmatsuura@vivint.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Mathias Kresin <dev@kresin.me>,
-        Tom Psyborg <pozega.tomislav@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        Jamie Stuart <jamie@onebillion.org>
-Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
- frame due to full tx queue...?
-In-Reply-To: <CAOt++SeLh_NxcmM=YEMQSv4y9PabS_dT7k4yTxUiqXbac-=iUQ@mail.gmail.com>
-Message-ID: <alpine.LNX.2.21.99.1804171555470.11111@mStation.localdomain> (sfid-20180417_155731_520995_603B2D6B)
-References: <20180123132234.GC2520@redhat.com> <alpine.LNX.2.21.99.1801240917001.13679@mStation.localdomain> <20180124100316.GB3101@redhat.com> <20180301153006.GJ1233@makrotopia.org> <20180307122701.GA10584@redhat.com> <20180307122935.GB10584@redhat.com>
- <d462681a-6a85-f76c-85a0-4e51b8529606@kresin.me> <20180326103551.GA2069@redhat.com> <24f8f4a2-b355-a1b3-d07a-940fc1e50fcc@kresin.me> <20180327171815.GA31338@redhat.com> <20180327174302.GB1206@makrotopia.org> <alpine.LNX.2.21.99.1803280605580.2911@mStation.localdomain>
- <CAOt++SeSQ2j1KuVkbqt77LfznXN7JV0Lx5O8d7-m2VBrz8=85g@mail.gmail.com> <alpine.LNX.2.21.99.1803301642110.31428@mStation.localdomain> <MWHPR02MB3326233159B021143D7278F5D4A10@MWHPR02MB3326.namprd02.prod.outlook.com> <alpine.LNX.2.21.99.1803301931300.5692@mStation.localdomain>
- <CAOt++SeLh_NxcmM=YEMQSv4y9PabS_dT7k4yTxUiqXbac-=iUQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323329-377538820-1523973440=:11111"
+        Sun, 22 Apr 2018 04:27:57 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Golan Ben Ami <golan.ben.ami@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 22 Apr 2018 11:27:34 +0300
+Message-Id: <20180422082745.9743-2-luca@coelho.fi> (sfid-20180422_102815_184645_40589054)
+In-Reply-To: <20180422082745.9743-1-luca@coelho.fi>
+References: <20180422082745.9743-1-luca@coelho.fi>
+Subject: [PATCH 01/12] iwlwifi: allow different csr flags for different device families
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+From: Golan Ben Ami <golan.ben.ami@intel.com>
 
---8323329-377538820-1523973440=:11111
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8BIT
+Different device families may have different flag values
+for passing a message to the fw (i.e. SW_RESET).
+In order to keep the code readable, and avoid conditioning
+upon the family, store a value for each flag, which indicates
+the bit that needs to be enabled.
 
-thank you very very much Kofi and Craig for your work, really. And congratulations.... this is great.
-And technically very very high and skilled.
+Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/cfg/1000.c |  8 ++-
+ drivers/net/wireless/intel/iwlwifi/cfg/2000.c | 13 ++--
+ .../net/wireless/intel/iwlwifi/cfg/22000.c    |  7 ++
+ drivers/net/wireless/intel/iwlwifi/cfg/5000.c |  8 ++-
+ drivers/net/wireless/intel/iwlwifi/cfg/6000.c | 19 ++++--
+ drivers/net/wireless/intel/iwlwifi/cfg/7000.c |  5 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/8000.c |  5 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c |  3 +-
+ .../net/wireless/intel/iwlwifi/iwl-config.h   | 65 +++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h  | 28 +-------
+ .../wireless/intel/iwlwifi/iwl-eeprom-read.c  |  8 ++-
+ .../net/wireless/intel/iwlwifi/mvm/utils.c    |  8 ++-
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |  3 +-
+ .../wireless/intel/iwlwifi/pcie/trans-gen2.c  | 15 +++--
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   | 65 +++++++++++--------
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c  | 16 +++--
+ 16 files changed, 184 insertions(+), 92 deletions(-)
 
-Enrico
-
-
-On Tue, 17 Apr 2018, Kofi Agor wrote:
-
-> Date: Tue, 17 Apr 2018 15:32:57
-> From: Kofi Agor <nenekofi@gmail.com>
-> To: Enrico Mioso <mrkiko.rs@gmail.com>
-> Cc: Craig Matsuura <cmatsuura@vivint.com>,
->     Daniel Golle <daniel@makrotopia.org>,
->     Stanislaw Gruszka <sgruszka@redhat.com>, Mathias Kresin <dev@kresin.me>,
->     Tom Psyborg <pozega.tomislav@gmail.com>,
->     linux-wireless <linux-wireless@vger.kernel.org>,
->     Johannes Berg <johannes.berg@intel.com>, Arnd Bergmann <arnd@arndb.de>,
->     John Crispin <john@phrozen.org>, Felix Fietkau <nbd@nbd.name>,
->     Jamie Stuart <jamie@onebillion.org>
-> Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
->     frame due to full tx queue...?
-> 
-> Hi Enrico,
-> Some minor changes to our patch:
->  1. We (Craig Matsuura) found that disabling/enable the txtasklet worked better than tearing down and recreating the txtasklet each time. It also resolved a kernel oops we were experiencing.
->  2. Cleaned up the patch a bit and gave credit to the developers
->  3. There's a companion patch along with the txqueue patch that I forgot to add when I submitted the txqueue patch the first time. It resolves an rtnl deadlock during device unregistration. This should resolve the ifdown issue you were
->     experiencing.
->  -Thanks, Kofi A.
-> 
-> On Fri, Mar 30, 2018 at 11:33 AM, Enrico Mioso <mrkiko.rs@gmail.com> wrote:
->       To turn it off and on I use the OpenWrt wifi command:
->       wifi down
->
->       turns it off.
->
->       wifi up
->
->       turns it back on.
->
->       thank you very much for your help.
->
->       I suspect you're using something nearer to mt7620A, while the Asus WL-330n3G is based on rt305X I guess.
->
->       Enrico
->
->       See attached .config:
->
->       #
->       # Automatically generated file; DO NOT EDIT.
->       # OpenWrt Configuration
->       #
->       CONFIG_MODULES=y
->       CONFIG_HAVE_DOT_CONFIG=y
->       # CONFIG_TARGET_sunxi is not set
->       # CONFIG_TARGET_apm821xx is not set
->       # CONFIG_TARGET_ath25 is not set
->       # CONFIG_TARGET_ar71xx is not set
->       # CONFIG_TARGET_brcm2708 is not set
->       # CONFIG_TARGET_bcm53xx is not set
->       # CONFIG_TARGET_brcm47xx is not set
->       # CONFIG_TARGET_brcm63xx is not set
->       # CONFIG_TARGET_cns3xxx is not set
->       # CONFIG_TARGET_octeon is not set
->       # CONFIG_TARGET_gemini is not set
->       # CONFIG_TARGET_mpc85xx is not set
->       # CONFIG_TARGET_imx6 is not set
->       # CONFIG_TARGET_mxs is not set
->       # CONFIG_TARGET_adm8668 is not set
->       # CONFIG_TARGET_adm5120 is not set
->       # CONFIG_TARGET_xburst is not set
->       # CONFIG_TARGET_ixp4xx is not set
->       # CONFIG_TARGET_lantiq is not set
->       # CONFIG_TARGET_malta is not set
->       # CONFIG_TARGET_pistachio is not set
->       # CONFIG_TARGET_mvebu is not set
->       # CONFIG_TARGET_kirkwood is not set
->       # CONFIG_TARGET_mediatek is not set
->       CONFIG_TARGET_ramips=y
->       # CONFIG_TARGET_at91 is not set
->       # CONFIG_TARGET_rb532 is not set
->       # CONFIG_TARGET_mcs814x is not set
->       # CONFIG_TARGET_layerscape is not set
->       # CONFIG_TARGET_octeontx is not set
->       # CONFIG_TARGET_oxnas is not set
->       # CONFIG_TARGET_armvirt is not set
->       # CONFIG_TARGET_ipq40xx is not set
->       # CONFIG_TARGET_ipq806x is not set
->       # CONFIG_TARGET_au1000 is not set
->       # CONFIG_TARGET_arc770 is not set
->       # CONFIG_TARGET_archs38 is not set
->       # CONFIG_TARGET_ar7 is not set
->       # CONFIG_TARGET_omap is not set
->       # CONFIG_TARGET_uml is not set
->       # CONFIG_TARGET_zynq is not set
->       # CONFIG_TARGET_x86 is not set
->       # CONFIG_TARGET_ramips_mt7620 is not set
->       # CONFIG_TARGET_ramips_mt7621 is not set
->       # CONFIG_TARGET_ramips_mt76x8 is not set
->       # CONFIG_TARGET_ramips_rt288x is not set
->       CONFIG_TARGET_ramips_rt305x=y
->       # CONFIG_TARGET_ramips_rt3883 is not set
->       # CONFIG_TARGET_MULTI_PROFILE is not set
->       # CONFIG_TARGET_ramips_rt305x_Default is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_px-4885-4M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_px-4885-8M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_carambola is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_a5-v11 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_w502u is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_freestation5 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wr6202 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_mr-102n is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_air3gii is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_ALL02393G is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_all0256n-4M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_all0256n-8M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_all5002 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_all5003 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_asl26555-8M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_asl26555-16M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_atp-52b is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_awapn2403 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_awm002-evb-4M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_awm002-evb-8M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_rt-g32-b1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_rt-n10-plus is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_rt-n13u is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wl-330n is not set
->       CONFIG_TARGET_ramips_rt305x_DEVICE_wl-330n3g=y
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_hw550-3g is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_f5d8235-v2 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_f7c027 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_whr-g300n is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dap-1350 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_DCS930 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_DCS930LB1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dir-300-b1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dir-300-b7 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dir-320-b1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dir-600-b1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dir-610-a1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dir-615-d is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dir-615-h1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dir-620-a1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dir-620-d1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_dwr-512-b is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wizard8800 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_3g-6200n is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_3g-6200nl is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_esr-9753 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_fonera20n is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_mpr-a1 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_mpr-a2 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_broadway is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_hlk-rm04 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_ht-tm02 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_hg255d is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_d105 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_m2m is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_jhr-n805r is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_jhr-n825r is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_jhr-n926r is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_mofi3500-3gn is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_nw718 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wnce2001 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_bc2 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wt1520-4M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wt1520-8M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_nixcore-x1-16M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_nixcore-x1-8M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_miniembplug is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_miniembwifi is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_psr-680w is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_mzk-dp150n is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_mzk-w300nh2 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_mzk-wdpr is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_ip2202 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_m3 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_m4-4M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_m4-8M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_x5 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_x8 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_pwh2004 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_rt5350f-olinuxino is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_rt5350f-olinuxino-evb is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_v22rw-2x2 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_WL-341V3 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wl-351 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_sl-r7205 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wcr-150gn is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_tew-638apb-v2 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_tew-714tru is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_rut5xx is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_3g150b is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_3g300m is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_w150m is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_w306r-v20 is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_ur-326n4g is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_ur-336un is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_vocore-16M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_vocore-8M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wizfi630a is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wr512-3gn-4M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_wr512-3gn-8M is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_ncs601w is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_xdxrn502j is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_kn is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_nbg-419n is not set
->       # CONFIG_TARGET_ramips_rt305x_DEVICE_nbg-419n2 is not set
->       CONFIG_HAS_SUBTARGETS=y
->       CONFIG_HAS_DEVICES=y
->       CONFIG_TARGET_BOARD="ramips"
->       CONFIG_TARGET_SUBTARGET="rt305x"
->       CONFIG_TARGET_PROFILE="DEVICE_wl-330n3g"
->       CONFIG_TARGET_ARCH_PACKAGES="mipsel_24kc"
->       CONFIG_DEFAULT_TARGET_OPTIMIZATION="-Os -pipe -mno-branch-likely -mips32r2 -mtune=24kc"
->       CONFIG_CPU_TYPE="24kc"
->       CONFIG_LINUX_4_9=y
->       CONFIG_DEFAULT_base-files=y
->       CONFIG_DEFAULT_busybox=y
->       CONFIG_DEFAULT_dnsmasq=y
->       CONFIG_DEFAULT_dropbear=y
->       CONFIG_DEFAULT_firewall=y
->       CONFIG_DEFAULT_fstools=y
->       CONFIG_DEFAULT_ip6tables=y
->       CONFIG_DEFAULT_iptables=y
->       CONFIG_DEFAULT_iwinfo=y
->       CONFIG_DEFAULT_kmod-gpio-button-hotplug=y
->       CONFIG_DEFAULT_kmod-ipt-offload=y
->       CONFIG_DEFAULT_kmod-leds-gpio=y
->       CONFIG_DEFAULT_kmod-rt2800-soc=y
->       CONFIG_DEFAULT_libc=y
->       CONFIG_DEFAULT_libgcc=y
->       CONFIG_DEFAULT_logd=y
->       CONFIG_DEFAULT_mtd=y
->       CONFIG_DEFAULT_netifd=y
->       CONFIG_DEFAULT_odhcp6c=y
->       CONFIG_DEFAULT_odhcpd-ipv6only=y
->       CONFIG_DEFAULT_opkg=y
->       CONFIG_DEFAULT_ppp=y
->       CONFIG_DEFAULT_ppp-mod-pppoe=y
->       CONFIG_DEFAULT_swconfig=y
->       CONFIG_DEFAULT_uci=y
->       CONFIG_DEFAULT_uclient-fetch=y
->       CONFIG_DEFAULT_wpad-mini=y
->       CONFIG_AUDIO_SUPPORT=y
->       CONFIG_GPIO_SUPPORT=y
->       CONFIG_USB_SUPPORT=y
->       CONFIG_USES_DEVICETREE=y
->       CONFIG_USES_INITRAMFS=y
->       CONFIG_USES_SQUASHFS=y
->       CONFIG_HAS_MIPS16=y
->       CONFIG_mipsel=y
->       CONFIG_ARCH="mipsel"
->
->       #
->       # Target Images
->       #
->       # CONFIG_TARGET_ROOTFS_INITRAMFS is not set
->       CONFIG_EXTERNAL_CPIO=""
->
->       #
->       # Root filesystem archives
->       #
->       # CONFIG_TARGET_ROOTFS_CPIOGZ is not set
->       # CONFIG_TARGET_ROOTFS_TARGZ is not set
->
->       #
->       # Root filesystem images
->       #
->       # CONFIG_TARGET_ROOTFS_EXT4FS is not set
->       CONFIG_TARGET_ROOTFS_SQUASHFS=y
->       CONFIG_TARGET_SQUASHFS_BLOCK_SIZE=256
->       CONFIG_TARGET_UBIFS_FREE_SPACE_FIXUP=y
->       CONFIG_TARGET_UBIFS_JOURNAL_SIZE=""
->
->       #
->       # Image Options
->       #
->
->       #
->       # Global build settings
->       #
->       # CONFIG_ALL_NONSHARED is not set
->       # CONFIG_ALL_KMODS is not set
->       # CONFIG_ALL is not set
->       # CONFIG_BUILDBOT is not set
->       CONFIG_SIGNED_PACKAGES=y
->
->       #
->       # General build options
->       #
->       # CONFIG_DISPLAY_SUPPORT is not set
->       CONFIG_BUILD_PATENTED=y
->       # CONFIG_BUILD_NLS is not set
->       CONFIG_SHADOW_PASSWORDS=y
->       # CONFIG_CLEAN_IPKG is not set
->       # CONFIG_INCLUDE_CONFIG is not set
->       # CONFIG_COLLECT_KERNEL_DEBUG is not set
->
->       #
->       # Kernel build options
->       #
->       CONFIG_KERNEL_BUILD_USER=""
->       CONFIG_KERNEL_BUILD_DOMAIN=""
->       CONFIG_KERNEL_PRINTK=y
->       # CONFIG_KERNEL_CRASHLOG is not set
->       # CONFIG_KERNEL_SWAP is not set
->       CONFIG_KERNEL_DEBUG_FS=y
->       CONFIG_KERNEL_MIPS_FPU_EMULATOR=y
->       # CONFIG_KERNEL_PERF_EVENTS is not set
->       # CONFIG_KERNEL_PROFILING is not set
->       # CONFIG_KERNEL_KALLSYMS is not set
->       # CONFIG_KERNEL_FTRACE is not set
->       # CONFIG_KERNEL_DEBUG_KERNEL is not set
->       # CONFIG_KERNEL_DEBUG_INFO is not set
->       # CONFIG_KERNEL_DYNAMIC_DEBUG is not set
->       # CONFIG_KERNEL_KPROBES is not set
->       # CONFIG_KERNEL_AIO is not set
->       # CONFIG_KERNEL_FHANDLE is not set
->       # CONFIG_KERNEL_FANOTIFY is not set
->       # CONFIG_KERNEL_BLK_DEV_BSG is not set
->       CONFIG_KERNEL_MAGIC_SYSRQ=y
->       # CONFIG_KERNEL_DEBUG_PINCTRL is not set
->       # CONFIG_KERNEL_DEBUG_GPIO is not set
->       # CONFIG_KERNEL_ELF_CORE is not set
->       # CONFIG_KERNEL_PROVE_LOCKING is not set
->       # CONFIG_KERNEL_PRINTK_TIME is not set
->       # CONFIG_KERNEL_SLABINFO is not set
->       # CONFIG_KERNEL_PROC_PAGE_MONITOR is not set
->       # CONFIG_KERNEL_KEXEC is not set
->       # CONFIG_USE_RFKILL is not set
->       # CONFIG_USE_SPARSE is not set
->       # CONFIG_KERNEL_DEVTMPFS is not set
->       # CONFIG_KERNEL_KEYS is not set
->       # CONFIG_KERNEL_CGROUPS is not set
->       # CONFIG_KERNEL_NAMESPACES is not set
->       # CONFIG_KERNEL_LXC_MISC is not set
->       # CONFIG_KERNEL_SECCOMP_FILTER is not set
->       # CONFIG_KERNEL_SECCOMP is not set
->       # CONFIG_KERNEL_IP_MROUTE is not set
->       CONFIG_KERNEL_IPV6=y
->       CONFIG_KERNEL_IPV6_MULTIPLE_TABLES=y
->       CONFIG_KERNEL_IPV6_SUBTREES=y
->       CONFIG_KERNEL_IPV6_MROUTE=y
->       # CONFIG_KERNEL_IPV6_PIMSM_V2 is not set
->       # CONFIG_KERNEL_IP_PNP is not set
->
->       #
->       # Filesystem ACL and attr support options
->       #
->       # CONFIG_USE_FS_ACL_ATTR is not set
->       # CONFIG_KERNEL_FS_POSIX_ACL is not set
->       # CONFIG_KERNEL_BTRFS_FS_POSIX_ACL is not set
->       # CONFIG_KERNEL_EXT4_FS_POSIX_ACL is not set
->       # CONFIG_KERNEL_F2FS_FS_POSIX_ACL is not set
->       # CONFIG_KERNEL_JFFS2_FS_POSIX_ACL is not set
->       # CONFIG_KERNEL_TMPFS_POSIX_ACL is not set
->       # CONFIG_KERNEL_CIFS_ACL is not set
->       # CONFIG_KERNEL_HFS_FS_POSIX_ACL is not set
->       # CONFIG_KERNEL_HFSPLUG_FS_POSIX_ACL is not set
->       # CONFIG_KERNEL_NFS_ACL_SUPPORT is not set
->       # CONFIG_KERNEL_NFS_V3_ACL_SUPPORT is not set
->       # CONFIG_KERNEL_NFSD_V2_ACL_SUPPORT is not set
->       # CONFIG_KERNEL_NFSD_V3_ACL_SUPPORT is not set
->       # CONFIG_KERNEL_REISER_FS_POSIX_ACL is not set
->       # CONFIG_KERNEL_XFS_POSIX_ACL is not set
->       # CONFIG_KERNEL_JFS_POSIX_ACL is not set
->       # CONFIG_KERNEL_DEVMEM is not set
->       # CONFIG_KERNEL_DEVKMEM is not set
->
->       #
->       # Package build options
->       #
->       # CONFIG_DEBUG is not set
->       CONFIG_IPV6=y
->
->       #
->       # Stripping options
->       #
->       # CONFIG_NO_STRIP is not set
->       # CONFIG_USE_STRIP is not set
->       CONFIG_USE_SSTRIP=y
->       # CONFIG_STRIP_KERNEL_EXPORTS is not set
->       # CONFIG_USE_MKLIBS is not set
->       CONFIG_USE_UCLIBCXX=y
->       # CONFIG_USE_LIBSTDCXX is not set
->
->       #
->       # Hardening build options
->       #
->       CONFIG_PKG_CHECK_FORMAT_SECURITY=y
->       CONFIG_PKG_ASLR_PIE=y
->       CONFIG_PKG_CC_STACKPROTECTOR_NONE=y
->       # CONFIG_PKG_CC_STACKPROTECTOR_STRONG is not set
->       # CONFIG_KERNEL_CC_STACKPROTECTOR_NONE is not set
->       # CONFIG_KERNEL_CC_STACKPROTECTOR_REGULAR is not set
->       CONFIG_KERNEL_CC_STACKPROTECTOR_STRONG=y
->       # CONFIG_PKG_FORTIFY_SOURCE_NONE is not set
->       CONFIG_PKG_FORTIFY_SOURCE_1=y
->       # CONFIG_PKG_FORTIFY_SOURCE_2 is not set
->       # CONFIG_PKG_RELRO_NONE is not set
->       # CONFIG_PKG_RELRO_PARTIAL is not set
->       CONFIG_PKG_RELRO_FULL=y
->       # CONFIG_DEVEL is not set
->       # CONFIG_BROKEN is not set
->       CONFIG_BINARY_FOLDER=""
->       CONFIG_DOWNLOAD_FOLDER=""
->       CONFIG_LOCALMIRROR=""
->       CONFIG_AUTOREBUILD=y
->       # CONFIG_AUTOREMOVE is not set
->       CONFIG_BUILD_SUFFIX=""
->       CONFIG_TARGET_ROOTFS_DIR=""
->       # CONFIG_CCACHE is not set
->       CONFIG_EXTERNAL_KERNEL_TREE=""
->       CONFIG_KERNEL_GIT_CLONE_URI=""
->       CONFIG_EXTRA_OPTIMIZATION="-fno-caller-saves -fno-plt"
->       CONFIG_TARGET_OPTIMIZATION="-Os -pipe -mno-branch-likely -mips32r2 -mtune=24kc"
->       CONFIG_SOFT_FLOAT=y
->       CONFIG_USE_MIPS16=y
->       # CONFIG_EXTRA_TARGET_ARCH is not set
->       CONFIG_EXTRA_BINUTILS_CONFIG_OPTIONS=""
->       CONFIG_EXTRA_GCC_CONFIG_OPTIONS=""
->       # CONFIG_GCC_DEFAULT_PIE is not set
->       # CONFIG_GCC_DEFAULT_SSP is not set
->       # CONFIG_SJLJ_EXCEPTIONS is not set
->       # CONFIG_INSTALL_GFORTRAN is not set
->       CONFIG_GDB=y
->       CONFIG_USE_MUSL=y
->       CONFIG_SSP_SUPPORT=y
->       CONFIG_BINUTILS_VERSION_2_29_1=y
->       CONFIG_BINUTILS_VERSION="2.29.1"
->       CONFIG_GCC_VERSION="7.3.0"
->       CONFIG_LIBC="musl"
->       CONFIG_TARGET_SUFFIX="musl"
->       # CONFIG_IB is not set
->       # CONFIG_SDK is not set
->       # CONFIG_MAKE_TOOLCHAIN is not set
->       # CONFIG_IMAGEOPT is not set
->       # CONFIG_PREINITOPT is not set
->       CONFIG_TARGET_PREINIT_SUPPRESS_STDERR=y
->       # CONFIG_TARGET_PREINIT_DISABLE_FAILSAFE is not set
->       CONFIG_TARGET_PREINIT_TIMEOUT=2
->       # CONFIG_TARGET_PREINIT_SHOW_NETMSG is not set
->       # CONFIG_TARGET_PREINIT_SUPPRESS_FAILSAFE_NETMSG is not set
->       CONFIG_TARGET_PREINIT_IFNAME=""
->       CONFIG_TARGET_PREINIT_IP="192.168.1.1"
->       CONFIG_TARGET_PREINIT_NETMASK="255.255.255.0"
->       CONFIG_TARGET_PREINIT_BROADCAST="192.168.1.255"
->       # CONFIG_INITOPT is not set
->       CONFIG_TARGET_INIT_PATH="/usr/sbin:/usr/bin:/sbin:/bin"
->       CONFIG_TARGET_INIT_ENV=""
->       CONFIG_TARGET_INIT_CMD="/sbin/init"
->       CONFIG_TARGET_INIT_SUPPRESS_STDERR=y
->       # CONFIG_VERSIONOPT is not set
->       CONFIG_PER_FEED_REPO=y
->       CONFIG_PER_FEED_REPO_ADD_DISABLED=y
->       CONFIG_PER_FEED_REPO_ADD_COMMENTED=y
->       # CONFIG_FEED_packages is not set
->       # CONFIG_FEED_luci is not set
->       # CONFIG_FEED_routing is not set
->       # CONFIG_FEED_telephony is not set
->
->       #
->       # Base system
->       #
->       CONFIG_PACKAGE_base-files=y
->       # CONFIG_PACKAGE_block-mount is not set
->       # CONFIG_PACKAGE_blockd is not set
->       CONFIG_PACKAGE_busybox=y
->       # CONFIG_BUSYBOX_CUSTOM is not set
->       CONFIG_BUSYBOX_DEFAULT_HAVE_DOT_CONFIG=y
->       # CONFIG_BUSYBOX_DEFAULT_DESKTOP is not set
->       # CONFIG_BUSYBOX_DEFAULT_EXTRA_COMPAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEDORA_COMPAT is not set
->       CONFIG_BUSYBOX_DEFAULT_INCLUDE_SUSv2=y
->       # CONFIG_BUSYBOX_DEFAULT_USE_PORTABLE_CODE is not set
->       CONFIG_BUSYBOX_DEFAULT_PLATFORM_LINUX=y
->       CONFIG_BUSYBOX_DEFAULT_SHOW_USAGE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VERBOSE_USAGE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_COMPRESS_USAGE=y
->       # CONFIG_BUSYBOX_DEFAULT_BUSYBOX is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INSTALLER is not set
->       # CONFIG_BUSYBOX_DEFAULT_INSTALL_NO_USR is not set
->       # CONFIG_BUSYBOX_DEFAULT_PAM is not set
->       CONFIG_BUSYBOX_DEFAULT_LONG_OPTS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_DEVPTS=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CLEAN_UP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UTMP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_WTMP is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_PIDFILE=y
->       CONFIG_BUSYBOX_DEFAULT_PID_FILE_PATH="/var/run"
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_SUID=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SUID_CONFIG is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SUID_CONFIG_QUIET is not set
->       # CONFIG_BUSYBOX_DEFAULT_SELINUX is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_PREFER_APPLETS=y
->       CONFIG_BUSYBOX_DEFAULT_BUSYBOX_EXEC_PATH="/proc/self/exe"
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_SYSLOG=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HAVE_RPC is not set
->       # CONFIG_BUSYBOX_DEFAULT_STATIC is not set
->       CONFIG_BUSYBOX_DEFAULT_PIE=y
->       # CONFIG_BUSYBOX_DEFAULT_NOMMU is not set
->       # CONFIG_BUSYBOX_DEFAULT_BUILD_LIBBUSYBOX is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INDIVIDUAL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SHARED_BUSYBOX is not set
->       CONFIG_BUSYBOX_DEFAULT_LFS=y
->       CONFIG_BUSYBOX_DEFAULT_CROSS_COMPILER_PREFIX=""
->       CONFIG_BUSYBOX_DEFAULT_SYSROOT=""
->       CONFIG_BUSYBOX_DEFAULT_EXTRA_CFLAGS=""
->       CONFIG_BUSYBOX_DEFAULT_EXTRA_LDFLAGS=""
->       CONFIG_BUSYBOX_DEFAULT_EXTRA_LDLIBS=""
->       CONFIG_BUSYBOX_DEFAULT_INSTALL_APPLET_SYMLINKS=y
->       # CONFIG_BUSYBOX_DEFAULT_INSTALL_APPLET_HARDLINKS is not set
->       # CONFIG_BUSYBOX_DEFAULT_INSTALL_APPLET_SCRIPT_WRAPPERS is not set
->       # CONFIG_BUSYBOX_DEFAULT_INSTALL_APPLET_DONT is not set
->       # CONFIG_BUSYBOX_DEFAULT_INSTALL_SH_APPLET_SYMLINK is not set
->       # CONFIG_BUSYBOX_DEFAULT_INSTALL_SH_APPLET_HARDLINK is not set
->       # CONFIG_BUSYBOX_DEFAULT_INSTALL_SH_APPLET_SCRIPT_WRAPPER is not set
->       CONFIG_BUSYBOX_DEFAULT_PREFIX="./_install"
->       # CONFIG_BUSYBOX_DEFAULT_DEBUG is not set
->       # CONFIG_BUSYBOX_DEFAULT_DEBUG_PESSIMIZE is not set
->       # CONFIG_BUSYBOX_DEFAULT_DEBUG_SANITIZE is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNIT_TEST is not set
->       # CONFIG_BUSYBOX_DEFAULT_WERROR is not set
->       CONFIG_BUSYBOX_DEFAULT_NO_DEBUG_LIB=y
->       # CONFIG_BUSYBOX_DEFAULT_DMALLOC is not set
->       # CONFIG_BUSYBOX_DEFAULT_EFENCE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_USE_BSS_TAIL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_RTMINMAX is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_BUFFERS_USE_MALLOC is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_BUFFERS_GO_ON_STACK=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_BUFFERS_GO_IN_BSS is not set
->       CONFIG_BUSYBOX_DEFAULT_PASSWORD_MINLEN=6
->       CONFIG_BUSYBOX_DEFAULT_MD5_SMALL=1
->       CONFIG_BUSYBOX_DEFAULT_SHA3_SMALL=1
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FAST_TOP=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_ETC_NETWORKS is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_EDITING=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_EDITING_MAX_LEN=512
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_EDITING_VI is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_EDITING_HISTORY=256
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_EDITING_SAVEHISTORY is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_EDITING_SAVE_ON_EXIT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_REVERSE_SEARCH is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TAB_COMPLETION=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_USERNAME_COMPLETION is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_EDITING_FANCY_PROMPT=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_EDITING_ASK_TERMINAL is not set
->       # CONFIG_BUSYBOX_DEFAULT_LOCALE_SUPPORT is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNICODE_SUPPORT is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNICODE_USING_LOCALE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHECK_UNICODE_IN_ENV is not set
->       CONFIG_BUSYBOX_DEFAULT_SUBST_WCHAR=0
->       CONFIG_BUSYBOX_DEFAULT_LAST_SUPPORTED_WCHAR=0
->       # CONFIG_BUSYBOX_DEFAULT_UNICODE_COMBINING_WCHARS is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNICODE_WIDE_WCHARS is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNICODE_BIDI_SUPPORT is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNICODE_NEUTRAL_TABLE is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNICODE_PRESERVE_BROKEN is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_NON_POSIX_CP=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VERBOSE_CP_MESSAGE is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_USE_SENDFILE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_COPYBUF_KB=4
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SKIP_ROOTFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_MONOTONIC_SYSCALL is not set
->       CONFIG_BUSYBOX_DEFAULT_IOCTL_HEX2STR_ERROR=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HWIB is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SEAMLESS_XZ is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SEAMLESS_LZMA is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SEAMLESS_BZ2 is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_SEAMLESS_GZ=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SEAMLESS_Z is not set
->       # CONFIG_BUSYBOX_DEFAULT_AR is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_AR_LONG_FILENAMES is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_AR_CREATE is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNCOMPRESS is not set
->       CONFIG_BUSYBOX_DEFAULT_GUNZIP=y
->       CONFIG_BUSYBOX_DEFAULT_ZCAT=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_GUNZIP_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_BUNZIP2=y
->       CONFIG_BUSYBOX_DEFAULT_BZCAT=y
->       # CONFIG_BUSYBOX_DEFAULT_UNLZMA is not set
->       # CONFIG_BUSYBOX_DEFAULT_LZCAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_LZMA is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LZMA_FAST is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNXZ is not set
->       # CONFIG_BUSYBOX_DEFAULT_XZCAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_XZ is not set
->       # CONFIG_BUSYBOX_DEFAULT_BZIP2 is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_BZIP2_DECOMPRESS=y
->       # CONFIG_BUSYBOX_DEFAULT_CPIO is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CPIO_O is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CPIO_P is not set
->       # CONFIG_BUSYBOX_DEFAULT_DPKG is not set
->       # CONFIG_BUSYBOX_DEFAULT_DPKG_DEB is not set
->       CONFIG_BUSYBOX_DEFAULT_GZIP=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_GZIP_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_GZIP_FAST=0
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_GZIP_LEVELS is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_GZIP_DECOMPRESS=y
->       # CONFIG_BUSYBOX_DEFAULT_LZOP is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNLZOP is not set
->       # CONFIG_BUSYBOX_DEFAULT_LZOPCAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_LZOP_COMPR_HIGH is not set
->       # CONFIG_BUSYBOX_DEFAULT_RPM is not set
->       # CONFIG_BUSYBOX_DEFAULT_RPM2CPIO is not set
->       CONFIG_BUSYBOX_DEFAULT_TAR=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_CREATE=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_AUTODETECT is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_FROM=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_OLDGNU_COMPATIBILITY is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_OLDSUN_COMPATIBILITY is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_GNU_EXTENSIONS=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_TO_COMMAND is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_UNAME_GNAME is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_NOPRESERVE_TIME is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TAR_SELINUX is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNZIP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UNZIP_CDF is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UNZIP_BZIP2 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UNZIP_LZMA is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UNZIP_XZ is not set
->       CONFIG_BUSYBOX_DEFAULT_BASENAME=y
->       CONFIG_BUSYBOX_DEFAULT_CAT=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CATV is not set
->       CONFIG_BUSYBOX_DEFAULT_CHGRP=y
->       CONFIG_BUSYBOX_DEFAULT_CHMOD=y
->       CONFIG_BUSYBOX_DEFAULT_CHOWN=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHOWN_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_CHROOT=y
->       # CONFIG_BUSYBOX_DEFAULT_CKSUM is not set
->       # CONFIG_BUSYBOX_DEFAULT_COMM is not set
->       CONFIG_BUSYBOX_DEFAULT_CP=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CP_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_CUT=y
->       CONFIG_BUSYBOX_DEFAULT_DATE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_DATE_ISOFMT=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DATE_NANO is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DATE_COMPAT is not set
->       CONFIG_BUSYBOX_DEFAULT_DD=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_DD_SIGNAL_HANDLING=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DD_THIRD_STATUS_LINE is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_DD_IBS_OBS=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DD_STATUS is not set
->       CONFIG_BUSYBOX_DEFAULT_DF=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DF_FANCY is not set
->       CONFIG_BUSYBOX_DEFAULT_DIRNAME=y
->       # CONFIG_BUSYBOX_DEFAULT_DOS2UNIX is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNIX2DOS is not set
->       CONFIG_BUSYBOX_DEFAULT_DU=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_DU_DEFAULT_BLOCKSIZE_1K=y
->       CONFIG_BUSYBOX_DEFAULT_ECHO=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FANCY_ECHO=y
->       CONFIG_BUSYBOX_DEFAULT_ENV=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_ENV_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_EXPAND is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_EXPAND_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_UNEXPAND is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UNEXPAND_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_EXPR=y
->       CONFIG_BUSYBOX_DEFAULT_EXPR_MATH_SUPPORT_64=y
->       # CONFIG_BUSYBOX_DEFAULT_FACTOR is not set
->       CONFIG_BUSYBOX_DEFAULT_FALSE=y
->       # CONFIG_BUSYBOX_DEFAULT_FOLD is not set
->       CONFIG_BUSYBOX_DEFAULT_FSYNC=y
->       CONFIG_BUSYBOX_DEFAULT_HEAD=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FANCY_HEAD=y
->       # CONFIG_BUSYBOX_DEFAULT_HOSTID is not set
->       CONFIG_BUSYBOX_DEFAULT_ID=y
->       # CONFIG_BUSYBOX_DEFAULT_GROUPS is not set
->       # CONFIG_BUSYBOX_DEFAULT_INSTALL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INSTALL_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_LINK is not set
->       CONFIG_BUSYBOX_DEFAULT_LN=y
->       # CONFIG_BUSYBOX_DEFAULT_LOGNAME is not set
->       CONFIG_BUSYBOX_DEFAULT_LS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LS_FILETYPES=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LS_FOLLOWLINKS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LS_RECURSIVE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LS_WIDTH=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LS_SORTFILES=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LS_TIMESTAMPS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LS_USERNAME=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LS_COLOR=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LS_COLOR_IS_DEFAULT=y
->       CONFIG_BUSYBOX_DEFAULT_MD5SUM=y
->       # CONFIG_BUSYBOX_DEFAULT_SHA1SUM is not set
->       CONFIG_BUSYBOX_DEFAULT_SHA256SUM=y
->       # CONFIG_BUSYBOX_DEFAULT_SHA512SUM is not set
->       # CONFIG_BUSYBOX_DEFAULT_SHA3SUM is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_MD5_SHA1_SUM_CHECK=y
->       CONFIG_BUSYBOX_DEFAULT_MKDIR=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MKDIR_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_MKFIFO=y
->       CONFIG_BUSYBOX_DEFAULT_MKNOD=y
->       CONFIG_BUSYBOX_DEFAULT_MV=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MV_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_NICE=y
->       # CONFIG_BUSYBOX_DEFAULT_NL is not set
->       # CONFIG_BUSYBOX_DEFAULT_NOHUP is not set
->       # CONFIG_BUSYBOX_DEFAULT_NPROC is not set
->       # CONFIG_BUSYBOX_DEFAULT_OD is not set
->       # CONFIG_BUSYBOX_DEFAULT_PASTE is not set
->       # CONFIG_BUSYBOX_DEFAULT_PRINTENV is not set
->       CONFIG_BUSYBOX_DEFAULT_PRINTF=y
->       CONFIG_BUSYBOX_DEFAULT_PWD=y
->       CONFIG_BUSYBOX_DEFAULT_READLINK=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_READLINK_FOLLOW=y
->       # CONFIG_BUSYBOX_DEFAULT_REALPATH is not set
->       CONFIG_BUSYBOX_DEFAULT_RM=y
->       CONFIG_BUSYBOX_DEFAULT_RMDIR=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_RMDIR_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_SEQ=y
->       # CONFIG_BUSYBOX_DEFAULT_SHRED is not set
->       # CONFIG_BUSYBOX_DEFAULT_SHUF is not set
->       CONFIG_BUSYBOX_DEFAULT_SLEEP=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FANCY_SLEEP=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FLOAT_SLEEP is not set
->       CONFIG_BUSYBOX_DEFAULT_SORT=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SORT_BIG is not set
->       # CONFIG_BUSYBOX_DEFAULT_SPLIT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SPLIT_FANCY is not set
->       # CONFIG_BUSYBOX_DEFAULT_STAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_STAT_FORMAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_STAT_FILESYSTEM is not set
->       # CONFIG_BUSYBOX_DEFAULT_STTY is not set
->       # CONFIG_BUSYBOX_DEFAULT_SUM is not set
->       CONFIG_BUSYBOX_DEFAULT_SYNC=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SYNC_FANCY is not set
->       # CONFIG_BUSYBOX_DEFAULT_TAC is not set
->       CONFIG_BUSYBOX_DEFAULT_TAIL=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FANCY_TAIL=y
->       CONFIG_BUSYBOX_DEFAULT_TEE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TEE_USE_BLOCK_IO=y
->       CONFIG_BUSYBOX_DEFAULT_TEST=y
->       CONFIG_BUSYBOX_DEFAULT_TEST1=y
->       CONFIG_BUSYBOX_DEFAULT_TEST2=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TEST_64=y
->       CONFIG_BUSYBOX_DEFAULT_TOUCH=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TOUCH_NODEREF is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TOUCH_SUSV3=y
->       CONFIG_BUSYBOX_DEFAULT_TR=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TR_CLASSES is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TR_EQUIV is not set
->       CONFIG_BUSYBOX_DEFAULT_TRUE=y
->       # CONFIG_BUSYBOX_DEFAULT_TRUNCATE is not set
->       # CONFIG_BUSYBOX_DEFAULT_TTY is not set
->       CONFIG_BUSYBOX_DEFAULT_UNAME=y
->       CONFIG_BUSYBOX_DEFAULT_UNAME_OSNAME="GNU/Linux"
->       CONFIG_BUSYBOX_DEFAULT_UNIQ=y
->       # CONFIG_BUSYBOX_DEFAULT_UNLINK is not set
->       # CONFIG_BUSYBOX_DEFAULT_USLEEP is not set
->       # CONFIG_BUSYBOX_DEFAULT_UUDECODE is not set
->       # CONFIG_BUSYBOX_DEFAULT_BASE64 is not set
->       # CONFIG_BUSYBOX_DEFAULT_UUENCODE is not set
->       CONFIG_BUSYBOX_DEFAULT_WC=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_WC_LARGE is not set
->       # CONFIG_BUSYBOX_DEFAULT_WHO is not set
->       # CONFIG_BUSYBOX_DEFAULT_W is not set
->       # CONFIG_BUSYBOX_DEFAULT_USERS is not set
->       # CONFIG_BUSYBOX_DEFAULT_WHOAMI is not set
->       CONFIG_BUSYBOX_DEFAULT_YES=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VERBOSE is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_PRESERVE_HARDLINKS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_HUMAN_READABLE=y
->       # CONFIG_BUSYBOX_DEFAULT_CHVT is not set
->       CONFIG_BUSYBOX_DEFAULT_CLEAR=y
->       # CONFIG_BUSYBOX_DEFAULT_DEALLOCVT is not set
->       # CONFIG_BUSYBOX_DEFAULT_DUMPKMAP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FGCONSOLE is not set
->       # CONFIG_BUSYBOX_DEFAULT_KBD_MODE is not set
->       # CONFIG_BUSYBOX_DEFAULT_LOADFONT is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETFONT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SETFONT_TEXTUAL_MAP is not set
->       CONFIG_BUSYBOX_DEFAULT_DEFAULT_SETFONT_DIR=""
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LOADFONT_PSF2 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LOADFONT_RAW is not set
->       # CONFIG_BUSYBOX_DEFAULT_LOADKMAP is not set
->       # CONFIG_BUSYBOX_DEFAULT_OPENVT is not set
->       CONFIG_BUSYBOX_DEFAULT_RESET=y
->       # CONFIG_BUSYBOX_DEFAULT_RESIZE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_RESIZE_PRINT is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETCONSOLE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SETCONSOLE_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETKEYCODES is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETLOGCONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_SHOWKEY is not set
->       CONFIG_BUSYBOX_DEFAULT_MKTEMP=y
->       # CONFIG_BUSYBOX_DEFAULT_PIPE_PROGRESS is not set
->       # CONFIG_BUSYBOX_DEFAULT_RUN_PARTS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_RUN_PARTS_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_RUN_PARTS_FANCY is not set
->       CONFIG_BUSYBOX_DEFAULT_START_STOP_DAEMON=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_START_STOP_DAEMON_FANCY is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_START_STOP_DAEMON_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_WHICH=y
->       CONFIG_BUSYBOX_DEFAULT_AWK=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_AWK_LIBM=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_AWK_GNU_EXTENSIONS=y
->       CONFIG_BUSYBOX_DEFAULT_CMP=y
->       # CONFIG_BUSYBOX_DEFAULT_DIFF is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DIFF_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DIFF_DIR is not set
->       # CONFIG_BUSYBOX_DEFAULT_ED is not set
->       # CONFIG_BUSYBOX_DEFAULT_PATCH is not set
->       CONFIG_BUSYBOX_DEFAULT_SED=y
->       CONFIG_BUSYBOX_DEFAULT_VI=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_MAX_LEN=1024
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_8BIT is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_COLON=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_YANKMARK=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_SEARCH=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_REGEX_SEARCH is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_USE_SIGNALS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_DOT_CMD=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_READONLY=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_SETOPTS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_SET=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_WIN_RESIZE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_ASK_TERMINAL=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_UNDO is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_UNDO_QUEUE is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_VI_UNDO_QUEUE_MAX=0
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_ALLOW_EXEC=y
->       CONFIG_BUSYBOX_DEFAULT_FIND=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_PRINT0=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_MTIME=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_MMIN is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_PERM=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_TYPE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_XDEV=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_MAXDEPTH=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_NEWER=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_INUM is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_EXEC=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_EXEC_PLUS is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_USER=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_GROUP=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_NOT=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_DEPTH=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_PAREN=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_SIZE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_PRUNE=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_DELETE is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_PATH=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_REGEX=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_CONTEXT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FIND_LINKS is not set
->       CONFIG_BUSYBOX_DEFAULT_GREP=y
->       CONFIG_BUSYBOX_DEFAULT_EGREP=y
->       CONFIG_BUSYBOX_DEFAULT_FGREP=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_GREP_CONTEXT=y
->       CONFIG_BUSYBOX_DEFAULT_XARGS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_XARGS_SUPPORT_CONFIRMATION=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_XARGS_SUPPORT_QUOTES=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_XARGS_SUPPORT_TERMOPT=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_XARGS_SUPPORT_ZERO_TERM=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_XARGS_SUPPORT_REPL_STR is not set
->       # CONFIG_BUSYBOX_DEFAULT_BOOTCHARTD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_BOOTCHARTD_BLOATED_HEADER is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_BOOTCHARTD_CONFIG_FILE is not set
->       CONFIG_BUSYBOX_DEFAULT_HALT=y
->       CONFIG_BUSYBOX_DEFAULT_POWEROFF=y
->       CONFIG_BUSYBOX_DEFAULT_REBOOT=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CALL_TELINIT is not set
->       CONFIG_BUSYBOX_DEFAULT_TELINIT_PATH=""
->       # CONFIG_BUSYBOX_DEFAULT_INIT is not set
->       # CONFIG_BUSYBOX_DEFAULT_LINUXRC is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_USE_INITTAB is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_KILL_REMOVED is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_KILL_DELAY=0
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INIT_SCTTY is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INIT_SYSLOG is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INIT_QUIET is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INIT_COREDUMPS is not set
->       CONFIG_BUSYBOX_DEFAULT_INIT_TERMINAL_TYPE=""
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INIT_MODIFY_CMDLINE is not set
->       # CONFIG_BUSYBOX_DEFAULT_MESG is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MESG_ENABLE_ONLY_GROUP is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_SHADOWPASSWDS=y
->       # CONFIG_BUSYBOX_DEFAULT_USE_BB_PWD_GRP is not set
->       # CONFIG_BUSYBOX_DEFAULT_USE_BB_SHADOW is not set
->       # CONFIG_BUSYBOX_DEFAULT_USE_BB_CRYPT is not set
->       # CONFIG_BUSYBOX_DEFAULT_USE_BB_CRYPT_SHA is not set
->       # CONFIG_BUSYBOX_DEFAULT_ADD_SHELL is not set
->       # CONFIG_BUSYBOX_DEFAULT_REMOVE_SHELL is not set
->       # CONFIG_BUSYBOX_DEFAULT_ADDGROUP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_ADDGROUP_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_ADDUSER_TO_GROUP is not set
->       # CONFIG_BUSYBOX_DEFAULT_ADDUSER is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_ADDUSER_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHECK_NAMES is not set
->       CONFIG_BUSYBOX_DEFAULT_LAST_ID=0
->       CONFIG_BUSYBOX_DEFAULT_FIRST_SYSTEM_ID=0
->       CONFIG_BUSYBOX_DEFAULT_LAST_SYSTEM_ID=0
->       # CONFIG_BUSYBOX_DEFAULT_CHPASSWD is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_DEFAULT_PASSWD_ALGO="md5"
->       # CONFIG_BUSYBOX_DEFAULT_CRYPTPW is not set
->       # CONFIG_BUSYBOX_DEFAULT_MKPASSWD is not set
->       # CONFIG_BUSYBOX_DEFAULT_DELUSER is not set
->       # CONFIG_BUSYBOX_DEFAULT_DELGROUP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DEL_USER_FROM_GROUP is not set
->       # CONFIG_BUSYBOX_DEFAULT_GETTY is not set
->       CONFIG_BUSYBOX_DEFAULT_LOGIN=y
->       CONFIG_BUSYBOX_DEFAULT_LOGIN_SESSION_AS_CHILD=y
->       # CONFIG_BUSYBOX_DEFAULT_LOGIN_SCRIPTS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_NOLOGIN is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SECURETTY is not set
->       CONFIG_BUSYBOX_DEFAULT_PASSWD=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_PASSWD_WEAK_CHECK=y
->       # CONFIG_BUSYBOX_DEFAULT_SU is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SU_SYSLOG is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SU_CHECKS_SHELLS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SU_BLANK_PW_NEEDS_SECURE_TTY is not set
->       # CONFIG_BUSYBOX_DEFAULT_SULOGIN is not set
->       # CONFIG_BUSYBOX_DEFAULT_VLOCK is not set
->       # CONFIG_BUSYBOX_DEFAULT_CHATTR is not set
->       # CONFIG_BUSYBOX_DEFAULT_FSCK is not set
->       # CONFIG_BUSYBOX_DEFAULT_LSATTR is not set
->       # CONFIG_BUSYBOX_DEFAULT_TUNE2FS is not set
->       # CONFIG_BUSYBOX_DEFAULT_MODPROBE_SMALL is not set
->       # CONFIG_BUSYBOX_DEFAULT_DEPMOD is not set
->       # CONFIG_BUSYBOX_DEFAULT_INSMOD is not set
->       # CONFIG_BUSYBOX_DEFAULT_LSMOD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LSMOD_PRETTY_2_6_OUTPUT is not set
->       # CONFIG_BUSYBOX_DEFAULT_MODINFO is not set
->       # CONFIG_BUSYBOX_DEFAULT_MODPROBE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MODPROBE_BLACKLIST is not set
->       # CONFIG_BUSYBOX_DEFAULT_RMMOD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CMDLINE_MODULE_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MODPROBE_SMALL_CHECK_ALREADY_LOADED is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_2_4_MODULES is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INSMOD_VERSION_CHECKING is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INSMOD_KSYMOOPS_SYMBOLS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INSMOD_LOADINKMEM is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INSMOD_LOAD_MAP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INSMOD_LOAD_MAP_FULL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHECK_TAINTED_MODULE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INSMOD_TRY_MMAP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MODUTILS_ALIAS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MODUTILS_SYMBOLS is not set
->       CONFIG_BUSYBOX_DEFAULT_DEFAULT_MODULES_DIR=""
->       CONFIG_BUSYBOX_DEFAULT_DEFAULT_DEPMOD_FILE=""
->       # CONFIG_BUSYBOX_DEFAULT_ACPID is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_ACPID_COMPAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_BLKDISCARD is not set
->       # CONFIG_BUSYBOX_DEFAULT_BLKID is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_BLKID_TYPE is not set
->       # CONFIG_BUSYBOX_DEFAULT_BLOCKDEV is not set
->       # CONFIG_BUSYBOX_DEFAULT_CAL is not set
->       CONFIG_BUSYBOX_DEFAULT_DMESG=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_DMESG_PRETTY=y
->       # CONFIG_BUSYBOX_DEFAULT_FALLOCATE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FATATTR is not set
->       # CONFIG_BUSYBOX_DEFAULT_FBSET is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FBSET_FANCY is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FBSET_READMODE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FDFORMAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FDISK is not set
->       # CONFIG_BUSYBOX_DEFAULT_FDISK_SUPPORT_LARGE_DISKS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FDISK_WRITABLE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_AIX_LABEL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SGI_LABEL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SUN_LABEL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_OSF_LABEL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_GPT_LABEL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FDISK_ADVANCED is not set
->       # CONFIG_BUSYBOX_DEFAULT_FINDFS is not set
->       CONFIG_BUSYBOX_DEFAULT_FLOCK=y
->       # CONFIG_BUSYBOX_DEFAULT_FDFLUSH is not set
->       # CONFIG_BUSYBOX_DEFAULT_FREERAMDISK is not set
->       # CONFIG_BUSYBOX_DEFAULT_FSCK_MINIX is not set
->       # CONFIG_BUSYBOX_DEFAULT_FSFREEZE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FSTRIM is not set
->       # CONFIG_BUSYBOX_DEFAULT_GETOPT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_GETOPT_LONG is not set
->       CONFIG_BUSYBOX_DEFAULT_HEXDUMP=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HEXDUMP_REVERSE is not set
->       # CONFIG_BUSYBOX_DEFAULT_HD is not set
->       # CONFIG_BUSYBOX_DEFAULT_XXD is not set
->       CONFIG_BUSYBOX_DEFAULT_HWCLOCK=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HWCLOCK_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HWCLOCK_ADJTIME_FHS is not set
->       # CONFIG_BUSYBOX_DEFAULT_IPCRM is not set
->       # CONFIG_BUSYBOX_DEFAULT_IPCS is not set
->       # CONFIG_BUSYBOX_DEFAULT_LOSETUP is not set
->       # CONFIG_BUSYBOX_DEFAULT_LSPCI is not set
->       # CONFIG_BUSYBOX_DEFAULT_LSUSB is not set
->       # CONFIG_BUSYBOX_DEFAULT_MDEV is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MDEV_CONF is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MDEV_RENAME is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MDEV_RENAME_REGEXP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MDEV_EXEC is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MDEV_LOAD_FIRMWARE is not set
->       # CONFIG_BUSYBOX_DEFAULT_MKE2FS is not set
->       # CONFIG_BUSYBOX_DEFAULT_MKFS_EXT2 is not set
->       # CONFIG_BUSYBOX_DEFAULT_MKFS_MINIX is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MINIX2 is not set
->       # CONFIG_BUSYBOX_DEFAULT_MKFS_REISER is not set
->       # CONFIG_BUSYBOX_DEFAULT_MKDOSFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_MKFS_VFAT is not set
->       CONFIG_BUSYBOX_DEFAULT_MKSWAP=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MKSWAP_UUID is not set
->       # CONFIG_BUSYBOX_DEFAULT_MORE is not set
->       CONFIG_BUSYBOX_DEFAULT_MOUNT=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_FAKE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_VERBOSE is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_HELPERS=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_LABEL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_NFS is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_CIFS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_FLAGS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_FSTAB=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_OTHERTAB is not set
->       # CONFIG_BUSYBOX_DEFAULT_NSENTER is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_NSENTER_LONG_OPTS is not set
->       CONFIG_BUSYBOX_DEFAULT_PIVOT_ROOT=y
->       # CONFIG_BUSYBOX_DEFAULT_RDATE is not set
->       # CONFIG_BUSYBOX_DEFAULT_RDEV is not set
->       # CONFIG_BUSYBOX_DEFAULT_READPROFILE is not set
->       # CONFIG_BUSYBOX_DEFAULT_REV is not set
->       # CONFIG_BUSYBOX_DEFAULT_RTCWAKE is not set
->       # CONFIG_BUSYBOX_DEFAULT_SCRIPT is not set
->       # CONFIG_BUSYBOX_DEFAULT_SCRIPTREPLAY is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETARCH is not set
->       # CONFIG_BUSYBOX_DEFAULT_LINUX32 is not set
->       # CONFIG_BUSYBOX_DEFAULT_LINUX64 is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETPRIV is not set
->       # CONFIG_BUSYBOX_DEFAULT_SWAPON is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SWAPON_DISCARD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SWAPON_PRI is not set
->       # CONFIG_BUSYBOX_DEFAULT_SWAPOFF is not set
->       CONFIG_BUSYBOX_DEFAULT_SWITCH_ROOT=y
->       # CONFIG_BUSYBOX_DEFAULT_UEVENT is not set
->       CONFIG_BUSYBOX_DEFAULT_UMOUNT=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_UMOUNT_ALL=y
->       # CONFIG_BUSYBOX_DEFAULT_UNSHARE is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_LOOP=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MOUNT_LOOP_CREATE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MTAB_SUPPORT is not set
->       # CONFIG_BUSYBOX_DEFAULT_VOLUMEID is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_BCACHE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_BTRFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_CRAMFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_EXFAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_EXT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_F2FS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_FAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_HFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_ISO9660 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_JFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_LINUXRAID is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_LINUXSWAP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_LUKS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_NILFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_NTFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_OCFS2 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_REISERFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_ROMFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_SQUASHFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_SYSV is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_UBIFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_UDF is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_VOLUMEID_XFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_ADJTIMEX is not set
->       # CONFIG_BUSYBOX_DEFAULT_BBCONFIG is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_COMPRESS_BBCONFIG is not set
->       # CONFIG_BUSYBOX_DEFAULT_BEEP is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_BEEP_FREQ=0
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_BEEP_LENGTH_MS=0
->       # CONFIG_BUSYBOX_DEFAULT_CHAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHAT_NOFAIL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHAT_TTY_HIFI is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHAT_IMPLICIT_CR is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHAT_SWALLOW_OPTS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHAT_SEND_ESCAPES is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHAT_VAR_ABORT_LEN is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHAT_CLR_ABORT is not set
->       # CONFIG_BUSYBOX_DEFAULT_CHRT is not set
->       # CONFIG_BUSYBOX_DEFAULT_CONSPY is not set
->       CONFIG_BUSYBOX_DEFAULT_CROND=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CROND_D is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CROND_CALL_SENDMAIL is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_CROND_DIR="/etc"
->       CONFIG_BUSYBOX_DEFAULT_CRONTAB=y
->       # CONFIG_BUSYBOX_DEFAULT_DC is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DC_LIBM is not set
->       # CONFIG_BUSYBOX_DEFAULT_DEVFSD is not set
->       # CONFIG_BUSYBOX_DEFAULT_DEVFSD_MODLOAD is not set
->       # CONFIG_BUSYBOX_DEFAULT_DEVFSD_FG_NP is not set
->       # CONFIG_BUSYBOX_DEFAULT_DEVFSD_VERBOSE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_DEVFS is not set
->       # CONFIG_BUSYBOX_DEFAULT_DEVMEM is not set
->       # CONFIG_BUSYBOX_DEFAULT_EJECT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_EJECT_SCSI is not set
->       # CONFIG_BUSYBOX_DEFAULT_FBSPLASH is not set
->       # CONFIG_BUSYBOX_DEFAULT_FLASH_ERASEALL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FLASH_LOCK is not set
->       # CONFIG_BUSYBOX_DEFAULT_FLASH_UNLOCK is not set
->       # CONFIG_BUSYBOX_DEFAULT_FLASHCP is not set
->       # CONFIG_BUSYBOX_DEFAULT_HDPARM is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HDPARM_GET_IDENTITY is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HDPARM_HDIO_SCAN_HWIF is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HDPARM_HDIO_UNREGISTER_HWIF is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HDPARM_HDIO_DRIVE_RESET is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HDPARM_HDIO_TRISTATE_HWIF is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HDPARM_HDIO_GETSET_DMA is not set
->       # CONFIG_BUSYBOX_DEFAULT_I2CGET is not set
->       # CONFIG_BUSYBOX_DEFAULT_I2CSET is not set
->       # CONFIG_BUSYBOX_DEFAULT_I2CDUMP is not set
->       # CONFIG_BUSYBOX_DEFAULT_I2CDETECT is not set
->       # CONFIG_BUSYBOX_DEFAULT_INOTIFYD is not set
->       # CONFIG_BUSYBOX_DEFAULT_IONICE is not set
->       # CONFIG_BUSYBOX_DEFAULT_LAST is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LAST_FANCY is not set
->       CONFIG_BUSYBOX_DEFAULT_LESS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_MAXLINES=9999999
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_BRACKETS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_FLAGS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_TRUNCATE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_MARKS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_REGEXP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_WINCH is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_ASK_TERMINAL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_DASHCMD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LESS_LINENUMS is not set
->       CONFIG_BUSYBOX_DEFAULT_LOCK=y
->       # CONFIG_BUSYBOX_DEFAULT_LSSCSI is not set
->       # CONFIG_BUSYBOX_DEFAULT_MAKEDEVS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MAKEDEVS_LEAF is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_MAKEDEVS_TABLE is not set
->       # CONFIG_BUSYBOX_DEFAULT_MAN is not set
->       # CONFIG_BUSYBOX_DEFAULT_MICROCOM is not set
->       # CONFIG_BUSYBOX_DEFAULT_MOUNTPOINT is not set
->       # CONFIG_BUSYBOX_DEFAULT_MT is not set
->       # CONFIG_BUSYBOX_DEFAULT_NANDWRITE is not set
->       # CONFIG_BUSYBOX_DEFAULT_NANDDUMP is not set
->       # CONFIG_BUSYBOX_DEFAULT_PARTPROBE is not set
->       # CONFIG_BUSYBOX_DEFAULT_RAIDAUTORUN is not set
->       # CONFIG_BUSYBOX_DEFAULT_READAHEAD is not set
->       # CONFIG_BUSYBOX_DEFAULT_RFKILL is not set
->       # CONFIG_BUSYBOX_DEFAULT_RUNLEVEL is not set
->       # CONFIG_BUSYBOX_DEFAULT_RX is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETSERIAL is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETSID is not set
->       CONFIG_BUSYBOX_DEFAULT_STRINGS=y
->       # CONFIG_BUSYBOX_DEFAULT_TASKSET is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TASKSET_FANCY is not set
->       CONFIG_BUSYBOX_DEFAULT_TIME=y
->       # CONFIG_BUSYBOX_DEFAULT_TIMEOUT is not set
->       # CONFIG_BUSYBOX_DEFAULT_TTYSIZE is not set
->       # CONFIG_BUSYBOX_DEFAULT_UBIATTACH is not set
->       # CONFIG_BUSYBOX_DEFAULT_UBIDETACH is not set
->       # CONFIG_BUSYBOX_DEFAULT_UBIMKVOL is not set
->       # CONFIG_BUSYBOX_DEFAULT_UBIRMVOL is not set
->       # CONFIG_BUSYBOX_DEFAULT_UBIRSVOL is not set
->       # CONFIG_BUSYBOX_DEFAULT_UBIUPDATEVOL is not set
->       # CONFIG_BUSYBOX_DEFAULT_UBIRENAME is not set
->       # CONFIG_BUSYBOX_DEFAULT_VOLNAME is not set
->       # CONFIG_BUSYBOX_DEFAULT_WALL is not set
->       # CONFIG_BUSYBOX_DEFAULT_WATCHDOG is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IPV6=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UNIX_LOCAL is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_PREFER_IPV4_ADDRESS=y
->       CONFIG_BUSYBOX_DEFAULT_VERBOSE_RESOLUTION_ERRORS=y
->       # CONFIG_BUSYBOX_DEFAULT_ARP is not set
->       # CONFIG_BUSYBOX_DEFAULT_ARPING is not set
->       CONFIG_BUSYBOX_DEFAULT_BRCTL=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_BRCTL_FANCY=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_BRCTL_SHOW=y
->       # CONFIG_BUSYBOX_DEFAULT_DNSD is not set
->       # CONFIG_BUSYBOX_DEFAULT_ETHER_WAKE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FTPD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FTPD_WRITE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FTPD_ACCEPT_BROKEN_LIST is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FTPD_AUTHENTICATION is not set
->       # CONFIG_BUSYBOX_DEFAULT_FTPGET is not set
->       # CONFIG_BUSYBOX_DEFAULT_FTPPUT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_FTPGETPUT_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_HOSTNAME is not set
->       # CONFIG_BUSYBOX_DEFAULT_DNSDOMAINNAME is not set
->       # CONFIG_BUSYBOX_DEFAULT_HTTPD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_RANGES is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_SETUID is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_BASIC_AUTH is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_AUTH_MD5 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_CGI is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_CONFIG_WITH_SCRIPT_INTERPR is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_SET_REMOTE_PORT_TO_ENV is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_ENCODE_URL_STR is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_ERROR_PAGES is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_PROXY is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_HTTPD_GZIP is not set
->       CONFIG_BUSYBOX_DEFAULT_IFCONFIG=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IFCONFIG_STATUS=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IFCONFIG_SLIP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IFCONFIG_MEMSTART_IOADDR_IRQ is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IFCONFIG_HW=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IFCONFIG_BROADCAST_PLUS=y
->       # CONFIG_BUSYBOX_DEFAULT_IFENSLAVE is not set
->       # CONFIG_BUSYBOX_DEFAULT_IFPLUGD is not set
->       # CONFIG_BUSYBOX_DEFAULT_IFUP is not set
->       # CONFIG_BUSYBOX_DEFAULT_IFDOWN is not set
->       CONFIG_BUSYBOX_DEFAULT_IFUPDOWN_IFSTATE_PATH=""
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IFUPDOWN_IP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IFUPDOWN_IPV4 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IFUPDOWN_IPV6 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IFUPDOWN_MAPPING is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IFUPDOWN_EXTERNAL_DHCP is not set
->       # CONFIG_BUSYBOX_DEFAULT_INETD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INETD_SUPPORT_BUILTIN_ECHO is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INETD_SUPPORT_BUILTIN_DISCARD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INETD_SUPPORT_BUILTIN_TIME is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INETD_SUPPORT_BUILTIN_DAYTIME is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INETD_SUPPORT_BUILTIN_CHARGEN is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_INETD_RPC is not set
->       CONFIG_BUSYBOX_DEFAULT_IP=y
->       # CONFIG_BUSYBOX_DEFAULT_IPADDR is not set
->       # CONFIG_BUSYBOX_DEFAULT_IPLINK is not set
->       # CONFIG_BUSYBOX_DEFAULT_IPROUTE is not set
->       # CONFIG_BUSYBOX_DEFAULT_IPTUNNEL is not set
->       # CONFIG_BUSYBOX_DEFAULT_IPRULE is not set
->       # CONFIG_BUSYBOX_DEFAULT_IPNEIGH is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IP_ADDRESS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IP_LINK=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IP_ROUTE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IP_ROUTE_DIR="/etc/iproute2"
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IP_TUNNEL is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IP_RULE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IP_NEIGH=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IP_RARE_PROTOCOLS is not set
->       # CONFIG_BUSYBOX_DEFAULT_IPCALC is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IPCALC_FANCY is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IPCALC_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FAKEIDENTD is not set
->       # CONFIG_BUSYBOX_DEFAULT_NAMEIF is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_NAMEIF_EXTENDED is not set
->       # CONFIG_BUSYBOX_DEFAULT_NBDCLIENT is not set
->       CONFIG_BUSYBOX_DEFAULT_NC=y
->       # CONFIG_BUSYBOX_DEFAULT_NC_SERVER is not set
->       # CONFIG_BUSYBOX_DEFAULT_NC_EXTRA is not set
->       # CONFIG_BUSYBOX_DEFAULT_NC_110_COMPAT is not set
->       CONFIG_BUSYBOX_DEFAULT_NETMSG=y
->       CONFIG_BUSYBOX_DEFAULT_NETSTAT=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_NETSTAT_WIDE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_NETSTAT_PRG=y
->       # CONFIG_BUSYBOX_DEFAULT_NSLOOKUP is not set
->       CONFIG_BUSYBOX_DEFAULT_NSLOOKUP_OPENWRT=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_NSLOOKUP_OPENWRT_LONG_OPTIONS is not set
->       CONFIG_BUSYBOX_DEFAULT_NTPD=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_NTPD_SERVER=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_NTPD_CONF is not set
->       CONFIG_BUSYBOX_DEFAULT_PING=y
->       CONFIG_BUSYBOX_DEFAULT_PING6=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_FANCY_PING=y
->       # CONFIG_BUSYBOX_DEFAULT_PSCAN is not set
->       CONFIG_BUSYBOX_DEFAULT_ROUTE=y
->       # CONFIG_BUSYBOX_DEFAULT_SLATTACH is not set
->       # CONFIG_BUSYBOX_DEFAULT_SSL_CLIENT is not set
->       # CONFIG_BUSYBOX_DEFAULT_TCPSVD is not set
->       # CONFIG_BUSYBOX_DEFAULT_UDPSVD is not set
->       # CONFIG_BUSYBOX_DEFAULT_TELNET is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TELNET_TTYPE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TELNET_AUTOLOGIN is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TELNET_WIDTH is not set
->       # CONFIG_BUSYBOX_DEFAULT_TELNETD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TELNETD_STANDALONE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TELNETD_INETD_WAIT is not set
->       # CONFIG_BUSYBOX_DEFAULT_TFTP is not set
->       # CONFIG_BUSYBOX_DEFAULT_TFTPD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TFTP_GET is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TFTP_PUT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TFTP_BLOCKSIZE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TFTP_PROGRESS_BAR is not set
->       # CONFIG_BUSYBOX_DEFAULT_TFTP_DEBUG is not set
->       # CONFIG_BUSYBOX_DEFAULT_TLS is not set
->       CONFIG_BUSYBOX_DEFAULT_TRACEROUTE=y
->       CONFIG_BUSYBOX_DEFAULT_TRACEROUTE6=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TRACEROUTE_VERBOSE=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TRACEROUTE_USE_ICMP is not set
->       # CONFIG_BUSYBOX_DEFAULT_TUNCTL is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TUNCTL_UG is not set
->       # CONFIG_BUSYBOX_DEFAULT_VCONFIG is not set
->       # CONFIG_BUSYBOX_DEFAULT_WGET is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_WGET_STATUSBAR is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_WGET_AUTHENTICATION is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_WGET_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_WGET_TIMEOUT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_WGET_HTTPS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_WGET_OPENSSL is not set
->       # CONFIG_BUSYBOX_DEFAULT_WHOIS is not set
->       # CONFIG_BUSYBOX_DEFAULT_ZCIP is not set
->       # CONFIG_BUSYBOX_DEFAULT_UDHCPC6 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCPC6_RFC3646 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCPC6_RFC4704 is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCPC6_RFC4833 is not set
->       # CONFIG_BUSYBOX_DEFAULT_UDHCPD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCPD_WRITE_LEASES_EARLY is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCPD_BASE_IP_ON_MAC is not set
->       CONFIG_BUSYBOX_DEFAULT_DHCPD_LEASES_FILE=""
->       # CONFIG_BUSYBOX_DEFAULT_DUMPLEASES is not set
->       # CONFIG_BUSYBOX_DEFAULT_DHCPRELAY is not set
->       CONFIG_BUSYBOX_DEFAULT_UDHCPC=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCPC_ARPING is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCPC_SANITIZEOPT is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCP_PORT is not set
->       CONFIG_BUSYBOX_DEFAULT_UDHCP_DEBUG=0
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCP_RFC3397=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UDHCP_8021Q is not set
->       CONFIG_BUSYBOX_DEFAULT_UDHCPC_DEFAULT_SCRIPT="/usr/share/udhcpc/default.script"
->       CONFIG_BUSYBOX_DEFAULT_UDHCPC_SLACK_FOR_BUGGY_SERVERS=80
->       CONFIG_BUSYBOX_DEFAULT_IFUPDOWN_UDHCPC_CMD_OPTIONS=""
->       # CONFIG_BUSYBOX_DEFAULT_LPD is not set
->       # CONFIG_BUSYBOX_DEFAULT_LPR is not set
->       # CONFIG_BUSYBOX_DEFAULT_LPQ is not set
->       # CONFIG_BUSYBOX_DEFAULT_MAKEMIME is not set
->       # CONFIG_BUSYBOX_DEFAULT_POPMAILDIR is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_POPMAILDIR_DELIVERY is not set
->       # CONFIG_BUSYBOX_DEFAULT_REFORMIME is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_REFORMIME_COMPAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_SENDMAIL is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_MIME_CHARSET=""
->       CONFIG_BUSYBOX_DEFAULT_FREE=y
->       # CONFIG_BUSYBOX_DEFAULT_FUSER is not set
->       # CONFIG_BUSYBOX_DEFAULT_IOSTAT is not set
->       CONFIG_BUSYBOX_DEFAULT_KILL=y
->       CONFIG_BUSYBOX_DEFAULT_KILLALL=y
->       # CONFIG_BUSYBOX_DEFAULT_KILLALL5 is not set
->       # CONFIG_BUSYBOX_DEFAULT_LSOF is not set
->       # CONFIG_BUSYBOX_DEFAULT_MPSTAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_NMETER is not set
->       CONFIG_BUSYBOX_DEFAULT_PGREP=y
->       # CONFIG_BUSYBOX_DEFAULT_PKILL is not set
->       CONFIG_BUSYBOX_DEFAULT_PIDOF=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_PIDOF_SINGLE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_PIDOF_OMIT is not set
->       # CONFIG_BUSYBOX_DEFAULT_PMAP is not set
->       # CONFIG_BUSYBOX_DEFAULT_POWERTOP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_POWERTOP_INTERACTIVE is not set
->       CONFIG_BUSYBOX_DEFAULT_PS=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_PS_WIDE=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_PS_LONG is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_PS_TIME is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_PS_ADDITIONAL_COLUMNS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_PS_UNUSUAL_SYSTEMS is not set
->       # CONFIG_BUSYBOX_DEFAULT_PSTREE is not set
->       # CONFIG_BUSYBOX_DEFAULT_PWDX is not set
->       # CONFIG_BUSYBOX_DEFAULT_RENICE is not set
->       # CONFIG_BUSYBOX_DEFAULT_SMEMCAP is not set
->       CONFIG_BUSYBOX_DEFAULT_BB_SYSCTL=y
->       CONFIG_BUSYBOX_DEFAULT_TOP=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TOP_INTERACTIVE is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TOP_CPU_USAGE_PERCENTAGE=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_TOP_CPU_GLOBAL_PERCENTS=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TOP_SMP_CPU is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TOP_DECIMALS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TOP_SMP_PROCESS is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_TOPMEM is not set
->       CONFIG_BUSYBOX_DEFAULT_UPTIME=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_UPTIME_UTMP_SUPPORT is not set
->       # CONFIG_BUSYBOX_DEFAULT_WATCH is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SHOW_THREADS is not set
->       # CONFIG_BUSYBOX_DEFAULT_CHPST is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETUIDGID is not set
->       # CONFIG_BUSYBOX_DEFAULT_ENVUIDGID is not set
->       # CONFIG_BUSYBOX_DEFAULT_ENVDIR is not set
->       # CONFIG_BUSYBOX_DEFAULT_SOFTLIMIT is not set
->       # CONFIG_BUSYBOX_DEFAULT_RUNSV is not set
->       # CONFIG_BUSYBOX_DEFAULT_RUNSVDIR is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_RUNSVDIR_LOG is not set
->       # CONFIG_BUSYBOX_DEFAULT_SV is not set
->       CONFIG_BUSYBOX_DEFAULT_SV_DEFAULT_SERVICE_DIR=""
->       # CONFIG_BUSYBOX_DEFAULT_SVC is not set
->       # CONFIG_BUSYBOX_DEFAULT_SVLOGD is not set
->       # CONFIG_BUSYBOX_DEFAULT_CHCON is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_CHCON_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_GETENFORCE is not set
->       # CONFIG_BUSYBOX_DEFAULT_GETSEBOOL is not set
->       # CONFIG_BUSYBOX_DEFAULT_LOAD_POLICY is not set
->       # CONFIG_BUSYBOX_DEFAULT_MATCHPATHCON is not set
->       # CONFIG_BUSYBOX_DEFAULT_RUNCON is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_RUNCON_LONG_OPTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_SELINUXENABLED is not set
->       # CONFIG_BUSYBOX_DEFAULT_SESTATUS is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETENFORCE is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETFILES is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SETFILES_CHECK_OPTION is not set
->       # CONFIG_BUSYBOX_DEFAULT_RESTORECON is not set
->       # CONFIG_BUSYBOX_DEFAULT_SETSEBOOL is not set
->       CONFIG_BUSYBOX_DEFAULT_SH_IS_ASH=y
->       # CONFIG_BUSYBOX_DEFAULT_SH_IS_HUSH is not set
->       # CONFIG_BUSYBOX_DEFAULT_SH_IS_NONE is not set
->       # CONFIG_BUSYBOX_DEFAULT_BASH_IS_ASH is not set
->       # CONFIG_BUSYBOX_DEFAULT_BASH_IS_HUSH is not set
->       CONFIG_BUSYBOX_DEFAULT_BASH_IS_NONE=y
->       CONFIG_BUSYBOX_DEFAULT_ASH=y
->       # CONFIG_BUSYBOX_DEFAULT_ASH_OPTIMIZE_FOR_SIZE is not set
->       CONFIG_BUSYBOX_DEFAULT_ASH_INTERNAL_GLOB=y
->       CONFIG_BUSYBOX_DEFAULT_ASH_BASH_COMPAT=y
->       CONFIG_BUSYBOX_DEFAULT_ASH_JOB_CONTROL=y
->       CONFIG_BUSYBOX_DEFAULT_ASH_ALIAS=y
->       # CONFIG_BUSYBOX_DEFAULT_ASH_RANDOM_SUPPORT is not set
->       CONFIG_BUSYBOX_DEFAULT_ASH_EXPAND_PRMT=y
->       # CONFIG_BUSYBOX_DEFAULT_ASH_IDLE_TIMEOUT is not set
->       # CONFIG_BUSYBOX_DEFAULT_ASH_MAIL is not set
->       CONFIG_BUSYBOX_DEFAULT_ASH_ECHO=y
->       CONFIG_BUSYBOX_DEFAULT_ASH_PRINTF=y
->       CONFIG_BUSYBOX_DEFAULT_ASH_TEST=y
->       # CONFIG_BUSYBOX_DEFAULT_ASH_HELP is not set
->       CONFIG_BUSYBOX_DEFAULT_ASH_GETOPTS=y
->       CONFIG_BUSYBOX_DEFAULT_ASH_CMDCMD=y
->       # CONFIG_BUSYBOX_DEFAULT_CTTYHACK is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_BASH_COMPAT is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_BRACE_EXPANSION is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_HELP is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_INTERACTIVE is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_SAVEHISTORY is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_JOB is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_TICK is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_IF is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_LOOPS is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_CASE is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_FUNCTIONS is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_LOCAL is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_RANDOM_SUPPORT is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_MODE_X is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_ECHO is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_PRINTF is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_TEST is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_EXPORT is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_EXPORT_N is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_KILL is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_WAIT is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_TRAP is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_TYPE is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_READ is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_SET is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_UNSET is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_ULIMIT is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_UMASK is not set
->       # CONFIG_BUSYBOX_DEFAULT_HUSH_MEMLEAK is not set
->       # CONFIG_BUSYBOX_DEFAULT_MSH is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_SH_MATH=y
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_SH_MATH_64=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SH_EXTRA_QUIET is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SH_STANDALONE is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_SH_NOFORK=y
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SH_HISTFILESIZE is not set
->       # CONFIG_BUSYBOX_DEFAULT_KLOGD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_KLOGD_KLOGCTL is not set
->       CONFIG_BUSYBOX_DEFAULT_LOGGER=y
->       # CONFIG_BUSYBOX_DEFAULT_LOGREAD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_LOGREAD_REDUCED_LOCKING is not set
->       # CONFIG_BUSYBOX_DEFAULT_SYSLOGD is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_ROTATE_LOGFILE is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_REMOTE_LOG is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SYSLOGD_DUP is not set
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_SYSLOGD_CFG is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_SYSLOGD_READ_BUFFER_SIZE=0
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_IPC_SYSLOG is not set
->       CONFIG_BUSYBOX_DEFAULT_FEATURE_IPC_SYSLOG_BUFFER_SIZE=0
->       # CONFIG_BUSYBOX_DEFAULT_FEATURE_KMSG_SYSLOG is not set
->       # CONFIG_PACKAGE_ca-bundle is not set
->       # CONFIG_PACKAGE_ca-certificates is not set
->       CONFIG_PACKAGE_dnsmasq=y
->       # CONFIG_PACKAGE_dnsmasq-dhcpv6 is not set
->       # CONFIG_PACKAGE_dnsmasq-full is not set
->       CONFIG_PACKAGE_dropbear=y
->
->       #
->       # Configuration
->       #
->       CONFIG_DROPBEAR_CURVE25519=y
->       CONFIG_DROPBEAR_ECC=y
->       CONFIG_DROPBEAR_ZLIB=y
->       # CONFIG_PACKAGE_ead is not set
->       CONFIG_PACKAGE_firewall=y
->       CONFIG_PACKAGE_fstools=y
->       CONFIG_PACKAGE_fwtool=y
->       CONFIG_PACKAGE_jsonfilter=y
->       CONFIG_PACKAGE_lede-keyring=y
->       # CONFIG_PACKAGE_libatomic is not set
->       CONFIG_PACKAGE_libc=y
->       CONFIG_PACKAGE_libgcc=y
->       # CONFIG_PACKAGE_libgomp is not set
->       CONFIG_PACKAGE_libpthread=y
->       # CONFIG_PACKAGE_librt is not set
->       # CONFIG_PACKAGE_libstdcpp is not set
->       CONFIG_PACKAGE_logd=y
->       CONFIG_PACKAGE_mtd=y
->       CONFIG_PACKAGE_netifd=y
->       # CONFIG_PACKAGE_om-watchdog is not set
->       CONFIG_PACKAGE_opkg=y
->       CONFIG_PACKAGE_procd=y
->
->       #
->       # Configuration
->       #
->       # CONFIG_PROCD_SHOW_BOOT is not set
->       # CONFIG_PROCD_ZRAM_TMPFS is not set
->       # CONFIG_PACKAGE_qos-scripts is not set
->       # CONFIG_PACKAGE_resolveip is not set
->       # CONFIG_PACKAGE_rpcd is not set
->       # CONFIG_PACKAGE_snapshot-tool is not set
->       CONFIG_PACKAGE_swconfig=y
->       CONFIG_PACKAGE_ubox=y
->       CONFIG_PACKAGE_ubus=y
->       CONFIG_PACKAGE_ubusd=y
->       CONFIG_PACKAGE_uci=y
->       CONFIG_PACKAGE_usign=y
->       # CONFIG_PACKAGE_wireless-tools is not set
->       # CONFIG_PACKAGE_zram-swap is not set
->
->       #
->       # Boot Loaders
->       #
->
->       #
->       # Development
->       #
->
->       #
->       # Libraries
->       #
->       # CONFIG_PACKAGE_libncurses-dev is not set
->       # CONFIG_PACKAGE_zlib-dev is not set
->       # CONFIG_PACKAGE_ar is not set
->       # CONFIG_PACKAGE_binutils is not set
->       # CONFIG_PACKAGE_gdb is not set
->       # CONFIG_PACKAGE_gdbserver is not set
->       # CONFIG_PACKAGE_objdump is not set
->       # CONFIG_PACKAGE_trace-cmd is not set
->       # CONFIG_PACKAGE_trace-cmd-extra is not set
->       # CONFIG_PACKAGE_valgrind is not set
->
->       #
->       # Firmware
->       #
->
->       #
->       # ath10k IPQ4019 Boarddata
->       #
->       # CONFIG_PACKAGE_aircard-pcmcia-firmware is not set
->       # CONFIG_PACKAGE_ar3k-firmware is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca4019 is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca4019-ct is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca4019-ct-htt is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca6174 is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca9887 is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca9887-ct is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca9887-ct-htt is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca9888 is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca9888-ct is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca9888-ct-htt is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca988x is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca988x-ct is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca988x-ct-htt is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca9984 is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca9984-ct is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca9984-ct-htt is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca99x0 is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca99x0-ct is not set
->       # CONFIG_PACKAGE_ath10k-firmware-qca99x0-ct-htt is not set
->       # CONFIG_PACKAGE_ath6k-firmware is not set
->       # CONFIG_PACKAGE_ath9k-htc-firmware is not set
->       # CONFIG_PACKAGE_b43legacy-firmware is not set
->       # CONFIG_PACKAGE_bnx2-firmware is not set
->       # CONFIG_PACKAGE_brcmfmac-firmware-4329-sdio is not set
->       # CONFIG_PACKAGE_brcmfmac-firmware-43362-sdio is not set
->       # CONFIG_PACKAGE_brcmfmac-firmware-43430-sdio is not set
->       # CONFIG_PACKAGE_brcmfmac-firmware-43602a1-pcie is not set
->       # CONFIG_PACKAGE_brcmfmac-firmware-4366b1-pcie is not set
->       # CONFIG_PACKAGE_brcmfmac-firmware-usb is not set
->       # CONFIG_PACKAGE_brcmsmac-firmware is not set
->       # CONFIG_PACKAGE_carl9170-firmware is not set
->       # CONFIG_PACKAGE_e100-firmware is not set
->       # CONFIG_PACKAGE_edgeport-firmware is not set
->       # CONFIG_PACKAGE_ibt-firmware is not set
->       # CONFIG_PACKAGE_iwl3945-firmware is not set
->       # CONFIG_PACKAGE_iwl4965-firmware is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl100 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl1000 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl105 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl135 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl2000 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl2030 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl3160 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl3168 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl5000 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl5150 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl6000g2 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl6000g2a is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl6000g2b is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl6050 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl7260 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl7265 is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl7265d is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl8260c is not set
->       # CONFIG_PACKAGE_iwlwifi-firmware-iwl8265 is not set
->       # CONFIG_PACKAGE_jboot-tools is not set
->       # CONFIG_PACKAGE_libertas-sdio-firmware is not set
->       # CONFIG_PACKAGE_libertas-spi-firmware is not set
->       # CONFIG_PACKAGE_libertas-usb-firmware is not set
->       # CONFIG_PACKAGE_mt7601u-firmware is not set
->       # CONFIG_PACKAGE_mwifiex-pcie-firmware is not set
->       # CONFIG_PACKAGE_mwifiex-sdio-firmware is not set
->       # CONFIG_PACKAGE_mwl8k-firmware is not set
->       # CONFIG_PACKAGE_p54-pci-firmware is not set
->       # CONFIG_PACKAGE_p54-spi-firmware is not set
->       # CONFIG_PACKAGE_p54-usb-firmware is not set
->       # CONFIG_PACKAGE_prism54-firmware is not set
->       # CONFIG_PACKAGE_r8169-firmware is not set
->       # CONFIG_PACKAGE_rt2800-pci-firmware is not set
->       # CONFIG_PACKAGE_rt2800-usb-firmware is not set
->       # CONFIG_PACKAGE_rt61-pci-firmware is not set
->       # CONFIG_PACKAGE_rt73-usb-firmware is not set
->       # CONFIG_PACKAGE_rtl8188eu-firmware is not set
->       # CONFIG_PACKAGE_rtl8192ce-firmware is not set
->       # CONFIG_PACKAGE_rtl8192cu-firmware is not set
->       # CONFIG_PACKAGE_rtl8192de-firmware is not set
->       # CONFIG_PACKAGE_rtl8192se-firmware is not set
->       # CONFIG_PACKAGE_rtl8192su-firmware is not set
->       # CONFIG_PACKAGE_rtl8821ae-firmware is not set
->       CONFIG_PACKAGE_wireless-regdb=y
->       # CONFIG_PACKAGE_wl12xx-firmware is not set
->       # CONFIG_PACKAGE_wl18xx-firmware is not set
->
->       #
->       # Kernel modules
->       #
->
->       #
->       # Block Devices
->       #
->       # CONFIG_PACKAGE_kmod-aoe is not set
->       # CONFIG_PACKAGE_kmod-block2mtd is not set
->       # CONFIG_PACKAGE_kmod-dm is not set
->       # CONFIG_PACKAGE_kmod-loop is not set
->       # CONFIG_PACKAGE_kmod-md-mod is not set
->       # CONFIG_PACKAGE_kmod-nbd is not set
->       # CONFIG_PACKAGE_kmod-scsi-cdrom is not set
->       # CONFIG_PACKAGE_kmod-scsi-core is not set
->       # CONFIG_PACKAGE_kmod-scsi-generic is not set
->       # CONFIG_PACKAGE_kmod-scsi-tape is not set
->
->       #
->       # CAN Support
->       #
->       # CONFIG_PACKAGE_kmod-can is not set
->
->       #
->       # Cryptographic API modules
->       #
->       # CONFIG_PACKAGE_kmod-crypto-aead is not set
->       # CONFIG_PACKAGE_kmod-crypto-authenc is not set
->       # CONFIG_PACKAGE_kmod-crypto-cbc is not set
->       # CONFIG_PACKAGE_kmod-crypto-ccm is not set
->       # CONFIG_PACKAGE_kmod-crypto-cmac is not set
->       # CONFIG_PACKAGE_kmod-crypto-crc32c is not set
->       # CONFIG_PACKAGE_kmod-crypto-ctr is not set
->       # CONFIG_PACKAGE_kmod-crypto-cts is not set
->       # CONFIG_PACKAGE_kmod-crypto-deflate is not set
->       # CONFIG_PACKAGE_kmod-crypto-des is not set
->       # CONFIG_PACKAGE_kmod-crypto-ecb is not set
->       # CONFIG_PACKAGE_kmod-crypto-ecdh is not set
->       # CONFIG_PACKAGE_kmod-crypto-echainiv is not set
->       # CONFIG_PACKAGE_kmod-crypto-fcrypt is not set
->       # CONFIG_PACKAGE_kmod-crypto-gcm is not set
->       # CONFIG_PACKAGE_kmod-crypto-gf128 is not set
->       # CONFIG_PACKAGE_kmod-crypto-ghash is not set
->       # CONFIG_PACKAGE_kmod-crypto-hash is not set
->       # CONFIG_PACKAGE_kmod-crypto-hmac is not set
->       # CONFIG_PACKAGE_kmod-crypto-hw-ccp is not set
->       # CONFIG_PACKAGE_kmod-crypto-hw-geode is not set
->       # CONFIG_PACKAGE_kmod-crypto-hw-hifn-795x is not set
->       # CONFIG_PACKAGE_kmod-crypto-hw-padlock is not set
->       # CONFIG_PACKAGE_kmod-crypto-hw-talitos is not set
->       # CONFIG_PACKAGE_kmod-crypto-manager is not set
->       # CONFIG_PACKAGE_kmod-crypto-md4 is not set
->       # CONFIG_PACKAGE_kmod-crypto-md5 is not set
->       # CONFIG_PACKAGE_kmod-crypto-michael-mic is not set
->       # CONFIG_PACKAGE_kmod-crypto-misc is not set
->       # CONFIG_PACKAGE_kmod-crypto-null is not set
->       # CONFIG_PACKAGE_kmod-crypto-pcbc is not set
->       # CONFIG_PACKAGE_kmod-crypto-pcompress is not set
->       # CONFIG_PACKAGE_kmod-crypto-rng is not set
->       # CONFIG_PACKAGE_kmod-crypto-seqiv is not set
->       # CONFIG_PACKAGE_kmod-crypto-sha1 is not set
->       # CONFIG_PACKAGE_kmod-crypto-sha256 is not set
->       # CONFIG_PACKAGE_kmod-crypto-sha512 is not set
->       # CONFIG_PACKAGE_kmod-crypto-test is not set
->       # CONFIG_PACKAGE_kmod-crypto-user is not set
->       # CONFIG_PACKAGE_kmod-crypto-wq is not set
->       # CONFIG_PACKAGE_kmod-crypto-xts is not set
->
->       #
->       # Filesystems
->       #
->       # CONFIG_PACKAGE_kmod-fs-afs is not set
->       # CONFIG_PACKAGE_kmod-fs-autofs4 is not set
->       # CONFIG_PACKAGE_kmod-fs-btrfs is not set
->       # CONFIG_PACKAGE_kmod-fs-cifs is not set
->       # CONFIG_PACKAGE_kmod-fs-configfs is not set
->       # CONFIG_PACKAGE_kmod-fs-cramfs is not set
->       # CONFIG_PACKAGE_kmod-fs-exportfs is not set
->       # CONFIG_PACKAGE_kmod-fs-ext4 is not set
->       # CONFIG_PACKAGE_kmod-fs-f2fs is not set
->       # CONFIG_PACKAGE_kmod-fs-fscache is not set
->       # CONFIG_PACKAGE_kmod-fs-hfs is not set
->       # CONFIG_PACKAGE_kmod-fs-hfsplus is not set
->       # CONFIG_PACKAGE_kmod-fs-isofs is not set
->       # CONFIG_PACKAGE_kmod-fs-jfs is not set
->       # CONFIG_PACKAGE_kmod-fs-minix is not set
->       # CONFIG_PACKAGE_kmod-fs-msdos is not set
->       # CONFIG_PACKAGE_kmod-fs-nfs is not set
->       # CONFIG_PACKAGE_kmod-fs-nfs-common is not set
->       # CONFIG_PACKAGE_kmod-fs-nfs-common-rpcsec is not set
->       # CONFIG_PACKAGE_kmod-fs-nfs-v3 is not set
->       # CONFIG_PACKAGE_kmod-fs-nfs-v4 is not set
->       # CONFIG_PACKAGE_kmod-fs-nfsd is not set
->       # CONFIG_PACKAGE_kmod-fs-ntfs is not set
->       # CONFIG_PACKAGE_kmod-fs-reiserfs is not set
->       # CONFIG_PACKAGE_kmod-fs-squashfs is not set
->       # CONFIG_PACKAGE_kmod-fs-udf is not set
->       # CONFIG_PACKAGE_kmod-fs-vfat is not set
->       # CONFIG_PACKAGE_kmod-fs-xfs is not set
->       # CONFIG_PACKAGE_kmod-fuse is not set
->
->       #
->       # FireWire support
->       #
->
->       #
->       # Hardware Monitoring Support
->       #
->       # CONFIG_PACKAGE_kmod-hwmon-core is not set
->
->       #
->       # I2C support
->       #
->       # CONFIG_PACKAGE_kmod-i2c-core is not set
->       # CONFIG_PACKAGE_kmod-i2c-gpio-custom is not set
->
->       #
->       # Industrial I/O Modules
->       #
->       # CONFIG_PACKAGE_kmod-iio-ad799x is not set
->       # CONFIG_PACKAGE_kmod-iio-bmp280 is not set
->       # CONFIG_PACKAGE_kmod-iio-bmp280-i2c is not set
->       # CONFIG_PACKAGE_kmod-iio-bmp280-spi is not set
->       # CONFIG_PACKAGE_kmod-iio-core is not set
->       # CONFIG_PACKAGE_kmod-iio-dht11 is not set
->
->       #
->       # Input modules
->       #
->       # CONFIG_PACKAGE_kmod-hid is not set
->       # CONFIG_PACKAGE_kmod-hid-generic is not set
->       # CONFIG_PACKAGE_kmod-input-core is not set
->       # CONFIG_PACKAGE_kmod-input-evdev is not set
->       # CONFIG_PACKAGE_kmod-input-gpio-encoder is not set
->       # CONFIG_PACKAGE_kmod-input-gpio-keys is not set
->       # CONFIG_PACKAGE_kmod-input-gpio-keys-polled is not set
->       # CONFIG_PACKAGE_kmod-input-joydev is not set
->       # CONFIG_PACKAGE_kmod-input-matrixkmap is not set
->       # CONFIG_PACKAGE_kmod-input-polldev is not set
->       # CONFIG_PACKAGE_kmod-input-uinput is not set
->
->       #
->       # LED modules
->       #
->       CONFIG_PACKAGE_kmod-leds-gpio=y
->       # CONFIG_PACKAGE_kmod-leds-pca963x is not set
->       # CONFIG_PACKAGE_kmod-ledtrig-default-on is not set
->       # CONFIG_PACKAGE_kmod-ledtrig-gpio is not set
->       # CONFIG_PACKAGE_kmod-ledtrig-heartbeat is not set
->       # CONFIG_PACKAGE_kmod-ledtrig-netdev is not set
->       # CONFIG_PACKAGE_kmod-ledtrig-oneshot is not set
->       # CONFIG_PACKAGE_kmod-ledtrig-timer is not set
->       # CONFIG_PACKAGE_kmod-ledtrig-transient is not set
->
->       #
->       # Libraries
->       #
->       # CONFIG_PACKAGE_kmod-lib-cordic is not set
->       CONFIG_PACKAGE_kmod-lib-crc-ccitt=y
->       CONFIG_PACKAGE_kmod-lib-crc-itu-t=y
->       # CONFIG_PACKAGE_kmod-lib-crc16 is not set
->       # CONFIG_PACKAGE_kmod-lib-crc32c is not set
->       # CONFIG_PACKAGE_kmod-lib-crc7 is not set
->       # CONFIG_PACKAGE_kmod-lib-crc8 is not set
->       # CONFIG_PACKAGE_kmod-lib-textsearch is not set
->
->       #
->       # Native Language Support
->       #
->       CONFIG_PACKAGE_kmod-nls-base=y
->       # CONFIG_PACKAGE_kmod-nls-cp1250 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp1251 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp437 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp775 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp850 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp852 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp862 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp864 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp866 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp932 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp936 is not set
->       # CONFIG_PACKAGE_kmod-nls-cp950 is not set
->       # CONFIG_PACKAGE_kmod-nls-iso8859-1 is not set
->       # CONFIG_PACKAGE_kmod-nls-iso8859-13 is not set
->       # CONFIG_PACKAGE_kmod-nls-iso8859-15 is not set
->       # CONFIG_PACKAGE_kmod-nls-iso8859-2 is not set
->       # CONFIG_PACKAGE_kmod-nls-iso8859-6 is not set
->       # CONFIG_PACKAGE_kmod-nls-iso8859-8 is not set
->       # CONFIG_PACKAGE_kmod-nls-koi8r is not set
->       # CONFIG_PACKAGE_kmod-nls-utf8 is not set
->
->       #
->       # Netfilter Extensions
->       #
->       # CONFIG_PACKAGE_kmod-arptables is not set
->       # CONFIG_PACKAGE_kmod-ebtables is not set
->       CONFIG_PACKAGE_kmod-ip6tables=y
->       # CONFIG_PACKAGE_kmod-ip6tables-extra is not set
->       # CONFIG_PACKAGE_kmod-ipt-checksum is not set
->       # CONFIG_PACKAGE_kmod-ipt-cluster is not set
->       # CONFIG_PACKAGE_kmod-ipt-clusterip is not set
->       CONFIG_PACKAGE_kmod-ipt-conntrack=y
->       # CONFIG_PACKAGE_kmod-ipt-conntrack-extra is not set
->       # CONFIG_PACKAGE_kmod-ipt-conntrack-label is not set
->       CONFIG_PACKAGE_kmod-ipt-core=y
->       # CONFIG_PACKAGE_kmod-ipt-debug is not set
->       # CONFIG_PACKAGE_kmod-ipt-extra is not set
->       # CONFIG_PACKAGE_kmod-ipt-filter is not set
->       # CONFIG_PACKAGE_kmod-ipt-hashlimit is not set
->       # CONFIG_PACKAGE_kmod-ipt-ipopt is not set
->       # CONFIG_PACKAGE_kmod-ipt-iprange is not set
->       # CONFIG_PACKAGE_kmod-ipt-ipsec is not set
->       # CONFIG_PACKAGE_kmod-ipt-ipset is not set
->       # CONFIG_PACKAGE_kmod-ipt-led is not set
->       CONFIG_PACKAGE_kmod-ipt-nat=y
->       # CONFIG_PACKAGE_kmod-ipt-nat-extra is not set
->       # CONFIG_PACKAGE_kmod-ipt-nat6 is not set
->       # CONFIG_PACKAGE_kmod-ipt-nflog is not set
->       # CONFIG_PACKAGE_kmod-ipt-nfqueue is not set
->       CONFIG_PACKAGE_kmod-ipt-raw=y
->       # CONFIG_PACKAGE_kmod-ipt-raw6 is not set
->       # CONFIG_PACKAGE_kmod-ipt-rpfilter is not set
->       # CONFIG_PACKAGE_kmod-ipt-tee is not set
->       # CONFIG_PACKAGE_kmod-ipt-tproxy is not set
->       # CONFIG_PACKAGE_kmod-ipt-u32 is not set
->       # CONFIG_PACKAGE_kmod-ipt-ulog is not set
->       CONFIG_PACKAGE_kmod-nf-conntrack=y
->       # CONFIG_PACKAGE_kmod-nf-conntrack-netlink is not set
->       CONFIG_PACKAGE_kmod-nf-conntrack6=y
->       CONFIG_PACKAGE_kmod-nf-ipt=y
->       CONFIG_PACKAGE_kmod-nf-ipt6=y
->       CONFIG_PACKAGE_kmod-nf-nat=y
->       # CONFIG_PACKAGE_kmod-nf-nat6 is not set
->       # CONFIG_PACKAGE_kmod-nf-nathelper is not set
->       # CONFIG_PACKAGE_kmod-nf-nathelper-extra is not set
->       CONFIG_PACKAGE_kmod-nf-reject=y
->       CONFIG_PACKAGE_kmod-nf-reject6=y
->       # CONFIG_PACKAGE_kmod-nfnetlink is not set
->       # CONFIG_PACKAGE_kmod-nfnetlink-log is not set
->       # CONFIG_PACKAGE_kmod-nfnetlink-queue is not set
->       # CONFIG_PACKAGE_kmod-nft-arp is not set
->       # CONFIG_PACKAGE_kmod-nft-bridge is not set
->       # CONFIG_PACKAGE_kmod-nft-core is not set
->       # CONFIG_PACKAGE_kmod-nft-nat is not set
->       # CONFIG_PACKAGE_kmod-nft-nat6 is not set
->
->       #
->       # Network Devices
->       #
->       # CONFIG_PACKAGE_kmod-dummy is not set
->       # CONFIG_PACKAGE_kmod-ethoc is not set
->       # CONFIG_PACKAGE_kmod-gigaset is not set
->       # CONFIG_PACKAGE_kmod-hfcmulti is not set
->       # CONFIG_PACKAGE_kmod-hfcpci is not set
->       # CONFIG_PACKAGE_kmod-ifb is not set
->       # CONFIG_PACKAGE_kmod-libphy is not set
->       # CONFIG_PACKAGE_kmod-macvlan is not set
->       # CONFIG_PACKAGE_kmod-mii is not set
->       # CONFIG_PACKAGE_kmod-of-mdio is not set
->       # CONFIG_PACKAGE_kmod-phy-broadcom is not set
->       # CONFIG_PACKAGE_kmod-spi-ks8995 is not set
->       # CONFIG_PACKAGE_kmod-swconfig is not set
->       # CONFIG_PACKAGE_kmod-switch-ip17xx is not set
->       # CONFIG_PACKAGE_kmod-switch-mvsw61xx is not set
->       # CONFIG_PACKAGE_kmod-switch-rtl8366-smi is not set
->       # CONFIG_PACKAGE_kmod-switch-rtl8366rb is not set
->       # CONFIG_PACKAGE_kmod-switch-rtl8366s is not set
->       # CONFIG_PACKAGE_kmod-switch-rtl8367b is not set
->       # CONFIG_PACKAGE_kmod-tg3 is not set
->
->       #
->       # Network Support
->       #
->       # CONFIG_PACKAGE_kmod-atm is not set
->       # CONFIG_PACKAGE_kmod-ax25 is not set
->       # CONFIG_PACKAGE_kmod-bonding is not set
->       # CONFIG_PACKAGE_kmod-capi is not set
->       # CONFIG_PACKAGE_kmod-dnsresolver is not set
->       # CONFIG_PACKAGE_kmod-fou is not set
->       # CONFIG_PACKAGE_kmod-geneve is not set
->       # CONFIG_PACKAGE_kmod-gre is not set
->       # CONFIG_PACKAGE_kmod-gre6 is not set
->       # CONFIG_PACKAGE_kmod-ip6-tunnel is not set
->       # CONFIG_PACKAGE_kmod-ipip is not set
->       # CONFIG_PACKAGE_kmod-ipsec is not set
->       # CONFIG_PACKAGE_kmod-iptunnel6 is not set
->       # CONFIG_PACKAGE_kmod-isdn4linux is not set
->       # CONFIG_PACKAGE_kmod-l2tp is not set
->       # CONFIG_PACKAGE_kmod-l2tp-eth is not set
->       # CONFIG_PACKAGE_kmod-l2tp-ip is not set
->       # CONFIG_PACKAGE_kmod-macsec is not set
->       # CONFIG_PACKAGE_kmod-misdn is not set
->       # CONFIG_PACKAGE_kmod-mpls is not set
->       CONFIG_PACKAGE_kmod-ppp=m
->       # CONFIG_PACKAGE_kmod-mppe is not set
->       # CONFIG_PACKAGE_kmod-netem is not set
->       # CONFIG_PACKAGE_kmod-nlmon is not set
->       # CONFIG_PACKAGE_kmod-pktgen is not set
->       # CONFIG_PACKAGE_kmod-ppp-synctty is not set
->       # CONFIG_PACKAGE_kmod-pppoa is not set
->       CONFIG_PACKAGE_kmod-pppoe=m
->       # CONFIG_PACKAGE_kmod-pppol2tp is not set
->       CONFIG_PACKAGE_kmod-pppox=m
->       # CONFIG_PACKAGE_kmod-pptp is not set
->       # CONFIG_PACKAGE_kmod-sched is not set
->       # CONFIG_PACKAGE_kmod-sched-cake is not set
->       # CONFIG_PACKAGE_kmod-sched-connmark is not set
->       # CONFIG_PACKAGE_kmod-sched-core is not set
->       # CONFIG_PACKAGE_kmod-sctp is not set
->       # CONFIG_PACKAGE_kmod-sit is not set
->       CONFIG_PACKAGE_kmod-slhc=m
->       # CONFIG_PACKAGE_kmod-slip is not set
->       # CONFIG_PACKAGE_kmod-trelay is not set
->       # CONFIG_PACKAGE_kmod-tun is not set
->       # CONFIG_PACKAGE_kmod-veth is not set
->       # CONFIG_PACKAGE_kmod-vxlan is not set
->       # CONFIG_PACKAGE_kmod-wireguard is not set
->
->       #
->       # Other modules
->       #
->       # CONFIG_PACKAGE_kmod-6lowpan is not set
->       # CONFIG_PACKAGE_kmod-ath3k is not set
->       # CONFIG_PACKAGE_kmod-bluetooth is not set
->       # CONFIG_PACKAGE_kmod-bluetooth_6lowpan is not set
->       # CONFIG_PACKAGE_kmod-bmp085 is not set
->       # CONFIG_PACKAGE_kmod-bmp085-i2c is not set
->       # CONFIG_PACKAGE_kmod-bmp085-spi is not set
->       # CONFIG_PACKAGE_kmod-btmrvl is not set
->       # CONFIG_PACKAGE_kmod-button-hotplug is not set
->       # CONFIG_PACKAGE_kmod-dma-ralink is not set
->       # CONFIG_PACKAGE_kmod-echo is not set
->       CONFIG_PACKAGE_kmod-eeprom-93cx6=y
->       # CONFIG_PACKAGE_kmod-eeprom-at24 is not set
->       # CONFIG_PACKAGE_kmod-eeprom-at25 is not set
->       # CONFIG_PACKAGE_kmod-gpio-beeper is not set
->       CONFIG_PACKAGE_kmod-gpio-button-hotplug=y
->       # CONFIG_PACKAGE_kmod-gpio-dev is not set
->       # CONFIG_PACKAGE_kmod-gpio-mcp23s08 is not set
->       # CONFIG_PACKAGE_kmod-gpio-nxp-74hc164 is not set
->       # CONFIG_PACKAGE_kmod-gpio-pca953x is not set
->       # CONFIG_PACKAGE_kmod-gpio-pcf857x is not set
->       # CONFIG_PACKAGE_kmod-ikconfig is not set
->       # CONFIG_PACKAGE_kmod-it87-wdt is not set
->       # CONFIG_PACKAGE_kmod-itco-wdt is not set
->       # CONFIG_PACKAGE_kmod-lp is not set
->       # CONFIG_PACKAGE_kmod-mmc is not set
->       # CONFIG_PACKAGE_kmod-mtdoops is not set
->       # CONFIG_PACKAGE_kmod-mtdram is not set
->       # CONFIG_PACKAGE_kmod-mtdtests is not set
->       # CONFIG_PACKAGE_kmod-parport-pc is not set
->       # CONFIG_PACKAGE_kmod-ppdev is not set
->       # CONFIG_PACKAGE_kmod-pps is not set
->       # CONFIG_PACKAGE_kmod-pps-gpio is not set
->       # CONFIG_PACKAGE_kmod-pps-ldisc is not set
->       # CONFIG_PACKAGE_kmod-ptp is not set
->       # CONFIG_PACKAGE_kmod-random-core is not set
->       # CONFIG_PACKAGE_kmod-regmap is not set
->       # CONFIG_PACKAGE_kmod-rtc-ds1307 is not set
->       # CONFIG_PACKAGE_kmod-rtc-ds1374 is not set
->       # CONFIG_PACKAGE_kmod-rtc-ds1672 is not set
->       # CONFIG_PACKAGE_kmod-rtc-isl1208 is not set
->       # CONFIG_PACKAGE_kmod-rtc-pcf2123 is not set
->       # CONFIG_PACKAGE_kmod-rtc-pcf8563 is not set
->       # CONFIG_PACKAGE_kmod-rtc-pt7c4338 is not set
->       # CONFIG_PACKAGE_kmod-rtc-rs5c372a is not set
->       # CONFIG_PACKAGE_kmod-sdhci is not set
->       # CONFIG_PACKAGE_kmod-serial-8250 is not set
->       # CONFIG_PACKAGE_kmod-softdog is not set
->       # CONFIG_PACKAGE_kmod-tpm is not set
->       # CONFIG_PACKAGE_kmod-tpm-i2c-atmel is not set
->       # CONFIG_PACKAGE_kmod-tpm-i2c-infineon is not set
->       # CONFIG_PACKAGE_kmod-w83627hf-wdt is not set
->       # CONFIG_PACKAGE_kmod-zram is not set
->
->       #
->       # PCMCIA support
->       #
->
->       #
->       # SPI Support
->       #
->       # CONFIG_PACKAGE_kmod-mmc-spi is not set
->       # CONFIG_PACKAGE_kmod-spi-bitbang is not set
->       # CONFIG_PACKAGE_kmod-spi-dev is not set
->       # CONFIG_PACKAGE_kmod-spi-gpio is not set
->       # CONFIG_PACKAGE_kmod-spi-gpio-custom is not set
->
->       #
->       # Sound Support
->       #
->       # CONFIG_PACKAGE_kmod-sound-core is not set
->
->       #
->       # USB Support
->       #
->       # CONFIG_PACKAGE_kmod-usb-acm is not set
->       # CONFIG_PACKAGE_kmod-usb-atm is not set
->       # CONFIG_PACKAGE_kmod-usb-cm109 is not set
->       CONFIG_PACKAGE_kmod-usb-core=y
->       CONFIG_PACKAGE_kmod-usb-dwc2=y
->       # CONFIG_PACKAGE_kmod-usb-dwc3 is not set
->       # CONFIG_PACKAGE_kmod-usb-hid is not set
->       CONFIG_PACKAGE_kmod-usb-ledtrig-usbport=y
->       # CONFIG_PACKAGE_kmod-usb-net is not set
->       # CONFIG_PACKAGE_kmod-usb-ohci is not set
->       # CONFIG_PACKAGE_kmod-usb-printer is not set
->       # CONFIG_PACKAGE_kmod-usb-serial is not set
->       # CONFIG_PACKAGE_kmod-usb-storage is not set
->       # CONFIG_PACKAGE_kmod-usb-storage-extras is not set
->       # CONFIG_PACKAGE_kmod-usb-storage-uas is not set
->       # CONFIG_PACKAGE_kmod-usb-uhci is not set
->       # CONFIG_PACKAGE_kmod-usb-wdm is not set
->       # CONFIG_PACKAGE_kmod-usb-yealink is not set
->       # CONFIG_PACKAGE_kmod-usb2 is not set
->       # CONFIG_PACKAGE_kmod-usb3 is not set
->       # CONFIG_PACKAGE_kmod-usbip is not set
->       # CONFIG_PACKAGE_kmod-usbip-client is not set
->       # CONFIG_PACKAGE_kmod-usbip-server is not set
->       # CONFIG_PACKAGE_kmod-usbmon is not set
->
->       #
->       # Video Support
->       #
->       # CONFIG_PACKAGE_kmod-video-core is not set
->
->       #
->       # Virtualization
->       #
->
->       #
->       # Voice over IP
->       #
->
->       #
->       # W1 support
->       #
->       # CONFIG_PACKAGE_kmod-w1 is not set
->
->       #
->       # WPAN 802.15.4 Support
->       #
->       # CONFIG_PACKAGE_kmod-at86rf230 is not set
->       # CONFIG_PACKAGE_kmod-cc2520 is not set
->       # CONFIG_PACKAGE_kmod-fakelb is not set
->       # CONFIG_PACKAGE_kmod-ieee802154 is not set
->       # CONFIG_PACKAGE_kmod-ieee802154_6lowpan is not set
->       # CONFIG_PACKAGE_kmod-mac802154 is not set
->       # CONFIG_PACKAGE_kmod-mrf24j40 is not set
->
->       #
->       # Wireless Drivers
->       #
->       # CONFIG_PACKAGE_kmod-ath is not set
->       # CONFIG_PACKAGE_kmod-ath10k-ct is not set
->       # CONFIG_PACKAGE_kmod-ath6kl-sdio is not set
->       # CONFIG_PACKAGE_kmod-ath6kl-usb is not set
-> 
-> 
-> 
-> 
-> --
-> Regards...
-> 
-> Kofi Agor
-> 
->
---8323329-377538820-1523973440=:11111--
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/1000.c b/drivers/net/wireless/intel/iwlwifi/cfg/1000.c
+index b2573b1d1506..591687984962 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/1000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/1000.c
+@@ -1,6 +1,7 @@
+ /******************************************************************************
+  *
+  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify it
+  * under the terms of version 2 of the GNU General Public License as
+@@ -27,7 +28,6 @@
+ #include <linux/module.h>
+ #include <linux/stringify.h>
+ #include "iwl-config.h"
+-#include "iwl-csr.h"
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+@@ -91,7 +91,8 @@ static const struct iwl_eeprom_params iwl1000_eeprom_params = {
+ 	.base_params = &iwl1000_base_params,			\
+ 	.eeprom_params = &iwl1000_eeprom_params,		\
+ 	.led_mode = IWL_LED_BLINK,				\
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,	\
++	.csr = &iwl_csr_v1
+ 
+ const struct iwl_cfg iwl1000_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 1000 BGN",
+@@ -117,7 +118,8 @@ const struct iwl_cfg iwl1000_bg_cfg = {
+ 	.eeprom_params = &iwl1000_eeprom_params,		\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+ 	.rx_with_siso_diversity = true,				\
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,	\
++	.csr = &iwl_csr_v1
+ 
+ const struct iwl_cfg iwl100_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 100 BGN",
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/2000.c b/drivers/net/wireless/intel/iwlwifi/cfg/2000.c
+index 1b32ad413b9e..a63ca8820568 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/2000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/2000.c
+@@ -1,6 +1,7 @@
+ /******************************************************************************
+  *
+  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify it
+  * under the terms of version 2 of the GNU General Public License as
+@@ -115,7 +116,8 @@ static const struct iwl_eeprom_params iwl20x0_eeprom_params = {
+ 	.base_params = &iwl2000_base_params,			\
+ 	.eeprom_params = &iwl20x0_eeprom_params,		\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,	\
++	.csr = &iwl_csr_v1
+ 
+ 
+ const struct iwl_cfg iwl2000_2bgn_cfg = {
+@@ -142,7 +144,8 @@ const struct iwl_cfg iwl2000_2bgn_d_cfg = {
+ 	.base_params = &iwl2030_base_params,			\
+ 	.eeprom_params = &iwl20x0_eeprom_params,		\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,	\
++	.csr = &iwl_csr_v1
+ 
+ const struct iwl_cfg iwl2030_2bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 2230 BGN",
+@@ -163,7 +166,8 @@ const struct iwl_cfg iwl2030_2bgn_cfg = {
+ 	.eeprom_params = &iwl20x0_eeprom_params,		\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+ 	.rx_with_siso_diversity = true,				\
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,	\
++	.csr = &iwl_csr_v1
+ 
+ const struct iwl_cfg iwl105_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 105 BGN",
+@@ -190,7 +194,8 @@ const struct iwl_cfg iwl105_bgn_d_cfg = {
+ 	.eeprom_params = &iwl20x0_eeprom_params,		\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+ 	.rx_with_siso_diversity = true,				\
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,	\
++	.csr = &iwl_csr_v1
+ 
+ const struct iwl_cfg iwl135_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 135 BGN",
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index f2b6e0e8d787..afc78a1e1cfc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -143,6 +143,7 @@ const struct iwl_cfg iwl22000_2ac_cfg_hr = {
+ 	.name = "Intel(R) Dual Band Wireless AC 22000",
+ 	.fw_name_pre = IWL_22000_HR_FW_PRE,
+ 	IWL_DEVICE_22000,
++	.csr = &iwl_csr_v1,
+ 	.ht_params = &iwl_22000_ht_params,
+ 	.nvm_ver = IWL_22000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
+@@ -153,6 +154,7 @@ const struct iwl_cfg iwl22000_2ac_cfg_hr_cdb = {
+ 	.name = "Intel(R) Dual Band Wireless AC 22000",
+ 	.fw_name_pre = IWL_22000_HR_CDB_FW_PRE,
+ 	IWL_DEVICE_22000,
++	.csr = &iwl_csr_v1,
+ 	.ht_params = &iwl_22000_ht_params,
+ 	.nvm_ver = IWL_22000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
+@@ -164,6 +166,7 @@ const struct iwl_cfg iwl22000_2ac_cfg_jf = {
+ 	.name = "Intel(R) Dual Band Wireless AC 22000",
+ 	.fw_name_pre = IWL_22000_JF_FW_PRE,
+ 	IWL_DEVICE_22000,
++	.csr = &iwl_csr_v1,
+ 	.ht_params = &iwl_22000_ht_params,
+ 	.nvm_ver = IWL_22000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
+@@ -174,6 +177,7 @@ const struct iwl_cfg iwl22000_2ax_cfg_hr = {
+ 	.name = "Intel(R) Dual Band Wireless AX 22000",
+ 	.fw_name_pre = IWL_22000_HR_FW_PRE,
+ 	IWL_DEVICE_22000,
++	.csr = &iwl_csr_v1,
+ 	.ht_params = &iwl_22000_ht_params,
+ 	.nvm_ver = IWL_22000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
+@@ -184,6 +188,7 @@ const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_f0 = {
+ 	.name = "Intel(R) Dual Band Wireless AX 22000",
+ 	.fw_name_pre = IWL_22000_HR_F0_FW_PRE,
+ 	IWL_DEVICE_22000,
++	.csr = &iwl_csr_v1,
+ 	.ht_params = &iwl_22000_ht_params,
+ 	.nvm_ver = IWL_22000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
+@@ -194,6 +199,7 @@ const struct iwl_cfg iwl22000_2ax_cfg_qnj_jf_b0 = {
+ 	.name = "Intel(R) Dual Band Wireless AX 22000",
+ 	.fw_name_pre = IWL_22000_JF_B0_FW_PRE,
+ 	IWL_DEVICE_22000,
++	.csr = &iwl_csr_v1,
+ 	.ht_params = &iwl_22000_ht_params,
+ 	.nvm_ver = IWL_22000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
+@@ -204,6 +210,7 @@ const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_a0 = {
+ 	.name = "Intel(R) Dual Band Wireless AX 22000",
+ 	.fw_name_pre = IWL_22000_HR_A0_FW_PRE,
+ 	IWL_DEVICE_22000,
++	.csr = &iwl_csr_v1,
+ 	.ht_params = &iwl_22000_ht_params,
+ 	.nvm_ver = IWL_22000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/5000.c b/drivers/net/wireless/intel/iwlwifi/cfg/5000.c
+index 4aa8f0a05c8a..a224f1be1ec2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/5000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/5000.c
+@@ -1,6 +1,7 @@
+ /******************************************************************************
+  *
+  * Copyright(c) 2007 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify it
+  * under the terms of version 2 of the GNU General Public License as
+@@ -28,7 +29,6 @@
+ #include <linux/stringify.h>
+ #include "iwl-config.h"
+ #include "iwl-agn-hw.h"
+-#include "iwl-csr.h"
+ 
+ /* Highest firmware API version supported */
+ #define IWL5000_UCODE_API_MAX 5
+@@ -89,7 +89,8 @@ static const struct iwl_eeprom_params iwl5000_eeprom_params = {
+ 	.base_params = &iwl5000_base_params,			\
+ 	.eeprom_params = &iwl5000_eeprom_params,		\
+ 	.led_mode = IWL_LED_BLINK,				\
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,	\
++	.csr = &iwl_csr_v1
+ 
+ const struct iwl_cfg iwl5300_agn_cfg = {
+ 	.name = "Intel(R) Ultimate N WiFi Link 5300 AGN",
+@@ -153,7 +154,8 @@ const struct iwl_cfg iwl5350_agn_cfg = {
+ 	.eeprom_params = &iwl5000_eeprom_params,		\
+ 	.led_mode = IWL_LED_BLINK,				\
+ 	.internal_wimax_coex = true,				\
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,	\
++	.csr = &iwl_csr_v1
+ 
+ const struct iwl_cfg iwl5150_agn_cfg = {
+ 	.name = "Intel(R) WiMAX/WiFi Link 5150 AGN",
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/6000.c b/drivers/net/wireless/intel/iwlwifi/cfg/6000.c
+index 39335b7b0c16..51cec0bb75fc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/6000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/6000.c
+@@ -1,6 +1,7 @@
+ /******************************************************************************
+  *
+  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify it
+  * under the terms of version 2 of the GNU General Public License as
+@@ -135,7 +136,8 @@ static const struct iwl_eeprom_params iwl6000_eeprom_params = {
+ 	.base_params = &iwl6000_g2_base_params,			\
+ 	.eeprom_params = &iwl6000_eeprom_params,		\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,	\
++	.csr = &iwl_csr_v1
+ 
+ const struct iwl_cfg iwl6005_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6205 AGN",
+@@ -189,7 +191,8 @@ const struct iwl_cfg iwl6005_2agn_mow2_cfg = {
+ 	.base_params = &iwl6000_g2_base_params,			\
+ 	.eeprom_params = &iwl6000_eeprom_params,		\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,	\
++	.csr = &iwl_csr_v1
+ 
+ const struct iwl_cfg iwl6030_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6230 AGN",
+@@ -225,7 +228,8 @@ const struct iwl_cfg iwl6030_2bg_cfg = {
+ 	.base_params = &iwl6000_g2_base_params,			\
+ 	.eeprom_params = &iwl6000_eeprom_params,		\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,	\
++	.csr = &iwl_csr_v1
+ 
+ const struct iwl_cfg iwl6035_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6235 AGN",
+@@ -280,7 +284,8 @@ const struct iwl_cfg iwl130_bg_cfg = {
+ 	.base_params = &iwl6000_base_params,			\
+ 	.eeprom_params = &iwl6000_eeprom_params,		\
+ 	.led_mode = IWL_LED_BLINK,				\
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,	\
++	.csr = &iwl_csr_v1
+ 
+ const struct iwl_cfg iwl6000i_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6200 AGN",
+@@ -313,7 +318,8 @@ const struct iwl_cfg iwl6000i_2bg_cfg = {
+ 	.eeprom_params = &iwl6000_eeprom_params,		\
+ 	.led_mode = IWL_LED_BLINK,				\
+ 	.internal_wimax_coex = true,				\
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,	\
++	.csr = &iwl_csr_v1
+ 
+ const struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N + WiMAX 6250 AGN",
+@@ -339,7 +345,8 @@ const struct iwl_cfg iwl6050_2abg_cfg = {
+ 	.eeprom_params = &iwl6000_eeprom_params,		\
+ 	.led_mode = IWL_LED_BLINK,				\
+ 	.internal_wimax_coex = true,				\
+-	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,	\
++	.csr = &iwl_csr_v1
+ 
+ const struct iwl_cfg iwl6150_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N + WiMAX 6150 BGN",
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/7000.c b/drivers/net/wireless/intel/iwlwifi/cfg/7000.c
+index ce741beec1fc..8e9684e8e603 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/7000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/7000.c
+@@ -8,6 +8,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+  * Copyright(c) 2015 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -35,6 +36,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+  * Copyright(c) 2015 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -167,7 +169,8 @@ static const struct iwl_ht_params iwl7000_ht_params = {
+ 	.nvm_hw_section_num = NVM_HW_SECTION_NUM_FAMILY_7000,	\
+ 	.non_shared_ant = ANT_A,				\
+ 	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,	\
+-	.dccm_offset = IWL7000_DCCM_OFFSET
++	.dccm_offset = IWL7000_DCCM_OFFSET,			\
++	.csr = &iwl_csr_v1
+ 
+ #define IWL_DEVICE_7000						\
+ 	IWL_DEVICE_7000_COMMON,					\
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/8000.c b/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
+index 3f4d9bac9f73..e8299b2ab6bd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
+@@ -8,6 +8,7 @@
+  * Copyright(c) 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2014 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -34,6 +35,7 @@
+  *
+  * Copyright(c) 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2014 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -158,7 +160,8 @@ static const struct iwl_tt_params iwl8000_tt_params = {
+ 	.apmg_not_supported = true,					\
+ 	.nvm_type = IWL_NVM_EXT,					\
+ 	.dbgc_supported = true,						\
+-	.min_umac_error_event_table = 0x800000
++	.min_umac_error_event_table = 0x800000,				\
++	.csr = &iwl_csr_v1
+ 
+ #define IWL_DEVICE_8000							\
+ 	IWL_DEVICE_8000_COMMON,						\
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+index e1c869a1f8cc..fe376fce3444 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+@@ -156,7 +156,8 @@ static const struct iwl_tt_params iwl9000_tt_params = {
+ 	.rf_id = true,							\
+ 	.nvm_type = IWL_NVM_EXT,					\
+ 	.dbgc_supported = true,						\
+-	.min_umac_error_event_table = 0x800000
++	.min_umac_error_event_table = 0x800000,				\
++	.csr = &iwl_csr_v1
+ 
+ const struct iwl_cfg iwl9160_2ac_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless AC 9160",
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 14e69e7a2287..7f0b7cea8b9b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -7,6 +7,7 @@
+  *
+  * Copyright(c) 2007 - 2014 Intel Corporation. All rights reserved.
+  * Copyright (C) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -33,6 +34,7 @@
+  *
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
+  * Copyright (C) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -69,6 +71,7 @@
+ #include <linux/netdevice.h>
+ #include <linux/ieee80211.h>
+ #include <linux/nl80211.h>
++#include "iwl-csr.h"
+ 
+ enum iwl_device_family {
+ 	IWL_DEVICE_FAMILY_UNDEFINED,
+@@ -284,6 +287,44 @@ struct iwl_pwr_tx_backoff {
+ 	u32 backoff;
+ };
+ 
++/**
++ * struct iwl_csr_params
++ *
++ * @flag_sw_reset: reset the device
++ * @flag_mac_clock_ready:
++ *	Indicates MAC (ucode processor, etc.) is powered up and can run.
++ *	Internal resources are accessible.
++ *	NOTE:  This does not indicate that the processor is actually running.
++ *	NOTE:  This does not indicate that device has completed
++ *	       init or post-power-down restore of internal SRAM memory.
++ *	       Use CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP as indication that
++ *	       SRAM is restored and uCode is in normal operation mode.
++ *	       This note is relevant only for pre 5xxx devices.
++ *	NOTE:  After device reset, this bit remains "0" until host sets
++ *	       INIT_DONE
++ * @flag_init_done: Host sets this to put device into fully operational
++ *	D0 power mode. Host resets this after SW_RESET to put device into
++ *	low power mode.
++ * @flag_mac_access_req: Host sets this to request and maintain MAC wakeup,
++ *	to allow host access to device-internal resources. Host must wait for
++ *	mac_clock_ready (and !GOING_TO_SLEEP) before accessing non-CSR device
++ *	registers.
++ * @flag_val_mac_access_en: mac access is enabled
++ * @flag_master_dis: disable master
++ * @flag_stop_master: stop master
++ * @addr_sw_reset: address for resetting the device
++ */
++struct iwl_csr_params {
++	u8 flag_sw_reset;
++	u8 flag_mac_clock_ready;
++	u8 flag_init_done;
++	u8 flag_mac_access_req;
++	u8 flag_val_mac_access_en;
++	u8 flag_master_dis;
++	u8 flag_stop_master;
++	u8 addr_sw_reset;
++};
++
+ /**
+  * struct iwl_cfg
+  * @name: Official name of the device
+@@ -316,6 +357,7 @@ struct iwl_pwr_tx_backoff {
+  * @mac_addr_from_csr: read HW address from CSR registers
+  * @features: hw features, any combination of feature_whitelist
+  * @pwr_tx_backoffs: translation table between power limits and backoffs
++ * @csr: csr flags and addresses that are different across devices
+  * @max_rx_agg_size: max RX aggregation size of the ADDBA request/response
+  * @max_tx_agg_size: max TX aggregation size of the ADDBA request/response
+  * @max_ht_ampdu_factor: the exponent of the max length of A-MPDU that the
+@@ -354,6 +396,7 @@ struct iwl_cfg {
+ 	const struct iwl_pwr_tx_backoff *pwr_tx_backoffs;
+ 	const char *default_nvm_file_C_step;
+ 	const struct iwl_tt_params *thermal_params;
++	const struct iwl_csr_params *csr;
+ 	enum iwl_device_family device_family;
+ 	enum iwl_led_mode led_mode;
+ 	enum iwl_nvm_type nvm_type;
+@@ -400,6 +443,28 @@ struct iwl_cfg {
+ 	u32 extra_phy_cfg_flags;
+ };
+ 
++static const struct iwl_csr_params iwl_csr_v1 = {
++	.flag_mac_clock_ready = 0,
++	.flag_val_mac_access_en = 0,
++	.flag_init_done = 2,
++	.flag_mac_access_req = 3,
++	.flag_sw_reset = 7,
++	.flag_master_dis = 8,
++	.flag_stop_master = 9,
++	.addr_sw_reset = (CSR_BASE + 0x020)
++};
++
++static const struct iwl_csr_params iwl_csr_v2 = {
++	.flag_init_done = 6,
++	.flag_mac_clock_ready = 20,
++	.flag_val_mac_access_en = 20,
++	.flag_mac_access_req = 21,
++	.flag_master_dis = 28,
++	.flag_stop_master = 29,
++	.flag_sw_reset = 31,
++	.addr_sw_reset = (CSR_BASE + 0x024)
++};
++
+ /*
+  * This list declares the config structures for all devices.
+  */
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+index 4f0d070eda54..ba971d3946e2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+@@ -8,6 +8,7 @@
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+  * Copyright(c) 2016        Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -34,6 +35,7 @@
+  *
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
++ * Copyright(c) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -257,7 +259,6 @@
+ /* RESET */
+ #define CSR_RESET_REG_FLAG_NEVO_RESET                (0x00000001)
+ #define CSR_RESET_REG_FLAG_FORCE_NMI                 (0x00000002)
+-#define CSR_RESET_REG_FLAG_SW_RESET                  (0x00000080)
+ #define CSR_RESET_REG_FLAG_MASTER_DISABLED           (0x00000100)
+ #define CSR_RESET_REG_FLAG_STOP_MASTER               (0x00000200)
+ #define CSR_RESET_LINK_PWR_MGMT_DISABLED             (0x80000000)
+@@ -280,35 +281,10 @@
+  *     4:  GOING_TO_SLEEP
+  *         Indicates MAC is entering a power-saving sleep power-down.
+  *         Not a good time to access device-internal resources.
+- *     3:  MAC_ACCESS_REQ
+- *         Host sets this to request and maintain MAC wakeup, to allow host
+- *         access to device-internal resources.  Host must wait for
+- *         MAC_CLOCK_READY (and !GOING_TO_SLEEP) before accessing non-CSR
+- *         device registers.
+- *     2:  INIT_DONE
+- *         Host sets this to put device into fully operational D0 power mode.
+- *         Host resets this after SW_RESET to put device into low power mode.
+- *     0:  MAC_CLOCK_READY
+- *         Indicates MAC (ucode processor, etc.) is powered up and can run.
+- *         Internal resources are accessible.
+- *         NOTE:  This does not indicate that the processor is actually running.
+- *         NOTE:  This does not indicate that device has completed
+- *                init or post-power-down restore of internal SRAM memory.
+- *                Use CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP as indication that
+- *                SRAM is restored and uCode is in normal operation mode.
+- *                Later devices (5xxx/6xxx/1xxx) use non-volatile SRAM, and
+- *                do not need to save/restore it.
+- *         NOTE:  After device reset, this bit remains "0" until host sets
+- *                INIT_DONE
+  */
+-#define CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY        (0x00000001)
+-#define CSR_GP_CNTRL_REG_FLAG_INIT_DONE              (0x00000004)
+-#define CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ         (0x00000008)
+ #define CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP         (0x00000010)
+ #define CSR_GP_CNTRL_REG_FLAG_XTAL_ON		     (0x00000400)
+ 
+-#define CSR_GP_CNTRL_REG_VAL_MAC_ACCESS_EN           (0x00000001)
+-
+ #define CSR_GP_CNTRL_REG_MSK_POWER_SAVE_TYPE         (0x07000000)
+ #define CSR_GP_CNTRL_REG_FLAG_RFKILL_WAKE_L1A_EN     (0x04000000)
+ #define CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW          (0x08000000)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c
+index f2cea1c7befc..ac965c34a2f8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c
+@@ -6,6 +6,7 @@
+  * GPL LICENSE SUMMARY
+  *
+  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -31,6 +32,7 @@
+  * BSD LICENSE
+  *
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -199,12 +201,12 @@ static int iwl_init_otp_access(struct iwl_trans *trans)
+ 	/* Enable 40MHz radio clock */
+ 	iwl_write32(trans, CSR_GP_CNTRL,
+ 		    iwl_read32(trans, CSR_GP_CNTRL) |
+-		    CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++		    BIT(trans->cfg->csr->flag_init_done));
+ 
+ 	/* wait for clock to be ready */
+ 	ret = iwl_poll_bit(trans, CSR_GP_CNTRL,
+-			   CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
+-			   CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
++			   BIT(trans->cfg->csr->flag_mac_clock_ready),
++			   BIT(trans->cfg->csr->flag_mac_clock_ready),
+ 			   25000);
+ 	if (ret < 0) {
+ 		IWL_ERR(trans, "Time out access OTP\n");
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 0497c7a44def..b002a7afb5f5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -8,6 +8,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+  * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -35,6 +36,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+  * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -520,15 +522,15 @@ static void iwl_mvm_dump_lmac_error_log(struct iwl_mvm *mvm, u32 base)
+ 
+ 		/* set INIT_DONE flag */
+ 		iwl_set_bit(trans, CSR_GP_CNTRL,
+-			    CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++			    BIT(trans->cfg->csr->flag_init_done));
+ 
+ 		/* and wait for clock stabilization */
+ 		if (trans->cfg->device_family == IWL_DEVICE_FAMILY_8000)
+ 			udelay(2);
+ 
+ 		err = iwl_poll_bit(trans, CSR_GP_CNTRL,
+-				   CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
+-				   CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
++				   BIT(trans->cfg->csr->flag_mac_clock_ready),
++				   BIT(trans->cfg->csr->flag_mac_clock_ready),
+ 				   25000);
+ 		if (err < 0) {
+ 			IWL_DEBUG_INFO(trans,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index f25ce3a1ea50..f772d70a65e4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -3,6 +3,7 @@
+  * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * Portions of this file are derived from the ipw3945 project, as well
+  * as portions of the ieee80211 subsystem header files.
+@@ -201,7 +202,7 @@ static void iwl_pcie_rxq_inc_wr_ptr(struct iwl_trans *trans,
+ 			IWL_DEBUG_INFO(trans, "Rx queue requesting wakeup, GP1 = 0x%x\n",
+ 				       reg);
+ 			iwl_set_bit(trans, CSR_GP_CNTRL,
+-				    CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++				    BIT(trans->cfg->csr->flag_mac_access_req));
+ 			rxq->need_update = true;
+ 			return;
+ 		}
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+index cb4012541f45..b8e8dac2895d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+@@ -6,6 +6,7 @@
+  * GPL LICENSE SUMMARY
+  *
+  * Copyright(c) 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -19,6 +20,7 @@
+  * BSD LICENSE
+  *
+  * Copyright(c) 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -92,7 +94,8 @@ static int iwl_pcie_gen2_apm_init(struct iwl_trans *trans)
+ 	 * Set "initialization complete" bit to move adapter from
+ 	 * D0U* --> D0A* (powered-up active) state.
+ 	 */
+-	iwl_set_bit(trans, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++	iwl_set_bit(trans, CSR_GP_CNTRL,
++		    BIT(trans->cfg->csr->flag_init_done));
+ 
+ 	/*
+ 	 * Wait for clock stabilization; once stabilized, access to
+@@ -100,8 +103,9 @@ static int iwl_pcie_gen2_apm_init(struct iwl_trans *trans)
+ 	 * and accesses to uCode SRAM.
+ 	 */
+ 	ret = iwl_poll_bit(trans, CSR_GP_CNTRL,
+-			   CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
+-			   CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
++			   BIT(trans->cfg->csr->flag_mac_clock_ready),
++			   BIT(trans->cfg->csr->flag_mac_clock_ready),
++			   25000);
+ 	if (ret < 0) {
+ 		IWL_DEBUG_INFO(trans, "Failed to init the card\n");
+ 		return ret;
+@@ -143,7 +147,8 @@ static void iwl_pcie_gen2_apm_stop(struct iwl_trans *trans, bool op_mode_leave)
+ 	 * Clear "initialization complete" bit to move adapter from
+ 	 * D0A* (powered-up Active) --> D0U* (Uninitialized) state.
+ 	 */
+-	iwl_clear_bit(trans, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++	iwl_clear_bit(trans, CSR_GP_CNTRL,
++		      BIT(trans->cfg->csr->flag_init_done));
+ }
+ 
+ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
+@@ -187,7 +192,7 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
+ 
+ 	/* Make sure (redundant) we've released our request to stay awake */
+ 	iwl_clear_bit(trans, CSR_GP_CNTRL,
+-		      CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++		      BIT(trans->cfg->csr->flag_mac_access_req));
+ 
+ 	/* Stop the device, and put it in low power state */
+ 	iwl_pcie_gen2_apm_stop(trans, false);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index f8a0234d332c..623476603cd4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -8,6 +8,7 @@
+  * Copyright(c) 2007 - 2015 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -35,6 +36,7 @@
+  * Copyright(c) 2005 - 2015 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -179,7 +181,8 @@ static void iwl_trans_pcie_dump_regs(struct iwl_trans *trans)
+ static void iwl_trans_pcie_sw_reset(struct iwl_trans *trans)
+ {
+ 	/* Reset entire device - do controller reset (results in SHRD_HW_RST) */
+-	iwl_set_bit(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
++	iwl_set_bit(trans, trans->cfg->csr->addr_sw_reset,
++		    BIT(trans->cfg->csr->flag_sw_reset));
+ 	usleep_range(5000, 6000);
+ }
+ 
+@@ -372,7 +375,8 @@ static int iwl_pcie_apm_init(struct iwl_trans *trans)
+ 	 * Set "initialization complete" bit to move adapter from
+ 	 * D0U* --> D0A* (powered-up active) state.
+ 	 */
+-	iwl_set_bit(trans, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++	iwl_set_bit(trans, CSR_GP_CNTRL,
++		    BIT(trans->cfg->csr->flag_init_done));
+ 
+ 	/*
+ 	 * Wait for clock stabilization; once stabilized, access to
+@@ -380,8 +384,9 @@ static int iwl_pcie_apm_init(struct iwl_trans *trans)
+ 	 * and accesses to uCode SRAM.
+ 	 */
+ 	ret = iwl_poll_bit(trans, CSR_GP_CNTRL,
+-			   CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
+-			   CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
++			   BIT(trans->cfg->csr->flag_mac_clock_ready),
++			   BIT(trans->cfg->csr->flag_mac_clock_ready),
++			   25000);
+ 	if (ret < 0) {
+ 		IWL_ERR(trans, "Failed to init the card\n");
+ 		return ret;
+@@ -459,15 +464,16 @@ static void iwl_pcie_apm_lp_xtal_enable(struct iwl_trans *trans)
+ 	 * Set "initialization complete" bit to move adapter from
+ 	 * D0U* --> D0A* (powered-up active) state.
+ 	 */
+-	iwl_set_bit(trans, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++	iwl_set_bit(trans, CSR_GP_CNTRL,
++		    BIT(trans->cfg->csr->flag_init_done));
+ 
+ 	/*
+ 	 * Wait for clock stabilization; once stabilized, access to
+ 	 * device-internal resources is possible.
+ 	 */
+ 	ret = iwl_poll_bit(trans, CSR_GP_CNTRL,
+-			   CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
+-			   CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
++			   BIT(trans->cfg->csr->flag_mac_clock_ready),
++			   BIT(trans->cfg->csr->flag_mac_clock_ready),
+ 			   25000);
+ 	if (WARN_ON(ret < 0)) {
+ 		IWL_ERR(trans, "Access time out - failed to enable LP XTAL\n");
+@@ -519,7 +525,7 @@ static void iwl_pcie_apm_lp_xtal_enable(struct iwl_trans *trans)
+ 	 * D0A* (powered-up Active) --> D0U* (Uninitialized) state.
+ 	 */
+ 	iwl_clear_bit(trans, CSR_GP_CNTRL,
+-		      CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++		      BIT(trans->cfg->csr->flag_init_done));
+ 
+ 	/* Activates XTAL resources monitor */
+ 	__iwl_trans_pcie_set_bit(trans, CSR_MONITOR_CFG_REG,
+@@ -541,11 +547,12 @@ void iwl_pcie_apm_stop_master(struct iwl_trans *trans)
+ 	int ret;
+ 
+ 	/* stop device's busmaster DMA activity */
+-	iwl_set_bit(trans, CSR_RESET, CSR_RESET_REG_FLAG_STOP_MASTER);
++	iwl_set_bit(trans, trans->cfg->csr->addr_sw_reset,
++		    BIT(trans->cfg->csr->flag_stop_master));
+ 
+-	ret = iwl_poll_bit(trans, CSR_RESET,
+-			   CSR_RESET_REG_FLAG_MASTER_DISABLED,
+-			   CSR_RESET_REG_FLAG_MASTER_DISABLED, 100);
++	ret = iwl_poll_bit(trans, trans->cfg->csr->addr_sw_reset,
++			   BIT(trans->cfg->csr->flag_master_dis),
++			   BIT(trans->cfg->csr->flag_master_dis), 100);
+ 	if (ret < 0)
+ 		IWL_WARN(trans, "Master Disable Timed Out, 100 usec\n");
+ 
+@@ -594,7 +601,7 @@ static void iwl_pcie_apm_stop(struct iwl_trans *trans, bool op_mode_leave)
+ 	 * D0A* (powered-up Active) --> D0U* (Uninitialized) state.
+ 	 */
+ 	iwl_clear_bit(trans, CSR_GP_CNTRL,
+-		      CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++		      BIT(trans->cfg->csr->flag_init_done));
+ }
+ 
+ static int iwl_pcie_nic_init(struct iwl_trans *trans)
+@@ -1267,7 +1274,7 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
+ 
+ 	/* Make sure (redundant) we've released our request to stay awake */
+ 	iwl_clear_bit(trans, CSR_GP_CNTRL,
+-		      CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++		      BIT(trans->cfg->csr->flag_mac_access_req));
+ 
+ 	/* Stop the device, and put it in low power state */
+ 	iwl_pcie_apm_stop(trans, false);
+@@ -1497,9 +1504,9 @@ static void iwl_trans_pcie_d3_suspend(struct iwl_trans *trans, bool test,
+ 	iwl_pcie_synchronize_irqs(trans);
+ 
+ 	iwl_clear_bit(trans, CSR_GP_CNTRL,
+-		      CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++		      BIT(trans->cfg->csr->flag_mac_access_req));
+ 	iwl_clear_bit(trans, CSR_GP_CNTRL,
+-		      CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++		      BIT(trans->cfg->csr->flag_init_done));
+ 
+ 	iwl_pcie_enable_rx_wake(trans, false);
+ 
+@@ -1543,15 +1550,17 @@ static int iwl_trans_pcie_d3_resume(struct iwl_trans *trans,
+ 		iwl_pcie_reset_ict(trans);
+ 	iwl_enable_interrupts(trans);
+ 
+-	iwl_set_bit(trans, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+-	iwl_set_bit(trans, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++	iwl_set_bit(trans, CSR_GP_CNTRL,
++		    BIT(trans->cfg->csr->flag_mac_access_req));
++	iwl_set_bit(trans, CSR_GP_CNTRL,
++		    BIT(trans->cfg->csr->flag_init_done));
+ 
+ 	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_8000)
+ 		udelay(2);
+ 
+ 	ret = iwl_poll_bit(trans, CSR_GP_CNTRL,
+-			   CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
+-			   CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
++			   BIT(trans->cfg->csr->flag_mac_clock_ready),
++			   BIT(trans->cfg->csr->flag_mac_clock_ready),
+ 			   25000);
+ 	if (ret < 0) {
+ 		IWL_ERR(trans, "Failed to resume the device (mac ready)\n");
+@@ -1562,7 +1571,7 @@ static int iwl_trans_pcie_d3_resume(struct iwl_trans *trans,
+ 
+ 	if (!reset) {
+ 		iwl_clear_bit(trans, CSR_GP_CNTRL,
+-			      CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++			      BIT(trans->cfg->csr->flag_mac_access_req));
+ 	} else {
+ 		iwl_trans_pcie_tx_reset(trans);
+ 
+@@ -1939,7 +1948,7 @@ static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans,
+ 
+ 	/* this bit wakes up the NIC */
+ 	__iwl_trans_pcie_set_bit(trans, CSR_GP_CNTRL,
+-				 CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++				 BIT(trans->cfg->csr->flag_mac_access_req));
+ 	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_8000)
+ 		udelay(2);
+ 
+@@ -1964,8 +1973,8 @@ static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans,
+ 	 * and do not save/restore SRAM when power cycling.
+ 	 */
+ 	ret = iwl_poll_bit(trans, CSR_GP_CNTRL,
+-			   CSR_GP_CNTRL_REG_VAL_MAC_ACCESS_EN,
+-			   (CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY |
++			   BIT(trans->cfg->csr->flag_val_mac_access_en),
++			   (BIT(trans->cfg->csr->flag_mac_clock_ready) |
+ 			    CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP), 15000);
+ 	if (unlikely(ret < 0)) {
+ 		iwl_trans_pcie_dump_regs(trans);
+@@ -2003,7 +2012,7 @@ static void iwl_trans_pcie_release_nic_access(struct iwl_trans *trans,
+ 		goto out;
+ 
+ 	__iwl_trans_pcie_clear_bit(trans, CSR_GP_CNTRL,
+-				   CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++				   BIT(trans->cfg->csr->flag_mac_access_req));
+ 	/*
+ 	 * Above we read the CSR_GP_CNTRL register, which will flush
+ 	 * any previous writes, but we need the write that clears the
+@@ -3232,12 +3241,12 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 		 * id located at the AUX bus MISC address space.
+ 		 */
+ 		iwl_set_bit(trans, CSR_GP_CNTRL,
+-			    CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++			    BIT(trans->cfg->csr->flag_init_done));
+ 		udelay(2);
+ 
+ 		ret = iwl_poll_bit(trans, CSR_GP_CNTRL,
+-				   CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
+-				   CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
++				   BIT(trans->cfg->csr->flag_mac_clock_ready),
++				   BIT(trans->cfg->csr->flag_mac_clock_ready),
+ 				   25000);
+ 		if (ret < 0) {
+ 			IWL_DEBUG_INFO(trans, "Failed to wake up the nic\n");
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index cf468b9f5a82..1cbb8f470afd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -3,6 +3,7 @@
+  * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * Portions of this file are derived from the ipw3945 project, as well
+  * as portions of the ieee80211 subsystem header files.
+@@ -273,7 +274,7 @@ static void iwl_pcie_txq_inc_wr_ptr(struct iwl_trans *trans,
+ 			IWL_DEBUG_INFO(trans, "Tx queue %d requesting wakeup, GP1 = 0x%x\n",
+ 				       txq_id, reg);
+ 			iwl_set_bit(trans, CSR_GP_CNTRL,
+-				    CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++				    BIT(trans->cfg->csr->flag_mac_access_req));
+ 			txq->need_update = true;
+ 			return;
+ 		}
+@@ -611,7 +612,7 @@ static void iwl_pcie_clear_cmd_in_flight(struct iwl_trans *trans)
+ 
+ 	trans_pcie->cmd_hold_nic_awake = false;
+ 	__iwl_trans_pcie_clear_bit(trans, CSR_GP_CNTRL,
+-				   CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++				   BIT(trans->cfg->csr->flag_mac_access_req));
+ }
+ 
+ /*
+@@ -1171,6 +1172,7 @@ static int iwl_pcie_set_cmd_in_flight(struct iwl_trans *trans,
+ 				      const struct iwl_host_cmd *cmd)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++	const struct iwl_cfg *cfg = trans->cfg;
+ 	int ret;
+ 
+ 	lockdep_assert_held(&trans_pcie->reg_lock);
+@@ -1188,19 +1190,19 @@ static int iwl_pcie_set_cmd_in_flight(struct iwl_trans *trans,
+ 	 * returned. This needs to be done only on NICs that have
+ 	 * apmg_wake_up_wa set.
+ 	 */
+-	if (trans->cfg->base_params->apmg_wake_up_wa &&
++	if (cfg->base_params->apmg_wake_up_wa &&
+ 	    !trans_pcie->cmd_hold_nic_awake) {
+ 		__iwl_trans_pcie_set_bit(trans, CSR_GP_CNTRL,
+-					 CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++					 BIT(cfg->csr->flag_mac_access_req));
+ 
+ 		ret = iwl_poll_bit(trans, CSR_GP_CNTRL,
+-				   CSR_GP_CNTRL_REG_VAL_MAC_ACCESS_EN,
+-				   (CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY |
++				   BIT(cfg->csr->flag_val_mac_access_en),
++				   (BIT(cfg->csr->flag_mac_clock_ready) |
+ 				    CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP),
+ 				   15000);
+ 		if (ret < 0) {
+ 			__iwl_trans_pcie_clear_bit(trans, CSR_GP_CNTRL,
+-					CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++					BIT(cfg->csr->flag_mac_access_req));
+ 			IWL_ERR(trans, "Failed to wake NIC for hcmd\n");
+ 			return -EIO;
+ 		}
+-- 
+2.17.0
