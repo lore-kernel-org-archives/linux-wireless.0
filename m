@@ -1,154 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:54902 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751104AbeDYCIg (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40826 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750814AbeDVI17 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 22:08:36 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 05/19] rtlwifi: halmac: describe number and size of chip functions
-Date: Wed, 25 Apr 2018 10:08:06 +0800
-Message-ID: <20180425020820.6141-6-pkshih@realtek.com> (sfid-20180425_040851_704533_E3D8FD05)
-In-Reply-To: <20180425020820.6141-1-pkshih@realtek.com>
-References: <20180425020820.6141-1-pkshih@realtek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 22 Apr 2018 04:27:59 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 22 Apr 2018 11:27:36 +0300
+Message-Id: <20180422082745.9743-4-luca@coelho.fi> (sfid-20180422_102816_764171_99FEFE3F)
+In-Reply-To: <20180422082745.9743-1-luca@coelho.fi>
+References: <20180422082745.9743-1-luca@coelho.fi>
+Subject: [PATCH 03/12] iwlwifi: cfg: remove unnecessary cfg data in non-dvm devices
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-The number and size of chip fucntions are different, such as TX/RX FIFO
-size, efuse size, etc. So they are defined in an individual file.
+The max_data_size and max_inst_size values are only needed for DVM
+devices.  Remove the assignment to those fields in 7000 and newer
+families so we can also remove the otherwise unnecessary inclusion of
+iwl-agn.h headers.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../halmac_88xx/halmac_8822b/halmac_8822b_cfg.h    | 68 ++++++++++++++++++++++
- .../rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h   | 40 +++++++++++++
- 2 files changed, 108 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_cfg.h
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c  |  3 ---
+ drivers/net/wireless/intel/iwlwifi/cfg/7000.c   | 11 ++++-------
+ drivers/net/wireless/intel/iwlwifi/cfg/8000.c   |  9 +++------
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c   |  3 ---
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h |  4 ++--
+ 5 files changed, 9 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_cfg.h b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_cfg.h
-new file mode 100644
-index 000000000000..f6ed7b44549c
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_8822b/halmac_8822b_cfg.h
-@@ -0,0 +1,68 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2016 - 2018 Realtek Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-+ * more details.
-+ *
-+ ******************************************************************************/
-+
-+#ifndef _HALMAC_8822B_CFG_H_
-+#define _HALMAC_8822B_CFG_H_
-+
-+#include "../halmac_88xx_cfg.h"
-+
-+#define TX_FIFO_SIZE_8822B	262144
-+#define RX_FIFO_SIZE_8822B	24576
-+#define TRX_SHARE_SIZE_8822B	65536
-+
-+#define RX_DESC_DUMMY_SIZE_8822B	72 /* 8 * 9 Bytes */
-+#define RX_FIFO_EXPANDING_MODE_PKT_SIZE_MAX_8822B	80 /* 8 Byte alignment*/
-+
-+/* should be 8 Byte alignment*/
-+#if (HALMAC_RX_FIFO_EXPANDING_MODE_PKT_SIZE <= \
-+	RX_FIFO_EXPANDING_MODE_PKT_SIZE_MAX_8822B)
-+#define RX_FIFO_EXPANDING_UNIT_8822B	(RX_DESC_SIZE_88XX + \
-+	RX_DESC_DUMMY_SIZE_8822B + HALMAC_RX_FIFO_EXPANDING_MODE_PKT_SIZE)
-+#else
-+#define RX_FIFO_EXPANDING_UNIT_8822B (RX_DESC_SIZE_88XX + \
-+	RX_DESC_DUMMY_SIZE_8822B + RX_FIFO_EXPANDING_MODE_PKT_SIZE_MAX_8822B)
-+#endif
-+
-+#define TX_FIFO_SIZE_LA_8822B	(TX_FIFO_SIZE_8822B >>  1)
-+#define TX_FIFO_SIZE_RX_EXPAND_1BLK_8822B	\
-+		(TX_FIFO_SIZE_8822B - TRX_SHARE_SIZE_8822B)
-+#define RX_FIFO_SIZE_RX_EXPAND_1BLK_8822B	\
-+		((((RX_FIFO_EXPANDING_UNIT_8822B << 8) - 1) >> 10) << 10)
-+#define TX_FIFO_SIZE_RX_EXPAND_2BLK_8822B	\
-+		(TX_FIFO_SIZE_8822B - (2 * TRX_SHARE_SIZE_8822B))
-+#define RX_FIFO_SIZE_RX_EXPAND_2BLK_8822B	\
-+		(RX_FIFO_SIZE_8822B +  (2 * TRX_SHARE_SIZE_8822B))
-+#define TX_FIFO_SIZE_RX_EXPAND_3BLK_8822B	\
-+		(TX_FIFO_SIZE_8822B - (3 * TRX_SHARE_SIZE_8822B))
-+#define RX_FIFO_SIZE_RX_EXPAND_3BLK_8822B	\
-+		(RX_FIFO_SIZE_8822B +  (3 * TRX_SHARE_SIZE_8822B))
-+
-+#define EFUSE_SIZE_8822B		1024
-+#define EEPROM_SIZE_8822B		768
-+#define BT_EFUSE_SIZE_8822B		128
-+
-+#define SEC_CAM_NUM_8822B		64
-+
-+#define OQT_ENTRY_AC_8822B		32
-+#define OQT_ENTRY_NOAC_8822B		32
-+#define MACID_MAX_8822B			128
-+
-+#define WLAN_FW_IRAM_MAX_SIZE_8822B	196608
-+#define WLAN_FW_DRAM_MAX_SIZE_8822B	49152
-+#define WLAN_FW_ERAM_MAX_SIZE_8822B	0
-+#define WLAN_FW_MAX_SIZE_8822B		(WLAN_FW_IRAM_MAX_SIZE_8822B + \
-+	WLAN_FW_DRAM_MAX_SIZE_8822B + WLAN_FW_ERAM_MAX_SIZE_8822B)
-+
-+#endif
-diff --git a/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h
-new file mode 100644
-index 000000000000..22514ef4680d
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_88xx_cfg.h
-@@ -0,0 +1,40 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2016 - 2018 Realtek Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-+ * more details.
-+ *
-+ ******************************************************************************/
-+
-+#ifndef _HALMAC_88XX_CFG_H_
-+#define _HALMAC_88XX_CFG_H_
-+
-+#include "../halmac_api.h"
-+
-+#define TX_PAGE_SIZE_88XX		128
-+#define TX_PAGE_SIZE_SHIFT_88XX		7 /* 128 = 2^7 */
-+#define TX_ALIGN_SIZE_88XX		8
-+#define SDIO_TX_MAX_SIZE_88XX		31744
-+#define RX_BUF_FW_88XX			12288
-+
-+#define TX_DESC_SIZE_88XX		48
-+#define RX_DESC_SIZE_88XX		24
-+
-+#define H2C_PKT_SIZE_88XX		32 /* Only support 32 byte packet now */
-+#define H2C_PKT_HDR_SIZE_88XX		8
-+#define C2H_DATA_OFFSET_88XX		10
-+#define C2H_PKT_BUF_88XX		256
-+
-+/* HW memory address */
-+#define OCPBASE_TXBUF_88XX		0x18780000
-+#define OCPBASE_DMEM_88XX		0x00200000
-+#define OCPBASE_EMEM_88XX		0x00100000
-+
-+#endif
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index afc78a1e1cfc..d4ba66aecdc9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -54,7 +54,6 @@
+ #include <linux/module.h>
+ #include <linux/stringify.h>
+ #include "iwl-config.h"
+-#include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+ #define IWL_22000_UCODE_API_MAX	38
+@@ -115,8 +114,6 @@ static const struct iwl_ht_params iwl_22000_ht_params = {
+ 	.ucode_api_max = IWL_22000_UCODE_API_MAX,			\
+ 	.ucode_api_min = IWL_22000_UCODE_API_MIN,			\
+ 	.device_family = IWL_DEVICE_FAMILY_22000,			\
+-	.max_inst_size = IWL60_RTC_INST_SIZE,				\
+-	.max_data_size = IWL60_RTC_DATA_SIZE,				\
+ 	.base_params = &iwl_22000_base_params,				\
+ 	.led_mode = IWL_LED_RF_STATE,					\
+ 	.nvm_hw_section_num = NVM_HW_SECTION_NUM_FAMILY_22000,		\
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/7000.c b/drivers/net/wireless/intel/iwlwifi/cfg/7000.c
+index 8e9684e8e603..69bfa827e82a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/7000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/7000.c
+@@ -7,8 +7,8 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+- * Copyright(c) 2015 Intel Deutschland GmbH
+- * Copyright(c) 2018 Intel Corporation
++ * Copyright(c) 2015        Intel Deutschland GmbH
++ * Copyright(c) 2018        Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -35,8 +35,8 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+- * Copyright(c) 2015 Intel Deutschland GmbH
+- * Copyright(c) 2018 Intel Corporation
++ * Copyright(c) 2015        Intel Deutschland GmbH
++ * Copyright(c) 2018        Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -70,7 +70,6 @@
+ #include <linux/module.h>
+ #include <linux/stringify.h>
+ #include "iwl-config.h"
+-#include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+ #define IWL7260_UCODE_API_MAX	17
+@@ -162,8 +161,6 @@ static const struct iwl_ht_params iwl7000_ht_params = {
+ 
+ #define IWL_DEVICE_7000_COMMON					\
+ 	.device_family = IWL_DEVICE_FAMILY_7000,		\
+-	.max_inst_size = IWL60_RTC_INST_SIZE,			\
+-	.max_data_size = IWL60_RTC_DATA_SIZE,			\
+ 	.base_params = &iwl7000_base_params,			\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+ 	.nvm_hw_section_num = NVM_HW_SECTION_NUM_FAMILY_7000,	\
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/8000.c b/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
+index e8299b2ab6bd..7262e973e0d6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
+@@ -7,8 +7,8 @@
+  *
+  * Copyright(c) 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2014 - 2015 Intel Mobile Communications GmbH
+- * Copyright(c) 2016 Intel Deutschland GmbH
+- * Copyright(c) 2018 Intel Corporation
++ * Copyright(c) 2016        Intel Deutschland GmbH
++ * Copyright(c) 2018        Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -35,7 +35,7 @@
+  *
+  * Copyright(c) 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2014 - 2015 Intel Mobile Communications GmbH
+- * Copyright(c) 2018 Intel Corporation
++ * Copyright(c) 2018        Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -69,7 +69,6 @@
+ #include <linux/module.h>
+ #include <linux/stringify.h>
+ #include "iwl-config.h"
+-#include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+ #define IWL8000_UCODE_API_MAX	36
+@@ -142,8 +141,6 @@ static const struct iwl_tt_params iwl8000_tt_params = {
+ 
+ #define IWL_DEVICE_8000_COMMON						\
+ 	.device_family = IWL_DEVICE_FAMILY_8000,			\
+-	.max_inst_size = IWL60_RTC_INST_SIZE,				\
+-	.max_data_size = IWL60_RTC_DATA_SIZE,				\
+ 	.base_params = &iwl8000_base_params,				\
+ 	.led_mode = IWL_LED_RF_STATE,					\
+ 	.nvm_hw_section_num = NVM_HW_SECTION_NUM_FAMILY_8000,		\
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+index fe376fce3444..9706624911f8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+@@ -54,7 +54,6 @@
+ #include <linux/module.h>
+ #include <linux/stringify.h>
+ #include "iwl-config.h"
+-#include "iwl-agn-hw.h"
+ #include "fw/file.h"
+ 
+ /* Highest firmware API version supported */
+@@ -135,8 +134,6 @@ static const struct iwl_tt_params iwl9000_tt_params = {
+ 	.ucode_api_max = IWL9000_UCODE_API_MAX,				\
+ 	.ucode_api_min = IWL9000_UCODE_API_MIN,				\
+ 	.device_family = IWL_DEVICE_FAMILY_9000,			\
+-	.max_inst_size = IWL60_RTC_INST_SIZE,				\
+-	.max_data_size = IWL60_RTC_DATA_SIZE,				\
+ 	.base_params = &iwl9000_base_params,				\
+ 	.led_mode = IWL_LED_RF_STATE,					\
+ 	.nvm_hw_section_num = NVM_HW_SECTION_NUM_FAMILY_9000,		\
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 7f0b7cea8b9b..7752794d0437 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -337,8 +337,8 @@ struct iwl_csr_params {
+  *	next step. Supported only in integrated solutions.
+  * @ucode_api_max: Highest version of uCode API supported by driver.
+  * @ucode_api_min: Lowest version of uCode API supported by driver.
+- * @max_inst_size: The maximal length of the fw inst section
+- * @max_data_size: The maximal length of the fw data section
++ * @max_inst_size: The maximal length of the fw inst section (only DVM)
++ * @max_data_size: The maximal length of the fw data section (only DVM)
+  * @valid_tx_ant: valid transmit antenna
+  * @valid_rx_ant: valid receive antenna
+  * @non_shared_ant: the antenna that is for WiFi only
 -- 
-2.15.1
+2.17.0
