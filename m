@@ -1,76 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51856 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754591AbeDTMBb (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40850 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750847AbeDVI2B (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Apr 2018 08:01:31 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: <pkshih@realtek.com>
-Cc: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
-        <stable@vger.kernel.org>
-Subject: Re: [PATCH v2] rtlwifi: cleanup 8723be ant_sel definition
-References: <20180420023009.3182-1-pkshih@realtek.com>
-Date: Fri, 20 Apr 2018 15:01:22 +0300
-In-Reply-To: <20180420023009.3182-1-pkshih@realtek.com> (pkshih@realtek.com's
-        message of "Fri, 20 Apr 2018 10:30:09 +0800")
-Message-ID: <87zi1ygk8d.fsf@kamboji.qca.qualcomm.com> (sfid-20180420_140134_562229_27C94695)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 22 Apr 2018 04:28:01 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 22 Apr 2018 11:27:39 +0300
+Message-Id: <20180422082745.9743-7-luca@coelho.fi> (sfid-20180422_102818_575657_B77FC374)
+In-Reply-To: <20180422082745.9743-1-luca@coelho.fi>
+References: <20180422082745.9743-1-luca@coelho.fi>
+Subject: [PATCH 06/12] iwlwifi: mvm: move skb padding reservation earlier
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-<pkshih@realtek.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> From: Ping-Ke Shih <pkshih@realtek.com>
->
-> The module parameter ant_sel is used to control antenna number and path.
-> There is an existing enum ANT_{X2,X1} defined the antenna number, so
-> add a new enum ANT_{MAIN,AUX} to make it readable. After this work,
-> incorrect given values depend on ant_sel were exposed, so refill values
-> according following definition:
->   ant_sel   ant_num   ant_path  print_label
->      1      ANT_X1    ANT_AUX        #2
->      2      ANT_X2    ANT_MAIN       #1
-> Then, a workaround resulted from the incorrect values in halbtcoutsrc.c was
-> removed. These is a existing bug in the workaround while ant_sel=2, but the
-> case is rare use so user is hard to observe this bug.
->
-> The experimental results with single antenna connected to specific path
-> are in following:
->   ant_sel  ANT_MAIN(#1)  ANT_AUX(#2)
->      0        -8            -62
->      1        -62           -10
->      2        -6            -60
->
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Cc: Stable <stable@vger.kernel.org> # 4.7+
-> Reviewed-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> v2: Add more description about fixed bugs in end of first paragraph.
+Future changes will require moving the HE radiotap data into
+the SKB head, but this means we need to have the alignment
+reservation done before that. To prepare, move the alignment
+reservation earlier here.
 
-Sorry, I still don't understand the bug you are fixing. It shouldn't
-take more than one minute to understand a commit log.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 20 ++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
-I prose that you rewrite the commit log, or at least parts of if it.
-When you are describing a bug don't talk about enums or source files,
-that's an implementation detail, and instead talk how the bug looks like
-from users point of view. For example:
-
-  "On HP laptop model 1234 with Realtex 4321 device users are supposed
-   to use ant_sel module parameter with value 77 to use the correct
-   antenna. But instead rtlwifi incorrectly chose antenna 88 with lower
-   transmit power and that caused packet loss. Fix it so that the user
-   gets better transmit power and..."
-
-(that's of course all made up information as I don't know what the
-actual bug is)
-
-And after that you can write rtlwifi internals in the commit log as much
-as you want :) But there needs to be a clear generic description of the
-bug first and it needs to understandable in one read.
-
-To make this faster I propose that you send the new commit log as a
-reply to this mail and I can then comment faster.
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 34791628cfb3..bb63e75a9b7f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -151,17 +151,9 @@ static void iwl_mvm_create_skb(struct sk_buff *skb, struct ieee80211_hdr *hdr,
+ 	unsigned int hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 
+ 	if (desc->mac_flags2 & IWL_RX_MPDU_MFLG2_PAD) {
++		len -= 2;
+ 		pad_len = 2;
+-
+-		/*
+-		 * If the device inserted padding it means that (it thought)
+-		 * the 802.11 header wasn't a multiple of 4 bytes long. In
+-		 * this case, reserve two bytes at the start of the SKB to
+-		 * align the payload properly in case we end up copying it.
+-		 */
+-		skb_reserve(skb, pad_len);
+ 	}
+-	len -= pad_len;
+ 
+ 	/* If frame is small enough to fit in skb->head, pull it completely.
+ 	 * If not, only pull ieee80211_hdr (including crypto if present, and
+@@ -866,6 +858,16 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 		return;
+ 	}
+ 
++	if (desc->mac_flags2 & IWL_RX_MPDU_MFLG2_PAD) {
++		/*
++		 * If the device inserted padding it means that (it thought)
++		 * the 802.11 header wasn't a multiple of 4 bytes long. In
++		 * this case, reserve two bytes at the start of the SKB to
++		 * align the payload properly in case we end up copying it.
++		 */
++		skb_reserve(skb, 2);
++	}
++
+ 	rx_status = IEEE80211_SKB_RXCB(skb);
+ 
+ 	if (iwl_mvm_rx_crypto(mvm, hdr, rx_status, desc,
 -- 
-Kalle Valo
+2.17.0
