@@ -1,101 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50206 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753084AbeDXJSR (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40926 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751990AbeDVI2m (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 05:18:17 -0400
-Subject: Re: [PATCH] ath10k: add dynamic vlan support
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-References: <1524232653-22573-1-git-send-email-mpubbise@codeaurora.org>
- <87r2n5auvq.fsf@kamboji.qca.qualcomm.com>
- <aa04534d-9677-f42e-a239-b230093ef2f5@dd-wrt.com>
-From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Message-ID: <12cd1e72-fd27-9111-808e-0295c53f5d6b@codeaurora.org> (sfid-20180424_111821_786589_801503C2)
-Date: Tue, 24 Apr 2018 14:48:10 +0530
-MIME-Version: 1.0
-In-Reply-To: <aa04534d-9677-f42e-a239-b230093ef2f5@dd-wrt.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Sun, 22 Apr 2018 04:28:42 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Eliad Peller <eliadx.peller@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sun, 22 Apr 2018 11:27:45 +0300
+Message-Id: <20180422082745.9743-13-luca@coelho.fi> (sfid-20180422_102845_392433_6214FADA)
+In-Reply-To: <20180422082745.9743-1-luca@coelho.fi>
+References: <20180422082745.9743-1-luca@coelho.fi>
+Subject: [PATCH 12/12] iwlwifi: mvm: set wakeup filters for wowlan "any" configuration
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yes Sebastian, Your point is valid. This would break the 4-addr 
-operation on other ath10k devices which does not support the new WMI 
-service.
+From: Eliad Peller <eliadx.peller@intel.com>
 
-I have another approach to solve this problem, I will come with a small 
-patch and see what johannes has to say on that approach.
+In can of "any" wowlan trigger is configured, no valid wakeup filter
+was configured.
 
-Manikanta
+Moreover, the fw assumes there's no connection when there are no configured
+wakeup filters.
+This leads to the station info not being updated on D3 command, causing
+rate_n_flags to be 0 when the offloading code sends tx frame (triggering
+SYSASSERT_102C due to invalid antenna param)
 
-On 4/24/2018 2:39 PM, Sebastian Gottschall wrote:
-> consider my comment regarding vlan_ap.
-> this patch will break wds ap / wds sta support with latest mac80211 
-> (see also my post on the wireless mailing list about the breaking 
-> patch in mac80211)
-> so AP_VLAN must be masked always for all chipsets. otherwise wds 
-> breaks and this is not just a guess. i tested it yesterday using this 
-> patch and found
-> the cause of the issue
->
-> the following lines
->
->   +    if (test_bit(WMI_SERVICE_PER_PACKET_SW_ENCRYPT, 
-> ar->wmi.svc_map)) {
-> +        ar->hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
-> +        ar->hw->wiphy->software_iftypes |= BIT(NL80211_IFTYPE_AP_VLAN);
-> +    }
->
->
-> must be just
->
-> +        ar->hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
-> +        ar->hw->wiphy->software_iftypes |= BIT(NL80211_IFTYPE_AP_VLAN);
->
-> everthing else will cause a regression
->
-> Am 24.04.2018 um 10:09 schrieb Kalle Valo:
->> Manikanta Pubbisetty <mpubbise@codeaurora.org> writes:
->>
->>> Mutlicast/broadcast traffic destined for a particular vlan group will
->>> always be encrypted in software. To enable dynamic VLANs, it requires
->>> driver support for sending software encrypted packets.
->>>
->>> In ath10k, sending sw encrypted frames is allowed only when we insmod
->>> the driver with cryptmode param set to 1, this configuration disables
->>> hardware crypto and enables RAW mode implicitly. Since, enabling raw
->>> mode has performance impact, this cannot be considered as an ideal
->>> solution for supporting VLANs in the driver.
->>>
->>> As an alternative take, in this approach, cryptographic keys for
->>> unicast traffic(per peer PTKs) and keys for non-vlan group traffic
->>> will be configured in hardware, allowing hardware encryption for 
->>> unicast
->>> and non-vlan group traffic. Only vlan group traffic will be 
->>> encrypted in
->>> software and pushed to the target with encap mode set to RAW in the TX
->>> descriptors.
->>>
->>> Not all firmwares can support this type of key configuration(having few
->>> keys installed in hardware and few only in software); for this 
->>> purpose a
->>> new WMI service flag "WMI_SERVICE_PER_PACKET_SW_ENCRYPT" is 
->>> introduced to
->>> advertise this support.
->>>
->>> Also, adding the logic required to send sw encrypted frames in raw 
->>> mode.
->>>
->>> Tested this change on QCA9984(firmware version 10.4-3.5.3-00057).
->>>
->>> Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
->> Your name in patchwork is wrong and hence my script uses the wrong
->> name. Please fix it by registering to patchwork[1] where it's possible
->> to change your name during registration, but only one time. If that
->> doesn't work then send a request to helpdesk@kernel.org and the admins
->> can fix it.
->>
->> [1] https://patchwork.kernel.org/register/
->>
->
+Note: "any" trigger is currently assumed to only be used when entering
+d0i3 (which has a different flow). However, we still reach this code
+when using d3_test.
+
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 80a9a7cb83be..3fcf489f3120 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -8,6 +8,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018        Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -18,11 +19,6 @@
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * General Public License for more details.
+  *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
+- * USA
+- *
+  * The full GNU General Public License is included in this distribution
+  * in the file called COPYING.
+  *
+@@ -35,6 +31,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018        Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -693,6 +690,14 @@ iwl_mvm_get_wowlan_config(struct iwl_mvm *mvm,
+ 				    IWL_WOWLAN_WAKEUP_LINK_CHANGE);
+ 	}
+ 
++	if (wowlan->any) {
++		wowlan_config_cmd->wakeup_filter |=
++			cpu_to_le32(IWL_WOWLAN_WAKEUP_BEACON_MISS |
++				    IWL_WOWLAN_WAKEUP_LINK_CHANGE |
++				    IWL_WOWLAN_WAKEUP_RX_FRAME |
++				    IWL_WOWLAN_WAKEUP_BCN_FILTERING);
++	}
++
+ 	return 0;
+ }
+ 
+-- 
+2.17.0
