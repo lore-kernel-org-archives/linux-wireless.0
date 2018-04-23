@@ -1,72 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:37957 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751167AbeDDIXx (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:32796 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932480AbeDWUMQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Apr 2018 04:23:53 -0400
-Received: by mail-wr0-f193.google.com with SMTP id m13so21161466wrj.5
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Apr 2018 01:23:52 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76x2: fix tx_alc_enabled check
-Date: Wed,  4 Apr 2018 10:23:46 +0200
-Message-Id: <8143b57af86d4bdd5764f86cf53a0cfdcbfe9bea.1522828102.git.lorenzo.bianconi@redhat.com> (sfid-20180404_102358_200935_C3A92B52)
-In-Reply-To: <cover.1522828102.git.lorenzo.bianconi@redhat.com>
-References: <cover.1522828102.git.lorenzo.bianconi@redhat.com>
+        Mon, 23 Apr 2018 16:12:16 -0400
+From: Andres Rodriguez <andresx7@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: andresx7@gmail.com, gregkh@linuxfoundation.org, mcgrof@kernel.org,
+        alexdeucher@gmail.com, christian.koenig@amd.com,
+        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        hdegoede@redhat.com
+Subject: [PATCH 1/9] firmware: some documentation fixes
+Date: Mon, 23 Apr 2018 16:11:57 -0400
+Message-Id: <20180423201205.20533-2-andresx7@gmail.com> (sfid-20180423_221437_037581_5E054D92)
+In-Reply-To: <20180423201205.20533-1-andresx7@gmail.com>
+References: <20180423201205.20533-1-andresx7@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix mt76x2_temp_tx_alc_enabled routine since in order to enable tx_alc
-temperature compensation it necessary to take into account BIT(15) of
-MT_EE_TX_POWER_EXT_PA_5G eeprom info
+Including:
+ - Fixup outdated kernel-doc paths
+ - Slightly too short title underline
+ - Some typos
 
-Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c | 6 +-----
- drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h | 6 ++++++
- 2 files changed, 7 insertions(+), 5 deletions(-)
+ Documentation/driver-api/firmware/request_firmware.rst | 16 ++++++++--------
+ drivers/base/firmware_loader/fallback.c                |  4 ++--
+ drivers/base/firmware_loader/fallback.h                |  2 +-
+ 3 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-index 5bb50027c1e8..95d5f7d888f0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-@@ -609,17 +609,13 @@ int mt76x2_get_temp_comp(struct mt76x2_dev *dev, struct mt76x2_temp_comp *t)
+diff --git a/Documentation/driver-api/firmware/request_firmware.rst b/Documentation/driver-api/firmware/request_firmware.rst
+index 9305bf4db38e..7632f8807472 100644
+--- a/Documentation/driver-api/firmware/request_firmware.rst
++++ b/Documentation/driver-api/firmware/request_firmware.rst
+@@ -17,17 +17,17 @@ an error is returned.
  
- 	memset(t, 0, sizeof(*t));
+ firmware_request
+ ----------------
+-.. kernel-doc:: drivers/base/firmware_class.c
++.. kernel-doc:: drivers/base/firmware_loader/main.c
+    :functions: firmware_request
  
--	val = mt76x2_eeprom_get(dev, MT_EE_NIC_CONF_1);
--	if (!(val & MT_EE_NIC_CONF_1_TEMP_TX_ALC))
-+	if (!mt76x2_temp_tx_alc_enabled(dev))
- 		return -EINVAL;
+ firmware_request_direct
+ -----------------------
+-.. kernel-doc:: drivers/base/firmware_class.c
++.. kernel-doc:: drivers/base/firmware_loader/main.c
+    :functions: firmware_request_direct
  
- 	if (!mt76x2_ext_pa_enabled(dev, band))
- 		return -EINVAL;
+ firmware_request_into_buf
+ -------------------------
+-.. kernel-doc:: drivers/base/firmware_class.c
++.. kernel-doc:: drivers/base/firmware_loader/main.c
+    :functions: firmware_request_into_buf
  
- 	val = mt76x2_eeprom_get(dev, MT_EE_TX_POWER_EXT_PA_5G) >> 8;
--	if (!(val & BIT(7)))
--		return -EINVAL;
--
- 	t->temp_25_ref = val & 0x7f;
- 	if (band == NL80211_BAND_5GHZ) {
- 		slope = mt76x2_eeprom_get(dev, MT_EE_RF_TEMP_COMP_SLOPE_5G);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
-index d79122728dca..aa0b0c040375 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
-@@ -159,6 +159,12 @@ void mt76x2_read_rx_gain(struct mt76x2_dev *dev);
- static inline bool
- mt76x2_temp_tx_alc_enabled(struct mt76x2_dev *dev)
- {
-+	u16 val;
-+
-+	val = mt76x2_eeprom_get(dev, MT_EE_TX_POWER_EXT_PA_5G);
-+	if (!(val & BIT(15)))
-+		return false;
-+
- 	return mt76x2_eeprom_get(dev, MT_EE_NIC_CONF_1) &
- 	       MT_EE_NIC_CONF_1_TEMP_TX_ALC;
+ Asynchronous firmware requests
+@@ -41,7 +41,7 @@ in atomic contexts.
+ 
+ firmware_request_nowait
+ -----------------------
+-.. kernel-doc:: drivers/base/firmware_class.c
++.. kernel-doc:: drivers/base/firmware_loader/main.c
+    :functions: firmware_request_nowait
+ 
+ Special optimizations on reboot
+@@ -50,12 +50,12 @@ Special optimizations on reboot
+ Some devices have an optimization in place to enable the firmware to be
+ retained during system reboot. When such optimizations are used the driver
+ author must ensure the firmware is still available on resume from suspend,
+-this can be done with firmware_request_cache() insted of requesting for the
+-firmare to be loaded.
++this can be done with firmware_request_cache() instead of requesting for the
++firmware to be loaded.
+ 
+ firmware_request_cache()
+------------------------
+-.. kernel-doc:: drivers/base/firmware_class.c
++------------------------
++.. kernel-doc:: drivers/base/firmware_loader/main.c
+    :functions: firmware_request_cache
+ 
+ request firmware API expected driver use
+diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
+index 71f529de5243..da97fc26119c 100644
+--- a/drivers/base/firmware_loader/fallback.c
++++ b/drivers/base/firmware_loader/fallback.c
+@@ -536,8 +536,8 @@ fw_create_instance(struct firmware *firmware, const char *fw_name,
  }
+ 
+ /**
+- * fw_load_sysfs_fallback - load a firmware via the syfs fallback mechanism
+- * @fw_sysfs: firmware syfs information for the firmware to load
++ * fw_load_sysfs_fallback - load a firmware via the sysfs fallback mechanism
++ * @fw_sysfs: firmware sysfs information for the firmware to load
+  * @opt_flags: flags of options, FW_OPT_*
+  * @timeout: timeout to wait for the load
+  *
+diff --git a/drivers/base/firmware_loader/fallback.h b/drivers/base/firmware_loader/fallback.h
+index dfebc644ed35..f8255670a663 100644
+--- a/drivers/base/firmware_loader/fallback.h
++++ b/drivers/base/firmware_loader/fallback.h
+@@ -6,7 +6,7 @@
+ #include <linux/device.h>
+ 
+ /**
+- * struct firmware_fallback_config - firmware fallback configuratioon settings
++ * struct firmware_fallback_config - firmware fallback configuration settings
+  *
+  * Helps describe and fine tune the fallback mechanism.
+  *
 -- 
-2.14.3
+2.14.1
