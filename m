@@ -1,27 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60564 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751870AbeDRKS3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 06:18:29 -0400
-Subject: Re: [PATCH] mt76x2: fix is_mt7612 routine
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-References: <20180417222718.17039-1-lorenzo.bianconi@redhat.com>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <5489b1c9-b613-0254-75eb-11fe7d881447@nbd.name> (sfid-20180418_121836_157357_AD4B8083)
-Date: Wed, 18 Apr 2018 12:18:27 +0200
+Received: from rtits2.realtek.com ([211.75.126.72]:55718 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753613AbeDWCUD (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 22 Apr 2018 22:20:03 -0400
+From: Pkshih <pkshih@realtek.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH v2] rtlwifi: cleanup 8723be ant_sel definition
+Date: Mon, 23 Apr 2018 02:19:46 +0000
+Message-ID: <1524449986.3086.2.camel@realtek.com> (sfid-20180423_042010_882357_F662C509)
+References: <20180420023009.3182-1-pkshih@realtek.com>
+         <87zi1ygk8d.fsf@kamboji.qca.qualcomm.com>
+         <db66387b-9271-2563-ae77-449716795150@lwfinger.net>
+In-Reply-To: <db66387b-9271-2563-ae77-449716795150@lwfinger.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180417222718.17039-1-lorenzo.bianconi@redhat.com>
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-04-18 00:27, Lorenzo Bianconi wrote:
-> Fix is_mt7612 routine since asic version is set in mt76_dev revision
-> field and not in mt76x2_dev one.
-> Moreover remove mt76x2_dev rev field since it is never used in the
-> driver
-> 
-> Fixes: 7bc04215a66b ('mt76: add driver code for MT76x2e')
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Acked-by: Felix Fietkau <nbd@nbd.name>
+VGhhbmtzIGZvciBzcGVuZGluZyB5b3VyIHRpbWUgdG8gdGVhY2ggYW5kIGhlbHAsIEthbGxlIGFu
+ZCBMYXJyeS4NCkknbGwgcmVjb3JkIHRoaXMgZXhhbXBsZSB0byBpbnRlcm5hbCB3aGl0ZSBib2Fy
+ZC4NCg0KUEsNCg0K
