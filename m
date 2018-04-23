@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:50932 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751262AbeDELln (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:16615 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932110AbeDWQfx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Apr 2018 07:41:43 -0400
-Date: Thu, 5 Apr 2018 14:41:24 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] rsi: Free the unaligned pointer
-Message-ID: <20180405114124.v2cgo36uuniirby2@mwanda> (sfid-20180405_134147_724141_43446064)
-References: <20180405112311.GD4218@mwanda>
- <1522927835.7140.8.camel@sipsolutions.net>
- <20180405113931.n6q6ix47quuvklyp@mwanda>
+        Mon, 23 Apr 2018 12:35:53 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [RESEND 23/33] staging: wilc1000: remove multiple define used for MAX_SSID_LEN
+Date: Mon, 23 Apr 2018 22:03:25 +0530
+Message-ID: <1524501215-4963-24-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183619_889931_C380206E)
+In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180405113931.n6q6ix47quuvklyp@mwanda>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 05, 2018 at 02:39:31PM +0300, Dan Carpenter wrote:
-> On Thu, Apr 05, 2018 at 01:30:35PM +0200, Johannes Berg wrote:
-> > On Thu, 2018-04-05 at 14:23 +0300, Dan Carpenter wrote:
-> > > The problem here is that we allocate "data".  Then we do
-> > > "data = PTR_ALIGN(data, 8);" and then we free the aligned pointer and
-> > > not the one we allocated.
-> > 
-> > That seems pretty pointless, since kmalloc guarantees such alignment for
-> > sure. Better to just remove PTR_ALIGN()?
-> 
-> Yeah.  You're probably right.  I was thinking that maybe
-> ARCH_SLAB_MINALIGN was smaller than 8 somewhere but look it it now, I
-> think it's always 8 or more.
-> 
+Cleanup patch to have commonly used macro in common header file to avoid
+same defination in mulitple file. Removed MAX_SSID_LEN macro from
+coreconfigurator.h header as its already defined in wilc_wlan_if.h.
 
-Perhaps on certain xtensa variants?
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-arch/xtensa/include/asm/processor.h:#define ARCH_SLAB_MINALIGN  XCHAL_DATA_WIDTH
-arch/xtensa/variants/fsf/include/variant/core.h:#define XCHAL_DATA_WIDTH                4       /* data width in bytes */
-
-regards,
-dan carpenter
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 5436fd3..1666b7a 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -17,7 +17,6 @@
+ #define NUM_RSSI                5
+ 
+ #define MAC_HDR_LEN             24
+-#define MAX_SSID_LEN            33
+ #define FCS_LEN                 4
+ #define TIME_STAMP_LEN          8
+ #define BEACON_INTERVAL_LEN     2
+-- 
+2.7.4
