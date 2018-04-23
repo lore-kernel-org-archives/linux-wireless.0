@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49778 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757545AbeD0MOj (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:16615 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932107AbeDWQfw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Apr 2018 08:14:39 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Karun Eagalapati <karun256@gmail.com>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] rsi: Uninitialized return value in rsi_reset_card()
-References: <20180426144235.GA25897@mwanda>
-Date: Fri, 27 Apr 2018 15:14:33 +0300
-In-Reply-To: <20180426144235.GA25897@mwanda> (Dan Carpenter's message of "Thu,
-        26 Apr 2018 17:42:35 +0300")
-Message-ID: <87604calsm.fsf@purkki.adurom.net> (sfid-20180427_141444_281301_72C40BFF)
+        Mon, 23 Apr 2018 12:35:52 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [RESEND 19/33] staging: wilc1000: fix line over 80 chars in change_station()
+Date: Mon, 23 Apr 2018 22:03:21 +0530
+Message-ID: <1524501215-4963-20-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183601_061905_432642B0)
+In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
+Fix 'line over 80 chars' issue found by checkpatch.pl script.
 
-> If rsi_usb_master_reg_write() fails then "ret" hasn't been initialized.
->
-> Fixes: 16d3bb7b2f37 ("rsi: disable fw watchdog timer during reset")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->
-> diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-> index b065438f51b2..6ce6b754df12 100644
-> --- a/drivers/net/wireless/rsi/rsi_91x_usb.c
-> +++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-> @@ -687,9 +687,10 @@ static int rsi_reset_card(struct rsi_hw *adapter)
->  	 */
->  	msleep(100);
->  
-> -	if (rsi_usb_master_reg_write(adapter, SWBL_REGOUT,
-> -				     RSI_FW_WDT_DISABLE_REQ,
-> -				     RSI_COMMON_REG_SIZE) < 0) {
-> +	ret = rsi_usb_master_reg_write(adapter, SWBL_REGOUT,
-> +				       RSI_FW_WDT_DISABLE_REQ,
-> +				       RSI_COMMON_REG_SIZE);
-> +	if (ret < 0) {
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Odd, I thought I replied to this one already but I don't see my mail on
-patchwork. Anyway, Gustavo already submitted an identical patch:
-
-https://patchwork.kernel.org/patch/10365985/
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 5bd294d..1540511 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1154,10 +1154,10 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
+ 		wilc_get_statistics(vif, &stats);
+ 
+ 		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL) |
+-						BIT(NL80211_STA_INFO_RX_PACKETS) |
+-						BIT(NL80211_STA_INFO_TX_PACKETS) |
+-						BIT(NL80211_STA_INFO_TX_FAILED) |
+-						BIT(NL80211_STA_INFO_TX_BITRATE);
++				 BIT(NL80211_STA_INFO_RX_PACKETS) |
++				 BIT(NL80211_STA_INFO_TX_PACKETS) |
++				 BIT(NL80211_STA_INFO_TX_FAILED) |
++				 BIT(NL80211_STA_INFO_TX_BITRATE);
+ 
+ 		sinfo->signal = stats.rssi;
+ 		sinfo->rx_packets = stats.rx_cnt;
 -- 
-Kalle Valo
+2.7.4
