@@ -1,60 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:11684 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751049AbeDLHnf (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54524 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755458AbeDWOOG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 03:43:35 -0400
-Subject: Re: [PATCH] staging: wilc1000: Remove unnecessary braces {} around
- single statement block
-To: Eyal Ilsar <edilsar@gmail.com>, <aditya.shankar@microchip.com>,
-        <ganesh.krishna@microchip.com>, <gregkh@linuxfoundation.org>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <linux-kernel@vger.kernel.org>
-References: <1523371795-5090-1-git-send-email-edilsar@gmail.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <4c3eeecd-ac80-a312-59cb-2b9432a5b5ae@microchip.com> (sfid-20180412_094350_203405_54F46AD0)
-Date: Thu, 12 Apr 2018 10:43:32 +0300
+        Mon, 23 Apr 2018 10:14:06 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Daniel Mack <daniel@zonque.org>
+Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+        loic.poulain@linaro.org, rfried@codeaurora.org,
+        bjorn.andersson@linaro.org
+Subject: Re: [PATCH 5/5] wcn36xx: pass information elements in scan requests
+References: <20180416131634.25432-1-daniel@zonque.org>
+        <20180416131634.25432-6-daniel@zonque.org>
+        <87lgdnp7sy.fsf@kamboji.qca.qualcomm.com>
+        <0595a559-8220-bc22-0c33-4580119c774d@zonque.org>
+        <87h8obp7c0.fsf@kamboji.qca.qualcomm.com>
+        <384e608f-0f59-8ba6-5223-8a52e2ac86f9@zonque.org>
+        <87d0yzp61v.fsf@kamboji.qca.qualcomm.com>
+        <65fd4461-91b4-2a42-6f66-7db7c8483fe7@zonque.org>
+Date: Mon, 23 Apr 2018 17:14:01 +0300
+In-Reply-To: <65fd4461-91b4-2a42-6f66-7db7c8483fe7@zonque.org> (Daniel Mack's
+        message of "Mon, 16 Apr 2018 17:03:28 +0200")
+Message-ID: <871sf6dn86.fsf@kamboji.qca.qualcomm.com> (sfid-20180423_161502_683766_E2D7865B)
 MIME-Version: 1.0
-In-Reply-To: <1523371795-5090-1-git-send-email-edilsar@gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Daniel Mack <daniel@zonque.org> writes:
 
+> On Monday, April 16, 2018 04:41 PM, Kalle Valo wrote:
+>> Daniel Mack <daniel@zonque.org> writes:
+>> 
+>>> On Monday, April 16, 2018 04:13 PM, Kalle Valo wrote:
+>>>> Daniel Mack <daniel@zonque.org> writes:
+>>>>> On Monday, April 16, 2018 04:03 PM, Kalle Valo wrote:
+>>>>>> Daniel Mack <daniel@zonque.org> writes:
+>>>
+>>>>>>> them to the firmware message. The driver currently tells the core that
+>>>>>>> it is capable of attaching up to WCN36XX_MAX_SCAN_IE_LEN octets, but
+>>>>>>> doesn't actually pass them to the the hardware.
+>>>>>>>
+>>>>>>> Some defines were moved around to avoid cyclic include dependencies.
+>>>>>>
+>>>>>> Does this fix anything or change functionality somehow? You should
+>>>>>> document that also in the commit log.
+>>>>>
+>>>>> I don't have a test case for this, no. But as the change was pretty much
+>>>>> straight forward, I sent it anyway.
+>>>>
+>>>> Ok, but you should still explain that in the commit log. In other words,
+>>>> you should always answer the question "Why?" in the commit log.
+>>>>
+>>>>> I can resend with some more information on this if you like.
+>>>>
+>>>> No need to resend because of this, I can edit the commit log.
+>>>
+>>> Hmm, given that I can't even be sure the firmware does the right thing
+>>> when instructed this way, we should probably just drop this patch from
+>>> the series. The others are more important anyway, as they address bugs
+>>> that hit me on actual hardware.
+>> 
+>> IMHO it's useful and if you don't see anything breaking I would prefer
+>> to take it anyway. I can't immeadiately say in what use cases this helps
+>> or fixes, though. But maybe you (or someone else) could verify that it
+>> works correctly by comparing before and after probe requests with a
+>> sniffer?
+>
+> It's certainly not a regression, no. I'm running extensive stress-tests
+> with this driver. Then I guess adding the following to the commit log
+> should suffice?
+>
+> "Note that this patch doesn't fix a bug that was observed. The change is
+> merely done for the sake of completeness as the hardware supports
+> appending IEs in scans. Tests show that network scans work fine with
+> this patch applied."
 
-On 10.04.2018 17:49, Eyal Ilsar wrote:
-> Remove unnecessary braces {} around an 'if' statement block with a single 
-> statement. Issue found by checkpatch.
+Looks good, thanks. I see that you submitted v2 already with this added.
 
-You should add an empty line before "Signed-off" line as stated in [1]. I
-would also add a space b/w your name and your email in Signed-off line as
-is exemplified in [2].
-
-[1]
-https://www.kernel.org/doc/html/latest/process/submitting-patches.html#the-canonical-patch-format
-[2] https://www.kernel.org/doc/html/latest/process/sub
-mitting-patches.html#developer-s-certificate-of-origin-1-1
-
-> Signed-off-by: Eyal Ilsar<edilsar@gmail.com>
-> ---
-> This is part of my take on the Eudyptula challenge
-> 
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> index 205304c..325afe1 100644
-> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> @@ -284,9 +284,8 @@ static void remove_network_from_shadow(struct timer_list *unused)
->  		}
->  	}
->  
-> -	if (last_scanned_cnt != 0) {
-> +	if (last_scanned_cnt != 0)
->  		mod_timer(&hAgingTimer, jiffies + msecs_to_jiffies(AGING_TIME));
-> -	}
->  }
->  
->  static void clear_duringIP(struct timer_list *unused)
-> 
+-- 
+Kalle Valo
