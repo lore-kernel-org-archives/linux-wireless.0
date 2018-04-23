@@ -1,62 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39444 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754648AbeDMMnb (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:2854 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755597AbeDWQfN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Apr 2018 08:43:31 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Apr 2018 15:42:56 +0300
-Message-Id: <20180413124256.21769-26-luca@coelho.fi> (sfid-20180413_144334_912130_B9F4FB85)
-In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
-References: <20180413124256.21769-1-luca@coelho.fi>
-Subject: [PATCH 25/25] iwlwifi: mvm: support 22000 HW opening agg before traffic
+        Mon, 23 Apr 2018 12:35:13 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [RESEND 11/33] staging: wilc1000: remove line over 80 char warning in few functions
+Date: Mon, 23 Apr 2018 22:03:13 +0530
+Message-ID: <1524501215-4963-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183525_669758_F18DAE27)
+In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+Remove 'line over 80 characters' issues found by checkpatch.pl script
+for following functions.
 
-When trying to open aggregations on 22000 HW before
-traffic had actually passed, the driver will discover
-it is missing a queue to aggregate on. In such a case -
-allocate a queue.
+disconnect()
+del_pmksa()
+wilc_create_wiphy()
+del_pmksa()
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 4f9d3e13d7e5..4ddd2c427b83 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -36,6 +36,7 @@
-  * Copyright(c) 2012 - 2015 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -2467,6 +2468,15 @@ int iwl_mvm_sta_tx_agg_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 394b606..d3818af 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -816,7 +816,8 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	return ret;
+ }
  
- 	lockdep_assert_held(&mvm->mutex);
+-static int disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_code)
++static int disconnect(struct wiphy *wiphy, struct net_device *dev,
++		      u16 reason_code)
+ {
+ 	s32 ret = 0;
+ 	struct wilc_priv *priv;
+@@ -1260,7 +1261,8 @@ static int del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
+ 	for (i = 0; i < priv->pmkid_list.numpmkid; i++)	{
+ 		if (!memcmp(pmksa->bssid, priv->pmkid_list.pmkidlist[i].bssid,
+ 			    ETH_ALEN)) {
+-			memset(&priv->pmkid_list.pmkidlist[i], 0, sizeof(struct host_if_pmkid));
++			memset(&priv->pmkid_list.pmkidlist[i], 0,
++			       sizeof(struct host_if_pmkid));
+ 			break;
+ 		}
+ 	}
+@@ -1969,7 +1971,8 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
  
-+	if (mvmsta->tid_data[tid].txq_id == IWL_MVM_INVALID_QUEUE &&
-+	    iwl_mvm_has_new_tx_api(mvm)) {
-+		u8 ac = tid_to_mac80211_ac[tid];
-+
-+		ret = iwl_mvm_sta_alloc_queue_tvqm(mvm, sta, ac, tid);
-+		if (ret)
-+			return ret;
-+	}
-+
- 	spin_lock_bh(&mvmsta->lock);
+ 	if (vif->iftype == AP_MODE || vif->iftype == GO_MODE) {
+ 		memcpy(sta_params.bssid, mac, ETH_ALEN);
+-		memcpy(priv->assoc_stainfo.sta_associated_bss[params->aid], mac, ETH_ALEN);
++		memcpy(priv->assoc_stainfo.sta_associated_bss[params->aid], mac,
++		       ETH_ALEN);
+ 		sta_params.aid = params->aid;
+ 		sta_params.rates_len = params->supported_rates_len;
+ 		sta_params.rates = params->supported_rates;
+@@ -2225,7 +2228,8 @@ static struct wireless_dev *wilc_wfi_cfg_alloc(void)
+ 	return NULL;
+ }
  
- 	/* possible race condition - we entered D0i3 while starting agg */
+-struct wireless_dev *wilc_create_wiphy(struct net_device *net, struct device *dev)
++struct wireless_dev *wilc_create_wiphy(struct net_device *net,
++				       struct device *dev)
+ {
+ 	struct wilc_priv *priv;
+ 	struct wireless_dev *wdev;
 -- 
-2.16.3
+2.7.4
