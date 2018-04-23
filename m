@@ -1,114 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:32796 "EHLO
-        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932480AbeDWUMQ (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:14322 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932172AbeDWQgF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 16:12:16 -0400
-From: Andres Rodriguez <andresx7@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: andresx7@gmail.com, gregkh@linuxfoundation.org, mcgrof@kernel.org,
-        alexdeucher@gmail.com, christian.koenig@amd.com,
-        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        hdegoede@redhat.com
-Subject: [PATCH 1/9] firmware: some documentation fixes
-Date: Mon, 23 Apr 2018 16:11:57 -0400
-Message-Id: <20180423201205.20533-2-andresx7@gmail.com> (sfid-20180423_221437_037581_5E054D92)
-In-Reply-To: <20180423201205.20533-1-andresx7@gmail.com>
-References: <20180423201205.20533-1-andresx7@gmail.com>
+        Mon, 23 Apr 2018 12:36:05 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [RESEND 31/33] staging: wilc1000: rename goto labels starting with '_' in wilc1000_wlan_init()
+Date: Mon, 23 Apr 2018 22:03:33 +0530
+Message-ID: <1524501215-4963-32-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183616_933561_8AB349C1)
+In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Including:
- - Fixup outdated kernel-doc paths
- - Slightly too short title underline
- - Some typos
+Rename goto labels starting with '_' in wilc1000_wlan_init() to follow
+linux coding style.
 
-Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
 ---
- Documentation/driver-api/firmware/request_firmware.rst | 16 ++++++++--------
- drivers/base/firmware_loader/fallback.c                |  4 ++--
- drivers/base/firmware_loader/fallback.h                |  2 +-
- 3 files changed, 11 insertions(+), 11 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/Documentation/driver-api/firmware/request_firmware.rst b/Documentation/driver-api/firmware/request_firmware.rst
-index 9305bf4db38e..7632f8807472 100644
---- a/Documentation/driver-api/firmware/request_firmware.rst
-+++ b/Documentation/driver-api/firmware/request_firmware.rst
-@@ -17,17 +17,17 @@ an error is returned.
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 8f97c62..26edbb6 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -735,42 +735,42 @@ int wilc1000_wlan_init(struct net_device *dev, struct wilc_vif *vif)
+ 		ret = wilc_wlan_init(dev);
+ 		if (ret < 0) {
+ 			ret = -EIO;
+-			goto _fail_locks_;
++			goto fail_locks;
+ 		}
  
- firmware_request
- ----------------
--.. kernel-doc:: drivers/base/firmware_class.c
-+.. kernel-doc:: drivers/base/firmware_loader/main.c
-    :functions: firmware_request
+ 		if (wl->gpio >= 0 && init_irq(dev)) {
+ 			ret = -EIO;
+-			goto _fail_locks_;
++			goto fail_locks;
+ 		}
  
- firmware_request_direct
- -----------------------
--.. kernel-doc:: drivers/base/firmware_class.c
-+.. kernel-doc:: drivers/base/firmware_loader/main.c
-    :functions: firmware_request_direct
+ 		ret = wlan_initialize_threads(dev);
+ 		if (ret < 0) {
+ 			ret = -EIO;
+-			goto _fail_wilc_wlan_;
++			goto fail_wilc_wlan;
+ 		}
  
- firmware_request_into_buf
- -------------------------
--.. kernel-doc:: drivers/base/firmware_class.c
-+.. kernel-doc:: drivers/base/firmware_loader/main.c
-    :functions: firmware_request_into_buf
+ 		if (!wl->dev_irq_num &&
+ 		    wl->hif_func->enable_interrupt &&
+ 		    wl->hif_func->enable_interrupt(wl)) {
+ 			ret = -EIO;
+-			goto _fail_irq_init_;
++			goto fail_irq_init;
+ 		}
  
- Asynchronous firmware requests
-@@ -41,7 +41,7 @@ in atomic contexts.
+ 		if (wilc_wlan_get_firmware(dev)) {
+ 			ret = -EIO;
+-			goto _fail_irq_enable_;
++			goto fail_irq_enable;
+ 		}
  
- firmware_request_nowait
- -----------------------
--.. kernel-doc:: drivers/base/firmware_class.c
-+.. kernel-doc:: drivers/base/firmware_loader/main.c
-    :functions: firmware_request_nowait
+ 		ret = wilc1000_firmware_download(dev);
+ 		if (ret < 0) {
+ 			ret = -EIO;
+-			goto _fail_irq_enable_;
++			goto fail_irq_enable;
+ 		}
  
- Special optimizations on reboot
-@@ -50,12 +50,12 @@ Special optimizations on reboot
- Some devices have an optimization in place to enable the firmware to be
- retained during system reboot. When such optimizations are used the driver
- author must ensure the firmware is still available on resume from suspend,
--this can be done with firmware_request_cache() insted of requesting for the
--firmare to be loaded.
-+this can be done with firmware_request_cache() instead of requesting for the
-+firmware to be loaded.
+ 		ret = linux_wlan_start_firmware(dev);
+ 		if (ret < 0) {
+ 			ret = -EIO;
+-			goto _fail_irq_enable_;
++			goto fail_irq_enable;
+ 		}
  
- firmware_request_cache()
-------------------------
--.. kernel-doc:: drivers/base/firmware_class.c
-+------------------------
-+.. kernel-doc:: drivers/base/firmware_loader/main.c
-    :functions: firmware_request_cache
+ 		if (wilc_wlan_cfg_get(vif, 1, WID_FIRMWARE_VERSION, 1, 0)) {
+@@ -788,27 +788,27 @@ int wilc1000_wlan_init(struct net_device *dev, struct wilc_vif *vif)
+ 		if (ret < 0) {
+ 			netdev_err(dev, "Failed to configure firmware\n");
+ 			ret = -EIO;
+-			goto _fail_fw_start_;
++			goto fail_fw_start;
+ 		}
  
- request firmware API expected driver use
-diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
-index 71f529de5243..da97fc26119c 100644
---- a/drivers/base/firmware_loader/fallback.c
-+++ b/drivers/base/firmware_loader/fallback.c
-@@ -536,8 +536,8 @@ fw_create_instance(struct firmware *firmware, const char *fw_name,
- }
+ 		wl->initialized = true;
+ 		return 0;
  
- /**
-- * fw_load_sysfs_fallback - load a firmware via the syfs fallback mechanism
-- * @fw_sysfs: firmware syfs information for the firmware to load
-+ * fw_load_sysfs_fallback - load a firmware via the sysfs fallback mechanism
-+ * @fw_sysfs: firmware sysfs information for the firmware to load
-  * @opt_flags: flags of options, FW_OPT_*
-  * @timeout: timeout to wait for the load
-  *
-diff --git a/drivers/base/firmware_loader/fallback.h b/drivers/base/firmware_loader/fallback.h
-index dfebc644ed35..f8255670a663 100644
---- a/drivers/base/firmware_loader/fallback.h
-+++ b/drivers/base/firmware_loader/fallback.h
-@@ -6,7 +6,7 @@
- #include <linux/device.h>
+-_fail_fw_start_:
++fail_fw_start:
+ 		wilc_wlan_stop(wl);
  
- /**
-- * struct firmware_fallback_config - firmware fallback configuratioon settings
-+ * struct firmware_fallback_config - firmware fallback configuration settings
-  *
-  * Helps describe and fine tune the fallback mechanism.
-  *
+-_fail_irq_enable_:
++fail_irq_enable:
+ 		if (!wl->dev_irq_num &&
+ 		    wl->hif_func->disable_interrupt)
+ 			wl->hif_func->disable_interrupt(wl);
+-_fail_irq_init_:
++fail_irq_init:
+ 		if (wl->dev_irq_num)
+ 			deinit_irq(dev);
+ 
+ 		wlan_deinitialize_threads(dev);
+-_fail_wilc_wlan_:
++fail_wilc_wlan:
+ 		wilc_wlan_cleanup(dev);
+-_fail_locks_:
++fail_locks:
+ 		wlan_deinit_locks(dev);
+ 		netdev_err(dev, "WLAN initialization FAILED\n");
+ 	} else {
 -- 
-2.14.1
+2.7.4
