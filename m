@@ -1,56 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:36242 "EHLO
-        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752962AbeDLSbi (ORCPT
+Received: from mail-it0-f67.google.com ([209.85.214.67]:56166 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932431AbeDWUMV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 14:31:38 -0400
-Received: by mail-wm0-f53.google.com with SMTP id x82so100395wmg.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2018 11:31:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE4vF2cjsQAW+jLF9Dxbqt1Bthmj5yXP-kVz17w__nk9=kuRog@mail.gmail.com>
-References: <CAE4vF2fCTEmEX8i+XVpvTJ1sRYDHDLr+fYFAM2PzTQTqkCoXVQ@mail.gmail.com>
- <CAE4vF2f2oXEvOJWDXPjmiWZTC=HOq5+xE_R64-_VvH6zc-Vw+A@mail.gmail.com>
- <5ACF0F5A.3090301@broadcom.com> <CAE4vF2ftgMPhKEUHr2rPaobM9Dtuc-B9rtbF5tWavvrwUXA7Ag@mail.gmail.com>
- <5ACF3A28.4060303@broadcom.com> <CALLGbRLJLxu92S2bYFOk9oJCLanES4Fu6e-9bh9oAupEC0Uw5w@mail.gmail.com>
- <1517ecac1d85eb746367d9db436beca2d8f47835.camel@redhat.com>
- <CAE4vF2fvumVELT5rScptjVC4JOqw5cqEu7yLrYZ64ci=5R6ZRQ@mail.gmail.com>
- <9e644f38-7038-b4cf-1b68-cffd1a56a3f4@candelatech.com> <CAE4vF2cjsQAW+jLF9Dxbqt1Bthmj5yXP-kVz17w__nk9=kuRog@mail.gmail.com>
-From: Steve deRosier <derosier@gmail.com>
-Date: Thu, 12 Apr 2018 11:30:56 -0700
-Message-ID: <CALLGbRJcH_Wq7QJYWsmj0AvSGXNVFFeUutVPY1Q09+YEW40PZA@mail.gmail.com> (sfid-20180412_203141_808337_E5FB8610)
-Subject: Re: second wifi card enforce CN reg dom
-To: "solsTiCe d'Hiver" <solstice.dhiver@gmail.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-        Dan Williams <dcbw@redhat.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Mon, 23 Apr 2018 16:12:21 -0400
+From: Andres Rodriguez <andresx7@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: andresx7@gmail.com, gregkh@linuxfoundation.org, mcgrof@kernel.org,
+        alexdeucher@gmail.com, christian.koenig@amd.com,
+        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        hdegoede@redhat.com
+Subject: [PATCH 4/9] firmware: use () to terminate kernel-doc function names
+Date: Mon, 23 Apr 2018 16:12:00 -0400
+Message-Id: <20180423201205.20533-5-andresx7@gmail.com> (sfid-20180423_221502_581260_2D426BF4)
+In-Reply-To: <20180423201205.20533-1-andresx7@gmail.com>
+References: <20180423201205.20533-1-andresx7@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 12, 2018 at 10:25 AM, solsTiCe d'Hiver
-<solstice.dhiver@gmail.com> wrote:
-> It's the second time that you (Ben and Steve) are implying that I
-> might break the law.
->
+The kernel-doc spec dictates a function name ends in ().
 
-No implication intended. All I said is regulatory operation is
-constrained by laws in various jurisdictions. And how the unit behaves
-is likely simply following the rules programmed into it for those
-purposes. And, there's nothing we can do to change that.
+Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
+Acked-by: Randy Dunlap <rdunlap@infradead.org>
+---
+ drivers/base/firmware_loader/fallback.c |  8 ++++----
+ drivers/base/firmware_loader/main.c     | 22 +++++++++++-----------
+ 2 files changed, 15 insertions(+), 15 deletions(-)
 
-> But why are you saying that ? I am not gonna repeat myself again.
->
-
-If the radio only works as CN and won't let you change it, it's
-probably a CN radio and is hard-coded to do that. And, the
-intersection of your FR regulatory domain and the CN is what it is.
-Have you plugged it in alone? And if so, can you get it on FR or does
-it stay on CN?
-
-- Steve
-
---
-Steve deRosier
-Cal-Sierra Consulting LLC
-https://www.cal-sierra.com/
+diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
+index ecc49a619298..e75928458489 100644
+--- a/drivers/base/firmware_loader/fallback.c
++++ b/drivers/base/firmware_loader/fallback.c
+@@ -124,7 +124,7 @@ static ssize_t timeout_show(struct class *class, struct class_attribute *attr,
+ }
+ 
+ /**
+- * firmware_timeout_store - set number of seconds to wait for firmware
++ * firmware_timeout_store() - set number of seconds to wait for firmware
+  * @class: device class pointer
+  * @attr: device attribute pointer
+  * @buf: buffer to scan for timeout value
+@@ -238,7 +238,7 @@ static int map_fw_priv_pages(struct fw_priv *fw_priv)
+ }
+ 
+ /**
+- * firmware_loading_store - set value in the 'loading' control file
++ * firmware_loading_store() - set value in the 'loading' control file
+  * @dev: device pointer
+  * @attr: device attribute pointer
+  * @buf: buffer to scan for loading control value
+@@ -430,7 +430,7 @@ static int fw_realloc_pages(struct fw_sysfs *fw_sysfs, int min_size)
+ }
+ 
+ /**
+- * firmware_data_write - write method for firmware
++ * firmware_data_write() - write method for firmware
+  * @filp: open sysfs file
+  * @kobj: kobject for the device
+  * @bin_attr: bin_attr structure
+@@ -536,7 +536,7 @@ fw_create_instance(struct firmware *firmware, const char *fw_name,
+ }
+ 
+ /**
+- * fw_load_sysfs_fallback - load a firmware via the sysfs fallback mechanism
++ * fw_load_sysfs_fallback() - load a firmware via the sysfs fallback mechanism
+  * @fw_sysfs: firmware sysfs information for the firmware to load
+  * @opt_flags: flags of options, FW_OPT_*
+  * @timeout: timeout to wait for the load
+diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
+index 5baadad3012d..d028cd3257f7 100644
+--- a/drivers/base/firmware_loader/main.c
++++ b/drivers/base/firmware_loader/main.c
+@@ -597,7 +597,7 @@ _firmware_request(const struct firmware **firmware_p, const char *name,
+ }
+ 
+ /**
+- * firmware_request: - send firmware request and wait for it
++ * firmware_request() - send firmware request and wait for it
+  * @firmware_p: pointer to firmware image
+  * @name: name of firmware file
+  * @device: device for which firmware is being loaded
+@@ -632,7 +632,7 @@ firmware_request(const struct firmware **firmware_p, const char *name,
+ EXPORT_SYMBOL(firmware_request);
+ 
+ /**
+- * firmware_request_direct: - load firmware directly without usermode helper
++ * firmware_request_direct() - load firmware directly without usermode helper
+  * @firmware_p: pointer to firmware image
+  * @name: name of firmware file
+  * @device: device for which firmware is being loaded
+@@ -657,7 +657,7 @@ int firmware_request_direct(const struct firmware **firmware_p,
+ EXPORT_SYMBOL_GPL(firmware_request_direct);
+ 
+ /**
+- * firmware_request_cache: - cache firmware for suspend so resume can use it
++ * firmware_request_cache() - cache firmware for suspend so resume can use it
+  * @name: name of firmware file
+  * @device: device for which firmware should be cached for
+  *
+@@ -681,7 +681,7 @@ int firmware_request_cache(struct device *device, const char *name)
+ EXPORT_SYMBOL_GPL(firmware_request_cache);
+ 
+ /**
+- * firmware_request_into_buf - load firmware into a previously allocated buffer
++ * firmware_request_into_buf() - load firmware into a previously allocated buffer
+  * @firmware_p: pointer to firmware image
+  * @name: name of firmware file
+  * @device: device for which firmware is being loaded and DMA region allocated
+@@ -713,7 +713,7 @@ firmware_request_into_buf(const struct firmware **firmware_p, const char *name,
+ EXPORT_SYMBOL(firmware_request_into_buf);
+ 
+ /**
+- * firmware_release: - release the resource associated with a firmware image
++ * firmware_release() - release the resource associated with a firmware image
+  * @fw: firmware resource to release
+  **/
+ void firmware_release(const struct firmware *fw)
+@@ -755,7 +755,7 @@ static void firmware_request_work_func(struct work_struct *work)
+ }
+ 
+ /**
+- * firmware_request_nowait - asynchronous version of firmware_request
++ * firmware_request_nowait() - asynchronous version of firmware_request
+  * @module: module requesting the firmware
+  * @uevent: sends uevent to copy the firmware image if this flag
+  *	is non-zero else the firmware copy must be done manually.
+@@ -824,7 +824,7 @@ EXPORT_SYMBOL(firmware_request_nowait);
+ static ASYNC_DOMAIN_EXCLUSIVE(fw_cache_domain);
+ 
+ /**
+- * cache_firmware - cache one firmware image in kernel memory space
++ * cache_firmware() - cache one firmware image in kernel memory space
+  * @fw_name: the firmware image name
+  *
+  * Cache firmware in kernel memory so that drivers can use it when
+@@ -866,7 +866,7 @@ static struct fw_priv *lookup_fw_priv(const char *fw_name)
+ }
+ 
+ /**
+- * uncache_firmware - remove one cached firmware image
++ * uncache_firmware() - remove one cached firmware image
+  * @fw_name: the firmware image name
+  *
+  * Uncache one firmware image which has been cached successfully
+@@ -1042,7 +1042,7 @@ static void __device_uncache_fw_images(void)
+ }
+ 
+ /**
+- * device_cache_fw_images - cache devices' firmware
++ * device_cache_fw_images() - cache devices' firmware
+  *
+  * If one device called firmware_request or its nowait version
+  * successfully before, the firmware names are recored into the
+@@ -1075,7 +1075,7 @@ static void device_cache_fw_images(void)
+ }
+ 
+ /**
+- * device_uncache_fw_images - uncache devices' firmware
++ * device_uncache_fw_images() - uncache devices' firmware
+  *
+  * uncache all firmwares which have been cached successfully
+  * by device_uncache_fw_images earlier
+@@ -1092,7 +1092,7 @@ static void device_uncache_fw_images_work(struct work_struct *work)
+ }
+ 
+ /**
+- * device_uncache_fw_images_delay - uncache devices firmwares
++ * device_uncache_fw_images_delay() - uncache devices firmwares
+  * @delay: number of milliseconds to delay uncache device firmwares
+  *
+  * uncache all devices's firmwares which has been cached successfully
+-- 
+2.14.1
