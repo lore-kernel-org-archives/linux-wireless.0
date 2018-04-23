@@ -1,86 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:55810 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753172AbeD3OMy (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:52284 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932073AbeDWQfg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Apr 2018 10:12:54 -0400
-Received: by mail-wm0-f68.google.com with SMTP id a8so13434083wmg.5
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2018 07:12:53 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [RFC 02/18] mt76x2: move mt76x2_fw_header and mt76x2_patch_header definitions in mcu.h
-Date: Mon, 30 Apr 2018 16:12:17 +0200
-Message-Id: <41e2b10a374b529afe6ebc4e015c53812f23b125.1525096206.git.lorenzo.bianconi@redhat.com> (sfid-20180430_161257_979549_D41271A4)
-In-Reply-To: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
-References: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
+        Mon, 23 Apr 2018 12:35:36 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [RESEND 20/33] staging: wilc1000: rename WID_LOGTerminal_Switch to avoid camelCase
+Date: Mon, 23 Apr 2018 22:03:22 +0530
+Message-ID: <1524501215-4963-21-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183544_199380_11ED57E3)
+In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-move mt76x2_fw_header and mt76x2_patch_header definitions in mcu.h in
-order to reuse them in mt76x2u mcu related code
+Fix 'Avoid camelCase' issue found by checkpatch.pl script.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c | 17 -----------------
- drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h | 17 +++++++++++++++++
- 2 files changed, 17 insertions(+), 17 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan_if.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
-index 3e2a7216ffdd..ba954e7bc426 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
-@@ -23,23 +23,6 @@
- #include "mt76x2_dma.h"
- #include "mt76x2_eeprom.h"
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index e186509..f129d81 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -741,7 +741,7 @@ enum {
  
--struct mt76x2_fw_header {
--	__le32 ilm_len;
--	__le32 dlm_len;
--	__le16 build_ver;
--	__le16 fw_ver;
--	u8 pad[4];
--	char build_time[16];
--};
--
--struct mt76x2_patch_header {
--	char build_time[16];
--	char platform[4];
--	char hw_version[4];
--	char patch_version[4];
--	u8 pad[2];
--};
--
- static struct sk_buff *mt76x2_mcu_msg_alloc(const void *data, int len)
- {
- 	struct sk_buff *skb;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
-index d7a7e83262ce..e40293f21417 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
-@@ -146,6 +146,23 @@ struct mt76x2_tssi_comp {
- 	u8 offset1;
- } __packed __aligned(4);
+ 	WID_DEL_BEACON			= 0x00CA,
  
-+struct mt76x2_fw_header {
-+	__le32 ilm_len;
-+	__le32 dlm_len;
-+	__le16 build_ver;
-+	__le16 fw_ver;
-+	u8 pad[4];
-+	char build_time[16];
-+};
-+
-+struct mt76x2_patch_header {
-+	char build_time[16];
-+	char platform[4];
-+	char hw_version[4];
-+	char patch_version[4];
-+	u8 pad[2];
-+};
-+
- int mt76x2_mcu_calibrate(struct mt76x2_dev *dev, enum mcu_calibration type,
- 			 u32 param);
- int mt76x2_mcu_tssi_comp(struct mt76x2_dev *dev, struct mt76x2_tssi_comp *tssi_data);
+-	WID_LOGTerminal_Switch		= 0x00CD,
++	WID_LOG_TERMINAL_SWITCH		= 0x00CD,
+ 	WID_TX_POWER			= 0x00CE,
+ 	/*  EMAC Short WID list */
+ 	/*  RTS Threshold */
 -- 
-2.14.3
+2.7.4
