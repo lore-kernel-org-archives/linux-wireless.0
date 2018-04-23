@@ -1,148 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:45634 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754447AbeD1Ar7 (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:2854 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754788AbeDWQeu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Apr 2018 20:47:59 -0400
-From: s.gottschall@dd-wrt.com
-To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Subject: [PATCH v4] ath10k: fix crash in recent 3.5.3 9984 firmware due wrong handling of peer_bw_rxnss_override parameter
-Date: Sat, 28 Apr 2018 02:47:52 +0200
-Message-Id: <20180428004752.16659-1-s.gottschall@dd-wrt.com> (sfid-20180428_024802_667458_165CF344)
+        Mon, 23 Apr 2018 12:34:50 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [RESEND 00/33] staging: wilc1000: code cleanup and checkpatch fixes
+Date: Mon, 23 Apr 2018 22:03:02 +0530
+Message-ID: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183454_301358_B98C8828)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+This resend patch series contains patches from [1] & [2] clubbed together.
 
-current handling of peer_bw_rxnss_override parameter is based on guessing the VHT160/8080 capability by rx rate. this is wrong and may lead
-to a non initialized peer_bw_rxnss_override parameter which is required since VHT160 operation mode only supports 2x2 chainmasks in addition the original code
-initialized the parameter with wrong masked values.
-This patch uses the peer phymode and peer nss information for correct initialisation of the peer_bw_rxnss_override parameter.
-if this peer information is not available, we initialize the parameter by minimum nss which is suggested by QCA as temporary workaround according
-to the QCA sourcecodes.
+[1] https://www.mail-archive.com/linux-wireless@vger.kernel.org/msg43998.html
+[2] https://www.mail-archive.com/linux-wireless@vger.kernel.org/msg45006.html
 
-Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Ajay Singh (33):
+  staging: wilc1000: refactor scan() to free kmalloc memory on failure
+    cases
+  staging: wilc1000: removed unused static variables for gtk and ptk
+    information
+  staging: wilc1000: remove line over 80 char warnings in
+    set_wiphy_params()
+  staging: wilc1000: refactor WILC_WFI_p2p_rx() to avoid line over 80
+    char
+  staging: wilc1000: rename WILC_WFI_p2p_rx & s32Freq to avoid camelCase
+  staging: wilc1000: refactor mgmt_tx to fix line over 80 chars
+  staging: wilc1000: rename hAgingTimer to avoid camelCase issue
+  staging: wilc1000: fix line over 80 char issue in clear_shadow_scan()
+  staging: wilc1000: remove line over 80 char in cfg_connect_result()
+  staging: wilc1000: remove unused 'struct add_key_params'
+  staging: wilc1000: remove line over 80 char warning in few functions
+  staging: wilc1000: rename WILC_WFI_wep_key & WILC_WFI_wep_key_len
+  staging: wilc1000: rename variable using datatype in their name in
+    add_key()
+  staging: wilc1000: split add_key() to avoid line over 80 chars
+  staging: wilc1000: remove inner block {} and resetting of mode
+    variable
+  staging: wilc1000: refactor add_key() to avoid duplicated code
+  staging: wilc1000: handle error condition in add_key() and remove
+    auth_type variable
+  staging: wilc1000: use sizeof(variable) for memory allocated to store
+    key info
+  staging: wilc1000: fix line over 80 chars in change_station()
+  staging: wilc1000: rename WID_LOGTerminal_Switch to avoid camelCase
+  staging: wilc1000: added identifiers name in function definations
+  staging: wilc1000: remove unused macros in wilc module
+  staging: wilc1000: remove multiple define used for MAX_SSID_LEN
+  staging: wilc1000: remove multiple define for mac connect and
+    disconnect
+  staging: wilc1000: remove the use of goto label in spi_cmd_complete()
+  staging: wilc1000: remove the use of goto label in
+    wilc_spi_read_size()
+  staging: wilc1000: remove the use of goto label in wilc_spi_read_int()
+  staging: wilc1000: remove goto label '_done_' in
+    handle_listen_state_expired()
+  staging: wilc1000: remove the use of goto label in wilc_init()
+  staging: wilc1000: rename goto label '_fail_' linux naming convension
+  staging: wilc1000: rename goto labels starting with '_' in
+    wilc1000_wlan_init()
+  staging: wilc1000: remove the use of goto label in
+    wilc_spi_clear_int_ext()
+  staging: wilc1000: rename pu32InactiveTime to avoid camelCase issue
 
-v2: remove debug messages
-v3: apply some cosmetics, update documentation
-v4: fix compile warning and truncate nss to maximum of 2x2 since current chipsets only support 2x2 at vht160
----
- drivers/net/wireless/ath/ath10k/mac.c | 44 ++++++++++++++++++---------
- drivers/net/wireless/ath/ath10k/wmi.c |  7 +----
- drivers/net/wireless/ath/ath10k/wmi.h | 14 ++++++++-
- 3 files changed, 43 insertions(+), 22 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.h       |  17 -
+ drivers/staging/wilc1000/host_interface.c         |  25 +-
+ drivers/staging/wilc1000/host_interface.h         |   3 +-
+ drivers/staging/wilc1000/linux_wlan.c             | 120 ++--
+ drivers/staging/wilc1000/wilc_sdio.c              |  84 +--
+ drivers/staging/wilc1000/wilc_spi.c               |  21 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 824 +++++++++++-----------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |   8 +-
+ drivers/staging/wilc1000/wilc_wlan.c              |  16 +-
+ drivers/staging/wilc1000/wilc_wlan.h              |  28 +-
+ drivers/staging/wilc1000/wilc_wlan_if.h           |   4 +-
+ 11 files changed, 562 insertions(+), 588 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 5be6386ede8f..de8a099c9f5a 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2528,23 +2528,37 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
- 		__le16_to_cpu(vht_cap->vht_mcs.tx_highest);
- 	arg->peer_vht_rates.tx_mcs_set = ath10k_peer_assoc_h_vht_limit(
- 		__le16_to_cpu(vht_cap->vht_mcs.tx_mcs_map), vht_mcs_mask);
-+	arg->peer_bw_rxnss_override = 0;
-+
-+	if (arg->peer_num_spatial_streams) {
-+		int nss160 = arg->peer_num_spatial_streams;
-+		/* truncate vht160 nss value to 2x2 since all known chipsets do not support more than 2x2 in vht160 modes */
-+		if (nss160 > 2)
-+			nss160 = 2;
-+		/* in case if peer is connected with vht160 or vht80+80, we need to properly adjust rxnss parameters */
-+		switch(arg->peer_phymode) {
-+		case MODE_11AC_VHT80_80:
-+			arg->peer_bw_rxnss_override = BW_NSS_FWCONF_80_80(nss160);
-+		/* fall through */
-+		case MODE_11AC_VHT160:
-+			arg->peer_bw_rxnss_override |= BW_NSS_FWCONF_160(nss160);
-+		break;
-+		default:
-+		break;
-+		}
-+	}
- 
--	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
--		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
-+	/* in case peer has no nss properties for some reasons, we set local nss to minimum (1x1) to avoid a 
-+	 * firmware assert / crash. this applies only to VHT160 or VHT80+80 and is a WAR for clients breaking
-+	 * the spec.
-+	 */
- 
--	if (arg->peer_vht_rates.rx_max_rate &&
--	    (sta->vht_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK)) {
--		switch (arg->peer_vht_rates.rx_max_rate) {
--		case 1560:
--			/* Must be 2x2 at 160Mhz is all it can do. */
--			arg->peer_bw_rxnss_override = 2;
--			break;
--		case 780:
--			/* Can only do 1x1 at 160Mhz (Long Guard Interval) */
--			arg->peer_bw_rxnss_override = 1;
--			break;
--		}
-+	if (!arg->peer_num_spatial_streams && (arg->peer_phymode == MODE_11AC_VHT80_80 || arg->peer_phymode == MODE_11AC_VHT160)) {
-+		arg->peer_bw_rxnss_override = BW_NSS_FWCONF_MAP_ENABLE;
- 	}
-+
-+	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
-+		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
- }
- 
- static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
-@@ -2696,9 +2710,9 @@ static int ath10k_peer_assoc_prepare(struct ath10k *ar,
- 	ath10k_peer_assoc_h_crypto(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_rates(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_ht(ar, vif, sta, arg);
-+	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_vht(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_qos(ar, vif, sta, arg);
--	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 2c36256a441d..3797dca317ff 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -7211,12 +7211,7 @@ ath10k_wmi_peer_assoc_fill_10_4(struct ath10k *ar, void *buf,
- 	struct wmi_10_4_peer_assoc_complete_cmd *cmd = buf;
- 
- 	ath10k_wmi_peer_assoc_fill_10_2(ar, buf, arg);
--	if (arg->peer_bw_rxnss_override)
--		cmd->peer_bw_rxnss_override =
--			__cpu_to_le32((arg->peer_bw_rxnss_override - 1) |
--				      BIT(PEER_BW_RXNSS_OVERRIDE_OFFSET));
--	else
--		cmd->peer_bw_rxnss_override = 0;
-+	cmd->peer_bw_rxnss_override = __cpu_to_le32(arg->peer_bw_rxnss_override);
- }
- 
- static int
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 46ae19bb2c92..1fe0aa5523a6 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -6380,7 +6380,19 @@ struct wmi_10_2_peer_assoc_complete_cmd {
- 	__le32 info0; /* WMI_PEER_ASSOC_INFO0_ */
- } __packed;
- 
--#define PEER_BW_RXNSS_OVERRIDE_OFFSET  31
-+#define BW_NSS_FWCONF_MAP_ENABLE             (1 << 31)
-+#define BW_NSS_FWCONF_MAP_160MHZ_S           (0)
-+#define BW_NSS_FWCONF_MAP_160MHZ_M           (0x00000007)
-+#define BW_NSS_FWCONF_MAP_80_80MHZ_S         (3)
-+#define BW_NSS_FWCONF_MAP_80_80MHZ_M         (0x00000038)
-+#define BW_NSS_FWCONF_MAP_M                  (0x0000003F)
-+
-+#define GET_BW_NSS_FWCONF_160(x)             ((((x) & BW_NSS_FWCONF_MAP_160MHZ_M) >> BW_NSS_FWCONF_MAP_160MHZ_S) + 1)
-+#define GET_BW_NSS_FWCONF_80_80(x)           ((((x) & BW_NSS_FWCONF_MAP_80_80MHZ_M) >> BW_NSS_FWCONF_MAP_80_80MHZ_S) + 1)
-+
-+/* Values defined to set 160 MHz Bandwidth NSS Mapping into FW*/
-+#define BW_NSS_FWCONF_160(x)          (BW_NSS_FWCONF_MAP_ENABLE | (((x - 1) << BW_NSS_FWCONF_MAP_160MHZ_S) & BW_NSS_FWCONF_MAP_160MHZ_M))
-+#define BW_NSS_FWCONF_80_80(x)        (BW_NSS_FWCONF_MAP_ENABLE | (((x - 1) << BW_NSS_FWCONF_MAP_80_80MHZ_S) & BW_NSS_FWCONF_MAP_80_80MHZ_M))
- 
- struct wmi_10_4_peer_assoc_complete_cmd {
- 	struct wmi_10_2_peer_assoc_complete_cmd cmd;
 -- 
-2.17.0
+2.7.4
