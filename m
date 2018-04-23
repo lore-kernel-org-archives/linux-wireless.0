@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:36656 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752831AbeDLTB1 (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:42501 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932508AbeDWUMX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 15:01:27 -0400
-Received: by mail-wm0-f52.google.com with SMTP id x82so216373wmg.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2018 12:01:26 -0700 (PDT)
-Subject: Re: second wifi card enforce CN reg dom
-To: Dan Williams <dcbw@redhat.com>, Steve deRosier <derosier@gmail.com>
-References: <CAE4vF2fCTEmEX8i+XVpvTJ1sRYDHDLr+fYFAM2PzTQTqkCoXVQ@mail.gmail.com>
- <CAE4vF2f2oXEvOJWDXPjmiWZTC=HOq5+xE_R64-_VvH6zc-Vw+A@mail.gmail.com>
- <5ACF0F5A.3090301@broadcom.com>
- <CAE4vF2ftgMPhKEUHr2rPaobM9Dtuc-B9rtbF5tWavvrwUXA7Ag@mail.gmail.com>
- <5ACF3A28.4060303@broadcom.com>
- <CALLGbRLJLxu92S2bYFOk9oJCLanES4Fu6e-9bh9oAupEC0Uw5w@mail.gmail.com>
- <1517ecac1d85eb746367d9db436beca2d8f47835.camel@redhat.com>
-Cc: solsTiCe d'Hiver <solstice.dhiver@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5ACFAD04.10908@broadcom.com> (sfid-20180412_210130_911089_89551300)
-Date: Thu, 12 Apr 2018 21:01:24 +0200
-MIME-Version: 1.0
-In-Reply-To: <1517ecac1d85eb746367d9db436beca2d8f47835.camel@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 23 Apr 2018 16:12:23 -0400
+From: Andres Rodriguez <andresx7@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: andresx7@gmail.com, gregkh@linuxfoundation.org, mcgrof@kernel.org,
+        alexdeucher@gmail.com, christian.koenig@amd.com,
+        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        hdegoede@redhat.com
+Subject: [PATCH 6/9] firmware: print firmware name on fallback path
+Date: Mon, 23 Apr 2018 16:12:02 -0400
+Message-Id: <20180423201205.20533-7-andresx7@gmail.com> (sfid-20180423_221410_855094_BBC5DDA4)
+In-Reply-To: <20180423201205.20533-1-andresx7@gmail.com>
+References: <20180423201205.20533-1-andresx7@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/12/2018 5:52 PM, Dan Williams wrote:
-> On Thu, 2018-04-12 at 08:18 -0700, Steve deRosier wrote:
->> On Thu, Apr 12, 2018 at 3:51 AM, Arend van Spriel
->> <arend.vanspriel@broadcom.com> wrote:
->>> On 4/12/2018 10:42 AM, solsTiCe d'Hiver wrote:
->>>>
->>>> Hi.
->>>>
->>>> This is beyond my comprehension that you could assert this is a
->>>> non issue.
->>>
->>>
->>> Well. I am just saying that it is by design. There is no way for
->>> the
->>> regulatory code to determine where you and your hardware actually
->>> reside so
->>> instead it takes a conservative approach.
->>>
->>
->> To say it another way: mixing regulatory domains on your host system
->> should result in a _smaller_ set of channels - ie only those channels
->> at the intersection of the two.
->>
->> And another wrinkle to consider - one of the 802.11 amendments (can't
->> remember which one) actually causes the radio to listen to the
->
-> 802.11d I believe, from the early 2000s.
+Previously, one could assume the firmware name from the preceding
+message: "Direct firmware load for {name} failed with error %d".
 
-Correct.
+However, with the new firmware_request_nowarn() entrypoint, the message
+outlined above will not always be printed.
 
-Regards,
-Arend
+Therefore, we add the firmware name to the fallback path spew in order
+to associate it with the appropriate request.
+
+Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
+---
+ drivers/base/firmware_loader/fallback.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
+index e75928458489..1a47ddc70c31 100644
+--- a/drivers/base/firmware_loader/fallback.c
++++ b/drivers/base/firmware_loader/fallback.c
+@@ -669,6 +669,6 @@ int fw_sysfs_fallback(struct firmware *fw, const char *name,
+ 	if (!fw_run_sysfs_fallback(opt_flags))
+ 		return ret;
+ 
+-	dev_warn(device, "Falling back to user helper\n");
++	dev_warn(device, "Falling back to user helper for %s\n", name);
+ 	return fw_load_from_user_helper(fw, name, device, opt_flags);
+ }
+-- 
+2.14.1
