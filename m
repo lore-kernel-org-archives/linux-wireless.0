@@ -1,184 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39532 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754756AbeDMMoK (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:2854 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755549AbeDWQfB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Apr 2018 08:44:10 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Apr 2018 15:42:53 +0300
-Message-Id: <20180413124256.21769-23-luca@coelho.fi> (sfid-20180413_144412_940655_D2746105)
-In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
-References: <20180413124256.21769-1-luca@coelho.fi>
-Subject: [PATCH 22/25] iwlwifi: use flags to denote modifiers for the channel maps
+        Mon, 23 Apr 2018 12:35:01 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [RESEND 05/33] staging: wilc1000: rename WILC_WFI_p2p_rx & s32Freq to avoid camelCase
+Date: Mon, 23 Apr 2018 22:03:07 +0530
+Message-ID: <1524501215-4963-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183510_840617_FFD168F6)
+In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Fix 'Avoid camelCase' issue found by checkpatch.pl script.
 
-Instead of having a boolean for each modifier we need to handle in the
-channel maps, create a bitmask with flags that denote each
-modification.
-
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/nvm.c        | 10 +++++----
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 25 ++++++++++++++--------
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h | 14 ++++++++++--
- 3 files changed, 34 insertions(+), 15 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c             |  2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 18 +++++++++---------
+ drivers/staging/wilc1000/wilc_wlan.h              |  2 +-
+ 3 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
-index ff44d9031e1a..beefb89194a9 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/nvm.c
-@@ -87,6 +87,7 @@ struct iwl_nvm_data *iwl_fw_get_nvm(struct iwl_fw_runtime *fwrt)
- 				fw_has_capa(&fwrt->fw->ucode_capa,
- 					    IWL_UCODE_TLV_CAPA_LAR_SUPPORT);
- 	u32 mac_flags;
-+	u32 sbands_flags = 0;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 38a83bd..2236967 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1166,7 +1166,7 @@ void wilc_wfi_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size)
+ 	vif = netdev_priv(wilc->vif[1]->ndev);
+ 	if ((buff[0] == vif->frame_reg[0].type && vif->frame_reg[0].reg) ||
+ 	    (buff[0] == vif->frame_reg[1].type && vif->frame_reg[1].reg))
+-		WILC_WFI_p2p_rx(wilc->vif[1]->ndev, buff, size);
++		wilc_wfi_p2p_rx(wilc->vif[1]->ndev, buff, size);
+ }
  
- 	ret = iwl_trans_send_cmd(trans, &hcmd);
- 	if (ret)
-@@ -144,15 +145,16 @@ struct iwl_nvm_data *iwl_fw_get_nvm(struct iwl_fw_runtime *fwrt)
- 	nvm->valid_tx_ant = (u8)le32_to_cpu(rsp->phy_sku.tx_chains);
- 	nvm->valid_rx_ant = (u8)le32_to_cpu(rsp->phy_sku.rx_chains);
- 
--	/* Initialize regulatory data */
--	nvm->lar_enabled =
--		le32_to_cpu(rsp->regulatory.lar_enabled) && lar_fw_supported;
-+	if (le32_to_cpu(rsp->regulatory.lar_enabled) && lar_fw_supported) {
-+		nvm->lar_enabled = true;
-+		sbands_flags |= IWL_NVM_SBANDS_FLAGS_LAR;
-+	}
- 
- 	iwl_init_sbands(trans->dev, trans->cfg, nvm,
- 			rsp->regulatory.channel_profile,
- 			nvm->valid_tx_ant & fwrt->fw->valid_tx_ant,
- 			nvm->valid_rx_ant & fwrt->fw->valid_rx_ant,
--			nvm->lar_enabled, false);
-+			sbands_flags);
- 
- 	iwl_free_resp(&hcmd);
- 	return nvm;
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 3437ed480e31..735b211364d2 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -295,7 +295,7 @@ static u32 iwl_get_channel_flags(u8 ch_num, int ch_idx, bool is_5ghz,
- static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 				struct iwl_nvm_data *data,
- 				const __le16 * const nvm_ch_flags,
--				bool lar_supported, bool no_wide_in_5ghz)
-+				u32 sbands_flags)
+ void wilc_netdev_cleanup(struct wilc *wilc)
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 7a6ca03..1bda7fc 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -359,7 +359,7 @@ static void cfg_scan_result(enum scan_event scan_event,
  {
- 	int ch_idx;
- 	int n_channels = 0;
-@@ -323,7 +323,8 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 			continue;
+ 	struct wilc_priv *priv;
+ 	struct wiphy *wiphy;
+-	s32 s32Freq;
++	s32 freq;
+ 	struct ieee80211_channel *channel;
+ 	struct cfg80211_bss *bss = NULL;
  
- 		/* workaround to disable wide channels in 5GHz */
--		if (no_wide_in_5ghz && is_5ghz) {
-+		if ((sbands_flags & IWL_NVM_SBANDS_FLAGS_NO_WIDE_IN_5GHZ) &&
-+		    is_5ghz) {
- 			ch_flags &= ~(NVM_CHANNEL_40MHZ |
- 				     NVM_CHANNEL_80MHZ |
- 				     NVM_CHANNEL_160MHZ);
-@@ -332,7 +333,8 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 		if (ch_flags & NVM_CHANNEL_160MHZ)
- 			data->vht160_supported = true;
+@@ -378,9 +378,9 @@ static void cfg_scan_result(enum scan_event scan_event,
+ 		    ((s32)network_info->rssi * 100) > 100))
+ 			return;
  
--		if (!lar_supported && !(ch_flags & NVM_CHANNEL_VALID)) {
-+		if (!(sbands_flags & IWL_NVM_SBANDS_FLAGS_LAR) &&
-+		    !(ch_flags & NVM_CHANNEL_VALID)) {
- 			/*
- 			 * Channels might become valid later if lar is
- 			 * supported, hence we still want to add them to
-@@ -362,7 +364,7 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
- 		channel->max_power = IWL_DEFAULT_MAX_TX_POWER;
+-		s32Freq = ieee80211_channel_to_frequency((s32)network_info->ch,
+-							 NL80211_BAND_2GHZ);
+-		channel = ieee80211_get_channel(wiphy, s32Freq);
++		freq = ieee80211_channel_to_frequency((s32)network_info->ch,
++						      NL80211_BAND_2GHZ);
++		channel = ieee80211_get_channel(wiphy, freq);
  
- 		/* don't put limitations in case we're using LAR */
--		if (!lar_supported)
-+		if (!(sbands_flags & IWL_NVM_SBANDS_FLAGS_LAR))
- 			channel->flags = iwl_get_channel_flags(nvm_chan[ch_idx],
- 							       ch_idx, is_5ghz,
- 							       ch_flags, cfg);
-@@ -460,15 +462,14 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
+ 		if (!channel)
+ 			return;
+@@ -1396,12 +1396,12 @@ static void wilc_wfi_cfg_parse_rx_vendor_spec(struct wilc_priv *priv, u8 *buff,
+ 	}
+ }
  
- void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
- 		     struct iwl_nvm_data *data, const __le16 *nvm_ch_flags,
--		     u8 tx_chains, u8 rx_chains, bool lar_supported,
--		     bool no_wide_in_5ghz)
-+		     u8 tx_chains, u8 rx_chains, u32 sbands_flags)
+-void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size)
++void wilc_wfi_p2p_rx(struct net_device *dev, u8 *buff, u32 size)
  {
- 	int n_channels;
- 	int n_used = 0;
- 	struct ieee80211_supported_band *sband;
+ 	struct wilc_priv *priv;
+ 	u32 header, pkt_offset;
+ 	struct host_if_drv *wfi_drv;
+-	s32 s32Freq;
++	s32 freq;
  
- 	n_channels = iwl_init_channel_map(dev, cfg, data, nvm_ch_flags,
--					  lar_supported, no_wide_in_5ghz);
-+					  sbands_flags);
- 	sband = &data->bands[NL80211_BAND_2GHZ];
- 	sband->band = NL80211_BAND_2GHZ;
- 	sband->bitrates = &iwl_cfg80211_rates[RATES_24_OFFS];
-@@ -716,8 +717,8 @@ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	struct device *dev = trans->dev;
- 	struct iwl_nvm_data *data;
- 	bool lar_enabled;
--	bool no_wide_in_5ghz = iwl_nvm_no_wide_in_5ghz(dev, cfg, nvm_hw);
- 	u32 sku, radio_cfg;
-+	u32 sbands_flags = 0;
- 	u16 lar_config;
- 	const __le16 *ch_section;
- 
-@@ -790,8 +791,14 @@ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 		return NULL;
+ 	priv = wiphy_priv(dev->ieee80211_ptr->wiphy);
+ 	wfi_drv = (struct host_if_drv *)priv->hif_drv;
+@@ -1422,10 +1422,10 @@ void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size)
+ 		return;
  	}
  
-+	if (lar_fw_supported && lar_enabled)
-+		sbands_flags |= IWL_NVM_SBANDS_FLAGS_LAR;
-+
-+	if (iwl_nvm_no_wide_in_5ghz(dev, cfg, nvm_hw))
-+		sbands_flags |= IWL_NVM_SBANDS_FLAGS_NO_WIDE_IN_5GHZ;
-+
- 	iwl_init_sbands(dev, cfg, data, ch_section, tx_chains, rx_chains,
--			lar_fw_supported && lar_enabled, no_wide_in_5ghz);
-+			sbands_flags);
- 	data->calib_version = 255;
+-	s32Freq = ieee80211_channel_to_frequency(curr_channel, NL80211_BAND_2GHZ);
++	freq = ieee80211_channel_to_frequency(curr_channel, NL80211_BAND_2GHZ);
  
- 	return data;
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-index 6b108cae61b8..868baa508a16 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-@@ -69,6 +69,17 @@
- #include <net/cfg80211.h>
- #include "iwl-eeprom-parse.h"
+ 	if (!ieee80211_is_action(buff[FRAME_TYPE_ID])) {
+-		cfg80211_rx_mgmt(priv->wdev, s32Freq, 0, buff, size, 0);
++		cfg80211_rx_mgmt(priv->wdev, freq, 0, buff, size, 0);
+ 		return;
+ 	}
  
-+/**
-+ * enum iwl_nvm_sbands_flags - modification flags for the channel profiles
-+ *
-+ * @IWL_NVM_SBANDS_FLAGS_LAR: LAR is enabled
-+ * @IWL_NVM_SBANDS_FLAGS_NO_WIDE_IN_5GHZ: disallow 40, 80 and 160MHz on 5GHz
-+ */
-+enum iwl_nvm_sbands_flags {
-+	IWL_NVM_SBANDS_FLAGS_LAR		= BIT(0),
-+	IWL_NVM_SBANDS_FLAGS_NO_WIDE_IN_5GHZ	= BIT(1),
-+};
-+
- /**
-  * iwl_parse_nvm_data - parse NVM data and return values
-  *
-@@ -95,8 +106,7 @@ void iwl_set_hw_address_from_csr(struct iwl_trans *trans,
-  */
- void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
- 		     struct iwl_nvm_data *data, const __le16 *nvm_ch_flags,
--		     u8 tx_chains, u8 rx_chains, bool lar_supported,
--		     bool no_wide_in_5ghz);
-+		     u8 tx_chains, u8 rx_chains, u32 sbands_flags);
+@@ -1461,7 +1461,7 @@ void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size)
+ 		}
+ 	}
  
- /**
-  * iwl_parse_mcc_info - parse MCC (mobile country code) info coming from FW
+-	cfg80211_rx_mgmt(priv->wdev, s32Freq, 0, buff, size, 0);
++	cfg80211_rx_mgmt(priv->wdev, freq, 0, buff, size, 0);
+ }
+ 
+ static void wilc_wfi_mgmt_tx_complete(void *priv, int status)
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index fa157a6..4abbfa7 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -300,7 +300,7 @@ void wilc_enable_tcp_ack_filter(bool value);
+ int wilc_wlan_get_num_conn_ifcs(struct wilc *wilc);
+ int wilc_mac_xmit(struct sk_buff *skb, struct net_device *dev);
+ 
+-void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size);
++void wilc_wfi_p2p_rx(struct net_device *dev, u8 *buff, u32 size);
+ void host_wakeup_notify(struct wilc *wilc);
+ void host_sleep_notify(struct wilc *wilc);
+ extern bool wilc_enable_ps;
 -- 
-2.16.3
+2.7.4
