@@ -1,61 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39488 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754735AbeDMMnu (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:37043 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932111AbeDWQfy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Apr 2018 08:43:50 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Apr 2018 15:42:42 +0300
-Message-Id: <20180413124256.21769-12-luca@coelho.fi> (sfid-20180413_144354_727034_5B8FE16B)
-In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
-References: <20180413124256.21769-1-luca@coelho.fi>
-Subject: [PATCH 11/25] iwlwifi: pcie: allocate shorter TX queues for 22000 devices
+        Mon, 23 Apr 2018 12:35:54 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [RESEND 25/33] staging: wilc1000: remove the use of goto label in spi_cmd_complete()
+Date: Mon, 23 Apr 2018 22:03:27 +0530
+Message-ID: <1524501215-4963-26-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183619_177543_C44C8326)
+In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+In spi_cmd_complete() remove the use of goto label '_error_'. Changes
+were done to avoid the use of '_' in label name.
 
-When support for shorter TX queues was introduced, it
-didn't include the actual allocation of shorter queue,
-which is the main motive for the change.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c      | 3 +++
- 2 files changed, 4 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_spi.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index b605b364ed3f..734a5fc3584d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -993,7 +993,7 @@ static void iwl_pcie_gen2_txq_free_memory(struct iwl_trans *trans,
- 	/* De-alloc circular buffer of TFDs */
- 	if (txq->tfds) {
- 		dma_free_coherent(dev,
--				  trans_pcie->tfd_size * TFD_QUEUE_SIZE_MAX,
-+				  trans_pcie->tfd_size * txq->n_window,
- 				  txq->tfds, txq->dma_addr);
- 		dma_free_coherent(dev,
- 				  sizeof(*txq->first_tb_bufs) * txq->n_window,
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 86873b99e5d7..4493520aae1e 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -495,6 +495,9 @@ int iwl_pcie_txq_alloc(struct iwl_trans *trans, struct iwl_txq *txq,
- 	if (WARN_ON(txq->entries || txq->tfds))
- 		return -EINVAL;
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 6b392c9..3e3c774 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -527,8 +527,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 			if (wilc_spi_rx(wilc, &b[ix], nbytes)) {
+ 				dev_err(&spi->dev,
+ 					"Failed block read, bus err\n");
+-				result = N_FAIL;
+-				goto _error_;
++				return N_FAIL;
+ 			}
  
-+	if (trans->cfg->use_tfh)
-+		tfd_sz = trans_pcie->tfd_size * slots_num;
-+
- 	timer_setup(&txq->stuck_timer, iwl_pcie_txq_stuck_timer, 0);
- 	txq->trans_pcie = trans_pcie;
+ 			/*
+@@ -537,8 +536,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 			if (!g_spi.crc_off && wilc_spi_rx(wilc, crc, 2)) {
+ 				dev_err(&spi->dev,
+ 					"Failed block crc read, bus err\n");
+-				result = N_FAIL;
+-				goto _error_;
++				return N_FAIL;
+ 			}
+ 
+ 			ix += nbytes;
+@@ -604,7 +602,6 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
+ 			sz -= nbytes;
+ 		}
+ 	}
+-_error_:
+ 	return result;
+ }
  
 -- 
-2.16.3
+2.7.4
