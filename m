@@ -1,55 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f43.google.com ([209.85.214.43]:37153 "EHLO
-        mail-it0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750841AbeDYCze (ORCPT
+Received: from mail-ot0-f173.google.com ([74.125.82.173]:36831 "EHLO
+        mail-ot0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932101AbeDWQJc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 22:55:34 -0400
-Received: by mail-it0-f43.google.com with SMTP id 71-v6so17681066ith.2
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2018 19:55:34 -0700 (PDT)
-Subject: Re: Simultaneous 2.4 GHz WiFi and Bluetooth issue on Intel Dual Band
- Wireless-AC 8260
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>
-References: <6e4b5e53-0a8d-978c-5cfe-f498c8b15c1a@gmail.com>
- <CANUX_P19ja=XLMs8Vvii1yMvCNAvPnMh7hs=H92M5QRJnJjRfg@mail.gmail.com>
-From: Nathan Schulte <nmschulte@gmail.com>
-Message-ID: <30aa1580-7913-a7f8-3f2d-be4d699d6dbc@gmail.com> (sfid-20180425_045538_478871_952DEA04)
-Date: Tue, 24 Apr 2018 21:55:32 -0500
+        Mon, 23 Apr 2018 12:09:32 -0400
+Subject: Re: [PATCH v2] rtlwifi: cleanup 8723be ant_sel definition
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: pkshih@realtek.com, linux-wireless@vger.kernel.org,
+        stable@vger.kernel.org
+References: <20180420023009.3182-1-pkshih@realtek.com>
+ <87zi1ygk8d.fsf@kamboji.qca.qualcomm.com>
+ <db66387b-9271-2563-ae77-449716795150@lwfinger.net>
+ <87o9iadog1.fsf@kamboji.qca.qualcomm.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <21a952f1-4793-3b09-26ed-dacc67b0bb8e@lwfinger.net> (sfid-20180423_180938_822365_965CD6AD)
+Date: Mon, 23 Apr 2018 11:09:29 -0500
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P19ja=XLMs8Vvii1yMvCNAvPnMh7hs=H92M5QRJnJjRfg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <87o9iadog1.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/20/2018 01:03 AM, Emmanuel Grumbach wrote:
->> Under Windows 10, the hardware appears to work without issue.
->> Additionally, I believe I managed to warm-reboot from Windows 10 to
->> Linux (with Bluetooth connected), and was able to continue using the
->> same 2.4 GHz WiFi and Bluetooth audio sink without issue.
+On 04/23/2018 08:47 AM, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
 > 
-> This was reported in the past. Please make sure you have the latest BT
-> firmware files.
+>> On 04/20/2018 07:01 AM, Kalle Valo wrote:
+>>> <pkshih@realtek.com> writes:
+>>>
+>>>> From: Ping-Ke Shih <pkshih@realtek.com>
+>>>>
+>>>> The module parameter ant_sel is used to control antenna number and path.
+>>>> There is an existing enum ANT_{X2,X1} defined the antenna number, so
+>>>> add a new enum ANT_{MAIN,AUX} to make it readable. After this work,
+>>>> incorrect given values depend on ant_sel were exposed, so refill values
+>>>> according following definition:
+>>>>     ant_sel   ant_num   ant_path  print_label
+>>>>        1      ANT_X1    ANT_AUX        #2
+>>>>        2      ANT_X2    ANT_MAIN       #1
+>>>> Then, a workaround resulted from the incorrect values in halbtcoutsrc.c was
+>>>> removed. These is a existing bug in the workaround while ant_sel=2, but the
+>>>> case is rare use so user is hard to observe this bug.
+>>>>
+>>>> The experimental results with single antenna connected to specific path
+>>>> are in following:
+>>>>     ant_sel  ANT_MAIN(#1)  ANT_AUX(#2)
+>>>>        0        -8            -62
+>>>>        1        -62           -10
+>>>>        2        -6            -60
+>>>>
+>>>> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+>>>> Cc: Stable <stable@vger.kernel.org> # 4.7+
+>>>> Reviewed-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>>> ---
+>>>> v2: Add more description about fixed bugs in end of first paragraph.
+>>>
+>>> Sorry, I still don't understand the bug you are fixing. It shouldn't
+>>> take more than one minute to understand a commit log.
+>>>
+>>> I prose that you rewrite the commit log, or at least parts of if it.
+>>> When you are describing a bug don't talk about enums or source files,
+>>> that's an implementation detail, and instead talk how the bug looks like
+>>> from users point of view. For example:
+>>>
+>>>     "On HP laptop model 1234 with Realtex 4321 device users are supposed
+>>>      to use ant_sel module parameter with value 77 to use the correct
+>>>      antenna. But instead rtlwifi incorrectly chose antenna 88 with lower
+>>>      transmit power and that caused packet loss. Fix it so that the user
+>>>      gets better transmit power and..."
+>>>
+>>> (that's of course all made up information as I don't know what the
+>>> actual bug is)
+>>>
+>>> And after that you can write rtlwifi internals in the commit log as much
+>>> as you want :) But there needs to be a clear generic description of the
+>>> bug first and it needs to understandable in one read.
+>>>
+>>> To make this faster I propose that you send the new commit log as a
+>>> reply to this mail and I can then comment faster.
+>>
+>> Kalle,
+>>
+>> As I have some responsibility in creating this mess, let me try to
+>> write a new commit log. I hope this answers your questions.
+>>
+>> Thanks,
+>>
+>> Larry
+>>
+>> ====================================
+>>
+>> Some HP laptops have only a single wifi antenna. This would not be a
+>> problem except that they were shipped with an incorrectly encoded
+>> EFUSE. It should have been possible to open the computer and transfer
+>> the antenna connection to the other terminal except that such action
+>> might void the warranty, and moving the antenna broke the Windows
+>> driver. The fix was to add a module option that would override the
+>> EFUSE encoding. That was done with commit c18d8f509571 ("rtlwifi:
+>> rtl8723be: Add antenna select module parameter"). There was still a
+>> problem with Bluetooth coexistence, which was addressed with commit
+>> baa170229095 ("rtlwifi: btcoexist: Implement antenna selection").
+>> There were still problems, thus there were commit 0ff78adeef11
+>> ("rtlwifi: rtl8723be: fix ant_sel code") and commit 6d6226928369
+>> ("rtlwifi: btcoexist: Fix antenna selection code"). Despite all these
+>> attempts at fixing the problem, the code is not yet right. A proper
+>> fix is important as there are now instances of laptops having
+>> RTL8723DE chips with the same problem.
+> 
+> This looks better, thanks.
+> 
+>> The module parameter ant_sel is used to control antenna number and path.
+>> At present enum ANT_{X2,X1} is used to define the antenna number, but
+>> this choice is not intuitive, thus change to a new enum ANT_{MAIN,AUX}
+>> to make it more readable. This change showed examples where incorrect
+>> values were used. It was also possible to remove a workaround in
+>> halbtcoutsrc.c
+>>
+>> The experimental results with single antenna connected to specific path
+>> are now as follows:
+>>    ant_sel  ANT_MAIN(#1)  ANT_AUX(#2)
+>>       0        -8            -62
+>>       1        -62           -10
+>>       2        -6            -60
+> 
+> But after reading this I'm still not sure if users are supposed to do
+> anything. I guess they will continue using existing values with the
+> ant_sel module parameter and nothing changes in that regard?
 
-This seems to have resolved the issue.  Interestingly, the firmware
-(version...) shipped with Debian Sid is not in the official
-linux-firmware.git repository; its md5sum doesn't match any of prior
-versions of the file:
+If users have two antennas, or a vendor that correctly encoded the EFUSE, this 
+patch will change nothing for them. If they have the low-signal problem, then 
+their choice of a value for ant_sel should not change. At least we are now sure 
+that using that module option will provide correct operation.
 
-> https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/log/intel/ibt-11-5.sfi
-
-Emmanuel, how can I determine the firmware version ("FW Build" and/or
-"Release Version") from a given file (e.g. ibt-11-5.sfi/.ddc)?
-
-> Regardless of the BT firmware version thing which is a pure Intel
-> problem, I have heard
-> about problems in the BT stack itself but I can't help about this.
-
-Though I've never really used the Bluetooth stack until this hardware,
-it seems the stack/blueman-* applications only behave oddly when there's
-problems with the firmware: never an issue when not using simultaneous
-2.4 GHz WiFi + Bluetooth, or with this latest firmware, or approx. 2
-years ago when I first started using this setup.
-
-Thanks,
-Nate
+Larry
