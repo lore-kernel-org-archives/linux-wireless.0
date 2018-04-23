@@ -1,165 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56412 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750864AbeDMUcI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Apr 2018 16:32:08 -0400
+Received: from mga11.intel.com ([192.55.52.93]:50731 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754710AbeDWMFn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Apr 2018 08:05:43 -0400
+Date: Mon, 23 Apr 2018 15:05:13 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Ayala Beker <ayala.beker@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [BUG] iwlwifi: Microcode SW error detected.  Restarting 0x2000000.
+Message-ID: <20180423120513.GS2173@lahna.fi.intel.com> (sfid-20180423_140547_616771_329BB837)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 13 Apr 2018 13:32:05 -0700
-From: asinghal@codeaurora.org
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <jouni@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Kiran Kumar Lokere <klokere@codeaurora.org>,
-        jjohnson@codeaurora.org
-Subject: Re: [PATCH 2/2] cfg80211: Modify wiphy registration semantics for
- self managed hints
-In-Reply-To: <1521627352.2645.27.camel@sipsolutions.net>
-References: <1520106021-16836-1-git-send-email-jouni@codeaurora.org>
- <1520106021-16836-2-git-send-email-jouni@codeaurora.org>
- <1521627352.2645.27.camel@sipsolutions.net>
-Message-ID: <5f8caab7e7cfb88072c2e221ea45063e@codeaurora.org> (sfid-20180413_223212_667445_67569A93)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi Johannes,
-             please fine some replies inline:
+Hi,
 
-On 2018-03-21 03:15, Johannes Berg wrote:
-> So I really think this should just be one patch - it's not about
-> "registration semantics" but about which types of requests get passed
-> to reg_notifier(), and if you do it in one place you'd better also do
-> it in the other.
+On my Lenovo X1 Carbon gen 5 system,after I upgraded to v4.17-rc1
+iwlwifi started to fail with following splats on dmesg:
 
-Sure, I have combined the two patches in one patch now:
+  iwlwifi 0000:04:00.0: Microcode SW error detected.  Restarting 0x2000000.
+  iwlwifi 0000:04:00.0: Start IWL Error Log Dump:
+  iwlwifi 0000:04:00.0: Status: 0x00000100, count: 6
+  iwlwifi 0000:04:00.0: Loaded firmware version: 31.560484.0
+  iwlwifi 0000:04:00.0: 0x00000038 | BAD_COMMAND                 
+  iwlwifi 0000:04:00.0: 0x00A002F1 | trm_hw_status0
+  iwlwifi 0000:04:00.0: 0x00000000 | trm_hw_status1
+  iwlwifi 0000:04:00.0: 0x0002495C | branchlink2
+  iwlwifi 0000:04:00.0: 0x0003962E | interruptlink1
+  iwlwifi 0000:04:00.0: 0x00000000 | interruptlink2
+  iwlwifi 0000:04:00.0: 0x00000000 | data1
+  iwlwifi 0000:04:00.0: 0x00000030 | data2
+  iwlwifi 0000:04:00.0: 0x00000030 | data3
+  iwlwifi 0000:04:00.0: 0x003B31AF | beacon time
+  iwlwifi 0000:04:00.0: 0x0004CE4F | tsf low
+  iwlwifi 0000:04:00.0: 0x00000000 | tsf hi
+  iwlwifi 0000:04:00.0: 0x00000000 | time gp1
+  iwlwifi 0000:04:00.0: 0x0004CE50 | time gp2
+  iwlwifi 0000:04:00.0: 0x00000001 | uCode revision type
+  iwlwifi 0000:04:00.0: 0x0000001F | uCode version major
+  iwlwifi 0000:04:00.0: 0x00088D64 | uCode version minor
+  iwlwifi 0000:04:00.0: 0x00000230 | hw version
+  iwlwifi 0000:04:00.0: 0x00489000 | board version
+  iwlwifi 0000:04:00.0: 0x00000000 | hcmd
+  iwlwifi 0000:04:00.0: 0x00122080 | isr0
+  iwlwifi 0000:04:00.0: 0x00000000 | isr1
+  iwlwifi 0000:04:00.0: 0x28201802 | isr2
+  iwlwifi 0000:04:00.0: 0x404001C0 | isr3
+  iwlwifi 0000:04:00.0: 0x00000000 | isr4
+  iwlwifi 0000:04:00.0: 0x802D0051 | last cmd Id
+  iwlwifi 0000:04:00.0: 0x00000000 | wait_event
+  iwlwifi 0000:04:00.0: 0x0000DF8E | l2p_control
+  iwlwifi 0000:04:00.0: 0x00000820 | l2p_duration
+  iwlwifi 0000:04:00.0: 0x00000000 | l2p_mhvalid
+  iwlwifi 0000:04:00.0: 0x00000000 | l2p_addr_match
+  iwlwifi 0000:04:00.0: 0x0000000D | lmpm_pmg_sel
+  iwlwifi 0000:04:00.0: 0x13091828 | timestamp
+  iwlwifi 0000:04:00.0: 0x00002838 | flow_handler
+  iwlwifi 0000:04:00.0: Start IWL Error Log Dump:
+  iwlwifi 0000:04:00.0: Status: 0x00000100, count: 7
+  iwlwifi 0000:04:00.0: 0x00000034 | NMI_INTERRUPT_WDG
+  iwlwifi 0000:04:00.0: 0x00000000 | umac branchlink1
+  iwlwifi 0000:04:00.0: 0xC0086950 | umac branchlink2
+  iwlwifi 0000:04:00.0: 0xC00842BC | umac interruptlink1
+  iwlwifi 0000:04:00.0: 0xC00840CC | umac interruptlink2
+  iwlwifi 0000:04:00.0: 0x00000400 | umac data1
+  iwlwifi 0000:04:00.0: 0xC00840CC | umac data2
+  iwlwifi 0000:04:00.0: 0xDEADBEEF | umac data3
+  iwlwifi 0000:04:00.0: 0x0000001F | umac major
+  iwlwifi 0000:04:00.0: 0x00088D64 | umac minor
+  iwlwifi 0000:04:00.0: 0xC08861DC | frame pointer
+  iwlwifi 0000:04:00.0: 0xC08861DC | stack pointer
+  iwlwifi 0000:04:00.0: 0x00000000 | last host cmd
+  iwlwifi 0000:04:00.0: 0x00004008 | isr status reg
+  ieee80211 phy0: Hardware restart was requested
+  iwlwifi 0000:04:00.0: FW Error notification: type 0x00000000 cmd_id 0x00
+  iwlwifi 0000:04:00.0: FW Error notification: seq 0x0000 service 0x00000000
+  iwlwifi 0000:04:00.0: FW Error notification: timestamp 0x           4CE4B
+  iwlwifi 0000:04:00.0: Microcode SW error detected.  Restarting 0x2000000.
 
- From: Amar Singhal <asinghal@codeaurora.org>
+The controller in question is:
 
-Call the regulatory notifier for self managed hints only if
-initiator is NL80211_REGDOM_SET_BY_USER and hint type is
-NL80211_USER_REG_HINT_CELL_BASE. Also call regulatory
-notifier when wiphy is registered under similar conditions.
+  04:00.0 Network controller [0280]: Intel Corporation Wireless 8265 / 8275 [8086:24fd] (rev 88)
 
-Signed-off-by: Amar Singhal <asinghal@codeaurora.org>
-Signed-off-by: Kiran Kumar Lokere <klokere@codeaurora.org>
-Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
----
-  net/wireless/reg.c | 31 +++++++++++++++++++++----------
-  1 file changed, 21 insertions(+), 10 deletions(-)
+Bisection pointed to the following commit and after I reverted it,
+things seem to work fine again:
+  
+  66fa2424df16 ("iwlwifi: fw api: support the new scan request FW API version")
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 16c7e4e..d74de76 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2768,20 +2768,25 @@ static void reg_process_hint(struct 
-regulatory_request *reg_request)
-  	reg_free_request(reg_request);
-  }
+Any idea what might be wrong with that commit and how to fix it
+properly?
 
--static bool reg_only_self_managed_wiphys(void)
-+static bool reg_only_self_managed_wiphys(struct regulatory_request 
-*request)
-  {
-  	struct cfg80211_registered_device *rdev;
-  	struct wiphy *wiphy;
--	bool self_managed_found = false;
-+	bool self_managed_found = true;
-
-  	ASSERT_RTNL();
-
-  	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
-  		wiphy = &rdev->wiphy;
--		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
-+		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
-  			self_managed_found = true;
--		else
--			return false;
-+			if (request->initiator == NL80211_REGDOM_SET_BY_USER &&
-+			    request->user_reg_hint_type ==
-+			    NL80211_USER_REG_HINT_CELL_BASE)
-+				reg_call_notifier(wiphy, request);
-+		} else {
-+			self_managed_found = false;
-+		}
-  	}
-
-  	/* make sure at least one self-managed wiphy exists */
-@@ -2819,7 +2824,7 @@ static void reg_process_pending_hints(void)
-
-  	spin_unlock(&reg_requests_lock);
-
--	if (reg_only_self_managed_wiphys()) {
-+	if (reg_only_self_managed_wiphys(reg_request)) {
-  		reg_free_request(reg_request);
-  		return;
-  	}
-@@ -3700,15 +3705,21 @@ void wiphy_regulatory_register(struct wiphy 
-*wiphy)
-  {
-  	struct regulatory_request *lr;
-
--	/* self-managed devices ignore external hints */
--	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
-+	lr = get_last_request();
-+
-+	/* self-managed devices ignore beacon hints and 11d IE */
-+	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
-  		wiphy->regulatory_flags |= REGULATORY_DISABLE_BEACON_HINTS |
--					   REGULATORY_COUNTRY_IE_IGNORE;
-+			REGULATORY_COUNTRY_IE_IGNORE;
-+
-+		if (lr->initiator == NL80211_REGDOM_SET_BY_USER &&
-+		    lr->user_reg_hint_type == NL80211_USER_REG_HINT_CELL_BASE)
-+			reg_call_notifier(wiphy, lr);
-+	}
-
-  	if (!reg_dev_ignore_cell_hint(wiphy))
-  		reg_num_devs_support_basehint++;
-
--	lr = get_last_request();
-  	wiphy_update_regulatory(wiphy, lr->initiator);
-  	wiphy_all_share_dfs_chan_state(wiphy);
-  }
--- 
-1.9.1
-> 
-> Secondly, this changes behaviour - not only for ath which presumably is
-> what you want, but also for
->  * brcmfmac
->  * brcmsmac
->  * libertas
->  * mwifiex
->  * mt76
->  * qtnfmac
->  * rtlwifi (& its staging cousin)
->  * rsi
->  * wlcore
->  * rtl8723bs (staging)
-> 
-> So I'm not really convinced we should do this unconditionally.
-
-I am calling the callback conditionally.
-Only couple of drivers are registering regulatory flag 
-REGULATORY_WIPHY_SELF_MANAGED:
-> drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c:              
-> >hw->wiphy->regulatory_flags |= REGULATORY_WIPHY_SELF_MANAGED;
-above driver does not register reg_notifier callback
-> drivers/net/wireless/quantenna/qtnfmac/cfg80211.c:              
-> >wiphy->regulatory_flags |= REGULATORY_WIPHY_SELF_MANAGED;
-> drivers/net/wireless/quantenna/qtnfmac/cfg80211.c:
-> (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
-Above driver registers reg_notifier callback only when flag 
-REGULATORY_WIPHY_SELF_MANAGED is not defined.
-
-Also, in this change, when REGULATORY_WIPHY_SELF_MANAGED is defined, the 
-callback is conditional on request initiator being 
-NL80211_REGDOM_SET_BY_USER and user_reg_hint_type being 
-NL80211_USER_REG_HINT_CELL_BASE.
-
-> 
-> Johannes
-
-regards,
-Amar
+Thanks!
