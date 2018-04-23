@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f65.google.com ([209.85.160.65]:42927 "EHLO
-        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751450AbeDLIAF (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:43231 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932522AbeDWUMZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 04:00:05 -0400
-From: Eyal Ilsar <edilsar@gmail.com>
-To: aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
-        gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2] staging: wilc1000: Remove unnecessary braces {} around single statement block
-Date: Thu, 12 Apr 2018 17:59:32 +1000
-Message-Id: <1523519972-21017-1-git-send-email-edilsar@gmail.com> (sfid-20180412_100046_952675_48E7856A)
-In-Reply-To: <1523371795-5090-1-git-send-email-edilsar@gmail.com>
-References: <1523371795-5090-1-git-send-email-edilsar@gmail.com>
+        Mon, 23 Apr 2018 16:12:25 -0400
+From: Andres Rodriguez <andresx7@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: andresx7@gmail.com, gregkh@linuxfoundation.org, mcgrof@kernel.org,
+        alexdeucher@gmail.com, christian.koenig@amd.com,
+        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        hdegoede@redhat.com
+Subject: [PATCH 8/9] ath10k: use request_firmware_nowarn to load firmware
+Date: Mon, 23 Apr 2018 16:12:04 -0400
+Message-Id: <20180423201205.20533-9-andresx7@gmail.com> (sfid-20180423_221244_174095_2FB75BD6)
+In-Reply-To: <20180423201205.20533-1-andresx7@gmail.com>
+References: <20180423201205.20533-1-andresx7@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unnecessary braces {} around an 'if' statement block with a single 
-statement. Issue found by checkpatch.
+This reduces the unnecessary spew when trying to load optional firmware:
+"Direct firmware load for ... failed with error -2"
 
-Signed-off-by: Eyal Ilsar <edilsar@gmail.com>
+Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
+Acked-by: Kalle Valo <kvalo@codeaurora.org>
 ---
-Added an empty line before the 'Signed-off-by' line and a space between the
-name and e-mail address within that line.
+ drivers/net/wireless/ath/ath10k/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 205304c..325afe1 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -284,9 +284,8 @@ static void remove_network_from_shadow(struct timer_list *unused)
- 		}
- 	}
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index f3ec13b80b20..9a225b7ad2d7 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -652,7 +652,7 @@ static const struct firmware *ath10k_fetch_fw_file(struct ath10k *ar,
+ 		dir = ".";
  
--	if (last_scanned_cnt != 0) {
-+	if (last_scanned_cnt != 0)
- 		mod_timer(&hAgingTimer, jiffies + msecs_to_jiffies(AGING_TIME));
--	}
- }
+ 	snprintf(filename, sizeof(filename), "%s/%s", dir, file);
+-	ret = request_firmware(&fw, filename, ar->dev);
++	ret = request_firmware_nowarn(&fw, filename, ar->dev);
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot fw request '%s': %d\n",
+ 		   filename, ret);
  
- static void clear_duringIP(struct timer_list *unused)
 -- 
-2.7.4
+2.14.1
