@@ -1,37 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38962 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:36248 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750806AbeDUHKg (ORCPT
+        with ESMTP id S1754881AbeDWNKr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 Apr 2018 03:10:36 -0400
+        Mon, 23 Apr 2018 09:10:47 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Jared Bents <jared.bents@rockwellcollins.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v1 1/1] ath10k: convert kmemdup to dma_alloc_coherent
-References: <1524238793-24481-1-git-send-email-jared.bents@rockwellcollins.com>
-Date: Sat, 21 Apr 2018 10:10:31 +0300
-In-Reply-To: <1524238793-24481-1-git-send-email-jared.bents@rockwellcollins.com>
-        (Jared Bents's message of "Fri, 20 Apr 2018 10:39:53 -0500")
-Message-ID: <87in8lf314.fsf@kamboji.qca.qualcomm.com> (sfid-20180421_091040_635911_F8E91925)
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, mika.westerberg@intel.com,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: [PATCH] iwlwifi: mvm: fix old scan version sizes
+References: <20180423130131.29645-1-luca@coelho.fi>
+Date: Mon, 23 Apr 2018 16:10:42 +0300
+In-Reply-To: <20180423130131.29645-1-luca@coelho.fi> (Luca Coelho's message of
+        "Mon, 23 Apr 2018 16:01:31 +0300")
+Message-ID: <87sh7mdq5p.fsf@kamboji.qca.qualcomm.com> (sfid-20180423_151050_663235_5320909C)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jared Bents <jared.bents@rockwellcollins.com> writes:
+Luca Coelho <luca@coelho.fi> writes:
 
-> Update to convert the use of kmemdup to dma_alloc_coherent as
-> dma_alloc_coherent will consider DMA region limits such as
-> those seen with CONFIG_FSL_PCI && CONFIG_ZONE_DMA32 whereas
-> kmemdup does not take those limitations into account.
+> From: Luca Coelho <luciano.coelho@intel.com>
 >
-> Signed-off-by: Jared Bents <jared.bents@rockwellcollins.com>
+> When version 8 of the scan command API was introduced, only the size
+> of version 7 was updated, causing older versions of the firmware to
+> throw BAD_COMMAND errors.
+>
+> Calculating the old version based on the size of the latest version
+> got too complicated and the size of the older versions will never
+> change anyway, so it's better to just hardcoded the sizes.
+>
+> Fixes: 66fa2424df16 ("iwlwifi: fw api: support the new scan request FW API version")
+> Reported-by: Scott Register <sreg@sreg.io>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-Does this fix a real bug or is it just a theoretical issue you noticed
-while looking at the code? If this fixes a real bug please give a
-description of it.
-
-https://wireless.wiki.kernel.org/en/users/drivers/ath10k/submittingpatches#guidelines
+I guess this is for 4.17? Should I apply this directly? I'm hoping to
+send a pull request today or tomorrow.
 
 -- 
 Kalle Valo
