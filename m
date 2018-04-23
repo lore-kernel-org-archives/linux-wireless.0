@@ -1,38 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49852 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753049AbeDCTxD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Apr 2018 15:53:03 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 5/7] mt76: fix potential sleep in atomic context
-Date: Tue,  3 Apr 2018 21:52:52 +0200
-Message-Id: <20180403195254.87700-5-nbd@nbd.name> (sfid-20180403_215308_242424_E30AAA39)
-In-Reply-To: <20180403195254.87700-1-nbd@nbd.name>
-References: <20180403195254.87700-1-nbd@nbd.name>
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:12719 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755376AbeDWQfS (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Apr 2018 12:35:18 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [RESEND 13/33] staging: wilc1000: rename variable using datatype in their name in add_key()
+Date: Mon, 23 Apr 2018 22:03:15 +0530
+Message-ID: <1524501215-4963-14-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183526_646176_C1AA73EA)
+In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use cancel_delayed_work instead of cancel_delayed_work_sync
+Cleanup changes to use variable name as per linux coding style.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
 ---
- drivers/net/wireless/mediatek/mt76/agg-rx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 32 +++++++++++------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/agg-rx.c b/drivers/net/wireless/mediatek/mt76/agg-rx.c
-index fcb208d1f276..cbac42cb536c 100644
---- a/drivers/net/wireless/mediatek/mt76/agg-rx.c
-+++ b/drivers/net/wireless/mediatek/mt76/agg-rx.c
-@@ -273,7 +273,7 @@ static void mt76_rx_aggr_shutdown(struct mt76_dev *dev, struct mt76_rx_tid *tid)
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 963a0e1..0f63c43 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -868,9 +868,9 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 	struct wilc_priv *priv;
+ 	const u8 *rx_mic = NULL;
+ 	const u8 *tx_mic = NULL;
+-	u8 u8mode = NO_ENCRYPT;
+-	u8 u8gmode = NO_ENCRYPT;
+-	u8 u8pmode = NO_ENCRYPT;
++	u8 mode = NO_ENCRYPT;
++	u8 gmode = NO_ENCRYPT;
++	u8 pmode = NO_ENCRYPT;
+ 	enum AUTHTYPE auth_type = ANY;
+ 	struct wilc *wl;
+ 	struct wilc_vif *vif;
+@@ -889,13 +889,13 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 			auth_type = OPEN_SYSTEM;
  
- 	spin_unlock_bh(&tid->lock);
+ 			if (params->cipher == WLAN_CIPHER_SUITE_WEP40)
+-				u8mode = ENCRYPT_ENABLED | WEP;
++				mode = ENCRYPT_ENABLED | WEP;
+ 			else
+-				u8mode = ENCRYPT_ENABLED | WEP | WEP_EXTENDED;
++				mode = ENCRYPT_ENABLED | WEP | WEP_EXTENDED;
  
--	cancel_delayed_work_sync(&tid->reorder_work);
-+	cancel_delayed_work(&tid->reorder_work);
- }
+ 			wilc_add_wep_key_bss_ap(vif, params->key,
+ 						params->key_len, key_index,
+-						u8mode, auth_type);
++						mode, auth_type);
+ 			break;
+ 		}
+ 		if (memcmp(params->key, priv->wep_key[key_index], params->key_len)) {
+@@ -924,11 +924,11 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
  
- void mt76_rx_aggr_stop(struct mt76_dev *dev, struct mt76_wcid *wcid, u8 tidno)
+ 			if (!pairwise) {
+ 				if (params->cipher == WLAN_CIPHER_SUITE_TKIP)
+-					u8gmode = ENCRYPT_ENABLED | WPA | TKIP;
++					gmode = ENCRYPT_ENABLED | WPA | TKIP;
+ 				else
+-					u8gmode = ENCRYPT_ENABLED | WPA2 | AES;
++					gmode = ENCRYPT_ENABLED | WPA2 | AES;
+ 
+-				priv->wilc_groupkey = u8gmode;
++				priv->wilc_groupkey = gmode;
+ 
+ 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
+ 					tx_mic = params->key + 24;
+@@ -953,13 +953,13 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 				wilc_add_rx_gtk(vif, params->key, keylen,
+ 						key_index, params->seq_len,
+ 						params->seq, rx_mic,
+-						tx_mic, AP_MODE, u8gmode);
++						tx_mic, AP_MODE, gmode);
+ 
+ 			} else {
+ 				if (params->cipher == WLAN_CIPHER_SUITE_TKIP)
+-					u8pmode = ENCRYPT_ENABLED | WPA | TKIP;
++					pmode = ENCRYPT_ENABLED | WPA | TKIP;
+ 				else
+-					u8pmode = priv->wilc_groupkey | AES;
++					pmode = priv->wilc_groupkey | AES;
+ 
+ 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
+ 					tx_mic = params->key + 24;
+@@ -983,13 +983,13 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 
+ 				wilc_add_ptk(vif, params->key, keylen,
+ 					     mac_addr, rx_mic, tx_mic,
+-					     AP_MODE, u8pmode, key_index);
++					     AP_MODE, pmode, key_index);
+ 			}
+ 			break;
+ 		}
+ 
+ 		{
+-			u8mode = 0;
++			mode = 0;
+ 			if (!pairwise) {
+ 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
+ 					rx_mic = params->key + 24;
+@@ -1001,7 +1001,7 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 						key_index, params->seq_len,
+ 						params->seq, rx_mic,
+ 						tx_mic, STATION_MODE,
+-						u8mode);
++						mode);
+ 			} else {
+ 				if (params->key_len > 16 && params->cipher == WLAN_CIPHER_SUITE_TKIP) {
+ 					rx_mic = params->key + 24;
+@@ -1011,7 +1011,7 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 
+ 				wilc_add_ptk(vif, params->key, keylen,
+ 					     mac_addr, rx_mic, tx_mic,
+-					     STATION_MODE, u8mode, key_index);
++					     STATION_MODE, mode, key_index);
+ 			}
+ 		}
+ 		break;
 -- 
-2.14.2
+2.7.4
