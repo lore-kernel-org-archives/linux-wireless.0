@@ -1,52 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39802 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754119AbeDJOYG (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:46380 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754749AbeDWLuF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Apr 2018 10:24:06 -0400
-From: pillair@codeaurora.org
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>,
-        Rakesh Pillai <pillair@codeaurora.org>
-Subject: [PATCH 4/4] ath10k: Enable sta idle power save
-Date: Tue, 10 Apr 2018 19:53:32 +0530
-Message-Id: <1523370212-8778-5-git-send-email-pillair@codeaurora.org> (sfid-20180410_162412_336212_54875F1D)
-In-Reply-To: <1523370212-8778-1-git-send-email-pillair@codeaurora.org>
-References: <1523370212-8778-1-git-send-email-pillair@codeaurora.org>
+        Mon, 23 Apr 2018 07:50:05 -0400
+Received: by mail-oi0-f67.google.com with SMTP id y15-v6so5980453oia.13
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Apr 2018 04:50:05 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1521899099-23634-1-git-send-email-festevam@gmail.com>
+References: <1521899099-23634-1-git-send-email-festevam@gmail.com>
+From: Fabio Estevam <festevam@gmail.com>
+Date: Mon, 23 Apr 2018 08:50:04 -0300
+Message-ID: <CAOMZO5BYGmGtw+npoejVoWHDYsqtZSrX7qMxD0YM33xTv0xStA@mail.gmail.com> (sfid-20180423_135009_791031_4E263683)
+Subject: Re: [PATCH 1/2] nfc: st21nfca: Check for devm_kzalloc() failure
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Christophe Ricard <christophe.ricard@gmail.com>,
+        linux-nfc@lists.01.org, Fabio Estevam <fabio.estevam@nxp.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Govind Singh <govinds@codeaurora.org>
+Hi Samuel,
 
-Enable sta power save in fw for the targets that
-supports idle power save. The idle ps enable command
-will be ignored by the firmware which does not support
-this feature.
+Maybe this patch series got forgotten?
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
-Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/mac.c | 7 +++++++
- 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 7e02ca02b28e..1d9222af1bb2 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4679,6 +4679,13 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 		}
- 	}
- 
-+	param = ar->wmi.pdev_param->idle_ps_config;
-+	ret = ath10k_wmi_pdev_set_param(ar, param, 1);
-+	if (ret && ret != -EOPNOTSUPP) {
-+		ath10k_warn(ar, "failed to enable idle_ps_config: %d\n", ret);
-+		goto err_core_stop;
-+	}
-+
- 	__ath10k_set_antenna(ar, ar->cfg_tx_chainmask, ar->cfg_rx_chainmask);
- 
- 	/*
--- 
-2.14.1
+
+On Sat, Mar 24, 2018 at 10:44 AM, Fabio Estevam <festevam@gmail.com> wrote:
+> From: Fabio Estevam <fabio.estevam@nxp.com>
+>
+> devm_kzalloc() may fail, so we should better check for error and
+> propagate the error in the case of allocation failure.
+>
+> This avoids a potential NULL pointer dereference later on.
+>
+> Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+> ---
+>  drivers/nfc/st21nfca/se.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/nfc/st21nfca/se.c b/drivers/nfc/st21nfca/se.c
+> index 4bed9e84..fd967a3 100644
+> --- a/drivers/nfc/st21nfca/se.c
+> +++ b/drivers/nfc/st21nfca/se.c
+> @@ -328,6 +328,8 @@ int st21nfca_connectivity_event_received(struct nfc_hci_dev *hdev, u8 host,
+>
+>                 transaction = (struct nfc_evt_transaction *)devm_kzalloc(dev,
+>                                                    skb->len - 2, GFP_KERNEL);
+> +               if (!transaction)
+> +                       return -ENOMEM;
+>
+>                 transaction->aid_len = skb->data[1];
+>                 memcpy(transaction->aid, &skb->data[2],
+> --
+> 2.7.4
+>
