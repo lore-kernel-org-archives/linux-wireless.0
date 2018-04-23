@@ -1,545 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39362 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754254AbeDMMnJ (ORCPT
+Received: from mail-it0-f68.google.com ([209.85.214.68]:54864 "EHLO
+        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932507AbeDWUMW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Apr 2018 08:43:09 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Apr 2018 15:42:36 +0300
-Message-Id: <20180413124256.21769-6-luca@coelho.fi> (sfid-20180413_144313_161887_560F9BB6)
-In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
-References: <20180413124256.21769-1-luca@coelho.fi>
-Subject: [PATCH 05/25] iwlwifi: mvm: detect low latency and traffic load per band
+        Mon, 23 Apr 2018 16:12:22 -0400
+From: Andres Rodriguez <andresx7@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: andresx7@gmail.com, gregkh@linuxfoundation.org, mcgrof@kernel.org,
+        alexdeucher@gmail.com, christian.koenig@amd.com,
+        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        hdegoede@redhat.com
+Subject: [PATCH 5/9] firmware: add function to load firmware without warnings v5
+Date: Mon, 23 Apr 2018 16:12:01 -0400
+Message-Id: <20180423201205.20533-6-andresx7@gmail.com> (sfid-20180423_221501_999298_6CA8B38B)
+In-Reply-To: <20180423201205.20533-1-andresx7@gmail.com>
+References: <20180423201205.20533-1-andresx7@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Currently the firmware loader only exposes one silent path for querying
+optional firmware, and that is firmware_request_direct(). This function
+also disables the fallback path, which might not always be the
+desired behaviour. [0]
 
-Detect low latency and traffic load per band.  Add support for
-deciding on scan type and timings per band.
+This patch introduces a variations of firmware_request() that enable the
+caller to disable the undesired warning messages. This is equivalent to
+adding FW_OPT_NO_WARN to the old behaviour.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+v2: add header prototype, use updated opt_flags
+v3: split debug message to separate patch
+    added _nowait variant
+    added documentation
+v4: fix kernel-doc style
+v5: drop _nowait for now, since we lack agreement on the API
+
+[0]: https://git.kernel.org/linus/c0cc00f250e1
+
+Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c    |   1 +
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h   |   8 ++
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c  | 167 ++++++++++++++++++-------
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c |  66 ++++++++--
- 4 files changed, 192 insertions(+), 50 deletions(-)
+ .../driver-api/firmware/request_firmware.rst       |  5 +++++
+ drivers/base/firmware_loader/main.c                | 24 ++++++++++++++++++++++
+ include/linux/firmware.h                           |  2 ++
+ 3 files changed, 31 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 3c59109bea20..4cf3e32e3dba 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1093,6 +1093,7 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+diff --git a/Documentation/driver-api/firmware/request_firmware.rst b/Documentation/driver-api/firmware/request_firmware.rst
+index 7632f8807472..c8bddbdcfd10 100644
+--- a/Documentation/driver-api/firmware/request_firmware.rst
++++ b/Documentation/driver-api/firmware/request_firmware.rst
+@@ -20,6 +20,11 @@ firmware_request
+ .. kernel-doc:: drivers/base/firmware_loader/main.c
+    :functions: firmware_request
  
- 	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_UMAC_SCAN)) {
- 		mvm->scan_type = IWL_SCAN_TYPE_NOT_SET;
-+		mvm->hb_scan_type = IWL_SCAN_TYPE_NOT_SET;
- 		ret = iwl_mvm_config_scan(mvm);
- 		if (ret)
- 			goto error;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 7fa68f4f2f6b..6f647fdd4e97 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -8,6 +8,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018        Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -35,6 +36,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018        Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -638,6 +640,7 @@ struct iwl_mvm_tcm {
- 		u32 elapsed; /* milliseconds for this TCM period */
- 		u32 airtime[NUM_MAC_INDEX_DRIVER];
- 		enum iwl_mvm_traffic_load load[NUM_MAC_INDEX_DRIVER];
-+		enum iwl_mvm_traffic_load band_load[NUM_NL80211_BANDS];
- 		enum iwl_mvm_traffic_load global_load;
- 		bool low_latency[NUM_MAC_INDEX_DRIVER];
- 		bool change[NUM_MAC_INDEX_DRIVER];
-@@ -879,7 +882,10 @@ struct iwl_mvm {
- 	unsigned int scan_status;
- 	void *scan_cmd;
- 	struct iwl_mcast_filter_cmd *mcast_filter_cmd;
-+	/* For CDB this is low band scan type, for non-CDB - type. */
- 	enum iwl_mvm_scan_type scan_type;
-+	enum iwl_mvm_scan_type hb_scan_type;
++firmware_request_nowarn
++-----------------------
++.. kernel-doc:: drivers/base/firmware_loader/main.c
++   :functions: firmware_request_nowarn
 +
- 	enum iwl_mvm_sched_scan_pass_all_states sched_scan_pass_all;
- 	struct delayed_work scan_timeout_dwork;
- 
-@@ -1828,6 +1834,8 @@ int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 			      enum iwl_mvm_low_latency_cause cause);
- /* get SystemLowLatencyMode - only needed for beacon threshold? */
- bool iwl_mvm_low_latency(struct iwl_mvm *mvm);
-+bool iwl_mvm_low_latency_band(struct iwl_mvm *mvm, enum nl80211_band band);
-+
- /* get VMACLowLatencyMode */
- static inline bool iwl_mvm_vif_low_latency(struct iwl_mvm_vif *mvmvif)
- {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index 8f3185b9d365..8fcd92dcaaa7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -8,6 +8,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -19,9 +20,7 @@
-  * General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-- * USA
-+ * along with this program
-  *
-  * The full GNU General Public License is included in this distribution
-  * in the file called COPYING.
-@@ -117,7 +116,9 @@ static struct iwl_mvm_scan_timing_params scan_timing[] = {
- };
- 
- struct iwl_mvm_scan_params {
-+	/* For CDB this is low band scan type, for non-CDB - type. */
- 	enum iwl_mvm_scan_type type;
-+	enum iwl_mvm_scan_type hb_type;
- 	u32 n_channels;
- 	u16 delay;
- 	int n_ssids;
-@@ -231,12 +232,18 @@ static enum iwl_mvm_traffic_load iwl_mvm_get_traffic_load(struct iwl_mvm *mvm)
- 	return mvm->tcm.result.global_load;
+ firmware_request_direct
+ -----------------------
+ .. kernel-doc:: drivers/base/firmware_loader/main.c
+diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
+index d028cd3257f7..58aaadf81e12 100644
+--- a/drivers/base/firmware_loader/main.c
++++ b/drivers/base/firmware_loader/main.c
+@@ -631,6 +631,30 @@ firmware_request(const struct firmware **firmware_p, const char *name,
  }
+ EXPORT_SYMBOL(firmware_request);
  
-+static enum iwl_mvm_traffic_load
-+iwl_mvm_get_traffic_load_band(struct iwl_mvm *mvm, enum nl80211_band band)
++/**
++ * firmware_request_nowarn() - request for an optional fw module
++ * @firmware: pointer to firmware image
++ * @name: name of firmware file
++ * @device: device for which firmware is being loaded
++ *
++ * This function is similar in behaviour to firmware_request(), except
++ * it doesn't produce warning messages when the file is not found.
++ **/
++int
++firmware_request_nowarn(const struct firmware **firmware, const char *name,
++			struct device *device)
 +{
-+	return mvm->tcm.result.band_load[band];
++	int ret;
++
++	/* Need to pin this module until return */
++	__module_get(THIS_MODULE);
++	ret = _firmware_request(firmware, name, device, NULL, 0,
++				FW_OPT_UEVENT | FW_OPT_NO_WARN);
++	module_put(THIS_MODULE);
++	return ret;
 +}
++EXPORT_SYMBOL_GPL(firmware_request_nowarn);
 +
- static enum
--iwl_mvm_scan_type iwl_mvm_get_scan_type(struct iwl_mvm *mvm, bool p2p_device)
-+iwl_mvm_scan_type _iwl_mvm_get_scan_type(struct iwl_mvm *mvm, bool p2p_device,
-+					 enum iwl_mvm_traffic_load load,
-+					 bool low_latency)
- {
- 	int global_cnt = 0;
--	enum iwl_mvm_traffic_load load;
--	bool low_latency;
- 
- 	ieee80211_iterate_active_interfaces_atomic(mvm->hw,
- 					    IEEE80211_IFACE_ITER_NORMAL,
-@@ -245,9 +252,6 @@ iwl_mvm_scan_type iwl_mvm_get_scan_type(struct iwl_mvm *mvm, bool p2p_device)
- 	if (!global_cnt)
- 		return IWL_SCAN_TYPE_UNASSOC;
- 
--	load = iwl_mvm_get_traffic_load(mvm);
--	low_latency = iwl_mvm_low_latency(mvm);
--
- 	if ((load == IWL_MVM_TRAFFIC_HIGH || low_latency) && !p2p_device &&
- 	    fw_has_api(&mvm->fw->ucode_capa, IWL_UCODE_TLV_API_FRAGMENTED_SCAN))
- 		return IWL_SCAN_TYPE_FRAGMENTED;
-@@ -258,25 +262,57 @@ iwl_mvm_scan_type iwl_mvm_get_scan_type(struct iwl_mvm *mvm, bool p2p_device)
- 	return IWL_SCAN_TYPE_WILD;
- }
- 
-+static enum
-+iwl_mvm_scan_type iwl_mvm_get_scan_type(struct iwl_mvm *mvm, bool p2p_device)
-+{
-+	enum iwl_mvm_traffic_load load;
-+	bool low_latency;
-+
-+	load = iwl_mvm_get_traffic_load(mvm);
-+	low_latency = iwl_mvm_low_latency(mvm);
-+
-+	return _iwl_mvm_get_scan_type(mvm, p2p_device, load, low_latency);
-+}
-+
-+static enum
-+iwl_mvm_scan_type iwl_mvm_get_scan_type_band(struct iwl_mvm *mvm,
-+					     bool p2p_device,
-+					     enum nl80211_band band)
-+{
-+	enum iwl_mvm_traffic_load load;
-+	bool low_latency;
-+
-+	load = iwl_mvm_get_traffic_load_band(mvm, band);
-+	low_latency = iwl_mvm_low_latency_band(mvm, band);
-+
-+	return _iwl_mvm_get_scan_type(mvm, p2p_device, load, low_latency);
-+}
-+
- static int
- iwl_mvm_get_measurement_dwell(struct iwl_mvm *mvm,
- 			      struct cfg80211_scan_request *req,
- 			      struct iwl_mvm_scan_params *params)
- {
-+	u32 duration = scan_timing[params->type].max_out_time;
-+
- 	if (!req->duration)
- 		return 0;
- 
--	if (req->duration_mandatory &&
--	    req->duration > scan_timing[params->type].max_out_time) {
-+	if (iwl_mvm_is_cdb_supported(mvm)) {
-+		u32 hb_time = scan_timing[params->hb_type].max_out_time;
-+
-+		duration = min_t(u32, duration, hb_time);
-+	}
-+
-+	if (req->duration_mandatory && req->duration > duration) {
- 		IWL_DEBUG_SCAN(mvm,
- 			       "Measurement scan - too long dwell %hu (max out time %u)\n",
- 			       req->duration,
--			       scan_timing[params->type].max_out_time);
-+			       duration);
- 		return -EOPNOTSUPP;
- 	}
- 
--	return min_t(u32, (u32)req->duration,
--		     scan_timing[params->type].max_out_time);
-+	return min_t(u32, (u32)req->duration, duration);
- }
- 
- static inline bool iwl_mvm_rrm_scan_needed(struct iwl_mvm *mvm)
-@@ -1025,22 +1061,38 @@ static void iwl_mvm_fill_scan_config_v1(struct iwl_mvm *mvm, void *config,
- static void iwl_mvm_fill_scan_config(struct iwl_mvm *mvm, void *config,
- 				     u32 flags, u8 channel_flags)
- {
--	enum iwl_mvm_scan_type type = iwl_mvm_get_scan_type(mvm, false);
- 	struct iwl_scan_config *cfg = config;
- 
- 	cfg->flags = cpu_to_le32(flags);
- 	cfg->tx_chains = cpu_to_le32(iwl_mvm_get_valid_tx_ant(mvm));
- 	cfg->rx_chains = cpu_to_le32(iwl_mvm_scan_rx_ant(mvm));
- 	cfg->legacy_rates = iwl_mvm_scan_config_rates(mvm);
--	cfg->out_of_channel_time[0] =
--		cpu_to_le32(scan_timing[type].max_out_time);
--	cfg->suspend_time[0] = cpu_to_le32(scan_timing[type].suspend_time);
- 
- 	if (iwl_mvm_is_cdb_supported(mvm)) {
--		cfg->suspend_time[1] =
--			cpu_to_le32(scan_timing[type].suspend_time);
--		cfg->out_of_channel_time[1] =
-+		enum iwl_mvm_scan_type lb_type, hb_type;
-+
-+		lb_type = iwl_mvm_get_scan_type_band(mvm, false,
-+						     NL80211_BAND_2GHZ);
-+		hb_type = iwl_mvm_get_scan_type_band(mvm, false,
-+						     NL80211_BAND_5GHZ);
-+
-+		cfg->out_of_channel_time[SCAN_LB_LMAC_IDX] =
-+			cpu_to_le32(scan_timing[lb_type].max_out_time);
-+		cfg->suspend_time[SCAN_LB_LMAC_IDX] =
-+			cpu_to_le32(scan_timing[lb_type].suspend_time);
-+
-+		cfg->out_of_channel_time[SCAN_HB_LMAC_IDX] =
-+			cpu_to_le32(scan_timing[hb_type].max_out_time);
-+		cfg->suspend_time[SCAN_HB_LMAC_IDX] =
-+			cpu_to_le32(scan_timing[hb_type].suspend_time);
-+	} else {
-+		enum iwl_mvm_scan_type type =
-+			iwl_mvm_get_scan_type(mvm, false);
-+
-+		cfg->out_of_channel_time[SCAN_LB_LMAC_IDX] =
- 			cpu_to_le32(scan_timing[type].max_out_time);
-+		cfg->suspend_time[SCAN_LB_LMAC_IDX] =
-+			cpu_to_le32(scan_timing[type].suspend_time);
- 	}
- 
- 	iwl_mvm_fill_scan_dwell(mvm, &cfg->dwell);
-@@ -1060,7 +1112,8 @@ int iwl_mvm_config_scan(struct iwl_mvm *mvm)
- 	struct iwl_host_cmd cmd = {
- 		.id = iwl_cmd_id(SCAN_CFG_CMD, IWL_ALWAYS_LONG_GROUP, 0),
- 	};
--	enum iwl_mvm_scan_type type = iwl_mvm_get_scan_type(mvm, false);
-+	enum iwl_mvm_scan_type type;
-+	enum iwl_mvm_scan_type hb_type = IWL_SCAN_TYPE_NOT_SET;
- 	int num_channels =
- 		mvm->nvm_data->bands[NL80211_BAND_2GHZ].n_channels +
- 		mvm->nvm_data->bands[NL80211_BAND_5GHZ].n_channels;
-@@ -1070,8 +1123,18 @@ int iwl_mvm_config_scan(struct iwl_mvm *mvm)
- 	if (WARN_ON(num_channels > mvm->fw->ucode_capa.n_scan_channels))
- 		return -ENOBUFS;
- 
--	if (type == mvm->scan_type)
--		return 0;
-+	if (iwl_mvm_is_cdb_supported(mvm)) {
-+		type = iwl_mvm_get_scan_type_band(mvm, false,
-+						  NL80211_BAND_2GHZ);
-+		hb_type = iwl_mvm_get_scan_type_band(mvm, false,
-+						     NL80211_BAND_5GHZ);
-+		if (type == mvm->scan_type && hb_type == mvm->hb_scan_type)
-+			return 0;
-+	} else {
-+		type = iwl_mvm_get_scan_type(mvm, false);
-+		if (type == mvm->scan_type)
-+			return 0;
-+	}
- 
- 	if (iwl_mvm_has_new_tx_api(mvm))
- 		cmd_size = sizeof(struct iwl_scan_config);
-@@ -1102,10 +1165,15 @@ int iwl_mvm_config_scan(struct iwl_mvm *mvm)
- 			IWL_CHANNEL_FLAG_EBS_ADD |
- 			IWL_CHANNEL_FLAG_PRE_SCAN_PASSIVE2ACTIVE;
- 
-+	/*
-+	 * Check for fragmented scan on LMAC2 - high band.
-+	 * LMAC1 - low band is checked above.
-+	 */
- 	if (iwl_mvm_has_new_tx_api(mvm)) {
--		flags |= (type == IWL_SCAN_TYPE_FRAGMENTED) ?
--			 SCAN_CONFIG_FLAG_SET_LMAC2_FRAGMENTED :
--			 SCAN_CONFIG_FLAG_CLEAR_LMAC2_FRAGMENTED;
-+		if (iwl_mvm_is_cdb_supported(mvm))
-+			flags |= (hb_type == IWL_SCAN_TYPE_FRAGMENTED) ?
-+				 SCAN_CONFIG_FLAG_SET_LMAC2_FRAGMENTED :
-+				 SCAN_CONFIG_FLAG_CLEAR_LMAC2_FRAGMENTED;
- 		iwl_mvm_fill_scan_config(mvm, cfg, flags, channel_flags);
- 	} else {
- 		iwl_mvm_fill_scan_config_v1(mvm, cfg, flags, channel_flags);
-@@ -1118,8 +1186,10 @@ int iwl_mvm_config_scan(struct iwl_mvm *mvm)
- 	IWL_DEBUG_SCAN(mvm, "Sending UMAC scan config\n");
- 
- 	ret = iwl_mvm_send_cmd(mvm, &cmd);
--	if (!ret)
-+	if (!ret) {
- 		mvm->scan_type = type;
-+		mvm->hb_scan_type = hb_type;
-+	}
- 
- 	kfree(cfg);
- 	return ret;
-@@ -1173,7 +1243,7 @@ static void iwl_mvm_scan_umac_dwell(struct iwl_mvm *mvm,
- 			cpu_to_le32(timing->suspend_time);
- 
- 		if (iwl_mvm_is_cdb_supported(mvm)) {
--			hb_timing = &scan_timing[params->type];
-+			hb_timing = &scan_timing[params->hb_type];
- 
- 			cmd->v7.max_out_time[SCAN_HB_LMAC_IDX] =
- 				cpu_to_le32(hb_timing->max_out_time);
-@@ -1203,7 +1273,7 @@ static void iwl_mvm_scan_umac_dwell(struct iwl_mvm *mvm,
- 		cmd->v1.fragmented_dwell = IWL_SCAN_DWELL_FRAGMENTED;
- 
- 		if (iwl_mvm_is_cdb_supported(mvm)) {
--			hb_timing = &scan_timing[params->type];
-+			hb_timing = &scan_timing[params->hb_type];
- 
- 			cmd->v6.max_out_time[SCAN_HB_LMAC_IDX] =
- 					cpu_to_le32(hb_timing->max_out_time);
-@@ -1212,8 +1282,7 @@ static void iwl_mvm_scan_umac_dwell(struct iwl_mvm *mvm,
- 		}
- 
- 		if (iwl_mvm_has_new_tx_api(mvm)) {
--			cmd->v6.scan_priority =
--				cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
-+			cmd->v6.scan_priority = cpu_to_le32(IWL_SCAN_PRIORITY_EXT_6);
- 			cmd->v6.max_out_time[SCAN_LB_LMAC_IDX] =
- 				cpu_to_le32(timing->max_out_time);
- 			cmd->v6.suspend_time[SCAN_LB_LMAC_IDX] =
-@@ -1257,11 +1326,12 @@ static u16 iwl_mvm_scan_umac_flags(struct iwl_mvm *mvm,
- 	if (params->n_ssids == 1 && params->ssids[0].ssid_len != 0)
- 		flags |= IWL_UMAC_SCAN_GEN_FLAGS_PRE_CONNECT;
- 
--	if (params->type == IWL_SCAN_TYPE_FRAGMENTED) {
-+	if (params->type == IWL_SCAN_TYPE_FRAGMENTED)
- 		flags |= IWL_UMAC_SCAN_GEN_FLAGS_FRAGMENTED;
--		if (iwl_mvm_is_cdb_supported(mvm))
--			flags |= IWL_UMAC_SCAN_GEN_FLAGS_LMAC2_FRAGMENTED;
--	}
-+
-+	if (iwl_mvm_is_cdb_supported(mvm) &&
-+	    params->hb_type == IWL_SCAN_TYPE_FRAGMENTED)
-+		flags |= IWL_UMAC_SCAN_GEN_FLAGS_LMAC2_FRAGMENTED;
- 
- 	if (iwl_mvm_rrm_scan_needed(mvm) &&
- 	    fw_has_capa(&mvm->fw->ucode_capa,
-@@ -1492,6 +1562,21 @@ void iwl_mvm_scan_timeout_wk(struct work_struct *work)
- 	iwl_force_nmi(mvm->trans);
- }
- 
-+static void iwl_mvm_fill_scan_type(struct iwl_mvm *mvm,
-+				   struct iwl_mvm_scan_params *params,
-+				   bool p2p)
-+{
-+	if (iwl_mvm_is_cdb_supported(mvm)) {
-+		params->type =
-+			iwl_mvm_get_scan_type_band(mvm, p2p,
-+						   NL80211_BAND_2GHZ);
-+		params->hb_type =
-+			iwl_mvm_get_scan_type_band(mvm, p2p,
-+						   NL80211_BAND_5GHZ);
-+	} else {
-+		params->type = iwl_mvm_get_scan_type(mvm, p2p);
-+	}
-+}
- int iwl_mvm_reg_scan_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 			   struct cfg80211_scan_request *req,
- 			   struct ieee80211_scan_ies *ies)
-@@ -1539,9 +1624,8 @@ int iwl_mvm_reg_scan_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	params.scan_plans = &scan_plan;
- 	params.n_scan_plans = 1;
- 
--	params.type =
--		iwl_mvm_get_scan_type(mvm,
--				      vif->type == NL80211_IFTYPE_P2P_DEVICE);
-+	iwl_mvm_fill_scan_type(mvm, &params,
-+			       vif->type == NL80211_IFTYPE_P2P_DEVICE);
- 
- 	ret = iwl_mvm_get_measurement_dwell(mvm, req, &params);
- 	if (ret < 0)
-@@ -1636,9 +1720,8 @@ int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
- 	params.n_scan_plans = req->n_scan_plans;
- 	params.scan_plans = req->scan_plans;
- 
--	params.type =
--		iwl_mvm_get_scan_type(mvm,
--				      vif->type == NL80211_IFTYPE_P2P_DEVICE);
-+	iwl_mvm_fill_scan_type(mvm, &params,
-+			       vif->type == NL80211_IFTYPE_P2P_DEVICE);
- 
- 	/* In theory, LMAC scans can handle a 32-bit delay, but since
- 	 * waiting for over 18 hours to start the scan is a bit silly
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 525a4b06ea15..20bd403f5af9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -1076,23 +1076,48 @@ int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	return iwl_mvm_power_update_mac(mvm);
- }
- 
-+struct iwl_mvm_low_latency_iter {
-+	bool result;
-+	bool result_per_band[NUM_NL80211_BANDS];
-+};
-+
- static void iwl_mvm_ll_iter(void *_data, u8 *mac, struct ieee80211_vif *vif)
- {
--	bool *result = _data;
-+	struct iwl_mvm_low_latency_iter *result = _data;
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	enum nl80211_band band;
-+
-+	if (iwl_mvm_vif_low_latency(mvmvif)) {
-+		result->result = true;
-+
-+		if (!mvmvif->phy_ctxt)
-+			return;
- 
--	if (iwl_mvm_vif_low_latency(iwl_mvm_vif_from_mac80211(vif)))
--		*result = true;
-+		band = mvmvif->phy_ctxt->channel->band;
-+		result->result_per_band[band] = true;
-+	}
- }
- 
- bool iwl_mvm_low_latency(struct iwl_mvm *mvm)
- {
--	bool result = false;
-+	struct iwl_mvm_low_latency_iter data = {};
- 
- 	ieee80211_iterate_active_interfaces_atomic(
- 			mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
--			iwl_mvm_ll_iter, &result);
-+			iwl_mvm_ll_iter, &data);
- 
--	return result;
-+	return data.result;
-+}
-+
-+bool iwl_mvm_low_latency_band(struct iwl_mvm *mvm, enum nl80211_band band)
-+{
-+	struct iwl_mvm_low_latency_iter data = {};
-+
-+	ieee80211_iterate_active_interfaces_atomic(
-+			mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
-+			iwl_mvm_ll_iter, &data);
-+
-+	return data.result_per_band[band];
- }
- 
- struct iwl_bss_iter_data {
-@@ -1606,6 +1631,18 @@ static void iwl_mvm_check_uapsd_agg_expected_tpt(struct iwl_mvm *mvm,
- 		iwl_mvm_uapsd_agg_disconnect_iter, &mac);
- }
- 
-+static void iwl_mvm_tcm_iterator(void *_data, u8 *mac,
-+				 struct ieee80211_vif *vif)
-+{
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	u32 *band = _data;
-+
-+	if (!mvmvif->phy_ctxt)
-+		return;
-+
-+	band[mvmvif->id] = mvmvif->phy_ctxt->channel->band;
-+}
-+
- static unsigned long iwl_mvm_calc_tcm_stats(struct iwl_mvm *mvm,
- 					    unsigned long ts,
- 					    bool handle_uapsd)
-@@ -1614,9 +1651,11 @@ static unsigned long iwl_mvm_calc_tcm_stats(struct iwl_mvm *mvm,
- 	unsigned int uapsd_elapsed =
- 		jiffies_to_msecs(ts - mvm->tcm.uapsd_nonagg_ts);
- 	u32 total_airtime = 0;
--	int ac, mac;
-+	u32 band_airtime[NUM_NL80211_BANDS] = {0};
-+	u32 band[NUM_MAC_INDEX_DRIVER] = {0};
-+	int ac, mac, i;
- 	bool low_latency = false;
--	enum iwl_mvm_traffic_load load;
-+	enum iwl_mvm_traffic_load load, band_load;
- 	bool handle_ll = time_after(ts, mvm->tcm.ll_ts + MVM_LL_PERIOD);
- 
- 	if (handle_ll)
-@@ -1626,12 +1665,18 @@ static unsigned long iwl_mvm_calc_tcm_stats(struct iwl_mvm *mvm,
- 
- 	mvm->tcm.result.elapsed = elapsed;
- 
-+	ieee80211_iterate_active_interfaces_atomic(mvm->hw,
-+						   IEEE80211_IFACE_ITER_NORMAL,
-+						   iwl_mvm_tcm_iterator,
-+						   &band);
-+
- 	for (mac = 0; mac < NUM_MAC_INDEX_DRIVER; mac++) {
- 		struct iwl_mvm_tcm_mac *mdata = &mvm->tcm.data[mac];
- 		u32 vo_vi_pkts = 0;
- 		u32 airtime = mdata->rx.airtime + mdata->tx.airtime;
- 
- 		total_airtime += airtime;
-+		band_airtime[band[mac]] += airtime;
- 
- 		load = iwl_mvm_tcm_load(mvm, airtime, elapsed);
- 		mvm->tcm.result.change[mac] = load != mvm->tcm.result.load[mac];
-@@ -1669,6 +1714,11 @@ static unsigned long iwl_mvm_calc_tcm_stats(struct iwl_mvm *mvm,
- 	mvm->tcm.result.global_change = load != mvm->tcm.result.global_load;
- 	mvm->tcm.result.global_load = load;
- 
-+	for (i = 0; i < NUM_NL80211_BANDS; i++) {
-+		band_load = iwl_mvm_tcm_load(mvm, band_airtime[i], elapsed);
-+		mvm->tcm.result.band_load[i] = band_load;
-+	}
-+
- 	/*
- 	 * If the current load isn't low we need to force re-evaluation
- 	 * in the TCM period, so that we can return to low load if there
+ /**
+  * firmware_request_direct() - load firmware directly without usermode helper
+  * @firmware_p: pointer to firmware image
+diff --git a/include/linux/firmware.h b/include/linux/firmware.h
+index db8351a42405..a34e16f77f20 100644
+--- a/include/linux/firmware.h
++++ b/include/linux/firmware.h
+@@ -42,6 +42,8 @@ struct builtin_fw {
+ #if defined(CONFIG_FW_LOADER) || (defined(CONFIG_FW_LOADER_MODULE) && defined(MODULE))
+ int firmware_request(const struct firmware **fw, const char *name,
+ 		     struct device *device);
++int firmware_request_nowarn(const struct firmware **fw, const char *name,
++			    struct device *device);
+ int firmware_request_nowait(
+ 	struct module *module, bool uevent,
+ 	const char *name, struct device *device, gfp_t gfp, void *context,
 -- 
-2.16.3
+2.14.1
