@@ -1,74 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:39346 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755422AbeDYQLf (ORCPT
+Received: from mail-wr0-f182.google.com ([209.85.128.182]:33236 "EHLO
+        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755432AbeDWQlJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 12:11:35 -0400
-Subject: Re: [PATCH] staging/wilc1000: fix wilc_mac_xmit()'s return type
-To: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
-        <linux-kernel@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <linux-wireless@vger.kernel.org>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Aditya Shankar <aditya.shankar@microchip.com>
-References: <20180424131857.5668-1-luc.vanoostenryck@gmail.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <3c4bbd52-5af9-72b9-732b-f83f0bd23905@microchip.com> (sfid-20180425_181201_184977_95080D15)
-Date: Wed, 25 Apr 2018 18:11:31 +0200
+        Mon, 23 Apr 2018 12:41:09 -0400
+Received: by mail-wr0-f182.google.com with SMTP id z73-v6so43115604wrb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Apr 2018 09:41:08 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20180424131857.5668-1-luc.vanoostenryck@gmail.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <87wowxdirv.fsf@kamboji.qca.qualcomm.com>
+References: <1523966821-21903-1-git-send-email-pillair@codeaurora.org>
+ <1523966821-21903-5-git-send-email-pillair@codeaurora.org>
+ <946e582c-2438-872b-eec8-25d9dcb994d9@dd-wrt.com> <7a06a34a5fcb97e07a8d79b4d689e781@codeaurora.org>
+ <87604oodt4.fsf@kamboji.qca.qualcomm.com> <a7dd1b94951725c61034f5be6744b725@codeaurora.org>
+ <8736zrjgq6.fsf@kamboji.qca.qualcomm.com> <c48c1bae-04c9-55d0-fdb9-d9ae8f7cb843@dd-wrt.com>
+ <5AD9A1DF.6060007@broadcom.com> <87wowxdirv.fsf@kamboji.qca.qualcomm.com>
+From: Adrian Chadd <adrian@freebsd.org>
+Date: Mon, 23 Apr 2018 09:41:06 -0700
+Message-ID: <CAJ-Vmoky_ErN447XxvUw4fcHZPptzbBpfLU1eXSCbevhAayy8A@mail.gmail.com> (sfid-20180423_184137_342001_895AAF08)
+Subject: Re: [PATCH v2 4/4] ath10k: Enable sta idle power save
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        govinds@codeaurora.org, pillair@codeaurora.org,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luc,
+On 23 April 2018 at 08:50, Kalle Valo <kvalo@codeaurora.org> wrote:
 
-I'm resending this since last time I only send it to staging ml.
+>
+> Adrian was also commenting something similar about adding a debugfs
+> interface but I don't really see the point right now while we are adding
+> initial wcn3990 support. If someone wants to run measurements with and
+> without this parameter it's very easy to edit it out from the sources.
+> Later on we can consider making it dynamic if there's really the need
+> for that, but I'm very skeptic that anyone would even need that.
 
-Could you, please, change the "return 0;"s inside wilc_mac_xmit() with
-"return NETDEV_TX_OK" ?
+Hi!
 
-Thank you,
-Claudiu
+We have at ${WORK}, because we've found various devices (atheros and
+qualcomm and QCA and otherwise) have this nasty habit of trying to
+guess when a good time to clock-gate down is, but we're busy doing low
+latency audio/video.
 
-On 24.04.2018 15:18, Luc Van Oostenryck wrote:
-> The method ndo_start_xmit() is defined as returning an 'netdev_tx_t',
-> which is a typedef for an enum type, but the implementation in this
-> driver returns an 'int'.
-> 
-> Fix this by returning 'netdev_tx_t' in this driver too.
-> 
-> Signed-off-by: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
-> ---
->  drivers/staging/wilc1000/linux_wlan.c | 2 +-
->  drivers/staging/wilc1000/wilc_wlan.h  | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-> index 38a83bd31..e06aaed5e 100644
-> --- a/drivers/staging/wilc1000/linux_wlan.c
-> +++ b/drivers/staging/wilc1000/linux_wlan.c
-> @@ -941,7 +941,7 @@ static void linux_wlan_tx_complete(void *priv, int status)
->  	kfree(pv_data);
->  }
->  
-> -int wilc_mac_xmit(struct sk_buff *skb, struct net_device *ndev)
-> +netdev_tx_t wilc_mac_xmit(struct sk_buff *skb, struct net_device *ndev)
->  {
->  	struct wilc_vif *vif;
->  	struct tx_complete_data *tx_data = NULL;
-> diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-> index fa157a67b..d3b5a6b38 100644
-> --- a/drivers/staging/wilc1000/wilc_wlan.h
-> +++ b/drivers/staging/wilc1000/wilc_wlan.h
-> @@ -298,7 +298,7 @@ void wilc_chip_sleep_manually(struct wilc *wilc);
->  
->  void wilc_enable_tcp_ack_filter(bool value);
->  int wilc_wlan_get_num_conn_ifcs(struct wilc *wilc);
-> -int wilc_mac_xmit(struct sk_buff *skb, struct net_device *dev);
-> +netdev_tx_t wilc_mac_xmit(struct sk_buff *skb, struct net_device *dev);
->  
->  void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size);
->  void host_wakeup_notify(struct wilc *wilc);
-> 
+10, 20ms may not be a lot of latency for bulk data but that's a half
+to one of a video frame in my world. :-)
+
+
+
+-adrian
