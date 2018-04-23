@@ -1,49 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f171.google.com ([209.85.128.171]:39584 "EHLO
-        mail-wr0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753099AbeDPSpS (ORCPT
+Received: from mail-pg0-f53.google.com ([74.125.83.53]:46972 "EHLO
+        mail-pg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753755AbeDWBOa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 14:45:18 -0400
-Received: by mail-wr0-f171.google.com with SMTP id q6so16720570wrd.6
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 11:45:17 -0700 (PDT)
-Subject: Re: [PATCH 2/2] mt7601u: run calibration works after finishing
- scanning
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Jakub Kicinski <kubakici@wp.pl>
-References: <1523630678-8100-1-git-send-email-sgruszka@redhat.com>
- <1523630678-8100-2-git-send-email-sgruszka@redhat.com>
- <20180413110613.0c13f64f@cakuba.netronome.com>
- <20180414105606.GA9245@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AD4EF3B.30508@broadcom.com> (sfid-20180416_204522_203106_60213E28)
-Date: Mon, 16 Apr 2018 20:45:15 +0200
+        Sun, 22 Apr 2018 21:14:30 -0400
+Received: by mail-pg0-f53.google.com with SMTP id t12so7187388pgp.13
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Apr 2018 18:14:30 -0700 (PDT)
+To: linux-wireless@vger.kernel.org, nataraja@qca.qualcomm.com,
+        jouni@qca.qualcomm.com
+From: Eric Nelson <eric@nelint.com>
+Subject: Tuning roaming on ath6kl through debugfs
+Message-ID: <4fc8114b-487b-6f13-9712-a87c8a24c8b5@nelint.com> (sfid-20180423_031437_279104_CE79C18B)
+Date: Sun, 22 Apr 2018 18:14:28 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180414105606.GA9245@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/14/2018 12:56 PM, Stanislaw Gruszka wrote:
-> On Fri, Apr 13, 2018 at 11:06:13AM -0700, Jakub Kicinski wrote:
->> >On Fri, 13 Apr 2018 16:44:38 +0200, Stanislaw Gruszka wrote:
->>> > >When finishing scanning we switch to operational channel sill with
->>> > >SCANNING flag. This mean that we never perform calibration works after
->>> > >scanning. To fix the problem cancel and queue calibration works on
->>> > >.sw_scan_start() and .sw_scan_complete() routines.
->>> > >
->>> > >Signed-off-by: Stanislaw Gruszka<sgruszka@redhat.com>
->> >
->> >IOW the stack will potentially ask us to return to the original channel
->> >before calling .sw_scan_complete()?  Hm.  That's unpleasant.
-> I think the stack need to assure we start and end scanning on
-> operational channel, otherwise we would have possibility to be on
-> undefined channel during normal work.
+Hi all,
 
-Returning to the operating channels during scanning is mostly important 
-when connected so you can receive the beacon of your AP and mc/bc 
-traffic and also to handle regular unicast traffic so you are not 
-screwing up your TCP window too much for instance.
+Does anyone have insight into how the various debugfs files can
+be used to control roaming in the ath6kl driver?
 
-Regards,
-Arend
+Commit e5090444 [1] added support for setting an RSSI "threshold" for
+roaming, but doesn't explain the units involved or what occurs when
+this threshold is reached or its' relationship to DEF_LRSSI_ROAM_FLOOR.
+
+Commit 1261875 [2] added support for three roaming modes with a
+similarly opaque commit message:
+
+	default
+	bssbias
+	lock
+
+The meaning of these modes isn't spelled out though. I presume
+that "lock" will prevent the wireless device from automatically
+switching between BSS's, but what are the "default" and "bssbias"
+values?
+
+Some insight into the operation of the wireless device can be seen
+by looking at the roam_table entry. It seems to show the current RSSI
+values for all BSS's with the current SSID, but I've been unable to
+force roaming through the use of the lrssi_roam_threshold entry and
+also by re-compiles with lower (and higher) values of
+DEF_LRSSI_ROAM_FLOOR.
+
+It's also not clear to me how upper layers of the WiFi stack
+(i.e. wpa_supplicant) would handle automatic switching of
+BSS by the Atheros device itself.
+
+If roaming is a problem for an application, can the value of "lock"
+for "roam_mode" be used to disable the feature entirely?
+
+1 - 
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e5090444
+2 - 
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1261875
+
+Please advise,
+
+
+Eric
