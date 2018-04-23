@@ -1,50 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43268 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755919AbeDXGHF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 02:07:05 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mga05.intel.com ([192.55.52.43]:42263 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754786AbeDWNQN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Apr 2018 09:16:13 -0400
+Date: Mon, 23 Apr 2018 16:16:09 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Luciano Coelho <luciano.coelho@intel.com>
+Cc: Ayala Beker <ayala.beker@intel.com>, linux-wireless@vger.kernel.org
+Subject: Re: [BUG] iwlwifi: Microcode SW error detected.  Restarting
+ 0x2000000.
+Message-ID: <20180423131609.GT2173@lahna.fi.intel.com> (sfid-20180423_151616_914057_8707857B)
+References: <20180423120513.GS2173@lahna.fi.intel.com>
+ <2769dd4501a9132f638202fece264de32218860d.camel@intel.com>
 MIME-Version: 1.0
-Subject: Re: [v2,
- 1/5] wcn36xx: abort scan request when 'dequeued' indicator is sent
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180417132337.31720-2-daniel@zonque.org>
-References: <20180417132337.31720-2-daniel@zonque.org>
-To: Daniel Mack <daniel@zonque.org>
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        loic.poulain@linaro.org, rfried@codeaurora.org,
-        bjorn.andersson@linaro.org, Daniel Mack <daniel@zonque.org>
-Message-Id: <20180424060704.A92DC6071A@smtp.codeaurora.org> (sfid-20180424_080708_733657_18D31859)
-Date: Tue, 24 Apr 2018 06:07:04 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2769dd4501a9132f638202fece264de32218860d.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Mack <daniel@zonque.org> wrote:
-
-> When the firmware sends a WCN36XX_HAL_SCAN_IND_DEQUEUED indication,
-> the request is apparently no longer valid. Attempts to stop the hardware
-> scan request subsequently will lead to the following error message, and
-> the hardware is no longer able to communicate with any AP:
+On Mon, Apr 23, 2018 at 03:39:45PM +0300, Luciano Coelho wrote:
+> We had a bug in the scan command size for older firmwares.  I have
+> already made a fix for it, but I hadn't sent it out for upstream yet. 
+> I'll send it out now and soon send you a link to it in patchwork.
 > 
-> [   57.917186] wcn36xx: ERROR hal_stop_scan_offload response failed err=5
+> You have two options: recompile the kernel with my patch or; use the
+> latest version of the firmware from linux-firmware.git[1].
 > 
-> Interpreting this indicator message as scan abortion fixes this.
+> I recommend upgrading the firmware, because we have a lot of other
+> fixes and improvements there, but if you want to keep your distro's
+> original firmware package, you can apply my patch instead.
 > 
-> While at it, add a newline to a debug print.
-> 
-> Signed-off-by: Daniel Mack <daniel@zonque.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> HTH and thanks for reporting!
 
-5 patches applied to ath-next branch of ath.git, thanks.
-
-14ca3c98aa12 wcn36xx: abort scan request when 'dequeued' indicator is sent
-80c764d32122 wcn36xx: cancel pending scan request when interface goes down
-89722f5767ac wcn36xx: handle scan cancellation when firmware support is missing
-5a425c8b78e5 wcn36xx: send bss_type in scan requests
-4836ec42b074 wcn36xx: pass information elements in scan requests
-
--- 
-https://patchwork.kernel.org/patch/10345025/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+I upgraded the firmware to iwlwifi-8265-36.ucode and the issue is gone
+now. Thanks Luca!
