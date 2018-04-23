@@ -1,43 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43156 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750815AbeDFIHn (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:2854 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932073AbeDWQfb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Apr 2018 04:07:43 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Cc: linux-wireless@vger.kernel.org,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH v12] ath10k: add LED and GPIO controlling support for various chipsets
-References: <20180226084406.2093-1-s.gottschall@dd-wrt.com>
-        <871sftemru.fsf@kamboji.qca.qualcomm.com>
-        <c4a1313a-73d2-a028-4fca-09f6fb6e56bd@dd-wrt.com>
-        <de9c007f-26e3-a511-e944-91e90aac7787@dd-wrt.com>
-Date: Fri, 06 Apr 2018 11:07:39 +0300
-In-Reply-To: <de9c007f-26e3-a511-e944-91e90aac7787@dd-wrt.com> (Sebastian
-        Gottschall's message of "Thu, 5 Apr 2018 22:00:43 +0200")
-Message-ID: <87h8oosqpg.fsf@codeaurora.org> (sfid-20180406_100748_182869_B05C2A19)
+        Mon, 23 Apr 2018 12:35:31 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [RESEND 18/33] staging: wilc1000: use sizeof(variable) for memory allocated to store key info
+Date: Mon, 23 Apr 2018 22:03:20 +0530
+Message-ID: <1524501215-4963-19-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183535_366464_F0114F12)
+In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
+Changes to fix below checkpatch reported issues.
 
-> i have some comments about your check warnings.
-> some of them are bogus. for instance they advise to use "unsigned int"
-> instead of "unsigned". this might be better, but
-> the original kernel header uses "unsigned" as api definition. so i
-> decided to use the same declarations here.
+CHECK: Prefer kmalloc(sizeof(*priv->wilc_gtk[idx])...) over
+kmalloc(sizeof(struct wilc_wfi_key)...)
 
-Sure, but using "unsigned int" won't create any harm either.
+CHECK: Prefer kmalloc(sizeof(*priv->wilc_ptk[idx])...) over
+kmalloc(sizeof(struct wilc_wfi_key)...)
 
-> for the rest like whitespaces i will make a new version and remove them
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-You missed my comment in my earlier mail that I'll send the next
-version. I have already fixed all the warnings so let me submit it. I'll
-do also some other changes.
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 1c9864b..5bd294d 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -870,15 +870,15 @@ static inline void wilc_wfi_cfg_copy_wep_info(struct wilc_priv *priv,
+ static int wilc_wfi_cfg_allocate_wpa_entry(struct wilc_priv *priv, u8 idx)
+ {
+ 	if (!priv->wilc_gtk[idx]) {
+-		priv->wilc_gtk[idx] = kzalloc(sizeof(struct wilc_wfi_key),
+-					       GFP_KERNEL);
++		priv->wilc_gtk[idx] = kzalloc(sizeof(*priv->wilc_gtk[idx]),
++					      GFP_KERNEL);
+ 		if (!priv->wilc_gtk[idx])
+ 			return -ENOMEM;
+ 	}
+ 
+ 	if (!priv->wilc_ptk[idx]) {
+-		priv->wilc_ptk[idx] = kzalloc(sizeof(struct wilc_wfi_key),
+-					       GFP_KERNEL);
++		priv->wilc_ptk[idx] = kzalloc(sizeof(*priv->wilc_ptk[idx]),
++					      GFP_KERNEL);
+ 		if (!priv->wilc_ptk[idx])
+ 			return -ENOMEM;
+ 	}
 -- 
-Kalle Valo
+2.7.4
