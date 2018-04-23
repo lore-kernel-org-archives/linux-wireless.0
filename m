@@ -1,123 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:23199 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752498AbeDLII7 (ORCPT
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:50556 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755264AbeDWOmm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 04:08:59 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Dedy Lansky <dlansky@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 09/10] wil6210: remove unused rx_reorder members
-Date: Thu, 12 Apr 2018 11:08:45 +0300
-Message-Id: <1523520526-24997-10-git-send-email-merez@codeaurora.org> (sfid-20180412_100923_393402_62FAD9D2)
-In-Reply-To: <1523520526-24997-1-git-send-email-merez@codeaurora.org>
-References: <1523520526-24997-1-git-send-email-merez@codeaurora.org>
+        Mon, 23 Apr 2018 10:42:42 -0400
+Subject: Re: [PATCH] staging: wilc1000: fix NULL pointer exception in
+ host_int_parse_assoc_resp_info()
+To: Ajay Singh <ajay.kathat@microchip.com>,
+        <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <adham.abozaeid@Microchip.com>
+References: <1523521274-8719-1-git-send-email-ajay.kathat@microchip.com>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <8b68c05c-989f-a15c-4f40-af80317adbcf@microchip.com> (sfid-20180423_164246_159402_04C6A760)
+Date: Mon, 23 Apr 2018 16:42:38 +0200
+MIME-Version: 1.0
+In-Reply-To: <1523521274-8719-1-git-send-email-ajay.kathat@microchip.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <dlansky@codeaurora.org>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
 
-Remove unused members from struct wil_tid_ampdu_rx
-
-Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/debugfs.c    |  3 +--
- drivers/net/wireless/ath/wil6210/rx_reorder.c |  7 +------
- drivers/net/wireless/ath/wil6210/wil6210.h    | 10 ----------
- 3 files changed, 2 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 49d9808..aff819b 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -1379,8 +1379,7 @@ static void wil_print_rxtid(struct seq_file *s, struct wil_tid_ampdu_rx *r)
- 	u16 index = ((r->head_seq_num - r->ssn) & 0xfff) % r->buf_size;
- 	unsigned long long drop_dup = r->drop_dup, drop_old = r->drop_old;
- 
--	seq_printf(s, "([%2d] %3d TU) 0x%03x [", r->buf_size, r->timeout,
--		   r->head_seq_num);
-+	seq_printf(s, "([%2d]) 0x%03x [", r->buf_size, r->head_seq_num);
- 	for (i = 0; i < r->buf_size; i++) {
- 		if (i == index)
- 			seq_printf(s, "%c", r->reorder_buf[i] ? 'O' : '|');
-diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
-index 14dcb06..76f8084 100644
---- a/drivers/net/wireless/ath/wil6210/rx_reorder.c
-+++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
-@@ -206,7 +206,6 @@ void wil_rx_reorder(struct wil6210_priv *wil, struct sk_buff *skb)
- 
- 	/* put the frame in the reordering buffer */
- 	r->reorder_buf[index] = skb;
--	r->reorder_time[index] = jiffies;
- 	r->stored_mpdu_num++;
- 	wil_reorder_release(ndev, r);
- 
-@@ -252,11 +251,8 @@ struct wil_tid_ampdu_rx *wil_tid_ampdu_rx_alloc(struct wil6210_priv *wil,
- 
- 	r->reorder_buf =
- 		kcalloc(size, sizeof(struct sk_buff *), GFP_KERNEL);
--	r->reorder_time =
--		kcalloc(size, sizeof(unsigned long), GFP_KERNEL);
--	if (!r->reorder_buf || !r->reorder_time) {
-+	if (!r->reorder_buf) {
- 		kfree(r->reorder_buf);
--		kfree(r->reorder_time);
- 		kfree(r);
- 		return NULL;
- 	}
-@@ -286,7 +282,6 @@ void wil_tid_ampdu_rx_free(struct wil6210_priv *wil,
- 		kfree_skb(r->reorder_buf[i]);
- 
- 	kfree(r->reorder_buf);
--	kfree(r->reorder_time);
- 	kfree(r);
- }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 2f77319..fe58169 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -493,38 +493,28 @@ enum { /* for wil6210_priv.status */
-  * struct tid_ampdu_rx - TID aggregation information (Rx).
-  *
-  * @reorder_buf: buffer to reorder incoming aggregated MPDUs
-- * @reorder_time: jiffies when skb was added
-- * @session_timer: check if peer keeps Tx-ing on the TID (by timeout value)
-- * @reorder_timer: releases expired frames from the reorder buffer.
-  * @last_rx: jiffies of last rx activity
-  * @head_seq_num: head sequence number in reordering buffer.
-  * @stored_mpdu_num: number of MPDUs in reordering buffer
-  * @ssn: Starting Sequence Number expected to be aggregated.
-  * @buf_size: buffer size for incoming A-MPDUs
-- * @timeout: reset timer value (in TUs).
-  * @ssn_last_drop: SSN of the last dropped frame
-  * @total: total number of processed incoming frames
-  * @drop_dup: duplicate frames dropped for this reorder buffer
-  * @drop_old: old frames dropped for this reorder buffer
-- * @dialog_token: dialog token for aggregation session
-  * @first_time: true when this buffer used 1-st time
-  */
- struct wil_tid_ampdu_rx {
- 	struct sk_buff **reorder_buf;
--	unsigned long *reorder_time;
--	struct timer_list session_timer;
--	struct timer_list reorder_timer;
- 	unsigned long last_rx;
- 	u16 head_seq_num;
- 	u16 stored_mpdu_num;
- 	u16 ssn;
- 	u16 buf_size;
--	u16 timeout;
- 	u16 ssn_last_drop;
- 	unsigned long long total; /* frames processed */
- 	unsigned long long drop_dup;
- 	unsigned long long drop_old;
--	u8 dialog_token;
- 	bool first_time; /* is it 1-st time this buffer used? */
- };
- 
--- 
-1.9.1
+On 12.04.2018 10:21, Ajay Singh wrote:
+> Commit fe014d4e6b55 (staging: wilc1000: free memory allocated for general info
+> message from firmware) introduced a bug by using wrong source address in
+> kmemdup(). 'conn_info.req_ies' is used for source address in kempdup()
+> instead of 'hif_drv->usr_conn_req.ies'.
+> 
+> This commit fixes the NULL pointer dereference issue in
+> host_int_parse_assoc_resp_info() by using the correct source address in
+> kmemdup().
+> 
+> Fixes: fe014d4e6b55 (staging: wilc1000: free memory allocated for
+> general info message from firmware)
+> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 316d73c..302e3cb 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -1387,7 +1387,7 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
+>  	}
+>  
+>  	if (hif_drv->usr_conn_req.ies) {
+> -		conn_info.req_ies = kmemdup(conn_info.req_ies,
+> +		conn_info.req_ies = kmemdup(hif_drv->usr_conn_req.ies,
+>  					    hif_drv->usr_conn_req.ies_len,
+>  					    GFP_KERNEL);
+>  		if (conn_info.req_ies)
+> 
