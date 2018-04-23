@@ -1,103 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:50477 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751728AbeDIStG (ORCPT
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:12141 "EHLO
+        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754456AbeDWIwZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Apr 2018 14:49:06 -0400
-Received: by mail-wm0-f48.google.com with SMTP id t67so21328436wmt.0
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Apr 2018 11:49:05 -0700 (PDT)
-Date: Mon, 9 Apr 2018 20:45:20 +0200 (CEST)
-From: Hans Ulli Kroll <ulli.kroll@googlemail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        =?ISO-8859-2?Q?Jakub_Kici=F1ski?= <moorray3@wp.pl>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [ANN] mt76x0 usb driver
-In-Reply-To: <20180409141032.GA9247@redhat.com>
-Message-ID: <alpine.LNX.2.00.1804092042320.8369@T420s> (sfid-20180409_204910_419690_0DA99EC8)
-References: <20180409141032.GA9247@redhat.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+        Mon, 23 Apr 2018 04:52:25 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Dedy Lansky <dlansky@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        Maya Erez <merez@codeaurora.org>
+Subject: [PATCH v2 09/10] wil6210: remove unused rx_reorder members
+Date: Mon, 23 Apr 2018 11:52:12 +0300
+Message-Id: <1524473533-24524-10-git-send-email-merez@codeaurora.org> (sfid-20180423_105355_641940_AA0CF721)
+In-Reply-To: <1524473533-24524-1-git-send-email-merez@codeaurora.org>
+References: <1524473533-24524-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+From: Dedy Lansky <dlansky@codeaurora.org>
 
-On Mon, 9 Apr 2018, Stanislaw Gruszka wrote:
+Remove unused members from struct wil_tid_ampdu_rx
 
-> Hi
-> 
-> I would like to announce mt76x0 driver for MT7610U USB dongles:
-> 
-> https://github.com/sgruszka/mt76x0
-> 
-> mt76x0 is based on Jakub's mt7601u mac80211 driver and is intended to be
-> integrated in the linux kernel.
-> 
-> Currently only Linksys AE6000 (ID 13b1:003e) in on USB id's list
-> and 5GHz does not work.
-> 
+Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c    |  3 +--
+ drivers/net/wireless/ath/wil6210/rx_reorder.c |  7 +------
+ drivers/net/wireless/ath/wil6210/wil6210.h    | 10 ----------
+ 3 files changed, 2 insertions(+), 18 deletions(-)
 
-here are my changes for working 5Ghz band and more USB ID's form my side
-
-diff --git a/phy.c b/phy.c
-index e1af2b0..460bd4e 100644
---- a/phy.c
-+++ b/phy.c
-@@ -350,7 +350,7 @@ mt76x0_phy_set_band(struct mt76x0_dev *dev, enum nl80211_band band)
- static void
- mt76x0_phy_set_chan_rf_params(struct mt76x0_dev *dev, u8 channel, u16 rf_bw_band)
- {
--	u16 rf_band = rf_bw_band & 0xff00;
-+	u16 rf_band;
- 	u16 rf_bw = rf_bw_band & 0x00ff;
- 	u32 mac_reg;
- 	u8 rf_val;
-@@ -367,6 +367,7 @@ mt76x0_phy_set_chan_rf_params(struct mt76x0_dev *dev, u8 channel, u16 rf_bw_band
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 49d9808..aff819b 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1379,8 +1379,7 @@ static void wil_print_rxtid(struct seq_file *s, struct wil_tid_ampdu_rx *r)
+ 	u16 index = ((r->head_seq_num - r->ssn) & 0xfff) % r->buf_size;
+ 	unsigned long long drop_dup = r->drop_dup, drop_old = r->drop_old;
  
- 	for (i = 0; i < ARRAY_SIZE(mt76x0_frequency_plan); i++) {
- 		if (channel == mt76x0_frequency_plan[i].channel) {
-+			rf_band = mt76x0_frequency_plan[i].band;
+-	seq_printf(s, "([%2d] %3d TU) 0x%03x [", r->buf_size, r->timeout,
+-		   r->head_seq_num);
++	seq_printf(s, "([%2d]) 0x%03x [", r->buf_size, r->head_seq_num);
+ 	for (i = 0; i < r->buf_size; i++) {
+ 		if (i == index)
+ 			seq_printf(s, "%c", r->reorder_buf[i] ? 'O' : '|');
+diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+index 14dcb06..76f8084 100644
+--- a/drivers/net/wireless/ath/wil6210/rx_reorder.c
++++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+@@ -206,7 +206,6 @@ void wil_rx_reorder(struct wil6210_priv *wil, struct sk_buff *skb)
  
- 			if (bSDM)
- 				freq_item = &(mt76x0_sdm_frequency_plan[i]);
-diff --git a/usb.c b/usb.c
-index efae0a0..6b9a505 100644
---- a/usb.c
-+++ b/usb.c
-@@ -20,7 +20,29 @@
- #include "trace.h"
+ 	/* put the frame in the reordering buffer */
+ 	r->reorder_buf[index] = skb;
+-	r->reorder_time[index] = jiffies;
+ 	r->stored_mpdu_num++;
+ 	wil_reorder_release(ndev, r);
  
- static struct usb_device_id mt76x0_device_table[] = {
--	{ USB_DEVICE(0x13b1,0x003e) },
-+	{ USB_DEVICE(0x148F, 0x7610) },	/* MT7610U */
-+	{ USB_DEVICE(0x13B1, 0x003E) },	/* Linksys AE6000 */
-+	{ USB_DEVICE(0x0E8D, 0x7610) },	/* Sabrent NTWLAC */
-+	{ USB_DEVICE(0x7392, 0xa711) },	/* Edimax 7711mac */
-+	{ USB_DEVICE(0x7392, 0xb711) },	/* Edimax / Elecom  */
-+	{ USB_DEVICE(0x148f, 0x761a) },	/* TP-Link TL-WDN5200 */
-+	{ USB_DEVICE(0x148f, 0x760a) },	/* TP-Link unknown */
-+	{ USB_DEVICE(0x0b05, 0x17d1) },	/* Asus USB-AC51 */
-+	{ USB_DEVICE(0x0b05, 0x17db) },	/* Asus USB-AC50 */
-+	{ USB_DEVICE(0x0df6, 0x0075) },	/* Sitecom WLA-3100 */
-+	{ USB_DEVICE(0x2019, 0xab31) },	/* Planex GW-450D */
-+	{ USB_DEVICE(0x2001, 0x3d02) },	/* D-LINK DWA-171 rev B1 */
-+	{ USB_DEVICE(0x0586, 0x3425) },	/* Zyxel NWD6505 */
-+	{ USB_DEVICE(0x07b8, 0x7610) },	/* AboCom AU7212 */
-+	{ USB_DEVICE(0x04bb, 0x0951) },	/* I-O DATA WN-AC433UK */
-+	{ USB_DEVICE(0x057c, 0x8502) },	/* AVM FRITZ!WLAN USB Stick AC 430 */
-+	{ USB_DEVICE(0x293c, 0x5702) },	/* Comcast Xfinity KXW02AAA  */
-+	{ USB_DEVICE(0x20f4, 0x806b) },	/* TRENDnet TEW-806UBH  */
-+	{ USB_DEVICE(0x7392, 0xc711) }, /* Devolo Wifi ac Stick */
-+	{ USB_DEVICE(0x0df6, 0x0079) }, /* Sitecom Europe B.V. ac  Stick */
-+	{ USB_DEVICE(0x2357, 0x0105) }, /* TP-LINK Archer T1U */
-+	{ USB_DEVICE_AND_INTERFACE_INFO(0x0E8D, 0x7630, 0xff, 0x2, 0xff)}, /* MT7630U */
-+	{ USB_DEVICE_AND_INTERFACE_INFO(0x0E8D, 0x7650, 0xff, 0x2, 0xff)}, /* MT7650U */
- 	{ 0, }
+@@ -252,11 +251,8 @@ struct wil_tid_ampdu_rx *wil_tid_ampdu_rx_alloc(struct wil6210_priv *wil,
+ 
+ 	r->reorder_buf =
+ 		kcalloc(size, sizeof(struct sk_buff *), GFP_KERNEL);
+-	r->reorder_time =
+-		kcalloc(size, sizeof(unsigned long), GFP_KERNEL);
+-	if (!r->reorder_buf || !r->reorder_time) {
++	if (!r->reorder_buf) {
+ 		kfree(r->reorder_buf);
+-		kfree(r->reorder_time);
+ 		kfree(r);
+ 		return NULL;
+ 	}
+@@ -286,7 +282,6 @@ void wil_tid_ampdu_rx_free(struct wil6210_priv *wil,
+ 		kfree_skb(r->reorder_buf[i]);
+ 
+ 	kfree(r->reorder_buf);
+-	kfree(r->reorder_time);
+ 	kfree(r);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 2f77319..fe58169 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -493,38 +493,28 @@ enum { /* for wil6210_priv.status */
+  * struct tid_ampdu_rx - TID aggregation information (Rx).
+  *
+  * @reorder_buf: buffer to reorder incoming aggregated MPDUs
+- * @reorder_time: jiffies when skb was added
+- * @session_timer: check if peer keeps Tx-ing on the TID (by timeout value)
+- * @reorder_timer: releases expired frames from the reorder buffer.
+  * @last_rx: jiffies of last rx activity
+  * @head_seq_num: head sequence number in reordering buffer.
+  * @stored_mpdu_num: number of MPDUs in reordering buffer
+  * @ssn: Starting Sequence Number expected to be aggregated.
+  * @buf_size: buffer size for incoming A-MPDUs
+- * @timeout: reset timer value (in TUs).
+  * @ssn_last_drop: SSN of the last dropped frame
+  * @total: total number of processed incoming frames
+  * @drop_dup: duplicate frames dropped for this reorder buffer
+  * @drop_old: old frames dropped for this reorder buffer
+- * @dialog_token: dialog token for aggregation session
+  * @first_time: true when this buffer used 1-st time
+  */
+ struct wil_tid_ampdu_rx {
+ 	struct sk_buff **reorder_buf;
+-	unsigned long *reorder_time;
+-	struct timer_list session_timer;
+-	struct timer_list reorder_timer;
+ 	unsigned long last_rx;
+ 	u16 head_seq_num;
+ 	u16 stored_mpdu_num;
+ 	u16 ssn;
+ 	u16 buf_size;
+-	u16 timeout;
+ 	u16 ssn_last_drop;
+ 	unsigned long long total; /* frames processed */
+ 	unsigned long long drop_dup;
+ 	unsigned long long drop_old;
+-	u8 dialog_token;
+ 	bool first_time; /* is it 1-st time this buffer used? */
  };
  
-Greetings
-Hans
+-- 
+1.9.1
