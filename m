@@ -1,147 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39136 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754408AbeDMLeN (ORCPT
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:12177 "EHLO
+        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754484AbeDWIw0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Apr 2018 07:34:13 -0400
-From: Balaji Pothunoori <bpothuno@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Cc: bpothuno@codeaurora.org
-Subject: [PATCH 1/3] cfg80211: average ack rssi support for data frames
-Date: Fri, 13 Apr 2018 17:04:01 +0530
-Message-Id: <1523619243-1898-2-git-send-email-bpothuno@codeaurora.org> (sfid-20180413_133445_470777_8133623A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Mon, 23 Apr 2018 04:52:26 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
+Subject: [PATCH v2 04/10] wil6210: fix call to wil6210_disconnect during unload
+Date: Mon, 23 Apr 2018 11:52:07 +0300
+Message-Id: <1524473533-24524-5-git-send-email-merez@codeaurora.org> (sfid-20180423_105238_791030_5D07B9BB)
+In-Reply-To: <1524473533-24524-1-git-send-email-merez@codeaurora.org>
+References: <1524473533-24524-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Average ack rssi will be given to userspace via NL80211 interface
-if firmware is capable. Userspace tool ‘iw’ can process this
-information and give the output as one of the fields in
-‘iw dev wlanX station dump’.
+From: Lior David <liord@codeaurora.org>
 
-Example output :
+Move the call to wil6210_disconnect so it will be called
+before unregister_netdevice. This is because it calls
+netif_carrier_off which is forbidden to call on an
+unregistered net device. Calling netif_carrier_off can
+add a link watch event which might be handled after
+net device was freed, causing a kernel oops.
 
-localhost ~ #iw dev wlan-5000mhz station dump Station
-34:f3:9a:aa:3b:29 (on wlan-5000mhz)
-        inactive time:  5370 ms
-        rx bytes:       85321
-        rx packets:     576
-        tx bytes:       14225
-        tx packets:     71
-        tx retries:     0
-        tx failed:      2
-        beacon loss:    0
-        rx drop misc:   0
-        signal:         -54 dBm
-        signal avg:     -53 dBm
-        tx bitrate:     866.7 MBit/s VHT-MCS 9 80MHz short GI VHT-NSS 2
-        rx bitrate:     866.7 MBit/s VHT-MCS 9 80MHz short GI VHT-NSS 2
-        avg ack signal: -56 dBm
-        authorized:     yes
-        authenticated:  yes
-        associated:     yes
-        preamble:       short
-        WMM/WME:        yes
-        MFP:            no
-        TDLS peer:      no
-        DTIM period:    2
-        beacon interval:100
-       short preamble: yes
-       short slot time:yes
-       connected time: 203 seconds
-
-Main use case is to measure the signal strength of a connected station
-to AP. Data packet transmit rates and bandwidth used by station can vary
-a lot even if the station is at fixed location, especially if the rates
-used are multi stream(2stream, 3stream) rates with different bandwidth(20/40/80 Mhz).
-These multi stream rates are sensitive and station can use different transmit power
-for each of the rate and bandwidth combinations. RSSI measured from these RX packets
-on AP will be not stable and can vary a lot with in a short time.
-Whereas 802.11 ack frames from station are sent relatively at a constant
-rate (6/12/24 Mbps) with constant bandwidth(20 Mhz).
-So average rssi of the ack packets is good and more accurate."
-
-Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
+Signed-off-by: Lior David <liord@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- include/net/cfg80211.h       | 3 +++
- include/uapi/linux/nl80211.h | 7 +++++++
- net/wireless/nl80211.c       | 3 +++
- 3 files changed, 13 insertions(+)
+ drivers/net/wireless/ath/wil6210/netdev.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 250dac3..5e888ec 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1152,6 +1152,8 @@ struct cfg80211_tid_stats {
-  * @pertid: per-TID statistics, see &struct cfg80211_tid_stats, using the last
-  *	(IEEE80211_NUM_TIDS) index for MSDUs not encapsulated in QoS-MPDUs.
-  * @ack_signal: signal strength (in dBm) of the last ACK frame.
-+ * @avg_ack_signal: average rssi value of ack packet for the no of msdu's has
-+ *	been sent.
-  */
- struct station_info {
- 	u64 filled;
-@@ -1197,6 +1199,7 @@ struct station_info {
- 	u8 rx_beacon_signal_avg;
- 	struct cfg80211_tid_stats pertid[IEEE80211_NUM_TIDS + 1];
- 	s8 ack_signal;
-+	s8 avg_ack_signal;
- };
+diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
+index 05e9408..eb6c14ed 100644
+--- a/drivers/net/wireless/ath/wil6210/netdev.c
++++ b/drivers/net/wireless/ath/wil6210/netdev.c
+@@ -457,16 +457,16 @@ void wil_vif_remove(struct wil6210_priv *wil, u8 mid)
+ 		return;
+ 	}
  
- #if IS_ENABLED(CONFIG_CFG80211)
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 15daf5e..a41a77b 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2980,6 +2980,8 @@ enum nl80211_sta_bss_param {
-  *	received from the station (u64, usec)
-  * @NL80211_STA_INFO_PAD: attribute used for padding for 64-bit alignment
-  * @NL80211_STA_INFO_ACK_SIGNAL: signal strength of the last ACK frame(u8, dBm)
-+ * @NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG: avg signal strength of data ACK
-+ * frame(s8, dBm)
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -3019,6 +3021,7 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_RX_DURATION,
- 	NL80211_STA_INFO_PAD,
- 	NL80211_STA_INFO_ACK_SIGNAL,
-+	NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG,
++	mutex_lock(&wil->mutex);
++	wil6210_disconnect(vif, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
++	mutex_unlock(&wil->mutex);
++
+ 	ndev = vif_to_ndev(vif);
+ 	/* during unregister_netdevice cfg80211_leave may perform operations
+ 	 * such as stop AP, disconnect, so we only clear the VIF afterwards
+ 	 */
+ 	unregister_netdevice(ndev);
  
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-@@ -5038,6 +5041,9 @@ enum nl80211_feature_flags {
-  *	"radar detected" event.
-  * @NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211: Driver supports sending and
-  *	receiving control port frames over nl80211 instead of the netdevice.
-+ * @NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT: This Driver support data ack
-+ *	rssi if firmware support, this flag is to intimate about ack rssi
-+ *	support to nl80211.
-  *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-@@ -5070,6 +5076,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_HIGH_ACCURACY_SCAN,
- 	NL80211_EXT_FEATURE_DFS_OFFLOAD,
- 	NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211,
-+	NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT,
+-	mutex_lock(&wil->mutex);
+-	wil6210_disconnect(vif, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
+-	mutex_unlock(&wil->mutex);
+-
+ 	if (any_active && vif->mid != 0)
+ 		wmi_port_delete(wil, vif->mid);
  
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ff28f8f..5415e7c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4494,6 +4494,9 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 	PUT_SINFO_U64(BEACON_RX, rx_beacon);
- 	PUT_SINFO(BEACON_SIGNAL_AVG, rx_beacon_signal_avg, u8);
- 	PUT_SINFO(ACK_SIGNAL, ack_signal, u8);
-+	if (wiphy_ext_feature_isset(&rdev->wiphy,
-+				    NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT))
-+		PUT_SINFO(DATA_ACK_SIGNAL_AVG, avg_ack_signal, s8);
- 
- #undef PUT_SINFO
- #undef PUT_SINFO_U64
 -- 
-2.7.4
+1.9.1
