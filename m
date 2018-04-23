@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50460 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752514AbeDSPsb (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:45719 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932306AbeDWUMP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Apr 2018 11:48:31 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCHv3] ath10k: Add tx ack signal support for management frames
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1522316915-27518-1-git-send-email-vnaralas@codeaurora.org>
-References: <1522316915-27518-1-git-send-email-vnaralas@codeaurora.org>
-To: Venkateswara Naralasetty <vnaralas@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Venkateswara Naralasetty <vnaralas@codeaurora.org>
-Message-Id: <20180419154831.38FC96071A@smtp.codeaurora.org> (sfid-20180419_174859_972237_912A6EC7)
-Date: Thu, 19 Apr 2018 15:48:31 +0000 (UTC)
+        Mon, 23 Apr 2018 16:12:15 -0400
+From: Andres Rodriguez <andresx7@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: andresx7@gmail.com, gregkh@linuxfoundation.org, mcgrof@kernel.org,
+        alexdeucher@gmail.com, christian.koenig@amd.com,
+        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        hdegoede@redhat.com
+Subject: [PATCH 0/9] Loading optional firmware v4
+Date: Mon, 23 Apr 2018 16:11:56 -0400
+Message-Id: <20180423201205.20533-1-andresx7@gmail.com> (sfid-20180423_221218_763684_8C9BB62B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Venkateswara Naralasetty <vnaralas@codeaurora.org> wrote:
+Hey Everyone,
 
-> This patch add support to get RSSI from acknowledgment
-> frames for transmitted management frames.
-> 
-> hardware_used: QCA4019, QCA9984.
-> firmware version: 10.4-3.5.3-00052.
-> 
-> Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+This is a trimmed down version of v3 that contains the changes for which we
+have agreement. Changes that raised concern are being shifted to a followup
+series, mainly changes to the async firmware API.
 
-Patch applied to ath-next branch of ath.git, thanks.
+Inline feedback I received in these patches has also been addressed, thanks
+everyone that chimed in.
 
-235b9c427661 ath10k: Add tx ack signal support for management frames
+I'll be following up with some proposals for the async API. Hopefully we can
+end up with something that is not "the least bad" option.
+
+This series can be found in the for-luis-v4 branch of:
+https://github.com/lostgoat/linux.git
+
+Andres Rodriguez (9):
+  firmware: some documentation fixes
+  firmware: wrap FW_OPT_* into an enum
+  firmware: add kernel-doc for enum fw_opt
+  firmware: use () to terminate kernel-doc function names
+  firmware: add function to load firmware without warnings v5
+  firmware: print firmware name on fallback path
+  firmware: use rename fw_sysfs_fallback to use the firmware_ prefix
+  ath10k: use request_firmware_nowarn to load firmware
+  ath10k: re-enable the firmware fallback mechanism for testmode
+
+ .../driver-api/firmware/request_firmware.rst       | 21 +++++----
+ drivers/base/firmware_loader/fallback.c            | 30 ++++++------
+ drivers/base/firmware_loader/fallback.h            | 12 +++--
+ drivers/base/firmware_loader/firmware.h            | 38 +++++++++++----
+ drivers/base/firmware_loader/main.c                | 54 ++++++++++++++++------
+ drivers/net/wireless/ath/ath10k/core.c             |  2 +-
+ drivers/net/wireless/ath/ath10k/testmode.c         |  2 +-
+ include/linux/firmware.h                           |  2 +
+ 8 files changed, 108 insertions(+), 53 deletions(-)
 
 -- 
-https://patchwork.kernel.org/patch/10314823/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.14.1
