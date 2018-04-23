@@ -1,80 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44634 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755887AbeDWPuS (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:37043 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932108AbeDWQfx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 11:50:18 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        govinds@codeaurora.org, pillair@codeaurora.org,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH v2 4/4] ath10k: Enable sta idle power save
-References: <1523966821-21903-1-git-send-email-pillair@codeaurora.org>
-        <1523966821-21903-5-git-send-email-pillair@codeaurora.org>
-        <946e582c-2438-872b-eec8-25d9dcb994d9@dd-wrt.com>
-        <7a06a34a5fcb97e07a8d79b4d689e781@codeaurora.org>
-        <87604oodt4.fsf@kamboji.qca.qualcomm.com>
-        <a7dd1b94951725c61034f5be6744b725@codeaurora.org>
-        <8736zrjgq6.fsf@kamboji.qca.qualcomm.com>
-        <c48c1bae-04c9-55d0-fdb9-d9ae8f7cb843@dd-wrt.com>
-        <5AD9A1DF.6060007@broadcom.com>
-Date: Mon, 23 Apr 2018 18:50:12 +0300
-In-Reply-To: <5AD9A1DF.6060007@broadcom.com> (Arend van Spriel's message of
-        "Fri, 20 Apr 2018 10:16:31 +0200")
-Message-ID: <87wowxdirv.fsf@kamboji.qca.qualcomm.com> (sfid-20180423_175027_829831_652893C8)
+        Mon, 23 Apr 2018 12:35:53 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [RESEND 21/33] staging: wilc1000: added identifiers name in function definations
+Date: Mon, 23 Apr 2018 22:03:23 +0530
+Message-ID: <1524501215-4963-22-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183621_542245_C3A637C8)
+In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+Fix identifier names required for functions definition issues reported
+by checkpatch.pl script.
 
-> On 4/20/2018 9:21 AM, Sebastian Gottschall wrote:
->>
->>>> Yes this is WIFI chip set level power-save(based on idleness) and not
->>>> related to protocol power save. FW will turn off/scale down the
->>>> resources(clock/rails) based on opportunity(when ever idle mode is
->>>> detected). This power save is mostly done in disconnected state. I am
->>>> not really sure when framework/user-space triggers power-save
->>>> config(iw dev <devname> set power_save on/off). Then doing this from
->>>> user-space will be unnecessarily toggling this config or may not be
->>>> setting at disconnected state.
->>> I think that 'set power_save' commands affects struct
->>> ieee80211_bss_conf::ps parameter and I don't think it should be used in
->>> this case. We already have ath10k_config_ps() for 802.11 level of power
->>> saving.
->>>
->>> Arend again proposed runtime-pm with which I'm not very familiar. But
->>> why would we want to disable this? Doesn't it make sense to have this
->>> feature always enabled to save power? wcn3990 is a chip for a mobile
->>> device anyway.
->>
->> it might be made for mobile devices but who knows how it is used by the
->> market.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.h | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
-Sure, and this does parameter prevent that. You can still connect
-wcn3990 to any power source you want, but the driver is just optimised
-power consumption in focus.
-
-> Reading the explanation above it does not make sense to use
-> runtime-pm. That would only come into play if the host driver would
-> actually control the resources being turned off/scaled down.
-
-Exactly.
-
-> So this is purely reducing power-consumption of the chip. However, it
-> would be good to know the consequences in terms of responsiveness to
-> firmware commands for instance when requesting a scan operation.
-> Another thing to consider is to provide user-space with possibility to
-> change this configuration (maybe through debugfs?).
-
-Adrian was also commenting something similar about adding a debugfs
-interface but I don't really see the point right now while we are adding
-initial wcn3990 support. If someone wants to run measurements with and
-without this parameter it's very easy to edit it out from the sources.
-Later on we can consider making it dynamic if there's really the need
-for that, but I'm very skeptic that anyone would even need that.
-
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 4abbfa7..20e4659 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -222,7 +222,7 @@ struct txq_entry_t {
+ 	int buffer_size;
+ 	void *priv;
+ 	int status;
+-	void (*tx_complete_func)(void *, int);
++	void (*tx_complete_func)(void *priv, int status);
+ };
+ 
+ struct rxq_entry_t {
+@@ -238,18 +238,18 @@ struct rxq_entry_t {
+  ********************************************/
+ struct wilc;
+ struct wilc_hif_func {
+-	int (*hif_init)(struct wilc *, bool resume);
+-	int (*hif_deinit)(struct wilc *);
+-	int (*hif_read_reg)(struct wilc *, u32, u32 *);
+-	int (*hif_write_reg)(struct wilc *, u32, u32);
+-	int (*hif_block_rx)(struct wilc *, u32, u8 *, u32);
+-	int (*hif_block_tx)(struct wilc *, u32, u8 *, u32);
+-	int (*hif_read_int)(struct wilc *, u32 *);
+-	int (*hif_clear_int_ext)(struct wilc *, u32);
+-	int (*hif_read_size)(struct wilc *, u32 *);
+-	int (*hif_block_tx_ext)(struct wilc *, u32, u8 *, u32);
+-	int (*hif_block_rx_ext)(struct wilc *, u32, u8 *, u32);
+-	int (*hif_sync_ext)(struct wilc *, int);
++	int (*hif_init)(struct wilc *wilc, bool resume);
++	int (*hif_deinit)(struct wilc *wilc);
++	int (*hif_read_reg)(struct wilc *wilc, u32 addr, u32 *data);
++	int (*hif_write_reg)(struct wilc *wilc, u32 addr, u32 data);
++	int (*hif_block_rx)(struct wilc *wilc, u32 addr, u8 *buf, u32 size);
++	int (*hif_block_tx)(struct wilc *wilc, u32 addr, u8 *buf, u32 size);
++	int (*hif_read_int)(struct wilc *wilc, u32 *int_status);
++	int (*hif_clear_int_ext)(struct wilc *wilc, u32 val);
++	int (*hif_read_size)(struct wilc *wilc, u32 *size);
++	int (*hif_block_tx_ext)(struct wilc *wilc, u32 addr, u8 *buf, u32 size);
++	int (*hif_block_rx_ext)(struct wilc *wilc, u32 addr, u8 *buf, u32 size);
++	int (*hif_sync_ext)(struct wilc *wilc, int nint);
+ 	int (*enable_interrupt)(struct wilc *nic);
+ 	void (*disable_interrupt)(struct wilc *nic);
+ };
 -- 
-Kalle Valo
+2.7.4
