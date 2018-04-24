@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway36.websitewelcome.com ([192.185.198.13]:22096 "EHLO
-        gateway36.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750726AbeDEQyD (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57148 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750826AbeDXRZs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Apr 2018 12:54:03 -0400
-Received: from cm10.websitewelcome.com (cm10.websitewelcome.com [100.42.49.4])
-        by gateway36.websitewelcome.com (Postfix) with ESMTP id A3CD241655EF3
-        for <linux-wireless@vger.kernel.org>; Thu,  5 Apr 2018 11:33:17 -0500 (CDT)
-Subject: Re: [PATCH] qtnfmac: pearl: pcie: fix memory leak in
- qtnf_fw_work_handler
-To: Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20180405154949.GA32223@embeddedor.com>
- <20180405163100.cuaedftds47pxdrn@bars>
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Message-ID: <123880c0-25f0-f53e-8c75-2a01c2756b4e@embeddedor.com> (sfid-20180405_185406_695093_A032EEAC)
-Date: Thu, 5 Apr 2018 11:33:15 -0500
+        Tue, 24 Apr 2018 13:25:48 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180405163100.cuaedftds47pxdrn@bars>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [v2,1/7] rsi: disable fw watchdog timer during reset
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1523372657-6067-2-git-send-email-siva8118@gmail.com>
+References: <1523372657-6067-2-git-send-email-siva8118@gmail.com>
+To: Siva Rebbagondla <siva8118@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Sushant Mishra <sushant.mishra@redpinesignals.com>
+Message-Id: <20180424172547.B959D6090E@smtp.codeaurora.org> (sfid-20180424_192609_614046_FC11ADF8)
+Date: Tue, 24 Apr 2018 17:25:47 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sergey,
+Siva Rebbagondla <siva8118@gmail.com> wrote:
 
-On 04/05/2018 11:31 AM, Sergey Matyukevich wrote:
-> Hello Gustavo,
+> From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
 > 
->> In case memory resources for fw were succesfully allocated, release
->> them before jumping to fw_load_fail.
->>
->> Addresses-Coverity-ID: 1466092 ("Resource leak")
->> Fixes: c3b2f7ca4186 ("qtnfmac: implement asynchronous firmware loading")
->> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
->> ---
->>   drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c | 4 ++++
->>   1 file changed, 4 insertions(+)
+> Firmware's watchdog timer should be disabled as a part of reset
+> sequence. This change fixes a firmware hang issue observed during
+> stress tests.
 > 
-> Thanks for the patch!
-> 
+> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
 
-Glad to help. :)
+7 patches applied to wireless-drivers-next.git, thanks.
 
-> Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-> 
+16d3bb7b2f37 rsi: disable fw watchdog timer during reset
+8c1475bdfc3a rsi: device bootup parameter configuration
+cbbfdd6c700f rsi: use appropriate interface for power save configuration
+a55e50f0672e rsi: increase max supported aggregation subframes
+3334306a086e rsi: parse TID from data frame correctly
+1e9c410f26a2 rsi: enable power save by default for coex
+f0b147b8f1d2 rsi: advertise 5GHz support based on device capability
 
-Thanks
---
-Gustavo
+-- 
+https://patchwork.kernel.org/patch/10333303/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
