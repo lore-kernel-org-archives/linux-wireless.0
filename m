@@ -1,36 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54514 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:34640 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751416AbeD0LjL (ORCPT
+        with ESMTP id S1751226AbeDXRcz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Apr 2018 07:39:11 -0400
+        Tue, 24 Apr 2018 13:32:55 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [next] ath10k: fix spelling mistake: "servive" -> "service"
+Subject: Re: mt76x2: set default values in TX_ALC_CFG_{1,
+ 2} for tempetaure compensation
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180426091244.9160-1-colin.king@canonical.com>
-References: <20180426091244.9160-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20180427113911.1640460213@smtp.codeaurora.org> (sfid-20180427_133931_772150_992E9AFE)
-Date: Fri, 27 Apr 2018 11:39:11 +0000 (UTC)
+In-Reply-To: <cca4a0d4fbe58e6ecf0f05b953b2df11e30e75b1.1522830473.git.lorenzo.bianconi@redhat.com>
+References: <cca4a0d4fbe58e6ecf0f05b953b2df11e30e75b1.1522830473.git.lorenzo.bianconi@redhat.com>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: nbd@nbd.name, linux-wireless@vger.kernel.org
+Message-Id: <20180424173255.5517060F5F@smtp.codeaurora.org> (sfid-20180424_193300_544467_E590579E)
+Date: Tue, 24 Apr 2018 17:32:55 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
 
-> Trivial fix to spelling mistake in ath10k_warn warning message text
+> Initialize default values for temperature compensation in TX_ALC_CFG_{1,2}
+> if tssi has been enabled
 > 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-Patch applied to ath-next branch of ath.git, thanks.
+Patch applied to wireless-drivers-next.git, thanks.
 
-785281342d0c ath10k: fix spelling mistake: "servive" -> "service"
+b9e5d4feb4fc mt76x2: set default values in TX_ALC_CFG_{1, 2} for tempetaure compensation
 
 -- 
-https://patchwork.kernel.org/patch/10365081/
+https://patchwork.kernel.org/patch/10322225/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
