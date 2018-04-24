@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48102 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:56170 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750882AbeDYIPY (ORCPT
+        with ESMTP id S1750735AbeDXRYs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 04:15:24 -0400
+        Tue, 24 Apr 2018 13:24:48 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [1/2] net: wireless: zydas: Replace mdelay with msleep in
- zd1201_probe
+Subject: Re: [v2] rsi: remove unecessary PTR_ALIGN()s
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1523367004-31935-1-git-send-email-baijiaju1990@gmail.com>
-References: <1523367004-31935-1-git-send-email-baijiaju1990@gmail.com>
-To: Jia-Ju Bai <baijiaju1990@gmail.com>
-Cc: davem@davemloft.net, stephen@networkplumber.org,
-        arvind.yadav.cs@gmail.com, johannes.berg@intel.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
-Message-Id: <20180425081523.98D9D60556@smtp.codeaurora.org> (sfid-20180425_101549_258918_4A06A81A)
-Date: Wed, 25 Apr 2018 08:15:23 +0000 (UTC)
+In-Reply-To: <20180406083717.GA21857@mwanda>
+References: <20180406083717.GA21857@mwanda>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Message-Id: <20180424172447.D1A0360131@smtp.codeaurora.org> (sfid-20180424_192451_900767_47516143)
+Date: Tue, 24 Apr 2018 17:24:47 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jia-Ju Bai <baijiaju1990@gmail.com> wrote:
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
-> zd1201_probe() is never called in atomic context.
+> The issue here is that we allocate "data" and then set
+> "data = PTR_ALIGN(data, 8);" and then we free the aligned pointer
+> instead of the original pointer.
 > 
-> zd1201_probe() is only set as ".probe" in struct usb_driver.
+> kmalloc() pointers are already ARCH_SLAB_MINALIGN aligned which is 8 or
+> more on everything except certain Xtensa variants.  We decided that if
+> the Xtensa people ever notice a bug here then we'll tell them the bug is
+> on their side.  ;)
 > 
-> Despite never getting called from atomic context, zd1201_probe()
-> calls mdelay() to busily wait.
-> This is not necessary and can be replaced with msleep() to
-> avoid busy waiting.
-> 
-> This is found by a static analysis tool named DCNS written by myself.
-> And I also manually check it.
-> 
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-I need a review from someone else before I'm willing to take this.
+Patch applied to wireless-drivers-next.git, thanks.
+
+350fcdb83457 rsi: remove unecessary PTR_ALIGN()s
 
 -- 
-https://patchwork.kernel.org/patch/10333189/
+https://patchwork.kernel.org/patch/10325781/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
