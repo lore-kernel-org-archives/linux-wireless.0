@@ -1,46 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:14322 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932181AbeDWQgK (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60818 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752985AbeDXRcC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 12:36:10 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [RESEND 33/33] staging: wilc1000: rename pu32InactiveTime to avoid camelCase issue
-Date: Mon, 23 Apr 2018 22:03:35 +0530
-Message-ID: <1524501215-4963-34-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183624_661185_9CE31CC2)
-In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 24 Apr 2018 13:32:02 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [v2] mt76x2: remove unnecessary MT_TX_ALC_CFG_4 configuration
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180403203019.8988-1-lorenzo.bianconi@redhat.com>
+References: <20180403203019.8988-1-lorenzo.bianconi@redhat.com>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: nbd@nbd.name, linux-wireless@vger.kernel.org
+Message-Id: <20180424173202.6011B60131@smtp.codeaurora.org> (sfid-20180424_193208_387249_4CD0AC47)
+Date: Tue, 24 Apr 2018 17:32:02 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoid camelCase issues found by checkpatch.pl script.
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
----
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Remove unnecessary MT_TX_ALC_CFG_4 configuration since the register value
+> will be properly set according to the usage of an external power amplifier
+> 
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> Acked-by: Felix Fietkau <nbd@nbd.name>
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 035c537..7a26f34 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -314,7 +314,7 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
- 		 const u8 *mac_addr, const u8 *rx_mic, const u8 *tx_mic,
- 		 u8 mode, u8 cipher_mode, u8 index);
- s32 wilc_get_inactive_time(struct wilc_vif *vif, const u8 *mac,
--			   u32 *pu32InactiveTime);
-+			   u32 *out_val);
- int wilc_add_rx_gtk(struct wilc_vif *vif, const u8 *rx_gtk, u8 gtk_key_len,
- 		    u8 index, u32 key_rsc_len, const u8 *key_rsc,
- 		    const u8 *rx_mic, const u8 *tx_mic, u8 mode,
+Patch applied to wireless-drivers-next.git, thanks.
+
+cf7b411dcea8 mt76x2: remove unnecessary MT_TX_ALC_CFG_4 configuration
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/10321735/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
