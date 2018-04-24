@@ -1,35 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40752 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750876AbeDUGLe (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36430 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751561AbeDXRdd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 Apr 2018 02:11:34 -0400
-Message-ID: <aed41f8d69cdb6feeb38717fed26b076e7daa4d4.camel@coelho.fi> (sfid-20180421_081149_978747_DD506990)
-From: Luca Coelho <luca@coelho.fi>
-To: Peter Oh <peter.oh@bowerswilkins.com>, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>
-Date: Sat, 21 Apr 2018 09:11:28 +0300
-In-Reply-To: <a36e55e5-1368-a3ef-9d5b-a53b0307e07d@bowerswilkins.com>
-References: <20180420104926.8816-1-luca@coelho.fi>
-         <20180420104926.8816-9-luca@coelho.fi>
-         <a36e55e5-1368-a3ef-9d5b-a53b0307e07d@bowerswilkins.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 8/9] mac80211: Support adding duration for prepare_tx()
- callback
+        Tue, 24 Apr 2018 13:33:33 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/2,v2] mt7601u: use EWMA to calculate avg_rssi
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1523879778-6455-1-git-send-email-sgruszka@redhat.com>
+References: <1523879778-6455-1-git-send-email-sgruszka@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Jakub Kicinski <kubakici@wp.pl>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Message-Id: <20180424173332.D7833607E1@smtp.codeaurora.org> (sfid-20180424_193423_611521_C053D3DC)
+Date: Tue, 24 Apr 2018 17:33:32 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2018-04-20 at 12:43 -0700, Peter Oh wrote:
-> where is the 9th patch gone?
+Stanislaw Gruszka <sgruszka@redhat.com> wrote:
 
-At least patchwork caught it so it must have been delivered to linux-wi
-reless@vger.kernel.org:
+> avr_rssi is not calculated correctly as we do not divide result
+> by 256 (mt76 sum avg_rssi1 and avg_rssi2 and divide by 512).
+> However dividing by 256 will make avg_rssi almost the same as
+> last rssi value - not really an average. So use EWMA to calculate
+> avg_rssi. I've chosen weight_rcp=4 to convergence quicker on signal
+> strength changes.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> Acked-by: Jakub Kicinski <kubakici@wp.pl>
 
-https://patchwork.kernel.org/patch/10352447/
+2 patches applied to wireless-drivers-next.git, thanks.
 
-Did you still not receive it? Has anyone else not received it?
+b305a6ab0247 mt7601u: use EWMA to calculate avg_rssi
+2019c39a2d60 mt7601u: run calibration works after finishing scanning
 
---
-Cheers,
-Luca.
+-- 
+https://patchwork.kernel.org/patch/10342803/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
