@@ -1,77 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51664 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:50206 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753710AbeDRNH1 (ORCPT
+        with ESMTP id S1753084AbeDXJSR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 09:07:27 -0400
+        Tue, 24 Apr 2018 05:18:17 -0400
+Subject: Re: [PATCH] ath10k: add dynamic vlan support
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+References: <1524232653-22573-1-git-send-email-mpubbise@codeaurora.org>
+ <87r2n5auvq.fsf@kamboji.qca.qualcomm.com>
+ <aa04534d-9677-f42e-a239-b230093ef2f5@dd-wrt.com>
+From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Message-ID: <12cd1e72-fd27-9111-808e-0295c53f5d6b@codeaurora.org> (sfid-20180424_111821_786589_801503C2)
+Date: Tue, 24 Apr 2018 14:48:10 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 18 Apr 2018 18:37:26 +0530
-From: govinds@codeaurora.org
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Cc: pillair@codeaurora.org, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 4/4] ath10k: Enable sta idle power save
-In-Reply-To: <946e582c-2438-872b-eec8-25d9dcb994d9@dd-wrt.com>
-References: <1523966821-21903-1-git-send-email-pillair@codeaurora.org>
- <1523966821-21903-5-git-send-email-pillair@codeaurora.org>
- <946e582c-2438-872b-eec8-25d9dcb994d9@dd-wrt.com>
-Message-ID: <7a06a34a5fcb97e07a8d79b4d689e781@codeaurora.org> (sfid-20180418_150732_032619_8D2334E5)
+In-Reply-To: <aa04534d-9677-f42e-a239-b230093ef2f5@dd-wrt.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-04-18 12:36, Sebastian Gottschall wrote:
-> from my point of view powersave should be optional and not forced.
-> 
-> consider :
-> iw dev <devname> set power_save on/off
-> 
-> so there is already a config option made for that purpose,
-> 
-> Sebastian
-> 
-> Am 17.04.2018 um 14:07 schrieb pillair@codeaurora.org:
->> From: Govind Singh <govinds@codeaurora.org>
->> 
->> Enable sta power save in fw for the targets that
->> supports idle power save. The idle ps enable command
->> will be ignored by the firmware which does not support
->> this feature.
->> 
->> Signed-off-by: Govind Singh <govinds@codeaurora.org>
->> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
->> ---
->>   drivers/net/wireless/ath/ath10k/mac.c | 7 +++++++
->>   1 file changed, 7 insertions(+)
->> 
->> diff --git a/drivers/net/wireless/ath/ath10k/mac.c 
->> b/drivers/net/wireless/ath/ath10k/mac.c
->> index 7e02ca02b28e..1d9222af1bb2 100644
->> --- a/drivers/net/wireless/ath/ath10k/mac.c
->> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->> @@ -4679,6 +4679,13 @@ static int ath10k_start(struct ieee80211_hw 
->> *hw)
->>   		}
->>   	}
->>   +	param = ar->wmi.pdev_param->idle_ps_config;
->> +	ret = ath10k_wmi_pdev_set_param(ar, param, 1);
->> +	if (ret && ret != -EOPNOTSUPP) {
->> +		ath10k_warn(ar, "failed to enable idle_ps_config: %d\n", ret);
->> +		goto err_core_stop;
->> +	}
->> +
->>   	__ath10k_set_antenna(ar, ar->cfg_tx_chainmask, 
->> ar->cfg_rx_chainmask);
->>     	/*
+Yes Sebastian, Your point is valid. This would break the 4-addr 
+operation on other ath10k devices which does not support the new WMI 
+service.
 
-Thanks Sebastian for your review. Agree this should not be forced with 
-in driver.
+I have another approach to solve this problem, I will come with a small 
+patch and see what johannes has to say on that approach.
 
-I will check if i can set the idle ps at the end of 
-ath10k_mac_vif_setup_ps by checking arvif->ps.
-I will update the patch accordingly.
+Manikanta
 
-
-BR,
-Govind
+On 4/24/2018 2:39 PM, Sebastian Gottschall wrote:
+> consider my comment regarding vlan_ap.
+> this patch will break wds ap / wds sta support with latest mac80211 
+> (see also my post on the wireless mailing list about the breaking 
+> patch in mac80211)
+> so AP_VLAN must be masked always for all chipsets. otherwise wds 
+> breaks and this is not just a guess. i tested it yesterday using this 
+> patch and found
+> the cause of the issue
+>
+> the following lines
+>
+>   +    if (test_bit(WMI_SERVICE_PER_PACKET_SW_ENCRYPT, 
+> ar->wmi.svc_map)) {
+> +        ar->hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
+> +        ar->hw->wiphy->software_iftypes |= BIT(NL80211_IFTYPE_AP_VLAN);
+> +    }
+>
+>
+> must be just
+>
+> +        ar->hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
+> +        ar->hw->wiphy->software_iftypes |= BIT(NL80211_IFTYPE_AP_VLAN);
+>
+> everthing else will cause a regression
+>
+> Am 24.04.2018 um 10:09 schrieb Kalle Valo:
+>> Manikanta Pubbisetty <mpubbise@codeaurora.org> writes:
+>>
+>>> Mutlicast/broadcast traffic destined for a particular vlan group will
+>>> always be encrypted in software. To enable dynamic VLANs, it requires
+>>> driver support for sending software encrypted packets.
+>>>
+>>> In ath10k, sending sw encrypted frames is allowed only when we insmod
+>>> the driver with cryptmode param set to 1, this configuration disables
+>>> hardware crypto and enables RAW mode implicitly. Since, enabling raw
+>>> mode has performance impact, this cannot be considered as an ideal
+>>> solution for supporting VLANs in the driver.
+>>>
+>>> As an alternative take, in this approach, cryptographic keys for
+>>> unicast traffic(per peer PTKs) and keys for non-vlan group traffic
+>>> will be configured in hardware, allowing hardware encryption for 
+>>> unicast
+>>> and non-vlan group traffic. Only vlan group traffic will be 
+>>> encrypted in
+>>> software and pushed to the target with encap mode set to RAW in the TX
+>>> descriptors.
+>>>
+>>> Not all firmwares can support this type of key configuration(having few
+>>> keys installed in hardware and few only in software); for this 
+>>> purpose a
+>>> new WMI service flag "WMI_SERVICE_PER_PACKET_SW_ENCRYPT" is 
+>>> introduced to
+>>> advertise this support.
+>>>
+>>> Also, adding the logic required to send sw encrypted frames in raw 
+>>> mode.
+>>>
+>>> Tested this change on QCA9984(firmware version 10.4-3.5.3-00057).
+>>>
+>>> Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+>> Your name in patchwork is wrong and hence my script uses the wrong
+>> name. Please fix it by registering to patchwork[1] where it's possible
+>> to change your name during registration, but only one time. If that
+>> doesn't work then send a request to helpdesk@kernel.org and the admins
+>> can fix it.
+>>
+>> [1] https://patchwork.kernel.org/register/
+>>
+>
