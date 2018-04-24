@@ -1,104 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39396 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754254AbeDMMnM (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40100 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755980AbeDXF5a (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Apr 2018 08:43:12 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Apr 2018 15:42:40 +0300
-Message-Id: <20180413124256.21769-10-luca@coelho.fi> (sfid-20180413_144320_206466_8DB55298)
-In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
-References: <20180413124256.21769-1-luca@coelho.fi>
-Subject: [PATCH 09/25] iwlwifi: pcie: implement the overlow queue for Gen2 devices
+        Tue, 24 Apr 2018 01:57:30 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2] wcn36xx: pass correct BSS index when deleting BSS keys
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180412122330.6916-1-daniel@zonque.org>
+References: <20180412122330.6916-1-daniel@zonque.org>
+To: Daniel Mack <daniel@zonque.org>
+Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+        rfried@codeaurora.org, bjorn.andersson@linaro.org,
+        loic.poulain@linaro.org, Daniel Mack <daniel@zonque.org>
+Message-Id: <20180424055729.942DC6085F@smtp.codeaurora.org> (sfid-20180424_075735_202335_D2DFCC41)
+Date: Tue, 24 Apr 2018 05:57:29 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Daniel Mack <daniel@zonque.org> wrote:
 
-When we enable TSO, we can have a lot of packets in the
-operation mode that will be pushed to the transport
-no matter what is the queue's fullness state.
+> The firmware message to delete BSS keys expects a BSS index to be passed.
+> This field is currently hard-coded to 0. Fix this by passing in the index
+> we received from the firmware when the BSS was configured.
+> 
+> The encryption type in that message also needs to be set to what was used
+> when the key was set, so the assignment of vif_priv->encrypt_type is now
+> done after the firmware command was sent. This reportedly fixes the
+> following error in AP mode:
+> 
+>   wcn36xx: ERROR hal_remove_bsskey response failed err=6
+> 
+> Also, AFAIU, when a BSS is deleted, the firmware apparently drops all the
+> keys associated with it. Trying to remove the key explicitly afterwards
+> will hence lead to the following message:
+> 
+>   wcn36xx: ERROR hal_remove_bsskey response failed err=16
+> 
+> This is now suppressed with an extra check for the BSS index validity.
+> 
+> Signed-off-by: Daniel Mack <daniel@zonque.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-To cope with that the transport can buffer those packets
-and add them to the ring later when there is more room.
-This implementation was missing in the Gen2 devices'
-code.
+Patch applied to ath-next branch of ath.git, thanks.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 27 ++++++++++++++++++++---
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c      |  2 +-
- 2 files changed, 25 insertions(+), 4 deletions(-)
+0fc8bb50bbfc wcn36xx: pass correct BSS index when deleting BSS keys
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index fabae0f60683..b605b364ed3f 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -488,6 +488,23 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 
- 	spin_lock(&txq->lock);
- 
-+	if (iwl_queue_space(txq) < txq->high_mark) {
-+		iwl_stop_queue(trans, txq);
-+
-+		/* don't put the packet on the ring, if there is no room */
-+		if (unlikely(iwl_queue_space(txq) < 3)) {
-+			struct iwl_device_cmd **dev_cmd_ptr;
-+
-+			dev_cmd_ptr = (void *)((u8 *)skb->cb +
-+					       trans_pcie->dev_cmd_offs);
-+
-+			*dev_cmd_ptr = dev_cmd;
-+			__skb_queue_tail(&txq->overflow_q, skb);
-+			spin_unlock(&txq->lock);
-+			return 0;
-+		}
-+	}
-+
- 	idx = iwl_pcie_get_cmd_index(txq, txq->write_ptr);
- 
- 	/* Set up driver data for this TFD */
-@@ -523,9 +540,6 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 	/* Tell device the write index *just past* this latest filled TFD */
- 	txq->write_ptr = iwl_queue_inc_wrap(txq->write_ptr);
- 	iwl_pcie_gen2_txq_inc_wr_ptr(trans, txq);
--	if (iwl_queue_space(txq) < txq->high_mark)
--		iwl_stop_queue(trans, txq);
--
- 	/*
- 	 * At this point the frame is "transmitted" successfully
- 	 * and we will get a TX status notification eventually.
-@@ -957,6 +971,13 @@ void iwl_pcie_gen2_txq_unmap(struct iwl_trans *trans, int txq_id)
- 			spin_unlock_irqrestore(&trans_pcie->reg_lock, flags);
- 		}
- 	}
-+
-+	while (!skb_queue_empty(&txq->overflow_q)) {
-+		struct sk_buff *skb = __skb_dequeue(&txq->overflow_q);
-+
-+		iwl_op_mode_free_skb(trans->op_mode, skb);
-+	}
-+
- 	spin_unlock_bh(&txq->lock);
- 
- 	/* just in case - this queue may have been stopped */
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 1a566287993d..86873b99e5d7 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -1166,7 +1166,7 @@ void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
- 			 * In that case, iwl_queue_space will be small again
- 			 * and we won't wake mac80211's queue.
- 			 */
--			iwl_trans_pcie_tx(trans, skb, dev_cmd_ptr, txq_id);
-+			iwl_trans_tx(trans, skb, dev_cmd_ptr, txq_id);
- 		}
- 		spin_lock_bh(&txq->lock);
- 
 -- 
-2.16.3
+https://patchwork.kernel.org/patch/10338447/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
