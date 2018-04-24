@@ -1,45 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:43231 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932522AbeDWUMZ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:41332 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1756587AbeDXK4Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 16:12:25 -0400
-From: Andres Rodriguez <andresx7@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: andresx7@gmail.com, gregkh@linuxfoundation.org, mcgrof@kernel.org,
-        alexdeucher@gmail.com, christian.koenig@amd.com,
-        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        hdegoede@redhat.com
-Subject: [PATCH 8/9] ath10k: use request_firmware_nowarn to load firmware
-Date: Mon, 23 Apr 2018 16:12:04 -0400
-Message-Id: <20180423201205.20533-9-andresx7@gmail.com> (sfid-20180423_221244_174095_2FB75BD6)
-In-Reply-To: <20180423201205.20533-1-andresx7@gmail.com>
-References: <20180423201205.20533-1-andresx7@gmail.com>
+        Tue, 24 Apr 2018 06:56:16 -0400
+Message-ID: <a768684127fb8e5f3c62bb62ec80e52950314787.camel@coelho.fi> (sfid-20180424_125619_502573_137F2BA9)
+From: Luca Coelho <luca@coelho.fi>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Rajat Jain <rajatja@google.com>
+Date: Tue, 24 Apr 2018 13:56:12 +0300
+In-Reply-To: <87h8o1os5b.fsf@codeaurora.org>
+References: <20180422082745.9743-1-luca@coelho.fi>
+         <20180422082745.9743-10-luca@coelho.fi> <87h8o1os5b.fsf@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH 09/12] iwlwifi: pcie: remove non-responsive device
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reduces the unnecessary spew when trying to load optional firmware:
-"Direct firmware load for ... failed with error -2"
+On Tue, 2018-04-24 at 12:44 +0300, Kalle Valo wrote:
+> Luca Coelho <luca@coelho.fi> writes:
+> 
+> > From: Luca Coelho <luciano.coelho@intel.com>
+> > 
+> > If we fail to to grab NIC access because the device is not
+> > responding
+> > (i.e. CSR_GP_CNTRL returns 0xFFFFFFFF), remove the device from the
+> > PCI
+> > bus, to avoid any further damage, and to let the user space rescan.
+> > 
+> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> > Signed-off-by: Rajat Jain <rajatja@google.com>
+> 
+> The commit log doesn't mention anything about the module parameter
+> nor
+> about the kobject uevent.
 
-Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Good point.  The uevent and the module parameter were added in later
+patches and I squashed them all into this one, but forgot to update the
+commit message.  I'll fix it.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index f3ec13b80b20..9a225b7ad2d7 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -652,7 +652,7 @@ static const struct firmware *ath10k_fetch_fw_file(struct ath10k *ar,
- 		dir = ".";
- 
- 	snprintf(filename, sizeof(filename), "%s/%s", dir, file);
--	ret = request_firmware(&fw, filename, ar->dev);
-+	ret = request_firmware_nowarn(&fw, filename, ar->dev);
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot fw request '%s': %d\n",
- 		   filename, ret);
- 
--- 
-2.14.1
+
+> > +static void iwl_trans_pcie_removal_wk(struct work_struct *wk)
+> > +{
+> > +	struct iwl_trans_pcie_removal *removal =
+> > +		container_of(wk, struct iwl_trans_pcie_removal,
+> > work);
+> > +	struct pci_dev *pdev = removal->pdev;
+> > +	char *prop[] = {"EVENT=INACCESSIBLE", NULL};
+> > +
+> > +	dev_err(&pdev->dev, "Device gone - attempting removal\n");
+> > +	kobject_uevent_env(&pdev->dev.kobj, KOBJ_CHANGE, prop);
+> > +	pci_lock_rescan_remove();
+> > +	pci_dev_put(pdev);
+> > +	pci_stop_and_remove_bus_device(pdev);
+> > +	pci_unlock_rescan_remove();
+> > +
+> > +	kfree(removal);
+> > +	module_put(THIS_MODULE);
+> > +}
+> 
+> So is the uevent some standard thing or what? At least grepping
+> INACCESSIBLE for didn't tell me anything.
+
+No, this is not standard.  We didn't find any appropriate standard
+message for this case, so we created a new one.  Also, we didn't want
+to interfere with components that may react to standard messages.
+
+This is disabled by default and the idea is to change this in the
+future to allow the driver to remove and rescan the device
+automatically.  So we will have 3 options in the module parameter: do
+nothing; auto-rescan or; send uevent.
+
+--
+Cheers,
+Luca.
