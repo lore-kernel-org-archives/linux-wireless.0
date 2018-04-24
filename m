@@ -1,75 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57376 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:51532 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752143AbeDXR0Q (ORCPT
+        with ESMTP id S1756265AbeDXKBQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 13:26:16 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/2] rsi: fix nommu_map_sg overflow kernel panic
+        Tue, 24 Apr 2018 06:01:16 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1523429012-3978-1-git-send-email-amitkarwar@gmail.com>
-References: <1523429012-3978-1-git-send-email-amitkarwar@gmail.com>
-To: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Message-Id: <20180424172616.4FA956085F@smtp.codeaurora.org> (sfid-20180424_192621_876431_40970FD6)
-Date: Tue, 24 Apr 2018 17:26:16 +0000 (UTC)
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com,
+        david.e.box@intel.com, janet.morgan@intel.com, joe.konno@intel.com
+Subject: Re: pull-request: iwlwifi-next 2018-04-20
+References: <92c9f150ac2ef6cf7fcf48f153eab9c4c7205804.camel@coelho.fi>
+Date: Tue, 24 Apr 2018 13:01:10 +0300
+In-Reply-To: <92c9f150ac2ef6cf7fcf48f153eab9c4c7205804.camel@coelho.fi> (Luca
+        Coelho's message of "Fri, 20 Apr 2018 11:59:03 +0300")
+Message-ID: <87in8gc49l.fsf@kamboji.qca.qualcomm.com> (sfid-20180424_120120_711400_6E4DDFC1)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <amitkarwar@gmail.com> wrote:
+Luca Coelho <luca@coelho.fi> writes:
 
-> From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-> 
-> Following overflow kernel panic is observed on some platforms while
-> loading the driver. It is fixed if dynamically allocated memory is
-> passed to SDIO instead of static one
-> 
-> [  927.513963] nommu_map_sg: overflow 17d54064ba7c+20 of device mask ffffffff
-> [  927.517712] Modules linked in: rsi_sdio(+) cmac bnep arc4 rsi_91x mac80211 cfg80211
-> 	       btrsi rfcomm bluetooth ecdh_generic snd_soc_sst_bytcr_rt5660
-> [  927.517861] CPU: 0 PID: 1624 Comm: insmod Tainted: G W 4.15.0-1000 #1
-> [  927.517870] RIP: 0010:sdhci_send_command+0x5f0/0xa90 [sdhci]
-> [  927.517873] RSP: 0000:ffffac3fc064b6d8 EFLAGS: 00010086
-> [  927.517895] Call Trace:
-> [  927.517908]  ? __schedule+0x3cd/0x890
-> [  927.517915]  ? mod_timer+0x17b/0x3c0
-> [  927.517922]  sdhci_request+0x7c/0xf0 [sdhci]
-> [  927.517928]  __mmc_start_request+0x5a/0x170
-> [  927.517932]  mmc_start_request+0x74/0x90
-> [  927.517936]  mmc_wait_for_req+0x87/0xe0
-> [  927.517940]  mmc_io_rw_extended+0x2fd/0x330
-> [  927.517946]  ? mmc_wait_data_done+0x30/0x30
-> [  927.517951]  sdio_io_rw_ext_helper+0x160/0x210
-> [  927.517956]  sdio_writesb+0x1d/0x20
-> [  927.517966]	rsi_sdio_write_register_multiple+0x68/0x110 [rsi_sdio]
-> [  927.517976]  rsi_hal_device_init+0x357/0x910 [rsi_91x]
-> [  927.517983]  ? rsi_hal_device_init+0x357/0x910 [rsi_91x]
-> [  927.517990]  rsi_probe+0x2c6/0x450 [rsi_sdio]
-> [  927.517995]  sdio_bus_probe+0xfc/0x110
-> [  927.518000]  driver_probe_device+0x2b3/0x490
-> [  927.518005]  __driver_attach+0xdf/0xf0
-> [  927.518008]  ? driver_probe_device+0x490/0x490
-> [  927.518014]  bus_for_each_dev+0x6c/0xc0
-> [  927.518018]  driver_attach+0x1e/0x20
-> [  927.518021]  bus_add_driver+0x1f4/0x270
-> [  927.518028]  ? rsi_sdio_ack_intr+0x50/0x50 [rsi_sdio]
-> [  927.518031]  driver_register+0x60/0xe0
-> [  927.518038]  ? rsi_sdio_ack_intr+0x50/0x50 [rsi_sdio]
-> [  927.518041]  sdio_register_driver+0x20/0x30
-> [  927.518047]  rsi_module_init+0x16/0x40 [rsi_sdio]
-> 
-> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> This is the first batch of patches intended for v4.18 (or whatever
+> Linus turns out to call it ;).  Nothing major here, just the usual
+> continued development, bugfixes, new FW APIs and some new
+> features.  More details about the contents in the tag description.
+>
+> I have sent this out before and kbuildbot reported success.
+>
+> Please let me know if there are any issues.
+>
+> Cheers,
+> Luca.
+>
+>
+> The following changes since commit 5d1365940a68dd57b031b6e3c07d7d451cd69daf:
+>
+>   Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2018-04-12 11:09:05 -0700)
+>
+> are available in the Git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2018-04-20
+>
+> for you to fetch changes up to bd8f3fc613919b50038c949f80b3f350a166293e:
+>
+>   iwlwifi: mvm: support 22000 HW opening agg before traffic (2018-04-20 10:57:16 +0300)
+>
+> ----------------------------------------------------------------
+> iwlwifi patches for 4.18
+>
+> * implement Traffic Condition Monitor;
+> * use TCM for scan and BT coex;
+> * use TCM to detect when the AP doesn't support UAPSD properly;
+> * some more work for the 22000 family of devices;
+> * introduce AMSDU rate control offload;
+> * a couple of clean-ups and bugfixes.
+>
+> ----------------------------------------------------------------
 
-2 patches applied to wireless-drivers-next.git, thanks.
-
-f700546682a6 rsi: fix nommu_map_sg overflow kernel panic
-78e450719c70 rsi: Fix 'invalid vdd' warning in mmc
+Pulled, thanks.
 
 -- 
-https://patchwork.kernel.org/patch/10334889/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
