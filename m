@@ -1,53 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37644 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751452AbeDYJiv (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54072 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751495AbeDXJok (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 05:38:51 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH 3/3] mwifiex: keep user configured mac address during changing virtual interface
-Date: Wed, 25 Apr 2018 17:38:14 +0800
-Message-ID: <1524649094-20069-3-git-send-email-huxm@marvell.com> (sfid-20180425_113854_207183_A3BF4126)
-In-Reply-To: <1524649094-20069-1-git-send-email-huxm@marvell.com>
-References: <1524649094-20069-1-git-send-email-huxm@marvell.com>
+        Tue, 24 Apr 2018 05:44:40 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Rajat Jain <rajatja@google.com>
+Subject: Re: [PATCH 09/12] iwlwifi: pcie: remove non-responsive device
+References: <20180422082745.9743-1-luca@coelho.fi>
+        <20180422082745.9743-10-luca@coelho.fi>
+Date: Tue, 24 Apr 2018 12:44:32 +0300
+In-Reply-To: <20180422082745.9743-10-luca@coelho.fi> (Luca Coelho's message of
+        "Sun, 22 Apr 2018 11:27:42 +0300")
+Message-ID: <87h8o1os5b.fsf@codeaurora.org> (sfid-20180424_114444_327139_57424F9D)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During changing virtual interface, keep using previous net device
-mac address.
+Luca Coelho <luca@coelho.fi> writes:
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/main.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+> From: Luca Coelho <luciano.coelho@intel.com>
+>
+> If we fail to to grab NIC access because the device is not responding
+> (i.e. CSR_GP_CNTRL returns 0xFFFFFFFF), remove the device from the PCI
+> bus, to avoid any further damage, and to let the user space rescan.
+>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> Signed-off-by: Rajat Jain <rajatja@google.com>
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index b5f99a1..2f2b115 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1333,7 +1333,10 @@ void mwifiex_init_priv_params(struct mwifiex_private *priv,
- 	priv->assocresp_idx = MWIFIEX_AUTO_IDX_MASK;
- 	priv->gen_idx = MWIFIEX_AUTO_IDX_MASK;
- 	priv->num_tx_timeout = 0;
--	ether_addr_copy(priv->curr_addr, priv->adapter->perm_addr);
-+	if (is_valid_ether_addr(dev->dev_addr))
-+		ether_addr_copy(priv->curr_addr, dev->dev_addr);
-+	else
-+		ether_addr_copy(priv->curr_addr, priv->adapter->perm_addr);
- 
- 	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA ||
- 	    GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
+The commit log doesn't mention anything about the module parameter nor
+about the kobject uevent.
+
+> +static void iwl_trans_pcie_removal_wk(struct work_struct *wk)
+> +{
+> +	struct iwl_trans_pcie_removal *removal =
+> +		container_of(wk, struct iwl_trans_pcie_removal, work);
+> +	struct pci_dev *pdev = removal->pdev;
+> +	char *prop[] = {"EVENT=INACCESSIBLE", NULL};
+> +
+> +	dev_err(&pdev->dev, "Device gone - attempting removal\n");
+> +	kobject_uevent_env(&pdev->dev.kobj, KOBJ_CHANGE, prop);
+> +	pci_lock_rescan_remove();
+> +	pci_dev_put(pdev);
+> +	pci_stop_and_remove_bus_device(pdev);
+> +	pci_unlock_rescan_remove();
+> +
+> +	kfree(removal);
+> +	module_put(THIS_MODULE);
+> +}
+
+So is the uevent some standard thing or what? At least grepping
+INACCESSIBLE for didn't tell me anything.
+
 -- 
-1.9.1
+Kalle Valo
