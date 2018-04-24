@@ -1,77 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56840 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:46478 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751803AbeDIPtk (ORCPT
+        with ESMTP id S1750835AbeDXRMX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Apr 2018 11:49:40 -0400
+        Tue, 24 Apr 2018 13:12:23 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>
-Subject: Re: [PATCH v13] ath10k: add LED and GPIO controlling support for various chipsets
-References: <1523027875-5143-1-git-send-email-kvalo@codeaurora.org>
-        <a249fc31-18bf-96a1-27ee-deea05d2d0ff@dd-wrt.com>
-Date: Mon, 09 Apr 2018 18:49:35 +0300
-In-Reply-To: <a249fc31-18bf-96a1-27ee-deea05d2d0ff@dd-wrt.com> (Sebastian
-        Gottschall's message of "Fri, 6 Apr 2018 20:31:16 +0200")
-Message-ID: <87k1tgbcs0.fsf@kamboji.qca.qualcomm.com> (sfid-20180409_174943_757659_1388A52E)
+To: <pkshih@realtek.com>
+Cc: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 00/17] rtlwifi: halmac: Add new module halmac
+References: <20180403075332.3344-1-pkshih@realtek.com>
+Date: Tue, 24 Apr 2018 20:12:15 +0300
+In-Reply-To: <20180403075332.3344-1-pkshih@realtek.com> (pkshih@realtek.com's
+        message of "Tue, 3 Apr 2018 15:53:15 +0800")
+Message-ID: <87muxsbkb4.fsf@purkki.adurom.net> (sfid-20180424_191227_333321_27E3812B)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
+<pkshih@realtek.com> writes:
 
-> you removed the call to leds_start from certain locations but you seem
-> to have ignored the comment i wrote above the function call.
-
-IIRC I moved the comment to ath10k_leds_start().
-
-> there is a reason why i reinitialize the gpio output state in these
-> locations. the firmware for 9984 and 99xx resets the gpio registers
-> at certain points. this will lead to a non working led code.
-
-What are the certain points exactly? I tried to be careful that from
-firmware's point of view the functionality is the same, even if I moved
-the call to a different location. Did you test the patch? Is it broken
-now?
-
-> so you must set the gpio output to high again and this is the reason
-> why the function is called "reset_led_pin" and not led_start because
-> it doesnt start the led in any way.
-
-The naming refers to phases of ath10k initialisation which are:
-
-create() - destroy()
-register() - unregister()
-start() - stop()
-
-So the naming doesn't mean that every ath10k_foo_start() has to start
-something, it just describes the phase of driver initialisation it's
-called in.
-
-> it just resets the output state there is only one work around you may
-> do. you set the gpio out register to high on every led trigger, but
-> this is what i wanted to avoid to save cpu time since a wmi call is
-> more expensive than just a register write.
-
-Is this really so frequently called that we need to think about CPU
-time? How often are we expecting the LED state to change?
-
-But I'm not really following you, from firmware point of view the
-functionality should be the same as with your patch. 
-
-> so if you want to follow this up. remove ath10k_leds_start
-> and insert
+> From: Ping-Ke Shih <pkshih@realtek.com>
 >
-> ath10k_wmi_gpio_config(ar, ar->hw_params.led_pin, 0,
-> 			       WMI_GPIO_PULL_NONE, WMI_GPIO_INTTYPE_DISABLE);
+> v2: remove indirection to get halmac ops
+>     Only patches 1/17 and 11/17 are changed.
 >
-> in ath10k_leds_set_brightness_blocking
+> Patches 1/17-3/17 are added structure to support this module.
+> Patches 4/17-16/17 add new files.
+> Patch 17/17 add this module to Makefile and Kconfig.
+>
+> Ping-Ke Shih (17):
+>   rtlwifi: add halmac structure to wifi.h
+>   rtlwifi: add debug ID COMP_HALMAC
+>   rtlwifi: add dmdef.h to share with driver and other modules
+>   rtlwifi: halmac: add main definition used by halmac
+>   rtlwifi: halmac: describe number and size of chip functions
+>   rtlwifi: halmac: add definitions of registers and bit fields
+>   rtlwifi: halmac: add definition of TX/RX descriptor
+>   rtlwifi: halmac: add GPIO pin/pinmux definitions
+>   rtlwifi: halmac: add power sequence to turn on/off wifi card
+>   rtlwifi: halmac: access efuse through halmac helper functions
+>   rtlwifi: halmac: add files to implement halmac ops
+>   rtlwifi: halmac: add halmac init/deinit functions
+>   rtlwifi: halmac: add firmware related functions and definitions
+>   rtlwifi: halmac: add bus interface commands
+>   rtlwifi: halmac: add to control WiFi mac functions and registers
+>   rtlwifi: halmac: add to support BB and RF functions
+>   rtlwifi: add halmac to Makefile and Kconfig
 
-Calling ath10k_wmi_gpio_config() every time sounds like quite odd to me
-and your patch didn't do that either. Are you sure this is really
-needed?
+BTW, I don't see patch 6 in patchwork. Did it get lost?
+
+      [v2,01/17] rtlwifi: add halmac structure to wifi.h           2018-04-03 Ping-Ke Shih New
+      [v2,02/17] rtlwifi: add debug ID COMP_HALMAC                 2018-04-03 Ping-Ke Shih New
+      [v2,03/17] rtlwifi: add dmdef.h to share with driver and.... 2018-04-03 Ping-Ke Shih New
+      [v2,04/17] rtlwifi: halmac: add main definition used by h... 2018-04-03 Ping-Ke Shih New
+      [v2,05/17] rtlwifi: halmac: describe number and size of c... 2018-04-03 Ping-Ke Shih New
+      [v2,07/17] rtlwifi: halmac: add definition of TX/RX descr... 2018-04-03 Ping-Ke Shih New
+      [v2,08/17] rtlwifi: halmac: add GPIO pin/pinmux definitions  2018-04-03 Ping-Ke Shih New
+      [v2,09/17] rtlwifi: halmac: add power sequence to turn on... 2018-04-03 Ping-Ke Shih New
+      [v2,10/17] rtlwifi: halmac: access efuse through halmac h... 2018-04-03 Ping-Ke Shih New
+      [v2,11/17] rtlwifi: halmac: add files to implement halmac... 2018-04-03 Ping-Ke Shih New
+      [v2,12/17] rtlwifi: halmac: add halmac init/deinit functions 2018-04-03 Ping-Ke Shih New
+      [v2,13/17] rtlwifi: halmac: add firmware related function... 2018-04-03 Ping-Ke Shih New
+      [v2,14/17] rtlwifi: halmac: add bus interface commands       2018-04-03 Ping-Ke Shih New
+      [v2,15/17] rtlwifi: halmac: add to control WiFi mac funct... 2018-04-03 Ping-Ke Shih New
+      [v2,16/17] rtlwifi: halmac: add to support BB and RF func... 2018-04-03 Ping-Ke Shih New
+      [v2,17/17] rtlwifi: add halmac to Makefile and Kconfig       2018-04-03 Ping-Ke Shih New
 
 -- 
 Kalle Valo
