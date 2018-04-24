@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59114 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751184AbeDSJwe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Apr 2018 05:52:34 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: <pkshih@realtek.com>
-Cc: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
-        <stable@vger.kernel.org>
-Subject: Re: [PATCH] rtlwifi: cleanup 8723be ant_sel definition
-References: <20180419083100.5254-1-pkshih@realtek.com>
-Date: Thu, 19 Apr 2018 12:52:28 +0300
-In-Reply-To: <20180419083100.5254-1-pkshih@realtek.com> (pkshih@realtek.com's
-        message of "Thu, 19 Apr 2018 16:31:00 +0800")
-Message-ID: <87k1t3mskj.fsf@kamboji.qca.qualcomm.com> (sfid-20180419_115237_684616_378E0816)
+Received: from mail.bugwerft.de ([46.23.86.59]:37548 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750778AbeDXOdW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Apr 2018 10:33:22 -0400
+Subject: Re: [PATCH 1/1 RFC] wcn36xx: fix buffer commit logic on TX path
+To: Loic Poulain <loic.poulain@linaro.org>
+Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Ramon Fried <rfried@codeaurora.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>
+References: <20180410174245.1116-1-daniel@zonque.org>
+ <20180410174245.1116-2-daniel@zonque.org>
+ <CAMZdPi8C84SC6RPS6yHfAgP7Xukdvw0m=Vqm4cV6HaOh7DX=Gg@mail.gmail.com>
+From: Daniel Mack <daniel@zonque.org>
+Message-ID: <f268b78d-b2f7-5500-1fd1-02ef04e28723@zonque.org> (sfid-20180424_163327_245616_DE38B20C)
+Date: Tue, 24 Apr 2018 16:33:19 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAMZdPi8C84SC6RPS6yHfAgP7Xukdvw0m=Vqm4cV6HaOh7DX=Gg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-<pkshih@realtek.com> writes:
+Hi Loic,
 
-> From: Ping-Ke Shih <pkshih@realtek.com>
->
-> The module parameter ant_sel is used to control antenna number and path.
-> There is an existing enum ANT_{X2,X1} defined the antenna number, so
-> add a new enum ANT_{MAIN,AUX} to make it readable. After this work,
-> incorrect given values depend on ant_sel were exposed, so refill values
-> according following definition:
->   ant_sel   ant_num   ant_path  print_label
->      1      ANT_X1    ANT_AUX        #2
->      2      ANT_X2    ANT_MAIN       #1
-> Then, the workaround in halbtcoutsrc.c was removed.
->
-> The experimental results with single antenna connected to specific path
-> are in following:
->   ant_sel  ANT_MAIN(#1)  ANT_AUX(#2)
->      0        -8            -62
->      1        -62           -10
->      2        -6            -60
->
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Cc: Stable <stable@vger.kernel.org> # 4.7+
-> Reviewed-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> Hi Kalle,
->
-> This patch would send to 4.17.
+On Wednesday, April 11, 2018 03:30 PM, Loic Poulain wrote:
+>>         /* Move the head of the ring to the next empty descriptor */
+>> -        ch->head_blk_ctl = ctl->next;
+>> +        ch->head_blk_ctl = ctl_skb->next;
+>> +
+>> +       /* Commit all previous writes and set descriptors to VALID */
+>> +       wmb();
+> 
+> Is this first memory barrier really needed? from what I understand, we
+> only need to ensure that the control descriptor is marked valid at the
+> end of the procedure and we don't really care about the paylod one.
+> 
+>> +       desc_skb->ctrl = ch->ctrl_skb;
+>> +       wmb();
+>> +       desc_bd->ctrl = ch->ctrl_bd;
+>>
+>>         /*
+>>          * When connected and trying to send data frame chip can be in sleep
+> 
+> Otherwise, patch makes sense.
 
-For -rc releases I require a quite clear bug report but I do not
-understand what you are fixing here, even after reading the commit log
-twice. Could you try to improve it? Especially focus on describing the
-bug in simple terms and how this patch changes the functionality from
-user's point of view.
+This patch has somehow vanished from patchwork. I am running it since I
+posted it and I can't see it causing any regressions, so I'd like to
+repost. Given that you seem to be in favor of it, can I have your
+Reviewed-by?
 
--- 
-Kalle Valo
+
+Thanks,
+Daniel
