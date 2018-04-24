@@ -1,66 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:37043 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932111AbeDWQfy (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42888 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754498AbeDXKQT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 12:35:54 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [RESEND 25/33] staging: wilc1000: remove the use of goto label in spi_cmd_complete()
-Date: Mon, 23 Apr 2018 22:03:27 +0530
-Message-ID: <1524501215-4963-26-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183619_177543_C44C8326)
-In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 24 Apr 2018 06:16:19 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [v2] rtlwifi: cleanup 8723be ant_sel definition
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180420023009.3182-1-pkshih@realtek.com>
+References: <20180420023009.3182-1-pkshih@realtek.com>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
+        <stable@vger.kernel.org>
+Message-Id: <20180424101618.E9D0260863@smtp.codeaurora.org> (sfid-20180424_121623_773807_2B8D55A5)
+Date: Tue, 24 Apr 2018 10:16:18 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In spi_cmd_complete() remove the use of goto label '_error_'. Changes
-were done to avoid the use of '_' in label name.
+Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
----
- drivers/staging/wilc1000/wilc_spi.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> Some HP laptops have only a single wifi antenna. This would not be a
+> problem except that they were shipped with an incorrectly encoded
+> EFUSE. It should have been possible to open the computer and transfer
+> the antenna connection to the other terminal except that such action
+> might void the warranty, and moving the antenna broke the Windows
+> driver. The fix was to add a module option that would override the
+> EFUSE encoding. That was done with commit c18d8f509571 ("rtlwifi:
+> rtl8723be: Add antenna select module parameter"). There was still a
+> problem with Bluetooth coexistence, which was addressed with commit
+> baa170229095 ("rtlwifi: btcoexist: Implement antenna selection").
+> There were still problems, thus there were commit 0ff78adeef11
+> ("rtlwifi: rtl8723be: fix ant_sel code") and commit 6d6226928369
+> ("rtlwifi: btcoexist: Fix antenna selection code"). Despite all these
+> attempts at fixing the problem, the code is not yet right. A proper
+> fix is important as there are now instances of laptops having
+> RTL8723DE chips with the same problem.
+> 
+> The module parameter ant_sel is used to control antenna number and path.
+> At present enum ANT_{X2,X1} is used to define the antenna number, but
+> this choice is not intuitive, thus change to a new enum ANT_{MAIN,AUX}
+> to make it more readable. This change showed examples where incorrect
+> values were used. It was also possible to remove a workaround in
+> halbtcoutsrc.c.
+> 
+> The experimental results with single antenna connected to specific path
+> are now as follows:
+>   ant_sel  ANT_MAIN(#1)  ANT_AUX(#2)
+>      0        -8            -62
+>      1        -62           -10
+>      2        -6            -60
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Fixes: c18d8f509571 ("rtlwifi: rtl8723be: Add antenna select module parameter")
+> Fixes: baa170229095 ("rtlwifi: btcoexist: Implement antenna selection")
+> Fixes: 0ff78adeef11 ("rtlwifi: rtl8723be: fix ant_sel code")
+> Fixes: 6d6226928369 ("rtlwifi: btcoexist: Fix antenna selection code")
+> Cc: Stable <stable@vger.kernel.org> # 4.7+
+> Reviewed-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 6b392c9..3e3c774 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -527,8 +527,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
- 			if (wilc_spi_rx(wilc, &b[ix], nbytes)) {
- 				dev_err(&spi->dev,
- 					"Failed block read, bus err\n");
--				result = N_FAIL;
--				goto _error_;
-+				return N_FAIL;
- 			}
- 
- 			/*
-@@ -537,8 +536,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
- 			if (!g_spi.crc_off && wilc_spi_rx(wilc, crc, 2)) {
- 				dev_err(&spi->dev,
- 					"Failed block crc read, bus err\n");
--				result = N_FAIL;
--				goto _error_;
-+				return N_FAIL;
- 			}
- 
- 			ix += nbytes;
-@@ -604,7 +602,6 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
- 			sz -= nbytes;
- 		}
- 	}
--_error_:
- 	return result;
- }
- 
+Patch applied to wireless-drivers.git, thanks.
+
+af8a41cccf8f rtlwifi: cleanup 8723be ant_sel definition
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/10351789/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
