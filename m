@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:54330 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753328AbeDRLlM (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55238 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755735AbeDXF3o (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 07:41:12 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 22/22] staging: wilc1000: rename pu32InactiveTime to avoid camelCase issue
-Date: Wed, 18 Apr 2018 17:09:24 +0530
-Message-ID: <1524051564-15497-23-git-send-email-ajay.kathat@microchip.com> (sfid-20180418_134115_395488_2CF6874E)
-In-Reply-To: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524051564-15497-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 24 Apr 2018 01:29:44 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Andres Rodriguez <andresx7@gmail.com>
+Cc: linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
+        mcgrof@kernel.org, alexdeucher@gmail.com, christian.koenig@amd.com,
+        arend.vanspriel@broadcom.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org, hdegoede@redhat.com
+Subject: Re: [PATCH 9/9] ath10k: re-enable the firmware fallback mechanism for testmode
+References: <20180423201205.20533-1-andresx7@gmail.com>
+        <20180423201205.20533-10-andresx7@gmail.com>
+Date: Tue, 24 Apr 2018 08:29:38 +0300
+In-Reply-To: <20180423201205.20533-10-andresx7@gmail.com> (Andres Rodriguez's
+        message of "Mon, 23 Apr 2018 16:12:05 -0400")
+Message-ID: <87fu3lcgu5.fsf@kamboji.qca.qualcomm.com> (sfid-20180424_073049_366047_7C2356E0)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoid camelCase issues found by checkpatch.pl script.
+Andres Rodriguez <andresx7@gmail.com> writes:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> The ath10k testmode uses request_firmware_direct() in order to avoid
+> producing firmware load warnings. Disabling the fallback mechanism was a
+> side effect of disabling warnings.
+>
+> We now have a new API that allows us to avoid warnings while keeping the
+> fallback mechanism enabled. So use that instead.
+>
+> Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 035c537..7a26f34 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -314,7 +314,7 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
- 		 const u8 *mac_addr, const u8 *rx_mic, const u8 *tx_mic,
- 		 u8 mode, u8 cipher_mode, u8 index);
- s32 wilc_get_inactive_time(struct wilc_vif *vif, const u8 *mac,
--			   u32 *pu32InactiveTime);
-+			   u32 *out_val);
- int wilc_add_rx_gtk(struct wilc_vif *vif, const u8 *rx_gtk, u8 gtk_key_len,
- 		    u8 index, u32 key_rsc_len, const u8 *key_rsc,
- 		    const u8 *rx_mic, const u8 *tx_mic, u8 mode,
+Thanks!
+
+Acked-by: Kalle Valo <kvalo@codeaurora.org>
+
 -- 
-2.7.4
+Kalle Valo
