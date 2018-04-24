@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:33518 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751676AbeDJCwl (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33404 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756683AbeDXJsH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Apr 2018 22:52:41 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 5/9] rtlwifi: btcoex: Add 8822b to Makefile
-Date: Tue, 10 Apr 2018 10:52:22 +0800
-Message-ID: <20180410025226.5236-6-pkshih@realtek.com> (sfid-20180410_045250_999360_E2F42F08)
-In-Reply-To: <20180410025226.5236-1-pkshih@realtek.com>
-References: <20180410025226.5236-1-pkshih@realtek.com>
+        Tue, 24 Apr 2018 05:48:07 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: merez@codeaurora.org
+Cc: Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [02/10] wil6210: set/get EDMG channel through debugfs
+References: <1523520526-24997-3-git-send-email-merez@codeaurora.org>
+        <20180419161506.868FA60A06@smtp.codeaurora.org>
+        <bf89143fe2765fab1aad65b9587030bf@codeaurora.org>
+Date: Tue, 24 Apr 2018 12:47:55 +0300
+In-Reply-To: <bf89143fe2765fab1aad65b9587030bf@codeaurora.org>
+        (merez@codeaurora.org's message of "Sun, 22 Apr 2018 15:40:34 +0300")
+Message-ID: <878t9dorzo.fsf@codeaurora.org> (sfid-20180424_114818_557914_D60F2E82)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+merez@codeaurora.org writes:
 
-Add btcoex of 8822b to Makefile.
+> On 2018-04-19 19:15, Kalle Valo wrote:
+>> Maya Erez <merez@codeaurora.org> wrote:
+>>
+>>> Setting EDMG channel through debugfs for connect and PCP start
+>>> commands.
+>> Why? And what is an EDMG channel?
+>> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#commit_log_does_not_answer_why
+>> I get bad vibes that this debugfs file is just a workaround for not
+>> adding this to nl80211, a proper commit log would not give me such
+>> vibes in the first place :)
+>
+> EDMG (Enhanced Directional Multi-Gigabit) is a new feature, part of
+> 11ad/11ay specification. In a nutshell it allows channel bonding of
+> 60Ghz channels.
+>
+> The debugfs is used for debug-only to allow forcing a channel, not
+> intended to replace NL API, which we are working to upstream such.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile | 3 +++
- 1 file changed, 3 insertions(+)
+But why cannot you do debugging via nl80211 as well?
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile b/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile
-index d15c58737388..37108c379bd0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile
-@@ -4,6 +4,9 @@ btcoexist-objs :=	halbtc8192e2ant.o	\
- 			halbtc8723b2ant.o	\
- 			halbtc8821a1ant.o	\
- 			halbtc8821a2ant.o	\
-+			halbtc8822b1ant.o	\
-+			halbtc8822b2ant.o	\
-+			halbtc8822bwifionly.o	\
- 			halbtcoutsrc.o		\
- 			rtl_btc.o
- 
 -- 
-2.15.1
+Kalle Valo
