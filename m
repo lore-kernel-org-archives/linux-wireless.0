@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0182.hostedemail.com ([216.40.44.182]:56684 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751165AbeDENvh (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:39704 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751022AbeDYFTk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Apr 2018 09:51:37 -0400
-Message-ID: <1522936292.11185.15.camel@perches.com> (sfid-20180405_155156_418526_C51FF8CA)
-Subject: Re: [PATCH 00/12] Ethernet: Add and use ether_<type>_addr globals
-From: Joe Perches <joe@perches.com>
-To: Felix Fietkau <nbd@nbd.name>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        bridge@lists.linux-foundation.org, netfilter-devel@vger.kernel.org,
-        coreteam@netfilter.org
-Cc: linux-kernel@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com
-Date: Thu, 05 Apr 2018 06:51:32 -0700
-In-Reply-To: <e0ab9616-64fa-cdbc-7a77-7e25d70c1a52@nbd.name>
-References: <cover.1522479607.git.joe@perches.com>
-         <e0ab9616-64fa-cdbc-7a77-7e25d70c1a52@nbd.name>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Wed, 25 Apr 2018 01:19:40 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH] mwifiex: fix nested rtnl locking on BG_SCAN_STOPPED
+Date: Wed, 25 Apr 2018 10:49:31 +0530
+Message-ID: <1524633572-5588-1-git-send-email-gbhat@marvell.com> (sfid-20180425_071944_247679_E4785207)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-04-05 at 15:27 +0200, Felix Fietkau wrote:
-> On 2018-03-31 09:05, Joe Perches wrote:
-> > There are many local static and non-static arrays that are used for
-> > Ethernet broadcast address output or comparison.
-> > 
-> > Centralize the array into a single separate file and remove the local
-> > arrays.
-> 
-> I suspect that for many targets and configurations, the local arrays
-> might actually be smaller than exporting a global.
+Whenever sched_scan(BG_SCAN) is in progress and driver downloads
+any command, firmware will send an event BG_SCAN_STOPPED. On
+recieving this, driver calls cfg80211_sched_scan_stopped. This
+function in turn will try to acquire rtnl_lock. But if the
+rtnl_lock was already held(while sending the command above), this
+will result in nested rtnl locking. To fix this driver must call
+rtnl version of the API if rtnl_is_locked().
 
-I tried x86-64 allnoconfig and defconfig.
-Those both did not increase vmlinux size.
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/sta_event.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-The defconfig actually got smaller, but that might have been
-some object alignment oddity.
-
->  You have to factor in
-> not just the .text size, but the fact that referencing an exported
-> symbol needs a .reloc entry as well, which also eats up some space (at
-> least when the code is being built as module).
-
-Thanks, the modules I built got smaller.
-
-> In my opinion, your series probably causes more bloat in common
-> configurations instead of reducing it.
-> 
-> You're also touching several places that could easily use
-> eth_broadcast_addr and eth_zero_addr. I think making those changes would
-> be more productive than what you did in this series.
-
-Doubtful. AFAIK: possible unaligned addresses.
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+index 93dfb76..03ef625c 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+@@ -848,7 +848,10 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 
+ 	case EVENT_BG_SCAN_STOPPED:
+ 		dev_dbg(adapter->dev, "event: BGS_STOPPED\n");
+-		cfg80211_sched_scan_stopped(priv->wdev.wiphy, 0);
++		if (rtnl_is_locked())
++			cfg80211_sched_scan_stopped_rtnl(priv->wdev.wiphy, 0);
++		else
++			cfg80211_sched_scan_stopped(priv->wdev.wiphy, 0);
+ 		if (priv->sched_scanning)
+ 			priv->sched_scanning = false;
+ 		break;
+-- 
+1.9.1
