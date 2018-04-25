@@ -1,46 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:52284 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932073AbeDWQfg (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38792 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750986AbeDYI6w (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 12:35:36 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [RESEND 20/33] staging: wilc1000: rename WID_LOGTerminal_Switch to avoid camelCase
-Date: Mon, 23 Apr 2018 22:03:22 +0530
-Message-ID: <1524501215-4963-21-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183544_199380_11ED57E3)
-In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+        Wed, 25 Apr 2018 04:58:52 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 25 Apr 2018 11:58:51 +0300
+From: merez@codeaurora.org
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [02/10] wil6210: set/get EDMG channel through debugfs
+In-Reply-To: <878t9dorzo.fsf@codeaurora.org>
+References: <1523520526-24997-3-git-send-email-merez@codeaurora.org>
+ <20180419161506.868FA60A06@smtp.codeaurora.org>
+ <bf89143fe2765fab1aad65b9587030bf@codeaurora.org>
+ <878t9dorzo.fsf@codeaurora.org>
+Message-ID: <8284e049104ad878e1722927ca2b345f@codeaurora.org> (sfid-20180425_105857_600448_D99C3D3C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix 'Avoid camelCase' issue found by checkpatch.pl script.
+On 2018-04-24 12:47, Kalle Valo wrote:
+> merez@codeaurora.org writes:
+> 
+>> On 2018-04-19 19:15, Kalle Valo wrote:
+>>> Maya Erez <merez@codeaurora.org> wrote:
+>>> 
+>>>> Setting EDMG channel through debugfs for connect and PCP start
+>>>> commands.
+>>> Why? And what is an EDMG channel?
+>>> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#commit_log_does_not_answer_why
+>>> I get bad vibes that this debugfs file is just a workaround for not
+>>> adding this to nl80211, a proper commit log would not give me such
+>>> vibes in the first place :)
+>> 
+>> EDMG (Enhanced Directional Multi-Gigabit) is a new feature, part of
+>> 11ad/11ay specification. In a nutshell it allows channel bonding of
+>> 60Ghz channels.
+>> 
+>> The debugfs is used for debug-only to allow forcing a channel, not
+>> intended to replace NL API, which we are working to upstream such.
+> 
+> But why cannot you do debugging via nl80211 as well?
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
----
- drivers/staging/wilc1000/wilc_wlan_if.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Debugging via nl80211 is possible, but there are benefits in using the 
+debugfs interface:
+- Debugfs allows forcing a specific channel, which is not always an 
+option with NL API
+- Debug via nl80211 is less straight forward and requires development of 
+user-space application
+and upgrade of the kernel version on the debug setups
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index e186509..f129d81 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -741,7 +741,7 @@ enum {
- 
- 	WID_DEL_BEACON			= 0x00CA,
- 
--	WID_LOGTerminal_Switch		= 0x00CD,
-+	WID_LOG_TERMINAL_SWITCH		= 0x00CD,
- 	WID_TX_POWER			= 0x00CE,
- 	/*  EMAC Short WID list */
- 	/*  RTS Threshold */
+If you believe that the duplication is not justified please drop this 
+patch.
+
 -- 
-2.7.4
+Maya Erez
+Qualcomm Israel, Inc. on behalf of Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
