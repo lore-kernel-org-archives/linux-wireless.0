@@ -1,178 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:42142 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752775AbeDLPmh (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44022 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751513AbeDYHRB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 11:42:37 -0400
-Received: from mail-wr0-f198.google.com ([209.85.128.198])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <alfonso.sanchez-beato@canonical.com>)
-        id 1f6eMu-0002ej-PF
-        for linux-wireless@vger.kernel.org; Thu, 12 Apr 2018 15:42:36 +0000
-Received: by mail-wr0-f198.google.com with SMTP id d37so3247246wrd.21
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2018 08:42:36 -0700 (PDT)
-From: =?UTF-8?q?Alfonso=20S=C3=A1nchez-Beato?=
-        <alfonso.sanchez-beato@canonical.com>
-To: kvalo@qca.qualcomm.com
-Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org,
-        alfonso.sanchez-beato@canonical.com
-Subject: [PATCH] ath6kl: use WMI to set RSN capabilities
-Date: Thu, 12 Apr 2018 17:41:59 +0200
-Message-Id: <20180412154159.13934-1-alfonso.sanchez-beato@canonical.com> (sfid-20180412_174241_564011_962AD46F)
+        Wed, 25 Apr 2018 03:17:01 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>
+Subject: Re: [PATCH] mwifiex: fix nested rtnl locking on BG_SCAN_STOPPED
+References: <1524633572-5588-1-git-send-email-gbhat@marvell.com>
+Date: Wed, 25 Apr 2018 10:16:56 +0300
+In-Reply-To: <1524633572-5588-1-git-send-email-gbhat@marvell.com> (Ganapathi
+        Bhat's message of "Wed, 25 Apr 2018 10:49:31 +0530")
+Message-ID: <87in8fbvrr.fsf@purkki.adurom.net> (sfid-20180425_091707_433458_4846159B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes AP mode when the ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE flag
-is not present in the FW. The id of some WMI commands is also fixed
-(there was an error in the enum order), and a function to set RSN caps
-is added.
+Ganapathi Bhat <gbhat@marvell.com> writes:
 
-Signed-off-by: Alfonso Sánchez-Beato <alfonso.sanchez-beato@canonical.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c | 21 ++++++---------------
- drivers/net/wireless/ath/ath6kl/main.c     | 10 +++-------
- drivers/net/wireless/ath/ath6kl/wmi.c      | 23 +++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/wmi.h      | 15 +++++++++++----
- 4 files changed, 43 insertions(+), 26 deletions(-)
+> Whenever sched_scan(BG_SCAN) is in progress and driver downloads
+> any command, firmware will send an event BG_SCAN_STOPPED. On
+> recieving this, driver calls cfg80211_sched_scan_stopped. This
+> function in turn will try to acquire rtnl_lock. But if the
+> rtnl_lock was already held(while sending the command above), this
+> will result in nested rtnl locking. To fix this driver must call
+> rtnl version of the API if rtnl_is_locked().
+>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 2ba8cf3f38af..1b89c53d47e7 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2933,13 +2933,11 @@ static int ath6kl_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	 * advertise the same in beacon/probe response. Send
- 	 * the complete RSN IE capability field to firmware
- 	 */
--	if (!ath6kl_get_rsn_capab(&info->beacon, (u8 *) &rsn_capab) &&
--	    test_bit(ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE,
--		     ar->fw_capabilities)) {
--		res = ath6kl_wmi_set_ie_cmd(ar->wmi, vif->fw_vif_idx,
--					    WLAN_EID_RSN, WMI_RSN_IE_CAPB,
--					    (const u8 *) &rsn_capab,
--					    sizeof(rsn_capab));
-+	if (!ath6kl_get_rsn_capab(&info->beacon, (u8 *)&rsn_capab)) {
-+		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "RSN caps %d\n", rsn_capab);
-+
-+		res = ath6kl_wmi_set_rsn_cap(ar->wmi, vif->fw_vif_idx,
-+					     rsn_capab);
- 		vif->rsn_capab = rsn_capab;
- 		if (res < 0)
- 			return res;
-@@ -3918,14 +3916,7 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
- 		return -EINVAL;
- 	}
- 
--	/*
--	 * Even if the fw has HT support, advertise HT cap only when
--	 * the firmware has support to override RSN capability, otherwise
--	 * 4-way handshake would fail.
--	 */
--	if (!(ht &&
--	      test_bit(ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE,
--		       ar->fw_capabilities))) {
-+	if (!ht) {
- 		ath6kl_band_2ghz.ht_cap.cap = 0;
- 		ath6kl_band_2ghz.ht_cap.ht_supported = false;
- 		ath6kl_band_5ghz.ht_cap.cap = 0;
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index db95f85751e3..4e186f8b3950 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -579,13 +579,9 @@ static int ath6kl_commit_ch_switch(struct ath6kl_vif *vif, u16 channel)
- 		 * reconfigure any saved RSN IE capabilites in the beacon /
- 		 * probe response to stay in sync with the supplicant.
- 		 */
--		if (vif->rsn_capab &&
--		    test_bit(ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE,
--			     ar->fw_capabilities))
--			ath6kl_wmi_set_ie_cmd(ar->wmi, vif->fw_vif_idx,
--					      WLAN_EID_RSN, WMI_RSN_IE_CAPB,
--					      (const u8 *) &vif->rsn_capab,
--					      sizeof(vif->rsn_capab));
-+		if (vif->rsn_capab)
-+			ath6kl_wmi_set_rsn_cap(ar->wmi, vif->fw_vif_idx,
-+					       vif->rsn_capab);
- 
- 		return ath6kl_wmi_ap_profile_commit(ar->wmi, vif->fw_vif_idx,
- 						    &vif->profile);
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 777acc564ac9..d7de9224d755 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -4168,3 +4168,26 @@ void ath6kl_wmi_shutdown(struct wmi *wmi)
- 	kfree(wmi->last_mgmt_tx_frame);
- 	kfree(wmi);
- }
-+
-+int ath6kl_wmi_set_rsn_cap(struct wmi *wmi, u8 if_idx, u16 rsn_cap)
-+{
-+	struct sk_buff *skb;
-+	struct wmi_rsn_cap_cmd *cmd;
-+
-+	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	ath6kl_dbg(ATH6KL_DBG_WMI, "set_rsn_cap: 0x%04x\n", rsn_cap);
-+
-+	cmd = (struct wmi_rsn_cap_cmd *)skb->data;
-+	cmd->rsn_cap = cpu_to_le16(rsn_cap);
-+
-+	return ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_SET_RSN_CAP_CMDID,
-+				   NO_SYNC_WMIFLAG);
-+}
-+
-+int ath6kl_wmi_get_rsn_cap(struct wmi *wmi, u8 if_idx)
-+{
-+	return ath6kl_wmi_simple_cmd(wmi, if_idx, WMI_GET_RSN_CAP_CMDID);
-+}
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index a60bb49fe920..011d4b6fb5ab 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -597,10 +597,6 @@ enum wmi_cmd_id {
- 
- 	WMI_GREENTX_PARAMS_CMDID,
- 
--	WMI_RTT_MEASREQ_CMDID,
--	WMI_RTT_CAPREQ_CMDID,
--	WMI_RTT_STATUSREQ_CMDID,
--
- 	/* WPS Commands */
- 	WMI_WPS_START_CMDID,
- 	WMI_GET_WPS_STATUS_CMDID,
-@@ -621,6 +617,10 @@ enum wmi_cmd_id {
- 	WMI_RX_FILTER_COALESCE_FILTER_OP_CMDID,
- 	WMI_RX_FILTER_SET_FRAME_TEST_LIST_CMDID,
- 
-+	WMI_RTT_MEASREQ_CMDID,
-+	WMI_RTT_CAPREQ_CMDID,
-+	WMI_RTT_STATUSREQ_CMDID,
-+
- 	WMI_SEND_MGMT_CMDID,
- 	WMI_BEGIN_SCAN_CMDID,
- 
-@@ -2533,6 +2533,10 @@ enum wmi_sync_flag {
- 	END_WMIFLAG
- };
- 
-+struct wmi_rsn_cap_cmd {
-+	__le16 rsn_cap;
-+} __packed;
-+
- enum htc_endpoint_id ath6kl_wmi_get_control_ep(struct wmi *wmi);
- void ath6kl_wmi_set_control_ep(struct wmi *wmi, enum htc_endpoint_id ep_id);
- int ath6kl_wmi_dix_2_dot3(struct wmi *wmi, struct sk_buff *skb);
-@@ -2728,4 +2732,7 @@ void *ath6kl_wmi_init(struct ath6kl *devt);
- void ath6kl_wmi_shutdown(struct wmi *wmi);
- void ath6kl_wmi_reset(struct wmi *wmi);
- 
-+int ath6kl_wmi_set_rsn_cap(struct wmi *wmi, u8 if_idx, u16 rsn_cap);
-+int ath6kl_wmi_get_rsn_cap(struct wmi *wmi, u8 if_idx);
-+
- #endif /* WMI_H */
+Which one is the author? If Cathy is the author, you should add a From
+header to indicate that.
+
+> --- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+> @@ -848,7 +848,10 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+>  
+>  	case EVENT_BG_SCAN_STOPPED:
+>  		dev_dbg(adapter->dev, "event: BGS_STOPPED\n");
+> -		cfg80211_sched_scan_stopped(priv->wdev.wiphy, 0);
+> +		if (rtnl_is_locked())
+> +			cfg80211_sched_scan_stopped_rtnl(priv->wdev.wiphy, 0);
+> +		else
+> +			cfg80211_sched_scan_stopped(priv->wdev.wiphy, 0);
+
+IMHO checking if a lock is taking is rather ugly and an indication
+there's a problem with the locking. Instead making an ugly workaround
+like this I would rather investigate who is holding the rtnl and solve
+that.
+
 -- 
-2.14.1
+Kalle Valo
