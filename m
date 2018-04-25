@@ -1,977 +1,2064 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52472 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755199AbeD0FaT (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:54984 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751323AbeDYCIr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Apr 2018 01:30:19 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [RFCv2 1/6] cfg80211: Add support to configure station specific rssi threshold for AP mode
-Date: Fri, 27 Apr 2018 11:00:31 +0530
-Message-Id: <1524807036-28056-2-git-send-email-tamizhr@codeaurora.org> (sfid-20180427_073023_914999_68B52BFC)
-In-Reply-To: <1524807036-28056-1-git-send-email-tamizhr@codeaurora.org>
-References: <1524807036-28056-1-git-send-email-tamizhr@codeaurora.org>
+        Tue, 24 Apr 2018 22:08:47 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 12/19] rtlwifi: halmac: access efuse through halmac helper functions
+Date: Wed, 25 Apr 2018 10:08:13 +0800
+Message-ID: <20180425020820.6141-13-pkshih@realtek.com> (sfid-20180425_040906_638826_5E9FFFCC)
+In-Reply-To: <20180425020820.6141-1-pkshih@realtek.com>
+References: <20180425020820.6141-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch add support to configure station specific rssi threshold
-to monitor station's signal strength modification. This will be useful
-for the user application like steering to configure and monitor the station's
-signal strength change event.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-New NL80211_CMD_STA_MON command introduced to cofigure single or multi
-rssi thresholds using NL80211_ATTR_STA_MON_RSSI_THOLD and
-NL80211_ATTR_STA_MON_RSSI_HYST.
+This file provides interfaces to read and write efuse contents.
 
-cfg80211_sta_mon_rssi_notify introduce to notify station's signal strength
-goes out of range using NL80211_CMD_NOTIFY_STA_MON command.
-
-NL80211_EXT_FEATURE_STA_MON_RSSI_CONFIG flag needs to be advertised by the
-drvier to allow single rssi threshold and hysteresis configuration.
-NL80211_EXT_FEATURE_STA_MON_RSSI_LIST needs to be advertised to allow
-multi rssi thresholds.
-
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- include/net/cfg80211.h       |  43 ++++-
- include/uapi/linux/nl80211.h |  62 +++++++
- net/wireless/core.c          |  26 ++-
- net/wireless/core.h          |   6 +-
- net/wireless/nl80211.c       | 388 +++++++++++++++++++++++++++++++++++++------
- net/wireless/rdev-ops.h      |  31 ++++
- net/wireless/trace.h         |  74 +++++++++
- 7 files changed, 567 insertions(+), 63 deletions(-)
+ .../rtlwifi/halmac/halmac_88xx/halmac_efuse_88xx.c | 1918 ++++++++++++++++++++
+ .../rtlwifi/halmac/halmac_88xx/halmac_efuse_88xx.h |  101 ++
+ 2 files changed, 2019 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_efuse_88xx.c
+ create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_efuse_88xx.h
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 250dac3..7e7a0bf 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2973,6 +2973,17 @@ struct cfg80211_external_auth_params {
-  *
-  * @tx_control_port: TX a control port frame (EAPoL).  The noencrypt parameter
-  *	tells the driver that the frame should not be encrypted.
-+ * @set_sta_mon_rssi_config: Configure  RSSI threshold for a station.
-+ *	After configuration, the driver should (soon) send an event indicating
-+ *	the current level of a station is above/below the configured threshold;
-+ *	this may need some care when the configuration is changed
-+ *	(without first being disabled.)
-+ * @set_sta_mon_rssi_range_config: Configure two RSSI thresholds in the
-+ *	station's rssi monitor.  An event is to be sent only when the
-+ *	signal level of a station is found to be outside the two values.
-+ *	The driver should set %NL80211_EXT_FEATURE_STA_MON_RSSI_LIST if this
-+ *	method is implemented. If it is provided then there's no point providing
-+ *	@set_sta_mon_rssi_config.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -3274,6 +3285,14 @@ struct cfg80211_ops {
- 				   const u8 *buf, size_t len,
- 				   const u8 *dest, const __be16 proto,
- 				   const bool noencrypt);
-+	int     (*set_sta_mon_rssi_config)(struct wiphy *wiphy,
-+					    struct net_device *dev,
-+					    const u8 *addr,
-+					    s32 rssi_thold, u32 rssi_hyst);
-+	int     (*set_sta_mon_rssi_range_config)(struct wiphy *wiphy,
-+						 struct net_device *dev,
-+						 const u8 *addr,
-+						 s32 rssi_low, s32 rssi_high);
- };
- 
- /*
-@@ -4076,7 +4095,7 @@ static inline struct wiphy *wiphy_new(const struct cfg80211_ops *ops,
- struct cfg80211_conn;
- struct cfg80211_internal_bss;
- struct cfg80211_cached_keys;
--struct cfg80211_cqm_config;
-+struct cfg80211_rssi_config;
- 
- /**
-  * struct wireless_dev - wireless device state
-@@ -4141,7 +4160,8 @@ static inline struct wiphy *wiphy_new(const struct cfg80211_ops *ops,
-  * @event_lock: (private) lock for event list
-  * @owner_nlportid: (private) owner socket port ID
-  * @nl_owner_dead: (private) owner socket went away
-- * @cqm_config: (private) nl80211 RSSI monitor state
-+ * @rssi_config: (private) nl80211 RSSI monitor state
-+ * @rssi_config_list: list of peer address based rssi configuration
-  */
- struct wireless_dev {
- 	struct wiphy *wiphy;
-@@ -4212,7 +4232,8 @@ struct wireless_dev {
- 	} wext;
- #endif
- 
--	struct cfg80211_cqm_config *cqm_config;
-+	struct cfg80211_rssi_config *rssi_config;
-+	struct list_head rssi_config_list;
- };
- 
- static inline u8 *wdev_address(struct wireless_dev *wdev)
-@@ -5776,6 +5797,22 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
- 			      s32 rssi_level, gfp_t gfp);
- 
- /**
-+ * cfg80211_sta_mon_rssi_notify - Station's rssi out of range event
-+ * @dev: network device
-+ * @peer: Station's mac address
-+ * @rssi_event: the triggered RSSI event
-+ * @rssi_level: new RSSI level value or 0 if not available
-+ * @gfp: context flags
+diff --git a/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_efuse_88xx.c b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_efuse_88xx.c
+new file mode 100644
+index 000000000000..3d51acb5857e
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_efuse_88xx.c
+@@ -0,0 +1,1918 @@
++/******************************************************************************
 + *
-+ * This function is called when a configured rssi threshold reached event
-+ * occurs for a station.
-+ */
-+void
-+cfg80211_sta_mon_rssi_notify(struct net_device *dev, const u8 *peer,
-+		     enum nl80211_sta_mon_rssi_threshold_event rssi_event,
-+		     s32 rssi_level, gfp_t gfp);
-+
-+/**
-  * cfg80211_cqm_pktloss_notify - notify userspace about packetloss to peer
-  * @dev: network device
-  * @peer: peer's MAC address
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 9c36301..fa1fed1 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1029,6 +1029,11 @@
-  *	ht opmode or vht opmode changes using any of &NL80211_ATTR_SMPS_MODE,
-  *	&NL80211_ATTR_CHANNEL_WIDTH,&NL80211_ATTR_NSS attributes with its
-  *	address(specified in &NL80211_ATTR_MAC).
-+ * @NL80211_CMD_SET_STA_MON: This command is used to configure station's
-+ *	connection monitoring notification trigger levels.
-+ * @NL80211_CMD_NOTIFY_STA_MON: Station's connection monitor notification. This
-+ *	command is used as an event to indicate the that a trigger level was
-+ *	reached for a station.
-  *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-@@ -1242,6 +1247,9 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_CONTROL_PORT_FRAME,
- 
-+	NL80211_CMD_STA_MON,
-+	NL80211_CMD_NOTIFY_STA_MON,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -2225,6 +2233,10 @@ enum nl80211_commands {
-  * @NL80211_ATTR_NSS: Station's New/updated  RX_NSS value notified using this
-  *	u8 attribute. This is used with %NL80211_CMD_STA_OPMODE_CHANGED.
-  *
-+ * @NL80211_ATTR_STA_MON: Station's connection monitor configuration in a
-+ *	nested attribute with %NL80211_ATTR_STA_MON_* sub-attributes.
++ * Copyright(c) 2016 - 2018 Realtek Corporation. All rights reserved.
 + *
-+ * @NL80211_ATTR_LOCAL_STATE_CHANGE: Flag attribute to indicate that a command
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2659,6 +2671,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_CONTROL_PORT_OVER_NL80211,
- 
-+	NL80211_ATTR_STA_MON,
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
++ * more details.
++ *
++ ******************************************************************************/
 +
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -4238,6 +4252,34 @@ enum nl80211_attr_cqm {
- };
- 
- /**
-+ * enum nl80211_attr_sta_mon - Attributes to monitor station's connection
-+ * @NL80211_ATTR_STA_MON_RSSI_THOLD: RSSI threshold in dBm. This value specifies
-+ *	the threshold for the RSSI level at which an event will be sent. Zero
-+ *	to disable.  Alternatively, if %NL80211_EXT_FEATURE_STA_MON_RSSI_LIST is
-+ *	set, multiple values can be supplied as a low-to-high sorted array of
-+ *	threshold values in dBm.  Events will be sent when the RSSI value
-+ *	crosses any of the thresholds. This threshold values are station
-+ *	spcific.
-+ * @NL80211_ATTR_STA_MON_RSSI_HYST: RSSI hysteresis in dBm. This value specifies
-+ *	the minimum amount the RSSI level must change after an event before a
-+ *	new event may be issued (to reduce effects of RSSI oscillation).
-+ * @NL80211_ATTR_STA_MON_RSSI_THRESHOLD_EVENT: RSSI threshold event
-+ * @NL80211_ATTR_STA_MON_RSSI_LEVEL: the RSSI value in dBm that triggered the
-+ *	RSSI threshold event.
-+ */
-+enum nl80211_attr_sta_mon {
-+	__NL80211_ATTR_STA_MON_INVALID,
-+	NL80211_ATTR_STA_MON_RSSI_THOLD,
-+	NL80211_ATTR_STA_MON_RSSI_HYST,
-+	NL80211_ATTR_STA_MON_RSSI_THRESHOLD_EVENT,
-+	NL80211_ATTR_STA_MON_RSSI_LEVEL,
++#include "halmac_efuse_88xx.h"
++#include "halmac_88xx_cfg.h"
++#include "halmac_common_88xx.h"
++#include "halmac_init_88xx.h"
 +
-+	/* keep last */
-+	__NL80211_ATTR_STA_MON_AFTER_LAST,
-+	NL80211_ATTR_STA_MON_MAX = __NL80211_ATTR_STA_MON_AFTER_LAST - 1
-+};
++#define RSVD_EFUSE_SIZE		16
++#define RSVD_CS_EFUSE_SIZE	24
++#define PROTECT_EFUSE_SIZE	96
++#define FEATURE_DUMP_PHY_EFUSE	HALMAC_FEATURE_DUMP_PHYSICAL_EFUSE
++#define FEATURE_DUMP_LOG_EFUSE	HALMAC_FEATURE_DUMP_LOGICAL_EFUSE
++
++static enum halmac_cmd_construct_state
++efuse_cmd_cnstr_state_88xx(struct halmac_adapter *adapter);
++
++static enum halmac_ret_status
++proc_dump_efuse_88xx(struct halmac_adapter *adapter,
++		     enum halmac_efuse_read_cfg cfg);
++
++static enum halmac_ret_status
++read_hw_efuse_88xx(struct halmac_adapter *adapter, u32 offset, u32 size,
++		   u8 *map);
++
++static enum halmac_ret_status
++eeprom_parser_88xx(struct halmac_adapter *adapter, u8 *phy_map, u8 *log_map);
++
++static enum halmac_ret_status
++read_log_efuse_map_88xx(struct halmac_adapter *adapter, u8 *map);
++
++static enum halmac_ret_status
++proc_pg_efuse_by_map_88xx(struct halmac_adapter *adapter,
++			  struct halmac_pg_efuse_info *info,
++			  enum halmac_efuse_read_cfg cfg);
++
++static enum halmac_ret_status
++dump_efuse_fw_88xx(struct halmac_adapter *adapter);
++
++static enum halmac_ret_status
++dump_efuse_drv_88xx(struct halmac_adapter *adapter);
++
++static enum halmac_ret_status
++proc_write_log_efuse_88xx(struct halmac_adapter *adapter, u32 offset, u8 value);
++
++static enum halmac_ret_status
++update_eeprom_mask_88xx(struct halmac_adapter *adapter,
++			struct halmac_pg_efuse_info *info, u8 *updated_mask);
++
++static enum halmac_ret_status
++check_efuse_enough_88xx(struct halmac_adapter *adapter,
++			struct halmac_pg_efuse_info *info, u8 *updated_mask);
++
++static enum halmac_ret_status
++pg_extend_efuse_88xx(struct halmac_adapter *adapter,
++		     struct halmac_pg_efuse_info *info, u8 word_en,
++		     u8 pre_word_en, u32 eeprom_offset);
++
++static enum halmac_ret_status
++proc_pg_efuse_88xx(struct halmac_adapter *adapter,
++		   struct halmac_pg_efuse_info *info, u8 word_en,
++		   u8 pre_word_en, u32 eeprom_offset);
++
++static enum halmac_ret_status
++program_efuse_88xx(struct halmac_adapter *adapter,
++		   struct halmac_pg_efuse_info *info, u8 *updated_mask);
++
++static void
++mask_eeprom_88xx(struct halmac_adapter *adapter,
++		 struct halmac_pg_efuse_info *info);
 +
 +/**
-  * enum nl80211_cqm_rssi_threshold_event - RSSI threshold event
-  * @NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW: The RSSI level is lower than the
-  *      configured threshold
-@@ -4251,6 +4293,18 @@ enum nl80211_cqm_rssi_threshold_event {
- 	NL80211_CQM_RSSI_BEACON_LOSS_EVENT,
- };
- 
-+/**
-+ * enum nl80211_sta_mon_rssi_threshold_event - RSSI threshold event
-+ * @NL80211_STA_MON_RSSI_THRESHOLD_EVENT_LOW: The RSSI level is lower than the
-+ *      configured threshold
-+ * @NL80211_STA_MON_RSSI_THRESHOLD_EVENT_HIGH: The RSSI is higher than the
-+ *      configured threshold
++ * dump_efuse_map_88xx() - dump "physical" efuse map
++ * @adapter : the adapter of halmac
++ * @cfg : dump efuse method
++ * Author : Ivan Lin/KaiYuan Chang
++ * Return : enum halmac_ret_status
++ * More details of status code can be found in prototype document
 + */
-+enum nl80211_sta_mon_rssi_threshold_event {
-+	NL80211_STA_MON_RSSI_THRESHOLD_EVENT_LOW,
-+	NL80211_STA_MON_RSSI_THRESHOLD_EVENT_HIGH,
-+};
++enum halmac_ret_status
++dump_efuse_map_88xx(struct halmac_adapter *adapter,
++		    enum halmac_efuse_read_cfg cfg)
++{
++	u8 *map = NULL;
++	u8 *efuse_map;
++	u32 efuse_size = adapter->hw_cfg_info.efuse_size;
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
++	enum halmac_cmd_process_status *proc_status;
 +
- 
- /**
-  * enum nl80211_tx_power_setting - TX power adjustment
-@@ -5040,6 +5094,12 @@ enum nl80211_feature_flags {
-  *	"radar detected" event.
-  * @NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211: Driver supports sending and
-  *	receiving control port frames over nl80211 instead of the netdevice.
-+ * @NL80211_EXT_FEATURE_STA_MON_RSSI_CONFIG: With this driver can set
-+ *	rssi threshold using %NL80211_ATTR_STA_MON_RSSI_THOLD attribute
-+ *	for a connected station.
-+ * @NL80211_EXT_FEATURE_STA_MON_RSSI_LIST: With this driver the
-+ *	%NL80211_ATTR_STA_MON_RSSI_THOLD attribute accepts a list of zero or
-+ *	more RSSI threshold values to monitor rather than exactly one threshold.
-  *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-@@ -5072,6 +5132,8 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_HIGH_ACCURACY_SCAN,
- 	NL80211_EXT_FEATURE_DFS_OFFLOAD,
- 	NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211,
-+	NL80211_EXT_FEATURE_STA_MON_RSSI_CONFIG,
-+	NL80211_EXT_FEATURE_STA_MON_RSSI_LIST,
- 
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index c0fd8a8..7933337 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -990,10 +990,25 @@ void wiphy_rfkill_set_hw_state(struct wiphy *wiphy, bool blocked)
- }
- EXPORT_SYMBOL(wiphy_rfkill_set_hw_state);
- 
--void cfg80211_cqm_config_free(struct wireless_dev *wdev)
-+void cfg80211_rssi_config_free(struct wireless_dev *wdev)
- {
--	kfree(wdev->cqm_config);
--	wdev->cqm_config = NULL;
-+	struct cfg80211_rssi_config *rssi_config, *tmp;
++	proc_status = &adapter->halmac_state.efuse_state.proc_status;
 +
-+	if (list_empty(&wdev->rssi_config_list))
-+		goto free;
++	if (cfg == HALMAC_EFUSE_R_FW &&
++	    halmac_fw_validate(adapter) != HALMAC_RET_SUCCESS)
++		return HALMAC_RET_NO_DLFW;
 +
-+	list_for_each_entry_safe(rssi_config, tmp, &wdev->rssi_config_list,
-+				 list) {
-+		list_del(&rssi_config->list);
-+		kfree(rssi_config);
-+		if (list_empty(&wdev->rssi_config_list))
-+			goto out;
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s ===>\n",
++		 __func__);
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "cfg = %d\n",
++		 cfg);
++
++	if (*proc_status == HALMAC_CMD_PROCESS_SENDING) {
++		RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_WARNING,
++			 "Wait event(efuse)\n");
++		return HALMAC_RET_BUSY_STATE;
 +	}
 +
-+free:
-+	kfree(wdev->rssi_config);
-+out:
-+	wdev->rssi_config = NULL;
- }
- 
- void cfg80211_unregister_wdev(struct wireless_dev *wdev)
-@@ -1023,7 +1038,7 @@ void cfg80211_unregister_wdev(struct wireless_dev *wdev)
- 		break;
- 	}
- 
--	cfg80211_cqm_config_free(wdev);
-+	cfg80211_rssi_config_free(wdev);
- }
- EXPORT_SYMBOL(cfg80211_unregister_wdev);
- 
-@@ -1159,6 +1174,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		spin_lock_init(&wdev->event_lock);
- 		INIT_LIST_HEAD(&wdev->mgmt_registrations);
- 		spin_lock_init(&wdev->mgmt_registrations_lock);
-+		INIT_LIST_HEAD(&wdev->rssi_config_list);
- 
- 		/*
- 		 * We get here also when the interface changes network namespaces,
-@@ -1288,7 +1304,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 			kzfree(wdev->wext.keys);
- #endif
- 			flush_work(&wdev->disconnect_wk);
--			cfg80211_cqm_config_free(wdev);
-+			cfg80211_rssi_config_free(wdev);
- 		}
- 		/*
- 		 * synchronise (so that we won't find this netdev
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 63eb1b5..17883ec 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -260,10 +260,12 @@ struct cfg80211_beacon_registration {
- 	u32 nlportid;
- };
- 
--struct cfg80211_cqm_config {
-+struct cfg80211_rssi_config {
-+	struct list_head list;
- 	u32 rssi_hyst;
- 	s32 last_rssi_event_value;
- 	int n_rssi_thresholds;
-+	u8 addr[ETH_ALEN];
- 	s32 rssi_thresholds[0];
- };
- 
-@@ -514,6 +516,6 @@ void cfg80211_stop_nan(struct cfg80211_registered_device *rdev,
- #define CFG80211_DEV_WARN_ON(cond)	({bool __r = (cond); __r; })
- #endif
- 
--void cfg80211_cqm_config_free(struct wireless_dev *wdev);
-+void cfg80211_rssi_config_free(struct wireless_dev *wdev);
- 
- #endif /* __NET_WIRELESS_CORE_H */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a052693..382dc63 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -423,6 +423,7 @@ enum nl80211_multicast_groups {
- 	[NL80211_ATTR_PMK] = { .type = NLA_BINARY, .len = PMK_MAX_LEN },
- 	[NL80211_ATTR_SCHED_SCAN_MULTI] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_EXTERNAL_AUTH_SUPPORT] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_STA_MON] = { .type = NLA_NESTED },
- };
- 
- /* policy for the key attributes */
-@@ -3043,6 +3044,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 		spin_lock_init(&wdev->event_lock);
- 		INIT_LIST_HEAD(&wdev->mgmt_registrations);
- 		spin_lock_init(&wdev->mgmt_registrations_lock);
-+		INIT_LIST_HEAD(&wdev->rssi_config_list);
- 
- 		wdev->identifier = ++rdev->wdev_id;
- 		list_add_rcu(&wdev->list, &rdev->wiphy.wdev_list);
-@@ -9864,6 +9866,14 @@ static int nl80211_get_power_save(struct sk_buff *skb, struct genl_info *info)
- 	[NL80211_ATTR_CQM_RSSI_LEVEL] = { .type = NLA_S32 },
- };
- 
-+static const struct nla_policy
-+nl80211_attr_sta_mon_policy[NL80211_ATTR_STA_MON_MAX + 1] = {
-+	[NL80211_ATTR_STA_MON_RSSI_THOLD] = { .type = NLA_BINARY },
-+	[NL80211_ATTR_STA_MON_RSSI_HYST] = { .type = NLA_U32 },
-+	[NL80211_ATTR_STA_MON_RSSI_THRESHOLD_EVENT] = { .type = NLA_U32 },
-+	[NL80211_ATTR_STA_MON_RSSI_LEVEL] = { .type = NLA_S32 },
-+};
++	if (efuse_cmd_cnstr_state_88xx(adapter) != HALMAC_CMD_CNSTR_IDLE) {
++		RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_WARNING,
++			 "Not idle(efuse)\n");
++		return HALMAC_RET_ERROR_STATE;
++	}
 +
- static int nl80211_set_cqm_txe(struct genl_info *info,
- 			       u32 rate, u32 pkts, u32 intvl)
- {
-@@ -9884,17 +9894,65 @@ static int nl80211_set_cqm_txe(struct genl_info *info,
- 	return rdev_set_cqm_txe_config(rdev, dev, rate, pkts, intvl);
- }
- 
-+static int cfg80211_set_rssi_range(struct cfg80211_registered_device *rdev,
-+				   struct net_device *dev, const u8 *mac_addr,
-+				   bool get_last_rssi)
++	if (adapter->halmac_state.mac_pwr == HALMAC_MAC_POWER_OFF)
++		pr_err("Dump efuse in suspend\n");
++
++	*proc_status = HALMAC_CMD_PROCESS_IDLE;
++	adapter->evnt.phy_efuse_map = 1;
++
++	status = switch_efuse_bank_88xx(adapter, HALMAC_EFUSE_BANK_WIFI);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("switch efuse bank!!\n");
++		return status;
++	}
++
++	status = proc_dump_efuse_88xx(adapter, cfg);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("dump efuse!!\n");
++		return status;
++	}
++
++	if (adapter->efuse_map_valid == 1) {
++		*proc_status = HALMAC_CMD_PROCESS_DONE;
++		efuse_map = adapter->efuse_map;
++
++		map = kzalloc(efuse_size, GFP_KERNEL);
++		if (!map)
++			return HALMAC_RET_MALLOC_FAIL;
++		memset(map, 0xFF, efuse_size);
++		mutex_lock(&adapter->efuse_mutex);
++		memcpy(map, efuse_map, efuse_size - PROTECT_EFUSE_SIZE);
++		memcpy(map + efuse_size - PROTECT_EFUSE_SIZE +
++		       RSVD_CS_EFUSE_SIZE,
++		       efuse_map + efuse_size - PROTECT_EFUSE_SIZE +
++		       RSVD_CS_EFUSE_SIZE,
++		       PROTECT_EFUSE_SIZE - RSVD_EFUSE_SIZE -
++		       RSVD_CS_EFUSE_SIZE);
++		mutex_unlock(&adapter->efuse_mutex);
++
++		PLTFM_EVENT_SIG(HALMAC_FEATURE_DUMP_PHYSICAL_EFUSE,
++				*proc_status, map, efuse_size);
++		adapter->evnt.phy_efuse_map = 0;
++
++		kfree(map);
++	}
++
++	if (cnv_efuse_state_88xx(adapter, HALMAC_CMD_CNSTR_IDLE) !=
++	    HALMAC_RET_SUCCESS)
++		return HALMAC_RET_ERROR_STATE;
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s <===\n",
++		 __func__);
++
++	return HALMAC_RET_SUCCESS;
++}
++
++/**
++ * dump_efuse_map_bt_88xx() - dump "BT physical" efuse map
++ * @adapter : the adapter of halmac
++ * @bank : bt efuse bank
++ * @size : bt efuse map size. get from halmac_get_efuse_size API
++ * @map : bt efuse map
++ * Author : Soar / Ivan Lin
++ * Return : enum halmac_ret_status
++ * More details of status code can be found in prototype document
++ */
++enum halmac_ret_status
++dump_efuse_map_bt_88xx(struct halmac_adapter *adapter,
++		       enum halmac_efuse_bank bank, u32 size, u8 *map)
 +{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	s32 low, high, last;
-+	u32 hyst;
-+	int i, n, err;
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
++	enum halmac_cmd_process_status *proc_status;
 +
-+	if (get_last_rssi && mac_addr) {
-+		struct station_info sinfo = {};
++	proc_status = &adapter->halmac_state.efuse_state.proc_status;
 +
-+		err = rdev_get_station(rdev, dev, mac_addr, &sinfo);
-+		if (err)
-+			return err;
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s ===>\n",
++		 __func__);
 +
-+		if (wdev->iftype != NL80211_IFTYPE_STATION &&
-+		    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT) {
-+			if (sinfo.filled & BIT(NL80211_STA_INFO_SIGNAL_AVG))
-+				wdev->rssi_config->last_rssi_event_value =
-+					(s8)sinfo.signal_avg;
++	if (adapter->hw_cfg_info.bt_efuse_size != size)
++		return HALMAC_RET_EFUSE_SIZE_INCORRECT;
++
++	if (bank >= HALMAC_EFUSE_BANK_MAX || bank == HALMAC_EFUSE_BANK_WIFI) {
++		pr_err("Undefined BT bank\n");
++		return HALMAC_RET_EFUSE_BANK_INCORRECT;
++	}
++
++	if (*proc_status == HALMAC_CMD_PROCESS_SENDING) {
++		RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_WARNING,
++			 "Wait event(efuse)\n");
++		return HALMAC_RET_BUSY_STATE;
++	}
++
++	if (efuse_cmd_cnstr_state_88xx(adapter) != HALMAC_CMD_CNSTR_IDLE) {
++		RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_WARNING,
++			 "Not idle(efuse)\n");
++		return HALMAC_RET_ERROR_STATE;
++	}
++
++	status = switch_efuse_bank_88xx(adapter, bank);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("switch efuse bank!!\n");
++		return status;
++	}
++
++	status = read_hw_efuse_88xx(adapter, 0, size, map);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("read hw efuse\n");
++		return status;
++	}
++
++	if (cnv_efuse_state_88xx(adapter, HALMAC_CMD_CNSTR_IDLE) !=
++	    HALMAC_RET_SUCCESS)
++		return HALMAC_RET_ERROR_STATE;
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s <===\n",
++		 __func__);
++
++	return HALMAC_RET_SUCCESS;
++}
++
++/**
++ * write_efuse_bt_88xx() - write "BT physical" efuse offset
++ * @adapter : the adapter of halmac
++ * @offset : offset
++ * @value : Write value
++ * @map : bt efuse map
++ * Author : Soar
++ * Return : enum halmac_ret_status
++ * More details of status code can be found in prototype document
++ */
++enum halmac_ret_status
++write_efuse_bt_88xx(struct halmac_adapter *adapter, u32 offset, u8 value,
++		    enum halmac_efuse_bank bank)
++{
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
++	enum halmac_cmd_process_status *proc_status;
++
++	proc_status = &adapter->halmac_state.efuse_state.proc_status;
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s ===>\n",
++		 __func__);
++
++	if (*proc_status == HALMAC_CMD_PROCESS_SENDING) {
++		RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_WARNING,
++			 "Wait event(efuse)\n");
++		return HALMAC_RET_BUSY_STATE;
++	}
++
++	if (efuse_cmd_cnstr_state_88xx(adapter) != HALMAC_CMD_CNSTR_IDLE) {
++		RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_WARNING,
++			 "Not idle(efuse)\n");
++		return HALMAC_RET_ERROR_STATE;
++	}
++
++	if (offset >= adapter->hw_cfg_info.efuse_size) {
++		pr_err("Offset is too large\n");
++		return HALMAC_RET_EFUSE_SIZE_INCORRECT;
++	}
++
++	if (bank > HALMAC_EFUSE_BANK_MAX || bank == HALMAC_EFUSE_BANK_WIFI) {
++		pr_err("Undefined BT bank\n");
++		return HALMAC_RET_EFUSE_BANK_INCORRECT;
++	}
++
++	status = switch_efuse_bank_88xx(adapter, bank);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("switch efuse bank!!\n");
++		return status;
++	}
++
++	status = write_hw_efuse_88xx(adapter, offset, value);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("write efuse\n");
++		return status;
++	}
++
++	if (cnv_efuse_state_88xx(adapter, HALMAC_CMD_CNSTR_IDLE) !=
++	    HALMAC_RET_SUCCESS)
++		return HALMAC_RET_ERROR_STATE;
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s <===\n",
++		 __func__);
++
++	return HALMAC_RET_SUCCESS;
++}
++
++/**
++ * read_efuse_bt_88xx() - read "BT physical" efuse offset
++ * @adapter : the adapter of halmac
++ * @offset : offset
++ * @value : 1 byte efuse value
++ * @bank : efuse bank
++ * Author : Soar
++ * Return : enum halmac_ret_status
++ * More details of status code can be found in prototype document
++ */
++enum halmac_ret_status
++read_efuse_bt_88xx(struct halmac_adapter *adapter, u32 offset, u8 *value,
++		   enum halmac_efuse_bank bank)
++{
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
++	enum halmac_cmd_process_status *proc_status;
++
++	proc_status = &adapter->halmac_state.efuse_state.proc_status;
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s ===>\n",
++		 __func__);
++
++	if (*proc_status == HALMAC_CMD_PROCESS_SENDING) {
++		RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_WARNING,
++			 "Wait event(efuse)\n");
++		return HALMAC_RET_BUSY_STATE;
++	}
++
++	if (efuse_cmd_cnstr_state_88xx(adapter) != HALMAC_CMD_CNSTR_IDLE) {
++		RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_WARNING,
++			 "Not idle(efuse)\n");
++		return HALMAC_RET_ERROR_STATE;
++	}
++
++	if (offset >= adapter->hw_cfg_info.efuse_size) {
++		pr_err("Offset is too large\n");
++		return HALMAC_RET_EFUSE_SIZE_INCORRECT;
++	}
++
++	if (bank > HALMAC_EFUSE_BANK_MAX || bank == HALMAC_EFUSE_BANK_WIFI) {
++		pr_err("Undefined BT bank\n");
++		return HALMAC_RET_EFUSE_BANK_INCORRECT;
++	}
++
++	status = switch_efuse_bank_88xx(adapter, bank);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("switch efuse bank\n");
++		return status;
++	}
++
++	status = read_efuse_88xx(adapter, offset, 1, value);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("read efuse\n");
++		return status;
++	}
++
++	if (cnv_efuse_state_88xx(adapter, HALMAC_CMD_CNSTR_IDLE) !=
++	    HALMAC_RET_SUCCESS)
++		return HALMAC_RET_ERROR_STATE;
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s <===\n",
++		 __func__);
++
++	return HALMAC_RET_SUCCESS;
++}
++
++/**
++ * cfg_efuse_auto_check_88xx() - check efuse after writing it
++ * @adapter : the adapter of halmac
++ * @enable : 1, enable efuse auto check. others, disable
++ * Author : Soar
++ * Return : enum halmac_ret_status
++ * More details of status code can be found in prototype document
++ */
++enum halmac_ret_status
++cfg_efuse_auto_check_88xx(struct halmac_adapter *adapter, u8 enable)
++{
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s ===>\n",
++		 __func__);
++
++	adapter->efuse_auto_check_en = enable;
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s <===\n",
++		 __func__);
++
++	return HALMAC_RET_SUCCESS;
++}
++
++/**
++ * get_efuse_available_size_88xx() - get efuse available size
++ * @adapter : the adapter of halmac
++ * @size : physical efuse available size
++ * Author : Soar
++ * Return : enum halmac_ret_status
++ * More details of status code can be found in prototype document
++ */
++enum halmac_ret_status
++get_efuse_available_size_88xx(struct halmac_adapter *adapter, u32 *size)
++{
++	enum halmac_ret_status status;
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s ===>\n",
++		 __func__);
++
++	status = dump_log_efuse_map_88xx(adapter, HALMAC_EFUSE_R_DRV);
++
++	if (status != HALMAC_RET_SUCCESS)
++		return status;
++
++	*size = adapter->hw_cfg_info.efuse_size - PROTECT_EFUSE_SIZE -
++		adapter->efuse_end;
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s <===\n",
++		 __func__);
++
++	return HALMAC_RET_SUCCESS;
++}
++
++/**
++ * get_efuse_size_88xx() - get "physical" efuse size
++ * @adapter : the adapter of halmac
++ * @size : physical efuse size
++ * Author : Ivan Lin/KaiYuan Chang
++ * Return : enum halmac_ret_status
++ * More details of status code can be found in prototype document
++ */
++enum halmac_ret_status
++get_efuse_size_88xx(struct halmac_adapter *adapter, u32 *size)
++{
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s ===>\n",
++		 __func__);
++
++	*size = adapter->hw_cfg_info.efuse_size;
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s <===\n",
++		 __func__);
++
++	return HALMAC_RET_SUCCESS;
++}
++
++/**
++ * get_log_efuse_size_88xx() - get "logical" efuse size
++ * @adapter : the adapter of halmac
++ * @size : logical efuse size
++ * Author : Ivan Lin/KaiYuan Chang
++ * Return : enum halmac_ret_status
++ * More details of status code can be found in prototype document
++ */
++enum halmac_ret_status
++get_log_efuse_size_88xx(struct halmac_adapter *adapter, u32 *size)
++{
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s ===>\n",
++		 __func__);
++
++	*size = adapter->hw_cfg_info.eeprom_size;
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s <===\n",
++		 __func__);
++
++	return HALMAC_RET_SUCCESS;
++}
++
++/**
++ * dump_log_efuse_map_88xx() - dump "logical" efuse map
++ * @adapter : the adapter of halmac
++ * @cfg : dump efuse method
++ * Author : Soar
++ * Return : enum halmac_ret_status
++ * More details of status code can be found in prototype document
++ */
++enum halmac_ret_status
++dump_log_efuse_map_88xx(struct halmac_adapter *adapter,
++			enum halmac_efuse_read_cfg cfg)
++{
++	u8 *map = NULL;
++	u32 size = adapter->hw_cfg_info.eeprom_size;
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
++	enum halmac_cmd_process_status *proc_status;
++
++	proc_status = &adapter->halmac_state.efuse_state.proc_status;
++
++	if (cfg == HALMAC_EFUSE_R_FW &&
++	    halmac_fw_validate(adapter) != HALMAC_RET_SUCCESS)
++		return HALMAC_RET_NO_DLFW;
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s ===>\n",
++		 __func__);
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "cfg = %d\n",
++		 cfg);
++
++	if (*proc_status == HALMAC_CMD_PROCESS_SENDING) {
++		RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_WARNING,
++			 "Wait event(efuse)\n");
++		return HALMAC_RET_BUSY_STATE;
++	}
++
++	if (efuse_cmd_cnstr_state_88xx(adapter) != HALMAC_CMD_CNSTR_IDLE) {
++		RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_WARNING,
++			 "Not idle(efuse)\n");
++		return HALMAC_RET_ERROR_STATE;
++	}
++
++	if (adapter->halmac_state.mac_pwr == HALMAC_MAC_POWER_OFF)
++		pr_err("Dump efuse in suspend\n");
++
++	*proc_status = HALMAC_CMD_PROCESS_IDLE;
++	adapter->evnt.log_efuse_map = 1;
++
++	status = switch_efuse_bank_88xx(adapter, HALMAC_EFUSE_BANK_WIFI);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("switch efuse bank\n");
++		return status;
++	}
++
++	status = proc_dump_efuse_88xx(adapter, cfg);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("dump efuse\n");
++		return status;
++	}
++
++	if (adapter->efuse_map_valid == 1) {
++		*proc_status = HALMAC_CMD_PROCESS_DONE;
++
++		map = kzalloc(size, GFP_KERNEL);
++		if (!map)
++			return HALMAC_RET_MALLOC_FAIL;
++		memset(map, 0xFF, size);
++
++		if (eeprom_parser_88xx(adapter, adapter->efuse_map, map) !=
++		    HALMAC_RET_SUCCESS) {
++			kfree(map);
++			return HALMAC_RET_EEPROM_PARSING_FAIL;
++		}
++
++		PLTFM_EVENT_SIG(HALMAC_FEATURE_DUMP_LOGICAL_EFUSE,
++				*proc_status, map, size);
++		adapter->evnt.log_efuse_map = 0;
++
++		kfree(map);
++	}
++
++	if (cnv_efuse_state_88xx(adapter, HALMAC_CMD_CNSTR_IDLE) !=
++	    HALMAC_RET_SUCCESS)
++		return HALMAC_RET_ERROR_STATE;
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s <===\n",
++		 __func__);
++
++	return HALMAC_RET_SUCCESS;
++}
++
++/**
++ * read_logical_efuse_88xx() - read logical efuse map 1 byte
++ * @adapter : the adapter of halmac
++ * @offset : offset
++ * @value : 1 byte efuse value
++ * Author : Soar
++ * Return : enum halmac_ret_status
++ * More details of status code can be found in prototype document
++ */
++enum halmac_ret_status
++read_logical_efuse_88xx(struct halmac_adapter *adapter, u32 offset, u8 *value)
++{
++	u8 *map = NULL;
++	u32 size = adapter->hw_cfg_info.eeprom_size;
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
++	enum halmac_cmd_process_status *proc_status;
++
++	proc_status = &adapter->halmac_state.efuse_state.proc_status;
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s ===>\n",
++		 __func__);
++
++	if (offset >= size) {
++		pr_err("Offset is too large\n");
++		return HALMAC_RET_EFUSE_SIZE_INCORRECT;
++	}
++
++	if (*proc_status == HALMAC_CMD_PROCESS_SENDING) {
++		RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_WARNING,
++			 "Wait event(efuse)\n");
++		return HALMAC_RET_BUSY_STATE;
++	}
++	if (efuse_cmd_cnstr_state_88xx(adapter) != HALMAC_CMD_CNSTR_IDLE) {
++		RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_WARNING,
++			 "Not idle(efuse)\n");
++		return HALMAC_RET_ERROR_STATE;
++	}
++
++	status = switch_efuse_bank_88xx(adapter, HALMAC_EFUSE_BANK_WIFI);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("switch efuse bank\n");
++		return status;
++	}
++
++	map = kzalloc(size, GFP_KERNEL);
++	if (!map)
++		return HALMAC_RET_MALLOC_FAIL;
++	memset(map, 0xFF, size);
++
++	status = read_log_efuse_map_88xx(adapter, map);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("read logical efuse\n");
++		kfree(map);
++		return status;
++	}
++
++	*value = *(map + offset);
++
++	if (cnv_efuse_state_88xx(adapter, HALMAC_CMD_CNSTR_IDLE) !=
++	    HALMAC_RET_SUCCESS) {
++		kfree(map);
++		return HALMAC_RET_ERROR_STATE;
++	}
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s <===\n",
++		 __func__);
++
++	kfree(map);
++
++	return HALMAC_RET_SUCCESS;
++}
++
++/**
++ * write_log_efuse_88xx() - write "logical" efuse offset
++ * @adapter : the adapter of halmac
++ * @offset : offset
++ * @value : value
++ * Author : Soar
++ * Return : enum halmac_ret_status
++ * More details of status code can be found in prototype document
++ */
++enum halmac_ret_status
++write_log_efuse_88xx(struct halmac_adapter *adapter, u32 offset, u8 value)
++{
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
++	enum halmac_cmd_process_status *proc_status;
++
++	proc_status = &adapter->halmac_state.efuse_state.proc_status;
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s ===>\n",
++		 __func__);
++
++	if (offset >= adapter->hw_cfg_info.eeprom_size) {
++		pr_err("Offset is too large\n");
++		return HALMAC_RET_EFUSE_SIZE_INCORRECT;
++	}
++
++	if (*proc_status == HALMAC_CMD_PROCESS_SENDING) {
++		RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_WARNING,
++			 "Wait event(efuse)\n");
++		return HALMAC_RET_BUSY_STATE;
++	}
++
++	if (efuse_cmd_cnstr_state_88xx(adapter) != HALMAC_CMD_CNSTR_IDLE) {
++		RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_WARNING,
++			 "Not idle(efuse)\n");
++		return HALMAC_RET_ERROR_STATE;
++	}
++
++	status = switch_efuse_bank_88xx(adapter, HALMAC_EFUSE_BANK_WIFI);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("switch efuse bank\n");
++		return status;
++	}
++
++	status = proc_write_log_efuse_88xx(adapter, offset, value);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("write logical efuse\n");
++		return status;
++	}
++
++	if (cnv_efuse_state_88xx(adapter, HALMAC_CMD_CNSTR_IDLE) !=
++	    HALMAC_RET_SUCCESS)
++		return HALMAC_RET_ERROR_STATE;
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s <===\n",
++		 __func__);
++
++	return HALMAC_RET_SUCCESS;
++}
++
++/**
++ * pg_efuse_by_map_88xx() - pg logical efuse by map
++ * @adapter : the adapter of halmac
++ * @info : efuse map information
++ * @cfg : dump efuse method
++ * Author : Soar
++ * Return : enum halmac_ret_status
++ * More details of status code can be found in prototype document
++ */
++enum halmac_ret_status
++pg_efuse_by_map_88xx(struct halmac_adapter *adapter,
++		     struct halmac_pg_efuse_info *info,
++		     enum halmac_efuse_read_cfg cfg)
++{
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
++	enum halmac_cmd_process_status *proc_status;
++
++	proc_status = &adapter->halmac_state.efuse_state.proc_status;
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s ===>\n",
++		 __func__);
++
++	if (info->efuse_map_size != adapter->hw_cfg_info.eeprom_size) {
++		pr_err("map size error\n");
++		return HALMAC_RET_EFUSE_SIZE_INCORRECT;
++	}
++
++	if ((info->efuse_map_size & 0xF) > 0) {
++		pr_err("not multiple of 16\n");
++		return HALMAC_RET_EFUSE_SIZE_INCORRECT;
++	}
++
++	if (info->efuse_mask_size != info->efuse_map_size >> 4) {
++		pr_err("mask size error\n");
++		return HALMAC_RET_EFUSE_SIZE_INCORRECT;
++	}
++
++	if (!info->efuse_map) {
++		pr_err("map is NULL\n");
++		return HALMAC_RET_NULL_POINTER;
++	}
++
++	if (!info->efuse_mask) {
++		pr_err("mask is NULL\n");
++		return HALMAC_RET_NULL_POINTER;
++	}
++
++	if (*proc_status == HALMAC_CMD_PROCESS_SENDING) {
++		RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_WARNING,
++			 "Wait event(efuse)\n");
++		return HALMAC_RET_BUSY_STATE;
++	}
++
++	if (efuse_cmd_cnstr_state_88xx(adapter) != HALMAC_CMD_CNSTR_IDLE) {
++		RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_WARNING,
++			 "Not idle(efuse)\n");
++		return HALMAC_RET_ERROR_STATE;
++	}
++
++	status = switch_efuse_bank_88xx(adapter, HALMAC_EFUSE_BANK_WIFI);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("switch efuse bank\n");
++		return status;
++	}
++
++	status = proc_pg_efuse_by_map_88xx(adapter, info, cfg);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("pg efuse\n");
++		return status;
++	}
++
++	if (cnv_efuse_state_88xx(adapter, HALMAC_CMD_CNSTR_IDLE) !=
++	    HALMAC_RET_SUCCESS)
++		return HALMAC_RET_ERROR_STATE;
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s <===\n",
++		 __func__);
++
++	return HALMAC_RET_SUCCESS;
++}
++
++/**
++ * mask_log_efuse_88xx() - mask logical efuse
++ * @adapter : the adapter of halmac
++ * @info : efuse map information
++ * Author : Soar
++ * Return : enum halmac_ret_status
++ * More details of status code can be found in prototype document
++ */
++enum halmac_ret_status
++mask_log_efuse_88xx(struct halmac_adapter *adapter,
++		    struct halmac_pg_efuse_info *info)
++{
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s ===>\n",
++		 __func__);
++
++	if (info->efuse_map_size != adapter->hw_cfg_info.eeprom_size) {
++		pr_err("map size error\n");
++		return HALMAC_RET_EFUSE_SIZE_INCORRECT;
++	}
++
++	if ((info->efuse_map_size & 0xF) > 0) {
++		pr_err("not multiple of 16\n");
++		return HALMAC_RET_EFUSE_SIZE_INCORRECT;
++	}
++
++	if (info->efuse_mask_size != info->efuse_map_size >> 4) {
++		pr_err("mask size error\n");
++		return HALMAC_RET_EFUSE_SIZE_INCORRECT;
++	}
++
++	if (!info->efuse_map) {
++		pr_err("map is NULL\n");
++		return HALMAC_RET_NULL_POINTER;
++	}
++
++	if (!info->efuse_mask) {
++		pr_err("mask is NULL\n");
++		return HALMAC_RET_NULL_POINTER;
++	}
++
++	mask_eeprom_88xx(adapter, info);
++
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG, "%s <===\n",
++		 __func__);
++
++	return HALMAC_RET_SUCCESS;
++}
++
++static enum halmac_cmd_construct_state
++efuse_cmd_cnstr_state_88xx(struct halmac_adapter *adapter)
++{
++	return adapter->halmac_state.efuse_state.cmd_cnstr_state;
++}
++
++enum halmac_ret_status
++switch_efuse_bank_88xx(struct halmac_adapter *adapter,
++		       enum halmac_efuse_bank bank)
++{
++	u8 reg_value;
++	struct halmac_api *api = (struct halmac_api *)adapter->halmac_api;
++
++	if (cnv_efuse_state_88xx(adapter, HALMAC_CMD_CNSTR_BUSY) !=
++	    HALMAC_RET_SUCCESS)
++		return HALMAC_RET_ERROR_STATE;
++
++	reg_value = HALMAC_REG_R8(REG_LDO_EFUSE_CTRL + 1);
++
++	if (bank == (reg_value & (BIT(0) | BIT(1))))
++		return HALMAC_RET_SUCCESS;
++
++	reg_value &= ~(BIT(0) | BIT(1));
++	reg_value |= bank;
++	HALMAC_REG_W8(REG_LDO_EFUSE_CTRL + 1, reg_value);
++
++	reg_value = HALMAC_REG_R8(REG_LDO_EFUSE_CTRL + 1);
++	if ((reg_value & (BIT(0) | BIT(1))) != bank)
++		return HALMAC_RET_SWITCH_EFUSE_BANK_FAIL;
++
++	return HALMAC_RET_SUCCESS;
++}
++
++static enum halmac_ret_status
++proc_dump_efuse_88xx(struct halmac_adapter *adapter,
++		     enum halmac_efuse_read_cfg cfg)
++{
++	u32 h2c_init;
++	struct halmac_api *api = (struct halmac_api *)adapter->halmac_api;
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
++	enum halmac_cmd_process_status *proc_status;
++
++	proc_status = &adapter->halmac_state.efuse_state.proc_status;
++
++	*proc_status = HALMAC_CMD_PROCESS_SENDING;
++
++	if (cnv_efuse_state_88xx(adapter, HALMAC_CMD_CNSTR_H2C_SENT) !=
++	    HALMAC_RET_SUCCESS)
++		return HALMAC_RET_ERROR_STATE;
++
++	if (cfg == HALMAC_EFUSE_R_AUTO) {
++		h2c_init = HALMAC_REG_R32(REG_H2C_PKT_READADDR);
++		if (adapter->halmac_state.dlfw_state == HALMAC_DLFW_NONE ||
++		    h2c_init == 0)
++			status = dump_efuse_drv_88xx(adapter);
++		else
++			status = dump_efuse_fw_88xx(adapter);
++	} else if (cfg == HALMAC_EFUSE_R_FW) {
++		status = dump_efuse_fw_88xx(adapter);
++	} else {
++		status = dump_efuse_drv_88xx(adapter);
++	}
++
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("dump efsue drv/fw\n");
++		return status;
++	}
++
++	return status;
++}
++
++enum halmac_ret_status
++cnv_efuse_state_88xx(struct halmac_adapter *adapter,
++		     enum halmac_cmd_construct_state dest_state)
++{
++	struct halmac_efuse_state *state = &adapter->halmac_state.efuse_state;
++
++	if (state->cmd_cnstr_state != HALMAC_CMD_CNSTR_IDLE &&
++	    state->cmd_cnstr_state != HALMAC_CMD_CNSTR_BUSY &&
++	    state->cmd_cnstr_state != HALMAC_CMD_CNSTR_H2C_SENT)
++		return HALMAC_RET_ERROR_STATE;
++
++	if (state->cmd_cnstr_state == dest_state)
++		return HALMAC_RET_ERROR_STATE;
++
++	if (dest_state == HALMAC_CMD_CNSTR_BUSY) {
++		if (state->cmd_cnstr_state == HALMAC_CMD_CNSTR_H2C_SENT)
++			return HALMAC_RET_ERROR_STATE;
++	} else if (dest_state == HALMAC_CMD_CNSTR_H2C_SENT) {
++		if (state->cmd_cnstr_state == HALMAC_CMD_CNSTR_IDLE)
++			return HALMAC_RET_ERROR_STATE;
++	}
++
++	state->cmd_cnstr_state = dest_state;
++
++	return HALMAC_RET_SUCCESS;
++}
++
++static enum halmac_ret_status
++read_hw_efuse_88xx(struct halmac_adapter *adapter, u32 offset, u32 size,
++		   u8 *map)
++{
++	u8 enable;
++	u32 value32;
++	u32 addr;
++	u32 tmp32;
++	u32 cnt;
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
++	struct halmac_api *api = (struct halmac_api *)adapter->halmac_api;
++
++	/* Read efuse no need 2.5V LDO */
++	enable = 0;
++	status = api->halmac_set_hw_value(adapter, HALMAC_HW_LDO25_EN, &enable);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("dis ldo25\n");
++		return status;
++	}
++	value32 = HALMAC_REG_R32(REG_EFUSE_CTRL);
++
++	for (addr = offset; addr < offset + size; addr++) {
++		value32 &= ~(BIT_MASK_EF_DATA | BITS_EF_ADDR);
++		value32 |= ((addr & BIT_MASK_EF_ADDR) << BIT_SHIFT_EF_ADDR);
++		HALMAC_REG_W32(REG_EFUSE_CTRL, value32 & (~BIT_EF_FLAG));
++
++		cnt = 1000000;
++		do {
++			udelay(1);
++			tmp32 = HALMAC_REG_R32(REG_EFUSE_CTRL);
++			cnt--;
++			if (cnt == 0) {
++				pr_err("read\n");
++				return HALMAC_RET_EFUSE_R_FAIL;
++			}
++		} while ((tmp32 & BIT_EF_FLAG) == 0);
++
++		*(map + addr - offset) = (u8)(tmp32 & BIT_MASK_EF_DATA);
++	}
++
++	return HALMAC_RET_SUCCESS;
++}
++
++enum halmac_ret_status
++write_hw_efuse_88xx(struct halmac_adapter *adapter, u32 offset, u8 value)
++{
++	const u8 unlock_code = 0x69;
++	u8 value_read = 0;
++	u8 enable;
++	u32 value32;
++	u32 tmp32;
++	u32 cnt;
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
++	struct halmac_api *api = (struct halmac_api *)adapter->halmac_api;
++
++	mutex_lock(&adapter->efuse_mutex);
++	adapter->efuse_map_valid = 0;
++	mutex_unlock(&adapter->efuse_mutex);
++
++	HALMAC_REG_W8(REG_PMC_DBG_CTRL2 + 3, unlock_code);
++
++	/* Enable 2.5V LDO */
++	enable = 1;
++	status = api->halmac_set_hw_value(adapter, HALMAC_HW_LDO25_EN, &enable);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("en ldo25\n");
++		return status;
++	}
++
++	value32 = HALMAC_REG_R32(REG_EFUSE_CTRL);
++	value32 &= ~(BIT_MASK_EF_DATA | BITS_EF_ADDR);
++	value32 = value32 | ((offset & BIT_MASK_EF_ADDR) << BIT_SHIFT_EF_ADDR) |
++			(value & BIT_MASK_EF_DATA);
++	HALMAC_REG_W32(REG_EFUSE_CTRL, value32 | BIT_EF_FLAG);
++
++	cnt = 1000000;
++	do {
++		udelay(1);
++		tmp32 = HALMAC_REG_R32(REG_EFUSE_CTRL);
++		cnt--;
++		if (cnt == 0) {
++			pr_err("write!!\n");
++			return HALMAC_RET_EFUSE_W_FAIL;
++		}
++	} while (BIT_EF_FLAG == (tmp32 & BIT_EF_FLAG));
++
++	HALMAC_REG_W8(REG_PMC_DBG_CTRL2 + 3, 0x00);
++
++	/* Disable 2.5V LDO */
++	enable = 0;
++	status = api->halmac_set_hw_value(adapter, HALMAC_HW_LDO25_EN, &enable);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("dis ldo25\n");
++		return status;
++	}
++
++	if (adapter->efuse_auto_check_en == 1) {
++		if (read_hw_efuse_88xx(adapter, offset, 1, &value_read) !=
++		    HALMAC_RET_SUCCESS)
++			return HALMAC_RET_EFUSE_R_FAIL;
++		if (value_read != value) {
++			pr_err("efuse compare\n");
++			return HALMAC_RET_EFUSE_W_FAIL;
++		}
++	}
++
++	return HALMAC_RET_SUCCESS;
++}
++
++static enum halmac_ret_status
++eeprom_parser_88xx(struct halmac_adapter *adapter, u8 *phy_map, u8 *log_map)
++{
++	u8 i;
++	u8 value8;
++	u8 blk_idx;
++	u8 word_en;
++	u8 valid;
++	u8 hdr;
++	u8 hdr2 = 0;
++	u32 eeprom_idx;
++	u32 efuse_idx = 0;
++	struct halmac_hw_cfg_info *hw_info = &adapter->hw_cfg_info;
++
++	memset(log_map, 0xFF, hw_info->eeprom_size);
++
++	do {
++		value8 = *(phy_map + efuse_idx);
++		hdr = value8;
++
++		if ((hdr & 0x1f) == 0x0f) {
++			efuse_idx++;
++			value8 = *(phy_map + efuse_idx);
++			hdr2 = value8;
++			if (hdr2 == 0xff)
++				break;
++			blk_idx = ((hdr2 & 0xF0) >> 1) | ((hdr >> 5) & 0x07);
++			word_en = hdr2 & 0x0F;
 +		} else {
-+			if (sinfo.filled &
-+			    BIT(NL80211_STA_INFO_BEACON_SIGNAL_AVG))
-+				wdev->rssi_config->last_rssi_event_value =
-+						(s8)sinfo.rx_beacon_signal_avg;
++			blk_idx = (hdr & 0xF0) >> 4;
++			word_en = hdr & 0x0F;
 +		}
-+	}
 +
-+	last = wdev->rssi_config->last_rssi_event_value;
-+	hyst = wdev->rssi_config->rssi_hyst;
-+	n = wdev->rssi_config->n_rssi_thresholds;
-+
-+	for (i = 0; i < n; i++) {
-+		if (last < wdev->rssi_config->rssi_thresholds[i])
++		if (hdr == 0xff)
 +			break;
-+	}
 +
-+	low = i > 0 ?
-+		(wdev->rssi_config->rssi_thresholds[i - 1] - hyst) : S32_MIN;
-+	high = i < n ?
-+		(wdev->rssi_config->rssi_thresholds[i] + hyst - 1) : S32_MAX;
++		efuse_idx++;
 +
-+	if (wdev->iftype == NL80211_IFTYPE_STATION ||
-+	    wdev->iftype == NL80211_IFTYPE_P2P_CLIENT)
-+		return rdev_set_cqm_rssi_range_config(rdev, dev, low, high);
++		if (efuse_idx >= hw_info->efuse_size - PROTECT_EFUSE_SIZE - 1)
++			return HALMAC_RET_EEPROM_PARSING_FAIL;
 +
-+	return rdev_set_sta_mon_rssi_range_config(rdev, dev, mac_addr,
-+						  low, high);
-+}
++		for (i = 0; i < 4; i++) {
++			valid = (u8)((~(word_en >> i)) & BIT(0));
++			if (valid == 1) {
++				eeprom_idx = (blk_idx << 3) + (i << 1);
 +
- static int cfg80211_cqm_rssi_update(struct cfg80211_registered_device *rdev,
- 				    struct net_device *dev)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
--	s32 last, low, high;
--	u32 hyst;
--	int i, n;
--	int err;
-+	u8 *mac_addr = NULL;
- 
- 	/* RSSI reporting disabled? */
--	if (!wdev->cqm_config)
-+	if (!wdev->rssi_config)
- 		return rdev_set_cqm_rssi_range_config(rdev, dev, 0, 0);
- 
- 	/*
-@@ -9903,36 +9961,62 @@ static int cfg80211_cqm_rssi_update(struct cfg80211_registered_device *rdev,
- 	 * connection is established and enough beacons received to calculate
- 	 * the average.
- 	 */
--	if (!wdev->cqm_config->last_rssi_event_value && wdev->current_bss &&
--	    rdev->ops->get_station) {
--		struct station_info sinfo = {};
--		u8 *mac_addr;
--
-+	if (!wdev->rssi_config->last_rssi_event_value && wdev->current_bss &&
-+	    rdev->ops->get_station)
- 		mac_addr = wdev->current_bss->pub.bssid;
- 
--		err = rdev_get_station(rdev, dev, mac_addr, &sinfo);
--		if (err)
--			return err;
-+	return cfg80211_set_rssi_range(rdev, dev, mac_addr,
-+				!wdev->rssi_config->last_rssi_event_value);
-+}
- 
--		if (sinfo.filled & BIT(NL80211_STA_INFO_BEACON_SIGNAL_AVG))
--			wdev->cqm_config->last_rssi_event_value =
--				(s8) sinfo.rx_beacon_signal_avg;
-+static int nl80211_validate_rssi_tholds(const s32 *thresholds, int n_thresholds)
-+{
-+	int i;
-+	s32 prev = S32_MIN;
++				if ((eeprom_idx + 1) > hw_info->eeprom_size) {
++					pr_err("efuse idx:0x%X\n",
++					       efuse_idx - 1);
 +
-+	/* Check all values negative and sorted */
-+	for (i = 0; i < n_thresholds; i++) {
-+		if (thresholds[i] > 0 || thresholds[i] <= prev)
-+			return -EINVAL;
++					pr_err("read hdr:0x%X\n", hdr);
 +
-+		prev = thresholds[i];
- 	}
- 
--	last = wdev->cqm_config->last_rssi_event_value;
--	hyst = wdev->cqm_config->rssi_hyst;
--	n = wdev->cqm_config->n_rssi_thresholds;
-+	return 0;
-+}
- 
--	for (i = 0; i < n; i++)
--		if (last < wdev->cqm_config->rssi_thresholds[i])
-+static struct cfg80211_rssi_config *
-+cfg80211_get_rssi_config(struct wireless_dev *wdev, const s32 *thresholds,
-+			 int n_thresholds, u32 hysteresis, const u8 *peer)
-+{
-+	struct cfg80211_rssi_config *rssi_config;
++					pr_err("rad hdr2:0x%X\n", hdr2);
 +
-+	if (!peer)
-+		return NULL;
++					return HALMAC_RET_EEPROM_PARSING_FAIL;
++				}
 +
-+	if (list_empty(&wdev->rssi_config_list))
-+		goto new;
++				value8 = *(phy_map + efuse_idx);
++				*(log_map + eeprom_idx) = value8;
 +
-+	list_for_each_entry(rssi_config, &wdev->rssi_config_list, list) {
-+		if (!memcmp(rssi_config->addr, peer, ETH_ALEN)) {
-+			list_del(&rssi_config->list);
-+			kfree(rssi_config);
- 			break;
++				eeprom_idx++;
++				efuse_idx++;
++
++				if (efuse_idx > hw_info->efuse_size -
++				    PROTECT_EFUSE_SIZE - 1)
++					return HALMAC_RET_EEPROM_PARSING_FAIL;
++
++				value8 = *(phy_map + efuse_idx);
++				*(log_map + eeprom_idx) = value8;
++
++				efuse_idx++;
++
++				if (efuse_idx > hw_info->efuse_size -
++				    PROTECT_EFUSE_SIZE)
++					return HALMAC_RET_EEPROM_PARSING_FAIL;
++			}
 +		}
-+	}
- 
--	low = i > 0 ?
--		(wdev->cqm_config->rssi_thresholds[i - 1] - hyst) : S32_MIN;
--	high = i < n ?
--		(wdev->cqm_config->rssi_thresholds[i] + hyst - 1) : S32_MAX;
-+new:
-+	rssi_config = kzalloc(sizeof(struct cfg80211_rssi_config) +
-+			      n_thresholds * sizeof(s32), GFP_KERNEL);
-+	if (!rssi_config)
-+		return NULL;
- 
--	return rdev_set_cqm_rssi_range_config(rdev, dev, low, high);
-+	rssi_config->rssi_hyst = hysteresis;
-+	rssi_config->n_rssi_thresholds = n_thresholds;
-+	memcpy(rssi_config->addr, peer, ETH_ALEN);
-+	memcpy(rssi_config->rssi_thresholds, thresholds,
-+	       n_thresholds * sizeof(s32));
-+	return rssi_config;
- }
- 
- static int nl80211_set_cqm_rssi(struct genl_info *info,
-@@ -9942,23 +10026,19 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct net_device *dev = info->user_ptr[1];
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
--	int i, err;
--	s32 prev = S32_MIN;
-+	int err;
- 
--	/* Check all values negative and sorted */
--	for (i = 0; i < n_thresholds; i++) {
--		if (thresholds[i] > 0 || thresholds[i] <= prev)
--			return -EINVAL;
-+	err = nl80211_validate_rssi_tholds(thresholds, n_thresholds);
- 
--		prev = thresholds[i];
--	}
-+	if (err)
-+		return err;
- 
- 	if (wdev->iftype != NL80211_IFTYPE_STATION &&
- 	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)
- 		return -EOPNOTSUPP;
- 
- 	wdev_lock(wdev);
--	cfg80211_cqm_config_free(wdev);
-+	cfg80211_rssi_config_free(wdev);
- 	wdev_unlock(wdev);
- 
- 	if (n_thresholds <= 1 && rdev->ops->set_cqm_rssi_config) {
-@@ -9977,26 +10057,22 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
- 		n_thresholds = 0;
- 
- 	wdev_lock(wdev);
--	if (n_thresholds) {
--		struct cfg80211_cqm_config *cqm_config;
-+	if (n_thresholds)
-+		wdev->rssi_config = cfg80211_get_rssi_config(
-+						wdev, thresholds,
-+						n_thresholds, hysteresis,
-+						wdev->current_bss->pub.bssid);
- 
--		cqm_config = kzalloc(sizeof(struct cfg80211_cqm_config) +
--				     n_thresholds * sizeof(s32), GFP_KERNEL);
--		if (!cqm_config) {
--			err = -ENOMEM;
--			goto unlock;
--		}
--
--		cqm_config->rssi_hyst = hysteresis;
--		cqm_config->n_rssi_thresholds = n_thresholds;
--		memcpy(cqm_config->rssi_thresholds, thresholds,
--		       n_thresholds * sizeof(s32));
--
--		wdev->cqm_config = cqm_config;
-+	if (!wdev->rssi_config) {
-+		err = -ENOMEM;
-+		goto unlock;
- 	}
- 
- 	err = cfg80211_cqm_rssi_update(rdev, dev);
- 
-+	if (!err)
-+		list_add(&wdev->rssi_config->list, &wdev->rssi_config_list);
++	} while (1);
 +
- unlock:
- 	wdev_unlock(wdev);
- 
-@@ -12642,6 +12718,103 @@ static int nl80211_tx_control_port(struct sk_buff *skb, struct genl_info *info)
- 	return err;
- }
- 
-+static int nl80211_set_sta_mon_rssi(struct genl_info *info,
-+				    const u8 *peer, const s32 *thresholds,
-+				    int n_thresholds, u32 hysteresis)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	int err;
++	adapter->efuse_end = efuse_idx;
 +
-+	if ((wdev->iftype != NL80211_IFTYPE_AP &&
-+	     wdev->iftype != NL80211_IFTYPE_P2P_GO &&
-+	     wdev->iftype != NL80211_IFTYPE_AP_VLAN) ||
-+	    !wiphy_ext_feature_isset(&rdev->wiphy,
-+				     NL80211_EXT_FEATURE_STA_MON_RSSI_CONFIG))
-+		return -EOPNOTSUPP;
-+
-+	err = nl80211_validate_rssi_tholds(thresholds, n_thresholds);
-+
-+	if (err)
-+		return err;
-+
-+	if (n_thresholds <= 1 && rdev->ops->set_sta_mon_rssi_config) {
-+		if (n_thresholds == 0 || thresholds[0] == 0)
-+			return rdev_set_sta_mon_rssi_config(rdev, dev,
-+					peer, 0, 0);
-+		return rdev_set_sta_mon_rssi_config(rdev, dev, peer,
-+				thresholds[0], hysteresis);
-+	}
-+
-+	if (!rdev->ops->set_sta_mon_rssi_range_config ||
-+	    !wiphy_ext_feature_isset(&rdev->wiphy,
-+				     NL80211_EXT_FEATURE_STA_MON_RSSI_LIST))
-+		return -EOPNOTSUPP;
-+
-+	/* Disabling */
-+	if (!n_thresholds || (n_thresholds == 1 && thresholds[0] == 0))
-+		return rdev_set_sta_mon_rssi_range_config(rdev, dev,
-+							  peer, 0, 0);
-+
-+	wdev_lock(wdev);
-+	wdev->rssi_config = cfg80211_get_rssi_config(wdev, thresholds,
-+						     n_thresholds, hysteresis,
-+						     peer);
-+
-+	if (!wdev->rssi_config) {
-+		err = -ENOMEM;
-+		goto unlock;
-+	}
-+
-+	err = cfg80211_set_rssi_range(rdev, dev, peer,
-+				!wdev->rssi_config->last_rssi_event_value);
-+
-+	if (!err)
-+		list_add(&wdev->rssi_config->list, &wdev->rssi_config_list);
-+unlock:
-+	wdev_unlock(wdev);
-+	return err;
++	return HALMAC_RET_SUCCESS;
 +}
 +
-+static int nl80211_sta_mon(struct sk_buff *skb, struct genl_info *info)
++static enum halmac_ret_status
++read_log_efuse_map_88xx(struct halmac_adapter *adapter, u8 *map)
 +{
-+	struct nlattr *attrs[NL80211_ATTR_STA_MON_MAX + 1];
-+	struct nlattr *sta_mon;
-+	u8 *addr = NULL;
-+	int err;
++	u8 *local_map = NULL;
++	u32 efuse_size;
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
 +
-+	sta_mon = info->attrs[NL80211_ATTR_STA_MON];
-+	if (!sta_mon || !(info->attrs[NL80211_ATTR_MAC]))
-+		return -EINVAL;
++	if (adapter->efuse_map_valid == 0) {
++		efuse_size = adapter->hw_cfg_info.efuse_size;
 +
-+	err = nla_parse_nested(attrs, NL80211_ATTR_STA_MON_MAX,
-+			       sta_mon, nl80211_attr_sta_mon_policy,
-+			       info->extack);
++		local_map = kzalloc(efuse_size, GFP_KERNEL);
++		if (!local_map)
++			return HALMAC_RET_MALLOC_FAIL;
 +
-+	if (err)
-+		return err;
++		status = read_efuse_88xx(adapter, 0, efuse_size, local_map);
++		if (status != HALMAC_RET_SUCCESS) {
++			pr_err("read efuse\n");
++			kfree(local_map);
++			return status;
++		}
 +
-+	addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
++		if (!adapter->efuse_map) {
++			adapter->efuse_map = kzalloc(efuse_size, GFP_KERNEL);
++			if (!adapter->efuse_map) {
++				kfree(local_map);
++				return HALMAC_RET_MALLOC_FAIL;
++			}
++		}
 +
-+	if (attrs[NL80211_ATTR_STA_MON_RSSI_THOLD] &&
-+	    attrs[NL80211_ATTR_STA_MON_RSSI_HYST]) {
-+		const s32 *tholds =
-+			nla_data(attrs[NL80211_ATTR_STA_MON_RSSI_THOLD]);
-+		int len = nla_len(attrs[NL80211_ATTR_STA_MON_RSSI_THOLD]);
-+		u32 hysteresis =
-+			nla_get_u32(attrs[NL80211_ATTR_STA_MON_RSSI_HYST]);
++		mutex_lock(&adapter->efuse_mutex);
++		memcpy(adapter->efuse_map, local_map, efuse_size);
++		adapter->efuse_map_valid = 1;
++		mutex_unlock(&adapter->efuse_mutex);
 +
-+		if (len % 4)
-+			return -EINVAL;
-+
-+		return nl80211_set_sta_mon_rssi(info, addr, tholds, len / 4,
-+				hysteresis);
++		kfree(local_map);
 +	}
 +
-+	return -EINVAL;
++	if (eeprom_parser_88xx(adapter, adapter->efuse_map, map) !=
++	    HALMAC_RET_SUCCESS)
++		return HALMAC_RET_EEPROM_PARSING_FAIL;
++
++	return status;
 +}
 +
- #define NL80211_FLAG_NEED_WIPHY		0x01
- #define NL80211_FLAG_NEED_NETDEV	0x02
- #define NL80211_FLAG_NEED_RTNL		0x04
-@@ -13553,6 +13726,14 @@ static void nl80211_post_doit(const struct genl_ops *ops, struct sk_buff *skb,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-+	{
-+		.cmd = NL80211_CMD_STA_MON,
-+		.doit = nl80211_sta_mon,
-+		.policy = nl80211_policy,
-+		.flags = GENL_UNS_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
- };
- 
- static struct genl_family nl80211_fam __ro_after_init = {
-@@ -14725,6 +14906,107 @@ bool cfg80211_rx_control_port(struct net_device *dev,
- }
- EXPORT_SYMBOL(cfg80211_rx_control_port);
- 
-+static struct sk_buff *cfg80211_prepare_sta_mon(struct net_device *dev,
-+						const char *mac, gfp_t gfp)
++static enum halmac_ret_status
++proc_pg_efuse_by_map_88xx(struct halmac_adapter *adapter,
++			  struct halmac_pg_efuse_info *info,
++			  enum halmac_efuse_read_cfg cfg)
 +{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-+	struct sk_buff *msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	void **cb;
++	u8 *updated_mask = NULL;
++	u32 mask_size = adapter->hw_cfg_info.eeprom_size >> 4;
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
 +
-+	if (!msg)
-+		return NULL;
++	updated_mask = kzalloc(mask_size, GFP_KERNEL);
++	if (!updated_mask)
++		return HALMAC_RET_MALLOC_FAIL;
++	memset(updated_mask, 0x00, mask_size);
 +
-+	cb = (void **)msg->cb;
-+
-+	cb[0] = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_NOTIFY_STA_MON);
-+	if (!cb[0]) {
-+		nlmsg_free(msg);
-+		return NULL;
++	status = update_eeprom_mask_88xx(adapter, info, updated_mask);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("update eeprom mask\n");
++		kfree(updated_mask);
++		return status;
 +	}
 +
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex))
-+		goto nla_put_failure;
++	status = check_efuse_enough_88xx(adapter, info, updated_mask);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("chk efuse enough\n");
++		kfree(updated_mask);
++		return status;
++	}
 +
-+	if (nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac))
-+		goto nla_put_failure;
++	status = program_efuse_88xx(adapter, info, updated_mask);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("pg efuse\n");
++		kfree(updated_mask);
++		return status;
++	}
 +
-+	cb[1] = nla_nest_start(msg, NL80211_ATTR_STA_MON);
-+	if (!cb[1])
-+		goto nla_put_failure;
++	kfree(updated_mask);
 +
-+	cb[2] = rdev;
-+
-+	return msg;
-+nla_put_failure:
-+	nlmsg_free(msg);
-+	return NULL;
++	return HALMAC_RET_SUCCESS;
 +}
 +
-+static void cfg80211_send_sta_mon(struct sk_buff *msg, gfp_t gfp)
++static enum halmac_ret_status
++dump_efuse_drv_88xx(struct halmac_adapter *adapter)
 +{
-+	void **cb = (void **)msg->cb;
-+	struct cfg80211_registered_device *rdev = cb[2];
++	u8 *map = NULL;
++	u32 efuse_size = adapter->hw_cfg_info.efuse_size;
 +
-+	nla_nest_end(msg, cb[1]);
-+	genlmsg_end(msg, cb[0]);
-+
-+	memset(msg->cb, 0, sizeof(msg->cb));
-+
-+	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
-+				NL80211_MCGRP_MLME, gfp);
-+}
-+
-+void cfg80211_sta_mon_rssi_notify(struct net_device *dev, const u8 *peer,
-+			  enum nl80211_sta_mon_rssi_threshold_event rssi_event,
-+			  s32 rssi_level, gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-+	struct cfg80211_rssi_config *rssi_config;
-+
-+	if (WARN_ON(!peer))
-+		return;
-+
-+	if (WARN_ON(rssi_event != NL80211_STA_MON_RSSI_THRESHOLD_EVENT_LOW &&
-+		    rssi_event != NL80211_STA_MON_RSSI_THRESHOLD_EVENT_HIGH))
-+		return;
-+
-+	trace_cfg80211_sta_mon_rssi_notify(dev, peer, rssi_event, rssi_level);
-+
-+	list_for_each_entry(rssi_config, &wdev->rssi_config_list, list) {
-+		if (!memcmp(rssi_config->addr, peer, ETH_ALEN)) {
-+			wdev->rssi_config = rssi_config;
-+			wdev->rssi_config->last_rssi_event_value = rssi_level;
-+			cfg80211_set_rssi_range(rdev, dev, peer,
-+				!wdev->rssi_config->last_rssi_event_value);
-+			break;
++	if (!adapter->efuse_map) {
++		adapter->efuse_map = kzalloc(efuse_size, GFP_KERNEL);
++		if (!adapter->efuse_map) {
++			reset_ofld_feature_88xx(adapter,
++						FEATURE_DUMP_PHY_EFUSE);
++			return HALMAC_RET_MALLOC_FAIL;
 +		}
 +	}
 +
-+	msg = cfg80211_prepare_sta_mon(dev, peer, gfp);
-+	if (!msg)
-+		return;
++	if (adapter->efuse_map_valid == 0) {
++		map = kzalloc(efuse_size, GFP_KERNEL);
++		if (!map)
++			return HALMAC_RET_MALLOC_FAIL;
 +
-+	if (nla_put_u32(msg, NL80211_ATTR_STA_MON_RSSI_THRESHOLD_EVENT,
-+			rssi_event))
-+		goto nla_put_failure;
++		if (read_hw_efuse_88xx(adapter, 0, efuse_size, map) !=
++		    HALMAC_RET_SUCCESS) {
++			kfree(map);
++			return HALMAC_RET_EFUSE_R_FAIL;
++		}
 +
-+	if (rssi_level && nla_put_s32(msg, NL80211_ATTR_STA_MON_RSSI_LEVEL,
-+				      rssi_level))
-+		goto nla_put_failure;
++		mutex_lock(&adapter->efuse_mutex);
++		memcpy(adapter->efuse_map, map, efuse_size);
++		adapter->efuse_map_valid = 1;
++		mutex_unlock(&adapter->efuse_mutex);
 +
-+	cfg80211_send_sta_mon(msg, gfp);
++		kfree(map);
++	}
 +
-+	return;
-+
-+ nla_put_failure:
-+	nlmsg_free(msg);
++	return HALMAC_RET_SUCCESS;
 +}
-+EXPORT_SYMBOL(cfg80211_sta_mon_rssi_notify);
 +
- static struct sk_buff *cfg80211_prepare_cqm(struct net_device *dev,
- 					    const char *mac, gfp_t gfp)
- {
-@@ -14791,13 +15073,13 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
- 		    rssi_event != NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH))
- 		return;
- 
--	if (wdev->cqm_config) {
--		wdev->cqm_config->last_rssi_event_value = rssi_level;
-+	if (wdev->rssi_config) {
-+		wdev->rssi_config->last_rssi_event_value = rssi_level;
- 
- 		cfg80211_cqm_rssi_update(rdev, dev);
- 
- 		if (rssi_level == 0)
--			rssi_level = wdev->cqm_config->last_rssi_event_value;
-+			rssi_level = wdev->rssi_config->last_rssi_event_value;
- 	}
- 
- 	msg = cfg80211_prepare_cqm(dev, NULL, gfp);
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 87479a5..47562b9 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -1220,4 +1220,35 @@ static inline int rdev_del_pmk(struct cfg80211_registered_device *rdev,
- 	return ret;
- }
- 
-+static inline int
-+rdev_set_sta_mon_rssi_config(struct cfg80211_registered_device *rdev,
-+			     struct net_device *dev, const u8 *peer,
-+			     s32 rssi_tholds, u32 rssi_hyst)
-+
++static enum halmac_ret_status
++dump_efuse_fw_88xx(struct halmac_adapter *adapter)
 +{
-+	int ret;
++	u8 h2c_buf[H2C_PKT_SIZE_88XX] = { 0 };
++	u16 seq_num = 0;
++	u32 efuse_size = adapter->hw_cfg_info.efuse_size;
++	struct halmac_h2c_header_info hdr_info;
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
 +
-+	trace_rdev_set_sta_mon_rssi_config(&rdev->wiphy, dev, peer,
-+					   rssi_tholds, rssi_hyst);
-+	ret = rdev->ops->set_sta_mon_rssi_config(&rdev->wiphy, dev, peer,
-+						 rssi_tholds, rssi_hyst);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+	return ret;
++	hdr_info.sub_cmd_id = SUB_CMD_ID_DUMP_PHYSICAL_EFUSE;
++	hdr_info.content_size = 0;
++	hdr_info.ack = 1;
++	set_h2c_pkt_hdr_88xx(adapter, h2c_buf, &hdr_info, &seq_num);
++
++	adapter->halmac_state.efuse_state.seq_num = seq_num;
++
++	if (!adapter->efuse_map) {
++		adapter->efuse_map = kzalloc(efuse_size, GFP_KERNEL);
++		if (!adapter->efuse_map) {
++			reset_ofld_feature_88xx(adapter,
++						FEATURE_DUMP_PHY_EFUSE);
++			return HALMAC_RET_MALLOC_FAIL;
++		}
++	}
++
++	if (adapter->efuse_map_valid == 0) {
++		status = send_h2c_pkt_88xx(adapter, h2c_buf);
++		if (status != HALMAC_RET_SUCCESS) {
++			pr_err("send h2c pkt\n");
++			reset_ofld_feature_88xx(adapter,
++						FEATURE_DUMP_PHY_EFUSE);
++			return status;
++		}
++	}
++
++	return HALMAC_RET_SUCCESS;
 +}
 +
-+static inline int
-+rdev_set_sta_mon_rssi_range_config(struct cfg80211_registered_device *rdev,
-+				   struct net_device *dev, const u8 *peer,
-+				   s32 low, s32 high)
++static enum halmac_ret_status
++proc_write_log_efuse_88xx(struct halmac_adapter *adapter, u32 offset, u8 value)
 +{
-+	int ret;
++	u8 byte1;
++	u8 byte2;
++	u8 blk;
++	u8 blk_idx;
++	u8 hdr;
++	u8 hdr2;
++	u8 *map = NULL;
++	u32 eeprom_size = adapter->hw_cfg_info.eeprom_size;
++	u32 end;
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
 +
-+	trace_rdev_set_sta_mon_rssi_range_config(&rdev->wiphy, dev, peer,
-+						 low, high);
-+	ret = rdev->ops->set_sta_mon_rssi_range_config(&rdev->wiphy, dev, peer,
-+						       low, high);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+	return ret;
++	map = kzalloc(eeprom_size, GFP_KERNEL);
++	if (!map)
++		return HALMAC_RET_MALLOC_FAIL;
++	memset(map, 0xFF, eeprom_size);
++
++	status = read_log_efuse_map_88xx(adapter, map);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("read logical efuse\n");
++		kfree(map);
++		return status;
++	}
++
++	if (*(map + offset) != value) {
++		end = adapter->efuse_end;
++		blk = (u8)(offset >> 3);
++		blk_idx = (u8)((offset & (8 - 1)) >> 1);
++
++		if (offset > 0x7f) {
++			hdr = (((blk & 0x07) << 5) & 0xE0) | 0x0F;
++			hdr2 = (u8)(((blk & 0x78) << 1) +
++						((0x1 << blk_idx) ^ 0x0F));
++		} else {
++			hdr = (u8)((blk << 4) + ((0x01 << blk_idx) ^ 0x0F));
++		}
++
++		if ((offset & 1) == 0) {
++			byte1 = value;
++			byte2 = *(map + offset + 1);
++		} else {
++			byte1 = *(map + offset - 1);
++			byte2 = value;
++		}
++
++		if (offset > 0x7f) {
++			if (adapter->hw_cfg_info.efuse_size <=
++			    4 + PROTECT_EFUSE_SIZE + end) {
++				kfree(map);
++				return HALMAC_RET_EFUSE_NOT_ENOUGH;
++			}
++
++			status = write_hw_efuse_88xx(adapter, end, hdr);
++			if (status != HALMAC_RET_SUCCESS) {
++				kfree(map);
++				return status;
++			}
++
++			status = write_hw_efuse_88xx(adapter, end + 1, hdr2);
++			if (status != HALMAC_RET_SUCCESS) {
++				kfree(map);
++				return status;
++			}
++
++			status = write_hw_efuse_88xx(adapter, end + 2, byte1);
++			if (status != HALMAC_RET_SUCCESS) {
++				kfree(map);
++				return status;
++			}
++
++			status = write_hw_efuse_88xx(adapter, end + 3, byte2);
++			if (status != HALMAC_RET_SUCCESS) {
++				kfree(map);
++				return status;
++			}
++		} else {
++			if (adapter->hw_cfg_info.efuse_size <=
++			    3 + PROTECT_EFUSE_SIZE + end) {
++				kfree(map);
++				return HALMAC_RET_EFUSE_NOT_ENOUGH;
++			}
++
++			status = write_hw_efuse_88xx(adapter, end, hdr);
++			if (status != HALMAC_RET_SUCCESS) {
++				kfree(map);
++				return status;
++			}
++
++			status = write_hw_efuse_88xx(adapter, end + 1, byte1);
++			if (status != HALMAC_RET_SUCCESS) {
++				kfree(map);
++				return status;
++			}
++
++			status = write_hw_efuse_88xx(adapter, end + 2, byte2);
++			if (status != HALMAC_RET_SUCCESS) {
++				kfree(map);
++				return status;
++			}
++		}
++	}
++
++	kfree(map);
++
++	return HALMAC_RET_SUCCESS;
 +}
 +
- #endif /* __CFG80211_RDEV_OPS */
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 55fb279..78ff0f2 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -1340,6 +1340,56 @@
- 		  __entry->rssi_low, __entry->rssi_high)
- );
- 
-+TRACE_EVENT(rdev_set_sta_mon_rssi_config,
-+	TP_PROTO(struct wiphy *wiphy,
-+		 struct net_device *netdev, const u8 *peer,
-+		 s32 rssi_thold, u32 rssi_hyst),
-+	TP_ARGS(wiphy, netdev, peer, rssi_thold, rssi_hyst),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		NETDEV_ENTRY
-+		MAC_ENTRY(peer)
-+		__field(s32, rssi_thold)
-+		__field(u32, rssi_hyst)
-+	),
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
-+		MAC_ASSIGN(peer, peer);
-+		__entry->rssi_thold = rssi_thold;
-+		__entry->rssi_hyst = rssi_hyst;
-+	),
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " MAC_PR_FMT
-+		  ", rssi_thold: %d, rssi_hyst: %u ",
-+		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(peer),
-+		  __entry->rssi_thold, __entry->rssi_hyst)
-+);
++enum halmac_ret_status
++read_efuse_88xx(struct halmac_adapter *adapter, u32 offset, u32 size, u8 *map)
++{
++	if (!map) {
++		pr_err("malloc map\n");
++		return HALMAC_RET_NULL_POINTER;
++	}
 +
-+TRACE_EVENT(rdev_set_sta_mon_rssi_range_config,
-+	TP_PROTO(struct wiphy *wiphy,
-+		 struct net_device *netdev, const u8 *peer,
-+		 s32 low, s32 high),
-+	TP_ARGS(wiphy, netdev, peer, low, high),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		NETDEV_ENTRY
-+		MAC_ENTRY(peer)
-+		__field(s32, rssi_low)
-+		__field(s32, rssi_high)
-+	),
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
-+		MAC_ASSIGN(peer, peer);
-+		__entry->rssi_low = low;
-+		__entry->rssi_high = high;
-+	),
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " MAC_PR_FMT
-+		  ", range: %d - %d ",
-+		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(peer),
-+		  __entry->rssi_low, __entry->rssi_high)
-+);
++	if (adapter->efuse_map_valid == 1) {
++		memcpy(map, adapter->efuse_map + offset, size);
++	} else {
++		if (read_hw_efuse_88xx(adapter, offset, size, map) !=
++		    HALMAC_RET_SUCCESS)
++			return HALMAC_RET_EFUSE_R_FAIL;
++	}
 +
- TRACE_EVENT(rdev_set_cqm_txe_config,
- 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev, u32 rate,
- 		 u32 pkts, u32 intvl),
-@@ -3243,6 +3293,30 @@
- 		  WIPHY_PR_ARG, NETDEV_PR_ARG,
- 		  BOOL_TO_STR(__entry->enabled))
- );
++	return HALMAC_RET_SUCCESS;
++}
 +
-+TRACE_EVENT(cfg80211_sta_mon_rssi_notify,
-+	TP_PROTO(struct net_device *netdev, const u8 *peer,
-+		 enum nl80211_sta_mon_rssi_threshold_event rssi_event,
-+		 s32 rssi_level),
-+	TP_ARGS(netdev, peer, rssi_event, rssi_level),
-+	TP_STRUCT__entry(
-+		NETDEV_ENTRY
-+		MAC_ENTRY(peer)
-+		__field(enum nl80211_sta_mon_rssi_threshold_event, rssi_event)
-+		__field(s32, rssi_level)
-+	),
-+	TP_fast_assign(
-+		NETDEV_ASSIGN;
-+		MAC_ASSIGN(peer, peer);
-+		__entry->rssi_event = rssi_event;
-+		__entry->rssi_level = rssi_level;
-+	),
-+	TP_printk(NETDEV_PR_FMT ", peer: " MAC_PR_FMT
-+		  ", rssi event: %d, rssi : %d",
-+		  NETDEV_PR_ARG, MAC_PR_ARG(peer),
-+		  __entry->rssi_event, __entry->rssi_level)
-+);
++static enum halmac_ret_status
++update_eeprom_mask_88xx(struct halmac_adapter *adapter,
++			struct halmac_pg_efuse_info *info, u8 *updated_mask)
++{
++	u8 *map = NULL;
++	u8 clr_bit = 0;
++	u32 eeprom_size = adapter->hw_cfg_info.eeprom_size;
++	u8 *map_pg;
++	u8 *efuse_mask;
++	u16 i;
++	u16 j;
++	u16 map_offset;
++	u16 mask_offset;
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
 +
- #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
- 
- #undef TRACE_INCLUDE_PATH
++	map = kzalloc(eeprom_size, GFP_KERNEL);
++	if (!map)
++		return HALMAC_RET_MALLOC_FAIL;
++	memset(map, 0xFF, eeprom_size);
++
++	memset(updated_mask, 0x00, info->efuse_mask_size);
++
++	status = read_log_efuse_map_88xx(adapter, map);
++
++	if (status != HALMAC_RET_SUCCESS) {
++		kfree(map);
++		return status;
++	}
++
++	map_pg = info->efuse_map;
++	efuse_mask = info->efuse_mask;
++
++	for (i = 0; i < info->efuse_mask_size; i++)
++		*(updated_mask + i) = *(efuse_mask + i);
++
++	for (i = 0; i < info->efuse_map_size; i += 16) {
++		for (j = 0; j < 16; j += 2) {
++			map_offset = i + j;
++			mask_offset = i >> 4;
++			if (*(u16 *)(map_pg + map_offset) ==
++			    *(u16 *)(map + map_offset)) {
++				switch (j) {
++				case 0:
++					clr_bit = BIT(4);
++					break;
++				case 2:
++					clr_bit = BIT(5);
++					break;
++				case 4:
++					clr_bit = BIT(6);
++					break;
++				case 6:
++					clr_bit = BIT(7);
++					break;
++				case 8:
++					clr_bit = BIT(0);
++					break;
++				case 10:
++					clr_bit = BIT(1);
++					break;
++				case 12:
++					clr_bit = BIT(2);
++					break;
++				case 14:
++					clr_bit = BIT(3);
++					break;
++				default:
++					break;
++				}
++				*(updated_mask + mask_offset) &= ~clr_bit;
++			}
++		}
++	}
++
++	kfree(map);
++
++	return status;
++}
++
++static enum halmac_ret_status
++check_efuse_enough_88xx(struct halmac_adapter *adapter,
++			struct halmac_pg_efuse_info *info, u8 *updated_mask)
++{
++	u8 pre_word_en;
++	u16 i;
++	u16 j;
++	u32 eeprom_offset;
++	u32 pg_num = 0;
++
++	for (i = 0; i < info->efuse_map_size; i = i + 8) {
++		eeprom_offset = i;
++
++		if ((eeprom_offset & 7) > 0)
++			pre_word_en = (*(updated_mask + (i >> 4)) & 0x0F);
++		else
++			pre_word_en = (*(updated_mask + (i >> 4)) >> 4);
++
++		if (pre_word_en > 0) {
++			if (eeprom_offset > 0x7f) {
++				pg_num += 2;
++				for (j = 0; j < 4; j++) {
++					if (((pre_word_en >> j) & 0x1) > 0)
++						pg_num += 2;
++				}
++			} else {
++				pg_num++;
++				for (j = 0; j < 4; j++) {
++					if (((pre_word_en >> j) & 0x1) > 0)
++						pg_num += 2;
++				}
++			}
++		}
++	}
++
++	if (adapter->hw_cfg_info.efuse_size <=
++	    (pg_num + PROTECT_EFUSE_SIZE + adapter->efuse_end))
++		return HALMAC_RET_EFUSE_NOT_ENOUGH;
++
++	return HALMAC_RET_SUCCESS;
++}
++
++static enum halmac_ret_status
++pg_extend_efuse_88xx(struct halmac_adapter *adapter,
++		     struct halmac_pg_efuse_info *info, u8 word_en,
++		     u8 pre_word_en, u32 eeprom_offset)
++{
++	u8 blk;
++	u8 hdr;
++	u8 hdr2;
++	u16 i;
++	u32 efuse_end;
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
++
++	efuse_end = adapter->efuse_end;
++
++	blk = (u8)(eeprom_offset >> 3);
++	hdr = (((blk & 0x07) << 5) & 0xE0) | 0x0F;
++	hdr2 = (u8)(((blk & 0x78) << 1) + word_en);
++
++	status = write_hw_efuse_88xx(adapter, efuse_end, hdr);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("write efuse\n");
++		return status;
++	}
++
++	status = write_hw_efuse_88xx(adapter, efuse_end + 1, hdr2);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("write efuse(+1)\n");
++		return status;
++	}
++
++	efuse_end = efuse_end + 2;
++	for (i = 0; i < 4; i++) {
++		if (((pre_word_en >> i) & 0x1) > 0) {
++			status = write_hw_efuse_88xx(adapter, efuse_end,
++						     *(info->efuse_map +
++						     eeprom_offset +
++						     (i << 1)));
++			if (status != HALMAC_RET_SUCCESS) {
++				pr_err("write efuse(<<1)\n");
++				return status;
++			}
++
++			status = write_hw_efuse_88xx(adapter, efuse_end + 1,
++						     *(info->efuse_map +
++						     eeprom_offset + (i << 1)
++						     + 1));
++			if (status != HALMAC_RET_SUCCESS) {
++				pr_err("write efuse(<<1)+1\n");
++				return status;
++			}
++			efuse_end = efuse_end + 2;
++		}
++	}
++	adapter->efuse_end = efuse_end;
++	return status;
++}
++
++static enum halmac_ret_status
++proc_pg_efuse_88xx(struct halmac_adapter *adapter,
++		   struct halmac_pg_efuse_info *info, u8 word_en,
++		   u8 pre_word_en, u32 eeprom_offset)
++{
++	u8 blk;
++	u8 hdr;
++	u16 i;
++	u32 efuse_end;
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
++
++	efuse_end = adapter->efuse_end;
++
++	blk = (u8)(eeprom_offset >> 3);
++	hdr = (u8)((blk << 4) + word_en);
++
++	status = write_hw_efuse_88xx(adapter, efuse_end, hdr);
++	if (status != HALMAC_RET_SUCCESS) {
++		pr_err("write efuse\n");
++		return status;
++	}
++	efuse_end = efuse_end + 1;
++	for (i = 0; i < 4; i++) {
++		if (((pre_word_en >> i) & 0x1) > 0) {
++			status = write_hw_efuse_88xx(adapter, efuse_end,
++						     *(info->efuse_map +
++						     eeprom_offset +
++						     (i << 1)));
++			if (status != HALMAC_RET_SUCCESS) {
++				pr_err("write efuse(<<1)\n");
++				return status;
++			}
++			status = write_hw_efuse_88xx(adapter, efuse_end + 1,
++						     *(info->efuse_map +
++						     eeprom_offset + (i << 1)
++						     + 1));
++			if (status != HALMAC_RET_SUCCESS) {
++				pr_err("write efuse(<<1)+1\n");
++				return status;
++			}
++			efuse_end = efuse_end + 2;
++		}
++	}
++	adapter->efuse_end = efuse_end;
++	return status;
++}
++
++static enum halmac_ret_status
++program_efuse_88xx(struct halmac_adapter *adapter,
++		   struct halmac_pg_efuse_info *info, u8 *updated_mask)
++{
++	u8 pre_word_en;
++	u8 word_en;
++	u16 i;
++	u32 eeprom_offset;
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
++
++	for (i = 0; i < info->efuse_map_size; i = i + 8) {
++		eeprom_offset = i;
++
++		if (((eeprom_offset >> 3) & 1) > 0) {
++			pre_word_en = (*(updated_mask + (i >> 4)) & 0x0F);
++			word_en = pre_word_en ^ 0x0F;
++		} else {
++			pre_word_en = (*(updated_mask + (i >> 4)) >> 4);
++			word_en = pre_word_en ^ 0x0F;
++		}
++
++		if (pre_word_en > 0) {
++			if (eeprom_offset > 0x7f) {
++				status = pg_extend_efuse_88xx(adapter, info,
++							      word_en,
++							      pre_word_en,
++							      eeprom_offset);
++				if (status != HALMAC_RET_SUCCESS) {
++					pr_err("extend efuse\n");
++					return status;
++				}
++			} else {
++				status = proc_pg_efuse_88xx(adapter, info,
++							    word_en,
++							    pre_word_en,
++							    eeprom_offset);
++				if (status != HALMAC_RET_SUCCESS) {
++					pr_err("extend efuse");
++					return status;
++				}
++			}
++		}
++	}
++
++	return status;
++}
++
++static void
++mask_eeprom_88xx(struct halmac_adapter *adapter,
++		 struct halmac_pg_efuse_info *info)
++{
++	u8 pre_word_en;
++	u8 *updated_mask;
++	u8 *efuse_map;
++	u16 i;
++	u16 j;
++	u32 offset;
++
++	updated_mask = info->efuse_mask;
++	efuse_map = info->efuse_map;
++
++	for (i = 0; i < info->efuse_map_size; i = i + 8) {
++		offset = i;
++
++		if (((offset >> 3) & 1) > 0)
++			pre_word_en = (*(updated_mask + (i >> 4)) & 0x0F);
++		else
++			pre_word_en = (*(updated_mask + (i >> 4)) >> 4);
++
++		for (j = 0; j < 4; j++) {
++			if (((pre_word_en >> j) & 0x1) == 0) {
++				*(efuse_map + offset + (j << 1)) = 0xFF;
++				*(efuse_map + offset + (j << 1) + 1) = 0xFF;
++			}
++		}
++	}
++}
++
++enum halmac_ret_status
++get_efuse_data_88xx(struct halmac_adapter *adapter, u8 *buf, u32 size)
++{
++	u8 seg_id;
++	u8 seg_size;
++	u8 seq_num;
++	u8 fw_rc;
++	u8 *map = NULL;
++	u32 eeprom_size = adapter->hw_cfg_info.eeprom_size;
++	struct halmac_efuse_state *state = &adapter->halmac_state.efuse_state;
++	enum halmac_cmd_process_status proc_status;
++
++	seq_num = (u8)EFUSE_DATA_GET_H2C_SEQ(buf);
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG,
++		 "Seq num : h2c->%d c2h->%d\n", state->seq_num, seq_num);
++	if (seq_num != state->seq_num) {
++		pr_err("Seq num mismatch : h2c->%d c2h->%d\n", state->seq_num,
++		       seq_num);
++		return HALMAC_RET_SUCCESS;
++	}
++
++	if (state->proc_status != HALMAC_CMD_PROCESS_SENDING) {
++		pr_err("not cmd sending\n");
++		return HALMAC_RET_SUCCESS;
++	}
++
++	seg_id = (u8)EFUSE_DATA_GET_SEGMENT_ID(buf);
++	seg_size = (u8)EFUSE_DATA_GET_SEGMENT_SIZE(buf);
++	if (seg_id == 0)
++		adapter->efuse_seg_size = seg_size;
++
++	map = kzalloc(eeprom_size, GFP_KERNEL);
++	if (!map)
++		return HALMAC_RET_MALLOC_FAIL;
++	memset(map, 0xFF, eeprom_size);
++
++	mutex_lock(&adapter->efuse_mutex);
++	memcpy(adapter->efuse_map + seg_id * adapter->efuse_seg_size,
++	       buf + C2H_DATA_OFFSET_88XX, seg_size);
++	mutex_unlock(&adapter->efuse_mutex);
++
++	if (EFUSE_DATA_GET_END_SEGMENT(buf) == 0) {
++		kfree(map);
++		return HALMAC_RET_SUCCESS;
++	}
++
++	fw_rc = state->fw_rc;
++
++	if ((enum halmac_h2c_return_code)fw_rc == HALMAC_H2C_RETURN_SUCCESS) {
++		proc_status = HALMAC_CMD_PROCESS_DONE;
++		state->proc_status = proc_status;
++
++		mutex_lock(&adapter->efuse_mutex);
++		adapter->efuse_map_valid = 1;
++		mutex_unlock(&adapter->efuse_mutex);
++
++		if (adapter->evnt.phy_efuse_map == 1) {
++			PLTFM_EVENT_SIG(FEATURE_DUMP_PHY_EFUSE,
++					proc_status, adapter->efuse_map,
++					adapter->hw_cfg_info.efuse_size);
++			adapter->evnt.phy_efuse_map = 0;
++		}
++
++		if (adapter->evnt.log_efuse_map == 1) {
++			if (eeprom_parser_88xx(adapter, adapter->efuse_map,
++					       map) != HALMAC_RET_SUCCESS) {
++				kfree(map);
++				return HALMAC_RET_EEPROM_PARSING_FAIL;
++			}
++			PLTFM_EVENT_SIG(FEATURE_DUMP_LOG_EFUSE, proc_status,
++					map, eeprom_size);
++			adapter->evnt.log_efuse_map = 0;
++		}
++	} else {
++		proc_status = HALMAC_CMD_PROCESS_ERROR;
++		state->proc_status = proc_status;
++
++		if (adapter->evnt.phy_efuse_map == 1) {
++			PLTFM_EVENT_SIG(FEATURE_DUMP_PHY_EFUSE, proc_status,
++					&state->fw_rc, 1);
++			adapter->evnt.phy_efuse_map = 0;
++		}
++
++		if (adapter->evnt.log_efuse_map == 1) {
++			PLTFM_EVENT_SIG(FEATURE_DUMP_LOG_EFUSE, proc_status,
++					&state->fw_rc, 1);
++			adapter->evnt.log_efuse_map = 0;
++		}
++	}
++
++	kfree(map);
++
++	return HALMAC_RET_SUCCESS;
++}
++
++enum halmac_ret_status
++get_dump_phy_efuse_status_88xx(struct halmac_adapter *adapter,
++			       enum halmac_cmd_process_status *proc_status,
++			       u8 *data, u32 *size)
++{
++	u8 *map = NULL;
++	u32 efuse_size = adapter->hw_cfg_info.efuse_size;
++	struct halmac_efuse_state *state = &adapter->halmac_state.efuse_state;
++
++	*proc_status = state->proc_status;
++
++	if (!data)
++		return HALMAC_RET_NULL_POINTER;
++
++	if (!size)
++		return HALMAC_RET_NULL_POINTER;
++
++	if (*proc_status == HALMAC_CMD_PROCESS_DONE) {
++		if (*size < efuse_size) {
++			*size = efuse_size;
++			return HALMAC_RET_BUFFER_TOO_SMALL;
++		}
++
++		*size = efuse_size;
++
++		map = kzalloc(efuse_size, GFP_KERNEL);
++		if (!map)
++			return HALMAC_RET_MALLOC_FAIL;
++		memset(map, 0xFF, efuse_size);
++		mutex_lock(&adapter->efuse_mutex);
++		memcpy(map, adapter->efuse_map,
++		       efuse_size - PROTECT_EFUSE_SIZE);
++		memcpy(map + efuse_size - PROTECT_EFUSE_SIZE +
++		       RSVD_CS_EFUSE_SIZE,
++		       adapter->efuse_map + efuse_size - PROTECT_EFUSE_SIZE +
++		       RSVD_CS_EFUSE_SIZE,
++		       PROTECT_EFUSE_SIZE - RSVD_EFUSE_SIZE -
++		       RSVD_CS_EFUSE_SIZE);
++		mutex_unlock(&adapter->efuse_mutex);
++
++		memcpy(data, map, *size);
++
++		kfree(map);
++	}
++
++	return HALMAC_RET_SUCCESS;
++}
++
++enum halmac_ret_status
++get_dump_log_efuse_status_88xx(struct halmac_adapter *adapter,
++			       enum halmac_cmd_process_status *proc_status,
++			       u8 *data, u32 *size)
++{
++	u8 *map = NULL;
++	u32 eeprom_size = adapter->hw_cfg_info.eeprom_size;
++	struct halmac_efuse_state *state = &adapter->halmac_state.efuse_state;
++
++	*proc_status = state->proc_status;
++
++	if (!data)
++		return HALMAC_RET_NULL_POINTER;
++
++	if (!size)
++		return HALMAC_RET_NULL_POINTER;
++
++	if (*proc_status == HALMAC_CMD_PROCESS_DONE) {
++		if (*size < eeprom_size) {
++			*size = eeprom_size;
++			return HALMAC_RET_BUFFER_TOO_SMALL;
++		}
++
++		*size = eeprom_size;
++
++		map = kzalloc(eeprom_size, GFP_KERNEL);
++		if (!map)
++			return HALMAC_RET_MALLOC_FAIL;
++		memset(map, 0xFF, eeprom_size);
++
++		if (eeprom_parser_88xx(adapter, adapter->efuse_map, map) !=
++		    HALMAC_RET_SUCCESS) {
++			kfree(map);
++			return HALMAC_RET_EEPROM_PARSING_FAIL;
++		}
++
++		memcpy(data, map, *size);
++
++		kfree(map);
++	}
++
++	return HALMAC_RET_SUCCESS;
++}
++
++enum halmac_ret_status
++get_h2c_ack_phy_efuse_88xx(struct halmac_adapter *adapter, u8 *buf, u32 size)
++{
++	u8 seq_num = 0;
++	u8 fw_rc;
++	struct halmac_efuse_state *state = &adapter->halmac_state.efuse_state;
++
++	seq_num = (u8)H2C_ACK_HDR_GET_H2C_SEQ(buf);
++	RT_TRACE(adapter->drv_adapter, COMP_HALMAC, DBG_DMESG,
++		 "Seq num : h2c->%d c2h->%d\n", state->seq_num, seq_num);
++	if (seq_num != state->seq_num) {
++		pr_err("Seq num mismatch : h2c->%d c2h->%d\n", state->seq_num,
++		       seq_num);
++		return HALMAC_RET_SUCCESS;
++	}
++
++	if (state->proc_status != HALMAC_CMD_PROCESS_SENDING) {
++		pr_err("not cmd sending\n");
++		return HALMAC_RET_SUCCESS;
++	}
++
++	fw_rc = (u8)H2C_ACK_HDR_GET_H2C_RETURN_CODE(buf);
++	state->fw_rc = fw_rc;
++
++	return HALMAC_RET_SUCCESS;
++}
++
++u32
++get_rsvd_efuse_size_88xx(struct halmac_adapter *adapter)
++{
++	return PROTECT_EFUSE_SIZE;
++}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_efuse_88xx.h b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_efuse_88xx.h
+new file mode 100644
+index 000000000000..2b1f0b199b76
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtlwifi/halmac/halmac_88xx/halmac_efuse_88xx.h
+@@ -0,0 +1,101 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2016 - 2018 Realtek Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
++ * more details.
++ *
++ ******************************************************************************/
++
++#ifndef _HALMAC_EFUSE_88XX_H_
++#define _HALMAC_EFUSE_88XX_H_
++
++#include "../halmac_api.h"
++
++enum halmac_ret_status
++dump_efuse_map_88xx(struct halmac_adapter *adapter,
++		    enum halmac_efuse_read_cfg cfg);
++
++enum halmac_ret_status
++dump_efuse_map_bt_88xx(struct halmac_adapter *adapter,
++		       enum halmac_efuse_bank bank, u32 size, u8 *map);
++
++enum halmac_ret_status
++write_efuse_bt_88xx(struct halmac_adapter *adapter, u32 offset, u8 value,
++		    enum halmac_efuse_bank bank);
++
++enum halmac_ret_status
++read_efuse_bt_88xx(struct halmac_adapter *adapter, u32 offset, u8 *value,
++		   enum halmac_efuse_bank bank);
++
++enum halmac_ret_status
++cfg_efuse_auto_check_88xx(struct halmac_adapter *adapter, u8 enable);
++
++enum halmac_ret_status
++get_efuse_available_size_88xx(struct halmac_adapter *adapter, u32 *size);
++
++enum halmac_ret_status
++get_efuse_size_88xx(struct halmac_adapter *adapter, u32 *size);
++
++enum halmac_ret_status
++get_log_efuse_size_88xx(struct halmac_adapter *adapter, u32 *size);
++
++enum halmac_ret_status
++dump_log_efuse_map_88xx(struct halmac_adapter *adapter,
++			enum halmac_efuse_read_cfg cfg);
++
++enum halmac_ret_status
++read_logical_efuse_88xx(struct halmac_adapter *adapter, u32 offset, u8 *value);
++
++enum halmac_ret_status
++write_log_efuse_88xx(struct halmac_adapter *adapter, u32 offset, u8 value);
++
++enum halmac_ret_status
++pg_efuse_by_map_88xx(struct halmac_adapter *adapter,
++		     struct halmac_pg_efuse_info *info,
++		     enum halmac_efuse_read_cfg cfg);
++
++enum halmac_ret_status
++mask_log_efuse_88xx(struct halmac_adapter *adapter,
++		    struct halmac_pg_efuse_info *info);
++
++enum halmac_ret_status
++read_efuse_88xx(struct halmac_adapter *adapter, u32 offset, u32 size, u8 *map);
++
++enum halmac_ret_status
++write_hw_efuse_88xx(struct halmac_adapter *adapter, u32 offset, u8 value);
++
++enum halmac_ret_status
++switch_efuse_bank_88xx(struct halmac_adapter *adapter,
++		       enum halmac_efuse_bank bank);
++
++enum halmac_ret_status
++get_efuse_data_88xx(struct halmac_adapter *adapter, u8 *buf, u32 size);
++
++enum halmac_ret_status
++cnv_efuse_state_88xx(struct halmac_adapter *adapter,
++		     enum halmac_cmd_construct_state dest_state);
++
++enum halmac_ret_status
++get_dump_phy_efuse_status_88xx(struct halmac_adapter *adapter,
++			       enum halmac_cmd_process_status *proc_status,
++			       u8 *data, u32 *size);
++
++enum halmac_ret_status
++get_dump_log_efuse_status_88xx(struct halmac_adapter *adapter,
++			       enum halmac_cmd_process_status *proc_status,
++			       u8 *data, u32 *size);
++
++enum halmac_ret_status
++get_h2c_ack_phy_efuse_88xx(struct halmac_adapter *adapter, u8 *buf, u32 size);
++
++u32
++get_rsvd_efuse_size_88xx(struct halmac_adapter *adapter);
++
++#endif/* _HALMAC_EFUSE_88XX_H_ */
 -- 
-1.9.1
+2.15.1
