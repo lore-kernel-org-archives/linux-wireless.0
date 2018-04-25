@@ -1,106 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:2854 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755603AbeDWQfJ (ORCPT
+Received: from mail-it0-f43.google.com ([209.85.214.43]:37153 "EHLO
+        mail-it0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750841AbeDYCze (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 12:35:09 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [RESEND 09/33] staging: wilc1000: remove line over 80 char in cfg_connect_result()
-Date: Mon, 23 Apr 2018 22:03:11 +0530
-Message-ID: <1524501215-4963-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183519_428057_AAF9132B)
-In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 24 Apr 2018 22:55:34 -0400
+Received: by mail-it0-f43.google.com with SMTP id 71-v6so17681066ith.2
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2018 19:55:34 -0700 (PDT)
+Subject: Re: Simultaneous 2.4 GHz WiFi and Bluetooth issue on Intel Dual Band
+ Wireless-AC 8260
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>
+References: <6e4b5e53-0a8d-978c-5cfe-f498c8b15c1a@gmail.com>
+ <CANUX_P19ja=XLMs8Vvii1yMvCNAvPnMh7hs=H92M5QRJnJjRfg@mail.gmail.com>
+From: Nathan Schulte <nmschulte@gmail.com>
+Message-ID: <30aa1580-7913-a7f8-3f2d-be4d699d6dbc@gmail.com> (sfid-20180425_045538_478871_952DEA04)
+Date: Tue, 24 Apr 2018 21:55:32 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CANUX_P19ja=XLMs8Vvii1yMvCNAvPnMh7hs=H92M5QRJnJjRfg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix 'line over 80 characters' issues reported by checkpatch.pl script in
-cfg_connect_result().
+On 04/20/2018 01:03 AM, Emmanuel Grumbach wrote:
+>> Under Windows 10, the hardware appears to work without issue.
+>> Additionally, I believe I managed to warm-reboot from Windows 10 to
+>> Linux (with Bluetooth connected), and was able to continue using the
+>> same 2.4 GHz WiFi and Bluetooth audio sink without issue.
+> 
+> This was reported in the past. Please make sure you have the latest BT
+> firmware files.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
-Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 34 +++++++++++++++--------
- 1 file changed, 22 insertions(+), 12 deletions(-)
+This seems to have resolved the issue.  Interestingly, the firmware
+(version...) shipped with Debian Sid is not in the official
+linux-firmware.git repository; its md5sum doesn't match any of prior
+versions of the file:
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 075413f..9c659ca 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -459,6 +459,17 @@ static void cfg_scan_result(enum scan_event scan_event,
- 	}
- }
- 
-+static inline bool wilc_wfi_cfg_scan_time_expired(int i)
-+{
-+	unsigned long now = jiffies;
-+
-+	if (time_after(now, last_scanned_shadow[i].time_scan_cached +
-+		       (unsigned long)(nl80211_SCAN_RESULT_EXPIRE - (1 * HZ))))
-+		return true;
-+	else
-+		return false;
-+}
-+
- int wilc_connecting;
- 
- static void cfg_connect_result(enum conn_event conn_disconn_evt,
-@@ -504,17 +515,14 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
- 			bool scan_refresh = false;
- 			u32 i;
- 
--			memcpy(priv->associated_bss, conn_info->bssid, ETH_ALEN);
-+			memcpy(priv->associated_bss, conn_info->bssid,
-+			       ETH_ALEN);
- 
- 			for (i = 0; i < last_scanned_cnt; i++) {
- 				if (memcmp(last_scanned_shadow[i].bssid,
- 					   conn_info->bssid,
- 					   ETH_ALEN) == 0) {
--					unsigned long now = jiffies;
--
--					if (time_after(now,
--						       last_scanned_shadow[i].time_scan_cached +
--						       (unsigned long)(nl80211_SCAN_RESULT_EXPIRE - (1 * HZ))))
-+					if (wilc_wfi_cfg_scan_time_expired(i))
- 						scan_refresh = true;
- 
- 					break;
-@@ -526,9 +534,11 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
- 		}
- 
- 		cfg80211_connect_result(dev, conn_info->bssid,
--					conn_info->req_ies, conn_info->req_ies_len,
--					conn_info->resp_ies, conn_info->resp_ies_len,
--					connect_status, GFP_KERNEL);
-+					conn_info->req_ies,
-+					conn_info->req_ies_len,
-+					conn_info->resp_ies,
-+					conn_info->resp_ies_len, connect_status,
-+					GFP_KERNEL);
- 	} else if (conn_disconn_evt == CONN_DISCONN_EVENT_DISCONN_NOTIF)    {
- 		wilc_optaining_ip = false;
- 		p2p_local_random = 0x01;
-@@ -545,9 +555,9 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
- 		else if (!wfi_drv->IFC_UP && dev == wl->vif[1]->ndev)
- 			disconn_info->reason = 1;
- 
--		cfg80211_disconnected(dev, disconn_info->reason, disconn_info->ie,
--				      disconn_info->ie_len, false,
--				      GFP_KERNEL);
-+		cfg80211_disconnected(dev, disconn_info->reason,
-+				      disconn_info->ie, disconn_info->ie_len,
-+				      false, GFP_KERNEL);
- 	}
- }
- 
--- 
-2.7.4
+> https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/log/intel/ibt-11-5.sfi
+
+Emmanuel, how can I determine the firmware version ("FW Build" and/or
+"Release Version") from a given file (e.g. ibt-11-5.sfi/.ddc)?
+
+> Regardless of the BT firmware version thing which is a pure Intel
+> problem, I have heard
+> about problems in the BT stack itself but I can't help about this.
+
+Though I've never really used the Bluetooth stack until this hardware,
+it seems the stack/blueman-* applications only behave oddly when there's
+problems with the firmware: never an issue when not using simultaneous
+2.4 GHz WiFi + Bluetooth, or with this latest firmware, or approx. 2
+years ago when I first started using this setup.
+
+Thanks,
+Nate
