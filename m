@@ -1,64 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56926 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751097AbeDEMsY (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:58440 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756027AbeDYRTq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Apr 2018 08:48:24 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Joe Perches <joe@perches.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Jussi Kivilinna <jussi.kivilinna@iki.fi>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: [PATCH 06/12] wireless: Convert simple uses of a static const Ethernet broadcast address
-References: <cover.1522479607.git.joe@perches.com>
-        <79196f134a513d50968e8e208a0e56b3c0236ee3.1522479607.git.joe@perches.com>
-        <87po3desix.fsf@kamboji.qca.qualcomm.com>
-Date: Thu, 05 Apr 2018 15:48:17 +0300
-In-Reply-To: <87po3desix.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Thu, 05 Apr 2018 15:39:50 +0300")
-Message-ID: <87zi2hlsz2.fsf@purkki.adurom.net> (sfid-20180405_144850_453425_367EDFCB)
+        Wed, 25 Apr 2018 13:19:46 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 09/21] staging: wilc1000: remove unsed typedef wilc_debug_func
+Date: Wed, 25 Apr 2018 22:48:14 +0530
+Message-ID: <1524676706-13179-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180425_191950_636634_C798A772)
+In-Reply-To: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+Cleanup patch to remove the unused typedef and also removed the
+unecessary comment about that typedef.
 
-> Joe Perches <joe@perches.com> writes:
->
->> Use the new ether_broadcast_addr global instead to save some object code.
->>
->> Signed-off-by: Joe Perches <joe@perches.com>
->> ---
->>  drivers/net/wireless/admtek/adm8211.c           | 3 +--
->>  drivers/net/wireless/ath/carl9170/mac.c         | 4 +---
->>  drivers/net/wireless/broadcom/b43/main.c        | 3 +--
->>  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 3 +--
->>  drivers/net/wireless/realtek/rtlwifi/core.c     | 5 ++---
->>  drivers/net/wireless/rndis_wlan.c               | 6 +-----
->>  drivers/net/wireless/ti/wl1251/main.c           | 5 +----
->>  drivers/net/wireless/ti/wlcore/main.c           | 5 +----
->>  8 files changed, 9 insertions(+), 25 deletions(-)
->
-> It would be really helpful if you could CLEARLY document in the patches
-> (or in the cover letter but then you need to cc all parties) to what
-> tree the patches are meant for. Otherwise I, and other maintainers as
-> well, need to waste time trying to guess what's your plan.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.h | 7 -------
+ 1 file changed, 7 deletions(-)
 
-Forgot to mention that for me the best approach is to have the tree name
-in subject, just like Dave and Linus both recommend:
-
-[PATCH 06/12 wireless-drivers-next] wireless: Convert simple uses of a static const Ethernet broadcast address
-
-This way I can immeaditely see from patchwork to which tree the patch
-should go which helps tremendously. And if the tree name is too long you
-can always shorten it to w-d and w-d-next.
-
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 671e499..a5b9c68 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -202,13 +202,6 @@
+ 
+ /********************************************
+  *
+- *      Debug Type
+- *
+- ********************************************/
+-typedef void (*wilc_debug_func)(u32, char *, ...);
+-
+-/********************************************
+- *
+  *      Tx/Rx Queue Structure
+  *
+  ********************************************/
 -- 
-Kalle Valo
+2.7.4
