@@ -1,39 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:49224 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750884AbeDSJwV (ORCPT
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:46496 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752851AbeDYNmL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Apr 2018 05:52:21 -0400
-Message-ID: <1524131536.3024.16.camel@sipsolutions.net> (sfid-20180419_115225_323370_CE152715)
-Subject: Re: [PATCH 0/3] Export TXQ parameters and statistics via nl80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Date: Thu, 19 Apr 2018 11:52:16 +0200
-In-Reply-To: <8736zr1rjh.fsf@toke.dk> (sfid-20180419_112023_143492_C28A4BC7)
-References: <20180219170224.14816-1-toke@toke.dk> <8736zr1rjh.fsf@toke.dk>
-         (sfid-20180419_112023_143492_C28A4BC7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 25 Apr 2018 09:42:11 -0400
+From: Eyal Reizer <eyalreizer@gmail.com>
+To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        robh@kernel.org, sre@kernel.org, tony@atomide.com,
+        linux-kernel@vger.kernel.org
+Cc: Eyal Reizer <eyalr@ti.com>, stable@vger.kernel.org
+Subject: [PATCH] net: wireless: ti: wlcore: sdio: allow pm to handle sdio power
+Date: Wed, 25 Apr 2018 16:41:50 +0300
+Message-Id: <1524663710-31927-1-git-send-email-eyalr@ti.com> (sfid-20180425_154231_189962_CFF85660)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-04-19 at 11:20 +0200, Toke Høiland-Jørgensen wrote:
-> Toke Høiland-Jørgensen <toke@toke.dk> writes:
-> 
-> > This series adds TXQ parameters and statistics that were previously only
-> > available through debugfs to the nl80211 userspace interface and the
-> > cfg80211 kernel interface. Patches for iw to print the statistics and
-> > change the settings are included.
-> 
-> So this patch set is now three months old. Any chance of actually
-> getting it, you know, merged? Or is there something more I need to do? :)
+pm_runtime handles sdio power on and power off transitions.
+An old workaround for trying to control the power explicitly from the
+driver was in fact causing failures on suspend/resume as the mmc layer
+already power the module on resume.
 
-I was just thinking about it yesterday, "sighing" that I'll need to make
-a decision even though I don't really know it well and can't even say if
-another API would be better :-)
+In case of resume pm_runtime_get sync returns a positive device's usage
+count causing the driver to try an re-initialize an already initialized
+device. This was causing sdio bus failure on resume.
 
-I think I'll take it, but I guess I'll need to review it again.
+Remove this manual power on/off sequence as it is in-fact not needed.
 
-johannes
+Signed-off-by: Eyal Reizer <eyalr@ti.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/net/wireless/ti/wlcore/sdio.c | 27 ++++++---------------------
+ 1 file changed, 6 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index 1f727ba..6dbe61d 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -155,17 +155,11 @@ static int wl12xx_sdio_power_on(struct wl12xx_sdio_glue *glue)
+ 	struct mmc_card *card = func->card;
+ 
+ 	ret = pm_runtime_get_sync(&card->dev);
+-	if (ret) {
+-		/*
+-		 * Runtime PM might be temporarily disabled, or the device
+-		 * might have a positive reference counter. Make sure it is
+-		 * really powered on.
+-		 */
+-		ret = mmc_power_restore_host(card->host);
+-		if (ret < 0) {
+-			pm_runtime_put_sync(&card->dev);
+-			goto out;
+-		}
++	if (ret < 0) {
++		pm_runtime_put_noidle(&card->dev);
++		dev_err(glue->dev, "%s: failed to get_sync(%d)\n",
++			__func__, ret);
++		goto out;
+ 	}
+ 
+ 	sdio_claim_host(func);
+@@ -178,7 +172,6 @@ static int wl12xx_sdio_power_on(struct wl12xx_sdio_glue *glue)
+ 
+ static int wl12xx_sdio_power_off(struct wl12xx_sdio_glue *glue)
+ {
+-	int ret;
+ 	struct sdio_func *func = dev_to_sdio_func(glue->dev);
+ 	struct mmc_card *card = func->card;
+ 
+@@ -186,16 +179,8 @@ static int wl12xx_sdio_power_off(struct wl12xx_sdio_glue *glue)
+ 	sdio_disable_func(func);
+ 	sdio_release_host(func);
+ 
+-	/* Power off the card manually in case it wasn't powered off above */
+-	ret = mmc_power_save_host(card->host);
+-	if (ret < 0)
+-		goto out;
+-
+ 	/* Let runtime PM know the card is powered off */
+-	pm_runtime_put_sync(&card->dev);
+-
+-out:
+-	return ret;
++	return pm_runtime_put_sync(&card->dev);
+ }
+ 
+ static int wl12xx_sdio_set_power(struct device *child, bool enable)
+-- 
+2.7.4
