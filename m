@@ -1,43 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:43514 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753562AbeDJOuh (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:46871 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755019AbeDYRTd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Apr 2018 10:50:37 -0400
-From: Eyal Ilsar <edilsar@gmail.com>
-To: aditya.shankar@microchip.com, ganesh.krishna@microchip.com,
-        gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: wilc1000: Remove unnecessary braces {} around single statement block
-Date: Wed, 11 Apr 2018 00:49:55 +1000
-Message-Id: <1523371795-5090-1-git-send-email-edilsar@gmail.com> (sfid-20180410_165132_696509_BE5FFAE3)
+        Wed, 25 Apr 2018 13:19:33 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 02/21] staging: wilc1000: align the #define in wilc_spi file
+Date: Wed, 25 Apr 2018 22:48:07 +0530
+Message-ID: <1524676706-13179-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180425_191937_596477_F30F29A6)
+In-Reply-To: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unnecessary braces {} around an 'if' statement block with a single 
-statement. Issue found by checkpatch.
-Signed-off-by: Eyal Ilsar<edilsar@gmail.com>
+Cleanup patch to align the #define used in wilc_spi.c file by adding the
+tabs.
+
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
-This is part of my take on the Eudyptula challenge
+ drivers/staging/wilc1000/wilc_spi.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 205304c..325afe1 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -284,9 +284,8 @@ static void remove_network_from_shadow(struct timer_list *unused)
- 		}
- 	}
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 3bb8fec..600005c 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -92,29 +92,29 @@ static u8 crc7(u8 crc, const u8 *buffer, u32 len)
  
--	if (last_scanned_cnt != 0) {
-+	if (last_scanned_cnt != 0)
- 		mod_timer(&hAgingTimer, jiffies + msecs_to_jiffies(AGING_TIME));
--	}
- }
+ #define CMD_DMA_WRITE				0xc1
+ #define CMD_DMA_READ				0xc2
+-#define CMD_INTERNAL_WRITE		0xc3
+-#define CMD_INTERNAL_READ		0xc4
++#define CMD_INTERNAL_WRITE			0xc3
++#define CMD_INTERNAL_READ			0xc4
+ #define CMD_TERMINATE				0xc5
+-#define CMD_REPEAT					0xc6
+-#define CMD_DMA_EXT_WRITE		0xc7
+-#define CMD_DMA_EXT_READ		0xc8
++#define CMD_REPEAT				0xc6
++#define CMD_DMA_EXT_WRITE			0xc7
++#define CMD_DMA_EXT_READ			0xc8
+ #define CMD_SINGLE_WRITE			0xc9
+-#define CMD_SINGLE_READ			0xca
+-#define CMD_RESET						0xcf
++#define CMD_SINGLE_READ				0xca
++#define CMD_RESET				0xcf
  
- static void clear_duringIP(struct timer_list *unused)
+-#define N_OK								1
+-#define N_FAIL								0
+-#define N_RESET							-1
+-#define N_RETRY							-2
++#define N_OK					1
++#define N_FAIL					0
++#define N_RESET					-1
++#define N_RETRY					-2
+ 
+ #define DATA_PKT_SZ_256				256
+-#define DATA_PKT_SZ_512			512
++#define DATA_PKT_SZ_512				512
+ #define DATA_PKT_SZ_1K				1024
+ #define DATA_PKT_SZ_4K				(4 * 1024)
+ #define DATA_PKT_SZ_8K				(8 * 1024)
+-#define DATA_PKT_SZ					DATA_PKT_SZ_8K
++#define DATA_PKT_SZ				DATA_PKT_SZ_8K
+ 
+-#define USE_SPI_DMA     0
++#define USE_SPI_DMA				0
+ 
+ static int wilc_bus_probe(struct spi_device *spi)
+ {
 -- 
 2.7.4
