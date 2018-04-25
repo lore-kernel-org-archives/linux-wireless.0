@@ -1,62 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f46.google.com ([209.85.215.46]:36413 "EHLO
-        mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755533AbeDWRWR (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:58019 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750841AbeDYC0w (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 13:22:17 -0400
-Received: by mail-lf0-f46.google.com with SMTP id d20-v6so16159687lfe.3
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Apr 2018 10:22:16 -0700 (PDT)
+        Tue, 24 Apr 2018 22:26:52 -0400
+From: Pkshih <pkshih@realtek.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH v2 00/17] rtlwifi: halmac: Add new module halmac
+Date: Wed, 25 Apr 2018 02:26:39 +0000
+Message-ID: <1524623197.6255.2.camel@realtek.com> (sfid-20180425_042657_821083_6BD13436)
+References: <20180403075332.3344-1-pkshih@realtek.com>
+         <87muxsbkb4.fsf@purkki.adurom.net>
+In-Reply-To: <87muxsbkb4.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180420164507.GA22666@animalcreek.com>
-References: <1524045904-7005-1-git-send-email-amit.pundir@linaro.org>
- <1524045904-7005-3-git-send-email-amit.pundir@linaro.org> <1524227986.21176.467.camel@linux.intel.com>
- <20180420164507.GA22666@animalcreek.com>
-From: Amit Pundir <amit.pundir@linaro.org>
-Date: Mon, 23 Apr 2018 22:51:35 +0530
-Message-ID: <CAMi1Hd36LbWSTsnxiLY0CAgW_CaAbTJNRrUQ07Qb4OiSmuC5sw@mail.gmail.com> (sfid-20180423_192232_843810_EC7830A4)
-Subject: Re: [RESEND][PATCH 2/4] NFC: st21nfca: Fix memory OOB and leak issues
- in connectivity events handler
-To: Mark Greer <mgreer@animalcreek.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        lkml <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Christophe Ricard <christophe.ricard@gmail.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        John Stultz <john.stultz@linaro.org>,
-        Dmitry Shmidt <dimitrysh@google.com>,
-        Todd Kjos <tkjos@google.com>,
-        Android Kernel Team <kernel-team@android.com>,
-        Suren Baghdasaryan <surenb@google.com>
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 April 2018 at 22:15, Mark Greer <mgreer@animalcreek.com> wrote:
-> On Fri, Apr 20, 2018 at 03:39:46PM +0300, Andy Shevchenko wrote:
->> On Wed, 2018-04-18 at 15:35 +0530, Amit Pundir wrote:
->>
->> >             if (skb->data[transaction->aid_len + 2] !=
->> > -               NFC_EVT_TRANSACTION_PARAMS_TAG)
->> > +               NFC_EVT_TRANSACTION_PARAMS_TAG ||
->> > +               skb->len < transaction->aid_len + transaction-
->> > >params_len + 4) {
->>
->> > +                   devm_kfree(dev, transaction);
->>
->> Oh, no.
->>
->> This is not memory leak per se, this is bad choice of devm_ API where it
->> should use plain kmalloc() / kfree().
->
-> Also, there is no check to see if the allocation worked at all.
-
-Ack. I'll add that in v2.
-Thanks.
-
-Regards,
-Amit Pundir
-
->
-> Mark
-> --
+T24gVHVlLCAyMDE4LTA0LTI0IGF0IDE3OjEyICswMDAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiA8
+cGtzaGloQHJlYWx0ZWsuY29tPiB3cml0ZXM6DQo+wqANCj4gPiBGcm9tOiBQaW5nLUtlIFNoaWgg
+PHBrc2hpaEByZWFsdGVrLmNvbT4NCj4gPg0KPiA+IHYyOiByZW1vdmUgaW5kaXJlY3Rpb24gdG8g
+Z2V0IGhhbG1hYyBvcHMNCj4gPsKgwqDCoMKgwqBPbmx5IHBhdGNoZXMgMS8xNyBhbmQgMTEvMTcg
+YXJlIGNoYW5nZWQuDQo+ID4NCj4gPiBQYXRjaGVzIDEvMTctMy8xNyBhcmUgYWRkZWQgc3RydWN0
+dXJlIHRvIHN1cHBvcnQgdGhpcyBtb2R1bGUuDQo+ID4gUGF0Y2hlcyA0LzE3LTE2LzE3IGFkZCBu
+ZXcgZmlsZXMuDQo+ID4gUGF0Y2ggMTcvMTcgYWRkIHRoaXMgbW9kdWxlIHRvIE1ha2VmaWxlIGFu
+ZCBLY29uZmlnLg0KPiA+DQo+ID4gUGluZy1LZSBTaGloICgxNyk6DQo+ID7CoMKgwqBydGx3aWZp
+OiBhZGQgaGFsbWFjIHN0cnVjdHVyZSB0byB3aWZpLmgNCj4gPsKgwqDCoHJ0bHdpZmk6IGFkZCBk
+ZWJ1ZyBJRCBDT01QX0hBTE1BQw0KPiA+wqDCoMKgcnRsd2lmaTogYWRkIGRtZGVmLmggdG8gc2hh
+cmUgd2l0aCBkcml2ZXIgYW5kIG90aGVyIG1vZHVsZXMNCj4gPsKgwqDCoHJ0bHdpZmk6IGhhbG1h
+YzogYWRkIG1haW4gZGVmaW5pdGlvbiB1c2VkIGJ5IGhhbG1hYw0KPiA+wqDCoMKgcnRsd2lmaTog
+aGFsbWFjOiBkZXNjcmliZSBudW1iZXIgYW5kIHNpemUgb2YgY2hpcCBmdW5jdGlvbnMNCj4gPsKg
+wqDCoHJ0bHdpZmk6IGhhbG1hYzogYWRkIGRlZmluaXRpb25zIG9mIHJlZ2lzdGVycyBhbmQgYml0
+IGZpZWxkcw0KPiA+wqDCoMKgcnRsd2lmaTogaGFsbWFjOiBhZGQgZGVmaW5pdGlvbiBvZiBUWC9S
+WCBkZXNjcmlwdG9yDQo+ID7CoMKgwqBydGx3aWZpOiBoYWxtYWM6IGFkZCBHUElPIHBpbi9waW5t
+dXggZGVmaW5pdGlvbnMNCj4gPsKgwqDCoHJ0bHdpZmk6IGhhbG1hYzogYWRkIHBvd2VyIHNlcXVl
+bmNlIHRvIHR1cm4gb24vb2ZmIHdpZmkgY2FyZA0KPiA+wqDCoMKgcnRsd2lmaTogaGFsbWFjOiBh
+Y2Nlc3MgZWZ1c2UgdGhyb3VnaCBoYWxtYWMgaGVscGVyIGZ1bmN0aW9ucw0KPiA+wqDCoMKgcnRs
+d2lmaTogaGFsbWFjOiBhZGQgZmlsZXMgdG8gaW1wbGVtZW50IGhhbG1hYyBvcHMNCj4gPsKgwqDC
+oHJ0bHdpZmk6IGhhbG1hYzogYWRkIGhhbG1hYyBpbml0L2RlaW5pdCBmdW5jdGlvbnMNCj4gPsKg
+wqDCoHJ0bHdpZmk6IGhhbG1hYzogYWRkIGZpcm13YXJlIHJlbGF0ZWQgZnVuY3Rpb25zIGFuZCBk
+ZWZpbml0aW9ucw0KPiA+wqDCoMKgcnRsd2lmaTogaGFsbWFjOiBhZGQgYnVzIGludGVyZmFjZSBj
+b21tYW5kcw0KPiA+wqDCoMKgcnRsd2lmaTogaGFsbWFjOiBhZGQgdG8gY29udHJvbCBXaUZpIG1h
+YyBmdW5jdGlvbnMgYW5kIHJlZ2lzdGVycw0KPiA+wqDCoMKgcnRsd2lmaTogaGFsbWFjOiBhZGQg
+dG8gc3VwcG9ydCBCQiBhbmQgUkYgZnVuY3Rpb25zDQo+ID7CoMKgwqBydGx3aWZpOiBhZGQgaGFs
+bWFjIHRvIE1ha2VmaWxlIGFuZCBLY29uZmlnDQo+wqANCj4gQlRXLCBJIGRvbid0IHNlZSBwYXRj
+aCA2IGluIHBhdGNod29yay4gRGlkIGl0IGdldCBsb3N0Pw0KPsKgDQo+wqDCoMKgwqDCoMKgwqBb
+djIsMDEvMTddIHJ0bHdpZmk6IGFkZCBoYWxtYWMgc3RydWN0dXJlIHRvIHdpZmkuaMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqAyMDE4LTA0LTAzIFBpbmctS2UgU2hpaCBOZXcNCj7CoMKgwqDCoMKgwqDC
+oFt2MiwwMi8xN10gcnRsd2lmaTogYWRkIGRlYnVnIElEIENPTVBfSEFMTUFDwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoDIwMTgtMDQtMDMgUGluZy1LZSBTaGloIE5ldw0KPsKgwqDC
+oMKgwqDCoMKgW3YyLDAzLzE3XSBydGx3aWZpOiBhZGQgZG1kZWYuaCB0byBzaGFyZSB3aXRoIGRy
+aXZlciBhbmQuLi4uIDIwMTgtMDQtMDMgUGluZy1LZSBTaGloIE5ldw0KPsKgwqDCoMKgwqDCoMKg
+W3YyLDA0LzE3XSBydGx3aWZpOiBoYWxtYWM6IGFkZCBtYWluIGRlZmluaXRpb24gdXNlZCBieSBo
+Li4uIDIwMTgtMDQtMDMgUGluZy1LZSBTaGloIE5ldw0KPsKgwqDCoMKgwqDCoMKgW3YyLDA1LzE3
+XSBydGx3aWZpOiBoYWxtYWM6IGRlc2NyaWJlIG51bWJlciBhbmQgc2l6ZSBvZiBjLi4uIDIwMTgt
+MDQtMDMgUGluZy1LZSBTaGloIE5ldw0KPsKgwqDCoMKgwqDCoMKgW3YyLDA3LzE3XSBydGx3aWZp
+OiBoYWxtYWM6IGFkZCBkZWZpbml0aW9uIG9mIFRYL1JYIGRlc2NyLi4uIDIwMTgtMDQtMDMgUGlu
+Zy1LZSBTaGloIE5ldw0KPsKgwqDCoMKgwqDCoMKgW3YyLDA4LzE3XSBydGx3aWZpOiBoYWxtYWM6
+IGFkZCBHUElPIHBpbi9waW5tdXggZGVmaW5pdGlvbnPCoMKgMjAxOC0wNC0wMyBQaW5nLUtlIFNo
+aWggTmV3DQo+wqDCoMKgwqDCoMKgwqBbdjIsMDkvMTddIHJ0bHdpZmk6IGhhbG1hYzogYWRkIHBv
+d2VyIHNlcXVlbmNlIHRvIHR1cm4gb24uLi4gMjAxOC0wNC0wMyBQaW5nLUtlIFNoaWggTmV3DQo+
+wqDCoMKgwqDCoMKgwqBbdjIsMTAvMTddIHJ0bHdpZmk6IGhhbG1hYzogYWNjZXNzIGVmdXNlIHRo
+cm91Z2ggaGFsbWFjIGguLi4gMjAxOC0wNC0wMyBQaW5nLUtlIFNoaWggTmV3DQo+wqDCoMKgwqDC
+oMKgwqBbdjIsMTEvMTddIHJ0bHdpZmk6IGhhbG1hYzogYWRkIGZpbGVzIHRvIGltcGxlbWVudCBo
+YWxtYWMuLi4gMjAxOC0wNC0wMyBQaW5nLUtlIFNoaWggTmV3DQo+wqDCoMKgwqDCoMKgwqBbdjIs
+MTIvMTddIHJ0bHdpZmk6IGhhbG1hYzogYWRkIGhhbG1hYyBpbml0L2RlaW5pdCBmdW5jdGlvbnMg
+MjAxOC0wNC0wMyBQaW5nLUtlIFNoaWggTmV3DQo+wqDCoMKgwqDCoMKgwqBbdjIsMTMvMTddIHJ0
+bHdpZmk6IGhhbG1hYzogYWRkIGZpcm13YXJlIHJlbGF0ZWQgZnVuY3Rpb24uLi4gMjAxOC0wNC0w
+MyBQaW5nLUtlIFNoaWggTmV3DQo+wqDCoMKgwqDCoMKgwqBbdjIsMTQvMTddIHJ0bHdpZmk6IGhh
+bG1hYzogYWRkIGJ1cyBpbnRlcmZhY2UgY29tbWFuZHPCoMKgwqDCoMKgwqDCoDIwMTgtMDQtMDMg
+UGluZy1LZSBTaGloIE5ldw0KPsKgwqDCoMKgwqDCoMKgW3YyLDE1LzE3XSBydGx3aWZpOiBoYWxt
+YWM6IGFkZCB0byBjb250cm9sIFdpRmkgbWFjIGZ1bmN0Li4uIDIwMTgtMDQtMDMgUGluZy1LZSBT
+aGloIE5ldw0KPsKgwqDCoMKgwqDCoMKgW3YyLDE2LzE3XSBydGx3aWZpOiBoYWxtYWM6IGFkZCB0
+byBzdXBwb3J0IEJCIGFuZCBSRiBmdW5jLi4uIDIwMTgtMDQtMDMgUGluZy1LZSBTaGloIE5ldw0K
+PsKgwqDCoMKgwqDCoMKgW3YyLDE3LzE3XSBydGx3aWZpOiBhZGQgaGFsbWFjIHRvIE1ha2VmaWxl
+IGFuZCBLY29uZmlnwqDCoMKgwqDCoMKgwqAyMDE4LTA0LTAzIFBpbmctS2UgU2hpaCBOZXcNCj7C
+oA0KDQpQYXRjaCAwNi8xNyBpbiB2MiBpcyB0b28gYmlnLCBzbyBtYWlsIHNlcnZlciBibG9ja3Mg
+aXQuDQpJIHNwbGl0IHRoZSBwYXRjaCBpbnRvIHRocmVlIHBhdGNoZXMsIGFuZCByZXNlbmQgdjMu
+DQoNClRoYW5rcw0KUEsNCg==
