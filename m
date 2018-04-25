@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:12141 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754545AbeDWIwg (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:58440 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754880AbeDYRTv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 04:52:36 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-Subject: [PATCH v2 01/10] wil6210: disable tracing config option
-Date: Mon, 23 Apr 2018 11:52:04 +0300
-Message-Id: <1524473533-24524-2-git-send-email-merez@codeaurora.org> (sfid-20180423_105308_924847_AA74BBB1)
-In-Reply-To: <1524473533-24524-1-git-send-email-merez@codeaurora.org>
-References: <1524473533-24524-1-git-send-email-merez@codeaurora.org>
+        Wed, 25 Apr 2018 13:19:51 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 11/21] staging: wilc1000: remove unused #define related to MAC status
+Date: Wed, 25 Apr 2018 22:48:16 +0530
+Message-ID: <1524676706-13179-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180425_191957_038826_93398D1A)
+In-Reply-To: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+Remove below #define which are not used in code:
 
-Disable WIL6210_TRACING by default to avoid its performance overhead.
+WILC_MAC_STATUS_READY
+WILC_MAC_STATUS_CONNECT
 
-Signed-off-by: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/ath/wil6210/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_wlan_if.h | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/Kconfig b/drivers/net/wireless/ath/wil6210/Kconfig
-index b448926..3548e8d 100644
---- a/drivers/net/wireless/ath/wil6210/Kconfig
-+++ b/drivers/net/wireless/ath/wil6210/Kconfig
-@@ -33,7 +33,7 @@ config WIL6210_TRACING
- 	bool "wil6210 tracing support"
- 	depends on WIL6210
- 	depends on EVENT_TRACING
--	default y
-+	default n
- 	---help---
- 	  Say Y here to enable tracepoints for the wil6210 driver
- 	  using the kernel tracing infrastructure.  Select this
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index e8a56f4..1982348 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -49,8 +49,6 @@ struct sdio_cmd53 {
+ 
+ #define WILC_MAC_INDICATE_STATUS	0x1
+ #define WILC_MAC_STATUS_INIT		-1
+-#define WILC_MAC_STATUS_READY		0
+-#define WILC_MAC_STATUS_CONNECT		1
+ 
+ #define WILC_MAC_INDICATE_SCAN		0x2
+ 
 -- 
-1.9.1
+2.7.4
