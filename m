@@ -1,156 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52890 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757423AbeD0Fab (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:22336 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755805AbeDYRUS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Apr 2018 01:30:31 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [RFCv2 6/6] mac80211: Implement functionality to monitor txrate cross event for station
-Date: Fri, 27 Apr 2018 11:00:36 +0530
-Message-Id: <1524807036-28056-7-git-send-email-tamizhr@codeaurora.org> (sfid-20180427_073037_505455_D193B5BD)
-In-Reply-To: <1524807036-28056-1-git-send-email-tamizhr@codeaurora.org>
-References: <1524807036-28056-1-git-send-email-tamizhr@codeaurora.org>
+        Wed, 25 Apr 2018 13:20:18 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 21/21] staging: wilc1000: reorder functions to avoid forward declaration in linux_wlan
+Date: Wed, 25 Apr 2018 22:48:26 +0530
+Message-ID: <1524676706-13179-22-git-send-email-ajay.kathat@microchip.com> (sfid-20180425_192021_777541_968841AF)
+In-Reply-To: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Trigger cfg80211_sta_mon_txrate_notify with the corresponding txrate
-event when the txrate for a station goes out of configured range.
-This event will be useful for the application like steering to take
-decision on any station depends on its current capability.
+Reorder the functions in linux_wlan.c file to avoid having explicit
+declaration of static functions. Forward declaration is avoided
+with the help of reordering the function.
 
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- include/net/mac80211.h  |  5 +++++
- net/mac80211/cfg.c      |  1 +
- net/mac80211/sta_info.h | 10 ++++++++++
- net/mac80211/status.c   | 40 +++++++++++++++++++++++++++++++++++++++-
- 4 files changed, 55 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/linux_wlan.c | 106 +++++++++++++++-------------------
+ 1 file changed, 46 insertions(+), 60 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 7b3d505..7023f40 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -809,6 +809,11 @@ enum mac80211_rate_control_flags {
-  */
- #define IEEE80211_STA_SIGNAL_AVE_MIN_COUNT	4
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 1643166..35e30c5 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -24,35 +24,8 @@
+ #include <linux/mutex.h>
+ #include <linux/completion.h>
  
-+/* Number of txrate count need to have been used in average station's
-+ * txrate before checking against the threshold
-+ */
-+#define IEEE80211_STA_TXRATE_AVE_MIN_COUNT	4
-+
+-static int dev_state_ev_handler(struct notifier_block *this,
+-				unsigned long event, void *ptr);
+-
+-static struct notifier_block g_dev_notifier = {
+-	.notifier_call = dev_state_ev_handler
+-};
+-
+-static int wlan_deinit_locks(struct net_device *dev);
+-static void wlan_deinitialize_threads(struct net_device *dev);
+-
+-static void linux_wlan_tx_complete(void *priv, int status);
+-static int  mac_init_fn(struct net_device *ndev);
+-static struct net_device_stats *mac_stats(struct net_device *dev);
+-static int wilc_mac_open(struct net_device *ndev);
+-static int wilc_mac_close(struct net_device *ndev);
+-static void wilc_set_multicast_list(struct net_device *dev);
+-
+ bool wilc_enable_ps = true;
  
- /* there are 40 bytes if you don't need the rateset to be kept */
- #define IEEE80211_TX_INFO_DRIVER_DATA_SIZE 40
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index ba2555d..0f06b0b 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3806,6 +3806,7 @@ static int ieee80211_set_sta_mon_txrate_config(struct wiphy *wiphy,
- 
- 	sta->txrate_low = low_txrate_thold;
- 	sta->txrate_high = high_txrate_thold;
-+	sta->last_txrate_event = 0;
- 
- unlock:
- 	mutex_unlock(&sdata->local->sta_mtx);
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index c73d010..e23d916 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -418,6 +418,8 @@ struct ieee80211_sta_rx_stats {
-  */
- #define STA_SLOW_THRESHOLD 6000 /* 6 Mbps */
- 
-+DECLARE_EWMA(sta_txrate, 4, 4)
-+
- /**
-  * struct sta_info - STA information
-  *
-@@ -498,6 +500,11 @@ struct ieee80211_sta_rx_stats {
-  *	events that would be based only on couple of received frames.
-  * @txrate_low: TXRATE lower threshold for a station to monitor
-  * @txrate_high: TXRATE upper threshold for a station to monitor
-+ * @count_sta_txrate: Number of transmitted data frames used in ave_sta_txrate
-+ * @last_txrate_event: Last txrate event that triggered sta_mon event for a
-+ *	station
-+ * @ave_sta_txrate: Average txrate to check against the txrate_low and
-+ *	txrate_high. Values expressed in 100kbps
-  */
- struct sta_info {
- 	/* General information, mostly static */
-@@ -608,6 +615,9 @@ struct sta_info {
- 	u32 txrate_low;
- 	u32 txrate_high;
- 
-+	unsigned int count_sta_txrate;
-+	enum nl80211_sta_mon_txrate_threshold_event last_txrate_event;
-+	struct ewma_sta_txrate ave_sta_txrate;
- 	/* keep last! */
- 	struct ieee80211_sta sta;
- };
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 743e89c..6656b04 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -699,6 +699,40 @@ void ieee80211_tx_monitor(struct ieee80211_local *local, struct sk_buff *skb,
- 	dev_kfree_skb(skb);
+-static const struct net_device_ops wilc_netdev_ops = {
+-	.ndo_init = mac_init_fn,
+-	.ndo_open = wilc_mac_open,
+-	.ndo_stop = wilc_mac_close,
+-	.ndo_start_xmit = wilc_mac_xmit,
+-	.ndo_get_stats = mac_stats,
+-	.ndo_set_rx_mode  = wilc_set_multicast_list,
+-
+-};
+-
+ static int dev_state_ev_handler(struct notifier_block *this,
+ 				unsigned long event, void *ptr)
+ {
+@@ -604,6 +577,39 @@ static int linux_wlan_init_test_config(struct net_device *dev,
+ 	return -1;
  }
  
-+static void ieee80211_sta_mon_txrate_thold_check(struct sta_info *sta)
++static int wlan_deinit_locks(struct net_device *dev)
 +{
-+	struct rate_info rinfo;
-+	enum nl80211_sta_mon_txrate_threshold_event sta_txrate_event;
-+	int txrate;
++	struct wilc_vif *vif;
++	struct wilc *wilc;
 +
-+	if (!sta->txrate_high)
-+		return;
++	vif = netdev_priv(dev);
++	wilc = vif->wilc;
 +
-+	sta_set_rate_info_tx(sta, &sta->tx_stats.last_rate, &rinfo);
-+	txrate = cfg80211_calculate_bitrate(&rinfo);
-+	ewma_sta_txrate_add(&sta->ave_sta_txrate, txrate);
-+	sta->count_sta_txrate++;
++	mutex_destroy(&wilc->hif_cs);
++	mutex_destroy(&wilc->rxq_cs);
++	mutex_destroy(&wilc->txq_add_to_head_cs);
 +
-+	if (sta->count_sta_txrate < IEEE80211_STA_TXRATE_AVE_MIN_COUNT)
-+		return;
++	return 0;
++}
 +
-+	txrate = ewma_sta_txrate_read(&sta->ave_sta_txrate);
++static void wlan_deinitialize_threads(struct net_device *dev)
++{
++	struct wilc_vif *vif;
++	struct wilc *wl;
 +
-+	if (txrate < sta->txrate_low)
-+		sta_txrate_event = NL80211_STA_MON_TXRATE_THRESHOLD_EVENT_LOW;
-+	else if (txrate > sta->txrate_high)
-+		sta_txrate_event = NL80211_STA_MON_TXRATE_THRESHOLD_EVENT_HIGH;
-+	else
-+		sta_txrate_event = NL80211_STA_MON_TXRATE_THRESHOLD_IN_RANGE;
++	vif = netdev_priv(dev);
++	wl = vif->wilc;
 +
-+	if (sta_txrate_event != sta->last_txrate_event) {
-+		cfg80211_sta_mon_txrate_notify(sta->sdata->dev, sta->addr,
-+					       sta_txrate_event, txrate,
-+					       GFP_ATOMIC);
-+		sta->last_txrate_event = sta_txrate_event;
++	wl->close = 1;
++
++	complete(&wl->txq_event);
++
++	if (wl->txq_thread) {
++		kthread_stop(wl->txq_thread);
++		wl->txq_thread = NULL;
 +	}
 +}
 +
- static void __ieee80211_tx_status(struct ieee80211_hw *hw,
- 				  struct ieee80211_tx_status *status)
+ static void wilc_wlan_deinitialize(struct net_device *dev)
  {
-@@ -748,9 +782,13 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+ 	struct wilc_vif *vif;
+@@ -666,21 +672,6 @@ static int wlan_init_locks(struct net_device *dev)
+ 	return 0;
+ }
  
- 		if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL) &&
- 		    (ieee80211_is_data(hdr->frame_control)) &&
--		    (rates_idx != -1))
-+		    (rates_idx != -1)) {
- 			sta->tx_stats.last_rate =
- 				info->status.rates[rates_idx];
-+			if (wiphy_ext_feature_isset(hw->wiphy,
-+				NL80211_EXT_FEATURE_STA_MON_TXRATE_CONFIG))
-+				ieee80211_sta_mon_txrate_thold_check(sta);
-+		}
+-static int wlan_deinit_locks(struct net_device *dev)
+-{
+-	struct wilc_vif *vif;
+-	struct wilc *wilc;
+-
+-	vif = netdev_priv(dev);
+-	wilc = vif->wilc;
+-
+-	mutex_destroy(&wilc->hif_cs);
+-	mutex_destroy(&wilc->rxq_cs);
+-	mutex_destroy(&wilc->txq_add_to_head_cs);
+-
+-	return 0;
+-}
+-
+ static int wlan_initialize_threads(struct net_device *dev)
+ {
+ 	struct wilc_vif *vif;
+@@ -701,24 +692,6 @@ static int wlan_initialize_threads(struct net_device *dev)
+ 	return 0;
+ }
  
- 		if ((info->flags & IEEE80211_TX_STAT_AMPDU_NO_BACK) &&
- 		    (ieee80211_is_data_qos(fc))) {
+-static void wlan_deinitialize_threads(struct net_device *dev)
+-{
+-	struct wilc_vif *vif;
+-	struct wilc *wl;
+-
+-	vif = netdev_priv(dev);
+-	wl = vif->wilc;
+-
+-	wl->close = 1;
+-
+-	complete(&wl->txq_event);
+-
+-	if (wl->txq_thread) {
+-		kthread_stop(wl->txq_thread);
+-		wl->txq_thread = NULL;
+-	}
+-}
+-
+ static int wilc_wlan_initialize(struct net_device *dev, struct wilc_vif *vif)
+ {
+ 	int ret = 0;
+@@ -1106,6 +1079,10 @@ void wilc_wfi_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size)
+ 		wilc_wfi_p2p_rx(wilc->vif[1]->ndev, buff, size);
+ }
+ 
++static struct notifier_block g_dev_notifier = {
++	.notifier_call = dev_state_ev_handler
++};
++
+ void wilc_netdev_cleanup(struct wilc *wilc)
+ {
+ 	int i;
+@@ -1135,6 +1112,15 @@ void wilc_netdev_cleanup(struct wilc *wilc)
+ }
+ EXPORT_SYMBOL_GPL(wilc_netdev_cleanup);
+ 
++static const struct net_device_ops wilc_netdev_ops = {
++	.ndo_init = mac_init_fn,
++	.ndo_open = wilc_mac_open,
++	.ndo_stop = wilc_mac_close,
++	.ndo_start_xmit = wilc_mac_xmit,
++	.ndo_get_stats = mac_stats,
++	.ndo_set_rx_mode  = wilc_set_multicast_list,
++};
++
+ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 		     int gpio, const struct wilc_hif_func *ops)
+ {
 -- 
-1.9.1
+2.7.4
