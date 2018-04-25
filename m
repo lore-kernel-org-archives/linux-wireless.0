@@ -1,93 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40648 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754651AbeDTKtj (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56196 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750941AbeDYIGt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Apr 2018 06:49:39 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 20 Apr 2018 13:49:24 +0300
-Message-Id: <20180420104926.8816-8-luca@coelho.fi> (sfid-20180420_125008_193590_3311D303)
-In-Reply-To: <20180420104926.8816-1-luca@coelho.fi>
-References: <20180420104926.8816-1-luca@coelho.fi>
-Subject: [PATCH 7/9] mac80211: add api to set CSA counter in mac80211
+        Wed, 25 Apr 2018 04:06:49 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Brian Norris" <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>
+Subject: RE: [EXT] Re: [PATCH] mwifiex: fix nested rtnl locking on
+ BG_SCAN_STOPPED
+Date: Wed, 25 Apr 2018 08:06:46 +0000
+Message-ID: <47b96e61ff234dacbe5da02f0730fb84@SC-EXCH02.marvell.com> (sfid-20180425_100656_698589_B6C1EFFC)
+References: <1524633572-5588-1-git-send-email-gbhat@marvell.com>
+ <87in8fbvrr.fsf@purkki.adurom.net>
+In-Reply-To: <87in8fbvrr.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+Hi Kalle,
 
-Sometimes the most updated CSA counter values are known only
-to the device. Add an API to pass this data to mac80211.
+> ----------------------------------------------------------------------
+> Ganapathi Bhat <gbhat@marvell.com> writes:
+>
+> > Whenever sched_scan(BG_SCAN) is in progress and driver downloads any
+> > command, firmware will send an event BG_SCAN_STOPPED. On recieving
+> > this, driver calls cfg80211_sched_scan_stopped. This function in turn
+> > will try to acquire rtnl_lock. But if the rtnl_lock was already
+> > held(while sending the command above), this will result in nested rtnl
+> > locking. To fix this driver must call rtnl version of the API if
+> > rtnl_is_locked().
+> >
+> > Signed-off-by: Cathy Luo <cluo@marvell.com>
+> > Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+>
+> Which one is the author? If Cathy is the author, you should add a From
+> header to indicate that.
+Sorry for the miss. Myself was the author. Will send v2 with corrections once we address the below comment.
+>
+> > --- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
+> > +++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+> > @@ -848,7 +848,10 @@ int mwifiex_process_sta_event(struct
+> > mwifiex_private *priv)
+> >
+> >     case EVENT_BG_SCAN_STOPPED:
+> >             dev_dbg(adapter->dev, "event: BGS_STOPPED\n");
+> > -           cfg80211_sched_scan_stopped(priv->wdev.wiphy, 0);
+> > +           if (rtnl_is_locked())
+> > +                   cfg80211_sched_scan_stopped_rtnl(priv-
+> >wdev.wiphy, 0);
+> > +           else
+> > +                   cfg80211_sched_scan_stopped(priv->wdev.wiphy,
+> 0);
+>
+> IMHO checking if a lock is taking is rather ugly and an indication there's a
+> problem with the locking. Instead making an ugly workaround like this I
+> would rather investigate who is holding the rtnl and solve that.
+There can be applications trying to access driver(via cfg80211), holding rtnl_lock.
+For example(in our case):
+1. "iw dev"  was called, when BG_SCAN was active.
+2. NL80211_CMD_GET_INTERFACE requires rtnl_lock to be hold(specified in internal_flags)
+3. cfg80211 will  hold rtnl_lock before calling "get_tx_power"(in pre_doit).
+4. mwifiex will download RF_TX_PWR command to firmware
+5. firmware will send BG_SCAN_STOPPED event(since BG_SCAN was active).
+6. mwifiex will call "cfg80211_sched_scan_stopped" causing nested rtnl locking.
 
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/net/mac80211.h | 13 +++++++++++++
- net/mac80211/tx.c      | 25 +++++++++++++++++++++++++
- 2 files changed, 38 insertions(+)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index d2279b2d61aa..52f36c43f35f 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4449,6 +4449,19 @@ static inline struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
-  */
- u8 ieee80211_csa_update_counter(struct ieee80211_vif *vif);
- 
-+/**
-+ * ieee80211_csa_set_counter - request mac80211 to set csa counter
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ * @counter: the new value for the counter
-+ *
-+ * The csa counter can be changed by the device, this API should be
-+ * used by the device driver to update csa counter in mac80211.
-+ *
-+ * It should never be used together with ieee80211_csa_update_counter(),
-+ * as it will cause a race condition around the counter value.
-+ */
-+void ieee80211_csa_set_counter(struct ieee80211_vif *vif, u8 counter);
-+
- /**
-  * ieee80211_csa_finish - notify mac80211 about channel switch
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 05a265cd573d..34499f6300d8 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -4085,6 +4085,31 @@ u8 ieee80211_csa_update_counter(struct ieee80211_vif *vif)
- }
- EXPORT_SYMBOL(ieee80211_csa_update_counter);
- 
-+void ieee80211_csa_set_counter(struct ieee80211_vif *vif, u8 counter)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	struct beacon_data *beacon = NULL;
-+
-+	rcu_read_lock();
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_AP)
-+		beacon = rcu_dereference(sdata->u.ap.beacon);
-+	else if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
-+		beacon = rcu_dereference(sdata->u.ibss.presp);
-+	else if (ieee80211_vif_is_mesh(&sdata->vif))
-+		beacon = rcu_dereference(sdata->u.mesh.beacon);
-+
-+	if (!beacon)
-+		goto unlock;
-+
-+	if (counter < beacon->csa_current_counter)
-+		beacon->csa_current_counter = counter;
-+
-+unlock:
-+	rcu_read_unlock();
-+}
-+EXPORT_SYMBOL(ieee80211_csa_set_counter);
-+
- bool ieee80211_csa_is_complete(struct ieee80211_vif *vif)
- {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
--- 
-2.17.0
+Please share your comments further.
+>
+> --
+> Kalle Valo
