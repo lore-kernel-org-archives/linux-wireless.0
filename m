@@ -1,62 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:57505 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753539AbeDTHVh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Apr 2018 03:21:37 -0400
-Subject: Re: [PATCH v2 4/4] ath10k: Enable sta idle power save
-To: Kalle Valo <kvalo@codeaurora.org>, govinds@codeaurora.org
-Cc: pillair@codeaurora.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org, arend.vanspriel@broadcom.com
-References: <1523966821-21903-1-git-send-email-pillair@codeaurora.org>
- <1523966821-21903-5-git-send-email-pillair@codeaurora.org>
- <946e582c-2438-872b-eec8-25d9dcb994d9@dd-wrt.com>
- <7a06a34a5fcb97e07a8d79b4d689e781@codeaurora.org>
- <87604oodt4.fsf@kamboji.qca.qualcomm.com>
- <a7dd1b94951725c61034f5be6744b725@codeaurora.org>
- <8736zrjgq6.fsf@kamboji.qca.qualcomm.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <c48c1bae-04c9-55d0-fdb9-d9ae8f7cb843@dd-wrt.com> (sfid-20180420_092141_417458_99FA3298)
-Date: Fri, 20 Apr 2018 09:21:33 +0200
-MIME-Version: 1.0
-In-Reply-To: <8736zrjgq6.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from nbd.name ([46.4.11.11]:36088 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751261AbeDYJL1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 25 Apr 2018 05:11:27 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 1/4] mt76: fix concurrent rx calls on A-MPDU release
+Date: Wed, 25 Apr 2018 11:11:21 +0200
+Message-Id: <20180425091124.909-1-nbd@nbd.name> (sfid-20180425_111139_696377_C72133B9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add a spinlock in mt76_rx_complete. Without this, multiple stats updates
+could happen in parallel, which can lead to deadlocks. There are
+probably more corner cases fixed by this change.
 
->> Yes this is WIFI chip set level power-save(based on idleness) and not
->> related to protocol power save. FW will turn off/scale down the
->> resources(clock/rails) based on opportunity(when ever idle mode is
->> detected). This power save is mostly done in disconnected state. I am
->> not really sure when framework/user-space triggers power-save
->> config(iw dev <devname> set power_save on/off). Then doing this from
->> user-space will be unnecessarily toggling this config or may not be
->> setting at disconnected state.
-> I think that 'set power_save' commands affects struct
-> ieee80211_bss_conf::ps parameter and I don't think it should be used in
-> this case. We already have ath10k_config_ps() for 802.11 level of power
-> saving.
->
-> Arend again proposed runtime-pm with which I'm not very familiar. But
-> why would we want to disable this? Doesn't it make sense to have this
-> feature always enabled to save power? wcn3990 is a chip for a mobile
-> device anyway.
-it might be made for mobile devices but who knows how it is used by the 
-market.
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mac80211.c    | 2 ++
+ drivers/net/wireless/mediatek/mt76/mt76.h        | 1 +
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 1 +
+ 3 files changed, 4 insertions(+)
 
-Sebastian
->
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index eb49e0a6758c..915e61733131 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -561,6 +561,7 @@ void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
+ 	if (queue >= 0)
+ 	    napi = &dev->napi[queue];
+ 
++	spin_lock(&dev->rx_lock);
+ 	while ((skb = __skb_dequeue(frames)) != NULL) {
+ 		if (mt76_check_ccmp_pn(skb)) {
+ 			dev_kfree_skb(skb);
+@@ -570,6 +571,7 @@ void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
+ 		sta = mt76_rx_convert(skb);
+ 		ieee80211_rx_napi(dev->hw, sta, skb, napi);
+ 	}
++	spin_unlock(&dev->rx_lock);
+ }
+ 
+ void mt76_rx_poll_complete(struct mt76_dev *dev, enum mt76_rxq_id q)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 065ff78059c3..a74e6eef51e9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -241,6 +241,7 @@ struct mt76_dev {
+ 	struct device *dev;
+ 
+ 	struct net_device napi_dev;
++	spinlock_t rx_lock;
+ 	struct napi_struct napi[__MT_RXQ_MAX];
+ 	struct sk_buff_head rx_skb[__MT_RXQ_MAX];
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+index 359b105235b3..d21e4a7c1bb9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+@@ -645,6 +645,7 @@ struct mt76x2_dev *mt76x2_alloc_device(struct device *pdev)
+ 	dev->mt76.drv = &drv_ops;
+ 	mutex_init(&dev->mutex);
+ 	spin_lock_init(&dev->irq_lock);
++	spin_lock_init(&dev->mt76.rx_lock);
+ 
+ 	return dev;
+ }
 -- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+2.14.2
