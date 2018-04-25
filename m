@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f45.google.com ([209.85.214.45]:53209 "EHLO
-        mail-it0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750917AbeDPWbA (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:46871 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755853AbeDYRUH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 18:31:00 -0400
-Received: by mail-it0-f45.google.com with SMTP id f6-v6so13501365ita.2
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 15:31:00 -0700 (PDT)
+        Wed, 25 Apr 2018 13:20:07 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 17/21] staging: wilc1000: remove unused enum 'stats_flags'
+Date: Wed, 25 Apr 2018 22:48:22 +0530
+Message-ID: <1524676706-13179-18-git-send-email-ajay.kathat@microchip.com> (sfid-20180425_192011_764218_67E39D4E)
+In-Reply-To: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <20180410101359.GA4220@redhat.com>
-References: <20180409141032.GA9247@redhat.com> <alpine.LNX.2.00.1804092042320.8369@T420s>
- <20180410101359.GA4220@redhat.com>
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Date: Tue, 17 Apr 2018 00:30:59 +0200
-Message-ID: <CAJ0CqmWQX0+dCyGwf9EYO=+X9mjadDMHq1tUR8oaxH-HyMGUyg@mail.gmail.com> (sfid-20180417_003104_473134_127C156E)
-Subject: Re: [ANN] mt76x0 usb driver
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        =?UTF-8?Q?Jakub_Kici=C5=84ski?= <moorray3@wp.pl>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 10, 2018 at 12:14 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> Hi
->
-> On Mon, Apr 09, 2018 at 08:45:20PM +0200, Hans Ulli Kroll wrote:
->> here are my changes for working 5Ghz band and more USB ID's form my side
->
-> I applied the changes and pushed to github repo.
->
-> Thanks
-> Stanislaw
+Cleanup patch to remove the unused enum.
 
-Hi all,
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 5 -----
+ 1 file changed, 5 deletions(-)
 
-brief update on mt76x2u support in mt76 driver: I added the support
-for tx/rx data channels and I am able to successfully connect to an
-unencrypted AP.
-I extended the usb utility layer that can be used to support mt76x0 in
-mt76 driver. Moreover I reused as mach as I can mt76x2 routines since
-the register map is pretty similar with the one used by mt7612u and
-similar chipsets (for the moment I just exported requested symbols).
-Next steps are add encryption support and improve driver stability.
-
-Regards,
-Lorenzo
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index e6489fa..5f4dbff 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -45,11 +45,6 @@
+ #define FLOW_CONTROL_LOWER_THRESHOLD	128
+ #define FLOW_CONTROL_UPPER_THRESHOLD	256
+ 
+-enum stats_flags {
+-	WILC_WFI_RX_PKT = BIT(0),
+-	WILC_WFI_TX_PKT = BIT(1),
+-};
+-
+ struct wilc_wfi_stats {
+ 	unsigned long rx_packets;
+ 	unsigned long tx_packets;
+-- 
+2.7.4
