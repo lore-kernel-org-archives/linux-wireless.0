@@ -1,42 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41730 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755919AbeDXGBy (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:46871 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755910AbeDYRTd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 02:01:54 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 25 Apr 2018 13:19:33 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 03/21] staging: wilc1000: remove unnecessary assingment from 'if' conditions
+Date: Wed, 25 Apr 2018 22:48:08 +0530
+Message-ID: <1524676706-13179-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180425_191938_223507_F8EBFE25)
+In-Reply-To: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Subject: Re: [v2] ath10k: Enable hw checksum for wcn3990
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1523957066-12585-1-git-send-email-pillair@codeaurora.org>
-References: <1523957066-12585-1-git-send-email-pillair@codeaurora.org>
-To: Rakesh Pillai <pillair@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Rakesh Pillai <pillair@codeaurora.org>
-Message-Id: <20180424060153.A00CD60863@smtp.codeaurora.org> (sfid-20180424_080158_184605_9F2C1AFD)
-Date: Tue, 24 Apr 2018 06:01:53 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rakesh Pillai <pillair@codeaurora.org> wrote:
+Cleanup patch to remove the unnecessary use of '==' check used in if
+conditions.
 
-> By default ath10k driver enables the support for HW_CHECKSUM
-> (NETIF_F_HW_CSUM). Since the TCP/UDP checksum calculation is not enabled
-> in the wcn3990 firmware the checksum is incorrect in the TCP/UDP packets
-> and all patckets are dropped. But due note that wcn3990 support in
-> ath10k is still incomplete so this isn't a critical fix (yet).
-> 
-> Enable hw checksum calculations in wcn3990 hardware by
-> setting the proper flags in msdu descriptor tso flags.
-> 
-> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 12 ++++++------
+ drivers/staging/wilc1000/wilc_spi.c  |  6 +++---
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-20529b33aa12 ath10k: enable hw checksum for wcn3990
-
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index 087ad42..54121c3 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -885,13 +885,13 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ 			reg = 0;
+ 		}
+ 		/* select VMM table 0 */
+-		if ((val & SEL_VMM_TBL0) == SEL_VMM_TBL0)
++		if (val & SEL_VMM_TBL0)
+ 			reg |= BIT(5);
+ 		/* select VMM table 1 */
+-		if ((val & SEL_VMM_TBL1) == SEL_VMM_TBL1)
++		if (val & SEL_VMM_TBL1)
+ 			reg |= BIT(6);
+ 		/* enable VMM */
+-		if ((val & EN_VMM) == EN_VMM)
++		if (val & EN_VMM)
+ 			reg |= BIT(7);
+ 		if (reg) {
+ 			struct sdio_cmd52 cmd;
+@@ -961,13 +961,13 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ 
+ 	vmm_ctl = 0;
+ 	/* select VMM table 0 */
+-	if ((val & SEL_VMM_TBL0) == SEL_VMM_TBL0)
++	if (val & SEL_VMM_TBL0)
+ 		vmm_ctl |= BIT(0);
+ 	/* select VMM table 1 */
+-	if ((val & SEL_VMM_TBL1) == SEL_VMM_TBL1)
++	if (val & SEL_VMM_TBL1)
+ 		vmm_ctl |= BIT(1);
+ 	/* enable VMM */
+-	if ((val & EN_VMM) == EN_VMM)
++	if (val & EN_VMM)
+ 		vmm_ctl |= BIT(2);
+ 
+ 	if (vmm_ctl) {
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 600005c..c980d3b 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -1023,10 +1023,10 @@ static int wilc_spi_clear_int_ext(struct wilc *wilc, u32 val)
+ 
+ 	tbl_ctl = 0;
+ 	/* select VMM table 0 */
+-	if ((val & SEL_VMM_TBL0) == SEL_VMM_TBL0)
++	if (val & SEL_VMM_TBL0)
+ 		tbl_ctl |= BIT(0);
+ 	/* select VMM table 1 */
+-	if ((val & SEL_VMM_TBL1) == SEL_VMM_TBL1)
++	if (val & SEL_VMM_TBL1)
+ 		tbl_ctl |= BIT(1);
+ 
+ 	ret = wilc_spi_write_reg(wilc, WILC_VMM_TBL_CTL, tbl_ctl);
+@@ -1035,7 +1035,7 @@ static int wilc_spi_clear_int_ext(struct wilc *wilc, u32 val)
+ 		return ret;
+ 	}
+ 
+-	if ((val & EN_VMM) == EN_VMM) {
++	if (val & EN_VMM) {
+ 		/*
+ 		 * enable vmm transfer.
+ 		 */
 -- 
-https://patchwork.kernel.org/patch/10344621/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
