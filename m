@@ -1,43 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49786 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:50896 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755058AbeDPODp (ORCPT
+        with ESMTP id S1750882AbeDYH02 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 10:03:45 -0400
+        Wed, 25 Apr 2018 03:26:28 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Daniel Mack <daniel@zonque.org>
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        loic.poulain@linaro.org, rfried@codeaurora.org,
-        bjorn.andersson@linaro.org
-Subject: Re: [PATCH 5/5] wcn36xx: pass information elements in scan requests
-References: <20180416131634.25432-1-daniel@zonque.org>
-        <20180416131634.25432-6-daniel@zonque.org>
-Date: Mon, 16 Apr 2018 17:03:41 +0300
-In-Reply-To: <20180416131634.25432-6-daniel@zonque.org> (Daniel Mack's message
-        of "Mon, 16 Apr 2018 15:16:34 +0200")
-Message-ID: <87lgdnp7sy.fsf@kamboji.qca.qualcomm.com> (sfid-20180416_160349_136488_2F762707)
+To: Kees Cook <keescook@chromium.org>
+Cc: Andreas Christoforou <andreaschristofo@gmail.com>,
+        Rosen Penev <rosenp@gmail.com>,
+        Eric Dumazet <eric.dumazet@gmail.com>,
+        Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        kernel-hardening@lists.openwall.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] ath9k: dfs: Remove VLA usage
+References: <20180424235752.GA37317@beast>
+Date: Wed, 25 Apr 2018 10:26:23 +0300
+In-Reply-To: <20180424235752.GA37317@beast> (Kees Cook's message of "Tue, 24
+        Apr 2018 16:57:52 -0700")
+Message-ID: <87po2nagrk.fsf@kamboji.qca.qualcomm.com> (sfid-20180425_092648_264233_08BB4899)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Mack <daniel@zonque.org> writes:
+Kees Cook <keescook@chromium.org> writes:
 
-> When the ieee8022 core passes IE elements in the scan request, append
-
-You mean mac80211?
-
-And yeah, the ieee80211_ prefix is confusing. Many many years I
-started to change that to mac80211_ but gave up :(
-
-> them to the firmware message. The driver currently tells the core that
-> it is capable of attaching up to WCN36XX_MAX_SCAN_IE_LEN octets, but
-> doesn't actually pass them to the the hardware.
+> In the quest to remove all stack VLA usage from the kernel[1], this
+> redefines FFT_NUM_SAMPLES as a #define instead of const int, which still
+> triggers gcc's VLA checking pass.
 >
-> Some defines were moved around to avoid cyclic include dependencies.
+> [1] https://lkml.org/lkml/2018/3/7/621
+>
+> Co-developed-by: Andreas Christoforou <andreaschristofo@gmail.com>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+> v3: replace FFT_NUM_SAMPLES as a #define (Joe)
+> ---
+>  drivers/net/wireless/ath/ath9k/dfs.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/dfs.c
+> b/drivers/net/wireless/ath/ath9k/dfs.c
+> index 6fee9a464cce..e6e56a925121 100644
+> --- a/drivers/net/wireless/ath/ath9k/dfs.c
+> +++ b/drivers/net/wireless/ath/ath9k/dfs.c
+> @@ -40,8 +40,8 @@ static const int BIN_DELTA_MIN		= 1;
+>  static const int BIN_DELTA_MAX		= 10;
+>  
+>  /* we need at least 3 deltas / 4 samples for a reliable chirp detection */
+> -#define NUM_DIFFS 3
+> -static const int FFT_NUM_SAMPLES	= (NUM_DIFFS + 1);
+> +#define NUM_DIFFS	3
+> +#define FFT_NUM_SAMPLES	(NUM_DIFFS + 1)
 
-Does this fix anything or change functionality somehow? You should
-document that also in the commit log.
+I have already applied an almost identical patch:
+
+ath9k: dfs: remove accidental use of stack VLA
+
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=ath-next&id=9c27489a34548913baaaf3b2776e05d4a9389e3e
 
 -- 
 Kalle Valo
