@@ -1,41 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38660 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753746AbeDJPAC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Apr 2018 11:00:02 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: wcn36xx: allocate skbs with GFP_KERNEL during init
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180319063002.24665-1-daniel@zonque.org>
-References: <20180319063002.24665-1-daniel@zonque.org>
-To: Daniel Mack <daniel@zonque.org>
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        rfried@codeaurora.org, bjorn.andersson@linaro.org,
-        Daniel Mack <daniel@zonque.org>
-Message-Id: <20180410150001.D691660274@smtp.codeaurora.org> (sfid-20180410_170006_320819_5E8A0660)
-Date: Tue, 10 Apr 2018 15:00:01 +0000 (UTC)
+Received: from nbd.name ([46.4.11.11]:36100 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751069AbeDYJL1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 25 Apr 2018 05:11:27 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 3/4] mt76: add rcu locking around tx scheduling
+Date: Wed, 25 Apr 2018 11:11:23 +0200
+Message-Id: <20180425091124.909-3-nbd@nbd.name> (sfid-20180425_111133_812176_EF31DE23)
+In-Reply-To: <20180425091124.909-1-nbd@nbd.name>
+References: <20180425091124.909-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Mack <daniel@zonque.org> wrote:
+Fixes a reported lockdep error in mac80211:
 
-> GFP_ATOMIC should only be used when the allocation is done from atomic
-> context. Introduce a new flag to wcn36xx_dxe_fill_skb() and use GFP_KERNEL
-> when pre-allocating buffers during init.
-> 
-> This doesn't fix an issue that was observed in the wild, but it reduces
-> the chance of failed allocations under memory pressure.
-> 
-> Signed-off-by: Daniel Mack <daniel@zonque.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+[  179.867321] =============================
+[  179.871510] WARNING: suspicious RCU usage
+[  179.875528] 4.14.32 #0 Not tainted
+[  179.878924] -----------------------------
+[  179.882981] backports-2017-11-01/net/mac80211/tx.c:594 suspicious rcu_dereference_check() usage!
+[  179.891785]
+[  179.891785] other info that might help us debug this:
+[  179.891785]
+[  179.899824]
+[  179.899824] rcu_scheduler_active = 2, debug_locks = 1
+[  179.906343] 2 locks held by ksoftirqd/0/7:
+[  179.910479]  #0:  (&(&q->lock)->rlock){+.-.}, at: [<86b207a4>] mt76_dma_tx_cleanup+0x64/0x354 [mt76]
+[  179.919734]  #1:  (&(&fq->lock)->rlock){+.-.}, at: [<87238410>] ieee80211_tx_dequeue+0x54/0xc3c [mac80211]
+[  179.929890]
+[  179.929890] stack backtrace:
+[  179.934257] CPU: 0 PID: 7 Comm: ksoftirqd/0 Not tainted 4.14.32 #0
+[  179.940421] Stack : 00000000 00000000 00000000 00000000 80e0fce2 00000036 00000000 00000000
+[  179.948864]         87c3d24c 80696377 8061039c 00000000 00000007 00000001 87c5db78 6534689d
+[  179.957306]         00000000 00000000 80e10000 87c5da74 00000001 0000015a 00000007 00000000
+[  179.965748]         00000000 806a0000 000e4171 00000000 00000000 00000000 ffffffff 00000001
+[  179.974189]         806c0000 8692b240 86b000d0 87316fe4 00000001 802c9a68 00000000 80700000
+[  179.982632]         ...
+[  179.985104] Call Trace:
+[  179.987582] [<80010a48>] show_stack+0x58/0x100
+[  179.992040] [<804c2c58>] dump_stack+0xe8/0x170
+[  179.996868] [<87234a04>] ieee80211_tx_h_select_key+0xa8/0x5b8 [mac80211]
+[  180.004299] [<87238d44>] ieee80211_tx_dequeue+0x988/0xc3c [mac80211]
+[  180.011048] [<86b230dc>] mt76_txq_schedule+0x110/0x3a4 [mt76]
+[  180.016821] [<86b209d0>] mt76_dma_tx_cleanup+0x290/0x354 [mt76]
+[  180.022777] [<86be2e60>] mt7603_tx_tasklet+0x40/0x6c [mt7603e]
+[  180.028637] [<80037058>] tasklet_action+0x110/0x1ec
+[  180.033532] [<804e1dac>] __do_softirq+0x164/0x35c
+[  180.038235] [<80037174>] run_ksoftirqd+0x40/0x84
+[  180.042870] [<800580c8>] smpboot_thread_fn+0x1a8/0x1d8
+[  180.048023] [<800542e8>] kthread+0x130/0x144
+[  180.052297] [<8000b1f8>] ret_from_kernel_thread+0x14/0x1c
 
-Patch applied to ath-next branch of ath.git, thanks.
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/tx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-5151a673da43 wcn36xx: allocate skbs with GFP_KERNEL during init
-
+diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
+index 4eef69bd8a9e..6aca794cf998 100644
+--- a/drivers/net/wireless/mediatek/mt76/tx.c
++++ b/drivers/net/wireless/mediatek/mt76/tx.c
+@@ -422,12 +422,14 @@ void mt76_txq_schedule(struct mt76_dev *dev, struct mt76_queue *hwq)
+ {
+ 	int len;
+ 
++	rcu_read_lock();
+ 	do {
+ 		if (hwq->swq_queued >= 4 || list_empty(&hwq->swq))
+ 			break;
+ 
+ 		len = mt76_txq_schedule_list(dev, hwq);
+ 	} while (len > 0);
++	rcu_read_unlock();
+ }
+ EXPORT_SYMBOL_GPL(mt76_txq_schedule);
+ 
 -- 
-https://patchwork.kernel.org/patch/10291685/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.14.2
