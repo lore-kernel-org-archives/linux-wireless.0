@@ -1,95 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:54976 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751283AbeDYCIp (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53858 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750882AbeDYHgW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 22:08:45 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 19/19] rtlwifi: add halmac to Makefile and Kconfig
-Date: Wed, 25 Apr 2018 10:08:20 +0800
-Message-ID: <20180425020820.6141-20-pkshih@realtek.com> (sfid-20180425_040857_796398_8E92D436)
-In-Reply-To: <20180425020820.6141-1-pkshih@realtek.com>
+        Wed, 25 Apr 2018 03:36:22 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: <pkshih@realtek.com>
+Cc: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 00/19] rtlwifi: halmac: Add new module halmac
 References: <20180425020820.6141-1-pkshih@realtek.com>
+Date: Wed, 25 Apr 2018 10:36:17 +0300
+In-Reply-To: <20180425020820.6141-1-pkshih@realtek.com> (pkshih@realtek.com's
+        message of "Wed, 25 Apr 2018 10:08:01 +0800")
+Message-ID: <87lgdbagb2.fsf@kamboji.qca.qualcomm.com> (sfid-20180425_093625_788660_D825C18E)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+<pkshih@realtek.com> writes:
 
-Add halmac to Makefile and Kconfig, so we can build this module if 8822BE
-is selected.
+> From: Ping-Ke Shih <pkshih@realtek.com>
+>
+> v3: patch 06/17 in v2 is too big, so mail server may block the mail.
+>     In this patchset, I decompose the patch into three patches 06/19-08/19,
+>     so in patchset view v2 and v3 are identical.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/Kconfig       |  5 ++++
- drivers/net/wireless/realtek/rtlwifi/Makefile      |  1 +
- .../net/wireless/realtek/rtlwifi/halmac/Makefile   | 29 ++++++++++++++++++++++
- 3 files changed, 35 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/Makefile
+I can confirm, all patches made it to patchwork now.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/Kconfig b/drivers/net/wireless/realtek/rtlwifi/Kconfig
-index 73067cac289c..d9aba8fed151 100644
---- a/drivers/net/wireless/realtek/rtlwifi/Kconfig
-+++ b/drivers/net/wireless/realtek/rtlwifi/Kconfig
-@@ -151,4 +151,9 @@ config RTLBTCOEXIST
- 	depends on RTL8723AE || RTL8723BE || RTL8821AE || RTL8192EE
- 	default y
- 
-+config RTLHALMAC
-+	tristate
-+	depends on RTL8822BE
-+	default y
-+
- endif
-diff --git a/drivers/net/wireless/realtek/rtlwifi/Makefile b/drivers/net/wireless/realtek/rtlwifi/Makefile
-index 09c30e428375..a30a73c351d8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/Makefile
-+++ b/drivers/net/wireless/realtek/rtlwifi/Makefile
-@@ -28,6 +28,7 @@ obj-$(CONFIG_RTL8723AE)		+= rtl8723ae/
- obj-$(CONFIG_RTL8723BE)		+= rtl8723be/
- obj-$(CONFIG_RTL8188EE)		+= rtl8188ee/
- obj-$(CONFIG_RTLBTCOEXIST)	+= btcoexist/
-+obj-$(CONFIG_RTLHALMAC)		+= halmac/
- obj-$(CONFIG_RTL8723_COMMON)	+= rtl8723com/
- obj-$(CONFIG_RTL8821AE)		+= rtl8821ae/
- obj-$(CONFIG_RTL8192EE)		+= rtl8192ee/
-diff --git a/drivers/net/wireless/realtek/rtlwifi/halmac/Makefile b/drivers/net/wireless/realtek/rtlwifi/halmac/Makefile
-new file mode 100644
-index 000000000000..41c1ae7e5e53
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtlwifi/halmac/Makefile
-@@ -0,0 +1,29 @@
-+
-+
-+halmac-objs := \
-+	halmac_api.o	\
-+	halmac_88xx/halmac_bb_rf_88xx.o	\
-+	halmac_88xx/halmac_efuse_88xx.o	\
-+	halmac_88xx/halmac_gpio_88xx.o	\
-+	halmac_88xx/halmac_pcie_88xx.o	\
-+	halmac_88xx/halmac_sdio_88xx.o	\
-+	halmac_88xx/halmac_usb_88xx.o	\
-+	halmac_88xx/halmac_cfg_wmac_88xx.o	\
-+	halmac_88xx/halmac_flash_88xx.o	\
-+	halmac_88xx/halmac_init_88xx.o	\
-+	halmac_88xx/halmac_common_88xx.o	\
-+	halmac_88xx/halmac_fw_88xx.o	\
-+	halmac_88xx/halmac_mimo_88xx.o	\
-+	halmac_88xx/halmac_8822b/halmac_gpio_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_pcie_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_sdio_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_usb_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_pwr_seq_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_common_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_cfg_wmac_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_phy_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_init_8822b.o	\
-+	rtl_halmac.o
-+
-+
-+obj-m = halmac.o
+> v2: remove indirection to get halmac ops
+>     Only patches 1/17 and 11/17 are changed.
+>
+> Patches 1/19-3/19 are added structure to support this module.
+> Patches 4/19-18/19 add new files.
+> Patch 19/19 add this module to Makefile and Kconfig.
+>
+> Ping-Ke Shih (19):
+>   rtlwifi: add halmac structure to wifi.h
+>   rtlwifi: add debug ID COMP_HALMAC
+>   rtlwifi: add dmdef.h to share with driver and other modules
+>   rtlwifi: halmac: add main definition used by halmac
+>   rtlwifi: halmac: describe number and size of chip functions
+>   rtlwifi: halmac: add register definitions
+>   rtlwifi: halmac: add bit field definitions
+>   rtlwifi: halmac: add bit field definitions of rtl8822b
+>   rtlwifi: halmac: add definition of TX/RX descriptor
+>   rtlwifi: halmac: add GPIO pin/pinmux definitions
+>   rtlwifi: halmac: add power sequence to turn on/off wifi card
+>   rtlwifi: halmac: access efuse through halmac helper functions
+>   rtlwifi: halmac: add files to implement halmac ops
+>   rtlwifi: halmac: add halmac init/deinit functions
+>   rtlwifi: halmac: add firmware related functions and definitions
+>   rtlwifi: halmac: add bus interface commands
+>   rtlwifi: halmac: add to control WiFi mac functions and registers
+>   rtlwifi: halmac: add to support BB and RF functions
+>   rtlwifi: add halmac to Makefile and Kconfig
+
+You are adding a new component to rtlwifi but there's no introduction in
+the cover letter. Why is this needed? For what hardware is it for? What
+new features does it bring?
+
+>  77 files changed, 64201 insertions(+)
+
+This is a huge patchset, I'm not even sure if I want to start reviewing
+this. Especially when I have no clue about the big picture (which should
+be described in the cover letter). 
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#too_many_patches
+
+And I even read all 19 commit logs and there was no mention of why this
+is needed either. I cannot just blindly apply patches without knowing
+what they do.
+
 -- 
-2.15.1
+Kalle Valo
