@@ -1,174 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:34873 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752519AbeDOMWu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 15 Apr 2018 08:22:50 -0400
-Received: by mail-lf0-f68.google.com with SMTP id r125-v6so1516380lfe.2
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Apr 2018 05:22:49 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [PATCH 1/2] ath10k: add inlined wrappers for htt tx ops
-Date: Sun, 15 Apr 2018 14:22:27 +0200
-Message-Id: <20180415122228.12565-2-erik.stromdahl@gmail.com> (sfid-20180415_142254_945708_CD7A63D4)
-In-Reply-To: <20180415122228.12565-1-erik.stromdahl@gmail.com>
-References: <20180415122228.12565-1-erik.stromdahl@gmail.com>
+Received: from nbd.name ([46.4.11.11]:36096 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751247AbeDYJL1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 25 Apr 2018 05:11:27 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 4/4] mt76: check for pending reset before attempting to schedule tx
+Date: Wed, 25 Apr 2018 11:11:24 +0200
+Message-Id: <20180425091124.909-4-nbd@nbd.name> (sfid-20180425_111131_811760_B85FF3B2)
+In-Reply-To: <20180425091124.909-1-nbd@nbd.name>
+References: <20180425091124.909-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These wrappers makes the HTT ops align better with the HIF ops
-(where similar wrappers are used).
+The check within mt76_txq_send_burst is not enough, as it happens after
+a first frame has already been queued up
 
-It also makes it easier for a target to have unsupported ops
-(by letting the corresponding function pointer be NULL).
-
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/ath/ath10k/htt.c    |  4 +-
- drivers/net/wireless/ath/ath10k/htt.h    | 51 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/htt_tx.c | 12 +++---
- drivers/net/wireless/ath/ath10k/mac.c    |  2 +-
- 4 files changed, 60 insertions(+), 9 deletions(-)
+ drivers/net/wireless/mediatek/mt76/tx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
-index 625198dea18b..21a67f82f037 100644
---- a/drivers/net/wireless/ath/ath10k/htt.c
-+++ b/drivers/net/wireless/ath/ath10k/htt.c
-@@ -257,11 +257,11 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
- 		return status;
- 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
+index 6aca794cf998..7ecd2d7c5db4 100644
+--- a/drivers/net/wireless/mediatek/mt76/tx.c
++++ b/drivers/net/wireless/mediatek/mt76/tx.c
+@@ -385,6 +385,10 @@ mt76_txq_schedule_list(struct mt76_dev *dev, struct mt76_queue *hwq)
+ 		bool empty = false;
+ 		int cur;
  
--	status = htt->tx_ops->htt_send_frag_desc_bank_cfg(htt);
-+	status = ath10k_htt_send_frag_desc_bank_cfg(htt);
- 	if (status)
- 		return status;
- 
--	status = htt->tx_ops->htt_send_rx_ring_cfg(htt);
-+	status = ath10k_htt_send_rx_ring_cfg(htt);
- 	if (status) {
- 		ath10k_warn(ar, "failed to setup rx ring: %d\n",
- 			    status);
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 8cc2a8b278e4..c76f6daafe70 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1848,6 +1848,57 @@ struct ath10k_htt_tx_ops {
- 	void (*htt_free_txbuff)(struct ath10k_htt *htt);
- };
- 
-+static inline int ath10k_htt_send_rx_ring_cfg(struct ath10k_htt *htt)
-+{
-+	if (!htt->tx_ops->htt_send_rx_ring_cfg)
-+		return -EOPNOTSUPP;
++		if (test_bit(MT76_SCANNING, &dev->state) ||
++		    test_bit(MT76_RESET, &dev->state))
++			return -EBUSY;
 +
-+	return htt->tx_ops->htt_send_rx_ring_cfg(htt);
-+}
-+
-+static inline int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt)
-+{
-+	if (!htt->tx_ops->htt_send_frag_desc_bank_cfg)
-+		return -EOPNOTSUPP;
-+
-+	return htt->tx_ops->htt_send_frag_desc_bank_cfg(htt);
-+}
-+
-+static inline int ath10k_htt_alloc_frag_desc(struct ath10k_htt *htt)
-+{
-+	if (!htt->tx_ops->htt_alloc_frag_desc)
-+		return -EOPNOTSUPP;
-+
-+	return htt->tx_ops->htt_alloc_frag_desc(htt);
-+}
-+
-+static inline void ath10k_htt_free_frag_desc(struct ath10k_htt *htt)
-+{
-+	if (htt->tx_ops->htt_free_frag_desc)
-+		htt->tx_ops->htt_free_frag_desc(htt);
-+}
-+
-+static inline int ath10k_htt_tx(struct ath10k_htt *htt,
-+				enum ath10k_hw_txrx_mode txmode,
-+				struct sk_buff *msdu)
-+{
-+	return htt->tx_ops->htt_tx(htt, txmode, msdu);
-+}
-+
-+static inline int ath10k_htt_alloc_txbuff(struct ath10k_htt *htt)
-+{
-+	if (!htt->tx_ops->htt_alloc_txbuff)
-+		return -EOPNOTSUPP;
-+
-+	return htt->tx_ops->htt_alloc_txbuff(htt);
-+}
-+
-+static inline void ath10k_htt_free_txbuff(struct ath10k_htt *htt)
-+{
-+	if (htt->tx_ops->htt_free_txbuff)
-+		htt->tx_ops->htt_free_txbuff(htt);
-+}
-+
- struct ath10k_htt_rx_ops {
- 	size_t (*htt_get_rx_ring_size)(struct ath10k_htt *htt);
- 	void (*htt_config_paddrs_ring)(struct ath10k_htt *htt, void *vaddr);
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index d334b7be1fea..a086958c39b6 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -443,13 +443,13 @@ static int ath10k_htt_tx_alloc_buf(struct ath10k_htt *htt)
- 	struct ath10k *ar = htt->ar;
- 	int ret;
- 
--	ret = htt->tx_ops->htt_alloc_txbuff(htt);
-+	ret = ath10k_htt_alloc_txbuff(htt);
- 	if (ret) {
- 		ath10k_err(ar, "failed to alloc cont tx buffer: %d\n", ret);
- 		return ret;
- 	}
- 
--	ret = htt->tx_ops->htt_alloc_frag_desc(htt);
-+	ret = ath10k_htt_alloc_frag_desc(htt);
- 	if (ret) {
- 		ath10k_err(ar, "failed to alloc cont frag desc: %d\n", ret);
- 		goto free_txbuf;
-@@ -473,10 +473,10 @@ static int ath10k_htt_tx_alloc_buf(struct ath10k_htt *htt)
- 	ath10k_htt_tx_free_txq(htt);
- 
- free_frag_desc:
--	htt->tx_ops->htt_free_frag_desc(htt);
-+	ath10k_htt_free_frag_desc(htt);
- 
- free_txbuf:
--	htt->tx_ops->htt_free_txbuff(htt);
-+	ath10k_htt_free_txbuff(htt);
- 
- 	return ret;
- }
-@@ -530,9 +530,9 @@ void ath10k_htt_tx_destroy(struct ath10k_htt *htt)
- 	if (!htt->tx_mem_allocated)
- 		return;
- 
--	htt->tx_ops->htt_free_txbuff(htt);
-+	ath10k_htt_free_txbuff(htt);
- 	ath10k_htt_tx_free_txq(htt);
--	htt->tx_ops->htt_free_frag_desc(htt);
-+	ath10k_htt_free_frag_desc(htt);
- 	ath10k_htt_tx_free_txdone_fifo(htt);
- 	htt->tx_mem_allocated = false;
- }
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index bf05a3689558..fc3320f94f45 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3598,7 +3598,7 @@ static int ath10k_mac_tx_submit(struct ath10k *ar,
- 
- 	switch (txpath) {
- 	case ATH10K_MAC_TX_HTT:
--		ret = htt->tx_ops->htt_tx(htt, txmode, skb);
-+		ret = ath10k_htt_tx(htt, txmode, skb);
- 		break;
- 	case ATH10K_MAC_TX_HTT_MGMT:
- 		ret = ath10k_htt_mgmt_tx(htt, skb);
+ 		mtxq = list_first_entry(&hwq->swq, struct mt76_txq, list);
+ 		if (mtxq->send_bar && mtxq->aggr) {
+ 			struct ieee80211_txq *txq = mtxq_to_txq(mtxq);
 -- 
-2.17.0
+2.14.2
