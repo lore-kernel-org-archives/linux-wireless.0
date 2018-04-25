@@ -1,170 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:55460 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755998AbeDZPau (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Apr 2018 11:30:50 -0400
-Subject: Re: [PATCH v2] ath10k: fix crash in recent 3.5.3 9984 firmware due
- wrong handling of peer_bw_rxnss_override parameter
-To: s.gottschall@dd-wrt.com, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-References: <20180426092848.23069-1-s.gottschall@dd-wrt.com>
-Cc: kvalo@codeaurora.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <f288f18c-684d-2ff9-5739-648e8e716653@candelatech.com> (sfid-20180426_173055_994761_8FE8C87F)
-Date: Thu, 26 Apr 2018 08:30:47 -0700
+Received: from mga01.intel.com ([192.55.52.88]:40537 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750862AbeDYFWb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 25 Apr 2018 01:22:31 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Nathan Schulte <nmschulte@gmail.com>,
+        Emmanuel Grumbach <egrumbach@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>
+Subject: RE: [linuxwifi] Simultaneous 2.4 GHz WiFi and Bluetooth issue on
+ Intel Dual Band Wireless-AC 8260
+Date: Wed, 25 Apr 2018 05:22:26 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB30126BF90DA@HASMSX112.ger.corp.intel.com> (sfid-20180425_072247_309449_A0A96DCB)
+References: <6e4b5e53-0a8d-978c-5cfe-f498c8b15c1a@gmail.com>
+ <CANUX_P19ja=XLMs8Vvii1yMvCNAvPnMh7hs=H92M5QRJnJjRfg@mail.gmail.com>
+ <30aa1580-7913-a7f8-3f2d-be4d699d6dbc@gmail.com>
+In-Reply-To: <30aa1580-7913-a7f8-3f2d-be4d699d6dbc@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180426092848.23069-1-s.gottschall@dd-wrt.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/26/2018 02:28 AM, s.gottschall@dd-wrt.com wrote:
-> From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
->
-> current handling of peer_bw_rxnss_override parameter is based on guessing the VHT160/8080 capability by rx rate. this is wrong and may lead
-> to a non initialized peer_bw_rxnss_override parameter which is required since VHT160 operation mode only supports 2x2 chainmasks in addition the original code
-> initialized the parameter with wrong masked values.
-> This patch uses the peer phymode and peer nss information for correct initialisation of the peer_bw_rxnss_override parameter.
-> if this peer information is not available, we initialize the parameter by minimum nss which is suggested by QCA as temporary workaround according
-> to the QCA sourcecodes.
->
-> Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
->
-> v2: remove debug messages
-> ---
->  drivers/net/wireless/ath/ath10k/mac.c | 36 +++++++++++++++++++----------------
->  drivers/net/wireless/ath/ath10k/wmi.c |  4 +---
->  drivers/net/wireless/ath/ath10k/wmi.h | 14 +++++++++++++-
->  3 files changed, 34 insertions(+), 20 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> index 5be6386ede8f..df79af89ee71 100644
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -2505,8 +2505,9 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
->  	if (sta->bandwidth == IEEE80211_STA_RX_BW_80)
->  		arg->peer_flags |= ar->wmi.peer_flags->bw80;
->
-> -	if (sta->bandwidth == IEEE80211_STA_RX_BW_160)
-> +	if (sta->bandwidth == IEEE80211_STA_RX_BW_160) {
->  		arg->peer_flags |= ar->wmi.peer_flags->bw160;
-> +	}
->
->  	/* Calculate peer NSS capability from VHT capabilities if STA
->  	 * supports VHT.
-> @@ -2529,22 +2530,25 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
->  	arg->peer_vht_rates.tx_mcs_set = ath10k_peer_assoc_h_vht_limit(
->  		__le16_to_cpu(vht_cap->vht_mcs.tx_mcs_map), vht_mcs_mask);
->
-> -	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
-> -		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
-> +	if (arg->peer_num_spatial_streams && (arg->peer_phymode == MODE_11AC_VHT160 || arg->peer_phymode == MODE_11AC_VHT80_80)) {
-> +		arg->peer_bw_rxnss_override = BW_NSS_FWCONF_160(arg->peer_num_spatial_streams);
-> +	}
-
-So, an 80Mhz peer could be 4x4 and could connect to a VHT-160 AP.  From what I can tell,
-the VHT-160 AP can talk 4x4 @ 80Mhz to the peer in this case, but if peer is VHT-160,
-then of course it can only talk at 2x2.
-
-So, I don't think you can just look at the peer_num_spatial_streams here.
-
-
-> -	if (arg->peer_vht_rates.rx_max_rate &&
-> -	    (sta->vht_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK)) {
-> -		switch (arg->peer_vht_rates.rx_max_rate) {
-> -		case 1560:
-> -			/* Must be 2x2 at 160Mhz is all it can do. */
-> -			arg->peer_bw_rxnss_override = 2;
-> -			break;
-> -		case 780:
-> -			/* Can only do 1x1 at 160Mhz (Long Guard Interval) */
-> -			arg->peer_bw_rxnss_override = 1;
-> -			break;
-> -		}
-
-This old code does look wrong, the firmware is using zero-based, so override-0 == nss-1, override-1 == nss-2.
-
-This is confusing enough that it deserves a comment in the code I think....
-
-> +	if (arg->peer_num_spatial_streams && arg->peer_phymode == MODE_11AC_VHT80_80) {
-> +		arg->peer_bw_rxnss_override |= BW_NSS_FWCONF_80_80(arg->peer_num_spatial_streams);
->  	}
-> +
-> +	/* In very exceptional  conditions it is observed  that
-> +	 * firmware was receiving bw_rxnss_override as 0 for peer from host, and resulting in Target Assert.
-> +	 * Changing the rxnss_override to minimum nss. This is a temporary WAR. Needs to be fixed
-> +	 * properly.
-> +	 */
-> +	if (!arg->peer_num_spatial_streams && (arg->peer_phymode == MODE_11AC_VHT80_80 || arg->peer_phymode == MODE_11AC_VHT160)) {
-> +		arg->peer_bw_rxnss_override = BW_NSS_FWCONF_MAP_ENABLE;
-> +	}
-> +
-> +	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
-> +		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
->  }
->
->  static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
-> @@ -2696,9 +2700,9 @@ static int ath10k_peer_assoc_prepare(struct ath10k *ar,
->  	ath10k_peer_assoc_h_crypto(ar, vif, sta, arg);
->  	ath10k_peer_assoc_h_rates(ar, vif, sta, arg);
->  	ath10k_peer_assoc_h_ht(ar, vif, sta, arg);
-> +	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
->  	ath10k_peer_assoc_h_vht(ar, vif, sta, arg);
->  	ath10k_peer_assoc_h_qos(ar, vif, sta, arg);
-> -	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
->
->  	return 0;
->  }
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-> index 2c36256a441d..7d72fdc703c8 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-> @@ -7212,9 +7212,7 @@ ath10k_wmi_peer_assoc_fill_10_4(struct ath10k *ar, void *buf,
->
->  	ath10k_wmi_peer_assoc_fill_10_2(ar, buf, arg);
->  	if (arg->peer_bw_rxnss_override)
-> -		cmd->peer_bw_rxnss_override =
-> -			__cpu_to_le32((arg->peer_bw_rxnss_override - 1) |
-> -				      BIT(PEER_BW_RXNSS_OVERRIDE_OFFSET));
-> +		cmd->peer_bw_rxnss_override = __cpu_to_le32(arg->peer_bw_rxnss_override);
->  	else
->  		cmd->peer_bw_rxnss_override = 0;
->  }
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-> index 46ae19bb2c92..1fe0aa5523a6 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.h
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
-> @@ -6380,7 +6380,19 @@ struct wmi_10_2_peer_assoc_complete_cmd {
->  	__le32 info0; /* WMI_PEER_ASSOC_INFO0_ */
->  } __packed;
->
-> -#define PEER_BW_RXNSS_OVERRIDE_OFFSET  31
-> +#define BW_NSS_FWCONF_MAP_ENABLE             (1 << 31)
-> +#define BW_NSS_FWCONF_MAP_160MHZ_S           (0)
-> +#define BW_NSS_FWCONF_MAP_160MHZ_M           (0x00000007)
-> +#define BW_NSS_FWCONF_MAP_80_80MHZ_S         (3)
-> +#define BW_NSS_FWCONF_MAP_80_80MHZ_M         (0x00000038)
-
-Older FW does not pay attention to the 80_80 bits.  It uses masks so it is
-backwards-compat, but maybe worth a comment.
-
-> +#define BW_NSS_FWCONF_MAP_M                  (0x0000003F)
-> +
-> +#define GET_BW_NSS_FWCONF_160(x)             ((((x) & BW_NSS_FWCONF_MAP_160MHZ_M) >> BW_NSS_FWCONF_MAP_160MHZ_S) + 1)
-> +#define GET_BW_NSS_FWCONF_80_80(x)           ((((x) & BW_NSS_FWCONF_MAP_80_80MHZ_M) >> BW_NSS_FWCONF_MAP_80_80MHZ_S) + 1)
-> +
-> +/* Values defined to set 160 MHz Bandwidth NSS Mapping into FW*/
-> +#define BW_NSS_FWCONF_160(x)          (BW_NSS_FWCONF_MAP_ENABLE | (((x - 1) << BW_NSS_FWCONF_MAP_160MHZ_S) & BW_NSS_FWCONF_MAP_160MHZ_M))
-> +#define BW_NSS_FWCONF_80_80(x)        (BW_NSS_FWCONF_MAP_ENABLE | (((x - 1) << BW_NSS_FWCONF_MAP_80_80MHZ_S) & BW_NSS_FWCONF_MAP_80_80MHZ_M))
->
->  struct wmi_10_4_peer_assoc_complete_cmd {
->  	struct wmi_10_2_peer_assoc_complete_cmd cmd;
->
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+IA0KPiBPbiAwNC8yMC8yMDE4IDAxOjAzIEFNLCBFbW1hbnVlbCBHcnVtYmFjaCB3cm90ZToNCj4g
+Pj4gVW5kZXIgV2luZG93cyAxMCwgdGhlIGhhcmR3YXJlIGFwcGVhcnMgdG8gd29yayB3aXRob3V0
+IGlzc3VlLg0KPiA+PiBBZGRpdGlvbmFsbHksIEkgYmVsaWV2ZSBJIG1hbmFnZWQgdG8gd2FybS1y
+ZWJvb3QgZnJvbSBXaW5kb3dzIDEwIHRvDQo+ID4+IExpbnV4ICh3aXRoIEJsdWV0b290aCBjb25u
+ZWN0ZWQpLCBhbmQgd2FzIGFibGUgdG8gY29udGludWUgdXNpbmcgdGhlDQo+ID4+IHNhbWUgMi40
+IEdIeiBXaUZpIGFuZCBCbHVldG9vdGggYXVkaW8gc2luayB3aXRob3V0IGlzc3VlLg0KPiA+DQo+
+ID4gVGhpcyB3YXMgcmVwb3J0ZWQgaW4gdGhlIHBhc3QuIFBsZWFzZSBtYWtlIHN1cmUgeW91IGhh
+dmUgdGhlIGxhdGVzdCBCVA0KPiA+IGZpcm13YXJlIGZpbGVzLg0KPiANCj4gVGhpcyBzZWVtcyB0
+byBoYXZlIHJlc29sdmVkIHRoZSBpc3N1ZS4gIEludGVyZXN0aW5nbHksIHRoZSBmaXJtd2FyZQ0K
+PiAodmVyc2lvbi4uLikgc2hpcHBlZCB3aXRoIERlYmlhbiBTaWQgaXMgbm90IGluIHRoZSBvZmZp
+Y2lhbCBsaW51eC1maXJtd2FyZS5naXQNCj4gcmVwb3NpdG9yeTsgaXRzIG1kNXN1bSBkb2Vzbid0
+IG1hdGNoIGFueSBvZiBwcmlvciB2ZXJzaW9ucyBvZiB0aGUgZmlsZToNCg0KR2xhZCB0byBrbm93
+LiBJIGd1ZXNzIHlvdSBjYW4gb3BlbiBhIGJ1ZyBvbiBEZWJpYW4gdG8gdGhhdmUgdGhleSBmaXgg
+dGhpcy4NClRoaXMgaXMgcmF0aGVyIHN0cmFuZ2UgdGhvdWdoLg0KDQo+IA0KPiA+IGh0dHBzOi8v
+Z2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2Zpcm13YXJlL2xpbnV4LWZp
+cm13YXINCj4gPiBlLmdpdC9sb2cvaW50ZWwvaWJ0LTExLTUuc2ZpDQo+IA0KPiBFbW1hbnVlbCwg
+aG93IGNhbiBJIGRldGVybWluZSB0aGUgZmlybXdhcmUgdmVyc2lvbiAoIkZXIEJ1aWxkIiBhbmQv
+b3INCj4gIlJlbGVhc2UgVmVyc2lvbiIpIGZyb20gYSBnaXZlbiBmaWxlIChlLmcuIGlidC0xMS01
+LnNmaS8uZGRjKT8NCg0KSSBoYXZlIG5vIGNsdWUgOikNCkkgYW0gbm90IGEgQlQgZ3V5LCBzb3Jy
+eS4NCg0KPiANCj4gPiBSZWdhcmRsZXNzIG9mIHRoZSBCVCBmaXJtd2FyZSB2ZXJzaW9uIHRoaW5n
+IHdoaWNoIGlzIGEgcHVyZSBJbnRlbA0KPiA+IHByb2JsZW0sIEkgaGF2ZSBoZWFyZCBhYm91dCBw
+cm9ibGVtcyBpbiB0aGUgQlQgc3RhY2sgaXRzZWxmIGJ1dCBJDQo+ID4gY2FuJ3QgaGVscCBhYm91
+dCB0aGlzLg0KPiANCj4gVGhvdWdoIEkndmUgbmV2ZXIgcmVhbGx5IHVzZWQgdGhlIEJsdWV0b290
+aCBzdGFjayB1bnRpbCB0aGlzIGhhcmR3YXJlLCBpdA0KPiBzZWVtcyB0aGUgc3RhY2svYmx1ZW1h
+bi0qIGFwcGxpY2F0aW9ucyBvbmx5IGJlaGF2ZSBvZGRseSB3aGVuIHRoZXJlJ3MNCj4gcHJvYmxl
+bXMgd2l0aCB0aGUgZmlybXdhcmU6IG5ldmVyIGFuIGlzc3VlIHdoZW4gbm90IHVzaW5nIHNpbXVs
+dGFuZW91cw0KPiAyLjQgR0h6IFdpRmkgKyBCbHVldG9vdGgsIG9yIHdpdGggdGhpcyBsYXRlc3Qg
+ZmlybXdhcmUsIG9yIGFwcHJveC4gMiB5ZWFycyBhZ28NCj4gd2hlbiBJIGZpcnN0IHN0YXJ0ZWQg
+dXNpbmcgdGhpcyBzZXR1cC4NCj4gDQoNCg==
