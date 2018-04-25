@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway24.websitewelcome.com ([192.185.51.253]:44754 "EHLO
-        gateway24.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751412AbeDEPtw (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:28418 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755853AbeDYRUF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Apr 2018 11:49:52 -0400
-Received: from cm14.websitewelcome.com (cm14.websitewelcome.com [100.42.49.7])
-        by gateway24.websitewelcome.com (Postfix) with ESMTP id 5D946422DC
-        for <linux-wireless@vger.kernel.org>; Thu,  5 Apr 2018 10:49:51 -0500 (CDT)
-Date: Thu, 5 Apr 2018 10:49:49 -0500
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To: Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] qtnfmac: pearl: pcie: fix memory leak in qtnf_fw_work_handler
-Message-ID: <20180405154949.GA32223@embeddedor.com> (sfid-20180405_175005_831392_EC40598E)
+        Wed, 25 Apr 2018 13:20:05 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 16/21] staging: wilc1000: remove unused elements in 'wilc_priv' struct
+Date: Wed, 25 Apr 2018 22:48:21 +0530
+Message-ID: <1524676706-13179-17-git-send-email-ajay.kathat@microchip.com> (sfid-20180425_192010_152480_6AC33DFF)
+In-Reply-To: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case memory resources for fw were succesfully allocated, release
-them before jumping to fw_load_fail.
+Cleanup patch to remove unused element from 'wilc_priv' structure.
 
-Addresses-Coverity-ID: 1466092 ("Resource leak")
-Fixes: c3b2f7ca4186 ("qtnfmac: implement asynchronous firmware loading")
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+Below elements are removed in 'wilc_priv' structure:
+
+struct WILC_WFI_packet *ppool;
+struct WILC_WFI_packet *rx_queue; /* List of incoming packets */
+int rx_int_enabled;
+int tx_packetlen;
+u8 *tx_packetdata;
+struct napi_struct napi;
+
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-index f117904..6c1e139 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/pearl/pcie.c
-@@ -1185,6 +1185,10 @@ static void qtnf_fw_work_handler(struct work_struct *work)
- 	if (qtnf_poll_state(&priv->bda->bda_ep_state, QTN_EP_FW_LOADRDY,
- 			    QTN_FW_DL_TIMEOUT_MS)) {
- 		pr_err("card is not ready\n");
-+
-+		if (!flashboot)
-+			release_firmware(fw);
-+
- 		goto fw_load_fail;
- 	}
- 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 0a91468..e6489fa 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -108,15 +108,9 @@ struct wilc_priv {
+ 	struct net_device_stats stats;
+ 	u8 monitor_flag;
+ 	int status;
+-	struct WILC_WFI_packet *ppool;
+-	struct WILC_WFI_packet *rx_queue; /* List of incoming packets */
+-	int rx_int_enabled;
+-	int tx_packetlen;
+-	u8 *tx_packetdata;
+ 	struct sk_buff *skb;
+ 	spinlock_t lock;
+ 	struct net_device *dev;
+-	struct napi_struct napi;
+ 	struct host_if_drv *hif_drv;
+ 	struct host_if_pmkid_attr pmkid_list;
+ 	struct wilc_wfi_stats netstats;
 -- 
 2.7.4
