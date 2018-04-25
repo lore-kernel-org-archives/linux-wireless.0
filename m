@@ -1,45 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f47.google.com ([209.85.213.47]:39892 "EHLO
-        mail-vk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754656AbeDYOm2 (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:5534 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756000AbeDYRTW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 10:42:28 -0400
-Received: by mail-vk0-f47.google.com with SMTP id g83so11104116vkc.6
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Apr 2018 07:42:28 -0700 (PDT)
+        Wed, 25 Apr 2018 13:19:22 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 00/21] staging: wilc1000: remove unused code and reorder functions 
+Date: Wed, 25 Apr 2018 22:48:05 +0530
+Message-ID: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180425_191932_460216_51B0792D)
 MIME-Version: 1.0
-In-Reply-To: <87po2nagrk.fsf@kamboji.qca.qualcomm.com>
-References: <20180424235752.GA37317@beast> <87po2nagrk.fsf@kamboji.qca.qualcomm.com>
-From: Kees Cook <keescook@chromium.org>
-Date: Wed, 25 Apr 2018 07:42:25 -0700
-Message-ID: <CAGXu5jJrd94=RQJHqfdP9wTfhsp61+aCnOmr06bia3mmi79_Mg@mail.gmail.com> (sfid-20180425_164250_653865_CE1AAE4D)
-Subject: Re: [PATCH v3] ath9k: dfs: Remove VLA usage
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Andreas Christoforou <andreaschristofo@gmail.com>,
-        Rosen Penev <rosenp@gmail.com>,
-        Eric Dumazet <eric.dumazet@gmail.com>,
-        Joe Perches <joe@perches.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Kernel Hardening <kernel-hardening@lists.openwall.com>,
-        LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 25, 2018 at 12:26 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> I have already applied an almost identical patch:
->
-> ath9k: dfs: remove accidental use of stack VLA
->
-> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=ath-next&id=9c27489a34548913baaaf3b2776e05d4a9389e3e
+This patch series contains fixes to remove the unused code. It also has patches
+to reorganize the function and simplify the function logic.
 
-Ah! Cool, no worries. I didn't see that in linux-next yet. :)
+Ajay Singh (21):
+  staging: wilc1000: replace crc7_byte() with inline macro CRC7_BYTE
+  staging: wilc1000: align the #define in wilc_spi file
+  staging: wilc1000: remove unnecessary assingment from 'if' conditions
+  staging: wilc1000: remove 'cmd' variable in wilc_spi functions
+  staging: wicl1000: removed the unsed variables in
+    wilc_parse_network_info()
+  staging: wilc1000: remove inner {} in wilc_parse_network_info()
+  staging: wilc1000: simplified if conditions in spi_data_write()
+  staging: wilc1000: remove unused variable scan_while_connected
+  staging: wilc1000: remove unsed typedef wilc_debug_func
+  staging: wilc1000: remove used #define HIF_SDIO_GPIO_IRQ
+  staging: wilc1000: remove unused #define related to MAC status
+  staging: wilc1000: rename mac status macros and moved related #define
+    together
+  staging: wilc1000: rename WILC_WFI_stats to avoid uppercase
+  staging: wilc1000: rename num_reg_frame macro to have uppercase in
+    macro name
+  staging: wilc1000: rename wlan init and deinit function prefixed with
+    wil1000
+  staging: wilc1000: remove unused elements in 'wilc_priv' struct
+  staging: wilc1000: remove unused enum 'stats_flags'
+  staging: wilc1000: rename P2P_LISTEN_STATE variable to use lowercase
+  staging: wilc1000: remove inner block '{}' in handle_remain_on_chan()
+  staging: wilc1000: change function to static in linux_wlan
+  staging: wilc1000: reorder functions to avoid forward declaration in
+    linux_wlan
 
-Thanks!
-
--Kees
+ drivers/staging/wilc1000/coreconfigurator.c       |  84 +++++++--------
+ drivers/staging/wilc1000/host_interface.c         |  64 ++++--------
+ drivers/staging/wilc1000/linux_wlan.c             | 122 ++++++++++------------
+ drivers/staging/wilc1000/wilc_sdio.c              |  12 +--
+ drivers/staging/wilc1000/wilc_spi.c               |  70 ++++++-------
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |   2 +-
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  23 +---
+ drivers/staging/wilc1000/wilc_wlan.h              |   7 --
+ drivers/staging/wilc1000/wilc_wlan_if.h           |  11 +-
+ 9 files changed, 158 insertions(+), 237 deletions(-)
 
 -- 
-Kees Cook
-Pixel Security
+2.7.4
