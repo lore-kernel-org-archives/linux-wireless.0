@@ -1,74 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40850 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750847AbeDVI2B (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49654 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750882AbeDYIVJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Apr 2018 04:28:01 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 22 Apr 2018 11:27:39 +0300
-Message-Id: <20180422082745.9743-7-luca@coelho.fi> (sfid-20180422_102818_575657_B77FC374)
-In-Reply-To: <20180422082745.9743-1-luca@coelho.fi>
-References: <20180422082745.9743-1-luca@coelho.fi>
-Subject: [PATCH 06/12] iwlwifi: mvm: move skb padding reservation earlier
+        Wed, 25 Apr 2018 04:21:09 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: pcie: tighten a check in
+ mwifiex_pcie_process_event_ready()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180405111719.GB4218@mwanda>
+References: <20180405111719.GB4218@mwanda>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>, linux-wireless@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Message-Id: <20180425082109.78ED5607E5@smtp.codeaurora.org> (sfid-20180425_102114_405242_87E94685)
+Date: Wed, 25 Apr 2018 08:21:09 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
-Future changes will require moving the HE radiotap data into
-the SKB head, but this means we need to have the alignment
-reservation done before that. To prepare, move the alignment
-reservation earlier here.
+> If "evt_len" is 1 then we try to memcpy() negative 3 bytes and it would
+> cause memory corruption.
+> 
+> Fixes: d930faee141b ("mwifiex: add support for Marvell pcie8766 chipset")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> index 97a6199692ab..7538543d46fa 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> @@ -1881,7 +1881,8 @@ static int mwifiex_pcie_process_event_ready(struct mwifiex_adapter *adapter)
+>  		mwifiex_dbg(adapter, EVENT,
+>  			    "info: Event length: %d\n", evt_len);
+>  
+> -		if ((evt_len > 0) && (evt_len  < MAX_EVENT_SIZE))
+> +		if (evt_len > MWIFIEX_EVENT_HEADER_LEN &&
+> +		    evt_len < MAX_EVENT_SIZE)
+>  			memcpy(adapter->event_body, skb_cmd->data +
+>  			       MWIFIEX_EVENT_HEADER_LEN, evt_len -
+>  			       MWIFIEX_EVENT_HEADER_LEN);
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 20 ++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
+Patch applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 34791628cfb3..bb63e75a9b7f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -151,17 +151,9 @@ static void iwl_mvm_create_skb(struct sk_buff *skb, struct ieee80211_hdr *hdr,
- 	unsigned int hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 
- 	if (desc->mac_flags2 & IWL_RX_MPDU_MFLG2_PAD) {
-+		len -= 2;
- 		pad_len = 2;
--
--		/*
--		 * If the device inserted padding it means that (it thought)
--		 * the 802.11 header wasn't a multiple of 4 bytes long. In
--		 * this case, reserve two bytes at the start of the SKB to
--		 * align the payload properly in case we end up copying it.
--		 */
--		skb_reserve(skb, pad_len);
- 	}
--	len -= pad_len;
- 
- 	/* If frame is small enough to fit in skb->head, pull it completely.
- 	 * If not, only pull ieee80211_hdr (including crypto if present, and
-@@ -866,6 +858,16 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 		return;
- 	}
- 
-+	if (desc->mac_flags2 & IWL_RX_MPDU_MFLG2_PAD) {
-+		/*
-+		 * If the device inserted padding it means that (it thought)
-+		 * the 802.11 header wasn't a multiple of 4 bytes long. In
-+		 * this case, reserve two bytes at the start of the SKB to
-+		 * align the payload properly in case we end up copying it.
-+		 */
-+		skb_reserve(skb, 2);
-+	}
-+
- 	rx_status = IEEE80211_SKB_RXCB(skb);
- 
- 	if (iwl_mvm_rx_crypto(mvm, hdr, rx_status, desc,
+01eca2842874 mwifiex: pcie: tighten a check in mwifiex_pcie_process_event_ready()
+
 -- 
-2.17.0
+https://patchwork.kernel.org/patch/10324435/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
