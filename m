@@ -1,35 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nyet.org ([66.175.217.148]:53258 "EHLO ln.curtisfong.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754240AbeDBJvk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Apr 2018 05:51:40 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by ln.curtisfong.org (Postfix) with ESMTP id C9532D4D7
-        for <linux-wireless@vger.kernel.org>; Mon,  2 Apr 2018 02:44:17 -0700 (PDT)
-Received: from ln.curtisfong.org ([127.0.0.1])
-        by localhost (ln.curtisfong.org [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id IedoMOdbLcjK for <linux-wireless@vger.kernel.org>;
-        Mon,  2 Apr 2018 02:44:17 -0700 (PDT)
-Received: from [192.168.19.169] (rrcs-76-80-9-214.west.biz.rr.com [76.80.9.214])
-        by ln.curtisfong.org (Postfix) with ESMTPSA id 9A96FD4D3
-        for <linux-wireless@vger.kernel.org>; Mon,  2 Apr 2018 02:44:17 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-From: Nye Liu <nyet@nyet.org>
-Subject: iwlwifi: completely opaque WARN_ON(1) at
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c:1363. Please remove or fix it
- (TX_STATUS_FAIL_DEST_PS)
-Message-ID: <423cffeb-fabc-78fc-c2f6-7d9e226fc051@nyet.org> (sfid-20180402_115144_333260_A89D3364)
-Date: Mon, 2 Apr 2018 02:44:17 -0700
+Received: from mail.linuxfoundation.org ([140.211.169.12]:47960 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754612AbeDYP0Y (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 25 Apr 2018 11:26:24 -0400
+Date: Wed, 25 Apr 2018 17:26:17 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Andres Rodriguez <andresx7@gmail.com>
+Cc: linux-kernel@vger.kernel.org, mcgrof@kernel.org,
+        alexdeucher@gmail.com, christian.koenig@amd.com,
+        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        hdegoede@redhat.com
+Subject: Re: [PATCH 1/9] firmware: some documentation fixes
+Message-ID: <20180425152617.GA5058@kroah.com> (sfid-20180425_172628_106780_A098AE11)
+References: <20180423201205.20533-1-andresx7@gmail.com>
+ <20180423201205.20533-2-andresx7@gmail.com>
+ <20180425152526.GA4921@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180425152526.GA4921@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-TX_STATUS_FAIL_DEST_PS
+On Wed, Apr 25, 2018 at 05:25:26PM +0200, Greg KH wrote:
+> On Mon, Apr 23, 2018 at 04:11:57PM -0400, Andres Rodriguez wrote:
+> > Including:
+> >  - Fixup outdated kernel-doc paths
+> >  - Slightly too short title underline
+> >  - Some typos
+> > 
+> > Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
+> > ---
+> >  Documentation/driver-api/firmware/request_firmware.rst | 16 ++++++++--------
+> >  drivers/base/firmware_loader/fallback.c                |  4 ++--
+> >  drivers/base/firmware_loader/fallback.h                |  2 +-
+> >  3 files changed, 11 insertions(+), 11 deletions(-)
+> 
+> This fails to apply to my driver-core-next branch.  Can you please
+> rebase it and resend?
 
-https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=887045
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1733194
+Oops, I meant the driver-core-linus branch, which is where "fixes" would
+go at the moment.
 
-Please remove or fix the WARN_ON(1) at 
-drivers/net/wireless/intel/iwlwifi/mvm/tx.c:1363 it is filling my kernel 
-logs
+thanks,
+
+greg k-h
