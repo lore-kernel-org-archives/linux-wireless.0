@@ -1,38 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42346 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:43418 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752306AbeDPE0x (ORCPT
+        with ESMTP id S1750882AbeDYIBI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 00:26:53 -0400
-From: Govind Singh <govinds@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, govinds@codeaurora.org
-Subject: [PATCH] ath10k: Fix fw path name for WCN3990 target
-Date: Mon, 16 Apr 2018 09:56:45 +0530
-Message-Id: <1523852805-14292-1-git-send-email-govinds@codeaurora.org> (sfid-20180416_062656_950279_52BC7405)
+        Wed, 25 Apr 2018 04:01:08 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, Rajat Jain <rajatja@google.com>
+Subject: Re: [PATCH 09/12] iwlwifi: pcie: remove non-responsive device
+References: <20180422082745.9743-1-luca@coelho.fi>
+        <20180422082745.9743-10-luca@coelho.fi>
+        <87h8o1os5b.fsf@codeaurora.org>
+        <a768684127fb8e5f3c62bb62ec80e52950314787.camel@coelho.fi>
+Date: Wed, 25 Apr 2018 11:01:02 +0300
+In-Reply-To: <a768684127fb8e5f3c62bb62ec80e52950314787.camel@coelho.fi> (Luca
+        Coelho's message of "Tue, 24 Apr 2018 13:56:12 +0300")
+Message-ID: <87efj3af5t.fsf@kamboji.qca.qualcomm.com> (sfid-20180425_100112_725792_B376B93F)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FW path is mapped incorrectly for the WCN3990
-hw version. Fix fw path with correct hw1.0 name.
+Luca Coelho <luca@coelho.fi> writes:
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/hw.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> On Tue, 2018-04-24 at 12:44 +0300, Kalle Valo wrote:
+>> Luca Coelho <luca@coelho.fi> writes:
+>> 
+>> > From: Luca Coelho <luciano.coelho@intel.com>
+>> > 
+>> > If we fail to to grab NIC access because the device is not
+>> > responding
+>> > (i.e. CSR_GP_CNTRL returns 0xFFFFFFFF), remove the device from the
+>> > PCI
+>> > bus, to avoid any further damage, and to let the user space rescan.
+>> > 
+>> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+>> > Signed-off-by: Rajat Jain <rajatja@google.com>
+>> 
+>> The commit log doesn't mention anything about the module parameter
+>> nor
+>> about the kobject uevent.
+>
+> Good point.  The uevent and the module parameter were added in later
+> patches and I squashed them all into this one, but forgot to update the
+> commit message.  I'll fix it.
 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 3041eba..b025a1b 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -131,7 +131,7 @@ enum qca9377_chip_id_rev {
- 
- /* WCN3990 1.0 definitions */
- #define WCN3990_HW_1_0_DEV_VERSION	ATH10K_HW_WCN3990
--#define WCN3990_HW_1_0_FW_DIR		ATH10K_FW_DIR "/WCN3990/hw3.0"
-+#define WCN3990_HW_1_0_FW_DIR		ATH10K_FW_DIR "/WCN3990/hw1.0"
- 
- #define ATH10K_FW_FILE_BASE		"firmware"
- #define ATH10K_FW_API_MAX		6
+Good, thanks.
+
+>> > +static void iwl_trans_pcie_removal_wk(struct work_struct *wk)
+>> > +{
+>> > +	struct iwl_trans_pcie_removal *removal =
+>> > +		container_of(wk, struct iwl_trans_pcie_removal,
+>> > work);
+>> > +	struct pci_dev *pdev = removal->pdev;
+>> > +	char *prop[] = {"EVENT=INACCESSIBLE", NULL};
+>> > +
+>> > +	dev_err(&pdev->dev, "Device gone - attempting removal\n");
+>> > +	kobject_uevent_env(&pdev->dev.kobj, KOBJ_CHANGE, prop);
+>> > +	pci_lock_rescan_remove();
+>> > +	pci_dev_put(pdev);
+>> > +	pci_stop_and_remove_bus_device(pdev);
+>> > +	pci_unlock_rescan_remove();
+>> > +
+>> > +	kfree(removal);
+>> > +	module_put(THIS_MODULE);
+>> > +}
+>> 
+>> So is the uevent some standard thing or what? At least grepping
+>> INACCESSIBLE for didn't tell me anything.
+>
+> No, this is not standard.  We didn't find any appropriate standard
+> message for this case, so we created a new one.  Also, we didn't want
+> to interfere with components that may react to standard messages.
+>
+> This is disabled by default and the idea is to change this in the
+> future to allow the driver to remove and rescan the device
+> automatically.  So we will have 3 options in the module parameter: do
+> nothing; auto-rescan or; send uevent.
+
+Ok, I assume you will explain this in the commit log.
+
+In my opinion the driver should not be sending custom events like this
+and instead pci_stop_and_remove_bus_device() should do it, but maybe
+that's just me?
+
 -- 
-1.9.1
+Kalle Valo
