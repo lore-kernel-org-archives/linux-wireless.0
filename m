@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39958 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751183AbeDQHGl (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51270 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750882AbeDYI02 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Apr 2018 03:06:41 -0400
-Message-ID: <1dfacb56f2ab9a1a38a7cb78326a4f96973cf622.camel@coelho.fi> (sfid-20180417_090643_655588_361E2CEA)
-From: Luca Coelho <luca@coelho.fi>
-To: Colin King <colin.king@canonical.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 17 Apr 2018 10:06:33 +0300
-In-Reply-To: <20180411130533.11827-1-colin.king@canonical.com>
-References: <20180411130533.11827-1-colin.king@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH][next] iwlwifi: mvm: remove division by size of
- sizeof(struct ieee80211_wmm_rule)
+        Wed, 25 Apr 2018 04:26:28 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: qtnfmac: pearl: pcie: fix memory leak in qtnf_fw_work_handler
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180405154949.GA32223@embeddedor.com>
+References: <20180405154949.GA32223@embeddedor.com>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Message-Id: <20180425082628.498886070B@smtp.codeaurora.org> (sfid-20180425_102708_199885_03EDABBD)
+Date: Wed, 25 Apr 2018 08:26:28 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-04-11 at 14:05 +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> The subtraction of two struct ieee80211_wmm_rule pointers leaves a
-> result
-> that is automatically scaled down by the size of the size of pointed-
-> to
-> type, hence the division by sizeof(struct ieee80211_wmm_rule) is
-> bogus and should be removed.
-> 
-> Detected by CoverityScan, CID#1467777 ("Extra sizeof expression")
-> 
-> Fixes: 77e30e10ee28 ("iwlwifi: mvm: query regdb for wmm rule if
-> needed")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
+"Gustavo A. R. Silva" <gustavo@embeddedor.com> wrote:
 
-Thanks, Colin! I've pushed this to our internal tree for review and if
-everything goes fine it will land upstream following our normal
-upstreaming process.
+> In case memory resources for fw were succesfully allocated, release
+> them before jumping to fw_load_fail.
+> 
+> Addresses-Coverity-ID: 1466092 ("Resource leak")
+> Fixes: c3b2f7ca4186 ("qtnfmac: implement asynchronous firmware loading")
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
---
-Cheers,
-Luca.
+Patch applied to wireless-drivers-next.git, thanks.
+
+376377004464 qtnfmac: pearl: pcie: fix memory leak in qtnf_fw_work_handler
+
+-- 
+https://patchwork.kernel.org/patch/10324855/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
