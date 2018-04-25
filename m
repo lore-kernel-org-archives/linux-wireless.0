@@ -1,312 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39386 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754708AbeDMMnL (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:28418 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756054AbeDYRUP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Apr 2018 08:43:11 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Apr 2018 15:42:39 +0300
-Message-Id: <20180413124256.21769-9-luca@coelho.fi> (sfid-20180413_144320_163636_6168776A)
-In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
-References: <20180413124256.21769-1-luca@coelho.fi>
-Subject: [PATCH 08/25] iwlwifi: mvm: support offload of AMSDU rate control
+        Wed, 25 Apr 2018 13:20:15 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 20/21] staging: wilc1000: change function to static in linux_wlan
+Date: Wed, 25 Apr 2018 22:48:25 +0530
+Message-ID: <1524676706-13179-21-git-send-email-ajay.kathat@microchip.com> (sfid-20180425_192019_233979_F9393E75)
+In-Reply-To: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+Defined function as static which are used only in single file. And also removed
+their declaration from header file.
+Below function are changed to static
+wilc_wlan_initialize()
+wilc_wlan_deinitialize()
+wilc_wlan_get_firmware()
 
-Support the new APIs and activate AMSDU based on the
-offloaded TLC decisions.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- .../net/wireless/intel/iwlwifi/fw/api/datapath.h   |  5 +++
- drivers/net/wireless/intel/iwlwifi/fw/api/rs.h     | 18 ++++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |  8 +++--
- drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c     | 42 +++++++++++++++++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c        | 15 +++++---
- drivers/net/wireless/intel/iwlwifi/mvm/rs.h        |  5 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h       |  7 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 11 ++++--
- 8 files changed, 96 insertions(+), 15 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c         | 6 +++---
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 4 ----
+ 2 files changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h b/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h
-index a57c7223df0f..184cee98c359 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/datapath.h
-@@ -92,6 +92,11 @@ enum iwl_data_path_subcmd_ids {
- 	 */
- 	TLC_MNG_NOTIF_REQ_CMD = 0x10,
- 
-+	/**
-+	 * @TLC_MNG_AMSDU_ENABLE_NOTIF: &struct iwl_tlc_amsdu_notif
-+	 */
-+	TLC_MNG_AMSDU_ENABLE_NOTIF = 0xF6,
-+
- 	/**
- 	 * @TLC_MNG_UPDATE_NOTIF: &struct iwl_tlc_update_notif
- 	 */
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
-index e49a6f7be613..1a8f3154a1fe 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
-@@ -205,7 +205,7 @@ enum iwl_tlc_mng_ht_rates {
-  * @non_ht_supp_rates: bitmap of supported legacy rates
-  * @ht_supp_rates: bitmap of supported HT/VHT rates, valid bits are 0-9
-  * @mode: &enum iwl_tlc_mng_cfg_mode
-- * @reserved2: reserved
-+ * @amsdu: TX amsdu is supported
-  * @he_supp_rates: bitmap of supported HE rates
-  * @sgi_ch_width_supp: bitmap of SGI support per channel width
-  * @he_gi_support: 11ax HE guard interval
-@@ -222,13 +222,27 @@ struct iwl_tlc_config_cmd {
- 	__le16 non_ht_supp_rates;
- 	__le16 ht_supp_rates[MAX_RS_ANT_NUM];
- 	u8 mode;
--	u8 reserved2;
-+	u8 amsdu;
- 	__le16 he_supp_rates;
- 	u8 sgi_ch_width_supp;
- 	u8 he_gi_support;
- 	__le32 max_ampdu_cnt;
- } __packed; /* TLC_MNG_CONFIG_CMD_API_S_VER_1 */
- 
-+/**
-+ * struct iwl_tlc_amsdu_notif - TLC AMSDU configuration
-+ * @sta_id: station id
-+ * @reserved: reserved
-+ * @amsdu_size: Max AMSDU size, in bytes
-+ * @amsdu_enabled: bitmap for per-TID AMSDU enablement
-+ */
-+struct iwl_tlc_amsdu_notif {
-+	u8 sta_id;
-+	u8 reserved[3];
-+	__le16 amsdu_size;
-+	__le16 amsdu_enabled;
-+} __packed; /* TLC_MNG_AMSDU_ENABLE_NTFY_API_S_VER_1 */
-+
- #define IWL_TLC_NOTIF_INIT_RATE_POS 0
- #define IWL_TLC_NOTIF_INIT_RATE_MSK BIT(IWL_TLC_NOTIF_INIT_RATE_POS)
- #define IWL_TLC_NOTIF_REQ_INTERVAL (500)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 6a3f557543e4..1ef4ac21f32a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -250,6 +250,9 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
- 	RX_HANDLER(TX_CMD, iwl_mvm_rx_tx_cmd, RX_HANDLER_SYNC),
- 	RX_HANDLER(BA_NOTIF, iwl_mvm_rx_ba_notif, RX_HANDLER_SYNC),
- 
-+	RX_HANDLER_GRP(DATA_PATH_GROUP, TLC_MNG_UPDATE_NOTIF,
-+		       iwl_mvm_tlc_update_notif, RX_HANDLER_SYNC),
-+
- 	RX_HANDLER(BT_PROFILE_NOTIFICATION, iwl_mvm_rx_bt_coex_notif,
- 		   RX_HANDLER_ASYNC_LOCKED),
- 	RX_HANDLER(BEACON_NOTIFICATION, iwl_mvm_rx_beacon_notif,
-@@ -309,6 +312,8 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
- 		       iwl_mvm_mu_mimo_grp_notif, RX_HANDLER_SYNC),
- 	RX_HANDLER_GRP(DATA_PATH_GROUP, STA_PM_NOTIF,
- 		       iwl_mvm_sta_pm_notif, RX_HANDLER_SYNC),
-+	RX_HANDLER_GRP(DATA_PATH_GROUP, TLC_MNG_AMSDU_ENABLE_NOTIF,
-+		       iwl_mvm_tlc_amsdu_notif, RX_HANDLER_SYNC),
- };
- #undef RX_HANDLER
- #undef RX_HANDLER_GRP
-@@ -445,6 +450,7 @@ static const struct iwl_hcmd_names iwl_mvm_data_path_names[] = {
- 	HCMD_NAME(DQA_ENABLE_CMD),
- 	HCMD_NAME(UPDATE_MU_GROUPS_CMD),
- 	HCMD_NAME(TRIGGER_RX_QUEUES_NOTIF_CMD),
-+	HCMD_NAME(TLC_MNG_AMSDU_ENABLE_NOTIF),
- 	HCMD_NAME(STA_PM_NOTIF),
- 	HCMD_NAME(MU_GROUP_MGMT_NOTIF),
- 	HCMD_NAME(RX_QUEUES_NOTIFICATION),
-@@ -1034,8 +1040,6 @@ static void iwl_mvm_rx_mq(struct iwl_op_mode *op_mode,
- 		iwl_mvm_rx_queue_notif(mvm, rxb, 0);
- 	else if (cmd == WIDE_ID(LEGACY_GROUP, FRAME_RELEASE))
- 		iwl_mvm_rx_frame_release(mvm, napi, rxb, 0);
--	else if (cmd == WIDE_ID(DATA_PATH_GROUP, TLC_MNG_UPDATE_NOTIF))
--		iwl_mvm_tlc_update_notif(mvm, pkt);
- 	else
- 		iwl_mvm_rx_common(mvm, rxb, pkt);
- }
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-index fb5745660509..4e818bce469b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-@@ -228,8 +228,47 @@ static void rs_fw_tlc_mng_notif_req_config(struct iwl_mvm *mvm, u8 sta_id)
- 		IWL_ERR(mvm, "Failed to send TLC notif request (%d)\n", ret);
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index b6a8165..1643166 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -315,7 +315,7 @@ static int linux_wlan_txq_task(void *vp)
+ 	return 0;
  }
  
--void iwl_mvm_tlc_update_notif(struct iwl_mvm *mvm, struct iwl_rx_packet *pkt)
-+void iwl_mvm_tlc_amsdu_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+-int wilc_wlan_get_firmware(struct net_device *dev)
++static int wilc_wlan_get_firmware(struct net_device *dev)
  {
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+	struct iwl_tlc_amsdu_notif *notif;
-+	struct ieee80211_sta *sta;
-+	struct iwl_mvm_sta *mvmsta;
-+	u16 size;
-+
-+	notif = (void *)pkt->data;
-+
-+	if (WARN_ON(notif->sta_id >= ARRAY_SIZE(mvm->fw_id_to_mac_id)))
-+		return;
-+
-+	rcu_read_lock();
-+
-+	sta = rcu_dereference(mvm->fw_id_to_mac_id[notif->sta_id]);
-+	if (IS_ERR_OR_NULL(sta)) {
-+		rcu_read_unlock();
-+		IWL_ERR(mvm, "Invalid sta id (%d) in FW TLC notification\n",
-+			notif->sta_id);
-+		return;
-+	}
-+
-+	mvmsta = iwl_mvm_sta_from_mac80211(sta);
-+
-+	size = min(le16_to_cpu(notif->amsdu_size), sta->max_amsdu_len);
-+	mvmsta->amsdu_enabled = le16_to_cpu(notif->amsdu_enabled);
-+	mvmsta->max_amsdu_len = size;
-+
-+	IWL_DEBUG_RATE(mvm,
-+		       "AMSDU notification. AMSDU size: %d, AMSDU selected size: %d, AMSDU TID bitmap 0x%X\n",
-+		       le16_to_cpu(notif->amsdu_size), size,
-+		       mvmsta->amsdu_enabled);
-+
-+	rcu_read_unlock();
-+};
-+
-+void iwl_mvm_tlc_update_notif(struct iwl_mvm *mvm,
-+			      struct iwl_rx_cmd_buffer *rxb)
-+{
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_tlc_update_notif *notif;
- 	struct iwl_mvm_sta *mvmsta;
- 	struct iwl_lq_sta_rs_fw *lq_sta;
-@@ -273,6 +312,7 @@ void rs_fw_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 		.max_supp_ss = sta->rx_nss,
- 		.max_ampdu_cnt = cpu_to_le32(mvmsta->max_agg_bufsize),
- 		.sgi_ch_width_supp = rs_fw_sgi_cw_support(sta),
-+		.amsdu = iwl_mvm_is_csum_supported(mvm),
- 	};
- 	int ret;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index 5d776ec1840f..af7bc3b7b0c3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -1715,12 +1715,18 @@ static void rs_set_amsdu_len(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- {
- 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 
-+	/*
-+	 * In case TLC offload is not active amsdu_enabled is either 0xFFFF
-+	 * or 0, since there is no per-TID alg.
-+	 */
- 	if ((!is_vht(&tbl->rate) && !is_ht(&tbl->rate)) ||
- 	    tbl->rate.index < IWL_RATE_MCS_5_INDEX ||
- 	    scale_action == RS_ACTION_DOWNSCALE)
--		mvmsta->tlc_amsdu = false;
-+		mvmsta->amsdu_enabled = 0;
- 	else
--		mvmsta->tlc_amsdu = true;
-+		mvmsta->amsdu_enabled = 0xFFFF;
-+
-+	mvmsta->max_amsdu_len = sta->max_amsdu_len;
+ 	struct wilc_vif *vif;
+ 	struct wilc *wilc;
+@@ -604,7 +604,7 @@ static int linux_wlan_init_test_config(struct net_device *dev,
+ 	return -1;
  }
  
- /*
-@@ -3134,7 +3140,8 @@ static void rs_drv_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	sband = hw->wiphy->bands[band];
- 
- 	lq_sta->lq.sta_id = mvmsta->sta_id;
--	mvmsta->tlc_amsdu = false;
-+	mvmsta->amsdu_enabled = 0;
-+	mvmsta->max_amsdu_len = sta->max_amsdu_len;
- 
- 	for (j = 0; j < LQ_SIZE; j++)
- 		rs_rate_scale_clear_tbl_windows(mvm, &lq_sta->lq_info[j]);
-@@ -3744,7 +3751,7 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
- 				(rate->sgi) ? "SGI" : "NGI",
- 				(rate->ldpc) ? "LDPC" : "BCC",
- 				(lq_sta->is_agg) ? "AGG on" : "",
--				(mvmsta->tlc_amsdu) ? "AMSDU on" : "");
-+				(mvmsta->amsdu_enabled) ? "AMSDU on" : "");
+-void wilc_wlan_deinitialize(struct net_device *dev)
++static void wilc_wlan_deinitialize(struct net_device *dev)
+ {
+ 	struct wilc_vif *vif;
+ 	struct wilc *wl;
+@@ -719,7 +719,7 @@ static void wlan_deinitialize_threads(struct net_device *dev)
  	}
- 	desc += scnprintf(buff + desc, bufsz - desc, "last tx rate=0x%X\n",
- 			lq_sta->last_rate_n_flags);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
-index fb18cb8c233d..736ac9642921 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
-@@ -454,5 +454,8 @@ void rs_fw_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 		     enum nl80211_band band);
- int rs_fw_tx_protection(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta,
- 			bool enable);
--void iwl_mvm_tlc_update_notif(struct iwl_mvm *mvm, struct iwl_rx_packet *pkt);
-+void iwl_mvm_tlc_update_notif(struct iwl_mvm *mvm,
-+			      struct iwl_rx_cmd_buffer *rxb);
-+void iwl_mvm_tlc_amsdu_notif(struct iwl_mvm *mvm,
-+			     struct iwl_rx_cmd_buffer *rxb);
- #endif /* __rs__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-index 5ffd6adbc383..60502c81dfce 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-@@ -391,7 +391,9 @@ struct iwl_mvm_rxq_dup_data {
-  * @tx_protection: reference counter for controlling the Tx protection.
-  * @tt_tx_protection: is thermal throttling enable Tx protection?
-  * @disable_tx: is tx to this STA disabled?
-- * @tlc_amsdu: true if A-MSDU is allowed
-+ * @amsdu_enabled: bitmap of TX AMSDU allowed TIDs.
-+ *	In case TLC offload is not active it is either 0xFFFF or 0.
-+ * @max_amsdu_len: max AMSDU length
-  * @agg_tids: bitmap of tids whose status is operational aggregated (IWL_AGG_ON)
-  * @sleep_tx_count: the number of frames that we told the firmware to let out
-  *	even when that station is asleep. This is useful in case the queue
-@@ -436,7 +438,8 @@ struct iwl_mvm_sta {
- 	bool tt_tx_protection;
+ }
  
- 	bool disable_tx;
--	bool tlc_amsdu;
-+	u16 amsdu_enabled;
-+	u16 max_amsdu_len;
- 	bool sleeping;
- 	bool associated;
- 	u8 agg_tids;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index f06a0ee7be28..90381348697c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -774,9 +774,9 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
+-int wilc_wlan_initialize(struct net_device *dev, struct wilc_vif *vif)
++static int wilc_wlan_initialize(struct net_device *dev, struct wilc_vif *vif)
+ {
+ 	int ret = 0;
+ 	struct wilc *wl = vif->wilc;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 5f4dbff..ab94d78f 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -207,16 +207,12 @@ struct WILC_WFI_mon_priv {
+ 	struct net_device *real_ndev;
+ };
  
- 	dbg_max_amsdu_len = READ_ONCE(mvm->max_amsdu_len);
+-int wilc_wlan_initialize(struct net_device *dev, struct wilc_vif *vif);
+-
+ void wilc_frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset);
+ void wilc_mac_indicate(struct wilc *wilc, int flag);
+ void wilc_netdev_cleanup(struct wilc *wilc);
+ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 		     int gpio, const struct wilc_hif_func *ops);
+-void wilc_wlan_deinitialize(struct net_device *dev);
+ void wilc_wfi_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
+-int wilc_wlan_get_firmware(struct net_device *dev);
+ int wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid, u8 mode);
  
--	if (!sta->max_amsdu_len ||
-+	if (!mvmsta->max_amsdu_len ||
- 	    !ieee80211_is_data_qos(hdr->frame_control) ||
--	    (!mvmsta->tlc_amsdu && !dbg_max_amsdu_len))
-+	    (!mvmsta->amsdu_enabled && !dbg_max_amsdu_len))
- 		return iwl_mvm_tx_tso_segment(skb, 1, netdev_flags, mpdus_skb);
- 
- 	/*
-@@ -803,7 +803,12 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	    !mvmsta->tid_data[tid].amsdu_in_ampdu_allowed)
- 		return iwl_mvm_tx_tso_segment(skb, 1, netdev_flags, mpdus_skb);
- 
--	max_amsdu_len = sta->max_amsdu_len;
-+	if (iwl_mvm_vif_low_latency(iwl_mvm_vif_from_mac80211(mvmsta->vif)) ||
-+	    tid_to_mac80211_ac[tid] < IEEE80211_AC_BE ||
-+	    !(mvmsta->amsdu_enabled & BIT(tid)))
-+		return iwl_mvm_tx_tso_segment(skb, 1, netdev_flags, mpdus_skb);
-+
-+	max_amsdu_len = mvmsta->max_amsdu_len;
- 
- 	/* the Tx FIFO to which this A-MSDU will be routed */
- 	txf = iwl_mvm_mac_ac_to_tx_fifo(mvm, tid_to_mac80211_ac[tid]);
+ #endif
 -- 
-2.16.3
+2.7.4
