@@ -1,57 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:53857 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757945AbeDXNTD (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:58440 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755818AbeDYRTk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 09:19:03 -0400
-From: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] ath6kl: fix ath6kl_data_tx()'s return type
-Date: Tue, 24 Apr 2018 15:18:59 +0200
-Message-Id: <20180424131900.5718-1-luc.vanoostenryck@gmail.com> (sfid-20180424_152411_906545_3831E3E2)
+        Wed, 25 Apr 2018 13:19:40 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 07/21] staging: wilc1000: simplified if conditions in spi_data_write()
+Date: Wed, 25 Apr 2018 22:48:12 +0530
+Message-ID: <1524676706-13179-8-git-send-email-ajay.kathat@microchip.com> (sfid-20180425_191944_632492_433F8831)
+In-Reply-To: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
+References: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The method ndo_start_xmit() is defined as returning an 'netdev_tx_t',
-which is a typedef for an enum type, but the implementation in this
-driver returns an 'int'.
+Cleanup patch to simplify the if conditions logic in spi_data_write().
 
-Fix this by returning 'netdev_tx_t' in this driver too.
-
-Signed-off-by: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/ath/ath6kl/core.h | 2 +-
- drivers/net/wireless/ath/ath6kl/txrx.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/wilc_spi.c | 23 +++++++++--------------
+ 1 file changed, 9 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index e23d450ba..0d30e762c 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -914,7 +914,7 @@ void ath6kl_tx_data_cleanup(struct ath6kl *ar);
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index ac8df38b..2aaa5fd 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -614,28 +614,23 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
+ 	 */
+ 	ix = 0;
+ 	do {
+-		if (sz <= DATA_PKT_SZ)
++		if (sz <= DATA_PKT_SZ) {
+ 			nbytes = sz;
+-		else
++			order = 0x3;
++		} else {
+ 			nbytes = DATA_PKT_SZ;
++			if (ix == 0)
++				order = 0x1;
++			else
++				order = 0x02;
++		}
  
- struct ath6kl_cookie *ath6kl_alloc_cookie(struct ath6kl *ar);
- void ath6kl_free_cookie(struct ath6kl *ar, struct ath6kl_cookie *cookie);
--int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev);
-+netdev_tx_t ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev);
- 
- struct aggr_info *aggr_init(struct ath6kl_vif *vif);
- void aggr_conn_init(struct ath6kl_vif *vif, struct aggr_info *aggr_info,
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 8da9506f8..618d12ed4 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -353,7 +353,7 @@ int ath6kl_control_tx(void *devt, struct sk_buff *skb,
- 	return status;
- }
- 
--int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
-+netdev_tx_t ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- {
- 	struct ath6kl *ar = ath6kl_priv(dev);
- 	struct ath6kl_cookie *cookie = NULL;
+ 		/*
+ 		 * Write command
+ 		 */
+ 		cmd = 0xf0;
+-		if (ix == 0) {
+-			if (sz <= DATA_PKT_SZ)
+-
+-				order = 0x3;
+-			else
+-				order = 0x1;
+-		} else {
+-			if (sz <= DATA_PKT_SZ)
+-				order = 0x3;
+-			else
+-				order = 0x2;
+-		}
+ 		cmd |= order;
++
+ 		if (wilc_spi_tx(wilc, &cmd, 1)) {
+ 			dev_err(&spi->dev,
+ 				"Failed data block cmd write, bus error...\n");
 -- 
-2.17.0
+2.7.4
