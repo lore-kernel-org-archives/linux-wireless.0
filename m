@@ -1,56 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.11.71.1]:57409 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750756AbeDYA5t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 20:57:49 -0400
-Date: Wed, 25 Apr 2018 10:56:19 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Wireless <linux-wireless@vger.kernel.org>
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: linux-next: Signed-off-by missing for commit in the
- wireless-drivers-next tree
-Message-ID: <20180425105619.09f58e39@canb.auug.org.au> (sfid-20180425_025757_683510_7E2B6F26)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/RFXR6VoHeFIt_oJdiO.0g=u"; protocol="application/pgp-signature"
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:44232 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754625AbeDZKRM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 26 Apr 2018 06:17:12 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Franky Lin <franky.lin@broadcom.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 5/6] brcmfmac: add hostready indication
+Date: Thu, 26 Apr 2018 12:16:50 +0200
+Message-Id: <1524737811-1965-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180426_121723_536968_0BEFF9EA)
+In-Reply-To: <1524737811-1965-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1524737811-1965-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/RFXR6VoHeFIt_oJdiO.0g=u
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From: Franky Lin <franky.lin@broadcom.com>
 
-Hi all,
+A hostready signal is introduced to inform firmware through mailbox
+doorbell1 when common ring initialized or D3 exited.
 
-Commit
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-  84226ca1c5d3 ("iwlwifi: mvm: support offload of AMSDU rate control")
-
-is missing a Signed-off-by from its author.
-
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/RFXR6VoHeFIt_oJdiO.0g=u
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlrf0jMACgkQAVBC80lX
-0Gwa8Qf/QuBcS+25nQp7e+Hh228TN+RsfXMihPjwcMkDvaJkWSLRcGUMv06QKucQ
-o7LlmNYJf+ozTyID6/+40gsvTRlc9UaiZb4JcHJ+CP2XbJnibWSF3AIjuHLfe7Am
-SOWn7o9EGEKtJLNknUF5DcXvLyu97KO0Jo+0q6rU/LPfOhjucfEKKX+QZe6aZDpi
-wUjOllQvpkkMXOB4XqiXdDRv+L4Lcu/bhzTvGgqfMmNtV19SkVxLYDOmZUaJhZIy
-tSyK8w6fnV/OCzgIReiwd/EOxtL1Tz38s2GK8IKZqMdd1ECuXeX0ZPNXvbNF2YNa
-5jM9vGzCnWpUBevJkskqYMQfqRoiCw==
-=Wc59
------END PGP SIGNATURE-----
-
---Sig_/RFXR6VoHeFIt_oJdiO.0g=u--
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 9708647..71b69af 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -105,7 +105,8 @@ enum brcmf_pcie_state {
+ #define BRCMF_PCIE_PCIE2REG_MAILBOXMASK		0x4C
+ #define BRCMF_PCIE_PCIE2REG_CONFIGADDR		0x120
+ #define BRCMF_PCIE_PCIE2REG_CONFIGDATA		0x124
+-#define BRCMF_PCIE_PCIE2REG_H2D_MAILBOX		0x140
++#define BRCMF_PCIE_PCIE2REG_H2D_MAILBOX_0	0x140
++#define BRCMF_PCIE_PCIE2REG_H2D_MAILBOX_1	0x144
+ 
+ #define BRCMF_PCIE2_INTA			0x01
+ #define BRCMF_PCIE2_INTB			0x02
+@@ -140,6 +141,7 @@ enum brcmf_pcie_state {
+ #define BRCMF_PCIE_SHARED_VERSION_MASK		0x00FF
+ #define BRCMF_PCIE_SHARED_DMA_INDEX		0x10000
+ #define BRCMF_PCIE_SHARED_DMA_2B_IDX		0x100000
++#define BRCMF_PCIE_SHARED_HOSTRDY_DB1		0x10000000
+ 
+ #define BRCMF_PCIE_FLAGS_HTOD_SPLIT		0x4000
+ #define BRCMF_PCIE_FLAGS_DTOH_SPLIT		0x8000
+@@ -782,6 +784,12 @@ static void brcmf_pcie_intr_enable(struct brcmf_pciedev_info *devinfo)
+ 			       BRCMF_PCIE_MB_INT_FN0_1);
+ }
+ 
++static void brcmf_pcie_hostready(struct brcmf_pciedev_info *devinfo)
++{
++	if (devinfo->shared.flags & BRCMF_PCIE_SHARED_HOSTRDY_DB1)
++		brcmf_pcie_write_reg32(devinfo,
++				       BRCMF_PCIE_PCIE2REG_H2D_MAILBOX_1, 1);
++}
+ 
+ static irqreturn_t brcmf_pcie_quick_check_isr(int irq, void *arg)
+ {
+@@ -924,7 +932,7 @@ static int brcmf_pcie_ring_mb_ring_bell(void *ctx)
+ 
+ 	brcmf_dbg(PCIE, "RING !\n");
+ 	/* Any arbitrary value will do, lets use 1 */
+-	brcmf_pcie_write_reg32(devinfo, BRCMF_PCIE_PCIE2REG_H2D_MAILBOX, 1);
++	brcmf_pcie_write_reg32(devinfo, BRCMF_PCIE_PCIE2REG_H2D_MAILBOX_0, 1);
+ 
+ 	return 0;
+ }
+@@ -1728,6 +1736,7 @@ static void brcmf_pcie_setup(struct device *dev, int ret,
+ 	init_waitqueue_head(&devinfo->mbdata_resp_wait);
+ 
+ 	brcmf_pcie_intr_enable(devinfo);
++	brcmf_pcie_hostready(devinfo);
+ 	if (brcmf_attach(&devinfo->pdev->dev, devinfo->settings) == 0)
+ 		return;
+ 
+@@ -1950,6 +1959,7 @@ static int brcmf_pcie_pm_leave_D3(struct device *dev)
+ 		brcmf_pcie_select_core(devinfo, BCMA_CORE_PCIE2);
+ 		brcmf_bus_change_state(bus, BRCMF_BUS_UP);
+ 		brcmf_pcie_intr_enable(devinfo);
++		brcmf_pcie_hostready(devinfo);
+ 		return 0;
+ 	}
+ 
+-- 
+1.9.1
