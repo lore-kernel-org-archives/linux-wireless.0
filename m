@@ -1,56 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f178.google.com ([209.85.128.178]:32770 "EHLO
-        mail-wr0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750885AbeDRSBQ (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:43401 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756008AbeDZMgl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 14:01:16 -0400
-Received: by mail-wr0-f178.google.com with SMTP id z73-v6so7192093wrb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2018 11:01:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <001901d3c759$8cd5b970$a6812c50$@codeaurora.org>
-References: <CAFnQ7os8AQGwJfkunZG-x9f9jdnOw=tjGCHE9wNxNwLfqka_tQ@mail.gmail.com>
- <001901d3c759$8cd5b970$a6812c50$@codeaurora.org>
-From: David Dean Zhang <daviddean166@gmail.com>
-Date: Wed, 18 Apr 2018 14:01:14 -0400
-Message-ID: <CAFnQ7oti-cKJxBXyuCCfJeLgHMcw1U0pE1hkdCH_ukN032f90A@mail.gmail.com> (sfid-20180418_200121_646238_650496DE)
-Subject: Re: wil6210: low level sector API
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Thu, 26 Apr 2018 08:36:41 -0400
+Received: by mail-lf0-f65.google.com with SMTP id g12-v6so14394658lfb.10
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Apr 2018 05:36:40 -0700 (PDT)
+From: Niklas Cassel <niklas.cassel@linaro.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Niklas Cassel <niklas.cassel@linaro.org>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath10k: sdio: jump to correct label in error handling path
+Date: Thu, 26 Apr 2018 14:35:02 +0200
+Message-Id: <20180426123502.23962-1-niklas.cassel@linaro.org> (sfid-20180426_143711_870875_6FFF6508)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Jump to the correct label in error handling path.
+At this point of execution create_singlethread_workqueue() has succeeded,
+so it should be properly destroyed.
 
-I updated the firmware and tried to call some low level functions,
-like WMI_PRIO_TX_SECTORS_NUMBER_CMDID and WMI_SET_RF_SECTOR_ON_CMDID .
-The previous errors have gone but it still has errors:
+Jump label was renamed in commit ec2c64e20257 ("ath10k: sdio: fix memory
+leak for probe allocations").
+However, the bug was originally introduced in commit d96db25d2025
+("ath10k: add initial SDIO support").
 
-wil6210 0000:03:00.0 wlp3s0: wmi_event_handle: Unhandled event 0x19a5
-wil6210 0000:03:00.0 wlp3s0: wmi_call: wmi_call(0x09a6->0x19a6)
-timeout 2000 msec
+Fixes: d96db25d2025 ("ath10k: add initial SDIO support")
+Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
+---
+ drivers/net/wireless/ath/ath10k/sdio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-So I am wondering whether it is because the chipset does not support
-these wmi commands. I just want to know how to use these commands and
-how to disable TXSS. I appreciate if anyone could provide some
-suggestions. Thanks.
-
-Bests,
-David
-
-On Thu, Mar 29, 2018 at 8:29 AM, Dedy Lansky <dlansky@codeaurora.org> wrote:
-> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of David Dean
-> Sent: Monday, March 26, 2018 9:38 PM
->
->> My question is how I can disable TXSS. One way I found in the wmi.h is setting the number of sectors of TXSS to 0 or 1 > by using wmi_prio_tx_sectors_num_cmd so that the TXSS will only use 1 sector.
->> However, when I called this cmd, I got this error:
->> wil6210 0000:03:00.0 wlp3s0: wil6210_irq_misc: Firmware error detected, assert codes FW 0x00001038, UCODE 0x00000000
->> wil6210 0000:03:00.0 wlp3s0: wil_fw_core_dump: fw core dumped, size 823296 bytes
->> wil6210 0000:03:00.0 wlp3s0: wil_notify_fw_error: Notify about firmware error
->> So I am wondering whether the firmware does not support these kinds of wmi commands. Does anyone have any experience on this? Thank you.
->
-> Indeed this error indicates that FW doesn't support these WMI commands.
-> We are working on releasing new FW version with support for these commands.
->
-> Thanks,
->  Dedy.
->
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index 2d04c54a4153..d612ce8c9cff 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -2011,7 +2011,7 @@ static int ath10k_sdio_probe(struct sdio_func *func,
+ 		ret = -ENODEV;
+ 		ath10k_err(ar, "unsupported device id %u (0x%x)\n",
+ 			   dev_id_base, id->device);
+-		goto err_core_destroy;
++		goto err_free_wq;
+ 	}
+ 
+ 	ar->id.vendor = id->vendor;
+-- 
+2.14.3
