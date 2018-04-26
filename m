@@ -1,192 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:2854 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755727AbeDWQfU (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:51225 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753256AbeDZJ26 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 12:35:20 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [RESEND 14/33] staging: wilc1000: split add_key() to avoid line over 80 chars
-Date: Mon, 23 Apr 2018 22:03:16 +0530
-Message-ID: <1524501215-4963-15-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183526_074670_D68F0C53)
-In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 26 Apr 2018 05:28:58 -0400
+From: s.gottschall@dd-wrt.com
+To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Subject: [PATCH v2] ath10k: fix crash in recent 3.5.3 9984 firmware due wrong handling of peer_bw_rxnss_override parameter
+Date: Thu, 26 Apr 2018 11:28:48 +0200
+Message-Id: <20180426092848.23069-1-s.gottschall@dd-wrt.com> (sfid-20180426_112903_476886_04941263)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup changes to fix 'line over 80 chars' issue found by checkpatch.pl
-script by spliting the function. Also make use of kzalloc() instead
-kmalloc().
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+current handling of peer_bw_rxnss_override parameter is based on guessing the VHT160/8080 capability by rx rate. this is wrong and may lead
+to a non initialized peer_bw_rxnss_override parameter which is required since VHT160 operation mode only supports 2x2 chainmasks in addition the original code
+initialized the parameter with wrong masked values.
+This patch uses the peer phymode and peer nss information for correct initialisation of the peer_bw_rxnss_override parameter.
+if this peer information is not available, we initialize the parameter by minimum nss which is suggested by QCA as temporary workaround according
+to the QCA sourcecodes.
+
+Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+
+v2: remove debug messages
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 108 +++++++++++++---------
- 1 file changed, 64 insertions(+), 44 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 36 +++++++++++++++++++----------------
+ drivers/net/wireless/ath/ath10k/wmi.c |  4 +---
+ drivers/net/wireless/ath/ath10k/wmi.h | 14 +++++++++++++-
+ 3 files changed, 34 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 0f63c43..a80d4d7 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -859,6 +859,58 @@ static int disconnect(struct wiphy *wiphy, struct net_device *dev,
- 	return ret;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 5be6386ede8f..df79af89ee71 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2505,8 +2505,9 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
+ 	if (sta->bandwidth == IEEE80211_STA_RX_BW_80)
+ 		arg->peer_flags |= ar->wmi.peer_flags->bw80;
+ 
+-	if (sta->bandwidth == IEEE80211_STA_RX_BW_160)
++	if (sta->bandwidth == IEEE80211_STA_RX_BW_160) {
+ 		arg->peer_flags |= ar->wmi.peer_flags->bw160;
++	}
+ 
+ 	/* Calculate peer NSS capability from VHT capabilities if STA
+ 	 * supports VHT.
+@@ -2529,22 +2530,25 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
+ 	arg->peer_vht_rates.tx_mcs_set = ath10k_peer_assoc_h_vht_limit(
+ 		__le16_to_cpu(vht_cap->vht_mcs.tx_mcs_map), vht_mcs_mask);
+ 
+-	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
+-		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
++	if (arg->peer_num_spatial_streams && (arg->peer_phymode == MODE_11AC_VHT160 || arg->peer_phymode == MODE_11AC_VHT80_80)) {
++		arg->peer_bw_rxnss_override = BW_NSS_FWCONF_160(arg->peer_num_spatial_streams);
++	}
+ 
+-	if (arg->peer_vht_rates.rx_max_rate &&
+-	    (sta->vht_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK)) {
+-		switch (arg->peer_vht_rates.rx_max_rate) {
+-		case 1560:
+-			/* Must be 2x2 at 160Mhz is all it can do. */
+-			arg->peer_bw_rxnss_override = 2;
+-			break;
+-		case 780:
+-			/* Can only do 1x1 at 160Mhz (Long Guard Interval) */
+-			arg->peer_bw_rxnss_override = 1;
+-			break;
+-		}
++	if (arg->peer_num_spatial_streams && arg->peer_phymode == MODE_11AC_VHT80_80) {
++		arg->peer_bw_rxnss_override |= BW_NSS_FWCONF_80_80(arg->peer_num_spatial_streams);
+ 	}
++
++	/* In very exceptional  conditions it is observed  that
++	 * firmware was receiving bw_rxnss_override as 0 for peer from host, and resulting in Target Assert.
++	 * Changing the rxnss_override to minimum nss. This is a temporary WAR. Needs to be fixed
++	 * properly.
++	 */
++	if (!arg->peer_num_spatial_streams && (arg->peer_phymode == MODE_11AC_VHT80_80 || arg->peer_phymode == MODE_11AC_VHT160)) {
++		arg->peer_bw_rxnss_override = BW_NSS_FWCONF_MAP_ENABLE;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
++		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
  }
  
-+static inline void wilc_wfi_cfg_copy_wep_info(struct wilc_priv *priv,
-+					      u8 key_index,
-+					      struct key_params *params)
-+{
-+	priv->wep_key_len[key_index] = params->key_len;
-+	memcpy(priv->wep_key[key_index], params->key, params->key_len);
-+}
-+
-+static int wilc_wfi_cfg_allocate_wpa_entry(struct wilc_priv *priv, u8 idx)
-+{
-+	if (!priv->wilc_gtk[idx]) {
-+		priv->wilc_gtk[idx] = kzalloc(sizeof(struct wilc_wfi_key),
-+					       GFP_KERNEL);
-+		if (!priv->wilc_gtk[idx])
-+			return -ENOMEM;
-+	}
-+
-+	if (!priv->wilc_ptk[idx]) {
-+		priv->wilc_ptk[idx] = kzalloc(sizeof(struct wilc_wfi_key),
-+					       GFP_KERNEL);
-+		if (!priv->wilc_ptk[idx])
-+			return -ENOMEM;
-+	}
-+
-+	return 0;
-+}
-+
-+static int wilc_wfi_cfg_copy_wpa_info(struct wilc_wfi_key *key_info,
-+				      struct key_params *params)
-+{
-+	kfree(key_info->key);
-+
-+	key_info->key = kmemdup(params->key, params->key_len, GFP_KERNEL);
-+	if (!key_info->key)
-+		return -ENOMEM;
-+
-+	kfree(key_info->seq);
-+
-+	if (params->seq_len > 0) {
-+		key_info->seq = kmemdup(params->seq, params->seq_len,
-+					GFP_KERNEL);
-+		if (!key_info->seq)
-+			return -ENOMEM;
-+	}
-+
-+	key_info->cipher = params->cipher;
-+	key_info->key_len = params->key_len;
-+	key_info->seq_len = params->seq_len;
-+
-+	return 0;
-+}
-+
- static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 		   bool pairwise,
- 		   const u8 *mac_addr, struct key_params *params)
-@@ -879,12 +931,11 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 	vif = netdev_priv(netdev);
- 	wl = vif->wilc;
+ static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
+@@ -2696,9 +2700,9 @@ static int ath10k_peer_assoc_prepare(struct ath10k *ar,
+ 	ath10k_peer_assoc_h_crypto(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_rates(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_ht(ar, vif, sta, arg);
++	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_vht(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_qos(ar, vif, sta, arg);
+-	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
  
--	switch (params->cipher)	{
-+	switch (params->cipher) {
- 	case WLAN_CIPHER_SUITE_WEP40:
- 	case WLAN_CIPHER_SUITE_WEP104:
- 		if (priv->wdev->iftype == NL80211_IFTYPE_AP) {
--			priv->wep_key_len[key_index] = params->key_len;
--			memcpy(priv->wep_key[key_index], params->key, params->key_len);
-+			wilc_wfi_cfg_copy_wep_info(priv, key_index, params);
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 2c36256a441d..7d72fdc703c8 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -7212,9 +7212,7 @@ ath10k_wmi_peer_assoc_fill_10_4(struct ath10k *ar, void *buf,
  
- 			auth_type = OPEN_SYSTEM;
+ 	ath10k_wmi_peer_assoc_fill_10_2(ar, buf, arg);
+ 	if (arg->peer_bw_rxnss_override)
+-		cmd->peer_bw_rxnss_override =
+-			__cpu_to_le32((arg->peer_bw_rxnss_override - 1) |
+-				      BIT(PEER_BW_RXNSS_OVERRIDE_OFFSET));
++		cmd->peer_bw_rxnss_override = __cpu_to_le32(arg->peer_bw_rxnss_override);
+ 	else
+ 		cmd->peer_bw_rxnss_override = 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 46ae19bb2c92..1fe0aa5523a6 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -6380,7 +6380,19 @@ struct wmi_10_2_peer_assoc_complete_cmd {
+ 	__le32 info0; /* WMI_PEER_ASSOC_INFO0_ */
+ } __packed;
  
-@@ -898,9 +949,9 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 						mode, auth_type);
- 			break;
- 		}
--		if (memcmp(params->key, priv->wep_key[key_index], params->key_len)) {
--			priv->wep_key_len[key_index] = params->key_len;
--			memcpy(priv->wep_key[key_index], params->key, params->key_len);
-+		if (memcmp(params->key, priv->wep_key[key_index],
-+			   params->key_len)) {
-+			wilc_wfi_cfg_copy_wep_info(priv, key_index, params);
+-#define PEER_BW_RXNSS_OVERRIDE_OFFSET  31
++#define BW_NSS_FWCONF_MAP_ENABLE             (1 << 31)
++#define BW_NSS_FWCONF_MAP_160MHZ_S           (0)
++#define BW_NSS_FWCONF_MAP_160MHZ_M           (0x00000007)
++#define BW_NSS_FWCONF_MAP_80_80MHZ_S         (3)
++#define BW_NSS_FWCONF_MAP_80_80MHZ_M         (0x00000038)
++#define BW_NSS_FWCONF_MAP_M                  (0x0000003F)
++
++#define GET_BW_NSS_FWCONF_160(x)             ((((x) & BW_NSS_FWCONF_MAP_160MHZ_M) >> BW_NSS_FWCONF_MAP_160MHZ_S) + 1)
++#define GET_BW_NSS_FWCONF_80_80(x)           ((((x) & BW_NSS_FWCONF_MAP_80_80MHZ_M) >> BW_NSS_FWCONF_MAP_80_80MHZ_S) + 1)
++
++/* Values defined to set 160 MHz Bandwidth NSS Mapping into FW*/
++#define BW_NSS_FWCONF_160(x)          (BW_NSS_FWCONF_MAP_ENABLE | (((x - 1) << BW_NSS_FWCONF_MAP_160MHZ_S) & BW_NSS_FWCONF_MAP_160MHZ_M))
++#define BW_NSS_FWCONF_80_80(x)        (BW_NSS_FWCONF_MAP_ENABLE | (((x - 1) << BW_NSS_FWCONF_MAP_80_80MHZ_S) & BW_NSS_FWCONF_MAP_80_80MHZ_M))
  
- 			wilc_add_wep_key_bss_sta(vif, params->key,
- 						 params->key_len, key_index);
-@@ -910,17 +961,9 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 
- 	case WLAN_CIPHER_SUITE_TKIP:
- 	case WLAN_CIPHER_SUITE_CCMP:
--		if (priv->wdev->iftype == NL80211_IFTYPE_AP || priv->wdev->iftype == NL80211_IFTYPE_P2P_GO) {
--			if (!priv->wilc_gtk[key_index]) {
--				priv->wilc_gtk[key_index] = kmalloc(sizeof(struct wilc_wfi_key), GFP_KERNEL);
--				priv->wilc_gtk[key_index]->key = NULL;
--				priv->wilc_gtk[key_index]->seq = NULL;
--			}
--			if (!priv->wilc_ptk[key_index]) {
--				priv->wilc_ptk[key_index] = kmalloc(sizeof(struct wilc_wfi_key), GFP_KERNEL);
--				priv->wilc_ptk[key_index]->key = NULL;
--				priv->wilc_ptk[key_index]->seq = NULL;
--			}
-+		if (priv->wdev->iftype == NL80211_IFTYPE_AP ||
-+		    priv->wdev->iftype == NL80211_IFTYPE_P2P_GO) {
-+			wilc_wfi_cfg_allocate_wpa_entry(priv, key_index);
- 
- 			if (!pairwise) {
- 				if (params->cipher == WLAN_CIPHER_SUITE_TKIP)
-@@ -935,20 +978,8 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 					rx_mic = params->key + 16;
- 					keylen = params->key_len - 16;
- 				}
--				kfree(priv->wilc_gtk[key_index]->key);
--
--				priv->wilc_gtk[key_index]->key = kmalloc(params->key_len, GFP_KERNEL);
--				memcpy(priv->wilc_gtk[key_index]->key, params->key, params->key_len);
--				kfree(priv->wilc_gtk[key_index]->seq);
--
--				if (params->seq_len > 0) {
--					priv->wilc_gtk[key_index]->seq = kmalloc(params->seq_len, GFP_KERNEL);
--					memcpy(priv->wilc_gtk[key_index]->seq, params->seq, params->seq_len);
--				}
--
--				priv->wilc_gtk[key_index]->cipher = params->cipher;
--				priv->wilc_gtk[key_index]->key_len = params->key_len;
--				priv->wilc_gtk[key_index]->seq_len = params->seq_len;
-+				wilc_wfi_cfg_copy_wpa_info(priv->wilc_gtk[key_index],
-+							   params);
- 
- 				wilc_add_rx_gtk(vif, params->key, keylen,
- 						key_index, params->seq_len,
-@@ -967,19 +998,8 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 					keylen = params->key_len - 16;
- 				}
- 
--				kfree(priv->wilc_ptk[key_index]->key);
--				priv->wilc_ptk[key_index]->key = kmalloc(params->key_len, GFP_KERNEL);
--				memcpy(priv->wilc_ptk[key_index]->key, params->key, params->key_len);
--
--				kfree(priv->wilc_ptk[key_index]->seq);
--				if (params->seq_len > 0) {
--					priv->wilc_ptk[key_index]->seq = kmalloc(params->seq_len, GFP_KERNEL);
--					memcpy(priv->wilc_ptk[key_index]->seq, params->seq, params->seq_len);
--				}
--
--				priv->wilc_ptk[key_index]->cipher = params->cipher;
--				priv->wilc_ptk[key_index]->key_len = params->key_len;
--				priv->wilc_ptk[key_index]->seq_len = params->seq_len;
-+				wilc_wfi_cfg_copy_wpa_info(priv->wilc_ptk[key_index],
-+							   params);
- 
- 				wilc_add_ptk(vif, params->key, keylen,
- 					     mac_addr, rx_mic, tx_mic,
+ struct wmi_10_4_peer_assoc_complete_cmd {
+ 	struct wmi_10_2_peer_assoc_complete_cmd cmd;
 -- 
-2.7.4
+2.14.1
