@@ -1,55 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f169.google.com ([209.85.217.169]:37700 "EHLO
-        mail-ua0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752578AbeDPN7c (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:55002 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750924AbeDZFrg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Apr 2018 09:59:32 -0400
-Received: by mail-ua0-f169.google.com with SMTP id d3so9820197uae.4
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2018 06:59:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87po2zp88o.fsf@kamboji.qca.qualcomm.com>
-References: <CAKzrAgSbYN1znJi8qM0QEfCniw2AGEKnrh-vJcUcXW0rVmo9tQ@mail.gmail.com>
- <CA+5PVA6nkGMzQHVu8LSaOUGU0h16rMeQvPoNORtyAzp8YDidOw@mail.gmail.com> <87po2zp88o.fsf@kamboji.qca.qualcomm.com>
-From: "ojab //" <ojab@ojab.ru>
-Date: Mon, 16 Apr 2018 13:59:31 +0000
-Message-ID: <CAKzrAgSYb1Pt2chr4OGzBOfCYpy9YFhJJnaAN2jxn1QraPDPoQ@mail.gmail.com> (sfid-20180416_155935_539850_00A13D45)
-Subject: Re: Compex WLE1216V2-20 (QCA9984) firmware is missing
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Josh Boyer <jwboyer@kernel.org>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        Linux Firmware <linux-firmware@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Thu, 26 Apr 2018 01:47:36 -0400
+From: Eyal Reizer <eyalreizer@gmail.com>
+To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        robh@kernel.org, sre@kernel.org, tony@atomide.com,
+        linux-kernel@vger.kernel.org
+Cc: Eyal Reizer <eyalr@ti.com>
+Subject: [PATCH v2] wlcore: sdio: allow pm to handle sdio power
+Date: Thu, 26 Apr 2018 08:47:11 +0300
+Message-Id: <1524721631-5983-1-git-send-email-eyalr@ti.com> (sfid-20180426_074751_823507_E8AD5FB7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 16, 2018 at 1:54 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Josh Boyer <jwboyer@kernel.org> writes:
->
->> On Tue, Mar 27, 2018 at 12:41 PM, ojab // <ojab@ojab.ru> wrote:
->>> [please CC me since I'm not subscribed to the lists and terribly sorry
->>> for HTML mails]
->>>
->>> Oh hai!
->>>
->>> I have Compex WLE1216V2-20 (based on QCA9984 chip) that isn't
->>> supported by linux-firmware (git master), card init fails with
->>>
->>>>[Mon Mar 26 17:18:47 2018] ath10k_pci 0000:05:00.0: failed to fetch
->>> board data for bus=pci,bmi-chip-id=0,bmi-board-id=30 from
->>> ath10k/QCA9984/hw1.0/board-2.bin
->>>
->>> It works fine with board-2.bin from the compex website [1] (can be
->>> downloaded directly from
->>> https://bugzilla.kernel.org/attachment.cgi?id=274959).
->>> What should be done to have it upstreamed?
->>
->> This is likely a question for Kalle.  I would expect an update to the
->> existing board-2.bin file submitted through Qualcomm with support for
->> that device.
->
-> Yes, this should have been sent to the ath10k list, not to
-> linux-firmware.
->
-> https://wireless.wiki.kernel.org/en/users/drivers/ath10k/support
+pm_runtime handles sdio power on and power off transitions.
+An old workaround for trying to control the power explicitly from the
+driver was in fact causing failures on suspend/resume as the mmc layer
+already power the module on resume.
 
-Thanks, sent the same email there.
+In case of resume pm_runtime_get sync returns a positive device's usage
+count causing the driver to try an re-initialize an already initialized
+device. This was causing sdio bus failure on resume.
+
+Remove this manual power on/off sequence as it is in-fact not needed.
+
+Signed-off-by: Eyal Reizer <eyalr@ti.com>
+Acked-by: Tony Lindgren <tony@atomide.com>
+---
+ drivers/net/wireless/ti/wlcore/sdio.c | 27 ++++++---------------------
+ 1 file changed, 6 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index 1f727ba..6dbe61d 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -155,17 +155,11 @@ static int wl12xx_sdio_power_on(struct wl12xx_sdio_glue *glue)
+ 	struct mmc_card *card = func->card;
+ 
+ 	ret = pm_runtime_get_sync(&card->dev);
+-	if (ret) {
+-		/*
+-		 * Runtime PM might be temporarily disabled, or the device
+-		 * might have a positive reference counter. Make sure it is
+-		 * really powered on.
+-		 */
+-		ret = mmc_power_restore_host(card->host);
+-		if (ret < 0) {
+-			pm_runtime_put_sync(&card->dev);
+-			goto out;
+-		}
++	if (ret < 0) {
++		pm_runtime_put_noidle(&card->dev);
++		dev_err(glue->dev, "%s: failed to get_sync(%d)\n",
++			__func__, ret);
++		goto out;
+ 	}
+ 
+ 	sdio_claim_host(func);
+@@ -178,7 +172,6 @@ static int wl12xx_sdio_power_on(struct wl12xx_sdio_glue *glue)
+ 
+ static int wl12xx_sdio_power_off(struct wl12xx_sdio_glue *glue)
+ {
+-	int ret;
+ 	struct sdio_func *func = dev_to_sdio_func(glue->dev);
+ 	struct mmc_card *card = func->card;
+ 
+@@ -186,16 +179,8 @@ static int wl12xx_sdio_power_off(struct wl12xx_sdio_glue *glue)
+ 	sdio_disable_func(func);
+ 	sdio_release_host(func);
+ 
+-	/* Power off the card manually in case it wasn't powered off above */
+-	ret = mmc_power_save_host(card->host);
+-	if (ret < 0)
+-		goto out;
+-
+ 	/* Let runtime PM know the card is powered off */
+-	pm_runtime_put_sync(&card->dev);
+-
+-out:
+-	return ret;
++	return pm_runtime_put_sync(&card->dev);
+ }
+ 
+ static int wl12xx_sdio_set_power(struct device *child, bool enable)
+-- 
+2.7.4
