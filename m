@@ -1,89 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41704 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752962AbeDZHxD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Apr 2018 03:53:03 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Eliad Peller <eliadx.peller@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 26 Apr 2018 10:52:57 +0300
-Message-Id: <20180426075257.21971-1-luca@coelho.fi> (sfid-20180426_095306_544093_9D81FDE4)
-In-Reply-To: <20180422082745.9743-13-luca@coelho.fi>
-References: <20180422082745.9743-13-luca@coelho.fi>
-Subject: [PATCH v2 12/12] iwlwifi: mvm: set wakeup filters for wowlan "any" configuration
+Received: from mga09.intel.com ([134.134.136.24]:14064 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751465AbeDZHiP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 26 Apr 2018 03:38:15 -0400
+Message-ID: <6f5ba028f120d092bd5c96557144750518faf9c1.camel@intel.com> (sfid-20180426_093819_241115_41C9C710)
+Subject: Re: linux-next: manual merge of the wireless-drivers-next tree with
+ the wireless-drivers tree
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Wireless <linux-wireless@vger.kernel.org>
+Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        Shaul Triebitz <shaul.triebitz@intel.com>
+Date: Thu, 26 Apr 2018 10:38:11 +0300
+In-Reply-To: <20180426110917.446204af@canb.auug.org.au>
+References: <20180426110917.446204af@canb.auug.org.au>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliadx.peller@intel.com>
+On Thu, 2018-04-26 at 11:09 +1000, Stephen Rothwell wrote:
+> Hi all,
+> 
+> Today's linux-next merge of the wireless-drivers-next tree got a
+> conflict in:
+> 
+>   drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+> 
+> between commit:
+> 
+>   77e30e10ee28 ("iwlwifi: mvm: query regdb for wmm rule if needed")
+> 
+> from the wireless-drivers tree and commits:
+> 
+>   9c4f7d512740 ("iwlwifi: move all NVM parsing code to the common
+> files")
+>   4c625c564ba2 ("iwlwifi: get rid of fw/nvm.c")
+> 
+> from the wireless-drivers-next tree.
+> 
+> I fixed it up (see below) and can carry the fix as necessary. This
+> is now fixed as far as linux-next is concerned, but any non trivial
+> conflicts should be mentioned to your upstream maintainer when your
+> tree
+> is submitted for merging.  You may also want to consider cooperating
+> with the maintainer of the conflicting tree to minimise any
+> particularly
+> complex conflicts.
 
-In case of "any" wowlan trigger is configured, no valid wakeup filter
-was configured.
+Thanks for resolving this, Stephen!
 
-Moreover, the fw assumes there's no connection when there are no configured
-wakeup filters.
-This leads to the station info not being updated on D3 command, causing
-rate_n_flags to be 0 when the offloading code sends tx frame (triggering
-SYSASSERT_102C due to invalid antenna param)
+I checked your resolution and it's spot on.
 
-Note: "any" trigger is currently assumed to only be used when entering
-d0i3 (which has a different flow). However, we still reach this code
-when using d3_test.
-
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 80a9a7cb83be..3fcf489f3120 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -8,6 +8,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018        Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -18,11 +19,6 @@
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  * General Public License for more details.
-  *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-- * USA
-- *
-  * The full GNU General Public License is included in this distribution
-  * in the file called COPYING.
-  *
-@@ -35,6 +31,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018        Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -693,6 +690,14 @@ iwl_mvm_get_wowlan_config(struct iwl_mvm *mvm,
- 				    IWL_WOWLAN_WAKEUP_LINK_CHANGE);
- 	}
- 
-+	if (wowlan->any) {
-+		wowlan_config_cmd->wakeup_filter |=
-+			cpu_to_le32(IWL_WOWLAN_WAKEUP_BEACON_MISS |
-+				    IWL_WOWLAN_WAKEUP_LINK_CHANGE |
-+				    IWL_WOWLAN_WAKEUP_RX_FRAME |
-+				    IWL_WOWLAN_WAKEUP_BCN_FILTERING);
-+	}
-+
- 	return 0;
- }
- 
--- 
-2.17.0
+--
+Cheers,
+Luca.
