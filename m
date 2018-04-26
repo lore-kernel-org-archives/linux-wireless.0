@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40918 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751990AbeDVI2i (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:45608 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753686AbeDZKUG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Apr 2018 04:28:38 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+        Thu, 26 Apr 2018 06:20:06 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 22 Apr 2018 11:27:44 +0300
-Message-Id: <20180422082745.9743-12-luca@coelho.fi> (sfid-20180422_102841_554098_577FF539)
-In-Reply-To: <20180422082745.9743-1-luca@coelho.fi>
-References: <20180422082745.9743-1-luca@coelho.fi>
-Subject: [PATCH 11/12] iwlwifi: mvm: remove check for non low latency TIDs
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 0/6] brcmfmac: new pcie fw-api support and cleanup
+Date: Thu, 26 Apr 2018 12:19:59 +0200
+Message-Id: <1524737999-2277-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180426_122010_590761_B68A8D9C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+This series contains following:
+  * support for PCIe rev7 firmware api.
+  * include boottime stamp for bss.
+  * check user-space provided P2P DEVICE mac address.
 
-Firmware will only send non low-latency TIDs in the
-bitmap, so the check is now redundant.
+The series applies to the master branch of wireless-drivers-next repository.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 1 -
- 1 file changed, 1 deletion(-)
+Arend van Spriel (2):
+  brcmfmac: check p2pdev mac address uniqueness
+  brcmfmac: constify firmware mapping tables
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index d0916f2552e2..df4c60496f72 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -803,7 +803,6 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
- 		return iwl_mvm_tx_tso_segment(skb, 1, netdev_flags, mpdus_skb);
- 
- 	if (iwl_mvm_vif_low_latency(iwl_mvm_vif_from_mac80211(mvmsta->vif)) ||
--	    tid_to_mac80211_ac[tid] < IEEE80211_AC_BE ||
- 	    !(mvmsta->amsdu_enabled & BIT(tid)))
- 		return iwl_mvm_tx_tso_segment(skb, 1, netdev_flags, mpdus_skb);
- 
--- 
-2.17.0
+Franky Lin (4):
+  brcmfmac: reports boottime_ns while informing bss
+  brcmfmac: use nl80211_band directly to get ieee80211 channel
+  brcmfmac: add hostready indication
+  brcmfmac: coarse support for PCIe shared structure rev7
+
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 34 +++++++++----------
+ .../broadcom/brcm80211/brcmfmac/firmware.c         |  2 +-
+ .../broadcom/brcm80211/brcmfmac/firmware.h         |  2 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.h  |  6 ++--
+ .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c |  7 ++++
+ .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    | 39 ++++++++++++++++++----
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  2 +-
+ .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |  2 +-
+ 8 files changed, 64 insertions(+), 30 deletions(-)
+
+--
+1.9.1
