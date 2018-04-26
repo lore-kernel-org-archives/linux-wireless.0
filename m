@@ -1,122 +1,241 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:14322 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932172AbeDWQgF (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:37725 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753836AbeDZUVN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 12:36:05 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [RESEND 31/33] staging: wilc1000: rename goto labels starting with '_' in wilc1000_wlan_init()
-Date: Mon, 23 Apr 2018 22:03:33 +0530
-Message-ID: <1524501215-4963-32-git-send-email-ajay.kathat@microchip.com> (sfid-20180423_183616_933561_8AB349C1)
-In-Reply-To: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524501215-4963-1-git-send-email-ajay.kathat@microchip.com>
+        Thu, 26 Apr 2018 16:21:13 -0400
+Subject: Re: [PATCH v2] ath10k: fix crash in recent 3.5.3 9984 firmware due
+ wrong handling of peer_bw_rxnss_override parameter
+To: Ben Greear <greearb@candelatech.com>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+References: <20180426092848.23069-1-s.gottschall@dd-wrt.com>
+ <f288f18c-684d-2ff9-5739-648e8e716653@candelatech.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <db214e94-1052-d6fa-744a-7c8ebcc84aee@dd-wrt.com> (sfid-20180426_222117_358526_569E2167)
+Date: Thu, 26 Apr 2018 22:21:12 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <f288f18c-684d-2ff9-5739-648e8e716653@candelatech.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rename goto labels starting with '_' in wilc1000_wlan_init() to follow
-linux coding style.
+Am 26.04.2018 um 17:30 schrieb Ben Greear:
+> On 04/26/2018 02:28 AM, s.gottschall@dd-wrt.com wrote:
+>> From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+>>
+>> current handling of peer_bw_rxnss_override parameter is based on 
+>> guessing the VHT160/8080 capability by rx rate. this is wrong and may 
+>> lead
+>> to a non initialized peer_bw_rxnss_override parameter which is 
+>> required since VHT160 operation mode only supports 2x2 chainmasks in 
+>> addition the original code
+>> initialized the parameter with wrong masked values.
+>> This patch uses the peer phymode and peer nss information for correct 
+>> initialisation of the peer_bw_rxnss_override parameter.
+>> if this peer information is not available, we initialize the 
+>> parameter by minimum nss which is suggested by QCA as temporary 
+>> workaround according
+>> to the QCA sourcecodes.
+>>
+>> Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+>>
+>> v2: remove debug messages
+>> ---
+>>  drivers/net/wireless/ath/ath10k/mac.c | 36 
+>> +++++++++++++++++++----------------
+>>  drivers/net/wireless/ath/ath10k/wmi.c |  4 +---
+>>  drivers/net/wireless/ath/ath10k/wmi.h | 14 +++++++++++++-
+>>  3 files changed, 34 insertions(+), 20 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c 
+>> b/drivers/net/wireless/ath/ath10k/mac.c
+>> index 5be6386ede8f..df79af89ee71 100644
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -2505,8 +2505,9 @@ static void ath10k_peer_assoc_h_vht(struct 
+>> ath10k *ar,
+>>      if (sta->bandwidth == IEEE80211_STA_RX_BW_80)
+>>          arg->peer_flags |= ar->wmi.peer_flags->bw80;
+>>
+>> -    if (sta->bandwidth == IEEE80211_STA_RX_BW_160)
+>> +    if (sta->bandwidth == IEEE80211_STA_RX_BW_160) {
+>>          arg->peer_flags |= ar->wmi.peer_flags->bw160;
+>> +    }
+>>
+>>      /* Calculate peer NSS capability from VHT capabilities if STA
+>>       * supports VHT.
+>> @@ -2529,22 +2530,25 @@ static void ath10k_peer_assoc_h_vht(struct 
+>> ath10k *ar,
+>>      arg->peer_vht_rates.tx_mcs_set = ath10k_peer_assoc_h_vht_limit(
+>>          __le16_to_cpu(vht_cap->vht_mcs.tx_mcs_map), vht_mcs_mask);
+>>
+>> -    ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d 
+>> flags 0x%x\n",
+>> -           sta->addr, arg->peer_max_mpdu, arg->peer_flags);
+>> +    if (arg->peer_num_spatial_streams && (arg->peer_phymode == 
+>> MODE_11AC_VHT160 || arg->peer_phymode == MODE_11AC_VHT80_80)) {
+>> +        arg->peer_bw_rxnss_override = 
+>> BW_NSS_FWCONF_160(arg->peer_num_spatial_streams);
+>> +    }
+>
+> So, an 80Mhz peer could be 4x4 and could connect to a VHT-160 AP. From 
+> what I can tell,
+> the VHT-160 AP can talk 4x4 @ 80Mhz to the peer in this case, but if 
+> peer is VHT-160,
+> then of course it can only talk at 2x2.
+>
+> So, I don't think you can just look at the peer_num_spatial_streams here.
+no? rxnss_override is only taked if peer phymode is vht160 or vht80_80. 
+vht80 is not considered in that code PEER phy_mode, not HOST phy_mode
+this parameter is a assoc per peer parameter as far as i can say here.
+consider that the firmware will accept anything except 0 for 
+peer_bw_rxnss_override in vht160 operation mode
+if a peer is 80 mhz, the code will be skipped here.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 26 +++++++++++++-------------
- 1 file changed, 13 insertions(+), 13 deletions(-)
+>
+>
+>> -    if (arg->peer_vht_rates.rx_max_rate &&
+>> -        (sta->vht_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK)) {
+>> -        switch (arg->peer_vht_rates.rx_max_rate) {
+>> -        case 1560:
+>> -            /* Must be 2x2 at 160Mhz is all it can do. */
+>> -            arg->peer_bw_rxnss_override = 2;
+>> -            break;
+>> -        case 780:
+>> -            /* Can only do 1x1 at 160Mhz (Long Guard Interval) */
+>> -            arg->peer_bw_rxnss_override = 1;
+>> -            break;
+>> -        }
+>
+> This old code does look wrong, the firmware is using zero-based, so 
+> override-0 == nss-1, override-1 == nss-2.
+0 = crash
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 8f97c62..26edbb6 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -735,42 +735,42 @@ int wilc1000_wlan_init(struct net_device *dev, struct wilc_vif *vif)
- 		ret = wilc_wlan_init(dev);
- 		if (ret < 0) {
- 			ret = -EIO;
--			goto _fail_locks_;
-+			goto fail_locks;
- 		}
- 
- 		if (wl->gpio >= 0 && init_irq(dev)) {
- 			ret = -EIO;
--			goto _fail_locks_;
-+			goto fail_locks;
- 		}
- 
- 		ret = wlan_initialize_threads(dev);
- 		if (ret < 0) {
- 			ret = -EIO;
--			goto _fail_wilc_wlan_;
-+			goto fail_wilc_wlan;
- 		}
- 
- 		if (!wl->dev_irq_num &&
- 		    wl->hif_func->enable_interrupt &&
- 		    wl->hif_func->enable_interrupt(wl)) {
- 			ret = -EIO;
--			goto _fail_irq_init_;
-+			goto fail_irq_init;
- 		}
- 
- 		if (wilc_wlan_get_firmware(dev)) {
- 			ret = -EIO;
--			goto _fail_irq_enable_;
-+			goto fail_irq_enable;
- 		}
- 
- 		ret = wilc1000_firmware_download(dev);
- 		if (ret < 0) {
- 			ret = -EIO;
--			goto _fail_irq_enable_;
-+			goto fail_irq_enable;
- 		}
- 
- 		ret = linux_wlan_start_firmware(dev);
- 		if (ret < 0) {
- 			ret = -EIO;
--			goto _fail_irq_enable_;
-+			goto fail_irq_enable;
- 		}
- 
- 		if (wilc_wlan_cfg_get(vif, 1, WID_FIRMWARE_VERSION, 1, 0)) {
-@@ -788,27 +788,27 @@ int wilc1000_wlan_init(struct net_device *dev, struct wilc_vif *vif)
- 		if (ret < 0) {
- 			netdev_err(dev, "Failed to configure firmware\n");
- 			ret = -EIO;
--			goto _fail_fw_start_;
-+			goto fail_fw_start;
- 		}
- 
- 		wl->initialized = true;
- 		return 0;
- 
--_fail_fw_start_:
-+fail_fw_start:
- 		wilc_wlan_stop(wl);
- 
--_fail_irq_enable_:
-+fail_irq_enable:
- 		if (!wl->dev_irq_num &&
- 		    wl->hif_func->disable_interrupt)
- 			wl->hif_func->disable_interrupt(wl);
--_fail_irq_init_:
-+fail_irq_init:
- 		if (wl->dev_irq_num)
- 			deinit_irq(dev);
- 
- 		wlan_deinitialize_threads(dev);
--_fail_wilc_wlan_:
-+fail_wilc_wlan:
- 		wilc_wlan_cleanup(dev);
--_fail_locks_:
-+fail_locks:
- 		wlan_deinit_locks(dev);
- 		netdev_err(dev, "WLAN initialization FAILED\n");
- 	} else {
+and 1 and 2 is wrong.
+
++#define BW_NSS_FWCONF_MAP_ENABLE             (1 << 31)
++#define BW_NSS_FWCONF_MAP_160MHZ_S           (0)
++#define BW_NSS_FWCONF_MAP_160MHZ_M           (0x00000007)
++#define BW_NSS_FWCONF_MAP_80_80MHZ_S         (3)
++#define BW_NSS_FWCONF_MAP_80_80MHZ_M         (0x00000038)
+>
+> This is confusing enough that it deserves a comment in the code I 
+> think....
+the removal doesnt deserve a comment. i dont know how to explain that 
+its simply wrong. it uses the wrong
+bit masks and this has been written in the initial patch description
+>
+>> +    if (arg->peer_num_spatial_streams && arg->peer_phymode == 
+>> MODE_11AC_VHT80_80) {
+>> +        arg->peer_bw_rxnss_override |= 
+>> BW_NSS_FWCONF_80_80(arg->peer_num_spatial_streams);
+>>      }
+>> +
+>> +    /* In very exceptional  conditions it is observed  that
+>> +     * firmware was receiving bw_rxnss_override as 0 for peer from 
+>> host, and resulting in Target Assert.
+>> +     * Changing the rxnss_override to minimum nss. This is a 
+>> temporary WAR. Needs to be fixed
+>> +     * properly.
+>> +     */
+>> +    if (!arg->peer_num_spatial_streams && (arg->peer_phymode == 
+>> MODE_11AC_VHT80_80 || arg->peer_phymode == MODE_11AC_VHT160)) {
+>> +        arg->peer_bw_rxnss_override = BW_NSS_FWCONF_MAP_ENABLE;
+>> +    }
+>> +
+>> +    ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d 
+>> flags 0x%x\n",
+>> +           sta->addr, arg->peer_max_mpdu, arg->peer_flags);
+>>  }
+>>
+>>  static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
+>> @@ -2696,9 +2700,9 @@ static int ath10k_peer_assoc_prepare(struct 
+>> ath10k *ar,
+>>      ath10k_peer_assoc_h_crypto(ar, vif, sta, arg);
+>>      ath10k_peer_assoc_h_rates(ar, vif, sta, arg);
+>>      ath10k_peer_assoc_h_ht(ar, vif, sta, arg);
+>> +    ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
+>>      ath10k_peer_assoc_h_vht(ar, vif, sta, arg);
+>>      ath10k_peer_assoc_h_qos(ar, vif, sta, arg);
+>> -    ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
+>>
+>>      return 0;
+>>  }
+>> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c 
+>> b/drivers/net/wireless/ath/ath10k/wmi.c
+>> index 2c36256a441d..7d72fdc703c8 100644
+>> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+>> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+>> @@ -7212,9 +7212,7 @@ ath10k_wmi_peer_assoc_fill_10_4(struct ath10k 
+>> *ar, void *buf,
+>>
+>>      ath10k_wmi_peer_assoc_fill_10_2(ar, buf, arg);
+>>      if (arg->peer_bw_rxnss_override)
+>> -        cmd->peer_bw_rxnss_override =
+>> -            __cpu_to_le32((arg->peer_bw_rxnss_override - 1) |
+>> -                      BIT(PEER_BW_RXNSS_OVERRIDE_OFFSET));
+>> +        cmd->peer_bw_rxnss_override = 
+>> __cpu_to_le32(arg->peer_bw_rxnss_override);
+>>      else
+>>          cmd->peer_bw_rxnss_override = 0;
+>>  }
+>> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h 
+>> b/drivers/net/wireless/ath/ath10k/wmi.h
+>> index 46ae19bb2c92..1fe0aa5523a6 100644
+>> --- a/drivers/net/wireless/ath/ath10k/wmi.h
+>> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
+>> @@ -6380,7 +6380,19 @@ struct wmi_10_2_peer_assoc_complete_cmd {
+>>      __le32 info0; /* WMI_PEER_ASSOC_INFO0_ */
+>>  } __packed;
+>>
+>> -#define PEER_BW_RXNSS_OVERRIDE_OFFSET  31
+>> +#define BW_NSS_FWCONF_MAP_ENABLE             (1 << 31)
+>> +#define BW_NSS_FWCONF_MAP_160MHZ_S           (0)
+>> +#define BW_NSS_FWCONF_MAP_160MHZ_M           (0x00000007)
+>> +#define BW_NSS_FWCONF_MAP_80_80MHZ_S         (3)
+>> +#define BW_NSS_FWCONF_MAP_80_80MHZ_M         (0x00000038)
+>
+> Older FW does not pay attention to the 80_80 bits.  It uses masks so 
+> it is
+> backwards-compat, but maybe worth a comment.
+i took that masks from recent 3.5.3 based qca code. its correct and if 
+its backward compatible, it's still correct
+i mean the old code did not coment anything. so dont know how to write 
+anything more about it now. see patch description
+
+>
+>> +#define BW_NSS_FWCONF_MAP_M                  (0x0000003F)
+>> +
+>> +#define GET_BW_NSS_FWCONF_160(x)             ((((x) & 
+>> BW_NSS_FWCONF_MAP_160MHZ_M) >> BW_NSS_FWCONF_MAP_160MHZ_S) + 1)
+>> +#define GET_BW_NSS_FWCONF_80_80(x)           ((((x) & 
+>> BW_NSS_FWCONF_MAP_80_80MHZ_M) >> BW_NSS_FWCONF_MAP_80_80MHZ_S) + 1)
+>> +
+>> +/* Values defined to set 160 MHz Bandwidth NSS Mapping into FW*/
+>> +#define BW_NSS_FWCONF_160(x)          (BW_NSS_FWCONF_MAP_ENABLE | 
+>> (((x - 1) << BW_NSS_FWCONF_MAP_160MHZ_S) & BW_NSS_FWCONF_MAP_160MHZ_M))
+>> +#define BW_NSS_FWCONF_80_80(x)        (BW_NSS_FWCONF_MAP_ENABLE | 
+>> (((x - 1) << BW_NSS_FWCONF_MAP_80_80MHZ_S) & 
+>> BW_NSS_FWCONF_MAP_80_80MHZ_M))
+>>
+>>  struct wmi_10_4_peer_assoc_complete_cmd {
+>>      struct wmi_10_2_peer_assoc_complete_cmd cmd;
+>>
+>
+> Thanks,
+> Ben
+>
+
 -- 
-2.7.4
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
