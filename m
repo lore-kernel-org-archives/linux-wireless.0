@@ -1,262 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr50068.outbound.protection.outlook.com ([40.107.5.68]:18656
-        "EHLO EUR03-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751168AbeDTTnh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Apr 2018 15:43:37 -0400
-Subject: Re: [PATCH 8/9] mac80211: Support adding duration for prepare_tx()
- callback
-To: Luca Coelho <luca@coelho.fi>, johannes@sipsolutions.net
-References: <20180420104926.8816-1-luca@coelho.fi>
- <20180420104926.8816-9-luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-From: Peter Oh <peter.oh@bowerswilkins.com>
-Message-ID: <a36e55e5-1368-a3ef-9d5b-a53b0307e07d@bowerswilkins.com> (sfid-20180420_214343_785014_D63F158D)
-Date: Fri, 20 Apr 2018 12:43:20 -0700
+Received: from mail2.candelatech.com ([208.74.158.173]:34244 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753393AbeDZUf7 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 26 Apr 2018 16:35:59 -0400
+Subject: Re: [PATCH v2] ath10k: fix crash in recent 3.5.3 9984 firmware due
+ wrong handling of peer_bw_rxnss_override parameter
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+References: <20180426092848.23069-1-s.gottschall@dd-wrt.com>
+ <f288f18c-684d-2ff9-5739-648e8e716653@candelatech.com>
+ <db214e94-1052-d6fa-744a-7c8ebcc84aee@dd-wrt.com>
+Cc: kvalo@codeaurora.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <96d512b3-3261-c6cf-e0eb-a9f5fe91f3b8@candelatech.com> (sfid-20180426_223603_003831_3F704ABC)
+Date: Thu, 26 Apr 2018 13:35:56 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180420104926.8816-9-luca@coelho.fi>
+In-Reply-To: <db214e94-1052-d6fa-744a-7c8ebcc84aee@dd-wrt.com>
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-where is the 9th patch gone?
+On 04/26/2018 01:21 PM, Sebastian Gottschall wrote:
+> Am 26.04.2018 um 17:30 schrieb Ben Greear:
+>> On 04/26/2018 02:28 AM, s.gottschall@dd-wrt.com wrote:
+>>> From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+>>>
+>>> current handling of peer_bw_rxnss_override parameter is based on guessing the VHT160/8080 capability by rx rate. this is wrong and may lead
+>>> to a non initialized peer_bw_rxnss_override parameter which is required since VHT160 operation mode only supports 2x2 chainmasks in addition the original code
+>>> initialized the parameter with wrong masked values.
+>>> This patch uses the peer phymode and peer nss information for correct initialisation of the peer_bw_rxnss_override parameter.
+>>> if this peer information is not available, we initialize the parameter by minimum nss which is suggested by QCA as temporary workaround according
+>>> to the QCA sourcecodes.
+>>>
+>>> Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+>>>
+>>> v2: remove debug messages
+>>> ---
+>>>  drivers/net/wireless/ath/ath10k/mac.c | 36 +++++++++++++++++++----------------
+>>>  drivers/net/wireless/ath/ath10k/wmi.c |  4 +---
+>>>  drivers/net/wireless/ath/ath10k/wmi.h | 14 +++++++++++++-
+>>>  3 files changed, 34 insertions(+), 20 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>>> index 5be6386ede8f..df79af89ee71 100644
+>>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>>> @@ -2505,8 +2505,9 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
+>>>      if (sta->bandwidth == IEEE80211_STA_RX_BW_80)
+>>>          arg->peer_flags |= ar->wmi.peer_flags->bw80;
+>>>
+>>> -    if (sta->bandwidth == IEEE80211_STA_RX_BW_160)
+>>> +    if (sta->bandwidth == IEEE80211_STA_RX_BW_160) {
+>>>          arg->peer_flags |= ar->wmi.peer_flags->bw160;
+>>> +    }
+>>>
+>>>      /* Calculate peer NSS capability from VHT capabilities if STA
+>>>       * supports VHT.
+>>> @@ -2529,22 +2530,25 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
+>>>      arg->peer_vht_rates.tx_mcs_set = ath10k_peer_assoc_h_vht_limit(
+>>>          __le16_to_cpu(vht_cap->vht_mcs.tx_mcs_map), vht_mcs_mask);
+>>>
+>>> -    ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
+>>> -           sta->addr, arg->peer_max_mpdu, arg->peer_flags);
+>>> +    if (arg->peer_num_spatial_streams && (arg->peer_phymode == MODE_11AC_VHT160 || arg->peer_phymode == MODE_11AC_VHT80_80)) {
+>>> +        arg->peer_bw_rxnss_override = BW_NSS_FWCONF_160(arg->peer_num_spatial_streams);
+>>> +    }
+>>
+>> So, an 80Mhz peer could be 4x4 and could connect to a VHT-160 AP. From what I can tell,
+>> the VHT-160 AP can talk 4x4 @ 80Mhz to the peer in this case, but if peer is VHT-160,
+>> then of course it can only talk at 2x2.
+>>
+>> So, I don't think you can just look at the peer_num_spatial_streams here.
+> no? rxnss_override is only taked if peer phymode is vht160 or vht80_80. vht80 is not considered in that code PEER phy_mode, not HOST phy_mode
+> this parameter is a assoc per peer parameter as far as i can say here.
+> consider that the firmware will accept anything except 0 for peer_bw_rxnss_override in vht160 operation mode
+> if a peer is 80 mhz, the code will be skipped here.
+
+ From what I can tell, this feature is supposed to configure the rate-ctrl in the firmware to know that
+it can only send 1x1 or 2x2 when sending at 160Mhz, but that it can send at higher NSS if it sends
+at 80Mhz or lower.
+
+If a 2x2 peer connects to the AP, will it have peer_num_spatial_streams set to 2?  If so,
+then your code will configure the peer_bw_rxnss_override to indicate it can send at 160Mhz
+2x2 as well, right?  And if so, then that is incorrect.
+
+Probably if you connected something like a IPQ4019 station to a 9984 AP configured for 160Mhz,
+the peer_bw_rxnss_override would be set to 2x2 instead of 1x1?
 
 
-On 04/20/2018 03:49 AM, Luca Coelho wrote:
-> From: Ilan Peer <ilan.peer@intel.com>
+>>> -    if (arg->peer_vht_rates.rx_max_rate &&
+>>> -        (sta->vht_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK)) {
+>>> -        switch (arg->peer_vht_rates.rx_max_rate) {
+>>> -        case 1560:
+>>> -            /* Must be 2x2 at 160Mhz is all it can do. */
+>>> -            arg->peer_bw_rxnss_override = 2;
+>>> -            break;
+>>> -        case 780:
+>>> -            /* Can only do 1x1 at 160Mhz (Long Guard Interval) */
+>>> -            arg->peer_bw_rxnss_override = 1;
+>>> -            break;
+>>> -        }
+>>
+>> This old code does look wrong, the firmware is using zero-based, so override-0 == nss-1, override-1 == nss-2.
+> 0 = crash
 >
-> There are specific cases, such as SAE authentication exchange, that
-> might require long duration to complete. For such cases, add support
-> for indicating to the driver the required duration of the prepare_tx()
-> operation, so the driver would still be able to complete the frame
-> exchange.
+> and 1 and 2 is wrong.
+
+Yes, it should be 0 and 1.  The old code | in the (1<<31) later.
+
 >
-> Currently, indicate the duration only for SAE authentication exchange,
-> as SAE authentication can take up to 2000 msec (as defined in IEEE
-> P802.11-REVmd D1.0 p. 3504).
+> +#define BW_NSS_FWCONF_MAP_ENABLE             (1 << 31)
+> +#define BW_NSS_FWCONF_MAP_160MHZ_S           (0)
+> +#define BW_NSS_FWCONF_MAP_160MHZ_M           (0x00000007)
+> +#define BW_NSS_FWCONF_MAP_80_80MHZ_S         (3)
+> +#define BW_NSS_FWCONF_MAP_80_80MHZ_M         (0x00000038)
+>>
+>> This is confusing enough that it deserves a comment in the code I think....
+> the removal doesnt deserve a comment. i dont know how to explain that its simply wrong. it uses the wrong
+> bit masks and this has been written in the initial patch description
+
+I think a comment like this would be helpful:
+
+/* Note that the rxnss_override is 0 based, so 0 means nss-1 and 7 means nss-8. */
+
+>>
+>>> +    if (arg->peer_num_spatial_streams && arg->peer_phymode == MODE_11AC_VHT80_80) {
+>>> +        arg->peer_bw_rxnss_override |= BW_NSS_FWCONF_80_80(arg->peer_num_spatial_streams);
+>>>      }
+>>> +
+>>> +    /* In very exceptional  conditions it is observed  that
+>>> +     * firmware was receiving bw_rxnss_override as 0 for peer from host, and resulting in Target Assert.
+>>> +     * Changing the rxnss_override to minimum nss. This is a temporary WAR. Needs to be fixed
+>>> +     * properly.
+>>> +     */
+>>> +    if (!arg->peer_num_spatial_streams && (arg->peer_phymode == MODE_11AC_VHT80_80 || arg->peer_phymode == MODE_11AC_VHT160)) {
+>>> +        arg->peer_bw_rxnss_override = BW_NSS_FWCONF_MAP_ENABLE;
+>>> +    }
+>>> +
+>>> +    ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
+>>> +           sta->addr, arg->peer_max_mpdu, arg->peer_flags);
+>>>  }
+>>>
+>>>  static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
+>>> @@ -2696,9 +2700,9 @@ static int ath10k_peer_assoc_prepare(struct ath10k *ar,
+>>>      ath10k_peer_assoc_h_crypto(ar, vif, sta, arg);
+>>>      ath10k_peer_assoc_h_rates(ar, vif, sta, arg);
+>>>      ath10k_peer_assoc_h_ht(ar, vif, sta, arg);
+>>> +    ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
+>>>      ath10k_peer_assoc_h_vht(ar, vif, sta, arg);
+>>>      ath10k_peer_assoc_h_qos(ar, vif, sta, arg);
+>>> -    ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
+>>>
+>>>      return 0;
+>>>  }
+>>> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+>>> index 2c36256a441d..7d72fdc703c8 100644
+>>> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+>>> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+>>> @@ -7212,9 +7212,7 @@ ath10k_wmi_peer_assoc_fill_10_4(struct ath10k *ar, void *buf,
+>>>
+>>>      ath10k_wmi_peer_assoc_fill_10_2(ar, buf, arg);
+>>>      if (arg->peer_bw_rxnss_override)
+>>> -        cmd->peer_bw_rxnss_override =
+>>> -            __cpu_to_le32((arg->peer_bw_rxnss_override - 1) |
+>>> -                      BIT(PEER_BW_RXNSS_OVERRIDE_OFFSET));
+>>> +        cmd->peer_bw_rxnss_override = __cpu_to_le32(arg->peer_bw_rxnss_override);
+>>>      else
+>>>          cmd->peer_bw_rxnss_override = 0;
+>>>  }
+>>> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+>>> index 46ae19bb2c92..1fe0aa5523a6 100644
+>>> --- a/drivers/net/wireless/ath/ath10k/wmi.h
+>>> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
+>>> @@ -6380,7 +6380,19 @@ struct wmi_10_2_peer_assoc_complete_cmd {
+>>>      __le32 info0; /* WMI_PEER_ASSOC_INFO0_ */
+>>>  } __packed;
+>>>
+>>> -#define PEER_BW_RXNSS_OVERRIDE_OFFSET  31
+>>> +#define BW_NSS_FWCONF_MAP_ENABLE             (1 << 31)
+>>> +#define BW_NSS_FWCONF_MAP_160MHZ_S           (0)
+>>> +#define BW_NSS_FWCONF_MAP_160MHZ_M           (0x00000007)
+>>> +#define BW_NSS_FWCONF_MAP_80_80MHZ_S         (3)
+>>> +#define BW_NSS_FWCONF_MAP_80_80MHZ_M         (0x00000038)
+>>
+>> Older FW does not pay attention to the 80_80 bits.  It uses masks so it is
+>> backwards-compat, but maybe worth a comment.
+> i took that masks from recent 3.5.3 based qca code. its correct and if its backward compatible, it's still correct
+> i mean the old code did not coment anything. so dont know how to write anything more about it now. see patch description
 >
-> As the patch modified the prepare_tx() callback API, also modify
-> the relevant code in iwlwifi.
+>>
+>>> +#define BW_NSS_FWCONF_MAP_M                  (0x0000003F)
+>>> +
+>>> +#define GET_BW_NSS_FWCONF_160(x)             ((((x) & BW_NSS_FWCONF_MAP_160MHZ_M) >> BW_NSS_FWCONF_MAP_160MHZ_S) + 1)
+>>> +#define GET_BW_NSS_FWCONF_80_80(x)           ((((x) & BW_NSS_FWCONF_MAP_80_80MHZ_M) >> BW_NSS_FWCONF_MAP_80_80MHZ_S) + 1)
+>>> +
+>>> +/* Values defined to set 160 MHz Bandwidth NSS Mapping into FW*/
+>>> +#define BW_NSS_FWCONF_160(x)          (BW_NSS_FWCONF_MAP_ENABLE | (((x - 1) << BW_NSS_FWCONF_MAP_160MHZ_S) & BW_NSS_FWCONF_MAP_160MHZ_M))
+>>> +#define BW_NSS_FWCONF_80_80(x)        (BW_NSS_FWCONF_MAP_ENABLE | (((x - 1) << BW_NSS_FWCONF_MAP_80_80MHZ_S) & BW_NSS_FWCONF_MAP_80_80MHZ_M))
+>>>
+>>>  struct wmi_10_4_peer_assoc_complete_cmd {
+>>>      struct wmi_10_2_peer_assoc_complete_cmd cmd;
+>>>
+>>
+>> Thanks,
+>> Ben
+>>
 >
-> Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> ---
->   drivers/net/wireless/ath/ath9k/main.c         |  3 ++-
->   .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  6 ++++-
->   include/net/mac80211.h                        |  5 +++-
->   net/mac80211/driver-ops.h                     |  8 +++---
->   net/mac80211/mlme.c                           | 17 ++++++++-----
->   net/mac80211/trace.h                          | 25 ++++++++++++++++---
->   6 files changed, 49 insertions(+), 15 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index a3be8add56e1..b6663c80e7dd 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -2544,7 +2544,8 @@ static void ath9k_unassign_vif_chanctx(struct ieee80211_hw *hw,
->   }
->   
->   static void ath9k_mgd_prepare_tx(struct ieee80211_hw *hw,
-> -				 struct ieee80211_vif *vif)
-> +				 struct ieee80211_vif *vif,
-> +				 u16 duration)
->   {
->   	struct ath_softc *sc = hw->priv;
->   	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-> index 51b30424575b..4e428427d1ba 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-> @@ -2810,7 +2810,8 @@ static int iwl_mvm_mac_conf_tx(struct ieee80211_hw *hw,
->   }
->   
->   static void iwl_mvm_mac_mgd_prepare_tx(struct ieee80211_hw *hw,
-> -				      struct ieee80211_vif *vif)
-> +				       struct ieee80211_vif *vif,
-> +				       u16 req_duration)
->   {
->   	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
->   	u32 duration = IWL_MVM_TE_SESSION_PROTECTION_MAX_TIME_MS;
-> @@ -2823,6 +2824,9 @@ static void iwl_mvm_mac_mgd_prepare_tx(struct ieee80211_hw *hw,
->   	if (iwl_mvm_ref_sync(mvm, IWL_MVM_REF_PREPARE_TX))
->   		return;
->   
-> +	if (req_duration > duration)
-> +		duration = req_duration;
-> +
->   	mutex_lock(&mvm->mutex);
->   	/* Try really hard to protect the session and hear a beacon */
->   	iwl_mvm_protect_session(mvm, vif, duration, min_duration, 500, false);
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 52f36c43f35f..cde1db0f6573 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -3378,6 +3378,8 @@ enum ieee80211_reconfig_type {
->    *	frame in case that no beacon was heard from the AP/P2P GO.
->    *	The callback will be called before each transmission and upon return
->    *	mac80211 will transmit the frame right away.
-> + *      If duration is greater than zero, mac80211 hints to the driver the
-> + *      duration for which the operation is requested.
->    *	The callback is optional and can (should!) sleep.
->    *
->    * @mgd_protect_tdls_discover: Protect a TDLS discovery session. After sending
-> @@ -3697,7 +3699,8 @@ struct ieee80211_ops {
->   				  u32 sset, u8 *data);
->   
->   	void	(*mgd_prepare_tx)(struct ieee80211_hw *hw,
-> -				  struct ieee80211_vif *vif);
-> +				  struct ieee80211_vif *vif,
-> +				  u16 duration);
->   
->   	void	(*mgd_protect_tdls_discover)(struct ieee80211_hw *hw,
->   					     struct ieee80211_vif *vif);
-> diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-> index 4d82fe7d627c..8f6998091d26 100644
-> --- a/net/mac80211/driver-ops.h
-> +++ b/net/mac80211/driver-ops.h
-> @@ -2,6 +2,7 @@
->   /*
->   * Portions of this file
->   * Copyright(c) 2016 Intel Deutschland GmbH
-> +* Copyright (C) 2018 Intel Corporation
->   */
->   
->   #ifndef __MAC80211_DRIVER_OPS
-> @@ -813,7 +814,8 @@ drv_allow_buffered_frames(struct ieee80211_local *local,
->   }
->   
->   static inline void drv_mgd_prepare_tx(struct ieee80211_local *local,
-> -				      struct ieee80211_sub_if_data *sdata)
-> +				      struct ieee80211_sub_if_data *sdata,
-> +				      u16 duration)
->   {
->   	might_sleep();
->   
-> @@ -821,9 +823,9 @@ static inline void drv_mgd_prepare_tx(struct ieee80211_local *local,
->   		return;
->   	WARN_ON_ONCE(sdata->vif.type != NL80211_IFTYPE_STATION);
->   
-> -	trace_drv_mgd_prepare_tx(local, sdata);
-> +	trace_drv_mgd_prepare_tx(local, sdata, duration);
->   	if (local->ops->mgd_prepare_tx)
-> -		local->ops->mgd_prepare_tx(&local->hw, &sdata->vif);
-> +		local->ops->mgd_prepare_tx(&local->hw, &sdata->vif, duration);
->   	trace_drv_return_void(local);
->   }
->   
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 51021d3d2d18..e2d254a85bd3 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -864,7 +864,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
->   		return;
->   	}
->   
-> -	drv_mgd_prepare_tx(local, sdata);
-> +	drv_mgd_prepare_tx(local, sdata, 0);
->   
->   	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
->   	if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
-> @@ -2022,7 +2022,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
->   		 */
->   		if (ieee80211_hw_check(&local->hw, DEAUTH_NEED_MGD_TX_PREP) &&
->   		    !ifmgd->have_beacon)
-> -			drv_mgd_prepare_tx(sdata->local, sdata);
-> +			drv_mgd_prepare_tx(sdata->local, sdata, 0);
->   
->   		ieee80211_send_deauth_disassoc(sdata, ifmgd->bssid, stype,
->   					       reason, tx, frame_buf);
-> @@ -2560,7 +2560,7 @@ static void ieee80211_auth_challenge(struct ieee80211_sub_if_data *sdata,
->   	if (!elems.challenge)
->   		return;
->   	auth_data->expected_transaction = 4;
-> -	drv_mgd_prepare_tx(sdata->local, sdata);
-> +	drv_mgd_prepare_tx(sdata->local, sdata, 0);
->   	if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS))
->   		tx_flags = IEEE80211_TX_CTL_REQ_TX_STATUS |
->   			   IEEE80211_TX_INTFL_MLME_CONN_TX;
-> @@ -3769,6 +3769,7 @@ static int ieee80211_auth(struct ieee80211_sub_if_data *sdata)
->   	u32 tx_flags = 0;
->   	u16 trans = 1;
->   	u16 status = 0;
-> +	u16 prepare_tx_duration = 0;
->   
->   	sdata_assert_lock(sdata);
->   
-> @@ -3790,7 +3791,11 @@ static int ieee80211_auth(struct ieee80211_sub_if_data *sdata)
->   		return -ETIMEDOUT;
->   	}
->   
-> -	drv_mgd_prepare_tx(local, sdata);
-> +	if (auth_data->algorithm == WLAN_AUTH_SAE)
-> +		prepare_tx_duration =
-> +			jiffies_to_msecs(IEEE80211_AUTH_TIMEOUT_SAE);
-> +
-> +	drv_mgd_prepare_tx(local, sdata, prepare_tx_duration);
->   
->   	sdata_info(sdata, "send auth to %pM (try %d/%d)\n",
->   		   auth_data->bss->bssid, auth_data->tries,
-> @@ -4994,7 +4999,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
->   			   req->bssid, req->reason_code,
->   			   ieee80211_get_reason_code_string(req->reason_code));
->   
-> -		drv_mgd_prepare_tx(sdata->local, sdata);
-> +		drv_mgd_prepare_tx(sdata->local, sdata, 0);
->   		ieee80211_send_deauth_disassoc(sdata, req->bssid,
->   					       IEEE80211_STYPE_DEAUTH,
->   					       req->reason_code, tx,
-> @@ -5014,7 +5019,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
->   			   req->bssid, req->reason_code,
->   			   ieee80211_get_reason_code_string(req->reason_code));
->   
-> -		drv_mgd_prepare_tx(sdata->local, sdata);
-> +		drv_mgd_prepare_tx(sdata->local, sdata, 0);
->   		ieee80211_send_deauth_disassoc(sdata, req->bssid,
->   					       IEEE80211_STYPE_DEAUTH,
->   					       req->reason_code, tx,
-> diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-> index 591ad02e1fa4..80a7edf8d314 100644
-> --- a/net/mac80211/trace.h
-> +++ b/net/mac80211/trace.h
-> @@ -2,6 +2,7 @@
->   /*
->   * Portions of this file
->   * Copyright(c) 2016 Intel Deutschland GmbH
-> +* Copyright (C) 2018 Intel Corporation
->   */
->   
->   #if !defined(__MAC80211_DRIVER_TRACE) || defined(TRACE_HEADER_MULTI_READ)
-> @@ -1413,11 +1414,29 @@ DEFINE_EVENT(release_evt, drv_allow_buffered_frames,
->   	TP_ARGS(local, sta, tids, num_frames, reason, more_data)
->   );
->   
-> -DEFINE_EVENT(local_sdata_evt, drv_mgd_prepare_tx,
-> +TRACE_EVENT(drv_mgd_prepare_tx,
->   	TP_PROTO(struct ieee80211_local *local,
-> -		 struct ieee80211_sub_if_data *sdata),
-> +		 struct ieee80211_sub_if_data *sdata,
-> +		 u16 duration),
->   
-> -	TP_ARGS(local, sdata)
-> +	TP_ARGS(local, sdata, duration),
-> +
-> +	TP_STRUCT__entry(
-> +		LOCAL_ENTRY
-> +		VIF_ENTRY
-> +		__field(u32, duration)
-> +	),
-> +
-> +	TP_fast_assign(
-> +		LOCAL_ASSIGN;
-> +		VIF_ASSIGN;
-> +		__entry->duration = duration;
-> +	),
-> +
-> +	TP_printk(
-> +		LOCAL_PR_FMT VIF_PR_FMT " duration: %u",
-> +		LOCAL_PR_ARG, VIF_PR_ARG, __entry->duration
-> +	)
->   );
->   
->   DEFINE_EVENT(local_sdata_evt, drv_mgd_protect_tdls_discover,
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
