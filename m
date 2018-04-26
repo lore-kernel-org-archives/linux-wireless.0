@@ -1,95 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:36866 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754899AbeDCHyQ (ORCPT
+Received: from userp2130.oracle.com ([156.151.31.86]:33876 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754727AbeDZOmy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Apr 2018 03:54:16 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 17/17] rtlwifi: add halmac to Makefile and Kconfig
-Date: Tue, 3 Apr 2018 15:53:32 +0800
-Message-ID: <20180403075332.3344-18-pkshih@realtek.com> (sfid-20180403_095420_729399_AF72B9FE)
-In-Reply-To: <20180403075332.3344-1-pkshih@realtek.com>
-References: <20180403075332.3344-1-pkshih@realtek.com>
+        Thu, 26 Apr 2018 10:42:54 -0400
+Date: Thu, 26 Apr 2018 17:42:35 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Cc: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] rsi: Uninitialized return value in rsi_reset_card()
+Message-ID: <20180426144235.GA25897@mwanda> (sfid-20180426_164259_317909_2BBBA515)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+If rsi_usb_master_reg_write() fails then "ret" hasn't been initialized.
 
-Add halmac to Makefile and Kconfig, so we can build this module if 8822BE
-is selected.
+Fixes: 16d3bb7b2f37 ("rsi: disable fw watchdog timer during reset")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/Kconfig       |  5 ++++
- drivers/net/wireless/realtek/rtlwifi/Makefile      |  1 +
- .../net/wireless/realtek/rtlwifi/halmac/Makefile   | 29 ++++++++++++++++++++++
- 3 files changed, 35 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtlwifi/halmac/Makefile
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/Kconfig b/drivers/net/wireless/realtek/rtlwifi/Kconfig
-index 73067cac289c..d9aba8fed151 100644
---- a/drivers/net/wireless/realtek/rtlwifi/Kconfig
-+++ b/drivers/net/wireless/realtek/rtlwifi/Kconfig
-@@ -151,4 +151,9 @@ config RTLBTCOEXIST
- 	depends on RTL8723AE || RTL8723BE || RTL8821AE || RTL8192EE
- 	default y
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index b065438f51b2..6ce6b754df12 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -687,9 +687,10 @@ static int rsi_reset_card(struct rsi_hw *adapter)
+ 	 */
+ 	msleep(100);
  
-+config RTLHALMAC
-+	tristate
-+	depends on RTL8822BE
-+	default y
-+
- endif
-diff --git a/drivers/net/wireless/realtek/rtlwifi/Makefile b/drivers/net/wireless/realtek/rtlwifi/Makefile
-index 09c30e428375..a30a73c351d8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/Makefile
-+++ b/drivers/net/wireless/realtek/rtlwifi/Makefile
-@@ -28,6 +28,7 @@ obj-$(CONFIG_RTL8723AE)		+= rtl8723ae/
- obj-$(CONFIG_RTL8723BE)		+= rtl8723be/
- obj-$(CONFIG_RTL8188EE)		+= rtl8188ee/
- obj-$(CONFIG_RTLBTCOEXIST)	+= btcoexist/
-+obj-$(CONFIG_RTLHALMAC)		+= halmac/
- obj-$(CONFIG_RTL8723_COMMON)	+= rtl8723com/
- obj-$(CONFIG_RTL8821AE)		+= rtl8821ae/
- obj-$(CONFIG_RTL8192EE)		+= rtl8192ee/
-diff --git a/drivers/net/wireless/realtek/rtlwifi/halmac/Makefile b/drivers/net/wireless/realtek/rtlwifi/halmac/Makefile
-new file mode 100644
-index 000000000000..41c1ae7e5e53
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtlwifi/halmac/Makefile
-@@ -0,0 +1,29 @@
-+
-+
-+halmac-objs := \
-+	halmac_api.o	\
-+	halmac_88xx/halmac_bb_rf_88xx.o	\
-+	halmac_88xx/halmac_efuse_88xx.o	\
-+	halmac_88xx/halmac_gpio_88xx.o	\
-+	halmac_88xx/halmac_pcie_88xx.o	\
-+	halmac_88xx/halmac_sdio_88xx.o	\
-+	halmac_88xx/halmac_usb_88xx.o	\
-+	halmac_88xx/halmac_cfg_wmac_88xx.o	\
-+	halmac_88xx/halmac_flash_88xx.o	\
-+	halmac_88xx/halmac_init_88xx.o	\
-+	halmac_88xx/halmac_common_88xx.o	\
-+	halmac_88xx/halmac_fw_88xx.o	\
-+	halmac_88xx/halmac_mimo_88xx.o	\
-+	halmac_88xx/halmac_8822b/halmac_gpio_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_pcie_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_sdio_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_usb_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_pwr_seq_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_common_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_cfg_wmac_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_phy_8822b.o	\
-+	halmac_88xx/halmac_8822b/halmac_init_8822b.o	\
-+	rtl_halmac.o
-+
-+
-+obj-m = halmac.o
--- 
-2.15.1
+-	if (rsi_usb_master_reg_write(adapter, SWBL_REGOUT,
+-				     RSI_FW_WDT_DISABLE_REQ,
+-				     RSI_COMMON_REG_SIZE) < 0) {
++	ret = rsi_usb_master_reg_write(adapter, SWBL_REGOUT,
++				       RSI_FW_WDT_DISABLE_REQ,
++				       RSI_COMMON_REG_SIZE);
++	if (ret < 0) {
+ 		rsi_dbg(ERR_ZONE, "Disabling firmware watchdog timer failed\n");
+ 		goto fail;
+ 	}
