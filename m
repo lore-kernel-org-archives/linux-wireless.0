@@ -1,89 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40926 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751990AbeDVI2m (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:44914 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754625AbeDZKSk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Apr 2018 04:28:42 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Eliad Peller <eliadx.peller@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 22 Apr 2018 11:27:45 +0300
-Message-Id: <20180422082745.9743-13-luca@coelho.fi> (sfid-20180422_102845_392433_6214FADA)
-In-Reply-To: <20180422082745.9743-1-luca@coelho.fi>
-References: <20180422082745.9743-1-luca@coelho.fi>
-Subject: [PATCH 12/12] iwlwifi: mvm: set wakeup filters for wowlan "any" configuration
+        Thu, 26 Apr 2018 06:18:40 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Dmitry Shmidt <dimitrysh@google.com>,
+        linux-wireless@vger.kernel.org,
+        Franky Lin <franky.lin@broadcom.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 2/6] brcmfmac: reports boottime_ns while informing bss
+Date: Thu, 26 Apr 2018 12:18:35 +0200
+Message-Id: <1524737915-2217-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180426_121900_745133_07DA08FA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliadx.peller@intel.com>
+From: Franky Lin <franky.lin@broadcom.com>
 
-In can of "any" wowlan trigger is configured, no valid wakeup filter
-was configured.
+Provides a timestamp in bss information so user space can see when the
+bss info was updated. Since tsf is not available from the dongle events
+boottime is reported instead.
 
-Moreover, the fw assumes there's no connection when there are no configured
-wakeup filters.
-This leads to the station info not being updated on D3 command, causing
-rate_n_flags to be 0 when the offloading code sends tx frame (triggering
-SYSASSERT_102C due to invalid antenna param)
-
-Note: "any" trigger is currently assumed to only be used when entering
-d0i3 (which has a different flow). However, we still reach this code
-when using d3_test.
-
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Reported-by: Dmitry Shmidt <dimitrysh@google.com>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 26 +++++++++++-----------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 80a9a7cb83be..3fcf489f3120 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -8,6 +8,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018        Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -18,11 +19,6 @@
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  * General Public License for more details.
-  *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-- * USA
-- *
-  * The full GNU General Public License is included in this distribution
-  * in the file called COPYING.
-  *
-@@ -35,6 +31,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018        Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -693,6 +690,14 @@ iwl_mvm_get_wowlan_config(struct iwl_mvm *mvm,
- 				    IWL_WOWLAN_WAKEUP_LINK_CHANGE);
- 	}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 89b8625..5d891cb 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -2728,7 +2728,6 @@ static s32 brcmf_inform_single_bss(struct brcmf_cfg80211_info *cfg,
+ 				   struct brcmf_bss_info_le *bi)
+ {
+ 	struct wiphy *wiphy = cfg_to_wiphy(cfg);
+-	struct ieee80211_channel *notify_channel;
+ 	struct cfg80211_bss *bss;
+ 	struct ieee80211_supported_band *band;
+ 	struct brcmu_chan ch;
+@@ -2738,7 +2737,7 @@ static s32 brcmf_inform_single_bss(struct brcmf_cfg80211_info *cfg,
+ 	u16 notify_interval;
+ 	u8 *notify_ie;
+ 	size_t notify_ielen;
+-	s32 notify_signal;
++	struct cfg80211_inform_bss bss_data = { 0 };
  
-+	if (wowlan->any) {
-+		wowlan_config_cmd->wakeup_filter |=
-+			cpu_to_le32(IWL_WOWLAN_WAKEUP_BEACON_MISS |
-+				    IWL_WOWLAN_WAKEUP_LINK_CHANGE |
-+				    IWL_WOWLAN_WAKEUP_RX_FRAME |
-+				    IWL_WOWLAN_WAKEUP_BCN_FILTERING);
-+	}
+ 	if (le32_to_cpu(bi->length) > WL_BSS_INFO_MAX) {
+ 		brcmf_err("Bss info is larger than buffer. Discarding\n");
+@@ -2758,27 +2757,28 @@ static s32 brcmf_inform_single_bss(struct brcmf_cfg80211_info *cfg,
+ 		band = wiphy->bands[NL80211_BAND_5GHZ];
+ 
+ 	freq = ieee80211_channel_to_frequency(channel, band->band);
+-	notify_channel = ieee80211_get_channel(wiphy, freq);
++	bss_data.chan = ieee80211_get_channel(wiphy, freq);
++	bss_data.scan_width = NL80211_BSS_CHAN_WIDTH_20;
++	bss_data.boottime_ns = ktime_to_ns(ktime_get_boottime());
+ 
+ 	notify_capability = le16_to_cpu(bi->capability);
+ 	notify_interval = le16_to_cpu(bi->beacon_period);
+ 	notify_ie = (u8 *)bi + le16_to_cpu(bi->ie_offset);
+ 	notify_ielen = le32_to_cpu(bi->ie_length);
+-	notify_signal = (s16)le16_to_cpu(bi->RSSI) * 100;
++	bss_data.signal = (s16)le16_to_cpu(bi->RSSI) * 100;
+ 
+ 	brcmf_dbg(CONN, "bssid: %pM\n", bi->BSSID);
+ 	brcmf_dbg(CONN, "Channel: %d(%d)\n", channel, freq);
+ 	brcmf_dbg(CONN, "Capability: %X\n", notify_capability);
+ 	brcmf_dbg(CONN, "Beacon interval: %d\n", notify_interval);
+-	brcmf_dbg(CONN, "Signal: %d\n", notify_signal);
+-
+-	bss = cfg80211_inform_bss(wiphy, notify_channel,
+-				  CFG80211_BSS_FTYPE_UNKNOWN,
+-				  (const u8 *)bi->BSSID,
+-				  0, notify_capability,
+-				  notify_interval, notify_ie,
+-				  notify_ielen, notify_signal,
+-				  GFP_KERNEL);
++	brcmf_dbg(CONN, "Signal: %d\n", bss_data.signal);
 +
- 	return 0;
- }
++	bss = cfg80211_inform_bss_data(wiphy, &bss_data,
++				       CFG80211_BSS_FTYPE_UNKNOWN,
++				       (const u8 *)bi->BSSID,
++				       0, notify_capability,
++				       notify_interval, notify_ie,
++				       notify_ielen, GFP_KERNEL);
  
+ 	if (!bss)
+ 		return -ENOMEM;
 -- 
-2.17.0
+1.9.1
