@@ -1,93 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:47935 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751808AbeDDMp2 (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:34644 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753403AbeDZJoH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Apr 2018 08:45:28 -0400
-From: Pkshih <pkshih@realtek.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/9] rtlwifi: btcoex: Add 8822b1ant coex files
-Date: Wed, 4 Apr 2018 12:45:16 +0000
-Message-ID: <1522845916.1856.7.camel@realtek.com> (sfid-20180404_144620_057260_9E6ADCA9)
-References: <20180328072741.23349-1-pkshih@realtek.com>
-         <20180328072741.23349-2-pkshih@realtek.com>
-         <f4d2fe50-76b0-27a8-a119-018d7d7d1286@lwfinger.net>
-         <1522845666.1856.5.camel@realtek.com>
-In-Reply-To: <1522845666.1856.5.camel@realtek.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Thu, 26 Apr 2018 05:44:07 -0400
+From: s.gottschall@dd-wrt.com
+To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Subject: [PATCH v1] ath10k: fix band_center_freq handling for VHT160 in recent firmwares
+Date: Thu, 26 Apr 2018 11:43:57 +0200
+Message-Id: <20180426094357.24358-1-s.gottschall@dd-wrt.com> (sfid-20180426_114411_950628_55FA3950)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCAyMDE4LTA0LTA0IGF0IDIwOjQxICswODAwLCBQa3NoaWggd3JvdGU6DQo+IE9uIFdl
-ZCwgMjAxOC0wNC0wNCBhdCAwMjo0MyArMDAwMCwgTGFycnkgRmluZ2VyIHdyb3RlOg0KPiA+IE9u
-IDAzLzI4LzIwMTggMDI6MjcgQU0sIHBrc2hpaEByZWFsdGVrLmNvbSB3cm90ZToNCj4gPiA+IEZy
-b206IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPg0KPiA+ID7CoA0KPiA+ID4gVGhp
-cyBmaWxlIHN1cHBvcnRzIDg4MjJiZSBXaUZpIG1vZHVsZSB3aXRoIHR3byBwaHlzaWNhbCBhbnRl
-bm5hIHRoYXQNCj4gPiA+IG1lYW5zIG9uZSBhbnRlbm5hIHdpbGwgc2hhcmUgd2l0aCBCVC4NCj4g
-PiA+wqANCj4gPiA+IFNpZ25lZC1vZmYtYnk6IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsu
-Y29tPg0KPiA+ID4gLS0tDQo+ID4gPsKgwqDCoC4uLi9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0
-L2hhbGJ0Yzg4MjJiMWFudC5jwqDCoMKgwqB8IDUzMDMgKysrKysrKysrKysrKysrKysrKysNCj4g
-PiA+wqDCoMKgLi4uL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjODgyMmIxYW50LmjC
-oMKgwqDCoHzCoMKgNDEzICsrDQo+ID4gPsKgwqDCoDIgZmlsZXMgY2hhbmdlZCwgNTcxNiBpbnNl
-cnRpb25zKCspDQo+ID4gPsKgwqDCoGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL25ldC93aXJl
-bGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Yzg4MjJiMWFudC5jDQo+ID4gPsKg
-wqDCoGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdp
-ZmkvYnRjb2V4aXN0L2hhbGJ0Yzg4MjJiMWFudC5oDQo+ID7CoA0KPiA+IC0tc25pcC0tDQo+ID7C
-oA0KPiA+ID4gKy8qYW50dGVubmEgY29udHJvbCBieSBiYiBtYWMgYnQgYW50ZGl2IHB0YSB0byB3
-cml0ZSAweDRjIDB4Y2I0LDB4Y2JkKi8NCj4gPiA+ICsNCj4gPiA+ICtzdGF0aWMNCj4gPiA+ICt2
-b2lkIGhhbGxidGM4ODJiMWFudF9zZXRfYW50X3N3aXRjaChzdHJ1Y3QgYnRjX2NvZXhpc3QgKmJ0
-Y29leGlzdCwNCj4gPiA+ICsJCQkJwqDCoMKgwqBib29sIGZvcmNlX2V4ZWMsIHU4IGN0cmxfdHlw
-ZSwNCj4gPiA+ICsJCQkJwqDCoMKgwqB1OCBwb3NfdHlwZSkNCj4gPiA+ICt7DQo+ID4gPiArCXN0
-cnVjdCBydGxfcHJpdiAqcnRscHJpdiA9IGJ0Y29leGlzdC0+YWRhcHRlcjsNCj4gPiA+ICsJYm9v
-bCBzd2l0Y2hfcG9sYXRpcnlfaW52ZXJzZSA9IGZhbHNlOw0KPiA+ID4gKwl1OCByZWd2YWxfMHhj
-YmQgPSAwLCByZWd2YWxfMHg2NDsNCj4gPiA+ICsJdTMyIHUzMnRtcDEgPSAwLCB1MzJ0bXAyID0g
-MCwgdTMydG1wMyA9IDA7DQo+ID4gPiArDQo+ID4gPiArCS8qIEV4dCBzd2l0Y2ggYnVmZmVyIG11
-eCAqLw0KPiA+ID4gKwlidGNvZXhpc3QtPmJ0Y193cml0ZV8xYnl0ZShidGNvZXhpc3QsIDB4OTc0
-LCAweGZmKTsNCj4gPiA+ICsJYnRjb2V4aXN0LT5idGNfd3JpdGVfMWJ5dGVfYml0bWFzayhidGNv
-ZXhpc3QsIDB4MTk5MSwgMHgzLCAweDApOw0KPiA+ID4gKwlidGNvZXhpc3QtPmJ0Y193cml0ZV8x
-Ynl0ZV9iaXRtYXNrKGJ0Y29leGlzdCwgMHhjYmUsIDB4OCwgMHgwKTsNCj4gPiA+ICsNCj4gPiA+
-ICsJaWYgKCFyZmVfdHlwZS0+ZXh0X2FudF9zd2l0Y2hfZXhpc3QpDQo+ID4gPiArCQlyZXR1cm47
-DQo+ID4gPiArDQo+ID4gPiArCWNvZXhfZG0tPmN1cl9leHRfYW50X3N3aXRjaF9zdGF0dXMgPSAo
-Y3RybF90eXBlIDw8IDgpICsgcG9zX3R5cGU7DQo+ID4gPiArDQo+ID4gPiArCWlmICghZm9yY2Vf
-ZXhlYykgew0KPiA+ID4gKwkJaWYgKGNvZXhfZG0tPnByZV9leHRfYW50X3N3aXRjaF9zdGF0dXMg
-PT0NCj4gPiA+ICsJCcKgwqDCoMKgY29leF9kbS0+Y3VyX2V4dF9hbnRfc3dpdGNoX3N0YXR1cykN
-Cj4gPiA+ICsJCQlyZXR1cm47DQo+ID4gPiArCX0NCj4gPiA+ICsNCj4gPiA+ICsJY29leF9kbS0+
-cHJlX2V4dF9hbnRfc3dpdGNoX3N0YXR1cyA9IGNvZXhfZG0tPmN1cl9leHRfYW50X3N3aXRjaF9z
-dGF0dXM7DQo+ID4gPiArDQo+ID4gPiArCS8qIHN3YXAgY29udHJvbCBwb2xhcml0eSBpZiB1c2Ug
-ZGlmZmVyZW50IHN3aXRjaCBjb250cm9sIHBvbGFyaXR5Ki8NCj4gPiA+ICsJLyogTm9ybWFsIHN3
-aXRjaCBwb2xhcml0eSBmb3IgU1BEVCwNCj4gPiA+ICsJwqAqIDB4Y2JkWzE6MF0gPSAyYicwMSA9
-PiBBbnQgdG8gQlRHLCBXTEENCj4gPiA+ICsJwqAqIDB4Y2JkWzE6MF0gPSAyYicxMCA9PiBBbnQg
-dG8gV0xHDQo+ID4gPiArCcKgKi8NCj4gPiA+ICsJc3dpdGNoX3BvbGF0aXJ5X2ludmVyc2UgPSAo
-cmZlX3R5cGUtPmV4dF9hbnRfc3dpdGNoX2N0cmxfcG9sYXJpdHkgPT0gMSA/DQo+ID4gPiArCQkJ
-CQnCoMKgwqB+c3dpdGNoX3BvbGF0aXJ5X2ludmVyc2UgOg0KPiA+ID4gKwkJCQkJwqDCoMKgc3dp
-dGNoX3BvbGF0aXJ5X2ludmVyc2UpOw0KPiA+wqANCj4gPiBnY2MgNy4zLjEgcmVwb3J0cyB0aGUg
-Zm9sbG93aW5nOg0KPiA+wqANCj4gPiDCoMKgwqBDQyBbTV3CoMKgZHJpdmVycy9uZXQvd2lyZWxl
-c3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9oYWxidGM4ODIyYjFhbnQubw0KPiA+IGRyaXZl
-cnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9idGNvZXhpc3QvaGFsYnRjODgyMmIxYW50
-LmM6IEluIGZ1bmN0aW9uwqANCj4gPiDigJhoYWxsYnRjODgyYjFhbnRfc2V0X2FudF9zd2l0Y2ji
-gJk6DQo+ID4gZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL2J0Y29leGlzdC9o
-YWxidGM4ODIyYjFhbnQuYzoyMTkzOjk6wqANCj4gPiB3YXJuaW5nOiDigJh+4oCZIG9uIGEgYm9v
-bGVhbiBleHByZXNzaW9uIFstV2Jvb2wtb3BlcmF0aW9uXQ0KPiA+IMKgwqDCoMKgwqDCoMKgwqDC
-oMKgfnN3aXRjaF9wb2xhdGlyeV9pbnZlcnNlIDoNCj4gPiDCoMKgwqDCoMKgwqDCoMKgwqDCoF4N
-Cj4gPiBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0
-Yzg4MjJiMWFudC5jOjIxOTM6OTogbm90ZTrCoA0KPiA+IGRpZCB5b3UgbWVhbiB0byB1c2UgbG9n
-aWNhbCBub3Q/DQo+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqB+c3dpdGNoX3BvbGF0aXJ5X2ludmVy
-c2UgOg0KPiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKgXg0KPiA+wqANCj4gPiBGb3IgYSBib29sZWFu
-LCB5b3Ugc2hvdWxkIHVzZSAhYm9vbCwgbm90IC1ib29sLiBJbiBhZGRpdGlvbiwgaXQgd291bGQg
-YmUgYmV0dGVywqANCj4gPiB0byB1c2Ugc3dpdGNoX3BvbGFyaXR5X2ludmVyc2UsIG5vdCBzd2l0
-Y2hfcG9sYXRpcnlfaW52ZXJzZS4gVGhlIHNhbWUgInR5cG8iwqANCj4gPiBoYXBwZW5zIGluIG90
-aGVyIHBsYWNlcyBpbiB0aGlzIGZpbGUuIEkgc3VnZ2VzdA0KPiA+wqANCj4gPiBzZWQgLWkgJ3Mv
-cG9sYXRpcnlfaW52ZXJzZS9wb2xhcml0eV9pbnZlcnNlL2cnIFwNCj4gPiBkcml2ZXJzL25ldC93
-aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvYnRjb2V4aXN0L2hhbGJ0Yzg4MjJiMWFudC5jLg0KPiA+
-wqANCj4gDQo+IEknbGwgZml4IHRoZSB0eXBvLCBhbmQgZGVjbGFyZSB0aGUgdmFyaWFibGXCoHN3
-aXRjaF9wb2xhcml0eV9pbnZlcnNlIHdpdGhvdXQNCj4gaW5pdGlhbCB2YWx1ZSwgdGhlbiBhc3Np
-Z24gdmFsdWUgdHJ1ZSBvciBmYWxzZSBpbiB0aGUgbGluZSBtZW50aW9uZWQgaW4gYWJvdmUNCj4g
-d2FybmluZy4gSXQgbG9va3MgbGlrZToNCj4gCWJvb2wgc3dpdGNoX3BvbGF0aXJ5X2ludmVyc2U7
-DQo+IAkuLi4NCj4gCXN3aXRjaF9wb2xhcml0eV9pbnZlcnNlID0gKHJmZV90eXBlLT5leHRfYW50
-X3N3aXRjaF9jdHJsX3BvbGFyaXR5ID09IDEgPwkJDQo+IAnCoMKgwqB0cnVlIDogZmFsc2UpOw0K
-PiANCg0KRml4IHRoZSBsYXN0IGV4cHJlc3Npb24gYWdhaW46DQoNCglzd2l0Y2hfcG9sYXJpdHlf
-aW52ZXJzZSA9IChyZmVfdHlwZS0+ZXh0X2FudF9zd2l0Y2hfY3RybF9wb2xhcml0eSA9PSAxKTsN
-Cg0KDQo=
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+
+starting with firmware 10.4.3.4.x series QCA changed the handling of the channel property band_center_freq1 and band_center_freq2 in vht160 operation mode
+likelly for backward compatiblity with vht80 only capable clients.
+this patch adjusts the handling to get vht160 to work again with official qca firmwares newer than 3.3
+consider that this patch will not work with older firmwares anymore. to avoid undefined behaviour this we disable vht160 capability for outdated firmwares
+---
+ drivers/net/wireless/ath/ath10k/mac.c |  7 -------
+ drivers/net/wireless/ath/ath10k/wmi.c | 11 ++++++++---
+ 2 files changed, 8 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 5be6386ede8f..d1239d40ac19 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4449,13 +4449,6 @@ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
+ 		vht_cap.cap |= val;
+ 	}
+ 
+-	/* Currently the firmware seems to be buggy, don't enable 80+80
+-	 * mode until that's resolved.
+-	 */
+-	if ((ar->vht_cap_info & IEEE80211_VHT_CAP_SHORT_GI_160) &&
+-	    (ar->vht_cap_info & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK) == 0)
+-		vht_cap.cap |= IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ;
+-
+ 	mcs_map = 0;
+ 	for (i = 0; i < 8; i++) {
+ 		if ((i < ar->num_rf_chains) && (ar->cfg_tx_chainmask & BIT(i)))
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 2c36256a441d..d78b8857a513 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1671,13 +1671,18 @@ void ath10k_wmi_put_wmi_channel(struct wmi_channel *ch,
+ 		flags |= WMI_CHAN_FLAG_HT40_PLUS;
+ 	if (arg->chan_radar)
+ 		flags |= WMI_CHAN_FLAG_DFS;
+-
++	ch->band_center_freq2 = 0;
+ 	ch->mhz = __cpu_to_le32(arg->freq);
+ 	ch->band_center_freq1 = __cpu_to_le32(arg->band_center_freq1);
+ 	if (arg->mode == MODE_11AC_VHT80_80)
+ 		ch->band_center_freq2 = __cpu_to_le32(arg->band_center_freq2);
+-	else
+-		ch->band_center_freq2 = 0;
++	if (arg->mode == MODE_11AC_VHT160)  {
++		if (arg->freq < arg->band_center_freq1)
++			ch->band_center_freq1 = __cpu_to_le32(arg->band_center_freq1 - 40);
++		else
++			ch->band_center_freq1 = __cpu_to_le32(arg->band_center_freq1 + 40);		
++		ch->band_center_freq2 = __cpu_to_le32(arg->band_center_freq1);
++	}
+ 	ch->min_power = arg->min_power;
+ 	ch->max_power = arg->max_power;
+ 	ch->reg_power = arg->max_reg_power;
+-- 
+2.14.1
