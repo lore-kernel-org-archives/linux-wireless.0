@@ -1,60 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43646 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750806AbeDUHTr (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:39532 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753053AbeD0FgM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 Apr 2018 03:19:47 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Andres Rodriguez <andresx7@gmail.com>
-Cc: linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
-        mcgrof@kernel.org, alexdeucher@gmail.com,
-        ckoenig.leichtzumerken@gmail.com, arend.vanspriel@broadcom.com,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 9/9] brcmfmac: use request_firmware_nowait2 to load firmware without warnings
-References: <20180417153307.3693-1-andresx7@gmail.com>
-        <20180417153307.3693-10-andresx7@gmail.com>
-        <87h8o6i36l.fsf@kamboji.qca.qualcomm.com>
-        <65954790-8579-66ee-9b67-d44e18b4abb3@gmail.com>
-Date: Sat, 21 Apr 2018 10:19:42 +0300
-In-Reply-To: <65954790-8579-66ee-9b67-d44e18b4abb3@gmail.com> (Andres
-        Rodriguez's message of "Fri, 20 Apr 2018 15:33:36 -0400")
-Message-ID: <87efj9f2lt.fsf@kamboji.qca.qualcomm.com> (sfid-20180421_092002_955449_B2C8203A)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 27 Apr 2018 01:36:12 -0400
+From: s.gottschall@dd-wrt.com
+To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Subject: [PATCH v3] ath10k: fix crash in recent 3.5.3 9984 firmware due wrong handling of peer_bw_rxnss_override parameter
+Date: Fri, 27 Apr 2018 07:36:03 +0200
+Message-Id: <20180427053603.12022-1-s.gottschall@dd-wrt.com> (sfid-20180427_073618_220874_8A23F077)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andres Rodriguez <andresx7@gmail.com> writes:
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
 
->>> +				      fwctx->nvram_name, fwctx->dev,
->>> +				      GFP_KERNEL, fwctx,
->>>   				      brcmf_fw_request_nvram_done);
->>>     	/* pass NULL to nvram callback for bcm47xx fallback */
->>> @@ -547,7 +548,7 @@ int brcmf_fw_get_firmwares_pcie(struct device *dev, u16 flags,
->>>   	fwctx->domain_nr = domain_nr;
->>>   	fwctx->bus_nr = bus_nr;
->>>   -	return request_firmware_nowait(THIS_MODULE, true, code, dev,
->>> +	return request_firmware_nowait2(THIS_MODULE, true, false, code, dev,
->>>   				       GFP_KERNEL, fwctx,
->>>   				       brcmf_fw_request_code_done);
->>>   }
->>
->> Also the number two in the function name is not really telling anything.
->> I think that something like request_firmware_nowait_nowarn() would be
->> better, even if it's so ugly.
->>
->
-> The 2 is meant to signify that this is an new version of the api with
-> different parameters.
+current handling of peer_bw_rxnss_override parameter is based on guessing the VHT160/8080 capability by rx rate. this is wrong and may lead
+to a non initialized peer_bw_rxnss_override parameter which is required since VHT160 operation mode only supports 2x2 chainmasks in addition the original code
+initialized the parameter with wrong masked values.
+This patch uses the peer phymode and peer nss information for correct initialisation of the peer_bw_rxnss_override parameter.
+if this peer information is not available, we initialize the parameter by minimum nss which is suggested by QCA as temporary workaround according
+to the QCA sourcecodes.
 
-Ah, I missed that. I didn't have time to review your patches in detail,
-just looked at the wireless patches.
+Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
 
-> I don't think we need to codify into the name what the new parameters
-> mean (mostly because when a 2 version of an api is implemented, usage
-> of the original version tends to be discouraged).
+v2: remove debug messages
+v3: apply some cosmetics, update documentation
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 38 +++++++++++++++++++++--------------
+ drivers/net/wireless/ath/ath10k/wmi.c |  7 +------
+ drivers/net/wireless/ath/ath10k/wmi.h | 14 ++++++++++++-
+ 3 files changed, 37 insertions(+), 22 deletions(-)
 
-Yeah, makes sense now.
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 5be6386ede8f..594db0713186 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2528,23 +2528,31 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
+ 		__le16_to_cpu(vht_cap->vht_mcs.tx_highest);
+ 	arg->peer_vht_rates.tx_mcs_set = ath10k_peer_assoc_h_vht_limit(
+ 		__le16_to_cpu(vht_cap->vht_mcs.tx_mcs_map), vht_mcs_mask);
++	arg->peer_bw_rxnss_override = 0;
+ 
+-	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
+-		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
+-
+-	if (arg->peer_vht_rates.rx_max_rate &&
+-	    (sta->vht_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK)) {
+-		switch (arg->peer_vht_rates.rx_max_rate) {
+-		case 1560:
+-			/* Must be 2x2 at 160Mhz is all it can do. */
+-			arg->peer_bw_rxnss_override = 2;
+-			break;
+-		case 780:
+-			/* Can only do 1x1 at 160Mhz (Long Guard Interval) */
+-			arg->peer_bw_rxnss_override = 1;
+-			break;
++	if (arg->peer_num_spatial_streams) {
++		/* in case if peer is connected with vht160 or vht80+80, we need to properly adjust rxnss parameters */
++		switch(arg->peer_phymode) {
++		case MODE_11AC_VHT80_80:
++			arg->peer_bw_rxnss_override = BW_NSS_FWCONF_80_80(arg->peer_num_spatial_streams);
++		/* fall through */
++		case MODE_11AC_VHT160:
++			arg->peer_bw_rxnss_override |= BW_NSS_FWCONF_160(arg->peer_num_spatial_streams);
++		break;
+ 		}
+ 	}
++
++	/* in case peer has no nss properties for some reasons, we set local nss to minimum (1x1) to avoid a 
++	 * firmware assert / crash. this applies only to VHT160 or VHT80+80 and is a WAR for clients breaking
++	 * the spec.
++	 */
++
++	if (!arg->peer_num_spatial_streams && (arg->peer_phymode == MODE_11AC_VHT80_80 || arg->peer_phymode == MODE_11AC_VHT160)) {
++		arg->peer_bw_rxnss_override = BW_NSS_FWCONF_MAP_ENABLE;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
++		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
+ }
+ 
+ static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
+@@ -2696,9 +2704,9 @@ static int ath10k_peer_assoc_prepare(struct ath10k *ar,
+ 	ath10k_peer_assoc_h_crypto(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_rates(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_ht(ar, vif, sta, arg);
++	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_vht(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_qos(ar, vif, sta, arg);
+-	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 2c36256a441d..3797dca317ff 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -7211,12 +7211,7 @@ ath10k_wmi_peer_assoc_fill_10_4(struct ath10k *ar, void *buf,
+ 	struct wmi_10_4_peer_assoc_complete_cmd *cmd = buf;
+ 
+ 	ath10k_wmi_peer_assoc_fill_10_2(ar, buf, arg);
+-	if (arg->peer_bw_rxnss_override)
+-		cmd->peer_bw_rxnss_override =
+-			__cpu_to_le32((arg->peer_bw_rxnss_override - 1) |
+-				      BIT(PEER_BW_RXNSS_OVERRIDE_OFFSET));
+-	else
+-		cmd->peer_bw_rxnss_override = 0;
++	cmd->peer_bw_rxnss_override = __cpu_to_le32(arg->peer_bw_rxnss_override);
+ }
+ 
+ static int
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 46ae19bb2c92..1fe0aa5523a6 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -6380,7 +6380,19 @@ struct wmi_10_2_peer_assoc_complete_cmd {
+ 	__le32 info0; /* WMI_PEER_ASSOC_INFO0_ */
+ } __packed;
+ 
+-#define PEER_BW_RXNSS_OVERRIDE_OFFSET  31
++#define BW_NSS_FWCONF_MAP_ENABLE             (1 << 31)
++#define BW_NSS_FWCONF_MAP_160MHZ_S           (0)
++#define BW_NSS_FWCONF_MAP_160MHZ_M           (0x00000007)
++#define BW_NSS_FWCONF_MAP_80_80MHZ_S         (3)
++#define BW_NSS_FWCONF_MAP_80_80MHZ_M         (0x00000038)
++#define BW_NSS_FWCONF_MAP_M                  (0x0000003F)
++
++#define GET_BW_NSS_FWCONF_160(x)             ((((x) & BW_NSS_FWCONF_MAP_160MHZ_M) >> BW_NSS_FWCONF_MAP_160MHZ_S) + 1)
++#define GET_BW_NSS_FWCONF_80_80(x)           ((((x) & BW_NSS_FWCONF_MAP_80_80MHZ_M) >> BW_NSS_FWCONF_MAP_80_80MHZ_S) + 1)
++
++/* Values defined to set 160 MHz Bandwidth NSS Mapping into FW*/
++#define BW_NSS_FWCONF_160(x)          (BW_NSS_FWCONF_MAP_ENABLE | (((x - 1) << BW_NSS_FWCONF_MAP_160MHZ_S) & BW_NSS_FWCONF_MAP_160MHZ_M))
++#define BW_NSS_FWCONF_80_80(x)        (BW_NSS_FWCONF_MAP_ENABLE | (((x - 1) << BW_NSS_FWCONF_MAP_80_80MHZ_S) & BW_NSS_FWCONF_MAP_80_80MHZ_M))
+ 
+ struct wmi_10_4_peer_assoc_complete_cmd {
+ 	struct wmi_10_2_peer_assoc_complete_cmd cmd;
 -- 
-Kalle Valo
+2.14.1
