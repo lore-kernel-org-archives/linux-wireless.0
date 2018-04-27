@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55884 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:49778 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755754AbeDXICu (ORCPT
+        with ESMTP id S1757545AbeD0MOj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 04:02:50 -0400
+        Fri, 27 Apr 2018 08:14:39 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Anilkumar Kolli <akolli@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFC v2] ath10k: report tx rate using ieee80211_tx_status()
-References: <1524291786-30850-1-git-send-email-akolli@codeaurora.org>
-Date: Tue, 24 Apr 2018 11:02:46 +0300
-In-Reply-To: <1524291786-30850-1-git-send-email-akolli@codeaurora.org>
-        (Anilkumar Kolli's message of "Sat, 21 Apr 2018 11:53:06 +0530")
-Message-ID: <87zi1tav6h.fsf@kamboji.qca.qualcomm.com> (sfid-20180424_100254_825310_7775D854)
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Karun Eagalapati <karun256@gmail.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] rsi: Uninitialized return value in rsi_reset_card()
+References: <20180426144235.GA25897@mwanda>
+Date: Fri, 27 Apr 2018 15:14:33 +0300
+In-Reply-To: <20180426144235.GA25897@mwanda> (Dan Carpenter's message of "Thu,
+        26 Apr 2018 17:42:35 +0300")
+Message-ID: <87604calsm.fsf@purkki.adurom.net> (sfid-20180427_141444_281301_72C40BFF)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Anilkumar Kolli <akolli@codeaurora.org> writes:
+Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-> Mesh path metric needs txrate information from ieee80211_tx_status()
-> call but in ath10k there is no mechanism to report tx rate information
-> via ieee80211_tx_status(), the rate is only accessible via
-> sta_statiscs() op.
+> If rsi_usb_master_reg_write() fails then "ret" hasn't been initialized.
 >
-> Per peer stats has tx rate info available, this patch stores per peer
-> last tx rate and updates the tx rate info structures in tx completition.
-> The rate updated in ieee80211_tx_status() is not exactly for the last
-> transmitted frame instead the rate is from one of the previous frames.
+> Fixes: 16d3bb7b2f37 ("rsi: disable fw watchdog timer during reset")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 >
-> Per peer txrate information is updated through per peer statistics
-> and is available for QCA9888/QCA9984/QCA4019/QCA998X only
->
-> Tested on QCA9984 with firmware-5.bin_10.4-3.5.3-00053
-> Tested on QCA998X with firmware-5.bin_10.2.4-1.0-00036
->
-> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+> diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+> index b065438f51b2..6ce6b754df12 100644
+> --- a/drivers/net/wireless/rsi/rsi_91x_usb.c
+> +++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+> @@ -687,9 +687,10 @@ static int rsi_reset_card(struct rsi_hw *adapter)
+>  	 */
+>  	msleep(100);
+>  
+> -	if (rsi_usb_master_reg_write(adapter, SWBL_REGOUT,
+> -				     RSI_FW_WDT_DISABLE_REQ,
+> -				     RSI_COMMON_REG_SIZE) < 0) {
+> +	ret = rsi_usb_master_reg_write(adapter, SWBL_REGOUT,
+> +				       RSI_FW_WDT_DISABLE_REQ,
+> +				       RSI_COMMON_REG_SIZE);
+> +	if (ret < 0) {
 
-BTW, your name in patchwork is "akolli@codeaurora.org" but it should be
-"Anilkumar Kolli" and that's why my script uses the wrong name. Please
-fix it by registering to patchwork as it's possible to change your name
-during registration, but only one time. If that doesn't work then send a
-request to helpdesk@kernel.org and the admins will fix it.
+Odd, I thought I replied to this one already but I don't see my mail on
+patchwork. Anyway, Gustavo already submitted an identical patch:
+
+https://patchwork.kernel.org/patch/10365985/
 
 -- 
 Kalle Valo
