@@ -1,76 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39452 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754147AbeDMMnf (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:34689 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1758481AbeD0Syr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Apr 2018 08:43:35 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Shaul Triebitz <shaul.triebitz@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Apr 2018 15:42:49 +0300
-Message-Id: <20180413124256.21769-19-luca@coelho.fi> (sfid-20180413_144338_039043_FF01CA68)
-In-Reply-To: <20180413124256.21769-1-luca@coelho.fi>
-References: <20180413124256.21769-1-luca@coelho.fi>
-Subject: [PATCH 18/25] iwlwifi: pcie: gen2: fix race in cmd fifo write ptr
+        Fri, 27 Apr 2018 14:54:47 -0400
+Subject: Re: [PATCH v2] ath10k: fix crash in recent 3.5.3 9984 firmware due
+ wrong handling of peer_bw_rxnss_override parameter
+To: Ben Greear <greearb@candelatech.com>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+References: <20180426092848.23069-1-s.gottschall@dd-wrt.com>
+ <f288f18c-684d-2ff9-5739-648e8e716653@candelatech.com>
+ <db214e94-1052-d6fa-744a-7c8ebcc84aee@dd-wrt.com>
+ <96d512b3-3261-c6cf-e0eb-a9f5fe91f3b8@candelatech.com>
+ <8263a720-07a2-dc5d-f8fc-2153574cbafc@dd-wrt.com>
+ <96f0393e-6bab-d397-d2b6-4538da7fc275@candelatech.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <f410c1d7-6b19-032d-7f03-6cb1d52f6956@dd-wrt.com> (sfid-20180427_205451_532577_66BFFDAF)
+Date: Fri, 27 Apr 2018 20:54:42 +0200
+MIME-Version: 1.0
+In-Reply-To: <96f0393e-6bab-d397-d2b6-4538da7fc275@candelatech.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shaul Triebitz <shaul.triebitz@intel.com>
+Am 27.04.2018 um 18:07 schrieb Ben Greear:
+> On 04/26/2018 09:40 PM, Sebastian Gottschall wrote:
+>> Am 26.04.2018 um 22:35 schrieb Ben Greear:
+>>> On 04/26/2018 01:21 PM, Sebastian Gottschall wrote:
+>>>> Am 26.04.2018 um 17:30 schrieb Ben Greear:
+>>>>> On 04/26/2018 02:28 AM, s.gottschall@dd-wrt.com wrote:
+>>>>>> From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+>>>>>>
+>>>>>> current handling of peer_bw_rxnss_override parameter is based on 
+>>>>>> guessing the VHT160/8080 capability by rx rate. this is wrong and 
+>>>>>> may lead
+>>>>>> to a non initialized peer_bw_rxnss_override parameter which is 
+>>>>>> required since VHT160 operation mode only supports 2x2 chainmasks 
+>>>>>> in addition the original code
+>>>>>> initialized the parameter with wrong masked values.
+>>>>>> This patch uses the peer phymode and peer nss information for 
+>>>>>> correct initialisation of the peer_bw_rxnss_override parameter.
+>>>>>> if this peer information is not available, we initialize the 
+>>>>>> parameter by minimum nss which is suggested by QCA as temporary 
+>>>>>> workaround according
+>>>>>> to the QCA sourcecodes.
+>>>>>>
+>>>>>> Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+>>>>>>
+>>>>>> v2: remove debug messages
+>>>>>> ---
+>>>>>>  drivers/net/wireless/ath/ath10k/mac.c | 36 
+>>>>>> +++++++++++++++++++----------------
+>>>>>>  drivers/net/wireless/ath/ath10k/wmi.c |  4 +---
+>>>>>>  drivers/net/wireless/ath/ath10k/wmi.h | 14 +++++++++++++-
+>>>>>>  3 files changed, 34 insertions(+), 20 deletions(-)
+>>>>>>
+>>>>>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c 
+>>>>>> b/drivers/net/wireless/ath/ath10k/mac.c
+>>>>>> index 5be6386ede8f..df79af89ee71 100644
+>>>>>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>>>>>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>>>>>> @@ -2505,8 +2505,9 @@ static void ath10k_peer_assoc_h_vht(struct 
+>>>>>> ath10k *ar,
+>>>>>>      if (sta->bandwidth == IEEE80211_STA_RX_BW_80)
+>>>>>>          arg->peer_flags |= ar->wmi.peer_flags->bw80;
+>>>>>>
+>>>>>> -    if (sta->bandwidth == IEEE80211_STA_RX_BW_160)
+>>>>>> +    if (sta->bandwidth == IEEE80211_STA_RX_BW_160) {
+>>>>>>          arg->peer_flags |= ar->wmi.peer_flags->bw160;
+>>>>>> +    }
+>>>>>>
+>>>>>>      /* Calculate peer NSS capability from VHT capabilities if STA
+>>>>>>       * supports VHT.
+>>>>>> @@ -2529,22 +2530,25 @@ static void 
+>>>>>> ath10k_peer_assoc_h_vht(struct ath10k *ar,
+>>>>>>      arg->peer_vht_rates.tx_mcs_set = ath10k_peer_assoc_h_vht_limit(
+>>>>>>          __le16_to_cpu(vht_cap->vht_mcs.tx_mcs_map), vht_mcs_mask);
+>>>>>>
+>>>>>> -    ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d 
+>>>>>> flags 0x%x\n",
+>>>>>> -           sta->addr, arg->peer_max_mpdu, arg->peer_flags);
+>>>>>> +    if (arg->peer_num_spatial_streams && (arg->peer_phymode == 
+>>>>>> MODE_11AC_VHT160 || arg->peer_phymode == MODE_11AC_VHT80_80)) {
+>>>>>> +        arg->peer_bw_rxnss_override = 
+>>>>>> BW_NSS_FWCONF_160(arg->peer_num_spatial_streams);
+>>>>>> +    }
+>>>>>
+>>>>> So, an 80Mhz peer could be 4x4 and could connect to a VHT-160 AP. 
+>>>>> From what I can tell,
+>>>>> the VHT-160 AP can talk 4x4 @ 80Mhz to the peer in this case, but 
+>>>>> if peer is VHT-160,
+>>>>> then of course it can only talk at 2x2.
+>>>>>
+>>>>> So, I don't think you can just look at the 
+>>>>> peer_num_spatial_streams here.
+>>>> no? rxnss_override is only taked if peer phymode is vht160 or 
+>>>> vht80_80. vht80 is not considered in that code PEER phy_mode, not 
+>>>> HOST phy_mode
+>>>> this parameter is a assoc per peer parameter as far as i can say here.
+>>>> consider that the firmware will accept anything except 0 for 
+>>>> peer_bw_rxnss_override in vht160 operation mode
+>>>> if a peer is 80 mhz, the code will be skipped here.
+>>>
+>>> From what I can tell, this feature is supposed to configure the 
+>>> rate-ctrl in the firmware to know that
+>>> it can only send 1x1 or 2x2 when sending at 160Mhz, but that it can 
+>>> send at higher NSS if it sends
+>>> at 80Mhz or lower.
+>> right. but thats exactly what it should does in case that a peer is 
+>> connecting with vht160 / 80_80
+>> and the peer itself does also send his own nss capabilities which is 
+>> used if available. if not ,it uses the fallback.
+>>>
+>>> If a 2x2 peer connects to the AP, will it have 
+>>> peer_num_spatial_streams set to 2?
+>> yes. i had some debug code in my initial early versions. the peer 
+>> does transmit his own nss capabilities.
+>>> If so,
+>>> then your code will configure the peer_bw_rxnss_override to indicate 
+>>> it can send at 160Mhz
+>>> 2x2 as well, right?  And if so, then that is incorrect.
+>> no. since nss_override is only set if peer phymode is 160 mhz as well
+>
+> The peer can run at 2x2 80Mhz and 1x1 160Mhz at the same time, so it 
+> can advertise
+> 2x2 nss and phy-mode of 160Mhz when associating to the 160Mhz AP, but 
+> the peer can only do 1x1 at 160Mhz.  There
+> is no standard way I know of for the peer to tell you specifically 
+> that it can only do
+> 1x1 at 160Mhz and also 2x2 at 80Mhz in this case.
+per specification the peer is able to provide max nss to the ap. the 
+rx_nss property is calculated
+from the mcs rateset provided by the peer by mac80211. this is mcs set 
+provided on on assoc is mandatory.
+so there is a way the peer can tell you what it supports and this is 
+what is used.
+if a peer does not provide the mcs rateset (which i have seen for a 
+single marvell client)
+the fallback mechanism will still work, but just with 1x1. the problem 
+is anything else will crash the firmware.
+we have to deal with that.
 
-Avoid a race where two (or more) commands get the
-same index:
+That is why this rxnns_override exists, to hack around this problem.
 
-1. T1 calls enqueue_hcmd and the local TFD index is assigned to
-   txq->write_ptr;
-2. Context switch 'before incrementing txq->write_ptr';
-3. T2 calls enqueue_hcmd and the local TFD index is assigned to
-   txq->write_ptr;
-4. Now the index is set to the same value for both commands of T1 and
-   T2.
+i dont think so, because its not just a hack. without providing that 
+parameter the firmware will crash.
+so its a always required parameter and not just a hack. for sure the 
+firmware can handle it by itself, just someone
+at qca should start to work on it.
+but again. my implementation is correct from the information i have out 
+of the qca propertiery wireless driver sources
+>
+> Your patch is going to break in this case as far as I can tell.
+no it isnt. my tests with various different clients from different 
+vendors shows that its working. with 2x2 and 1x1.
+its all well detected by the code and configured as expected
+consider that this patch fixes a CRASH. accept that. it wont break. it 
+repairs.
+>
+> Thanks,
+> Ben
+>
+>
 
-To prevent this from happening, set the local TFD index inside the
-critical section (the index is set by global txq write pointer).
-
-Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index a235dda1f70b..48890a1c825f 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -569,15 +569,13 @@ static int iwl_pcie_gen2_enqueue_hcmd(struct iwl_trans *trans,
- 	unsigned long flags;
- 	void *dup_buf = NULL;
- 	dma_addr_t phys_addr;
--	int i, cmd_pos, idx = iwl_pcie_get_cmd_index(txq, txq->write_ptr);
-+	int i, cmd_pos, idx;
- 	u16 copy_size, cmd_size, tb0_size;
- 	bool had_nocopy = false;
- 	u8 group_id = iwl_cmd_groupid(cmd->id);
- 	const u8 *cmddata[IWL_MAX_CMD_TBS_PER_TFD];
- 	u16 cmdlen[IWL_MAX_CMD_TBS_PER_TFD];
--	struct iwl_tfh_tfd *tfd = iwl_pcie_get_tfd(trans, txq, txq->write_ptr);
--
--	memset(tfd, 0, sizeof(*tfd));
-+	struct iwl_tfh_tfd *tfd;
- 
- 	copy_size = sizeof(struct iwl_cmd_header_wide);
- 	cmd_size = sizeof(struct iwl_cmd_header_wide);
-@@ -648,6 +646,10 @@ static int iwl_pcie_gen2_enqueue_hcmd(struct iwl_trans *trans,
- 
- 	spin_lock_bh(&txq->lock);
- 
-+	idx = iwl_pcie_get_cmd_index(txq, txq->write_ptr);
-+	tfd = iwl_pcie_get_tfd(trans, txq, txq->write_ptr);
-+	memset(tfd, 0, sizeof(*tfd));
-+
- 	if (iwl_queue_space(txq) < ((cmd->flags & CMD_ASYNC) ? 2 : 1)) {
- 		spin_unlock_bh(&txq->lock);
- 
 -- 
-2.16.3
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
