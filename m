@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:47960 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754612AbeDYP0Y (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53252 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757451AbeD0LfR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 11:26:24 -0400
-Date: Wed, 25 Apr 2018 17:26:17 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Andres Rodriguez <andresx7@gmail.com>
-Cc: linux-kernel@vger.kernel.org, mcgrof@kernel.org,
-        alexdeucher@gmail.com, christian.koenig@amd.com,
-        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        hdegoede@redhat.com
-Subject: Re: [PATCH 1/9] firmware: some documentation fixes
-Message-ID: <20180425152617.GA5058@kroah.com> (sfid-20180425_172628_106780_A098AE11)
-References: <20180423201205.20533-1-andresx7@gmail.com>
- <20180423201205.20533-2-andresx7@gmail.com>
- <20180425152526.GA4921@kroah.com>
+        Fri, 27 Apr 2018 07:35:17 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180425152526.GA4921@kroah.com>
+Subject: Re: ath6kl: fix ath6kl_data_tx()'s return type
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180424131900.5718-1-luc.vanoostenryck@gmail.com>
+References: <20180424131900.5718-1-luc.vanoostenryck@gmail.com>
+To: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+        Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Message-Id: <20180427113517.656D360767@smtp.codeaurora.org> (sfid-20180427_133535_337214_55D3156D)
+Date: Fri, 27 Apr 2018 11:35:17 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 25, 2018 at 05:25:26PM +0200, Greg KH wrote:
-> On Mon, Apr 23, 2018 at 04:11:57PM -0400, Andres Rodriguez wrote:
-> > Including:
-> >  - Fixup outdated kernel-doc paths
-> >  - Slightly too short title underline
-> >  - Some typos
-> > 
-> > Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
-> > ---
-> >  Documentation/driver-api/firmware/request_firmware.rst | 16 ++++++++--------
-> >  drivers/base/firmware_loader/fallback.c                |  4 ++--
-> >  drivers/base/firmware_loader/fallback.h                |  2 +-
-> >  3 files changed, 11 insertions(+), 11 deletions(-)
+Luc Van Oostenryck <luc.vanoostenryck@gmail.com> wrote:
+
+> The method ndo_start_xmit() is defined as returning an 'netdev_tx_t',
+> which is a typedef for an enum type, but the implementation in this
+> driver returns an 'int'.
 > 
-> This fails to apply to my driver-core-next branch.  Can you please
-> rebase it and resend?
+> Fix this by returning 'netdev_tx_t' in this driver too.
+> 
+> Signed-off-by: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Oops, I meant the driver-core-linus branch, which is where "fixes" would
-go at the moment.
+Patch applied to ath-next branch of ath.git, thanks.
 
-thanks,
+378b1d65070f ath6kl: fix ath6kl_data_tx()'s return type
 
-greg k-h
+-- 
+https://patchwork.kernel.org/patch/10359823/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
