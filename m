@@ -1,48 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:46871 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755853AbeDYRUH (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56272 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751416AbeD0Lk0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 13:20:07 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 17/21] staging: wilc1000: remove unused enum 'stats_flags'
-Date: Wed, 25 Apr 2018 22:48:22 +0530
-Message-ID: <1524676706-13179-18-git-send-email-ajay.kathat@microchip.com> (sfid-20180425_192011_764218_67E39D4E)
-In-Reply-To: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
+        Fri, 27 Apr 2018 07:40:26 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: ath10k: sdio: jump to correct label in error handling path
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180426123502.23962-1-niklas.cassel@linaro.org>
+References: <20180426123502.23962-1-niklas.cassel@linaro.org>
+To: Niklas Cassel <niklas.cassel@linaro.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Niklas Cassel <niklas.cassel@linaro.org>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20180427114026.79F1F60767@smtp.codeaurora.org> (sfid-20180427_134043_530879_790818D9)
+Date: Fri, 27 Apr 2018 11:40:26 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to remove the unused enum.
+Niklas Cassel <niklas.cassel@linaro.org> wrote:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 5 -----
- 1 file changed, 5 deletions(-)
+> Jump to the correct label in error handling path.
+> At this point of execution create_singlethread_workqueue() has succeeded,
+> so it should be properly destroyed.
+> 
+> Jump label was renamed in commit ec2c64e20257 ("ath10k: sdio: fix memory
+> leak for probe allocations").
+> However, the bug was originally introduced in commit d96db25d2025
+> ("ath10k: add initial SDIO support").
+> 
+> Fixes: d96db25d2025 ("ath10k: add initial SDIO support")
+> Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index e6489fa..5f4dbff 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -45,11 +45,6 @@
- #define FLOW_CONTROL_LOWER_THRESHOLD	128
- #define FLOW_CONTROL_UPPER_THRESHOLD	256
- 
--enum stats_flags {
--	WILC_WFI_RX_PKT = BIT(0),
--	WILC_WFI_TX_PKT = BIT(1),
--};
--
- struct wilc_wfi_stats {
- 	unsigned long rx_packets;
- 	unsigned long tx_packets;
+Patch applied to ath-next branch of ath.git, thanks.
+
+e60a92590187 ath10k: sdio: jump to correct label in error handling path
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/10365901/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
