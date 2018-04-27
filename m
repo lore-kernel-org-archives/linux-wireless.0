@@ -1,73 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:41368 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753181AbeD3NlJ (ORCPT
+Received: from bombadil.infradead.org ([198.137.202.133]:55852 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754824AbeD0BRc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Apr 2018 09:41:09 -0400
-From: Colin King <colin.king@canonical.com>
-To: Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] rtlwifi: fix spelling mistake: "dismatch" -> "mismatch"
-Date: Mon, 30 Apr 2018 14:41:02 +0100
-Message-Id: <20180430134102.11171-1-colin.king@canonical.com> (sfid-20180430_154139_381091_5323102A)
+        Thu, 26 Apr 2018 21:17:32 -0400
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc: LKML <linux-kernel@vger.kernel.org>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH] mac80211: fix kernel-doc "bad line" warning
+Message-ID: <a248f969-311b-1a4b-4b11-c0b90134527f@infradead.org> (sfid-20180427_031747_547557_8EAFF5CF)
+Date: Thu, 26 Apr 2018 18:17:31 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Randy Dunlap <rdunlap@infradead.org>
 
-Trivial fix to spelling mistake in RT_TRACE message text.
+Fix 88 instances of a kernel-doc warning:
+  ../include/net/mac80211.h:2083: warning: bad line:  >
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
 ---
- .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    | 2 +-
- .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 2 +-
- .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ include/net/mac80211.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
-index 8fce371749d3..f22fec093f1d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
-@@ -1783,7 +1783,7 @@ static void btc8192e2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
- 		bool scan = false, link = false, roam = false;
- 
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], PsTdma type dismatch!!!, ");
-+			 "[BTCoex], PsTdma type mismatch!!!, ");
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 			 "curPsTdma=%d, recordPsTdma=%d\n",
- 			 coex_dm->cur_ps_tdma, coex_dm->tdma_adj_type);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index 73ec31972944..279fe01bb55e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -2766,7 +2766,7 @@ static void btc8723b2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
- 	if (coex_dm->cur_ps_tdma != coex_dm->ps_tdma_du_adj_type) {
- 		bool scan = false, link = false, roam = false;
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], PsTdma type dismatch!!!, curPsTdma=%d, recordPsTdma=%d\n",
-+			 "[BTCoex], PsTdma type mismatch!!!, curPsTdma=%d, recordPsTdma=%d\n",
- 			 coex_dm->cur_ps_tdma, coex_dm->ps_tdma_du_adj_type);
- 
- 		btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_SCAN, &scan);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-index 2202d5e18977..01a9d303603b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
-@@ -2614,7 +2614,7 @@ static void btc8821a2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
- 		bool scan = false, link = false, roam = false;
- 
- 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
--			 "[BTCoex], PsTdma type dismatch!!!, cur_ps_tdma = %d, recordPsTdma = %d\n",
-+			 "[BTCoex], PsTdma type mismatch!!!, cur_ps_tdma = %d, recordPsTdma = %d\n",
- 			 coex_dm->cur_ps_tdma, coex_dm->ps_tdma_du_adj_type);
- 
- 		btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_SCAN, &scan);
--- 
-2.17.0
+--- linux-next-20180426.orig/include/net/mac80211.h
++++ linux-next-20180426/include/net/mac80211.h
+@@ -2080,7 +2080,7 @@ struct ieee80211_txq {
+  *	virtual interface might not be given air time for the transmission of
+  *	the frame, as it is not synced with the AP/P2P GO yet, and thus the
+  *	deauthentication frame might not be transmitted.
+- >
++ *
+  * @IEEE80211_HW_DOESNT_SUPPORT_QOS_NDP: The driver (or firmware) doesn't
+  *	support QoS NDP for AP probing - that's most likely a driver bug.
+  *
