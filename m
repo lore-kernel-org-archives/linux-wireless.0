@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48262 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754813AbeDCJ6k (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Apr 2018 05:58:40 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Daniel Mack <daniel@zonque.org>
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        rfried@codeaurora.org, bjorn.andersson@linaro.org
-Subject: Re: [PATCH] wcn36xx: allocate skbs with GFP_KERNEL during init
-References: <20180319063002.24665-1-daniel@zonque.org>
-        <0dafe1f7-6f79-faa7-aff9-3eca532d237e@zonque.org>
-Date: Tue, 03 Apr 2018 12:58:35 +0300
-In-Reply-To: <0dafe1f7-6f79-faa7-aff9-3eca532d237e@zonque.org> (Daniel Mack's
-        message of "Thu, 29 Mar 2018 20:04:10 +0200")
-Message-ID: <87sh8cipbo.fsf@kamboji.qca.qualcomm.com> (sfid-20180403_115847_831076_C7390194)
+Received: from mail-eopbgr00065.outbound.protection.outlook.com ([40.107.0.65]:39264
+        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1758865AbeD0T0x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Apr 2018 15:26:53 -0400
+From: peter.oh@bowerswilkins.com
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Cc: Peter Oh <peter.oh@bowerswilkins.com>, johannes.berg@intel.com
+Subject: [PATCH] mesh: don't process mesh channel switch unless csa ie provided
+Date: Fri, 27 Apr 2018 12:26:36 -0700
+Message-Id: <1524857196-29399-1-git-send-email-peter.oh@bowerswilkins.com> (sfid-20180427_212657_786960_82D0DC24)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Mack <daniel@zonque.org> writes:
+From: Peter Oh <peter.oh@bowerswilkins.com>
 
-> On Monday, March 19, 2018 07:30 AM, Daniel Mack wrote:
->> GFP_ATOMIC should only be used when the allocation is done from atomic
->> context. Introduce a new flag to wcn36xx_dxe_fill_skb() and use GFP_KERNEL
->> when pre-allocating buffers during init.
->> 
->> This doesn't fix an issue that was observed in the wild, but it reduces
->> the chance of failed allocations under memory pressure.
->> 
->> Signed-off-by: Daniel Mack <daniel@zonque.org>
->
-> Any opinion about this one?
+There is no meaning to call ieee80211_mesh_process_chnswitch
+without CSA IE provided, since the function will always return error.
 
-It's better that you check the state from patchwork, less mail to the
-maintainers:
+Signed-off-by: Peter Oh <peter.oh@bowerswilkins.com>
+---
+ net/mac80211/mesh.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#checking_state_of_patches_from_patchwork
-
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index d51da26e9c18..8ced757dff8d 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -1196,7 +1196,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 			stype, mgmt, &elems, rx_status);
+ 
+ 	if (ifmsh->csa_role != IEEE80211_MESH_CSA_ROLE_INIT &&
+-	    !sdata->vif.csa_active)
++	    !sdata->vif.csa_active && elems.ch_switch_ie)
+ 		ieee80211_mesh_process_chnswitch(sdata, &elems, true);
+ }
+ 
 -- 
-Kalle Valo
+2.11.0 (Apple Git-81)
