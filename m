@@ -1,83 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f49.google.com ([209.85.214.49]:40201 "EHLO
-        mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752713AbeDLHAu (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:45634 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754447AbeD1Ar7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 03:00:50 -0400
-Received: by mail-it0-f49.google.com with SMTP id u62-v6so5755265ita.5
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2018 00:00:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE4vF2fCTEmEX8i+XVpvTJ1sRYDHDLr+fYFAM2PzTQTqkCoXVQ@mail.gmail.com>
-References: <CAE4vF2fCTEmEX8i+XVpvTJ1sRYDHDLr+fYFAM2PzTQTqkCoXVQ@mail.gmail.com>
-From: "solsTiCe d'Hiver" <solstice.dhiver@gmail.com>
-Date: Thu, 12 Apr 2018 09:00:49 +0200
-Message-ID: <CAE4vF2f2oXEvOJWDXPjmiWZTC=HOq5+xE_R64-_VvH6zc-Vw+A@mail.gmail.com> (sfid-20180412_090054_939813_E8E9F5ED)
-Subject: Re: second wifi card enforce CN reg dom
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 27 Apr 2018 20:47:59 -0400
+From: s.gottschall@dd-wrt.com
+To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Subject: [PATCH v4] ath10k: fix crash in recent 3.5.3 9984 firmware due wrong handling of peer_bw_rxnss_override parameter
+Date: Sat, 28 Apr 2018 02:47:52 +0200
+Message-Id: <20180428004752.16659-1-s.gottschall@dd-wrt.com> (sfid-20180428_024802_667458_165CF344)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nobody cares about this ?
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
 
-Should I report this as a bug to the LKML ? or elsewhere ? to
-ath9k_htc dev ? to crda dev ?
+current handling of peer_bw_rxnss_override parameter is based on guessing the VHT160/8080 capability by rx rate. this is wrong and may lead
+to a non initialized peer_bw_rxnss_override parameter which is required since VHT160 operation mode only supports 2x2 chainmasks in addition the original code
+initialized the parameter with wrong masked values.
+This patch uses the peer phymode and peer nss information for correct initialisation of the peer_bw_rxnss_override parameter.
+if this peer information is not available, we initialize the parameter by minimum nss which is suggested by QCA as temporary workaround according
+to the QCA sourcecodes.
 
-Please.
+Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
 
-2018-04-10 21:57 GMT+02:00 solsTiCe d'Hiver <solstice.dhiver@gmail.com>:
-> hi.
->
-> I am trying to capture on 2 channels at the same time with 2 cards.
->
-> One card is TP-Link TL-W722N v1 using ath9k_htc and the second one is
-> an Alfa AWUS051NH v2 using rt2800usb.
->
-> I have tried this, first, on raspberry pi 0 W  using archlinux-arm and
-> reproduced the issue on a netbook using archlinux x64 too using latest
-> kernel and drivers. (seems to happen on ubuntu 17.10 on dell laptop
-> too)
->
-> So when the Alfa card is used alone using the default reg dom FR, one
-> can change to 112 channel for example (using iw dev wlan1 set channel
-> 112)
->
-> But once the tp-link is plugged in, reg dom seems to become CN and one
-> can't change the alfa card to 112 channel.
->
-> iw reg get output change from
-> global
-> country FR: DFS-ETSI
-> (2402 - 2482 @ 40), (N/A, 20), (N/A)
-> (5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW
-> (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW
-> (5490 - 5710 @ 160), (N/A, 27), (0 ms), DFS
-> (57000 - 66000 @ 2160), (N/A, 40), (N/A)
-> to
-> global
-> country 98: DFS-UNSET
-> (2402 - 2482 @ 40), (N/A, 20), (N/A)
-> (5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW
-> (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW
-> (57240 - 59400 @ 2160), (N/A, 28), (N/A)
-> (59400 - 63720 @ 2160), (N/A, 40), (N/A)
-> (63720 - 65880 @ 2160), (N/A, 28), (N/A)
->
-> phy#2
-> country CN: DFS-FCC
-> (2402 - 2482 @ 40), (N/A, 20), (N/A)
-> (5170 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
-> (5250 - 5330 @ 80), (N/A, 23), (0 ms), DFS, AUTO-BW
-> (5735 - 5835 @ 80), (N/A, 30), (N/A)
-> (57240 - 59400 @ 2160), (N/A, 28), (N/A)
-> (59400 - 63720 @ 2160), (N/A, 44), (N/A)
-> (63720 - 65880 @ 2160), (N/A, 28), (N/A)
->
->
-> and all the channels above 100 are marked as disabled in iw list
-> output (after the plug not before) for the alfa card
->
-> It is as if the TL-WN722N has CN reg dom hard-coded and that switches
-> it globally to CN too ???
->
-> Is this a bug in ath9k_htc ? a bug with the TL-WN722N card ??
+v2: remove debug messages
+v3: apply some cosmetics, update documentation
+v4: fix compile warning and truncate nss to maximum of 2x2 since current chipsets only support 2x2 at vht160
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 44 ++++++++++++++++++---------
+ drivers/net/wireless/ath/ath10k/wmi.c |  7 +----
+ drivers/net/wireless/ath/ath10k/wmi.h | 14 ++++++++-
+ 3 files changed, 43 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 5be6386ede8f..de8a099c9f5a 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2528,23 +2528,37 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
+ 		__le16_to_cpu(vht_cap->vht_mcs.tx_highest);
+ 	arg->peer_vht_rates.tx_mcs_set = ath10k_peer_assoc_h_vht_limit(
+ 		__le16_to_cpu(vht_cap->vht_mcs.tx_mcs_map), vht_mcs_mask);
++	arg->peer_bw_rxnss_override = 0;
++
++	if (arg->peer_num_spatial_streams) {
++		int nss160 = arg->peer_num_spatial_streams;
++		/* truncate vht160 nss value to 2x2 since all known chipsets do not support more than 2x2 in vht160 modes */
++		if (nss160 > 2)
++			nss160 = 2;
++		/* in case if peer is connected with vht160 or vht80+80, we need to properly adjust rxnss parameters */
++		switch(arg->peer_phymode) {
++		case MODE_11AC_VHT80_80:
++			arg->peer_bw_rxnss_override = BW_NSS_FWCONF_80_80(nss160);
++		/* fall through */
++		case MODE_11AC_VHT160:
++			arg->peer_bw_rxnss_override |= BW_NSS_FWCONF_160(nss160);
++		break;
++		default:
++		break;
++		}
++	}
+ 
+-	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
+-		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
++	/* in case peer has no nss properties for some reasons, we set local nss to minimum (1x1) to avoid a 
++	 * firmware assert / crash. this applies only to VHT160 or VHT80+80 and is a WAR for clients breaking
++	 * the spec.
++	 */
+ 
+-	if (arg->peer_vht_rates.rx_max_rate &&
+-	    (sta->vht_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK)) {
+-		switch (arg->peer_vht_rates.rx_max_rate) {
+-		case 1560:
+-			/* Must be 2x2 at 160Mhz is all it can do. */
+-			arg->peer_bw_rxnss_override = 2;
+-			break;
+-		case 780:
+-			/* Can only do 1x1 at 160Mhz (Long Guard Interval) */
+-			arg->peer_bw_rxnss_override = 1;
+-			break;
+-		}
++	if (!arg->peer_num_spatial_streams && (arg->peer_phymode == MODE_11AC_VHT80_80 || arg->peer_phymode == MODE_11AC_VHT160)) {
++		arg->peer_bw_rxnss_override = BW_NSS_FWCONF_MAP_ENABLE;
+ 	}
++
++	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
++		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
+ }
+ 
+ static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
+@@ -2696,9 +2710,9 @@ static int ath10k_peer_assoc_prepare(struct ath10k *ar,
+ 	ath10k_peer_assoc_h_crypto(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_rates(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_ht(ar, vif, sta, arg);
++	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_vht(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_qos(ar, vif, sta, arg);
+-	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 2c36256a441d..3797dca317ff 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -7211,12 +7211,7 @@ ath10k_wmi_peer_assoc_fill_10_4(struct ath10k *ar, void *buf,
+ 	struct wmi_10_4_peer_assoc_complete_cmd *cmd = buf;
+ 
+ 	ath10k_wmi_peer_assoc_fill_10_2(ar, buf, arg);
+-	if (arg->peer_bw_rxnss_override)
+-		cmd->peer_bw_rxnss_override =
+-			__cpu_to_le32((arg->peer_bw_rxnss_override - 1) |
+-				      BIT(PEER_BW_RXNSS_OVERRIDE_OFFSET));
+-	else
+-		cmd->peer_bw_rxnss_override = 0;
++	cmd->peer_bw_rxnss_override = __cpu_to_le32(arg->peer_bw_rxnss_override);
+ }
+ 
+ static int
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 46ae19bb2c92..1fe0aa5523a6 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -6380,7 +6380,19 @@ struct wmi_10_2_peer_assoc_complete_cmd {
+ 	__le32 info0; /* WMI_PEER_ASSOC_INFO0_ */
+ } __packed;
+ 
+-#define PEER_BW_RXNSS_OVERRIDE_OFFSET  31
++#define BW_NSS_FWCONF_MAP_ENABLE             (1 << 31)
++#define BW_NSS_FWCONF_MAP_160MHZ_S           (0)
++#define BW_NSS_FWCONF_MAP_160MHZ_M           (0x00000007)
++#define BW_NSS_FWCONF_MAP_80_80MHZ_S         (3)
++#define BW_NSS_FWCONF_MAP_80_80MHZ_M         (0x00000038)
++#define BW_NSS_FWCONF_MAP_M                  (0x0000003F)
++
++#define GET_BW_NSS_FWCONF_160(x)             ((((x) & BW_NSS_FWCONF_MAP_160MHZ_M) >> BW_NSS_FWCONF_MAP_160MHZ_S) + 1)
++#define GET_BW_NSS_FWCONF_80_80(x)           ((((x) & BW_NSS_FWCONF_MAP_80_80MHZ_M) >> BW_NSS_FWCONF_MAP_80_80MHZ_S) + 1)
++
++/* Values defined to set 160 MHz Bandwidth NSS Mapping into FW*/
++#define BW_NSS_FWCONF_160(x)          (BW_NSS_FWCONF_MAP_ENABLE | (((x - 1) << BW_NSS_FWCONF_MAP_160MHZ_S) & BW_NSS_FWCONF_MAP_160MHZ_M))
++#define BW_NSS_FWCONF_80_80(x)        (BW_NSS_FWCONF_MAP_ENABLE | (((x - 1) << BW_NSS_FWCONF_MAP_80_80MHZ_S) & BW_NSS_FWCONF_MAP_80_80MHZ_M))
+ 
+ struct wmi_10_4_peer_assoc_complete_cmd {
+ 	struct wmi_10_2_peer_assoc_complete_cmd cmd;
+-- 
+2.17.0
