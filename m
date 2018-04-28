@@ -1,57 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:51532 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751832AbeDLMQ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 08:16:59 -0400
-Subject: Re: [PATCH] wcn36xx: pass correct BSS index when deleting BSS keys
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Loic Poulain <loic.poulain@linaro.org>,
-        wcn36xx@lists.infradead.org, Ramon Fried <rfried@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Bjorn Andersson <bjorn.andersson@linaro.org>
-References: <20180412111311.28809-1-daniel@zonque.org>
- <CAMZdPi98WH59nxV08wHcyAoDB06T3ptNT=E9C8S6RK_Yg1pKnQ@mail.gmail.com>
- <62942f8b-3e02-868f-6cb1-7423cd44b828@zonque.org>
- <877epcr58x.fsf@codeaurora.org>
-From: Daniel Mack <daniel@zonque.org>
-Message-ID: <94a0d7fa-04f6-2c9a-7aa4-1d3ddc28ee8c@zonque.org> (sfid-20180412_141702_930887_C9452EC2)
-Date: Thu, 12 Apr 2018 14:16:57 +0200
+Received: from youngberry.canonical.com ([91.189.89.112]:40968 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759710AbeD1Jg0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 28 Apr 2018 05:36:26 -0400
+From: Colin King <colin.king@canonical.com>
+To: Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] mwifiex: fix spelling mistake: "capabilties" -> "capabilities"
+Date: Sat, 28 Apr 2018 10:36:21 +0100
+Message-Id: <20180428093621.6806-1-colin.king@canonical.com> (sfid-20180428_113645_078214_1836F044)
 MIME-Version: 1.0
-In-Reply-To: <877epcr58x.fsf@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, April 12, 2018 02:14 PM, Kalle Valo wrote:
-> Daniel Mack <daniel@zonque.org> writes:
-> 
->> On Thursday, April 12, 2018 01:46 PM, Loic Poulain wrote:
->>> Hi Daniel,
->>>
->>>> @@ -564,10 +565,13 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
->>>>                 break;
->>>>         case DISABLE_KEY:
->>>>                 if (!(IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags)) {
->>>> +                       if (vif_priv->bss_index != WCN36XX_HAL_BSS_INVALID_IDX)
->>>> +                               wcn36xx_smd_remove_bsskey(wcn,
->>>> +                                       vif_priv->encrypt_type,
->>>> +                                       vif_priv->bss_index,
->>>> +                                       key_conf->keyidx);
->>>> +
->>>>                         vif_priv->encrypt_type = WCN36XX_HAL_ED_NONE;
->>>> -                       wcn36xx_smd_remove_bsskey(wcn,
->>>> -                               vif_priv->encrypt_type,
->>>> -                               key_conf->keyidx);
->>>
->>> Note that moving vif_priv->encrypt_type = WCN36XX_HAL_ED_NONE after
->>> key removal also fixes an issue I observed in AP mode:
->>> wcn36xx: ERROR hal_remove_bsskey response failed err=6
->>
->> Yeah, sorry. I did that intentionally, but missed to mention it in the
->> commit log.
-> 
-> I can add that to the commit log, just tell me what to add.
+From: Colin Ian King <colin.king@canonical.com>
 
-I'll resend, hang on :)
+Trivial fix to spelling mistake in function names and text strings
 
-Daniel
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/marvell/mwifiex/sta_event.c | 10 +++++-----
+ drivers/net/wireless/marvell/mwifiex/uap_event.c |  8 ++++----
+ 2 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+index 93dfb76cd8a6..01636c1b7447 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+@@ -27,9 +27,9 @@
+ 
+ #define MWIFIEX_IBSS_CONNECT_EVT_FIX_SIZE    12
+ 
+-static int mwifiex_check_ibss_peer_capabilties(struct mwifiex_private *priv,
+-					       struct mwifiex_sta_node *sta_ptr,
+-					       struct sk_buff *event)
++static int mwifiex_check_ibss_peer_capabilities(struct mwifiex_private *priv,
++						struct mwifiex_sta_node *sta_ptr,
++						struct sk_buff *event)
+ {
+ 	int evt_len, ele_len;
+ 	u8 *curr;
+@@ -42,7 +42,7 @@ static int mwifiex_check_ibss_peer_capabilties(struct mwifiex_private *priv,
+ 	evt_len = event->len;
+ 	curr = event->data;
+ 
+-	mwifiex_dbg_dump(priv->adapter, EVT_D, "ibss peer capabilties:",
++	mwifiex_dbg_dump(priv->adapter, EVT_D, "ibss peer capabilities:",
+ 			 event->data, event->len);
+ 
+ 	skb_push(event, MWIFIEX_IBSS_CONNECT_EVT_FIX_SIZE);
+@@ -933,7 +933,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 			    ibss_sta_addr);
+ 		sta_ptr = mwifiex_add_sta_entry(priv, ibss_sta_addr);
+ 		if (sta_ptr && adapter->adhoc_11n_enabled) {
+-			mwifiex_check_ibss_peer_capabilties(priv, sta_ptr,
++			mwifiex_check_ibss_peer_capabilities(priv, sta_ptr,
+ 							     adapter->event_skb);
+ 			if (sta_ptr->is_11n_enabled)
+ 				for (i = 0; i < MAX_NUM_TID; i++)
+diff --git a/drivers/net/wireless/marvell/mwifiex/uap_event.c b/drivers/net/wireless/marvell/mwifiex/uap_event.c
+index e8c8728db15a..5c57efe24f6a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/uap_event.c
++++ b/drivers/net/wireless/marvell/mwifiex/uap_event.c
+@@ -23,8 +23,8 @@
+ 
+ #define MWIFIEX_BSS_START_EVT_FIX_SIZE    12
+ 
+-static int mwifiex_check_uap_capabilties(struct mwifiex_private *priv,
+-					 struct sk_buff *event)
++static int mwifiex_check_uap_capabilities(struct mwifiex_private *priv,
++					  struct sk_buff *event)
+ {
+ 	int evt_len;
+ 	u8 *curr;
+@@ -38,7 +38,7 @@ static int mwifiex_check_uap_capabilties(struct mwifiex_private *priv,
+ 	evt_len = event->len;
+ 	curr = event->data;
+ 
+-	mwifiex_dbg_dump(priv->adapter, EVT_D, "uap capabilties:",
++	mwifiex_dbg_dump(priv->adapter, EVT_D, "uap capabilities:",
+ 			 event->data, event->len);
+ 
+ 	skb_push(event, MWIFIEX_BSS_START_EVT_FIX_SIZE);
+@@ -194,7 +194,7 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
+ 		       ETH_ALEN);
+ 		if (priv->hist_data)
+ 			mwifiex_hist_data_reset(priv);
+-		mwifiex_check_uap_capabilties(priv, adapter->event_skb);
++		mwifiex_check_uap_capabilities(priv, adapter->event_skb);
+ 		break;
+ 	case EVENT_UAP_MIC_COUNTERMEASURES:
+ 		/* For future development */
+-- 
+2.17.0
