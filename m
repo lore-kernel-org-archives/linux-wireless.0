@@ -1,202 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41714 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753068AbeDZHxw (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:39783 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753817AbeD2TuF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Apr 2018 03:53:52 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Rajat Jain <rajatja@google.com>
-Date: Thu, 26 Apr 2018 10:53:45 +0300
-Message-Id: <20180426075345.22169-1-luca@coelho.fi> (sfid-20180426_095359_021426_82E884AE)
-In-Reply-To: <20180422082745.9743-10-luca@coelho.fi>
-References: <20180422082745.9743-10-luca@coelho.fi>
-Subject: [PATCH v2 12/12] iwlwifi: pcie: remove non-responsive device
+        Sun, 29 Apr 2018 15:50:05 -0400
+From: s.gottschall@dd-wrt.com
+To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Subject: [PATCH v5] ath10k: fix crash in recent 3.5.3 9984 firmware due wrong handling of peer_bw_rxnss_override parameter
+Date: Sun, 29 Apr 2018 21:49:57 +0200
+Message-Id: <20180429194957.3144-1-s.gottschall@dd-wrt.com> (sfid-20180429_215009_336717_35CDCFB8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
 
-If we fail to to grab NIC access because the device is not responding
-(i.e. CSR_GP_CNTRL returns 0xFFFFFFFF), remove the device from the PCI
-bus, to avoid any further damage, and to let the user space rescan.
+current handling of peer_bw_rxnss_override parameter is based on guessing the VHT160/8080 capability by rx rate. this is wrong and may lead
+to a non initialized peer_bw_rxnss_override parameter which is required since VHT160 operation mode only supports 2x2 chainmasks in addition the original code
+initialized the parameter with wrong masked values.
+This patch uses the peer phymode and peer nss information for correct initialisation of the peer_bw_rxnss_override parameter.
+if this peer information is not available, we initialize the parameter by minimum nss which is suggested by QCA as temporary workaround according
+to the QCA sourcecodes.
 
-In order to inform the userspace that a rescan is needed, we send a
-kobject uevent with "INACCESSIBLE".
+Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
 
-This functionality is disabled by default, but can be enabled via a
-new module parameter called "remove_when_gone".  In the future we may
-change this module parameter to include 3 modes instead: do nothing;
-auto-rescan or; send uevent.
-
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Rajat Jain <rajatja@google.com>
+v2: remove debug messages
+v3: apply some cosmetics, update documentation
+v4: fix compile warning and truncate nss to maximum of 2x2 since current chipsets only support 2x2 at vht160
+v5: handle maximum nss for chipsets supportig vht160 with 1x1 only
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  6 ++
- .../wireless/intel/iwlwifi/iwl-modparams.h    |  2 +
- .../wireless/intel/iwlwifi/pcie/internal.h    |  5 ++
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 74 ++++++++++++++++++-
- 4 files changed, 84 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 48 ++++++++++++++++++---------
+ drivers/net/wireless/ath/ath10k/wmi.c |  7 +---
+ drivers/net/wireless/ath/ath10k/wmi.h | 14 +++++++-
+ 3 files changed, 47 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 4f451a6f20b9..c59ce4f8a5ed 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1850,3 +1850,9 @@ MODULE_PARM_DESC(d0i3_timeout, "Timeout to D0i3 entry when idle (ms)");
- 
- module_param_named(disable_11ac, iwlwifi_mod_params.disable_11ac, bool, 0444);
- MODULE_PARM_DESC(disable_11ac, "Disable VHT capabilities (default: false)");
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 5be6386ede8f..a95a32102ef3 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2528,23 +2528,41 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
+ 		__le16_to_cpu(vht_cap->vht_mcs.tx_highest);
+ 	arg->peer_vht_rates.tx_mcs_set = ath10k_peer_assoc_h_vht_limit(
+ 		__le16_to_cpu(vht_cap->vht_mcs.tx_mcs_map), vht_mcs_mask);
++	arg->peer_bw_rxnss_override = 0;
 +
-+module_param_named(remove_when_gone,
-+		   iwlwifi_mod_params.remove_when_gone, bool,
-+		   0444);
-+MODULE_PARM_DESC(remove_when_gone,
-+		 "Remove dev from PCIe bus if it is deemed inaccessible (default: false)");
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
-index a41c46e63eb1..a7dd8a8cddf9 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
-@@ -122,6 +122,7 @@ enum iwl_uapsd_disable {
-  * @lar_disable: disable LAR (regulatory), default = 0
-  * @fw_monitor: allow to use firmware monitor
-  * @disable_11ac: disable VHT capabilities, default = false.
-+ * @remove_when_gone: remove an inaccessible device from the PCIe bus.
-  */
- struct iwl_mod_params {
- 	int swcrypto;
-@@ -143,6 +144,7 @@ struct iwl_mod_params {
- 	bool lar_disable;
- 	bool fw_monitor;
- 	bool disable_11ac;
-+	bool remove_when_gone;
- };
++	if (arg->peer_num_spatial_streams && ar->hw_params.vht160_mcs_rx_highest) {
++		int nss160 = arg->peer_num_spatial_streams;
++		/* truncate vht160 nss value to 2x2 since all known chipsets do not support more than 2x2 in vht160 modes */
++		if (nss160 > 2) {
++			if (ar->hw_params.vht160_mcs_rx_highest == 1560)
++				nss160 = 2;
++			else
++				nss160 = 1;
++		}
++		/* in case if peer is connected with vht160 or vht80+80, we need to properly adjust rxnss parameters */
++		switch(arg->peer_phymode) {
++		case MODE_11AC_VHT80_80:
++			arg->peer_bw_rxnss_override = BW_NSS_FWCONF_80_80(nss160);
++		/* fall through */
++		case MODE_11AC_VHT160:
++			arg->peer_bw_rxnss_override |= BW_NSS_FWCONF_160(nss160);
++		break;
++		default:
++		break;
++		}
++	}
  
- #endif /* #__iwl_modparams_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index cda66340d357..45ea32796cda 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -383,6 +383,8 @@ struct iwl_self_init_dram {
-  * @hw_init_mask: initial unmasked hw causes
-  * @fh_mask: current unmasked fh causes
-  * @hw_mask: current unmasked hw causes
-+ * @in_rescan: true if we have triggered a device rescan
-+ * @scheduled_for_removal: true if we have scheduled a device removal
-  */
- struct iwl_trans_pcie {
- 	struct iwl_rxq *rxq;
-@@ -464,6 +466,9 @@ struct iwl_trans_pcie {
- 	u32 fh_mask;
- 	u32 hw_mask;
- 	cpumask_t affinity_mask[IWL_MAX_RX_HW_QUEUES];
-+	u16 tx_cmd_queue_size;
-+	bool in_rescan;
-+	bool scheduled_for_removal;
- };
+-	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
+-		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
++	/* in case peer has no nss properties for some reasons, we set local nss to minimum (1x1) to avoid a 
++	 * firmware assert / crash. this applies only to VHT160 or VHT80+80 and is a WAR for clients breaking
++	 * the spec.
++	 */
  
- static inline struct iwl_trans_pcie *
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 623476603cd4..6e9a9ecfb11c 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -75,6 +75,7 @@
- #include <linux/gfp.h>
- #include <linux/vmalloc.h>
- #include <linux/pm_runtime.h>
-+#include <linux/module.h>
- 
- #include "iwl-drv.h"
- #include "iwl-trans.h"
-@@ -1935,6 +1936,29 @@ static void iwl_trans_pcie_set_pmi(struct iwl_trans *trans, bool state)
- 		clear_bit(STATUS_TPOWER_PMI, &trans->status);
+-	if (arg->peer_vht_rates.rx_max_rate &&
+-	    (sta->vht_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK)) {
+-		switch (arg->peer_vht_rates.rx_max_rate) {
+-		case 1560:
+-			/* Must be 2x2 at 160Mhz is all it can do. */
+-			arg->peer_bw_rxnss_override = 2;
+-			break;
+-		case 780:
+-			/* Can only do 1x1 at 160Mhz (Long Guard Interval) */
+-			arg->peer_bw_rxnss_override = 1;
+-			break;
+-		}
++	if (!(arg->peer_num_spatial_streams || !ar->hw_params.vht160_mcs_rx_highest) && (arg->peer_phymode == MODE_11AC_VHT80_80 || arg->peer_phymode == MODE_11AC_VHT160)) {
++		arg->peer_bw_rxnss_override = BW_NSS_FWCONF_MAP_ENABLE;
+ 	}
++
++	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
++		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
  }
  
-+struct iwl_trans_pcie_removal {
-+	struct pci_dev *pdev;
-+	struct work_struct work;
-+};
+ static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
+@@ -2696,9 +2714,9 @@ static int ath10k_peer_assoc_prepare(struct ath10k *ar,
+ 	ath10k_peer_assoc_h_crypto(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_rates(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_ht(ar, vif, sta, arg);
++	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_vht(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_qos(ar, vif, sta, arg);
+-	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 2c36256a441d..3797dca317ff 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -7211,12 +7211,7 @@ ath10k_wmi_peer_assoc_fill_10_4(struct ath10k *ar, void *buf,
+ 	struct wmi_10_4_peer_assoc_complete_cmd *cmd = buf;
+ 
+ 	ath10k_wmi_peer_assoc_fill_10_2(ar, buf, arg);
+-	if (arg->peer_bw_rxnss_override)
+-		cmd->peer_bw_rxnss_override =
+-			__cpu_to_le32((arg->peer_bw_rxnss_override - 1) |
+-				      BIT(PEER_BW_RXNSS_OVERRIDE_OFFSET));
+-	else
+-		cmd->peer_bw_rxnss_override = 0;
++	cmd->peer_bw_rxnss_override = __cpu_to_le32(arg->peer_bw_rxnss_override);
+ }
+ 
+ static int
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 46ae19bb2c92..1fe0aa5523a6 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -6380,7 +6380,19 @@ struct wmi_10_2_peer_assoc_complete_cmd {
+ 	__le32 info0; /* WMI_PEER_ASSOC_INFO0_ */
+ } __packed;
+ 
+-#define PEER_BW_RXNSS_OVERRIDE_OFFSET  31
++#define BW_NSS_FWCONF_MAP_ENABLE             (1 << 31)
++#define BW_NSS_FWCONF_MAP_160MHZ_S           (0)
++#define BW_NSS_FWCONF_MAP_160MHZ_M           (0x00000007)
++#define BW_NSS_FWCONF_MAP_80_80MHZ_S         (3)
++#define BW_NSS_FWCONF_MAP_80_80MHZ_M         (0x00000038)
++#define BW_NSS_FWCONF_MAP_M                  (0x0000003F)
 +
-+static void iwl_trans_pcie_removal_wk(struct work_struct *wk)
-+{
-+	struct iwl_trans_pcie_removal *removal =
-+		container_of(wk, struct iwl_trans_pcie_removal, work);
-+	struct pci_dev *pdev = removal->pdev;
-+	char *prop[] = {"EVENT=INACCESSIBLE", NULL};
++#define GET_BW_NSS_FWCONF_160(x)             ((((x) & BW_NSS_FWCONF_MAP_160MHZ_M) >> BW_NSS_FWCONF_MAP_160MHZ_S) + 1)
++#define GET_BW_NSS_FWCONF_80_80(x)           ((((x) & BW_NSS_FWCONF_MAP_80_80MHZ_M) >> BW_NSS_FWCONF_MAP_80_80MHZ_S) + 1)
 +
-+	dev_err(&pdev->dev, "Device gone - attempting removal\n");
-+	kobject_uevent_env(&pdev->dev.kobj, KOBJ_CHANGE, prop);
-+	pci_lock_rescan_remove();
-+	pci_dev_put(pdev);
-+	pci_stop_and_remove_bus_device(pdev);
-+	pci_unlock_rescan_remove();
-+
-+	kfree(removal);
-+	module_put(THIS_MODULE);
-+}
-+
- static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans,
- 					   unsigned long *flags)
- {
-@@ -1977,11 +2001,55 @@ static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans,
- 			   (BIT(trans->cfg->csr->flag_mac_clock_ready) |
- 			    CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP), 15000);
- 	if (unlikely(ret < 0)) {
--		iwl_trans_pcie_dump_regs(trans);
--		iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_FORCE_NMI);
-+		u32 cntrl = iwl_read32(trans, CSR_GP_CNTRL);
-+
- 		WARN_ONCE(1,
- 			  "Timeout waiting for hardware access (CSR_GP_CNTRL 0x%08x)\n",
--			  iwl_read32(trans, CSR_GP_CNTRL));
-+			  cntrl);
-+
-+		iwl_trans_pcie_dump_regs(trans);
-+
-+		if (iwlwifi_mod_params.remove_when_gone && cntrl == ~0U) {
-+			struct iwl_trans_pcie_removal *removal;
-+
-+			if (trans_pcie->scheduled_for_removal)
-+				goto err;
-+
-+			IWL_ERR(trans, "Device gone - scheduling removal!\n");
-+
-+			/*
-+			 * get a module reference to avoid doing this
-+			 * while unloading anyway and to avoid
-+			 * scheduling a work with code that's being
-+			 * removed.
-+			 */
-+			if (!try_module_get(THIS_MODULE)) {
-+				IWL_ERR(trans,
-+					"Module is being unloaded - abort\n");
-+				goto err;
-+			}
-+
-+			removal = kzalloc(sizeof(*removal), GFP_ATOMIC);
-+			if (!removal) {
-+				module_put(THIS_MODULE);
-+				goto err;
-+			}
-+			/*
-+			 * we don't need to clear this flag, because
-+			 * the trans will be freed and reallocated.
-+			*/
-+			trans_pcie->scheduled_for_removal = true;
-+
-+			removal->pdev = to_pci_dev(trans->dev);
-+			INIT_WORK(&removal->work, iwl_trans_pcie_removal_wk);
-+			pci_dev_get(removal->pdev);
-+			schedule_work(&removal->work);
-+		} else {
-+			iwl_write32(trans, CSR_RESET,
-+				    CSR_RESET_REG_FLAG_FORCE_NMI);
-+		}
-+
-+err:
- 		spin_unlock_irqrestore(&trans_pcie->reg_lock, *flags);
- 		return false;
- 	}
++/* Values defined to set 160 MHz Bandwidth NSS Mapping into FW*/
++#define BW_NSS_FWCONF_160(x)          (BW_NSS_FWCONF_MAP_ENABLE | (((x - 1) << BW_NSS_FWCONF_MAP_160MHZ_S) & BW_NSS_FWCONF_MAP_160MHZ_M))
++#define BW_NSS_FWCONF_80_80(x)        (BW_NSS_FWCONF_MAP_ENABLE | (((x - 1) << BW_NSS_FWCONF_MAP_80_80MHZ_S) & BW_NSS_FWCONF_MAP_80_80MHZ_M))
+ 
+ struct wmi_10_4_peer_assoc_complete_cmd {
+ 	struct wmi_10_2_peer_assoc_complete_cmd cmd;
 -- 
 2.17.0
