@@ -1,56 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:50556 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755264AbeDWOmm (ORCPT
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:40112 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753172AbeD3OMw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 10:42:42 -0400
-Subject: Re: [PATCH] staging: wilc1000: fix NULL pointer exception in
- host_int_parse_assoc_resp_info()
-To: Ajay Singh <ajay.kathat@microchip.com>,
-        <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <adham.abozaeid@Microchip.com>
-References: <1523521274-8719-1-git-send-email-ajay.kathat@microchip.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <8b68c05c-989f-a15c-4f40-af80317adbcf@microchip.com> (sfid-20180423_164246_159402_04C6A760)
-Date: Mon, 23 Apr 2018 16:42:38 +0200
-MIME-Version: 1.0
-In-Reply-To: <1523521274-8719-1-git-send-email-ajay.kathat@microchip.com>
-Content-Type: text/plain; charset="utf-8"
+        Mon, 30 Apr 2018 10:12:52 -0400
+Received: by mail-wr0-f195.google.com with SMTP id v60-v6so8183631wrc.7
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2018 07:12:52 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [RFC 01/18] mt76x2: use completion instead of wait_queue for mcu rx queue
+Date: Mon, 30 Apr 2018 16:12:16 +0200
+Message-Id: <1a04d20c7e6199311f5b0179359be666beeab345.1525096206.git.lorenzo.bianconi@redhat.com> (sfid-20180430_161255_671720_84BA63BC)
+In-Reply-To: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
+References: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+In order to reuse mcu related code supporting mt76x2u based devices,
+use completion instead of wait_queue for mcu responses queue
 
-On 12.04.2018 10:21, Ajay Singh wrote:
-> Commit fe014d4e6b55 (staging: wilc1000: free memory allocated for general info
-> message from firmware) introduced a bug by using wrong source address in
-> kmemdup(). 'conn_info.req_ies' is used for source address in kempdup()
-> instead of 'hif_drv->usr_conn_req.ies'.
-> 
-> This commit fixes the NULL pointer dereference issue in
-> host_int_parse_assoc_resp_info() by using the correct source address in
-> kmemdup().
-> 
-> Fixes: fe014d4e6b55 (staging: wilc1000: free memory allocated for
-> general info message from firmware)
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index 316d73c..302e3cb 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -1387,7 +1387,7 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
->  	}
->  
->  	if (hif_drv->usr_conn_req.ies) {
-> -		conn_info.req_ies = kmemdup(conn_info.req_ies,
-> +		conn_info.req_ies = kmemdup(hif_drv->usr_conn_req.ies,
->  					    hif_drv->usr_conn_req.ies_len,
->  					    GFP_KERNEL);
->  		if (conn_info.req_ies)
-> 
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x2.h     | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_dma.c | 4 ++--
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c | 3 +--
+ 3 files changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+index a5d1255e4b9c..a31602d9310e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+@@ -47,7 +47,7 @@
+ struct mt76x2_mcu {
+ 	struct mutex mutex;
+ 
+-	wait_queue_head_t wait;
++	struct completion resp_cmpl;
+ 	struct sk_buff_head res_q;
+ 
+ 	u32 msg_seq;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
+index fd1ec4743e0b..ab71b6e6c6dc 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
+@@ -74,7 +74,7 @@ void mt76x2_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
+ 
+ 	if (q == MT_RXQ_MCU) {
+ 		skb_queue_tail(&dev->mcu.res_q, skb);
+-		wake_up(&dev->mcu.wait);
++		complete(&dev->mcu.resp_cmpl);
+ 		return;
+ 	}
+ 
+@@ -139,7 +139,7 @@ int mt76x2_dma_init(struct mt76x2_dev *dev)
+ 
+ 	mt76_dma_attach(&dev->mt76);
+ 
+-	init_waitqueue_head(&dev->mcu.wait);
++	init_completion(&dev->mcu.resp_cmpl);
+ 	skb_queue_head_init(&dev->mcu.res_q);
+ 
+ 	tasklet_init(&dev->tx_tasklet, mt76x2_tx_tasklet, (unsigned long) dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
+index dfd36d736b06..3e2a7216ffdd 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
+@@ -61,8 +61,7 @@ mt76x2_mcu_get_response(struct mt76x2_dev *dev, unsigned long expires)
+ 		return NULL;
+ 
+ 	timeout = expires - jiffies;
+-	wait_event_timeout(dev->mcu.wait, !skb_queue_empty(&dev->mcu.res_q),
+-			   timeout);
++	wait_for_completion_timeout(&dev->mcu.resp_cmpl, timeout);
+ 	return skb_dequeue(&dev->mcu.res_q);
+ }
+ 
+-- 
+2.14.3
