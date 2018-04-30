@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f177.google.com ([209.85.223.177]:41495 "EHLO
-        mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752305AbeDZEwv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Apr 2018 00:52:51 -0400
-Received: by mail-io0-f177.google.com with SMTP id e12-v6so6503489iob.8
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Apr 2018 21:52:51 -0700 (PDT)
-Subject: Re: [linuxwifi] Simultaneous 2.4 GHz WiFi and Bluetooth issue on
- Intel Dual Band Wireless-AC 8260
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>
-References: <6e4b5e53-0a8d-978c-5cfe-f498c8b15c1a@gmail.com>
- <CANUX_P19ja=XLMs8Vvii1yMvCNAvPnMh7hs=H92M5QRJnJjRfg@mail.gmail.com>
- <30aa1580-7913-a7f8-3f2d-be4d699d6dbc@gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB30126BF90DA@HASMSX112.ger.corp.intel.com>
-From: Nathan Schulte <nmschulte@gmail.com>
-Message-ID: <ecc3e8ac-78c8-2f6e-e252-95f2b1dc1ba3@gmail.com> (sfid-20180426_065256_097098_A6494179)
-Date: Wed, 25 Apr 2018 23:52:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54732 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752722AbeD3TJK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Apr 2018 15:09:10 -0400
+Date: Mon, 30 Apr 2018 12:09:01 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Sriram R <srirrama@codeaurora.org>
+Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org,
+        Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+Subject: Re: [PATCH 2/2 - linux-stable-4.4] ath10k: rebuild crypto header in
+ rx data frames
+Message-ID: <20180430190901.GB8415@kroah.com> (sfid-20180430_210914_480632_F0EFC834)
+References: <1525069587-19281-1-git-send-email-srirrama@codeaurora.org>
+ <1525069587-19281-3-git-send-email-srirrama@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB30126BF90DA@HASMSX112.ger.corp.intel.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1525069587-19281-3-git-send-email-srirrama@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/25/2018 12:22 AM, Grumbach, Emmanuel wrote:
->> This seems to have resolved the issue.  Interestingly, the firmware
->> (version...) shipped with Debian Sid is not in the official linux-firmware.git
->> repository; its md5sum doesn't match any of prior versions of the file:
+On Mon, Apr 30, 2018 at 11:56:27AM +0530, Sriram R wrote:
+> Rx data frames notified through HTT_T2H_MSG_TYPE_RX_IND and
+> HTT_T2H_MSG_TYPE_RX_FRAG_IND expect PN/TSC check to be done
+> on host (mac80211) rather than firmware. Rebuild cipher header
+> in every received data frames (that are notified through those
+> HTT interfaces) from the rx_hdr_status tlv available in the
+> rx descriptor of the first msdu. Skip setting RX_FLAG_IV_STRIPPED
+> flag for the packets which requires mac80211 PN/TSC check support
+> and set appropriate RX_FLAG for stripped crypto tail. Hw QCA988X,
+> and QCA99X0 currently need the rebuilding of cipher header to
+> perform PN/TSC check for replay attack.
 > 
-> Glad to know. I guess you can open a bug on Debian to thave they fix this.
-> This is rather strange though.
+> [Upstream Commit : 7eccb738fce57cbe53ed903ccf43f9ab257b15b3]
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+> Signed-off-by: Sriram R <srirrama@codeaurora.org>
+> ---
+>  drivers/net/wireless/ath/ath10k/htt_rx.c | 98 ++++++++++++++++++++++++++------
+>  1 file changed, 82 insertions(+), 16 deletions(-)
 
-I re-verified this, and I must have done something wrong the first go
-around.  It looks like the last commit in the log for the file is indeed
-what's packaged.
+This patch breaks the build.  Always test build your patches!
 
---
-Nate
+thanks,
+
+greg k-h
