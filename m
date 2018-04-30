@@ -1,95 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40804 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750814AbeDVI15 (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:54594 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754165AbeD3ONB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Apr 2018 04:27:57 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sun, 22 Apr 2018 11:27:33 +0300
-Message-Id: <20180422082745.9743-1-luca@coelho.fi> (sfid-20180422_102805_927353_72CA872E)
-Subject: [PATCH 00/12] iwlwifi: updates intended for v4.18 2018-04-22
+        Mon, 30 Apr 2018 10:13:01 -0400
+Received: by mail-wm0-f66.google.com with SMTP id f6so13431620wmc.4
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2018 07:13:00 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [RFC 07/18] mt76x2: add napi struct to mt76_rx_poll_complete/mt76_rx_complete signatures
+Date: Mon, 30 Apr 2018 16:12:22 +0200
+Message-Id: <eadbb6c315ca05e06c0fd26a26519fe662266ead.1525096206.git.lorenzo.bianconi@redhat.com> (sfid-20180430_161304_475711_32FDC0C4)
+In-Reply-To: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
+References: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+in order to reuse mt76_rx_complete routine supporting mt76x2u based
+devices add napi struct to mt76_rx_poll_complete and mt76_rx_complete
+routine signatures and do not fetch it according to the rx queue index
 
-Hi,
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/agg-rx.c   |  2 +-
+ drivers/net/wireless/mediatek/mt76/dma.c      |  2 +-
+ drivers/net/wireless/mediatek/mt76/mac80211.c | 12 +++++-------
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  5 +++--
+ 4 files changed, 10 insertions(+), 11 deletions(-)
 
-Here's the second batch of patches intended for 4.18.  Normal
-development work this time.  The patches include these changes:
-
-* Some preparations for new hardware;
-* A workaround to rescan the bus for the rare situation when older
-  devices become irresponsive,
-* Hardening of the firmware loading code to avoid issues with
-  corrupted files;
-* A few clean-ups and bugfixes.
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Eliad Peller (2):
-  iwlwifi: pcie: allow sending pre-built A-MSDUs
-  iwlwifi: mvm: set wakeup filters for wowlan "any" configuration
-
-Golan Ben Ami (2):
-  iwlwifi: allow different csr flags for different device families
-  iwlwifi: support new csr addresses for hw address
-
-Golan Ben-Ami (1):
-  iwlwifi: introduce Image Loader (IML) - new firmware image
-
-Johannes Berg (1):
-  iwlwifi: mvm: move skb padding reservation earlier
-
-Luca Coelho (5):
-  iwlwifi: cfg: remove unnecessary cfg data in non-dvm devices
-  iwlwifi: fw: harden page loading code
-  iwlwifi: fw: combine loading of last page block into main copy loop
-  iwlwifi: pcie: remove non-responsive device
-  iwlwifi: make bitfield a u32 instead of u16
-
-Sara Sharon (1):
-  iwlwifi: mvm: remove check for non low latency TIDs
-
- drivers/net/wireless/intel/iwlwifi/cfg/1000.c |   8 +-
- drivers/net/wireless/intel/iwlwifi/cfg/2000.c |  13 +-
- .../net/wireless/intel/iwlwifi/cfg/22000.c    |  10 +-
- drivers/net/wireless/intel/iwlwifi/cfg/5000.c |   8 +-
- drivers/net/wireless/intel/iwlwifi/cfg/6000.c |  19 ++-
- drivers/net/wireless/intel/iwlwifi/cfg/7000.c |  12 +-
- drivers/net/wireless/intel/iwlwifi/cfg/8000.c |  10 +-
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c |   6 +-
- drivers/net/wireless/intel/iwlwifi/fw/file.h  |   3 +
- drivers/net/wireless/intel/iwlwifi/fw/img.h   |   6 +
- .../net/wireless/intel/iwlwifi/fw/paging.c    |  78 ++++++----
- .../net/wireless/intel/iwlwifi/iwl-config.h   |  87 ++++++++++-
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h  |  28 +---
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  14 ++
- .../wireless/intel/iwlwifi/iwl-eeprom-read.c  |   8 +-
- .../wireless/intel/iwlwifi/iwl-modparams.h    |   2 +
- .../wireless/intel/iwlwifi/iwl-nvm-parse.c    |  14 +-
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |   5 +
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |  15 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |   3 +
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |  20 +--
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c   |   1 -
- .../net/wireless/intel/iwlwifi/mvm/utils.c    |   8 +-
- .../wireless/intel/iwlwifi/pcie/internal.h    |   5 +
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |   3 +-
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |  15 +-
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 139 ++++++++++++++----
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |  24 ++-
- 28 files changed, 400 insertions(+), 164 deletions(-)
-
+diff --git a/drivers/net/wireless/mediatek/mt76/agg-rx.c b/drivers/net/wireless/mediatek/mt76/agg-rx.c
+index b67acc6189bf..8df0d41f7317 100644
+--- a/drivers/net/wireless/mediatek/mt76/agg-rx.c
++++ b/drivers/net/wireless/mediatek/mt76/agg-rx.c
+@@ -113,7 +113,7 @@ mt76_rx_aggr_reorder_work(struct work_struct *work)
+ 	if (nframes)
+ 		ieee80211_queue_delayed_work(tid->dev->hw, &tid->reorder_work,
+ 					     REORDER_TIMEOUT);
+-	mt76_rx_complete(dev, &frames, -1);
++	mt76_rx_complete(dev, &frames, NULL);
+ 
+ 	rcu_read_unlock();
+ 	local_bh_enable();
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index 3518703524e7..528132c3d1cd 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -396,7 +396,7 @@ mt76_dma_rx_poll(struct napi_struct *napi, int budget)
+ 
+ 	do {
+ 		cur = mt76_dma_rx_process(dev, &dev->q_rx[qid], budget - done);
+-		mt76_rx_poll_complete(dev, qid);
++		mt76_rx_poll_complete(dev, qid, napi);
+ 		done += cur;
+ 	} while (cur && done < budget);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index da5254b48cf7..600db8e689aa 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -537,15 +537,11 @@ mt76_check_ps(struct mt76_dev *dev, struct sk_buff *skb)
+ }
+ 
+ void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
+-		      int queue)
++		      struct napi_struct *napi)
+ {
+-	struct napi_struct *napi = NULL;
+ 	struct ieee80211_sta *sta;
+ 	struct sk_buff *skb;
+ 
+-	if (queue >= 0)
+-	    napi = &dev->napi[queue];
+-
+ 	spin_lock(&dev->rx_lock);
+ 	while ((skb = __skb_dequeue(frames)) != NULL) {
+ 		if (mt76_check_ccmp_pn(skb)) {
+@@ -559,7 +555,8 @@ void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
+ 	spin_unlock(&dev->rx_lock);
+ }
+ 
+-void mt76_rx_poll_complete(struct mt76_dev *dev, enum mt76_rxq_id q)
++void mt76_rx_poll_complete(struct mt76_dev *dev, enum mt76_rxq_id q,
++			   struct napi_struct *napi)
+ {
+ 	struct sk_buff_head frames;
+ 	struct sk_buff *skb;
+@@ -571,5 +568,6 @@ void mt76_rx_poll_complete(struct mt76_dev *dev, enum mt76_rxq_id q)
+ 		mt76_rx_aggr_reorder(skb, &frames);
+ 	}
+ 
+-	mt76_rx_complete(dev, &frames, q);
++	mt76_rx_complete(dev, &frames, napi);
+ }
++EXPORT_SYMBOL_GPL(mt76_rx_poll_complete);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index a74e6eef51e9..f4144c3e70d3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -439,8 +439,9 @@ void mt76_wcid_key_setup(struct mt76_dev *dev, struct mt76_wcid *wcid,
+ void mt76_tx_free(struct mt76_dev *dev);
+ void mt76_put_txwi(struct mt76_dev *dev, struct mt76_txwi_cache *t);
+ void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
+-		      int queue);
+-void mt76_rx_poll_complete(struct mt76_dev *dev, enum mt76_rxq_id q);
++		      struct napi_struct *napi);
++void mt76_rx_poll_complete(struct mt76_dev *dev, enum mt76_rxq_id q,
++			   struct napi_struct *napi);
+ void mt76_rx_aggr_reorder(struct sk_buff *skb, struct sk_buff_head *frames);
+ 
+ #endif
 -- 
-2.17.0
+2.14.3
