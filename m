@@ -1,42 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60262 "EHLO nbd.name"
+Received: from mail.kernel.org ([198.145.29.99]:41162 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751242AbeDEN16 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Apr 2018 09:27:58 -0400
-Subject: Re: [PATCH 00/12] Ethernet: Add and use ether_<type>_addr globals
-To: Joe Perches <joe@perches.com>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        bridge@lists.linux-foundation.org, netfilter-devel@vger.kernel.org,
-        coreteam@netfilter.org
-Cc: linux-kernel@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com
-References: <cover.1522479607.git.joe@perches.com>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <e0ab9616-64fa-cdbc-7a77-7e25d70c1a52@nbd.name> (sfid-20180405_152819_849131_284D716E)
-Date: Thu, 5 Apr 2018 15:27:49 +0200
+        id S1753480AbeD3SQ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Apr 2018 14:16:29 -0400
+Date: Mon, 30 Apr 2018 11:16:19 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Sriram R <srirrama@codeaurora.org>
+Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH 0/2 linux-stable-4.4] ath10k: rebuild crypto header in rx
+ data frames
+Message-ID: <20180430181619.GA12118@kroah.com> (sfid-20180430_201632_881627_2F509A7C)
+References: <1525069587-19281-1-git-send-email-srirrama@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <cover.1522479607.git.joe@perches.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1525069587-19281-1-git-send-email-srirrama@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-03-31 09:05, Joe Perches wrote:
-> There are many local static and non-static arrays that are used for
-> Ethernet broadcast address output or comparison.
+On Mon, Apr 30, 2018 at 11:56:25AM +0530, Sriram R wrote:
+> ath10k has a replay detection issue which was fixed in v4.14 and we would
+> like to get this security fix also to linux-stable-4.4.But for that it
+> depends on 3 mac80211 patches so the below mac80211 commits needs to be
+> picked first in the same order and then apply this patchset.
 > 
-> Centralize the array into a single separate file and remove the local
-> arrays.
-I suspect that for many targets and configurations, the local arrays
-might actually be smaller than exporting a global. You have to factor in
-not just the .text size, but the fact that referencing an exported
-symbol needs a .reloc entry as well, which also eats up some space (at
-least when the code is being built as module).
+> f980ebc058c2 : mac80211: allow not sending MIC up from driver for HW crypto
+> f631a77ba920 : mac80211: allow same PN for AMSDU sub-frames  
+> cef0acd4d7d4 : mac80211: Add RX flag to indicate ICV stripped
+> 
+> These patches should be applied in that order(commit f980ebc058c2 first)
+> and they should apply cleanly with 3-way merge.
 
-In my opinion, your series probably causes more bloat in common
-configurations instead of reducing it.
+Thanks, now queued up.
 
-You're also touching several places that could easily use
-eth_broadcast_addr and eth_zero_addr. I think making those changes would
-be more productive than what you did in this series.
-
-- Felix
+greg k-h
