@@ -1,63 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:60558 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753109AbeDWJQi (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33374 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750882AbeD3K1V (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 05:16:38 -0400
-Date: Mon, 23 Apr 2018 11:16:31 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Amit Pundir <amit.pundir@linaro.org>
-Cc: lkml <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Christophe Ricard <christophe.ricard@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        John Stultz <john.stultz@linaro.org>,
-        Dmitry Shmidt <dimitrysh@google.com>,
-        Todd Kjos <tkjos@google.com>,
-        Android Kernel Team <kernel-team@android.com>,
-        Suren Baghdasaryan <surenb@google.com>
-Subject: Re: [RESEND][PATCH 4/4] NFC: fdp: Fix possible buffer overflow in
- WCS4000 NFC driver
-Message-ID: <20180423091631.GA14322@kroah.com> (sfid-20180423_111642_088553_A952079E)
-References: <1524045904-7005-1-git-send-email-amit.pundir@linaro.org>
- <1524045904-7005-5-git-send-email-amit.pundir@linaro.org>
+        Mon, 30 Apr 2018 06:27:21 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1524045904-7005-5-git-send-email-amit.pundir@linaro.org>
+Subject: Re: net: wireless: b43legacy: Replace GFP_ATOMIC with GFP_KERNEL in
+ dma_tx_fragment
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1523368459-32128-1-git-send-email-baijiaju1990@gmail.com>
+References: <1523368459-32128-1-git-send-email-baijiaju1990@gmail.com>
+To: Jia-Ju Bai <baijiaju1990@gmail.com>
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+        b43-dev@lists.infradead.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
+Message-Id: <20180430102720.D5FC760710@smtp.codeaurora.org> (sfid-20180430_122734_424121_1B339CCB)
+Date: Mon, 30 Apr 2018 10:27:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 18, 2018 at 03:35:04PM +0530, Amit Pundir wrote:
-> From: Suren Baghdasaryan <surenb@google.com>
-> 
-> Possible buffer overflow when reading next_read_size bytes into
-> tmp buffer after next_read_size was extracted from a previous packet.
-> 
-> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-> Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
-> ---
->  drivers/nfc/fdp/i2c.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/drivers/nfc/fdp/i2c.c b/drivers/nfc/fdp/i2c.c
-> index c4da50e07bbc..08a4f82a2965 100644
-> --- a/drivers/nfc/fdp/i2c.c
-> +++ b/drivers/nfc/fdp/i2c.c
-> @@ -176,6 +176,16 @@ static int fdp_nci_i2c_read(struct fdp_i2c_phy *phy, struct sk_buff **skb)
->  		/* Packet that contains a length */
->  		if (tmp[0] == 0 && tmp[1] == 0) {
->  			phy->next_read_size = (tmp[2] << 8) + tmp[3] + 3;
-> +			/*
-> +			 * Ensure next_read_size does not exceed sizeof(tmp)
-> +			 * for reading that many bytes during next iteration
-> +			 */
-> +			if (phy->next_read_size > FDP_NCI_I2C_MAX_PAYLOAD) {
-> +				dev_dbg(&client->dev, "%s: corrupted packet\n",
-> +					__func__);
+Jia-Ju Bai <baijiaju1990@gmail.com> wrote:
 
-As Andy points out, no need for __func__ in any dev_dbg() call.
+> dma_tx_fragment() is never called in atomic context.
+> 
+> dma_tx_fragment() is only called by b43legacy_dma_tx(), which is 
+> only called by b43legacy_tx_work().
+> b43legacy_tx_work() is only set a parameter of INIT_WORK() in 
+> b43legacy_wireless_init().
+> 
+> Despite never getting called from atomic context,
+> dma_tx_fragment() calls alloc_skb() with GFP_ATOMIC,
+> which does not sleep for allocation.
+> GFP_ATOMIC is not necessary and can be replaced with GFP_KERNEL,
+> which can sleep and improve the possibility of sucessful allocation.
+> 
+> This is found by a static analysis tool named DCNS written by myself.
+> And I also manually check it.
+> 
+> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
 
-thanks,
+Patch applied to wireless-drivers-next.git, thanks.
 
-greg k-h
+6e1d8d1470b2 net: wireless: b43legacy: Replace GFP_ATOMIC with GFP_KERNEL in dma_tx_fragment
+
+-- 
+https://patchwork.kernel.org/patch/10333217/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
