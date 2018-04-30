@@ -1,117 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f47.google.com ([209.85.214.47]:34313 "EHLO
-        mail-it0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753178AbeDRIbm (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:55810 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753172AbeD3OMy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 04:31:42 -0400
-Received: by mail-it0-f47.google.com with SMTP id t192-v6so17029236itc.1
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2018 01:31:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANrGCJeTDQ1DTuum-asODLMoY4StspzukkWfTVtb6fJ+yHBGXg@mail.gmail.com>
-References: <CANrGCJeTDQ1DTuum-asODLMoY4StspzukkWfTVtb6fJ+yHBGXg@mail.gmail.com>
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-Date: Wed, 18 Apr 2018 11:31:41 +0300
-Message-ID: <CANUX_P0VoQHQ1iPsk_u1bZsEU1ny1SxwrZbQeSEBUVGyjKcyVQ@mail.gmail.com> (sfid-20180418_103146_862242_75407647)
-Subject: Re: iwlwifi 4.18rc1 SYNC TIME_QUOTA_CMD with fw 31
-To: Scott Register <sreg@sreg.io>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Mon, 30 Apr 2018 10:12:54 -0400
+Received: by mail-wm0-f68.google.com with SMTP id a8so13434083wmg.5
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2018 07:12:53 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [RFC 02/18] mt76x2: move mt76x2_fw_header and mt76x2_patch_header definitions in mcu.h
+Date: Mon, 30 Apr 2018 16:12:17 +0200
+Message-Id: <41e2b10a374b529afe6ebc4e015c53812f23b125.1525096206.git.lorenzo.bianconi@redhat.com> (sfid-20180430_161257_979549_D41271A4)
+In-Reply-To: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
+References: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 18, 2018 at 5:47 AM, Scott Register <sreg@sreg.io> wrote:
->
-> Hello,
->
-> After upgrading to 4.18rc1 iwlwifi is printing a FW error. There was a
-> previous thread with a similar
-> issue but they seemed to resolve it with a ucode update. I think I'm
-> running a newer FW and
-> am still having an issue. 4.13 works--I haven't gone any higher so far.
+move mt76x2_fw_header and mt76x2_patch_header definitions in mcu.h in
+order to reuse them in mt76x2u mcu related code
 
-Please download the firmware from
-https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/linux-firmware.git/plain/iwlwifi-8265-36.ucode
-This should fix your problem.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c | 17 -----------------
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h | 17 +++++++++++++++++
+ 2 files changed, 17 insertions(+), 17 deletions(-)
 
->
-> iwlwifi 0000:02:00.0: Microcode SW error detected.  Restarting 0x2000000.
-> iwlwifi 0000:02:00.0: Start IWL Error Log Dump:
-> iwlwifi 0000:02:00.0: Status: 0x00000100, count: 6
-> iwlwifi 0000:02:00.0: Loaded firmware version: 31.560484.0
-> iwlwifi 0000:02:00.0: 0x00000038 | BAD_COMMAND
-> iwlwifi 0000:02:00.0: 0x00A002F1 | trm_hw_status0
-> iwlwifi 0000:02:00.0: 0x00000000 | trm_hw_status1
-> iwlwifi 0000:02:00.0: 0x0002495C | branchlink2
-> iwlwifi 0000:02:00.0: 0x0003962E | interruptlink1
-> iwlwifi 0000:02:00.0: 0x00000000 | interruptlink2
-> iwlwifi 0000:02:00.0: 0x00000000 | data1
-> iwlwifi 0000:02:00.0: 0x00000032 | data2
-> iwlwifi 0000:02:00.0: 0x00000032 | data3
-> iwlwifi 0000:02:00.0: 0x003B15C2 | beacon time
-> iwlwifi 0000:02:00.0: 0x0004EA3C | tsf low
-> iwlwifi 0000:02:00.0: 0x00000000 | tsf hi
-> iwlwifi 0000:02:00.0: 0x00000000 | time gp1
-> iwlwifi 0000:02:00.0: 0x0004EA3D | time gp2
-> iwlwifi 0000:02:00.0: 0x00000001 | uCode revision type
-> iwlwifi 0000:02:00.0: 0x0000001F | uCode version major
-> iwlwifi 0000:02:00.0: 0x00088D64 | uCode version minor
-> iwlwifi 0000:02:00.0: 0x00000230 | hw version
-> iwlwifi 0000:02:00.0: 0x00489000 | board version
-> iwlwifi 0000:02:00.0: 0x00000000 | hcmd
-> iwlwifi 0000:02:00.0: 0x00122080 | isr0
-> iwlwifi 0000:02:00.0: 0x00000000 | isr1
-> iwlwifi 0000:02:00.0: 0x28201802 | isr2
-> iwlwifi 0000:02:00.0: 0x404001C0 | isr3
-> iwlwifi 0000:02:00.0: 0x00000000 | isr4
-> iwlwifi 0000:02:00.0: 0x802F0051 | last cmd Id
-> iwlwifi 0000:02:00.0: 0x00000000 | wait_event
-> iwlwifi 0000:02:00.0: 0x0000277E | l2p_control
-> iwlwifi 0000:02:00.0: 0x00000820 | l2p_duration
-> iwlwifi 0000:02:00.0: 0x00000000 | l2p_mhvalid
-> iwlwifi 0000:02:00.0: 0x00000000 | l2p_addr_match
-> iwlwifi 0000:02:00.0: 0x0000000D | lmpm_pmg_sel
-> iwlwifi 0000:02:00.0: 0x13091828 | timestamp
-> iwlwifi 0000:02:00.0: 0x00002838 | flow_handler
-> iwlwifi 0000:02:00.0: Start IWL Error Log Dump:
-> iwlwifi 0000:02:00.0: Status: 0x00000100, count: 7
-> iwlwifi 0000:02:00.0: 0x00000034 | NMI_INTERRUPT_WDG
-> iwlwifi 0000:02:00.0: 0x00000000 | umac branchlink1
-> iwlwifi 0000:02:00.0: 0xC0086950 | umac branchlink2
-> iwlwifi 0000:02:00.0: 0xC00842BC | umac interruptlink1
-> iwlwifi 0000:02:00.0: 0xC00840CC | umac interruptlink2
-> iwlwifi 0000:02:00.0: 0x00000400 | umac data1
-> iwlwifi 0000:02:00.0: 0xC00840CC | umac data2
-> iwlwifi 0000:02:00.0: 0xDEADBEEF | umac data3
-> iwlwifi 0000:02:00.0: 0x0000001F | umac major
-> iwlwifi 0000:02:00.0: 0x00088D64 | umac minor
-> iwlwifi 0000:02:00.0: 0xC08861DC | frame pointer
-> iwlwifi 0000:02:00.0: 0xC08861DC | stack pointer
-> iwlwifi 0000:02:00.0: 0x00000000 | last host cmd
-> iwlwifi 0000:02:00.0: 0x00004008 | isr status reg
-> ieee80211 phy0: Hardware restart was requested
-> ieee80211 phy0: Hardware restart was requested
-> iwlwifi 0000:02:00.0: FW Error notification: type 0x00000000 cmd_id 0x34
-> iwlwifi 0000:02:00.0: FW Error notification: seq 0x0070 service 0x00000034
-> iwlwifi 0000:02:00.0: FW Error notification: timestamp 0x            D559
-> iwlwifi 0000:02:00.0: FW error in SYNC CMD TIME_QUOTA_CMD
-> CPU: 7 PID: 83 Comm: kworker/7:1 Tainted: G        W
-> 4.17.0-041700rc1-generic #201804152230
-> Hardware name: LENOVO 20KHCTO1WW/20KHCTO1WW, BIOS N23ET37W (1.12 ) 02/27/2018
->
-> ethtool & lspci:
-> driver: iwlwifi
-> version: 4.17.0-041700rc1-generic
-> firmware-version: 31.560484.0
-> expansion-rom-version:
-> bus-info: 0000:02:00.0
-> supports-statistics: yes
-> supports-test: no
-> supports-eeprom-access: no
-> supports-register-dump: no
-> supports-priv-flags: no
-> 02:00.0 Network controller: Intel Corporation Wireless 8265 / 8275 (rev 78)
->
-> Any ideas?
->
-> Cheers,
-> Scott
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
+index 3e2a7216ffdd..ba954e7bc426 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
+@@ -23,23 +23,6 @@
+ #include "mt76x2_dma.h"
+ #include "mt76x2_eeprom.h"
+ 
+-struct mt76x2_fw_header {
+-	__le32 ilm_len;
+-	__le32 dlm_len;
+-	__le16 build_ver;
+-	__le16 fw_ver;
+-	u8 pad[4];
+-	char build_time[16];
+-};
+-
+-struct mt76x2_patch_header {
+-	char build_time[16];
+-	char platform[4];
+-	char hw_version[4];
+-	char patch_version[4];
+-	u8 pad[2];
+-};
+-
+ static struct sk_buff *mt76x2_mcu_msg_alloc(const void *data, int len)
+ {
+ 	struct sk_buff *skb;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
+index d7a7e83262ce..e40293f21417 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
+@@ -146,6 +146,23 @@ struct mt76x2_tssi_comp {
+ 	u8 offset1;
+ } __packed __aligned(4);
+ 
++struct mt76x2_fw_header {
++	__le32 ilm_len;
++	__le32 dlm_len;
++	__le16 build_ver;
++	__le16 fw_ver;
++	u8 pad[4];
++	char build_time[16];
++};
++
++struct mt76x2_patch_header {
++	char build_time[16];
++	char platform[4];
++	char hw_version[4];
++	char patch_version[4];
++	u8 pad[2];
++};
++
+ int mt76x2_mcu_calibrate(struct mt76x2_dev *dev, enum mcu_calibration type,
+ 			 u32 param);
+ int mt76x2_mcu_tssi_comp(struct mt76x2_dev *dev, struct mt76x2_tssi_comp *tssi_data);
+-- 
+2.14.3
