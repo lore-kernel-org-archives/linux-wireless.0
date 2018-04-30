@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57148 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:53016 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750826AbeDXRZs (ORCPT
+        with ESMTP id S1751565AbeD3KmJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Apr 2018 13:25:48 -0400
+        Mon, 30 Apr 2018 06:42:09 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [v2,1/7] rsi: disable fw watchdog timer during reset
+Subject: Re: [1/6] brcmfmac: check p2pdev mac address uniqueness
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1523372657-6067-2-git-send-email-siva8118@gmail.com>
-References: <1523372657-6067-2-git-send-email-siva8118@gmail.com>
-To: Siva Rebbagondla <siva8118@gmail.com>
+In-Reply-To: <1524737811-1965-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1524737811-1965-1-git-send-email-arend.vanspriel@broadcom.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
 Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sushant Mishra <sushant.mishra@redpinesignals.com>
-Message-Id: <20180424172547.B959D6090E@smtp.codeaurora.org> (sfid-20180424_192609_614046_FC11ADF8)
-Date: Tue, 24 Apr 2018 17:25:47 +0000 (UTC)
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-Id: <20180430104208.EC5FE607CF@smtp.codeaurora.org> (sfid-20180430_124213_162228_8ED046A8)
+Date: Mon, 30 Apr 2018 10:42:08 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Siva Rebbagondla <siva8118@gmail.com> wrote:
+Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
 
-> From: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+> The mac address for p2pdev must be different from the primary interface
+> due to firmware requirement. Add an explicit check for this requirement
+> if user-space provides a mac address.
 > 
-> Firmware's watchdog timer should be disabled as a part of reset
-> sequence. This change fixes a firmware hang issue observed during
-> stress tests.
-> 
-> Signed-off-by: Amitkumar Karwar <amit.karwar@redpinesignals.com>
-> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-7 patches applied to wireless-drivers-next.git, thanks.
+Patch applied to wireless-drivers-next.git, thanks.
 
-16d3bb7b2f37 rsi: disable fw watchdog timer during reset
-8c1475bdfc3a rsi: device bootup parameter configuration
-cbbfdd6c700f rsi: use appropriate interface for power save configuration
-a55e50f0672e rsi: increase max supported aggregation subframes
-3334306a086e rsi: parse TID from data frame correctly
-1e9c410f26a2 rsi: enable power save by default for coex
-f0b147b8f1d2 rsi: advertise 5GHz support based on device capability
+cb746e47837a brcmfmac: check p2pdev mac address uniqueness
 
 -- 
-https://patchwork.kernel.org/patch/10333303/
+https://patchwork.kernel.org/patch/10365333/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
