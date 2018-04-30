@@ -1,58 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:63073 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750853AbeDDFPc (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41230 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753744AbeD3Kfm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Apr 2018 01:15:32 -0400
-Date: Wed, 4 Apr 2018 10:45:25 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: Claudiu Beznea <Claudiu.Beznea@microchip.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <venkateswara.kaja@microchip.com>, <ganesh.krishna@microchip.com>,
-        <adham.abozaeid@microchip.com>, <aditya.shankar@microchip.com>
-Subject: Re: [PATCH 00/11] staging: wilc1000: fix for checkpatch and handled
- malloc memory properly
-Message-ID: <20180404104525.22abe3fc@ajaysk-VirtualBox> (sfid-20180404_071538_917761_70461956)
-In-Reply-To: <20180328113101.GC26219@kroah.com>
-References: <1521564944-3565-1-git-send-email-ajay.kathat@microchip.com>
-        <20180321075116.bm6x3c53bahw3c2i@mwanda>
-        <20180321145021.044f4536@ajaysk-VirtualBox>
-        <53a25901-754c-bfe9-169e-d2ed4cb34583@microchip.com>
-        <20180327125213.0594ff79@ajaysk-VirtualBox>
-        <20180328113101.GC26219@kroah.com>
+        Mon, 30 Apr 2018 06:35:42 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Subject: Re: rt2x00: fix spelling mistake in various macros, UKNOWN -> UNKNOWN
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180418114750.1978-1-colin.king@canonical.com>
+References: <20180418114750.1978-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20180430103541.C860C60556@smtp.codeaurora.org> (sfid-20180430_123612_628847_9D9A367D)
+Date: Mon, 30 Apr 2018 10:35:41 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Greg,
+Colin Ian King <colin.king@canonical.com> wrote:
 
-On Wed, 28 Mar 2018 13:31:01 +0200
-Greg KH <gregkh@linuxfoundation.org> wrote:
-
-> On Tue, Mar 27, 2018 at 12:52:13PM +0530, Ajay Singh wrote:
-> > 
-> > Please let me know, in case I have to rework and resubmit this
-> > patch series to make them into staging branch.  
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> You already sent a v2 series for this, right?  Why respond to the v1
-> set?
+> Rename several macros that contain mispellings of UNKNOWN
 > 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Sorry for late reply.
+Patch applied to wireless-drivers-next.git, thanks.
 
-V2 series was not sent for this patchset. No code updates were 
-submitted for this patch series. It's an independent patch series
-with 11 patches and had changes different from other patch series.
+cc282a0c5f08 rt2x00: fix spelling mistake in various macros, UKNOWN -> UNKNOWN
 
-Just for information, the v2 patch series was submitted for different
-patch series which had 9 patches.
+-- 
+https://patchwork.kernel.org/patch/10348023/
 
-Please let me know if any other information/action is required from
-my side to include this patch series to staging.
-
-
-Regards,
-Ajay
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
