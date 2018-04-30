@@ -1,48 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:58440 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754880AbeDYRTv (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:41368 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753181AbeD3NlJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Apr 2018 13:19:51 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 11/21] staging: wilc1000: remove unused #define related to MAC status
-Date: Wed, 25 Apr 2018 22:48:16 +0530
-Message-ID: <1524676706-13179-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180425_191957_038826_93398D1A)
-In-Reply-To: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
-References: <1524676706-13179-1-git-send-email-ajay.kathat@microchip.com>
+        Mon, 30 Apr 2018 09:41:09 -0400
+From: Colin King <colin.king@canonical.com>
+To: Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] rtlwifi: fix spelling mistake: "dismatch" -> "mismatch"
+Date: Mon, 30 Apr 2018 14:41:02 +0100
+Message-Id: <20180430134102.11171-1-colin.king@canonical.com> (sfid-20180430_154139_381091_5323102A)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove below #define which are not used in code:
+From: Colin Ian King <colin.king@canonical.com>
 
-WILC_MAC_STATUS_READY
-WILC_MAC_STATUS_CONNECT
+Trivial fix to spelling mistake in RT_TRACE message text.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/staging/wilc1000/wilc_wlan_if.h | 2 --
- 1 file changed, 2 deletions(-)
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    | 2 +-
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 2 +-
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index e8a56f4..1982348 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -49,8 +49,6 @@ struct sdio_cmd53 {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
+index 8fce371749d3..f22fec093f1d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8192e2ant.c
+@@ -1783,7 +1783,7 @@ static void btc8192e2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
+ 		bool scan = false, link = false, roam = false;
  
- #define WILC_MAC_INDICATE_STATUS	0x1
- #define WILC_MAC_STATUS_INIT		-1
--#define WILC_MAC_STATUS_READY		0
--#define WILC_MAC_STATUS_CONNECT		1
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], PsTdma type dismatch!!!, ");
++			 "[BTCoex], PsTdma type mismatch!!!, ");
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+ 			 "curPsTdma=%d, recordPsTdma=%d\n",
+ 			 coex_dm->cur_ps_tdma, coex_dm->tdma_adj_type);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index 73ec31972944..279fe01bb55e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -2766,7 +2766,7 @@ static void btc8723b2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
+ 	if (coex_dm->cur_ps_tdma != coex_dm->ps_tdma_du_adj_type) {
+ 		bool scan = false, link = false, roam = false;
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], PsTdma type dismatch!!!, curPsTdma=%d, recordPsTdma=%d\n",
++			 "[BTCoex], PsTdma type mismatch!!!, curPsTdma=%d, recordPsTdma=%d\n",
+ 			 coex_dm->cur_ps_tdma, coex_dm->ps_tdma_du_adj_type);
  
- #define WILC_MAC_INDICATE_SCAN		0x2
+ 		btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_SCAN, &scan);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+index 2202d5e18977..01a9d303603b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8821a2ant.c
+@@ -2614,7 +2614,7 @@ static void btc8821a2ant_tdma_duration_adjust(struct btc_coexist *btcoexist,
+ 		bool scan = false, link = false, roam = false;
  
+ 		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
+-			 "[BTCoex], PsTdma type dismatch!!!, cur_ps_tdma = %d, recordPsTdma = %d\n",
++			 "[BTCoex], PsTdma type mismatch!!!, cur_ps_tdma = %d, recordPsTdma = %d\n",
+ 			 coex_dm->cur_ps_tdma, coex_dm->ps_tdma_du_adj_type);
+ 
+ 		btcoexist->btc_get(btcoexist, BTC_GET_BL_WIFI_SCAN, &scan);
 -- 
-2.7.4
+2.17.0
