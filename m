@@ -1,50 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37446 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751510AbeEPNg0 (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:60635 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751497AbeD3WOg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 May 2018 09:36:26 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V2 1/6] brcmfmac: move ALLFFMAC variable in flowring module
-References: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
-        <1526472723-15758-2-git-send-email-arend.vanspriel@broadcom.com>
-Date: Wed, 16 May 2018 16:36:22 +0300
-In-Reply-To: <1526472723-15758-2-git-send-email-arend.vanspriel@broadcom.com>
-        (Arend van Spriel's message of "Wed, 16 May 2018 14:11:58 +0200")
-Message-ID: <87lgcjlo2x.fsf@kamboji.qca.qualcomm.com> (sfid-20180516_153632_269379_7FA2926A)
+        Mon, 30 Apr 2018 18:14:36 -0400
+Subject: Re: [PATCH v7] ath10k: fix crash in recent 3.5.3 9984 firmware due
+ wrong handling of peer_bw_rxnss_override parameter
+To: Ben Greear <greearb@candelatech.com>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+References: <20180430213046.8393-1-s.gottschall@dd-wrt.com>
+ <5AE78F7D.7090909@candelatech.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <caeeaac0-dd71-89f3-8690-88d4a58ec5a0@dd-wrt.com> (sfid-20180501_001440_138953_0A87F692)
+Date: Tue, 1 May 2018 00:14:33 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5AE78F7D.7090909@candelatech.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-> The only user of ALLFFMAC is the flowring module so no need to
-> expose it in a header file.
+>> +    /* only 4x4 configuration do support 2x2 for VHT160, everything 
+>> else must use 1x1 */
+>> +    if (ar->cfg_rx_chainmask == 15)
+>> +        nss160 = arg->peer_num_spatial_streams <= 2 ? 
+>> arg->peer_num_spatial_streams : 2;
 >
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> ---
-> Hi Kalle,
->
-> I recall Joe Perches posted patches dealing with broadcast address declarations,
-> but don't know what happened with those. In patchwork [1] is says 'Not Applicable'
-> whatever that means. I noticed Johannes set similar mac80211 change to
-> 'Awaiting Upstream'. Anyway, when applying this patch the patch in [1] needs to
-> be reworked.
->
-> Regards,
-> Arend
->
-> [1] https://patchwork.kernel.org/patch/10318857/
+> If peer nss == 3, then nss160 must be 1x1.  That is why I previously 
+> suggested the code that set nss160 to equal nss / 2
+> (with special case to bump nss160 to 1x1 if nss == 1.
+btw. it doesnt matter if the peer sends with 3x3 or even 4x4, i still 
+can receive with 2x2. thats no conflict. switching back to 1x1 of the 
+peer sends vht160 with 3x3 makes no real sense
+i dont have to turn off a chain, if i'm able todo 2x2, no matter what 
+the peer does. i just have to limit the maximum
 
-'Not Applicable' means that I have assumed that the patch is not
-suitable for my tree for whatever reason, I guess in this case because
-it was part of a bigger patchset.
+>
+> A 9984 peer with chainmask configured to 0x7 would hit this case I think.
+>
+> Overall this looks better than previous patches though.
+>
+> Thanks,
+> Ben
+>
+>> +
+>> +    /* in case if peer is connected with vht160 or vht80+80, we need 
+>> to properly adjust rxnss parameters otherwise firmware will raise a 
+>> assert */
+>> +    switch(arg->peer_phymode) {
+>> +    case MODE_11AC_VHT80_80:
+>> +        arg->peer_bw_rxnss_override = BW_NSS_FWCONF_80_80(nss160);
+>> +    /* fall through */
+>> +    case MODE_11AC_VHT160:
+>> +        arg->peer_bw_rxnss_override |= BW_NSS_FWCONF_160(nss160);
+>> +    break;
+>> +    default:
+>> +    break;
+>>       }
+>> +
+>> +    ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vht peer %pM max_mpdu %d 
+>> flags 0x%x peer_bw_rxnss_override 0x%x\n",
+>> +           sta->addr, arg->peer_max_mpdu, arg->peer_flags, 
+>> arg->peer_bw_rxnss_override);
+>>   }
+>>
+>>   static void ath10k_peer_assoc_h_qos(struct ath10k *ar,
+>> @@ -2696,9 +2700,9 @@ static int ath10k_peer_assoc_prepare(struct 
+>> ath10k *ar,
+>>       ath10k_peer_assoc_h_crypto(ar, vif, sta, arg);
+>>       ath10k_peer_assoc_h_rates(ar, vif, sta, arg);
+>>       ath10k_peer_assoc_h_ht(ar, vif, sta, arg);
+>> +    ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
+>>       ath10k_peer_assoc_h_vht(ar, vif, sta, arg);
+>>       ath10k_peer_assoc_h_qos(ar, vif, sta, arg);
+>> -    ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
+>>
+>>       return 0;
+>>   }
+>> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c 
+>> b/drivers/net/wireless/ath/ath10k/wmi.c
+>> index 2c36256a441d..3797dca317ff 100644
+>> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+>> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+>> @@ -7211,12 +7211,7 @@ ath10k_wmi_peer_assoc_fill_10_4(struct ath10k 
+>> *ar, void *buf,
+>>       struct wmi_10_4_peer_assoc_complete_cmd *cmd = buf;
+>>
+>>       ath10k_wmi_peer_assoc_fill_10_2(ar, buf, arg);
+>> -    if (arg->peer_bw_rxnss_override)
+>> -        cmd->peer_bw_rxnss_override =
+>> -            __cpu_to_le32((arg->peer_bw_rxnss_override - 1) |
+>> -                      BIT(PEER_BW_RXNSS_OVERRIDE_OFFSET));
+>> -    else
+>> -        cmd->peer_bw_rxnss_override = 0;
+>> +    cmd->peer_bw_rxnss_override = 
+>> __cpu_to_le32(arg->peer_bw_rxnss_override);
+>>   }
+>>
+>>   static int
+>> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h 
+>> b/drivers/net/wireless/ath/ath10k/wmi.h
+>> index 46ae19bb2c92..1fe0aa5523a6 100644
+>> --- a/drivers/net/wireless/ath/ath10k/wmi.h
+>> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
+>> @@ -6380,7 +6380,19 @@ struct wmi_10_2_peer_assoc_complete_cmd {
+>>       __le32 info0; /* WMI_PEER_ASSOC_INFO0_ */
+>>   } __packed;
+>>
+>> -#define PEER_BW_RXNSS_OVERRIDE_OFFSET  31
+>> +#define BW_NSS_FWCONF_MAP_ENABLE             (1 << 31)
+>> +#define BW_NSS_FWCONF_MAP_160MHZ_S           (0)
+>> +#define BW_NSS_FWCONF_MAP_160MHZ_M           (0x00000007)
+>> +#define BW_NSS_FWCONF_MAP_80_80MHZ_S         (3)
+>> +#define BW_NSS_FWCONF_MAP_80_80MHZ_M         (0x00000038)
+>> +#define BW_NSS_FWCONF_MAP_M                  (0x0000003F)
+>> +
+>> +#define GET_BW_NSS_FWCONF_160(x)             ((((x) & 
+>> BW_NSS_FWCONF_MAP_160MHZ_M) >> BW_NSS_FWCONF_MAP_160MHZ_S) + 1)
+>> +#define GET_BW_NSS_FWCONF_80_80(x)           ((((x) & 
+>> BW_NSS_FWCONF_MAP_80_80MHZ_M) >> BW_NSS_FWCONF_MAP_80_80MHZ_S) + 1)
+>> +
+>> +/* Values defined to set 160 MHz Bandwidth NSS Mapping into FW*/
+>> +#define BW_NSS_FWCONF_160(x)          (BW_NSS_FWCONF_MAP_ENABLE | 
+>> (((x - 1) << BW_NSS_FWCONF_MAP_160MHZ_S) & BW_NSS_FWCONF_MAP_160MHZ_M))
+>> +#define BW_NSS_FWCONF_80_80(x)        (BW_NSS_FWCONF_MAP_ENABLE | 
+>> (((x - 1) << BW_NSS_FWCONF_MAP_80_80MHZ_S) & 
+>> BW_NSS_FWCONF_MAP_80_80MHZ_M))
+>>
+>>   struct wmi_10_4_peer_assoc_complete_cmd {
+>>       struct wmi_10_2_peer_assoc_complete_cmd cmd;
+>>
+>
+>
 
 -- 
-Kalle Valo
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
