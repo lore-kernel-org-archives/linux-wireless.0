@@ -1,61 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:37064 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753337AbeDQNX5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Apr 2018 09:23:57 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
-        loic.poulain@linaro.org, rfried@codeaurora.org,
-        bjorn.andersson@linaro.org, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH v2 1/5] wcn36xx: abort scan request when 'dequeued' indicator is sent
-Date: Tue, 17 Apr 2018 15:23:33 +0200
-Message-Id: <20180417132337.31720-2-daniel@zonque.org> (sfid-20180417_152401_570137_2057B933)
-In-Reply-To: <20180417132337.31720-1-daniel@zonque.org>
-References: <20180417132337.31720-1-daniel@zonque.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:38248 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751339AbeD3KdP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Apr 2018 06:33:15 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: rsi_91x: fix structurally dead code
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180426130138.GA440@embeddedor.com>
+References: <20180426130138.GA440@embeddedor.com>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Message-Id: <20180430103315.35F26606AC@smtp.codeaurora.org> (sfid-20180430_123334_408009_57209BF2)
+Date: Mon, 30 Apr 2018 10:33:15 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the firmware sends a WCN36XX_HAL_SCAN_IND_DEQUEUED indication,
-the request is apparently no longer valid. Attempts to stop the hardware
-scan request subsequently will lead to the following error message, and
-the hardware is no longer able to communicate with any AP:
+"Gustavo A. R. Silva" <gustavo@embeddedor.com> wrote:
 
-[   57.917186] wcn36xx: ERROR hal_stop_scan_offload response failed err=5
+> Function rsi_hal_key_config returns before reaching code at line
+> 922 if (status), hence this code is structurally dead.
+> 
+> Fix this by storing the value returned by rsi_hal_load_key
+> into _status_ for its further evaluation and use.
+> 
+> Addresses-Coverity-ID: 1468409 ("Structurally dead code")
+> Fixes: 4fd6c4762f37 ("rsi: roaming enhancements")
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 
-Interpreting this indicator message as scan abortion fixes this.
+Patch applied to wireless-drivers-next.git, thanks.
 
-While at it, add a newline to a debug print.
+e1fd7ceec194 rsi_91x: fix structurally dead code
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
----
- drivers/net/wireless/ath/wcn36xx/smd.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 297a785d0785..b7964f79d837 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -2140,10 +2140,11 @@ static int wcn36xx_smd_hw_scan_ind(struct wcn36xx *wcn, void *buf, size_t len)
- 		return -EIO;
- 	}
- 
--	wcn36xx_dbg(WCN36XX_DBG_HAL, "scan indication (type %x)", rsp->type);
-+	wcn36xx_dbg(WCN36XX_DBG_HAL, "scan indication (type %x)\n", rsp->type);
- 
- 	switch (rsp->type) {
- 	case WCN36XX_HAL_SCAN_IND_FAILED:
-+	case WCN36XX_HAL_SCAN_IND_DEQUEUED:
- 		scan_info.aborted = true;
- 		/* fall through */
- 	case WCN36XX_HAL_SCAN_IND_COMPLETED:
-@@ -2156,7 +2157,6 @@ static int wcn36xx_smd_hw_scan_ind(struct wcn36xx *wcn, void *buf, size_t len)
- 		break;
- 	case WCN36XX_HAL_SCAN_IND_STARTED:
- 	case WCN36XX_HAL_SCAN_IND_FOREIGN_CHANNEL:
--	case WCN36XX_HAL_SCAN_IND_DEQUEUED:
- 	case WCN36XX_HAL_SCAN_IND_PREEMPTED:
- 	case WCN36XX_HAL_SCAN_IND_RESTARTED:
- 		break;
 -- 
-2.14.3
+https://patchwork.kernel.org/patch/10365997/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
