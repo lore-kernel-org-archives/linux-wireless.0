@@ -1,76 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:54945 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752022AbeDRHGn (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47874 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750882AbeD3KEd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Apr 2018 03:06:43 -0400
-Subject: Re: [PATCH v2 4/4] ath10k: Enable sta idle power save
-To: pillair@codeaurora.org, ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-References: <1523966821-21903-1-git-send-email-pillair@codeaurora.org>
- <1523966821-21903-5-git-send-email-pillair@codeaurora.org>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <946e582c-2438-872b-eec8-25d9dcb994d9@dd-wrt.com> (sfid-20180418_090647_445707_6C05A69E)
-Date: Wed, 18 Apr 2018 09:06:40 +0200
+        Mon, 30 Apr 2018 06:04:33 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com,
+        david.e.box@intel.com, joe.konno@intel.com
+Subject: Re: pull-request: iwlwifi-next 2018-04-26
+References: <d70efddcc5ef39561504f61eb0069281b76d8ce2.camel@coelho.fi>
+Date: Mon, 30 Apr 2018 13:04:27 +0300
+In-Reply-To: <d70efddcc5ef39561504f61eb0069281b76d8ce2.camel@coelho.fi> (Luca
+        Coelho's message of "Thu, 26 Apr 2018 15:45:34 +0300")
+Message-ID: <87r2mx3t90.fsf@kamboji.qca.qualcomm.com> (sfid-20180430_120437_414210_C987AD05)
 MIME-Version: 1.0
-In-Reply-To: <1523966821-21903-5-git-send-email-pillair@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-from my point of view powersave should be optional and not forced.
+Luca Coelho <luca@coelho.fi> writes:
 
-consider :
-iw dev <devname> set power_save on/off
-
-so there is already a config option made for that purpose,
-
-Sebastian
-
-Am 17.04.2018 um 14:07 schrieb pillair@codeaurora.org:
-> From: Govind Singh <govinds@codeaurora.org>
+> This is the second batch of patches intended for v4.18.  Nothing major
+> here, just the usual continued development, bugfixes, new FW APIs and
+> some new features.  More details about the contents in the tag
+> description.
 >
-> Enable sta power save in fw for the targets that
-> supports idle power save. The idle ps enable command
-> will be ignored by the firmware which does not support
-> this feature.
+> I have sent this out before and kbuildbot reported success.
 >
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
-> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
-> ---
->   drivers/net/wireless/ath/ath10k/mac.c | 7 +++++++
->   1 file changed, 7 insertions(+)
+> Please let me know if there are any issues.
 >
-> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> index 7e02ca02b28e..1d9222af1bb2 100644
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -4679,6 +4679,13 @@ static int ath10k_start(struct ieee80211_hw *hw)
->   		}
->   	}
->   
-> +	param = ar->wmi.pdev_param->idle_ps_config;
-> +	ret = ath10k_wmi_pdev_set_param(ar, param, 1);
-> +	if (ret && ret != -EOPNOTSUPP) {
-> +		ath10k_warn(ar, "failed to enable idle_ps_config: %d\n", ret);
-> +		goto err_core_stop;
-> +	}
-> +
->   	__ath10k_set_antenna(ar, ar->cfg_tx_chainmask, ar->cfg_rx_chainmask);
->   
->   	/*
+> Cheers,
+> Luca.
+>
+>
+> The following changes since commit 0ddcf3e76ae4d02918e609342a1020b50258fadd:
+>
+>   Merge git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git (2018-04-26 13:26:37 +0300)
+>
+> are available in the Git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2018-04-26
+>
+> for you to fetch changes up to d3a6f7fb97fc34a38e40cc56392e701598f99863:
+>
+>   iwlwifi: mvm: set wakeup filters for wowlan "any" configuration (2018-04-26 15:18:07 +0300)
+>
+> ----------------------------------------------------------------
+> Second batch of iwlwifi patches for 4.18
+>
+> * Some preparations for new hardware;
+> * A workaround to rescan the bus for the rare situation when older
+>   devices become irresponsive,
+> * Hardening of the firmware loading code to avoid issues with
+>   corrupted files;
+> * A few clean-ups and bugfixes.
+>
+> ----------------------------------------------------------------
 
+Pulled, thanks.
 
 -- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+Kalle Valo
