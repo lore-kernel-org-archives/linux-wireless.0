@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40938 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:59902 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752955AbeDJOZN (ORCPT
+        with ESMTP id S1751339AbeD3KXc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Apr 2018 10:25:13 -0400
+        Mon, 30 Apr 2018 06:23:32 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [v2,13/13] dt: bindings: add bindings for wcn3990 wifi block
+Subject: Re: mwifiex: fix mwifiex_hard_start_xmit()'s return type
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1521781424-24972-14-git-send-email-govinds@codeaurora.org>
-References: <1521781424-24972-14-git-send-email-govinds@codeaurora.org>
-To: Govind Singh <govinds@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Message-Id: <20180410142513.238DE60D81@smtp.codeaurora.org> (sfid-20180410_162518_462512_68F4051C)
-Date: Tue, 10 Apr 2018 14:25:13 +0000 (UTC)
+In-Reply-To: <20180424131802.4913-1-luc.vanoostenryck@gmail.com>
+References: <20180424131802.4913-1-luc.vanoostenryck@gmail.com>
+To: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+        Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Message-Id: <20180430102331.C959D60710@smtp.codeaurora.org> (sfid-20180430_122351_148116_56F1B18B)
+Date: Mon, 30 Apr 2018 10:23:31 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Govind Singh <govinds@codeaurora.org> wrote:
+Luc Van Oostenryck <luc.vanoostenryck@gmail.com> wrote:
 
-> Add device tree binding documentation details for wcn3990
-> wifi block present in Qualcomm SDM845/APQ8098 SoC into
-> "qcom,ath10k.txt".
+> The method ndo_start_xmit() is defined as returning an 'netdev_tx_t',
+> which is a typedef for an enum type, but the implementation in this
+> driver returns an 'int'.
 > 
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> Fix this by returning 'netdev_tx_t' in this driver too.
+> 
+> Signed-off-by: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
 
-Govind, you forgot to CC devicetree list. I was wondering why there's no ack
-from device tree maintainers and realised only now that they were not CCed.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Please resubmit this patch unmodified (no need to resubmit others) and CC also
-devicetree list. Hopefully we get an ack from them and I can finally apply this
-patchset.
+c126e1995f79 mwifiex: fix mwifiex_hard_start_xmit()'s return type
 
 -- 
-https://patchwork.kernel.org/patch/10302683/
+https://patchwork.kernel.org/patch/10359857/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
