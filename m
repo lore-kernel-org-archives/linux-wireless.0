@@ -1,116 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:45384 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753327AbeERJai (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39728 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751384AbeD3WKc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 05:30:38 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 07/14] rtlwifi: remove dummy hal_op rx_command_packet from rtl8188ee and rtl8723ae
-Date: Fri, 18 May 2018 17:30:00 +0800
-Message-ID: <20180518093007.23594-8-pkshih@realtek.com> (sfid-20180518_113222_763750_4F120E06)
-In-Reply-To: <20180518093007.23594-1-pkshih@realtek.com>
-References: <20180518093007.23594-1-pkshih@realtek.com>
+        Mon, 30 Apr 2018 18:10:32 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 30 Apr 2018 15:10:31 -0700
+From: asinghal@codeaurora.org
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <jouni@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Kiran Kumar Lokere <klokere@codeaurora.org>,
+        jjohnson@codeaurora.org
+Subject: Re: [PATCH 2/2] cfg80211: Modify wiphy registration semantics for
+ self managed hints
+In-Reply-To: <1524150429.3024.24.camel@sipsolutions.net>
+References: <1520106021-16836-1-git-send-email-jouni@codeaurora.org>
+ <1520106021-16836-2-git-send-email-jouni@codeaurora.org>
+ <1521627352.2645.27.camel@sipsolutions.net>
+ <5f8caab7e7cfb88072c2e221ea45063e@codeaurora.org>
+ <1524150429.3024.24.camel@sipsolutions.net>
+Message-ID: <8dab316b358495f85821474540af4532@codeaurora.org> (sfid-20180501_001035_361294_307609C5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+hi Johannes,
+             replies inline:
 
-The caller of hal_op rx_command_packet will assert function pointer
-before calling, so we can remove dummy functions safely.
+On 2018-04-19 08:07, Johannes Berg wrote:
+> On Fri, 2018-04-13 at 13:32 -0700, asinghal@codeaurora.org wrote:
+>> hi Johannes,
+>>              please fine some replies inline:
+>> 
+>> On 2018-03-21 03:15, Johannes Berg wrote:
+>> > So I really think this should just be one patch - it's not about
+>> > "registration semantics" but about which types of requests get passed
+>> > to reg_notifier(), and if you do it in one place you'd better also do
+>> > it in the other.
+>> 
+>> Sure, I have combined the two patches in one patch now:
+> 
+> So now you should probably resend it properly, with a new subject that
+> explains it better? Just "modify" doesn't really seem all that
+> appropriate - what's the modification?
+> 
+> Patchwork also lost half the patch for some reason, probably you
+> copy/pasted it and lost some whitespace at an empty line.
+> 
+We have posted a new patch-set with better commit title and message.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c  | 2 --
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c | 7 -------
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.h | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c  | 1 -
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c | 7 -------
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.h | 3 ---
- 6 files changed, 24 deletions(-)
+>> Call the regulatory notifier for self managed hints only if
+>> initiator is NL80211_REGDOM_SET_BY_USER and hint type is
+>> NL80211_USER_REG_HINT_CELL_BASE. Also call regulatory
+>> notifier when wiphy is registered under similar conditions.
+> 
+> I guess this should say why.
+> 
+>>   	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
+>>   		wiphy = &rdev->wiphy;
+>> -		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
+>> +		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
+>>   			self_managed_found = true;
+>> -		else
+>> -			return false;
+>> +			if (request->initiator == NL80211_REGDOM_SET_BY_USER &&
+>> +			    request->user_reg_hint_type ==
+>> +			    NL80211_USER_REG_HINT_CELL_BASE)
+>> +				reg_call_notifier(wiphy, request);
+>> +		} else {
+>> +			self_managed_found = false;
+>> +		}
+>>   	}
+> 
+> This is awkward now - how about
+> 
+> self_managed_found = regulatory_flags & SELF_MANAGED;
+> if (self_managed_found &&
+>     request->initiator == ... &&
+>     ...)
+>         reg_call_notifier(...)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
-index 82681b96ef93..8c15ffd3568b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
-@@ -263,8 +263,6 @@ static struct rtl_hal_ops rtl8188ee_hal_ops = {
- 	.get_rfreg = rtl88e_phy_query_rf_reg,
- 	.set_rfreg = rtl88e_phy_set_rf_reg,
- 	.get_btc_status = rtl88e_get_btc_status,
--	.rx_command_packet = rtl88ee_rx_command_packet,
--
- };
- 
- static struct rtl_mod_params rtl88ee_mod_params = {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
-index 9670732b2bc6..4c1f8b08fc10 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
-@@ -850,10 +850,3 @@ void rtl88ee_tx_polling(struct ieee80211_hw *hw, u8 hw_queue)
- 			       BIT(0) << (hw_queue));
- 	}
- }
--
--u32 rtl88ee_rx_command_packet(struct ieee80211_hw *hw,
--			      const struct rtl_stats *status,
--			      struct sk_buff *skb)
--{
--	return 0;
--}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.h
-index f902d6769aa8..127ba977206f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.h
-@@ -790,8 +790,4 @@ void rtl88ee_tx_polling(struct ieee80211_hw *hw, u8 hw_queue);
- void rtl88ee_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
- 			     bool firstseg, bool lastseg,
- 			     struct sk_buff *skb);
--u32 rtl88ee_rx_command_packet(struct ieee80211_hw *hw,
--			      const struct rtl_stats *status,
--			      struct sk_buff *skb);
--
- #endif
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-index a545ea317323..07b82700d1de 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-@@ -260,7 +260,6 @@ static struct rtl_hal_ops rtl8723e_hal_ops = {
- 	.bt_coex_off_before_lps =
- 		rtl8723e_dm_bt_turn_off_bt_coexist_before_enter_lps,
- 	.get_btc_status = rtl8723e_get_btc_status,
--	.rx_command_packet = rtl8723e_rx_command_packet,
- 	.is_fw_header = is_fw_header,
- };
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
-index 23485602a9a1..d461d0c9631f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
-@@ -709,10 +709,3 @@ void rtl8723e_tx_polling(struct ieee80211_hw *hw, u8 hw_queue)
- 			       BIT(0) << (hw_queue));
- 	}
- }
--
--u32 rtl8723e_rx_command_packet(struct ieee80211_hw *hw,
--			       const struct rtl_stats *status,
--			       struct sk_buff *skb)
--{
--	return 0;
--}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.h
-index 985ce0b77ea5..d592b08d4ac8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.h
-@@ -716,7 +716,4 @@ void rtl8723e_tx_polling(struct ieee80211_hw *hw, u8 hw_queue);
- void rtl8723e_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
- 			      bool firstseg, bool lastseg,
- 			      struct sk_buff *skb);
--u32 rtl8723e_rx_command_packet(struct ieee80211_hw *hw,
--			       const struct rtl_stats *status,
--			       struct sk_buff *skb);
- #endif
--- 
-2.15.1
+This has been addressed in the new patch with a separate notify 
+function.
+> 
+> 
+>> @@ -3700,15 +3705,21 @@ void wiphy_regulatory_register(struct wiphy
+>> *wiphy)
+>>   {
+>>   	struct regulatory_request *lr;
+>> 
+>> -	/* self-managed devices ignore external hints */
+>> -	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
+>> +	lr = get_last_request();
+>> +
+>> +	/* self-managed devices ignore beacon hints and 11d IE */
+>> +	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
+>>   		wiphy->regulatory_flags |= REGULATORY_DISABLE_BEACON_HINTS |
+>> -					   REGULATORY_COUNTRY_IE_IGNORE;
+>> +			REGULATORY_COUNTRY_IE_IGNORE;
+> 
+> no need to change the indentation here
+
+has been addressed in new patch.
+thanks,
+amar
+> 
+> johannes
