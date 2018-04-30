@@ -1,47 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:43938 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752796AbeEGVVe (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46434 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753744AbeD3XoS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 17:21:34 -0400
-Message-ID: <1525728090.6222.1.camel@sipsolutions.net> (sfid-20180507_232137_196018_D49580FE)
-Subject: Re: [PATCH 2/3] iw: Print TXQ statistics for stations and interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Date: Mon, 07 May 2018 23:21:30 +0200
-In-Reply-To: <20180219170224.14816-3-toke@toke.dk> (sfid-20180219_180319_201142_47E9DB27)
-References: <20180219170224.14816-1-toke@toke.dk>
-         <20180219170224.14816-3-toke@toke.dk>
-         (sfid-20180219_180319_201142_47E9DB27)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 30 Apr 2018 19:44:18 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 01 May 2018 05:14:17 +0530
+From: Sriram R <srirrama@codeaurora.org>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org,
+        Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+Subject: Re: [PATCH 2/2 - linux-stable-4.4] ath10k: rebuild crypto header in
+ rx data frames
+In-Reply-To: <20180430190901.GB8415@kroah.com>
+References: <1525069587-19281-1-git-send-email-srirrama@codeaurora.org>
+ <1525069587-19281-3-git-send-email-srirrama@codeaurora.org>
+ <20180430190901.GB8415@kroah.com>
+Message-ID: <583dcb6821d9803277f60780385dff52@codeaurora.org> (sfid-20180501_014421_920421_6E7A941F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-02-19 at 18:02 +0100, Toke Høiland-Jørgensen wrote:
+On 2018-05-01 00:39, Greg KH wrote:
+> On Mon, Apr 30, 2018 at 11:56:27AM +0530, Sriram R wrote:
+>> Rx data frames notified through HTT_T2H_MSG_TYPE_RX_IND and
+>> HTT_T2H_MSG_TYPE_RX_FRAG_IND expect PN/TSC check to be done
+>> on host (mac80211) rather than firmware. Rebuild cipher header
+>> in every received data frames (that are notified through those
+>> HTT interfaces) from the rx_hdr_status tlv available in the
+>> rx descriptor of the first msdu. Skip setting RX_FLAG_IV_STRIPPED
+>> flag for the packets which requires mac80211 PN/TSC check support
+>> and set appropriate RX_FLAG for stripped crypto tail. Hw QCA988X,
+>> and QCA99X0 currently need the rebuilding of cipher header to
+>> perform PN/TSC check for replay attack.
+>> 
+>> [Upstream Commit : 7eccb738fce57cbe53ed903ccf43f9ab257b15b3]
+>> 
+>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+>> Signed-off-by: Sriram R <srirrama@codeaurora.org>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/htt_rx.c | 98 
+>> ++++++++++++++++++++++++++------
+>>  1 file changed, 82 insertions(+), 16 deletions(-)
 > 
-> +	if (header && tid >= 0)
-> +		pos += snprintf(buf, buflen, "\n\t\tTID\tqsz-byt\t"
-> +				"qsz-pkt\tflows\tdrops\tmarks\toverlmt\t"
-> +				"hashcol\ttx-bytes\ttx-packets");
-> +	else if (header)
-> +		pos += snprintf(buf, buflen, "\n\t\tqsz-byt\t"
-> +				"qsz-pkt\tflows\tdrops\tmarks\toverlmt\t"
-> +				"hashcol\ttx-bytes\ttx-packets");
-> +
-> +	if (tid >= 0)
-> +		pos += snprintf(pos, buflen - (pos - buf), "\n\t\t%d", tid);
-> +	else
-> +		pos += snprintf(pos, buflen - (pos - buf), "\n\t");
-> +
-> +	txqinfo = txqstats_info[NL80211_TXQ_STATS_BACKLOG_BYTES];
-> +	if (txqinfo)
-> +		pos += snprintf(pos, buflen - (pos - buf), "\t%u",
-> +				nla_get_u32(txqinfo));
+> This patch breaks the build.  Always test build your patches!
+> 
+> thanks,
+> 
+> greg k-h
+Hi Greg,
 
-since the header is fixed, shouldn't all of these get an else branch
-that just prints a tab or so?
+   This patch along with its dependency patches (in the following order)
 
-johannes
+f980ebc058c2 : mac80211: allow not sending MIC up from driver for HW 
+crypto
+f631a77ba920 : mac80211: allow same PN for AMSDU sub-frames
+cef0acd4d7d4 : mac80211: Add RX flag to indicate ICV stripped
+[PATCH 1/2 linux-stable-4.4] ath10k: Add new hw param to identify 
+alignment for different chipsets
+
+build fine when checked with v4.4.130.
+
+Kindly let me know if you face any issues while trying out in this 
+order.
+
+Thanks,
+Sriram.R
