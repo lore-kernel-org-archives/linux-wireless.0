@@ -1,124 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:51200 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752821AbeDLLNV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Apr 2018 07:13:21 -0400
-From: Daniel Mack <daniel@zonque.org>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:34910 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753704AbeD3NTY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Apr 2018 09:19:24 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 051E4401DEA8
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2018 13:19:24 +0000 (UTC)
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
-        rfried@codeaurora.org, bjorn.andersson@linaro.org,
-        Daniel Mack <daniel@zonque.org>
-Subject: [PATCH] wcn36xx: pass correct BSS index when deleting BSS keys
-Date: Thu, 12 Apr 2018 13:13:11 +0200
-Message-Id: <20180412111311.28809-1-daniel@zonque.org> (sfid-20180412_131345_901291_4AB32091)
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 2/2] rt2x00: check against flushing empty queue
+Date: Mon, 30 Apr 2018 15:19:17 +0200
+Message-Id: <1525094357-24782-2-git-send-email-sgruszka@redhat.com> (sfid-20180430_151929_499312_1A8C8B68)
+In-Reply-To: <1525094357-24782-1-git-send-email-sgruszka@redhat.com>
+References: <1525094357-24782-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware message to delete BSS keys expects a BSS index to be passed.
-This field is currently hard-coded to 0. Fix this by passing in the index
-we received from the firmware when the BSS was configured.
+We have check if queue is not empty when start flushing queues on
+by mac80211 callback, but we also can start flushing queues by internal
+driver calls. So move check into rt2x00queue_flush_queue() to assure
+we do not flush empty queue anytime.
 
-Also, AFAIU, when a BSS is deleted, the firmware apparently drops all the
-keys associated with it. Trying to remove the key explicitly afterwards
-will hence lead to the following message:
+Additionally add warning if we start to kick empty queue as in such
+situation we set wrong index in the HW queue, what can confuse the HW
+and have various negative consequences.
 
-  wcn36xx: ERROR hal_remove_bsskey response failed err=16
-
-This is now suppressed with an extra check for the BSS index validity.
-
-Signed-off-by: Daniel Mack <daniel@zonque.org>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ath/wcn36xx/main.c | 10 +++++++---
- drivers/net/wireless/ath/wcn36xx/smd.c  |  6 ++++--
- drivers/net/wireless/ath/wcn36xx/smd.h  |  2 ++
- 3 files changed, 13 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ralink/rt2x00/rt2800mmio.c  | 1 +
+ drivers/net/wireless/ralink/rt2x00/rt2x00mac.c   | 3 +--
+ drivers/net/wireless/ralink/rt2x00/rt2x00queue.c | 2 ++
+ 3 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 0bc9283e7d8d..1b17c35a7944 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -547,6 +547,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		} else {
- 			wcn36xx_smd_set_bsskey(wcn,
- 				vif_priv->encrypt_type,
-+				vif_priv->bss_index,
- 				key_conf->keyidx,
- 				key_conf->keylen,
- 				key);
-@@ -564,10 +565,13 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		break;
- 	case DISABLE_KEY:
- 		if (!(IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags)) {
-+			if (vif_priv->bss_index != WCN36XX_HAL_BSS_INVALID_IDX)
-+				wcn36xx_smd_remove_bsskey(wcn,
-+					vif_priv->encrypt_type,
-+					vif_priv->bss_index,
-+					key_conf->keyidx);
-+
- 			vif_priv->encrypt_type = WCN36XX_HAL_ED_NONE;
--			wcn36xx_smd_remove_bsskey(wcn,
--				vif_priv->encrypt_type,
--				key_conf->keyidx);
- 		} else {
- 			sta_priv->is_data_encrypted = false;
- 			/* do not remove key if disassociated */
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 9827a1e1124b..297a785d0785 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1636,6 +1636,7 @@ int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c b/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
+index 1123e2bed803..e1a7ed7e4892 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
+@@ -600,6 +600,7 @@ void rt2800mmio_kick_queue(struct data_queue *queue)
+ 	case QID_AC_VI:
+ 	case QID_AC_BE:
+ 	case QID_AC_BK:
++		WARN_ON_ONCE(rt2x00queue_empty(queue));
+ 		entry = rt2x00queue_get_entry(queue, Q_INDEX);
+ 		rt2x00mmio_register_write(rt2x00dev, TX_CTX_IDX(queue->qid),
+ 					  entry->entry_idx);
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+index a971bc7a6b63..c380c1f56ba6 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+@@ -739,8 +739,7 @@ void rt2x00mac_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		return;
  
- int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
- 			   enum ani_ed_type enc_type,
-+			   u8 bssidx,
- 			   u8 keyidx,
- 			   u8 keylen,
- 			   u8 *key)
-@@ -1645,7 +1646,7 @@ int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
+ 	tx_queue_for_each(rt2x00dev, queue)
+-		if (!rt2x00queue_empty(queue))
+-			rt2x00queue_flush_queue(queue, drop);
++		rt2x00queue_flush_queue(queue, drop);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00mac_flush);
  
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SET_BSSKEY_REQ);
--	msg_body.bss_idx = 0;
-+	msg_body.bss_idx = bssidx;
- 	msg_body.enc_type = enc_type;
- 	msg_body.num_keys = 1;
- 	msg_body.keys[0].id = keyidx;
-@@ -1706,6 +1707,7 @@ int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+index a6884e73d2ab..7c1f8f561d4a 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+@@ -1000,6 +1000,8 @@ void rt2x00queue_flush_queue(struct data_queue *queue, bool drop)
+ 		(queue->qid == QID_AC_BE) ||
+ 		(queue->qid == QID_AC_BK);
  
- int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
- 			      enum ani_ed_type enc_type,
-+			      u8 bssidx,
- 			      u8 keyidx)
- {
- 	struct wcn36xx_hal_remove_bss_key_req_msg msg_body;
-@@ -1713,7 +1715,7 @@ int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
++	if (rt2x00queue_empty(queue))
++		return;
  
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_RMV_BSSKEY_REQ);
--	msg_body.bss_idx = 0;
-+	msg_body.bss_idx = bssidx;
- 	msg_body.enc_type = enc_type;
- 	msg_body.key_id = keyidx;
- 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
-index 8076edf40ac8..61bb8d43138c 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.h
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.h
-@@ -97,6 +97,7 @@ int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
- 			   u8 sta_index);
- int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
- 			   enum ani_ed_type enc_type,
-+			   u8 bssidx,
- 			   u8 keyidx,
- 			   u8 keylen,
- 			   u8 *key);
-@@ -106,6 +107,7 @@ int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
- 			      u8 sta_index);
- int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
- 			      enum ani_ed_type enc_type,
-+			      u8 bssidx,
- 			      u8 keyidx);
- int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif);
- int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif);
+ 	/*
+ 	 * If we are not supposed to drop any pending
 -- 
-2.14.3
+1.9.3
