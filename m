@@ -1,48 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52294 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:33986 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754962AbeDWOKp (ORCPT
+        with ESMTP id S1751360AbeD3K2z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 10:10:45 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Joey Pabalinas <joeypabalinas@gmail.com>
-Cc: Kees Cook <keescook@chromium.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        luciano.coelho@intel.com, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: New sparse warning from min_t(): expression using sizeof(void)
-References: <87a7txf15w.fsf@kamboji.qca.qualcomm.com>
-        <20180421082444.i4eyw2zxl6tipt6i@gmail.com>
-        <87604ley7t.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 23 Apr 2018 17:10:39 +0300
-In-Reply-To: <87604ley7t.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Sat, 21 Apr 2018 11:54:30 +0300")
-Message-ID: <87d0yqdnds.fsf@kamboji.qca.qualcomm.com> (sfid-20180423_161055_274651_7AC871B7)
+        Mon, 30 Apr 2018 06:28:55 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: qtnfmac: fix qtnf_netdev_hard_start_xmit()'s return type
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180424131810.4963-1-luc.vanoostenryck@gmail.com>
+References: <20180424131810.4963-1-luc.vanoostenryck@gmail.com>
+To: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+        Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
+        Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Vasily Ulyanov <vulyanov@quantenna.com>,
+        Kees Cook <keescook@chromium.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Message-Id: <20180430102854.CA14360558@smtp.codeaurora.org> (sfid-20180430_122914_879781_DC38CCC2)
+Date: Mon, 30 Apr 2018 10:28:54 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+Luc Van Oostenryck <luc.vanoostenryck@gmail.com> wrote:
 
-> Joey Pabalinas <joeypabalinas@gmail.com> writes:
->
->> On Sat, Apr 21, 2018 at 10:50:51AM +0300, Kalle Valo wrote:
->>> Is there any way to fix it? With ath10k I use sparse a lot and because
->>> of these warnings sparse is now very annoying to use.
->>
->> I submitted a sparse patch [1] for this not too long ago, but in the
->> meantime you can still curl the patch [2] and apply it directly to
->> the v0.5.2 release to suppress the deluge of warnings (-Wpointer-arith
->> is off by defaultl so no need to change any of you configurations).
->>
->> [1] https://lkml.org/lkml/2018/4/10/923
->> [2] https://patchwork.kernel.org/patch/10334353/raw/
->
-> Perfect, thanks. Unfortunatelly I need to catch a boat and I can't test
-> it right now, but I'll do that on Monday.
+> The method ndo_start_xmit() is defined as returning an 'netdev_tx_t',
+> which is a typedef for an enum type, but the implementation in this
+> driver returns an 'int'.
+> 
+> Fix this by returning 'netdev_tx_t' in this driver too.
+> 
+> Signed-off-by: Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
+> Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-Yes, this fixed my warnings. Thanks!
+Patch applied to wireless-drivers-next.git, thanks.
+
+3ff6ee28535f qtnfmac: fix qtnf_netdev_hard_start_xmit()'s return type
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/10359851/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
