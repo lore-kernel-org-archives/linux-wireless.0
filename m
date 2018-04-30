@@ -1,91 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:52176 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756020AbeDZNoJ (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:51613 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754165AbeD3ONM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Apr 2018 09:44:09 -0400
-Subject: Re: [PATCH v1] ath10k: fix band_center_freq handling for VHT160 in
- recent firmwares
-To: s.gottschall@dd-wrt.com, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-References: <20180426094357.24358-1-s.gottschall@dd-wrt.com>
-Cc: kvalo@codeaurora.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <19b8766e-d474-31d3-ff38-993498ee670d@candelatech.com> (sfid-20180426_154423_505826_4E4D78E8)
-Date: Thu, 26 Apr 2018 06:44:00 -0700
-MIME-Version: 1.0
-In-Reply-To: <20180426094357.24358-1-s.gottschall@dd-wrt.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Mon, 30 Apr 2018 10:13:12 -0400
+Received: by mail-wm0-f65.google.com with SMTP id j4so13439807wme.1
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2018 07:13:12 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [RFC 16/18] mt76: move mt76x2_debugfs in mt76-common module
+Date: Mon, 30 Apr 2018 16:12:31 +0200
+Message-Id: <5ca18290fe0cc8aa9527d8ec204c30f934c83743.1525096206.git.lorenzo.bianconi@redhat.com> (sfid-20180430_161325_911570_1F44342D)
+In-Reply-To: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
+References: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Move mt76x2_debugfs code in mt76-common module since it is shared
+between mt76x2 and mt76x2u
 
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/Makefile         | 5 +++--
+ drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c | 1 +
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-On 04/26/2018 02:43 AM, s.gottschall@dd-wrt.com wrote:
-> From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
->
-> starting with firmware 10.4.3.4.x series QCA changed the handling of the channel property band_center_freq1 and band_center_freq2 in vht160 operation mode
-> likelly for backward compatiblity with vht80 only capable clients.
-> this patch adjusts the handling to get vht160 to work again with official qca firmwares newer than 3.3
-> consider that this patch will not work with older firmwares anymore. to avoid undefined behaviour this we disable vht160 capability for outdated firmwares
-
-We should be able to use a feature-flag or otherwise determine if the firmware needs the old or new
-API and make the driver able to handle both.
-
-Thanks,
-Ben
-
-> ---
->  drivers/net/wireless/ath/ath10k/mac.c |  7 -------
->  drivers/net/wireless/ath/ath10k/wmi.c | 11 ++++++++---
->  2 files changed, 8 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> index 5be6386ede8f..d1239d40ac19 100644
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -4449,13 +4449,6 @@ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
->  		vht_cap.cap |= val;
->  	}
->
-> -	/* Currently the firmware seems to be buggy, don't enable 80+80
-> -	 * mode until that's resolved.
-> -	 */
-> -	if ((ar->vht_cap_info & IEEE80211_VHT_CAP_SHORT_GI_160) &&
-> -	    (ar->vht_cap_info & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK) == 0)
-> -		vht_cap.cap |= IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ;
-> -
->  	mcs_map = 0;
->  	for (i = 0; i < 8; i++) {
->  		if ((i < ar->num_rf_chains) && (ar->cfg_tx_chainmask & BIT(i)))
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-> index 2c36256a441d..d78b8857a513 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-> @@ -1671,13 +1671,18 @@ void ath10k_wmi_put_wmi_channel(struct wmi_channel *ch,
->  		flags |= WMI_CHAN_FLAG_HT40_PLUS;
->  	if (arg->chan_radar)
->  		flags |= WMI_CHAN_FLAG_DFS;
-> -
-> +	ch->band_center_freq2 = 0;
->  	ch->mhz = __cpu_to_le32(arg->freq);
->  	ch->band_center_freq1 = __cpu_to_le32(arg->band_center_freq1);
->  	if (arg->mode == MODE_11AC_VHT80_80)
->  		ch->band_center_freq2 = __cpu_to_le32(arg->band_center_freq2);
-> -	else
-> -		ch->band_center_freq2 = 0;
-> +	if (arg->mode == MODE_11AC_VHT160)  {
-> +		if (arg->freq < arg->band_center_freq1)
-> +			ch->band_center_freq1 = __cpu_to_le32(arg->band_center_freq1 - 40);
-> +		else
-> +			ch->band_center_freq1 = __cpu_to_le32(arg->band_center_freq1 + 40);		
-> +		ch->band_center_freq2 = __cpu_to_le32(arg->band_center_freq1);
-> +	}
->  	ch->min_power = arg->min_power;
->  	ch->max_power = arg->max_power;
->  	ch->reg_power = arg->max_reg_power;
->
-
+diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
+index 5a9f34b14ee4..e1bc229e4aad 100644
+--- a/drivers/net/wireless/mediatek/mt76/Makefile
++++ b/drivers/net/wireless/mediatek/mt76/Makefile
+@@ -9,11 +9,12 @@ CFLAGS_trace.o := -I$(src)
+ 
+ mt76x2-common-y := \
+ 	mt76x2_eeprom.o mt76x2_tx_common.o mt76x2_mac_common.o \
+-	mt76x2_init_common.o mt76x2_common.o mt76x2_phy_common.o
++	mt76x2_init_common.o mt76x2_common.o mt76x2_phy_common.o \
++	mt76x2_debugfs.o
+ 
+ mt76x2e-y := \
+ 	mt76x2_pci.o mt76x2_dma.o \
+-	mt76x2_main.o mt76x2_init.o mt76x2_debugfs.o mt76x2_tx.o \
++	mt76x2_main.o mt76x2_init.o mt76x2_tx.o \
+ 	mt76x2_core.o mt76x2_mac.o mt76x2_mcu.o mt76x2_phy.o \
+ 	mt76x2_dfs.o mt76x2_trace.o
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c b/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
+index 955ea3e692dd..9613fe5f0d12 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
+@@ -131,3 +131,4 @@ void mt76x2_init_debugfs(struct mt76x2_dev *dev)
+ 	debugfs_create_devm_seqfile(dev->mt76.dev, "txpower", dir,
+ 				    read_txpower);
+ }
++EXPORT_SYMBOL_GPL(mt76x2_init_debugfs);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.14.3
