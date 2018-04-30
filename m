@@ -1,34 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:53660 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754718AbeDWMzS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Apr 2018 08:55:18 -0400
-Date: Mon, 23 Apr 2018 14:56:38 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Nipun Gupta <nipun.gupta@nxp.com>
-Cc: robin.murphy@arm.com, hch@lst.de, linux@armlinux.org.uk,
-        gregkh@linuxfoundation.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, zajec5@gmail.com, andy.gross@linaro.org,
-        david.brown@linaro.org, dan.j.williams@intel.com,
-        vinod.koul@intel.com, thierry.reding@gmail.com, robh+dt@kernel.org,
-        frowand.list@gmail.com, jarkko.sakkinen@linux.intel.com,
-        rafael.j.wysocki@intel.com, dmitry.torokhov@gmail.com,
-        johan@kernel.org, msuchanek@suse.de, linux-kernel@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
-        dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, bharat.bhushan@nxp.com,
-        leoyang.li@nxp.com
-Subject: Re: [PATCH v3 1/2] dma-mapping: move dma configuration to bus
-        infrastructure
-Message-ID: <20180423125638.GB8824@lst.de> (sfid-20180423_145525_581030_3C791073)
-References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com> <1522396485-10248-1-git-send-email-nipun.gupta@nxp.com>
+Received: from mail-eopbgr10068.outbound.protection.outlook.com ([40.107.1.68]:18587
+        "EHLO EUR02-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753397AbeD3TCA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Apr 2018 15:02:00 -0400
+Subject: Re: [PATCH 1/2] ath: Add support to get the detected radar
+ specifications
+To: Sriram R <srirrama@codeaurora.org>, ath10k@lists.infradead.org
+References: <1525110339-25326-1-git-send-email-srirrama@codeaurora.org>
+ <1525110339-25326-2-git-send-email-srirrama@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+From: Peter Oh <peter.oh@bowerswilkins.com>
+Message-ID: <cf60f81c-9466-ac52-e902-413fe3163490@bowerswilkins.com> (sfid-20180430_210206_321583_9363396B)
+Date: Mon, 30 Apr 2018 12:01:45 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1522396485-10248-1-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1525110339-25326-2-git-send-email-srirrama@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Can you resend your changes against Linux 4.17-rc2?  There are a lot
-of conflicts as-is.
+
+
+On 04/30/2018 10:45 AM, Sriram R wrote:
+> This enables ath10k/ath9k drivers to collect the specifications of the
+> radar type once it is detected by the dfs pattern detector unit.
+> Usage of the collected info is specific to driver implementation.
+> For example, collected radar info could be used by the host driver
+> to send to co-processors for additional processing/validation.
+What kind of additional processing/validation does it do?
+Please give us more details for that.
+
+Thanks,
+Peter
