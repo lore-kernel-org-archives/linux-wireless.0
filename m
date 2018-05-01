@@ -1,675 +1,321 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f177.google.com ([209.85.128.177]:36323 "EHLO
-        mail-wr0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751607AbeETIQA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 May 2018 04:16:00 -0400
-Received: by mail-wr0-f177.google.com with SMTP id k5-v6so937680wrn.3
-        for <linux-wireless@vger.kernel.org>; Sun, 20 May 2018 01:15:59 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [RFC v2 15/18] mt76: add mt76x2_phy_common to mt76x2-common module
-Date: Sun, 20 May 2018 10:15:19 +0200
-Message-Id: <20180520081522.10163-16-lorenzo.bianconi@redhat.com> (sfid-20180520_101641_100138_C57DD0C5)
+Received: from mga06.intel.com ([134.134.136.31]:61206 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754623AbeEALie (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 1 May 2018 07:38:34 -0400
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+To: seth.forshee@canonical.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+        johannes.berg@intel.com, Haim Dreyfuss <haim.dreyfuss@intel.com>
+Subject: [PATCH 2/2] wireless-regdb: Parse wmm rule data
+Date: Tue,  1 May 2018 16:36:12 +0300
+Message-Id: <1525181772-30337-2-git-send-email-haim.dreyfuss@intel.com> (sfid-20180501_133838_108789_F5536C3B)
+In-Reply-To: <1525181772-30337-1-git-send-email-haim.dreyfuss@intel.com>
+References: <1525181772-30337-1-git-send-email-haim.dreyfuss@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move phy related code shared between mt76x2 and mt76x2u in
-mt76x2-common module
+Add code to parse wmm rule data.
+Also write it to the the regulatory.db fw file
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
 ---
- drivers/net/wireless/mediatek/mt76/Makefile        |   2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2.h        |   8 +
- drivers/net/wireless/mediatek/mt76/mt76x2_phy.c    | 281 -------------------
- .../net/wireless/mediatek/mt76/mt76x2_phy_common.c | 302 +++++++++++++++++++++
- 4 files changed, 311 insertions(+), 282 deletions(-)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_phy_common.c
+ db2fw.py   |  31 +++++++++++++++--
+ dbparse.py | 111 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 136 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
-index a184e16a5d54..5a9f34b14ee4 100644
---- a/drivers/net/wireless/mediatek/mt76/Makefile
-+++ b/drivers/net/wireless/mediatek/mt76/Makefile
-@@ -9,7 +9,7 @@ CFLAGS_trace.o := -I$(src)
+diff --git a/db2fw.py b/db2fw.py
+index 7b2b141..6d0ae5f 100755
+--- a/db2fw.py
++++ b/db2fw.py
+@@ -5,6 +5,7 @@ import struct
+ import hashlib
+ from dbparse import DBParser
+ import sys
++from math import log
  
- mt76x2-common-y := \
- 	mt76x2_eeprom.o mt76x2_tx_common.o mt76x2_mac_common.o \
--	mt76x2_init_common.o mt76x2_common.o
-+	mt76x2_init_common.o mt76x2_common.o mt76x2_phy_common.o
+ MAGIC = 0x52474442
+ VERSION = 20
+@@ -26,6 +27,13 @@ def create_collections(countries):
+         result[(c.permissions, c.dfs_region)] = 1
+     return result.keys()
  
- mt76x2e-y := \
- 	mt76x2_pci.o mt76x2_dma.o \
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-index ee39fca7d9b7..2993dd183c2e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-@@ -302,4 +302,12 @@ void mt76x2_sta_rate_tbl_update(struct ieee80211_hw *hw,
- 				struct ieee80211_vif *vif,
- 				struct ieee80211_sta *sta);
++def create_wmms(countries):
++    result = {}
++    for c in countries.itervalues():
++        for rule in c.permissions:
++            if rule.wmmrule is not None:
++                result[rule.wmmrule] = 1
++    return result.keys()
  
-+void mt76x2_phy_set_txpower_regs(struct mt76x2_dev *dev,
-+				 enum nl80211_band band);
-+void mt76x2_configure_tx_delay(struct mt76x2_dev *dev,
-+			       enum nl80211_band band, u8 bw);
-+void mt76x2_phy_set_bw(struct mt76x2_dev *dev, int width, u8 ctrl);
-+void mt76x2_phy_set_band(struct mt76x2_dev *dev, int band, bool primary_upper);
-+void mt76x2_apply_gain_adj(struct mt76x2_dev *dev);
+ def be32(output, val):
+     output.write(struct.pack('>I', val))
+@@ -63,6 +71,8 @@ rules = create_rules(countries)
+ rules.sort(cmp=lambda x, y: cmp(x.freqband, y.freqband))
+ collections = create_collections(countries)
+ collections.sort(cmp=lambda x, y: cmp(x[0][0].freqband, y[0][0].freqband))
++wmms = create_wmms(countries)
++wmms.sort(cmp=lambda x, y: cmp(x.vo_c, y.vo_c))
+ 
+ output = StringIO()
+ 
+@@ -79,10 +89,19 @@ for alpha2 in countrynames:
+     country_ptrs[alpha2] = PTR(output)
+ output.write('\x00' * 4)
+ 
++wmmdb = {}
++for w in wmms:
++    assert output.tell() & 3 == 0
++    wmmdb[w] = output.tell() >> 2
++    for r in w._as_tuple():
++        ecw = int(log(r[0] + 1, 2)) << 4 | int(log(r[1] + 1, 2))
++        ac = (ecw, r[2],r[3])
++        output.write(struct.pack('>BBH', *ac))
 +
- #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-index 62785bea7a6a..9945d2c73164 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-@@ -19,50 +19,6 @@
- #include "mt76x2_mcu.h"
- #include "mt76x2_eeprom.h"
+ reg_rules = {}
+ flags = 0
+ for reg_rule in rules:
+-    freq_range, power_rule = reg_rule.freqband, reg_rule.power
++    freq_range, power_rule, wmm_rule = reg_rule.freqband, reg_rule.power, reg_rule.wmmrule
+     reg_rules[reg_rule] = output.tell()
+     assert power_rule.max_ant_gain == 0
+     flags = 0
+@@ -102,13 +121,19 @@ for reg_rule in rules:
+     cac_timeout = 0 # TODO
+     if not (flags & 1<<2):
+         cac_timeout = 0
+-    if cac_timeout:
++    if cac_timeout or wmm_rule:
++        rule_len += 2
++    if wmm_rule is not None:
+         rule_len += 2
+     output.write(struct.pack('>BBHIII', rule_len, flags, power_rule.max_eirp * 100,
+                              freq_range.start * 1000, freq_range.end * 1000, freq_range.maxbw * 1000,
+                              ))
+-    if cac_timeout:
++    if rule_len > 16:
+         output.write(struct.pack('>H', cac_timeout))
++
++    if rule_len > 18:
++        be16(output, wmmdb[wmm_rule])
++
+     while rule_len % 4:
+         output.write('\0')
+         rule_len += 1
+diff --git a/dbparse.py b/dbparse.py
+index b735b6a..409fbb8 100755
+--- a/dbparse.py
++++ b/dbparse.py
+@@ -1,6 +1,9 @@
+ #!/usr/bin/env python
  
--static void
--mt76x2_adjust_high_lna_gain(struct mt76x2_dev *dev, int reg, s8 offset)
--{
--	s8 gain;
--
--	gain = FIELD_GET(MT_BBP_AGC_LNA_HIGH_GAIN, mt76_rr(dev, MT_BBP(AGC, reg)));
--	gain -= offset / 2;
--	mt76_rmw_field(dev, MT_BBP(AGC, reg), MT_BBP_AGC_LNA_HIGH_GAIN, gain);
--}
--
--static void
--mt76x2_adjust_agc_gain(struct mt76x2_dev *dev, int reg, s8 offset)
--{
--	s8 gain;
--
--	gain = FIELD_GET(MT_BBP_AGC_GAIN, mt76_rr(dev, MT_BBP(AGC, reg)));
--	gain += offset;
--	mt76_rmw_field(dev, MT_BBP(AGC, reg), MT_BBP_AGC_GAIN, gain);
--}
--
--static void
--mt76x2_apply_gain_adj(struct mt76x2_dev *dev)
--{
--	s8 *gain_adj = dev->cal.rx.high_gain;
--
--	mt76x2_adjust_high_lna_gain(dev, 4, gain_adj[0]);
--	mt76x2_adjust_high_lna_gain(dev, 5, gain_adj[1]);
--
--	mt76x2_adjust_agc_gain(dev, 8, gain_adj[0]);
--	mt76x2_adjust_agc_gain(dev, 9, gain_adj[1]);
--}
--
--static u32
--mt76x2_tx_power_mask(u8 v1, u8 v2, u8 v3, u8 v4)
--{
--	u32 val = 0;
--
--	val |= (v1 & (BIT(6) - 1)) << 0;
--	val |= (v2 & (BIT(6) - 1)) << 8;
--	val |= (v3 & (BIT(6) - 1)) << 16;
--	val |= (v4 & (BIT(6) - 1)) << 24;
--	return val;
--}
--
- int mt76x2_phy_get_rssi(struct mt76x2_dev *dev, s8 rssi, int chain)
- {
- 	struct mt76x2_rx_freq_cal *cal = &dev->cal.rx;
-@@ -73,109 +29,6 @@ int mt76x2_phy_get_rssi(struct mt76x2_dev *dev, s8 rssi, int chain)
- 	return rssi;
+ import sys, math
++from math import ceil, log
++from collections import defaultdict, OrderedDict
++import attr
+ 
+ # must match <linux/nl80211.h> enum nl80211_reg_rule_flags
+ 
+@@ -25,6 +28,21 @@ dfs_regions = {
+     'DFS-JP':		3,
  }
  
--static void
--mt76x2_add_rate_power_offset(struct mt76_rate_power *r, int offset)
--{
--	int i;
--
--	for (i = 0; i < sizeof(r->all); i++)
--		r->all[i] += offset;
--}
--
--static void
--mt76x2_limit_rate_power(struct mt76_rate_power *r, int limit)
--{
--	int i;
--
--	for (i = 0; i < sizeof(r->all); i++)
--		if (r->all[i] > limit)
--			r->all[i] = limit;
--}
--
--static int
--mt76x2_get_min_rate_power(struct mt76_rate_power *r)
--{
--	int i;
--	s8 ret = 0;
--
--	for (i = 0; i < sizeof(r->all); i++) {
--		if (!r->all[i])
--			continue;
--
--		if (ret)
--			ret = min(ret, r->all[i]);
--		else
--			ret = r->all[i];
--	}
--
--	return ret;
--}
--
--
--void mt76x2_phy_set_txpower(struct mt76x2_dev *dev)
--{
--	enum nl80211_chan_width width = dev->mt76.chandef.width;
--	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
--	struct mt76x2_tx_power_info txp;
--	int txp_0, txp_1, delta = 0;
--	struct mt76_rate_power t = {};
--	int base_power, gain;
--
--	mt76x2_get_power_info(dev, &txp, chan);
--
--	if (width == NL80211_CHAN_WIDTH_40)
--		delta = txp.delta_bw40;
--	else if (width == NL80211_CHAN_WIDTH_80)
--		delta = txp.delta_bw80;
--
--	mt76x2_get_rate_power(dev, &t, chan);
--	mt76x2_add_rate_power_offset(&t, txp.chain[0].target_power);
--	mt76x2_limit_rate_power(&t, dev->txpower_conf);
--	dev->txpower_cur = mt76x2_get_max_rate_power(&t);
--
--	base_power = mt76x2_get_min_rate_power(&t);
--	delta += base_power - txp.chain[0].target_power;
--	txp_0 = txp.chain[0].target_power + txp.chain[0].delta + delta;
--	txp_1 = txp.chain[1].target_power + txp.chain[1].delta + delta;
--
--	gain = min(txp_0, txp_1);
--	if (gain < 0) {
--		base_power -= gain;
--		txp_0 -= gain;
--		txp_1 -= gain;
--	} else if (gain > 0x2f) {
--		base_power -= gain - 0x2f;
--		txp_0 = 0x2f;
--		txp_1 = 0x2f;
--	}
--
--	mt76x2_add_rate_power_offset(&t, -base_power);
--	dev->target_power = txp.chain[0].target_power;
--	dev->target_power_delta[0] = txp_0 - txp.chain[0].target_power;
--	dev->target_power_delta[1] = txp_1 - txp.chain[0].target_power;
--	dev->rate_power = t;
--
--	mt76_rmw_field(dev, MT_TX_ALC_CFG_0, MT_TX_ALC_CFG_0_CH_INIT_0, txp_0);
--	mt76_rmw_field(dev, MT_TX_ALC_CFG_0, MT_TX_ALC_CFG_0_CH_INIT_1, txp_1);
--
--	mt76_wr(dev, MT_TX_PWR_CFG_0,
--		mt76x2_tx_power_mask(t.cck[0], t.cck[2], t.ofdm[0], t.ofdm[2]));
--	mt76_wr(dev, MT_TX_PWR_CFG_1,
--		mt76x2_tx_power_mask(t.ofdm[4], t.ofdm[6], t.ht[0], t.ht[2]));
--	mt76_wr(dev, MT_TX_PWR_CFG_2,
--		mt76x2_tx_power_mask(t.ht[4], t.ht[6], t.ht[8], t.ht[10]));
--	mt76_wr(dev, MT_TX_PWR_CFG_3,
--		mt76x2_tx_power_mask(t.ht[12], t.ht[14], t.ht[0], t.ht[2]));
--	mt76_wr(dev, MT_TX_PWR_CFG_4,
--		mt76x2_tx_power_mask(t.ht[4], t.ht[6], 0, 0));
--	mt76_wr(dev, MT_TX_PWR_CFG_7,
--		mt76x2_tx_power_mask(t.ofdm[6], t.vht[8], t.ht[6], t.vht[8]));
--	mt76_wr(dev, MT_TX_PWR_CFG_8,
--		mt76x2_tx_power_mask(t.ht[14], t.vht[8], t.vht[8], 0));
--	mt76_wr(dev, MT_TX_PWR_CFG_9,
--		mt76x2_tx_power_mask(t.ht[6], t.vht[8], t.vht[8], 0));
--}
--
- static bool
- mt76x2_phy_tssi_init_cal(struct mt76x2_dev *dev)
- {
-@@ -234,140 +87,6 @@ mt76x2_phy_channel_calibrate(struct mt76x2_dev *dev, bool mac_stopped)
- 	dev->cal.channel_cal_done = true;
- }
++@attr.s(frozen=True)
++class WmmRule(object):
++    vo_c = attr.ib()
++    vi_c = attr.ib()
++    be_c = attr.ib()
++    bk_c = attr.ib()
++    vo_ap = attr.ib()
++    vi_ap = attr.ib()
++    be_ap = attr.ib()
++    bk_ap = attr.ib()
++
++    def _as_tuple(self):
++        return (self.vo_c, self.vi_c, self.be_c, self.bk_c,
++                self.vo_ap, self.vi_ap, self.be_ap, self.bk_ap)
++
+ class FreqBand(object):
+     def __init__(self, start, end, bw, comments=None):
+         self.start = start
+@@ -77,11 +95,13 @@ class FlagError(Exception):
+         self.flag = flag
  
--static void
--mt76x2_phy_set_txpower_regs(struct mt76x2_dev *dev, enum nl80211_band band)
--{
--	u32 pa_mode[2];
--	u32 pa_mode_adj;
--
--	if (band == NL80211_BAND_2GHZ) {
--		pa_mode[0] = 0x010055ff;
--		pa_mode[1] = 0x00550055;
--
--		mt76_wr(dev, MT_TX_ALC_CFG_2, 0x35160a00);
--		mt76_wr(dev, MT_TX_ALC_CFG_3, 0x35160a06);
--
--		if (mt76x2_ext_pa_enabled(dev, band)) {
--			mt76_wr(dev, MT_RF_PA_MODE_ADJ0, 0x0000ec00);
--			mt76_wr(dev, MT_RF_PA_MODE_ADJ1, 0x0000ec00);
--		} else {
--			mt76_wr(dev, MT_RF_PA_MODE_ADJ0, 0xf4000200);
--			mt76_wr(dev, MT_RF_PA_MODE_ADJ1, 0xfa000200);
--		}
--	} else {
--		pa_mode[0] = 0x0000ffff;
--		pa_mode[1] = 0x00ff00ff;
--
--		if (mt76x2_ext_pa_enabled(dev, band)) {
--			mt76_wr(dev, MT_TX_ALC_CFG_2, 0x2f0f0400);
--			mt76_wr(dev, MT_TX_ALC_CFG_3, 0x2f0f0476);
--		} else {
--			mt76_wr(dev, MT_TX_ALC_CFG_2, 0x1b0f0400);
--			mt76_wr(dev, MT_TX_ALC_CFG_3, 0x1b0f0476);
--		}
--
--		if (mt76x2_ext_pa_enabled(dev, band))
--			pa_mode_adj = 0x04000000;
--		else
--			pa_mode_adj = 0;
--
--		mt76_wr(dev, MT_RF_PA_MODE_ADJ0, pa_mode_adj);
--		mt76_wr(dev, MT_RF_PA_MODE_ADJ1, pa_mode_adj);
--	}
--
--	mt76_wr(dev, MT_BB_PA_MODE_CFG0, pa_mode[0]);
--	mt76_wr(dev, MT_BB_PA_MODE_CFG1, pa_mode[1]);
--	mt76_wr(dev, MT_RF_PA_MODE_CFG0, pa_mode[0]);
--	mt76_wr(dev, MT_RF_PA_MODE_CFG1, pa_mode[1]);
--
--	if (mt76x2_ext_pa_enabled(dev, band)) {
--		u32 val;
--
--		if (band == NL80211_BAND_2GHZ)
--			val = 0x3c3c023c;
--		else
--			val = 0x363c023c;
--
--		mt76_wr(dev, MT_TX0_RF_GAIN_CORR, val);
--		mt76_wr(dev, MT_TX1_RF_GAIN_CORR, val);
--		mt76_wr(dev, MT_TX_ALC_CFG_4, 0x00001818);
--	} else {
--		if (band == NL80211_BAND_2GHZ) {
--			u32 val = 0x0f3c3c3c;
--
--			mt76_wr(dev, MT_TX0_RF_GAIN_CORR, val);
--			mt76_wr(dev, MT_TX1_RF_GAIN_CORR, val);
--			mt76_wr(dev, MT_TX_ALC_CFG_4, 0x00000606);
--		} else {
--			mt76_wr(dev, MT_TX0_RF_GAIN_CORR, 0x383c023c);
--			mt76_wr(dev, MT_TX1_RF_GAIN_CORR, 0x24282e28);
--			mt76_wr(dev, MT_TX_ALC_CFG_4, 0);
--		}
--	}
--}
--
--static void
--mt76x2_configure_tx_delay(struct mt76x2_dev *dev, enum nl80211_band band, u8 bw)
--{
--	u32 cfg0, cfg1;
--
--	if (mt76x2_ext_pa_enabled(dev, band)) {
--		cfg0 = bw ? 0x000b0c01 : 0x00101101;
--		cfg1 = 0x00011414;
--	} else {
--		cfg0 = bw ? 0x000b0b01 : 0x00101001;
--		cfg1 = 0x00021414;
--	}
--	mt76_wr(dev, MT_TX_SW_CFG0, cfg0);
--	mt76_wr(dev, MT_TX_SW_CFG1, cfg1);
--
--	mt76_rmw_field(dev, MT_XIFS_TIME_CFG, MT_XIFS_TIME_CFG_OFDM_SIFS, 15);
--}
--
--static void
--mt76x2_phy_set_bw(struct mt76x2_dev *dev, int width, u8 ctrl)
--{
--	int core_val, agc_val;
--
--	switch (width) {
--	case NL80211_CHAN_WIDTH_80:
--		core_val = 3;
--		agc_val = 7;
--		break;
--	case NL80211_CHAN_WIDTH_40:
--		core_val = 2;
--		agc_val = 3;
--		break;
--	default:
--		core_val = 0;
--		agc_val = 1;
--		break;
--	}
--
--	mt76_rmw_field(dev, MT_BBP(CORE, 1), MT_BBP_CORE_R1_BW, core_val);
--	mt76_rmw_field(dev, MT_BBP(AGC, 0), MT_BBP_AGC_R0_BW, agc_val);
--	mt76_rmw_field(dev, MT_BBP(AGC, 0), MT_BBP_AGC_R0_CTRL_CHAN, ctrl);
--	mt76_rmw_field(dev, MT_BBP(TXBE, 0), MT_BBP_TXBE_R0_CTRL_CHAN, ctrl);
--}
--
--static void
--mt76x2_phy_set_band(struct mt76x2_dev *dev, int band, bool primary_upper)
--{
--	switch (band) {
--	case NL80211_BAND_2GHZ:
--		mt76_set(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_2G);
--		mt76_clear(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_5G);
--		break;
--	case NL80211_BAND_5GHZ:
--		mt76_clear(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_2G);
--		mt76_set(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_5G);
--		break;
--	}
--
--	mt76_rmw_field(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_UPPER_40M,
--		       primary_upper);
--}
--
- void mt76x2_phy_set_antenna(struct mt76x2_dev *dev)
- {
- 	u32 val;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy_common.c
-new file mode 100644
-index 000000000000..3d2c81110832
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy_common.c
-@@ -0,0 +1,302 @@
-+/*
-+ * Copyright (C) 2016 Felix Fietkau <nbd@nbd.name>
-+ * Copyright (C) 2018 Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
+ class Permission(object):
+-    def __init__(self, freqband, power, flags):
++    def __init__(self, freqband, power, flags, wmmrule):
+         assert isinstance(freqband, FreqBand)
+         assert isinstance(power, PowerRestriction)
++        assert isinstance(wmmrule, WmmRule) or wmmrule is None
+         self.freqband = freqband
+         self.power = power
++        self.wmmrule = wmmrule
+         self.flags = 0
+         for flag in flags:
+             if not flag in flag_definitions:
+@@ -89,8 +109,11 @@ class Permission(object):
+             self.flags |= flag_definitions[flag]
+         self.textflags = flags
+ 
++    def _has_wmmrule(self):
++        return self.wmmrule is not None
 +
-+#include "mt76x2.h"
-+#include "mt76x2_eeprom.h"
+     def _as_tuple(self):
+-        return (self.freqband, self.power, self.flags)
++        return (self.freqband, self.power, self.flags, self.wmmrule)
+ 
+     def __cmp__(self, other):
+         if not isinstance(other, Permission):
+@@ -100,6 +123,9 @@ class Permission(object):
+     def __hash__(self):
+         return hash(self._as_tuple())
+ 
++    def __str__(self):
++        return str(self.freqband) + str(self.power) + str(self.wmmrule)
 +
-+static void
-+mt76x2_adjust_high_lna_gain(struct mt76x2_dev *dev, int reg, s8 offset)
-+{
-+	s8 gain;
+ class Country(object):
+     def __init__(self, dfs_region, permissions=None, comments=None):
+         self._permissions = permissions or []
+@@ -233,6 +259,61 @@ class DBParser(object):
+         self._powerrev[p] = pname
+         self._powerline[pname] = self._lineno
+ 
++    def _parse_wmmrule(self, line):
++        regions = line[:-1].strip()
++        if not regions:
++            self._syntax_error("'wmmrule' keyword must be followed by region")
 +
-+	gain = FIELD_GET(MT_BBP_AGC_LNA_HIGH_GAIN, mt76_rr(dev, MT_BBP(AGC, reg)));
-+	gain -= offset / 2;
-+	mt76_rmw_field(dev, MT_BBP(AGC, reg), MT_BBP_AGC_LNA_HIGH_GAIN, gain);
-+}
++        regions = regions.split(',')
 +
-+static void
-+mt76x2_adjust_agc_gain(struct mt76x2_dev *dev, int reg, s8 offset)
-+{
-+	s8 gain;
++        self._current_regions = {}
++        for region in regions:
++            if region in self._wmm_rules:
++                self._warn("region %s was added already to wmm rules" % region)
++            self._current_regions[region] = 1
++        self._comments = []
 +
-+	gain = FIELD_GET(MT_BBP_AGC_GAIN, mt76_rr(dev, MT_BBP(AGC, reg)));
-+	gain += offset;
-+	mt76_rmw_field(dev, MT_BBP(AGC, reg), MT_BBP_AGC_GAIN, gain);
-+}
++    def _validate_input(self, cw_min, cw_max, aifsn, cot):
++        if  cw_min < 1:
++            self._syntax_error("Invalid cw_min value (%d)" % cw_min)
++        if cw_max < 1:
++            self._syntax_error("Invalid cw_max value (%d)" % cw_max)
++        if cw_min > cw_max:
++            self._syntax_error("Inverted contention window (%d - %d)" %
++                    (cw_min, cw_max))
++        if not (bin(cw_min + 1).count('1') == 1 and cw_min < 2**15):
++            self._syntax_error("Invalid cw_min value should be power of 2 - 1 (%d)"
++                    % cw_min)
++        if not (bin(cw_max + 1).count('1') == 1 and cw_max < 2**15):
++            self._syntax_error("Invalid cw_max value should be power of 2 - 1 (%d)"
++                    % cw_max)
++        if aifsn < 1:
++            self._syntax_error("Invalid aifsn value (%d)" % aifsn)
++        if cot < 0:
++            self._syntax_error("Invalid cot value (%d)" % cot)
 +
-+void mt76x2_apply_gain_adj(struct mt76x2_dev *dev)
-+{
-+	s8 *gain_adj = dev->cal.rx.high_gain;
 +
-+	mt76x2_adjust_high_lna_gain(dev, 4, gain_adj[0]);
-+	mt76x2_adjust_high_lna_gain(dev, 5, gain_adj[1]);
++    def _validate_size(self, var, bytcnt):
++        return bytcnt < ceil(len(bin(var)[2:]) / 8.0)
 +
-+	mt76x2_adjust_agc_gain(dev, 8, gain_adj[0]);
-+	mt76x2_adjust_agc_gain(dev, 9, gain_adj[1]);
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_apply_gain_adj);
++    def _parse_wmmrule_item(self, line):
++        bytcnt = (2.0, 2.0, 1.0, 2.0)
++        try:
++            ac, cval = line.split(':')
++            if not ac:
++                self._syntax_error("wmm item must have ac prefix")
++        except ValueError:
++                self._syntax_error("access category must be followed by colon")
++        p = tuple([int(v.split('=', 1)[1]) for v in cval.split(',')])
++        self._validate_input(*p)
++        for v, b in zip(p, bytcnt):
++            if self._validate_size(v, b):
++                self._syntax_error("unexpected input size expect %d got %d"
++                        % (b, v))
 +
-+void mt76x2_phy_set_txpower_regs(struct mt76x2_dev *dev,
-+				 enum nl80211_band band)
-+{
-+	u32 pa_mode[2];
-+	u32 pa_mode_adj;
++            for r in self._current_regions:
++                self._wmm_rules[r][ac] = p
 +
-+	if (band == NL80211_BAND_2GHZ) {
-+		pa_mode[0] = 0x010055ff;
-+		pa_mode[1] = 0x00550055;
-+
-+		mt76_wr(dev, MT_TX_ALC_CFG_2, 0x35160a00);
-+		mt76_wr(dev, MT_TX_ALC_CFG_3, 0x35160a06);
-+
-+		if (mt76x2_ext_pa_enabled(dev, band)) {
-+			mt76_wr(dev, MT_RF_PA_MODE_ADJ0, 0x0000ec00);
-+			mt76_wr(dev, MT_RF_PA_MODE_ADJ1, 0x0000ec00);
-+		} else {
-+			mt76_wr(dev, MT_RF_PA_MODE_ADJ0, 0xf4000200);
-+			mt76_wr(dev, MT_RF_PA_MODE_ADJ1, 0xfa000200);
-+		}
-+	} else {
-+		pa_mode[0] = 0x0000ffff;
-+		pa_mode[1] = 0x00ff00ff;
-+
-+		if (mt76x2_ext_pa_enabled(dev, band)) {
-+			mt76_wr(dev, MT_TX_ALC_CFG_2, 0x2f0f0400);
-+			mt76_wr(dev, MT_TX_ALC_CFG_3, 0x2f0f0476);
-+		} else {
-+			mt76_wr(dev, MT_TX_ALC_CFG_2, 0x1b0f0400);
-+			mt76_wr(dev, MT_TX_ALC_CFG_3, 0x1b0f0476);
-+		}
-+
-+		if (mt76x2_ext_pa_enabled(dev, band))
-+			pa_mode_adj = 0x04000000;
-+		else
-+			pa_mode_adj = 0;
-+
-+		mt76_wr(dev, MT_RF_PA_MODE_ADJ0, pa_mode_adj);
-+		mt76_wr(dev, MT_RF_PA_MODE_ADJ1, pa_mode_adj);
-+	}
-+
-+	mt76_wr(dev, MT_BB_PA_MODE_CFG0, pa_mode[0]);
-+	mt76_wr(dev, MT_BB_PA_MODE_CFG1, pa_mode[1]);
-+	mt76_wr(dev, MT_RF_PA_MODE_CFG0, pa_mode[0]);
-+	mt76_wr(dev, MT_RF_PA_MODE_CFG1, pa_mode[1]);
-+
-+	if (mt76x2_ext_pa_enabled(dev, band)) {
-+		u32 val;
-+
-+		if (band == NL80211_BAND_2GHZ)
-+			val = 0x3c3c023c;
-+		else
-+			val = 0x363c023c;
-+
-+		mt76_wr(dev, MT_TX0_RF_GAIN_CORR, val);
-+		mt76_wr(dev, MT_TX1_RF_GAIN_CORR, val);
-+		mt76_wr(dev, MT_TX_ALC_CFG_4, 0x00001818);
-+	} else {
-+		if (band == NL80211_BAND_2GHZ) {
-+			u32 val = 0x0f3c3c3c;
-+
-+			mt76_wr(dev, MT_TX0_RF_GAIN_CORR, val);
-+			mt76_wr(dev, MT_TX1_RF_GAIN_CORR, val);
-+			mt76_wr(dev, MT_TX_ALC_CFG_4, 0x00000606);
-+		} else {
-+			mt76_wr(dev, MT_TX0_RF_GAIN_CORR, 0x383c023c);
-+			mt76_wr(dev, MT_TX1_RF_GAIN_CORR, 0x24282e28);
-+			mt76_wr(dev, MT_TX_ALC_CFG_4, 0);
-+		}
-+	}
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_phy_set_txpower_regs);
-+
-+static void
-+mt76x2_limit_rate_power(struct mt76_rate_power *r, int limit)
-+{
-+	int i;
-+
-+	for (i = 0; i < sizeof(r->all); i++)
-+		if (r->all[i] > limit)
-+			r->all[i] = limit;
-+}
-+
-+static u32
-+mt76x2_tx_power_mask(u8 v1, u8 v2, u8 v3, u8 v4)
-+{
-+	u32 val = 0;
-+
-+	val |= (v1 & (BIT(6) - 1)) << 0;
-+	val |= (v2 & (BIT(6) - 1)) << 8;
-+	val |= (v3 & (BIT(6) - 1)) << 16;
-+	val |= (v4 & (BIT(6) - 1)) << 24;
-+	return val;
-+}
-+
-+static void
-+mt76x2_add_rate_power_offset(struct mt76_rate_power *r, int offset)
-+{
-+	int i;
-+
-+	for (i = 0; i < sizeof(r->all); i++)
-+		r->all[i] += offset;
-+}
-+
-+static int
-+mt76x2_get_min_rate_power(struct mt76_rate_power *r)
-+{
-+	int i;
-+	s8 ret = 0;
-+
-+	for (i = 0; i < sizeof(r->all); i++) {
-+		if (!r->all[i])
-+			continue;
-+
-+		if (ret)
-+			ret = min(ret, r->all[i]);
-+		else
-+			ret = r->all[i];
-+	}
-+
-+	return ret;
-+}
-+
-+void mt76x2_phy_set_txpower(struct mt76x2_dev *dev)
-+{
-+	enum nl80211_chan_width width = dev->mt76.chandef.width;
-+	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
-+	struct mt76x2_tx_power_info txp;
-+	int txp_0, txp_1, delta = 0;
-+	struct mt76_rate_power t = {};
-+	int base_power, gain;
-+
-+	mt76x2_get_power_info(dev, &txp, chan);
-+
-+	if (width == NL80211_CHAN_WIDTH_40)
-+		delta = txp.delta_bw40;
-+	else if (width == NL80211_CHAN_WIDTH_80)
-+		delta = txp.delta_bw80;
-+
-+	mt76x2_get_rate_power(dev, &t, chan);
-+	mt76x2_add_rate_power_offset(&t, txp.chain[0].target_power);
-+	mt76x2_limit_rate_power(&t, dev->txpower_conf);
-+	dev->txpower_cur = mt76x2_get_max_rate_power(&t);
-+
-+	base_power = mt76x2_get_min_rate_power(&t);
-+	delta += base_power - txp.chain[0].target_power;
-+	txp_0 = txp.chain[0].target_power + txp.chain[0].delta + delta;
-+	txp_1 = txp.chain[1].target_power + txp.chain[1].delta + delta;
-+
-+	gain = min(txp_0, txp_1);
-+	if (gain < 0) {
-+		base_power -= gain;
-+		txp_0 -= gain;
-+		txp_1 -= gain;
-+	} else if (gain > 0x2f) {
-+		base_power -= gain - 0x2f;
-+		txp_0 = 0x2f;
-+		txp_1 = 0x2f;
-+	}
-+
-+	mt76x2_add_rate_power_offset(&t, -base_power);
-+	dev->target_power = txp.chain[0].target_power;
-+	dev->target_power_delta[0] = txp_0 - txp.chain[0].target_power;
-+	dev->target_power_delta[1] = txp_1 - txp.chain[0].target_power;
-+	dev->rate_power = t;
-+
-+	mt76_rmw_field(dev, MT_TX_ALC_CFG_0, MT_TX_ALC_CFG_0_CH_INIT_0, txp_0);
-+	mt76_rmw_field(dev, MT_TX_ALC_CFG_0, MT_TX_ALC_CFG_0_CH_INIT_1, txp_1);
-+
-+	mt76_wr(dev, MT_TX_PWR_CFG_0,
-+		mt76x2_tx_power_mask(t.cck[0], t.cck[2], t.ofdm[0], t.ofdm[2]));
-+	mt76_wr(dev, MT_TX_PWR_CFG_1,
-+		mt76x2_tx_power_mask(t.ofdm[4], t.ofdm[6], t.ht[0], t.ht[2]));
-+	mt76_wr(dev, MT_TX_PWR_CFG_2,
-+		mt76x2_tx_power_mask(t.ht[4], t.ht[6], t.ht[8], t.ht[10]));
-+	mt76_wr(dev, MT_TX_PWR_CFG_3,
-+		mt76x2_tx_power_mask(t.ht[12], t.ht[14], t.ht[0], t.ht[2]));
-+	mt76_wr(dev, MT_TX_PWR_CFG_4,
-+		mt76x2_tx_power_mask(t.ht[4], t.ht[6], 0, 0));
-+	mt76_wr(dev, MT_TX_PWR_CFG_7,
-+		mt76x2_tx_power_mask(t.ofdm[6], t.vht[8], t.ht[6], t.vht[8]));
-+	mt76_wr(dev, MT_TX_PWR_CFG_8,
-+		mt76x2_tx_power_mask(t.ht[14], t.vht[8], t.vht[8], 0));
-+	mt76_wr(dev, MT_TX_PWR_CFG_9,
-+		mt76x2_tx_power_mask(t.ht[6], t.vht[8], t.vht[8], 0));
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_phy_set_txpower);
-+
-+void mt76x2_configure_tx_delay(struct mt76x2_dev *dev,
-+			       enum nl80211_band band, u8 bw)
-+{
-+	u32 cfg0, cfg1;
-+
-+	if (mt76x2_ext_pa_enabled(dev, band)) {
-+		cfg0 = bw ? 0x000b0c01 : 0x00101101;
-+		cfg1 = 0x00011414;
-+	} else {
-+		cfg0 = bw ? 0x000b0b01 : 0x00101001;
-+		cfg1 = 0x00021414;
-+	}
-+	mt76_wr(dev, MT_TX_SW_CFG0, cfg0);
-+	mt76_wr(dev, MT_TX_SW_CFG1, cfg1);
-+
-+	mt76_rmw_field(dev, MT_XIFS_TIME_CFG, MT_XIFS_TIME_CFG_OFDM_SIFS, 15);
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_configure_tx_delay);
-+
-+void mt76x2_phy_set_bw(struct mt76x2_dev *dev, int width, u8 ctrl)
-+{
-+	int core_val, agc_val;
-+
-+	switch (width) {
-+	case NL80211_CHAN_WIDTH_80:
-+		core_val = 3;
-+		agc_val = 7;
-+		break;
-+	case NL80211_CHAN_WIDTH_40:
-+		core_val = 2;
-+		agc_val = 3;
-+		break;
-+	default:
-+		core_val = 0;
-+		agc_val = 1;
-+		break;
-+	}
-+
-+	mt76_rmw_field(dev, MT_BBP(CORE, 1), MT_BBP_CORE_R1_BW, core_val);
-+	mt76_rmw_field(dev, MT_BBP(AGC, 0), MT_BBP_AGC_R0_BW, agc_val);
-+	mt76_rmw_field(dev, MT_BBP(AGC, 0), MT_BBP_AGC_R0_CTRL_CHAN, ctrl);
-+	mt76_rmw_field(dev, MT_BBP(TXBE, 0), MT_BBP_TXBE_R0_CTRL_CHAN, ctrl);
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_phy_set_bw);
-+
-+void mt76x2_phy_set_band(struct mt76x2_dev *dev, int band, bool primary_upper)
-+{
-+	switch (band) {
-+	case NL80211_BAND_2GHZ:
-+		mt76_set(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_2G);
-+		mt76_clear(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_5G);
-+		break;
-+	case NL80211_BAND_5GHZ:
-+		mt76_clear(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_2G);
-+		mt76_set(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_5G);
-+		break;
-+	}
-+
-+	mt76_rmw_field(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_UPPER_40M,
-+		       primary_upper);
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_phy_set_band);
+     def _parse_country(self, line):
+         try:
+             cname, cvals= line.split(':', 1)
+@@ -290,6 +371,15 @@ class DBParser(object):
+             line = line.split(',')
+             pname = line[0]
+             flags = line[1:]
++        w = None
++        if flags and 'wmmrule' in flags[-1]:
++            try:
++                region = flags.pop().split('=', 1)[1]
++                if region not in self._wmm_rules.keys():
++                    self._syntax_error("No wmm rule for %s" % region)
++            except IndexError:
++                self._syntax_error("flags is empty list or no region was found")
++            w = WmmRule(*self._wmm_rules[region].values())
+ 
+         if not bname in self._bands:
+             self._syntax_error("band does not exist")
+@@ -303,7 +393,7 @@ class DBParser(object):
+         b = self._bands[bname]
+         p = self._power[pname]
+         try:
+-            perm = Permission(b, p, flags)
++            perm = Permission(b, p, flags, w)
+         except FlagError, e:
+             self._syntax_error("Invalid flag '%s'" % e.flag)
+         for cname, c in self._current_countries.iteritems():
+@@ -315,6 +405,7 @@ class DBParser(object):
+ 
+     def parse(self, f):
+         self._current_countries = None
++        self._current_regions = None
+         self._bands = {}
+         self._power = {}
+         self._countries = {}
+@@ -326,6 +417,7 @@ class DBParser(object):
+         self._powerdup = {}
+         self._bandline = {}
+         self._powerline = {}
++        self._wmm_rules = defaultdict(lambda: OrderedDict())
+ 
+         self._comments = []
+ 
+@@ -337,6 +429,7 @@ class DBParser(object):
+                 self._comments.append(line[1:].strip())
+             line = line.replace(' ', '').replace('\t', '')
+             if not line:
++                self._current_regions = None
+                 self._comments = []
+             line = line.split('#')[0]
+             if not line:
+@@ -344,17 +437,29 @@ class DBParser(object):
+             if line[0:4] == 'band':
+                 self._parse_band(line[4:])
+                 self._current_countries = None
++                self._current_regions = None
+                 self._comments = []
+             elif line[0:5] == 'power':
+                 self._parse_power(line[5:])
+                 self._current_countries = None
++                self._current_regions = None
+                 self._comments = []
+             elif line[0:7] == 'country':
+                 self._parse_country(line[7:])
+                 self._comments = []
++                self._current_regions = None
+             elif self._current_countries is not None:
++                self._current_regions = None
+                 self._parse_country_item(line)
+                 self._comments = []
++            elif line[0:7] == 'wmmrule':
++                self._parse_wmmrule(line[7:])
++                self._current_countries = None
++                self._comments = []
++            elif self._current_regions is not None:
++                self._parse_wmmrule_item(line)
++                self._current_countries = None
++                self._comments = []
+             else:
+                 self._syntax_error("Expected band, power or country definition")
+ 
 -- 
-2.16.3
+2.7.4
