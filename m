@@ -1,134 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47046 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:42644 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966609AbeEXLsU (ORCPT
+        with ESMTP id S1755492AbeEAPS7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 May 2018 07:48:20 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Daniel Mack <daniel@zonque.org>
-Cc: loic.poulain@linaro.org, linux-wireless@vger.kernel.org,
-        bjorn.andersson@linaro.org, nicolas.dechesne@linaro.org,
-        wcn36xx@lists.infradead.org, rfried@codeaurora.org
-Subject: wcn36xx: bug #538: stuck tx management frames
-References: <20180516140820.1636-1-daniel@zonque.org>
-        <95b89ceb-cc25-023e-9fa2-e45b2deb5027@zonque.org>
-        <874lj5jj96.fsf@kamboji.qca.qualcomm.com>
-        <65b0f1d0-0c74-0efb-c7ca-c0fbae681810@zonque.org>
-        <877entigth.fsf@codeaurora.org>
-        <00f05d66-3076-0e49-f4af-74c797210948@zonque.org>
-Date: Thu, 24 May 2018 14:48:13 +0300
-In-Reply-To: <00f05d66-3076-0e49-f4af-74c797210948@zonque.org> (Daniel Mack's
-        message of "Thu, 24 May 2018 11:40:58 +0200")
-Message-ID: <87a7spcm0y.fsf_-_@kamboji.qca.qualcomm.com> (sfid-20180524_134850_282007_96280C48)
+        Tue, 1 May 2018 11:18:59 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 01 May 2018 20:48:58 +0530
+From: Sriram R <srirrama@codeaurora.org>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org,
+        Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+Subject: Re: [PATCH 2/2 - linux-stable-4.4] ath10k: rebuild crypto header in
+ rx data frames
+In-Reply-To: <20180501150028.GA14123@kroah.com>
+References: <1525069587-19281-1-git-send-email-srirrama@codeaurora.org>
+ <1525069587-19281-3-git-send-email-srirrama@codeaurora.org>
+ <20180430190901.GB8415@kroah.com>
+ <583dcb6821d9803277f60780385dff52@codeaurora.org>
+ <dc88bf84bb843958dceb401ca2e6be17@codeaurora.org>
+ <20180501150028.GA14123@kroah.com>
+Message-ID: <92cb976fd9e800c32f3256792609f46d@codeaurora.org> (sfid-20180501_171916_919491_EE31A3F9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(I'll change the subject to better reflect what we are discussing.)
+On 2018-05-01 20:30, Greg KH wrote:
+> On Tue, May 01, 2018 at 05:44:19AM +0530, Sriram R wrote:
+>> On 2018-05-01 05:14, Sriram R wrote:
+>> > On 2018-05-01 00:39, Greg KH wrote:
+>> > > On Mon, Apr 30, 2018 at 11:56:27AM +0530, Sriram R wrote:
+>> > > > Rx data frames notified through HTT_T2H_MSG_TYPE_RX_IND and
+>> > > > HTT_T2H_MSG_TYPE_RX_FRAG_IND expect PN/TSC check to be done
+>> > > > on host (mac80211) rather than firmware. Rebuild cipher header
+>> > > > in every received data frames (that are notified through those
+>> > > > HTT interfaces) from the rx_hdr_status tlv available in the
+>> > > > rx descriptor of the first msdu. Skip setting RX_FLAG_IV_STRIPPED
+>> > > > flag for the packets which requires mac80211 PN/TSC check support
+>> > > > and set appropriate RX_FLAG for stripped crypto tail. Hw QCA988X,
+>> > > > and QCA99X0 currently need the rebuilding of cipher header to
+>> > > > perform PN/TSC check for replay attack.
+>> > > >
+>> > > > [Upstream Commit : 7eccb738fce57cbe53ed903ccf43f9ab257b15b3]
+>> > > >
+>> > > > Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+>> > > > Signed-off-by: Sriram R <srirrama@codeaurora.org>
+>> > > > ---
+>> > > >  drivers/net/wireless/ath/ath10k/htt_rx.c | 98
+>> > > > ++++++++++++++++++++++++++------
+>> > > >  1 file changed, 82 insertions(+), 16 deletions(-)
+>> > >
+>> > > This patch breaks the build.  Always test build your patches!
+>> > >
+>> > > thanks,
+>> > >
+>> > > greg k-h
+>> > Hi Greg,
+>> >
+>> >   This patch along with its dependency patches (in the following order)
+>> >
+>> > f980ebc058c2 : mac80211: allow not sending MIC up from driver for HW
+>> > crypto
+>> > f631a77ba920 : mac80211: allow same PN for AMSDU sub-frames
+>> > cef0acd4d7d4 : mac80211: Add RX flag to indicate ICV stripped
+>> > [PATCH 1/2 linux-stable-4.4] ath10k: Add new hw param to identify
+>> > alignment for different chipsets
+>> >
+>> Hi Greg,
+>> 
+>>  I feel this breaks since the above mentioned mac80211 commits are not
+>> available in this queue.
+>> 
+>> https://git.kernel.org/pub/scm/linux/kernel/git/stable/stable-queue.git/diff/queue-4.4/series?id=8e2985dd801f00640be6998ec831018a688bb221
+>> 
+>> Could you please check after these commits are queued as well before 
+>> this
+>> patch is applied.
+>> 
+>> Please let me know if i miss something here so i could check from my 
+>> side as
+>> well.
+> 
+> Ugh, you are right, I missed that in the cover leter, my fault.  I'll
+> blame the jet-lag :)
+> 
+> I'll go drop the first patch for now, and then look at all of these
+> again at the end of the week for the next round of releases.
+> 
+> thanks,
+> 
+> greg k-h
 
-Daniel Mack <daniel@zonque.org> writes:
-> On Thursday, May 24, 2018 10:44 AM, Kalle Valo wrote:
->> Daniel Mack <daniel@zonque.org> writes:
->>> On Friday, May 18, 2018 01:28 PM, Kalle Valo wrote:
->
->>>> Also I would recommend to file a bug to bugzilla.kernel.org so that all
->>>> the information is one place and it can be easily updated. Now it's
->>>> pretty difficult to get the big picture from various emails on the list.
->>>
->>> Yes, I agree it's a bit convoluted. However, there's already the bug
->>> report on 96board.org that Bjorn opened some time back, and I
->>> considered that sufficient. IMO, it has all the information needed,
->>> plus a link to a tool to reproduce the issue.
->>>
->>>    https://bugs.96boards.org/show_bug.cgi?id=538
->>
->> Yeah, bugs.96boards.org is fine. As long as there's one place which
->> collects all the information about the bug.
->>
->> But IMHO the bug report is not telling much, all I get is that TX frames
->> get stuck but not even that is confirmed. After reading it I have at
->> least these questions:
->>
->> * Is it really confirmed that the issue is that TX frames are stuck? For
->>    example, using a wireless sniffer would confirm that.
->
-> Yes, that's confirmed. I have a 2nd machine tuned to the same channel
-> than the network I use for testing, and once the timeouts happen, I
-> cannot see any frame anymore from the MAC of the wcn36xx. No probe
-> requests for scans, no authentication attempts, nothing.
->
-> As my test constantly connects and disconnects, the last thing I see
-> in wireshark is a deauthentication frame.
+Sure, Thanks Greg.
 
-Thanks, this is good to know.
-
->> * Are only management frames stuck or does it also involve data frames?
->
-> It seems that once a network is successfully joined, the network
-> stability is fine. I haven't seen any starvation of streams lately, at
-> least not with the the patches in this series which I'm running since
-> a while. That is, until a disconnect/reconnect attempt is made, and at
-> this point, only management frames are involved.
-
-Ah, maybe originally you were seeing different issues with similar
-symptoms? But now you have fixed the other bugsand now the stuck
-transmitted management frame issue is left? Just guessing...
-
->> * Based on the bug report the TX stuck issue seems to happen during
->>    authentication, but what happens before that? Does wcn36xx get
->>    disconnected from AP or what?
->
-> As I said, my test setup includes repeated disconnections to make the
-> bug appear. It sometimes happens at the first attempt after a fresh
-> boot, however, so the stress test only makes debugging a bit easier by
-> increasing the likeliness.
->
->> * Any wcn36xx logs about the issue (with or without debug logs)? Also
->>    matching wpasupplicant logs would help.
->
-> The problem with this is that it's not exactly clear what kind of
-> effect we're looking at. With all the debug flags of the driver
-> enabled, it produces so much log output that wpa_supplicant gives up
-> due to timeouts. The other weird issue is that with WCN36XX_DBG_MAC
-> and/or WCN36XX_DBG_SMD enabled, the effect is _much_ harder to
-> trigger.
-
-It would be great to have wcn36xx logging via tracing, just like ath10k
-and iwlwifi does. This way logging shouldn't slow down the system too
-much and with wpasupplicant's -T switch you can even get wpasupplicant's
-debug messages to the same log with proper timestamps! And almost
-forgot, you can also include mac80211 tracing logs as well:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/mac80211/tracing
-
-https://wireless.wiki.kernel.org/en/users/drivers/ath10k/debug#tracing
-
-See ath10k_dbg() and trace_ath10k_log_dbg() for ideas how to implement
-this, and you can also take a look at iwlwifi. Should be pretty easy.
-Patches more than welcome :)
-
->> * Does this only happen with encryption or also in open mode?
->
-> That's a good question. I'll go check with an open network.
-
-Thanks.
-
->> * How long does it take with qconnman-stress to reproduce the issue?
->
-> Usually less than 10 minutes.
-
-That's really good, makes it so much easier to verify potential fixes.
-
->> * Does the radio environment make any difference on reproducibility? For
->>    example, clear enviroment vs lots of traffic/interference?
->
-> It seems it does, yes. Tests at night seem to take a bit more time to
-> make the effect happen. But then again, it could also be unrelated. I
-> can't be certain at this point.
-
-Can you describe what kind of radio environment you have, is it a busy
-office complex? How many APs around etc?
-
--- 
-Kalle Valo
+Regards,
+Sriram.R
