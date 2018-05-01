@@ -1,53 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:24766 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752472AbeEKIOT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 04:14:19 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 08/30] staging: wilc1000: replace kmalloc with kmemdup() in handle_connect_timeout()
-Date: Fri, 11 May 2018 13:43:09 +0530
-Message-ID: <1526026411-11058-9-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101423_295768_3E0FE3C8)
-In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
-References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+Received: from mail.kernel.org ([198.145.29.99]:35446 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754790AbeEAPAj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 1 May 2018 11:00:39 -0400
+Date: Tue, 1 May 2018 08:00:28 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Sriram R <srirrama@codeaurora.org>
+Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org,
+        Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+Subject: Re: [PATCH 2/2 - linux-stable-4.4] ath10k: rebuild crypto header in
+ rx data frames
+Message-ID: <20180501150028.GA14123@kroah.com> (sfid-20180501_170045_414757_574AF7C0)
+References: <1525069587-19281-1-git-send-email-srirrama@codeaurora.org>
+ <1525069587-19281-3-git-send-email-srirrama@codeaurora.org>
+ <20180430190901.GB8415@kroah.com>
+ <583dcb6821d9803277f60780385dff52@codeaurora.org>
+ <dc88bf84bb843958dceb401ca2e6be17@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <dc88bf84bb843958dceb401ca2e6be17@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of kmalloc and memcpy use kmemdup in handle_connect_timeout().
-Also return -ENOMEM incase of failure to allocate the memory.
+On Tue, May 01, 2018 at 05:44:19AM +0530, Sriram R wrote:
+> On 2018-05-01 05:14, Sriram R wrote:
+> > On 2018-05-01 00:39, Greg KH wrote:
+> > > On Mon, Apr 30, 2018 at 11:56:27AM +0530, Sriram R wrote:
+> > > > Rx data frames notified through HTT_T2H_MSG_TYPE_RX_IND and
+> > > > HTT_T2H_MSG_TYPE_RX_FRAG_IND expect PN/TSC check to be done
+> > > > on host (mac80211) rather than firmware. Rebuild cipher header
+> > > > in every received data frames (that are notified through those
+> > > > HTT interfaces) from the rx_hdr_status tlv available in the
+> > > > rx descriptor of the first msdu. Skip setting RX_FLAG_IV_STRIPPED
+> > > > flag for the packets which requires mac80211 PN/TSC check support
+> > > > and set appropriate RX_FLAG for stripped crypto tail. Hw QCA988X,
+> > > > and QCA99X0 currently need the rebuilding of cipher header to
+> > > > perform PN/TSC check for replay attack.
+> > > > 
+> > > > [Upstream Commit : 7eccb738fce57cbe53ed903ccf43f9ab257b15b3]
+> > > > 
+> > > > Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+> > > > Signed-off-by: Sriram R <srirrama@codeaurora.org>
+> > > > ---
+> > > >  drivers/net/wireless/ath/ath10k/htt_rx.c | 98
+> > > > ++++++++++++++++++++++++++------
+> > > >  1 file changed, 82 insertions(+), 16 deletions(-)
+> > > 
+> > > This patch breaks the build.  Always test build your patches!
+> > > 
+> > > thanks,
+> > > 
+> > > greg k-h
+> > Hi Greg,
+> > 
+> >   This patch along with its dependency patches (in the following order)
+> > 
+> > f980ebc058c2 : mac80211: allow not sending MIC up from driver for HW
+> > crypto
+> > f631a77ba920 : mac80211: allow same PN for AMSDU sub-frames
+> > cef0acd4d7d4 : mac80211: Add RX flag to indicate ICV stripped
+> > [PATCH 1/2 linux-stable-4.4] ath10k: Add new hw param to identify
+> > alignment for different chipsets
+> > 
+> Hi Greg,
+> 
+>  I feel this breaks since the above mentioned mac80211 commits are not
+> available in this queue.
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/stable/stable-queue.git/diff/queue-4.4/series?id=8e2985dd801f00640be6998ec831018a688bb221
+> 
+> Could you please check after these commits are queued as well before this
+> patch is applied.
+> 
+> Please let me know if i miss something here so i could check from my side as
+> well.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+Ugh, you are right, I missed that in the cover leter, my fault.  I'll
+blame the jet-lag :)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 039b49b..89f4afd 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1166,10 +1166,11 @@ static s32 handle_connect_timeout(struct wilc_vif *vif)
- 
- 		if (hif_drv->usr_conn_req.ies) {
- 			info.req_ies_len = hif_drv->usr_conn_req.ies_len;
--			info.req_ies = kmalloc(hif_drv->usr_conn_req.ies_len, GFP_KERNEL);
--			memcpy(info.req_ies,
--			       hif_drv->usr_conn_req.ies,
--			       hif_drv->usr_conn_req.ies_len);
-+			info.req_ies = kmemdup(hif_drv->usr_conn_req.ies,
-+					       hif_drv->usr_conn_req.ies_len,
-+					       GFP_KERNEL);
-+			if (!info.req_ies)
-+				return -ENOMEM;
- 		}
- 
- 		hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_CONN_RESP,
--- 
-2.7.4
+I'll go drop the first patch for now, and then look at all of these
+again at the end of the week for the next round of releases.
+
+thanks,
+
+greg k-h
