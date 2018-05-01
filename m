@@ -1,74 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0066.outbound.protection.outlook.com ([104.47.42.66]:47232
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756828AbeEJIvJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 May 2018 04:51:09 -0400
-Date: Thu, 10 May 2018 11:50:53 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Subject: Re: [PATCH v2 1/3] wireless-drivers: Dynamically allocate struct
- station_info
-Message-ID: <20180510085052.oscm2ezf4k6p2kwf@bars> (sfid-20180510_105117_028466_1DDF2ECC)
-References: <152590211357.13924.18408619969539206421.stgit@alrua-kau>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:39320 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751064AbeEAWqf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 1 May 2018 18:46:35 -0400
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Steve deRosier <derosier@gmail.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Birming Chiu <birming@realtek.com>,
+        Shaofu <shaofu@realtek.com>,
+        Steven Ting <steventing@realtek.com>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Daniel Drake <drake@endlessm.com>,
+        =?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>,
+        linux@endlessm.com
+Subject: [RFC PATCH 2/3] Revert "rtlwifi: fill FW version and subversion"
+Date: Tue,  1 May 2018 15:46:12 -0700
+Message-Id: <20180501224613.32460-2-jprvita@endlessm.com> (sfid-20180502_004812_934384_5F660DBC)
+In-Reply-To: <20180501224613.32460-1-jprvita@endlessm.com>
+References: <CA+A7VXUUsZHD2gr9TBcV6jZBOPGZv7_vK-wWZ0MvGgiCnAiUgQ@mail.gmail.com>
+ <20180501224613.32460-1-jprvita@endlessm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <152590211357.13924.18408619969539206421.stgit@alrua-kau>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Toke and all,
+This reverts commit 874e837d67d0db179c9771f38fd21df07c703e93.
 
-> Since the addition of the TXQ stats to cfg80211, the station_info struct
-> has grown to be quite large, which results in warnings when allocated on
-> the stack. Fix the affected places to do dynamic allocations instead.
-> 
-> Fixes: 52539ca89f36 ("cfg80211: Expose TXQ stats and parameters to userspace")
-> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
-> ---
->  drivers/net/wireless/ath/ath6kl/main.c             |   14 ++++++----
->  drivers/net/wireless/ath/wil6210/debugfs.c         |   22 ++++++++++-----
->  drivers/net/wireless/ath/wil6210/wmi.c             |   19 ++++++++-----
->  .../broadcom/brcm80211/brcmfmac/cfg80211.c         |   18 ++++++++----
->  drivers/net/wireless/marvell/mwifiex/uap_event.c   |   25 +++++++++++------
->  drivers/net/wireless/quantenna/qtnfmac/event.c     |   29 +++++++++++++-------
->  6 files changed, 82 insertions(+), 45 deletions(-)
+This drastically affects the upload performance and signal strenght on
+the HP 240 G4 laptop, as shown by the results bellow:
 
-Thanks for taking care of this. As for qtnfmac part, there are two
-more EINVALs returned during payload processing. So they should be
-modified as well to avoid memleaks. Here is a fixup on top of your
-patch:
+Without this change:
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
-index 969b6fc7128a..16617c44f81b 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -78,15 +78,19 @@ qtnf_event_handle_sta_assoc(struct qtnf_wmac *mac, struct qtnf_vif *vif,
- 		tlv_value_len = le16_to_cpu(tlv->len);
- 		tlv_full_len = tlv_value_len + sizeof(struct qlink_tlv_hdr);
- 
--		if (tlv_full_len > payload_len)
--			return -EINVAL;
-+		if (tlv_full_len > payload_len) {
-+			ret = -EINVAL;
-+			goto out;
-+		}
- 
- 		if (tlv_type == QTN_TLV_ID_IE_SET) {
- 			const struct qlink_tlv_ie_set *ie_set;
- 			unsigned int ie_len;
- 
--			if (payload_len < sizeof(*ie_set))
--				return -EINVAL;
-+			if (payload_len < sizeof(*ie_set)) {
-+				ret = -EINVAL;
-+				goto out;
-+			}
- 
- 			ie_set = (const struct qlink_tlv_ie_set *)tlv;
- 			ie_len = tlv_value_len -
+ $ sudo iw dev wlp2s0 scan | grep -B3 JJ | grep signal
+        signal: -42.00 dBm
+ $ iperf3 -c 192.168.1.254
+ Connecting to host 192.168.1.254, port 5201
+ [  4] local 192.168.1.253 port 39678 connected to 192.168.1.254 port 5201
+ [ ID] Interval           Transfer     Bandwidth       Retr  Cwnd
+ [  4]   0.00-1.00   sec   735 KBytes  6.02 Mbits/sec    1   1.41 KBytes
+ [  4]   1.00-2.00   sec   274 KBytes  2.25 Mbits/sec    1   1.41 KBytes
+ [  4]   2.00-3.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
+ [  4]   3.00-4.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
+ [  4]   4.00-5.00   sec  0.00 Bytes  0.00 bits/sec    1   28.3 KBytes
+ [  4]   5.00-6.00   sec   423 KBytes  3.47 Mbits/sec    3   41.0 KBytes
+ [  4]   6.00-7.00   sec   840 KBytes  6.88 Mbits/sec    0   58.0 KBytes
+ [  4]   7.00-8.00   sec   830 KBytes  6.79 Mbits/sec    1   1.41 KBytes
+ [  4]   8.00-9.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
+ [  4]   9.00-10.00  sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
+ - - - - - - - - - - - - - - - - - - - - - - - - -
+ [ ID] Interval           Transfer     Bandwidth       Retr
+ [  4]   0.00-10.00  sec  3.03 MBytes  2.54 Mbits/sec    7             sender
+ [  4]   0.00-10.00  sec  2.88 MBytes  2.41 Mbits/sec                  receiver
 
-Regards,
-Sergey
+ iperf Done.
+
+With this change:
+
+ $ sudo iw dev wlp2s0 scan | grep -B3 JJ | grep signal
+        signal: -14.00 dBm
+ $ iperf3 -c 192.168.1.254
+ Connecting to host 192.168.1.254, port 5201
+ [  4] local 192.168.1.253 port 59380 connected to 192.168.1.254 port 5201
+ [ ID] Interval           Transfer     Bandwidth       Retr  Cwnd
+ [  4]   0.00-1.00   sec  4.63 MBytes  38.8 Mbits/sec    0    194 KBytes
+ [  4]   1.00-2.00   sec  4.58 MBytes  38.4 Mbits/sec    0    273 KBytes
+ [  4]   2.00-3.00   sec  5.05 MBytes  42.3 Mbits/sec    0    332 KBytes
+ [  4]   3.00-4.00   sec  4.98 MBytes  41.8 Mbits/sec    0    393 KBytes
+ [  4]   4.00-5.00   sec  4.76 MBytes  39.9 Mbits/sec    0    434 KBytes
+ [  4]   5.00-6.00   sec  4.85 MBytes  40.7 Mbits/sec    0    434 KBytes
+ [  4]   6.00-7.00   sec  3.96 MBytes  33.2 Mbits/sec    0    464 KBytes
+ [  4]   7.00-8.00   sec  4.74 MBytes  39.8 Mbits/sec    0    481 KBytes
+ [  4]   8.00-9.00   sec  4.22 MBytes  35.4 Mbits/sec    0    508 KBytes
+ [  4]   9.00-10.00  sec  4.09 MBytes  34.3 Mbits/sec    0    564 KBytes
+ - - - - - - - - - - - - - - - - - - - - - - - - -
+ [ ID] Interval           Transfer     Bandwidth       Retr
+ [  4]   0.00-10.00  sec  45.9 MBytes  38.5 Mbits/sec    0             sender
+ [  4]   0.00-10.00  sec  45.0 MBytes  37.7 Mbits/sec                  receiver
+
+ iperf Done.
+
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c         | 2 --
+ drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c | 2 --
+ 2 files changed, 4 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+index 63874512598b..a2eca669873b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+@@ -141,8 +141,6 @@ int rtl88e_download_fw(struct ieee80211_hw *hw,
+ 		return 1;
+ 
+ 	pfwheader = (struct rtlwifi_firmware_header *)rtlhal->pfirmware;
+-	rtlhal->fw_version = le16_to_cpu(pfwheader->version);
+-	rtlhal->fw_subversion = pfwheader->subversion;
+ 	pfwdata = rtlhal->pfirmware;
+ 	fwsize = rtlhal->fwsize;
+ 	RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
+index 521039c5d4ce..0d1ebc861720 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
+@@ -200,8 +200,6 @@ int rtl8723_download_fw(struct ieee80211_hw *hw,
+ 		return 1;
+ 
+ 	pfwheader = (struct rtlwifi_firmware_header *)rtlhal->pfirmware;
+-	rtlhal->fw_version = le16_to_cpu(pfwheader->version);
+-	rtlhal->fw_subversion = pfwheader->subversion;
+ 	pfwdata = rtlhal->pfirmware;
+ 	fwsize = rtlhal->fwsize;
+ 
+-- 
+2.17.0
