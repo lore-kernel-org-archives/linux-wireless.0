@@ -1,84 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46966 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S935605AbeE3HUT (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60212 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751429AbeEAAOV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 03:20:19 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 30 May 2018 10:20:04 +0300
-Message-Id: <20180530072005.633-10-luca@coelho.fi> (sfid-20180530_092031_813889_FFBA9410)
-In-Reply-To: <20180530072005.633-1-luca@coelho.fi>
-References: <20180530072005.633-1-luca@coelho.fi>
-Subject: [PATCH 09/10] iwlwifi: mvm: fix race in queue notification wait
+        Mon, 30 Apr 2018 20:14:21 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 01 May 2018 05:44:19 +0530
+From: Sriram R <srirrama@codeaurora.org>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org,
+        Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+Subject: Re: [PATCH 2/2 - linux-stable-4.4] ath10k: rebuild crypto header in
+ rx data frames
+In-Reply-To: <583dcb6821d9803277f60780385dff52@codeaurora.org>
+References: <1525069587-19281-1-git-send-email-srirrama@codeaurora.org>
+ <1525069587-19281-3-git-send-email-srirrama@codeaurora.org>
+ <20180430190901.GB8415@kroah.com>
+ <583dcb6821d9803277f60780385dff52@codeaurora.org>
+Message-ID: <dc88bf84bb843958dceb401ca2e6be17@codeaurora.org> (sfid-20180501_021425_371130_FB1126E0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 2018-05-01 05:14, Sriram R wrote:
+> On 2018-05-01 00:39, Greg KH wrote:
+>> On Mon, Apr 30, 2018 at 11:56:27AM +0530, Sriram R wrote:
+>>> Rx data frames notified through HTT_T2H_MSG_TYPE_RX_IND and
+>>> HTT_T2H_MSG_TYPE_RX_FRAG_IND expect PN/TSC check to be done
+>>> on host (mac80211) rather than firmware. Rebuild cipher header
+>>> in every received data frames (that are notified through those
+>>> HTT interfaces) from the rx_hdr_status tlv available in the
+>>> rx descriptor of the first msdu. Skip setting RX_FLAG_IV_STRIPPED
+>>> flag for the packets which requires mac80211 PN/TSC check support
+>>> and set appropriate RX_FLAG for stripped crypto tail. Hw QCA988X,
+>>> and QCA99X0 currently need the rebuilding of cipher header to
+>>> perform PN/TSC check for replay attack.
+>>> 
+>>> [Upstream Commit : 7eccb738fce57cbe53ed903ccf43f9ab257b15b3]
+>>> 
+>>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+>>> Signed-off-by: Sriram R <srirrama@codeaurora.org>
+>>> ---
+>>>  drivers/net/wireless/ath/ath10k/htt_rx.c | 98 
+>>> ++++++++++++++++++++++++++------
+>>>  1 file changed, 82 insertions(+), 16 deletions(-)
+>> 
+>> This patch breaks the build.  Always test build your patches!
+>> 
+>> thanks,
+>> 
+>> greg k-h
+> Hi Greg,
+> 
+>   This patch along with its dependency patches (in the following order)
+> 
+> f980ebc058c2 : mac80211: allow not sending MIC up from driver for HW 
+> crypto
+> f631a77ba920 : mac80211: allow same PN for AMSDU sub-frames
+> cef0acd4d7d4 : mac80211: Add RX flag to indicate ICV stripped
+> [PATCH 1/2 linux-stable-4.4] ath10k: Add new hw param to identify
+> alignment for different chipsets
+> 
+Hi Greg,
 
-Initially in this code, the race didn't matter since it didn't
-do anything. Latest with the commit I marked this as fixing it
-started to matter as something got done here that needed other
-data that got freed as soon as the queue notification wait was
-returning.
+  I feel this breaks since the above mentioned mac80211 commits are not 
+available in this queue.
 
-In the scenario we saw, apparently the IWL_MVM_RXQ_NOTIF_DEL_BA
-event was sent to all queues, but processing the last event we
-returned from iwl_mvm_sync_rx_queues_internal() and then from
-iwl_mvm_free_reorder() and continued some processing before
-wl_mvm_del_ba() was even invoked on the other CPU. Thus, when
-the latter finally ran, it found that mvm->baid_map[baid] was
-no longer valid.
+https://git.kernel.org/pub/scm/linux/kernel/git/stable/stable-queue.git/diff/queue-4.4/series?id=8e2985dd801f00640be6998ec831018a688bb221
 
-Correct the race by moving the counter decrement and wake_up()
-to be done only after all the per-event processing completed.
-Note that in the commit I marked as being fixed the wake_up()
-didn't exist yet (and the code was otherwise problematic) but
-this particular problem already existed in a way.
+Could you please check after these commits are queued as well before 
+this patch is applied.
 
-Fixes: b915c10174fb ("iwlwifi: mvm: add reorder buffer per queue")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+Please let me know if i miss something here so i could check from my 
+side as well.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 2b1f0dc73c25..129c4c09648d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -590,14 +590,10 @@ void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
- 	notif = (void *)pkt->data;
- 	internal_notif = (void *)notif->payload;
- 
--	if (internal_notif->sync) {
--		if (mvm->queue_sync_cookie != internal_notif->cookie) {
--			WARN_ONCE(1,
--				  "Received expired RX queue sync message\n");
--			return;
--		}
--		if (!atomic_dec_return(&mvm->queue_sync_counter))
--			wake_up(&mvm->rx_sync_waitq);
-+	if (internal_notif->sync &&
-+	    mvm->queue_sync_cookie != internal_notif->cookie) {
-+		WARN_ONCE(1, "Received expired RX queue sync message\n");
-+		return;
- 	}
- 
- 	switch (internal_notif->type) {
-@@ -609,6 +605,10 @@ void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
- 	default:
- 		WARN_ONCE(1, "Invalid identifier %d", internal_notif->type);
- 	}
-+
-+	if (internal_notif->sync &&
-+	    !atomic_dec_return(&mvm->queue_sync_counter))
-+		wake_up(&mvm->rx_sync_waitq);
- }
- 
- /*
--- 
-2.17.0
+Thanks,
+Sriram.R
+> build fine when checked with v4.4.130.
+> 
+> Kindly let me know if you face any issues while trying out in this 
+> order.
+> 
+> Thanks,
+> Sriram.R
