@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42190 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932538AbeEHPYY (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:63357 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751100AbeEBHPl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 May 2018 11:24:24 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 2 May 2018 03:15:41 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 15/21] staging: wilc1000: remove unused macros in host_interface
+Date: Wed, 2 May 2018 12:43:41 +0530
+Message-ID: <1525245227-3924-16-git-send-email-ajay.kathat@microchip.com> (sfid-20180502_093237_508191_AC52E0C2)
+In-Reply-To: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Subject: Re: [v2,
- 06/10] wil6210: use country specific board file upon reg domain change
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1524473533-24524-7-git-send-email-merez@codeaurora.org>
-References: <1524473533-24524-7-git-send-email-merez@codeaurora.org>
-To: Maya Erez <merez@codeaurora.org>
-Cc: Dedy Lansky <dlansky@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-Message-Id: <20180508152424.6C03A605FD@smtp.codeaurora.org> (sfid-20180508_172450_072048_324DEBDE)
-Date: Tue,  8 May 2018 15:24:24 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <merez@codeaurora.org> wrote:
+Cleanup patch to remove the unused macro mentioned below. Also move
+macro up along with other macro declaration.
 
-> From: Dedy Lansky <dlansky@codeaurora.org>
-> 
-> wil6210 device needs to use country specific board file while in China
-> regulatory domain.
-> Register cfg80211 reg_notifier and switch board file if needed
-> according to new regulatory domain.
-> This feature is disabled by default and can be enabled with a new
-> country_specific_board_file module parameter.
-> 
-> Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
-> Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-This looks fishy, especially the addition of a new module parameter.
-I'll drop this as I don't have time to investigate in detail.
-
-Patch set to Changes Requested.
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6746e2f..52d3a2c 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -58,6 +58,8 @@
+ #define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
+ #define DEFAULT_LINK_SPEED			72
+ 
++#define REAL_JOIN_REQ				0
++
+ struct host_if_wpa_attr {
+ 	u8 *key;
+ 	const u8 *mac_addr;
+@@ -248,10 +250,6 @@ static u8 get_ip[2][4];
+ static u32 inactive_time;
+ static u32 clients_count;
+ 
+-#define REAL_JOIN_REQ 0
+-#define FLUSHED_JOIN_REQ 1
+-#define FLUSHED_BYTE_POS 79
+-
+ static void *host_int_parse_join_bss_param(struct network_info *info);
+ static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
+ static s32 handle_scan_done(struct wilc_vif *vif, enum scan_event evt);
 -- 
-https://patchwork.kernel.org/patch/10356435/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
