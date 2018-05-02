@@ -1,90 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52692 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752482AbeEPMBZ (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:29470 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750907AbeEBJmk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 May 2018 08:01:25 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Pkshih <pkshih@realtek.com>, Barry Day <briselec@gmail.com>,
-        "Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 00/19] rtlwifi: halmac: Add new module halmac
-References: <20180425020820.6141-1-pkshih@realtek.com>
-        <87lgdbagb2.fsf@kamboji.qca.qualcomm.com>
-        <5B2DA6FDDF928F4E855344EE0A5C39D13BEBF231@RTITMBSV07.realtek.com.tw>
-        <20180427224156.GA18163@thinktank.home.org>
-        <5B2DA6FDDF928F4E855344EE0A5C39D13BEBFD30@RTITMBSV07.realtek.com.tw>
-        <CABPxzYKfZVA8RTADEG5TCu0SXRSVEGWEn+Ym6AkMuFzHC5iSVg@mail.gmail.com>
-Date: Wed, 16 May 2018 15:01:20 +0300
-In-Reply-To: <CABPxzYKfZVA8RTADEG5TCu0SXRSVEGWEn+Ym6AkMuFzHC5iSVg@mail.gmail.com>
-        (Krishna Chaitanya's message of "Mon, 30 Apr 2018 14:03:28 +0530")
-Message-ID: <87a7szkdwv.fsf@codeaurora.org> (sfid-20180516_140128_966159_C355A18F)
+        Wed, 2 May 2018 05:42:40 -0400
+Date: Wed, 2 May 2018 15:12:29 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: <devel@driverdev.osuosl.org>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        <linux-wireless@vger.kernel.org>,
+        <kernel-janitors@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        "Ganesh Krishna" <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] staging: wilc1000: fix infinite loop and out-of-bounds
+ access
+Message-ID: <20180502151229.4be29ec8@ajaysk-VirtualBox> (sfid-20180502_114347_624510_A70ED942)
+In-Reply-To: <20180502083935.uw4mxvcgnpayv3h3@mwanda>
+References: <20180430125040.GA19050@embeddedor.com>
+ <20180430195916.596a93eb@ajaysk-VirtualBox>
+ <20180430152321.7pq4ol2ed7tzsrl4@mwanda>
+ <20180502111735.5a2c6faa@ajaysk-VirtualBox>
+ <20180502083935.uw4mxvcgnpayv3h3@mwanda>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Krishna Chaitanya <chaitanya.mgit@gmail.com> writes:
+On Wed, 2 May 2018 11:39:36 +0300
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
-> On Mon, Apr 30, 2018 at 8:10 AM, Pkshih <pkshih@realtek.com> wrote:
->>
->>
->> > -----Original Message-----
->> > From: Barry Day [mailto:briselec@gmail.com]
->> > Sent: Saturday, April 28, 2018 6:42 AM
->> > To: Pkshih
->> > Cc: Kalle Valo; Larry.Finger@lwfinger.net; linux-wireless@vger.kernel.org
->> > Subject: Re: [PATCH v3 00/19] rtlwifi: halmac: Add new module halmac
->> >
->> > On Fri, Apr 27, 2018 at 05:44:16AM +0000, Pkshih wrote:
->> > >
->> > > The registers reside in driver causes error frequently, because MAC register
->> > > is maintained by Realtek's MAC team so they create this module to avoid mistakes.
->> > > Another benefit is to make it possible to become a thin driver, because many
->> > > common functions are provided, so duplicate code will be reduced.
->> >
->> > How is it possible to create a thin driver by adding lots more code and layers
->> > of indirection ??? and writing it in a way that it won't compile without the
->> > code for every type of bus interface even though most modules only use one ?
->> >
->> As I mentioned in first paragraph "(I use 'driver' in this mail indicates part of
->> rtlwifi excluded from this module.)". If this module was seen as a 'lib', rtl8822be
->> would be a "thin driver". For bus interface code, I need to add a way to compile
->> type of bus interface according to selected chip.
->>
->> > It's a horrible pile of garbage slapped together by an inexperienced
->> > programmer. Its a major deterrent for anyone looking at working on one of
->> > the latest realtek drivers.
->> >
->> This module is designed to support multiple OS including Windows and Linux, and
->> many products have used this module and worked well. We hope Linux user can also
->> use Realtek's WiFi without additional installation if driver was built.
->> In order to submit this module to kernel upstream, we take a lot of effort
->> to fit Linux coding conventions (e.g. coding style), and explicit
->> suggestions will be helpful for us to continuously improve this module.
->
-> IMHO, this is a common use case for most organizations.
+> We're mainly discussing readability, right?
+> 
+> To me when people use "int" that tells me as a reader that we don't
+> need to think about the type.  It's going to be a small number.
+> 
+> Say you have data which the user can control, then it's super
+> important to focus on the data types.  We don't focus on it
+> enough.  There is some kind of idea that good developers should
+> just be super focused on everything all the time, but I don't think
+> humans can do it.  So to me it's useful when the author tells me,
+> "This an int type.  It's fine. This is not critical."
+> 
+> If you make request->n_ssids a u8 or u16, that isn't going to save
+> any memory because the struct is padded.  You'd also need to audit
+> a bunch of code to make sure that we don't overflow the u16.  If
+> you wanted to overflow the int, you'd need to allocate several gigs
+> of memory but kmalloc() is capped at KMALLOC_MAX_SIZE (4MB) so
+> that's not possible. How many of these structs do we allocate?  Is
+> it really worth optimizing the heck out of it?
+> 
+> There are times where want to be very deliberate with our types
+> because we're dealing the large numbers, or user data or fast
+> paths.  But there are other times where int is fine...
+> 
 
-Yes, it is.
+As in this case, its fine to be of 'int' type.
+So we can retain the current data type('int') for 'i' and 'slot_id'. 
+Thank you for sharing your insights,it was very helpful.
 
-> I understand that Linux cannot accommodate other OSes requirements but
-> is there an approved/recommended way to upstream an OS agnostic
-> driver?
-
-When having an OS agnostic driver My recommendataion is to rewrite the
-driver :) We have plenty of examples doing that: wl1251/wl18xx, ath10k,
-rtl8xxx, cw1200 and wcn36xx at least. But of course it's possible to
-major cleanup to the driver and then get it accepted, with ath6kl we did
-that and I think brcmfmac also did that.
-
-> Agnostic drivers are generally bulkier compared to Linux-only drivers
-> and also code organization is also different (to handle other OSes).
-
-Indeed, I hate those OS agnostic vendor drivers so much. So many
-different layers and abstractions make my head just spin. Luckily we
-seem to have proper Linux upstream drivers for most of the wireless
-hardware nowadays!
-
--- 
-Kalle Valo
+Regards,
+Ajay
