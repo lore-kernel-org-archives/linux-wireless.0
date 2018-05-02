@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga06-in.huawei.com ([45.249.212.32]:55397 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932622AbeEaC0b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 22:26:31 -0400
-From: Wei Yongjun <weiyongjun1@huawei.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Govind Singh <govinds@codeaurora.org>
-CC: Wei Yongjun <weiyongjun1@huawei.com>, <ath10k@lists.infradead.org>,
-        <linux-wireless@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
-Subject: [PATCH net-next] ath10k: make some functions static
-Date: Thu, 31 May 2018 02:33:14 +0000
-Message-ID: <1527733994-149212-1-git-send-email-weiyongjun1@huawei.com> (sfid-20180531_042708_111494_2A482A1C)
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36338 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751020AbeEBNHd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 2 May 2018 09:07:33 -0400
+Date: Wed, 2 May 2018 15:07:26 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: nbd@nbd.name, linux-wireless@vger.kernel.org
+Subject: Re: [RFC 06/18] mt76x2: introduce mt76x2_mac_load_tx_status routine
+Message-ID: <20180502130726.GA13887@redhat.com> (sfid-20180502_151314_065630_A283C7F0)
+References: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
+ <9d50bf4d74ec52e141dd112768570e15a481ad2e.1525096206.git.lorenzo.bianconi@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9d50bf4d74ec52e141dd112768570e15a481ad2e.1525096206.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes the following sparse warnings:
+On Mon, Apr 30, 2018 at 04:12:21PM +0200, Lorenzo Bianconi wrote:
+> Add mt76x2_mac_load_tx_status routine since tx stats register map is
+> shared between usb and pci based devices but usb devices do not have a
+> tx stat irq line as pcie ones and it is necessary to load tx statistics
+> using a workqueue
+> 
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> ---
+>  drivers/net/wireless/mediatek/mt76/mt76x2_mac.c | 43 +++++++++++++++----------
+>  1 file changed, 26 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+> index d18315652583..0ddc84525ffa 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+> @@ -515,6 +515,28 @@ mt76x2_send_tx_status(struct mt76x2_dev *dev, struct mt76x2_tx_status *stat,
+>  	rcu_read_unlock();
+>  }
+>  
+> +static struct mt76x2_tx_status
+> +mt76x2_mac_load_tx_status(struct mt76x2_dev *dev)
+> +{
+> +	struct mt76x2_tx_status stat = {};
+> +	u32 stat1, stat2;
+> +
+> +	stat2 = mt76_rr(dev, MT_TX_STAT_FIFO_EXT);
+> +	stat1 = mt76_rr(dev, MT_TX_STAT_FIFO);
+> +
+> +	stat.valid = !!(stat1 & MT_TX_STAT_FIFO_VALID);
+> +	stat.success = !!(stat1 & MT_TX_STAT_FIFO_SUCCESS);
+> +	stat.aggr = !!(stat1 & MT_TX_STAT_FIFO_AGGR);
+> +	stat.ack_req = !!(stat1 & MT_TX_STAT_FIFO_ACKREQ);
+> +	stat.wcid = FIELD_GET(MT_TX_STAT_FIFO_WCID, stat1);
+> +	stat.rate = FIELD_GET(MT_TX_STAT_FIFO_RATE, stat1);
+> +
+> +	stat.retry = FIELD_GET(MT_TX_STAT_FIFO_EXT_RETRY, stat2);
+> +	stat.pktid = FIELD_GET(MT_TX_STAT_FIFO_EXT_PKTID, stat2);
+> +
+> +	return stat;
+> +}
+> +
 
-drivers/net/wireless/ath/ath10k/snoc.c:823:5: warning:
- symbol 'ath10k_snoc_get_ce_id_from_irq' was not declared. Should it be static?
-drivers/net/wireless/ath/ath10k/snoc.c:871:6: warning:
- symbol 'ath10k_snoc_init_napi' was not declared. Should it be static?
+Just two minor points. We do not need fill structure if stat is
+not valid. Also returning mt76x2_tx_status structure might require
+full copy of it. Returning boolean indicator of validity and pass
+pointer to struct mt76x2_tx_status to the subroutine would be more
+efficient.
 
-Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
----
- drivers/net/wireless/ath/ath10k/snoc.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index 47a4d2a..c82bc6f 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -820,7 +820,7 @@ static int ath10k_snoc_hif_power_up(struct ath10k *ar)
- 	.write32	= ath10k_snoc_write32,
- };
- 
--int ath10k_snoc_get_ce_id_from_irq(struct ath10k *ar, int irq)
-+static int ath10k_snoc_get_ce_id_from_irq(struct ath10k *ar, int irq)
- {
- 	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
- 	int i;
-@@ -868,7 +868,7 @@ static int ath10k_snoc_napi_poll(struct napi_struct *ctx, int budget)
- 	return done;
- }
- 
--void ath10k_snoc_init_napi(struct ath10k *ar)
-+static void ath10k_snoc_init_napi(struct ath10k *ar)
- {
- 	netif_napi_add(&ar->napi_dev, &ar->napi, ath10k_snoc_napi_poll,
- 		       ATH10K_NAPI_BUDGET);
+Regards
+Stanislaw
