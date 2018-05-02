@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35700 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752025AbeEJUJG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 May 2018 16:09:06 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, keescook@chromium.org,
-        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
-        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
-        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
-        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
-        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
-        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        cantabile.desu@gmail.com, khc@pm.waw.pl, arve@android.com,
-        tkjos@android.com, corbet@lwn.net, mchehab+samsung@kernel.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v7 08/14] firmware_loader: make firmware_fallback_sysfs() print more useful
-Date: Thu, 10 May 2018 13:08:44 -0700
-Message-Id: <20180510200850.5958-9-mcgrof@kernel.org> (sfid-20180510_221131_758393_01513CF5)
-In-Reply-To: <20180510200850.5958-1-mcgrof@kernel.org>
-References: <20180510200850.5958-1-mcgrof@kernel.org>
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:18466 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751102AbeEBHPA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 2 May 2018 03:15:00 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 02/21] staging: wilc1000: remove unnecessary 'out of memory' message in handle_key()
+Date: Wed, 2 May 2018 12:43:28 +0530
+Message-ID: <1525245227-3924-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180502_092058_102859_01BD3DAF)
+In-Reply-To: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we resort to using the sysfs fallback mechanism we don't print
-the filename. This can be deceiving given we could have a series of
-callers intertwined and it'd be unclear exactly for what firmware
-this was meant for.
+Fix "Possible unnecessary 'out of memory' message" issue reported by
+checkpatch.pl script.
 
-Additionally, although we don't currently use FW_OPT_NO_WARN when
-dealing with the fallback mechanism, we will soon, so just respect
-its use consistently.
-
-And even if you *don't* want to print always on failure, you may
-want to print when debugging so enable dynamic debug print when
-FW_OPT_NO_WARN is used.
-
-Reviewed-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/base/firmware_loader/fallback.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
-index 9169e7b9800c..b676a99c469c 100644
---- a/drivers/base/firmware_loader/fallback.c
-+++ b/drivers/base/firmware_loader/fallback.c
-@@ -690,6 +690,11 @@ int firmware_fallback_sysfs(struct firmware *fw, const char *name,
- 	if (!fw_run_sysfs_fallback(opt_flags))
- 		return ret;
- 
--	dev_warn(device, "Falling back to user helper\n");
-+	if (!(opt_flags & FW_OPT_NO_WARN))
-+		dev_warn(device, "Falling back to syfs fallback for: %s\n",
-+				 name);
-+	else
-+		dev_dbg(device, "Falling back to sysfs fallback for: %s\n",
-+				name);
- 	return fw_load_from_user_helper(fw, name, device, opt_flags);
- }
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 2f3e20d..d5b824b 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1707,7 +1707,6 @@ static int handle_key(struct wilc_vif *vif, struct key_attr *hif_key)
+ 		} else if (hif_key->action & ADDKEY) {
+ 			key_buf = kmalloc(PTK_KEY_MSG_LEN, GFP_KERNEL);
+ 			if (!key_buf) {
+-				netdev_err(vif->ndev, "No buffer send PTK\n");
+ 				ret = -ENOMEM;
+ 				goto out_wpa_ptk;
+ 			}
 -- 
-2.17.0
+2.7.4
