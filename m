@@ -1,108 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36214 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750740AbeELBWp (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:36800 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751763AbeEBRsT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 21:22:45 -0400
-From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH] ath10k: Add support to configure channel dwell time
-Date: Fri, 11 May 2018 18:22:39 -0700
-Message-Id: <1526088159-29912-1-git-send-email-pradeepc@codeaurora.org> (sfid-20180512_032249_615870_2BE644E5)
+        Wed, 2 May 2018 13:48:19 -0400
+Received: by mail-pg0-f67.google.com with SMTP id z129-v6so6985464pgz.3
+        for <linux-wireless@vger.kernel.org>; Wed, 02 May 2018 10:48:19 -0700 (PDT)
+From: Amit Pundir <amit.pundir@linaro.org>
+To: lkml <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+Cc: Suren Baghdasaryan <surenb@google.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Christophe Ricard <christophe.ricard@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        John Stultz <john.stultz@linaro.org>,
+        Dmitry Shmidt <dimitrysh@google.com>,
+        Todd Kjos <tkjos@google.com>,
+        Android Kernel Team <kernel-team@android.com>
+Subject: [PATCH v2 1/3] NFC: st21nfca: Fix out of bounds kernel access when handling ATR_REQ
+Date: Wed,  2 May 2018 23:18:06 +0530
+Message-Id: <1525283288-7027-2-git-send-email-amit.pundir@linaro.org> (sfid-20180502_195016_793614_BE21C997)
+In-Reply-To: <1525283288-7027-1-git-send-email-amit.pundir@linaro.org>
+References: <1525283288-7027-1-git-send-email-amit.pundir@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Configure channel dwell time from duration of the scan request
-received from mac80211 when the duration is non-zero. When the
-scan request does not have duration value, use the default ones,
-the current implementation.
+From: Suren Baghdasaryan <surenb@google.com>
 
-Corresponding flag NL80211_EXT_FEATURE_SET_SCAN_DWELL is
-advertized.
+Out of bounds kernel accesses in st21nfca's NFC HCI layer
+might happen when handling ATR_REQ events if user-specified
+atr_req->length is bigger than the buffer size. In
+that case memcpy() inside st21nfca_tm_send_atr_res() will
+read extra bytes resulting in OOB read from the kernel heap.
 
-Supported Chipsets:
- -QCA988X/QCA9887 PCI
- -QCA99X0/QCA9984/QCA9888/QCA4019 PCI
- -QCA6174/QCA9377 PCI/USB/SDIO
- -WCN3990 SNOC
-
-Tested on QCA9984 with firmware ver 10.4-3.6-0010
-
-Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
 ---
- drivers/net/wireless/ath/ath10k/core.h |  1 +
- drivers/net/wireless/ath/ath10k/mac.c  | 23 ++++++++++++++++++++---
- 2 files changed, 21 insertions(+), 3 deletions(-)
+v2:
+Resend. No changes.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index c17d805..39d4d7d 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -44,6 +44,7 @@
- #define WO(_f)      ((_f##_OFFSET) >> 2)
+ drivers/nfc/st21nfca/dep.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/nfc/st21nfca/dep.c b/drivers/nfc/st21nfca/dep.c
+index fd08be2..3420c51 100644
+--- a/drivers/nfc/st21nfca/dep.c
++++ b/drivers/nfc/st21nfca/dep.c
+@@ -217,7 +217,8 @@ static int st21nfca_tm_recv_atr_req(struct nfc_hci_dev *hdev,
  
- #define ATH10K_SCAN_ID 0
-+#define ATH10K_SCAN_CHANNEL_SWITCH_WMI_EVT_OVERHEAD 10 /* msec */
- #define WMI_READY_TIMEOUT (5 * HZ)
- #define ATH10K_FLUSH_TIMEOUT_HZ (5 * HZ)
- #define ATH10K_CONNECTION_LOSS_HZ (3 * HZ)
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index bf05a36..c6828c7 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -5668,6 +5668,7 @@ static int ath10k_hw_scan(struct ieee80211_hw *hw,
- 	struct wmi_start_scan_arg arg;
- 	int ret = 0;
- 	int i;
-+	u32 scan_timeout;
+ 	atr_req = (struct st21nfca_atr_req *)skb->data;
  
- 	mutex_lock(&ar->conf_mutex);
- 
-@@ -5723,6 +5724,22 @@ static int ath10k_hw_scan(struct ieee80211_hw *hw,
- 			arg.channels[i] = req->channels[i]->center_freq;
+-	if (atr_req->length < sizeof(struct st21nfca_atr_req)) {
++	if (atr_req->length < sizeof(struct st21nfca_atr_req) ||
++	    atr_req->length > skb->len) {
+ 		r = -EPROTO;
+ 		goto exit;
  	}
- 
-+	/* if duration is set, default dwell times will be overwritten */
-+	if (req->duration) {
-+		arg.dwell_time_active = req->duration;
-+		arg.dwell_time_passive = req->duration;
-+		arg.burst_duration_ms = req->duration;
-+
-+		scan_timeout = min_t(u32, arg.max_rest_time *
-+				(arg.n_channels - 1) + (req->duration +
-+				ATH10K_SCAN_CHANNEL_SWITCH_WMI_EVT_OVERHEAD) *
-+				arg.n_channels, arg.max_scan_time + 200);
-+
-+	} else {
-+		/* Add a 200ms margin to account for event/command processing */
-+		scan_timeout = arg.max_scan_time + 200;
-+	}
-+
- 	ret = ath10k_start_scan(ar, &arg);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to start hw scan: %d\n", ret);
-@@ -5731,10 +5748,8 @@ static int ath10k_hw_scan(struct ieee80211_hw *hw,
- 		spin_unlock_bh(&ar->data_lock);
- 	}
- 
--	/* Add a 200ms margin to account for event/command processing */
- 	ieee80211_queue_delayed_work(ar->hw, &ar->scan.timeout,
--				     msecs_to_jiffies(arg.max_scan_time +
--						      200));
-+				     msecs_to_jiffies(scan_timeout));
- 
- exit:
- 	mutex_unlock(&ar->conf_mutex);
-@@ -8351,6 +8366,8 @@ int ath10k_mac_register(struct ath10k *ar)
- 	}
- 
- 	wiphy_ext_feature_set(ar->hw->wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
-+	wiphy_ext_feature_set(ar->hw->wiphy,
-+			      NL80211_EXT_FEATURE_SET_SCAN_DWELL);
- 
- 	/*
- 	 * on LL hardware queues are managed entirely by the FW
 -- 
-1.9.1
+2.7.4
