@@ -1,106 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:45209 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934575AbeEWWP1 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33086 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750939AbeEBL1r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 May 2018 18:15:27 -0400
-Received: by mail-wr0-f195.google.com with SMTP id w3-v6so21486290wrl.12
-        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2018 15:15:27 -0700 (PDT)
-From: Niklas Cassel <niklas.cassel@linaro.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: Niklas Cassel <niklas.cassel@linaro.org>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3] ath10k: transmit queued frames after processing rx packets
-Date: Thu, 24 May 2018 00:15:08 +0200
-Message-Id: <20180523221508.26391-1-niklas.cassel@linaro.org> (sfid-20180524_001609_053743_AFCE769E)
+        Wed, 2 May 2018 07:27:47 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Peter Oh <peter.oh@bowerswilkins.com>
+Cc: Sriram R <srirrama@codeaurora.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] ath10k: DFS Host Confirmation
+References: <1525110339-25326-1-git-send-email-srirrama@codeaurora.org>
+        <1525110339-25326-3-git-send-email-srirrama@codeaurora.org>
+        <0c224b54-dd10-576f-944f-2d20d1cb2c46@bowerswilkins.com>
+Date: Wed, 02 May 2018 14:27:42 +0300
+In-Reply-To: <0c224b54-dd10-576f-944f-2d20d1cb2c46@bowerswilkins.com> (Peter
+        Oh's message of "Mon, 30 Apr 2018 12:50:40 -0700")
+Message-ID: <87d0ye2t75.fsf@kamboji.qca.qualcomm.com> (sfid-20180502_132751_802952_2A3A5319)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When running iperf on ath10k SDIO, TX can stop working:
+Peter Oh <peter.oh@bowerswilkins.com> writes:
 
-iperf -c 192.168.1.1 -i 1 -t 20 -w 10K
-[  3]  0.0- 1.0 sec  2.00 MBytes  16.8 Mbits/sec
-[  3]  1.0- 2.0 sec  3.12 MBytes  26.2 Mbits/sec
-[  3]  2.0- 3.0 sec  3.25 MBytes  27.3 Mbits/sec
-[  3]  3.0- 4.0 sec   655 KBytes  5.36 Mbits/sec
-[  3]  4.0- 5.0 sec  0.00 Bytes  0.00 bits/sec
-[  3]  5.0- 6.0 sec  0.00 Bytes  0.00 bits/sec
-[  3]  6.0- 7.0 sec  0.00 Bytes  0.00 bits/sec
-[  3]  7.0- 8.0 sec  0.00 Bytes  0.00 bits/sec
-[  3]  8.0- 9.0 sec  0.00 Bytes  0.00 bits/sec
-[  3]  9.0-10.0 sec  0.00 Bytes  0.00 bits/sec
-[  3]  0.0-10.3 sec  9.01 MBytes  7.32 Mbits/sec
+> On 04/30/2018 10:45 AM, Sriram R wrote:
+>> In the 10.4-3.6 firmware branch there's a new DFS Host confirmation
+>> feature which is advertised using WMI_SERVICE_HOST_DFS_CHECK_SUPPORT flag.
+>>
+>> This new features enables the ath10k host to send information to the
+>> firmware on the specifications of detected radar type. This allows the
+>> firmware to validate if the host's radar pattern detector unit is
+>> operational and check if the radar information shared by host matches
+>> the radar pulses sent as phy error events from firmware. If the check
+>> fails the firmware won't allow use of DFS channels on AP mode when using
+>> FCC regulatory region.
+>
+> What's the main reason you introduce this feature?
+> What are you trying to solve with this change?
 
-There are frames in the ieee80211_txq and there are frames that have
-been removed from from this queue, but haven't yet been sent on the wire
-(num_pending_tx).
+Otherwise one cannot use DFS channels on FCC regions with a firmware
+from 10.4-3.6 branch.
 
-When num_pending_tx reaches max_num_pending_tx, we will stop the queues
-by calling ieee80211_stop_queues().
+>> @@ -3765,25 +3834,46 @@ static void ath10k_dfs_radar_report(struct ath10k *ar,
+>>     	ATH10K_DFS_STAT_INC(ar, pulses_detected);
+>>   -	if (!ar->dfs_detector->add_pulse(ar->dfs_detector, &pe, NULL))
+>> {
+>> +	if (!ar->dfs_detector->add_pulse(ar->dfs_detector, &pe, &rs)) {
+>>   		ath10k_dbg(ar, ATH10K_DBG_REGULATORY,
+>>   			   "dfs no pulse pattern detected, yet\n");
+>>   		return;
+>>   	}
+>>   -radar_detected:
+>> -	ath10k_dbg(ar, ATH10K_DBG_REGULATORY, "dfs radar detected\n");
+>> -	ATH10K_DFS_STAT_INC(ar, radar_detected);
+>> +	if ((test_bit(WMI_SERVICE_HOST_DFS_CHECK_SUPPORT, ar->wmi.svc_map)) &&
+>> +	    ar->dfs_detector->region == NL80211_DFS_FCC) {
+>
+> I feel risky that host drivers have no way to control this new feature
+> and totally rely on FW feature mask. We should have a host drivers'
+> feature mask such as module param and set it false (don't use) by
+> default until it proves safe to use.
 
-As frames that have previously been sent for transmission
-(num_pending_tx) are completed, we will decrease num_pending_tx and wake
-the queues by calling ieee80211_wake_queue(). ieee80211_wake_queue()
-does not call wake_tx_queue, so we might still have frames in the
-queue at this point.
+This is for regulatory enforcement so it's not possible to disable the
+feature from host.
 
-While the queues were stopped, the socket buffer might have filled up,
-and in order for user space to write more, we need to free the frames
-in the queue, since they are accounted to the socket. In order to free
-them, we first need to transmit them.
-
-This problem cannot be reproduced on low-latency devices, e.g. pci,
-since they call ath10k_mac_tx_push_pending() from
-ath10k_htt_txrx_compl_task(). ath10k_htt_txrx_compl_task() is not called
-on high-latency devices.
-Fix the problem by calling ath10k_mac_tx_push_pending(), after
-processing rx packets, just like for low-latency devices, also in the
-SDIO case. Since we are calling ath10k_mac_tx_push_pending() directly,
-we also need to export it.
-
-Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
----
-Changes since V2:
-Moved ath10k_mac_tx_push_pending() call to ath10k_sdio_irq_handler().
-
- drivers/net/wireless/ath/ath10k/mac.c  | 1 +
- drivers/net/wireless/ath/ath10k/sdio.c | 3 +++
- 2 files changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 487a7a7380fd..bfcd9705ed54 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4038,6 +4038,7 @@ void ath10k_mac_tx_push_pending(struct ath10k *ar)
- 	rcu_read_unlock();
- 	spin_unlock_bh(&ar->txqs_lock);
- }
-+EXPORT_SYMBOL(ath10k_mac_tx_push_pending);
- 
- /************/
- /* Scanning */
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index d612ce8c9cff..2856c75f9011 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -30,6 +30,7 @@
- #include "debug.h"
- #include "hif.h"
- #include "htc.h"
-+#include "mac.h"
- #include "targaddrs.h"
- #include "trace.h"
- #include "sdio.h"
-@@ -1342,6 +1343,8 @@ static void ath10k_sdio_irq_handler(struct sdio_func *func)
- 			break;
- 	} while (time_before(jiffies, timeout) && !done);
- 
-+	ath10k_mac_tx_push_pending(ar);
-+
- 	sdio_claim_host(ar_sdio->func);
- 
- 	if (ret && ret != -ECANCELED)
 -- 
-2.17.0
+Kalle Valo
