@@ -1,79 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35991 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756705AbeEJKl0 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42382 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751347AbeEBIAf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 May 2018 06:41:26 -0400
-MIME-Version: 1.0
-In-Reply-To: <7bbc067a-c412-3d2e-174a-abc31b46e246@lwfinger.net>
-References: <7bbc067a-c412-3d2e-174a-abc31b46e246@lwfinger.net>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Thu, 10 May 2018 12:41:24 +0200
-Message-ID: <CACna6rxb9KSQfGwi__xxSMACAxh-bOV9SR1NsnUVe8ASdA0Liw@mail.gmail.com> (sfid-20180510_124158_180681_912C8C7C)
-Subject: Re: Regression caused by commit 882164a4a928
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Matt Redfearn <matt.redfearn@mips.com>,
-        =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
+        Wed, 2 May 2018 04:00:35 -0400
+Message-ID: <c6315e121c63cfc1e23ec7c84bba0334f75eeed1.camel@coelho.fi> (sfid-20180502_100319_415361_5F51E00B)
+From: Luca Coelho <luca@coelho.fi>
+To: Stephen Wille Padnos <steve@thothsystems.com>,
+        linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+        Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+        Intel Linux Wireless <ilw@linux.intel.com>
+Date: Wed, 02 May 2018 11:00:32 +0300
+In-Reply-To: <3e72561c-c531-95c3-5fc8-b195ce8dae4b@thothsystems.com>
+References: <3e72561c-c531-95c3-5fc8-b195ce8dae4b@thothsystems.com>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: Patch: Support Killer 1550 in MSI laptop
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 May 2018 at 17:44, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Although commit 882164a4a928 ("ssb: Prevent build of PCI host features in
-> module") appeared to be harmless, it leads to complete failure of drivers
-> b43. and b43legacy, and likely affects b44 as well. The problem is that
-> CONFIG_SSB_PCIHOST is undefined, which prevents the compilation of the co=
-de
-> that controls the PCI cores of the device. See
-> https://bugzilla.redhat.com/show_bug.cgi?id=3D1572349 for details.
->
-> As the underlying errors ("pcibios_enable_device" undefined, and
-> "register_pci_controller" undefined) do not appear on the architectures t=
-hat
-> I have tested (x86_64, x86, and ppc), I suspect something in the
-> arch-specific code for your setup (MIPS?). As I have no idea on how to fi=
-x
-> that problem, would the following patch work for you?
->
-> diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
-> index 9371651d8017..3743533c8057 100644
-> --- a/drivers/ssb/Kconfig
-> +++ b/drivers/ssb/Kconfig
-> @@ -117,7 +117,7 @@ config SSB_SERIAL
->
->  config SSB_DRIVER_PCICORE_POSSIBLE
->         bool
-> -       depends on SSB_PCIHOST && SSB =3D y
-> +       depends on SSB_PCIHOST && (SSB =3D y || !MIPS)
->         default y
->
->  config SSB_DRIVER_PCICORE
+On Tue, 2018-05-01 at 11:51 -0400, Stephen Wille Padnos wrote:
+> Hello, all
+> 
+> I have an MSI 8th-gen notebook with a Killer 1550 wifi card.  This
+> card 
+> has a different subsystem ID than I have seen in prior patches:
+> 
+> Output of lspci -nnvvv:
+> 00:14.3 Network controller [0280]: Intel Corporation Wireless-AC
+> 9560 
+> [Jefferson Peak] [8086:a370] (rev 10)
+>      Subsystem: Bigfoot Networks, Inc. Device [1a56:1552]
+>      Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+> ParErr- 
+> Stepping- SERR- FastB2B- DisINTx+
+>      Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
+> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>      Latency: 0, Cache Line Size: 64 bytes
+>      Interrupt: pin A routed to IRQ 16
+>      Region 0: Memory at ad414000 (64-bit, non-prefetchable)
+> [size=16K]
+>      Capabilities: <access denied>
+>      Kernel driver in use: iwlwifi
+>      Kernel modules: iwlwifi
+> 
+> Without this patch no driver is shown, not even pci_stub. This has
+> been 
+> tested on my laptop, and only on my home wifi which is wireless-N,
+> not 
+> -AC (no 5GHz).  The speed seems to be slower than the Windows
+> driver, 
+> but at least this gets the device recognized and working.
+> 
+> Signed-off-by: Stephen Wille Padnos
+> ---
 
-I strongly suggest we take a step back, slow down a bit and look at
-the original problem.
+We have a patch that will add the Killer wifi cards to our list of
+supported devices.  They will be pushed upstream as soon as we iron out
+some final details.
 
-In driver_pcicore.c there is MIPS specific code. It's protected using
-#ifdef CONFIG_SSB_PCICORE_HOSTMODE
-(...)
-#endif
-
-If anyone has ever seen
-ERROR: "pcibios_enable_device" [drivers/ssb/ssb.ko] undefined!
-ERROR: "register_pci_controller" [drivers/ssb/ssb.ko] undefined!
-make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
-it means he managed to get CONFIG_SSB_PCICORE_HOSTMODE set on non-MIPS syst=
-em.
-
-We should rather answer how did that happen and fix it.
-
-SSB_PCICORE_HOSTMODE depends on SSB_DRIVER_MIPS
-SSB_DRIVER_MIPS depends on MIPS
-
-How is that possible to set SSB_PCICORE_HOSTMODE with non-MIPS config?
-Is there some mistake in Kconfig I can't see?
-
---=20
-Rafa=C5=82
+--
+Cheers,
+Luca.
