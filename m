@@ -1,44 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46626 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S935459AbeE2OuY (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:53170 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751100AbeEBHPi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 May 2018 10:50:24 -0400
-Message-ID: <ec8456ec39ba3af2a56a5738e0e21c0b179df92c.camel@coelho.fi> (sfid-20180529_165055_208343_8B0A27E1)
-From: Luca Coelho <luca@coelho.fi>
-To: Jonathan <jadit2@gmail.com>, Kalle Valo <kvalo@codeaurora.org>
-Cc: emmanuel.grumbach@intel.com, linux-wireless@vger.kernel.org,
-        Hao Wei Tee <angelsl@in04.sg>
-Date: Tue, 29 May 2018 17:50:18 +0300
-In-Reply-To: <CADPGViGBfviaasvCLQWTXo4=R2Fx2BLfpm7b0Ws=aH0oKw9ckg@mail.gmail.com>
-References: <20180529072517.30135-1-luca@coelho.fi>
-         <87fu2a9au0.fsf@kamboji.qca.qualcomm.com>
-         <CADPGViGBfviaasvCLQWTXo4=R2Fx2BLfpm7b0Ws=aH0oKw9ckg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH] iwlwifi: pcie: compare with number of IRQs requested
- for, not number of CPUs
+        Wed, 2 May 2018 03:15:38 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 14/21] staging: wilc1000: remove the use of cur_byte variable in functions
+Date: Wed, 2 May 2018 12:43:40 +0530
+Message-ID: <1525245227-3924-15-git-send-email-ajay.kathat@microchip.com> (sfid-20180502_093237_273902_491355CC)
+In-Reply-To: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(note: your previous email didn't reach the linux-wireless mailing
-list, since it drops all html emails without notice).
+Instead of using the intermediate variable to hold the value, now directly
+using the allocated variable.
 
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-On Tue, 2018-05-29 at 07:35 -0700, Jonathan wrote:
-> Do you think this will land in a 4.17 RC version, or in 4.17
-> official, or in a 4.17.1 subsequent release?
-
-We will try to get it into 4.17.  We are currently in 4.17-rc7, so
-there probably won't be another rc release for 4.17.
-
-If it doesn't go in, then we will most likely get it in 4.17.1 (or
-maybe 4.17.2, depends on Greg's schedule).
-
-Again, we can't really promise anything, because the patch needs to be
-accepts at our assumed times in the whole chain, and is out of our
-control.
-
---
-Cheers,
-Luca.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 930af0c..6746e2f 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2017,7 +2017,6 @@ static void handle_del_beacon(struct wilc_vif *vif)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+-	u8 *cur_byte;
+ 	u8 del_beacon = 0;
+ 
+ 	wid.id = (u16)WID_DEL_BEACON;
+@@ -2025,8 +2024,6 @@ static void handle_del_beacon(struct wilc_vif *vif)
+ 	wid.size = sizeof(char);
+ 	wid.val = &del_beacon;
+ 
+-	cur_byte = wid.val;
+-
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result)
+@@ -2136,7 +2133,6 @@ static void handle_del_station(struct wilc_vif *vif, struct del_sta *param)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+-	u8 *cur_byte;
+ 
+ 	wid.id = (u16)WID_REMOVE_STA;
+ 	wid.type = WID_BIN;
+@@ -2146,9 +2142,7 @@ static void handle_del_station(struct wilc_vif *vif, struct del_sta *param)
+ 	if (!wid.val)
+ 		goto error;
+ 
+-	cur_byte = wid.val;
+-
+-	ether_addr_copy(cur_byte, param->mac_addr);
++	ether_addr_copy(wid.val, param->mac_addr);
+ 
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+-- 
+2.7.4
