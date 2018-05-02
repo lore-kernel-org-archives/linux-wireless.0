@@ -1,61 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:38651 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752645AbeEUMJB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 May 2018 08:09:01 -0400
-From: Yisheng Xie <xieyisheng1@huawei.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Yisheng Xie <xieyisheng1@huawei.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH 07/33] iwlwifi: mvm: use match_string() helper
-Date: Mon, 21 May 2018 19:57:44 +0800
-Message-ID: <1526903890-35761-8-git-send-email-xieyisheng1@huawei.com> (sfid-20180521_141749_746183_05F583BC)
-In-Reply-To: <1526903890-35761-1-git-send-email-xieyisheng1@huawei.com>
-References: <1526903890-35761-1-git-send-email-xieyisheng1@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:41777 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751776AbeEBRsP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 2 May 2018 13:48:15 -0400
+Received: by mail-pg0-f68.google.com with SMTP id m21-v6so11156740pgv.8
+        for <linux-wireless@vger.kernel.org>; Wed, 02 May 2018 10:48:15 -0700 (PDT)
+From: Amit Pundir <amit.pundir@linaro.org>
+To: lkml <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+Cc: Suren Baghdasaryan <surenb@google.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Christophe Ricard <christophe.ricard@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        John Stultz <john.stultz@linaro.org>,
+        Dmitry Shmidt <dimitrysh@google.com>,
+        Todd Kjos <tkjos@google.com>,
+        Android Kernel Team <kernel-team@android.com>
+Subject: [PATCH v2 0/3] Few NFC fixes from android-4.14 tree
+Date: Wed,  2 May 2018 23:18:05 +0530
+Message-Id: <1525283288-7027-1-git-send-email-amit.pundir@linaro.org> (sfid-20180502_195037_497208_2878E504)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-match_string() returns the index of an array for a matching string,
-which can be used intead of open coded variant.
+Hi,
 
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Intel Linux Wireless <linuxwifi@intel.com>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+Submitting v2 of NFC fixes I picked up from android-4.14 tree[1]
+for review and comments.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 0e6401c..e8249a6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -671,14 +671,9 @@ static ssize_t iwl_dbgfs_bt_cmd_read(struct file *file, char __user *user_buf,
- 	};
- 	int ret, bt_force_ant_mode;
- 
--	for (bt_force_ant_mode = 0;
--	     bt_force_ant_mode < ARRAY_SIZE(modes_str);
--	     bt_force_ant_mode++) {
--		if (!strcmp(buf, modes_str[bt_force_ant_mode]))
--			break;
--	}
--
--	if (bt_force_ant_mode >= ARRAY_SIZE(modes_str))
-+	bt_force_ant_mode = match_string(modes_str,
-+					 ARRAY_SIZE(modes_str), buf);
-+	if (bt_force_ant_mode < 0)
- 		return -EINVAL;
- 
- 	ret = 0;
+Again like to point out that I have not feature tested these patches
+at all. Only made small cosmetic changes to the original patches
+(removed Android-only tag and internal bug ID) and build tested for
+arm, before posting them here for review.
+
+Really appreciate any comments or feedback on how to take it forward.
+
+Changes since v1:
+* Dropped "NFC: st21nfca: Fix memory OOB and leak issues in connectivity
+  events handler" patch for now. I'm yet to verify if the additional
+  aid_len and params_len checks for buffer size are really required, and
+  I didn't want to hold up this patch series for one patch alone.
+* Dropped redundant __func__ use dev_dbg() in "NFC: fdp: Fix possible
+  buffer overflow in WCS4000 NFC driver" patch.
+
+Also drivers/nfc/fdp/ is full of __func__ parameter usage in dev_dbg(),
+so submitting a new patch separately to clean that up.
+
+Regards,
+Amit Pundir
+[1] https://android.googlesource.com/kernel/common/+log/android-4.14
+
+Suren Baghdasaryan (3):
+  NFC: st21nfca: Fix out of bounds kernel access when handling ATR_REQ
+  NFC: Fix possible memory corruption when handling SHDLC I-Frame
+    commands
+  NFC: fdp: Fix possible buffer overflow in WCS4000 NFC driver
+
+ drivers/nfc/fdp/fdp.c      | 22 +++++++++++-----------
+ drivers/nfc/fdp/i2c.c      | 29 ++++++++++++++++++-----------
+ drivers/nfc/st21nfca/dep.c |  3 ++-
+ net/nfc/hci/core.c         | 10 ++++++++++
+ 4 files changed, 41 insertions(+), 23 deletions(-)
+
 -- 
-1.7.12.4
+2.7.4
