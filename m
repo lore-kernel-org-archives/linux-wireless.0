@@ -1,62 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:36571 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752162AbeEOKId (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:53183 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751339AbeEBHPu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 May 2018 06:08:33 -0400
-Received: by mail-wr0-f196.google.com with SMTP id p4-v6so15384130wrh.3
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2018 03:08:33 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, luca.bisti@gmail.com,
-        gaetano.catalli@gmail.com
-Subject: [PATCH] mt76x2: apply coverage class on slot time too
-Date: Tue, 15 May 2018 12:08:14 +0200
-Message-Id: <20180515100814.491-1-lorenzo.bianconi@redhat.com> (sfid-20180515_120837_453949_F1CCCADF)
+        Wed, 2 May 2018 03:15:50 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 18/21] staging: wilc1000: move macro after the #include file in wilc_wfi_netdevice
+Date: Wed, 2 May 2018 12:43:44 +0530
+Message-ID: <1525245227-3924-19-git-send-email-ajay.kathat@microchip.com> (sfid-20180502_093236_316847_4D028212)
+In-Reply-To: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to 802.11-2007 17.3.8.6 (slot time), the slot time should
-be increased by 3 us * coverage class. Taking into account coverage
-class in slot time configuration allows to increase by an order of
-magnitude the throughput on a 4Km link in a noisy environment
+Cleanup patch to organize macro in a file together after #include
+statements.
 
-Tested-by: Luca Bisti <luca.bisti@gmail.com>
-Tested-by: Gaetano Catalli <gaetano.catalli@gmail.com>
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 3 +++
- drivers/net/wireless/mediatek/mt76/mt76x2_main.c | 3 +--
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index d21e4a7c1bb9..9eeb1d7631c2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -482,7 +482,10 @@ void mt76x2_set_tx_ackto(struct mt76x2_dev *dev)
- {
- 	u8 ackto, sifs, slottime = dev->slottime;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 01cb9ac..8849924 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -2,11 +2,6 @@
+ #ifndef WILC_WFI_NETDEVICE
+ #define WILC_WFI_NETDEVICE
  
-+	/* As defined by IEEE 802.11-2007 17.3.8.6 */
- 	slottime += 3 * dev->coverage_class;
-+	mt76_rmw_field(dev, MT_BKOFF_SLOT_CFG,
-+		       MT_BKOFF_SLOT_CFG_SLOTTIME, slottime);
+-#define WILC_MAX_NUM_PMKIDS  16
+-#define PMKID_LEN  16
+-#define PMKID_FOUND 1
+- #define NUM_STA_ASSOCIATED 8
+-
+ #include <linux/tcp.h>
+ #include <linux/ieee80211.h>
+ #include <net/cfg80211.h>
+@@ -16,8 +11,15 @@
+ #include "host_interface.h"
+ #include "wilc_wlan.h"
  
- 	sifs = mt76_get_field(dev, MT_XIFS_TIME_CFG,
- 			      MT_XIFS_TIME_CFG_OFDM_SIFS);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-index 81c58f865c64..539dda8a59e2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-@@ -247,8 +247,7 @@ mt76x2_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		int slottime = info->use_short_slot ? 9 : 20;
+-#define FLOW_CONTROL_LOWER_THRESHOLD	128
+-#define FLOW_CONTROL_UPPER_THRESHOLD	256
++#define FLOW_CONTROL_LOWER_THRESHOLD		128
++#define FLOW_CONTROL_UPPER_THRESHOLD		256
++
++#define WILC_MAX_NUM_PMKIDS			16
++#define PMKID_LEN				16
++#define PMKID_FOUND				1
++#define NUM_STA_ASSOCIATED			8
++
++#define NUM_REG_FRAME				2
  
- 		dev->slottime = slottime;
--		mt76_rmw_field(dev, MT_BKOFF_SLOT_CFG,
--			       MT_BKOFF_SLOT_CFG_SLOTTIME, slottime);
-+		mt76x2_set_tx_ackto(dev);
- 	}
+ struct wilc_wfi_stats {
+ 	unsigned long rx_packets;
+@@ -34,8 +36,6 @@ struct wilc_wfi_stats {
+  * packets in and out, so there is place for a packet
+  */
  
- 	mutex_unlock(&dev->mutex);
+-#define NUM_REG_FRAME 2
+-
+ struct wilc_wfi_key {
+ 	u8 *key;
+ 	u8 *seq;
 -- 
-2.16.3
+2.7.4
