@@ -1,53 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53924 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932075AbeE3TLB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 15:11:01 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [RFCv3 0/4] cfg80211/mac80211: Add support to configure and monitor txrate threshold
-Date: Thu, 31 May 2018 00:40:46 +0530
-Message-Id: <1527707450-2985-1-git-send-email-tamizhr@codeaurora.org> (sfid-20180530_211105_696299_F04419B7)
+Received: from mga03.intel.com ([134.134.136.65]:48312 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750942AbeEBSAD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 2 May 2018 14:00:03 -0400
+Message-ID: <1525283968.21176.633.camel@linux.intel.com> (sfid-20180502_200020_621633_29786FA2)
+Subject: Re: [PATCH] NFC: fdp: Remove __func__ parameter from dev_dbg() call
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Amit Pundir <amit.pundir@linaro.org>,
+        lkml <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org
+Cc: Samuel Ortiz <sameo@linux.intel.com>,
+        Christophe Ricard <christophe.ricard@gmail.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        John Stultz <john.stultz@linaro.org>
+Date: Wed, 02 May 2018 20:59:28 +0300
+In-Reply-To: <1525283379-7141-1-git-send-email-amit.pundir@linaro.org>
+References: <1525283379-7141-1-git-send-email-amit.pundir@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchsets introduced new NL command and api to support
-configuring txrate threshold for the connected stations and api to
-notify userspace application upon crossing the configured txrate threshold.
-This will be useful for the application which requires
-station's current capability change information.
+On Wed, 2018-05-02 at 23:19 +0530, Amit Pundir wrote:
 
-Tamizh chelvam (4):
-  cfg80211: Add support to configure station specific txrate threshold
-  mac80211: Add api to configure low and high txrate threshold
-  cfg80211: Add support to notify station's txrate crossing event
-  mac80211: Implement functionality to monitor txrate cross event for a
-    station
+> -	dev_dbg(dev, "%s\n", __func__);
+> +	dev_dbg(dev, "\n");
 
-Note:
-  * This patch rebased on top of below patchset
-    [RFCv3 0/7] cfg80211/mac80211: Add support to configure and monitor rssi threshold
-
-v3:
-  * splitted txrate patchsets as a different patchsets.
-
-v2:
-  * fixed kbuild warnings
-  * updated commit log
-
- include/net/cfg80211.h       | 26 +++++++++++++++
- include/net/mac80211.h       |  5 +++
- include/uapi/linux/nl80211.h | 34 ++++++++++++++++++++
- net/mac80211/cfg.c           | 36 +++++++++++++++++++++
- net/mac80211/sta_info.h      | 17 ++++++++++
- net/mac80211/status.c        | 40 ++++++++++++++++++++++-
- net/wireless/nl80211.c       | 76 ++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      | 17 ++++++++++
- net/wireless/trace.h         | 50 +++++++++++++++++++++++++++++
- 9 files changed, 300 insertions(+), 1 deletion(-)
+If one enables function tracer this will be redundant completely. 
 
 -- 
-1.9.1
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
