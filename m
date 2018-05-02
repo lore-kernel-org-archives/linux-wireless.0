@@ -1,126 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35070 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934057AbeEIKpX (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:21887 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750909AbeEBFrs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 06:45:23 -0400
+        Wed, 2 May 2018 01:47:48 -0400
+Date: Wed, 2 May 2018 11:17:35 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: <devel@driverdev.osuosl.org>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        <linux-wireless@vger.kernel.org>,
+        <kernel-janitors@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        "Ganesh Krishna" <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] staging: wilc1000: fix infinite loop and out-of-bounds
+ access
+Message-ID: <20180502111735.5a2c6faa@ajaysk-VirtualBox> (sfid-20180502_074804_269819_6A4C2E75)
+In-Reply-To: <20180430152321.7pq4ol2ed7tzsrl4@mwanda>
+References: <20180430125040.GA19050@embeddedor.com>
+        <20180430195916.596a93eb@ajaysk-VirtualBox>
+        <20180430152321.7pq4ol2ed7tzsrl4@mwanda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 09 May 2018 16:15:22 +0530
-From: Sriram R <srirrama@codeaurora.org>
-To: Peter Oh <peter.oh@bowerswilkins.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] ath10k: DFS Host Confirmation
-In-Reply-To: <0c224b54-dd10-576f-944f-2d20d1cb2c46@bowerswilkins.com>
-References: <1525110339-25326-1-git-send-email-srirrama@codeaurora.org>
- <1525110339-25326-3-git-send-email-srirrama@codeaurora.org>
- <0c224b54-dd10-576f-944f-2d20d1cb2c46@bowerswilkins.com>
-Message-ID: <9e87e920e215bbadbcbd86e58ccccbc3@codeaurora.org> (sfid-20180509_124527_830508_C2AD169E)
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-05-01 01:20, Peter Oh wrote:
-> On 04/30/2018 10:45 AM, Sriram R wrote:
->> In the 10.4-3.6 firmware branch there's a new DFS Host confirmation
->> feature which is advertised using WMI_SERVICE_HOST_DFS_CHECK_SUPPORT 
->> flag.
->> 
->> This new features enables the ath10k host to send information to the
->> firmware on the specifications of detected radar type. This allows the
->> firmware to validate if the host's radar pattern detector unit is
->> operational and check if the radar information shared by host matches
->> the radar pulses sent as phy error events from firmware. If the check
->> fails the firmware won't allow use of DFS channels on AP mode when 
->> using
->> FCC regulatory region.
-> What's the main reason you introduce this feature?
-> What are you trying to solve with this change?
->> +#define ATH10K_WMI_DFS_CONF_TIMEOUT_HZ (HZ / 2)
->>   +static void ath10k_radar_confirmation_work(struct work_struct 
->> *work)
->> +{
->> +	struct ath10k *ar = container_of(work, struct ath10k,
->> +					 radar_confirmation_work);
->> +	struct ath10k_radar_found_info radar_info;
->> +	int ret, time_left;
->> +
->> +	reinit_completion(&ar->wmi.radar_confirm);
->> +
->> +	spin_lock_bh(&ar->data_lock);
->> +	memcpy(&radar_info, &ar->last_radar_info, sizeof(radar_info));
->> +	spin_unlock_bh(&ar->data_lock);
->> +
->> +	ret = ath10k_wmi_report_radar_found(ar, &radar_info);
->> +	if (ret) {
->> +		ath10k_warn(ar, "failed to send radar found %d\n", ret);
->> +		goto wait_complete;
->> +	}
->> +
->> +	time_left = wait_for_completion_timeout(&ar->wmi.radar_confirm,
->> +						ATH10K_WMI_DFS_CONF_TIMEOUT_HZ);
-> It looks wrong to me in terms of timeout value.
-> Typical channel closing time in FCC domain is 200ms (excluding control
-> signals), but you're waiting for 500ms for response from FW.
-Right Peter, We haven't hit this limit during our testing. On an average 
-we
-received completion event within few milliseconds ,say less than 
-10-15ms. I'll correct
-this timeout in my next patch revision.
->> @@ -3765,25 +3834,46 @@ static void ath10k_dfs_radar_report(struct 
->> ath10k *ar,
->>     	ATH10K_DFS_STAT_INC(ar, pulses_detected);
->>   -	if (!ar->dfs_detector->add_pulse(ar->dfs_detector, &pe, NULL)) {
->> +	if (!ar->dfs_detector->add_pulse(ar->dfs_detector, &pe, &rs)) {
->>   		ath10k_dbg(ar, ATH10K_DBG_REGULATORY,
->>   			   "dfs no pulse pattern detected, yet\n");
->>   		return;
->>   	}
->>   -radar_detected:
->> -	ath10k_dbg(ar, ATH10K_DBG_REGULATORY, "dfs radar detected\n");
->> -	ATH10K_DFS_STAT_INC(ar, radar_detected);
->> +	if ((test_bit(WMI_SERVICE_HOST_DFS_CHECK_SUPPORT, ar->wmi.svc_map)) 
->> &&
->> +	    ar->dfs_detector->region == NL80211_DFS_FCC) {
-> I feel risky that host drivers have no way to control this new feature
-> and totally rely on FW feature mask. We should have a host drivers'
-> feature mask such as module param and set it false (don't use) by
-> default until it proves safe to use.
->> +static void
->> +ath10k_wmi_event_dfs_status_check(struct ath10k *ar, struct sk_buff 
->> *skb)
->> +{
->> +	struct wmi_dfs_status_ev_arg status_arg = {};
->> +	int ret;
->> +
->> +	ret = ath10k_wmi_pull_dfs_status(ar, skb, &status_arg);
->> +
->> +	if (ret) {
->> +		ath10k_warn(ar, "failed to parse dfs status event: %d\n", ret);
->> +		return;
->> +	}
->> +
->> +	ath10k_dbg(ar, ATH10K_DBG_REGULATORY,
->> +		   "dfs status event received from fw: %d\n",
->> +		   status_arg.status);
->> +
->> +	/* Even in case of radar detection failure we follow the same
->> +	 * behaviour as if radar is detected i.e to switch to a different
->> +	 * channel.
->> +	 */
->> +	if (status_arg.status == WMI_HW_RADAR_DETECTED ||
->> +	    status_arg.status == WMI_RADAR_DETECTION_FAIL)
->> +		ath10k_radar_detected(ar);
->> +	complete(&ar->wmi.radar_confirm);
->> +}
-> What is typical average duration from
-> wait_for_completion_timeout(&ar->wmi.radar_confirm) to this completion
-> called ?
-We didn't see this taking more than 20ms to reach this completion.
-As mentioned above I'll change the timeout value in the next patch.
+On Mon, 30 Apr 2018 18:23:21 +0300
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
-Thanks,
-Sriram.R
+> On Mon, Apr 30, 2018 at 07:59:16PM +0530, Ajay Singh wrote:
+> > Reviewed-by: Ajay Singh <ajay.kathat@microchip.com>
+> > 
+> > On Mon, 30 Apr 2018 07:50:40 -0500
+> > "Gustavo A. R. Silva" <gustavo@embeddedor.com> wrote:
+> >   
+> > > If i < slot_id is initially true then it will remain true. Also,
+> > > as i is being decremented it will end up accessing memory out of
+> > > bounds.
+> > > 
+> > > Fix this by incrementing *i* instead of decrementing it.  
+> > 
+> > Nice catch!
+> > Thanks for submitting the changes.
+> >   
+> > > 
+> > > Addresses-Coverity-ID: 1468454 ("Infinite loop")
+> > > Fixes: faa657641081 ("staging: wilc1000: refactor scan() to free
+> > > kmalloc memory on failure cases")
+> > > Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> > > ---
+> > > 
+> > > BTW... at first sight it seems to me that variables slot_id
+> > > and i should be of type unsigned instead of signed.  
+> > 
+> > Yes, 'slot_id' & 'i' can be changed to unsigned int.
+> >   
 > 
-> Thanks,
-> Peter
+> A lot of people think making things unsigned improves the code but I
+> hate "unsigned int i"...  I understand that in certain cases we do
+> loop more than INT_MAX but those are a tiny tiny minority of loops.
+> 
+> Simple types like "int" are more readable than complicated types
+> like "unsigned int".  Unsigned int just draws attention to itself
+> and distracts people from things that might potentially matter.  We
+> have real life subtle loops like in xtea_encrypt() where we need to
+> use unsigned types.
+> 
+> And look at the function we're talking about here:
+> 
+> drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+>    577  static inline int
+>    578  wilc_wfi_cfg_alloc_fill_ssid(struct cfg80211_scan_request
+> *request, 579                               struct hidden_network
+> *ntwk) 580  {
+>    581          int i;
+>    582          int slot_id = 0;
+>    583  
+>    584          ntwk->net_info = kcalloc(request->n_ssids,
+>    585                                   sizeof(struct
+> hidden_network), GFP_KERNEL); 586          if (!ntwk->net_info)
+>    587                  goto out;
+>    588  
+>    589          ntwk->n_ssids = request->n_ssids;
+>    590  
+>    591          for (i = 0; i < request->n_ssids; i++) {
+> 
+> request->n_ssids is an int.  It can't possibly be INT_MAX because
+> the kcalloc() will fail.  Ideally the static analysis tool should
+> be able to tell you that if you seed it with the knowledge of how
+> much memory it's possible to kmalloc().  So it's just laziness here
+> is why the static checker complains, it should see there is no
+> issue.  Smatch fails here as well but I'll see if I can fix it.
+> 
+> Anyway let's say it could be negative then 0 is greater than
+> negative values so the loop would be a no-op.  I've seen code where
+> the user could set the loop bounds to s32min-4 but because it was
+> "int i" instead of "unsigned int i" then it meant the loop was a
+> no-op instead of being a security problem.  In other words,
+> unsigned can be less secure.
+> 
+> I honestly have never seen a bug in the kernel where we intended to
+> loop more than INT_MAX times, but there was a signedness bug
+> preventing it. That's the only reason I can see to change the
+> signedness.  Am I missing something?
+> 
+
+Hi Dan,
+
+Thanks for providing the detailed explanation.
+
+I understand your point, but what's your opinion about variable
+'slot_id', as this variable is added to take only the positive
+value(i.e from 0 to maximum number of filled elements), so for more
+readability should we keep it same.
+
+BTW in my opinion 'request->n_ssids' should have been unsigned
+because it is suppose to hold only positive values along with 
+smaller data type(may be u8 or u16, as the range might be enough to
+hold the value of n_ssids). So we have advantage of size reduction
+not just the increase in value range.
+
+Suppose we get negative value for "request->n_ssids" & kmalloc is 
+pass then we have to add some more extra code to free data and
+return error code in wilc_wfi_cfg_alloc_fill_ssid(). In your opinion
+should this condition be handled as the received 'request->n_ssids' is
+of 'int' type.
+
+
+Regards,
+Ajay
