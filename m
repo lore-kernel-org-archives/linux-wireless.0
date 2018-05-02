@@ -1,77 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:38075 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751540AbeERHET (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:50943 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751527AbeEBMcm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 03:04:19 -0400
-Received: by mail-wm0-f67.google.com with SMTP id m129-v6so13055824wmb.3
-        for <linux-wireless@vger.kernel.org>; Fri, 18 May 2018 00:04:19 -0700 (PDT)
-Subject: Re: [PATCH V3 0/5] Update brcm firmware files
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Josh Boyer <jwboyer@kernel.org>
-Cc: Linux Firmware <linux-firmware@kernel.org>,
-        chi-hsien.lin@cypress.com,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, wright.feng@cypress.com
-References: <1521209329-59441-1-git-send-email-chi-hsien.lin@cypress.com>
- <5AF960B6.2010709@broadcom.com>
- <CA+5PVA7m3wWHyi12rTcpAozj=en9BtnsVAKAbQyvKvPRh_jC4A@mail.gmail.com>
- <5AFA9DB0.7060703@broadcom.com>
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <e2b71216-dc95-6d16-47c3-6b50da03a716@redhat.com> (sfid-20180518_090439_236379_EA862B7F)
-Date: Fri, 18 May 2018 09:04:16 +0200
+        Wed, 2 May 2018 08:32:42 -0400
+Received: from mail-it0-f72.google.com ([209.85.214.72])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1fDqw4-0003u9-Si
+        for linux-wireless@vger.kernel.org; Wed, 02 May 2018 12:32:40 +0000
+Received: by mail-it0-f72.google.com with SMTP id n190-v6so3403734itg.4
+        for <linux-wireless@vger.kernel.org>; Wed, 02 May 2018 05:32:40 -0700 (PDT)
+Date: Wed, 2 May 2018 07:32:36 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Subject: Re: [wireless-regdb] [PATCH 2/2] wireless-regdb: Parse wmm rule data
+Message-ID: <20180502123236.GA981@ubuntu-xps13> (sfid-20180502_143318_934936_47B643E8)
+References: <1525181772-30337-1-git-send-email-haim.dreyfuss@intel.com>
+ <1525181772-30337-2-git-send-email-haim.dreyfuss@intel.com>
+ <20180501200256.GM3502@ubuntu-xps13>
+ <1525209561.25505.3.camel@sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <5AFA9DB0.7060703@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1525209561.25505.3.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On 15-05-18 10:43, Arend van Spriel wrote:
-> On 5/14/2018 2:05 PM, Josh Boyer wrote:
->> n Mon, May 14, 2018 at 6:11 AM Arend van Spriel <
->> arend.vanspriel@broadcom.com> wrote:
->>
->>> On 3/16/2018 3:08 PM, Chi-Hsien Lin wrote:
->>>> Update brcm firmware files and WHENCE accordingly.
->>
->>> Hi firmware-maintainers,
->>
->>> It seems this series somehow got lost. Can these still be applied. They
->>> can be found in the linux-wireless patchwork database. I provided links
->>> below.
->>
->> All 5 of these move the respective firmware files under the Cypress
->> license.  It has been pointed out that the Cypress license has some
->> questionable language in it and that people have been in touch to try and
->> get this resolved.  I'm personally waiting on applying them until the
->> licence issue is sorted out.
+On Tue, May 01, 2018 at 11:19:21PM +0200, Johannes Berg wrote:
+> On Tue, 2018-05-01 at 15:02 -0500, Seth Forshee wrote:
+> > 
+> > > +import attr
+> > 
+> > I'm a little hesitant to add use of non-standard libraries if it isn't
+> > necessary, as some distros have traditionally built the regdb from
+> > source (not sure how practical that is after the db-as-firmware changes
+> > though). Do we lose anything critical if we don't use attr?
 > 
-> Thanks, Josh
+> I probably suggested the use of attr. It's super useful, for things like
+> this:
 > 
-> I could not find any such response. Has it been taken off-list? Seems like 2 months is quite some time, but maybe there are lawyers involved ;-)
+> > > +@attr.s(frozen=True)
+> > > +class WmmRule(object):
+> > > +    vo_c = attr.ib()
+> > > +    vi_c = attr.ib()
+> > > +    be_c = attr.ib()
+> > > +    bk_c = attr.ib()
+> > > +    vo_ap = attr.ib()
+> > > +    vi_ap = attr.ib()
+> > > +    be_ap = attr.ib()
+> > > +    bk_ap = attr.ib()
+> > > +
+> > > +    def _as_tuple(self):
+> > > +        return (self.vo_c, self.vi_c, self.be_c, self.bk_c,
+> > > +                self.vo_ap, self.vi_ap, self.be_ap, self.bk_ap)
+> 
+> Spelling this out as a real object with all the __repr__ and comparisons
+> etc. gets far more verbose.
+> 
+> While we can get rid of it in theory, it's a ~100KiB package without any
+> further dependencies, and the code is better off for it.
+> 
+> Ultimately it's your decision, but I suspect that python is already such
+> a big dependency that adding this library is in the noise.
 
-Yes the discussion about this has been happening off-list. IANAL but
-the gist of it is (AFAIK) that:
+I'm more thinking that for e.g. Debian if attr is installed via pip and
+not a distro package then that might be a problem for their package
+builds. But let's go ahead and leave it, if there's fallout we can
+figure that out later.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/tree/LICENCE.cypress
-
-has a clause which allows Cypress to retro-actively revoke the LICENSE:
-
-"either party may terminate this Agreement at any time with or without cause."
-...
-"Upon termination, you must destroy all copies of Software in your possession or
-control."
-
-So upon revokation we would have to remove the files from linux-firmware
-(rewrite git history?) and since distros get their redistribution rights
-from this license too they would also need to remove it from their packages
-including all mirrors and archives of older versions. Which simply is not
-feasible and no other license in linux-firmware has such a clause.
-
-Regards,
-
-Hans
+Thanks,
+Seth
