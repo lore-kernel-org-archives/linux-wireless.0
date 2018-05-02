@@ -1,33 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:43846 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751326AbeEBSEH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 May 2018 14:04:07 -0400
-Date: Wed, 2 May 2018 11:03:56 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Amit Pundir <amit.pundir@linaro.org>,
-        lkml <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Christophe Ricard <christophe.ricard@gmail.com>,
-        John Stultz <john.stultz@linaro.org>
-Subject: Re: [PATCH] NFC: fdp: Remove __func__ parameter from dev_dbg() call
-Message-ID: <20180502180356.GA4660@kroah.com> (sfid-20180502_200637_764557_6FCB65A4)
-References: <1525283379-7141-1-git-send-email-amit.pundir@linaro.org>
- <1525283968.21176.633.camel@linux.intel.com>
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:28631 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751100AbeEBHPM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 2 May 2018 03:15:12 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 06/21] staging: wilc1000: use 'else if' condition in get_station()
+Date: Wed, 2 May 2018 12:43:32 +0530
+Message-ID: <1525245227-3924-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180502_092100_451102_9F2A392B)
+In-Reply-To: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1525283968.21176.633.camel@linux.intel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 02, 2018 at 08:59:28PM +0300, Andy Shevchenko wrote:
-> On Wed, 2018-05-02 at 23:19 +0530, Amit Pundir wrote:
-> 
-> > -	dev_dbg(dev, "%s\n", __func__);
-> > +	dev_dbg(dev, "\n");
-> 
-> If one enables function tracer this will be redundant completely. 
+Use 'else if' in get_station(), as only one condition will statisfy.
 
-Yes those kinds of "trace" debug log messages should be just deleted.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 5c52a7c..827afe9 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1143,9 +1143,7 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 		wilc_get_inactive_time(vif, mac, &inactive_time);
+ 		sinfo->inactive_time = 1000 * inactive_time;
+-	}
+-
+-	if (vif->iftype == STATION_MODE) {
++	} else if (vif->iftype == STATION_MODE) {
+ 		struct rf_info stats;
+ 
+ 		wilc_get_statistics(vif, &stats);
+-- 
+2.7.4
