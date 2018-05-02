@@ -1,52 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fllnx210.ext.ti.com ([198.47.19.17]:10301 "EHLO
-        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965185AbeEXISU (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:32636 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751339AbeEBHP4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 May 2018 04:18:20 -0400
-From: "Reizer, Eyal" <eyalr@ti.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Eyal Reizer <eyalreizer@gmail.com>
-CC: "tony@atomide.com" <tony@atomide.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
-Subject: RE: [EXTERNAL] Re: [PATCH] wlcore: use generic runtime pm calls for
-   wowlan elp configuration
-Date: Thu, 24 May 2018 08:18:09 +0000
-Message-ID: <06f0b1b5243a4ab7befad7b9109bf5a5@ti.com> (sfid-20180524_101944_241252_D838A7F0)
-References: <1527146337-17562-1-git-send-email-eyalr@ti.com>
- <87fu2hiilx.fsf@codeaurora.org>
-In-Reply-To: <87fu2hiilx.fsf@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
+        Wed, 2 May 2018 03:15:56 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 20/21] staging: wilc1000: rename 'during_ip_time' macro to have uppercase name for macro
+Date: Wed, 2 May 2018 12:43:46 +0530
+Message-ID: <1525245227-3924-21-git-send-email-ajay.kathat@microchip.com> (sfid-20180502_093238_446525_CB7865B6)
+In-Reply-To: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->=20
-> > With runtime PM enabled, we can now use generic calls to
-> > pm_generic_runtime_suspend and pm_generic_runtime_resume for
-> enabling elp
-> > during suspend when wowlan is enabled and waking the chip from elp
-> > on resume.
-> > remove the custom API that was used to ensure that the command
-> > that is used to allow ELP during suspend is completed before the system
-> > suspend.
-> >
-> > Signed-off-by: Eyal Reizer <eyalr@ti.com>
-> > ---
-> > Dependent on the Runtime PM support for wlcore patch set that was
-> submitted
-> > by Tony Lindgren <tony@atomide.com>
->=20
-> Ok, I'll drop this from my queue. Please resubmit once Tony's patches
-> are ready to apply (or Tony can include this patch in his patchset).
->=20
-> BTW, for me it would be a lot easier if you could mark patches like this
-> as RFT (Request For Test) or RFC (Request For Comments). That way I can
-> automatically drop the patch without sending any emails.
->=20
+Rename 'during_ip_time' to 'DURING_IP_TIME_OUT' to have uppercase letter
+for macros(#define).
 
-Understood. Thanks!
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Best Regards,
-Eyal
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 5e7bb1f..ed613b3 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -156,7 +156,7 @@ static struct ieee80211_supported_band WILC_WFI_band_2ghz = {
+ };
+ 
+ #define AGING_TIME	(9 * 1000)
+-#define during_ip_time	15000
++#define DURING_IP_TIME_OUT	15000
+ 
+ static void clear_shadow_scan(void)
+ {
+@@ -1863,7 +1863,7 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 	case NL80211_IFTYPE_P2P_GO:
+ 		wilc_optaining_ip = true;
+ 		mod_timer(&wilc_during_ip_timer,
+-			  jiffies + msecs_to_jiffies(during_ip_time));
++			  jiffies + msecs_to_jiffies(DURING_IP_TIME_OUT));
+ 		wilc_set_operation_mode(vif, AP_MODE);
+ 		dev->ieee80211_ptr->iftype = type;
+ 		priv->wdev->iftype = type;
+-- 
+2.7.4
