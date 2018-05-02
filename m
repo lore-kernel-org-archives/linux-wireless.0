@@ -1,69 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:40388 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935467AbeEISrG (ORCPT
+Received: from mail-it0-f67.google.com ([209.85.214.67]:52918 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751476AbeEBNeY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 14:47:06 -0400
-Date: Thu, 10 May 2018 00:14:53 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
-        <adham.abozaeid@Microchip.com>
-Subject: Re: [PATCH 30/30] staging: wilc1000: rename s8idxarray to avoid
- datatype in variable name
-Message-ID: <20180510001453.347a0882@ajaysk-VirtualBox> (sfid-20180509_204709_932170_2C333A36)
-In-Reply-To: <9f4adf70-9c0a-18f7-750d-1dfa8c19f91e@microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
- <1525682614-3824-31-git-send-email-ajay.kathat@microchip.com>
- <9f4adf70-9c0a-18f7-750d-1dfa8c19f91e@microchip.com>
+        Wed, 2 May 2018 09:34:24 -0400
+Received: by mail-it0-f67.google.com with SMTP id i136-v6so8504967ita.2
+        for <linux-wireless@vger.kernel.org>; Wed, 02 May 2018 06:34:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <20180502130726.GA13887@redhat.com>
+References: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
+ <9d50bf4d74ec52e141dd112768570e15a481ad2e.1525096206.git.lorenzo.bianconi@redhat.com>
+ <20180502130726.GA13887@redhat.com>
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Date: Wed, 2 May 2018 15:34:22 +0200
+Message-ID: <CAJ0CqmUEULD0X_CaLLnF3jeRJQdgLM2LK-XPt==nDuThF7wGKA@mail.gmail.com> (sfid-20180502_153728_769779_B50B3FE8)
+Subject: Re: [RFC 06/18] mt76x2: introduce mt76x2_mac_load_tx_status routine
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Felix Fietkau <nbd@nbd.name>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 9 May 2018 16:42:20 +0300
-Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
+> On Mon, Apr 30, 2018 at 04:12:21PM +0200, Lorenzo Bianconi wrote:
+>> Add mt76x2_mac_load_tx_status routine since tx stats register map is
+>> shared between usb and pci based devices but usb devices do not have a
+>> tx stat irq line as pcie ones and it is necessary to load tx statistics
+>> using a workqueue
+>>
+>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+>> ---
+>>  drivers/net/wireless/mediatek/mt76/mt76x2_mac.c | 43 +++++++++++++++----------
+>>  1 file changed, 26 insertions(+), 17 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+>> index d18315652583..0ddc84525ffa 100644
+>> --- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+>> +++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+>> @@ -515,6 +515,28 @@ mt76x2_send_tx_status(struct mt76x2_dev *dev, struct mt76x2_tx_status *stat,
+>>       rcu_read_unlock();
+>>  }
+>>
+>> +static struct mt76x2_tx_status
+>> +mt76x2_mac_load_tx_status(struct mt76x2_dev *dev)
+>> +{
+>> +     struct mt76x2_tx_status stat = {};
+>> +     u32 stat1, stat2;
+>> +
+>> +     stat2 = mt76_rr(dev, MT_TX_STAT_FIFO_EXT);
+>> +     stat1 = mt76_rr(dev, MT_TX_STAT_FIFO);
+>> +
+>> +     stat.valid = !!(stat1 & MT_TX_STAT_FIFO_VALID);
+>> +     stat.success = !!(stat1 & MT_TX_STAT_FIFO_SUCCESS);
+>> +     stat.aggr = !!(stat1 & MT_TX_STAT_FIFO_AGGR);
+>> +     stat.ack_req = !!(stat1 & MT_TX_STAT_FIFO_ACKREQ);
+>> +     stat.wcid = FIELD_GET(MT_TX_STAT_FIFO_WCID, stat1);
+>> +     stat.rate = FIELD_GET(MT_TX_STAT_FIFO_RATE, stat1);
+>> +
+>> +     stat.retry = FIELD_GET(MT_TX_STAT_FIFO_EXT_RETRY, stat2);
+>> +     stat.pktid = FIELD_GET(MT_TX_STAT_FIFO_EXT_PKTID, stat2);
+>> +
+>> +     return stat;
+>> +}
+>> +
+>
+> Just two minor points. We do not need fill structure if stat is
+> not valid. Also returning mt76x2_tx_status structure might require
+> full copy of it. Returning boolean indicator of validity and pass
+> pointer to struct mt76x2_tx_status to the subroutine would be more
+> efficient.
+>
+> Regards
+> Stanislaw
 
-> On 07.05.2018 11:43, Ajay Singh wrote:
-> > Cleanup patch to have variable names as per linux coding style.
-> > 
-> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> > ---
-> >  drivers/staging/wilc1000/host_interface.c | 6 +++---
-> >  1 file changed, 3 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/drivers/staging/wilc1000/host_interface.c
-> > b/drivers/staging/wilc1000/host_interface.c index ad9270e..e27010c
-> > 100644 --- a/drivers/staging/wilc1000/host_interface.c
-> > +++ b/drivers/staging/wilc1000/host_interface.c
-> > @@ -1543,7 +1543,7 @@ static int handle_key(struct wilc_vif *vif,
-> > struct key_attr *hif_key) struct wid wid;
-> >  	struct wid wid_list[5];
-> >  	u8 *key_buf;
-> > -	s8 s8idxarray[1];
-> > +	s8 idxarray[1];
-> >  	struct host_if_drv *hif_drv = vif->hif_drv;
-> >  
-> >  	switch (hif_key->type) {
-> > @@ -1610,8 +1610,8 @@ static int handle_key(struct wilc_vif *vif,
-> > struct key_attr *hif_key) wid.id = (u16)WID_REMOVE_WEP_KEY;
-> >  			wid.type = WID_STR;
-> >  
-> > -			s8idxarray[0] =
-> > (s8)hif_key->attr.wep.index;
-> > -			wid.val = s8idxarray;
-> > +			idxarray[0] =
-> > (s8)hif_key->attr.wep.index;  
-> 
-> I think you can get rid of idxarray at all.
-> 
+I agree, thx for the review. I will address your suggestions in v1.
 
-Yes, we can remove idxarray variable. I will update and resubmit this
-patch.
-
-> > +			wid.val = idxarray;>
-> > 			wid.size = 1; 
-> >  			result = wilc_send_config_pkt(vif, SET_CFG,
-> >   
+Regards,
+Lorenzo
