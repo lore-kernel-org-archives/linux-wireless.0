@@ -1,39 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:51694 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750707AbeEVJAT (ORCPT
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:28631 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751178AbeEBHPG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 05:00:19 -0400
-Message-ID: <1526979617.6787.12.camel@sipsolutions.net> (sfid-20180522_110023_099437_0B4AB757)
-Subject: Re: [PATCH] nl80211: fix nlmsg allocation in cfg80211_ft_event
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dedy Lansky <dlansky@codeaurora.org>,
-        'Jeff Johnson' <jjohnson@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-Date: Tue, 22 May 2018 11:00:17 +0200
-In-Reply-To: <001201d3f0d4$93258900$b9709b00$@codeaurora.org>
-References: <000901d3ede2$78a3aa20$69eafe60$@codeaurora.org>
-                 <a19275473776283a94997b8f5436f3b9@codeaurora.org>
-                 (sfid-20180517_204322_111043_9C68DA25) <1526585345.5351.3.camel@sipsolutions.net>
-         <001201d3f0d4$93258900$b9709b00$@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 2 May 2018 03:15:06 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 04/21] staging: wilc1000: remove unnecessary bracket used in switch in wilc_mgmt_frame_register()
+Date: Wed, 2 May 2018 12:43:30 +0530
+Message-ID: <1525245227-3924-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180502_092059_300346_C9868A70)
+In-Reply-To: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-05-21 at 10:23 +0300, Dedy Lansky wrote:
-> > We do, technically we should have something like nla_total_size() of various things including all those wiphy, ifindex, MAC attributes etc.
-> > so we just get lazy...
-> 
-> nla_total_size is currently not used in nl80211.c (actually not used
-> in net\wireless\ for that matters).
+Cleanup patch to remove the curly braces used in 'case' statement to follow as
+per linux standard.
 
-Like I said, we're lazy ;-)
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-> IMO, switching nl80211/cfg80211 to use nla_total_size should be done
-> separately.
-
-I don't see much value in doing it at all, TBH.
-
-johannes
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index d82a7b0..470a103 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1741,24 +1741,18 @@ void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 
+ 	switch (frame_type) {
+ 	case PROBE_REQ:
+-	{
+ 		vif->frame_reg[0].type = frame_type;
+ 		vif->frame_reg[0].reg = reg;
+-	}
+-	break;
++		break;
+ 
+ 	case ACTION:
+-	{
+ 		vif->frame_reg[1].type = frame_type;
+ 		vif->frame_reg[1].reg = reg;
+-	}
+-	break;
++		break;
+ 
+ 	default:
+-	{
+ 		break;
+ 	}
+-	}
+ 
+ 	if (!wl->initialized)
+ 		return;
+-- 
+2.7.4
