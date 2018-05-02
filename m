@@ -1,33 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:48312 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750942AbeEBSAD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 May 2018 14:00:03 -0400
-Message-ID: <1525283968.21176.633.camel@linux.intel.com> (sfid-20180502_200020_621633_29786FA2)
-Subject: Re: [PATCH] NFC: fdp: Remove __func__ parameter from dev_dbg() call
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Amit Pundir <amit.pundir@linaro.org>,
-        lkml <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Cc: Samuel Ortiz <sameo@linux.intel.com>,
-        Christophe Ricard <christophe.ricard@gmail.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        John Stultz <john.stultz@linaro.org>
-Date: Wed, 02 May 2018 20:59:28 +0300
-In-Reply-To: <1525283379-7141-1-git-send-email-amit.pundir@linaro.org>
-References: <1525283379-7141-1-git-send-email-amit.pundir@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:1383 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751074AbeEBHO6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 2 May 2018 03:14:58 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 01/21] staging: wilc1000: remove inner block in wilc_netdev_init()
+Date: Wed, 2 May 2018 12:43:27 +0530
+Message-ID: <1525245227-3924-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180502_092057_531745_C27E13B9)
+In-Reply-To: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-05-02 at 23:19 +0530, Amit Pundir wrote:
+Cleanup patch to remove unnecessary inner block ( {/**/} ) in
+wilc_netdev_init().
 
-> -	dev_dbg(dev, "%s\n", __func__);
-> +	dev_dbg(dev, "\n");
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 34 ++++++++++++++++------------------
+ 1 file changed, 16 insertions(+), 18 deletions(-)
 
-If one enables function tracer this will be redundant completely. 
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 35e30c5..491baeb 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1141,6 +1141,8 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 	register_inetaddr_notifier(&g_dev_notifier);
+ 
+ 	for (i = 0; i < NUM_CONCURRENT_IFC; i++) {
++		struct wireless_dev *wdev;
++
+ 		ndev = alloc_etherdev(sizeof(struct wilc_vif));
+ 		if (!ndev)
+ 			return -ENOMEM;
+@@ -1163,28 +1165,24 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 
+ 		ndev->netdev_ops = &wilc_netdev_ops;
+ 
+-		{
+-			struct wireless_dev *wdev;
+-
+-			wdev = wilc_create_wiphy(ndev, dev);
++		wdev = wilc_create_wiphy(ndev, dev);
+ 
+-			if (dev)
+-				SET_NETDEV_DEV(ndev, dev);
++		if (dev)
++			SET_NETDEV_DEV(ndev, dev);
+ 
+-			if (!wdev) {
+-				netdev_err(ndev, "Can't register WILC Wiphy\n");
+-				return -1;
+-			}
+-
+-			vif->ndev->ieee80211_ptr = wdev;
+-			vif->ndev->ml_priv = vif;
+-			wdev->netdev = vif->ndev;
+-			vif->netstats.rx_packets = 0;
+-			vif->netstats.tx_packets = 0;
+-			vif->netstats.rx_bytes = 0;
+-			vif->netstats.tx_bytes = 0;
++		if (!wdev) {
++			netdev_err(ndev, "Can't register WILC Wiphy\n");
++			return -1;
+ 		}
+ 
++		vif->ndev->ieee80211_ptr = wdev;
++		vif->ndev->ml_priv = vif;
++		wdev->netdev = vif->ndev;
++		vif->netstats.rx_packets = 0;
++		vif->netstats.tx_packets = 0;
++		vif->netstats.rx_bytes = 0;
++		vif->netstats.tx_bytes = 0;
++
+ 		ret = register_netdev(ndev);
+ 		if (ret)
+ 			return ret;
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+2.7.4
