@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:37021 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752689AbeEGUlO (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:63761 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751214AbeEBHPZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 16:41:14 -0400
-Received: by mail-pl0-f66.google.com with SMTP id f7-v6so749898plr.4
-        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2018 13:41:14 -0700 (PDT)
-Date: Mon, 7 May 2018 13:42:36 -0700
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Govind Singh <govinds@codeaurora.org>,
-        Andy Gross <andy.gross@linaro.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 06/12] firmware: qcom: scm: Add WLAN VMID for Qualcomm
- SCM interface
-Message-ID: <20180507204236.GI2259@tuxbook-pro> (sfid-20180507_224117_994334_9CC11C36)
-References: <1522042819-25916-1-git-send-email-govinds@codeaurora.org>
+        Wed, 2 May 2018 03:15:25 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 10/21] staging: wilc1000: rename WILC_WFI_mon_xmit to avoid uppercase for function name
+Date: Wed, 2 May 2018 12:43:36 +0530
+Message-ID: <1525245227-3924-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180502_093238_194735_6FA52A29)
+In-Reply-To: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1522042819-25916-1-git-send-email-govinds@codeaurora.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun 25 Mar 22:40 PDT 2018, Govind Singh wrote:
+Changes to avoid the use of uppercase for function name.
 
-> Add WLAN related VMID's to support wlan driver to set up
-> the remote's permissions call via TrustZone.
-> 
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/linux_mon.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Please use ./scripts/get_maintainer.pl for each patch to get a hint
-about whom to send your patches to.
-
-While I think it's okay that Kalle picks it through his tree Andy should
-give his ack first.
-
-
-Acked-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-
-Regards,
-Bjorn
-
-> ---
->  include/linux/qcom_scm.h | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/include/linux/qcom_scm.h b/include/linux/qcom_scm.h
-> index b401b96..da63d84 100644
-> --- a/include/linux/qcom_scm.h
-> +++ b/include/linux/qcom_scm.h
-> @@ -1,4 +1,4 @@
-> -/* Copyright (c) 2010-2015, The Linux Foundation. All rights reserved.
-> +/* Copyright (c) 2010-2015, 2018, The Linux Foundation. All rights reserved.
->   * Copyright (C) 2015 Linaro Ltd.
->   *
->   * This program is free software; you can redistribute it and/or modify
-> @@ -33,6 +33,8 @@ struct qcom_scm_vmperm {
->  
->  #define QCOM_SCM_VMID_HLOS       0x3
->  #define QCOM_SCM_VMID_MSS_MSA    0xF
-> +#define QCOM_SCM_VMID_WLAN       0x18
-> +#define QCOM_SCM_VMID_WLAN_CE    0x19
->  #define QCOM_SCM_PERM_READ       0x4
->  #define QCOM_SCM_PERM_WRITE      0x2
->  #define QCOM_SCM_PERM_EXEC       0x1
-> -- 
-> 1.9.1
-> 
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 1667646..d5af736 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -145,7 +145,7 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
+ 	return 0;
+ }
+ 
+-static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
++static netdev_tx_t wilc_wfi_mon_xmit(struct sk_buff *skb,
+ 				     struct net_device *dev)
+ {
+ 	u32 rtap_len, ret = 0;
+@@ -218,7 +218,7 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
+ }
+ 
+ static const struct net_device_ops wilc_wfi_netdev_ops = {
+-	.ndo_start_xmit         = WILC_WFI_mon_xmit,
++	.ndo_start_xmit         = wilc_wfi_mon_xmit,
+ 
+ };
+ 
+-- 
+2.7.4
