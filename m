@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50746 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750841AbeERQIS (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:38844 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751575AbeECKFC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 12:08:18 -0400
-Received: from potku.adurom.net (88-114-240-52.elisa-laajakaista.fi [88.114.240.52])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D78846021A
-        for <linux-wireless@vger.kernel.org>; Fri, 18 May 2018 16:08:16 +0000 (UTC)
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] MAINTAINERS: update Kalle's email address
-Date: Fri, 18 May 2018 19:08:11 +0300
-Message-Id: <1526659693-32546-1-git-send-email-kvalo@codeaurora.org> (sfid-20180518_180821_730198_C4E96DCA)
+        Thu, 3 May 2018 06:05:02 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>, James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Sachin Patki <spatki@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Prashanth Ranganathan <rprashk@marvell.com>,
+        "Mayur Arakere" <mayur@marvell.com>,
+        Sanjay Subbarao <jayrao@marvell.com>
+Subject: pull-request mwifiex-firmware 2018-05-03
+Date: Thu, 3 May 2018 10:04:56 +0000
+Message-ID: <75b499fa68dc487984aadcc8ab5160ab@SC-EXCH02.marvell.com> (sfid-20180503_120507_324078_07FD93CA)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I switched to use my codeaurora.org address.
+The following changes since commit 5446916b53de395245d89400dea566055ec4502c:
 
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
----
- MAINTAINERS | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+  linux-firmware: update Marvell PCIe-USB8897/8997 firmware image to add WPA2 vulnerability fix (2018-01-16 01:45:00 -0800)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 6d21f2f74578..4be9ff892ec0 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2345,7 +2345,7 @@ S:	Maintained
- F:	drivers/net/wireless/ath/ath5k/
- 
- ATHEROS ATH6KL WIRELESS DRIVER
--M:	Kalle Valo <kvalo@qca.qualcomm.com>
-+M:	Kalle Valo <kvalo@codeaurora.org>
- L:	linux-wireless@vger.kernel.org
- W:	http://wireless.kernel.org/en/users/Drivers/ath6kl
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git
-@@ -11651,7 +11651,7 @@ S:	Maintained
- F:	drivers/media/tuners/qt1010*
- 
- QUALCOMM ATHEROS ATH10K WIRELESS DRIVER
--M:	Kalle Valo <kvalo@qca.qualcomm.com>
-+M:	Kalle Valo <kvalo@codeaurora.org>
- L:	ath10k@lists.infradead.org
- W:	http://wireless.kernel.org/en/users/Drivers/ath10k
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git
--- 
-2.7.4
+are available in the git repository at:
+
+  git://git.marvell.com/mwifiex-firmware.git
+
+for you to fetch changes up to 13763b23a8753a11a2590ebfb895a6226db87600:
+
+  linux-firmware: update Marvell USB8997 firmware image to add WPA2 vulnerability fix (2018-05-03 15:24:41 +0530)
+
+----------------------------------------------------------------
+Ganapathi Bhat (1):
+      linux-firmware: update Marvell USB8997 firmware image to add WPA2 vulnerability fix
+
+ WHENCE                       |   2 +-
+ mrvl/usbusb8997_combo_v4.bin | Bin 602100 -> 604536 bytes
+ 2 files changed, 1 insertion(+), 1 deletion(-)
