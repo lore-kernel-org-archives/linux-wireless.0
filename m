@@ -1,43 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:45972 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752227AbeEGMbe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 08:31:34 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: Linux Firmware <linux-firmware@kernel.org>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Josh Boyer <jwboyer@kernel.org>,
-        Sachin Patki <spatki@marvell.com>,
-        "Prashanth Ranganathan" <rprashk@marvell.com>,
-        Mayur Arakere <mayur@marvell.com>,
-        "Sanjay Subbarao" <jayrao@marvell.com>
-Subject: pull-request mwifiex-firmware 2018-05-07
-Date: Mon, 7 May 2018 12:31:29 +0000
-Message-ID: <9481d7f7694345f2966e78c2284ee4a0@SC-EXCH02.marvell.com> (sfid-20180507_143137_447726_6A57A696)
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-eopbgr50086.outbound.protection.outlook.com ([40.107.5.86]:8928
+        "EHLO EUR03-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751894AbeECGZb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 May 2018 02:25:31 -0400
+Subject: Re: [PATCH 2/2] ath10k: DFS Host Confirmation
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1525110339-25326-1-git-send-email-srirrama@codeaurora.org>
+ <1525110339-25326-3-git-send-email-srirrama@codeaurora.org>
+ <0c224b54-dd10-576f-944f-2d20d1cb2c46@bowerswilkins.com>
+ <87d0ye2t75.fsf@kamboji.qca.qualcomm.com>
+Cc: Sriram R <srirrama@codeaurora.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+From: Peter Oh <peter.oh@bowerswilkins.com>
+Message-ID: <4c3ae0c5-0b26-3be9-ccad-ea71b325d5ad@bowerswilkins.com> (sfid-20180503_082711_924935_48BBDABB)
+Date: Wed, 2 May 2018 23:25:14 -0700
 MIME-Version: 1.0
+In-Reply-To: <87d0ye2t75.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdCA1NDQ2OTE2YjUzZGUzOTUyNDVkODk0
-MDBkZWE1NjYwNTVlYzQ1MDJjOg0KDQogIGxpbnV4LWZpcm13YXJlOiB1cGRhdGUgTWFydmVsbCBQ
-Q0llLVVTQjg4OTcvODk5NyBmaXJtd2FyZSBpbWFnZSB0byBhZGQgV1BBMiB2dWxuZXJhYmlsaXR5
-IGZpeCAoMjAxOC0wMS0xNiAwMTo0NTowMCAtMDgwMCkNCg0KYXJlIGF2YWlsYWJsZSBpbiB0aGUg
-Z2l0IHJlcG9zaXRvcnkgYXQ6DQoNCiAgZ2l0Oi8vZ2l0Lm1hcnZlbGwuY29tL213aWZpZXgtZmly
-bXdhcmUuZ2l0DQoNCmZvciB5b3UgdG8gZmV0Y2ggY2hhbmdlcyB1cCB0byBlMWFiYWI2MTgzMDgx
-MTA3ODlhNGMyN2RiNTQzZDEzMmZkNjJlODlmOg0KDQogIGxpbnV4LWZpcm13YXJlOiB1cGRhdGUg
-TWFydmVsbCBVU0I4OTk3IGZpcm13YXJlIGltYWdlIHRvIGFkZCBXUEEyIHZ1bG5lcmFiaWxpdHkg
-Zml4ICgyMDE4LTA1LTA3IDE3OjU0OjQyICswNTMwKQ0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQpHYW5hcGF0aGkgQmhh
-dCAoMik6DQogICAgICBsaW51eC1maXJtd2FyZTogdXBkYXRlIE1hcnZlbGwgU0Q4ODk3LUIwIGZp
-cm13YXJlIGltYWdlIHRvIGFkZCBXUEEyIHZ1bG5lcmFiaWxpdHkgZml4DQogICAgICBsaW51eC1m
-aXJtd2FyZTogdXBkYXRlIE1hcnZlbGwgVVNCODk5NyBmaXJtd2FyZSBpbWFnZSB0byBhZGQgV1BB
-MiB2dWxuZXJhYmlsaXR5IGZpeA0KDQogV0hFTkNFICAgICAgICAgICAgICAgICAgICAgICB8ICAg
-NCArKy0tDQogbXJ2bC9zZDg4OTdfdWFwc3RhLmJpbiAgICAgICB8IEJpbiA4MTQwNDggLT4gODIx
-MDI0IGJ5dGVzDQogbXJ2bC91c2J1c2I4OTk3X2NvbWJvX3Y0LmJpbiB8IEJpbiA2MDIxMDAgLT4g
-NjA0NTM2IGJ5dGVzDQogMyBmaWxlcyBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKyksIDIgZGVsZXRp
-b25zKC0pDQo=
+
+
+On 05/02/2018 04:27 AM, Kalle Valo wrote:
+> Peter Oh <peter.oh@bowerswilkins.com> writes:
+>
+>> On 04/30/2018 10:45 AM, Sriram R wrote:
+>>> In the 10.4-3.6 firmware branch there's a new DFS Host confirmation
+>>> feature which is advertised using WMI_SERVICE_HOST_DFS_CHECK_SUPPORT flag.
+>>>
+>>> This new features enables the ath10k host to send information to the
+>>> firmware on the specifications of detected radar type. This allows the
+>>> firmware to validate if the host's radar pattern detector unit is
+>>> operational and check if the radar information shared by host matches
+>>> the radar pulses sent as phy error events from firmware. If the check
+>>> fails the firmware won't allow use of DFS channels on AP mode when using
+>>> FCC regulatory region.
+>> What's the main reason you introduce this feature?
+>> What are you trying to solve with this change?
+> Otherwise one cannot use DFS channels on FCC regions with a firmware
+> from 10.4-3.6 branch.
+>
+It's a big change and none of us knows until I asked and you answered.
+>>> @@ -3765,25 +3834,46 @@ static void ath10k_dfs_radar_report(struct ath10k *ar,
+>>>      	ATH10K_DFS_STAT_INC(ar, pulses_detected);
+>>>    -	if (!ar->dfs_detector->add_pulse(ar->dfs_detector, &pe, NULL))
+>>> {
+>>> +	if (!ar->dfs_detector->add_pulse(ar->dfs_detector, &pe, &rs)) {
+>>>    		ath10k_dbg(ar, ATH10K_DBG_REGULATORY,
+>>>    			   "dfs no pulse pattern detected, yet\n");
+>>>    		return;
+>>>    	}
+>>>    -radar_detected:
+>>> -	ath10k_dbg(ar, ATH10K_DBG_REGULATORY, "dfs radar detected\n");
+>>> -	ATH10K_DFS_STAT_INC(ar, radar_detected);
+>>> +	if ((test_bit(WMI_SERVICE_HOST_DFS_CHECK_SUPPORT, ar->wmi.svc_map)) &&
+>>> +	    ar->dfs_detector->region == NL80211_DFS_FCC) {
+>> I feel risky that host drivers have no way to control this new feature
+>> and totally rely on FW feature mask. We should have a host drivers'
+>> feature mask such as module param and set it false (don't use) by
+>> default until it proves safe to use.
+> This is for regulatory enforcement so it's not possible to disable the
+> feature from host.
+Which regulatory enforcement are you talking to?
+Are you talking about such "prevent users from changing regulatory 
+domain" or "don't provide a manner to change regulatory domain or 
+channel list" ?
+If not, can you share the section of document?
+
+In addition to that, How do you make sure if FW side DFS radar detection 
+algorithm has no defects and it always categorizes phy errors to correct 
+radar type?
+I'm asking it, because it's known that DFS detector in ath module does 
+sometimes detect radar patterns as wrong radar type in both of ath10k 
+and ath9k.
+I couldn't think FW side detector has no such defects at all.
+It's like blind patch to open source community, since no one can review 
+the implementation in FW even though no one can guarantee its level of 
+integrity.
+
+Peter
