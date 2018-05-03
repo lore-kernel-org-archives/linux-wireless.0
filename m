@@ -1,37 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:48742 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752597AbeENMNu (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:39766 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751140AbeECSjM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 May 2018 08:13:50 -0400
-Message-ID: <1526300027.8070.0.camel@sipsolutions.net> (sfid-20180514_141405_188345_F4F0EB32)
-Subject: Re: WARNING in dev_vprintk_emit
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eric Biggers <ebiggers3@gmail.com>, linux-wireless@vger.kernel.org
-Cc: syzbot <syzbot+e64565577af34b3768dc@syzkaller.appspotmail.com>,
-        gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com
-Date: Mon, 14 May 2018 14:13:47 +0200
-In-Reply-To: <20180513184714.GA677@sol.localdomain> (sfid-20180513_204509_876004_C99B826F)
-References: <001a113a36724a053a0562f93c05@google.com>
-         <20180513184714.GA677@sol.localdomain>
-         (sfid-20180513_204509_876004_C99B826F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 3 May 2018 14:39:12 -0400
+Received: by mail-pf0-f194.google.com with SMTP id a22so1309267pfn.6
+        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2018 11:39:11 -0700 (PDT)
+From: Amit Pundir <amit.pundir@linaro.org>
+To: lkml <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+Cc: Suren Baghdasaryan <surenb@google.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Christophe Ricard <christophe.ricard@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        John Stultz <john.stultz@linaro.org>,
+        Dmitry Shmidt <dimitrysh@google.com>,
+        Todd Kjos <tkjos@google.com>,
+        Android Kernel Team <kernel-team@android.com>,
+        Stable <stable@vger.kernel.org>
+Subject: [PATCH v3 3/4] NFC: fdp: Fix possible buffer overflow in WCS4000 NFC driver
+Date: Fri,  4 May 2018 00:08:55 +0530
+Message-Id: <1525372736-25094-3-git-send-email-amit.pundir@linaro.org> (sfid-20180503_203953_774659_F5DFBA67)
+In-Reply-To: <1525372736-25094-1-git-send-email-amit.pundir@linaro.org>
+References: <1525372736-25094-1-git-send-email-amit.pundir@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2018-05-13 at 11:47 -0700, Eric Biggers wrote:
+From: Suren Baghdasaryan <surenb@google.com>
 
-> The bug is that mac80211_hwsim allows creating device names that are too long,
-> via HWSIM_CMD_NEW_RADIO.  Commit a7cfebcb7594a2 ("cfg80211: limit wiphy names to
-> 128 bytes") limited them to 128 bytes, but it's not enough because
-> dev_vprintk_emit() needs the device name plus some other stuff to not exceed 128
-> bytes.  Here's a reproducer that works on Linus' tree (commit ccda3c4b777),
-> provided that CONFIG_MAC80211_HWSIM=y.  Note that you'll probably need to change
-> the hardcoded MAC80211_HWSIM generic netlink family ID for it to work.
-> Johannes, what would you say about limiting the name length to 64 bytes instead?
+Possible buffer overflow when reading next_read_size bytes into
+tmp buffer after next_read_size was extracted from a previous packet.
 
-Don't really have any objections - care to send a patch?
+cc: Stable <stable@vger.kernel.org>
+Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+v3:
+Reset next_read_size to a more readable macro FDP_NCI_I2C_MIN_PAYLOAD
+instead of 5.
 
-johannes
+v2:
+Remove redundant __func__ from dev_dgb().
+
+ drivers/nfc/fdp/i2c.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/nfc/fdp/i2c.c b/drivers/nfc/fdp/i2c.c
+index c4da50e07bbc..2c5ed2224c5e 100644
+--- a/drivers/nfc/fdp/i2c.c
++++ b/drivers/nfc/fdp/i2c.c
+@@ -176,6 +176,15 @@ static int fdp_nci_i2c_read(struct fdp_i2c_phy *phy, struct sk_buff **skb)
+ 		/* Packet that contains a length */
+ 		if (tmp[0] == 0 && tmp[1] == 0) {
+ 			phy->next_read_size = (tmp[2] << 8) + tmp[3] + 3;
++			/*
++			 * Ensure next_read_size does not exceed sizeof(tmp)
++			 * for reading that many bytes during next iteration
++			 */
++			if (phy->next_read_size > FDP_NCI_I2C_MAX_PAYLOAD) {
++				dev_dbg(&client->dev, "corrupted packet\n");
++				phy->next_read_size = FDP_NCI_I2C_MIN_PAYLOAD;
++				goto flush;
++			}
+ 		} else {
+ 			phy->next_read_size = FDP_NCI_I2C_MIN_PAYLOAD;
+ 
+-- 
+2.7.4
