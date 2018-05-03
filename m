@@ -1,71 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:40378 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965397AbeEYOwf (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60412 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751775AbeECGBd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 May 2018 10:52:35 -0400
-Subject: Re: [PATCH v1] ath10k: fix band_center_freq handling for VHT160 in
- recent firmwares
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>
-References: <20180426094357.24358-1-s.gottschall@dd-wrt.com>
- <19b8766e-d474-31d3-ff38-993498ee670d@candelatech.com>
- <da5c7c56-9a41-99f0-28be-3a2c8e9fabbf@dd-wrt.com>
- <87wovr94ml.fsf@kamboji.qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <71d17554-7727-cdfa-4a0d-5e1170dc32b7@candelatech.com> (sfid-20180525_165253_409372_70112A6D)
-Date: Fri, 25 May 2018 07:52:32 -0700
-MIME-Version: 1.0
-In-Reply-To: <87wovr94ml.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Thu, 3 May 2018 02:01:33 -0400
+From: Yu Wang <yyuwang@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath10k: add quiet mode support for QCA6174/QCA9377
+Date: Thu,  3 May 2018 14:01:25 +0800
+Message-Id: <1525327285-15392-2-git-send-email-yyuwang@codeaurora.org> (sfid-20180503_080215_506531_84A61733)
+In-Reply-To: <1525327285-15392-1-git-send-email-yyuwang@codeaurora.org>
+References: <1525327285-15392-1-git-send-email-yyuwang@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/25/2018 07:44 AM, Kalle Valo wrote:
-> Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
->
->> Am 26.04.2018 um 15:44 schrieb Ben Greear:
->>>
->>>
->>> On 04/26/2018 02:43 AM, s.gottschall@dd-wrt.com wrote:
->>>> From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
->>>>
->>>> starting with firmware 10.4.3.4.x series QCA changed the handling
->>>> of the channel property band_center_freq1 and band_center_freq2 in
->>>> vht160 operation mode
->>>> likelly for backward compatiblity with vht80 only capable clients.
->>>> this patch adjusts the handling to get vht160 to work again with
->>>> official qca firmwares newer than 3.3
->>>> consider that this patch will not work with older firmwares
->>>> anymore. to avoid undefined behaviour this we disable vht160
->>>> capability for outdated firmwares
->>>
->>> We should be able to use a feature-flag or otherwise determine if
->>> the firmware needs the old or new
->>> API and make the driver able to handle both.
->>
->> the new firmware must be used as is and it works. the old firmware can
->> be detected on the missing vht cap flag.
->> but thats not my task. i can only use feature flags if they are
->> included within the qca firmwares. but they arent
->> the old pre 3.3 firmwares should be treated as obsolete. they are more
->> than 2 years old and do not announce vht160 capability
->> even if it works with some ignorance, but on the other side the it has
->> backward incompatiblies with older vht80 only clients.
->> this is why the new way was introduced
->
-> I was told ath10k could check for WMI_SERVICE_EXTENDED_NSS_SUPPORT flag.
-> Can someone test and verify that?
->
+To enable thermal throttling for QCA6174 and QCA9377,
+implement gen_pdev_set_quiet_mode for them.
+With this change, quiet period for QCA6174/QCA9377 can
+be also set/get via debugfs.
+Usage:
+To set quiet period:
+ echo <period> > /sys/kernel/debug/ieee80211/phyX/ath10k/quiet_period
+To get the current quiet period:
+ cat /sys/kernel/debug/ieee80211/phyX/ath10k/quiet_period
 
-I do see that my firmware source based on older upstream QCA FW does not advertise
-that flag, and newer QCA firmware does, so it would appear that test might
-work.
+This change has been verified with
+QCA6174 hw3.2(fw: WLAN_RM.4.4.1-00102-QCARMSWP-1).
 
-Thanks,
-Ben
+Signed-off-by: Yu Wang <yyuwang@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 33 ++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h | 16 +++++++++++++++
+ 2 files changed, 48 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 01f4eb2..2e34a1f 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -3136,6 +3136,37 @@ static u32 ath10k_wmi_tlv_prepare_peer_qos(u8 uapsd_queues, u8 sp)
+ }
+ 
+ static struct sk_buff *
++ath10k_wmi_tlv_op_gen_pdev_set_quiet_mode(struct ath10k *ar, u32 period,
++					  u32 duration, u32 next_offset,
++					  u32 enabled)
++{
++	struct wmi_tlv_set_quiet_cmd *cmd;
++	struct wmi_tlv *tlv;
++	struct sk_buff *skb;
++
++	skb = ath10k_wmi_alloc_skb(ar, sizeof(*tlv) + sizeof(*cmd));
++	if (!skb)
++		return ERR_PTR(-ENOMEM);
++
++	tlv = (void *)skb->data;
++	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_PDEV_SET_QUIET_CMD);
++	tlv->len = __cpu_to_le16(sizeof(*cmd));
++	cmd = (void *)tlv->value;
++
++	/* vdev_id is not in use, set to 0 */
++	cmd->vdev_id = __cpu_to_le32(0);
++	cmd->period = __cpu_to_le32(period);
++	cmd->duration = __cpu_to_le32(duration);
++	cmd->next_start = __cpu_to_le32(next_offset);
++	cmd->enabled = __cpu_to_le32(enabled);
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI,
++		   "wmi tlv quiet param: period %u duration %u enabled %d\n",
++		   period, duration, enabled);
++	return skb;
++}
++
++static struct sk_buff *
+ ath10k_wmi_tlv_op_gen_wow_enable(struct ath10k *ar)
+ {
+ 	struct wmi_tlv_wow_enable_cmd *cmd;
+@@ -3854,7 +3885,7 @@ static u32 ath10k_wmi_tlv_prepare_peer_qos(u8 uapsd_queues, u8 sp)
+ 	.gen_dbglog_cfg = ath10k_wmi_tlv_op_gen_dbglog_cfg,
+ 	.gen_pktlog_enable = ath10k_wmi_tlv_op_gen_pktlog_enable,
+ 	.gen_pktlog_disable = ath10k_wmi_tlv_op_gen_pktlog_disable,
+-	/* .gen_pdev_set_quiet_mode not implemented */
++	.gen_pdev_set_quiet_mode = ath10k_wmi_tlv_op_gen_pdev_set_quiet_mode,
+ 	.gen_pdev_get_temperature = ath10k_wmi_tlv_op_gen_pdev_get_temperature,
+ 	/* .gen_addba_clear_resp not implemented */
+ 	/* .gen_addba_send not implemented */
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+index 954c50b..3e1e340 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (c) 2005-2011 Atheros Communications Inc.
+  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
++ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -1952,6 +1953,21 @@ struct wmi_tlv_wow_add_del_event_cmd {
+ 	__le32 event_bitmap;
+ } __packed;
+ 
++/* Command to set/unset chip in quiet mode */
++struct wmi_tlv_set_quiet_cmd {
++	__le32 vdev_id;
++
++	/* in TUs */
++	__le32 period;
++
++	/* in TUs */
++	__le32 duration;
++
++	/* offset in TUs */
++	__le32 next_start;
++	__le32 enabled;
++} __packed;
++
+ struct wmi_tlv_wow_enable_cmd {
+ 	__le32 enable;
+ } __packed;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
