@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33446 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754214AbeEWH73 (ORCPT
+Received: from mail-wr0-f175.google.com ([209.85.128.175]:41581 "EHLO
+        mail-wr0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750829AbeECXtH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 May 2018 03:59:29 -0400
-Content-Type: text/plain; charset="utf-8"
+        Thu, 3 May 2018 19:49:07 -0400
+Received: by mail-wr0-f175.google.com with SMTP id g21-v6so19254358wrb.8
+        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2018 16:49:06 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [1/5] mt76: only stop tx queues on offchannel,
- not during the entire scan
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180520054349.49422-1-nbd@nbd.name>
-References: <20180520054349.49422-1-nbd@nbd.name>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <20180523075929.2356E60618@smtp.codeaurora.org> (sfid-20180523_100309_778386_9138E90C)
-Date: Wed, 23 May 2018 07:59:29 +0000 (UTC)
+References: <1525110339-25326-1-git-send-email-srirrama@codeaurora.org> <1525110339-25326-3-git-send-email-srirrama@codeaurora.org>
+In-Reply-To: <1525110339-25326-3-git-send-email-srirrama@codeaurora.org>
+From: Adrian Chadd <adrian@freebsd.org>
+Date: Thu, 03 May 2018 23:48:53 +0000
+Message-ID: <CAJ-VmonSEuh7Ou=K9Gu-gZ5ikpX9H=nzXe9NssNu1vw8fEk3hg@mail.gmail.com> (sfid-20180504_014910_647646_3A5BB585)
+Subject: Re: [PATCH 2/2] ath10k: DFS Host Confirmation
+To: srirrama@codeaurora.org
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> wrote:
+Hi,
 
-> During scans, mac80211 frequently switches back to the home channel to
-> minimize interruption of ongoing traffic. Keep regular tx queues active
-> during that time.
-> 
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+May we have a little more information about how this is supposed to work?
 
-5 patches applied to wireless-drivers-next.git, thanks.
+It looks like we're supposed to send the information about the matched
+radar pattern back to the firmware for confirmation? What's the intended
+behaviour from the firmware? Will the firmware have a hard-coded set of
+patterns we have to answer in/by?
 
-89bc67e3a93a mt76: only stop tx queues on offchannel, not during the entire scan
-a164a94212ce mt76: prevent tx scheduling during channel change
-a85b590cf55f mt76: move ieee80211_hw allocation to common core
-26e40d4c0b52 mt76: wait for pending tx to complete before switching channel
-cbec83d40cc7 mt76: use udelay instead of usleep_range in mt76x2_mac_stop
+I ask (like Peter, we work together) because we've had to tweak this
+behaviour a little to actually pass FCC / ETSI DFS certification. My
+general concern is that this'll cause a lot of false detects on boards that
+haven't had things tweaked for the given board. As far as I'm aware the DFS
+parameters are still hard-coded into the firmware image so if you have to
+change those you're SOL without the relevant NDAs - this makes running the
+open source DFS stuff a little tricksy on vendor boards.
 
--- 
-https://patchwork.kernel.org/patch/10413117/
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
+-adrian
