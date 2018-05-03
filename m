@@ -1,69 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36338 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751020AbeEBNHd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 May 2018 09:07:33 -0400
-Date: Wed, 2 May 2018 15:07:26 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: nbd@nbd.name, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 06/18] mt76x2: introduce mt76x2_mac_load_tx_status routine
-Message-ID: <20180502130726.GA13887@redhat.com> (sfid-20180502_151314_065630_A283C7F0)
-References: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
- <9d50bf4d74ec52e141dd112768570e15a481ad2e.1525096206.git.lorenzo.bianconi@redhat.com>
+Received: from ol.sdf.org ([205.166.94.20]:49400 "EHLO mx.sdf.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751713AbeECAjs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 2 May 2018 20:39:48 -0400
+Received: from sdf.org (sverige.freeshell.org [205.166.94.5])
+        by mx.sdf.org (8.15.2/8.14.5) with ESMTPS id w430V7lV016449
+        (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits) verified NO)
+        for <linux-wireless@vger.kernel.org>; Thu, 3 May 2018 00:31:07 GMT
+Received: (from gerrit@localhost)
+        by sdf.org (8.15.2/8.12.8/Submit) id w430V6Nb001048
+        for linux-wireless@vger.kernel.org; Wed, 2 May 2018 18:31:07 -0600 (MDT)
+Date: Wed, 2 May 2018 18:31:06 -0600
+From: Gerrit Renker <gerrit@SDF.ORG>
+To: linux-wireless@vger.kernel.org
+Subject: Intel 9260NGW (beacon) signal average values off
+Message-ID: <20180503003106.GA19935@SDF.ORG> (sfid-20180503_023951_790849_8466E97A)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9d50bf4d74ec52e141dd112768570e15a481ad2e.1525096206.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 30, 2018 at 04:12:21PM +0200, Lorenzo Bianconi wrote:
-> Add mt76x2_mac_load_tx_status routine since tx stats register map is
-> shared between usb and pci based devices but usb devices do not have a
-> tx stat irq line as pcie ones and it is necessary to load tx statistics
-> using a workqueue
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-> ---
->  drivers/net/wireless/mediatek/mt76/mt76x2_mac.c | 43 +++++++++++++++----------
->  1 file changed, 26 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-> index d18315652583..0ddc84525ffa 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-> @@ -515,6 +515,28 @@ mt76x2_send_tx_status(struct mt76x2_dev *dev, struct mt76x2_tx_status *stat,
->  	rcu_read_unlock();
->  }
->  
-> +static struct mt76x2_tx_status
-> +mt76x2_mac_load_tx_status(struct mt76x2_dev *dev)
-> +{
-> +	struct mt76x2_tx_status stat = {};
-> +	u32 stat1, stat2;
-> +
-> +	stat2 = mt76_rr(dev, MT_TX_STAT_FIFO_EXT);
-> +	stat1 = mt76_rr(dev, MT_TX_STAT_FIFO);
-> +
-> +	stat.valid = !!(stat1 & MT_TX_STAT_FIFO_VALID);
-> +	stat.success = !!(stat1 & MT_TX_STAT_FIFO_SUCCESS);
-> +	stat.aggr = !!(stat1 & MT_TX_STAT_FIFO_AGGR);
-> +	stat.ack_req = !!(stat1 & MT_TX_STAT_FIFO_ACKREQ);
-> +	stat.wcid = FIELD_GET(MT_TX_STAT_FIFO_WCID, stat1);
-> +	stat.rate = FIELD_GET(MT_TX_STAT_FIFO_RATE, stat1);
-> +
-> +	stat.retry = FIELD_GET(MT_TX_STAT_FIFO_EXT_RETRY, stat2);
-> +	stat.pktid = FIELD_GET(MT_TX_STAT_FIFO_EXT_PKTID, stat2);
-> +
-> +	return stat;
-> +}
-> +
+A user with 4.15.11-1~bpo9+1 Debian kernel reported the following problem with
+Intel 9260NGW in a Dell XPS 13: the following nl80211 reported values were off [1]:
 
-Just two minor points. We do not need fill structure if stat is
-not valid. Also returning mt76x2_tx_status structure might require
-full copy of it. Returning boolean indicator of validity and pass
-pointer to struct mt76x2_tx_status to the subroutine would be more
-efficient.
+ * signal average (NL80211_STA_INFO_SIGNAL_AVG) reported as +72 dBm
+ * beacon signal average (NL80211_STA_INFO_BEACON_SIGNAL_AVG) reported as +184 dBm
+ * while the station signal was reported as -74 dBm
 
-Regards
-Stanislaw
+I found a work-around in user-space, not sure if this has been fixed already.
+
+Gerrit
+
+ [1] https://github.com/uoaerg/wavemon/issues/47
