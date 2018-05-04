@@ -1,42 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:35457 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750709AbeEVHx2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57452 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751339AbeEDMgs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 03:53:28 -0400
-Received: by mail-qt0-f195.google.com with SMTP id f5-v6so22263846qth.2
-        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2018 00:53:27 -0700 (PDT)
-Subject: Re: [PATCH] nl80211: Reject disconnect commands except from
- conn_owner
-To: Andrew Zaborowski <andrew.zaborowski@intel.com>,
-        linux-wireless@vger.kernel.org
-References: <20180522004602.19370-1-andrew.zaborowski@intel.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5B03CC75.7060908@broadcom.com> (sfid-20180522_095331_635148_CE4BF2A3)
-Date: Tue, 22 May 2018 09:53:25 +0200
+        Fri, 4 May 2018 08:36:48 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180522004602.19370-1-andrew.zaborowski@intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Subject: Re: mt76x2: remove unnecessary break in mt76x2_mac_process_tx_rate()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180501083354.1252-1-lorenzo.bianconi@redhat.com>
+References: <20180501083354.1252-1-lorenzo.bianconi@redhat.com>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: nbd@nbd.name, linux-wireless@vger.kernel.org
+Message-Id: <20180504123648.279BC60310@smtp.codeaurora.org> (sfid-20180504_143652_664664_94A987A9)
+Date: Fri,  4 May 2018 12:36:48 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/22/2018 2:46 AM, Andrew Zaborowski wrote:
-> Reject NL80211_CMD_DISCONNECT, NL80211_CMD_DISASSOCIATE,
-> NL80211_CMD_DEAUTHENTICATE and NL80211_CMD_ASSOCIATE commands
-> from clients other than the connection owner set in the connect,
-> authenticate or associate commands, if it was set.
->
-> The main point of this check is to prevent chaos when two processes
-> try to use nl80211 at the same time, it's not a security measure.
-> The same thing should possibly be done for JOIN_IBSS/LEAVE_IBSS and
-> START_AP/STOP_AP.
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
 
-Isn't this V2? What has changed since last time?
+> Remove unnecessary break statement in the default case of bw switch
+> block in mt76x2_mac_process_tx_rate routine
+> 
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-Regards,
-Arend
+Patch applied to wireless-drivers-next.git, thanks.
 
-> Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
-> ---
->   net/wireless/nl80211.c | 16 ++++++++++++++++
->   1 file changed, 16 insertions(+)
+8efb868566db mt76x2: remove unnecessary break in mt76x2_mac_process_tx_rate()
+
+-- 
+https://patchwork.kernel.org/patch/10373263/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
