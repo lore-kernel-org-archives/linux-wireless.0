@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46930 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752800AbeE3HUQ (ORCPT
+Received: from merlin.infradead.org ([205.233.59.134]:35086 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752081AbeEDUKG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 03:20:16 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Shaul Triebitz <shaul.triebitz@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 30 May 2018 10:20:00 +0300
-Message-Id: <20180530072005.633-6-luca@coelho.fi> (sfid-20180530_092024_253057_6EE68FE3)
-In-Reply-To: <20180530072005.633-1-luca@coelho.fi>
-References: <20180530072005.633-1-luca@coelho.fi>
-Subject: [PATCH 05/10] iwlwifi: pcie: fix race in Rx buffer allocator
+        Fri, 4 May 2018 16:10:06 -0400
+Date: Fri, 4 May 2018 22:09:53 +0200
+From: Peter Zijlstra <peterz@infradead.org>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: linux-kernel@vger.kernel.org, tglx@linutronix.de,
+        Ingo Molnar <mingo@redhat.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Alexander Aring <alex.aring@gmail.com>,
+        Stefan Schmidt <stefan@osg.samsung.com>,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-wpan@vger.kernel.org,
+        Anna-Maria Gleixner <anna-maria@linutronix.de>
+Subject: Re: [RFC PATCH 2/2] net: mac808211: mac802154: use
+ lockdep_assert_in_softirq() instead own warning
+Message-ID: <20180504200953.GW12217@hirez.programming.kicks-ass.net> (sfid-20180504_221041_435999_C72D1D63)
+References: <20180504175144.12179-1-bigeasy@linutronix.de>
+ <20180504175144.12179-3-bigeasy@linutronix.de>
+ <20180504183249.GU12217@hirez.programming.kicks-ass.net>
+ <20180504184538.gavk7e2vtm73e32w@linutronix.de>
+ <20180504185132.GV12217@hirez.programming.kicks-ass.net>
+ <20180504190735.izmzibhb66gjb5wr@linutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180504190735.izmzibhb66gjb5wr@linutronix.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shaul Triebitz <shaul.triebitz@intel.com>
+On Fri, May 04, 2018 at 09:07:35PM +0200, Sebastian Andrzej Siewior wrote:
+> On 2018-05-04 20:51:32 [+0200], Peter Zijlstra wrote:
 
-Make sure the rx_allocator worker is canceled before running the
-rx_init routine.  rx_init frees and re-allocates all rxb's pages.  The
-rx_allocator worker also allocates pages for the used rxb's.  Running
-rx_init and rx_allocator simultaniously causes a kernel panic.  Fix
-that by canceling the work in rx_init.
+> > softirqs disabled, ack that is exactly what it checks.
+> > 
+> > But afaict the assertion you introduced tests that we are _in_ softirq
+> > context, which is not the same.
+> 
+> indeed, now it clicked. Given what I wrote in the cover letter would you
+> be in favour of (a proper) lockdep_assert_BH_disabled() or the cheaper
+> local_bh_enable() (assuming the network folks don't mind the cheaper
+> version)?
 
-Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index f772d70a65e4..d15f5ba2dc77 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -902,6 +902,8 @@ static int _iwl_pcie_rx_init(struct iwl_trans *trans)
- 	}
- 	def_rxq = trans_pcie->rxq;
- 
-+	cancel_work_sync(&rba->rx_alloc);
-+
- 	spin_lock(&rba->lock);
- 	atomic_set(&rba->req_pending, 0);
- 	atomic_set(&rba->req_ready, 0);
--- 
-2.17.0
+Depends a bit on what the code wants I suppose. If the code is in fact
+fine with the stronger in-softirq assertion, that'd be best. Otherwise I
+don't object to a lockdep_assert_bh_disabled() to accompany the
+lockdep_assert_irq_disabled() we already have either.
