@@ -1,56 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:31999 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752419AbeEGIqa (ORCPT
+Received: from Galois.linutronix.de ([146.0.238.70]:42374 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751814AbeEDRwI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 04:46:30 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 30/30] staging: wilc1000: rename s8idxarray to avoid datatype in variable name
-Date: Mon, 7 May 2018 14:13:34 +0530
-Message-ID: <1525682614-3824-31-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104901_668054_7EB7DA29)
-In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+        Fri, 4 May 2018 13:52:08 -0400
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: linux-kernel@vger.kernel.org
+Cc: tglx@linutronix.de, Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Alexander Aring <alex.aring@gmail.com>,
+        Stefan Schmidt <stefan@osg.samsung.com>,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-wpan@vger.kernel.org,
+        Anna-Maria Gleixner <anna-maria@linutronix.de>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: [RFC PATCH 1/2] lockdep: Add a assert_in_softirq()
+Date: Fri,  4 May 2018 19:51:43 +0200
+Message-Id: <20180504175144.12179-2-bigeasy@linutronix.de> (sfid-20180504_195252_971814_C5912F2E)
+In-Reply-To: <20180504175144.12179-1-bigeasy@linutronix.de>
+References: <20180504175144.12179-1-bigeasy@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to have variable names as per linux coding style.
+From: Anna-Maria Gleixner <anna-maria@linutronix.de>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Instead of directly warn on wrong context, check if softirq context is
+set. This check could be a nop on RT.
+
+Signed-off-by: Anna-Maria Gleixner <anna-maria@linutronix.de>
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ include/linux/lockdep.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ad9270e..e27010c 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1543,7 +1543,7 @@ static int handle_key(struct wilc_vif *vif, struct key_attr *hif_key)
- 	struct wid wid;
- 	struct wid wid_list[5];
- 	u8 *key_buf;
--	s8 s8idxarray[1];
-+	s8 idxarray[1];
- 	struct host_if_drv *hif_drv = vif->hif_drv;
- 
- 	switch (hif_key->type) {
-@@ -1610,8 +1610,8 @@ static int handle_key(struct wilc_vif *vif, struct key_attr *hif_key)
- 			wid.id = (u16)WID_REMOVE_WEP_KEY;
- 			wid.type = WID_STR;
- 
--			s8idxarray[0] = (s8)hif_key->attr.wep.index;
--			wid.val = s8idxarray;
-+			idxarray[0] = (s8)hif_key->attr.wep.index;
-+			wid.val = idxarray;
- 			wid.size = 1;
- 
- 			result = wilc_send_config_pkt(vif, SET_CFG,
--- 
-2.7.4
+diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
+index 6fc77d4dbdcd..59363c3047c6 100644
+--- a/include/linux/lockdep.h
++++ b/include/linux/lockdep.h
+@@ -608,11 +608,17 @@ do {									\
+ 			  "IRQs not disabled as expected\n");		\
+ 	} while (0)
+=20
++#define lockdep_assert_in_softirq()	do {				\
++		WARN_ONCE(debug_locks && !current->lockdep_recursion &&	\
++			  !current->softirq_context,			\
++			  "Not in softirq context as expected\n");	\
++	} while (0)
+ #else
+ # define might_lock(lock) do { } while (0)
+ # define might_lock_read(lock) do { } while (0)
+ # define lockdep_assert_irqs_enabled() do { } while (0)
+ # define lockdep_assert_irqs_disabled() do { } while (0)
++# define lockdep_assert_in_softirq() do { } while (0)
+ #endif
+=20
+ #ifdef CONFIG_LOCKDEP
+--=20
+2.17.0
