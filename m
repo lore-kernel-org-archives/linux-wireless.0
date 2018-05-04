@@ -1,96 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40846 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752224AbeERKia (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 06:38:30 -0400
-Date: Fri, 18 May 2018 12:38:11 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Carlos Manuel Santos <cmmpsantos@gmail.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v3] NFC: pn533: don't send USB data off of the stack
-Message-ID: <20180518103811.GA29186@kroah.com> (sfid-20180518_123833_527986_B52B4E21)
+Received: from Galois.linutronix.de ([146.0.238.70]:42369 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751492AbeEDRwF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 4 May 2018 13:52:05 -0400
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: linux-kernel@vger.kernel.org
+Cc: tglx@linutronix.de, Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Alexander Aring <alex.aring@gmail.com>,
+        Stefan Schmidt <stefan@osg.samsung.com>,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-wpan@vger.kernel.org,
+        Anna-Maria Gleixner <anna-maria@linutronix.de>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: [RFC PATCH 2/2] net: mac808211: mac802154: use lockdep_assert_in_softirq() instead own warning
+Date: Fri,  4 May 2018 19:51:44 +0200
+Message-Id: <20180504175144.12179-3-bigeasy@linutronix.de> (sfid-20180504_195317_616011_566C125A)
+In-Reply-To: <20180504175144.12179-1-bigeasy@linutronix.de>
+References: <20180504175144.12179-1-bigeasy@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's amazing that this driver ever worked, but now that x86 doesn't
-allow USB data to be sent off of the stack, it really does not work at
-all.  Fix this up by properly allocating the data for the small
-"commands" that get sent to the device.
+From: Anna-Maria Gleixner <anna-maria@linutronix.de>
 
-The USB stack will free the buffer when the data has been transmitted,
-that is why there is no kfree() to mirror the call to kmalloc().
+The warning in ieee802154_rx() and ieee80211_rx_napi() is there to ensure
+the softirq context for the subsequent netif_receive_skb() call. The check
+could be moved into the netif_receive_skb() function to prevent all calling
+functions implement the checks on their own. Use the lockdep variant for
+softirq context check. While at it, add a lockdep based check for irq
+enabled as mentioned in the comment above netif_receive_skb().
 
-Reported-by: Carlos Manuel Santos <cmmpsantos@gmail.com>
-Cc: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Stephen Hemminger <stephen@networkplumber.org>
-Cc: stable <stable@vger.kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Anna-Maria Gleixner <anna-maria@linutronix.de>
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
-v3: actually use the correct buffer (thanks to Arend van Spriel)
-    use kmemdup (thanks to Johannes Berg and Julia Lawall)
-v2: set the urb flags correctly
+ net/core/dev.c     | 3 +++
+ net/mac80211/rx.c  | 2 --
+ net/mac802154/rx.c | 2 --
+ 3 files changed, 3 insertions(+), 4 deletions(-)
 
- drivers/nfc/pn533/usb.c |   17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
-
---- a/drivers/nfc/pn533/usb.c
-+++ b/drivers/nfc/pn533/usb.c
-@@ -150,10 +150,16 @@ static int pn533_usb_send_ack(struct pn5
- 	struct pn533_usb_phy *phy = dev->phy;
- 	static const u8 ack[6] = {0x00, 0x00, 0xff, 0x00, 0xff, 0x00};
- 	/* spec 7.1.1.3:  Preamble, SoPC (2), ACK Code (2), Postamble */
-+	char *buffer;
- 	int rc;
- 
--	phy->out_urb->transfer_buffer = (u8 *)ack;
-+	buffer = kmemdup(ack, sizeof(ack), GFP_KERNEL);
-+	if (!buffer)
-+		return -ENOMEM;
+diff --git a/net/core/dev.c b/net/core/dev.c
+index af0558b00c6c..7b4b8611cc21 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -4750,6 +4750,9 @@ static int netif_receive_skb_internal(struct sk_buff =
+*skb)
+  */
+ int netif_receive_skb(struct sk_buff *skb)
+ {
++	lockdep_assert_irqs_enabled();
++	lockdep_assert_in_softirq();
 +
-+	phy->out_urb->transfer_buffer = buffer;
- 	phy->out_urb->transfer_buffer_length = sizeof(ack);
-+	phy->out_urb->transfer_flags |= URB_FREE_BUFFER;
- 	rc = usb_submit_urb(phy->out_urb, flags);
- 
- 	return rc;
-@@ -170,6 +176,7 @@ static int pn533_usb_send_frame(struct p
- 
- 	phy->out_urb->transfer_buffer = out->data;
- 	phy->out_urb->transfer_buffer_length = out->len;
-+	phy->out_urb->transfer_flags &= ~URB_FREE_BUFFER;
- 
- 	print_hex_dump_debug("PN533 TX: ", DUMP_PREFIX_NONE, 16, 1,
- 			     out->data, out->len, false);
-@@ -375,20 +382,26 @@ static int pn533_acr122_poweron_rdr(stru
- 	/* Power on th reader (CCID cmd) */
- 	u8 cmd[10] = {PN533_ACR122_PC_TO_RDR_ICCPOWERON,
- 		      0, 0, 0, 0, 0, 0, 3, 0, 0};
-+	char *buffer;
- 	int rc;
- 	void *cntx;
- 	struct pn533_acr122_poweron_rdr_arg arg;
- 
- 	dev_dbg(&phy->udev->dev, "%s\n", __func__);
- 
-+	buffer = kmemdup(cmd, sizeof(cmd), GFP_KERNEL);
-+	if (!buffer)
-+		return -ENOMEM;
-+
- 	init_completion(&arg.done);
- 	cntx = phy->in_urb->context;  /* backup context */
- 
- 	phy->in_urb->complete = pn533_acr122_poweron_rdr_resp;
- 	phy->in_urb->context = &arg;
- 
--	phy->out_urb->transfer_buffer = cmd;
-+	phy->out_urb->transfer_buffer = buffer;
- 	phy->out_urb->transfer_buffer_length = sizeof(cmd);
-+	phy->out_urb->transfer_flags |= URB_FREE_BUFFER;
- 
- 	print_hex_dump_debug("ACR122 TX: ", DUMP_PREFIX_NONE, 16, 1,
- 		       cmd, sizeof(cmd), false);
+ 	trace_netif_receive_skb_entry(skb);
+=20
+ 	return netif_receive_skb_internal(skb);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 03102aff0953..653332d81c17 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -4324,8 +4324,6 @@ void ieee80211_rx_napi(struct ieee80211_hw *hw, struc=
+t ieee80211_sta *pubsta,
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_rx_status *status =3D IEEE80211_SKB_RXCB(skb);
+=20
+-	WARN_ON_ONCE(softirq_count() =3D=3D 0);
+-
+ 	if (WARN_ON(status->band >=3D NUM_NL80211_BANDS))
+ 		goto drop;
+=20
+diff --git a/net/mac802154/rx.c b/net/mac802154/rx.c
+index 4dcf6e18563a..66916c270efc 100644
+--- a/net/mac802154/rx.c
++++ b/net/mac802154/rx.c
+@@ -258,8 +258,6 @@ void ieee802154_rx(struct ieee802154_local *local, stru=
+ct sk_buff *skb)
+ {
+ 	u16 crc;
+=20
+-	WARN_ON_ONCE(softirq_count() =3D=3D 0);
+-
+ 	if (local->suspended)
+ 		goto drop;
+=20
+--=20
+2.17.0
