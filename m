@@ -1,70 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44732 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934106AbeEIJsZ (ORCPT
+Received: from bombadil.infradead.org ([198.137.202.133]:46778 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751445AbeEDSvq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 05:48:25 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
-        linux-wireless@vger.kernel.org, Maya Erez <merez@codeaurora.org>
-Subject: Re: [mac80211-next:master 12/14] drivers/net//wireless/ath/wil6210/debugfs.c:1245:1: warning: the frame size of 1600 bytes is larger than 1024 bytes
-References: <201805090154.h4Cokbx2%fengguang.wu@intel.com>
-        <87efil2p2o.fsf@purkki.adurom.net>
-        <1525855900.6910.5.camel@sipsolutions.net>
-        <87tvrhw6kj.fsf@kamboji.qca.qualcomm.com>
-        <1525856418.6910.6.camel@sipsolutions.net> <87efil41d4.fsf@toke.dk>
-        <1525858618.6910.9.camel@sipsolutions.net>
-Date: Wed, 09 May 2018 12:48:20 +0300
-In-Reply-To: <1525858618.6910.9.camel@sipsolutions.net> (Johannes Berg's
-        message of "Wed, 09 May 2018 11:36:58 +0200")
-Message-ID: <87po25w463.fsf@kamboji.qca.qualcomm.com> (sfid-20180509_114954_416319_1A82EE76)
+        Fri, 4 May 2018 14:51:46 -0400
+Date: Fri, 4 May 2018 20:51:32 +0200
+From: Peter Zijlstra <peterz@infradead.org>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: linux-kernel@vger.kernel.org, tglx@linutronix.de,
+        Ingo Molnar <mingo@redhat.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Alexander Aring <alex.aring@gmail.com>,
+        Stefan Schmidt <stefan@osg.samsung.com>,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-wpan@vger.kernel.org,
+        Anna-Maria Gleixner <anna-maria@linutronix.de>
+Subject: Re: [RFC PATCH 2/2] net: mac808211: mac802154: use
+ lockdep_assert_in_softirq() instead own warning
+Message-ID: <20180504185132.GV12217@hirez.programming.kicks-ass.net> (sfid-20180504_205203_567791_4F3E2A4B)
+References: <20180504175144.12179-1-bigeasy@linutronix.de>
+ <20180504175144.12179-3-bigeasy@linutronix.de>
+ <20180504183249.GU12217@hirez.programming.kicks-ass.net>
+ <20180504184538.gavk7e2vtm73e32w@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180504184538.gavk7e2vtm73e32w@linutronix.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Fri, May 04, 2018 at 08:45:39PM +0200, Sebastian Andrzej Siewior wrote:
+> On 2018-05-04 20:32:49 [+0200], Peter Zijlstra wrote:
+> > On Fri, May 04, 2018 at 07:51:44PM +0200, Sebastian Andrzej Siewior wrote:
+> > > From: Anna-Maria Gleixner <anna-maria@linutronix.de>
+> > > 
+> > > The warning in ieee802154_rx() and ieee80211_rx_napi() is there to ensure
+> > > the softirq context for the subsequent netif_receive_skb() call. 
+> > 
+> > That's not in fact what it does though; so while that might indeed be
+> > the intent that's not what it does.
+> 
+> It was introduced in commit d20ef63d3246 ("mac80211: document
+> ieee80211_rx() context requirement"):
+> 
+>     mac80211: document ieee80211_rx() context requirement
+>     
+>     ieee80211_rx() must be called with softirqs disabled
 
-> On Wed, 2018-05-09 at 11:36 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> Johannes Berg <johannes@sipsolutions.net> writes:
->>=20
->> > On Wed, 2018-05-09 at 11:56 +0300, Kalle Valo wrote:
->> > > Johannes Berg <johannes@sipsolutions.net> writes:
->> > >=20
->> > > > On Wed, 2018-05-09 at 11:47 +0300, Kalle Valo wrote:
->> > > > >=20
->> > > > > I guess these warnings come because Toke's patch increased size =
-of
->> > > > > struct cfg80211_tid_stats (which is included in struct station_i=
-nfo) and
->> > > > > both wil6210 and qtnfmac allocate a struct station_info from sta=
-ck?=20
->> > > >=20
->> > > > Yes.
->> > > >=20
->> > > > > Can
->> > > > > someone send a fix for the drivers?
->> > > >=20
->> > > > I guess Toke/I should do that through my tree.
->> > >=20
->> > > IMHO the fix could go through my tree as well, less risk of conflict=
-s in
->> > > drivers. AFAICS the fix (allocating station_info dynamically?) would=
- not
->> > > depend on Toke's patch and could be applied separately.
->> >=20
->> > That's true, if you prefer that it's fine with me.
->>=20
->> I'll send a patch.
->>=20
->> What's the right tag to put in the commit for this?
->> Fixes-but-is-independent-from: ? ;)
->
-> Heh. You can still put Fixes: I think.
+softirqs disabled, ack that is exactly what it checks.
 
-Yeah, I think so too.
-
---=20
-Kalle Valo
+But afaict the assertion you introduced tests that we are _in_ softirq
+context, which is not the same.
