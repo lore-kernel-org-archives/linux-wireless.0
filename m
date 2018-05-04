@@ -1,61 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:11268 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934724AbeEINn0 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42922 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751189AbeEDH00 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 09:43:26 -0400
-Subject: Re: [PATCH 13/30] staging: wilc1000: rename clear_duringIP() to avoid
- camelCase issue
-To: Ajay Singh <ajay.kathat@microchip.com>,
-        <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <adham.abozaeid@Microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
- <1525682614-3824-14-git-send-email-ajay.kathat@microchip.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <aaf50a9f-f632-fd63-5363-15eebc3b60bd@microchip.com> (sfid-20180509_154348_327050_3189014E)
-Date: Wed, 9 May 2018 16:43:22 +0300
+        Fri, 4 May 2018 03:26:26 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>, James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Sachin Patki <spatki@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Prashanth Ranganathan <rprashk@marvell.com>,
+        "Mayur Arakere" <mayur@marvell.com>,
+        Sanjay Subbarao <jayrao@marvell.com>
+Subject: RE: pull-request mwifiex-firmware 2018-05-03
+Date: Fri, 4 May 2018 07:26:22 +0000
+Message-ID: <fd94b6356f5741e9a0e2ec4e9db58e53@SC-EXCH02.marvell.com> (sfid-20180504_092630_123077_44985C36)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1525682614-3824-14-git-send-email-ajay.kathat@microchip.com>
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
+Kindly ignore this request as this needs a correction in commit message. We will submit a fresh request.
 
-On 07.05.2018 11:43, Ajay Singh wrote:
-> Rename clear_duringIP() function to avoid camelCase issue reported by
-> checkpatch.pl script.
-> 
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> ---
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> index d0fb31a..f1ebaea 100644
-> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> @@ -269,7 +269,7 @@ static void remove_network_from_shadow(struct timer_list *unused)
->  		mod_timer(&aging_timer, jiffies + msecs_to_jiffies(AGING_TIME));
->  }
->  
-> -static void clear_duringIP(struct timer_list *unused)
-> +static void clear_duringip(struct timer_list *unused)
+Thanks,
+Ganapathi
 
-Maybe add an '_' for better understanding: like clear_during_ip() ?
-
->  {
->  	wilc_optaining_ip = false;
->  }
-> @@ -2272,7 +2272,7 @@ int wilc_init_host_int(struct net_device *net)
->  	priv = wdev_priv(net->ieee80211_ptr);
->  	if (op_ifcs == 0) {
->  		timer_setup(&aging_timer, remove_network_from_shadow, 0);
-> -		timer_setup(&wilc_during_ip_timer, clear_duringIP, 0);
-> +		timer_setup(&wilc_during_ip_timer, clear_duringip, 0);
->  	}
->  	op_ifcs++;
->  
-> 
+> -----Original Message-----
+> From: Ganapathi Bhat
+> Sent: Thursday, May 03, 2018 3:35 PM
+> To: linux-firmware@kernel.org
+> Cc: linux-wireless@vger.kernel.org; Cathy Luo; James Cao; Mangesh
+> Malusare; Sachin Patki; Xinming Hu; Prashanth Ranganathan; Mayur Arakere;
+> Sanjay Subbarao
+> Subject: pull-request mwifiex-firmware 2018-05-03
+>
+> The following changes since commit
+> 5446916b53de395245d89400dea566055ec4502c:
+>
+>   linux-firmware: update Marvell PCIe-USB8897/8997 firmware image to add
+> WPA2 vulnerability fix (2018-01-16 01:45:00 -0800)
+>
+> are available in the git repository at:
+>
+>   git://git.marvell.com/mwifiex-firmware.git
+>
+> for you to fetch changes up to
+> 13763b23a8753a11a2590ebfb895a6226db87600:
+>
+>   linux-firmware: update Marvell USB8997 firmware image to add WPA2
+> vulnerability fix (2018-05-03 15:24:41 +0530)
+>
+> ----------------------------------------------------------------
+> Ganapathi Bhat (1):
+>       linux-firmware: update Marvell USB8997 firmware image to add WPA2
+> vulnerability fix
+>
+>  WHENCE                       |   2 +-
+>  mrvl/usbusb8997_combo_v4.bin | Bin 602100 -> 604536 bytes
+>  2 files changed, 1 insertion(+), 1 deletion(-)
