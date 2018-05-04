@@ -1,48 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:43602 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752101AbeEUPbe (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:41405 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751287AbeEDCmd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 May 2018 11:31:34 -0400
-Received: by mail-ot0-f193.google.com with SMTP id y10-v6so17288013otg.10
-        for <linux-wireless@vger.kernel.org>; Mon, 21 May 2018 08:31:34 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [PATCH] nl80211: Optimize cfg80211_bss_expire invocations
-Date: Mon, 21 May 2018 10:31:13 -0500
-Message-Id: <20180521153113.8442-1-denkenz@gmail.com> (sfid-20180521_173138_185226_88D6681C)
+        Thu, 3 May 2018 22:42:33 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH] rtlwifi: remove duplicate definition of antenna number for btcoex
+Date: Fri, 4 May 2018 10:42:04 +0800
+Message-ID: <20180504024204.6138-1-pkshih@realtek.com> (sfid-20180504_044235_993670_47B85334)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only invoke cfg80211_bss_expire on the first nl80211_dump_scan
-invocation to avoid (likely) redundant processing.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+Two enumerations bt_total_ant_num and bt_ant_num are identical, so one
+can be removed.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- net/wireless/nl80211.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c | 4 ++--
+ drivers/net/wireless/realtek/rtlwifi/wifi.h         | 5 -----
+ 2 files changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ff28f8feeb09..7458cbcf00b2 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7930,7 +7930,15 @@ static int nl80211_dump_scan(struct sk_buff *skb, struct netlink_callback *cb)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
+index fd7928fdbd1a..3f2295fdb02d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
+@@ -2574,11 +2574,11 @@ void rtl92ee_read_bt_coexist_info_from_hwpg(struct ieee80211_hw *hw,
+ 			rtlpriv->btcoexist.btc_info.btcoexist = 0;
  
- 	wdev_lock(wdev);
- 	spin_lock_bh(&rdev->bss_lock);
--	cfg80211_bss_expire(rdev);
-+
-+	/*
-+	 * dump_scan will be called multiple times to break up the scan results
-+	 * into multiple messages.  It is unlikely that any more bss-es will be
-+	 * expired after the first call, so only call only call this on the
-+	 * first dump_scan invocation.
-+	 */
-+	if (start == 0)
-+		cfg80211_bss_expire(rdev);
+ 		rtlpriv->btcoexist.btc_info.bt_type = BT_RTL8192E;
+-		rtlpriv->btcoexist.btc_info.ant_num = ANT_TOTAL_X2;
++		rtlpriv->btcoexist.btc_info.ant_num = ANT_X2;
+ 	} else {
+ 		rtlpriv->btcoexist.btc_info.btcoexist = 1;
+ 		rtlpriv->btcoexist.btc_info.bt_type = BT_RTL8192E;
+-		rtlpriv->btcoexist.btc_info.ant_num = ANT_TOTAL_X1;
++		rtlpriv->btcoexist.btc_info.ant_num = ANT_X1;
+ 	}
+ }
  
- 	cb->seq = rdev->bss_generation;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index ce1754054a07..208010fcde21 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2842,11 +2842,6 @@ enum bt_co_type {
+ 	BT_RTL8812A = 11,
+ };
  
+-enum bt_total_ant_num {
+-	ANT_TOTAL_X2 = 0,
+-	ANT_TOTAL_X1 = 1
+-};
+-
+ enum bt_cur_state {
+ 	BT_OFF = 0,
+ 	BT_ON = 1,
 -- 
-2.13.5
+2.15.1
