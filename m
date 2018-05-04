@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47000 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S934600AbeE3HVS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 03:21:18 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Erel Geron <erelx.geron@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 30 May 2018 10:20:05 +0300
-Message-Id: <20180530072005.633-11-luca@coelho.fi> (sfid-20180530_092207_303897_3AA062F0)
-In-Reply-To: <20180530072005.633-1-luca@coelho.fi>
-References: <20180530072005.633-1-luca@coelho.fi>
-Subject: [PATCH 10/10] iwlwifi: fix non_shared_ant for 9000 devices
+Received: from mx2.suse.de ([195.135.220.15]:32878 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750911AbeEDAAI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 May 2018 20:00:08 -0400
+Date: Fri, 4 May 2018 00:00:06 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Andres Rodriguez <andresx7@gmail.com>
+Cc: linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
+        mcgrof@kernel.org, alexdeucher@gmail.com, christian.koenig@amd.com,
+        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        hdegoede@redhat.com, Kees Cook <keescook@chromium.org>,
+        Mimi Zohar <zohar@linux.vnet.ibm.com>
+Subject: Re: [PATCH 5/9] firmware: add function to load firmware without
+ warnings v5
+Message-ID: <20180504000006.GO27853@wotan.suse.de> (sfid-20180504_020022_642490_AC12FB90)
+References: <20180423201205.20533-1-andresx7@gmail.com>
+ <20180423201205.20533-6-andresx7@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180423201205.20533-6-andresx7@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Erel Geron <erelx.geron@intel.com>
+On Mon, Apr 23, 2018 at 04:12:01PM -0400, Andres Rodriguez wrote:
+> diff --git a/include/linux/firmware.h b/include/linux/firmware.h
+> index db8351a42405..a34e16f77f20 100644
+> --- a/include/linux/firmware.h
+> +++ b/include/linux/firmware.h
+> @@ -42,6 +42,8 @@ struct builtin_fw {
+>  #if defined(CONFIG_FW_LOADER) || (defined(CONFIG_FW_LOADER_MODULE) && defined(MODULE))
+>  int firmware_request(const struct firmware **fw, const char *name,
+>  		     struct device *device);
+> +int firmware_request_nowarn(const struct firmware **fw, const char *name,
+> +			    struct device *device);
+>  int firmware_request_nowait(
+>  	struct module *module, bool uevent,
+>  	const char *name, struct device *device, gfp_t gfp, void *context,
 
-The non-shared antenna was wrong for 9000 device series.  Fix it to
-ANT_B for correct antenna preference by coex in MVM driver.
+You also missed the firmware_request_nowarn() call on the #else. I'll add it
+and re-submit myself.
 
-Fixes: 89374fe60bfb ("iwlwifi: Add new PCI IDs for 9260 and 5165 series")
-Signed-off-by: Erel Geron <erelx.geron@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+In future patches about firmware please also Cc Mimi Zohar <zohar@linux.vnet.ibm.com>,
+and Kees Cook <keescook@chromium.org>. You can also use the long list (modulo, not
+the EFI list) that Hans used on his EFI patches. I realize its long but its just
+to ensure enough folks get to review and eybeball the code.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-index 9706624911f8..e20c30b29c03 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-@@ -137,7 +137,7 @@ static const struct iwl_tt_params iwl9000_tt_params = {
- 	.base_params = &iwl9000_base_params,				\
- 	.led_mode = IWL_LED_RF_STATE,					\
- 	.nvm_hw_section_num = NVM_HW_SECTION_NUM_FAMILY_9000,		\
--	.non_shared_ant = ANT_A,					\
-+	.non_shared_ant = ANT_B,					\
- 	.dccm_offset = IWL9000_DCCM_OFFSET,				\
- 	.dccm_len = IWL9000_DCCM_LEN,					\
- 	.dccm2_offset = IWL9000_DCCM2_OFFSET,				\
--- 
-2.17.0
+  Luis
