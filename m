@@ -1,299 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48392 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932168AbeE3TI6 (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.130]:41099 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751507AbeEDTzv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 15:08:58 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [RFCv3 1/7] wireless: Change single cqm_config to rssi config list
-Date: Thu, 31 May 2018 00:38:40 +0530
-Message-Id: <1527707326-2822-2-git-send-email-tamizhr@codeaurora.org> (sfid-20180530_210904_480904_D251F9E3)
-In-Reply-To: <1527707326-2822-1-git-send-email-tamizhr@codeaurora.org>
-References: <1527707326-2822-1-git-send-email-tamizhr@codeaurora.org>
+        Fri, 4 May 2018 15:55:51 -0400
+To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+From: Wirz <spam@lukas-wirz.de>
+Subject: b43 crashes on rmmod (bcm4331)
+Message-ID: <75e4b424-4c75-5abd-1ef0-c2537d329b10@lukas-wirz.de> (sfid-20180504_215555_784636_188849C5)
+Date: Fri, 4 May 2018 22:55:26 +0300
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="AU6OvInpaAhvXXomYgxRnb4FmxC3oVpmV"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes single cqm_config into mac address based
-rssi config list. This way the same structure can be
-utilized by AP mode as well.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--AU6OvInpaAhvXXomYgxRnb4FmxC3oVpmV
+Content-Type: multipart/mixed; boundary="b6rHxDGWppxSvktXK7roY6N22VtTbvNWQ";
+ protected-headers="v1"
+From: Wirz <spam@lukas-wirz.de>
+To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Message-ID: <75e4b424-4c75-5abd-1ef0-c2537d329b10@lukas-wirz.de>
+Subject: b43 crashes on rmmod (bcm4331)
 
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
----
- include/net/cfg80211.h |  7 +++--
- net/wireless/core.c    | 29 ++++++++++++++++----
- net/wireless/core.h    |  6 ++--
- net/wireless/nl80211.c | 74 +++++++++++++++++++++++++++++++++-----------------
- 4 files changed, 81 insertions(+), 35 deletions(-)
+--b6rHxDGWppxSvktXK7roY6N22VtTbvNWQ
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-GB
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 5fbfe61..656031e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4139,7 +4139,7 @@ static inline struct wiphy *wiphy_new(const struct cfg80211_ops *ops,
- struct cfg80211_conn;
- struct cfg80211_internal_bss;
- struct cfg80211_cached_keys;
--struct cfg80211_cqm_config;
-+struct cfg80211_rssi_config;
- 
- /**
-  * struct wireless_dev - wireless device state
-@@ -4204,7 +4204,7 @@ static inline struct wiphy *wiphy_new(const struct cfg80211_ops *ops,
-  * @event_lock: (private) lock for event list
-  * @owner_nlportid: (private) owner socket port ID
-  * @nl_owner_dead: (private) owner socket went away
-- * @cqm_config: (private) nl80211 RSSI monitor state
-+ * @rssi_config: (private) nl80211 RSSI monitor state
-  */
- struct wireless_dev {
- 	struct wiphy *wiphy;
-@@ -4275,7 +4275,8 @@ struct wireless_dev {
- 	} wext;
- #endif
- 
--	struct cfg80211_cqm_config *cqm_config;
-+	struct cfg80211_rssi_config *rssi_config;
-+	struct list_head rssi_config_list;
- };
- 
- static inline u8 *wdev_address(struct wireless_dev *wdev)
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 5fe35aa..62e496e 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -994,10 +994,28 @@ void wiphy_rfkill_set_hw_state(struct wiphy *wiphy, bool blocked)
- }
- EXPORT_SYMBOL(wiphy_rfkill_set_hw_state);
- 
--void cfg80211_cqm_config_free(struct wireless_dev *wdev)
-+void cfg80211_rssi_config_free(struct wireless_dev *wdev, const u8 *peer)
- {
--	kfree(wdev->cqm_config);
--	wdev->cqm_config = NULL;
-+	struct cfg80211_rssi_config *rssi_config, *tmp;
-+
-+	if (list_empty(&wdev->rssi_config_list))
-+		goto free;
-+
-+	list_for_each_entry_safe(rssi_config, tmp, &wdev->rssi_config_list,
-+				 list) {
-+		if (peer && memcmp(rssi_config->addr, peer, ETH_ALEN))
-+			continue;
-+
-+		list_del(&rssi_config->list);
-+		kfree(rssi_config);
-+		if (list_empty(&wdev->rssi_config_list) || peer)
-+			goto out;
-+	}
-+
-+free:
-+	kfree(wdev->rssi_config);
-+out:
-+	wdev->rssi_config = NULL;
- }
- 
- void cfg80211_unregister_wdev(struct wireless_dev *wdev)
-@@ -1027,7 +1045,7 @@ void cfg80211_unregister_wdev(struct wireless_dev *wdev)
- 		break;
- 	}
- 
--	cfg80211_cqm_config_free(wdev);
-+	cfg80211_rssi_config_free(wdev, NULL);
- }
- EXPORT_SYMBOL(cfg80211_unregister_wdev);
- 
-@@ -1163,6 +1181,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		spin_lock_init(&wdev->event_lock);
- 		INIT_LIST_HEAD(&wdev->mgmt_registrations);
- 		spin_lock_init(&wdev->mgmt_registrations_lock);
-+		INIT_LIST_HEAD(&wdev->rssi_config_list);
- 
- 		/*
- 		 * We get here also when the interface changes network namespaces,
-@@ -1292,7 +1311,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 			kzfree(wdev->wext.keys);
- #endif
- 			flush_work(&wdev->disconnect_wk);
--			cfg80211_cqm_config_free(wdev);
-+			cfg80211_rssi_config_free(wdev, NULL);
- 		}
- 		/*
- 		 * synchronise (so that we won't find this netdev
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 63eb1b5..170a31b 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -260,10 +260,12 @@ struct cfg80211_beacon_registration {
- 	u32 nlportid;
- };
- 
--struct cfg80211_cqm_config {
-+struct cfg80211_rssi_config {
-+	struct list_head list;
- 	u32 rssi_hyst;
- 	s32 last_rssi_event_value;
- 	int n_rssi_thresholds;
-+	u8 addr[ETH_ALEN];
- 	s32 rssi_thresholds[0];
- };
- 
-@@ -514,6 +516,6 @@ void cfg80211_stop_nan(struct cfg80211_registered_device *rdev,
- #define CFG80211_DEV_WARN_ON(cond)	({bool __r = (cond); __r; })
- #endif
- 
--void cfg80211_cqm_config_free(struct wireless_dev *wdev);
-+void cfg80211_rssi_config_free(struct wireless_dev *wdev, const u8 *peer);
- 
- #endif /* __NET_WIRELESS_CORE_H */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 07514ca..2fb2e97 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3200,6 +3200,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 		spin_lock_init(&wdev->event_lock);
- 		INIT_LIST_HEAD(&wdev->mgmt_registrations);
- 		spin_lock_init(&wdev->mgmt_registrations_lock);
-+		INIT_LIST_HEAD(&wdev->rssi_config_list);
- 
- 		wdev->identifier = ++rdev->wdev_id;
- 		list_add_rcu(&wdev->list, &rdev->wiphy.wdev_list);
-@@ -10140,7 +10141,7 @@ static int cfg80211_cqm_rssi_update(struct cfg80211_registered_device *rdev,
- 	int err;
- 
- 	/* RSSI reporting disabled? */
--	if (!wdev->cqm_config)
-+	if (!wdev->rssi_config)
- 		return rdev_set_cqm_rssi_range_config(rdev, dev, 0, 0);
- 
- 	/*
-@@ -10149,7 +10150,7 @@ static int cfg80211_cqm_rssi_update(struct cfg80211_registered_device *rdev,
- 	 * connection is established and enough beacons received to calculate
- 	 * the average.
- 	 */
--	if (!wdev->cqm_config->last_rssi_event_value && wdev->current_bss &&
-+	if (!wdev->rssi_config->last_rssi_event_value && wdev->current_bss &&
- 	    rdev->ops->get_station) {
- 		struct station_info sinfo = {};
- 		u8 *mac_addr;
-@@ -10161,26 +10162,56 @@ static int cfg80211_cqm_rssi_update(struct cfg80211_registered_device *rdev,
- 			return err;
- 
- 		if (sinfo.filled & BIT(NL80211_STA_INFO_BEACON_SIGNAL_AVG))
--			wdev->cqm_config->last_rssi_event_value =
-+			wdev->rssi_config->last_rssi_event_value =
- 				(s8) sinfo.rx_beacon_signal_avg;
- 	}
- 
--	last = wdev->cqm_config->last_rssi_event_value;
--	hyst = wdev->cqm_config->rssi_hyst;
--	n = wdev->cqm_config->n_rssi_thresholds;
-+	last = wdev->rssi_config->last_rssi_event_value;
-+	hyst = wdev->rssi_config->rssi_hyst;
-+	n = wdev->rssi_config->n_rssi_thresholds;
- 
- 	for (i = 0; i < n; i++)
--		if (last < wdev->cqm_config->rssi_thresholds[i])
-+		if (last < wdev->rssi_config->rssi_thresholds[i])
- 			break;
- 
- 	low = i > 0 ?
--		(wdev->cqm_config->rssi_thresholds[i - 1] - hyst) : S32_MIN;
-+		(wdev->rssi_config->rssi_thresholds[i - 1] - hyst) : S32_MIN;
- 	high = i < n ?
--		(wdev->cqm_config->rssi_thresholds[i] + hyst - 1) : S32_MAX;
-+		(wdev->rssi_config->rssi_thresholds[i] + hyst - 1) : S32_MAX;
- 
- 	return rdev_set_cqm_rssi_range_config(rdev, dev, low, high);
- }
- 
-+static struct cfg80211_rssi_config *
-+cfg80211_get_rssi_config(struct wireless_dev *wdev, const s32 *thresholds,
-+			 int n_thresholds, u32 hysteresis, const u8 *peer)
-+{
-+	struct cfg80211_rssi_config *rssi_config;
-+
-+	if (!peer)
-+		return NULL;
-+
-+	if (list_empty(&wdev->rssi_config_list))
-+		goto new;
-+
-+	list_for_each_entry(rssi_config, &wdev->rssi_config_list, list) {
-+		if (!memcmp(rssi_config->addr, peer, ETH_ALEN))
-+			goto found;
-+	}
-+
-+new:
-+	rssi_config = kzalloc(sizeof(struct cfg80211_rssi_config) +
-+			      n_thresholds * sizeof(s32), GFP_KERNEL);
-+	list_add(&rssi_config->list, &wdev->rssi_config_list);
-+found:
-+	rssi_config->rssi_hyst = hysteresis;
-+	rssi_config->n_rssi_thresholds = n_thresholds;
-+	memcpy(rssi_config->addr, peer, ETH_ALEN);
-+	memcpy(rssi_config->rssi_thresholds, thresholds,
-+	       n_thresholds * sizeof(s32));
-+	return rssi_config;
-+}
-+
- static int nl80211_set_cqm_rssi(struct genl_info *info,
- 				const s32 *thresholds, int n_thresholds,
- 				u32 hysteresis)
-@@ -10204,7 +10235,7 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
- 		return -EOPNOTSUPP;
- 
- 	wdev_lock(wdev);
--	cfg80211_cqm_config_free(wdev);
-+	cfg80211_rssi_config_free(wdev, NULL);
- 	wdev_unlock(wdev);
- 
- 	if (n_thresholds <= 1 && rdev->ops->set_cqm_rssi_config) {
-@@ -10224,21 +10255,14 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
- 
- 	wdev_lock(wdev);
- 	if (n_thresholds) {
--		struct cfg80211_cqm_config *cqm_config;
--
--		cqm_config = kzalloc(sizeof(struct cfg80211_cqm_config) +
--				     n_thresholds * sizeof(s32), GFP_KERNEL);
--		if (!cqm_config) {
-+		wdev->rssi_config = cfg80211_get_rssi_config(
-+						wdev, thresholds,
-+						n_thresholds, hysteresis,
-+						wdev->current_bss->pub.bssid);
-+		if (!wdev->rssi_config) {
- 			err = -ENOMEM;
- 			goto unlock;
- 		}
--
--		cqm_config->rssi_hyst = hysteresis;
--		cqm_config->n_rssi_thresholds = n_thresholds;
--		memcpy(cqm_config->rssi_thresholds, thresholds,
--		       n_thresholds * sizeof(s32));
--
--		wdev->cqm_config = cqm_config;
- 	}
- 
- 	err = cfg80211_cqm_rssi_update(rdev, dev);
-@@ -15053,13 +15077,13 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
- 		    rssi_event != NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH))
- 		return;
- 
--	if (wdev->cqm_config) {
--		wdev->cqm_config->last_rssi_event_value = rssi_level;
-+	if (wdev->rssi_config) {
-+		wdev->rssi_config->last_rssi_event_value = rssi_level;
- 
- 		cfg80211_cqm_rssi_update(rdev, dev);
- 
- 		if (rssi_level == 0)
--			rssi_level = wdev->cqm_config->last_rssi_event_value;
-+			rssi_level = wdev->rssi_config->last_rssi_event_value;
- 	}
- 
- 	msg = cfg80211_prepare_cqm(dev, NULL, gfp);
--- 
-1.9.1
+Hi,
+
+I'm using b43 to operate a BCM4331 (on a MacBookPro 9,2).  At the moment
+I'm using the kernels that are shipped with debian testing.
+
+On all three versions of 4.15 (what debian called 4.15.4, 4.15.11, and
+4.15.17) that were available as well as the current 4.16.5 I can load
+b43 and successfully use it, but the kernel crashes when unloading the
+driver, see the trace below.
+I had no such problems under 4.14.17.
+
+Is that a known problem?  Can I provide any more information to trace
+this down?
+
+cheers, lukas
+
+
+
+[27541.758851] wlan0: deauthenticating from f4:6b:ef:5f:1b:e5 by local
+choice (Reason: 3=3DDEAUTH_LEAVING)
+[27542.009123] general protection fault: 0000 [#1] SMP PTI
+[27542.009129] Modules linked in: ctr ccm cpufreq_conservative bnep
+cpufreq_userspace cpufreq_powersave binfmt_misc dm_crypt algif_skcipher
+af_alg btusb btrtl btbcm btintel hid_appleir hid_apple bluetooth
+jitterentropy_rng drbg ansi_cprng ecdh_generic hid_generic usbhid
+bcm5974 hid arc4 b43(-) joydev uvcvideo videobuf2_vmalloc
+videobuf2_memops videobuf2_v4l2 mac80211 videobuf2_common videodev media
+cfg80211 intel_rapl x86_pkg_temp_thermal intel_powerclamp efi_pstore ssb
+rfkill pcmcia pcmcia_core coretemp rng_core nls_ascii kvm_intel kvm
+irqbypass nls_cp437 iTCO_wdt iTCO_vendor_support vfat fat
+crct10dif_pclmul crc32_pclmul snd_hda_codec_hdmi evdev
+snd_hda_codec_cirrus dm_mod snd_hda_codec_generic applesmc input_polldev
+ghash_clmulni_intel intel_cstate intel_uncore intel_rapl_perf pcspkr
+efivars snd_hda_intel
+[27542.009199]  snd_hda_codec snd_hda_core snd_hwdep bcma snd_pcm_oss
+i915 snd_mixer_oss snd_pcm drm_kms_helper snd_timer mei_me snd drm sg
+soundcore mei i2c_algo_bit shpchp lpc_ich sbs apple_gmux sbshc acpi_als
+kfifo_buf industrialio video apple_bl ac button loop firewire_sbp2
+parport_pc ppdev lp parport efivarfs ip_tables x_tables autofs4 ext4
+crc16 mbcache jbd2 fscrypto ecb btrfs zstd_decompress zstd_compress
+xxhash raid10 raid456 async_raid6_recov async_memcpy async_pq async_xor
+async_tx xor raid6_pq libcrc32c crc32c_generic raid1 raid0 multipath
+linear md_mod sr_mod cdrom sd_mod crc32c_intel ahci libahci sdhci_pci
+cqhci sdhci firewire_ohci libata tg3 aesni_intel libphy xhci_pci
+aes_x86_64 ehci_pci firewire_core crypto_simd crc_itu_t xhci_hcd
+ehci_hcd cryptd glue_helper mmc_core i2c_i801 scsi_mod
+[27542.009284]  usbcore usb_common thunderbolt
+[27542.009293] CPU: 1 PID: 30802 Comm: rmmod Not tainted 4.16.0-1-amd64
+#1 Debian 4.16.5-1
+[27542.009295] Hardware name: Apple Inc.
+MacBookPro9,2/Mac-6F01561E16C75D06, BIOS MBP91.88Z.00D3.B0C.1509111653
+09/11/2015
+[27542.009304] RIP: 0010:kfree+0x4f/0x180
+[27542.009307] RSP: 0018:ffffa8638448fe50 EFLAGS: 00010207
+[27542.009311] RAX: ffff96325b9a4a01 RBX: b842b70420b5828a RCX:
+00000001820001cc
+[27542.009314] RDX: 00000001820001cd RSI: ffffe590d16e6900 RDI:
+000069d180000000
+[27542.009316] RBP: ffff96325cadd0a0 R08: ffff96325b9a4bf8 R09:
+00000001820001cc
+[27542.009320] R10: 02e0f2141882d600 R11: ffff9631d987d100 R12:
+ffffffffc080a122
+[27542.009323] R13: ffffffffc10850f8 R14: ffff96325cadd100 R15:
+0000000000000000
+[27542.009327] FS:  00007f82c0a95b80(0000) GS:ffff96326f280000(0000)
+knlGS:0000000000000000
+[27542.009330] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[27542.009333] CR2: 0000559625d724a8 CR3: 00000003d9990001 CR4:
+00000000001606e0
+[27542.009336] Call Trace:
+[27542.009349]  bcma_device_remove+0x22/0x30 [bcma]
+[27542.009357]  device_release_driver_internal+0x15a/0x220
+[27542.009364]  driver_detach+0x39/0x70
+[27542.009369]  bus_remove_driver+0x51/0xd0
+[27542.009385]  b43_exit+0x18/0xcaf [b43]
+[27542.009392]  SyS_delete_module+0x18f/0x290
+[27542.009398]  ? task_work_run+0x38/0xb0
+[27542.009404]  do_syscall_64+0x6c/0x130
+[27542.009411]  entry_SYSCALL_64_after_hwframe+0x3d/0xa2
+[27542.009415] RIP: 0033:0x7f82c03bb5e7
+[27542.009418] RSP: 002b:00007ffc133187c8 EFLAGS: 00000206 ORIG_RAX:
+00000000000000b0
+[27542.009422] RAX: ffffffffffffffda RBX: 00007ffc13318828 RCX:
+00007f82c03bb5e7
+[27542.009426] RDX: 000000000000000a RSI: 0000000000000800 RDI:
+000056430c000808
+[27542.009428] RBP: 000056430c0007a0 R08: 00007ffc13317741 R09:
+0000000000000000
+[27542.009431] R10: 00007f82c042b960 R11: 0000000000000206 R12:
+00007ffc133189f0
+[27542.009434] R13: 00007ffc13318edd R14: 000056430c000260 R15:
+000056430c0007a0
+[27542.009437] Code: 00 80 49 01 da 0f 82 39 01 00 00 48 c7 c7 00 00 00
+80 48 2b 3d 7b 5c e2 00 49 01 fa 49 c1 ea 0c 49 c1 e2 06 4c 03 15 59 5c
+e2 00 <49> 8b 42 20 48 8d 50 ff a8 01 4c 0f 45 d2 49 8b 52 20 48 8d 42
+[27542.009505] RIP: kfree+0x4f/0x180 RSP: ffffa8638448fe50
+[27542.009508] ---[ end trace 564977d3706dc719 ]---
+
+
+
+
+--b6rHxDGWppxSvktXK7roY6N22VtTbvNWQ--
+
+--AU6OvInpaAhvXXomYgxRnb4FmxC3oVpmV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iF0EARECAB0WIQQfsLWbEt//FEFwBMDWbaSYbwIjLQUCWuy6swAKCRDWbaSYbwIj
+LfiOAJ4sevwwgGEbeuOWb9F82ZJODH72vQCeI9xOJ9AcowCpHRGGmfFK+13kyVs=
+=0Y3i
+-----END PGP SIGNATURE-----
+
+--AU6OvInpaAhvXXomYgxRnb4FmxC3oVpmV--
