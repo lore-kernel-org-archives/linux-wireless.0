@@ -1,71 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:17367 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934630AbeEINoR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 09:44:17 -0400
-Subject: Re: [PATCH 06/30] staging: wilc1000: fix line over 80 chars issue in
- host_int_handle_disconnect()
-To: Ajay Singh <ajay.kathat@microchip.com>,
-        <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <adham.abozaeid@Microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
- <1525682614-3824-7-git-send-email-ajay.kathat@microchip.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <f25c13fc-3dbb-cc17-7e37-ad72b69b0664@microchip.com> (sfid-20180509_154420_117248_1BB7161F)
-Date: Wed, 9 May 2018 16:44:13 +0300
+Received: from mail.bootlin.com ([62.4.15.54]:43922 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751605AbeEDTU7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 4 May 2018 15:20:59 -0400
+Date: Fri, 4 May 2018 21:20:57 +0200
+From: =?UTF-8?B?TXlsw6huZQ==?= Josserand <mylene.josserand@bootlin.com>
+To: linux-wireless@vger.kernel.org
+Cc: Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        =?UTF-8?B?TXlsw6hu?= =?UTF-8?B?ZQ==?= Josserand
+        <mylene.josserand@bootlin.com>
+Subject: rtl8188eu: link is not ready error on lm816
+Message-ID: <20180504212057.2edaa658@dell-desktop.home> (sfid-20180504_212103_624087_DEDE1081)
 MIME-Version: 1.0
-In-Reply-To: <1525682614-3824-7-git-send-email-ajay.kathat@microchip.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello everyone,
+
+I am currently testing a USB Wifi dongle LM816 [1] on a custom platform
+based on an IMX6.
+
+My configuration:
+	kernel from mainline: v4.14
+	driver: staging R8188EU
+	firmware: rtl8188eu from linux-firmware, last commit
+	a3a26af24e29c818ef9b5661856018e21a5c49fb
+
+When I tried to set the wlan interface up, it says that "link is not
+ready" and that's all. Because of that, it fails to scan available
+networks.
+
+Here are commands used and their output:
+
+# dmesg
+[...]
+[   14.690152] r8188eu: module is from the staging directory, the
+quality is unknown, you have been warned. 
+[   14.703105] Chip Version
+Info: CHIP_8188E_Normal_Chip_TSMC_D_CUT_1T1R_RomVer(0)
+[...]
+
+# lsusb
+Bus 002 Device 004: ID 0bda:8179  <-- LM816
+Bus 002 Device 003: ID 0424:9e00  
+Bus 002 Device 002: ID 0424:2517  
+Bus 002 Device 001: ID 1d6b:0002  
+Bus 001 Device 001: ID 1d6b:0002  
+
+# lsmod
+Module                  Size  Used by    Tainted: G  
+dw_hdmi_ahb_audio      16384  0 
+r8188eu               401408  0 
+coda                   61440  0 
+imx_vdoa               16384  1 coda
+v4l2_mem2mem           24576  1 coda
+videobuf2_vmalloc      16384  1 coda
+evbug                  16384  0 
+
+# ifconfig wlan0 up
+[  447.639524] MAC Address = 5c:f3:70:3d:5c:71
+[  447.653636] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+# 
+# 
+# iw wlan0 scan
+command failed: No such device (-19)
 
 
-On 07.05.2018 11:43, Ajay Singh wrote:
-> Fix line over 80 char issue in host_int_handle_disconnect() by using
-> temp variable to hold the 'wilc_connect_result' function pointer.
-> 
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index a341ff1..0d84af9 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -1401,6 +1401,7 @@ static inline void host_int_handle_disconnect(struct wilc_vif *vif)
->  {
->  	struct disconnect_info disconn_info;
->  	struct host_if_drv *hif_drv = vif->hif_drv;
-> +	wilc_connect_result conn_result = hif_drv->usr_conn_req.conn_result;
->  
+Does anyone already have this issue with this dongle? 
+If it is not the case, what is your setup? Which firmware? Which driver?
+Any help will be very appreciated.
 
-Is there a scenario you can end up here with a null hif_drv? I'm seeing that some
-of the functions from this layer are checking for hif_drv at the beginning, some
-are not.
+Thanks in advance,
+Best regards,
 
+[1]:
+https://www.lm-technologies.com/product/wifi-usb-nano-adapter-150mbps-lm816/
 
->  	memset(&disconn_info, 0, sizeof(struct disconnect_info));
->  
-> @@ -1413,13 +1414,12 @@ static inline void host_int_handle_disconnect(struct wilc_vif *vif)
->  	disconn_info.ie = NULL;
->  	disconn_info.ie_len = 0;
->  
-> -	if (hif_drv->usr_conn_req.conn_result) {
-> +	if (conn_result) {
->  		wilc_optaining_ip = false;
->  		wilc_set_power_mgmt(vif, 0, 0);
->  
-> -		hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_DISCONN_NOTIF,
-> -						  NULL, 0, &disconn_info,
-> -						  hif_drv->usr_conn_req.arg);
-> +		conn_result(CONN_DISCONN_EVENT_DISCONN_NOTIF, NULL, 0,
-> +			    &disconn_info, hif_drv->usr_conn_req.arg);
->  	} else {
->  		netdev_err(vif->ndev, "Connect result NULL\n");
->  	}
-> 
+-- 
+Mylène Josserand, Bootlin (formerly Free Electrons)
+Embedded Linux and Kernel engineering
+http://bootlin.com
