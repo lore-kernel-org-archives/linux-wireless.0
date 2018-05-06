@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:37812 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932708AbeEaPxE (ORCPT
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:41033
+        "EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750961AbeEFIZP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 May 2018 11:53:04 -0400
-Subject: Re: [PATCH] cfg80211: Add cumulative channel survey dump support.
-To: vnaralas@codeaurora.org, Johannes Berg <johannes@sipsolutions.net>
-References: <1526980556-26707-1-git-send-email-vnaralas@codeaurora.org>
- <1527069282.3759.16.camel@sipsolutions.net>
- <ebf1c95acb34649b3d2a5435142dc06a@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <7afee956-9f91-37f5-52d2-7cdc0686f213@candelatech.com> (sfid-20180531_175308_144480_831AD032)
-Date: Thu, 31 May 2018 08:52:56 -0700
-MIME-Version: 1.0
-In-Reply-To: <ebf1c95acb34649b3d2a5435142dc06a@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Sun, 6 May 2018 04:25:15 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: kernel-janitors@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] mwifiex: delete unneeded include
+Date: Sun,  6 May 2018 09:53:53 +0200
+Message-Id: <1525593233-10968-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20180506_102535_718802_A39DF9F0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Nothing that is defined in 11ac.h is referenced in cmdevt.c.
 
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
-On 05/31/2018 02:06 AM, vnaralas@codeaurora.org wrote:
-> On 2018-05-23 15:24, Johannes Berg wrote:
->> On Tue, 2018-05-22 at 14:45 +0530, Venkateswara Naralasetty wrote:
->>> This patch provides support to send accumulated survey data to
->>> user if low level drivers provides non-accumulated survey data.
->>
->> I think the commit log should say what you need this for?
->>
->> It's simultaneously a new flag, and a lot of code, but it's not clear
->> what the point is?
->>
->> johannes
->
-> I will sent next version of patch with updated commit log.
->
-> Providing you the earlier discussion of this patch to give quick overview about this patch.
-> https://patchwork.kernel.org/patch/9701459/
+---
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-It is simple to fix the firmware, it just has several bugs related to clearing the
-accumulator as well as the 'real' values.  If you can find a QCA firmware engineer
-that will accept patches I can show them how to fix this easily.  I recently
-fixed this in my wave-1 firmware.  I posted patches to the ath10k driver to
-support this a week or so ago, but not sure if Kalle will apply them.
-
-And, it is likely that even if you don't use the 'clear' option, you are going to
-get wraps in the firmware and that will just be other harder to debug bugs.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+index 7014f44..9cfcdf6 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+@@ -25,7 +25,6 @@
+ #include "main.h"
+ #include "wmm.h"
+ #include "11n.h"
+-#include "11ac.h"
+ 
+ static void mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter);
+ 
