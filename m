@@ -1,66 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:49029 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935325AbeEIV1g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 17:27:36 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [wl-testing/master] build regression in brcmfmac
-In-Reply-To: <1525900945.6910.28.camel@sipsolutions.net>
-References: <5AF36449.9050906@broadcom.com> <1525900945.6910.28.camel@sipsolutions.net>
-Date: Wed, 09 May 2018 23:27:42 +0200
-Message-ID: <874ljgzfht.fsf@toke.dk> (sfid-20180509_232740_097570_36C986E6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:38282 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751252AbeEFHdc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 6 May 2018 03:33:32 -0400
+From: Nathan Chancellor <natechancellor@gmail.com>
+To: devel@driverdev.osuosl.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Nathan Chancellor <natechancellor@gmail.com>
+Subject: [PATCH 2/3] staging: wilc1000: Remove useless function
+Date: Sun,  6 May 2018 00:33:32 -0700
+Message-Id: <20180506073333.3770-2-natechancellor@gmail.com> (sfid-20180506_093448_043222_545BAD77)
+In-Reply-To: <20180506073333.3770-1-natechancellor@gmail.com>
+References: <20180506073333.3770-1-natechancellor@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+GCC warns that 'wid' is unused in wilc_remove_key and it's correct; the
+variable is only local. Get rid of the function (since it just returns
+zero) and shuffle the remaining code into one if statement.
 
-> On Wed, 2018-05-09 at 23:12 +0200, Arend van Spriel wrote:
->> Since yesterday I get the following build error on wl-testing/master:
->>=20
->>    CC [M]  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.o
->> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c: In function=
-=20
->> =E2=80=98brcmf_notify_connect_status_ap=E2=80=99:
->> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:5530:1:=20
->> error: the frame size of 1592 bytes is larger than 1024 bytes=20
->> [-Werror=3Dframe-larger-than=3D]
->>   }
->>   ^
->>=20
->> In the function brcmf_notify_connect_status_ap() I do have following on=
-=20
->> the stack:
->>=20
->> static s32
->> brcmf_notify_connect_status_ap(struct brcmf_cfg80211_info *cfg,
->>                                 struct net_device *ndev,
->>                                 const struct brcmf_event_msg *e, void *d=
-ata)
->> {
->>          static int generation;
->>          u32 event =3D e->event_code;
->>          u32 reason =3D e->reason;
->>          struct station_info sinfo;
->>=20
->> I guess the struct station_info grew bigger by these commits:
->>=20
->> 52539ca cfg80211: Expose TXQ stats and parameters to userspace	+816
->> 81d5439 cfg80211: average ack rssi support for data frames	+1
->>=20
->> There are a number of other (cfg80211-based) drivers doing the same=20
->> thing, ie. mwifiex, ath6kl, qtnfmac.
->
-> Yeah. Toke said this morning he was working on fixes.
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c         | 12 ------------
+ drivers/staging/wilc1000/host_interface.h         |  1 -
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++++---------
+ 3 files changed, 5 insertions(+), 22 deletions(-)
 
-That would be these:
-
-https://patchwork.kernel.org/patch/10389333/
-https://patchwork.kernel.org/patch/10389331/
-https://patchwork.kernel.org/patch/10389335/
-
--Toke
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 3fd4c8e62da6..b5f3829e9903 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2606,18 +2606,6 @@ static void timer_connect_cb(struct timer_list *t)
+ 	wilc_enqueue_cmd(&msg);
+ }
+ 
+-s32 wilc_remove_key(struct host_if_drv *hif_drv, const u8 *sta_addr)
+-{
+-	struct wid wid;
+-
+-	wid.id = (u16)WID_REMOVE_KEY;
+-	wid.type = WID_STR;
+-	wid.val = (s8 *)sta_addr;
+-	wid.size = 6;
+-
+-	return 0;
+-}
+-
+ int wilc_remove_wep_key(struct wilc_vif *vif, u8 index)
+ {
+ 	int result = 0;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 7a26f341e0ba..08b3ba7df8b4 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -303,7 +303,6 @@ struct add_sta_param {
+ };
+ 
+ struct wilc_vif;
+-s32 wilc_remove_key(struct host_if_drv *hif_drv, const u8 *sta_addr);
+ int wilc_remove_wep_key(struct wilc_vif *vif, u8 index);
+ int wilc_set_wep_default_keyid(struct wilc_vif *vif, u8 index);
+ int wilc_add_wep_key_bss_sta(struct wilc_vif *vif, const u8 *key, u8 len,
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 76b4afaef423..b499fb987395 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1054,15 +1054,11 @@ static int del_key(struct wiphy *wiphy, struct net_device *netdev,
+ 		}
+ 	}
+ 
+-	if (key_index >= 0 && key_index <= 3) {
+-		if (priv->wep_key_len[key_index]) {
+-			memset(priv->wep_key[key_index], 0,
+-			       priv->wep_key_len[key_index]);
+-			priv->wep_key_len[key_index] = 0;
+-			wilc_remove_wep_key(vif, key_index);
+-		}
+-	} else {
+-		wilc_remove_key(priv->hif_drv, mac_addr);
++	if (key_index >= 0 && key_index <= 3 && priv->wep_key_len[key_index]) {
++		memset(priv->wep_key[key_index], 0,
++		       priv->wep_key_len[key_index]);
++		priv->wep_key_len[key_index] = 0;
++		wilc_remove_wep_key(vif, key_index);
+ 	}
+ 
+ 	return 0;
+-- 
+2.17.0
