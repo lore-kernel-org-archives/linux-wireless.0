@@ -1,79 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:57494 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934976AbeEINWN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 09:22:13 -0400
-Date: Wed, 9 May 2018 10:21:08 -0300
-From: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: gregkh@linuxfoundation.org, akpm@linux-foundation.org,
-        keescook@chromium.org, josh@joshtriplett.org, maco@android.com,
-        andy.gross@linaro.org, david.brown@linaro.org,
-        bjorn.andersson@linaro.org, teg@jklm.no, wagi@monom.org,
-        hdegoede@redhat.com, andresx7@gmail.com, zohar@linux.vnet.ibm.com,
-        kubakici@wp.pl, shuah@kernel.org, mfuzzey@parkeon.com,
-        dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de,
-        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        cantabile.desu@gmail.com, ast@fb.com, hare@suse.com,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl,
-        davem@davemloft.net, arve@android.com, tkjos@android.com,
-        corbet@lwn.net, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v6 13/13] Documentation: clarify firmware_class
- provenance and why we can't rename the module
-Message-ID: <20180509102108.7049f7a9@vento.lan> (sfid-20180509_152233_075798_C5B2B08B)
-In-Reply-To: <20180508181247.19431-14-mcgrof@kernel.org>
-References: <20180508181247.19431-1-mcgrof@kernel.org>
-        <20180508181247.19431-14-mcgrof@kernel.org>
+Received: from mail.toke.dk ([52.28.52.200]:60979 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752081AbeEGVad (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 May 2018 17:30:33 -0400
+Date: Mon, 07 May 2018 23:30:31 +0200
+In-Reply-To: <1525728090.6222.1.camel@sipsolutions.net>
+References: <20180219170224.14816-1-toke@toke.dk> <20180219170224.14816-3-toke@toke.dk> (sfid-20180219_180319_201142_47E9DB27) <1525728090.6222.1.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+ charset=utf-8
+Subject: Re: [PATCH 2/3] iw: Print TXQ statistics for stations and interfaces
+To: Johannes Berg <johannes@sipsolutions.net>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+From: =?ISO-8859-1?Q?Toke_H=F8iland-J=F8rgensen?= <toke@toke.dk>
+Message-ID: <C105BD5A-5307-45D1-B91A-0E9833671B92@toke.dk> (sfid-20180507_233037_875892_28F63851)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Tue,  8 May 2018 11:12:47 -0700
-"Luis R. Rodriguez" <mcgrof@kernel.org> escreveu:
-
-> Clarify the provenance of the firmware loader firmware_class module name
-> and why we cannot rename the module in the future.
-> 
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> ---
->  .../driver-api/firmware/fallback-mechanisms.rst          | 9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
-> 
-> diff --git a/Documentation/driver-api/firmware/fallback-mechanisms.rst b/Documentation/driver-api/firmware/fallback-mechanisms.rst
-> index a39323ef7d29..a8047be4a96e 100644
-> --- a/Documentation/driver-api/firmware/fallback-mechanisms.rst
-> +++ b/Documentation/driver-api/firmware/fallback-mechanisms.rst
-> @@ -72,9 +72,12 @@ the firmware requested, and establishes it in the device hierarchy by
->  associating the device used to make the request as the device's parent.
->  The sysfs directory's file attributes are defined and controlled through
->  the new device's class (firmware_class) and group (fw_dev_attr_groups).
-> -This is actually where the original firmware_class.c file name comes from,
-> -as originally the only firmware loading mechanism available was the
-> -mechanism we now use as a fallback mechanism.
-> +This is actually where the original firmware_class module name came from,
-> +given that originally the only firmware loading mechanism available was the
-> +mechanism we now use as a fallback mechanism, which which registers a
-> +struct class firmware_class. Because the attributes exposed are part of the
-> +module name, the module name firmware_class cannot be renamed in the future, to
-> +ensure backward compatibilty with old userspace.
-
-Ah, now the explanation makes a lot more sense to me :-)
-
-Reviewed-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-
->  
->  To load firmware using the sysfs interface we expose a loading indicator,
->  and a file upload firmware into:
 
 
+On 7 May 2018 23:21:30 CEST, Johannes Berg <johannes@sipsolutions=2Enet> w=
+rote:
+>On Mon, 2018-02-19 at 18:02 +0100, Toke H=C3=B8iland-J=C3=B8rgensen wrote=
+:
+>>=20
+>> +	if (header && tid >=3D 0)
+>> +		pos +=3D snprintf(buf, buflen, "\n\t\tTID\tqsz-byt\t"
+>> +				"qsz-pkt\tflows\tdrops\tmarks\toverlmt\t"
+>> +				"hashcol\ttx-bytes\ttx-packets");
+>> +	else if (header)
+>> +		pos +=3D snprintf(buf, buflen, "\n\t\tqsz-byt\t"
+>> +				"qsz-pkt\tflows\tdrops\tmarks\toverlmt\t"
+>> +				"hashcol\ttx-bytes\ttx-packets");
+>> +
+>> +	if (tid >=3D 0)
+>> +		pos +=3D snprintf(pos, buflen - (pos - buf), "\n\t\t%d", tid);
+>> +	else
+>> +		pos +=3D snprintf(pos, buflen - (pos - buf), "\n\t");
+>> +
+>> +	txqinfo =3D txqstats_info[NL80211_TXQ_STATS_BACKLOG_BYTES];
+>> +	if (txqinfo)
+>> +		pos +=3D snprintf(pos, buflen - (pos - buf), "\t%u",
+>> +				nla_get_u32(txqinfo));
+>
+>since the header is fixed, shouldn't all of these get an else branch
+>that just prints a tab or so?
 
-Thanks,
-Mauro
+Ah, right, good point=2E Didn't think about what would happen if any of th=
+e fields were actually omitted=2E Will fix that as well :)
+
+-Toke
