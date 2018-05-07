@@ -1,231 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35240 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752101AbeEJUIz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 May 2018 16:08:55 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, keescook@chromium.org,
-        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
-        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
-        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
-        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
-        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
-        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        cantabile.desu@gmail.com, khc@pm.waw.pl, arve@android.com,
-        tkjos@android.com, corbet@lwn.net, mchehab+samsung@kernel.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        "Luis R . Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v7 01/14] firmware: wrap FW_OPT_* into an enum
-Date: Thu, 10 May 2018 13:08:37 -0700
-Message-Id: <20180510200850.5958-2-mcgrof@kernel.org> (sfid-20180510_221343_340339_7C764B82)
-In-Reply-To: <20180510200850.5958-1-mcgrof@kernel.org>
-References: <20180510200850.5958-1-mcgrof@kernel.org>
+Received: from s3.sipsolutions.net ([144.76.63.242]:41872 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752081AbeEGTTR (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 May 2018 15:19:17 -0400
+Message-ID: <1525720752.22388.3.camel@sipsolutions.net> (sfid-20180507_211920_932957_36B0514B)
+Subject: Re: [PATCH] nl80211: Reject disconnect commands except from
+ conn_owner
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 07 May 2018 21:19:12 +0200
+In-Reply-To: <CAOq732JPfbJWyR0RROY-t67p7dOuoHoHS6eaMrZ1j39F1Q0zmg@mail.gmail.com> (sfid-20180429_203012_488292_838F025C)
+References: <20180428014732.4018-1-andrew.zaborowski@intel.com>
+         <87in8b8ooy.fsf@purkki.adurom.net>
+         <CAOq732JPfbJWyR0RROY-t67p7dOuoHoHS6eaMrZ1j39F1Q0zmg@mail.gmail.com>
+         (sfid-20180429_203012_488292_838F025C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andres Rodriguez <andresx7@gmail.com>
+On Sun, 2018-04-29 at 20:30 +0200, Andrew Zaborowski wrote:
+> On 28 April 2018 at 15:07, Kalle Valo <kvalo@codeaurora.org> wrote:
+> > Andrew Zaborowski <andrew.zaborowski@intel.com> writes:
+> > > Reject NL80211_CMD_DISCONNECT, NL80211_CMD_DISASSOCIATE,
+> > > NL80211_CMD_DEAUTHENTICATE and NL80211_CMD_ASSOCIATE commands
+> > > from clients other than the connection owner set in the connect,
+> > > authenticate or associate commands, if it was set.
+> > > 
+> > > The main point of this check is to prevent chaos when two processes
+> > > try to use nl80211 at the same time, it's not a security measure.
+> > > The same thing should possibly be done for JOIN_IBSS/LEAVE_IBSS and
+> > > START_AP/STOP_AP.
+> > 
+> > s-o-b missing.
+> 
+> True, thanks.  Also I was going to send this as an RFC.
+> 
+Looks fine to me, please resend if you want it in :)
 
-This should let us associate enum kdoc to these values.
-While at it, kdocify the fw_opt.
-
-Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
-Reviewed-by: Kees Cook <keescook@chromium.org>
-Acked-by: Luis R. Rodriguez <mcgrof@kernel.org>
-[mcgrof: coding style fixes, merge kdoc with enum move]
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- drivers/base/firmware_loader/fallback.c | 12 ++++----
- drivers/base/firmware_loader/fallback.h |  6 ++--
- drivers/base/firmware_loader/firmware.h | 37 +++++++++++++++++++------
- drivers/base/firmware_loader/main.c     |  6 ++--
- 4 files changed, 42 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
-index 358354148dec..b57a7b3b4122 100644
---- a/drivers/base/firmware_loader/fallback.c
-+++ b/drivers/base/firmware_loader/fallback.c
-@@ -512,7 +512,7 @@ static const struct attribute_group *fw_dev_attr_groups[] = {
- 
- static struct fw_sysfs *
- fw_create_instance(struct firmware *firmware, const char *fw_name,
--		   struct device *device, unsigned int opt_flags)
-+		   struct device *device, enum fw_opt opt_flags)
- {
- 	struct fw_sysfs *fw_sysfs;
- 	struct device *f_dev;
-@@ -545,7 +545,7 @@ fw_create_instance(struct firmware *firmware, const char *fw_name,
-  * In charge of constructing a sysfs fallback interface for firmware loading.
-  **/
- static int fw_load_sysfs_fallback(struct fw_sysfs *fw_sysfs,
--				  unsigned int opt_flags, long timeout)
-+				  enum fw_opt opt_flags, long timeout)
- {
- 	int retval = 0;
- 	struct device *f_dev = &fw_sysfs->dev;
-@@ -599,7 +599,7 @@ static int fw_load_sysfs_fallback(struct fw_sysfs *fw_sysfs,
- 
- static int fw_load_from_user_helper(struct firmware *firmware,
- 				    const char *name, struct device *device,
--				    unsigned int opt_flags)
-+				    enum fw_opt opt_flags)
- {
- 	struct fw_sysfs *fw_sysfs;
- 	long timeout;
-@@ -640,7 +640,7 @@ static int fw_load_from_user_helper(struct firmware *firmware,
- 	return ret;
- }
- 
--static bool fw_force_sysfs_fallback(unsigned int opt_flags)
-+static bool fw_force_sysfs_fallback(enum fw_opt opt_flags)
- {
- 	if (fw_fallback_config.force_sysfs_fallback)
- 		return true;
-@@ -649,7 +649,7 @@ static bool fw_force_sysfs_fallback(unsigned int opt_flags)
- 	return true;
- }
- 
--static bool fw_run_sysfs_fallback(unsigned int opt_flags)
-+static bool fw_run_sysfs_fallback(enum fw_opt opt_flags)
- {
- 	if (fw_fallback_config.ignore_sysfs_fallback) {
- 		pr_info_once("Ignoring firmware sysfs fallback due to sysctl knob\n");
-@@ -664,7 +664,7 @@ static bool fw_run_sysfs_fallback(unsigned int opt_flags)
- 
- int fw_sysfs_fallback(struct firmware *fw, const char *name,
- 		      struct device *device,
--		      unsigned int opt_flags,
-+		      enum fw_opt opt_flags,
- 		      int ret)
- {
- 	if (!fw_run_sysfs_fallback(opt_flags))
-diff --git a/drivers/base/firmware_loader/fallback.h b/drivers/base/firmware_loader/fallback.h
-index f8255670a663..a3b73a09db6c 100644
---- a/drivers/base/firmware_loader/fallback.h
-+++ b/drivers/base/firmware_loader/fallback.h
-@@ -5,6 +5,8 @@
- #include <linux/firmware.h>
- #include <linux/device.h>
- 
-+#include "firmware.h"
-+
- /**
-  * struct firmware_fallback_config - firmware fallback configuration settings
-  *
-@@ -31,7 +33,7 @@ struct firmware_fallback_config {
- #ifdef CONFIG_FW_LOADER_USER_HELPER
- int fw_sysfs_fallback(struct firmware *fw, const char *name,
- 		      struct device *device,
--		      unsigned int opt_flags,
-+		      enum fw_opt opt_flags,
- 		      int ret);
- void kill_pending_fw_fallback_reqs(bool only_kill_custom);
- 
-@@ -43,7 +45,7 @@ void unregister_sysfs_loader(void);
- #else /* CONFIG_FW_LOADER_USER_HELPER */
- static inline int fw_sysfs_fallback(struct firmware *fw, const char *name,
- 				    struct device *device,
--				    unsigned int opt_flags,
-+				    enum fw_opt opt_flags,
- 				    int ret)
- {
- 	/* Keep carrying over the same error */
-diff --git a/drivers/base/firmware_loader/firmware.h b/drivers/base/firmware_loader/firmware.h
-index 64acbb1a392c..4f433b447367 100644
---- a/drivers/base/firmware_loader/firmware.h
-+++ b/drivers/base/firmware_loader/firmware.h
-@@ -2,6 +2,7 @@
- #ifndef __FIRMWARE_LOADER_H
- #define __FIRMWARE_LOADER_H
- 
-+#include <linux/bitops.h>
- #include <linux/firmware.h>
- #include <linux/types.h>
- #include <linux/kref.h>
-@@ -10,13 +11,33 @@
- 
- #include <generated/utsrelease.h>
- 
--/* firmware behavior options */
--#define FW_OPT_UEVENT			(1U << 0)
--#define FW_OPT_NOWAIT			(1U << 1)
--#define FW_OPT_USERHELPER		(1U << 2)
--#define FW_OPT_NO_WARN			(1U << 3)
--#define FW_OPT_NOCACHE			(1U << 4)
--#define FW_OPT_NOFALLBACK		(1U << 5)
-+/**
-+ * enum fw_opt - options to control firmware loading behaviour
-+ *
-+ * @FW_OPT_UEVENT: Enables the fallback mechanism to send a kobject uevent
-+ *	when the firmware is not found. Userspace is in charge to load the
-+ *	firmware using the sysfs loading facility.
-+ * @FW_OPT_NOWAIT: Used to describe the firmware request is asynchronous.
-+ * @FW_OPT_USERHELPER: Enable the fallback mechanism, in case the direct
-+ *	filesystem lookup fails at finding the firmware.  For details refer to
-+ *	fw_sysfs_fallback().
-+ * @FW_OPT_NO_WARN: Quiet, avoid printing warning messages.
-+ * @FW_OPT_NOCACHE: Disables firmware caching. Firmware caching is used to
-+ *	cache the firmware upon suspend, so that upon resume races against the
-+ *	firmware file lookup on storage is avoided. Used for calls where the
-+ *	file may be too big, or where the driver takes charge of its own
-+ *	firmware caching mechanism.
-+ * @FW_OPT_NOFALLBACK: Disable the fallback mechanism. Takes precedence over
-+ *	&FW_OPT_UEVENT and &FW_OPT_USERHELPER.
-+ */
-+enum fw_opt {
-+	FW_OPT_UEVENT =         BIT(0),
-+	FW_OPT_NOWAIT =         BIT(1),
-+	FW_OPT_USERHELPER =     BIT(2),
-+	FW_OPT_NO_WARN =        BIT(3),
-+	FW_OPT_NOCACHE =        BIT(4),
-+	FW_OPT_NOFALLBACK =     BIT(5),
-+};
- 
- enum fw_status {
- 	FW_STATUS_UNKNOWN,
-@@ -110,6 +131,6 @@ static inline void fw_state_done(struct fw_priv *fw_priv)
- }
- 
- int assign_fw(struct firmware *fw, struct device *device,
--	      unsigned int opt_flags);
-+	      enum fw_opt opt_flags);
- 
- #endif /* __FIRMWARE_LOADER_H */
-diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
-index eb34089e4299..9919f0e6a7cc 100644
---- a/drivers/base/firmware_loader/main.c
-+++ b/drivers/base/firmware_loader/main.c
-@@ -443,7 +443,7 @@ static int fw_add_devm_name(struct device *dev, const char *name)
- #endif
- 
- int assign_fw(struct firmware *fw, struct device *device,
--	      unsigned int opt_flags)
-+	      enum fw_opt opt_flags)
- {
- 	struct fw_priv *fw_priv = fw->priv;
- 	int ret;
-@@ -558,7 +558,7 @@ static void fw_abort_batch_reqs(struct firmware *fw)
- static int
- _request_firmware(const struct firmware **firmware_p, const char *name,
- 		  struct device *device, void *buf, size_t size,
--		  unsigned int opt_flags)
-+		  enum fw_opt opt_flags)
- {
- 	struct firmware *fw = NULL;
- 	int ret;
-@@ -734,7 +734,7 @@ struct firmware_work {
- 	struct device *device;
- 	void *context;
- 	void (*cont)(const struct firmware *fw, void *context);
--	unsigned int opt_flags;
-+	enum fw_opt opt_flags;
- };
- 
- static void request_firmware_work_func(struct work_struct *work)
--- 
-2.17.0
+johannes
