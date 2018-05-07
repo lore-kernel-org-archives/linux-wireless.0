@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:41778 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750841AbeERHjR (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:36693 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752502AbeEGIom (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 03:39:17 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH] mwifiex: correct histogram data with appropriate index
-Date: Fri, 18 May 2018 15:38:54 +0800
-Message-ID: <1526629134-10049-1-git-send-email-huxm@marvell.com> (sfid-20180518_093921_222692_F1CAD5FE)
+        Mon, 7 May 2018 04:44:42 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 18/30] staging: wilc1000: fix line over 80 chars in get_station()
+Date: Mon, 7 May 2018 14:13:22 +0530
+Message-ID: <1525682614-3824-19-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104447_974362_DCD3CA34)
+In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct snr/nr/rssi data index to avoid possible buffer underflow.
+Fix line over 80 characters issue in get_station().
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/marvell/mwifiex/util.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/util.c b/drivers/net/wireless/marvell/mwifiex/util.c
-index 0cd68ff..51ccf10 100644
---- a/drivers/net/wireless/marvell/mwifiex/util.c
-+++ b/drivers/net/wireless/marvell/mwifiex/util.c
-@@ -708,12 +708,14 @@ void mwifiex_hist_data_set(struct mwifiex_private *priv, u8 rx_rate, s8 snr,
- 			   s8 nflr)
- {
- 	struct mwifiex_histogram_data *phist_data = priv->hist_data;
-+	s8 nf   = -nflr;
-+	s8 rssi = snr - nflr;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 8dea414..3deef5b 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1124,7 +1124,9 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
  
- 	atomic_inc(&phist_data->num_samples);
- 	atomic_inc(&phist_data->rx_rate[rx_rate]);
--	atomic_inc(&phist_data->snr[snr]);
--	atomic_inc(&phist_data->noise_flr[128 + nflr]);
--	atomic_inc(&phist_data->sig_str[nflr - snr]);
-+	atomic_inc(&phist_data->snr[snr + 128]);
-+	atomic_inc(&phist_data->noise_flr[nf + 128]);
-+	atomic_inc(&phist_data->sig_str[rssi + 128]);
- }
- 
- /* function to reset histogram data during init/reset */
+ 	if (vif->iftype == AP_MODE || vif->iftype == GO_MODE) {
+ 		for (i = 0; i < NUM_STA_ASSOCIATED; i++) {
+-			if (!(memcmp(mac, priv->assoc_stainfo.sta_associated_bss[i], ETH_ALEN))) {
++			if (!(memcmp(mac,
++				     priv->assoc_stainfo.sta_associated_bss[i],
++				     ETH_ALEN))) {
+ 				associatedsta = i;
+ 				break;
+ 			}
 -- 
-1.9.1
+2.7.4
