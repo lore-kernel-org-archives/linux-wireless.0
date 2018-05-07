@@ -1,58 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36030 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752334AbeEJUJN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 May 2018 16:09:13 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, keescook@chromium.org,
-        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
-        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
-        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
-        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
-        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
-        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        cantabile.desu@gmail.com, khc@pm.waw.pl, arve@android.com,
-        tkjos@android.com, corbet@lwn.net, mchehab+samsung@kernel.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v7 13/14] Documentation: remove stale firmware API reference
-Date: Thu, 10 May 2018 13:08:49 -0700
-Message-Id: <20180510200850.5958-14-mcgrof@kernel.org> (sfid-20180510_220951_239511_7D25AE4D)
-In-Reply-To: <20180510200850.5958-1-mcgrof@kernel.org>
-References: <20180510200850.5958-1-mcgrof@kernel.org>
+Received: from www262.sakura.ne.jp ([202.181.97.72]:19968 "EHLO
+        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751968AbeEGKK5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 May 2018 06:10:57 -0400
+Subject: Re: WARNING in kernfs_add_one
+To: Greg KH <gregkh@linuxfoundation.org>,
+        Eric Dumazet <eric.dumazet@gmail.com>,
+        syzbot <syzbot+df47f81c226b31d89fb1@syzkaller.appspotmail.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, syzkaller-bugs@googlegroups.com,
+        tj@kernel.org, Johannes Berg <johannes@sipsolutions.net>
+References: <0000000000000390eb056b77596d@google.com>
+ <20180505164041.GD7746@kroah.com>
+ <095bc684-0029-0b2e-5e28-23376174ca02@gmail.com>
+ <20180505220721.GA10829@kroah.com>
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Message-ID: <7e25235d-0a11-87fb-cf81-56d6c13f40b0@I-love.SAKURA.ne.jp> (sfid-20180507_121101_136709_901E5733)
+Date: Mon, 7 May 2018 19:10:31 +0900
+MIME-Version: 1.0
+In-Reply-To: <20180505220721.GA10829@kroah.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It refers to a pending patch, but this was merged eons ago.
+On 2018/05/06 7:07, Greg KH wrote:
+>> More likely wireless territory
+> 
+> Ugh, that's what I get for writing emails before coffee in the
+> morning...
+> 
+> Yes, you are right, this looks like a wireless issue.
+> 
+> Now cc: linux-wireless.
+> 
+Nope, if you look at previous fault injection messages...
 
-Reviewed-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Reviewed-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+
+
+>From 7ddcaa3d4327d4f29d11053bd2011bf77ecf72af Mon Sep 17 00:00:00 2001
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Date: Mon, 7 May 2018 14:19:50 +0900
+Subject: [PATCH] driver core: Don't ignore class_dir_create_and_add() failure.
+
+syzbot is hitting WARN() at kernfs_add_one() [1].
+This is because kernfs_create_link() is confused by previous device_add()
+call which continued without setting dev->kobj.parent field when
+get_device_parent() failed by memory allocation fault injection.
+Fix this by propagating the error from class_dir_create_and_add() to
+the calllers of get_device_parent().
+
+[1] https://syzkaller.appspot.com/bug?id=fae0fb607989ea744526d1c082a5b8de6529116f
+
+Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Reported-by: syzbot <syzbot+df47f81c226b31d89fb1@syzkaller.appspotmail.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- Documentation/dell_rbu.txt | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/base/core.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/dell_rbu.txt b/Documentation/dell_rbu.txt
-index 0fdb6aa2704c..5d1ce7bcd04d 100644
---- a/Documentation/dell_rbu.txt
-+++ b/Documentation/dell_rbu.txt
-@@ -121,10 +121,7 @@ read back the image downloaded.
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index b610816..d680fd0 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -1467,7 +1467,7 @@ class_dir_create_and_add(struct class *class, struct kobject *parent_kobj)
  
- .. note::
+ 	dir = kzalloc(sizeof(*dir), GFP_KERNEL);
+ 	if (!dir)
+-		return NULL;
++		return ERR_PTR(-ENOMEM);
  
--   This driver requires a patch for firmware_class.c which has the modified
--   request_firmware_nowait function.
--
--   Also after updating the BIOS image a user mode application needs to execute
-+   After updating the BIOS image a user mode application needs to execute
-    code which sends the BIOS update request to the BIOS. So on the next reboot
-    the BIOS knows about the new image downloaded and it updates itself.
-    Also don't unload the rbu driver if the image has to be updated.
+ 	dir->class = class;
+ 	kobject_init(&dir->kobj, &class_dir_ktype);
+@@ -1477,7 +1477,7 @@ class_dir_create_and_add(struct class *class, struct kobject *parent_kobj)
+ 	retval = kobject_add(&dir->kobj, parent_kobj, "%s", class->name);
+ 	if (retval < 0) {
+ 		kobject_put(&dir->kobj);
+-		return NULL;
++		return ERR_PTR(retval);
+ 	}
+ 	return &dir->kobj;
+ }
+@@ -1784,6 +1784,10 @@ int device_add(struct device *dev)
+ 
+ 	parent = get_device(dev->parent);
+ 	kobj = get_device_parent(dev, parent);
++	if (IS_ERR(kobj)) {
++		error = PTR_ERR(kobj);
++		goto parent_error;
++	}
+ 	if (kobj)
+ 		dev->kobj.parent = kobj;
+ 
+@@ -1882,6 +1886,7 @@ int device_add(struct device *dev)
+ 	kobject_del(&dev->kobj);
+  Error:
+ 	cleanup_glue_dir(dev, glue_dir);
++parent_error:
+ 	put_device(parent);
+ name_error:
+ 	kfree(dev->p);
+@@ -2701,6 +2706,11 @@ int device_move(struct device *dev, struct device *new_parent,
+ 	device_pm_lock();
+ 	new_parent = get_device(new_parent);
+ 	new_parent_kobj = get_device_parent(dev, new_parent);
++	if (IS_ERR(new_parent_kobj)) {
++		error = PTR_ERR(new_parent_kobj);
++		put_device(new_parent);
++		goto out;
++	}
+ 
+ 	pr_debug("device: '%s': %s: moving to '%s'\n", dev_name(dev),
+ 		 __func__, new_parent ? dev_name(new_parent) : "<NULL>");
 -- 
-2.17.0
+1.8.3.1
