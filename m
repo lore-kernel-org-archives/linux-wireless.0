@@ -1,72 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56842 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751229AbeEVO2P (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:42978 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752389AbeEGUGp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 10:28:15 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2018-05-22
-Date: Tue, 22 May 2018 17:28:11 +0300
-Message-ID: <87603fg3yc.fsf@kamboji.qca.qualcomm.com> (sfid-20180522_162834_964910_B9E87089)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Mon, 7 May 2018 16:06:45 -0400
+Message-ID: <1525723602.1080.0.camel@sipsolutions.net> (sfid-20180507_220648_181452_7F370D04)
+Subject: Re: [PATCH] mesh: don't process mesh channel switch unless csa ie
+ provided
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Peter Oh <peter.oh@bowerswilkins.com>,
+        linux-wireless@vger.kernel.org
+Date: Mon, 07 May 2018 22:06:42 +0200
+In-Reply-To: <81cf6620-d7f6-50f7-23c5-e1ba693f2907@bowerswilkins.com>
+References: <1524857196-29399-1-git-send-email-peter.oh@bowerswilkins.com>
+         <1525722286.22388.5.camel@sipsolutions.net>
+         <81cf6620-d7f6-50f7-23c5-e1ba693f2907@bowerswilkins.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Mon, 2018-05-07 at 13:04 -0700, Peter Oh wrote:
+> 
+> On 05/07/2018 12:44 PM, Johannes Berg wrote:
+> > On Fri, 2018-04-27 at 12:26 -0700, peter.oh@bowerswilkins.com wrote:
+> > > From: Peter Oh <peter.oh@bowerswilkins.com>
+> > > 
+> > > There is no meaning to call ieee80211_mesh_process_chnswitch
+> > > without CSA IE provided, since the function will always return error.
+> > 
+> > I'm not convinced, an extended channel switch element might be present
+> > instead?
+> 
+> I expected the comment. Yes, extended channel switch element could be 
+> present instead of channel switch element which I missed to take care 
+> of. So you can ignore the patch for now and I'll get back with right 
+> patch for it.
 
-here's a pull request to net tree for 4.17. Please let me know if you
-have any problems.
+Heh. Well, but then why bother at all? I mean, the inner function will
+do the check and fail, and nothing will happen, so why bother?
 
-Kalle
-
-The following changes since commit a8d7aa17bbc970971ccdf71988ea19230ab368b1:
-
-  dccp: fix tasklet usage (2018-05-03 15:14:57 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git =
-tags/wireless-drivers-for-davem-2018-05-22
-
-for you to fetch changes up to 813477aa49aac5deba04eb4956360dde58a0e807:
-
-  MAINTAINERS: change Kalle as wcn36xx maintainer (2018-05-22 15:36:41 +030=
-0)
-
-----------------------------------------------------------------
-wireless-drivers fixes for 4.17
-
-Hopefully the last fixes for 4.17. ssb is again causing problems so we
-had to revert a commit and fix it better. Also a small fix to bcma and
-some MAINTAINERS file updates.
-
-ssb
-
-* fix regression with all module PCI cards, for example using b43 and
-  b44 drivers
-
-* try again fixing a MIPS linker error
-
-bcma
-
-* fix truncated info log messages
-
-----------------------------------------------------------------
-Kalle Valo (3):
-      MAINTAINERS: update Kalle's email address
-      MAINTAINERS: change Kalle as ath.ko maintainer
-      MAINTAINERS: change Kalle as wcn36xx maintainer
-
-Rafa=C5=82 Mi=C5=82ecki (3):
-      bcma: fix buffer size caused crash in bcma_core_mips_print_irq()
-      Revert "ssb: Prevent build of PCI host features in module"
-      ssb: make SSB_PCICORE_HOSTMODE depend on SSB =3D y
-
- MAINTAINERS                | 8 ++++----
- drivers/bcma/driver_mips.c | 2 +-
- drivers/ssb/Kconfig        | 4 ++--
- 3 files changed, 7 insertions(+), 7 deletions(-)
+johannes
