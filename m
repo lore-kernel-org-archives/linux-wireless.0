@@ -1,33 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:38027 "EHLO
-        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964827AbeEIS5g (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:54827 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752186AbeEGIos (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 14:57:36 -0400
-Subject: Re: [PATCH] ssb: Fix regression caused by disabling PCI cores on
- non-MIPS architecture
-To: Jeff Johnson <jjohnson@codeaurora.org>
-Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>,
-        linux-wireless-owner@vger.kernel.org
-References: <20180509164220.22653-1-Larry.Finger@lwfinger.net>
- <d31853aa21d1c610d09bce696423cfe2@codeaurora.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <5f7abc22-f3e5-fce3-690b-17e40ef73c8a@lwfinger.net> (sfid-20180509_205745_508412_5143274F)
-Date: Wed, 9 May 2018 13:57:34 -0500
+        Mon, 7 May 2018 04:44:48 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 20/30] staging: wilc1000: fix line over 80 characters in add_key()
+Date: Mon, 7 May 2018 14:13:24 +0530
+Message-ID: <1525682614-3824-21-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104531_395086_55B7E2DD)
+In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <d31853aa21d1c610d09bce696423cfe2@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/09/2018 11:57 AM, Jeff Johnson wrote:
-> On 2018-05-09 09:42, Larry Finger wrote:
->> Some MPIS-based SoCs use chips driven by b43 for wireless capability.
-> typo: MPIS=>MIPS
+Fix line over 80 character issue found by checkpatch.pl script in
+add_key().
 
-Jeff,
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
 
-Thanks. I will fix this with V2.
-
-Larry
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 3deef5b..20ba9cc 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -905,8 +905,7 @@ static int wilc_wfi_cfg_copy_wpa_info(struct wilc_wfi_key *key_info,
+ }
+ 
+ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+-		   bool pairwise,
+-		   const u8 *mac_addr, struct key_params *params)
++		   bool pairwise, const u8 *mac_addr, struct key_params *params)
+ 
+ {
+ 	s32 ret = 0, keylen = params->key_len;
+@@ -954,6 +953,8 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 	case WLAN_CIPHER_SUITE_CCMP:
+ 		if (priv->wdev->iftype == NL80211_IFTYPE_AP ||
+ 		    priv->wdev->iftype == NL80211_IFTYPE_P2P_GO) {
++			struct wilc_wfi_key *key;
++
+ 			ret = wilc_wfi_cfg_allocate_wpa_entry(priv, key_index);
+ 			if (ret)
+ 				return -ENOMEM;
+@@ -973,21 +974,19 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 
+ 				priv->wilc_groupkey = mode;
+ 
+-				ret = wilc_wfi_cfg_copy_wpa_info(priv->wilc_gtk[key_index],
+-								 params);
+-				if (ret)
+-					return -ENOMEM;
++				key = priv->wilc_gtk[key_index];
+ 			} else {
+ 				if (params->cipher == WLAN_CIPHER_SUITE_TKIP)
+ 					mode = ENCRYPT_ENABLED | WPA | TKIP;
+ 				else
+ 					mode = priv->wilc_groupkey | AES;
+ 
+-				ret = wilc_wfi_cfg_copy_wpa_info(priv->wilc_ptk[key_index],
+-								 params);
+-				if (ret)
+-					return -ENOMEM;
++				key = priv->wilc_ptk[key_index];
+ 			}
++			ret = wilc_wfi_cfg_copy_wpa_info(key, params);
++			if (ret)
++				return -ENOMEM;
++
+ 			op_mode = AP_MODE;
+ 		} else {
+ 			if (params->key_len > 16 &&
+-- 
+2.7.4
