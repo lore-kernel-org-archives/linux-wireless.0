@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:45751 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754952AbeEAMev (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:51014 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752131AbeEGMa1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 May 2018 08:34:51 -0400
-Date: Tue, 1 May 2018 07:34:48 -0500
-From: Rob Herring <robh@kernel.org>
-To: Nipun Gupta <nipun.gupta@nxp.com>
-Cc: robin.murphy@arm.com, hch@lst.de, linux@armlinux.org.uk,
-        gregkh@linuxfoundation.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, zajec5@gmail.com, andy.gross@linaro.org,
-        david.brown@linaro.org, dan.j.williams@intel.com,
-        vinod.koul@intel.com, thierry.reding@gmail.com,
-        frowand.list@gmail.com, jarkko.sakkinen@linux.intel.com,
-        rafael.j.wysocki@intel.com, dmitry.torokhov@gmail.com,
-        johan@kernel.org, msuchanek@suse.de, linux-kernel@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
-        dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, bharat.bhushan@nxp.com,
-        leoyang.li@nxp.com
-Subject: Re: [PATCH v4 2/2] drivers: remove force dma flag from buses
-Message-ID: <20180501123448.GA23861@rob-hp-laptop> (sfid-20180501_143459_211261_FE0C57FD)
-References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
- <1524883919-29484-1-git-send-email-nipun.gupta@nxp.com>
- <1524883919-29484-2-git-send-email-nipun.gupta@nxp.com>
+        Mon, 7 May 2018 08:30:27 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: Josh Boyer <jwboyer@kernel.org>
+CC: Linux Firmware <linux-firmware@kernel.org>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Sachin Patki <spatki@marvell.com>,
+        "Prashanth Ranganathan" <rprashk@marvell.com>,
+        Mayur Arakere <mayur@marvell.com>,
+        "Sanjay Subbarao" <jayrao@marvell.com>
+Subject: RE: [EXT] Re: pull-request mwifiex-firmware 2018-05-04
+Date: Mon, 7 May 2018 12:30:24 +0000
+Message-ID: <68b8974ea04d426c8d84a5cb1b2e589c@SC-EXCH02.marvell.com> (sfid-20180507_143030_845396_6A39E47E)
+References: <76132c14dc564054af97f3355dddf4e7@SC-EXCH02.marvell.com>
+ <CA+5PVA6PhygeHtm9duGWZA1GtXjbAKNgyU8gUKiphkyAt9NWOw@mail.gmail.com>
+In-Reply-To: <CA+5PVA6PhygeHtm9duGWZA1GtXjbAKNgyU8gUKiphkyAt9NWOw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1524883919-29484-2-git-send-email-nipun.gupta@nxp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 28, 2018 at 08:21:59AM +0530, Nipun Gupta wrote:
-> With each bus implementing its own DMA configuration callback,
-> there is no need for bus to explicitly have force_dma in its
-> global structure. This patch modifies of_dma_configure API to
-> accept an input parameter which specifies if implicit DMA
-> configuration is required even when it is not described by the
-> firmware.
-> 
-> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>  # PCI parts
-> ---
-> Changes in v2:
->   - This is a new change suggested by Robin and Christoph
->     and is added to the series.
-> 
-> Changes in v3:
->   - Rebase and changes corresponding to the changes in patch 1/2
-> 
-> Changes in v4:
->   - Rebased on top of 4.17-rc2
-> 
->  drivers/amba/bus.c            | 1 -
->  drivers/base/platform.c       | 3 +--
->  drivers/bcma/main.c           | 2 +-
->  drivers/dma/qcom/hidma_mgmt.c | 2 +-
->  drivers/gpu/host1x/bus.c      | 5 ++---
->  drivers/of/device.c           | 6 ++++--
->  drivers/of/of_reserved_mem.c  | 2 +-
->  drivers/pci/pci-driver.c      | 3 +--
->  include/linux/device.h        | 4 ----
->  include/linux/of_device.h     | 8 ++++++--
->  10 files changed, 17 insertions(+), 19 deletions(-)
-
-Reviewed-by: Rob Herring <robh@kernel.org>
+SGkgSm9zaCwNCg0KPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IE9uIEZyaSwgTWF5IDQsIDIwMTggYXQgMzoz
+NCBBTSBHYW5hcGF0aGkgQmhhdCA8Z2JoYXRAbWFydmVsbC5jb20+IHdyb3RlOg0KPg0KPiA+IFRo
+ZSBmb2xsb3dpbmcgY2hhbmdlcyBzaW5jZSBjb21taXQNCj4gNTQ0NjkxNmI1M2RlMzk1MjQ1ZDg5
+NDAwZGVhNTY2MDU1ZWM0NTAyYzoNCj4NCj4gPiAgICBsaW51eC1maXJtd2FyZTogdXBkYXRlIE1h
+cnZlbGwgUENJZS1VU0I4ODk3Lzg5OTcgZmlybXdhcmUgaW1hZ2UgdG8NCj4gPiBhZGQNCj4gV1BB
+MiB2dWxuZXJhYmlsaXR5IGZpeCAoMjAxOC0wMS0xNiAwMTo0NTowMCAtMDgwMCkNCj4NCj4gPiBh
+cmUgYXZhaWxhYmxlIGluIHRoZSBnaXQgcmVwb3NpdG9yeSBhdDoNCj4NCj4gPiAgICBnaXQ6Ly9n
+aXQubWFydmVsbC5jb20vbXdpZmlleC1maXJtd2FyZS5naXQNCj4NCj4gPiBmb3IgeW91IHRvIGZl
+dGNoIGNoYW5nZXMgdXAgdG8NCj4gOGIyZjg5YmJhNmU4MzMwYzQ4NGY5YWQzOTM2N2Q4ZWZkNDJk
+MjNiNDoNCj4NCj4gPiAgICBsaW51eC1maXJtd2FyZTogdXBkYXRlIE1hcnZlbGwgVVNCODk5NyBm
+aXJtd2FyZSBpbWFnZSB0byBhZGQgV1BBMg0KPiB2dWxuZXJhYmlsaXR5IGZpeCAoMjAxOC0wNS0w
+NCAxMjo1MTo0MCArMDUzMCkNCj4NCj4gPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+ID4gR2FuYXBhdGhpIEJoYXQgKDIp
+Og0KPiA+ICAgICAgICBsaW51eC1maXJtd2FyZTogdXBkYXRlIE1hcnZlbGwgU0Q4ODk3LUIwIGZp
+cm13YXJlIGltYWdlIHRvIGFkZA0KPiA+IFdQQTINCj4gdnVsbmVyYWJpbGl0eSBmaXgNCj4gPiAg
+ICAgICAgbGludXgtZmlybXdhcmU6IHVwZGF0ZSBNYXJ2ZWxsIFVTQjg5OTcgZmlybXdhcmUgaW1h
+Z2UgdG8gYWRkDQo+ID4gV1BBMg0KPiB2dWxuZXJhYmlsaXR5IGZpeA0KPg0KPiBCb3RoIG9mIHRo
+b3NlIGNvbW1pdHMgYXJlIG1pc3NpbmcgdGhlIFNpZ25lZC1vZmYtYnk6IHRhZy4gIENhbiB5b3Ug
+YWRkIGl0DQo+IHBsZWFzZT8NClN1cmUsIHdpbGwgc2VuZCBhbm90aGVyIHB1bGwgcmVxdWVzdC4N
+Cj4NCj4gam9zaA0KPg0KPg0KPiA+IFdIRU5DRSAgICAgICAgICAgICAgICAgICAgICAgfCAgIDQg
+KystLQ0KPiA+IG1ydmwvc2Q4ODk3X3VhcHN0YS5iaW4gICAgICAgfCBCaW4gODE0MDQ4IC0+IDgy
+MTAyNCBieXRlcw0KPiA+IG1ydmwvdXNidXNiODk5N19jb21ib192NC5iaW4gfCBCaW4gNjAyMTAw
+IC0+IDYwNDUzNiBieXRlcw0KPiA+IDMgZmlsZXMgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAy
+IGRlbGV0aW9ucygtKQ0KVGhhbmtzLA0KR2FuYXBhdGhpDQo=
