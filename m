@@ -1,56 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:40811 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751639AbeETIQB (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:39425 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752172AbeEGInu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 May 2018 04:16:01 -0400
-Received: by mail-wr0-f195.google.com with SMTP id v60-v6so13016433wrc.7
-        for <linux-wireless@vger.kernel.org>; Sun, 20 May 2018 01:16:00 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [RFC v2 16/18] mt76: move mt76x2_debugfs in mt76-common module
-Date: Sun, 20 May 2018 10:15:20 +0200
-Message-Id: <20180520081522.10163-17-lorenzo.bianconi@redhat.com> (sfid-20180520_101638_442881_10D223C7)
+        Mon, 7 May 2018 04:43:50 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 03/30] staging: wilc1000: fix line over 80 chars in handle_key()
+Date: Mon, 7 May 2018 14:13:07 +0530
+Message-ID: <1525682614-3824-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104354_757902_CA230ECB)
+In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move mt76x2_debugfs code in mt76-common module since it is shared
-between mt76x2 and mt76x2u
+Fix checkpatch reported issue of line over 80 char in handle_key().
+Introduced new functions by spliting existing function to address the
+checkpatch issue.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/mediatek/mt76/Makefile         | 5 +++--
- drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c | 1 +
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 59 +++++++++++++++++++------------
+ 1 file changed, 37 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
-index 5a9f34b14ee4..e1bc229e4aad 100644
---- a/drivers/net/wireless/mediatek/mt76/Makefile
-+++ b/drivers/net/wireless/mediatek/mt76/Makefile
-@@ -9,11 +9,12 @@ CFLAGS_trace.o := -I$(src)
- 
- mt76x2-common-y := \
- 	mt76x2_eeprom.o mt76x2_tx_common.o mt76x2_mac_common.o \
--	mt76x2_init_common.o mt76x2_common.o mt76x2_phy_common.o
-+	mt76x2_init_common.o mt76x2_common.o mt76x2_phy_common.o \
-+	mt76x2_debugfs.o
- 
- mt76x2e-y := \
- 	mt76x2_pci.o mt76x2_dma.o \
--	mt76x2_main.o mt76x2_init.o mt76x2_debugfs.o mt76x2_tx.o \
-+	mt76x2_main.o mt76x2_init.o mt76x2_tx.o \
- 	mt76x2_core.o mt76x2_mac.o mt76x2_mcu.o mt76x2_phy.o \
- 	mt76x2_dfs.o mt76x2_trace.o
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c b/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
-index 955ea3e692dd..9613fe5f0d12 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
-@@ -131,3 +131,4 @@ void mt76x2_init_debugfs(struct mt76x2_dev *dev)
- 	debugfs_create_devm_seqfile(dev->mt76.dev, "txpower", dir,
- 				    read_txpower);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 4ba868c..29f9907 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1498,12 +1498,45 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
+ 	return result;
  }
-+EXPORT_SYMBOL_GPL(mt76x2_init_debugfs);
+ 
++static int wilc_pmksa_key_copy(struct wilc_vif *vif, struct key_attr *hif_key)
++{
++	int i;
++	int ret;
++	struct wid wid;
++	u8 *key_buf;
++
++	key_buf = kmalloc((hif_key->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1,
++			  GFP_KERNEL);
++	if (!key_buf)
++		return -ENOMEM;
++
++	key_buf[0] = hif_key->attr.pmkid.numpmkid;
++
++	for (i = 0; i < hif_key->attr.pmkid.numpmkid; i++) {
++		memcpy(key_buf + ((PMKSA_KEY_LEN * i) + 1),
++		       hif_key->attr.pmkid.pmkidlist[i].bssid, ETH_ALEN);
++		memcpy(key_buf + ((PMKSA_KEY_LEN * i) + ETH_ALEN + 1),
++		       hif_key->attr.pmkid.pmkidlist[i].pmkid, PMKID_LEN);
++	}
++
++	wid.id = (u16)WID_PMKID_INFO;
++	wid.type = WID_STR;
++	wid.val = (s8 *)key_buf;
++	wid.size = (hif_key->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1;
++
++	ret = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
++				   wilc_get_vif_idx(vif));
++
++	kfree(key_buf);
++
++	return ret;
++}
++
+ static int handle_key(struct wilc_vif *vif, struct key_attr *hif_key)
+ {
+ 	int result = 0;
+ 	struct wid wid;
+ 	struct wid wid_list[5];
+-	u8 i;
+ 	u8 *key_buf;
+ 	s8 s8idxarray[1];
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+@@ -1547,7 +1580,8 @@ static int handle_key(struct wilc_vif *vif, struct key_attr *hif_key)
+ 						      wilc_get_vif_idx(vif));
+ 			kfree(key_buf);
+ 		} else if (hif_key->action & ADDKEY) {
+-			key_buf = kmalloc(hif_key->attr.wep.key_len + 2, GFP_KERNEL);
++			key_buf = kmalloc(hif_key->attr.wep.key_len + 2,
++					  GFP_KERNEL);
+ 			if (!key_buf) {
+ 				result = -ENOMEM;
+ 				goto out_wep;
+@@ -1715,26 +1749,7 @@ static int handle_key(struct wilc_vif *vif, struct key_attr *hif_key)
+ 		break;
+ 
+ 	case PMKSA:
+-		key_buf = kmalloc((hif_key->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1, GFP_KERNEL);
+-		if (!key_buf)
+-			return -ENOMEM;
+-
+-		key_buf[0] = hif_key->attr.pmkid.numpmkid;
+-
+-		for (i = 0; i < hif_key->attr.pmkid.numpmkid; i++) {
+-			memcpy(key_buf + ((PMKSA_KEY_LEN * i) + 1), hif_key->attr.pmkid.pmkidlist[i].bssid, ETH_ALEN);
+-			memcpy(key_buf + ((PMKSA_KEY_LEN * i) + ETH_ALEN + 1), hif_key->attr.pmkid.pmkidlist[i].pmkid, PMKID_LEN);
+-		}
+-
+-		wid.id = (u16)WID_PMKID_INFO;
+-		wid.type = WID_STR;
+-		wid.val = (s8 *)key_buf;
+-		wid.size = (hif_key->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1;
+-
+-		result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+-					      wilc_get_vif_idx(vif));
+-
+-		kfree(key_buf);
++		result = wilc_pmksa_key_copy(vif, hif_key);
+ 		break;
+ 	}
+ 
 -- 
-2.16.3
+2.7.4
