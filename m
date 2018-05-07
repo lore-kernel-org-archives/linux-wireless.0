@@ -1,39 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40888 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751229AbeEVOG0 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:41742 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751976AbeEGTNI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 10:06:26 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Dreyfuss\, Haim" <haim.dreyfuss@intel.com>
-Cc: Eric Biggers <ebiggers3@gmail.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Coelho\, Luciano" <luciano.coelho@intel.com>
-Subject: Re: [4.17 iwlwifi regression] NULL pointer dereference in reg_query_regdb_wmm()
-References: <20180519183345.GA701@sol.localdomain>
-        <409B2791E285FD41B488E034D9B4719F27E99C58@HASMSX106.ger.corp.intel.com>
-        <87muwtezwy.fsf@kamboji.qca.qualcomm.com>
-        <409B2791E285FD41B488E034D9B4719F27E99E2B@HASMSX106.ger.corp.intel.com>
-Date: Tue, 22 May 2018 17:06:19 +0300
-In-Reply-To: <409B2791E285FD41B488E034D9B4719F27E99E2B@HASMSX106.ger.corp.intel.com>
-        (Haim Dreyfuss's message of "Mon, 21 May 2018 16:56:41 +0000")
-Message-ID: <87a7srg4ys.fsf@kamboji.qca.qualcomm.com> (sfid-20180522_160629_372395_A59D7624)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 7 May 2018 15:13:08 -0400
+Message-ID: <1525720384.22388.2.camel@sipsolutions.net> (sfid-20180507_211311_414349_F50C87C3)
+Subject: Re: [PATCH 1/3] cfg80211: Expose TXQ stats and parameters to
+ userspace
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Date: Mon, 07 May 2018 21:13:04 +0200
+In-Reply-To: <20180219170224.14816-2-toke@toke.dk> (sfid-20180219_180300_682375_800CE1A2)
+References: <20180219170224.14816-1-toke@toke.dk>
+         <20180219170224.14816-2-toke@toke.dk>
+         (sfid-20180219_180300_682375_800CE1A2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Dreyfuss, Haim" <haim.dreyfuss@intel.com> writes:
+On Mon, 2018-02-19 at 18:02 +0100, Toke Høiland-Jørgensen wrote:
+> This adds support for exporting the mac80211 TXQ stats via nl80211 by
+> way of a nested TXQ stats attribute, as well as for configuring the
+> quantum and limits that were previously only changeable through debugfs.
 
-> Yeah, MCC stands for Mobile Country Code.
-> You can find it in the dmesg 
-> "iwl_mvm_get_regdomain Getting regdomain data for ZZ from FW "
-> " iwl_mvm_update_mcc send MCC update to FW with 'ZZ' src = 16"
+So I finally (sorry) decided to apply this, but I get a few issues with
+it (aside from trivial rebase issues). If you're not able to fix them
+now let me know and I can:
 
-Please do not top post:
+1) Lots of places put the sinfo on the stack, but it's now way bigger,
+so we get warnings like
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#do_not_top_post_and_edit_your_quotes
+net/mac80211/ethtool.c: In function ‘ieee80211_get_stats’:
+net/mac80211/ethtool.c:204:1: warning: the frame size of 1752 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+net/mac80211/ethtool.c:74 ieee80211_get_stats() warn: 'sinfo' puts 1672 bytes on stack
 
--- 
-Kalle Valo
+I guess we need to pull those out to dynamic allocations.
+
+net/mac80211/cfg.c:3762:12: warning: context imbalance in 'ieee80211_get_txq_stats' - different lock contexts for basic block
+net/mac80211/tx.c: In function ‘ieee80211_txq_set_params’:
+net/mac80211/tx.c:1478:1: warning: control reaches end of non-void function [-Wreturn-type]
+
+also show up.
+
+johannes
