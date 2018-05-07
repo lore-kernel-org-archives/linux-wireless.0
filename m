@@ -1,61 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:48254 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752479AbeEPMMa (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:55262 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752413AbeEGSlG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 May 2018 08:12:30 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 0/6] brcmfmac: coredump functionality and fixes
-Date: Wed, 16 May 2018 14:11:57 +0200
-Message-Id: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180516_141243_852772_4B2DD662)
+        Mon, 7 May 2018 14:41:06 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH] mwifiex: increase TX threashold to avoid TX timeout during ED MAC test
+Date: Tue, 8 May 2018 00:10:58 +0530
+Message-ID: <1525718458-5299-1-git-send-email-gbhat@marvell.com> (sfid-20180507_204110_252717_7CC872C2)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series is intended for 4.18:
+While carrying energy detection(ED) tests, the chip will stop
+transmission upon detecting an energy in the connected channel.
+As a feedback, driver will stop dequeuing TX packets and due to
+which wmm_tx_pending keep incremeting. Once wmm_tx_pending
+reaches 100, driver calls netif_tx_stop_queue(). If TX ques is
+not restarted within 5(watchdog_timeo) seconds, it will result in
+TX timeout.
 
- * make ALLFFMAC variable static.
- * support user-space initiated coredump.
+The ED test is carried out for one minute and the current
+threshold of 100 is easily overcome by the traffic, cuasing TX
+timeouts. To fix this increase the threshold to 400.
 
-The first patch in this series applies to the master branch of the
-wireless-drivers-next repository. The remaining patches related to coredump
-functionality are dependent upon a commit present since v4.17-rc3:
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/main.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-  commit ed4564babeeee4fb19fe4ec0beabe29754e380f9
-  Author: Arend van Spriel <aspriel@gmail.com>
-  Date:   Sun Apr 8 23:57:07 2018 +0200
-
-     drivers: change struct device_driver::coredump() return type to void
-
-This patch is not in w-d-next yet.
-
-Arend van Spriel (3):
-  brcmfmac: move ALLFFMAC variable in flowring module
-  brcmfmac: add support for sysfs initiated coredump
-  mwifiex: support sysfs initiated device coredump
-
-Franky Lin (3):
-  brcmfmac: validate user provided data for memdump before copying
-  brcmfmac: trigger memory dump upon firmware halt signal
-  brcmfmac: trigger memory dump on SDIO firmware halt message
-
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  |  1 +
- .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h |  2 ++
- .../wireless/broadcom/brcm80211/brcmfmac/common.c  |  2 --
- .../wireless/broadcom/brcm80211/brcmfmac/common.h  |  2 --
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    |  8 ++++++
- .../wireless/broadcom/brcm80211/brcmfmac/debug.c   |  3 ++-
- .../broadcom/brcm80211/brcmfmac/flowring.c         |  2 ++
- .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |  6 +++++
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  4 ++-
- drivers/net/wireless/marvell/mwifiex/cmdevt.c      |  1 +
- drivers/net/wireless/marvell/mwifiex/debugfs.c     | 31 +---------------------
- drivers/net/wireless/marvell/mwifiex/pcie.c        | 18 +++++++++++--
- drivers/net/wireless/marvell/mwifiex/sdio.c        | 12 +++++++++
- drivers/net/wireless/marvell/mwifiex/usb.c         | 13 +++++++++
- 14 files changed, 67 insertions(+), 38 deletions(-)
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index b2a94b8..c5478c8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -84,8 +84,8 @@ enum {
+ #define MWIFIEX_TIMER_10S			10000
+ #define MWIFIEX_TIMER_1S			1000
+ 
+-#define MAX_TX_PENDING      100
+-#define LOW_TX_PENDING      80
++#define MAX_TX_PENDING      400
++#define LOW_TX_PENDING      380
+ 
+ #define HIGH_RX_PENDING     50
+ #define LOW_RX_PENDING      20
 -- 
 1.9.1
