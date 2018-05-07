@@ -1,82 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:38778 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751930AbeEQXQl (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:41089 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752115AbeEGInk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 May 2018 19:16:41 -0400
-Received: by mail-lf0-f67.google.com with SMTP id z142-v6so11178021lff.5
-        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2018 16:16:41 -0700 (PDT)
-From: Niklas Cassel <niklas.cassel@linaro.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: Niklas Cassel <niklas.cassel@linaro.org>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ath10k: transmit queued frames after waking queues
-Date: Fri, 18 May 2018 01:15:12 +0200
-Message-Id: <20180517231512.13085-1-niklas.cassel@linaro.org> (sfid-20180518_011700_365195_5191E860)
+        Mon, 7 May 2018 04:43:40 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 00/30] staging: wilc1000: checkpatch fixes and code cleanup 
+Date: Mon, 7 May 2018 14:13:04 +0530
+Message-ID: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104346_366139_C54EE603)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following problem was observed when running iperf:
+This patch series contains modification to remove checkpatch related issues,
+mainly related to 'line over 80 chars'.
 
-[  3]  0.0- 1.0 sec  2.00 MBytes  16.8 Mbits/sec
-[  3]  1.0- 2.0 sec  3.12 MBytes  26.2 Mbits/sec
-[  3]  2.0- 3.0 sec  3.25 MBytes  27.3 Mbits/sec
-[  3]  3.0- 4.0 sec   655 KBytes  5.36 Mbits/sec
-[  3]  4.0- 5.0 sec  0.00 Bytes  0.00 bits/sec
-[  3]  5.0- 6.0 sec  0.00 Bytes  0.00 bits/sec
-[  3]  6.0- 7.0 sec  0.00 Bytes  0.00 bits/sec
-[  3]  7.0- 8.0 sec  0.00 Bytes  0.00 bits/sec
-[  3]  8.0- 9.0 sec  0.00 Bytes  0.00 bits/sec
-[  3]  9.0-10.0 sec  0.00 Bytes  0.00 bits/sec
-[  3]  0.0-10.3 sec  9.01 MBytes  7.32 Mbits/sec
+We are left with around '5' checkpatch warnings in WILC1000.
 
-There are frames in the ieee80211_txq and there are frames that have
-been removed from from this queue, but haven't yet been sent on the wire
-(num_pending_tx).
+Also code cleanup related change to follow as per linux coding style are
+included in this patch series.
 
-When num_pending_tx reaches max_num_pending_tx, we will stop the queues
-by calling ieee80211_stop_queues().
+Ajay Singh (30):
+  staging: wilc1000: added complete() call for error scenario in
+    handle_key()
+  staging: wilc1000: remove 'ret' variable in handle_key()
+  staging: wilc1000: fix line over 80 chars in handle_key()
+  staging: wilc1000: fix line over 80 characters issue in
+    handle_connect()
+  staging: wilc1000: fix line over 80 chars in
+    host_int_parse_assoc_resp_info()
+  staging: wilc1000: fix line over 80 chars issue in
+    host_int_handle_disconnect()
+  staging: wilc1000: fix line over 80 characters in
+    host_int_parse_join_bss_param()
+  staging: wilc1000: fix line over 80 chars in
+    host_int_parse_assoc_resp_info()
+  staging: wilc1000: rename kmalloc with kmemdup() in
+    handle_connect_timeout()
+  staging: wilc1000: fix line over 80 chars in linux_mon
+  staging: wilc1000: use sizeof(*wdev) to allocate memory in
+    wilc_wfi_cfg_alloc()
+  staging: wilc1000: use kmalloc(sizeof(*mgmt_tx)...) in mgmt_tx()
+  staging: wilc1000: rename clear_duringIP() to avoid camelCase issue
+  staging: wilc1000: fix line over 80 chars in add_network_to_shadow()
+  staging: wilc1000: use kmemdup instead of kmalloc in
+    add_network_to_shadow()
+  staging: wilc1000: fix line over 80 charas in
+    wilc_wfi_remain_on_channel_expired()
+  staging: wilc1000: fix line over 80 chars in
+    wilc_wfi_cfg_tx_vendor_spec()
+  staging: wilc1000: fix line over 80 chars in get_station()
+  staging: wilc1000: fix line over 80 chars in wilc_create_wiphy()
+    declaration
+  staging: wilc1000: fix line over 80 characters in add_key()
+  staging: wilc1000: fix line over 80 chars in scan()
+  staging: wilc1000: fix line over 80 chars issue in connect()
+  staging: wilc1000: rename u8security to avoid datatype in variable
+    name
+  staging: wilc1000: refactor del_station() to avoid parenthesis
+    misalignment
+  staging: wilc1000: fix line over 80 chars in wilc_sdio struct
+  staging: wilc1000: added #define for setting radiotap header
+  staging: wilc1000: remove 'flag' argument from wilc_mac_indicate()
+  staging: wilc1000: added comments for mutex and spinlock_t
+  staging: wilc1000: remove unused 'lock' varible in 'wilc_priv'
+    structure
+  staging: wilc1000: rename s8idxarray to avoid datatype in variable
+    name
 
-As frames that have previously been sent for transmission
-(num_pending_tx) are completed, we will decrease num_pending_tx and wake
-the queues by calling ieee80211_wake_queue(). ieee80211_wake_queue()
-does not call wake_tx_queue, so we might still have frames in the
-queue at this point.
+ drivers/staging/wilc1000/host_interface.c         | 417 ++++++++++++----------
+ drivers/staging/wilc1000/host_interface.h         |   2 +-
+ drivers/staging/wilc1000/linux_mon.c              |  25 +-
+ drivers/staging/wilc1000/linux_wlan.c             |  17 +-
+ drivers/staging/wilc1000/wilc_sdio.c              |   3 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 187 +++++-----
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.h |   3 +-
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |   8 +-
+ drivers/staging/wilc1000/wilc_wlan.c              |   7 +-
+ drivers/staging/wilc1000/wilc_wlan_if.h           |   3 -
+ 10 files changed, 350 insertions(+), 322 deletions(-)
 
-While the queues were stopped, the socket buffer might have filled up,
-and in order for user space to write more, we need to free the frames
-in the queue, since they are accounted to the socket. In order to free
-them, we first need to transmit them.
-
-In order to avoid trying to flush the queue every time we free a frame,
-only do this when there are 3 or less frames pending, and while we
-actually have frames in the queue. This logic was copied from
-mt76_txq_schedule (mt76), one of few other drivers that are actually
-using wake_tx_queue.
-
-Suggested-by: Toke Høiland-Jørgensen <toke@toke.dk>
-Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
----
- drivers/net/wireless/ath/ath10k/txrx.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index cda164f6e9f6..1d3b2d2c3fee 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -95,6 +95,9 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 		wake_up(&htt->empty_tx_wq);
- 	spin_unlock_bh(&htt->tx_lock);
- 
-+	if (htt->num_pending_tx <= 3 && !list_empty(&ar->txqs))
-+		ath10k_mac_tx_push_pending(ar);
-+
- 	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
- 
- 	ath10k_report_offchan_tx(htt->ar, msdu);
 -- 
-2.17.0
+2.7.4
