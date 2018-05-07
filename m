@@ -1,48 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59098 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751623AbeE3TUp (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:43781 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752036AbeEGJjw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 15:20:45 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 7 May 2018 05:39:52 -0400
+Received: by mail-pg0-f65.google.com with SMTP id k11-v6so18703826pgo.10
+        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2018 02:39:51 -0700 (PDT)
+Date: Mon, 7 May 2018 17:39:48 +0800
+From: Kenneth Lu <kuohsianglu@gmail.com>
+To: kvalo@qca.qualcomm.com
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v2] ath10k: remove variables which set but not used
+Message-ID: <20180507093948.GA7905@blackstone> (sfid-20180507_114002_358196_BD23FB75)
 MIME-Version: 1.0
-Subject: Re: [1/9] qtnfmac: remove unused function declarations
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180529120005.21498-2-sergey.matyukevich.os@quantenna.com>
-References: <20180529120005.21498-2-sergey.matyukevich.os@quantenna.com>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Dmitry Lebed <dlebed@quantenna.com>
-Message-Id: <20180530192044.95E756074F@smtp.codeaurora.org> (sfid-20180530_212048_327953_929A7D7F)
-Date: Wed, 30 May 2018 19:20:44 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
+Variable buf_len and num_vdev_stats are bging assigned but never read.
+These are redundant and can be remove.
 
-> From: Andrey Shevchenko <ashevchenko@quantenna.com>
-> 
-> Functions qtnf_cmd_resp_parse and qtnf_cmd_resp_check have
-> been removed. Remove their declarations as well.
-> 
-> Signed-off-by: Andrey Shevchenko <ashevchenko@quantenna.com>
+Signed-off-by: Kenneth Lu <kuohsianglu@gmail.com>
+---
+Changes in v2:
+Fixed compile failed in function 'ath10k_wmi_10_4_op_pull_fw_stats'
+error: 'num_vdev_stats' undeclared
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-9 patches applied to wireless-drivers-next.git, thanks.
-
-6d89265d7841 qtnfmac: remove unused function declarations
-d62b622ca409 qtnfmac: simplify notation
-36e8c538b374 qtnfmac: decode error codes from firmware replies
-9a3beeb5b73a qtnfmac: cleanup wdev structure between its uses
-9e33e7fb4772 qtnfmac: improve control path timeout handling
-b60769e2dff0 qtnfmac: fix firmware command error path
-f5d2ff43b9ed qtnfmac: fix bg_scan_period parameter processing
-40d68dbb986d qtnfmac: cancel scan on disconnect
-480daa9cb62c qtnfmac: fix invalid STA state on EAPOL failure
-
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index bb8e9e2..46fb96e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2318,7 +2318,6 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	u32 phy_mode;
+ 	u32 snr;
+ 	u32 rate;
+-	u32 buf_len;
+ 	u16 fc;
+ 	int ret;
+ 
+@@ -2330,7 +2329,6 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	}
+ 
+ 	channel = __le32_to_cpu(arg.channel);
+-	buf_len = __le32_to_cpu(arg.buf_len);
+ 	rx_status = __le32_to_cpu(arg.status);
+ 	snr = __le32_to_cpu(arg.snr);
+ 	phy_mode = __le32_to_cpu(arg.phy_mode);
+@@ -2740,14 +2738,13 @@ static int ath10k_wmi_main_op_pull_fw_stats(struct ath10k *ar,
+ 					    struct ath10k_fw_stats *stats)
+ {
+ 	const struct wmi_stats_event *ev = (void *)skb->data;
+-	u32 num_pdev_stats, num_vdev_stats, num_peer_stats;
++	u32 num_pdev_stats, num_peer_stats;
+ 	int i;
+ 
+ 	if (!skb_pull(skb, sizeof(*ev)))
+ 		return -EPROTO;
+ 
+ 	num_pdev_stats = __le32_to_cpu(ev->num_pdev_stats);
+-	num_vdev_stats = __le32_to_cpu(ev->num_vdev_stats);
+ 	num_peer_stats = __le32_to_cpu(ev->num_peer_stats);
+ 
+ 	for (i = 0; i < num_pdev_stats; i++) {
+@@ -2795,14 +2792,13 @@ static int ath10k_wmi_10x_op_pull_fw_stats(struct ath10k *ar,
+ 					   struct ath10k_fw_stats *stats)
+ {
+ 	const struct wmi_stats_event *ev = (void *)skb->data;
+-	u32 num_pdev_stats, num_vdev_stats, num_peer_stats;
++	u32 num_pdev_stats, num_peer_stats;
+ 	int i;
+ 
+ 	if (!skb_pull(skb, sizeof(*ev)))
+ 		return -EPROTO;
+ 
+ 	num_pdev_stats = __le32_to_cpu(ev->num_pdev_stats);
+-	num_vdev_stats = __le32_to_cpu(ev->num_vdev_stats);
+ 	num_peer_stats = __le32_to_cpu(ev->num_peer_stats);
+ 
+ 	for (i = 0; i < num_pdev_stats; i++) {
+@@ -2856,7 +2852,6 @@ static int ath10k_wmi_10_2_op_pull_fw_stats(struct ath10k *ar,
+ 	const struct wmi_10_2_stats_event *ev = (void *)skb->data;
+ 	u32 num_pdev_stats;
+ 	u32 num_pdev_ext_stats;
+-	u32 num_vdev_stats;
+ 	u32 num_peer_stats;
+ 	int i;
+ 
+@@ -2865,7 +2860,6 @@ static int ath10k_wmi_10_2_op_pull_fw_stats(struct ath10k *ar,
+ 
+ 	num_pdev_stats = __le32_to_cpu(ev->num_pdev_stats);
+ 	num_pdev_ext_stats = __le32_to_cpu(ev->num_pdev_ext_stats);
+-	num_vdev_stats = __le32_to_cpu(ev->num_vdev_stats);
+ 	num_peer_stats = __le32_to_cpu(ev->num_peer_stats);
+ 
+ 	for (i = 0; i < num_pdev_stats; i++) {
+@@ -2935,7 +2929,6 @@ static int ath10k_wmi_10_2_4_op_pull_fw_stats(struct ath10k *ar,
+ 	const struct wmi_10_2_stats_event *ev = (void *)skb->data;
+ 	u32 num_pdev_stats;
+ 	u32 num_pdev_ext_stats;
+-	u32 num_vdev_stats;
+ 	u32 num_peer_stats;
+ 	int i;
+ 
+@@ -2944,7 +2937,6 @@ static int ath10k_wmi_10_2_4_op_pull_fw_stats(struct ath10k *ar,
+ 
+ 	num_pdev_stats = __le32_to_cpu(ev->num_pdev_stats);
+ 	num_pdev_ext_stats = __le32_to_cpu(ev->num_pdev_ext_stats);
+-	num_vdev_stats = __le32_to_cpu(ev->num_vdev_stats);
+ 	num_peer_stats = __le32_to_cpu(ev->num_peer_stats);
+ 
+ 	for (i = 0; i < num_pdev_stats; i++) {
 -- 
-https://patchwork.kernel.org/patch/10435101/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
