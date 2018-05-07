@@ -1,51 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39004 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752394AbeEKKSA (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:42364 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752217AbeEGTot (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 06:18:00 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ssb: Fix regression caused by disabling PCI cores on non-MIPS
- architecture
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180509164220.22653-1-Larry.Finger@lwfinger.net>
-References: <20180509164220.22653-1-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        =?UTF-8?q?Michael=20B=C3=BCsch?= <m@bues.ch>
-Message-Id: <20180511101800.71CD56081B@smtp.codeaurora.org> (sfid-20180511_121803_876545_1962AC00)
-Date: Fri, 11 May 2018 10:18:00 +0000 (UTC)
+        Mon, 7 May 2018 15:44:49 -0400
+Message-ID: <1525722286.22388.5.camel@sipsolutions.net> (sfid-20180507_214452_939373_A6E9E8E9)
+Subject: Re: [PATCH] mesh: don't process mesh channel switch unless csa ie
+ provided
+From: Johannes Berg <johannes@sipsolutions.net>
+To: peter.oh@bowerswilkins.com, linux-wireless@vger.kernel.org
+Date: Mon, 07 May 2018 21:44:46 +0200
+In-Reply-To: <1524857196-29399-1-git-send-email-peter.oh@bowerswilkins.com> (sfid-20180427_212657_786960_82D0DC24)
+References: <1524857196-29399-1-git-send-email-peter.oh@bowerswilkins.com>
+         (sfid-20180427_212657_786960_82D0DC24)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-
-> Some MPIS-based SoCs use chips driven by b43 for wireless capability.
-> When ssb is configured as a module, build errors happen on these
-> platforms as described in the commit 882164a4a928 ("ssb: Prevent build
-> of PCI host features in module"). Unfortunately that change leads to
-> the removal of code needed for correct operation on platforms that use
-> PCI cores on the chip bus. The fix allows ssb to be build as a module
-> for all architectures other than MIPS. This approach is ad-hoc, but it
-> is the same as done in commit a9e6d44ddecc ("ssb: Do not disable PCI
-> host on non-Mips").
+On Fri, 2018-04-27 at 12:26 -0700, peter.oh@bowerswilkins.com wrote:
+> From: Peter Oh <peter.oh@bowerswilkins.com>
 > 
-> This problem was reported and discussed in
-> https://bugzilla.redhat.com/show_bug.cgi?id=1572349.
-> 
-> Fixes: commit 882164a4a928 ("ssb: Prevent build of PCI host features in module")
-> Tested-by: Matt Redfearn <matt.redfearn@mips.com>
-> Tested-by: Bruno Wolff III <bruno@wolff.to>
-> Cc: Michael Büsch <m@bues.ch>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> There is no meaning to call ieee80211_mesh_process_chnswitch
+> without CSA IE provided, since the function will always return error.
 
-Dropped per Larry's request (on the other thread).
+I'm not convinced, an extended channel switch element might be present
+instead?
 
-Patch set to Rejected.
-
--- 
-https://patchwork.kernel.org/patch/10390053/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
