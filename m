@@ -1,76 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:34893 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752555AbeEOIJA (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:12228 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752222AbeEGIoY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 May 2018 04:09:00 -0400
-From: Pkshih <pkshih@realtek.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "briselec@gmail.com" <briselec@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        "chaitanya.mgit@gmail.com" <chaitanya.mgit@gmail.com>
-Subject: Re: [PATCH v3 00/19] rtlwifi: halmac: Add new module halmac
-Date: Tue, 15 May 2018 08:08:43 +0000
-Message-ID: <1526371717.12375.8.camel@realtek.com> (sfid-20180515_100940_684463_A1A2CC16)
-References: <20180425020820.6141-1-pkshih@realtek.com>
-         <87lgdbagb2.fsf@kamboji.qca.qualcomm.com>
-         <5B2DA6FDDF928F4E855344EE0A5C39D13BEBF231@RTITMBSV07.realtek.com.tw>
-         <20180427224156.GA18163@thinktank.home.org>
-         <5B2DA6FDDF928F4E855344EE0A5C39D13BEBFD30@RTITMBSV07.realtek.com.tw>
-         <CABPxzYKfZVA8RTADEG5TCu0SXRSVEGWEn+Ym6AkMuFzHC5iSVg@mail.gmail.com>
-In-Reply-To: <CABPxzYKfZVA8RTADEG5TCu0SXRSVEGWEn+Ym6AkMuFzHC5iSVg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+        Mon, 7 May 2018 04:44:24 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 13/30] staging: wilc1000: rename clear_duringIP() to avoid camelCase issue
+Date: Mon, 7 May 2018 14:13:17 +0530
+Message-ID: <1525682614-3824-14-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104505_263002_5A1828CA)
+In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCAyMDE4LTA0LTMwIGF0IDE0OjAzICswNTMwLCBLcmlzaG5hIENoYWl0YW55YSB3cm90
-ZToNCj4gT24gTW9uLCBBcHIgMzAsIDIwMTggYXQgODoxMCBBTSwgUGtzaGloIDxwa3NoaWhAcmVh
-bHRlay5jb20+IHdyb3RlOg0KPiA+DQo+ID4NCj4gPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0t
-LS0tDQo+ID4gPiBGcm9tOiBCYXJyeSBEYXkgW21haWx0bzpicmlzZWxlY0BnbWFpbC5jb21dDQo+
-ID4gPiBTZW50OiBTYXR1cmRheSwgQXByaWwgMjgsIDIwMTggNjo0MiBBTQ0KPiA+ID4gVG86IFBr
-c2hpaA0KPiA+ID4gQ2M6IEthbGxlIFZhbG87IExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ7IGxp
-bnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KPiA+ID4gU3ViamVjdDogUmU6IFtQQVRDSCB2
-MyAwMC8xOV0gcnRsd2lmaTogaGFsbWFjOiBBZGQgbmV3IG1vZHVsZSBoYWxtYWMNCj4gPiA+DQo+
-ID4gPiBPbiBGcmksIEFwciAyNywgMjAxOCBhdCAwNTo0NDoxNkFNICswMDAwLCBQa3NoaWggd3Jv
-dGU6DQo+ID4gPiA+DQo+ID4gPiA+IFRoZSByZWdpc3RlcnMgcmVzaWRlIGluIGRyaXZlciBjYXVz
-ZXMgZXJyb3IgZnJlcXVlbnRseSwgYmVjYXVzZSBNQUMgcmVnaXN0ZXINCj4gPiA+ID4gaXMgbWFp
-bnRhaW5lZCBieSBSZWFsdGVrJ3MgTUFDIHRlYW0gc28gdGhleSBjcmVhdGUgdGhpcyBtb2R1bGUg
-dG8gYXZvaWQgbWlzdGFrZXMuDQo+ID4gPiA+IEFub3RoZXIgYmVuZWZpdCBpcyB0byBtYWtlIGl0
-IHBvc3NpYmxlIHRvIGJlY29tZSBhIHRoaW4gZHJpdmVyLCBiZWNhdXNlIG1hbnkNCj4gPiA+ID4g
-Y29tbW9uIGZ1bmN0aW9ucyBhcmUgcHJvdmlkZWQsIHNvIGR1cGxpY2F0ZSBjb2RlIHdpbGwgYmUg
-cmVkdWNlZC4NCj4gPiA+DQo+ID4gPiBIb3cgaXMgaXQgcG9zc2libGUgdG8gY3JlYXRlIGEgdGhp
-biBkcml2ZXIgYnkgYWRkaW5nIGxvdHMgbW9yZSBjb2RlIGFuZCBsYXllcnMNCj4gPiA+IG9mIGlu
-ZGlyZWN0aW9uID8/PyBhbmQgd3JpdGluZyBpdCBpbiBhIHdheSB0aGF0IGl0IHdvbid0IGNvbXBp
-bGUgd2l0aG91dCB0aGUNCj4gPiA+IGNvZGUgZm9yIGV2ZXJ5IHR5cGUgb2YgYnVzIGludGVyZmFj
-ZSBldmVuIHRob3VnaCBtb3N0IG1vZHVsZXMgb25seSB1c2Ugb25lID8NCj4gPiA+DQo+ID4gQXMg
-SSBtZW50aW9uZWQgaW4gZmlyc3QgcGFyYWdyYXBoICIoSSB1c2UgJ2RyaXZlcicgaW4gdGhpcyBt
-YWlsIGluZGljYXRlcyBwYXJ0IG9mDQo+ID4gcnRsd2lmaSBleGNsdWRlZCBmcm9tIHRoaXMgbW9k
-dWxlLikiLiBJZiB0aGlzIG1vZHVsZSB3YXMgc2VlbiBhcyBhICdsaWInLCBydGw4ODIyYmUNCj4g
-PiB3b3VsZCBiZSBhICJ0aGluIGRyaXZlciIuIEZvciBidXMgaW50ZXJmYWNlIGNvZGUsIEkgbmVl
-ZCB0byBhZGQgYSB3YXkgdG8gY29tcGlsZQ0KPiA+IHR5cGUgb2YgYnVzIGludGVyZmFjZSBhY2Nv
-cmRpbmcgdG8gc2VsZWN0ZWQgY2hpcC4NCj4gPg0KPiA+ID4gSXQncyBhIGhvcnJpYmxlIHBpbGUg
-b2YgZ2FyYmFnZSBzbGFwcGVkIHRvZ2V0aGVyIGJ5IGFuIGluZXhwZXJpZW5jZWQNCj4gPiA+IHBy
-b2dyYW1tZXIuIEl0cyBhIG1ham9yIGRldGVycmVudCBmb3IgYW55b25lIGxvb2tpbmcgYXQgd29y
-a2luZyBvbiBvbmUgb2YNCj4gPiA+IHRoZSBsYXRlc3QgcmVhbHRlayBkcml2ZXJzLg0KPiA+ID4N
-Cj4gPiBUaGlzIG1vZHVsZSBpcyBkZXNpZ25lZCB0byBzdXBwb3J0IG11bHRpcGxlIE9TIGluY2x1
-ZGluZyBXaW5kb3dzIGFuZCBMaW51eCwgYW5kDQo+ID4gbWFueSBwcm9kdWN0cyBoYXZlIHVzZWQg
-dGhpcyBtb2R1bGUgYW5kIHdvcmtlZCB3ZWxsLiBXZSBob3BlIExpbnV4IHVzZXIgY2FuIGFsc28N
-Cj4gPiB1c2UgUmVhbHRlaydzIFdpRmkgd2l0aG91dCBhZGRpdGlvbmFsIGluc3RhbGxhdGlvbiBp
-ZiBkcml2ZXIgd2FzIGJ1aWx0Lg0KPiA+IEluIG9yZGVyIHRvIHN1Ym1pdCB0aGlzIG1vZHVsZSB0
-byBrZXJuZWwgdXBzdHJlYW0sIHdlIHRha2UgYSBsb3Qgb2YgZWZmb3J0DQo+ID4gdG8gZml0IExp
-bnV4IGNvZGluZyBjb252ZW50aW9ucyAoZS5nLiBjb2Rpbmcgc3R5bGUpLCBhbmQgZXhwbGljaXQN
-Cj4gPiBzdWdnZXN0aW9ucyB3aWxsIGJlIGhlbHBmdWwgZm9yIHVzIHRvIGNvbnRpbnVvdXNseSBp
-bXByb3ZlIHRoaXMgbW9kdWxlLg0KPsKgDQo+IElNSE8sIHRoaXMgaXMgYSBjb21tb24gdXNlIGNh
-c2UgZm9yIG1vc3Qgb3JnYW5pemF0aW9ucy4gSSB1bmRlcnN0YW5kDQo+IHRoYXQgTGludXggY2Fu
-bm90DQo+IGFjY29tbW9kYXRlIG90aGVyIE9TZXMgcmVxdWlyZW1lbnRzIGJ1dCBpcyB0aGVyZSBh
-biBhcHByb3ZlZC9yZWNvbW1lbmRlZCB3YXkNCj4gdG8gdXBzdHJlYW0gYW4gT1MgYWdub3N0aWMg
-ZHJpdmVyPyBBZ25vc3RpYyBkcml2ZXJzIGFyZSBnZW5lcmFsbHkNCj4gYnVsa2llciBjb21wYXJl
-ZCB0bw0KPiBMaW51eC1vbmx5IGRyaXZlcnMgYW5kIGFsc28gY29kZSBvcmdhbml6YXRpb24gaXMg
-YWxzbyBkaWZmZXJlbnQgKHRvDQo+IGhhbmRsZSBvdGhlciBPU2VzKS4NCj7CoA0KDQpIaSBLYWxs
-ZSwNCg0KVGhlIHN0YXRlIG9mIHRoaXMgcGF0Y2hzZXQgd2FzIGNoYW5nZWQgdG8gUkZDIGluIHBh
-dGNod29yaywgYW5kIEkgbG9vayBhdCBSRkMncw0KbWVhbmluZyBpbiB3aXJlbGVzcyB3aWtpLiBE
-byB5b3UgZXhwZWN0IHRoYXQgSSB3aWxsIHNlbmQgdjQ/IElmIHNvLCB3aGF0IGRvIEkNCm5lZWQg
-dG8gZml4IGluIHY0PyBPciwgeW91IG5lZWQgbW9yZSBkZXNjcmlwdGlvbiBhYm91dCB0aGlzIG1v
-ZHVsZSwgcGxlYXNlIGxldA0KbWUga25vdy7CoA0KDQpUaGFua3MNClBLDQoNCg==
+Rename clear_duringIP() function to avoid camelCase issue reported by
+checkpatch.pl script.
+
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index d0fb31a..f1ebaea 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -269,7 +269,7 @@ static void remove_network_from_shadow(struct timer_list *unused)
+ 		mod_timer(&aging_timer, jiffies + msecs_to_jiffies(AGING_TIME));
+ }
+ 
+-static void clear_duringIP(struct timer_list *unused)
++static void clear_duringip(struct timer_list *unused)
+ {
+ 	wilc_optaining_ip = false;
+ }
+@@ -2272,7 +2272,7 @@ int wilc_init_host_int(struct net_device *net)
+ 	priv = wdev_priv(net->ieee80211_ptr);
+ 	if (op_ifcs == 0) {
+ 		timer_setup(&aging_timer, remove_network_from_shadow, 0);
+-		timer_setup(&wilc_during_ip_timer, clear_duringIP, 0);
++		timer_setup(&wilc_during_ip_timer, clear_duringip, 0);
+ 	}
+ 	op_ifcs++;
+ 
+-- 
+2.7.4
