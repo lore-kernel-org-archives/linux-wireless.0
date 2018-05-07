@@ -1,92 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55400 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751402AbeENNii (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 May 2018 09:38:38 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Govind Singh <govinds@codeaurora.org>
-Cc: ath10k@lists.infradead.org, bjorn.andersson@linaro.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3 00/12] *** Add support for wifi QMI client driver ***
-References: <1522042636-25516-1-git-send-email-govinds@codeaurora.org>
-Date: Mon, 14 May 2018 16:38:33 +0300
-In-Reply-To: <1522042636-25516-1-git-send-email-govinds@codeaurora.org>
-        (Govind Singh's message of "Mon, 26 Mar 2018 11:07:16 +0530")
-Message-ID: <87po1ys6g6.fsf@kamboji.qca.qualcomm.com> (sfid-20180514_153842_282709_5FE6207C)
+Received: from bues.ch ([80.190.117.144]:36160 "EHLO bues.ch"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752081AbeEGTcc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 May 2018 15:32:32 -0400
+Date: Mon, 7 May 2018 21:30:43 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Matt Redfearn <matt.redfearn@mips.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: Regression caused by commit 882164a4a928
+Message-ID: <20180507213043.727cee15@wiggum> (sfid-20180507_213246_623409_F5269FE3)
+In-Reply-To: <874ljj2spt.fsf@kamboji.qca.qualcomm.com>
+References: <7bbc067a-c412-3d2e-174a-abc31b46e246@lwfinger.net>
+ <20180507204317.52992b6c@wiggum>
+ <874ljj2spt.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ boundary="Sig_/O_DufF+FEAEFW5+p0hXEcFA"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Govind Singh <govinds@codeaurora.org> writes:
+--Sig_/O_DufF+FEAEFW5+p0hXEcFA
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-> Add QMI client driver for Q6 integrated WLAN connectivity subsystem.
-> This module is responsible for communicating WLAN control messages to FW
-> over QMI interface.
->
-> =E2=80=9CQUALCOMM Messaging Interface=E2=80=9D(QMI) provides the control =
-interface between
-> components running b/w remote processors with underlying transport layer
-> based on integrated chipset(shared memory) or discrete chipset(PCI/USB/SD=
-IO/UART).
->
-> QMI client driver implementation is based on qmi frmework https://lwn.net=
-/Articles/729924/.
->
-> Below is the sequence of qmi handshake.
->
->        QMI CLIENT(APPS)                                         QMI SERVE=
-R(FW in Q6)
->
->                          <------wlan service discoverd----
->
->                        -----connect to wlam qmi service----->
->
->                        ------------wlan info request----->
->
->                        <------------wlan info resp------------
->
->                        ------------msa info req-------->
->
->                      <------------msa info resp------------
->
->                      ------------msa ready req-------->
->
->                      <------------msa ready resp------------
->
->                      <------------msa ready indication-------
->
->                      ------------capability req------->
->
->                     <------------capability resp------------
->
->                     ------------qmi bdf req--------->
->
->                      <------------qmi bdf resp------------
->
->                       ------------qmi cal trigger------->
->
->                   <------------ QMI FW ready indication-------
->
-> Govind Singh (12):
->   ath10k: Add qmi service for wlan qmi client
->   dt: bindings: add bindings for ath10k qmi client
->   ath10k: Add WCN3990 QMI client driver
->   ath10k: add support to start and stop qmi service
->   ath10k: Add support of QMI indication message
->   firmware: qcom: scm: Add WLAN VMID for Qualcomm SCM interface
->   ath10k: Add MSA handshake QMI mgs support
->   ath10k: Add QMI CAP request support
->   ath10k: Add QMI HOST CAP request support
->   ath10k: add bdf/cal indication support
->   ath10k: Add wlan mode on/off qmi message
->   ath10k: Add qmi wlan enable/disable support for WCN3990
+On Mon, 07 May 2018 22:03:58 +0300
+Kalle Valo <kvalo@codeaurora.org> wrote:
 
-BTW, I noticed that you had v3 only in the cover letter but the version
-number should be in every patch part of the set:
+> Michael B=C3=BCsch <m@bues.ch> writes:
+>=20
+> > On Mon, 7 May 2018 10:44:34 -0500
+> > Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> > =20
+> >> Although commit 882164a4a928 ("ssb: Prevent build of PCI host features=
+ in=20
+> >> module") appeared to be harmless, it leads to complete failure of driv=
+ers b43.  =20
+> > =20
+> >>   config SSB_DRIVER_PCICORE_POSSIBLE
+> >>          bool
+> >> -       depends on SSB_PCIHOST && SSB =3D y
+> >> +       depends on SSB_PCIHOST && (SSB =3D y || !MIPS)
+> >>          default y
+> >>=20
+> >>   config SSB_DRIVER_PCICORE =20
+> >
+> >
+> > https://patchwork.kernel.org/patch/10161131/
+> >
+> > Could we _please_ switch to not applying patches to ssb or b43, if
+> > nobody acked (or better reviewed) a patch?
+> >
+> > We had multiple changes to ssb and b43 in the recent past that did not
+> > have a review at all and broke something. I don't think such software
+> > quality is acceptable at all.
+> > So please revert 882164a4a928. =20
+>=20
+> Yes, someone please send a revert so that this can be fixed quickly for
+> v4.17.
 
-https://patchwork.kernel.org/patch/10307161/
+Uhm, can you just type git revert 882164a4a928? :)
+Or do I have to send you a pull request?
+
+> > I'm sorry that this patch slipped through the cracks of my inbox.
+> > But the reaction to that shall not be to just apply the patch. It
+> > shall be to resubmit it for review. =20
+>=20
+> The thing is that in general I do not have time to ping people for every
+> patch, I get enough of emails as is. If there are no review comments I
+> have to assume the patch is ok to apply.
+
+Yes, I understand that pinging people can be annoying and time
+consuming. But we have tools like patchwork. Why isn't pinging
+(semi)automated? Patchwork should really track the review status of a
+patch.
+I think the concept of no-comments =3D everything-ok is
+fundamentally broken. But it has always been that way for wireless and
+lots of other subsystems.
+
+> But as ssb has had two major regressions recently I'm going to
+> significantly raise the bar for ssb patches, and will refuse to apply
+> random patches if they have not been tested with b43/b44.
+
+Thanks.
 
 --=20
-Kalle Valo
+Michael
+
+--Sig_/O_DufF+FEAEFW5+p0hXEcFA
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlrwqWMACgkQ9TK+HZCN
+iw4jcBAAkclVNRB6XMZJ2Z+f5+6vNu45KEZ4CvpmY5WD78f4dK2dT0BNwbRv9v63
+ZO1g6sBuYMBSFgySUW7BuSNHqTTb1Y9Ye+iNuG5Y1WPVHbmdBFPn+D/Tr3lDloRW
+/f/auW6OB1dYN7A4k3S0+vTeaRwhPbcCRMp0pP3Vk0EXBh0rxgKYkHM0zL/sYhLv
+6y4geiQewQ+WClgJXzxm5P+2P41S2uAdubFkAmoLveMvZX1UrHNJxjXMu56T/0Rf
+H4XGHWeHqTlQR74BIhHXl2ZVO7t1wqfUKPn8AsojdW148aGxYO1qbDEbNohXYQIu
+pE8FTUyMYWL4IcyPqvZnzs19J3rmoNKuDcw9k76yEO30jNPijeYDOXzSAmTS4CVA
+a+dKo81OCBxQO43x73if08hlCafH83ZEfREZQtyj7V2woOASc4/E2uzfprOtjclv
+kIZvuNPETu36/s/b1QnorXUvQLPT5UHt8rmAJo4unGFQpVgIR/gL3Ihztvwp0w6z
+yUGySmUIm3w8rILUhVzEAVBmnLubDjXDvTeO2JMPMpkRR65dIBzo72WUGpFnoHg+
+5qf8GptyAY9UoS6qUB23oReB48uTPX1Ho8eDmSxtTs/ojxBHAl1sB06f8q3b3vjg
+8IajhdSjphWcU4gVVmPQPNosTiHvVgTX9De2IqDhp4xqBA81kmo=
+=nC4V
+-----END PGP SIGNATURE-----
+
+--Sig_/O_DufF+FEAEFW5+p0hXEcFA--
