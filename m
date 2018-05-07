@@ -1,67 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:54065 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751498AbeENShN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 May 2018 14:37:13 -0400
-Received: by mail-wm0-f67.google.com with SMTP id a67-v6so15168780wmf.3
-        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2018 11:37:13 -0700 (PDT)
-Date: Mon, 14 May 2018 19:37:10 +0100
-From: Chris Vine <vine35792468@gmail.com>
-To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: Regression: bcm4312 lp-phy device not working in 4.17-rc5
- kernel
-Message-Id: <20180514193710.39101e4d30d2282fb1a73f10@gmail.com> (sfid-20180514_203717_434818_DEE31B28)
-In-Reply-To: <20180514200205.47814f60@wiggum>
-References: <20180514184953.001c06412efcf2b16fdc59ac@gmail.com>
-        <20180514195539.74686870@wiggum>
-        <20180514200205.47814f60@wiggum>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from osg.samsung.com ([64.30.133.232]:61717 "EHLO osg.samsung.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752167AbeEGJgD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 May 2018 05:36:03 -0400
+From: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+To: Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
+        Mauro Carvalho Chehab <mchehab@infradead.org>,
+        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        linux-wireless@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-fbdev@vger.kernel.org, linux-can@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-iio@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-crypto@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-pm@vger.kernel.org
+Subject: [PATCH 00/18] Fix some build warnings/errors with Sphinx
+Date: Mon,  7 May 2018 06:35:36 -0300
+Message-Id: <cover.1525684985.git.mchehab+samsung@kernel.org> (sfid-20180507_113853_452809_8074FE6B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 14 May 2018 20:02:05 +0200
-Michael B=FCsch <m@bues.ch> wrote:
-> On Mon, 14 May 2018 19:55:39 +0200
-> Michael B=FCsch <m@bues.ch> wrote:
->=20
-> > On Mon, 14 May 2018 18:49:53 +0100
-> > Chris Vine <vine35792468@gmail.com> wrote:
-> >=20
-> > > I have an old netbook with a Broadcom bcm4312 802.11b/g lp-phy
-> > > [14e4:4315] (rev 01) wifi device.  This works up to and including the
-> > > 4.16 kernel, but not with 4.17-rc5.
-> > >=20
-> > > The b43, mac80211, cfg80211, ssb and mmc_core modules are loaded OK, =
-as
-> > > is the firmware, and the wlan0 interface will come up, but any attempt
-> > > to use the interface fails and it cannot (for example) scan.
-> > >=20
-> > > No useful error messages are given.  The interface (wlan0) is just
-> > > reported as not being ready. =20
-> >=20
-> > Hi,
-> >=20
-> > thanks for your report.
-> >=20
-> > Can you please provide all kernel log messages anyway?
-> > And what does "not ready" mean exactly?
-> >=20
-> > It would be extremely helpful if you'd do a git bisect to find the
-> > commit that broke it.
-> >=20
->=20
-> Ok, I just noticed that mainline still contains the ssb breakage.
->=20
-> So you are most likely hitting this:
-> https://patchwork.kernel.org/patch/10393729/
+I decided to give a try with Sphinx last stable version
+(1.17.4), and noticed several issues. The worse one was
+with the networking book: a non-standard footnote there
+with [*] instead of a number causes it to break PDF building.
 
-Yes thanks, applying that patch resolves the issue fine.  There was a
-similar problem with disabled PCI support for b43 which found its way
-into the 4.15.0/4.15.1 kernels:
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git/=
-commit/?id=3Da9e6d44ddeccd3522670e641f1ed9b068e746ff7
-At least this bug should avoid getting into the mainline release.
+So, I took some spare time to address some warnings all over
+the tree, and moved a few text documents to a book. I with
+I had more time to move the other ones and to solve other
+warnings.
 
-Chris
+Mauro Carvalho Chehab (18):
+  docs: can.rst: fix a footnote reference
+  docs: fix location of request_firmware & friends
+  docs: */index.rst: Add newer documents to their respective index.rst
+  docs: admin-guide: add bcache documentation
+  docs: core-api: add cachetlb documentation
+  docs: core-api: add cgroup-v2 documentation
+  docs: core-api: add circular-buffers documentation
+  docs: driver-api: add clk documentation
+  net: mac80211.h: fix a bad comment line
+  rcu: rcupdate.h: get rid of Sphinx warnings at rcu_pointer_handoff()
+  docs: crypto_engine.rst: Fix two parse warnings
+  time: timer.c: adjust a kernel-doc comment
+  wait: wait.h: Get rid of a kernel-doc/Sphinx warnings
+  fbdev: modedb.c: fix a kernel-doc markup
+  iio: iio.h: use nested struct support on kernel-doc markup
+  mtd: rawnand.h: use nested union kernel-doc markups
+  docs: uio-howto.rst: use a code block to solve a warning
+  w1: w1_io.c: fix a kernel-doc warning
+
+ Documentation/00-INDEX                        | 10 -------
+ .../{bcache.txt => admin-guide/bcache.rst}    |  0
+ .../cgroup-v2.rst}                            |  0
+ Documentation/admin-guide/index.rst           |  2 ++
+ .../admin-guide/kernel-parameters.txt         |  2 +-
+ .../{cachetlb.txt => core-api/cachetlb.rst}   |  0
+ .../circular-buffers.rst}                     |  0
+ Documentation/core-api/index.rst              |  2 ++
+ Documentation/crypto/crypto_engine.rst        |  8 +++---
+ Documentation/crypto/index.rst                |  1 +
+ Documentation/dell_rbu.txt                    |  4 +--
+ Documentation/{clk.txt => driver-api/clk.rst} |  0
+ .../firmware/fallback-mechanisms.rst          |  2 +-
+ .../driver-api/firmware/request_firmware.rst  | 17 +++++++-----
+ Documentation/driver-api/index.rst            |  2 ++
+ Documentation/driver-api/infrastructure.rst   |  2 +-
+ Documentation/driver-api/uio-howto.rst        |  3 ++-
+ Documentation/memory-barriers.txt             |  4 +--
+ Documentation/networking/can.rst              |  4 +--
+ .../power/suspend-and-cpuhotplug.txt          |  2 +-
+ Documentation/process/index.rst               |  1 +
+ Documentation/security/index.rst              |  2 ++
+ .../translations/ko_KR/memory-barriers.txt    |  4 +--
+ drivers/video/fbdev/core/modedb.c             | 22 ++++++++--------
+ drivers/w1/w1_io.c                            |  1 +
+ include/linux/iio/iio.h                       | 24 ++++++++---------
+ include/linux/mtd/rawnand.h                   | 26 +++++++++++++------
+ include/linux/rcupdate.h                      |  5 ++--
+ include/linux/wait.h                          |  2 +-
+ include/net/mac80211.h                        |  2 +-
+ kernel/time/timer.c                           | 14 +++++-----
+ 31 files changed, 93 insertions(+), 75 deletions(-)
+ rename Documentation/{bcache.txt => admin-guide/bcache.rst} (100%)
+ rename Documentation/{cgroup-v2.txt => admin-guide/cgroup-v2.rst} (100%)
+ rename Documentation/{cachetlb.txt => core-api/cachetlb.rst} (100%)
+ rename Documentation/{circular-buffers.txt => core-api/circular-buffers.rst} (100%)
+ rename Documentation/{clk.txt => driver-api/clk.rst} (100%)
+
+-- 
+2.17.0
