@@ -1,75 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:53183 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751339AbeEBHPu (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:42066 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752375AbeEGJdy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 May 2018 03:15:50 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 18/21] staging: wilc1000: move macro after the #include file in wilc_wfi_netdevice
-Date: Wed, 2 May 2018 12:43:44 +0530
-Message-ID: <1525245227-3924-19-git-send-email-ajay.kathat@microchip.com> (sfid-20180502_093236_316847_4D028212)
-In-Reply-To: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
-References: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
+        Mon, 7 May 2018 05:33:54 -0400
+Received: by mail-pf0-f195.google.com with SMTP id p14so11029730pfh.9
+        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2018 02:33:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1525682589.6049.4.camel@sipsolutions.net>
+References: <0000000000000390eb056b77596d@google.com> <20180505164041.GD7746@kroah.com>
+ <095bc684-0029-0b2e-5e28-23376174ca02@gmail.com> <20180505220721.GA10829@kroah.com>
+ <1525682589.6049.4.camel@sipsolutions.net>
+From: Dmitry Vyukov <dvyukov@google.com>
+Date: Mon, 7 May 2018 11:33:33 +0200
+Message-ID: <CACT4Y+bWW8w7RJ1roUQ8dDk5Fv0syDsKtMH1wRnkkN4nWOootQ@mail.gmail.com> (sfid-20180507_113416_319080_383644FD)
+Subject: Re: WARNING in kernfs_add_one
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org,
+        Eric Dumazet <eric.dumazet@gmail.com>,
+        netdev <netdev@vger.kernel.org>,
+        syzbot <syzbot+df47f81c226b31d89fb1@syzkaller.appspotmail.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        syzkaller-bugs <syzkaller-bugs@googlegroups.com>,
+        Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to organize macro in a file together after #include
-statements.
+On Mon, May 7, 2018 at 10:43 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sat, 2018-05-05 at 15:07 -0700, Greg KH wrote:
+>
+>> > > > syzbot found the following crash on:
+>
+> Maybe it should learn to differentiate warnings, if it's going to set
+> panic_on_warn :-)
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+How?
+Note that this is not specific to syzbot. If you see WARNINGs in a
+subsystem that you have no idea about (or you just a normal user),
+what do you do? Right, you report it to maintainers.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 01cb9ac..8849924 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -2,11 +2,6 @@
- #ifndef WILC_WFI_NETDEVICE
- #define WILC_WFI_NETDEVICE
- 
--#define WILC_MAX_NUM_PMKIDS  16
--#define PMKID_LEN  16
--#define PMKID_FOUND 1
-- #define NUM_STA_ASSOCIATED 8
--
- #include <linux/tcp.h>
- #include <linux/ieee80211.h>
- #include <net/cfg80211.h>
-@@ -16,8 +11,15 @@
- #include "host_interface.h"
- #include "wilc_wlan.h"
- 
--#define FLOW_CONTROL_LOWER_THRESHOLD	128
--#define FLOW_CONTROL_UPPER_THRESHOLD	256
-+#define FLOW_CONTROL_LOWER_THRESHOLD		128
-+#define FLOW_CONTROL_UPPER_THRESHOLD		256
-+
-+#define WILC_MAX_NUM_PMKIDS			16
-+#define PMKID_LEN				16
-+#define PMKID_FOUND				1
-+#define NUM_STA_ASSOCIATED			8
-+
-+#define NUM_REG_FRAME				2
- 
- struct wilc_wfi_stats {
- 	unsigned long rx_packets;
-@@ -34,8 +36,6 @@ struct wilc_wfi_stats {
-  * packets in and out, so there is place for a packet
-  */
- 
--#define NUM_REG_FRAME 2
--
- struct wilc_wfi_key {
- 	u8 *key;
- 	u8 *seq;
--- 
-2.7.4
+
+> I get why, but still, at least differentiating in the emails wouldn't be
+> bad.
+
+Well, the subject says "WARNING".
+But note there are _very_ bad WARNINGs too. Generally, a WARNING means
+a kernel bug just that kernel can tolerate without bringing the system
+down (as opposed to BUG).
+
+
+>> > > > kernfs: ns required in 'ieee80211' for 'phy3'
+>
+> Huh. What does that even mean?
+>
+>> > > > RIP: 0010:kernfs_add_one+0x406/0x4d0 fs/kernfs/dir.c:758
+>> > > > RSP: 0018:ffff8801ca9eece0 EFLAGS: 00010286
+>> > > > RAX: 000000000000002d RBX: ffffffff87d5cee0 RCX: ffffffff8160ba7d
+>> > > > RDX: 0000000000000000 RSI: ffffffff81610731 RDI: ffff8801ca9ee840
+>> > > > RBP: ffff8801ca9eed20 R08: ffff8801d9538500 R09: 0000000000000006
+>> > > > R10: ffff8801d9538500 R11: 0000000000000000 R12: ffff8801ad1cb6c0
+>> > > > R13: ffffffff885da640 R14: 0000000000000020 R15: 0000000000000000
+>> > > >  kernfs_create_link+0x112/0x180 fs/kernfs/symlink.c:41
+>> > > >  sysfs_do_create_link_sd.isra.2+0x90/0x130 fs/sysfs/symlink.c:43
+>> > > >  sysfs_do_create_link fs/sysfs/symlink.c:79 [inline]
+>> > > >  sysfs_create_link+0x65/0xc0 fs/sysfs/symlink.c:91
+>> > > >  device_add_class_symlinks drivers/base/core.c:1612 [inline]
+>> > > >  device_add+0x7a0/0x16d0 drivers/base/core.c:1810
+>> > > >  wiphy_register+0x178a/0x2430 net/wireless/core.c:806
+>> > > >  ieee80211_register_hw+0x13cd/0x35d0 net/mac80211/main.c:1047
+>> > > >  mac80211_hwsim_new_radio+0x1d9b/0x3410
+>> > > > drivers/net/wireless/mac80211_hwsim.c:2772
+>> > > >  hwsim_new_radio_nl+0x7a7/0xa60 drivers/net/wireless/mac80211_hwsim.c:3246
+>> > > >  genl_family_rcv_msg+0x889/0x1120 net/netlink/genetlink.c:599
+>
+> Basically we're creating a new virtual radio, which in turn creates a
+> new device, which we have to register.
+>
+> Something is going on with the context here that makes sysfs unhappy,
+> but TBH I have no idea what.
+>
+> johannes
+>
+> --
+> You received this message because you are subscribed to the Google Groups "syzkaller-bugs" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to syzkaller-bugs+unsubscribe@googlegroups.com.
+> To view this discussion on the web visit https://groups.google.com/d/msgid/syzkaller-bugs/1525682589.6049.4.camel%40sipsolutions.net.
+> For more options, visit https://groups.google.com/d/optout.
