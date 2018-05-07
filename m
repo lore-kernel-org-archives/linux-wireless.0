@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57536 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751283AbeEVICo (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:38691 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752513AbeEGIoR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 04:02:44 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Tony Lindgren <tony@atomide.com>
-Cc: "Reizer\, Eyal" <eyalr@ti.com>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>,
-        "Mishol\, Guy" <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        "Hahn\, Maital" <maitalm@ti.com>,
-        "Altshul\, Maxim" <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-omap\@vger.kernel.org" <linux-omap@vger.kernel.org>,
-        "Loewy\, Chen" <c-loewy@ti.com>
-Subject: Re: [EXTERNAL] [PATCHv2 0/5] Runtime PM support for wlcore
-References: <20180517185029.71716-1-tony@atomide.com>
-        <bff51dcc6fd441d9ab42db273219aaf4@ti.com>
-        <20180521163830.GZ98604@atomide.com>
-Date: Tue, 22 May 2018 11:02:36 +0300
-In-Reply-To: <20180521163830.GZ98604@atomide.com> (Tony Lindgren's message of
-        "Mon, 21 May 2018 09:38:30 -0700")
-Message-ID: <87efi4f78j.fsf@kamboji.qca.qualcomm.com> (sfid-20180522_100315_989155_A2105A39)
+        Mon, 7 May 2018 04:44:17 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 11/30] staging: wilc1000: use sizeof(*wdev) to allocate memory in wilc_wfi_cfg_alloc()
+Date: Mon, 7 May 2018 14:13:15 +0530
+Message-ID: <1525682614-3824-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104421_676075_3D9D3DF8)
+In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tony Lindgren <tony@atomide.com> writes:
+Fix below reported checkpatch issues in wilc_wfi_cfg_alloc().
+kzalloc(sizeof(*wdev)...) over kzalloc(sizeof(struct wireless_dev)
 
-> * Reizer, Eyal <eyalr@ti.com> [180521 07:31]:
->> > Here's a series of patches to add runtime PM support for wlcore. It does not
->> > yet implement autosuspend support, but let's get this tested first as the
->> > autosuspend can mask enable/disable issues easily.
->> 
->> Testing on BBB+WL1837 cape, scan, recovery, down/up and basic traffic seems ok now.
->> Of course we need to test some more.
->
-> Thanks for testing. Yes let's do more testing, no rush with these.
-> Hopefully they'll be ready for v4.19 merge window though.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-So I can drop the patchset now and you will resend once it's ready?
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 8be3c4c..102facd 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2194,7 +2194,7 @@ static struct wireless_dev *wilc_wfi_cfg_alloc(void)
+ {
+ 	struct wireless_dev *wdev;
+ 
+-	wdev = kzalloc(sizeof(struct wireless_dev), GFP_KERNEL);
++	wdev = kzalloc(sizeof(*wdev), GFP_KERNEL);
+ 	if (!wdev)
+ 		goto _fail_;
+ 
 -- 
-Kalle Valo
+2.7.4
