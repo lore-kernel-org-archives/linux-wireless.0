@@ -1,40 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56764 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754759AbeE2H2E (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:17781 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752104AbeEGIp1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 May 2018 03:28:04 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 7 May 2018 04:45:27 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 29/30] staging: wilc1000: remove unused 'lock' varible in 'wilc_priv' structure
+Date: Mon, 7 May 2018 14:13:33 +0530
+Message-ID: <1525682614-3824-30-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104716_536409_123EE56D)
+In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Subject: Re: [1/2] mwifiex: increase log level for internal scan fail result
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1527558129-18109-1-git-send-email-huxm@marvell.com>
-References: <1527558129-18109-1-git-send-email-huxm@marvell.com>
-To: Xinming Hu <huxm@marvell.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Message-Id: <20180529072804.06E9D603D2@smtp.codeaurora.org> (sfid-20180529_092808_172679_9BBA6846)
-Date: Tue, 29 May 2018 07:28:03 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Xinming Hu <huxm@marvell.com> wrote:
+Cleanup patch to remove the unused variable from 'wilc_priv' structure.
 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-2 patches applied to wireless-drivers-next.git, thanks.
-
-788f4e4cf063 mwifiex: increase log level for internal scan fail result
-db69f4e05bd5 mwifiex: reserve passive scan time for radar channel
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index e517768..3875065 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -78,7 +78,6 @@ struct wilc_priv {
+ 	u8 monitor_flag;
+ 	int status;
+ 	struct sk_buff *skb;
+-	spinlock_t lock;
+ 	struct net_device *dev;
+ 	struct host_if_drv *hif_drv;
+ 	struct host_if_pmkid_attr pmkid_list;
 -- 
-https://patchwork.kernel.org/patch/10434183/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
