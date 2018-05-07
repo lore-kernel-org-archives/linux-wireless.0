@@ -1,78 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:55431 "EHLO mail.toke.dk"
+Received: from mail.toke.dk ([52.28.52.200]:44321 "EHLO mail.toke.dk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933715AbeEIKal (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 06:30:41 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
-        linux-wireless@vger.kernel.org, Maya Erez <merez@codeaurora.org>
-Subject: Re: [mac80211-next:master 12/14] drivers/net//wireless/ath/wil6210/debugfs.c:1245:1: warning: the frame size of 1600 bytes is larger than 1024 bytes
-In-Reply-To: <87h8nhw2yf.fsf@kamboji.qca.qualcomm.com>
-References: <201805090154.h4Cokbx2%fengguang.wu@intel.com> <87efil2p2o.fsf@purkki.adurom.net> <1525855900.6910.5.camel@sipsolutions.net> <87tvrhw6kj.fsf@kamboji.qca.qualcomm.com> <1525856418.6910.6.camel@sipsolutions.net> <87efil41d4.fsf@toke.dk> <1525858618.6910.9.camel@sipsolutions.net> <87po25w463.fsf@kamboji.qca.qualcomm.com> <878t8t3zwp.fsf@toke.dk> <87h8nhw2yf.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 09 May 2018 12:30:39 +0200
-Message-ID: <8736z13yuo.fsf@toke.dk> (sfid-20180509_123044_967078_5A620346)
+        id S1752888AbeEGVTZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 May 2018 17:19:25 -0400
+Date: Mon, 07 May 2018 23:19:21 +0200
+In-Reply-To: <1525720384.22388.2.camel@sipsolutions.net>
+References: <20180219170224.14816-1-toke@toke.dk> <20180219170224.14816-2-toke@toke.dk> (sfid-20180219_180300_682375_800CE1A2) <1525720384.22388.2.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+ charset=utf-8
+Subject: Re: [PATCH 1/3] cfg80211: Expose TXQ stats and parameters to userspace
+To: Johannes Berg <johannes@sipsolutions.net>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+From: =?ISO-8859-1?Q?Toke_H=F8iland-J=F8rgensen?= <toke@toke.dk>
+Message-ID: <DDA0225E-5A86-438A-8A57-0EC9113EBE02@toke.dk> (sfid-20180507_231928_785072_4D64E0EC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
 
-> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
->
->> Kalle Valo <kvalo@codeaurora.org> writes:
->>
->>> Johannes Berg <johannes@sipsolutions.net> writes:
->>>
->>>> On Wed, 2018-05-09 at 11:36 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wr=
-ote:
->>>>> Johannes Berg <johannes@sipsolutions.net> writes:
->>>>>=20
->>>>> > On Wed, 2018-05-09 at 11:56 +0300, Kalle Valo wrote:
->>>>> > > Johannes Berg <johannes@sipsolutions.net> writes:
->>>>> > >=20
->>>>> > > > On Wed, 2018-05-09 at 11:47 +0300, Kalle Valo wrote:
->>>>> > > > >=20
->>>>> > > > > I guess these warnings come because Toke's patch increased si=
-ze of
->>>>> > > > > struct cfg80211_tid_stats (which is included in struct statio=
-n_info) and
->>>>> > > > > both wil6210 and qtnfmac allocate a struct station_info from =
-stack?=20
->>>>> > > >=20
->>>>> > > > Yes.
->>>>> > > >=20
->>>>> > > > > Can
->>>>> > > > > someone send a fix for the drivers?
->>>>> > > >=20
->>>>> > > > I guess Toke/I should do that through my tree.
->>>>> > >=20
->>>>> > > IMHO the fix could go through my tree as well, less risk of confl=
-icts in
->>>>> > > drivers. AFAICS the fix (allocating station_info dynamically?) wo=
-uld not
->>>>> > > depend on Toke's patch and could be applied separately.
->>>>> >=20
->>>>> > That's true, if you prefer that it's fine with me.
->>>>>=20
->>>>> I'll send a patch.
->>>>>=20
->>>>> What's the right tag to put in the commit for this?
->>>>> Fixes-but-is-independent-from: ? ;)
->>>>
->>>> Heh. You can still put Fixes: I think.
->>>
->>> Yeah, I think so too.
->>
->> Cool. My "git grep 'struct station_info sinfo'" also shows up a driver
->> in staging; that should be fixed as well, right? In the same commit?
->
-> Not in the same commit at least, I don't want to touch staging even with
-> a ten foot pole :) I guess either Greg or Johannes would take that
-> patch.
 
-What about batman-adv and wext-compat? Should I split those out as well?
+On 7 May 2018 21:13:04 CEST, Johannes Berg <johannes@sipsolutions=2Enet> w=
+rote:
+>On Mon, 2018-02-19 at 18:02 +0100, Toke H=C3=B8iland-J=C3=B8rgensen wrote=
+:
+>> This adds support for exporting the mac80211 TXQ stats via nl80211 by
+>> way of a nested TXQ stats attribute, as well as for configuring the
+>> quantum and limits that were previously only changeable through
+>debugfs=2E
+>
+>So I finally (sorry) decided to apply this, but I get a few issues with
+>it (aside from trivial rebase issues)=2E If you're not able to fix them
+>now let me know and I can:
+
+Great! I'll rebase and fix those and resend :)
+
+Is the iw patch fine as-is?
 
 -Toke
