@@ -1,59 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46222 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S967823AbeEYTwG (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:8846 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750953AbeEGFzd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 May 2018 15:52:06 -0400
-Message-ID: <37100d5380fcea97bfc83b92d4e1d89dbf52d674.camel@coelho.fi> (sfid-20180525_215228_501819_159A2D77)
-From: Luca Coelho <luca@coelho.fi>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Ilan Peer <ilan.peer@intel.com>,
-        Ido Yariv <idox.yariv@intel.com>
-Date: Fri, 25 May 2018 22:51:59 +0300
-In-Reply-To: <b1d344f5f5fa2797fa5b931f019bb7f3bd18b904.camel@coelho.fi>
-References: <20180518140543.13620-1-luca@coelho.fi>
-         <20180518140543.13620-2-luca@coelho.fi> <5B032249.2020900@broadcom.com>
-         <b1d344f5f5fa2797fa5b931f019bb7f3bd18b904.camel@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [RFC 1/3] cfg80211: Add support for HE
+        Mon, 7 May 2018 01:55:33 -0400
+Date: Mon, 7 May 2018 11:25:27 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Nathan Chancellor <natechancellor@gmail.com>
+CC: <devel@driverdev.osuosl.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Aditya Shankar <aditya.shankar@microchip.com>
+Subject: Re: [PATCH 3/3] staging: wilc1000: Remove unnecessary array index
+ check
+Message-ID: <20180507112527.0037a95e@ajaysk-VirtualBox> (sfid-20180507_075547_341489_1AAF597E)
+In-Reply-To: <20180506073333.3770-3-natechancellor@gmail.com>
+References: <20180506073333.3770-1-natechancellor@gmail.com>
+        <20180506073333.3770-3-natechancellor@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend,
+On Sun, 6 May 2018 00:33:33 -0700
+Nathan Chancellor <natechancellor@gmail.com> wrote:
 
-On Fri, 2018-05-25 at 13:11 +0300, Luca Coelho wrote:
-> On Mon, 2018-05-21 at 21:47 +0200, Arend van Spriel wrote:
-> > On 5/18/2018 4:05 PM, Luca Coelho wrote:
-> > > @@ -781,6 +783,23 @@ int wiphy_register(struct wiphy *wiphy)
-> > >   			sband->channels[i].band = band;
-> > >   		}
-> > > 
-> > > +		for (i = 0; i < sband->n_iftype_data; i++) {
-> > > +			const struct ieee80211_sband_iftype_data
-> > > *iftd;
-> > > +
-> > > +			iftd = &sband->iftype_data[i];
-> > > +
-> > > +			if (WARN_ON(!iftd->types))
-> > > +				return -EINVAL;
-> > > +			if (WARN_ON(types & iftd->types))
-> > > +				return -EINVAL;
-> > 
-> > I suspected the types mask was not allowed to overlap for the 
-> > iftype_data entries, but may be worth documenting that in struct 
-> > ieee80211_sband_iftype_data kerneldoc.
+> This statment triggers GCC's -Wtype-limit since key_index is an
+> unsigned integer so it cannot be less than zero.
 > 
-> Sure, I'll add it.
+> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
 
-Actually, looking into this again, I'm not sure I understand your
-comment.  AFAICT this prevents the same type from appearing twice,
-right? I don't get the "not allowed to overlap"... Can you clarify?
+Reviewed-by: Ajay Singh <ajay.kathat@microchip.com>
 
---
-Cheers,
-Luca.
+> ---
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c index
+> b499fb987395..e0015ca6c21a 100644 ---
+> a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c +++
+> b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c @@ -1054,7
+> +1054,7 @@ static int del_key(struct wiphy *wiphy, struct net_device
+> *netdev, } }
+>  
+> -	if (key_index >= 0 && key_index <= 3 &&
+> priv->wep_key_len[key_index]) {
+> +	if (key_index <= 3 && priv->wep_key_len[key_index]) {
+>  		memset(priv->wep_key[key_index], 0,
+>  		       priv->wep_key_len[key_index]);
+>  		priv->wep_key_len[key_index] = 0;
