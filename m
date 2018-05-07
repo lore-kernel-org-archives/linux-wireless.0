@@ -1,65 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:60340 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752373AbeENPw0 (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:4389 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752482AbeEGIoG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 May 2018 11:52:26 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 2/3] ath10k:  Don't try un-supported idle_ps_config command.
-Date: Mon, 14 May 2018 08:52:16 -0700
-Message-Id: <1526313137-23899-2-git-send-email-greearb@candelatech.com> (sfid-20180514_175252_131489_9037FC49)
-In-Reply-To: <1526313137-23899-1-git-send-email-greearb@candelatech.com>
-References: <1526313137-23899-1-git-send-email-greearb@candelatech.com>
+        Mon, 7 May 2018 04:44:06 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 08/30] staging: wilc1000: fix line over 80 chars in host_int_parse_assoc_resp_info()
+Date: Mon, 7 May 2018 14:13:12 +0530
+Message-ID: <1525682614-3824-9-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104416_524861_E96C27AC)
+In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Fix line over 80 characters issue in host_int_parse_assoc_resp_info() by
+using shorter name for the local variable.
 
-The warning the the logs does not give user a clue as to what
-command is failing, so it is worth it to check for un-supported
-command before trying the call.
-
-And add return-code to survey error message.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 3d7119a..1185d0c2 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4680,10 +4680,13 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 	}
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c9c5d352..b1f67a7 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1320,18 +1320,19 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
+ 	memset(&conn_info, 0, sizeof(struct connect_info));
  
- 	param = ar->wmi.pdev_param->idle_ps_config;
--	ret = ath10k_wmi_pdev_set_param(ar, param, 1);
--	if (ret && ret != -EOPNOTSUPP) {
--		ath10k_warn(ar, "failed to enable idle_ps_config: %d\n", ret);
--		goto err_core_stop;
-+	if (param != WMI_PDEV_PARAM_UNSUPPORTED) {
-+		ret = ath10k_wmi_pdev_set_param(ar, param, 1);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to enable idle_ps_config: %d\n",
-+				    ret);
-+			goto err_core_stop;
-+		}
- 	}
+ 	if (mac_status == MAC_STATUS_CONNECTED) {
+-		u32 rcvd_assoc_resp_info_len;
++		u32 assoc_resp_info_len;
  
- 	__ath10k_set_antenna(ar, ar->cfg_tx_chainmask, ar->cfg_rx_chainmask);
-@@ -6770,7 +6773,8 @@ ath10k_mac_update_bss_chan_survey(struct ath10k *ar,
+ 		memset(rcv_assoc_resp, 0, MAX_ASSOC_RESP_FRAME_SIZE);
  
- 	ret = ath10k_wmi_pdev_bss_chan_info_request(ar, type);
- 	if (ret) {
--		ath10k_warn(ar, "failed to send pdev bss chan info request\n");
-+		ath10k_warn(ar, "failed to send pdev bss chan info request: %d\n",
-+			    ret);
- 		return;
- 	}
+ 		host_int_get_assoc_res_info(vif, rcv_assoc_resp,
+ 					    MAX_ASSOC_RESP_FRAME_SIZE,
+-					    &rcvd_assoc_resp_info_len);
++					    &assoc_resp_info_len);
  
+-		if (rcvd_assoc_resp_info_len != 0) {
++		if (assoc_resp_info_len != 0) {
+ 			s32 err = 0;
+ 
+-			err = wilc_parse_assoc_resp_info(rcv_assoc_resp, rcvd_assoc_resp_info_len,
++			err = wilc_parse_assoc_resp_info(rcv_assoc_resp,
++							 assoc_resp_info_len,
+ 							 &connect_resp_info);
+ 			if (err)
+ 				netdev_err(vif->ndev,
 -- 
-2.4.11
+2.7.4
