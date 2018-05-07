@@ -1,78 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:33385 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932115AbeE0Feb (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:31438 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752502AbeEGIoi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 27 May 2018 01:34:31 -0400
-Received: by mail-wr0-f195.google.com with SMTP id a15-v6so15257858wrm.0
-        for <linux-wireless@vger.kernel.org>; Sat, 26 May 2018 22:34:30 -0700 (PDT)
+        Mon, 7 May 2018 04:44:38 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 17/30] staging: wilc1000: fix line over 80 chars in wilc_wfi_cfg_tx_vendor_spec()
+Date: Mon, 7 May 2018 14:13:21 +0530
+Message-ID: <1525682614-3824-18-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104446_864418_C5BD37A5)
+In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-References: <20180522131836.26858-1-zajec5@gmail.com> <20180522131836.26858-2-zajec5@gmail.com>
- <5B070A5D.3080400@broadcom.com>
-In-Reply-To: <5B070A5D.3080400@broadcom.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Sun, 27 May 2018 15:34:16 +1000
-Message-ID: <CAGRGNgXMUTBhjGA_Rk=_ASaOcYNM+udAN8=HhutxFP5kwQYLww@mail.gmail.com> (sfid-20180527_073450_768576_226A56D5)
-Subject: Re: [PATCH 2/3] brcmfmac: handle monitor mode marked msgbuf packets
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        stanley.hsu@cypress.com,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, rafal@milecki.pl
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
-On Fri, May 25, 2018 at 12:38 PM Arend van Spriel <
-arend.vanspriel@broadcom.com> wrote:
+Fix line over 80 characters issues reported by checkpatch.pl script in
+wilc_wfi_cfg_tx_vendor_spec() by using temporary variable. Simplified
+'if else' condition with 'if'.
 
-> On 5/22/2018 3:18 PM, Rafa=C5=82 Mi=C5=82ecki wrote:
-> > From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
-> >
-> > New Broadcom firmwares mark monitor mode packets using a newly defined
-> > bit in the flags field. Use it to filter them out and pass to the
-> > monitor interface. These defines were found in bcmmsgbuf.h from SDK.
-> >
-> > As not every firmware generates radiotap header this commit introduces
-> > BRCMF_FEAT_MON_FMT_RADIOTAP that has to be set per firmware version. If
-> > not present brcmf_netif_mon_rx() assumed packet being a raw 802.11 fram=
-e
-> > and prepends it with an empty radiotap header.
-> >
-> > It's limited to the msgbuf protocol. Adding support for SDIO/USB device=
-s
-> > will require some extra research.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-> So I went looking on my shelf and found the patch I made for SDIO a
-> while back. It relies on firmware change and I did not introduce a
-> firmware flag for it. I will send the patch as RFT so you can have a
-> look at it.
-
-> I checked our internal driver and it turns out the raw vs. radiotap is a
-> compilation option. So depending on customer they would get either
-> firmware doing the radiotap header generation or the host driver,
-> without any run-time way to determine it. Not nice for brcmfmac.
-
-I pretty sure I know what the answer to this is going to be, however I
-still have to ask:
-
-Is it possible to open up _any_ part of the firmware? (Even if it's just
-the host-interface end and the hardware end is a big ugly blob) It'd make
-dealing with stuff like this so much easier if we can just toggle a flag
-and recompile. (I'm also sure that we'd be more than happy to pass some
-flag through telling us/you that it's unofficial firmware and has probably
-broken the hardware, etc.)
-
-Thanks,
-
---=20
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 4f35178..8dea414 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1573,14 +1573,14 @@ static void wilc_wfi_cfg_tx_vendor_spec(struct p2p_mgmt_data *mgmt_tx,
+ 	for (i = P2P_PUB_ACTION_SUBTYPE + 2; i < len; i++) {
+ 		if (buf[i] == P2PELEM_ATTR_ID &&
+ 		    !memcmp(p2p_oui, &buf[i + 2], 4)) {
++			bool oper_ch = false;
++			u8 *tx_buff = &mgmt_tx->buff[i + 6];
++
+ 			if (subtype == P2P_INV_REQ || subtype == P2P_INV_RSP)
+-				wilc_wfi_cfg_parse_tx_action(&mgmt_tx->buff[i + 6],
+-							     len - (i + 6),
+-							     true, iftype);
+-			else
+-				wilc_wfi_cfg_parse_tx_action(&mgmt_tx->buff[i + 6],
+-							     len - (i + 6),
+-							     false, iftype);
++				oper_ch = true;
++
++			wilc_wfi_cfg_parse_tx_action(tx_buff, len - (i + 6),
++						     oper_ch, iftype);
+ 
+ 			break;
+ 		}
+-- 
+2.7.4
