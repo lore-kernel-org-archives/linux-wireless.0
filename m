@@ -1,78 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:35139 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750869AbeETIPd (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:2126 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752121AbeEGIoK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 May 2018 04:15:33 -0400
-Received: by mail-wr0-f196.google.com with SMTP id i14-v6so13028543wre.2
-        for <linux-wireless@vger.kernel.org>; Sun, 20 May 2018 01:15:32 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [RFC v2 01/18] mt76x2: use completion instead of wait_queue for mcu rx queue
-Date: Sun, 20 May 2018 10:15:05 +0200
-Message-Id: <20180520081522.10163-2-lorenzo.bianconi@redhat.com> (sfid-20180520_101540_327315_157E22B0)
+        Mon, 7 May 2018 04:44:10 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 09/30] staging: wilc1000: rename kmalloc with kmemdup() in handle_connect_timeout()
+Date: Mon, 7 May 2018 14:13:13 +0530
+Message-ID: <1525682614-3824-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104417_357283_A896E6B9)
+In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to reuse mcu related code supporting mt76x2u based devices,
-use completion instead of wait_queue for mcu responses queue
+Instead of kmalloc and memcpy use kmemdup in handle_connect_timeout().
+Also return -ENOMEM incase of failure to allocate the memory.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2.h     | 2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_dma.c | 4 ++--
- drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c | 3 +--
- 3 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-index a5d1255e4b9c..a31602d9310e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-@@ -47,7 +47,7 @@
- struct mt76x2_mcu {
- 	struct mutex mutex;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index b1f67a7..ad9270e 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1166,10 +1166,11 @@ static s32 handle_connect_timeout(struct wilc_vif *vif)
  
--	wait_queue_head_t wait;
-+	struct completion resp_cmpl;
- 	struct sk_buff_head res_q;
+ 		if (hif_drv->usr_conn_req.ies) {
+ 			info.req_ies_len = hif_drv->usr_conn_req.ies_len;
+-			info.req_ies = kmalloc(hif_drv->usr_conn_req.ies_len, GFP_KERNEL);
+-			memcpy(info.req_ies,
+-			       hif_drv->usr_conn_req.ies,
+-			       hif_drv->usr_conn_req.ies_len);
++			info.req_ies = kmemdup(hif_drv->usr_conn_req.ies,
++					       hif_drv->usr_conn_req.ies_len,
++					       GFP_KERNEL);
++			if (!info.req_ies)
++				return -ENOMEM;
+ 		}
  
- 	u32 msg_seq;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
-index fd1ec4743e0b..ab71b6e6c6dc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
-@@ -74,7 +74,7 @@ void mt76x2_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
- 
- 	if (q == MT_RXQ_MCU) {
- 		skb_queue_tail(&dev->mcu.res_q, skb);
--		wake_up(&dev->mcu.wait);
-+		complete(&dev->mcu.resp_cmpl);
- 		return;
- 	}
- 
-@@ -139,7 +139,7 @@ int mt76x2_dma_init(struct mt76x2_dev *dev)
- 
- 	mt76_dma_attach(&dev->mt76);
- 
--	init_waitqueue_head(&dev->mcu.wait);
-+	init_completion(&dev->mcu.resp_cmpl);
- 	skb_queue_head_init(&dev->mcu.res_q);
- 
- 	tasklet_init(&dev->tx_tasklet, mt76x2_tx_tasklet, (unsigned long) dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
-index dfd36d736b06..3e2a7216ffdd 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
-@@ -61,8 +61,7 @@ mt76x2_mcu_get_response(struct mt76x2_dev *dev, unsigned long expires)
- 		return NULL;
- 
- 	timeout = expires - jiffies;
--	wait_event_timeout(dev->mcu.wait, !skb_queue_empty(&dev->mcu.res_q),
--			   timeout);
-+	wait_for_completion_timeout(&dev->mcu.resp_cmpl, timeout);
- 	return skb_dequeue(&dev->mcu.res_q);
- }
- 
+ 		hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_CONN_RESP,
 -- 
-2.16.3
+2.7.4
