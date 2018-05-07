@@ -1,81 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:36273 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752819AbeEYNSt (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:47032 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752531AbeEGIo1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 May 2018 09:18:49 -0400
-Received: by mail-wr0-f196.google.com with SMTP id k5-v6so9207171wrn.3
-        for <linux-wireless@vger.kernel.org>; Fri, 25 May 2018 06:18:48 -0700 (PDT)
-Date: Fri, 25 May 2018 15:18:45 +0200
-From: Niklas Cassel <niklas.cassel@linaro.org>
-To: Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Move up init of TXQs
-Message-ID: <20180525131845.GA9975@localhost.localdomain> (sfid-20180525_151852_563342_647D1643)
-References: <152725136177.14483.16708750819293583562.stgit@alrua-kau>
+        Mon, 7 May 2018 04:44:27 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 14/30] staging: wilc1000: fix line over 80 chars in add_network_to_shadow()
+Date: Mon, 7 May 2018 14:13:18 +0530
+Message-ID: <1525682614-3824-15-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104433_149573_8F114AF1)
+In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <152725136177.14483.16708750819293583562.stgit@alrua-kau>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tested-by: Niklas Cassel <niklas.cassel@linaro.org>
+Fix line over 80 characters issue reported by checkpatch in
+add_network_to_shadow() by using temporary variable.
 
-On Fri, May 25, 2018 at 02:29:21PM +0200, Toke Høiland-Jørgensen wrote:
-> On init, ieee80211_if_add() dumps the interface. Since that now includes a
-> dump of the TXQ state, we need to initialise that before the dump happens.
-> So move up the TXQ initialisation to to before the call to
-> ieee80211_if_add().
-> 
-> Fixes: 52539ca89f36 ("cfg80211: Expose TXQ stats and parameters to userspace")
-> Reported-by: Niklas Cassel <niklas.cassel@linaro.org>
-> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
-> ---
->  net/mac80211/main.c |   12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> index 4d2e797e3f16..722f3d9fb416 100644
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -1098,6 +1098,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
->  
->  	ieee80211_led_init(local);
->  
-> +	result = ieee80211_txq_setup_flows(local);
-> +	if (result)
-> +		goto fail_flows;
-> +
->  	rtnl_lock();
->  
->  	result = ieee80211_init_rate_ctrl_alg(local,
-> @@ -1120,10 +1124,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
->  
->  	rtnl_unlock();
->  
-> -	result = ieee80211_txq_setup_flows(local);
-> -	if (result)
-> -		goto fail_flows;
-> -
->  #ifdef CONFIG_INET
->  	local->ifa_notifier.notifier_call = ieee80211_ifa_changed;
->  	result = register_inetaddr_notifier(&local->ifa_notifier);
-> @@ -1149,8 +1149,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
->  #if defined(CONFIG_INET) || defined(CONFIG_IPV6)
->   fail_ifa:
->  #endif
-> -	ieee80211_txq_teardown_flows(local);
-> - fail_flows:
->  	rtnl_lock();
->  	rate_control_deinitialize(local);
->  	ieee80211_remove_interfaces(local);
-> @@ -1158,6 +1156,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
->  	rtnl_unlock();
->  	ieee80211_led_exit(local);
->  	ieee80211_wep_free(local);
-> +	ieee80211_txq_teardown_flows(local);
-> + fail_flows:
->  	destroy_workqueue(local->workqueue);
->   fail_workqueue:
->  	wiphy_unregister(local->hw.wiphy);
-> 
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 52 +++++++++++------------
+ 1 file changed, 25 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index f1ebaea..0ae2065 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -300,6 +300,7 @@ static void add_network_to_shadow(struct network_info *nw_info,
+ 	int ap_found = is_network_in_shadow(nw_info, user_void);
+ 	u32 ap_index = 0;
+ 	u8 rssi_index = 0;
++	struct network_info *shadow_nw_info;
+ 
+ 	if (last_scanned_cnt >= MAX_NUM_SCANNED_NETWORKS_SHADOW)
+ 		return;
+@@ -310,37 +311,34 @@ static void add_network_to_shadow(struct network_info *nw_info,
+ 	} else {
+ 		ap_index = ap_found;
+ 	}
+-	rssi_index = last_scanned_shadow[ap_index].rssi_history.index;
+-	last_scanned_shadow[ap_index].rssi_history.samples[rssi_index++] = nw_info->rssi;
++	shadow_nw_info = &last_scanned_shadow[ap_index];
++	rssi_index = shadow_nw_info->rssi_history.index;
++	shadow_nw_info->rssi_history.samples[rssi_index++] = nw_info->rssi;
+ 	if (rssi_index == NUM_RSSI) {
+ 		rssi_index = 0;
+-		last_scanned_shadow[ap_index].rssi_history.full = true;
+-	}
+-	last_scanned_shadow[ap_index].rssi_history.index = rssi_index;
+-	last_scanned_shadow[ap_index].rssi = nw_info->rssi;
+-	last_scanned_shadow[ap_index].cap_info = nw_info->cap_info;
+-	last_scanned_shadow[ap_index].ssid_len = nw_info->ssid_len;
+-	memcpy(last_scanned_shadow[ap_index].ssid,
+-	       nw_info->ssid, nw_info->ssid_len);
+-	memcpy(last_scanned_shadow[ap_index].bssid,
+-	       nw_info->bssid, ETH_ALEN);
+-	last_scanned_shadow[ap_index].beacon_period = nw_info->beacon_period;
+-	last_scanned_shadow[ap_index].dtim_period = nw_info->dtim_period;
+-	last_scanned_shadow[ap_index].ch = nw_info->ch;
+-	last_scanned_shadow[ap_index].ies_len = nw_info->ies_len;
+-	last_scanned_shadow[ap_index].tsf_hi = nw_info->tsf_hi;
++		shadow_nw_info->rssi_history.full = true;
++	}
++	shadow_nw_info->rssi_history.index = rssi_index;
++	shadow_nw_info->rssi = nw_info->rssi;
++	shadow_nw_info->cap_info = nw_info->cap_info;
++	shadow_nw_info->ssid_len = nw_info->ssid_len;
++	memcpy(shadow_nw_info->ssid, nw_info->ssid, nw_info->ssid_len);
++	memcpy(shadow_nw_info->bssid, nw_info->bssid, ETH_ALEN);
++	shadow_nw_info->beacon_period = nw_info->beacon_period;
++	shadow_nw_info->dtim_period = nw_info->dtim_period;
++	shadow_nw_info->ch = nw_info->ch;
++	shadow_nw_info->ies_len = nw_info->ies_len;
++	shadow_nw_info->tsf_hi = nw_info->tsf_hi;
+ 	if (ap_found != -1)
+-		kfree(last_scanned_shadow[ap_index].ies);
+-	last_scanned_shadow[ap_index].ies = kmalloc(nw_info->ies_len,
+-						    GFP_KERNEL);
+-	memcpy(last_scanned_shadow[ap_index].ies,
+-	       nw_info->ies, nw_info->ies_len);
+-	last_scanned_shadow[ap_index].time_scan = jiffies;
+-	last_scanned_shadow[ap_index].time_scan_cached = jiffies;
+-	last_scanned_shadow[ap_index].found = 1;
++		kfree(shadow_nw_info->ies);
++	shadow_nw_info->ies = kmalloc(nw_info->ies_len, GFP_KERNEL);
++	memcpy(shadow_nw_info->ies, nw_info->ies, nw_info->ies_len);
++	shadow_nw_info->time_scan = jiffies;
++	shadow_nw_info->time_scan_cached = jiffies;
++	shadow_nw_info->found = 1;
+ 	if (ap_found != -1)
+-		kfree(last_scanned_shadow[ap_index].join_params);
+-	last_scanned_shadow[ap_index].join_params = join_params;
++		kfree(shadow_nw_info->join_params);
++	shadow_nw_info->join_params = join_params;
+ }
+ 
+ static void cfg_scan_result(enum scan_event scan_event,
+-- 
+2.7.4
