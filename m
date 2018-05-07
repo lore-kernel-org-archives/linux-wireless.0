@@ -1,45 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f172.google.com ([74.125.82.172]:36946 "EHLO
-        mail-ot0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751229AbeEVOsi (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:28968 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752279AbeEGIoN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 10:48:38 -0400
-Received: by mail-ot0-f172.google.com with SMTP id 77-v6so21285764otd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2018 07:48:38 -0700 (PDT)
-Subject: Re: [PATCH] cfg80211: Fix support for flushing old scan results
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Tim Kourt <tim.a.kourt@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-References: <20180511164835.40161-1-tim.a.kourt@linux.intel.com>
- <1526631206.3805.1.camel@sipsolutions.net>
- <d12d4d4d-25d6-3cd0-1399-27de09c7f8c5@gmail.com>
- <5AFF2169.4010003@broadcom.com>
- <51c56faf-267d-c204-243a-31fc91976c5e@gmail.com>
- <5B03C5BA.50804@broadcom.com>
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <c8f3d9a7-b978-8af8-6594-d0ae66652956@gmail.com> (sfid-20180522_164842_551857_7F70ECC4)
-Date: Tue, 22 May 2018 09:48:36 -0500
+        Mon, 7 May 2018 04:44:13 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 10/30] staging: wilc1000: fix line over 80 chars in linux_mon
+Date: Mon, 7 May 2018 14:13:14 +0530
+Message-ID: <1525682614-3824-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104514_280349_1248185D)
+In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <5B03C5BA.50804@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+Fix line over 80 char issue reported by checkpatch.pl script.
 
->> Are you saying the first result is from the Beacon and the other is from
->> the Probe Response?  Then why are the 'Information elements from Probe
->> Response frame' the way they are?
-> 
-> Nope. I am not saying that. I am saying that there are two probe 
-> requests being sent. One with broadcast ssid, ie. ssid_len == 0, and 
-> with ssid 'myssid'. But it is speculation without a sniffer capture.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/linux_mon.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-Ah I see what you mean now.  No, we traced this down to hostapd itself 
-and it was receiving a single Probe Request with the ssid set and 
-replying to it per spec.  So I'm pretty confident this scenario isn't 
-what is happening.  Let me try to get some actual packet captures...
-
-Regards
--Denis
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 2f4b3f5..c372e0f 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -46,18 +46,18 @@ void wilc_wfi_monitor_rx(u8 *buff, u32 size)
+ 	if (pkt_offset & IS_MANAGMEMENT_CALLBACK) {
+ 		/* hostapd callback mgmt frame */
+ 
+-		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_cb_hdr));
++		skb = dev_alloc_skb(size + sizeof(*cb_hdr));
+ 		if (!skb)
+ 			return;
+ 
+ 		skb_put_data(skb, buff, size);
+ 
+ 		cb_hdr = skb_push(skb, sizeof(*cb_hdr));
+-		memset(cb_hdr, 0, sizeof(struct wilc_wfi_radiotap_cb_hdr));
++		memset(cb_hdr, 0, sizeof(*cb_hdr));
+ 
+ 		cb_hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
+ 
+-		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
++		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(*cb_hdr));
+ 
+ 		cb_hdr->hdr.it_present = cpu_to_le32(
+ 				(1 << IEEE80211_RADIOTAP_RATE) |
+@@ -73,7 +73,7 @@ void wilc_wfi_monitor_rx(u8 *buff, u32 size)
+ 		}
+ 
+ 	} else {
+-		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_hdr));
++		skb = dev_alloc_skb(size + sizeof(*hdr));
+ 
+ 		if (!skb)
+ 			return;
+@@ -82,7 +82,7 @@ void wilc_wfi_monitor_rx(u8 *buff, u32 size)
+ 		hdr = skb_push(skb, sizeof(*hdr));
+ 		memset(hdr, 0, sizeof(struct wilc_wfi_radiotap_hdr));
+ 		hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
+-		hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_hdr));
++		hdr->hdr.it_len = cpu_to_le16(sizeof(*hdr));
+ 		hdr->hdr.it_present = cpu_to_le32
+ 				(1 << IEEE80211_RADIOTAP_RATE); /* | */
+ 		hdr->rate = 5; /* txrate->bitrate / 5; */
+@@ -164,7 +164,7 @@ static netdev_tx_t wilc_wfi_mon_xmit(struct sk_buff *skb,
+ 	skb_pull(skb, rtap_len);
+ 
+ 	if (skb->data[0] == 0xc0 && is_broadcast_ether_addr(&skb->data[4])) {
+-		skb2 = dev_alloc_skb(skb->len + sizeof(struct wilc_wfi_radiotap_cb_hdr));
++		skb2 = dev_alloc_skb(skb->len + sizeof(*cb_hdr));
+ 		if (!skb2)
+ 			return -ENOMEM;
+ 
+@@ -175,7 +175,7 @@ static netdev_tx_t wilc_wfi_mon_xmit(struct sk_buff *skb,
+ 
+ 		cb_hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
+ 
+-		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
++		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(*cb_hdr));
+ 
+ 		cb_hdr->hdr.it_present = cpu_to_le32(
+ 				(1 << IEEE80211_RADIOTAP_RATE) |
+-- 
+2.7.4
