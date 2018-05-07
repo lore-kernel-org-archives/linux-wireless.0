@@ -1,74 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dnvrco-outbound-snat.email.rr.com ([107.14.73.232]:38503 "EHLO
-        dnvrco-cmomta03.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751746AbeE3OFr (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:14273 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752502AbeEGIop (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 10:05:47 -0400
-Message-ID: <20180530140546.7KP70.72041.root@dnvrco-web22> (sfid-20180530_160552_592492_EB6B2789)
-Date: Wed, 30 May 2018 14:05:46 +0000
-From: <mgreger@cinci.rr.com>
-To: sedat.dilek@gmail.com
-Subject: Re: Atheros AR9462 - 5Ghz not working
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CA+icZUX+p2feWOnXSA=m3i+r560Mo2kHsadT4qFhx8VvUv_k8A@mail.gmail.com>
+        Mon, 7 May 2018 04:44:45 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 19/30] staging: wilc1000: fix line over 80 chars in wilc_create_wiphy() declaration
+Date: Mon, 7 May 2018 14:13:23 +0530
+Message-ID: <1525682614-3824-20-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104535_810998_3EE7D956)
+In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Fix line over 80 characters issue found by checkpatch.pl script in
+function declaration.
 
----- Sedat Dilek <sedat.dilek@gmail.com> wrote: 
-> On Tue, May 22, 2018 at 7:21 PM,  <mgreger@cinci.rr.com> wrote:
-> > I've run out of ideas and am hoping someone here can help.
-> >
-> > All I want to do is connect a client to my 5Ghz network.
-> >
-> > My client:
-> >   OS is Debian stable "Stretch" with sysvinit instead of systemd
-> >   Atheros AR9462 (World roaming 0x64 regdomain in EEPROM)
-> >   "iw reg set US"
-> >   "iw list" shows both 2.4Ghz and 5Ghz bands available.
-> >   "iw wlp3s0 survey dump" shows received traffic on 5Ghz bands.
-> >
-> > There are oodles of 5Ghz AP's within range, but scans (including passive scans) reveal only 2.4Ghz networks. My only guess was that it won't transmit due to regulatory requirements, but I cannot make it work.
-> >
-> > What I've tried:
-> >   Running with and without CRDA
-> >   Running latest mainline kernel
-> >   Hacking around on the ath9k driver and nl80211 to remove all regulatory enforcement.
-> >
-> > Nothing works and I'm pulling my hair out. Any help would be greatly appreciated.
-> 
-> Hi,
-> 
-> I try to give some initial help.
-> 
-> The linux-wireless driver is supported by ath9k driver see [1] and [2].
-> 
-> Unfortunately, you have not sent any log-files at least your dmesg-log.
-> No output of the above userspace commands or userspace-tools versions.
-> No information to VendorID/ProductID (PCI, USB, whatever).
-> It's not clear to me if this is a kernelspace (ath9k-driver) or
-> userspace (CRDA/regulatory) problem.
-> How should someone help you effectively?
-> 
-> The linux-wireless wiki has somne informations on how to debug
-> Atheros/Qualcomm ath9k-driver, see [3].
-> 
-> As a debianist I say try Linux v4.16 Debian packages from
-> stretch-backports (and maybe a higher version of wireless-regdb).
-> 
-> Try to ask questions the smart way [4] :-).
-> 
-> Hope this helps.
-> 
-> Regards,
-> - Sedat -
-> 
-> [1] https://wireless.wiki.kernel.org/en/users/drivers/ath9k
-> [2] https://wireless.wiki.kernel.org/en/users/drivers/ath9k/devices
-> [3] https://wireless.wiki.kernel.org/en/users/drivers/ath9k/debug
-> [4] http://www.catb.org/esr/faqs/smart-questions.html
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-
-I have also built the latest wireless-regdb and crda, but it made no difference.
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+index c1a2421..a69103b 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+@@ -3,7 +3,8 @@
+ #define NM_WFI_CFGOPERATIONS
+ #include "wilc_wfi_netdevice.h"
+ 
+-struct wireless_dev *wilc_create_wiphy(struct net_device *net, struct device *dev);
++struct wireless_dev *wilc_create_wiphy(struct net_device *net,
++				       struct device *dev);
+ void wilc_free_wiphy(struct net_device *net);
+ int wilc_deinit_host_int(struct net_device *net);
+ int wilc_init_host_int(struct net_device *net);
+-- 
+2.7.4
