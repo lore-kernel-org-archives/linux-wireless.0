@@ -1,231 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53758 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751499AbeEDRoB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 May 2018 13:44:01 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, keescook@chromium.org,
-        josh@joshtriplett.org, teg@jklm.no, wagi@monom.org,
-        hdegoede@redhat.com, andresx7@gmail.com, zohar@linux.vnet.ibm.com,
-        kubakici@wp.pl, shuah@kernel.org, mfuzzey@parkeon.com,
-        dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de,
-        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, cantabile.desu@gmail.com, ast@fb.com,
-        hare@suse.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
-        khc@pm.waw.pl, davem@davemloft.net, maco@android.com,
-        arve@android.com, tkjos@android.com, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        "Luis R . Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v5 1/6] firmware: wrap FW_OPT_* into an enum
-Date: Fri,  4 May 2018 10:43:50 -0700
-Message-Id: <20180504174356.13227-2-mcgrof@kernel.org> (sfid-20180504_194712_765237_E6991C33)
-In-Reply-To: <20180504174356.13227-1-mcgrof@kernel.org>
-References: <20180504174356.13227-1-mcgrof@kernel.org>
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:32076 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751830AbeEGFy6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 May 2018 01:54:58 -0400
+Date: Mon, 7 May 2018 11:24:51 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Nathan Chancellor <natechancellor@gmail.com>
+CC: <devel@driverdev.osuosl.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Aditya Shankar <aditya.shankar@microchip.com>
+Subject: Re: [PATCH 2/3] staging: wilc1000: Remove useless function
+Message-ID: <20180507112451.574f72ac@ajaysk-VirtualBox> (sfid-20180507_075502_448263_DC38DCC3)
+In-Reply-To: <20180506073333.3770-2-natechancellor@gmail.com>
+References: <20180506073333.3770-1-natechancellor@gmail.com>
+        <20180506073333.3770-2-natechancellor@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andres Rodriguez <andresx7@gmail.com>
+On Sun, 6 May 2018 00:33:32 -0700
+Nathan Chancellor <natechancellor@gmail.com> wrote:
 
-This should let us associate enum kdoc to these values.
-While at it, kdocify the fw_opt.
+> GCC warns that 'wid' is unused in wilc_remove_key and it's correct;
+> the variable is only local. Get rid of the function (since it just
+> returns zero) and shuffle the remaining code into one if statement.
+> 
+> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
 
-Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
-Acked-by: Luis R. Rodriguez <mcgrof@kernel.org>
-[mcgrof: coding style fixes, merge kdoc with enum move]
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- drivers/base/firmware_loader/fallback.c | 12 ++++----
- drivers/base/firmware_loader/fallback.h |  6 ++--
- drivers/base/firmware_loader/firmware.h | 37 +++++++++++++++++++------
- drivers/base/firmware_loader/main.c     |  6 ++--
- 4 files changed, 42 insertions(+), 19 deletions(-)
+Reviewed-by: Ajay Singh <ajay.kathat@microchip.com>
 
-diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
-index 358354148dec..b57a7b3b4122 100644
---- a/drivers/base/firmware_loader/fallback.c
-+++ b/drivers/base/firmware_loader/fallback.c
-@@ -512,7 +512,7 @@ static const struct attribute_group *fw_dev_attr_groups[] = {
- 
- static struct fw_sysfs *
- fw_create_instance(struct firmware *firmware, const char *fw_name,
--		   struct device *device, unsigned int opt_flags)
-+		   struct device *device, enum fw_opt opt_flags)
- {
- 	struct fw_sysfs *fw_sysfs;
- 	struct device *f_dev;
-@@ -545,7 +545,7 @@ fw_create_instance(struct firmware *firmware, const char *fw_name,
-  * In charge of constructing a sysfs fallback interface for firmware loading.
-  **/
- static int fw_load_sysfs_fallback(struct fw_sysfs *fw_sysfs,
--				  unsigned int opt_flags, long timeout)
-+				  enum fw_opt opt_flags, long timeout)
- {
- 	int retval = 0;
- 	struct device *f_dev = &fw_sysfs->dev;
-@@ -599,7 +599,7 @@ static int fw_load_sysfs_fallback(struct fw_sysfs *fw_sysfs,
- 
- static int fw_load_from_user_helper(struct firmware *firmware,
- 				    const char *name, struct device *device,
--				    unsigned int opt_flags)
-+				    enum fw_opt opt_flags)
- {
- 	struct fw_sysfs *fw_sysfs;
- 	long timeout;
-@@ -640,7 +640,7 @@ static int fw_load_from_user_helper(struct firmware *firmware,
- 	return ret;
- }
- 
--static bool fw_force_sysfs_fallback(unsigned int opt_flags)
-+static bool fw_force_sysfs_fallback(enum fw_opt opt_flags)
- {
- 	if (fw_fallback_config.force_sysfs_fallback)
- 		return true;
-@@ -649,7 +649,7 @@ static bool fw_force_sysfs_fallback(unsigned int opt_flags)
- 	return true;
- }
- 
--static bool fw_run_sysfs_fallback(unsigned int opt_flags)
-+static bool fw_run_sysfs_fallback(enum fw_opt opt_flags)
- {
- 	if (fw_fallback_config.ignore_sysfs_fallback) {
- 		pr_info_once("Ignoring firmware sysfs fallback due to sysctl knob\n");
-@@ -664,7 +664,7 @@ static bool fw_run_sysfs_fallback(unsigned int opt_flags)
- 
- int fw_sysfs_fallback(struct firmware *fw, const char *name,
- 		      struct device *device,
--		      unsigned int opt_flags,
-+		      enum fw_opt opt_flags,
- 		      int ret)
- {
- 	if (!fw_run_sysfs_fallback(opt_flags))
-diff --git a/drivers/base/firmware_loader/fallback.h b/drivers/base/firmware_loader/fallback.h
-index f8255670a663..a3b73a09db6c 100644
---- a/drivers/base/firmware_loader/fallback.h
-+++ b/drivers/base/firmware_loader/fallback.h
-@@ -5,6 +5,8 @@
- #include <linux/firmware.h>
- #include <linux/device.h>
- 
-+#include "firmware.h"
-+
- /**
-  * struct firmware_fallback_config - firmware fallback configuration settings
-  *
-@@ -31,7 +33,7 @@ struct firmware_fallback_config {
- #ifdef CONFIG_FW_LOADER_USER_HELPER
- int fw_sysfs_fallback(struct firmware *fw, const char *name,
- 		      struct device *device,
--		      unsigned int opt_flags,
-+		      enum fw_opt opt_flags,
- 		      int ret);
- void kill_pending_fw_fallback_reqs(bool only_kill_custom);
- 
-@@ -43,7 +45,7 @@ void unregister_sysfs_loader(void);
- #else /* CONFIG_FW_LOADER_USER_HELPER */
- static inline int fw_sysfs_fallback(struct firmware *fw, const char *name,
- 				    struct device *device,
--				    unsigned int opt_flags,
-+				    enum fw_opt opt_flags,
- 				    int ret)
- {
- 	/* Keep carrying over the same error */
-diff --git a/drivers/base/firmware_loader/firmware.h b/drivers/base/firmware_loader/firmware.h
-index 64acbb1a392c..4f433b447367 100644
---- a/drivers/base/firmware_loader/firmware.h
-+++ b/drivers/base/firmware_loader/firmware.h
-@@ -2,6 +2,7 @@
- #ifndef __FIRMWARE_LOADER_H
- #define __FIRMWARE_LOADER_H
- 
-+#include <linux/bitops.h>
- #include <linux/firmware.h>
- #include <linux/types.h>
- #include <linux/kref.h>
-@@ -10,13 +11,33 @@
- 
- #include <generated/utsrelease.h>
- 
--/* firmware behavior options */
--#define FW_OPT_UEVENT			(1U << 0)
--#define FW_OPT_NOWAIT			(1U << 1)
--#define FW_OPT_USERHELPER		(1U << 2)
--#define FW_OPT_NO_WARN			(1U << 3)
--#define FW_OPT_NOCACHE			(1U << 4)
--#define FW_OPT_NOFALLBACK		(1U << 5)
-+/**
-+ * enum fw_opt - options to control firmware loading behaviour
-+ *
-+ * @FW_OPT_UEVENT: Enables the fallback mechanism to send a kobject uevent
-+ *	when the firmware is not found. Userspace is in charge to load the
-+ *	firmware using the sysfs loading facility.
-+ * @FW_OPT_NOWAIT: Used to describe the firmware request is asynchronous.
-+ * @FW_OPT_USERHELPER: Enable the fallback mechanism, in case the direct
-+ *	filesystem lookup fails at finding the firmware.  For details refer to
-+ *	fw_sysfs_fallback().
-+ * @FW_OPT_NO_WARN: Quiet, avoid printing warning messages.
-+ * @FW_OPT_NOCACHE: Disables firmware caching. Firmware caching is used to
-+ *	cache the firmware upon suspend, so that upon resume races against the
-+ *	firmware file lookup on storage is avoided. Used for calls where the
-+ *	file may be too big, or where the driver takes charge of its own
-+ *	firmware caching mechanism.
-+ * @FW_OPT_NOFALLBACK: Disable the fallback mechanism. Takes precedence over
-+ *	&FW_OPT_UEVENT and &FW_OPT_USERHELPER.
-+ */
-+enum fw_opt {
-+	FW_OPT_UEVENT =         BIT(0),
-+	FW_OPT_NOWAIT =         BIT(1),
-+	FW_OPT_USERHELPER =     BIT(2),
-+	FW_OPT_NO_WARN =        BIT(3),
-+	FW_OPT_NOCACHE =        BIT(4),
-+	FW_OPT_NOFALLBACK =     BIT(5),
-+};
- 
- enum fw_status {
- 	FW_STATUS_UNKNOWN,
-@@ -110,6 +131,6 @@ static inline void fw_state_done(struct fw_priv *fw_priv)
- }
- 
- int assign_fw(struct firmware *fw, struct device *device,
--	      unsigned int opt_flags);
-+	      enum fw_opt opt_flags);
- 
- #endif /* __FIRMWARE_LOADER_H */
-diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
-index eb34089e4299..9919f0e6a7cc 100644
---- a/drivers/base/firmware_loader/main.c
-+++ b/drivers/base/firmware_loader/main.c
-@@ -443,7 +443,7 @@ static int fw_add_devm_name(struct device *dev, const char *name)
- #endif
- 
- int assign_fw(struct firmware *fw, struct device *device,
--	      unsigned int opt_flags)
-+	      enum fw_opt opt_flags)
- {
- 	struct fw_priv *fw_priv = fw->priv;
- 	int ret;
-@@ -558,7 +558,7 @@ static void fw_abort_batch_reqs(struct firmware *fw)
- static int
- _request_firmware(const struct firmware **firmware_p, const char *name,
- 		  struct device *device, void *buf, size_t size,
--		  unsigned int opt_flags)
-+		  enum fw_opt opt_flags)
- {
- 	struct firmware *fw = NULL;
- 	int ret;
-@@ -734,7 +734,7 @@ struct firmware_work {
- 	struct device *device;
- 	void *context;
- 	void (*cont)(const struct firmware *fw, void *context);
--	unsigned int opt_flags;
-+	enum fw_opt opt_flags;
- };
- 
- static void request_firmware_work_func(struct work_struct *work)
--- 
-2.17.0
+> ---
+>  drivers/staging/wilc1000/host_interface.c         | 12 ------------
+>  drivers/staging/wilc1000/host_interface.h         |  1 -
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++++---------
+>  3 files changed, 5 insertions(+), 22 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/host_interface.c
+> b/drivers/staging/wilc1000/host_interface.c index
+> 3fd4c8e62da6..b5f3829e9903 100644 ---
+> a/drivers/staging/wilc1000/host_interface.c +++
+> b/drivers/staging/wilc1000/host_interface.c @@ -2606,18 +2606,6 @@
+> static void timer_connect_cb(struct timer_list *t)
+> wilc_enqueue_cmd(&msg); }
+>  
+> -s32 wilc_remove_key(struct host_if_drv *hif_drv, const u8 *sta_addr)
+> -{
+> -	struct wid wid;
+> -
+> -	wid.id = (u16)WID_REMOVE_KEY;
+> -	wid.type = WID_STR;
+> -	wid.val = (s8 *)sta_addr;
+> -	wid.size = 6;
+> -
+> -	return 0;
+> -}
+> -
+>  int wilc_remove_wep_key(struct wilc_vif *vif, u8 index)
+>  {
+>  	int result = 0;
+> diff --git a/drivers/staging/wilc1000/host_interface.h
+> b/drivers/staging/wilc1000/host_interface.h index
+> 7a26f341e0ba..08b3ba7df8b4 100644 ---
+> a/drivers/staging/wilc1000/host_interface.h +++
+> b/drivers/staging/wilc1000/host_interface.h @@ -303,7 +303,6 @@
+> struct add_sta_param { };
+>  
+>  struct wilc_vif;
+> -s32 wilc_remove_key(struct host_if_drv *hif_drv, const u8 *sta_addr);
+>  int wilc_remove_wep_key(struct wilc_vif *vif, u8 index);
+>  int wilc_set_wep_default_keyid(struct wilc_vif *vif, u8 index);
+>  int wilc_add_wep_key_bss_sta(struct wilc_vif *vif, const u8 *key, u8
+> len, diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c index
+> 76b4afaef423..b499fb987395 100644 ---
+> a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c +++
+> b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c @@ -1054,15
+> +1054,11 @@ static int del_key(struct wiphy *wiphy, struct net_device
+> *netdev, } }
+>  
+> -	if (key_index >= 0 && key_index <= 3) {
+> -		if (priv->wep_key_len[key_index]) {
+> -			memset(priv->wep_key[key_index], 0,
+> -			       priv->wep_key_len[key_index]);
+> -			priv->wep_key_len[key_index] = 0;
+> -			wilc_remove_wep_key(vif, key_index);
+> -		}
+> -	} else {
+> -		wilc_remove_key(priv->hif_drv, mac_addr);
+> +	if (key_index >= 0 && key_index <= 3 &&
+> priv->wep_key_len[key_index]) {
+> +		memset(priv->wep_key[key_index], 0,
+> +		       priv->wep_key_len[key_index]);
+> +		priv->wep_key_len[key_index] = 0;
+> +		wilc_remove_wep_key(vif, key_index);
+>  	}
+>  
+>  	return 0;
