@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:58130 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752928AbeEOJPI (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:12228 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752531AbeEGIob (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 May 2018 05:15:08 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Franky Lin <franky.lin@broadcom.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 8/8] brcmfmac: trigger memory dump on SDIO firmware halt message
-Date: Tue, 15 May 2018 11:14:51 +0200
-Message-Id: <1526375691-31789-9-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180515_111543_231080_6035D2B7)
-In-Reply-To: <1526375691-31789-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1526375691-31789-1-git-send-email-arend.vanspriel@broadcom.com>
+        Mon, 7 May 2018 04:44:31 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 15/30] staging: wilc1000: use kmemdup instead of kmalloc in add_network_to_shadow()
+Date: Mon, 7 May 2018 14:13:19 +0530
+Message-ID: <1525682614-3824-16-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104436_657961_3108911B)
+In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <franky.lin@broadcom.com>
+Use kmemdup instead of kmalloc & memcpy in add_network_to_shadow().
 
-Attempt to dump dongle memory for debug upon receiving firmware halt
-message through dongle to host mail box interrupt.
-
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 412a05b..c99a191 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -1072,8 +1072,10 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
- 	bus->sdcnt.f1regdata += 2;
- 
- 	/* dongle indicates the firmware has halted/crashed */
--	if (hmb_data & HMB_DATA_FWHALT)
-+	if (hmb_data & HMB_DATA_FWHALT) {
- 		brcmf_err("mailbox indicates firmware halted\n");
-+		brcmf_dev_coredump(&sdiod->func1->dev);
-+	}
- 
- 	/* Dongle recomposed rx frames, accept them again */
- 	if (hmb_data & HMB_DATA_NAKHANDLED) {
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 0ae2065..ca221f1 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -331,8 +331,8 @@ static void add_network_to_shadow(struct network_info *nw_info,
+ 	shadow_nw_info->tsf_hi = nw_info->tsf_hi;
+ 	if (ap_found != -1)
+ 		kfree(shadow_nw_info->ies);
+-	shadow_nw_info->ies = kmalloc(nw_info->ies_len, GFP_KERNEL);
+-	memcpy(shadow_nw_info->ies, nw_info->ies, nw_info->ies_len);
++	shadow_nw_info->ies = kmemdup(nw_info->ies, nw_info->ies_len,
++				      GFP_KERNEL);
+ 	shadow_nw_info->time_scan = jiffies;
+ 	shadow_nw_info->time_scan_cached = jiffies;
+ 	shadow_nw_info->found = 1;
 -- 
-1.9.1
+2.7.4
