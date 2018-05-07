@@ -1,78 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:49306 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964799AbeEIPND (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 11:13:03 -0400
-Date: Wed, 9 May 2018 12:12:09 -0300
-From: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: gregkh@linuxfoundation.org, akpm@linux-foundation.org,
-        keescook@chromium.org, josh@joshtriplett.org, maco@android.com,
-        andy.gross@linaro.org, david.brown@linaro.org,
-        bjorn.andersson@linaro.org, teg@jklm.no, wagi@monom.org,
-        hdegoede@redhat.com, andresx7@gmail.com, zohar@linux.vnet.ibm.com,
-        kubakici@wp.pl, shuah@kernel.org, mfuzzey@parkeon.com,
-        dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de,
-        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        cantabile.desu@gmail.com, ast@fb.com, hare@suse.com,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl,
-        davem@davemloft.net, arve@android.com, tkjos@android.com,
-        corbet@lwn.net, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v6 12/13] Documentation: remove stale firmware API
- reference
-Message-ID: <20180509121209.1e332f63@vento.lan> (sfid-20180509_171332_666895_FB268DF5)
-In-Reply-To: <20180508181247.19431-13-mcgrof@kernel.org>
-References: <20180508181247.19431-1-mcgrof@kernel.org>
-        <20180508181247.19431-13-mcgrof@kernel.org>
+Received: from mail-ve1eur01on0085.outbound.protection.outlook.com ([104.47.1.85]:58265
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752460AbeEGUE1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 May 2018 16:04:27 -0400
+Subject: Re: [PATCH] mesh: don't process mesh channel switch unless csa ie
+ provided
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <1524857196-29399-1-git-send-email-peter.oh@bowerswilkins.com>
+ <1525722286.22388.5.camel@sipsolutions.net>
+From: Peter Oh <peter.oh@bowerswilkins.com>
+Message-ID: <81cf6620-d7f6-50f7-23c5-e1ba693f2907@bowerswilkins.com> (sfid-20180507_220432_266777_461E2353)
+Date: Mon, 7 May 2018 13:04:13 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <1525722286.22388.5.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Tue,  8 May 2018 11:12:46 -0700
-"Luis R. Rodriguez" <mcgrof@kernel.org> escreveu:
 
-> It refers to a pending patch, but this was merged eons ago.
 
-Didn't know that such patch was already merged. Great!
+On 05/07/2018 12:44 PM, Johannes Berg wrote:
+> On Fri, 2018-04-27 at 12:26 -0700, peter.oh@bowerswilkins.com wrote:
+>> From: Peter Oh <peter.oh@bowerswilkins.com>
+>>
+>> There is no meaning to call ieee80211_mesh_process_chnswitch
+>> without CSA IE provided, since the function will always return error.
+> I'm not convinced, an extended channel switch element might be present
+> instead?
+I expected the comment. Yes, extended channel switch element could be 
+present instead of channel switch element which I missed to take care 
+of. So you can ignore the patch for now and I'll get back with right 
+patch for it.
 
-Regards,
-Mauro
-
-> 
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> ---
->  Documentation/dell_rbu.txt | 3 ---
->  1 file changed, 3 deletions(-)
-> 
-> diff --git a/Documentation/dell_rbu.txt b/Documentation/dell_rbu.txt
-> index 0fdb6aa2704c..077fdc29a0d0 100644
-> --- a/Documentation/dell_rbu.txt
-> +++ b/Documentation/dell_rbu.txt
-> @@ -121,9 +121,6 @@ read back the image downloaded.
->  
->  .. note::
->  
-> -   This driver requires a patch for firmware_class.c which has the modified
-> -   request_firmware_nowait function.
-> -
-
->     Also after updating the BIOS image a user mode application needs to execute
->     code which sends the BIOS update request to the BIOS. So on the next reboot
->     the BIOS knows about the new image downloaded and it updates itself.
-
-You should likely remove the "Also" here.
-
-With that,
-
-Reviewed-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-
-Regards,
-Mauro
+Thanks,
+Peter
