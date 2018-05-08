@@ -1,105 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:52911 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752020AbeEQNJu (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47406 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754366AbeEHKGl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 May 2018 09:09:50 -0400
-Received: by mail-it0-f65.google.com with SMTP id y189-v6so8687373itb.2
-        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2018 06:09:50 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, kernel-team@fb.com,
-        Bob Copeland <me@bobcopeland.com>,
-        Bob Copeland <bobcopeland@fb.com>
-Subject: [PATCH] mac80211: mesh: fix premature update of rc stats
-Date: Thu, 17 May 2018 09:09:28 -0400
-Message-Id: <20180517130928.5397-1-me@bobcopeland.com> (sfid-20180517_150958_526308_57611C7C)
+        Tue, 8 May 2018 06:06:41 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+        Joe Perches <joe@perches.com>,
+        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: Re: [PATCH 4.17] bcma: fix buffer size caused crash in bcma_core_mips_print_irq()
+References: <20180508093104.27018-1-zajec5@gmail.com>
+Date: Tue, 08 May 2018 13:06:35 +0300
+In-Reply-To: <20180508093104.27018-1-zajec5@gmail.com> (=?utf-8?Q?=22Rafa?=
+ =?utf-8?Q?=C5=82_Mi=C5=82ecki=22's?=
+        message of "Tue, 8 May 2018 11:31:04 +0200")
+Message-ID: <87zi1a1mxg.fsf@kamboji.qca.qualcomm.com> (sfid-20180508_120646_156730_939A06E6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mesh_neighbour_update() function, queued via beacon rx, can race with
-userspace creating the same station.  If the station already exists by the
-time mesh_neighbour_update() is called, the function wrongly assumes rate
-control has been initialized and calls rate_control_rate_update(), which
-in turn calls into the driver.
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
 
-Updating the rate control before it has been initialized can cause a
-crash in some drivers, for example this firmware crash in ath10k due
-to sta->rx_nss being 0:
+> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>
+> Used buffer wasn't big enough to hold whole strings. Example output of
+> this function is:
+> [    0.180892] bcma: bus0: core 0x0800, irq: 2(S)* 3  4  5  6  D  I
+> [    0.180948] bcma: bus0: core 0x0812, irq: 2(S)  3* 4  5  6  D  I
+> [    0.180998] bcma: bus0: core 0x082d, irq: 2(S)  3  4* 5  6  D  I
+> [    0.181046] bcma: bus0: core 0x082c, irq: 2(S)  3  4  5  6  D  I*
+> which means we need to store up to 24 chars.
+>
+> Fixes: 758f7e06063a8 ("bcma: Use bcma_debug and not pr_cont in MIPS drive=
+r")
+> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+> Cc: stable@vger.kernel.org # v4.15+
 
-[ 3078.088247] mesh0: Inserted STA 5c:e2:8c:f1:ab:ba
-[ 3078.258407] ath10k_pci 0000:0d:00.0: firmware crashed! (uuid d6ed5961-93cc-4d61-803f-5eda55bb8643)
-[ 3078.258421] ath10k_pci 0000:0d:00.0: qca988x hw2.0 target 0x4100016c chip_id 0x043202ff sub 0000:0000
-[ 3078.258426] ath10k_pci 0000:0d:00.0: kconfig debug 1 debugfs 1 tracing 1 dfs 0 testmode 0
-[ 3078.258608] ath10k_pci 0000:0d:00.0: firmware ver 10.2.4.70.59-2 api 5 features no-p2p,raw-mode,mfp crc32 4159f498
-[ 3078.258613] ath10k_pci 0000:0d:00.0: board_file api 1 bmi_id N/A crc32 bebc7c08
-[ 3078.258617] ath10k_pci 0000:0d:00.0: htt-ver 2.1 wmi-op 5 htt-op 2 cal otp max-sta 128 raw 0 hwcrypto 1
-[ 3078.260627] ath10k_pci 0000:0d:00.0: firmware register dump:
-[ 3078.260640] ath10k_pci 0000:0d:00.0: [00]: 0x4100016C 0x000015B3 0x009A31BB 0x00955B31
-[ 3078.260647] ath10k_pci 0000:0d:00.0: [04]: 0x009A31BB 0x00060130 0x00000008 0x00000007
-[ 3078.260652] ath10k_pci 0000:0d:00.0: [08]: 0x00000000 0x00955B31 0x00000000 0x0040F89E
-[ 3078.260656] ath10k_pci 0000:0d:00.0: [12]: 0x00000009 0xFFFFFFFF 0x009580F5 0x00958117
-[ 3078.260660] ath10k_pci 0000:0d:00.0: [16]: 0x00958080 0x0094085D 0x00000000 0x00000000
-[ 3078.260664] ath10k_pci 0000:0d:00.0: [20]: 0x409A31BB 0x0040AA84 0x00000002 0x00000001
-[ 3078.260669] ath10k_pci 0000:0d:00.0: [24]: 0x809A2B8D 0x0040AAE4 0x00000088 0xC09A31BB
-[ 3078.260673] ath10k_pci 0000:0d:00.0: [28]: 0x809898C8 0x0040AB04 0x0043F91C 0x009C6458
-[ 3078.260677] ath10k_pci 0000:0d:00.0: [32]: 0x809B66AC 0x0040AB34 0x009C6458 0x0043F91C
-[ 3078.260686] ath10k_pci 0000:0d:00.0: [36]: 0x809B2824 0x0040ADA4 0x00400000 0x00416EB4
-[ 3078.260692] ath10k_pci 0000:0d:00.0: [40]: 0x809C07D9 0x0040ADE4 0x0040AE08 0x00412028
-[ 3078.260696] ath10k_pci 0000:0d:00.0: [44]: 0x809486FA 0x0040AE04 0x00000001 0x00000000
-[ 3078.260700] ath10k_pci 0000:0d:00.0: [48]: 0x80948E2C 0x0040AEA4 0x0041F4F0 0x00412634
-[ 3078.260704] ath10k_pci 0000:0d:00.0: [52]: 0x809BFC39 0x0040AEC4 0x0041F4F0 0x00000001
-[ 3078.260709] ath10k_pci 0000:0d:00.0: [56]: 0x80940F18 0x0040AF14 0x00000010 0x00403AC0
-[ 3078.284130] ath10k_pci 0000:0d:00.0: failed to to request monitor vdev 1 stop: -108
+I'll queue this for 4.17.
 
-Fix this by checking whether the sta has already initialized rate control
-using the flag for that purpose.  We can also drop the unnecessary insert
-parameter here.
-
-Signed-off-by: Bob Copeland <bobcopeland@fb.com>
----
- net/mac80211/mesh_plink.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 0f6c9ca..5b5b0f9 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -401,7 +401,7 @@ u32 mesh_plink_deactivate(struct sta_info *sta)
- 
- static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
- 			       struct sta_info *sta,
--			       struct ieee802_11_elems *elems, bool insert)
-+			       struct ieee802_11_elems *elems)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband;
-@@ -447,7 +447,7 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
- 		sta->sta.bandwidth = IEEE80211_STA_RX_BW_20;
- 	}
- 
--	if (insert)
-+	if (!test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
- 		rate_control_rate_init(sta);
- 	else
- 		rate_control_rate_update(local, sband, sta, changed);
-@@ -551,7 +551,7 @@ mesh_sta_info_get(struct ieee80211_sub_if_data *sdata,
- 	rcu_read_lock();
- 	sta = sta_info_get(sdata, addr);
- 	if (sta) {
--		mesh_sta_info_init(sdata, sta, elems, false);
-+		mesh_sta_info_init(sdata, sta, elems);
- 	} else {
- 		rcu_read_unlock();
- 		/* can't run atomic */
-@@ -561,7 +561,7 @@ mesh_sta_info_get(struct ieee80211_sub_if_data *sdata,
- 			return NULL;
- 		}
- 
--		mesh_sta_info_init(sdata, sta, elems, true);
-+		mesh_sta_info_init(sdata, sta, elems);
- 
- 		if (sta_info_insert_rcu(sta))
- 			return NULL;
--- 
-2.9.0
+--=20
+Kalle Valo
