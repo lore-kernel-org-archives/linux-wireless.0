@@ -1,38 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dnvrco-outbound-snat.email.rr.com ([107.14.73.227]:7616 "EHLO
-        dnvrco-cmomta02.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S966192AbeEXW3n (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:55758 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754856AbeEHMTg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 May 2018 18:29:43 -0400
-Message-ID: <20180524222942.533WK.32712.root@dnvrco-web06> (sfid-20180525_002947_762541_7353D9F7)
-Date: Thu, 24 May 2018 22:29:42 +0000
-From: <mgreger@cinci.rr.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Can no one help me? (Nevermind)
-In-Reply-To: <20180524002814.0LYFB.99550.root@dnvrco-web07>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Tue, 8 May 2018 08:19:36 -0400
+Message-ID: <1525781970.14830.11.camel@sipsolutions.net> (sfid-20180508_141950_047472_D01128F6)
+Subject: Re: [PATCH] nl80211: Reject disconnect commands except from
+ conn_owner
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 08 May 2018 14:19:30 +0200
+In-Reply-To: <5AF1959E.6020605@broadcom.com> (sfid-20180508_141840_870131_A9A1B28D)
+References: <20180428014732.4018-1-andrew.zaborowski@intel.com>
+         <87in8b8ooy.fsf@purkki.adurom.net>
+         <CAOq732JPfbJWyR0RROY-t67p7dOuoHoHS6eaMrZ1j39F1Q0zmg@mail.gmail.com>
+         <1525720752.22388.3.camel@sipsolutions.net> <5AF1959E.6020605@broadcom.com>
+         (sfid-20180508_141840_870131_A9A1B28D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nevermind.
-
-I tried several different AR9462 cards in a completely different laptop running MS Windows 10 (Privacy Invasion Edition) with the exact same results.
-
-Conclusion: Atheros is complete crap.
-
-Can anyone recommend a dual-band adapter that ACTUALLY WORKS in linux with an open driver and without proprietary firmware (M.2 NGFF format A keyed or A-E keyed)? 
-
-Thanks
-
-
----- mgreger@cinci.rr.com wrote: 
-> I realize this is a development mailinglist and not a support forum, but I'm really at the end of my rope here.
+On Tue, 2018-05-08 at 14:18 +0200, Arend van Spriel wrote:
+> On 5/7/2018 9:19 PM, Johannes Berg wrote:
+> > On Sun, 2018-04-29 at 20:30 +0200, Andrew Zaborowski wrote:
+> > > On 28 April 2018 at 15:07, Kalle Valo <kvalo@codeaurora.org> wrote:
+> > > > Andrew Zaborowski <andrew.zaborowski@intel.com> writes:
+> > > > > Reject NL80211_CMD_DISCONNECT, NL80211_CMD_DISASSOCIATE,
+> > > > > NL80211_CMD_DEAUTHENTICATE and NL80211_CMD_ASSOCIATE commands
+> > > > > from clients other than the connection owner set in the connect,
+> > > > > authenticate or associate commands, if it was set.
+> > > > > 
+> > > > > The main point of this check is to prevent chaos when two processes
+> > > > > try to use nl80211 at the same time, it's not a security measure.
+> > > > > The same thing should possibly be done for JOIN_IBSS/LEAVE_IBSS and
+> > > > > START_AP/STOP_AP.
+> > > > 
+> > > > s-o-b missing.
+> > > 
+> > > True, thanks.  Also I was going to send this as an RFC.
+> > > 
+> > 
+> > Looks fine to me, please resend if you want it in :)
 > 
-> If someone can get this working, I'll buy them a nice lunch if they're ever near Cincinnati.
-> 
-> I've tried booting alternative distros to see if it is a software problem, but no distro I've tried will work. I've even replaced the AR9462 card with another one, thinking maybe the hardware was bad...but no change.
-> 
-> Surely someone here has a clue as to what's going on?
-> 
-> Many thanks in advance for any help.
+> Do we really want this? Is the referred chaos hypothetical or an actual 
+> issue. Nothing stops me from doing an 'ifconfig down' so why should 'iw 
+> disconnect' be any different. As far I can tell it does not affect my 
+> testing environment, but particularly in such use-cases I can expect 
+> issues adopting this change, which is also hypothetical of course ;-)
+
+Yeah, it's a good question. But it might help with inadvertent issues,
+like starting wpa_s which immediately disconnects if it finds something
+connected. If that fails, perhaps you have a better chance of noticing
+the error?
+
+johannes
