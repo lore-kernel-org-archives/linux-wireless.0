@@ -1,39 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35827 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751148AbeEAIeD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 May 2018 04:34:03 -0400
-Received: by mail-wm0-f66.google.com with SMTP id o78so18070750wmg.0
-        for <linux-wireless@vger.kernel.org>; Tue, 01 May 2018 01:34:03 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76x2: remove unnecessary break in mt76x2_mac_process_tx_rate()
-Date: Tue,  1 May 2018 10:33:54 +0200
-Message-Id: <20180501083354.1252-1-lorenzo.bianconi@redhat.com> (sfid-20180501_103411_756617_50DA40E4)
+Received: from mail.kernel.org ([198.145.29.99]:41218 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933334AbeEHSNI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 May 2018 14:13:08 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, keescook@chromium.org,
+        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
+        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
+        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
+        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
+        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
+        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        jewalt@lgsinnovations.com, oneukum@suse.com,
+        cantabile.desu@gmail.com, ast@fb.com, hare@suse.com,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl,
+        davem@davemloft.net, arve@android.com, tkjos@android.com,
+        corbet@lwn.net, mchehab+samsung@kernel.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, "Luis R . Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v6 10/13] ath10k: re-enable the firmware fallback mechanism for testmode
+Date: Tue,  8 May 2018 11:12:44 -0700
+Message-Id: <20180508181247.19431-11-mcgrof@kernel.org> (sfid-20180508_201620_211644_0AAAD69F)
+In-Reply-To: <20180508181247.19431-1-mcgrof@kernel.org>
+References: <20180508181247.19431-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unnecessary break statement in the default case of bw switch
-block in mt76x2_mac_process_tx_rate routine
+From: Andres Rodriguez <andresx7@gmail.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+The ath10k testmode uses request_firmware_direct() in order to avoid
+producing firmware load warnings. Disabling the fallback mechanism was a
+side effect of disabling warnings.
+
+We now have a new API that allows us to avoid warnings while keeping the
+fallback mechanism enabled. So use that instead.
+
+Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
+Acked-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/testmode.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-index d18315652583..dab713756004 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-@@ -410,7 +410,6 @@ mt76x2_mac_process_tx_rate(struct ieee80211_tx_rate *txrate, u16 rate,
- 		break;
- 	default:
- 		return -EINVAL;
--		break;
- 	}
+diff --git a/drivers/net/wireless/ath/ath10k/testmode.c b/drivers/net/wireless/ath/ath10k/testmode.c
+index 568810b41657..c24ee616833c 100644
+--- a/drivers/net/wireless/ath/ath10k/testmode.c
++++ b/drivers/net/wireless/ath/ath10k/testmode.c
+@@ -157,7 +157,7 @@ static int ath10k_tm_fetch_utf_firmware_api_1(struct ath10k *ar,
+ 		 ar->hw_params.fw.dir, ATH10K_FW_UTF_FILE);
  
- 	if (rate & MT_RXWI_RATE_SGI)
+ 	/* load utf firmware image */
+-	ret = request_firmware_direct(&fw_file->firmware, filename, ar->dev);
++	ret = firmware_request_nowarn(&fw_file->firmware, filename, ar->dev);
+ 	ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode fw request '%s': %d\n",
+ 		   filename, ret);
+ 
 -- 
-2.16.3
+2.17.0
