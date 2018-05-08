@@ -1,36 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41434 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932523AbeE1P6t (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 May 2018 11:58:49 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Revert "rt2800: use TXOP_BACKOFF for probe frames"
-References: <1527506706-6488-1-git-send-email-sgruszka@redhat.com>
-Date: Mon, 28 May 2018 18:58:45 +0300
-In-Reply-To: <1527506706-6488-1-git-send-email-sgruszka@redhat.com> (Stanislaw
-        Gruszka's message of "Mon, 28 May 2018 13:25:06 +0200")
-Message-ID: <87bmczkc0a.fsf@purkki.adurom.net> (sfid-20180528_180030_987784_138EB2D4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail.kernel.org ([198.145.29.99]:40986 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932874AbeEHSNC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 May 2018 14:13:02 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, keescook@chromium.org,
+        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
+        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
+        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
+        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
+        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
+        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        jewalt@lgsinnovations.com, oneukum@suse.com,
+        cantabile.desu@gmail.com, ast@fb.com, hare@suse.com,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl,
+        davem@davemloft.net, arve@android.com, tkjos@android.com,
+        corbet@lwn.net, mchehab+samsung@kernel.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v6 07/13] firmware_loader: make firmware_fallback_sysfs() print more useful
+Date: Tue,  8 May 2018 11:12:41 -0700
+Message-Id: <20180508181247.19431-8-mcgrof@kernel.org> (sfid-20180508_201627_163755_3F99BE45)
+In-Reply-To: <20180508181247.19431-1-mcgrof@kernel.org>
+References: <20180508181247.19431-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> writes:
+If we resort to using the sysfs fallback mechanism we don't print
+the filename. This can be deceiving given we could have a series of
+callers intertwined and it'd be unclear exactly for what firmware
+this was meant for.
 
-> This reverts commit fb47ada8dc3c30c8e7b415da155742b49536c61e.
->
-> In some situations when we set TXOP_BACKOFF, the probe frame is
-> not sent at all. What it worse then sending probe frame as part
-> of AMPDU and can degrade 11n performance to 11g rates.
->
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Additionally, although we don't currently use FW_OPT_NO_WARN when
+dealing with the fallback mechanism, we will soon, so just respect
+its use consistently.
 
-I'll try to get to this to final 4.17 still (scheduled for next Sunday),
-but no promises if it makes it.
+And even if you *don't* want to print always on failure, you may
+want to print when debugging so enable dynamic debug print when
+FW_OPT_NO_WARN is used.
 
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ drivers/base/firmware_loader/fallback.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
+index 9169e7b9800c..b676a99c469c 100644
+--- a/drivers/base/firmware_loader/fallback.c
++++ b/drivers/base/firmware_loader/fallback.c
+@@ -690,6 +690,11 @@ int firmware_fallback_sysfs(struct firmware *fw, const char *name,
+ 	if (!fw_run_sysfs_fallback(opt_flags))
+ 		return ret;
+ 
+-	dev_warn(device, "Falling back to user helper\n");
++	if (!(opt_flags & FW_OPT_NO_WARN))
++		dev_warn(device, "Falling back to syfs fallback for: %s\n",
++				 name);
++	else
++		dev_dbg(device, "Falling back to sysfs fallback for: %s\n",
++				name);
+ 	return fw_load_from_user_helper(fw, name, device, opt_flags);
+ }
 -- 
-Kalle Valo
+2.17.0
