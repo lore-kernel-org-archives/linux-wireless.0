@@ -1,99 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:38562 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750800AbeETIPl (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53870 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753392AbeEHBe7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 May 2018 04:15:41 -0400
-Received: by mail-wm0-f67.google.com with SMTP id m129-v6so21624057wmb.3
-        for <linux-wireless@vger.kernel.org>; Sun, 20 May 2018 01:15:40 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [RFC v2 05/18] mt76x2: move currently mt76x2u unsupported features to mt76x2_init
-Date: Sun, 20 May 2018 10:15:09 +0200
-Message-Id: <20180520081522.10163-6-lorenzo.bianconi@redhat.com> (sfid-20180520_101551_814369_20B8FAF3)
+        Mon, 7 May 2018 21:34:59 -0400
+From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Subject: [PATCH v2] ath10k: support for multicast rate control
+Date: Mon,  7 May 2018 18:34:51 -0700
+Message-Id: <1525743291-4306-1-git-send-email-pradeepc@codeaurora.org> (sfid-20180508_033505_642832_A8189C04)
+In-Reply-To: <cebad8674a69761e32a1a882de9a1259657c65d4>
+References: <cebad8674a69761e32a1a882de9a1259657c65d4>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move currently mt76x2u hw unsupported features to mt76x2_init in order
-to reuse mt76_register_device routine supporting mt76x2u based chipsets
+Issues wmi command to firmwre when multicast rate change is received
+with the new BSS_CHANGED_MCAST_RATE flag.
+Also fixes the incorrect fixed_rate setting for CCK rates which got
+introduced with addition of ath10k_rates_rev2 enum.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Tested on QCA9984 with firmware ver 10.4-3.6-00104
+
+Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 ---
- drivers/net/wireless/mediatek/mt76/mac80211.c    | 15 ---------------
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 16 ++++++++++++++++
- 2 files changed, 16 insertions(+), 15 deletions(-)
+v2:
+ - fixed the CCK rates setting for mcast_rate and fixed_rate paths.
+ - set broadcast rate along with multicast rate setting.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 915e61733131..da5254b48cf7 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -284,14 +284,6 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
- 	SET_IEEE80211_DEV(hw, dev->dev);
- 	SET_IEEE80211_PERM_ADDR(hw, dev->macaddr);
+ drivers/net/wireless/ath/ath10k/mac.c | 54 ++++++++++++++++++++++++++++++++---
+ 1 file changed, 50 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 3d7119a..70a0563 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -101,6 +101,8 @@
+ #define ath10k_g_rates_rev2 (ath10k_rates_rev2 + 0)
+ #define ath10k_g_rates_rev2_size (ARRAY_SIZE(ath10k_rates_rev2))
  
--	wiphy->interface_modes =
--		BIT(NL80211_IFTYPE_STATION) |
--		BIT(NL80211_IFTYPE_AP) |
--#ifdef CONFIG_MAC80211_MESH
--		BIT(NL80211_IFTYPE_MESH_POINT) |
--#endif
--		BIT(NL80211_IFTYPE_ADHOC);
--
- 	wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
- 
- 	wiphy->available_antennas_tx = dev->antenna_mask;
-@@ -301,17 +293,10 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
- 	hw->max_tx_fragments = 16;
- 
- 	ieee80211_hw_set(hw, SIGNAL_DBM);
--	ieee80211_hw_set(hw, PS_NULLFUNC_STACK);
--	ieee80211_hw_set(hw, HOST_BROADCAST_PS_BUFFERING);
- 	ieee80211_hw_set(hw, AMPDU_AGGREGATION);
- 	ieee80211_hw_set(hw, SUPPORTS_RC_TABLE);
- 	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
--	ieee80211_hw_set(hw, SUPPORTS_CLONED_SKBS);
--	ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
--	ieee80211_hw_set(hw, TX_AMSDU);
--	ieee80211_hw_set(hw, TX_FRAG_LIST);
- 	ieee80211_hw_set(hw, MFP_CAPABLE);
--	ieee80211_hw_set(hw, AP_LINK_PS);
- 
- 	wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index d678675a0b91..b00f51cf22df 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -834,6 +834,14 @@ int mt76x2_register_device(struct mt76x2_dev *dev)
- 
- 	wiphy->reg_notifier = mt76x2_regd_notifier;
- 
-+	wiphy->interface_modes =
-+		BIT(NL80211_IFTYPE_STATION) |
-+		BIT(NL80211_IFTYPE_AP) |
-+#ifdef CONFIG_MAC80211_MESH
-+		BIT(NL80211_IFTYPE_MESH_POINT) |
-+#endif
-+		BIT(NL80211_IFTYPE_ADHOC);
++#define ath10k_wmi_legacy_rates ath10k_rates
 +
- 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
+ static bool ath10k_mac_bitrate_is_cck(int bitrate)
+ {
+ 	switch (bitrate) {
+@@ -5426,8 +5428,12 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+ {
+ 	struct ath10k *ar = hw->priv;
+ 	struct ath10k_vif *arvif = (void *)vif->drv_priv;
+-	int ret = 0;
++	struct cfg80211_chan_def def;
+ 	u32 vdev_param, pdev_param, slottime, preamble;
++	u16 bitrate, hw_value;
++	u8 rate;
++	int rateidx, ret = 0;
++	enum nl80211_band band;
  
- 	mt76x2_dfs_init_detector(dev);
-@@ -842,6 +850,14 @@ int mt76x2_register_device(struct mt76x2_dev *dev)
- 	dev->mt76.led_cdev.brightness_set = mt76x2_led_set_brightness;
- 	dev->mt76.led_cdev.blink_set = mt76x2_led_set_blink;
+ 	mutex_lock(&ar->conf_mutex);
  
-+	ieee80211_hw_set(hw, PS_NULLFUNC_STACK);
-+	ieee80211_hw_set(hw, HOST_BROADCAST_PS_BUFFERING);
-+	ieee80211_hw_set(hw, SUPPORTS_CLONED_SKBS);
-+	ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
-+	ieee80211_hw_set(hw, TX_AMSDU);
-+	ieee80211_hw_set(hw, TX_FRAG_LIST);
-+	ieee80211_hw_set(hw, AP_LINK_PS);
+@@ -5595,6 +5601,44 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+ 				    arvif->vdev_id, ret);
+ 	}
+ 
++	if (changed & BSS_CHANGED_MCAST_RATE &&
++	    !WARN_ON(ath10k_mac_vif_chan(arvif->vif, &def))) {
++		band = def.chan->band;
++		rateidx = vif->bss_conf.mcast_rate[band] - 1;
 +
- 	ret = mt76_register_device(&dev->mt76, true, mt76x2_rates,
- 				   ARRAY_SIZE(mt76x2_rates));
- 	if (ret)
++		if (ar->phy_capability & WHAL_WLAN_11A_CAPABILITY)
++			rateidx += ATH10K_MAC_FIRST_OFDM_RATE_IDX;
++
++		bitrate = ath10k_wmi_legacy_rates[rateidx].bitrate;
++		hw_value = ath10k_wmi_legacy_rates[rateidx].hw_value;
++		if (ath10k_mac_bitrate_is_cck(bitrate))
++			preamble = WMI_RATE_PREAMBLE_CCK;
++		else
++			preamble = WMI_RATE_PREAMBLE_OFDM;
++
++		rate = ATH10K_HW_RATECODE(hw_value, 0, preamble);
++
++		ath10k_dbg(ar, ATH10K_DBG_MAC,
++			   "mac vdev %d mcast_rate %x\n",
++			   arvif->vdev_id, rate);
++
++		vdev_param = ar->wmi.vdev_param->mcast_data_rate;
++		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
++						vdev_param, rate);
++		if (ret)
++			ath10k_warn(ar,
++				    "failed to set mcast rate on vdev %i: %d\n",
++				    arvif->vdev_id,  ret);
++
++		vdev_param = ar->wmi.vdev_param->bcast_data_rate;
++		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
++						vdev_param, rate);
++		if (ret)
++			ath10k_warn(ar,
++				    "failed to set bcast rate on vdev %i: %d\n",
++				    arvif->vdev_id,  ret);
++	}
++
+ 	mutex_unlock(&ar->conf_mutex);
+ }
+ 
+@@ -6895,7 +6939,6 @@ ath10k_mac_bitrate_mask_get_single_rate(
+ 					const struct cfg80211_bitrate_mask *mask,
+ 					u8 *rate, u8 *nss)
+ {
+-	struct ieee80211_supported_band *sband = &ar->mac.sbands[band];
+ 	int rate_idx;
+ 	int i;
+ 	u16 bitrate;
+@@ -6905,8 +6948,11 @@ ath10k_mac_bitrate_mask_get_single_rate(
+ 	if (hweight32(mask->control[band].legacy) == 1) {
+ 		rate_idx = ffs(mask->control[band].legacy) - 1;
+ 
+-		hw_rate = sband->bitrates[rate_idx].hw_value;
+-		bitrate = sband->bitrates[rate_idx].bitrate;
++		if (ar->phy_capability & WHAL_WLAN_11A_CAPABILITY)
++			rate_idx += ATH10K_MAC_FIRST_OFDM_RATE_IDX;
++
++		hw_rate = ath10k_wmi_legacy_rates[rate_idx].hw_value;
++		bitrate = ath10k_wmi_legacy_rates[rate_idx].bitrate;
+ 
+ 		if (ath10k_mac_bitrate_is_cck(bitrate))
+ 			preamble = WMI_RATE_PREAMBLE_CCK;
 -- 
-2.16.3
+1.9.1
