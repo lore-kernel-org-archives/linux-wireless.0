@@ -1,68 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:51158 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1032744AbeEXSya (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 May 2018 14:54:30 -0400
-Received: by mail-wm0-f67.google.com with SMTP id t11-v6so7951042wmt.0
-        for <linux-wireless@vger.kernel.org>; Thu, 24 May 2018 11:54:30 -0700 (PDT)
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [PATCH 2/3] brcmfmac: handle monitor mode marked msgbuf packets
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20180522131836.26858-1-zajec5@gmail.com>
- <20180522131836.26858-2-zajec5@gmail.com>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Message-ID: <5B070A5D.3080400@broadcom.com> (sfid-20180524_205524_594651_A3E593C9)
-Date: Thu, 24 May 2018 20:54:21 +0200
+Received: from mail.toke.dk ([52.28.52.200]:44519 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751934AbeEHLWP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 May 2018 07:22:15 -0400
+Subject: [PATCH v2 2/2] iw: Add getting and setting of TXQ params for phy
+From: Toke =?utf-8?q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: linux-wireless@vger.kernel.org
+Cc: make-wifi-fast@lists.bufferbloat.net
+Date: Tue, 08 May 2018 13:22:11 +0200
+Message-ID: <152577853191.32130.8121936914570715577.stgit@alrua-kau> (sfid-20180508_132221_528153_5F2CFF96)
+In-Reply-To: <152577853186.32130.16532617444736581736.stgit@alrua-kau>
+References: <152577853186.32130.16532617444736581736.stgit@alrua-kau>
 MIME-Version: 1.0
-In-Reply-To: <20180522131836.26858-2-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/22/2018 3:18 PM, Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
->
-> New Broadcom firmwares mark monitor mode packets using a newly defined
-> bit in the flags field. Use it to filter them out and pass to the
-> monitor interface. These defines were found in bcmmsgbuf.h from SDK.
->
-> As not every firmware generates radiotap header this commit introduces
-> BRCMF_FEAT_MON_FMT_RADIOTAP that has to be set per firmware version. If
-> not present brcmf_netif_mon_rx() assumed packet being a raw 802.11 frame
-> and prepends it with an empty radiotap header.
->
-> It's limited to the msgbuf protocol. Adding support for SDIO/USB devices
-> will require some extra research.
+This adds commands to get and set the per-phy TXQ parameters for drivers
+that use the intermediate TXQs. These are the settings and statistics that
+are also available through /sys/kernel/debug/ieee80211/phyX/aqm.
 
-So I went looking on my shelf and found the patch I made for SDIO a 
-while back. It relies on firmware change and I did not introduce a 
-firmware flag for it. I will send the patch as RFT so you can have a 
-look at it.
+Sample output:
 
-I checked our internal driver and it turns out the raw vs. radiotap is a 
-compilation option. So depending on customer they would get either 
-firmware doing the radiotap header generation or the host driver, 
-without any run-time way to determine it. Not nice for brcmfmac.
+$ iw phy phy0 get txq
+Packet limit:		8192 pkts
+Memory limit:		4194304 bytes
+Quantum:		300 bytes
+Number of queues:	4096
+Backlog:		12 pkts
+Memory usage:		52224 bytes
+Packet limit overflows:	0
+Memory limit overflows:	0
+Hash collisions:	1
 
-Regards,
-Arend
+Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+---
+ info.c |    2 +
+ phy.c  |  116 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 118 insertions(+)
 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> ---
->   .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 24 ++++++++++++++++++++++
->   .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  2 ++
->   .../wireless/broadcom/brcm80211/brcmfmac/feature.h |  6 +++++-
->   .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  | 17 +++++++++++++++
->   4 files changed, 48 insertions(+), 1 deletion(-)
->
+diff --git a/info.c b/info.c
+index be68571..fbf3ee0 100644
+--- a/info.c
++++ b/info.c
+@@ -686,6 +686,8 @@ broken_combination:
+ 		ext_feat_print(tb, NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211,
+ 			       "CONTROL_PORT_OVER_NL80211",
+ 			       "control port over nl80211");
++		ext_feat_print(tb, NL80211_EXT_FEATURE_TXQS,
++			       "TXQS", "FQ-CoDel-enabled intermediate TXQs");
+ 	}
+ 
+ 	if (tb_msg[NL80211_ATTR_COALESCE_RULE]) {
+diff --git a/phy.c b/phy.c
+index be31820..77df7a7 100644
+--- a/phy.c
++++ b/phy.c
+@@ -727,3 +727,119 @@ COMMAND(set, antenna, "<bitmap> | all | <tx bitmap> <rx bitmap>",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_antenna,
+ 	"Set a bitmap of allowed antennas to use for TX and RX.\n"
+ 	"The driver may reject antenna configurations it cannot support.");
++
++static int handle_set_txq(struct nl80211_state *state,
++			  struct nl_msg *msg,
++			  int argc, char **argv,
++			  enum id_input id)
++{
++	unsigned int argval;
++	char *end;
++
++	if (argc != 2)
++		return 1;
++
++	if (!*argv[0] || !*argv[1])
++		return 1;
++
++	argval = strtoul(argv[1], &end, 10);
++
++	if (*end)
++		return 1;
++
++	if (!argval)
++		return 1;
++
++	if (strcmp("limit", argv[0]) == 0)
++		NLA_PUT_U32(msg, NL80211_ATTR_TXQ_LIMIT, argval);
++	else if (strcmp("memory_limit", argv[0]) == 0)
++		NLA_PUT_U32(msg, NL80211_ATTR_TXQ_MEMORY_LIMIT, argval);
++	else if (strcmp("quantum", argv[0]) == 0)
++		NLA_PUT_U32(msg, NL80211_ATTR_TXQ_QUANTUM, argval);
++	else
++		return -1;
++
++	return 0;
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND(set, txq, "limit <packets> | memory_limit <bytes> | quantum <bytes>",
++	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_set_txq,
++	"Set TXQ parameters. The limit and memory_limit are global queue limits\n"
++	"for the whole phy. The quantum is the DRR scheduler quantum setting.\n"
++	"Valid values: 1 - 2**32");
++
++static int print_txq_handler(struct nl_msg *msg, void *arg)
++{
++	struct nlattr *attrs[NL80211_ATTR_MAX + 1];
++	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
++	struct nlattr *txqstats_info[NL80211_TXQ_STATS_MAX + 1], *txqinfo;
++	static struct nla_policy txqstats_policy[NL80211_TXQ_STATS_MAX + 1] = {
++		[NL80211_TXQ_STATS_BACKLOG_PACKETS] = { .type = NLA_U32 },
++		[NL80211_TXQ_STATS_BACKLOG_BYTES] = { .type = NLA_U32 },
++		[NL80211_TXQ_STATS_OVERLIMIT] = { .type = NLA_U32 },
++		[NL80211_TXQ_STATS_OVERMEMORY] = { .type = NLA_U32 },
++		[NL80211_TXQ_STATS_COLLISIONS] = { .type = NLA_U32 },
++		[NL80211_TXQ_STATS_MAX_FLOWS] = { .type = NLA_U32 },
++	};
++
++	nla_parse(attrs, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
++		  genlmsg_attrlen(gnlh, 0), NULL);
++
++
++	if (attrs[NL80211_ATTR_TXQ_LIMIT])
++		printf("Packet limit:\t\t%u pkts\n",
++			nla_get_u32(attrs[NL80211_ATTR_TXQ_LIMIT]));
++	if (attrs[NL80211_ATTR_TXQ_MEMORY_LIMIT])
++		printf("Memory limit:\t\t%u bytes\n",
++			nla_get_u32(attrs[NL80211_ATTR_TXQ_MEMORY_LIMIT]));
++	if (attrs[NL80211_ATTR_TXQ_QUANTUM])
++		printf("Quantum:\t\t%u bytes\n",
++			nla_get_u32(attrs[NL80211_ATTR_TXQ_QUANTUM]));
++
++	if (attrs[NL80211_ATTR_TXQ_STATS]) {
++		if (nla_parse_nested(txqstats_info, NL80211_TXQ_STATS_MAX,
++				     attrs[NL80211_ATTR_TXQ_STATS],
++				     txqstats_policy)) {
++			printf("failed to parse nested TXQ stats attributes!");
++			return 0;
++		}
++		txqinfo = txqstats_info[NL80211_TXQ_STATS_MAX_FLOWS];
++		if (txqinfo)
++			printf("Number of queues:\t%u\n", nla_get_u32(txqinfo));
++
++		txqinfo = txqstats_info[NL80211_TXQ_STATS_BACKLOG_PACKETS];
++		if (txqinfo)
++			printf("Backlog:\t\t%u pkts\n", nla_get_u32(txqinfo));
++
++		txqinfo = txqstats_info[NL80211_TXQ_STATS_BACKLOG_BYTES];
++		if (txqinfo)
++			printf("Memory usage:\t\t%u bytes\n", nla_get_u32(txqinfo));
++
++		txqinfo = txqstats_info[NL80211_TXQ_STATS_OVERLIMIT];
++		if (txqinfo)
++			printf("Packet limit overflows:\t%u\n", nla_get_u32(txqinfo));
++
++		txqinfo = txqstats_info[NL80211_TXQ_STATS_OVERMEMORY];
++		if (txqinfo)
++			printf("Memory limit overflows:\t%u\n", nla_get_u32(txqinfo));
++		txqinfo = txqstats_info[NL80211_TXQ_STATS_COLLISIONS];
++		if (txqinfo)
++			printf("Hash collisions:\t%u\n", nla_get_u32(txqinfo));
++	}
++	return NL_SKIP;
++}
++
++static int handle_get_txq(struct nl80211_state *state,
++			  struct nl_msg *msg,
++			  int argc, char **argv,
++			  enum id_input id)
++{
++	nla_put_flag(msg, NL80211_ATTR_SPLIT_WIPHY_DUMP);
++	nlmsg_hdr(msg)->nlmsg_flags |= NLM_F_DUMP;
++	register_handler(print_txq_handler, NULL);
++	return 0;
++}
++COMMAND(get, txq, "",
++	NL80211_CMD_GET_WIPHY, 0, CIB_PHY, handle_get_txq,
++	"Get TXQ parameters.");
