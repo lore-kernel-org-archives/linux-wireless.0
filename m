@@ -1,73 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:33917 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967293AbeEYRG2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 May 2018 13:06:28 -0400
-Received: by mail-wm0-f67.google.com with SMTP id q4-v6so14307530wmq.1
-        for <linux-wireless@vger.kernel.org>; Fri, 25 May 2018 10:06:28 -0700 (PDT)
+Received: from mx2.suse.de ([195.135.220.15]:53445 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753627AbeEHAU6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 May 2018 20:20:58 -0400
+Date: Tue, 8 May 2018 00:20:55 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Andres Rodriguez <andresx7@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
+        alexdeucher@gmail.com, christian.koenig@amd.com,
+        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        hdegoede@redhat.com, Kees Cook <keescook@chromium.org>,
+        Mimi Zohar <zohar@linux.vnet.ibm.com>
+Subject: Re: [PATCH 6/9] firmware: print firmware name on fallback path
+Message-ID: <20180508002055.GY27853@wotan.suse.de> (sfid-20180508_022113_250258_651E3A17)
+References: <20180423201205.20533-1-andresx7@gmail.com>
+ <20180423201205.20533-7-andresx7@gmail.com>
+ <20180503234235.GX27853@wotan.suse.de>
+ <e79fe68b-7dc5-b65a-e483-287c91d67bc2@gmail.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <20180522172129.V9LI1.34449.root@dnvrco-web11>
-References: <20180522172129.V9LI1.34449.root@dnvrco-web11>
-From: Sedat Dilek <sedat.dilek@gmail.com>
-Date: Fri, 25 May 2018 19:06:27 +0200
-Message-ID: <CA+icZUX+p2feWOnXSA=m3i+r560Mo2kHsadT4qFhx8VvUv_k8A@mail.gmail.com> (sfid-20180525_190632_814397_E1AD5897)
-Subject: Re: Atheros AR9462 - 5Ghz not working
-To: mgreger@cinci.rr.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <e79fe68b-7dc5-b65a-e483-287c91d67bc2@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 22, 2018 at 7:21 PM,  <mgreger@cinci.rr.com> wrote:
-> I've run out of ideas and am hoping someone here can help.
->
-> All I want to do is connect a client to my 5Ghz network.
->
-> My client:
->   OS is Debian stable "Stretch" with sysvinit instead of systemd
->   Atheros AR9462 (World roaming 0x64 regdomain in EEPROM)
->   "iw reg set US"
->   "iw list" shows both 2.4Ghz and 5Ghz bands available.
->   "iw wlp3s0 survey dump" shows received traffic on 5Ghz bands.
->
-> There are oodles of 5Ghz AP's within range, but scans (including passive scans) reveal only 2.4Ghz networks. My only guess was that it won't transmit due to regulatory requirements, but I cannot make it work.
->
-> What I've tried:
->   Running with and without CRDA
->   Running latest mainline kernel
->   Hacking around on the ath9k driver and nl80211 to remove all regulatory enforcement.
->
-> Nothing works and I'm pulling my hair out. Any help would be greatly appreciated.
+On Fri, May 04, 2018 at 10:57:26PM -0400, Andres Rodriguez wrote:
+> On 2018-05-03 07:42 PM, Luis R. Rodriguez wrote:
+> > On Mon, Apr 23, 2018 at 04:12:02PM -0400, Andres Rodriguez wrote:
+> > > Previously, one could assume the firmware name from the preceding
+> > > message: "Direct firmware load for {name} failed with error %d".
+> > > 
+> > > However, with the new firmware_request_nowarn() entrypoint, the message
+> > > outlined above will not always be printed.
+> > 
+> > I though the whole point was to not print an error message. What if
+> > we want later to disable this error message? This would prove a bit
+> > pointless.
+> > 
+> > Let's discuss the exact semantics desired here. Why would only the
+> > fallback be desirable here?
+> > 
+> > Andres, Kalle?
+> > 
+> > After we address this I'll address resubmitting this lat patch
+> > along with the last one. For now I'll skip it.
+> 
+> You are correct. I initially thought it would be useful to know that the
+> usermode fallback was being triggered. And for that message to be useful we
+> would need a fw name.
+> 
+> But now that you point it out, this behaviour is inconsistent with the
+> _nowarn() definition. We shouldn't have a message in the first place.
+> 
+> So it might be better to instead have:
+> 
+> if (!(opt_flags & FW_OPT_NO_WARN) )
+>     dev_warn(device, "Falling back to user helper\n");
+> 
+> No need to add the firmware name, cause we either:
+>     a) FW_OPT_NO_WARN is set and no messages are printed, or
+>     b) FW_OPT_NO_WARN is not set and we get both messages.
+> 
+> Yay, nay?
 
-Hi,
+I welcome such a new warning but not for any of the reasons stated.
 
-I try to give some initial help.
+It make sense if FW_OPT_NO_WARN is not set and only because the fallback
+mechanism can fail for a slew of different firmware files, and just getting
+informed a failure with a fallback occurred does not tell us for which file it
+failed for.
 
-The linux-wireless driver is supported by ath9k driver see [1] and [2].
+I'll add such a patch to my queue and send it off soon prior to your own
+new API nowarn call.
 
-Unfortunately, you have not sent any log-files at least your dmesg-log.
-No output of the above userspace commands or userspace-tools versions.
-No information to VendorID/ProductID (PCI, USB, whatever).
-It's not clear to me if this is a kernelspace (ath9k-driver) or
-userspace (CRDA/regulatory) problem.
-How should someone help you effectively?
-
-The linux-wireless wiki has somne informations on how to debug
-Atheros/Qualcomm ath9k-driver, see [3].
-
-As a debianist I say try Linux v4.16 Debian packages from
-stretch-backports (and maybe a higher version of wireless-regdb).
-
-Try to ask questions the smart way [4] :-).
-
-Hope this helps.
-
-Regards,
-- Sedat -
-
-[1] https://wireless.wiki.kernel.org/en/users/drivers/ath9k
-[2] https://wireless.wiki.kernel.org/en/users/drivers/ath9k/devices
-[3] https://wireless.wiki.kernel.org/en/users/drivers/ath9k/debug
-[4] http://www.catb.org/esr/faqs/smart-questions.html
+  Luis
