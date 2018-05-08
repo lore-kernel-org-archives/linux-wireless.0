@@ -1,93 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway22.websitewelcome.com ([192.185.46.233]:27354 "EHLO
-        gateway22.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S971329AbeEXULb (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:37630 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752500AbeEHMLl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 May 2018 16:11:31 -0400
-Received: from cm14.websitewelcome.com (cm14.websitewelcome.com [100.42.49.7])
-        by gateway22.websitewelcome.com (Postfix) with ESMTP id 21216289C
-        for <linux-wireless@vger.kernel.org>; Thu, 24 May 2018 14:47:33 -0500 (CDT)
-Subject: Re: [PATCH] rtlwifi: remove duplicate code
-To: Joe Perches <joe@perches.com>, Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20180524185450.GA2875@embeddedor.com>
- <57f2881d031de041a6ce95cf8adc5ce80551ce19.camel@perches.com>
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Message-ID: <cc0b9d9a-88c2-4b93-0fa8-ca0f62e9f135@embeddedor.com> (sfid-20180524_221141_295356_04790FDE)
-Date: Thu, 24 May 2018 14:47:25 -0500
+        Tue, 8 May 2018 08:11:41 -0400
+Received: by mail-wm0-f66.google.com with SMTP id l1-v6so21140881wmb.2
+        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2018 05:11:40 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: Add support for bcm43364 wireless chipset
+To: Ulf Hansson <ulf.hansson@linaro.org>,
+        Sean Lanigan <sean@lano.id.au>
+References: <1525416503-832-1-git-send-email-sean@lano.id.au>
+ <CAPDyKFr62-+EF_GRbUSa=VOQfYa3c3HHZCR_LsN67k1yVkNNFw@mail.gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Ian Molton <ian@mnementh.co.uk>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list@cypress.com,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AF193FA.7000700@broadcom.com> (sfid-20180508_141150_621282_300300C5)
+Date: Tue, 8 May 2018 14:11:38 +0200
 MIME-Version: 1.0
-In-Reply-To: <57f2881d031de041a6ce95cf8adc5ce80551ce19.camel@perches.com>
+In-Reply-To: <CAPDyKFr62-+EF_GRbUSa=VOQfYa3c3HHZCR_LsN67k1yVkNNFw@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joe,
++ Kalle (explicitly)
 
-On 05/24/2018 02:24 PM, Joe Perches wrote:
-> On Thu, 2018-05-24 at 13:54 -0500, Gustavo A. R. Silva wrote:
->> Remove and refactor some code in order to avoid having identical code
->> for different branches.
-> 
-> True and nice tool and patch submittal thanks.
-> 
->> Notice that the logic has been there since 2014.
-> 
-> But perhaps the original logic is a defective copy/paste
-> and it should be corrected instead.
-> 
-> Can anyone from realtek verify this?
-> 
-
-I actually used gitk to track down the last changes made to this code 
-and, it doesn't look like a copy/paste issue:
-
-commit: c6821613e653aae4f54c75689e229e3f063b7f69
-commit: 27a31a60a4de4c1b45e371152bb6e701e1a8cc40
-
-Thanks
---
-Gustavo
-
->> Addresses-Coverity-ID: 1426199 ("Identical code for different branches")
->> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
->> ---
->>   .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 23 ++++------------------
->>   1 file changed, 4 insertions(+), 19 deletions(-)
+On 5/8/2018 9:58 AM, Ulf Hansson wrote:
+> On 4 May 2018 at 08:48, Sean Lanigan <sean@lano.id.au> wrote:
+>> Add support for the BCM43364 chipset via an SDIO interface, as used in
+>> e.g. the Murata 1FX module.
 >>
->> diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
->> index 279fe01..df3facc 100644
->> --- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
->> +++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
->> @@ -2876,25 +2876,10 @@ static void btc8723b2ant_action_hid(struct btc_coexist *btcoexist)
->>   		btc8723b2ant_ps_tdma(btcoexist, NORMAL_EXEC, true, 13);
->>   
->>   	/* sw mechanism */
->> -	if (BTC_WIFI_BW_HT40 == wifi_bw) {
->> -		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
->> -		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
->> -			btc8723b2ant_sw_mechanism(btcoexist, true, true,
->> -						  false, false);
->> -		} else {
->> -			btc8723b2ant_sw_mechanism(btcoexist, true, true,
->> -						  false, false);
->> -		}
->> -	} else {
->> -		if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
->> -		    (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
->> -			btc8723b2ant_sw_mechanism(btcoexist, false, true,
->> -						  false, false);
->> -		} else {
->> -			btc8723b2ant_sw_mechanism(btcoexist, false, true,
->> -						  false, false);
->> -		}
->> -	}
->> +	if (wifi_bw == BTC_WIFI_BW_HT40)
->> +		btc8723b2ant_sw_mechanism(btcoexist, true, true, false, false);
->> +	else
->> +		btc8723b2ant_sw_mechanism(btcoexist, false, true, false, false);
->>   }
->>   
->>   /* A2DP only / PAN(EDR) only/ A2DP+PAN(HS) */
+>> The BCM43364 uses the same firmware as the BCM43430 (which is already
+>> included), the only difference is the omission of Bluetooth.
+>>
+>> However, the SDIO_ID for the BCM43364 is 02D0:A9A4, giving it a MODALIAS
+>> of sdio:c00v02D0dA9A4, which doesn't get recognised and hence doesn't
+>> load the brcmfmac module. Adding the 'A9A4' ID in the appropriate place
+>> triggers the brcmfmac driver to load, and then correctly use the
+>> firmware file 'brcmfmac43430-sdio.bin'.
+>>
+>>
+>> Signed-off-by: Sean Lanigan <sean@lano.id.au>
+>
+> Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
+>
+> Arend, I assume you want to pick this up? If not, just tell and I can do it.
+
+Not necessarily. I let Kalle do the leg work ;-) Given the change I do 
+not expect any conflict so we can go either way with a slight preference 
+for wl-drivers-next. Kalle?
+
+Regards,
+Arend
