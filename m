@@ -1,88 +1,248 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:39914 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756729AbeEJKon (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 May 2018 06:44:43 -0400
-Received: by mail-wm0-f68.google.com with SMTP id f8-v6so3527575wmc.4
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2018 03:44:43 -0700 (PDT)
+Received: from mail.toke.dk ([52.28.52.200]:49825 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752708AbeEHLED (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 May 2018 07:04:03 -0400
+Subject: [PATCH v2 2/2] mac80211: Support the new cfg80211 TXQ stats API
+From: Toke =?utf-8?q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: linux-wireless@vger.kernel.org
+Cc: make-wifi-fast@lists.bufferbloat.net
+Date: Tue, 08 May 2018 13:03:50 +0200
+Message-ID: <152577743049.25101.13824636281389192724.stgit@alrua-kau> (sfid-20180508_130407_879158_1B050780)
+In-Reply-To: <152577743042.25101.3403778697134482264.stgit@alrua-kau>
+References: <152577743042.25101.3403778697134482264.stgit@alrua-kau>
 MIME-Version: 1.0
-In-Reply-To: <20180509164220.22653-1-Larry.Finger@lwfinger.net>
-References: <20180509164220.22653-1-Larry.Finger@lwfinger.net>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Thu, 10 May 2018 12:44:42 +0200
-Message-ID: <CACna6rwUiJbMnFeAn7DvrpKvMsqsBMuctGNdUW199kGhcY2+gQ@mail.gmail.com> (sfid-20180510_124447_675073_F6334A61)
-Subject: Re: [PATCH] ssb: Fix regression caused by disabling PCI cores on
- non-MIPS architecture
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 May 2018 at 18:42, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Some MPIS-based SoCs use chips driven by b43 for wireless capability.
-> When ssb is configured as a module, build errors happen on these
-> platforms as described in the commit 882164a4a928 ("ssb: Prevent build
-> of PCI host features in module"). Unfortunately that change leads to
-> the removal of code needed for correct operation on platforms that use
-> PCI cores on the chip bus. The fix allows ssb to be build as a module
-> for all architectures other than MIPS. This approach is ad-hoc, but it
-> is the same as done in commit a9e6d44ddecc ("ssb: Do not disable PCI
-> host on non-Mips").
->
-> This problem was reported and discussed in
-> https://bugzilla.redhat.com/show_bug.cgi?id=3D1572349.
->
-> Fixes: commit 882164a4a928 ("ssb: Prevent build of PCI host features in m=
-odule")
-> Tested-by: Matt Redfearn <matt.redfearn@mips.com>
-> Tested-by: Bruno Wolff III <bruno@wolff.to>
-> Cc: Michael B=C3=BCsch <m@bues.ch>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->
-> Kalle,
->
-> This patch fixes the regression in 4.17 that was discussed on the
-> wireless mailing list. I'm not really happy about the ad-hoc rejection
-> of ssb as a module only on MIPS; however, that seems to be a unique
-> implementation of this hardware.
->
-> Larry
->
-> Michael,
->
-> Although I think your version of the patch is superior, this is the one t=
-hat
-> Matt tested, thus I'm submitting this version.
->
-> Larry
->
-> ---
->  drivers/ssb/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
-> index 9371651d8017..3743533c8057 100644
-> --- a/drivers/ssb/Kconfig
-> +++ b/drivers/ssb/Kconfig
-> @@ -117,7 +117,7 @@ config SSB_SERIAL
->
->  config SSB_DRIVER_PCICORE_POSSIBLE
->         bool
-> -       depends on SSB_PCIHOST && SSB =3D y
-> +       depends on SSB_PCIHOST && (SSB =3D y || !MIPS)
->         default y
->
->  config SSB_DRIVER_PCICORE
+This adds support to mac80211 to export TXQ stats via the newly added
+cfg80211 API.
 
-I don't like hacking SSB_DRIVER_PCICORE_POSSIBLE while the original
-problem seems to be related to the SSB_PCICORE_HOSTMODE.
+Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+---
+ net/mac80211/cfg.c         |   99 ++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |    3 +
+ net/mac80211/main.c        |    3 +
+ net/mac80211/sta_info.c    |   12 +++++
+ net/mac80211/tx.c          |   20 +++++++++
+ 5 files changed, 137 insertions(+)
 
-We should rather revert breaking commit & fix original problem properly.
-
---=20
-Rafa=C5=82
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 85dbaa891059..670ad48cf555 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2376,6 +2376,11 @@ static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ 	    (WIPHY_PARAM_RETRY_SHORT | WIPHY_PARAM_RETRY_LONG))
+ 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_RETRY_LIMITS);
+ 
++	if (changed & (WIPHY_PARAM_TXQ_LIMIT |
++		       WIPHY_PARAM_TXQ_MEMORY_LIMIT |
++		       WIPHY_PARAM_TXQ_QUANTUM))
++		ieee80211_txq_set_params(local);
++
+ 	return 0;
+ }
+ 
+@@ -3705,6 +3710,99 @@ static int ieee80211_set_multicast_to_unicast(struct wiphy *wiphy,
+ 	return 0;
+ }
+ 
++void ieee80211_fill_txq_stats(struct cfg80211_txq_stats *txqstats,
++			      struct txq_info *txqi)
++{
++	if (!(txqstats->filled & BIT(NL80211_TXQ_STATS_BACKLOG_BYTES))) {
++		txqstats->filled |= BIT(NL80211_TXQ_STATS_BACKLOG_BYTES);
++		txqstats->backlog_bytes = txqi->tin.backlog_bytes;
++	}
++
++	if (!(txqstats->filled & BIT(NL80211_TXQ_STATS_BACKLOG_PACKETS))) {
++		txqstats->filled |= BIT(NL80211_TXQ_STATS_BACKLOG_PACKETS);
++		txqstats->backlog_packets = txqi->tin.backlog_packets;
++	}
++
++	if (!(txqstats->filled & BIT(NL80211_TXQ_STATS_FLOWS))) {
++		txqstats->filled |= BIT(NL80211_TXQ_STATS_FLOWS);
++		txqstats->flows = txqi->tin.flows;
++	}
++
++	if (!(txqstats->filled & BIT(NL80211_TXQ_STATS_DROPS))) {
++		txqstats->filled |= BIT(NL80211_TXQ_STATS_DROPS);
++		txqstats->drops = txqi->cstats.drop_count;
++	}
++
++	if (!(txqstats->filled & BIT(NL80211_TXQ_STATS_ECN_MARKS))) {
++		txqstats->filled |= BIT(NL80211_TXQ_STATS_ECN_MARKS);
++		txqstats->ecn_marks = txqi->cstats.ecn_mark;
++	}
++
++	if (!(txqstats->filled & BIT(NL80211_TXQ_STATS_OVERLIMIT))) {
++		txqstats->filled |= BIT(NL80211_TXQ_STATS_OVERLIMIT);
++		txqstats->overlimit = txqi->tin.overlimit;
++	}
++
++	if (!(txqstats->filled & BIT(NL80211_TXQ_STATS_COLLISIONS))) {
++		txqstats->filled |= BIT(NL80211_TXQ_STATS_COLLISIONS);
++		txqstats->collisions = txqi->tin.collisions;
++	}
++
++	if (!(txqstats->filled & BIT(NL80211_TXQ_STATS_TX_BYTES))) {
++		txqstats->filled |= BIT(NL80211_TXQ_STATS_TX_BYTES);
++		txqstats->tx_bytes = txqi->tin.tx_bytes;
++	}
++
++	if (!(txqstats->filled & BIT(NL80211_TXQ_STATS_TX_PACKETS))) {
++		txqstats->filled |= BIT(NL80211_TXQ_STATS_TX_PACKETS);
++		txqstats->tx_packets = txqi->tin.tx_packets;
++	}
++}
++
++static int ieee80211_get_txq_stats(struct wiphy *wiphy,
++				   struct wireless_dev *wdev,
++				   struct cfg80211_txq_stats *txqstats)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++	struct ieee80211_sub_if_data *sdata;
++	int ret = 0;
++
++	if (!local->ops->wake_tx_queue)
++		return 1;
++
++	spin_lock_bh(&local->fq.lock);
++	rcu_read_lock();
++
++	if (wdev) {
++		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++		if (!sdata->vif.txq) {
++			ret = 1;
++			goto out;
++		}
++		ieee80211_fill_txq_stats(txqstats, to_txq_info(sdata->vif.txq));
++	} else {
++		/* phy stats */
++		txqstats->filled |= (BIT(NL80211_TXQ_STATS_BACKLOG_PACKETS) |
++				     BIT(NL80211_TXQ_STATS_BACKLOG_BYTES) |
++				     BIT(NL80211_TXQ_STATS_OVERLIMIT) |
++				     BIT(NL80211_TXQ_STATS_OVERMEMORY) |
++				     BIT(NL80211_TXQ_STATS_COLLISIONS) |
++				     BIT(NL80211_TXQ_STATS_MAX_FLOWS));
++		txqstats->backlog_packets = local->fq.backlog;
++		txqstats->backlog_bytes = local->fq.memory_usage;
++		txqstats->overlimit = local->fq.overlimit;
++		txqstats->overmemory = local->fq.overmemory;
++		txqstats->collisions = local->fq.collisions;
++		txqstats->max_flows = local->fq.flows_cnt;
++	}
++
++out:
++	rcu_read_unlock();
++	spin_unlock_bh(&local->fq.lock);
++
++	return ret;
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -3798,4 +3896,5 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.del_nan_func = ieee80211_del_nan_func,
+ 	.set_multicast_to_unicast = ieee80211_set_multicast_to_unicast,
+ 	.tx_control_port = ieee80211_tx_control_port,
++	.get_txq_stats = ieee80211_get_txq_stats,
+ };
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 6372dbdadf53..d1978aa1c15d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2012,6 +2012,7 @@ static inline bool ieee80211_can_run_worker(struct ieee80211_local *local)
+ }
+ 
+ int ieee80211_txq_setup_flows(struct ieee80211_local *local);
++void ieee80211_txq_set_params(struct ieee80211_local *local);
+ void ieee80211_txq_teardown_flows(struct ieee80211_local *local);
+ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
+ 			struct sta_info *sta,
+@@ -2020,6 +2021,8 @@ void ieee80211_txq_purge(struct ieee80211_local *local,
+ 			 struct txq_info *txqi);
+ void ieee80211_txq_remove_vlan(struct ieee80211_local *local,
+ 			       struct ieee80211_sub_if_data *sdata);
++void ieee80211_fill_txq_stats(struct cfg80211_txq_stats *txqstats,
++			      struct txq_info *txqi);
+ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 			 u16 transaction, u16 auth_alg, u16 status,
+ 			 const u8 *extra, size_t extra_len, const u8 *bssid,
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 9ea17afaa237..4d2e797e3f16 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -565,6 +565,9 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 	if (!ops->set_key)
+ 		wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+ 
++	if (ops->wake_tx_queue)
++		wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_TXQS);
++
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_RRM);
+ 
+ 	wiphy->bss_priv_size = sizeof(struct ieee80211_bss);
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index f83e6e2ad5ab..43f34aa873bc 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -2052,6 +2052,18 @@ static void sta_set_tidstats(struct sta_info *sta,
+ 		tidstats->filled |= BIT(NL80211_TID_STATS_TX_MSDU_FAILED);
+ 		tidstats->tx_msdu_failed = sta->status_stats.msdu_failed[tid];
+ 	}
++
++	if (local->ops->wake_tx_queue && tid < IEEE80211_NUM_TIDS) {
++		spin_lock_bh(&local->fq.lock);
++		rcu_read_lock();
++
++		tidstats->filled |= BIT(NL80211_TID_STATS_TXQ_STATS);
++		ieee80211_fill_txq_stats(&tidstats->txq_stats,
++					 to_txq_info(sta->sta.txq[tid]));
++
++		rcu_read_unlock();
++		spin_unlock_bh(&local->fq.lock);
++	}
+ }
+ 
+ static inline u64 sta_get_stats_bytes(struct ieee80211_sta_rx_stats *rxstats)
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 062e125a324c..8275a58450b2 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1459,6 +1459,24 @@ void ieee80211_txq_purge(struct ieee80211_local *local,
+ 	ieee80211_purge_tx_queue(&local->hw, &txqi->frags);
+ }
+ 
++void ieee80211_txq_set_params(struct ieee80211_local *local)
++{
++	if (local->hw.wiphy->txq_limit)
++		local->fq.limit = local->hw.wiphy->txq_limit;
++	else
++		local->hw.wiphy->txq_limit = local->fq.limit;
++
++	if (local->hw.wiphy->txq_memory_limit)
++		local->fq.memory_limit = local->hw.wiphy->txq_memory_limit;
++	else
++		local->hw.wiphy->txq_memory_limit = local->fq.memory_limit;
++
++	if (local->hw.wiphy->txq_quantum)
++		local->fq.quantum = local->hw.wiphy->txq_quantum;
++	else
++		local->hw.wiphy->txq_quantum = local->fq.quantum;
++}
++
+ int ieee80211_txq_setup_flows(struct ieee80211_local *local)
+ {
+ 	struct fq *fq = &local->fq;
+@@ -1508,6 +1526,8 @@ int ieee80211_txq_setup_flows(struct ieee80211_local *local)
+ 	for (i = 0; i < fq->flows_cnt; i++)
+ 		codel_vars_init(&local->cvars[i]);
+ 
++	ieee80211_txq_set_params(local);
++
+ 	return 0;
+ }
+ 
