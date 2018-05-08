@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53454 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:50962 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754752AbeE2HYQ (ORCPT
+        with ESMTP id S1752591AbeEHPKg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 May 2018 03:24:16 -0400
+        Tue, 8 May 2018 11:10:36 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: mwifiex: skip sending GT_REKEY_OFFLOAD_CFG if firmware has no
- support
+Subject: Re: [PATCHv2,3/3] ath10k: average ack rssi support for data frames
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1527280762-5648-1-git-send-email-gbhat@marvell.com>
-References: <1527280762-5648-1-git-send-email-gbhat@marvell.com>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Shrenik Shikhare <shrenik@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Message-Id: <20180529072416.3ECA4606FA@smtp.codeaurora.org> (sfid-20180529_092420_733109_7D026366)
-Date: Tue, 29 May 2018 07:24:16 +0000 (UTC)
+In-Reply-To: <1523890122-23952-4-git-send-email-bpothuno@codeaurora.org>
+References: <1523890122-23952-4-git-send-email-bpothuno@codeaurora.org>
+To: Balaji Pothunoori <bpothuno@codeaurora.org>
+Cc: johannes@sipsolutions.net, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, bpothuno@codeaurora.org
+Message-Id: <20180508151035.E613D60767@smtp.codeaurora.org> (sfid-20180508_171040_203726_3D9369DD)
+Date: Tue,  8 May 2018 15:10:35 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ganapathi Bhat <gbhat@marvell.com> wrote:
+Balaji Pothunoori <bpothuno@codeaurora.org> wrote:
 
-> If firmware does not support embedded supplicant, then it in turn
-> will not support GT rekey offloading. If this is the case, then
-> driver must not advertise WOWLAN flags related to GTK rekey and
-> it must also skip sending the GT_REKEY_OFFLOAD_CFG command.
+> Average ack rssi value is weighted average of ack rssi for
+> no of msdu's has been sent.
+> This feature is enabled by the host driver if firmware is capable.
+> After receiving event from host, firmware allocates the necessary
+> memory to store the ack_rssi for data packets during the init time.
 > 
-> Signed-off-by: Shrenik Shikhare <shrenik@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+> After each successful transmission, If tx completion status is OK
+> and 24th bit is set in HTT message header then host will fetch the
+> ack_rssi else host can ignore the ack_rssi field.
+> 
+> Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
 
-Patch applied to wireless-drivers-next.git, thanks.
+A note to myself that this depends on:
 
-ae30bdaa4c27 mwifiex: skip sending GT_REKEY_OFFLOAD_CFG if firmware has no support
+cc60dbbfed8f mac80211: average ack rssi support for data frames
+
+Currently in mac80211-next.
 
 -- 
-https://patchwork.kernel.org/patch/10428493/
+https://patchwork.kernel.org/patch/10343153/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
