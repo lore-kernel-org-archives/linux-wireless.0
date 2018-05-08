@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34768 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753451AbeENNrK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 May 2018 09:47:10 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        franky.lin@broadcom.com
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [wireless-drivers-next:master] BUILD REGRESSION b41c393676696c20456d5fd8cbe71453560ee06e
-References: <5af6c41e.dwbK9bka/B8S6Bva%lkp@intel.com>
-Date: Mon, 14 May 2018 16:47:06 +0300
-In-Reply-To: <5af6c41e.dwbK9bka/B8S6Bva%lkp@intel.com> (kbuild test robot's
-        message of "Sat, 12 May 2018 18:38:22 +0800")
-Message-ID: <87lgcms61x.fsf@kamboji.qca.qualcomm.com> (sfid-20180514_154714_268241_1DEE8A63)
+Received: from ms.lwn.net ([45.79.88.28]:35952 "EHLO ms.lwn.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755237AbeEHQNq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 May 2018 12:13:46 -0400
+Date: Tue, 8 May 2018 10:13:42 -0600
+From: Jonathan Corbet <corbet@lwn.net>
+To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Cc: Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        Mauro Carvalho Chehab <mchehab@infradead.org>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-fbdev@vger.kernel.org,
+        linux-can@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        linux-iio@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-crypto@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-pm@vger.kernel.org
+Subject: Re: [PATCH 00/18] Fix some build warnings/errors with Sphinx
+Message-ID: <20180508101342.2bde20ea@lwn.net> (sfid-20180508_181416_933046_A6F08BBB)
+In-Reply-To: <cover.1525684985.git.mchehab+samsung@kernel.org>
+References: <cover.1525684985.git.mchehab+samsung@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kbuild test robot <lkp@intel.com> writes:
+On Mon,  7 May 2018 06:35:36 -0300
+Mauro Carvalho Chehab <mchehab+samsung@kernel.org> wrote:
 
-> tree/branch:
-> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-ne=
-xt.git
-> master
-> branch HEAD: b41c393676696c20456d5fd8cbe71453560ee06e rsi: fix
-> spelling mistake: "thead" -> "thread"
->
-> Regressions in current branch:
->
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:2740:49:
-> sparse: Using plain integer as NULL pointer
->
-> Error ids grouped by kconfigs:
->
-> recent_errors
-> =E2=94=94=E2=94=80=E2=94=80 x86_64-allmodconfig
->     =E2=94=94=E2=94=80=E2=94=80
-> drivers-net-wireless-broadcom-brcm80211-brcmfmac-cfg80211.c:sparse:Using-=
-plain-integer-as-NULL-pointer
+> I decided to give a try with Sphinx last stable version
+> (1.17.4), and noticed several issues. The worse one was
+> with the networking book: a non-standard footnote there
+> with [*] instead of a number causes it to break PDF building.
+> 
+> So, I took some spare time to address some warnings all over
+> the tree, and moved a few text documents to a book. 
 
-Could someone (Franky?) please fix this regression in brcmfmac? (Or if
-it's a false positive report it to the kbuilt bot maintainers.) The
-kbuild bot is complaining about this in every build report now.
+OK, I've applied the ones that seem to make sense for me to take now.
+There's comments on the firmware one, and I'd rather have Tejun's OK for
+the cgroup one.  The code-comment changes should probably go via the
+usual maintainers.
 
-I think the offending commit is:
+> I with
+> I had more time to move the other ones and to solve other
+> warnings.
 
-7742fce4c007 brcmfmac: reports boottime_ns while informing bss
+You and me both - but each step helps!
 
-Earlier report:
+Thanks,
 
-https://lkml.kernel.org/r/878t94278l.fsf@codeaurora.org
-
---=20
-Kalle Valo
+jon
