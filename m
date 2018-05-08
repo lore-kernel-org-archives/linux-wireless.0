@@ -1,108 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53696 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:40758 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751443AbeEDRn7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 May 2018 13:43:59 -0400
+        id S933292AbeEHSM5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 May 2018 14:12:57 -0400
 From: "Luis R. Rodriguez" <mcgrof@kernel.org>
 To: gregkh@linuxfoundation.org
 Cc: akpm@linux-foundation.org, keescook@chromium.org,
-        josh@joshtriplett.org, teg@jklm.no, wagi@monom.org,
-        hdegoede@redhat.com, andresx7@gmail.com, zohar@linux.vnet.ibm.com,
-        kubakici@wp.pl, shuah@kernel.org, mfuzzey@parkeon.com,
-        dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de,
-        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
+        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
+        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
+        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
+        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
+        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
         zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
         broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
         torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, cantabile.desu@gmail.com, ast@fb.com,
-        hare@suse.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
-        khc@pm.waw.pl, davem@davemloft.net, maco@android.com,
-        arve@android.com, tkjos@android.com, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v5 0/6] firmware_loader: cleanups for v4.18
-Date: Fri,  4 May 2018 10:43:49 -0700
-Message-Id: <20180504174356.13227-1-mcgrof@kernel.org> (sfid-20180504_194649_888438_152D7D40)
+        jewalt@lgsinnovations.com, oneukum@suse.com,
+        cantabile.desu@gmail.com, ast@fb.com, hare@suse.com,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl,
+        davem@davemloft.net, arve@android.com, tkjos@android.com,
+        corbet@lwn.net, mchehab+samsung@kernel.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v6 04/13] firmware_loader: document firmware_sysfs_fallback()
+Date: Tue,  8 May 2018 11:12:38 -0700
+Message-Id: <20180508181247.19431-5-mcgrof@kernel.org> (sfid-20180508_202220_291792_EC3CE180)
+In-Reply-To: <20180508181247.19431-1-mcgrof@kernel.org>
+References: <20180508181247.19431-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greg,
+This also sets the expecations for future fallback interfaces, even
+if they are not exported.
 
-I've reviewed the pending patches for the firmware_laoder and as for
-v4.18, the following 3 patches from Andres have been iterated enough
-that they're ready after I made some final minor changes, mostly just
-style fixes and re-arrangements in terms of order. The new API he was
-suggesting to add requires just a bit more review.
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ drivers/base/firmware_loader/fallback.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-The last 3 patches are my own and are new, so I'd like further review
-from others on them, but considering the changes Hans de Goede is having
-us consider, I think this will prove useful to his work in terms of
-splitting up code and documenting things properly. One thing that was
-clear -- is our Kconfig entries for FW_LOADER were *extremely* outdated,
-as such I've gone ahead and updated them.
-
-The kconfig wording update for FW_LOADER includes prior conclusions made
-to help justify keeping the split of the firmware fallback sysfs
-interface in terms of size which was discussed with Josh Triplett a
-while ago. It also includes modern recommendations, which would otherwise
-get lost, on what to do about corner case firmware situations on
-provisioning situations which folks have brought to my attention before
-and architectural solutions based on firmwared [0] for a few years now.
-Finally this work also reveals that a couple of candidate drivers could
-likely move to staging considering their age, *or* we could just remove
-the respective firmware build options. SCSI folks? Networking folks? To
-my surprise *nothing* has been done about PREVENT_FIRMWARE_BUILD for
-them since pre-git days!  These sneaky litte buggers are:
-
-  * CONFIG_WANXL --> CONFIG_WANXL_BUILD_FIRMWARE
-  * CONFIG_SCSI_AIC79XX --> CONFIG_AIC79XX_BUILD_FIRMWARE
-
-To this day both of these drivers are building driver *firmwares* when
-the option CONFIG_PREVENT_FIRMWARE_BUILD is disabled, and they don't
-even make use of the firmware API at all. I find it *highly unlikely*
-pre-git day drivers are raging in new radical firmware updates these
-days. I'll go put a knife into some of that unless I hear back from
-SCSI or networking folks that WANXL_BUILD_FIRMWARE and
-AIC79XX_BUILD_FIRMWARE are still hip and very much needed.
-
-On my radar as well are Mimi's latest firmware_loader proposed changes,
-but I think those need considerable review and attention from more security
-folks, Android folks, and the linux-wireless community, our own
-scattered random folks of firmware reviewer folks.
-
-These patches are based on top of linux-next next-20180504, they are
-also available in a respective git branch, both for linux-next [1] and
-linux [2].
-
-Question, and specially rants are greatly appreciated, and of course...
-may the 4th be with you.
-
-[0] https://github.com/teg/firmwared
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux-next.git/log/?h=20180504-firmware_loader
-[2] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git/log/?h=20180504-firmware_loader
-
-  Luis
-
-Andres Rodriguez (3):
-  firmware: wrap FW_OPT_* into an enum
-  firmware: use () to terminate kernel-doc function names
-  firmware: rename fw_sysfs_fallback to firmware_fallback_sysfs()
-
-Luis R. Rodriguez (3):
-  firmware_loader: document firmware_sysfs_fallback()
-  firmware_loader: enhance Kconfig documentation over FW_LOADER
-  firmware_loader: move kconfig FW_LOADER entries to its own file
-
- drivers/base/Kconfig                    |  90 +++-----------
- drivers/base/firmware_loader/Kconfig    | 149 ++++++++++++++++++++++++
- drivers/base/firmware_loader/fallback.c |  46 +++++---
- drivers/base/firmware_loader/fallback.h |  18 +--
- drivers/base/firmware_loader/firmware.h |  37 ++++--
- drivers/base/firmware_loader/main.c     |  28 ++---
- 6 files changed, 252 insertions(+), 116 deletions(-)
- create mode 100644 drivers/base/firmware_loader/Kconfig
-
+diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
+index 3db9e0f225ac..9169e7b9800c 100644
+--- a/drivers/base/firmware_loader/fallback.c
++++ b/drivers/base/firmware_loader/fallback.c
+@@ -662,6 +662,26 @@ static bool fw_run_sysfs_fallback(enum fw_opt opt_flags)
+ 	return fw_force_sysfs_fallback(opt_flags);
+ }
+ 
++/**
++ * firmware_fallback_sysfs() - use the fallback mechanism to find firmware
++ * @fw: pointer to firmware image
++ * @name: name of firmware file to look for
++ * @device: device for which firmware is being loaded
++ * @opt_flags: options to control firmware loading behaviour
++ * @ret: return value from direct lookup which triggered the fallback mechanism
++ *
++ * This function is called if direct lookup for the firmware failed, it enables
++ * a fallback mechanism through userspace by exposing a sysfs loading
++ * interface. Userspace is in charge of loading the firmware through the syfs
++ * loading interface. This syfs fallback mechanism may be disabled completely
++ * on a system by setting the proc sysctl value ignore_sysfs_fallback to true.
++ * If this false we check if the internal API caller set the @FW_OPT_NOFALLBACK
++ * flag, if so it would also disable the fallback mechanism. A system may want
++ * to enfoce the sysfs fallback mechanism at all times, it can do this by
++ * setting ignore_sysfs_fallback to false and force_sysfs_fallback to true.
++ * Enabling force_sysfs_fallback is functionally equivalent to build a kernel
++ * with CONFIG_FW_LOADER_USER_HELPER_FALLBACK.
++ **/
+ int firmware_fallback_sysfs(struct firmware *fw, const char *name,
+ 			    struct device *device,
+ 			    enum fw_opt opt_flags,
 -- 
 2.17.0
