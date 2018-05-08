@@ -1,55 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53140 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750831AbeE2HXO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 May 2018 03:23:14 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: mwifiex: handle race during mwifiex_usb_disconnect
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1527169707-27317-1-git-send-email-gbhat@marvell.com>
-References: <1527169707-27317-1-git-send-email-gbhat@marvell.com>
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Message-Id: <20180529072314.84BDD6060A@smtp.codeaurora.org> (sfid-20180529_092318_527246_05B5F267)
-Date: Tue, 29 May 2018 07:23:14 +0000 (UTC)
+Received: from mail.kernel.org ([198.145.29.99]:40662 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933042AbeEHSMy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 May 2018 14:12:54 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, keescook@chromium.org,
+        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
+        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
+        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
+        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
+        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
+        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        jewalt@lgsinnovations.com, oneukum@suse.com,
+        cantabile.desu@gmail.com, ast@fb.com, hare@suse.com,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl,
+        davem@davemloft.net, arve@android.com, tkjos@android.com,
+        corbet@lwn.net, mchehab+samsung@kernel.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, "Luis R . Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v6 02/13] firmware: use () to terminate kernel-doc function names
+Date: Tue,  8 May 2018 11:12:36 -0700
+Message-Id: <20180508181247.19431-3-mcgrof@kernel.org> (sfid-20180508_202240_064869_EFBDBD56)
+In-Reply-To: <20180508181247.19431-1-mcgrof@kernel.org>
+References: <20180508181247.19431-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ganapathi Bhat <gbhat@marvell.com> wrote:
+From: Andres Rodriguez <andresx7@gmail.com>
 
-> Race condition is observed during rmmod of mwifiex_usb:
-> 
-> 1. The rmmod thread will call mwifiex_usb_disconnect(), download
->    SHUTDOWN command and do wait_event_interruptible_timeout(),
->    waiting for response.
-> 
-> 2. The main thread will handle the response and will do a
->    wake_up_interruptible(), unblocking rmmod thread.
-> 
-> 3. On getting unblocked, rmmod thread  will make rx_cmd.urb = NULL in
->    mwifiex_usb_free().
-> 
-> 4. The main thread will try to resubmit rx_cmd.urb in
->    mwifiex_usb_submit_rx_urb(), which is NULL.
-> 
-> To fix, wait for main thread to complete before calling
-> mwifiex_usb_free().
-> 
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+The kernel-doc spec dictates a function name ends in ().
 
-Patch applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
+Acked-by: Randy Dunlap <rdunlap@infradead.org>
+Acked-by: Luis R. Rodriguez <mcgrof@kernel.org>
+[mcgrof: adjust since the wide API rename is not yet merged]
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ drivers/base/firmware_loader/fallback.c |  8 ++++----
+ drivers/base/firmware_loader/main.c     | 22 +++++++++++-----------
+ 2 files changed, 15 insertions(+), 15 deletions(-)
 
-b817047ae70c mwifiex: handle race during mwifiex_usb_disconnect
-
+diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
+index b57a7b3b4122..529f7013616f 100644
+--- a/drivers/base/firmware_loader/fallback.c
++++ b/drivers/base/firmware_loader/fallback.c
+@@ -125,7 +125,7 @@ static ssize_t timeout_show(struct class *class, struct class_attribute *attr,
+ }
+ 
+ /**
+- * firmware_timeout_store - set number of seconds to wait for firmware
++ * firmware_timeout_store() - set number of seconds to wait for firmware
+  * @class: device class pointer
+  * @attr: device attribute pointer
+  * @buf: buffer to scan for timeout value
+@@ -239,7 +239,7 @@ static int map_fw_priv_pages(struct fw_priv *fw_priv)
+ }
+ 
+ /**
+- * firmware_loading_store - set value in the 'loading' control file
++ * firmware_loading_store() - set value in the 'loading' control file
+  * @dev: device pointer
+  * @attr: device attribute pointer
+  * @buf: buffer to scan for loading control value
+@@ -431,7 +431,7 @@ static int fw_realloc_pages(struct fw_sysfs *fw_sysfs, int min_size)
+ }
+ 
+ /**
+- * firmware_data_write - write method for firmware
++ * firmware_data_write() - write method for firmware
+  * @filp: open sysfs file
+  * @kobj: kobject for the device
+  * @bin_attr: bin_attr structure
+@@ -537,7 +537,7 @@ fw_create_instance(struct firmware *firmware, const char *fw_name,
+ }
+ 
+ /**
+- * fw_load_sysfs_fallback - load a firmware via the sysfs fallback mechanism
++ * fw_load_sysfs_fallback() - load a firmware via the sysfs fallback mechanism
+  * @fw_sysfs: firmware sysfs information for the firmware to load
+  * @opt_flags: flags of options, FW_OPT_*
+  * @timeout: timeout to wait for the load
+diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
+index 9919f0e6a7cc..4d11efadb3a4 100644
+--- a/drivers/base/firmware_loader/main.c
++++ b/drivers/base/firmware_loader/main.c
+@@ -597,7 +597,7 @@ _request_firmware(const struct firmware **firmware_p, const char *name,
+ }
+ 
+ /**
+- * request_firmware: - send firmware request and wait for it
++ * request_firmware() - send firmware request and wait for it
+  * @firmware_p: pointer to firmware image
+  * @name: name of firmware file
+  * @device: device for which firmware is being loaded
+@@ -632,7 +632,7 @@ request_firmware(const struct firmware **firmware_p, const char *name,
+ EXPORT_SYMBOL(request_firmware);
+ 
+ /**
+- * request_firmware_direct: - load firmware directly without usermode helper
++ * request_firmware_direct() - load firmware directly without usermode helper
+  * @firmware_p: pointer to firmware image
+  * @name: name of firmware file
+  * @device: device for which firmware is being loaded
+@@ -657,7 +657,7 @@ int request_firmware_direct(const struct firmware **firmware_p,
+ EXPORT_SYMBOL_GPL(request_firmware_direct);
+ 
+ /**
+- * firmware_request_cache: - cache firmware for suspend so resume can use it
++ * firmware_request_cache() - cache firmware for suspend so resume can use it
+  * @name: name of firmware file
+  * @device: device for which firmware should be cached for
+  *
+@@ -681,7 +681,7 @@ int firmware_request_cache(struct device *device, const char *name)
+ EXPORT_SYMBOL_GPL(firmware_request_cache);
+ 
+ /**
+- * request_firmware_into_buf - load firmware into a previously allocated buffer
++ * request_firmware_into_buf() - load firmware into a previously allocated buffer
+  * @firmware_p: pointer to firmware image
+  * @name: name of firmware file
+  * @device: device for which firmware is being loaded and DMA region allocated
+@@ -713,7 +713,7 @@ request_firmware_into_buf(const struct firmware **firmware_p, const char *name,
+ EXPORT_SYMBOL(request_firmware_into_buf);
+ 
+ /**
+- * release_firmware: - release the resource associated with a firmware image
++ * release_firmware() - release the resource associated with a firmware image
+  * @fw: firmware resource to release
+  **/
+ void release_firmware(const struct firmware *fw)
+@@ -755,7 +755,7 @@ static void request_firmware_work_func(struct work_struct *work)
+ }
+ 
+ /**
+- * request_firmware_nowait - asynchronous version of request_firmware
++ * request_firmware_nowait() - asynchronous version of request_firmware
+  * @module: module requesting the firmware
+  * @uevent: sends uevent to copy the firmware image if this flag
+  *	is non-zero else the firmware copy must be done manually.
+@@ -824,7 +824,7 @@ EXPORT_SYMBOL(request_firmware_nowait);
+ static ASYNC_DOMAIN_EXCLUSIVE(fw_cache_domain);
+ 
+ /**
+- * cache_firmware - cache one firmware image in kernel memory space
++ * cache_firmware() - cache one firmware image in kernel memory space
+  * @fw_name: the firmware image name
+  *
+  * Cache firmware in kernel memory so that drivers can use it when
+@@ -866,7 +866,7 @@ static struct fw_priv *lookup_fw_priv(const char *fw_name)
+ }
+ 
+ /**
+- * uncache_firmware - remove one cached firmware image
++ * uncache_firmware() - remove one cached firmware image
+  * @fw_name: the firmware image name
+  *
+  * Uncache one firmware image which has been cached successfully
+@@ -1042,7 +1042,7 @@ static void __device_uncache_fw_images(void)
+ }
+ 
+ /**
+- * device_cache_fw_images - cache devices' firmware
++ * device_cache_fw_images() - cache devices' firmware
+  *
+  * If one device called request_firmware or its nowait version
+  * successfully before, the firmware names are recored into the
+@@ -1075,7 +1075,7 @@ static void device_cache_fw_images(void)
+ }
+ 
+ /**
+- * device_uncache_fw_images - uncache devices' firmware
++ * device_uncache_fw_images() - uncache devices' firmware
+  *
+  * uncache all firmwares which have been cached successfully
+  * by device_uncache_fw_images earlier
+@@ -1092,7 +1092,7 @@ static void device_uncache_fw_images_work(struct work_struct *work)
+ }
+ 
+ /**
+- * device_uncache_fw_images_delay - uncache devices firmwares
++ * device_uncache_fw_images_delay() - uncache devices firmwares
+  * @delay: number of milliseconds to delay uncache device firmwares
+  *
+  * uncache all devices's firmwares which has been cached successfully
 -- 
-https://patchwork.kernel.org/patch/10424763/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.17.0
