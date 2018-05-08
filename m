@@ -1,179 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 1.mo7.mail-out.ovh.net ([178.33.45.51]:40655 "EHLO
-        1.mo7.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752392AbeEOSjz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 May 2018 14:39:55 -0400
-Received: from player696.ha.ovh.net (unknown [10.109.108.35])
-        by mo7.mail-out.ovh.net (Postfix) with ESMTP id 69B49A8021
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2018 12:22:59 +0200 (CEST)
-From: Alexander Wetzel <alexander.wetzel@web.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-        s.gottschall@dd-wrt.com, Alexander Wetzel <alexander.wetzel@web.de>
-Subject: [PATCH v2] mac80211: Fix wlan freezes under load at rekey
-Date: Tue, 15 May 2018 12:22:02 +0200
-Message-Id: <20180515102202.2021-1-alexander.wetzel@web.de> (sfid-20180515_204001_215652_02257D78)
-In-Reply-To: <1523258757.3076.5.camel@sipsolutions.net>
-References: <1523258757.3076.5.camel@sipsolutions.net>
+Received: from mail.kernel.org ([198.145.29.99]:41356 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933362AbeEHSNJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 May 2018 14:13:09 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, keescook@chromium.org,
+        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
+        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
+        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
+        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
+        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
+        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        jewalt@lgsinnovations.com, oneukum@suse.com,
+        cantabile.desu@gmail.com, ast@fb.com, hare@suse.com,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl,
+        davem@davemloft.net, arve@android.com, tkjos@android.com,
+        corbet@lwn.net, mchehab+samsung@kernel.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v6 11/13] Documentation: fix few typos and clarifications for the firmware loader
+Date: Tue,  8 May 2018 11:12:45 -0700
+Message-Id: <20180508181247.19431-12-mcgrof@kernel.org> (sfid-20180508_201514_034496_1F1AF902)
+In-Reply-To: <20180508181247.19431-1-mcgrof@kernel.org>
+References: <20180508181247.19431-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rekeying a pairwise key with encryption offload and only keyid 0 has two
-potential races which can freeze the wlan conection till rekeyed again:
+Fix a few typos, and clarify a few sentences.
 
- 1) For incomming packets:
-    If the local STA installs the key prior to the remote STA we still
-    have the old key active in the hardware for a short time after
-    mac80211 switched to the new key.
-    The card can still hand over packets decoded with the old key to
-    mac80211, bumping the new PN (IV) value to an incorrect high number and
-    tricking the local replay detection to drop all packets really sent
-    with the new key.
-
- 2) For outgoing packets:
-    If mac80211 is providing the PN (IV) and hands over the cleartext
-    packets for encryption to the hardware immediately prior to a key
-    change the driver/card may process the queued packets after
-    switching to the new key.
-    This will immediatelly bump the PN (IV) value on the remote STA to
-    an incorrect high number, also freezing the connection.
-
-Both issues can be prevented by first replacing the key in the HW and
-makeing sure no aggregation sessions are running during the rekey.
-
-Signed-off-by: Alexander Wetzel <alexander.wetzel@web.de>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- net/mac80211/key.c | 54 ++++++++++++++++++++++++++++++++++------------
- 1 file changed, 40 insertions(+), 14 deletions(-)
+ Documentation/driver-api/firmware/fallback-mechanisms.rst | 5 +++--
+ Documentation/driver-api/firmware/firmware_cache.rst      | 4 ++--
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index ee0d0cc8dc3b..bb498f2b6c44 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -248,6 +248,7 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
- 	      (key->conf.flags & IEEE80211_KEY_FLAG_RESERVE_TAILROOM)))
- 		increment_tailroom_need_count(sdata);
+diff --git a/Documentation/driver-api/firmware/fallback-mechanisms.rst b/Documentation/driver-api/firmware/fallback-mechanisms.rst
+index f353783ae0be..a39323ef7d29 100644
+--- a/Documentation/driver-api/firmware/fallback-mechanisms.rst
++++ b/Documentation/driver-api/firmware/fallback-mechanisms.rst
+@@ -83,7 +83,7 @@ and a file upload firmware into:
+   * /sys/$DEVPATH/data
  
-+	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
- 	ret = drv_set_key(key->local, DISABLE_KEY, sdata,
- 			  sta ? &sta->sta : NULL, &key->conf);
+ To upload firmware you will echo 1 onto the loading file to indicate
+-you are loading firmware. You then cat the firmware into the data file,
++you are loading firmware. You then write the firmware into the data file,
+ and you notify the kernel the firmware is ready by echo'ing 0 onto
+ the loading file.
  
-@@ -257,7 +258,26 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
- 			  key->conf.keyidx,
- 			  sta ? sta->sta.addr : bcast_addr, ret);
+@@ -136,7 +136,8 @@ by kobject uevents. This is specially exacerbated due to the fact that most
+ distributions today disable CONFIG_FW_LOADER_USER_HELPER_FALLBACK.
  
--	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
-+}
-+
-+static void ieee80211_key_retire(struct ieee80211_key *key)
-+{
-+	struct ieee80211_local *local = key->local;
-+	struct sta_info *sta = key->sta;
-+
-+	assert_key_lock(key->local);
-+
-+	/* Stop TX till we are on the new key */
-+	key->flags |= KEY_FLAG_TAINTED;
-+	ieee80211_clear_fast_xmit(sta);
-+
-+	if (ieee80211_hw_check(&local->hw, AMPDU_AGGREGATION)) {
-+		set_sta_flag(sta, WLAN_STA_BLOCK_BA);
-+		ieee80211_sta_tear_down_BA_sessions(
-+		    sta, AGG_STOP_LOCAL_REQUEST);
-+	}
-+	ieee80211_flush_queues(key->local, key->sdata, false);
-+	ieee80211_key_disable_hw_accel(key);
- }
+ Refer to do_firmware_uevent() for details of the kobject event variables
+-setup. Variables passwdd with a kobject add event:
++setup. The variables currently passed to userspace with a "kobject add"
++event are:
  
- static void __ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata,
-@@ -316,34 +336,45 @@ void ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata,
- }
+ * FIRMWARE=firmware name
+ * TIMEOUT=timeout value
+diff --git a/Documentation/driver-api/firmware/firmware_cache.rst b/Documentation/driver-api/firmware/firmware_cache.rst
+index 2210e5bfb332..c2e69d9c6bf1 100644
+--- a/Documentation/driver-api/firmware/firmware_cache.rst
++++ b/Documentation/driver-api/firmware/firmware_cache.rst
+@@ -29,8 +29,8 @@ Some implementation details about the firmware cache setup:
+ * If an asynchronous call is used the firmware cache is only set up for a
+   device if if the second argument (uevent) to request_firmware_nowait() is
+   true. When uevent is true it requests that a kobject uevent be sent to
+-  userspace for the firmware request. For details refer to the Fackback
+-  mechanism documented below.
++  userspace for the firmware request through the sysfs fallback mechanism
++  if the firmware file is not found.
  
- 
--static void ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
-+static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 				  struct sta_info *sta,
- 				  bool pairwise,
- 				  struct ieee80211_key *old,
- 				  struct ieee80211_key *new)
- {
- 	int idx;
-+	int ret;
- 	bool defunikey, defmultikey, defmgmtkey;
- 
- 	/* caller must provide at least one old/new */
- 	if (WARN_ON(!new && !old))
--		return;
-+		return 0;
- 
- 	if (new)
- 		list_add_tail_rcu(&new->list, &sdata->key_list);
- 
- 	WARN_ON(new && old && new->conf.keyidx != old->conf.keyidx);
- 
--	if (old)
-+	if (old) {
- 		idx = old->conf.keyidx;
--	else
-+		if(new && sta && pairwise)
-+			ieee80211_key_retire(old);
-+	} else {
- 		idx = new->conf.keyidx;
-+	}
-+
-+	if (new && !new->local->wowlan) {
-+		ret = ieee80211_key_enable_hw_accel(new);
-+		if (ret)
-+			return ret;
-+	}
- 
- 	if (sta) {
- 		if (pairwise) {
- 			rcu_assign_pointer(sta->ptk[idx], new);
- 			sta->ptk_idx = idx;
- 			ieee80211_check_fast_xmit(sta);
-+			clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
- 		} else {
- 			rcu_assign_pointer(sta->gtk[idx], new);
- 		}
-@@ -380,6 +411,7 @@ static void ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 
- 	if (old)
- 		list_del_rcu(&old->list);
-+	return 0;
- }
- 
- struct ieee80211_key *
-@@ -654,7 +686,6 @@ int ieee80211_key_link(struct ieee80211_key *key,
- 		       struct ieee80211_sub_if_data *sdata,
- 		       struct sta_info *sta)
- {
--	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_key *old_key;
- 	int idx, ret;
- 	bool pairwise;
-@@ -687,18 +718,13 @@ int ieee80211_key_link(struct ieee80211_key *key,
- 
- 	increment_tailroom_need_count(sdata);
- 
--	ieee80211_key_replace(sdata, sta, pairwise, old_key, key);
-+	ret = ieee80211_key_replace(sdata, sta, pairwise, old_key, key);
- 	ieee80211_key_destroy(old_key, true);
- 
- 	ieee80211_debugfs_key_add(key);
- 
--	if (!local->wowlan) {
--		ret = ieee80211_key_enable_hw_accel(key);
--		if (ret)
--			ieee80211_key_free(key, true);
--	} else {
--		ret = 0;
--	}
-+	if (ret)
-+		ieee80211_key_free(key, true);
- 
-  out:
- 	mutex_unlock(&sdata->local->key_mtx);
+ * If the firmware cache is determined to be needed as per the above two
+   criteria the firmware cache is setup by adding a devres entry for the
 -- 
 2.17.0
