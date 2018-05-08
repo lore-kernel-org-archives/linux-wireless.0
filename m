@@ -1,56 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:41188 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932380AbeEWKkC (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:41276 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754622AbeEHTtT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 May 2018 06:40:02 -0400
-Message-ID: <1527071997.3759.18.camel@sipsolutions.net> (sfid-20180523_124059_279812_336FC3F6)
-Subject: Re: [PATCH] ath10k: add dynamic vlan support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Date: Wed, 23 May 2018 12:39:57 +0200
-In-Reply-To: <988f350d-a6eb-1733-4a2f-43a87053e96a@codeaurora.org>
-References: <1524232653-22573-1-git-send-email-mpubbise@codeaurora.org>
-         <87r2n5auvq.fsf@kamboji.qca.qualcomm.com>
-         <aa04534d-9677-f42e-a239-b230093ef2f5@dd-wrt.com>
-         <f8d6d13943ccac22f363d7d4f53d645c@codeaurora.org>
-         <1526637270.3805.15.camel@sipsolutions.net>
-         <59ff8201-fc1b-8579-d5a9-f4b08621f5ec@codeaurora.org>
-         <1527069018.3759.15.camel@sipsolutions.net>
-         <988f350d-a6eb-1733-4a2f-43a87053e96a@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Tue, 8 May 2018 15:49:19 -0400
+Received: from mail-io0-f197.google.com ([209.85.223.197])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1fG8bt-0004yS-U9
+        for linux-wireless@vger.kernel.org; Tue, 08 May 2018 19:49:18 +0000
+Received: by mail-io0-f197.google.com with SMTP id u23-v6so12128142ioc.13
+        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2018 12:49:17 -0700 (PDT)
+Date: Tue, 8 May 2018 14:49:15 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+        johannes.berg@intel.com
+Subject: Re: [PATCH v2 1/2] wireless-regdb: Add wmm rule for EEA and EFTA
+ countries
+Message-ID: <20180508194915.GA3375@ubuntu-xps13> (sfid-20180508_214923_746310_ECBCF3BF)
+References: <1525363103-8620-1-git-send-email-haim.dreyfuss@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1525363103-8620-1-git-send-email-haim.dreyfuss@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-05-23 at 16:09 +0530, Manikanta Pubbisetty wrote:
-> > > > > + * @IEEE80211_HW_SUPPORTS_SW_ENCRYPT: Device is capable of transmitting
-> > > > > + *     frames encrypted in software, only valid when SW_CRYPTO_CONTROL
-> > > > > + *     is enabled. Based on this flag, mac80211 can allow/disallow VLAN
-> > > > > + *     operations in the BSS.
-> > > > 
-> > > > Based on the name and initial description, this sounds equivalent to
-> > > > just turning off SW_CRYPTO_CONTROL. I think that's not the intent, but
-> > > > would need some renaming.
-> > > 
-> > > I can rename it to something which is very specific to VLAN support on
-> > > sw crypto controlled devices if that is okay.
-> > 
-> > I don't think that makes sense. If we split the capability of AP_VLAN
-> > and AP_VLAN_FOR_4ADDR at the "root", then we don't need to play with all
-> > these things. Yes, this is slightly awkward for userspace, and perhaps
-> > with the interface combination checks, but I'd like you to look at that.
-> > 
+On Thu, May 03, 2018 at 06:58:22PM +0300, Haim Dreyfuss wrote:
+> The ETSI EN 301 893 v211 (2017-05) standard defines a new channel
+> access mechanism that all devices (WLAN and LAA) need to comply with.
+> In previous versions the device was allowed by ETSI to implement
+> 802.11 channel access mechanism based on a set of priority classes
+> which are taken from 802.11.
+> According to the new standard there might be some exception
+> which require the EEA and the EFTA countries, which adhere
+> ETSI rules, to follow more restrictive rules.
+> In order to comply with the new standard introduced by ETSI, add
+> wmmrule global item with the new ETSI channel mechanism rules.
+> Also add wmmrule flag to EEA and EFTA countries.
 > 
-> Makes sense, I had this thought to split the VLAN and 4-addr 
-> functionality, but since we need to fiddle with userspace, I refrained.
-> Anyways, I will check all the possibilities of splitting these 
-> functionalities.
+> Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-I'm not sure we really have to - it's likely that wpa_s/hostapd don't
-check the capabilities?
+That's looking better. I did some light testing and nothing blew up with
+4.15 or 4.17.
 
-johannes
+Applied both patches, thanks!
