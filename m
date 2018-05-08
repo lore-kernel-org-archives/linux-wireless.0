@@ -1,49 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:32878 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750911AbeEDAAI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 May 2018 20:00:08 -0400
-Date: Fri, 4 May 2018 00:00:06 +0000
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Andres Rodriguez <andresx7@gmail.com>
-Cc: linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
-        mcgrof@kernel.org, alexdeucher@gmail.com, christian.koenig@amd.com,
-        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        hdegoede@redhat.com, Kees Cook <keescook@chromium.org>,
-        Mimi Zohar <zohar@linux.vnet.ibm.com>
-Subject: Re: [PATCH 5/9] firmware: add function to load firmware without
- warnings v5
-Message-ID: <20180504000006.GO27853@wotan.suse.de> (sfid-20180504_020022_642490_AC12FB90)
-References: <20180423201205.20533-1-andresx7@gmail.com>
- <20180423201205.20533-6-andresx7@gmail.com>
+Received: from rtits2.realtek.com ([211.75.126.72]:50748 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932644AbeEHIhh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 May 2018 04:37:37 -0400
+From: Pkshih <pkshih@realtek.com>
+To: "jprvita@gmail.com" <jprvita@gmail.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        "jprvita@endlessm.com" <jprvita@endlessm.com>,
+        Birming Chiu <birming@realtek.com>,
+        "drake@endlessm.com" <drake@endlessm.com>,
+        Chaoming_Li <chaoming_li@realsil.com.cn>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        =?utf-8?B?6I6K5b2l5a6j?= <yhchuang@realtek.com>,
+        "derosier@gmail.com" <derosier@gmail.com>,
+        Steven Ting <steventing@realtek.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux@endlessm.com" <linux@endlessm.com>,
+        Shaofu <shaofu@realtek.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: RTL8723BE performance regression
+Date: Tue, 8 May 2018 08:37:16 +0000
+Message-ID: <1525768634.2885.11.camel@realtek.com> (sfid-20180508_103811_249786_753BEDBC)
+References: <CA+A7VXX+z8FrDhzW2BQ6AGMJ=_j_53wkUL_YNgkreEbWSh+jCw@mail.gmail.com>
+         <afdf0498-c0a9-936c-0c9b-1b6da6eb5957@lwfinger.net>
+         <CA+A7VXWjWaSSUiX3h_rpFXrSwtUkynKR9tpvnsSe=DZrC+mF-Q@mail.gmail.com>
+         <059b40f0-b8e2-b55f-92d5-a859ba4204a4@lwfinger.net>
+         <CA+A7VXUUsZHD2gr9TBcV6jZBOPGZv7_vK-wWZ0MvGgiCnAiUgQ@mail.gmail.com>
+         <5B2DA6FDDF928F4E855344EE0A5C39D13BEC14C0@RTITMBSV07.realtek.com.tw>
+         <1525240713.3735.3.camel@realtek.com>
+         <CA+A7VXWywjTVeb3DTjVMVTUw-vjAjD+3XTuVNk8S=8D7W=MkPQ@mail.gmail.com>
+In-Reply-To: <CA+A7VXWywjTVeb3DTjVMVTUw-vjAjD+3XTuVNk8S=8D7W=MkPQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180423201205.20533-6-andresx7@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 23, 2018 at 04:12:01PM -0400, Andres Rodriguez wrote:
-> diff --git a/include/linux/firmware.h b/include/linux/firmware.h
-> index db8351a42405..a34e16f77f20 100644
-> --- a/include/linux/firmware.h
-> +++ b/include/linux/firmware.h
-> @@ -42,6 +42,8 @@ struct builtin_fw {
->  #if defined(CONFIG_FW_LOADER) || (defined(CONFIG_FW_LOADER_MODULE) && defined(MODULE))
->  int firmware_request(const struct firmware **fw, const char *name,
->  		     struct device *device);
-> +int firmware_request_nowarn(const struct firmware **fw, const char *name,
-> +			    struct device *device);
->  int firmware_request_nowait(
->  	struct module *module, bool uevent,
->  	const char *name, struct device *device, gfp_t gfp, void *context,
-
-You also missed the firmware_request_nowarn() call on the #else. I'll add it
-and re-submit myself.
-
-In future patches about firmware please also Cc Mimi Zohar <zohar@linux.vnet.ibm.com>,
-and Kees Cook <keescook@chromium.org>. You can also use the long list (modulo, not
-the EFI list) that Hans used on his EFI patches. I realize its long but its just
-to ensure enough folks get to review and eybeball the code.
-
-  Luis
+T24gTW9uLCAyMDE4LTA1LTA3IGF0IDE0OjQ5IC0wNzAwLCBKb8OjbyBQYXVsbyBSZWNoaSBWaXRh
+IHdyb3RlOg0KPiBPbiBUdWUsIE1heSAxLCAyMDE4IGF0IDEwOjU4IFBNLCBQa3NoaWggPHBrc2hp
+aEByZWFsdGVrLmNvbT4gd3JvdGU6DQo+ID4gT24gV2VkLCAyMDE4LTA1LTAyIGF0IDA1OjQ0ICsw
+MDAwLCBQa3NoaWggd3JvdGU6DQo+ID4+DQo+ID4+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0t
+LS0NCj4gPj4gPiBGcm9tOiBKb8OjbyBQYXVsbyBSZWNoaSBWaXRhIFttYWlsdG86anBydml0YUBn
+bWFpbC5jb21dDQo+ID4+ID4gU2VudDogV2VkbmVzZGF5LCBNYXkgMDIsIDIwMTggNjo0MSBBTQ0K
+PiA+PiA+IFRvOiBMYXJyeSBGaW5nZXINCj4gPj4gPiBDYzogU3RldmUgZGVSb3NpZXI7IOiOiuW9
+peWuozsgUGtzaGloOyBCaXJtaW5nIENoaXU7IFNoYW9mdTsgU3RldmVuIFRpbmc7IENoYW9taW5n
+X0xpOyBLYWxsZSBWYWxvOw0KPiA+PiA+IGxpbnV4LXdpcmVsZXNzOyBOZXR3b3JrIERldmVsb3Bt
+ZW50OyBMS01MOyBEYW5pZWwgRHJha2U7IEpvw6NvIFBhdWxvIFJlY2hpIFZpdGE7IGxpbnV4QGVu
+ZGxlc3MNCj4gbS5jDQo+ID4+IG9tDQo+ID4+ID4gU3ViamVjdDogUmU6IFJUTDg3MjNCRSBwZXJm
+b3JtYW5jZSByZWdyZXNzaW9uDQo+ID4+ID4NCj4gPj4gPiBPbiBUdWUsIEFwciAzLCAyMDE4IGF0
+IDc6NTEgUE0sIExhcnJ5IEZpbmdlciA8TGFycnkuRmluZ2VyQGx3ZmluZ2VyLm5ldD4gd3JvdGU6
+DQo+ID4+ID4gPiBPbiAwNC8wMy8yMDE4IDA5OjM3IFBNLCBKb8OjbyBQYXVsbyBSZWNoaSBWaXRh
+IHdyb3RlOg0KPiA+PiA+ID4+DQo+ID4+ID4gPj4gT24gVHVlLCBBcHIgMywgMjAxOCBhdCA3OjI4
+IFBNLCBMYXJyeSBGaW5nZXIgPExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ+DQo+ID4+ID4gPj4g
+d3JvdGU6DQo+ID4+ID4gPj4NCj4gPj4gPiA+PiAoLi4uKQ0KPiA+PiA+ID4+DQo+ID4+ID4gPj4+
+IEFzIHRoZSBhbnRlbm5hIHNlbGVjdGlvbiBjb2RlIGNoYW5nZXMgYWZmZWN0ZWQgeW91ciBmaXJz
+dCBiaXNlY3Rpb24sIGRvDQo+ID4+ID4gPj4+IHlvdQ0KPiA+PiA+ID4+PiBoYXZlIG9uZSBvZiB0
+aG9zZSBIUCBsYXB0b3BzIHdpdGggb25seSBvbmUgYW50ZW5uYSBhbmQgdGhlIGluY29ycmVjdA0K
+PiA+PiA+ID4+PiBjb2RpbmcNCj4gPj4gPiA+Pj4gaW4gdGhlIEZVU0U/DQo+ID4+ID4gPj4NCj4g
+Pj4gPiA+Pg0KPiA+PiA+ID4+IFllcywgdGhhdCBpcyB3aHkgSSd2ZSBiZWVuIHBhc3NpbmcgYW50
+X3NlbD0xIGR1cmluZyBteSB0ZXN0cyAtLSB0aGlzDQo+ID4+ID4gPj4gd2FzIG5lZWRlZCB0byBh
+Y2hpZXZlIGEgZ29vZCBwZXJmb3JtYW5jZSBpbiB0aGUgcGFzdCwgYmVmb3JlIHRoaXMNCj4gPj4g
+PiA+PiByZWdyZXNzaW9uLiBJJ3ZlIGFsc28gb3BlbmVkIHRoZSBsYXB0b3AgY2hhc3NpcyBhbmQg
+Y29uZmlybWVkIHRoZQ0KPiA+PiA+ID4+IGFudGVubmEgY2FibGUgaXMgcGx1Z2dlZCB0byB0aGUg
+Y29ubmVjdG9yIGxhYmVsZWQgd2l0aCAiMSIgb24gdGhlDQo+ID4+ID4gPj4gY2FyZC4NCj4gPj4g
+PiA+Pg0KPiA+PiA+ID4+PiBJZiBzbywgcGxlYXNlIG1ha2Ugc3VyZSB0aGF0IHlvdSBzdGlsbCBo
+YXZlIHRoZSBzYW1lIHNpZ25hbA0KPiA+PiA+ID4+PiBzdHJlbmd0aCBmb3IgZ29vZCBhbmQgYmFk
+IGNhc2VzLiBJIGhhdmUgdHJpZWQgdG8ga2VlcCB0aGUgZHJpdmVyIGFuZCB0aGUNCj4gPj4gPiA+
+Pj4gYnRjb2V4IGNvZGUgaW4gc3luYywgYnV0IHRoZXJlIG1heSBiZSBzb21lIGNvbWJpbmF0aW9u
+cyBvZiBhbnRlbm5hDQo+ID4+ID4gPj4+IGNvbmZpZ3VyYXRpb24gYW5kIEZVU0UgY29udGVudHMg
+dGhhdCBjYXVzZSB0aGUgY29kZSB0byBmYWlsLg0KPiA+PiA+ID4+Pg0KPiA+PiA+ID4+DQo+ID4+
+ID4gPj4gV2hhdCBpcyB0aGUgcmVjb21tZW5kZWQgd2F5IHRvIG1vbml0b3IgdGhlIHNpZ25hbCBz
+dHJlbmd0aD8NCj4gPj4gPiA+DQo+ID4+ID4gPg0KPiA+PiA+ID4gVGhlIGJ0Y29leCBjb2RlIGlz
+IGRldmVsb3BlZCBmb3IgbXVsdGlwbGUgcGxhdGZvcm1zIGJ5IGEgZGlmZmVyZW50IGdyb3VwDQo+
+ID4+ID4gPiB0aGFuIHRoZSBMaW51eCBkcml2ZXIuIEkgdGhpbmsgdGhleSBtYWRlIGEgY2hhbmdl
+IHRoYXQgY2F1c2VkIGFudF9zZWwgdG8NCj4gPj4gPiA+IHN3aXRjaCBmcm9tIDEgdG8gMi4gQXQg
+bGVhc3QgbnVtZXJvdXMgY29tbWVudHMgYXQNCj4gPj4gPiA+IGdpdGh1Yi5jb20vbHdmaW5nZXIv
+cnRsd2lmaV9uZXcgY2xhaW1lZCB0aGV5IG5lZWRlZCB0byBtYWtlIHRoYXQgY2hhbmdlLg0KPiA+
+PiA+ID4NCj4gPj4gPiA+IE1oeSByZWNvbW1lbmRlZCBtZXRob2QgaXMgdG8gdmVyaWZ5IHRoZSB3
+aWZpIGRldmljZSBuYW1lIHdpdGggIml3IGRldiIuIFRoZW4NCj4gPj4gPiA+IHVzaW5nIHRoYXQg
+ZGV2aWNlDQo+ID4+ID4gPg0KPiA+PiA+ID4gc3VkbyBpdyBkZXYgPGRldl9uYW1lPiBzY2FuIHwg
+ZWdyZXAgIlNTSUR8c2lnbmFsIg0KPiA+PiA+ID4NCj4gPj4gPg0KPiA+PiA+IEkgaGF2ZSBjb25m
+aXJtZWQgdGhhdCB0aGUgcGVyZm9ybWFuY2UgcmVncmVzc2lvbiBpcyBpbmRlZWQgdGllZCB0bw0K
+PiA+PiA+IHNpZ25hbCBzdHJlbmd0aDogb24gdGhlIGdvb2QgY2FzZXMgc2lnbmFsIHdhcyBiZXR3
+ZWVuIC0xNiBhbmQgLTggZEJtLA0KPiA+PiA+IHdoZXJlYXMgaW4gYmFkIGNhc2VzIHNpZ25hbCB3
+YXMgYWx3YXlzIGJldHdlZW4gLTUwIHRvIC0gNDAgZEJtLiBJJ3ZlDQo+ID4+ID4gYWxzbyBzd2l0
+Y2hlZCB0byB0ZXN0aW5nIGJhbmR3aWR0aCBpbiBjb250cm9sbGVkIExBTiBlbnZpcm9ubWVudCB1
+c2luZw0KPiA+PiA+IGlwZXJmMywgYXMgc3VnZ2VzdGVkIGJ5IFN0ZXZlIGRlUm9zaWVyLCB3aXRo
+IHRoZSBEVVQgYmVpbmcgdGhlIG9ubHkNCj4gPj4gPiBtYWNoaW5lIGNvbm5lY3RlZCB0byB0aGUg
+Mi40IEdIeiByYWRpbyBhbmQgdGhlIG1hY2hpbmUgcnVubmluZyB0aGUNCj4gPj4gPiBpcGVyZjMg
+c2VydmVyIGNvbm5lY3RlZCB2aWEgZXRoZXJuZXQuDQo+ID4+ID4NCj4gPj4NCj4gPj4gV2UgaGF2
+ZSBuZXcgZXhwZXJpbWVudGFsIHJlc3VsdHMgaW4gY29tbWl0IGFmOGE0MWNjY2Y4ZjQ2ICgicnRs
+d2lmaTogY2xlYW51cA0KPiA+PiA4NzIzYmUgYW50X3NlbCBkZWZpbml0aW9uIikuIFlvdSBjYW4g
+dXNlIHRoZSBhYm92ZSBjb21taXQgYW5kIGRvIHRoZSBzYW1lDQo+ID4+IGV4cGVyaW1lbnRzICh3
+aXRoIGFudF9zZWw9MCwgMSBhbmQgMikgaW4geW91ciBzaWRlLCBhbmQgdGhlbiBzaGFyZSB5b3Vy
+IHJlc3VsdHMuDQo+ID4+IFNpbmNlIHBlcmZvcm1hbmNlIGlzIHRpZWQgdG8gc2lnbmFsIHN0cmVu
+Z3RoLCB5b3UgY2FuIG9ubHkgc2hhcmUgc2lnbmFsIHN0cmVuZ3RoLg0KPiA+Pg0KPiA+DQo+ID4g
+UGxlYXNlIHBheSBhdHRlbnRpb24gdG8gY29sZCByZWJvb3Qgb25jZSBhbnRfc2VsIGlzIGNoYW5n
+ZWQuDQo+ID4NCj7CoA0KPiBJJ3ZlIHRlc3RlZCB0aGUgY29tbWl0IG1lbnRpb25lZCBhYm92ZSBh
+bmQgaXQgZml4ZXMgdGhlIHByb2JsZW0gb24gdG9wDQo+IG9mIHY0LjE2IChpbiBhZGRpdGlvbiB0
+byB0aGUgbGF0ZXN0IHdpcmVsZXNzLWRyaXZlcnMtbmV4dCBhbHNvIGJlZW4NCj4gZml4ZWQgYXMg
+aXQgYWxyZWFkeSBjb250YWlucyBzdWNoIGNvbW1pdCkuIE9uIHY0LjE1LCB3ZSBhbHNvIG5lZWQg
+dGhlDQo+IGZvbGxvd2luZyBjb21taXRzIGJlZm9yZSAiYWY4YTQxY2NjZjhmIHJ0bHdpZmk6IGNs
+ZWFudXAgODcyM2JlIGFudF9zZWwNCj4gZGVmaW5pdGlvbiIgdG8gaGF2ZSBhIGdvb2QgcGVyZm9y
+bWFuY2UgYWdhaW46DQo+wqANCj7CoMKgwqA4NzRlODM3ZDY3ZDAgcnRsd2lmaTogZmlsbCBGVyB2
+ZXJzaW9uIGFuZCBzdWJ2ZXJzaW9uDQo+wqDCoMKgYTQ0NzA5YmJhNzBmIHJ0bHdpZmk6IGJ0Y29l
+eDogQWRkIHBvd2VyX29uX3NldHRpbmcgcm91dGluZQ0KPsKgwqDCoDQwZDlkZDRmMWM1ZCBydGx3
+aWZpOiBidGNvZXg6IFJlbW92ZSBnbG9iYWwgdmFyaWFibGVzIGZyb20gYnRjb2V4DQoNCnY0LjE1
+IGlzbid0IGxvbmd0ZXJtIHZlcnNpb24gYW5kIGhhZCBiZWVuIEVPTC4NCg0KPsKgDQo+IFN1cnBy
+aXNpbmdseSwgaXQgc2VlbXMgZm9yY2luZyBhbnRfc2VsPTEgaXMgbm90IG5lZWRlZCBhbnltb3Jl
+IG9uDQo+IHRoZXNlIG1hY2hpbmVzLCBhcyB0aGUgc2hvd24gYnkgdGhlIG51bWJlcnMgYmVsbG93
+IChhbnRfc2VsPTAgbWVhbnMNCj4gdGhhdCBhY3R1YWxseSBubyBwYXJhbWV0ZXIgd2FzIHBhc3Nl
+ZCB0byB0aGUgbW9kdWxlKS4gSSBoYXZlIHBvd2VyZWQNCj4gb2ZmIHRoZSBtYWNoaW5lIGFuZCBk
+b25lIGEgY29sZCBib290IGZvciBldmVyeSB0ZXN0LiBJdCBzZWVtcw0KPiBzb21ldGhpbmcgaGF2
+ZSBjaGFuZ2VkIGluIHRoZSBhbnRlbm5hIGF1dG8tc2VsZWN0aW9uIGNvZGUgc2luY2UgdjQuMTEs
+DQo+IHRoZSBsYXRlc3QgcG9pbnQgd2hlcmUgSSBjb3VsZCBjb25maXJtIHdlIGRlZmluaXRlbHkg
+bmVlZCB0byBmb3JjZQ0KPiBhbnRfc2VsPTEuIEkndmUgYmVlbiB0cnlpbmcgdG8gdW5kZXJzdGFu
+ZCB3aGF0IGNhdXNlcyB0aGlzIGRpZmZlcmVuY2UsDQo+IGJ1dCBoYXZlbid0IG1hZGUgcHJvZ3Jl
+c3Mgb24gdGhhdCBzbyBmYXIsIHNvIGFueSBzdWdnZXN0aW9ucyBhcmUNCj4gYXBwcmVjaWF0ZWQg
+KHdlIGFyZSB0cnlpbmcgdG8gZGVjaWRlIGlmIHdlIGNhbiBjb25maWRlbnRseSBkcm9wIHRoZQ0K
+PiBkb3duc3RyZWFtIERNSSBxdWlya3MgZm9yIHRoZXNlIHNwZWNpZmljIG1hY2hpbmVzKS4NCj7C
+oA0KSSB0aGluayB5b3VyIHJ0bDg3MjNiZSBtb2R1bGUgcHJvZ3JhbWVkIGNvcnJlY3QgZWZ1c2Ug
+Y29udGVudCwgc28gaXQNCndvcmtzIHByb3Blcmx5IHdpdGggYW50X3NlbD0wLCBhbmQgcXVpcmsg
+aXNuJ3QgcmVxdWlyZWQgZm9yIHlvdXINCm1hY2hpbmUuDQoNCj7CoMKgwqB3LWQtbiBhbnRfc2Vs
+PTA6IC0xNC4wMCBkQm0swqDCoDY5LjUgTWJwcyAtPiBnb29kDQo+wqDCoMKgdy1kLW4gYW50X3Nl
+bD0xOiAtMTAuMDAgZEJtLMKgwqA0MS4xIE1icHMgLT4gZ29vZA0KPsKgwqDCoHctZC1uIGFudF9z
+ZWw9MjogLTQ0LjAwIGRCbSzCoMKgwqA2MDcga2JwcyAtPiBiYWQNCj7CoA0KPsKgwqDCoHY0LjE2
+IGFudF9zZWw9MDogLTEyLjAwIGRCbSzCoMKgNjMuMCBNYnBzIC0+IGdvb2QNCj7CoMKgwqB2NC4x
+NiBhbnRfc2VsPTE6IC0gOC4wMCBkQm0swqDCoDY5LjAgTWJwcyAtPiBnb29kDQo+wqDCoMKgdjQu
+MTYgYW50X3NlbD0yOiAtNTAuMDAgZEJtLMKgwqDCoDIyNCBrYnBzIC0+IGJhZA0KPsKgDQo+wqDC
+oMKgdjQuMTUgYW50X3NlbD0wOiAtIDguMDAgZEJtLMKgwqAzMy4wIE1icHMgLT4gZ29vZA0KPsKg
+wqDCoHY0LjE1IGFudF9zZWw9MTogLTEwLjAwIGRCbSzCoMKgMzguMSBNYnBzIC0+IGdvb2QNCj7C
+oMKgwqB2NC4xNSBhbnRfc2VsPTI6IC00OC4wMCBkQm0swqDCoMKgMjA2IGticHMgLT4gYmFkDQo+
+wqANCg0KV2l0aCB5b3VyIHJlc3VsdHMsIHRoZSBlZnVzZSBjb250ZW50IGlzIHByb2dyYW1tZWQg
+YXMgb25lIG9yIHR3byBhbnRlbm5hDQpvbiBBVVggcGF0aC4NCg0KUmVnYXJkcywNClBLDQoNCg==
