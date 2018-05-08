@@ -1,126 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60307 "EHLO mx2.suse.de"
+Received: from mail.kernel.org ([198.145.29.99]:40466 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750911AbeECXoL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 May 2018 19:44:11 -0400
-Date: Thu, 3 May 2018 23:44:09 +0000
+        id S932874AbeEHSMv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 May 2018 14:12:51 -0400
 From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Andres Rodriguez <andresx7@gmail.com>
-Cc: linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
-        mcgrof@kernel.org, alexdeucher@gmail.com, christian.koenig@amd.com,
-        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        hdegoede@redhat.com, Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH 7/9] firmware: use rename fw_sysfs_fallback to use the
- firmware_ prefix
-Message-ID: <20180503234409.GY27853@wotan.suse.de> (sfid-20180504_014425_014912_20CF8E73)
-References: <20180423201205.20533-1-andresx7@gmail.com>
- <20180423201205.20533-8-andresx7@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180423201205.20533-8-andresx7@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, keescook@chromium.org,
+        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
+        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
+        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
+        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
+        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
+        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        jewalt@lgsinnovations.com, oneukum@suse.com,
+        cantabile.desu@gmail.com, ast@fb.com, hare@suse.com,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl,
+        davem@davemloft.net, arve@android.com, tkjos@android.com,
+        corbet@lwn.net, mchehab+samsung@kernel.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v6 00/13] firmware_loader changes for v4.18
+Date: Tue,  8 May 2018 11:12:34 -0700
+Message-Id: <20180508181247.19431-1-mcgrof@kernel.org> (sfid-20180508_202219_736519_124C9596)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 23, 2018 at 04:12:03PM -0400, Andres Rodriguez wrote:
-> Use the correct prefix for symbols exported by firmware_loader(). This
-> is done since firmware_sysfs_fallback() is now exposed through
-> kernel-doc.
-> 
-> Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
-> ---
->  drivers/base/firmware_loader/fallback.c | 8 ++++----
->  drivers/base/firmware_loader/fallback.h | 4 ++--
->  drivers/base/firmware_loader/firmware.h | 6 +++---
->  drivers/base/firmware_loader/main.c     | 2 +-
->  4 files changed, 10 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
-> index 1a47ddc70c31..fc186b5bccce 100644
-> --- a/drivers/base/firmware_loader/fallback.c
-> +++ b/drivers/base/firmware_loader/fallback.c
-> @@ -661,10 +661,10 @@ static bool fw_run_sysfs_fallback(enum fw_opt opt_flags)
->  	return fw_force_sysfs_fallback(opt_flags);
->  }
->  
-> -int fw_sysfs_fallback(struct firmware *fw, const char *name,
-> -		      struct device *device,
-> -		      enum fw_opt opt_flags,
-> -		      int ret)
-> +int firmware_sysfs_fallback(struct firmware *fw, const char *name,
-> +			    struct device *device,
-> +			    enum fw_opt opt_flags,
-> +			    int ret)
+Greg,
 
-Since we may get more than one fallback later I'll usee the firmware_fallback_sysfs() here.
-I'll do this change and resubmit myself.
+Here is what I have queued up for the firmware_loader for v4.18. It
+includes a slew of cleanup work, and the new firmware_request_nowarn()
+which is quiet but enables the sysfs fallback mechanism. I've gone ahead
+and also queued up a few minor fixes for the firmware loader documentation
+which have come up recently. These changes are available on my git tree
+both based on linux-next [0] and Linus' latest tree [1]. Folks working
+on new developments for the firmware loader can use my linux-next
+branch 20180508-firmware_loader_for-v4.18-try2 for now.
 
->  {
->  	if (!fw_run_sysfs_fallback(opt_flags))
->  		return ret;
-> diff --git a/drivers/base/firmware_loader/fallback.h b/drivers/base/firmware_loader/fallback.h
-> index a3b73a09db6c..8cfaa3299bb7 100644
-> --- a/drivers/base/firmware_loader/fallback.h
-> +++ b/drivers/base/firmware_loader/fallback.h
-> @@ -31,7 +31,7 @@ struct firmware_fallback_config {
->  };
->  
->  #ifdef CONFIG_FW_LOADER_USER_HELPER
-> -int fw_sysfs_fallback(struct firmware *fw, const char *name,
-> +int firmware_sysfs_fallback(struct firmware *fw, const char *name,
->  		      struct device *device,
->  		      enum fw_opt opt_flags,
->  		      int ret);
-> @@ -43,7 +43,7 @@ void fw_fallback_set_default_timeout(void);
->  int register_sysfs_loader(void);
->  void unregister_sysfs_loader(void);
->  #else /* CONFIG_FW_LOADER_USER_HELPER */
-> -static inline int fw_sysfs_fallback(struct firmware *fw, const char *name,
-> +static inline int firmware_sysfs_fallback(struct firmware *fw, const char *name,
->  				    struct device *device,
->  				    enum fw_opt opt_flags,
->  				    int ret)
-> diff --git a/drivers/base/firmware_loader/firmware.h b/drivers/base/firmware_loader/firmware.h
-> index a405d400a925..59836d50c5bd 100644
-> --- a/drivers/base/firmware_loader/firmware.h
-> +++ b/drivers/base/firmware_loader/firmware.h
-> @@ -15,12 +15,12 @@
->   * enum fw_opt - options to control firmware loading behaviour
->   *
->   * @FW_OPT_UEVENT: Enables the fallback mechanism to send a kobject uevent
-> - *                  when the firmware is not found. Userspace is in charge
-> - *                  to load the firmware using the sysfs loading facility.
-> + *                 when the firmware is not found. Userspace is in charge
-> + *                 to load the firmware using the sysfs loading facility.
+0-day sends its blessings.
 
-This change was really not part of this patch, so I'll merge it in with the
-other patch.
+The patches from Mimi's series still require a bit more discussion and
+review. The discussion over the EFI firmware fallback mechanism is still
+ongoing.
 
->   * @FW_OPT_NOWAIT: Used to describe the firmware request is asynchronous.
->   * @FW_OPT_USERHELPER: Enable the fallback mechanism, in case the direct
->   *                     filesystem lookup fails at finding the firmware.
-> - *                     For details refer to fw_sysfs_fallback().
-> + *                     For details refer to firmware_sysfs_fallback().
->   * @FW_OPT_NO_WARN: Quiet, avoid printing warning messages.
->   * @FW_OPT_NOCACHE: Disables firmware caching. Firmware caching is used to
->   *                  cache the firmware upon suspend, so that upon resume
-> diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
-> index 58aaadf81e12..f009566acd35 100644
-> --- a/drivers/base/firmware_loader/main.c
-> +++ b/drivers/base/firmware_loader/main.c
-> @@ -581,7 +581,7 @@ _firmware_request(const struct firmware **firmware_p, const char *name,
->  			dev_warn(device,
->  				 "Direct firmware load for %s failed with error %d\n",
->  				 name, ret);
-> -		ret = fw_sysfs_fallback(fw, name, device, opt_flags, ret);
-> +		ret = firmware_sysfs_fallback(fw, name, device, opt_flags, ret);
->  	} else
->  		ret = assign_fw(fw, device, opt_flags);
->  
-> -- 
-> 2.14.1
-> 
-> 
+As for the rename that you wanted, perhaps we can do this late in the
+merge window considering we're at rc4 now. I can prep something up for
+that later.
+
+Question, and specially rants are warmly welcomed.
+
+[0] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux-next.git/log/?h=20180508-firmware_loader_for-v4.18-try2
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git/log/?h=20180508-firmware_loader_for-v4.18-try2
+
+Andres Rodriguez (6):
+  firmware: wrap FW_OPT_* into an enum
+  firmware: use () to terminate kernel-doc function names
+  firmware: rename fw_sysfs_fallback to firmware_fallback_sysfs()
+  firmware: add firmware_request_nowarn() - load firmware without
+    warnings
+  ath10k: use firmware_request_nowarn() to load firmware
+  ath10k: re-enable the firmware fallback mechanism for testmode
+
+Luis R. Rodriguez (7):
+  firmware_loader: document firmware_sysfs_fallback()
+  firmware_loader: enhance Kconfig documentation over FW_LOADER
+  firmware_loader: move kconfig FW_LOADER entries to its own file
+  firmware_loader: make firmware_fallback_sysfs() print more useful
+  Documentation: fix few typos and clarifications for the firmware
+    loader
+  Documentation: remove stale firmware API reference
+  Documentation: clarify firmware_class provenance and why we can't
+    rename the module
+
+ Documentation/dell_rbu.txt                    |   3 -
+ .../firmware/fallback-mechanisms.rst          |  14 +-
+ .../driver-api/firmware/firmware_cache.rst    |   4 +-
+ .../driver-api/firmware/request_firmware.rst  |   5 +
+ drivers/base/Kconfig                          |  90 ++--------
+ drivers/base/firmware_loader/Kconfig          | 154 ++++++++++++++++++
+ drivers/base/firmware_loader/fallback.c       |  53 ++++--
+ drivers/base/firmware_loader/fallback.h       |  18 +-
+ drivers/base/firmware_loader/firmware.h       |  37 ++++-
+ drivers/base/firmware_loader/main.c           |  57 +++++--
+ drivers/net/wireless/ath/ath10k/core.c        |   2 +-
+ drivers/net/wireless/ath/ath10k/testmode.c    |   2 +-
+ include/linux/firmware.h                      |  10 ++
+ 13 files changed, 319 insertions(+), 130 deletions(-)
+ create mode 100644 drivers/base/firmware_loader/Kconfig
 
 -- 
-Do not panic
+2.17.0
