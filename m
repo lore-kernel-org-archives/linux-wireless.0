@@ -1,53 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:57414 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751196AbeEVOuO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 10:50:14 -0400
-Message-ID: <1527000610.6787.14.camel@sipsolutions.net> (sfid-20180522_165017_766861_D4036905)
-Subject: Re: [PATCH] cfg80211: Fix support for flushing old scan results
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Tim Kourt <tim.a.kourt@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 22 May 2018 16:50:10 +0200
-In-Reply-To: <c8f3d9a7-b978-8af8-6594-d0ae66652956@gmail.com> (sfid-20180522_164839_367773_27F91548)
-References: <20180511164835.40161-1-tim.a.kourt@linux.intel.com>
-         <1526631206.3805.1.camel@sipsolutions.net>
-         <d12d4d4d-25d6-3cd0-1399-27de09c7f8c5@gmail.com>
-         <5AFF2169.4010003@broadcom.com>
-         <51c56faf-267d-c204-243a-31fc91976c5e@gmail.com>
-         <5B03C5BA.50804@broadcom.com>
-         <c8f3d9a7-b978-8af8-6594-d0ae66652956@gmail.com>
-         (sfid-20180522_164839_367773_27F91548)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.kernel.org ([198.145.29.99]:41428 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933383AbeEHSNL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 May 2018 14:13:11 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, keescook@chromium.org,
+        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
+        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
+        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
+        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
+        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
+        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        jewalt@lgsinnovations.com, oneukum@suse.com,
+        cantabile.desu@gmail.com, ast@fb.com, hare@suse.com,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl,
+        davem@davemloft.net, arve@android.com, tkjos@android.com,
+        corbet@lwn.net, mchehab+samsung@kernel.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v6 12/13] Documentation: remove stale firmware API reference
+Date: Tue,  8 May 2018 11:12:46 -0700
+Message-Id: <20180508181247.19431-13-mcgrof@kernel.org> (sfid-20180508_201429_719071_3692D87D)
+In-Reply-To: <20180508181247.19431-1-mcgrof@kernel.org>
+References: <20180508181247.19431-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-05-22 at 09:48 -0500, Denis Kenzior wrote:
-> Hi Arend,
-> 
-> > > Are you saying the first result is from the Beacon and the other is from
-> > > the Probe Response?  Then why are the 'Information elements from Probe
-> > > Response frame' the way they are?
-> > 
-> > Nope. I am not saying that. I am saying that there are two probe 
-> > requests being sent. One with broadcast ssid, ie. ssid_len == 0, and 
-> > with ssid 'myssid'. But it is speculation without a sniffer capture.
-> 
-> Ah I see what you mean now.  No, we traced this down to hostapd itself 
-> and it was receiving a single Probe Request with the ssid set and 
-> replying to it per spec.  So I'm pretty confident this scenario isn't 
-> what is happening.  Let me try to get some actual packet captures...
+It refers to a pending patch, but this was merged eons ago.
 
-Was "myssid" the real SSID, or did you hide that from us and it was
-really 9 characters long in the original?
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ Documentation/dell_rbu.txt | 3 ---
+ 1 file changed, 3 deletions(-)
 
-If it was really 9 characters long I could imagine that there's a
-different bug with a beacon with all-zero-bytes having been received
-(and getting stuck into the probe response buffer for some reason), and
-then you *should* see both entries.
-
-johannes
+diff --git a/Documentation/dell_rbu.txt b/Documentation/dell_rbu.txt
+index 0fdb6aa2704c..077fdc29a0d0 100644
+--- a/Documentation/dell_rbu.txt
++++ b/Documentation/dell_rbu.txt
+@@ -121,9 +121,6 @@ read back the image downloaded.
+ 
+ .. note::
+ 
+-   This driver requires a patch for firmware_class.c which has the modified
+-   request_firmware_nowait function.
+-
+    Also after updating the BIOS image a user mode application needs to execute
+    code which sends the BIOS update request to the BIOS. So on the next reboot
+    the BIOS knows about the new image downloaded and it updates itself.
+-- 
+2.17.0
