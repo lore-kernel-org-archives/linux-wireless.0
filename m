@@ -1,52 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:55868 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752296AbeEQJ1R (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34788 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751699AbeEHMJX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 May 2018 05:27:17 -0400
-Date: Thu, 17 May 2018 12:27:07 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: huxm@marvell.com
+        Tue, 8 May 2018 08:09:23 -0400
+From: Anilkumar Kolli <akolli@codeaurora.org>
+To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org
-Subject: [bug report] mwifiex: add rx histogram statistics support
-Message-ID: <20180517092707.GA5900@mwanda> (sfid-20180517_112730_442084_900C5557)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH] ath10k: add fw crash dump support for QCA9888 and QCA99X0
+Date: Tue,  8 May 2018 17:41:36 +0530
+Message-Id: <1525781496-14776-1-git-send-email-akolli@codeaurora.org> (sfid-20180508_140927_169317_5124B8A5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Xinming Hu,
+This patch adds crash dump support for QCA9888 and QCA99X0
 
-The patch cbf6e05527a7: "mwifiex: add rx histogram statistics
-support" from Dec 23, 2014, leads to the following static checker
-warning:
+Tested On: QCA9888, Firmware Version: 10.4-3.5.3-00053
+Tested on QCA99X0, Firmware Version: 10.4.1.00030-1
 
-	drivers/net/wireless/marvell/mwifiex/util.c:714 mwifiex_hist_data_set()
-	error: buffer underflow 'phist_data->snr' '(-128)-127'
+Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/coredump.c |   98 ++++++++++++++++++++++++++++
+ 1 file changed, 98 insertions(+)
 
-drivers/net/wireless/marvell/mwifiex/util.c
-   706  /* function to add histogram record */
-   707  void mwifiex_hist_data_set(struct mwifiex_private *priv, u8 rx_rate, s8 snr,
-                                                                             ^^^^^^
-   708                             s8 nflr)
-   709  {
-   710          struct mwifiex_histogram_data *phist_data = priv->hist_data;
-   711  
-   712          atomic_inc(&phist_data->num_samples);
-   713          atomic_inc(&phist_data->rx_rate[rx_rate]);
-   714          atomic_inc(&phist_data->snr[snr]);
-   715          atomic_inc(&phist_data->noise_flr[128 + nflr]);
-   716          atomic_inc(&phist_data->sig_str[nflr - snr]);
-
-Smatch complains that "snr" comes from skb->data so it's untrusted and
-it can be less than zero and underflow the ->snr array.
-
-->snr, ->noise_flr and ->sig_str all have 256 elements.  Obviously it
-seems like "snr" should be declared as a u8 instead of an s8.  But I'm
-not totally sure what to do about the ->noise_flr and ->sig_str[]
-arrays.
-
-   717  }
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/ath/ath10k/coredump.c b/drivers/net/wireless/ath/ath10k/coredump.c
+index f90cec0ebb1c..e0eb2eb1a66d 100644
+--- a/drivers/net/wireless/ath/ath10k/coredump.c
++++ b/drivers/net/wireless/ath/ath10k/coredump.c
+@@ -701,6 +701,89 @@
+ 	},
+ };
+ 
++static const struct ath10k_mem_region qca99X0_hw20_mem_regions[] = {
++	{
++		.type = ATH10K_MEM_REGION_TYPE_DRAM,
++		.start = 0x400000,
++		.len = 0x60000,
++		.name = "DRAM",
++		.section_table = {
++			.sections = NULL,
++			.size = 0,
++		},
++	},
++	{
++		.type = ATH10K_MEM_REGION_TYPE_REG,
++		.start = 0x98000,
++		.len = 0x50000,
++		.name = "IRAM",
++		.section_table = {
++			.sections = NULL,
++			.size = 0,
++		},
++	},
++	{
++		.type = ATH10K_MEM_REGION_TYPE_IOSRAM,
++		.start = 0xC0000,
++		.len = 0x40000,
++		.name = "SRAM",
++		.section_table = {
++			.sections = NULL,
++			.size = 0,
++		},
++	},
++	{
++		.type = ATH10K_MEM_REGION_TYPE_IOREG,
++		.start = 0x30000,
++		.len = 0x7000,
++		.name = "APB REG 1",
++		.section_table = {
++			.sections = NULL,
++			.size = 0,
++		},
++	},
++	{
++		.type = ATH10K_MEM_REGION_TYPE_IOREG,
++		.start = 0x3f000,
++		.len = 0x3000,
++		.name = "APB REG 2",
++		.section_table = {
++			.sections = NULL,
++			.size = 0,
++		},
++	},
++	{
++		.type = ATH10K_MEM_REGION_TYPE_IOREG,
++		.start = 0x43000,
++		.len = 0x3000,
++		.name = "WIFI REG",
++		.section_table = {
++			.sections = NULL,
++			.size = 0,
++		},
++	},
++	{
++		.type = ATH10K_MEM_REGION_TYPE_IOREG,
++		.start = 0x4A000,
++		.len = 0x5000,
++		.name = "CE REG",
++		.section_table = {
++			.sections = NULL,
++			.size = 0,
++		},
++	},
++	{
++		.type = ATH10K_MEM_REGION_TYPE_IOREG,
++		.start = 0x80000,
++		.len = 0x6000,
++		.name = "SOC REG",
++		.section_table = {
++			.sections = NULL,
++			.size = 0,
++		},
++	},
++};
++
+ static const struct ath10k_mem_region qca9984_hw10_mem_regions[] = {
+ 	{
+ 		.type = ATH10K_MEM_REGION_TYPE_DRAM,
+@@ -848,6 +931,21 @@
+ 			.size = ARRAY_SIZE(qca9984_hw10_mem_regions),
+ 		},
+ 	},
++	{
++		.hw_id = QCA9888_HW_2_0_DEV_VERSION,
++		.region_table = {
++			.regions = qca9984_hw10_mem_regions,
++			.size = ARRAY_SIZE(qca9984_hw10_mem_regions),
++		},
++	},
++	{
++		.hw_id = QCA99X0_HW_2_0_DEV_VERSION,
++		.region_table = {
++			.regions = qca99X0_hw20_mem_regions,
++			.size = ARRAY_SIZE(qca99X0_hw20_mem_regions),
++		},
++	},
++
+ };
+ 
+ static u32 ath10k_coredump_get_ramdump_size(struct ath10k *ar)
+-- 
+1.7.9.5
