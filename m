@@ -1,72 +1,232 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:60365 "EHLO mail.toke.dk"
+Received: from mail.kernel.org ([198.145.29.99]:40540 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966497AbeEYM3Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 May 2018 08:29:24 -0400
-Subject: [PATCH] mac80211: Move up init of TXQs
-From: Toke =?utf-8?q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: linux-wireless@vger.kernel.org
-Cc: Niklas Cassel <niklas.cassel@linaro.org>
-Date: Fri, 25 May 2018 14:29:21 +0200
-Message-ID: <152725136177.14483.16708750819293583562.stgit@alrua-kau> (sfid-20180525_142943_783332_DD5B80F9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        id S932880AbeEHSMw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 May 2018 14:12:52 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, keescook@chromium.org,
+        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
+        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
+        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
+        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
+        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
+        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        jewalt@lgsinnovations.com, oneukum@suse.com,
+        cantabile.desu@gmail.com, ast@fb.com, hare@suse.com,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl,
+        davem@davemloft.net, arve@android.com, tkjos@android.com,
+        corbet@lwn.net, mchehab+samsung@kernel.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, "Luis R . Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v6 01/13] firmware: wrap FW_OPT_* into an enum
+Date: Tue,  8 May 2018 11:12:35 -0700
+Message-Id: <20180508181247.19431-2-mcgrof@kernel.org> (sfid-20180508_202330_016295_78F76479)
+In-Reply-To: <20180508181247.19431-1-mcgrof@kernel.org>
+References: <20180508181247.19431-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On init, ieee80211_if_add() dumps the interface. Since that now includes a
-dump of the TXQ state, we need to initialise that before the dump happens.
-So move up the TXQ initialisation to to before the call to
-ieee80211_if_add().
+From: Andres Rodriguez <andresx7@gmail.com>
 
-Fixes: 52539ca89f36 ("cfg80211: Expose TXQ stats and parameters to userspace")
-Reported-by: Niklas Cassel <niklas.cassel@linaro.org>
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+This should let us associate enum kdoc to these values.
+While at it, kdocify the fw_opt.
+
+Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
+Acked-by: Luis R. Rodriguez <mcgrof@kernel.org>
+[mcgrof: coding style fixes, merge kdoc with enum move]
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- net/mac80211/main.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/base/firmware_loader/fallback.c | 12 ++++----
+ drivers/base/firmware_loader/fallback.h |  6 ++--
+ drivers/base/firmware_loader/firmware.h | 37 +++++++++++++++++++------
+ drivers/base/firmware_loader/main.c     |  6 ++--
+ 4 files changed, 42 insertions(+), 19 deletions(-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 4d2e797e3f16..722f3d9fb416 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1098,6 +1098,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
+index 358354148dec..b57a7b3b4122 100644
+--- a/drivers/base/firmware_loader/fallback.c
++++ b/drivers/base/firmware_loader/fallback.c
+@@ -512,7 +512,7 @@ static const struct attribute_group *fw_dev_attr_groups[] = {
  
- 	ieee80211_led_init(local);
+ static struct fw_sysfs *
+ fw_create_instance(struct firmware *firmware, const char *fw_name,
+-		   struct device *device, unsigned int opt_flags)
++		   struct device *device, enum fw_opt opt_flags)
+ {
+ 	struct fw_sysfs *fw_sysfs;
+ 	struct device *f_dev;
+@@ -545,7 +545,7 @@ fw_create_instance(struct firmware *firmware, const char *fw_name,
+  * In charge of constructing a sysfs fallback interface for firmware loading.
+  **/
+ static int fw_load_sysfs_fallback(struct fw_sysfs *fw_sysfs,
+-				  unsigned int opt_flags, long timeout)
++				  enum fw_opt opt_flags, long timeout)
+ {
+ 	int retval = 0;
+ 	struct device *f_dev = &fw_sysfs->dev;
+@@ -599,7 +599,7 @@ static int fw_load_sysfs_fallback(struct fw_sysfs *fw_sysfs,
  
-+	result = ieee80211_txq_setup_flows(local);
-+	if (result)
-+		goto fail_flows;
+ static int fw_load_from_user_helper(struct firmware *firmware,
+ 				    const char *name, struct device *device,
+-				    unsigned int opt_flags)
++				    enum fw_opt opt_flags)
+ {
+ 	struct fw_sysfs *fw_sysfs;
+ 	long timeout;
+@@ -640,7 +640,7 @@ static int fw_load_from_user_helper(struct firmware *firmware,
+ 	return ret;
+ }
+ 
+-static bool fw_force_sysfs_fallback(unsigned int opt_flags)
++static bool fw_force_sysfs_fallback(enum fw_opt opt_flags)
+ {
+ 	if (fw_fallback_config.force_sysfs_fallback)
+ 		return true;
+@@ -649,7 +649,7 @@ static bool fw_force_sysfs_fallback(unsigned int opt_flags)
+ 	return true;
+ }
+ 
+-static bool fw_run_sysfs_fallback(unsigned int opt_flags)
++static bool fw_run_sysfs_fallback(enum fw_opt opt_flags)
+ {
+ 	if (fw_fallback_config.ignore_sysfs_fallback) {
+ 		pr_info_once("Ignoring firmware sysfs fallback due to sysctl knob\n");
+@@ -664,7 +664,7 @@ static bool fw_run_sysfs_fallback(unsigned int opt_flags)
+ 
+ int fw_sysfs_fallback(struct firmware *fw, const char *name,
+ 		      struct device *device,
+-		      unsigned int opt_flags,
++		      enum fw_opt opt_flags,
+ 		      int ret)
+ {
+ 	if (!fw_run_sysfs_fallback(opt_flags))
+diff --git a/drivers/base/firmware_loader/fallback.h b/drivers/base/firmware_loader/fallback.h
+index f8255670a663..a3b73a09db6c 100644
+--- a/drivers/base/firmware_loader/fallback.h
++++ b/drivers/base/firmware_loader/fallback.h
+@@ -5,6 +5,8 @@
+ #include <linux/firmware.h>
+ #include <linux/device.h>
+ 
++#include "firmware.h"
 +
- 	rtnl_lock();
+ /**
+  * struct firmware_fallback_config - firmware fallback configuration settings
+  *
+@@ -31,7 +33,7 @@ struct firmware_fallback_config {
+ #ifdef CONFIG_FW_LOADER_USER_HELPER
+ int fw_sysfs_fallback(struct firmware *fw, const char *name,
+ 		      struct device *device,
+-		      unsigned int opt_flags,
++		      enum fw_opt opt_flags,
+ 		      int ret);
+ void kill_pending_fw_fallback_reqs(bool only_kill_custom);
  
- 	result = ieee80211_init_rate_ctrl_alg(local,
-@@ -1120,10 +1124,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+@@ -43,7 +45,7 @@ void unregister_sysfs_loader(void);
+ #else /* CONFIG_FW_LOADER_USER_HELPER */
+ static inline int fw_sysfs_fallback(struct firmware *fw, const char *name,
+ 				    struct device *device,
+-				    unsigned int opt_flags,
++				    enum fw_opt opt_flags,
+ 				    int ret)
+ {
+ 	/* Keep carrying over the same error */
+diff --git a/drivers/base/firmware_loader/firmware.h b/drivers/base/firmware_loader/firmware.h
+index 64acbb1a392c..4f433b447367 100644
+--- a/drivers/base/firmware_loader/firmware.h
++++ b/drivers/base/firmware_loader/firmware.h
+@@ -2,6 +2,7 @@
+ #ifndef __FIRMWARE_LOADER_H
+ #define __FIRMWARE_LOADER_H
  
- 	rtnl_unlock();
++#include <linux/bitops.h>
+ #include <linux/firmware.h>
+ #include <linux/types.h>
+ #include <linux/kref.h>
+@@ -10,13 +11,33 @@
  
--	result = ieee80211_txq_setup_flows(local);
--	if (result)
--		goto fail_flows;
--
- #ifdef CONFIG_INET
- 	local->ifa_notifier.notifier_call = ieee80211_ifa_changed;
- 	result = register_inetaddr_notifier(&local->ifa_notifier);
-@@ -1149,8 +1149,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- #if defined(CONFIG_INET) || defined(CONFIG_IPV6)
-  fail_ifa:
+ #include <generated/utsrelease.h>
+ 
+-/* firmware behavior options */
+-#define FW_OPT_UEVENT			(1U << 0)
+-#define FW_OPT_NOWAIT			(1U << 1)
+-#define FW_OPT_USERHELPER		(1U << 2)
+-#define FW_OPT_NO_WARN			(1U << 3)
+-#define FW_OPT_NOCACHE			(1U << 4)
+-#define FW_OPT_NOFALLBACK		(1U << 5)
++/**
++ * enum fw_opt - options to control firmware loading behaviour
++ *
++ * @FW_OPT_UEVENT: Enables the fallback mechanism to send a kobject uevent
++ *	when the firmware is not found. Userspace is in charge to load the
++ *	firmware using the sysfs loading facility.
++ * @FW_OPT_NOWAIT: Used to describe the firmware request is asynchronous.
++ * @FW_OPT_USERHELPER: Enable the fallback mechanism, in case the direct
++ *	filesystem lookup fails at finding the firmware.  For details refer to
++ *	fw_sysfs_fallback().
++ * @FW_OPT_NO_WARN: Quiet, avoid printing warning messages.
++ * @FW_OPT_NOCACHE: Disables firmware caching. Firmware caching is used to
++ *	cache the firmware upon suspend, so that upon resume races against the
++ *	firmware file lookup on storage is avoided. Used for calls where the
++ *	file may be too big, or where the driver takes charge of its own
++ *	firmware caching mechanism.
++ * @FW_OPT_NOFALLBACK: Disable the fallback mechanism. Takes precedence over
++ *	&FW_OPT_UEVENT and &FW_OPT_USERHELPER.
++ */
++enum fw_opt {
++	FW_OPT_UEVENT =         BIT(0),
++	FW_OPT_NOWAIT =         BIT(1),
++	FW_OPT_USERHELPER =     BIT(2),
++	FW_OPT_NO_WARN =        BIT(3),
++	FW_OPT_NOCACHE =        BIT(4),
++	FW_OPT_NOFALLBACK =     BIT(5),
++};
+ 
+ enum fw_status {
+ 	FW_STATUS_UNKNOWN,
+@@ -110,6 +131,6 @@ static inline void fw_state_done(struct fw_priv *fw_priv)
+ }
+ 
+ int assign_fw(struct firmware *fw, struct device *device,
+-	      unsigned int opt_flags);
++	      enum fw_opt opt_flags);
+ 
+ #endif /* __FIRMWARE_LOADER_H */
+diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
+index eb34089e4299..9919f0e6a7cc 100644
+--- a/drivers/base/firmware_loader/main.c
++++ b/drivers/base/firmware_loader/main.c
+@@ -443,7 +443,7 @@ static int fw_add_devm_name(struct device *dev, const char *name)
  #endif
--	ieee80211_txq_teardown_flows(local);
-- fail_flows:
- 	rtnl_lock();
- 	rate_control_deinitialize(local);
- 	ieee80211_remove_interfaces(local);
-@@ -1158,6 +1156,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	rtnl_unlock();
- 	ieee80211_led_exit(local);
- 	ieee80211_wep_free(local);
-+	ieee80211_txq_teardown_flows(local);
-+ fail_flows:
- 	destroy_workqueue(local->workqueue);
-  fail_workqueue:
- 	wiphy_unregister(local->hw.wiphy);
+ 
+ int assign_fw(struct firmware *fw, struct device *device,
+-	      unsigned int opt_flags)
++	      enum fw_opt opt_flags)
+ {
+ 	struct fw_priv *fw_priv = fw->priv;
+ 	int ret;
+@@ -558,7 +558,7 @@ static void fw_abort_batch_reqs(struct firmware *fw)
+ static int
+ _request_firmware(const struct firmware **firmware_p, const char *name,
+ 		  struct device *device, void *buf, size_t size,
+-		  unsigned int opt_flags)
++		  enum fw_opt opt_flags)
+ {
+ 	struct firmware *fw = NULL;
+ 	int ret;
+@@ -734,7 +734,7 @@ struct firmware_work {
+ 	struct device *device;
+ 	void *context;
+ 	void (*cont)(const struct firmware *fw, void *context);
+-	unsigned int opt_flags;
++	enum fw_opt opt_flags;
+ };
+ 
+ static void request_firmware_work_func(struct work_struct *work)
+-- 
+2.17.0
