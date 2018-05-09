@@ -1,117 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46188 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932204AbeEHRUi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 May 2018 13:20:38 -0400
-From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH] iw: Add duration parameter to scan command 
-Date: Tue,  8 May 2018 10:20:30 -0700
-Message-Id: <1525800030-19322-1-git-send-email-pradeepc@codeaurora.org> (sfid-20180508_192042_783043_7D5CD309)
+Received: from mail.toke.dk ([52.28.52.200]:47343 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933813AbeEIKRW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 May 2018 06:17:22 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
+        linux-wireless@vger.kernel.org, Maya Erez <merez@codeaurora.org>
+Subject: Re: [mac80211-next:master 12/14] drivers/net//wireless/ath/wil6210/debugfs.c:1245:1: warning: the frame size of 1600 bytes is larger than 1024 bytes
+In-Reply-To: <87h8nhw2yf.fsf@kamboji.qca.qualcomm.com>
+References: <201805090154.h4Cokbx2%fengguang.wu@intel.com> <87efil2p2o.fsf@purkki.adurom.net> <1525855900.6910.5.camel@sipsolutions.net> <87tvrhw6kj.fsf@kamboji.qca.qualcomm.com> <1525856418.6910.6.camel@sipsolutions.net> <87efil41d4.fsf@toke.dk> <1525858618.6910.9.camel@sipsolutions.net> <87po25w463.fsf@kamboji.qca.qualcomm.com> <878t8t3zwp.fsf@toke.dk> <87h8nhw2yf.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 09 May 2018 12:17:15 +0200
+Message-ID: <87603x3zh0.fsf@toke.dk> (sfid-20180509_121725_058440_ACFAC269)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch lets user to specify duration(TUs) and set duration-mandatory
-flag in scan command.
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
----
+> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
+>
+>> Kalle Valo <kvalo@codeaurora.org> writes:
+>>
+>>> Johannes Berg <johannes@sipsolutions.net> writes:
+>>>
+>>>> On Wed, 2018-05-09 at 11:36 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wr=
+ote:
+>>>>> Johannes Berg <johannes@sipsolutions.net> writes:
+>>>>>=20
+>>>>> > On Wed, 2018-05-09 at 11:56 +0300, Kalle Valo wrote:
+>>>>> > > Johannes Berg <johannes@sipsolutions.net> writes:
+>>>>> > >=20
+>>>>> > > > On Wed, 2018-05-09 at 11:47 +0300, Kalle Valo wrote:
+>>>>> > > > >=20
+>>>>> > > > > I guess these warnings come because Toke's patch increased si=
+ze of
+>>>>> > > > > struct cfg80211_tid_stats (which is included in struct statio=
+n_info) and
+>>>>> > > > > both wil6210 and qtnfmac allocate a struct station_info from =
+stack?=20
+>>>>> > > >=20
+>>>>> > > > Yes.
+>>>>> > > >=20
+>>>>> > > > > Can
+>>>>> > > > > someone send a fix for the drivers?
+>>>>> > > >=20
+>>>>> > > > I guess Toke/I should do that through my tree.
+>>>>> > >=20
+>>>>> > > IMHO the fix could go through my tree as well, less risk of confl=
+icts in
+>>>>> > > drivers. AFAICS the fix (allocating station_info dynamically?) wo=
+uld not
+>>>>> > > depend on Toke's patch and could be applied separately.
+>>>>> >=20
+>>>>> > That's true, if you prefer that it's fine with me.
+>>>>>=20
+>>>>> I'll send a patch.
+>>>>>=20
+>>>>> What's the right tag to put in the commit for this?
+>>>>> Fixes-but-is-independent-from: ? ;)
+>>>>
+>>>> Heh. You can still put Fixes: I think.
+>>>
+>>> Yeah, I think so too.
+>>
+>> Cool. My "git grep 'struct station_info sinfo'" also shows up a driver
+>> in staging; that should be fixed as well, right? In the same commit?
+>
+> Not in the same commit at least, I don't want to touch staging even with
+> a ten foot pole :) I guess either Greg or Johannes would take that
+> patch.
 
- scan.c | 31 ++++++++++++++++++++++++++++---
- 1 file changed, 28 insertions(+), 3 deletions(-)
+Gotcha, I'll split that out :D
 
-diff --git a/scan.c b/scan.c
-index 74ccc06..3e9daef 100644
---- a/scan.c
-+++ b/scan.c
-@@ -411,10 +411,13 @@ static int handle_scan(struct nl80211_state *state,
- 		IES,
- 		SSID,
- 		MESHID,
-+		DURATION,
- 		DONE,
- 	} parse = NONE;
- 	int freq;
-+	unsigned int duration = 0;
- 	bool passive = false, have_ssids = false, have_freqs = false;
-+	bool duration_mandatory = false;
- 	size_t ies_len = 0, meshid_len = 0;
- 	unsigned char *ies = NULL, *meshid = NULL, *tmpies;
- 	unsigned int flags = 0;
-@@ -448,6 +451,9 @@ static int handle_scan(struct nl80211_state *state,
- 			} else if (strcmp(argv[i], "ap-force") == 0) {
- 				flags |= NL80211_SCAN_FLAG_AP;
- 				break;
-+			} else if (strcmp(argv[i], "duration-mandatory") == 0) {
-+				duration_mandatory = true;
-+				break;
- 			} else if (strncmp(argv[i], "randomise", 9) == 0 ||
- 				   strncmp(argv[i], "randomize", 9) == 0) {
- 				flags |= NL80211_SCAN_FLAG_RANDOM_ADDR;
-@@ -466,6 +472,9 @@ static int handle_scan(struct nl80211_state *state,
- 			} else if (strcmp(argv[i], "meshid") == 0) {
- 				parse = MESHID;
- 				break;
-+			} else if (strcmp(argv[i], "duration") == 0) {
-+				parse = DURATION;
-+				break;
- 			}
- 		case DONE:
- 			nlmsg_free(ssids);
-@@ -501,6 +510,10 @@ static int handle_scan(struct nl80211_state *state,
- 			meshid_len += 2;
- 			parse = NONE;
- 			break;
-+		case DURATION:
-+			duration = strtoul(argv[i], &eptr, 10);
-+			parse = NONE;
-+			break;
- 		}
- 	}
- 
-@@ -535,6 +548,17 @@ static int handle_scan(struct nl80211_state *state,
- 		nla_put_nested(msg, NL80211_ATTR_SCAN_FREQUENCIES, freqs);
- 	if (flags)
- 		NLA_PUT_U32(msg, NL80211_ATTR_SCAN_FLAGS, flags);
-+	if (duration)
-+		NLA_PUT_U16(msg, NL80211_ATTR_MEASUREMENT_DURATION, duration);
-+	if (duration_mandatory) {
-+		if (duration) {
-+			NLA_PUT_FLAG(msg,
-+				     NL80211_ATTR_MEASUREMENT_DURATION_MANDATORY);
-+		} else {
-+			err = -EINVAL;
-+			goto nla_put_failure;
-+		}
-+	}
- 
- 	err = 0;
-  nla_put_failure:
-@@ -2275,7 +2299,7 @@ static int handle_scan_combined(struct nl80211_state *state,
- 	dump_argv[0] = argv[0];
- 	return handle_cmd(state, id, dump_argc, dump_argv);
- }
--TOPLEVEL(scan, "[-u] [freq <freq>*] [ies <hex as 00:11:..>] [meshid <meshid>] [lowpri,flush,ap-force] [randomise[=<addr>/<mask>]] [ssid <ssid>*|passive]", 0, 0,
-+TOPLEVEL(scan, "[-u] [freq <freq>*] [duration <dur>] [ies <hex as 00:11:..>] [meshid <meshid>] [lowpri,flush,ap-force,duration-mandatory] [randomise[=<addr>/<mask>]] [ssid <ssid>*|passive]", 0, 0,
- 	 CIB_NETDEV, handle_scan_combined,
- 	 "Scan on the given frequencies and probe for the given SSIDs\n"
- 	 "(or wildcard if not given) unless passive scanning is requested.\n"
-@@ -2285,10 +2309,11 @@ COMMAND(scan, dump, "[-u]",
- 	NL80211_CMD_GET_SCAN, NLM_F_DUMP, CIB_NETDEV, handle_scan_dump,
- 	"Dump the current scan results. If -u is specified, print unknown\n"
- 	"data in scan results.");
--COMMAND(scan, trigger, "[freq <freq>*] [ies <hex as 00:11:..>] [meshid <meshid>] [lowpri,flush,ap-force] [randomise[=<addr>/<mask>]] [ssid <ssid>*|passive]",
-+COMMAND(scan, trigger, "[freq <freq>*] [duration <dur>] [ies <hex as 00:11:..>] [meshid <meshid>] [lowpri,flush,ap-force,duration-mandatory] [randomise[=<addr>/<mask>]] [ssid <ssid>*|passive]",
- 	NL80211_CMD_TRIGGER_SCAN, 0, CIB_NETDEV, handle_scan,
- 	 "Trigger a scan on the given frequencies with probing for the given\n"
--	 "SSIDs (or wildcard if not given) unless passive scanning is requested.");
-+	 "SSIDs (or wildcard if not given) unless passive scanning is requested.\n"
-+	 "Duration(in TUs), if specified, will be used to set dwell times.\n");
- 
- 
- static int handle_scan_abort(struct nl80211_state *state,
--- 
-1.9.1
+-Toke
