@@ -1,61 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:46499 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752764AbeEVUti (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 16:49:38 -0400
-Received: by mail-ot0-f195.google.com with SMTP id t1-v6so22585185ott.13
-        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2018 13:49:38 -0700 (PDT)
-Subject: Re: [PATCH] cfg80211: Fix support for flushing old scan results
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Tim Kourt <tim.a.kourt@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-References: <20180511164835.40161-1-tim.a.kourt@linux.intel.com>
- <1526631206.3805.1.camel@sipsolutions.net>
- <d12d4d4d-25d6-3cd0-1399-27de09c7f8c5@gmail.com>
- <1527019967.6787.45.camel@sipsolutions.net>
- <114ca20b-7b20-7a3e-75bd-8c336d26b9c0@gmail.com>
- <1527021608.6787.47.camel@sipsolutions.net>
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <2036335b-ca8f-d63f-8142-11d81cfb9a22@gmail.com> (sfid-20180522_224942_527955_394100FA)
-Date: Tue, 22 May 2018 15:49:35 -0500
+Received: from mail.toke.dk ([52.28.52.200]:55431 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933715AbeEIKal (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 May 2018 06:30:41 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
+        linux-wireless@vger.kernel.org, Maya Erez <merez@codeaurora.org>
+Subject: Re: [mac80211-next:master 12/14] drivers/net//wireless/ath/wil6210/debugfs.c:1245:1: warning: the frame size of 1600 bytes is larger than 1024 bytes
+In-Reply-To: <87h8nhw2yf.fsf@kamboji.qca.qualcomm.com>
+References: <201805090154.h4Cokbx2%fengguang.wu@intel.com> <87efil2p2o.fsf@purkki.adurom.net> <1525855900.6910.5.camel@sipsolutions.net> <87tvrhw6kj.fsf@kamboji.qca.qualcomm.com> <1525856418.6910.6.camel@sipsolutions.net> <87efil41d4.fsf@toke.dk> <1525858618.6910.9.camel@sipsolutions.net> <87po25w463.fsf@kamboji.qca.qualcomm.com> <878t8t3zwp.fsf@toke.dk> <87h8nhw2yf.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 09 May 2018 12:30:39 +0200
+Message-ID: <8736z13yuo.fsf@toke.dk> (sfid-20180509_123044_967078_5A620346)
 MIME-Version: 1.0
-In-Reply-To: <1527021608.6787.47.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-On 05/22/2018 03:40 PM, Johannes Berg wrote:
-> Hi,
-> 
->> So I need to absorb all of this some more, but I'm still wondering why
->> we are seeing two separate scan entries (with hidden & plain ssid) when
->> we requested a flush?  Is there a way to force the kernel to only show
->> us the probe responses.
-> 
-> Oh. I didn't even think about this part, but that's just a consequence
-> of having a hidden SSID. We need one entry to track the beacon, and then
-> we add another entry for each hidden SSID it may have. Some APs
-> implement multiple SSIDs that way (old Cisco equipment, IIRC, though
-> then with zero-length SSID instead of zero-bytes), so you can't lump
-> them together into a single BSS entry.
-> 
->> It would seem that even with the flush flag set, there could still be
->> spurious beacons getting in causing these results to appear in the scan
->> result set, right?
-> 
-> In general anything can, there's no filtering. So you might do a flush
-> scan for a specific SSID and still get 20 (different) results, if 20
-> beacons happened to be received while you were scanning.
-> 
+> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
+>
+>> Kalle Valo <kvalo@codeaurora.org> writes:
+>>
+>>> Johannes Berg <johannes@sipsolutions.net> writes:
+>>>
+>>>> On Wed, 2018-05-09 at 11:36 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wr=
+ote:
+>>>>> Johannes Berg <johannes@sipsolutions.net> writes:
+>>>>>=20
+>>>>> > On Wed, 2018-05-09 at 11:56 +0300, Kalle Valo wrote:
+>>>>> > > Johannes Berg <johannes@sipsolutions.net> writes:
+>>>>> > >=20
+>>>>> > > > On Wed, 2018-05-09 at 11:47 +0300, Kalle Valo wrote:
+>>>>> > > > >=20
+>>>>> > > > > I guess these warnings come because Toke's patch increased si=
+ze of
+>>>>> > > > > struct cfg80211_tid_stats (which is included in struct statio=
+n_info) and
+>>>>> > > > > both wil6210 and qtnfmac allocate a struct station_info from =
+stack?=20
+>>>>> > > >=20
+>>>>> > > > Yes.
+>>>>> > > >=20
+>>>>> > > > > Can
+>>>>> > > > > someone send a fix for the drivers?
+>>>>> > > >=20
+>>>>> > > > I guess Toke/I should do that through my tree.
+>>>>> > >=20
+>>>>> > > IMHO the fix could go through my tree as well, less risk of confl=
+icts in
+>>>>> > > drivers. AFAICS the fix (allocating station_info dynamically?) wo=
+uld not
+>>>>> > > depend on Toke's patch and could be applied separately.
+>>>>> >=20
+>>>>> > That's true, if you prefer that it's fine with me.
+>>>>>=20
+>>>>> I'll send a patch.
+>>>>>=20
+>>>>> What's the right tag to put in the commit for this?
+>>>>> Fixes-but-is-independent-from: ? ;)
+>>>>
+>>>> Heh. You can still put Fixes: I think.
+>>>
+>>> Yeah, I think so too.
+>>
+>> Cool. My "git grep 'struct station_info sinfo'" also shows up a driver
+>> in staging; that should be fixed as well, right? In the same commit?
+>
+> Not in the same commit at least, I don't want to touch staging even with
+> a ten foot pole :) I guess either Greg or Johannes would take that
+> patch.
 
-Okay, so we need to use NL80211_BSS_PRESP_DATA if we want to filter out 
-scan results that are coming from beacons, right?
+What about batman-adv and wext-compat? Should I split those out as well?
 
-So what's the practical use of the flush flag?  Or is that something 
-that was meant to be 'for-testing-only'?
-
-Regards,
--Denis
+-Toke
