@@ -1,42 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:43618 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933558AbeE1TjC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 May 2018 15:39:02 -0400
-Subject: Re: [PATCH 1/2] NFC: st95hf: initialize semaphore and mutex earlier
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org
-References: <20180516133247.25986-1-daniel@zonque.org>
- <6eed2f2f-b3cc-0582-220c-e4ccd2175fd7@zonque.org>
- <20180528145000.GA11829@zurbaran.ger.intel.com>
-From: Daniel Mack <daniel@zonque.org>
-Message-ID: <a8713f8c-a3be-6248-9fd6-b7e91048c9b7@zonque.org> (sfid-20180528_213945_548995_059F007E)
-Date: Mon, 28 May 2018 21:39:01 +0200
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:40388 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935467AbeEISrG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 May 2018 14:47:06 -0400
+Date: Thu, 10 May 2018 00:14:53 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
+        <adham.abozaeid@Microchip.com>
+Subject: Re: [PATCH 30/30] staging: wilc1000: rename s8idxarray to avoid
+ datatype in variable name
+Message-ID: <20180510001453.347a0882@ajaysk-VirtualBox> (sfid-20180509_204709_932170_2C333A36)
+In-Reply-To: <9f4adf70-9c0a-18f7-750d-1dfa8c19f91e@microchip.com>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+ <1525682614-3824-31-git-send-email-ajay.kathat@microchip.com>
+ <9f4adf70-9c0a-18f7-750d-1dfa8c19f91e@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <20180528145000.GA11829@zurbaran.ger.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, May 28, 2018 04:50 PM, Samuel Ortiz wrote:
-> Hi Daniel,
+On Wed, 9 May 2018 16:42:20 +0300
+Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
+
+> On 07.05.2018 11:43, Ajay Singh wrote:
+> > Cleanup patch to have variable names as per linux coding style.
+> > 
+> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> > ---
+> >  drivers/staging/wilc1000/host_interface.c | 6 +++---
+> >  1 file changed, 3 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/drivers/staging/wilc1000/host_interface.c
+> > b/drivers/staging/wilc1000/host_interface.c index ad9270e..e27010c
+> > 100644 --- a/drivers/staging/wilc1000/host_interface.c
+> > +++ b/drivers/staging/wilc1000/host_interface.c
+> > @@ -1543,7 +1543,7 @@ static int handle_key(struct wilc_vif *vif,
+> > struct key_attr *hif_key) struct wid wid;
+> >  	struct wid wid_list[5];
+> >  	u8 *key_buf;
+> > -	s8 s8idxarray[1];
+> > +	s8 idxarray[1];
+> >  	struct host_if_drv *hif_drv = vif->hif_drv;
+> >  
+> >  	switch (hif_key->type) {
+> > @@ -1610,8 +1610,8 @@ static int handle_key(struct wilc_vif *vif,
+> > struct key_attr *hif_key) wid.id = (u16)WID_REMOVE_WEP_KEY;
+> >  			wid.type = WID_STR;
+> >  
+> > -			s8idxarray[0] =
+> > (s8)hif_key->attr.wep.index;
+> > -			wid.val = s8idxarray;
+> > +			idxarray[0] =
+> > (s8)hif_key->attr.wep.index;  
 > 
-> On Mon, May 28, 2018 at 04:35:15PM +0200, Daniel Mack wrote:
->> On Wednesday, May 16, 2018 03:32 PM, Daniel Mack wrote:
->>> 'rm_lock' and 'exchange_lock' need to be ready before the IRQ handler has a
->>> chance to fire.
->>>
->>> This fixes the oops below.
->>
->> Nobody seems to be interested in these. Davem, can you take them through
->> your tree or is there anyone else I can ping?
-> I'm going to gather all pending NFC patches this week, including this
-> one.
-> They will land in either the nfc-next or nfc-fixes tree.
+> I think you can get rid of idxarray at all.
+> 
 
-Ah, perfect. Sorry for nagging. I just wanted to be sure they're not 
-forgotten :)
+Yes, we can remove idxarray variable. I will update and resubmit this
+patch.
 
-
-Thanks,
-Daniel
+> > +			wid.val = idxarray;>
+> > 			wid.size = 1; 
+> >  			result = wilc_send_config_pkt(vif, SET_CFG,
+> >   
