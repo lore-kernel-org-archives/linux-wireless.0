@@ -1,116 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:36637 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751298AbeERJpU (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:37986 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933383AbeEIHkt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 05:45:20 -0400
-Received: by mail-wm0-f65.google.com with SMTP id n10-v6so13936989wmc.1
-        for <linux-wireless@vger.kernel.org>; Fri, 18 May 2018 02:45:19 -0700 (PDT)
-Subject: Re: [PATCH V3 0/5] Update brcm firmware files
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Josh Boyer <jwboyer@kernel.org>
-Cc: Linux Firmware <linux-firmware@kernel.org>,
-        chi-hsien.lin@cypress.com,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, wright.feng@cypress.com
-References: <1521209329-59441-1-git-send-email-chi-hsien.lin@cypress.com>
- <5AF960B6.2010709@broadcom.com>
- <CA+5PVA7m3wWHyi12rTcpAozj=en9BtnsVAKAbQyvKvPRh_jC4A@mail.gmail.com>
- <5AFA9DB0.7060703@broadcom.com>
- <e2b71216-dc95-6d16-47c3-6b50da03a716@redhat.com>
- <5AFE9637.8010607@broadcom.com>
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <b7544843-f7dc-5501-7f86-36f49bf362d9@redhat.com> (sfid-20180518_114525_327249_2FE002F1)
-Date: Fri, 18 May 2018 11:45:17 +0200
+        Wed, 9 May 2018 03:40:49 -0400
+Received: by mail-lf0-f65.google.com with SMTP id z142-v6so6278614lff.5
+        for <linux-wireless@vger.kernel.org>; Wed, 09 May 2018 00:40:48 -0700 (PDT)
+Date: Wed, 9 May 2018 09:40:42 +0200
+From: Marcus Folkesson <marcus.folkesson@gmail.com>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: Replace bit shifts with the BIT() macro for rx
+ desc bits
+Message-ID: <20180509074042.GA768@gmail.com> (sfid-20180509_094052_982041_42BE9CD7)
+References: <20180509044804.13751-1-govinds@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <5AFE9637.8010607@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="TB36FDmn/VVEgNH/"
+In-Reply-To: <20180509044804.13751-1-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-On 18-05-18 11:00, Arend van Spriel wrote:
-> On 5/18/2018 9:04 AM, Hans de Goede wrote:
->> Hi,
->>
->> On 15-05-18 10:43, Arend van Spriel wrote:
->>> On 5/14/2018 2:05 PM, Josh Boyer wrote:
->>>> n Mon, May 14, 2018 at 6:11 AM Arend van Spriel <
->>>> arend.vanspriel@broadcom.com> wrote:
->>>>
->>>>> On 3/16/2018 3:08 PM, Chi-Hsien Lin wrote:
->>>>>> Update brcm firmware files and WHENCE accordingly.
->>>>
->>>>> Hi firmware-maintainers,
->>>>
->>>>> It seems this series somehow got lost. Can these still be applied. They
->>>>> can be found in the linux-wireless patchwork database. I provided links
->>>>> below.
->>>>
->>>> All 5 of these move the respective firmware files under the Cypress
->>>> license.  It has been pointed out that the Cypress license has some
->>>> questionable language in it and that people have been in touch to try
->>>> and
->>>> get this resolved.  I'm personally waiting on applying them until the
->>>> licence issue is sorted out.
->>>
->>> Thanks, Josh
->>>
->>> I could not find any such response. Has it been taken off-list? Seems
->>> like 2 months is quite some time, but maybe there are lawyers involved
->>> ;-)
->>
->> Yes the discussion about this has been happening off-list. IANAL but
->> the gist of it is (AFAIK) that:
->>
->> https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/tree/LICENCE.cypress
->>
->>
->> has a clause which allows Cypress to retro-actively revoke the LICENSE:
->>
->> "either party may terminate this Agreement at any time with or without
->> cause."
->> ...
->> "Upon termination, you must destroy all copies of Software in your
->> possession or
->> control."
->>
->> So upon revokation we would have to remove the files from linux-firmware
->> (rewrite git history?) and since distros get their redistribution rights
->> from this license too they would also need to remove it from their packages
->> including all mirrors and archives of older versions. Which simply is not
->> feasible and no other license in linux-firmware has such a clause.
-> 
-> Check again. From LICENCE.broadcom_bcm43xx:
-> 
-> """
-> 2.      Restrictions. Licensee shall distribute Software with a copy of this
-> Agreement. Licensee shall not remove, efface or obscure any copyright or
-> trademark notices from the Software. Reproductions of the Broadcom copyright
-> notice shall be included with each copy of the Software, except where such
-> Software is embedded in a manner not readily accessible to the end user.
-> Licensee shall not: (i) use, license, sell or otherwise distribute the Software
-> except as provided in this Agreement; (ii) attempt to modify in any way,
-> reverse engineer, decompile or disassemble any portion of the Software; or
-> (iii) use the Software or other material in violation of any applicable law or
-> regulation, including but not limited to any regulatory agency. This Agreement
-> shall automatically terminate upon Licensee\u2019s failure to comply with any of the
-> terms of this Agreement. In such event, Licensee will destroy all copies of the
-> Software and its component parts.
-> """
+--TB36FDmn/VVEgNH/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-That has the "destroy all copies of (the) Software" language, but the entire
-file does not have anything equivalent to: "either party may terminate this Agreement
-at any time with or without cause.". So as long as we abide by the license terms,
-the LICENCE.broadcom_bcm43xx license will never terminate and the
-"destroy all copies of (the) Software" language is not a problem.
+Hello Govind,
 
-The main problem is the "either party may terminate this Agreement at any time
-with or without cause." language in the Cypress license. Note IANAL and TINLA.
+On Wed, May 09, 2018 at 10:18:04AM +0530, Govind Singh wrote:
+> Use the BIT() macro from 'linux/bitops.h' to define the rx desc
+> bit flags to have consistency with new definitions.
+>=20
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> ---
+>  drivers/net/wireless/ath/ath10k/rx_desc.h | 134 +++++++++++-----------
+>  1 file changed, 67 insertions(+), 67 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/ath/ath10k/rx_desc.h b/drivers/net/wire=
+less/ath/ath10k/rx_desc.h
+> index 545deb6d7af1..b3d7c6e7ac90 100644
+> --- a/drivers/net/wireless/ath/ath10k/rx_desc.h
+> +++ b/drivers/net/wireless/ath/ath10k/rx_desc.h
 
-Regards,
+Looks good, but please include linux/bitops.h as well.
 
-Hans
+=46rom the documentation [1]:
+
+If you use a facility then #include the file that defines/declares
+ that facility.  Don't depend on other header files pulling in ones
+ that you use.
+
+
+[1] Documentation/process/submit-checklist.rst
+
+
+Best regards
+Marcus Folkesson
+
+--TB36FDmn/VVEgNH/
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEBVGi6LZstU1kwSxliIBOb1ldUjIFAlrypfYACgkQiIBOb1ld
+UjLXFhAAv7glnIKqCqkjfiSJTGRWa2Nw+lu/63edMYxlBXbWSaBpwRSLOXndMJeH
+IjLhUXqHR9fKfl7/AE6Cj7YuzldpWK2l4faCeIoQ2o4HXhz03Z/cgOhAA9dMf/r8
+XsGEEK8ELPOFdi8h/2BeHPcGQe6+NGv2heAPaXCRI93pdyXq0wVkIgHntG7RVX2T
+SX0oYY9ZBsSo3phkMxWK3E1JXovcuy0pTVXcnqBdGEnjZodQCVe9biy15yc62T66
+048wrDNOPHifN1te35VWPlw0PFLpzuFFGhiy1/966bVZgx2MGEdRdkWHjRhDS1lL
+pkqm/Ce3qUGXjvAe5LPw4lhlZsqaD2uDSCBWrujrwbTIiTDrhgesDf1N2Ebnwb/S
+LG+hcZpixx95bp1AJ7pzMWfstnwg2sVNpwCWa1Q21M7oV5ZPVI2mzde0nEsMxgTR
+fyQHxf23rce5FifVKYFbNqDBTO6YeJ/udCaBpcLzhENBy5mVqaEbd9RBcCCr3oRE
+dGyihJNIm/YX0fco7OFW2UTjWaJ3x/kL+7jicI5L/IsGBl0SlT5H0qRr3X1yqcCR
+S5VIOezVznXaI/BDVl+RhDjXaEiFd6c5FptFLvu/OV/xHjcWZUdIVTB/OvW7Zaby
+r7sWHWrHGBzTi5ycsKDgeDQnnqkE8ZaBO6lJHQHKikiHy1miAG4=
+=1zIr
+-----END PGP SIGNATURE-----
+
+--TB36FDmn/VVEgNH/--
