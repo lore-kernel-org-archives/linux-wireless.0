@@ -1,143 +1,788 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:47694 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756118AbeEJCBK (ORCPT
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:5149 "EHLO
+        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933968AbeEIKHP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 22:01:10 -0400
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w4A1xDL5020793
-        for <linux-wireless@vger.kernel.org>; Wed, 9 May 2018 22:01:10 -0400
-Received: from e06smtp14.uk.ibm.com (e06smtp14.uk.ibm.com [195.75.94.110])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2hvc3q1ufm-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Wed, 09 May 2018 22:01:10 -0400
-Received: from localhost
-        by e06smtp14.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-wireless@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
-        Thu, 10 May 2018 03:01:07 +0100
-Subject: Re: [PATCH 3/6] firmware: differentiate between signed
- regulatory.db and other firmware
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Matthew Garrett <mjg59@srcf.ucam.org>,
-        Peter Jones <pjones@redhat.com>,
-        "AKASHI, Takahiro" <takahiro.akashi@linaro.org>,
-        David Howells <dhowells@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Seth Forshee <seth.forshee@canonical.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        linux-integrity@vger.kernel.org,
-        Hans de Goede <hdegoede@redhat.com>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        linux-security-module@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Andres Rodriguez <andresx7@gmail.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Casey Schaufler <casey@schaufler-ca.com>
-Date: Wed, 09 May 2018 22:00:58 -0400
-In-Reply-To: <20180509234814.GY27853@wotan.suse.de>
-References: <1525182503-13849-1-git-send-email-zohar@linux.vnet.ibm.com>
-         <1525182503-13849-4-git-send-email-zohar@linux.vnet.ibm.com>
-         <20180504000743.GR27853@wotan.suse.de>
-         <1525393466.3539.133.camel@linux.vnet.ibm.com>
-         <20180508173404.GG27853@wotan.suse.de>
-         <1525865428.3551.175.camel@linux.vnet.ibm.com>
-         <20180509191508.GR27853@wotan.suse.de>
-         <1525895838.3551.247.camel@linux.vnet.ibm.com>
-         <20180509212212.GX27853@wotan.suse.de>
-         <1525903617.3551.281.camel@linux.vnet.ibm.com>
-         <20180509234814.GY27853@wotan.suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Message-Id: <1525917658.3551.322.camel@linux.vnet.ibm.com> (sfid-20180510_040127_733320_502E6441)
+        Wed, 9 May 2018 06:07:15 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Ahmad Masri <amasri@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        Maya Erez <merez@codeaurora.org>
+Subject: [PATCH v3 2/8] wil6210: align to latest auto generated wmi.h
+Date: Wed,  9 May 2018 13:06:53 +0300
+Message-Id: <1525860419-6514-3-git-send-email-merez@codeaurora.org> (sfid-20180509_120725_025667_A259C628)
+In-Reply-To: <1525860419-6514-1-git-send-email-merez@codeaurora.org>
+References: <1525860419-6514-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-05-09 at 23:48 +0000, Luis R. Rodriguez wrote:
-> On Wed, May 09, 2018 at 06:06:57PM -0400, Mimi Zohar wrote:
-> > On Wed, 2018-05-09 at 21:22 +0000, Luis R. Rodriguez wrote:
-> > > 
-> > > OK, its still not clear to what it will do. If it does not touch the firmware
-> > > loader code, and it just sets and configures IMA to do file signature checking
-> > > on its own, then yes I think both mechanisms would be doing the similar work.
-> > > 
-> > > Wouldn't IMA do file signature checks then for all files? Or it would just
-> > > enable this for whatever files userspace wishes to cover?
-> > 
-> > Enabling CONFIG_IMA_APPRAISE_FIRMWARE would enforce firmware
-> > signatures on all directly loaded firmware and fail any method of
-> > loading firmware that the signature couldn't be verified.
-> 
-> Ah, so a generic firmware signing mechanism via IMA. Sounds very sensible to me.
-> Specially in light of the fact that its what we recommend folks to consider
-> if they need to address firmware signing for devices which do not have the
-> ability to do hardware firmware signing verification on their own.
-> 
-> > > One of the things with READING_FIRMWARE_REGULATORY_DB is to also use and trust
-> > > the wireless-regdgb maintainer's key for this file, could IMA be configured to
-> > > do that?
-> > 
-> > IMA has its own trusted keyring.  So either the maintainer's key would
-> > need to be added to the IMA keyring,
-> 
-> I see so we'd need this documented somehow.
-> 
-> > or IMA-appraisal would need to use the regdb keyring.
-> 
-> Can you describe this a bit more, for those not too familiar with IMA, in terms
-> of what would be involved in the kernel? Or is this all userspace configuration
-> stuff?
+From: Ahmad Masri <amasri@codeaurora.org>
 
-I think it's a bit premature to be discussing how IMA could add the
-builtin regulatory key to its keyring or use the regdb keyring, as
-IMA-appraisal doesn't (yet) support detached signatures.
+Align to latest version of the auto generated wmi file
+describing the interface with FW
 
-The other option would be to include the regulatory.db signature in
-the package.  For rpm, the file signature is included in the RPM
-header.  Multiple attempts have been made to have Debian packages
-include file signatures.  This is the most recent attempt - https://li
-sts.debian.org/debian-dpkg/2018/05/msg00005.html
+Signed-off-by: Ahmad Masri <amasri@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/wmi.c |   6 +-
+ drivers/net/wireless/ath/wil6210/wmi.h | 387 +++++++++++++++++++++++++++++++--
+ 2 files changed, 371 insertions(+), 22 deletions(-)
 
-> > > > Yes, writing regdb as a micro/mini LSM sounds reasonable.  The LSM
-> > > > would differentiate between other firmware and the regulatory.db based
-> > > > on the firmware's pathname.
-> > > 
-> > > If that is the only way then it would be silly to do the mini LSM as all
-> > > calls would have to have the check. A special LSM hook for just the
-> > > regulatory db also doesn't make much sense.
-> > 
-> > All calls to request_firmware() are already going through this LSM
-> > hook.  I should have said, it would be based on both READING_FIRMWARE
-> > and the firmware's pathname.
-> 
-> Yes, but it would still be a strcmp() computation added for all
-> READING_FIRMWARE. In that sense, the current arrangement is only open coding the
-> signature verification for the regulatory.db file.  One way to avoid this would
-> be to add an LSM specific to the regulatory db
-
-Casey already commented on this suggestion.
-
-Mimi
-
-> and have the
-> security_check_regulatory_db() do what it needs per LSM, but that would mean
-> setting a precedent for open possibly open coded future firmware verification
-> call. Its not too crazy to consider if an end goal may be avoid further open
-> coded firmware signature verification hacks.
-> 
-> > > > Making regdb an LSM would have the same issues as currently - deciding
-> > > > if regdb, IMA-appraisal, or both verify the regdb's signature.
-> > > 
-> > > Its unclear to me why they can't co-exist yet and not have to touch
-> > > the firmware_loader code at all.
-> > 
-> > With the changes discussed above, they will co-exist.  Other than the
-> > Kconfig changes, I don't think it will touch the firmware_loader code.
-> 
-> Great.
-> 
->   Luis
-> 
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index a3dda9a..73efa13 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -1554,7 +1554,9 @@ int wmi_pcp_start(struct wil6210_vif *vif,
+ 		.pcp_max_assoc_sta = max_assoc_sta,
+ 		.hidden_ssid = hidden_ssid,
+ 		.is_go = is_go,
+-		.disable_ap_sme = disable_ap_sme,
++		.ap_sme_offload_mode = disable_ap_sme ?
++				       WMI_AP_SME_OFFLOAD_PARTIAL :
++				       WMI_AP_SME_OFFLOAD_FULL,
+ 		.abft_len = wil->abft_len,
+ 	};
+ 	struct {
+@@ -1574,7 +1576,7 @@ int wmi_pcp_start(struct wil6210_vif *vif,
+ 	}
+ 
+ 	if (disable_ap_sme &&
+-	    !test_bit(WMI_FW_CAPABILITY_DISABLE_AP_SME,
++	    !test_bit(WMI_FW_CAPABILITY_AP_SME_OFFLOAD_PARTIAL,
+ 		      wil->fw_capabilities)) {
+ 		wil_err(wil, "disable_ap_sme not supported by FW\n");
+ 		return -EOPNOTSUPP;
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index d3e75f0..dc503d9 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -1,4 +1,5 @@
+ /*
++ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+  * Copyright (c) 2012-2017 Qualcomm Atheros, Inc.
+  * Copyright (c) 2006-2012 Wilocity
+  *
+@@ -29,8 +30,6 @@
+ #ifndef __WILOCITY_WMI_H__
+ #define __WILOCITY_WMI_H__
+ 
+-/* General */
+-#define WMI_MAX_ASSOC_STA		(8)
+ #define WMI_DEFAULT_ASSOC_STA		(1)
+ #define WMI_MAC_LEN			(6)
+ #define WMI_PROX_RANGE_NUM		(3)
+@@ -41,6 +40,19 @@
+ #define WMI_RF_ETYPE_LENGTH		(3)
+ #define WMI_RF_RX2TX_LENGTH		(3)
+ #define WMI_RF_ETYPE_VAL_PER_RANGE	(5)
++/* DTYPE configuration array size
++ * must always be kept equal to (WMI_RF_DTYPE_LENGTH+1)
++ */
++#define WMI_RF_DTYPE_CONF_LENGTH	(4)
++/* ETYPE configuration array size
++ * must always be kept equal to
++ * (WMI_RF_ETYPE_LENGTH+WMI_RF_ETYPE_VAL_PER_RANGE)
++ */
++#define WMI_RF_ETYPE_CONF_LENGTH	(8)
++/* RX2TX configuration array size
++ * must always be kept equal to (WMI_RF_RX2TX_LENGTH+1)
++ */
++#define WMI_RF_RX2TX_CONF_LENGTH	(4)
+ 
+ /* Mailbox interface
+  * used for commands and events
+@@ -61,7 +73,7 @@ enum wmi_fw_capability {
+ 	WMI_FW_CAPABILITY_PS_CONFIG			= 1,
+ 	WMI_FW_CAPABILITY_RF_SECTORS			= 2,
+ 	WMI_FW_CAPABILITY_MGMT_RETRY_LIMIT		= 3,
+-	WMI_FW_CAPABILITY_DISABLE_AP_SME		= 4,
++	WMI_FW_CAPABILITY_AP_SME_OFFLOAD_PARTIAL	= 4,
+ 	WMI_FW_CAPABILITY_WMI_ONLY			= 5,
+ 	WMI_FW_CAPABILITY_THERMAL_THROTTLING		= 7,
+ 	WMI_FW_CAPABILITY_D3_SUSPEND			= 8,
+@@ -73,6 +85,7 @@ enum wmi_fw_capability {
+ 	WMI_FW_CAPABILITY_LO_POWER_CALIB_FROM_OTP	= 14,
+ 	WMI_FW_CAPABILITY_PNO				= 15,
+ 	WMI_FW_CAPABILITY_REF_CLOCK_CONTROL		= 18,
++	WMI_FW_CAPABILITY_AP_SME_OFFLOAD_NONE		= 19,
+ 	WMI_FW_CAPABILITY_MAX,
+ };
+ 
+@@ -164,12 +177,14 @@ enum wmi_command_id {
+ 	WMI_SET_ACTIVE_SILENT_RSSI_TABLE_CMDID		= 0x85C,
+ 	WMI_RF_PWR_ON_DELAY_CMDID			= 0x85D,
+ 	WMI_SET_HIGH_POWER_TABLE_PARAMS_CMDID		= 0x85E,
++	WMI_FIXED_SCHEDULING_UL_CONFIG_CMDID		= 0x85F,
+ 	/* Performance monitoring commands */
+ 	WMI_BF_CTRL_CMDID				= 0x862,
+ 	WMI_NOTIFY_REQ_CMDID				= 0x863,
+ 	WMI_GET_STATUS_CMDID				= 0x864,
+ 	WMI_GET_RF_STATUS_CMDID				= 0x866,
+ 	WMI_GET_BASEBAND_TYPE_CMDID			= 0x867,
++	WMI_VRING_SWITCH_TIMING_CONFIG_CMDID		= 0x868,
+ 	WMI_UNIT_TEST_CMDID				= 0x900,
+ 	WMI_FLASH_READ_CMDID				= 0x902,
+ 	WMI_FLASH_WRITE_CMDID				= 0x903,
+@@ -202,6 +217,7 @@ enum wmi_command_id {
+ 	WMI_GET_THERMAL_THROTTLING_CFG_CMDID		= 0x941,
+ 	/* Read Power Save profile type */
+ 	WMI_PS_DEV_PROFILE_CFG_READ_CMDID		= 0x942,
++	WMI_TSF_SYNC_CMDID				= 0x973,
+ 	WMI_TOF_SESSION_START_CMDID			= 0x991,
+ 	WMI_TOF_GET_CAPABILITIES_CMDID			= 0x992,
+ 	WMI_TOF_SET_LCR_CMDID				= 0x993,
+@@ -218,11 +234,16 @@ enum wmi_command_id {
+ 	WMI_PRIO_TX_SECTORS_ORDER_CMDID			= 0x9A5,
+ 	WMI_PRIO_TX_SECTORS_NUMBER_CMDID		= 0x9A6,
+ 	WMI_PRIO_TX_SECTORS_SET_DEFAULT_CFG_CMDID	= 0x9A7,
++	WMI_BF_CONTROL_CMDID				= 0x9AA,
+ 	WMI_SCHEDULING_SCHEME_CMDID			= 0xA01,
+ 	WMI_FIXED_SCHEDULING_CONFIG_CMDID		= 0xA02,
+ 	WMI_ENABLE_FIXED_SCHEDULING_CMDID		= 0xA03,
+ 	WMI_SET_MULTI_DIRECTED_OMNIS_CONFIG_CMDID	= 0xA04,
+ 	WMI_SET_LONG_RANGE_CONFIG_CMDID			= 0xA05,
++	WMI_GET_ASSOC_LIST_CMDID			= 0xA06,
++	WMI_GET_CCA_INDICATIONS_CMDID			= 0xA07,
++	WMI_SET_CCA_INDICATIONS_BI_AVG_NUM_CMDID	= 0xA08,
++	WMI_INTERNAL_FW_IOCTL_CMDID			= 0xA0B,
+ 	WMI_SET_MAC_ADDRESS_CMDID			= 0xF003,
+ 	WMI_ABORT_SCAN_CMDID				= 0xF007,
+ 	WMI_SET_PROMISCUOUS_MODE_CMDID			= 0xF041,
+@@ -484,6 +505,18 @@ enum wmi_rf_mgmt_type {
+ 	WMI_RF_MGMT_GET_STATUS	= 0x02,
+ };
+ 
++/* WMI_BF_CONTROL_CMDID */
++enum wmi_bf_triggers {
++	WMI_BF_TRIGGER_RS_MCS1_TH_FAILURE		= 0x01,
++	WMI_BF_TRIGGER_RS_MCS1_NO_BACK_FAILURE		= 0x02,
++	WMI_BF_TRIGGER_MAX_CTS_FAILURE_IN_TXOP		= 0x04,
++	WMI_BF_TRIGGER_MAX_BACK_FAILURE			= 0x08,
++	WMI_BF_TRIGGER_FW				= 0x10,
++	WMI_BF_TRIGGER_MAX_CTS_FAILURE_IN_KEEP_ALIVE	= 0x20,
++	WMI_BF_TRIGGER_AOA				= 0x40,
++	WMI_BF_TRIGGER_MAX_CTS_FAILURE_IN_UPM		= 0x80,
++};
++
+ /* WMI_RF_MGMT_CMDID */
+ struct wmi_rf_mgmt_cmd {
+ 	__le32 rf_mgmt_type;
+@@ -519,7 +552,9 @@ struct wmi_bcon_ctrl_cmd {
+ 	u8 disable_sec;
+ 	u8 hidden_ssid;
+ 	u8 is_go;
+-	u8 reserved[2];
++	/* A-BFT length override if non-0 */
++	u8 abft_len;
++	u8 reserved;
+ } __packed;
+ 
+ /* WMI_PORT_ALLOCATE_CMDID */
+@@ -585,6 +620,16 @@ struct wmi_power_mgmt_cfg_cmd {
+ } __packed;
+ 
+ /* WMI_PCP_START_CMDID */
++enum wmi_ap_sme_offload_mode {
++	/* Full AP SME in FW */
++	WMI_AP_SME_OFFLOAD_FULL		= 0x00,
++	/* Probe AP SME in FW */
++	WMI_AP_SME_OFFLOAD_PARTIAL	= 0x01,
++	/* AP SME in host */
++	WMI_AP_SME_OFFLOAD_NONE		= 0x02,
++};
++
++/* WMI_PCP_START_CMDID */
+ struct wmi_pcp_start_cmd {
+ 	__le16 bcon_interval;
+ 	u8 pcp_max_assoc_sta;
+@@ -593,7 +638,8 @@ struct wmi_pcp_start_cmd {
+ 	u8 reserved0[5];
+ 	/* A-BFT length override if non-0 */
+ 	u8 abft_len;
+-	u8 disable_ap_sme;
++	/* enum wmi_ap_sme_offload_mode_e */
++	u8 ap_sme_offload_mode;
+ 	u8 network_type;
+ 	u8 channel;
+ 	u8 disable_sec_offload;
+@@ -607,6 +653,17 @@ struct wmi_sw_tx_req_cmd {
+ 	u8 payload[0];
+ } __packed;
+ 
++/* WMI_VRING_SWITCH_TIMING_CONFIG_CMDID */
++struct wmi_vring_switch_timing_config_cmd {
++	/* Set vring timing configuration:
++	 *
++	 * defined interval for vring switch
++	 */
++	__le32 interval_usec;
++	/* vring inactivity threshold */
++	__le32 idle_th_usec;
++} __packed;
++
+ struct wmi_sw_ring_cfg {
+ 	__le64 ring_mem_base;
+ 	__le16 ring_size;
+@@ -642,6 +699,7 @@ enum wmi_vring_cfg_schd_params_priority {
+ 	WMI_SCH_PRIO_HIGH	= 0x01,
+ };
+ 
++#define CIDXTID_EXTENDED_CID_TID		(0xFF)
+ #define CIDXTID_CID_POS				(0)
+ #define CIDXTID_CID_LEN				(4)
+ #define CIDXTID_CID_MSK				(0xF)
+@@ -662,6 +720,9 @@ struct wmi_vring_cfg {
+ 	struct wmi_sw_ring_cfg tx_sw_ring;
+ 	/* 0-23 vrings */
+ 	u8 ringid;
++	/* Used for cid less than 8. For higher cid set
++	 * CIDXTID_EXTENDED_CID_TID here and use cid and tid members instead
++	 */
+ 	u8 cidxtid;
+ 	u8 encap_trans_type;
+ 	/* 802.3 DS cfg */
+@@ -671,6 +732,11 @@ struct wmi_vring_cfg {
+ 	u8 to_resolution;
+ 	u8 agg_max_wsize;
+ 	struct wmi_vring_cfg_schd schd_params;
++	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
++	u8 cid;
++	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
++	u8 tid;
++	u8 reserved[2];
+ } __packed;
+ 
+ enum wmi_vring_cfg_cmd_action {
+@@ -868,23 +934,42 @@ struct wmi_cfg_rx_chain_cmd {
+ 
+ /* WMI_RCP_ADDBA_RESP_CMDID */
+ struct wmi_rcp_addba_resp_cmd {
++	/* Used for cid less than 8. For higher cid set
++	 * CIDXTID_EXTENDED_CID_TID here and use cid and tid members instead
++	 */
+ 	u8 cidxtid;
+ 	u8 dialog_token;
+ 	__le16 status_code;
+ 	/* ieee80211_ba_parameterset field to send */
+ 	__le16 ba_param_set;
+ 	__le16 ba_timeout;
++	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
++	u8 cid;
++	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
++	u8 tid;
++	u8 reserved[2];
+ } __packed;
+ 
+ /* WMI_RCP_DELBA_CMDID */
+ struct wmi_rcp_delba_cmd {
++	/* Used for cid less than 8. For higher cid set
++	 * CIDXTID_EXTENDED_CID_TID here and use cid and tid members instead
++	 */
+ 	u8 cidxtid;
+ 	u8 reserved;
+ 	__le16 reason;
++	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
++	u8 cid;
++	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
++	u8 tid;
++	u8 reserved2[2];
+ } __packed;
+ 
+ /* WMI_RCP_ADDBA_REQ_CMDID */
+ struct wmi_rcp_addba_req_cmd {
++	/* Used for cid less than 8. For higher cid set
++	 * CIDXTID_EXTENDED_CID_TID here and use cid and tid members instead
++	 */
+ 	u8 cidxtid;
+ 	u8 dialog_token;
+ 	/* ieee80211_ba_parameterset field as it received */
+@@ -892,6 +977,11 @@ struct wmi_rcp_addba_req_cmd {
+ 	__le16 ba_timeout;
+ 	/* ieee80211_ba_seqstrl field as it received */
+ 	__le16 ba_seq_ctrl;
++	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
++	u8 cid;
++	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
++	u8 tid;
++	u8 reserved[2];
+ } __packed;
+ 
+ /* WMI_SET_MAC_ADDRESS_CMDID */
+@@ -902,15 +992,20 @@ struct wmi_set_mac_address_cmd {
+ 
+ /* WMI_ECHO_CMDID
+  * Check FW is alive
+- * WMI_DEEP_ECHO_CMDID
+- * Check FW and ucode are alive
+  * Returned event: WMI_ECHO_RSP_EVENTID
+- * same event for both commands
+  */
+ struct wmi_echo_cmd {
+ 	__le32 value;
+ } __packed;
+ 
++/* WMI_DEEP_ECHO_CMDID
++ * Check FW and ucode are alive
++ * Returned event: WMI_ECHO_RSP_EVENTID
++ */
++struct wmi_deep_echo_cmd {
++	__le32 value;
++} __packed;
++
+ /* WMI_RF_PWR_ON_DELAY_CMDID
+  * set FW time parameters used through RF resetting
+  *  RF reset consists of bringing its power down for a period of time, then
+@@ -928,7 +1023,7 @@ struct wmi_rf_pwr_on_delay_cmd {
+ 	__le16 up_delay_usec;
+ } __packed;
+ 
+-/* \WMI_SET_HIGH_POWER_TABLE_PARAMS_CMDID
++/* WMI_SET_HIGH_POWER_TABLE_PARAMS_CMDID
+  * This API controls the Tx and Rx gain over temperature.
+  * It controls the Tx D-type, Rx D-type and Rx E-type amplifiers.
+  * It also controls the Tx gain index, by controlling the Rx to Tx gain index
+@@ -942,25 +1037,46 @@ struct wmi_set_high_power_table_params_cmd {
+ 	u8 tx_dtype_temp[WMI_RF_DTYPE_LENGTH];
+ 	u8 reserved0;
+ 	/* Tx D-type values to be used for each temperature range */
+-	__le32 tx_dtype_conf[WMI_RF_DTYPE_LENGTH + 1];
++	__le32 tx_dtype_conf[WMI_RF_DTYPE_CONF_LENGTH];
++	/* Temperature range for Tx E-type parameters */
++	u8 tx_etype_temp[WMI_RF_ETYPE_LENGTH];
++	u8 reserved1;
++	/* Tx E-type values to be used for each temperature range.
++	 * The last 4 values of any range are the first 4 values of the next
++	 * range and so on
++	 */
++	__le32 tx_etype_conf[WMI_RF_ETYPE_CONF_LENGTH];
+ 	/* Temperature range for Rx D-type parameters */
+ 	u8 rx_dtype_temp[WMI_RF_DTYPE_LENGTH];
+-	u8 reserved1;
++	u8 reserved2;
+ 	/* Rx D-type values to be used for each temperature range */
+-	__le32 rx_dtype_conf[WMI_RF_DTYPE_LENGTH + 1];
++	__le32 rx_dtype_conf[WMI_RF_DTYPE_CONF_LENGTH];
+ 	/* Temperature range for Rx E-type parameters */
+ 	u8 rx_etype_temp[WMI_RF_ETYPE_LENGTH];
+-	u8 reserved2;
++	u8 reserved3;
+ 	/* Rx E-type values to be used for each temperature range.
+ 	 * The last 4 values of any range are the first 4 values of the next
+ 	 * range and so on
+ 	 */
+-	__le32 rx_etype_conf[WMI_RF_ETYPE_VAL_PER_RANGE + WMI_RF_ETYPE_LENGTH];
++	__le32 rx_etype_conf[WMI_RF_ETYPE_CONF_LENGTH];
+ 	/* Temperature range for rx_2_tx_offs parameters */
+ 	u8 rx_2_tx_temp[WMI_RF_RX2TX_LENGTH];
+-	u8 reserved3;
++	u8 reserved4;
+ 	/* Rx to Tx gain index offset */
+-	s8 rx_2_tx_offs[WMI_RF_RX2TX_LENGTH + 1];
++	s8 rx_2_tx_offs[WMI_RF_RX2TX_CONF_LENGTH];
++} __packed;
++
++/* WMI_FIXED_SCHEDULING_UL_CONFIG_CMDID
++ * This API sets rd parameter per mcs.
++ * Relevant only in Fixed Scheduling mode.
++ * Returned event: WMI_FIXED_SCHEDULING_UL_CONFIG_EVENTID
++ */
++struct wmi_fixed_scheduling_ul_config_cmd {
++	/* Use mcs -1 to set for every mcs */
++	s8 mcs;
++	/* Number of frames with rd bit set in a single virtual slot */
++	u8 rd_count_per_slot;
++	u8 reserved[2];
+ } __packed;
+ 
+ /* CMD: WMI_RF_XPM_READ_CMDID */
+@@ -1267,6 +1383,93 @@ struct wmi_set_long_range_config_complete_event {
+ 	u8 reserved[3];
+ } __packed;
+ 
++/* payload max size is 236 bytes: max event buffer size (256) - WMI headers
++ * (16) - prev struct field size (4)
++ */
++#define WMI_MAX_IOCTL_PAYLOAD_SIZE		(236)
++#define WMI_MAX_IOCTL_REPLY_PAYLOAD_SIZE	(236)
++#define WMI_MAX_INTERNAL_EVENT_PAYLOAD_SIZE	(236)
++
++enum wmi_internal_fw_ioctl_code {
++	WMI_INTERNAL_FW_CODE_NONE	= 0x0,
++	WMI_INTERNAL_FW_CODE_QCOM	= 0x1,
++};
++
++/* WMI_INTERNAL_FW_IOCTL_CMDID */
++struct wmi_internal_fw_ioctl_cmd {
++	/* enum wmi_internal_fw_ioctl_code */
++	__le16 code;
++	__le16 length;
++	/* payload max size is WMI_MAX_IOCTL_PAYLOAD_SIZE
++	 * Must be the last member of the struct
++	 */
++	__le32 payload[0];
++} __packed;
++
++/* WMI_INTERNAL_FW_IOCTL_EVENTID */
++struct wmi_internal_fw_ioctl_event {
++	/* wmi_fw_status */
++	u8 status;
++	u8 reserved;
++	__le16 length;
++	/* payload max size is WMI_MAX_IOCTL_REPLY_PAYLOAD_SIZE
++	 * Must be the last member of the struct
++	 */
++	__le32 payload[0];
++} __packed;
++
++/* WMI_INTERNAL_FW_EVENT_EVENTID */
++struct wmi_internal_fw_event_event {
++	__le16 id;
++	__le16 length;
++	/* payload max size is WMI_MAX_INTERNAL_EVENT_PAYLOAD_SIZE
++	 * Must be the last member of the struct
++	 */
++	__le32 payload[0];
++} __packed;
++
++/* WMI_BF_CONTROL_CMDID */
++struct wmi_bf_control_cmd {
++	/* wmi_bf_triggers */
++	__le32 triggers;
++	u8 cid;
++	/* DISABLED = 0, ENABLED = 1 , DRY_RUN = 2 */
++	u8 txss_mode;
++	/* DISABLED = 0, ENABLED = 1, DRY_RUN = 2 */
++	u8 brp_mode;
++	/* Max cts threshold (correspond to
++	 * WMI_BF_TRIGGER_MAX_CTS_FAILURE_IN_TXOP)
++	 */
++	u8 bf_trigger_max_cts_failure_thr;
++	/* Max cts threshold in dense (correspond to
++	 * WMI_BF_TRIGGER_MAX_CTS_FAILURE_IN_TXOP)
++	 */
++	u8 bf_trigger_max_cts_failure_dense_thr;
++	/* Max b-ack threshold (correspond to
++	 * WMI_BF_TRIGGER_MAX_BACK_FAILURE)
++	 */
++	u8 bf_trigger_max_back_failure_thr;
++	/* Max b-ack threshold in dense (correspond to
++	 * WMI_BF_TRIGGER_MAX_BACK_FAILURE)
++	 */
++	u8 bf_trigger_max_back_failure_dense_thr;
++	u8 reserved0;
++	/* Wrong sectors threshold */
++	__le32 wrong_sector_bis_thr;
++	/* BOOL to enable/disable long term trigger */
++	u8 long_term_enable;
++	/* 1 = Update long term thresholds from the long_term_mbps_th_tbl and
++	 * long_term_trig_timeout_per_mcs arrays, 0 = Ignore
++	 */
++	u8 long_term_update_thr;
++	/* Long term throughput threshold [Mbps] */
++	u8 long_term_mbps_th_tbl[WMI_NUM_MCS];
++	u8 reserved1;
++	/* Long term timeout threshold table [msec] */
++	__le16 long_term_trig_timeout_per_mcs[WMI_NUM_MCS];
++	u8 reserved2[2];
++} __packed;
++
+ /* WMI Events
+  * List of Events (target to host)
+  */
+@@ -1325,6 +1528,7 @@ enum wmi_event_id {
+ 	WMI_SET_SILENT_RSSI_TABLE_DONE_EVENTID		= 0x185C,
+ 	WMI_RF_PWR_ON_DELAY_RSP_EVENTID			= 0x185D,
+ 	WMI_SET_HIGH_POWER_TABLE_PARAMS_EVENTID		= 0x185E,
++	WMI_FIXED_SCHEDULING_UL_CONFIG_EVENTID		= 0x185F,
+ 	/* Performance monitoring events */
+ 	WMI_DATA_PORT_OPEN_EVENTID			= 0x1860,
+ 	WMI_WBE_LINK_DOWN_EVENTID			= 0x1861,
+@@ -1334,6 +1538,7 @@ enum wmi_event_id {
+ 	WMI_VRING_EN_EVENTID				= 0x1865,
+ 	WMI_GET_RF_STATUS_EVENTID			= 0x1866,
+ 	WMI_GET_BASEBAND_TYPE_EVENTID			= 0x1867,
++	WMI_VRING_SWITCH_TIMING_CONFIG_EVENTID		= 0x1868,
+ 	WMI_UNIT_TEST_EVENTID				= 0x1900,
+ 	WMI_FLASH_READ_DONE_EVENTID			= 0x1902,
+ 	WMI_FLASH_WRITE_DONE_EVENTID			= 0x1903,
+@@ -1363,6 +1568,7 @@ enum wmi_event_id {
+ 	WMI_GET_THERMAL_THROTTLING_CFG_EVENTID		= 0x1941,
+ 	/* return the Power Save profile */
+ 	WMI_PS_DEV_PROFILE_CFG_READ_EVENTID		= 0x1942,
++	WMI_TSF_SYNC_STATUS_EVENTID			= 0x1973,
+ 	WMI_TOF_SESSION_END_EVENTID			= 0x1991,
+ 	WMI_TOF_GET_CAPABILITIES_EVENTID		= 0x1992,
+ 	WMI_TOF_SET_LCR_EVENTID				= 0x1993,
+@@ -1380,17 +1586,24 @@ enum wmi_event_id {
+ 	WMI_PRIO_TX_SECTORS_ORDER_EVENTID		= 0x19A5,
+ 	WMI_PRIO_TX_SECTORS_NUMBER_EVENTID		= 0x19A6,
+ 	WMI_PRIO_TX_SECTORS_SET_DEFAULT_CFG_EVENTID	= 0x19A7,
++	WMI_BF_CONTROL_EVENTID				= 0x19AA,
+ 	WMI_SCHEDULING_SCHEME_EVENTID			= 0x1A01,
+ 	WMI_FIXED_SCHEDULING_CONFIG_COMPLETE_EVENTID	= 0x1A02,
+ 	WMI_ENABLE_FIXED_SCHEDULING_COMPLETE_EVENTID	= 0x1A03,
+ 	WMI_SET_MULTI_DIRECTED_OMNIS_CONFIG_EVENTID	= 0x1A04,
+ 	WMI_SET_LONG_RANGE_CONFIG_COMPLETE_EVENTID	= 0x1A05,
++	WMI_GET_ASSOC_LIST_RES_EVENTID			= 0x1A06,
++	WMI_GET_CCA_INDICATIONS_EVENTID			= 0x1A07,
++	WMI_SET_CCA_INDICATIONS_BI_AVG_NUM_EVENTID	= 0x1A08,
++	WMI_INTERNAL_FW_EVENT_EVENTID			= 0x1A0A,
++	WMI_INTERNAL_FW_IOCTL_EVENTID			= 0x1A0B,
+ 	WMI_SET_CHANNEL_EVENTID				= 0x9000,
+ 	WMI_ASSOC_REQ_EVENTID				= 0x9001,
+ 	WMI_EAPOL_RX_EVENTID				= 0x9002,
+ 	WMI_MAC_ADDR_RESP_EVENTID			= 0x9003,
+ 	WMI_FW_VER_EVENTID				= 0x9004,
+ 	WMI_ACS_PASSIVE_SCAN_COMPLETE_EVENTID		= 0x9005,
++	WMI_INTERNAL_FW_SET_CHANNEL			= 0x9006,
+ 	WMI_COMMAND_NOT_SUPPORTED_EVENTID		= 0xFFFF,
+ };
+ 
+@@ -1462,12 +1675,16 @@ enum rf_type {
+ 	RF_UNKNOWN	= 0x00,
+ 	RF_MARLON	= 0x01,
+ 	RF_SPARROW	= 0x02,
++	RF_TALYNA1	= 0x03,
++	RF_TALYNA2	= 0x04,
+ };
+ 
+ /* WMI_GET_RF_STATUS_EVENTID */
+ enum board_file_rf_type {
+ 	BF_RF_MARLON	= 0x00,
+ 	BF_RF_SPARROW	= 0x01,
++	BF_RF_TALYNA1	= 0x02,
++	BF_RF_TALYNA2	= 0x03,
+ };
+ 
+ /* WMI_GET_RF_STATUS_EVENTID */
+@@ -1507,6 +1724,7 @@ enum baseband_type {
+ 	BASEBAND_SPARROW_M_C0	= 0x06,
+ 	BASEBAND_SPARROW_M_D0	= 0x07,
+ 	BASEBAND_TALYN_M_A0	= 0x08,
++	BASEBAND_TALYN_M_B0	= 0x09,
+ };
+ 
+ /* WMI_GET_BASEBAND_TYPE_EVENTID */
+@@ -1551,7 +1769,11 @@ struct wmi_ready_event {
+ 	u8 numof_additional_mids;
+ 	/* rfc read calibration result. 5..15 */
+ 	u8 rfc_read_calib_result;
+-	u8 reserved[3];
++	/* Max associated STAs supported by FW in AP mode (default 0 means 8
++	 * STA)
++	 */
++	u8 max_assoc_sta;
++	u8 reserved[2];
+ } __packed;
+ 
+ /* WMI_NOTIFY_REQ_DONE_EVENTID */
+@@ -1666,13 +1888,13 @@ enum wmi_pno_result {
+ };
+ 
+ struct wmi_start_sched_scan_event {
+-	/* pno_result */
++	/* wmi_pno_result */
+ 	u8 result;
+ 	u8 reserved[3];
+ } __packed;
+ 
+ struct wmi_stop_sched_scan_event {
+-	/* pno_result */
++	/* wmi_pno_result */
+ 	u8 result;
+ 	u8 reserved[3];
+ } __packed;
+@@ -1739,9 +1961,17 @@ struct wmi_ba_status_event {
+ 
+ /* WMI_DELBA_EVENTID */
+ struct wmi_delba_event {
++	/* Used for cid less than 8. For higher cid set
++	 * CIDXTID_EXTENDED_CID_TID here and use cid and tid members instead
++	 */
+ 	u8 cidxtid;
+ 	u8 from_initiator;
+ 	__le16 reason;
++	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
++	u8 cid;
++	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
++	u8 tid;
++	u8 reserved[2];
+ } __packed;
+ 
+ /* WMI_VRING_CFG_DONE_EVENTID */
+@@ -1754,13 +1984,24 @@ struct wmi_vring_cfg_done_event {
+ 
+ /* WMI_RCP_ADDBA_RESP_SENT_EVENTID */
+ struct wmi_rcp_addba_resp_sent_event {
++	/* Used for cid less than 8. For higher cid set
++	 * CIDXTID_EXTENDED_CID_TID here and use cid and tid members instead
++	 */
+ 	u8 cidxtid;
+ 	u8 reserved;
+ 	__le16 status;
++	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
++	u8 cid;
++	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
++	u8 tid;
++	u8 reserved2[2];
+ } __packed;
+ 
+ /* WMI_RCP_ADDBA_REQ_EVENTID */
+ struct wmi_rcp_addba_req_event {
++	/* Used for cid less than 8. For higher cid set
++	 * CIDXTID_EXTENDED_CID_TID here and use cid and tid members instead
++	 */
+ 	u8 cidxtid;
+ 	u8 dialog_token;
+ 	/* ieee80211_ba_parameterset as it received */
+@@ -1768,6 +2009,11 @@ struct wmi_rcp_addba_req_event {
+ 	__le16 ba_timeout;
+ 	/* ieee80211_ba_seqstrl field as it received */
+ 	__le16 ba_seq_ctrl;
++	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
++	u8 cid;
++	/* Used when cidxtid = CIDXTID_EXTENDED_CID_TID */
++	u8 tid;
++	u8 reserved[2];
+ } __packed;
+ 
+ /* WMI_CFG_RX_CHAIN_DONE_EVENTID */
+@@ -1942,6 +2188,13 @@ struct wmi_set_high_power_table_params_event {
+ 	u8 reserved[3];
+ } __packed;
+ 
++/* WMI_FIXED_SCHEDULING_UL_CONFIG_EVENTID */
++struct wmi_fixed_scheduling_ul_config_event {
++	/* wmi_fw_status */
++	u8 status;
++	u8 reserved[3];
++} __packed;
++
+ /* WMI_TEMP_SENSE_DONE_EVENTID
+  *
+  * Measure MAC and radio temperatures
+@@ -2290,6 +2543,8 @@ struct wmi_link_maintain_cfg {
+ 	__le32 bad_beacons_num_threshold;
+ 	/* SNR limit for bad_beacons_detector */
+ 	__le32 bad_beacons_snr_threshold_db;
++	/* timeout for disassoc response frame in uSec */
++	__le32 disconnect_timeout;
+ } __packed;
+ 
+ /* WMI_LINK_MAINTAIN_CFG_WRITE_CMDID */
+@@ -2519,6 +2774,7 @@ enum wmi_tof_session_end_status {
+ 	WMI_TOF_SESSION_END_FAIL		= 0x01,
+ 	WMI_TOF_SESSION_END_PARAMS_ERROR	= 0x02,
+ 	WMI_TOF_SESSION_END_ABORTED		= 0x03,
++	WMI_TOF_SESSION_END_BUSY		= 0x04,
+ };
+ 
+ /* WMI_TOF_SESSION_END_EVENTID */
+@@ -2925,7 +3181,40 @@ struct wmi_set_silent_rssi_table_done_event {
+ 	__le32 table;
+ } __packed;
+ 
+-/* \WMI_COMMAND_NOT_SUPPORTED_EVENTID */
++/* WMI_VRING_SWITCH_TIMING_CONFIG_EVENTID */
++struct wmi_vring_switch_timing_config_event {
++	/* enum wmi_fw_status */
++	u8 status;
++	u8 reserved[3];
++} __packed;
++
++/* WMI_GET_ASSOC_LIST_RES_EVENTID */
++struct wmi_assoc_sta_info {
++	u8 mac[WMI_MAC_LEN];
++	u8 omni_index_address;
++	u8 reserved;
++} __packed;
++
++#define WMI_GET_ASSOC_LIST_SIZE	(8)
++
++/* WMI_GET_ASSOC_LIST_RES_EVENTID
++ * Returns up to MAX_ASSOC_STA_LIST_SIZE associated STAs
++ */
++struct wmi_get_assoc_list_res_event {
++	struct wmi_assoc_sta_info assoc_sta_list[WMI_GET_ASSOC_LIST_SIZE];
++	/* STA count */
++	u8 count;
++	u8 reserved[3];
++} __packed;
++
++/* WMI_BF_CONTROL_EVENTID */
++struct wmi_bf_control_event {
++	/* wmi_fw_status */
++	u8 status;
++	u8 reserved[3];
++} __packed;
++
++/* WMI_COMMAND_NOT_SUPPORTED_EVENTID */
+ struct wmi_command_not_supported_event {
+ 	/* device id */
+ 	u8 mid;
+@@ -2936,4 +3225,62 @@ struct wmi_command_not_supported_event {
+ 	__le16 reserved1;
+ } __packed;
+ 
++/* WMI_TSF_SYNC_CMDID */
++struct wmi_tsf_sync_cmd {
++	/* The time interval to send announce frame in one BI */
++	u8 interval_ms;
++	/* The mcs to send announce frame */
++	u8 mcs;
++	u8 reserved[6];
++} __packed;
++
++/* WMI_TSF_SYNC_STATUS_EVENTID */
++enum wmi_tsf_sync_status {
++	WMI_TSF_SYNC_SUCCESS	= 0x00,
++	WMI_TSF_SYNC_FAILED	= 0x01,
++	WMI_TSF_SYNC_REJECTED	= 0x02,
++};
++
++/* WMI_TSF_SYNC_STATUS_EVENTID */
++struct wmi_tsf_sync_status_event {
++	/* enum wmi_tsf_sync_status */
++	u8 status;
++	u8 reserved[3];
++} __packed;
++
++/* WMI_GET_CCA_INDICATIONS_EVENTID */
++struct wmi_get_cca_indications_event {
++	/* wmi_fw_status */
++	u8 status;
++	/* CCA-Energy Detect in percentage over last BI (0..100) */
++	u8 cca_ed_percent;
++	/* Averaged CCA-Energy Detect in percent over number of BIs (0..100) */
++	u8 cca_ed_avg_percent;
++	/* NAV percent over last BI (0..100) */
++	u8 nav_percent;
++	/* Averaged NAV percent over number of BIs (0..100) */
++	u8 nav_avg_percent;
++	u8 reserved[3];
++} __packed;
++
++/* WMI_SET_CCA_INDICATIONS_BI_AVG_NUM_CMDID */
++struct wmi_set_cca_indications_bi_avg_num_cmd {
++	/* set the number of bis to average cca_ed (0..255) */
++	u8 bi_number;
++	u8 reserved[3];
++} __packed;
++
++/* WMI_SET_CCA_INDICATIONS_BI_AVG_NUM_EVENTID */
++struct wmi_set_cca_indications_bi_avg_num_event {
++	/* wmi_fw_status */
++	u8 status;
++	u8 reserved[3];
++} __packed;
++
++/* WMI_INTERNAL_FW_SET_CHANNEL */
++struct wmi_internal_fw_set_channel_event {
++	u8 channel_num;
++	u8 reserved[3];
++} __packed;
++
+ #endif /* __WILOCITY_WMI_H__ */
+-- 
+1.9.1
