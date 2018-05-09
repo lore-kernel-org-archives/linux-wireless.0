@@ -1,48 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway24.websitewelcome.com ([192.185.51.162]:41721 "EHLO
-        gateway24.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755048AbeEXX1W (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44732 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934106AbeEIJsZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 May 2018 19:27:22 -0400
-Received: from cm12.websitewelcome.com (cm12.websitewelcome.com [100.42.49.8])
-        by gateway24.websitewelcome.com (Postfix) with ESMTP id B97404000A
-        for <linux-wireless@vger.kernel.org>; Thu, 24 May 2018 18:07:03 -0500 (CDT)
-Date: Thu, 24 May 2018 18:07:00 -0500
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To: Jiri Slaby <jirislaby@gmail.com>,
-        Nick Kossifidis <mickflemm@gmail.com>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] ath5k: mark expected switch fall-through
-Message-ID: <20180524230700.GA21433@embeddedor.com> (sfid-20180525_012829_324704_522DBE07)
+        Wed, 9 May 2018 05:48:25 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
+        linux-wireless@vger.kernel.org, Maya Erez <merez@codeaurora.org>
+Subject: Re: [mac80211-next:master 12/14] drivers/net//wireless/ath/wil6210/debugfs.c:1245:1: warning: the frame size of 1600 bytes is larger than 1024 bytes
+References: <201805090154.h4Cokbx2%fengguang.wu@intel.com>
+        <87efil2p2o.fsf@purkki.adurom.net>
+        <1525855900.6910.5.camel@sipsolutions.net>
+        <87tvrhw6kj.fsf@kamboji.qca.qualcomm.com>
+        <1525856418.6910.6.camel@sipsolutions.net> <87efil41d4.fsf@toke.dk>
+        <1525858618.6910.9.camel@sipsolutions.net>
+Date: Wed, 09 May 2018 12:48:20 +0300
+In-Reply-To: <1525858618.6910.9.camel@sipsolutions.net> (Johannes Berg's
+        message of "Wed, 09 May 2018 11:36:58 +0200")
+Message-ID: <87po25w463.fsf@kamboji.qca.qualcomm.com> (sfid-20180509_114954_416319_1A82EE76)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-where we are expecting to fall through.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/net/wireless/ath/ath5k/pcu.c | 1 +
- 1 file changed, 1 insertion(+)
+> On Wed, 2018-05-09 at 11:36 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> Johannes Berg <johannes@sipsolutions.net> writes:
+>>=20
+>> > On Wed, 2018-05-09 at 11:56 +0300, Kalle Valo wrote:
+>> > > Johannes Berg <johannes@sipsolutions.net> writes:
+>> > >=20
+>> > > > On Wed, 2018-05-09 at 11:47 +0300, Kalle Valo wrote:
+>> > > > >=20
+>> > > > > I guess these warnings come because Toke's patch increased size =
+of
+>> > > > > struct cfg80211_tid_stats (which is included in struct station_i=
+nfo) and
+>> > > > > both wil6210 and qtnfmac allocate a struct station_info from sta=
+ck?=20
+>> > > >=20
+>> > > > Yes.
+>> > > >=20
+>> > > > > Can
+>> > > > > someone send a fix for the drivers?
+>> > > >=20
+>> > > > I guess Toke/I should do that through my tree.
+>> > >=20
+>> > > IMHO the fix could go through my tree as well, less risk of conflict=
+s in
+>> > > drivers. AFAICS the fix (allocating station_info dynamically?) would=
+ not
+>> > > depend on Toke's patch and could be applied separately.
+>> >=20
+>> > That's true, if you prefer that it's fine with me.
+>>=20
+>> I'll send a patch.
+>>=20
+>> What's the right tag to put in the commit for this?
+>> Fixes-but-is-independent-from: ? ;)
+>
+> Heh. You can still put Fixes: I think.
 
-diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
-index f23c851..05140d8 100644
---- a/drivers/net/wireless/ath/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath/ath5k/pcu.c
-@@ -670,6 +670,7 @@ ath5k_hw_init_beacon_timers(struct ath5k_hw *ah, u32 next_beacon, u32 interval)
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		AR5K_REG_ENABLE_BITS(ah, AR5K_TXCFG, AR5K_TXCFG_ADHOC_BCN_ATIM);
-+		/* fall through */
- 	default:
- 		/* On non-STA modes timer1 is used as next DMA
- 		 * beacon alert (DBA) timer and timer2 as next
--- 
-2.7.4
+Yeah, I think so too.
+
+--=20
+Kalle Valo
