@@ -1,110 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39728 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751384AbeD3WKc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Apr 2018 18:10:32 -0400
+Received: from mail.toke.dk ([52.28.52.200]:34931 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935325AbeEIVlz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 May 2018 17:41:55 -0400
+Subject: [PATCH v2 3/3] net: Dynamically allocate struct station_info
+From: Toke =?utf-8?q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: linux-wireless@vger.kernel.org
+Date: Wed, 09 May 2018 23:41:53 +0200
+Message-ID: <152590211369.13924.13761154559335595261.stgit@alrua-kau> (sfid-20180509_234200_628734_282E66A7)
+In-Reply-To: <152590211357.13924.18408619969539206421.stgit@alrua-kau>
+References: <152590211357.13924.18408619969539206421.stgit@alrua-kau>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Mon, 30 Apr 2018 15:10:31 -0700
-From: asinghal@codeaurora.org
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <jouni@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Kiran Kumar Lokere <klokere@codeaurora.org>,
-        jjohnson@codeaurora.org
-Subject: Re: [PATCH 2/2] cfg80211: Modify wiphy registration semantics for
- self managed hints
-In-Reply-To: <1524150429.3024.24.camel@sipsolutions.net>
-References: <1520106021-16836-1-git-send-email-jouni@codeaurora.org>
- <1520106021-16836-2-git-send-email-jouni@codeaurora.org>
- <1521627352.2645.27.camel@sipsolutions.net>
- <5f8caab7e7cfb88072c2e221ea45063e@codeaurora.org>
- <1524150429.3024.24.camel@sipsolutions.net>
-Message-ID: <8dab316b358495f85821474540af4532@codeaurora.org> (sfid-20180501_001035_361294_307609C5)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi Johannes,
-             replies inline:
+Since the addition of the TXQ stats to cfg80211, the station_info struct
+has grown to be quite large, which results in warnings when allocated on
+the stack. Fix the affected places to do dynamic allocations instead.
 
-On 2018-04-19 08:07, Johannes Berg wrote:
-> On Fri, 2018-04-13 at 13:32 -0700, asinghal@codeaurora.org wrote:
->> hi Johannes,
->>              please fine some replies inline:
->> 
->> On 2018-03-21 03:15, Johannes Berg wrote:
->> > So I really think this should just be one patch - it's not about
->> > "registration semantics" but about which types of requests get passed
->> > to reg_notifier(), and if you do it in one place you'd better also do
->> > it in the other.
->> 
->> Sure, I have combined the two patches in one patch now:
-> 
-> So now you should probably resend it properly, with a new subject that
-> explains it better? Just "modify" doesn't really seem all that
-> appropriate - what's the modification?
-> 
-> Patchwork also lost half the patch for some reason, probably you
-> copy/pasted it and lost some whitespace at an empty line.
-> 
-We have posted a new patch-set with better commit title and message.
+This patch applies the fix to batman-adv and wext-compat, while a
+separate patch fixes up the drivers.
 
->> Call the regulatory notifier for self managed hints only if
->> initiator is NL80211_REGDOM_SET_BY_USER and hint type is
->> NL80211_USER_REG_HINT_CELL_BASE. Also call regulatory
->> notifier when wiphy is registered under similar conditions.
-> 
-> I guess this should say why.
-> 
->>   	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
->>   		wiphy = &rdev->wiphy;
->> -		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
->> +		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
->>   			self_managed_found = true;
->> -		else
->> -			return false;
->> +			if (request->initiator == NL80211_REGDOM_SET_BY_USER &&
->> +			    request->user_reg_hint_type ==
->> +			    NL80211_USER_REG_HINT_CELL_BASE)
->> +				reg_call_notifier(wiphy, request);
->> +		} else {
->> +			self_managed_found = false;
->> +		}
->>   	}
-> 
-> This is awkward now - how about
-> 
-> self_managed_found = regulatory_flags & SELF_MANAGED;
-> if (self_managed_found &&
->     request->initiator == ... &&
->     ...)
->         reg_call_notifier(...)
+Fixes: 52539ca89f36 ("cfg80211: Expose TXQ stats and parameters to userspace")
+Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+---
+ net/batman-adv/bat_v_elp.c |   21 +++++++++++++++------
+ net/wireless/wext-compat.c |   29 +++++++++++++++++------------
+ 2 files changed, 32 insertions(+), 18 deletions(-)
 
-This has been addressed in the new patch with a separate notify 
-function.
-> 
-> 
->> @@ -3700,15 +3705,21 @@ void wiphy_regulatory_register(struct wiphy
->> *wiphy)
->>   {
->>   	struct regulatory_request *lr;
->> 
->> -	/* self-managed devices ignore external hints */
->> -	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
->> +	lr = get_last_request();
->> +
->> +	/* self-managed devices ignore beacon hints and 11d IE */
->> +	if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
->>   		wiphy->regulatory_flags |= REGULATORY_DISABLE_BEACON_HINTS |
->> -					   REGULATORY_COUNTRY_IE_IGNORE;
->> +			REGULATORY_COUNTRY_IE_IGNORE;
-> 
-> no need to change the indentation here
-
-has been addressed in new patch.
-thanks,
-amar
-> 
-> johannes
+diff --git a/net/batman-adv/bat_v_elp.c b/net/batman-adv/bat_v_elp.c
+index 28687493599f..442b3ebb54f0 100644
+--- a/net/batman-adv/bat_v_elp.c
++++ b/net/batman-adv/bat_v_elp.c
+@@ -79,8 +79,9 @@ static u32 batadv_v_elp_get_throughput(struct batadv_hardif_neigh_node *neigh)
+ 	struct batadv_hard_iface *hard_iface = neigh->if_incoming;
+ 	struct ethtool_link_ksettings link_settings;
+ 	struct net_device *real_netdev;
+-	struct station_info sinfo;
++	struct station_info *sinfo;
+ 	u32 throughput;
++	bool filled;
+ 	int ret;
+ 
+ 	/* if the user specified a customised value for this interface, then
+@@ -102,7 +103,17 @@ static u32 batadv_v_elp_get_throughput(struct batadv_hardif_neigh_node *neigh)
+ 		if (!real_netdev)
+ 			goto default_throughput;
+ 
+-		ret = cfg80211_get_station(real_netdev, neigh->addr, &sinfo);
++		sinfo = kzalloc(sizeof(*sinfo), GFP_KERNEL);
++		if (!sinfo)
++			goto default_throughput;
++
++		ret = cfg80211_get_station(real_netdev, neigh->addr, sinfo);
++
++		/* just save these here instead of having complex free logic below */
++		throughput = sinfo.expected_throughput / 100;
++		filled = (sinfo.filled & BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT));
++
++		kfree(sinfo);
+ 
+ 		dev_put(real_netdev);
+ 		if (ret == -ENOENT) {
+@@ -112,12 +123,10 @@ static u32 batadv_v_elp_get_throughput(struct batadv_hardif_neigh_node *neigh)
+ 			 */
+ 			return 0;
+ 		}
+-		if (ret)
+-			goto default_throughput;
+-		if (!(sinfo.filled & BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
++		if (ret || !filled)
+ 			goto default_throughput;
+ 
+-		return sinfo.expected_throughput / 100;
++		return throughput;
+ 	}
+ 
+ 	/* if not a wifi interface, check if this device provides data via
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 9e002df0f8d8..2038e3fb25fa 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -1300,7 +1300,7 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
+ 	/* we are under RTNL - globally locked - so can use static structs */
+ 	static struct iw_statistics wstats;
+-	static struct station_info sinfo;
++	static struct station_info *sinfo;
+ 	u8 bssid[ETH_ALEN];
+ 
+ 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_STATION)
+@@ -1318,17 +1318,21 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
+ 	memcpy(bssid, wdev->current_bss->pub.bssid, ETH_ALEN);
+ 	wdev_unlock(wdev);
+ 
+-	memset(&sinfo, 0, sizeof(sinfo));
++	sinfo = kzalloc(sizeof(*sinfo), GFP_KERNEL);
++	if (!sinfo)
++		return NULL;
+ 
+-	if (rdev_get_station(rdev, dev, bssid, &sinfo))
++	if (rdev_get_station(rdev, dev, bssid, sinfo)) {
++		kfree(sinfo);
+ 		return NULL;
++	}
+ 
+ 	memset(&wstats, 0, sizeof(wstats));
+ 
+ 	switch (rdev->wiphy.signal_type) {
+ 	case CFG80211_SIGNAL_TYPE_MBM:
+-		if (sinfo.filled & BIT(NL80211_STA_INFO_SIGNAL)) {
+-			int sig = sinfo.signal;
++		if (sinfo->filled & BIT(NL80211_STA_INFO_SIGNAL)) {
++			int sig = sinfo->signal;
+ 			wstats.qual.updated |= IW_QUAL_LEVEL_UPDATED;
+ 			wstats.qual.updated |= IW_QUAL_QUAL_UPDATED;
+ 			wstats.qual.updated |= IW_QUAL_DBM;
+@@ -1341,11 +1345,11 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
+ 			break;
+ 		}
+ 	case CFG80211_SIGNAL_TYPE_UNSPEC:
+-		if (sinfo.filled & BIT(NL80211_STA_INFO_SIGNAL)) {
++		if (sinfo->filled & BIT(NL80211_STA_INFO_SIGNAL)) {
+ 			wstats.qual.updated |= IW_QUAL_LEVEL_UPDATED;
+ 			wstats.qual.updated |= IW_QUAL_QUAL_UPDATED;
+-			wstats.qual.level = sinfo.signal;
+-			wstats.qual.qual = sinfo.signal;
++			wstats.qual.level = sinfo->signal;
++			wstats.qual.qual = sinfo->signal;
+ 			break;
+ 		}
+ 	default:
+@@ -1354,11 +1358,12 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
+ 	}
+ 
+ 	wstats.qual.updated |= IW_QUAL_NOISE_INVALID;
+-	if (sinfo.filled & BIT(NL80211_STA_INFO_RX_DROP_MISC))
+-		wstats.discard.misc = sinfo.rx_dropped_misc;
+-	if (sinfo.filled & BIT(NL80211_STA_INFO_TX_FAILED))
+-		wstats.discard.retries = sinfo.tx_failed;
++	if (sinfo->filled & BIT(NL80211_STA_INFO_RX_DROP_MISC))
++		wstats.discard.misc = sinfo->rx_dropped_misc;
++	if (sinfo->filled & BIT(NL80211_STA_INFO_TX_FAILED))
++		wstats.discard.retries = sinfo->tx_failed;
+ 
++	kfree(sinfo);
+ 	return &wstats;
+ }
+ 
