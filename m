@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33346 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751481AbeENSZv (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:58853 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935346AbeEIPgY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 May 2018 14:25:51 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: srirrama@codeaurora.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH 2/2] ath10k: DFS Host Confirmation
-References: <1525110339-25326-1-git-send-email-srirrama@codeaurora.org>
-        <1525110339-25326-3-git-send-email-srirrama@codeaurora.org>
-        <CAJ-VmonSEuh7Ou=K9Gu-gZ5ikpX9H=nzXe9NssNu1vw8fEk3hg@mail.gmail.com>
-Date: Mon, 14 May 2018 21:25:46 +0300
-In-Reply-To: <CAJ-VmonSEuh7Ou=K9Gu-gZ5ikpX9H=nzXe9NssNu1vw8fEk3hg@mail.gmail.com>
-        (Adrian Chadd's message of "Thu, 03 May 2018 23:48:53 +0000")
-Message-ID: <87h8naqel1.fsf@kamboji.qca.qualcomm.com> (sfid-20180514_202555_208059_AC17DFFB)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 9 May 2018 11:36:24 -0400
+Received: from mail-it0-f71.google.com ([209.85.214.71])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1fGR8h-0007P3-QC
+        for linux-wireless@vger.kernel.org; Wed, 09 May 2018 15:36:23 +0000
+Received: by mail-it0-f71.google.com with SMTP id p12-v6so15167802itc.7
+        for <linux-wireless@vger.kernel.org>; Wed, 09 May 2018 08:36:23 -0700 (PDT)
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] iw: support reloading the regulatory database
+Date: Wed,  9 May 2018 10:36:20 -0500
+Message-Id: <20180509153620.23630-1-seth.forshee@canonical.com> (sfid-20180509_173628_460684_79EFEC18)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adrian Chadd <adrian@freebsd.org> writes:
+Add a "iw reg reload" command, useful for testing new regulatory
+databases.
 
-> May we have a little more information about how this is supposed to work?
->
-> It looks like we're supposed to send the information about the matched
-> radar pattern back to the firmware for confirmation? What's the intended
-> behaviour from the firmware? Will the firmware have a hard-coded set of
-> patterns we have to answer in/by?
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ reg.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-That's really an implementation detail inside the firmware and from
-ath10k point of view we don't care what checks the firmware has, we just
-provide all the necessary information. The checks in firmware might even
-change in later releases.
-
-> I ask (like Peter, we work together) because we've had to tweak this
-> behaviour a little to actually pass FCC / ETSI DFS certification. My
-> general concern is that this'll cause a lot of false detects on boards that
-> haven't had things tweaked for the given board. As far as I'm aware the DFS
-> parameters are still hard-coded into the firmware image so if you have to
-> change those you're SOL without the relevant NDAs - this makes running the
-> open source DFS stuff a little tricksy on vendor boards.
-
-This shouldn't cause more false detections, the pattern detection from
-ath.ko is still used as before. The firmware will just disable DFS
-altogether if it thinks ath10k is not compliant.
-
+diff --git a/reg.c b/reg.c
+index cee0b5e8cedb..cadff3884c04 100644
+--- a/reg.c
++++ b/reg.c
+@@ -259,3 +259,13 @@ COMMAND(reg, get, NULL, NL80211_CMD_GET_REG, 0, CIB_PHY, handle_reg_get,
+ 	"Print out the devices' current regulatory domain information.");
+ HIDDEN(reg, dump, NULL, NL80211_CMD_GET_REG, NLM_F_DUMP, CIB_NONE,
+        handle_reg_dump);
++
++static int handle_reg_reload(struct nl80211_state *state,
++			     struct nl_msg *msg,
++			     int argc, char **argv,
++			     enum id_input id)
++{
++	return 0;
++}
++COMMAND(reg, reload, NULL, NL80211_CMD_RELOAD_REGDB, 0, CIB_NONE,
++	handle_reg_reload, "Reload the kernel's regulatory database.");
 -- 
-Kalle Valo
+2.17.0
