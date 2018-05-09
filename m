@@ -1,161 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:5085 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933968AbeEIKHL (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:41566 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933879AbeEIJhF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 06:07:11 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Dedy Lansky <dlansky@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-Subject: [PATCH v3 5/8] wil6210: move WMI functionality out of wil_cfg80211_mgmt_tx
-Date: Wed,  9 May 2018 13:06:56 +0300
-Message-Id: <1525860419-6514-6-git-send-email-merez@codeaurora.org> (sfid-20180509_120716_756947_DCA089EA)
-In-Reply-To: <1525860419-6514-1-git-send-email-merez@codeaurora.org>
-References: <1525860419-6514-1-git-send-email-merez@codeaurora.org>
+        Wed, 9 May 2018 05:37:05 -0400
+Message-ID: <1525858618.6910.9.camel@sipsolutions.net> (sfid-20180509_113709_277359_1EC29927)
+Subject: Re: [mac80211-next:master 12/14]
+ drivers/net//wireless/ath/wil6210/debugfs.c:1245:1: warning: the frame size
+ of 1600 bytes is larger than 1024 bytes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
+        linux-wireless@vger.kernel.org, Maya Erez <merez@codeaurora.org>
+Date: Wed, 09 May 2018 11:36:58 +0200
+In-Reply-To: <87efil41d4.fsf@toke.dk>
+References: <201805090154.h4Cokbx2%fengguang.wu@intel.com>
+         <87efil2p2o.fsf@purkki.adurom.net>
+         <1525855900.6910.5.camel@sipsolutions.net>
+         <87tvrhw6kj.fsf@kamboji.qca.qualcomm.com>
+         <1525856418.6910.6.camel@sipsolutions.net> <87efil41d4.fsf@toke.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <dlansky@codeaurora.org>
+On Wed, 2018-05-09 at 11:36 +0200, Toke Høiland-Jørgensen wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> 
+> > On Wed, 2018-05-09 at 11:56 +0300, Kalle Valo wrote:
+> > > Johannes Berg <johannes@sipsolutions.net> writes:
+> > > 
+> > > > On Wed, 2018-05-09 at 11:47 +0300, Kalle Valo wrote:
+> > > > > 
+> > > > > I guess these warnings come because Toke's patch increased size of
+> > > > > struct cfg80211_tid_stats (which is included in struct station_info) and
+> > > > > both wil6210 and qtnfmac allocate a struct station_info from stack? 
+> > > > 
+> > > > Yes.
+> > > > 
+> > > > > Can
+> > > > > someone send a fix for the drivers?
+> > > > 
+> > > > I guess Toke/I should do that through my tree.
+> > > 
+> > > IMHO the fix could go through my tree as well, less risk of conflicts in
+> > > drivers. AFAICS the fix (allocating station_info dynamically?) would not
+> > > depend on Toke's patch and could be applied separately.
+> > 
+> > That's true, if you prefer that it's fine with me.
+> 
+> I'll send a patch.
+> 
+> What's the right tag to put in the commit for this?
+> Fixes-but-is-independent-from: ? ;)
 
-Rearrange the code by having new function wmi_mgmt_tx() to take care
-of the WMI part of wil_cfg80211_mgmt_tx().
+Heh. You can still put Fixes: I think.
 
-Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 39 +++---------------------
- drivers/net/wireless/ath/wil6210/wil6210.h  |  1 +
- drivers/net/wireless/ath/wil6210/wmi.c      | 47 +++++++++++++++++++++++++++++
- 3 files changed, 52 insertions(+), 35 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index cdbb393..109bae1 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -1081,17 +1081,11 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			 u64 *cookie)
- {
- 	const u8 *buf = params->buf;
--	size_t len = params->len, total;
-+	size_t len = params->len;
- 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
- 	struct wil6210_vif *vif = wdev_to_vif(wil, wdev);
- 	int rc;
--	bool tx_status = false;
--	struct ieee80211_mgmt *mgmt_frame = (void *)buf;
--	struct wmi_sw_tx_req_cmd *cmd;
--	struct {
--		struct wmi_cmd_hdr wmi;
--		struct wmi_sw_tx_complete_event evt;
--	} __packed evt;
-+	bool tx_status;
- 
- 	/* Note, currently we do not support the "wait" parameter, user-space
- 	 * must call remain_on_channel before mgmt_tx or listen on a channel
-@@ -1100,34 +1094,9 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	 * different from currently "listened" channel and fail if it is.
- 	 */
- 
--	wil_dbg_misc(wil, "mgmt_tx mid %d\n", vif->mid);
--	wil_hex_dump_misc("mgmt tx frame ", DUMP_PREFIX_OFFSET, 16, 1, buf,
--			  len, true);
--
--	if (len < sizeof(struct ieee80211_hdr_3addr))
--		return -EINVAL;
--
--	total = sizeof(*cmd) + len;
--	if (total < len)
--		return -EINVAL;
--
--	cmd = kmalloc(total, GFP_KERNEL);
--	if (!cmd) {
--		rc = -ENOMEM;
--		goto out;
--	}
--
--	memcpy(cmd->dst_mac, mgmt_frame->da, WMI_MAC_LEN);
--	cmd->len = cpu_to_le16(len);
--	memcpy(cmd->payload, buf, len);
--
--	rc = wmi_call(wil, WMI_SW_TX_REQ_CMDID, vif->mid, cmd, total,
--		      WMI_SW_TX_COMPLETE_EVENTID, &evt, sizeof(evt), 2000);
--	if (rc == 0)
--		tx_status = !evt.evt.status;
-+	rc = wmi_mgmt_tx(vif, buf, len);
-+	tx_status = (rc == 0);
- 
--	kfree(cmd);
-- out:
- 	cfg80211_mgmt_tx_status(wdev, cookie ? *cookie : 0, buf, len,
- 				tx_status, GFP_KERNEL);
- 	return rc;
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 9ac9292..c9120dc 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -1150,5 +1150,6 @@ int wil_request_firmware(struct wil6210_priv *wil, const char *name,
- int wmi_start_sched_scan(struct wil6210_priv *wil,
- 			 struct cfg80211_sched_scan_request *request);
- int wmi_stop_sched_scan(struct wil6210_priv *wil);
-+int wmi_mgmt_tx(struct wil6210_vif *vif, const u8 *buf, size_t len);
- 
- #endif /* __WIL6210_H__ */
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index fcd9529..bf110e3 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -2773,3 +2773,50 @@ int wmi_stop_sched_scan(struct wil6210_priv *wil)
- 
- 	return 0;
- }
-+
-+int wmi_mgmt_tx(struct wil6210_vif *vif, const u8 *buf, size_t len)
-+{
-+	size_t total;
-+	struct wil6210_priv *wil = vif_to_wil(vif);
-+	struct ieee80211_mgmt *mgmt_frame = (void *)buf;
-+	struct wmi_sw_tx_req_cmd *cmd;
-+	struct {
-+		struct wmi_cmd_hdr wmi;
-+		struct wmi_sw_tx_complete_event evt;
-+	} __packed evt = {
-+		.evt = {.status = WMI_FW_STATUS_FAILURE},
-+	};
-+	int rc;
-+
-+	wil_dbg_misc(wil, "mgmt_tx mid %d\n", vif->mid);
-+	wil_hex_dump_misc("mgmt tx frame ", DUMP_PREFIX_OFFSET, 16, 1, buf,
-+			  len, true);
-+
-+	if (len < sizeof(struct ieee80211_hdr_3addr))
-+		return -EINVAL;
-+
-+	total = sizeof(*cmd) + len;
-+	if (total < len) {
-+		wil_err(wil, "mgmt_tx invalid len %zu\n", len);
-+		return -EINVAL;
-+	}
-+
-+	cmd = kmalloc(total, GFP_KERNEL);
-+	if (!cmd)
-+		return -ENOMEM;
-+
-+	memcpy(cmd->dst_mac, mgmt_frame->da, WMI_MAC_LEN);
-+	cmd->len = cpu_to_le16(len);
-+	memcpy(cmd->payload, buf, len);
-+
-+	rc = wmi_call(wil, WMI_SW_TX_REQ_CMDID, vif->mid, cmd, total,
-+		      WMI_SW_TX_COMPLETE_EVENTID, &evt, sizeof(evt), 2000);
-+	if (!rc && evt.evt.status != WMI_FW_STATUS_SUCCESS) {
-+		wil_err(wil, "mgmt_tx failed with status %d\n", evt.evt.status);
-+		rc = -EINVAL;
-+	}
-+
-+	kfree(cmd);
-+
-+	return rc;
-+}
--- 
-1.9.1
+johannes
