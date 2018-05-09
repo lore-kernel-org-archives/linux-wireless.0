@@ -1,64 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60320 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754352AbeEaKjK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 May 2018 06:39:10 -0400
-Date: Thu, 31 May 2018 12:38:48 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Johan Hovold <johan@kernel.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Carlos Manuel Santos <cmmpsantos@gmail.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4] NFC: pn533: don't send USB data off of the stack
-Message-ID: <20180531103848.GB31952@kroah.com> (sfid-20180531_123914_623463_F5A18AA9)
-References: <20180520131946.GA7325@kroah.com>
- <20180521083825.GO30172@localhost>
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:57475 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964814AbeEISoC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 May 2018 14:44:02 -0400
+Date: Thu, 10 May 2018 00:11:48 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
+        <adham.abozaeid@Microchip.com>
+Subject: Re: [PATCH 08/30] staging: wilc1000: fix line over 80 chars in
+ host_int_parse_assoc_resp_info()
+Message-ID: <20180510001148.41441858@ajaysk-VirtualBox> (sfid-20180509_204404_810665_F9D7AA8C)
+In-Reply-To: <aa0033fb-fbf6-80aa-0b58-7e36c5803170@microchip.com>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+ <1525682614-3824-9-git-send-email-ajay.kathat@microchip.com>
+ <aa0033fb-fbf6-80aa-0b58-7e36c5803170@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180521083825.GO30172@localhost>
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 21, 2018 at 10:38:25AM +0200, Johan Hovold wrote:
-> On Sun, May 20, 2018 at 03:19:46PM +0200, Greg Kroah-Hartman wrote:
-> > It's amazing that this driver ever worked, but now that x86 doesn't
-> > allow USB data to be sent off of the stack, it really does not work at
-> > all.  Fix this up by properly allocating the data for the small
-> > "commands" that get sent to the device off of the stack.
+On Wed, 9 May 2018 16:43:37 +0300
+Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
+
+> On 07.05.2018 11:43, Ajay Singh wrote:
+> > Fix line over 80 characters issue in
+> > host_int_parse_assoc_resp_info() by using shorter name for the
+> > local variable.
 > > 
-> > We do this for one command by having a whole urb just for ack messages,
-> > as they can be submitted in interrupt context, so we can not use
-> > usb_bulk_msg().  But the poweron command can sleep (and does), so use
-> > usb_bulk_msg() for that transfer.
-> > 
-> > Reported-by: Carlos Manuel Santos <cmmpsantos@gmail.com>
-> > Cc: Samuel Ortiz <sameo@linux.intel.com>
-> > Cc: Stephen Hemminger <stephen@networkplumber.org>
-> > Cc: stable <stable@vger.kernel.org>
-> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 > > ---
-> > v4: don't use urb transfer buffer flags as the memory is tied to the urb
-> >     (thanks to Johan)  Now we have a new static urb, and we use
-> >     usb_bulk_msg() for the other message.
-> > v3: actually use the correct buffer (thanks to Arend van Spriel)
-> >     use kmemdup (thanks to Johannes Berg and Julia Lawall)
-> > v2: set the urb flags correctly
+> >  drivers/staging/wilc1000/host_interface.c | 9 +++++----
+> >  1 file changed, 5 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/staging/wilc1000/host_interface.c
+> > b/drivers/staging/wilc1000/host_interface.c index c9c5d352..b1f67a7
+> > 100644 --- a/drivers/staging/wilc1000/host_interface.c
+> > +++ b/drivers/staging/wilc1000/host_interface.c
+> > @@ -1320,18 +1320,19 @@ static inline void
+> > host_int_parse_assoc_resp_info(struct wilc_vif *vif,
+> > memset(&conn_info, 0, sizeof(struct connect_info)); 
+> >  	if (mac_status == MAC_STATUS_CONNECTED) {
+> > -		u32 rcvd_assoc_resp_info_len;
+> > +		u32 assoc_resp_info_len;  
 > 
-> Your changes look correct now so feel free to add:
+> I would simply use len or size. It is just my preference.
+
+I would prefer to keep it same(as submitted patch), as its more
+readable.
+
 > 
-> Reviewed-by: Johan Hovold <johan@kernel.org>
-
-Thanks for the review.
-
-> It seems we could end up returning an errno from probe with active urbs
-> (if pn533_finalize_setup() fails) in which case the ack buffer would
-> leak. But freeing the urbs while active would then be the bigger
-> problem, and that wasn't introduced by this patch.
-
-Yeah, this whole thing is a mess and I really don't want to do much more
-to the driver without having the hardware to test with it.  So I'll just
-leave it as-is for now :)
-
-greg k-h
+> >  
+> >  		memset(rcv_assoc_resp, 0,
+> > MAX_ASSOC_RESP_FRAME_SIZE); 
+> >  		host_int_get_assoc_res_info(vif, rcv_assoc_resp,
+> >  					    MAX_ASSOC_RESP_FRAME_SIZE,
+> > -
+> > &rcvd_assoc_resp_info_len);
+> > +					    &assoc_resp_info_len);
+> >  
+> > -		if (rcvd_assoc_resp_info_len != 0) {
+> > +		if (assoc_resp_info_len != 0) {
+> >  			s32 err = 0;
+> >  
+> > -			err =
+> > wilc_parse_assoc_resp_info(rcv_assoc_resp, rcvd_assoc_resp_info_len,
+> > +			err =
+> > wilc_parse_assoc_resp_info(rcv_assoc_resp,
+> > +
+> > assoc_resp_info_len, &connect_resp_info);
+> >  			if (err)
+> >  				netdev_err(vif->ndev,
+> >   
