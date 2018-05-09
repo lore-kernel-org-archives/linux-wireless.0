@@ -1,59 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway32.websitewelcome.com ([192.185.145.122]:45871 "EHLO
-        gateway32.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755104AbeEXXXZ (ORCPT
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:38027 "EHLO
+        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964827AbeEIS5g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 May 2018 19:23:25 -0400
-Received: from cm17.websitewelcome.com (cm17.websitewelcome.com [100.42.49.20])
-        by gateway32.websitewelcome.com (Postfix) with ESMTP id 7C8E93EB923
-        for <linux-wireless@vger.kernel.org>; Thu, 24 May 2018 17:59:30 -0500 (CDT)
-Date: Thu, 24 May 2018 17:59:28 -0500
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] ath10k: htt_tx: mark expected switch fall-throughs
-Message-ID: <20180524225928.GA19570@embeddedor.com> (sfid-20180525_012718_172853_AB4F75B9)
+        Wed, 9 May 2018 14:57:36 -0400
+Subject: Re: [PATCH] ssb: Fix regression caused by disabling PCI cores on
+ non-MIPS architecture
+To: Jeff Johnson <jjohnson@codeaurora.org>
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>,
+        linux-wireless-owner@vger.kernel.org
+References: <20180509164220.22653-1-Larry.Finger@lwfinger.net>
+ <d31853aa21d1c610d09bce696423cfe2@codeaurora.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <5f7abc22-f3e5-fce3-690b-17e40ef73c8a@lwfinger.net> (sfid-20180509_205745_508412_5143274F)
+Date: Wed, 9 May 2018 13:57:34 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d31853aa21d1c610d09bce696423cfe2@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-where we are expecting to fall through.
+On 05/09/2018 11:57 AM, Jeff Johnson wrote:
+> On 2018-05-09 09:42, Larry Finger wrote:
+>> Some MPIS-based SoCs use chips driven by b43 for wireless capability.
+> typo: MPIS=>MIPS
 
-Notice that in this particular case, I replaced "pass through" with
-a proper "fall through" comment, which is what GCC is expecting
-to find.
+Jeff,
 
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/net/wireless/ath/ath10k/htt_tx.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Thanks. I will fix this with V2.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 5d8b97a..89157c5 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -1202,7 +1202,7 @@ static int ath10k_htt_tx_32(struct ath10k_htt *htt,
- 	case ATH10K_HW_TXRX_RAW:
- 	case ATH10K_HW_TXRX_NATIVE_WIFI:
- 		flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
--		/* pass through */
-+		/* fall through */
- 	case ATH10K_HW_TXRX_ETHERNET:
- 		if (ar->hw_params.continuous_frag_desc) {
- 			ext_desc_t = htt->frag_desc.vaddr_desc_32;
-@@ -1404,7 +1404,7 @@ static int ath10k_htt_tx_64(struct ath10k_htt *htt,
- 	case ATH10K_HW_TXRX_RAW:
- 	case ATH10K_HW_TXRX_NATIVE_WIFI:
- 		flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
--		/* pass through */
-+		/* fall through */
- 	case ATH10K_HW_TXRX_ETHERNET:
- 		if (ar->hw_params.continuous_frag_desc) {
- 			ext_desc_t = htt->frag_desc.vaddr_desc_64;
--- 
-2.7.4
+Larry
