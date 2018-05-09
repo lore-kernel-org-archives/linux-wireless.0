@@ -1,49 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:48256 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752482AbeEPMMa (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 May 2018 08:12:30 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Franky Lin <franky.lin@broadcom.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 6/6] brcmfmac: trigger memory dump on SDIO firmware halt message
-Date: Wed, 16 May 2018 14:12:03 +0200
-Message-Id: <1526472723-15758-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180516_141241_505564_9013DF73)
-In-Reply-To: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from mail.toke.dk ([52.28.52.200]:36613 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934336AbeEIKHv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 May 2018 06:07:51 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
+        linux-wireless@vger.kernel.org, Maya Erez <merez@codeaurora.org>
+Subject: Re: [mac80211-next:master 12/14] drivers/net//wireless/ath/wil6210/debugfs.c:1245:1: warning: the frame size of 1600 bytes is larger than 1024 bytes
+In-Reply-To: <87po25w463.fsf@kamboji.qca.qualcomm.com>
+References: <201805090154.h4Cokbx2%fengguang.wu@intel.com> <87efil2p2o.fsf@purkki.adurom.net> <1525855900.6910.5.camel@sipsolutions.net> <87tvrhw6kj.fsf@kamboji.qca.qualcomm.com> <1525856418.6910.6.camel@sipsolutions.net> <87efil41d4.fsf@toke.dk> <1525858618.6910.9.camel@sipsolutions.net> <87po25w463.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 09 May 2018 12:07:50 +0200
+Message-ID: <878t8t3zwp.fsf@toke.dk> (sfid-20180509_120754_883240_25E10377)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <franky.lin@broadcom.com>
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-Attempt to dump dongle memory for debug upon receiving firmware halt
-message through dongle to host mail box interrupt.
+> Johannes Berg <johannes@sipsolutions.net> writes:
+>
+>> On Wed, 2018-05-09 at 11:36 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrot=
+e:
+>>> Johannes Berg <johannes@sipsolutions.net> writes:
+>>>=20
+>>> > On Wed, 2018-05-09 at 11:56 +0300, Kalle Valo wrote:
+>>> > > Johannes Berg <johannes@sipsolutions.net> writes:
+>>> > >=20
+>>> > > > On Wed, 2018-05-09 at 11:47 +0300, Kalle Valo wrote:
+>>> > > > >=20
+>>> > > > > I guess these warnings come because Toke's patch increased size=
+ of
+>>> > > > > struct cfg80211_tid_stats (which is included in struct station_=
+info) and
+>>> > > > > both wil6210 and qtnfmac allocate a struct station_info from st=
+ack?=20
+>>> > > >=20
+>>> > > > Yes.
+>>> > > >=20
+>>> > > > > Can
+>>> > > > > someone send a fix for the drivers?
+>>> > > >=20
+>>> > > > I guess Toke/I should do that through my tree.
+>>> > >=20
+>>> > > IMHO the fix could go through my tree as well, less risk of conflic=
+ts in
+>>> > > drivers. AFAICS the fix (allocating station_info dynamically?) woul=
+d not
+>>> > > depend on Toke's patch and could be applied separately.
+>>> >=20
+>>> > That's true, if you prefer that it's fine with me.
+>>>=20
+>>> I'll send a patch.
+>>>=20
+>>> What's the right tag to put in the commit for this?
+>>> Fixes-but-is-independent-from: ? ;)
+>>
+>> Heh. You can still put Fixes: I think.
+>
+> Yeah, I think so too.
 
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Cool. My "git grep 'struct station_info sinfo'" also shows up a driver
+in staging; that should be fixed as well, right? In the same commit?
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 412a05b..c99a191 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -1072,8 +1072,10 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
- 	bus->sdcnt.f1regdata += 2;
- 
- 	/* dongle indicates the firmware has halted/crashed */
--	if (hmb_data & HMB_DATA_FWHALT)
-+	if (hmb_data & HMB_DATA_FWHALT) {
- 		brcmf_err("mailbox indicates firmware halted\n");
-+		brcmf_dev_coredump(&sdiod->func1->dev);
-+	}
- 
- 	/* Dongle recomposed rx frames, accept them again */
- 	if (hmb_data & HMB_DATA_NAKHANDLED) {
--- 
-1.9.1
+-Toke
