@@ -1,62 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:12105 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752054AbeEGIoA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39770 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933796AbeEIKOi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 04:44:00 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 06/30] staging: wilc1000: fix line over 80 chars issue in host_int_handle_disconnect()
-Date: Mon, 7 May 2018 14:13:10 +0530
-Message-ID: <1525682614-3824-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104404_344018_1CD42A33)
-In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+        Wed, 9 May 2018 06:14:38 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
+        linux-wireless@vger.kernel.org, Maya Erez <merez@codeaurora.org>
+Subject: Re: [mac80211-next:master 12/14] drivers/net//wireless/ath/wil6210/debugfs.c:1245:1: warning: the frame size of 1600 bytes is larger than 1024 bytes
+References: <201805090154.h4Cokbx2%fengguang.wu@intel.com>
+        <87efil2p2o.fsf@purkki.adurom.net>
+        <1525855900.6910.5.camel@sipsolutions.net>
+        <87tvrhw6kj.fsf@kamboji.qca.qualcomm.com>
+        <1525856418.6910.6.camel@sipsolutions.net> <87efil41d4.fsf@toke.dk>
+        <1525858618.6910.9.camel@sipsolutions.net>
+        <87po25w463.fsf@kamboji.qca.qualcomm.com> <878t8t3zwp.fsf@toke.dk>
+Date: Wed, 09 May 2018 13:14:32 +0300
+In-Reply-To: <878t8t3zwp.fsf@toke.dk> ("Toke \=\?utf-8\?Q\?H\=C3\=B8iland-J\?\=
+ \=\?utf-8\?Q\?\=C3\=B8rgensen\=22's\?\= message of
+        "Wed, 09 May 2018 12:07:50 +0200")
+Message-ID: <87h8nhw2yf.fsf@kamboji.qca.qualcomm.com> (sfid-20180509_121442_611704_3CF40C81)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix line over 80 char issue in host_int_handle_disconnect() by using
-temp variable to hold the 'wilc_connect_result' function pointer.
+Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+> Kalle Valo <kvalo@codeaurora.org> writes:
+>
+>> Johannes Berg <johannes@sipsolutions.net> writes:
+>>
+>>> On Wed, 2018-05-09 at 11:36 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wro=
+te:
+>>>> Johannes Berg <johannes@sipsolutions.net> writes:
+>>>>=20
+>>>> > On Wed, 2018-05-09 at 11:56 +0300, Kalle Valo wrote:
+>>>> > > Johannes Berg <johannes@sipsolutions.net> writes:
+>>>> > >=20
+>>>> > > > On Wed, 2018-05-09 at 11:47 +0300, Kalle Valo wrote:
+>>>> > > > >=20
+>>>> > > > > I guess these warnings come because Toke's patch increased siz=
+e of
+>>>> > > > > struct cfg80211_tid_stats (which is included in struct station=
+_info) and
+>>>> > > > > both wil6210 and qtnfmac allocate a struct station_info from s=
+tack?=20
+>>>> > > >=20
+>>>> > > > Yes.
+>>>> > > >=20
+>>>> > > > > Can
+>>>> > > > > someone send a fix for the drivers?
+>>>> > > >=20
+>>>> > > > I guess Toke/I should do that through my tree.
+>>>> > >=20
+>>>> > > IMHO the fix could go through my tree as well, less risk of confli=
+cts in
+>>>> > > drivers. AFAICS the fix (allocating station_info dynamically?) wou=
+ld not
+>>>> > > depend on Toke's patch and could be applied separately.
+>>>> >=20
+>>>> > That's true, if you prefer that it's fine with me.
+>>>>=20
+>>>> I'll send a patch.
+>>>>=20
+>>>> What's the right tag to put in the commit for this?
+>>>> Fixes-but-is-independent-from: ? ;)
+>>>
+>>> Heh. You can still put Fixes: I think.
+>>
+>> Yeah, I think so too.
+>
+> Cool. My "git grep 'struct station_info sinfo'" also shows up a driver
+> in staging; that should be fixed as well, right? In the same commit?
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index a341ff1..0d84af9 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1401,6 +1401,7 @@ static inline void host_int_handle_disconnect(struct wilc_vif *vif)
- {
- 	struct disconnect_info disconn_info;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
-+	wilc_connect_result conn_result = hif_drv->usr_conn_req.conn_result;
- 
- 	memset(&disconn_info, 0, sizeof(struct disconnect_info));
- 
-@@ -1413,13 +1414,12 @@ static inline void host_int_handle_disconnect(struct wilc_vif *vif)
- 	disconn_info.ie = NULL;
- 	disconn_info.ie_len = 0;
- 
--	if (hif_drv->usr_conn_req.conn_result) {
-+	if (conn_result) {
- 		wilc_optaining_ip = false;
- 		wilc_set_power_mgmt(vif, 0, 0);
- 
--		hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_DISCONN_NOTIF,
--						  NULL, 0, &disconn_info,
--						  hif_drv->usr_conn_req.arg);
-+		conn_result(CONN_DISCONN_EVENT_DISCONN_NOTIF, NULL, 0,
-+			    &disconn_info, hif_drv->usr_conn_req.arg);
- 	} else {
- 		netdev_err(vif->ndev, "Connect result NULL\n");
- 	}
--- 
-2.7.4
+Not in the same commit at least, I don't want to touch staging even with
+a ten foot pole :) I guess either Greg or Johannes would take that
+patch.
+
+--=20
+Kalle Valo
