@@ -1,35 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52018 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750831AbeE2HUg (ORCPT
+Received: from mail-qt0-f178.google.com ([209.85.216.178]:39417 "EHLO
+        mail-qt0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964896AbeEIVMp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 May 2018 03:20:36 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 9 May 2018 17:12:45 -0400
+Received: by mail-qt0-f178.google.com with SMTP id f1-v6so47610564qtj.6
+        for <linux-wireless@vger.kernel.org>; Wed, 09 May 2018 14:12:45 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [wl-testing/master] build regression in brcmfmac
+Message-ID: <5AF36449.9050906@broadcom.com> (sfid-20180509_231249_251823_47897641)
+Date: Wed, 9 May 2018 23:12:41 +0200
 MIME-Version: 1.0
-Subject: Re: atmel: Add missing call to pci_disable_device()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180523103445.8372-1-yuehaibing@huawei.com>
-References: <20180523103445.8372-1-yuehaibing@huawei.com>
-To: YueHaibing <yuehaibing@huawei.com>
-Cc: <simon@thekelleys.org.uk>, <davem@davemloft.net>,
-        <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-        YueHaibing <yuehaibing@huawei.com>
-Message-Id: <20180529072036.802216060A@smtp.codeaurora.org> (sfid-20180529_092047_548332_9EC56064)
-Date: Tue, 29 May 2018 07:20:36 +0000 (UTC)
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-YueHaibing <yuehaibing@huawei.com> wrote:
+Since yesterday I get the following build error on wl-testing/master:
 
-> add pci_disable_device in error handling while init_atmel_card failed.
-> 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+   CC [M]  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.o
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c: In function 
+‘brcmf_notify_connect_status_ap’:
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:5530:1: 
+error: the frame size of 1592 bytes is larger than 1024 bytes 
+[-Werror=frame-larger-than=]
+  }
+  ^
 
-Patch applied to wireless-drivers-next.git, thanks.
+In the function brcmf_notify_connect_status_ap() I do have following on 
+the stack:
 
-88027c8ff0a3 atmel: Add missing call to pci_disable_device()
+static s32
+brcmf_notify_connect_status_ap(struct brcmf_cfg80211_info *cfg,
+                                struct net_device *ndev,
+                                const struct brcmf_event_msg *e, void *data)
+{
+         static int generation;
+         u32 event = e->event_code;
+         u32 reason = e->reason;
+         struct station_info sinfo;
 
--- 
-https://patchwork.kernel.org/patch/10420905/
+I guess the struct station_info grew bigger by these commits:
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+52539ca cfg80211: Expose TXQ stats and parameters to userspace	+816
+81d5439 cfg80211: average ack rssi support for data frames	+1
+
+There are a number of other (cfg80211-based) drivers doing the same 
+thing, ie. mwifiex, ath6kl, qtnfmac.
+
+Regards,
+Arend
