@@ -1,64 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:34831 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752785AbeEKIPZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 04:15:25 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 27/30] staging: wilc1000: added comments for mutex and spinlock_t
-Date: Fri, 11 May 2018 13:43:28 +0530
-Message-ID: <1526026411-11058-28-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101529_487037_D9E876E3)
-In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
-References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+Received: from mx2.suse.de ([195.135.220.15]:33504 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965574AbeEITn2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 May 2018 15:43:28 -0400
+Date: Wed, 9 May 2018 19:43:23 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        gregkh@linuxfoundation.org, akpm@linux-foundation.org,
+        keescook@chromium.org, josh@joshtriplett.org, maco@android.com,
+        andy.gross@linaro.org, david.brown@linaro.org,
+        bjorn.andersson@linaro.org, teg@jklm.no, wagi@monom.org,
+        hdegoede@redhat.com, andresx7@gmail.com, zohar@linux.vnet.ibm.com,
+        kubakici@wp.pl, shuah@kernel.org, mfuzzey@parkeon.com,
+        dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de,
+        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        jewalt@lgsinnovations.com, oneukum@suse.com,
+        cantabile.desu@gmail.com, ast@fb.com, hare@suse.com,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl,
+        davem@davemloft.net, arve@android.com, tkjos@android.com,
+        corbet@lwn.net, linux-kernel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v6 12/13] Documentation: remove stale firmware API
+ reference
+Message-ID: <20180509194323.GV27853@wotan.suse.de> (sfid-20180509_214349_919927_81A55786)
+References: <20180508181247.19431-1-mcgrof@kernel.org>
+ <20180508181247.19431-13-mcgrof@kernel.org>
+ <20180509121209.1e332f63@vento.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180509121209.1e332f63@vento.lan>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added comments for mutex and spinlock_t to avoid checkpatch.pl script.
+On Wed, May 09, 2018 at 12:12:09PM -0300, Mauro Carvalho Chehab wrote:
+> Em Tue,  8 May 2018 11:12:46 -0700
+> "Luis R. Rodriguez" <mcgrof@kernel.org> escreveu:
+> 
+> > It refers to a pending patch, but this was merged eons ago.
+> 
+> Didn't know that such patch was already merged. Great!
+> 
+> Regards,
+> Mauro
+> 
+> > 
+> > Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> > ---
+> >  Documentation/dell_rbu.txt | 3 ---
+> >  1 file changed, 3 deletions(-)
+> > 
+> > diff --git a/Documentation/dell_rbu.txt b/Documentation/dell_rbu.txt
+> > index 0fdb6aa2704c..077fdc29a0d0 100644
+> > --- a/Documentation/dell_rbu.txt
+> > +++ b/Documentation/dell_rbu.txt
+> > @@ -121,9 +121,6 @@ read back the image downloaded.
+> >  
+> >  .. note::
+> >  
+> > -   This driver requires a patch for firmware_class.c which has the modified
+> > -   request_firmware_nowait function.
+> > -
+> 
+> >     Also after updating the BIOS image a user mode application needs to execute
+> >     code which sends the BIOS update request to the BIOS. So on the next reboot
+> >     the BIOS knows about the new image downloaded and it updates itself.
+> 
+> You should likely remove the "Also" here.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.h     | 2 +-
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 5 +++--
- 2 files changed, 4 insertions(+), 3 deletions(-)
+Good catch. Will adjust.
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 08b3ba7..068b587 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -271,7 +271,7 @@ struct host_if_drv {
- 
- 	u8 assoc_bssid[ETH_ALEN];
- 	struct cfg_param_attr cfg_values;
--
-+	/*lock to protect concurrent setting of cfg params*/
- 	struct mutex cfg_values_lock;
- 	struct completion comp_test_key_block;
- 	struct completion comp_test_disconn_block;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 607dae0..78f3312 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -131,10 +131,11 @@ struct wilc {
- 	u8 vif_num;
- 	struct wilc_vif *vif[NUM_CONCURRENT_IFC];
- 	u8 open_ifcs;
--
-+	/*protect head of transmit queue*/
- 	struct mutex txq_add_to_head_cs;
-+	/*protect txq_entry_t transmit queue*/
- 	spinlock_t txq_spinlock;
--
-+	/*protect rxq_entry_t receiver queue*/
- 	struct mutex rxq_cs;
- 	struct mutex hif_cs;
- 
--- 
-2.7.4
+> 
+> With that,
+> 
+> Reviewed-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+
+Great, thanks.
+
+  Luis
