@@ -1,58 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:38632 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932071AbeEWLYV (ORCPT
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:5085 "EHLO
+        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S934088AbeEIKHO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 May 2018 07:24:21 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
+        Wed, 9 May 2018 06:07:14 -0400
+From: Maya Erez <merez@codeaurora.org>
 To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: RE: [EXT] Re: [PATCH V2 3/6] mwifiex: support sysfs initiated device
- coredump
-Date: Wed, 23 May 2018 11:24:13 +0000
-Message-ID: <6c419785be0e4e89a62f3b81c36971ce@SC-EXCH02.marvell.com> (sfid-20180523_132430_197852_C14D0971)
-References: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
-        <1526472723-15758-4-git-send-email-arend.vanspriel@broadcom.com>
-        <87h8n7lnfx.fsf@kamboji.qca.qualcomm.com>       <5AFC7E01.3070503@broadcom.com>
-        <d9414fb243bf4a8daecfef11fe6cdc65@SC-EXCH02.marvell.com>
-        <87po1mu7s2.fsf@purkki.adurom.net> <5B052248.5020805@broadcom.com>
- <87d0xmeqfw.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87d0xmeqfw.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Cc: Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
+Subject: [PATCH v3 3/8] wil6210: fix call to wil6210_disconnect during unload
+Date: Wed,  9 May 2018 13:06:54 +0300
+Message-Id: <1525860419-6514-4-git-send-email-merez@codeaurora.org> (sfid-20180509_120718_729937_F2CC29F8)
+In-Reply-To: <1525860419-6514-1-git-send-email-merez@codeaurora.org>
+References: <1525860419-6514-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+From: Lior David <liord@codeaurora.org>
 
-> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
->
-> > On 5/23/2018 9:54 AM, Kalle Valo wrote:
-> >> Ganapathi Bhat <gbhat@marvell.com> writes:
-> >>
-> >>> In V2:
-> >>>
-> >>>          return ret;
-> >>>   }
-> >>> +EXPORT_SYMBOL_GPL(mwifiex_send_cmd);
-> >>>
-> >>> Instead of exporting 'mwifiex_send_cmd' we can prepare a wrapper for
-> >>> the command 'MWIFIEX_IFACE_WORK_DEVICE_DUMP' in mwifiex
-> module. Let
-> >>> me know if we can send a follow up.
-> >>
-> >> So what's the plan? Can I apply this patch or should I drop it?
-> >
-> > Sorry. Had to reply that earlier. When adding the export I figured it
-> > might not be desirable. If Ganapathi can fix it with a follow up patch
-> > that would ok, right?
->
-> A follow up patch sounds good to me.
-Sorry for confusions. I assume you will be margining the original patch and want me to send the follow-up right?
->
-Regards,
-Ganapathi
+Move the call to wil6210_disconnect so it will be called
+before unregister_netdevice. This is because it calls
+netif_carrier_off which is forbidden to call on an
+unregistered net device. Calling netif_carrier_off can
+add a link watch event which might be handled after
+net device was freed, causing a kernel oops.
+
+Signed-off-by: Lior David <liord@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/netdev.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
+index 05e9408..eb6c14ed 100644
+--- a/drivers/net/wireless/ath/wil6210/netdev.c
++++ b/drivers/net/wireless/ath/wil6210/netdev.c
+@@ -457,16 +457,16 @@ void wil_vif_remove(struct wil6210_priv *wil, u8 mid)
+ 		return;
+ 	}
+ 
++	mutex_lock(&wil->mutex);
++	wil6210_disconnect(vif, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
++	mutex_unlock(&wil->mutex);
++
+ 	ndev = vif_to_ndev(vif);
+ 	/* during unregister_netdevice cfg80211_leave may perform operations
+ 	 * such as stop AP, disconnect, so we only clear the VIF afterwards
+ 	 */
+ 	unregister_netdevice(ndev);
+ 
+-	mutex_lock(&wil->mutex);
+-	wil6210_disconnect(vif, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
+-	mutex_unlock(&wil->mutex);
+-
+ 	if (any_active && vif->mid != 0)
+ 		wmi_port_delete(wil, vif->mid);
+ 
+-- 
+1.9.1
