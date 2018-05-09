@@ -1,53 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:60979 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752081AbeEGVad (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 17:30:33 -0400
-Date: Mon, 07 May 2018 23:30:31 +0200
-In-Reply-To: <1525728090.6222.1.camel@sipsolutions.net>
-References: <20180219170224.14816-1-toke@toke.dk> <20180219170224.14816-3-toke@toke.dk> (sfid-20180219_180319_201142_47E9DB27) <1525728090.6222.1.camel@sipsolutions.net>
+Received: from bombadil.infradead.org ([198.137.202.133]:49306 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964799AbeEIPND (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 May 2018 11:13:03 -0400
+Date: Wed, 9 May 2018 12:12:09 -0300
+From: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: gregkh@linuxfoundation.org, akpm@linux-foundation.org,
+        keescook@chromium.org, josh@joshtriplett.org, maco@android.com,
+        andy.gross@linaro.org, david.brown@linaro.org,
+        bjorn.andersson@linaro.org, teg@jklm.no, wagi@monom.org,
+        hdegoede@redhat.com, andresx7@gmail.com, zohar@linux.vnet.ibm.com,
+        kubakici@wp.pl, shuah@kernel.org, mfuzzey@parkeon.com,
+        dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de,
+        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        jewalt@lgsinnovations.com, oneukum@suse.com,
+        cantabile.desu@gmail.com, ast@fb.com, hare@suse.com,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl,
+        davem@davemloft.net, arve@android.com, tkjos@android.com,
+        corbet@lwn.net, linux-kernel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v6 12/13] Documentation: remove stale firmware API
+ reference
+Message-ID: <20180509121209.1e332f63@vento.lan> (sfid-20180509_171332_666895_FB268DF5)
+In-Reply-To: <20180508181247.19431-13-mcgrof@kernel.org>
+References: <20180508181247.19431-1-mcgrof@kernel.org>
+        <20180508181247.19431-13-mcgrof@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Subject: Re: [PATCH 2/3] iw: Print TXQ statistics for stations and interfaces
-To: Johannes Berg <johannes@sipsolutions.net>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-From: =?ISO-8859-1?Q?Toke_H=F8iland-J=F8rgensen?= <toke@toke.dk>
-Message-ID: <C105BD5A-5307-45D1-B91A-0E9833671B92@toke.dk> (sfid-20180507_233037_875892_28F63851)
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Em Tue,  8 May 2018 11:12:46 -0700
+"Luis R. Rodriguez" <mcgrof@kernel.org> escreveu:
 
+> It refers to a pending patch, but this was merged eons ago.
 
-On 7 May 2018 23:21:30 CEST, Johannes Berg <johannes@sipsolutions=2Enet> w=
-rote:
->On Mon, 2018-02-19 at 18:02 +0100, Toke H=C3=B8iland-J=C3=B8rgensen wrote=
-:
->>=20
->> +	if (header && tid >=3D 0)
->> +		pos +=3D snprintf(buf, buflen, "\n\t\tTID\tqsz-byt\t"
->> +				"qsz-pkt\tflows\tdrops\tmarks\toverlmt\t"
->> +				"hashcol\ttx-bytes\ttx-packets");
->> +	else if (header)
->> +		pos +=3D snprintf(buf, buflen, "\n\t\tqsz-byt\t"
->> +				"qsz-pkt\tflows\tdrops\tmarks\toverlmt\t"
->> +				"hashcol\ttx-bytes\ttx-packets");
->> +
->> +	if (tid >=3D 0)
->> +		pos +=3D snprintf(pos, buflen - (pos - buf), "\n\t\t%d", tid);
->> +	else
->> +		pos +=3D snprintf(pos, buflen - (pos - buf), "\n\t");
->> +
->> +	txqinfo =3D txqstats_info[NL80211_TXQ_STATS_BACKLOG_BYTES];
->> +	if (txqinfo)
->> +		pos +=3D snprintf(pos, buflen - (pos - buf), "\t%u",
->> +				nla_get_u32(txqinfo));
->
->since the header is fixed, shouldn't all of these get an else branch
->that just prints a tab or so?
+Didn't know that such patch was already merged. Great!
 
-Ah, right, good point=2E Didn't think about what would happen if any of th=
-e fields were actually omitted=2E Will fix that as well :)
+Regards,
+Mauro
 
--Toke
+> 
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> ---
+>  Documentation/dell_rbu.txt | 3 ---
+>  1 file changed, 3 deletions(-)
+> 
+> diff --git a/Documentation/dell_rbu.txt b/Documentation/dell_rbu.txt
+> index 0fdb6aa2704c..077fdc29a0d0 100644
+> --- a/Documentation/dell_rbu.txt
+> +++ b/Documentation/dell_rbu.txt
+> @@ -121,9 +121,6 @@ read back the image downloaded.
+>  
+>  .. note::
+>  
+> -   This driver requires a patch for firmware_class.c which has the modified
+> -   request_firmware_nowait function.
+> -
+
+>     Also after updating the BIOS image a user mode application needs to execute
+>     code which sends the BIOS update request to the BIOS. So on the next reboot
+>     the BIOS knows about the new image downloaded and it updates itself.
+
+You should likely remove the "Also" here.
+
+With that,
+
+Reviewed-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+
+Regards,
+Mauro
