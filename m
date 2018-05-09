@@ -1,77 +1,379 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:26150 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751111AbeEUKKO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 May 2018 06:10:14 -0400
-From: "Dreyfuss, Haim" <haim.dreyfuss@intel.com>
-To: Eric Biggers <ebiggers3@gmail.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Coelho, Luciano" <luciano.coelho@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: RE: [4.17 iwlwifi regression] NULL pointer dereference in
- reg_query_regdb_wmm()
-Date: Mon, 21 May 2018 10:10:09 +0000
-Message-ID: <409B2791E285FD41B488E034D9B4719F27E99C58@HASMSX106.ger.corp.intel.com> (sfid-20180521_121018_405485_7247BA5A)
-References: <20180519183345.GA701@sol.localdomain>
-In-Reply-To: <20180519183345.GA701@sol.localdomain>
-Content-Type: text/plain; charset="us-ascii"
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:54147 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964818AbeEISnb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 May 2018 14:43:31 -0400
+Date: Thu, 10 May 2018 00:11:17 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
+        <adham.abozaeid@Microchip.com>
+Subject: Re: [PATCH 07/30] staging: wilc1000: fix line over 80 characters in
+ host_int_parse_join_bss_param()
+Message-ID: <20180510001117.26a29f19@ajaysk-VirtualBox> (sfid-20180509_204335_287667_873A680D)
+In-Reply-To: <41b47474-9dad-05c8-aa1b-0da661de3caf@microchip.com>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+ <1525682614-3824-8-git-send-email-ajay.kathat@microchip.com>
+ <41b47474-9dad-05c8-aa1b-0da661de3caf@microchip.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Wed, 9 May 2018 16:43:59 +0300
+Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
 
-Can you provide the following information?
-1. The *boot* you mentioned is from clean shutdown or from Sx state?
-2. Do you know which MCC the driver is trying to update?
-I will appreciate if you could reproduce it with trace-cmd  (recording at least iwlwifi , iwlwifi_msg -and iwlwifi_ucode)
-Or if you can't,  just send dmesg  but make sure to set iwlwifi.debug in the kernel parameters to 0x4000
+> On 07.05.2018 11:43, Ajay Singh wrote:
+> > Split host_int_parse_join_bss_param() to avoid the line over 80
+> > character issue reported by checkpatch.pl script.
+> > 
+> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> > ---
+> >  drivers/staging/wilc1000/host_interface.c | 247
+> > ++++++++++++++++-------------- 1 file changed, 131 insertions(+),
+> > 116 deletions(-)
+> > 
+> > diff --git a/drivers/staging/wilc1000/host_interface.c
+> > b/drivers/staging/wilc1000/host_interface.c index 0d84af9..c9c5d352
+> > 100644 --- a/drivers/staging/wilc1000/host_interface.c
+> > +++ b/drivers/staging/wilc1000/host_interface.c
+> > @@ -3856,150 +3856,165 @@ int wilc_setup_multicast_filter(struct
+> > wilc_vif *vif, bool enabled, return result;
+> >  }
+> >  
+> > -static void *host_int_parse_join_bss_param(struct network_info
+> > *info) +static void host_int_fill_join_bss_param(struct
+> > join_bss_param *param, u8 *ies,
+> > +					 u16 *out_index, u8
+> > *pcipher_tc,
+> > +					 u8 *auth_total_cnt, u32
+> > tsf_lo) {
+> > -	struct join_bss_param *param = NULL;
+> > -	u8 *ies;
+> > -	u16 ies_len;
+> > -	u16 index = 0;
+> >  	u8 rates_no = 0;
+> >  	u8 ext_rates_no;
+> >  	u16 offset;
+> >  	u8 pcipher_cnt;
+> >  	u8 auth_cnt;
+> > -	u8 pcipher_total_cnt = 0;
+> > -	u8 auth_total_cnt = 0;
+> >  	u8 i, j;
+> > +	u16 index = *out_index;  
+> 
+> Why not having a single index, the one passed as argument?
+> 
 
-Cheers
-Dreyfuss
------Original Message-----
-From: Eric Biggers [mailto:ebiggers3@gmail.com] 
-Sent: Saturday, May 19, 2018 9:34 PM
-To: linuxwifi <linuxwifi@intel.com>; linux-wireless@vger.kernel.org; Dreyfuss, Haim <haim.dreyfuss@intel.com>; Coelho, Luciano <luciano.coelho@intel.com>; Kalle Valo <kvalo@codeaurora.org>
-Subject: [4.17 iwlwifi regression] NULL pointer dereference in reg_query_regdb_wmm()
+If we use 'index' argument then we have to change all the lines below
+with '*index' and it would make code look more complicated. So to
+reduce those changes below I have the above logic.
 
-Hello,
+> >  
+> > -	ies = info->ies;
+> > -	ies_len = info->ies_len;
+> > +	if (ies[index] == SUPP_RATES_IE) {
+> > +		rates_no = ies[index + 1];
+> > +		param->supp_rates[0] = rates_no;
+> > +		index += 2;
+> >  
+> > -	param = kzalloc(sizeof(*param), GFP_KERNEL);
+> > -	if (!param)
+> > -		return NULL;
+> > +		for (i = 0; i < rates_no; i++)
+> > +			param->supp_rates[i + 1] = ies[index + i];
+> >  
+> > -	param->dtim_period = info->dtim_period;
+> > -	param->beacon_period = info->beacon_period;
+> > -	param->cap_info = info->cap_info;
+> > -	memcpy(param->bssid, info->bssid, 6);
+> > -	memcpy((u8 *)param->ssid, info->ssid, info->ssid_len + 1);
+> > -	param->ssid_len = info->ssid_len;
+> > -	memset(param->rsn_pcip_policy, 0xFF, 3);
+> > -	memset(param->rsn_auth_policy, 0xFF, 3);
+> > +		index += rates_no;
+> > +	} else if (ies[index] == EXT_SUPP_RATES_IE) {
+> > +		ext_rates_no = ies[index + 1];
+> > +		if (ext_rates_no > (MAX_RATES_SUPPORTED -
+> > rates_no))
+> > +			param->supp_rates[0] = MAX_RATES_SUPPORTED;
+> > +		else
+> > +			param->supp_rates[0] += ext_rates_no;
+> > +		index += 2;
+> > +		for (i = 0; i < (param->supp_rates[0] - rates_no);
+> > i++)
+> > +			param->supp_rates[rates_no + i + 1] =
+> > ies[index + i]; +
+> > +		index += ext_rates_no;
+> > +	} else if (ies[index] == HT_CAPABILITY_IE) {
+> > +		param->ht_capable = true;
+> > +		index += ies[index + 1] + 2;
+> > +	} else if ((ies[index] == WMM_IE) &&
+> > +		   (ies[index + 2] == 0x00) && (ies[index + 3] ==
+> > 0x50) &&
+> > +		   (ies[index + 4] == 0xF2) && (ies[index + 5] ==
+> > 0x02) &&
+> > +		   ((ies[index + 6] == 0x00) || (ies[index + 6] ==
+> > 0x01)) &&
+> > +		   (ies[index + 7] == 0x01)) {
+> > +		param->wmm_cap = true;
+> > +
+> > +		if (ies[index + 8] & BIT(7))
+> > +			param->uapsd_cap = true;
+> > +		index += ies[index + 1] + 2;
+> > +	} else if ((ies[index] == P2P_IE) &&
+> > +		 (ies[index + 2] == 0x50) && (ies[index + 3] ==
+> > 0x6f) &&
+> > +		 (ies[index + 4] == 0x9a) &&
+> > +		 (ies[index + 5] == 0x09) && (ies[index + 6] ==
+> > 0x0c)) {
+> > +		u16 p2p_cnt;
+> > +
+> > +		param->tsf = tsf_lo;
+> > +		param->noa_enabled = 1;
+> > +		param->idx = ies[index + 9];
+> > +
+> > +		if (ies[index + 10] & BIT(7)) {
+> > +			param->opp_enabled = 1;
+> > +			param->ct_window = ies[index + 10];
+> > +		} else {
+> > +			param->opp_enabled = 0;
+> > +		}
+> >  
+> > -	while (index < ies_len) {
+> > -		if (ies[index] == SUPP_RATES_IE) {
+> > -			rates_no = ies[index + 1];
+> > -			param->supp_rates[0] = rates_no;
+> > -			index += 2;
+> > +		param->cnt = ies[index + 11];
+> > +		p2p_cnt = index + 12;
+> >  
+> > -			for (i = 0; i < rates_no; i++)
+> > -				param->supp_rates[i + 1] =
+> > ies[index + i];
+> > +		memcpy(param->duration, ies + p2p_cnt, 4);
+> > +		p2p_cnt += 4;
+> >  
+> > -			index += rates_no;
+> > -		} else if (ies[index] == EXT_SUPP_RATES_IE) {
+> > -			ext_rates_no = ies[index + 1];
+> > -			if (ext_rates_no > (MAX_RATES_SUPPORTED -
+> > rates_no))
+> > -				param->supp_rates[0] =
+> > MAX_RATES_SUPPORTED;
+> > -			else
+> > -				param->supp_rates[0] +=
+> > ext_rates_no;
+> > -			index += 2;
+> > -			for (i = 0; i < (param->supp_rates[0] -
+> > rates_no); i++)
+> > -				param->supp_rates[rates_no + i +
+> > 1] = ies[index + i]; -
+> > -			index += ext_rates_no;
+> > -		} else if (ies[index] == HT_CAPABILITY_IE) {
+> > -			param->ht_capable = true;
+> > -			index += ies[index + 1] + 2;
+> > -		} else if ((ies[index] == WMM_IE) &&
+> > -			   (ies[index + 2] == 0x00) && (ies[index
+> > + 3] == 0x50) &&
+> > -			   (ies[index + 4] == 0xF2) &&
+> > -			   (ies[index + 5] == 0x02) &&
+> > -			   ((ies[index + 6] == 0x00) || (ies[index
+> > + 6] == 0x01)) &&
+> > -			   (ies[index + 7] == 0x01)) {
+> > -			param->wmm_cap = true;
+> > -
+> > -			if (ies[index + 8] & BIT(7))
+> > -				param->uapsd_cap = true;
+> > -			index += ies[index + 1] + 2;
+> > -		} else if ((ies[index] == P2P_IE) &&
+> > -			 (ies[index + 2] == 0x50) && (ies[index +
+> > 3] == 0x6f) &&
+> > -			 (ies[index + 4] == 0x9a) &&
+> > -			 (ies[index + 5] == 0x09) && (ies[index +
+> > 6] == 0x0c)) {
+> > -			u16 p2p_cnt;
+> > -
+> > -			param->tsf = info->tsf_lo;
+> > -			param->noa_enabled = 1;
+> > -			param->idx = ies[index + 9];
+> > -
+> > -			if (ies[index + 10] & BIT(7)) {
+> > -				param->opp_enabled = 1;
+> > -				param->ct_window = ies[index + 10];
+> > -			} else {
+> > -				param->opp_enabled = 0;
+> > -			}
+> > +		memcpy(param->interval, ies + p2p_cnt, 4);
+> > +		p2p_cnt += 4;
+> >  
+> > -			param->cnt = ies[index + 11];
+> > -			p2p_cnt = index + 12;
+> > +		memcpy(param->start_time, ies + p2p_cnt, 4);
+> >  
+> > -			memcpy(param->duration, ies + p2p_cnt, 4);
+> > -			p2p_cnt += 4;
+> > +		index += ies[index + 1] + 2;
+> > +	} else if ((ies[index] == RSN_IE) ||
+> > +		 ((ies[index] == WPA_IE) && (ies[index + 2] ==
+> > 0x00) &&
+> > +		  (ies[index + 3] == 0x50) && (ies[index + 4] ==
+> > 0xF2) &&
+> > +		  (ies[index + 5] == 0x01))) {
+> > +		u16 rsn_idx = index;
+> >  
+> > -			memcpy(param->interval, ies + p2p_cnt, 4);
+> > -			p2p_cnt += 4;
+> > +		if (ies[rsn_idx] == RSN_IE) {
+> > +			param->mode_802_11i = 2;
+> > +		} else {
+> > +			if (param->mode_802_11i == 0)
+> > +				param->mode_802_11i = 1;
+> > +			rsn_idx += 4;
+> > +		}
+> >  
+> > -			memcpy(param->start_time, ies + p2p_cnt,
+> > 4);
+> > +		rsn_idx += 7;
+> > +		param->rsn_grp_policy = ies[rsn_idx];
+> > +		rsn_idx++;
+> > +		offset = ies[rsn_idx] * 4;
+> > +		pcipher_cnt = (ies[rsn_idx] > 3) ? 3 :
+> > ies[rsn_idx];
+> > +		rsn_idx += 2;
+> >  
+> > -			index += ies[index + 1] + 2;
+> > -		} else if ((ies[index] == RSN_IE) ||
+> > -			 ((ies[index] == WPA_IE) && (ies[index +
+> > 2] == 0x00) &&
+> > -			  (ies[index + 3] == 0x50) && (ies[index +
+> > 4] == 0xF2) &&
+> > -			  (ies[index + 5] == 0x01)))	{
+> > -			u16 rsn_idx = index;
+> > +		i = *pcipher_tc;
+> > +		j = 0;
+> > +		for (; i < (pcipher_cnt + *pcipher_tc) && i < 3;
+> > i++, j++) {
+> > +			u8 *policy =  &param->rsn_pcip_policy[i];
+> >  
+> > -			if (ies[rsn_idx] == RSN_IE)	{
+> > -				param->mode_802_11i = 2;
+> > -			} else {
+> > -				if (param->mode_802_11i == 0)
+> > -					param->mode_802_11i = 1;
+> > -				rsn_idx += 4;
+> > -			}
+> > +			*policy = ies[rsn_idx + ((j + 1) * 4) - 1];
+> > +		}
+> >  
+> > -			rsn_idx += 7;
+> > -			param->rsn_grp_policy = ies[rsn_idx];
+> > -			rsn_idx++;
+> > -			offset = ies[rsn_idx] * 4;
+> > -			pcipher_cnt = (ies[rsn_idx] > 3) ? 3 :
+> > ies[rsn_idx];
+> > -			rsn_idx += 2;
+> > +		*pcipher_tc += pcipher_cnt;
+> > +		rsn_idx += offset;
+> >  
+> > -			for (i = pcipher_total_cnt, j = 0; i <
+> > pcipher_cnt + pcipher_total_cnt && i < 3; i++, j++)
+> > -				param->rsn_pcip_policy[i] =
+> > ies[rsn_idx + ((j + 1) * 4) - 1];
+> > +		offset = ies[rsn_idx] * 4;
+> >  
+> > -			pcipher_total_cnt += pcipher_cnt;
+> > -			rsn_idx += offset;
+> > +		auth_cnt = (ies[rsn_idx] > 3) ? 3 : ies[rsn_idx];
+> > +		rsn_idx += 2;
+> > +		i = *auth_total_cnt;
+> > +		j = 0;  
+> 
+> I prefer keeping these inside for (). I think some of the "line over
+> 80" should be fixed by refactoring code not introducing new variables
+> and so on.
 
-Using v4.17-rc5, on a laptop with an "Intel Corporation Wireless 3165 (rev 79)"
-using the iwlwifi driver, I get a NULL pointer dereference immediately after boot.  Apparently, the 'regdb' variable in net/wireless/reg.c is NULL, yet
-reg_query_regdb_wmm() is checking for IS_ERR().  It goes away if I revert commit
-77e30e10ee28a5 ("iwlwifi: mvm: query regdb for wmm rule if needed").  The symbolized crash report is:
+Do you think for the below line the 'line over 80 chars' can be solved
+by refactoring alone and without using temp/intermediate variables
+or short names of variables. 
 
-BUG: unable to handle kernel NULL pointer dereference at 000000000000000a PGD 0 P4D 0
-Oops: 0000 [#1] PREEMPT SMP PTI
-Modules linked in: kvm_intel kvm irqbypass joydev
-CPU: 2 PID: 371 Comm: NetworkManager Tainted: G                T 4.17.0-rc5-00140-g0b449a441dac #5
-Hardware name: Dell Inc. Inspiron 15-7568/0M5YMV, BIOS 01.00.00 08/07/2015
-RIP: 0010:reg_query_regdb_wmm+0x14/0x160 net/wireless/reg.c:919
-RSP: 0018:ffffad458102b4f0 EFLAGS: 00010207
-RAX: ffff96a8e7b350a0 RBX: ffff96a8e7b35000 RCX: ffff96a8e7b35638
-RDX: ffff96a8e14ee408 RSI: 000000000000143c RDI: ffff96a8e7b35018
-RBP: 0000000000000005 R08: 0000000000013088 R09: 0000000000000000
-R10: 0000000000000004 R11: 000000000000143c R12: ffffffff93ebd7a0
-R13: ffff96a8e14ee400 R14: 0000000000000040 R15: 000000000000000e
-FS:  00007f29f1311880(0000) GS:ffff96a8f2500000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 000000000000000a CR3: 0000000260e9c005 CR4: 00000000003606e0 Call Trace:
- iwl_parse_nvm_mcc_info+0x267/0x4e0 drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c:962
- iwl_mvm_get_regdomain+0x67/0xb0 drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c:311
- iwl_mvm_init_mcc+0x6f/0x1f0 drivers/net/wireless/intel/iwlwifi/mvm/nvm.c:783
- iwl_mvm_up+0x79f/0x840 drivers/net/wireless/intel/iwlwifi/mvm/fw.c:1089
- __iwl_mvm_mac_start+0x225/0x290 drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c:1108
- iwl_mvm_mac_start+0x4e/0x120 drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c:1141
- ? inetdev_event+0x72/0x4d0 net/ipv4/devinet.c:1533
- drv_start+0x2d/0x50 net/mac80211/driver-ops.c:26
- ieee80211_do_open+0x453/0x880 net/mac80211/iface.c:558
- __dev_open+0xb4/0x130 net/core/dev.c:1392
- __dev_change_flags+0x1a1/0x210 net/core/dev.c:6955  ? call_netdevice_notifiers net/core/dev.c:1752 [inline]  ? __dev_notify_flags+0x56/0xf0 net/core/dev.c:6993
- dev_change_flags+0x1e/0x60 net/core/dev.c:7024  ? nla_put_ifalias+0x2e/0x90 net/core/rtnetlink.c:1459
- do_setlink+0x656/0xd80 net/core/rtnetlink.c:2362  ? new_slab_objects mm/slub.c:2452 [inline]  ? ___slab_alloc+0x48a/0x560 mm/slub.c:2604  ? memset include/linux/string.h:330 [inline]  ? __nla_reserve+0x38/0x50 lib/nlattr.c:437  ? __nla_put+0xc/0x20 lib/nlattr.c:568  ? nla_put+0x2f/0x40 lib/nlattr.c:627  ? nla_put_u8 include/net/netlink.h:780 [inline]  ? rtnl_xdp_fill+0x172/0x1d0 net/core/rtnetlink.c:1379  ? memset include/linux/string.h:330 [inline]  ? __nla_reserve+0x38/0x50 lib/nlattr.c:437  ? memset include/linux/string.h:330 [inline]  ? __nla_reserve+0x38/0x50 lib/nlattr.c:437  ? inet_fill_link_af+0x1c/0x50 net/ipv4/devinet.c:1738  ? rtnl_newlink+0x793/0x930 net/core/rtnetlink.c:2970  ? spin_unlock_irqrestore include/linux/spinlock.h:365 [inline]  ? __wake_up_common_lock+0x84/0xb0 kernel/sched/wait.c:120  ? rtnetlink_rcv_msg+0x121/0x390 net/core/rtnetlink.c:4646  ? fast_dput fs/dcache.c:716 [inline]  ? dput.part.5+0x92/0x120 fs/dcache.c:837  ? __lookup_slow+0x137/0x160 fs/namei.c:1633  ? rtnl_calcit.isra.14+0x110/0x110 net/core/rtnetlink.c:3188  ? netlink_rcv_skb+0x44/0x110 net/netlink/af_netlink.c:2448  ? netlink_unicast_kernel net/netlink/af_netlink.c:1310 [inline]  ? netlink_unicast+0x18b/0x230 net/netlink/af_netlink.c:1336  ? netlink_sendmsg+0x1f0/0x3b0 net/netlink/af_netlink.c:1901  ? sock_sendmsg_nosec net/socket.c:629 [inline]  ? sock_sendmsg+0x14/0x20 net/socket.c:639  ? ___sys_sendmsg+0x28e/0x2f0 net/socket.c:2117  ? try_to_wake_up+0x26a/0x360 kernel/sched/core.c:2060  ? __check_object_size+0xf9/0x180 mm/usercopy.c:262  ? rcu_read_unlock include/linux/rcupdate.h:687 [inline]  ? __fget+0x67/0xa0 fs/file.c:697  ? __sys_sendmsg+0x52/0xa0 net/socket.c:2155  ? do_syscall_64+0x43/0xd0 arch/x86/entry/common.c:287  ? entry_SYSCALL_64_after_hwframe+0x44/0xa9
-Code: ff ff 0f 1f 44 00 00 eb ae 0f 1f 40 00 66 2e 0f 1f 84 00 00 00 00 00 4c 8b 0d 89 41 fd 00 49 81 f9 00 f0 ff ff 0f 87 12 01 00 00 <45> 0f b7 41 0a 49 89 d2 b8 c3 ff ff ff 49 8d 51 08 66 45 85 c0
-RIP: reg_query_regdb_wmm+0x14/0x160 net/wireless/reg.c:919 RSP: ffffad458102b4f0
-CR2: 000000000000000a
----[ end trace 0940319c2377625e ]---
+The original 'for' loop line itself was about 65+ characters long. 
+
+> 
+> > +		for (; i < (*auth_total_cnt + auth_cnt); i++, j++)
+> > {
+> > +			u8 *policy =  &param->rsn_auth_policy[i];
+> >  
+> > -			offset = ies[rsn_idx] * 4;
+> > +			*policy = ies[rsn_idx + ((j + 1) * 4) - 1];
+> > +		}
+> > +
+> > +		auth_total_cnt += auth_cnt;
+> > +		rsn_idx += offset;
+> >  
+> > -			auth_cnt = (ies[rsn_idx] > 3) ? 3 :
+> > ies[rsn_idx];
+> > +		if (ies[index] == RSN_IE) {
+> > +			param->rsn_cap[0] = ies[rsn_idx];
+> > +			param->rsn_cap[1] = ies[rsn_idx + 1];
+> >  			rsn_idx += 2;
+> > +		}
+> > +		param->rsn_found = true;
+> > +		index += ies[index + 1] + 2;
+> > +	} else {
+> > +		index += ies[index + 1] + 2;
+> > +	}
+> >  
+> > -			for (i = auth_total_cnt, j = 0; i <
+> > auth_total_cnt + auth_cnt; i++, j++)
+> > -				param->rsn_auth_policy[i] =
+> > ies[rsn_idx + ((j + 1) * 4) - 1];
+> > +	*out_index = index;
+> > +}
+> >  
+> > -			auth_total_cnt += auth_cnt;
+> > -			rsn_idx += offset;
+> > +static void *host_int_parse_join_bss_param(struct network_info
+> > *info) +{
+> > +	struct join_bss_param *param = NULL;
+> > +	u16 index = 0;
+> > +	u8 pcipher_total_cnt = 0;
+> > +	u8 auth_total_cnt = 0;
+> >  
+> > -			if (ies[index] == RSN_IE) {
+> > -				param->rsn_cap[0] = ies[rsn_idx];
+> > -				param->rsn_cap[1] = ies[rsn_idx +
+> > 1];
+> > -				rsn_idx += 2;
+> > -			}
+> > -			param->rsn_found = true;
+> > -			index += ies[index + 1] + 2;
+> > -		} else {
+> > -			index += ies[index + 1] + 2;
+> > -		}
+> > -	}
+> > +	param = kzalloc(sizeof(*param), GFP_KERNEL);
+> > +	if (!param)
+> > +		return NULL;
+> > +
+> > +	param->dtim_period = info->dtim_period;
+> > +	param->beacon_period = info->beacon_period;
+> > +	param->cap_info = info->cap_info;
+> > +	memcpy(param->bssid, info->bssid, 6);
+> > +	memcpy((u8 *)param->ssid, info->ssid, info->ssid_len + 1);
+> > +	param->ssid_len = info->ssid_len;
+> > +	memset(param->rsn_pcip_policy, 0xFF, 3);
+> > +	memset(param->rsn_auth_policy, 0xFF, 3);
+> > +
+> > +	while (index < info->ies_len)
+> > +		host_int_fill_join_bss_param(param, info->ies,
+> > &index,
+> > +					     &pcipher_total_cnt,
+> > +					     &auth_total_cnt,
+> > info->tsf_lo); 
+> >  	return (void *)param;
+> >  }
+> >   
