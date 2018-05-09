@@ -1,36 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54282 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750778AbeELJYz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 May 2018 05:24:55 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.toke.dk ([52.28.52.200]:49029 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935325AbeEIV1g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 May 2018 17:27:36 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [wl-testing/master] build regression in brcmfmac
+In-Reply-To: <1525900945.6910.28.camel@sipsolutions.net>
+References: <5AF36449.9050906@broadcom.com> <1525900945.6910.28.camel@sipsolutions.net>
+Date: Wed, 09 May 2018 23:27:42 +0200
+Message-ID: <874ljgzfht.fsf@toke.dk> (sfid-20180509_232740_097570_36C986E6)
 MIME-Version: 1.0
-Subject: Re: ath10k: hw: make consistent usage of ATH10K_FW_DIR in paths
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180509075633.3030-1-marcus.folkesson@gmail.com>
-References: <20180509075633.3030-1-marcus.folkesson@gmail.com>
-To: Marcus Folkesson <marcus.folkesson@gmail.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Marcus Folkesson <marcus.folkesson@gmail.com>
-Message-Id: <20180512092455.1ABBC601EA@smtp.codeaurora.org> (sfid-20180512_112458_362407_E9B1AB0D)
-Date: Sat, 12 May 2018 09:24:55 +0000 (UTC)
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marcus Folkesson <marcus.folkesson@gmail.com> wrote:
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-> For some reason not all entries used ATH10K_FW_DIR so fix that. No functional
-> changes.
-> 
-> Signed-off-by: Marcus Folkesson <marcus.folkesson@gmail.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> On Wed, 2018-05-09 at 23:12 +0200, Arend van Spriel wrote:
+>> Since yesterday I get the following build error on wl-testing/master:
+>>=20
+>>    CC [M]  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.o
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c: In function=
+=20
+>> =E2=80=98brcmf_notify_connect_status_ap=E2=80=99:
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:5530:1:=20
+>> error: the frame size of 1592 bytes is larger than 1024 bytes=20
+>> [-Werror=3Dframe-larger-than=3D]
+>>   }
+>>   ^
+>>=20
+>> In the function brcmf_notify_connect_status_ap() I do have following on=
+=20
+>> the stack:
+>>=20
+>> static s32
+>> brcmf_notify_connect_status_ap(struct brcmf_cfg80211_info *cfg,
+>>                                 struct net_device *ndev,
+>>                                 const struct brcmf_event_msg *e, void *d=
+ata)
+>> {
+>>          static int generation;
+>>          u32 event =3D e->event_code;
+>>          u32 reason =3D e->reason;
+>>          struct station_info sinfo;
+>>=20
+>> I guess the struct station_info grew bigger by these commits:
+>>=20
+>> 52539ca cfg80211: Expose TXQ stats and parameters to userspace	+816
+>> 81d5439 cfg80211: average ack rssi support for data frames	+1
+>>=20
+>> There are a number of other (cfg80211-based) drivers doing the same=20
+>> thing, ie. mwifiex, ath6kl, qtnfmac.
+>
+> Yeah. Toke said this morning he was working on fixes.
 
-Patch applied to ath-next branch of ath.git, thanks.
+That would be these:
 
-0be928850dac ath10k: hw: make consistent usage of ATH10K_FW_DIR in paths
+https://patchwork.kernel.org/patch/10389333/
+https://patchwork.kernel.org/patch/10389331/
+https://patchwork.kernel.org/patch/10389335/
 
--- 
-https://patchwork.kernel.org/patch/10388585/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+-Toke
