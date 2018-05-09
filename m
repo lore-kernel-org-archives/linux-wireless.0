@@ -1,60 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43336 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754859AbeEYJVB (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:17367 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934630AbeEINoR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 May 2018 05:21:01 -0400
-From: Balaji Pothunoori <bpothuno@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Balaji Pothunoori <bpothuno@codeaurora.org>
-Subject: [PATCH 2/2] mac80211: last ack singal support in station dump
-Date: Fri, 25 May 2018 14:50:05 +0530
-Message-Id: <1527240005-8508-3-git-send-email-bpothuno@codeaurora.org> (sfid-20180525_112110_355178_8D950FDF)
-In-Reply-To: <1527240005-8508-1-git-send-email-bpothuno@codeaurora.org>
-References: <1527240005-8508-1-git-send-email-bpothuno@codeaurora.org>
+        Wed, 9 May 2018 09:44:17 -0400
+Subject: Re: [PATCH 06/30] staging: wilc1000: fix line over 80 chars issue in
+ host_int_handle_disconnect()
+To: Ajay Singh <ajay.kathat@microchip.com>,
+        <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <adham.abozaeid@Microchip.com>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+ <1525682614-3824-7-git-send-email-ajay.kathat@microchip.com>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <f25c13fc-3dbb-cc17-7e37-ad72b69b0664@microchip.com> (sfid-20180509_154420_117248_1BB7161F)
+Date: Wed, 9 May 2018 16:44:13 +0300
+MIME-Version: 1.0
+In-Reply-To: <1525682614-3824-7-git-send-email-ajay.kathat@microchip.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds "last ack signal" and "avg ack signal" support
-in station dump for valid ack rssi.
 
-Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
----
- net/mac80211/sta_info.c | 20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 6428f1a..12b618e 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -2310,13 +2310,21 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL);
- 	}
- 
--	if (ieee80211_hw_check(&sta->local->hw, REPORTS_TX_ACK_STATUS) &&
--	    !(sinfo->filled & BIT_ULL(NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG))) {
--		sinfo->avg_ack_signal =
--			-(s8)ewma_avg_signal_read(
-+	if (ieee80211_hw_check(&sta->local->hw, REPORTS_TX_ACK_STATUS)) {
-+		if (sta->status_stats.ack_signal_filled && ((!(sinfo->filled &
-+		    BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL))) ||
-+		    (!(sinfo->filled &
-+		    BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL_AVG))))) {
-+			sinfo->ack_signal =
-+				sta->status_stats.last_ack_signal;
-+			sinfo->filled |=
-+				BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL);
-+			sinfo->avg_ack_signal =
-+				-(s8)ewma_avg_signal_read(
- 				&sta->status_stats.avg_ack_signal);
--		sinfo->filled |=
--			BIT_ULL(NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG);
-+			sinfo->filled |=
-+				BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL_AVG);
-+		}
- 	}
- }
- 
--- 
-2.7.4
+On 07.05.2018 11:43, Ajay Singh wrote:
+> Fix line over 80 char issue in host_int_handle_disconnect() by using
+> temp variable to hold the 'wilc_connect_result' function pointer.
+> 
+> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index a341ff1..0d84af9 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -1401,6 +1401,7 @@ static inline void host_int_handle_disconnect(struct wilc_vif *vif)
+>  {
+>  	struct disconnect_info disconn_info;
+>  	struct host_if_drv *hif_drv = vif->hif_drv;
+> +	wilc_connect_result conn_result = hif_drv->usr_conn_req.conn_result;
+>  
+
+Is there a scenario you can end up here with a null hif_drv? I'm seeing that some
+of the functions from this layer are checking for hif_drv at the beginning, some
+are not.
+
+
+>  	memset(&disconn_info, 0, sizeof(struct disconnect_info));
+>  
+> @@ -1413,13 +1414,12 @@ static inline void host_int_handle_disconnect(struct wilc_vif *vif)
+>  	disconn_info.ie = NULL;
+>  	disconn_info.ie_len = 0;
+>  
+> -	if (hif_drv->usr_conn_req.conn_result) {
+> +	if (conn_result) {
+>  		wilc_optaining_ip = false;
+>  		wilc_set_power_mgmt(vif, 0, 0);
+>  
+> -		hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_DISCONN_NOTIF,
+> -						  NULL, 0, &disconn_info,
+> -						  hif_drv->usr_conn_req.arg);
+> +		conn_result(CONN_DISCONN_EVENT_DISCONN_NOTIF, NULL, 0,
+> +			    &disconn_info, hif_drv->usr_conn_req.arg);
+>  	} else {
+>  		netdev_err(vif->ndev, "Connect result NULL\n");
+>  	}
+> 
