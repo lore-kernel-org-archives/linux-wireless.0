@@ -1,73 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45440 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750993AbeEUUMb (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:38021 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933715AbeEIH5q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 May 2018 16:12:31 -0400
-Message-ID: <bd408cb86db243289ce32d16adea003245facefa.camel@coelho.fi> (sfid-20180521_221300_315975_8A3AD3FF)
-From: Luca Coelho <luca@coelho.fi>
-To: Yisheng Xie <xieyisheng1@huawei.com>, linux-kernel@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Mon, 21 May 2018 23:12:22 +0300
-In-Reply-To: <1526903890-35761-8-git-send-email-xieyisheng1@huawei.com>
-References: <1526903890-35761-1-git-send-email-xieyisheng1@huawei.com>
-         <1526903890-35761-8-git-send-email-xieyisheng1@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 07/33] iwlwifi: mvm: use match_string() helper
+        Wed, 9 May 2018 03:57:46 -0400
+Received: by mail-lf0-f68.google.com with SMTP id z142-v6so6339498lff.5
+        for <linux-wireless@vger.kernel.org>; Wed, 09 May 2018 00:57:46 -0700 (PDT)
+From: Marcus Folkesson <marcus.folkesson@gmail.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Marcus Folkesson <marcus.folkesson@gmail.com>
+Subject: [PATCH] ath10k: hw: make consistent usage of ATH10K_FW_DIR in paths
+Date: Wed,  9 May 2018 09:56:33 +0200
+Message-Id: <20180509075633.3030-1-marcus.folkesson@gmail.com> (sfid-20180509_095750_368146_667A2D39)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-05-21 at 19:57 +0800, Yisheng Xie wrote:
-> match_string() returns the index of an array for a matching string,
-> which can be used intead of open coded variant.
-> 
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: Intel Linux Wireless <linuxwifi@intel.com>
-> Cc: Johannes Berg <johannes.berg@intel.com>
-> Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
-> ---
->  drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 11 +++--------
->  1 file changed, 3 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-> b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-> index 0e6401c..e8249a6 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-> @@ -671,14 +671,9 @@ static ssize_t iwl_dbgfs_bt_cmd_read(struct file
-> *file, char __user *user_buf,
->  	};
->  	int ret, bt_force_ant_mode;
->  
-> -	for (bt_force_ant_mode = 0;
-> -	     bt_force_ant_mode < ARRAY_SIZE(modes_str);
-> -	     bt_force_ant_mode++) {
-> -		if (!strcmp(buf, modes_str[bt_force_ant_mode]))
-> -			break;
-> -	}
-> -
-> -	if (bt_force_ant_mode >= ARRAY_SIZE(modes_str))
-> +	bt_force_ant_mode = match_string(modes_str,
-> +					 ARRAY_SIZE(modes_str),
-> buf);
-> +	if (bt_force_ant_mode < 0)
->  		return -EINVAL;
->  
->  	ret = 0;
+Signed-off-by: Marcus Folkesson <marcus.folkesson@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/hw.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Looks fine, I'll push this to our internal tree for review and take a
-closer look at what the match_string() function does exactly.
-
-Thanks for the patch.
-
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index b8bdabe73073..23467e9fefeb 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -85,11 +85,11 @@ enum qca9377_chip_id_rev {
+ 	QCA9377_HW_1_1_CHIP_ID_REV = 0x1,
+ };
+ 
+-#define QCA6174_HW_2_1_FW_DIR		"ath10k/QCA6174/hw2.1"
++#define QCA6174_HW_2_1_FW_DIR		ATH10K_FW_DIR "/QCA6174/hw2.1"
+ #define QCA6174_HW_2_1_BOARD_DATA_FILE	"board.bin"
+ #define QCA6174_HW_2_1_PATCH_LOAD_ADDR	0x1234
+ 
+-#define QCA6174_HW_3_0_FW_DIR		"ath10k/QCA6174/hw3.0"
++#define QCA6174_HW_3_0_FW_DIR		ATH10K_FW_DIR "/QCA6174/hw3.0"
+ #define QCA6174_HW_3_0_BOARD_DATA_FILE	"board.bin"
+ #define QCA6174_HW_3_0_PATCH_LOAD_ADDR	0x1234
+ 
+-- 
+2.16.2
