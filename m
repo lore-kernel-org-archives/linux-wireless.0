@@ -1,51 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54398 "EHLO mail.kernel.org"
+Received: from mail.toke.dk ([52.28.52.200]:55073 "EHLO mail.toke.dk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750771AbeESHI5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 May 2018 03:08:57 -0400
-Date: Sat, 19 May 2018 09:08:38 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Johan Hovold <johan@kernel.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Carlos Manuel Santos <cmmpsantos@gmail.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3] NFC: pn533: don't send USB data off of the stack
-Message-ID: <20180519070838.GC2943@kroah.com> (sfid-20180519_090901_241417_63905957)
-References: <20180518103811.GA29186@kroah.com>
- <20180518154847.GB2668@localhost>
+        id S964984AbeEIVgT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 May 2018 17:36:19 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/3] net: Dynamically allocate struct station_info
+In-Reply-To: <1525901625.6910.33.camel@sipsolutions.net>
+References: <152586802501.18089.2502272945272741154.stgit@alrua-kau> <152586802515.18089.12700714478750075562.stgit@alrua-kau> <1525901625.6910.33.camel@sipsolutions.net>
+Date: Wed, 09 May 2018 23:36:27 +0200
+Message-ID: <87vabwy0is.fsf@toke.dk> (sfid-20180509_233623_305374_9793C7C8)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180518154847.GB2668@localhost>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 18, 2018 at 05:48:47PM +0200, Johan Hovold wrote:
-> On Fri, May 18, 2018 at 12:38:11PM +0200, Greg Kroah-Hartman wrote:
-> > It's amazing that this driver ever worked, but now that x86 doesn't
-> > allow USB data to be sent off of the stack, it really does not work at
-> > all.  Fix this up by properly allocating the data for the small
-> > "commands" that get sent to the device.
-> > 
-> > The USB stack will free the buffer when the data has been transmitted,
-> > that is why there is no kfree() to mirror the call to kmalloc().
-> 
-> It looks like you're now leaking all but the final transfer buffer that
-> is allocated for outgoing commands, as the URBs themselves are not freed
-> until disconnect() (and that's when core would free the buffers along
-> with the URBs if URB_FREE_BUFFER is set).
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Ugh, you are right.  The urb handling in this driver is crazy...
+>> WARN_ON is used where the function has no way to signal errors to the
+>> caller.
+>
+> There isn't really much point in that - failing allocations are already
+> *very* noisy. Please respin with that removed (and then I guess you can
+> fix the Fixes: too)
 
-Let me go redo this whole thing, give me a few days...
+OK, will do.
 
-thanks for the review, much appreciated.
+> You didn't actually do that in this patch though :-)
 
-Carlos, it would be good to know if your testing showed that the patch
-at least enables the device to work for now.  It will leak memory like
-crazy, so I don't recomment relying on the driver, but it should be good
-enough to see if my thinking as to why the driver was not working is
-correct or not.
+Well, I may have copy-pasted that from the commit message of the
+previous patch ;)
 
-greg k-h
+> It's bool so you don't need the !!(...) :-)
+
+But what if I want it to be extra super duper bool? ;)
+
+-Toke
