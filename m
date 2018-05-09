@@ -1,88 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:1383 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751074AbeEBHO6 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:41182 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934401AbeEIJAX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 May 2018 03:14:58 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 01/21] staging: wilc1000: remove inner block in wilc_netdev_init()
-Date: Wed, 2 May 2018 12:43:27 +0530
-Message-ID: <1525245227-3924-2-git-send-email-ajay.kathat@microchip.com> (sfid-20180502_092057_531745_C27E13B9)
-In-Reply-To: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
-References: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 9 May 2018 05:00:23 -0400
+Message-ID: <1525856418.6910.6.camel@sipsolutions.net> (sfid-20180509_110028_911459_65D5733E)
+Subject: Re: [mac80211-next:master 12/14]
+ drivers/net//wireless/ath/wil6210/debugfs.c:1245:1: warning: the frame size
+ of 1600 bytes is larger than 1024 bytes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: kbuild test robot <lkp@intel.com>,
+        Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        kbuild-all@01.org, linux-wireless@vger.kernel.org,
+        Maya Erez <merez@codeaurora.org>
+Date: Wed, 09 May 2018 11:00:18 +0200
+In-Reply-To: <87tvrhw6kj.fsf@kamboji.qca.qualcomm.com>
+References: <201805090154.h4Cokbx2%fengguang.wu@intel.com>
+         <87efil2p2o.fsf@purkki.adurom.net>
+         <1525855900.6910.5.camel@sipsolutions.net>
+         <87tvrhw6kj.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to remove unnecessary inner block ( {/**/} ) in
-wilc_netdev_init().
+On Wed, 2018-05-09 at 11:56 +0300, Kalle Valo wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> 
+> > On Wed, 2018-05-09 at 11:47 +0300, Kalle Valo wrote:
+> > > 
+> > > I guess these warnings come because Toke's patch increased size of
+> > > struct cfg80211_tid_stats (which is included in struct station_info) and
+> > > both wil6210 and qtnfmac allocate a struct station_info from stack? 
+> > 
+> > Yes.
+> > 
+> > > Can
+> > > someone send a fix for the drivers?
+> > 
+> > I guess Toke/I should do that through my tree.
+> 
+> IMHO the fix could go through my tree as well, less risk of conflicts in
+> drivers. AFAICS the fix (allocating station_info dynamically?) would not
+> depend on Toke's patch and could be applied separately.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 34 ++++++++++++++++------------------
- 1 file changed, 16 insertions(+), 18 deletions(-)
+That's true, if you prefer that it's fine with me.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 35e30c5..491baeb 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1141,6 +1141,8 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 	register_inetaddr_notifier(&g_dev_notifier);
- 
- 	for (i = 0; i < NUM_CONCURRENT_IFC; i++) {
-+		struct wireless_dev *wdev;
-+
- 		ndev = alloc_etherdev(sizeof(struct wilc_vif));
- 		if (!ndev)
- 			return -ENOMEM;
-@@ -1163,28 +1165,24 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 
- 		ndev->netdev_ops = &wilc_netdev_ops;
- 
--		{
--			struct wireless_dev *wdev;
--
--			wdev = wilc_create_wiphy(ndev, dev);
-+		wdev = wilc_create_wiphy(ndev, dev);
- 
--			if (dev)
--				SET_NETDEV_DEV(ndev, dev);
-+		if (dev)
-+			SET_NETDEV_DEV(ndev, dev);
- 
--			if (!wdev) {
--				netdev_err(ndev, "Can't register WILC Wiphy\n");
--				return -1;
--			}
--
--			vif->ndev->ieee80211_ptr = wdev;
--			vif->ndev->ml_priv = vif;
--			wdev->netdev = vif->ndev;
--			vif->netstats.rx_packets = 0;
--			vif->netstats.tx_packets = 0;
--			vif->netstats.rx_bytes = 0;
--			vif->netstats.tx_bytes = 0;
-+		if (!wdev) {
-+			netdev_err(ndev, "Can't register WILC Wiphy\n");
-+			return -1;
- 		}
- 
-+		vif->ndev->ieee80211_ptr = wdev;
-+		vif->ndev->ml_priv = vif;
-+		wdev->netdev = vif->ndev;
-+		vif->netstats.rx_packets = 0;
-+		vif->netstats.tx_packets = 0;
-+		vif->netstats.rx_bytes = 0;
-+		vif->netstats.tx_bytes = 0;
-+
- 		ret = register_netdev(ndev);
- 		if (ret)
- 			return ret;
--- 
-2.7.4
+johannes
