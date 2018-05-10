@@ -1,142 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41056 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933328AbeEHSNE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 May 2018 14:13:04 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, keescook@chromium.org,
-        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
-        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
-        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
-        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
-        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
-        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        cantabile.desu@gmail.com, ast@fb.com, hare@suse.com,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl,
-        davem@davemloft.net, arve@android.com, tkjos@android.com,
-        corbet@lwn.net, mchehab+samsung@kernel.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, "Luis R . Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v6 08/13] firmware: add firmware_request_nowarn() - load firmware without warnings
-Date: Tue,  8 May 2018 11:12:42 -0700
-Message-Id: <20180508181247.19431-9-mcgrof@kernel.org> (sfid-20180508_201523_449198_35AF69CC)
-In-Reply-To: <20180508181247.19431-1-mcgrof@kernel.org>
-References: <20180508181247.19431-1-mcgrof@kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:47694 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756118AbeEJCBK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 May 2018 22:01:10 -0400
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w4A1xDL5020793
+        for <linux-wireless@vger.kernel.org>; Wed, 9 May 2018 22:01:10 -0400
+Received: from e06smtp14.uk.ibm.com (e06smtp14.uk.ibm.com [195.75.94.110])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2hvc3q1ufm-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-wireless@vger.kernel.org>; Wed, 09 May 2018 22:01:10 -0400
+Received: from localhost
+        by e06smtp14.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-wireless@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
+        Thu, 10 May 2018 03:01:07 +0100
+Subject: Re: [PATCH 3/6] firmware: differentiate between signed
+ regulatory.db and other firmware
+From: Mimi Zohar <zohar@linux.vnet.ibm.com>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Matthew Garrett <mjg59@srcf.ucam.org>,
+        Peter Jones <pjones@redhat.com>,
+        "AKASHI, Takahiro" <takahiro.akashi@linaro.org>,
+        David Howells <dhowells@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Seth Forshee <seth.forshee@canonical.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        linux-integrity@vger.kernel.org,
+        Hans de Goede <hdegoede@redhat.com>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        linux-security-module@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Andres Rodriguez <andresx7@gmail.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        Casey Schaufler <casey@schaufler-ca.com>
+Date: Wed, 09 May 2018 22:00:58 -0400
+In-Reply-To: <20180509234814.GY27853@wotan.suse.de>
+References: <1525182503-13849-1-git-send-email-zohar@linux.vnet.ibm.com>
+         <1525182503-13849-4-git-send-email-zohar@linux.vnet.ibm.com>
+         <20180504000743.GR27853@wotan.suse.de>
+         <1525393466.3539.133.camel@linux.vnet.ibm.com>
+         <20180508173404.GG27853@wotan.suse.de>
+         <1525865428.3551.175.camel@linux.vnet.ibm.com>
+         <20180509191508.GR27853@wotan.suse.de>
+         <1525895838.3551.247.camel@linux.vnet.ibm.com>
+         <20180509212212.GX27853@wotan.suse.de>
+         <1525903617.3551.281.camel@linux.vnet.ibm.com>
+         <20180509234814.GY27853@wotan.suse.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Message-Id: <1525917658.3551.322.camel@linux.vnet.ibm.com> (sfid-20180510_040127_733320_502E6441)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andres Rodriguez <andresx7@gmail.com>
+On Wed, 2018-05-09 at 23:48 +0000, Luis R. Rodriguez wrote:
+> On Wed, May 09, 2018 at 06:06:57PM -0400, Mimi Zohar wrote:
+> > On Wed, 2018-05-09 at 21:22 +0000, Luis R. Rodriguez wrote:
+> > > 
+> > > OK, its still not clear to what it will do. If it does not touch the firmware
+> > > loader code, and it just sets and configures IMA to do file signature checking
+> > > on its own, then yes I think both mechanisms would be doing the similar work.
+> > > 
+> > > Wouldn't IMA do file signature checks then for all files? Or it would just
+> > > enable this for whatever files userspace wishes to cover?
+> > 
+> > Enabling CONFIG_IMA_APPRAISE_FIRMWARE would enforce firmware
+> > signatures on all directly loaded firmware and fail any method of
+> > loading firmware that the signature couldn't be verified.
+> 
+> Ah, so a generic firmware signing mechanism via IMA. Sounds very sensible to me.
+> Specially in light of the fact that its what we recommend folks to consider
+> if they need to address firmware signing for devices which do not have the
+> ability to do hardware firmware signing verification on their own.
+> 
+> > > One of the things with READING_FIRMWARE_REGULATORY_DB is to also use and trust
+> > > the wireless-regdgb maintainer's key for this file, could IMA be configured to
+> > > do that?
+> > 
+> > IMA has its own trusted keyring.  So either the maintainer's key would
+> > need to be added to the IMA keyring,
+> 
+> I see so we'd need this documented somehow.
+> 
+> > or IMA-appraisal would need to use the regdb keyring.
+> 
+> Can you describe this a bit more, for those not too familiar with IMA, in terms
+> of what would be involved in the kernel? Or is this all userspace configuration
+> stuff?
 
-Currently the firmware loader only exposes one silent path for querying
-optional firmware, and that is firmware_request_direct(). This function
-also disables the sysfs fallback mechanism, which might not always be the
-desired behaviour [0].
+I think it's a bit premature to be discussing how IMA could add the
+builtin regulatory key to its keyring or use the regdb keyring, as
+IMA-appraisal doesn't (yet) support detached signatures.
 
-This patch introduces a variations of request_firmware() that enable the
-caller to disable the undesired warning messages but enables the sysfs
-fallback mechanism. This is equivalent to adding FW_OPT_NO_WARN to the
-old behaviour.
+The other option would be to include the regulatory.db signature in
+the package.  For rpm, the file signature is included in the RPM
+header.  Multiple attempts have been made to have Debian packages
+include file signatures.  This is the most recent attempt - https://li
+sts.debian.org/debian-dpkg/2018/05/msg00005.html
 
-[0]: https://git.kernel.org/linus/c0cc00f250e1
+> > > > Yes, writing regdb as a micro/mini LSM sounds reasonable.  The LSM
+> > > > would differentiate between other firmware and the regulatory.db based
+> > > > on the firmware's pathname.
+> > > 
+> > > If that is the only way then it would be silly to do the mini LSM as all
+> > > calls would have to have the check. A special LSM hook for just the
+> > > regulatory db also doesn't make much sense.
+> > 
+> > All calls to request_firmware() are already going through this LSM
+> > hook.  I should have said, it would be based on both READING_FIRMWARE
+> > and the firmware's pathname.
+> 
+> Yes, but it would still be a strcmp() computation added for all
+> READING_FIRMWARE. In that sense, the current arrangement is only open coding the
+> signature verification for the regulatory.db file.  One way to avoid this would
+> be to add an LSM specific to the regulatory db
 
-Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
-Acked-by: Luis R. Rodriguez <mcgrof@kernel.org>
-[mcgrof: used the old API calls as the full rename is not done yet, and
- add the caller for when FW_LOADER is disabled, enhance documentation ]
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- .../driver-api/firmware/request_firmware.rst  |  5 ++++
- drivers/base/firmware_loader/main.c           | 27 +++++++++++++++++++
- include/linux/firmware.h                      | 10 +++++++
- 3 files changed, 42 insertions(+)
+Casey already commented on this suggestion.
 
-diff --git a/Documentation/driver-api/firmware/request_firmware.rst b/Documentation/driver-api/firmware/request_firmware.rst
-index d5ec95a7195b..f62bdcbfed5b 100644
---- a/Documentation/driver-api/firmware/request_firmware.rst
-+++ b/Documentation/driver-api/firmware/request_firmware.rst
-@@ -20,6 +20,11 @@ request_firmware
- .. kernel-doc:: drivers/base/firmware_loader/main.c
-    :functions: request_firmware
- 
-+firmware_request_nowarn
-+-----------------------
-+.. kernel-doc:: drivers/base/firmware_loader/main.c
-+   :functions: firmware_request_nowarn
-+
- request_firmware_direct
- -----------------------
- .. kernel-doc:: drivers/base/firmware_loader/main.c
-diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
-index abdc4e4d55f1..2be79ee773c0 100644
---- a/drivers/base/firmware_loader/main.c
-+++ b/drivers/base/firmware_loader/main.c
-@@ -631,6 +631,33 @@ request_firmware(const struct firmware **firmware_p, const char *name,
- }
- EXPORT_SYMBOL(request_firmware);
- 
-+/**
-+ * firmware_request_nowarn() - request for an optional fw module
-+ * @firmware: pointer to firmware image
-+ * @name: name of firmware file
-+ * @device: device for which firmware is being loaded
-+ *
-+ * This function is similar in behaviour to request_firmware(), except
-+ * it doesn't produce warning messages when the file is not found.
-+ * The sysfs fallback mechanism is enabled if direct filesystem lookup fails,
-+ * however, however failures to find the firmware file with it are still
-+ * supressed. It is therefore up to the driver to check for the return value
-+ * of this call and to decide when to inform the users of errors.
-+ **/
-+int firmware_request_nowarn(const struct firmware **firmware, const char *name,
-+			    struct device *device)
-+{
-+	int ret;
-+
-+	/* Need to pin this module until return */
-+	__module_get(THIS_MODULE);
-+	ret = _request_firmware(firmware, name, device, NULL, 0,
-+				FW_OPT_UEVENT | FW_OPT_NO_WARN);
-+	module_put(THIS_MODULE);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(firmware_request_nowarn);
-+
- /**
-  * request_firmware_direct() - load firmware directly without usermode helper
-  * @firmware_p: pointer to firmware image
-diff --git a/include/linux/firmware.h b/include/linux/firmware.h
-index 41050417cafb..2dd566c91d44 100644
---- a/include/linux/firmware.h
-+++ b/include/linux/firmware.h
-@@ -42,6 +42,8 @@ struct builtin_fw {
- #if defined(CONFIG_FW_LOADER) || (defined(CONFIG_FW_LOADER_MODULE) && defined(MODULE))
- int request_firmware(const struct firmware **fw, const char *name,
- 		     struct device *device);
-+int firmware_request_nowarn(const struct firmware **fw, const char *name,
-+			    struct device *device);
- int request_firmware_nowait(
- 	struct module *module, bool uevent,
- 	const char *name, struct device *device, gfp_t gfp, void *context,
-@@ -59,6 +61,14 @@ static inline int request_firmware(const struct firmware **fw,
- {
- 	return -EINVAL;
- }
-+
-+static inline int firmware_request_nowarn(const struct firmware **fw,
-+					  const char *name,
-+					  struct device *device)
-+{
-+	return -EINVAL;
-+}
-+
- static inline int request_firmware_nowait(
- 	struct module *module, bool uevent,
- 	const char *name, struct device *device, gfp_t gfp, void *context,
--- 
-2.17.0
+Mimi
+
+> and have the
+> security_check_regulatory_db() do what it needs per LSM, but that would mean
+> setting a precedent for open possibly open coded future firmware verification
+> call. Its not too crazy to consider if an end goal may be avoid further open
+> coded firmware signature verification hacks.
+> 
+> > > > Making regdb an LSM would have the same issues as currently - deciding
+> > > > if regdb, IMA-appraisal, or both verify the regdb's signature.
+> > > 
+> > > Its unclear to me why they can't co-exist yet and not have to touch
+> > > the firmware_loader code at all.
+> > 
+> > With the changes discussed above, they will co-exist.  Other than the
+> > Kconfig changes, I don't think it will touch the firmware_loader code.
+> 
+> Great.
+> 
+>   Luis
+> 
