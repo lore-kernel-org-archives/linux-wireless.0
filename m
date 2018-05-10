@@ -1,38 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36642 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750831AbeE2Hj5 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 May 2018 03:39:57 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: Revert "rt2800: use TXOP_BACKOFF for probe frames"
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1527506706-6488-1-git-send-email-sgruszka@redhat.com>
-References: <1527506706-6488-1-git-send-email-sgruszka@redhat.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <20180529073956.F103160591@smtp.codeaurora.org> (sfid-20180529_094001_043021_B170002D)
-Date: Tue, 29 May 2018 07:39:56 +0000 (UTC)
+Received: from mail.kernel.org ([198.145.29.99]:35896 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752318AbeEJUJK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 May 2018 16:09:10 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, keescook@chromium.org,
+        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
+        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
+        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
+        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
+        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
+        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        jewalt@lgsinnovations.com, oneukum@suse.com,
+        cantabile.desu@gmail.com, khc@pm.waw.pl, arve@android.com,
+        tkjos@android.com, corbet@lwn.net, mchehab+samsung@kernel.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        "Luis R . Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v7 11/14] ath10k: re-enable the firmware fallback mechanism for testmode
+Date: Thu, 10 May 2018 13:08:47 -0700
+Message-Id: <20180510200850.5958-12-mcgrof@kernel.org> (sfid-20180510_221032_337053_9BE2F398)
+In-Reply-To: <20180510200850.5958-1-mcgrof@kernel.org>
+References: <20180510200850.5958-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+From: Andres Rodriguez <andresx7@gmail.com>
 
-> This reverts commit fb47ada8dc3c30c8e7b415da155742b49536c61e.
-> 
-> In some situations when we set TXOP_BACKOFF, the probe frame is
-> not sent at all. What it worse then sending probe frame as part
-> of AMPDU and can degrade 11n performance to 11g rates.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+The ath10k testmode uses request_firmware_direct() in order to avoid
+producing firmware load warnings. Disabling the fallback mechanism was a
+side effect of disabling warnings.
 
-Patch applied to wireless-drivers.git, thanks.
+We now have a new API that allows us to avoid warnings while keeping the
+fallback mechanism enabled. So use that instead.
 
-52a192362932 Revert "rt2800: use TXOP_BACKOFF for probe frames"
+Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
+Reviewed-by: Kees Cook <keescook@chromium.org>
+Acked-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ drivers/net/wireless/ath/ath10k/testmode.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/testmode.c b/drivers/net/wireless/ath/ath10k/testmode.c
+index 568810b41657..c24ee616833c 100644
+--- a/drivers/net/wireless/ath/ath10k/testmode.c
++++ b/drivers/net/wireless/ath/ath10k/testmode.c
+@@ -157,7 +157,7 @@ static int ath10k_tm_fetch_utf_firmware_api_1(struct ath10k *ar,
+ 		 ar->hw_params.fw.dir, ATH10K_FW_UTF_FILE);
+ 
+ 	/* load utf firmware image */
+-	ret = request_firmware_direct(&fw_file->firmware, filename, ar->dev);
++	ret = firmware_request_nowarn(&fw_file->firmware, filename, ar->dev);
+ 	ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode fw request '%s': %d\n",
+ 		   filename, ret);
+ 
 -- 
-https://patchwork.kernel.org/patch/10431861/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.17.0
