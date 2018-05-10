@@ -1,31 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:38350 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751105AbeERIN3 (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:43540 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934948AbeEJLQA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 04:13:29 -0400
-Message-ID: <1526631206.3805.1.camel@sipsolutions.net> (sfid-20180518_101333_544617_1BD90F09)
-Subject: Re: [PATCH] cfg80211: Fix support for flushing old scan results
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tim Kourt <tim.a.kourt@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 18 May 2018 10:13:26 +0200
-In-Reply-To: <20180511164835.40161-1-tim.a.kourt@linux.intel.com> (sfid-20180511_184957_723913_31CD95FE)
-References: <20180511164835.40161-1-tim.a.kourt@linux.intel.com>
-         (sfid-20180511_184957_723913_31CD95FE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 10 May 2018 07:16:00 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        =?UTF-8?q?Michael=20B=C3=BCsch?= <m@bues.ch>,
+        Larry Finger <larry.finger@lwfinger.net>,
+        Matt Redfearn <matt.redfearn@mips.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+        LKML <linux-kernel@vger.kernel.org>,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH 4.17 2/2] ssb: make SSB_PCICORE_HOSTMODE depend on SSB = y
+Date: Thu, 10 May 2018 13:14:01 +0200
+Message-Id: <20180510111401.1161-2-zajec5@gmail.com> (sfid-20180510_131619_055462_2B733E35)
+In-Reply-To: <20180510111401.1161-1-zajec5@gmail.com>
+References: <20180510111401.1161-1-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2018-05-11 at 09:48 -0700, Tim Kourt wrote:
-> __cfg80211_bss_expire function was incorrectly used to flush the BSS
-> entries from the previous scan results, causing NL80211_SCAN_FLAG_FLUSH
-> flag to have no effect.
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Hmm. I guess I'm not convinced - what's the bug?
+SSB_PCICORE_HOSTMODE protects MIPS specific code that calls not exported
+symbols pcibios_enable_device and register_pci_controller. This code is
+supposed to be compiled only with ssb builtin.
 
-We flush anything that's older than our start, so that should work just
-fine?
+This fixes:
+ERROR: "pcibios_enable_device" [drivers/ssb/ssb.ko] undefined!
+ERROR: "register_pci_controller" [drivers/ssb/ssb.ko] undefined!
+make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
 
-johannes
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ drivers/ssb/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
+index b3f5cae98ea6..c574dd210500 100644
+--- a/drivers/ssb/Kconfig
++++ b/drivers/ssb/Kconfig
+@@ -131,7 +131,7 @@ config SSB_DRIVER_PCICORE
+ 
+ config SSB_PCICORE_HOSTMODE
+ 	bool "Hostmode support for SSB PCI core"
+-	depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS
++	depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS && SSB = y
+ 	help
+ 	  PCIcore hostmode operation (external PCI bus).
+ 
+-- 
+2.13.6
