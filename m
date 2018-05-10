@@ -1,70 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:39766 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751140AbeECSjM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 May 2018 14:39:12 -0400
-Received: by mail-pf0-f194.google.com with SMTP id a22so1309267pfn.6
-        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2018 11:39:11 -0700 (PDT)
-From: Amit Pundir <amit.pundir@linaro.org>
-To: lkml <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Cc: Suren Baghdasaryan <surenb@google.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Christophe Ricard <christophe.ricard@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        John Stultz <john.stultz@linaro.org>,
-        Dmitry Shmidt <dimitrysh@google.com>,
-        Todd Kjos <tkjos@google.com>,
-        Android Kernel Team <kernel-team@android.com>,
-        Stable <stable@vger.kernel.org>
-Subject: [PATCH v3 3/4] NFC: fdp: Fix possible buffer overflow in WCS4000 NFC driver
-Date: Fri,  4 May 2018 00:08:55 +0530
-Message-Id: <1525372736-25094-3-git-send-email-amit.pundir@linaro.org> (sfid-20180503_203953_774659_F5DFBA67)
-In-Reply-To: <1525372736-25094-1-git-send-email-amit.pundir@linaro.org>
-References: <1525372736-25094-1-git-send-email-amit.pundir@linaro.org>
+Received: from mail.toke.dk ([52.28.52.200]:47923 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934380AbeEJNCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 May 2018 09:02:20 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RESEND PATCH] cfg80211: dynamically allocate per-tid stats for station info
+In-Reply-To: <5AF431F4.9060408@broadcom.com>
+References: <5AF430B2.2060903@broadcom.com> <5AF431F4.9060408@broadcom.com>
+Date: Thu, 10 May 2018 15:02:14 +0200
+Message-ID: <87a7t7y889.fsf@toke.dk> (sfid-20180510_150224_789102_AF4E542E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Suren Baghdasaryan <surenb@google.com>
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-Possible buffer overflow when reading next_read_size bytes into
-tmp buffer after next_read_size was extracted from a previous packet.
+> From: Arend van Spriel <aspriel@gmail.com>
+>
+> With the addition of TXQ stats in the per-tid statistics the struct
+> station_info grew significantly. This resulted in stack limit warnings
+> like below:
+>
+>    CC [M]  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.o
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:
+> 	In function =E2=80=98brcmf_notify_connect_status_ap=E2=80=99:
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:5530:1:
+> 	error: the frame size of 1592 bytes is larger than 1024 bytes
+>
+> This patch adds an allocation function that those who want to provide
+> per-tid stats should use to allocate the tid array, ie.
+> struct station_info::pertid.
+>
+> Cc: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
+> Fixes: 52539ca89f36 ("cfg80211: Expose TXQ stats and parameters to
+> userspace")
+> Signed-off-by: Arend van Spriel <aspriel@gmail.com>
+> ---
+> + linux-wireless list
+>
+> Johannes, Toke,
+>
+> Here an alternative approach. Currently the only cfg80211-based driver
+> providing per-tid stats is mac80211. This patch only changes mac80211
+> and the other driver can keep using stack allocation. Even mac80211 could
+> if wanted, but I left that part as is.
 
-cc: Stable <stable@vger.kernel.org>
-Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
-v3:
-Reset next_read_size to a more readable macro FDP_NCI_I2C_MIN_PAYLOAD
-instead of 5.
+Hmm, yeah, that would work too. Though I worry that mixing dynamically
+and statically allocated fields is going to result in errors further
+down the road? I guess it also depends on whether struct station_info is
+likely to grow more for other reasons, in which case on-stack allocation
+needs to be changed anyway.
 
-v2:
-Remove redundant __func__ from dev_dgb().
+I'm fine with either approach; I'm happy to let it be up to our friendly
+maintainers to decide which approach they prefer :)
 
- drivers/nfc/fdp/i2c.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/drivers/nfc/fdp/i2c.c b/drivers/nfc/fdp/i2c.c
-index c4da50e07bbc..2c5ed2224c5e 100644
---- a/drivers/nfc/fdp/i2c.c
-+++ b/drivers/nfc/fdp/i2c.c
-@@ -176,6 +176,15 @@ static int fdp_nci_i2c_read(struct fdp_i2c_phy *phy, struct sk_buff **skb)
- 		/* Packet that contains a length */
- 		if (tmp[0] == 0 && tmp[1] == 0) {
- 			phy->next_read_size = (tmp[2] << 8) + tmp[3] + 3;
-+			/*
-+			 * Ensure next_read_size does not exceed sizeof(tmp)
-+			 * for reading that many bytes during next iteration
-+			 */
-+			if (phy->next_read_size > FDP_NCI_I2C_MAX_PAYLOAD) {
-+				dev_dbg(&client->dev, "corrupted packet\n");
-+				phy->next_read_size = FDP_NCI_I2C_MIN_PAYLOAD;
-+				goto flush;
-+			}
- 		} else {
- 			phy->next_read_size = FDP_NCI_I2C_MIN_PAYLOAD;
- 
--- 
-2.7.4
+-Toke
