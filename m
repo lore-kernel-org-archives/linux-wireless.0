@@ -1,114 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:20988 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934412AbeEXAHl (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:39914 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756729AbeEJKon (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 May 2018 20:07:41 -0400
-From: Adham Abozaeid <adham.abozaeid@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        Ganesh Krishna <Ganesh.Krishna@microchip.com>,
-        Robert Jensen Tebbs <Robert.Jensen-Tebbs@microchip.com>,
-        Aditya Shankar <Aditya.Shankar@microchip.com>,
-        Claudiu Beznea <Claudiu.Beznea@microchip.com>,
-        Ajay Kathat <Ajay.Kathat@microchip.com>,
-        Adham Abozaeid <adham.abozaeid@microchip.com>
-Subject: [PATCH] staging: wilc1000: Avoid overriding rates_no while parsing ies element.
-Date: Wed, 23 May 2018 17:02:14 -0700
-Message-ID: <1527120134-11058-1-git-send-email-adham.abozaeid@microchip.com> (sfid-20180524_020805_326311_382264A2)
+        Thu, 10 May 2018 06:44:43 -0400
+Received: by mail-wm0-f68.google.com with SMTP id f8-v6so3527575wmc.4
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2018 03:44:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180509164220.22653-1-Larry.Finger@lwfinger.net>
+References: <20180509164220.22653-1-Larry.Finger@lwfinger.net>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Thu, 10 May 2018 12:44:42 +0200
+Message-ID: <CACna6rwUiJbMnFeAn7DvrpKvMsqsBMuctGNdUW199kGhcY2+gQ@mail.gmail.com> (sfid-20180510_124447_675073_F6334A61)
+Subject: Re: [PATCH] ssb: Fix regression caused by disabling PCI cores on
+ non-MIPS architecture
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit d4b4aaba515a ("staging: wilc1000: fix line over 80 characters in
-host_int_parse_join_bss_param()") introduced a bug by not keeping the
-rates_no value while parsing ies elements.
-It also increments auth_total_cnt as a pointer instead of its reference.
+On 9 May 2018 at 18:42, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Some MPIS-based SoCs use chips driven by b43 for wireless capability.
+> When ssb is configured as a module, build errors happen on these
+> platforms as described in the commit 882164a4a928 ("ssb: Prevent build
+> of PCI host features in module"). Unfortunately that change leads to
+> the removal of code needed for correct operation on platforms that use
+> PCI cores on the chip bus. The fix allows ssb to be build as a module
+> for all architectures other than MIPS. This approach is ad-hoc, but it
+> is the same as done in commit a9e6d44ddecc ("ssb: Do not disable PCI
+> host on non-Mips").
+>
+> This problem was reported and discussed in
+> https://bugzilla.redhat.com/show_bug.cgi?id=3D1572349.
+>
+> Fixes: commit 882164a4a928 ("ssb: Prevent build of PCI host features in m=
+odule")
+> Tested-by: Matt Redfearn <matt.redfearn@mips.com>
+> Tested-by: Bruno Wolff III <bruno@wolff.to>
+> Cc: Michael B=C3=BCsch <m@bues.ch>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>
+> Kalle,
+>
+> This patch fixes the regression in 4.17 that was discussed on the
+> wireless mailing list. I'm not really happy about the ad-hoc rejection
+> of ssb as a module only on MIPS; however, that seems to be a unique
+> implementation of this hardware.
+>
+> Larry
+>
+> Michael,
+>
+> Although I think your version of the patch is superior, this is the one t=
+hat
+> Matt tested, thus I'm submitting this version.
+>
+> Larry
+>
+> ---
+>  drivers/ssb/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
+> index 9371651d8017..3743533c8057 100644
+> --- a/drivers/ssb/Kconfig
+> +++ b/drivers/ssb/Kconfig
+> @@ -117,7 +117,7 @@ config SSB_SERIAL
+>
+>  config SSB_DRIVER_PCICORE_POSSIBLE
+>         bool
+> -       depends on SSB_PCIHOST && SSB =3D y
+> +       depends on SSB_PCIHOST && (SSB =3D y || !MIPS)
+>         default y
+>
+>  config SSB_DRIVER_PCICORE
 
-This commit fixes the bug by passing reference to rates_no to
-host_int_parse_join_bss_param() and by incrementing reference of
-auth_total_cnt
+I don't like hacking SSB_DRIVER_PCICORE_POSSIBLE while the original
+problem seems to be related to the SSB_PCICORE_HOSTMODE.
 
-Fixes: d4b4aaba515a (staging: wilc1000: fix line over 80 characters in host_int_parse_join_bss_param())
-Signed-off-by: Adham Abozaeid <adham.abozaeid@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
+We should rather revert breaking commit & fix original problem properly.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index a2f82c8..bf7dd18d 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3813,9 +3813,9 @@ int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
- 
- static void host_int_fill_join_bss_param(struct join_bss_param *param, u8 *ies,
- 					 u16 *out_index, u8 *pcipher_tc,
--					 u8 *auth_total_cnt, u32 tsf_lo)
-+					 u8 *auth_total_cnt, u32 tsf_lo,
-+					 u8 *rates_no)
- {
--	u8 rates_no = 0;
- 	u8 ext_rates_no;
- 	u16 offset;
- 	u8 pcipher_cnt;
-@@ -3824,23 +3824,23 @@ static void host_int_fill_join_bss_param(struct join_bss_param *param, u8 *ies,
- 	u16 index = *out_index;
- 
- 	if (ies[index] == SUPP_RATES_IE) {
--		rates_no = ies[index + 1];
--		param->supp_rates[0] = rates_no;
-+		*rates_no = ies[index + 1];
-+		param->supp_rates[0] = *rates_no;
- 		index += 2;
- 
--		for (i = 0; i < rates_no; i++)
-+		for (i = 0; i < *rates_no; i++)
- 			param->supp_rates[i + 1] = ies[index + i];
- 
--		index += rates_no;
-+		index += *rates_no;
- 	} else if (ies[index] == EXT_SUPP_RATES_IE) {
- 		ext_rates_no = ies[index + 1];
--		if (ext_rates_no > (MAX_RATES_SUPPORTED - rates_no))
-+		if (ext_rates_no > (MAX_RATES_SUPPORTED - *rates_no))
- 			param->supp_rates[0] = MAX_RATES_SUPPORTED;
- 		else
- 			param->supp_rates[0] += ext_rates_no;
- 		index += 2;
--		for (i = 0; i < (param->supp_rates[0] - rates_no); i++)
--			param->supp_rates[rates_no + i + 1] = ies[index + i];
-+		for (i = 0; i < (param->supp_rates[0] - *rates_no); i++)
-+			param->supp_rates[*rates_no + i + 1] = ies[index + i];
- 
- 		index += ext_rates_no;
- 	} else if (ies[index] == HT_CAPABILITY_IE) {
-@@ -3929,7 +3929,7 @@ static void host_int_fill_join_bss_param(struct join_bss_param *param, u8 *ies,
- 			*policy = ies[rsn_idx + ((j + 1) * 4) - 1];
- 		}
- 
--		auth_total_cnt += auth_cnt;
-+		*auth_total_cnt += auth_cnt;
- 		rsn_idx += offset;
- 
- 		if (ies[index] == RSN_IE) {
-@@ -3950,6 +3950,7 @@ static void *host_int_parse_join_bss_param(struct network_info *info)
- {
- 	struct join_bss_param *param = NULL;
- 	u16 index = 0;
-+	u8 rates_no = 0;
- 	u8 pcipher_total_cnt = 0;
- 	u8 auth_total_cnt = 0;
- 
-@@ -3969,7 +3970,8 @@ static void *host_int_parse_join_bss_param(struct network_info *info)
- 	while (index < info->ies_len)
- 		host_int_fill_join_bss_param(param, info->ies, &index,
- 					     &pcipher_total_cnt,
--					     &auth_total_cnt, info->tsf_lo);
-+					     &auth_total_cnt, info->tsf_lo,
-+					     &rates_no);
- 
- 	return (void *)param;
- }
--- 
-2.7.4
+--=20
+Rafa=C5=82
