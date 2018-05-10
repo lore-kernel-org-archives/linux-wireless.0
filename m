@@ -1,111 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0088.outbound.protection.outlook.com ([104.47.42.88]:23410
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933652AbeE2MAs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 May 2018 08:00:48 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Dmitry Lebed <dlebed@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 9/9] qtnfmac: fix invalid STA state on EAPOL failure
-Date: Tue, 29 May 2018 15:00:05 +0300
-Message-Id: <20180529120005.21498-10-sergey.matyukevich.os@quantenna.com> (sfid-20180529_140101_502153_6C80EBEB)
-In-Reply-To: <20180529120005.21498-1-sergey.matyukevich.os@quantenna.com>
-References: <20180529120005.21498-1-sergey.matyukevich.os@quantenna.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.kernel.org ([198.145.29.99]:36086 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752343AbeEJUJP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 May 2018 16:09:15 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, keescook@chromium.org,
+        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
+        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
+        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
+        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
+        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
+        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        jewalt@lgsinnovations.com, oneukum@suse.com,
+        cantabile.desu@gmail.com, khc@pm.waw.pl, arve@android.com,
+        tkjos@android.com, corbet@lwn.net, mchehab+samsung@kernel.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v7 14/14] Documentation: clarify firmware_class provenance and why we can't rename the module
+Date: Thu, 10 May 2018 13:08:50 -0700
+Message-Id: <20180510200850.5958-15-mcgrof@kernel.org> (sfid-20180510_221038_777104_46BA6EEA)
+In-Reply-To: <20180510200850.5958-1-mcgrof@kernel.org>
+References: <20180510200850.5958-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver switches vif sta_state into QTNF_STA_CONNECTING when cfg80211
-core initiates connect procedure. Further this state is changed either
-to QTNF_STA_CONNECTED or to QTNF_STA_DISCONNECTED by BSS_JOIN and
-BSS_LEAVE events from firmware. However it is possible that no such
-events will be sent by firmware, e.g. if EAPOL timed out.
+Clarify the provenance of the firmware loader firmware_class module name
+and why we cannot rename the module in the future.
 
-In this case vif sta_mode will remain in QTNF_STA_CONNECTING state and
-all subsequent connection attempts will fail with -EBUSY error code.
-Fix this by perfroming STA state transition from QTNF_STA_CONNECTING
-to QTNF_STA_DISCONNECTED in cfg80211 disconnect callback.
-No need to rely upon firmware events in this case.
-
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Reviewed-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Reviewed-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 21 ++++++++++++++-------
- drivers/net/wireless/quantenna/qtnfmac/event.c    |  8 +++-----
- 2 files changed, 17 insertions(+), 12 deletions(-)
+ .../driver-api/firmware/fallback-mechanisms.rst          | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 1fcd94bf7c59..220e2b710208 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -649,30 +649,37 @@ qtnf_disconnect(struct wiphy *wiphy, struct net_device *dev,
- {
- 	struct qtnf_wmac *mac = wiphy_priv(wiphy);
- 	struct qtnf_vif *vif;
--	int ret;
-+	int ret = 0;
+diff --git a/Documentation/driver-api/firmware/fallback-mechanisms.rst b/Documentation/driver-api/firmware/fallback-mechanisms.rst
+index a39323ef7d29..d35fed65eae9 100644
+--- a/Documentation/driver-api/firmware/fallback-mechanisms.rst
++++ b/Documentation/driver-api/firmware/fallback-mechanisms.rst
+@@ -72,9 +72,12 @@ the firmware requested, and establishes it in the device hierarchy by
+ associating the device used to make the request as the device's parent.
+ The sysfs directory's file attributes are defined and controlled through
+ the new device's class (firmware_class) and group (fw_dev_attr_groups).
+-This is actually where the original firmware_class.c file name comes from,
+-as originally the only firmware loading mechanism available was the
+-mechanism we now use as a fallback mechanism.
++This is actually where the original firmware_class module name came from,
++given that originally the only firmware loading mechanism available was the
++mechanism we now use as a fallback mechanism, which registers a struct class
++firmware_class. Because the attributes exposed are part of the module name, the
++module name firmware_class cannot be renamed in the future, to ensure backward
++compatibility with old userspace.
  
- 	vif = qtnf_mac_get_base_vif(mac);
- 	if (!vif) {
- 		pr_err("MAC%u: primary VIF is not configured\n", mac->macid);
--		return -EFAULT;
-+		ret = -EFAULT;
-+		goto out;
- 	}
- 
--	if (vif->wdev.iftype != NL80211_IFTYPE_STATION)
--		return -EOPNOTSUPP;
-+	if (vif->wdev.iftype != NL80211_IFTYPE_STATION) {
-+		ret = -EOPNOTSUPP;
-+		goto out;
-+	}
- 
- 	qtnf_scan_done(mac, true);
- 
- 	if (vif->sta_state == QTNF_STA_DISCONNECTED)
--		return 0;
-+		goto out;
- 
- 	ret = qtnf_cmd_send_disconnect(vif, reason_code);
- 	if (ret) {
- 		pr_err("VIF%u.%u: failed to disconnect\n", mac->macid,
- 		       vif->vifid);
--		return ret;
-+		goto out;
- 	}
- 
--	return 0;
-+out:
-+	if (vif->sta_state == QTNF_STA_CONNECTING)
-+		vif->sta_state = QTNF_STA_DISCONNECTED;
-+
-+	return ret;
- }
- 
- static int
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
-index 16617c44f81b..68da81bec4e9 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -211,11 +211,9 @@ qtnf_event_handle_bss_leave(struct qtnf_vif *vif,
- 		return -EPROTO;
- 	}
- 
--	if (vif->sta_state != QTNF_STA_CONNECTED) {
--		pr_err("VIF%u.%u: BSS_LEAVE event when STA is not connected\n",
--		       vif->mac->macid, vif->vifid);
--		return -EPROTO;
--	}
-+	if (vif->sta_state != QTNF_STA_CONNECTED)
-+		pr_warn("VIF%u.%u: BSS_LEAVE event when STA is not connected\n",
-+			vif->mac->macid, vif->vifid);
- 
- 	pr_debug("VIF%u.%u: disconnected\n", vif->mac->macid, vif->vifid);
- 
+ To load firmware using the sysfs interface we expose a loading indicator,
+ and a file upload firmware into:
 -- 
-2.11.0
+2.17.0
