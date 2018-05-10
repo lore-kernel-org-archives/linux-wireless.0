@@ -1,193 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:20557 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752785AbeEKIPg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 04:15:36 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 30/30] staging: wilc1000: refactor host_int_parse_assoc_resp_info() to remove unused code
-Date: Fri, 11 May 2018 13:43:31 +0530
-Message-ID: <1526026411-11058-31-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_103236_078412_B8EDF6C4)
-In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
-References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.kernel.org ([198.145.29.99]:35182 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752025AbeEJUIy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 May 2018 16:08:54 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, keescook@chromium.org,
+        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
+        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
+        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
+        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
+        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
+        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        jewalt@lgsinnovations.com, oneukum@suse.com,
+        cantabile.desu@gmail.com, khc@pm.waw.pl, arve@android.com,
+        tkjos@android.com, corbet@lwn.net, mchehab+samsung@kernel.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v7 00/14] firmware_loader changes for v4.18
+Date: Thu, 10 May 2018 13:08:36 -0700
+Message-Id: <20180510200850.5958-1-mcgrof@kernel.org> (sfid-20180510_221310_301761_3EB561A9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove 'connect_resp_info' structure as most of its elements are not used.
+Greg,
 
-Modified wilc_parse_assoc_resp_info() to directly parse and fill value
-in connect_info structure variable. Remove use of 'assoc_resp_len' variable.
-get_assoc_resp_cap_info() & get_asoc_id() functions are remove as its
-not used anymore.
+This is what I have queued up for the firmware_loader for v4.18. Below
+is a changelog of the changes, mostly addressing Andre's changes and a few
+other set of cleanups and documentation updates on my part and a few
+others pointed out by others.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 51 +++++------------------------
- drivers/staging/wilc1000/coreconfigurator.h | 10 +-----
- drivers/staging/wilc1000/host_interface.c   | 20 ++---------
- 3 files changed, 11 insertions(+), 70 deletions(-)
+Mimi will still be working on her changes later to add IMA firmware
+signature support, that should not touch the firmware loader code at all,
+and should help provide a generic alternative to the wireless regulatory
+signing work -- for all firmware.
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 9f9ca76..4481602 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -207,16 +207,6 @@ static inline u16 get_cap_info(u8 *data)
- 	return cap_info;
- }
- 
--static inline u16 get_assoc_resp_cap_info(u8 *data)
--{
--	u16 cap_info;
--
--	cap_info  = data[0];
--	cap_info |= (data[1] << 8);
--
--	return cap_info;
--}
--
- static inline u16 get_asoc_status(u8 *data)
- {
- 	u16 asoc_status;
-@@ -225,16 +215,6 @@ static inline u16 get_asoc_status(u8 *data)
- 	return (asoc_status << 8) | data[2];
- }
- 
--static inline u16 get_asoc_id(u8 *data)
--{
--	u16 asoc_id;
--
--	asoc_id  = data[4];
--	asoc_id |= (data[5] << 8);
--
--	return asoc_id;
--}
--
- static u8 *get_tim_elm(u8 *msa, u16 rx_len, u16 tag_param_offset)
- {
- 	u16 index;
-@@ -338,38 +318,23 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
- }
- 
- s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
--			       struct connect_resp_info **ret_connect_resp_info)
-+			       struct connect_info *ret_conn_info)
- {
--	struct connect_resp_info *connect_resp_info = NULL;
--	u16 assoc_resp_len = 0;
- 	u8 *ies = NULL;
- 	u16 ies_len = 0;
- 
--	connect_resp_info = kzalloc(sizeof(*connect_resp_info), GFP_KERNEL);
--	if (!connect_resp_info)
--		return -ENOMEM;
--
--	assoc_resp_len = (u16)buffer_len;
--
--	connect_resp_info->status = get_asoc_status(buffer);
--	if (connect_resp_info->status == SUCCESSFUL_STATUSCODE) {
--		connect_resp_info->capability = get_assoc_resp_cap_info(buffer);
--		connect_resp_info->assoc_id = get_asoc_id(buffer);
--
-+	ret_conn_info->status = get_asoc_status(buffer);
-+	if (ret_conn_info->status == SUCCESSFUL_STATUSCODE) {
- 		ies = &buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
--		ies_len = assoc_resp_len - (CAP_INFO_LEN + STATUS_CODE_LEN +
--					    AID_LEN);
-+		ies_len = buffer_len - (CAP_INFO_LEN + STATUS_CODE_LEN +
-+					AID_LEN);
- 
--		connect_resp_info->ies = kmemdup(ies, ies_len, GFP_KERNEL);
--		if (!connect_resp_info->ies) {
--			kfree(connect_resp_info);
-+		ret_conn_info->resp_ies = kmemdup(ies, ies_len, GFP_KERNEL);
-+		if (!ret_conn_info->resp_ies)
- 			return -ENOMEM;
--		}
- 
--		connect_resp_info->ies_len = ies_len;
-+		ret_conn_info->resp_ies_len = ies_len;
- 	}
- 
--	*ret_connect_resp_info = connect_resp_info;
--
- 	return 0;
- }
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index a58f44e..55b5531 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -71,14 +71,6 @@ struct network_info {
- 	u64 tsf_hi;
- };
- 
--struct connect_resp_info {
--	u16 capability;
--	u16 status;
--	u16 assoc_id;
--	u8 *ies;
--	u16 ies_len;
--};
--
- struct connect_info {
- 	u8 bssid[6];
- 	u8 *req_ies;
-@@ -97,7 +89,7 @@ struct disconnect_info {
- s32 wilc_parse_network_info(u8 *msg_buffer,
- 			    struct network_info **ret_network_info);
- s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
--			       struct connect_resp_info **ret_connect_resp_info);
-+			       struct connect_info *ret_conn_info);
- void wilc_scan_complete_received(struct wilc *wilc, u8 *buffer, u32 length);
- void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32 length);
- void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length);
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 4274efb..a2f82c8 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1297,7 +1297,6 @@ static inline void host_int_free_user_conn_req(struct host_if_drv *hif_drv)
- static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
- 						  u8 mac_status)
- {
--	struct connect_resp_info *connect_resp_info = NULL;
- 	struct connect_info conn_info;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
- 
-@@ -1317,26 +1316,11 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
- 
- 			err = wilc_parse_assoc_resp_info(rcv_assoc_resp,
- 							 assoc_resp_info_len,
--							 &connect_resp_info);
--			if (err) {
-+							 &conn_info);
-+			if (err)
- 				netdev_err(vif->ndev,
- 					   "wilc_parse_assoc_resp_info() returned error %d\n",
- 					   err);
--			} else {
--				conn_info.status = connect_resp_info->status;
--
--				if (conn_info.status == SUCCESSFUL_STATUSCODE &&
--				    connect_resp_info->ies) {
--					conn_info.resp_ies = kmemdup(connect_resp_info->ies,
--								     connect_resp_info->ies_len,
--								     GFP_KERNEL);
--					if (conn_info.resp_ies)
--						conn_info.resp_ies_len = connect_resp_info->ies_len;
--				}
--
--				kfree(connect_resp_info->ies);
--				kfree(connect_resp_info);
--			}
- 		}
- 	}
- 
+Hans's EFI changes are still being worked on.
+
+These changes are available in git form on my linux-next [0] and linux [1]
+trees on kernel.org on the branch name firmware_loader_for-v4.18. Hans,
+feel free to work off of that for your next iteration.
+
+Questions, and specially rants are greatly appreciated.
+
+[0] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux-next.git/log/?h=20180510-firmware_loader_for-v4.18
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git/log/?h=20180510-firmware_loader_for-v4.18
+
+v7:
+
+- Annoted Reviewed-by tags.
+
+- Installed codespell and am now using checkpatch.sh --codespell to check
+each patch for spell check and blunders. Edited all files for
+corrections missed by other reviewers.
+
+- checkpatch complained about using ---help--- when I moved the Kconfig
+file for the firmware loader so I replaced that now with what it
+suggests.
+
+- fixed the other series of typos pickd up by reviewers
+
+v6:
+
+- Added the firmware_request_nowarn() patch again, now that we've decided
+on not to warn even for the fallback case.
+
+v5:
+
+- I took up Andres' patches and cleaned them up a bit further with
+minor details which would have otherwise have taken a few more
+iterations to do.
+
+- Dropped the firmware_request_nowarn() patch since there was some
+inconsistencies over actually not warning on the fallback case
+
+- Added some further firmware loader Kconfig clarifications which have
+come up through recent discussions.
+
+- I dropped my firmware API rename changes for v4.18, so I adjusted
+Andres' patches accordingly.
+
+v4:
+
+- Andres removed the async nowarn API call firmware_request_nowait2()
+  from his series, given we got into a discussion over how to properly
+add a new async API to the firmware loader and there was no real
+consensus. Given I was tired of the bikeshedding I offered for folks
+recommend a solution and for us to just go with it. None solution was
+provided by any.  To not leave Andres hanging during patch review, I
+made a set of recommendations but suggested that the asycn API be
+punted until *after* we get the simple sync nowarn API added. The
+recommendation still stands and my hope is that Andres will follow
+up with it later:
+
+https://lkml.kernel.org/r/20180422202609.GX14440@wotan.suse.de
+
+- Andres dropped the drm/amdgpu/brcmfmac driver changes based on feedback
+and becuase the async nowarn call was dropped in favor of addressing
+this later.
+
+v3:
+
+- Andres fixed typos picked up by Randy Dunlap.
+
+v2:
+
+- Andres added request_firmware_nowait2()
+
+- Based on feedback Andres extended his patches to include use of the new API
+on the drivers amdgpu, ath10k and brcmfmac.
+
+v1:
+
+Andres only posted one patch to add request_firmware_optional() without
+any users
+
+Andres Rodriguez (6):
+  firmware: wrap FW_OPT_* into an enum
+  firmware: use () to terminate kernel-doc function names
+  firmware: rename fw_sysfs_fallback to firmware_fallback_sysfs()
+  firmware: add firmware_request_nowarn() - load firmware without
+    warnings
+  ath10k: use firmware_request_nowarn() to load firmware
+  ath10k: re-enable the firmware fallback mechanism for testmode
+
+Luis R. Rodriguez (8):
+  firmware_loader: document firmware_sysfs_fallback()
+  firmware_loader: enhance Kconfig documentation over FW_LOADER
+  firmware_loader: replace ---help--- with help
+  firmware_loader: move kconfig FW_LOADER entries to its own file
+  firmware_loader: make firmware_fallback_sysfs() print more useful
+  Documentation: fix few typos and clarifications for the firmware
+    loader
+  Documentation: remove stale firmware API reference
+  Documentation: clarify firmware_class provenance and why we can't
+    rename the module
+
+ Documentation/dell_rbu.txt                    |   5 +-
+ .../firmware/fallback-mechanisms.rst          |  14 +-
+ .../driver-api/firmware/firmware_cache.rst    |   4 +-
+ .../driver-api/firmware/request_firmware.rst  |   5 +
+ drivers/base/Kconfig                          |  90 ++--------
+ drivers/base/firmware_loader/Kconfig          | 154 ++++++++++++++++++
+ drivers/base/firmware_loader/fallback.c       |  53 ++++--
+ drivers/base/firmware_loader/fallback.h       |  18 +-
+ drivers/base/firmware_loader/firmware.h       |  37 ++++-
+ drivers/base/firmware_loader/main.c           |  57 +++++--
+ drivers/net/wireless/ath/ath10k/core.c        |   2 +-
+ drivers/net/wireless/ath/ath10k/testmode.c    |   2 +-
+ include/linux/firmware.h                      |  10 ++
+ 13 files changed, 320 insertions(+), 131 deletions(-)
+ create mode 100644 drivers/base/firmware_loader/Kconfig
+
 -- 
-2.7.4
+2.17.0
