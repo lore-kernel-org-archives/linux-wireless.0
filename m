@@ -1,51 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:33478 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752582AbeEOJ6O (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 May 2018 05:58:14 -0400
-Received: by mail-qt0-f196.google.com with SMTP id e8-v6so19979138qth.0
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2018 02:58:14 -0700 (PDT)
-Subject: Re: [PATCH 0/8] brcmfmac: coredump functionality and fixes
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <1526375691-31789-1-git-send-email-arend.vanspriel@broadcom.com>
- <877eo5p8ml.fsf@kamboji.qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AFAAF34.4030906@broadcom.com> (sfid-20180515_115825_985131_CCFFD85F)
-Date: Tue, 15 May 2018 11:58:12 +0200
-MIME-Version: 1.0
-In-Reply-To: <877eo5p8ml.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mail.kernel.org ([198.145.29.99]:35756 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752286AbeEJUJH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 May 2018 16:09:07 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, keescook@chromium.org,
+        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
+        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
+        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
+        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
+        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
+        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        jewalt@lgsinnovations.com, oneukum@suse.com,
+        cantabile.desu@gmail.com, khc@pm.waw.pl, arve@android.com,
+        tkjos@android.com, corbet@lwn.net, mchehab+samsung@kernel.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        "Luis R . Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v7 09/14] firmware: add firmware_request_nowarn() - load firmware without warnings
+Date: Thu, 10 May 2018 13:08:45 -0700
+Message-Id: <20180510200850.5958-10-mcgrof@kernel.org> (sfid-20180510_221045_143194_3FE727E0)
+In-Reply-To: <20180510200850.5958-1-mcgrof@kernel.org>
+References: <20180510200850.5958-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/15/2018 11:32 AM, Kalle Valo wrote:
-> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
->
->> This series is intended for 4.18:
->>
->>   * fix variable initialization found by kbuild bot.
->>   * make ALLFFMAC variable static.
->>   * support user-space initiated coredump.
->>
->> The first two patches in this series apply to the master branch of the
->> wireless-drivers-next repository. The remaining patches related to coredump
->> functionality are dependent upon a commit present since v4.17-rc3:
->>
->>    commit ed4564babeeee4fb19fe4ec0beabe29754e380f9
->>    Author: Arend van Spriel <aspriel@gmail.com>
->>    Date:   Sun Apr 8 23:57:07 2018 +0200
->>
->>       drivers: change struct device_driver::coredump() return type to void
->>
->> Both w-d-next and bt-next (for patch 5/8) do not carry this patch yet.
->
-> So what I'm planning to do is apply patch 1 now to fix the warning, send
-> a pull request to Dave and then fast forward w-d-next so that I can
-> apply rest of the patches.
+From: Andres Rodriguez <andresx7@gmail.com>
 
-Ok. Sounds good.
+Currently the firmware loader only exposes one silent path for querying
+optional firmware, and that is firmware_request_direct(). This function
+also disables the sysfs fallback mechanism, which might not always be the
+desired behaviour [0].
 
-Regards,
-Arend
+This patch introduces a variations of request_firmware() that enable the
+caller to disable the undesired warning messages but enables the sysfs
+fallback mechanism. This is equivalent to adding FW_OPT_NO_WARN to the
+old behaviour.
+
+[0]: https://git.kernel.org/linus/c0cc00f250e1
+
+Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
+Reviewed-by: Kees Cook <keescook@chromium.org>
+Acked-by: Luis R. Rodriguez <mcgrof@kernel.org>
+[mcgrof: used the old API calls as the full rename is not done yet, and
+ add the caller for when FW_LOADER is disabled, enhance documentation ]
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ .../driver-api/firmware/request_firmware.rst  |  5 ++++
+ drivers/base/firmware_loader/main.c           | 27 +++++++++++++++++++
+ include/linux/firmware.h                      | 10 +++++++
+ 3 files changed, 42 insertions(+)
+
+diff --git a/Documentation/driver-api/firmware/request_firmware.rst b/Documentation/driver-api/firmware/request_firmware.rst
+index d5ec95a7195b..f62bdcbfed5b 100644
+--- a/Documentation/driver-api/firmware/request_firmware.rst
++++ b/Documentation/driver-api/firmware/request_firmware.rst
+@@ -20,6 +20,11 @@ request_firmware
+ .. kernel-doc:: drivers/base/firmware_loader/main.c
+    :functions: request_firmware
+ 
++firmware_request_nowarn
++-----------------------
++.. kernel-doc:: drivers/base/firmware_loader/main.c
++   :functions: firmware_request_nowarn
++
+ request_firmware_direct
+ -----------------------
+ .. kernel-doc:: drivers/base/firmware_loader/main.c
+diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
+index abdc4e4d55f1..0943e7065e0e 100644
+--- a/drivers/base/firmware_loader/main.c
++++ b/drivers/base/firmware_loader/main.c
+@@ -631,6 +631,33 @@ request_firmware(const struct firmware **firmware_p, const char *name,
+ }
+ EXPORT_SYMBOL(request_firmware);
+ 
++/**
++ * firmware_request_nowarn() - request for an optional fw module
++ * @firmware: pointer to firmware image
++ * @name: name of firmware file
++ * @device: device for which firmware is being loaded
++ *
++ * This function is similar in behaviour to request_firmware(), except
++ * it doesn't produce warning messages when the file is not found.
++ * The sysfs fallback mechanism is enabled if direct filesystem lookup fails,
++ * however, however failures to find the firmware file with it are still
++ * suppressed. It is therefore up to the driver to check for the return value
++ * of this call and to decide when to inform the users of errors.
++ **/
++int firmware_request_nowarn(const struct firmware **firmware, const char *name,
++			    struct device *device)
++{
++	int ret;
++
++	/* Need to pin this module until return */
++	__module_get(THIS_MODULE);
++	ret = _request_firmware(firmware, name, device, NULL, 0,
++				FW_OPT_UEVENT | FW_OPT_NO_WARN);
++	module_put(THIS_MODULE);
++	return ret;
++}
++EXPORT_SYMBOL_GPL(firmware_request_nowarn);
++
+ /**
+  * request_firmware_direct() - load firmware directly without usermode helper
+  * @firmware_p: pointer to firmware image
+diff --git a/include/linux/firmware.h b/include/linux/firmware.h
+index 41050417cafb..2dd566c91d44 100644
+--- a/include/linux/firmware.h
++++ b/include/linux/firmware.h
+@@ -42,6 +42,8 @@ struct builtin_fw {
+ #if defined(CONFIG_FW_LOADER) || (defined(CONFIG_FW_LOADER_MODULE) && defined(MODULE))
+ int request_firmware(const struct firmware **fw, const char *name,
+ 		     struct device *device);
++int firmware_request_nowarn(const struct firmware **fw, const char *name,
++			    struct device *device);
+ int request_firmware_nowait(
+ 	struct module *module, bool uevent,
+ 	const char *name, struct device *device, gfp_t gfp, void *context,
+@@ -59,6 +61,14 @@ static inline int request_firmware(const struct firmware **fw,
+ {
+ 	return -EINVAL;
+ }
++
++static inline int firmware_request_nowarn(const struct firmware **fw,
++					  const char *name,
++					  struct device *device)
++{
++	return -EINVAL;
++}
++
+ static inline int request_firmware_nowait(
+ 	struct module *module, bool uevent,
+ 	const char *name, struct device *device, gfp_t gfp, void *context,
+-- 
+2.17.0
