@@ -1,45 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:42348 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751114AbeEVKjz (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:23853 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934243AbeEJHrx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 06:39:55 -0400
-Received: by mail-qt0-f195.google.com with SMTP id c2-v6so22714449qtn.9
-        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2018 03:39:55 -0700 (PDT)
-Subject: Re: [PATCH] nl80211: Reject disconnect commands except from
- conn_owner
-To: Andrew Zaborowski <andrew.zaborowski@intel.com>
-References: <20180522004602.19370-1-andrew.zaborowski@intel.com>
- <5B03CC75.7060908@broadcom.com>
- <CAOq732+LheV0qx2yJF3j-b514cqa8hfRQBVVh=Epr1_W4UUnGA@mail.gmail.com>
-Cc: linux-wireless@vger.kernel.org
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5B03F379.5000904@broadcom.com> (sfid-20180522_123959_683696_24C6B6F8)
-Date: Tue, 22 May 2018 12:39:53 +0200
+        Thu, 10 May 2018 03:47:53 -0400
+Date: Thu, 10 May 2018 13:17:45 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
+        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
+        <adham.abozaeid@Microchip.com>
+Subject: Re: [PATCH 15/30] staging: wilc1000: use kmemdup instead of kmalloc
+ in add_network_to_shadow()
+Message-ID: <20180510131745.2e40a16a@ajaysk-VirtualBox> (sfid-20180510_094757_100078_5FFDA284)
+In-Reply-To: <cc24355c-a3d9-cecc-923d-ace7d1aa4998@microchip.com>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+        <1525682614-3824-16-git-send-email-ajay.kathat@microchip.com>
+        <e90398be-e387-1d5e-071f-b0863c249870@microchip.com>
+        <20180510004731.64cd2d32@ajaysk-VirtualBox>
+        <cc24355c-a3d9-cecc-923d-ace7d1aa4998@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOq732+LheV0qx2yJF3j-b514cqa8hfRQBVVh=Epr1_W4UUnGA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/22/2018 12:33 PM, Andrew Zaborowski wrote:
-> On 22 May 2018 at 09:53, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
->> On 5/22/2018 2:46 AM, Andrew Zaborowski wrote:
->>> Reject NL80211_CMD_DISCONNECT, NL80211_CMD_DISASSOCIATE,
->>> NL80211_CMD_DEAUTHENTICATE and NL80211_CMD_ASSOCIATE commands
->>> from clients other than the connection owner set in the connect,
->>> authenticate or associate commands, if it was set.
->>>
->>> The main point of this check is to prevent chaos when two processes
->>> try to use nl80211 at the same time, it's not a security measure.
->>> The same thing should possibly be done for JOIN_IBSS/LEAVE_IBSS and
->>> START_AP/STOP_AP.
->>
->> Isn't this V2? What has changed since last time?
->
-> It's only a resend to include the Signed-off-by that I forgot the first time.
+On Thu, 10 May 2018 08:35:29 +0300
+Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
 
-That could also be it ;-)
+> On 09.05.2018 22:17, Ajay Singh wrote:
+> > On Wed, 9 May 2018 16:42:59 +0300
+> > Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
+> >   
+> >> On 07.05.2018 11:43, Ajay Singh wrote:  
+> >>> Use kmemdup instead of kmalloc & memcpy in
+> >>> add_network_to_shadow().
+> >>>
+> >>> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> >>> ---
+> >>>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
+> >>>  1 file changed, 2 insertions(+), 2 deletions(-)
+> >>>
+> >>> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> >>> b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c index
+> >>> 0ae2065..ca221f1 100644 ---
+> >>> a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c +++
+> >>> b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c @@ -331,8
+> >>> +331,8 @@ static void add_network_to_shadow(struct network_info
+> >>> *nw_info, shadow_nw_info->tsf_hi = nw_info->tsf_hi; if
+> >>> (ap_found != -1) kfree(shadow_nw_info->ies);
+> >>> -	shadow_nw_info->ies = kmalloc(nw_info->ies_len,
+> >>> GFP_KERNEL);
+> >>> -	memcpy(shadow_nw_info->ies, nw_info->ies,
+> >>> nw_info->ies_len);
+> >>> +	shadow_nw_info->ies = kmemdup(nw_info->ies,
+> >>> nw_info->ies_len,
+> >>> +				      GFP_KERNEL);    
+> >>
+> >> Maybe, in case of NULL, you will want to set ies_len = 0 ?  
+> > 
+> > 
+> > I couldn't find code where 'ies_len' is check to validity of data.
+> > Mostly we use NULL check for "ies" pointer for data
+> > validity.So in my opinion setting it to zero would be
+> > irrelevant.  
+> 
+> I'm seeing this in refresh_scan():
+>                 network_info =
+> &last_scanned_shadow[i]; 
+>                 if (!memcmp("DIRECT-", network_info->ssid, 7)
+> && !direct_scan)
+> continue; 
+>                 freq =
+> ieee80211_channel_to_frequency((s32)network_info->ch,
+> NL80211_BAND_2GHZ); channel = ieee80211_get_channel(wiphy,
+> freq); rssi =
+> get_rssi_avg(network_info); bss =
+> cfg80211_inform_bss(wiphy, channel,                              
+>                                           CFG80211_BSS_FTYPE_UNKNOWN,           
+>                                           network_info->bssid,                  
+>                                           network_info->tsf_hi,                 
+>                                           network_info->cap_info,               
+>                                           network_info->beacon_period,          
+>                                           (const u8
+> *)network_info->ies, (size_t)network_info->ies_len,        
+>                                           (s32)rssi *
+> 100, GFP_KERNEL);                          
+> 
+> Looking further into cfg80211_inform_bss():
+> 	-> cfg80211_inform_bss_data()
+> 	-> cfg80211_get_bss_channel()
+> 	-> cfg80211_find_ie()
+> 	-> cfg80211_find_ie_match():  
+>         while (len >= 2 && len >= ies[1] + 2)
+> { if ((ies[0] == eid) &&                                          
+>                     (ies[1] + 2 >= match_offset + match_len)
+> && !memcmp(ies + match_offset, match, match_len))              
+>                         return
+> ies; 
+>                 len -= ies[1] +
+> 2; ies += ies[1] + 2;                                              
+>         }                                                                       
+> 
+> 
 
-Thanks,
-Arend
+Got it. I will also include the code to set ies_len to 0 during 
+memory allocations failure scenario.
+
+
+> > 
+> >   
+> >>  
+> >>>  	shadow_nw_info->time_scan = jiffies;
+> >>>  	shadow_nw_info->time_scan_cached = jiffies;
+> >>>  	shadow_nw_info->found = 1;
+> >>>     
+> > 
+> > 
+> > Regards,
+> > Ajay
+> > 
+> >   
