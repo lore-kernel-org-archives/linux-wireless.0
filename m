@@ -1,63 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:7993 "EHLO mga14.intel.com"
+Received: from bues.ch ([80.190.117.144]:55288 "EHLO bues.ch"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750779AbeEQFYe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 May 2018 01:24:34 -0400
-Message-ID: <4d7158c407973a5be972a690a64c3f69119bd921.camel@intel.com> (sfid-20180517_072448_199709_19888EED)
-Subject: Re: [linux-firmware] Version in WHENCE file
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: sedat.dilek@gmail.com
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 17 May 2018 08:24:31 +0300
-In-Reply-To: <CA+icZUXy5VyJq_L=ipyutvYk6gpsCb9jxHzBa7T3MRhs3XgQKA@mail.gmail.com>
-References: <CA+icZUXrHmOJPKT0gnym9yOs6Erm3wDOZU3sbr_MGB8pYjfuzA@mail.gmail.com>
-         <0f8aaff5ecad8af6d146453d4d3a5d4dd145977b.camel@intel.com>
-         <CA+icZUXy5VyJq_L=ipyutvYk6gpsCb9jxHzBa7T3MRhs3XgQKA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S934002AbeEJLSE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 May 2018 07:18:04 -0400
+Date: Thu, 10 May 2018 13:17:25 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Larry Finger <larry.finger@lwfinger.net>,
+        Matt Redfearn <matt.redfearn@mips.com>,
+        linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+        LKML <linux-kernel@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Subject: Re: [PATCH 4.17 2/2] ssb: make SSB_PCICORE_HOSTMODE depend on SSB =
+ y
+Message-ID: <20180510131725.111079af@wiggum> (sfid-20180510_131818_237981_CDE774D3)
+In-Reply-To: <20180510111401.1161-2-zajec5@gmail.com>
+References: <20180510111401.1161-1-zajec5@gmail.com>
+        <20180510111401.1161-2-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ boundary="Sig_/LYuvGXWFcxeqfuoTvE+Dq9Z"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-05-07 at 09:47 +0200, Sedat Dilek wrote:
-> On Sun, May 6, 2018 at 3:07 PM, Luciano Coelho <luciano.coelho@intel.
-> com> wrote:
-> > On Sun, 2018-05-06 at 14:46 +0200, Sedat Dilek wrote:
-> > > Hi Luca,
-> > > 
-> > > I hope I catched the correct MLs (not sure if linux-firmware has
-> > > a
-> > > ML,
-> > > I did not found any in the MAINTAINERS file).
-> > > 
-> > > I have seen that in the WHENCE file there is "Version" with and
-> > > without ":", mostly iwlwifi ucodes.
-> > > 
-> > > As an example:
-> > > 
-> > >  File: iwlwifi-8265-36.ucode
-> > > -Version 36.e91976c0.0
-> > > +Version: 36.e91976c0.0
-> > > 
-> > > I don't know the workflow: Do you want to fix it in your tree or
-> > > directly in linux-firmware.git upstream?
-> > > My attached patch is against upstream.
-> > 
-> > Thanks, Sedat!
-> > 
-> > I'm going to send a new pull-request this week, so I can include
-> > your
-> > patch in my tree and as part of the pull-request.
-> > 
-> > --
-> > Cheers,
-> > Luca.
-> 
-> OK, Thanks.
-> Attached Patch v2 is against your tree [1].
-> It differs from v1 against upstream.
+--Sig_/LYuvGXWFcxeqfuoTvE+Dq9Z
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-You need to write a proper commit message and sign it off so I can
-apply it.
+On Thu, 10 May 2018 13:14:01 +0200
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
 
---
-Luca.
+> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>=20
+> SSB_PCICORE_HOSTMODE protects MIPS specific code that calls not exported
+> symbols pcibios_enable_device and register_pci_controller. This code is
+> supposed to be compiled only with ssb builtin.
+>=20
+> This fixes:
+> ERROR: "pcibios_enable_device" [drivers/ssb/ssb.ko] undefined!
+> ERROR: "register_pci_controller" [drivers/ssb/ssb.ko] undefined!
+> make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
+>=20
+> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+> ---
+>  drivers/ssb/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
+> index b3f5cae98ea6..c574dd210500 100644
+> --- a/drivers/ssb/Kconfig
+> +++ b/drivers/ssb/Kconfig
+> @@ -131,7 +131,7 @@ config SSB_DRIVER_PCICORE
+> =20
+>  config SSB_PCICORE_HOSTMODE
+>  	bool "Hostmode support for SSB PCI core"
+> -	depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS
+> +	depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS && SSB =3D y
+>  	help
+>  	  PCIcore hostmode operation (external PCI bus).
+> =20
+
+
+I think we also need to depend on PCI_DRIVERS_LEGACY.
+See the other patch that floats around.
+
+
+--=20
+Michael
+
+--Sig_/LYuvGXWFcxeqfuoTvE+Dq9Z
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlr0KkUACgkQ9TK+HZCN
+iw4BBhAAviGJSH9TbTZSY9GOTaJP0+3qnkZT4qi8G0RjCNzr/Gsi/GdSwl6IlUx2
+0rgqPrVqfHmZs9MPgs5X+ApYTK0aX0B4OpQLuWh1ddLHJNwIVtOfegP5u73V/f9Z
+JkUSX0d6bb2MLJmUDh/yH+Aqajgmj3/DXx/surIMx1WWU7k0/YLL9N4c71HMfaDc
+0So0nwGB7B84ZHnqAeExB1l0nZqsvPZ8Jlmbcm95x0Prxp+ZXAz/ZE9NfR7MlfTO
+hmv3nfNnp3ZEuUOujOuK0RbmI3TXsG/En6AMIMP85RaVclokwzJBeqUl/02Vtp5C
+feW2YXrZrp105FmIpDVlP/XD/TNs72QQ3CoDEXIu9sNa2QM2VPeXTguZ1Q1GVosr
+Z34+FQo2BZQEsxlmuoz8YCZjKrC/lAuH4rrV8s2oEBoZ2VOM3zxOoPbr0x73k6E4
+I/PDtKHNCnydgywIvm1oL9obBbC1euINCpflrSNefvFZ8PUBvhsUU0QYwAdomFtJ
+Wu4DHUD9SrZJ8oKsuFwmXu7HbMqpuqkkwWIJwfuh0AVW4dPSciQ0hm/KU+Ff4ah5
+YpRTksfCQTdg8PAS5QN3tMTB8jlVKr6g9F87bhSwHmvBgnlfmIGrfxbCE8Z8SvsP
+cwXHotMt1kLn+abYjk+d3sXvV7cbXocFNFi1foxvHUePyHskKWs=
+=Kkq3
+-----END PGP SIGNATURE-----
+
+--Sig_/LYuvGXWFcxeqfuoTvE+Dq9Z--
