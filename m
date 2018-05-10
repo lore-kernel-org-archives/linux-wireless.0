@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:42978 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752389AbeEGUGp (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:49751 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965503AbeEJOcY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 16:06:45 -0400
-Message-ID: <1525723602.1080.0.camel@sipsolutions.net> (sfid-20180507_220648_181452_7F370D04)
-Subject: Re: [PATCH] mesh: don't process mesh channel switch unless csa ie
- provided
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Peter Oh <peter.oh@bowerswilkins.com>,
-        linux-wireless@vger.kernel.org
-Date: Mon, 07 May 2018 22:06:42 +0200
-In-Reply-To: <81cf6620-d7f6-50f7-23c5-e1ba693f2907@bowerswilkins.com>
-References: <1524857196-29399-1-git-send-email-peter.oh@bowerswilkins.com>
-         <1525722286.22388.5.camel@sipsolutions.net>
-         <81cf6620-d7f6-50f7-23c5-e1ba693f2907@bowerswilkins.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 10 May 2018 10:32:24 -0400
+From: Colin King <colin.king@canonical.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] rsi: fix spelling mistake: "thead" -> "thread"
+Date: Thu, 10 May 2018 15:32:17 +0100
+Message-Id: <20180510143217.23488-1-colin.king@canonical.com> (sfid-20180510_163243_207115_EDA6B8D6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-05-07 at 13:04 -0700, Peter Oh wrote:
-> 
-> On 05/07/2018 12:44 PM, Johannes Berg wrote:
-> > On Fri, 2018-04-27 at 12:26 -0700, peter.oh@bowerswilkins.com wrote:
-> > > From: Peter Oh <peter.oh@bowerswilkins.com>
-> > > 
-> > > There is no meaning to call ieee80211_mesh_process_chnswitch
-> > > without CSA IE provided, since the function will always return error.
-> > 
-> > I'm not convinced, an extended channel switch element might be present
-> > instead?
-> 
-> I expected the comment. Yes, extended channel switch element could be 
-> present instead of channel switch element which I missed to take care 
-> of. So you can ignore the patch for now and I'll get back with right 
-> patch for it.
+From: Colin Ian King <colin.king@canonical.com>
 
-Heh. Well, but then why bother at all? I mean, the inner function will
-do the check and fail, and nothing will happen, so why bother?
+Trivial fix to spelling mistake in rsi_dbg debug message text
 
-johannes
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
+index 1f1b97220d43..3644d7d99463 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_core.c
++++ b/drivers/net/wireless/rsi/rsi_91x_core.c
+@@ -485,7 +485,7 @@ void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb)
+ 	}
+ 
+ 	rsi_core_queue_pkt(common, skb);
+-	rsi_dbg(DATA_TX_ZONE, "%s: ===> Scheduling TX thead <===\n", __func__);
++	rsi_dbg(DATA_TX_ZONE, "%s: ===> Scheduling TX thread <===\n", __func__);
+ 	rsi_set_event(&common->tx_thread.event);
+ 
+ 	return;
+-- 
+2.17.0
