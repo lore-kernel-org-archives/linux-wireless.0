@@ -1,108 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:57826 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S968315AbeEYUj3 (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35093 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756729AbeEJKsR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 May 2018 16:39:29 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Shrenik Shikhare <shrenik@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH] mwifiex: skip sending GT_REKEY_OFFLOAD_CFG if firmware has no support
-Date: Sat, 26 May 2018 02:09:22 +0530
-Message-ID: <1527280762-5648-1-git-send-email-gbhat@marvell.com> (sfid-20180525_223950_152590_AF504903)
+        Thu, 10 May 2018 06:48:17 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CACna6rxb9KSQfGwi__xxSMACAxh-bOV9SR1NsnUVe8ASdA0Liw@mail.gmail.com>
+References: <7bbc067a-c412-3d2e-174a-abc31b46e246@lwfinger.net> <CACna6rxb9KSQfGwi__xxSMACAxh-bOV9SR1NsnUVe8ASdA0Liw@mail.gmail.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Thu, 10 May 2018 12:48:15 +0200
+Message-ID: <CACna6ry4AYpwOguzDoP4XsonF4_eWW2PpxonwbuAXMVw3wrQ+g@mail.gmail.com> (sfid-20180510_124833_099220_590F8F80)
+Subject: Re: Regression caused by commit 882164a4a928
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Matt Redfearn <matt.redfearn@mips.com>,
+        =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If firmware does not support embedded supplicant, then it in turn
-will not support GT rekey offloading. If this is the case, then
-driver must not advertise WOWLAN flags related to GTK rekey and
-it must also skip sending the GT_REKEY_OFFLOAD_CFG command.
+On 10 May 2018 at 12:41, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+> On 7 May 2018 at 17:44, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> Although commit 882164a4a928 ("ssb: Prevent build of PCI host features i=
+n
+>> module") appeared to be harmless, it leads to complete failure of driver=
+s
+>> b43. and b43legacy, and likely affects b44 as well. The problem is that
+>> CONFIG_SSB_PCIHOST is undefined, which prevents the compilation of the c=
+ode
+>> that controls the PCI cores of the device. See
+>> https://bugzilla.redhat.com/show_bug.cgi?id=3D1572349 for details.
+>>
+>> As the underlying errors ("pcibios_enable_device" undefined, and
+>> "register_pci_controller" undefined) do not appear on the architectures =
+that
+>> I have tested (x86_64, x86, and ppc), I suspect something in the
+>> arch-specific code for your setup (MIPS?). As I have no idea on how to f=
+ix
+>> that problem, would the following patch work for you?
+>>
+>> diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
+>> index 9371651d8017..3743533c8057 100644
+>> --- a/drivers/ssb/Kconfig
+>> +++ b/drivers/ssb/Kconfig
+>> @@ -117,7 +117,7 @@ config SSB_SERIAL
+>>
+>>  config SSB_DRIVER_PCICORE_POSSIBLE
+>>         bool
+>> -       depends on SSB_PCIHOST && SSB =3D y
+>> +       depends on SSB_PCIHOST && (SSB =3D y || !MIPS)
+>>         default y
+>>
+>>  config SSB_DRIVER_PCICORE
+>
+> I strongly suggest we take a step back, slow down a bit and look at
+> the original problem.
+>
+> In driver_pcicore.c there is MIPS specific code. It's protected using
+> #ifdef CONFIG_SSB_PCICORE_HOSTMODE
+> (...)
+> #endif
+>
+> If anyone has ever seen
+> ERROR: "pcibios_enable_device" [drivers/ssb/ssb.ko] undefined!
+> ERROR: "register_pci_controller" [drivers/ssb/ssb.ko] undefined!
+> make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
+> it means he managed to get CONFIG_SSB_PCICORE_HOSTMODE set on non-MIPS sy=
+stem.
+>
+> We should rather answer how did that happen and fix it.
+>
+> SSB_PCICORE_HOSTMODE depends on SSB_DRIVER_MIPS
+> SSB_DRIVER_MIPS depends on MIPS
+>
+> How is that possible to set SSB_PCICORE_HOSTMODE with non-MIPS config?
+> Is there some mistake in Kconfig I can't see?
 
-Signed-off-by: Shrenik Shikhare <shrenik@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c  | 18 +++++++++++++++++-
- drivers/net/wireless/marvell/mwifiex/fw.h        |  1 +
- drivers/net/wireless/marvell/mwifiex/sta_event.c |  3 +++
- 3 files changed, 21 insertions(+), 1 deletion(-)
+I think SSB =3D y should be added as dependency for
+SSB_PCICORE_HOSTMODE. See also commit 79ca239a68f8f ("bcma: Prevent
+build of PCI host features in module").
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 54a2297..d04a599 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3555,6 +3555,9 @@ static int mwifiex_set_rekey_data(struct wiphy *wiphy, struct net_device *dev,
- {
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
- 
-+	if (!ISSUPP_FIRMWARE_SUPPLICANT(priv->adapter->fw_cap_info))
-+		return -EOPNOTSUPP;
-+
- 	return mwifiex_send_cmd(priv, HostCmd_CMD_GTK_REKEY_OFFLOAD_CFG,
- 				HostCmd_ACT_GEN_SET, 0, data, true);
- }
-@@ -4190,6 +4193,16 @@ static int mwifiex_tm_cmd(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	.max_pkt_offset = MWIFIEX_MAX_OFFSET_LEN,
- 	.max_nd_match_sets = MWIFIEX_MAX_ND_MATCH_SETS,
- };
-+
-+static const struct wiphy_wowlan_support mwifiex_wowlan_support_no_gtk = {
-+	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT |
-+		 WIPHY_WOWLAN_NET_DETECT,
-+	.n_patterns = MWIFIEX_MEF_MAX_FILTERS,
-+	.pattern_min_len = 1,
-+	.pattern_max_len = MWIFIEX_MAX_PATTERN_LEN,
-+	.max_pkt_offset = MWIFIEX_MAX_OFFSET_LEN,
-+	.max_nd_match_sets = MWIFIEX_MAX_ND_MATCH_SETS,
-+};
- #endif
- 
- static bool mwifiex_is_valid_alpha2(const char *alpha2)
-@@ -4308,7 +4321,10 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 				WIPHY_FLAG_TDLS_EXTERNAL_SETUP;
- 
- #ifdef CONFIG_PM
--	wiphy->wowlan = &mwifiex_wowlan_support;
-+	if (ISSUPP_FIRMWARE_SUPPLICANT(priv->adapter->fw_cap_info))
-+		wiphy->wowlan = &mwifiex_wowlan_support;
-+	else
-+		wiphy->wowlan = &mwifiex_wowlan_support_no_gtk;
- #endif
- 
- 	wiphy->coalesce = &mwifiex_coalesce_support;
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index c5dc518..b73f99d 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -249,6 +249,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define ISSUPP_SDIO_SPA_ENABLED(FwCapInfo) (FwCapInfo & BIT(16))
- #define ISSUPP_ADHOC_ENABLED(FwCapInfo) (FwCapInfo & BIT(25))
- #define ISSUPP_RANDOM_MAC(FwCapInfo) (FwCapInfo & BIT(27))
-+#define ISSUPP_FIRMWARE_SUPPLICANT(FwCapInfo) (FwCapInfo & BIT(21))
- 
- #define MWIFIEX_DEF_HT_CAP	(IEEE80211_HT_CAP_DSSSCCK40 | \
- 				 (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT) | \
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-index 93dfb76..03a6492 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-@@ -241,6 +241,9 @@ void mwifiex_reset_connect_state(struct mwifiex_private *priv, u16 reason_code,
- 	if (netif_carrier_ok(priv->netdev))
- 		netif_carrier_off(priv->netdev);
- 
-+	if (!ISSUPP_FIRMWARE_SUPPLICANT(priv->adapter->fw_cap_info))
-+		return;
-+
- 	mwifiex_send_cmd(priv, HostCmd_CMD_GTK_REKEY_OFFLOAD_CFG,
- 			 HostCmd_ACT_GEN_REMOVE, 0, NULL, false);
- }
--- 
-1.9.1
+--=20
+Rafa=C5=82
