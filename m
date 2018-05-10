@@ -1,79 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:52918 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751476AbeEBNeY (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:36199 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934002AbeEJLUD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 May 2018 09:34:24 -0400
-Received: by mail-it0-f67.google.com with SMTP id i136-v6so8504967ita.2
-        for <linux-wireless@vger.kernel.org>; Wed, 02 May 2018 06:34:24 -0700 (PDT)
+        Thu, 10 May 2018 07:20:03 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180502130726.GA13887@redhat.com>
-References: <cover.1525096206.git.lorenzo.bianconi@redhat.com>
- <9d50bf4d74ec52e141dd112768570e15a481ad2e.1525096206.git.lorenzo.bianconi@redhat.com>
- <20180502130726.GA13887@redhat.com>
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Date: Wed, 2 May 2018 15:34:22 +0200
-Message-ID: <CAJ0CqmUEULD0X_CaLLnF3jeRJQdgLM2LK-XPt==nDuThF7wGKA@mail.gmail.com> (sfid-20180502_153728_769779_B50B3FE8)
-Subject: Re: [RFC 06/18] mt76x2: introduce mt76x2_mac_load_tx_status routine
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Felix Fietkau <nbd@nbd.name>,
-        linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20180510131725.111079af@wiggum>
+References: <20180510111401.1161-1-zajec5@gmail.com> <20180510111401.1161-2-zajec5@gmail.com>
+ <20180510131725.111079af@wiggum>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Thu, 10 May 2018 13:20:01 +0200
+Message-ID: <CACna6ryWUCnrw9w4yhfiNXFHy1hFjVV-BqH07i7DQqxq8FtjMw@mail.gmail.com> (sfid-20180510_132018_402993_D93BD833)
+Subject: Re: [PATCH 4.17 2/2] ssb: make SSB_PCICORE_HOSTMODE depend on SSB = y
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Larry Finger <larry.finger@lwfinger.net>,
+        Matt Redfearn <matt.redfearn@mips.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Hauke Mehrtens <hauke@hauke-m.de>,
+        LKML <linux-kernel@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Mon, Apr 30, 2018 at 04:12:21PM +0200, Lorenzo Bianconi wrote:
->> Add mt76x2_mac_load_tx_status routine since tx stats register map is
->> shared between usb and pci based devices but usb devices do not have a
->> tx stat irq line as pcie ones and it is necessary to load tx statistics
->> using a workqueue
+On 10 May 2018 at 13:17, Michael B=C3=BCsch <m@bues.ch> wrote:
+> On Thu, 10 May 2018 13:14:01 +0200
+> Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+>
+>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
 >>
->> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+>> SSB_PCICORE_HOSTMODE protects MIPS specific code that calls not exported
+>> symbols pcibios_enable_device and register_pci_controller. This code is
+>> supposed to be compiled only with ssb builtin.
+>>
+>> This fixes:
+>> ERROR: "pcibios_enable_device" [drivers/ssb/ssb.ko] undefined!
+>> ERROR: "register_pci_controller" [drivers/ssb/ssb.ko] undefined!
+>> make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
+>>
+>> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
 >> ---
->>  drivers/net/wireless/mediatek/mt76/mt76x2_mac.c | 43 +++++++++++++++----------
->>  1 file changed, 26 insertions(+), 17 deletions(-)
+>>  drivers/ssb/Kconfig | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
 >>
->> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
->> index d18315652583..0ddc84525ffa 100644
->> --- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
->> +++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
->> @@ -515,6 +515,28 @@ mt76x2_send_tx_status(struct mt76x2_dev *dev, struct mt76x2_tx_status *stat,
->>       rcu_read_unlock();
->>  }
+>> diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
+>> index b3f5cae98ea6..c574dd210500 100644
+>> --- a/drivers/ssb/Kconfig
+>> +++ b/drivers/ssb/Kconfig
+>> @@ -131,7 +131,7 @@ config SSB_DRIVER_PCICORE
 >>
->> +static struct mt76x2_tx_status
->> +mt76x2_mac_load_tx_status(struct mt76x2_dev *dev)
->> +{
->> +     struct mt76x2_tx_status stat = {};
->> +     u32 stat1, stat2;
->> +
->> +     stat2 = mt76_rr(dev, MT_TX_STAT_FIFO_EXT);
->> +     stat1 = mt76_rr(dev, MT_TX_STAT_FIFO);
->> +
->> +     stat.valid = !!(stat1 & MT_TX_STAT_FIFO_VALID);
->> +     stat.success = !!(stat1 & MT_TX_STAT_FIFO_SUCCESS);
->> +     stat.aggr = !!(stat1 & MT_TX_STAT_FIFO_AGGR);
->> +     stat.ack_req = !!(stat1 & MT_TX_STAT_FIFO_ACKREQ);
->> +     stat.wcid = FIELD_GET(MT_TX_STAT_FIFO_WCID, stat1);
->> +     stat.rate = FIELD_GET(MT_TX_STAT_FIFO_RATE, stat1);
->> +
->> +     stat.retry = FIELD_GET(MT_TX_STAT_FIFO_EXT_RETRY, stat2);
->> +     stat.pktid = FIELD_GET(MT_TX_STAT_FIFO_EXT_PKTID, stat2);
->> +
->> +     return stat;
->> +}
->> +
+>>  config SSB_PCICORE_HOSTMODE
+>>       bool "Hostmode support for SSB PCI core"
+>> -     depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS
+>> +     depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS && SSB =3D y
+>>       help
+>>         PCIcore hostmode operation (external PCI bus).
+>>
 >
-> Just two minor points. We do not need fill structure if stat is
-> not valid. Also returning mt76x2_tx_status structure might require
-> full copy of it. Returning boolean indicator of validity and pass
-> pointer to struct mt76x2_tx_status to the subroutine would be more
-> efficient.
 >
-> Regards
-> Stanislaw
+> I think we also need to depend on PCI_DRIVERS_LEGACY.
+> See the other patch that floats around.
 
-I agree, thx for the review. I will address your suggestions in v1.
+I believe it's already handled by SSB_PCIHOST_POSSIBLE's dependency on
+PCI_DRIVERS_LEGACY.
 
-Regards,
-Lorenzo
+--=20
+Rafa=C5=82
