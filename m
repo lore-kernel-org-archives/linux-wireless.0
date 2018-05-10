@@ -1,126 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:35035 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935626AbeEXHTG (ORCPT
+Received: from 9pmail.ess.barracuda.com ([64.235.154.210]:50321 "EHLO
+        9pmail.ess.barracuda.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934760AbeEJKYb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 May 2018 03:19:06 -0400
-From: Eyal Reizer <eyalreizer@gmail.com>
-To: kvalo@codeaurora.org, tony@atomide.com,
-        linux-wireless@vger.kernel.org, linux-omap@vger.kernel.org
-Cc: Eyal Reizer <eyalr@ti.com>
-Subject: [PATCH] wlcore: use generic runtime pm calls for wowlan elp configuration
-Date: Thu, 24 May 2018 10:18:57 +0300
-Message-Id: <1527146337-17562-1-git-send-email-eyalr@ti.com> (sfid-20180524_091922_670389_6F2A275B)
+        Thu, 10 May 2018 06:24:31 -0400
+Subject: Re: Regression caused by commit 882164a4a928
+To: =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+References: <7bbc067a-c412-3d2e-174a-abc31b46e246@lwfinger.net>
+ <372d149c-c34c-56a0-4e1a-5ab2c1e16e73@mips.com>
+ <20180509182756.6f36cc05@wiggum>
+From: Matt Redfearn <matt.redfearn@mips.com>
+Message-ID: <af1f604a-21e0-e7ff-f526-9d2aec184389@mips.com> (sfid-20180510_122449_961026_50319703)
+Date: Thu, 10 May 2018 11:24:12 +0100
+MIME-Version: 1.0
+In-Reply-To: <20180509182756.6f36cc05@wiggum>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With runtime PM enabled, we can now use generic calls to
-pm_generic_runtime_suspend and pm_generic_runtime_resume for enabling elp
-during suspend when wowlan is enabled and waking the chip from elp
-on resume.
-remove the custom API that was used to ensure that the command
-that is used to allow ELP during suspend is completed before the system
-suspend.
+Hi Michael,
 
-Signed-off-by: Eyal Reizer <eyalr@ti.com>
----
-Dependent on the Runtime PM support for wlcore patch set that was submitted 
-by Tony Lindgren <tony@atomide.com>
+On 09/05/18 17:27, Michael Büsch wrote:
+> On Wed, 9 May 2018 13:55:43 +0100
+> Matt Redfearn <matt.redfearn@mips.com> wrote:
+> 
+>> Hi Larry
+>>
+>> On 07/05/18 16:44, Larry Finger wrote:
+>>> Matt,
+>>>
+>>> Although commit 882164a4a928 ("ssb: Prevent build of PCI host features
+>>> in module") appeared to be harmless, it leads to complete failure of
+>>> drivers b43. and b43legacy, and likely affects b44 as well. The problem
+>>> is that CONFIG_SSB_PCIHOST is undefined, which prevents the compilation
+>>> of the code that controls the PCI cores of the device. See
+>>> https://bugzilla.redhat.com/show_bug.cgi?id=1572349 for details.
+>>
+>> Sorry for the breakage :-/
+>>
+>>>
+>>> As the underlying errors ("pcibios_enable_device" undefined, and
+>>> "register_pci_controller" undefined) do not appear on the architectures
+>>> that I have tested (x86_64, x86, and ppc), I suspect something in the
+>>> arch-specific code for your setup (MIPS?). As I have no idea on how to
+>>> fix that problem, would the following patch work for you?
+>>>
+>>> diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
+>>> index 9371651d8017..3743533c8057 100644
+>>> --- a/drivers/ssb/Kconfig
+>>> +++ b/drivers/ssb/Kconfig
+>>> @@ -117,7 +117,7 @@ config SSB_SERIAL
+>>>
+>>>    config SSB_DRIVER_PCICORE_POSSIBLE
+>>>           bool
+>>> -       depends on SSB_PCIHOST && SSB = y
+>>> +       depends on SSB_PCIHOST && (SSB = y || !MIPS)
+>>>           default y
+>>>
+>>>    config SSB_DRIVER_PCICORE
+>>
+>> I believe that the problem stems from these drivers being used for some
+>> wireless AP functionality built into some MIPS based SoCs. The Kconfig
+>> rules sort out building this additional functionality when configured
+>> for MIPS (in a round about sort of way), but it allowed it even when SSB
+>> is a module, leading to build failures. My patch was intended to prevent
+>> that.
+>>
+>> There was a similar issue in the same Kconfig file, introduced by
+>> c5611df96804 and fixed by a9e6d44ddecc. It was fixed the same way as you
+>> suggest. I've tested the above patch and it does work for MIPS
+>> (preventing the PCICORE being built into the module).
+>>
+>> Tested-by: Matt Redfearn <matt.redfearn@mips.com>
+> 
+> 
+> Could you please try this?
+> 
+> config SSB_DRIVER_PCICORE_POSSIBLE
+> 	depends on SSB_PCIHOST
+> 
+> config SSB_PCICORE_HOSTMODE
+> 	depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS && (SSB = y) && PCI_DRIVERS_LEGACY
+> 
+> 
+> The affected API pcibios_enable_device() and register_pci_controller()
+> is only used in HOSTMODE. So I think it makes sense to make HOSTMODE
+> depend on SSB=y and PCI_DRIVERS_LEGACY.
+> 
+> PCICore itself does not use the API, if hostmode is disabled.
+> 
 
- drivers/net/wireless/ti/wlcore/main.c | 51 +++++++++--------------------------
- 1 file changed, 13 insertions(+), 38 deletions(-)
+Sure - I've tested the patch:
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 4c297aa..6c8e4fa 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -1001,24 +1001,6 @@ static int wlcore_fw_wakeup(struct wl1271 *wl)
- 	return wlcore_raw_write32(wl, HW_ACCESS_ELP_CTRL_REG, ELPCTRL_WAKE_UP);
- }
- 
--static int wlcore_fw_sleep(struct wl1271 *wl)
--{
--	int ret;
--
--	mutex_lock(&wl->mutex);
--	ret = wlcore_raw_write32(wl, HW_ACCESS_ELP_CTRL_REG, ELPCTRL_SLEEP);
--	if (ret < 0) {
--		wl12xx_queue_recovery_work(wl);
--		goto out;
--	}
--	set_bit(WL1271_FLAG_IN_ELP, &wl->flags);
--out:
--	mutex_unlock(&wl->mutex);
--	mdelay(WL1271_SUSPEND_SLEEP);
--
--	return 0;
--}
--
- static int wl1271_setup(struct wl1271 *wl)
- {
- 	wl->raw_fw_status = kzalloc(wl->fw_status_len, GFP_KERNEL);
-@@ -1742,6 +1724,7 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
- {
- 	struct wl1271 *wl = hw->priv;
- 	struct wl12xx_vif *wlvif;
-+	unsigned long flags;
- 	int ret;
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 suspend wow=%d", !!wow);
-@@ -1800,19 +1783,6 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
- 	/* flush any remaining work */
- 	wl1271_debug(DEBUG_MAC80211, "flushing remaining works");
- 
--	/*
--	 * disable and re-enable interrupts in order to flush
--	 * the threaded_irq
--	 */
--	wlcore_disable_interrupts(wl);
--
--	/*
--	 * set suspended flag to avoid triggering a new threaded_irq
--	 * work. no need for spinlock as interrupts are disabled.
--	 */
--	set_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
--
--	wlcore_enable_interrupts(wl);
- 	flush_work(&wl->tx_work);
- 
- 	/*
-@@ -1822,15 +1792,14 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
- 	cancel_delayed_work(&wl->tx_watchdog_work);
- 
- 	/*
--	 * Use an immediate call for allowing the firmware to go into power
--	 * save during suspend.
--	 * Using a workque for this last write was only hapenning on resume
--	 * leaving the firmware with power save disabled during suspend,
--	 * while consuming full power during wowlan suspend.
-+	 * set suspended flag to avoid triggering a new threaded_irq
-+	 * work.
- 	 */
--	wlcore_fw_sleep(wl);
-+	spin_lock_irqsave(&wl->wl_lock, flags);
-+	set_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
-+	spin_unlock_irqrestore(&wl->wl_lock, flags);
- 
--	return 0;
-+	return pm_generic_runtime_suspend(wl->dev);
- }
- 
- static int wl1271_op_resume(struct ieee80211_hw *hw)
-@@ -1845,6 +1814,12 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
- 		     wl->wow_enabled);
- 	WARN_ON(!wl->wow_enabled);
- 
-+	ret = pm_generic_runtime_resume(wl->dev);
-+	if (ret < 0) {
-+		wl1271_error("ELP wakeup failure!");
-+		goto out_sleep;
-+	}
-+
- 	/*
- 	 * re-enable irq_work enqueuing, and call irq_work directly if
- 	 * there is a pending work.
--- 
-2.7.4
+--- a/drivers/ssb/Kconfig
++++ b/drivers/ssb/Kconfig
+@@ -117,7 +117,7 @@ config SSB_SERIAL
+
+  config SSB_DRIVER_PCICORE_POSSIBLE
+         bool
+-       depends on SSB_PCIHOST && SSB = y
++       depends on SSB_PCIHOST
+         default y
+
+  config SSB_DRIVER_PCICORE
+@@ -131,7 +131,7 @@ config SSB_DRIVER_PCICORE
+
+  config SSB_PCICORE_HOSTMODE
+         bool "Hostmode support for SSB PCI core"
+-       depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS
++       depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS && (SSB = y) && 
+PCI_DRIVERS_LEGACY
+         help
+           PCIcore hostmode operation (external PCI bus).
+
+
+And this seems to work for MIPS, we don't get the build error from 
+building the SSB module under nec_markeins allmodconfig, and 
+SSB_PCICORE_HOSTMODE=y for bcm47xx allmodconfig, which selects SSB=y.
+
+So this looks like a good fix for MIPS, at least.
+
+Tested-by: Matt Redfearn <matt.redfearn@mips.com>
+
+Thanks,
+Matt
