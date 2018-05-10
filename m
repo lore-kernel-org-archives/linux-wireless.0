@@ -1,68 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:36613 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934336AbeEIKHv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 06:07:51 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Johannes Berg <johannes@sipsolutions.net>
-Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
-        linux-wireless@vger.kernel.org, Maya Erez <merez@codeaurora.org>
-Subject: Re: [mac80211-next:master 12/14] drivers/net//wireless/ath/wil6210/debugfs.c:1245:1: warning: the frame size of 1600 bytes is larger than 1024 bytes
-In-Reply-To: <87po25w463.fsf@kamboji.qca.qualcomm.com>
-References: <201805090154.h4Cokbx2%fengguang.wu@intel.com> <87efil2p2o.fsf@purkki.adurom.net> <1525855900.6910.5.camel@sipsolutions.net> <87tvrhw6kj.fsf@kamboji.qca.qualcomm.com> <1525856418.6910.6.camel@sipsolutions.net> <87efil41d4.fsf@toke.dk> <1525858618.6910.9.camel@sipsolutions.net> <87po25w463.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 09 May 2018 12:07:50 +0200
-Message-ID: <878t8t3zwp.fsf@toke.dk> (sfid-20180509_120754_883240_25E10377)
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:39493 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756998AbeEJNXE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 May 2018 09:23:04 -0400
+Received: by mail-lf0-f67.google.com with SMTP id j193-v6so2947426lfg.6
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2018 06:23:04 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH] brcmfmac: set WIPHY_FLAG_HAVE_AP_SME flag
+Date: Thu, 10 May 2018 15:21:39 +0200
+Message-Id: <20180510132139.16279-1-zajec5@gmail.com> (sfid-20180510_152308_478383_780DE3FF)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+From: Rafał Miłecki <rafal@milecki.pl>
 
-> Johannes Berg <johannes@sipsolutions.net> writes:
->
->> On Wed, 2018-05-09 at 11:36 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrot=
-e:
->>> Johannes Berg <johannes@sipsolutions.net> writes:
->>>=20
->>> > On Wed, 2018-05-09 at 11:56 +0300, Kalle Valo wrote:
->>> > > Johannes Berg <johannes@sipsolutions.net> writes:
->>> > >=20
->>> > > > On Wed, 2018-05-09 at 11:47 +0300, Kalle Valo wrote:
->>> > > > >=20
->>> > > > > I guess these warnings come because Toke's patch increased size=
- of
->>> > > > > struct cfg80211_tid_stats (which is included in struct station_=
-info) and
->>> > > > > both wil6210 and qtnfmac allocate a struct station_info from st=
-ack?=20
->>> > > >=20
->>> > > > Yes.
->>> > > >=20
->>> > > > > Can
->>> > > > > someone send a fix for the drivers?
->>> > > >=20
->>> > > > I guess Toke/I should do that through my tree.
->>> > >=20
->>> > > IMHO the fix could go through my tree as well, less risk of conflic=
-ts in
->>> > > drivers. AFAICS the fix (allocating station_info dynamically?) woul=
-d not
->>> > > depend on Toke's patch and could be applied separately.
->>> >=20
->>> > That's true, if you prefer that it's fine with me.
->>>=20
->>> I'll send a patch.
->>>=20
->>> What's the right tag to put in the commit for this?
->>> Fixes-but-is-independent-from: ? ;)
->>
->> Heh. You can still put Fixes: I think.
->
-> Yeah, I think so too.
+brcmfmac is a FullMAC driver and it implements/uses cfg80211 interface
+for stations management. At the same time it doesn't receive or pass up
+management frames.
 
-Cool. My "git grep 'struct station_info sinfo'" also shows up a driver
-in staging; that should be fixed as well, right? In the same commit?
+This flag indicates that authenticator doesn't have to subscribe to or
+handle management frames. Some authenticators (e.g. hostapd) were
+working with brcmfmac thanks to some extra assumptions. This commit
+clears up the situation.
 
--Toke
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index ff6b3514c501..a400a513dac2 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6512,6 +6512,7 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 
+ 	wiphy->flags |= WIPHY_FLAG_NETNS_OK |
+ 			WIPHY_FLAG_PS_ON_BY_DEFAULT |
++			WIPHY_FLAG_HAVE_AP_SME |
+ 			WIPHY_FLAG_OFFCHAN_TX |
+ 			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+ 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_TDLS))
+-- 
+2.13.6
