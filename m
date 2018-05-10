@@ -1,76 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hapkido.dreamhost.com ([66.33.216.122]:56414 "EHLO
-        hapkido.dreamhost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752182AbeEAPvw (ORCPT
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:38804 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965049AbeEJQHL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 May 2018 11:51:52 -0400
-Received: from homiemail-a108.g.dreamhost.com (sub4.mail.dreamhost.com [69.163.253.135])
-        by hapkido.dreamhost.com (Postfix) with ESMTP id DA4638F21D
-        for <linux-wireless@vger.kernel.org>; Tue,  1 May 2018 08:51:51 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-From: Stephen Wille Padnos <steve@thothsystems.com>
-Subject: Patch: Support Killer 1550 in MSI laptop
-Cc: Johannes Berg <johannes.berg@intel.com>,
-        Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-        Intel Linux Wireless <ilw@linux.intel.com>
-Message-ID: <3e72561c-c531-95c3-5fc8-b195ce8dae4b@thothsystems.com> (sfid-20180501_175156_151182_EECA75E1)
-Date: Tue, 1 May 2018 11:51:49 -0400
+        Thu, 10 May 2018 12:07:11 -0400
+Subject: Re: [PATCH 4.17 2/2] ssb: make SSB_PCICORE_HOSTMODE depend on SSB = y
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>,
+        Matt Redfearn <matt.redfearn@mips.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+        LKML <linux-kernel@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+References: <20180510111401.1161-1-zajec5@gmail.com>
+ <20180510111401.1161-2-zajec5@gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <ff18cb0a-e878-dff4-777b-134f0f3fe2e5@lwfinger.net> (sfid-20180510_180726_248145_A89163FC)
+Date: Thu, 10 May 2018 11:07:09 -0500
 MIME-Version: 1.0
+In-Reply-To: <20180510111401.1161-2-zajec5@gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, all
+On 05/10/2018 06:14 AM, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> SSB_PCICORE_HOSTMODE protects MIPS specific code that calls not exported
+> symbols pcibios_enable_device and register_pci_controller. This code is
+> supposed to be compiled only with ssb builtin.
+> 
+> This fixes:
+> ERROR: "pcibios_enable_device" [drivers/ssb/ssb.ko] undefined!
+> ERROR: "register_pci_controller" [drivers/ssb/ssb.ko] undefined!
+> make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
+> 
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 
-I have an MSI 8th-gen notebook with a Killer 1550 wifi card.=C2=A0 This c=
-ard=20
-has a different subsystem ID than I have seen in prior patches:
+This patch needs a "Reported-by: Matt Redfearn <matt.redfearn@mips.com>".
 
-Output of lspci -nnvvv:
-00:14.3 Network controller [0280]: Intel Corporation Wireless-AC 9560=20
-[Jefferson Peak] [8086:a370] (rev 10)
- =C2=A0=C2=A0 =C2=A0Subsystem: Bigfoot Networks, Inc. Device [1a56:1552]
- =C2=A0=C2=A0 =C2=A0Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGA=
-Snoop- ParErr-=20
-Stepping- SERR- FastB2B- DisINTx+
- =C2=A0=C2=A0 =C2=A0Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfa=
-st >TAbort-=20
-<TAbort- <MAbort- >SERR- <PERR- INTx-
- =C2=A0=C2=A0 =C2=A0Latency: 0, Cache Line Size: 64 bytes
- =C2=A0=C2=A0 =C2=A0Interrupt: pin A routed to IRQ 16
- =C2=A0=C2=A0 =C2=A0Region 0: Memory at ad414000 (64-bit, non-prefetchabl=
-e) [size=3D16K]
- =C2=A0=C2=A0 =C2=A0Capabilities: <access denied>
- =C2=A0=C2=A0 =C2=A0Kernel driver in use: iwlwifi
- =C2=A0=C2=A0 =C2=A0Kernel modules: iwlwifi
+Applying both patches leads to a correct configuration for PCI. I cannot test on 
+my present hardware, but the patches seem to be correct.
 
-Without this patch no driver is shown, not even pci_stub. This has been=20
-tested on my laptop, and only on my home wifi which is wireless-N, not=20
--AC (no 5GHz).=C2=A0 The speed seems to be slower than the Windows driver=
-,=20
-but at least this gets the device recognized and working.
+Reviewed-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Stephen Wille Padnos
+@Kalle: Please drop my patch from yesterday. This solution is much better.
 
----
+Larry
 
-diff --git a/drv.c.orig b/drv.c
-index ccd7c33..8920169 100644
---- a/drv.c.orig
-+++ b/drv.c
-@@ -648,6 +648,7 @@ static const struct pci_device_id iwl_hw_card_ids[] =3D=
- {
- =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 {IWL_PCI_DEVICE(0xA370, 0x02A=
-0, iwl9462_2ac_cfg_soc)},
- =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 {IWL_PCI_DEVICE(0xA370, 0x02A=
-4, iwl9462_2ac_cfg_soc)},
- =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 {IWL_PCI_DEVICE(0xA370, 0x103=
-0, iwl9560_2ac_cfg_soc)},
-+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 {IWL_PCI_DEVICE(0xA370, 0x1552, iwl=
-9560_2ac_cfg_soc)},
- =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 {IWL_PCI_DEVICE(0xA370, 0x403=
-0, iwl9560_2ac_cfg_soc)},
- =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 {IWL_PCI_DEVICE(0xA370, 0x403=
-4, iwl9560_2ac_cfg_soc)},
- =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 {IWL_PCI_DEVICE(0xA370, 0x40A=
-4, iwl9462_2ac_cfg_soc)},
+> ---
+>   drivers/ssb/Kconfig | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
+> index b3f5cae98ea6..c574dd210500 100644
+> --- a/drivers/ssb/Kconfig
+> +++ b/drivers/ssb/Kconfig
+> @@ -131,7 +131,7 @@ config SSB_DRIVER_PCICORE
+>   
+>   config SSB_PCICORE_HOSTMODE
+>   	bool "Hostmode support for SSB PCI core"
+> -	depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS
+> +	depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS && SSB = y
+>   	help
+>   	  PCIcore hostmode operation (external PCI bus).
+>   
+> 
