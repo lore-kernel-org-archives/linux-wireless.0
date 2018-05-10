@@ -1,54 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:45892 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751747AbeEEPSv (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35991 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756705AbeEJKl0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 May 2018 11:18:51 -0400
-Received: by mail-pg0-f66.google.com with SMTP id i29-v6so17342936pgn.12
-        for <linux-wireless@vger.kernel.org>; Sat, 05 May 2018 08:18:50 -0700 (PDT)
-Subject: [PATCH v2] iwlwifi: limit MSI-X IRQs to IWL_MAX_RX_HW_QUEUES - 1 to
- avoid num_rx_queues > IWL_MAX_RX_HW_QUEUES
-From: Hao Wei Tee <angelsl@in04.sg>
-To: johannes.berg@intel.com, emmanuel.grumbach@intel.com,
-        luciano.coelho@intel.com, linuxwifi@intel.com,
-        linux-wireless@vger.kernel.org
-References: <b14032bd-5843-9e0f-aa5b-af5289a7ff5f@in04.sg>
-Message-ID: <0b07aa06-111b-4399-786d-056d9bba5cdd@in04.sg> (sfid-20180505_172134_113147_46901137)
-Date: Sat, 5 May 2018 23:18:46 +0800
+        Thu, 10 May 2018 06:41:26 -0400
 MIME-Version: 1.0
-In-Reply-To: <b14032bd-5843-9e0f-aa5b-af5289a7ff5f@in04.sg>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <7bbc067a-c412-3d2e-174a-abc31b46e246@lwfinger.net>
+References: <7bbc067a-c412-3d2e-174a-abc31b46e246@lwfinger.net>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Thu, 10 May 2018 12:41:24 +0200
+Message-ID: <CACna6rxb9KSQfGwi__xxSMACAxh-bOV9SR1NsnUVe8ASdA0Liw@mail.gmail.com> (sfid-20180510_124158_180681_912C8C7C)
+Subject: Re: Regression caused by commit 882164a4a928
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Matt Redfearn <matt.redfearn@mips.com>,
+        =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When there are 16 or more logical CPUs, we request for `IWL_MAX_RX_HW_QUEUES` (16)
-IRQs only, but later on create `num_irqs+1` RX queues, which could end up more
-than `IWL_MAX_RX_HW_QUEUES` if the OS does return us 16 IRQs. This wreaks lots
-of havoc elsewhere later on due to code that uses `num_rx_queues` to calculate
-array sizes.
+On 7 May 2018 at 17:44, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Although commit 882164a4a928 ("ssb: Prevent build of PCI host features in
+> module") appeared to be harmless, it leads to complete failure of drivers
+> b43. and b43legacy, and likely affects b44 as well. The problem is that
+> CONFIG_SSB_PCIHOST is undefined, which prevents the compilation of the co=
+de
+> that controls the PCI cores of the device. See
+> https://bugzilla.redhat.com/show_bug.cgi?id=3D1572349 for details.
+>
+> As the underlying errors ("pcibios_enable_device" undefined, and
+> "register_pci_controller" undefined) do not appear on the architectures t=
+hat
+> I have tested (x86_64, x86, and ppc), I suspect something in the
+> arch-specific code for your setup (MIPS?). As I have no idea on how to fi=
+x
+> that problem, would the following patch work for you?
+>
+> diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
+> index 9371651d8017..3743533c8057 100644
+> --- a/drivers/ssb/Kconfig
+> +++ b/drivers/ssb/Kconfig
+> @@ -117,7 +117,7 @@ config SSB_SERIAL
+>
+>  config SSB_DRIVER_PCICORE_POSSIBLE
+>         bool
+> -       depends on SSB_PCIHOST && SSB =3D y
+> +       depends on SSB_PCIHOST && (SSB =3D y || !MIPS)
+>         default y
+>
+>  config SSB_DRIVER_PCICORE
 
-Limit to IWL_MAX_RX_HW_QUEUES - 1 IRQs so num_rx_queues is never more than
-IWL_MAX_RX_HW_QUEUES.
+I strongly suggest we take a step back, slow down a bit and look at
+the original problem.
 
-Signed-off-by: Hao Wei Tee <angelsl@in04.sg>
----
-My bad. Forgot to sign off.
+In driver_pcicore.c there is MIPS specific code. It's protected using
+#ifdef CONFIG_SSB_PCICORE_HOSTMODE
+(...)
+#endif
 
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+If anyone has ever seen
+ERROR: "pcibios_enable_device" [drivers/ssb/ssb.ko] undefined!
+ERROR: "register_pci_controller" [drivers/ssb/ssb.ko] undefined!
+make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
+it means he managed to get CONFIG_SSB_PCICORE_HOSTMODE set on non-MIPS syst=
+em.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 6e9a9ecfb11c..f5c12924c836 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1607,7 +1607,7 @@ static void iwl_pcie_set_interrupt_capa(struct pci_dev *pdev,
- 		goto enable_msi;
- 
- 	nr_online_cpus = num_online_cpus();
--	max_irqs = min_t(u32, nr_online_cpus + 2, IWL_MAX_RX_HW_QUEUES);
-+	max_irqs = min_t(u32, nr_online_cpus + 2, IWL_MAX_RX_HW_QUEUES - 1);
- 	for (i = 0; i < max_irqs; i++)
- 		trans_pcie->msix_entries[i].entry = i;
- 
--- 
-2.17.0
+We should rather answer how did that happen and fix it.
+
+SSB_PCICORE_HOSTMODE depends on SSB_DRIVER_MIPS
+SSB_DRIVER_MIPS depends on MIPS
+
+How is that possible to set SSB_PCICORE_HOSTMODE with non-MIPS config?
+Is there some mistake in Kconfig I can't see?
+
+--=20
+Rafa=C5=82
