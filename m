@@ -1,115 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga18.intel.com ([134.134.136.126]:30107 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750711AbeEKQty (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 12:49:54 -0400
-From: Tim Kourt <tim.a.kourt@linux.intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tim Kourt <tim.a.kourt@linux.intel.com>
-Subject: [PATCH] cfg80211: Fix support for flushing old scan results
-Date: Fri, 11 May 2018 09:48:35 -0700
-Message-Id: <20180511164835.40161-1-tim.a.kourt@linux.intel.com> (sfid-20180511_184957_723913_31CD95FE)
+Received: from mail-it0-f67.google.com ([209.85.214.67]:40704 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934517AbeEJKbA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 May 2018 06:31:00 -0400
+Received: by mail-it0-f67.google.com with SMTP id j186-v6so2502496ita.5
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2018 03:30:59 -0700 (PDT)
+Message-ID: <5AF41F55.4060606@sra-tohoku.co.jp> (sfid-20180510_123104_600602_A76EA0DA)
+Date: Thu, 10 May 2018 19:30:45 +0900
+From: Taketo Kabe <kabe@sra-tohoku.co.jp>
+MIME-Version: 1.0
+To: b43-dev@lists.infradead.org
+CC: kabe@sra-tohoku.co.jp, linux-wireless@vger.kernel.org,
+        kvalo@codeaurora.org
+Subject: [PATCH v2] drivers/net/wireless/broadcom/b43: fix transmit failure
+ when VT is switched
+References: <5AF2DE73.20608@sra-tohoku.co.jp> <20180509185101.0888bd7a@wiggum>
+In-Reply-To: <20180509185101.0888bd7a@wiggum>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-__cfg80211_bss_expire function was incorrectly used to flush the BSS
-entries from the previous scan results, causing NL80211_SCAN_FLAG_FLUSH
-flag to have no effect.
 
-This patch is addressing the described issue by changing the semantics
-of the function (__cfg80211_bss_expire) parameter from a confusing
-expire_time (jiffies - IEEE80211_SCAN_RESULT_EXPIRE) to a simple
-time_to_live interval and encapsulating the needed calculations inside
-of the function. The rest of the function usages were changed accordingly.
+From: Taketo Kabe <kabe@sra-tohoku.co.jp>
 
-Note: This patch enables flushing of the non-hidden BSSs.
+Fix for b43 wireless card stopping transmission when switching VTs.
 
-Signed-off-by: Tim Kourt <tim.a.kourt@linux.intel.com>
+Setup:
+Using BCM4306 rev.03 chip based CardBus wireless card.
+IRQ is shared with yenta (cardbus bridge) and i915 (display) driver.
+For firmware, installed latest but dated openfwwf 5.2
+(http://netweb.ing.unibs.it/~openfwwf/)
+
+How-to-reproduce:
+Do "ssh <NetBSD-remotehost>", then "ls -lR /" to generate traffic, then
+repeatedly switch VTs by Alt-F1<>Alt-F2.
+Eventually (within a minute) the card stops working.
+You can receive traffic but no transmission.
+For unknown reason it doesn't occur when just generating traffic by
+"ssh <remotehost> ls -lR /".
+
+With CONFIG_B43_DEBUG=y kernel config, when it stops,
+the debug message shows
+     kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 148, but got 180
+The slot offset I observed so far was always 32.
+
+When err_out2 is not set to make error messages successive,
+the debug output will be like this:
+kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 148
+kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 150
+kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 120
+kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 152
+kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 122
+kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 154
+kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 124
+kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 156
+kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 126
+The TX ring alternates between 2 sequences; the ring seems
+to be completely confused. Controller restart is needed.
+
+Workaround(1):
+This problem doesn't occur when using propriatory firmware
+you will extract by b43-fwcutter, so it may be a bug in
+openfwwf firmware, as the comment in the b43_dma_handle_txstatus() suggests.
+I wasn't able to find a bug in the terse openfwwf code though.
+
+Workaround(2):
+Using "pio=1" option to not use DMA makes this problem to
+not occur.
+
+Description of the patch:
+This patch will forcibly reset the controller to make it
+work again. Very kludgy and doesn't look right, but
+the traffic will continue to flow.
+
+Changes since last edition:
+- Remove now unused err_out2 variable.
+
+Signed-off-by: Taketo Kabe <kabe@sra-tohoku.co.jp>
 ---
- net/wireless/scan.c | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
+diff -up ./drivers/net/wireless/broadcom/b43/dma.c.b43 ./drivers/net/wireless/broadcom/b43/dma.c
+--- ./drivers/net/wireless/broadcom/b43/dma.c.b43	2018-05-04 15:18:12.000000000 +0900
++++ ./drivers/net/wireless/broadcom/b43/dma.c	2018-05-10 18:46:36.000000000 +0900
+@@ -1484,7 +1484,7 @@ void b43_dma_handle_txstatus(struct b43_
+  	int slot, firstused;
+  	bool frame_succeed;
+  	int skip;
+-	static u8 err_out1, err_out2;
++	static u8 err_out1;
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index d36c3eb..d459457 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -71,7 +71,7 @@ module_param(bss_entries_limit, int, 0644);
- MODULE_PARM_DESC(bss_entries_limit,
-                  "limit to number of scan BSS entries (per wiphy, default 1000)");
- 
--#define IEEE80211_SCAN_RESULT_EXPIRE	(30 * HZ)
-+#define IEEE80211_SCAN_RESULT_TIME_TO_LIVE (30 * HZ)
- 
- static void bss_free(struct cfg80211_internal_bss *bss)
- {
-@@ -160,7 +160,7 @@ static bool __cfg80211_unlink_bss(struct cfg80211_registered_device *rdev,
- }
- 
- static void __cfg80211_bss_expire(struct cfg80211_registered_device *rdev,
--				  unsigned long expire_time)
-+				  unsigned long time_to_live)
- {
- 	struct cfg80211_internal_bss *bss, *tmp;
- 	bool expired = false;
-@@ -170,7 +170,8 @@ static void __cfg80211_bss_expire(struct cfg80211_registered_device *rdev,
- 	list_for_each_entry_safe(bss, tmp, &rdev->bss_list, list) {
- 		if (atomic_read(&bss->hold))
- 			continue;
--		if (!time_after(expire_time, bss->ts))
-+
-+		if (!time_after(jiffies, bss->ts + time_to_live))
- 			continue;
- 
- 		if (__cfg80211_unlink_bss(rdev, bss))
-@@ -181,6 +182,11 @@ static void __cfg80211_bss_expire(struct cfg80211_registered_device *rdev,
- 		rdev->bss_generation++;
- }
- 
-+static void __cfg80211_bss_expire_all(struct cfg80211_registered_device *rdev)
-+{
-+	__cfg80211_bss_expire(rdev, 0);
-+}
-+
- static bool cfg80211_bss_expire_oldest(struct cfg80211_registered_device *rdev)
- {
- 	struct cfg80211_internal_bss *bss, *oldest = NULL;
-@@ -251,7 +257,7 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev,
- 	    request->flags & NL80211_SCAN_FLAG_FLUSH) {
- 		/* flush entries from previous scans */
- 		spin_lock_bh(&rdev->bss_lock);
--		__cfg80211_bss_expire(rdev, request->scan_start);
-+		__cfg80211_bss_expire_all(rdev);
- 		spin_unlock_bh(&rdev->bss_lock);
- 	}
- 
-@@ -380,7 +386,7 @@ void cfg80211_sched_scan_results_wk(struct work_struct *work)
- 			if (req->flags & NL80211_SCAN_FLAG_FLUSH) {
- 				/* flush entries from previous scans */
- 				spin_lock_bh(&rdev->bss_lock);
--				__cfg80211_bss_expire(rdev, req->scan_start);
-+				__cfg80211_bss_expire_all(rdev);
- 				spin_unlock_bh(&rdev->bss_lock);
- 				req->scan_start = jiffies;
- 			}
-@@ -477,7 +483,7 @@ void cfg80211_bss_age(struct cfg80211_registered_device *rdev,
- 
- void cfg80211_bss_expire(struct cfg80211_registered_device *rdev)
- {
--	__cfg80211_bss_expire(rdev, jiffies - IEEE80211_SCAN_RESULT_EXPIRE);
-+	__cfg80211_bss_expire(rdev, IEEE80211_SCAN_RESULT_TIME_TO_LIVE);
- }
- 
- const u8 *cfg80211_find_ie_match(u8 eid, const u8 *ies, int len,
-@@ -738,7 +744,8 @@ struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
- 		if (!is_valid_ether_addr(bss->pub.bssid))
- 			continue;
- 		/* Don't get expired BSS structs */
--		if (time_after(now, bss->ts + IEEE80211_SCAN_RESULT_EXPIRE) &&
-+		if (time_after(now, bss->ts +
-+					IEEE80211_SCAN_RESULT_TIME_TO_LIVE) &&
- 		    !atomic_read(&bss->hold))
- 			continue;
- 		if (is_bss(&bss->pub, bssid, ssid, ssid_len)) {
+  	ring = parse_cookie(dev, status->cookie, &slot);
+  	if (unlikely(!ring))
+@@ -1518,13 +1518,13 @@ void b43_dma_handle_txstatus(struct b43_
+  			}
+  		} else {
+  			/* More than a single header/data pair were missed.
+-			 * Report this error once.
++			 * Report this error, and reset the controller to
++			 * revive operation.
+  			 */
+-			if (!err_out2)
+-				b43dbg(dev->wl,
+-				       "Out of order TX status report on DMA ring %d. Expected %d, but got %d\n",
+-				       ring->index, firstused, slot);
+-			err_out2 = 1;
++			b43dbg(dev->wl,
++			       "Out of order TX status report on DMA ring %d. Expected %d, but got %d\n",
++			       ring->index, firstused, slot);
++			b43_controller_restart(dev, "Out of order TX");
+  			return;
+  		}
+  	}
+
 -- 
-2.9.4
+kabe
