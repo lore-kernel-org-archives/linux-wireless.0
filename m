@@ -1,68 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55758 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934008AbeE1KIL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 May 2018 06:08:11 -0400
+Received: from bues.ch ([80.190.117.144]:55234 "EHLO bues.ch"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756679AbeEJLJy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 May 2018 07:09:54 -0400
+Date: Thu, 10 May 2018 13:09:12 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Matt Redfearn <matt.redfearn@mips.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJl?= =?UTF-8?B?Y2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: Regression caused by commit 882164a4a928
+Message-ID: <20180510130912.72738106@wiggum> (sfid-20180510_131009_543538_11C45FAF)
+In-Reply-To: <af1f604a-21e0-e7ff-f526-9d2aec184389@mips.com>
+References: <7bbc067a-c412-3d2e-174a-abc31b46e246@lwfinger.net>
+        <372d149c-c34c-56a0-4e1a-5ab2c1e16e73@mips.com>
+        <20180509182756.6f36cc05@wiggum>
+        <af1f604a-21e0-e7ff-f526-9d2aec184389@mips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Mon, 28 May 2018 13:08:04 +0300
-From: merez@codeaurora.org
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Gidon Studinski <gidons@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com
-Subject: Re: [PATCH 5/7] wil6210: add support for enhanced DMA RX data flows
-In-Reply-To: <87efhzlxwe.fsf@purkki.adurom.net>
-References: <1526227375-31881-1-git-send-email-merez@codeaurora.org>
- <1526227375-31881-6-git-send-email-merez@codeaurora.org>
- <87efhzlxwe.fsf@purkki.adurom.net>
-Message-ID: <1acfc0dc335d86eadfdd8c009265957e@codeaurora.org> (sfid-20180528_120844_434151_1948D5CC)
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ boundary="Sig_/87YtzGCidlbcr1x5uZFlufW"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-05-25 15:31, Kalle Valo wrote:
-> Maya Erez <merez@codeaurora.org> writes:
-> 
->> From: Gidon Studinski <gidons@codeaurora.org>
->> 
->> Enhanced DMA RX data path is handled using a single
->> RX descriptor ring for all VIFs.
->> Multiple RX status rings are supported, to allow RSS
->> and multi MSI support.
->> The driver gets the RX completions via the RX status rings.
->> The RX status message includes the completed RX buffer ID,
->> which points to the allocated SKB.
->> 
->> The enhanced DMA RX data flow supports RX chaining, where
->> multiple SKBs are merged into a single packet.
->> 
->> Enhanced DMA HW supports RX HW reorder offload, enabled by
->> default and can be disabled via module parameter.
->> 
->> Signed-off-by: Gidon Studinski <gidons@codeaurora.org>
->> Signed-off-by: Maya Erez <merez@codeaurora.org>
-> 
-> kbuild bot reported a warning but not sure if it's valid, please take a
-> look:
-> 
->    drivers/net/wireless/ath/wil6210/txrx_edma.c: In function
->    'wil_rx_handle_edma':
->>> drivers/net/wireless/ath/wil6210/txrx_edma.c:815:7: warning: 'stats'
->    may be used uninitialized in this function [-Wmaybe-uninitialized]
->      stats->rx_non_data_frame++;
->      ~~~~~^~~~~~~~~~~~~~~~~~~
->    drivers/net/wireless/ath/wil6210/txrx_edma.c:908:24: note: 'stats'
->    was declared here
->      struct wil_net_stats *stats;
->                            ^~~~~
+--Sig_/87YtzGCidlbcr1x5uZFlufW
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-This is false alarm but looking again on the code I think it is better 
-to initialize stats.
-I'll upload a fix.
+On Thu, 10 May 2018 11:24:12 +0100
+Matt Redfearn <matt.redfearn@mips.com> wrote:
 
--- 
-Maya Erez
-Qualcomm Israel, Inc. on behalf of Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+> > Could you please try this?
+> >=20
+> > config SSB_DRIVER_PCICORE_POSSIBLE
+> > 	depends on SSB_PCIHOST
+> >=20
+> > config SSB_PCICORE_HOSTMODE
+> > 	depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS && (SSB =3D y) && PCI=
+_DRIVERS_LEGACY
+> >=20
+> >=20
+> > The affected API pcibios_enable_device() and register_pci_controller()
+> > is only used in HOSTMODE. So I think it makes sense to make HOSTMODE
+> > depend on SSB=3Dy and PCI_DRIVERS_LEGACY.
+> >=20
+> > PCICore itself does not use the API, if hostmode is disabled.
+> >  =20
+>=20
+> Sure - I've tested the patch:
+>=20
+> --- a/drivers/ssb/Kconfig
+> +++ b/drivers/ssb/Kconfig
+> @@ -117,7 +117,7 @@ config SSB_SERIAL
+>=20
+>   config SSB_DRIVER_PCICORE_POSSIBLE
+>          bool
+> -       depends on SSB_PCIHOST && SSB =3D y
+> +       depends on SSB_PCIHOST
+>          default y
+>=20
+>   config SSB_DRIVER_PCICORE
+> @@ -131,7 +131,7 @@ config SSB_DRIVER_PCICORE
+>=20
+>   config SSB_PCICORE_HOSTMODE
+>          bool "Hostmode support for SSB PCI core"
+> -       depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS
+> +       depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS && (SSB =3D y) &=
+&=20
+> PCI_DRIVERS_LEGACY
+>          help
+>            PCIcore hostmode operation (external PCI bus).
+>=20
+>=20
+> And this seems to work for MIPS, we don't get the build error from=20
+> building the SSB module under nec_markeins allmodconfig, and=20
+> SSB_PCICORE_HOSTMODE=3Dy for bcm47xx allmodconfig, which selects SSB=3Dy.
+>=20
+> So this looks like a good fix for MIPS, at least.
+>=20
+> Tested-by: Matt Redfearn <matt.redfearn@mips.com>
+
+
+Thanks.
+Could you please submit it?
+You can add my Acked-by.
+
+--=20
+Michael
+
+--Sig_/87YtzGCidlbcr1x5uZFlufW
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlr0KFgACgkQ9TK+HZCN
+iw5y9A/7BABuNQ+CSpVQqNzuzLUqhvdOpfkSad3mH2cmbEWwNPgeZB8GIQJUUR3l
+PRbZMQJhGg0nBwJJLsrP/qXXCoX50y/XLhrrJLCPIt7KCPCKbjnR5M2Zgw0aRrTm
+imoKQVf3ZDjvc/32NJ0yantApp6L9yEzICCAhGPN76g1V9jNM5I7u7Pw/dHG6w0E
+nZB2EBlrSQZiYgIrK9OwebF2qfIj5J+sJQg32EJoDVjr+PB/TC3t96+REGX4+Bty
+/FhVN9a6HNFN0Yld4Fv0LJtyynyMkKmkl+Es040R8GuS0d3weVtD0lIUYJIHhbkG
+ww5N00DeiK6e5hL+j1hQclNgkYSBChDkFtUQNxaOXjBSzDP8QdI4qO9BlnWHF8ez
+VXrR1I2pX5n4s2+iwaidGHA+VNaKzuxF27jQKQLjzL4BpUdfhbUx5Rue4/InGUzw
+8nJCkK8NXt/1yEGZK1XXhU/w80B5ncqZjRd9dtdVaeukGpvBPOdaYqgqHlPfEC7n
+Ljsgg7W5EO2RqSd4pjwERkHnoaF3J70qtPF/AcQEmXxo8EflMEoAMoJSgoFxeFy5
+R5S6Ydp/jbR731GwfXHEimSnQmTKQuX7hrWTMGzGWj37mPQLUUbmtScu4bh9oBnW
+tYxlKQQoUjXmBNqNdHJ2HeV+1Vo3PUmnBo8lKxa9R6d7zjr0hRo=
+=Nsfv
+-----END PGP SIGNATURE-----
+
+--Sig_/87YtzGCidlbcr1x5uZFlufW--
