@@ -1,297 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35226 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750985AbeEKTPf (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:38170 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757098AbeEJLuP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 15:15:35 -0400
-Received: by mail-pf0-f194.google.com with SMTP id x9-v6so3151269pfm.2
-        for <linux-wireless@vger.kernel.org>; Fri, 11 May 2018 12:15:35 -0700 (PDT)
-Date: Fri, 11 May 2018 12:16:56 -0700
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Govind Singh <govinds@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 11/12] ath10k: Add wlan mode on/off qmi message
-Message-ID: <20180511191656.GV2259@tuxbook-pro> (sfid-20180511_211539_299918_2C446C98)
-References: <1522042904-26559-1-git-send-email-govinds@codeaurora.org>
+        Thu, 10 May 2018 07:50:15 -0400
+Received: by mail-wm0-f65.google.com with SMTP id y189-v6so3846854wmc.3
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2018 04:50:14 -0700 (PDT)
+Subject: [RESEND PATCH] cfg80211: dynamically allocate per-tid stats for
+ station info
+References: <5AF430B2.2060903@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AF431F4.9060408@broadcom.com> (sfid-20180510_135019_562987_33757727)
+Date: Thu, 10 May 2018 13:50:12 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1522042904-26559-1-git-send-email-govinds@codeaurora.org>
+In-Reply-To: <5AF430B2.2060903@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun 25 Mar 22:41 PDT 2018, Govind Singh wrote:
+From: Arend van Spriel <aspriel@gmail.com>
 
-> Add qmi message required for enabling and disabling
-> target to qmi server running in Q6.
-> 
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
-> ---
->  drivers/net/wireless/ath/ath10k/qmi.c | 226 +++++++++++++++++++++++++++++++++-
->  drivers/net/wireless/ath/ath10k/qmi.h |  62 ++++++----
->  2 files changed, 264 insertions(+), 24 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
-> index f23d0fe..331a528 100644
-> --- a/drivers/net/wireless/ath/ath10k/qmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/qmi.c
-> @@ -35,7 +35,30 @@
->  #define WLFW_CLIENT_ID			0x4b4e454c
->  #define WLFW_TIMEOUT			500
->  
-> -static struct ath10k_qmi *qmi;
-> +static struct ath10k_qmi {
-> +	struct platform_device *pdev;
-> +	struct qmi_handle qmi_hdl;
-> +	struct sockaddr_qrtr sq;
-> +	bool fw_ready;
-> +	bool msa_ready;
-> +	struct work_struct work_svc_arrive;
-> +	struct work_struct work_svc_exit;
-> +	struct work_struct work_msa_ready;
-> +	struct workqueue_struct *event_wq;
-> +	spinlock_t event_lock; /* spinlock for fw ready status*/
-> +	u32 nr_mem_region;
-> +	struct ath10k_msa_mem_region_info
-> +		mem_region[MAX_NUM_MEMORY_REGIONS];
-> +	phys_addr_t msa_pa;
-> +	u32 msa_mem_size;
-> +	void *msa_va;
-> +	struct ath10k_qmi_chip_info chip_info;
-> +	struct ath10k_qmi_board_info board_info;
-> +	struct ath10k_qmi_soc_info soc_info;
-> +	struct ath10k_qmi_fw_version_info fw_version_info;
-> +	char fw_build_id[MAX_BUILD_ID_LEN + 1];
-> +	struct ath10k_qmi_cal_data cal_data[MAX_NUM_CAL_V01];
-> +} *qmi;
+With the addition of TXQ stats in the per-tid statistics the struct
+station_info grew significantly. This resulted in stack limit warnings
+like below:
 
-Don't end your patch series with a move of this structure, fold it back
-into each patch.
+   CC [M]  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.o
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:
+	In function ‘brcmf_notify_connect_status_ap’:
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:5530:1:
+	error: the frame size of 1592 bytes is larger than 1024 bytes
 
->  
->  static int
->  ath10k_qmi_map_msa_permissions(struct ath10k_msa_mem_region_info *mem_region)
-> @@ -444,6 +467,207 @@ int ath10k_qmi_send_cal_report_req(struct ath10k_qmi *qmi)
->  	return ret;
->  }
->  
-> +static int
-> +ath10k_qmi_mode_send_sync_msg(enum wlfw_driver_mode_enum_v01 mode)
-> +{
-> +	struct wlfw_wlan_mode_resp_msg_v01 *resp;
+This patch adds an allocation function that those who want to provide
+per-tid stats should use to allocate the tid array, ie.
+struct station_info::pertid.
 
-4 bytes
+Cc: Toke Høiland-Jørgensen <toke@toke.dk>
+Fixes: 52539ca89f36 ("cfg80211: Expose TXQ stats and parameters to
+userspace")
+Signed-off-by: Arend van Spriel <aspriel@gmail.com>
+---
++ linux-wireless list
 
-> +	struct wlfw_wlan_mode_req_msg_v01 *req;
+Johannes, Toke,
 
-6 bytes, use the stack.
+Here an alternative approach. Currently the only cfg80211-based driver
+providing per-tid stats is mac80211. This patch only changes mac80211
+and the other driver can keep using stack allocation. Even mac80211 could
+if wanted, but I left that part as is.
 
-> +	struct qmi_txn txn;
-> +	int ret;
-> +
-> +	req = kzalloc(sizeof(*req), GFP_KERNEL);
-> +	if (!req)
-> +		return -ENOMEM;
-> +
-> +	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
-> +	if (!resp) {
-> +		kfree(req);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
-> +			   wlfw_wlan_mode_resp_msg_v01_ei,
-> +			   resp);
-> +	if (ret < 0) {
-> +		pr_err("fail to init txn for mode req %d ret %d\n", mode, ret);
-> +		goto out;
-> +	}
-> +
-> +	req->mode = mode;
-> +	req->hw_debug_valid = 1;
-> +	req->hw_debug = 0;
-> +
-> +	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
-> +			       QMI_WLFW_WLAN_MODE_REQ_V01,
-> +			       WLFW_WLAN_MODE_REQ_MSG_V01_MAX_MSG_LEN,
-> +			       wlfw_wlan_mode_req_msg_v01_ei, req);
-> +	if (ret < 0) {
-> +		qmi_txn_cancel(&txn);
-> +		pr_err("send mode req failed, mode: %d ret: %d\n",
-> +		       mode, ret);
-> +		goto out;
-> +	}
-> +
-> +	ret = qmi_txn_wait(&txn, WLFW_TIMEOUT * HZ);
-> +	if (ret < 0)
-> +		goto out;
-> +
-> +	if (resp->resp.result != QMI_RESULT_SUCCESS_V01) {
-> +		pr_err("qmi mode request rejected:");
-> +		pr_err("mode:%d result:%d error:%d\n",
-> +		       mode, resp->resp.result, resp->resp.error);
-> +		ret = resp->resp.result;
-> +		goto out;
-> +	}
-> +
-> +	pr_debug("wlan Mode request completed, mode: %d\n", mode);
-> +	kfree(resp);
-> +	kfree(req);
-> +	return 0;
-> +
-> +out:
-> +	kfree(resp);
-> +	kfree(req);
-> +	return ret;
-> +}
-> +
-> +static int
-> +ath10k_qmi_cfg_send_sync_msg(struct wlfw_wlan_cfg_req_msg_v01 *data)
-> +{
-> +	struct wlfw_wlan_cfg_resp_msg_v01 *resp;
+I considered making the new helper more generic and allocate 'pertid' based
+on filled flags, ie.:
 
-4 bytes, use stack
+int cfg80211_sinfo_prepare(struct station_info *sinfo, gfp_t gfp)
+{
+	:
+	if (sinfo->filled & BIT(NL80211_STA_INFO_TID_STATS)) {
+		sinfo->pertid = kzalloc(..., gfp);
+		if (!pertid)
+			return -ENOMEM;
+	}
+	:
+	return 0;
+}
 
-> +	struct wlfw_wlan_cfg_req_msg_v01 *req;
-
-This is larger, use heap
-
-> +	struct qmi_txn txn;
-> +	int ret;
-> +
-> +	req = kzalloc(sizeof(*req), GFP_KERNEL);
-> +	if (!req)
-> +		return -ENOMEM;
-> +
-> +	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
-> +	if (!resp) {
-> +		kfree(req);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
-> +			   wlfw_wlan_cfg_resp_msg_v01_ei,
-> +			   resp);
-> +	if (ret < 0) {
-> +		pr_err("fail to init txn for config req %d\n", ret);
-> +		goto out;
-> +	}
-> +
-> +	memcpy(req, data, sizeof(*req));
-
-I see no reason to create a local copy of this struct, just pass data to
-qmi_send_request.
-
-> +
-> +	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
-> +			       QMI_WLFW_WLAN_CFG_REQ_V01,
-> +			       WLFW_WLAN_CFG_REQ_MSG_V01_MAX_MSG_LEN,
-> +			       wlfw_wlan_cfg_req_msg_v01_ei, req);
-> +	if (ret < 0) {
-> +		qmi_txn_cancel(&txn);
-> +		pr_err("send config req failed %d\n", ret);
-> +		goto out;
-> +	}
-> +
-> +	ret = qmi_txn_wait(&txn, WLFW_TIMEOUT * HZ);
-> +	if (ret < 0)
-> +		goto out;
-> +
-> +	if (resp->resp.result != QMI_RESULT_SUCCESS_V01) {
-> +		pr_err("qmi cfg request rejected:");
-> +		pr_err("result:%d error:%d\n",
-> +		       resp->resp.result, resp->resp.error);
-> +		ret = resp->resp.result;
-> +		goto out;
-> +	}
-> +
-> +	pr_debug("wlan config request completed\n");
-> +	kfree(resp);
-> +	kfree(req);
-> +	return 0;
-> +
-> +out:
-> +	kfree(resp);
-> +	kfree(req);
-> +	return ret;
-> +}
-> +
-> +int ath10k_qmi_wlan_enable(struct ath10k_qmi_wlan_enable_cfg *config,
-> +			   enum ath10k_qmi_driver_mode mode,
-> +			   const char *host_version)
-> +{
-> +	struct wlfw_wlan_cfg_req_msg_v01 req;
-> +	int ret;
-> +	u32 i;
-> +
-> +	pr_debug("mode: %d, config: %p:\n",
-> +		 mode, config);
-
-Use dev_dbg() and dev_err()
-
-> +	memset(&req, 0, sizeof(req));
-> +	if (!config) {
-> +		pr_err("wlan enable Config Invalid:%p\n",
-> +		       config);
-> +		ret = -EINVAL;
-> +		return ret;
-> +	}
-> +
-> +	req.host_version_valid = 0;
-> +
-> +	req.tgt_cfg_valid = 1;
-> +	if (config->num_ce_tgt_cfg > QMI_WLFW_MAX_NUM_CE_V01)
-> +		req.tgt_cfg_len = QMI_WLFW_MAX_NUM_CE_V01;
-> +	else
-> +		req.tgt_cfg_len = config->num_ce_tgt_cfg;
-> +	for (i = 0; i < req.tgt_cfg_len; i++) {
-> +		req.tgt_cfg[i].pipe_num = config->ce_tgt_cfg[i].pipe_num;
-> +		req.tgt_cfg[i].pipe_dir = config->ce_tgt_cfg[i].pipe_dir;
-> +		req.tgt_cfg[i].nentries = config->ce_tgt_cfg[i].nentries;
-> +		req.tgt_cfg[i].nbytes_max = config->ce_tgt_cfg[i].nbytes_max;
-> +		req.tgt_cfg[i].flags = config->ce_tgt_cfg[i].flags;
-> +	}
-> +
-> +	req.svc_cfg_valid = 1;
-> +	if (config->num_ce_svc_pipe_cfg > QMI_WLFW_MAX_NUM_SVC_V01)
-> +		req.svc_cfg_len = QMI_WLFW_MAX_NUM_SVC_V01;
-> +	else
-> +		req.svc_cfg_len = config->num_ce_svc_pipe_cfg;
-> +	for (i = 0; i < req.svc_cfg_len; i++) {
-> +		req.svc_cfg[i].service_id = config->ce_svc_cfg[i].service_id;
-> +		req.svc_cfg[i].pipe_dir = config->ce_svc_cfg[i].pipe_dir;
-> +		req.svc_cfg[i].pipe_num = config->ce_svc_cfg[i].pipe_num;
-> +	}
-> +
-> +	req.shadow_reg_valid = 1;
-> +	if (config->num_shadow_reg_cfg >
-> +	    QMI_WLFW_MAX_NUM_SHADOW_REG_V01)
-> +		req.shadow_reg_len = QMI_WLFW_MAX_NUM_SHADOW_REG_V01;
-> +	else
-> +		req.shadow_reg_len = config->num_shadow_reg_cfg;
-> +
-> +	memcpy(req.shadow_reg, config->shadow_reg_cfg,
-> +	       sizeof(struct wlfw_shadow_reg_cfg_s_v01) * req.shadow_reg_len);
-> +
-> +	ret = ath10k_qmi_cfg_send_sync_msg(&req);
-
-Either move all of the req buildup into ath10k_qmi_cfg_send_sync_msg()
-or inline that function here - they are logically the two parts of the
-same function, don't split it like this.
-
-> +	if (ret) {
-> +		pr_err("wlan qmi config send failed\n");
-> +		return ret;
-> +	}
-> +
-> +	ret = ath10k_qmi_mode_send_sync_msg(mode);
-> +	if (ret) {
-> +		pr_err("wlan qmi mode send failed\n");
-> +		return ret;
-> +	}
-> +
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(ath10k_qmi_wlan_enable);
+but decided to stick close to the issue.
 
 Regards,
-Bjorn
+Arend
+---
+  include/net/cfg80211.h  |  9 ++++++++-
+  net/mac80211/sta_info.c | 11 ++++++-----
+  net/wireless/nl80211.c  |  4 +++-
+  net/wireless/util.c     | 12 ++++++++++++
+  4 files changed, 29 insertions(+), 7 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 8db6071..784377a 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1230,7 +1230,7 @@ struct station_info {
+  	u64 rx_beacon;
+  	u64 rx_duration;
+  	u8 rx_beacon_signal_avg;
+-	struct cfg80211_tid_stats pertid[IEEE80211_NUM_TIDS + 1];
++	struct cfg80211_tid_stats *pertid;
+  	s8 ack_signal;
+  	s8 avg_ack_signal;
+  };
+@@ -5701,6 +5701,13 @@ void cfg80211_remain_on_channel_expired(struct
+wireless_dev *wdev, u64 cookie,
+  					struct ieee80211_channel *chan,
+  					gfp_t gfp);
+
++/**
++ * cfg80211_sinfo_alloc_tid_stats - allocate per-tid statistics.
++ *
++ * @sinfo: the station information
++ * @gfp: allocation flags
++ */
++int cfg80211_sinfo_alloc_tid_stats(struct station_info *sinfo, gfp_t gfp);
+
+  /**
+   * cfg80211_new_sta - notify userspace about station
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 43f34aa..25e8b15 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -2233,11 +2233,12 @@ void sta_set_sinfo(struct sta_info *sta, struct
+station_info *sinfo)
+  			sinfo->filled |= BIT(NL80211_STA_INFO_RX_BITRATE);
+  	}
+
+-	sinfo->filled |= BIT(NL80211_STA_INFO_TID_STATS);
+-	for (i = 0; i < IEEE80211_NUM_TIDS + 1; i++) {
+-		struct cfg80211_tid_stats *tidstats = &sinfo->pertid[i];
+-
+-		sta_set_tidstats(sta, tidstats, i);
++	if (!cfg80211_sinfo_alloc_tid_stats(sinfo, GFP_KERNEL)) {
++		for (i = 0; i < IEEE80211_NUM_TIDS + 1; i++) {
++			struct cfg80211_tid_stats *tidstats = &sinfo->pertid[i];
++	
++			sta_set_tidstats(sta, tidstats, i);
++		}
+  	}
+
+  	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f7715b8..e51cae7 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4663,7 +4663,7 @@ static int nl80211_send_station(struct sk_buff
+*msg, u32 cmd, u32 portid,
+  		int tid;
+
+  		tidsattr = nla_nest_start(msg, NL80211_STA_INFO_TID_STATS);
+-		if (!tidsattr)
++		if (!tidsattr || !sinfo->pertid)
+  			goto nla_put_failure;
+
+  		for (tid = 0; tid < IEEE80211_NUM_TIDS + 1; tid++) {
+@@ -4702,6 +4702,8 @@ static int nl80211_send_station(struct sk_buff
+*msg, u32 cmd, u32 portid,
+  		}
+
+  		nla_nest_end(msg, tidsattr);
++
++		kfree(sinfo->pertid);
+  	}
+
+  	nla_nest_end(msg, sinfoattr);
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index d112e9a..b956c23fe 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1750,6 +1750,18 @@ int cfg80211_get_station(struct net_device *dev,
+const u8 *mac_addr,
+  }
+  EXPORT_SYMBOL(cfg80211_get_station);
+
++int cfg80211_sinfo_alloc_tid_stats(struct station_info *sinfo, gfp_t gfp)
++{
++	sinfo->pertid = kcalloc(sizeof(*(sinfo->pertid)),
++				IEEE80211_NUM_TIDS + 1, gfp);
++	if (!sinfo->pertid)
++		return -ENOMEM;
++	
++	sinfo->filled |= NL80211_STA_INFO_TID_STATS;
++	return 0;
++}
++EXPORT_SYMBOL(cfg80211_sinfo_alloc_tid_stats);
++
+  void cfg80211_free_nan_func(struct cfg80211_nan_func *f)
+  {
+  	int i;
+-- 
+2.7.4
