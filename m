@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga17.intel.com ([192.55.52.151]:41996 "EHLO mga17.intel.com"
+Received: from mail.kernel.org ([198.145.29.99]:36030 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753077AbeEUQ6b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 May 2018 12:58:31 -0400
-From: "Dreyfuss, Haim" <haim.dreyfuss@intel.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: Eric Biggers <ebiggers3@gmail.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Coelho, Luciano" <luciano.coelho@intel.com>
-Subject: RE: [4.17 iwlwifi regression] NULL pointer dereference in
- reg_query_regdb_wmm()
-Date: Mon, 21 May 2018 16:56:41 +0000
-Message-ID: <409B2791E285FD41B488E034D9B4719F27E99E2B@HASMSX106.ger.corp.intel.com> (sfid-20180521_185842_793822_E6A81DF9)
-References: <20180519183345.GA701@sol.localdomain>
-        <409B2791E285FD41B488E034D9B4719F27E99C58@HASMSX106.ger.corp.intel.com>
- <87muwtezwy.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87muwtezwy.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        id S1752334AbeEJUJN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 May 2018 16:09:13 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: akpm@linux-foundation.org, keescook@chromium.org,
+        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
+        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
+        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
+        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
+        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
+        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        jewalt@lgsinnovations.com, oneukum@suse.com,
+        cantabile.desu@gmail.com, khc@pm.waw.pl, arve@android.com,
+        tkjos@android.com, corbet@lwn.net, mchehab+samsung@kernel.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v7 13/14] Documentation: remove stale firmware API reference
+Date: Thu, 10 May 2018 13:08:49 -0700
+Message-Id: <20180510200850.5958-14-mcgrof@kernel.org> (sfid-20180510_220951_239511_7D25AE4D)
+In-Reply-To: <20180510200850.5958-1-mcgrof@kernel.org>
+References: <20180510200850.5958-1-mcgrof@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yeah, MCC stands for Mobile Country Code.
-You can find it in the dmesg 
-"iwl_mvm_get_regdomain Getting regdomain data for ZZ from FW "
-" iwl_mvm_update_mcc send MCC update to FW with 'ZZ' src = 16"
+It refers to a pending patch, but this was merged eons ago.
 
-Cheers
-Dreyfuss
+Reviewed-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Reviewed-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ Documentation/dell_rbu.txt | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
------Original Message-----
-From: Kalle Valo [mailto:kvalo@codeaurora.org] 
-Sent: Monday, May 21, 2018 7:28 PM
-To: Dreyfuss, Haim <haim.dreyfuss@intel.com>
-Cc: Eric Biggers <ebiggers3@gmail.com>; linuxwifi <linuxwifi@intel.com>; linux-wireless@vger.kernel.org; Coelho, Luciano <luciano.coelho@intel.com>
-Subject: Re: [4.17 iwlwifi regression] NULL pointer dereference in reg_query_regdb_wmm()
-
-"Dreyfuss, Haim" <haim.dreyfuss@intel.com> writes:
-
-> Can you provide the following information?
-> 1. The *boot* you mentioned is from clean shutdown or from Sx state?
-> 2. Do you know which MCC the driver is trying to update?
-
-You could also give some hints how to find the MCC and even tell what it means. Is it Mobile Country Code or what?
-
---
-Kalle Valo
+diff --git a/Documentation/dell_rbu.txt b/Documentation/dell_rbu.txt
+index 0fdb6aa2704c..5d1ce7bcd04d 100644
+--- a/Documentation/dell_rbu.txt
++++ b/Documentation/dell_rbu.txt
+@@ -121,10 +121,7 @@ read back the image downloaded.
+ 
+ .. note::
+ 
+-   This driver requires a patch for firmware_class.c which has the modified
+-   request_firmware_nowait function.
+-
+-   Also after updating the BIOS image a user mode application needs to execute
++   After updating the BIOS image a user mode application needs to execute
+    code which sends the BIOS update request to the BIOS. So on the next reboot
+    the BIOS knows about the new image downloaded and it updates itself.
+    Also don't unload the rbu driver if the image has to be updated.
+-- 
+2.17.0
