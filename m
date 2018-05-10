@@ -1,67 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:35622 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752588AbeEPOIt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 May 2018 10:08:49 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
-        rfried@codeaurora.org, bjorn.andersson@linaro.org,
-        nicolas.dechesne@linaro.org, loic.poulain@linaro.org,
-        Daniel Mack <daniel@zonque.org>
-Subject: [PATCH 10/10] wcn36xx: improve debug and error messages for SMD
-Date: Wed, 16 May 2018 16:08:20 +0200
-Message-Id: <20180516140820.1636-11-daniel@zonque.org> (sfid-20180516_160856_156239_4A2DD131)
-In-Reply-To: <20180516140820.1636-1-daniel@zonque.org>
-References: <20180516140820.1636-1-daniel@zonque.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:40209 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757103AbeEJLf2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 May 2018 07:35:28 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180510132612.25c8c20e@wiggum>
+References: <20180510111401.1161-1-zajec5@gmail.com> <20180510111401.1161-2-zajec5@gmail.com>
+ <20180510131725.111079af@wiggum> <CACna6ryWUCnrw9w4yhfiNXFHy1hFjVV-BqH07i7DQqxq8FtjMw@mail.gmail.com>
+ <20180510132612.25c8c20e@wiggum>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Thu, 10 May 2018 13:35:26 +0200
+Message-ID: <CACna6rxymYHCNU8hDG0gADBboguvBsjrLu5CR2zcOuCS8g=SfA@mail.gmail.com> (sfid-20180510_133542_954929_D189EACF)
+Subject: Re: [PATCH 4.17 2/2] ssb: make SSB_PCICORE_HOSTMODE depend on SSB = y
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Larry Finger <larry.finger@lwfinger.net>,
+        Matt Redfearn <matt.redfearn@mips.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Hauke Mehrtens <hauke@hauke-m.de>,
+        LKML <linux-kernel@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a missing newline in wcn36xx_smd_send_and_wait() and also log the
-command request and response type that was processed.
+On 10 May 2018 at 13:26, Michael B=C3=BCsch <m@bues.ch> wrote:
+> On Thu, 10 May 2018 13:20:01 +0200
+> Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+>
+>> On 10 May 2018 at 13:17, Michael B=C3=BCsch <m@bues.ch> wrote:
+>> > On Thu, 10 May 2018 13:14:01 +0200
+>> > Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+>> >
+>> >> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>> >>
+>> >> SSB_PCICORE_HOSTMODE protects MIPS specific code that calls not expor=
+ted
+>> >> symbols pcibios_enable_device and register_pci_controller. This code =
+is
+>> >> supposed to be compiled only with ssb builtin.
+>> >>
+>> >> This fixes:
+>> >> ERROR: "pcibios_enable_device" [drivers/ssb/ssb.ko] undefined!
+>> >> ERROR: "register_pci_controller" [drivers/ssb/ssb.ko] undefined!
+>> >> make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
+>> >>
+>> >> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>> >> ---
+>> >>  drivers/ssb/Kconfig | 2 +-
+>> >>  1 file changed, 1 insertion(+), 1 deletion(-)
+>> >>
+>> >> diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
+>> >> index b3f5cae98ea6..c574dd210500 100644
+>> >> --- a/drivers/ssb/Kconfig
+>> >> +++ b/drivers/ssb/Kconfig
+>> >> @@ -131,7 +131,7 @@ config SSB_DRIVER_PCICORE
+>> >>
+>> >>  config SSB_PCICORE_HOSTMODE
+>> >>       bool "Hostmode support for SSB PCI core"
+>> >> -     depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS
+>> >> +     depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS && SSB =3D y
+>> >>       help
+>> >>         PCIcore hostmode operation (external PCI bus).
+>> >>
+>> >
+>> >
+>> > I think we also need to depend on PCI_DRIVERS_LEGACY.
+>> > See the other patch that floats around.
+>>
+>> I believe it's already handled by SSB_PCIHOST_POSSIBLE's dependency on
+>> PCI_DRIVERS_LEGACY.
+>
+>
+> That dependency seems to be wrong there.
+> Was it added among some other "let's just unbreak some random
+> build" change as well?
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
----
- drivers/net/wireless/ath/wcn36xx/smd.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+I guess so.
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 43c8aa79fad4..b855a58d5aac 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -252,23 +252,29 @@ static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
- {
- 	int ret = 0;
- 	unsigned long start;
-+	struct wcn36xx_hal_msg_header *hdr =
-+		(struct wcn36xx_hal_msg_header *)wcn->hal_buf;
-+	u16 req_type = hdr->msg_type;
-+
- 	wcn36xx_dbg_dump(WCN36XX_DBG_SMD_DUMP, "HAL >>> ", wcn->hal_buf, len);
- 
- 	init_completion(&wcn->hal_rsp_compl);
- 	start = jiffies;
- 	ret = rpmsg_send(wcn->smd_channel, wcn->hal_buf, len);
- 	if (ret) {
--		wcn36xx_err("HAL TX failed\n");
-+		wcn36xx_err("HAL TX failed for req %d\n", req_type);
- 		goto out;
- 	}
- 	if (wait_for_completion_timeout(&wcn->hal_rsp_compl,
- 		msecs_to_jiffies(HAL_MSG_TIMEOUT)) <= 0) {
--		wcn36xx_err("Timeout! No SMD response in %dms\n",
--			    HAL_MSG_TIMEOUT);
-+		wcn36xx_err("Timeout! No SMD response to req %d in %dms\n",
-+			    req_type, HAL_MSG_TIMEOUT);
- 		ret = -ETIME;
- 		goto out;
- 	}
--	wcn36xx_dbg(WCN36XX_DBG_SMD, "SMD command completed in %dms",
-+	wcn36xx_dbg(WCN36XX_DBG_SMD,
-+		    "SMD command (req %d, rsp %d) completed in %dms\n",
-+		    req_type, hdr->msg_type,
- 		    jiffies_to_msecs(jiffies - start));
- out:
- 	return ret;
--- 
-2.14.3
+
+> SSB_PCIHOST enables support for SSB on top of PCI. (Which is 99% of it
+> uses). I don't see how this uses the legacy API.
+>
+> SSB_PCICORE_HOSTMODE enables PCI on top of SSB. Which is a MIPS corner
+> case. This uses the legacy MIPS API to register a PCI bus.
+
+I agree current dependency on PCI_DRIVERS_LEGACY doesn't make sense.
+It doesn't break thing though, thanks to the || !MIPS. I'm going to
+fix that up in separated patch.
+
+--=20
+Rafa=C5=82
