@@ -1,61 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59210 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750831AbeE2HcF (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:54907 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752673AbeEKIPF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 May 2018 03:32:05 -0400
-Subject: Re: [RFC] mac80211: add stop/start logic for software TXQs
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgens?= =?UTF-8?Q?en?=
-        <toke@toke.dk>
-References: <1526672192-3873-1-git-send-email-mpubbise@codeaurora.org>
- <1527068760.3759.13.camel@sipsolutions.net>
- <af87d35a-f5d8-0766-b650-0ba3e941e839@codeaurora.org>
- <1527494784.8221.1.camel@sipsolutions.net>
-From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Message-ID: <0d71d9f0-42cf-ce73-0c44-bbbe6b32b275@codeaurora.org> (sfid-20180529_093252_557034_475F7AF4)
-Date: Tue, 29 May 2018 13:02:01 +0530
+        Fri, 11 May 2018 04:15:05 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 21/30] staging: wilc1000: fix line over 80 chars issue in connect()
+Date: Fri, 11 May 2018 13:43:22 +0530
+Message-ID: <1526026411-11058-22-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101510_817626_EA457580)
+In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <1527494784.8221.1.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Fix line over 80 characters in connect() by using temporary variables.
 
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 29 +++++++++++++----------
+ 1 file changed, 17 insertions(+), 12 deletions(-)
 
-On 5/28/2018 1:36 PM, Johannes Berg wrote:
-> On Mon, 2018-05-28 at 12:49 +0530, Manikanta Pubbisetty wrote:
->>> This doesn't seem right, all the logic that clears the TXQ_STOP etc.
->>> still needs to be invoked, otherwise your TXQ will get stuck completely
->>> since you'll never run this code again.
->> If the queues are blocked more than the block ack timeout then the
->> traffic should be sent only in the next BA session.
->> I am not really sure whether the queues will be blocked more than the
->> block ack timeout value unless the queues are stopped because of
->> multiple reasons.
->> In any case, traffic will be pushed out in subsequent BA sessions, no?
-> I'm not really sure what you're saying, but it sounds almost like you're
-> confusing a "BA session" with a single A-MPDU? The session will get
-> stuck if you do the code this way, I think.
-
-Okay.
-
->>> Also, you have the same problem as above - you never re-run this code so
->>>    you'd get stuck completely.
->> I didn't get your point here. By the time the queues gets started again,
->> there could be possibility that the station might have been back to
->> sleep. In this case, it is better not to send the traffic, no?
->> Anyways, station would receive the traffic in the next cycle when it is
->> out of sleep. Considering codel logic, there could be frame drops
->> though; maybe I am missing something?
-> But this is still the old code before cycling, so you never get here
-> during the TX cycle you're thinking of?
-
-I did not understand your question fully ;-)
-But then, as discussed earlier, it is best to mark the queues on which 
-driver attempted to dequeue and then release the packets once queues are 
-woken up.
-
-Thanks,
-Manikanta
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index e64e944..70947a8 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -679,7 +679,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	u32 sel_bssi_idx = UINT_MAX;
+ 	u8 u8security = NO_ENCRYPT;
+ 	enum AUTHTYPE auth_type = ANY;
+-
++	u32 cipher_group;
+ 	struct wilc_priv *priv;
+ 	struct host_if_drv *wfi_drv;
+ 	struct network_info *nw_info = NULL;
+@@ -727,32 +727,35 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	memset(priv->wep_key, 0, sizeof(priv->wep_key));
+ 	memset(priv->wep_key_len, 0, sizeof(priv->wep_key_len));
+ 
+-	if (sme->crypto.cipher_group != NO_ENCRYPT) {
+-		if (sme->crypto.cipher_group == WLAN_CIPHER_SUITE_WEP40) {
++	cipher_group = sme->crypto.cipher_group;
++	if (cipher_group != NO_ENCRYPT) {
++		if (cipher_group == WLAN_CIPHER_SUITE_WEP40) {
+ 			u8security = ENCRYPT_ENABLED | WEP;
+ 
+ 			priv->wep_key_len[sme->key_idx] = sme->key_len;
+-			memcpy(priv->wep_key[sme->key_idx], sme->key, sme->key_len);
++			memcpy(priv->wep_key[sme->key_idx], sme->key,
++			       sme->key_len);
+ 
+ 			wilc_set_wep_default_keyid(vif, sme->key_idx);
+ 			wilc_add_wep_key_bss_sta(vif, sme->key, sme->key_len,
+ 						 sme->key_idx);
+-		} else if (sme->crypto.cipher_group == WLAN_CIPHER_SUITE_WEP104)   {
++		} else if (cipher_group == WLAN_CIPHER_SUITE_WEP104) {
+ 			u8security = ENCRYPT_ENABLED | WEP | WEP_EXTENDED;
+ 
+ 			priv->wep_key_len[sme->key_idx] = sme->key_len;
+-			memcpy(priv->wep_key[sme->key_idx], sme->key, sme->key_len);
++			memcpy(priv->wep_key[sme->key_idx], sme->key,
++			       sme->key_len);
+ 
+ 			wilc_set_wep_default_keyid(vif, sme->key_idx);
+ 			wilc_add_wep_key_bss_sta(vif, sme->key, sme->key_len,
+ 						 sme->key_idx);
+-		} else if (sme->crypto.wpa_versions & NL80211_WPA_VERSION_2)   {
+-			if (sme->crypto.cipher_group == WLAN_CIPHER_SUITE_TKIP)
++		} else if (sme->crypto.wpa_versions & NL80211_WPA_VERSION_2) {
++			if (cipher_group == WLAN_CIPHER_SUITE_TKIP)
+ 				u8security = ENCRYPT_ENABLED | WPA2 | TKIP;
+ 			else
+ 				u8security = ENCRYPT_ENABLED | WPA2 | AES;
+-		} else if (sme->crypto.wpa_versions & NL80211_WPA_VERSION_1)   {
+-			if (sme->crypto.cipher_group == WLAN_CIPHER_SUITE_TKIP)
++		} else if (sme->crypto.wpa_versions & NL80211_WPA_VERSION_1) {
++			if (cipher_group == WLAN_CIPHER_SUITE_TKIP)
+ 				u8security = ENCRYPT_ENABLED | WPA | TKIP;
+ 			else
+ 				u8security = ENCRYPT_ENABLED | WPA | AES;
+@@ -767,14 +770,16 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	if ((sme->crypto.wpa_versions & NL80211_WPA_VERSION_1) ||
+ 	    (sme->crypto.wpa_versions & NL80211_WPA_VERSION_2)) {
+ 		for (i = 0; i < sme->crypto.n_ciphers_pairwise; i++) {
+-			if (sme->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_TKIP)
++			u32 ciphers_pairwise = sme->crypto.ciphers_pairwise[i];
++
++			if (ciphers_pairwise == WLAN_CIPHER_SUITE_TKIP)
+ 				u8security = u8security | TKIP;
+ 			else
+ 				u8security = u8security | AES;
+ 		}
+ 	}
+ 
+-	switch (sme->auth_type)	{
++	switch (sme->auth_type) {
+ 	case NL80211_AUTHTYPE_OPEN_SYSTEM:
+ 		auth_type = OPEN_SYSTEM;
+ 		break;
+-- 
+2.7.4
