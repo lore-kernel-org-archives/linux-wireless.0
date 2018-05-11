@@ -1,211 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:39282 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751674AbeECF4Z (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:42663 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752747AbeEKIOv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 May 2018 01:56:25 -0400
-Received: by mail-pg0-f68.google.com with SMTP id e1-v6so992911pga.6
-        for <linux-wireless@vger.kernel.org>; Wed, 02 May 2018 22:56:25 -0700 (PDT)
-From: Amit Pundir <amit.pundir@linaro.org>
-To: lkml <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Cc: Samuel Ortiz <sameo@linux.intel.com>,
-        Christophe Ricard <christophe.ricard@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        John Stultz <john.stultz@linaro.org>
-Subject: [PATCH v2] NFC: fdp: Remove __func__ from dev_dbg()
-Date: Thu,  3 May 2018 11:26:19 +0530
-Message-Id: <1525326979-16897-1-git-send-email-amit.pundir@linaro.org> (sfid-20180503_075807_258643_FFF51427)
+        Fri, 11 May 2018 04:14:51 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 15/30] staging: wilc1000: fix line over 80 charas in wilc_wfi_remain_on_channel_expired()
+Date: Fri, 11 May 2018 13:43:16 +0530
+Message-ID: <1526026411-11058-16-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101545_372765_8FD3166B)
+In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove redundant __func__ parameter from dev_dgb() calls.
+Refactor wilc_wfi_remain_on_channel_expired() to avoid line over 80
+character issue reported by checkpatch.pl script. Also assigned value in the
+variable at the time of declaration.
 
-v2:
-Deleted empty dev_dbg() trace calls, which are redundant if
-function tracer is enabled.
-
-Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/nfc/fdp/fdp.c | 18 +++---------------
- drivers/nfc/fdp/i2c.c | 17 ++++-------------
- 2 files changed, 7 insertions(+), 28 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/nfc/fdp/fdp.c b/drivers/nfc/fdp/fdp.c
-index d5784a4..f64a6fd 100644
---- a/drivers/nfc/fdp/fdp.c
-+++ b/drivers/nfc/fdp/fdp.c
-@@ -249,8 +249,6 @@ static int fdp_nci_open(struct nci_dev *ndev)
- 	struct fdp_nci_info *info = nci_get_drvdata(ndev);
- 	struct device *dev = &info->phy->i2c_dev->dev;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 32bdefb..93511de 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1487,18 +1487,16 @@ static void wilc_wfi_remain_on_channel_ready(void *priv_data)
  
--	dev_dbg(dev, "%s\n", __func__);
--
- 	r = info->phy_ops->enable(info->phy);
- 
- 	return r;
-@@ -261,7 +259,6 @@ static int fdp_nci_close(struct nci_dev *ndev)
- 	struct fdp_nci_info *info = nci_get_drvdata(ndev);
- 	struct device *dev = &info->phy->i2c_dev->dev;
- 
--	dev_dbg(dev, "%s\n", __func__);
- 	return 0;
- }
- 
-@@ -270,8 +267,6 @@ static int fdp_nci_send(struct nci_dev *ndev, struct sk_buff *skb)
- 	struct fdp_nci_info *info = nci_get_drvdata(ndev);
- 	struct device *dev = &info->phy->i2c_dev->dev;
- 
--	dev_dbg(dev, "%s\n", __func__);
--
- 	if (atomic_dec_and_test(&info->data_pkt_counter))
- 		info->data_pkt_counter_cb(ndev);
- 
-@@ -283,7 +278,6 @@ int fdp_nci_recv_frame(struct nci_dev *ndev, struct sk_buff *skb)
- 	struct fdp_nci_info *info = nci_get_drvdata(ndev);
- 	struct device *dev = &info->phy->i2c_dev->dev;
- 
--	dev_dbg(dev, "%s\n", __func__);
- 	return nci_recv_frame(ndev, skb);
- }
- EXPORT_SYMBOL(fdp_nci_recv_frame);
-@@ -498,8 +492,6 @@ static int fdp_nci_setup(struct nci_dev *ndev)
- 	int r;
- 	u8 patched = 0;
- 
--	dev_dbg(dev, "%s\n", __func__);
--
- 	r = nci_core_init(ndev);
- 	if (r)
- 		goto error;
-@@ -609,7 +601,6 @@ static int fdp_nci_core_reset_ntf_packet(struct nci_dev *ndev,
- 	struct fdp_nci_info *info = nci_get_drvdata(ndev);
- 	struct device *dev = &info->phy->i2c_dev->dev;
- 
--	dev_dbg(dev, "%s\n", __func__);
- 	info->setup_reset_ntf = 1;
- 	wake_up(&info->setup_wq);
- 
-@@ -622,7 +613,6 @@ static int fdp_nci_prop_patch_ntf_packet(struct nci_dev *ndev,
- 	struct fdp_nci_info *info = nci_get_drvdata(ndev);
- 	struct device *dev = &info->phy->i2c_dev->dev;
- 
--	dev_dbg(dev, "%s\n", __func__);
- 	info->setup_patch_ntf = 1;
- 	info->setup_patch_status = skb->data[0];
- 	wake_up(&info->setup_wq);
-@@ -637,7 +627,7 @@ static int fdp_nci_prop_patch_rsp_packet(struct nci_dev *ndev,
- 	struct device *dev = &info->phy->i2c_dev->dev;
- 	u8 status = skb->data[0];
- 
--	dev_dbg(dev, "%s: status 0x%x\n", __func__, status);
-+	dev_dbg(dev, "status 0x%x\n", status);
- 	nci_req_complete(ndev, status);
- 
- 	return 0;
-@@ -650,7 +640,7 @@ static int fdp_nci_prop_set_production_data_rsp_packet(struct nci_dev *ndev,
- 	struct device *dev = &info->phy->i2c_dev->dev;
- 	u8 status = skb->data[0];
- 
--	dev_dbg(dev, "%s: status 0x%x\n", __func__, status);
-+	dev_dbg(dev, "status 0x%x\n", status);
- 	nci_req_complete(ndev, status);
- 
- 	return 0;
-@@ -695,7 +685,7 @@ static int fdp_nci_core_get_config_rsp_packet(struct nci_dev *ndev,
- 	dev_dbg(dev, "OTP version %d\n", info->otp_version);
- 	dev_dbg(dev, "RAM version %d\n", info->ram_version);
- 	dev_dbg(dev, "key index %d\n", info->key_index);
--	dev_dbg(dev, "%s: status 0x%x\n", __func__, rsp->status);
-+	dev_dbg(dev, "status 0x%x\n", rsp->status);
- 
- 	nci_req_complete(ndev, rsp->status);
- 
-@@ -798,8 +788,6 @@ void fdp_nci_remove(struct nci_dev *ndev)
- 	struct fdp_nci_info *info = nci_get_drvdata(ndev);
- 	struct device *dev = &info->phy->i2c_dev->dev;
- 
--	dev_dbg(dev, "%s\n", __func__);
--
- 	nci_unregister_device(ndev);
- 	nci_free_device(ndev);
- }
-diff --git a/drivers/nfc/fdp/i2c.c b/drivers/nfc/fdp/i2c.c
-index c4da50e..f355ab2 100644
---- a/drivers/nfc/fdp/i2c.c
-+++ b/drivers/nfc/fdp/i2c.c
-@@ -57,7 +57,6 @@ static int fdp_nci_i2c_enable(void *phy_id)
+ static void wilc_wfi_remain_on_channel_expired(void *data, u32 session_id)
  {
- 	struct fdp_i2c_phy *phy = phy_id;
+-	struct wilc_priv *priv;
++	struct wilc_priv *priv = data;
++	struct wilc_wfi_p2p_listen_params *params = &priv->remain_on_ch_params;
  
--	dev_dbg(&phy->i2c_dev->dev, "%s\n", __func__);
- 	fdp_nci_i2c_reset(phy);
+-	priv = data;
++	if (session_id != params->listen_session_id)
++		return;
  
- 	return 0;
-@@ -67,7 +66,6 @@ static void fdp_nci_i2c_disable(void *phy_id)
- {
- 	struct fdp_i2c_phy *phy = phy_id;
+-	if (session_id == priv->remain_on_ch_params.listen_session_id) {
+-		priv->p2p_listen_state = false;
++	priv->p2p_listen_state = false;
  
--	dev_dbg(&phy->i2c_dev->dev, "%s\n", __func__);
- 	fdp_nci_i2c_reset(phy);
+-		cfg80211_remain_on_channel_expired(priv->wdev,
+-						   priv->remain_on_ch_params.listen_cookie,
+-						   priv->remain_on_ch_params.listen_ch,
+-						   GFP_KERNEL);
+-	}
++	cfg80211_remain_on_channel_expired(priv->wdev, params->listen_cookie,
++					   params->listen_ch, GFP_KERNEL);
  }
  
-@@ -113,8 +111,8 @@ static int fdp_nci_i2c_write(void *phy_id, struct sk_buff *skb)
- 	}
- 
- 	if (r < 0 || r != skb->len)
--		dev_dbg(&client->dev, "%s: error err=%d len=%d\n",
--			__func__, r, skb->len);
-+		dev_dbg(&client->dev, "error err=%d len=%d\n",
-+			r, skb->len);
- 
- 	if (r >= 0) {
- 		if (r != skb->len) {
-@@ -152,8 +150,7 @@ static int fdp_nci_i2c_read(struct fdp_i2c_phy *phy, struct sk_buff **skb)
- 
- 		r = i2c_master_recv(client, tmp, len);
- 		if (r != len) {
--			dev_dbg(&client->dev, "%s: i2c recv err: %d\n",
--				__func__, r);
-+			dev_dbg(&client->dev, "i2c recv err: %d\n", r);
- 			goto flush;
- 		}
- 
-@@ -167,8 +164,7 @@ static int fdp_nci_i2c_read(struct fdp_i2c_phy *phy, struct sk_buff **skb)
- 		 * and force resynchronization
- 		 */
- 		if (lrc) {
--			dev_dbg(&client->dev, "%s: corrupted packet\n",
--				__func__);
-+			dev_dbg(&client->dev, "corrupted packet\n");
- 			phy->next_read_size = 5;
- 			goto flush;
- 		}
-@@ -215,7 +211,6 @@ static irqreturn_t fdp_nci_i2c_irq_thread_fn(int irq, void *phy_id)
- 	}
- 
- 	client = phy->i2c_dev;
--	dev_dbg(&client->dev, "%s\n", __func__);
- 
- 	r = fdp_nci_i2c_read(phy, &skb);
- 
-@@ -296,8 +291,6 @@ static int fdp_nci_i2c_probe(struct i2c_client *client)
- 	u32 clock_freq;
- 	int r = 0;
- 
--	dev_dbg(dev, "%s\n", __func__);
--
- 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
- 		nfc_err(dev, "No I2C_FUNC_I2C support\n");
- 		return -ENODEV;
-@@ -359,8 +352,6 @@ static int fdp_nci_i2c_remove(struct i2c_client *client)
- {
- 	struct fdp_i2c_phy *phy = i2c_get_clientdata(client);
- 
--	dev_dbg(&client->dev, "%s\n", __func__);
--
- 	fdp_nci_remove(phy->ndev);
- 	fdp_nci_i2c_disable(phy);
- 
+ static int remain_on_channel(struct wiphy *wiphy,
 -- 
 2.7.4
