@@ -1,55 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:42094 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752102AbeEOQNY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 May 2018 12:13:24 -0400
-From: Tony Lindgren <tony@atomide.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
-        Guy Mishol <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Maital Hahn <maitalm@ti.com>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org
-Subject: [PATCH 0/2] Runtime PM support for wlcore
-Date: Tue, 15 May 2018 09:13:13 -0700
-Message-Id: <20180515161315.1997-1-tony@atomide.com> (sfid-20180515_181330_097117_F653100E)
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:42663 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752742AbeEKIOu (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 11 May 2018 04:14:50 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 13/30] staging: wilc1000: fix line over 80 chars in add_network_to_shadow()
+Date: Fri, 11 May 2018 13:43:14 +0530
+Message-ID: <1526026411-11058-14-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101454_129731_D4C2531D)
+In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Fix line over 80 characters issue reported by checkpatch in
+add_network_to_shadow() by using temporary variable.
 
-Here are two patches to add runtime PM support for wlcore. I've
-only lightly tested this so far, so some more testing sure would be
-appreciated.I have no idea about the test mode for example.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 52 +++++++++++------------
+ 1 file changed, 25 insertions(+), 27 deletions(-)
 
-You also want patch "[PATCH] wlcore: sdio: Fix flakey SDIO
-runtime PM handling" that I posted earlier today as otherwise
-you will get bogus errors.
-
-Regards,
-
-Tony
-
-
-Tony Lindgren (2):
-  wlcore: Make sure PM calls are paired
-  wlcore: Add support runtime PM
-
- drivers/net/wireless/ti/wl18xx/debugfs.c    |  26 +-
- drivers/net/wireless/ti/wlcore/debugfs.c    |  79 ++--
- drivers/net/wireless/ti/wlcore/main.c       | 405 ++++++++++++++------
- drivers/net/wireless/ti/wlcore/ps.c         | 146 -------
- drivers/net/wireless/ti/wlcore/ps.h         |   3 -
- drivers/net/wireless/ti/wlcore/scan.c       |   9 +-
- drivers/net/wireless/ti/wlcore/sysfs.c      |  10 +-
- drivers/net/wireless/ti/wlcore/testmode.c   |  17 +-
- drivers/net/wireless/ti/wlcore/tx.c         |   9 +-
- drivers/net/wireless/ti/wlcore/vendor_cmd.c |  26 +-
- drivers/net/wireless/ti/wlcore/wlcore.h     |   1 -
- drivers/net/wireless/ti/wlcore/wlcore_i.h   |   1 -
- 12 files changed, 405 insertions(+), 327 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 9afba4d..c730323 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -300,6 +300,7 @@ static void add_network_to_shadow(struct network_info *nw_info,
+ 	int ap_found = is_network_in_shadow(nw_info, user_void);
+ 	u32 ap_index = 0;
+ 	u8 rssi_index = 0;
++	struct network_info *shadow_nw_info;
+ 
+ 	if (last_scanned_cnt >= MAX_NUM_SCANNED_NETWORKS_SHADOW)
+ 		return;
+@@ -310,37 +311,34 @@ static void add_network_to_shadow(struct network_info *nw_info,
+ 	} else {
+ 		ap_index = ap_found;
+ 	}
+-	rssi_index = last_scanned_shadow[ap_index].rssi_history.index;
+-	last_scanned_shadow[ap_index].rssi_history.samples[rssi_index++] = nw_info->rssi;
++	shadow_nw_info = &last_scanned_shadow[ap_index];
++	rssi_index = shadow_nw_info->rssi_history.index;
++	shadow_nw_info->rssi_history.samples[rssi_index++] = nw_info->rssi;
+ 	if (rssi_index == NUM_RSSI) {
+ 		rssi_index = 0;
+-		last_scanned_shadow[ap_index].rssi_history.full = true;
+-	}
+-	last_scanned_shadow[ap_index].rssi_history.index = rssi_index;
+-	last_scanned_shadow[ap_index].rssi = nw_info->rssi;
+-	last_scanned_shadow[ap_index].cap_info = nw_info->cap_info;
+-	last_scanned_shadow[ap_index].ssid_len = nw_info->ssid_len;
+-	memcpy(last_scanned_shadow[ap_index].ssid,
+-	       nw_info->ssid, nw_info->ssid_len);
+-	memcpy(last_scanned_shadow[ap_index].bssid,
+-	       nw_info->bssid, ETH_ALEN);
+-	last_scanned_shadow[ap_index].beacon_period = nw_info->beacon_period;
+-	last_scanned_shadow[ap_index].dtim_period = nw_info->dtim_period;
+-	last_scanned_shadow[ap_index].ch = nw_info->ch;
+-	last_scanned_shadow[ap_index].ies_len = nw_info->ies_len;
+-	last_scanned_shadow[ap_index].tsf_hi = nw_info->tsf_hi;
++		shadow_nw_info->rssi_history.full = true;
++	}
++	shadow_nw_info->rssi_history.index = rssi_index;
++	shadow_nw_info->rssi = nw_info->rssi;
++	shadow_nw_info->cap_info = nw_info->cap_info;
++	shadow_nw_info->ssid_len = nw_info->ssid_len;
++	memcpy(shadow_nw_info->ssid, nw_info->ssid, nw_info->ssid_len);
++	memcpy(shadow_nw_info->bssid, nw_info->bssid, ETH_ALEN);
++	shadow_nw_info->beacon_period = nw_info->beacon_period;
++	shadow_nw_info->dtim_period = nw_info->dtim_period;
++	shadow_nw_info->ch = nw_info->ch;
++	shadow_nw_info->ies_len = nw_info->ies_len;
++	shadow_nw_info->tsf_hi = nw_info->tsf_hi;
+ 	if (ap_found != -1)
+-		kfree(last_scanned_shadow[ap_index].ies);
+-	last_scanned_shadow[ap_index].ies = kmalloc(nw_info->ies_len,
+-						    GFP_KERNEL);
+-	memcpy(last_scanned_shadow[ap_index].ies,
+-	       nw_info->ies, nw_info->ies_len);
+-	last_scanned_shadow[ap_index].time_scan = jiffies;
+-	last_scanned_shadow[ap_index].time_scan_cached = jiffies;
+-	last_scanned_shadow[ap_index].found = 1;
++		kfree(shadow_nw_info->ies);
++	shadow_nw_info->ies = kmalloc(nw_info->ies_len, GFP_KERNEL);
++	memcpy(shadow_nw_info->ies, nw_info->ies, nw_info->ies_len);
++	shadow_nw_info->time_scan = jiffies;
++	shadow_nw_info->time_scan_cached = jiffies;
++	shadow_nw_info->found = 1;
+ 	if (ap_found != -1)
+-		kfree(last_scanned_shadow[ap_index].join_params);
+-	last_scanned_shadow[ap_index].join_params = join_params;
++		kfree(shadow_nw_info->join_params);
++	shadow_nw_info->join_params = join_params;
+ }
+ 
+ static void cfg_scan_result(enum scan_event scan_event,
 -- 
-2.17.0
+2.7.4
