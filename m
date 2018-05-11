@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42494 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934035AbeEIIrP (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:53637 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752472AbeEKIOa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 04:47:15 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: kbuild test robot <lkp@intel.com>
-Cc: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        kbuild-all@01.org, linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Maya Erez <merez@codeaurora.org>
-Subject: Re: [mac80211-next:master 12/14] drivers/net//wireless/ath/wil6210/debugfs.c:1245:1: warning: the frame size of 1600 bytes is larger than 1024 bytes
-References: <201805090154.h4Cokbx2%fengguang.wu@intel.com>
-Date: Wed, 09 May 2018 11:47:11 +0300
-In-Reply-To: <201805090154.h4Cokbx2%fengguang.wu@intel.com> (kbuild test
-        robot's message of "Wed, 9 May 2018 01:39:57 +0800")
-Message-ID: <87efil2p2o.fsf@purkki.adurom.net> (sfid-20180509_104722_363915_8DC71EC9)
+        Fri, 11 May 2018 04:14:30 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 11/30] staging: wilc1000: use kmalloc(sizeof(*mgmt_tx)...) in mgmt_tx()
+Date: Fri, 11 May 2018 13:43:12 +0530
+Message-ID: <1526026411-11058-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101433_868260_3FC1E0F9)
+In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(adding Maya)
+Fix below checkpatch issue found in mgmt_tx()
 
-kbuild test robot <lkp@intel.com> writes:
+Prefer kmalloc(sizeof(*mgmt_tx)...) over kmalloc(sizeof(struct
+p2p_mgmt_data)...)
 
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
-> head:   57c6cb81717f957fb741f2e4c79bd0e2f4f55910
-> commit: 52539ca89f365d3db530535fbffa88a3cca4d2ec [12/14] cfg80211: Expose TXQ stats and parameters to userspace
-> config: i386-randconfig-i1-201818 (attached as .config)
-> compiler: gcc-7 (Debian 7.3.0-16) 7.3.0
-> reproduce:
->         git checkout 52539ca89f365d3db530535fbffa88a3cca4d2ec
->         # save the attached .config to linux build tree
->         make ARCH=i386 
->
-> All warnings (new ones prefixed by >>):
->
->    drivers/net//wireless/ath/wil6210/debugfs.c: In function 'wil_link_debugfs_show':
->>> drivers/net//wireless/ath/wil6210/debugfs.c:1245:1: warning: the frame size of 1600 bytes is larger than 1024 bytes [-Wframe-larger-than=]
->     }
->     ^
-> --
->    drivers/net//wireless/ath/wil6210/wmi.c: In function 'wmi_evt_connect':
->>> drivers/net//wireless/ath/wil6210/wmi.c:979:1: warning: the frame size of 1684 bytes is larger than 1024 bytes [-Wframe-larger-than=]
->     }
->     ^
-> --
->    drivers/net//wireless/quantenna/qtnfmac/event.c: In function 'qtnf_event_handle_sta_assoc':
->>> drivers/net//wireless/quantenna/qtnfmac/event.c:107:1: warning: the frame size of 1616 bytes is larger than 1024 bytes [-Wframe-larger-than=]
->     }
->     ^
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I guess these warnings come because Toke's patch increased size of
-struct cfg80211_tid_stats (which is included in struct station_info) and
-both wil6210 and qtnfmac allocate a struct station_info from stack? Can
-someone send a fix for the drivers?
-
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 65ba6ed..1408ebd 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1622,7 +1622,7 @@ static int mgmt_tx(struct wiphy *wiphy,
+ 	if (!ieee80211_is_mgmt(mgmt->frame_control))
+ 		goto out;
+ 
+-	mgmt_tx = kmalloc(sizeof(struct p2p_mgmt_data), GFP_KERNEL);
++	mgmt_tx = kmalloc(sizeof(*mgmt_tx), GFP_KERNEL);
+ 	if (!mgmt_tx) {
+ 		ret = -ENOMEM;
+ 		goto out;
 -- 
-Kalle Valo
+2.7.4
