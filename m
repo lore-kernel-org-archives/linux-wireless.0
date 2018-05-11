@@ -1,169 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:41402 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751219AbeENCvO (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:40291 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752673AbeEKIPB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 13 May 2018 22:51:14 -0400
-From: Pkshih <pkshih@realtek.com>
-To: "jprvita@gmail.com" <jprvita@gmail.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        "jprvita@endlessm.com" <jprvita@endlessm.com>,
-        Birming Chiu <birming@realtek.com>,
-        "drake@endlessm.com" <drake@endlessm.com>,
-        Chaoming_Li <chaoming_li@realsil.com.cn>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        =?utf-8?B?6I6K5b2l5a6j?= <yhchuang@realtek.com>,
-        "derosier@gmail.com" <derosier@gmail.com>,
-        Steven Ting <steventing@realtek.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux@endlessm.com" <linux@endlessm.com>,
-        Shaofu <shaofu@realtek.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: RTL8723BE performance regression
-Date: Mon, 14 May 2018 02:50:37 +0000
-Message-ID: <1526266228.3144.18.camel@realtek.com> (sfid-20180514_045159_634382_E0471081)
-References: <CA+A7VXX+z8FrDhzW2BQ6AGMJ=_j_53wkUL_YNgkreEbWSh+jCw@mail.gmail.com>
-         <afdf0498-c0a9-936c-0c9b-1b6da6eb5957@lwfinger.net>
-         <CA+A7VXWjWaSSUiX3h_rpFXrSwtUkynKR9tpvnsSe=DZrC+mF-Q@mail.gmail.com>
-         <059b40f0-b8e2-b55f-92d5-a859ba4204a4@lwfinger.net>
-         <CA+A7VXUUsZHD2gr9TBcV6jZBOPGZv7_vK-wWZ0MvGgiCnAiUgQ@mail.gmail.com>
-         <5B2DA6FDDF928F4E855344EE0A5C39D13BEC14C0@RTITMBSV07.realtek.com.tw>
-         <1525240713.3735.3.camel@realtek.com>
-         <CA+A7VXWywjTVeb3DTjVMVTUw-vjAjD+3XTuVNk8S=8D7W=MkPQ@mail.gmail.com>
-         <1525768634.2885.11.camel@realtek.com>
-         <CA+A7VXWhi24iw=TpoWQe6AY-pyvF6-C03dc+AN9kXeLPhLni+g@mail.gmail.com>
-In-Reply-To: <CA+A7VXWhi24iw=TpoWQe6AY-pyvF6-C03dc+AN9kXeLPhLni+g@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+        Fri, 11 May 2018 04:15:01 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 20/30] staging: wilc1000: fix line over 80 chars in scan()
+Date: Fri, 11 May 2018 13:43:21 +0530
+Message-ID: <1526026411-11058-21-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101508_650146_D00BBD0A)
+In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCAyMDE4LTA1LTA5IGF0IDEzOjMzIC0wNzAwLCBKb8OjbyBQYXVsbyBSZWNoaSBWaXRh
-IHdyb3RlOg0KPiBPbiBUdWUsIE1heSA4LCAyMDE4IGF0IDE6MzcgQU0sIFBrc2hpaCA8cGtzaGlo
-QHJlYWx0ZWsuY29tPiB3cm90ZToNCj4gPiBPbiBNb24sIDIwMTgtMDUtMDcgYXQgMTQ6NDkgLTA3
-MDAsIEpvw6NvIFBhdWxvIFJlY2hpIFZpdGEgd3JvdGU6DQo+ID4+IE9uIFR1ZSwgTWF5IDEsIDIw
-MTggYXQgMTA6NTggUE0sIFBrc2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPiB3cm90ZToNCj4gPj4g
-PiBPbiBXZWQsIDIwMTgtMDUtMDIgYXQgMDU6NDQgKzAwMDAsIFBrc2hpaCB3cm90ZToNCj4gPj4g
-Pj4NCj4gPj4gPj4gPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+PiA+PiA+IEZyb206
-IEpvw6NvIFBhdWxvIFJlY2hpIFZpdGEgW21haWx0bzpqcHJ2aXRhQGdtYWlsLmNvbV0NCj4gPj4g
-Pj4gPiBTZW50OiBXZWRuZXNkYXksIE1heSAwMiwgMjAxOCA2OjQxIEFNDQo+ID4+ID4+ID4gVG86
-IExhcnJ5IEZpbmdlcg0KPiA+PiA+PiA+IENjOiBTdGV2ZSBkZVJvc2llcjsg6I6K5b2l5a6jOyBQ
-a3NoaWg7IEJpcm1pbmcgQ2hpdTsgU2hhb2Z1OyBTdGV2ZW4gVGluZzsgQ2hhb21pbmdfTGk7IEth
-bGxlDQo+IFZhbG87DQo+ID4+ID4+ID4gbGludXgtd2lyZWxlc3M7IE5ldHdvcmsgRGV2ZWxvcG1l
-bnQ7IExLTUw7IERhbmllbCBEcmFrZTsgSm/Do28gUGF1bG8gUmVjaGkgVml0YTsgbGludXhAZW5k
-bA0KPiBlc3MNCj4gPj4gbS5jDQo+ID4+ID4+IG9tDQo+ID4+ID4+ID4gU3ViamVjdDogUmU6IFJU
-TDg3MjNCRSBwZXJmb3JtYW5jZSByZWdyZXNzaW9uDQo+ID4+ID4+ID4NCj4gPj4gPj4gPiBPbiBU
-dWUsIEFwciAzLCAyMDE4IGF0IDc6NTEgUE0sIExhcnJ5IEZpbmdlciA8TGFycnkuRmluZ2VyQGx3
-ZmluZ2VyLm5ldD4gd3JvdGU6DQo+ID4+ID4+ID4gPiBPbiAwNC8wMy8yMDE4IDA5OjM3IFBNLCBK
-b8OjbyBQYXVsbyBSZWNoaSBWaXRhIHdyb3RlOg0KPiA+PiA+PiA+ID4+DQo+ID4+ID4+ID4gPj4g
-T24gVHVlLCBBcHIgMywgMjAxOCBhdCA3OjI4IFBNLCBMYXJyeSBGaW5nZXIgPExhcnJ5LkZpbmdl
-ckBsd2Zpbmdlci5uZXQ+DQo+ID4+ID4+ID4gPj4gd3JvdGU6DQo+ID4+ID4+ID4gPj4NCj4gPj4g
-Pj4gPiA+PiAoLi4uKQ0KPiA+PiA+PiA+ID4+DQo+ID4+ID4+ID4gPj4+IEFzIHRoZSBhbnRlbm5h
-IHNlbGVjdGlvbiBjb2RlIGNoYW5nZXMgYWZmZWN0ZWQgeW91ciBmaXJzdCBiaXNlY3Rpb24sIGRv
-DQo+ID4+ID4+ID4gPj4+IHlvdQ0KPiA+PiA+PiA+ID4+PiBoYXZlIG9uZSBvZiB0aG9zZSBIUCBs
-YXB0b3BzIHdpdGggb25seSBvbmUgYW50ZW5uYSBhbmQgdGhlIGluY29ycmVjdA0KPiA+PiA+PiA+
-ID4+PiBjb2RpbmcNCj4gPj4gPj4gPiA+Pj4gaW4gdGhlIEZVU0U/DQo+ID4+ID4+ID4gPj4NCj4g
-Pj4gPj4gPiA+Pg0KPiA+PiA+PiA+ID4+IFllcywgdGhhdCBpcyB3aHkgSSd2ZSBiZWVuIHBhc3Np
-bmcgYW50X3NlbD0xIGR1cmluZyBteSB0ZXN0cyAtLSB0aGlzDQo+ID4+ID4+ID4gPj4gd2FzIG5l
-ZWRlZCB0byBhY2hpZXZlIGEgZ29vZCBwZXJmb3JtYW5jZSBpbiB0aGUgcGFzdCwgYmVmb3JlIHRo
-aXMNCj4gPj4gPj4gPiA+PiByZWdyZXNzaW9uLiBJJ3ZlIGFsc28gb3BlbmVkIHRoZSBsYXB0b3Ag
-Y2hhc3NpcyBhbmQgY29uZmlybWVkIHRoZQ0KPiA+PiA+PiA+ID4+IGFudGVubmEgY2FibGUgaXMg
-cGx1Z2dlZCB0byB0aGUgY29ubmVjdG9yIGxhYmVsZWQgd2l0aCAiMSIgb24gdGhlDQo+ID4+ID4+
-ID4gPj4gY2FyZC4NCj4gPj4gPj4gPiA+Pg0KPiA+PiA+PiA+ID4+PiBJZiBzbywgcGxlYXNlIG1h
-a2Ugc3VyZSB0aGF0IHlvdSBzdGlsbCBoYXZlIHRoZSBzYW1lIHNpZ25hbA0KPiA+PiA+PiA+ID4+
-PiBzdHJlbmd0aCBmb3IgZ29vZCBhbmQgYmFkIGNhc2VzLiBJIGhhdmUgdHJpZWQgdG8ga2VlcCB0
-aGUgZHJpdmVyIGFuZCB0aGUNCj4gPj4gPj4gPiA+Pj4gYnRjb2V4IGNvZGUgaW4gc3luYywgYnV0
-IHRoZXJlIG1heSBiZSBzb21lIGNvbWJpbmF0aW9ucyBvZiBhbnRlbm5hDQo+ID4+ID4+ID4gPj4+
-IGNvbmZpZ3VyYXRpb24gYW5kIEZVU0UgY29udGVudHMgdGhhdCBjYXVzZSB0aGUgY29kZSB0byBm
-YWlsLg0KPiA+PiA+PiA+ID4+Pg0KPiA+PiA+PiA+ID4+DQo+ID4+ID4+ID4gPj4gV2hhdCBpcyB0
-aGUgcmVjb21tZW5kZWQgd2F5IHRvIG1vbml0b3IgdGhlIHNpZ25hbCBzdHJlbmd0aD8NCj4gPj4g
-Pj4gPiA+DQo+ID4+ID4+ID4gPg0KPiA+PiA+PiA+ID4gVGhlIGJ0Y29leCBjb2RlIGlzIGRldmVs
-b3BlZCBmb3IgbXVsdGlwbGUgcGxhdGZvcm1zIGJ5IGEgZGlmZmVyZW50IGdyb3VwDQo+ID4+ID4+
-ID4gPiB0aGFuIHRoZSBMaW51eCBkcml2ZXIuIEkgdGhpbmsgdGhleSBtYWRlIGEgY2hhbmdlIHRo
-YXQgY2F1c2VkIGFudF9zZWwgdG8NCj4gPj4gPj4gPiA+IHN3aXRjaCBmcm9tIDEgdG8gMi4gQXQg
-bGVhc3QgbnVtZXJvdXMgY29tbWVudHMgYXQNCj4gPj4gPj4gPiA+IGdpdGh1Yi5jb20vbHdmaW5n
-ZXIvcnRsd2lmaV9uZXcgY2xhaW1lZCB0aGV5IG5lZWRlZCB0byBtYWtlIHRoYXQgY2hhbmdlLg0K
-PiA+PiA+PiA+ID4NCj4gPj4gPj4gPiA+IE1oeSByZWNvbW1lbmRlZCBtZXRob2QgaXMgdG8gdmVy
-aWZ5IHRoZSB3aWZpIGRldmljZSBuYW1lIHdpdGggIml3IGRldiIuIFRoZW4NCj4gPj4gPj4gPiA+
-IHVzaW5nIHRoYXQgZGV2aWNlDQo+ID4+ID4+ID4gPg0KPiA+PiA+PiA+ID4gc3VkbyBpdyBkZXYg
-PGRldl9uYW1lPiBzY2FuIHwgZWdyZXAgIlNTSUR8c2lnbmFsIg0KPiA+PiA+PiA+ID4NCj4gPj4g
-Pj4gPg0KPiA+PiA+PiA+IEkgaGF2ZSBjb25maXJtZWQgdGhhdCB0aGUgcGVyZm9ybWFuY2UgcmVn
-cmVzc2lvbiBpcyBpbmRlZWQgdGllZCB0bw0KPiA+PiA+PiA+IHNpZ25hbCBzdHJlbmd0aDogb24g
-dGhlIGdvb2QgY2FzZXMgc2lnbmFsIHdhcyBiZXR3ZWVuIC0xNiBhbmQgLTggZEJtLA0KPiA+PiA+
-PiA+IHdoZXJlYXMgaW4gYmFkIGNhc2VzIHNpZ25hbCB3YXMgYWx3YXlzIGJldHdlZW4gLTUwIHRv
-IC0gNDAgZEJtLiBJJ3ZlDQo+ID4+ID4+ID4gYWxzbyBzd2l0Y2hlZCB0byB0ZXN0aW5nIGJhbmR3
-aWR0aCBpbiBjb250cm9sbGVkIExBTiBlbnZpcm9ubWVudCB1c2luZw0KPiA+PiA+PiA+IGlwZXJm
-MywgYXMgc3VnZ2VzdGVkIGJ5IFN0ZXZlIGRlUm9zaWVyLCB3aXRoIHRoZSBEVVQgYmVpbmcgdGhl
-IG9ubHkNCj4gPj4gPj4gPiBtYWNoaW5lIGNvbm5lY3RlZCB0byB0aGUgMi40IEdIeiByYWRpbyBh
-bmQgdGhlIG1hY2hpbmUgcnVubmluZyB0aGUNCj4gPj4gPj4gPiBpcGVyZjMgc2VydmVyIGNvbm5l
-Y3RlZCB2aWEgZXRoZXJuZXQuDQo+ID4+ID4+ID4NCj4gPj4gPj4NCj4gPj4gPj4gV2UgaGF2ZSBu
-ZXcgZXhwZXJpbWVudGFsIHJlc3VsdHMgaW4gY29tbWl0IGFmOGE0MWNjY2Y4ZjQ2ICgicnRsd2lm
-aTogY2xlYW51cA0KPiA+PiA+PiA4NzIzYmUgYW50X3NlbCBkZWZpbml0aW9uIikuIFlvdSBjYW4g
-dXNlIHRoZSBhYm92ZSBjb21taXQgYW5kIGRvIHRoZSBzYW1lDQo+ID4+ID4+IGV4cGVyaW1lbnRz
-ICh3aXRoIGFudF9zZWw9MCwgMSBhbmQgMikgaW4geW91ciBzaWRlLCBhbmQgdGhlbiBzaGFyZSB5
-b3VyIHJlc3VsdHMuDQo+ID4+ID4+IFNpbmNlIHBlcmZvcm1hbmNlIGlzIHRpZWQgdG8gc2lnbmFs
-IHN0cmVuZ3RoLCB5b3UgY2FuIG9ubHkgc2hhcmUgc2lnbmFsIHN0cmVuZ3RoLg0KPiA+PiA+Pg0K
-PiA+PiA+DQo+ID4+ID4gUGxlYXNlIHBheSBhdHRlbnRpb24gdG8gY29sZCByZWJvb3Qgb25jZSBh
-bnRfc2VsIGlzIGNoYW5nZWQuDQo+ID4+ID4NCj4gPj4NCj4gPj4gSSd2ZSB0ZXN0ZWQgdGhlIGNv
-bW1pdCBtZW50aW9uZWQgYWJvdmUgYW5kIGl0IGZpeGVzIHRoZSBwcm9ibGVtIG9uIHRvcA0KPiA+
-PiBvZiB2NC4xNiAoaW4gYWRkaXRpb24gdG8gdGhlIGxhdGVzdCB3aXJlbGVzcy1kcml2ZXJzLW5l
-eHQgYWxzbyBiZWVuDQo+ID4+IGZpeGVkIGFzIGl0IGFscmVhZHkgY29udGFpbnMgc3VjaCBjb21t
-aXQpLiBPbiB2NC4xNSwgd2UgYWxzbyBuZWVkIHRoZQ0KPiA+PiBmb2xsb3dpbmcgY29tbWl0cyBi
-ZWZvcmUgImFmOGE0MWNjY2Y4ZiBydGx3aWZpOiBjbGVhbnVwIDg3MjNiZSBhbnRfc2VsDQo+ID4+
-IGRlZmluaXRpb24iIHRvIGhhdmUgYSBnb29kIHBlcmZvcm1hbmNlIGFnYWluOg0KPiA+Pg0KPiA+
-PsKgwqDCoDg3NGU4MzdkNjdkMCBydGx3aWZpOiBmaWxsIEZXIHZlcnNpb24gYW5kIHN1YnZlcnNp
-b24NCj4gPj7CoMKgwqBhNDQ3MDliYmE3MGYgcnRsd2lmaTogYnRjb2V4OiBBZGQgcG93ZXJfb25f
-c2V0dGluZyByb3V0aW5lDQo+ID4+wqDCoMKgNDBkOWRkNGYxYzVkIHJ0bHdpZmk6IGJ0Y29leDog
-UmVtb3ZlIGdsb2JhbCB2YXJpYWJsZXMgZnJvbSBidGNvZXgNCj4gPg0KPiA+IHY0LjE1IGlzbid0
-IGxvbmd0ZXJtIHZlcnNpb24gYW5kIGhhZCBiZWVuIEVPTC4NCj4gPg0KPsKgDQo+IFJpZ2h0LCBi
-dXQgdGhpcyBpcyBhIHBlcmZvcm1hY2UgcmVncmVzc2lvbiBpbiBjb21wYXJpc29uIHRvIHY0LjEx
-LCBzbw0KPiBpZiAiYWY4YTQxY2NjZjhmIHJ0bHdpZmk6IGNsZWFudXAgODcyM2JlIGFudF9zZWwg
-ZGVmaW5pdGlvbiIgaXMgbWFya2VkDQo+IGZvciBzdGFibGUsIHNob3VsZG4ndCB0aGVzZSBvdGhl
-ciBwYXRjaGVzIGJlIGJyb3VnaHQgYXMgd2VsbD8gQWxsDQo+IHJlbGVhc2VzIHNpbmNlIHY0LjEx
-IGFyZSBwcm9iYWJseSBhZmZlY3RlZCwgYnV0IGhvbmVzdGx5IEkgZG9uJ3QgaGF2ZQ0KPiBhIHN0
-cm9uZyB1bmRlcnN0YW5kaW5nIG9mIGhvdyB0aGUgc3RhYmxlIHRyZWVzIG9wZXJhdGUgaW4gc2l0
-dWF0aW9ucw0KPiBsaWtlIHRoaXMuDQo+wqANCg0Kc2VlIGJlbG93Lg0KDQo+ID4+DQo+ID4+IFN1
-cnByaXNpbmdseSwgaXQgc2VlbXMgZm9yY2luZyBhbnRfc2VsPTEgaXMgbm90IG5lZWRlZCBhbnlt
-b3JlIG9uDQo+ID4+IHRoZXNlIG1hY2hpbmVzLCBhcyB0aGUgc2hvd24gYnkgdGhlIG51bWJlcnMg
-YmVsbG93IChhbnRfc2VsPTAgbWVhbnMNCj4gPj4gdGhhdCBhY3R1YWxseSBubyBwYXJhbWV0ZXIg
-d2FzIHBhc3NlZCB0byB0aGUgbW9kdWxlKS4gSSBoYXZlIHBvd2VyZWQNCj4gPj4gb2ZmIHRoZSBt
-YWNoaW5lIGFuZCBkb25lIGEgY29sZCBib290IGZvciBldmVyeSB0ZXN0LiBJdCBzZWVtcw0KPiA+
-PiBzb21ldGhpbmcgaGF2ZSBjaGFuZ2VkIGluIHRoZSBhbnRlbm5hIGF1dG8tc2VsZWN0aW9uIGNv
-ZGUgc2luY2UgdjQuMTEsDQo+ID4+IHRoZSBsYXRlc3QgcG9pbnQgd2hlcmUgSSBjb3VsZCBjb25m
-aXJtIHdlIGRlZmluaXRlbHkgbmVlZCB0byBmb3JjZQ0KPiA+PiBhbnRfc2VsPTEuIEkndmUgYmVl
-biB0cnlpbmcgdG8gdW5kZXJzdGFuZCB3aGF0IGNhdXNlcyB0aGlzIGRpZmZlcmVuY2UsDQo+ID4+
-IGJ1dCBoYXZlbid0IG1hZGUgcHJvZ3Jlc3Mgb24gdGhhdCBzbyBmYXIsIHNvIGFueSBzdWdnZXN0
-aW9ucyBhcmUNCj4gPj4gYXBwcmVjaWF0ZWQgKHdlIGFyZSB0cnlpbmcgdG8gZGVjaWRlIGlmIHdl
-IGNhbiBjb25maWRlbnRseSBkcm9wIHRoZQ0KPiA+PiBkb3duc3RyZWFtIERNSSBxdWlya3MgZm9y
-IHRoZXNlIHNwZWNpZmljIG1hY2hpbmVzKS4NCj4gPj4NCj4gPiBJIHRoaW5rIHlvdXIgcnRsODcy
-M2JlIG1vZHVsZSBwcm9ncmFtZWQgY29ycmVjdCBlZnVzZSBjb250ZW50LCBzbyBpdA0KPiA+IHdv
-cmtzIHByb3Blcmx5IHdpdGggYW50X3NlbD0wLCBhbmQgcXVpcmsgaXNuJ3QgcmVxdWlyZWQgZm9y
-IHlvdXINCj4gPiBtYWNoaW5lLg0KPiA+DQo+ID4+wqDCoMKgdy1kLW4gYW50X3NlbD0wOiAtMTQu
-MDAgZEJtLMKgwqA2OS41IE1icHMgLT4gZ29vZA0KPiA+PsKgwqDCoHctZC1uIGFudF9zZWw9MTog
-LTEwLjAwIGRCbSzCoMKgNDEuMSBNYnBzIC0+IGdvb2QNCj4gPj7CoMKgwqB3LWQtbiBhbnRfc2Vs
-PTI6IC00NC4wMCBkQm0swqDCoMKgNjA3IGticHMgLT4gYmFkDQo+ID4+DQo+ID4+wqDCoMKgdjQu
-MTYgYW50X3NlbD0wOiAtMTIuMDAgZEJtLMKgwqA2My4wIE1icHMgLT4gZ29vZA0KPiA+PsKgwqDC
-oHY0LjE2IGFudF9zZWw9MTogLSA4LjAwIGRCbSzCoMKgNjkuMCBNYnBzIC0+IGdvb2QNCj4gPj7C
-oMKgwqB2NC4xNiBhbnRfc2VsPTI6IC01MC4wMCBkQm0swqDCoMKgMjI0IGticHMgLT4gYmFkDQo+
-ID4+DQo+ID4+wqDCoMKgdjQuMTUgYW50X3NlbD0wOiAtIDguMDAgZEJtLMKgwqAzMy4wIE1icHMg
-LT4gZ29vZA0KPiA+PsKgwqDCoHY0LjE1IGFudF9zZWw9MTogLTEwLjAwIGRCbSzCoMKgMzguMSBN
-YnBzIC0+IGdvb2QNCj4gPj7CoMKgwqB2NC4xNSBhbnRfc2VsPTI6IC00OC4wMCBkQm0swqDCoMKg
-MjA2IGticHMgLT4gYmFkDQo+ID4+DQo+ID4NCj4gPiBXaXRoIHlvdXIgcmVzdWx0cywgdGhlIGVm
-dXNlIGNvbnRlbnQgaXMgcHJvZ3JhbW1lZCBhcyBvbmUgb3IgdHdvIGFudGVubmENCj4gPiBvbiBB
-VVggcGF0aC4NCj4gPg0KPsKgDQo+IFdpdGggdjQuMTEgSSBoYWQgZ29vZCBwZXJmb3JtYW5jZSBy
-ZXN1bHRzIG9uIHRoaXMgdmVyeSBzYW1lIG1hY2hpbmUNCj4gKHRodXMgc2FtZSBlZnVzZSBjb250
-ZW50cykgb25seSB3aGVuIHBhc3NpbmcgYW50X3NlbD0xLCBzbyB0aGVyZSBoYXMNCj4gdG8gYmUg
-c29tZSBjaGFuZ2Ugb24gdGhlIGNvZGUgdGhhdCBwYXJzZXMgdGhlIGVmdXNlIGNvbnRlbnRzIGFu
-ZA0KPiBkZWNpZGVzIHdoaWNoIGFudGVubmEgd2lsbCBiZSB1c2VkLg0KPsKgDQoNClNpbmNlIGJ0
-Y29leCBjb250cm9sIFRETUEgcGFyYW1ldGVycyBmb3IgV2lGaSBhbmQgQlQsIGFudGVubmEgcmVs
-YXRlZCBjb2RlDQppcyBwdXQgaW4gYnRjb2V4LiBUaGF0J3Mgd2h5IGFudF9zZWwgaXMgdXNlZCBi
-eSBidGNvZXguDQpJbiB2NC4xMiwgd2UgdXBncmFkZWQgYnRjb2V4IGFuZCBmaXJtd2FyZSBpbiBv
-cmRlciB0byB5aWVsZCBiZXR0ZXIgYmFsYW5jZQ0KYmV0d2VlbiBXaUZpIGFuZCBCVCwgbWVhbndo
-aWxlIGNvZGUgZmxvdyBoYWQgc29tZSBjaGFuZ2VzLiBTbywgdGhlIHNpbmdsZcKgDQpjb21taXQg
-YWY4YTQxY2NjZjhmICgicnRsd2lmaTogY2xlYW51cCA4NzIzYmUgYW50X3NlbCBkZWZpbml0aW9u
-Iikgd29uJ3TCoA0Kd29yayBvbiB2NC4xMS4gSW4gb3RoZXIgd29yZHMsIGlmIHlvdSB3YW50IHY0
-LjExIHdvcmsgcHJvcGVybHksIHlvdSBuZWVkIHRvDQphcHBseSBhbGwgY2hhbmdlcyBvZiBidGNv
-ZXguDQoNCg0KVGhlIHBhcnNlciBvZiBlZnVzZSBpc24ndCBjaGFuZ2VkLCBhbmQgSSB0aGluayB0
-aGUgcmVhc29uIHdoeSB2NC4xMSBuZWVkcw0KYW50X3NlbD0xIGlzIHRoZSBzYW1lIGFzIGFib3Zl
-Lg0KDQpSZWdhcmRzDQpQSw0KDQo=
+Fix line over 80 characters issues found by checkpatch.pl script with
+the help of local variable.
+
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index b67a170..e64e944 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -636,8 +636,11 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ 
+ 	priv->cfg_scanning = true;
+ 	if (request->n_channels <= MAX_NUM_SCANNED_NETWORKS) {
+-		for (i = 0; i < request->n_channels; i++)
+-			scan_ch_list[i] = (u8)ieee80211_frequency_to_channel(request->channels[i]->center_freq);
++		for (i = 0; i < request->n_channels; i++) {
++			u16 freq = request->channels[i]->center_freq;
++
++			scan_ch_list[i] = ieee80211_frequency_to_channel(freq);
++		}
+ 
+ 		if (request->n_ssids >= 1) {
+ 			if (wilc_wfi_cfg_alloc_fill_ssid(request,
+-- 
+2.7.4
