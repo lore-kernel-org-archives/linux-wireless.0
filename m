@@ -1,29 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:59552 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932322AbeE2Jbh (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:9818 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752687AbeEKIOI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 May 2018 05:31:37 -0400
-Message-ID: <1527586295.6955.9.camel@sipsolutions.net> (sfid-20180529_113419_471707_C77D84C8)
-Subject: Re: [PATCH] nl80211: Include ies_len for nlmsg from ft_event
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Srinivas Dasari <dasaris@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 29 May 2018 11:31:35 +0200
-In-Reply-To: <1527585581-23277-1-git-send-email-dasaris@codeaurora.org>
-References: <1527585581-23277-1-git-send-email-dasaris@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Fri, 11 May 2018 04:14:08 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 05/30] staging: wilc1000: fix line over 80 chars issue in host_int_handle_disconnect()
+Date: Fri, 11 May 2018 13:43:06 +0530
+Message-ID: <1526026411-11058-6-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101412_181481_5A78B0E6)
+In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-05-29 at 14:49 +0530, Srinivas Dasari wrote:
-> Length of the ies is not considered while allocating nl
-> message for ft_event, though they are filled.
-> Hence, consider the length also for nl_msg.
+Fix line over 80 char issue in host_int_handle_disconnect() by using
+temp variable to hold the 'wilc_connect_result' function pointer.
 
-THis was already fixed by 
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-nl80211: fix nlmsg allocation in cfg80211_ft_event
-
-johannes
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 84eff27..b8dcca6 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1396,6 +1396,7 @@ static inline void host_int_handle_disconnect(struct wilc_vif *vif)
+ {
+ 	struct disconnect_info disconn_info;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
++	wilc_connect_result conn_result = hif_drv->usr_conn_req.conn_result;
+ 
+ 	memset(&disconn_info, 0, sizeof(struct disconnect_info));
+ 
+@@ -1408,13 +1409,12 @@ static inline void host_int_handle_disconnect(struct wilc_vif *vif)
+ 	disconn_info.ie = NULL;
+ 	disconn_info.ie_len = 0;
+ 
+-	if (hif_drv->usr_conn_req.conn_result) {
++	if (conn_result) {
+ 		wilc_optaining_ip = false;
+ 		wilc_set_power_mgmt(vif, 0, 0);
+ 
+-		hif_drv->usr_conn_req.conn_result(CONN_DISCONN_EVENT_DISCONN_NOTIF,
+-						  NULL, 0, &disconn_info,
+-						  hif_drv->usr_conn_req.arg);
++		conn_result(CONN_DISCONN_EVENT_DISCONN_NOTIF, NULL, 0,
++			    &disconn_info, hif_drv->usr_conn_req.arg);
+ 	} else {
+ 		netdev_err(vif->ndev, "Connect result NULL\n");
+ 	}
+-- 
+2.7.4
