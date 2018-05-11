@@ -1,67 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35094 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932241AbeEHPRf (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:34262 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751052AbeEKR5K (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 May 2018 11:17:35 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: merez@codeaurora.org
-Cc: Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [02/10] wil6210: set/get EDMG channel through debugfs
-References: <1523520526-24997-3-git-send-email-merez@codeaurora.org>
-        <20180419161506.868FA60A06@smtp.codeaurora.org>
-        <bf89143fe2765fab1aad65b9587030bf@codeaurora.org>
-        <878t9dorzo.fsf@codeaurora.org>
-        <8284e049104ad878e1722927ca2b345f@codeaurora.org>
-Date: Tue, 08 May 2018 18:17:30 +0300
-In-Reply-To: <8284e049104ad878e1722927ca2b345f@codeaurora.org>
-        (merez@codeaurora.org's message of "Wed, 25 Apr 2018 11:58:51 +0300")
-Message-ID: <877eoexjlh.fsf@kamboji.qca.qualcomm.com> (sfid-20180508_171739_917004_E5269444)
+        Fri, 11 May 2018 13:57:10 -0400
+Received: by mail-pg0-f66.google.com with SMTP id g20-v6so2742298pgv.1
+        for <linux-wireless@vger.kernel.org>; Fri, 11 May 2018 10:57:10 -0700 (PDT)
+Date: Fri, 11 May 2018 10:58:31 -0700
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 05/12] ath10k: Add support of QMI indication message
+Message-ID: <20180511175831.GQ2259@tuxbook-pro> (sfid-20180511_195714_322808_CE98DA9C)
+References: <1522042800-25877-1-git-send-email-govinds@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1522042800-25877-1-git-send-email-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-merez@codeaurora.org writes:
+On Sun 25 Mar 22:40 PDT 2018, Govind Singh wrote:
 
-> On 2018-04-24 12:47, Kalle Valo wrote:
->> merez@codeaurora.org writes:
->>
->>> On 2018-04-19 19:15, Kalle Valo wrote:
->>>> Maya Erez <merez@codeaurora.org> wrote:
->>>>
->>>>> Setting EDMG channel through debugfs for connect and PCP start
->>>>> commands.
->>>> Why? And what is an EDMG channel?
->>>> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#commit_log_does_not_answer_why
->>>> I get bad vibes that this debugfs file is just a workaround for not
->>>> adding this to nl80211, a proper commit log would not give me such
->>>> vibes in the first place :)
->>>
->>> EDMG (Enhanced Directional Multi-Gigabit) is a new feature, part of
->>> 11ad/11ay specification. In a nutshell it allows channel bonding of
->>> 60Ghz channels.
->>>
->>> The debugfs is used for debug-only to allow forcing a channel, not
->>> intended to replace NL API, which we are working to upstream such.
->>
->> But why cannot you do debugging via nl80211 as well?
->
-> Debugging via nl80211 is possible, but there are benefits in using the
-> debugfs interface:
-> - Debugfs allows forcing a specific channel, which is not always an
-> option with NL API
-> - Debug via nl80211 is less straight forward and requires development
-> of user-space application
-> and upgrade of the kernel version on the debug setups
->
-> If you believe that the duplication is not justified please drop this
-> patch.
+> Add support of indication qmi message to communicate
+> with wlan qmi server. Indication message request
+> describes client capability and in response client
+> gets the state of wlan qmi service.
+> 
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> ---
+>  drivers/net/wireless/ath/ath10k/qmi.c | 71 ++++++++++++++++++++++++++++++++++-
+>  1 file changed, 70 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
+> index 3a7fcc6..bc80b8f 100644
+> --- a/drivers/net/wireless/ath/ath10k/qmi.c
+> +++ b/drivers/net/wireless/ath/ath10k/qmi.c
+> @@ -29,8 +29,76 @@
+>  #include "qmi.h"
+>  #include "qmi_svc_v01.h"
+>  
+> +#define WLFW_CLIENT_ID			0x4b4e454c
+> +#define WLFW_TIMEOUT			500
+> +
+>  static struct ath10k_qmi *qmi;
+>  
+> +static int
+> +ath10k_qmi_ind_register_send_sync_msg(struct ath10k_qmi *qmi)
+> +{
+> +	struct wlfw_ind_register_resp_msg_v01 *resp;
 
-Yeah, I think it's better to drop this. Let's revisit after we have the
-corresonding nl80211 command in place.
+struct wlfw_ind_register_resp_msg_v01 is 12 bytes,
 
--- 
-Kalle Valo
+> +	struct wlfw_ind_register_req_msg_v01 *req;
+
+and struct wlfw_ind_register_req_msg_v01 is 30 bytes.
+
+So you can easily just store them on the stack, saving yourself the
+trouble of allocating and freeing them below.
+
+> +	struct qmi_txn txn;
+> +	int ret;
+> +
+> +	req = kzalloc(sizeof(*req), GFP_KERNEL);
+> +	if (!req)
+> +		return -ENOMEM;
+> +
+> +	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
+> +	if (!resp) {
+> +		kfree(req);
+> +		return -ENOMEM;
+> +	}
+> +
+> +	req->client_id_valid = 1;
+> +	req->client_id = WLFW_CLIENT_ID;
+> +	req->fw_ready_enable_valid = 1;
+> +	req->fw_ready_enable = 1;
+> +	req->msa_ready_enable_valid = 1;
+> +	req->msa_ready_enable = 1;
+> +
+> +	ret = qmi_txn_init(&qmi->qmi_hdl, &txn,
+> +			   wlfw_ind_register_resp_msg_v01_ei, resp);
+> +	if (ret < 0) {
+> +		pr_err("fail to init txn for ind register resp %d\n",
+> +		       ret);
+
+qmi_txn_init() typically doesn't fail, but when it does it will print an
+error message. So you can omit yours.
+
+> +		goto out;
+> +	}
+> +
+> +	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
+> +			       QMI_WLFW_IND_REGISTER_REQ_V01,
+> +			       WLFW_IND_REGISTER_REQ_MSG_V01_MAX_MSG_LEN,
+> +			       wlfw_ind_register_req_msg_v01_ei, req);
+> +	if (ret < 0) {
+> +		qmi_txn_cancel(&txn);
+> +		pr_err("fail to send ind register req %d\n", ret);
+
+qmi_send_request() does print error messages when things go wrong, if
+you want to add context to this use dev_err().
+
+> +		goto out;
+> +	}
+> +
+> +	ret = qmi_txn_wait(&txn, WLFW_TIMEOUT * HZ);
+> +	if (ret < 0)
+> +		goto out;
+> +
+> +	if (resp->resp.result != QMI_RESULT_SUCCESS_V01) {
+> +		pr_err("qmi indication register request rejected:");
+> +		pr_err("resut:%d error:%d\n",
+> +		       resp->resp.result, resp->resp.error);
+
+If resp->resp.result is not success it is going to be 1, so no need to
+include that in the printout. Use dev_err() and print your error on a
+single line.
+
+> +		ret = resp->resp.result;
+
+ret is positive and some QMI_ERR_*, return a negative errno instead to
+better match future readers assumptions.
+
+> +	}
+> +
+> +	pr_debug("indication register request completed\n");
+> +	kfree(resp);
+> +	kfree(req);
+> +	return 0;
+> +
+> +out:
+> +	kfree(resp);
+> +	kfree(req);
+> +	return ret;
+> +}
+> +
+>  static int ath10k_qmi_event_fw_ready_ind(struct ath10k_qmi *qmi)
+>  {
+>  	pr_debug("fw ready event received\n");
+> @@ -100,11 +168,12 @@ static void ath10k_qmi_event_server_arrive(struct work_struct *work)
+>  					      work_svc_arrive);
+>  	int ret;
+>  
+> +	pr_debug("wlan qmi server arrive\n");
+
+Fold the move of this debug print into the patch that introduced it.
+
+>  	ret = ath10k_qmi_connect_to_fw_server(qmi);
+>  	if (ret)
+>  		return;
+>  
+> -	pr_debug("qmi server arrive\n");
+> +	ath10k_qmi_ind_register_send_sync_msg(qmi);
+>  }
+
+Regards,
+Bjorn
