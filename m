@@ -1,117 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:43781 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752036AbeEGJjw (ORCPT
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:46985 "EHLO
+        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750726AbeEKMIv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 05:39:52 -0400
-Received: by mail-pg0-f65.google.com with SMTP id k11-v6so18703826pgo.10
-        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2018 02:39:51 -0700 (PDT)
-Date: Mon, 7 May 2018 17:39:48 +0800
-From: Kenneth Lu <kuohsianglu@gmail.com>
-To: kvalo@qca.qualcomm.com
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v2] ath10k: remove variables which set but not used
-Message-ID: <20180507093948.GA7905@blackstone> (sfid-20180507_114002_358196_BD23FB75)
+        Fri, 11 May 2018 08:08:51 -0400
+Subject: Re: [PATCH V2 1/2] Revert "ssb: Prevent build of PCI host features in
+ module"
+To: Kalle Valo <kvalo@codeaurora.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>,
+        Matt Redfearn <matt.redfearn@mips.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Hauke Mehrtens <hauke@hauke-m.de>,
+        LKML <linux-kernel@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+References: <20180511091715.1989-1-zajec5@gmail.com>
+ <CACna6ry-91oR1u697NRymLsN28fnnHDp9OQrdiVwA7A3KTV1fg@mail.gmail.com>
+ <87bmdmcxf6.fsf@codeaurora.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <727571cb-5d1f-2d99-b050-979edd02106f@lwfinger.net> (sfid-20180511_140906_215346_1DB1C206)
+Date: Fri, 11 May 2018 07:08:48 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87bmdmcxf6.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Variable buf_len and num_vdev_stats are bging assigned but never read.
-These are redundant and can be remove.
+On 05/11/2018 05:13 AM, Kalle Valo wrote:
+> Rafał Miłecki <zajec5@gmail.com> writes:
+> 
+>> On 11 May 2018 at 11:17, Rafał Miłecki <zajec5@gmail.com> wrote:
+>>> From: Rafał Miłecki <rafal@milecki.pl>
+>>>
+>>> This reverts commit 882164a4a928bcaa53280940436ca476e6b1db8e.
+>>>
+>>> Above commit added "SSB = y" dependency to the wrong symbol
+>>> SSB_DRIVER_PCICORE_POSSIBLE and prevented SSB_DRIVER_PCICORE from being
+>>> selected when needed. PCI core driver for core running in clienthost
+>>> mode is important for bus initialization. It's perfectly valid scenario
+>>> to have ssb built as module and use it with buses on PCI cards.
+>>>
+>>> This fixes regression that affected all *module* users with PCI cards.
+>>>
+>>> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1572349
+>>> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+>>
+>> As these patches fix regression/build error, I believe both should get
+>> into 4.17.
+> 
+> How much confidence do we have that we don't need to end up reverting
+> patch 2 as well? I rather be pushing patch 2 to 4.18 so that there's
+> more time for testing and waiting for feedback.
 
-Signed-off-by: Kenneth Lu <kuohsianglu@gmail.com>
----
-Changes in v2:
-Fixed compile failed in function 'ath10k_wmi_10_4_op_pull_fw_stats'
-error: 'num_vdev_stats' undeclared
----
- drivers/net/wireless/ath/ath10k/wmi.c | 12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+Although I do not have the hardware to test the builds, I worked closely with 
+the OP in the bug at b.r.c noted above. From that effort, it became clear what 
+configuration variables were missing to cause the x86 failures. Patch 2 
+satisfies the requirement, and prevents the build problems found by the MIPS 
+users. Both patches are needed in 4.17.
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index bb8e9e2..46fb96e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2318,7 +2318,6 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 	u32 phy_mode;
- 	u32 snr;
- 	u32 rate;
--	u32 buf_len;
- 	u16 fc;
- 	int ret;
- 
-@@ -2330,7 +2329,6 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 	}
- 
- 	channel = __le32_to_cpu(arg.channel);
--	buf_len = __le32_to_cpu(arg.buf_len);
- 	rx_status = __le32_to_cpu(arg.status);
- 	snr = __le32_to_cpu(arg.snr);
- 	phy_mode = __le32_to_cpu(arg.phy_mode);
-@@ -2740,14 +2738,13 @@ static int ath10k_wmi_main_op_pull_fw_stats(struct ath10k *ar,
- 					    struct ath10k_fw_stats *stats)
- {
- 	const struct wmi_stats_event *ev = (void *)skb->data;
--	u32 num_pdev_stats, num_vdev_stats, num_peer_stats;
-+	u32 num_pdev_stats, num_peer_stats;
- 	int i;
- 
- 	if (!skb_pull(skb, sizeof(*ev)))
- 		return -EPROTO;
- 
- 	num_pdev_stats = __le32_to_cpu(ev->num_pdev_stats);
--	num_vdev_stats = __le32_to_cpu(ev->num_vdev_stats);
- 	num_peer_stats = __le32_to_cpu(ev->num_peer_stats);
- 
- 	for (i = 0; i < num_pdev_stats; i++) {
-@@ -2795,14 +2792,13 @@ static int ath10k_wmi_10x_op_pull_fw_stats(struct ath10k *ar,
- 					   struct ath10k_fw_stats *stats)
- {
- 	const struct wmi_stats_event *ev = (void *)skb->data;
--	u32 num_pdev_stats, num_vdev_stats, num_peer_stats;
-+	u32 num_pdev_stats, num_peer_stats;
- 	int i;
- 
- 	if (!skb_pull(skb, sizeof(*ev)))
- 		return -EPROTO;
- 
- 	num_pdev_stats = __le32_to_cpu(ev->num_pdev_stats);
--	num_vdev_stats = __le32_to_cpu(ev->num_vdev_stats);
- 	num_peer_stats = __le32_to_cpu(ev->num_peer_stats);
- 
- 	for (i = 0; i < num_pdev_stats; i++) {
-@@ -2856,7 +2852,6 @@ static int ath10k_wmi_10_2_op_pull_fw_stats(struct ath10k *ar,
- 	const struct wmi_10_2_stats_event *ev = (void *)skb->data;
- 	u32 num_pdev_stats;
- 	u32 num_pdev_ext_stats;
--	u32 num_vdev_stats;
- 	u32 num_peer_stats;
- 	int i;
- 
-@@ -2865,7 +2860,6 @@ static int ath10k_wmi_10_2_op_pull_fw_stats(struct ath10k *ar,
- 
- 	num_pdev_stats = __le32_to_cpu(ev->num_pdev_stats);
- 	num_pdev_ext_stats = __le32_to_cpu(ev->num_pdev_ext_stats);
--	num_vdev_stats = __le32_to_cpu(ev->num_vdev_stats);
- 	num_peer_stats = __le32_to_cpu(ev->num_peer_stats);
- 
- 	for (i = 0; i < num_pdev_stats; i++) {
-@@ -2935,7 +2929,6 @@ static int ath10k_wmi_10_2_4_op_pull_fw_stats(struct ath10k *ar,
- 	const struct wmi_10_2_stats_event *ev = (void *)skb->data;
- 	u32 num_pdev_stats;
- 	u32 num_pdev_ext_stats;
--	u32 num_vdev_stats;
- 	u32 num_peer_stats;
- 	int i;
- 
-@@ -2944,7 +2937,6 @@ static int ath10k_wmi_10_2_4_op_pull_fw_stats(struct ath10k *ar,
- 
- 	num_pdev_stats = __le32_to_cpu(ev->num_pdev_stats);
- 	num_pdev_ext_stats = __le32_to_cpu(ev->num_pdev_ext_stats);
--	num_vdev_stats = __le32_to_cpu(ev->num_vdev_stats);
- 	num_peer_stats = __le32_to_cpu(ev->num_peer_stats);
- 
- 	for (i = 0; i < num_pdev_stats; i++) {
--- 
-2.7.4
+Larry
