@@ -1,184 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:59036 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752041AbeENLSa (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:20557 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752785AbeEKIPg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 May 2018 07:18:30 -0400
-Date: Mon, 14 May 2018 16:48:23 +0530
+        Fri, 11 May 2018 04:15:36 -0400
 From: Ajay Singh <ajay.kathat@microchip.com>
-To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
-        <adham.abozaeid@Microchip.com>
-Subject: Re: [PATCH 14/30] staging: wilc1000: fix line over 80 chars in
- add_network_to_shadow()
-Message-ID: <20180514164823.7d773e7e@ajaysk-VirtualBox> (sfid-20180514_131834_591667_794118AB)
-In-Reply-To: <9aa5bfe8-2e41-6d37-4190-74dcbd301893@microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
-        <1525682614-3824-15-git-send-email-ajay.kathat@microchip.com>
-        <b967c08b-1158-f71a-9976-05c6365af857@microchip.com>
-        <20180510001222.5f443b47@ajaysk-VirtualBox>
-        <bff49f85-4c10-797d-4cea-62ab86933fa1@microchip.com>
-        <9aa5bfe8-2e41-6d37-4190-74dcbd301893@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 30/30] staging: wilc1000: refactor host_int_parse_assoc_resp_info() to remove unused code
+Date: Fri, 11 May 2018 13:43:31 +0530
+Message-ID: <1526026411-11058-31-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_103236_078412_B8EDF6C4)
+In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Claudiu,
+Remove 'connect_resp_info' structure as most of its elements are not used.
 
-On Mon, 14 May 2018 11:57:24 +0300
-Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
+Modified wilc_parse_assoc_resp_info() to directly parse and fill value
+in connect_info structure variable. Remove use of 'assoc_resp_len' variable.
+get_assoc_resp_cap_info() & get_asoc_id() functions are remove as its
+not used anymore.
 
-> Hi Ajay,
-> 
-> On 10.05.2018 08:27, Claudiu Beznea wrote:
-> > 
-> > 
-> > On 09.05.2018 21:42, Ajay Singh wrote:  
-> >> On Wed, 9 May 2018 16:43:14 +0300
-> >> Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
-> >>  
-> >>> On 07.05.2018 11:43, Ajay Singh wrote:  
-> >>>> Fix line over 80 characters issue reported by checkpatch in
-> >>>> add_network_to_shadow() by using temporary variable.    
-> >>>
-> >>> I, personally, don't like this way of fixing line over 80. From my
-> >>> point of view this introduces a new future patch. Maybe, in
-> >>> future, somebody will remove this temporary variable stating that
-> >>> there is no need for it.
-> >>>  
-> >>
-> >> In my opinion, just by removing this temporary variable the patch
-> >> might not go through because it will definitely have line over
-> >> 80 character issue. As per guideline its recommended to run the
-> >> checkpatch before submitting the patch.
-> >>
-> >> Only using short variables names might help to resolve that issue
-> >> but using short variable names will not give clear meaning for the
-> >> code. I  don't want to shorten the variable name as they don't
-> >> convey the complete meaning.
-> >>
-> >> Do you have any suggestion/code which can help to understand how to
-> >> resolve this without using temp/variables name changes.  
-> > 
-> > No, for this one I have not. Maybe further refactoring...
-> >   
-> 
-> Looking over the v2 of this series you send, and over
-> wilc_wfi_cfgoperations.c, and remembering your last question on this
-> patch, I was thinking that one suggestion for this would be to
-> replace last_scanned_shadow with just scanned_shadow or nw_info or
-> scanned_nw_info. Just an idea.
-> 
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 51 +++++------------------------
+ drivers/staging/wilc1000/coreconfigurator.h | 10 +-----
+ drivers/staging/wilc1000/host_interface.c   | 20 ++---------
+ 3 files changed, 11 insertions(+), 70 deletions(-)
 
-I avoided use of short name for 'last_scanned_shadow' because it might
-not give clear meaning as there are variables like 'last_scanned_cnt',
-which also uses same prefix 'last_' and its helpful to know its related
-data.
-
-
-> >>  
-> >>>>
-> >>>> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> >>>> ---
-> >>>>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 52
-> >>>> +++++++++++------------ 1 file changed, 25 insertions(+), 27
-> >>>> deletions(-)
-> >>>>
-> >>>> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> >>>> b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c index
-> >>>> f1ebaea..0ae2065 100644 ---
-> >>>> a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c +++
-> >>>> b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c @@ -300,6
-> >>>> +300,7 @@ static void add_network_to_shadow(struct network_info
-> >>>> *nw_info, int ap_found = is_network_in_shadow(nw_info,
-> >>>> user_void); u32 ap_index = 0; u8 rssi_index = 0;
-> >>>> +	struct network_info *shadow_nw_info;
-> >>>>  
-> >>>>  	if (last_scanned_cnt >= MAX_NUM_SCANNED_NETWORKS_SHADOW)
-> >>>>  		return;
-> >>>> @@ -310,37 +311,34 @@ static void add_network_to_shadow(struct
-> >>>> network_info *nw_info, } else {
-> >>>>  		ap_index = ap_found;
-> >>>>  	}
-> >>>> -	rssi_index =
-> >>>> last_scanned_shadow[ap_index].rssi_history.index;
-> >>>> -
-> >>>> last_scanned_shadow[ap_index].rssi_history.samples[rssi_index++]
-> >>>> = nw_info->rssi;
-> >>>> +	shadow_nw_info = &last_scanned_shadow[ap_index];
-> >>>> +	rssi_index = shadow_nw_info->rssi_history.index;
-> >>>> +	shadow_nw_info->rssi_history.samples[rssi_index++] =
-> >>>> nw_info->rssi; if (rssi_index == NUM_RSSI) {
-> >>>>  		rssi_index = 0;
-> >>>> -		last_scanned_shadow[ap_index].rssi_history.full
-> >>>> = true;
-> >>>> -	}
-> >>>> -	last_scanned_shadow[ap_index].rssi_history.index =
-> >>>> rssi_index;
-> >>>> -	last_scanned_shadow[ap_index].rssi = nw_info->rssi;
-> >>>> -	last_scanned_shadow[ap_index].cap_info =
-> >>>> nw_info->cap_info;
-> >>>> -	last_scanned_shadow[ap_index].ssid_len =
-> >>>> nw_info->ssid_len;
-> >>>> -	memcpy(last_scanned_shadow[ap_index].ssid,
-> >>>> -	       nw_info->ssid, nw_info->ssid_len);
-> >>>> -	memcpy(last_scanned_shadow[ap_index].bssid,
-> >>>> -	       nw_info->bssid, ETH_ALEN);
-> >>>> -	last_scanned_shadow[ap_index].beacon_period =
-> >>>> nw_info->beacon_period;
-> >>>> -	last_scanned_shadow[ap_index].dtim_period =
-> >>>> nw_info->dtim_period;
-> >>>> -	last_scanned_shadow[ap_index].ch = nw_info->ch;
-> >>>> -	last_scanned_shadow[ap_index].ies_len =
-> >>>> nw_info->ies_len;
-> >>>> -	last_scanned_shadow[ap_index].tsf_hi = nw_info->tsf_hi;
-> >>>> +		shadow_nw_info->rssi_history.full = true;
-> >>>> +	}
-> >>>> +	shadow_nw_info->rssi_history.index = rssi_index;
-> >>>> +	shadow_nw_info->rssi = nw_info->rssi;
-> >>>> +	shadow_nw_info->cap_info = nw_info->cap_info;
-> >>>> +	shadow_nw_info->ssid_len = nw_info->ssid_len;
-> >>>> +	memcpy(shadow_nw_info->ssid, nw_info->ssid,
-> >>>> nw_info->ssid_len);
-> >>>> +	memcpy(shadow_nw_info->bssid, nw_info->bssid, ETH_ALEN);
-> >>>> +	shadow_nw_info->beacon_period = nw_info->beacon_period;
-> >>>> +	shadow_nw_info->dtim_period = nw_info->dtim_period;
-> >>>> +	shadow_nw_info->ch = nw_info->ch;
-> >>>> +	shadow_nw_info->ies_len = nw_info->ies_len;
-> >>>> +	shadow_nw_info->tsf_hi = nw_info->tsf_hi;
-> >>>>  	if (ap_found != -1)
-> >>>> -		kfree(last_scanned_shadow[ap_index].ies);
-> >>>> -	last_scanned_shadow[ap_index].ies =
-> >>>> kmalloc(nw_info->ies_len,
-> >>>> -						    GFP_KERNEL);
-> >>>> -	memcpy(last_scanned_shadow[ap_index].ies,
-> >>>> -	       nw_info->ies, nw_info->ies_len);
-> >>>> -	last_scanned_shadow[ap_index].time_scan = jiffies;
-> >>>> -	last_scanned_shadow[ap_index].time_scan_cached =
-> >>>> jiffies;
-> >>>> -	last_scanned_shadow[ap_index].found = 1;
-> >>>> +		kfree(shadow_nw_info->ies);
-> >>>> +	shadow_nw_info->ies = kmalloc(nw_info->ies_len,
-> >>>> GFP_KERNEL);
-> >>>> +	memcpy(shadow_nw_info->ies, nw_info->ies,
-> >>>> nw_info->ies_len);
-> >>>> +	shadow_nw_info->time_scan = jiffies;
-> >>>> +	shadow_nw_info->time_scan_cached = jiffies;
-> >>>> +	shadow_nw_info->found = 1;
-> >>>>  	if (ap_found != -1)
-> >>>> -
-> >>>> kfree(last_scanned_shadow[ap_index].join_params);
-> >>>> -	last_scanned_shadow[ap_index].join_params = join_params;
-> >>>> +		kfree(shadow_nw_info->join_params);
-> >>>> +	shadow_nw_info->join_params = join_params;
-> >>>>  }
-> >>>>  
-> >>>>  static void cfg_scan_result(enum scan_event scan_event,
-> >>>>     
-> >>
-> >>
-> >>  
-> >   
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 9f9ca76..4481602 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -207,16 +207,6 @@ static inline u16 get_cap_info(u8 *data)
+ 	return cap_info;
+ }
+ 
+-static inline u16 get_assoc_resp_cap_info(u8 *data)
+-{
+-	u16 cap_info;
+-
+-	cap_info  = data[0];
+-	cap_info |= (data[1] << 8);
+-
+-	return cap_info;
+-}
+-
+ static inline u16 get_asoc_status(u8 *data)
+ {
+ 	u16 asoc_status;
+@@ -225,16 +215,6 @@ static inline u16 get_asoc_status(u8 *data)
+ 	return (asoc_status << 8) | data[2];
+ }
+ 
+-static inline u16 get_asoc_id(u8 *data)
+-{
+-	u16 asoc_id;
+-
+-	asoc_id  = data[4];
+-	asoc_id |= (data[5] << 8);
+-
+-	return asoc_id;
+-}
+-
+ static u8 *get_tim_elm(u8 *msa, u16 rx_len, u16 tag_param_offset)
+ {
+ 	u16 index;
+@@ -338,38 +318,23 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
+ }
+ 
+ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
+-			       struct connect_resp_info **ret_connect_resp_info)
++			       struct connect_info *ret_conn_info)
+ {
+-	struct connect_resp_info *connect_resp_info = NULL;
+-	u16 assoc_resp_len = 0;
+ 	u8 *ies = NULL;
+ 	u16 ies_len = 0;
+ 
+-	connect_resp_info = kzalloc(sizeof(*connect_resp_info), GFP_KERNEL);
+-	if (!connect_resp_info)
+-		return -ENOMEM;
+-
+-	assoc_resp_len = (u16)buffer_len;
+-
+-	connect_resp_info->status = get_asoc_status(buffer);
+-	if (connect_resp_info->status == SUCCESSFUL_STATUSCODE) {
+-		connect_resp_info->capability = get_assoc_resp_cap_info(buffer);
+-		connect_resp_info->assoc_id = get_asoc_id(buffer);
+-
++	ret_conn_info->status = get_asoc_status(buffer);
++	if (ret_conn_info->status == SUCCESSFUL_STATUSCODE) {
+ 		ies = &buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
+-		ies_len = assoc_resp_len - (CAP_INFO_LEN + STATUS_CODE_LEN +
+-					    AID_LEN);
++		ies_len = buffer_len - (CAP_INFO_LEN + STATUS_CODE_LEN +
++					AID_LEN);
+ 
+-		connect_resp_info->ies = kmemdup(ies, ies_len, GFP_KERNEL);
+-		if (!connect_resp_info->ies) {
+-			kfree(connect_resp_info);
++		ret_conn_info->resp_ies = kmemdup(ies, ies_len, GFP_KERNEL);
++		if (!ret_conn_info->resp_ies)
+ 			return -ENOMEM;
+-		}
+ 
+-		connect_resp_info->ies_len = ies_len;
++		ret_conn_info->resp_ies_len = ies_len;
+ 	}
+ 
+-	*ret_connect_resp_info = connect_resp_info;
+-
+ 	return 0;
+ }
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index a58f44e..55b5531 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -71,14 +71,6 @@ struct network_info {
+ 	u64 tsf_hi;
+ };
+ 
+-struct connect_resp_info {
+-	u16 capability;
+-	u16 status;
+-	u16 assoc_id;
+-	u8 *ies;
+-	u16 ies_len;
+-};
+-
+ struct connect_info {
+ 	u8 bssid[6];
+ 	u8 *req_ies;
+@@ -97,7 +89,7 @@ struct disconnect_info {
+ s32 wilc_parse_network_info(u8 *msg_buffer,
+ 			    struct network_info **ret_network_info);
+ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
+-			       struct connect_resp_info **ret_connect_resp_info);
++			       struct connect_info *ret_conn_info);
+ void wilc_scan_complete_received(struct wilc *wilc, u8 *buffer, u32 length);
+ void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32 length);
+ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 4274efb..a2f82c8 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1297,7 +1297,6 @@ static inline void host_int_free_user_conn_req(struct host_if_drv *hif_drv)
+ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
+ 						  u8 mac_status)
+ {
+-	struct connect_resp_info *connect_resp_info = NULL;
+ 	struct connect_info conn_info;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+@@ -1317,26 +1316,11 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
+ 
+ 			err = wilc_parse_assoc_resp_info(rcv_assoc_resp,
+ 							 assoc_resp_info_len,
+-							 &connect_resp_info);
+-			if (err) {
++							 &conn_info);
++			if (err)
+ 				netdev_err(vif->ndev,
+ 					   "wilc_parse_assoc_resp_info() returned error %d\n",
+ 					   err);
+-			} else {
+-				conn_info.status = connect_resp_info->status;
+-
+-				if (conn_info.status == SUCCESSFUL_STATUSCODE &&
+-				    connect_resp_info->ies) {
+-					conn_info.resp_ies = kmemdup(connect_resp_info->ies,
+-								     connect_resp_info->ies_len,
+-								     GFP_KERNEL);
+-					if (conn_info.resp_ies)
+-						conn_info.resp_ies_len = connect_resp_info->ies_len;
+-				}
+-
+-				kfree(connect_resp_info->ies);
+-				kfree(connect_resp_info);
+-			}
+ 		}
+ 	}
+ 
+-- 
+2.7.4
