@@ -1,115 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:45328 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S937769AbeE1Nrq (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:6309 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752786AbeEKIPM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 May 2018 09:47:46 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/5] nl80211: refactor common code in scan flags checks
-Date: Mon, 28 May 2018 15:47:37 +0200
-Message-Id: <20180528134741.10386-2-johannes@sipsolutions.net> (sfid-20180528_154818_825681_E3E4C9DA)
-In-Reply-To: <20180528134741.10386-1-johannes@sipsolutions.net>
-References: <20180528134741.10386-1-johannes@sipsolutions.net>
+        Fri, 11 May 2018 04:15:12 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 23/30] staging: wilc1000: refactor del_station() to avoid parenthesis misalignment
+Date: Fri, 11 May 2018 13:43:24 +0530
+Message-ID: <1526026411-11058-24-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101516_565789_61FEBEC4)
+In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Refactor the code to fix open parenthesis alignment issue reported by
+checkpatch.pl script in del_station().
 
-There's a very common pattern to check for a scan flag and
-then reject it if an extended feature flag isn't set, factor
-this out into a helper function.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- net/wireless/nl80211.c | 60 ++++++++++++++++++++++++++------------------------
- 1 file changed, 31 insertions(+), 29 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index bc40a783cb27..384fdad9825d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6861,6 +6861,16 @@ static bool cfg80211_off_channel_oper_allowed(struct wireless_dev *wdev)
- 	return regulatory_pre_cac_allowed(wdev->wiphy);
- }
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 399dc1e3..e248702 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1992,6 +1992,7 @@ static int del_station(struct wiphy *wiphy, struct net_device *dev,
+ 	s32 ret = 0;
+ 	struct wilc_priv *priv;
+ 	struct wilc_vif *vif;
++	struct sta_info *info;
  
-+static bool nl80211_check_scan_feat(struct wiphy *wiphy, u32 flags, u32 flag,
-+				    enum nl80211_ext_feature_index feat)
-+{
-+	if (!(flags & flag))
-+		return true;
-+	if (wiphy_ext_feature_isset(wiphy, feat))
-+		return true;
-+	return false;
-+}
+ 	if (!wiphy)
+ 		return -EFAULT;
+@@ -1999,16 +2000,17 @@ static int del_station(struct wiphy *wiphy, struct net_device *dev,
+ 	priv = wiphy_priv(wiphy);
+ 	vif = netdev_priv(dev);
+ 
+-	if (vif->iftype == AP_MODE || vif->iftype == GO_MODE) {
+-		if (!mac)
+-			ret = wilc_del_allstation(vif,
+-				     priv->assoc_stainfo.sta_associated_bss);
++	if (!(vif->iftype == AP_MODE || vif->iftype == GO_MODE))
++		return ret;
+ 
+-		ret = wilc_del_station(vif, mac);
++	info = &priv->assoc_stainfo;
+ 
+-		if (ret)
+-			netdev_err(dev, "Host delete station fail\n");
+-	}
++	if (!mac)
++		ret = wilc_del_allstation(vif, info->sta_associated_bss);
 +
- static int
- nl80211_check_scan_flags(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			 void *request, struct nlattr **attrs,
-@@ -6895,15 +6905,27 @@ nl80211_check_scan_flags(struct wiphy *wiphy, struct wireless_dev *wdev,
- 
- 	if (((*flags & NL80211_SCAN_FLAG_LOW_PRIORITY) &&
- 	     !(wiphy->features & NL80211_FEATURE_LOW_PRIORITY_SCAN)) ||
--	    ((*flags & NL80211_SCAN_FLAG_LOW_SPAN) &&
--	     !wiphy_ext_feature_isset(wiphy,
--				      NL80211_EXT_FEATURE_LOW_SPAN_SCAN)) ||
--	    ((*flags & NL80211_SCAN_FLAG_LOW_POWER) &&
--	     !wiphy_ext_feature_isset(wiphy,
--				      NL80211_EXT_FEATURE_LOW_POWER_SCAN)) ||
--	    ((*flags & NL80211_SCAN_FLAG_HIGH_ACCURACY) &&
--	     !wiphy_ext_feature_isset(wiphy,
--				      NL80211_EXT_FEATURE_HIGH_ACCURACY_SCAN)))
-+	    !nl80211_check_scan_feat(wiphy, *flags,
-+				     NL80211_SCAN_FLAG_LOW_SPAN,
-+				     NL80211_EXT_FEATURE_LOW_SPAN_SCAN) ||
-+	    !nl80211_check_scan_feat(wiphy, *flags,
-+				     NL80211_SCAN_FLAG_LOW_POWER,
-+				     NL80211_EXT_FEATURE_LOW_POWER_SCAN) ||
-+	    !nl80211_check_scan_feat(wiphy, *flags,
-+				     NL80211_SCAN_FLAG_HIGH_ACCURACY,
-+				     NL80211_EXT_FEATURE_HIGH_ACCURACY_SCAN) ||
-+	    !nl80211_check_scan_feat(wiphy, *flags,
-+				     NL80211_SCAN_FLAG_FILS_MAX_CHANNEL_TIME,
-+				     NL80211_EXT_FEATURE_FILS_MAX_CHANNEL_TIME) ||
-+	    !nl80211_check_scan_feat(wiphy, *flags,
-+				     NL80211_SCAN_FLAG_ACCEPT_BCAST_PROBE_RESP,
-+				     NL80211_EXT_FEATURE_ACCEPT_BCAST_PROBE_RESP) ||
-+	    !nl80211_check_scan_feat(wiphy, *flags,
-+				     NL80211_SCAN_FLAG_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION,
-+				     NL80211_EXT_FEATURE_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION) ||
-+	    !nl80211_check_scan_feat(wiphy, *flags,
-+				     NL80211_SCAN_FLAG_OCE_PROBE_REQ_HIGH_TX_RATE,
-+				     NL80211_EXT_FEATURE_OCE_PROBE_REQ_HIGH_TX_RATE))
- 		return -EOPNOTSUPP;
- 
- 	if (*flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
-@@ -6918,26 +6940,6 @@ nl80211_check_scan_flags(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			return err;
- 	}
- 
--	if ((*flags & NL80211_SCAN_FLAG_FILS_MAX_CHANNEL_TIME) &&
--	    !wiphy_ext_feature_isset(wiphy,
--				     NL80211_EXT_FEATURE_FILS_MAX_CHANNEL_TIME))
--		return -EOPNOTSUPP;
--
--	if ((*flags & NL80211_SCAN_FLAG_ACCEPT_BCAST_PROBE_RESP) &&
--	   !wiphy_ext_feature_isset(wiphy,
--				    NL80211_EXT_FEATURE_ACCEPT_BCAST_PROBE_RESP))
--		return -EOPNOTSUPP;
--
--	if ((*flags & NL80211_SCAN_FLAG_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION) &&
--	    !wiphy_ext_feature_isset(wiphy,
--				     NL80211_EXT_FEATURE_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION))
--		return -EOPNOTSUPP;
--
--	if ((*flags & NL80211_SCAN_FLAG_OCE_PROBE_REQ_HIGH_TX_RATE) &&
--	    !wiphy_ext_feature_isset(wiphy,
--				     NL80211_EXT_FEATURE_OCE_PROBE_REQ_HIGH_TX_RATE))
--		return -EOPNOTSUPP;
--
- 	return 0;
++	ret = wilc_del_station(vif, mac);
++	if (ret)
++		netdev_err(dev, "Host delete station fail\n");
+ 	return ret;
  }
  
 -- 
-2.14.3
+2.7.4
