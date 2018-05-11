@@ -1,58 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:44410 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965042AbeEXNVf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 May 2018 09:21:35 -0400
-Date: Thu, 24 May 2018 06:21:32 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: "Reizer, Eyal" <eyalr@ti.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Eyal Reizer <eyalreizer@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
-Subject: Re: [EXTERNAL] Re: [PATCH] wlcore: use generic runtime pm calls for
- wowlan elp configuration
-Message-ID: <20180524132132.GZ98604@atomide.com> (sfid-20180524_152158_731783_D02496BE)
-References: <1527146337-17562-1-git-send-email-eyalr@ti.com>
- <87fu2hiilx.fsf@codeaurora.org>
- <06f0b1b5243a4ab7befad7b9109bf5a5@ti.com>
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:9090 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752751AbeEKIOw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 11 May 2018 04:14:52 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 16/30] staging: wilc1000: fix line over 80 chars in wilc_wfi_cfg_tx_vendor_spec()
+Date: Fri, 11 May 2018 13:43:17 +0530
+Message-ID: <1526026411-11058-17-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101455_438130_BA0E46E3)
+In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <06f0b1b5243a4ab7befad7b9109bf5a5@ti.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Reizer, Eyal <eyalr@ti.com> [180524 08:20]:
-> > 
-> > > With runtime PM enabled, we can now use generic calls to
-> > > pm_generic_runtime_suspend and pm_generic_runtime_resume for
-> > enabling elp
-> > > during suspend when wowlan is enabled and waking the chip from elp
-> > > on resume.
-> > > remove the custom API that was used to ensure that the command
-> > > that is used to allow ELP during suspend is completed before the system
-> > > suspend.
-> > >
-> > > Signed-off-by: Eyal Reizer <eyalr@ti.com>
-> > > ---
-> > > Dependent on the Runtime PM support for wlcore patch set that was
-> > submitted
-> > > by Tony Lindgren <tony@atomide.com>
-> > 
-> > Ok, I'll drop this from my queue. Please resubmit once Tony's patches
-> > are ready to apply (or Tony can include this patch in his patchset).
-> > 
-> > BTW, for me it would be a lot easier if you could mark patches like this
-> > as RFT (Request For Test) or RFC (Request For Comments). That way I can
-> > automatically drop the patch without sending any emails.
+Fix line over 80 characters issues reported by checkpatch.pl script in
+wilc_wfi_cfg_tx_vendor_spec() by using temporary variable. Simplified
+'if else' condition with 'if'.
 
-Sorry for the noise, what seemed like a trivial change to use generic
-runtime PM exposed few unexpected issues :) I'll do one more revision
-of all the patches with RFT. Then when we are happy with that series,
-I'll do one more patch to enable runtime PM autosuspend support to
-avoid enabling and disabing the hardware constantly. And then after
-that we should have the patches finally ready for merging.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-Regards,
-
-Tony
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 93511de..7994736 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1570,14 +1570,14 @@ static void wilc_wfi_cfg_tx_vendor_spec(struct p2p_mgmt_data *mgmt_tx,
+ 	for (i = P2P_PUB_ACTION_SUBTYPE + 2; i < len; i++) {
+ 		if (buf[i] == P2PELEM_ATTR_ID &&
+ 		    !memcmp(p2p_oui, &buf[i + 2], 4)) {
++			bool oper_ch = false;
++			u8 *tx_buff = &mgmt_tx->buff[i + 6];
++
+ 			if (subtype == P2P_INV_REQ || subtype == P2P_INV_RSP)
+-				wilc_wfi_cfg_parse_tx_action(&mgmt_tx->buff[i + 6],
+-							     len - (i + 6),
+-							     true, iftype);
+-			else
+-				wilc_wfi_cfg_parse_tx_action(&mgmt_tx->buff[i + 6],
+-							     len - (i + 6),
+-							     false, iftype);
++				oper_ch = true;
++
++			wilc_wfi_cfg_parse_tx_action(tx_buff, len - (i + 6),
++						     oper_ch, iftype);
+ 
+ 			break;
+ 		}
+-- 
+2.7.4
