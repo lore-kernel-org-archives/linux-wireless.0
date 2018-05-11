@@ -1,75 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:60094 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751665AbeEROrF (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34840 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750989AbeEKWHi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 10:47:05 -0400
-Received: from mail-io0-f199.google.com ([209.85.223.199])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <seth.forshee@canonical.com>)
-        id 1fJgeu-0006XO-Hn
-        for linux-wireless@vger.kernel.org; Fri, 18 May 2018 14:47:04 +0000
-Received: by mail-io0-f199.google.com with SMTP id s12-v6so5279597ioc.20
-        for <linux-wireless@vger.kernel.org>; Fri, 18 May 2018 07:47:04 -0700 (PDT)
-From: Seth Forshee <seth.forshee@canonical.com>
-To: wireless-regdb@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] wireless-regdb: Fix comparison of WmmRule with NoneType in python 3
-Date: Fri, 18 May 2018 09:47:01 -0500
-Message-Id: <20180518144701.25138-1-seth.forshee@canonical.com> (sfid-20180518_164708_524837_BDF810C0)
+        Fri, 11 May 2018 18:07:38 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 11 May 2018 15:07:37 -0700
+From: Jeff Johnson <jjohnson@codeaurora.org>
+To: greearb@candelatech.com
+Cc: ath10k@lists.infradead.org, kvalo@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH 1/3] ath10k: Add ath10k-ct firmware feature flags and
+ descriptions.
+In-Reply-To: <1526074931-23885-1-git-send-email-greearb@candelatech.com>
+References: <1526074931-23885-1-git-send-email-greearb@candelatech.com>
+Message-ID: <1a5289623457c6c36413b0763010a799@codeaurora.org> (sfid-20180512_000742_837582_55C07B5B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Python 3 gives errors as a result of the changes to add wmm
-rules since Permission.wmmrule can be set to None:
+On 2018-05-11 14:42, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> These feature flags are used by ath10k-ct firmware.  Add these
+> so we can use them in future patches and so there are no warings
 
- TypeError: '<' not supported between instances of 'WmmRule' and 'NoneType'
-
-To fix this, supply compairson methods for WmmRule instead of
-using the ones provided by attrs. Doing this means we also need
-to supply a __hash__ method.
-
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- dbparse.py | 18 +++++++++++++++++-
- 1 file changed, 17 insertions(+), 1 deletion(-)
-
-diff --git a/dbparse.py b/dbparse.py
-index 5cb8b3f13266..5fe752b4ff31 100755
---- a/dbparse.py
-+++ b/dbparse.py
-@@ -32,7 +32,7 @@ dfs_regions = {
- 
- @total_ordering
- 
--@attr.s(frozen=True)
-+@attr.s(frozen=True, cmp=False)
- class WmmRule(object):
-     vo_c = attr.ib()
-     vi_c = attr.ib()
-@@ -47,6 +47,22 @@ class WmmRule(object):
-         return (self.vo_c, self.vi_c, self.be_c, self.bk_c,
-                 self.vo_ap, self.vi_ap, self.be_ap, self.bk_ap)
- 
-+    def __eq__(self, other):
-+        if other is None:
-+            return False
-+        return (self._as_tuple() == other._as_tuple())
-+
-+    def __ne__(self, other):
-+        return not (self == other)
-+
-+    def __lt__(self, other):
-+        if other is None:
-+            return False
-+        return (self._as_tuple() < other._as_tuple())
-+
-+    def __hash__(self):
-+        return hash(self._as_tuple())
-+
- class FreqBand(object):
-     def __init__(self, start, end, bw, comments=None):
-         self.start = start
--- 
-2.17.0
+typo: warings => warnings
