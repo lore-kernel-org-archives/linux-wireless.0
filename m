@@ -1,84 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:41061 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750800AbeETIPg (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:42663 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752751AbeEKIOz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 May 2018 04:15:36 -0400
-Received: by mail-wr0-f195.google.com with SMTP id w15-v6so5477903wrp.8
-        for <linux-wireless@vger.kernel.org>; Sun, 20 May 2018 01:15:35 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [RFC v2 02/18] mt76x2: move mt76x2_fw_header and mt76x2_patch_header definitions in mcu.h
-Date: Sun, 20 May 2018 10:15:06 +0200
-Message-Id: <20180520081522.10163-3-lorenzo.bianconi@redhat.com> (sfid-20180520_101542_467240_FB8440A8)
+        Fri, 11 May 2018 04:14:55 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 18/30] staging: wilc1000: fix line over 80 chars in wilc_create_wiphy() declaration
+Date: Fri, 11 May 2018 13:43:19 +0530
+Message-ID: <1526026411-11058-19-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101500_931840_40602E58)
+In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-move mt76x2_fw_header and mt76x2_patch_header definitions in mcu.h in
-order to reuse them in mt76x2u mcu related code
+Fix line over 80 characters issue found by checkpatch.pl script in
+function declaration.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c | 17 -----------------
- drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h | 17 +++++++++++++++++
- 2 files changed, 17 insertions(+), 17 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
-index 3e2a7216ffdd..ba954e7bc426 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
-@@ -23,23 +23,6 @@
- #include "mt76x2_dma.h"
- #include "mt76x2_eeprom.h"
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+index c1a2421..a69103b 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
+@@ -3,7 +3,8 @@
+ #define NM_WFI_CFGOPERATIONS
+ #include "wilc_wfi_netdevice.h"
  
--struct mt76x2_fw_header {
--	__le32 ilm_len;
--	__le32 dlm_len;
--	__le16 build_ver;
--	__le16 fw_ver;
--	u8 pad[4];
--	char build_time[16];
--};
--
--struct mt76x2_patch_header {
--	char build_time[16];
--	char platform[4];
--	char hw_version[4];
--	char patch_version[4];
--	u8 pad[2];
--};
--
- static struct sk_buff *mt76x2_mcu_msg_alloc(const void *data, int len)
- {
- 	struct sk_buff *skb;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
-index d7a7e83262ce..e40293f21417 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
-@@ -146,6 +146,23 @@ struct mt76x2_tssi_comp {
- 	u8 offset1;
- } __packed __aligned(4);
- 
-+struct mt76x2_fw_header {
-+	__le32 ilm_len;
-+	__le32 dlm_len;
-+	__le16 build_ver;
-+	__le16 fw_ver;
-+	u8 pad[4];
-+	char build_time[16];
-+};
-+
-+struct mt76x2_patch_header {
-+	char build_time[16];
-+	char platform[4];
-+	char hw_version[4];
-+	char patch_version[4];
-+	u8 pad[2];
-+};
-+
- int mt76x2_mcu_calibrate(struct mt76x2_dev *dev, enum mcu_calibration type,
- 			 u32 param);
- int mt76x2_mcu_tssi_comp(struct mt76x2_dev *dev, struct mt76x2_tssi_comp *tssi_data);
+-struct wireless_dev *wilc_create_wiphy(struct net_device *net, struct device *dev);
++struct wireless_dev *wilc_create_wiphy(struct net_device *net,
++				       struct device *dev);
+ void wilc_free_wiphy(struct net_device *net);
+ int wilc_deinit_host_int(struct net_device *net);
+ int wilc_init_host_int(struct net_device *net);
 -- 
-2.16.3
+2.7.4
