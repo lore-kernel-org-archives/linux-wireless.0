@@ -1,106 +1,217 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:42017 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934630AbeEINom (ORCPT
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:41320 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750980AbeEKSvD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 09:44:42 -0400
-Subject: Re: [PATCH 05/30] staging: wilc1000: fix line over 80 chars in
- host_int_parse_assoc_resp_info()
-To: Ajay Singh <ajay.kathat@microchip.com>,
-        <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <adham.abozaeid@Microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
- <1525682614-3824-6-git-send-email-ajay.kathat@microchip.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <e7165eb4-584d-370c-7d5d-cca93ab34fc7@microchip.com> (sfid-20180509_154445_521196_F961234A)
-Date: Wed, 9 May 2018 16:44:38 +0300
+        Fri, 11 May 2018 14:51:03 -0400
+Received: by mail-pl0-f67.google.com with SMTP id az12-v6so3758406plb.8
+        for <linux-wireless@vger.kernel.org>; Fri, 11 May 2018 11:51:03 -0700 (PDT)
+Date: Fri, 11 May 2018 11:52:23 -0700
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 08/12] ath10k: Add QMI CAP request support
+Message-ID: <20180511185223.GS2259@tuxbook-pro> (sfid-20180511_205127_471874_57B97C21)
+References: <1522042847-26245-1-git-send-email-govinds@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <1525682614-3824-6-git-send-email-ajay.kathat@microchip.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1522042847-26245-1-git-send-email-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun 25 Mar 22:40 PDT 2018, Govind Singh wrote:
 
-
-On 07.05.2018 11:43, Ajay Singh wrote:
-> Fix line over 80 characters issue reported by checkpatch.pl in
-> host_int_parse_assoc_resp_info().
+> Add support for target capablity request
+> qmi message for wcn3990 target.
 > 
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
 > ---
->  drivers/staging/wilc1000/host_interface.c | 37 ++++++++++++++++++-------------
->  1 file changed, 21 insertions(+), 16 deletions(-)
+>  drivers/net/wireless/ath/ath10k/qmi.c | 91 +++++++++++++++++++++++++++++++++++
+>  drivers/net/wireless/ath/ath10k/qmi.h | 25 ++++++++++
+>  2 files changed, 116 insertions(+)
 > 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index 55a61d5..a341ff1 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -1293,6 +1293,23 @@ static inline void host_int_free_user_conn_req(struct host_if_drv *hif_drv)
->  	hif_drv->usr_conn_req.ies = NULL;
+> diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
+> index 763b812..65a43af 100644
+> --- a/drivers/net/wireless/ath/ath10k/qmi.c
+> +++ b/drivers/net/wireless/ath/ath10k/qmi.c
+> @@ -270,6 +270,93 @@ static int ath10k_qmi_msa_ready_send_sync_msg(struct ath10k_qmi *qmi)
+>  	return ret;
 >  }
 >  
-> +static void host_int_copy_conn_info(struct connect_resp_info *conn_resp_info,
-> +				    struct connect_info *conn_info)
+> +static int ath10k_qmi_cap_send_sync_msg(struct ath10k_qmi *qmi)
 > +{
-> +	conn_info->status = conn_resp_info->status;
+> +	struct wlfw_cap_resp_msg_v01 *resp;
+
+I think this is 207 bytes, so it makes sense to allocate this on the
+heap.
+
+> +	struct wlfw_cap_req_msg_v01 *req;
+
+But this is 1 bytes, so keep it on the stack.
+
+> +	struct qmi_txn txn;
+> +	int ret;
 > +
-> +	if (conn_info->status == SUCCESSFUL_STATUSCODE && conn_resp_info->ies) {
-> +		conn_info->resp_ies = kmemdup(conn_resp_info->ies,
-> +					      conn_resp_info->ies_len,
-> +					      GFP_KERNEL);
-> +		if (conn_info->resp_ies)
-> +			conn_info->resp_ies_len = conn_resp_info->ies_len;
+> +	req = kzalloc(sizeof(*req), GFP_KERNEL);
+> +	if (!req)
+> +		return -ENOMEM;
+> +
+> +	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
+> +	if (!resp) {
+> +		kfree(req);
+> +		return -ENOMEM;
 > +	}
 > +
-> +	kfree(conn_resp_info->ies);
-> +	kfree(conn_resp_info);
+> +	ret = qmi_txn_init(&qmi->qmi_hdl, &txn, wlfw_cap_resp_msg_v01_ei, resp);
+> +	if (ret < 0) {
+> +		pr_err("fail to init txn for capability resp %d\n", ret);
+
+Same comments as in previous patches.
+
+> +		goto out;
+> +	}
+> +
+> +	ret = qmi_send_request(&qmi->qmi_hdl, NULL, &txn,
+> +			       QMI_WLFW_CAP_REQ_V01,
+> +			       WLFW_CAP_REQ_MSG_V01_MAX_MSG_LEN,
+> +			       wlfw_cap_req_msg_v01_ei, req);
+> +	if (ret < 0) {
+> +		qmi_txn_cancel(&txn);
+> +		pr_err("fail to send capability req %d\n", ret);
+> +		goto out;
+> +	}
+> +
+> +	ret = qmi_txn_wait(&txn, WLFW_TIMEOUT * HZ);
+> +	if (ret < 0)
+> +		goto out;
+> +
+> +	if (resp->resp.result != QMI_RESULT_SUCCESS_V01) {
+> +		pr_err("qmi capability request rejected, result:%d error:%d\n",
+> +		       resp->resp.result, resp->resp.error);
+> +		ret = -resp->resp.result;
+> +		goto out;
+> +	}
+> +
+> +	if (resp->chip_info_valid) {
+> +		qmi->chip_info.chip_id = resp->chip_info.chip_id;
+> +		qmi->chip_info.chip_family = resp->chip_info.chip_family;
+> +	}
+> +
+> +	if (resp->board_info_valid)
+> +		qmi->board_info.board_id = resp->board_info.board_id;
+> +	else
+> +		qmi->board_info.board_id = 0xFF;
+> +
+> +	if (resp->soc_info_valid)
+> +		qmi->soc_info.soc_id = resp->soc_info.soc_id;
+> +
+> +	if (resp->fw_version_info_valid) {
+> +		qmi->fw_version_info.fw_version =
+> +			resp->fw_version_info.fw_version;
+> +		strlcpy(qmi->fw_version_info.fw_build_timestamp,
+> +			resp->fw_version_info.fw_build_timestamp,
+> +			MAX_TIMESTAMP_LEN + 1);
+
+Use sizeof(qmi->fw_version_info.fw_build_timestamp) to remove the risk
+of them getting out of sync.
+
+> +	}
+> +
+> +	if (resp->fw_build_id_valid)
+> +		strlcpy(qmi->fw_build_id, resp->fw_build_id,
+> +			MAX_BUILD_ID_LEN + 1);
+> +
+> +	pr_debug("chip_id: 0x%x, chip_family: 0x%x, board_id: 0x%x, soc_id: 0x%x, fw_version: 0x%x, fw_build_timestamp: %s, fw_build_id: %s",
+> +		 qmi->chip_info.chip_id, qmi->chip_info.chip_family,
+> +		 qmi->board_info.board_id, qmi->soc_info.soc_id,
+> +		 qmi->fw_version_info.fw_version,
+> +		 qmi->fw_version_info.fw_build_timestamp,
+> +		 qmi->fw_build_id);
+
+Use dev_dbg(), but perhaps this could even be a dev_info()?
+
+> +
+> +	pr_debug("target cap request completed\n");
+> +	kfree(resp);
+> +	kfree(req);
+> +
+> +	return 0;
+> +out:
+> +	kfree(resp);
+> +	kfree(req);
+> +	return ret;
 > +}
 > +
-
-Instead of adding new function why not using wilc_parse_assoc_resp_info() to
-return you the conn_info that you are copying it here? The connect_resp_info
-object that you are passing to wilc_parse_assoc_resp_info() is not used 
-anywhere in host_int_parse_assoc_resp_info() it is used only to copy again
-from it to conn_info object.
-
-Also, in wilc_parse_assoc_resp_info() you can get rid of these lines:
-connect_resp_info->capability = get_assoc_resp_cap_info(buffer);
-connect_resp_info->assoc_id = get_asoc_id(buffer);              
-
-
->  static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
->  						  u8 mac_status)
+>  static int
+>  ath10k_qmi_ind_register_send_sync_msg(struct ath10k_qmi *qmi)
 >  {
-> @@ -1316,25 +1333,13 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
+> @@ -425,6 +512,10 @@ static void ath10k_qmi_event_server_arrive(struct work_struct *work)
+>  	if (ret)
+>  		goto err_setup_msa;
 >  
->  			err = wilc_parse_assoc_resp_info(rcv_assoc_resp, rcvd_assoc_resp_info_len,
->  							 &connect_resp_info);
-> -			if (err) {
-> +			if (err)
->  				netdev_err(vif->ndev,
->  					   "wilc_parse_assoc_resp_info() returned error %d\n",
->  					   err);
-> -			} else {
-> -				conn_info.status = connect_resp_info->status;
-> -
-> -				if (conn_info.status == SUCCESSFUL_STATUSCODE &&
-> -				    connect_resp_info->ies) {
-> -					conn_info.resp_ies = kmemdup(connect_resp_info->ies,
-> -								     connect_resp_info->ies_len,
-> -								     GFP_KERNEL);
-> -					if (conn_info.resp_ies)
-> -						conn_info.resp_ies_len = connect_resp_info->ies_len;
-> -				}
-> -
-> -				kfree(connect_resp_info->ies);
-> -				kfree(connect_resp_info);
-> -			}
-> +			else
-> +				host_int_copy_conn_info(connect_resp_info,
-> +							&conn_info);
->  		}
->  	}
+> +	ret = ath10k_qmi_cap_send_sync_msg(qmi);
+> +	if (ret)
+> +		goto err_setup_msa;
+> +
+>  	return;
 >  
-> 
+>  err_setup_msa:
+> diff --git a/drivers/net/wireless/ath/ath10k/qmi.h b/drivers/net/wireless/ath/ath10k/qmi.h
+> index 47af020..09d20a0 100644
+> --- a/drivers/net/wireless/ath/ath10k/qmi.h
+> +++ b/drivers/net/wireless/ath/ath10k/qmi.h
+> @@ -17,6 +17,8 @@
+>  #define _QMI_H_
+>  
+>  #define MAX_NUM_MEMORY_REGIONS			2
+> +#define MAX_TIMESTAMP_LEN			32
+> +#define MAX_BUILD_ID_LEN			128
+>  
+>  enum ath10k_qmi_driver_event_type {
+>  	ATH10K_QMI_EVENT_SERVER_ARRIVE,
+> @@ -31,6 +33,24 @@ struct ath10k_msa_mem_region_info {
+>  	u8 secure_flag;
+>  };
+>  
+> +struct ath10k_qmi_chip_info {
+> +	u32 chip_id;
+> +	u32 chip_family;
+> +};
+> +
+> +struct ath10k_qmi_board_info {
+> +	u32 board_id;
+> +};
+> +
+> +struct ath10k_qmi_soc_info {
+> +	u32 soc_id;
+> +};
+> +
+> +struct ath10k_qmi_fw_version_info {
+> +	u32 fw_version;
+> +	char fw_build_timestamp[MAX_TIMESTAMP_LEN + 1];
+> +};
+
+I don't see the benefit off lugging these around as separate structs,
+why not just put them in the ath10k_qmi struct directly.
+
+But in particular, I don't see a reason for stashing the data that will
+never be used, store the parts that you're actually using.
+
+> +
+>  struct ath10k_qmi {
+>  	struct platform_device *pdev;
+>  	struct qmi_handle qmi_hdl;
+> @@ -47,5 +67,10 @@ struct ath10k_qmi {
+>  	phys_addr_t msa_pa;
+>  	u32 msa_mem_size;
+>  	void *msa_va;
+> +	struct ath10k_qmi_chip_info chip_info;
+> +	struct ath10k_qmi_board_info board_info;
+> +	struct ath10k_qmi_soc_info soc_info;
+> +	struct ath10k_qmi_fw_version_info fw_version_info;
+> +	char fw_build_id[MAX_BUILD_ID_LEN + 1];
+>  };
+>  #endif /* _QMI_H_ */
+
+Regards,
+Bjorn
