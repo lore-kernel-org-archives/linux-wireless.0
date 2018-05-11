@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:5149 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S934283AbeEIKHN (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39468 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750852AbeEKKSf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 06:07:13 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-Subject: [PATCH v3 1/8] wil6210: disable tracing config option
-Date: Wed,  9 May 2018 13:06:52 +0300
-Message-Id: <1525860419-6514-2-git-send-email-merez@codeaurora.org> (sfid-20180509_120720_841090_E34C4CF3)
-In-Reply-To: <1525860419-6514-1-git-send-email-merez@codeaurora.org>
-References: <1525860419-6514-1-git-send-email-merez@codeaurora.org>
+        Fri, 11 May 2018 06:18:35 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Michael =?utf-8?Q?B=C3=BCsch?= <m@bues.ch>,
+        Matt Redfearn <matt.redfearn@mips.com>,
+        linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+        LKML <linux-kernel@vger.kernel.org>,
+        =?utf-8?Q?Rafa?= =?utf-8?Q?=C5=82_Mi=C5=82ecki?=
+        <rafal@milecki.pl>
+Subject: Re: [PATCH 4.17 2/2] ssb: make SSB_PCICORE_HOSTMODE depend on SSB = y
+References: <20180510111401.1161-1-zajec5@gmail.com>
+        <20180510111401.1161-2-zajec5@gmail.com>
+        <ff18cb0a-e878-dff4-777b-134f0f3fe2e5@lwfinger.net>
+Date: Fri, 11 May 2018 13:18:30 +0300
+In-Reply-To: <ff18cb0a-e878-dff4-777b-134f0f3fe2e5@lwfinger.net> (Larry
+        Finger's message of "Thu, 10 May 2018 11:07:09 -0500")
+Message-ID: <8736yycx6x.fsf@codeaurora.org> (sfid-20180511_121902_760584_62B3D542)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-Disable WIL6210_TRACING by default to avoid its performance overhead.
+> On 05/10/2018 06:14 AM, Rafa=C5=82 Mi=C5=82ecki wrote:
+>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>>
+>> SSB_PCICORE_HOSTMODE protects MIPS specific code that calls not exported
+>> symbols pcibios_enable_device and register_pci_controller. This code is
+>> supposed to be compiled only with ssb builtin.
+>>
+>> This fixes:
+>> ERROR: "pcibios_enable_device" [drivers/ssb/ssb.ko] undefined!
+>> ERROR: "register_pci_controller" [drivers/ssb/ssb.ko] undefined!
+>> make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
+>>
+>> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>
+> This patch needs a "Reported-by: Matt Redfearn <matt.redfearn@mips.com>".
+>
+> Applying both patches leads to a correct configuration for PCI. I
+> cannot test on my present hardware, but the patches seem to be
+> correct.
+>
+> Reviewed-by: Larry Finger <Larry.Finger@lwfinger.net>
+>
+> @Kalle: Please drop my patch from yesterday. This solution is much better.
 
-Signed-off-by: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Dropped, thanks for letting me know.
 
-diff --git a/drivers/net/wireless/ath/wil6210/Kconfig b/drivers/net/wireless/ath/wil6210/Kconfig
-index b448926..3548e8d 100644
---- a/drivers/net/wireless/ath/wil6210/Kconfig
-+++ b/drivers/net/wireless/ath/wil6210/Kconfig
-@@ -33,7 +33,7 @@ config WIL6210_TRACING
- 	bool "wil6210 tracing support"
- 	depends on WIL6210
- 	depends on EVENT_TRACING
--	default y
-+	default n
- 	---help---
- 	  Say Y here to enable tracepoints for the wil6210 driver
- 	  using the kernel tracing infrastructure.  Select this
--- 
-1.9.1
+--=20
+Kalle Valo
