@@ -1,380 +1,303 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:56861 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756697AbeEJJ1P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 May 2018 05:27:15 -0400
-Subject: [PATCH v4] wireless-drivers: Dynamically allocate struct
- station_info
-From: Toke =?utf-8?q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 10 May 2018 11:27:13 +0200
-Message-ID: <152594435934.24751.8979312538330792032.stgit@alrua-kau> (sfid-20180510_112719_898215_A476B335)
+Received: from mail-pl0-f66.google.com ([209.85.160.66]:40659 "EHLO
+        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750711AbeEKRme (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 11 May 2018 13:42:34 -0400
+Received: by mail-pl0-f66.google.com with SMTP id t12-v6so3677414plo.7
+        for <linux-wireless@vger.kernel.org>; Fri, 11 May 2018 10:42:34 -0700 (PDT)
+Date: Fri, 11 May 2018 10:43:55 -0700
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 04/12] ath10k: add support to start and stop qmi service
+Message-ID: <20180511174355.GP2259@tuxbook-pro> (sfid-20180511_194238_724244_D2A45DE1)
+References: <1522042773-25775-1-git-send-email-govinds@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1522042773-25775-1-git-send-email-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since the addition of the TXQ stats to cfg80211, the station_info struct
-has grown to be quite large, which results in warnings when allocated on
-the stack. Fix the affected places to do dynamic allocations instead.
+On Sun 25 Mar 22:39 PDT 2018, Govind Singh wrote:
 
-Fixes: 52539ca89f36 ("cfg80211: Expose TXQ stats and parameters to userspace")
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
----
-v4:
-  - Add missing kfree before return in qtnfmac, as pointed out by Sergey
-    Matyukevich.
+> Add support to start qmi service to configure the wlan
+> firmware component and register event notifier to communicate
+> with the WLAN firmware over qmi communication interface.
+> 
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> ---
+>  drivers/net/wireless/ath/ath10k/qmi.c | 155 ++++++++++++++++++++++++++++++++--
+>  drivers/net/wireless/ath/ath10k/qmi.h |  13 +++
+>  2 files changed, 160 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
+> index 2235182..3a7fcc6 100644
+> --- a/drivers/net/wireless/ath/ath10k/qmi.c
+> +++ b/drivers/net/wireless/ath/ath10k/qmi.c
+> @@ -31,15 +31,115 @@
+>  
+>  static struct ath10k_qmi *qmi;
+>  
+> +static int ath10k_qmi_event_fw_ready_ind(struct ath10k_qmi *qmi)
+> +{
+> +	pr_debug("fw ready event received\n");
 
- drivers/net/wireless/ath/ath6kl/main.c             |   14 ++++---
- drivers/net/wireless/ath/wil6210/debugfs.c         |   22 +++++++----
- drivers/net/wireless/ath/wil6210/wmi.c             |   19 ++++++---
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         |   18 ++++++---
- drivers/net/wireless/marvell/mwifiex/uap_event.c   |   25 ++++++++----
- drivers/net/wireless/quantenna/qtnfmac/event.c     |   41 +++++++++++++-------
- 6 files changed, 90 insertions(+), 49 deletions(-)
+Please use dev_dbg.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index db95f85751e3..808fb30be9ad 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -426,7 +426,7 @@ void ath6kl_connect_ap_mode_sta(struct ath6kl_vif *vif, u16 aid, u8 *mac_addr,
- {
- 	u8 *ies = NULL, *wpa_ie = NULL, *pos;
- 	size_t ies_len = 0;
--	struct station_info sinfo;
-+	struct station_info *sinfo;
- 
- 	ath6kl_dbg(ATH6KL_DBG_TRC, "new station %pM aid=%d\n", mac_addr, aid);
- 
-@@ -482,16 +482,20 @@ void ath6kl_connect_ap_mode_sta(struct ath6kl_vif *vif, u16 aid, u8 *mac_addr,
- 			   keymgmt, ucipher, auth, apsd_info);
- 
- 	/* send event to application */
--	memset(&sinfo, 0, sizeof(sinfo));
-+	sinfo = kzalloc(sizeof(*sinfo), GFP_KERNEL);
-+	if (!sinfo)
-+		return;
- 
- 	/* TODO: sinfo.generation */
- 
--	sinfo.assoc_req_ies = ies;
--	sinfo.assoc_req_ies_len = ies_len;
-+	sinfo->assoc_req_ies = ies;
-+	sinfo->assoc_req_ies_len = ies_len;
- 
--	cfg80211_new_sta(vif->ndev, mac_addr, &sinfo, GFP_KERNEL);
-+	cfg80211_new_sta(vif->ndev, mac_addr, sinfo, GFP_KERNEL);
- 
- 	netif_wake_queue(vif->ndev);
-+
-+	kfree(sinfo);
- }
- 
- void disconnect_timer_handler(struct timer_list *t)
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 8c90b3111f0b..11e46e44381e 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -1200,8 +1200,12 @@ static const struct file_operations fops_freq = {
- static int wil_link_debugfs_show(struct seq_file *s, void *data)
- {
- 	struct wil6210_priv *wil = s->private;
--	struct station_info sinfo;
--	int i, rc;
-+	struct station_info *sinfo;
-+	int i, rc = 0;
-+
-+	sinfo = kzalloc(sizeof(*sinfo), GFP_KERNEL);
-+	if (!sinfo)
-+		return -ENOMEM;
- 
- 	for (i = 0; i < ARRAY_SIZE(wil->sta); i++) {
- 		struct wil_sta_info *p = &wil->sta[i];
-@@ -1229,19 +1233,21 @@ static int wil_link_debugfs_show(struct seq_file *s, void *data)
- 
- 		vif = (mid < wil->max_vifs) ? wil->vifs[mid] : NULL;
- 		if (vif) {
--			rc = wil_cid_fill_sinfo(vif, i, &sinfo);
-+			rc = wil_cid_fill_sinfo(vif, i, sinfo);
- 			if (rc)
--				return rc;
-+				goto out;
- 
--			seq_printf(s, "  Tx_mcs = %d\n", sinfo.txrate.mcs);
--			seq_printf(s, "  Rx_mcs = %d\n", sinfo.rxrate.mcs);
--			seq_printf(s, "  SQ     = %d\n", sinfo.signal);
-+			seq_printf(s, "  Tx_mcs = %d\n", sinfo->txrate.mcs);
-+			seq_printf(s, "  Rx_mcs = %d\n", sinfo->rxrate.mcs);
-+			seq_printf(s, "  SQ     = %d\n", sinfo->signal);
- 		} else {
- 			seq_puts(s, "  INVALID MID\n");
- 		}
- 	}
- 
--	return 0;
-+out:
-+	kfree(sinfo);
-+	return rc;
- }
- 
- static int wil_link_seq_open(struct inode *inode, struct file *file)
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index a3dda9a97c1f..21124af06bdd 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -824,7 +824,7 @@ static void wmi_evt_connect(struct wil6210_vif *vif, int id, void *d, int len)
- 	struct wireless_dev *wdev = vif_to_wdev(vif);
- 	struct wmi_connect_event *evt = d;
- 	int ch; /* channel number */
--	struct station_info sinfo;
-+	struct station_info *sinfo;
- 	u8 *assoc_req_ie, *assoc_resp_ie;
- 	size_t assoc_req_ielen, assoc_resp_ielen;
- 	/* capinfo(u16) + listen_interval(u16) + IEs */
-@@ -940,6 +940,11 @@ static void wmi_evt_connect(struct wil6210_vif *vif, int id, void *d, int len)
- 		vif->bss = NULL;
- 	} else if ((wdev->iftype == NL80211_IFTYPE_AP) ||
- 		   (wdev->iftype == NL80211_IFTYPE_P2P_GO)) {
-+
-+		sinfo = kzalloc(sizeof(*sinfo), GFP_KERNEL);
-+		if (!sinfo)
-+			rc = -ENOMEM;
-+
- 		if (rc) {
- 			if (disable_ap_sme)
- 				/* notify new_sta has failed */
-@@ -947,16 +952,16 @@ static void wmi_evt_connect(struct wil6210_vif *vif, int id, void *d, int len)
- 			goto out;
- 		}
- 
--		memset(&sinfo, 0, sizeof(sinfo));
--
--		sinfo.generation = wil->sinfo_gen++;
-+		sinfo->generation = wil->sinfo_gen++;
- 
- 		if (assoc_req_ie) {
--			sinfo.assoc_req_ies = assoc_req_ie;
--			sinfo.assoc_req_ies_len = assoc_req_ielen;
-+			sinfo->assoc_req_ies = assoc_req_ie;
-+			sinfo->assoc_req_ies_len = assoc_req_ielen;
- 		}
- 
--		cfg80211_new_sta(ndev, evt->bssid, &sinfo, GFP_KERNEL);
-+		cfg80211_new_sta(ndev, evt->bssid, sinfo, GFP_KERNEL);
-+
-+		kfree(sinfo);
- 	} else {
- 		wil_err(wil, "unhandled iftype %d for CID %d\n", wdev->iftype,
- 			evt->cid);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 89b86251910e..f29f9ef521ab 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -5498,7 +5498,7 @@ brcmf_notify_connect_status_ap(struct brcmf_cfg80211_info *cfg,
- 	static int generation;
- 	u32 event = e->event_code;
- 	u32 reason = e->reason;
--	struct station_info sinfo;
-+	struct station_info *sinfo;
- 
- 	brcmf_dbg(CONN, "event %s (%u), reason %d\n",
- 		  brcmf_fweh_event_name(event), event, reason);
-@@ -5511,16 +5511,22 @@ brcmf_notify_connect_status_ap(struct brcmf_cfg80211_info *cfg,
- 
- 	if (((event == BRCMF_E_ASSOC_IND) || (event == BRCMF_E_REASSOC_IND)) &&
- 	    (reason == BRCMF_E_STATUS_SUCCESS)) {
--		memset(&sinfo, 0, sizeof(sinfo));
- 		if (!data) {
- 			brcmf_err("No IEs present in ASSOC/REASSOC_IND");
- 			return -EINVAL;
- 		}
--		sinfo.assoc_req_ies = data;
--		sinfo.assoc_req_ies_len = e->datalen;
-+
-+		sinfo = kzalloc(sizeof(*sinfo), GFP_KERNEL);
-+		if (!sinfo)
-+			return -ENOMEM;
-+
-+		sinfo->assoc_req_ies = data;
-+		sinfo->assoc_req_ies_len = e->datalen;
- 		generation++;
--		sinfo.generation = generation;
--		cfg80211_new_sta(ndev, e->addr, &sinfo, GFP_KERNEL);
-+		sinfo->generation = generation;
-+		cfg80211_new_sta(ndev, e->addr, sinfo, GFP_KERNEL);
-+
-+		kfree(sinfo);
- 	} else if ((event == BRCMF_E_DISASSOC_IND) ||
- 		   (event == BRCMF_E_DEAUTH_IND) ||
- 		   (event == BRCMF_E_DEAUTH)) {
-diff --git a/drivers/net/wireless/marvell/mwifiex/uap_event.c b/drivers/net/wireless/marvell/mwifiex/uap_event.c
-index e8c8728db15a..e86217a6b9ca 100644
---- a/drivers/net/wireless/marvell/mwifiex/uap_event.c
-+++ b/drivers/net/wireless/marvell/mwifiex/uap_event.c
-@@ -108,7 +108,7 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 	int len, i;
- 	u32 eventcause = adapter->event_cause;
--	struct station_info sinfo;
-+	struct station_info *sinfo;
- 	struct mwifiex_assoc_event *event;
- 	struct mwifiex_sta_node *node;
- 	u8 *deauth_mac;
-@@ -117,7 +117,10 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
- 
- 	switch (eventcause) {
- 	case EVENT_UAP_STA_ASSOC:
--		memset(&sinfo, 0, sizeof(sinfo));
-+		sinfo = kzalloc(sizeof(*sinfo), GFP_KERNEL);
-+		if (!sinfo)
-+			return -ENOMEM;
-+
- 		event = (struct mwifiex_assoc_event *)
- 			(adapter->event_body + MWIFIEX_UAP_EVENT_EXTRA_HEADER);
- 		if (le16_to_cpu(event->type) == TLV_TYPE_UAP_MGMT_FRAME) {
-@@ -132,28 +135,31 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
- 				len = ETH_ALEN;
- 
- 			if (len != -1) {
--				sinfo.assoc_req_ies = &event->data[len];
--				len = (u8 *)sinfo.assoc_req_ies -
-+				sinfo->assoc_req_ies = &event->data[len];
-+				len = (u8 *)sinfo->assoc_req_ies -
- 				      (u8 *)&event->frame_control;
--				sinfo.assoc_req_ies_len =
-+				sinfo->assoc_req_ies_len =
- 					le16_to_cpu(event->len) - (u16)len;
- 			}
- 		}
--		cfg80211_new_sta(priv->netdev, event->sta_addr, &sinfo,
-+		cfg80211_new_sta(priv->netdev, event->sta_addr, sinfo,
- 				 GFP_KERNEL);
- 
- 		node = mwifiex_add_sta_entry(priv, event->sta_addr);
- 		if (!node) {
- 			mwifiex_dbg(adapter, ERROR,
- 				    "could not create station entry!\n");
-+			kfree(sinfo);
- 			return -1;
- 		}
- 
--		if (!priv->ap_11n_enabled)
-+		if (!priv->ap_11n_enabled) {
-+			kfree(sinfo);
- 			break;
-+		}
- 
--		mwifiex_set_sta_ht_cap(priv, sinfo.assoc_req_ies,
--				       sinfo.assoc_req_ies_len, node);
-+		mwifiex_set_sta_ht_cap(priv, sinfo->assoc_req_ies,
-+				       sinfo->assoc_req_ies_len, node);
- 
- 		for (i = 0; i < MAX_NUM_TID; i++) {
- 			if (node->is_11n_enabled)
-@@ -163,6 +169,7 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
- 				node->ampdu_sta[i] = BA_STREAM_NOT_ALLOWED;
- 		}
- 		memset(node->rx_seq, 0xff, sizeof(node->rx_seq));
-+		kfree(sinfo);
- 		break;
- 	case EVENT_UAP_STA_DEAUTH:
- 		deauth_mac = adapter->event_body +
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
-index bcd415f96412..a28ae7a34821 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -34,12 +34,13 @@ qtnf_event_handle_sta_assoc(struct qtnf_wmac *mac, struct qtnf_vif *vif,
- {
- 	const u8 *sta_addr;
- 	u16 frame_control;
--	struct station_info sinfo = { 0 };
-+	struct station_info *sinfo;
- 	size_t payload_len;
- 	u16 tlv_type;
- 	u16 tlv_value_len;
- 	size_t tlv_full_len;
- 	const struct qlink_tlv_hdr *tlv;
-+	int ret = 0;
- 
- 	if (unlikely(len < sizeof(*sta_assoc))) {
- 		pr_err("VIF%u.%u: payload is too short (%u < %zu)\n",
-@@ -53,6 +54,10 @@ qtnf_event_handle_sta_assoc(struct qtnf_wmac *mac, struct qtnf_vif *vif,
- 		return -EPROTO;
- 	}
- 
-+	sinfo = kzalloc(sizeof(*sinfo), GFP_KERNEL);
-+	if (!sinfo)
-+		return -ENOMEM;
-+
- 	sta_addr = sta_assoc->sta_addr;
- 	frame_control = le16_to_cpu(sta_assoc->frame_control);
- 
-@@ -61,9 +66,9 @@ qtnf_event_handle_sta_assoc(struct qtnf_wmac *mac, struct qtnf_vif *vif,
- 
- 	qtnf_sta_list_add(vif, sta_addr);
- 
--	sinfo.assoc_req_ies = NULL;
--	sinfo.assoc_req_ies_len = 0;
--	sinfo.generation = vif->generation;
-+	sinfo->assoc_req_ies = NULL;
-+	sinfo->assoc_req_ies_len = 0;
-+	sinfo->generation = vif->generation;
- 
- 	payload_len = len - sizeof(*sta_assoc);
- 	tlv = (const struct qlink_tlv_hdr *)sta_assoc->ies;
-@@ -73,23 +78,27 @@ qtnf_event_handle_sta_assoc(struct qtnf_wmac *mac, struct qtnf_vif *vif,
- 		tlv_value_len = le16_to_cpu(tlv->len);
- 		tlv_full_len = tlv_value_len + sizeof(struct qlink_tlv_hdr);
- 
--		if (tlv_full_len > payload_len)
--			return -EINVAL;
-+		if (tlv_full_len > payload_len) {
-+			ret = -EINVAL;
-+			goto out;
-+		}
- 
- 		if (tlv_type == QTN_TLV_ID_IE_SET) {
- 			const struct qlink_tlv_ie_set *ie_set;
- 			unsigned int ie_len;
- 
--			if (payload_len < sizeof(*ie_set))
--				return -EINVAL;
-+			if (payload_len < sizeof(*ie_set)) {
-+				ret = -EINVAL;
-+				goto out;
-+			}
- 
- 			ie_set = (const struct qlink_tlv_ie_set *)tlv;
- 			ie_len = tlv_value_len -
- 				(sizeof(*ie_set) - sizeof(ie_set->hdr));
- 
- 			if (ie_set->type == QLINK_IE_SET_ASSOC_REQ && ie_len) {
--				sinfo.assoc_req_ies = ie_set->ie_data;
--				sinfo.assoc_req_ies_len = ie_len;
-+				sinfo->assoc_req_ies = ie_set->ie_data;
-+				sinfo->assoc_req_ies_len = ie_len;
- 			}
- 		}
- 
-@@ -97,13 +106,17 @@ qtnf_event_handle_sta_assoc(struct qtnf_wmac *mac, struct qtnf_vif *vif,
- 		tlv = (struct qlink_tlv_hdr *)(tlv->val + tlv_value_len);
- 	}
- 
--	if (payload_len)
--		return -EINVAL;
-+	if (payload_len) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
- 
--	cfg80211_new_sta(vif->netdev, sta_assoc->sta_addr, &sinfo,
-+	cfg80211_new_sta(vif->netdev, sta_assoc->sta_addr, sinfo,
- 			 GFP_KERNEL);
- 
--	return 0;
-+out:
-+	kfree(sinfo);
-+	return ret;
- }
- 
- static int
+> +	spin_lock(&qmi->event_lock);
+> +	qmi->fw_ready = true;
+> +	spin_unlock(&qmi->event_lock);
+
+I see no reason for not just putting this code in
+ath10k_qmi_fw_ready_ind().
+
+> +
+
+fw_ready isn't used for anything, what purpose does this code have?
+
+> +	return 0;
+> +}
+> +
+> +static void ath10k_qmi_fw_ready_ind(struct qmi_handle *qmi_hdl,
+> +				    struct sockaddr_qrtr *sq,
+> +				    struct qmi_txn *txn, const void *data)
+> +{
+> +	struct ath10k_qmi *qmi = container_of(qmi_hdl, struct ath10k_qmi, qmi_hdl);
+> +
+> +	ath10k_qmi_event_fw_ready_ind(qmi);
+> +}
+> +
+> +static void ath10k_qmi_msa_ready_ind(struct qmi_handle *qmi_hdl,
+> +				     struct sockaddr_qrtr *sq,
+> +				     struct qmi_txn *txn, const void *data)
+> +{
+> +	struct ath10k_qmi *qmi = container_of(qmi_hdl, struct ath10k_qmi, qmi_hdl);
+> +
+> +	qmi->msa_ready = true;
+
+msa_ready is not only unused in this patch, it's unused after all 11
+patches. Can you drop it?
+
+> +}
+> +
+> +static struct qmi_msg_handler qmi_msg_handler[] = {
+> +	{
+> +		.type = QMI_INDICATION,
+> +		.msg_id = QMI_WLFW_FW_READY_IND_V01,
+> +		.ei = wlfw_fw_ready_ind_msg_v01_ei,
+> +		.decoded_size = sizeof(struct wlfw_fw_ready_ind_msg_v01),
+> +		.fn = ath10k_qmi_fw_ready_ind,
+> +	},
+> +	{
+> +		.type = QMI_INDICATION,
+> +		.msg_id = QMI_WLFW_MSA_READY_IND_V01,
+> +		.ei = wlfw_msa_ready_ind_msg_v01_ei,
+> +		.decoded_size = sizeof(struct wlfw_msa_ready_ind_msg_v01),
+> +		.fn = ath10k_qmi_msa_ready_ind,
+> +	},
+> +	{}
+> +};
+> +
+> +static int ath10k_qmi_connect_to_fw_server(struct ath10k_qmi *qmi)
+> +{
+> +	struct qmi_handle *qmi_hdl = &qmi->qmi_hdl;
+> +	int ret;
+> +
+> +	ret = kernel_connect(qmi_hdl->sock, (struct sockaddr *)&qmi->sq,
+> +			     sizeof(qmi->sq), 0);
+> +	if (ret) {
+> +		pr_err("fail to connect to remote service port\n");
+> +		return ret;
+> +	}
+> +
+> +	pr_info("wlan qmi service connected\n");
+> +
+> +	return 0;
+> +}
+> +
+> +static void ath10k_qmi_event_server_arrive(struct work_struct *work)
+> +{
+> +	struct ath10k_qmi *qmi = container_of(work, struct ath10k_qmi,
+> +					      work_svc_arrive);
+> +	int ret;
+> +
+> +	ret = ath10k_qmi_connect_to_fw_server(qmi);
+> +	if (ret)
+> +		return;
+> +
+> +	pr_debug("qmi server arrive\n");
+> +}
+> +
+> +static void ath10k_qmi_event_server_exit(struct work_struct *work)
+> +{
+> +	struct ath10k_qmi *qmi = container_of(work, struct ath10k_qmi,
+> +					      work_svc_exit);
+> +
+> +	spin_lock(&qmi->event_lock);
+> +	qmi->fw_ready = false;
+> +	spin_unlock(&qmi->event_lock);
+> +	pr_info("wlan fw service disconnected\n");
+> +}
+> +
+>  static int ath10k_qmi_new_server(struct qmi_handle *qmi_hdl,
+>  				 struct qmi_service *service)
+>  {
+> +	struct ath10k_qmi *qmi = container_of(qmi_hdl, struct ath10k_qmi, qmi_hdl);
+> +	struct sockaddr_qrtr *sq = &qmi->sq;
+> +
+> +	sq->sq_family = AF_QIPCRTR;
+> +	sq->sq_node = service->node;
+> +	sq->sq_port = service->port;
+> +
+> +	queue_work(qmi->event_wq, &qmi->work_svc_arrive);
+
+This is being called in a sleepable context and kernel_connect() will
+not block, so I see no reason for queue work here to invoke
+ath10k_qmi_event_server_arrive() just to call
+ath10k_qmi_connect_to_fw_server().
+
+Just put the kernel_connect() call here.
+
+
+This gives the added benefit that you don't need to use qmi->sq as a way
+to pass parameters to ath10k_qmi_connect_to_fw_server().
+
+> +
+>  	return 0;
+>  }
+>  
+>  static void ath10k_qmi_del_server(struct qmi_handle *qmi_hdl,
+>  				  struct qmi_service *service)
+>  {
+> +	struct ath10k_qmi *qmi =
+> +		container_of(qmi_hdl, struct ath10k_qmi, qmi_hdl);
+> +
+> +	queue_work(qmi->event_wq, &qmi->work_svc_exit);
+
+I see no reason to queue work to set a boolean to false, just inline the
+code here.
+
+>  }
+>  
+>  static struct qmi_ops ath10k_qmi_ops = {
+> @@ -47,6 +147,51 @@ static void ath10k_qmi_del_server(struct qmi_handle *qmi_hdl,
+>  	.del_server = ath10k_qmi_del_server,
+>  };
+>  
+> +static int ath10k_alloc_qmi_resources(struct ath10k_qmi *qmi)
+> +{
+> +	int ret;
+> +
+> +	ret = qmi_handle_init(&qmi->qmi_hdl,
+> +			      WLFW_BDF_DOWNLOAD_REQ_MSG_V01_MAX_MSG_LEN,
+> +			      &ath10k_qmi_ops, qmi_msg_handler);
+> +	if (ret)
+> +		goto err;
+> +
+> +	qmi->event_wq = alloc_workqueue("qmi_driver_event",
+> +					WQ_UNBOUND, 1);
+> +	if (!qmi->event_wq) {
+> +		pr_err("workqueue alloc failed\n");
+> +		ret = -EFAULT;
+> +		goto err_qmi_service;
+> +	}
+> +
+> +	spin_lock_init(&qmi->event_lock);
+
+All calls from the qmi helpers are done from a single context, so
+there's no reason to use this lock.
+
+> +	INIT_WORK(&qmi->work_svc_arrive, ath10k_qmi_event_server_arrive);
+> +	INIT_WORK(&qmi->work_svc_exit, ath10k_qmi_event_server_exit);
+> +
+> +	ret = qmi_add_lookup(&qmi->qmi_hdl, WLFW_SERVICE_ID_V01,
+> +			     WLFW_SERVICE_VERS_V01, 0);
+> +	if (ret)
+> +		goto err_qmi_service;
+> +
+> +	return 0;
+> +
+> +err_qmi_service:
+> +	qmi_handle_release(&qmi->qmi_hdl);
+> +
+> +err:
+> +	return ret;
+> +}
+> +
+> +static void ath10k_remove_qmi_resources(struct ath10k_qmi *qmi)
+> +{
+> +	cancel_work_sync(&qmi->work_svc_arrive);
+> +	cancel_work_sync(&qmi->work_svc_exit);
+> +	destroy_workqueue(qmi->event_wq);
+> +	qmi_handle_release(&qmi->qmi_hdl);
+> +	qmi = NULL;
+> +}
+> +
+>  static int ath10k_qmi_probe(struct platform_device *pdev)
+>  {
+>  	int ret;
+> @@ -58,14 +203,8 @@ static int ath10k_qmi_probe(struct platform_device *pdev)
+>  
+>  	qmi->pdev = pdev;
+>  	platform_set_drvdata(pdev, qmi);
+> -	ret = qmi_handle_init(&qmi->qmi_hdl,
+> -			      WLFW_BDF_DOWNLOAD_REQ_MSG_V01_MAX_MSG_LEN,
+> -			      &ath10k_qmi_ops, NULL);
+> -	if (ret < 0)
+> -		goto err;
+>  
+> -	ret = qmi_add_lookup(&qmi->qmi_hdl, WLFW_SERVICE_ID_V01,
+> -			     WLFW_SERVICE_VERS_V01, 0);
+
+Please plan ahead, there's no reason for adding this here in patch 3 and
+then just move it in patch 4. That said, with the removal of the queues
+I don't see a good reason to create a helper for this.
+
+> +	ret = ath10k_alloc_qmi_resources(qmi);
+>  	if (ret < 0)
+>  		goto err;
+>  
+> @@ -81,7 +220,7 @@ static int ath10k_qmi_remove(struct platform_device *pdev)
+>  {
+>  	struct ath10k_qmi *qmi = platform_get_drvdata(pdev);
+>  
+> -	qmi_handle_release(&qmi->qmi_hdl);
+> +	ath10k_remove_qmi_resources(qmi);
+
+Just inline ath10k_remove_qmi_resources() here, so one doesn't have to
+jump around to figure out what's actually going on.
+
+>  
+>  	return 0;
+>  }
+> diff --git a/drivers/net/wireless/ath/ath10k/qmi.h b/drivers/net/wireless/ath/ath10k/qmi.h
+> index ad256ef..7697d24 100644
+> --- a/drivers/net/wireless/ath/ath10k/qmi.h
+> +++ b/drivers/net/wireless/ath/ath10k/qmi.h
+> @@ -16,9 +16,22 @@
+>  #ifndef _QMI_H_
+>  #define _QMI_H_
+>  
+> +enum ath10k_qmi_driver_event_type {
+> +	ATH10K_QMI_EVENT_SERVER_ARRIVE,
+> +	ATH10K_QMI_EVENT_SERVER_EXIT,
+> +	ATH10K_QMI_EVENT_FW_READY_IND,
+> +	ATH10K_QMI_EVENT_MAX,
+> +};
+> +
+>  struct ath10k_qmi {
+>  	struct platform_device *pdev;
+>  	struct qmi_handle qmi_hdl;
+>  	struct sockaddr_qrtr sq;
+> +	bool fw_ready;
+> +	bool msa_ready;
+> +	struct work_struct work_svc_arrive;
+> +	struct work_struct work_svc_exit;
+> +	struct workqueue_struct *event_wq;
+> +	spinlock_t event_lock; /* spinlock for fw ready status*/
+>  };
+
+Regards,
+Bjorn
+> 
