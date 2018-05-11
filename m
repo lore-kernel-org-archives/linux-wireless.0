@@ -1,67 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:50856 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934630AbeEINnl (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:42486 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752357AbeEKINv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 09:43:41 -0400
-Subject: Re: [PATCH 08/30] staging: wilc1000: fix line over 80 chars in
- host_int_parse_assoc_resp_info()
-To: Ajay Singh <ajay.kathat@microchip.com>,
-        <linux-wireless@vger.kernel.org>
+        Fri, 11 May 2018 04:13:51 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
 CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <adham.abozaeid@Microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
- <1525682614-3824-9-git-send-email-ajay.kathat@microchip.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <aa0033fb-fbf6-80aa-0b58-7e36c5803170@microchip.com> (sfid-20180509_154345_074386_11793D8E)
-Date: Wed, 9 May 2018 16:43:37 +0300
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 00/30] staging: wilc1000: checkpatch fixes and code cleanup
+Date: Fri, 11 May 2018 13:43:01 +0530
+Message-ID: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101357_420436_E85AE4FA)
 MIME-Version: 1.0
-In-Reply-To: <1525682614-3824-9-git-send-email-ajay.kathat@microchip.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch series contains modification to remove checkpatch related issues,
+mainly related to 'line over 80 chars'.
 
+Also code cleanup related change to follow as per linux coding style are
+included in this patch series.
 
-On 07.05.2018 11:43, Ajay Singh wrote:
-> Fix line over 80 characters issue in host_int_parse_assoc_resp_info() by
-> using shorter name for the local variable.
-> 
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 9 +++++----
->  1 file changed, 5 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index c9c5d352..b1f67a7 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -1320,18 +1320,19 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
->  	memset(&conn_info, 0, sizeof(struct connect_info));
->  
->  	if (mac_status == MAC_STATUS_CONNECTED) {
-> -		u32 rcvd_assoc_resp_info_len;
-> +		u32 assoc_resp_info_len;
+changes from v1:
+- Dropped patch#5 and add a new patch #30 to address its review comments.
+- Included changes for patch# 13, 15, 28 & 30 based on review comments
+	please refer patch# 12, 14, 27 & 29 in current updates series because
+	one patch is dropped in between.
+- Corrected commit summary and description for patch#8 & #26 in updates series.
 
-I would simply use len or size. It is just my preference.
+Ajay Singh (30):
+  staging: wilc1000: added complete() call for error scenario in
+    handle_key()
+  staging: wilc1000: remove 'ret' variable in handle_key()
+  staging: wilc1000: fix line over 80 chars in handle_key()
+  staging: wilc1000: fix line over 80 characters issue in
+    handle_connect()
+  staging: wilc1000: fix line over 80 chars issue in
+    host_int_handle_disconnect()
+  staging: wilc1000: fix line over 80 characters in
+    host_int_parse_join_bss_param()
+  staging: wilc1000: fix line over 80 chars in
+    host_int_parse_assoc_resp_info()
+  staging: wilc1000: replace kmalloc with kmemdup() in
+    handle_connect_timeout()
+  staging: wilc1000: fix line over 80 chars in linux_mon
+  staging: wilc1000: use sizeof(*wdev) to allocate memory in
+    wilc_wfi_cfg_alloc()
+  staging: wilc1000: use kmalloc(sizeof(*mgmt_tx)...) in mgmt_tx()
+  staging: wilc1000: rename clear_duringIP() to avoid camelCase issue
+  staging: wilc1000: fix line over 80 chars in add_network_to_shadow()
+  staging: wilc1000: use kmemdup instead of kmalloc in
+    add_network_to_shadow()
+  staging: wilc1000: fix line over 80 charas in
+    wilc_wfi_remain_on_channel_expired()
+  staging: wilc1000: fix line over 80 chars in
+    wilc_wfi_cfg_tx_vendor_spec()
+  staging: wilc1000: fix line over 80 chars in get_station()
+  staging: wilc1000: fix line over 80 chars in wilc_create_wiphy()
+    declaration
+  staging: wilc1000: fix line over 80 characters in add_key()
+  staging: wilc1000: fix line over 80 chars in scan()
+  staging: wilc1000: fix line over 80 chars issue in connect()
+  staging: wilc1000: rename u8security to avoid datatype in variable
+    name
+  staging: wilc1000: refactor del_station() to avoid parenthesis
+    misalignment
+  staging: wilc1000: fix line over 80 chars in wilc_sdio struct
+  staging: wilc1000: added #define for setting radiotap header
+  staging: wilc1000: remove 'flag' argument from wilc_mac_indicate()
+  staging: wilc1000: added comments for mutex and spinlock_t
+  staging: wilc1000: remove unused 'lock' varible in 'wilc_priv'
+    structure
+  staging: wilc1000: remove s8idxarray to avoid datatype in variable
+    name
+  staging: wilc1000: refactor host_int_parse_assoc_resp_info() to remove
+    unused code
 
->  
->  		memset(rcv_assoc_resp, 0, MAX_ASSOC_RESP_FRAME_SIZE);
->  
->  		host_int_get_assoc_res_info(vif, rcv_assoc_resp,
->  					    MAX_ASSOC_RESP_FRAME_SIZE,
-> -					    &rcvd_assoc_resp_info_len);
-> +					    &assoc_resp_info_len);
->  
-> -		if (rcvd_assoc_resp_info_len != 0) {
-> +		if (assoc_resp_info_len != 0) {
->  			s32 err = 0;
->  
-> -			err = wilc_parse_assoc_resp_info(rcv_assoc_resp, rcvd_assoc_resp_info_len,
-> +			err = wilc_parse_assoc_resp_info(rcv_assoc_resp,
-> +							 assoc_resp_info_len,
->  							 &connect_resp_info);
->  			if (err)
->  				netdev_err(vif->ndev,
-> 
+ drivers/staging/wilc1000/coreconfigurator.c       |  51 +--
+ drivers/staging/wilc1000/coreconfigurator.h       |  10 +-
+ drivers/staging/wilc1000/host_interface.c         | 398 +++++++++++-----------
+ drivers/staging/wilc1000/host_interface.h         |   2 +-
+ drivers/staging/wilc1000/linux_mon.c              |  25 +-
+ drivers/staging/wilc1000/linux_wlan.c             |  17 +-
+ drivers/staging/wilc1000/wilc_sdio.c              |   3 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 190 ++++++-----
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.h |   3 +-
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |   8 +-
+ drivers/staging/wilc1000/wilc_wlan.c              |   7 +-
+ drivers/staging/wilc1000/wilc_wlan_if.h           |   3 -
+ 12 files changed, 341 insertions(+), 376 deletions(-)
+
+-- 
+2.7.4
