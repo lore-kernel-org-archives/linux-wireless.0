@@ -1,64 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45834 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754527AbeEHMve (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:39261 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751147AbeEKRJk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 May 2018 08:51:34 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Ulf Hansson <ulf.hansson@linaro.org>,
-        Sean Lanigan <sean@lano.id.au>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Ian Molton <ian@mnementh.co.uk>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list@cypress.com,
-        "linux-mmc\@vger.kernel.org" <linux-mmc@vger.kernel.org>
-Subject: Re: [PATCH] brcmfmac: Add support for bcm43364 wireless chipset
-References: <1525416503-832-1-git-send-email-sean@lano.id.au>
-        <CAPDyKFr62-+EF_GRbUSa=VOQfYa3c3HHZCR_LsN67k1yVkNNFw@mail.gmail.com>
-        <5AF193FA.7000700@broadcom.com>
-Date: Tue, 08 May 2018 15:51:28 +0300
-In-Reply-To: <5AF193FA.7000700@broadcom.com> (Arend van Spriel's message of
-        "Tue, 8 May 2018 14:11:38 +0200")
-Message-ID: <871semz4xb.fsf@kamboji.qca.qualcomm.com> (sfid-20180508_145139_154267_545AC50B)
+        Fri, 11 May 2018 13:09:40 -0400
+Received: by mail-pg0-f65.google.com with SMTP id e1-v6so2689618pga.6
+        for <linux-wireless@vger.kernel.org>; Fri, 11 May 2018 10:09:40 -0700 (PDT)
+Date: Fri, 11 May 2018 10:11:01 -0700
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 02/12] dt: bindings: add bindings for ath10k qmi client
+Message-ID: <20180511171101.GN2259@tuxbook-pro> (sfid-20180511_190944_308090_8D21113C)
+References: <1522042748-25677-1-git-send-email-govinds@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1522042748-25677-1-git-send-email-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+On Sun 25 Mar 22:39 PDT 2018, Govind Singh wrote:
 
-> + Kalle (explicitly)
->
-> On 5/8/2018 9:58 AM, Ulf Hansson wrote:
->> On 4 May 2018 at 08:48, Sean Lanigan <sean@lano.id.au> wrote:
->>> Add support for the BCM43364 chipset via an SDIO interface, as used in
->>> e.g. the Murata 1FX module.
->>>
->>> The BCM43364 uses the same firmware as the BCM43430 (which is already
->>> included), the only difference is the omission of Bluetooth.
->>>
->>> However, the SDIO_ID for the BCM43364 is 02D0:A9A4, giving it a MODALIAS
->>> of sdio:c00v02D0dA9A4, which doesn't get recognised and hence doesn't
->>> load the brcmfmac module. Adding the 'A9A4' ID in the appropriate place
->>> triggers the brcmfmac driver to load, and then correctly use the
->>> firmware file 'brcmfmac43430-sdio.bin'.
->>>
->>>
->>> Signed-off-by: Sean Lanigan <sean@lano.id.au>
->>
->> Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
->>
->> Arend, I assume you want to pick this up? If not, just tell and I can do it.
->
-> Not necessarily. I let Kalle do the leg work ;-) Given the change I do
-> not expect any conflict so we can go either way with a slight
-> preference for wl-drivers-next. Kalle?
+> Add device tree binding documentation details for ath10k
+> qmi client for SDM845/APQ8098 SoC into "qcom,ath10k.txt".
+> 
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> ---
+>  Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> index 34e4f98..8076ae3 100644
+> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> @@ -5,6 +5,7 @@ Required properties:
+>  	* "qcom,ath10k"
+>  	* "qcom,ipq4019-wifi"
+>  	* "qcom,wcn3990-wifi"
+> +	* "qcom,ath10k-qmi"
+>  
+>  PCI based devices uses compatible string "qcom,ath10k" and takes calibration
+>  data along with board specific data via "qcom,ath10k-calibration-data".
+> @@ -21,6 +22,8 @@ can be provided per device.
+>  
+>  SNOC based devices (i.e. wcn3990) uses compatible string "qcom,wcn3990-wifi".
+>  
+> +- qcom,wlan-msa-memory: MSA memory size
+> +
+>  Optional properties:
+>  - reg: Address and length of the register set for the device.
+>  - reg-names: Must include the list of following reg names,
+> @@ -150,3 +153,8 @@ qcom,wifi@18000000 {
+>  			   <0 141 0 /* CE11 */ >;
+>  		vdd-0.8-cx-mx-supply = <&pm8998_l5>;
+>  };
+> +
+> +qcom,ath10k-qmi {
+> +	compatible = "qcom,ath10k-qmi";
+> +	qcom,wlan-msa-memory = <0x100000>;
 
-Yeah, I would like to take this to wireless-drivers-next. Less conflicts
-that way.
+Is this a complete example for what's needed to get working WiFi?
+> +};
 
--- 
-Kalle Valo
+Regards,
+Bjorn
