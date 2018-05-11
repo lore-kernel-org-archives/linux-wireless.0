@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35712 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750739AbeELIhg (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:39517 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753143AbeEKOzC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 May 2018 04:37:36 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [4.17] bcma: fix buffer size caused crash in
- bcma_core_mips_print_irq()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180508093104.27018-1-zajec5@gmail.com>
-References: <20180508093104.27018-1-zajec5@gmail.com>
-To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-        Joe Perches <joe@perches.com>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Message-Id: <20180512083735.D82496085F@smtp.codeaurora.org> (sfid-20180512_103740_107991_1C74EA72)
-Date: Sat, 12 May 2018 08:37:35 +0000 (UTC)
+        Fri, 11 May 2018 10:55:02 -0400
+Received: by mail-pf0-f196.google.com with SMTP id a22-v6so2848857pfn.6
+        for <linux-wireless@vger.kernel.org>; Fri, 11 May 2018 07:55:02 -0700 (PDT)
+From: Sushant Kumar Mishra <sushant2k1513@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
+Subject: [PATCH 3/3] rsi: Set wowlan flag while writing wowlan config parameters
+Date: Fri, 11 May 2018 20:27:53 +0530
+Message-Id: <1526050673-7026-4-git-send-email-sushant2k1513@gmail.com> (sfid-20180511_165505_464368_C3145124)
+In-Reply-To: <1526050673-7026-1-git-send-email-sushant2k1513@gmail.com>
+References: <1526050673-7026-1-git-send-email-sushant2k1513@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki wrote:
+From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
 
-> From: Rafał Miłecki <rafal@milecki.pl>
-> 
-> Used buffer wasn't big enough to hold whole strings. Example output of
-> this function is:
-> [    0.180892] bcma: bus0: core 0x0800, irq: 2(S)* 3  4  5  6  D  I
-> [    0.180948] bcma: bus0: core 0x0812, irq: 2(S)  3* 4  5  6  D  I
-> [    0.180998] bcma: bus0: core 0x082d, irq: 2(S)  3  4* 5  6  D  I
-> [    0.181046] bcma: bus0: core 0x082c, irq: 2(S)  3  4  5  6  D  I*
-> which means we need to store up to 24 chars.
-> 
-> Fixes: 758f7e06063a8 ("bcma: Use bcma_debug and not pr_cont in MIPS driver")
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> Cc: stable@vger.kernel.org # v4.15+
+As wowlan enable flag did not set, while writing wowlan parameters to
+card using rsi_send_vap_dynamic_update, which results firmware is unable to
+set wowlan configurations. Hence, setting wowlan flag before sending
+parameters.
 
-Patch applied to wireless-drivers.git, thanks.
+Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-361de091a4b9 bcma: fix buffer size caused crash in bcma_core_mips_print_irq()
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index 743706e..3faa044 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -1818,6 +1818,7 @@ int rsi_config_wowlan(struct rsi_hw *adapter, struct cfg80211_wowlan *wowlan)
+ 		return -EINVAL;
+ 	}
+ 
++	common->wow_flags |= RSI_WOW_ENABLED;
+ 	triggers = rsi_wow_map_triggers(common, wowlan);
+ 	if (!triggers) {
+ 		rsi_dbg(ERR_ZONE, "%s:No valid WoW triggers\n", __func__);
+@@ -1840,7 +1841,6 @@ int rsi_config_wowlan(struct rsi_hw *adapter, struct cfg80211_wowlan *wowlan)
+ 
+ 	rx_filter_word = (ALLOW_DATA_ASSOC_PEER | DISALLOW_BEACONS);
+ 	rsi_send_rx_filter_frame(common, rx_filter_word);
+-	common->wow_flags |= RSI_WOW_ENABLED;
+ 
+ 	return 0;
+ }
 -- 
-https://patchwork.kernel.org/patch/10385861/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.5.5
