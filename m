@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:50572 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750859AbeEUUlf (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37618 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752639AbeEKKNj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 May 2018 16:41:35 -0400
-Received: by mail-it0-f65.google.com with SMTP id p3-v6so22639711itc.0
-        for <linux-wireless@vger.kernel.org>; Mon, 21 May 2018 13:41:35 -0700 (PDT)
+        Fri, 11 May 2018 06:13:39 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Michael =?utf-8?Q?B=C3=BCsch?= <m@bues.ch>,
+        Larry Finger <larry.finger@lwfinger.net>,
+        Matt Redfearn <matt.redfearn@mips.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Hauke Mehrtens <hauke@hauke-m.de>,
+        LKML <linux-kernel@vger.kernel.org>,
+        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: Re: [PATCH V2 1/2] Revert "ssb: Prevent build of PCI host features in module"
+References: <20180511091715.1989-1-zajec5@gmail.com>
+        <CACna6ry-91oR1u697NRymLsN28fnnHDp9OQrdiVwA7A3KTV1fg@mail.gmail.com>
+Date: Fri, 11 May 2018 13:13:33 +0300
+In-Reply-To: <CACna6ry-91oR1u697NRymLsN28fnnHDp9OQrdiVwA7A3KTV1fg@mail.gmail.com>
+        (=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Fri, 11 May 2018
+ 11:21:11 +0200")
+Message-ID: <87bmdmcxf6.fsf@codeaurora.org> (sfid-20180511_121352_234494_4907E020)
 MIME-Version: 1.0
-References: <20180521162845.5793-1-guylovesbritt@gmail.com>
-In-Reply-To: <20180521162845.5793-1-guylovesbritt@gmail.com>
-From: Steve deRosier <derosier@gmail.com>
-Date: Mon, 21 May 2018 13:40:58 -0700
-Message-ID: <CALLGbRJqDLzj9V07nJxEw4VDBeLKaKGADpPTET2j_4iTyVx53Q@mail.gmail.com> (sfid-20180521_224139_194625_C83CF7B2)
-Subject: Re: [PATCH] Added Dell Wireless 1537 Ath6kl sdio card (0x19) to the list.
-To: guylovesbritt@gmail.com
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        guychronister@outlook.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Guy,
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
 
-On Mon, May 21, 2018 at 9:28 AM Guy Chronister <guylovesbritt@gmail.com>
-wrote:
+> On 11 May 2018 at 11:17, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>>
+>> This reverts commit 882164a4a928bcaa53280940436ca476e6b1db8e.
+>>
+>> Above commit added "SSB =3D y" dependency to the wrong symbol
+>> SSB_DRIVER_PCICORE_POSSIBLE and prevented SSB_DRIVER_PCICORE from being
+>> selected when needed. PCI core driver for core running in clienthost
+>> mode is important for bus initialization. It's perfectly valid scenario
+>> to have ssb built as module and use it with buses on PCI cards.
+>>
+>> This fixes regression that affected all *module* users with PCI cards.
+>>
+>> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=3D1572349
+>> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>
+> As these patches fix regression/build error, I believe both should get
+> into 4.17.
 
-> Signed-off-by: Guy Chronister <guylovesbritt@gmail.com>
-> ---
->   drivers/net/wireless/ath/ath6kl/sdio.c | 1 +
->   1 file changed, 1 insertion(+)
+How much confidence do we have that we don't need to end up reverting
+patch 2 as well? I rather be pushing patch 2 to 4.18 so that there's
+more time for testing and waiting for feedback.
 
-> diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c
-b/drivers/net/wireless/ath/ath6kl/sdio.c
-> index 2195b1b7a8a6..bb50680580f3 100644
-> --- a/drivers/net/wireless/ath/ath6kl/sdio.c
-> +++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-> @@ -1415,6 +1415,7 @@ static const struct sdio_device_id
-ath6kl_sdio_devices[] = {
->          {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE |
-0x1))},
->          {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE |
-0x2))},
->          {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE |
-0x18))},
-> +       {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE |
-0x19))},
->          {},
->   };
-
-
-Thanks for this. I'd like to see more information in the git commit
-message. While I get that this is some Dell card, it would be helpful to
-know what is the actual chip, which firmware, sdio id, and what tests were
-done to confirm this worked. Honestly I'm a bit surprised to see a new
-ath6k chip ID.
-
-Thanks,
-- Steve
+--=20
+Kalle Valo
