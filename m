@@ -1,143 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34788 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751699AbeEHMJX (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:12983 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752472AbeEKIOW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 May 2018 08:09:23 -0400
-From: Anilkumar Kolli <akolli@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath10k: add fw crash dump support for QCA9888 and QCA99X0
-Date: Tue,  8 May 2018 17:41:36 +0530
-Message-Id: <1525781496-14776-1-git-send-email-akolli@codeaurora.org> (sfid-20180508_140927_169317_5124B8A5)
+        Fri, 11 May 2018 04:14:22 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2 09/30] staging: wilc1000: fix line over 80 chars in linux_mon
+Date: Fri, 11 May 2018 13:43:10 +0530
+Message-ID: <1526026411-11058-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101426_269173_CDCE17A0)
+In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds crash dump support for QCA9888 and QCA99X0
+Fix line over 80 char issue reported by checkpatch.pl script.
 
-Tested On: QCA9888, Firmware Version: 10.4-3.5.3-00053
-Tested on QCA99X0, Firmware Version: 10.4.1.00030-1
-
-Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/ath/ath10k/coredump.c |   98 ++++++++++++++++++++++++++++
- 1 file changed, 98 insertions(+)
+ drivers/staging/wilc1000/linux_mon.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/coredump.c b/drivers/net/wireless/ath/ath10k/coredump.c
-index f90cec0ebb1c..e0eb2eb1a66d 100644
---- a/drivers/net/wireless/ath/ath10k/coredump.c
-+++ b/drivers/net/wireless/ath/ath10k/coredump.c
-@@ -701,6 +701,89 @@
- 	},
- };
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 2f4b3f5..c372e0f 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -46,18 +46,18 @@ void wilc_wfi_monitor_rx(u8 *buff, u32 size)
+ 	if (pkt_offset & IS_MANAGMEMENT_CALLBACK) {
+ 		/* hostapd callback mgmt frame */
  
-+static const struct ath10k_mem_region qca99X0_hw20_mem_regions[] = {
-+	{
-+		.type = ATH10K_MEM_REGION_TYPE_DRAM,
-+		.start = 0x400000,
-+		.len = 0x60000,
-+		.name = "DRAM",
-+		.section_table = {
-+			.sections = NULL,
-+			.size = 0,
-+		},
-+	},
-+	{
-+		.type = ATH10K_MEM_REGION_TYPE_REG,
-+		.start = 0x98000,
-+		.len = 0x50000,
-+		.name = "IRAM",
-+		.section_table = {
-+			.sections = NULL,
-+			.size = 0,
-+		},
-+	},
-+	{
-+		.type = ATH10K_MEM_REGION_TYPE_IOSRAM,
-+		.start = 0xC0000,
-+		.len = 0x40000,
-+		.name = "SRAM",
-+		.section_table = {
-+			.sections = NULL,
-+			.size = 0,
-+		},
-+	},
-+	{
-+		.type = ATH10K_MEM_REGION_TYPE_IOREG,
-+		.start = 0x30000,
-+		.len = 0x7000,
-+		.name = "APB REG 1",
-+		.section_table = {
-+			.sections = NULL,
-+			.size = 0,
-+		},
-+	},
-+	{
-+		.type = ATH10K_MEM_REGION_TYPE_IOREG,
-+		.start = 0x3f000,
-+		.len = 0x3000,
-+		.name = "APB REG 2",
-+		.section_table = {
-+			.sections = NULL,
-+			.size = 0,
-+		},
-+	},
-+	{
-+		.type = ATH10K_MEM_REGION_TYPE_IOREG,
-+		.start = 0x43000,
-+		.len = 0x3000,
-+		.name = "WIFI REG",
-+		.section_table = {
-+			.sections = NULL,
-+			.size = 0,
-+		},
-+	},
-+	{
-+		.type = ATH10K_MEM_REGION_TYPE_IOREG,
-+		.start = 0x4A000,
-+		.len = 0x5000,
-+		.name = "CE REG",
-+		.section_table = {
-+			.sections = NULL,
-+			.size = 0,
-+		},
-+	},
-+	{
-+		.type = ATH10K_MEM_REGION_TYPE_IOREG,
-+		.start = 0x80000,
-+		.len = 0x6000,
-+		.name = "SOC REG",
-+		.section_table = {
-+			.sections = NULL,
-+			.size = 0,
-+		},
-+	},
-+};
-+
- static const struct ath10k_mem_region qca9984_hw10_mem_regions[] = {
- 	{
- 		.type = ATH10K_MEM_REGION_TYPE_DRAM,
-@@ -848,6 +931,21 @@
- 			.size = ARRAY_SIZE(qca9984_hw10_mem_regions),
- 		},
- 	},
-+	{
-+		.hw_id = QCA9888_HW_2_0_DEV_VERSION,
-+		.region_table = {
-+			.regions = qca9984_hw10_mem_regions,
-+			.size = ARRAY_SIZE(qca9984_hw10_mem_regions),
-+		},
-+	},
-+	{
-+		.hw_id = QCA99X0_HW_2_0_DEV_VERSION,
-+		.region_table = {
-+			.regions = qca99X0_hw20_mem_regions,
-+			.size = ARRAY_SIZE(qca99X0_hw20_mem_regions),
-+		},
-+	},
-+
- };
+-		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_cb_hdr));
++		skb = dev_alloc_skb(size + sizeof(*cb_hdr));
+ 		if (!skb)
+ 			return;
  
- static u32 ath10k_coredump_get_ramdump_size(struct ath10k *ar)
+ 		skb_put_data(skb, buff, size);
+ 
+ 		cb_hdr = skb_push(skb, sizeof(*cb_hdr));
+-		memset(cb_hdr, 0, sizeof(struct wilc_wfi_radiotap_cb_hdr));
++		memset(cb_hdr, 0, sizeof(*cb_hdr));
+ 
+ 		cb_hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
+ 
+-		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
++		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(*cb_hdr));
+ 
+ 		cb_hdr->hdr.it_present = cpu_to_le32(
+ 				(1 << IEEE80211_RADIOTAP_RATE) |
+@@ -73,7 +73,7 @@ void wilc_wfi_monitor_rx(u8 *buff, u32 size)
+ 		}
+ 
+ 	} else {
+-		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_hdr));
++		skb = dev_alloc_skb(size + sizeof(*hdr));
+ 
+ 		if (!skb)
+ 			return;
+@@ -82,7 +82,7 @@ void wilc_wfi_monitor_rx(u8 *buff, u32 size)
+ 		hdr = skb_push(skb, sizeof(*hdr));
+ 		memset(hdr, 0, sizeof(struct wilc_wfi_radiotap_hdr));
+ 		hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
+-		hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_hdr));
++		hdr->hdr.it_len = cpu_to_le16(sizeof(*hdr));
+ 		hdr->hdr.it_present = cpu_to_le32
+ 				(1 << IEEE80211_RADIOTAP_RATE); /* | */
+ 		hdr->rate = 5; /* txrate->bitrate / 5; */
+@@ -164,7 +164,7 @@ static netdev_tx_t wilc_wfi_mon_xmit(struct sk_buff *skb,
+ 	skb_pull(skb, rtap_len);
+ 
+ 	if (skb->data[0] == 0xc0 && is_broadcast_ether_addr(&skb->data[4])) {
+-		skb2 = dev_alloc_skb(skb->len + sizeof(struct wilc_wfi_radiotap_cb_hdr));
++		skb2 = dev_alloc_skb(skb->len + sizeof(*cb_hdr));
+ 		if (!skb2)
+ 			return -ENOMEM;
+ 
+@@ -175,7 +175,7 @@ static netdev_tx_t wilc_wfi_mon_xmit(struct sk_buff *skb,
+ 
+ 		cb_hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
+ 
+-		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
++		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(*cb_hdr));
+ 
+ 		cb_hdr->hdr.it_present = cpu_to_le32(
+ 				(1 << IEEE80211_RADIOTAP_RATE) |
 -- 
-1.7.9.5
+2.7.4
