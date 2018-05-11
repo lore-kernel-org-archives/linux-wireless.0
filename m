@@ -1,85 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:54591 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750821AbeEEJpb (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:35889 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750852AbeEKKZg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 May 2018 05:45:31 -0400
-Subject: Re: [PATCH 2/2] ath10k: DFS Host Confirmation
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Peter Oh <peter.oh@bowerswilkins.com>
-Cc: Sriram R <srirrama@codeaurora.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-References: <1525110339-25326-1-git-send-email-srirrama@codeaurora.org>
- <1525110339-25326-3-git-send-email-srirrama@codeaurora.org>
- <0c224b54-dd10-576f-944f-2d20d1cb2c46@bowerswilkins.com>
- <87d0ye2t75.fsf@kamboji.qca.qualcomm.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <3f762586-a757-636c-2eb4-3fa3e193b3dd@dd-wrt.com> (sfid-20180505_114535_935633_BF93CE2A)
-Date: Sat, 5 May 2018 11:45:28 +0200
+        Fri, 11 May 2018 06:25:36 -0400
 MIME-Version: 1.0
-In-Reply-To: <87d0ye2t75.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <87bmdmcxf6.fsf@codeaurora.org>
+References: <20180511091715.1989-1-zajec5@gmail.com> <CACna6ry-91oR1u697NRymLsN28fnnHDp9OQrdiVwA7A3KTV1fg@mail.gmail.com>
+ <87bmdmcxf6.fsf@codeaurora.org>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Fri, 11 May 2018 12:25:33 +0200
+Message-ID: <CACna6rxY16UzVPpMy+kKpun8ZVY+b5THBuCjvCG9tF0t9hcNBA@mail.gmail.com> (sfid-20180511_122547_268065_23985671)
+Subject: Re: [PATCH V2 1/2] Revert "ssb: Prevent build of PCI host features in module"
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
+        Larry Finger <larry.finger@lwfinger.net>,
+        Matt Redfearn <matt.redfearn@mips.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Hauke Mehrtens <hauke@hauke-m.de>,
+        LKML <linux-kernel@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 02.05.2018 um 13:27 schrieb Kalle Valo:
-> Peter Oh <peter.oh@bowerswilkins.com> writes:
+On 11 May 2018 at 12:13, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
 >
->> On 04/30/2018 10:45 AM, Sriram R wrote:
->>> In the 10.4-3.6 firmware branch there's a new DFS Host confirmation
->>> feature which is advertised using WMI_SERVICE_HOST_DFS_CHECK_SUPPORT flag.
+>> On 11 May 2018 at 11:17, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrot=
+e:
+>>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
 >>>
->>> This new features enables the ath10k host to send information to the
->>> firmware on the specifications of detected radar type. This allows the
->>> firmware to validate if the host's radar pattern detector unit is
->>> operational and check if the radar information shared by host matches
->>> the radar pulses sent as phy error events from firmware. If the check
->>> fails the firmware won't allow use of DFS channels on AP mode when using
->>> FCC regulatory region.
->> What's the main reason you introduce this feature?
->> What are you trying to solve with this change?
-> Otherwise one cannot use DFS channels on FCC regions with a firmware
-> from 10.4-3.6 branch.
+>>> This reverts commit 882164a4a928bcaa53280940436ca476e6b1db8e.
+>>>
+>>> Above commit added "SSB =3D y" dependency to the wrong symbol
+>>> SSB_DRIVER_PCICORE_POSSIBLE and prevented SSB_DRIVER_PCICORE from being
+>>> selected when needed. PCI core driver for core running in clienthost
+>>> mode is important for bus initialization. It's perfectly valid scenario
+>>> to have ssb built as module and use it with buses on PCI cards.
+>>>
+>>> This fixes regression that affected all *module* users with PCI cards.
+>>>
+>>> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=3D1572349
+>>> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>>
+>> As these patches fix regression/build error, I believe both should get
+>> into 4.17.
 >
->>> @@ -3765,25 +3834,46 @@ static void ath10k_dfs_radar_report(struct ath10k *ar,
->>>      	ATH10K_DFS_STAT_INC(ar, pulses_detected);
->>>    -	if (!ar->dfs_detector->add_pulse(ar->dfs_detector, &pe, NULL))
->>> {
->>> +	if (!ar->dfs_detector->add_pulse(ar->dfs_detector, &pe, &rs)) {
->>>    		ath10k_dbg(ar, ATH10K_DBG_REGULATORY,
->>>    			   "dfs no pulse pattern detected, yet\n");
->>>    		return;
->>>    	}
->>>    -radar_detected:
->>> -	ath10k_dbg(ar, ATH10K_DBG_REGULATORY, "dfs radar detected\n");
->>> -	ATH10K_DFS_STAT_INC(ar, radar_detected);
->>> +	if ((test_bit(WMI_SERVICE_HOST_DFS_CHECK_SUPPORT, ar->wmi.svc_map)) &&
->>> +	    ar->dfs_detector->region == NL80211_DFS_FCC) {
->> I feel risky that host drivers have no way to control this new feature
->> and totally rely on FW feature mask. We should have a host drivers'
->> feature mask such as module param and set it false (don't use) by
->> default until it proves safe to use.
-> This is for regulatory enforcement so it's not possible to disable the
-> feature from host.
-mmh from what i see it is possible to disable it from host since the 
-firmware seem to be sensitive on the regdomain set by the host
-so if host sets anything else than a FCC regdomain, it will still work 
-in the old way. so its more a pseudo enforcement. dont know if this is
-usefull and it also will it make impossible to fix radar detection 
-issues for certification as mentioned by peter and adrian.
+> How much confidence do we have that we don't need to end up reverting
+> patch 2 as well? I rather be pushing patch 2 to 4.18 so that there's
+> more time for testing and waiting for feedback.
 
-Sebastian
->
+Solution from 2/2 seems pretty obvious.
 
--- 
-Mit freundlichen Grüssen / Regards
+1) Enabling SSB_PCICORE_HOSTMODE compiles code that requires
+non-exported symbols. Requiring "SSB =3D y" seems pretty obvious.
+2) As pointed in another e-mail bcma has pretty identical solution
+that seems to be working well, see commit 79ca239a68f8f ("bcma:
+Prevent build of PCI host features in module").
 
-Sebastian Gottschall / CTO
+That's just my opinion though, I shared since you asked.
 
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Stubenwaldallee 21a, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+If you prefer to queue that for 4.18, I'm OK. After all:
+1) This problem affects MIPS arch only
+2) It can be fixed by not selecting BCMA_DRIVER_PCI_HOSTMODE for SSB =3D m
+
+--=20
+Rafa=C5=82
