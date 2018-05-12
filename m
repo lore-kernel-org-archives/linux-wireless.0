@@ -1,36 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:34025 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S939360AbeE1OuD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 May 2018 10:50:03 -0400
-Date: Mon, 28 May 2018 16:50:00 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Daniel Mack <daniel@zonque.org>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] NFC: st95hf: initialize semaphore and mutex earlier
-Message-ID: <20180528145000.GA11829@zurbaran.ger.intel.com> (sfid-20180528_165119_633920_CA47A120)
-References: <20180516133247.25986-1-daniel@zonque.org>
- <6eed2f2f-b3cc-0582-220c-e4ccd2175fd7@zonque.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:38458 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750735AbeELJ5k (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 12 May 2018 05:57:40 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sriram R <srirrama@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] ath10k: DFS Host Confirmation
+References: <1525110339-25326-1-git-send-email-srirrama@codeaurora.org>
+        <1525110339-25326-3-git-send-email-srirrama@codeaurora.org>
+Date: Sat, 12 May 2018 12:57:35 +0300
+In-Reply-To: <1525110339-25326-3-git-send-email-srirrama@codeaurora.org>
+        (Sriram R.'s message of "Mon, 30 Apr 2018 23:15:39 +0530")
+Message-ID: <87a7t5urg0.fsf@kamboji.qca.qualcomm.com> (sfid-20180512_115744_031435_D5F42579)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6eed2f2f-b3cc-0582-220c-e4ccd2175fd7@zonque.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+Sriram R <srirrama@codeaurora.org> writes:
 
-On Mon, May 28, 2018 at 04:35:15PM +0200, Daniel Mack wrote:
-> On Wednesday, May 16, 2018 03:32 PM, Daniel Mack wrote:
-> > 'rm_lock' and 'exchange_lock' need to be ready before the IRQ handler has a
-> > chance to fire.
-> > 
-> > This fixes the oops below.
-> 
-> Nobody seems to be interested in these. Davem, can you take them through
-> your tree or is there anyone else I can ping?
-I'm going to gather all pending NFC patches this week, including this
-one.
-They will land in either the nfc-next or nfc-fixes tree.
+> In the 10.4-3.6 firmware branch there's a new DFS Host confirmation
+> feature which is advertised using WMI_SERVICE_HOST_DFS_CHECK_SUPPORT flag.
+>
+> This new features enables the ath10k host to send information to the
+> firmware on the specifications of detected radar type. This allows the
+> firmware to validate if the host's radar pattern detector unit is
+> operational and check if the radar information shared by host matches
+> the radar pulses sent as phy error events from firmware. If the check
+> fails the firmware won't allow use of DFS channels on AP mode when using
+> FCC regulatory region.
+>
+> Supported Chipsets : QCA9984/QCA9888/QCA4019
+> Firmware Version : 10.4-3.6-00104
+>
+> Signed-off-by: Sriram R <srirrama@codeaurora.org>
 
-Cheers,
-Samuel.
+This introduces a new checkpatch warning:
+
+drivers/net/wireless/ath/ath10k/wmi.c:3753: Please use a blank line after function/struct/union/enum declarations
+
+-- 
+Kalle Valo
