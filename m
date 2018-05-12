@@ -1,138 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:60338 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752651AbeENPwY (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40222 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750722AbeELIuy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 May 2018 11:52:24 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 1/3] ath10k: Add ath10k-ct firmware feature flags and descriptions.
-Date: Mon, 14 May 2018 08:52:15 -0700
-Message-Id: <1526313137-23899-1-git-send-email-greearb@candelatech.com> (sfid-20180514_175251_509874_AF5CBFD3)
+        Sat, 12 May 2018 04:50:54 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2] b43: fix transmit failure when VT is switched
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <5AF41F55.4060606@sra-tohoku.co.jp>
+References: <5AF41F55.4060606@sra-tohoku.co.jp>
+To: kabe@sra-tohoku.co.jp
+Cc: b43-dev@lists.infradead.org, kabe@sra-tohoku.co.jp,
+        linux-wireless@vger.kernel.org
+Message-Id: <20180512085053.D5B4160850@smtp.codeaurora.org> (sfid-20180512_105058_273589_D0DCA9E9)
+Date: Sat, 12 May 2018 08:50:53 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+kabe@sra-tohoku.co.jp wrote:
 
-These feature flags are used by ath10k-ct firmware.  Add these
-so we can use them in future patches and so there are no warnings
-about feature flags on loading ath10k-ct firmware.
+> From: Taketo Kabe <kabe@sra-tohoku.co.jp>
+> 
+> Fix for b43 wireless card stopping transmission when switching VTs.
+> 
+> Setup:
+> Using BCM4306 rev.03 chip based CardBus wireless card.
+> IRQ is shared with yenta (cardbus bridge) and i915 (display) driver.
+> For firmware, installed latest but dated openfwwf 5.2
+> (http://netweb.ing.unibs.it/~openfwwf/)
+> 
+> How-to-reproduce:
+> Do "ssh <NetBSD-remotehost>", then "ls -lR /" to generate traffic, then
+> repeatedly switch VTs by Alt-F1<>Alt-F2.
+> Eventually (within a minute) the card stops working.
+> You can receive traffic but no transmission.
+> For unknown reason it doesn't occur when just generating traffic by
+> "ssh <remotehost> ls -lR /".
+> 
+> With CONFIG_B43_DEBUG=y kernel config, when it stops,
+> the debug message shows
+>      kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 148, but got 180
+> The slot offset I observed so far was always 32.
+> 
+> When err_out2 is not set to make error messages successive,
+> the debug output will be like this:
+> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 148
+> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 150
+> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 120
+> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 152
+> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 122
+> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 154
+> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 124
+> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 156
+> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 126
+> The TX ring alternates between 2 sequences; the ring seems
+> to be completely confused. Controller restart is needed.
+> 
+> Workaround(1):
+> This problem doesn't occur when using propriatory firmware
+> you will extract by b43-fwcutter, so it may be a bug in
+> openfwwf firmware, as the comment in the b43_dma_handle_txstatus() suggests.
+> I wasn't able to find a bug in the terse openfwwf code though.
+> 
+> Workaround(2):
+> Using "pio=1" option to not use DMA makes this problem to
+> not occur.
+> 
+> Description of the patch:
+> This patch will forcibly reset the controller to make it
+> work again. Very kludgy and doesn't look right, but
+> the traffic will continue to flow.
+> 
+> Signed-off-by: Taketo Kabe <kabe@sra-tohoku.co.jp>
+> Reviewed-by: Michael Buesch <m@bues.ch>
+> [kvalo@codeaurora.org: clean up commit log]
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-v2:  Fix warings typo in description.
+Failed to apply to wireless-drivers-next:
 
- drivers/net/wireless/ath/ath10k/core.c | 17 +++++++++
- drivers/net/wireless/ath/ath10k/core.h | 67 ++++++++++++++++++++++++++++++++++
- 2 files changed, 84 insertions(+)
+fatal: sha1 information is lacking or useless (drivers/net/wireless/broadcom/b43/dma.c).
+error: could not build fake ancestor
+Applying: b43: fix transmit failure when VT is switched
+Patch failed at 0001 b43: fix transmit failure when VT is switched
+The copy of the patch that failed is found in: .git/rebase-apply/patch
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 4cf54a7..f2f8f61 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -552,6 +552,23 @@ static const char *const ath10k_core_fw_feature_str[] = {
- 	[ATH10K_FW_FEATURE_NO_PS] = "no-ps",
- 	[ATH10K_FW_FEATURE_MGMT_TX_BY_REF] = "mgmt-tx-by-reference",
- 	[ATH10K_FW_FEATURE_NON_BMI] = "non-bmi",
-+	[ATH10K_FW_FEATURE_WMI_10X_CT] = "wmi-10.x-CT",
-+	[ATH10K_FW_FEATURE_CT_RXSWCRYPT] = "rxswcrypt-CT",
-+	[ATH10K_FW_FEATURE_HAS_TXSTATUS_NOACK] = "txstatus-noack",
-+	[ATH10K_FW_FEATURE_CT_RATEMASK] = "ratemask-CT",
-+	[ATH10K_FW_FEATURE_HAS_SAFE_BURST] = "safe-burst",
-+	[ATH10K_FW_FEATURE_REGDUMP_CT] = "regdump-CT",
-+	[ATH10K_FW_FEATURE_TXRATE_CT] = "txrate-CT",
-+	[ATH10K_FW_FEATURE_FLUSH_ALL_CT] = "flush-all-CT",
-+	[ATH10K_FW_FEATURE_PINGPONG_READ_CT] = "pingpong-CT",
-+	[ATH10K_FW_FEATURE_SKIP_CH_RES_CT] = "ch-regs-CT",
-+	[ATH10K_FW_FEATURE_NOP_CT] = "nop-CT",
-+	[ATH10K_FW_FEATURE_HTT_MGT_CT] = "htt-mgt-CT",
-+	[ATH10K_FW_FEATURE_SET_SPECIAL_CT] = "set-special-CT",
-+	[ATH10K_FW_FEATURE_NO_BMISS_CT] = "no-bmiss-CT",
-+	[ATH10K_FW_FEATURE_HAS_GET_TEMP_CT] = "get-temp-CT",
-+	[ATH10K_FW_FEATURE_HAS_TX_RC_CT] = "tx-rc-CT",
-+	[ATH10K_FW_FEATURE_CUST_STATS_CT] = "cust-stats-CT",
- };
- 
- static unsigned int ath10k_core_get_fw_feature_str(char *buf,
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index e4ac8f2..c1342c5 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -711,6 +711,73 @@ enum ath10k_fw_features {
- 	/* Firmware load is done externally, not by bmi */
- 	ATH10K_FW_FEATURE_NON_BMI = 19,
- 
-+	/* tx-status has the noack bits (CT firmware version 14 and higher ) */
-+	ATH10K_FW_FEATURE_HAS_TXSTATUS_NOACK = 30,
-+
-+	/* Firmware from Candela Technologies, enables more VIFs, etc */
-+	ATH10K_FW_FEATURE_WMI_10X_CT = 31,
-+
-+	/* Firmware from Candela Technologies with rx-software-crypt.
-+	 * Required for multiple stations connected to same AP when using
-+	 * encryption (ie, commercial version of CT firmware)
-+	 */
-+	ATH10K_FW_FEATURE_CT_RXSWCRYPT = 32,
-+
-+	/* Firmware supports extended wmi_common_peer_assoc_complete_cmd that
-+	 * contains an array of rate-disable masks.  This allows the host to
-+	 * have better control over what rates the firmware will use.  CT
-+	 * Firmware only (v15 and higher)
-+	 */
-+	ATH10K_FW_FEATURE_CT_RATEMASK = 33,
-+
-+	/* Versions of firmware before approximately 10.2.4.72 would corrupt
-+	 * txop fields during burst.  Since this is fixed now, add a flag to
-+	 * denote this.
-+	 */
-+	ATH10K_FW_FEATURE_HAS_SAFE_BURST = 34,
-+
-+	/* Register-dump is supported. */
-+	ATH10K_FW_FEATURE_REGDUMP_CT = 35,
-+
-+	/* TX-Rate is reported. */
-+	ATH10K_FW_FEATURE_TXRATE_CT = 36,
-+
-+	/* Firmware can flush all peers. */
-+	ATH10K_FW_FEATURE_FLUSH_ALL_CT = 37,
-+
-+	/* Firmware can read memory with ping-pong protocol. */
-+	ATH10K_FW_FEATURE_PINGPONG_READ_CT = 38,
-+
-+	/* Firmware can skip channel reservation. */
-+	ATH10K_FW_FEATURE_SKIP_CH_RES_CT = 39,
-+
-+	/* Firmware supports NOP keep-alive message. */
-+	ATH10K_FW_FEATURE_NOP_CT = 40,
-+
-+	/* Firmware supports CT HTT MGT feature. */
-+	ATH10K_FW_FEATURE_HTT_MGT_CT = 41,
-+
-+	/* Set-special cmd-id is supported. */
-+	ATH10K_FW_FEATURE_SET_SPECIAL_CT = 42,
-+
-+	/* SW Beacon Miss is disabled in this kernel, so you have to
-+	 * let mac80211 manage the connection.
-+	 */
-+	ATH10K_FW_FEATURE_NO_BMISS_CT = 43,
-+
-+	/* 10.1 firmware that supports getting temperature.  Stock
-+	 * 10.1 cannot.
-+	 */
-+	ATH10K_FW_FEATURE_HAS_GET_TEMP_CT = 44,
-+
-+	/* Can peer-id be over-ridden to provide rix + retries for raw pkts?
-+	 *  CT only option.
-+	 */
-+	ATH10K_FW_FEATURE_HAS_TX_RC_CT = 45,
-+
-+	/* Do we support requesting custom stats */
-+	ATH10K_FW_FEATURE_CUST_STATS_CT = 46,
-+
- 	/* keep last */
- 	ATH10K_FW_FEATURE_COUNT,
- };
+Please read:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#format_of_patches
+
+Also the change log should be after --- line:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#changelog_missing
+
+Patch set to Changes Requested.
+
 -- 
-2.4.11
+https://patchwork.kernel.org/patch/10391617/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
