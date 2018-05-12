@@ -1,34 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57452 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:47196 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751339AbeEDMgs (ORCPT
+        with ESMTP id S1750793AbeELJKZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 May 2018 08:36:48 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: mt76x2: remove unnecessary break in mt76x2_mac_process_tx_rate()
+        Sat, 12 May 2018 05:10:25 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180501083354.1252-1-lorenzo.bianconi@redhat.com>
-References: <20180501083354.1252-1-lorenzo.bianconi@redhat.com>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: nbd@nbd.name, linux-wireless@vger.kernel.org
-Message-Id: <20180504123648.279BC60310@smtp.codeaurora.org> (sfid-20180504_143652_664664_94A987A9)
-Date: Fri,  4 May 2018 12:36:48 +0000 (UTC)
+To: Marcus Folkesson <marcus.folkesson@gmail.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: hw: make consistent usage of ATH10K_FW_DIR in paths
+References: <20180509075633.3030-1-marcus.folkesson@gmail.com>
+Date: Sat, 12 May 2018 12:10:21 +0300
+In-Reply-To: <20180509075633.3030-1-marcus.folkesson@gmail.com> (Marcus
+        Folkesson's message of "Wed, 9 May 2018 09:56:33 +0200")
+Message-ID: <87in7tutmq.fsf@kamboji.qca.qualcomm.com> (sfid-20180512_111028_709747_1CC8B352)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
+Marcus Folkesson <marcus.folkesson@gmail.com> writes:
 
-> Remove unnecessary break statement in the default case of bw switch
-> block in mt76x2_mac_process_tx_rate routine
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> Signed-off-by: Marcus Folkesson <marcus.folkesson@gmail.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
+I don't like empty commit logs so I added this in the pending branch:
 
-8efb868566db mt76x2: remove unnecessary break in mt76x2_mac_process_tx_rate()
+  ath10k: hw: make consistent usage of ATH10K_FW_DIR in paths
+
+  For some reason not all entries used ATH10K_FW_DIR so fix that. No functional 
+  changes.
 
 -- 
-https://patchwork.kernel.org/patch/10373263/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
