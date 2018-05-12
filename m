@@ -1,67 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:8226 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754723AbeEaLWl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 May 2018 07:22:41 -0400
-From: Yisheng Xie <xieyisheng1@huawei.com>
-To: <linux-kernel@vger.kernel.org>
-CC: <andy.shevchenko@gmail.com>, Yisheng Xie <xieyisheng1@huawei.com>,
-        "Kalle Valo" <kvalo@codeaurora.org>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH v2 06/21] iwlwifi: mvm: use match_string() helper
-Date: Thu, 31 May 2018 19:11:11 +0800
-Message-ID: <1527765086-19873-7-git-send-email-xieyisheng1@huawei.com> (sfid-20180531_132749_318224_80C54F89)
-In-Reply-To: <1527765086-19873-1-git-send-email-xieyisheng1@huawei.com>
-References: <1527765086-19873-1-git-send-email-xieyisheng1@huawei.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:36814 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751225AbeELIkM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 12 May 2018 04:40:12 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [V2,
+ 1/2] Revert "ssb: Prevent build of PCI host features in module"
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180511091715.1989-1-zajec5@gmail.com>
+References: <20180511091715.1989-1-zajec5@gmail.com>
+To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: =?UTF-8?q?Michael=20B=C3=BCsch?= <m@bues.ch>,
+        Larry Finger <larry.finger@lwfinger.net>,
+        Matt Redfearn <matt.redfearn@mips.com>,
+        linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+        LKML <linux-kernel@vger.kernel.org>,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Message-Id: <20180512084011.DEA1360807@smtp.codeaurora.org> (sfid-20180512_104024_445573_04B699E5)
+Date: Sat, 12 May 2018 08:40:11 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-match_string() returns the index of an array for a matching string,
-which can be used instead of open coded variant.
+Rafał Miłecki wrote:
 
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Intel Linux Wireless <linuxwifi@intel.com>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
----
-v2:
- - let ret get return value of match_string  - per Andy
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> This reverts commit 882164a4a928bcaa53280940436ca476e6b1db8e.
+> 
+> Above commit added "SSB = y" dependency to the wrong symbol
+> SSB_DRIVER_PCICORE_POSSIBLE and prevented SSB_DRIVER_PCICORE from being
+> selected when needed. PCI core driver for core running in clienthost
+> mode is important for bus initialization. It's perfectly valid scenario
+> to have ssb built as module and use it with buses on PCI cards.
+> 
+> This fixes regression that affected all *module* users with PCI cards.
+> 
+> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1572349
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 13 ++++---------
- 1 file changed, 4 insertions(+), 9 deletions(-)
+2 patches applied to wireless-drivers.git, thanks.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 0e6401c..d7ac511 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -671,16 +671,11 @@ static ssize_t iwl_dbgfs_bt_cmd_read(struct file *file, char __user *user_buf,
- 	};
- 	int ret, bt_force_ant_mode;
- 
--	for (bt_force_ant_mode = 0;
--	     bt_force_ant_mode < ARRAY_SIZE(modes_str);
--	     bt_force_ant_mode++) {
--		if (!strcmp(buf, modes_str[bt_force_ant_mode]))
--			break;
--	}
--
--	if (bt_force_ant_mode >= ARRAY_SIZE(modes_str))
--		return -EINVAL;
-+	ret = match_string(modes_str, ARRAY_SIZE(modes_str), buf);
-+	if (ret < 0)
-+		return ret;
- 
-+	bt_force_ant_mode = ret;
- 	ret = 0;
- 	mutex_lock(&mvm->mutex);
- 	if (mvm->bt_force_ant_mode == bt_force_ant_mode)
+36910d82a80c Revert "ssb: Prevent build of PCI host features in module"
+ebd27d3317c6 ssb: make SSB_PCICORE_HOSTMODE depend on SSB = y
+
 -- 
-1.7.12.4
+https://patchwork.kernel.org/patch/10393729/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
