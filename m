@@ -1,191 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35302 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752025AbeEJUI5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 May 2018 16:08:57 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, keescook@chromium.org,
-        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
-        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
-        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
-        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
-        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
-        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        cantabile.desu@gmail.com, khc@pm.waw.pl, arve@android.com,
-        tkjos@android.com, corbet@lwn.net, mchehab+samsung@kernel.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        "Luis R . Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v7 02/14] firmware: use () to terminate kernel-doc function names
-Date: Thu, 10 May 2018 13:08:38 -0700
-Message-Id: <20180510200850.5958-3-mcgrof@kernel.org> (sfid-20180510_220905_912203_F1A94979)
-In-Reply-To: <20180510200850.5958-1-mcgrof@kernel.org>
-References: <20180510200850.5958-1-mcgrof@kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:36214 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750740AbeELBWp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 11 May 2018 21:22:45 -0400
+From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Subject: [PATCH] ath10k: Add support to configure channel dwell time
+Date: Fri, 11 May 2018 18:22:39 -0700
+Message-Id: <1526088159-29912-1-git-send-email-pradeepc@codeaurora.org> (sfid-20180512_032249_615870_2BE644E5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andres Rodriguez <andresx7@gmail.com>
+Configure channel dwell time from duration of the scan request
+received from mac80211 when the duration is non-zero. When the
+scan request does not have duration value, use the default ones,
+the current implementation.
 
-The kernel-doc spec dictates a function name ends in ().
+Corresponding flag NL80211_EXT_FEATURE_SET_SCAN_DWELL is
+advertized.
 
-Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
-Reviewed-by: Kees Cook <keescook@chromium.org>
-Acked-by: Randy Dunlap <rdunlap@infradead.org>
-Acked-by: Luis R. Rodriguez <mcgrof@kernel.org>
-[mcgrof: adjust since the wide API rename is not yet merged]
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Supported Chipsets:
+ -QCA988X/QCA9887 PCI
+ -QCA99X0/QCA9984/QCA9888/QCA4019 PCI
+ -QCA6174/QCA9377 PCI/USB/SDIO
+ -WCN3990 SNOC
+
+Tested on QCA9984 with firmware ver 10.4-3.6-0010
+
+Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 ---
- drivers/base/firmware_loader/fallback.c |  8 ++++----
- drivers/base/firmware_loader/main.c     | 22 +++++++++++-----------
- 2 files changed, 15 insertions(+), 15 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h |  1 +
+ drivers/net/wireless/ath/ath10k/mac.c  | 23 ++++++++++++++++++++---
+ 2 files changed, 21 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
-index b57a7b3b4122..529f7013616f 100644
---- a/drivers/base/firmware_loader/fallback.c
-+++ b/drivers/base/firmware_loader/fallback.c
-@@ -125,7 +125,7 @@ static ssize_t timeout_show(struct class *class, struct class_attribute *attr,
- }
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index c17d805..39d4d7d 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -44,6 +44,7 @@
+ #define WO(_f)      ((_f##_OFFSET) >> 2)
  
- /**
-- * firmware_timeout_store - set number of seconds to wait for firmware
-+ * firmware_timeout_store() - set number of seconds to wait for firmware
-  * @class: device class pointer
-  * @attr: device attribute pointer
-  * @buf: buffer to scan for timeout value
-@@ -239,7 +239,7 @@ static int map_fw_priv_pages(struct fw_priv *fw_priv)
- }
+ #define ATH10K_SCAN_ID 0
++#define ATH10K_SCAN_CHANNEL_SWITCH_WMI_EVT_OVERHEAD 10 /* msec */
+ #define WMI_READY_TIMEOUT (5 * HZ)
+ #define ATH10K_FLUSH_TIMEOUT_HZ (5 * HZ)
+ #define ATH10K_CONNECTION_LOSS_HZ (3 * HZ)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index bf05a36..c6828c7 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -5668,6 +5668,7 @@ static int ath10k_hw_scan(struct ieee80211_hw *hw,
+ 	struct wmi_start_scan_arg arg;
+ 	int ret = 0;
+ 	int i;
++	u32 scan_timeout;
  
- /**
-- * firmware_loading_store - set value in the 'loading' control file
-+ * firmware_loading_store() - set value in the 'loading' control file
-  * @dev: device pointer
-  * @attr: device attribute pointer
-  * @buf: buffer to scan for loading control value
-@@ -431,7 +431,7 @@ static int fw_realloc_pages(struct fw_sysfs *fw_sysfs, int min_size)
- }
+ 	mutex_lock(&ar->conf_mutex);
  
- /**
-- * firmware_data_write - write method for firmware
-+ * firmware_data_write() - write method for firmware
-  * @filp: open sysfs file
-  * @kobj: kobject for the device
-  * @bin_attr: bin_attr structure
-@@ -537,7 +537,7 @@ fw_create_instance(struct firmware *firmware, const char *fw_name,
- }
+@@ -5723,6 +5724,22 @@ static int ath10k_hw_scan(struct ieee80211_hw *hw,
+ 			arg.channels[i] = req->channels[i]->center_freq;
+ 	}
  
- /**
-- * fw_load_sysfs_fallback - load a firmware via the sysfs fallback mechanism
-+ * fw_load_sysfs_fallback() - load a firmware via the sysfs fallback mechanism
-  * @fw_sysfs: firmware sysfs information for the firmware to load
-  * @opt_flags: flags of options, FW_OPT_*
-  * @timeout: timeout to wait for the load
-diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
-index 9919f0e6a7cc..4d11efadb3a4 100644
---- a/drivers/base/firmware_loader/main.c
-+++ b/drivers/base/firmware_loader/main.c
-@@ -597,7 +597,7 @@ _request_firmware(const struct firmware **firmware_p, const char *name,
- }
++	/* if duration is set, default dwell times will be overwritten */
++	if (req->duration) {
++		arg.dwell_time_active = req->duration;
++		arg.dwell_time_passive = req->duration;
++		arg.burst_duration_ms = req->duration;
++
++		scan_timeout = min_t(u32, arg.max_rest_time *
++				(arg.n_channels - 1) + (req->duration +
++				ATH10K_SCAN_CHANNEL_SWITCH_WMI_EVT_OVERHEAD) *
++				arg.n_channels, arg.max_scan_time + 200);
++
++	} else {
++		/* Add a 200ms margin to account for event/command processing */
++		scan_timeout = arg.max_scan_time + 200;
++	}
++
+ 	ret = ath10k_start_scan(ar, &arg);
+ 	if (ret) {
+ 		ath10k_warn(ar, "failed to start hw scan: %d\n", ret);
+@@ -5731,10 +5748,8 @@ static int ath10k_hw_scan(struct ieee80211_hw *hw,
+ 		spin_unlock_bh(&ar->data_lock);
+ 	}
  
- /**
-- * request_firmware: - send firmware request and wait for it
-+ * request_firmware() - send firmware request and wait for it
-  * @firmware_p: pointer to firmware image
-  * @name: name of firmware file
-  * @device: device for which firmware is being loaded
-@@ -632,7 +632,7 @@ request_firmware(const struct firmware **firmware_p, const char *name,
- EXPORT_SYMBOL(request_firmware);
+-	/* Add a 200ms margin to account for event/command processing */
+ 	ieee80211_queue_delayed_work(ar->hw, &ar->scan.timeout,
+-				     msecs_to_jiffies(arg.max_scan_time +
+-						      200));
++				     msecs_to_jiffies(scan_timeout));
  
- /**
-- * request_firmware_direct: - load firmware directly without usermode helper
-+ * request_firmware_direct() - load firmware directly without usermode helper
-  * @firmware_p: pointer to firmware image
-  * @name: name of firmware file
-  * @device: device for which firmware is being loaded
-@@ -657,7 +657,7 @@ int request_firmware_direct(const struct firmware **firmware_p,
- EXPORT_SYMBOL_GPL(request_firmware_direct);
+ exit:
+ 	mutex_unlock(&ar->conf_mutex);
+@@ -8351,6 +8366,8 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	}
  
- /**
-- * firmware_request_cache: - cache firmware for suspend so resume can use it
-+ * firmware_request_cache() - cache firmware for suspend so resume can use it
-  * @name: name of firmware file
-  * @device: device for which firmware should be cached for
-  *
-@@ -681,7 +681,7 @@ int firmware_request_cache(struct device *device, const char *name)
- EXPORT_SYMBOL_GPL(firmware_request_cache);
+ 	wiphy_ext_feature_set(ar->hw->wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
++	wiphy_ext_feature_set(ar->hw->wiphy,
++			      NL80211_EXT_FEATURE_SET_SCAN_DWELL);
  
- /**
-- * request_firmware_into_buf - load firmware into a previously allocated buffer
-+ * request_firmware_into_buf() - load firmware into a previously allocated buffer
-  * @firmware_p: pointer to firmware image
-  * @name: name of firmware file
-  * @device: device for which firmware is being loaded and DMA region allocated
-@@ -713,7 +713,7 @@ request_firmware_into_buf(const struct firmware **firmware_p, const char *name,
- EXPORT_SYMBOL(request_firmware_into_buf);
- 
- /**
-- * release_firmware: - release the resource associated with a firmware image
-+ * release_firmware() - release the resource associated with a firmware image
-  * @fw: firmware resource to release
-  **/
- void release_firmware(const struct firmware *fw)
-@@ -755,7 +755,7 @@ static void request_firmware_work_func(struct work_struct *work)
- }
- 
- /**
-- * request_firmware_nowait - asynchronous version of request_firmware
-+ * request_firmware_nowait() - asynchronous version of request_firmware
-  * @module: module requesting the firmware
-  * @uevent: sends uevent to copy the firmware image if this flag
-  *	is non-zero else the firmware copy must be done manually.
-@@ -824,7 +824,7 @@ EXPORT_SYMBOL(request_firmware_nowait);
- static ASYNC_DOMAIN_EXCLUSIVE(fw_cache_domain);
- 
- /**
-- * cache_firmware - cache one firmware image in kernel memory space
-+ * cache_firmware() - cache one firmware image in kernel memory space
-  * @fw_name: the firmware image name
-  *
-  * Cache firmware in kernel memory so that drivers can use it when
-@@ -866,7 +866,7 @@ static struct fw_priv *lookup_fw_priv(const char *fw_name)
- }
- 
- /**
-- * uncache_firmware - remove one cached firmware image
-+ * uncache_firmware() - remove one cached firmware image
-  * @fw_name: the firmware image name
-  *
-  * Uncache one firmware image which has been cached successfully
-@@ -1042,7 +1042,7 @@ static void __device_uncache_fw_images(void)
- }
- 
- /**
-- * device_cache_fw_images - cache devices' firmware
-+ * device_cache_fw_images() - cache devices' firmware
-  *
-  * If one device called request_firmware or its nowait version
-  * successfully before, the firmware names are recored into the
-@@ -1075,7 +1075,7 @@ static void device_cache_fw_images(void)
- }
- 
- /**
-- * device_uncache_fw_images - uncache devices' firmware
-+ * device_uncache_fw_images() - uncache devices' firmware
-  *
-  * uncache all firmwares which have been cached successfully
-  * by device_uncache_fw_images earlier
-@@ -1092,7 +1092,7 @@ static void device_uncache_fw_images_work(struct work_struct *work)
- }
- 
- /**
-- * device_uncache_fw_images_delay - uncache devices firmwares
-+ * device_uncache_fw_images_delay() - uncache devices firmwares
-  * @delay: number of milliseconds to delay uncache device firmwares
-  *
-  * uncache all devices's firmwares which has been cached successfully
+ 	/*
+ 	 * on LL hardware queues are managed entirely by the FW
 -- 
-2.17.0
+1.9.1
