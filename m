@@ -1,100 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40222 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750722AbeELIuy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 May 2018 04:50:54 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from ozlabs.org ([203.11.71.1]:36647 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750854AbeELD57 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 11 May 2018 23:57:59 -0400
+Date: Sat, 12 May 2018 13:57:57 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Toke =?UTF-8?B?SMO4aWxhbmQt?= =?UTF-8?B?SsO4cmdlbnNlbg==?=
+        <toke@toke.dk>, Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: linux-next: build warning after merge of the mac80211-next tree
+Message-ID: <20180512135757.7c4e3bc7@canb.auug.org.au> (sfid-20180512_055812_972727_E3149DC1)
+In-Reply-To: <20180509145624.643d2e56@canb.auug.org.au>
+References: <20180509145624.643d2e56@canb.auug.org.au>
 MIME-Version: 1.0
-Subject: Re: [v2] b43: fix transmit failure when VT is switched
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <5AF41F55.4060606@sra-tohoku.co.jp>
-References: <5AF41F55.4060606@sra-tohoku.co.jp>
-To: kabe@sra-tohoku.co.jp
-Cc: b43-dev@lists.infradead.org, kabe@sra-tohoku.co.jp,
-        linux-wireless@vger.kernel.org
-Message-Id: <20180512085053.D5B4160850@smtp.codeaurora.org> (sfid-20180512_105058_273589_D0DCA9E9)
-Date: Sat, 12 May 2018 08:50:53 +0000 (UTC)
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/4NiqZE+n7_0ITHj05L_/v63"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kabe@sra-tohoku.co.jp wrote:
+--Sig_/4NiqZE+n7_0ITHj05L_/v63
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> From: Taketo Kabe <kabe@sra-tohoku.co.jp>
-> 
-> Fix for b43 wireless card stopping transmission when switching VTs.
-> 
-> Setup:
-> Using BCM4306 rev.03 chip based CardBus wireless card.
-> IRQ is shared with yenta (cardbus bridge) and i915 (display) driver.
-> For firmware, installed latest but dated openfwwf 5.2
-> (http://netweb.ing.unibs.it/~openfwwf/)
-> 
-> How-to-reproduce:
-> Do "ssh <NetBSD-remotehost>", then "ls -lR /" to generate traffic, then
-> repeatedly switch VTs by Alt-F1<>Alt-F2.
-> Eventually (within a minute) the card stops working.
-> You can receive traffic but no transmission.
-> For unknown reason it doesn't occur when just generating traffic by
-> "ssh <remotehost> ls -lR /".
-> 
-> With CONFIG_B43_DEBUG=y kernel config, when it stops,
-> the debug message shows
->      kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 148, but got 180
-> The slot offset I observed so far was always 32.
-> 
-> When err_out2 is not set to make error messages successive,
-> the debug output will be like this:
-> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 148
-> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 150
-> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 120
-> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 152
-> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 122
-> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 154
-> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 124
-> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 156
-> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 126
-> The TX ring alternates between 2 sequences; the ring seems
-> to be completely confused. Controller restart is needed.
-> 
-> Workaround(1):
-> This problem doesn't occur when using propriatory firmware
-> you will extract by b43-fwcutter, so it may be a bug in
-> openfwwf firmware, as the comment in the b43_dma_handle_txstatus() suggests.
-> I wasn't able to find a bug in the terse openfwwf code though.
-> 
-> Workaround(2):
-> Using "pio=1" option to not use DMA makes this problem to
-> not occur.
-> 
-> Description of the patch:
-> This patch will forcibly reset the controller to make it
-> work again. Very kludgy and doesn't look right, but
-> the traffic will continue to flow.
-> 
-> Signed-off-by: Taketo Kabe <kabe@sra-tohoku.co.jp>
-> Reviewed-by: Michael Buesch <m@bues.ch>
-> [kvalo@codeaurora.org: clean up commit log]
+Hi all,
 
-Failed to apply to wireless-drivers-next:
+Just cc'ing the wireless list at Kalle's suggestion.
 
-fatal: sha1 information is lacking or useless (drivers/net/wireless/broadcom/b43/dma.c).
-error: could not build fake ancestor
-Applying: b43: fix transmit failure when VT is switched
-Patch failed at 0001 b43: fix transmit failure when VT is switched
-The copy of the patch that failed is found in: .git/rebase-apply/patch
+On Wed, 9 May 2018 14:56:24 +1000 Stephen Rothwell <sfr@canb.auug.org.au> w=
+rote:
+>
+> Hi Johannes,
+>=20
+> After merging the mac80211-next tree, today's linux-next build (arm_multi
+> v7_defconfig) produced this warning:
+>=20
+> drivers/net/wireless/marvell/mwifiex/uap_event.c: In function 'mwifiex_pr=
+ocess_uap_event':
+> drivers/net/wireless/marvell/mwifiex/uap_event.c:333:1: warning: the fram=
+e size of 1680 bytes is larger than 1024 bytes [-Wframe-larger-than=3D]
+>  }
+>  ^
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c: In function =
+'brcmf_notify_connect_status_ap':
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:5530:1: warni=
+ng: the frame size of 1680 bytes is larger than 1024 bytes [-Wframe-larger-=
+than=3D]
+>  }
+>  ^
+>=20
+> Maybe introduced by commit
+>=20
+>   52539ca89f36 ("cfg80211: Expose TXQ stats and parameters to userspace")
 
-Please read:
+--=20
+Cheers,
+Stephen Rothwell
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#format_of_patches
+--Sig_/4NiqZE+n7_0ITHj05L_/v63
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
-Also the change log should be after --- line:
+-----BEGIN PGP SIGNATURE-----
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#changelog_missing
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlr2ZkUACgkQAVBC80lX
+0Gz0mQf/VZUkfeVvkvAWDWJDLTYgq5Yk9Q64iaVZDnVFlxOYVjsBUyGrxPylIMFo
+AQ5ubLlp7+M0NUqBCXtjoeq8ivRMvKLFuuUxFUW5ywy6hfI2Hzai7x7IxaRo7lRC
+2VXRMWBHsqpVh2gsPLZwm4rO1humWvl4xIE7u80hfqhZmnlNybxQF4D+1oe8jD5H
+4Hsp80sNIaRqAJnqfISq8FwGKQcGRLW2Xr2aKdqTS7ALGqTwqqBx4k2+p3nq+p4l
+WO9fNPutkIzvV7oO91HkkG9W6d3N9sxJ3kSVhYT+DuYKKrZVM/xn8b3VeXPeA+EF
+m9c2VKNdSZ5T5ry/BTIxZxyVQVtCZg==
+=P+Kz
+-----END PGP SIGNATURE-----
 
-Patch set to Changes Requested.
-
--- 
-https://patchwork.kernel.org/patch/10391617/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+--Sig_/4NiqZE+n7_0ITHj05L_/v63--
