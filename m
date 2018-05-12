@@ -1,35 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:53516 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964968AbeEIV3l (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43734 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750740AbeELJDc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 17:29:41 -0400
-Message-ID: <1525901377.6910.29.camel@sipsolutions.net> (sfid-20180509_232947_329731_77DF5748)
-Subject: Re: pull-request: mac80211-next 2018-05-09
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Wed, 09 May 2018 23:29:37 +0200
-In-Reply-To: <20180509194034.11992-1-johannes@sipsolutions.net> (sfid-20180509_214049_113840_06178292)
-References: <20180509194034.11992-1-johannes@sipsolutions.net>
-         (sfid-20180509_214049_113840_06178292)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Sat, 12 May 2018 05:03:32 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: ath10k: fix return value check in wake_tx_q op
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180506132500.16888-1-erik.stromdahl@gmail.com>
+References: <20180506132500.16888-1-erik.stromdahl@gmail.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org,
+        Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-Id: <20180512090332.895FF6079C@smtp.codeaurora.org> (sfid-20180512_110335_895100_2DC56A48)
+Date: Sat, 12 May 2018 09:03:32 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Erik Stromdahl <erik.stromdahl@gmail.com> wrote:
 
-Sorry, scratch that.
+> ath10k_mac_tx_push_txq returns either a postive integer (length) on
+> success or a negative error code on error.
+> 
+> The "if (ret) break;" statement will thus always break out of the loop
+> immediately after ath10k_mac_tx_push_txq has returned (making the loop
+> pointless).
+> 
+> A side effect of this fix is that we will iterate the queue until
+> ath10k_mac_tx_push_txq returns -ENOENT. This will make sure the queue is
+> not added back to ar->txqs when it is empty. This could potentially
+> improve performance somewhat (I have seen a small improvement with SDIO
+> devices).
+> 
+> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-I forgot that this commit:
+Patch applied to ath-next branch of ath.git, thanks.
 
-> Toke Høiland-Jørgensen (3):
+e3148cc5fecf ath10k: fix return value check in wake_tx_q op
 
->       cfg80211: Expose TXQ stats and parameters to userspace
+-- 
+https://patchwork.kernel.org/patch/10382789/
 
-caused a bunch of "too much stack" warnings - I should put in at least
-the non-driver fix for that first, and then coordinate with Kalle to
-send the driver fixes in too.
-
-johannes
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
