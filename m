@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58600 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932215AbeEIJf6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 05:35:58 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60845 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750735AbeELJGV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 12 May 2018 05:06:21 -0400
+Date: Sat, 12 May 2018 09:06:19 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Andres Rodriguez <andresx7@gmail.com>,
+        linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
+        alexdeucher@gmail.com, christian.koenig@amd.com,
+        arend.vanspriel@broadcom.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org, hdegoede@redhat.com,
+        Kees Cook <keescook@chromium.org>,
+        Mimi Zohar <zohar@linux.vnet.ibm.com>
+Subject: Re: [PATCH 6/9] firmware: print firmware name on fallback path
+Message-ID: <20180512090619.GL27853@wotan.suse.de> (sfid-20180512_110635_857619_A1547467)
+References: <20180423201205.20533-1-andresx7@gmail.com>
+ <20180423201205.20533-7-andresx7@gmail.com>
+ <20180503234235.GX27853@wotan.suse.de>
+ <8736yxb8rb.fsf@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 09 May 2018 15:05:57 +0530
-From: Govind Singh <govinds@codeaurora.org>
-To: Marcus Folkesson <marcus.folkesson@gmail.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: Replace bit shifts with the BIT() macro for rx
- desc bits
-In-Reply-To: <20180509074042.GA768@gmail.com>
-References: <20180509044804.13751-1-govinds@codeaurora.org>
- <20180509074042.GA768@gmail.com>
-Message-ID: <57eb66a936cb541e81cb9ba4f48df61b@codeaurora.org> (sfid-20180509_113603_094823_F7DF34BD)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8736yxb8rb.fsf@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-05-09 13:10, Marcus Folkesson wrote:
-> Hello Govind,
+On Sat, May 12, 2018 at 11:03:52AM +0300, Kalle Valo wrote:
+> (sorry for the delay, this got buried in my inbox)
 > 
-> On Wed, May 09, 2018 at 10:18:04AM +0530, Govind Singh wrote:
->> Use the BIT() macro from 'linux/bitops.h' to define the rx desc
->> bit flags to have consistency with new definitions.
->> 
->> Signed-off-by: Govind Singh <govinds@codeaurora.org>
->> ---
->>  drivers/net/wireless/ath/ath10k/rx_desc.h | 134 
->> +++++++++++-----------
->>  1 file changed, 67 insertions(+), 67 deletions(-)
->> 
->> diff --git a/drivers/net/wireless/ath/ath10k/rx_desc.h 
->> b/drivers/net/wireless/ath/ath10k/rx_desc.h
->> index 545deb6d7af1..b3d7c6e7ac90 100644
->> --- a/drivers/net/wireless/ath/ath10k/rx_desc.h
->> +++ b/drivers/net/wireless/ath/ath10k/rx_desc.h
+> "Luis R. Rodriguez" <mcgrof@kernel.org> writes:
 > 
-> Looks good, but please include linux/bitops.h as well.
+> > On Mon, Apr 23, 2018 at 04:12:02PM -0400, Andres Rodriguez wrote:
+> >> Previously, one could assume the firmware name from the preceding
+> >> message: "Direct firmware load for {name} failed with error %d".
+> >> 
+> >> However, with the new firmware_request_nowarn() entrypoint, the message
+> >> outlined above will not always be printed.
+> >
+> > I though the whole point was to not print an error message. What if
+> > we want later to disable this error message? This would prove a bit
+> > pointless.
+> >
+> > Let's discuss the exact semantics desired here. Why would only the
+> > fallback be desirable here?
+> >
+> > Andres, Kalle?
 > 
-> From the documentation [1]:
-> 
-> If you use a facility then #include the file that defines/declares
->  that facility.  Don't depend on other header files pulling in ones
->  that you use.
-> 
+> So from ath10k point of view we do not want to have any messages printed
+> when calling firmware_request_nowarn(). The warnings get users really
+> confused when ath10k is checking if an optional firmware file is
+> available or not.
 
-Thanks, addressed the comment in v2 patchset.
+I figured, that is the intended functionality now.
 
-> 
-> [1] Documentation/process/submit-checklist.rst
-> 
-> 
-> Best regards
-> Marcus Folkesson
+  Luis
