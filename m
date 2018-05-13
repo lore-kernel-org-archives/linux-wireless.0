@@ -1,86 +1,266 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35093 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756729AbeEJKsR (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:4633 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751924AbeEMQDz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 May 2018 06:48:17 -0400
-MIME-Version: 1.0
-In-Reply-To: <CACna6rxb9KSQfGwi__xxSMACAxh-bOV9SR1NsnUVe8ASdA0Liw@mail.gmail.com>
-References: <7bbc067a-c412-3d2e-174a-abc31b46e246@lwfinger.net> <CACna6rxb9KSQfGwi__xxSMACAxh-bOV9SR1NsnUVe8ASdA0Liw@mail.gmail.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Thu, 10 May 2018 12:48:15 +0200
-Message-ID: <CACna6ry4AYpwOguzDoP4XsonF4_eWW2PpxonwbuAXMVw3wrQ+g@mail.gmail.com> (sfid-20180510_124833_099220_590F8F80)
-Subject: Re: Regression caused by commit 882164a4a928
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Matt Redfearn <matt.redfearn@mips.com>,
-        =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Sun, 13 May 2018 12:03:55 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com
+Subject: [PATCH 1/7] wil6210: add support for Talyn-MB (Talyn ver 2.0) device
+Date: Sun, 13 May 2018 19:02:49 +0300
+Message-Id: <1526227375-31881-2-git-send-email-merez@codeaurora.org> (sfid-20180513_180400_213774_DC4658A2)
+In-Reply-To: <1526227375-31881-1-git-send-email-merez@codeaurora.org>
+References: <1526227375-31881-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 May 2018 at 12:41, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
-> On 7 May 2018 at 17:44, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->> Although commit 882164a4a928 ("ssb: Prevent build of PCI host features i=
-n
->> module") appeared to be harmless, it leads to complete failure of driver=
-s
->> b43. and b43legacy, and likely affects b44 as well. The problem is that
->> CONFIG_SSB_PCIHOST is undefined, which prevents the compilation of the c=
-ode
->> that controls the PCI cores of the device. See
->> https://bugzilla.redhat.com/show_bug.cgi?id=3D1572349 for details.
->>
->> As the underlying errors ("pcibios_enable_device" undefined, and
->> "register_pci_controller" undefined) do not appear on the architectures =
-that
->> I have tested (x86_64, x86, and ppc), I suspect something in the
->> arch-specific code for your setup (MIPS?). As I have no idea on how to f=
-ix
->> that problem, would the following patch work for you?
->>
->> diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
->> index 9371651d8017..3743533c8057 100644
->> --- a/drivers/ssb/Kconfig
->> +++ b/drivers/ssb/Kconfig
->> @@ -117,7 +117,7 @@ config SSB_SERIAL
->>
->>  config SSB_DRIVER_PCICORE_POSSIBLE
->>         bool
->> -       depends on SSB_PCIHOST && SSB =3D y
->> +       depends on SSB_PCIHOST && (SSB =3D y || !MIPS)
->>         default y
->>
->>  config SSB_DRIVER_PCICORE
->
-> I strongly suggest we take a step back, slow down a bit and look at
-> the original problem.
->
-> In driver_pcicore.c there is MIPS specific code. It's protected using
-> #ifdef CONFIG_SSB_PCICORE_HOSTMODE
-> (...)
-> #endif
->
-> If anyone has ever seen
-> ERROR: "pcibios_enable_device" [drivers/ssb/ssb.ko] undefined!
-> ERROR: "register_pci_controller" [drivers/ssb/ssb.ko] undefined!
-> make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
-> it means he managed to get CONFIG_SSB_PCICORE_HOSTMODE set on non-MIPS sy=
-stem.
->
-> We should rather answer how did that happen and fix it.
->
-> SSB_PCICORE_HOSTMODE depends on SSB_DRIVER_MIPS
-> SSB_DRIVER_MIPS depends on MIPS
->
-> How is that possible to set SSB_PCICORE_HOSTMODE with non-MIPS config?
-> Is there some mistake in Kconfig I can't see?
+Add changes to support initialization of Talyn-MB wil6210
+device:
+- Add definition for Talyn-MB new JTAG id
+- Define talyn_mb_fw_mapping array
+- Add Talyn-MB reset sequence
 
-I think SSB =3D y should be added as dependency for
-SSB_PCICORE_HOSTMODE. See also commit 79ca239a68f8f ("bcma: Prevent
-build of PCI host features in module").
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/main.c     | 48 +++++++++++++++++++------
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 11 +++++-
+ drivers/net/wireless/ath/wil6210/wil6210.h  | 11 +++++-
+ drivers/net/wireless/ath/wil6210/wmi.c      | 55 +++++++++++++++++++++++++++++
+ 4 files changed, 113 insertions(+), 12 deletions(-)
 
---=20
-Rafa=C5=82
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index e7006c2..1282e1a 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -736,14 +736,24 @@ static void wil_bl_prepare_halt(struct wil6210_priv *wil)
+ 
+ static inline void wil_halt_cpu(struct wil6210_priv *wil)
+ {
+-	wil_w(wil, RGF_USER_USER_CPU_0, BIT_USER_USER_CPU_MAN_RST);
+-	wil_w(wil, RGF_USER_MAC_CPU_0,  BIT_USER_MAC_CPU_MAN_RST);
++	if (wil->hw_version >= HW_VER_TALYN_MB) {
++		wil_w(wil, RGF_USER_USER_CPU_0_TALYN_MB,
++		      BIT_USER_USER_CPU_MAN_RST);
++		wil_w(wil, RGF_USER_MAC_CPU_0_TALYN_MB,
++		      BIT_USER_MAC_CPU_MAN_RST);
++	} else {
++		wil_w(wil, RGF_USER_USER_CPU_0, BIT_USER_USER_CPU_MAN_RST);
++		wil_w(wil, RGF_USER_MAC_CPU_0,  BIT_USER_MAC_CPU_MAN_RST);
++	}
+ }
+ 
+ static inline void wil_release_cpu(struct wil6210_priv *wil)
+ {
+ 	/* Start CPU */
+-	wil_w(wil, RGF_USER_USER_CPU_0, 1);
++	if (wil->hw_version >= HW_VER_TALYN_MB)
++		wil_w(wil, RGF_USER_USER_CPU_0_TALYN_MB, 1);
++	else
++		wil_w(wil, RGF_USER_USER_CPU_0, 1);
+ }
+ 
+ static void wil_set_oob_mode(struct wil6210_priv *wil, u8 mode)
+@@ -811,10 +821,17 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
+ 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_0, 0x3ff81f);
+ 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1, 0xf);
+ 
+-	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0xFE000000);
+-	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0x0000003F);
+-	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0x000000f0);
+-	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0xFFE7FE00);
++	if (wil->hw_version >= HW_VER_TALYN_MB) {
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0x7e000000);
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0x0000003f);
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0xc00000f0);
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0xffe7fe00);
++	} else {
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0xfe000000);
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0x0000003f);
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0x000000f0);
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0xffe7fe00);
++	}
+ 
+ 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_0, 0x0);
+ 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1, 0x0);
+@@ -1042,8 +1059,14 @@ static int wil_get_otp_info(struct wil6210_priv *wil)
+ 	struct net_device *ndev = wil->main_ndev;
+ 	struct wiphy *wiphy = wil_to_wiphy(wil);
+ 	u8 mac[8];
++	int mac_addr;
++
++	if (wil->hw_version >= HW_VER_TALYN_MB)
++		mac_addr = RGF_OTP_MAC_TALYN_MB;
++	else
++		mac_addr = RGF_OTP_MAC;
+ 
+-	wil_memcpy_fromio_32(mac, wil->csr + HOSTADDR(RGF_OTP_MAC),
++	wil_memcpy_fromio_32(mac, wil->csr + HOSTADDR(mac_addr),
+ 			     sizeof(mac));
+ 	if (!is_valid_ether_addr(mac)) {
+ 		wil_err(wil, "Invalid MAC %pM\n", mac);
+@@ -1147,8 +1170,13 @@ static void wil_pre_fw_config(struct wil6210_priv *wil)
+ 	/* it is W1C, clear by writing back same value */
+ 	wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
+ 	wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
+-	/* clear PAL_UNIT_ICR (potential D0->D3 leftover) */
+-	wil_s(wil, RGF_PAL_UNIT_ICR + offsetof(struct RGF_ICR, ICR), 0);
++	/* clear PAL_UNIT_ICR (potential D0->D3 leftover)
++	 * In Talyn-MB host cannot access this register due to
++	 * access control, hence PAL_UNIT_ICR is cleared by the FW
++	 */
++	if (wil->hw_version < HW_VER_TALYN_MB)
++		wil_s(wil, RGF_PAL_UNIT_ICR + offsetof(struct RGF_ICR, ICR),
++		      0);
+ 
+ 	if (wil->fw_calib_result > 0) {
+ 		__le32 val = cpu_to_le32(wil->fw_calib_result |
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index 19cbc6a..3a7e406 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -85,7 +85,7 @@ int wil_set_capabilities(struct wil6210_priv *wil)
+ 		wil->rgf_ucode_assert_code_addr = SPARROW_RGF_UCODE_ASSERT_CODE;
+ 		break;
+ 	case JTAG_DEV_ID_TALYN:
+-		wil->hw_name = "Talyn";
++		wil->hw_name = "Talyn-MA";
+ 		wil->hw_version = HW_VER_TALYN;
+ 		memcpy(fw_mapping, talyn_fw_mapping, sizeof(talyn_fw_mapping));
+ 		wil->rgf_fw_assert_code_addr = TALYN_RGF_FW_ASSERT_CODE;
+@@ -94,6 +94,15 @@ int wil_set_capabilities(struct wil6210_priv *wil)
+ 		    BIT_NO_FLASH_INDICATION)
+ 			set_bit(hw_capa_no_flash, wil->hw_capa);
+ 		break;
++	case JTAG_DEV_ID_TALYN_MB:
++		wil->hw_name = "Talyn-MB";
++		wil->hw_version = HW_VER_TALYN_MB;
++		memcpy(fw_mapping, talyn_mb_fw_mapping,
++		       sizeof(talyn_mb_fw_mapping));
++		wil->rgf_fw_assert_code_addr = TALYN_RGF_FW_ASSERT_CODE;
++		wil->rgf_ucode_assert_code_addr = TALYN_RGF_UCODE_ASSERT_CODE;
++		set_bit(hw_capa_no_flash, wil->hw_capa);
++		break;
+ 	default:
+ 		wil_err(wil, "Unknown board hardware, chip_id 0x%08x, chip_revision 0x%08x\n",
+ 			jtag_id, chip_revision);
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index b623510c..4cd8e40 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -311,14 +311,20 @@ struct RGF_ICR {
+ #define RGF_USER_JTAG_DEV_ID	(0x880b34) /* device ID */
+ 	#define JTAG_DEV_ID_SPARROW	(0x2632072f)
+ 	#define JTAG_DEV_ID_TALYN	(0x7e0e1)
++	#define JTAG_DEV_ID_TALYN_MB	(0x1007e0e1)
+ 
+ #define RGF_USER_REVISION_ID		(0x88afe4)
+ #define RGF_USER_REVISION_ID_MASK	(3)
+ 	#define REVISION_ID_SPARROW_B0	(0x0)
+ 	#define REVISION_ID_SPARROW_D0	(0x3)
+ 
++#define RGF_OTP_MAC_TALYN_MB		(0x8a0304)
+ #define RGF_OTP_MAC			(0x8a0620)
+ 
++/* Talyn-MB */
++#define RGF_USER_USER_CPU_0_TALYN_MB	(0x8c0138)
++#define RGF_USER_MAC_CPU_0_TALYN_MB	(0x8c0154)
++
+ /* crash codes for FW/Ucode stored here */
+ 
+ /* ASSERT RGFs */
+@@ -332,6 +338,7 @@ enum {
+ 	HW_VER_SPARROW_B0, /* REVISION_ID_SPARROW_B0 */
+ 	HW_VER_SPARROW_D0, /* REVISION_ID_SPARROW_D0 */
+ 	HW_VER_TALYN,	/* JTAG_DEV_ID_TALYN */
++	HW_VER_TALYN_MB	/* JTAG_DEV_ID_TALYN_MB */
+ };
+ 
+ /* popular locations */
+@@ -349,7 +356,8 @@ enum {
+ /* Hardware definitions end */
+ #define SPARROW_FW_MAPPING_TABLE_SIZE 10
+ #define TALYN_FW_MAPPING_TABLE_SIZE 13
+-#define MAX_FW_MAPPING_TABLE_SIZE 13
++#define TALYN_MB_FW_MAPPING_TABLE_SIZE 19
++#define MAX_FW_MAPPING_TABLE_SIZE 19
+ 
+ struct fw_map {
+ 	u32 from; /* linker address - from, inclusive */
+@@ -363,6 +371,7 @@ struct fw_map {
+ extern const struct fw_map sparrow_fw_mapping[SPARROW_FW_MAPPING_TABLE_SIZE];
+ extern const struct fw_map sparrow_d0_mac_rgf_ext;
+ extern const struct fw_map talyn_fw_mapping[TALYN_FW_MAPPING_TABLE_SIZE];
++extern const struct fw_map talyn_mb_fw_mapping[TALYN_MB_FW_MAPPING_TABLE_SIZE];
+ extern struct fw_map fw_mapping[MAX_FW_MAPPING_TABLE_SIZE];
+ 
+ /**
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 8a9bbd6..ef991d7 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -164,6 +164,61 @@
+ 	{0x800000, 0x808000, 0xa78000, "uc_data", false},
+ };
+ 
++/**
++ * @talyn_mb_fw_mapping provides memory remapping table for Talyn-MB
++ *
++ * array size should be in sync with the declaration in the wil6210.h
++ *
++ * Talyn MB memory mapping:
++ * Linker address         PCI/Host address
++ *                        0x880000 .. 0xc80000  4Mb BAR0
++ * 0x800000 .. 0x820000   0xa00000 .. 0xa20000  128k DCCM
++ * 0x840000 .. 0x858000   0xa20000 .. 0xa38000  96k PERIPH
++ */
++const struct fw_map talyn_mb_fw_mapping[] = {
++	/* FW code RAM 768k */
++	{0x000000, 0x0c0000, 0x900000, "fw_code", true},
++	/* FW data RAM 128k */
++	{0x800000, 0x820000, 0xa00000, "fw_data", true},
++	/* periph. data RAM 96k */
++	{0x840000, 0x858000, 0xa20000, "fw_peri", true},
++	/* various RGF 40k */
++	{0x880000, 0x88a000, 0x880000, "rgf", true},
++	/* AGC table 4k */
++	{0x88a000, 0x88b000, 0x88a000, "AGC_tbl", true},
++	/* Pcie_ext_rgf 4k */
++	{0x88b000, 0x88c000, 0x88b000, "rgf_ext", true},
++	/* mac_ext_rgf 2256b */
++	{0x88c000, 0x88c8d0, 0x88c000, "mac_rgf_ext", true},
++	/* ext USER RGF 4k */
++	{0x88d000, 0x88e000, 0x88d000, "ext_user_rgf", true},
++	/* SEC PKA 16k */
++	{0x890000, 0x894000, 0x890000, "sec_pka", true},
++	/* SEC KDF RGF 3096b */
++	{0x898000, 0x898c18, 0x898000, "sec_kdf_rgf", true},
++	/* SEC MAIN 2124b */
++	{0x89a000, 0x89a84c, 0x89a000, "sec_main", true},
++	/* OTP 4k */
++	{0x8a0000, 0x8a1000, 0x8a0000, "otp", true},
++	/* DMA EXT RGF 64k */
++	{0x8b0000, 0x8c0000, 0x8b0000, "dma_ext_rgf", true},
++	/* DUM USER RGF 528b */
++	{0x8c0000, 0x8c0210, 0x8c0000, "dum_user_rgf", true},
++	/* DMA OFU 296b */
++	{0x8c2000, 0x8c2128, 0x8c2000, "dma_ofu", true},
++	/* ucode debug 4k */
++	{0x8c3000, 0x8c4000, 0x8c3000, "ucode_debug", true},
++	/* upper area 1536k */
++	{0x900000, 0xa80000, 0x900000, "upper", true},
++	/* UCODE areas - accessible by debugfs blobs but not by
++	 * wmi_addr_remap. UCODE areas MUST be added AFTER FW areas!
++	 */
++	/* ucode code RAM 256k */
++	{0x000000, 0x040000, 0xa38000, "uc_code", false},
++	/* ucode data RAM 32k */
++	{0x800000, 0x808000, 0xa78000, "uc_data", false},
++};
++
+ struct fw_map fw_mapping[MAX_FW_MAPPING_TABLE_SIZE];
+ 
+ struct blink_on_off_time led_blink_time[] = {
+-- 
+1.9.1
