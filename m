@@ -1,278 +1,2266 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:40620 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751378AbeEKRYd (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:4633 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751943AbeEMQEA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 13:24:33 -0400
-Received: by mail-pf0-f195.google.com with SMTP id f189-v6so3030513pfa.7
-        for <linux-wireless@vger.kernel.org>; Fri, 11 May 2018 10:24:32 -0700 (PDT)
-Date: Fri, 11 May 2018 10:25:54 -0700
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Govind Singh <govinds@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 03/12] ath10k: Add ath10k QMI client driver
-Message-ID: <20180511172554.GO2259@tuxbook-pro> (sfid-20180511_192440_964654_9489DDB8)
-References: <1522042761-25716-1-git-send-email-govinds@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1522042761-25716-1-git-send-email-govinds@codeaurora.org>
+        Sun, 13 May 2018 12:04:00 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Gidon Studinski <gidons@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        Maya Erez <merez@codeaurora.org>
+Subject: [PATCH 3/7] wil6210: initialize TX and RX enhanced DMA rings
+Date: Sun, 13 May 2018 19:02:51 +0300
+Message-Id: <1526227375-31881-4-git-send-email-merez@codeaurora.org> (sfid-20180513_180409_204907_5AD3F71E)
+In-Reply-To: <1526227375-31881-1-git-send-email-merez@codeaurora.org>
+References: <1526227375-31881-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun 25 Mar 22:39 PDT 2018, Govind Singh wrote:
+From: Gidon Studinski <gidons@codeaurora.org>
 
-> Add QMI client driver for Q6 integrated WLAN connectivity
-> subsystem. This module is responsible for communicating WLAN
-> control messages to FW over QUALCOMM MSM Interface (QMI).
-> 
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
-> ---
->  drivers/net/wireless/ath/ath10k/Kconfig  |   2 +-
->  drivers/net/wireless/ath/ath10k/Makefile |   4 +
->  drivers/net/wireless/ath/ath10k/qmi.c    | 121 +++++++++++++++++++++++++++++++
->  drivers/net/wireless/ath/ath10k/qmi.h    |  24 ++++++
->  4 files changed, 150 insertions(+), 1 deletion(-)
->  create mode 100644 drivers/net/wireless/ath/ath10k/qmi.c
->  create mode 100644 drivers/net/wireless/ath/ath10k/qmi.h
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
-> index 84f071a..9978ad5e 100644
-> --- a/drivers/net/wireless/ath/ath10k/Kconfig
-> +++ b/drivers/net/wireless/ath/ath10k/Kconfig
-> @@ -42,7 +42,7 @@ config ATH10K_USB
->  
->  config ATH10K_SNOC
->          tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
-> -        depends on ATH10K && ARCH_QCOM
-> +        depends on ATH10K && ARCH_QCOM && QCOM_QMI_HELPERS
+Enhanced DMA design includes the following rings:
+- Single RX descriptor ring is used for all VIFs
+- Multiple RX status rings are supported, to allow RSS
+- TX descriptor ring is allocated per connection
+- A single TX status ring is used for all TX descriptor rings
 
-QCOM_QMI_HELPERS is expected to be selected by the clients, so this
-would be:
+This patch initializes and frees the above descriptor and
+status rings.
 
-	select QCOM_QMI_HELPERS
+The RX SKBs are handled by a new entity of RX buffers manager,
+which handles RX buffers, each one points to an allocated SKB.
+During Rx completion processing, the driver extracts a buffer
+ID which is used as an index to the buffers array.
+After the SKB is freed the buffer is moved from the 'active'
+list to the 'free' list, indicating it can be used for another
+descriptor. During Rx refill, SKBs are allocated and attached
+to 'free' buffers. Those buffers are attached to new descriptors
+and moved to the 'active' list.
 
->          ---help---
->            This module adds support for integrated WCN3990 chip connected
->            to system NOC(SNOC). Currently work in progress and will not
-> diff --git a/drivers/net/wireless/ath/ath10k/Makefile b/drivers/net/wireless/ath/ath10k/Makefile
-> index 44d60a6..1730d1d 100644
-> --- a/drivers/net/wireless/ath/ath10k/Makefile
-> +++ b/drivers/net/wireless/ath/ath10k/Makefile
-> @@ -38,5 +38,9 @@ ath10k_usb-y += usb.o
->  obj-$(CONFIG_ATH10K_SNOC) += ath10k_snoc.o
->  ath10k_snoc-y += snoc.o
->  
-> +obj-$(CONFIG_ATH10K_SNOC) += ath10k_qmi.o
-> +ath10k_qmi-y += qmi.o \
-> +		qmi_svc_v01.o
-> +
->  # for tracing framework to find trace.h
->  CFLAGS_trace.o := -I$(src)
-> diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
-> new file mode 100644
-> index 0000000..2235182
-> --- /dev/null
-> +++ b/drivers/net/wireless/ath/ath10k/qmi.c
-> @@ -0,0 +1,121 @@
-> +/*
-> + * Copyright (c) 2018 The Linux Foundation. All rights reserved.
-> + *
-> + * Permission to use, copy, modify, and/or distribute this software for any
-> + * purpose with or without fee is hereby granted, provided that the above
-> + * copyright notice and this permission notice appear in all copies.
-> + *
-> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-> + */
+Signed-off-by: Gidon Studinski <gidons@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/Makefile    |   1 +
+ drivers/net/wireless/ath/wil6210/debugfs.c   |   1 +
+ drivers/net/wireless/ath/wil6210/ethtool.c   |   2 +-
+ drivers/net/wireless/ath/wil6210/interrupt.c |  21 +
+ drivers/net/wireless/ath/wil6210/main.c      |  74 ++-
+ drivers/net/wireless/ath/wil6210/pcie_bus.c  |  51 +-
+ drivers/net/wireless/ath/wil6210/txrx.c      |  90 ++--
+ drivers/net/wireless/ath/wil6210/txrx.h      |   8 +
+ drivers/net/wireless/ath/wil6210/txrx_edma.c | 761 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/txrx_edma.h |  46 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h   |  81 ++-
+ drivers/net/wireless/ath/wil6210/wmi.c       | 316 ++++++++++-
+ drivers/net/wireless/ath/wil6210/wmi.h       | 166 +++++-
+ 13 files changed, 1490 insertions(+), 128 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/wil6210/txrx_edma.c
 
-SPDX headers for new files please.
-
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/module.h>
-> +#include <linux/debugfs.h>
-> +#include <linux/device.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/qrtr.h>
-> +#include <linux/net.h>
-> +#include <linux/completion.h>
-> +#include <linux/idr.h>
-> +#include <linux/string.h>
-> +#include <net/sock.h>
-> +#include <linux/soc/qcom/qmi.h>
-> +#include "qmi.h"
-> +#include "qmi_svc_v01.h"
-> +
-> +static struct ath10k_qmi *qmi;
-
-Please design your code so that you don't depend on a global state
-pointer.
-
-> +
-> +static int ath10k_qmi_new_server(struct qmi_handle *qmi_hdl,
-> +				 struct qmi_service *service)
-> +{
-> +	return 0;
-> +}
-> +
-> +static void ath10k_qmi_del_server(struct qmi_handle *qmi_hdl,
-> +				  struct qmi_service *service)
-> +{
-> +}
-> +
-> +static struct qmi_ops ath10k_qmi_ops = {
-> +	.new_server = ath10k_qmi_new_server,
-> +	.del_server = ath10k_qmi_del_server,
-> +};
-> +
-> +static int ath10k_qmi_probe(struct platform_device *pdev)
-> +{
-> +	int ret;
-> +
-> +	qmi = devm_kzalloc(&pdev->dev, sizeof(*qmi),
-> +			   GFP_KERNEL);
-
-This doesn't need to be line wrapped.
-
-> +	if (!qmi)
-> +		return -ENOMEM;
-> +
-> +	qmi->pdev = pdev;
-
-The only place you use this is to access pdev->dev, so carry the struct
-device * instead.
-
-> +	platform_set_drvdata(pdev, qmi);
-> +	ret = qmi_handle_init(&qmi->qmi_hdl,
-> +			      WLFW_BDF_DOWNLOAD_REQ_MSG_V01_MAX_MSG_LEN,
-> +			      &ath10k_qmi_ops, NULL);
-> +	if (ret < 0)
-> +		goto err;
-> +
-> +	ret = qmi_add_lookup(&qmi->qmi_hdl, WLFW_SERVICE_ID_V01,
-> +			     WLFW_SERVICE_VERS_V01, 0);
-> +	if (ret < 0)
-> +		goto err;
-> +
-> +	pr_debug("qmi client driver probed successfully\n");
-
-Rather than printing a line to indicate that your driver probed you can
-check /sys/bus/platform/drivers/ath10k_QMI_client for for devices,
-regardless of debug level.
-
-> +
-> +	return 0;
-
-qmi_add_lookup() returns 0 on success, so you can have a common return,
-preferably after renaming "err" to "out" or something that indicates
-that it covers both cases.
-
-> +
-> +err:
-> +	return ret;
-> +}
-> +
-> +static int ath10k_qmi_remove(struct platform_device *pdev)
-> +{
-> +	struct ath10k_qmi *qmi = platform_get_drvdata(pdev);
-> +
-> +	qmi_handle_release(&qmi->qmi_hdl);
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct of_device_id ath10k_qmi_dt_match[] = {
-> +	{.compatible = "qcom,ath10k-qmi"},
-> +	{}
-> +};
-> +
-> +MODULE_DEVICE_TABLE(of, ath10k_qmi_dt_match);
-> +
-> +static struct platform_driver ath10k_qmi_clinet = {
-
-Spelling of "client".
-
-> +	.probe  = ath10k_qmi_probe,
-> +	.remove = ath10k_qmi_remove,
-> +	.driver = {
-> +		.name = "ath10k QMI client",
-> +		.owner = THIS_MODULE,
-
-platform_driver_register() will fill out .owner for you, so skip this.
-
-> +		.of_match_table = ath10k_qmi_dt_match,
-> +	},
-> +};
-> +
-> +static int __init ath10k_qmi_init(void)
-> +{
-> +	return platform_driver_register(&ath10k_qmi_clinet);
-> +}
-> +
-> +static void __exit ath10k_qmi_exit(void)
-> +{
-> +	platform_driver_unregister(&ath10k_qmi_clinet);
-> +}
-> +
-> +module_init(ath10k_qmi_init);
-> +module_exit(ath10k_qmi_exit);
-
-Replace all this with:
-
-module_platform_driver(ath10k_qmi_clinet);
-
-> +
-> +MODULE_AUTHOR("Qualcomm");
-> +MODULE_LICENSE("Dual BSD/GPL");
-> +MODULE_DESCRIPTION("ath10k QMI client driver");
-> diff --git a/drivers/net/wireless/ath/ath10k/qmi.h b/drivers/net/wireless/ath/ath10k/qmi.h
-> new file mode 100644
-> index 0000000..ad256ef
-> --- /dev/null
-> +++ b/drivers/net/wireless/ath/ath10k/qmi.h
-> @@ -0,0 +1,24 @@
-> +/*
-> + * Copyright (c) 2018 The Linux Foundation. All rights reserved.
-> + *
-> + * Permission to use, copy, modify, and/or distribute this software for any
-> + * purpose with or without fee is hereby granted, provided that the above
-> + * copyright notice and this permission notice appear in all copies.
-> + *
-> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-> + */
-
-SPDX headers, please.
-
-> +#ifndef _QMI_H_
-> +#define _QMI_H_
-
-This is not a good guard name, be more specific to avoid collisions.
-
-> +
-> +struct ath10k_qmi {
-
-Afaict ath10k_qmi is not used outside "qmi.c", so there's no reason to
-have it in a header file.
-
-> +	struct platform_device *pdev;
-> +	struct qmi_handle qmi_hdl;
-> +	struct sockaddr_qrtr sq;
-
-Add sq in the patch that actually uses it.
-
-> +};
-> +#endif /* _QMI_H_ */
-
-Regards,
-Bjorn
+diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
+index 398edd2..d3d61ae 100644
+--- a/drivers/net/wireless/ath/wil6210/Makefile
++++ b/drivers/net/wireless/ath/wil6210/Makefile
+@@ -9,6 +9,7 @@ wil6210-$(CONFIG_WIL6210_DEBUGFS) += debugfs.o
+ wil6210-y += wmi.o
+ wil6210-y += interrupt.o
+ wil6210-y += txrx.o
++wil6210-y += txrx_edma.o
+ wil6210-y += debug.o
+ wil6210-y += rx_reorder.o
+ wil6210-y += fw.o
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index af7c59c..1165bc7 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1854,6 +1854,7 @@ static void wil6210_debugfs_init_isr(struct wil6210_priv *wil,
+ 	WIL_FIELD(abft_len, 0644,		doff_u8),
+ 	WIL_FIELD(wakeup_trigger, 0644,		doff_u8),
+ 	WIL_FIELD(ring_idle_trsh, 0644,	doff_u32),
++	WIL_FIELD(num_rx_status_rings, 0644,	doff_u8),
+ 	{},
+ };
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/ethtool.c b/drivers/net/wireless/ath/wil6210/ethtool.c
+index e7ff41e..a04c87f 100644
+--- a/drivers/net/wireless/ath/wil6210/ethtool.c
++++ b/drivers/net/wireless/ath/wil6210/ethtool.c
+@@ -101,7 +101,7 @@ static int wil_ethtoolops_set_coalesce(struct net_device *ndev,
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	wil_configure_interrupt_moderation(wil);
++	wil->txrx_ops.configure_interrupt_moderation(wil);
+ 
+ 	wil_pm_runtime_put(wil);
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index 84e9840..311d482 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -186,6 +186,27 @@ void wil_unmask_irq(struct wil6210_priv *wil)
+ 	wil6210_unmask_irq_misc(wil, true);
+ }
+ 
++void wil_configure_interrupt_moderation_edma(struct wil6210_priv *wil)
++{
++	u32 moderation;
++
++	wil_s(wil, RGF_INT_GEN_IDLE_TIME_LIMIT, WIL_EDMA_IDLE_TIME_LIMIT_USEC);
++
++	wil_s(wil, RGF_INT_GEN_TIME_UNIT_LIMIT, WIL_EDMA_TIME_UNIT_CLK_CYCLES);
++
++	/* Update RX and TX moderation */
++	moderation = wil->rx_max_burst_duration |
++		(WIL_EDMA_AGG_WATERMARK << WIL_EDMA_AGG_WATERMARK_POS);
++	wil_w(wil, RGF_INT_CTRL_INT_GEN_CFG_0, moderation);
++	wil_w(wil, RGF_INT_CTRL_INT_GEN_CFG_1, moderation);
++
++	/* Treat special events as regular
++	 * (set bit 0 to 0x1 and clear bits 1-8)
++	 */
++	wil_c(wil, RGF_INT_COUNT_ON_SPECIAL_EVT, 0x1FE);
++	wil_s(wil, RGF_INT_COUNT_ON_SPECIAL_EVT, 0x1);
++}
++
+ void wil_configure_interrupt_moderation(struct wil6210_priv *wil)
+ {
+ 	struct wireless_dev *wdev = wil->main_ndev->ieee80211_ptr;
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index bfe6284..995b332 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -21,11 +21,13 @@
+ 
+ #include "wil6210.h"
+ #include "txrx.h"
++#include "txrx_edma.h"
+ #include "wmi.h"
+ #include "boot_loader.h"
+ 
+ #define WAIT_FOR_HALP_VOTE_MS 100
+ #define WAIT_FOR_SCAN_ABORT_MS 1000
++#define WIL_DEFAULT_NUM_RX_STATUS_RINGS 1
+ 
+ bool debug_fw; /* = false; */
+ module_param(debug_fw, bool, 0444);
+@@ -77,9 +79,9 @@ static int mtu_max_set(const char *val, const struct kernel_param *kp)
+ module_param_cb(mtu_max, &mtu_max_ops, &mtu_max, 0444);
+ MODULE_PARM_DESC(mtu_max, " Max MTU value.");
+ 
+-static uint rx_ring_order = WIL_RX_RING_SIZE_ORDER_DEFAULT;
+-static uint tx_ring_order = WIL_TX_RING_SIZE_ORDER_DEFAULT;
+-static uint bcast_ring_order = WIL_BCAST_RING_SIZE_ORDER_DEFAULT;
++static uint rx_ring_order	 = WIL_RX_RING_SIZE_ORDER_DEFAULT;
++static uint tx_ring_order	 = WIL_TX_RING_SIZE_ORDER_DEFAULT;
++static uint bcast_ring_order	 = WIL_BCAST_RING_SIZE_ORDER_DEFAULT;
+ 
+ static int ring_order_set(const char *val, const struct kernel_param *kp)
+ {
+@@ -160,6 +162,37 @@ void wil_memcpy_toio_32(volatile void __iomem *dst, const void *src,
+ 	}
+ }
+ 
++static void wil_ring_fini_tx(struct wil6210_priv *wil, int id)
++{
++	struct wil_ring *ring = &wil->ring_tx[id];
++	struct wil_ring_tx_data *txdata = &wil->ring_tx_data[id];
++
++	lockdep_assert_held(&wil->mutex);
++
++	if (!ring->va)
++		return;
++
++	wil_dbg_misc(wil, "vring_fini_tx: id=%d\n", id);
++
++	spin_lock_bh(&txdata->lock);
++	txdata->dot1x_open = false;
++	txdata->mid = U8_MAX;
++	txdata->enabled = 0; /* no Tx can be in progress or start anew */
++	spin_unlock_bh(&txdata->lock);
++	/* napi_synchronize waits for completion of the current NAPI but will
++	 * not prevent the next NAPI run.
++	 * Add a memory barrier to guarantee that txdata->enabled is zeroed
++	 * before napi_synchronize so that the next scheduled NAPI will not
++	 * handle this vring
++	 */
++	wmb();
++	/* make sure NAPI won't touch this vring */
++	if (test_bit(wil_status_napi_en, wil->status))
++		napi_synchronize(&wil->napi_tx);
++
++	wil->txrx_ops.ring_fini_tx(wil, ring);
++}
++
+ static void wil_disconnect_cid(struct wil6210_vif *vif, int cid,
+ 			       u16 reason_code, bool from_event)
+ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
+@@ -456,15 +489,16 @@ static void wil_fw_error_worker(struct work_struct *work)
+ static int wil_find_free_ring(struct wil6210_priv *wil)
+ {
+ 	int i;
++	int min_ring_id = wil_get_min_tx_ring_id(wil);
+ 
+-	for (i = 0; i < WIL6210_MAX_TX_RINGS; i++) {
++	for (i = min_ring_id; i < WIL6210_MAX_TX_RINGS; i++) {
+ 		if (!wil->ring_tx[i].va)
+ 			return i;
+ 	}
+ 	return -EINVAL;
+ }
+ 
+-int wil_tx_init(struct wil6210_vif *vif, int cid)
++int wil_ring_init_tx(struct wil6210_vif *vif, int cid)
+ {
+ 	struct wil6210_priv *wil = vif_to_wil(vif);
+ 	int rc = -EINVAL, ringid;
+@@ -482,7 +516,8 @@ int wil_tx_init(struct wil6210_vif *vif, int cid)
+ 	wil_dbg_wmi(wil, "Configure for connection CID %d MID %d ring %d\n",
+ 		    cid, vif->mid, ringid);
+ 
+-	rc = wil_vring_init_tx(vif, ringid, 1 << tx_ring_order, cid, 0);
++	rc = wil->txrx_ops.ring_init_tx(vif, ringid, 1 << tx_ring_order,
++					cid, 0);
+ 	if (rc)
+ 		wil_err(wil, "init TX for CID %d MID %d vring %d failed\n",
+ 			cid, vif->mid, ringid);
+@@ -504,7 +539,7 @@ int wil_bcast_init(struct wil6210_vif *vif)
+ 		return ri;
+ 
+ 	vif->bcast_ring = ri;
+-	rc = wil_vring_init_bcast(vif, ri, 1 << bcast_ring_order);
++	rc = wil->txrx_ops.ring_init_bcast(vif, ri, 1 << bcast_ring_order);
+ 	if (rc)
+ 		vif->bcast_ring = -1;
+ 
+@@ -594,6 +629,9 @@ int wil_priv_init(struct wil6210_priv *wil)
+ 	wil->reply_mid = U8_MAX;
+ 	wil->max_vifs = 1;
+ 
++	/* num of rx srings can be updated via debugfs before allocation */
++	wil->num_rx_status_rings = WIL_DEFAULT_NUM_RX_STATUS_RINGS;
++
+ 	return 0;
+ 
+ out_wmi_wq:
+@@ -1312,7 +1350,8 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 	rc = wil_target_reset(wil, no_flash);
+ 	wil6210_clear_irq(wil);
+ 	wil_enable_irq(wil);
+-	wil_rx_fini(wil);
++	wil->txrx_ops.rx_fini(wil);
++	wil->txrx_ops.tx_fini(wil);
+ 	if (rc) {
+ 		if (!no_flash)
+ 			wil_bl_crash_info(wil, true);
+@@ -1365,7 +1404,6 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 	clear_bit(wil_status_resetting, wil->status);
+ 
+ 	if (load_fw) {
+-		wil_configure_interrupt_moderation(wil);
+ 		wil_unmask_irq(wil);
+ 
+ 		/* we just started MAC, wait for FW ready */
+@@ -1380,6 +1418,8 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 			return rc;
+ 		}
+ 
++		wil->txrx_ops.configure_interrupt_moderation(wil);
++
+ 		rc = wil_restore_vifs(wil);
+ 		if (rc) {
+ 			wil_err(wil, "failed to restore vifs, rc %d\n", rc);
+@@ -1434,8 +1474,12 @@ int __wil_up(struct wil6210_priv *wil)
+ 	if (rc)
+ 		return rc;
+ 
+-	/* Rx VRING. After MAC and beacon */
+-	rc = wil_rx_init(wil, 1 << rx_ring_order);
++	/* Rx RING. After MAC and beacon */
++	rc = wil->txrx_ops.rx_init(wil, 1 << rx_ring_order);
++	if (rc)
++		return rc;
++
++	rc = wil->txrx_ops.tx_init(wil);
+ 	if (rc)
+ 		return rc;
+ 
+@@ -1596,3 +1640,11 @@ void wil_halp_unvote(struct wil6210_priv *wil)
+ 
+ 	mutex_unlock(&wil->halp.lock);
+ }
++
++void wil_init_txrx_ops(struct wil6210_priv *wil)
++{
++	if (wil->use_enhanced_dma_hw)
++		wil_init_txrx_ops_edma(wil);
++	else
++		wil_init_txrx_ops_legacy_dma(wil);
++}
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index 3a7e406..4cb5e5e 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -32,6 +32,10 @@
+ module_param(ftm_mode, bool, 0444);
+ MODULE_PARM_DESC(ftm_mode, " Set factory test mode, default - false");
+ 
++static bool use_enhanced_dma_hw = true;
++module_param(use_enhanced_dma_hw, bool, 0444);
++MODULE_PARM_DESC(use_enhanced_dma_hw, " Use enhanced or legacy DMA HW. Default: true when available");
++
+ static int wil6210_pm_notify(struct notifier_block *notify_block,
+ 			     unsigned long mode, void *unused);
+ 
+@@ -102,6 +106,7 @@ int wil_set_capabilities(struct wil6210_priv *wil)
+ 		wil->rgf_fw_assert_code_addr = TALYN_RGF_FW_ASSERT_CODE;
+ 		wil->rgf_ucode_assert_code_addr = TALYN_RGF_UCODE_ASSERT_CODE;
+ 		set_bit(hw_capa_no_flash, wil->hw_capa);
++		wil->use_enhanced_dma_hw = use_enhanced_dma_hw;
+ 		break;
+ 	default:
+ 		wil_err(wil, "Unknown board hardware, chip_id 0x%08x, chip_revision 0x%08x\n",
+@@ -111,6 +116,8 @@ int wil_set_capabilities(struct wil6210_priv *wil)
+ 		return -EINVAL;
+ 	}
+ 
++	wil_init_txrx_ops(wil);
++
+ 	iccm_section = wil_find_fw_mapping("fw_code");
+ 	if (!iccm_section) {
+ 		wil_err(wil, "fw_code section not found in fw_mapping\n");
+@@ -266,8 +273,8 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		.fw_recovery = wil_platform_rop_fw_recovery,
+ 	};
+ 	u32 bar_size = pci_resource_len(pdev, 0);
+-	int dma_addr_size[] = {48, 40, 32}; /* keep descending order */
+-	int i;
++	int dma_addr_size[] = {64, 48, 40, 32}; /* keep descending order */
++	int i, start_idx;
+ 
+ 	/* check HW */
+ 	dev_info(&pdev->dev, WIL_NAME
+@@ -302,24 +309,6 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto if_free;
+ 	}
+ 	/* rollback to err_plat */
+-
+-	/* device supports >32bit addresses */
+-	for (i = 0; i < ARRAY_SIZE(dma_addr_size); i++) {
+-		rc = dma_set_mask_and_coherent(dev,
+-					       DMA_BIT_MASK(dma_addr_size[i]));
+-		if (rc) {
+-			dev_err(dev, "dma_set_mask_and_coherent(%d) failed: %d\n",
+-				dma_addr_size[i], rc);
+-			continue;
+-		}
+-		dev_info(dev, "using dma mask %d", dma_addr_size[i]);
+-		wil->dma_addr_size = dma_addr_size[i];
+-		break;
+-	}
+-
+-	if (wil->dma_addr_size == 0)
+-		goto err_plat;
+-
+ 	rc = pci_enable_device(pdev);
+ 	if (rc && pdev->msi_enabled == 0) {
+ 		wil_err(wil,
+@@ -359,6 +348,28 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		wil_err(wil, "wil_set_capabilities failed, rc %d\n", rc);
+ 		goto err_iounmap;
+ 	}
++
++	/* device supports >32bit addresses.
++	 * for legacy DMA start from 48 bit.
++	 */
++	start_idx = wil->use_enhanced_dma_hw ? 0 : 1;
++
++	for (i = start_idx; i < ARRAY_SIZE(dma_addr_size); i++) {
++		rc = dma_set_mask_and_coherent(dev,
++					       DMA_BIT_MASK(dma_addr_size[i]));
++		if (rc) {
++			dev_err(dev, "dma_set_mask_and_coherent(%d) failed: %d\n",
++				dma_addr_size[i], rc);
++			continue;
++		}
++		dev_info(dev, "using dma mask %d", dma_addr_size[i]);
++		wil->dma_addr_size = dma_addr_size[i];
++		break;
++	}
++
++	if (wil->dma_addr_size == 0)
++		goto err_iounmap;
++
+ 	wil6210_clear_irq(wil);
+ 
+ 	/* FW should raise IRQ when ready */
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 55946de..2a359e1 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -202,14 +202,13 @@ static void wil_txdesc_unmap(struct device *dev, struct vring_tx_desc *d,
+ 	}
+ }
+ 
+-static void wil_vring_free(struct wil6210_priv *wil, struct wil_ring *vring,
+-			   int tx)
++static void wil_vring_free(struct wil6210_priv *wil, struct wil_ring *vring)
+ {
+ 	struct device *dev = wil_to_dev(wil);
+ 	size_t sz = vring->size * sizeof(vring->va[0]);
+ 
+ 	lockdep_assert_held(&wil->mutex);
+-	if (tx) {
++	if (!vring->is_rx) {
+ 		int vring_index = vring - wil->ring_tx;
+ 
+ 		wil_dbg_misc(wil, "free Tx vring %d [%d] 0x%p:%pad 0x%p\n",
+@@ -226,7 +225,7 @@ static void wil_vring_free(struct wil6210_priv *wil, struct wil_ring *vring,
+ 		u16 dmalen;
+ 		struct wil_ctx *ctx;
+ 
+-		if (tx) {
++		if (!vring->is_rx) {
+ 			struct vring_tx_desc dd, *d = &dd;
+ 			volatile struct vring_tx_desc *_d =
+ 					&vring->va[vring->swtail].tx.legacy;
+@@ -843,7 +842,7 @@ static void wil_rx_buf_len_init(struct wil6210_priv *wil)
+ 	}
+ }
+ 
+-int wil_rx_init(struct wil6210_priv *wil, u16 size)
++static int wil_rx_init(struct wil6210_priv *wil, u16 size)
+ {
+ 	struct wil_ring *vring = &wil->ring_rx;
+ 	int rc;
+@@ -858,6 +857,7 @@ int wil_rx_init(struct wil6210_priv *wil, u16 size)
+ 	wil_rx_buf_len_init(wil);
+ 
+ 	vring->size = size;
++	vring->is_rx = true;
+ 	rc = wil_vring_alloc(wil, vring);
+ 	if (rc)
+ 		return rc;
+@@ -872,22 +872,22 @@ int wil_rx_init(struct wil6210_priv *wil, u16 size)
+ 
+ 	return 0;
+  err_free:
+-	wil_vring_free(wil, vring, 0);
++	wil_vring_free(wil, vring);
+ 
+ 	return rc;
+ }
+ 
+-void wil_rx_fini(struct wil6210_priv *wil)
++static void wil_rx_fini(struct wil6210_priv *wil)
+ {
+ 	struct wil_ring *vring = &wil->ring_rx;
+ 
+ 	wil_dbg_misc(wil, "rx_fini\n");
+ 
+ 	if (vring->va)
+-		wil_vring_free(wil, vring, 0);
++		wil_vring_free(wil, vring);
+ }
+ 
+-static inline void wil_tx_data_init(struct wil_ring_tx_data *txdata)
++void wil_tx_data_init(struct wil_ring_tx_data *txdata)
+ {
+ 	spin_lock_bh(&txdata->lock);
+ 	txdata->dot1x_open = 0;
+@@ -903,8 +903,8 @@ static inline void wil_tx_data_init(struct wil_ring_tx_data *txdata)
+ 	spin_unlock_bh(&txdata->lock);
+ }
+ 
+-int wil_vring_init_tx(struct wil6210_vif *vif, int id, int size,
+-		      int cid, int tid)
++static int wil_vring_init_tx(struct wil6210_vif *vif, int id, int size,
++			     int cid, int tid)
+ {
+ 	struct wil6210_priv *wil = vif_to_wil(vif);
+ 	int rc;
+@@ -948,6 +948,7 @@ int wil_vring_init_tx(struct wil6210_vif *vif, int id, int size,
+ 	}
+ 
+ 	wil_tx_data_init(txdata);
++	vring->is_rx = false;
+ 	vring->size = size;
+ 	rc = wil_vring_alloc(wil, vring);
+ 	if (rc)
+@@ -987,7 +988,7 @@ int wil_vring_init_tx(struct wil6210_vif *vif, int id, int size,
+ 	txdata->dot1x_open = false;
+ 	txdata->enabled = 0;
+ 	spin_unlock_bh(&txdata->lock);
+-	wil_vring_free(wil, vring, 1);
++	wil_vring_free(wil, vring);
+ 	wil->ring2cid_tid[id][0] = WIL6210_MAX_CID;
+ 	wil->ring2cid_tid[id][1] = 0;
+ 
+@@ -1032,6 +1033,7 @@ int wil_vring_init_bcast(struct wil6210_vif *vif, int id, int size)
+ 	}
+ 
+ 	wil_tx_data_init(txdata);
++	vring->is_rx = false;
+ 	vring->size = size;
+ 	rc = wil_vring_alloc(wil, vring);
+ 	if (rc)
+@@ -1069,43 +1071,12 @@ int wil_vring_init_bcast(struct wil6210_vif *vif, int id, int size)
+ 	txdata->enabled = 0;
+ 	txdata->dot1x_open = false;
+ 	spin_unlock_bh(&txdata->lock);
+-	wil_vring_free(wil, vring, 1);
++	wil_vring_free(wil, vring);
+  out:
+ 
+ 	return rc;
+ }
+ 
+-void wil_ring_fini_tx(struct wil6210_priv *wil, int id)
+-{
+-	struct wil_ring *vring = &wil->ring_tx[id];
+-	struct wil_ring_tx_data *txdata = &wil->ring_tx_data[id];
+-
+-	lockdep_assert_held(&wil->mutex);
+-
+-	if (!vring->va)
+-		return;
+-
+-	wil_dbg_misc(wil, "vring_fini_tx: id=%d\n", id);
+-
+-	spin_lock_bh(&txdata->lock);
+-	txdata->dot1x_open = false;
+-	txdata->mid = U8_MAX;
+-	txdata->enabled = 0; /* no Tx can be in progress or start anew */
+-	spin_unlock_bh(&txdata->lock);
+-	/* napi_synchronize waits for completion of the current NAPI but will
+-	 * not prevent the next NAPI run.
+-	 * Add a memory barrier to guarantee that txdata->enabled is zeroed
+-	 * before napi_synchronize so that the next scheduled NAPI will not
+-	 * handle this vring
+-	 */
+-	wmb();
+-	/* make sure NAPI won't touch this vring */
+-	if (test_bit(wil_status_napi_en, wil->status))
+-		napi_synchronize(&wil->napi_tx);
+-
+-	wil_vring_free(wil, vring, 1);
+-}
+-
+ static struct wil_ring *wil_find_tx_ucast(struct wil6210_priv *wil,
+ 					  struct wil6210_vif *vif,
+ 					  struct sk_buff *skb)
+@@ -1113,12 +1084,13 @@ static struct wil_ring *wil_find_tx_ucast(struct wil6210_priv *wil,
+ 	int i;
+ 	struct ethhdr *eth = (void *)skb->data;
+ 	int cid = wil_find_cid(wil, vif->mid, eth->h_dest);
++	int min_ring_id = wil_get_min_tx_ring_id(wil);
+ 
+ 	if (cid < 0)
+ 		return NULL;
+ 
+ 	/* TODO: fix for multiple TID */
+-	for (i = 0; i < ARRAY_SIZE(wil->ring2cid_tid); i++) {
++	for (i = min_ring_id; i < ARRAY_SIZE(wil->ring2cid_tid); i++) {
+ 		if (!wil->ring_tx_data[i].dot1x_open &&
+ 		    skb->protocol != cpu_to_be16(ETH_P_PAE))
+ 			continue;
+@@ -1153,12 +1125,13 @@ static struct wil_ring *wil_find_tx_ring_sta(struct wil6210_priv *wil,
+ 	int i;
+ 	u8 cid;
+ 	struct wil_ring_tx_data  *txdata;
++	int min_ring_id = wil_get_min_tx_ring_id(wil);
+ 
+ 	/* In the STA mode, it is expected to have only 1 VRING
+ 	 * for the AP we connected to.
+ 	 * find 1-st vring eligible for this skb and use it.
+ 	 */
+-	for (i = 0; i < WIL6210_MAX_TX_RINGS; i++) {
++	for (i = min_ring_id; i < WIL6210_MAX_TX_RINGS; i++) {
+ 		ring = &wil->ring_tx[i];
+ 		txdata = &wil->ring_tx_data[i];
+ 		if (!ring->va || !txdata->enabled || txdata->mid != vif->mid)
+@@ -1234,9 +1207,10 @@ static struct wil_ring *wil_find_tx_bcast_2(struct wil6210_priv *wil,
+ 	struct ethhdr *eth = (void *)skb->data;
+ 	char *src = eth->h_source;
+ 	struct wil_ring_tx_data *txdata, *txdata2;
++	int min_ring_id = wil_get_min_tx_ring_id(wil);
+ 
+ 	/* find 1-st vring eligible for data */
+-	for (i = 0; i < WIL6210_MAX_TX_RINGS; i++) {
++	for (i = min_ring_id; i < WIL6210_MAX_TX_RINGS; i++) {
+ 		v = &wil->ring_tx[i];
+ 		txdata = &wil->ring_tx_data[i];
+ 		if (!v->va || !txdata->enabled || txdata->mid != vif->mid)
+@@ -2201,3 +2175,25 @@ int wil_tx_complete(struct wil6210_vif *vif, int ringid)
+ 
+ 	return done;
+ }
++
++static inline int wil_tx_init(struct wil6210_priv *wil)
++{
++	return 0;
++}
++
++static inline void wil_tx_fini(struct wil6210_priv *wil) {}
++
++void wil_init_txrx_ops_legacy_dma(struct wil6210_priv *wil)
++{
++	wil->txrx_ops.configure_interrupt_moderation =
++		wil_configure_interrupt_moderation;
++	/* TX ops */
++	wil->txrx_ops.ring_init_tx = wil_vring_init_tx;
++	wil->txrx_ops.ring_fini_tx = wil_vring_free;
++	wil->txrx_ops.ring_init_bcast = wil_vring_init_bcast;
++	wil->txrx_ops.tx_init = wil_tx_init;
++	wil->txrx_ops.tx_fini = wil_tx_fini;
++	/* RX ops */
++	wil->txrx_ops.rx_init = wil_rx_init;
++	wil->txrx_ops.rx_fini = wil_rx_fini;
++}
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.h b/drivers/net/wireless/ath/wil6210/txrx.h
+index 66217f8..4e3781d 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.h
++++ b/drivers/net/wireless/ath/wil6210/txrx.h
+@@ -570,6 +570,12 @@ static inline int wil_ring_avail_tx(struct wil_ring *ring)
+ 	return ring->size - wil_ring_used_tx(ring) - 1;
+ }
+ 
++static inline int wil_get_min_tx_ring_id(struct wil6210_priv *wil)
++{
++	/* In Enhanced DMA ring 0 is reserved for RX */
++	return wil->use_enhanced_dma_hw ? 1 : 0;
++}
++
+ void wil_netif_rx_any(struct sk_buff *skb, struct net_device *ndev);
+ void wil_rx_reorder(struct wil6210_priv *wil, struct sk_buff *skb);
+ void wil_rx_bar(struct wil6210_priv *wil, struct wil6210_vif *vif,
+@@ -578,5 +584,7 @@ struct wil_tid_ampdu_rx *wil_tid_ampdu_rx_alloc(struct wil6210_priv *wil,
+ 						int size, u16 ssn);
+ void wil_tid_ampdu_rx_free(struct wil6210_priv *wil,
+ 			   struct wil_tid_ampdu_rx *r);
++void wil_tx_data_init(struct wil_ring_tx_data *txdata);
++void wil_init_txrx_ops_legacy_dma(struct wil6210_priv *wil);
+ 
+ #endif /* WIL6210_TXRX_H */
+diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.c b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+new file mode 100644
+index 0000000..c320a85
+--- /dev/null
++++ b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+@@ -0,0 +1,761 @@
++/*
++ * Copyright (c) 2012-2018 The Linux Foundation. All rights reserved.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <linux/etherdevice.h>
++#include <linux/moduleparam.h>
++#include <linux/prefetch.h>
++#include <linux/types.h>
++#include <linux/list.h>
++#include <linux/ip.h>
++#include <linux/ipv6.h>
++#include "wil6210.h"
++#include "txrx_edma.h"
++#include "txrx.h"
++
++/* limit status ring size in range [ring size..max ring size] */
++#define WIL_SRING_SIZE_ORDER_MIN	(WIL_RING_SIZE_ORDER_MIN)
++#define WIL_SRING_SIZE_ORDER_MAX	(WIL_RING_SIZE_ORDER_MAX)
++/* RX sring order should be bigger than RX ring order */
++#define WIL_RX_SRING_SIZE_ORDER_DEFAULT	(11)
++#define WIL_TX_SRING_SIZE_ORDER_DEFAULT	(12)
++#define WIL_RX_BUFF_ARR_SIZE_DEFAULT (1536)
++#define WIL_EDMA_MAX_DATA_OFFSET (2)
++
++bool use_compressed_rx_status = true;
++module_param(use_compressed_rx_status, bool, 0444);
++MODULE_PARM_DESC(use_compressed_rx_status, " Use compressed or extended Rx status message. Default: true");
++
++static int sring_order_set(const char *val, const struct kernel_param *kp)
++{
++	int ret;
++	uint x;
++
++	ret = kstrtouint(val, 0, &x);
++	if (ret)
++		return ret;
++
++	if (x < WIL_SRING_SIZE_ORDER_MIN || x > WIL_SRING_SIZE_ORDER_MAX)
++		return -EINVAL;
++
++	*((uint *)kp->arg) = x;
++
++	return 0;
++}
++
++static const struct kernel_param_ops sring_order_ops = {
++	.set = sring_order_set,
++	.get = param_get_uint,
++};
++
++/* Status ring size should be bigger than the number of RX buffers in order
++ * to prevent backpressure on the status ring, which may cause HW freeze.
++ */
++static uint rx_status_ring_order = WIL_RX_SRING_SIZE_ORDER_DEFAULT;
++module_param_cb(rx_status_ring_order, &sring_order_ops, &rx_status_ring_order,
++		0444);
++MODULE_PARM_DESC(rx_status_ring_order, " Rx status ring order; size = 1 << order. Default: 11");
++
++static uint tx_status_ring_order = WIL_TX_SRING_SIZE_ORDER_DEFAULT;
++module_param_cb(tx_status_ring_order, &sring_order_ops, &tx_status_ring_order,
++		0444);
++MODULE_PARM_DESC(tx_status_ring_order, " Tx status ring order; size = 1 << order. Default: 12");
++
++/* Number of RX buffer IDs should be bigger than the RX descriptor ring size
++ * as in HW reorder flow, the HW can consume additional buffers before
++ * releasing the previous ones.
++ */
++static uint rx_buff_id_count = WIL_RX_BUFF_ARR_SIZE_DEFAULT;
++module_param(rx_buff_id_count, uint, 0444);
++MODULE_PARM_DESC(rx_buff_id_count, " Rx buffer IDs count: default: 1536");
++
++static void wil_tx_desc_unmap_edma(struct device *dev,
++				   struct wil_tx_enhanced_desc *d,
++				   struct wil_ctx *ctx)
++{
++	dma_addr_t pa = wil_tx_desc_get_addr_edma(&d->dma);
++	u16 dmalen = le16_to_cpu(d->dma.length);
++
++	switch (ctx->mapped_as) {
++	case wil_mapped_as_single:
++		dma_unmap_single(dev, pa, dmalen, DMA_TO_DEVICE);
++		break;
++	case wil_mapped_as_page:
++		dma_unmap_page(dev, pa, dmalen, DMA_TO_DEVICE);
++		break;
++	default:
++		break;
++	}
++}
++
++static int wil_find_free_sring(struct wil6210_priv *wil)
++{
++	int i;
++
++	for (i = 0; i < WIL6210_MAX_STATUS_RINGS; i++) {
++		if (!wil->srings[i].va)
++			return i;
++	}
++
++	return -EINVAL;
++}
++
++static void wil_sring_free(struct wil6210_priv *wil,
++			   struct wil_status_ring *sring)
++{
++	struct device *dev = wil_to_dev(wil);
++	size_t sz;
++
++	if (!sring || !sring->va)
++		return;
++
++	sz = sring->elem_size * sring->size;
++
++	wil_dbg_misc(wil, "status_ring_free, size(bytes)=%zu, 0x%p:%pad\n",
++		     sz, sring->va, &sring->pa);
++
++	dma_free_coherent(dev, sz, (void *)sring->va, sring->pa);
++	sring->pa = 0;
++	sring->va = NULL;
++}
++
++static int wil_sring_alloc(struct wil6210_priv *wil,
++			   struct wil_status_ring *sring)
++{
++	struct device *dev = wil_to_dev(wil);
++	size_t sz = sring->elem_size * sring->size;
++
++	wil_dbg_misc(wil, "status_ring_alloc: size=%zu\n", sz);
++
++	if (sz == 0) {
++		wil_err(wil, "Cannot allocate a zero size status ring\n");
++		return -EINVAL;
++	}
++
++	sring->swhead = 0;
++
++	/* Status messages are allocated and initialized to 0. This is necessary
++	 * since DR bit should be initialized to 0.
++	 */
++	sring->va = dma_zalloc_coherent(dev, sz, &sring->pa, GFP_KERNEL);
++	if (!sring->va)
++		return -ENOMEM;
++
++	wil_dbg_misc(wil, "status_ring[%d] 0x%p:%pad\n", sring->size, sring->va,
++		     &sring->pa);
++
++	return 0;
++}
++
++static int wil_tx_init_edma(struct wil6210_priv *wil)
++{
++	int ring_id = wil_find_free_sring(wil);
++	struct wil_status_ring *sring;
++	int rc;
++	u16 status_ring_size = 1 << tx_status_ring_order;
++
++	wil_dbg_misc(wil, "init TX sring: size=%u, ring_id=%u\n",
++		     status_ring_size, ring_id);
++
++	if (ring_id < 0)
++		return ring_id;
++
++	/* Allocate Tx status ring. Tx descriptor rings will be
++	 * allocated on WMI connect event
++	 */
++	sring = &wil->srings[ring_id];
++
++	sring->is_rx = false;
++	sring->size = status_ring_size;
++	sring->elem_size = sizeof(struct wil_ring_tx_status);
++	rc = wil_sring_alloc(wil, sring);
++	if (rc)
++		return rc;
++
++	rc = wil_wmi_tx_sring_cfg(wil, ring_id);
++	if (rc)
++		goto out_free;
++
++	sring->desc_rdy_pol = 1;
++	wil->tx_sring_idx = ring_id;
++
++	return 0;
++out_free:
++	wil_sring_free(wil, sring);
++	return rc;
++}
++
++/**
++ * Allocate one skb for Rx descriptor RING
++ */
++static int wil_ring_alloc_skb_edma(struct wil6210_priv *wil,
++				   struct wil_ring *ring, u32 i)
++{
++	struct device *dev = wil_to_dev(wil);
++	unsigned int sz = wil->rx_buf_len + ETH_HLEN +
++		WIL_EDMA_MAX_DATA_OFFSET;
++	dma_addr_t pa;
++	u16 buff_id;
++	struct list_head *active = &wil->rx_buff_mgmt.active;
++	struct list_head *free = &wil->rx_buff_mgmt.free;
++	struct wil_rx_buff *rx_buff;
++	struct wil_rx_buff *buff_arr = wil->rx_buff_mgmt.buff_arr;
++	struct sk_buff *skb;
++	struct wil_rx_enhanced_desc dd, *d = &dd;
++	struct wil_rx_enhanced_desc *_d = (struct wil_rx_enhanced_desc *)
++		&ring->va[i].rx.enhanced;
++
++	if (unlikely(list_empty(free))) {
++		wil->rx_buff_mgmt.free_list_empty_cnt++;
++		return -EAGAIN;
++	}
++
++	skb = dev_alloc_skb(sz);
++	if (unlikely(!skb))
++		return -ENOMEM;
++
++	skb_put(skb, sz);
++
++	pa = dma_map_single(dev, skb->data, skb->len, DMA_FROM_DEVICE);
++	if (unlikely(dma_mapping_error(dev, pa))) {
++		kfree_skb(skb);
++		return -ENOMEM;
++	}
++
++	/* Get the buffer ID - the index of the rx buffer in the buff_arr */
++	rx_buff = list_first_entry(free, struct wil_rx_buff, list);
++	buff_id = rx_buff->id;
++
++	/* Move a buffer from the free list to the active list */
++	list_move(&rx_buff->list, active);
++
++	buff_arr[buff_id].skb = skb;
++
++	wil_desc_set_addr_edma(&d->dma.addr, &d->dma.addr_high_high, pa);
++	d->dma.length = cpu_to_le16(sz);
++	d->mac.buff_id = cpu_to_le16(buff_id);
++	*_d = *d;
++
++	/* Save the physical address in skb->cb for later use in dma_unmap */
++	memcpy(skb->cb, &pa, sizeof(pa));
++
++	return 0;
++}
++
++static int wil_rx_refill_edma(struct wil6210_priv *wil)
++{
++	struct wil_ring *ring = &wil->ring_rx;
++	u32 next_head;
++	int rc = 0;
++	u32 swtail = *ring->edma_rx_swtail.va;
++
++	for (; next_head = wil_ring_next_head(ring), (next_head != swtail);
++	     ring->swhead = next_head) {
++		rc = wil_ring_alloc_skb_edma(wil, ring, ring->swhead);
++		if (unlikely(rc)) {
++			if (rc == -EAGAIN)
++				wil_dbg_txrx(wil, "No free buffer ID found\n");
++			else
++				wil_err_ratelimited(wil,
++						    "Error %d in refill desc[%d]\n",
++						    rc, ring->swhead);
++			break;
++		}
++	}
++
++	/* make sure all writes to descriptors (shared memory) are done before
++	 * committing them to HW
++	 */
++	wmb();
++
++	wil_w(wil, ring->hwtail, ring->swhead);
++
++	return rc;
++}
++
++static void wil_move_all_rx_buff_to_free_list(struct wil6210_priv *wil,
++					      struct wil_ring *ring)
++{
++	struct device *dev = wil_to_dev(wil);
++	u32 next_tail;
++	u32 swhead = (ring->swhead + 1) % ring->size;
++	dma_addr_t pa;
++	u16 dmalen;
++
++	for (; next_tail = wil_ring_next_tail(ring), (next_tail != swhead);
++	     ring->swtail = next_tail) {
++		struct wil_rx_enhanced_desc dd, *d = &dd;
++		struct wil_rx_enhanced_desc *_d =
++			(struct wil_rx_enhanced_desc *)
++			&ring->va[ring->swtail].rx.enhanced;
++		struct sk_buff *skb;
++		u16 buff_id;
++
++		*d = *_d;
++		pa = wil_rx_desc_get_addr_edma(&d->dma);
++		dmalen = le16_to_cpu(d->dma.length);
++		dma_unmap_single(dev, pa, dmalen, DMA_FROM_DEVICE);
++
++		/* Extract the SKB from the rx_buff management array */
++		buff_id = __le16_to_cpu(d->mac.buff_id);
++		if (buff_id >= wil->rx_buff_mgmt.size) {
++			wil_err(wil, "invalid buff_id %d\n", buff_id);
++			continue;
++		}
++		skb = wil->rx_buff_mgmt.buff_arr[buff_id].skb;
++		wil->rx_buff_mgmt.buff_arr[buff_id].skb = NULL;
++		if (unlikely(!skb))
++			wil_err(wil, "No Rx skb at buff_id %d\n", buff_id);
++		else
++			kfree_skb(skb);
++
++		/* Move the buffer from the active to the free list */
++		list_move(&wil->rx_buff_mgmt.buff_arr[buff_id].list,
++			  &wil->rx_buff_mgmt.free);
++	}
++}
++
++static void wil_free_rx_buff_arr(struct wil6210_priv *wil)
++{
++	struct wil_ring *ring = &wil->ring_rx;
++
++	if (!wil->rx_buff_mgmt.buff_arr)
++		return;
++
++	/* Move all the buffers to the free list in case active list is
++	 * not empty in order to release all SKBs before deleting the array
++	 */
++	wil_move_all_rx_buff_to_free_list(wil, ring);
++
++	kfree(wil->rx_buff_mgmt.buff_arr);
++	wil->rx_buff_mgmt.buff_arr = NULL;
++}
++
++static int wil_init_rx_buff_arr(struct wil6210_priv *wil,
++				size_t size)
++{
++	struct wil_rx_buff *buff_arr;
++	struct list_head *active = &wil->rx_buff_mgmt.active;
++	struct list_head *free = &wil->rx_buff_mgmt.free;
++	int i;
++
++	wil->rx_buff_mgmt.buff_arr = kcalloc(size, sizeof(struct wil_rx_buff),
++					     GFP_KERNEL);
++	if (!wil->rx_buff_mgmt.buff_arr)
++		return -ENOMEM;
++
++	/* Set list heads */
++	INIT_LIST_HEAD(active);
++	INIT_LIST_HEAD(free);
++
++	/* Linkify the list */
++	buff_arr = wil->rx_buff_mgmt.buff_arr;
++	for (i = 0; i < size; i++) {
++		list_add(&buff_arr[i].list, free);
++		buff_arr[i].id = i;
++	}
++
++	wil->rx_buff_mgmt.size = size;
++
++	return 0;
++}
++
++static int wil_init_rx_sring(struct wil6210_priv *wil,
++			     u16 status_ring_size,
++			     size_t elem_size,
++			     u16 ring_id)
++{
++	struct wil_status_ring *sring = &wil->srings[ring_id];
++	int rc;
++
++	wil_dbg_misc(wil, "init RX sring: size=%u, ring_id=%u\n", sring->size,
++		     ring_id);
++
++	memset(&sring->rx_data, 0, sizeof(sring->rx_data));
++
++	sring->is_rx = true;
++	sring->size = status_ring_size;
++	sring->elem_size = elem_size;
++	rc = wil_sring_alloc(wil, sring);
++	if (rc)
++		return rc;
++
++	rc = wil_wmi_rx_sring_add(wil, ring_id);
++	if (rc)
++		goto out_free;
++
++	sring->desc_rdy_pol = 1;
++
++	return 0;
++out_free:
++	wil_sring_free(wil, sring);
++	return rc;
++}
++
++static int wil_ring_alloc_desc_ring(struct wil6210_priv *wil,
++				    struct wil_ring *ring)
++{
++	struct device *dev = wil_to_dev(wil);
++	size_t sz = ring->size * sizeof(ring->va[0]);
++
++	wil_dbg_misc(wil, "alloc_desc_ring:\n");
++
++	BUILD_BUG_ON(sizeof(ring->va[0]) != 32);
++
++	ring->swhead = 0;
++	ring->swtail = 0;
++	ring->ctx = kcalloc(ring->size, sizeof(ring->ctx[0]), GFP_KERNEL);
++	if (!ring->ctx)
++		goto err;
++
++	ring->va = dma_zalloc_coherent(dev, sz, &ring->pa, GFP_KERNEL);
++	if (!ring->va)
++		goto err_free_ctx;
++
++	if (ring->is_rx) {
++		sz = sizeof(*ring->edma_rx_swtail.va);
++		ring->edma_rx_swtail.va =
++			dma_zalloc_coherent(dev, sz, &ring->edma_rx_swtail.pa,
++					    GFP_KERNEL);
++		if (!ring->edma_rx_swtail.va)
++			goto err_free_va;
++	}
++
++	wil_dbg_misc(wil, "%s ring[%d] 0x%p:%pad 0x%p\n",
++		     ring->is_rx ? "RX" : "TX",
++		     ring->size, ring->va, &ring->pa, ring->ctx);
++
++	return 0;
++err_free_va:
++	dma_free_coherent(dev, ring->size * sizeof(ring->va[0]),
++			  (void *)ring->va, ring->pa);
++	ring->va = NULL;
++err_free_ctx:
++	kfree(ring->ctx);
++	ring->ctx = NULL;
++err:
++	return -ENOMEM;
++}
++
++static void wil_ring_free_edma(struct wil6210_priv *wil, struct wil_ring *ring)
++{
++	struct device *dev = wil_to_dev(wil);
++	size_t sz;
++	int ring_index = 0;
++
++	if (!ring->va)
++		return;
++
++	sz = ring->size * sizeof(ring->va[0]);
++
++	lockdep_assert_held(&wil->mutex);
++	if (ring->is_rx) {
++		wil_dbg_misc(wil, "free Rx ring [%d] 0x%p:%pad 0x%p\n",
++			     ring->size, ring->va,
++			     &ring->pa, ring->ctx);
++
++		wil_move_all_rx_buff_to_free_list(wil, ring);
++		goto out;
++	}
++
++	/* TX ring */
++	ring_index = ring - wil->ring_tx;
++
++	wil_dbg_misc(wil, "free Tx ring %d [%d] 0x%p:%pad 0x%p\n",
++		     ring_index, ring->size, ring->va,
++		     &ring->pa, ring->ctx);
++
++	while (!wil_ring_is_empty(ring)) {
++		struct wil_ctx *ctx;
++
++		struct wil_tx_enhanced_desc dd, *d = &dd;
++		struct wil_tx_enhanced_desc *_d =
++			(struct wil_tx_enhanced_desc *)
++			&ring->va[ring->swtail].tx.enhanced;
++
++		ctx = &ring->ctx[ring->swtail];
++		if (!ctx) {
++			wil_dbg_txrx(wil,
++				     "ctx(%d) was already completed\n",
++				     ring->swtail);
++			ring->swtail = wil_ring_next_tail(ring);
++			continue;
++		}
++		*d = *_d;
++		wil_tx_desc_unmap_edma(dev, d, ctx);
++		if (ctx->skb)
++			dev_kfree_skb_any(ctx->skb);
++		ring->swtail = wil_ring_next_tail(ring);
++	}
++
++out:
++	dma_free_coherent(dev, sz, (void *)ring->va, ring->pa);
++	kfree(ring->ctx);
++	ring->pa = 0;
++	ring->va = NULL;
++	ring->ctx = NULL;
++}
++
++static int wil_init_rx_desc_ring(struct wil6210_priv *wil, u16 desc_ring_size,
++				 int status_ring_id)
++{
++	struct wil_ring *ring = &wil->ring_rx;
++	int rc;
++
++	wil_dbg_misc(wil, "init RX desc ring\n");
++
++	ring->size = desc_ring_size;
++	ring->is_rx = true;
++	rc = wil_ring_alloc_desc_ring(wil, ring);
++	if (rc)
++		return rc;
++
++	rc = wil_wmi_rx_desc_ring_add(wil, status_ring_id);
++	if (rc)
++		goto out_free;
++
++	return 0;
++out_free:
++	wil_ring_free_edma(wil, ring);
++	return rc;
++}
++
++static void wil_rx_buf_len_init_edma(struct wil6210_priv *wil)
++{
++	wil->rx_buf_len = rx_large_buf ?
++		WIL_MAX_ETH_MTU : TXRX_BUF_LEN_DEFAULT - WIL_MAX_MPDU_OVERHEAD;
++}
++
++static int wil_rx_init_edma(struct wil6210_priv *wil, u16 desc_ring_size)
++{
++	u16 status_ring_size = 1 << rx_status_ring_order;
++	struct wil_ring *ring = &wil->ring_rx;
++	int rc;
++	size_t elem_size = use_compressed_rx_status ?
++		sizeof(struct wil_rx_status_compressed) :
++		sizeof(struct wil_rx_status_extended);
++	int i;
++	u16 max_rx_pl_per_desc;
++
++	wil_dbg_misc(wil,
++		     "rx_init, desc_ring_size=%u, status_ring_size=%u, elem_size=%zu\n",
++		     desc_ring_size, status_ring_size, elem_size);
++
++	wil_rx_buf_len_init_edma(wil);
++
++	max_rx_pl_per_desc = wil->rx_buf_len + ETH_HLEN +
++		WIL_EDMA_MAX_DATA_OFFSET;
++
++	/* Use debugfs dbg_num_rx_srings if set, reserve one sring for TX */
++	if (wil->num_rx_status_rings > WIL6210_MAX_STATUS_RINGS - 1)
++		wil->num_rx_status_rings = WIL6210_MAX_STATUS_RINGS - 1;
++
++	wil_dbg_misc(wil, "rx_init: allocate %d status rings\n",
++		     wil->num_rx_status_rings);
++
++	rc = wil_wmi_cfg_def_rx_offload(wil, max_rx_pl_per_desc);
++	if (rc)
++		return rc;
++
++	/* Allocate status ring */
++	for (i = 0; i < wil->num_rx_status_rings; i++) {
++		int sring_id = wil_find_free_sring(wil);
++
++		if (sring_id < 0) {
++			rc = -EFAULT;
++			goto err_free_status;
++		}
++		rc = wil_init_rx_sring(wil, status_ring_size, elem_size,
++				       sring_id);
++		if (rc)
++			goto err_free_status;
++	}
++
++	/* Allocate descriptor ring */
++	rc = wil_init_rx_desc_ring(wil, desc_ring_size,
++				   WIL_DEFAULT_RX_STATUS_RING_ID);
++	if (rc)
++		goto err_free_status;
++
++	if (rx_buff_id_count >= status_ring_size) {
++		wil_info(wil,
++			 "rx_buff_id_count %d exceeds sring_size %d. set it to %d\n",
++			 rx_buff_id_count, status_ring_size,
++			 status_ring_size - 1);
++		rx_buff_id_count = status_ring_size - 1;
++	}
++
++	/* Allocate Rx buffer array */
++	rc = wil_init_rx_buff_arr(wil, rx_buff_id_count);
++	if (rc)
++		goto err_free_desc;
++
++	/* Fill descriptor ring with credits */
++	rc = wil_rx_refill_edma(wil);
++	if (rc)
++		goto err_free_rx_buff_arr;
++
++	return 0;
++err_free_rx_buff_arr:
++	wil_free_rx_buff_arr(wil);
++err_free_desc:
++	wil_ring_free_edma(wil, ring);
++err_free_status:
++	for (i = 0; i < wil->num_rx_status_rings; i++)
++		wil_sring_free(wil, &wil->srings[i]);
++
++	return rc;
++}
++
++static int wil_ring_init_tx_edma(struct wil6210_vif *vif, int ring_id,
++				 int size, int cid, int tid)
++{
++	struct wil6210_priv *wil = vif_to_wil(vif);
++	int rc;
++	struct wil_ring *ring = &wil->ring_tx[ring_id];
++	struct wil_ring_tx_data *txdata = &wil->ring_tx_data[ring_id];
++
++	lockdep_assert_held(&wil->mutex);
++
++	wil_dbg_misc(wil,
++		     "init TX ring: ring_id=%u, cid=%u, tid=%u, sring_id=%u\n",
++		     ring_id, cid, tid, wil->tx_sring_idx);
++
++	wil_tx_data_init(txdata);
++	ring->size = size;
++	rc = wil_ring_alloc_desc_ring(wil, ring);
++	if (rc)
++		goto out;
++
++	wil->ring2cid_tid[ring_id][0] = cid;
++	wil->ring2cid_tid[ring_id][1] = tid;
++	if (!vif->privacy)
++		txdata->dot1x_open = true;
++
++	rc = wil_wmi_tx_desc_ring_add(vif, ring_id, cid, tid);
++	if (rc) {
++		wil_err(wil, "WMI_TX_DESC_RING_ADD_CMD failed\n");
++		goto out_free;
++	}
++
++	if (txdata->dot1x_open && agg_wsize >= 0)
++		wil_addba_tx_request(wil, ring_id, agg_wsize);
++
++	return 0;
++ out_free:
++	spin_lock_bh(&txdata->lock);
++	txdata->dot1x_open = false;
++	txdata->enabled = 0;
++	spin_unlock_bh(&txdata->lock);
++	wil_ring_free_edma(wil, ring);
++	wil->ring2cid_tid[ring_id][0] = WIL6210_MAX_CID;
++	wil->ring2cid_tid[ring_id][1] = 0;
++
++ out:
++	return rc;
++}
++
++static int wil_ring_init_bcast_edma(struct wil6210_vif *vif, int ring_id,
++				    int size)
++{
++	struct wil6210_priv *wil = vif_to_wil(vif);
++	struct wil_ring *ring = &wil->ring_tx[ring_id];
++	int rc;
++	struct wil_ring_tx_data *txdata = &wil->ring_tx_data[ring_id];
++
++	wil_dbg_misc(wil, "init bcast: ring_id=%d, sring_id=%d\n",
++		     ring_id, wil->tx_sring_idx);
++
++	lockdep_assert_held(&wil->mutex);
++
++	wil_tx_data_init(txdata);
++	ring->size = size;
++	ring->is_rx = false;
++	rc = wil_ring_alloc_desc_ring(wil, ring);
++	if (rc)
++		goto out;
++
++	wil->ring2cid_tid[ring_id][0] = WIL6210_MAX_CID; /* CID */
++	wil->ring2cid_tid[ring_id][1] = 0; /* TID */
++	if (!vif->privacy)
++		txdata->dot1x_open = true;
++
++	rc = wil_wmi_bcast_desc_ring_add(vif, ring_id);
++	if (rc)
++		goto out_free;
++
++	return 0;
++
++ out_free:
++	spin_lock_bh(&txdata->lock);
++	txdata->enabled = 0;
++	txdata->dot1x_open = false;
++	spin_unlock_bh(&txdata->lock);
++	wil_ring_free_edma(wil, ring);
++
++out:
++	return rc;
++}
++
++static void wil_tx_fini_edma(struct wil6210_priv *wil)
++{
++	struct wil_status_ring *sring = &wil->srings[wil->tx_sring_idx];
++
++	wil_dbg_misc(wil, "free TX sring\n");
++
++	wil_sring_free(wil, sring);
++}
++
++static void wil_rx_data_free(struct wil_status_ring *sring)
++{
++	if (!sring)
++		return;
++
++	kfree_skb(sring->rx_data.skb);
++	sring->rx_data.skb = NULL;
++}
++
++static void wil_rx_fini_edma(struct wil6210_priv *wil)
++{
++	struct wil_ring *ring = &wil->ring_rx;
++	int i;
++
++	wil_dbg_misc(wil, "rx_fini_edma\n");
++
++	wil_ring_free_edma(wil, ring);
++
++	for (i = 0; i < wil->num_rx_status_rings; i++) {
++		wil_rx_data_free(&wil->srings[i]);
++		wil_sring_free(wil, &wil->srings[i]);
++	}
++
++	wil_free_rx_buff_arr(wil);
++}
++
++void wil_init_txrx_ops_edma(struct wil6210_priv *wil)
++{
++	wil->txrx_ops.configure_interrupt_moderation =
++		wil_configure_interrupt_moderation_edma;
++	/* TX ops */
++	wil->txrx_ops.ring_init_tx = wil_ring_init_tx_edma;
++	wil->txrx_ops.ring_fini_tx = wil_ring_free_edma;
++	wil->txrx_ops.ring_init_bcast = wil_ring_init_bcast_edma;
++	wil->txrx_ops.tx_init = wil_tx_init_edma;
++	wil->txrx_ops.tx_fini = wil_tx_fini_edma;
++	/* RX ops */
++	wil->txrx_ops.rx_init = wil_rx_init_edma;
++	wil->txrx_ops.rx_fini = wil_rx_fini_edma;
++}
++
+diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.h b/drivers/net/wireless/ath/wil6210/txrx_edma.h
+index 14e0b6c..645ba17 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx_edma.h
++++ b/drivers/net/wireless/ath/wil6210/txrx_edma.h
+@@ -19,6 +19,17 @@
+ 
+ #include "wil6210.h"
+ 
++#define WIL_DEFAULT_RX_STATUS_RING_ID 0
++#define WIL_RX_DESC_RING_ID 0
++#define WIL_RX_STATUS_IRQ_IDX 0
++#define WIL_TX_STATUS_IRQ_IDX 1
++
++#define WIL_EDMA_AGG_WATERMARK (0xffff)
++#define WIL_EDMA_AGG_WATERMARK_POS (16)
++
++#define WIL_EDMA_IDLE_TIME_LIMIT_USEC (50)
++#define WIL_EDMA_TIME_UNIT_CLK_CYCLES (330) /* fits 1 usec */
++
+ /* Enhanced Rx descriptor - MAC part
+  * [dword 0] : Reserved
+  * [dword 1] : Reserved
+@@ -216,7 +227,7 @@ struct wil_ring_tx_status {
+  *	bit 22..23 : CB mode:2 - The CB Mode: 0-DMG, 1-EDMG, 2-Wide
+  *	bit 24..27 : Data Offset:4 - The data offset, a code that describe the
+  *		     payload shift from the beginning of the buffer:
+- *		     0 - 0 Bytes, 1 - 2 Bytes, 2 - 6 Bytes
++ *		     0 - 0 Bytes, 3 - 2 Bytes
+  *	bit     28 : A-MSDU Present:1 - The QoS (b7) A-MSDU present field
+  *	bit     29 : A-MSDU Type:1 The QoS (b8) A-MSDU Type field
+  *	bit     30 : A-MPDU:1 - Packet is part of aggregated MPDU
+@@ -286,5 +297,38 @@ struct wil_rx_status_extended {
+ 	struct wil_rx_status_extension ext;
+ };
+ 
++static inline u32 wil_ring_next_head(struct wil_ring *ring)
++{
++	return (ring->swhead + 1) % ring->size;
++}
++
++static inline void wil_desc_set_addr_edma(struct wil_ring_dma_addr *addr,
++					  __le16 *addr_high_high,
++					  dma_addr_t pa)
++{
++	addr->addr_low = cpu_to_le32(lower_32_bits(pa));
++	addr->addr_high = cpu_to_le16((u16)upper_32_bits(pa));
++	*addr_high_high = cpu_to_le16((u16)(upper_32_bits(pa) >> 16));
++}
++
++static inline
++dma_addr_t wil_tx_desc_get_addr_edma(struct wil_ring_tx_enhanced_dma *dma)
++{
++	return le32_to_cpu(dma->addr.addr_low) |
++			   ((u64)le16_to_cpu(dma->addr.addr_high) << 32) |
++			   ((u64)le16_to_cpu(dma->addr_high_high) << 48);
++}
++
++static inline
++dma_addr_t wil_rx_desc_get_addr_edma(struct wil_ring_rx_enhanced_dma *dma)
++{
++	return le32_to_cpu(dma->addr.addr_low) |
++			   ((u64)le16_to_cpu(dma->addr.addr_high) << 32) |
++			   ((u64)le16_to_cpu(dma->addr_high_high) << 48);
++}
++
++void wil_configure_interrupt_moderation_edma(struct wil6210_priv *wil);
++void wil_init_txrx_ops_edma(struct wil6210_priv *wil);
++
+ #endif /* WIL6210_TXRX_EDMA_H */
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index dac1425..5930907 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -36,6 +36,10 @@
+ extern bool rx_large_buf;
+ extern bool debug_fw;
+ extern bool disable_ap_sme;
++extern bool use_compressed_rx_status;
++
++struct wil6210_priv;
++struct wil6210_vif;
+ 
+ #define WIL_NAME "wil6210"
+ 
+@@ -307,6 +311,18 @@ struct RGF_ICR {
+ #define RGF_CAF_PLL_LOCK_STATUS		(0x88afec)
+ 	#define BIT_CAF_OSC_DIG_XTAL_STABLE	BIT(0)
+ 
++/* eDMA */
++#define RGF_INT_COUNT_ON_SPECIAL_EVT	(0x8b62d8)
++
++#define RGF_INT_CTRL_INT_GEN_CFG_0	(0x8bc000)
++#define RGF_INT_CTRL_INT_GEN_CFG_1	(0x8bc004)
++#define RGF_INT_GEN_TIME_UNIT_LIMIT	(0x8bc0c8)
++
++#define RGF_INT_GEN_CTRL		(0x8bc0ec)
++	#define BIT_CONTROL_0			BIT(0)
++
++#define RGF_INT_GEN_IDLE_TIME_LIMIT	(0x8bc134)
++
+ #define USER_EXT_USER_PMU_3		(0x88d00c)
+ 	#define BIT_PMU_DEVICE_RDY		BIT(0)
+ 
+@@ -486,6 +502,17 @@ struct wil_ring {
+ };
+ 
+ /**
++ * Additional data for Rx ring.
++ * Used for enhanced DMA RX chaining.
++ */
++struct wil_ring_rx_data {
++	/* the skb being assembled */
++	struct sk_buff *skb;
++	/* true if we are skipping a bad fragmented packet */
++	bool skipping;
++};
++
++/**
+  * Status ring structure, used for enhanced DMA completions for RX and TX.
+  */
+ struct wil_status_ring {
+@@ -497,6 +524,25 @@ struct wil_status_ring {
+ 	u32 hwtail; /* write here to inform hw */
+ 	bool is_rx;
+ 	u8 desc_rdy_pol; /* Expected descriptor ready bit polarity */
++	struct wil_ring_rx_data rx_data;
++};
++
++/**
++ * struct tx_rx_ops - different TX/RX ops for legacy and enhanced
++ * DMA flow
++ */
++struct wil_txrx_ops {
++	void (*configure_interrupt_moderation)(struct wil6210_priv *wil);
++	/* TX ops */
++	int (*ring_init_tx)(struct wil6210_vif *vif, int ring_id,
++			    int size, int cid, int tid);
++	void (*ring_fini_tx)(struct wil6210_priv *wil, struct wil_ring *ring);
++	int (*ring_init_bcast)(struct wil6210_vif *vif, int id, int size);
++	int (*tx_init)(struct wil6210_priv *wil);
++	void (*tx_fini)(struct wil6210_priv *wil);
++	/* RX ops */
++	int (*rx_init)(struct wil6210_priv *wil, u16 ring_size);
++	void (*rx_fini)(struct wil6210_priv *wil);
+ };
+ 
+ /**
+@@ -514,18 +560,6 @@ struct wil_ring_tx_data {
+ 	spinlock_t lock;
+ };
+ 
+-/**
+- * Additional data for Rx ring.
+- * Used for enhanced DMA RX chaining.
+- */
+-struct wil_ring_rx_data {
+-	/* the skb being assembled */
+-	struct sk_buff *skb;
+-	/* true if we are skipping a bad fragmented packet */
+-	bool skipping;
+-	u16 buff_size;
+-};
+-
+ enum { /* for wil6210_priv.status */
+ 	wil_status_fwready = 0, /* FW operational */
+ 	wil_status_dontscan,
+@@ -848,12 +882,15 @@ struct wil6210_priv {
+ 	struct wil_ring ring_tx[WIL6210_MAX_TX_RINGS];
+ 	struct wil_ring_tx_data ring_tx_data[WIL6210_MAX_TX_RINGS];
+ 	struct wil_status_ring srings[WIL6210_MAX_STATUS_RINGS];
+-	int num_rx_status_rings;
++	u8 num_rx_status_rings;
++	int tx_sring_idx;
+ 	u8 ring2cid_tid[WIL6210_MAX_TX_RINGS][2]; /* [0] - CID, [1] - TID */
+ 	struct wil_sta_info sta[WIL6210_MAX_CID];
+ 	u32 ring_idle_trsh; /* HW fetches up to 16 descriptors at once  */
+ 	u32 dma_addr_size; /* indicates dma addr size */
+ 	struct wil_rx_buff_mgmt rx_buff_mgmt;
++	bool use_enhanced_dma_hw;
++	struct wil_txrx_ops txrx_ops;
+ 
+ 	struct mutex mutex; /* for wil6210_priv access in wil_{up|down} */
+ 	/* statistics */
+@@ -1168,14 +1205,10 @@ void wil6210_disconnect(struct wil6210_vif *vif, const u8 *bssid,
+ void wil_probe_client_worker(struct work_struct *work);
+ void wil_disconnect_worker(struct work_struct *work);
+ 
+-int wil_rx_init(struct wil6210_priv *wil, u16 size);
+-void wil_rx_fini(struct wil6210_priv *wil);
++void wil_init_txrx_ops(struct wil6210_priv *wil);
+ 
+ /* TX API */
+-int wil_vring_init_tx(struct wil6210_vif *vif, int id, int size,
+-		      int cid, int tid);
+-void wil_ring_fini_tx(struct wil6210_priv *wil, int id);
+-int wil_tx_init(struct wil6210_vif *vif, int cid);
++int wil_ring_init_tx(struct wil6210_vif *vif, int cid);
+ int wil_vring_init_bcast(struct wil6210_vif *vif, int id, int size);
+ int wil_bcast_init(struct wil6210_vif *vif);
+ void wil_bcast_fini(struct wil6210_vif *vif);
+@@ -1227,4 +1260,14 @@ int wmi_start_sched_scan(struct wil6210_priv *wil,
+ int wmi_stop_sched_scan(struct wil6210_priv *wil);
+ int wmi_mgmt_tx(struct wil6210_vif *vif, const u8 *buf, size_t len);
+ 
++/* WMI for enhanced DMA */
++int wil_wmi_tx_sring_cfg(struct wil6210_priv *wil, int ring_id);
++int wil_wmi_cfg_def_rx_offload(struct wil6210_priv *wil,
++			       u16 max_rx_pl_per_desc);
++int wil_wmi_rx_sring_add(struct wil6210_priv *wil, u16 ring_id);
++int wil_wmi_rx_desc_ring_add(struct wil6210_priv *wil, int status_ring_id);
++int wil_wmi_tx_desc_ring_add(struct wil6210_vif *vif, int ring_id, int cid,
++			     int tid);
++int wil_wmi_bcast_desc_ring_add(struct wil6210_vif *vif, int ring_id);
++
+ #endif /* __WIL6210_H__ */
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 4c8e0bf..3669acb 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -420,10 +420,10 @@ static const char *cmdid2name(u16 cmdid)
+ 		return "WMI_DEL_STA_CMD";
+ 	case WMI_DISCONNECT_STA_CMDID:
+ 		return "WMI_DISCONNECT_STA_CMD";
+-	case WMI_VRING_BA_EN_CMDID:
+-		return "WMI_VRING_BA_EN_CMD";
+-	case WMI_VRING_BA_DIS_CMDID:
+-		return "WMI_VRING_BA_DIS_CMD";
++	case WMI_RING_BA_EN_CMDID:
++		return "WMI_RING_BA_EN_CMD";
++	case WMI_RING_BA_DIS_CMDID:
++		return "WMI_RING_BA_DIS_CMD";
+ 	case WMI_RCP_DELBA_CMDID:
+ 		return "WMI_RCP_DELBA_CMD";
+ 	case WMI_RCP_ADDBA_RESP_CMDID:
+@@ -450,6 +450,18 @@ static const char *cmdid2name(u16 cmdid)
+ 		return "WMI_START_SCHED_SCAN_CMD";
+ 	case WMI_STOP_SCHED_SCAN_CMDID:
+ 		return "WMI_STOP_SCHED_SCAN_CMD";
++	case WMI_TX_STATUS_RING_ADD_CMDID:
++		return "WMI_TX_STATUS_RING_ADD_CMD";
++	case WMI_RX_STATUS_RING_ADD_CMDID:
++		return "WMI_RX_STATUS_RING_ADD_CMD";
++	case WMI_TX_DESC_RING_ADD_CMDID:
++		return "WMI_TX_DESC_RING_ADD_CMD";
++	case WMI_RX_DESC_RING_ADD_CMDID:
++		return "WMI_RX_DESC_RING_ADD_CMD";
++	case WMI_BCAST_DESC_RING_ADD_CMDID:
++		return "WMI_BCAST_DESC_RING_ADD_CMD";
++	case WMI_CFG_DEF_RX_OFFLOAD_CMDID:
++		return "WMI_CFG_DEF_RX_OFFLOAD_CMD";
+ 	default:
+ 		return "Untracked CMD";
+ 	}
+@@ -504,8 +516,8 @@ static const char *eventid2name(u16 eventid)
+ 		return "WMI_RCP_ADDBA_REQ_EVENT";
+ 	case WMI_DELBA_EVENTID:
+ 		return "WMI_DELBA_EVENT";
+-	case WMI_VRING_EN_EVENTID:
+-		return "WMI_VRING_EN_EVENT";
++	case WMI_RING_EN_EVENTID:
++		return "WMI_RING_EN_EVENT";
+ 	case WMI_DATA_PORT_OPEN_EVENTID:
+ 		return "WMI_DATA_PORT_OPEN_EVENT";
+ 	case WMI_AOA_MEAS_EVENTID:
+@@ -574,6 +586,16 @@ static const char *eventid2name(u16 eventid)
+ 		return "WMI_STOP_SCHED_SCAN_EVENT";
+ 	case WMI_SCHED_SCAN_RESULT_EVENTID:
+ 		return "WMI_SCHED_SCAN_RESULT_EVENT";
++	case WMI_TX_STATUS_RING_CFG_DONE_EVENTID:
++		return "WMI_TX_STATUS_RING_CFG_DONE_EVENT";
++	case WMI_RX_STATUS_RING_CFG_DONE_EVENTID:
++		return "WMI_RX_STATUS_RING_CFG_DONE_EVENT";
++	case WMI_TX_DESC_RING_CFG_DONE_EVENTID:
++		return "WMI_TX_DESC_RING_CFG_DONE_EVENT";
++	case WMI_RX_DESC_RING_CFG_DONE_EVENTID:
++		return "WMI_RX_DESC_RING_CFG_DONE_EVENT";
++	case WMI_CFG_DEF_RX_OFFLOAD_DONE_EVENTID:
++		return "WMI_CFG_DEF_RX_OFFLOAD_DONE_EVENT";
+ 	default:
+ 		return "Untracked EVENT";
+ 	}
+@@ -961,7 +983,7 @@ static void wmi_evt_connect(struct wil6210_vif *vif, int id, void *d, int len)
+ 	wil->sta[evt->cid].mid = vif->mid;
+ 	wil->sta[evt->cid].status = wil_sta_conn_pending;
+ 
+-	rc = wil_tx_init(vif, evt->cid);
++	rc = wil_ring_init_tx(vif, evt->cid);
+ 	if (rc) {
+ 		wil_err(wil, "config tx vring failed for CID %d, rc (%d)\n",
+ 			evt->cid, rc);
+@@ -1111,11 +1133,11 @@ static void wmi_evt_eapol_rx(struct wil6210_vif *vif, int id, void *d, int len)
+ 	}
+ }
+ 
+-static void wmi_evt_vring_en(struct wil6210_vif *vif, int id, void *d, int len)
++static void wmi_evt_ring_en(struct wil6210_vif *vif, int id, void *d, int len)
+ {
+ 	struct wil6210_priv *wil = vif_to_wil(vif);
+-	struct wmi_vring_en_event *evt = d;
+-	u8 vri = evt->vring_index;
++	struct wmi_ring_en_event *evt = d;
++	u8 vri = evt->ring_index;
+ 	struct wireless_dev *wdev = vif_to_wdev(vif);
+ 
+ 	wil_dbg_wmi(wil, "Enable vring %d MID %d\n", vri, vif->mid);
+@@ -1325,7 +1347,7 @@ static void wmi_evt_ignore(struct wil6210_vif *vif, int id, void *d, int len)
+ 	{WMI_BA_STATUS_EVENTID,		wmi_evt_ba_status},
+ 	{WMI_RCP_ADDBA_REQ_EVENTID,	wmi_evt_addba_rx_req},
+ 	{WMI_DELBA_EVENTID,		wmi_evt_delba},
+-	{WMI_VRING_EN_EVENTID,		wmi_evt_vring_en},
++	{WMI_RING_EN_EVENTID,		wmi_evt_ring_en},
+ 	{WMI_DATA_PORT_OPEN_EVENTID,		wmi_evt_ignore},
+ 	{WMI_SCHED_SCAN_RESULT_EVENTID,		wmi_evt_sched_scan_result},
+ };
+@@ -2111,8 +2133,8 @@ int wmi_disconnect_sta(struct wil6210_vif *vif, const u8 *mac,
+ int wmi_addba(struct wil6210_priv *wil, u8 mid,
+ 	      u8 ringid, u8 size, u16 timeout)
+ {
+-	struct wmi_vring_ba_en_cmd cmd = {
+-		.ringid = ringid,
++	struct wmi_ring_ba_en_cmd cmd = {
++		.ring_id = ringid,
+ 		.agg_max_wsize = size,
+ 		.ba_timeout = cpu_to_le16(timeout),
+ 		.amsdu = 0,
+@@ -2121,19 +2143,19 @@ int wmi_addba(struct wil6210_priv *wil, u8 mid,
+ 	wil_dbg_wmi(wil, "addba: (ring %d size %d timeout %d)\n", ringid, size,
+ 		    timeout);
+ 
+-	return wmi_send(wil, WMI_VRING_BA_EN_CMDID, mid, &cmd, sizeof(cmd));
++	return wmi_send(wil, WMI_RING_BA_EN_CMDID, mid, &cmd, sizeof(cmd));
+ }
+ 
+ int wmi_delba_tx(struct wil6210_priv *wil, u8 mid, u8 ringid, u16 reason)
+ {
+-	struct wmi_vring_ba_dis_cmd cmd = {
+-		.ringid = ringid,
++	struct wmi_ring_ba_dis_cmd cmd = {
++		.ring_id = ringid,
+ 		.reason = cpu_to_le16(reason),
+ 	};
+ 
+ 	wil_dbg_wmi(wil, "delba_tx: (ring %d reason %d)\n", ringid, reason);
+ 
+-	return wmi_send(wil, WMI_VRING_BA_DIS_CMDID, mid, &cmd, sizeof(cmd));
++	return wmi_send(wil, WMI_RING_BA_DIS_CMDID, mid, &cmd, sizeof(cmd));
+ }
+ 
+ int wmi_delba_rx(struct wil6210_priv *wil, u8 mid, u8 cidxtid, u16 reason)
+@@ -2900,3 +2922,263 @@ int wmi_mgmt_tx(struct wil6210_vif *vif, const u8 *buf, size_t len)
+ 
+ 	return rc;
+ }
++
++int wil_wmi_tx_sring_cfg(struct wil6210_priv *wil, int ring_id)
++{
++	int rc;
++	struct wil6210_vif *vif = ndev_to_vif(wil->main_ndev);
++	struct wil_status_ring *sring = &wil->srings[ring_id];
++	struct wmi_tx_status_ring_add_cmd cmd = {
++		.ring_cfg = {
++			.ring_size = cpu_to_le16(sring->size),
++		},
++		.irq_index = WIL_TX_STATUS_IRQ_IDX
++	};
++	struct {
++		struct wmi_cmd_hdr hdr;
++		struct wmi_tx_status_ring_cfg_done_event evt;
++	} __packed reply = {
++		.evt = {.status = WMI_FW_STATUS_FAILURE},
++	};
++
++	cmd.ring_cfg.ring_id = ring_id;
++
++	cmd.ring_cfg.ring_mem_base = cpu_to_le64(sring->pa);
++	rc = wmi_call(wil, WMI_TX_STATUS_RING_ADD_CMDID, vif->mid, &cmd,
++		      sizeof(cmd), WMI_TX_STATUS_RING_CFG_DONE_EVENTID,
++		      &reply, sizeof(reply), WIL_WMI_CALL_GENERAL_TO_MS);
++	if (rc) {
++		wil_err(wil, "TX_STATUS_RING_ADD_CMD failed, rc %d\n", rc);
++		return rc;
++	}
++
++	if (reply.evt.status != WMI_FW_STATUS_SUCCESS) {
++		wil_err(wil, "TX_STATUS_RING_ADD_CMD failed, status %d\n",
++			reply.evt.status);
++		return -EINVAL;
++	}
++
++	sring->hwtail = le32_to_cpu(reply.evt.ring_tail_ptr);
++
++	return 0;
++}
++
++int wil_wmi_cfg_def_rx_offload(struct wil6210_priv *wil, u16 max_rx_pl_per_desc)
++{
++	struct net_device *ndev = wil->main_ndev;
++	struct wil6210_vif *vif = ndev_to_vif(ndev);
++	int rc;
++	struct wmi_cfg_def_rx_offload_cmd cmd = {
++		.max_msdu_size = cpu_to_le16(wil_mtu2macbuf(WIL_MAX_ETH_MTU)),
++		.max_rx_pl_per_desc = cpu_to_le16(max_rx_pl_per_desc),
++		.decap_trans_type = WMI_DECAP_TYPE_802_3,
++		.l2_802_3_offload_ctrl = 0,
++		.l3_l4_ctrl = 1 << L3_L4_CTRL_TCPIP_CHECKSUM_EN_POS,
++	};
++	struct {
++		struct wmi_cmd_hdr hdr;
++		struct wmi_cfg_def_rx_offload_done_event evt;
++	} __packed reply = {
++		.evt = {.status = WMI_FW_STATUS_FAILURE},
++	};
++
++	rc = wmi_call(wil, WMI_CFG_DEF_RX_OFFLOAD_CMDID, vif->mid, &cmd,
++		      sizeof(cmd), WMI_CFG_DEF_RX_OFFLOAD_DONE_EVENTID, &reply,
++		      sizeof(reply), WIL_WMI_CALL_GENERAL_TO_MS);
++	if (rc) {
++		wil_err(wil, "WMI_CFG_DEF_RX_OFFLOAD_CMD failed, rc %d\n", rc);
++		return rc;
++	}
++
++	if (reply.evt.status != WMI_FW_STATUS_SUCCESS) {
++		wil_err(wil, "WMI_CFG_DEF_RX_OFFLOAD_CMD failed, status %d\n",
++			reply.evt.status);
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++int wil_wmi_rx_sring_add(struct wil6210_priv *wil, u16 ring_id)
++{
++	struct net_device *ndev = wil->main_ndev;
++	struct wil6210_vif *vif = ndev_to_vif(ndev);
++	struct wil_status_ring *sring = &wil->srings[ring_id];
++	int rc;
++	struct wmi_rx_status_ring_add_cmd cmd = {
++		.ring_cfg = {
++			.ring_size = cpu_to_le16(sring->size),
++			.ring_id = ring_id,
++		},
++		.rx_msg_type = use_compressed_rx_status ?
++			WMI_RX_MSG_TYPE_COMPRESSED :
++			WMI_RX_MSG_TYPE_EXTENDED,
++		.irq_index = WIL_RX_STATUS_IRQ_IDX,
++	};
++	struct {
++		struct wmi_cmd_hdr hdr;
++		struct wmi_rx_status_ring_cfg_done_event evt;
++	} __packed reply = {
++		.evt = {.status = WMI_FW_STATUS_FAILURE},
++	};
++
++	cmd.ring_cfg.ring_mem_base = cpu_to_le64(sring->pa);
++	rc = wmi_call(wil, WMI_RX_STATUS_RING_ADD_CMDID, vif->mid, &cmd,
++		      sizeof(cmd), WMI_RX_STATUS_RING_CFG_DONE_EVENTID, &reply,
++		      sizeof(reply), WIL_WMI_CALL_GENERAL_TO_MS);
++	if (rc) {
++		wil_err(wil, "RX_STATUS_RING_ADD_CMD failed, rc %d\n", rc);
++		return rc;
++	}
++
++	if (reply.evt.status != WMI_FW_STATUS_SUCCESS) {
++		wil_err(wil, "RX_STATUS_RING_ADD_CMD failed, status %d\n",
++			reply.evt.status);
++		return -EINVAL;
++	}
++
++	sring->hwtail = le32_to_cpu(reply.evt.ring_tail_ptr);
++
++	return 0;
++}
++
++int wil_wmi_rx_desc_ring_add(struct wil6210_priv *wil, int status_ring_id)
++{
++	struct net_device *ndev = wil->main_ndev;
++	struct wil6210_vif *vif = ndev_to_vif(ndev);
++	struct wil_ring *ring = &wil->ring_rx;
++	int rc;
++	struct wmi_rx_desc_ring_add_cmd cmd = {
++		.ring_cfg = {
++			.ring_size = cpu_to_le16(ring->size),
++			.ring_id = WIL_RX_DESC_RING_ID,
++		},
++		.status_ring_id = status_ring_id,
++		.irq_index = WIL_RX_STATUS_IRQ_IDX,
++	};
++	struct {
++		struct wmi_cmd_hdr hdr;
++		struct wmi_rx_desc_ring_cfg_done_event evt;
++	} __packed reply = {
++		.evt = {.status = WMI_FW_STATUS_FAILURE},
++	};
++
++	cmd.ring_cfg.ring_mem_base = cpu_to_le64(ring->pa);
++	cmd.sw_tail_host_addr = cpu_to_le64(ring->edma_rx_swtail.pa);
++	rc = wmi_call(wil, WMI_RX_DESC_RING_ADD_CMDID, vif->mid, &cmd,
++		      sizeof(cmd), WMI_RX_DESC_RING_CFG_DONE_EVENTID, &reply,
++		      sizeof(reply), WIL_WMI_CALL_GENERAL_TO_MS);
++	if (rc) {
++		wil_err(wil, "WMI_RX_DESC_RING_ADD_CMD failed, rc %d\n", rc);
++		return rc;
++	}
++
++	if (reply.evt.status != WMI_FW_STATUS_SUCCESS) {
++		wil_err(wil, "WMI_RX_DESC_RING_ADD_CMD failed, status %d\n",
++			reply.evt.status);
++		return -EINVAL;
++	}
++
++	ring->hwtail = le32_to_cpu(reply.evt.ring_tail_ptr);
++
++	return 0;
++}
++
++int wil_wmi_tx_desc_ring_add(struct wil6210_vif *vif, int ring_id, int cid,
++			     int tid)
++{
++	struct wil6210_priv *wil = vif_to_wil(vif);
++	int sring_id = wil->tx_sring_idx; /* there is only one TX sring */
++	int rc;
++	struct wil_ring *ring = &wil->ring_tx[ring_id];
++	struct wil_ring_tx_data *txdata = &wil->ring_tx_data[ring_id];
++	struct wmi_tx_desc_ring_add_cmd cmd = {
++		.ring_cfg = {
++			.ring_size = cpu_to_le16(ring->size),
++			.ring_id = ring_id,
++		},
++		.status_ring_id = sring_id,
++		.cid = cid,
++		.tid = tid,
++		.encap_trans_type = WMI_VRING_ENC_TYPE_802_3,
++		.max_msdu_size = cpu_to_le16(wil_mtu2macbuf(mtu_max)),
++		.schd_params = {
++			.priority = cpu_to_le16(0),
++			.timeslot_us = cpu_to_le16(0xfff),
++		}
++	};
++	struct {
++		struct wmi_cmd_hdr hdr;
++		struct wmi_tx_desc_ring_cfg_done_event evt;
++	} __packed reply = {
++		.evt = {.status = WMI_FW_STATUS_FAILURE},
++	};
++
++	cmd.ring_cfg.ring_mem_base = cpu_to_le64(ring->pa);
++	rc = wmi_call(wil, WMI_TX_DESC_RING_ADD_CMDID, vif->mid, &cmd,
++		      sizeof(cmd), WMI_TX_DESC_RING_CFG_DONE_EVENTID, &reply,
++		      sizeof(reply), WIL_WMI_CALL_GENERAL_TO_MS);
++	if (rc) {
++		wil_err(wil, "WMI_TX_DESC_RING_ADD_CMD failed, rc %d\n", rc);
++		return rc;
++	}
++
++	if (reply.evt.status != WMI_FW_STATUS_SUCCESS) {
++		wil_err(wil, "WMI_TX_DESC_RING_ADD_CMD failed, status %d\n",
++			reply.evt.status);
++		return -EINVAL;
++	}
++
++	spin_lock_bh(&txdata->lock);
++	ring->hwtail = le32_to_cpu(reply.evt.ring_tail_ptr);
++	txdata->mid = vif->mid;
++	txdata->enabled = 1;
++	spin_unlock_bh(&txdata->lock);
++
++	return 0;
++}
++
++int wil_wmi_bcast_desc_ring_add(struct wil6210_vif *vif, int ring_id)
++{
++	struct wil6210_priv *wil = vif_to_wil(vif);
++	struct wil_ring *ring = &wil->ring_tx[ring_id];
++	int rc;
++	struct wmi_bcast_desc_ring_add_cmd cmd = {
++		.ring_cfg = {
++			.ring_size = cpu_to_le16(ring->size),
++			.ring_id = ring_id,
++		},
++		.status_ring_id = wil->tx_sring_idx,
++		.encap_trans_type = WMI_VRING_ENC_TYPE_802_3,
++	};
++	struct {
++		struct wmi_cmd_hdr hdr;
++		struct wmi_rx_desc_ring_cfg_done_event evt;
++	} __packed reply = {
++		.evt = {.status = WMI_FW_STATUS_FAILURE},
++	};
++	struct wil_ring_tx_data *txdata = &wil->ring_tx_data[ring_id];
++
++	cmd.ring_cfg.ring_mem_base = cpu_to_le64(ring->pa);
++	rc = wmi_call(wil, WMI_BCAST_DESC_RING_ADD_CMDID, vif->mid, &cmd,
++		      sizeof(cmd), WMI_TX_DESC_RING_CFG_DONE_EVENTID, &reply,
++		      sizeof(reply), WIL_WMI_CALL_GENERAL_TO_MS);
++	if (rc) {
++		wil_err(wil, "WMI_BCAST_DESC_RING_ADD_CMD failed, rc %d\n", rc);
++		return rc;
++	}
++
++	if (reply.evt.status != WMI_FW_STATUS_SUCCESS) {
++		wil_err(wil, "Broadcast Tx config failed, status %d\n",
++			reply.evt.status);
++		return -EINVAL;
++	}
++
++	spin_lock_bh(&txdata->lock);
++	ring->hwtail = le32_to_cpu(reply.evt.ring_tail_ptr);
++	txdata->mid = vif->mid;
++	txdata->enabled = 1;
++	spin_unlock_bh(&txdata->lock);
++
++	return 0;
++}
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index dc503d9..38e7880 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -148,8 +148,8 @@ enum wmi_command_id {
+ 	WMI_CFG_RX_CHAIN_CMDID				= 0x820,
+ 	WMI_VRING_CFG_CMDID				= 0x821,
+ 	WMI_BCAST_VRING_CFG_CMDID			= 0x822,
+-	WMI_VRING_BA_EN_CMDID				= 0x823,
+-	WMI_VRING_BA_DIS_CMDID				= 0x824,
++	WMI_RING_BA_EN_CMDID				= 0x823,
++	WMI_RING_BA_DIS_CMDID				= 0x824,
+ 	WMI_RCP_ADDBA_RESP_CMDID			= 0x825,
+ 	WMI_RCP_DELBA_CMDID				= 0x826,
+ 	WMI_SET_SSID_CMDID				= 0x827,
+@@ -163,6 +163,7 @@ enum wmi_command_id {
+ 	WMI_BF_SM_MGMT_CMDID				= 0x838,
+ 	WMI_BF_RXSS_MGMT_CMDID				= 0x839,
+ 	WMI_BF_TRIG_CMDID				= 0x83A,
++	WMI_RCP_ADDBA_RESP_EDMA_CMDID			= 0x83B,
+ 	WMI_LINK_MAINTAIN_CFG_WRITE_CMDID		= 0x842,
+ 	WMI_LINK_MAINTAIN_CFG_READ_CMDID		= 0x843,
+ 	WMI_SET_SECTORS_CMDID				= 0x849,
+@@ -235,6 +236,12 @@ enum wmi_command_id {
+ 	WMI_PRIO_TX_SECTORS_NUMBER_CMDID		= 0x9A6,
+ 	WMI_PRIO_TX_SECTORS_SET_DEFAULT_CFG_CMDID	= 0x9A7,
+ 	WMI_BF_CONTROL_CMDID				= 0x9AA,
++	WMI_TX_STATUS_RING_ADD_CMDID			= 0x9C0,
++	WMI_RX_STATUS_RING_ADD_CMDID			= 0x9C1,
++	WMI_TX_DESC_RING_ADD_CMDID			= 0x9C2,
++	WMI_RX_DESC_RING_ADD_CMDID			= 0x9C3,
++	WMI_BCAST_DESC_RING_ADD_CMDID			= 0x9C4,
++	WMI_CFG_DEF_RX_OFFLOAD_CMDID			= 0x9C5,
+ 	WMI_SCHEDULING_SCHEME_CMDID			= 0xA01,
+ 	WMI_FIXED_SCHEDULING_CONFIG_CMDID		= 0xA02,
+ 	WMI_ENABLE_FIXED_SCHEDULING_CMDID		= 0xA03,
+@@ -781,18 +788,90 @@ struct wmi_lo_power_calib_from_otp_event {
+ 	u8 reserved[3];
+ } __packed;
+ 
+-/* WMI_VRING_BA_EN_CMDID */
+-struct wmi_vring_ba_en_cmd {
+-	u8 ringid;
++struct wmi_edma_ring_cfg {
++	__le64 ring_mem_base;
++	/* size in number of items */
++	__le16 ring_size;
++	u8 ring_id;
++	u8 reserved;
++} __packed;
++
++enum wmi_rx_msg_type {
++	WMI_RX_MSG_TYPE_COMPRESSED	= 0x00,
++	WMI_RX_MSG_TYPE_EXTENDED	= 0x01,
++};
++
++struct wmi_tx_status_ring_add_cmd {
++	struct wmi_edma_ring_cfg ring_cfg;
++	u8 irq_index;
++	u8 reserved[3];
++} __packed;
++
++struct wmi_rx_status_ring_add_cmd {
++	struct wmi_edma_ring_cfg ring_cfg;
++	u8 irq_index;
++	/* wmi_rx_msg_type */
++	u8 rx_msg_type;
++	u8 reserved[2];
++} __packed;
++
++struct wmi_cfg_def_rx_offload_cmd {
++	__le16 max_msdu_size;
++	__le16 max_rx_pl_per_desc;
++	u8 decap_trans_type;
++	u8 l2_802_3_offload_ctrl;
++	u8 l2_nwifi_offload_ctrl;
++	u8 vlan_id;
++	u8 nwifi_ds_trans_type;
++	u8 l3_l4_ctrl;
++	u8 reserved[6];
++} __packed;
++
++struct wmi_tx_desc_ring_add_cmd {
++	struct wmi_edma_ring_cfg ring_cfg;
++	__le16 max_msdu_size;
++	/* Correlated status ring (0-63) */
++	u8 status_ring_id;
++	u8 cid;
++	u8 tid;
++	u8 encap_trans_type;
++	u8 mac_ctrl;
++	u8 to_resolution;
++	u8 agg_max_wsize;
++	u8 reserved[3];
++	struct wmi_vring_cfg_schd schd_params;
++} __packed;
++
++struct wmi_rx_desc_ring_add_cmd {
++	struct wmi_edma_ring_cfg ring_cfg;
++	u8 irq_index;
++	/* 0-63 status rings */
++	u8 status_ring_id;
++	u8 reserved[2];
++	__le64 sw_tail_host_addr;
++} __packed;
++
++struct wmi_bcast_desc_ring_add_cmd {
++	struct wmi_edma_ring_cfg ring_cfg;
++	__le16 max_msdu_size;
++	/* Correlated status ring (0-63) */
++	u8 status_ring_id;
++	u8 encap_trans_type;
++	u8 reserved[4];
++} __packed;
++
++/* WMI_RING_BA_EN_CMDID */
++struct wmi_ring_ba_en_cmd {
++	u8 ring_id;
+ 	u8 agg_max_wsize;
+ 	__le16 ba_timeout;
+ 	u8 amsdu;
+ 	u8 reserved[3];
+ } __packed;
+ 
+-/* WMI_VRING_BA_DIS_CMDID */
+-struct wmi_vring_ba_dis_cmd {
+-	u8 ringid;
++/* WMI_RING_BA_DIS_CMDID */
++struct wmi_ring_ba_dis_cmd {
++	u8 ring_id;
+ 	u8 reserved;
+ 	__le16 reason;
+ } __packed;
+@@ -950,6 +1029,21 @@ struct wmi_rcp_addba_resp_cmd {
+ 	u8 reserved[2];
+ } __packed;
+ 
++/* WMI_RCP_ADDBA_RESP_EDMA_CMDID */
++struct wmi_rcp_addba_resp_edma_cmd {
++	u8 cid;
++	u8 tid;
++	u8 dialog_token;
++	u8 reserved;
++	__le16 status_code;
++	/* ieee80211_ba_parameterset field to send */
++	__le16 ba_param_set;
++	__le16 ba_timeout;
++	u8 status_ring_id;
++	/* wmi_cfg_rx_chain_cmd_reorder_type */
++	u8 reorder_type;
++} __packed;
++
+ /* WMI_RCP_DELBA_CMDID */
+ struct wmi_rcp_delba_cmd {
+ 	/* Used for cid less than 8. For higher cid set
+@@ -1535,7 +1629,7 @@ enum wmi_event_id {
+ 	WMI_BF_CTRL_DONE_EVENTID			= 0x1862,
+ 	WMI_NOTIFY_REQ_DONE_EVENTID			= 0x1863,
+ 	WMI_GET_STATUS_DONE_EVENTID			= 0x1864,
+-	WMI_VRING_EN_EVENTID				= 0x1865,
++	WMI_RING_EN_EVENTID				= 0x1865,
+ 	WMI_GET_RF_STATUS_EVENTID			= 0x1866,
+ 	WMI_GET_BASEBAND_TYPE_EVENTID			= 0x1867,
+ 	WMI_VRING_SWITCH_TIMING_CONFIG_EVENTID		= 0x1868,
+@@ -1587,6 +1681,11 @@ enum wmi_event_id {
+ 	WMI_PRIO_TX_SECTORS_NUMBER_EVENTID		= 0x19A6,
+ 	WMI_PRIO_TX_SECTORS_SET_DEFAULT_CFG_EVENTID	= 0x19A7,
+ 	WMI_BF_CONTROL_EVENTID				= 0x19AA,
++	WMI_TX_STATUS_RING_CFG_DONE_EVENTID		= 0x19C0,
++	WMI_RX_STATUS_RING_CFG_DONE_EVENTID		= 0x19C1,
++	WMI_TX_DESC_RING_CFG_DONE_EVENTID		= 0x19C2,
++	WMI_RX_DESC_RING_CFG_DONE_EVENTID		= 0x19C3,
++	WMI_CFG_DEF_RX_OFFLOAD_DONE_EVENTID		= 0x19C5,
+ 	WMI_SCHEDULING_SCHEME_EVENTID			= 0x1A01,
+ 	WMI_FIXED_SCHEDULING_CONFIG_COMPLETE_EVENTID	= 0x1A02,
+ 	WMI_ENABLE_FIXED_SCHEDULING_COMPLETE_EVENTID	= 0x1A03,
+@@ -1997,6 +2096,49 @@ struct wmi_rcp_addba_resp_sent_event {
+ 	u8 reserved2[2];
+ } __packed;
+ 
++/* WMI_TX_STATUS_RING_CFG_DONE_EVENTID */
++struct wmi_tx_status_ring_cfg_done_event {
++	u8 ring_id;
++	/* wmi_fw_status */
++	u8 status;
++	u8 reserved[2];
++	__le32 ring_tail_ptr;
++} __packed;
++
++/* WMI_RX_STATUS_RING_CFG_DONE_EVENTID */
++struct wmi_rx_status_ring_cfg_done_event {
++	u8 ring_id;
++	/* wmi_fw_status */
++	u8 status;
++	u8 reserved[2];
++	__le32 ring_tail_ptr;
++} __packed;
++
++/* WMI_CFG_DEF_RX_OFFLOAD_DONE_EVENTID */
++struct wmi_cfg_def_rx_offload_done_event {
++	/* wmi_fw_status */
++	u8 status;
++	u8 reserved[3];
++} __packed;
++
++/* WMI_TX_DESC_RING_CFG_DONE_EVENTID */
++struct wmi_tx_desc_ring_cfg_done_event {
++	u8 ring_id;
++	/* wmi_fw_status */
++	u8 status;
++	u8 reserved[2];
++	__le32 ring_tail_ptr;
++} __packed;
++
++/* WMI_RX_DESC_RING_CFG_DONE_EVENTID */
++struct wmi_rx_desc_ring_cfg_done_event {
++	u8 ring_id;
++	/* wmi_fw_status */
++	u8 status;
++	u8 reserved[2];
++	__le32 ring_tail_ptr;
++} __packed;
++
+ /* WMI_RCP_ADDBA_REQ_EVENTID */
+ struct wmi_rcp_addba_req_event {
+ 	/* Used for cid less than 8. For higher cid set
+@@ -2047,9 +2189,9 @@ struct wmi_data_port_open_event {
+ 	u8 reserved[3];
+ } __packed;
+ 
+-/* WMI_VRING_EN_EVENTID */
+-struct wmi_vring_en_event {
+-	u8 vring_index;
++/* WMI_RING_EN_EVENTID */
++struct wmi_ring_en_event {
++	u8 ring_index;
+ 	u8 reserved[3];
+ } __packed;
+ 
+-- 
+1.9.1
