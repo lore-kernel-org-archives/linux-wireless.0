@@ -1,76 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:45543 "EHLO
-        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754370AbeEHUDq (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:4615 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751903AbeEMQDy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 May 2018 16:03:46 -0400
-Received: by mail-io0-f178.google.com with SMTP id c9-v6so33628916iob.12
-        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2018 13:03:46 -0700 (PDT)
-Received: from mail-io0-f170.google.com (mail-io0-f170.google.com. [209.85.223.170])
-        by smtp.gmail.com with ESMTPSA id m11-v6sm6442846ioo.60.2018.05.08.13.03.44
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 08 May 2018 13:03:44 -0700 (PDT)
-Received: by mail-io0-f170.google.com with SMTP id g14-v6so36318533ioc.7
-        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2018 13:03:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1525781970.14830.11.camel@sipsolutions.net>
-References: <20180428014732.4018-1-andrew.zaborowski@intel.com>
- <87in8b8ooy.fsf@purkki.adurom.net> <CAOq732JPfbJWyR0RROY-t67p7dOuoHoHS6eaMrZ1j39F1Q0zmg@mail.gmail.com>
- <1525720752.22388.3.camel@sipsolutions.net> <5AF1959E.6020605@broadcom.com> <1525781970.14830.11.camel@sipsolutions.net>
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-Date: Tue, 8 May 2018 22:03:44 +0200
-Message-ID: <CAOq732+fenUS0GX+oHvc5u7kYZ2D9kT0uYJE_-8Qd+jvb7Nb_A@mail.gmail.com> (sfid-20180508_220351_433494_81838C1D)
-Subject: Re: [PATCH] nl80211: Reject disconnect commands except from conn_owner
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Sun, 13 May 2018 12:03:54 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com
+Subject: [PATCH 0/7] wil6210 patches
+Date: Sun, 13 May 2018 19:02:48 +0300
+Message-Id: <1526227375-31881-1-git-send-email-merez@codeaurora.org> (sfid-20180513_180402_543444_09CBF42D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The following set of patches add support for new wil6210 device (Talyn ver 2.0):
+- Definition of the new device ID and memory areas
+- New boot flow procedure and reset sequence
+- Support new DMA interface - enhanced DMA
+- Support new HW offloads, such as TSO, RX reorder and AMSDU
 
-On 8 May 2018 at 14:19, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2018-05-08 at 14:18 +0200, Arend van Spriel wrote:
->> On 5/7/2018 9:19 PM, Johannes Berg wrote:
->> > On Sun, 2018-04-29 at 20:30 +0200, Andrew Zaborowski wrote:
->> > > On 28 April 2018 at 15:07, Kalle Valo <kvalo@codeaurora.org> wrote:
->> > > > Andrew Zaborowski <andrew.zaborowski@intel.com> writes:
->> > > > > Reject NL80211_CMD_DISCONNECT, NL80211_CMD_DISASSOCIATE,
->> > > > > NL80211_CMD_DEAUTHENTICATE and NL80211_CMD_ASSOCIATE commands
->> > > > > from clients other than the connection owner set in the connect,
->> > > > > authenticate or associate commands, if it was set.
->> > > > >
->> > > > > The main point of this check is to prevent chaos when two processes
->> > > > > try to use nl80211 at the same time, it's not a security measure.
->> > > > > The same thing should possibly be done for JOIN_IBSS/LEAVE_IBSS and
->> > > > > START_AP/STOP_AP.
->> > > >
->> > > > s-o-b missing.
->> > >
->> > > True, thanks.  Also I was going to send this as an RFC.
->> > >
->> >
->> > Looks fine to me, please resend if you want it in :)
->>
->> Do we really want this? Is the referred chaos hypothetical or an actual
->> issue. Nothing stops me from doing an 'ifconfig down' so why should 'iw
->> disconnect' be any different. As far I can tell it does not affect my
->> testing environment, but particularly in such use-cases I can expect
->> issues adopting this change, which is also hypothetical of course ;-)
->
-> Yeah, it's a good question. But it might help with inadvertent issues,
-> like starting wpa_s which immediately disconnects if it finds something
-> connected. If that fails, perhaps you have a better chance of noticing
-> the error?
+Gidon Studinski (3):
+  wil6210: add support for enhanced DMA structures
+  wil6210: initialize TX and RX enhanced DMA rings
+  wil6210: add support for enhanced DMA RX data flows
 
-This patch was only motivated by a case of running both iwd and
-wpa_supplicant simultaneously by mistake.  They can both handle things
-like 'ifconfig down', but when one daemon tries to connect the other
-immediately commands a disconnect (makes sense) and it made us think
-whether it was more correct if that disconnect command failed.  I'm
-not really sure what's right here so I wanted to float this idea.
+Maya Erez (4):
+  wil6210: add support for Talyn-MB (Talyn ver 2.0) device
+  wil6210: add support for enhanced DMA TX data flows
+  wil6210: add support for enhanced DMA debugfs
+  wil6210: add support for Talyn-MB boot flow
 
-Best regards
+ drivers/net/wireless/ath/wil6210/Makefile     |    1 +
+ drivers/net/wireless/ath/wil6210/cfg80211.c   |   12 +-
+ drivers/net/wireless/ath/wil6210/debugfs.c    |  431 +++++--
+ drivers/net/wireless/ath/wil6210/ethtool.c    |    2 +-
+ drivers/net/wireless/ath/wil6210/interrupt.c  |  225 +++-
+ drivers/net/wireless/ath/wil6210/main.c       |  350 ++++--
+ drivers/net/wireless/ath/wil6210/netdev.c     |   73 +-
+ drivers/net/wireless/ath/wil6210/pcie_bus.c   |   62 +-
+ drivers/net/wireless/ath/wil6210/pm.c         |    6 +-
+ drivers/net/wireless/ath/wil6210/rx_reorder.c |   20 +-
+ drivers/net/wireless/ath/wil6210/trace.h      |   57 +
+ drivers/net/wireless/ath/wil6210/txrx.c       |  648 +++++-----
+ drivers/net/wireless/ath/wil6210/txrx.h       |  105 +-
+ drivers/net/wireless/ath/wil6210/txrx_edma.c  | 1637 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/txrx_edma.h  |  553 +++++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h    |  220 +++-
+ drivers/net/wireless/ath/wil6210/wmi.c        |  458 ++++++-
+ drivers/net/wireless/ath/wil6210/wmi.h        |  166 ++-
+ 18 files changed, 4389 insertions(+), 637 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/wil6210/txrx_edma.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/txrx_edma.h
+
+-- 
+1.9.1
