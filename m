@@ -1,77 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:57475 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964814AbeEISoC (ORCPT
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:38365 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751052AbeEMJQz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 14:44:02 -0400
-Date: Thu, 10 May 2018 00:11:48 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
-        <adham.abozaeid@Microchip.com>
-Subject: Re: [PATCH 08/30] staging: wilc1000: fix line over 80 chars in
- host_int_parse_assoc_resp_info()
-Message-ID: <20180510001148.41441858@ajaysk-VirtualBox> (sfid-20180509_204404_810665_F9D7AA8C)
-In-Reply-To: <aa0033fb-fbf6-80aa-0b58-7e36c5803170@microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
- <1525682614-3824-9-git-send-email-ajay.kathat@microchip.com>
- <aa0033fb-fbf6-80aa-0b58-7e36c5803170@microchip.com>
+        Sun, 13 May 2018 05:16:55 -0400
+Received: by mail-pl0-f67.google.com with SMTP id c11-v6so5677443plr.5
+        for <linux-wireless@vger.kernel.org>; Sun, 13 May 2018 02:16:55 -0700 (PDT)
+Message-ID: <5AF80278.9000501@sra-tohoku.co.jp> (sfid-20180513_111659_495841_928CD20E)
+Date: Sun, 13 May 2018 18:16:40 +0900
+From: Taketo Kabe <kabe@sra-tohoku.co.jp>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+To: linux-wireless@vger.kernel.org
+CC: kabe@sra-tohoku.co.jp, b43-dev@lists.infradead.org
+Subject: [PATCH v3] b43: fix transmit failure when VT is switched
+References: <5AF41F55.4060606@sra-tohoku.co.jp> <20180512085053.8637A60618@smtp.codeaurora.org>
+In-Reply-To: <20180512085053.8637A60618@smtp.codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 9 May 2018 16:43:37 +0300
-Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
+From: Taketo Kabe <kabe@sra-tohoku.co.jp>
 
-> On 07.05.2018 11:43, Ajay Singh wrote:
-> > Fix line over 80 characters issue in
-> > host_int_parse_assoc_resp_info() by using shorter name for the
-> > local variable.
-> > 
-> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> > ---
-> >  drivers/staging/wilc1000/host_interface.c | 9 +++++----
-> >  1 file changed, 5 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/staging/wilc1000/host_interface.c
-> > b/drivers/staging/wilc1000/host_interface.c index c9c5d352..b1f67a7
-> > 100644 --- a/drivers/staging/wilc1000/host_interface.c
-> > +++ b/drivers/staging/wilc1000/host_interface.c
-> > @@ -1320,18 +1320,19 @@ static inline void
-> > host_int_parse_assoc_resp_info(struct wilc_vif *vif,
-> > memset(&conn_info, 0, sizeof(struct connect_info)); 
-> >  	if (mac_status == MAC_STATUS_CONNECTED) {
-> > -		u32 rcvd_assoc_resp_info_len;
-> > +		u32 assoc_resp_info_len;  
-> 
-> I would simply use len or size. It is just my preference.
+Setup:
+Using BCM4306 rev.03 chip based CardBus wireless card.
+IRQ is shared with yenta (cardbus bridge) and i915 (display) driver.
+For firmware, installed latest but dated openfwwf 5.2
+(http://netweb.ing.unibs.it/~openfwwf/)
 
-I would prefer to keep it same(as submitted patch), as its more
-readable.
+How-to-reproduce:
+Do "ssh <NetBSD-remotehost>", then "ls -lR /" to generate traffic, then
+repeatedly switch VTs by Alt-F1<>Alt-F2.
+Eventually (within a minute) the card stops working.
+You can receive traffic but no transmission.
+For unknown reason it doesn't occur when just generating traffic by
+"ssh <remotehost> ls -lR /".
 
-> 
-> >  
-> >  		memset(rcv_assoc_resp, 0,
-> > MAX_ASSOC_RESP_FRAME_SIZE); 
-> >  		host_int_get_assoc_res_info(vif, rcv_assoc_resp,
-> >  					    MAX_ASSOC_RESP_FRAME_SIZE,
-> > -
-> > &rcvd_assoc_resp_info_len);
-> > +					    &assoc_resp_info_len);
-> >  
-> > -		if (rcvd_assoc_resp_info_len != 0) {
-> > +		if (assoc_resp_info_len != 0) {
-> >  			s32 err = 0;
-> >  
-> > -			err =
-> > wilc_parse_assoc_resp_info(rcv_assoc_resp, rcvd_assoc_resp_info_len,
-> > +			err =
-> > wilc_parse_assoc_resp_info(rcv_assoc_resp,
-> > +
-> > assoc_resp_info_len, &connect_resp_info);
-> >  			if (err)
-> >  				netdev_err(vif->ndev,
-> >   
+With CONFIG_B43_DEBUG=y kernel config, when it stops,
+the debug message shows
+    kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 148, but got 180
+The slot offset I observed so far was always 32.
+
+When err_out2 is not set to make error messages successive,
+the debug output will be like this:
+kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 148
+kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 150
+kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 120
+kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 152
+kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 122
+kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 154
+kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 124
+kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 156
+kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 126
+The TX ring alternates between 2 sequences; the ring seems
+to be completely confused. Controller restart is needed.
+
+Workaround(1):
+This problem doesn't occur when using propriatory firmware
+you will extract by b43-fwcutter, so it may be a bug in
+openfwwf firmware, as the comment in the b43_dma_handle_txstatus() suggests.
+I wasn't able to find a bug in the terse openfwwf code though.
+
+Workaround(2):
+Using "pio=1" option to not use DMA makes this problem to
+not occur.
+
+Description of the patch:
+This patch will forcibly reset the controller to make it
+work again. Very kludgy and doesn't look right, but
+the traffic will continue to flow.
+
+Signed-off-by: Taketo Kabe <kabe@sra-tohoku.co.jp>
+Reviewed-by: Michael Buesch <m@bues.ch>
+---
+ drivers/net/wireless/broadcom/b43/dma.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+Changes since last edition:
+- Remove now unused err_out2 variable.
+- Regenerated the patch using "git format-patch" against
+  wireless-drivers-next.git .
+
+diff --git a/drivers/net/wireless/broadcom/b43/dma.c b/drivers/net/wireless/broadcom/b43/dma.c
+index 6837064..6b0e1ec 100644
+--- a/drivers/net/wireless/broadcom/b43/dma.c
++++ b/drivers/net/wireless/broadcom/b43/dma.c
+@@ -1484,7 +1484,7 @@ void b43_dma_handle_txstatus(struct b43_wldev *dev,
+ 	int slot, firstused;
+ 	bool frame_succeed;
+ 	int skip;
+-	static u8 err_out1, err_out2;
++	static u8 err_out1;
+
+ 	ring = parse_cookie(dev, status->cookie, &slot);
+ 	if (unlikely(!ring))
+@@ -1518,13 +1518,13 @@ void b43_dma_handle_txstatus(struct b43_wldev *dev,
+ 			}
+ 		} else {
+ 			/* More than a single header/data pair were missed.
+-			 * Report this error once.
++			 * Report this error, and reset the controller to
++			 * revive operation.
+ 			 */
+-			if (!err_out2)
+-				b43dbg(dev->wl,
+-				       "Out of order TX status report on DMA ring %d. Expected %d, but got %d\n",
+-				       ring->index, firstused, slot);
+-			err_out2 = 1;
++			b43dbg(dev->wl,
++			       "Out of order TX status report on DMA ring %d. Expected %d, but got %d\n",
++			       ring->index, firstused, slot);
++			b43_controller_restart(dev, "Out of order TX");
+ 			return;
+ 		}
+ 	}
+-- 
+kabe
