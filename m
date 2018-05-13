@@ -1,160 +1,482 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35974 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750936AbeETNUE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 May 2018 09:20:04 -0400
-Date: Sun, 20 May 2018 15:19:46 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Carlos Manuel Santos <cmmpsantos@gmail.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v4] NFC: pn533: don't send USB data off of the stack
-Message-ID: <20180520131946.GA7325@kroah.com> (sfid-20180520_152009_646685_C167856D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:4615 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751584AbeEMQDz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 13 May 2018 12:03:55 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, Gidon Studinski <gidons@codeaurora.org>
+Subject: [PATCH 6/7] wil6210: add support for enhanced DMA debugfs
+Date: Sun, 13 May 2018 19:02:54 +0300
+Message-Id: <1526227375-31881-7-git-send-email-merez@codeaurora.org> (sfid-20180513_180410_585338_96E1CC12)
+In-Reply-To: <1526227375-31881-1-git-send-email-merez@codeaurora.org>
+References: <1526227375-31881-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's amazing that this driver ever worked, but now that x86 doesn't
-allow USB data to be sent off of the stack, it really does not work at
-all.  Fix this up by properly allocating the data for the small
-"commands" that get sent to the device off of the stack.
+Add debugfs support for enhanced DMA TX and RX descriptor rings,
+TX and RX status rings and RX buffer management.
 
-We do this for one command by having a whole urb just for ack messages,
-as they can be submitted in interrupt context, so we can not use
-usb_bulk_msg().  But the poweron command can sleep (and does), so use
-usb_bulk_msg() for that transfer.
+Run the following command to print the TX and RX status rings:
+cat srings
 
-Reported-by: Carlos Manuel Santos <cmmpsantos@gmail.com>
-Cc: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Stephen Hemminger <stephen@networkplumber.org>
-Cc: stable <stable@vger.kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Run the following command in order to select the status ring:
+echo STATUS_RING_IDX > dbg_sring_index
+
+Run the following command in order to select the status message:
+echo STATUS_MSG_IDX > dbg_status_msg_index
+
+Run the following command in order to print the selected status
+message from the selected status ring:
+cat status_msg
+
+Run the following command in order to print the RX buffer management
+debug information:
+cat rx_buff_mgmt
+
+Signed-off-by: Gidon Studinski <gidons@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
-v4: don't use urb transfer buffer flags as the memory is tied to the urb
-    (thanks to Johan)  Now we have a new static urb, and we use
-    usb_bulk_msg() for the other message.
-v3: actually use the correct buffer (thanks to Arend van Spriel)
-    use kmemdup (thanks to Johannes Berg and Julia Lawall)
-v2: set the urb flags correctly
+ drivers/net/wireless/ath/wil6210/debugfs.c | 347 +++++++++++++++++++++++++----
+ 1 file changed, 307 insertions(+), 40 deletions(-)
 
- drivers/nfc/pn533/usb.c |   42 ++++++++++++++++++++++++++++++------------
- 1 file changed, 30 insertions(+), 12 deletions(-)
-
---- a/drivers/nfc/pn533/usb.c
-+++ b/drivers/nfc/pn533/usb.c
-@@ -62,6 +62,9 @@ struct pn533_usb_phy {
- 	struct urb *out_urb;
- 	struct urb *in_urb;
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 1165bc7..bdd6978 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -30,6 +30,9 @@
+ static u32 mem_addr;
+ static u32 dbg_txdesc_index;
+ static u32 dbg_ring_index; /* 24+ for Rx, 0..23 for Tx */
++static u32 dbg_status_msg_index;
++/* 0..wil->num_rx_status_rings-1 for Rx, wil->tx_sring_idx for Tx */
++static u32 dbg_sring_index;
  
-+	struct urb *ack_urb;
-+	u8 *ack_buffer;
-+
- 	struct pn533 *priv;
+ enum dbg_off_type {
+ 	doff_u32 = 0,
+@@ -47,6 +50,36 @@ struct dbg_off {
+ 	enum dbg_off_type type;
  };
  
-@@ -150,13 +153,16 @@ static int pn533_usb_send_ack(struct pn5
- 	struct pn533_usb_phy *phy = dev->phy;
- 	static const u8 ack[6] = {0x00, 0x00, 0xff, 0x00, 0xff, 0x00};
- 	/* spec 7.1.1.3:  Preamble, SoPC (2), ACK Code (2), Postamble */
--	int rc;
++static void wil_print_desc_edma(struct seq_file *s, struct wil6210_priv *wil,
++				struct wil_ring *ring,
++				char _s, char _h, int idx)
++{
++	u8 num_of_descs;
++	bool has_skb = false;
++
++	if (ring->is_rx) {
++		struct wil_rx_enhanced_desc *rx_d =
++			(struct wil_rx_enhanced_desc *)
++			&ring->va[idx].rx.enhanced;
++		u16 buff_id = le16_to_cpu(rx_d->mac.buff_id);
++
++		has_skb = wil->rx_buff_mgmt.buff_arr[buff_id].skb;
++		seq_printf(s, "%c", (has_skb) ? _h : _s);
++	} else {
++		struct wil_tx_enhanced_desc *d =
++			(struct wil_tx_enhanced_desc *)
++			&ring->va[idx].tx.enhanced;
++
++		num_of_descs = (u8)d->mac.d[2];
++		has_skb = ring->ctx[idx].skb;
++		if (num_of_descs >= 1)
++			seq_printf(s, "%c", ring->ctx[idx].skb ? _h : _s);
++		else
++			/* num_of_descs == 0, it's a frag in a list of descs */
++			seq_printf(s, "%c", has_skb ? 'h' : _s);
++	}
++}
++
+ static void wil_print_ring(struct seq_file *s, struct wil6210_priv *wil,
+ 			   const char *name, struct wil_ring *ring,
+ 			   char _s, char _h)
+@@ -58,7 +91,10 @@ static void wil_print_ring(struct seq_file *s, struct wil6210_priv *wil,
+ 	seq_printf(s, "  pa     = %pad\n", &ring->pa);
+ 	seq_printf(s, "  va     = 0x%p\n", ring->va);
+ 	seq_printf(s, "  size   = %d\n", ring->size);
+-	seq_printf(s, "  swtail = %d\n", ring->swtail);
++	if (wil->use_enhanced_dma_hw && ring->is_rx)
++		seq_printf(s, "  swtail = %u\n", *ring->edma_rx_swtail.va);
++	else
++		seq_printf(s, "  swtail = %d\n", ring->swtail);
+ 	seq_printf(s, "  swhead = %d\n", ring->swhead);
+ 	seq_printf(s, "  hwtail = [0x%08x] -> ", ring->hwtail);
+ 	if (x) {
+@@ -72,13 +108,16 @@ static void wil_print_ring(struct seq_file *s, struct wil6210_priv *wil,
+ 		uint i;
  
--	phy->out_urb->transfer_buffer = (u8 *)ack;
--	phy->out_urb->transfer_buffer_length = sizeof(ack);
--	rc = usb_submit_urb(phy->out_urb, flags);
-+	if (!phy->ack_buffer) {
-+		phy->ack_buffer = kmemdup(ack, sizeof(ack), flags);
-+		if (!phy->ack_buffer)
-+			return -ENOMEM;
+ 		for (i = 0; i < ring->size; i++) {
+-			volatile struct vring_tx_desc *d =
+-				&ring->va[i].tx.legacy;
+-
+-			if ((i % 128) == 0 && (i != 0))
++			if ((i % 128) == 0 && i != 0)
+ 				seq_puts(s, "\n");
+-			seq_printf(s, "%c", (d->dma.status & BIT(0)) ?
+-					_s : (ring->ctx[i].skb ? _h : 'h'));
++			if (wil->use_enhanced_dma_hw) {
++				wil_print_desc_edma(s, wil, ring, _s, _h, i);
++			} else {
++				volatile struct vring_tx_desc *d =
++					&ring->va[i].tx.legacy;
++				seq_printf(s, "%c", (d->dma.status & BIT(0)) ?
++					   _s : (ring->ctx[i].skb ? _h : 'h'));
++			}
+ 		}
+ 		seq_puts(s, "\n");
+ 	}
+@@ -157,6 +196,74 @@ static int wil_ring_seq_open(struct inode *inode, struct file *file)
+ 	.llseek		= seq_lseek,
+ };
+ 
++static void wil_print_sring(struct seq_file *s, struct wil6210_priv *wil,
++			    struct wil_status_ring *sring)
++{
++	void __iomem *x = wmi_addr(wil, sring->hwtail);
++	int sring_idx = sring - wil->srings;
++	u32 v;
++
++	seq_printf(s, "Status Ring %s [ %d ] = {\n",
++		   sring->is_rx ? "RX" : "TX", sring_idx);
++	seq_printf(s, "  pa     = %pad\n", &sring->pa);
++	seq_printf(s, "  va     = 0x%pK\n", sring->va);
++	seq_printf(s, "  size   = %d\n", sring->size);
++	seq_printf(s, "  elem_size   = %zu\n", sring->elem_size);
++	seq_printf(s, "  swhead = %d\n", sring->swhead);
++	seq_printf(s, "  hwtail = [0x%08x] -> ", sring->hwtail);
++	if (x) {
++		v = readl_relaxed(x);
++		seq_printf(s, "0x%08x = %d\n", v, v);
++	} else {
++		seq_puts(s, "???\n");
++	}
++	seq_printf(s, "  desc_rdy_pol   = %d\n", sring->desc_rdy_pol);
++
++	if (sring->va && (sring->size <= (1 << WIL_RING_SIZE_ORDER_MAX))) {
++		uint i;
++
++		for (i = 0; i < sring->size; i++) {
++			u32 *sdword_0 =
++				(u32 *)(sring->va + (sring->elem_size * i));
++
++			if ((i % 128) == 0 && i != 0)
++				seq_puts(s, "\n");
++			if (i == sring->swhead)
++				seq_printf(s, "%c", (*sdword_0 & BIT(31)) ?
++					   'X' : 'x');
++			else
++				seq_printf(s, "%c", (*sdword_0 & BIT(31)) ?
++					   '1' : '0');
++		}
++		seq_puts(s, "\n");
++	}
++	seq_puts(s, "}\n");
++}
++
++static int wil_srings_debugfs_show(struct seq_file *s, void *data)
++{
++	struct wil6210_priv *wil = s->private;
++	int i = 0;
++
++	for (i = 0; i < WIL6210_MAX_STATUS_RINGS; i++)
++		if (wil->srings[i].va)
++			wil_print_sring(s, wil, &wil->srings[i]);
++
++	return 0;
++}
++
++static int wil_srings_seq_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, wil_srings_debugfs_show, inode->i_private);
++}
++
++static const struct file_operations fops_srings = {
++	.open		= wil_srings_seq_open,
++	.release	= single_release,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++};
++
+ static void wil_seq_hexdump(struct seq_file *s, void *p, int len,
+ 			    const char *prefix)
+ {
+@@ -974,53 +1081,92 @@ static int wil_txdesc_debugfs_show(struct seq_file *s, void *data)
+ {
+ 	struct wil6210_priv *wil = s->private;
+ 	struct wil_ring *ring;
+-	bool tx = (dbg_ring_index < WIL6210_MAX_TX_RINGS);
++	bool tx;
++	int ring_idx = dbg_ring_index;
++	int txdesc_idx = dbg_txdesc_index;
++	volatile struct vring_tx_desc *d;
++	volatile u32 *u;
++	struct sk_buff *skb;
++
++	if (wil->use_enhanced_dma_hw) {
++		/* RX ring index == 0 */
++		if (ring_idx >= WIL6210_MAX_TX_RINGS) {
++			seq_printf(s, "invalid ring index %d\n", ring_idx);
++			return 0;
++		}
++		tx = ring_idx > 0; /* desc ring 0 is reserved for RX */
++	} else {
++		/* RX ring index == WIL6210_MAX_TX_RINGS */
++		if (ring_idx > WIL6210_MAX_TX_RINGS) {
++			seq_printf(s, "invalid ring index %d\n", ring_idx);
++			return 0;
++		}
++		tx = (ring_idx < WIL6210_MAX_TX_RINGS);
 +	}
  
--	return rc;
-+	phy->ack_urb->transfer_buffer = phy->ack_buffer;
-+	phy->ack_urb->transfer_buffer_length = sizeof(ack);
-+	return usb_submit_urb(phy->ack_urb, flags);
- }
+-	ring = tx ? &wil->ring_tx[dbg_ring_index] : &wil->ring_rx;
++	ring = tx ? &wil->ring_tx[ring_idx] : &wil->ring_rx;
  
- static int pn533_usb_send_frame(struct pn533 *dev,
-@@ -375,26 +381,31 @@ static int pn533_acr122_poweron_rdr(stru
- 	/* Power on th reader (CCID cmd) */
- 	u8 cmd[10] = {PN533_ACR122_PC_TO_RDR_ICCPOWERON,
- 		      0, 0, 0, 0, 0, 0, 3, 0, 0};
-+	char *buffer;
-+	int transferred;
- 	int rc;
- 	void *cntx;
- 	struct pn533_acr122_poweron_rdr_arg arg;
+ 	if (!ring->va) {
+ 		if (tx)
+-			seq_printf(s, "No Tx[%2d] VRING\n", dbg_ring_index);
++			seq_printf(s, "No Tx[%2d] RING\n", ring_idx);
+ 		else
+-			seq_puts(s, "No Rx VRING\n");
++			seq_puts(s, "No Rx RING\n");
+ 		return 0;
+ 	}
  
- 	dev_dbg(&phy->udev->dev, "%s\n", __func__);
- 
-+	buffer = kmemdup(cmd, sizeof(cmd), GFP_KERNEL);
-+	if (!buffer)
-+		return -ENOMEM;
+-	if (dbg_txdesc_index < ring->size) {
+-		/* use struct vring_tx_desc for Rx as well,
+-		 * only field used, .dma.length, is the same
+-		 */
+-		volatile struct vring_tx_desc *d =
+-				&ring->va[dbg_txdesc_index].tx.legacy;
+-		volatile u32 *u = (volatile u32 *)d;
+-		struct sk_buff *skb = ring->ctx[dbg_txdesc_index].skb;
+-
++	if (txdesc_idx >= ring->size) {
+ 		if (tx)
+-			seq_printf(s, "Tx[%2d][%3d] = {\n", dbg_ring_index,
+-				   dbg_txdesc_index);
++			seq_printf(s, "[%2d] TxDesc index (%d) >= size (%d)\n",
++				   ring_idx, txdesc_idx, ring->size);
+ 		else
+-			seq_printf(s, "Rx[%3d] = {\n", dbg_txdesc_index);
+-		seq_printf(s, "  MAC = 0x%08x 0x%08x 0x%08x 0x%08x\n",
+-			   u[0], u[1], u[2], u[3]);
+-		seq_printf(s, "  DMA = 0x%08x 0x%08x 0x%08x 0x%08x\n",
+-			   u[4], u[5], u[6], u[7]);
+-		seq_printf(s, "  SKB = 0x%p\n", skb);
++			seq_printf(s, "RxDesc index (%d) >= size (%d)\n",
++				   txdesc_idx, ring->size);
++		return 0;
++	}
 +
- 	init_completion(&arg.done);
- 	cntx = phy->in_urb->context;  /* backup context */
++	/* use struct vring_tx_desc for Rx as well,
++	 * only field used, .dma.length, is the same
++	 */
++	d = &ring->va[txdesc_idx].tx.legacy;
++	u = (volatile u32 *)d;
++	skb = NULL;
  
- 	phy->in_urb->complete = pn533_acr122_poweron_rdr_resp;
- 	phy->in_urb->context = &arg;
+-		if (skb) {
+-			skb_get(skb);
+-			wil_seq_print_skb(s, skb);
+-			kfree_skb(skb);
++	if (wil->use_enhanced_dma_hw) {
++		if (tx) {
++			skb = ring->ctx[txdesc_idx].skb;
++		} else {
++			struct wil_rx_enhanced_desc *rx_d =
++				(struct wil_rx_enhanced_desc *)
++				&ring->va[txdesc_idx].rx.enhanced;
++			u16 buff_id = le16_to_cpu(rx_d->mac.buff_id);
++
++			if (!wil_val_in_range(buff_id, 0,
++					      wil->rx_buff_mgmt.size)) {
++				seq_printf(s, "invalid buff_id %d\n", buff_id);
++				return 0;
++			}
++			skb = wil->rx_buff_mgmt.buff_arr[buff_id].skb;
+ 		}
+-		seq_puts(s, "}\n");
+ 	} else {
+-		if (tx)
+-			seq_printf(s, "[%2d] TxDesc index (%d) >= size (%d)\n",
+-				   dbg_ring_index, dbg_txdesc_index,
+-				   ring->size);
+-		else
+-			seq_printf(s, "RxDesc index (%d) >= size (%d)\n",
+-				   dbg_txdesc_index, ring->size);
++		skb = ring->ctx[txdesc_idx].skb;
++	}
++	if (tx)
++		seq_printf(s, "Tx[%2d][%3d] = {\n", ring_idx,
++			   txdesc_idx);
++	else
++		seq_printf(s, "Rx[%3d] = {\n", txdesc_idx);
++	seq_printf(s, "  MAC = 0x%08x 0x%08x 0x%08x 0x%08x\n",
++		   u[0], u[1], u[2], u[3]);
++	seq_printf(s, "  DMA = 0x%08x 0x%08x 0x%08x 0x%08x\n",
++		   u[4], u[5], u[6], u[7]);
++	seq_printf(s, "  SKB = 0x%p\n", skb);
++
++	if (skb) {
++		skb_get(skb);
++		wil_seq_print_skb(s, skb);
++		kfree_skb(skb);
+ 	}
++	seq_puts(s, "}\n");
  
--	phy->out_urb->transfer_buffer = cmd;
--	phy->out_urb->transfer_buffer_length = sizeof(cmd);
--
- 	print_hex_dump_debug("ACR122 TX: ", DUMP_PREFIX_NONE, 16, 1,
- 		       cmd, sizeof(cmd), false);
- 
--	rc = usb_submit_urb(phy->out_urb, GFP_KERNEL);
--	if (rc) {
-+	rc = usb_bulk_msg(phy->udev, phy->out_urb->pipe, buffer, sizeof(cmd),
-+			  &transferred, 0);
-+	kfree(buffer);
-+	if (rc || (transferred != sizeof(cmd))) {
- 		nfc_err(&phy->udev->dev,
- 			"Reader power on cmd error %d\n", rc);
- 		return rc;
-@@ -490,8 +501,9 @@ static int pn533_usb_probe(struct usb_in
- 
- 	phy->in_urb = usb_alloc_urb(0, GFP_KERNEL);
- 	phy->out_urb = usb_alloc_urb(0, GFP_KERNEL);
-+	phy->ack_urb = usb_alloc_urb(0, GFP_KERNEL);
- 
--	if (!phy->in_urb || !phy->out_urb)
-+	if (!phy->in_urb || !phy->out_urb || !phy->ack_urb)
- 		goto error;
- 
- 	usb_fill_bulk_urb(phy->in_urb, phy->udev,
-@@ -501,7 +513,9 @@ static int pn533_usb_probe(struct usb_in
- 	usb_fill_bulk_urb(phy->out_urb, phy->udev,
- 			  usb_sndbulkpipe(phy->udev, out_endpoint),
- 			  NULL, 0, pn533_send_complete, phy);
--
-+	usb_fill_bulk_urb(phy->ack_urb, phy->udev,
-+			  usb_sndbulkpipe(phy->udev, out_endpoint),
-+			  NULL, 0, pn533_send_complete, phy);
- 
- 	switch (id->driver_info) {
- 	case PN533_DEVICE_STD:
-@@ -554,6 +568,7 @@ static int pn533_usb_probe(struct usb_in
- error:
- 	usb_free_urb(phy->in_urb);
- 	usb_free_urb(phy->out_urb);
-+	usb_free_urb(phy->ack_urb);
- 	usb_put_dev(phy->udev);
- 	kfree(in_buf);
- 
-@@ -573,10 +588,13 @@ static void pn533_usb_disconnect(struct
- 
- 	usb_kill_urb(phy->in_urb);
- 	usb_kill_urb(phy->out_urb);
-+	usb_kill_urb(phy->ack_urb);
- 
- 	kfree(phy->in_urb->transfer_buffer);
- 	usb_free_urb(phy->in_urb);
- 	usb_free_urb(phy->out_urb);
-+	usb_free_urb(phy->ack_urb);
-+	kfree(phy->ack_buffer);
- 
- 	nfc_info(&interface->dev, "NXP PN533 NFC device disconnected\n");
+ 	return 0;
  }
+@@ -1037,6 +1183,115 @@ static int wil_txdesc_seq_open(struct inode *inode, struct file *file)
+ 	.llseek		= seq_lseek,
+ };
+ 
++/*---------Tx/Rx status message------------*/
++static int wil_status_msg_debugfs_show(struct seq_file *s, void *data)
++{
++	struct wil6210_priv *wil = s->private;
++	int sring_idx = dbg_sring_index;
++	struct wil_status_ring *sring;
++	bool tx = sring_idx == wil->tx_sring_idx ? 1 : 0;
++	u32 status_msg_idx = dbg_status_msg_index;
++	u32 *u;
++
++	if (sring_idx >= WIL6210_MAX_STATUS_RINGS) {
++		seq_printf(s, "invalid status ring index %d\n", sring_idx);
++		return 0;
++	}
++
++	sring = &wil->srings[sring_idx];
++
++	if (!sring->va) {
++		seq_printf(s, "No %cX status ring\n", tx ? 'T' : 'R');
++		return 0;
++	}
++
++	if (status_msg_idx >= sring->size) {
++		seq_printf(s, "%cxDesc index (%d) >= size (%d)\n",
++			   tx ? 'T' : 'R', status_msg_idx, sring->size);
++		return 0;
++	}
++
++	u = sring->va + (sring->elem_size * status_msg_idx);
++
++	seq_printf(s, "%cx[%d][%3d] = {\n",
++		   tx ? 'T' : 'R', sring_idx, status_msg_idx);
++
++	seq_printf(s, "  0x%08x 0x%08x 0x%08x 0x%08x\n",
++		   u[0], u[1], u[2], u[3]);
++	if (!tx && !use_compressed_rx_status)
++		seq_printf(s, "  0x%08x 0x%08x 0x%08x 0x%08x\n",
++			   u[4], u[5], u[6], u[7]);
++
++	seq_puts(s, "}\n");
++
++	return 0;
++}
++
++static int wil_status_msg_seq_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, wil_status_msg_debugfs_show,
++			   inode->i_private);
++}
++
++static const struct file_operations fops_status_msg = {
++	.open		= wil_status_msg_seq_open,
++	.release	= single_release,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++};
++
++static int wil_print_rx_buff(struct seq_file *s, struct list_head *lh)
++{
++	struct wil_rx_buff *it;
++	int i = 0;
++
++	list_for_each_entry(it, lh, list) {
++		if ((i % 16) == 0 && i != 0)
++			seq_puts(s, "\n    ");
++		seq_printf(s, "[%4d] ", it->id);
++		i++;
++	}
++	seq_printf(s, "\nNumber of buffers: %u\n", i);
++
++	return i;
++}
++
++static int wil_rx_buff_mgmt_debugfs_show(struct seq_file *s, void *data)
++{
++	struct wil6210_priv *wil = s->private;
++	struct wil_rx_buff_mgmt *rbm = &wil->rx_buff_mgmt;
++	int num_active;
++	int num_free;
++
++	seq_printf(s, "  size = %zu\n", rbm->size);
++	seq_printf(s, "  free_list_empty_cnt = %lu\n",
++		   rbm->free_list_empty_cnt);
++
++	/* Print active list */
++	seq_puts(s, "  Active list:\n");
++	num_active = wil_print_rx_buff(s, &rbm->active);
++	seq_puts(s, "\n  Free list:\n");
++	num_free = wil_print_rx_buff(s, &rbm->free);
++
++	seq_printf(s, "  Total number of buffers: %u\n",
++		   num_active + num_free);
++
++	return 0;
++}
++
++static int wil_rx_buff_mgmt_seq_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, wil_rx_buff_mgmt_debugfs_show,
++			   inode->i_private);
++}
++
++static const struct file_operations fops_rx_buff_mgmt = {
++	.open		= wil_rx_buff_mgmt_seq_open,
++	.release	= single_release,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++};
++
+ /*---------beamforming------------*/
+ static char *wil_bfstatus_str(u32 status)
+ {
+@@ -1473,6 +1728,13 @@ static int wil_sta_debugfs_show(struct seq_file *s, void *data)
+ 				   p->stats.rx_large_frame,
+ 				   p->stats.rx_replay);
+ 
++			if (wil->use_enhanced_dma_hw)
++				seq_printf(s,
++					   "mic error  %lu, key error %lu, amsdu error %lu\n",
++					   p->stats.rx_mic_error,
++					   p->stats.rx_key_error,
++					   p->stats.rx_amsdu_error);
++
+ 			seq_puts(s, "Rx/MCS:");
+ 			for (mcs = 0; mcs < ARRAY_SIZE(p->stats.rx_per_mcs);
+ 			     mcs++)
+@@ -1808,6 +2070,9 @@ static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
+ 	{"fw_capabilities",	0444,	&fops_fw_capabilities},
+ 	{"fw_version",	0444,		&fops_fw_version},
+ 	{"suspend_stats",	0644,	&fops_suspend_stats},
++	{"srings",	0444,		&fops_srings},
++	{"status_msg",	0444,		&fops_status_msg},
++	{"rx_buff_mgmt",	0444,	&fops_rx_buff_mgmt},
+ };
+ 
+ static void wil6210_debugfs_init_files(struct wil6210_priv *wil,
+@@ -1871,6 +2136,8 @@ static void wil6210_debugfs_init_isr(struct wil6210_priv *wil,
+ 	{"ring_index",	0644, (ulong)&dbg_ring_index, doff_u32},
+ 	{"mem_addr",	0644, (ulong)&mem_addr, doff_u32},
+ 	{"led_polarity", 0644, (ulong)&led_polarity, doff_u8},
++	{"status_index", 0644, (ulong)&dbg_status_msg_index, doff_u32},
++	{"sring_index",	0644, (ulong)&dbg_sring_index, doff_u32},
+ 	{},
+ };
+ 
+-- 
+1.9.1
