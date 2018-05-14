@@ -1,55 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:42334 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752162AbeEOInb (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55400 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751402AbeENNii (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 May 2018 04:43:31 -0400
-Received: by mail-qt0-f194.google.com with SMTP id c2-v6so19769828qtn.9
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2018 01:43:31 -0700 (PDT)
-Subject: Re: [PATCH V3 0/5] Update brcm firmware files
-To: Josh Boyer <jwboyer@kernel.org>
-References: <1521209329-59441-1-git-send-email-chi-hsien.lin@cypress.com>
- <5AF960B6.2010709@broadcom.com>
- <CA+5PVA7m3wWHyi12rTcpAozj=en9BtnsVAKAbQyvKvPRh_jC4A@mail.gmail.com>
-Cc: Linux Firmware <linux-firmware@kernel.org>,
-        chi-hsien.lin@cypress.com,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, wright.feng@cypress.com,
-        Hans de Goede <hdegoede@redhat.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AFA9DB0.7060703@broadcom.com> (sfid-20180515_104335_651642_400F1888)
-Date: Tue, 15 May 2018 10:43:28 +0200
+        Mon, 14 May 2018 09:38:38 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: ath10k@lists.infradead.org, bjorn.andersson@linaro.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 00/12] *** Add support for wifi QMI client driver ***
+References: <1522042636-25516-1-git-send-email-govinds@codeaurora.org>
+Date: Mon, 14 May 2018 16:38:33 +0300
+In-Reply-To: <1522042636-25516-1-git-send-email-govinds@codeaurora.org>
+        (Govind Singh's message of "Mon, 26 Mar 2018 11:07:16 +0530")
+Message-ID: <87po1ys6g6.fsf@kamboji.qca.qualcomm.com> (sfid-20180514_153842_282709_5FE6207C)
 MIME-Version: 1.0
-In-Reply-To: <CA+5PVA7m3wWHyi12rTcpAozj=en9BtnsVAKAbQyvKvPRh_jC4A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/14/2018 2:05 PM, Josh Boyer wrote:
-> n Mon, May 14, 2018 at 6:11 AM Arend van Spriel <
-> arend.vanspriel@broadcom.com> wrote:
->
->> On 3/16/2018 3:08 PM, Chi-Hsien Lin wrote:
->>> Update brcm firmware files and WHENCE accordingly.
->
->> Hi firmware-maintainers,
->
->> It seems this series somehow got lost. Can these still be applied. They
->> can be found in the linux-wireless patchwork database. I provided links
->> below.
->
-> All 5 of these move the respective firmware files under the Cypress
-> license.  It has been pointed out that the Cypress license has some
-> questionable language in it and that people have been in touch to try and
-> get this resolved.  I'm personally waiting on applying them until the
-> licence issue is sorted out.
+Govind Singh <govinds@codeaurora.org> writes:
 
-Thanks, Josh
+> Add QMI client driver for Q6 integrated WLAN connectivity subsystem.
+> This module is responsible for communicating WLAN control messages to FW
+> over QMI interface.
+>
+> =E2=80=9CQUALCOMM Messaging Interface=E2=80=9D(QMI) provides the control =
+interface between
+> components running b/w remote processors with underlying transport layer
+> based on integrated chipset(shared memory) or discrete chipset(PCI/USB/SD=
+IO/UART).
+>
+> QMI client driver implementation is based on qmi frmework https://lwn.net=
+/Articles/729924/.
+>
+> Below is the sequence of qmi handshake.
+>
+>        QMI CLIENT(APPS)                                         QMI SERVE=
+R(FW in Q6)
+>
+>                          <------wlan service discoverd----
+>
+>                        -----connect to wlam qmi service----->
+>
+>                        ------------wlan info request----->
+>
+>                        <------------wlan info resp------------
+>
+>                        ------------msa info req-------->
+>
+>                      <------------msa info resp------------
+>
+>                      ------------msa ready req-------->
+>
+>                      <------------msa ready resp------------
+>
+>                      <------------msa ready indication-------
+>
+>                      ------------capability req------->
+>
+>                     <------------capability resp------------
+>
+>                     ------------qmi bdf req--------->
+>
+>                      <------------qmi bdf resp------------
+>
+>                       ------------qmi cal trigger------->
+>
+>                   <------------ QMI FW ready indication-------
+>
+> Govind Singh (12):
+>   ath10k: Add qmi service for wlan qmi client
+>   dt: bindings: add bindings for ath10k qmi client
+>   ath10k: Add WCN3990 QMI client driver
+>   ath10k: add support to start and stop qmi service
+>   ath10k: Add support of QMI indication message
+>   firmware: qcom: scm: Add WLAN VMID for Qualcomm SCM interface
+>   ath10k: Add MSA handshake QMI mgs support
+>   ath10k: Add QMI CAP request support
+>   ath10k: Add QMI HOST CAP request support
+>   ath10k: add bdf/cal indication support
+>   ath10k: Add wlan mode on/off qmi message
+>   ath10k: Add qmi wlan enable/disable support for WCN3990
 
-I could not find any such response. Has it been taken off-list? Seems 
-like 2 months is quite some time, but maybe there are lawyers involved ;-)
+BTW, I noticed that you had v3 only in the cover letter but the version
+number should be in every patch part of the set:
 
-Regards,
-Arend
+https://patchwork.kernel.org/patch/10307161/
+
+--=20
+Kalle Valo
