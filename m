@@ -1,44 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:18466 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751102AbeEBHPA (ORCPT
+Received: from mout.kundenserver.de ([217.72.192.74]:53583 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752000AbeENJxD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 May 2018 03:15:00 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 02/21] staging: wilc1000: remove unnecessary 'out of memory' message in handle_key()
-Date: Wed, 2 May 2018 12:43:28 +0530
-Message-ID: <1525245227-3924-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180502_092058_102859_01BD3DAF)
-In-Reply-To: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
-References: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
+        Mon, 14 May 2018 05:53:03 -0400
+Subject: Re: brcmfmac: Updating Broadcom/Cypress Wifi/BT firmware
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <wright.feng@cypress.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Kevin Hilman <khilman@baylibre.com>
+References: <1350822038.83583.1525284334972@email.1und1.de>
+ <5AF945B8.3070801@broadcom.com>
+From: Stefan Wahren <stefan.wahren@i2se.com>
+Message-ID: <944ad773-6a7a-17c5-1d7e-0a3d20173e1d@i2se.com> (sfid-20180514_115308_000870_6A243121)
+Date: Mon, 14 May 2018 11:52:56 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5AF945B8.3070801@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix "Possible unnecessary 'out of memory' message" issue reported by
-checkpatch.pl script.
+Hi Arend,
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 1 -
- 1 file changed, 1 deletion(-)
+Am 14.05.2018 um 10:15 schrieb Arend van Spriel:
+> On 5/2/2018 8:05 PM, Stefan Wahren wrote:
+>> Hi,
+>> i wanted to know, if there are any plans to update the 
+>> Broadcom/Cypress firmware under:
+>>
+>> https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 
+>>
+>>
+>> As BCM2835 maintainer i'm interested in the following files:
+>>
+>> brcm/brcmfmac43430-sdio.bin
+>> brcm/brcmfmac43455-sdio.bin
+>
+> To my knowledge (just checked ;-) ) these are already in the repository.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 2f3e20d..d5b824b 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1707,7 +1707,6 @@ static int handle_key(struct wilc_vif *vif, struct key_attr *hif_key)
- 		} else if (hif_key->action & ADDKEY) {
- 			key_buf = kmalloc(PTK_KEY_MSG_LEN, GFP_KERNEL);
- 			if (!key_buf) {
--				netdev_err(vif->ndev, "No buffer send PTK\n");
- 				ret = -ENOMEM;
- 				goto out_wpa_ptk;
- 			}
--- 
-2.7.4
+i know, but the subject was about updating. These files are from 
+2015/2016 and contains a lot of issues (including CVE-2016-0801 
+CVE-2017-0561 CVE-2017-9417).
+
+AFAIK the latest version of brcmfmac43430-sdio.bin was from October 2017 
+[1].
+
+>
+>> brcm/brcmfmac43430-sdio.txt
+>
+> We do not distribute these .txt files aka nvram files as they are 
+> board specific and no good solution to express that in the filename.
+
+Thanks for clarification
+
+>
+>> brcm/BCM43430A1.hcd
+>
+> The BT side is not handled by us. Might be different within Cypress 
+> though.
+
+Okay
+
+>
+> Regards,
+> Arend
+
+[1] - https://github.com/raspberrypi/linux/issues/1342
+
+Best regards
+Stefan
