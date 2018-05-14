@@ -1,56 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41428 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933383AbeEHSNL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 May 2018 14:13:11 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, keescook@chromium.org,
-        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
-        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
-        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
-        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
-        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
-        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        cantabile.desu@gmail.com, ast@fb.com, hare@suse.com,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl,
-        davem@davemloft.net, arve@android.com, tkjos@android.com,
-        corbet@lwn.net, mchehab+samsung@kernel.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v6 12/13] Documentation: remove stale firmware API reference
-Date: Tue,  8 May 2018 11:12:46 -0700
-Message-Id: <20180508181247.19431-13-mcgrof@kernel.org> (sfid-20180508_201429_719071_3692D87D)
-In-Reply-To: <20180508181247.19431-1-mcgrof@kernel.org>
-References: <20180508181247.19431-1-mcgrof@kernel.org>
+Received: from mail-eopbgr00076.outbound.protection.outlook.com ([40.107.0.76]:64714
+        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751978AbeENU4M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 14 May 2018 16:56:12 -0400
+Subject: Re: [PATCH 2/2] ath10k: DFS Host Confirmation
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1525110339-25326-1-git-send-email-srirrama@codeaurora.org>
+ <1525110339-25326-3-git-send-email-srirrama@codeaurora.org>
+ <0c224b54-dd10-576f-944f-2d20d1cb2c46@bowerswilkins.com>
+ <87d0ye2t75.fsf@kamboji.qca.qualcomm.com>
+ <4c3ae0c5-0b26-3be9-ccad-ea71b325d5ad@bowerswilkins.com>
+ <87lgcmqfaz.fsf@kamboji.qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, Sriram R <srirrama@codeaurora.org>,
+        ath10k@lists.infradead.org
+From: Peter Oh <peter.oh@bowerswilkins.com>
+Message-ID: <e491e3fe-fc45-570f-a27c-ddaf376a1d25@bowerswilkins.com> (sfid-20180514_225616_852384_DB4A5634)
+Date: Mon, 14 May 2018 13:55:56 -0700
+MIME-Version: 1.0
+In-Reply-To: <87lgcmqfaz.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It refers to a pending patch, but this was merged eons ago.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- Documentation/dell_rbu.txt | 3 ---
- 1 file changed, 3 deletions(-)
+>> Which regulatory enforcement are you talking to? Are you talking about
+>> such "prevent users from changing regulatory domain" or "don't provide
+>> a manner to change regulatory domain or channel list" ? If not, can
+>> you share the section of document?
+> Sorry, I don't have any references about that.
+>
+This question is for "what the patch is trying to solve" and "to comply 
+FCC regulatory rule" is not the right answer. It should be answered by 
+"FCC regulatory rule section xx.xx.xx".
+So we all can double check if this patch addresses "the root cause of 
+the requirement" and "if it's the best approach or not"
 
-diff --git a/Documentation/dell_rbu.txt b/Documentation/dell_rbu.txt
-index 0fdb6aa2704c..077fdc29a0d0 100644
---- a/Documentation/dell_rbu.txt
-+++ b/Documentation/dell_rbu.txt
-@@ -121,9 +121,6 @@ read back the image downloaded.
- 
- .. note::
- 
--   This driver requires a patch for firmware_class.c which has the modified
--   request_firmware_nowait function.
--
-    Also after updating the BIOS image a user mode application needs to execute
-    code which sends the BIOS update request to the BIOS. So on the next reboot
-    the BIOS knows about the new image downloaded and it updates itself.
--- 
-2.17.0
+Thanks,
+Peter
