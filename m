@@ -1,94 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:12983 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752472AbeEKIOW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 04:14:22 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 09/30] staging: wilc1000: fix line over 80 chars in linux_mon
-Date: Fri, 11 May 2018 13:43:10 +0530
-Message-ID: <1526026411-11058-10-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101426_269173_CDCE17A0)
-In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
-References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+Received: from bues.ch ([80.190.117.144]:60014 "EHLO bues.ch"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752024AbeENR4Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 14 May 2018 13:56:16 -0400
+Date: Mon, 14 May 2018 19:55:39 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Chris Vine <vine35792468@gmail.com>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Re: Regression: bcm4312 lp-phy device not working in 4.17-rc5
+ kernel
+Message-ID: <20180514195539.74686870@wiggum> (sfid-20180514_195623_397934_F84FFCD1)
+In-Reply-To: <20180514184953.001c06412efcf2b16fdc59ac@gmail.com>
+References: <20180514184953.001c06412efcf2b16fdc59ac@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ boundary="Sig_/Ji.OWRUI1EkVOiswkG+_pal"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix line over 80 char issue reported by checkpatch.pl script.
+--Sig_/Ji.OWRUI1EkVOiswkG+_pal
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/linux_mon.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+On Mon, 14 May 2018 18:49:53 +0100
+Chris Vine <vine35792468@gmail.com> wrote:
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index 2f4b3f5..c372e0f 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -46,18 +46,18 @@ void wilc_wfi_monitor_rx(u8 *buff, u32 size)
- 	if (pkt_offset & IS_MANAGMEMENT_CALLBACK) {
- 		/* hostapd callback mgmt frame */
- 
--		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_cb_hdr));
-+		skb = dev_alloc_skb(size + sizeof(*cb_hdr));
- 		if (!skb)
- 			return;
- 
- 		skb_put_data(skb, buff, size);
- 
- 		cb_hdr = skb_push(skb, sizeof(*cb_hdr));
--		memset(cb_hdr, 0, sizeof(struct wilc_wfi_radiotap_cb_hdr));
-+		memset(cb_hdr, 0, sizeof(*cb_hdr));
- 
- 		cb_hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
- 
--		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
-+		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(*cb_hdr));
- 
- 		cb_hdr->hdr.it_present = cpu_to_le32(
- 				(1 << IEEE80211_RADIOTAP_RATE) |
-@@ -73,7 +73,7 @@ void wilc_wfi_monitor_rx(u8 *buff, u32 size)
- 		}
- 
- 	} else {
--		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_hdr));
-+		skb = dev_alloc_skb(size + sizeof(*hdr));
- 
- 		if (!skb)
- 			return;
-@@ -82,7 +82,7 @@ void wilc_wfi_monitor_rx(u8 *buff, u32 size)
- 		hdr = skb_push(skb, sizeof(*hdr));
- 		memset(hdr, 0, sizeof(struct wilc_wfi_radiotap_hdr));
- 		hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
--		hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_hdr));
-+		hdr->hdr.it_len = cpu_to_le16(sizeof(*hdr));
- 		hdr->hdr.it_present = cpu_to_le32
- 				(1 << IEEE80211_RADIOTAP_RATE); /* | */
- 		hdr->rate = 5; /* txrate->bitrate / 5; */
-@@ -164,7 +164,7 @@ static netdev_tx_t wilc_wfi_mon_xmit(struct sk_buff *skb,
- 	skb_pull(skb, rtap_len);
- 
- 	if (skb->data[0] == 0xc0 && is_broadcast_ether_addr(&skb->data[4])) {
--		skb2 = dev_alloc_skb(skb->len + sizeof(struct wilc_wfi_radiotap_cb_hdr));
-+		skb2 = dev_alloc_skb(skb->len + sizeof(*cb_hdr));
- 		if (!skb2)
- 			return -ENOMEM;
- 
-@@ -175,7 +175,7 @@ static netdev_tx_t wilc_wfi_mon_xmit(struct sk_buff *skb,
- 
- 		cb_hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
- 
--		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_cb_hdr));
-+		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(*cb_hdr));
- 
- 		cb_hdr->hdr.it_present = cpu_to_le32(
- 				(1 << IEEE80211_RADIOTAP_RATE) |
--- 
-2.7.4
+> I have an old netbook with a Broadcom bcm4312 802.11b/g lp-phy
+> [14e4:4315] (rev 01) wifi device.  This works up to and including the
+> 4.16 kernel, but not with 4.17-rc5.
+>=20
+> The b43, mac80211, cfg80211, ssb and mmc_core modules are loaded OK, as
+> is the firmware, and the wlan0 interface will come up, but any attempt
+> to use the interface fails and it cannot (for example) scan.
+>=20
+> No useful error messages are given.  The interface (wlan0) is just
+> reported as not being ready.
+
+Hi,
+
+thanks for your report.
+
+Can you please provide all kernel log messages anyway?
+And what does "not ready" mean exactly?
+
+It would be extremely helpful if you'd do a git bisect to find the
+commit that broke it.
+
+--=20
+Michael
+
+--Sig_/Ji.OWRUI1EkVOiswkG+_pal
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlr5zZsACgkQ9TK+HZCN
+iw6QiA//Vh+LV9ZkLUG4zye21fP5i+XPonkuVwy5+vCKzc36akbHeGG/LdOx6gGG
+paikZi4AG+e5vqowE/27Y+MIGX3xUZxETO5m5mfiXrb4AjQ5mTBZoO/MzWHz54sg
+Ths5Ejs9o4QG6Us0/PaMqHsxRdajoR/76aEs8esglrTFtd48caIcJITbXS0t3Fwy
+XOEzmRwx35INHZbLyb+NG7QYt2lBjgMxpFYv7sJ9aTWbJpqpbgrO4Pidg+s4LvLu
+Zvb/an4px9y3v/sqNg2/URLiR6e2nhBbxUKX/hOSp/mg1qLSL2+QUByVQxTM7o5+
+1ClYTUF4FBCPB28F3vZZmJz5lPaqlTanIAKbv1F8ONts7VxhEA77aSvJ3Pq5cHas
+kt+BgK67Ls/MGHBjJNf7rkIdbEpLR9ZllYKCSe7BXPpXNGn+EIohmw0g78O3WE87
+BIwTS9qtmtjnk0cjNEh9eLKqJF8iz0Mk+T8poEKwFmK7H+A6VMLMlpIiw/gl7KiP
+S4nb4qpQXR35uw/RsCnGQIQLZ79ajyQ391d9GLIs5YW/REmLm/6Nff7qGkWy9XBR
+DYbSkmCcwLxU/Xr1+gVc4jTrIoVInBEegyesBxvG7eUFuE2pE+JEF/Dj9nDNc8S0
+M4lGmLMmqlhMpMje4G2iBlVB91hqJ9gAXXEoVBolO+x6SQIeSu8=
+=y6Sh
+-----END PGP SIGNATURE-----
+
+--Sig_/Ji.OWRUI1EkVOiswkG+_pal--
