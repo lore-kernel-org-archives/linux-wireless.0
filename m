@@ -1,90 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:30794 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751363AbeERPCy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 11:02:54 -0400
-Date: Fri, 18 May 2018 23:02:44 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: kbuild-all@01.org, linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [mac80211-next:master 20/20] net/wireless/nl80211.c:4802:48: sparse:
- incorrect type in argument 1 (different base types)
-Message-ID: <201805182336.tAJNrmeL%fengguang.wu@intel.com> (sfid-20180518_170258_192666_83AA0FA7)
+Received: from smtp.codeaurora.org ([198.145.29.96]:57036 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932144AbeENNSr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 14 May 2018 09:18:47 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: Govind Singh <govinds@codeaurora.org>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 01/12] ath10k: Add qmi service for wlan qmi client
+References: <1522042736-25618-1-git-send-email-govinds@codeaurora.org>
+        <20180511170540.GM2259@tuxbook-pro>
+Date: Mon, 14 May 2018 16:18:42 +0300
+In-Reply-To: <20180511170540.GM2259@tuxbook-pro> (Bjorn Andersson's message of
+        "Fri, 11 May 2018 10:05:40 -0700")
+Message-ID: <87tvras7d9.fsf@kamboji.qca.qualcomm.com> (sfid-20180514_151856_636418_03375809)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
-head:   7ea3e110f2f8ba23f330c2f702f556acd539bcb8
-commit: 7ea3e110f2f8ba23f330c2f702f556acd539bcb8 [20/20] cfg80211: release station info tidstats where needed
-reproduce:
-        # apt-get install sparse
-        git checkout 7ea3e110f2f8ba23f330c2f702f556acd539bcb8
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
+Bjorn Andersson <bjorn.andersson@linaro.org> writes:
 
+>> new file mode 100644
+>> index 0000000..5857c0c
+>> --- /dev/null
+>> +++ b/drivers/net/wireless/ath/ath10k/qmi_svc_v01.c
+>> @@ -0,0 +1,2323 @@
+>> +/*
+>> + * Copyright (c) 2018 The Linux Foundation. All rights reserved.
+>> + *
+>> + * Permission to use, copy, modify, and/or distribute this software for any
+>> + * purpose with or without fee is hereby granted, provided that the above
+>> + * copyright notice and this permission notice appear in all copies.
+>> + *
+>> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+>> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+>> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+>> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+>> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+>> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+>> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+>> + */
+>
+> Please use SPDX license header.
 
-sparse warnings: (new ones prefixed by >>)
+As ath10k does not use SPDX yet so for consistency I would like to use
+the old style license text still and later switch the whole ath10k to
+use SPDX in one go.
 
->> net/wireless/nl80211.c:4802:48: sparse: incorrect type in argument 1 (different base types) @@    expected struct station_info *sinfo @@    got struct statiostruct station_info *sinfo @@
-   net/wireless/nl80211.c:4802:48:    expected struct station_info *sinfo
-   net/wireless/nl80211.c:4802:48:    got struct station_info [addressable] sinfo
-   net/wireless/nl80211.c:7587:33: sparse: expression using sizeof(void)
-   net/wireless/nl80211.c:7587:33: sparse: expression using sizeof(void)
-   net/wireless/nl80211.c: In function 'nl80211_get_station':
-   net/wireless/nl80211.c:4802:34: error: incompatible type for argument 1 of 'cfg80211_sinfo_release_content'
-      cfg80211_sinfo_release_content(sinfo);
-                                     ^~~~~
-   In file included from net/wireless/nl80211.c:24:0:
-   include/net/cfg80211.h:5721:20: note: expected 'struct station_info *' but argument is of type 'struct station_info'
-    static inline void cfg80211_sinfo_release_content(struct station_info *sinfo)
-                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-vim +4802 net/wireless/nl80211.c
-
-  4776	
-  4777	static int nl80211_get_station(struct sk_buff *skb, struct genl_info *info)
-  4778	{
-  4779		struct cfg80211_registered_device *rdev = info->user_ptr[0];
-  4780		struct net_device *dev = info->user_ptr[1];
-  4781		struct station_info sinfo;
-  4782		struct sk_buff *msg;
-  4783		u8 *mac_addr = NULL;
-  4784		int err;
-  4785	
-  4786		memset(&sinfo, 0, sizeof(sinfo));
-  4787	
-  4788		if (!info->attrs[NL80211_ATTR_MAC])
-  4789			return -EINVAL;
-  4790	
-  4791		mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
-  4792	
-  4793		if (!rdev->ops->get_station)
-  4794			return -EOPNOTSUPP;
-  4795	
-  4796		err = rdev_get_station(rdev, dev, mac_addr, &sinfo);
-  4797		if (err)
-  4798			return err;
-  4799	
-  4800		msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-  4801		if (!msg) {
-> 4802			cfg80211_sinfo_release_content(sinfo);
-  4803			return -ENOMEM;
-  4804		}
-  4805	
-  4806		if (nl80211_send_station(msg, NL80211_CMD_NEW_STATION,
-  4807					 info->snd_portid, info->snd_seq, 0,
-  4808					 rdev, dev, mac_addr, &sinfo) < 0) {
-  4809			nlmsg_free(msg);
-  4810			return -ENOBUFS;
-  4811		}
-  4812	
-  4813		return genlmsg_reply(msg, info);
-  4814	}
-  4815	
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+-- 
+Kalle Valo
