@@ -1,80 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35974 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752226AbeEJUJM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 May 2018 16:09:12 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, keescook@chromium.org,
-        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
-        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
-        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
-        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
-        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
-        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        cantabile.desu@gmail.com, khc@pm.waw.pl, arve@android.com,
-        tkjos@android.com, corbet@lwn.net, mchehab+samsung@kernel.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v7 12/14] Documentation: fix few typos and clarifications for the firmware loader
-Date: Thu, 10 May 2018 13:08:48 -0700
-Message-Id: <20180510200850.5958-13-mcgrof@kernel.org> (sfid-20180510_220931_806381_BFD82163)
-In-Reply-To: <20180510200850.5958-1-mcgrof@kernel.org>
-References: <20180510200850.5958-1-mcgrof@kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:40262 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752302AbeENOvJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 14 May 2018 10:51:09 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Peter Oh <peter.oh@bowerswilkins.com>
+Cc: Sriram R <srirrama@codeaurora.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] ath: Add support to get the detected radar specifications
+References: <1525110339-25326-1-git-send-email-srirrama@codeaurora.org>
+        <1525110339-25326-2-git-send-email-srirrama@codeaurora.org>
+        <cf60f81c-9466-ac52-e902-413fe3163490@bowerswilkins.com>
+Date: Mon, 14 May 2018 17:51:04 +0300
+In-Reply-To: <cf60f81c-9466-ac52-e902-413fe3163490@bowerswilkins.com> (Peter
+        Oh's message of "Mon, 30 Apr 2018 12:01:45 -0700")
+Message-ID: <871sees33b.fsf@kamboji.qca.qualcomm.com> (sfid-20180514_165112_814508_0FBBBAB8)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix a few typos, and clarify a few sentences.
+Peter Oh <peter.oh@bowerswilkins.com> writes:
 
-Reviewed-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- Documentation/driver-api/firmware/fallback-mechanisms.rst | 5 +++--
- Documentation/driver-api/firmware/firmware_cache.rst      | 4 ++--
- 2 files changed, 5 insertions(+), 4 deletions(-)
+> On 04/30/2018 10:45 AM, Sriram R wrote:
+>> This enables ath10k/ath9k drivers to collect the specifications of the
+>> radar type once it is detected by the dfs pattern detector unit.
+>> Usage of the collected info is specific to driver implementation.
+>> For example, collected radar info could be used by the host driver
+>> to send to co-processors for additional processing/validation.
+>
+> What kind of additional processing/validation does it do?
+> Please give us more details for that.
 
-diff --git a/Documentation/driver-api/firmware/fallback-mechanisms.rst b/Documentation/driver-api/firmware/fallback-mechanisms.rst
-index f353783ae0be..a39323ef7d29 100644
---- a/Documentation/driver-api/firmware/fallback-mechanisms.rst
-+++ b/Documentation/driver-api/firmware/fallback-mechanisms.rst
-@@ -83,7 +83,7 @@ and a file upload firmware into:
-   * /sys/$DEVPATH/data
- 
- To upload firmware you will echo 1 onto the loading file to indicate
--you are loading firmware. You then cat the firmware into the data file,
-+you are loading firmware. You then write the firmware into the data file,
- and you notify the kernel the firmware is ready by echo'ing 0 onto
- the loading file.
- 
-@@ -136,7 +136,8 @@ by kobject uevents. This is specially exacerbated due to the fact that most
- distributions today disable CONFIG_FW_LOADER_USER_HELPER_FALLBACK.
- 
- Refer to do_firmware_uevent() for details of the kobject event variables
--setup. Variables passwdd with a kobject add event:
-+setup. The variables currently passed to userspace with a "kobject add"
-+event are:
- 
- * FIRMWARE=firmware name
- * TIMEOUT=timeout value
-diff --git a/Documentation/driver-api/firmware/firmware_cache.rst b/Documentation/driver-api/firmware/firmware_cache.rst
-index 2210e5bfb332..c2e69d9c6bf1 100644
---- a/Documentation/driver-api/firmware/firmware_cache.rst
-+++ b/Documentation/driver-api/firmware/firmware_cache.rst
-@@ -29,8 +29,8 @@ Some implementation details about the firmware cache setup:
- * If an asynchronous call is used the firmware cache is only set up for a
-   device if if the second argument (uevent) to request_firmware_nowait() is
-   true. When uevent is true it requests that a kobject uevent be sent to
--  userspace for the firmware request. For details refer to the Fackback
--  mechanism documented below.
-+  userspace for the firmware request through the sysfs fallback mechanism
-+  if the firmware file is not found.
- 
- * If the firmware cache is determined to be needed as per the above two
-   criteria the firmware cache is setup by adding a devres entry for the
+This is handled in patch 2.
+
 -- 
-2.17.0
+Kalle Valo
