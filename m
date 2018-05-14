@@ -1,73 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55970 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751063AbeEUDq2 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:60338 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752651AbeENPwY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 May 2018 23:46:28 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Mon, 21 May 2018 09:16:27 +0530
-From: Sriram R <srirrama@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 0/2] nl80211/mac80211 Add support for per-rate rx statistics
-In-Reply-To: <1526635805.3805.7.camel@sipsolutions.net>
-References: <1526361481-7159-1-git-send-email-srirrama@codeaurora.org>
- <1526367603.3255.3.camel@sipsolutions.net>
- <44cd0e995e3caf7b44fcf5676cb57b5a@codeaurora.org>
- <1526635805.3805.7.camel@sipsolutions.net>
-Message-ID: <36b1baa590e67bd8eeeca0466006bb83@codeaurora.org> (sfid-20180521_054633_103734_A5CD7AF0)
+        Mon, 14 May 2018 11:52:24 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 1/3] ath10k: Add ath10k-ct firmware feature flags and descriptions.
+Date: Mon, 14 May 2018 08:52:15 -0700
+Message-Id: <1526313137-23899-1-git-send-email-greearb@candelatech.com> (sfid-20180514_175251_509874_AF5CBFD3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-05-18 15:00, Johannes Berg wrote:
-> On Wed, 2018-05-16 at 10:04 +0530, Sriram R wrote:
-> 
->> But, I wanted to avoid,
->> 	1. Static indexing and memory allocation based on MCS count((8x3)24
->> entries for HT and (10x3)30 for VHT within allocated 36 entries) so 
->> that
->> it's scalable.
-> 
-> Do you expect that the rate control on the other side flips through
-> MCSes so fast that this little cache will need to be flushed
-> significantly?
-Not really Johannes. Dynamic allocation (with indexing based on encoded 
-rate)was tried out in this patch
-so as to have the rate table independent of MCS Count(so that it works 
-without changes
-when new mcs's is used in HE).
-> 
->> 	2. Remote chance of dropping a stats(Though it does not have much
->> impact)
-> 
-> Yeah this doesn't seem like a concern either way. How many packets and
-> how little time ... :)
-Right!
-> 
->> And to allow,
->> 	1. A 'station dump' kind of interface to dump the complete collected
->> stats instead of returning only current snapshot of the stats within
->> kernel.
-> 
-> This *completely* contradict keeping limits on the kernel memory
-> consumed, so basically I don't think this is feasible.
-Ok,Understood.
-> 
->> Also, do you feel it would be good to have both ,i.e complete stats
->> collection within kernel(this approach) and dump+clear of stats on
->> reaching threshold(your approach) and have one of these two modes
->> selected based on the requirement.
-> 
-> No, honestly, I don't. If an application wants these statistics, then I
-> feel that we can impose *some* requirements and not leave it at "let me
-> just enable it and have the kernel do all the work for me".
-Right, Thanks for the suggestions. I'll send the next revision based on 
-your approach
-of flushing the rate table(whenever its' requested or when we hit a 
-limit)
-Thanks and Regards,
-Sriram.R
-> 
-> johannes
+From: Ben Greear <greearb@candelatech.com>
+
+These feature flags are used by ath10k-ct firmware.  Add these
+so we can use them in future patches and so there are no warnings
+about feature flags on loading ath10k-ct firmware.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+v2:  Fix warings typo in description.
+
+ drivers/net/wireless/ath/ath10k/core.c | 17 +++++++++
+ drivers/net/wireless/ath/ath10k/core.h | 67 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 84 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 4cf54a7..f2f8f61 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -552,6 +552,23 @@ static const char *const ath10k_core_fw_feature_str[] = {
+ 	[ATH10K_FW_FEATURE_NO_PS] = "no-ps",
+ 	[ATH10K_FW_FEATURE_MGMT_TX_BY_REF] = "mgmt-tx-by-reference",
+ 	[ATH10K_FW_FEATURE_NON_BMI] = "non-bmi",
++	[ATH10K_FW_FEATURE_WMI_10X_CT] = "wmi-10.x-CT",
++	[ATH10K_FW_FEATURE_CT_RXSWCRYPT] = "rxswcrypt-CT",
++	[ATH10K_FW_FEATURE_HAS_TXSTATUS_NOACK] = "txstatus-noack",
++	[ATH10K_FW_FEATURE_CT_RATEMASK] = "ratemask-CT",
++	[ATH10K_FW_FEATURE_HAS_SAFE_BURST] = "safe-burst",
++	[ATH10K_FW_FEATURE_REGDUMP_CT] = "regdump-CT",
++	[ATH10K_FW_FEATURE_TXRATE_CT] = "txrate-CT",
++	[ATH10K_FW_FEATURE_FLUSH_ALL_CT] = "flush-all-CT",
++	[ATH10K_FW_FEATURE_PINGPONG_READ_CT] = "pingpong-CT",
++	[ATH10K_FW_FEATURE_SKIP_CH_RES_CT] = "ch-regs-CT",
++	[ATH10K_FW_FEATURE_NOP_CT] = "nop-CT",
++	[ATH10K_FW_FEATURE_HTT_MGT_CT] = "htt-mgt-CT",
++	[ATH10K_FW_FEATURE_SET_SPECIAL_CT] = "set-special-CT",
++	[ATH10K_FW_FEATURE_NO_BMISS_CT] = "no-bmiss-CT",
++	[ATH10K_FW_FEATURE_HAS_GET_TEMP_CT] = "get-temp-CT",
++	[ATH10K_FW_FEATURE_HAS_TX_RC_CT] = "tx-rc-CT",
++	[ATH10K_FW_FEATURE_CUST_STATS_CT] = "cust-stats-CT",
+ };
+ 
+ static unsigned int ath10k_core_get_fw_feature_str(char *buf,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index e4ac8f2..c1342c5 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -711,6 +711,73 @@ enum ath10k_fw_features {
+ 	/* Firmware load is done externally, not by bmi */
+ 	ATH10K_FW_FEATURE_NON_BMI = 19,
+ 
++	/* tx-status has the noack bits (CT firmware version 14 and higher ) */
++	ATH10K_FW_FEATURE_HAS_TXSTATUS_NOACK = 30,
++
++	/* Firmware from Candela Technologies, enables more VIFs, etc */
++	ATH10K_FW_FEATURE_WMI_10X_CT = 31,
++
++	/* Firmware from Candela Technologies with rx-software-crypt.
++	 * Required for multiple stations connected to same AP when using
++	 * encryption (ie, commercial version of CT firmware)
++	 */
++	ATH10K_FW_FEATURE_CT_RXSWCRYPT = 32,
++
++	/* Firmware supports extended wmi_common_peer_assoc_complete_cmd that
++	 * contains an array of rate-disable masks.  This allows the host to
++	 * have better control over what rates the firmware will use.  CT
++	 * Firmware only (v15 and higher)
++	 */
++	ATH10K_FW_FEATURE_CT_RATEMASK = 33,
++
++	/* Versions of firmware before approximately 10.2.4.72 would corrupt
++	 * txop fields during burst.  Since this is fixed now, add a flag to
++	 * denote this.
++	 */
++	ATH10K_FW_FEATURE_HAS_SAFE_BURST = 34,
++
++	/* Register-dump is supported. */
++	ATH10K_FW_FEATURE_REGDUMP_CT = 35,
++
++	/* TX-Rate is reported. */
++	ATH10K_FW_FEATURE_TXRATE_CT = 36,
++
++	/* Firmware can flush all peers. */
++	ATH10K_FW_FEATURE_FLUSH_ALL_CT = 37,
++
++	/* Firmware can read memory with ping-pong protocol. */
++	ATH10K_FW_FEATURE_PINGPONG_READ_CT = 38,
++
++	/* Firmware can skip channel reservation. */
++	ATH10K_FW_FEATURE_SKIP_CH_RES_CT = 39,
++
++	/* Firmware supports NOP keep-alive message. */
++	ATH10K_FW_FEATURE_NOP_CT = 40,
++
++	/* Firmware supports CT HTT MGT feature. */
++	ATH10K_FW_FEATURE_HTT_MGT_CT = 41,
++
++	/* Set-special cmd-id is supported. */
++	ATH10K_FW_FEATURE_SET_SPECIAL_CT = 42,
++
++	/* SW Beacon Miss is disabled in this kernel, so you have to
++	 * let mac80211 manage the connection.
++	 */
++	ATH10K_FW_FEATURE_NO_BMISS_CT = 43,
++
++	/* 10.1 firmware that supports getting temperature.  Stock
++	 * 10.1 cannot.
++	 */
++	ATH10K_FW_FEATURE_HAS_GET_TEMP_CT = 44,
++
++	/* Can peer-id be over-ridden to provide rix + retries for raw pkts?
++	 *  CT only option.
++	 */
++	ATH10K_FW_FEATURE_HAS_TX_RC_CT = 45,
++
++	/* Do we support requesting custom stats */
++	ATH10K_FW_FEATURE_CUST_STATS_CT = 46,
++
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
+ };
+-- 
+2.4.11
