@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34172 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:34768 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753986AbeEWIB7 (ORCPT
+        with ESMTP id S1753451AbeENNrK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 May 2018 04:01:59 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [V2] brcmfmac: add debugfs entry for reading firmware capabilities
+        Mon, 14 May 2018 09:47:10 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180514064820.24305-1-zajec5@gmail.com>
-References: <20180514064820.24305-1-zajec5@gmail.com>
-To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Message-Id: <20180523080159.917DB604D4@smtp.codeaurora.org> (sfid-20180523_100311_033706_DA8F6F5B)
-Date: Wed, 23 May 2018 08:01:59 +0000 (UTC)
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        franky.lin@broadcom.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [wireless-drivers-next:master] BUILD REGRESSION b41c393676696c20456d5fd8cbe71453560ee06e
+References: <5af6c41e.dwbK9bka/B8S6Bva%lkp@intel.com>
+Date: Mon, 14 May 2018 16:47:06 +0300
+In-Reply-To: <5af6c41e.dwbK9bka/B8S6Bva%lkp@intel.com> (kbuild test robot's
+        message of "Sat, 12 May 2018 18:38:22 +0800")
+Message-ID: <87lgcms61x.fsf@kamboji.qca.qualcomm.com> (sfid-20180514_154714_268241_1DEE8A63)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki wrote:
+kbuild test robot <lkp@intel.com> writes:
 
-> From: Rafał Miłecki <rafal@milecki.pl>
-> 
-> This allows reading all capabilities as reported by a firmware. They are
-> printed using native (raw) names, just like developers like it the most.
-> It's how firmware reports support for various features, e.g. supported
-> modes, supported standards, power saving details, max BSS-es.
-> 
-> Access to all that info is useful for trying new firmwares, comparing
-> them and debugging features AKA bugs.
-> 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> tree/branch:
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-ne=
+xt.git
+> master
+> branch HEAD: b41c393676696c20456d5fd8cbe71453560ee06e rsi: fix
+> spelling mistake: "thead" -> "thread"
+>
+> Regressions in current branch:
+>
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:2740:49:
+> sparse: Using plain integer as NULL pointer
+>
+> Error ids grouped by kconfigs:
+>
+> recent_errors
+> =E2=94=94=E2=94=80=E2=94=80 x86_64-allmodconfig
+>     =E2=94=94=E2=94=80=E2=94=80
+> drivers-net-wireless-broadcom-brcm80211-brcmfmac-cfg80211.c:sparse:Using-=
+plain-integer-as-NULL-pointer
 
-Patch applied to wireless-drivers-next.git, thanks.
+Could someone (Franky?) please fix this regression in brcmfmac? (Or if
+it's a false positive report it to the kbuilt bot maintainers.) The
+kbuild bot is complaining about this in every build report now.
 
-88001968245c brcmfmac: add debugfs entry for reading firmware capabilities
+I think the offending commit is:
 
--- 
-https://patchwork.kernel.org/patch/10396811/
+7742fce4c007 brcmfmac: reports boottime_ns while informing bss
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Earlier report:
+
+https://lkml.kernel.org/r/878t94278l.fsf@codeaurora.org
+
+--=20
+Kalle Valo
