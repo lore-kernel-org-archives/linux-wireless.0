@@ -1,57 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:4615 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751903AbeEMQDy (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42974 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752379AbeEOKCJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 13 May 2018 12:03:54 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH 0/7] wil6210 patches
-Date: Sun, 13 May 2018 19:02:48 +0300
-Message-Id: <1526227375-31881-1-git-send-email-merez@codeaurora.org> (sfid-20180513_180402_543444_09CBF42D)
+        Tue, 15 May 2018 06:02:09 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Linux Bluetooth mailing list
+        <linux-bluetooth@vger.kernel.org>
+Subject: Re: [PATCH 5/8] btmrvl: support sysfs initiated firmware coredump
+References: <1526375691-31789-1-git-send-email-arend.vanspriel@broadcom.com>
+        <1526375691-31789-6-git-send-email-arend.vanspriel@broadcom.com>
+        <87bmdhp8os.fsf@kamboji.qca.qualcomm.com>
+        <5AFAAF05.2020207@broadcom.com>
+Date: Tue, 15 May 2018 13:02:04 +0300
+In-Reply-To: <5AFAAF05.2020207@broadcom.com> (Arend van Spriel's message of
+        "Tue, 15 May 2018 11:57:25 +0200")
+Message-ID: <8736ytp78j.fsf@kamboji.qca.qualcomm.com> (sfid-20180515_120218_171772_A7896F5A)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following set of patches add support for new wil6210 device (Talyn ver 2.0):
-- Definition of the new device ID and memory areas
-- New boot flow procedure and reset sequence
-- Support new DMA interface - enhanced DMA
-- Support new HW offloads, such as TSO, RX reorder and AMSDU
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-Gidon Studinski (3):
-  wil6210: add support for enhanced DMA structures
-  wil6210: initialize TX and RX enhanced DMA rings
-  wil6210: add support for enhanced DMA RX data flows
+> + Marcel, bt-list
+>
+> On 5/15/2018 11:30 AM, Kalle Valo wrote:
+>> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+>>
+>>> Since commit 3c47d19ff4dc ("drivers: base: add coredump driver ops")
+>>> it is possible to initiate a device coredump from user-space. This
+>>> patch adds support for it in btmrvl_sdio adding the .coredump()
+>>> driver callback. This makes dump through debugfs obsolete so removing
+>>> it.
+>>>
+>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>> ---
+>>>   drivers/bluetooth/btmrvl_debugfs.c | 31 -------------------------------
+>>>   drivers/bluetooth/btmrvl_drv.h     |  2 --
+>>>   drivers/bluetooth/btmrvl_main.c    |  6 ------
+>>>   drivers/bluetooth/btmrvl_sdio.c    | 11 ++++++++---
+>>>   4 files changed, 8 insertions(+), 42 deletions(-)
+>>
+>> Shouldn't this go via bluetooth tree?
+>
+> Ah, yes. I should at least have added bt-list to Cc: I can submit this
+> separately so you can drop it or can you coordinate with Marcel how to
+> deal with it. Maybe it is fine to take this to w-d tree?
 
-Maya Erez (4):
-  wil6210: add support for Talyn-MB (Talyn ver 2.0) device
-  wil6210: add support for enhanced DMA TX data flows
-  wil6210: add support for enhanced DMA debugfs
-  wil6210: add support for Talyn-MB boot flow
-
- drivers/net/wireless/ath/wil6210/Makefile     |    1 +
- drivers/net/wireless/ath/wil6210/cfg80211.c   |   12 +-
- drivers/net/wireless/ath/wil6210/debugfs.c    |  431 +++++--
- drivers/net/wireless/ath/wil6210/ethtool.c    |    2 +-
- drivers/net/wireless/ath/wil6210/interrupt.c  |  225 +++-
- drivers/net/wireless/ath/wil6210/main.c       |  350 ++++--
- drivers/net/wireless/ath/wil6210/netdev.c     |   73 +-
- drivers/net/wireless/ath/wil6210/pcie_bus.c   |   62 +-
- drivers/net/wireless/ath/wil6210/pm.c         |    6 +-
- drivers/net/wireless/ath/wil6210/rx_reorder.c |   20 +-
- drivers/net/wireless/ath/wil6210/trace.h      |   57 +
- drivers/net/wireless/ath/wil6210/txrx.c       |  648 +++++-----
- drivers/net/wireless/ath/wil6210/txrx.h       |  105 +-
- drivers/net/wireless/ath/wil6210/txrx_edma.c  | 1637 +++++++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/txrx_edma.h  |  553 +++++++++
- drivers/net/wireless/ath/wil6210/wil6210.h    |  220 +++-
- drivers/net/wireless/ath/wil6210/wmi.c        |  458 ++++++-
- drivers/net/wireless/ath/wil6210/wmi.h        |  166 ++-
- 18 files changed, 4389 insertions(+), 637 deletions(-)
- create mode 100644 drivers/net/wireless/ath/wil6210/txrx_edma.c
- create mode 100644 drivers/net/wireless/ath/wil6210/txrx_edma.h
+I prefer submitting this patch separately to the bluetooth tree (and
+I'll drop this version from my queue).
 
 -- 
-1.9.1
+Kalle Valo
