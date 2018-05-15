@@ -1,73 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:42758 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751438AbeEQSug (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 May 2018 14:50:36 -0400
-From: Tony Lindgren <tony@atomide.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
-        Guy Mishol <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Maital Hahn <maitalm@ti.com>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org
-Subject: [PATCH 2/5] wlcore: Make sure PM calls are paired
-Date: Thu, 17 May 2018 11:50:26 -0700
-Message-Id: <20180517185029.71716-3-tony@atomide.com> (sfid-20180517_205041_037497_14961769)
-In-Reply-To: <20180517185029.71716-1-tony@atomide.com>
-References: <20180517185029.71716-1-tony@atomide.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:60244 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752149AbeEOFEm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 May 2018 01:04:42 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: srirrama@codeaurora.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH 2/2] ath10k: DFS Host Confirmation
+References: <1525110339-25326-1-git-send-email-srirrama@codeaurora.org>
+        <1525110339-25326-3-git-send-email-srirrama@codeaurora.org>
+        <CAJ-VmonSEuh7Ou=K9Gu-gZ5ikpX9H=nzXe9NssNu1vw8fEk3hg@mail.gmail.com>
+        <87h8naqel1.fsf@kamboji.qca.qualcomm.com>
+        <CAJ-VmomNrjdEZ+UCH5rmth=2yE9utfM3FUTEy2a0zpq0r44Zig@mail.gmail.com>
+Date: Tue, 15 May 2018 08:04:37 +0300
+In-Reply-To: <CAJ-VmomNrjdEZ+UCH5rmth=2yE9utfM3FUTEy2a0zpq0r44Zig@mail.gmail.com>
+        (Adrian Chadd's message of "Mon, 14 May 2018 14:13:13 -0700")
+Message-ID: <87y3gla4re.fsf@codeaurora.org> (sfid-20180515_070551_946585_D690AC54)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The call to wl1271_ps_elp_wakeup() in wl12xx_queue_recovery_work() is
-unpaired. Let's remove it and add paired calls to wl1271_recovery_work()
-instead in preparation for changing things to use runtime PM.
+Adrian Chadd <adrian@freebsd.org> writes:
 
-Signed-off-by: Tony Lindgren <tony@atomide.com>
----
- drivers/net/wireless/ti/wlcore/main.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+> On Mon, 14 May 2018 at 11:25, Kalle Valo <kvalo@codeaurora.org> wrote:
+>
+>> Adrian Chadd <adrian@freebsd.org> writes:
+>
+>> > May we have a little more information about how this is supposed to
+> work?
+>> >
+>> > It looks like we're supposed to send the information about the matched
+>> > radar pattern back to the firmware for confirmation? What's the intended
+>> > behaviour from the firmware? Will the firmware have a hard-coded set of
+>> > patterns we have to answer in/by?
+>
+>> That's really an implementation detail inside the firmware and from
+>> ath10k point of view we don't care what checks the firmware has, we just
+>> provide all the necessary information. The checks in firmware might even
+>> change in later releases.
+>
+>> > I ask (like Peter, we work together) because we've had to tweak this
+>> > behaviour a little to actually pass FCC / ETSI DFS certification. My
+>> > general concern is that this'll cause a lot of false detects on boards
+> that
+>> > haven't had things tweaked for the given board. As far as I'm aware the
+> DFS
+>> > parameters are still hard-coded into the firmware image so if you have
+> to
+>> > change those you're SOL without the relevant NDAs - this makes running
+> the
+>> > open source DFS stuff a little tricksy on vendor boards.
+>
+>> This shouldn't cause more false detections, the pattern detection from
+>> ath.ko is still used as before. The firmware will just disable DFS
+>> altogether if it thinks ath10k is not compliant.
+>
+>
+> Heh, well the fun one for production for us is "ok, so what's
+> non-compliant" ?
+>
+> Eg - if it's 1 out of 100 that we don't hit the explicit timing
+> requirements because of the rest of the linux kernel (eg someone holds a
+> spinlock more than they should) then I'd prefer that we got a notification
+> that something happened so we can fix it. Otherwise in the field it'll just
+> be "hey, our stuff stopped working" because whatever the firmware
+> expectations are aren't being met.
+>
+> Again, we're OK because we can at least inspect what's going on, but not
+> everyone doing ath10k development/deployment will be so lucky :(
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -796,8 +796,6 @@ void wl12xx_queue_recovery_work(struct wl1271 *wl)
- 
- 		wl->state = WLCORE_STATE_RESTARTING;
- 		set_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags);
--		wl1271_ps_elp_wakeup(wl);
--		wlcore_disable_interrupts_nosync(wl);
- 		ieee80211_queue_work(wl->hw, &wl->recovery_work);
- 	}
- }
-@@ -919,12 +917,18 @@ static void wl1271_recovery_work(struct work_struct *work)
- 		container_of(work, struct wl1271, recovery_work);
- 	struct wl12xx_vif *wlvif;
- 	struct ieee80211_vif *vif;
-+	int error;
- 
- 	mutex_lock(&wl->mutex);
- 
- 	if (wl->state == WLCORE_STATE_OFF || wl->plt)
- 		goto out_unlock;
- 
-+	error = wl1271_ps_elp_wakeup(wl);
-+	if (error < 0)
-+		wl1271_warning("Enable for recovery failed");
-+	wlcore_disable_interrupts_nosync(wl);
-+
- 	if (!test_bit(WL1271_FLAG_INTENDED_FW_RECOVERY, &wl->flags)) {
- 		if (wl->conf.fwlog.output == WL12XX_FWLOG_OUTPUT_HOST)
- 			wl12xx_read_fwlog_panic(wl);
-@@ -967,6 +971,8 @@ static void wl1271_recovery_work(struct work_struct *work)
- 	 */
- 	wlcore_wake_queues(wl, WLCORE_QUEUE_STOP_REASON_FW_RESTART);
- 
-+	wl1271_ps_elp_sleep(wl);
-+
- out_unlock:
- 	wl->watchdog_recovery = false;
- 	clear_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags);
+Sure, every software change can cause regressions. But the thing is that
+this isn't an optional, ath10k has to have this to be able to continue
+using DFS channels.
+
 -- 
-2.17.0
+Kalle Valo
