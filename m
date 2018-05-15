@@ -1,72 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:52843 "EHLO
-        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967628AbeEYS2h (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51128 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752475AbeEOJcF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 May 2018 14:28:37 -0400
+        Tue, 15 May 2018 05:32:05 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/8] brcmfmac: coredump functionality and fixes
+References: <1526375691-31789-1-git-send-email-arend.vanspriel@broadcom.com>
+Date: Tue, 15 May 2018 12:32:02 +0300
+In-Reply-To: <1526375691-31789-1-git-send-email-arend.vanspriel@broadcom.com>
+        (Arend van Spriel's message of "Tue, 15 May 2018 11:14:43 +0200")
+Message-ID: <877eo5p8ml.fsf@kamboji.qca.qualcomm.com> (sfid-20180515_113211_687968_F264249B)
 MIME-Version: 1.0
-References: <20180525182311.GA3000@embeddedor.com>
-In-Reply-To: <20180525182311.GA3000@embeddedor.com>
-From: Steve deRosier <derosier@gmail.com>
-Date: Fri, 25 May 2018 11:27:59 -0700
-Message-ID: <CALLGbRLFU5xH7PogXmjNSFkayLyo2Q1w1+8hQWgOSDYxS_GgUQ@mail.gmail.com> (sfid-20180525_202855_234891_6D9361A2)
-Subject: Re: [PATCH v2] ath6kl: mark expected switch fall-throughs
-To: gustavo@embeddedor.com
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>, davem@davemloft.net,
-        sergei.shtylyov@cogentembedded.com,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 25, 2018 at 11:23 AM Gustavo A. R. Silva
-<gustavo@embeddedor.com>
-wrote:
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-> where we are expecting to fall through.
+> This series is intended for 4.18:
+>
+>  * fix variable initialization found by kbuild bot.
+>  * make ALLFFMAC variable static.
+>  * support user-space initiated coredump.
+>
+> The first two patches in this series apply to the master branch of the
+> wireless-drivers-next repository. The remaining patches related to coredump
+> functionality are dependent upon a commit present since v4.17-rc3:
+>
+>   commit ed4564babeeee4fb19fe4ec0beabe29754e380f9
+>   Author: Arend van Spriel <aspriel@gmail.com>
+>   Date:   Sun Apr 8 23:57:07 2018 +0200
+>
+>      drivers: change struct device_driver::coredump() return type to void
+>
+> Both w-d-next and bt-next (for patch 5/8) do not carry this patch yet.
 
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> ---
-> Changes in v2:
->    - Place code comments on a line of their own.
+So what I'm planning to do is apply patch 1 now to fix the warning, send
+a pull request to Dave and then fast forward w-d-next so that I can
+apply rest of the patches.
 
->    drivers/net/wireless/ath/ath6kl/cfg80211.c | 3 +++
->    1 file changed, 3 insertions(+)
-
-> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> index 2ba8cf3..a16ee5d 100644
-> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> @@ -3899,16 +3899,19 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
->           switch (ar->hw.cap) {
->           case WMI_11AN_CAP:
->                   ht = true;
-> +               /* fall through */
->           case WMI_11A_CAP:
->                   band_5gig = true;
->                   break;
->           case WMI_11GN_CAP:
->                   ht = true;
-> +               /* fall through */
->           case WMI_11G_CAP:
->                   band_2gig = true;
->                   break;
->           case WMI_11AGN_CAP:
->                   ht = true;
-> +               /* fall through */
->           case WMI_11AG_CAP:
->                   band_2gig = true;
->                   band_5gig = true;
-> --
-> 2.7.4
-
-
-Gustavo,
-
-Thanks for the adjustment.  It now looks good to me.
-
-Reviewed-by: Steve deRosier <derosier@cal-sierra.com>
+-- 
+Kalle Valo
