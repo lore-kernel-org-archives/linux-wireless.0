@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50872 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936026AbeEYKRC (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:34062 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752171AbeEOHAG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 May 2018 06:17:02 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCHv2,
- 1/2] ath: Add support to get the detected radar specifications
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1526375389-7106-2-git-send-email-srirrama@codeaurora.org>
-References: <1526375389-7106-2-git-send-email-srirrama@codeaurora.org>
+        Tue, 15 May 2018 03:00:06 -0400
+Message-ID: <1526367603.3255.3.camel@sipsolutions.net> (sfid-20180515_090009_980327_6151D6A5)
+Subject: Re: [RFC 0/2] nl80211/mac80211 Add support for per-rate rx
+ statistics
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Sriram R <srirrama@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Sriram R <srirrama@codeaurora.org>
-Message-Id: <20180525101702.140FD6076C@smtp.codeaurora.org> (sfid-20180525_121722_643732_98CD7558)
-Date: Fri, 25 May 2018 10:17:02 +0000 (UTC)
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 15 May 2018 09:00:03 +0200
+In-Reply-To: <1526361481-7159-1-git-send-email-srirrama@codeaurora.org>
+References: <1526361481-7159-1-git-send-email-srirrama@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sriram R <srirrama@codeaurora.org> wrote:
-
-> This enables ath10k/ath9k drivers to collect the specifications of the
-> radar type once it is detected by the dfs pattern detector unit.
-> Usage of the collected info is specific to driver implementation.
-> For example, collected radar info could be used by the host driver
-> to send to co-processors for additional processing/validation.
+On Tue, 2018-05-15 at 10:47 +0530, Sriram R wrote:
+> This patchset adds support for the collection and propagating of
+> per-rate, per-station rx statistics when enabled by a userspace application.
 > 
-> Note: 'radar_detector_specs' data containing the specifications of
-> different radar types which was private within dfs_pattern_detector/
-> dfs_pri_detector is now shared with drivers as well for making use
-> of this information.
-> 
-> Signed-off-by: Sriram R <srirrama@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> These statistics can be useful in understanding the quality of 
+> communication with our peers and in evaluating how different peers
+> are communicating in different MCS/BW/NSS during different time periods and environment.
 
-2 patches applied to ath-next branch of ath.git, thanks.
+So ... I know that you're aware of my rate statistics collection code
+(at least you should be, I showed it to Jouni), so I think you should
+state why that approach isn't suitable.
 
-f40105e67478 ath: add support to get the detected radar specifications
-6f6eb1bcbeff ath10k: DFS Host Confirmation
+In particular, I don't like the idea that you implement here of allowing
+unresponsive (or dead) userspace to let the data pile up indefinitely. I
+think we should be sending it out upon reaching a threshold to limit the
+memory consumption in the kernel more reliably.
 
--- 
-https://patchwork.kernel.org/patch/10400505/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
