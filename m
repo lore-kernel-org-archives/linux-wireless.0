@@ -1,181 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:45009 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965953AbeEIXHh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 19:07:37 -0400
-Date: Thu, 10 May 2018 01:07:34 +0200
-In-Reply-To: <201805100446.C8w6ThtE%fengguang.wu@intel.com>
-References: <152586802515.18089.12700714478750075562.stgit@alrua-kau> <201805100446.C8w6ThtE%fengguang.wu@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Subject: Re: [PATCH 3/3] net: Dynamically allocate struct station_info
-To: kbuild test robot <lkp@intel.com>
-CC: kbuild-all@01.org, linux-wireless@vger.kernel.org
-From: =?ISO-8859-1?Q?Toke_H=F8iland-J=F8rgensen?= <toke@toke.dk>
-Message-ID: <184D0BE8-7D2D-44AB-9BF6-24FA928E3B31@toke.dk> (sfid-20180510_010741_707915_CE87044C)
+Received: from 1.mo7.mail-out.ovh.net ([178.33.45.51]:40655 "EHLO
+        1.mo7.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752392AbeEOSjz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 May 2018 14:39:55 -0400
+Received: from player696.ha.ovh.net (unknown [10.109.108.35])
+        by mo7.mail-out.ovh.net (Postfix) with ESMTP id 69B49A8021
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2018 12:22:59 +0200 (CEST)
+From: Alexander Wetzel <alexander.wetzel@web.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+        s.gottschall@dd-wrt.com, Alexander Wetzel <alexander.wetzel@web.de>
+Subject: [PATCH v2] mac80211: Fix wlan freezes under load at rekey
+Date: Tue, 15 May 2018 12:22:02 +0200
+Message-Id: <20180515102202.2021-1-alexander.wetzel@web.de> (sfid-20180515_204001_215652_02257D78)
+In-Reply-To: <1523258757.3076.5.camel@sipsolutions.net>
+References: <1523258757.3076.5.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Rekeying a pairwise key with encryption offload and only keyid 0 has two
+potential races which can freeze the wlan conection till rekeyed again:
 
+ 1) For incomming packets:
+    If the local STA installs the key prior to the remote STA we still
+    have the old key active in the hardware for a short time after
+    mac80211 switched to the new key.
+    The card can still hand over packets decoded with the old key to
+    mac80211, bumping the new PN (IV) value to an incorrect high number and
+    tricking the local replay detection to drop all packets really sent
+    with the new key.
 
-On 10 May 2018 00:55:01 CEST, kbuild test robot <lkp@intel=2Ecom> wrote:
->Hi Toke,
->
->Thank you for the patch! Yet something to improve:
->
->[auto build test ERROR on wireless-drivers-next/master]
->[also build test ERROR on v4=2E17-rc4 next-20180509]
->[if your patch is applied to the wrong git tree, please drop us a note
->to help improve the system]
->
->url:  =20
->https://github=2Ecom/0day-ci/linux/commits/Toke-H-iland-J-rgensen/wireles=
-s-drivers-Dynamically-allocate-struct-station_info/20180510-034416
->base: =20
->https://git=2Ekernel=2Eorg/pub/scm/linux/kernel/git/kvalo/wireless-driver=
-s-next=2Egit
->master
->config: i386-randconfig-x000-201818 (attached as =2Econfig)
->compiler: gcc-7 (Debian 7=2E3=2E0-16) 7=2E3=2E0
->reproduce:
->        # save the attached =2Econfig to linux build tree
->        make ARCH=3Di386=20
->
->All errors (new ones prefixed by >>):
->
-> net/batman-adv/bat_v_elp=2Ec: In function 'batadv_v_elp_get_throughput':
->>> net/batman-adv/bat_v_elp=2Ec:113:21: error: 'sinfo' is a pointer; did
->you mean to use '->'?
->      throughput =3D sinfo=2Eexpected_throughput / 100;
->                        ^
->                        ->
->net/batman-adv/bat_v_elp=2Ec:114:20: error: 'sinfo' is a pointer; did you
->mean to use '->'?
-> filled =3D !!(sinfo=2Efilled & BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT)=
-);
->                       ^
->                       ->
+ 2) For outgoing packets:
+    If mac80211 is providing the PN (IV) and hands over the cleartext
+    packets for encryption to the hardware immediately prior to a key
+    change the driver/card may process the queued packets after
+    switching to the new key.
+    This will immediatelly bump the PN (IV) value on the remote STA to
+    an incorrect high number, also freezing the connection.
 
-Huh, I could swear I compile tested this=2E Will send another version tomo=
-rrow, sorry about that :/
+Both issues can be prevented by first replacing the key in the HW and
+makeing sure no aggregation sessions are running during the rekey.
 
--Toke
+Signed-off-by: Alexander Wetzel <alexander.wetzel@web.de>
+---
+ net/mac80211/key.c | 54 ++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 40 insertions(+), 14 deletions(-)
 
->
->vim +113 net/batman-adv/bat_v_elp=2Ec
->
->    69=09
->    70	/**
->71	 * batadv_v_elp_get_throughput() - get the throughput towards a
->neighbour
->72	 * @neigh: the neighbour for which the throughput has to be obtained
->    73	 *
->74	 * Return: The throughput towards the given neighbour in multiples
->of 100kpbs
->75	 *         (a value of '1' equals to 0=2E1Mbps, '10' equals 1Mbps,
->etc)=2E
->    76	 */
->77	static u32 batadv_v_elp_get_throughput(struct
->batadv_hardif_neigh_node *neigh)
->    78	{
->    79		struct batadv_hard_iface *hard_iface =3D neigh->if_incoming;
->    80		struct ethtool_link_ksettings link_settings;
->    81		struct net_device *real_netdev;
->    82		struct station_info *sinfo;
->    83		u32 throughput;
->    84		bool filled;
->    85		int ret;
->    86=09
->87		/* if the user specified a customised value for this interface,
->then
->    88		 * return it directly
->    89		 */
-> 90		throughput =3D  atomic_read(&hard_iface->bat_v=2Ethroughput_override=
-);
->    91		if (throughput !=3D 0)
->    92			return throughput;
->    93=09
->   94		/* if this is a wireless device, then ask its throughput through
->    95		 * cfg80211 API
->    96		 */
->    97		if (batadv_is_wifi_hardif(hard_iface)) {
->    98			if (!batadv_is_cfg80211_hardif(hard_iface))
->    99				/* unsupported WiFi driver version */
->   100				goto default_throughput;
->   101=09
->   102			real_netdev =3D batadv_get_real_netdev(hard_iface->net_dev);
->   103			if (!real_netdev)
->   104				goto default_throughput;
->   105=09
->   106			sinfo =3D kzalloc(sizeof(*sinfo), GFP_KERNEL);
->   107			if (!sinfo)
->   108				goto default_throughput;
->   109=09
->   110			ret =3D cfg80211_get_station(real_netdev, neigh->addr, sinfo);
->   111=09
->112			/* just save these here instead of having complex free logic
->below */
-> > 113			throughput =3D sinfo=2Eexpected_throughput / 100;
->114			filled =3D !!(sinfo=2Efilled &
->BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT));
->   115=09
->   116			kfree(sinfo);
->   117=09
->   118			dev_put(real_netdev);
->   119			if (ret =3D=3D -ENOENT) {
->   120				/* Node is not associated anymore! It would be
->   121				 * possible to delete this neighbor=2E For now set
->   122				 * the throughput metric to 0=2E
->   123				 */
->   124				return 0;
->   125			}
->   126			if (ret || !filled)
->   127				goto default_throughput;
->   128=09
->   129			return throughput;
->   130		}
->   131=09
->132		/* if not a wifi interface, check if this device provides data via
->   133		 * ethtool (e=2Eg=2E an Ethernet adapter)
->   134		 */
->   135		memset(&link_settings, 0, sizeof(link_settings));
->   136		rtnl_lock();
->137		ret =3D __ethtool_get_link_ksettings(hard_iface->net_dev,
->&link_settings);
->   138		rtnl_unlock();
->   139		if (ret =3D=3D 0) {
->   140			/* link characteristics might change over time */
->   141			if (link_settings=2Ebase=2Eduplex =3D=3D DUPLEX_FULL)
->   142				hard_iface->bat_v=2Eflags |=3D BATADV_FULL_DUPLEX;
->   143			else
->   144				hard_iface->bat_v=2Eflags &=3D ~BATADV_FULL_DUPLEX;
->   145=09
->   146			throughput =3D link_settings=2Ebase=2Espeed;
->   147			if (throughput && throughput !=3D SPEED_UNKNOWN)
->   148				return throughput * 10;
->   149		}
->   150=09
->   151	default_throughput:
->   152		if (!(hard_iface->bat_v=2Eflags & BATADV_WARNING_DEFAULT)) {
->   153			batadv_info(hard_iface->soft_iface,
->154				    "WiFi driver or ethtool info does not provide information
->about link speeds on interface %s, therefore defaulting to hardcoded
->throughput values of %u=2E%1u Mbps=2E Consider overriding the throughput
->manually or checking your driver=2E\n",
->   155				    hard_iface->net_dev->name,
->   156				    BATADV_THROUGHPUT_DEFAULT_VALUE / 10,
->   157				    BATADV_THROUGHPUT_DEFAULT_VALUE % 10);
->   158			hard_iface->bat_v=2Eflags |=3D BATADV_WARNING_DEFAULT;
->   159		}
->   160=09
->161		/* if none of the above cases apply, return the base_throughput */
->   162		return BATADV_THROUGHPUT_DEFAULT_VALUE;
->   163	}
->   164=09
->
->---
->0-DAY kernel test infrastructure                Open Source Technology
->Center
->https://lists=2E01=2Eorg/pipermail/kbuild-all                   Intel
->Corporation
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index ee0d0cc8dc3b..bb498f2b6c44 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -248,6 +248,7 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+ 	      (key->conf.flags & IEEE80211_KEY_FLAG_RESERVE_TAILROOM)))
+ 		increment_tailroom_need_count(sdata);
+ 
++	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
+ 	ret = drv_set_key(key->local, DISABLE_KEY, sdata,
+ 			  sta ? &sta->sta : NULL, &key->conf);
+ 
+@@ -257,7 +258,26 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+ 			  key->conf.keyidx,
+ 			  sta ? sta->sta.addr : bcast_addr, ret);
+ 
+-	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
++}
++
++static void ieee80211_key_retire(struct ieee80211_key *key)
++{
++	struct ieee80211_local *local = key->local;
++	struct sta_info *sta = key->sta;
++
++	assert_key_lock(key->local);
++
++	/* Stop TX till we are on the new key */
++	key->flags |= KEY_FLAG_TAINTED;
++	ieee80211_clear_fast_xmit(sta);
++
++	if (ieee80211_hw_check(&local->hw, AMPDU_AGGREGATION)) {
++		set_sta_flag(sta, WLAN_STA_BLOCK_BA);
++		ieee80211_sta_tear_down_BA_sessions(
++		    sta, AGG_STOP_LOCAL_REQUEST);
++	}
++	ieee80211_flush_queues(key->local, key->sdata, false);
++	ieee80211_key_disable_hw_accel(key);
+ }
+ 
+ static void __ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata,
+@@ -316,34 +336,45 @@ void ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ 
+-static void ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
++static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
+ 				  struct sta_info *sta,
+ 				  bool pairwise,
+ 				  struct ieee80211_key *old,
+ 				  struct ieee80211_key *new)
+ {
+ 	int idx;
++	int ret;
+ 	bool defunikey, defmultikey, defmgmtkey;
+ 
+ 	/* caller must provide at least one old/new */
+ 	if (WARN_ON(!new && !old))
+-		return;
++		return 0;
+ 
+ 	if (new)
+ 		list_add_tail_rcu(&new->list, &sdata->key_list);
+ 
+ 	WARN_ON(new && old && new->conf.keyidx != old->conf.keyidx);
+ 
+-	if (old)
++	if (old) {
+ 		idx = old->conf.keyidx;
+-	else
++		if(new && sta && pairwise)
++			ieee80211_key_retire(old);
++	} else {
+ 		idx = new->conf.keyidx;
++	}
++
++	if (new && !new->local->wowlan) {
++		ret = ieee80211_key_enable_hw_accel(new);
++		if (ret)
++			return ret;
++	}
+ 
+ 	if (sta) {
+ 		if (pairwise) {
+ 			rcu_assign_pointer(sta->ptk[idx], new);
+ 			sta->ptk_idx = idx;
+ 			ieee80211_check_fast_xmit(sta);
++			clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
+ 		} else {
+ 			rcu_assign_pointer(sta->gtk[idx], new);
+ 		}
+@@ -380,6 +411,7 @@ static void ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (old)
+ 		list_del_rcu(&old->list);
++	return 0;
+ }
+ 
+ struct ieee80211_key *
+@@ -654,7 +686,6 @@ int ieee80211_key_link(struct ieee80211_key *key,
+ 		       struct ieee80211_sub_if_data *sdata,
+ 		       struct sta_info *sta)
+ {
+-	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_key *old_key;
+ 	int idx, ret;
+ 	bool pairwise;
+@@ -687,18 +718,13 @@ int ieee80211_key_link(struct ieee80211_key *key,
+ 
+ 	increment_tailroom_need_count(sdata);
+ 
+-	ieee80211_key_replace(sdata, sta, pairwise, old_key, key);
++	ret = ieee80211_key_replace(sdata, sta, pairwise, old_key, key);
+ 	ieee80211_key_destroy(old_key, true);
+ 
+ 	ieee80211_debugfs_key_add(key);
+ 
+-	if (!local->wowlan) {
+-		ret = ieee80211_key_enable_hw_accel(key);
+-		if (ret)
+-			ieee80211_key_free(key, true);
+-	} else {
+-		ret = 0;
+-	}
++	if (ret)
++		ieee80211_key_free(key, true);
+ 
+  out:
+ 	mutex_unlock(&sdata->local->key_mtx);
+-- 
+2.17.0
