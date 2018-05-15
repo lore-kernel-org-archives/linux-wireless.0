@@ -1,70 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:24642 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965017AbeEITTp (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 15:19:45 -0400
-Date: Thu, 10 May 2018 00:47:31 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
-        <adham.abozaeid@Microchip.com>
-Subject: Re: [PATCH 15/30] staging: wilc1000: use kmemdup instead of kmalloc
- in add_network_to_shadow()
-Message-ID: <20180510004731.64cd2d32@ajaysk-VirtualBox> (sfid-20180509_211948_687179_734AA165)
-In-Reply-To: <e90398be-e387-1d5e-071f-b0863c249870@microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
-        <1525682614-3824-16-git-send-email-ajay.kathat@microchip.com>
-        <e90398be-e387-1d5e-071f-b0863c249870@microchip.com>
+Received: from muru.com ([72.249.23.125]:42128 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752453AbeEOQZu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 May 2018 12:25:50 -0400
+Date: Tue, 15 May 2018 09:25:46 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Michael Nazzareno Trimarchi <michael@amarulasolutions.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, Eyal Reizer <eyalr@ti.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        Linux OMAP Mailing List <linux-omap@vger.kernel.org>
+Subject: Re: [PATCH 2/2] wlcore: Add support runtime PM
+Message-ID: <20180515162546.GO98604@atomide.com> (sfid-20180515_182601_931848_B421561B)
+References: <20180515161315.1997-1-tony@atomide.com>
+ <20180515161315.1997-3-tony@atomide.com>
+ <CAOf5uwkT4Vg1kQn5k=_z9XjXOLWbA0vioqH6KSdikZbCwyaYbA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAOf5uwkT4Vg1kQn5k=_z9XjXOLWbA0vioqH6KSdikZbCwyaYbA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 9 May 2018 16:42:59 +0300
-Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
-
-> On 07.05.2018 11:43, Ajay Singh wrote:
-> > Use kmemdup instead of kmalloc & memcpy in add_network_to_shadow().
-> > 
-> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> > ---
-> >  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> > b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c index
-> > 0ae2065..ca221f1 100644 ---
-> > a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c +++
-> > b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c @@ -331,8
-> > +331,8 @@ static void add_network_to_shadow(struct network_info
-> > *nw_info, shadow_nw_info->tsf_hi = nw_info->tsf_hi; if (ap_found !=
-> > -1) kfree(shadow_nw_info->ies);
-> > -	shadow_nw_info->ies = kmalloc(nw_info->ies_len,
-> > GFP_KERNEL);
-> > -	memcpy(shadow_nw_info->ies, nw_info->ies,
-> > nw_info->ies_len);
-> > +	shadow_nw_info->ies = kmemdup(nw_info->ies,
-> > nw_info->ies_len,
-> > +				      GFP_KERNEL);  
+* Michael Nazzareno Trimarchi <michael@amarulasolutions.com> [180515 16:19]:
+> On Tue, May 15, 2018 at 6:13 PM, Tony Lindgren <tony@atomide.com> wrote:
+> > @@ -315,15 +319,17 @@ static ssize_t dynamic_fw_traces_write(struct file *file,
+> >         if (unlikely(wl->state != WLCORE_STATE_ON))
+> >                 goto out;
+> >
+> > -       ret = wl1271_ps_elp_wakeup(wl);
+> > -       if (ret < 0)
+> > +       ret = pm_runtime_get_sync(wl->dev);
+> > +       if (ret < 0) {
+> > +               pm_runtime_put_noidle(wl->dev);
+> >                 goto out;
+> > +       }
+> >
 > 
-> Maybe, in case of NULL, you will want to set ies_len = 0 ?
-
-
-I couldn't find code where 'ies_len' is check to validity of data.
-Mostly we use NULL check for "ies" pointer for data
-validity.So in my opinion setting it to zero would be
-irrelevant.
-
-
+> Can you just change ps_elp_wakeup with
+>        ret = pm_runtime_get_sync(wl->dev);
+>        if (ret < 0) {
+>                pm_runtime_put_noidle(wl->dev);
+>                  goto out;
+>        }
 > 
-> >  	shadow_nw_info->time_scan = jiffies;
-> >  	shadow_nw_info->time_scan_cached = jiffies;
-> >  	shadow_nw_info->found = 1;
-> >   
+> >         ret = wl18xx_acx_dynamic_fw_traces(wl);
+> >         if (ret < 0)
+> >                 count = ret;
+> >
+> > -       wl1271_ps_elp_sleep(wl);
+> > +       pm_runtime_put(wl->dev);
+> 
+> and elp_sleep with this one
 
+That's what I started with, but they really behave in a different way. And
+there is no usage count. It's really best to just get rid of the custom PM
+calls in favor of generic calls. That's because then we have much better
+control for future changes in the driver with pm_runtime_use_autosuspend()
+and pm_runtime_put_sync() for example.
 
 Regards,
-Ajay
+
+Tony
