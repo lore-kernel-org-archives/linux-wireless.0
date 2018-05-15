@@ -1,36 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:42588 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752803AbeEUQ2x (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:58084 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752915AbeEOJPH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 May 2018 12:28:53 -0400
-Received: by mail-ot0-f195.google.com with SMTP id l13-v6so17493834otk.9
-        for <linux-wireless@vger.kernel.org>; Mon, 21 May 2018 09:28:52 -0700 (PDT)
-From: Guy Chronister <guylovesbritt@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: guychronister@outlook.com, Guy Chronister <guylovesbritt@gmail.com>
-Subject: [PATCH] Added Dell Wireless 1537 Ath6kl sdio card (0x19) to the list.
-Date: Mon, 21 May 2018 11:28:45 -0500
-Message-Id: <20180521162845.5793-1-guylovesbritt@gmail.com> (sfid-20180521_182856_516500_035D7174)
+        Tue, 15 May 2018 05:15:07 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Franky Lin <franky.lin@broadcom.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 6/8] brcmfmac: validate user provided data for memdump before copying
+Date: Tue, 15 May 2018 11:14:49 +0200
+Message-Id: <1526375691-31789-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180515_111600_419787_8A302FAA)
+In-Reply-To: <1526375691-31789-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1526375691-31789-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Guy Chronister <guylovesbritt@gmail.com>
----
- drivers/net/wireless/ath/ath6kl/sdio.c | 1 +
- 1 file changed, 1 insertion(+)
+From: Franky Lin <franky.lin@broadcom.com>
 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 2195b1b7a8a6..bb50680580f3 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -1415,6 +1415,7 @@ static const struct sdio_device_id ath6kl_sdio_devices[] = {
- 	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x1))},
- 	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x2))},
- 	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x18))},
-+	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x19))},
- 	{},
- };
+In patch "brcmfmac: add support for sysfs initiated coredump", a new
+scenario of brcmf_debug_create_memdump was added in which the user of
+the function might not necessarily provide prefix data. Hence the
+function should not assume the data is always valid and should perform a
+check before copying.
+
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+index 5048320..489b5df 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+@@ -40,7 +40,8 @@ int brcmf_debug_create_memdump(struct brcmf_bus *bus, const void *data,
+ 	if (!dump)
+ 		return -ENOMEM;
  
+-	memcpy(dump, data, len);
++	if (data && len > 0)
++		memcpy(dump, data, len);
+ 	err = brcmf_bus_get_memdump(bus, dump + len, ramsize);
+ 	if (err) {
+ 		vfree(dump);
 -- 
-2.17.0
+1.9.1
