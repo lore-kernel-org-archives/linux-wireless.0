@@ -1,35 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40976 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750847AbeELIyS (ORCPT
+Received: from aserp2130.oracle.com ([141.146.126.79]:41964 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752195AbeEOIWj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 May 2018 04:54:18 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 15 May 2018 04:22:39 -0400
+Date: Tue, 15 May 2018 11:22:24 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Cc: Ajay Singh <ajay.kathat@microchip.com>, devel@driverdev.osuosl.org,
+        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
+        linux-wireless@vger.kernel.org, ganesh.krishna@microchip.com,
+        adham.abozaeid@microchip.com, aditya.shankar@microchip.com
+Subject: Re: [PATCH 03/30] staging: wilc1000: fix line over 80 chars in
+ handle_key()
+Message-ID: <20180515082224.slpj6v5vg2acbzu3@mwanda> (sfid-20180515_102338_387275_2E5D6935)
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+ <1525682614-3824-4-git-send-email-ajay.kathat@microchip.com>
+ <1c7fbd1f-a655-a96a-5d2c-50cca9087023@microchip.com>
+ <20180510000609.07dcb5a2@ajaysk-VirtualBox>
+ <ba9df0c4-e6b3-f858-7c90-06926546d7b7@microchip.com>
 MIME-Version: 1.0
-Subject: Re: mt76x2: add a polling delay in mt76x2_mac_stop routine
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <e7c7fcf87f42a137472b8dfd1460a8d41a295bfa.1525960967.git.lorenzo.bianconi@redhat.com>
-References: <e7c7fcf87f42a137472b8dfd1460a8d41a295bfa.1525960967.git.lorenzo.bianconi@redhat.com>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: nbd@nbd.name, linux-wireless@vger.kernel.org
-Message-Id: <20180512085417.C2E42607E1@smtp.codeaurora.org> (sfid-20180512_105420_995848_0F10BFDC)
-Date: Sat, 12 May 2018 08:54:17 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ba9df0c4-e6b3-f858-7c90-06926546d7b7@microchip.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
-
-> Add a usleep_range in mt76x2_mac_stop routine in order to add
-> a polling delay checking values of MT_MAC_STATUS and IBI_R12 registers
+On Thu, May 10, 2018 at 08:21:52AM +0300, Claudiu Beznea wrote:
+> >>> +	wid.val = (s8 *)key_buf;  
+> >>
+> >> Is this cast really needed?
+> >>
+> > 
+> > This patch is only to address line over 80 chars checkpatch issue.
+> > It is not good to club these change with type cast related
+> > modification. For removing unnecessary cast we can submit
+> > a separate patch series.
+> > These are my views. What do you think?
+> > 
 > 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-> Acked-by: Felix Fietkau <nbd@nbd.name>
+> I'm ok with this. I was thinking that since you introduced this new function
+> you may want to also address this, if any.
 
-Patch applied to wireless-drivers-next.git, thanks.
+No.  Please don't.  That kind of thing is sort of an unrelated change
+from just moving the lines around and it messes up my review scripts.
 
-6823dc0d91e5 mt76x2: add a polling delay in mt76x2_mac_stop routine
+It's really really easy to review the changes when they're split into
+multiple chunks.
 
--- 
-https://patchwork.kernel.org/patch/10391839/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+regards,
+dan carpenter
