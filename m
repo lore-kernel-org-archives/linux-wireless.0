@@ -1,85 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:48320 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752525AbeEPMMe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 May 2018 08:12:34 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 1/6] brcmfmac: move ALLFFMAC variable in flowring module
-Date: Wed, 16 May 2018 14:11:58 +0200
-Message-Id: <1526472723-15758-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180516_141243_229104_91CD53C6)
-In-Reply-To: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from nbd.name ([46.4.11.11]:47416 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752695AbeEOMd0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 May 2018 08:33:26 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 1/2] mt76: fix sending encrypted broadcast packets for secondary interfaces
+Date: Tue, 15 May 2018 14:33:22 +0200
+Message-Id: <20180515123323.24702-1-nbd@nbd.name> (sfid-20180515_143332_164030_E54A00DF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The only user of ALLFFMAC is the flowring module so no need to
-expose it in a header file.
+For encryption to work properly, the BSS index needs to be initialized
+for the WCID entry used for the interface.
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
-Hi Kalle,
+ drivers/net/wireless/mediatek/mt76/mt76x2.h      | 3 +++
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 3 +++
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c | 2 +-
+ 3 files changed, 7 insertions(+), 1 deletion(-)
 
-I recall Joe Perches posted patches dealing with broadcast address declarations,
-but don't know what happened with those. In patchwork [1] is says 'Not Applicable'
-whatever that means. I noticed Johannes set similar mac80211 change to
-'Awaiting Upstream'. Anyway, when applying this patch the patch in [1] needs to
-be reworked.
-
-Regards,
-Arend
-
-[1] https://patchwork.kernel.org/patch/10318857/
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c   | 2 --
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h   | 2 --
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c | 2 ++
- 3 files changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 105b877..cd36510 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -36,8 +36,6 @@
- MODULE_DESCRIPTION("Broadcom 802.11 wireless LAN fullmac driver.");
- MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+index a5d1255e4b9c..dc12bbdbb2ee 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+@@ -39,6 +39,9 @@
  
--const u8 ALLFFMAC[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
--
- #define BRCMF_DEFAULT_SCAN_CHANNEL_TIME	40
- #define BRCMF_DEFAULT_SCAN_UNASSOC_TIME	40
+ #define MT_CALIBRATE_INTERVAL	HZ
  
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-index ef91461..a34642c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-@@ -19,8 +19,6 @@
- #include <linux/platform_data/brcmfmac.h>
- #include "fwil_types.h"
- 
--extern const u8 ALLFFMAC[ETH_ALEN];
--
- #define BRCMF_FW_ALTPATH_LEN			256
- 
- /* Definitions for the module global and device specific settings are defined
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
-index d0b738d..d0d8b32 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
-@@ -46,6 +46,8 @@
- 	3
- };
- 
-+static const u8 ALLFFMAC[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
++#define MT_MAX_VIFS		8
++#define MT_VIF_WCID(_n)		(254 - ((_n) & 7))
 +
+ #include "mt76.h"
+ #include "mt76x2_regs.h"
+ #include "mt76x2_mac.h"
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+index dd4c1127797e..aeee0b3de136 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+@@ -296,6 +296,9 @@ static int mt76x2_mac_reset(struct mt76x2_dev *dev, bool hard)
+ 	for (i = 0; i < 256; i++)
+ 		mt76x2_mac_wcid_setup(dev, i, 0, NULL);
  
- static bool
- brcmf_flowring_is_tdls_mac(struct brcmf_flowring *flow, u8 mac[ETH_ALEN])
++	for (i = 0; i < MT_MAX_VIFS; i++)
++		mt76x2_mac_wcid_setup(dev, MT_VIF_WCID(i), i, NULL);
++
+ 	for (i = 0; i < 16; i++)
+ 		for (k = 0; k < 4; k++)
+ 			mt76x2_mac_shared_key_setup(dev, i, k, NULL);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+index 81c58f865c64..5c0d1e1260fa 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
+@@ -104,7 +104,7 @@ mt76x2_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 		idx += 8;
+ 
+ 	mvif->idx = idx;
+-	mvif->group_wcid.idx = 254 - idx;
++	mvif->group_wcid.idx = MT_VIF_WCID(idx);
+ 	mvif->group_wcid.hw_key_idx = -1;
+ 	mt76x2_txq_init(dev, vif->txq);
+ 
 -- 
-1.9.1
+2.17.0
