@@ -1,153 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:41959 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934653AbeEIMNt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 08:13:49 -0400
-Subject: [PATCH 3/3] net: Dynamically allocate struct station_info
-From: Toke =?utf-8?q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: linux-wireless@vger.kernel.org
-Date: Wed, 09 May 2018 14:13:45 +0200
-Message-ID: <152586802515.18089.12700714478750075562.stgit@alrua-kau> (sfid-20180509_141355_857728_4EC9B802)
-In-Reply-To: <152586802501.18089.2502272945272741154.stgit@alrua-kau>
-References: <152586802501.18089.2502272945272741154.stgit@alrua-kau>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp.codeaurora.org ([198.145.29.96]:36774 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752044AbeEOFS1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 May 2018 01:18:27 -0400
+From: Sriram R <srirrama@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Sriram R <srirrama@codeaurora.org>
+Subject: [RFC 0/2] nl80211/mac80211 Add support for per-rate rx statistics
+Date: Tue, 15 May 2018 10:47:59 +0530
+Message-Id: <1526361481-7159-1-git-send-email-srirrama@codeaurora.org> (sfid-20180515_071835_449483_BBA9A04F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since the addition of the TXQ stats to cfg80211, the station_info struct
-has grown to be quite large, which results in warnings when allocated on
-the stack. Fix the affected places to do dynamic allocations instead.
-WARN_ON is used where the function has no way to signal errors to the
-caller.
+This patchset adds support for the collection and propagating of
+per-rate, per-station rx statistics when enabled by a userspace application.
 
-This patch applies the fix to batman-adv and wext-compat, while a
-separate patch fixes up the drivers.
+These statistics can be useful in understanding the quality of 
+communication with our peers and in evaluating how different peers
+are communicating in different MCS/BW/NSS during different time periods and environment.
 
-Fixes: 52539ca89f36 cfg80211: Expose TXQ stats and parameters to userspace
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
----
- net/batman-adv/bat_v_elp.c |   21 +++++++++++++++------
- net/wireless/wext-compat.c |   29 +++++++++++++++++------------
- 2 files changed, 32 insertions(+), 18 deletions(-)
+Sriram R (2):
+  nl80211: Add support for collection of per rate rx statistics
+  mac80211: Add support for per-rate rx statistics
 
-diff --git a/net/batman-adv/bat_v_elp.c b/net/batman-adv/bat_v_elp.c
-index 28687493599f..d2393ebc6af4 100644
---- a/net/batman-adv/bat_v_elp.c
-+++ b/net/batman-adv/bat_v_elp.c
-@@ -79,8 +79,9 @@ static u32 batadv_v_elp_get_throughput(struct batadv_hardif_neigh_node *neigh)
- 	struct batadv_hard_iface *hard_iface = neigh->if_incoming;
- 	struct ethtool_link_ksettings link_settings;
- 	struct net_device *real_netdev;
--	struct station_info sinfo;
-+	struct station_info *sinfo;
- 	u32 throughput;
-+	bool filled;
- 	int ret;
- 
- 	/* if the user specified a customised value for this interface, then
-@@ -102,7 +103,17 @@ static u32 batadv_v_elp_get_throughput(struct batadv_hardif_neigh_node *neigh)
- 		if (!real_netdev)
- 			goto default_throughput;
- 
--		ret = cfg80211_get_station(real_netdev, neigh->addr, &sinfo);
-+		sinfo = kzalloc(sizeof(*sinfo), GFP_KERNEL);
-+		if (!sinfo)
-+			goto default_throughput;
-+
-+		ret = cfg80211_get_station(real_netdev, neigh->addr, sinfo);
-+
-+		/* just save these here instead of having complex free logic below */
-+		throughput = sinfo.expected_throughput / 100;
-+		filled = !!(sinfo.filled & BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT));
-+
-+		kfree(sinfo);
- 
- 		dev_put(real_netdev);
- 		if (ret == -ENOENT) {
-@@ -112,12 +123,10 @@ static u32 batadv_v_elp_get_throughput(struct batadv_hardif_neigh_node *neigh)
- 			 */
- 			return 0;
- 		}
--		if (ret)
--			goto default_throughput;
--		if (!(sinfo.filled & BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
-+		if (ret || !filled)
- 			goto default_throughput;
- 
--		return sinfo.expected_throughput / 100;
-+		return throughput;
- 	}
- 
- 	/* if not a wifi interface, check if this device provides data via
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index 9e002df0f8d8..2038e3fb25fa 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -1300,7 +1300,7 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
- 	/* we are under RTNL - globally locked - so can use static structs */
- 	static struct iw_statistics wstats;
--	static struct station_info sinfo;
-+	static struct station_info *sinfo;
- 	u8 bssid[ETH_ALEN];
- 
- 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_STATION)
-@@ -1318,17 +1318,21 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
- 	memcpy(bssid, wdev->current_bss->pub.bssid, ETH_ALEN);
- 	wdev_unlock(wdev);
- 
--	memset(&sinfo, 0, sizeof(sinfo));
-+	sinfo = kzalloc(sizeof(*sinfo), GFP_KERNEL);
-+	if (!sinfo)
-+		return NULL;
- 
--	if (rdev_get_station(rdev, dev, bssid, &sinfo))
-+	if (rdev_get_station(rdev, dev, bssid, sinfo)) {
-+		kfree(sinfo);
- 		return NULL;
-+	}
- 
- 	memset(&wstats, 0, sizeof(wstats));
- 
- 	switch (rdev->wiphy.signal_type) {
- 	case CFG80211_SIGNAL_TYPE_MBM:
--		if (sinfo.filled & BIT(NL80211_STA_INFO_SIGNAL)) {
--			int sig = sinfo.signal;
-+		if (sinfo->filled & BIT(NL80211_STA_INFO_SIGNAL)) {
-+			int sig = sinfo->signal;
- 			wstats.qual.updated |= IW_QUAL_LEVEL_UPDATED;
- 			wstats.qual.updated |= IW_QUAL_QUAL_UPDATED;
- 			wstats.qual.updated |= IW_QUAL_DBM;
-@@ -1341,11 +1345,11 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
- 			break;
- 		}
- 	case CFG80211_SIGNAL_TYPE_UNSPEC:
--		if (sinfo.filled & BIT(NL80211_STA_INFO_SIGNAL)) {
-+		if (sinfo->filled & BIT(NL80211_STA_INFO_SIGNAL)) {
- 			wstats.qual.updated |= IW_QUAL_LEVEL_UPDATED;
- 			wstats.qual.updated |= IW_QUAL_QUAL_UPDATED;
--			wstats.qual.level = sinfo.signal;
--			wstats.qual.qual = sinfo.signal;
-+			wstats.qual.level = sinfo->signal;
-+			wstats.qual.qual = sinfo->signal;
- 			break;
- 		}
- 	default:
-@@ -1354,11 +1358,12 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
- 	}
- 
- 	wstats.qual.updated |= IW_QUAL_NOISE_INVALID;
--	if (sinfo.filled & BIT(NL80211_STA_INFO_RX_DROP_MISC))
--		wstats.discard.misc = sinfo.rx_dropped_misc;
--	if (sinfo.filled & BIT(NL80211_STA_INFO_TX_FAILED))
--		wstats.discard.retries = sinfo.tx_failed;
-+	if (sinfo->filled & BIT(NL80211_STA_INFO_RX_DROP_MISC))
-+		wstats.discard.misc = sinfo->rx_dropped_misc;
-+	if (sinfo->filled & BIT(NL80211_STA_INFO_TX_FAILED))
-+		wstats.discard.retries = sinfo->tx_failed;
- 
-+	kfree(sinfo);
- 	return &wstats;
- }
- 
+ include/net/cfg80211.h       |  25 +++++++
+ include/uapi/linux/nl80211.h |  50 +++++++++++++
+ net/mac80211/cfg.c           |  47 ++++++++++++
+ net/mac80211/rx.c            |  10 ++-
+ net/mac80211/sta_info.c      | 165 +++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/sta_info.h      |  17 +++++
+ net/wireless/nl80211.c       | 172 +++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      |  30 ++++++++
+ net/wireless/trace.h         |  26 +++++++
+ 9 files changed, 540 insertions(+), 2 deletions(-)
+
+-- 
+2.7.4
