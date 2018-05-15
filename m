@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34124 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751236AbeEVN5P (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 09:57:15 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Ramon Fried <ramon.fried@gmail.com>
-Cc: jjohnson@codeaurora.org, linux-kernel@vger.kernel.org,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, Eyal Ilsar <eilsar@codeaurora.org>,
-        Ramon Fried <ramon.fried@linaro.org>
-Subject: Re: [PATCH v2] wcn36xx: Add support for Factory Test Mode (FTM)
-References: <20180518103122.28439-1-ramon.fried@gmail.com>
-Date: Tue, 22 May 2018 16:57:09 +0300
-In-Reply-To: <20180518103122.28439-1-ramon.fried@gmail.com> (Ramon Fried's
-        message of "Fri, 18 May 2018 13:31:22 +0300")
-Message-ID: <87a7srvlmy.fsf@purkki.adurom.net> (sfid-20180522_155734_567591_CDD3163A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from nbd.name ([46.4.11.11]:47412 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752698AbeEOMd0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 May 2018 08:33:26 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 2/2] mt76: discard early received packets if not running yet
+Date: Tue, 15 May 2018 14:33:23 +0200
+Message-Id: <20180515123323.24702-2-nbd@nbd.name> (sfid-20180515_143330_923624_56C3E3D3)
+In-Reply-To: <20180515123323.24702-1-nbd@nbd.name>
+References: <20180515123323.24702-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ramon Fried <ramon.fried@gmail.com> writes:
+If the radio was previously in running state, it can receive some
+packets before it is able to process them.
+This can lead to a crash if the channel is not initialized yet.
+Discard all rx packets until start() is called
 
-> From: Eyal Ilsar <eilsar@codeaurora.org>
->
-> Introduce infrastructure for supporting Factory Test Mode (FTM) of the
-> wireless LAN subsystem. In order for the user space to access the
-> firmware in test mode the relevant netlink channel needs to be exposed
-> from the kernel driver.
->
-> The above is achieved as follows:
-> 1) Register wcn36xx driver to testmode callback from netlink
-> 2) Add testmode callback implementation to handle incoming FTM commands
-> 3) Add FTM command packet structure
-> 4) Add handling for GET_BUILD_RELEASE_NUMBER (msgid=0x32A2)
-> 5) Add generic handling for all PTT_MSG packets
->
-> Signed-off-by: Eyal Ilsar <eilsar@codeaurora.org>
-> Signed-off-by: Ramon Fried <ramon.fried@linaro.org>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-kbuild bot reported a warning:
-
-drivers/net/wireless/ath/wcn36xx/testmode.c:122:5: warning: 'msg' may be used uninitialized in this function [-Wmaybe-uninitialized]
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+index dab713756004..b49aea4da2d6 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+@@ -301,6 +301,9 @@ int mt76x2_mac_process_rx(struct mt76x2_dev *dev, struct sk_buff *skb,
+ 	u8 wcid;
+ 	int len;
+ 
++	if (!test_bit(MT76_STATE_RUNNING, &dev->mt76.state))
++		return -EINVAL;
++
+ 	if (rxinfo & MT_RXINFO_L2PAD)
+ 		pad_len += 2;
+ 
 -- 
-Kalle Valo
+2.17.0
