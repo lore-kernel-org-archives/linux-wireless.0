@@ -1,122 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:39320 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751064AbeEAWqf (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:2564 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752471AbeEOLqI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 May 2018 18:46:35 -0400
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Steve deRosier <derosier@gmail.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Birming Chiu <birming@realtek.com>,
-        Shaofu <shaofu@realtek.com>,
-        Steven Ting <steventing@realtek.com>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Daniel Drake <drake@endlessm.com>,
-        =?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>,
-        linux@endlessm.com
-Subject: [RFC PATCH 2/3] Revert "rtlwifi: fill FW version and subversion"
-Date: Tue,  1 May 2018 15:46:12 -0700
-Message-Id: <20180501224613.32460-2-jprvita@endlessm.com> (sfid-20180502_004812_934384_5F660DBC)
-In-Reply-To: <20180501224613.32460-1-jprvita@endlessm.com>
-References: <CA+A7VXUUsZHD2gr9TBcV6jZBOPGZv7_vK-wWZ0MvGgiCnAiUgQ@mail.gmail.com>
- <20180501224613.32460-1-jprvita@endlessm.com>
+        Tue, 15 May 2018 07:46:08 -0400
+Date: Tue, 15 May 2018 17:16:01 +0530
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <venkateswara.kaja@microchip.com>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <adham.abozaeid@microchip.com>,
+        <aditya.shankar@microchip.com>
+Subject: Re: [PATCH 24/30] staging: wilc1000: refactor del_station() to
+ avoid parenthesis misalignment
+Message-ID: <20180515171601.35125506@ajaysk-VirtualBox> (sfid-20180515_134611_350480_D8C616EC)
+In-Reply-To: <20180515090112.fba2zkzsqd7j7ckq@mwanda>
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+        <1525682614-3824-25-git-send-email-ajay.kathat@microchip.com>
+        <20180515090112.fba2zkzsqd7j7ckq@mwanda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit 874e837d67d0db179c9771f38fd21df07c703e93.
+Hi Dan,
 
-This drastically affects the upload performance and signal strenght on
-the HP 240 G4 laptop, as shown by the results bellow:
+On Tue, 15 May 2018 12:01:12 +0300
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
-Without this change:
+> I feel sort of bad complaining about this patchset when your
+> co-workers already nit picked it to death...  :P
+> 
+> On Mon, May 07, 2018 at 02:13:28PM +0530, Ajay Singh wrote:
+> > Refactor the code to fix open parenthesis alignment issue reported
+> > by checkpatch.pl script in del_station().  
+> 
+> I no idea what an "open parenthesis alignment issue" is.  It's sort of
+> surprising because I deal with checkpatch patches a lot.
 
- $ sudo iw dev wlp2s0 scan | grep -B3 JJ | grep signal
-        signal: -42.00 dBm
- $ iperf3 -c 192.168.1.254
- Connecting to host 192.168.1.254, port 5201
- [  4] local 192.168.1.253 port 39678 connected to 192.168.1.254 port 5201
- [ ID] Interval           Transfer     Bandwidth       Retr  Cwnd
- [  4]   0.00-1.00   sec   735 KBytes  6.02 Mbits/sec    1   1.41 KBytes
- [  4]   1.00-2.00   sec   274 KBytes  2.25 Mbits/sec    1   1.41 KBytes
- [  4]   2.00-3.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
- [  4]   3.00-4.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
- [  4]   4.00-5.00   sec  0.00 Bytes  0.00 bits/sec    1   28.3 KBytes
- [  4]   5.00-6.00   sec   423 KBytes  3.47 Mbits/sec    3   41.0 KBytes
- [  4]   6.00-7.00   sec   840 KBytes  6.88 Mbits/sec    0   58.0 KBytes
- [  4]   7.00-8.00   sec   830 KBytes  6.79 Mbits/sec    1   1.41 KBytes
- [  4]   8.00-9.00   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
- [  4]   9.00-10.00  sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
- - - - - - - - - - - - - - - - - - - - - - - - - -
- [ ID] Interval           Transfer     Bandwidth       Retr
- [  4]   0.00-10.00  sec  3.03 MBytes  2.54 Mbits/sec    7             sender
- [  4]   0.00-10.00  sec  2.88 MBytes  2.41 Mbits/sec                  receiver
+The exact issue description reported by checkpatch.pl was 
 
- iperf Done.
+"CHECK: Alignment should match open parenthesis"
 
-With this change:
+To resolve that issue tried by reducing the leading tabs before
+wilc_del_allstations() call, which helped in resolving checkpatch
+issue without introducing line over 80 chars.
 
- $ sudo iw dev wlp2s0 scan | grep -B3 JJ | grep signal
-        signal: -14.00 dBm
- $ iperf3 -c 192.168.1.254
- Connecting to host 192.168.1.254, port 5201
- [  4] local 192.168.1.253 port 59380 connected to 192.168.1.254 port 5201
- [ ID] Interval           Transfer     Bandwidth       Retr  Cwnd
- [  4]   0.00-1.00   sec  4.63 MBytes  38.8 Mbits/sec    0    194 KBytes
- [  4]   1.00-2.00   sec  4.58 MBytes  38.4 Mbits/sec    0    273 KBytes
- [  4]   2.00-3.00   sec  5.05 MBytes  42.3 Mbits/sec    0    332 KBytes
- [  4]   3.00-4.00   sec  4.98 MBytes  41.8 Mbits/sec    0    393 KBytes
- [  4]   4.00-5.00   sec  4.76 MBytes  39.9 Mbits/sec    0    434 KBytes
- [  4]   5.00-6.00   sec  4.85 MBytes  40.7 Mbits/sec    0    434 KBytes
- [  4]   6.00-7.00   sec  3.96 MBytes  33.2 Mbits/sec    0    464 KBytes
- [  4]   7.00-8.00   sec  4.74 MBytes  39.8 Mbits/sec    0    481 KBytes
- [  4]   8.00-9.00   sec  4.22 MBytes  35.4 Mbits/sec    0    508 KBytes
- [  4]   9.00-10.00  sec  4.09 MBytes  34.3 Mbits/sec    0    564 KBytes
- - - - - - - - - - - - - - - - - - - - - - - - - -
- [ ID] Interval           Transfer     Bandwidth       Retr
- [  4]   0.00-10.00  sec  45.9 MBytes  38.5 Mbits/sec    0             sender
- [  4]   0.00-10.00  sec  45.0 MBytes  37.7 Mbits/sec                  receiver
+> 
+> > 
+> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> > ---
+> >  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 18
+> > ++++++++++-------- 1 file changed, 10 insertions(+), 8 deletions(-)
+> > 
+> > diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> > b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c index
+> > 4600f4a..7f49d60 100644 ---
+> > a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c +++
+> > b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c @@ -1997,6
+> > +1997,7 @@ static int del_station(struct wiphy *wiphy, struct
+> > net_device *dev, s32 ret = 0; struct wilc_priv *priv;
+> >  	struct wilc_vif *vif;
+> > +	struct sta_info *info;
+> >  
+> >  	if (!wiphy)
+> >  		return -EFAULT;
+> > @@ -2004,16 +2005,17 @@ static int del_station(struct wiphy *wiphy,
+> > struct net_device *dev, priv = wiphy_priv(wiphy);
+> >  	vif = netdev_priv(dev);
+> >  
+> > -	if (vif->iftype == AP_MODE || vif->iftype == GO_MODE) {
+> > -		if (!mac)
+> > -			ret = wilc_del_allstation(vif,
+> > -
+> > priv->assoc_stainfo.sta_associated_bss);
+> > +	if (!(vif->iftype == AP_MODE || vif->iftype == GO_MODE))  
+> 
+> I feel like this is better as:
+> 	if (vif->iftype != AP_MODE && vif->iftype != GO_MODE)
+> 
 
- iperf Done.
+Thanks for your suggestion.
+Currently the patch is accepted, i will check and try to include it in
+future patch as per your inputs.
 
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c         | 2 --
- drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c | 2 --
- 2 files changed, 4 deletions(-)
+> > +		return ret;  
+> 
+> What is "ret" here?  I haven't looked at this patch in context, but
+> it's probably zero.  Just return the literal.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
-index 63874512598b..a2eca669873b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
-@@ -141,8 +141,6 @@ int rtl88e_download_fw(struct ieee80211_hw *hw,
- 		return 1;
- 
- 	pfwheader = (struct rtlwifi_firmware_header *)rtlhal->pfirmware;
--	rtlhal->fw_version = le16_to_cpu(pfwheader->version);
--	rtlhal->fw_subversion = pfwheader->subversion;
- 	pfwdata = rtlhal->pfirmware;
- 	fwsize = rtlhal->fwsize;
- 	RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
-index 521039c5d4ce..0d1ebc861720 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
-@@ -200,8 +200,6 @@ int rtl8723_download_fw(struct ieee80211_hw *hw,
- 		return 1;
- 
- 	pfwheader = (struct rtlwifi_firmware_header *)rtlhal->pfirmware;
--	rtlhal->fw_version = le16_to_cpu(pfwheader->version);
--	rtlhal->fw_subversion = pfwheader->subversion;
- 	pfwdata = rtlhal->pfirmware;
- 	fwsize = rtlhal->fwsize;
- 
--- 
-2.17.0
+The value for 'ret' is zero till this point, only if there is
+failure to post the command in wilc_eneque_cmd() then 'ret' receives
+-ENOMEM value in below code.
+
+
+
+Regards,
+Ajay
