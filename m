@@ -1,61 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:46985 "EHLO
-        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750726AbeEKMIv (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48378 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752370AbeEOFkk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 08:08:51 -0400
-Subject: Re: [PATCH V2 1/2] Revert "ssb: Prevent build of PCI host features in
- module"
-To: Kalle Valo <kvalo@codeaurora.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>,
-        Matt Redfearn <matt.redfearn@mips.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Hauke Mehrtens <hauke@hauke-m.de>,
-        LKML <linux-kernel@vger.kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-References: <20180511091715.1989-1-zajec5@gmail.com>
- <CACna6ry-91oR1u697NRymLsN28fnnHDp9OQrdiVwA7A3KTV1fg@mail.gmail.com>
- <87bmdmcxf6.fsf@codeaurora.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <727571cb-5d1f-2d99-b050-979edd02106f@lwfinger.net> (sfid-20180511_140906_215346_1DB1C206)
-Date: Fri, 11 May 2018 07:08:48 -0500
+        Tue, 15 May 2018 01:40:40 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <87bmdmcxf6.fsf@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [v3] b43: fix transmit failure when VT is switched
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <5AF80278.9000501@sra-tohoku.co.jp>
+References: <5AF80278.9000501@sra-tohoku.co.jp>
+To: kabe@sra-tohoku.co.jp
+Cc: linux-wireless@vger.kernel.org, kabe@sra-tohoku.co.jp,
+        b43-dev@lists.infradead.org
+Message-Id: <20180515054039.CECEE6085F@smtp.codeaurora.org> (sfid-20180515_074139_906705_4A280431)
+Date: Tue, 15 May 2018 05:40:39 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/11/2018 05:13 AM, Kalle Valo wrote:
-> Rafał Miłecki <zajec5@gmail.com> writes:
-> 
->> On 11 May 2018 at 11:17, Rafał Miłecki <zajec5@gmail.com> wrote:
->>> From: Rafał Miłecki <rafal@milecki.pl>
->>>
->>> This reverts commit 882164a4a928bcaa53280940436ca476e6b1db8e.
->>>
->>> Above commit added "SSB = y" dependency to the wrong symbol
->>> SSB_DRIVER_PCICORE_POSSIBLE and prevented SSB_DRIVER_PCICORE from being
->>> selected when needed. PCI core driver for core running in clienthost
->>> mode is important for bus initialization. It's perfectly valid scenario
->>> to have ssb built as module and use it with buses on PCI cards.
->>>
->>> This fixes regression that affected all *module* users with PCI cards.
->>>
->>> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1572349
->>> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
->>
->> As these patches fix regression/build error, I believe both should get
->> into 4.17.
-> 
-> How much confidence do we have that we don't need to end up reverting
-> patch 2 as well? I rather be pushing patch 2 to 4.18 so that there's
-> more time for testing and waiting for feedback.
+kabe@sra-tohoku.co.jp wrote:
 
-Although I do not have the hardware to test the builds, I worked closely with 
-the OP in the bug at b.r.c noted above. From that effort, it became clear what 
-configuration variables were missing to cause the x86 failures. Patch 2 
-satisfies the requirement, and prevents the build problems found by the MIPS 
-users. Both patches are needed in 4.17.
+> From: Taketo Kabe <kabe@sra-tohoku.co.jp>
+> 
+> Setup:
+> Using BCM4306 rev.03 chip based CardBus wireless card.
+> IRQ is shared with yenta (cardbus bridge) and i915 (display) driver.
+> For firmware, installed latest but dated openfwwf 5.2
+> (http://netweb.ing.unibs.it/~openfwwf/)
+> 
+> How-to-reproduce:
+> Do "ssh <NetBSD-remotehost>", then "ls -lR /" to generate traffic, then
+> repeatedly switch VTs by Alt-F1<>Alt-F2.
+> Eventually (within a minute) the card stops working.
+> You can receive traffic but no transmission.
+> For unknown reason it doesn't occur when just generating traffic by
+> "ssh <remotehost> ls -lR /".
+> 
+> With CONFIG_B43_DEBUG=y kernel config, when it stops,
+> the debug message shows
+>     kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 148, but got 180
+> The slot offset I observed so far was always 32.
+> 
+> When err_out2 is not set to make error messages successive,
+> the debug output will be like this:
+> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 148
+> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 150
+> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 120
+> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 152
+> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 122
+> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 154
+> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 124
+> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 156
+> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 126
+> The TX ring alternates between 2 sequences; the ring seems
+> to be completely confused. Controller restart is needed.
+> 
+> Workaround(1):
+> This problem doesn't occur when using propriatory firmware
+> you will extract by b43-fwcutter, so it may be a bug in
+> openfwwf firmware, as the comment in the b43_dma_handle_txstatus() suggests.
+> I wasn't able to find a bug in the terse openfwwf code though.
+> 
+> Workaround(2):
+> Using "pio=1" option to not use DMA makes this problem to
+> not occur.
+> 
+> Description of the patch:
+> This patch will forcibly reset the controller to make it
+> work again. Very kludgy and doesn't look right, but
+> the traffic will continue to flow.
+> 
+> Signed-off-by: Taketo Kabe <kabe@sra-tohoku.co.jp>
+> Reviewed-by: Michael Buesch <m@bues.ch>
 
-Larry
+Patch applied to wireless-drivers-next.git, thanks.
+
+66cffd6daab7 b43: fix transmit failure when VT is switched
+
+-- 
+https://patchwork.kernel.org/patch/10396133/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
