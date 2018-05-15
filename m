@@ -1,47 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45340 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750883AbeEUHmE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 May 2018 03:42:04 -0400
-Message-ID: <1469fa7134c62e0323ea1b409d98953f6c1a70a3.camel@coelho.fi> (sfid-20180521_094207_703492_2781BD25)
-From: Luca Coelho <luca@coelho.fi>
-To: Eric Biggers <ebiggers3@gmail.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        linux-wireless@vger.kernel.org,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Date: Mon, 21 May 2018 10:42:00 +0300
-In-Reply-To: <20180519183345.GA701@sol.localdomain>
-References: <20180519183345.GA701@sol.localdomain>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [4.17 iwlwifi regression] NULL pointer dereference in
- reg_query_regdb_wmm()
+Received: from muru.com ([72.249.23.125]:42082 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752931AbeEOPni (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 May 2018 11:43:38 -0400
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: [PATCH] wlcore: sdio: Fix flakey SDIO runtime PM handling
+Date: Tue, 15 May 2018 08:43:34 -0700
+Message-Id: <20180515154334.121621-1-tony@atomide.com> (sfid-20180515_174402_893984_81BB4BC0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2018-05-19 at 11:33 -0700, Eric Biggers wrote:
-> Hello,
-> 
-> Using v4.17-rc5, on a laptop with an "Intel Corporation Wireless 3165
-> (rev 79)"
-> using the iwlwifi driver, I get a NULL pointer dereference
-> immediately after
-> boot.  Apparently, the 'regdb' variable in net/wireless/reg.c is
-> NULL, yet
-> reg_query_regdb_wmm() is checking for IS_ERR().  It goes away if I
-> revert commit
-> 77e30e10ee28a5 ("iwlwifi: mvm: query regdb for wmm rule if
-> needed").  The
-> symbolized crash report is:
-> 
-> BUG: unable to handle kernel NULL pointer dereference at
-> 000000000000000a
+We can have pm_runtime_get_sync() return 1, and we can have
+pm_runtime_put_sync() return -EBUSY. See rpm_suspend() and
+rpm_resume() for more information.
 
-Thanks for the report and analysis! Haim is working on a fix and I will
-send it out later today.
+Fix the issue by returning 0 from wl12xx_sdio_power_on() on success.
+And use pm_runtime_put() instead of pm_runtime_put_sync() for
+wl12xx_sdio_power_off(), then the MMC subsystem will idle the bus
+when suitable.
 
---
-Cheers,
-Luca.
+Otherwise wlcore can sometimes get confused and may report bogus
+errors and WLAN connection can fail.
+
+Fixes: 60f36637bbbd ("wlcore: sdio: allow pm to handle sdio power")
+Signed-off-by: Tony Lindgren <tony@atomide.com>
+---
+ drivers/net/wireless/ti/wlcore/sdio.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -159,15 +159,15 @@ static int wl12xx_sdio_power_on(struct wl12xx_sdio_glue *glue)
+ 		pm_runtime_put_noidle(&card->dev);
+ 		dev_err(glue->dev, "%s: failed to get_sync(%d)\n",
+ 			__func__, ret);
+-		goto out;
++
++		return ret;
+ 	}
+ 
+ 	sdio_claim_host(func);
+ 	sdio_enable_func(func);
+ 	sdio_release_host(func);
+ 
+-out:
+-	return ret;
++	return 0;
+ }
+ 
+ static int wl12xx_sdio_power_off(struct wl12xx_sdio_glue *glue)
+@@ -180,7 +180,7 @@ static int wl12xx_sdio_power_off(struct wl12xx_sdio_glue *glue)
+ 	sdio_release_host(func);
+ 
+ 	/* Let runtime PM know the card is powered off */
+-	return pm_runtime_put_sync(&card->dev);
++	return pm_runtime_put(&card->dev);
+ }
+ 
+ static int wl12xx_sdio_set_power(struct device *child, bool enable)
+-- 
+2.17.0
