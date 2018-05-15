@@ -1,33 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:45326 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S937731AbeE1Nrq (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 May 2018 09:47:46 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.91)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1fNIUy-0000GZ-Lo
-        for linux-wireless@vger.kernel.org; Mon, 28 May 2018 15:47:44 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/5] improved scan privacy
-Date: Mon, 28 May 2018 15:47:36 +0200
-Message-Id: <20180528134741.10386-1-johannes@sipsolutions.net> (sfid-20180528_154819_436156_4C5CD792)
+Received: from mail.toke.dk ([52.28.52.200]:46559 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752452AbeEOIvk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 May 2018 04:51:40 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Sriram R <srirrama@codeaurora.org>, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Sriram R <srirrama@codeaurora.org>
+Subject: Re: [RFC 0/2] nl80211/mac80211 Add support for per-rate rx statistics
+In-Reply-To: <1526361481-7159-1-git-send-email-srirrama@codeaurora.org>
+References: <1526361481-7159-1-git-send-email-srirrama@codeaurora.org>
+Date: Tue, 15 May 2018 10:51:38 +0200
+Message-ID: <87y3gl1eud.fsf@toke.dk> (sfid-20180515_105144_258553_75E0A34C)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After the random MAC address, we all expected the next level of
-escalation in the "tracking war". This comes in form of the APs
-being able to track clients using their sequence numbers and to
-some extent HT/VHT information which tends to be pretty unique,
-as evidenced by the fingerprinting the Google Fiber folks did.
+Sriram R <srirrama@codeaurora.org> writes:
 
-Extend scan privacy by adding two new flags:
- * random SN
-   this randomizes the sequence number of the probe request frames transmitted
- * minimal content
-   reduces the probe request content to just the SSID, supported rates, DS
-   element and - if given - requested elements from userspace
+> This patchset adds support for the collection and propagating of
+> per-rate, per-station rx statistics when enabled by a userspace
+> application.
 
-johannes
+Why not report TX rate statistics as well, when it is available?
+Minstrel already collects this, and it is available via debugfs (the
+rc_stats file); so if you're adding a netlink API, it seems odd to not
+include TX stats as well...
+
+-Toke
