@@ -1,45 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f179.google.com ([209.85.223.179]:32836 "EHLO
-        mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751344AbeEVM0A (ORCPT
+Received: from aserp2120.oracle.com ([141.146.126.78]:57892 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752587AbeEOJBg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 08:26:00 -0400
-Received: by mail-io0-f179.google.com with SMTP id e78-v6so18204527iod.0
-        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2018 05:25:59 -0700 (PDT)
-To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netfilter-devel@vger.kernel.org
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-Subject: netdev 0x12 conference update
-Message-ID: <3a8be40b-f8b1-43ec-3488-1b0143f2fe1a@mojatatu.com> (sfid-20180522_142613_671247_2DF66BD1)
-Date: Tue, 22 May 2018 08:25:57 -0400
+        Tue, 15 May 2018 05:01:36 -0400
+Date: Tue, 15 May 2018 12:01:12 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Ajay Singh <ajay.kathat@microchip.com>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        venkateswara.kaja@microchip.com, gregkh@linuxfoundation.org,
+        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
+        aditya.shankar@microchip.com
+Subject: Re: [PATCH 24/30] staging: wilc1000: refactor del_station() to avoid
+ parenthesis misalignment
+Message-ID: <20180515090112.fba2zkzsqd7j7ckq@mwanda> (sfid-20180515_110140_711079_31E7BB43)
+References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+ <1525682614-3824-25-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1525682614-3824-25-git-send-email-ajay.kathat@microchip.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Folks,
+I feel sort of bad complaining about this patchset when your co-workers
+already nit picked it to death...  :P
 
-This is a small update to the community on the Netdev 0x12 conference
-(July 11-13, 2018 in Montreal, Canada, https://www.netdevconf.org/0x12).
+On Mon, May 07, 2018 at 02:13:28PM +0530, Ajay Singh wrote:
+> Refactor the code to fix open parenthesis alignment issue reported by
+> checkpatch.pl script in del_station().
 
-Early registration fees (20% off) are still in effect until June 1st.
-To Register: https://www.netdevconf.org/0x12/registration.html
+I no idea what an "open parenthesis alignment issue" is.  It's sort of
+surprising because I deal with checkpatch patches a lot.
 
-Our bursaries are still open until June 20.
-Any member of the community may request for a bursary (sponsorship) to 
-attend.
-https://www.netdevconf.org/0x12/bursaries.html
+> 
+> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> ---
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 18 ++++++++++--------
+>  1 file changed, 10 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> index 4600f4a..7f49d60 100644
+> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+> @@ -1997,6 +1997,7 @@ static int del_station(struct wiphy *wiphy, struct net_device *dev,
+>  	s32 ret = 0;
+>  	struct wilc_priv *priv;
+>  	struct wilc_vif *vif;
+> +	struct sta_info *info;
+>  
+>  	if (!wiphy)
+>  		return -EFAULT;
+> @@ -2004,16 +2005,17 @@ static int del_station(struct wiphy *wiphy, struct net_device *dev,
+>  	priv = wiphy_priv(wiphy);
+>  	vif = netdev_priv(dev);
+>  
+> -	if (vif->iftype == AP_MODE || vif->iftype == GO_MODE) {
+> -		if (!mac)
+> -			ret = wilc_del_allstation(vif,
+> -				     priv->assoc_stainfo.sta_associated_bss);
+> +	if (!(vif->iftype == AP_MODE || vif->iftype == GO_MODE))
 
-The CFS closed on May 20.
-We expect the schedule up by June 11. In the meantime you can see
-the sessions the program committee has accepted so far at:
-https://www.netdevconf.org/0x12/accepted-sessions.html
+I feel like this is better as:
+	if (vif->iftype != AP_MODE && vif->iftype != GO_MODE)
 
-For regular updates, please subscribe to people@lists.netdevconf.org
-(more info at: https://lists.netdevconf.org/cgi-bin/mailman/listinfo/people)
+> +		return ret;
 
-If twitter is your thing then follow us: @netdev01
-and use hashtag #netdevconf
+What is "ret" here?  I haven't looked at this patch in context, but
+it's probably zero.  Just return the literal.
 
-cheers,
-jamal
+regards,
+dan carpenter
