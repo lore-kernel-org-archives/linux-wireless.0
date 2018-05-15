@@ -1,225 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:62761 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932306AbeEWKbO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 May 2018 06:31:14 -0400
-Date: Wed, 23 May 2018 18:30:42 +0800
-From: kbuild test robot <lkp@intel.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: kbuild-all@01.org, Kalle Valo <kvalo@codeaurora.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Subject: Re: [PATCH 2/3] brcmfmac: handle monitor mode marked msgbuf packets
-Message-ID: <201805231801.hzr4coEN%fengguang.wu@intel.com> (sfid-20180523_123118_894554_0A6B636B)
-References: <20180522131836.26858-2-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20180522131836.26858-2-zajec5@gmail.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:58510 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751219AbeEOTLa (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 May 2018 15:11:30 -0400
+Received: from mail-it0-f71.google.com ([209.85.214.71])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1fIfM9-0002IC-Ns
+        for linux-wireless@vger.kernel.org; Tue, 15 May 2018 19:11:29 +0000
+Received: by mail-it0-f71.google.com with SMTP id o8-v6so3643159itf.2
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2018 12:11:29 -0700 (PDT)
+From: Seth Forshee <seth.forshee@canonical.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        =?UTF-8?q?Mathieu=20Peyr=C3=A9ga?= <mathieu.peyrega@gmail.com>
+Subject: [PATCH] wireless-regdb: Add 5725-5875 MHz rule for France (FR)
+Date: Tue, 15 May 2018 14:11:26 -0500
+Message-Id: <20180515191126.19189-1-seth.forshee@canonical.com> (sfid-20180515_211135_594923_DA400637)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rafał,
+Based on [1] and [2], use of short range devices in this range
+is now permitted in France. Add a rule for this range, using the
+power limit of 25 dBm as specified in these documents and in
+ETSI EN 300 440.
 
-I love your patch! Perhaps something to improve:
+[1] https://www.arcep.fr/uploads/tx_gsavis/14-1263.pdf
+[2] https://www.arcep.fr/uploads/tx_gsavis/14-1263.pdf
 
-[auto build test WARNING on wireless-drivers-next/master]
-[also build test WARNING on v4.17-rc6 next-20180517]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-
-url:    https://github.com/0day-ci/linux/commits/Rafa-Mi-ecki/brcmfmac-allow-specifying-features-per-firmware-version/20180523-160546
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
-reproduce:
-        # apt-get install sparse
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
-
-
-sparse warnings: (new ones prefixed by >>)
-
-   drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c:304:30: sparse: expression using sizeof(void)
->> drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c:417:34: sparse: incorrect type in assignment (different base types) @@    expected restricted __le16 [usertype] it_len @@    got 6 [usertype] it_len @@
-   drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c:417:34:    expected restricted __le16 [usertype] it_len
-   drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c:417:34:    got unsigned long
-
-vim +417 drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-
-   264	
-   265	static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
-   266						   struct net_device *ndev)
-   267	{
-   268		int ret;
-   269		struct brcmf_if *ifp = netdev_priv(ndev);
-   270		struct brcmf_pub *drvr = ifp->drvr;
-   271		struct ethhdr *eh;
-   272		int head_delta;
-   273	
-   274		brcmf_dbg(DATA, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
-   275	
-   276		/* Can the device send data? */
-   277		if (drvr->bus_if->state != BRCMF_BUS_UP) {
-   278			brcmf_err("xmit rejected state=%d\n", drvr->bus_if->state);
-   279			netif_stop_queue(ndev);
-   280			dev_kfree_skb(skb);
-   281			ret = -ENODEV;
-   282			goto done;
-   283		}
-   284	
-   285		/* Some recent Broadcom's firmwares disassociate STA when they receive
-   286		 * an 802.11f ADD frame. This behavior can lead to a local DoS security
-   287		 * issue. Attacker may trigger disassociation of any STA by sending a
-   288		 * proper Ethernet frame to the wireless interface.
-   289		 *
-   290		 * Moreover this feature may break AP interfaces in some specific
-   291		 * setups. This applies e.g. to the bridge with hairpin mode enabled and
-   292		 * IFLA_BRPORT_MCAST_TO_UCAST set. IAPP packet generated by a firmware
-   293		 * will get passed back to the wireless interface and cause immediate
-   294		 * disassociation of a just-connected STA.
-   295		 */
-   296		if (!drvr->settings->iapp && brcmf_skb_is_iapp(skb)) {
-   297			dev_kfree_skb(skb);
-   298			ret = -EINVAL;
-   299			goto done;
-   300		}
-   301	
-   302		/* Make sure there's enough writeable headroom */
-   303		if (skb_headroom(skb) < drvr->hdrlen || skb_header_cloned(skb)) {
- > 304			head_delta = max_t(int, drvr->hdrlen - skb_headroom(skb), 0);
-   305	
-   306			brcmf_dbg(INFO, "%s: insufficient headroom (%d)\n",
-   307				  brcmf_ifname(ifp), head_delta);
-   308			atomic_inc(&drvr->bus_if->stats.pktcowed);
-   309			ret = pskb_expand_head(skb, ALIGN(head_delta, NET_SKB_PAD), 0,
-   310					       GFP_ATOMIC);
-   311			if (ret < 0) {
-   312				brcmf_err("%s: failed to expand headroom\n",
-   313					  brcmf_ifname(ifp));
-   314				atomic_inc(&drvr->bus_if->stats.pktcow_failed);
-   315				goto done;
-   316			}
-   317		}
-   318	
-   319		/* validate length for ether packet */
-   320		if (skb->len < sizeof(*eh)) {
-   321			ret = -EINVAL;
-   322			dev_kfree_skb(skb);
-   323			goto done;
-   324		}
-   325	
-   326		eh = (struct ethhdr *)(skb->data);
-   327	
-   328		if (eh->h_proto == htons(ETH_P_PAE))
-   329			atomic_inc(&ifp->pend_8021x_cnt);
-   330	
-   331		/* determine the priority */
-   332		if ((skb->priority == 0) || (skb->priority > 7))
-   333			skb->priority = cfg80211_classify8021d(skb, NULL);
-   334	
-   335		ret = brcmf_proto_tx_queue_data(drvr, ifp->ifidx, skb);
-   336		if (ret < 0)
-   337			brcmf_txfinalize(ifp, skb, false);
-   338	
-   339	done:
-   340		if (ret) {
-   341			ndev->stats.tx_dropped++;
-   342		} else {
-   343			ndev->stats.tx_packets++;
-   344			ndev->stats.tx_bytes += skb->len;
-   345		}
-   346	
-   347		/* Return ok: we always eat the packet */
-   348		return NETDEV_TX_OK;
-   349	}
-   350	
-   351	void brcmf_txflowblock_if(struct brcmf_if *ifp,
-   352				  enum brcmf_netif_stop_reason reason, bool state)
-   353	{
-   354		unsigned long flags;
-   355	
-   356		if (!ifp || !ifp->ndev)
-   357			return;
-   358	
-   359		brcmf_dbg(TRACE, "enter: bsscfgidx=%d stop=0x%X reason=%d state=%d\n",
-   360			  ifp->bsscfgidx, ifp->netif_stop, reason, state);
-   361	
-   362		spin_lock_irqsave(&ifp->netif_stop_lock, flags);
-   363		if (state) {
-   364			if (!ifp->netif_stop)
-   365				netif_stop_queue(ifp->ndev);
-   366			ifp->netif_stop |= reason;
-   367		} else {
-   368			ifp->netif_stop &= ~reason;
-   369			if (!ifp->netif_stop)
-   370				netif_wake_queue(ifp->ndev);
-   371		}
-   372		spin_unlock_irqrestore(&ifp->netif_stop_lock, flags);
-   373	}
-   374	
-   375	void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb)
-   376	{
-   377		/* Most of Broadcom's firmwares send 802.11f ADD frame every time a new
-   378		 * STA connects to the AP interface. This is an obsoleted standard most
-   379		 * users don't use, so don't pass these frames up unless requested.
-   380		 */
-   381		if (!ifp->drvr->settings->iapp && brcmf_skb_is_iapp(skb)) {
-   382			brcmu_pkt_buf_free_skb(skb);
-   383			return;
-   384		}
-   385	
-   386		if (skb->pkt_type == PACKET_MULTICAST)
-   387			ifp->ndev->stats.multicast++;
-   388	
-   389		if (!(ifp->ndev->flags & IFF_UP)) {
-   390			brcmu_pkt_buf_free_skb(skb);
-   391			return;
-   392		}
-   393	
-   394		ifp->ndev->stats.rx_bytes += skb->len;
-   395		ifp->ndev->stats.rx_packets++;
-   396	
-   397		brcmf_dbg(DATA, "rx proto=0x%X\n", ntohs(skb->protocol));
-   398		if (in_interrupt())
-   399			netif_rx(skb);
-   400		else
-   401			/* If the receive is not processed inside an ISR,
-   402			 * the softirqd must be woken explicitly to service
-   403			 * the NET_RX_SOFTIRQ.  This is handled by netif_rx_ni().
-   404			 */
-   405			netif_rx_ni(skb);
-   406	}
-   407	
-   408	void brcmf_netif_mon_rx(struct brcmf_if *ifp, struct sk_buff *skb)
-   409	{
-   410		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MON_FMT_RADIOTAP)) {
-   411			/* Do nothing */
-   412		} else {
-   413			struct ieee80211_radiotap_header *radiotap;
-   414	
-   415			radiotap = skb_push(skb, sizeof(*radiotap));
-   416			memset(radiotap, 0, sizeof(*radiotap));
- > 417			radiotap->it_len = sizeof(*radiotap);
-   418	
-   419			/* TODO: what are these extra 4 bytes? */
-   420			skb->len -= 4;
-   421		}
-   422	
-   423		skb->dev = ifp->ndev;
-   424		skb_reset_mac_header(skb);
-   425		skb->pkt_type = PACKET_OTHERHOST;
-   426		skb->protocol = htons(ETH_P_802_2);
-   427	
-   428		brcmf_netif_rx(ifp, skb);
-   429	}
-   430	
-
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 ---
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+ db.txt | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/db.txt b/db.txt
+index fd73049596f2..eeff196e4aac 100644
+--- a/db.txt
++++ b/db.txt
+@@ -475,6 +475,8 @@ country FR: DFS-ETSI
+ 	(5170 - 5250 @ 80), (20), AUTO-BW, wmmrule=ETSI
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW, wmmrule=ETSI
+ 	(5490 - 5710 @ 160), (27), DFS, wmmrule=ETSI
++        # short range devices (ETSI EN 300 440)
++	(5725 - 5875 @ 80), (25)
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
+ 
+-- 
+2.17.0
