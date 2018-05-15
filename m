@@ -1,49 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:37664 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967464AbeEXLfp (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:58086 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752917AbeEOJPH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 May 2018 07:35:45 -0400
-Received: by mail-wr0-f194.google.com with SMTP id i12-v6so2488948wrc.4
-        for <linux-wireless@vger.kernel.org>; Thu, 24 May 2018 04:35:44 -0700 (PDT)
-From: Eyal Reizer <eyalreizer@gmail.com>
-To: kvalo@codeaurora.org, tony@atomide.com, nsekhar@ti.com,
-        linux-wireless@vger.kernel.org
-Cc: Eyal Reizer <eyalr@ti.com>
-Subject: [PATCH] wlcore: sdio: check for valid platform device data before suspend
-Date: Thu, 24 May 2018 14:35:30 +0300
-Message-Id: <1527161730-9044-1-git-send-email-eyalr@ti.com> (sfid-20180524_133621_141069_FD03788D)
+        Tue, 15 May 2018 05:15:07 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 2/8] brcmfmac: move ALLFFMAC variable in flowring module
+Date: Tue, 15 May 2018 11:14:45 +0200
+Message-Id: <1526375691-31789-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180515_111601_082494_2F1D6529)
+In-Reply-To: <1526375691-31789-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1526375691-31789-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-the wl pointer can be null In case only wlcore_sdio is probed while
-no WiLink module is successfully probed, as in the case of mounting a
-wl12xx module while using a device tree file configured with wl18xx
-related settings.
-In this case the system was crashing in wl1271_suspend() as platform
-device data is not set.
-Make sure wl the pointer is valid before using it.
+The only user of ALLFFMAC is the flowring module so no need to
+expose it in a header file.
 
-Signed-off-by: Eyal Reizer <eyalr@ti.com>mamai
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/ti/wlcore/sdio.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Hi Kalle,
 
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index da701cd..aec6225 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -406,6 +406,11 @@ static int wl1271_suspend(struct device *dev)
- 	mmc_pm_flag_t sdio_flags;
- 	int ret = 0;
- 
-+	if (!wl) {
-+		dev_err(dev, "no wilink module was probed\n");
-+		goto out;
-+	}
+I recall Joe Perches posted patches dealing with broadcast address declarations,
+but don't know what happened with those. In patchwork [1] is says 'Not Applicable'
+whatever that means. I noticed Johannes set similar mac80211 change to
+'Awaiting Upstream'. Anyway, when applying this patch the patch in [1] needs to
+be reworked.
+
+Regards,
+Arend
+
+[1] https://patchwork.kernel.org/patch/10318857/
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c   | 2 --
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h   | 2 --
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c | 2 ++
+ 3 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index 105b877..cd36510 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -36,8 +36,6 @@
+ MODULE_DESCRIPTION("Broadcom 802.11 wireless LAN fullmac driver.");
+ MODULE_LICENSE("Dual BSD/GPL");
+
+-const u8 ALLFFMAC[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+-
+ #define BRCMF_DEFAULT_SCAN_CHANNEL_TIME	40
+ #define BRCMF_DEFAULT_SCAN_UNASSOC_TIME	40
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
+index ef91461..a34642c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
+@@ -19,8 +19,6 @@
+ #include <linux/platform_data/brcmfmac.h>
+ #include "fwil_types.h"
+
+-extern const u8 ALLFFMAC[ETH_ALEN];
+-
+ #define BRCMF_FW_ALTPATH_LEN			256
+
+ /* Definitions for the module global and device specific settings are defined
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
+index d0b738d..d0d8b32 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
+@@ -46,6 +46,8 @@
+ 	3
+ };
+
++static const u8 ALLFFMAC[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 +
- 	dev_dbg(dev, "wl1271 suspend. wow_enabled: %d\n",
- 		wl->wow_enabled);
- 
--- 
-2.7.4
+
+ static bool
+ brcmf_flowring_is_tdls_mac(struct brcmf_flowring *flow, u8 mac[ETH_ALEN])
+--
+1.9.1
