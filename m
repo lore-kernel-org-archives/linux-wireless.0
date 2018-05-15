@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37146 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935638AbeEYKI6 (ORCPT
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:42334 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752162AbeEOInb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 May 2018 06:08:58 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 15 May 2018 04:43:31 -0400
+Received: by mail-qt0-f194.google.com with SMTP id c2-v6so19769828qtn.9
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2018 01:43:31 -0700 (PDT)
+Subject: Re: [PATCH V3 0/5] Update brcm firmware files
+To: Josh Boyer <jwboyer@kernel.org>
+References: <1521209329-59441-1-git-send-email-chi-hsien.lin@cypress.com>
+ <5AF960B6.2010709@broadcom.com>
+ <CA+5PVA7m3wWHyi12rTcpAozj=en9BtnsVAKAbQyvKvPRh_jC4A@mail.gmail.com>
+Cc: Linux Firmware <linux-firmware@kernel.org>,
+        chi-hsien.lin@cypress.com,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, wright.feng@cypress.com,
+        Hans de Goede <hdegoede@redhat.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AFA9DB0.7060703@broadcom.com> (sfid-20180515_104335_651642_400F1888)
+Date: Tue, 15 May 2018 10:43:28 +0200
 MIME-Version: 1.0
-Subject: Re: [01/10] wcn36xx: fix buffer commit logic on TX path
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180516140820.1636-2-daniel@zonque.org>
-References: <20180516140820.1636-2-daniel@zonque.org>
-To: Daniel Mack <daniel@zonque.org>
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-        rfried@codeaurora.org, bjorn.andersson@linaro.org,
-        nicolas.dechesne@linaro.org, loic.poulain@linaro.org,
-        Daniel Mack <daniel@zonque.org>
-Message-Id: <20180525100858.6251560618@smtp.codeaurora.org> (sfid-20180525_120949_362618_892842BD)
-Date: Fri, 25 May 2018 10:08:58 +0000 (UTC)
+In-Reply-To: <CA+5PVA7m3wWHyi12rTcpAozj=en9BtnsVAKAbQyvKvPRh_jC4A@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Mack <daniel@zonque.org> wrote:
+On 5/14/2018 2:05 PM, Josh Boyer wrote:
+> n Mon, May 14, 2018 at 6:11 AM Arend van Spriel <
+> arend.vanspriel@broadcom.com> wrote:
+>
+>> On 3/16/2018 3:08 PM, Chi-Hsien Lin wrote:
+>>> Update brcm firmware files and WHENCE accordingly.
+>
+>> Hi firmware-maintainers,
+>
+>> It seems this series somehow got lost. Can these still be applied. They
+>> can be found in the linux-wireless patchwork database. I provided links
+>> below.
+>
+> All 5 of these move the respective firmware files under the Cypress
+> license.  It has been pointed out that the Cypress license has some
+> questionable language in it and that people have been in touch to try and
+> get this resolved.  I'm personally waiting on applying them until the
+> licence issue is sorted out.
 
-> When wcn36xx_dxe_tx_frame() is entered while the device is still processing
-> the queue asyncronously, we are racing against the firmware code with
-> updates to the buffer descriptors. Presumably, the firmware scans the ring
-> buffer that holds the descriptors and scans for a valid control descriptor,
-> and then assumes that the next descriptor contains the payload. If, however,
-> the control descriptor is marked valid, but the payload descriptor isn't,
-> the packet is not sent out.
-> 
-> Another issue with the current code is that is lacks memory barriers before
-> descriptors are marked valid. This is important because the CPU may reorder
-> writes to memory, even if it is allocated as coherent DMA area, and hence
-> the device may see incompletely written data.
-> 
-> To fix this, the code in wcn36xx_dxe_tx_frame() was restructured a bit so
-> that the payload descriptor is made valid before the control descriptor.
-> Memory barriers are added to ensure coherency of shared memory areas.
-> 
-> Signed-off-by: Daniel Mack <daniel@zonque.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Thanks, Josh
 
-10 patches applied to ath-next branch of ath.git, thanks.
+I could not find any such response. Has it been taken off-list? Seems 
+like 2 months is quite some time, but maybe there are lawyers involved ;-)
 
-9a81cc23dfef wcn36xx: fix buffer commit logic on TX path
-57e06e0e2a86 wcn36xx: set DMA mask explicitly
-ba437e72378c wcn36xx: don't disable RX IRQ from handler
-edd23ab403cf wcn36xx: clear all masks in RX interrupt
-ce1d4be82b10 wcn36xx: only handle packets when ED or DONE bit is set
-18c7ed138824 wcn36xx: consider CTRL_EOP bit when looking for valid descriptors
-2a46c829a926 wcn36xx: set PREASSOC and IDLE stated when BSS info changes
-773f9a28bcda wcn36xx: drain pending indicator messages on shutdown
-a50c6c8412f7 wcn36xx: simplify wcn36xx_smd_open()
-ffbc9197b472 wcn36xx: improve debug and error messages for SMD
-
--- 
-https://patchwork.kernel.org/patch/10404031/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Regards,
+Arend
