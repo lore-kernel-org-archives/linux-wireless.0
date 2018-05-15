@@ -1,58 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:55618 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932657AbeEaCgs (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49396 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752129AbeEOJar (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 22:36:48 -0400
-From: Pkshih <pkshih@realtek.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH v4 0/9] rtlwifi: btcoex: Add 8822b btcoex support
-Date: Thu, 31 May 2018 02:36:38 +0000
-Message-ID: <1527734181.8418.13.camel@realtek.com> (sfid-20180531_043652_209564_79AE440C)
-References: <20180413061613.8569-1-pkshih@realtek.com>
-In-Reply-To: <20180413061613.8569-1-pkshih@realtek.com>
-Content-Type: text/plain; charset="utf-8"
+        Tue, 15 May 2018 05:30:47 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/8] btmrvl: support sysfs initiated firmware coredump
+References: <1526375691-31789-1-git-send-email-arend.vanspriel@broadcom.com>
+        <1526375691-31789-6-git-send-email-arend.vanspriel@broadcom.com>
+Date: Tue, 15 May 2018 12:30:43 +0300
+In-Reply-To: <1526375691-31789-6-git-send-email-arend.vanspriel@broadcom.com>
+        (Arend van Spriel's message of "Tue, 15 May 2018 11:14:48 +0200")
+Message-ID: <87bmdhp8os.fsf@kamboji.qca.qualcomm.com> (sfid-20180515_113051_149467_9B64B875)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gRnJpLCAyMDE4LTA0LTEzIGF0IDE0OjE2ICswODAwLCBwa3NoaWhAcmVhbHRlay5jb20gd3Jv
-dGU6DQo+IEZyb206IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPg0KPiANCj4gdjQ6
-IHN3YXAgdGhlIG9yZGVyIG9mIHBhdGNoIDQvOSBhbmQgNS85LCBiZWNhdXNlIGtidWlsZCB0ZXN0
-IHJvYm90IHJlcG9ydHMNCj4gwqDCoMKgwqB1bmRlZmluZWQgcmVmZXJlbmNlLiBObyBzb3VyY2Ug
-Y29kZSBjaGFuZ2UuDQo+IHYzOiBmb3JnZXQgdG8gQ0Mgd2lyZWxlc3MgbWFpbGluZyBsaXN0LCBz
-byByZXNlbmQgYWdhaW4uIE5vIGFueSBjaGFuZ2UuDQo+IHYyOiBmaXggbWlzc3BlbGxpbmcgYW5k
-IGJvb2xlYW4gZXhwcmVzc2lvbiBpbiBwYXRjaCAxLzkNCj4gDQo+IFBhdGNoZXMgMS0yIGFyZSBy
-ZXZpc2VkIGJ5IHBhdGNoZXMgMTIgb2YgcHJldmlvdXMgcGF0Y2hzZXQuIDg4MjJiIGNvZXgNCj4g
-ZmlsZXMgYXJlIHNwbGl0IGludG8gdHdvIHBhdGNoZXMsIGFuZCBJIHJlbW92ZSBzb21lIGNvbW1l
-bnRzIGFuZCBhcHBseQ0KPiAnc3RhdGljIGNvbnN0JyB0byB2ZXJzaW9uIHJlbGF0ZWQgdmFyaWFi
-bGVzLg0KPiBQYXRjaGVzIDMtNCBhcmVuJ3QgY2hhbmdlZC4gKGlkZW50aWNhbCB0byBwYXRjaGVz
-IDEzLTE1IG9mIHByZXZpb3VzIHBhdGNoc2V0KQ0KPiBQYXRjaGVzIDYtNyByZW1vdmUgY29tbWVu
-dHMgYW5kIGFwcGx5ICdzdGF0aWMgY29uc3QnIHRvIGV4aXN0aW5nIGZpbGVzLg0KPiBQYXRjaGVz
-IDgtOSByZW1vdmUgZ2xvYmFsIHZhcmlhYmxlcywgYW5kIHVzZSBsb2NhbCB2YXJpYWJsZXMgaW5z
-dGVhZC4NCj4gDQo+IFBpbmctS2UgU2hpaCAoOSk6DQo+IMKgIHJ0bHdpZmk6IGJ0Y29leDogQWRk
-IDg4MjJiMWFudCBjb2V4IGZpbGVzDQo+IMKgIHJ0bHdpZmk6IGJ0Y29leDogQWRkIDg4MjJiMmFu
-dCBjb2V4IGZpbGVzDQo+IMKgIHJ0bHdpZmk6IGJ0Y29leDogQWRkIDg4MjJiIGhlYWRlciBmaWxl
-cyB0byBwcmVjb21wLmgNCj4gwqAgcnRsd2lmaTogYnRjb2V4OiBBZGQgODgyMmIgdG8gTWFrZWZp
-bGUNCj4gwqAgcnRsd2lmaTogYnRjb2V4OiBBZGQgODgyMmIgcm91dGluZSB0byBidGMgaW50ZXJm
-YWNlcw0KPiDCoCBydGx3aWZpOiBidGNvZXg6IHJlbW92ZSBjb21tZW50cyB0aGF0IGFyZSBub3Qg
-bWVhbmluZ2Z1bA0KPiDCoCBydGx3aWZpOiBidGNvZXg6IEFkZCBtb2RpZmllciBjb25zdCB0byB2
-ZXJzaW9uIHJlbGF0ZWQgdmFyaWFibGVzDQo+IMKgIHJ0bHdpZmk6IGJ0Y29leDogQWRkIHN0cnVj
-dCBtZW1iZXJzIHRvIHJlcGxhY2UgZ2xvYmFsIHZhcmFpYmxlcw0KPiDCoCBydGx3aWZpOiBidGNv
-ZXg6IFJlbW92ZSBnbG9iYWwgdmFyaWFibGVzIG9mIGNoaXAgc3BlY2lmaWMgY29udGV4dA0KPiAN
-Cg0KSGkgS2FsbGUsDQoNCkkgd291bGQgbGlrZSB0byBzZW5kIHY1IHRvIGNoYW5nZSB0aGUgb3Jk
-ZXIgb2YgdGhpcyBwYXRjaHNldCBsaWtlOg0KwqAgcnRsd2lmaTogYnRjb2V4OiByZW1vdmUgY29t
-bWVudHMgdGhhdCBhcmUgbm90IG1lYW5pbmdmdWwNCsKgIHJ0bHdpZmk6IGJ0Y29leDogQWRkIG1v
-ZGlmaWVyIGNvbnN0IHRvIHZlcnNpb24gcmVsYXRlZCB2YXJpYWJsZXMNCsKgIHJ0bHdpZmk6IGJ0
-Y29leDogQWRkIHN0cnVjdCBtZW1iZXJzIHRvIHJlcGxhY2UgZ2xvYmFsIHZhcmFpYmxlcw0KwqAg
-cnRsd2lmaTogYnRjb2V4OiBSZW1vdmUgZ2xvYmFsIHZhcmlhYmxlcyBvZiBjaGlwIHNwZWNpZmlj
-IGNvbnRleHQNCg0KwqAgcnRsd2lmaTogYnRjb2V4OiBBZGQgODgyMmIxYW50IGNvZXggZmlsZXMN
-CsKgIHJ0bHdpZmk6IGJ0Y29leDogQWRkIDg4MjJiMmFudCBjb2V4IGZpbGVzDQrCoCBydGx3aWZp
-OiBidGNvZXg6IEFkZCA4ODIyYiBoZWFkZXIgZmlsZXMgdG8gcHJlY29tcC5oDQrCoCBydGx3aWZp
-OiBidGNvZXg6IEFkZCA4ODIyYiB0byBNYWtlZmlsZQ0KwqAgcnRsd2lmaTogYnRjb2V4OiBBZGQg
-ODgyMmIgcm91dGluZSB0byBidGMgaW50ZXJmYWNlcw0KDQpUaGVuLCB5b3UgY2FuIHJldmlldyBw
-YXRjaGVzIDEvOSAtIDQvOSB0aGF0IHJlZmluZSBidGNvZXgsIGFuZA0KdGhlIHJlbWFpbmluZyA4
-ODIyYidzIGJ0Y29leCBjYW4gcmV2aWV3IGxhdGVyLg0KRG9lcyBpdCB3b3JrIGZvciB5b3U/DQoN
-ClRoYW5rcw0KUEsNCg==
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+
+> Since commit 3c47d19ff4dc ("drivers: base: add coredump driver ops")
+> it is possible to initiate a device coredump from user-space. This
+> patch adds support for it in btmrvl_sdio adding the .coredump()
+> driver callback. This makes dump through debugfs obsolete so removing
+> it.
+>
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> ---
+>  drivers/bluetooth/btmrvl_debugfs.c | 31 -------------------------------
+>  drivers/bluetooth/btmrvl_drv.h     |  2 --
+>  drivers/bluetooth/btmrvl_main.c    |  6 ------
+>  drivers/bluetooth/btmrvl_sdio.c    | 11 ++++++++---
+>  4 files changed, 8 insertions(+), 42 deletions(-)
+
+Shouldn't this go via bluetooth tree?
+
+-- 
+Kalle Valo
