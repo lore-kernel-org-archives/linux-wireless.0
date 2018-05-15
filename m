@@ -1,83 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48378 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752370AbeEOFkk (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:44348 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752009AbeEODKl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 May 2018 01:40:40 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v3] b43: fix transmit failure when VT is switched
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <5AF80278.9000501@sra-tohoku.co.jp>
-References: <5AF80278.9000501@sra-tohoku.co.jp>
-To: kabe@sra-tohoku.co.jp
-Cc: linux-wireless@vger.kernel.org, kabe@sra-tohoku.co.jp,
-        b43-dev@lists.infradead.org
-Message-Id: <20180515054039.CECEE6085F@smtp.codeaurora.org> (sfid-20180515_074139_906705_4A280431)
-Date: Tue, 15 May 2018 05:40:39 +0000 (UTC)
+        Mon, 14 May 2018 23:10:41 -0400
+From: Eric Biggers <ebiggers3@gmail.com>
+To: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-kernel@vger.kernel.org, syzkaller-bugs@googlegroups.com,
+        Eric Biggers <ebiggers@google.com>
+Subject: [PATCH] cfg80211: further limit wiphy names to 64 bytes
+Date: Mon, 14 May 2018 20:09:24 -0700
+Message-Id: <20180515030924.27570-1-ebiggers3@gmail.com> (sfid-20180515_051106_679009_4DFEEF89)
+In-Reply-To: <1526300027.8070.0.camel@sipsolutions.net>
+References: <1526300027.8070.0.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kabe@sra-tohoku.co.jp wrote:
+From: Eric Biggers <ebiggers@google.com>
 
-> From: Taketo Kabe <kabe@sra-tohoku.co.jp>
-> 
-> Setup:
-> Using BCM4306 rev.03 chip based CardBus wireless card.
-> IRQ is shared with yenta (cardbus bridge) and i915 (display) driver.
-> For firmware, installed latest but dated openfwwf 5.2
-> (http://netweb.ing.unibs.it/~openfwwf/)
-> 
-> How-to-reproduce:
-> Do "ssh <NetBSD-remotehost>", then "ls -lR /" to generate traffic, then
-> repeatedly switch VTs by Alt-F1<>Alt-F2.
-> Eventually (within a minute) the card stops working.
-> You can receive traffic but no transmission.
-> For unknown reason it doesn't occur when just generating traffic by
-> "ssh <remotehost> ls -lR /".
-> 
-> With CONFIG_B43_DEBUG=y kernel config, when it stops,
-> the debug message shows
->     kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 148, but got 180
-> The slot offset I observed so far was always 32.
-> 
-> When err_out2 is not set to make error messages successive,
-> the debug output will be like this:
-> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 148
-> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 150
-> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 120
-> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 152
-> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 122
-> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 154
-> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 124
-> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 156
-> kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 126
-> The TX ring alternates between 2 sequences; the ring seems
-> to be completely confused. Controller restart is needed.
-> 
-> Workaround(1):
-> This problem doesn't occur when using propriatory firmware
-> you will extract by b43-fwcutter, so it may be a bug in
-> openfwwf firmware, as the comment in the b43_dma_handle_txstatus() suggests.
-> I wasn't able to find a bug in the terse openfwwf code though.
-> 
-> Workaround(2):
-> Using "pio=1" option to not use DMA makes this problem to
-> not occur.
-> 
-> Description of the patch:
-> This patch will forcibly reset the controller to make it
-> work again. Very kludgy and doesn't look right, but
-> the traffic will continue to flow.
-> 
-> Signed-off-by: Taketo Kabe <kabe@sra-tohoku.co.jp>
-> Reviewed-by: Michael Buesch <m@bues.ch>
+wiphy names were recently limited to 128 bytes by commit a7cfebcb7594
+("cfg80211: limit wiphy names to 128 bytes").  As it turns out though,
+this isn't sufficient because dev_vprintk_emit() needs the syslog header
+string "SUBSYSTEM=ieee80211\0DEVICE=+ieee80211:$devname" to fit into 128
+bytes.  This triggered the "device/subsystem name too long" WARN when
+the device name was >= 90 bytes.  As before, this was reproduced by
+syzbot by sending an HWSIM_CMD_NEW_RADIO command to the MAC80211_HWSIM
+generic netlink family.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Fix it by further limiting wiphy names to 64 bytes.
 
-66cffd6daab7 b43: fix transmit failure when VT is switched
+Reported-by: syzbot+e64565577af34b3768dc@syzkaller.appspotmail.com
+Fixes: a7cfebcb7594 ("cfg80211: limit wiphy names to 128 bytes")
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ include/uapi/linux/nl80211.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 9c3630146cec0..271b93783d282 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2698,7 +2698,7 @@ enum nl80211_attrs {
+ #define NL80211_ATTR_KEYS NL80211_ATTR_KEYS
+ #define NL80211_ATTR_FEATURE_FLAGS NL80211_ATTR_FEATURE_FLAGS
+ 
+-#define NL80211_WIPHY_NAME_MAXLEN		128
++#define NL80211_WIPHY_NAME_MAXLEN		64
+ 
+ #define NL80211_MAX_SUPP_RATES			32
+ #define NL80211_MAX_SUPP_HT_RATES		77
 -- 
-https://patchwork.kernel.org/patch/10396133/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.17.0
