@@ -1,106 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39192 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750866AbeEWSFd (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:48338 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752482AbeEPMMe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 May 2018 14:05:33 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 23 May 2018 11:05:32 -0700
-From: Rajkumar Manoharan <rmanohar@codeaurora.org>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-Cc: Niklas Cassel <niklas.cassel@linaro.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH v2] ath10k: transmit queued frames after waking queues
-In-Reply-To: <c131da6e-6479-3a40-fbd3-9c61d6690ba8@gmail.com>
-References: <20180521204359.23884-1-niklas.cassel@linaro.org>
- <8195be7603a8cd659d25a9c3d898b891@codeaurora.org>
- <20180522211521.GA26123@localhost.localdomain>
- <c131da6e-6479-3a40-fbd3-9c61d6690ba8@gmail.com>
-Message-ID: <ddcd48cc8b1a77c489214a4f63c54b1a@codeaurora.org> (sfid-20180523_200658_737733_C95E3A31)
+        Wed, 16 May 2018 08:12:34 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Franky Lin <franky.lin@broadcom.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 4/6] brcmfmac: validate user provided data for memdump before copying
+Date: Wed, 16 May 2018 14:12:01 +0200
+Message-Id: <1526472723-15758-5-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180516_141242_663373_3EE9053D)
+In-Reply-To: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-05-23 09:25, Erik Stromdahl wrote:
-> On 05/22/2018 11:15 PM, Niklas Cassel wrote:
-> 
-[...]
->> 
->> Perhaps it would be possible to call ath10k_mac_tx_push_pending()
->> from the equivalent to ath10k_htt_txrx_compl_task(),
->> but from SDIO's point of view.
-> An equivalent for SDIO would most likely be 
-> *ath10k_htt_htc_t2h_msg_handler*
-> or any of the other functions called from this function.
-> 
-> *ath10k_txrx_tx_unref* is actually called from 
-> *ath10k_htt_htc_t2h_msg_handler*,
-> so that function could be viewed as an equivalent.
-> 
-> If the call should be added in the bus driver (sdio.c) it should most 
-> likely be
-> placed in *ath10k_sdio_mbox_rx_process_packets*
-> 
-> 		if (!pkt->trailer_only) {
-> 			ep->ep_ops.ep_rx_complete(ar_sdio->ar, pkt->skb);
-> 			ath10k_mac_tx_push_pending(ar_sdio->ar);
-> 		} else {
-> 			kfree_skb(pkt->skb)
-> 		}
-> 
-> The above call would of course result in lot's of calls to
-> *ath10k_mac_tx_push_pending*
-> Adding a htt_num_pending check here wouldn't look nice.
-> 
-> The HL RX path differs from the LL path in that the t2h_msg_handler 
-> returns
-> false indicating that it has consumed the skb.
-> 
-> This is because it is the HL RX indication handler that delivers the 
-> skb's
-> to mac80211.
-> 
-I also dont prefer to call *_push_pending for every HTC packets. Similar 
-to
-LL approach, call ath10k_mac_tx_push_pending after processing all 
-pending
-rx messages like calling from ath10k_sdio_mbox_rxmsg_pending_handler.
+From: Franky Lin <franky.lin@broadcom.com>
 
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -807,6 +807,8 @@ static int 
-ath10k_sdio_mbox_rxmsg_pending_handler(struct ath10k *ar,
-                 ath10k_warn(ar, "failed to get pending recv messages: 
-%d\n",
-                             ret);
+In patch "brcmfmac: add support for sysfs initiated coredump", a new
+scenario of brcmf_debug_create_memdump was added in which the user of
+the function might not necessarily provide prefix data. Hence the
+function should not assume the data is always valid and should perform a
+check before copying.
 
-+       ath10k_mac_tx_push_pending(ar);
-+
-         return ret;
-  }
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> Another solution could be to add an *else-statement* as a part of the
-> *if (release)*
-> in *ath10k_htt_htc_t2h_msg_handler*, where
-> *ath10k_mac_tx_push_pending* could be called.
-> 
-> Something like this perhaps:
-> 
-> 	/* Free the indication buffer */
-> 	if (release)
-> 		dev_kfree_skb_any(skb);
-> 	else if (!ar->htt.num_pending_tx)
-> 		ath10k_mac_tx_push_pending(ar);
-> 
-> I think I prefer your original patch though.
->> 
-
-Better to do changes as HL specific path instead in common path.
-The above change will impact QCA6174 based devices.
-
--Rajkumar
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+index 5048320..489b5df 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+@@ -40,7 +40,8 @@ int brcmf_debug_create_memdump(struct brcmf_bus *bus, const void *data,
+ 	if (!dump)
+ 		return -ENOMEM;
+ 
+-	memcpy(dump, data, len);
++	if (data && len > 0)
++		memcpy(dump, data, len);
+ 	err = brcmf_bus_get_memdump(bus, dump + len, ramsize);
+ 	if (err) {
+ 		vfree(dump);
+-- 
+1.9.1
