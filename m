@@ -1,47 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:14273 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752502AbeEGIop (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51850 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753210AbeEPKJ5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 04:44:45 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 19/30] staging: wilc1000: fix line over 80 chars in wilc_create_wiphy() declaration
-Date: Mon, 7 May 2018 14:13:23 +0530
-Message-ID: <1525682614-3824-20-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104535_810998_3EE7D956)
-In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+        Wed, 16 May 2018 06:09:57 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Peter Oh <peter.oh@bowerswilkins.com>
+Cc: Adrian Chadd <adrian@freebsd.org>, srirrama@codeaurora.org,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 2/2] ath10k: DFS Host Confirmation
+References: <1525110339-25326-1-git-send-email-srirrama@codeaurora.org>
+        <1525110339-25326-3-git-send-email-srirrama@codeaurora.org>
+        <CAJ-VmonSEuh7Ou=K9Gu-gZ5ikpX9H=nzXe9NssNu1vw8fEk3hg@mail.gmail.com>
+        <87h8naqel1.fsf@kamboji.qca.qualcomm.com>
+        <CAJ-VmomNrjdEZ+UCH5rmth=2yE9utfM3FUTEy2a0zpq0r44Zig@mail.gmail.com>
+        <87y3gla4re.fsf@codeaurora.org>
+        <a148127a-322a-8e48-cea4-bd9a8aa7c2ed@bowerswilkins.com>
+Date: Wed, 16 May 2018 13:09:51 +0300
+In-Reply-To: <a148127a-322a-8e48-cea4-bd9a8aa7c2ed@bowerswilkins.com> (Peter
+        Oh's message of "Tue, 15 May 2018 11:59:45 -0700")
+Message-ID: <87wow3lxn4.fsf@kamboji.qca.qualcomm.com> (sfid-20180516_121011_097147_8BFE9F76)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix line over 80 characters issue found by checkpatch.pl script in
-function declaration.
+Peter Oh <peter.oh@bowerswilkins.com> writes:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+>> Sure, every software change can cause regressions. But the thing is that
+>> this isn't an optional, ath10k has to have this to be able to continue
+>> using DFS channels.
+>
+> Kalle, you said you don't know which exact FCC requirement this is for
+> in another email thread. Then how come you're sure this is not an
+> optional 
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-index c1a2421..a69103b 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-@@ -3,7 +3,8 @@
- #define NM_WFI_CFGOPERATIONS
- #include "wilc_wfi_netdevice.h"
- 
--struct wireless_dev *wilc_create_wiphy(struct net_device *net, struct device *dev);
-+struct wireless_dev *wilc_create_wiphy(struct net_device *net,
-+				       struct device *dev);
- void wilc_free_wiphy(struct net_device *net);
- int wilc_deinit_host_int(struct net_device *net);
- int wilc_init_host_int(struct net_device *net);
+To me this is a mandatory ath10k feature because if the host driver does
+not have this DFS channels won't work anymore.
+
+> and this approach is right one?
+
+That's something you need to ask the firmware team who designed and
+implemented this.
+
+This discussion is going circles, it would be a lot easier if you could
+clearly say your point. But if your point is just "I don't like this"
+then there's not much, if any, I can do about that.
+
 -- 
-2.7.4
+Kalle Valo
