@@ -1,54 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:51038 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750897AbeEBIkB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 May 2018 04:40:01 -0400
-Date: Wed, 2 May 2018 11:39:36 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: devel@driverdev.osuosl.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] staging: wilc1000: fix infinite loop and out-of-bounds
- access
-Message-ID: <20180502083935.uw4mxvcgnpayv3h3@mwanda> (sfid-20180502_104018_908605_D22DB19D)
-References: <20180430125040.GA19050@embeddedor.com>
- <20180430195916.596a93eb@ajaysk-VirtualBox>
- <20180430152321.7pq4ol2ed7tzsrl4@mwanda>
- <20180502111735.5a2c6faa@ajaysk-VirtualBox>
+Received: from mail.toke.dk ([52.28.52.200]:47791 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751976AbeEPJWO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 May 2018 05:22:14 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Niklas Cassel <niklas.cassel@linaro.org>
+Cc: johannes@sipsolutions.net, kvalo@qca.qualcomm.com,
+        erik.stromdahl@gmail.com, Felix Fietkau <nbd@nbd.name>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: ath10k wake_tx_queue issues
+In-Reply-To: <20180515203102.GA20469@localhost.localdomain>
+References: <20180515134516.GA30397@localhost.localdomain> <87d0xx0zxf.fsf@toke.dk> <20180515203102.GA20469@localhost.localdomain>
+Date: Wed, 16 May 2018 11:22:11 +0200
+Message-ID: <87tvr8ymyk.fsf@toke.dk> (sfid-20180516_112219_280419_9F5A3E12)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180502111735.5a2c6faa@ajaysk-VirtualBox>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We're mainly discussing readability, right?
+Niklas Cassel <niklas.cassel@linaro.org> writes:
+> [ .. snip .. ]
+>> > Sure, the regular way ath10k_mac_op_wake_tx_queue is called is via
+>> > ieee80211_subif_start_xmit => __ieee80211_subif_start_xmit => ieee80211_xmit_fast
+>> > => ieee80211_queue_skb => drv_wake_tx_queue.
+>> >
+>> > But I was expecting the call to ieee80211_wake_queue to somehow trigger a call
+>> > to ath10k_mac_op_wake_tx_queue, since there is still data in the send buffer/
+>> > in the ieee80211_txq that needs to be sent, to allow more data to be written to
+>> > the socket. But obviously the callback never comes.
+>> > Or how else is this supposed to work?
+>> 
+>> The driver should reschedule itself before/after calling
+>> ieee80211_wake_queue. mt76 does this; I'm not actually sure if ath9k
+>> does the right thing either, I'm not too familiar with that part of the
+>> code. There's no direct call to reschedule that I can see, but there may
+>> be another reason why this is not needed for ath9k. I'm sure Felix
+>> knows?
+>
+> Hello Toke
+>
+> Unfortunately, it doesn't look like mt76 uses any ieee80211_* function
+> to reschedule.
 
-To me when people use "int" that tells me as a reader that we don't need
-to think about the type.  It's going to be a small number.
+It doesn't need to; it just reschedules itself.
 
-Say you have data which the user can control, then it's super important
-to focus on the data types.  We don't focus on it enough.  There is some
-kind of idea that good developers should just be super focused on
-everything all the time, but I don't think humans can do it.  So to me
-it's useful when the author tells me, "This an int type.  It's fine.
-This is not critical."
+Basically, the wake_tx_queue() callback is just a way for mac80211 to
+notify the driver that new packets are available and that it should
+start its scheduling function. But in this case it is the driver that is
+restarting the queues, so it already knows that. And so it can just call
+its internal scheduling function. This is what mt76 does in
+mt76_dma_tx_cleanup() with the call to mt76_txq_schedule() before
+calling ieee80211_wake_queue().
 
-If you make request->n_ssids a u8 or u16, that isn't going to save any
-memory because the struct is padded.  You'd also need to audit a bunch
-of code to make sure that we don't overflow the u16.  If you wanted to
-overflow the int, you'd need to allocate several gigs of memory but
-kmalloc() is capped at KMALLOC_MAX_SIZE (4MB) so that's not possible.
-How many of these structs do we allocate?  Is it really worth optimizing
-the heck out of it?
+I think that what ath10k should be doing is calling
+ath10k_mac_tx_push_pending() when it restarts the queues.
 
-There are times where want to be very deliberate with our types because
-we're dealing the large numbers, or user data or fast paths.  But there
-are other times where int is fine...
+> I just came across a ieee80211_schedule_txq() function in e937b8da5a59
+> ("mac80211: Add TXQ scheduling API"). However, this commit was
+> reverted. Any plans on resubmitting this?
 
-regards,
-dan carpenter
+Yeah, I have a revised version lying around waiting for Felix to review
+it. But that wouldn't help this bug; it's just an API change, it doesn't
+change behaviour...
+
+-Toke
