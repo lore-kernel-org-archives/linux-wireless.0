@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:40480 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S935149AbeE2Bmf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 May 2018 21:42:35 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH 1/2] mwifiex: increase log level for internal scan fail result
-Date: Tue, 29 May 2018 09:42:08 +0800
-Message-ID: <1527558129-18109-1-git-send-email-huxm@marvell.com> (sfid-20180529_034307_923459_A2E64340)
+Received: from szxga04-in.huawei.com ([45.249.212.190]:7675 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752292AbeEPK5M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 May 2018 06:57:12 -0400
+From: YueHaibing <yuehaibing@huawei.com>
+To: <kvalo@qca.qualcomm.com>, <davem@davemloft.net>
+CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+        YueHaibing <yuehaibing@huawei.com>
+Subject: [PATCH net-next] ath10k: Remove useless test before clk_disable_unprepare
+Date: Wed, 16 May 2018 18:54:54 +0800
+Message-ID: <20180516105454.30212-1-yuehaibing@huawei.com> (sfid-20180516_125719_389401_7F498EFD)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+clk_disable_unprepare() already checks that the clock pointer is valid.
+No need to test it before calling it.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 54a2297..6eba0b2 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -2258,7 +2258,7 @@ static int mwifiex_cfg80211_inform_ibss_bss(struct mwifiex_private *priv)
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/net/wireless/ath/ath10k/ahb.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
+index 35d1049..fa39fff 100644
+--- a/drivers/net/wireless/ath/ath10k/ahb.c
++++ b/drivers/net/wireless/ath/ath10k/ahb.c
+@@ -180,14 +180,11 @@ static void ath10k_ahb_clock_disable(struct ath10k *ar)
+ {
+ 	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
  
- 		if (!bss) {
- 			if (is_scanning_required) {
--				mwifiex_dbg(priv->adapter, WARN,
-+				mwifiex_dbg(priv->adapter, MSG,
- 					    "assoc: requested bss not found in scan results\n");
- 				break;
- 			}
+-	if (!IS_ERR_OR_NULL(ar_ahb->cmd_clk))
+-		clk_disable_unprepare(ar_ahb->cmd_clk);
++	clk_disable_unprepare(ar_ahb->cmd_clk);
+ 
+-	if (!IS_ERR_OR_NULL(ar_ahb->ref_clk))
+-		clk_disable_unprepare(ar_ahb->ref_clk);
++	clk_disable_unprepare(ar_ahb->ref_clk);
+ 
+-	if (!IS_ERR_OR_NULL(ar_ahb->rtc_clk))
+-		clk_disable_unprepare(ar_ahb->rtc_clk);
++	clk_disable_unprepare(ar_ahb->rtc_clk);
+ }
+ 
+ static int ath10k_ahb_rst_ctrl_init(struct ath10k *ar)
 -- 
-1.9.1
+2.7.0
