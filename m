@@ -1,118 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:7399 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752262AbeEGIp1 (ORCPT
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:33499 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750858AbeEPSwx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 04:45:27 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 27/30] staging: wilc1000: remove 'flag' argument from wilc_mac_indicate()
-Date: Mon, 7 May 2018 14:13:31 +0530
-Message-ID: <1525682614-3824-28-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104724_861155_E30D5816)
-In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+        Wed, 16 May 2018 14:52:53 -0400
+Received: by mail-qt0-f196.google.com with SMTP id e8-v6so2499766qth.0
+        for <linux-wireless@vger.kernel.org>; Wed, 16 May 2018 11:52:53 -0700 (PDT)
+Subject: Re: [PATCH V2 3/6] mwifiex: support sysfs initiated device coredump
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1526472723-15758-4-git-send-email-arend.vanspriel@broadcom.com>
+ <87h8n7lnfx.fsf@kamboji.qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AFC7E01.3070503@broadcom.com> (sfid-20180516_205257_659397_56F1EC2B)
+Date: Wed, 16 May 2018 20:52:49 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87h8n7lnfx.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove 'flag' function parameter in wilc_mac_indicate() as only one
-condition was handled using that parameter. Also removed unnecessary
-call to wilc_mac_indicate() as no operation was performed in that
-function call.
-After above changes below macro are not required.
+On 5/16/2018 3:50 PM, Kalle Valo wrote:
+> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+>
+>> Since commit 3c47d19ff4dc ("drivers: base: add coredump driver ops")
+>> it is possible to initiate a device coredump from user-space. This
+>> patch adds support for it adding the .coredump() driver callback.
+>> As there is no longer a need to initiate it through debugfs remove
+>> that code.
+>>
+>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>> ---
+>>   V2:
+>>    - export mwifiex_send_cmd() needed by mwifiex_usb.ko.
+>> ---
+>>   drivers/net/wireless/marvell/mwifiex/cmdevt.c  |  1 +
+>>   drivers/net/wireless/marvell/mwifiex/debugfs.c | 31 +-------------------------
+>>   drivers/net/wireless/marvell/mwifiex/pcie.c    | 18 +++++++++++++--
+>>   drivers/net/wireless/marvell/mwifiex/sdio.c    | 12 ++++++++++
+>>   drivers/net/wireless/marvell/mwifiex/usb.c     | 13 +++++++++++
+>>   5 files changed, 43 insertions(+), 32 deletions(-)
+>
+> You forgot to CC mwifiex maintainers, doing it now. Full patch here:
+>
+> https://patchwork.kernel.org/patch/10403717/
 
-This changes also helped in resolving the line over 80 chars issue
-found by checkatpch.pl script.
+Thanks, Kalle
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/linux_wlan.c         | 17 +++++++----------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h |  2 +-
- drivers/staging/wilc1000/wilc_wlan.c          |  7 +------
- drivers/staging/wilc1000/wilc_wlan_if.h       |  3 ---
- 4 files changed, 9 insertions(+), 20 deletions(-)
+You would almost think I am not used to submit patches for drivers I do 
+not actively maintain ;-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 7b883c0..02e6b13 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -176,19 +176,16 @@ static void deinit_irq(struct net_device *dev)
- 	}
- }
- 
--void wilc_mac_indicate(struct wilc *wilc, int flag)
-+void wilc_mac_indicate(struct wilc *wilc)
- {
- 	int status;
- 
--	if (flag == WILC_MAC_INDICATE_STATUS) {
--		wilc_wlan_cfg_get_val(WID_STATUS,
--				      (unsigned char *)&status, 4);
--		if (wilc->mac_status == MAC_STATUS_INIT) {
--			wilc->mac_status = status;
--			complete(&wilc->sync_event);
--		} else {
--			wilc->mac_status = status;
--		}
-+	wilc_wlan_cfg_get_val(WID_STATUS, (unsigned char *)&status, 4);
-+	if (wilc->mac_status == MAC_STATUS_INIT) {
-+		wilc->mac_status = status;
-+		complete(&wilc->sync_event);
-+	} else {
-+		wilc->mac_status = status;
- 	}
- }
- 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 8849924..607dae0 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -182,7 +182,7 @@ struct wilc_wfi_mon_priv {
- };
- 
- void wilc_frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset);
--void wilc_mac_indicate(struct wilc *wilc, int flag);
-+void wilc_mac_indicate(struct wilc *wilc);
- void wilc_netdev_cleanup(struct wilc *wilc);
- int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 		     int gpio, const struct wilc_hif_func *ops);
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 7147e0c..d4ebbf6 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -816,12 +816,7 @@ static void wilc_wlan_handle_rx_buff(struct wilc *wilc, u8 *buffer, int size)
- 					if (wilc->cfg_seq_no == rsp.seq_no)
- 						complete(&wilc->cfg_event);
- 				} else if (rsp.type == WILC_CFG_RSP_STATUS) {
--					wilc_mac_indicate(wilc,
--							  WILC_MAC_INDICATE_STATUS);
--
--				} else if (rsp.type == WILC_CFG_RSP_SCAN) {
--					wilc_mac_indicate(wilc,
--							  WILC_MAC_INDICATE_SCAN);
-+					wilc_mac_indicate(wilc);
- 				}
- 			}
- 		}
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index aa0731e..e4a7bf5 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -47,9 +47,6 @@ struct sdio_cmd53 {
- 	u32 block_size;
- };
- 
--#define WILC_MAC_INDICATE_STATUS	0x1
--#define WILC_MAC_INDICATE_SCAN		0x2
--
- #define MAC_STATUS_INIT			-1
- #define MAC_STATUS_CONNECTED		1
- #define MAC_STATUS_DISCONNECTED		0
--- 
-2.7.4
+Gr. AvS
