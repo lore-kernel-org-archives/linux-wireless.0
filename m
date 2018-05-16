@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:35196 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752525AbeERJhU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 05:37:20 -0400
-Received: by mail-qk0-f194.google.com with SMTP id c137-v6so5914544qkg.2
-        for <linux-wireless@vger.kernel.org>; Fri, 18 May 2018 02:37:20 -0700 (PDT)
-Subject: Re: [RESEND PATCH] cfg80211: dynamically allocate per-tid stats for
- station info
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <5AF430B2.2060903@broadcom.com> <5AF431F4.9060408@broadcom.com>
- <1526635514.3805.3.camel@sipsolutions.net>
-Cc: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AFE9ECE.50306@broadcom.com> (sfid-20180518_113731_261136_2EAA069C)
-Date: Fri, 18 May 2018 11:37:18 +0200
-MIME-Version: 1.0
-In-Reply-To: <1526635514.3805.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mail.bugwerft.de ([46.23.86.59]:35186 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752585AbeEPNcy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 May 2018 09:32:54 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: sameo@linux.intel.com, davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH 2/2] NFC: st95hf: drop illegal kfree_skb()
+Date: Wed, 16 May 2018 15:32:47 +0200
+Message-Id: <20180516133247.25986-2-daniel@zonque.org> (sfid-20180516_153355_440838_EAACDC5A)
+In-Reply-To: <20180516133247.25986-1-daniel@zonque.org>
+References: <20180516133247.25986-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/18/2018 11:25 AM, Johannes Berg wrote:
-> On Thu, 2018-05-10 at 13:50 +0200, Arend van Spriel wrote:
->>
->> Here an alternative approach. Currently the only cfg80211-based driver
->> providing per-tid stats is mac80211. This patch only changes mac80211
->> and the other driver can keep using stack allocation. Even mac80211 could
->> if wanted, but I left that part as is.
->
-> I decided to take this and remove the BIT() thing entirely (you had a
-> bug there anyway)
+The skb that is passed in to ->in_send_cmd() is freed by the core when the
+function returns. Calling kfree_skb() on it from the driver callback will
+hence lead to a double-free.
 
-I figured you would drop this one. The error paths may need to do kfree 
-here and there. Kalle took dynamic alloc fixes in driver already so my 
-patch is not really needed right now.
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+---
+ drivers/nfc/st95hf/core.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Gr. AvS
+diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
+index 394bdc7b0cf2..a50a95cfcfd8 100644
+--- a/drivers/nfc/st95hf/core.c
++++ b/drivers/nfc/st95hf/core.c
+@@ -995,8 +995,6 @@ static int st95hf_in_send_cmd(struct nfc_digital_dev *ddev,
+ 		goto free_skb_resp;
+ 	}
+ 
+-	kfree_skb(skb);
+-
+ 	return rc;
+ 
+ free_skb_resp:
+-- 
+2.14.3
