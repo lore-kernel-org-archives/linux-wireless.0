@@ -1,107 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:42663 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752742AbeEKIOu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 04:14:50 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 13/30] staging: wilc1000: fix line over 80 chars in add_network_to_shadow()
-Date: Fri, 11 May 2018 13:43:14 +0530
-Message-ID: <1526026411-11058-14-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101454_129731_D4C2531D)
-In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
-References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.bugwerft.de ([46.23.86.59]:35578 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752535AbeEPOIl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 May 2018 10:08:41 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
+        rfried@codeaurora.org, bjorn.andersson@linaro.org,
+        nicolas.dechesne@linaro.org, loic.poulain@linaro.org,
+        Daniel Mack <daniel@zonque.org>
+Subject: [PATCH 06/10] wcn36xx: consider CTRL_EOP bit when looking for valid descriptors
+Date: Wed, 16 May 2018 16:08:16 +0200
+Message-Id: <20180516140820.1636-7-daniel@zonque.org> (sfid-20180516_160844_081953_25895A56)
+In-Reply-To: <20180516140820.1636-1-daniel@zonque.org>
+References: <20180516140820.1636-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix line over 80 characters issue reported by checkpatch in
-add_network_to_shadow() by using temporary variable.
+In reap_tx_dxes(), when we iterate over the linked descriptors, only
+consider such valid that have WCN36xx_DXE_CTRL_EOP set.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+This is what the prima downstream driver is doing as well.
+
+Signed-off-by: Daniel Mack <daniel@zonque.org>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 52 +++++++++++------------
- 1 file changed, 25 insertions(+), 27 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/dxe.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 9afba4d..c730323 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -300,6 +300,7 @@ static void add_network_to_shadow(struct network_info *nw_info,
- 	int ap_found = is_network_in_shadow(nw_info, user_void);
- 	u32 ap_index = 0;
- 	u8 rssi_index = 0;
-+	struct network_info *shadow_nw_info;
- 
- 	if (last_scanned_cnt >= MAX_NUM_SCANNED_NETWORKS_SHADOW)
- 		return;
-@@ -310,37 +311,34 @@ static void add_network_to_shadow(struct network_info *nw_info,
- 	} else {
- 		ap_index = ap_found;
- 	}
--	rssi_index = last_scanned_shadow[ap_index].rssi_history.index;
--	last_scanned_shadow[ap_index].rssi_history.samples[rssi_index++] = nw_info->rssi;
-+	shadow_nw_info = &last_scanned_shadow[ap_index];
-+	rssi_index = shadow_nw_info->rssi_history.index;
-+	shadow_nw_info->rssi_history.samples[rssi_index++] = nw_info->rssi;
- 	if (rssi_index == NUM_RSSI) {
- 		rssi_index = 0;
--		last_scanned_shadow[ap_index].rssi_history.full = true;
--	}
--	last_scanned_shadow[ap_index].rssi_history.index = rssi_index;
--	last_scanned_shadow[ap_index].rssi = nw_info->rssi;
--	last_scanned_shadow[ap_index].cap_info = nw_info->cap_info;
--	last_scanned_shadow[ap_index].ssid_len = nw_info->ssid_len;
--	memcpy(last_scanned_shadow[ap_index].ssid,
--	       nw_info->ssid, nw_info->ssid_len);
--	memcpy(last_scanned_shadow[ap_index].bssid,
--	       nw_info->bssid, ETH_ALEN);
--	last_scanned_shadow[ap_index].beacon_period = nw_info->beacon_period;
--	last_scanned_shadow[ap_index].dtim_period = nw_info->dtim_period;
--	last_scanned_shadow[ap_index].ch = nw_info->ch;
--	last_scanned_shadow[ap_index].ies_len = nw_info->ies_len;
--	last_scanned_shadow[ap_index].tsf_hi = nw_info->tsf_hi;
-+		shadow_nw_info->rssi_history.full = true;
-+	}
-+	shadow_nw_info->rssi_history.index = rssi_index;
-+	shadow_nw_info->rssi = nw_info->rssi;
-+	shadow_nw_info->cap_info = nw_info->cap_info;
-+	shadow_nw_info->ssid_len = nw_info->ssid_len;
-+	memcpy(shadow_nw_info->ssid, nw_info->ssid, nw_info->ssid_len);
-+	memcpy(shadow_nw_info->bssid, nw_info->bssid, ETH_ALEN);
-+	shadow_nw_info->beacon_period = nw_info->beacon_period;
-+	shadow_nw_info->dtim_period = nw_info->dtim_period;
-+	shadow_nw_info->ch = nw_info->ch;
-+	shadow_nw_info->ies_len = nw_info->ies_len;
-+	shadow_nw_info->tsf_hi = nw_info->tsf_hi;
- 	if (ap_found != -1)
--		kfree(last_scanned_shadow[ap_index].ies);
--	last_scanned_shadow[ap_index].ies = kmalloc(nw_info->ies_len,
--						    GFP_KERNEL);
--	memcpy(last_scanned_shadow[ap_index].ies,
--	       nw_info->ies, nw_info->ies_len);
--	last_scanned_shadow[ap_index].time_scan = jiffies;
--	last_scanned_shadow[ap_index].time_scan_cached = jiffies;
--	last_scanned_shadow[ap_index].found = 1;
-+		kfree(shadow_nw_info->ies);
-+	shadow_nw_info->ies = kmalloc(nw_info->ies_len, GFP_KERNEL);
-+	memcpy(shadow_nw_info->ies, nw_info->ies, nw_info->ies_len);
-+	shadow_nw_info->time_scan = jiffies;
-+	shadow_nw_info->time_scan_cached = jiffies;
-+	shadow_nw_info->found = 1;
- 	if (ap_found != -1)
--		kfree(last_scanned_shadow[ap_index].join_params);
--	last_scanned_shadow[ap_index].join_params = join_params;
-+		kfree(shadow_nw_info->join_params);
-+	shadow_nw_info->join_params = join_params;
- }
- 
- static void cfg_scan_result(enum scan_event scan_event,
+diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
+index 8c64e05ca3b7..06cfe8d311f3 100644
+--- a/drivers/net/wireless/ath/wcn36xx/dxe.c
++++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
+@@ -370,7 +370,9 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
+ 	do {
+ 		if (READ_ONCE(ctl->desc->ctrl) & WCN36xx_DXE_CTRL_VLD)
+ 			break;
+-		if (ctl->skb) {
++
++		if (ctl->skb &&
++		    READ_ONCE(ctl->desc->ctrl) & WCN36xx_DXE_CTRL_EOP) {
+ 			dma_unmap_single(wcn->dev, ctl->desc->src_addr_l,
+ 					 ctl->skb->len, DMA_TO_DEVICE);
+ 			info = IEEE80211_SKB_CB(ctl->skb);
 -- 
-2.7.4
+2.14.3
