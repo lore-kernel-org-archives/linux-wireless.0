@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57878 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:35480 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751371AbeEDMiA (ORCPT
+        with ESMTP id S1751182AbeEPL1c (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 May 2018 08:38:00 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ipw2200: fix spelling mistake: "functionalitis" ->
- "functionalities"
+        Wed, 16 May 2018 07:27:32 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180501093643.23318-1-colin.king@canonical.com>
-References: <20180501093643.23318-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20180504123759.7EC8760C54@smtp.codeaurora.org> (sfid-20180504_143808_973325_5D62414A)
-Date: Fri,  4 May 2018 12:37:59 +0000 (UTC)
+To: Sushant Kumar Mishra <sushant2k1513@gmail.com>
+Cc: Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>,
+        linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: invoke software scan when hardware scan returns EPERM
+References: <1526468599-14665-1-git-send-email-sushant2k1513@gmail.com>
+Date: Wed, 16 May 2018 14:27:27 +0300
+In-Reply-To: <1526468599-14665-1-git-send-email-sushant2k1513@gmail.com>
+        (Sushant Kumar Mishra's message of "Wed, 16 May 2018 16:33:18 +0530")
+Message-ID: <87lgcjkfhc.fsf@codeaurora.org> (sfid-20180516_132735_718547_E63F75E9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
+Sushant Kumar Mishra <sushant2k1513@gmail.com> writes:
 
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Trivial fix to spelling mistake in module parameter description text
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> From: Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>
+>
+> Currently, software scan in mac80211 is used by drivers, which don't
+> implement hardware scan. However some drivers which have implemented
+> hardware scan may also sometimes want to use software scan in mac80211.
+> Such drivers can return '-EPERM' and ask mac80211 to fallback to
+> software scan with this patch.
+>
+> Signed-off-by: Sanjay Kumar Konduri <sanjay.konduri@redpinesignals.com>
+> Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+> Signed-off-by: Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
+This and the following rsi patch should in the same patchset as there's
+a dependency. This being patch 1 and "rsi: add support for hardware scan
+offload" patch 2.
 
-7e7939e80e3c ipw2200: fix spelling mistake: "functionalitis" -> "functionalities"
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#sending_large_patches_or_multiple_patches
+
+Also Johanne's address (Johannes@codeaurora.org, "Berg
+<johannes"@sipsolutions.net) looked bogus so I fixed it.
 
 -- 
-https://patchwork.kernel.org/patch/10373469/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
