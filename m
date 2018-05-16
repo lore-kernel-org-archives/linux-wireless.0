@@ -1,49 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54294 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754586AbeEaLMU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 May 2018 07:12:20 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
+Received: from mail.bugwerft.de ([46.23.86.59]:35622 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752588AbeEPOIt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 May 2018 10:08:49 -0400
+From: Daniel Mack <daniel@zonque.org>
 To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>
-Subject: Re: [PATCH 0/6] qtnfmac: enable more features
-References: <20180531091102.28666-1-sergey.matyukevich.os@quantenna.com>
-        <876034i2ug.fsf@purkki.adurom.net>
-        <20180531103506.wskh5fyat2ildmp5@bars>
-Date: Thu, 31 May 2018 14:12:15 +0300
-In-Reply-To: <20180531103506.wskh5fyat2ildmp5@bars> (Sergey Matyukevich's
-        message of "Thu, 31 May 2018 13:35:07 +0300")
-Message-ID: <87bmcw13lc.fsf@kamboji.qca.qualcomm.com> (sfid-20180531_131224_050819_20276253)
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
+        rfried@codeaurora.org, bjorn.andersson@linaro.org,
+        nicolas.dechesne@linaro.org, loic.poulain@linaro.org,
+        Daniel Mack <daniel@zonque.org>
+Subject: [PATCH 10/10] wcn36xx: improve debug and error messages for SMD
+Date: Wed, 16 May 2018 16:08:20 +0200
+Message-Id: <20180516140820.1636-11-daniel@zonque.org> (sfid-20180516_160856_156239_4A2DD131)
+In-Reply-To: <20180516140820.1636-1-daniel@zonque.org>
+References: <20180516140820.1636-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+Add a missing newline in wcn36xx_smd_send_and_wait() and also log the
+command request and response type that was processed.
 
-> Hello Kalle,
->
->> > Here is the next update for qtnfmac driver which enables more wireless
->> > features. The major changes include the following items:
->> > - cfg80211 power management callback
->> > - net_device_ops set MAC addr callback
->> > - advanced scan features: multiple SSIDs and randomized source MACs
->> > - basic WoWLAN support: disconnect/magic/pattern triggers
->> >   -- not yet: PCIe backend suspend/resume, reporting wakeup reason
->> 
->> BTW, most likely the merge window will start on Sunday and I'm planning
->> to send the last w-d-next pull request to Dave today. So you just missed
->> the window to get these to 4.18 by a day.
->
-> Ok. Thanks for letting us know. I assume that our previous 'fixes' patch
-> series (which you applied today) will be included into your
-> 4.18 pull request. Correct ?
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-Correct. Everything in w-d-next as of now will be included to the pull
-request.
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 43c8aa79fad4..b855a58d5aac 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -252,23 +252,29 @@ static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
+ {
+ 	int ret = 0;
+ 	unsigned long start;
++	struct wcn36xx_hal_msg_header *hdr =
++		(struct wcn36xx_hal_msg_header *)wcn->hal_buf;
++	u16 req_type = hdr->msg_type;
++
+ 	wcn36xx_dbg_dump(WCN36XX_DBG_SMD_DUMP, "HAL >>> ", wcn->hal_buf, len);
+ 
+ 	init_completion(&wcn->hal_rsp_compl);
+ 	start = jiffies;
+ 	ret = rpmsg_send(wcn->smd_channel, wcn->hal_buf, len);
+ 	if (ret) {
+-		wcn36xx_err("HAL TX failed\n");
++		wcn36xx_err("HAL TX failed for req %d\n", req_type);
+ 		goto out;
+ 	}
+ 	if (wait_for_completion_timeout(&wcn->hal_rsp_compl,
+ 		msecs_to_jiffies(HAL_MSG_TIMEOUT)) <= 0) {
+-		wcn36xx_err("Timeout! No SMD response in %dms\n",
+-			    HAL_MSG_TIMEOUT);
++		wcn36xx_err("Timeout! No SMD response to req %d in %dms\n",
++			    req_type, HAL_MSG_TIMEOUT);
+ 		ret = -ETIME;
+ 		goto out;
+ 	}
+-	wcn36xx_dbg(WCN36XX_DBG_SMD, "SMD command completed in %dms",
++	wcn36xx_dbg(WCN36XX_DBG_SMD,
++		    "SMD command (req %d, rsp %d) completed in %dms\n",
++		    req_type, hdr->msg_type,
+ 		    jiffies_to_msecs(jiffies - start));
+ out:
+ 	return ret;
 -- 
-Kalle Valo
+2.14.3
