@@ -1,45 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:35822 "EHLO
-        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753935AbeENHYk (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:48320 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752307AbeEPMMd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 May 2018 03:24:40 -0400
-Received: by mail-wm0-f50.google.com with SMTP id o78-v6so13105115wmg.0
-        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2018 00:24:39 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: add debugfs entry for reading firmware
- capabilities
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-References: <20180511101526.10734-1-zajec5@gmail.com>
- <5AF88B10.2040504@broadcom.com> <5729429a82d2eb034b88adb7e1738ce6@milecki.pl>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+        Wed, 16 May 2018 08:12:33 -0400
 From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AF939B7.9050202@broadcom.com> (sfid-20180514_092451_963082_813F325F)
-Date: Mon, 14 May 2018 09:24:39 +0200
-MIME-Version: 1.0
-In-Reply-To: <5729429a82d2eb034b88adb7e1738ce6@milecki.pl>
-Content-Type: text/plain; charset=utf-8; format=flowed
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 2/6] brcmfmac: add support for sysfs initiated coredump
+Date: Wed, 16 May 2018 14:11:59 +0200
+Message-Id: <1526472723-15758-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180516_141244_419741_E9712194)
+In-Reply-To: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/14/2018 7:11 AM, Rafał Miłecki wrote:
->>> +/**
->>> + * brcmf_cap_read() - expose firmware capabilities to debugfs.
->>
->> Please stick to naming convention brcmf_<module>_foo(), ie.
->> brcmf_feat_cap_read().
->
-> Will do, thanks! I missed that naming convention because of
-> brcmf_debugfs_fws_stats_read() / brcmf_debugfs_sdio_count_read() which
-> slightly confused me. I see your point now!
+The driver already supports device coredump initiated by firmware
+event. Since commit 3c47d19ff4dc ("drivers: base: add coredump driver
+ops") it is also possible to initiate it from user-space through
+sysfs. This patch adds support for SDIO and PCIe devices.
 
-Yeah. Sorry for the confusion. There is always room to improve.
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 1 +
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h    | 2 ++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c   | 8 ++++++++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c   | 1 +
+ 4 files changed, 12 insertions(+)
 
-Gr. AvS
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index a191541..d2f788d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -1165,6 +1165,7 @@ static int brcmf_ops_sdio_resume(struct device *dev)
+ #ifdef CONFIG_PM_SLEEP
+ 		.pm = &brcmf_sdio_pm_ops,
+ #endif	/* CONFIG_PM_SLEEP */
++		.coredump = brcmf_dev_coredump,
+ 	},
+ };
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+index 27e693e..c496518 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+@@ -250,6 +250,8 @@ int brcmf_bus_get_fwname(struct brcmf_bus *bus, const char *ext,
+ void brcmf_detach(struct device *dev);
+ /* Indication from bus module that dongle should be reset */
+ void brcmf_dev_reset(struct device *dev);
++/* Request from bus module to initiate a coredump */
++void brcmf_dev_coredump(struct device *dev);
+ 
+ /* Configure the "global" bus state used by upper layers */
+ void brcmf_bus_change_state(struct brcmf_bus *bus, enum brcmf_bus_state state);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 8d4511e..72954fd 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -1180,6 +1180,14 @@ void brcmf_dev_reset(struct device *dev)
+ 		brcmf_fil_cmd_int_set(drvr->iflist[0], BRCMF_C_TERMINATED, 1);
+ }
+ 
++void brcmf_dev_coredump(struct device *dev)
++{
++	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++
++	if (brcmf_debug_create_memdump(bus_if, NULL, 0) < 0)
++		brcmf_dbg(TRACE, "failed to create coredump\n");
++}
++
+ void brcmf_detach(struct device *dev)
+ {
+ 	s32 i;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index f0797ae..5baa837 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -2044,6 +2044,7 @@ static int brcmf_pcie_pm_leave_D3(struct device *dev)
+ #ifdef CONFIG_PM
+ 	.driver.pm = &brcmf_pciedrvr_pm,
+ #endif
++	.driver.coredump = brcmf_dev_coredump,
+ };
+ 
+ 
+-- 
+1.9.1
