@@ -1,69 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:36199 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934002AbeEJLUD (ORCPT
+Received: from userp2130.oracle.com ([156.151.31.86]:45020 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752574AbeEPIs5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 May 2018 07:20:03 -0400
+        Wed, 16 May 2018 04:48:57 -0400
+Date: Wed, 16 May 2018 11:48:37 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
+Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] cfg80211: Use correct GFP_ mask in cfg80211_del_sta_sinfo()
+Message-ID: <20180516084836.GB23043@mwanda> (sfid-20180516_104917_940347_F56166B9)
 MIME-Version: 1.0
-In-Reply-To: <20180510131725.111079af@wiggum>
-References: <20180510111401.1161-1-zajec5@gmail.com> <20180510111401.1161-2-zajec5@gmail.com>
- <20180510131725.111079af@wiggum>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Thu, 10 May 2018 13:20:01 +0200
-Message-ID: <CACna6ryWUCnrw9w4yhfiNXFHy1hFjVV-BqH07i7DQqxq8FtjMw@mail.gmail.com> (sfid-20180510_132018_402993_D93BD833)
-Subject: Re: [PATCH 4.17 2/2] ssb: make SSB_PCICORE_HOSTMODE depend on SSB = y
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Larry Finger <larry.finger@lwfinger.net>,
-        Matt Redfearn <matt.redfearn@mips.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Hauke Mehrtens <hauke@hauke-m.de>,
-        LKML <linux-kernel@vger.kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 May 2018 at 13:17, Michael B=C3=BCsch <m@bues.ch> wrote:
-> On Thu, 10 May 2018 13:14:01 +0200
-> Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
->
->> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->>
->> SSB_PCICORE_HOSTMODE protects MIPS specific code that calls not exported
->> symbols pcibios_enable_device and register_pci_controller. This code is
->> supposed to be compiled only with ssb builtin.
->>
->> This fixes:
->> ERROR: "pcibios_enable_device" [drivers/ssb/ssb.ko] undefined!
->> ERROR: "register_pci_controller" [drivers/ssb/ssb.ko] undefined!
->> make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
->>
->> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->> ---
->>  drivers/ssb/Kconfig | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
->> index b3f5cae98ea6..c574dd210500 100644
->> --- a/drivers/ssb/Kconfig
->> +++ b/drivers/ssb/Kconfig
->> @@ -131,7 +131,7 @@ config SSB_DRIVER_PCICORE
->>
->>  config SSB_PCICORE_HOSTMODE
->>       bool "Hostmode support for SSB PCI core"
->> -     depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS
->> +     depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS && SSB =3D y
->>       help
->>         PCIcore hostmode operation (external PCI bus).
->>
->
->
-> I think we also need to depend on PCI_DRIVERS_LEGACY.
-> See the other patch that floats around.
+Smatch complains that we should use the passed in "gfp" instead of hard
+coding GFP_KERNEL.  I looked at some of the callers and this would
+probably be a bug for rtw_cfg80211_indicate_sta_disassoc() which uses
+GFP_ATOMIC and a NULL "sinfo".
 
-I believe it's already handled by SSB_PCIHOST_POSSIBLE's dependency on
-PCI_DRIVERS_LEGACY.
+Fixes: 52539ca89f36 ("cfg80211: Expose TXQ stats and parameters to userspace")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
---=20
-Rafa=C5=82
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index afbe5105bf7f..3eb645b81777 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -14644,7 +14644,7 @@ void cfg80211_del_sta_sinfo(struct net_device *dev, const u8 *mac_addr,
+ 	struct station_info *empty_sinfo = NULL;
+ 
+ 	if (!sinfo) {
+-		empty_sinfo = kzalloc(sizeof(*empty_sinfo), GFP_KERNEL);
++		empty_sinfo = kzalloc(sizeof(*empty_sinfo), gfp);
+ 		if (!empty_sinfo)
+ 			return;
+ 		sinfo = empty_sinfo;
