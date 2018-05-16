@@ -1,181 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53846 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751443AbeEDRoD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 May 2018 13:44:03 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, keescook@chromium.org,
-        josh@joshtriplett.org, teg@jklm.no, wagi@monom.org,
-        hdegoede@redhat.com, andresx7@gmail.com, zohar@linux.vnet.ibm.com,
-        kubakici@wp.pl, shuah@kernel.org, mfuzzey@parkeon.com,
-        dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de,
-        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, cantabile.desu@gmail.com, ast@fb.com,
-        hare@suse.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
-        khc@pm.waw.pl, davem@davemloft.net, maco@android.com,
-        arve@android.com, tkjos@android.com, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        "Luis R . Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v5 2/6] firmware: use () to terminate kernel-doc function names
-Date: Fri,  4 May 2018 10:43:51 -0700
-Message-Id: <20180504174356.13227-3-mcgrof@kernel.org> (sfid-20180504_194522_176020_880BBA47)
-In-Reply-To: <20180504174356.13227-1-mcgrof@kernel.org>
-References: <20180504174356.13227-1-mcgrof@kernel.org>
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:48302 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752513AbeEPMMc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 May 2018 08:12:32 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 3/6] mwifiex: support sysfs initiated device coredump
+Date: Wed, 16 May 2018 14:12:00 +0200
+Message-Id: <1526472723-15758-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180516_141244_998835_DA33602E)
+In-Reply-To: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andres Rodriguez <andresx7@gmail.com>
+Since commit 3c47d19ff4dc ("drivers: base: add coredump driver ops")
+it is possible to initiate a device coredump from user-space. This
+patch adds support for it adding the .coredump() driver callback.
+As there is no longer a need to initiate it through debugfs remove
+that code.
 
-The kernel-doc spec dictates a function name ends in ().
-
-Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
-Acked-by: Randy Dunlap <rdunlap@infradead.org>
-Acked-by: Luis R. Rodriguez <mcgrof@kernel.org>
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/base/firmware_loader/fallback.c |  8 ++++----
- drivers/base/firmware_loader/main.c     | 20 ++++++++++----------
- 2 files changed, 14 insertions(+), 14 deletions(-)
+ V2:
+  - export mwifiex_send_cmd() needed by mwifiex_usb.ko.
+---
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c  |  1 +
+ drivers/net/wireless/marvell/mwifiex/debugfs.c | 31 +-------------------------
+ drivers/net/wireless/marvell/mwifiex/pcie.c    | 18 +++++++++++++--
+ drivers/net/wireless/marvell/mwifiex/sdio.c    | 12 ++++++++++
+ drivers/net/wireless/marvell/mwifiex/usb.c     | 13 +++++++++++
+ 5 files changed, 43 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
-index b57a7b3b4122..529f7013616f 100644
---- a/drivers/base/firmware_loader/fallback.c
-+++ b/drivers/base/firmware_loader/fallback.c
-@@ -125,7 +125,7 @@ static ssize_t timeout_show(struct class *class, struct class_attribute *attr,
+diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+index 9cfcdf6..8be1e69 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+@@ -674,6 +674,7 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(mwifiex_send_cmd);
+ 
+ /*
+  * This function queues a command to the command pending queue.
+diff --git a/drivers/net/wireless/marvell/mwifiex/debugfs.c b/drivers/net/wireless/marvell/mwifiex/debugfs.c
+index db2872d..0745393 100644
+--- a/drivers/net/wireless/marvell/mwifiex/debugfs.c
++++ b/drivers/net/wireless/marvell/mwifiex/debugfs.c
+@@ -154,34 +154,6 @@
  }
  
- /**
-- * firmware_timeout_store - set number of seconds to wait for firmware
-+ * firmware_timeout_store() - set number of seconds to wait for firmware
-  * @class: device class pointer
-  * @attr: device attribute pointer
-  * @buf: buffer to scan for timeout value
-@@ -239,7 +239,7 @@ static int map_fw_priv_pages(struct fw_priv *fw_priv)
- }
- 
- /**
-- * firmware_loading_store - set value in the 'loading' control file
-+ * firmware_loading_store() - set value in the 'loading' control file
-  * @dev: device pointer
-  * @attr: device attribute pointer
-  * @buf: buffer to scan for loading control value
-@@ -431,7 +431,7 @@ static int fw_realloc_pages(struct fw_sysfs *fw_sysfs, int min_size)
- }
- 
- /**
-- * firmware_data_write - write method for firmware
-+ * firmware_data_write() - write method for firmware
-  * @filp: open sysfs file
-  * @kobj: kobject for the device
-  * @bin_attr: bin_attr structure
-@@ -537,7 +537,7 @@ fw_create_instance(struct firmware *firmware, const char *fw_name,
- }
- 
- /**
-- * fw_load_sysfs_fallback - load a firmware via the sysfs fallback mechanism
-+ * fw_load_sysfs_fallback() - load a firmware via the sysfs fallback mechanism
-  * @fw_sysfs: firmware sysfs information for the firmware to load
-  * @opt_flags: flags of options, FW_OPT_*
-  * @timeout: timeout to wait for the load
-diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
-index 9919f0e6a7cc..7f2bc7e8e3c0 100644
---- a/drivers/base/firmware_loader/main.c
-+++ b/drivers/base/firmware_loader/main.c
-@@ -597,7 +597,7 @@ _request_firmware(const struct firmware **firmware_p, const char *name,
- }
- 
- /**
-- * request_firmware: - send firmware request and wait for it
-+ * request_firmware() - send firmware request and wait for it
-  * @firmware_p: pointer to firmware image
-  * @name: name of firmware file
-  * @device: device for which firmware is being loaded
-@@ -657,7 +657,7 @@ int request_firmware_direct(const struct firmware **firmware_p,
- EXPORT_SYMBOL_GPL(request_firmware_direct);
- 
- /**
-- * firmware_request_cache: - cache firmware for suspend so resume can use it
-+ * firmware_request_cache() - cache firmware for suspend so resume can use it
-  * @name: name of firmware file
-  * @device: device for which firmware should be cached for
+ /*
+- * Proc device dump read handler.
+- *
+- * This function is called when the 'device_dump' file is opened for
+- * reading.
+- * This function dumps driver information and firmware memory segments
+- * (ex. DTCM, ITCM, SQRAM etc.) for
+- * debugging.
+- */
+-static ssize_t
+-mwifiex_device_dump_read(struct file *file, char __user *ubuf,
+-			 size_t count, loff_t *ppos)
+-{
+-	struct mwifiex_private *priv = file->private_data;
+-
+-	/* For command timeouts, USB firmware will automatically emit
+-	 * firmware dump events, so we don't implement device_dump().
+-	 * For user-initiated dumps, we trigger it ourselves.
+-	 */
+-	if (priv->adapter->iface_type == MWIFIEX_USB)
+-		mwifiex_send_cmd(priv, HostCmd_CMD_FW_DUMP_EVENT,
+-				 HostCmd_ACT_GEN_SET, 0, NULL, true);
+-	else
+-		priv->adapter->if_ops.device_dump(priv->adapter);
+-
+-	return 0;
+-}
+-
+-/*
+  * Proc getlog file read handler.
   *
-@@ -681,7 +681,7 @@ int firmware_request_cache(struct device *device, const char *name)
- EXPORT_SYMBOL_GPL(firmware_request_cache);
- 
- /**
-- * request_firmware_into_buf - load firmware into a previously allocated buffer
-+ * request_firmware_into_buf() - load firmware into a previously allocated buffer
-  * @firmware_p: pointer to firmware image
-  * @name: name of firmware file
-  * @device: device for which firmware is being loaded and DMA region allocated
-@@ -713,7 +713,7 @@ request_firmware_into_buf(const struct firmware **firmware_p, const char *name,
- EXPORT_SYMBOL(request_firmware_into_buf);
- 
- /**
-- * release_firmware: - release the resource associated with a firmware image
-+ * release_firmware() - release the resource associated with a firmware image
-  * @fw: firmware resource to release
-  **/
- void release_firmware(const struct firmware *fw)
-@@ -755,7 +755,7 @@ static void request_firmware_work_func(struct work_struct *work)
+  * This function is called when the 'getlog' file is opened for reading
+@@ -980,7 +952,6 @@
+ MWIFIEX_DFS_FILE_READ_OPS(info);
+ MWIFIEX_DFS_FILE_READ_OPS(debug);
+ MWIFIEX_DFS_FILE_READ_OPS(getlog);
+-MWIFIEX_DFS_FILE_READ_OPS(device_dump);
+ MWIFIEX_DFS_FILE_OPS(regrdwr);
+ MWIFIEX_DFS_FILE_OPS(rdeeprom);
+ MWIFIEX_DFS_FILE_OPS(memrw);
+@@ -1011,7 +982,7 @@
+ 	MWIFIEX_DFS_ADD_FILE(getlog);
+ 	MWIFIEX_DFS_ADD_FILE(regrdwr);
+ 	MWIFIEX_DFS_ADD_FILE(rdeeprom);
+-	MWIFIEX_DFS_ADD_FILE(device_dump);
++
+ 	MWIFIEX_DFS_ADD_FILE(memrw);
+ 	MWIFIEX_DFS_ADD_FILE(hscfg);
+ 	MWIFIEX_DFS_ADD_FILE(histogram);
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 7538543..0c42b72 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -320,6 +320,19 @@ static void mwifiex_pcie_shutdown(struct pci_dev *pdev)
+ 	return;
  }
  
- /**
-- * request_firmware_nowait - asynchronous version of request_firmware
-+ * request_firmware_nowait() - asynchronous version of request_firmware
-  * @module: module requesting the firmware
-  * @uevent: sends uevent to copy the firmware image if this flag
-  *	is non-zero else the firmware copy must be done manually.
-@@ -824,7 +824,7 @@ EXPORT_SYMBOL(request_firmware_nowait);
- static ASYNC_DOMAIN_EXCLUSIVE(fw_cache_domain);
- 
- /**
-- * cache_firmware - cache one firmware image in kernel memory space
-+ * cache_firmware() - cache one firmware image in kernel memory space
-  * @fw_name: the firmware image name
-  *
-  * Cache firmware in kernel memory so that drivers can use it when
-@@ -866,7 +866,7 @@ static struct fw_priv *lookup_fw_priv(const char *fw_name)
++static void mwifiex_pcie_coredump(struct device *dev)
++{
++	struct pci_dev *pdev;
++	struct pcie_service_card *card;
++
++	pdev = container_of(dev, struct pci_dev, dev);
++	card = pci_get_drvdata(pdev);
++
++	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP,
++			      &card->work_flags))
++		schedule_work(&card->work);
++}
++
+ static const struct pci_device_id mwifiex_ids[] = {
+ 	{
+ 		PCIE_VENDOR_ID_MARVELL, PCIE_DEVICE_ID_MARVELL_88W8766P,
+@@ -415,11 +428,12 @@ static SIMPLE_DEV_PM_OPS(mwifiex_pcie_pm_ops, mwifiex_pcie_suspend,
+ 	.id_table = mwifiex_ids,
+ 	.probe    = mwifiex_pcie_probe,
+ 	.remove   = mwifiex_pcie_remove,
+-#ifdef CONFIG_PM_SLEEP
+ 	.driver   = {
++		.coredump = mwifiex_pcie_coredump,
++#ifdef CONFIG_PM_SLEEP
+ 		.pm = &mwifiex_pcie_pm_ops,
+-	},
+ #endif
++	},
+ 	.shutdown = mwifiex_pcie_shutdown,
+ 	.err_handler = &mwifiex_pcie_err_handler,
+ };
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index a828801..47d2dcc 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -466,6 +466,17 @@ static int mwifiex_sdio_suspend(struct device *dev)
+ 	return ret;
  }
  
- /**
-- * uncache_firmware - remove one cached firmware image
-+ * uncache_firmware() - remove one cached firmware image
-  * @fw_name: the firmware image name
-  *
-  * Uncache one firmware image which has been cached successfully
-@@ -1042,7 +1042,7 @@ static void __device_uncache_fw_images(void)
++static void mwifiex_sdio_coredump(struct device *dev)
++{
++	struct sdio_func *func = dev_to_sdio_func(dev);
++	struct sdio_mmc_card *card;
++
++	card = sdio_get_drvdata(func);
++	if (!test_and_set_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP,
++			      &card->work_flags))
++		schedule_work(&card->work);
++}
++
+ /* Device ID for SD8786 */
+ #define SDIO_DEVICE_ID_MARVELL_8786   (0x9116)
+ /* Device ID for SD8787 */
+@@ -515,6 +526,7 @@ static int mwifiex_sdio_suspend(struct device *dev)
+ 	.remove = mwifiex_sdio_remove,
+ 	.drv = {
+ 		.owner = THIS_MODULE,
++		.coredump = mwifiex_sdio_coredump,
+ 		.pm = &mwifiex_sdio_pm_ops,
+ 	}
+ };
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 4bc2448..7aa39878 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -653,6 +653,16 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
+ 	usb_put_dev(interface_to_usbdev(intf));
  }
  
- /**
-- * device_cache_fw_images - cache devices' firmware
-+ * device_cache_fw_images() - cache devices' firmware
-  *
-  * If one device called request_firmware or its nowait version
-  * successfully before, the firmware names are recored into the
-@@ -1075,7 +1075,7 @@ static void device_cache_fw_images(void)
- }
++static void mwifiex_usb_coredump(struct device *dev)
++{
++	struct usb_interface *intf = to_usb_interface(dev);
++	struct usb_card_rec *card = usb_get_intfdata(intf);
++
++	mwifiex_send_cmd(mwifiex_get_priv(card->adapter, MWIFIEX_BSS_ROLE_ANY),
++			 HostCmd_CMD_FW_DUMP_EVENT, HostCmd_ACT_GEN_SET, 0,
++			 NULL, true);
++}
++
+ static struct usb_driver mwifiex_usb_driver = {
+ 	.name = "mwifiex_usb",
+ 	.probe = mwifiex_usb_probe,
+@@ -661,6 +671,9 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
+ 	.suspend = mwifiex_usb_suspend,
+ 	.resume = mwifiex_usb_resume,
+ 	.soft_unbind = 1,
++	.drvwrap.driver = {
++		.coredump = mwifiex_usb_coredump,
++	},
+ };
  
- /**
-- * device_uncache_fw_images - uncache devices' firmware
-+ * device_uncache_fw_images() - uncache devices' firmware
-  *
-  * uncache all firmwares which have been cached successfully
-  * by device_uncache_fw_images earlier
-@@ -1092,7 +1092,7 @@ static void device_uncache_fw_images_work(struct work_struct *work)
- }
- 
- /**
-- * device_uncache_fw_images_delay - uncache devices firmwares
-+ * device_uncache_fw_images_delay() - uncache devices firmwares
-  * @delay: number of milliseconds to delay uncache device firmwares
-  *
-  * uncache all devices's firmwares which has been cached successfully
+ static int mwifiex_write_data_sync(struct mwifiex_adapter *adapter, u8 *pbuf,
 -- 
-2.17.0
+1.9.1
