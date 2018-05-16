@@ -1,98 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42644 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:41106 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755492AbeEAPS7 (ORCPT
+        with ESMTP id S1750992AbeEPEeJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 May 2018 11:18:59 -0400
+        Wed, 16 May 2018 00:34:09 -0400
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
-Date: Tue, 01 May 2018 20:48:58 +0530
+Date: Wed, 16 May 2018 10:04:08 +0530
 From: Sriram R <srirrama@codeaurora.org>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: stable@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org,
-        Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
-Subject: Re: [PATCH 2/2 - linux-stable-4.4] ath10k: rebuild crypto header in
- rx data frames
-In-Reply-To: <20180501150028.GA14123@kroah.com>
-References: <1525069587-19281-1-git-send-email-srirrama@codeaurora.org>
- <1525069587-19281-3-git-send-email-srirrama@codeaurora.org>
- <20180430190901.GB8415@kroah.com>
- <583dcb6821d9803277f60780385dff52@codeaurora.org>
- <dc88bf84bb843958dceb401ca2e6be17@codeaurora.org>
- <20180501150028.GA14123@kroah.com>
-Message-ID: <92cb976fd9e800c32f3256792609f46d@codeaurora.org> (sfid-20180501_171916_919491_EE31A3F9)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 0/2] nl80211/mac80211 Add support for per-rate rx statistics
+In-Reply-To: <1526367603.3255.3.camel@sipsolutions.net>
+References: <1526361481-7159-1-git-send-email-srirrama@codeaurora.org>
+ <1526367603.3255.3.camel@sipsolutions.net>
+Message-ID: <44cd0e995e3caf7b44fcf5676cb57b5a@codeaurora.org> (sfid-20180516_063413_393900_A0D60C03)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-05-01 20:30, Greg KH wrote:
-> On Tue, May 01, 2018 at 05:44:19AM +0530, Sriram R wrote:
->> On 2018-05-01 05:14, Sriram R wrote:
->> > On 2018-05-01 00:39, Greg KH wrote:
->> > > On Mon, Apr 30, 2018 at 11:56:27AM +0530, Sriram R wrote:
->> > > > Rx data frames notified through HTT_T2H_MSG_TYPE_RX_IND and
->> > > > HTT_T2H_MSG_TYPE_RX_FRAG_IND expect PN/TSC check to be done
->> > > > on host (mac80211) rather than firmware. Rebuild cipher header
->> > > > in every received data frames (that are notified through those
->> > > > HTT interfaces) from the rx_hdr_status tlv available in the
->> > > > rx descriptor of the first msdu. Skip setting RX_FLAG_IV_STRIPPED
->> > > > flag for the packets which requires mac80211 PN/TSC check support
->> > > > and set appropriate RX_FLAG for stripped crypto tail. Hw QCA988X,
->> > > > and QCA99X0 currently need the rebuilding of cipher header to
->> > > > perform PN/TSC check for replay attack.
->> > > >
->> > > > [Upstream Commit : 7eccb738fce57cbe53ed903ccf43f9ab257b15b3]
->> > > >
->> > > > Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
->> > > > Signed-off-by: Sriram R <srirrama@codeaurora.org>
->> > > > ---
->> > > >  drivers/net/wireless/ath/ath10k/htt_rx.c | 98
->> > > > ++++++++++++++++++++++++++------
->> > > >  1 file changed, 82 insertions(+), 16 deletions(-)
->> > >
->> > > This patch breaks the build.  Always test build your patches!
->> > >
->> > > thanks,
->> > >
->> > > greg k-h
->> > Hi Greg,
->> >
->> >   This patch along with its dependency patches (in the following order)
->> >
->> > f980ebc058c2 : mac80211: allow not sending MIC up from driver for HW
->> > crypto
->> > f631a77ba920 : mac80211: allow same PN for AMSDU sub-frames
->> > cef0acd4d7d4 : mac80211: Add RX flag to indicate ICV stripped
->> > [PATCH 1/2 linux-stable-4.4] ath10k: Add new hw param to identify
->> > alignment for different chipsets
->> >
->> Hi Greg,
+On 2018-05-15 12:30, Johannes Berg wrote:
+> On Tue, 2018-05-15 at 10:47 +0530, Sriram R wrote:
+>> This patchset adds support for the collection and propagating of
+>> per-rate, per-station rx statistics when enabled by a userspace 
+>> application.
 >> 
->>  I feel this breaks since the above mentioned mac80211 commits are not
->> available in this queue.
->> 
->> https://git.kernel.org/pub/scm/linux/kernel/git/stable/stable-queue.git/diff/queue-4.4/series?id=8e2985dd801f00640be6998ec831018a688bb221
->> 
->> Could you please check after these commits are queued as well before 
->> this
->> patch is applied.
->> 
->> Please let me know if i miss something here so i could check from my 
->> side as
->> well.
+>> These statistics can be useful in understanding the quality of
+>> communication with our peers and in evaluating how different peers
+>> are communicating in different MCS/BW/NSS during different time 
+>> periods and environment.
 > 
-> Ugh, you are right, I missed that in the cover leter, my fault.  I'll
-> blame the jet-lag :)
+> So ... I know that you're aware of my rate statistics collection code
+> (at least you should be, I showed it to Jouni), so I think you should
+> state why that approach isn't suitable.
 > 
-> I'll go drop the first patch for now, and then look at all of these
-> again at the end of the week for the next round of releases.
-> 
-> thanks,
-> 
-> greg k-h
+Hi Johannes,
 
-Sure, Thanks Greg.
+  I really liked your approach of publishing the rate statistics only 
+when subscribers exist and to push the data when we hit some limits (pkt 
+count nearing UINT16_MAX or when 'escape' entries gets used).
 
-Regards,
+But, I wanted to avoid,
+	1. Static indexing and memory allocation based on MCS count((8x3)24 
+entries for HT and (10x3)30 for VHT within allocated 36 entries) so that 
+it's scalable.
+	2. Remote chance of dropping a stats(Though it does not have much 
+impact)
+
+And to allow,
+	1. A 'station dump' kind of interface to dump the complete collected 
+stats instead of returning only current snapshot of the stats within 
+kernel.
+
+> In particular, I don't like the idea that you implement here of 
+> allowing
+> unresponsive (or dead) userspace to let the data pile up indefinitely. 
+> I
+> think we should be sending it out upon reaching a threshold to limit 
+> the
+> memory consumption in the kernel more reliably.
+I agree with you that this does not allow deterministic memory 
+allocation within kernel (when rate stats are enabled).
+
+I'll revisit this approach to address your concern and to allow a data 
+aggregator kind of usersapce application to collect info and provide 
+complete stats.
+
+Also, do you feel it would be good to have both ,i.e complete stats 
+collection within kernel(this approach) and dump+clear of stats on 
+reaching threshold(your approach) and have one of these two modes 
+selected based on the requirement.
+
+Thanks,
 Sriram.R
+> 
+> johannes
