@@ -1,46 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:28631 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751100AbeEBHPM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 May 2018 03:15:12 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 06/21] staging: wilc1000: use 'else if' condition in get_station()
-Date: Wed, 2 May 2018 12:43:32 +0530
-Message-ID: <1525245227-3924-7-git-send-email-ajay.kathat@microchip.com> (sfid-20180502_092100_451102_9F2A392B)
-In-Reply-To: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
-References: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.bugwerft.de ([46.23.86.59]:35518 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751914AbeEPOId (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 May 2018 10:08:33 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
+        rfried@codeaurora.org, bjorn.andersson@linaro.org,
+        nicolas.dechesne@linaro.org, loic.poulain@linaro.org,
+        Daniel Mack <daniel@zonque.org>
+Subject: [PATCH 01/10] wcn36xx: fix buffer commit logic on TX path
+Date: Wed, 16 May 2018 16:08:11 +0200
+Message-Id: <20180516140820.1636-2-daniel@zonque.org> (sfid-20180516_160841_636081_9B3B180B)
+In-Reply-To: <20180516140820.1636-1-daniel@zonque.org>
+References: <20180516140820.1636-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use 'else if' in get_station(), as only one condition will statisfy.
+When wcn36xx_dxe_tx_frame() is entered while the device is still processing
+the queue asyncronously, we are racing against the firmware code with
+updates to the buffer descriptors. Presumably, the firmware scans the ring
+buffer that holds the descriptors and scans for a valid control descriptor,
+and then assumes that the next descriptor contains the payload. If, however,
+the control descriptor is marked valid, but the payload descriptor isn't,
+the packet is not sent out.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Another issue with the current code is that is lacks memory barriers before
+descriptors are marked valid. This is important because the CPU may reorder
+writes to memory, even if it is allocated as coherent DMA area, and hence
+the device may see incompletely written data.
+
+To fix this, the code in wcn36xx_dxe_tx_frame() was restructured a bit so
+that the payload descriptor is made valid before the control descriptor.
+Memory barriers are added to ensure coherency of shared memory areas.
+
+Signed-off-by: Daniel Mack <daniel@zonque.org>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/dxe.c | 75 +++++++++++++++++-----------------
+ 1 file changed, 38 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 5c52a7c..827afe9 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1143,9 +1143,7 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
+index bd2b946a65c9..3d1cf7dd1f8e 100644
+--- a/drivers/net/wireless/ath/wcn36xx/dxe.c
++++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
+@@ -642,8 +642,8 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
+ 			 struct sk_buff *skb,
+ 			 bool is_low)
+ {
+-	struct wcn36xx_dxe_ctl *ctl = NULL;
+-	struct wcn36xx_dxe_desc *desc = NULL;
++	struct wcn36xx_dxe_desc *desc_bd, *desc_skb;
++	struct wcn36xx_dxe_ctl *ctl_bd, *ctl_skb;
+ 	struct wcn36xx_dxe_ch *ch = NULL;
+ 	unsigned long flags;
+ 	int ret;
+@@ -651,74 +651,75 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
+ 	ch = is_low ? &wcn->dxe_tx_l_ch : &wcn->dxe_tx_h_ch;
  
- 		wilc_get_inactive_time(vif, mac, &inactive_time);
- 		sinfo->inactive_time = 1000 * inactive_time;
+ 	spin_lock_irqsave(&ch->lock, flags);
+-	ctl = ch->head_blk_ctl;
++	ctl_bd = ch->head_blk_ctl;
++	ctl_skb = ctl_bd->next;
+ 
+ 	/*
+ 	 * If skb is not null that means that we reached the tail of the ring
+ 	 * hence ring is full. Stop queues to let mac80211 back off until ring
+ 	 * has an empty slot again.
+ 	 */
+-	if (NULL != ctl->next->skb) {
++	if (NULL != ctl_skb->skb) {
+ 		ieee80211_stop_queues(wcn->hw);
+ 		wcn->queues_stopped = true;
+ 		spin_unlock_irqrestore(&ch->lock, flags);
+ 		return -EBUSY;
+ 	}
+ 
+-	ctl->skb = NULL;
+-	desc = ctl->desc;
++	if (unlikely(ctl_skb->bd_cpu_addr)) {
++		wcn36xx_err("bd_cpu_addr cannot be NULL for skb DXE\n");
++		ret = -EINVAL;
++		goto unlock;
++	}
++
++	desc_bd = ctl_bd->desc;
++	desc_skb = ctl_skb->desc;
++
++	ctl_bd->skb = NULL;
+ 
+ 	/* write buffer descriptor */
+-	memcpy(ctl->bd_cpu_addr, bd, sizeof(*bd));
++	memcpy(ctl_bd->bd_cpu_addr, bd, sizeof(*bd));
+ 
+ 	/* Set source address of the BD we send */
+-	desc->src_addr_l = ctl->bd_phy_addr;
+-
+-	desc->dst_addr_l = ch->dxe_wq;
+-	desc->fr_len = sizeof(struct wcn36xx_tx_bd);
+-	desc->ctrl = ch->ctrl_bd;
++	desc_bd->src_addr_l = ctl_bd->bd_phy_addr;
++	desc_bd->dst_addr_l = ch->dxe_wq;
++	desc_bd->fr_len = sizeof(struct wcn36xx_tx_bd);
+ 
+ 	wcn36xx_dbg(WCN36XX_DBG_DXE, "DXE TX\n");
+ 
+ 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "DESC1 >>> ",
+-			 (char *)desc, sizeof(*desc));
++			 (char *)desc_bd, sizeof(*desc_bd));
+ 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP,
+-			 "BD   >>> ", (char *)ctl->bd_cpu_addr,
++			 "BD   >>> ", (char *)ctl_bd->bd_cpu_addr,
+ 			 sizeof(struct wcn36xx_tx_bd));
+ 
+-	/* Set source address of the SKB we send */
+-	ctl = ctl->next;
+-	desc = ctl->desc;
+-	if (ctl->bd_cpu_addr) {
+-		wcn36xx_err("bd_cpu_addr cannot be NULL for skb DXE\n");
+-		ret = -EINVAL;
+-		goto unlock;
 -	}
 -
--	if (vif->iftype == STATION_MODE) {
-+	} else if (vif->iftype == STATION_MODE) {
- 		struct rf_info stats;
+-	desc->src_addr_l = dma_map_single(wcn->dev,
+-					  skb->data,
+-					  skb->len,
+-					  DMA_TO_DEVICE);
+-	if (dma_mapping_error(wcn->dev, desc->src_addr_l)) {
++	desc_skb->src_addr_l = dma_map_single(wcn->dev,
++					      skb->data,
++					      skb->len,
++					      DMA_TO_DEVICE);
++	if (dma_mapping_error(wcn->dev, desc_skb->src_addr_l)) {
+ 		dev_err(wcn->dev, "unable to DMA map src_addr_l\n");
+ 		ret = -ENOMEM;
+ 		goto unlock;
+ 	}
  
- 		wilc_get_statistics(vif, &stats);
+-	ctl->skb = skb;
+-	desc->dst_addr_l = ch->dxe_wq;
+-	desc->fr_len = ctl->skb->len;
+-
+-	/* set dxe descriptor to VALID */
+-	desc->ctrl = ch->ctrl_skb;
++	ctl_skb->skb = skb;
++	desc_skb->dst_addr_l = ch->dxe_wq;
++	desc_skb->fr_len = ctl_skb->skb->len;
+ 
+ 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "DESC2 >>> ",
+-			 (char *)desc, sizeof(*desc));
++			 (char *)desc_skb, sizeof(*desc_skb));
+ 	wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "SKB   >>> ",
+-			 (char *)ctl->skb->data, ctl->skb->len);
++			 (char *)ctl_skb->skb->data, ctl_skb->skb->len);
+ 
+ 	/* Move the head of the ring to the next empty descriptor */
+-	 ch->head_blk_ctl = ctl->next;
++	 ch->head_blk_ctl = ctl_skb->next;
++
++	/* Commit all previous writes and set descriptors to VALID */
++	wmb();
++	desc_skb->ctrl = ch->ctrl_skb;
++	wmb();
++	desc_bd->ctrl = ch->ctrl_bd;
+ 
+ 	/*
+ 	 * When connected and trying to send data frame chip can be in sleep
 -- 
-2.7.4
+2.14.3
