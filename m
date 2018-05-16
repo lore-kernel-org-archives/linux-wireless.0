@@ -1,116 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:25648 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934664AbeEINnR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 09:43:17 -0400
-Subject: Re: [PATCH 14/30] staging: wilc1000: fix line over 80 chars in
- add_network_to_shadow()
-To: Ajay Singh <ajay.kathat@microchip.com>,
-        <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <adham.abozaeid@Microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
- <1525682614-3824-15-git-send-email-ajay.kathat@microchip.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <b967c08b-1158-f71a-9976-05c6365af857@microchip.com> (sfid-20180509_154321_067753_E1C97134)
-Date: Wed, 9 May 2018 16:43:14 +0300
-MIME-Version: 1.0
-In-Reply-To: <1525682614-3824-15-git-send-email-ajay.kathat@microchip.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.bugwerft.de ([46.23.86.59]:35182 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752584AbeEPNcy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 May 2018 09:32:54 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: sameo@linux.intel.com, davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH 1/2] NFC: st95hf: initialize semaphore and mutex earlier
+Date: Wed, 16 May 2018 15:32:46 +0200
+Message-Id: <20180516133247.25986-1-daniel@zonque.org> (sfid-20180516_153355_993307_BD36918D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+'rm_lock' and 'exchange_lock' need to be ready before the IRQ handler has a
+chance to fire.
 
+This fixes the oops below.
 
-On 07.05.2018 11:43, Ajay Singh wrote:
-> Fix line over 80 characters issue reported by checkpatch in
-> add_network_to_shadow() by using temporary variable.
+[    1.040255] Internal error: Oops: 96000004 [#1] PREEMPT SMP
+[...]
+[    1.181564] Call trace:
+[    1.188591] Exception stack(0xffff00000a473c40 to 0xffff00000a473d80)
+[    1.190943] 3c40: ffff80003673b118 0000000000000000 ffff800036374380 0000000000000000
+[    1.197542] 3c60: 0000000000000000 0000000000000000 00000000044b2ac5 0000000000000001
+[    1.205354] 3c80: ffff800036374d60 ffff00000a473d70 0000000000000980 0000000000000000
+[    1.213166] 3ca0: 0000000000000001 0000000000000000 000000000000004c 0000000000000033
+[    1.217590] st95hf spi2.0: err: por seq failed for st95hf
+[    1.228788] 3cc0: 0000000000000019 0000000000000001 0000000000000007 ffff80003673b118
+[    1.234175] 3ce0: ffff800009f27000 0000000000000000 ffff80003673b1c8 ffff80003673b1b0
+[    1.241986] 3d00: ffff0000080f0000 ffff800009f716a4 ffff00000894bb40 0000000000000000
+[    1.249800] 3d20: 0000000000000000 ffff00000a473d80 ffff0000084268c0 ffff00000a473d80
+[    1.257611] 3d40: ffff0000084268c4 0000000040000005 ffff00000a473d60 ffff0000080e5688
+[    1.265424] 3d60: ffffffffffffffff ffff0000084268a4 ffff00000a473d80 ffff0000084268c4
+[    1.273239] [<ffff0000084268c4>] st95hf_irq_thread_handler+0x44/0x3a0
+[    1.281048] [<ffff0000080f00b0>] irq_thread_fn+0x28/0x68
+[    1.287468] [<ffff0000080f035c>] irq_thread+0x10c/0x1a0
+[    1.292850] [<ffff0000080c50bc>] kthread+0x12c/0x130
+[    1.297799] [<ffff000008084b88>] ret_from_fork+0x10/0x18
+[    1.303008] Code: aa1603e0 f9403675 940d010f aa1303e0 (f94066a1)
+[    1.308307] ---[ end trace d058c1b88aad74d8 ]---
 
-I, personally, don't like this way of fixing line over 80. From my
-point of view this introduces a new future patch. Maybe, in future,
-somebody will remove this temporary variable stating that there is
-no need for it.
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+---
+ drivers/nfc/st95hf/core.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-> 
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> ---
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 52 +++++++++++------------
->  1 file changed, 25 insertions(+), 27 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> index f1ebaea..0ae2065 100644
-> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> @@ -300,6 +300,7 @@ static void add_network_to_shadow(struct network_info *nw_info,
->  	int ap_found = is_network_in_shadow(nw_info, user_void);
->  	u32 ap_index = 0;
->  	u8 rssi_index = 0;
-> +	struct network_info *shadow_nw_info;
->  
->  	if (last_scanned_cnt >= MAX_NUM_SCANNED_NETWORKS_SHADOW)
->  		return;
-> @@ -310,37 +311,34 @@ static void add_network_to_shadow(struct network_info *nw_info,
->  	} else {
->  		ap_index = ap_found;
->  	}
-> -	rssi_index = last_scanned_shadow[ap_index].rssi_history.index;
-> -	last_scanned_shadow[ap_index].rssi_history.samples[rssi_index++] = nw_info->rssi;
-> +	shadow_nw_info = &last_scanned_shadow[ap_index];
-> +	rssi_index = shadow_nw_info->rssi_history.index;
-> +	shadow_nw_info->rssi_history.samples[rssi_index++] = nw_info->rssi;
->  	if (rssi_index == NUM_RSSI) {
->  		rssi_index = 0;
-> -		last_scanned_shadow[ap_index].rssi_history.full = true;
-> -	}
-> -	last_scanned_shadow[ap_index].rssi_history.index = rssi_index;
-> -	last_scanned_shadow[ap_index].rssi = nw_info->rssi;
-> -	last_scanned_shadow[ap_index].cap_info = nw_info->cap_info;
-> -	last_scanned_shadow[ap_index].ssid_len = nw_info->ssid_len;
-> -	memcpy(last_scanned_shadow[ap_index].ssid,
-> -	       nw_info->ssid, nw_info->ssid_len);
-> -	memcpy(last_scanned_shadow[ap_index].bssid,
-> -	       nw_info->bssid, ETH_ALEN);
-> -	last_scanned_shadow[ap_index].beacon_period = nw_info->beacon_period;
-> -	last_scanned_shadow[ap_index].dtim_period = nw_info->dtim_period;
-> -	last_scanned_shadow[ap_index].ch = nw_info->ch;
-> -	last_scanned_shadow[ap_index].ies_len = nw_info->ies_len;
-> -	last_scanned_shadow[ap_index].tsf_hi = nw_info->tsf_hi;
-> +		shadow_nw_info->rssi_history.full = true;
-> +	}
-> +	shadow_nw_info->rssi_history.index = rssi_index;
-> +	shadow_nw_info->rssi = nw_info->rssi;
-> +	shadow_nw_info->cap_info = nw_info->cap_info;
-> +	shadow_nw_info->ssid_len = nw_info->ssid_len;
-> +	memcpy(shadow_nw_info->ssid, nw_info->ssid, nw_info->ssid_len);
-> +	memcpy(shadow_nw_info->bssid, nw_info->bssid, ETH_ALEN);
-> +	shadow_nw_info->beacon_period = nw_info->beacon_period;
-> +	shadow_nw_info->dtim_period = nw_info->dtim_period;
-> +	shadow_nw_info->ch = nw_info->ch;
-> +	shadow_nw_info->ies_len = nw_info->ies_len;
-> +	shadow_nw_info->tsf_hi = nw_info->tsf_hi;
->  	if (ap_found != -1)
-> -		kfree(last_scanned_shadow[ap_index].ies);
-> -	last_scanned_shadow[ap_index].ies = kmalloc(nw_info->ies_len,
-> -						    GFP_KERNEL);
-> -	memcpy(last_scanned_shadow[ap_index].ies,
-> -	       nw_info->ies, nw_info->ies_len);
-> -	last_scanned_shadow[ap_index].time_scan = jiffies;
-> -	last_scanned_shadow[ap_index].time_scan_cached = jiffies;
-> -	last_scanned_shadow[ap_index].found = 1;
-> +		kfree(shadow_nw_info->ies);
-> +	shadow_nw_info->ies = kmalloc(nw_info->ies_len, GFP_KERNEL);
-> +	memcpy(shadow_nw_info->ies, nw_info->ies, nw_info->ies_len);
-> +	shadow_nw_info->time_scan = jiffies;
-> +	shadow_nw_info->time_scan_cached = jiffies;
-> +	shadow_nw_info->found = 1;
->  	if (ap_found != -1)
-> -		kfree(last_scanned_shadow[ap_index].join_params);
-> -	last_scanned_shadow[ap_index].join_params = join_params;
-> +		kfree(shadow_nw_info->join_params);
-> +	shadow_nw_info->join_params = join_params;
->  }
->  
->  static void cfg_scan_result(enum scan_event scan_event,
-> 
+diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
+index 2b26f762fbc3..394bdc7b0cf2 100644
+--- a/drivers/nfc/st95hf/core.c
++++ b/drivers/nfc/st95hf/core.c
+@@ -1112,8 +1112,10 @@ static int st95hf_probe(struct spi_device *nfc_spi_dev)
+ 		}
+ 	}
+ 
++	sema_init(&st95context->exchange_lock, 1);
+ 	init_completion(&spicontext->done);
+ 	mutex_init(&spicontext->spi_lock);
++	mutex_init(&st95context->rm_lock);
+ 
+ 	/*
+ 	 * Store spicontext in spi device object for using it in
+@@ -1197,9 +1199,6 @@ static int st95hf_probe(struct spi_device *nfc_spi_dev)
+ 	/* store st95context in nfc device object */
+ 	nfc_digital_set_drvdata(st95context->ddev, st95context);
+ 
+-	sema_init(&st95context->exchange_lock, 1);
+-	mutex_init(&st95context->rm_lock);
+-
+ 	return ret;
+ 
+ err_free_digital_device:
+-- 
+2.14.3
