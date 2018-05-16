@@ -1,65 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:65044 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964942AbeE3GfE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 02:35:04 -0400
-From: "Reizer, Eyal" <eyalr@ti.com>
-To: Tony Lindgren <tony@atomide.com>,
-        "Strashko, Grygorii" <grygorii.strashko@ti.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>,
-        "Mishol, Guy" <guym@ti.com>,
+Received: from muru.com ([72.249.23.125]:42538 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751013AbeEPPn3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 May 2018 11:43:29 -0400
+Date: Wed, 16 May 2018 08:43:26 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>,
         Luca Coelho <luciano.coelho@intel.com>,
-        "Hahn, Maital" <maitalm@ti.com>,
-        "Altshul, Maxim" <maxim.altshul@ti.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-        Eyal Reizer <eyalreizer@gmail.com>
-Subject: Re: [RFT 6/6] wlcore: Use generic runtime pm calls   for wowlan elp
- configuration
-Date: Wed, 30 May 2018 06:34:56 +0000
-Message-ID: <63ad2f07fac941b88408352f6ddbce50@ti.com> (sfid-20180530_083549_407860_50F16717)
-Content-Type: text/plain; charset="us-ascii"
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: Re: [PATCH 1/2] wlcore: Make sure PM calls are paired
+Message-ID: <20180516154326.GG98604@atomide.com> (sfid-20180516_174334_008505_146ECA14)
+References: <20180515161315.1997-1-tony@atomide.com>
+ <20180515161315.1997-2-tony@atomide.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180515161315.1997-2-tony@atomide.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > >
-> > > With runtime PM enabled, we can now use generic calls to
-> > > pm_generic_runtime_suspend and pm_generic_runtime_resume for
-> enabling elp
-> > > during suspend when wowlan is enabled and waking the chip from elp
-> > > on resume.
-> >
-> > Sry, but not sure you can :(
-> >
-> > These functions are not used by drivers directly because system suspend
-> > are not synchronized with PM runtime, so if you call
-> pm_generic_runtime_suspend()
-> > and, at the same time, there is pm_runtime_get_() in progress --> race =
-...
-> >
-> > The pm_runtime_force_() APIs have to be used, or
-> > PM runtime drivers functions can be called directly, but only if it pos=
-sible to
-> be
-> > sure no other PM runtime calls active which is usually true at
-> suspend_noirq stage.
->=20
-> Oh right, those are subsystem calls. Seems like
-> pm_runtime_force_suspend/resume() should work here,
-> Eyal?
->=20
+* Tony Lindgren <tony@atomide.com> [180515 16:15]:
+> The call to wl1271_ps_elp_wakeup() in wl12xx_queue_recovery_work() is
+> unpaired. Let's remove it and add paired calls to wl1271_recovery_work()
+> instead in preparation for changing things to use runtime PM.
 
-Oh, nice, wasn't aware of the pm_runtime_force_() calls.
-For some reason they are not documented in:
-https://www.kernel.org/doc/Documentation/power/runtime_pm.txt
-Perhaps they should be?
+Looks like this causes at least a warning at
+drivers/net/wireless/ti/wlcore/io.h:66 if recovery triggers.
 
-Anyway I have tried them instead of pm_generic_runtime_() and they seem
-To work fine on my platform.
-Will test some more and submit a v2.
+Regards,
 
-Best Regards,
-Eyal
+Tony
