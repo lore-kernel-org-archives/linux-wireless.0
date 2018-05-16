@@ -1,46 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from resqmta-po-11v.sys.comcast.net ([96.114.154.170]:34736 "EHLO
-        resqmta-po-11v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751384AbeD3WJt (ORCPT
+Received: from mail-qk0-f179.google.com ([209.85.220.179]:43613 "EHLO
+        mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750995AbeEPIhs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Apr 2018 18:09:49 -0400
-To: linux-wireless@vger.kernel.org
-From: Jape Person <japers@comcast.net>
-Subject: Possible Regression in Wireless Driver Affecting Intel Corporation
- Wireless 7265 (rev 59)
-Message-ID: <1b91c09e-d20b-bcb2-5961-7c7b400a78d9@comcast.net> (sfid-20180501_000952_951894_5B218C94)
-Date: Mon, 30 Apr 2018 18:01:11 -0400
+        Wed, 16 May 2018 04:37:48 -0400
+Received: by mail-qk0-f179.google.com with SMTP id h19-v6so2460667qkj.10
+        for <linux-wireless@vger.kernel.org>; Wed, 16 May 2018 01:37:47 -0700 (PDT)
+Subject: Re: Research + questions on brcmfmac and support for monitor mode
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+References: <986bbf4c-8fa1-4367-db9e-76a209594b81@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AFBEDD8.8030801@broadcom.com> (sfid-20180516_103835_758709_6A1A47E0)
+Date: Wed, 16 May 2018 10:37:44 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <986bbf4c-8fa1-4367-db9e-76a209594b81@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Two recent kernel upgrades seem to have both affected the Intel
-Corporation Wireless 7265 (rev 59) adapters on our systems in a
-manner which causes their network transfer rates to be reduced
-dramatically. File transfers which normally require a few
-minutes are now taking several hours.
+On 5/15/2018 2:29 PM, Rafał Miłecki wrote:
+> I'm interested in adding support for monitor mode to the brcmfmac. I did
+> some early research on firmware capabilities & behavior using various
+> firmwares I could find for my devices: 43602a1, 4366b1, 4366c0 (BCM4366
+> and BCM4366E).
 
-These systems are running the Debian testing distribution with
-the iwilwifi drivers from Debian's testing/contrib. The altered
-behavior came when the Debian linux-image version advanced to
-4.15.*.
+I am interested too and already did some work in this respect.
 
-I looked online for similar reports and didn't find anything
-that seemed directly applicably. I finally got lucky when I
-experimented with the net.ipv4.tcp_congestion_control setting.
+> I was doing my tests by starting monitor mode with SET_MONITOR ioctl +
+> value 3 and dumping msgbuf RX header + skb data.
+>
+> The good news is that almost every firmware has some minimal support for
+> monitor mode. Unfortunately implementing it may be (a big?) problem.
+>
+> The basic concept is simple. Once we set SET_MONITOR to 3, firmware
+> starts passing up monitor mode frames to the driver.
 
-I understand that in version 4.15 of the kernel the default was
-changed from cubic to bbr. I used
+The main issue is that monitor mode was historically made for what we 
+call NIC drivers, ie. driver running on the host so without an active 
+cpu on the device. Also monitor functionality is used within the 
+firmware itself by other features, which is why most firmwares you have 
+include monitor functionality.
 
-# sysctl net.ipv4.tcp_congestion_control=cubic
+I implemented monitor mode for SDIO devices, but that required firmware 
+changes so an explicit firmware target. Unfortunately, for PCIe things 
+are quite different. On SDIO the entire packet is passed to the host, 
+but for PCIe the 802.11 part is split from the 802.3 payload.
 
-to revert to the previous default on all of the systems. This
-has caused all of the systems to return to their normal file
-transfer speeds.
+> The first problem I see is identifying monitor mode frames in order to
+> make brcmfmac pass them to the monitor interface. Monitor frames have
+> msg.ifidx set to 0 which makes them indistinguishable from main
+> interface frames by simply looking at that index field. There is nothing
+> in the msg.rsvd0, compl_hdr.status, rx_status_0 or rx_status_1 fields.
+>
+> Now, some new firmwares have flags set to 0x0002 (instead of 0x0001) for
+> monitor frames. This is very helpful but it only applies to the really
+> recent images.
+>
+> My first question is: is there any reliable way of filtering monitor
+> frames for older firmwares? We could try to reserve ifidx 0 for monitor
+> mode purposes, but I'm afraid I'd require hacking quite some code. Is
+> there any better & simpler solution?
 
-Please let me know by direct reply (I'm not subscribed.) if I
-can supply more information.
+Depends what you want. I wanted mainly a dedicated sniffer so only 
+allowing changing the main interface to monitor mode. Not allowing 
+adding a monitor mode interface.
 
-Best regards,
-JP
+> The second problem is monitor frame format. Older firmwares were simply
+> passing 802.11 frames to the driver. It means passing frame control
+> field, duration, AP MAC, src MAC, dst MAC, sequence + data. There was no
+> info about signal, noise, etc. passed. New firmwares seem to be
+> including radiotap header which makes things much nicer.
+
+For the SDIO implementation mentioned I generated radiotap header in 
+brcmfmac. I recall that was the intention for the PCIe implementation as 
+well, but maybe things changed since then as you managed to get radiotap 
+headers on recent firmwares.
+
+> The second question: is there a reliable way of telling what format uses
+> monitor packet passed by a firmware? Is it maybe strictly related to the
+> flags set to 0x0002 (instead of 0x0001)?
+
+This is the flags in the msgbuf RXHEADER? That is
+
+> I was hoping that maybe looking at fw-reported capabilities will give me
+> any hint regarding that but I'm afraid I'm out of luck. Below is a list
+> of firmwares I tested and summary of each of them.
+>
+> Note: as every firmware reports following capabilities:
+> 802.11d 802.11h ampdu ampdu_rx ampdu_tx amsdurx amsdutx anqpo ap bcm_dcs
+> bsstrans cac cqa dfrts dwds led mfp p2po probresp_mac_filter pspretend
+> psr psta radio_pwrsave rm rxchain_pwrsave sta stbc-rx-1ss stbc-tx
+> traffic-mgmt traffic-mgmt-dwm vht-prop-rates wds wet wet_tunnel wme wnm
+> I omitted them below.
+
+Actually the capability iovar is tricky/broken. It can potentially 
+truncate the string so you don't get all the information on the host.
+
+So a question about monitor mode. In hostapd an attempt is made to 
+create a monitor interface. Is that no longer done because of you recent 
+patch regarding the wiphy flag HAVE_AP_SME?
+
+Regards,
+Arend
