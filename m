@@ -1,99 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:52753 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964984AbeE3JGj (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:48256 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752482AbeEPMMa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 05:06:39 -0400
-Received: by mail-wm0-f66.google.com with SMTP id 18-v6so40851349wml.2
-        for <linux-wireless@vger.kernel.org>; Wed, 30 May 2018 02:06:39 -0700 (PDT)
-Date: Wed, 30 May 2018 11:06:34 +0200
-From: Michael Trimarchi <michael@amarulasolutions.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Ian Molton <ian@mnementh.co.uk>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH V2] brcmfmac: stop watchdog before detach and free everything
-Message-ID: <20180530090633.GA15390@panicking> (sfid-20180530_110758_733867_9C106B67)
-References: <1527493857-2220-1-git-send-email-michael@amarulasolutions.com>
- <5B0D1C9E.4000800@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5B0D1C9E.4000800@broadcom.com>
+        Wed, 16 May 2018 08:12:30 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Franky Lin <franky.lin@broadcom.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH V2 6/6] brcmfmac: trigger memory dump on SDIO firmware halt message
+Date: Wed, 16 May 2018 14:12:03 +0200
+Message-Id: <1526472723-15758-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180516_141241_505564_9013DF73)
+In-Reply-To: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using built-in in kernel image without a firmware in filesystem
-or in the kernel image can lead to a kernel NULL pointer deference.
-Watchdog need to be stopped in brcmf_sdio_remove
+From: Franky Lin <franky.lin@broadcom.com>
 
-The system is going down NOW!
-[ 1348.110759] Unable to handle kernel NULL pointer dereference at virtual address 000002f8
-Sent SIGTERM to all processes
-[ 1348.121412] Mem abort info:
-[ 1348.126962]   ESR = 0x96000004
-[ 1348.130023]   Exception class = DABT (current EL), IL = 32 bits
-[ 1348.135948]   SET = 0, FnV = 0
-[ 1348.138997]   EA = 0, S1PTW = 0
-[ 1348.142154] Data abort info:
-[ 1348.145045]   ISV = 0, ISS = 0x00000004
-[ 1348.148884]   CM = 0, WnR = 0
-[ 1348.151861] user pgtable: 4k pages, 48-bit VAs, pgdp = (____ptrval____)
-[ 1348.158475] [00000000000002f8] pgd=0000000000000000
-[ 1348.163364] Internal error: Oops: 96000004 [#1] PREEMPT SMP
-[ 1348.168927] Modules linked in: ipv6
-[ 1348.172421] CPU: 3 PID: 1421 Comm: brcmf_wdog/mmc0 Not tainted 4.17.0-rc5-next-20180517 #18
-[ 1348.180757] Hardware name: Amarula A64-Relic (DT)
-[ 1348.185455] pstate: 60000005 (nZCv daif -PAN -UAO)
-[ 1348.190251] pc : brcmf_sdiod_freezer_count+0x0/0x20
-[ 1348.195124] lr : brcmf_sdio_watchdog_thread+0x64/0x290
-[ 1348.200253] sp : ffff00000b85be30
-[ 1348.203561] x29: ffff00000b85be30 x28: 0000000000000000
-[ 1348.208868] x27: ffff00000b6cb918 x26: ffff80003b990638
-[ 1348.214176] x25: ffff0000087b1a20 x24: ffff80003b94f800
-[ 1348.219483] x23: ffff000008e620c8 x22: ffff000008f0b660
-[ 1348.224790] x21: ffff000008c6a858 x20: 00000000fffffe00
-[ 1348.230097] x19: ffff80003b94f800 x18: 0000000000000001
-[ 1348.235404] x17: 0000ffffab2e8a74 x16: ffff0000080d7de8
-[ 1348.240711] x15: 0000000000000000 x14: 0000000000000400
-[ 1348.246018] x13: 0000000000000400 x12: 0000000000000001
-[ 1348.251324] x11: 00000000000002c4 x10: 0000000000000a10
-[ 1348.256631] x9 : ffff00000b85bc40 x8 : ffff80003be11870
-[ 1348.261937] x7 : ffff80003dfc7308 x6 : 000000078ff08b55
-[ 1348.267243] x5 : 00000139e1058400 x4 : 0000000000000000
-[ 1348.272550] x3 : dead000000000100 x2 : 958f2788d6618100
-[ 1348.277856] x1 : 00000000fffffe00 x0 : 0000000000000000
+Attempt to dump dongle memory for debug upon receiving firmware halt
+message through dongle to host mail box interrupt.
 
-Signed-off-by: Michael Trimarchi <michael@amarulasolutions.com>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 412a05b..061f69d 100644
+index 412a05b..c99a191 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -4294,6 +4294,13 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
- 	brcmf_dbg(TRACE, "Enter\n");
+@@ -1072,8 +1072,10 @@ static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
+ 	bus->sdcnt.f1regdata += 2;
  
- 	if (bus) {
-+		/* Stop watchdog task */
-+		if (bus->watchdog_tsk) {
-+			send_sig(SIGTERM, bus->watchdog_tsk, 1);
-+			kthread_stop(bus->watchdog_tsk);
-+			bus->watchdog_tsk = NULL;
-+		}
-+
- 		/* De-register interrupt handler */
- 		brcmf_sdiod_intr_unregister(bus->sdiodev);
+ 	/* dongle indicates the firmware has halted/crashed */
+-	if (hmb_data & HMB_DATA_FWHALT)
++	if (hmb_data & HMB_DATA_FWHALT) {
+ 		brcmf_err("mailbox indicates firmware halted\n");
++		brcmf_dev_coredump(&sdiod->func1->dev);
++	}
  
+ 	/* Dongle recomposed rx frames, accept them again */
+ 	if (hmb_data & HMB_DATA_NAKHANDLED) {
 -- 
-2.7.4
+1.9.1
