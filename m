@@ -1,64 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:42776 "EHLO muru.com"
+Received: from mail.bugwerft.de ([46.23.86.59]:35590 "EHLO mail.bugwerft.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751971AbeEQSum (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 May 2018 14:50:42 -0400
-From: Tony Lindgren <tony@atomide.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
-        Guy Mishol <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Maital Hahn <maitalm@ti.com>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org
-Subject: [PATCH 4/5] wlcore: Fix misplaced PM call for scan_complete_work()
-Date: Thu, 17 May 2018 11:50:28 -0700
-Message-Id: <20180517185029.71716-5-tony@atomide.com> (sfid-20180517_205049_881929_4A5F7E16)
-In-Reply-To: <20180517185029.71716-1-tony@atomide.com>
-References: <20180517185029.71716-1-tony@atomide.com>
+        id S1752253AbeEPOIm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 May 2018 10:08:42 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
+        rfried@codeaurora.org, bjorn.andersson@linaro.org,
+        nicolas.dechesne@linaro.org, loic.poulain@linaro.org,
+        Daniel Mack <daniel@zonque.org>
+Subject: [PATCH 07/10] wcn36xx: set PREASSOC and IDLE stated when BSS info changes
+Date: Wed, 16 May 2018 16:08:17 +0200
+Message-Id: <20180516140820.1636-8-daniel@zonque.org> (sfid-20180516_160849_247393_B907E838)
+In-Reply-To: <20180516140820.1636-1-daniel@zonque.org>
+References: <20180516140820.1636-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With runtime PM enabled, we now need to have wlcore enabled longer
-until after we're done calling wlcore_cmd_regdomain_config_locked():
+When a BSSID is joined, set the link status to 'preassoc', and set it to
+'idle' when the BSS is deleted.
 
-scan_complete_work()
- wlcore_cmd_regdomain_config_locked()
-   wlcore_cmd_send_failsafe()
-     wl12xx_sdio_raw_read()
+This is what the downstream driver is doing, and it seems to improve the
+reliability during connect/disconnect stress tests.
 
-Note that this is not needed before runtime PM support as the
-custom PM code had it's own timer. We have not yet enabled runtime
-PM autosuspend for wlcore and this is why this issue now shows up.
-
-Let's fix the issues first before we enable runtime PM autosuspend.
-
-Signed-off-by: Tony Lindgren <tony@atomide.com>
+Signed-off-by: Daniel Mack <daniel@zonque.org>
 ---
- drivers/net/wireless/ti/wlcore/scan.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/main.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ti/wlcore/scan.c b/drivers/net/wireless/ti/wlcore/scan.c
---- a/drivers/net/wireless/ti/wlcore/scan.c
-+++ b/drivers/net/wireless/ti/wlcore/scan.c
-@@ -78,8 +78,6 @@ void wl1271_scan_complete_work(struct work_struct *work)
- 		wl1271_cmd_build_ap_probe_req(wl, wlvif, wlvif->probereq);
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index e6330ad372b3..662e50540b07 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -798,6 +798,8 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
+ 		if (!is_zero_ether_addr(bss_conf->bssid)) {
+ 			vif_priv->is_joining = true;
+ 			vif_priv->bss_index = WCN36XX_HAL_BSS_INVALID_IDX;
++			wcn36xx_smd_set_link_st(wcn, bss_conf->bssid, vif->addr,
++						WCN36XX_HAL_LINK_PREASSOC_STATE);
+ 			wcn36xx_smd_join(wcn, bss_conf->bssid,
+ 					 vif->addr, WCN36XX_HW_CHANNEL(wcn));
+ 			wcn36xx_smd_config_bss(wcn, vif, NULL,
+@@ -805,6 +807,8 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
+ 		} else {
+ 			vif_priv->is_joining = false;
+ 			wcn36xx_smd_delete_bss(wcn, vif);
++			wcn36xx_smd_set_link_st(wcn, bss_conf->bssid, vif->addr,
++						WCN36XX_HAL_LINK_IDLE_STATE);
+ 			vif_priv->encrypt_type = WCN36XX_HAL_ED_NONE;
+ 		}
  	}
- 
--	pm_runtime_put(wl->dev);
--
- 	if (wl->scan.failed) {
- 		wl1271_info("Scan completed due to error.");
- 		wl12xx_queue_recovery_work(wl);
-@@ -87,6 +85,8 @@ void wl1271_scan_complete_work(struct work_struct *work)
- 
- 	wlcore_cmd_regdomain_config_locked(wl);
- 
-+	pm_runtime_put(wl->dev);
-+
- 	ieee80211_scan_completed(wl->hw, &info);
- 
- out:
 -- 
-2.17.0
+2.14.3
