@@ -1,79 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway33.websitewelcome.com ([192.185.145.9]:36652 "EHLO
-        gateway33.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1030216AbeEYVWM (ORCPT
+Received: from mail-it0-f65.google.com ([209.85.214.65]:52911 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752020AbeEQNJu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 May 2018 17:22:12 -0400
-Received: from cm15.websitewelcome.com (cm15.websitewelcome.com [100.42.49.9])
-        by gateway33.websitewelcome.com (Postfix) with ESMTP id 0E54C3550
-        for <linux-wireless@vger.kernel.org>; Fri, 25 May 2018 16:22:12 -0500 (CDT)
-Date: Fri, 25 May 2018 16:22:07 -0500
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] ath9k: mark expected switch fall-throughs
-Message-ID: <20180525212207.GA10681@embeddedor.com> (sfid-20180525_232442_973597_6A142BE6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Thu, 17 May 2018 09:09:50 -0400
+Received: by mail-it0-f65.google.com with SMTP id y189-v6so8687373itb.2
+        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2018 06:09:50 -0700 (PDT)
+From: Bob Copeland <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, kernel-team@fb.com,
+        Bob Copeland <me@bobcopeland.com>,
+        Bob Copeland <bobcopeland@fb.com>
+Subject: [PATCH] mac80211: mesh: fix premature update of rc stats
+Date: Thu, 17 May 2018 09:09:28 -0400
+Message-Id: <20180517130928.5397-1-me@bobcopeland.com> (sfid-20180517_150958_526308_57611C7C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-where we are expecting to fall through.
+The mesh_neighbour_update() function, queued via beacon rx, can race with
+userspace creating the same station.  If the station already exists by the
+time mesh_neighbour_update() is called, the function wrongly assumes rate
+control has been initialized and calls rate_control_rate_update(), which
+in turn calls into the driver.
 
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+Updating the rate control before it has been initialized can cause a
+crash in some drivers, for example this firmware crash in ath10k due
+to sta->rx_nss being 0:
+
+[ 3078.088247] mesh0: Inserted STA 5c:e2:8c:f1:ab:ba
+[ 3078.258407] ath10k_pci 0000:0d:00.0: firmware crashed! (uuid d6ed5961-93cc-4d61-803f-5eda55bb8643)
+[ 3078.258421] ath10k_pci 0000:0d:00.0: qca988x hw2.0 target 0x4100016c chip_id 0x043202ff sub 0000:0000
+[ 3078.258426] ath10k_pci 0000:0d:00.0: kconfig debug 1 debugfs 1 tracing 1 dfs 0 testmode 0
+[ 3078.258608] ath10k_pci 0000:0d:00.0: firmware ver 10.2.4.70.59-2 api 5 features no-p2p,raw-mode,mfp crc32 4159f498
+[ 3078.258613] ath10k_pci 0000:0d:00.0: board_file api 1 bmi_id N/A crc32 bebc7c08
+[ 3078.258617] ath10k_pci 0000:0d:00.0: htt-ver 2.1 wmi-op 5 htt-op 2 cal otp max-sta 128 raw 0 hwcrypto 1
+[ 3078.260627] ath10k_pci 0000:0d:00.0: firmware register dump:
+[ 3078.260640] ath10k_pci 0000:0d:00.0: [00]: 0x4100016C 0x000015B3 0x009A31BB 0x00955B31
+[ 3078.260647] ath10k_pci 0000:0d:00.0: [04]: 0x009A31BB 0x00060130 0x00000008 0x00000007
+[ 3078.260652] ath10k_pci 0000:0d:00.0: [08]: 0x00000000 0x00955B31 0x00000000 0x0040F89E
+[ 3078.260656] ath10k_pci 0000:0d:00.0: [12]: 0x00000009 0xFFFFFFFF 0x009580F5 0x00958117
+[ 3078.260660] ath10k_pci 0000:0d:00.0: [16]: 0x00958080 0x0094085D 0x00000000 0x00000000
+[ 3078.260664] ath10k_pci 0000:0d:00.0: [20]: 0x409A31BB 0x0040AA84 0x00000002 0x00000001
+[ 3078.260669] ath10k_pci 0000:0d:00.0: [24]: 0x809A2B8D 0x0040AAE4 0x00000088 0xC09A31BB
+[ 3078.260673] ath10k_pci 0000:0d:00.0: [28]: 0x809898C8 0x0040AB04 0x0043F91C 0x009C6458
+[ 3078.260677] ath10k_pci 0000:0d:00.0: [32]: 0x809B66AC 0x0040AB34 0x009C6458 0x0043F91C
+[ 3078.260686] ath10k_pci 0000:0d:00.0: [36]: 0x809B2824 0x0040ADA4 0x00400000 0x00416EB4
+[ 3078.260692] ath10k_pci 0000:0d:00.0: [40]: 0x809C07D9 0x0040ADE4 0x0040AE08 0x00412028
+[ 3078.260696] ath10k_pci 0000:0d:00.0: [44]: 0x809486FA 0x0040AE04 0x00000001 0x00000000
+[ 3078.260700] ath10k_pci 0000:0d:00.0: [48]: 0x80948E2C 0x0040AEA4 0x0041F4F0 0x00412634
+[ 3078.260704] ath10k_pci 0000:0d:00.0: [52]: 0x809BFC39 0x0040AEC4 0x0041F4F0 0x00000001
+[ 3078.260709] ath10k_pci 0000:0d:00.0: [56]: 0x80940F18 0x0040AF14 0x00000010 0x00403AC0
+[ 3078.284130] ath10k_pci 0000:0d:00.0: failed to to request monitor vdev 1 stop: -108
+
+Fix this by checking whether the sta has already initialized rate control
+using the flag for that purpose.  We can also drop the unnecessary insert
+parameter here.
+
+Signed-off-by: Bob Copeland <bobcopeland@fb.com>
 ---
- drivers/net/wireless/ath/ath9k/ar5008_phy.c | 2 ++
- drivers/net/wireless/ath/ath9k/ar9002_phy.c | 1 +
- drivers/net/wireless/ath/ath9k/main.c       | 1 +
- 3 files changed, 4 insertions(+)
+ net/mac80211/mesh_plink.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index 7922550..ef2dd68 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -583,12 +583,14 @@ static void ar5008_hw_init_chain_masks(struct ath_hw *ah)
- 	case 0x5:
- 		REG_SET_BIT(ah, AR_PHY_ANALOG_SWAP,
- 			    AR_PHY_SWAP_ALT_CHAIN);
-+		/* fall through */
- 	case 0x3:
- 		if (ah->hw_version.macVersion == AR_SREV_REVISION_5416_10) {
- 			REG_WRITE(ah, AR_PHY_RX_CHAINMASK, 0x7);
- 			REG_WRITE(ah, AR_PHY_CAL_CHAINMASK, 0x7);
- 			break;
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 0f6c9ca..5b5b0f9 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -401,7 +401,7 @@ u32 mesh_plink_deactivate(struct sta_info *sta)
+ 
+ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
+ 			       struct sta_info *sta,
+-			       struct ieee802_11_elems *elems, bool insert)
++			       struct ieee802_11_elems *elems)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_supported_band *sband;
+@@ -447,7 +447,7 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
+ 		sta->sta.bandwidth = IEEE80211_STA_RX_BW_20;
+ 	}
+ 
+-	if (insert)
++	if (!test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
+ 		rate_control_rate_init(sta);
+ 	else
+ 		rate_control_rate_update(local, sband, sta, changed);
+@@ -551,7 +551,7 @@ mesh_sta_info_get(struct ieee80211_sub_if_data *sdata,
+ 	rcu_read_lock();
+ 	sta = sta_info_get(sdata, addr);
+ 	if (sta) {
+-		mesh_sta_info_init(sdata, sta, elems, false);
++		mesh_sta_info_init(sdata, sta, elems);
+ 	} else {
+ 		rcu_read_unlock();
+ 		/* can't run atomic */
+@@ -561,7 +561,7 @@ mesh_sta_info_get(struct ieee80211_sub_if_data *sdata,
+ 			return NULL;
  		}
-+		/* else: fall through */
- 	case 0x1:
- 	case 0x2:
- 	case 0x7:
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-index 61a9b85..7132918 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-@@ -119,6 +119,7 @@ static int ar9002_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
- 				aModeRefSel = 2;
- 			if (aModeRefSel)
- 				break;
-+			/* else: fall through */
- 		case 1:
- 		default:
- 			aModeRefSel = 0;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index a3be8ad..11d84f4 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1928,6 +1928,7 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
- 	case IEEE80211_AMPDU_TX_STOP_FLUSH:
- 	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
- 		flush = true;
-+		/* fall through */
- 	case IEEE80211_AMPDU_TX_STOP_CONT:
- 		ath9k_ps_wakeup(sc);
- 		ath_tx_aggr_stop(sc, sta, tid);
+ 
+-		mesh_sta_info_init(sdata, sta, elems, true);
++		mesh_sta_info_init(sdata, sta, elems);
+ 
+ 		if (sta_info_insert_rcu(sta))
+ 			return NULL;
 -- 
-2.7.4
+2.9.0
