@@ -1,135 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:30899 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751304AbeEVN0H (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:52986 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751858AbeEQJD4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 09:26:07 -0400
-From: "Reizer, Eyal" <eyalr@ti.com>
-To: Tony Lindgren <tony@atomide.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>,
-        "Mishol, Guy" <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        "Hahn, Maital" <maitalm@ti.com>,
-        "Altshul, Maxim" <maxim.altshul@ti.com>,
-        "Shahar Patury" <shaharp@ti.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-        "Loewy, Chen" <c-loewy@ti.com>
-Subject: RE: [EXTERNAL] [PATCHv2 0/5] Runtime PM support for wlcore
-Date: Tue, 22 May 2018 13:26:01 +0000
-Message-ID: <38ddca4c73bb4dbf835a84133035dbfb@ti.com> (sfid-20180522_152611_236958_D674BB61)
-References: <20180517185029.71716-1-tony@atomide.com>
- <bff51dcc6fd441d9ab42db273219aaf4@ti.com>
- <20180521163830.GZ98604@atomide.com> <20180521224339.GD98604@atomide.com>
-Content-Type: text/plain; charset="us-ascii"
+        Thu, 17 May 2018 05:03:56 -0400
+Received: by mail-wm0-f68.google.com with SMTP id w194-v6so7020963wmf.2
+        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2018 02:03:55 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20180516140820.1636-2-daniel@zonque.org>
+References: <20180516140820.1636-1-daniel@zonque.org> <20180516140820.1636-2-daniel@zonque.org>
+From: Ramon Fried <ramon.fried@gmail.com>
+Date: Thu, 17 May 2018 12:03:54 +0300
+Message-ID: <CA+Kvs9nW9nRvU9edxy0yennJF5HqQzZU4sguUjufN6MuSwq0qA@mail.gmail.com> (sfid-20180517_110412_845030_671621FF)
+Subject: Re: [PATCH 01/10] wcn36xx: fix buffer commit logic on TX path
+To: Daniel Mack <daniel@zonque.org>
+Cc: linux-wireless@vger.kernel.org, loic.poulain@linaro.org,
+        bjorn.andersson@linaro.org, nicolas.dechesne@linaro.org,
+        wcn36xx@lists.infradead.org, rfried@codeaurora.org,
+        kvalo@codeaurora.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> >
-> > 8< ------------------------
-> > diff --git a/drivers/net/wireless/ti/wlcore/main.c
-> > b/drivers/net/wireless/ti/wlcore/main.c
-> > --- a/drivers/net/wireless/ti/wlcore/main.c
-> > +++ b/drivers/net/wireless/ti/wlcore/main.c
-> > @@ -1867,8 +1867,6 @@ static int __maybe_unused
-> > wl1271_op_resume(struct ieee80211_hw *hw)
-> >  			if (ret)
-> >  				wl12xx_queue_recovery_work(wl);
-> >  		}
-> > -
-> > -		wlcore_enable_interrupts(wl);
-> >  	}
-> >
-> >  	if (pending_recovery) {
-> > @@ -1877,6 +1875,8 @@ static int __maybe_unused
-> > wl1271_op_resume(struct ieee80211_hw *hw)
-> >  		goto out_sleep;
-> >  	}
-> >
-> > +	wlcore_enable_interrupts(wl);
-> > +
-> >  	ret =3D pm_runtime_get_sync(wl->dev);
-> >  	if (ret < 0) {
-> >  		pm_runtime_put_noidle(wl->dev);
->=20
-> It still crash.
-> The crash is different now.
-> It also complains about:
-> [   60.544224] Unbalanced enable for IRQ 65
-> Need down/up of the interface to recover after it.
-> Log below:
->=20
+On Wed, May 16, 2018 at 5:08 PM, Daniel Mack <daniel@zonque.org> wrote:
+> When wcn36xx_dxe_tx_frame() is entered while the device is still processing
+> the queue asyncronously, we are racing against the firmware code with
+> updates to the buffer descriptors. Presumably, the firmware scans the ring
+> buffer that holds the descriptors and scans for a valid control descriptor,
+> and then assumes that the next descriptor contains the payload. If, however,
+> the control descriptor is marked valid, but the payload descriptor isn't,
+> the packet is not sent out.
+>
+> Another issue with the current code is that is lacks memory barriers before
+> descriptors are marked valid. This is important because the CPU may reorder
+> writes to memory, even if it is allocated as coherent DMA area, and hence
+> the device may see incompletely written data.
+>
+> To fix this, the code in wcn36xx_dxe_tx_frame() was restructured a bit so
+> that the payload descriptor is made valid before the control descriptor.
+> Memory barriers are added to ensure coherency of shared memory areas.
+>
+> Signed-off-by: Daniel Mack <daniel@zonque.org>
+> ---
+>  drivers/net/wireless/ath/wcn36xx/dxe.c | 75 +++++++++++++++++-----------------
+>  1 file changed, 38 insertions(+), 37 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
+> index bd2b946a65c9..3d1cf7dd1f8e 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/dxe.c
+> +++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
+> @@ -642,8 +642,8 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
+>                          struct sk_buff *skb,
+>                          bool is_low)
+>  {
+> -       struct wcn36xx_dxe_ctl *ctl = NULL;
+> -       struct wcn36xx_dxe_desc *desc = NULL;
+> +       struct wcn36xx_dxe_desc *desc_bd, *desc_skb;
+> +       struct wcn36xx_dxe_ctl *ctl_bd, *ctl_skb;
+>         struct wcn36xx_dxe_ch *ch = NULL;
+>         unsigned long flags;
+>         int ret;
+> @@ -651,74 +651,75 @@ int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
+>         ch = is_low ? &wcn->dxe_tx_l_ch : &wcn->dxe_tx_h_ch;
+>
+>         spin_lock_irqsave(&ch->lock, flags);
+> -       ctl = ch->head_blk_ctl;
+> +       ctl_bd = ch->head_blk_ctl;
+> +       ctl_skb = ctl_bd->next;
+>
+>         /*
+>          * If skb is not null that means that we reached the tail of the ring
+>          * hence ring is full. Stop queues to let mac80211 back off until ring
+>          * has an empty slot again.
+>          */
+> -       if (NULL != ctl->next->skb) {
+> +       if (NULL != ctl_skb->skb) {
+>                 ieee80211_stop_queues(wcn->hw);
+>                 wcn->queues_stopped = true;
+>                 spin_unlock_irqrestore(&ch->lock, flags);
+>                 return -EBUSY;
+>         }
+>
+> -       ctl->skb = NULL;
+> -       desc = ctl->desc;
+> +       if (unlikely(ctl_skb->bd_cpu_addr)) {
+> +               wcn36xx_err("bd_cpu_addr cannot be NULL for skb DXE\n");
+> +               ret = -EINVAL;
+> +               goto unlock;
+> +       }
+> +
+> +       desc_bd = ctl_bd->desc;
+> +       desc_skb = ctl_skb->desc;
+> +
+> +       ctl_bd->skb = NULL;
+>
+>         /* write buffer descriptor */
+> -       memcpy(ctl->bd_cpu_addr, bd, sizeof(*bd));
+> +       memcpy(ctl_bd->bd_cpu_addr, bd, sizeof(*bd));
+>
+>         /* Set source address of the BD we send */
+> -       desc->src_addr_l = ctl->bd_phy_addr;
+> -
+> -       desc->dst_addr_l = ch->dxe_wq;
+> -       desc->fr_len = sizeof(struct wcn36xx_tx_bd);
+> -       desc->ctrl = ch->ctrl_bd;
+> +       desc_bd->src_addr_l = ctl_bd->bd_phy_addr;
+> +       desc_bd->dst_addr_l = ch->dxe_wq;
+> +       desc_bd->fr_len = sizeof(struct wcn36xx_tx_bd);
+>
+>         wcn36xx_dbg(WCN36XX_DBG_DXE, "DXE TX\n");
+>
+>         wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "DESC1 >>> ",
+> -                        (char *)desc, sizeof(*desc));
+> +                        (char *)desc_bd, sizeof(*desc_bd));
+>         wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP,
+> -                        "BD   >>> ", (char *)ctl->bd_cpu_addr,
+> +                        "BD   >>> ", (char *)ctl_bd->bd_cpu_addr,
+>                          sizeof(struct wcn36xx_tx_bd));
+>
+> -       /* Set source address of the SKB we send */
+> -       ctl = ctl->next;
+> -       desc = ctl->desc;
+> -       if (ctl->bd_cpu_addr) {
+> -               wcn36xx_err("bd_cpu_addr cannot be NULL for skb DXE\n");
+> -               ret = -EINVAL;
+> -               goto unlock;
+> -       }
+> -
+> -       desc->src_addr_l = dma_map_single(wcn->dev,
+> -                                         skb->data,
+> -                                         skb->len,
+> -                                         DMA_TO_DEVICE);
+> -       if (dma_mapping_error(wcn->dev, desc->src_addr_l)) {
+> +       desc_skb->src_addr_l = dma_map_single(wcn->dev,
+> +                                             skb->data,
+> +                                             skb->len,
+> +                                             DMA_TO_DEVICE);
+> +       if (dma_mapping_error(wcn->dev, desc_skb->src_addr_l)) {
+>                 dev_err(wcn->dev, "unable to DMA map src_addr_l\n");
+>                 ret = -ENOMEM;
+>                 goto unlock;
+>         }
+>
+> -       ctl->skb = skb;
+> -       desc->dst_addr_l = ch->dxe_wq;
+> -       desc->fr_len = ctl->skb->len;
+> -
+> -       /* set dxe descriptor to VALID */
+> -       desc->ctrl = ch->ctrl_skb;
+> +       ctl_skb->skb = skb;
+> +       desc_skb->dst_addr_l = ch->dxe_wq;
+> +       desc_skb->fr_len = ctl_skb->skb->len;
+>
+>         wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "DESC2 >>> ",
+> -                        (char *)desc, sizeof(*desc));
+> +                        (char *)desc_skb, sizeof(*desc_skb));
+>         wcn36xx_dbg_dump(WCN36XX_DBG_DXE_DUMP, "SKB   >>> ",
+> -                        (char *)ctl->skb->data, ctl->skb->len);
+> +                        (char *)ctl_skb->skb->data, ctl_skb->skb->len);
+>
+>         /* Move the head of the ring to the next empty descriptor */
+> -        ch->head_blk_ctl = ctl->next;
+> +        ch->head_blk_ctl = ctl_skb->next;
+> +
+> +       /* Commit all previous writes and set descriptors to VALID */
+> +       wmb();
+> +       desc_skb->ctrl = ch->ctrl_skb;
+> +       wmb();
+> +       desc_bd->ctrl = ch->ctrl_bd;
+>
+>         /*
+>          * When connected and trying to send data frame chip can be in sleep
+> --
+> 2.14.3
+>
+>
+> _______________________________________________
+> wcn36xx mailing list
+> wcn36xx@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/wcn36xx
 
-Actually the below patch removing the call to wlcore_fw_sleep() avoids this=
- error.
-The downside is that the wl8 firmware remains fully active during supend, s=
-o we
-Would need to find the root cause why the last call allowing the wilink8 fi=
-rmware=20
-To go into ELP mode during suspend is only completing on resume and not dur=
-ing
-Suspend enter.
-
-diff --git a/drivers/net/wireless/ti/wlcore/main.c
-b/drivers/net/wireless/ti/wlcore/main.c
-index 4c297aa..8df1ae6 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -1789,7 +1789,6 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
-                goto out_sleep;
-
- out_sleep:
--       pm_runtime_put_noidle(wl->dev);
-        mutex_unlock(&wl->mutex);
-
-        if (ret < 0) {
-@@ -1821,15 +1820,7 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw=
-,
-         */
-        cancel_delayed_work(&wl->tx_watchdog_work);
-
--       /*
--        * Use an immediate call for allowing the firmware to go into power
--        * save during suspend.
--        * Using a workque for this last write was only hapenning on resume
--        * leaving the firmware with power save disabled during suspend,
--        * while consuming full power during wowlan suspend.
--        */
--       wlcore_fw_sleep(wl);
--
-+       pm_runtime_put_noidle(wl->dev);
-        return 0;
- }
-
-With this wowlan seems to work ok and suspend/resume is not crashing when=20
-enabling wowlan. See below:
-
-root@am335x-evm:/usr/share/wl18xx#
-root@am335x-evm:/usr/share/wl18xx#
-root@am335x-evm:/usr/share/wl18xx#
-root@am335x-evm:/usr/share/wl18xx# iw phy0 wowlan enable any
-root@am335x-evm:/usr/share/wl18xx#
-root@am335x-evm:/usr/share/wl18xx# echo mem > /sys/power/state
-[   63.794805] PM: suspend entry (deep)
-[   63.798455] PM: Syncing filesystems ... done.
-[   65.779673] Freezing user space processes ... (elapsed 0.001 seconds) do=
-ne.
-[   65.788878] OOM killer disabled.
-[   65.792117] Freezing remaining freezable tasks ... (elapsed 0.001 second=
-s) done.
-[   65.801196] Suspending console(s) (use no_console_suspend to debug)
-[   65.952459] pm33xx pm33xx: PM: Successfully put all powerdomains to targ=
-et state
-[   65.952459] PM: Wakeup source GPIO0
-[   65.977028] net eth0: initializing cpsw version 1.12 (0)
-[   66.074419] SMSC LAN8710/LAN8720 4a101000.mdio:00: attached PHY driver [=
-SMSC LAN8710/LAN8720] (mii_bus:phy_addr=3D4a101000.mdio:00, irq=3DPOLL)
-[   66.236312] OOM killer enabled.
-[   66.239604] Restarting tasks ... done.
-[   66.282501] PM: suspend exit
-root@am335x-evm:/usr/share/wl18xx#
-
-BR,
-Eyal
+Acked-by: Ramon Fried <ramon.fried@linaro.org>
