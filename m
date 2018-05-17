@@ -1,46 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:38015 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751844AbeEQX05 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 May 2018 19:26:57 -0400
-MIME-Version: 1.0
-References: <20180517231512.13085-1-niklas.cassel@linaro.org>
-In-Reply-To: <20180517231512.13085-1-niklas.cassel@linaro.org>
-From: Adrian Chadd <adrian.chadd@gmail.com>
-Date: Thu, 17 May 2018 15:26:25 -0700
-Message-ID: <CAJ-Vmon1ybhWs_8Nv=w62pmhSizDdDeYCgK8_HTTwPZ=EEC46g@mail.gmail.com> (sfid-20180518_012717_685288_0609B2D9)
-Subject: Re: [PATCH] ath10k: transmit queued frames after waking queues
-To: niklas.cassel@linaro.org
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        David Miller <davem@davemloft.net>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Received: from muru.com ([72.249.23.125]:42758 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751438AbeEQSug (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 May 2018 14:50:36 -0400
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: [PATCH 2/5] wlcore: Make sure PM calls are paired
+Date: Thu, 17 May 2018 11:50:26 -0700
+Message-Id: <20180517185029.71716-3-tony@atomide.com> (sfid-20180517_205041_037497_14961769)
+In-Reply-To: <20180517185029.71716-1-tony@atomide.com>
+References: <20180517185029.71716-1-tony@atomide.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 17 May 2018 at 16:16, Niklas Cassel <niklas.cassel@linaro.org>
-wrote:
+The call to wl1271_ps_elp_wakeup() in wl12xx_queue_recovery_work() is
+unpaired. Let's remove it and add paired calls to wl1271_recovery_work()
+instead in preparation for changing things to use runtime PM.
 
-> diff --git a/drivers/net/wireless/ath/ath10k/txrx.c
-b/drivers/net/wireless/ath/ath10k/txrx.c
-> index cda164f6e9f6..1d3b2d2c3fee 100644
-> --- a/drivers/net/wireless/ath/ath10k/txrx.c
-> +++ b/drivers/net/wireless/ath/ath10k/txrx.c
-> @@ -95,6 +95,9 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
->                  wake_up(&htt->empty_tx_wq);
->          spin_unlock_bh(&htt->tx_lock);
+Signed-off-by: Tony Lindgren <tony@atomide.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-> +       if (htt->num_pending_tx <= 3 && !list_empty(&ar->txqs))
-> +               ath10k_mac_tx_push_pending(ar);
-> +
-
-Just sanity checking - what's protecting htt->num_pending_tx? or is it
-serialised some other way?
-
->          dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
-
->          ath10k_report_offchan_tx(htt->ar, msdu);
-> --
-> 2.17.0
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -796,8 +796,6 @@ void wl12xx_queue_recovery_work(struct wl1271 *wl)
+ 
+ 		wl->state = WLCORE_STATE_RESTARTING;
+ 		set_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags);
+-		wl1271_ps_elp_wakeup(wl);
+-		wlcore_disable_interrupts_nosync(wl);
+ 		ieee80211_queue_work(wl->hw, &wl->recovery_work);
+ 	}
+ }
+@@ -919,12 +917,18 @@ static void wl1271_recovery_work(struct work_struct *work)
+ 		container_of(work, struct wl1271, recovery_work);
+ 	struct wl12xx_vif *wlvif;
+ 	struct ieee80211_vif *vif;
++	int error;
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+ 	if (wl->state == WLCORE_STATE_OFF || wl->plt)
+ 		goto out_unlock;
+ 
++	error = wl1271_ps_elp_wakeup(wl);
++	if (error < 0)
++		wl1271_warning("Enable for recovery failed");
++	wlcore_disable_interrupts_nosync(wl);
++
+ 	if (!test_bit(WL1271_FLAG_INTENDED_FW_RECOVERY, &wl->flags)) {
+ 		if (wl->conf.fwlog.output == WL12XX_FWLOG_OUTPUT_HOST)
+ 			wl12xx_read_fwlog_panic(wl);
+@@ -967,6 +971,8 @@ static void wl1271_recovery_work(struct work_struct *work)
+ 	 */
+ 	wlcore_wake_queues(wl, WLCORE_QUEUE_STOP_REASON_FW_RESTART);
+ 
++	wl1271_ps_elp_sleep(wl);
++
+ out_unlock:
+ 	wl->watchdog_recovery = false;
+ 	clear_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags);
+-- 
+2.17.0
