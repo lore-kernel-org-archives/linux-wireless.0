@@ -1,72 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:1451 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751100AbeEBHPT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 May 2018 03:15:19 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 08/21] staging: wilc1000: rename WILC_WFI_monitor_rx to avoid uppercase for function name
-Date: Wed, 2 May 2018 12:43:34 +0530
-Message-ID: <1525245227-3924-9-git-send-email-ajay.kathat@microchip.com> (sfid-20180502_093236_080716_9BD0AFCD)
-In-Reply-To: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
-References: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from muru.com ([72.249.23.125]:42720 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751047AbeEQS3z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 May 2018 14:29:55 -0400
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: [PATCHv2] wlcore: sdio: Fix flakey SDIO runtime PM handling
+Date: Thu, 17 May 2018 11:29:50 -0700
+Message-Id: <20180517182950.60807-1-tony@atomide.com> (sfid-20180517_202959_104773_C50B9EA9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to follow names as per linux coding style.
+We can have pm_runtime_get_sync() return 1, and we can have
+pm_runtime_put_sync() return -EBUSY. See rpm_suspend() and
+rpm_resume() for more information.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Fix the issue by returning 0 from wl12xx_sdio_power_on() on success.
+And use pm_runtime_put() instead of pm_runtime_put_sync() for
+wl12xx_sdio_power_off(), then the MMC subsystem will idle the bus
+when suitable.
+
+Otherwise wlcore can sometimes get confused and may report bogus
+errors and WLAN connection can fail.
+
+Note that while wlcore checks the return value for wl1271_power_on(),
+the return value is ignored for wl1271_power_off(). Let's fix them
+both though to avoid further confusion in the future.
+
+Fixes: 60f36637bbbd ("wlcore: sdio: allow pm to handle sdio power")
+Signed-off-by: Tony Lindgren <tony@atomide.com>
 ---
- drivers/staging/wilc1000/linux_mon.c              | 2 +-
- drivers/staging/wilc1000/linux_wlan.c             | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index 02cbefd..ff13e0d 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -25,7 +25,7 @@ static u8 broadcast[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
- #define IEEE80211_RADIOTAP_F_TX_FAIL	0x0001  /* failed due to excessive*/
- #define GET_PKT_OFFSET(a) (((a) >> 22) & 0x1ff)
- 
--void WILC_WFI_monitor_rx(u8 *buff, u32 size)
-+void wilc_wfi_monitor_rx(u8 *buff, u32 size)
- {
- 	u32 header, pkt_offset;
- 	struct sk_buff *skb = NULL;
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 491baeb..f66704d 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1068,7 +1068,7 @@ void wilc_wfi_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size)
- 	for (i = 0; i < wilc->vif_num; i++) {
- 		vif = netdev_priv(wilc->vif[i]->ndev);
- 		if (vif->monitor_flag) {
--			WILC_WFI_monitor_rx(buff, size);
-+			wilc_wfi_monitor_rx(buff, size);
- 			return;
- 		}
+Changes since v1:
+
+- Just ignore -EBUSY error for pm_runtime_put(), we're not checking
+  the return value for wl12xx_sdio_power_off() anyways currently
+
+---
+ drivers/net/wireless/ti/wlcore/sdio.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -159,28 +159,36 @@ static int wl12xx_sdio_power_on(struct wl12xx_sdio_glue *glue)
+ 		pm_runtime_put_noidle(&card->dev);
+ 		dev_err(glue->dev, "%s: failed to get_sync(%d)\n",
+ 			__func__, ret);
+-		goto out;
++
++		return ret;
  	}
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-index 7372813..a0a07b4 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-@@ -7,7 +7,7 @@ struct wireless_dev *wilc_create_wiphy(struct net_device *net, struct device *de
- void wilc_free_wiphy(struct net_device *net);
- int wilc_deinit_host_int(struct net_device *net);
- int wilc_init_host_int(struct net_device *net);
--void WILC_WFI_monitor_rx(u8 *buff, u32 size);
-+void wilc_wfi_monitor_rx(u8 *buff, u32 size);
- int WILC_WFI_deinit_mon_interface(void);
- struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_device *real_dev);
- void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 
+ 	sdio_claim_host(func);
+ 	sdio_enable_func(func);
+ 	sdio_release_host(func);
+ 
+-out:
+-	return ret;
++	return 0;
+ }
+ 
+ static int wl12xx_sdio_power_off(struct wl12xx_sdio_glue *glue)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(glue->dev);
+ 	struct mmc_card *card = func->card;
++	int error;
+ 
+ 	sdio_claim_host(func);
+ 	sdio_disable_func(func);
+ 	sdio_release_host(func);
+ 
+ 	/* Let runtime PM know the card is powered off */
+-	return pm_runtime_put_sync(&card->dev);
++	error = pm_runtime_put(&card->dev);
++	if (error < 0 && error != -EBUSY) {
++		dev_err(&card->dev, "%s failed: %i\n", __func__, error);
++
++		return error;
++	}
++
++	return 0;
+ }
+ 
+ static int wl12xx_sdio_set_power(struct device *child, bool enable)
 -- 
-2.7.4
+2.17.0
