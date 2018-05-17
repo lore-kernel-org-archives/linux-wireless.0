@@ -1,86 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:54398 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751101AbeEVAqJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 May 2018 20:46:09 -0400
-Received: by mail-wm0-f66.google.com with SMTP id f6-v6so28078653wmc.4
-        for <linux-wireless@vger.kernel.org>; Mon, 21 May 2018 17:46:09 -0700 (PDT)
-Received: from iss.ger.corp.intel.com ([139.47.106.244])
-        by smtp.gmail.com with ESMTPSA id h10-v6sm26123513wrf.83.2018.05.21.17.46.07
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 21 May 2018 17:46:07 -0700 (PDT)
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] nl80211: Reject disconnect commands except from conn_owner
-Date: Tue, 22 May 2018 02:46:02 +0200
-Message-Id: <20180522004602.19370-1-andrew.zaborowski@intel.com> (sfid-20180522_024612_553067_045404DA)
+Received: from muru.com ([72.249.23.125]:42776 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751971AbeEQSum (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 May 2018 14:50:42 -0400
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: [PATCH 4/5] wlcore: Fix misplaced PM call for scan_complete_work()
+Date: Thu, 17 May 2018 11:50:28 -0700
+Message-Id: <20180517185029.71716-5-tony@atomide.com> (sfid-20180517_205049_881929_4A5F7E16)
+In-Reply-To: <20180517185029.71716-1-tony@atomide.com>
+References: <20180517185029.71716-1-tony@atomide.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reject NL80211_CMD_DISCONNECT, NL80211_CMD_DISASSOCIATE,
-NL80211_CMD_DEAUTHENTICATE and NL80211_CMD_ASSOCIATE commands
-from clients other than the connection owner set in the connect,
-authenticate or associate commands, if it was set.
+With runtime PM enabled, we now need to have wlcore enabled longer
+until after we're done calling wlcore_cmd_regdomain_config_locked():
 
-The main point of this check is to prevent chaos when two processes
-try to use nl80211 at the same time, it's not a security measure.
-The same thing should possibly be done for JOIN_IBSS/LEAVE_IBSS and
-START_AP/STOP_AP.
+scan_complete_work()
+ wlcore_cmd_regdomain_config_locked()
+   wlcore_cmd_send_failsafe()
+     wl12xx_sdio_raw_read()
 
-Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
+Note that this is not needed before runtime PM support as the
+custom PM code had it's own timer. We have not yet enabled runtime
+PM autosuspend for wlcore and this is why this issue now shows up.
+
+Let's fix the issues first before we enable runtime PM autosuspend.
+
+Signed-off-by: Tony Lindgren <tony@atomide.com>
 ---
- net/wireless/nl80211.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/net/wireless/ti/wlcore/scan.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e4a52a2b5e..85f094a564 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8506,6 +8506,10 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 	const u8 *bssid, *ssid;
- 	int err, ssid_len = 0;
+diff --git a/drivers/net/wireless/ti/wlcore/scan.c b/drivers/net/wireless/ti/wlcore/scan.c
+--- a/drivers/net/wireless/ti/wlcore/scan.c
++++ b/drivers/net/wireless/ti/wlcore/scan.c
+@@ -78,8 +78,6 @@ void wl1271_scan_complete_work(struct work_struct *work)
+ 		wl1271_cmd_build_ap_probe_req(wl, wlvif, wlvif->probereq);
+ 	}
  
-+	if (dev->ieee80211_ptr->conn_owner_nlportid &&
-+	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
-+		return -EPERM;
+-	pm_runtime_put(wl->dev);
+-
+ 	if (wl->scan.failed) {
+ 		wl1271_info("Scan completed due to error.");
+ 		wl12xx_queue_recovery_work(wl);
+@@ -87,6 +85,8 @@ void wl1271_scan_complete_work(struct work_struct *work)
+ 
+ 	wlcore_cmd_regdomain_config_locked(wl);
+ 
++	pm_runtime_put(wl->dev);
 +
- 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
- 		return -EINVAL;
+ 	ieee80211_scan_completed(wl->hw, &info);
  
-@@ -8628,6 +8632,10 @@ static int nl80211_deauthenticate(struct sk_buff *skb, struct genl_info *info)
- 	u16 reason_code;
- 	bool local_state_change;
- 
-+	if (dev->ieee80211_ptr->conn_owner_nlportid &&
-+	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
-+		return -EPERM;
-+
- 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
- 		return -EINVAL;
- 
-@@ -8675,6 +8683,10 @@ static int nl80211_disassociate(struct sk_buff *skb, struct genl_info *info)
- 	u16 reason_code;
- 	bool local_state_change;
- 
-+	if (dev->ieee80211_ptr->conn_owner_nlportid &&
-+	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
-+		return -EPERM;
-+
- 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
- 		return -EINVAL;
- 
-@@ -9451,6 +9463,10 @@ static int nl80211_disconnect(struct sk_buff *skb, struct genl_info *info)
- 	u16 reason;
- 	int ret;
- 
-+	if (dev->ieee80211_ptr->conn_owner_nlportid &&
-+	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
-+		return -EPERM;
-+
- 	if (!info->attrs[NL80211_ATTR_REASON_CODE])
- 		reason = WLAN_REASON_DEAUTH_LEAVING;
- 	else
+ out:
 -- 
-2.14.1
+2.17.0
