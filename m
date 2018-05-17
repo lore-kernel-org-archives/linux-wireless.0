@@ -1,56 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54104 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751117AbeERL2L (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 07:28:11 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Daniel Mack <daniel@zonque.org>
-Cc: linux-wireless@vger.kernel.org, loic.poulain@linaro.org,
-        bjorn.andersson@linaro.org, nicolas.dechesne@linaro.org,
-        wcn36xx@lists.infradead.org, rfried@codeaurora.org
-Subject: Re: [PATCH 00/10] Some more patches for wcn36xx
-References: <20180516140820.1636-1-daniel@zonque.org>
-        <95b89ceb-cc25-023e-9fa2-e45b2deb5027@zonque.org>
-Date: Fri, 18 May 2018 14:28:05 +0300
-In-Reply-To: <95b89ceb-cc25-023e-9fa2-e45b2deb5027@zonque.org> (Daniel Mack's
-        message of "Fri, 18 May 2018 12:50:53 +0200")
-Message-ID: <874lj5jj96.fsf@kamboji.qca.qualcomm.com> (sfid-20180518_132814_725120_FC3B9F96)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from muru.com ([72.249.23.125]:42746 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751438AbeEQSud (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 May 2018 14:50:33 -0400
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: [PATCHv2 0/5] Runtime PM support for wlcore
+Date: Thu, 17 May 2018 11:50:24 -0700
+Message-Id: <20180517185029.71716-1-tony@atomide.com> (sfid-20180517_205036_844594_C582A114)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Mack <daniel@zonque.org> writes:
+Hi all,
 
-> On Wednesday, May 16, 2018 04:08 PM, Daniel Mack wrote:
->> Hence I believe that some sort of firmware internal buffer is overrun if
->> too many SMD requests fly in in a short amount of time. The firmware
->> does, however, still ack all packets just fine on the SMD channels, and
->> also the DXE communication flows are all healthy. No errors are reported
->> anywhere, but nothing is being put on the ether anymore.
->
-> And FTR, there is a commit in the prima repository that caught my
-> attention a while back:
->
->   https://source.codeaurora.org/external/wlan/prima/commit/?id=93cd8f3c
->
-> What this does (through an remarkable number of indirection layers) is
-> sending the DUMP_COMMAND_REQ command with args = (274, 0, 0, 0, 0)
-> when management frames get stuck, which smells pretty much like the
-> issue I'm seeing. Doing the same with the mainline driver and the
-> debugfs interface it exposes doesn't have any effect though.
->
-> But even if it did work, I wouldn't see a way to detect the situation
-> in which this is needed reliably.
+Here's a series of patches to add runtime PM support for wlcore. It does not
+yet implement autosuspend support, but let's get this tested first as the
+autosuspend can mask enable/disable issues easily.
 
-The firmware version might make a difference so I recommend always
-mentioning the firmware version as well. For example, what if your
-firmware does not support that command or parameter?
+Regards,
 
-Also I would recommend to file a bug to bugzilla.kernel.org so that all
-the information is one place and it can be easily updated. Now it's
-pretty difficult to get the big picture from various emails on the list.
+Tony
+
+Changes since v1:
+
+- Fix issues reported by Eyal for recovery
+
+- Add few patches for enable/disable issues found when using runtime PM
+
+- Remove unused ps.h includes
+
+Tony Lindgren (5):
+  wlcore: Add missing PM call for wlcore_cmd_wait_for_event_or_timeout()
+  wlcore: Make sure PM calls are paired
+  wlcore: Add support for runtime PM
+  wlcore: Fix misplaced PM call for scan_complete_work()
+  wlcore: sdio: Warn about runtime PM suspend errors
+
+ drivers/net/wireless/ti/wl18xx/debugfs.c    |  26 +-
+ drivers/net/wireless/ti/wlcore/acx.c        |   1 -
+ drivers/net/wireless/ti/wlcore/cmd.c        |   9 +
+ drivers/net/wireless/ti/wlcore/debugfs.c    |  79 ++--
+ drivers/net/wireless/ti/wlcore/main.c       | 404 ++++++++++++++------
+ drivers/net/wireless/ti/wlcore/ps.c         | 146 -------
+ drivers/net/wireless/ti/wlcore/ps.h         |   3 -
+ drivers/net/wireless/ti/wlcore/scan.c       |  12 +-
+ drivers/net/wireless/ti/wlcore/sdio.c       |   7 +
+ drivers/net/wireless/ti/wlcore/sysfs.c      |  12 +-
+ drivers/net/wireless/ti/wlcore/testmode.c   |  18 +-
+ drivers/net/wireless/ti/wlcore/tx.c         |   9 +-
+ drivers/net/wireless/ti/wlcore/vendor_cmd.c |  27 +-
+ drivers/net/wireless/ti/wlcore/wlcore.h     |   1 -
+ drivers/net/wireless/ti/wlcore/wlcore_i.h   |   1 -
+ 15 files changed, 421 insertions(+), 334 deletions(-)
 
 -- 
-Kalle Valo
+2.17.0
