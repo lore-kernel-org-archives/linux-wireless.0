@@ -1,49 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:36370 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753150AbeEKOy7 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43438 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751409AbeEQSfq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 10:54:59 -0400
-Received: by mail-pf0-f196.google.com with SMTP id w129-v6so2850559pfd.3
-        for <linux-wireless@vger.kernel.org>; Fri, 11 May 2018 07:54:59 -0700 (PDT)
-From: Sushant Kumar Mishra <sushant2k1513@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
-Subject: [PATCH 2/3] rsi: reset hibernate_resume flag to work hibernate resume in coex mode.
-Date: Fri, 11 May 2018 20:27:52 +0530
-Message-Id: <1526050673-7026-3-git-send-email-sushant2k1513@gmail.com> (sfid-20180511_165502_424369_E25A8E23)
-In-Reply-To: <1526050673-7026-1-git-send-email-sushant2k1513@gmail.com>
-References: <1526050673-7026-1-git-send-email-sushant2k1513@gmail.com>
+        Thu, 17 May 2018 14:35:46 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 17 May 2018 11:35:44 -0700
+From: Jeff Johnson <jjohnson@codeaurora.org>
+To: Ramon Fried <ramon.fried@linaro.org>
+Cc: kvalo@codeaurora.org, linux-kernel@vger.kernel.org,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Eyal Ilsar <eilsar@codeaurora.org>,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH] wcn36xx: Add support for Factory Test Mode (FTM)
+In-Reply-To: <20180517113250.16517-1-ramon.fried@linaro.org>
+References: <20180517113250.16517-1-ramon.fried@linaro.org>
+Message-ID: <b4a96b0e326cd45928f97d6e5796c748@codeaurora.org> (sfid-20180517_203602_640231_27360BEA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+On 2018-05-17 04:32, Ramon Fried wrote:
+> From: Eyal Ilsar <eilsar@codeaurora.org>
+...
+> +static int wcn36xx_smd_process_ptt_msg_rsp(void *buf, size_t len,
+> +					   void **p_ptt_rsp_msg)
+> +{
+> +	struct wcn36xx_hal_process_ptt_msg_rsp_msg *rsp;
+> +	int ret = 0;
 
-In coex mode, observed hibernate resume is not working properly, as the
-hibernate_resume flag is not getting reset in rsi_coex_recv_pkt(),
-when common card ready indication received from firmware. Hence resetting
-hibernate_resume flag in this function.
+why initialize 'ret' when you immediately overwrite?
 
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Signed-off-by: Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_coex.c | 1 +
- 1 file changed, 1 insertion(+)
+> +	ret = wcn36xx_smd_rsp_status_check(buf, len);
+...
+> +	if (rsp->header.len > 0) {
+> +		*p_ptt_rsp_msg = kmalloc(rsp->header.len, GFP_ATOMIC);
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_coex.c b/drivers/net/wireless/rsi/rsi_91x_coex.c
-index d055099..c8ba148 100644
---- a/drivers/net/wireless/rsi/rsi_91x_coex.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_coex.c
-@@ -73,6 +73,7 @@ int rsi_coex_recv_pkt(struct rsi_common *common, u8 *msg)
- 	switch (msg_type) {
- 	case COMMON_CARD_READY_IND:
- 		rsi_dbg(INFO_ZONE, "common card ready received\n");
-+		common->hibernate_resume = false;
- 		rsi_handle_card_ready(common, msg);
- 		break;
- 	case SLEEP_NOTIFY_IND:
--- 
-2.5.5
+NULL check required?
+
+> +		memcpy(*p_ptt_rsp_msg, rsp->ptt_msg, rsp->header.len);
+> +	}
+> +	return ret;
+> +}
+> +
+> +int wcn36xx_smd_process_ptt_msg(struct wcn36xx *wcn,
+> +				struct ieee80211_vif *vif, void *ptt_msg, size_t len,
+> +		void **ptt_rsp_msg)
+> +{
+> +	struct wcn36xx_hal_process_ptt_msg_req_msg *p_msg_body;
+> +	int ret = 0;
+
+why initialize 'ret' when it is always overwritten before use?
+
+> +	ret = wcn36xx_smd_send_and_wait(wcn, p_msg_body->header.len);
