@@ -1,107 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtps.newmedia-net.de ([185.84.6.167]:44257 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751117AbeERKwx (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:38778 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751930AbeEQXQl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 06:52:53 -0400
-Subject: Re: [PATCH] ath10k: add dynamic vlan support
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, nbd@nbd.name
-References: <1524232653-22573-1-git-send-email-mpubbise@codeaurora.org>
- <87r2n5auvq.fsf@kamboji.qca.qualcomm.com>
- <aa04534d-9677-f42e-a239-b230093ef2f5@dd-wrt.com>
- <f8d6d13943ccac22f363d7d4f53d645c@codeaurora.org>
- <1526637270.3805.15.camel@sipsolutions.net>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <d2dfdfb4-72d6-00e7-3952-bb38ef88ea5f@dd-wrt.com> (sfid-20180518_125257_698886_366846AE)
-Date: Fri, 18 May 2018 12:52:53 +0200
+        Thu, 17 May 2018 19:16:41 -0400
+Received: by mail-lf0-f67.google.com with SMTP id z142-v6so11178021lff.5
+        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2018 16:16:41 -0700 (PDT)
+From: Niklas Cassel <niklas.cassel@linaro.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: Niklas Cassel <niklas.cassel@linaro.org>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath10k: transmit queued frames after waking queues
+Date: Fri, 18 May 2018 01:15:12 +0200
+Message-Id: <20180517231512.13085-1-niklas.cassel@linaro.org> (sfid-20180518_011700_365195_5191E860)
 MIME-Version: 1.0
-In-Reply-To: <1526637270.3805.15.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The following problem was observed when running iperf:
 
-Am 18.05.2018 um 11:54 schrieb Johannes Berg:
-> On Fri, 2018-05-04 at 12:20 +0530, Manikanta Pubbisetty wrote:
->> Johannes,
->>
->> It seems like commit db3bdcb9c3ff ("mac80211: allow AP_VLAN operation on
->> crypto controlled devices") has broken 4-addr operation on crypto
->> controlled devices as reported by sebastian.
->> The commit was mainly focused in addressing the problem in supporting
->> VLANs on crypto controlled devices but since 4-addr mode is also
->> dependent on AP_VLAN interface, this commit breaks the 4-addr AP mode.
-> Ok.
->
-> Do you know why it actually broke it? I mean, we should've turned off
-> the strict requirement for sw crypto control only for the GTK, and that
-> shouldn't matter so much?
->
->> I have couple of ideas on how to address the problem,
->>
->> 1) Add a new hw_flag and based on the hardware flag, allow/disallow the
->> creation of AP_VLAN interface.
->>
->> + * @IEEE80211_HW_SUPPORTS_SW_ENCRYPT: Device is capable of transmitting
->> + *     frames encrypted in software, only valid when SW_CRYPTO_CONTROL
->> + *     is enabled. Based on this flag, mac80211 can allow/disallow VLAN
->> + *     operations in the BSS.
-> Based on the name and initial description, this sounds equivalent to
-> just turning off SW_CRYPTO_CONTROL. I think that's not the intent, but
-> would need some renaming.
->
->> 2) Allow mac80211 to call set_key for GTKs on AP_VLAN interfaces for
->> crypto controlled devices, let the driver decide whether to return '1'
->> or some error code based on their support for transmitting sw encrypted
->> frames. I am little skeptical with this approach as drivers are totally
->> unaware of AP_VLAN interfaces.
-> No, that won't work.
->
-> I'm unsure how 4-addr VLAN can work with ath10k either way?
->
-> Maybe it just doesn't normally need a GTK, so nothing broke before, but
-> your other patch changed things to remove VLAN and then of course it's
-> no longer available?
->
-> But then I don't understand the complaint that
->
-> So maybe the solution should be to add a separate flag for whether or
-> not 4-addr VLAN is supported?
->
-> johannes
+[  3]  0.0- 1.0 sec  2.00 MBytes  16.8 Mbits/sec
+[  3]  1.0- 2.0 sec  3.12 MBytes  26.2 Mbits/sec
+[  3]  2.0- 3.0 sec  3.25 MBytes  27.3 Mbits/sec
+[  3]  3.0- 4.0 sec   655 KBytes  5.36 Mbits/sec
+[  3]  4.0- 5.0 sec  0.00 Bytes  0.00 bits/sec
+[  3]  5.0- 6.0 sec  0.00 Bytes  0.00 bits/sec
+[  3]  6.0- 7.0 sec  0.00 Bytes  0.00 bits/sec
+[  3]  7.0- 8.0 sec  0.00 Bytes  0.00 bits/sec
+[  3]  8.0- 9.0 sec  0.00 Bytes  0.00 bits/sec
+[  3]  9.0-10.0 sec  0.00 Bytes  0.00 bits/sec
+[  3]  0.0-10.3 sec  9.01 MBytes  7.32 Mbits/sec
 
-let me explain. the vlan mode is used to create local interfaces in 
-4addr mode
+There are frames in the ieee80211_txq and there are frames that have
+been removed from from this queue, but haven't yet been sent on the wire
+(num_pending_tx).
 
-like wlan0.sta0, wlan0.sta1 per peer. this is required to put these 
-peers into the local linux bridge since the local ap interface cannot
+When num_pending_tx reaches max_num_pending_tx, we will stop the queues
+by calling ieee80211_stop_queues().
 
-handle the bridging capabilities like correct forwarding, stp or even 
-filtering. this is a long term behaviour since the beginning of ath9k.
+As frames that have previously been sent for transmission
+(num_pending_tx) are completed, we will decrease num_pending_tx and wake
+the queues by calling ieee80211_wake_queue(). ieee80211_wake_queue()
+does not call wake_tx_queue, so we might still have frames in the
+queue at this point.
 
-so the ap_vlan feature is used to pass the frames per peer in a 
-indepenened way. you may ask felix fietkau, since he developed it 
-originally in madwifi
+While the queues were stopped, the socket buffer might have filled up,
+and in order for user space to write more, we need to free the frames
+in the queue, since they are accounted to the socket. In order to free
+them, we first need to transmit them.
 
-and later in mac80211 / ath9k. so ap_vlan capability is a requiredment 
-for all 4addr capable wireless drivers.
+In order to avoid trying to flush the queue every time we free a frame,
+only do this when there are 3 or less frames pending, and while we
+actually have frames in the queue. This logic was copied from
+mt76_txq_schedule (mt76), one of few other drivers that are actually
+using wake_tx_queue.
 
+Suggested-by: Toke Høiland-Jørgensen <toke@toke.dk>
+Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
+---
+ drivers/net/wireless/ath/ath10k/txrx.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-example of a 4addr capable ap in ath10k with 2 connected 4addr stations
-
-root@apreithalle:~# brctl show
-bridge name     bridge id               STP enabled     interfaces
-br0             8000.dcef09e4ce07       no              ath0
-                                                         ath0.1
-                                                         ath0.2
-                                                         ath0.sta1
-                                                         ath0.sta4
-                                                         ath1
-                                                         ath1.2
-                                                         eth0
-                                                         eth1
-
->
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index cda164f6e9f6..1d3b2d2c3fee 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -95,6 +95,9 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 		wake_up(&htt->empty_tx_wq);
+ 	spin_unlock_bh(&htt->tx_lock);
+ 
++	if (htt->num_pending_tx <= 3 && !list_empty(&ar->txqs))
++		ath10k_mac_tx_push_pending(ar);
++
+ 	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
+ 
+ 	ath10k_report_offchan_tx(htt->ar, msdu);
+-- 
+2.17.0
