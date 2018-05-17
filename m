@@ -1,47 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:34004 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752663AbeEVUwP (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 16:52:15 -0400
-Message-ID: <1527022332.6787.51.camel@sipsolutions.net> (sfid-20180522_225219_156972_8A03D377)
-Subject: Re: [PATCH] cfg80211: Fix support for flushing old scan results
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>,
-        Tim Kourt <tim.a.kourt@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 22 May 2018 22:52:12 +0200
-In-Reply-To: <2036335b-ca8f-d63f-8142-11d81cfb9a22@gmail.com> (sfid-20180522_224939_826247_CA9579F5)
-References: <20180511164835.40161-1-tim.a.kourt@linux.intel.com>
-         <1526631206.3805.1.camel@sipsolutions.net>
-         <d12d4d4d-25d6-3cd0-1399-27de09c7f8c5@gmail.com>
-         <1527019967.6787.45.camel@sipsolutions.net>
-         <114ca20b-7b20-7a3e-75bd-8c336d26b9c0@gmail.com>
-         <1527021608.6787.47.camel@sipsolutions.net>
-         <2036335b-ca8f-d63f-8142-11d81cfb9a22@gmail.com>
-         (sfid-20180522_224939_826247_CA9579F5)
+Received: from mga14.intel.com ([192.55.52.115]:7993 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750779AbeEQFYe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 May 2018 01:24:34 -0400
+Message-ID: <4d7158c407973a5be972a690a64c3f69119bd921.camel@intel.com> (sfid-20180517_072448_199709_19888EED)
+Subject: Re: [linux-firmware] Version in WHENCE file
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: sedat.dilek@gmail.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 17 May 2018 08:24:31 +0300
+In-Reply-To: <CA+icZUXy5VyJq_L=ipyutvYk6gpsCb9jxHzBa7T3MRhs3XgQKA@mail.gmail.com>
+References: <CA+icZUXrHmOJPKT0gnym9yOs6Erm3wDOZU3sbr_MGB8pYjfuzA@mail.gmail.com>
+         <0f8aaff5ecad8af6d146453d4d3a5d4dd145977b.camel@intel.com>
+         <CA+icZUXy5VyJq_L=ipyutvYk6gpsCb9jxHzBa7T3MRhs3XgQKA@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-05-22 at 15:49 -0500, Denis Kenzior wrote:
+On Mon, 2018-05-07 at 09:47 +0200, Sedat Dilek wrote:
+> On Sun, May 6, 2018 at 3:07 PM, Luciano Coelho <luciano.coelho@intel.
+> com> wrote:
+> > On Sun, 2018-05-06 at 14:46 +0200, Sedat Dilek wrote:
+> > > Hi Luca,
+> > > 
+> > > I hope I catched the correct MLs (not sure if linux-firmware has
+> > > a
+> > > ML,
+> > > I did not found any in the MAINTAINERS file).
+> > > 
+> > > I have seen that in the WHENCE file there is "Version" with and
+> > > without ":", mostly iwlwifi ucodes.
+> > > 
+> > > As an example:
+> > > 
+> > >  File: iwlwifi-8265-36.ucode
+> > > -Version 36.e91976c0.0
+> > > +Version: 36.e91976c0.0
+> > > 
+> > > I don't know the workflow: Do you want to fix it in your tree or
+> > > directly in linux-firmware.git upstream?
+> > > My attached patch is against upstream.
+> > 
+> > Thanks, Sedat!
+> > 
+> > I'm going to send a new pull-request this week, so I can include
+> > your
+> > patch in my tree and as part of the pull-request.
+> > 
+> > --
+> > Cheers,
+> > Luca.
+> 
+> OK, Thanks.
+> Attached Patch v2 is against your tree [1].
+> It differs from v1 against upstream.
 
-> Okay, so we need to use NL80211_BSS_PRESP_DATA if we want to filter out 
-> scan results that are coming from beacons, right?
+You need to write a proper commit message and sign it off so I can
+apply it.
 
-You could do that, yes. In non-hidden cases you get the beacon/probe
-response data combined, in hidden cases you may get the beacon data
-separately and the (second, third, ...) entry with probe response data
-will come with beacon data too.
-
-I'm not really sure what value that would have though. In general, you
-might want to not display hidden SSIDs as such or at all in the UI.
-
-> So what's the practical use of the flush flag?  Or is that something 
-> that was meant to be 'for-testing-only'?
-
-I think you misunderstand? The value is that it ensures that nothing is
-present in the list that was received *before* the scan.
-
-johannes
+--
+Luca.
