@@ -1,172 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45072 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752322AbeEROF4 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:39374 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752320AbeERJrq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 10:05:56 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Ilan Peer <ilan.peer@intel.com>,
-        Ido Yariv <idox.yariv@intel.com>
-Date: Fri, 18 May 2018 17:05:42 +0300
-Message-Id: <20180518140543.13620-3-luca@coelho.fi> (sfid-20180518_160603_174800_D664690A)
-In-Reply-To: <20180518140543.13620-1-luca@coelho.fi>
-References: <20180518140543.13620-1-luca@coelho.fi>
-Subject: [RFC 2/3] radiotap: add structs for HE
+        Fri, 18 May 2018 05:47:46 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] cfg80211: release station info tidstats where needed
+Date: Fri, 18 May 2018 11:47:42 +0200
+Message-Id: <20180518094742.10669-2-johannes@sipsolutions.net> (sfid-20180518_114804_035410_760F1375)
+In-Reply-To: <20180518094742.10669-1-johannes@sipsolutions.net>
+References: <20180518094742.10669-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Add radiotap structures for HE.
+This fixes memory leaks in cases where we got the station
+info but failed sending it out properly.
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Fixes: 8689c051a201 ("cfg80211: dynamically allocate per-tid stats for station info")
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Ido Yariv <idox.yariv@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/net/ieee80211_radiotap.h | 111 +++++++++++++++++++++++++++++++
- 1 file changed, 111 insertions(+)
+ include/net/cfg80211.h | 13 +++++++++++++
+ net/wireless/nl80211.c | 11 ++++++++---
+ 2 files changed, 21 insertions(+), 3 deletions(-)
 
-diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
-index 960236fb1681..2117b2cea598 100644
---- a/include/net/ieee80211_radiotap.h
-+++ b/include/net/ieee80211_radiotap.h
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2017		Intel Deutschland GmbH
-+ * Copyright (c) 2018		Intel Corporation
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -72,6 +73,8 @@ enum ieee80211_radiotap_presence {
- 	IEEE80211_RADIOTAP_AMPDU_STATUS = 20,
- 	IEEE80211_RADIOTAP_VHT = 21,
- 	IEEE80211_RADIOTAP_TIMESTAMP = 22,
-+	IEEE80211_RADIOTAP_HE = 23,
-+	IEEE80211_RADIOTAP_HE_MU = 24,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 8984d24d68b7..1c6364591856 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5710,6 +5710,19 @@ void cfg80211_remain_on_channel_expired(struct wireless_dev *wdev, u64 cookie,
+  */
+ int cfg80211_sinfo_alloc_tid_stats(struct station_info *sinfo, gfp_t gfp);
  
- 	/* valid in every it_present bitmap, even vendor namespaces */
- 	IEEE80211_RADIOTAP_RADIOTAP_NAMESPACE = 29,
-@@ -202,6 +205,114 @@ enum ieee80211_radiotap_timestamp_flags {
- 	IEEE80211_RADIOTAP_TIMESTAMP_FLAG_ACCURACY = 0x02,
- };
- 
-+struct ieee80211_radiotap_he {
-+	__le16 data1, data2, data3, data4, data5, data6;
-+};
-+
-+enum ieee80211_radiotap_he_bits {
-+	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_MASK		= 3,
-+	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_SU		= 0,
-+	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_EXT_SU	= 1,
-+	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_MU		= 2,
-+	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_TRIG		= 3,
-+
-+	IEEE80211_RADIOTAP_HE_DATA1_BSS_COLOR_KNOWN	= 0x0004,
-+	IEEE80211_RADIOTAP_HE_DATA1_BEAM_CHANGE_KNOWN	= 0x0008,
-+	IEEE80211_RADIOTAP_HE_DATA1_UL_DL_KNOWN		= 0x0010,
-+	IEEE80211_RADIOTAP_HE_DATA1_DATA_MCS_KNOWN	= 0x0020,
-+	IEEE80211_RADIOTAP_HE_DATA1_DATA_DCM_KNOWN	= 0x0040,
-+	IEEE80211_RADIOTAP_HE_DATA1_CODING_KNOWN	= 0x0080,
-+	IEEE80211_RADIOTAP_HE_DATA1_LDPC_XSYMSEG_KNOWN	= 0x0100,
-+	IEEE80211_RADIOTAP_HE_DATA1_STBC_KNOWN		= 0x0200,
-+	IEEE80211_RADIOTAP_HE_DATA1_SPTL_REUSE_KNOWN	= 0x0400,
-+	IEEE80211_RADIOTAP_HE_DATA1_SPTL_REUSE2_KNOWN	= 0x0800,
-+	IEEE80211_RADIOTAP_HE_DATA1_SPTL_REUSE3_KNOWN	= 0x1000,
-+	IEEE80211_RADIOTAP_HE_DATA1_SPTL_REUSE4_KNOWN	= 0x2000,
-+	IEEE80211_RADIOTAP_HE_DATA1_BW_RU_ALLOC_KNOWN	= 0x4000,
-+	IEEE80211_RADIOTAP_HE_DATA1_DOPPLER_KNOWN	= 0x8000,
-+
-+	IEEE80211_RADIOTAP_HE_DATA2_PRISEC_80_KNOWN	= 0x0001,
-+	IEEE80211_RADIOTAP_HE_DATA2_GI_KNOWN		= 0x0002,
-+	IEEE80211_RADIOTAP_HE_DATA2_NUM_LTF_SYMS_KNOWN	= 0x0004,
-+	IEEE80211_RADIOTAP_HE_DATA2_PRE_FEC_PAD_KNOWN	= 0x0008,
-+	IEEE80211_RADIOTAP_HE_DATA2_TXBF_KNOWN		= 0x0010,
-+	IEEE80211_RADIOTAP_HE_DATA2_PE_DISAMBIG_KNOWN	= 0x0020,
-+	IEEE80211_RADIOTAP_HE_DATA2_TXOP_KNOWN		= 0x0040,
-+	IEEE80211_RADIOTAP_HE_DATA2_MIDAMBLE_KNOWN	= 0x0080,
-+	IEEE80211_RADIOTAP_HE_DATA2_RU_OFFSET		= 0x3f00,
-+	IEEE80211_RADIOTAP_HE_DATA2_RU_OFFSET_KNOWN	= 0x4000,
-+	IEEE80211_RADIOTAP_HE_DATA2_PRISEC_80_SEC	= 0x8000,
-+
-+	IEEE80211_RADIOTAP_HE_DATA3_BSS_COLOR		= 0x003f,
-+	IEEE80211_RADIOTAP_HE_DATA3_BEAM_CHANGE		= 0x0040,
-+	IEEE80211_RADIOTAP_HE_DATA3_UL_DL		= 0x0080,
-+	IEEE80211_RADIOTAP_HE_DATA3_DATA_MCS		= 0x0f00,
-+	IEEE80211_RADIOTAP_HE_DATA3_DATA_DCM		= 0x1000,
-+	IEEE80211_RADIOTAP_HE_DATA3_CODING		= 0x2000,
-+	IEEE80211_RADIOTAP_HE_DATA3_LDPC_XSYMSEG	= 0x4000,
-+	IEEE80211_RADIOTAP_HE_DATA3_STBC		= 0x8000,
-+
-+	IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC	= 0x000f,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_20MHZ	= 0,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_40MHZ	= 1,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_80MHZ	= 2,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_160MHZ	= 3,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_26T	= 4,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_52T	= 5,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_106T	= 6,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_242T	= 7,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_484T	= 8,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_996T	= 9,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_2x996T	= 10,
-+
-+	IEEE80211_RADIOTAP_HE_DATA5_GI			= 0x0030,
-+		IEEE80211_RADIOTAP_HE_DATA5_GI_0_8			= 0,
-+		IEEE80211_RADIOTAP_HE_DATA5_GI_1_6			= 1,
-+		IEEE80211_RADIOTAP_HE_DATA5_GI_3_2			= 2,
-+
-+	IEEE80211_RADIOTAP_HE_DATA5_NUM_LTF_SYMS	= 0x0700,
-+	IEEE80211_RADIOTAP_HE_DATA5_PRE_FEC_PAD		= 0x3000,
-+	IEEE80211_RADIOTAP_HE_DATA5_TXBF		= 0x4000,
-+	IEEE80211_RADIOTAP_HE_DATA5_PE_DISAMBIG		= 0x8000,
-+
-+	IEEE80211_RADIOTAP_HE_DATA6_NSTS		= 0x000f,
-+	IEEE80211_RADIOTAP_HE_DATA6_DOPPLER		= 0x0010,
-+	IEEE80211_RADIOTAP_HE_DATA6_TXOP		= 0x7f00,
-+	IEEE80211_RADIOTAP_HE_DATA6_MIDAMBLE_PDCTY	= 0x8000,
-+};
-+
-+struct ieee80211_radiotap_he_mu {
-+	__le16 flags1, flags2;
-+	u8 ru_ch1[4];
-+	u8 ru_ch2[4];
-+};
-+
-+enum ieee80211_radiotap_he_mu_bits {
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_MCS		= 0x000f,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_MCS_KNOWN		= 0x0010,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_DCM		= 0x0020,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_DCM_KNOWN		= 0x0040,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH2_CTR_26T_RU_KNOWN	= 0x0080,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH1_RU_KNOWN		= 0x0100,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH2_RU_KNOWN		= 0x0200,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH1_CTR_26T_RU_KNOWN	= 0x1000,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH1_CTR_26T_RU		= 0x2000,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_COMP_KNOWN	= 0x4000,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_SYMS_USERS_KNOWN	= 0x8000,
-+
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW	= 0x0003,
-+		IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_20MHZ	= 0x0000,
-+		IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_40MHZ	= 0x0001,
-+		IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_80MHZ	= 0x0002,
-+		IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_160MHZ	= 0x0003,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_KNOWN	= 0x0004,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS2_SIG_B_COMP		= 0x0008,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS2_SIG_B_SYMS_USERS	= 0x00f0,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS2_PUNC_FROM_SIG_A_BW	= 0x0300,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS2_PUNC_FROM_SIG_A_BW_KNOWN= 0x0400,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS2_CH2_CTR_26T_RU		= 0x0800,
-+};
++/**
++ * cfg80211_sinfo_release_sinfo - release contents of station info
++ * @sinfo: the station information
++ *
++ * Releases any potentially allocated sub-information of the station
++ * information, but not the struct itself (since it's typically on
++ * the stack.)
++ */
++static inline void cfg80211_sinfo_release_sinfo(struct station_info *sinfo)
++{
++	kfree(sinfo->pertid);
++}
 +
  /**
-  * ieee80211_get_radiotap_len - get radiotap header length
-  */
+  * cfg80211_new_sta - notify userspace about station
+  *
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 7daceb1f253d..0996fdc002e0 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4702,7 +4702,6 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
+ 		}
+ 
+ 		nla_nest_end(msg, tidsattr);
+-		kfree(sinfo->pertid);
+ 	}
+ 
+ 	nla_nest_end(msg, sinfoattr);
+@@ -4712,10 +4711,12 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
+ 		    sinfo->assoc_req_ies))
+ 		goto nla_put_failure;
+ 
++	cfg80211_sinfo_release_sinfo(sinfo);
+ 	genlmsg_end(msg, hdr);
+ 	return 0;
+ 
+  nla_put_failure:
++	cfg80211_sinfo_release_sinfo(sinfo);
+ 	genlmsg_cancel(msg, hdr);
+ 	return -EMSGSIZE;
+ }
+@@ -4797,8 +4798,10 @@ static int nl80211_get_station(struct sk_buff *skb, struct genl_info *info)
+ 		return err;
+ 
+ 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+-	if (!msg)
++	if (!msg) {
++		cfg80211_sinfo_release_sinfo(sinfo);
+ 		return -ENOMEM;
++	}
+ 
+ 	if (nl80211_send_station(msg, NL80211_CMD_NEW_STATION,
+ 				 info->snd_portid, info->snd_seq, 0,
+@@ -14624,8 +14627,10 @@ void cfg80211_del_sta_sinfo(struct net_device *dev, const u8 *mac_addr,
+ 	trace_cfg80211_del_sta(dev, mac_addr);
+ 
+ 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
+-	if (!msg)
++	if (!msg) {
++		cfg80211_sinfo_release_sinfo(sinfo);
+ 		return;
++	}
+ 
+ 	if (nl80211_send_station(msg, NL80211_CMD_DEL_STATION, 0, 0, 0,
+ 				 rdev, dev, mac_addr, sinfo) < 0) {
 -- 
-2.17.0
+2.14.3
