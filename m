@@ -1,54 +1,240 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49208 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751910AbeE2HQE (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:45391 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753371AbeERJak (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 May 2018 03:16:04 -0400
-Content-Type: text/plain; charset="utf-8"
+        Fri, 18 May 2018 05:30:40 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 10/14] rtlwifi: remove hal_op rx_command_packet
+Date: Fri, 18 May 2018 17:30:03 +0800
+Message-ID: <20180518093007.23594-11-pkshih@realtek.com> (sfid-20180518_113206_629666_9206BF77)
+In-Reply-To: <20180518093007.23594-1-pkshih@realtek.com>
+References: <20180518093007.23594-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Subject: Re: [PATCHv2] wlcore: sdio: Fix flakey SDIO runtime PM handling
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180517182950.60807-1-tony@atomide.com>
-References: <20180517182950.60807-1-tony@atomide.com>
-To: Tony Lindgren <tony@atomide.com>
-Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
-        Guy Mishol <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Maital Hahn <maitalm@ti.com>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org
-Message-Id: <20180529071603.4DFD260541@smtp.codeaurora.org> (sfid-20180529_091638_090443_710C8B38)
-Date: Tue, 29 May 2018 07:16:03 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tony Lindgren <tony@atomide.com> wrote:
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-> We can have pm_runtime_get_sync() return 1, and we can have
-> pm_runtime_put_sync() return -EBUSY. See rpm_suspend() and
-> rpm_resume() for more information.
-> 
-> Fix the issue by returning 0 from wl12xx_sdio_power_on() on success.
-> And use pm_runtime_put() instead of pm_runtime_put_sync() for
-> wl12xx_sdio_power_off(), then the MMC subsystem will idle the bus
-> when suitable.
-> 
-> Otherwise wlcore can sometimes get confused and may report bogus
-> errors and WLAN connection can fail.
-> 
-> Note that while wlcore checks the return value for wl1271_power_on(),
-> the return value is ignored for wl1271_power_off(). Let's fix them
-> both though to avoid further confusion in the future.
-> 
-> Fixes: 60f36637bbbd ("wlcore: sdio: allow pm to handle sdio power")
-> Signed-off-by: Tony Lindgren <tony@atomide.com>
+Because the hal_op rx_command_packet does C2H handler if rx packet type
+is C2H, and the handler have been moved to base.c so we can call the
+handler directly.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/pci.c         |  4 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/sw.c    |  1 -
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.c   | 24 --------------------
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.h   |  3 ---
+ .../net/wireless/realtek/rtlwifi/rtl8723be/sw.c    |  1 -
+ .../net/wireless/realtek/rtlwifi/rtl8723be/trx.c   | 24 --------------------
+ .../net/wireless/realtek/rtlwifi/rtl8723be/trx.h   |  3 ---
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/sw.c    |  1 -
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/trx.c   | 26 ----------------------
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/trx.h   |  3 ---
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        |  2 --
+ 11 files changed, 2 insertions(+), 90 deletions(-)
 
-728a9dc61f13 wlcore: sdio: Fix flakey SDIO runtime PM handling
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index d0c509ef790e..dd51c67c09fa 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -830,8 +830,8 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+ 			goto new_trx_end;
+ 		}
+ 		/* handle command packet here */
+-		if (rtlpriv->cfg->ops->rx_command_packet &&
+-		    rtlpriv->cfg->ops->rx_command_packet(hw, &stats, skb)) {
++		if (stats.packet_report_type == C2H_PACKET) {
++			rtl_c2h_packet_handler(hw, skb->data, (u8)skb->len);
+ 			dev_kfree_skb_any(skb);
+ 			goto new_trx_end;
+ 		}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
+index fd028274c593..5b67ad748d67 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
+@@ -250,7 +250,6 @@ static struct rtl_hal_ops rtl8192ee_hal_ops = {
+ 	.set_rfreg = rtl92ee_phy_set_rf_reg,
+ 	.fill_h2c_cmd = rtl92ee_fill_h2c_cmd,
+ 	.get_btc_status = rtl92ee_get_btc_status,
+-	.rx_command_packet = rtl92ee_rx_command_packet,
+ 	.c2h_content_parsing = rtl_c2h_content_parsing,
+ 	.c2h_ra_report_handler = rtl92ee_c2h_ra_report_handler,
+ };
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+index e525c2bb4457..14d6e3fc5767 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+@@ -1072,27 +1072,3 @@ bool rtl92ee_is_tx_desc_closed(struct ieee80211_hw *hw, u8 hw_queue, u16 index)
+ void rtl92ee_tx_polling(struct ieee80211_hw *hw, u8 hw_queue)
+ {
+ }
+-
+-u32 rtl92ee_rx_command_packet(struct ieee80211_hw *hw,
+-			      const struct rtl_stats *status,
+-			      struct sk_buff *skb)
+-{
+-	u32 result = 0;
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-
+-	switch (status->packet_report_type) {
+-	case NORMAL_RX:
+-		result = 0;
+-		break;
+-	case C2H_PACKET:
+-		rtl_c2h_packet_handler(hw, skb->data, (u8)skb->len);
+-		result = 1;
+-		break;
+-	default:
+-		RT_TRACE(rtlpriv, COMP_RECV, DBG_TRACE,
+-			 "Unknown packet type %d\n", status->packet_report_type);
+-		break;
+-	}
+-
+-	return result;
+-}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.h
+index 48c16fff20c6..45df3e79f490 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.h
+@@ -762,7 +762,4 @@ void rtl92ee_tx_polling(struct ieee80211_hw *hw, u8 hw_queue);
+ void rtl92ee_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
+ 			     bool firstseg, bool lastseg,
+ 			     struct sk_buff *skb);
+-u32 rtl92ee_rx_command_packet(struct ieee80211_hw *hw,
+-			      const struct rtl_stats *status,
+-			      struct sk_buff *skb);
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
+index 9df994965c4a..a41e67b3f38b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
+@@ -261,7 +261,6 @@ static struct rtl_hal_ops rtl8723be_hal_ops = {
+ 	.set_rfreg = rtl8723be_phy_set_rf_reg,
+ 	.fill_h2c_cmd = rtl8723be_fill_h2c_cmd,
+ 	.get_btc_status = rtl8723be_get_btc_status,
+-	.rx_command_packet = rtl8723be_rx_command_packet,
+ 	.is_fw_header = is_fw_header,
+ 	.c2h_content_parsing = rtl_c2h_content_parsing,
+ };
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
+index 0c0cece9d5f9..9f8dfb5af774 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
+@@ -761,27 +761,3 @@ void rtl8723be_tx_polling(struct ieee80211_hw *hw, u8 hw_queue)
+ 			       BIT(0) << (hw_queue));
+ 	}
+ }
+-
+-u32 rtl8723be_rx_command_packet(struct ieee80211_hw *hw,
+-				const struct rtl_stats *status,
+-				struct sk_buff *skb)
+-{
+-	u32 result = 0;
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-
+-	switch (status->packet_report_type) {
+-	case NORMAL_RX:
+-			result = 0;
+-			break;
+-	case C2H_PACKET:
+-			rtl_c2h_packet_handler(hw, skb->data, (u8)skb->len);
+-			result = 1;
+-			break;
+-	default:
+-			RT_TRACE(rtlpriv, COMP_RECV, DBG_TRACE,
+-				 "No this packet type!!\n");
+-			break;
+-	}
+-
+-	return result;
+-}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.h
+index 988bf0586674..609f7ad7f787 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.h
+@@ -632,7 +632,4 @@ void rtl8723be_tx_polling(struct ieee80211_hw *hw, u8 hw_queue);
+ void rtl8723be_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
+ 			       bool firstseg, bool lastseg,
+ 			       struct sk_buff *skb);
+-u32 rtl8723be_rx_command_packet(struct ieee80211_hw *hw,
+-				const struct rtl_stats *status,
+-				struct sk_buff *skb);
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+index bcabf4dc6353..8ff8a406db52 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+@@ -303,7 +303,6 @@ static struct rtl_hal_ops rtl8821ae_hal_ops = {
+ 	.set_rfreg = rtl8821ae_phy_set_rf_reg,
+ 	.fill_h2c_cmd = rtl8821ae_fill_h2c_cmd,
+ 	.get_btc_status = rtl8821ae_get_btc_status,
+-	.rx_command_packet = rtl8821ae_rx_command_packet,
+ 	.c2h_content_parsing = rtl_c2h_content_parsing,
+ 	.c2h_ra_report_handler = rtl8821ae_c2h_ra_report_handler,
+ 	.add_wowlan_pattern = rtl8821ae_add_wowlan_pattern,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
+index a93d8569c186..d7960dd5bf1a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
+@@ -1005,29 +1005,3 @@ void rtl8821ae_tx_polling(struct ieee80211_hw *hw, u8 hw_queue)
+ 			       BIT(0) << (hw_queue));
+ 	}
+ }
+-
+-u32 rtl8821ae_rx_command_packet(struct ieee80211_hw *hw,
+-				const struct rtl_stats *status,
+-				struct sk_buff *skb)
+-{
+-	u32 result = 0;
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-
+-	switch (status->packet_report_type) {
+-	case NORMAL_RX:
+-		result = 0;
+-		break;
+-	case C2H_PACKET:
+-		rtl_c2h_packet_handler(hw, skb->data, (u8)skb->len);
+-		result = 1;
+-		RT_TRACE(rtlpriv, COMP_RECV, DBG_LOUD,
+-			 "skb->len=%d\n\n", skb->len);
+-		break;
+-	default:
+-		RT_TRACE(rtlpriv, COMP_RECV, DBG_LOUD,
+-			 "No this packet type!!\n");
+-		break;
+-	}
+-
+-	return result;
+-}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.h
+index 221dd2b29d3b..4ff0968dba81 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.h
+@@ -628,7 +628,4 @@ void rtl8821ae_tx_polling(struct ieee80211_hw *hw, u8 hw_queue);
+ void rtl8821ae_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
+ 			       bool firstseg, bool lastseg,
+ 			       struct sk_buff *skb);
+-u32 rtl8821ae_rx_command_packet(struct ieee80211_hw *hw,
+-				const struct rtl_stats *status,
+-				struct sk_buff *skb);
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 392b3e84db7e..b40d8f5bbdce 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2340,8 +2340,6 @@ struct rtl_hal_ops {
+ 	void (*set_default_port_id_cmd)(struct ieee80211_hw *hw);
+ 	bool (*get_btc_status) (void);
+ 	bool (*is_fw_header)(struct rtlwifi_firmware_header *hdr);
+-	u32 (*rx_command_packet)(struct ieee80211_hw *hw,
+-				 const struct rtl_stats *status, struct sk_buff *skb);
+ 	void (*add_wowlan_pattern)(struct ieee80211_hw *hw,
+ 				   struct rtl_wow_pattern *rtl_pattern,
+ 				   u8 index);
 -- 
-https://patchwork.kernel.org/patch/10407569/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.15.1
