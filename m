@@ -1,95 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:60440 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751196AbeEVNsm (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:35679 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750975AbeERPtl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 09:48:42 -0400
-From: "Reizer, Eyal" <eyalr@ti.com>
-To: Tony Lindgren <tony@atomide.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>,
-        "Mishol, Guy" <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        "Hahn, Maital" <maitalm@ti.com>,
-        "Altshul, Maxim" <maxim.altshul@ti.com>,
-        "Shahar Patury" <shaharp@ti.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-        "Loewy, Chen" <c-loewy@ti.com>
-Subject: RE: [EXTERNAL] [PATCHv2 0/5] Runtime PM support for wlcore
-Date: Tue, 22 May 2018 13:48:33 +0000
-Message-ID: <eae7c720c09549f0b4ff83f88ad6959b@ti.com> (sfid-20180522_154846_426978_5C72D793)
-References: <20180517185029.71716-1-tony@atomide.com>
- <bff51dcc6fd441d9ab42db273219aaf4@ti.com>
- <20180521163830.GZ98604@atomide.com> <20180521224339.GD98604@atomide.com>
- <38ddca4c73bb4dbf835a84133035dbfb@ti.com>
- <20180522133158.GE98604@atomide.com>
-In-Reply-To: <20180522133158.GE98604@atomide.com>
-Content-Type: text/plain; charset="us-ascii"
+        Fri, 18 May 2018 11:49:41 -0400
+Date: Fri, 18 May 2018 17:48:47 +0200
+From: Johan Hovold <johan@kernel.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Carlos Manuel Santos <cmmpsantos@gmail.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3] NFC: pn533: don't send USB data off of the stack
+Message-ID: <20180518154847.GB2668@localhost> (sfid-20180518_174945_620568_C8232127)
+References: <20180518103811.GA29186@kroah.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180518103811.GA29186@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->=20
-> * Reizer, Eyal <eyalr@ti.com> [180522 13:28]:
-> > Actually the below patch removing the call to wlcore_fw_sleep() avoids =
-this
-> error.
-> > The downside is that the wl8 firmware remains fully active during supen=
-d, so
-> we
-> > Would need to find the root cause why the last call allowing the wilink=
-8
-> firmware
-> > To go into ELP mode during suspend is only completing on resume and not
-> during
-> > Suspend enter.
-> >
-> > diff --git a/drivers/net/wireless/ti/wlcore/main.c
-> > b/drivers/net/wireless/ti/wlcore/main.c
-> > index 4c297aa..8df1ae6 100644
-> > --- a/drivers/net/wireless/ti/wlcore/main.c
-> > +++ b/drivers/net/wireless/ti/wlcore/main.c
-> > @@ -1789,7 +1789,6 @@ static int wl1271_op_suspend(struct
-> ieee80211_hw *hw,
-> >                 goto out_sleep;
-> >
-> >  out_sleep:
-> > -       pm_runtime_put_noidle(wl->dev);
-> >         mutex_unlock(&wl->mutex);
-> >
-> >         if (ret < 0) {
-> > @@ -1821,15 +1820,7 @@ static int wl1271_op_suspend(struct
-> ieee80211_hw *hw,
-> >          */
-> >         cancel_delayed_work(&wl->tx_watchdog_work);
-> >
-> > -       /*
-> > -        * Use an immediate call for allowing the firmware to go into p=
-ower
-> > -        * save during suspend.
-> > -        * Using a workque for this last write was only hapenning on re=
-sume
-> > -        * leaving the firmware with power save disabled during suspend=
-,
-> > -        * while consuming full power during wowlan suspend.
-> > -        */
-> > -       wlcore_fw_sleep(wl);
-> > -
-> > +       pm_runtime_put_noidle(wl->dev);
-> >         return 0;
-> >  }
->=20
-> OK try replacing the pm_runtime_put_noidle() above with just
-> pm_runtime_put_sync(). The reason why I put noidle there was the
-> wlcore_fw_sleep() call, with that gone put_sync should do the trick.
->=20
+On Fri, May 18, 2018 at 12:38:11PM +0200, Greg Kroah-Hartman wrote:
+> It's amazing that this driver ever worked, but now that x86 doesn't
+> allow USB data to be sent off of the stack, it really does not work at
+> all.  Fix this up by properly allocating the data for the small
+> "commands" that get sent to the device.
+> 
+> The USB stack will free the buffer when the data has been transmitted,
+> that is why there is no kfree() to mirror the call to kmalloc().
 
-I have tried that already. Same problem. The last call to:
-ret =3D wlcore_raw_write32(wl, HW_ACCESS_ELP_CTRL_REG, ELPCTRL_SLEEP)
+It looks like you're now leaking all but the final transfer buffer that
+is allocated for outgoing commands, as the URBs themselves are not freed
+until disconnect() (and that's when core would free the buffers along
+with the URBs if URB_FREE_BUFFER is set).
 
-which allows the firmware to get into ELP state during wowlan suspend is=20
-only completing after system resume for some unknown reason...
-
-Best Regards,
-Eyal
+Johan
