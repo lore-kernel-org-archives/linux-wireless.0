@@ -1,85 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:45379 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752756AbeERJai (ORCPT
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:35196 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752525AbeERJhU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 05:30:38 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 04/14] rtlwifi: rename register-based C2H command IDs to V0
-Date: Fri, 18 May 2018 17:29:57 +0800
-Message-ID: <20180518093007.23594-5-pkshih@realtek.com> (sfid-20180518_113058_982952_8676CB29)
-In-Reply-To: <20180518093007.23594-1-pkshih@realtek.com>
-References: <20180518093007.23594-1-pkshih@realtek.com>
+        Fri, 18 May 2018 05:37:20 -0400
+Received: by mail-qk0-f194.google.com with SMTP id c137-v6so5914544qkg.2
+        for <linux-wireless@vger.kernel.org>; Fri, 18 May 2018 02:37:20 -0700 (PDT)
+Subject: Re: [RESEND PATCH] cfg80211: dynamically allocate per-tid stats for
+ station info
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <5AF430B2.2060903@broadcom.com> <5AF431F4.9060408@broadcom.com>
+ <1526635514.3805.3.camel@sipsolutions.net>
+Cc: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AFE9ECE.50306@broadcom.com> (sfid-20180518_113731_261136_2EAA069C)
+Date: Fri, 18 May 2018 11:37:18 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1526635514.3805.3.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On 5/18/2018 11:25 AM, Johannes Berg wrote:
+> On Thu, 2018-05-10 at 13:50 +0200, Arend van Spriel wrote:
+>>
+>> Here an alternative approach. Currently the only cfg80211-based driver
+>> providing per-tid stats is mac80211. This patch only changes mac80211
+>> and the other driver can keep using stack allocation. Even mac80211 could
+>> if wanted, but I left that part as is.
+>
+> I decided to take this and remove the BIT() thing entirely (you had a
+> bug there anyway)
 
-Current chips use packet-based C2H commands whose IDs differ from old
-ones, so this commit simply gives C2H_V0_ as prefix of command IDs.
+I figured you would drop this one. The error paths may need to do kfree 
+here and there. Kalle took dynamic alloc fixes in driver already so my 
+patch is not really needed right now.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- .../net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c |  6 +++---
- .../net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.h | 20 ++++++++++----------
- 2 files changed, 13 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
-index ec9bcf32f0ab..788de88ab1ee 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
-@@ -1749,13 +1749,13 @@ void rtl_8723e_c2h_command_handle(struct ieee80211_hw *hw)
- 
- 
- 	switch (c2h_event.cmd_id) {
--	case C2H_BT_RSSI:
-+	case C2H_V0_BT_RSSI:
- 			break;
- 
--	case C2H_BT_OP_MODE:
-+	case C2H_V0_BT_OP_MODE:
- 			break;
- 
--	case BT_INFO:
-+	case C2H_V0_BT_INFO:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
- 			"BT info Byte[0] (ID) is 0x%x\n",
- 			c2h_event.cmd_id);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.h
-index 3723d7476717..756868897d8b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.h
-@@ -130,17 +130,17 @@ enum bt_state {
- 	BT_INFO_STATE_MAX = 7
- };
- 
--enum rtl8723e_c2h_evt {
--	C2H_DBG = 0,
--	C2H_TSF = 1,
--	C2H_AP_RPT_RSP = 2,
-+enum rtl8723e_c2h_evt_v0 {
-+	C2H_V0_DBG = 0,
-+	C2H_V0_TSF = 1,
-+	C2H_V0_AP_RPT_RSP = 2,
- 	/* The FW notify the report of the specific tx packet. */
--	C2H_CCX_TX_RPT = 3,
--	C2H_BT_RSSI = 4,
--	C2H_BT_OP_MODE = 5,
--	C2H_HW_INFO_EXCH = 10,
--	C2H_C2H_H2C_TEST = 11,
--	BT_INFO = 12,
-+	C2H_V0_CCX_TX_RPT = 3,
-+	C2H_V0_BT_RSSI = 4,
-+	C2H_V0_BT_OP_MODE = 5,
-+	C2H_V0_HW_INFO_EXCH = 10,
-+	C2H_V0_C2H_H2C_TEST = 11,
-+	C2H_V0_BT_INFO = 12,
- 	MAX_C2HEVENT
- };
- 
--- 
-2.15.1
+Gr. AvS
