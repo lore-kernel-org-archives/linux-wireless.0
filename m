@@ -1,156 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54228 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932140AbeE3TLI (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:45388 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753340AbeERJaj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 15:11:08 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [RFCv3 4/4] mac80211: Implement functionality to monitor txrate cross event for a station
-Date: Thu, 31 May 2018 00:40:50 +0530
-Message-Id: <1527707450-2985-5-git-send-email-tamizhr@codeaurora.org> (sfid-20180530_211115_616644_2CCB9596)
-In-Reply-To: <1527707450-2985-1-git-send-email-tamizhr@codeaurora.org>
-References: <1527707450-2985-1-git-send-email-tamizhr@codeaurora.org>
+        Fri, 18 May 2018 05:30:39 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 08/14] rtlwifi: Add hal_op c2h_ra_report_handler for special process
+Date: Fri, 18 May 2018 17:30:01 +0800
+Message-ID: <20180518093007.23594-9-pkshih@realtek.com> (sfid-20180518_113135_602445_DC275E1C)
+In-Reply-To: <20180518093007.23594-1-pkshih@realtek.com>
+References: <20180518093007.23594-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Trigger cfg80211_sta_mon_txrate_notify with the corresponding txrate
-event when the txrate for a station goes out of configured range.
-This event will be useful for the application like steering to take
-decision on any station depends on its current capability.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+We're going to merge C2H handler into one, but one special case is to
+handle RA_REPORT that implements in individual IC folder. So this commit
+adds a hal_op for caller in common code.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- include/net/mac80211.h  |  5 +++++
- net/mac80211/cfg.c      |  1 +
- net/mac80211/sta_info.h | 10 ++++++++++
- net/mac80211/status.c   | 40 +++++++++++++++++++++++++++++++++++++++-
- 4 files changed, 55 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c | 7 ++++---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h | 2 ++
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c | 1 +
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c | 5 +++--
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h | 2 ++
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 1 +
+ drivers/net/wireless/realtek/rtlwifi/wifi.h         | 2 ++
+ 7 files changed, 15 insertions(+), 5 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 96fb9a8..02714ea 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -808,6 +808,11 @@ enum mac80211_rate_control_flags {
-  */
- #define IEEE80211_STA_SIGNAL_AVE_MIN_COUNT	4
- 
-+/* Number of txrate count need to have been used in average station's
-+ * txrate before checking against the threshold
-+ */
-+#define IEEE80211_STA_TXRATE_AVE_MIN_COUNT     4
-+
- 
- /* there are 40 bytes if you don't need the rateset to be kept */
- #define IEEE80211_TX_INFO_DRIVER_DATA_SIZE 40
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 649f5c7..36ec5fb 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3904,6 +3904,7 @@ static int ieee80211_set_sta_mon_txrate_config(struct wiphy *wiphy,
- 
- 	sta->txrate_low = low_txrate_thold;
- 	sta->txrate_high = high_txrate_thold;
-+	sta->last_txrate_event = 0;
- 
- unlock:
- 	mutex_unlock(&sdata->local->sta_mtx);
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index a71f50c..f978e5a 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -419,6 +419,8 @@ struct ieee80211_sta_rx_stats {
-  */
- #define STA_SLOW_THRESHOLD 6000 /* 6 Mbps */
- 
-+DECLARE_EWMA(sta_txrate, 4, 4)
-+
- /**
-  * struct sta_info - STA information
-  *
-@@ -501,6 +503,11 @@ struct ieee80211_sta_rx_stats {
-  *	in 100Kbps
-  * @txrate_high: TXRATE upper threshold for a station to monitor, this will be
-  *	in 100Kbps
-+ * @count_sta_txrate: Number of transmitted data frames used in ave_sta_txrate
-+ * @last_txrate_event: Last txrate event that triggered sta_mon event for a
-+ *	station
-+ * @ave_sta_txrate: Average txrate to check against the txrate_low and
-+ *	txrate_high. Values expressed in 100kbps
-  */
- struct sta_info {
- 	/* General information, mostly static */
-@@ -611,6 +618,9 @@ struct sta_info {
- 
- 	u32 txrate_low;
- 	u32 txrate_high;
-+	unsigned int count_sta_txrate;
-+	enum nl80211_sta_mon_txrate_threshold_event last_txrate_event;
-+	struct ewma_sta_txrate ave_sta_txrate;
- 
- 	/* keep last! */
- 	struct ieee80211_sta sta;
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 9a6d720..112b18d 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -701,6 +701,40 @@ void ieee80211_tx_monitor(struct ieee80211_local *local, struct sk_buff *skb,
- 	dev_kfree_skb(skb);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+index 25d6c32f66c3..a2d9e217bc65 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+@@ -876,8 +876,8 @@ void rtl92ee_set_p2p_ps_offload_cmd(struct ieee80211_hw *hw, u8 p2p_ps_state)
+ 			     (u8 *)p2p_ps_offload);
  }
  
-+static void ieee80211_sta_mon_txrate_thold_check(struct sta_info *sta)
-+{
-+	struct rate_info rinfo;
-+	enum nl80211_sta_mon_txrate_threshold_event sta_txrate_event;
-+	int txrate;
-+
-+	if (!sta->txrate_high)
-+		return;
-+
-+	sta_set_rate_info_tx(sta, &sta->tx_stats.last_rate, &rinfo);
-+	txrate = cfg80211_calculate_bitrate(&rinfo);
-+	ewma_sta_txrate_add(&sta->ave_sta_txrate, txrate);
-+	sta->count_sta_txrate++;
-+
-+	if (sta->count_sta_txrate < IEEE80211_STA_TXRATE_AVE_MIN_COUNT)
-+		return;
-+
-+	txrate = ewma_sta_txrate_read(&sta->ave_sta_txrate);
-+
-+	if (txrate < sta->txrate_low)
-+		sta_txrate_event = NL80211_STA_MON_TXRATE_THRESHOLD_EVENT_LOW;
-+	else if (txrate > sta->txrate_high)
-+		sta_txrate_event = NL80211_STA_MON_TXRATE_THRESHOLD_EVENT_HIGH;
-+	else
-+		sta_txrate_event = NL80211_STA_MON_TXRATE_THRESHOLD_IN_RANGE;
-+
-+	if (sta_txrate_event != sta->last_txrate_event) {
-+		cfg80211_sta_mon_txrate_notify(sta->sdata->dev, sta->addr,
-+					       sta_txrate_event, txrate,
-+					       GFP_ATOMIC);
-+		sta->last_txrate_event = sta_txrate_event;
-+	}
-+}
-+
- static void __ieee80211_tx_status(struct ieee80211_hw *hw,
- 				  struct ieee80211_tx_status *status)
+-static void _rtl92ee_c2h_ra_report_handler(struct ieee80211_hw *hw,
+-					   u8 *cmd_buf, u8 cmd_len)
++void rtl92ee_c2h_ra_report_handler(struct ieee80211_hw *hw,
++				   u8 *cmd_buf, u8 cmd_len)
  {
-@@ -750,9 +784,13 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+ 	u8 rate = cmd_buf[0] & 0x3F;
+ 	bool collision_state = cmd_buf[3] & BIT(0);
+@@ -889,6 +889,7 @@ void rtl92ee_c2h_content_parsing(struct ieee80211_hw *hw, u8 c2h_cmd_id,
+ 				 u8 c2h_cmd_len, u8 *tmp_buf)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_hal_ops *hal_ops = rtlpriv->cfg->ops;
+ 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
  
- 		if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL) &&
- 		    (ieee80211_is_data(hdr->frame_control)) &&
--		    (rates_idx != -1))
-+		    (rates_idx != -1)) {
- 			sta->tx_stats.last_rate =
- 				info->status.rates[rates_idx];
-+			if (wiphy_ext_feature_isset(hw->wiphy,
-+				NL80211_EXT_FEATURE_STA_MON_TXRATE_CONFIG))
-+				ieee80211_sta_mon_txrate_thold_check(sta);
-+		}
+ 	switch (c2h_cmd_id) {
+@@ -920,7 +921,7 @@ void rtl92ee_c2h_content_parsing(struct ieee80211_hw *hw, u8 c2h_cmd_id,
+ 						     c2h_cmd_len);
+ 		break;
+ 	case C2H_RA_RPT:
+-		_rtl92ee_c2h_ra_report_handler(hw, tmp_buf, c2h_cmd_len);
++		hal_ops->c2h_ra_report_handler(hw, tmp_buf, c2h_cmd_len);
+ 		break;
+ 	default:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h
+index 8325adaa9663..e5fae0a86a27 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h
+@@ -182,4 +182,6 @@ void rtl92ee_set_p2p_ps_offload_cmd(struct ieee80211_hw *hw, u8 p2p_ps_state);
+ void rtl92ee_c2h_packet_handler(struct ieee80211_hw *hw, u8 *buffer, u8 len);
+ void rtl92ee_c2h_content_parsing(struct ieee80211_hw *hw, u8 c2h_cmd_id,
+ 				 u8 c2h_cmd_len, u8 *tmp_buf);
++void rtl92ee_c2h_ra_report_handler(struct ieee80211_hw *hw,
++				   u8 *cmd_buf, u8 cmd_len);
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
+index ef92a789871d..c5c26b537cd2 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
+@@ -252,6 +252,7 @@ static struct rtl_hal_ops rtl8192ee_hal_ops = {
+ 	.get_btc_status = rtl92ee_get_btc_status,
+ 	.rx_command_packet = rtl92ee_rx_command_packet,
+ 	.c2h_content_parsing = rtl92ee_c2h_content_parsing,
++	.c2h_ra_report_handler = rtl92ee_c2h_ra_report_handler,
+ };
  
- 		if ((info->flags & IEEE80211_TX_STAT_AMPDU_NO_BACK) &&
- 		    (ieee80211_is_data_qos(fc))) {
+ static struct rtl_mod_params rtl92ee_mod_params = {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+index 5c7e58fbc07e..bf37c428c682 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+@@ -1907,7 +1907,7 @@ void rtl8821ae_set_p2p_ps_offload_cmd(struct ieee80211_hw *hw, u8 p2p_ps_state)
+ 			H2C_8821AE_P2P_PS_OFFLOAD, 1, (u8 *)p2p_ps_offload);
+ }
+ 
+-static void rtl8821ae_c2h_ra_report_handler(struct ieee80211_hw *hw,
++void rtl8821ae_c2h_ra_report_handler(struct ieee80211_hw *hw,
+ 				     u8 *cmd_buf, u8 cmd_len)
+ {
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+@@ -1923,6 +1923,7 @@ void rtl8821ae_c2h_content_parsing(struct ieee80211_hw *hw,
+ 				   u8 *tmp_buf)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_hal_ops *hal_ops = rtlpriv->cfg->ops;
+ 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
+ 
+ 	switch (c2h_cmd_id) {
+@@ -1933,7 +1934,7 @@ void rtl8821ae_c2h_content_parsing(struct ieee80211_hw *hw,
+ 		rtl_tx_report_handler(hw, tmp_buf, c2h_cmd_len);
+ 		break;
+ 	case C2H_RA_RPT:
+-		rtl8821ae_c2h_ra_report_handler(hw, tmp_buf, c2h_cmd_len);
++		hal_ops->c2h_ra_report_handler(hw, tmp_buf, c2h_cmd_len);
+ 		break;
+ 	case C2H_BT_INFO:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h
+index 48c72a26c7e8..a69448be7c26 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h
+@@ -322,4 +322,6 @@ void rtl8821ae_c2h_packet_handler(struct ieee80211_hw *hw,
+ void rtl8821ae_c2h_content_parsing(struct ieee80211_hw *hw,
+ 				   u8 c2h_cmd_id, u8 c2h_cmd_len,
+ 				   u8 *tmp_buf);
++void rtl8821ae_c2h_ra_report_handler(struct ieee80211_hw *hw,
++				     u8 *cmd_buf, u8 cmd_len);
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+index 9bb3d9dfce79..4b2cb6bda4f1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+@@ -305,6 +305,7 @@ static struct rtl_hal_ops rtl8821ae_hal_ops = {
+ 	.get_btc_status = rtl8821ae_get_btc_status,
+ 	.rx_command_packet = rtl8821ae_rx_command_packet,
+ 	.c2h_content_parsing = rtl8821ae_c2h_content_parsing,
++	.c2h_ra_report_handler = rtl8821ae_c2h_ra_report_handler,
+ 	.add_wowlan_pattern = rtl8821ae_add_wowlan_pattern,
+ };
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 3da8e2a6084a..392b3e84db7e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2348,6 +2348,8 @@ struct rtl_hal_ops {
+ 	u16 (*get_available_desc)(struct ieee80211_hw *hw, u8 q_idx);
+ 	void (*c2h_content_parsing)(struct ieee80211_hw *hw, u8 tag, u8 len,
+ 				    u8 *val);
++	void (*c2h_ra_report_handler)(struct ieee80211_hw *hw,
++				      u8 *cmd_buf, u8 cmd_len);
+ };
+ 
+ struct rtl_intf_ops {
 -- 
-1.9.1
+2.15.1
