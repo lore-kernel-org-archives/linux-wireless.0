@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45478 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936185AbeEYOok (ORCPT
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:44916 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752022AbeERKZI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 May 2018 10:44:40 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Cc: Ben Greear <greearb@candelatech.com>, ath10k@lists.infradead.org,
+        Fri, 18 May 2018 06:25:08 -0400
+Received: by mail-qt0-f194.google.com with SMTP id d3-v6so9558571qtp.11
+        for <linux-wireless@vger.kernel.org>; Fri, 18 May 2018 03:25:08 -0700 (PDT)
+Subject: Re: [PATCH 2/2] cfg80211: release station info tidstats where needed
+To: Johannes Berg <johannes@sipsolutions.net>,
         linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v1] ath10k: fix band_center_freq handling for VHT160 in recent firmwares
-References: <20180426094357.24358-1-s.gottschall@dd-wrt.com>
-        <19b8766e-d474-31d3-ff38-993498ee670d@candelatech.com>
-        <da5c7c56-9a41-99f0-28be-3a2c8e9fabbf@dd-wrt.com>
-Date: Fri, 25 May 2018 17:44:34 +0300
-In-Reply-To: <da5c7c56-9a41-99f0-28be-3a2c8e9fabbf@dd-wrt.com> (Sebastian
-        Gottschall's message of "Thu, 26 Apr 2018 17:12:11 +0200")
-Message-ID: <87wovr94ml.fsf@kamboji.qca.qualcomm.com> (sfid-20180525_164608_084123_99181AAE)
+References: <20180518094742.10669-1-johannes@sipsolutions.net>
+ <20180518094742.10669-2-johannes@sipsolutions.net>
+Cc: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
+        Johannes Berg <johannes.berg@intel.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5AFEAA02.2010303@broadcom.com> (sfid-20180518_122512_654826_FC7C3833)
+Date: Fri, 18 May 2018 12:25:06 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180518094742.10669-2-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
-
-> Am 26.04.2018 um 15:44 schrieb Ben Greear:
->>
->>
->> On 04/26/2018 02:43 AM, s.gottschall@dd-wrt.com wrote:
->>> From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
->>>
->>> starting with firmware 10.4.3.4.x series QCA changed the handling
->>> of the channel property band_center_freq1 and band_center_freq2 in
->>> vht160 operation mode
->>> likelly for backward compatiblity with vht80 only capable clients.
->>> this patch adjusts the handling to get vht160 to work again with
->>> official qca firmwares newer than 3.3
->>> consider that this patch will not work with older firmwares
->>> anymore. to avoid undefined behaviour this we disable vht160
->>> capability for outdated firmwares
->>
->> We should be able to use a feature-flag or otherwise determine if
->> the firmware needs the old or new
->> API and make the driver able to handle both.
+On 5/18/2018 11:47 AM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 >
-> the new firmware must be used as is and it works. the old firmware can
-> be detected on the missing vht cap flag.
-> but thats not my task. i can only use feature flags if they are
-> included within the qca firmwares. but they arent
-> the old pre 3.3 firmwares should be treated as obsolete. they are more
-> than 2 years old and do not announce vht160 capability
-> even if it works with some ignorance, but on the other side the it has
-> backward incompatiblies with older vht80 only clients.
-> this is why the new way was introduced
+> This fixes memory leaks in cases where we got the station
+> info but failed sending it out properly.
 
-I was told ath10k could check for WMI_SERVICE_EXTENDED_NSS_SUPPORT flag.
-Can someone test and verify that?
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Fixes: 8689c051a201 ("cfg80211: dynamically allocate per-tid stats for station info")
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>   include/net/cfg80211.h | 13 +++++++++++++
+>   net/wireless/nl80211.c | 11 ++++++++---
+>   2 files changed, 21 insertions(+), 3 deletions(-)
+>
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 8984d24d68b7..1c6364591856 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -5710,6 +5710,19 @@ void cfg80211_remain_on_channel_expired(struct wireless_dev *wdev, u64 cookie,
+>    */
+>   int cfg80211_sinfo_alloc_tid_stats(struct station_info *sinfo, gfp_t gfp);
+>
+> +/**
+> + * cfg80211_sinfo_release_sinfo - release contents of station info
 
--- 
-Kalle Valo
+Maybe drop one '_sinfo' from the function name? Or 
+cfg80211_sinfo_release_contents?
+
+Regards,
+Arend
