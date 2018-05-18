@@ -1,106 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35653 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751385AbeEXF2m (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:55964 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750977AbeERMeN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 May 2018 01:28:42 -0400
-Received: by mail-wm0-f66.google.com with SMTP id o78-v6so1525414wmg.0
-        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2018 22:28:41 -0700 (PDT)
-Subject: Re: [PATCH 1/3] brcmfmac: allow specifying features per firmware
- version
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-References: <20180522131836.26858-1-zajec5@gmail.com>
- <5B051F2A.9090501@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <f79ad17d-5d7f-ceac-19e6-2e55d9bb20bf@gmail.com> (sfid-20180524_072852_807676_F124A80C)
-Date: Thu, 24 May 2018 07:27:07 +0200
+        Fri, 18 May 2018 08:34:13 -0400
+From: Pkshih <pkshih@realtek.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "briselec@gmail.com" <briselec@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        "chaitanya.mgit@gmail.com" <chaitanya.mgit@gmail.com>
+Subject: Re: [PATCH v3 00/19] rtlwifi: halmac: Add new module halmac
+Date: Fri, 18 May 2018 12:33:55 +0000
+Message-ID: <1526646826.1942.1.camel@realtek.com> (sfid-20180518_143416_988351_2B1D1CA5)
+References: <20180425020820.6141-1-pkshih@realtek.com>
+         <87lgdbagb2.fsf@kamboji.qca.qualcomm.com>
+         <5B2DA6FDDF928F4E855344EE0A5C39D13BEBF231@RTITMBSV07.realtek.com.tw>
+         <20180427224156.GA18163@thinktank.home.org>
+         <5B2DA6FDDF928F4E855344EE0A5C39D13BEBFD30@RTITMBSV07.realtek.com.tw>
+         <CABPxzYKfZVA8RTADEG5TCu0SXRSVEGWEn+Ym6AkMuFzHC5iSVg@mail.gmail.com>
+         <1526371717.12375.8.camel@realtek.com> <871sebkcad.fsf@codeaurora.org>
+In-Reply-To: <871sebkcad.fsf@codeaurora.org>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <5B051F2A.9090501@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23.05.2018 09:58, Arend van Spriel wrote:
-> On 5/22/2018 3:18 PM, Rafał Miłecki wrote:
->> From: Rafał Miłecki <rafal@milecki.pl>
->>
->> Some features supported by firmware aren't advertised and there is no
->> way for a driver to query them. This includes e.g. monitor mode details.
->> Some firmwares support tagging monitor frames, some build radiotap
->> header but there is no way to detect it.
->>
->> This commit adds table that will allow specifying features like:
->> { "01-abcdef01", BIT(BRCMF_FEAT_FOO) }
-> 
-> I have my reservations taking this route. Full-dongle monitor mode is not very reliable especially when running it next to regular STA/AP interface due to memory constraints. So enabling a feature from host side could cause issues that are hard to debug.
-
-I was using this *really* intensively on BCM4366 and didn't notice any
-problems. My use case is listening to the air traffic for 300 ms every
-few seconds (and I got that running for months!).
-
-
- > So I think it would be better if the cap iovar would get a new flag for this. Please hold this patch and let me discuss internally.
-
-That would be a pretty big limitation to have to wait for and use a
-special firmware for this feature. Also considering time it takes to
-release brcmfmac4366c-pcie.bin, Broadcom vs. Cypress, licensing issues
-with Cypress, we will likely never get all firmwares updated properly.
-
-As for me (!) it seems rather unacceptable (no offence!). I believe we
-should have a free choice to use that discovered feature even if
-Broadcom didn't test it for host machine purposes (just internal fw
-purposes as I get it).
-
-
-> some more specific comments below...
-> 
->> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
->> ---
->>   .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 24 ++++++++++++++++++++++
->>   1 file changed, 24 insertions(+)
->>
->> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
->> index 876731c57bf5..1194d31d3902 100644
->> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
->> @@ -91,6 +91,28 @@ static int brcmf_feat_debugfs_read(struct seq_file *seq, void *data)
->>   }
->>   #endif /* DEBUG */
->>
->> +struct brcmf_feat_fwfeat {
->> +    const char * const fwid;
->> +    u32 flags;
-> 
-> For consistency call this feat_flags as well.
-
-Sure.
-
-
->> +};
->> +
->> +static const struct brcmf_feat_fwfeat brcmf_feat_fwfeat_map[] = {
->> +};
->> +
->> +static void brcmf_feat_firmware_features(struct brcmf_pub *pub)
-> 
-> Try to keep name of the struct brcmf_pub instance 'drvr'.
-
-Wait, doesn't "pub" make more sense for "struct brcmf_pub" than "drvr"?
-:) I'm sure I also saw "pub" variables all over the code, so this isn't
-some new/mine convention.
-
-
- > Maybe the function name could be brcmf_feat_firmware_overrides() instead.
-
-Sure!
+T24gV2VkLCAyMDE4LTA1LTE2IGF0IDE1OjM2ICswMzAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiBQ
+a3NoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4gd3JpdGVzOg0KPsKgDQo+ID4gT24gTW9uLCAyMDE4
+LTA0LTMwIGF0IDE0OjAzICswNTMwLCBLcmlzaG5hIENoYWl0YW55YSB3cm90ZToNCj4gPj4gT24g
+TW9uLCBBcHIgMzAsIDIwMTggYXQgODoxMCBBTSwgUGtzaGloIDxwa3NoaWhAcmVhbHRlay5jb20+
+IHdyb3RlOg0KPiA+PiA+DQo+ID4+ID4NCj4gPj4gPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0t
+LS0tDQo+ID4+ID4gPiBGcm9tOiBCYXJyeSBEYXkgW21haWx0bzpicmlzZWxlY0BnbWFpbC5jb21d
+DQo+ID4+ID4gPiBTZW50OiBTYXR1cmRheSwgQXByaWwgMjgsIDIwMTggNjo0MiBBTQ0KPiA+PiA+
+ID4gVG86IFBrc2hpaA0KPiA+PiA+ID4gQ2M6IEthbGxlIFZhbG87IExhcnJ5LkZpbmdlckBsd2Zp
+bmdlci5uZXQ7IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KPiA+PiA+ID4gU3ViamVj
+dDogUmU6IFtQQVRDSCB2MyAwMC8xOV0gcnRsd2lmaTogaGFsbWFjOiBBZGQgbmV3IG1vZHVsZSBo
+YWxtYWMNCj4gPj4gPiA+DQo+ID4+ID4gPiBPbiBGcmksIEFwciAyNywgMjAxOCBhdCAwNTo0NDox
+NkFNICswMDAwLCBQa3NoaWggd3JvdGU6DQo+ID4+ID4gPiA+DQo+ID4+ID4gPiA+IFRoZSByZWdp
+c3RlcnMgcmVzaWRlIGluIGRyaXZlciBjYXVzZXMgZXJyb3IgZnJlcXVlbnRseSwgYmVjYXVzZSBN
+QUMgcmVnaXN0ZXINCj4gPj4gPiA+ID4gaXMgbWFpbnRhaW5lZCBieSBSZWFsdGVrJ3MgTUFDIHRl
+YW0gc28gdGhleSBjcmVhdGUgdGhpcyBtb2R1bGUgdG8gYXZvaWQgbWlzdGFrZXMuDQo+ID4+ID4g
+PiA+IEFub3RoZXIgYmVuZWZpdCBpcyB0byBtYWtlIGl0IHBvc3NpYmxlIHRvIGJlY29tZSBhIHRo
+aW4gZHJpdmVyLCBiZWNhdXNlIG1hbnkNCj4gPj4gPiA+ID4gY29tbW9uIGZ1bmN0aW9ucyBhcmUg
+cHJvdmlkZWQsIHNvIGR1cGxpY2F0ZSBjb2RlIHdpbGwgYmUgcmVkdWNlZC4NCj4gPj4gPiA+DQo+
+ID4+ID4gPiBIb3cgaXMgaXQgcG9zc2libGUgdG8gY3JlYXRlIGEgdGhpbiBkcml2ZXIgYnkgYWRk
+aW5nIGxvdHMgbW9yZSBjb2RlIGFuZCBsYXllcnMNCj4gPj4gPiA+IG9mIGluZGlyZWN0aW9uID8/
+PyBhbmQgd3JpdGluZyBpdCBpbiBhIHdheSB0aGF0IGl0IHdvbid0IGNvbXBpbGUgd2l0aG91dCB0
+aGUNCj4gPj4gPiA+IGNvZGUgZm9yIGV2ZXJ5IHR5cGUgb2YgYnVzIGludGVyZmFjZSBldmVuIHRo
+b3VnaCBtb3N0IG1vZHVsZXMgb25seSB1c2Ugb25lID8NCj4gPj4gPiA+DQo+ID4+ID4gQXMgSSBt
+ZW50aW9uZWQgaW4gZmlyc3QgcGFyYWdyYXBoICIoSSB1c2UgJ2RyaXZlcicgaW4gdGhpcyBtYWls
+IGluZGljYXRlcyBwYXJ0IG9mDQo+ID4+ID4gcnRsd2lmaSBleGNsdWRlZCBmcm9tIHRoaXMgbW9k
+dWxlLikiLiBJZiB0aGlzIG1vZHVsZSB3YXMgc2VlbiBhcyBhICdsaWInLCBydGw4ODIyYmUNCj4g
+Pj4gPiB3b3VsZCBiZSBhICJ0aGluIGRyaXZlciIuIEZvciBidXMgaW50ZXJmYWNlIGNvZGUsIEkg
+bmVlZCB0byBhZGQgYSB3YXkgdG8gY29tcGlsZQ0KPiA+PiA+IHR5cGUgb2YgYnVzIGludGVyZmFj
+ZSBhY2NvcmRpbmcgdG8gc2VsZWN0ZWQgY2hpcC4NCj4gPj4gPg0KPiA+PiA+ID4gSXQncyBhIGhv
+cnJpYmxlIHBpbGUgb2YgZ2FyYmFnZSBzbGFwcGVkIHRvZ2V0aGVyIGJ5IGFuIGluZXhwZXJpZW5j
+ZWQNCj4gPj4gPiA+IHByb2dyYW1tZXIuIEl0cyBhIG1ham9yIGRldGVycmVudCBmb3IgYW55b25l
+IGxvb2tpbmcgYXQgd29ya2luZyBvbiBvbmUgb2YNCj4gPj4gPiA+IHRoZSBsYXRlc3QgcmVhbHRl
+ayBkcml2ZXJzLg0KPiA+PiA+ID4NCj4gPj4gPiBUaGlzIG1vZHVsZSBpcyBkZXNpZ25lZCB0byBz
+dXBwb3J0IG11bHRpcGxlIE9TIGluY2x1ZGluZyBXaW5kb3dzIGFuZCBMaW51eCwgYW5kDQo+ID4+
+ID4gbWFueSBwcm9kdWN0cyBoYXZlIHVzZWQgdGhpcyBtb2R1bGUgYW5kIHdvcmtlZCB3ZWxsLiBX
+ZSBob3BlIExpbnV4IHVzZXIgY2FuIGFsc28NCj4gPj4gPiB1c2UgUmVhbHRlaydzIFdpRmkgd2l0
+aG91dCBhZGRpdGlvbmFsIGluc3RhbGxhdGlvbiBpZiBkcml2ZXIgd2FzIGJ1aWx0Lg0KPiA+PiA+
+IEluIG9yZGVyIHRvIHN1Ym1pdCB0aGlzIG1vZHVsZSB0byBrZXJuZWwgdXBzdHJlYW0sIHdlIHRh
+a2UgYSBsb3Qgb2YgZWZmb3J0DQo+ID4+ID4gdG8gZml0IExpbnV4IGNvZGluZyBjb252ZW50aW9u
+cyAoZS5nLiBjb2Rpbmcgc3R5bGUpLCBhbmQgZXhwbGljaXQNCj4gPj4gPiBzdWdnZXN0aW9ucyB3
+aWxsIGJlIGhlbHBmdWwgZm9yIHVzIHRvIGNvbnRpbnVvdXNseSBpbXByb3ZlIHRoaXMgbW9kdWxl
+Lg0KPiA+PsKgDQo+ID4+IElNSE8sIHRoaXMgaXMgYSBjb21tb24gdXNlIGNhc2UgZm9yIG1vc3Qg
+b3JnYW5pemF0aW9ucy4gSSB1bmRlcnN0YW5kDQo+ID4+IHRoYXQgTGludXggY2Fubm90DQo+ID4+
+IGFjY29tbW9kYXRlIG90aGVyIE9TZXMgcmVxdWlyZW1lbnRzIGJ1dCBpcyB0aGVyZSBhbiBhcHBy
+b3ZlZC9yZWNvbW1lbmRlZCB3YXkNCj4gPj4gdG8gdXBzdHJlYW0gYW4gT1MgYWdub3N0aWMgZHJp
+dmVyPyBBZ25vc3RpYyBkcml2ZXJzIGFyZSBnZW5lcmFsbHkNCj4gPj4gYnVsa2llciBjb21wYXJl
+ZCB0bw0KPiA+PiBMaW51eC1vbmx5IGRyaXZlcnMgYW5kIGFsc28gY29kZSBvcmdhbml6YXRpb24g
+aXMgYWxzbyBkaWZmZXJlbnQgKHRvDQo+ID4+IGhhbmRsZSBvdGhlciBPU2VzKS4NCj4gPj7CoA0K
+PiA+DQo+ID4gSGkgS2FsbGUsDQo+ID4NCj4gPiBUaGUgc3RhdGUgb2YgdGhpcyBwYXRjaHNldCB3
+YXMgY2hhbmdlZCB0byBSRkMgaW4gcGF0Y2h3b3JrLCBhbmQgSSBsb29rIGF0IFJGQydzDQo+ID4g
+bWVhbmluZyBpbiB3aXJlbGVzcyB3aWtpLiBEbyB5b3UgZXhwZWN0IHRoYXQgSSB3aWxsIHNlbmQg
+djQ/DQo+wqANCj4gWWVzLCBJIHdhcyBleHBlY3RpbmcgdGhhdCB5b3Ugd2lsbCBzdWJtaXQgdjQg
+d2l0aCBwcm9wZXIgZG9jdW1lbnRhdGlvbi4NCj4gSSB3YXMgc3VwcG9zZWQgdG8gc2VuZCBhbiBl
+bWFpbCBidXQgZm9yZ290LCBzb3JyeS4NCj7CoA0KPiA+IElmIHNvLCB3aGF0IGRvIEkgbmVlZCB0
+byBmaXggaW4gdjQ/IE9yLCB5b3UgbmVlZCBtb3JlIGRlc2NyaXB0aW9uDQo+ID4gYWJvdXQgdGhp
+cyBtb2R1bGUsIHBsZWFzZSBsZXQgbWUga25vdy7CoA0KPsKgDQo+IFRoZSBiaWdnZXN0IHByb2Js
+ZW0gaXMgdGhhdCBydGx3aWZpIHBhdGNoZXMgYXJlIHdheSB0b28gYmlnIGFuZCB3aGljaCBJDQo+
+IGRvbid0IHRoaW5rIGFyZSByZWFkeSBmb3IgdXBzdHJlYW0sIG1vc3Qgb2YgdGhlIHRpbWUgY29k
+ZSBxdWFsaXR5IGlzDQo+IGNsb3NlciB0byB0aGUgaW5mYW1vdXMgInZlbmRvciBkcml2ZXJzIi4g
+VGhpcyBpcyBjYXVzaW5nIG1lIHRvbyBtdWNoDQo+IGJ1cmRlbiwgZXZlbiBqdXN0IHJldmlld2lu
+ZyBhbmQgcHJvdmlkaW5nIGluaXRpYWwgY29tbWVudHMgdG8gcnRsd2lmaQ0KPiBwYXRjaGVzIHRh
+a2UgdG9vIG11Y2ggb2YgbXkgdGltZS4gRm9yIGV4YW1wbGUsIEkgc3RpbGwgaGF2ZW4ndCBiZWVu
+IGFibGUNCj4gdG8gY2hlY2sgdGhlIHJ0bHdpZmkgYnRjb2V4IHBhdGNoZXMgZnJvbSBhIG1vbnRo
+IGFnby4NCj7CoA0KPiBJbiBwcmluY2lwbGUgSSBjYW4gdXNlIGEgbWludXRlIG9yIHR3byBwZXIg
+cGF0Y2gsIGFueXRoaW5nIGxvbmdlciB0aGFuDQo+IHRoYXQgYW5kIEkgY2FuJ3Qga2VlcCB1cCB3
+aXRoIHRoZSBpbmNvbWluZyBwYXRjaCBmbG93LiBBbmQgd2l0aCBodWdlDQo+IHJ0bHdpZmkgcGF0
+Y2hzZXRzIEkgdXN1YWxseSBuZWVkIHNvbWV0aGluZyBtb3JlIGxpa2UgYW4gaG91ciB0aGFuIGZl
+dw0KPiBtaW51dGVzLg0KPsKgDQo+IEkgaGF2ZSBzYWlkIHRoaXMgYWxzbyBiZWZvcmUsIGJ1dCBt
+b3JlIGFuZCBtb3JlIEknbSB0aGlua2luZyB0aGF0DQo+IHJ0bHdpZmkgaXMgbm90IHJlYWxseSBh
+IHByb3BlciB1cHN0cmVhbSBkcml2ZXIuIEkgdGhpbmsgc3RhZ2luZyB3b3VsZCBiZQ0KPiBhIG11
+Y2ggYmV0dGVyIHBsYWNlIGZvciBpdCBhbmQgbWF5YmUgYSBwcm9wZXIgdXBzdHJlYW0gcmVhbHRl
+ayBkcml2ZXINCj4gd291bGQgYmUgc29tZXRoaW5nIGJhc2VkIG9uIHJ0bDh4eHh1PyBJIGR1bm5v
+Lg0KPsKgDQo+IEJ1dCB3ZSByZWFsbHkgbmVlZCB0byBmaW5kIGEgc29sdXRpb24gZm9yIHRoaXMg
+YXMgdGhlIGN1cnJlbnQgd2F5IHdpdGgNCj4gcnRsd2lmaSBwYXRjaGVzIHdvbid0IHdvcmsgaW4g
+dGhlIGxvbmcgcnVuLg0KPsKgDQoNCklmIHdlIHJlbW92ZSB1bnVzZWQgY29kZSBhbmQgZG8gcHJv
+cGVyIG1vZGlmaWNhdGlvbiAoZS5nLiByZW1vdmUgYWJzdHJhY3Rpb24gbGF5ZXIpDQphbmQgc3Vi
+bWl0IHRvIHN0YWdpbmcsIGJ1dCBzdGlsbCByZW1haW4gdGhlIGRpcmVjdG9yeSBsZXZlbHMuDQpX
+aWxsIHlvdSBhY2NlcHQgaGFsbWFjIGFuZCBzdWJtaXQgaXQgaW50byB1cHN0cmVhbSBhZnRlciBi
+ZWluZyByZXZpZXdlZCBpbiBzdGFnaW5nPw0KT3IsIHRoZSBvbmx5IHdheSB5b3UgY2FuIGFjY2Vw
+dCBpcyB0byByZW1vdmUgdGhlIGhhbG1hYyBkaXJlY3RvcnkgYW5kIHJlYXJyYW5nZQ0KdGhlIGNv
+ZGUgYW5kIHNwbGl0IGl0IGludG8gdGhlIHRvcCBsZXZlbCBkaXJlY3Rvcnk/DQoNClJlZ2FyZHMs
+DQpQSw0K
