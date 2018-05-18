@@ -1,55 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:12228 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752222AbeEGIoY (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45062 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751696AbeEROFx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 04:44:24 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 13/30] staging: wilc1000: rename clear_duringIP() to avoid camelCase issue
-Date: Mon, 7 May 2018 14:13:17 +0530
-Message-ID: <1525682614-3824-14-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104505_263002_5A1828CA)
-In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 18 May 2018 10:05:53 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 18 May 2018 17:05:40 +0300
+Message-Id: <20180518140543.13620-1-luca@coelho.fi> (sfid-20180518_160558_045501_F37EF668)
+Subject: [RFC 0/3] cfg80211/mac80211: add support for IEEE802.11ax
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rename clear_duringIP() function to avoid camelCase issue reported by
-checkpatch.pl script.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Hi,
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index d0fb31a..f1ebaea 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -269,7 +269,7 @@ static void remove_network_from_shadow(struct timer_list *unused)
- 		mod_timer(&aging_timer, jiffies + msecs_to_jiffies(AGING_TIME));
- }
- 
--static void clear_duringIP(struct timer_list *unused)
-+static void clear_duringip(struct timer_list *unused)
- {
- 	wilc_optaining_ip = false;
- }
-@@ -2272,7 +2272,7 @@ int wilc_init_host_int(struct net_device *net)
- 	priv = wdev_priv(net->ieee80211_ptr);
- 	if (op_ifcs == 0) {
- 		timer_setup(&aging_timer, remove_network_from_shadow, 0);
--		timer_setup(&wilc_during_ip_timer, clear_duringIP, 0);
-+		timer_setup(&wilc_during_ip_timer, clear_duringip, 0);
- 	}
- 	op_ifcs++;
- 
+This series contain a squashed version of our internal series of
+patches that add support for IEEE802.11ax draft v1.4.  It is a
+combination of over 40 patches, so I may have made some mistakes when
+squashing and splitting parts of to the right place, thus I'm sending
+as an RFC.
+
+I split it into 3 different patches, as you can see, one with cfg80211
+changes, one with radiotap changes and one with mac80211 changes.
+
+Please review them and let me know if anything needs to be changed.
+I've been rather sparse in the commit logs, so suggestions for
+improvements are welcome.
+
+Cheers,
+Luca.
+
+
+Luca Coelho (3):
+  cfg80211: Add support for HE
+  radiotap: add structs for HE
+  mac80211: add support for HE
+
+ drivers/net/wireless/realtek/rtlwifi/base.c |   2 +-
+ drivers/staging/rtl8188eu/include/wifi.h    |   1 -
+ drivers/staging/rtl8712/wifi.h              |   1 -
+ drivers/staging/rtl8723bs/include/wifi.h    |   1 -
+ include/linux/ieee80211.h                   | 431 +++++++++++++++++++-
+ include/net/cfg80211.h                      | 102 ++++-
+ include/net/ieee80211_radiotap.h            | 111 +++++
+ include/net/mac80211.h                      |  64 ++-
+ include/uapi/linux/nl80211.h                |  87 +++-
+ net/mac80211/Makefile                       |   1 +
+ net/mac80211/agg-rx.c                       |   8 +-
+ net/mac80211/agg-tx.c                       |  19 +-
+ net/mac80211/cfg.c                          |   5 +
+ net/mac80211/he.c                           |  55 +++
+ net/mac80211/ieee80211_i.h                  |  16 +
+ net/mac80211/main.c                         |  19 +-
+ net/mac80211/mlme.c                         | 277 ++++++++++++-
+ net/mac80211/rx.c                           | 127 +++++-
+ net/mac80211/sta_info.c                     |  15 +-
+ net/mac80211/sta_info.h                     |  20 +-
+ net/mac80211/trace.h                        |   2 +-
+ net/mac80211/util.c                         | 120 +++++-
+ net/wireless/core.c                         |  21 +-
+ net/wireless/nl80211.c                      |  99 ++++-
+ net/wireless/util.c                         |  82 ++++
+ 25 files changed, 1633 insertions(+), 53 deletions(-)
+ create mode 100644 net/mac80211/he.c
+
 -- 
-2.7.4
+2.17.0
