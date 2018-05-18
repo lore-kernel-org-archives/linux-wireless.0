@@ -1,181 +1,241 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44218 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932949AbeE2Lb1 (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:45392 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753378AbeERJal (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 May 2018 07:31:27 -0400
-From: Karthikeyan Periyasamy <periyasa@codeaurora.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Karthikeyan Periyasamy <periyasa@codeaurora.org>
-Subject: [PATCH] ath10k: fix spectral scan for QCA9984 and QCA9888 chipsets
-Date: Tue, 29 May 2018 17:01:13 +0530
-Message-Id: <1527593473-15976-1-git-send-email-periyasa@codeaurora.org> (sfid-20180529_133137_016504_FC1C3919)
+        Fri, 18 May 2018 05:30:41 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 12/14] rtlwifi: use sk_buff to queue C2H commands
+Date: Fri, 18 May 2018 17:30:05 +0800
+Message-ID: <20180518093007.23594-13-pkshih@realtek.com> (sfid-20180518_113100_687573_F17F45F0)
+In-Reply-To: <20180518093007.23594-1-pkshih@realtek.com>
+References: <20180518093007.23594-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The spectral scan has been always broken on QCA9984 and QCA9888.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Introduce a hardware parameter 'spectral_bin_offset' to resolve this issue for
-QCA9984 and QCA9888 chipsets. For other chipsets, the hardware parameter
-'spectral_bin_offset' is zero so that existing behaviour is retained as it is.
+We use 'struct rtl_c2hcmd' to store C2H commands originally, and the code
+is slightly complex to enqueue and dequeue and also wastes time to
+allocate and memcpy data. Since C2H commands are asynchronous events,
+they can be processed in work queue, so RX ISR enqueues C2H result in
+removal of rtl_c2h_packet_handler().
 
-In QCA9984 and QCA9888 chipsets, hardware param value 'spectral_bin_discard'
-is 12 bytes. This 12 bytes is derived as the sum of segment index (4 bytes),
-extra bins before the actual data (4 bytes) and extra bins after the actual
-data (4 bytes). Always discarding (12 bytes) happens at end of the samples and
-incorrect samples got dumped, so that user can find incorrect arrangement
-samples in spectral scan dump.
-
-To fix this issue, we have to discard first 8 bytes and last 4 bytes in every
-samples, so totally 12 bytes are discarded. In every sample we need to consider
-the offset while taking the actual spectral data. For QCA9984, QCA9888 the
-offset is 8 bytes (segment index + extra bins before actual data).
-
-Hardware tested: QCA9984 and QCA9888
-Firmware tested: 10.4-3.5.3-00053
-
-Signed-off-by: Karthikeyan Periyasamy <periyasa@codeaurora.org>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c     | 13 +++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h       |  3 +++
- drivers/net/wireless/ath/ath10k/spectral.c |  2 +-
- 3 files changed, 17 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtlwifi/base.c | 96 +++++++----------------------
+ drivers/net/wireless/realtek/rtlwifi/base.h |  5 +-
+ drivers/net/wireless/realtek/rtlwifi/pci.c  |  3 +-
+ drivers/net/wireless/realtek/rtlwifi/wifi.h |  2 +-
+ 4 files changed, 25 insertions(+), 81 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 4cf54a7..25ecf74 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -82,6 +82,7 @@
- 		.hw_ops = &qca988x_ops,
- 		.decap_align_bytes = 4,
- 		.spectral_bin_discard = 0,
-+		.spectral_bin_offset = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
- 		.n_cipher_suites = 8,
-@@ -113,6 +114,7 @@
- 		.hw_ops = &qca988x_ops,
- 		.decap_align_bytes = 4,
- 		.spectral_bin_discard = 0,
-+		.spectral_bin_offset = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
- 		.n_cipher_suites = 8,
-@@ -145,6 +147,7 @@
- 		.hw_ops = &qca988x_ops,
- 		.decap_align_bytes = 4,
- 		.spectral_bin_discard = 0,
-+		.spectral_bin_offset = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
- 		.n_cipher_suites = 8,
-@@ -176,6 +179,7 @@
- 		.hw_ops = &qca988x_ops,
- 		.decap_align_bytes = 4,
- 		.spectral_bin_discard = 0,
-+		.spectral_bin_offset = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
- 		.n_cipher_suites = 8,
-@@ -207,6 +211,7 @@
- 		.hw_ops = &qca988x_ops,
- 		.decap_align_bytes = 4,
- 		.spectral_bin_discard = 0,
-+		.spectral_bin_offset = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
- 		.n_cipher_suites = 8,
-@@ -238,6 +243,7 @@
- 		.hw_ops = &qca988x_ops,
- 		.decap_align_bytes = 4,
- 		.spectral_bin_discard = 0,
-+		.spectral_bin_offset = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
- 		.n_cipher_suites = 8,
-@@ -272,6 +278,7 @@
- 		.target_cpu_freq = 176000000,
- 		.decap_align_bytes = 4,
- 		.spectral_bin_discard = 0,
-+		.spectral_bin_offset = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
- 		.n_cipher_suites = 8,
-@@ -309,6 +316,7 @@
- 		.hw_ops = &qca99x0_ops,
- 		.decap_align_bytes = 1,
- 		.spectral_bin_discard = 4,
-+		.spectral_bin_offset = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
- 		.n_cipher_suites = 11,
-@@ -347,6 +355,7 @@
- 		.hw_ops = &qca99x0_ops,
- 		.decap_align_bytes = 1,
- 		.spectral_bin_discard = 12,
-+		.spectral_bin_offset = 8,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 927b7d231576..61f12f86fcd4 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -571,9 +571,9 @@ int rtl_init_core(struct ieee80211_hw *hw)
+ 	spin_lock_init(&rtlpriv->locks.iqk_lock);
+ 	/* <5> init list */
+ 	INIT_LIST_HEAD(&rtlpriv->entry_list);
+-	INIT_LIST_HEAD(&rtlpriv->c2hcmd_list);
+ 	INIT_LIST_HEAD(&rtlpriv->scan_list.list);
+ 	skb_queue_head_init(&rtlpriv->tx_report.queue);
++	skb_queue_head_init(&rtlpriv->c2hcmd_queue);
  
- 		/* Can do only 2x2 VHT160 or 80+80. 1560Mbps is 4x4 80Mhz
- 		 * or 2x2 160Mhz, long-guard-interval.
-@@ -388,6 +397,7 @@
- 		.hw_ops = &qca99x0_ops,
- 		.decap_align_bytes = 1,
- 		.spectral_bin_discard = 12,
-+		.spectral_bin_offset = 8,
+ 	rtlmac->link_state = MAC80211_NOLINK;
  
- 		/* Can do only 1x1 VHT160 or 80+80. 780Mbps is 2x2 80Mhz or
- 		 * 1x1 160Mhz, long-guard-interval.
-@@ -423,6 +433,7 @@
- 		.hw_ops = &qca988x_ops,
- 		.decap_align_bytes = 4,
- 		.spectral_bin_discard = 0,
-+		.spectral_bin_offset = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
- 		.n_cipher_suites = 8,
-@@ -456,6 +467,7 @@
- 		.target_cpu_freq = 176000000,
- 		.decap_align_bytes = 4,
- 		.spectral_bin_discard = 0,
-+		.spectral_bin_offset = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
- 		.n_cipher_suites = 8,
-@@ -494,6 +506,7 @@
- 		.hw_ops = &qca99x0_ops,
- 		.decap_align_bytes = 1,
- 		.spectral_bin_discard = 4,
-+		.spectral_bin_offset = 0,
- 		.vht160_mcs_rx_highest = 0,
- 		.vht160_mcs_tx_highest = 0,
- 		.n_cipher_suites = 11,
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 23467e9..a274bd8 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -586,6 +586,9 @@ struct ath10k_hw_params {
+@@ -2262,56 +2262,36 @@ void rtl_fwevt_wq_callback(void *data)
+ 	rtlpriv->cfg->ops->c2h_command_handle(hw);
+ }
  
- 	/* target supporting retention restore on ddr */
- 	bool rri_on_ddr;
+-void rtl_c2hcmd_enqueue(struct ieee80211_hw *hw, u8 tag, u8 len, u8 *val)
++void rtl_c2hcmd_enqueue(struct ieee80211_hw *hw, struct sk_buff *skb)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	unsigned long flags;
+-	struct rtl_c2hcmd *c2hcmd;
+-
+-	c2hcmd = kmalloc(sizeof(*c2hcmd),
+-			 in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
+-
+-	if (!c2hcmd)
+-		goto label_err;
+-
+-	c2hcmd->val = kmalloc(len,
+-			      in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
+-
+-	if (!c2hcmd->val)
+-		goto label_err2;
+-
+-	/* fill data */
+-	c2hcmd->tag = tag;
+-	c2hcmd->len = len;
+-	memcpy(c2hcmd->val, val, len);
+ 
+ 	/* enqueue */
+ 	spin_lock_irqsave(&rtlpriv->locks.c2hcmd_lock, flags);
+ 
+-	list_add_tail(&c2hcmd->list, &rtlpriv->c2hcmd_list);
++	__skb_queue_tail(&rtlpriv->c2hcmd_queue, skb);
+ 
+ 	spin_unlock_irqrestore(&rtlpriv->locks.c2hcmd_lock, flags);
+ 
+ 	/* wake up wq */
+ 	queue_delayed_work(rtlpriv->works.rtl_wq, &rtlpriv->works.c2hcmd_wq, 0);
+-
+-	return;
+-
+-label_err2:
+-	kfree(c2hcmd);
+-
+-label_err:
+-	RT_TRACE(rtlpriv, COMP_CMD, DBG_WARNING,
+-		 "C2H cmd enqueue fail.\n");
+ }
+ EXPORT_SYMBOL(rtl_c2hcmd_enqueue);
+ 
+-void rtl_c2h_content_parsing(struct ieee80211_hw *hw, u8 cmd_id,
+-			     u8 cmd_len, u8 *cmd_buf)
++static void rtl_c2h_content_parsing(struct ieee80211_hw *hw,
++				    struct sk_buff *skb)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_hal_ops *hal_ops = rtlpriv->cfg->ops;
+ 	const struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
++	u8 cmd_id, cmd_seq, cmd_len;
++	u8 *cmd_buf = NULL;
 +
-+	/* Number of bytes to be the offset for each FFT sample */
-+	int spectral_bin_offset;
- };
++	cmd_id = skb->data[0];
++	cmd_seq = skb->data[1];
++	cmd_len = skb->len - 2;
++	cmd_buf = skb->data + 2;
  
- struct htt_rx_desc;
-diff --git a/drivers/net/wireless/ath/ath10k/spectral.c b/drivers/net/wireless/ath/ath10k/spectral.c
-index af6995d..653b6d0 100644
---- a/drivers/net/wireless/ath/ath10k/spectral.c
-+++ b/drivers/net/wireless/ath/ath10k/spectral.c
-@@ -145,7 +145,7 @@ int ath10k_spectral_process_fft(struct ath10k *ar,
- 	fft_sample->noise = __cpu_to_be16(phyerr->nf_chains[chain_idx]);
+ 	switch (cmd_id) {
+ 	case C2H_DBG:
+@@ -2347,67 +2327,35 @@ void rtl_c2h_content_parsing(struct ieee80211_hw *hw, u8 cmd_id,
+ 	}
+ }
  
- 	bins = (u8 *)fftr;
--	bins += sizeof(*fftr);
-+	bins += sizeof(*fftr) + ar->hw_params.spectral_bin_offset;
+-void rtl_c2h_packet_handler(struct ieee80211_hw *hw, u8 *buffer, u8 len)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u8 c2h_cmd_id = 0, c2h_cmd_seq = 0, c2h_cmd_len = 0;
+-	u8 *tmp_buf = NULL;
+-
+-	c2h_cmd_id = buffer[0];
+-	c2h_cmd_seq = buffer[1];
+-	c2h_cmd_len = len - 2;
+-	tmp_buf = buffer + 2;
+-
+-	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-		 "[C2H packet], c2hCmdId=0x%x, c2hCmdSeq=0x%x, c2hCmdLen=%d\n",
+-		 c2h_cmd_id, c2h_cmd_seq, c2h_cmd_len);
+-
+-	RT_PRINT_DATA(rtlpriv, COMP_FW, DBG_TRACE,
+-		      "[C2H packet], Content Hex:\n", tmp_buf, c2h_cmd_len);
+-
+-	switch (c2h_cmd_id) {
+-	case C2H_BT_INFO:
+-	case C2H_BT_MP:
+-		rtl_c2hcmd_enqueue(hw, c2h_cmd_id, c2h_cmd_len, tmp_buf);
+-		break;
+-	default:
+-		rtl_c2h_content_parsing(hw, c2h_cmd_id, c2h_cmd_len, tmp_buf);
+-		break;
+-	}
+-}
+-EXPORT_SYMBOL_GPL(rtl_c2h_packet_handler);
+-
+ void rtl_c2hcmd_launcher(struct ieee80211_hw *hw, int exec)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct sk_buff *skb;
+ 	unsigned long flags;
+-	struct rtl_c2hcmd *c2hcmd;
+ 	int i;
  
- 	fft_sample->tsf = __cpu_to_be64(tsf);
+ 	for (i = 0; i < 200; i++) {
+ 		/* dequeue a task */
+ 		spin_lock_irqsave(&rtlpriv->locks.c2hcmd_lock, flags);
  
+-		c2hcmd = list_first_entry_or_null(&rtlpriv->c2hcmd_list,
+-						  struct rtl_c2hcmd, list);
+-
+-		if (c2hcmd)
+-			list_del(&c2hcmd->list);
++		skb = __skb_dequeue(&rtlpriv->c2hcmd_queue);
+ 
+ 		spin_unlock_irqrestore(&rtlpriv->locks.c2hcmd_lock, flags);
+ 
+ 		/* do it */
+-		if (!c2hcmd)
++		if (!skb)
+ 			break;
+ 
++		RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG, "C2H rx_desc_shift=%d\n",
++			 *((u8 *)skb->cb));
++		RT_PRINT_DATA(rtlpriv, COMP_FW, DBG_DMESG,
++			      "C2H data: ", skb->data, skb->len);
++
+ 		if (exec)
+-			rtl_c2h_content_parsing(hw, c2hcmd->tag,
+-						c2hcmd->len, c2hcmd->val);
++			rtl_c2h_content_parsing(hw, skb);
+ 
+ 		/* free */
+-		kfree(c2hcmd->val);
+-
+-		kfree(c2hcmd);
++		dev_kfree_skb_any(skb);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.h b/drivers/net/wireless/realtek/rtlwifi/base.h
+index 3bf174e5b07e..912f205779c3 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.h
++++ b/drivers/net/wireless/realtek/rtlwifi/base.h
+@@ -161,10 +161,7 @@ void rtl_watchdog_wq_callback(void *data);
+ void rtl_fwevt_wq_callback(void *data);
+ void rtl_c2hcmd_wq_callback(void *data);
+ void rtl_c2hcmd_launcher(struct ieee80211_hw *hw, int exec);
+-void rtl_c2hcmd_enqueue(struct ieee80211_hw *hw, u8 tag, u8 len, u8 *val);
+-void rtl_c2h_content_parsing(struct ieee80211_hw *hw, u8 c2h_cmd_id,
+-			     u8 c2h_cmd_len, u8 *tmp_buf);
+-void rtl_c2h_packet_handler(struct ieee80211_hw *hw, u8 *buffer, u8 len);
++void rtl_c2hcmd_enqueue(struct ieee80211_hw *hw, struct sk_buff *skb);
+ 
+ u8 rtl_mrate_idx_to_arfr_id(struct ieee80211_hw *hw, u8 rate_index,
+ 			    enum wireless_mode wirelessmode);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index dd51c67c09fa..ae13bcfb3bf0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -831,8 +831,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+ 		}
+ 		/* handle command packet here */
+ 		if (stats.packet_report_type == C2H_PACKET) {
+-			rtl_c2h_packet_handler(hw, skb->data, (u8)skb->len);
+-			dev_kfree_skb_any(skb);
++			rtl_c2hcmd_enqueue(hw, skb);
+ 			goto new_trx_end;
+ 		}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 930e1ec2280f..9e620b943f8c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2791,7 +2791,7 @@ struct rtl_priv {
+ 	struct list_head entry_list;
+ 
+ 	/* c2hcmd list for kthread level access */
+-	struct list_head c2hcmd_list;
++	struct sk_buff_head c2hcmd_queue;
+ 
+ 	struct rtl_debug dbg;
+ 	int max_fw_size;
 -- 
-1.9.1
+2.15.1
