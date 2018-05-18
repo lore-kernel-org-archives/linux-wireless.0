@@ -1,77 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:33082 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750831AbeEEHHC (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:42865 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751531AbeERTAY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 May 2018 03:07:02 -0400
-Date: Sat, 5 May 2018 09:06:58 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-        linux-kernel@vger.kernel.org, tglx@linutronix.de,
-        Ingo Molnar <mingo@redhat.com>,
-        "David S. Miller" <davem@davemloft.net>,
+        Fri, 18 May 2018 15:00:24 -0400
+Received: by mail-oi0-f67.google.com with SMTP id t27-v6so7995827oij.9
+        for <linux-wireless@vger.kernel.org>; Fri, 18 May 2018 12:00:23 -0700 (PDT)
+Subject: Re: [PATCH] cfg80211: Fix support for flushing old scan results
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
         Johannes Berg <johannes@sipsolutions.net>,
-        Alexander Aring <alex.aring@gmail.com>,
-        Stefan Schmidt <stefan@osg.samsung.com>,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-wpan@vger.kernel.org,
-        Anna-Maria Gleixner <anna-maria@linutronix.de>
-Subject: Re: [RFC PATCH 2/2] net: mac808211: mac802154: use
- lockdep_assert_in_softirq() instead own warning
-Message-ID: <20180505070658.sqttolnnkgv7xyj5@gmail.com> (sfid-20180505_090724_414692_3F333587)
-References: <20180504175144.12179-1-bigeasy@linutronix.de>
- <20180504175144.12179-3-bigeasy@linutronix.de>
- <20180504183249.GU12217@hirez.programming.kicks-ass.net>
- <20180504184538.gavk7e2vtm73e32w@linutronix.de>
- <20180504185132.GV12217@hirez.programming.kicks-ass.net>
- <20180504190735.izmzibhb66gjb5wr@linutronix.de>
+        Tim Kourt <tim.a.kourt@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+References: <20180511164835.40161-1-tim.a.kourt@linux.intel.com>
+ <1526631206.3805.1.camel@sipsolutions.net>
+ <d12d4d4d-25d6-3cd0-1399-27de09c7f8c5@gmail.com>
+ <5AFF2169.4010003@broadcom.com>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <51c56faf-267d-c204-243a-31fc91976c5e@gmail.com> (sfid-20180518_210027_857161_EE419AB0)
+Date: Fri, 18 May 2018 14:00:20 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180504190735.izmzibhb66gjb5wr@linutronix.de>
+In-Reply-To: <5AFF2169.4010003@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Arend,
 
-* Sebastian Andrzej Siewior <bigeasy@linutronix.de> wrote:
-
-> On 2018-05-04 20:51:32 [+0200], Peter Zijlstra wrote:
-> > On Fri, May 04, 2018 at 08:45:39PM +0200, Sebastian Andrzej Siewior wrote:
-> > > On 2018-05-04 20:32:49 [+0200], Peter Zijlstra wrote:
-> > > > On Fri, May 04, 2018 at 07:51:44PM +0200, Sebastian Andrzej Siewior wrote:
-> > > > > From: Anna-Maria Gleixner <anna-maria@linutronix.de>
-> > > > > 
-> > > > > The warning in ieee802154_rx() and ieee80211_rx_napi() is there to ensure
-> > > > > the softirq context for the subsequent netif_receive_skb() call. 
-> > > > 
-> > > > That's not in fact what it does though; so while that might indeed be
-> > > > the intent that's not what it does.
-> > > 
-> > > It was introduced in commit d20ef63d3246 ("mac80211: document
-> > > ieee80211_rx() context requirement"):
-> > > 
-> > >     mac80211: document ieee80211_rx() context requirement
-> > >     
-> > >     ieee80211_rx() must be called with softirqs disabled
-> > 
-> > softirqs disabled, ack that is exactly what it checks.
-> > 
-> > But afaict the assertion you introduced tests that we are _in_ softirq
-> > context, which is not the same.
+On 05/18/2018 01:54 PM, Arend van Spriel wrote:
+> On 5/18/2018 6:47 PM, Denis Kenzior wrote:
+>> Hi Johannes,
+>>
+>> On 05/18/2018 03:13 AM, Johannes Berg wrote:
+>>> On Fri, 2018-05-11 at 09:48 -0700, Tim Kourt wrote:
+>>>> __cfg80211_bss_expire function was incorrectly used to flush the BSS
+>>>> entries from the previous scan results, causing NL80211_SCAN_FLAG_FLUSH
+>>>> flag to have no effect.
+>>>
+>>> Hmm. I guess I'm not convinced - what's the bug?
+>>>
+>>> We flush anything that's older than our start, so that should work just
+>>> fine?
+>>>
+>>
+>> Just FYI, there's definitely something funny with the scanning code:
+>>
+>> denkenz@iwd-test ~ $ sudo iw dev wlp2s0 scan flush
+>> BSS 10:c3:7b:54:74:d4(on wlp2s0)
+>>      last seen: 274.815s [boottime]
+>>      freq: 5765
+>>      beacon interval: 100 TUs
+>>      signal: -35.00 dBm
+>>      last seen: 349 ms ago
+>>      Information elements from Probe Response frame:
+>>      SSID: \x00\x00\x00\x00\x00\x00\x00\x00\x00
+>>
+>>
+>> Then if I try:
+>> denkenz@iwd-test ~ $ sudo iw dev wlp2s0 scan flush ssid myssid
+>> BSS 10:c3:7b:54:74:d4(on wlp2s0)
+>>      last seen: 319.667s [boottime]
+>>      freq: 5765
+>>      beacon interval: 100 TUs
+>>      signal: -42.00 dBm
+>>      last seen: 350 ms ago
+>>      Information elements from Probe Response frame:
+>>      SSID: \x00\x00\x00\x00\x00\x00\x00\x00\x00
+>> ....
+>> BSS 10:c3:7b:54:74:d4(on wlp2s0)
+>>      last seen: 319.662s [boottime]
+>>      freq: 5765
+>>      beacon interval: 100 TUs
+>>      signal: -37.00 dBm
+>>      last seen: 355 ms ago
+>>      Information elements from Probe Response frame:
+>>      SSID: myssid
+>>
+>> Shouldn't the second scan give a single result from that one BSS?
 > 
-> indeed, now it clicked. Given what I wrote in the cover letter would you
-> be in favour of (a proper) lockdep_assert_BH_disabled() or the cheaper
-> local_bh_enable() (assuming the network folks don't mind the cheaper
-> version)?
+> Looking at the 'last seen' values it does look ok. Both results have the 
+> same BSSID, but the first one shows the broadcast ssid (or so it seems). 
 
-BTW., going by the hardirq variant nomenclature:
+Are you saying the first result is from the Beacon and the other is from 
+the Probe Response?  Then why are the 'Information elements from Probe 
+Response frame' the way they are?
 
-        lockdep_assert_irqs_enabled();
+> Neither iw nor nl80211 on the kernel side add the broadcast ssid. So 
+> question is what device are you using and does it use mac80211 software 
 
-... the proper name would not be lockdep_assert_BH_disabled(), but:
+Intel 7260.  We're seeing the same results with hwsim as well though. 
+This was just a quick test to illustrate.
 
-        lockdep_assert_softirqs_disabled();
+> scanning or hardware scanning. I did not dive into mac80211 to see if 
+> the broadcast ssid is added there.
 
-Thanks,
+By the way, if you're interested.  The same tests with a Broadcom based 
+device wouldn't even find the hidden network.  It would always come back 
+with a single 'x00' SSID regardless of whether I added 'ssid myssid' at 
+the end.
 
-	Ingo
+Regards,
+-Denis
