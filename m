@@ -1,86 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46896 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752800AbeE3HUM (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:45376 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753283AbeERJai (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 03:20:12 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 30 May 2018 10:19:55 +0300
-Message-Id: <20180530072005.633-1-luca@coelho.fi> (sfid-20180530_092018_591051_783A73BF)
-Subject: [PATCH 00/10] iwlwifi: updates intended for v4.18 2018-05-30
+        Fri, 18 May 2018 05:30:38 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 03/14] rtlwifi: remove duplicate rx_packet_type definition
+Date: Fri, 18 May 2018 17:29:56 +0800
+Message-ID: <20180518093007.23594-4-pkshih@realtek.com> (sfid-20180518_113058_437161_3E8B9FF6)
+In-Reply-To: <20180518093007.23594-1-pkshih@realtek.com>
+References: <20180518093007.23594-1-pkshih@realtek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Hi,
+Move duplicate definitions from def.h of ic folder to wifi.h
 
-Here's the last batch of patches intended for 4.18.  Focused on
-bugfixes, especially (but not exclusively) regressions introduced in
-4.18.  The patches include these changes:
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/def.h | 7 -------
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/def.h | 8 --------
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/def.h | 8 --------
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/def.h | 8 --------
+ drivers/net/wireless/realtek/rtlwifi/wifi.h          | 8 ++++++++
+ 5 files changed, 8 insertions(+), 31 deletions(-)
 
-* Some bugzilla fixes;
-* Some kernel warning fixes;
-* Fix for an (ETSI) WMM limits bug;
-* Fix for a Bluetooth coexistence problem on 9000 devices;
-* Fix for an interoperability bug related to block-ack sessions; 
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Aviya Erenfeld (1):
-  iwlmvm: tdls: Check TDLS channel switch support
-
-Colin Ian King (1):
-  iwlwifi: mvm: remove division by size of sizeof(struct
-    ieee80211_wmm_rule)
-
-Emmanuel Grumbach (2):
-  iwlwifi: mvm: fix TSO with highly fragmented SKBs
-  iwlwifi: mvm: honor the max_amsdu_subframes limit
-
-Erel Geron (1):
-  iwlwifi: fix non_shared_ant for 9000 devices
-
-Golan Ben Ami (1):
-  iwlwifi: add csr configuration for 6300 devices
-
-Gregory Greenman (1):
-  iwlwifi: mvm: open BA session only when sta is authorized
-
-Johannes Berg (1):
-  iwlwifi: mvm: fix race in queue notification wait
-
-Sara Sharon (1):
-  iwlwifi: mvm: drop UNKNOWN security type frames
-
-Shaul Triebitz (1):
-  iwlwifi: pcie: fix race in Rx buffer allocator
-
- drivers/net/wireless/intel/iwlwifi/cfg/6000.c |  1 +
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c |  2 +-
- .../net/wireless/intel/iwlwifi/fw/api/rx.h    |  1 +
- .../wireless/intel/iwlwifi/iwl-nvm-parse.c    |  3 +-
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  8 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c   | 38 +++++++++----------
- drivers/net/wireless/intel/iwlwifi/mvm/rs.h   |  7 +---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 36 ++++++++++++------
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c  |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h  | 10 ++---
- drivers/net/wireless/intel/iwlwifi/mvm/tdls.c | 16 +++++---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c   | 16 +++++---
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  3 ++
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |  2 +
- 14 files changed, 83 insertions(+), 62 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/def.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/def.h
+index 0532b9852444..32492d64d685 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/def.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/def.h
+@@ -137,13 +137,6 @@ enum version_8188e {
+ 	VERSION_UNKNOWN = 0xFF,
+ };
+ 
+-enum rx_packet_type {
+-	NORMAL_RX,
+-	TX_REPORT1,
+-	TX_REPORT2,
+-	HIS_REPORT,
+-};
+-
+ enum rtl819x_loopback_e {
+ 	RTL819X_NO_LOOPBACK = 0,
+ 	RTL819X_MAC_LOOPBACK = 1,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/def.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/def.h
+index 60f5728b4e2d..9f7e7bb8610b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/def.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/def.h
+@@ -47,14 +47,6 @@ enum version_8192e {
+ 	VERSION_UNKNOWN = 0xFF,
+ };
+ 
+-enum rx_packet_type {
+-	NORMAL_RX,
+-	TX_REPORT1,
+-	TX_REPORT2,
+-	HIS_REPORT,
+-	C2H_PACKET,
+-};
+-
+ enum rtl_desc_qsel {
+ 	QSLT_BK = 0x2,
+ 	QSLT_BE = 0x0,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/def.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/def.h
+index 025ea5c0f3f6..5e5403d69220 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/def.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/def.h
+@@ -38,14 +38,6 @@
+ /* Currently only for RTL8723B */
+ #define EXT_VENDOR_ID				(BIT(18) | BIT(19))
+ 
+-enum rx_packet_type {
+-	NORMAL_RX,
+-	TX_REPORT1,
+-	TX_REPORT2,
+-	HIS_REPORT,
+-	C2H_PACKET,
+-};
+-
+ enum rtl_desc_qsel {
+ 	QSLT_BK = 0x2,
+ 	QSLT_BE = 0x0,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/def.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/def.h
+index dfbdf539de1a..498f716bfc73 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/def.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/def.h
+@@ -332,14 +332,6 @@ enum rtl_desc_qsel {
+ 	QSLT_CMD = 0x13,
+ };
+ 
+-enum rx_packet_type {
+-	NORMAL_RX,
+-	TX_REPORT1,
+-	TX_REPORT2,
+-	HIS_REPORT,
+-	C2H_PACKET,
+-};
+-
+ struct phy_sts_cck_8821ae_t {
+ 	u8 adc_pwdb_X[4];
+ 	u8 sq_rpt;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 1259d2b66d17..81ac036760fc 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -1010,6 +1010,14 @@ enum dm_info_query {
+ 	DM_INFO_SIZE,
+ };
+ 
++enum rx_packet_type {
++	NORMAL_RX,
++	TX_REPORT1,
++	TX_REPORT2,
++	HIS_REPORT,
++	C2H_PACKET,
++};
++
+ struct rtlwifi_tx_info {
+ 	int sn;
+ 	unsigned long send_time;
 -- 
-2.17.0
+2.15.1
