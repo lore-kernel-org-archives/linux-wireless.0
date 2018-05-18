@@ -1,505 +1,276 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:39091 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751319AbeEVTDY (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:45386 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753334AbeERJai (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 15:03:24 -0400
-From: Ramon Fried <ramon.fried@gmail.com>
-To: kvalo@codeaurora.org
-Cc: linux-kernel@vger.kernel.org, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Eyal Ilsar <eilsar@codeaurora.org>,
-        Ramon Fried <ramon.fried@linaro.org>
-Subject: [PATCH v3] wcn36xx: Add support for Factory Test Mode (FTM)
-Date: Tue, 22 May 2018 22:02:56 +0300
-Message-Id: <20180522190256.32136-1-ramon.fried@gmail.com> (sfid-20180522_210346_619205_B583DAEC)
+        Fri, 18 May 2018 05:30:38 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 05/14] rtlwifi: remove duplicate C2H definition
+Date: Fri, 18 May 2018 17:29:58 +0800
+Message-ID: <20180518093007.23594-6-pkshih@realtek.com> (sfid-20180518_113127_104285_28ED9EE1)
+In-Reply-To: <20180518093007.23594-1-pkshih@realtek.com>
+References: <20180518093007.23594-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Ilsar <eilsar@codeaurora.org>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Introduce infrastructure for supporting Factory Test Mode (FTM) of the
-wireless LAN subsystem. In order for the user space to access the
-firmware in test mode the relevant netlink channel needs to be exposed
-from the kernel driver.
+Move C2H definition to wifi.h, because the definitions of 8192ee, 8723be
+and 8821ae are the same.
 
-The above is achieved as follows:
-1) Register wcn36xx driver to testmode callback from netlink
-2) Add testmode callback implementation to handle incoming FTM commands
-3) Add FTM command packet structure
-4) Add handling for GET_BUILD_RELEASE_NUMBER (msgid=0x32A2)
-5) Add generic handling for all PTT_MSG packets
-
-Signed-off-by: Eyal Ilsar <eilsar@codeaurora.org>
-Signed-off-by: Ramon Fried <ramon.fried@linaro.org>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
-v3:
-	* fixed kbuild warning
-v2:
-    * check for NULL after kmalloc
-    * don't assign value to ret.
- drivers/net/wireless/ath/wcn36xx/Makefile     |   2 +
- drivers/net/wireless/ath/wcn36xx/hal.h        |  16 ++
- drivers/net/wireless/ath/wcn36xx/main.c       |   3 +
- drivers/net/wireless/ath/wcn36xx/smd.c        |  81 ++++++++++
- drivers/net/wireless/ath/wcn36xx/smd.h        |   4 +
- drivers/net/wireless/ath/wcn36xx/testmode.c   | 149 ++++++++++++++++++
- drivers/net/wireless/ath/wcn36xx/testmode.h   |  46 ++++++
- drivers/net/wireless/ath/wcn36xx/testmode_i.h |  29 ++++
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h    |   2 +
- 9 files changed, 332 insertions(+)
- create mode 100644 drivers/net/wireless/ath/wcn36xx/testmode.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/testmode.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/testmode_i.h
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c | 16 ++++++++--------
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h | 11 -----------
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c | 12 ++++++------
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h | 10 ----------
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c | 12 ++++++------
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h | 14 --------------
+ drivers/net/wireless/realtek/rtlwifi/wifi.h         | 19 +++++++++++++++++++
+ 7 files changed, 39 insertions(+), 55 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/Makefile b/drivers/net/wireless/ath/wcn36xx/Makefile
-index 3b09435104eb..582049f65735 100644
---- a/drivers/net/wireless/ath/wcn36xx/Makefile
-+++ b/drivers/net/wireless/ath/wcn36xx/Makefile
-@@ -6,3 +6,5 @@ wcn36xx-y +=   main.o \
-                smd.o \
-                pmc.o \
-                debug.o
-+
-+wcn36xx-$(CONFIG_NL80211_TESTMODE) += testmode.o
-diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
-index 182963522941..8491b3cb3206 100644
---- a/drivers/net/wireless/ath/wcn36xx/hal.h
-+++ b/drivers/net/wireless/ath/wcn36xx/hal.h
-@@ -2230,6 +2230,22 @@ struct wcn36xx_hal_switch_channel_rsp_msg {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+index f9563ae301ad..25d6c32f66c3 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+@@ -892,34 +892,34 @@ void rtl92ee_c2h_content_parsing(struct ieee80211_hw *hw, u8 c2h_cmd_id,
+ 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
  
- } __packed;
+ 	switch (c2h_cmd_id) {
+-	case C2H_8192E_DBG:
++	case C2H_DBG:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+ 			 "[C2H], C2H_8723BE_DBG!!\n");
+ 		break;
+-	case C2H_8192E_TXBF:
++	case C2H_TXBF:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+ 			 "[C2H], C2H_8192E_TXBF!!\n");
+ 		break;
+-	case C2H_8192E_TX_REPORT:
++	case C2H_TX_REPORT:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE ,
+ 			 "[C2H], C2H_8723BE_TX_REPORT!\n");
+ 		rtl_tx_report_handler(hw, tmp_buf, c2h_cmd_len);
+ 		break;
+-	case C2H_8192E_BT_INFO:
++	case C2H_BT_INFO:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+ 			 "[C2H], C2H_8723BE_BT_INFO!!\n");
+ 		if (rtlpriv->cfg->ops->get_btc_status())
+ 			btc_ops->btc_btinfo_notify(rtlpriv, tmp_buf,
+ 						   c2h_cmd_len);
+ 		break;
+-	case C2H_8192E_BT_MP:
++	case C2H_BT_MP:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+ 			 "[C2H], C2H_8723BE_BT_MP!!\n");
+ 		if (rtlpriv->cfg->ops->get_btc_status())
+ 			btc_ops->btc_btmpinfo_notify(rtlpriv, tmp_buf,
+ 						     c2h_cmd_len);
+ 		break;
+-	case C2H_8192E_RA_RPT:
++	case C2H_RA_RPT:
+ 		_rtl92ee_c2h_ra_report_handler(hw, tmp_buf, c2h_cmd_len);
+ 		break;
+ 	default:
+@@ -948,8 +948,8 @@ void rtl92ee_c2h_packet_handler(struct ieee80211_hw *hw, u8 *buffer, u8 len)
+ 		      "[C2H packet], Content Hex:\n", tmp_buf, c2h_cmd_len);
  
-+struct wcn36xx_hal_process_ptt_msg_req_msg {
-+	struct wcn36xx_hal_msg_header header;
-+
-+	/* Actual FTM Command body */
-+	u8 ptt_msg[0];
-+} __packed;
-+
-+struct wcn36xx_hal_process_ptt_msg_rsp_msg {
-+	struct wcn36xx_hal_msg_header header;
-+
-+	/* FTM Command response status */
-+	u32 ptt_msg_resp_status;
-+	/* Actual FTM Command body */
-+	u8 ptt_msg[0];
-+} __packed;
-+
- struct update_edca_params_req_msg {
- 	struct wcn36xx_hal_msg_header header;
- 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 69d6be59d97f..ea14f87d11ff 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -26,6 +26,7 @@
- #include <linux/soc/qcom/smem_state.h>
- #include <linux/soc/qcom/wcnss_ctrl.h>
- #include "wcn36xx.h"
-+#include "testmode.h"
- 
- unsigned int wcn36xx_dbg_mask;
- module_param_named(debug_mask, wcn36xx_dbg_mask, uint, 0644);
-@@ -1116,6 +1117,8 @@ static const struct ieee80211_ops wcn36xx_ops = {
- 	.sta_add		= wcn36xx_sta_add,
- 	.sta_remove		= wcn36xx_sta_remove,
- 	.ampdu_action		= wcn36xx_ampdu_action,
-+
-+	CFG80211_TESTMODE_CMD(wcn36xx_tm_cmd)
+ 	switch (c2h_cmd_id) {
+-	case C2H_8192E_BT_INFO:
+-	case C2H_8192E_BT_MP:
++	case C2H_BT_INFO:
++	case C2H_BT_MP:
+ 		rtl_c2hcmd_enqueue(hw, c2h_cmd_id, c2h_cmd_len, tmp_buf);
+ 		break;
+ 	default:
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h
+index b770f722daa6..8325adaa9663 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h
+@@ -128,17 +128,6 @@ enum rtl8192e_h2c_cmd {
+ 	MAX_92E_H2CCMD
  };
  
- static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 8932af5e4d8d..fb0192b7ee99 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -292,12 +292,26 @@ static void init_hal_msg(struct wcn36xx_hal_msg_header *hdr,
- 		msg_body.header.len = sizeof(msg_body);			\
- 	} while (0)							\
+-enum rtl8192e_c2h_evt {
+-	C2H_8192E_DBG = 0,
+-	C2H_8192E_LB = 1,
+-	C2H_8192E_TXBF = 2,
+-	C2H_8192E_TX_REPORT = 3,
+-	C2H_8192E_BT_INFO = 9,
+-	C2H_8192E_BT_MP = 11,
+-	C2H_8192E_RA_RPT = 12,
+-	MAX_8192E_C2HEVENT
+-};
+-
+ #define pagenum_128(_len)	\
+ 	(u32)(((_len) >> 7) + ((_len) & 0x7F ? 1 : 0))
  
-+#define INIT_HAL_PTT_MSG(p_msg_body, ppt_msg_len) \
-+	do { \
-+		memset(p_msg_body, 0, sizeof(*p_msg_body) + ppt_msg_len); \
-+		p_msg_body->header.msg_type = WCN36XX_HAL_PROCESS_PTT_REQ; \
-+		p_msg_body->header.msg_version = WCN36XX_HAL_MSG_VERSION0; \
-+		p_msg_body->header.len = sizeof(*p_msg_body) + ppt_msg_len; \
-+	} while (0)
-+
- #define PREPARE_HAL_BUF(send_buf, msg_body) \
- 	do {							\
- 		memset(send_buf, 0, msg_body.header.len);	\
- 		memcpy(send_buf, &msg_body, sizeof(msg_body));	\
- 	} while (0)						\
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
+index 4b963fd27d64..34703b9cf5e8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
+@@ -712,23 +712,23 @@ void rtl8723be_c2h_content_parsing(struct ieee80211_hw *hw,
+ 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
  
-+#define PREPARE_HAL_PTT_MSG_BUF(send_buf, p_msg_body) \
-+	do {							\
-+		memset(send_buf, 0, p_msg_body->header.len); \
-+		memcpy(send_buf, p_msg_body, p_msg_body->header.len); \
-+	} while (0)
-+
- static int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
- {
- 	struct wcn36xx_fw_msg_status_rsp *rsp;
-@@ -741,6 +755,71 @@ int wcn36xx_smd_switch_channel(struct wcn36xx *wcn,
- 	return ret;
- }
+ 	switch (c2h_cmd_id) {
+-	case C2H_8723B_DBG:
++	case C2H_DBG:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+ 			 "[C2H], C2H_8723BE_DBG!!\n");
+ 		break;
+-	case C2H_8723B_TX_REPORT:
++	case C2H_TX_REPORT:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+ 			 "[C2H], C2H_8723BE_TX_REPORT!\n");
+ 		rtl_tx_report_handler(hw, tmp_buf, c2h_cmd_len);
+ 		break;
+-	case C2H_8723B_BT_INFO:
++	case C2H_BT_INFO:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+ 			 "[C2H], C2H_8723BE_BT_INFO!!\n");
+ 		if (rtlpriv->cfg->ops->get_btc_status())
+ 			btc_ops->btc_btinfo_notify(rtlpriv, tmp_buf,
+ 						   c2h_cmd_len);
+ 		break;
+-	case C2H_8723B_BT_MP:
++	case C2H_BT_MP:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+ 			 "[C2H], C2H_8723BE_BT_MP!!\n");
+ 		if (rtlpriv->cfg->ops->get_btc_status())
+@@ -761,8 +761,8 @@ void rtl8723be_c2h_packet_handler(struct ieee80211_hw *hw, u8 *buffer, u8 len)
+ 		      "[C2H packet], Content Hex:\n", tmp_buf, c2h_cmd_len);
  
-+static int wcn36xx_smd_process_ptt_msg_rsp(void *buf, size_t len,
-+					   void **p_ptt_rsp_msg)
-+{
-+	struct wcn36xx_hal_process_ptt_msg_rsp_msg *rsp;
-+	int ret;
-+
-+	ret = wcn36xx_smd_rsp_status_check(buf, len);
-+	if (ret)
-+		return ret;
-+
-+	rsp = (struct wcn36xx_hal_process_ptt_msg_rsp_msg *)buf;
-+
-+	wcn36xx_dbg(WCN36XX_DBG_HAL, "process ptt msg responded with length %d\n",
-+		    rsp->header.len);
-+	wcn36xx_dbg_dump(WCN36XX_DBG_HAL_DUMP, "HAL_PTT_MSG_RSP:", rsp->ptt_msg,
-+			 rsp->header.len - sizeof(rsp->ptt_msg_resp_status));
-+
-+	if (rsp->header.len > 0) {
-+		*p_ptt_rsp_msg = kmalloc(rsp->header.len, GFP_ATOMIC);
-+		if (!*p_ptt_rsp_msg)
-+			return -ENOMEM;
-+		memcpy(*p_ptt_rsp_msg, rsp->ptt_msg, rsp->header.len);
-+	}
-+	return ret;
-+}
-+
-+int wcn36xx_smd_process_ptt_msg(struct wcn36xx *wcn,
-+				struct ieee80211_vif *vif, void *ptt_msg, size_t len,
-+		void **ptt_rsp_msg)
-+{
-+	struct wcn36xx_hal_process_ptt_msg_req_msg *p_msg_body;
-+	int ret;
-+
-+	mutex_lock(&wcn->hal_mutex);
-+	p_msg_body = kmalloc(
-+		sizeof(struct wcn36xx_hal_process_ptt_msg_req_msg) + len,
-+		GFP_ATOMIC);
-+	if (!p_msg_body) {
-+		ret = -ENOMEM;
-+		goto out_nomem;
-+	}
-+	INIT_HAL_PTT_MSG(p_msg_body, len);
-+
-+	memcpy(&p_msg_body->ptt_msg, ptt_msg, len);
-+
-+	PREPARE_HAL_PTT_MSG_BUF(wcn->hal_buf, p_msg_body);
-+
-+	ret = wcn36xx_smd_send_and_wait(wcn, p_msg_body->header.len);
-+	if (ret) {
-+		wcn36xx_err("Sending hal_process_ptt_msg failed\n");
-+		goto out;
-+	}
-+	ret = wcn36xx_smd_process_ptt_msg_rsp(wcn->hal_buf, wcn->hal_rsp_len,
-+					      ptt_rsp_msg);
-+	if (ret) {
-+		wcn36xx_err("process_ptt_msg response failed err=%d\n", ret);
-+		goto out;
-+	}
-+out:
-+	kfree(p_msg_body);
-+out_nomem:
-+	mutex_unlock(&wcn->hal_mutex);
-+	return ret;
-+}
-+
- static int wcn36xx_smd_update_scan_params_rsp(void *buf, size_t len)
- {
- 	struct wcn36xx_hal_update_scan_params_resp *rsp;
-@@ -2367,6 +2446,7 @@ int wcn36xx_smd_rsp_process(struct rpmsg_device *rpdev,
- 	case WCN36XX_HAL_JOIN_RSP:
- 	case WCN36XX_HAL_UPDATE_SCAN_PARAM_RSP:
- 	case WCN36XX_HAL_CH_SWITCH_RSP:
-+	case WCN36XX_HAL_PROCESS_PTT_RSP:
- 	case WCN36XX_HAL_FEATURE_CAPS_EXCHANGE_RSP:
- 	case WCN36XX_HAL_8023_MULTICAST_LIST_RSP:
- 	case WCN36XX_HAL_START_SCAN_OFFLOAD_RSP:
-@@ -2407,6 +2487,7 @@ int wcn36xx_smd_rsp_process(struct rpmsg_device *rpdev,
+ 	switch (c2h_cmd_id) {
+-	case C2H_8723B_BT_INFO:
+-	case C2H_8723B_BT_MP:
++	case C2H_BT_INFO:
++	case C2H_BT_MP:
+ 		rtl_c2hcmd_enqueue(hw, c2h_cmd_id, c2h_cmd_len, tmp_buf);
+ 		break;
  
- 	return 0;
- }
-+
- static void wcn36xx_ind_smd_work(struct work_struct *work)
- {
- 	struct wcn36xx *wcn =
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
-index 8076edf40ac8..945407b8764b 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.h
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.h
-@@ -86,6 +86,10 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 			    u16 p2p_off);
- int wcn36xx_smd_switch_channel(struct wcn36xx *wcn,
- 			       struct ieee80211_vif *vif, int ch);
-+int wcn36xx_smd_process_ptt_msg(struct wcn36xx *wcn,
-+				struct ieee80211_vif *vif,
-+				void *ptt_msg, size_t len,
-+				void **ptt_rsp_msg);
- int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn,
- 				      struct ieee80211_vif *vif,
- 				      struct sk_buff *skb);
-diff --git a/drivers/net/wireless/ath/wcn36xx/testmode.c b/drivers/net/wireless/ath/wcn36xx/testmode.c
-new file mode 100644
-index 000000000000..1279064a3b71
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/testmode.c
-@@ -0,0 +1,149 @@
-+﻿/*
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include <net/netlink.h>
-+#include <linux/firmware.h>
-+#include <net/cfg80211.h>
-+#include "wcn36xx.h"
-+
-+#include "testmode.h"
-+#include "testmode_i.h"
-+#include "hal.h"
-+#include "smd.h"
-+
-+static const struct nla_policy wcn36xx_tm_policy[WCN36XX_TM_ATTR_MAX + 1] = {
-+	[WCN36XX_TM_ATTR_CMD] = { .type = NLA_U16 },
-+	[WCN36XX_TM_ATTR_DATA] = { .type = NLA_BINARY,
-+	.len = WCN36XX_TM_DATA_MAX_LEN },
-+};
-+
-+struct build_release_number {
-+	u16 drv_major;
-+	u16 drv_minor;
-+	u16 drv_patch;
-+	u16 drv_build;
-+	u16 ptt_max;
-+	u16 ptt_min;
-+	u16 fw_ver;
-+} __packed;
-+
-+static int wcn36xx_tm_cmd_ptt(struct wcn36xx *wcn, struct ieee80211_vif *vif,
-+			      struct nlattr *tb[])
-+{
-+	int ret = 0, buf_len;
-+	void *buf;
-+	struct ftm_rsp_msg *msg, *rsp = NULL;
-+	struct sk_buff *skb;
-+
-+	if (!tb[WCN36XX_TM_ATTR_DATA])
-+		return -EINVAL;
-+
-+	buf = nla_data(tb[WCN36XX_TM_ATTR_DATA]);
-+	buf_len = nla_len(tb[WCN36XX_TM_ATTR_DATA]);
-+	msg = (struct ftm_rsp_msg *)buf;
-+
-+	wcn36xx_dbg(WCN36XX_DBG_TESTMODE,
-+		    "testmode cmd wmi msg_id 0x%04X msg_len %d buf %pK buf_len %d\n",
-+		   msg->msg_id, msg->msg_body_length,
-+		   buf, buf_len);
-+
-+	wcn36xx_dbg_dump(WCN36XX_DBG_TESTMODE_DUMP, "REQ ", buf, buf_len);
-+
-+	if (msg->msg_id == MSG_GET_BUILD_RELEASE_NUMBER) {
-+		struct build_release_number *body =
-+				(struct build_release_number *)
-+				msg->msg_response;
-+
-+		body->drv_major = wcn->fw_major;
-+		body->drv_minor = wcn->fw_minor;
-+		body->drv_patch = wcn->fw_version;
-+		body->drv_build = wcn->fw_revision;
-+		body->ptt_max = 10;
-+		body->ptt_min = 0;
-+
-+		rsp = msg;
-+		rsp->resp_status = 0;
-+	} else {
-+		wcn36xx_dbg(WCN36XX_DBG_TESTMODE,
-+			    "PPT Request >> HAL size %d\n",
-+				msg->msg_body_length);
-+
-+		msg->resp_status = wcn36xx_smd_process_ptt_msg(wcn, vif, msg,
-+							       msg->msg_body_length, (void *)(&rsp));
-+
-+		wcn36xx_dbg(WCN36XX_DBG_TESTMODE,
-+			    "Response status = %d\n",
-+				msg->resp_status);
-+		if (rsp)
-+			wcn36xx_dbg(WCN36XX_DBG_TESTMODE,
-+				    "PPT Response << HAL size %d\n",
-+					rsp->msg_body_length);
-+	}
-+
-+	if (!rsp) {
-+		rsp = msg;
-+		wcn36xx_warn("No response! Echoing request with response status %d\n",
-+			     rsp->resp_status);
-+	}
-+	wcn36xx_dbg_dump(WCN36XX_DBG_TESTMODE_DUMP, "RSP ",
-+			 rsp, rsp->msg_body_length);
-+
-+	skb = cfg80211_testmode_alloc_reply_skb(wcn->hw->wiphy,
-+						nla_total_size(msg->msg_body_length));
-+	if (!skb) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	ret = nla_put(skb, WCN36XX_TM_ATTR_DATA, rsp->msg_body_length, rsp);
-+	if (ret) {
-+		kfree_skb(skb);
-+		goto out;
-+	}
-+
-+	ret = cfg80211_testmode_reply(skb);
-+
-+out:
-+	if (rsp != msg)
-+		kfree(rsp);
-+
-+	return ret;
-+}
-+
-+int wcn36xx_tm_cmd(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		   void *data, int len)
-+{
-+	struct wcn36xx *wcn = hw->priv;
-+	struct nlattr *tb[WCN36XX_TM_ATTR_MAX + 1];
-+	int ret = 0;
-+	unsigned short attr;
-+
-+	wcn36xx_dbg_dump(WCN36XX_DBG_TESTMODE_DUMP, "Data:", data, len);
-+	ret = nla_parse(tb, WCN36XX_TM_ATTR_MAX, data, len,
-+			wcn36xx_tm_policy, NULL);
-+	if (ret)
-+		return ret;
-+
-+	if (!tb[WCN36XX_TM_ATTR_CMD])
-+		return -EINVAL;
-+
-+	attr = nla_get_u16(tb[WCN36XX_TM_ATTR_CMD]);
-+
-+	if (attr != WCN36XX_TM_CMD_PTT)
-+		return -EOPNOTSUPP;
-+
-+	return wcn36xx_tm_cmd_ptt(wcn, vif, tb);
-+}
-diff --git a/drivers/net/wireless/ath/wcn36xx/testmode.h b/drivers/net/wireless/ath/wcn36xx/testmode.h
-new file mode 100644
-index 000000000000..4c6cfdb46580
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/testmode.h
-@@ -0,0 +1,46 @@
-+/*
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include "wcn36xx.h"
-+
-+struct ftm_rsp_msg {
-+	u16 msg_id;
-+	u16 msg_body_length;
-+	u32 resp_status;
-+	u8 msg_response[0];
-+} __packed;
-+
-+/* The request buffer of FTM which contains a byte of command and the request */
-+struct ftm_payload {
-+	u16 ftm_cmd_type;
-+	struct ftm_rsp_msg ftm_cmd_msg;
-+} __packed;
-+
-+#define MSG_GET_BUILD_RELEASE_NUMBER 0x32A2
-+
-+#ifdef CONFIG_NL80211_TESTMODE
-+int wcn36xx_tm_cmd(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		   void *data, int len);
-+
-+#else
-+static inline int wcn36xx_tm_cmd(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif *vif,
-+				void *data, int len)
-+{
-+	return 0;
-+}
-+
-+#endif
-diff --git a/drivers/net/wireless/ath/wcn36xx/testmode_i.h b/drivers/net/wireless/ath/wcn36xx/testmode_i.h
-new file mode 100644
-index 000000000000..8a1477ffd5a0
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/testmode_i.h
-@@ -0,0 +1,29 @@
-+/*
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#define WCN36XX_TM_DATA_MAX_LEN		5000
-+
-+enum wcn36xx_tm_attr {
-+	__WCN36XX_TM_ATTR_INVALID	= 0,
-+	WCN36XX_TM_ATTR_CMD		= 1,
-+	WCN36XX_TM_ATTR_DATA		= 2,
-+
-+	/* keep last */
-+	__WCN36XX_TM_ATTR_AFTER_LAST,
-+	WCN36XX_TM_ATTR_MAX		= __WCN36XX_TM_ATTR_AFTER_LAST - 1,
-+};
-+
-+#define WCN36XX_TM_CMD_PTT 3
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index 5854adf43f3a..547e9a9eb28f 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -56,6 +56,8 @@ enum wcn36xx_debug_mask {
- 	WCN36XX_DBG_BEACON_DUMP	= 0x00001000,
- 	WCN36XX_DBG_PMC		= 0x00002000,
- 	WCN36XX_DBG_PMC_DUMP	= 0x00004000,
-+	WCN36XX_DBG_TESTMODE		= 0x00008000,
-+	WCN36XX_DBG_TESTMODE_DUMP	= 0x00010000,
- 	WCN36XX_DBG_ANY		= 0xffffffff,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h
+index 2de4edb62bca..8f49941028f4 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h
+@@ -100,16 +100,6 @@ enum rtl8723b_h2c_cmd {
+ 	MAX_8723B_H2CCMD
  };
  
+-enum rtl8723b_c2h_evt {
+-	C2H_8723B_DBG = 0,
+-	C2H_8723B_LB = 1,
+-	C2H_8723B_TXBF = 2,
+-	C2H_8723B_TX_REPORT = 3,
+-	C2H_8723B_BT_INFO = 9,
+-	C2H_8723B_BT_MP = 11,
+-	MAX_8723B_C2HEVENT
+-};
+-
+ #define pagenum_128(_len) (u32)(((_len)>>7) + ((_len)&0x7F ? 1 : 0))
+ 
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+index f2b2c549e5b2..5c7e58fbc07e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+@@ -1926,23 +1926,23 @@ void rtl8821ae_c2h_content_parsing(struct ieee80211_hw *hw,
+ 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
+ 
+ 	switch (c2h_cmd_id) {
+-	case C2H_8812_DBG:
++	case C2H_DBG:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "[C2H], C2H_8812_DBG!!\n");
+ 		break;
+-	case C2H_8812_TX_REPORT:
++	case C2H_TX_REPORT:
+ 		rtl_tx_report_handler(hw, tmp_buf, c2h_cmd_len);
+ 		break;
+-	case C2H_8812_RA_RPT:
++	case C2H_RA_RPT:
+ 		rtl8821ae_c2h_ra_report_handler(hw, tmp_buf, c2h_cmd_len);
+ 		break;
+-	case C2H_8812_BT_INFO:
++	case C2H_BT_INFO:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD,
+ 			 "[C2H], C2H_8812_BT_INFO!!\n");
+ 		if (rtlpriv->cfg->ops->get_btc_status())
+ 			btc_ops->btc_btinfo_notify(rtlpriv, tmp_buf,
+ 						   c2h_cmd_len);
+ 		break;
+-	case C2H_8812_BT_MP:
++	case C2H_BT_MP:
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+ 			 "[C2H], C2H_8812_BT_MP!!\n");
+ 		if (rtlpriv->cfg->ops->get_btc_status())
+@@ -1974,7 +1974,7 @@ void rtl8821ae_c2h_packet_handler(struct ieee80211_hw *hw, u8 *buffer,
+ 		      "[C2H packet], Content Hex:\n", tmp_buf, c2h_cmd_len);
+ 
+ 	switch (c2h_cmd_id) {
+-	case C2H_8812_BT_INFO:
++	case C2H_BT_INFO:
+ 		rtl_c2hcmd_enqueue(hw, c2h_cmd_id, c2h_cmd_len, tmp_buf);
+ 		break;
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h
+index 32d46d7128f5..48c72a26c7e8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h
+@@ -137,20 +137,6 @@
+ #define	FW_PWR_STATE_ACTIVE	((FW_PS_RF_ON) | (FW_PS_REGISTER_ACTIVE))
+ #define	FW_PWR_STATE_RF_OFF	0
+ 
+-enum rtl8812_c2h_evt {
+-	C2H_8812_DBG = 0,
+-	C2H_8812_LB = 1,
+-	C2H_8812_TXBF = 2,
+-	C2H_8812_TX_REPORT = 3,
+-	C2H_8812_BT_INFO = 9,
+-	C2H_8812_BT_MP = 11,
+-	C2H_8812_RA_RPT = 12,
+-
+-	C2H_8812_FW_SWCHNL = 0x10,
+-	C2H_8812_IQK_FINISH = 0x11,
+-	MAX_8812_C2HEVENT
+-};
+-
+ enum rtl8821a_h2c_cmd {
+ 	H2C_8821AE_RSVDPAGE = 0,
+ 	H2C_8821AE_MSRRPT = 1,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 81ac036760fc..3da8e2a6084a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -158,6 +158,25 @@ enum {
+ 	H2C_BT_PORT_ID = 0x71,
+ };
+ 
++enum rtl_c2h_evt_v1 {
++	C2H_DBG = 0,
++	C2H_LB = 1,
++	C2H_TXBF = 2,
++	C2H_TX_REPORT = 3,
++	C2H_BT_INFO = 9,
++	C2H_BT_MP = 11,
++	C2H_RA_RPT = 12,
++
++	C2H_FW_SWCHNL = 0x10,
++	C2H_IQK_FINISH = 0x11,
++
++	C2H_EXT_V2 = 0xFF,
++};
++
++enum rtl_c2h_evt_v2 {
++	C2H_V2_CCX_RPT = 0x0F,
++};
++
+ #define GET_TX_REPORT_SN_V1(c2h)	(c2h[6])
+ #define GET_TX_REPORT_ST_V1(c2h)	(c2h[0] & 0xC0)
+ #define GET_TX_REPORT_RETRY_V1(c2h)	(c2h[2] & 0x3F)
 -- 
-2.17.0
+2.15.1
