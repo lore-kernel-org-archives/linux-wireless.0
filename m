@@ -1,64 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:4409 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751277AbeECQbl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 May 2018 12:31:41 -0400
-Date: Thu, 3 May 2018 22:06:22 +0530
-From: Vinod Koul <vinod.koul@intel.com>
-To: Nipun Gupta <nipun.gupta@nxp.com>
-Cc: robin.murphy@arm.com, hch@lst.de, linux@armlinux.org.uk,
-        gregkh@linuxfoundation.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, zajec5@gmail.com, andy.gross@linaro.org,
-        david.brown@linaro.org, dan.j.williams@intel.com,
-        thierry.reding@gmail.com, robh+dt@kernel.org,
-        frowand.list@gmail.com, jarkko.sakkinen@linux.intel.com,
-        rafael.j.wysocki@intel.com, dmitry.torokhov@gmail.com,
-        johan@kernel.org, msuchanek@suse.de, linux-kernel@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
-        dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, bharat.bhushan@nxp.com,
-        leoyang.li@nxp.com
-Subject: Re: [PATCH v4 2/2] drivers: remove force dma flag from buses
-Message-ID: <20180503163622.GA6014@localhost> (sfid-20180503_183149_288216_3CE4F681)
-References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
- <1524883919-29484-1-git-send-email-nipun.gupta@nxp.com>
- <1524883919-29484-2-git-send-email-nipun.gupta@nxp.com>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:35000 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751452AbeERKGc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 May 2018 06:06:32 -0400
+Received: by mail-qt0-f193.google.com with SMTP id f5-v6so9536257qth.2
+        for <linux-wireless@vger.kernel.org>; Fri, 18 May 2018 03:06:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1524883919-29484-2-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <58c8d2d16995e80f5527370e224045e2@codeaurora.org>
+References: <20180517113250.16517-1-ramon.fried@linaro.org> <58c8d2d16995e80f5527370e224045e2@codeaurora.org>
+From: Ramon Fried <ramon.fried@linaro.org>
+Date: Fri, 18 May 2018 13:06:31 +0300
+Message-ID: <CAODu4NqG9aTtoOx70cNk3=z3L-AKcrvxRPBO1xc9=vpWvqw-XA@mail.gmail.com> (sfid-20180518_120652_962618_328DCFF4)
+Subject: Re: [PATCH] wcn36xx: Add support for Factory Test Mode (FTM)
+To: Jeff Johnson <jjohnson@codeaurora.org>
+Cc: kvalo@codeaurora.org, linux-kernel@vger.kernel.org,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Eyal Ilsar <eilsar@codeaurora.org>,
+        linux-wireless-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 28, 2018 at 08:21:59AM +0530, Nipun Gupta wrote:
-> With each bus implementing its own DMA configuration callback,
-> there is no need for bus to explicitly have force_dma in its
-> global structure. This patch modifies of_dma_configure API to
-> accept an input parameter which specifies if implicit DMA
-> configuration is required even when it is not described by the
-> firmware.
-> 
-> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>  # PCI parts
-> ---
-> Changes in v2:
->   - This is a new change suggested by Robin and Christoph
->     and is added to the series.
-> 
-> Changes in v3:
->   - Rebase and changes corresponding to the changes in patch 1/2
-> 
-> Changes in v4:
->   - Rebased on top of 4.17-rc2
-> 
->  drivers/amba/bus.c            | 1 -
->  drivers/base/platform.c       | 3 +--
->  drivers/bcma/main.c           | 2 +-
->  drivers/dma/qcom/hidma_mgmt.c | 2 +-
+On 17 May 2018 at 21:37, Jeff Johnson <jjohnson@codeaurora.org> wrote:
+> On 2018-05-17 04:32, Ramon Fried wrote:
+>>
+>> From: Eyal Ilsar <eilsar@codeaurora.org>
+>
+> ...
+>>
+>> +int wcn36xx_smd_process_ptt_msg(struct wcn36xx *wcn,
+>> +                               struct ieee80211_vif *vif, void *ptt_msg,
+>> size_t len,
+>> +               void **ptt_rsp_msg)
+>> +{
+>> +       struct wcn36xx_hal_process_ptt_msg_req_msg *p_msg_body;
+>> +       int ret = 0;
+>> +
+>> +       mutex_lock(&wcn->hal_mutex);
+>> +       p_msg_body = kmalloc(
+>> +               sizeof(struct wcn36xx_hal_process_ptt_msg_req_msg) + len,
+>> +               GFP_ATOMIC);
+>
+>
+> NULL check required?
+>
+>> +       INIT_HAL_PTT_MSG(p_msg_body, len);
+>> +
 
-This one:
-Acked-by: Vinod Koul <vkoul@kernel.org>
-
--- 
-~Vinod
+Thanks Jeff. will fix it and send again :)
