@@ -1,73 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 14.mo6.mail-out.ovh.net ([46.105.56.113]:36899 "EHLO
-        14.mo6.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750879AbeELNgB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 May 2018 09:36:01 -0400
-Received: from player699.ha.ovh.net (unknown [10.109.120.114])
-        by mo6.mail-out.ovh.net (Postfix) with ESMTP id CE11915A6C5
-        for <linux-wireless@vger.kernel.org>; Sat, 12 May 2018 12:00:17 +0200 (CEST)
+Received: from mail.kernel.org ([198.145.29.99]:40846 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752224AbeERKia (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 May 2018 06:38:30 -0400
+Date: Fri, 18 May 2018 12:38:11 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Carlos Manuel Santos <cmmpsantos@gmail.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v3] NFC: pn533: don't send USB data off of the stack
+Message-ID: <20180518103811.GA29186@kroah.com> (sfid-20180518_123833_527986_B52B4E21)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Sat, 12 May 2018 12:00:07 +0200
-From: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Matt Redfearn <matt.redfearn@mips.com>,
-        linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH V2 1/2] Revert "ssb: Prevent build of PCI host features in
- module"
-In-Reply-To: <20180512100136.1d26e6d3@wiggum>
-References: <20180511091715.1989-1-zajec5@gmail.com>
- <CACna6ry-91oR1u697NRymLsN28fnnHDp9OQrdiVwA7A3KTV1fg@mail.gmail.com>
- <87bmdmcxf6.fsf@codeaurora.org>
- <727571cb-5d1f-2d99-b050-979edd02106f@lwfinger.net>
- <877eo9b9d9.fsf@codeaurora.org> <20180512100136.1d26e6d3@wiggum>
-Message-ID: <2a401060858a337f84039eddef4b3b87@milecki.pl> (sfid-20180512_153605_613170_B6FDD6BF)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-05-12 10:01, Michael Büsch wrote:
-> On Sat, 12 May 2018 10:50:42 +0300
-> Kalle Valo <kvalo@codeaurora.org> wrote:
-> 
->> Larry Finger <Larry.Finger@lwfinger.net> writes:
->> 
->> > On 05/11/2018 05:13 AM, Kalle Valo wrote:
->> >> Rafał Miłecki <zajec5@gmail.com> writes:
->> >>
->> >>> On 11 May 2018 at 11:17, Rafał Miłecki <zajec5@gmail.com> wrote:
->>  [...]
->> >>>
->> >>> As these patches fix regression/build error, I believe both should get
->> >>> into 4.17.
->> >>
->> >> How much confidence do we have that we don't need to end up reverting
->> >> patch 2 as well? I rather be pushing patch 2 to 4.18 so that there's
->> >> more time for testing and waiting for feedback.
->> >
->> > Although I do not have the hardware to test the builds, I worked
->> > closely with the OP in the bug at b.r.c noted above. From that effort,
->> > it became clear what configuration variables were missing to cause the
->> > x86 failures. Patch 2 satisfies the requirement, and prevents the
->> > build problems found by the MIPS users. Both patches are needed in
->> > 4.17.
->> 
->> And I assume Michael is ok with this approach as well as I haven't 
->> heard
->> from him. I'll then push both of these to 4.17.
->> 
-> 
-> Yes, I'm OK with the patch, if we have a third patch that cleans up the
-> PCI_DRIVERS_LEGACY dependency by moving it to SSB_PCICORE_HOSTMODE
-> where it belongs. (This doesn't need to go into the stable tree.)
-> We currently implicitly get that via dependency chain, so this is OK
-> for now as-is.
+It's amazing that this driver ever worked, but now that x86 doesn't
+allow USB data to be sent off of the stack, it really does not work at
+all.  Fix this up by properly allocating the data for the small
+"commands" that get sent to the device.
 
-I'm planning to handle PCI_DRIVERS_LEGACY cleanup once my patches hit
-net-next.git and then wireless-drivers-next.git. It's to avoid
-conflicts.
+The USB stack will free the buffer when the data has been transmitted,
+that is why there is no kfree() to mirror the call to kmalloc().
+
+Reported-by: Carlos Manuel Santos <cmmpsantos@gmail.com>
+Cc: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Stephen Hemminger <stephen@networkplumber.org>
+Cc: stable <stable@vger.kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+v3: actually use the correct buffer (thanks to Arend van Spriel)
+    use kmemdup (thanks to Johannes Berg and Julia Lawall)
+v2: set the urb flags correctly
+
+ drivers/nfc/pn533/usb.c |   17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
+
+--- a/drivers/nfc/pn533/usb.c
++++ b/drivers/nfc/pn533/usb.c
+@@ -150,10 +150,16 @@ static int pn533_usb_send_ack(struct pn5
+ 	struct pn533_usb_phy *phy = dev->phy;
+ 	static const u8 ack[6] = {0x00, 0x00, 0xff, 0x00, 0xff, 0x00};
+ 	/* spec 7.1.1.3:  Preamble, SoPC (2), ACK Code (2), Postamble */
++	char *buffer;
+ 	int rc;
+ 
+-	phy->out_urb->transfer_buffer = (u8 *)ack;
++	buffer = kmemdup(ack, sizeof(ack), GFP_KERNEL);
++	if (!buffer)
++		return -ENOMEM;
++
++	phy->out_urb->transfer_buffer = buffer;
+ 	phy->out_urb->transfer_buffer_length = sizeof(ack);
++	phy->out_urb->transfer_flags |= URB_FREE_BUFFER;
+ 	rc = usb_submit_urb(phy->out_urb, flags);
+ 
+ 	return rc;
+@@ -170,6 +176,7 @@ static int pn533_usb_send_frame(struct p
+ 
+ 	phy->out_urb->transfer_buffer = out->data;
+ 	phy->out_urb->transfer_buffer_length = out->len;
++	phy->out_urb->transfer_flags &= ~URB_FREE_BUFFER;
+ 
+ 	print_hex_dump_debug("PN533 TX: ", DUMP_PREFIX_NONE, 16, 1,
+ 			     out->data, out->len, false);
+@@ -375,20 +382,26 @@ static int pn533_acr122_poweron_rdr(stru
+ 	/* Power on th reader (CCID cmd) */
+ 	u8 cmd[10] = {PN533_ACR122_PC_TO_RDR_ICCPOWERON,
+ 		      0, 0, 0, 0, 0, 0, 3, 0, 0};
++	char *buffer;
+ 	int rc;
+ 	void *cntx;
+ 	struct pn533_acr122_poweron_rdr_arg arg;
+ 
+ 	dev_dbg(&phy->udev->dev, "%s\n", __func__);
+ 
++	buffer = kmemdup(cmd, sizeof(cmd), GFP_KERNEL);
++	if (!buffer)
++		return -ENOMEM;
++
+ 	init_completion(&arg.done);
+ 	cntx = phy->in_urb->context;  /* backup context */
+ 
+ 	phy->in_urb->complete = pn533_acr122_poweron_rdr_resp;
+ 	phy->in_urb->context = &arg;
+ 
+-	phy->out_urb->transfer_buffer = cmd;
++	phy->out_urb->transfer_buffer = buffer;
+ 	phy->out_urb->transfer_buffer_length = sizeof(cmd);
++	phy->out_urb->transfer_flags |= URB_FREE_BUFFER;
+ 
+ 	print_hex_dump_debug("ACR122 TX: ", DUMP_PREFIX_NONE, 16, 1,
+ 		       cmd, sizeof(cmd), false);
