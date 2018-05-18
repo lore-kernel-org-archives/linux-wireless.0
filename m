@@ -1,89 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:42369 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751492AbeEDRwF (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:39482 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751545AbeERJyf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 May 2018 13:52:05 -0400
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: linux-kernel@vger.kernel.org
-Cc: tglx@linutronix.de, Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Alexander Aring <alex.aring@gmail.com>,
-        Stefan Schmidt <stefan@osg.samsung.com>,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-wpan@vger.kernel.org,
-        Anna-Maria Gleixner <anna-maria@linutronix.de>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [RFC PATCH 2/2] net: mac808211: mac802154: use lockdep_assert_in_softirq() instead own warning
-Date: Fri,  4 May 2018 19:51:44 +0200
-Message-Id: <20180504175144.12179-3-bigeasy@linutronix.de> (sfid-20180504_195317_616011_566C125A)
-In-Reply-To: <20180504175144.12179-1-bigeasy@linutronix.de>
-References: <20180504175144.12179-1-bigeasy@linutronix.de>
-MIME-Version: 1.0
+        Fri, 18 May 2018 05:54:35 -0400
+Message-ID: <1526637270.3805.15.camel@sipsolutions.net> (sfid-20180518_115440_197293_60E86CB5)
+Subject: Re: [PATCH] ath10k: add dynamic vlan support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Date: Fri, 18 May 2018 11:54:30 +0200
+In-Reply-To: <f8d6d13943ccac22f363d7d4f53d645c@codeaurora.org>
+References: <1524232653-22573-1-git-send-email-mpubbise@codeaurora.org>
+         <87r2n5auvq.fsf@kamboji.qca.qualcomm.com>
+         <aa04534d-9677-f42e-a239-b230093ef2f5@dd-wrt.com>
+         <f8d6d13943ccac22f363d7d4f53d645c@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Anna-Maria Gleixner <anna-maria@linutronix.de>
+On Fri, 2018-05-04 at 12:20 +0530, Manikanta Pubbisetty wrote:
+> Johannes,
+> 
+> It seems like commit db3bdcb9c3ff ("mac80211: allow AP_VLAN operation on 
+> crypto controlled devices") has broken 4-addr operation on crypto 
+> controlled devices as reported by sebastian.
+> The commit was mainly focused in addressing the problem in supporting 
+> VLANs on crypto controlled devices but since 4-addr mode is also 
+> dependent on AP_VLAN interface, this commit breaks the 4-addr AP mode.
 
-The warning in ieee802154_rx() and ieee80211_rx_napi() is there to ensure
-the softirq context for the subsequent netif_receive_skb() call. The check
-could be moved into the netif_receive_skb() function to prevent all calling
-functions implement the checks on their own. Use the lockdep variant for
-softirq context check. While at it, add a lockdep based check for irq
-enabled as mentioned in the comment above netif_receive_skb().
+Ok.
 
-Signed-off-by: Anna-Maria Gleixner <anna-maria@linutronix.de>
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
----
- net/core/dev.c     | 3 +++
- net/mac80211/rx.c  | 2 --
- net/mac802154/rx.c | 2 --
- 3 files changed, 3 insertions(+), 4 deletions(-)
+Do you know why it actually broke it? I mean, we should've turned off
+the strict requirement for sw crypto control only for the GTK, and that
+shouldn't matter so much?
 
-diff --git a/net/core/dev.c b/net/core/dev.c
-index af0558b00c6c..7b4b8611cc21 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -4750,6 +4750,9 @@ static int netif_receive_skb_internal(struct sk_buff =
-*skb)
-  */
- int netif_receive_skb(struct sk_buff *skb)
- {
-+	lockdep_assert_irqs_enabled();
-+	lockdep_assert_in_softirq();
-+
- 	trace_netif_receive_skb_entry(skb);
-=20
- 	return netif_receive_skb_internal(skb);
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 03102aff0953..653332d81c17 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -4324,8 +4324,6 @@ void ieee80211_rx_napi(struct ieee80211_hw *hw, struc=
-t ieee80211_sta *pubsta,
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_rx_status *status =3D IEEE80211_SKB_RXCB(skb);
-=20
--	WARN_ON_ONCE(softirq_count() =3D=3D 0);
--
- 	if (WARN_ON(status->band >=3D NUM_NL80211_BANDS))
- 		goto drop;
-=20
-diff --git a/net/mac802154/rx.c b/net/mac802154/rx.c
-index 4dcf6e18563a..66916c270efc 100644
---- a/net/mac802154/rx.c
-+++ b/net/mac802154/rx.c
-@@ -258,8 +258,6 @@ void ieee802154_rx(struct ieee802154_local *local, stru=
-ct sk_buff *skb)
- {
- 	u16 crc;
-=20
--	WARN_ON_ONCE(softirq_count() =3D=3D 0);
--
- 	if (local->suspended)
- 		goto drop;
-=20
---=20
-2.17.0
+> I have couple of ideas on how to address the problem,
+> 
+> 1) Add a new hw_flag and based on the hardware flag, allow/disallow the 
+> creation of AP_VLAN interface.
+> 
+> + * @IEEE80211_HW_SUPPORTS_SW_ENCRYPT: Device is capable of transmitting
+> + *     frames encrypted in software, only valid when SW_CRYPTO_CONTROL
+> + *     is enabled. Based on this flag, mac80211 can allow/disallow VLAN
+> + *     operations in the BSS.
+
+Based on the name and initial description, this sounds equivalent to
+just turning off SW_CRYPTO_CONTROL. I think that's not the intent, but
+would need some renaming.
+
+> 2) Allow mac80211 to call set_key for GTKs on AP_VLAN interfaces for 
+> crypto controlled devices, let the driver decide whether to return '1' 
+> or some error code based on their support for transmitting sw encrypted 
+> frames. I am little skeptical with this approach as drivers are totally 
+> unaware of AP_VLAN interfaces.
+
+No, that won't work.
+
+I'm unsure how 4-addr VLAN can work with ath10k either way?
+
+Maybe it just doesn't normally need a GTK, so nothing broke before, but
+your other patch changed things to remove VLAN and then of course it's
+no longer available?
+
+But then I don't understand the complaint that 
+
+So maybe the solution should be to add a separate flag for whether or
+not 4-addr VLAN is supported?
+
+johannes
