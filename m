@@ -1,111 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f179.google.com ([209.85.220.179]:43613 "EHLO
-        mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750995AbeEPIhs (ORCPT
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:34614 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752327AbeERJAm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 May 2018 04:37:48 -0400
-Received: by mail-qk0-f179.google.com with SMTP id h19-v6so2460667qkj.10
-        for <linux-wireless@vger.kernel.org>; Wed, 16 May 2018 01:37:47 -0700 (PDT)
-Subject: Re: Research + questions on brcmfmac and support for monitor mode
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-References: <986bbf4c-8fa1-4367-db9e-76a209594b81@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+        Fri, 18 May 2018 05:00:42 -0400
+Received: by mail-qt0-f194.google.com with SMTP id m5-v6so9357788qti.1
+        for <linux-wireless@vger.kernel.org>; Fri, 18 May 2018 02:00:42 -0700 (PDT)
+Subject: Re: [PATCH V3 0/5] Update brcm firmware files
+To: Hans de Goede <hdegoede@redhat.com>,
+        Josh Boyer <jwboyer@kernel.org>
+References: <1521209329-59441-1-git-send-email-chi-hsien.lin@cypress.com>
+ <5AF960B6.2010709@broadcom.com>
+ <CA+5PVA7m3wWHyi12rTcpAozj=en9BtnsVAKAbQyvKvPRh_jC4A@mail.gmail.com>
+ <5AFA9DB0.7060703@broadcom.com>
+ <e2b71216-dc95-6d16-47c3-6b50da03a716@redhat.com>
+Cc: Linux Firmware <linux-firmware@kernel.org>,
+        chi-hsien.lin@cypress.com,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, wright.feng@cypress.com
 From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AFBEDD8.8030801@broadcom.com> (sfid-20180516_103835_758709_6A1A47E0)
-Date: Wed, 16 May 2018 10:37:44 +0200
+Message-ID: <5AFE9637.8010607@broadcom.com> (sfid-20180518_110225_620414_103521C2)
+Date: Fri, 18 May 2018 11:00:39 +0200
 MIME-Version: 1.0
-In-Reply-To: <986bbf4c-8fa1-4367-db9e-76a209594b81@gmail.com>
+In-Reply-To: <e2b71216-dc95-6d16-47c3-6b50da03a716@redhat.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/15/2018 2:29 PM, Rafał Miłecki wrote:
-> I'm interested in adding support for monitor mode to the brcmfmac. I did
-> some early research on firmware capabilities & behavior using various
-> firmwares I could find for my devices: 43602a1, 4366b1, 4366c0 (BCM4366
-> and BCM4366E).
-
-I am interested too and already did some work in this respect.
-
-> I was doing my tests by starting monitor mode with SET_MONITOR ioctl +
-> value 3 and dumping msgbuf RX header + skb data.
+On 5/18/2018 9:04 AM, Hans de Goede wrote:
+> Hi,
 >
-> The good news is that almost every firmware has some minimal support for
-> monitor mode. Unfortunately implementing it may be (a big?) problem.
+> On 15-05-18 10:43, Arend van Spriel wrote:
+>> On 5/14/2018 2:05 PM, Josh Boyer wrote:
+>>> n Mon, May 14, 2018 at 6:11 AM Arend van Spriel <
+>>> arend.vanspriel@broadcom.com> wrote:
+>>>
+>>>> On 3/16/2018 3:08 PM, Chi-Hsien Lin wrote:
+>>>>> Update brcm firmware files and WHENCE accordingly.
+>>>
+>>>> Hi firmware-maintainers,
+>>>
+>>>> It seems this series somehow got lost. Can these still be applied. They
+>>>> can be found in the linux-wireless patchwork database. I provided links
+>>>> below.
+>>>
+>>> All 5 of these move the respective firmware files under the Cypress
+>>> license.  It has been pointed out that the Cypress license has some
+>>> questionable language in it and that people have been in touch to try
+>>> and
+>>> get this resolved.  I'm personally waiting on applying them until the
+>>> licence issue is sorted out.
+>>
+>> Thanks, Josh
+>>
+>> I could not find any such response. Has it been taken off-list? Seems
+>> like 2 months is quite some time, but maybe there are lawyers involved
+>> ;-)
 >
-> The basic concept is simple. Once we set SET_MONITOR to 3, firmware
-> starts passing up monitor mode frames to the driver.
-
-The main issue is that monitor mode was historically made for what we 
-call NIC drivers, ie. driver running on the host so without an active 
-cpu on the device. Also monitor functionality is used within the 
-firmware itself by other features, which is why most firmwares you have 
-include monitor functionality.
-
-I implemented monitor mode for SDIO devices, but that required firmware 
-changes so an explicit firmware target. Unfortunately, for PCIe things 
-are quite different. On SDIO the entire packet is passed to the host, 
-but for PCIe the 802.11 part is split from the 802.3 payload.
-
-> The first problem I see is identifying monitor mode frames in order to
-> make brcmfmac pass them to the monitor interface. Monitor frames have
-> msg.ifidx set to 0 which makes them indistinguishable from main
-> interface frames by simply looking at that index field. There is nothing
-> in the msg.rsvd0, compl_hdr.status, rx_status_0 or rx_status_1 fields.
+> Yes the discussion about this has been happening off-list. IANAL but
+> the gist of it is (AFAIK) that:
 >
-> Now, some new firmwares have flags set to 0x0002 (instead of 0x0001) for
-> monitor frames. This is very helpful but it only applies to the really
-> recent images.
+> https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/tree/LICENCE.cypress
 >
-> My first question is: is there any reliable way of filtering monitor
-> frames for older firmwares? We could try to reserve ifidx 0 for monitor
-> mode purposes, but I'm afraid I'd require hacking quite some code. Is
-> there any better & simpler solution?
-
-Depends what you want. I wanted mainly a dedicated sniffer so only 
-allowing changing the main interface to monitor mode. Not allowing 
-adding a monitor mode interface.
-
-> The second problem is monitor frame format. Older firmwares were simply
-> passing 802.11 frames to the driver. It means passing frame control
-> field, duration, AP MAC, src MAC, dst MAC, sequence + data. There was no
-> info about signal, noise, etc. passed. New firmwares seem to be
-> including radiotap header which makes things much nicer.
-
-For the SDIO implementation mentioned I generated radiotap header in 
-brcmfmac. I recall that was the intention for the PCIe implementation as 
-well, but maybe things changed since then as you managed to get radiotap 
-headers on recent firmwares.
-
-> The second question: is there a reliable way of telling what format uses
-> monitor packet passed by a firmware? Is it maybe strictly related to the
-> flags set to 0x0002 (instead of 0x0001)?
-
-This is the flags in the msgbuf RXHEADER? That is
-
-> I was hoping that maybe looking at fw-reported capabilities will give me
-> any hint regarding that but I'm afraid I'm out of luck. Below is a list
-> of firmwares I tested and summary of each of them.
 >
-> Note: as every firmware reports following capabilities:
-> 802.11d 802.11h ampdu ampdu_rx ampdu_tx amsdurx amsdutx anqpo ap bcm_dcs
-> bsstrans cac cqa dfrts dwds led mfp p2po probresp_mac_filter pspretend
-> psr psta radio_pwrsave rm rxchain_pwrsave sta stbc-rx-1ss stbc-tx
-> traffic-mgmt traffic-mgmt-dwm vht-prop-rates wds wet wet_tunnel wme wnm
-> I omitted them below.
+> has a clause which allows Cypress to retro-actively revoke the LICENSE:
+>
+> "either party may terminate this Agreement at any time with or without
+> cause."
+> ...
+> "Upon termination, you must destroy all copies of Software in your
+> possession or
+> control."
+>
+> So upon revokation we would have to remove the files from linux-firmware
+> (rewrite git history?) and since distros get their redistribution rights
+> from this license too they would also need to remove it from their packages
+> including all mirrors and archives of older versions. Which simply is not
+> feasible and no other license in linux-firmware has such a clause.
 
-Actually the capability iovar is tricky/broken. It can potentially 
-truncate the string so you don't get all the information on the host.
+Check again. From LICENCE.broadcom_bcm43xx:
 
-So a question about monitor mode. In hostapd an attempt is made to 
-create a monitor interface. Is that no longer done because of you recent 
-patch regarding the wiphy flag HAVE_AP_SME?
+"""
+2.      Restrictions. Licensee shall distribute Software with a copy of this
+Agreement. Licensee shall not remove, efface or obscure any copyright or
+trademark notices from the Software. Reproductions of the Broadcom copyright
+notice shall be included with each copy of the Software, except where such
+Software is embedded in a manner not readily accessible to the end user.
+Licensee shall not: (i) use, license, sell or otherwise distribute the 
+Software
+except as provided in this Agreement; (ii) attempt to modify in any way,
+reverse engineer, decompile or disassemble any portion of the Software; or
+(iii) use the Software or other material in violation of any applicable 
+law or
+regulation, including but not limited to any regulatory agency. This 
+Agreement
+shall automatically terminate upon Licensee\u2019s failure to comply 
+with any of the
+terms of this Agreement. In such event, Licensee will destroy all copies 
+of the
+Software and its component parts.
+"""
 
 Regards,
 Arend
