@@ -1,88 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:35507 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934739AbeEILr2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 07:47:28 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
-        linux-wireless@vger.kernel.org, Maya Erez <merez@codeaurora.org>
-Subject: Re: [mac80211-next:master 12/14] drivers/net//wireless/ath/wil6210/debugfs.c:1245:1: warning: the frame size of 1600 bytes is larger than 1024 bytes
-In-Reply-To: <87d0y5w0ri.fsf@kamboji.qca.qualcomm.com>
-References: <201805090154.h4Cokbx2%fengguang.wu@intel.com> <87efil2p2o.fsf@purkki.adurom.net> <1525855900.6910.5.camel@sipsolutions.net> <87tvrhw6kj.fsf@kamboji.qca.qualcomm.com> <1525856418.6910.6.camel@sipsolutions.net> <87efil41d4.fsf@toke.dk> <1525858618.6910.9.camel@sipsolutions.net> <87po25w463.fsf@kamboji.qca.qualcomm.com> <878t8t3zwp.fsf@toke.dk> <87h8nhw2yf.fsf@kamboji.qca.qualcomm.com> <8736z13yuo.fsf@toke.dk> <87d0y5w0ri.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 09 May 2018 13:47:24 +0200
-Message-ID: <87zi192gqb.fsf@toke.dk> (sfid-20180509_134733_080090_413F000E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from youngberry.canonical.com ([91.189.89.112]:60072 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750763AbeEROqo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 May 2018 10:46:44 -0400
+Received: from mail-io0-f199.google.com ([209.85.223.199])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1fJgeZ-0006SE-Im
+        for linux-wireless@vger.kernel.org; Fri, 18 May 2018 14:46:43 +0000
+Received: by mail-io0-f199.google.com with SMTP id r140-v6so5236374iod.16
+        for <linux-wireless@vger.kernel.org>; Fri, 18 May 2018 07:46:43 -0700 (PDT)
+From: Seth Forshee <seth.forshee@canonical.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Michael Chen <michaelchentejada@gmail.com>
+Subject: [PATCH] wireless-regdb: Update rules for Panama (PA) and add 60 GHz rule
+Date: Fri, 18 May 2018 09:46:41 -0500
+Message-Id: <20180518144641.24995-1-seth.forshee@canonical.com> (sfid-20180518_164648_376937_09B97BA8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+Updates are based on the information in
+http://www.asep.gob.pa/images/telecomunicaciones/Anexos/PNAF-dic2015.pdf.
 
-> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
->
->> Kalle Valo <kvalo@codeaurora.org> writes:
->>
->>> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
->>>
->>>> Kalle Valo <kvalo@codeaurora.org> writes:
->>>>
->>>>> Johannes Berg <johannes@sipsolutions.net> writes:
->>>>>
->>>>>> On Wed, 2018-05-09 at 11:36 +0200, Toke H=C3=B8iland-J=C3=B8rgensen =
-wrote:
->>>>>>> Johannes Berg <johannes@sipsolutions.net> writes:
->>>>>>>=20
->>>>>>> > On Wed, 2018-05-09 at 11:56 +0300, Kalle Valo wrote:
->>>>>>> > > Johannes Berg <johannes@sipsolutions.net> writes:
->>>>>>> > >=20
->>>>>>> > > > On Wed, 2018-05-09 at 11:47 +0300, Kalle Valo wrote:
->>>>>>> > > > >=20
->>>>>>> > > > > I guess these warnings come because Toke's patch increased =
-size of
->>>>>>> > > > > struct cfg80211_tid_stats (which is included in struct stat=
-ion_info) and
->>>>>>> > > > > both wil6210 and qtnfmac allocate a struct station_info fro=
-m stack?=20
->>>>>>> > > >=20
->>>>>>> > > > Yes.
->>>>>>> > > >=20
->>>>>>> > > > > Can
->>>>>>> > > > > someone send a fix for the drivers?
->>>>>>> > > >=20
->>>>>>> > > > I guess Toke/I should do that through my tree.
->>>>>>> > >=20
->>>>>>> > > IMHO the fix could go through my tree as well, less risk of con=
-flicts in
->>>>>>> > > drivers. AFAICS the fix (allocating station_info dynamically?) =
-would not
->>>>>>> > > depend on Toke's patch and could be applied separately.
->>>>>>> >=20
->>>>>>> > That's true, if you prefer that it's fine with me.
->>>>>>>=20
->>>>>>> I'll send a patch.
->>>>>>>=20
->>>>>>> What's the right tag to put in the commit for this?
->>>>>>> Fixes-but-is-independent-from: ? ;)
->>>>>>
->>>>>> Heh. You can still put Fixes: I think.
->>>>>
->>>>> Yeah, I think so too.
->>>>
->>>> Cool. My "git grep 'struct station_info sinfo'" also shows up a driver
->>>> in staging; that should be fixed as well, right? In the same commit?
->>>
->>> Not in the same commit at least, I don't want to touch staging even with
->>> a ten foot pole :) I guess either Greg or Johannes would take that
->>> patch.
->>
->> What about batman-adv and wext-compat? Should I split those out as well?
->
-> So normally I only take patches touching drivers/net/wireless, anything
-> else has to go via other trees.
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ db.txt | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-Right, thought so; will send a series as soon as I've verified that it
-compiles :)
-
--Toke
+diff --git a/db.txt b/db.txt
+index ed461a35b770..e3bbd374d096 100644
+--- a/db.txt
++++ b/db.txt
+@@ -963,11 +963,15 @@ country OM: DFS-ETSI
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (27), DFS
+ 
++# Source:
++# http://www.asep.gob.pa/images/telecomunicaciones/Anexos/PNAF-dic2015.pdf
+ country PA: DFS-FCC
+-	(2402 - 2472 @ 40), (30)
+-	(5170 - 5250 @ 80), (17), AUTO-BW
+-	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
+-	(5735 - 5835 @ 80), (30)
++	(2400 - 2483.5 @ 40), (36)
++	(5150 - 5250 @ 80), (36), AUTO-BW
++	(5250 - 5350 @ 80), (30), AUTO-BW
++	(5470 - 5725 @ 160), (30)
++	(5725 - 5850 @ 80), (36)
++	(57000 - 64000 @ 2160), (43)
+ 
+ country PE: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-- 
+2.17.0
