@@ -1,53 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:44972 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934512AbeEWWUG (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45072 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752322AbeEROF4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 May 2018 18:20:06 -0400
-Received: by mail-wr0-f196.google.com with SMTP id y15-v6so29205667wrg.11
-        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2018 15:20:06 -0700 (PDT)
-Date: Thu, 24 May 2018 00:20:02 +0200
-From: Niklas Cassel <niklas.cassel@linaro.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] ath10k: transmit queued frames after processing rx
- packets
-Message-ID: <20180523222002.GA26565@localhost.localdomain> (sfid-20180524_002111_850399_E6725E3C)
-References: <20180523221508.26391-1-niklas.cassel@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180523221508.26391-1-niklas.cassel@linaro.org>
+        Fri, 18 May 2018 10:05:56 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Ilan Peer <ilan.peer@intel.com>,
+        Ido Yariv <idox.yariv@intel.com>
+Date: Fri, 18 May 2018 17:05:42 +0300
+Message-Id: <20180518140543.13620-3-luca@coelho.fi> (sfid-20180518_160603_174800_D664690A)
+In-Reply-To: <20180518140543.13620-1-luca@coelho.fi>
+References: <20180518140543.13620-1-luca@coelho.fi>
+Subject: [RFC 2/3] radiotap: add structs for HE
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 24, 2018 at 12:15:08AM +0200, Niklas Cassel wrote:
-> This problem cannot be reproduced on low-latency devices, e.g. pci,
-> since they call ath10k_mac_tx_push_pending() from
-> ath10k_htt_txrx_compl_task(). ath10k_htt_txrx_compl_task() is not called
-> on high-latency devices.
-> Fix the problem by calling ath10k_mac_tx_push_pending(), after
-> processing rx packets, just like for low-latency devices, also in the
-> SDIO case. Since we are calling ath10k_mac_tx_push_pending() directly,
-> we also need to export it.
-> 
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Even if we are now calling ath10k_mac_tx_push_pending each time we process rx packets,
-the number of packets we actually queue from ath10k_mac_tx_push_pending are quite few:
+Add radiotap structures for HE.
 
->From running iperf for 20 seconds:
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Ido Yariv <idox.yariv@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ include/net/ieee80211_radiotap.h | 111 +++++++++++++++++++++++++++++++
+ 1 file changed, 111 insertions(+)
 
-# grep ath10k_mac_tx_push_txq /sys/kernel/debug/tracing/trace | grep -v ath10k_mac_op_wake_tx_queue | wc -l
-233
-number of times ath10k_mac_tx_push_txq was called, but not from ath10k_mac_op_wake_tx_queue,
-i.e. number of times ath10k_mac_tx_push_txq was called from ath10k_mac_tx_push_pending.
-
-
-# grep ath10k_mac_tx_push_txq /sys/kernel/debug/tracing/trace | grep -v ath10k_mac_tx_push_pending | wc -l
-28415
-number of times ath10k_mac_tx_push_txq was called, but not from ath10k_mac_tx_push_pending,
-i.e number of times ath10k_mac_tx_push_txq was called from ath10k_mac_op_wake_tx_queue.
-
-
-Regards,
-Niklas
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index 960236fb1681..2117b2cea598 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2017		Intel Deutschland GmbH
++ * Copyright (c) 2018		Intel Corporation
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -72,6 +73,8 @@ enum ieee80211_radiotap_presence {
+ 	IEEE80211_RADIOTAP_AMPDU_STATUS = 20,
+ 	IEEE80211_RADIOTAP_VHT = 21,
+ 	IEEE80211_RADIOTAP_TIMESTAMP = 22,
++	IEEE80211_RADIOTAP_HE = 23,
++	IEEE80211_RADIOTAP_HE_MU = 24,
+ 
+ 	/* valid in every it_present bitmap, even vendor namespaces */
+ 	IEEE80211_RADIOTAP_RADIOTAP_NAMESPACE = 29,
+@@ -202,6 +205,114 @@ enum ieee80211_radiotap_timestamp_flags {
+ 	IEEE80211_RADIOTAP_TIMESTAMP_FLAG_ACCURACY = 0x02,
+ };
+ 
++struct ieee80211_radiotap_he {
++	__le16 data1, data2, data3, data4, data5, data6;
++};
++
++enum ieee80211_radiotap_he_bits {
++	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_MASK		= 3,
++	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_SU		= 0,
++	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_EXT_SU	= 1,
++	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_MU		= 2,
++	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_TRIG		= 3,
++
++	IEEE80211_RADIOTAP_HE_DATA1_BSS_COLOR_KNOWN	= 0x0004,
++	IEEE80211_RADIOTAP_HE_DATA1_BEAM_CHANGE_KNOWN	= 0x0008,
++	IEEE80211_RADIOTAP_HE_DATA1_UL_DL_KNOWN		= 0x0010,
++	IEEE80211_RADIOTAP_HE_DATA1_DATA_MCS_KNOWN	= 0x0020,
++	IEEE80211_RADIOTAP_HE_DATA1_DATA_DCM_KNOWN	= 0x0040,
++	IEEE80211_RADIOTAP_HE_DATA1_CODING_KNOWN	= 0x0080,
++	IEEE80211_RADIOTAP_HE_DATA1_LDPC_XSYMSEG_KNOWN	= 0x0100,
++	IEEE80211_RADIOTAP_HE_DATA1_STBC_KNOWN		= 0x0200,
++	IEEE80211_RADIOTAP_HE_DATA1_SPTL_REUSE_KNOWN	= 0x0400,
++	IEEE80211_RADIOTAP_HE_DATA1_SPTL_REUSE2_KNOWN	= 0x0800,
++	IEEE80211_RADIOTAP_HE_DATA1_SPTL_REUSE3_KNOWN	= 0x1000,
++	IEEE80211_RADIOTAP_HE_DATA1_SPTL_REUSE4_KNOWN	= 0x2000,
++	IEEE80211_RADIOTAP_HE_DATA1_BW_RU_ALLOC_KNOWN	= 0x4000,
++	IEEE80211_RADIOTAP_HE_DATA1_DOPPLER_KNOWN	= 0x8000,
++
++	IEEE80211_RADIOTAP_HE_DATA2_PRISEC_80_KNOWN	= 0x0001,
++	IEEE80211_RADIOTAP_HE_DATA2_GI_KNOWN		= 0x0002,
++	IEEE80211_RADIOTAP_HE_DATA2_NUM_LTF_SYMS_KNOWN	= 0x0004,
++	IEEE80211_RADIOTAP_HE_DATA2_PRE_FEC_PAD_KNOWN	= 0x0008,
++	IEEE80211_RADIOTAP_HE_DATA2_TXBF_KNOWN		= 0x0010,
++	IEEE80211_RADIOTAP_HE_DATA2_PE_DISAMBIG_KNOWN	= 0x0020,
++	IEEE80211_RADIOTAP_HE_DATA2_TXOP_KNOWN		= 0x0040,
++	IEEE80211_RADIOTAP_HE_DATA2_MIDAMBLE_KNOWN	= 0x0080,
++	IEEE80211_RADIOTAP_HE_DATA2_RU_OFFSET		= 0x3f00,
++	IEEE80211_RADIOTAP_HE_DATA2_RU_OFFSET_KNOWN	= 0x4000,
++	IEEE80211_RADIOTAP_HE_DATA2_PRISEC_80_SEC	= 0x8000,
++
++	IEEE80211_RADIOTAP_HE_DATA3_BSS_COLOR		= 0x003f,
++	IEEE80211_RADIOTAP_HE_DATA3_BEAM_CHANGE		= 0x0040,
++	IEEE80211_RADIOTAP_HE_DATA3_UL_DL		= 0x0080,
++	IEEE80211_RADIOTAP_HE_DATA3_DATA_MCS		= 0x0f00,
++	IEEE80211_RADIOTAP_HE_DATA3_DATA_DCM		= 0x1000,
++	IEEE80211_RADIOTAP_HE_DATA3_CODING		= 0x2000,
++	IEEE80211_RADIOTAP_HE_DATA3_LDPC_XSYMSEG	= 0x4000,
++	IEEE80211_RADIOTAP_HE_DATA3_STBC		= 0x8000,
++
++	IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC	= 0x000f,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_20MHZ	= 0,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_40MHZ	= 1,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_80MHZ	= 2,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_160MHZ	= 3,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_26T	= 4,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_52T	= 5,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_106T	= 6,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_242T	= 7,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_484T	= 8,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_996T	= 9,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_2x996T	= 10,
++
++	IEEE80211_RADIOTAP_HE_DATA5_GI			= 0x0030,
++		IEEE80211_RADIOTAP_HE_DATA5_GI_0_8			= 0,
++		IEEE80211_RADIOTAP_HE_DATA5_GI_1_6			= 1,
++		IEEE80211_RADIOTAP_HE_DATA5_GI_3_2			= 2,
++
++	IEEE80211_RADIOTAP_HE_DATA5_NUM_LTF_SYMS	= 0x0700,
++	IEEE80211_RADIOTAP_HE_DATA5_PRE_FEC_PAD		= 0x3000,
++	IEEE80211_RADIOTAP_HE_DATA5_TXBF		= 0x4000,
++	IEEE80211_RADIOTAP_HE_DATA5_PE_DISAMBIG		= 0x8000,
++
++	IEEE80211_RADIOTAP_HE_DATA6_NSTS		= 0x000f,
++	IEEE80211_RADIOTAP_HE_DATA6_DOPPLER		= 0x0010,
++	IEEE80211_RADIOTAP_HE_DATA6_TXOP		= 0x7f00,
++	IEEE80211_RADIOTAP_HE_DATA6_MIDAMBLE_PDCTY	= 0x8000,
++};
++
++struct ieee80211_radiotap_he_mu {
++	__le16 flags1, flags2;
++	u8 ru_ch1[4];
++	u8 ru_ch2[4];
++};
++
++enum ieee80211_radiotap_he_mu_bits {
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_MCS		= 0x000f,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_MCS_KNOWN		= 0x0010,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_DCM		= 0x0020,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_DCM_KNOWN		= 0x0040,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH2_CTR_26T_RU_KNOWN	= 0x0080,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH1_RU_KNOWN		= 0x0100,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH2_RU_KNOWN		= 0x0200,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH1_CTR_26T_RU_KNOWN	= 0x1000,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH1_CTR_26T_RU		= 0x2000,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_COMP_KNOWN	= 0x4000,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_SYMS_USERS_KNOWN	= 0x8000,
++
++	IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW	= 0x0003,
++		IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_20MHZ	= 0x0000,
++		IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_40MHZ	= 0x0001,
++		IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_80MHZ	= 0x0002,
++		IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_160MHZ	= 0x0003,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_KNOWN	= 0x0004,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS2_SIG_B_COMP		= 0x0008,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS2_SIG_B_SYMS_USERS	= 0x00f0,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS2_PUNC_FROM_SIG_A_BW	= 0x0300,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS2_PUNC_FROM_SIG_A_BW_KNOWN= 0x0400,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS2_CH2_CTR_26T_RU		= 0x0800,
++};
++
+ /**
+  * ieee80211_get_radiotap_len - get radiotap header length
+  */
+-- 
+2.17.0
