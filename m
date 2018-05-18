@@ -1,43 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:40605 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752578AbeEKNZq (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:45390 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753370AbeERJak (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 09:25:46 -0400
-From: Colin King <colin.king@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] cfg80211: fix spelling mistake: "uknown" -> "unknown"
-Date: Fri, 11 May 2018 14:25:42 +0100
-Message-Id: <20180511132542.16304-1-colin.king@canonical.com> (sfid-20180511_152555_891647_155849EE)
+        Fri, 18 May 2018 05:30:40 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 11/14] rtlwifi: remove hal_op c2h_content_parsing
+Date: Fri, 18 May 2018 17:30:04 +0800
+Message-ID: <20180518093007.23594-12-pkshih@realtek.com> (sfid-20180518_113135_013252_3EC6F3C8)
+In-Reply-To: <20180518093007.23594-1-pkshih@realtek.com>
+References: <20180518093007.23594-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Trivial fix to spelling mistake in pr_debug message text
+Similar to rx_command_packet, we can call rtl_c2h_content_parsing so the
+hal_op isn't necessary.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- net/wireless/reg.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtlwifi/base.c         | 7 +++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c | 1 -
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c | 1 -
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 1 -
+ drivers/net/wireless/realtek/rtlwifi/wifi.h         | 2 --
+ 5 files changed, 3 insertions(+), 9 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 72eb7c6b6e7f..e55099b1785d 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -3400,7 +3400,7 @@ bool reg_supported_dfs_region(enum nl80211_dfs_regions dfs_region)
- 	case NL80211_DFS_JP:
- 		return true;
- 	default:
--		pr_debug("Ignoring uknown DFS master region: %d\n", dfs_region);
-+		pr_debug("Ignoring unknown DFS master region: %d\n", dfs_region);
- 		return false;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 0d03e98f9cb4..927b7d231576 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -2346,7 +2346,6 @@ void rtl_c2h_content_parsing(struct ieee80211_hw *hw, u8 cmd_id,
+ 		break;
  	}
  }
+-EXPORT_SYMBOL_GPL(rtl_c2h_content_parsing);
+ 
+ void rtl_c2h_packet_handler(struct ieee80211_hw *hw, u8 *buffer, u8 len)
+ {
+@@ -2401,9 +2400,9 @@ void rtl_c2hcmd_launcher(struct ieee80211_hw *hw, int exec)
+ 		if (!c2hcmd)
+ 			break;
+ 
+-		if (rtlpriv->cfg->ops->c2h_content_parsing && exec)
+-			rtlpriv->cfg->ops->c2h_content_parsing(hw,
+-					c2hcmd->tag, c2hcmd->len, c2hcmd->val);
++		if (exec)
++			rtl_c2h_content_parsing(hw, c2hcmd->tag,
++						c2hcmd->len, c2hcmd->val);
+ 
+ 		/* free */
+ 		kfree(c2hcmd->val);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
+index 5b67ad748d67..9ea62599ecbb 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
+@@ -250,7 +250,6 @@ static struct rtl_hal_ops rtl8192ee_hal_ops = {
+ 	.set_rfreg = rtl92ee_phy_set_rf_reg,
+ 	.fill_h2c_cmd = rtl92ee_fill_h2c_cmd,
+ 	.get_btc_status = rtl92ee_get_btc_status,
+-	.c2h_content_parsing = rtl_c2h_content_parsing,
+ 	.c2h_ra_report_handler = rtl92ee_c2h_ra_report_handler,
+ };
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
+index a41e67b3f38b..c9f7b042d9c6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
+@@ -262,7 +262,6 @@ static struct rtl_hal_ops rtl8723be_hal_ops = {
+ 	.fill_h2c_cmd = rtl8723be_fill_h2c_cmd,
+ 	.get_btc_status = rtl8723be_get_btc_status,
+ 	.is_fw_header = is_fw_header,
+-	.c2h_content_parsing = rtl_c2h_content_parsing,
+ };
+ 
+ static struct rtl_mod_params rtl8723be_mod_params = {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+index 8ff8a406db52..77f6401021c9 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+@@ -303,7 +303,6 @@ static struct rtl_hal_ops rtl8821ae_hal_ops = {
+ 	.set_rfreg = rtl8821ae_phy_set_rf_reg,
+ 	.fill_h2c_cmd = rtl8821ae_fill_h2c_cmd,
+ 	.get_btc_status = rtl8821ae_get_btc_status,
+-	.c2h_content_parsing = rtl_c2h_content_parsing,
+ 	.c2h_ra_report_handler = rtl8821ae_c2h_ra_report_handler,
+ 	.add_wowlan_pattern = rtl8821ae_add_wowlan_pattern,
+ };
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index b40d8f5bbdce..930e1ec2280f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2344,8 +2344,6 @@ struct rtl_hal_ops {
+ 				   struct rtl_wow_pattern *rtl_pattern,
+ 				   u8 index);
+ 	u16 (*get_available_desc)(struct ieee80211_hw *hw, u8 q_idx);
+-	void (*c2h_content_parsing)(struct ieee80211_hw *hw, u8 tag, u8 len,
+-				    u8 *val);
+ 	void (*c2h_ra_report_handler)(struct ieee80211_hw *hw,
+ 				      u8 *cmd_buf, u8 cmd_len);
+ };
 -- 
-2.17.0
+2.15.1
