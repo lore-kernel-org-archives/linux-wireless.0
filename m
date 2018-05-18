@@ -1,63 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:28631 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751178AbeEBHPG (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:39172 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752377AbeERJaH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 May 2018 03:15:06 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 04/21] staging: wilc1000: remove unnecessary bracket used in switch in wilc_mgmt_frame_register()
-Date: Wed, 2 May 2018 12:43:30 +0530
-Message-ID: <1525245227-3924-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180502_092059_300346_C9868A70)
-In-Reply-To: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
-References: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 18 May 2018 05:30:07 -0400
+Message-ID: <1526635805.3805.7.camel@sipsolutions.net> (sfid-20180518_113016_202986_AD5A0C8D)
+Subject: Re: [RFC 0/2] nl80211/mac80211 Add support for per-rate rx
+ statistics
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sriram R <srirrama@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 18 May 2018 11:30:05 +0200
+In-Reply-To: <44cd0e995e3caf7b44fcf5676cb57b5a@codeaurora.org>
+References: <1526361481-7159-1-git-send-email-srirrama@codeaurora.org>
+         <1526367603.3255.3.camel@sipsolutions.net>
+         <44cd0e995e3caf7b44fcf5676cb57b5a@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to remove the curly braces used in 'case' statement to follow as
-per linux standard.
+On Wed, 2018-05-16 at 10:04 +0530, Sriram R wrote:
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+> But, I wanted to avoid,
+> 	1. Static indexing and memory allocation based on MCS count((8x3)24 
+> entries for HT and (10x3)30 for VHT within allocated 36 entries) so that 
+> it's scalable.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index d82a7b0..470a103 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1741,24 +1741,18 @@ void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
- 
- 	switch (frame_type) {
- 	case PROBE_REQ:
--	{
- 		vif->frame_reg[0].type = frame_type;
- 		vif->frame_reg[0].reg = reg;
--	}
--	break;
-+		break;
- 
- 	case ACTION:
--	{
- 		vif->frame_reg[1].type = frame_type;
- 		vif->frame_reg[1].reg = reg;
--	}
--	break;
-+		break;
- 
- 	default:
--	{
- 		break;
- 	}
--	}
- 
- 	if (!wl->initialized)
- 		return;
--- 
-2.7.4
+Do you expect that the rate control on the other side flips through
+MCSes so fast that this little cache will need to be flushed
+significantly?
+
+> 	2. Remote chance of dropping a stats(Though it does not have much 
+> impact)
+
+Yeah this doesn't seem like a concern either way. How many packets and
+how little time ... :)
+
+> And to allow,
+> 	1. A 'station dump' kind of interface to dump the complete collected 
+> stats instead of returning only current snapshot of the stats within 
+> kernel.
+
+This *completely* contradict keeping limits on the kernel memory
+consumed, so basically I don't think this is feasible.
+
+> Also, do you feel it would be good to have both ,i.e complete stats 
+> collection within kernel(this approach) and dump+clear of stats on 
+> reaching threshold(your approach) and have one of these two modes 
+> selected based on the requirement.
+
+No, honestly, I don't. If an application wants these statistics, then I
+feel that we can impose *some* requirements and not leave it at "let me
+just enable it and have the kernel do all the work for me".
+
+johannes
