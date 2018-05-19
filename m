@@ -1,72 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:63761 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751292AbeEBHPb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 May 2018 03:15:31 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 12/21] staging: wilc1000: rename WILC_WFI_deinit_mon_interface to avoid uppercase for function name
-Date: Wed, 2 May 2018 12:43:38 +0530
-Message-ID: <1525245227-3924-13-git-send-email-ajay.kathat@microchip.com> (sfid-20180502_093236_804142_1D4E7AAE)
-In-Reply-To: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
-References: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
+Received: from mail.kernel.org ([198.145.29.99]:54398 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750771AbeESHI5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 19 May 2018 03:08:57 -0400
+Date: Sat, 19 May 2018 09:08:38 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Johan Hovold <johan@kernel.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Carlos Manuel Santos <cmmpsantos@gmail.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3] NFC: pn533: don't send USB data off of the stack
+Message-ID: <20180519070838.GC2943@kroah.com> (sfid-20180519_090901_241417_63905957)
+References: <20180518103811.GA29186@kroah.com>
+ <20180518154847.GB2668@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180518154847.GB2668@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes to avoid the use of uppercase for function name.
+On Fri, May 18, 2018 at 05:48:47PM +0200, Johan Hovold wrote:
+> On Fri, May 18, 2018 at 12:38:11PM +0200, Greg Kroah-Hartman wrote:
+> > It's amazing that this driver ever worked, but now that x86 doesn't
+> > allow USB data to be sent off of the stack, it really does not work at
+> > all.  Fix this up by properly allocating the data for the small
+> > "commands" that get sent to the device.
+> > 
+> > The USB stack will free the buffer when the data has been transmitted,
+> > that is why there is no kfree() to mirror the call to kmalloc().
+> 
+> It looks like you're now leaking all but the final transfer buffer that
+> is allocated for outgoing commands, as the URBs themselves are not freed
+> until disconnect() (and that's when core would free the buffers along
+> with the URBs if URB_FREE_BUFFER is set).
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/linux_mon.c              | 2 +-
- drivers/staging/wilc1000/linux_wlan.c             | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+Ugh, you are right.  The urb handling in this driver is crazy...
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index 1ee9ca3..a08ee9c 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -252,7 +252,7 @@ struct net_device *wilc_wfi_init_mon_interface(const char *name,
- 	return wilc_wfi_mon;
- }
- 
--int WILC_WFI_deinit_mon_interface(void)
-+int wilc_wfi_deinit_mon_interface(void)
- {
- 	bool rollback_lock = false;
- 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index f66704d..4208548 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1012,7 +1012,7 @@ static int wilc_mac_close(struct net_device *ndev)
- 		netdev_dbg(ndev, "Deinitializing wilc1000\n");
- 		wl->close = 1;
- 		wilc_wlan_deinitialize(ndev);
--		WILC_WFI_deinit_mon_interface();
-+		wilc_wfi_deinit_mon_interface();
- 	}
- 
- 	vif->mac_opened = 0;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-index f41ce84..c1a2421 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-@@ -8,7 +8,7 @@ void wilc_free_wiphy(struct net_device *net);
- int wilc_deinit_host_int(struct net_device *net);
- int wilc_init_host_int(struct net_device *net);
- void wilc_wfi_monitor_rx(u8 *buff, u32 size);
--int WILC_WFI_deinit_mon_interface(void);
-+int wilc_wfi_deinit_mon_interface(void);
- struct net_device *wilc_wfi_init_mon_interface(const char *name,
- 					       struct net_device *real_dev);
- void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
--- 
-2.7.4
+Let me go redo this whole thing, give me a few days...
+
+thanks for the review, much appreciated.
+
+Carlos, it would be good to know if your testing showed that the patch
+at least enables the device to work for now.  It will leak memory like
+crazy, so I don't recomment relying on the driver, but it should be good
+enough to see if my thinking as to why the driver was not working is
+correct or not.
+
+greg k-h
