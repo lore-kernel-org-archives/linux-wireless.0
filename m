@@ -1,70 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:54827 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752204AbeEGIp0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 04:45:26 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 26/30] staging: wilc1000: added #define for setting radiotap header
-Date: Mon, 7 May 2018 14:13:30 +0530
-Message-ID: <1525682614-3824-27-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104723_832695_31E8EF3D)
-In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:51968 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750918AbeETFnw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 20 May 2018 01:43:52 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 1/5] mt76: only stop tx queues on offchannel, not during the entire scan
+Date: Sun, 20 May 2018 07:43:45 +0200
+Message-Id: <20180520054349.49422-1-nbd@nbd.name> (sfid-20180520_074404_838212_30E29DBA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added new macro to resolve below checkpatch issues in linux_mon.
+During scans, mac80211 frequently switches back to the home channel to
+minimize interruption of ongoing traffic. Keep regular tx queues active
+during that time.
 
-"Lines should not end with a '('"
-
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/staging/wilc1000/linux_mon.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mac80211.c | 5 +++++
+ drivers/net/wireless/mediatek/mt76/mt76.h     | 1 +
+ drivers/net/wireless/mediatek/mt76/tx.c       | 4 ++--
+ 3 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index c372e0f..1c7e6e1 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -22,6 +22,9 @@ static u8 bssid[6];
- #define IEEE80211_RADIOTAP_F_TX_FAIL	0x0001  /* failed due to excessive*/
- #define GET_PKT_OFFSET(a) (((a) >> 22) & 0x1ff)
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index 915e61733131..d862e5efd094 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -366,6 +366,11 @@ void mt76_set_channel(struct mt76_dev *dev)
+ 	struct mt76_channel_state *state;
+ 	bool offchannel = hw->conf.flags & IEEE80211_CONF_OFFCHANNEL;
  
-+#define TX_RADIOTAP_PRESENT ((1 << IEEE80211_RADIOTAP_RATE) |	\
-+			     (1 << IEEE80211_RADIOTAP_TX_FLAGS))
++	if (offchannel)
++		set_bit(MT76_OFFCHANNEL, &dev->state);
++	else
++		clear_bit(MT76_OFFCHANNEL, &dev->state);
 +
- void wilc_wfi_monitor_rx(u8 *buff, u32 size)
- {
- 	u32 header, pkt_offset;
-@@ -59,9 +62,7 @@ void wilc_wfi_monitor_rx(u8 *buff, u32 size)
+ 	if (dev->drv->update_survey)
+ 		dev->drv->update_survey(dev);
  
- 		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(*cb_hdr));
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index a74e6eef51e9..2d098fac6147 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -189,6 +189,7 @@ enum {
+ 	MT76_STATE_RUNNING,
+ 	MT76_SCANNING,
+ 	MT76_RESET,
++	MT76_OFFCHANNEL,
+ };
  
--		cb_hdr->hdr.it_present = cpu_to_le32(
--				(1 << IEEE80211_RADIOTAP_RATE) |
--				(1 << IEEE80211_RADIOTAP_TX_FLAGS));
-+		cb_hdr->hdr.it_present = cpu_to_le32(TX_RADIOTAP_PRESENT);
+ struct mt76_hw_cap {
+diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
+index 7ecd2d7c5db4..e96956710fb2 100644
+--- a/drivers/net/wireless/mediatek/mt76/tx.c
++++ b/drivers/net/wireless/mediatek/mt76/tx.c
+@@ -332,7 +332,7 @@ mt76_txq_send_burst(struct mt76_dev *dev, struct mt76_queue *hwq,
+ 		if (probe)
+ 			break;
  
- 		cb_hdr->rate = 5; /* txrate->bitrate / 5; */
+-		if (test_bit(MT76_SCANNING, &dev->state) ||
++		if (test_bit(MT76_OFFCHANNEL, &dev->state) ||
+ 		    test_bit(MT76_RESET, &dev->state))
+ 			return -EBUSY;
  
-@@ -177,9 +178,7 @@ static netdev_tx_t wilc_wfi_mon_xmit(struct sk_buff *skb,
+@@ -385,7 +385,7 @@ mt76_txq_schedule_list(struct mt76_dev *dev, struct mt76_queue *hwq)
+ 		bool empty = false;
+ 		int cur;
  
- 		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(*cb_hdr));
+-		if (test_bit(MT76_SCANNING, &dev->state) ||
++		if (test_bit(MT76_OFFCHANNEL, &dev->state) ||
+ 		    test_bit(MT76_RESET, &dev->state))
+ 			return -EBUSY;
  
--		cb_hdr->hdr.it_present = cpu_to_le32(
--				(1 << IEEE80211_RADIOTAP_RATE) |
--				(1 << IEEE80211_RADIOTAP_TX_FLAGS));
-+		cb_hdr->hdr.it_present = cpu_to_le32(TX_RADIOTAP_PRESENT);
- 
- 		cb_hdr->rate = 5; /* txrate->bitrate / 5; */
- 		cb_hdr->tx_flags = 0x0004;
 -- 
-2.7.4
+2.17.0
