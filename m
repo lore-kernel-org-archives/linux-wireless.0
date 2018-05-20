@@ -1,117 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:38365 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751052AbeEMJQz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 13 May 2018 05:16:55 -0400
-Received: by mail-pl0-f67.google.com with SMTP id c11-v6so5677443plr.5
-        for <linux-wireless@vger.kernel.org>; Sun, 13 May 2018 02:16:55 -0700 (PDT)
-Message-ID: <5AF80278.9000501@sra-tohoku.co.jp> (sfid-20180513_111659_495841_928CD20E)
-Date: Sun, 13 May 2018 18:16:40 +0900
-From: Taketo Kabe <kabe@sra-tohoku.co.jp>
+Received: from mail.kernel.org ([198.145.29.99]:35974 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750936AbeETNUE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 20 May 2018 09:20:04 -0400
+Date: Sun, 20 May 2018 15:19:46 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Carlos Manuel Santos <cmmpsantos@gmail.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH v4] NFC: pn533: don't send USB data off of the stack
+Message-ID: <20180520131946.GA7325@kroah.com> (sfid-20180520_152009_646685_C167856D)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: kabe@sra-tohoku.co.jp, b43-dev@lists.infradead.org
-Subject: [PATCH v3] b43: fix transmit failure when VT is switched
-References: <5AF41F55.4060606@sra-tohoku.co.jp> <20180512085053.8637A60618@smtp.codeaurora.org>
-In-Reply-To: <20180512085053.8637A60618@smtp.codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Taketo Kabe <kabe@sra-tohoku.co.jp>
+It's amazing that this driver ever worked, but now that x86 doesn't
+allow USB data to be sent off of the stack, it really does not work at
+all.  Fix this up by properly allocating the data for the small
+"commands" that get sent to the device off of the stack.
 
-Setup:
-Using BCM4306 rev.03 chip based CardBus wireless card.
-IRQ is shared with yenta (cardbus bridge) and i915 (display) driver.
-For firmware, installed latest but dated openfwwf 5.2
-(http://netweb.ing.unibs.it/~openfwwf/)
+We do this for one command by having a whole urb just for ack messages,
+as they can be submitted in interrupt context, so we can not use
+usb_bulk_msg().  But the poweron command can sleep (and does), so use
+usb_bulk_msg() for that transfer.
 
-How-to-reproduce:
-Do "ssh <NetBSD-remotehost>", then "ls -lR /" to generate traffic, then
-repeatedly switch VTs by Alt-F1<>Alt-F2.
-Eventually (within a minute) the card stops working.
-You can receive traffic but no transmission.
-For unknown reason it doesn't occur when just generating traffic by
-"ssh <remotehost> ls -lR /".
-
-With CONFIG_B43_DEBUG=y kernel config, when it stops,
-the debug message shows
-    kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 148, but got 180
-The slot offset I observed so far was always 32.
-
-When err_out2 is not set to make error messages successive,
-the debug output will be like this:
-kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 148
-kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 150
-kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 120
-kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 152
-kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 122
-kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 154
-kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 124
-kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 156
-kernel: b43-phy1 debug: Out of order TX status report on DMA ring 1. Expected 116, but got 126
-The TX ring alternates between 2 sequences; the ring seems
-to be completely confused. Controller restart is needed.
-
-Workaround(1):
-This problem doesn't occur when using propriatory firmware
-you will extract by b43-fwcutter, so it may be a bug in
-openfwwf firmware, as the comment in the b43_dma_handle_txstatus() suggests.
-I wasn't able to find a bug in the terse openfwwf code though.
-
-Workaround(2):
-Using "pio=1" option to not use DMA makes this problem to
-not occur.
-
-Description of the patch:
-This patch will forcibly reset the controller to make it
-work again. Very kludgy and doesn't look right, but
-the traffic will continue to flow.
-
-Signed-off-by: Taketo Kabe <kabe@sra-tohoku.co.jp>
-Reviewed-by: Michael Buesch <m@bues.ch>
+Reported-by: Carlos Manuel Santos <cmmpsantos@gmail.com>
+Cc: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Stephen Hemminger <stephen@networkplumber.org>
+Cc: stable <stable@vger.kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- drivers/net/wireless/broadcom/b43/dma.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+v4: don't use urb transfer buffer flags as the memory is tied to the urb
+    (thanks to Johan)  Now we have a new static urb, and we use
+    usb_bulk_msg() for the other message.
+v3: actually use the correct buffer (thanks to Arend van Spriel)
+    use kmemdup (thanks to Johannes Berg and Julia Lawall)
+v2: set the urb flags correctly
 
-Changes since last edition:
-- Remove now unused err_out2 variable.
-- Regenerated the patch using "git format-patch" against
-  wireless-drivers-next.git .
+ drivers/nfc/pn533/usb.c |   42 ++++++++++++++++++++++++++++++------------
+ 1 file changed, 30 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/b43/dma.c b/drivers/net/wireless/broadcom/b43/dma.c
-index 6837064..6b0e1ec 100644
---- a/drivers/net/wireless/broadcom/b43/dma.c
-+++ b/drivers/net/wireless/broadcom/b43/dma.c
-@@ -1484,7 +1484,7 @@ void b43_dma_handle_txstatus(struct b43_wldev *dev,
- 	int slot, firstused;
- 	bool frame_succeed;
- 	int skip;
--	static u8 err_out1, err_out2;
-+	static u8 err_out1;
-
- 	ring = parse_cookie(dev, status->cookie, &slot);
- 	if (unlikely(!ring))
-@@ -1518,13 +1518,13 @@ void b43_dma_handle_txstatus(struct b43_wldev *dev,
- 			}
- 		} else {
- 			/* More than a single header/data pair were missed.
--			 * Report this error once.
-+			 * Report this error, and reset the controller to
-+			 * revive operation.
- 			 */
--			if (!err_out2)
--				b43dbg(dev->wl,
--				       "Out of order TX status report on DMA ring %d. Expected %d, but got %d\n",
--				       ring->index, firstused, slot);
--			err_out2 = 1;
-+			b43dbg(dev->wl,
-+			       "Out of order TX status report on DMA ring %d. Expected %d, but got %d\n",
-+			       ring->index, firstused, slot);
-+			b43_controller_restart(dev, "Out of order TX");
- 			return;
- 		}
- 	}
--- 
-kabe
+--- a/drivers/nfc/pn533/usb.c
++++ b/drivers/nfc/pn533/usb.c
+@@ -62,6 +62,9 @@ struct pn533_usb_phy {
+ 	struct urb *out_urb;
+ 	struct urb *in_urb;
+ 
++	struct urb *ack_urb;
++	u8 *ack_buffer;
++
+ 	struct pn533 *priv;
+ };
+ 
+@@ -150,13 +153,16 @@ static int pn533_usb_send_ack(struct pn5
+ 	struct pn533_usb_phy *phy = dev->phy;
+ 	static const u8 ack[6] = {0x00, 0x00, 0xff, 0x00, 0xff, 0x00};
+ 	/* spec 7.1.1.3:  Preamble, SoPC (2), ACK Code (2), Postamble */
+-	int rc;
+ 
+-	phy->out_urb->transfer_buffer = (u8 *)ack;
+-	phy->out_urb->transfer_buffer_length = sizeof(ack);
+-	rc = usb_submit_urb(phy->out_urb, flags);
++	if (!phy->ack_buffer) {
++		phy->ack_buffer = kmemdup(ack, sizeof(ack), flags);
++		if (!phy->ack_buffer)
++			return -ENOMEM;
++	}
+ 
+-	return rc;
++	phy->ack_urb->transfer_buffer = phy->ack_buffer;
++	phy->ack_urb->transfer_buffer_length = sizeof(ack);
++	return usb_submit_urb(phy->ack_urb, flags);
+ }
+ 
+ static int pn533_usb_send_frame(struct pn533 *dev,
+@@ -375,26 +381,31 @@ static int pn533_acr122_poweron_rdr(stru
+ 	/* Power on th reader (CCID cmd) */
+ 	u8 cmd[10] = {PN533_ACR122_PC_TO_RDR_ICCPOWERON,
+ 		      0, 0, 0, 0, 0, 0, 3, 0, 0};
++	char *buffer;
++	int transferred;
+ 	int rc;
+ 	void *cntx;
+ 	struct pn533_acr122_poweron_rdr_arg arg;
+ 
+ 	dev_dbg(&phy->udev->dev, "%s\n", __func__);
+ 
++	buffer = kmemdup(cmd, sizeof(cmd), GFP_KERNEL);
++	if (!buffer)
++		return -ENOMEM;
++
+ 	init_completion(&arg.done);
+ 	cntx = phy->in_urb->context;  /* backup context */
+ 
+ 	phy->in_urb->complete = pn533_acr122_poweron_rdr_resp;
+ 	phy->in_urb->context = &arg;
+ 
+-	phy->out_urb->transfer_buffer = cmd;
+-	phy->out_urb->transfer_buffer_length = sizeof(cmd);
+-
+ 	print_hex_dump_debug("ACR122 TX: ", DUMP_PREFIX_NONE, 16, 1,
+ 		       cmd, sizeof(cmd), false);
+ 
+-	rc = usb_submit_urb(phy->out_urb, GFP_KERNEL);
+-	if (rc) {
++	rc = usb_bulk_msg(phy->udev, phy->out_urb->pipe, buffer, sizeof(cmd),
++			  &transferred, 0);
++	kfree(buffer);
++	if (rc || (transferred != sizeof(cmd))) {
+ 		nfc_err(&phy->udev->dev,
+ 			"Reader power on cmd error %d\n", rc);
+ 		return rc;
+@@ -490,8 +501,9 @@ static int pn533_usb_probe(struct usb_in
+ 
+ 	phy->in_urb = usb_alloc_urb(0, GFP_KERNEL);
+ 	phy->out_urb = usb_alloc_urb(0, GFP_KERNEL);
++	phy->ack_urb = usb_alloc_urb(0, GFP_KERNEL);
+ 
+-	if (!phy->in_urb || !phy->out_urb)
++	if (!phy->in_urb || !phy->out_urb || !phy->ack_urb)
+ 		goto error;
+ 
+ 	usb_fill_bulk_urb(phy->in_urb, phy->udev,
+@@ -501,7 +513,9 @@ static int pn533_usb_probe(struct usb_in
+ 	usb_fill_bulk_urb(phy->out_urb, phy->udev,
+ 			  usb_sndbulkpipe(phy->udev, out_endpoint),
+ 			  NULL, 0, pn533_send_complete, phy);
+-
++	usb_fill_bulk_urb(phy->ack_urb, phy->udev,
++			  usb_sndbulkpipe(phy->udev, out_endpoint),
++			  NULL, 0, pn533_send_complete, phy);
+ 
+ 	switch (id->driver_info) {
+ 	case PN533_DEVICE_STD:
+@@ -554,6 +568,7 @@ static int pn533_usb_probe(struct usb_in
+ error:
+ 	usb_free_urb(phy->in_urb);
+ 	usb_free_urb(phy->out_urb);
++	usb_free_urb(phy->ack_urb);
+ 	usb_put_dev(phy->udev);
+ 	kfree(in_buf);
+ 
+@@ -573,10 +588,13 @@ static void pn533_usb_disconnect(struct
+ 
+ 	usb_kill_urb(phy->in_urb);
+ 	usb_kill_urb(phy->out_urb);
++	usb_kill_urb(phy->ack_urb);
+ 
+ 	kfree(phy->in_urb->transfer_buffer);
+ 	usb_free_urb(phy->in_urb);
+ 	usb_free_urb(phy->out_urb);
++	usb_free_urb(phy->ack_urb);
++	kfree(phy->ack_buffer);
+ 
+ 	nfc_info(&interface->dev, "NXP PN533 NFC device disconnected\n");
+ }
