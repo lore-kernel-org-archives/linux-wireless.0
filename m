@@ -1,52 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dnvrco-outbound-snat.email.rr.com ([107.14.73.230]:7733 "EHLO
-        dnvrco-cmomta03.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752413AbeEYNGq (ORCPT
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:41061 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750800AbeETIPg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 May 2018 09:06:46 -0400
-Message-ID: <20180525130644.XJCYB.49285.root@dnvrco-web25> (sfid-20180525_150649_902118_44AC1614)
-Date: Fri, 25 May 2018 13:06:44 +0000
-From: <mgreger@cinci.rr.com>
-To: Reinoud Koornstra <reinoudkoornstra@gmail.com>
-Subject: Re: Can no one help me?
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAAA5faH+tU8-xhaQjfO4S2yKN_b=HTVfAxi8QaN7QObAdrV-pA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Sun, 20 May 2018 04:15:36 -0400
+Received: by mail-wr0-f195.google.com with SMTP id w15-v6so5477903wrp.8
+        for <linux-wireless@vger.kernel.org>; Sun, 20 May 2018 01:15:35 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [RFC v2 02/18] mt76x2: move mt76x2_fw_header and mt76x2_patch_header definitions in mcu.h
+Date: Sun, 20 May 2018 10:15:06 +0200
+Message-Id: <20180520081522.10163-3-lorenzo.bianconi@redhat.com> (sfid-20180520_101542_467240_FB8440A8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for the reply.
+move mt76x2_fw_header and mt76x2_patch_header definitions in mcu.h in
+order to reuse them in mt76x2u mcu related code
 
-My first message to the list did have more information. I've tried the latest mainline kernel and also the default kernel for Debian stable and multiple other distros (Ubuntu, Arch, etc). The cards (I have several of the same model) are AR9462 in an M.2 NGFF format using the ath9k driver with 0x64 world roaming regdomain in EEPROM and US regdomain set via crda and iw claims the card supports both bands. No error messages to speak of, just 5GHz networks simply don't show up in scans and can't be associated with despite there being nearly a dozen different 5Ghz networks within range. The card acts like the entire 5Ghz band is NO_IR restricted (incoming packet statistics for 5Ghz via 'iw survey dump' do increment, but tx values are always zero. 2.4Ghz works fine. A custom kernel enabling beacon hints made no difference.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c | 17 -----------------
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h | 17 +++++++++++++++++
+ 2 files changed, 17 insertions(+), 17 deletions(-)
 
-I've now come to believe it's not software, but the cards themselves as OS/kernel/hardware seems to make no difference. I even installed them in a different brand/model laptop running MS Windows and got the same results.
-
-Since it was incredibly difficult to find an ath9k supported dual band card in M.2 format with a A-key slot needed by my laptop, I'm thinking now maybe the cards are simply faulty or designed incorrectly. These were bought via aliexpress.com and advertised as 5Ghz capable, but I've been unable to locate them anywhere else...all other sources seem to only carry AR9462 as Mini-PCIE, and not M.2
-
-Anyway, I've given up on them. If anyone happens to know of an M.2 A-keyed dual band card supported by an open driver (preferrably no or open firmware too) I'd really appreciate it, but I'm not holding my breath.
-
-Again, thanks anyway.
-
-
----- Reinoud Koornstra <reinoudkoornstra@gmail.com> wrote: 
-> What kernels have you tried? What messages do you get? Is the card not
-> supported? Crash? It's always good to share more info on what you're
-> experienced.
-> 
-> On Wed, May 23, 2018, 5:38 PM <mgreger@cinci.rr.com> wrote:
-> 
-> > I realize this is a development mailinglist and not a support forum, but
-> > I'm really at the end of my rope here.
-> >
-> > If someone can get this working, I'll buy them a nice lunch if they're
-> > ever near Cincinnati.
-> >
-> > I've tried booting alternative distros to see if it is a software problem,
-> > but no distro I've tried will work. I've even replaced the AR9462 card with
-> > another one, thinking maybe the hardware was bad...but no change.
-> >
-> > Surely someone here has a clue as to what's going on?
-> >
-> > Many thanks in advance for any help.
-> >
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
+index 3e2a7216ffdd..ba954e7bc426 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
+@@ -23,23 +23,6 @@
+ #include "mt76x2_dma.h"
+ #include "mt76x2_eeprom.h"
+ 
+-struct mt76x2_fw_header {
+-	__le32 ilm_len;
+-	__le32 dlm_len;
+-	__le16 build_ver;
+-	__le16 fw_ver;
+-	u8 pad[4];
+-	char build_time[16];
+-};
+-
+-struct mt76x2_patch_header {
+-	char build_time[16];
+-	char platform[4];
+-	char hw_version[4];
+-	char patch_version[4];
+-	u8 pad[2];
+-};
+-
+ static struct sk_buff *mt76x2_mcu_msg_alloc(const void *data, int len)
+ {
+ 	struct sk_buff *skb;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
+index d7a7e83262ce..e40293f21417 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
+@@ -146,6 +146,23 @@ struct mt76x2_tssi_comp {
+ 	u8 offset1;
+ } __packed __aligned(4);
+ 
++struct mt76x2_fw_header {
++	__le32 ilm_len;
++	__le32 dlm_len;
++	__le16 build_ver;
++	__le16 fw_ver;
++	u8 pad[4];
++	char build_time[16];
++};
++
++struct mt76x2_patch_header {
++	char build_time[16];
++	char platform[4];
++	char hw_version[4];
++	char patch_version[4];
++	u8 pad[2];
++};
++
+ int mt76x2_mcu_calibrate(struct mt76x2_dev *dev, enum mcu_calibration type,
+ 			 u32 param);
+ int mt76x2_mcu_tssi_comp(struct mt76x2_dev *dev, struct mt76x2_tssi_comp *tssi_data);
+-- 
+2.16.3
