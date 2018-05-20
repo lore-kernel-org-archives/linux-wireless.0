@@ -1,84 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:54827 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752186AbeEGIos (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 04:44:48 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 20/30] staging: wilc1000: fix line over 80 characters in add_key()
-Date: Mon, 7 May 2018 14:13:24 +0530
-Message-ID: <1525682614-3824-21-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104531_395086_55B7E2DD)
-In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:51964 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750932AbeETFnw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 20 May 2018 01:43:52 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 4/5] mt76: wait for pending tx to complete before switching channel
+Date: Sun, 20 May 2018 07:43:48 +0200
+Message-Id: <20180520054349.49422-4-nbd@nbd.name> (sfid-20180520_074405_416775_1376A160)
+In-Reply-To: <20180520054349.49422-1-nbd@nbd.name>
+References: <20180520054349.49422-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix line over 80 character issue found by checkpatch.pl script in
-add_key().
+Reduces interruption caused by scanning
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 19 +++++++++----------
- 1 file changed, 9 insertions(+), 10 deletions(-)
+ drivers/net/wireless/mediatek/mt76/dma.c      |  4 ++++
+ drivers/net/wireless/mediatek/mt76/mac80211.c | 16 ++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  2 ++
+ 3 files changed, 22 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 3deef5b..20ba9cc 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -905,8 +905,7 @@ static int wilc_wfi_cfg_copy_wpa_info(struct wilc_wfi_key *key_info,
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index 3518703524e7..3dbedcedc2c4 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -178,6 +178,10 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, enum mt76_txq_id qid, bool flush)
+ 		mt76_dma_sync_idx(dev, q);
+ 
+ 	wake = wake && qid < IEEE80211_NUM_ACS && q->queued < q->ndesc - 8;
++
++	if (!q->queued)
++		wake_up(&dev->tx_wait);
++
+ 	spin_unlock_bh(&q->lock);
+ 
+ 	if (wake)
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index d1044e5b25db..fcd079a96782 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -283,6 +283,7 @@ mt76_alloc_device(unsigned int size, const struct ieee80211_ops *ops)
+ 	spin_lock_init(&dev->rx_lock);
+ 	spin_lock_init(&dev->lock);
+ 	spin_lock_init(&dev->cc_lock);
++	init_waitqueue_head(&dev->tx_wait);
+ 
+ 	return dev;
  }
+@@ -377,18 +378,33 @@ void mt76_rx(struct mt76_dev *dev, enum mt76_rxq_id q, struct sk_buff *skb)
+ }
+ EXPORT_SYMBOL_GPL(mt76_rx);
  
- static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
--		   bool pairwise,
--		   const u8 *mac_addr, struct key_params *params)
-+		   bool pairwise, const u8 *mac_addr, struct key_params *params)
- 
++static bool mt76_has_tx_pending(struct mt76_dev *dev)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(dev->q_tx); i++) {
++		if (dev->q_tx[i].queued)
++			return true;
++	}
++
++	return false;
++}
++
+ void mt76_set_channel(struct mt76_dev *dev)
  {
- 	s32 ret = 0, keylen = params->key_len;
-@@ -954,6 +953,8 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 	case WLAN_CIPHER_SUITE_CCMP:
- 		if (priv->wdev->iftype == NL80211_IFTYPE_AP ||
- 		    priv->wdev->iftype == NL80211_IFTYPE_P2P_GO) {
-+			struct wilc_wfi_key *key;
+ 	struct ieee80211_hw *hw = dev->hw;
+ 	struct cfg80211_chan_def *chandef = &hw->conf.chandef;
+ 	struct mt76_channel_state *state;
+ 	bool offchannel = hw->conf.flags & IEEE80211_CONF_OFFCHANNEL;
++	int timeout = HZ / 5;
+ 
+ 	if (offchannel)
+ 		set_bit(MT76_OFFCHANNEL, &dev->state);
+ 	else
+ 		clear_bit(MT76_OFFCHANNEL, &dev->state);
+ 
++	wait_event_timeout(dev->tx_wait, !mt76_has_tx_pending(dev), timeout);
 +
- 			ret = wilc_wfi_cfg_allocate_wpa_entry(priv, key_index);
- 			if (ret)
- 				return -ENOMEM;
-@@ -973,21 +974,19 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 	if (dev->drv->update_survey)
+ 		dev->drv->update_survey(dev);
  
- 				priv->wilc_groupkey = mode;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index bb158f867d7c..d2166fbf50ff 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -251,6 +251,8 @@ struct mt76_dev {
+ 	struct mt76_queue q_rx[__MT_RXQ_MAX];
+ 	const struct mt76_queue_ops *queue_ops;
  
--				ret = wilc_wfi_cfg_copy_wpa_info(priv->wilc_gtk[key_index],
--								 params);
--				if (ret)
--					return -ENOMEM;
-+				key = priv->wilc_gtk[key_index];
- 			} else {
- 				if (params->cipher == WLAN_CIPHER_SUITE_TKIP)
- 					mode = ENCRYPT_ENABLED | WPA | TKIP;
- 				else
- 					mode = priv->wilc_groupkey | AES;
- 
--				ret = wilc_wfi_cfg_copy_wpa_info(priv->wilc_ptk[key_index],
--								 params);
--				if (ret)
--					return -ENOMEM;
-+				key = priv->wilc_ptk[key_index];
- 			}
-+			ret = wilc_wfi_cfg_copy_wpa_info(key, params);
-+			if (ret)
-+				return -ENOMEM;
++	wait_queue_head_t tx_wait;
 +
- 			op_mode = AP_MODE;
- 		} else {
- 			if (params->key_len > 16 &&
+ 	u8 macaddr[ETH_ALEN];
+ 	u32 rev;
+ 	unsigned long state;
 -- 
-2.7.4
+2.17.0
