@@ -1,50 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f180.google.com ([209.85.216.180]:47043 "EHLO
-        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751853AbeENIPy (ORCPT
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:33825 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750800AbeETIPb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 May 2018 04:15:54 -0400
-Received: by mail-qt0-f180.google.com with SMTP id m16-v6so14955334qtg.13
-        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2018 01:15:54 -0700 (PDT)
-Subject: Re: brcmfmac: Updating Broadcom/Cypress Wifi/BT firmware
-To: Stefan Wahren <stefan.wahren@i2se.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>
-References: <1350822038.83583.1525284334972@email.1und1.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Kevin Hilman <khilman@baylibre.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AF945B8.3070801@broadcom.com> (sfid-20180514_101603_304261_6B0BEE3F)
-Date: Mon, 14 May 2018 10:15:52 +0200
-MIME-Version: 1.0
-In-Reply-To: <1350822038.83583.1525284334972@email.1und1.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Sun, 20 May 2018 04:15:31 -0400
+Received: by mail-wr0-f194.google.com with SMTP id j1-v6so2069542wrm.1
+        for <linux-wireless@vger.kernel.org>; Sun, 20 May 2018 01:15:31 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [RFC v2 00/18] add mt76x2u support to mt76 driver
+Date: Sun, 20 May 2018 10:15:04 +0200
+Message-Id: <20180520081522.10163-1-lorenzo.bianconi@redhat.com> (sfid-20180520_101539_479388_5221956D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/2/2018 8:05 PM, Stefan Wahren wrote:
-> Hi,
-> i wanted to know, if there are any plans to update the Broadcom/Cypress firmware under:
->
-> https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
->
-> As BCM2835 maintainer i'm interested in the following files:
->
-> brcm/brcmfmac43430-sdio.bin
-> brcm/brcmfmac43455-sdio.bin
+Add usb layer to mt76 driver in order to support mt76x2u based devices.
+Move common code between pci and usb in mt76x2-common module in order to
+remove pci dependency from usb driver
 
-To my knowledge (just checked ;-) ) these are already in the repository.
+Changes since RFCv1:
+- added power management support
+- updated usb_device_id list
+- fixed 5GHz frequencies scan
+- fixed various races during module load/unload
+- implemented dynamic AGC tuning based on false packet detection count
+- use netdev_alloc_frag/build_skb to get rid of rx frames copies
+- addressed comments from Stanislaw 
+- added bss configuration support
+- added tx power configuration support
+- patchset rebased on top of current wireless-drivers-next master branch
 
-> brcm/brcmfmac43430-sdio.txt
+Lorenzo Bianconi (18):
+  mt76x2: use completion instead of wait_queue for mcu rx queue
+  mt76x2: move mt76x2_fw_header and mt76x2_patch_header definitions in
+    mcu.h
+  mt76x2: move utility routines in mt76x2.h
+  mt76x2: introduce mt76x2_init_device routine
+  mt76x2: move currently mt76x2u unsupported features to mt76x2_init
+  mt76x2: introduce mt76x2_mac_load_tx_status routine
+  mt76x2: add napi struct to mt76_rx_poll_complete/mt76_rx_complete
+    signatures
+  mt76x2: add buffer len to mt76x2_mac_write_txwi signature
+  mt76: introduce tx_queue_skb function pointer in mt76_bus_ops
+  mt76: introduce mt76x2-common module
+  mt76: add mt76x2_tx_common to mt76x2-common module
+  mt76: add mt76x2_mac_common to mt76x2-common module
+  mt76: add mt76x2_init_common to mt76x2-common module
+  mt76: add mt76x2_common to mt76x2-common module
+  mt76: add mt76x2_phy_common to mt76x2-common module
+  mt76: move mt76x2_debugfs in mt76-common module
+  mt76: add usb support to mt76 layer
+  mt76: add driver code for MT76x2u based devices
 
-We do not distribute these .txt files aka nvram files as they are board 
-specific and no good solution to express that in the filename.
+ drivers/net/wireless/mediatek/mt76/Kconfig         |  13 +
+ drivers/net/wireless/mediatek/mt76/Makefile        |  18 +-
+ drivers/net/wireless/mediatek/mt76/agg-rx.c        |   2 +-
+ drivers/net/wireless/mediatek/mt76/dma.c           |   3 +-
+ drivers/net/wireless/mediatek/mt76/dma.h           |   5 +
+ drivers/net/wireless/mediatek/mt76/mac80211.c      |  27 +-
+ drivers/net/wireless/mediatek/mt76/mt76.h          | 125 +++-
+ drivers/net/wireless/mediatek/mt76/mt76x2.h        |  92 ++-
+ drivers/net/wireless/mediatek/mt76/mt76x2_common.c | 348 +++++++++++
+ .../net/wireless/mediatek/mt76/mt76x2_debugfs.c    |   1 +
+ drivers/net/wireless/mediatek/mt76/mt76x2_dma.c    |  23 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c |  13 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h |   1 +
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c   | 311 +---------
+ .../wireless/mediatek/mt76/mt76x2_init_common.c    | 253 ++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c    | 611 +-----------------
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.h    |   2 +-
+ .../net/wireless/mediatek/mt76/mt76x2_mac_common.c | 683 +++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_main.c   | 305 ---------
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c    |  20 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h    |  17 +
+ drivers/net/wireless/mediatek/mt76/mt76x2_phy.c    | 290 ---------
+ .../net/wireless/mediatek/mt76/mt76x2_phy_common.c | 302 +++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_regs.h   |  35 ++
+ drivers/net/wireless/mediatek/mt76/mt76x2_tx.c     | 125 +---
+ .../net/wireless/mediatek/mt76/mt76x2_tx_common.c  | 149 +++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_usb.c    | 138 +++++
+ drivers/net/wireless/mediatek/mt76/mt76x2u.h       |  99 +++
+ drivers/net/wireless/mediatek/mt76/mt76x2u_core.c  | 195 ++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2u_init.c  | 317 ++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2u_mac.c   | 240 ++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2u_main.c  | 182 ++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c   | 667 ++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2u_phy.c   | 311 ++++++++++
+ drivers/net/wireless/mediatek/mt76/tx.c            |   9 +-
+ drivers/net/wireless/mediatek/mt76/usb.c           | 613 ++++++++++++++++++
+ 36 files changed, 4849 insertions(+), 1696 deletions(-)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_common.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mac_common.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_phy_common.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_usb.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2u.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2u_core.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2u_init.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2u_mac.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2u_main.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2u_mcu.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2u_phy.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/usb.c
 
-> brcm/BCM43430A1.hcd
-
-The BT side is not handled by us. Might be different within Cypress though.
-
-Regards,
-Arend
+-- 
+2.16.3
