@@ -1,80 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:41914 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933107AbeEYMhA (ORCPT
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:37908 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751080AbeETIPh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 May 2018 08:37:00 -0400
-Received: by mail-wr0-f193.google.com with SMTP id u12-v6so8954205wrn.8
-        for <linux-wireless@vger.kernel.org>; Fri, 25 May 2018 05:36:59 -0700 (PDT)
-Date: Fri, 25 May 2018 14:36:56 +0200
-From: Niklas Cassel <niklas.cassel@linaro.org>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Adrian Chadd <adrian.chadd@gmail.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        David Miller <davem@davemloft.net>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: transmit queued frames after waking queues
-Message-ID: <20180525123656.GB8780@localhost.localdomain> (sfid-20180525_143717_189301_8E7B259B)
-References: <20180517231512.13085-1-niklas.cassel@linaro.org>
- <CAJ-Vmon1ybhWs_8Nv=w62pmhSizDdDeYCgK8_HTTwPZ=EEC46g@mail.gmail.com>
- <20180521203701.GA7619@localhost.localdomain>
- <20180524155034.xse7cfm5figfktuj@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180524155034.xse7cfm5figfktuj@localhost>
+        Sun, 20 May 2018 04:15:37 -0400
+Received: by mail-wr0-f194.google.com with SMTP id 94-v6so13027898wrf.5
+        for <linux-wireless@vger.kernel.org>; Sun, 20 May 2018 01:15:37 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [RFC v2 03/18] mt76x2: move utility routines in mt76x2.h
+Date: Sun, 20 May 2018 10:15:07 +0200
+Message-Id: <20180520081522.10163-4-lorenzo.bianconi@redhat.com> (sfid-20180520_101543_068404_1CF5B44D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 24, 2018 at 11:50:34AM -0400, Bob Copeland wrote:
-> On Mon, May 21, 2018 at 10:37:01PM +0200, Niklas Cassel wrote:
-> > On Thu, May 17, 2018 at 03:26:25PM -0700, Adrian Chadd wrote:
-> > > On Thu, 17 May 2018 at 16:16, Niklas Cassel <niklas.cassel@linaro.org>
-> > > wrote:
-> > > 
-> > > > diff --git a/drivers/net/wireless/ath/ath10k/txrx.c
-> > > b/drivers/net/wireless/ath/ath10k/txrx.c
-> > > > index cda164f6e9f6..1d3b2d2c3fee 100644
-> > > > --- a/drivers/net/wireless/ath/ath10k/txrx.c
-> > > > +++ b/drivers/net/wireless/ath/ath10k/txrx.c
-> > > > @@ -95,6 +95,9 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
-> > > >                  wake_up(&htt->empty_tx_wq);
-> > > >          spin_unlock_bh(&htt->tx_lock);
-> > > 
-> > > > +       if (htt->num_pending_tx <= 3 && !list_empty(&ar->txqs))
-> > > > +               ath10k_mac_tx_push_pending(ar);
-> > > > +
-> > > 
-> > > Just sanity checking - what's protecting htt->num_pending_tx? or is it
-> > > serialised some other way?
-> [...]
-> > I can't see that any of the examples applies, but let's add READ_ONCE(),
-> > to make sure that the compiler doesn't try to optimize this.
-> 
-> Couldn't you just move the num_pending_tx read inside tx_lock which is 2 lines
-> above?  I think all the other manipulations are protected by tx_lock.
+In order to reuse them supporting mt76x2u based devices, move
+mt76x2_wait_for_mac, wait_for_wpdma and mt76x2_channel_silent in
+mt76x2.h
 
-Hello Bob,
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x2.h      | 40 ++++++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 28 -----------------
+ drivers/net/wireless/mediatek/mt76/mt76x2_phy.c  |  9 ------
+ 3 files changed, 40 insertions(+), 37 deletions(-)
 
-There is both a V2 and V3 of this patchset, V3 moves this to a sdio.c and
-calls ath10k_mac_tx_push_pending() unconditionally.
-
-
-But to answer your question,
-it shouldn't matter if the read is done while holding the lock or not.
-
-Sure, the compiler could do things so that the code path is always or never
-executed, but that is why I added READ_ONCE() in V2.
-
-A spin lock does have the advantage of ordering: memory operations issued
-before the spin_unlock_bh() will be completed before the spin_unlock_bh()
-operation has completed.
-
-However, ath10k_htt_tx_dec_pending() was called earlier in the same function,
-which decreases htt->num_pending_tx, so that write will be completed before
-our read. That is the only ordering we care about here (if we should call
-ath10k_mac_tx_push_pending() or not).
-
-
-Kind regards,
-Niklas
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+index a31602d9310e..ec4396583a94 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+@@ -148,6 +148,23 @@ struct mt76x2_sta {
+ 	int n_frames;
+ };
+ 
++static inline bool mt76x2_wait_for_mac(struct mt76x2_dev *dev)
++{
++	int i;
++
++	for (i = 0; i < 500; i++) {
++		switch (mt76_rr(dev, MT_MAC_CSR0)) {
++		case 0:
++		case ~0:
++			break;
++		default:
++			return true;
++		}
++		usleep_range(5000, 10000);
++	}
++	return false;
++}
++
+ static inline bool is_mt7612(struct mt76x2_dev *dev)
+ {
+ 	return mt76_chip(&dev->mt76) == 0x7612;
+@@ -155,6 +172,14 @@ static inline bool is_mt7612(struct mt76x2_dev *dev)
+ 
+ void mt76x2_set_irq_mask(struct mt76x2_dev *dev, u32 clear, u32 set);
+ 
++static inline bool mt76x2_channel_silent(struct mt76x2_dev *dev)
++{
++	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
++
++	return ((chan->flags & IEEE80211_CHAN_RADAR) &&
++		chan->dfs_state != NL80211_DFS_AVAILABLE);
++}
++
+ static inline void mt76x2_irq_enable(struct mt76x2_dev *dev, u32 mask)
+ {
+ 	mt76x2_set_irq_mask(dev, 0, mask);
+@@ -165,6 +190,21 @@ static inline void mt76x2_irq_disable(struct mt76x2_dev *dev, u32 mask)
+ 	mt76x2_set_irq_mask(dev, mask, 0);
+ }
+ 
++static inline bool mt76x2_wait_for_bbp(struct mt76x2_dev *dev)
++{
++	return mt76_poll_msec(dev, MT_MAC_STATUS,
++			      MT_MAC_STATUS_TX | MT_MAC_STATUS_RX,
++			      0, 100);
++}
++
++static inline bool wait_for_wpdma(struct mt76x2_dev *dev)
++{
++	return mt76_poll(dev, MT_WPDMA_GLO_CFG,
++			 MT_WPDMA_GLO_CFG_TX_DMA_BUSY |
++			 MT_WPDMA_GLO_CFG_RX_DMA_BUSY,
++			 0, 1000);
++}
++
+ extern const struct ieee80211_ops mt76x2_ops;
+ 
+ struct mt76x2_dev *mt76x2_alloc_device(struct device *pdev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+index 276c6b6bec95..0aedd507f856 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+@@ -24,34 +24,6 @@ struct mt76x2_reg_pair {
+ 	u32 value;
+ };
+ 
+-static bool
+-mt76x2_wait_for_mac(struct mt76x2_dev *dev)
+-{
+-	int i;
+-
+-	for (i = 0; i < 500; i++) {
+-		switch (mt76_rr(dev, MT_MAC_CSR0)) {
+-		case 0:
+-		case ~0:
+-			break;
+-		default:
+-			return true;
+-		}
+-		usleep_range(5000, 10000);
+-	}
+-
+-	return false;
+-}
+-
+-static bool
+-wait_for_wpdma(struct mt76x2_dev *dev)
+-{
+-	return mt76_poll(dev, MT_WPDMA_GLO_CFG,
+-			 MT_WPDMA_GLO_CFG_TX_DMA_BUSY |
+-			 MT_WPDMA_GLO_CFG_RX_DMA_BUSY,
+-			 0, 1000);
+-}
+-
+ static void
+ mt76x2_mac_pbf_init(struct mt76x2_dev *dev)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
+index c1c38ca3330a..62785bea7a6a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
+@@ -176,15 +176,6 @@ void mt76x2_phy_set_txpower(struct mt76x2_dev *dev)
+ 		mt76x2_tx_power_mask(t.ht[6], t.vht[8], t.vht[8], 0));
+ }
+ 
+-static bool
+-mt76x2_channel_silent(struct mt76x2_dev *dev)
+-{
+-	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
+-
+-	return ((chan->flags & IEEE80211_CHAN_RADAR) &&
+-		chan->dfs_state != NL80211_DFS_AVAILABLE);
+-}
+-
+ static bool
+ mt76x2_phy_tssi_init_cal(struct mt76x2_dev *dev)
+ {
+-- 
+2.16.3
