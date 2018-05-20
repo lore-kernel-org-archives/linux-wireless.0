@@ -1,202 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:45332 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932483AbeE1Nrq (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 May 2018 09:47:46 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/5] mac80211: add probe request building flags
-Date: Mon, 28 May 2018 15:47:38 +0200
-Message-Id: <20180528134741.10386-3-johannes@sipsolutions.net> (sfid-20180528_154822_105428_48D0C9C2)
-In-Reply-To: <20180528134741.10386-1-johannes@sipsolutions.net>
-References: <20180528134741.10386-1-johannes@sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:33414 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750932AbeETKsA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 20 May 2018 06:48:00 -0400
+Subject: Re: [RFC v2 17/18] mt76: add usb support to mt76 layer
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+References: <20180520081522.10163-18-lorenzo.bianconi@redhat.com>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <89bfbabd-d4a3-07d0-d0af-7fc86c9ac406@nbd.name> (sfid-20180520_124804_387515_C7B6CFF7)
+Date: Sun, 20 May 2018 12:47:58 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180520081522.10163-18-lorenzo.bianconi@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 2018-05-20 10:15, Lorenzo Bianconi wrote:
+> This will be used by drivers for MT76x2u based devices
+> 
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> ---
+>  drivers/net/wireless/mediatek/mt76/Makefile |   3 +-
+>  drivers/net/wireless/mediatek/mt76/dma.h    |   5 +
+>  drivers/net/wireless/mediatek/mt76/mt76.h   | 115 +++++-
+>  drivers/net/wireless/mediatek/mt76/usb.c    | 610 ++++++++++++++++++++++++++++
+>  4 files changed, 731 insertions(+), 2 deletions(-)
+>  create mode 100644 drivers/net/wireless/mediatek/mt76/usb.c
+> 
+> diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
+> index e1bc229e4aad..4f7f6021d79c 100644
+> --- a/drivers/net/wireless/mediatek/mt76/Makefile
+> +++ b/drivers/net/wireless/mediatek/mt76/Makefile
+> @@ -3,7 +3,8 @@ obj-$(CONFIG_MT76x2_COMMON) += mt76x2-common.o
+>  obj-$(CONFIG_MT76x2E) += mt76x2e.o
+>  
+>  mt76-y := \
+> -	mmio.o util.o trace.o dma.o mac80211.o debugfs.o eeprom.o tx.o agg-rx.o
+> +	mmio.o util.o trace.o dma.o mac80211.o debugfs.o eeprom.o \
+> +	tx.o agg-rx.o usb.o
+Please don't make the mt76 core module depend on USB.
 
-Add flags to pass through to probe request building and
-change the "bool directed" to be one of them.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h | 12 +++++++++---
- net/mac80211/mlme.c        |  5 +++--
- net/mac80211/scan.c        |  7 ++++---
- net/mac80211/util.c        | 18 ++++++++++--------
- 4 files changed, 26 insertions(+), 16 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index d1978aa1c15d..ee2a25d6ecf2 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -2031,24 +2031,30 @@ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
- void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
- 				    const u8 *bssid, u16 stype, u16 reason,
- 				    bool send_frame, u8 *frame_buf);
-+
-+enum {
-+	IEEE80211_PROBE_FLAG_DIRECTED		= BIT(0),
-+};
-+
- int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
- 			     size_t buffer_len,
- 			     struct ieee80211_scan_ies *ie_desc,
- 			     const u8 *ie, size_t ie_len,
- 			     u8 bands_used, u32 *rate_masks,
--			     struct cfg80211_chan_def *chandef);
-+			     struct cfg80211_chan_def *chandef,
-+			     u32 flags);
- struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
- 					  const u8 *src, const u8 *dst,
- 					  u32 ratemask,
- 					  struct ieee80211_channel *chan,
- 					  const u8 *ssid, size_t ssid_len,
- 					  const u8 *ie, size_t ie_len,
--					  bool directed);
-+					  u32 flags);
- void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata,
- 			      const u8 *src, const u8 *dst,
- 			      const u8 *ssid, size_t ssid_len,
- 			      const u8 *ie, size_t ie_len,
--			      u32 ratemask, bool directed, u32 tx_flags,
-+			      u32 ratemask, u32 flags, u32 tx_flags,
- 			      struct ieee80211_channel *channel, bool scan);
- 
- u32 ieee80211_sta_get_rates(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index a59187c016e0..c3f2883cc0ec 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2267,7 +2267,8 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
- 
- 		ieee80211_send_probe_req(sdata, sdata->vif.addr, dst,
- 					 ssid + 2, ssid_len, NULL,
--					 0, (u32) -1, true, 0,
-+					 0, (u32) -1,
-+					 IEEE80211_PROBE_FLAG_DIRECTED, 0,
- 					 ifmgd->associated->channel, false);
- 		rcu_read_unlock();
- 	}
-@@ -2370,7 +2371,7 @@ struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
- 	skb = ieee80211_build_probe_req(sdata, sdata->vif.addr, cbss->bssid,
- 					(u32) -1, cbss->channel,
- 					ssid + 2, ssid_len,
--					NULL, 0, true);
-+					NULL, 0, IEEE80211_PROBE_FLAG_DIRECTED);
- 	rcu_read_unlock();
- 
- 	return skb;
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index a3b1bcc2b461..8e28d8de26aa 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -336,7 +336,7 @@ static bool ieee80211_prep_hw_scan(struct ieee80211_local *local)
- 					 local->hw_scan_ies_bufsize,
- 					 &local->hw_scan_req->ies,
- 					 req->ie, req->ie_len,
--					 bands_used, req->rates, &chandef);
-+					 bands_used, req->rates, &chandef, 0);
- 	local->hw_scan_req->req.ie_len = ielen;
- 	local->hw_scan_req->req.no_cck = req->no_cck;
- 	ether_addr_copy(local->hw_scan_req->req.mac_addr, req->mac_addr);
-@@ -552,7 +552,7 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
- 			sdata, local->scan_addr, scan_req->bssid,
- 			scan_req->ssids[i].ssid, scan_req->ssids[i].ssid_len,
- 			scan_req->ie, scan_req->ie_len,
--			scan_req->rates[band], false,
-+			scan_req->rates[band], 0,
- 			tx_flags, local->hw.conf.chandef.chan, true);
- 
- 	/*
-@@ -1167,7 +1167,8 @@ int __ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
- 
- 	ieee80211_build_preq_ies(local, ie, num_bands * iebufsz,
- 				 &sched_scan_ies, req->ie,
--				 req->ie_len, bands_used, rate_masks, &chandef);
-+				 req->ie_len, bands_used, rate_masks, &chandef,
-+				 0);
- 
- 	ret = drv_sched_scan_start(local, sdata, req, &sched_scan_ies);
- 	if (ret == 0) {
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 2d82c88efd0b..fb7264edecad 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1353,7 +1353,7 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_local *local,
- 					 enum nl80211_band band,
- 					 u32 rate_mask,
- 					 struct cfg80211_chan_def *chandef,
--					 size_t *offset)
-+					 size_t *offset, u32 flags)
- {
- 	struct ieee80211_supported_band *sband;
- 	u8 *pos = buffer, *end = buffer + buffer_len;
-@@ -1518,7 +1518,8 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
- 			     struct ieee80211_scan_ies *ie_desc,
- 			     const u8 *ie, size_t ie_len,
- 			     u8 bands_used, u32 *rate_masks,
--			     struct cfg80211_chan_def *chandef)
-+			     struct cfg80211_chan_def *chandef,
-+			     u32 flags)
- {
- 	size_t pos = 0, old_pos = 0, custom_ie_offset = 0;
- 	int i;
-@@ -1533,7 +1534,8 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
- 							     ie, ie_len, i,
- 							     rate_masks[i],
- 							     chandef,
--							     &custom_ie_offset);
-+							     &custom_ie_offset,
-+							     flags);
- 			ie_desc->ies[i] = buffer + old_pos;
- 			ie_desc->len[i] = pos - old_pos;
- 			old_pos = pos;
-@@ -1561,7 +1563,7 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
- 					  struct ieee80211_channel *chan,
- 					  const u8 *ssid, size_t ssid_len,
- 					  const u8 *ie, size_t ie_len,
--					  bool directed)
-+					  u32 flags)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct cfg80211_chan_def chandef;
-@@ -1577,7 +1579,7 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
- 	 * badly-behaved APs don't respond when this parameter is included.
- 	 */
- 	chandef.width = sdata->vif.bss_conf.chandef.width;
--	if (directed)
-+	if (flags & IEEE80211_PROBE_FLAG_DIRECTED)
- 		chandef.chan = NULL;
- 	else
- 		chandef.chan = chan;
-@@ -1591,7 +1593,7 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
- 	ies_len = ieee80211_build_preq_ies(local, skb_tail_pointer(skb),
- 					   skb_tailroom(skb), &dummy_ie_desc,
- 					   ie, ie_len, BIT(chan->band),
--					   rate_masks, &chandef);
-+					   rate_masks, &chandef, flags);
- 	skb_put(skb, ies_len);
- 
- 	if (dst) {
-@@ -1609,14 +1611,14 @@ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata,
- 			      const u8 *src, const u8 *dst,
- 			      const u8 *ssid, size_t ssid_len,
- 			      const u8 *ie, size_t ie_len,
--			      u32 ratemask, bool directed, u32 tx_flags,
-+			      u32 ratemask, u32 flags, u32 tx_flags,
- 			      struct ieee80211_channel *channel, bool scan)
- {
- 	struct sk_buff *skb;
- 
- 	skb = ieee80211_build_probe_req(sdata, src, dst, ratemask, channel,
- 					ssid, ssid_len,
--					ie, ie_len, directed);
-+					ie, ie_len, flags);
- 	if (skb) {
- 		IEEE80211_SKB_CB(skb)->flags |= tx_flags;
- 		if (scan)
--- 
-2.14.3
+- Felix
