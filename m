@@ -1,30 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:34400 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934181AbeEWTxf (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:38256 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932263AbeEUV0x (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 May 2018 15:53:35 -0400
-Date: Wed, 23 May 2018 15:53:34 -0400 (EDT)
-Message-Id: <20180523.155334.771812575627419028.davem@davemloft.net> (sfid-20180523_215534_139913_AA07102C)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2018-05-23
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20180523121432.9862-1-johannes@sipsolutions.net>
-References: <20180523121432.9862-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Mon, 21 May 2018 17:26:53 -0400
+Received: by mail-oi0-f68.google.com with SMTP id k17-v6so14314451oih.5
+        for <linux-wireless@vger.kernel.org>; Mon, 21 May 2018 14:26:53 -0700 (PDT)
+From: Guy Chronister <guylovesbritt@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: guychronister@outlook.com, Guy Chronister <guylovesbritt@gmail.com>
+Subject: [PATCH] Added support for Dell Wireless 1537 which is an Qualcomm Atheros AR6004X with an sdio ID of 0x19. hardware ID is 0271:0419. And tested it on a Dell Venue 11 Pro 7130 with a compiled kernel.
+Date: Mon, 21 May 2018 16:26:44 -0500
+Message-Id: <20180521212644.7838-1-guylovesbritt@gmail.com> (sfid-20180521_232706_974343_DF8085E9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Wed, 23 May 2018 14:14:31 +0200
+Signed-off-by: Guy Chronister <guylovesbritt@gmail.com>
+---
+ drivers/net/wireless/ath/ath6kl/sdio.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> Here's a new version of the pull request for net-next, now
-> with the stack size fixes included, which were the reason I
-> withdrew my earlier one. Other things are also included all
-> over the map.
-> 
-> Please pull and let me know if there's any problem.
-
-Looks good, pulled, thank you.
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 2195b1b7a8a6..bb50680580f3 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -1415,6 +1415,7 @@ static const struct sdio_device_id ath6kl_sdio_devices[] = {
+ 	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x1))},
+ 	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x2))},
+ 	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x18))},
++	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x19))},
+ 	{},
+ };
+ 
+-- 
+2.17.0
