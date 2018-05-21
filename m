@@ -1,55 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:43540 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934948AbeEJLQA (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45400 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752803AbeEUQaN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 May 2018 07:16:00 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        =?UTF-8?q?Michael=20B=C3=BCsch?= <m@bues.ch>,
-        Larry Finger <larry.finger@lwfinger.net>,
-        Matt Redfearn <matt.redfearn@mips.com>
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-        LKML <linux-kernel@vger.kernel.org>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH 4.17 2/2] ssb: make SSB_PCICORE_HOSTMODE depend on SSB = y
-Date: Thu, 10 May 2018 13:14:01 +0200
-Message-Id: <20180510111401.1161-2-zajec5@gmail.com> (sfid-20180510_131619_055462_2B733E35)
-In-Reply-To: <20180510111401.1161-1-zajec5@gmail.com>
-References: <20180510111401.1161-1-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Mon, 21 May 2018 12:30:13 -0400
+Message-ID: <17add6524aa6980898b9772b0aee92e9f5b04223.camel@coelho.fi> (sfid-20180521_183017_196089_1901115D)
+From: Luca Coelho <luca@coelho.fi>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eric Biggers <ebiggers3@gmail.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        linux-wireless@vger.kernel.org,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>
+Date: Mon, 21 May 2018 19:30:09 +0300
+In-Reply-To: <87r2m5f01p.fsf@kamboji.qca.qualcomm.com>
+References: <20180519183345.GA701@sol.localdomain>
+         <1469fa7134c62e0323ea1b409d98953f6c1a70a3.camel@coelho.fi>
+         <87r2m5f01p.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [4.17 iwlwifi regression] NULL pointer dereference in
+ reg_query_regdb_wmm()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+On Mon, 2018-05-21 at 19:25 +0300, Kalle Valo wrote:
+> Luca Coelho <luca@coelho.fi> writes:
+> 
+> > On Sat, 2018-05-19 at 11:33 -0700, Eric Biggers wrote:
+> > > Hello,
+> > > 
+> > > Using v4.17-rc5, on a laptop with an "Intel Corporation Wireless
+> > > 3165
+> > > (rev 79)"
+> > > using the iwlwifi driver, I get a NULL pointer dereference
+> > > immediately after
+> > > boot.  Apparently, the 'regdb' variable in net/wireless/reg.c is
+> > > NULL, yet
+> > > reg_query_regdb_wmm() is checking for IS_ERR().  It goes away if
+> > > I
+> > > revert commit
+> > > 77e30e10ee28a5 ("iwlwifi: mvm: query regdb for wmm rule if
+> > > needed").  The
+> > > symbolized crash report is:
+> > > 
+> > > BUG: unable to handle kernel NULL pointer dereference at
+> > > 000000000000000a
+> > 
+> > Thanks for the report and analysis! Haim is working on a fix and I
+> > will
+> > send it out later today.
+> 
+> We are on -rc6 already and getting close to the final v4.17 release.
+> I
+> wonder should we just revert 77e30e10ee28a5 for now?
 
-SSB_PCICORE_HOSTMODE protects MIPS specific code that calls not exported
-symbols pcibios_enable_device and register_pci_controller. This code is
-supposed to be compiled only with ssb builtin.
+I don't think we should revert it, this implements the new ETSI
+requirements for the WMM settings and this will be enforced in all new
+devices sold after mid-June (IIRC).
 
-This fixes:
-ERROR: "pcibios_enable_device" [drivers/ssb/ssb.ko] undefined!
-ERROR: "register_pci_controller" [drivers/ssb/ssb.ko] undefined!
-make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
+We haven't seen this problem and cfg80211 should not crash if the
+driver does stupid things, so we should just reject the call if regdb
+is still NULL.  It's a simple fix for the crash and the driver should
+recover from the issue later on.
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
- drivers/ssb/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I'll push the patch for cfg80211 later this evening.  Haim is still
+working on fixing it in the driver side.
 
-diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
-index b3f5cae98ea6..c574dd210500 100644
---- a/drivers/ssb/Kconfig
-+++ b/drivers/ssb/Kconfig
-@@ -131,7 +131,7 @@ config SSB_DRIVER_PCICORE
- 
- config SSB_PCICORE_HOSTMODE
- 	bool "Hostmode support for SSB PCI core"
--	depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS
-+	depends on SSB_DRIVER_PCICORE && SSB_DRIVER_MIPS && SSB = y
- 	help
- 	  PCIcore hostmode operation (external PCI bus).
- 
--- 
-2.13.6
+--
+Cheers,
+Luca.
