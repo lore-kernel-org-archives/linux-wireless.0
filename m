@@ -1,56 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:53396 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935325AbeEIVW2 (ORCPT
+Received: from mail-qk0-f174.google.com ([209.85.220.174]:40487 "EHLO
+        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751694AbeEUVnX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 17:22:28 -0400
-Message-ID: <1525900945.6910.28.camel@sipsolutions.net> (sfid-20180509_232233_209628_E57060A2)
-Subject: Re: [wl-testing/master] build regression in brcmfmac
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 09 May 2018 23:22:25 +0200
-In-Reply-To: <5AF36449.9050906@broadcom.com> (sfid-20180509_231246_109184_F25A324A)
-References: <5AF36449.9050906@broadcom.com>
-         (sfid-20180509_231246_109184_F25A324A)
+        Mon, 21 May 2018 17:43:23 -0400
+MIME-Version: 1.0
+In-Reply-To: <1526903890-35761-8-git-send-email-xieyisheng1@huawei.com>
+References: <1526903890-35761-1-git-send-email-xieyisheng1@huawei.com> <1526903890-35761-8-git-send-email-xieyisheng1@huawei.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Tue, 22 May 2018 00:43:21 +0300
+Message-ID: <CAHp75VeFiEMN+q0FPuk4qTVEW_1oovHzVkV_Ydcm22SEMarvUA@mail.gmail.com> (sfid-20180521_234400_585412_A729AE66)
+Subject: Re: [PATCH 07/33] iwlwifi: mvm: use match_string() helper
+To: Yisheng Xie <xieyisheng1@huawei.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-05-09 at 23:12 +0200, Arend van Spriel wrote:
-> Since yesterday I get the following build error on wl-testing/master:
-> 
->    CC [M]  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.o
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c: In function 
-> ‘brcmf_notify_connect_status_ap’:
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:5530:1: 
-> error: the frame size of 1592 bytes is larger than 1024 bytes 
-> [-Werror=frame-larger-than=]
->   }
->   ^
-> 
-> In the function brcmf_notify_connect_status_ap() I do have following on 
-> the stack:
-> 
-> static s32
-> brcmf_notify_connect_status_ap(struct brcmf_cfg80211_info *cfg,
->                                 struct net_device *ndev,
->                                 const struct brcmf_event_msg *e, void *data)
-> {
->          static int generation;
->          u32 event = e->event_code;
->          u32 reason = e->reason;
->          struct station_info sinfo;
-> 
-> I guess the struct station_info grew bigger by these commits:
-> 
-> 52539ca cfg80211: Expose TXQ stats and parameters to userspace	+816
-> 81d5439 cfg80211: average ack rssi support for data frames	+1
-> 
-> There are a number of other (cfg80211-based) drivers doing the same 
-> thing, ie. mwifiex, ath6kl, qtnfmac.
+On Mon, May 21, 2018 at 2:57 PM, Yisheng Xie <xieyisheng1@huawei.com> wrote:
+> match_string() returns the index of an array for a matching string,
+> which can be used intead of open coded variant.
 
-Yeah. Toke said this morning he was working on fixes.
+>         int ret, bt_force_ant_mode;
+>
+> -       for (bt_force_ant_mode = 0;
+> -            bt_force_ant_mode < ARRAY_SIZE(modes_str);
+> -            bt_force_ant_mode++) {
+> -               if (!strcmp(buf, modes_str[bt_force_ant_mode]))
+> -                       break;
+> -       }
+> -
+> -       if (bt_force_ant_mode >= ARRAY_SIZE(modes_str))
 
-johannes
+> +       bt_force_ant_mode = match_string(modes_str,
+> +                                        ARRAY_SIZE(modes_str), buf);
+
+One line?
+
+> +       if (bt_force_ant_mode < 0)
+>                 return -EINVAL;
+
+I would rather use
+
+ret = match_string();
+if (ret < 0)
+ return ret;
+
+bt_force_... = ret;
+
+But it's up tu Loca.
+
+>
+>         ret = 0;
+
+
+
+-- 
+With Best Regards,
+Andy Shevchenko
