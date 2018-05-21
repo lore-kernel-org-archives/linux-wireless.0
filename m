@@ -1,303 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:40659 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750711AbeEKRme (ORCPT
+Received: from mail-it0-f65.google.com ([209.85.214.65]:50572 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750859AbeEUUlf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 13:42:34 -0400
-Received: by mail-pl0-f66.google.com with SMTP id t12-v6so3677414plo.7
-        for <linux-wireless@vger.kernel.org>; Fri, 11 May 2018 10:42:34 -0700 (PDT)
-Date: Fri, 11 May 2018 10:43:55 -0700
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Govind Singh <govinds@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 04/12] ath10k: add support to start and stop qmi service
-Message-ID: <20180511174355.GP2259@tuxbook-pro> (sfid-20180511_194238_724244_D2A45DE1)
-References: <1522042773-25775-1-git-send-email-govinds@codeaurora.org>
+        Mon, 21 May 2018 16:41:35 -0400
+Received: by mail-it0-f65.google.com with SMTP id p3-v6so22639711itc.0
+        for <linux-wireless@vger.kernel.org>; Mon, 21 May 2018 13:41:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1522042773-25775-1-git-send-email-govinds@codeaurora.org>
+References: <20180521162845.5793-1-guylovesbritt@gmail.com>
+In-Reply-To: <20180521162845.5793-1-guylovesbritt@gmail.com>
+From: Steve deRosier <derosier@gmail.com>
+Date: Mon, 21 May 2018 13:40:58 -0700
+Message-ID: <CALLGbRJqDLzj9V07nJxEw4VDBeLKaKGADpPTET2j_4iTyVx53Q@mail.gmail.com> (sfid-20180521_224139_194625_C83CF7B2)
+Subject: Re: [PATCH] Added Dell Wireless 1537 Ath6kl sdio card (0x19) to the list.
+To: guylovesbritt@gmail.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        guychronister@outlook.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun 25 Mar 22:39 PDT 2018, Govind Singh wrote:
+Hi Guy,
 
-> Add support to start qmi service to configure the wlan
-> firmware component and register event notifier to communicate
-> with the WLAN firmware over qmi communication interface.
-> 
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+On Mon, May 21, 2018 at 9:28 AM Guy Chronister <guylovesbritt@gmail.com>
+wrote:
+
+> Signed-off-by: Guy Chronister <guylovesbritt@gmail.com>
 > ---
->  drivers/net/wireless/ath/ath10k/qmi.c | 155 ++++++++++++++++++++++++++++++++--
->  drivers/net/wireless/ath/ath10k/qmi.h |  13 +++
->  2 files changed, 160 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
-> index 2235182..3a7fcc6 100644
-> --- a/drivers/net/wireless/ath/ath10k/qmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/qmi.c
-> @@ -31,15 +31,115 @@
->  
->  static struct ath10k_qmi *qmi;
->  
-> +static int ath10k_qmi_event_fw_ready_ind(struct ath10k_qmi *qmi)
-> +{
-> +	pr_debug("fw ready event received\n");
+>   drivers/net/wireless/ath/ath6kl/sdio.c | 1 +
+>   1 file changed, 1 insertion(+)
 
-Please use dev_dbg.
-
-> +	spin_lock(&qmi->event_lock);
-> +	qmi->fw_ready = true;
-> +	spin_unlock(&qmi->event_lock);
-
-I see no reason for not just putting this code in
-ath10k_qmi_fw_ready_ind().
-
-> +
-
-fw_ready isn't used for anything, what purpose does this code have?
-
-> +	return 0;
-> +}
-> +
-> +static void ath10k_qmi_fw_ready_ind(struct qmi_handle *qmi_hdl,
-> +				    struct sockaddr_qrtr *sq,
-> +				    struct qmi_txn *txn, const void *data)
-> +{
-> +	struct ath10k_qmi *qmi = container_of(qmi_hdl, struct ath10k_qmi, qmi_hdl);
-> +
-> +	ath10k_qmi_event_fw_ready_ind(qmi);
-> +}
-> +
-> +static void ath10k_qmi_msa_ready_ind(struct qmi_handle *qmi_hdl,
-> +				     struct sockaddr_qrtr *sq,
-> +				     struct qmi_txn *txn, const void *data)
-> +{
-> +	struct ath10k_qmi *qmi = container_of(qmi_hdl, struct ath10k_qmi, qmi_hdl);
-> +
-> +	qmi->msa_ready = true;
-
-msa_ready is not only unused in this patch, it's unused after all 11
-patches. Can you drop it?
-
-> +}
-> +
-> +static struct qmi_msg_handler qmi_msg_handler[] = {
-> +	{
-> +		.type = QMI_INDICATION,
-> +		.msg_id = QMI_WLFW_FW_READY_IND_V01,
-> +		.ei = wlfw_fw_ready_ind_msg_v01_ei,
-> +		.decoded_size = sizeof(struct wlfw_fw_ready_ind_msg_v01),
-> +		.fn = ath10k_qmi_fw_ready_ind,
-> +	},
-> +	{
-> +		.type = QMI_INDICATION,
-> +		.msg_id = QMI_WLFW_MSA_READY_IND_V01,
-> +		.ei = wlfw_msa_ready_ind_msg_v01_ei,
-> +		.decoded_size = sizeof(struct wlfw_msa_ready_ind_msg_v01),
-> +		.fn = ath10k_qmi_msa_ready_ind,
-> +	},
-> +	{}
-> +};
-> +
-> +static int ath10k_qmi_connect_to_fw_server(struct ath10k_qmi *qmi)
-> +{
-> +	struct qmi_handle *qmi_hdl = &qmi->qmi_hdl;
-> +	int ret;
-> +
-> +	ret = kernel_connect(qmi_hdl->sock, (struct sockaddr *)&qmi->sq,
-> +			     sizeof(qmi->sq), 0);
-> +	if (ret) {
-> +		pr_err("fail to connect to remote service port\n");
-> +		return ret;
-> +	}
-> +
-> +	pr_info("wlan qmi service connected\n");
-> +
-> +	return 0;
-> +}
-> +
-> +static void ath10k_qmi_event_server_arrive(struct work_struct *work)
-> +{
-> +	struct ath10k_qmi *qmi = container_of(work, struct ath10k_qmi,
-> +					      work_svc_arrive);
-> +	int ret;
-> +
-> +	ret = ath10k_qmi_connect_to_fw_server(qmi);
-> +	if (ret)
-> +		return;
-> +
-> +	pr_debug("qmi server arrive\n");
-> +}
-> +
-> +static void ath10k_qmi_event_server_exit(struct work_struct *work)
-> +{
-> +	struct ath10k_qmi *qmi = container_of(work, struct ath10k_qmi,
-> +					      work_svc_exit);
-> +
-> +	spin_lock(&qmi->event_lock);
-> +	qmi->fw_ready = false;
-> +	spin_unlock(&qmi->event_lock);
-> +	pr_info("wlan fw service disconnected\n");
-> +}
-> +
->  static int ath10k_qmi_new_server(struct qmi_handle *qmi_hdl,
->  				 struct qmi_service *service)
->  {
-> +	struct ath10k_qmi *qmi = container_of(qmi_hdl, struct ath10k_qmi, qmi_hdl);
-> +	struct sockaddr_qrtr *sq = &qmi->sq;
-> +
-> +	sq->sq_family = AF_QIPCRTR;
-> +	sq->sq_node = service->node;
-> +	sq->sq_port = service->port;
-> +
-> +	queue_work(qmi->event_wq, &qmi->work_svc_arrive);
-
-This is being called in a sleepable context and kernel_connect() will
-not block, so I see no reason for queue work here to invoke
-ath10k_qmi_event_server_arrive() just to call
-ath10k_qmi_connect_to_fw_server().
-
-Just put the kernel_connect() call here.
+> diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c
+b/drivers/net/wireless/ath/ath6kl/sdio.c
+> index 2195b1b7a8a6..bb50680580f3 100644
+> --- a/drivers/net/wireless/ath/ath6kl/sdio.c
+> +++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+> @@ -1415,6 +1415,7 @@ static const struct sdio_device_id
+ath6kl_sdio_devices[] = {
+>          {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE |
+0x1))},
+>          {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE |
+0x2))},
+>          {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE |
+0x18))},
+> +       {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE |
+0x19))},
+>          {},
+>   };
 
 
-This gives the added benefit that you don't need to use qmi->sq as a way
-to pass parameters to ath10k_qmi_connect_to_fw_server().
+Thanks for this. I'd like to see more information in the git commit
+message. While I get that this is some Dell card, it would be helpful to
+know what is the actual chip, which firmware, sdio id, and what tests were
+done to confirm this worked. Honestly I'm a bit surprised to see a new
+ath6k chip ID.
 
-> +
->  	return 0;
->  }
->  
->  static void ath10k_qmi_del_server(struct qmi_handle *qmi_hdl,
->  				  struct qmi_service *service)
->  {
-> +	struct ath10k_qmi *qmi =
-> +		container_of(qmi_hdl, struct ath10k_qmi, qmi_hdl);
-> +
-> +	queue_work(qmi->event_wq, &qmi->work_svc_exit);
-
-I see no reason to queue work to set a boolean to false, just inline the
-code here.
-
->  }
->  
->  static struct qmi_ops ath10k_qmi_ops = {
-> @@ -47,6 +147,51 @@ static void ath10k_qmi_del_server(struct qmi_handle *qmi_hdl,
->  	.del_server = ath10k_qmi_del_server,
->  };
->  
-> +static int ath10k_alloc_qmi_resources(struct ath10k_qmi *qmi)
-> +{
-> +	int ret;
-> +
-> +	ret = qmi_handle_init(&qmi->qmi_hdl,
-> +			      WLFW_BDF_DOWNLOAD_REQ_MSG_V01_MAX_MSG_LEN,
-> +			      &ath10k_qmi_ops, qmi_msg_handler);
-> +	if (ret)
-> +		goto err;
-> +
-> +	qmi->event_wq = alloc_workqueue("qmi_driver_event",
-> +					WQ_UNBOUND, 1);
-> +	if (!qmi->event_wq) {
-> +		pr_err("workqueue alloc failed\n");
-> +		ret = -EFAULT;
-> +		goto err_qmi_service;
-> +	}
-> +
-> +	spin_lock_init(&qmi->event_lock);
-
-All calls from the qmi helpers are done from a single context, so
-there's no reason to use this lock.
-
-> +	INIT_WORK(&qmi->work_svc_arrive, ath10k_qmi_event_server_arrive);
-> +	INIT_WORK(&qmi->work_svc_exit, ath10k_qmi_event_server_exit);
-> +
-> +	ret = qmi_add_lookup(&qmi->qmi_hdl, WLFW_SERVICE_ID_V01,
-> +			     WLFW_SERVICE_VERS_V01, 0);
-> +	if (ret)
-> +		goto err_qmi_service;
-> +
-> +	return 0;
-> +
-> +err_qmi_service:
-> +	qmi_handle_release(&qmi->qmi_hdl);
-> +
-> +err:
-> +	return ret;
-> +}
-> +
-> +static void ath10k_remove_qmi_resources(struct ath10k_qmi *qmi)
-> +{
-> +	cancel_work_sync(&qmi->work_svc_arrive);
-> +	cancel_work_sync(&qmi->work_svc_exit);
-> +	destroy_workqueue(qmi->event_wq);
-> +	qmi_handle_release(&qmi->qmi_hdl);
-> +	qmi = NULL;
-> +}
-> +
->  static int ath10k_qmi_probe(struct platform_device *pdev)
->  {
->  	int ret;
-> @@ -58,14 +203,8 @@ static int ath10k_qmi_probe(struct platform_device *pdev)
->  
->  	qmi->pdev = pdev;
->  	platform_set_drvdata(pdev, qmi);
-> -	ret = qmi_handle_init(&qmi->qmi_hdl,
-> -			      WLFW_BDF_DOWNLOAD_REQ_MSG_V01_MAX_MSG_LEN,
-> -			      &ath10k_qmi_ops, NULL);
-> -	if (ret < 0)
-> -		goto err;
->  
-> -	ret = qmi_add_lookup(&qmi->qmi_hdl, WLFW_SERVICE_ID_V01,
-> -			     WLFW_SERVICE_VERS_V01, 0);
-
-Please plan ahead, there's no reason for adding this here in patch 3 and
-then just move it in patch 4. That said, with the removal of the queues
-I don't see a good reason to create a helper for this.
-
-> +	ret = ath10k_alloc_qmi_resources(qmi);
->  	if (ret < 0)
->  		goto err;
->  
-> @@ -81,7 +220,7 @@ static int ath10k_qmi_remove(struct platform_device *pdev)
->  {
->  	struct ath10k_qmi *qmi = platform_get_drvdata(pdev);
->  
-> -	qmi_handle_release(&qmi->qmi_hdl);
-> +	ath10k_remove_qmi_resources(qmi);
-
-Just inline ath10k_remove_qmi_resources() here, so one doesn't have to
-jump around to figure out what's actually going on.
-
->  
->  	return 0;
->  }
-> diff --git a/drivers/net/wireless/ath/ath10k/qmi.h b/drivers/net/wireless/ath/ath10k/qmi.h
-> index ad256ef..7697d24 100644
-> --- a/drivers/net/wireless/ath/ath10k/qmi.h
-> +++ b/drivers/net/wireless/ath/ath10k/qmi.h
-> @@ -16,9 +16,22 @@
->  #ifndef _QMI_H_
->  #define _QMI_H_
->  
-> +enum ath10k_qmi_driver_event_type {
-> +	ATH10K_QMI_EVENT_SERVER_ARRIVE,
-> +	ATH10K_QMI_EVENT_SERVER_EXIT,
-> +	ATH10K_QMI_EVENT_FW_READY_IND,
-> +	ATH10K_QMI_EVENT_MAX,
-> +};
-> +
->  struct ath10k_qmi {
->  	struct platform_device *pdev;
->  	struct qmi_handle qmi_hdl;
->  	struct sockaddr_qrtr sq;
-> +	bool fw_ready;
-> +	bool msa_ready;
-> +	struct work_struct work_svc_arrive;
-> +	struct work_struct work_svc_exit;
-> +	struct workqueue_struct *event_wq;
-> +	spinlock_t event_lock; /* spinlock for fw ready status*/
->  };
-
-Regards,
-Bjorn
-> 
+Thanks,
+- Steve
