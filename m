@@ -1,151 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:34931 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935325AbeEIVlz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 17:41:55 -0400
-Subject: [PATCH v2 3/3] net: Dynamically allocate struct station_info
-From: Toke =?utf-8?q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: linux-wireless@vger.kernel.org
-Date: Wed, 09 May 2018 23:41:53 +0200
-Message-ID: <152590211369.13924.13761154559335595261.stgit@alrua-kau> (sfid-20180509_234200_628734_282E66A7)
-In-Reply-To: <152590211357.13924.18408619969539206421.stgit@alrua-kau>
-References: <152590211357.13924.18408619969539206421.stgit@alrua-kau>
+Received: from smtp.codeaurora.org ([198.145.29.96]:54766 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751108AbeEUHXM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 May 2018 03:23:12 -0400
+From: "Dedy Lansky" <dlansky@codeaurora.org>
+To: "'Johannes Berg'" <johannes@sipsolutions.net>,
+        "'Jeff Johnson'" <jjohnson@codeaurora.org>,
+        "'Dedy Lansky'" <dlansky@codeaurora.org>
+Cc: <linux-wireless@vger.kernel.org>,
+        <linux-wireless-owner@vger.kernel.org>
+References: <000901d3ede2$78a3aa20$69eafe60$@codeaurora.org>         <a19275473776283a94997b8f5436f3b9@codeaurora.org>         (sfid-20180517_204322_111043_9C68DA25) <1526585345.5351.3.camel@sipsolutions.net>
+In-Reply-To: <1526585345.5351.3.camel@sipsolutions.net>
+Subject: RE: [PATCH] nl80211: fix nlmsg allocation in cfg80211_ft_event
+Date: Mon, 21 May 2018 10:23:07 +0300
+Message-ID: <001201d3f0d4$93258900$b9709b00$@codeaurora.org> (sfid-20180521_092316_448754_4B3DD5BF)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+        charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since the addition of the TXQ stats to cfg80211, the station_info struct
-has grown to be quite large, which results in warnings when allocated on
-the stack. Fix the affected places to do dynamic allocations instead.
+> From: linux-wireless-owner@vger.kernel.org =
+[mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Johannes Berg
+>
+> On Thu, 2018-05-17 at 11:43 -0700, Jeff Johnson wrote:
+> >=20
+> > > -	msg =3D nlmsg_new(100 + ft_event->ric_ies_len, GFP_KERNEL);
+> > > +	msg =3D nlmsg_new(100 + ft_event->ies_len + =
+ft_event->ric_ies_len,
+> > > +			GFP_KERNEL);
+> > >  	if (!msg)
+> > >  		return;
+> >=20
+> > should these really be nla_total_size(ft_event->ies_len) +
+> > nla_total_size(ft_event->ric_ies_len) to properly account for the =
+NLA=20
+> > header + padding? or do we consider that to be noise captured by the =
 
-This patch applies the fix to batman-adv and wext-compat, while a
-separate patch fixes up the drivers.
+> > "100"?
+>
+> We do, technically we should have something like nla_total_size() of =
+various things including all those wiphy, ifindex, MAC attributes etc.
+> so we just get lazy...
 
-Fixes: 52539ca89f36 ("cfg80211: Expose TXQ stats and parameters to userspace")
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
----
- net/batman-adv/bat_v_elp.c |   21 +++++++++++++++------
- net/wireless/wext-compat.c |   29 +++++++++++++++++------------
- 2 files changed, 32 insertions(+), 18 deletions(-)
+nla_total_size is currently not used in nl80211.c (actually not used in =
+net\wireless\ for that matters).
+IMO, switching nl80211/cfg80211 to use nla_total_size should be done =
+separately.
+This patch is for fixing a very specific and small bug. Using =
+nla_total_size in a single function in the file (cfg80211_ft_event) =
+would be awkward.
 
-diff --git a/net/batman-adv/bat_v_elp.c b/net/batman-adv/bat_v_elp.c
-index 28687493599f..442b3ebb54f0 100644
---- a/net/batman-adv/bat_v_elp.c
-+++ b/net/batman-adv/bat_v_elp.c
-@@ -79,8 +79,9 @@ static u32 batadv_v_elp_get_throughput(struct batadv_hardif_neigh_node *neigh)
- 	struct batadv_hard_iface *hard_iface = neigh->if_incoming;
- 	struct ethtool_link_ksettings link_settings;
- 	struct net_device *real_netdev;
--	struct station_info sinfo;
-+	struct station_info *sinfo;
- 	u32 throughput;
-+	bool filled;
- 	int ret;
- 
- 	/* if the user specified a customised value for this interface, then
-@@ -102,7 +103,17 @@ static u32 batadv_v_elp_get_throughput(struct batadv_hardif_neigh_node *neigh)
- 		if (!real_netdev)
- 			goto default_throughput;
- 
--		ret = cfg80211_get_station(real_netdev, neigh->addr, &sinfo);
-+		sinfo = kzalloc(sizeof(*sinfo), GFP_KERNEL);
-+		if (!sinfo)
-+			goto default_throughput;
-+
-+		ret = cfg80211_get_station(real_netdev, neigh->addr, sinfo);
-+
-+		/* just save these here instead of having complex free logic below */
-+		throughput = sinfo.expected_throughput / 100;
-+		filled = (sinfo.filled & BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT));
-+
-+		kfree(sinfo);
- 
- 		dev_put(real_netdev);
- 		if (ret == -ENOENT) {
-@@ -112,12 +123,10 @@ static u32 batadv_v_elp_get_throughput(struct batadv_hardif_neigh_node *neigh)
- 			 */
- 			return 0;
- 		}
--		if (ret)
--			goto default_throughput;
--		if (!(sinfo.filled & BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
-+		if (ret || !filled)
- 			goto default_throughput;
- 
--		return sinfo.expected_throughput / 100;
-+		return throughput;
- 	}
- 
- 	/* if not a wifi interface, check if this device provides data via
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index 9e002df0f8d8..2038e3fb25fa 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -1300,7 +1300,7 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
- 	/* we are under RTNL - globally locked - so can use static structs */
- 	static struct iw_statistics wstats;
--	static struct station_info sinfo;
-+	static struct station_info *sinfo;
- 	u8 bssid[ETH_ALEN];
- 
- 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_STATION)
-@@ -1318,17 +1318,21 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
- 	memcpy(bssid, wdev->current_bss->pub.bssid, ETH_ALEN);
- 	wdev_unlock(wdev);
- 
--	memset(&sinfo, 0, sizeof(sinfo));
-+	sinfo = kzalloc(sizeof(*sinfo), GFP_KERNEL);
-+	if (!sinfo)
-+		return NULL;
- 
--	if (rdev_get_station(rdev, dev, bssid, &sinfo))
-+	if (rdev_get_station(rdev, dev, bssid, sinfo)) {
-+		kfree(sinfo);
- 		return NULL;
-+	}
- 
- 	memset(&wstats, 0, sizeof(wstats));
- 
- 	switch (rdev->wiphy.signal_type) {
- 	case CFG80211_SIGNAL_TYPE_MBM:
--		if (sinfo.filled & BIT(NL80211_STA_INFO_SIGNAL)) {
--			int sig = sinfo.signal;
-+		if (sinfo->filled & BIT(NL80211_STA_INFO_SIGNAL)) {
-+			int sig = sinfo->signal;
- 			wstats.qual.updated |= IW_QUAL_LEVEL_UPDATED;
- 			wstats.qual.updated |= IW_QUAL_QUAL_UPDATED;
- 			wstats.qual.updated |= IW_QUAL_DBM;
-@@ -1341,11 +1345,11 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
- 			break;
- 		}
- 	case CFG80211_SIGNAL_TYPE_UNSPEC:
--		if (sinfo.filled & BIT(NL80211_STA_INFO_SIGNAL)) {
-+		if (sinfo->filled & BIT(NL80211_STA_INFO_SIGNAL)) {
- 			wstats.qual.updated |= IW_QUAL_LEVEL_UPDATED;
- 			wstats.qual.updated |= IW_QUAL_QUAL_UPDATED;
--			wstats.qual.level = sinfo.signal;
--			wstats.qual.qual = sinfo.signal;
-+			wstats.qual.level = sinfo->signal;
-+			wstats.qual.qual = sinfo->signal;
- 			break;
- 		}
- 	default:
-@@ -1354,11 +1358,12 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
- 	}
- 
- 	wstats.qual.updated |= IW_QUAL_NOISE_INVALID;
--	if (sinfo.filled & BIT(NL80211_STA_INFO_RX_DROP_MISC))
--		wstats.discard.misc = sinfo.rx_dropped_misc;
--	if (sinfo.filled & BIT(NL80211_STA_INFO_TX_FAILED))
--		wstats.discard.retries = sinfo.tx_failed;
-+	if (sinfo->filled & BIT(NL80211_STA_INFO_RX_DROP_MISC))
-+		wstats.discard.misc = sinfo->rx_dropped_misc;
-+	if (sinfo->filled & BIT(NL80211_STA_INFO_TX_FAILED))
-+		wstats.discard.retries = sinfo->tx_failed;
- 
-+	kfree(sinfo);
- 	return &wstats;
- }
- 
+Thanks,
+ Dedy.
