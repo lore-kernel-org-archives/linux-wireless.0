@@ -1,63 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:44034 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751277AbeEVPBO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 11:01:14 -0400
-Date: Tue, 22 May 2018 08:01:11 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: "Reizer, Eyal" <eyalr@ti.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>,
-        "Mishol, Guy" <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        "Hahn, Maital" <maitalm@ti.com>,
-        "Altshul, Maxim" <maxim.altshul@ti.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-        "Loewy, Chen" <c-loewy@ti.com>
-Subject: Re: [EXTERNAL] [PATCHv2 0/5] Runtime PM support for wlcore
-Message-ID: <20180522150111.GJ98604@atomide.com> (sfid-20180522_170117_864239_52BF365E)
-References: <20180517185029.71716-1-tony@atomide.com>
- <bff51dcc6fd441d9ab42db273219aaf4@ti.com>
- <20180521163830.GZ98604@atomide.com>
- <20180521224339.GD98604@atomide.com>
- <38ddca4c73bb4dbf835a84133035dbfb@ti.com>
- <20180522133158.GE98604@atomide.com>
- <eae7c720c09549f0b4ff83f88ad6959b@ti.com>
- <20180522135511.GI98604@atomide.com>
- <92eff64ea59740bfa395b53ff22c07d3@ti.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:38616 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751050AbeEUXLj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 May 2018 19:11:39 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <92eff64ea59740bfa395b53ff22c07d3@ti.com>
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Mon, 21 May 2018 16:11:38 -0700
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: Niklas Cassel <niklas.cassel@linaro.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH v2] ath10k: transmit queued frames after waking queues
+In-Reply-To: <20180521204359.23884-1-niklas.cassel@linaro.org>
+References: <20180521204359.23884-1-niklas.cassel@linaro.org>
+Message-ID: <8195be7603a8cd659d25a9c3d898b891@codeaurora.org> (sfid-20180522_011143_199655_CCCD2100)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Reizer, Eyal <eyalr@ti.com> [180522 14:07]:
-> > > >
-> > > > OK try replacing the pm_runtime_put_noidle() above with just
-> > > > pm_runtime_put_sync(). The reason why I put noidle there was the
-> > > > wlcore_fw_sleep() call, with that gone put_sync should do the trick.
-> > > >
-> > >
-> > > I have tried that already. Same problem. The last call to:
-> > > ret = wlcore_raw_write32(wl, HW_ACCESS_ELP_CTRL_REG, ELPCTRL_SLEEP)
-> > >
-> > > which allows the firmware to get into ELP state during wowlan suspend is
-> > > only completing after system resume for some unknown reason...
-> > 
-> > Hmm maybe try also adding wl1271_power_off(wl) after put_sync()?
-> > 
+On 2018-05-21 13:43, Niklas Cassel wrote:
+> The following problem was observed when running iperf:
+[...]
 > 
-> No, we don't want to power off the chip in wowlan mode.
-> We power it of only during standard suspend.
+> In order to avoid trying to flush the queue every time we free a frame,
+> only do this when there are 3 or less frames pending, and while we
+> actually have frames in the queue. This logic was copied from
+> mt76_txq_schedule (mt76), one of few other drivers that are actually
+> using wake_tx_queue.
 > 
-> The trick is that it stays on during suspend and can be used 
-> As a wakeup source to the host on specific packets received by
-> The firmware over the air.
+> Suggested-by: Toke Høiland-Jørgensen <toke@toke.dk>
+> Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
+> ---
+> Changes since V1: use READ_ONCE() to disallow the compiler
+> optimizing things in undesirable ways.
+> 
+>  drivers/net/wireless/ath/ath10k/txrx.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/txrx.c
+> b/drivers/net/wireless/ath/ath10k/txrx.c
+> index cda164f6e9f6..264cf0bd5c00 100644
+> --- a/drivers/net/wireless/ath/ath10k/txrx.c
+> +++ b/drivers/net/wireless/ath/ath10k/txrx.c
+> @@ -95,6 +95,9 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+>  		wake_up(&htt->empty_tx_wq);
+>  	spin_unlock_bh(&htt->tx_lock);
+> 
+> +	if (READ_ONCE(htt->num_pending_tx) <= 3 && !list_empty(&ar->txqs))
+> +		ath10k_mac_tx_push_pending(ar);
+> +
+Niklas,
 
-Oh right, then in theory pm_runtime_put_sync() should do the
-here.
+Sorry for the late response. ath10k_mac_tx_push_pending is already 
+called
+at the end of NAPI handler. Isn't that enough to process pending frames?
 
-Regards,
+Earlier we observed performance issues in calling push_pending from each
+tx completion. IMHO this change may introduce the same problem again.
 
-Tony
+-Rajkumar
