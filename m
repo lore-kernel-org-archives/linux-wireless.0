@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:37638 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752510AbeEJVfw (ORCPT
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:43602 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752101AbeEUPbe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 May 2018 17:35:52 -0400
-Date: Thu, 10 May 2018 17:35:51 -0400 (EDT)
-Message-Id: <20180510.173551.1677651998682798856.davem@davemloft.net> (sfid-20180510_233558_741451_C50BFD35)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2018-05-09
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1525901377.6910.29.camel@sipsolutions.net>
-References: <20180509194034.11992-1-johannes@sipsolutions.net>
-        <1525901377.6910.29.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
+        Mon, 21 May 2018 11:31:34 -0400
+Received: by mail-ot0-f193.google.com with SMTP id y10-v6so17288013otg.10
+        for <linux-wireless@vger.kernel.org>; Mon, 21 May 2018 08:31:34 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [PATCH] nl80211: Optimize cfg80211_bss_expire invocations
+Date: Mon, 21 May 2018 10:31:13 -0500
+Message-Id: <20180521153113.8442-1-denkenz@gmail.com> (sfid-20180521_173138_185226_88D6681C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Wed, 09 May 2018 23:29:37 +0200
+Only invoke cfg80211_bss_expire on the first nl80211_dump_scan
+invocation to avoid (likely) redundant processing.
 
-> Hi,
-> 
-> Sorry, scratch that.
-> 
-> I forgot that this commit:
-> 
->> Toke Høiland-Jørgensen (3):
-> 
->>       cfg80211: Expose TXQ stats and parameters to userspace
-> 
-> caused a bunch of "too much stack" warnings - I should put in at least
-> the non-driver fix for that first, and then coordinate with Kalle to
-> send the driver fixes in too.
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+---
+ net/wireless/nl80211.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-Ok, tossed.
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ff28f8feeb09..7458cbcf00b2 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7930,7 +7930,15 @@ static int nl80211_dump_scan(struct sk_buff *skb, struct netlink_callback *cb)
+ 
+ 	wdev_lock(wdev);
+ 	spin_lock_bh(&rdev->bss_lock);
+-	cfg80211_bss_expire(rdev);
++
++	/*
++	 * dump_scan will be called multiple times to break up the scan results
++	 * into multiple messages.  It is unlikely that any more bss-es will be
++	 * expired after the first call, so only call only call this on the
++	 * first dump_scan invocation.
++	 */
++	if (start == 0)
++		cfg80211_bss_expire(rdev);
+ 
+ 	cb->seq = rdev->bss_generation;
+ 
+-- 
+2.13.5
