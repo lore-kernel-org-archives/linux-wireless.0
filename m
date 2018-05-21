@@ -1,111 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48534 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753733AbeE3TJB (ORCPT
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:42588 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752803AbeEUQ2x (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 15:09:01 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [RFCv3 3/7] mac80211: Add api to support configuring station specific rssi threshold
-Date: Thu, 31 May 2018 00:38:42 +0530
-Message-Id: <1527707326-2822-4-git-send-email-tamizhr@codeaurora.org> (sfid-20180530_210906_274323_1A6D209B)
-In-Reply-To: <1527707326-2822-1-git-send-email-tamizhr@codeaurora.org>
-References: <1527707326-2822-1-git-send-email-tamizhr@codeaurora.org>
+        Mon, 21 May 2018 12:28:53 -0400
+Received: by mail-ot0-f195.google.com with SMTP id l13-v6so17493834otk.9
+        for <linux-wireless@vger.kernel.org>; Mon, 21 May 2018 09:28:52 -0700 (PDT)
+From: Guy Chronister <guylovesbritt@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: guychronister@outlook.com, Guy Chronister <guylovesbritt@gmail.com>
+Subject: [PATCH] Added Dell Wireless 1537 Ath6kl sdio card (0x19) to the list.
+Date: Mon, 21 May 2018 11:28:45 -0500
+Message-Id: <20180521162845.5793-1-guylovesbritt@gmail.com> (sfid-20180521_182856_516500_035D7174)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch add set_sta_mon_rssi_config api to configure rssi and
-hysteresis threshold value for a connected station. This configuration
-will be applied only for the connected station.
-
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+Signed-off-by: Guy Chronister <guylovesbritt@gmail.com>
 ---
- net/mac80211/cfg.c      | 35 +++++++++++++++++++++++++++++++++++
- net/mac80211/sta_info.h | 12 ++++++++++++
- 2 files changed, 47 insertions(+)
+ drivers/net/wireless/ath/ath6kl/sdio.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index bdf6fa7..80ced50 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3803,6 +3803,40 @@ static int ieee80211_get_txq_stats(struct wiphy *wiphy,
- 	return ret;
- }
- 
-+static int ieee80211_set_sta_mon_rssi_config(struct wiphy *wiphy,
-+					     struct net_device *dev,
-+					     const u8 *peer, s32 rssi_thold,
-+					     u32 rssi_hyst)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct sta_info *sta;
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_AP &&
-+	    (!sdata->vif.bss_conf.enable_beacon ||
-+	     !wiphy_ext_feature_isset(sdata->local->hw.wiphy,
-+				 NL80211_EXT_FEATURE_STA_MON_RSSI_CONFIG)))
-+		return -EOPNOTSUPP;
-+
-+	mutex_lock(&sdata->local->sta_mtx);
-+
-+	sta = sta_info_get_bss(sdata, peer);
-+	if (!sta) {
-+		mutex_unlock(&sdata->local->sta_mtx);
-+		return -ENOENT;
-+	}
-+
-+	if (sta->rssi_thold == rssi_thold &&
-+	    sta->rssi_hyst == rssi_hyst)
-+		goto unlock;
-+
-+	sta->rssi_thold = rssi_thold;
-+	sta->rssi_hyst = rssi_hyst;
-+	sta->last_sta_mon_event_signal = 0;
-+unlock:
-+	mutex_unlock(&sdata->local->sta_mtx);
-+	return 0;
-+}
-+
- const struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -3897,4 +3931,5 @@ static int ieee80211_get_txq_stats(struct wiphy *wiphy,
- 	.set_multicast_to_unicast = ieee80211_set_multicast_to_unicast,
- 	.tx_control_port = ieee80211_tx_control_port,
- 	.get_txq_stats = ieee80211_get_txq_stats,
-+	.set_sta_mon_rssi_config = ieee80211_set_sta_mon_rssi_config,
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 2195b1b7a8a6..bb50680580f3 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -1415,6 +1415,7 @@ static const struct sdio_device_id ath6kl_sdio_devices[] = {
+ 	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x1))},
+ 	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x2))},
+ 	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x18))},
++	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x19))},
+ 	{},
  };
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 81b35f6..8c459a7 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -482,6 +482,14 @@ struct ieee80211_sta_rx_stats {
-  * @pcpu_rx_stats: per-CPU RX statistics, assigned only if the driver needs
-  *	this (by advertising the USES_RSS hw flag)
-  * @status_stats: TX status statistics
-+ * @rssi_thold: RSSI threshold to monitor station's signal strength, a zero
-+ *	value implies disabled. As with the cfg80211 callback, a change here
-+ *	should cause an event to be sent indicating where the current value
-+ *	is in relation to the newly configured threshold
-+ * @rssi_hyst: Station's RSSI hysteresis
-+ * @last_sta_mon_event_signal: Last signal strength average for a station
-+ *	that triggered a sta_mon event. 0 indicates that no event has been
-+ *	generated for the current association
-  */
- struct sta_info {
- 	/* General information, mostly static */
-@@ -583,6 +591,10 @@ struct sta_info {
  
- 	struct cfg80211_chan_def tdls_chandef;
- 
-+	s32 rssi_thold;
-+	u32 rssi_hyst;
-+	int last_sta_mon_event_signal;
-+
- 	/* keep last! */
- 	struct ieee80211_sta sta;
- };
 -- 
-1.9.1
+2.17.0
