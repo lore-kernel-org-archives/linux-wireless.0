@@ -1,49 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35159 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751596AbeEMSti (ORCPT
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:36708 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751199AbeEVOpz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 13 May 2018 14:49:38 -0400
-Received: by mail-wm0-f67.google.com with SMTP id o78-v6so11324491wmg.0
-        for <linux-wireless@vger.kernel.org>; Sun, 13 May 2018 11:49:37 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: set WIPHY_FLAG_HAVE_AP_SME flag
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20180510132139.16279-1-zajec5@gmail.com>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AF888C0.7020506@broadcom.com> (sfid-20180513_204941_997008_5F167967)
-Date: Sun, 13 May 2018 20:49:36 +0200
+        Tue, 22 May 2018 10:45:55 -0400
+Received: by mail-ot0-f195.google.com with SMTP id m11-v6so21270033otf.3
+        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2018 07:45:55 -0700 (PDT)
+Subject: Re: [PATCH] nl80211: Reject disconnect commands except from
+ conn_owner
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+References: <20180428014732.4018-1-andrew.zaborowski@intel.com>
+ <87in8b8ooy.fsf@purkki.adurom.net>
+ <CAOq732JPfbJWyR0RROY-t67p7dOuoHoHS6eaMrZ1j39F1Q0zmg@mail.gmail.com>
+ <1525720752.22388.3.camel@sipsolutions.net> <5AF1959E.6020605@broadcom.com>
+ <1525781970.14830.11.camel@sipsolutions.net> <5AF1995D.3040204@broadcom.com>
+ <A996D5EE-1279-4DEC-832F-FC4D5FD7FC61@gmail.com>
+ <5B03F345.70809@broadcom.com>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <ffdde7b5-2852-3bdc-cfa1-0d9e83e810b7@gmail.com> (sfid-20180522_164559_790864_2F8D07D2)
+Date: Tue, 22 May 2018 09:45:53 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180510132139.16279-1-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <5B03F345.70809@broadcom.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/10/2018 3:21 PM, Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
->
-> brcmfmac is a FullMAC driver and it implements/uses cfg80211 interface
-> for stations management. At the same time it doesn't receive or pass up
-> management frames.
->
-> This flag indicates that authenticator doesn't have to subscribe to or
-> handle management frames. Some authenticators (e.g. hostapd) were
-> working with brcmfmac thanks to some extra assumptions. This commit
-> clears up the situation.
+Hi Arend,
 
-Thanks for this patch.
+On 05/22/2018 05:39 AM, Arend van Spriel wrote:
+> On 5/8/2018 5:05 PM, Denis Kenzior wrote:
+>> Hi Arend,
+>>
+>>>
+>>> Sure. I guess we all have been there kicking of wpa_s and discovering
+>>> there is already one running in the background. I am just a bit
+>>> squeamish to change the behavior like this. Hmmmm. Is wpa_s already
+>>> using SOCKET_OWNER. If so, I might create a patch to opt-out for that
+>>> so people can knowingly choose chaos ;-)
+>>>
+>>
+>> wpa_s is using SOCKET_OWNER these days.� However, with the introduction
+>> of Control Port over NL80211, just getting rid of SOCKET_OWNER might not
+>> be that easy.
+> 
+> I have a regression test script employing py80211 which listens for 
+> connect event. Right now I am using an older wpa_s, but the above will 
+> screw it up.
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 1 +
->   1 file changed, 1 insertion(+)
+So it is still early in the morning for me and you might have to talk 
+slower.  But let me take a stab anyway :)
+
+What will screw up?  The connect event is always multicast, so you 
+should still receive it regardless of SOCKET_OWNER / Control Port over 
+NL80211.
+
+> 
+> If I recall correctly the mlme notification needed to be unicast, 
+> because multicast was not 100% reliable, right? Would it be acceptable 
+> to send unicast to the socket owner and still do the multicast or are we 
+> already doing that? If not, that would fix my imminent issue.
+> 
+
+Control Port events are only unicast to the application that is the 
+SOCKET_OWNER.  E.g. either wpa_s or iwd.  They are never multicast as 
+nobody else could make sense of them anyway due to lack of passphrase / 
+nonces.
+
+The other 'regular' events like Disconnect, Connect, etc are still 
+multicast.  What this patch does is prevents some app from rudely coming 
+in and sending a Disconnect on an interface which is being managed by 
+another process, e.g. iwd or wpa_s, that has set the SOCKET_OWNER flag.
+
+Regards,
+-Denis
