@@ -1,109 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:45390 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753370AbeERJak (ORCPT
+Received: from mail-ot0-f169.google.com ([74.125.82.169]:44449 "EHLO
+        mail-ot0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752713AbeEVVZO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 05:30:40 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 11/14] rtlwifi: remove hal_op c2h_content_parsing
-Date: Fri, 18 May 2018 17:30:04 +0800
-Message-ID: <20180518093007.23594-12-pkshih@realtek.com> (sfid-20180518_113135_013252_3EC6F3C8)
-In-Reply-To: <20180518093007.23594-1-pkshih@realtek.com>
-References: <20180518093007.23594-1-pkshih@realtek.com>
+        Tue, 22 May 2018 17:25:14 -0400
+Received: by mail-ot0-f169.google.com with SMTP id g7-v6so22727234otj.11
+        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2018 14:25:14 -0700 (PDT)
+Subject: Re: [PATCH] cfg80211: Fix support for flushing old scan results
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Tim Kourt <tim.a.kourt@linux.intel.com>,
+        linux-wireless@vger.kernel.org
+References: <20180511164835.40161-1-tim.a.kourt@linux.intel.com>
+ <1526631206.3805.1.camel@sipsolutions.net>
+ <d12d4d4d-25d6-3cd0-1399-27de09c7f8c5@gmail.com>
+ <1527019967.6787.45.camel@sipsolutions.net>
+ <114ca20b-7b20-7a3e-75bd-8c336d26b9c0@gmail.com>
+ <1527021608.6787.47.camel@sipsolutions.net>
+ <2036335b-ca8f-d63f-8142-11d81cfb9a22@gmail.com>
+ <1527022332.6787.51.camel@sipsolutions.net>
+ <D2E91785-58E3-46FA-94B9-879E621D5049@gmail.com>
+ <1527023478.6787.60.camel@sipsolutions.net>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <c0b00a4c-f98e-6261-976b-d9c7ae708eee@gmail.com> (sfid-20180522_232518_657796_1C403783)
+Date: Tue, 22 May 2018 16:25:11 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1527023478.6787.60.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Hi Johannes,
 
-Similar to rx_command_packet, we can call rtl_c2h_content_parsing so the
-hal_op isn't necessary.
+> But in theory, I think you could've received the beacon with hidden SSID
+> *before* the scan, yet it might be present in the scan results if the
+> new scan caused the probe response to be associated with that scan.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c         | 7 +++----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c | 1 -
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c | 1 -
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 1 -
- drivers/net/wireless/realtek/rtlwifi/wifi.h         | 2 --
- 5 files changed, 3 insertions(+), 9 deletions(-)
+Right, your explanation was helpful, thanks.  It still seems completely 
+weird and redundant that we get two separate entries though.  The second 
+entry with the probe response data still carries the beacon info (as you 
+point out).  Should the pure-beacon one be filtered?
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 0d03e98f9cb4..927b7d231576 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -2346,7 +2346,6 @@ void rtl_c2h_content_parsing(struct ieee80211_hw *hw, u8 cmd_id,
- 		break;
- 	}
- }
--EXPORT_SYMBOL_GPL(rtl_c2h_content_parsing);
- 
- void rtl_c2h_packet_handler(struct ieee80211_hw *hw, u8 *buffer, u8 len)
- {
-@@ -2401,9 +2400,9 @@ void rtl_c2hcmd_launcher(struct ieee80211_hw *hw, int exec)
- 		if (!c2hcmd)
- 			break;
- 
--		if (rtlpriv->cfg->ops->c2h_content_parsing && exec)
--			rtlpriv->cfg->ops->c2h_content_parsing(hw,
--					c2hcmd->tag, c2hcmd->len, c2hcmd->val);
-+		if (exec)
-+			rtl_c2h_content_parsing(hw, c2hcmd->tag,
-+						c2hcmd->len, c2hcmd->val);
- 
- 		/* free */
- 		kfree(c2hcmd->val);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-index 5b67ad748d67..9ea62599ecbb 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-@@ -250,7 +250,6 @@ static struct rtl_hal_ops rtl8192ee_hal_ops = {
- 	.set_rfreg = rtl92ee_phy_set_rf_reg,
- 	.fill_h2c_cmd = rtl92ee_fill_h2c_cmd,
- 	.get_btc_status = rtl92ee_get_btc_status,
--	.c2h_content_parsing = rtl_c2h_content_parsing,
- 	.c2h_ra_report_handler = rtl92ee_c2h_ra_report_handler,
- };
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-index a41e67b3f38b..c9f7b042d9c6 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-@@ -262,7 +262,6 @@ static struct rtl_hal_ops rtl8723be_hal_ops = {
- 	.fill_h2c_cmd = rtl8723be_fill_h2c_cmd,
- 	.get_btc_status = rtl8723be_get_btc_status,
- 	.is_fw_header = is_fw_header,
--	.c2h_content_parsing = rtl_c2h_content_parsing,
- };
- 
- static struct rtl_mod_params rtl8723be_mod_params = {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-index 8ff8a406db52..77f6401021c9 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-@@ -303,7 +303,6 @@ static struct rtl_hal_ops rtl8821ae_hal_ops = {
- 	.set_rfreg = rtl8821ae_phy_set_rf_reg,
- 	.fill_h2c_cmd = rtl8821ae_fill_h2c_cmd,
- 	.get_btc_status = rtl8821ae_get_btc_status,
--	.c2h_content_parsing = rtl_c2h_content_parsing,
- 	.c2h_ra_report_handler = rtl8821ae_c2h_ra_report_handler,
- 	.add_wowlan_pattern = rtl8821ae_add_wowlan_pattern,
- };
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index b40d8f5bbdce..930e1ec2280f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2344,8 +2344,6 @@ struct rtl_hal_ops {
- 				   struct rtl_wow_pattern *rtl_pattern,
- 				   u8 index);
- 	u16 (*get_available_desc)(struct ieee80211_hw *hw, u8 q_idx);
--	void (*c2h_content_parsing)(struct ieee80211_hw *hw, u8 tag, u8 len,
--				    u8 *val);
- 	void (*c2h_ra_report_handler)(struct ieee80211_hw *hw,
- 				      u8 *cmd_buf, u8 cmd_len);
- };
--- 
-2.15.1
+> 
+>> I’m just curious what other potential uses this flag might have.
+> 
+> Well, basically, ensure that your scan data is up-to-date?
+> 
+> I think mostly it's because there are scenarios where the AP is expected
+> to vary the probe response data, so you need to know if you
+>   * have a new probe response, or
+>   * didn't receive a new probe response, or
+>   * the AP erroneously didn't change the new probe response.
+
+Right, so thinking out loud here.  Would it be useful to tell GET SCAN 
+to only return entries with actual probe response data?  Combined with 
+the flush flag it seems like a much better fit for the cases you point out.
+
+Regards,
+-Denis
