@@ -1,385 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:45381 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752576AbeERJai (ORCPT
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:60440 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751196AbeEVNsm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 05:30:38 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 01/14] rtlwifi: support accurate nullfunc frame tx ack report
-Date: Fri, 18 May 2018 17:29:54 +0800
-Message-ID: <20180518093007.23594-2-pkshih@realtek.com> (sfid-20180518_113207_227940_5FD4F662)
-In-Reply-To: <20180518093007.23594-1-pkshih@realtek.com>
-References: <20180518093007.23594-1-pkshih@realtek.com>
+        Tue, 22 May 2018 09:48:42 -0400
+From: "Reizer, Eyal" <eyalr@ti.com>
+To: Tony Lindgren <tony@atomide.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        KISHON VIJAY ABRAHAM <kishon@ti.com>,
+        "Mishol, Guy" <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        "Hahn, Maital" <maitalm@ti.com>,
+        "Altshul, Maxim" <maxim.altshul@ti.com>,
+        "Shahar Patury" <shaharp@ti.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+        "Loewy, Chen" <c-loewy@ti.com>
+Subject: RE: [EXTERNAL] [PATCHv2 0/5] Runtime PM support for wlcore
+Date: Tue, 22 May 2018 13:48:33 +0000
+Message-ID: <eae7c720c09549f0b4ff83f88ad6959b@ti.com> (sfid-20180522_154846_426978_5C72D793)
+References: <20180517185029.71716-1-tony@atomide.com>
+ <bff51dcc6fd441d9ab42db273219aaf4@ti.com>
+ <20180521163830.GZ98604@atomide.com> <20180521224339.GD98604@atomide.com>
+ <38ddca4c73bb4dbf835a84133035dbfb@ti.com>
+ <20180522133158.GE98604@atomide.com>
+In-Reply-To: <20180522133158.GE98604@atomide.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tzu-En Huang <tehuang@realtek.com>
+>=20
+> * Reizer, Eyal <eyalr@ti.com> [180522 13:28]:
+> > Actually the below patch removing the call to wlcore_fw_sleep() avoids =
+this
+> error.
+> > The downside is that the wl8 firmware remains fully active during supen=
+d, so
+> we
+> > Would need to find the root cause why the last call allowing the wilink=
+8
+> firmware
+> > To go into ELP mode during suspend is only completing on resume and not
+> during
+> > Suspend enter.
+> >
+> > diff --git a/drivers/net/wireless/ti/wlcore/main.c
+> > b/drivers/net/wireless/ti/wlcore/main.c
+> > index 4c297aa..8df1ae6 100644
+> > --- a/drivers/net/wireless/ti/wlcore/main.c
+> > +++ b/drivers/net/wireless/ti/wlcore/main.c
+> > @@ -1789,7 +1789,6 @@ static int wl1271_op_suspend(struct
+> ieee80211_hw *hw,
+> >                 goto out_sleep;
+> >
+> >  out_sleep:
+> > -       pm_runtime_put_noidle(wl->dev);
+> >         mutex_unlock(&wl->mutex);
+> >
+> >         if (ret < 0) {
+> > @@ -1821,15 +1820,7 @@ static int wl1271_op_suspend(struct
+> ieee80211_hw *hw,
+> >          */
+> >         cancel_delayed_work(&wl->tx_watchdog_work);
+> >
+> > -       /*
+> > -        * Use an immediate call for allowing the firmware to go into p=
+ower
+> > -        * save during suspend.
+> > -        * Using a workque for this last write was only hapenning on re=
+sume
+> > -        * leaving the firmware with power save disabled during suspend=
+,
+> > -        * while consuming full power during wowlan suspend.
+> > -        */
+> > -       wlcore_fw_sleep(wl);
+> > -
+> > +       pm_runtime_put_noidle(wl->dev);
+> >         return 0;
+> >  }
+>=20
+> OK try replacing the pm_runtime_put_noidle() above with just
+> pm_runtime_put_sync(). The reason why I put noidle there was the
+> wlcore_fw_sleep() call, with that gone put_sync should do the trick.
+>=20
 
-In order to realize the keep-alive mechanism in mac80211 stack, reporting
-accurate tx ack status for nullfunc frame is added in this commit.
+I have tried that already. Same problem. The last call to:
+ret =3D wlcore_raw_write32(wl, HW_ACCESS_ELP_CTRL_REG, ELPCTRL_SLEEP)
 
-If current frame is nullfunc frame, we ask firmware to report by filling
-TX report bit in TX descriptor. After this frame DMA done, TX interrupt is
-triggered but TX status is unknown at this moment, so enqueue this skb
-into tx_report->queue. Finally, C2H report will be received if the frame
-is transmitted successfully or retried over, and then we report to mac80211
-with IEEE80211_TX_STAT_ACK flag only if it's successful. Otherwise, if
-failure or timeout (one second), we report to mac80211 without this flag.
+which allows the firmware to get into ELP state during wowlan suspend is=20
+only completing after system resume for some unknown reason...
 
-Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c        | 84 +++++++++++++++++++---
- drivers/net/wireless/realtek/rtlwifi/base.h        |  5 +-
- drivers/net/wireless/realtek/rtlwifi/pci.c         | 13 ++--
- .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.c   |  5 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/trx.c   |  5 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/trx.c   |  5 +-
- drivers/net/wireless/realtek/rtlwifi/wifi.h        | 16 +++++
- 7 files changed, 112 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 762a29cdf7ad..6620c6842b91 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -574,6 +574,7 @@ int rtl_init_core(struct ieee80211_hw *hw)
- 	INIT_LIST_HEAD(&rtlpriv->entry_list);
- 	INIT_LIST_HEAD(&rtlpriv->c2hcmd_list);
- 	INIT_LIST_HEAD(&rtlpriv->scan_list.list);
-+	skb_queue_head_init(&rtlpriv->tx_report.queue);
- 
- 	rtlmac->link_state = MAC80211_NOLINK;
- 
-@@ -585,11 +586,14 @@ int rtl_init_core(struct ieee80211_hw *hw)
- EXPORT_SYMBOL_GPL(rtl_init_core);
- 
- static void rtl_free_entries_from_scan_list(struct ieee80211_hw *hw);
-+static void rtl_free_entries_from_ack_queue(struct ieee80211_hw *hw,
-+					    bool timeout);
- 
- void rtl_deinit_core(struct ieee80211_hw *hw)
- {
- 	rtl_c2hcmd_launcher(hw, 0);
- 	rtl_free_entries_from_scan_list(hw);
-+	rtl_free_entries_from_ack_queue(hw, false);
- }
- EXPORT_SYMBOL_GPL(rtl_deinit_core);
- 
-@@ -1575,22 +1579,52 @@ u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx,
- }
- EXPORT_SYMBOL_GPL(rtl_is_special_data);
- 
-+void rtl_tx_ackqueue(struct ieee80211_hw *hw, struct sk_buff *skb)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_tx_report *tx_report = &rtlpriv->tx_report;
-+
-+	__skb_queue_tail(&tx_report->queue, skb);
-+}
-+EXPORT_SYMBOL_GPL(rtl_tx_ackqueue);
-+
-+static void rtl_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb,
-+			  bool ack)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct ieee80211_tx_info *info;
-+
-+	info = IEEE80211_SKB_CB(skb);
-+	ieee80211_tx_info_clear_status(info);
-+	if (ack) {
-+		RT_TRACE(rtlpriv, COMP_TX_REPORT, DBG_LOUD,
-+			 "tx report: ack\n");
-+		info->flags |= IEEE80211_TX_STAT_ACK;
-+	} else {
-+		RT_TRACE(rtlpriv, COMP_TX_REPORT, DBG_LOUD,
-+			 "tx report: not ack\n");
-+		info->flags &= ~IEEE80211_TX_STAT_ACK;
-+	}
-+	ieee80211_tx_status_irqsafe(hw, skb);
-+}
-+
- bool rtl_is_tx_report_skb(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
- 	u16 ether_type;
- 	const u8 *ether_type_ptr;
-+	__le16 fc = rtl_get_fc(skb);
- 
- 	ether_type_ptr = rtl_skb_ether_type_ptr(hw, skb, true);
- 	ether_type = be16_to_cpup((__be16 *)ether_type_ptr);
- 
--	/* EAPOL */
--	if (ether_type == ETH_P_PAE)
-+	if (ether_type == ETH_P_PAE || ieee80211_is_nullfunc(fc))
- 		return true;
- 
- 	return false;
- }
- 
--static u16 rtl_get_tx_report_sn(struct ieee80211_hw *hw)
-+static u16 rtl_get_tx_report_sn(struct ieee80211_hw *hw,
-+				struct rtlwifi_tx_info *tx_info)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_tx_report *tx_report = &rtlpriv->tx_report;
-@@ -1604,29 +1638,33 @@ static u16 rtl_get_tx_report_sn(struct ieee80211_hw *hw)
- 
- 	tx_report->last_sent_sn = sn;
- 	tx_report->last_sent_time = jiffies;
--
-+	tx_info->sn = sn;
-+	tx_info->send_time = tx_report->last_sent_time;
- 	RT_TRACE(rtlpriv, COMP_TX_REPORT, DBG_DMESG,
- 		 "Send TX-Report sn=0x%X\n", sn);
- 
- 	return sn;
- }
- 
--void rtl_get_tx_report(struct rtl_tcb_desc *ptcb_desc, u8 *pdesc,
--		       struct ieee80211_hw *hw)
-+void rtl_set_tx_report(struct rtl_tcb_desc *ptcb_desc, u8 *pdesc,
-+		       struct ieee80211_hw *hw, struct rtlwifi_tx_info *tx_info)
- {
- 	if (ptcb_desc->use_spe_rpt) {
--		u16 sn = rtl_get_tx_report_sn(hw);
-+		u16 sn = rtl_get_tx_report_sn(hw, tx_info);
- 
- 		SET_TX_DESC_SPE_RPT(pdesc, 1);
- 		SET_TX_DESC_SW_DEFINE(pdesc, sn);
- 	}
- }
--EXPORT_SYMBOL_GPL(rtl_get_tx_report);
-+EXPORT_SYMBOL_GPL(rtl_set_tx_report);
- 
- void rtl_tx_report_handler(struct ieee80211_hw *hw, u8 *tmp_buf, u8 c2h_cmd_len)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_tx_report *tx_report = &rtlpriv->tx_report;
-+	struct rtlwifi_tx_info *tx_info;
-+	struct sk_buff_head *queue = &tx_report->queue;
-+	struct sk_buff *skb;
- 	u16 sn;
- 	u8 st, retry;
- 
-@@ -1642,6 +1680,14 @@ void rtl_tx_report_handler(struct ieee80211_hw *hw, u8 *tmp_buf, u8 c2h_cmd_len)
- 
- 	tx_report->last_recv_sn = sn;
- 
-+	skb_queue_walk(queue, skb) {
-+		tx_info = rtl_tx_skb_cb_info(skb);
-+		if (tx_info->sn == sn) {
-+			skb_unlink(skb, queue);
-+			rtl_tx_status(hw, skb, st == 0);
-+			break;
-+		}
-+	}
- 	RT_TRACE(rtlpriv, COMP_TX_REPORT, DBG_DMESG,
- 		 "Recv TX-Report st=0x%02X sn=0x%X retry=0x%X\n",
- 		 st, sn, retry);
-@@ -1909,6 +1955,25 @@ static void rtl_free_entries_from_scan_list(struct ieee80211_hw *hw)
- 	}
- }
- 
-+static void rtl_free_entries_from_ack_queue(struct ieee80211_hw *hw,
-+					    bool chk_timeout)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_tx_report *tx_report = &rtlpriv->tx_report;
-+	struct sk_buff_head *queue = &tx_report->queue;
-+	struct sk_buff *skb, *tmp;
-+	struct rtlwifi_tx_info *tx_info;
-+
-+	skb_queue_walk_safe(queue, skb, tmp) {
-+		tx_info = rtl_tx_skb_cb_info(skb);
-+		if (chk_timeout &&
-+		    time_after(tx_info->send_time + HZ, jiffies))
-+			continue;
-+		skb_unlink(skb, queue);
-+		rtl_tx_status(hw, skb, false);
-+	}
-+}
-+
- void rtl_scan_list_expire(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -2173,6 +2238,9 @@ void rtl_watchdog_wq_callback(void *data)
- 
- 	/* <6> scan list */
- 	rtl_scan_list_expire(hw);
-+
-+	/* <7> check ack queue */
-+	rtl_free_entries_from_ack_queue(hw, true);
- }
- 
- void rtl_watch_dog_timer_callback(struct timer_list *t)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.h b/drivers/net/wireless/realtek/rtlwifi/base.h
-index acc924635818..19e7477839e4 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.h
-@@ -130,9 +130,10 @@ bool rtl_tx_mgmt_proc(struct ieee80211_hw *hw, struct sk_buff *skb);
- u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx,
- 		       bool is_enc);
- 
-+void rtl_tx_ackqueue(struct ieee80211_hw *hw, struct sk_buff *skb);
- bool rtl_is_tx_report_skb(struct ieee80211_hw *hw, struct sk_buff *skb);
--void rtl_get_tx_report(struct rtl_tcb_desc *ptcb_desc, u8 *pdesc,
--		       struct ieee80211_hw *hw);
-+void rtl_set_tx_report(struct rtl_tcb_desc *ptcb_desc, u8 *pdesc,
-+		       struct ieee80211_hw *hw, struct rtlwifi_tx_info *info);
- void rtl_tx_report_handler(struct ieee80211_hw *hw, u8 *tmp_buf,
- 			   u8 c2h_cmd_len);
- bool rtl_check_tx_report_acked(struct ieee80211_hw *hw);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-index 57bb8f049e59..d0c509ef790e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -619,12 +619,15 @@ static void _rtl_pci_tx_isr(struct ieee80211_hw *hw, int prio)
- 			rtlpriv->link_info.tidtx_inperiod[tid]++;
- 
- 		info = IEEE80211_SKB_CB(skb);
--		ieee80211_tx_info_clear_status(info);
- 
--		info->flags |= IEEE80211_TX_STAT_ACK;
--		/*info->status.rates[0].count = 1; */
--
--		ieee80211_tx_status_irqsafe(hw, skb);
-+		if (likely(!ieee80211_is_nullfunc(fc))) {
-+			ieee80211_tx_info_clear_status(info);
-+			info->flags |= IEEE80211_TX_STAT_ACK;
-+			/*info->status.rates[0].count = 1; */
-+			ieee80211_tx_status_irqsafe(hw, skb);
-+		} else {
-+			rtl_tx_ackqueue(hw, skb);
-+		}
- 
- 		if ((ring->entries - skb_queue_len(&ring->queue)) <= 4) {
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_DMESG,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-index 4f7444331b07..852a2701ef55 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-@@ -662,6 +662,7 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
-+	struct rtlwifi_tx_info *tx_info = rtl_tx_skb_cb_info(skb);
- 	u8 *pdesc = (u8 *)pdesc_tx;
- 	u16 seq_number;
- 	__le16 fc = hdr->frame_control;
-@@ -723,8 +724,6 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
- 			SET_TX_DESC_OFFSET(pdesc, USB_HWDESC_HEADER_LEN);
- 		}
- 
--		/* tx report */
--		rtl_get_tx_report(ptcb_desc, pdesc, hw);
- 
- 		SET_TX_DESC_TX_RATE(pdesc, ptcb_desc->hw_rate);
- 
-@@ -827,6 +826,8 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
- 				SET_TX_DESC_HTC(pdesc, 1);
- 			}
- 		}
-+		/* tx report */
-+		rtl_set_tx_report(ptcb_desc, pdesc, hw, tx_info);
- 	}
- 
- 	SET_TX_DESC_FIRST_SEG(pdesc, (firstseg ? 1 : 0));
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
-index fd9b38aa08a1..deb8f9501b51 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
-@@ -431,6 +431,7 @@ void rtl8723be_tx_fill_desc(struct ieee80211_hw *hw,
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
-+	struct rtlwifi_tx_info *tx_info = rtl_tx_skb_cb_info(skb);
- 	u8 *pdesc = (u8 *)pdesc_tx;
- 	u16 seq_number;
- 	__le16 fc = hdr->frame_control;
-@@ -488,8 +489,6 @@ void rtl8723be_tx_fill_desc(struct ieee80211_hw *hw,
- 			SET_TX_DESC_OFFSET(pdesc, USB_HWDESC_HEADER_LEN);
- 		}
- 
--		/* tx report */
--		rtl_get_tx_report(ptcb_desc, pdesc, hw);
- 
- 		/* ptcb_desc->use_driver_rate = true; */
- 		SET_TX_DESC_TX_RATE(pdesc, ptcb_desc->hw_rate);
-@@ -578,6 +577,8 @@ void rtl8723be_tx_fill_desc(struct ieee80211_hw *hw,
- 				SET_TX_DESC_HTC(pdesc, 1);
- 			}
- 		}
-+		/* tx report */
-+		rtl_set_tx_report(ptcb_desc, pdesc, hw, tx_info);
- 	}
- 
- 	SET_TX_DESC_FIRST_SEG(pdesc, (firstseg ? 1 : 0));
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
-index 1e1bacf562f3..63fb80039f82 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
-@@ -691,6 +691,7 @@ void rtl8821ae_tx_fill_desc(struct ieee80211_hw *hw,
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
-+	struct rtlwifi_tx_info *tx_info = rtl_tx_skb_cb_info(skb);
- 	u8 *pdesc = (u8 *)pdesc_tx;
- 	u16 seq_number;
- 	__le16 fc = hdr->frame_control;
-@@ -740,8 +741,6 @@ void rtl8821ae_tx_fill_desc(struct ieee80211_hw *hw,
- 			SET_TX_DESC_OFFSET(pdesc, USB_HWDESC_HEADER_LEN);
- 		}
- 
--		/* tx report */
--		rtl_get_tx_report(ptcb_desc, pdesc, hw);
- 
- 		/* ptcb_desc->use_driver_rate = true; */
- 		SET_TX_DESC_TX_RATE(pdesc, ptcb_desc->hw_rate);
-@@ -818,6 +817,8 @@ void rtl8821ae_tx_fill_desc(struct ieee80211_hw *hw,
- 				SET_TX_DESC_HTC(pdesc, 1);
- 			}
- 		}
-+		/* tx report */
-+		rtl_set_tx_report(ptcb_desc, pdesc, hw, tx_info);
- 	}
- 
- 	SET_TX_DESC_FIRST_SEG(pdesc, (firstseg ? 1 : 0));
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 208010fcde21..1259d2b66d17 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -1010,6 +1010,21 @@ enum dm_info_query {
- 	DM_INFO_SIZE,
- };
- 
-+struct rtlwifi_tx_info {
-+	int sn;
-+	unsigned long send_time;
-+};
-+
-+static inline struct rtlwifi_tx_info *rtl_tx_skb_cb_info(struct sk_buff *skb)
-+{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+
-+	BUILD_BUG_ON(sizeof(struct rtlwifi_tx_info) >
-+		     sizeof(info->status.status_driver_data));
-+
-+	return (struct rtlwifi_tx_info *)(info->status.status_driver_data);
-+}
-+
- struct octet_string {
- 	u8 *octet;
- 	u16 length;
-@@ -1967,6 +1982,7 @@ struct rtl_tx_report {
- 	u16 last_sent_sn;
- 	unsigned long last_sent_time;
- 	u16 last_recv_sn;
-+	struct sk_buff_head queue;
- };
- 
- struct rtl_ps_ctl {
--- 
-2.15.1
+Best Regards,
+Eyal
