@@ -1,81 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:35566 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752407AbeEPOIj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 May 2018 10:08:39 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
-        rfried@codeaurora.org, bjorn.andersson@linaro.org,
-        nicolas.dechesne@linaro.org, loic.poulain@linaro.org,
-        Daniel Mack <daniel@zonque.org>
-Subject: [PATCH 05/10] wcn36xx: only handle packets when ED or DONE bit is set
-Date: Wed, 16 May 2018 16:08:15 +0200
-Message-Id: <20180516140820.1636-6-daniel@zonque.org> (sfid-20180516_160843_490268_20C4FC16)
-In-Reply-To: <20180516140820.1636-1-daniel@zonque.org>
-References: <20180516140820.1636-1-daniel@zonque.org>
+Received: from rtits2.realtek.com ([211.75.126.72]:37562 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751557AbeEVBuN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 May 2018 21:50:13 -0400
+From: Pkshih <pkshih@realtek.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "nostrad@gmail.com" <nostrad@gmail.com>
+Subject: Re: rtl8723be signal strength loss, and possibly a OOPS/BUG
+Date: Tue, 22 May 2018 01:50:08 +0000
+Message-ID: <1526982602.2667.17.camel@realtek.com> (sfid-20180522_035136_840186_6ADC42CA)
+References: <CAMZeTPn=oTcbDsYFLg+F4CxopmL1SP0xryC9mAzZPe+cqV5cCA@mail.gmail.com>
+In-Reply-To: <CAMZeTPn=oTcbDsYFLg+F4CxopmL1SP0xryC9mAzZPe+cqV5cCA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On RX and TX interrupts, check for the WCN36XX_CH_STAT_INT_ED_MASK or
-WCN36XX_CH_STAT_INT_DONE_MASK in the interrupt reason register, and
-only handle packets when it is set. This way, reap_tx_dxes() is only
-invoked when needed.
-
-This brings the dequeing logic in line with what the prima downstream
-driver is doing.
-
-While at it, also log the interrupt reason.
-
-Signed-off-by: Daniel Mack <daniel@zonque.org>
----
- drivers/net/wireless/ath/wcn36xx/dxe.c | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index d11c9c536627..8c64e05ca3b7 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -430,8 +430,12 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
- 						   WCN36XX_INT_MASK_CHAN_TX_H);
- 		}
- 
--		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready high\n");
--		reap_tx_dxes(wcn, &wcn->dxe_tx_h_ch);
-+		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready high, reason %08x\n",
-+			    int_reason);
-+
-+		if (int_reason & (WCN36XX_CH_STAT_INT_DONE_MASK |
-+				  WCN36XX_CH_STAT_INT_ED_MASK))
-+			reap_tx_dxes(wcn, &wcn->dxe_tx_h_ch);
- 	}
- 
- 	if (int_src & WCN36XX_INT_MASK_CHAN_TX_L) {
-@@ -465,8 +469,12 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
- 						   WCN36XX_INT_MASK_CHAN_TX_L);
- 		}
- 
--		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready low\n");
--		reap_tx_dxes(wcn, &wcn->dxe_tx_l_ch);
-+		wcn36xx_dbg(WCN36XX_DBG_DXE, "dxe tx ready low, reason %08x\n",
-+			    int_reason);
-+
-+		if (int_reason & (WCN36XX_CH_STAT_INT_DONE_MASK |
-+				  WCN36XX_CH_STAT_INT_ED_MASK))
-+			reap_tx_dxes(wcn, &wcn->dxe_tx_l_ch);
- 	}
- 
- 	return IRQ_HANDLED;
-@@ -545,6 +553,10 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
- 					   WCN36XX_DXE_0_INT_ED_CLR,
- 					   int_mask);
- 
-+	if (!(int_reason & (WCN36XX_CH_STAT_INT_DONE_MASK |
-+			    WCN36XX_CH_STAT_INT_ED_MASK)))
-+		return 0;
-+
- 	spin_lock(&ch->lock);
- 
- 	ctl = ch->head_blk_ctl;
--- 
-2.14.3
+T24gU2F0LCAyMDE4LTA1LTE5IGF0IDIwOjQzICswMDAwLCBNYXR0aWFzIEplcm5iZXJnIHdyb3Rl
+Og0KPiBIaQ0KPsKgDQo+IFdpdGgga2VybmVsIDQuMTYgSSBleHBlcmllbmNlIGEgbG9zcyBpbiBz
+aWduYWwgc3RyZW5ndGggb24gcnRsODcyM2JlLA0KPiBpdCBpcyB2ZXJ5IHNpbWlsYXIgdG8gaGF2
+aW5nIHRoZSBhbnRfc2VsIHBhcmFtZXRlciB3cm9uZyAob3IgbWlzc2luZyksDQo+IGl3IHNjYW4g
+c2hvd3Mgb25seSBteSBvd24gYWNjZXNzIHBvaW50IG5leHQgdG8gbWUgYW5kIHdpdGggYSBzaWdu
+YWwNCj4gc3RyZW5ndGggb2YgdW5kZXIgLTYwIHJhdGhlciB0aGFuIGFib3ZlIC0zMC4NCj7CoA0K
+PiBJIGJpc2VjdGVkIHRoaXMgZG93biB0byA4NzRlODM3ZDY3ZDBkYjE3OWM5NzcxZjM4ZmQyMWRm
+MDdjNzAzZTkzIGJlaW5nDQo+IHRoZSBvZmZlbmRpbmcgY29tbWl0Lg0KPsKgDQpUaGUgY29tbWl0
+IDg3NGU4MzdkNjdkMCAoInJ0bHdpZmk6IGZpbGwgRlcgdmVyc2lvbiBhbmQgc3VidmVyc2lvbiIp
+IHNldA0KY29ycmVjdCBmaXJtd2FyZSB2ZXJzaW9uIHRoYXQgaXMgdXNlZCBieSBidGNvZXggdG8g
+Y29sbGFib3JhdGUgd2l0aCANCmZpcm13YXJlIHByb3Blcmx5Lg0KDQo+IEkgaGF2ZSBhbHNvIHNl
+ZW4gdGhyZWUgQlVHcyB0aGF0IG1pZ2h0IGJlIHJlbGF0ZWQuIFRoZXkgYXBwZWFyIHdoZW4NCj4g
+c2V0dGluZyBhbnRfc2VsPTENCj7CoA0KPiAqIFRoZSBmaXJzdCBvbmUgb2NjdXJyZWQgKGJvdGgg
+b24gRGViaWFucyA0LjE2LjUga2VybmVsIGFuZCBvbg0KPiBtYWlubGluZSA0LjE3LXJjNSkgd2hl
+biBJIGRpZCBtb2Rwcm9iZSBydGw4NzIzYmUgYW50X3NlbD0xLCBhZnRlciBhDQo+IG1vZHByb2Jl
+IC1yIHJ0bDg3MjNiZS4NCj4gKiBUaGUgc2Vjb25kIG9uZSB3aGVuIGJvb3Rpbmcgd2l0aCBhbnRf
+c2VsPTEgaW4gL2V0Yy9tb2Rwcm9iZS5kLg0KPiAqIFRoZSB0aGlyZCBvbmUgaXMgd2hlbiBib290
+aW5nDQo+IDg3NGU4MzdkNjdkMGRiMTc5Yzk3NzFmMzhmZDIxZGYwN2M3MDNlOTMgYW5kIGhhdmlu
+ZyBhbnRfc2VsPTEuDQo+wqANCj4gQ29ycmVjdCAoYXQgbGVhc3Qgb24gNC4xNS4wKSBmb3IgdGhp
+cyBsYXB0b3AgaXMgYW50X3NlbD0yLg0KPsKgDQoNCldpdGggYW50X3NlbD0xLCBpdCB3aWxsIHJ1
+biBpbnRvIGV4X2J0Yzg3MjNiMWFudF9idF9pbmZvX25vdGlmeSgpwqBvZsKgDQpidGNvZXhpc3Qv
+aGFsYnRjODcyM2IxYW50LmMsIGFuZCBjYXVzZSB0aGUgYnVncyB5b3UgcmVwb3J0ZWQuDQpXaXRo
+IGFudF9zZWw9MiwgYW5vdGhlciBmdW5jdGlvbiBjb3JyZXNwb25kaW5nIHRvIDJhbnQgaXMgZXhl
+Y3V0ZWQsIHNvDQp0aGVyZSBpcyBubyBidWcgbWVzc2FnZS4NCkkgaGF2ZSBzZW50IGEgcGF0Y2hz
+ZXQgdG8gbGludXgtd2lyZWxlc3MgdGhhdCB3aWxsIGFsc28gZml4IHRoaXMgYnVnLg0KSWYgeW91
+IHdhbnQgdG8gZml4IGl0IGxvY2FsbHksIHBsZWFzZSB0cnkgYmVsb3cgcGF0Y2ggYmFzZWQgb27C
+oA0KY29tbWl0IGJmNTE2ZTdkOGIxYyAoInJ0bHdpZmk6IHJlbW92ZSBkdXBsaWNhdGUgZGVmaW5p
+dGlvbiBvZiBhbnRlbm5hwqANCm51bWJlciBmb3IgYnRjb2V4Iikgb2Ygd2lyZWxlc3MtZHJpdmVy
+cy1uZXh0IHRyZWUuDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVr
+L3J0bHdpZmkvcnRsODcyM2JlL2Z3LmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0
+bHdpZmkvcnRsODcyM2JlL2Z3LmMNCmluZGV4IDRiOTYzZmQyN2Q2NC4uODY4ZTc4ODcwMDI5IDEw
+MDY0NA0KLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3J0bDg3MjNi
+ZS9mdy5jDQorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvcnRsODcy
+M2JlL2Z3LmMNCkBAIC03NjIsMTAgKzc2MiwxMCBAQCB2b2lkIHJ0bDg3MjNiZV9jMmhfcGFja2V0
+X2hhbmRsZXIoc3RydWN0IGllZWU4MDIxMV9odyAqaHcsIHU4ICpidWZmZXIsIHU4IGxlbikNCsKg
+DQrCoMKgwqDCoMKgwqDCoMKgc3dpdGNoIChjMmhfY21kX2lkKSB7DQrCoMKgwqDCoMKgwqDCoMKg
+Y2FzZSBDMkhfODcyM0JfQlRfSU5GTzoNCi3CoMKgwqDCoMKgwqDCoGNhc2UgQzJIXzg3MjNCX0JU
+X01QOg0KwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBydGxfYzJoY21kX2VucXVldWUo
+aHcsIGMyaF9jbWRfaWQsIGMyaF9jbWRfbGVuLCB0bXBfYnVmKTsNCsKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgYnJlYWs7DQrCoA0KK8KgwqDCoMKgwqDCoMKgY2FzZSBDMkhfODcyM0Jf
+QlRfTVA6DQrCoMKgwqDCoMKgwqDCoMKgZGVmYXVsdDoNCsKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgcnRsODcyM2JlX2MyaF9jb250ZW50X3BhcnNpbmcoaHcsIGMyaF9jbWRfaWQsIGMy
+aF9jbWRfbGVuLA0KwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqB0bXBfYnVmKTsN
+Cg0KDQpSZWdhcmRzDQpQSw0KDQo=
