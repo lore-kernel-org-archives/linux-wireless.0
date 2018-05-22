@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36148 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:53682 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754092AbeEaJg2 (ORCPT
+        with ESMTP id S1751036AbeEVMiG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 May 2018 05:36:28 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>
-Subject: Re: [PATCH 0/6] qtnfmac: enable more features
-References: <20180531091102.28666-1-sergey.matyukevich.os@quantenna.com>
-Date: Thu, 31 May 2018 12:36:23 +0300
-In-Reply-To: <20180531091102.28666-1-sergey.matyukevich.os@quantenna.com>
-        (Sergey Matyukevich's message of "Thu, 31 May 2018 12:10:56 +0300")
-Message-ID: <876034i2ug.fsf@purkki.adurom.net> (sfid-20180531_113631_672634_1CD7CB6E)
+        Tue, 22 May 2018 08:38:06 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [1/3] MAINTAINERS: update Kalle's email address
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1526659693-32546-1-git-send-email-kvalo@codeaurora.org>
+References: <1526659693-32546-1-git-send-email-kvalo@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Message-Id: <20180522123806.107366028C@smtp.codeaurora.org> (sfid-20180522_143810_117084_10696351)
+Date: Tue, 22 May 2018 12:38:05 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
+Kalle Valo <kvalo@codeaurora.org> wrote:
 
-> Here is the next update for qtnfmac driver which enables more wireless
-> features. The major changes include the following items:
-> - cfg80211 power management callback
-> - net_device_ops set MAC addr callback
-> - advanced scan features: multiple SSIDs and randomized source MACs
-> - basic WoWLAN support: disconnect/magic/pattern triggers
->   -- not yet: PCIe backend suspend/resume, reporting wakeup reason
+> I switched to use my codeaurora.org address.
+> 
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-BTW, most likely the merge window will start on Sunday and I'm planning
-to send the last w-d-next pull request to Dave today. So you just missed
-the window to get these to 4.18 by a day.
+3 patches applied to wireless-drivers.git, thanks.
+
+c76700ab337a MAINTAINERS: update Kalle's email address
+b561290995b2 MAINTAINERS: change Kalle as ath.ko maintainer
+813477aa49aa MAINTAINERS: change Kalle as wcn36xx maintainer
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/10411095/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
