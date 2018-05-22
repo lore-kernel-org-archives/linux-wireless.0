@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:59901 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932768AbeEHPIK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 May 2018 11:08:10 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Jia-Ju Bai <baijiaju1990@gmail.com>
-Cc: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] net: wireless: ath: ath9k: Fix a possible data race in ath_chanctx_set_next
-In-Reply-To: <87o9hqxktc.fsf@kamboji.qca.qualcomm.com>
-References: <20180508080636.13827-1-baijiaju1990@gmail.com> <87o9hqxktc.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 08 May 2018 17:08:08 +0200
-Message-ID: <87h8ni423r.fsf@toke.dk> (sfid-20180508_170830_799829_79C1D1E3)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:33112 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750733AbeEVIT1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 May 2018 04:19:27 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        Eylon Pedinovsky <eylon.pedinovsky@broadcom.com>,
+        Jithu Jance <jithu.jance@broadcom.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 0/3] nl80211: support offloading FILS-SK roaming scenarios
+Date: Tue, 22 May 2018 10:19:05 +0200
+Message-Id: <1526977148-11600-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180522_101931_125869_EF8CD352)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+This small patch series is based on patch originally submitted by Vidyullatha
+to support driver/firmware roaming for FILS-SK offload. It also reworks the
+connection response code to reuse the fils parameter structure for the ROAM
+event.
 
-> Jia-Ju Bai <baijiaju1990@gmail.com> writes:
->
->> The write operation to "sc->next_chan" is protected by
->> the lock on line 1287, but the read operation to
->> this data on line 1262 is not protected by the lock.
->> Thus, there may exist a data race for "sc->next_chan".
->>
->> To fix this data race, the read operation to "sc->next_chan" 
->> should be also protected by the lock.
->>
->> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
->
-> I need this reviewed by someone else before I'm willing to take it.
+The series is intended for 4.18 and applies to the master branch of the
+mac80211-next repository.
 
-Only possible issue I can see is that it puts a call to
-getrawmonotonic() under the spinlock. Not sure if that has any bad
-implications...
+Arend van Spriel (2):
+  cfg80211: use separate struct for fils parameters
+  nl80211: add FILS related parameters to ROAM event
 
--Toke
+Vidyullatha Kanchanapally (1):
+  nl80211: Update ERP info using NL80211_CMD_UPDATE_CONNECT_PARAMS
+
+ include/net/cfg80211.h       | 51 ++++++++++++++++---------
+ include/uapi/linux/nl80211.h |  6 ++-
+ net/wireless/core.c          |  4 ++
+ net/wireless/nl80211.c       | 90 +++++++++++++++++++++++++++++++++++++-------
+ net/wireless/sme.c           | 88 ++++++++++++++++++++++++++++++-------------
+ 5 files changed, 180 insertions(+), 59 deletions(-)
+
+--
+1.9.1
