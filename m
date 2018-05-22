@@ -1,72 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41866 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965255AbeEYKsJ (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:41635 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751199AbeEVPDd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 May 2018 06:48:09 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Alexei Starovoitov <alexei.starovoitov@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Alexei Starovoitov <ast@kernel.org>, davem@davemloft.net,
-        daniel@iogearbox.net, torvalds@linux-foundation.org,
-        peterz@infradead.org, rostedt@goodmis.org,
-        mathieu.desnoyers@efficios.com, netdev@vger.kernel.org,
-        kernel-team@fb.com, linux-api@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [v8, bpf-next, 4/9] net/wireless/iwlwifi: fix iwlwifi_dev_ucode_error tracepoint
-References: <20180328190540.370956-5-ast@kernel.org>
-        <1527073388.3759.21.camel@sipsolutions.net>
-        <20180524232837.24jvdsdiohkpj7fs@ast-mbp>
-Date: Fri, 25 May 2018 13:48:02 +0300
-In-Reply-To: <20180524232837.24jvdsdiohkpj7fs@ast-mbp> (Alexei Starovoitov's
-        message of "Thu, 24 May 2018 16:28:39 -0700")
-Message-ID: <87zi0oko4d.fsf@purkki.adurom.net> (sfid-20180525_124835_294650_6A768899)
+        Tue, 22 May 2018 11:03:33 -0400
+Received: by mail-oi0-f65.google.com with SMTP id 11-v6so16492027ois.8
+        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2018 08:03:33 -0700 (PDT)
+Subject: Re: [PATCH] cfg80211: Fix support for flushing old scan results
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Tim Kourt <tim.a.kourt@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+References: <20180511164835.40161-1-tim.a.kourt@linux.intel.com>
+ <1526631206.3805.1.camel@sipsolutions.net>
+ <d12d4d4d-25d6-3cd0-1399-27de09c7f8c5@gmail.com>
+ <5AFF2169.4010003@broadcom.com>
+ <51c56faf-267d-c204-243a-31fc91976c5e@gmail.com>
+ <5B03C5BA.50804@broadcom.com>
+ <c8f3d9a7-b978-8af8-6594-d0ae66652956@gmail.com>
+ <1527000610.6787.14.camel@sipsolutions.net>
+ <1527000664.6787.15.camel@sipsolutions.net>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <d1b22fc7-805a-cb30-3dc5-0acf9236b672@gmail.com> (sfid-20180522_170337_219809_1C287B7A)
+Date: Tue, 22 May 2018 10:03:30 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1527000664.6787.15.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alexei Starovoitov <alexei.starovoitov@gmail.com> writes:
+Hi Johannes,
 
-> On Wed, May 23, 2018 at 01:03:08PM +0200, Johannes Berg wrote:
->> On Wed, 2018-03-28 at 12:05 -0700, Alexei Starovoitov wrote:
->> > fix iwlwifi_dev_ucode_error tracepoint to pass pointer to a table
->> > instead of all 17 arguments by value.
->> > dvm/main.c and mvm/utils.c have 'struct iwl_error_event_table'
->> > defined with very similar yet subtly different fields and offsets.
->> > tracepoint is still common and using definition of 'struct iwl_error_event_table'
->> > from dvm/commands.h while copying fields.
->> > Long term this tracepoint probably should be split into two.
->> 
->> It would've been nice to CC the wireless list for wireless related
->> patches ...
->
-> Ohh. I didn't realize that networking wireless doesn't fall under netdev.
-> I thought wireless folks are silent because they are embarrassed
-> by a function with 17 arguments.
+On 05/22/2018 09:51 AM, Johannes Berg wrote:
+> On Tue, 2018-05-22 at 16:50 +0200, Johannes Berg wrote:
+>> On Tue, 2018-05-22 at 09:48 -0500, Denis Kenzior wrote:
+>>> Hi Arend,
+>>>
+>>>>> Are you saying the first result is from the Beacon and the other is from
+>>>>> the Probe Response?  Then why are the 'Information elements from Probe
+>>>>> Response frame' the way they are?
+>>>>
+>>>> Nope. I am not saying that. I am saying that there are two probe
+>>>> requests being sent. One with broadcast ssid, ie. ssid_len == 0, and
+>>>> with ssid 'myssid'. But it is speculation without a sniffer capture.
+>>>
+>>> Ah I see what you mean now.  No, we traced this down to hostapd itself
+>>> and it was receiving a single Probe Request with the ssid set and
+>>> replying to it per spec.  So I'm pretty confident this scenario isn't
+>>> what is happening.  Let me try to get some actual packet captures...
+>>
+>> Was "myssid" the real SSID, or did you hide that from us and it was
+>> really 9 characters long in the original?
 
-Really, this is the level of discussion now? You don't even bother to CC
-the driver maintainers and your first reaction is that they are just too
-embarrassed to answer? Oh man...
+See the other sub-thread.  It was 9 characters long, I hand-edited it to 
+protect the innocent.
 
-But if you continue doing these kind of "drive-by cleanups" to a
-subsystem you are not familiar with, at least don't assume anything and
-instead use get_maintainer script to find the maintainers so that the
-patches get reviewed and applied to the correct tree:
+>>
+>> If it was really 9 characters long I could imagine that there's a
+>> different bug with a beacon with all-zero-bytes having been received
+>> (and getting stuck into the probe response buffer for some reason), and
+>> then you *should* see both entries.
+> 
+> Or perhaps there's a bug with how we link the results between
+> hidden/non-hidden, but it seems to me that hostapd would never have
+> responded with a probe response with zeroed bytes.
+> 
 
-$ scripts/get_maintainer.pl --no-rolestats --no-git -f drivers/net/wireless/intel/iwlwifi/dvm/main.c
-Johannes Berg <johannes.berg@intel.com>
-Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Luca Coelho <luciano.coelho@intel.com>
-Intel Linux Wireless <linuxwifi@intel.com>
-Kalle Valo <kvalo@codeaurora.org>
-"David S. Miller" <davem@davemloft.net>
-Daniel Borkmann <daniel@iogearbox.net>
-Alexei Starovoitov <ast@kernel.org>
-Kees Cook <keescook@chromium.org>
-linux-wireless@vger.kernel.org
-netdev@vger.kernel.org
-linux-kernel@vger.kernel.org
+We suspect it is likely a bug in cfg80211_bss_update logic somewhere.
 
--- 
-Kalle Valo
+Regards,
+-Denis
