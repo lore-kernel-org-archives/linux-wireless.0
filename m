@@ -1,74 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.74]:53583 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752000AbeENJxD (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:34156 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752675AbeEVVLV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 May 2018 05:53:03 -0400
-Subject: Re: brcmfmac: Updating Broadcom/Cypress Wifi/BT firmware
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Kevin Hilman <khilman@baylibre.com>
-References: <1350822038.83583.1525284334972@email.1und1.de>
- <5AF945B8.3070801@broadcom.com>
-From: Stefan Wahren <stefan.wahren@i2se.com>
-Message-ID: <944ad773-6a7a-17c5-1d7e-0a3d20173e1d@i2se.com> (sfid-20180514_115308_000870_6A243121)
-Date: Mon, 14 May 2018 11:52:56 +0200
-MIME-Version: 1.0
-In-Reply-To: <5AF945B8.3070801@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Tue, 22 May 2018 17:11:21 -0400
+Message-ID: <1527023478.6787.60.camel@sipsolutions.net> (sfid-20180522_231125_128548_9AE043B0)
+Subject: Re: [PATCH] cfg80211: Fix support for flushing old scan results
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>
+Cc: Tim Kourt <tim.a.kourt@linux.intel.com>,
+        linux-wireless@vger.kernel.org
+Date: Tue, 22 May 2018 23:11:18 +0200
+In-Reply-To: <D2E91785-58E3-46FA-94B9-879E621D5049@gmail.com> (sfid-20180522_230705_275847_981AACBF)
+References: <20180511164835.40161-1-tim.a.kourt@linux.intel.com>
+         <1526631206.3805.1.camel@sipsolutions.net>
+         <d12d4d4d-25d6-3cd0-1399-27de09c7f8c5@gmail.com>
+         <1527019967.6787.45.camel@sipsolutions.net>
+         <114ca20b-7b20-7a3e-75bd-8c336d26b9c0@gmail.com>
+         <1527021608.6787.47.camel@sipsolutions.net>
+         <2036335b-ca8f-d63f-8142-11d81cfb9a22@gmail.com>
+         <1527022332.6787.51.camel@sipsolutions.net>
+         <D2E91785-58E3-46FA-94B9-879E621D5049@gmail.com>
+         (sfid-20180522_230705_275847_981AACBF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+On Tue, 2018-05-22 at 16:00 -0500, Denis Kenzior wrote:
 
-Am 14.05.2018 um 10:15 schrieb Arend van Spriel:
-> On 5/2/2018 8:05 PM, Stefan Wahren wrote:
->> Hi,
->> i wanted to know, if there are any plans to update the 
->> Broadcom/Cypress firmware under:
->>
->> https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 
->>
->>
->> As BCM2835 maintainer i'm interested in the following files:
->>
->> brcm/brcmfmac43430-sdio.bin
->> brcm/brcmfmac43455-sdio.bin
->
-> To my knowledge (just checked ;-) ) these are already in the repository.
+> > > So what's the practical use of the flush flag?  Or is that something 
+> > > that was meant to be 'for-testing-only'?
+> > 
+> > I think you misunderstand? The value is that it ensures that nothing is
+> > present in the list that was received *before* the scan.
+> > 
+> 
+> We misunderstood how it was supposed to work, but no, I get how things
+> work now. 
 
-i know, but the subject was about updating. These files are from 
-2015/2016 and contains a lot of issues (including CVE-2016-0801 
-CVE-2017-0561 CVE-2017-9417).
+FWIW, even what I said above was slightly lying I think (though I'd have
+to go check the code). That's actually what I thought had happened
+before, though the timestamps should've allowed you to realize this, and
+it wasn't the case here afaict.
 
-AFAIK the latest version of brcmfmac43430-sdio.bin was from October 2017 
-[1].
+But in theory, I think you could've received the beacon with hidden SSID
+*before* the scan, yet it might be present in the scan results if the
+new scan caused the probe response to be associated with that scan.
 
->
->> brcm/brcmfmac43430-sdio.txt
->
-> We do not distribute these .txt files aka nvram files as they are 
-> board specific and no good solution to express that in the filename.
+> I’m just curious what other potential uses this flag might have.
 
-Thanks for clarification
+Well, basically, ensure that your scan data is up-to-date?
 
->
->> brcm/BCM43430A1.hcd
->
-> The BT side is not handled by us. Might be different within Cypress 
-> though.
+I think mostly it's because there are scenarios where the AP is expected
+to vary the probe response data, so you need to know if you
+ * have a new probe response, or
+ * didn't receive a new probe response, or
+ * the AP erroneously didn't change the new probe response.
 
-Okay
-
->
-> Regards,
-> Arend
-
-[1] - https://github.com/raspberrypi/linux/issues/1342
-
-Best regards
-Stefan
+johannes
