@@ -1,206 +1,505 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f45.google.com ([209.85.215.45]:35251 "EHLO
-        mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752343AbeEOMaR (ORCPT
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:39091 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751319AbeEVTDY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 May 2018 08:30:17 -0400
-Received: by mail-lf0-f45.google.com with SMTP id y72-v6so23108517lfd.2
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2018 05:30:16 -0700 (PDT)
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Subject: Research + questions on brcmfmac and support for monitor mode
-Message-ID: <986bbf4c-8fa1-4367-db9e-76a209594b81@gmail.com> (sfid-20180515_143022_278962_8A435D19)
-Date: Tue, 15 May 2018 14:29:01 +0200
+        Tue, 22 May 2018 15:03:24 -0400
+From: Ramon Fried <ramon.fried@gmail.com>
+To: kvalo@codeaurora.org
+Cc: linux-kernel@vger.kernel.org, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Eyal Ilsar <eilsar@codeaurora.org>,
+        Ramon Fried <ramon.fried@linaro.org>
+Subject: [PATCH v3] wcn36xx: Add support for Factory Test Mode (FTM)
+Date: Tue, 22 May 2018 22:02:56 +0300
+Message-Id: <20180522190256.32136-1-ramon.fried@gmail.com> (sfid-20180522_210346_619205_B583DAEC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm interested in adding support for monitor mode to the brcmfmac. I did
-some early research on firmware capabilities & behavior using various
-firmwares I could find for my devices: 43602a1, 4366b1, 4366c0 (BCM4366
-and BCM4366E).
-
-I was doing my tests by starting monitor mode with SET_MONITOR ioctl +
-value 3 and dumping msgbuf RX header + skb data.
-
-The good news is that almost every firmware has some minimal support for
-monitor mode. Unfortunately implementing it may be (a big?) problem.
-
-The basic concept is simple. Once we set SET_MONITOR to 3, firmware
-starts passing up monitor mode frames to the driver.
-
-
-
-The first problem I see is identifying monitor mode frames in order to
-make brcmfmac pass them to the monitor interface. Monitor frames have
-msg.ifidx set to 0 which makes them indistinguishable from main
-interface frames by simply looking at that index field. There is nothing
-in the msg.rsvd0, compl_hdr.status, rx_status_0 or rx_status_1 fields.
-
-Now, some new firmwares have flags set to 0x0002 (instead of 0x0001) for
-monitor frames. This is very helpful but it only applies to the really
-recent images.
-
-My first question is: is there any reliable way of filtering monitor
-frames for older firmwares? We could try to reserve ifidx 0 for monitor
-mode purposes, but I'm afraid I'd require hacking quite some code. Is
-there any better & simpler solution?
-
-
-
-The second problem is monitor frame format. Older firmwares were simply
-passing 802.11 frames to the driver. It means passing frame control
-field, duration, AP MAC, src MAC, dst MAC, sequence + data. There was no
-info about signal, noise, etc. passed. New firmwares seem to be
-including radiotap header which makes things much nicer.
-
-The second question: is there a reliable way of telling what format uses
-monitor packet passed by a firmware? Is it maybe strictly related to the
-flags set to 0x0002 (instead of 0x0001)?
-
-
-
-I was hoping that maybe looking at fw-reported capabilities will give me
-any hint regarding that but I'm afraid I'm out of luck. Below is a list
-of firmwares I tested and summary of each of them.
-
-Note: as every firmware reports following capabilities:
-802.11d 802.11h ampdu ampdu_rx ampdu_tx amsdurx amsdutx anqpo ap bcm_dcs
-bsstrans cac cqa dfrts dwds led mfp p2po probresp_mac_filter pspretend
-psr psta radio_pwrsave rm rxchain_pwrsave sta stbc-rx-1ss stbc-tx
-traffic-mgmt traffic-mgmt-dwm vht-prop-rates wds wet wet_tunnel wme wnm
-I omitted them below.
-
-*****
-
-1) brcmfmac43602-pcie.ap.bin from linux-firmware.git
-Firmware version = wl0: Sep 18 2015 03:30:01 version 7.35.177.56 (r587209) FWID 01-6cb8e269
-
-Monitor frames without raiotap
-
-flags: 0x0001
-
-Extra caps: mbss4 ndoe proptxstatus
-
-*****
-
-2) brcmfmac4366b-pcie.bin from linux-firmware.git
-Firmware version = wl0: Jan  8 2016 12:54:07 version 10.10.69.3309 (r610991) FWID 01-c47a91a4
-
-Monitor frames without raiotap
-
-flags: 0x0001
-
-Extra caps: ccx mbss8 multi-user-beamformer proptxstatus
-single-user-beamformee single-user-beamformer toe txpwrcache
-
-*****
-
-3) 4366b1 development branch (from Arend)
-Firmware version = wl0: Oct  6 2016 10:17:32 version 10.10 (TOB) (r663589) FWID 01-6c5a1687
-
-Monitor frames without raiotap
-
-flags: 0x0001
-
-Extra caps: bgdfs ccx mbss8 multi-user-beamformer proptxstatus
-single-user-beamformee single-user-beamformer toe txpwrcache
-
-*****
-
-4) brcmfmac4366c-pcie.bin.k3
-Firmware version = wl0: Aug 19 2016 15:22:35 version 10.10.69.74 (r629731 WLTEST) FWID 01-5c0166fa
-
-Monitor frames without raiotap
-
-flags: 0x0001
-
-Extra caps: bgdfs ccx cptlv-4 mbss8 multi-user-beamformee
-multi-user-beamformer single-user-beamformee single-user-beamformer toe
-txpwrcache
-
-*****
-
-5) brcmfmac4366c-pcie.bin.ea9500
-Firmware version = wl0: Aug 23 2016 17:19:51 version 10.10.69.69 (r625687) FWID 01-8438621f
-
-Monitor frames without raiotap
-
-flags: 0x0001
-
-Extra caps: bgdfs ccx mbss8 multi-user-beamformee multi-user-beamformer
-proptxstatus single-user-beamformee single-user-beamformer toe
-txpwrcache
-
-*****
-
-6) brcmfmac4366c-pcie.bin.ac88u
-Firmware version = wl0: Sep 12 2016 13:26:44 version 10.10.69.6908 (r658761) FWID 01-fed440e1
-
-Monitor frames without raiotap
-
-flags: 0x0001
-
-Extra caps: bgdfs ccx cptlv-4 mbss8 multi-user-beamformee
-multi-user-beamformer proptxstatus single-user-beamformee
-single-user-beamformer toe txpwrcache
-
-*****
-
-7) brcmfmac4366c-pcie.bin.asus-dhd24
-Firmware version = wl0: Nov  7 2017 12:23:08 version 10.10.69.69017 (r730013) FWID 01-e258597c
-
-Monitor frames include radiotap header
-
-flags: 0x0002
-
-Extra caps: bgdfs ccx cptlv-4 mbss8 multi-user-beamformee
-multi-user-beamformer proptxstatus single-user-beamformee
-single-user-beamformer toe txpwrcache
-
-*****
-
-8) 4366c0 fw from FW_EA9500v2_EA9500S_2.1.1.183171_prod.img
-Firmware version = wl0: Aug  2 2017 18:45:13 version 10.10.122.20 (r683106) FWID 01-91326ac8
-
-Monitor frames include radiotap header
-
-flags: 0x0002
-
-Extra caps: 160 bgdfs ccx dyn160 mbss8 multi-user-beamformee
-multi-user-beamformer proptxstatus single-user-beamformee
-single-user-beamformer toe txpwrcache
-
-*****
-
-9) 4366c0 fw from GT-AC5300_3.0.0.4_382_15984-gf481f58_cferom_ubi_0824.w
-Firmware version = wl0: Aug 17 2017 08:13:19 version 10.10.122.20 (r683106) FWID 01-bbb1a4c
-
-Monitor frames include radiotap header
-
-flags: 0x0002
-
-Extra caps: 160 bgdfs ccx cptlv-4 dyn160 mbss8 multi-user-beamformee
-multi-user-beamformer proptxstatus single-user-beamformee
-single-user-beamformer toe txpwrcache
-
-*****
-
-10) 4366c0 fw from ArcherC5400X(US)_171023.bin
-Firmware version = wl0: Sep 14 2017 14:10:23 version 10.10.122.20 (r683106) FWID 01-9f0e64f9
-
-Monitor frames include radiotap header
-
-flags: 0x0002
-
-Extra caps: 160 bgdfs ccx dyn160 mbss8 multi-user-beamformee
-multi-user-beamformer proptxstatus single-user-beamformee
-single-user-beamformer toe txpwrcache
+From: Eyal Ilsar <eilsar@codeaurora.org>
+
+Introduce infrastructure for supporting Factory Test Mode (FTM) of the
+wireless LAN subsystem. In order for the user space to access the
+firmware in test mode the relevant netlink channel needs to be exposed
+from the kernel driver.
+
+The above is achieved as follows:
+1) Register wcn36xx driver to testmode callback from netlink
+2) Add testmode callback implementation to handle incoming FTM commands
+3) Add FTM command packet structure
+4) Add handling for GET_BUILD_RELEASE_NUMBER (msgid=0x32A2)
+5) Add generic handling for all PTT_MSG packets
+
+Signed-off-by: Eyal Ilsar <eilsar@codeaurora.org>
+Signed-off-by: Ramon Fried <ramon.fried@linaro.org>
+---
+v3:
+	* fixed kbuild warning
+v2:
+    * check for NULL after kmalloc
+    * don't assign value to ret.
+ drivers/net/wireless/ath/wcn36xx/Makefile     |   2 +
+ drivers/net/wireless/ath/wcn36xx/hal.h        |  16 ++
+ drivers/net/wireless/ath/wcn36xx/main.c       |   3 +
+ drivers/net/wireless/ath/wcn36xx/smd.c        |  81 ++++++++++
+ drivers/net/wireless/ath/wcn36xx/smd.h        |   4 +
+ drivers/net/wireless/ath/wcn36xx/testmode.c   | 149 ++++++++++++++++++
+ drivers/net/wireless/ath/wcn36xx/testmode.h   |  46 ++++++
+ drivers/net/wireless/ath/wcn36xx/testmode_i.h |  29 ++++
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h    |   2 +
+ 9 files changed, 332 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/testmode.c
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/testmode.h
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/testmode_i.h
+
+diff --git a/drivers/net/wireless/ath/wcn36xx/Makefile b/drivers/net/wireless/ath/wcn36xx/Makefile
+index 3b09435104eb..582049f65735 100644
+--- a/drivers/net/wireless/ath/wcn36xx/Makefile
++++ b/drivers/net/wireless/ath/wcn36xx/Makefile
+@@ -6,3 +6,5 @@ wcn36xx-y +=   main.o \
+                smd.o \
+                pmc.o \
+                debug.o
++
++wcn36xx-$(CONFIG_NL80211_TESTMODE) += testmode.o
+diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
+index 182963522941..8491b3cb3206 100644
+--- a/drivers/net/wireless/ath/wcn36xx/hal.h
++++ b/drivers/net/wireless/ath/wcn36xx/hal.h
+@@ -2230,6 +2230,22 @@ struct wcn36xx_hal_switch_channel_rsp_msg {
+ 
+ } __packed;
+ 
++struct wcn36xx_hal_process_ptt_msg_req_msg {
++	struct wcn36xx_hal_msg_header header;
++
++	/* Actual FTM Command body */
++	u8 ptt_msg[0];
++} __packed;
++
++struct wcn36xx_hal_process_ptt_msg_rsp_msg {
++	struct wcn36xx_hal_msg_header header;
++
++	/* FTM Command response status */
++	u32 ptt_msg_resp_status;
++	/* Actual FTM Command body */
++	u8 ptt_msg[0];
++} __packed;
++
+ struct update_edca_params_req_msg {
+ 	struct wcn36xx_hal_msg_header header;
+ 
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 69d6be59d97f..ea14f87d11ff 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -26,6 +26,7 @@
+ #include <linux/soc/qcom/smem_state.h>
+ #include <linux/soc/qcom/wcnss_ctrl.h>
+ #include "wcn36xx.h"
++#include "testmode.h"
+ 
+ unsigned int wcn36xx_dbg_mask;
+ module_param_named(debug_mask, wcn36xx_dbg_mask, uint, 0644);
+@@ -1116,6 +1117,8 @@ static const struct ieee80211_ops wcn36xx_ops = {
+ 	.sta_add		= wcn36xx_sta_add,
+ 	.sta_remove		= wcn36xx_sta_remove,
+ 	.ampdu_action		= wcn36xx_ampdu_action,
++
++	CFG80211_TESTMODE_CMD(wcn36xx_tm_cmd)
+ };
+ 
+ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 8932af5e4d8d..fb0192b7ee99 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -292,12 +292,26 @@ static void init_hal_msg(struct wcn36xx_hal_msg_header *hdr,
+ 		msg_body.header.len = sizeof(msg_body);			\
+ 	} while (0)							\
+ 
++#define INIT_HAL_PTT_MSG(p_msg_body, ppt_msg_len) \
++	do { \
++		memset(p_msg_body, 0, sizeof(*p_msg_body) + ppt_msg_len); \
++		p_msg_body->header.msg_type = WCN36XX_HAL_PROCESS_PTT_REQ; \
++		p_msg_body->header.msg_version = WCN36XX_HAL_MSG_VERSION0; \
++		p_msg_body->header.len = sizeof(*p_msg_body) + ppt_msg_len; \
++	} while (0)
++
+ #define PREPARE_HAL_BUF(send_buf, msg_body) \
+ 	do {							\
+ 		memset(send_buf, 0, msg_body.header.len);	\
+ 		memcpy(send_buf, &msg_body, sizeof(msg_body));	\
+ 	} while (0)						\
+ 
++#define PREPARE_HAL_PTT_MSG_BUF(send_buf, p_msg_body) \
++	do {							\
++		memset(send_buf, 0, p_msg_body->header.len); \
++		memcpy(send_buf, p_msg_body, p_msg_body->header.len); \
++	} while (0)
++
+ static int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
+ {
+ 	struct wcn36xx_fw_msg_status_rsp *rsp;
+@@ -741,6 +755,71 @@ int wcn36xx_smd_switch_channel(struct wcn36xx *wcn,
+ 	return ret;
+ }
+ 
++static int wcn36xx_smd_process_ptt_msg_rsp(void *buf, size_t len,
++					   void **p_ptt_rsp_msg)
++{
++	struct wcn36xx_hal_process_ptt_msg_rsp_msg *rsp;
++	int ret;
++
++	ret = wcn36xx_smd_rsp_status_check(buf, len);
++	if (ret)
++		return ret;
++
++	rsp = (struct wcn36xx_hal_process_ptt_msg_rsp_msg *)buf;
++
++	wcn36xx_dbg(WCN36XX_DBG_HAL, "process ptt msg responded with length %d\n",
++		    rsp->header.len);
++	wcn36xx_dbg_dump(WCN36XX_DBG_HAL_DUMP, "HAL_PTT_MSG_RSP:", rsp->ptt_msg,
++			 rsp->header.len - sizeof(rsp->ptt_msg_resp_status));
++
++	if (rsp->header.len > 0) {
++		*p_ptt_rsp_msg = kmalloc(rsp->header.len, GFP_ATOMIC);
++		if (!*p_ptt_rsp_msg)
++			return -ENOMEM;
++		memcpy(*p_ptt_rsp_msg, rsp->ptt_msg, rsp->header.len);
++	}
++	return ret;
++}
++
++int wcn36xx_smd_process_ptt_msg(struct wcn36xx *wcn,
++				struct ieee80211_vif *vif, void *ptt_msg, size_t len,
++		void **ptt_rsp_msg)
++{
++	struct wcn36xx_hal_process_ptt_msg_req_msg *p_msg_body;
++	int ret;
++
++	mutex_lock(&wcn->hal_mutex);
++	p_msg_body = kmalloc(
++		sizeof(struct wcn36xx_hal_process_ptt_msg_req_msg) + len,
++		GFP_ATOMIC);
++	if (!p_msg_body) {
++		ret = -ENOMEM;
++		goto out_nomem;
++	}
++	INIT_HAL_PTT_MSG(p_msg_body, len);
++
++	memcpy(&p_msg_body->ptt_msg, ptt_msg, len);
++
++	PREPARE_HAL_PTT_MSG_BUF(wcn->hal_buf, p_msg_body);
++
++	ret = wcn36xx_smd_send_and_wait(wcn, p_msg_body->header.len);
++	if (ret) {
++		wcn36xx_err("Sending hal_process_ptt_msg failed\n");
++		goto out;
++	}
++	ret = wcn36xx_smd_process_ptt_msg_rsp(wcn->hal_buf, wcn->hal_rsp_len,
++					      ptt_rsp_msg);
++	if (ret) {
++		wcn36xx_err("process_ptt_msg response failed err=%d\n", ret);
++		goto out;
++	}
++out:
++	kfree(p_msg_body);
++out_nomem:
++	mutex_unlock(&wcn->hal_mutex);
++	return ret;
++}
++
+ static int wcn36xx_smd_update_scan_params_rsp(void *buf, size_t len)
+ {
+ 	struct wcn36xx_hal_update_scan_params_resp *rsp;
+@@ -2367,6 +2446,7 @@ int wcn36xx_smd_rsp_process(struct rpmsg_device *rpdev,
+ 	case WCN36XX_HAL_JOIN_RSP:
+ 	case WCN36XX_HAL_UPDATE_SCAN_PARAM_RSP:
+ 	case WCN36XX_HAL_CH_SWITCH_RSP:
++	case WCN36XX_HAL_PROCESS_PTT_RSP:
+ 	case WCN36XX_HAL_FEATURE_CAPS_EXCHANGE_RSP:
+ 	case WCN36XX_HAL_8023_MULTICAST_LIST_RSP:
+ 	case WCN36XX_HAL_START_SCAN_OFFLOAD_RSP:
+@@ -2407,6 +2487,7 @@ int wcn36xx_smd_rsp_process(struct rpmsg_device *rpdev,
+ 
+ 	return 0;
+ }
++
+ static void wcn36xx_ind_smd_work(struct work_struct *work)
+ {
+ 	struct wcn36xx *wcn =
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
+index 8076edf40ac8..945407b8764b 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.h
++++ b/drivers/net/wireless/ath/wcn36xx/smd.h
+@@ -86,6 +86,10 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+ 			    u16 p2p_off);
+ int wcn36xx_smd_switch_channel(struct wcn36xx *wcn,
+ 			       struct ieee80211_vif *vif, int ch);
++int wcn36xx_smd_process_ptt_msg(struct wcn36xx *wcn,
++				struct ieee80211_vif *vif,
++				void *ptt_msg, size_t len,
++				void **ptt_rsp_msg);
+ int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn,
+ 				      struct ieee80211_vif *vif,
+ 				      struct sk_buff *skb);
+diff --git a/drivers/net/wireless/ath/wcn36xx/testmode.c b/drivers/net/wireless/ath/wcn36xx/testmode.c
+new file mode 100644
+index 000000000000..1279064a3b71
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/testmode.c
+@@ -0,0 +1,149 @@
++﻿/*
++ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <net/netlink.h>
++#include <linux/firmware.h>
++#include <net/cfg80211.h>
++#include "wcn36xx.h"
++
++#include "testmode.h"
++#include "testmode_i.h"
++#include "hal.h"
++#include "smd.h"
++
++static const struct nla_policy wcn36xx_tm_policy[WCN36XX_TM_ATTR_MAX + 1] = {
++	[WCN36XX_TM_ATTR_CMD] = { .type = NLA_U16 },
++	[WCN36XX_TM_ATTR_DATA] = { .type = NLA_BINARY,
++	.len = WCN36XX_TM_DATA_MAX_LEN },
++};
++
++struct build_release_number {
++	u16 drv_major;
++	u16 drv_minor;
++	u16 drv_patch;
++	u16 drv_build;
++	u16 ptt_max;
++	u16 ptt_min;
++	u16 fw_ver;
++} __packed;
++
++static int wcn36xx_tm_cmd_ptt(struct wcn36xx *wcn, struct ieee80211_vif *vif,
++			      struct nlattr *tb[])
++{
++	int ret = 0, buf_len;
++	void *buf;
++	struct ftm_rsp_msg *msg, *rsp = NULL;
++	struct sk_buff *skb;
++
++	if (!tb[WCN36XX_TM_ATTR_DATA])
++		return -EINVAL;
++
++	buf = nla_data(tb[WCN36XX_TM_ATTR_DATA]);
++	buf_len = nla_len(tb[WCN36XX_TM_ATTR_DATA]);
++	msg = (struct ftm_rsp_msg *)buf;
++
++	wcn36xx_dbg(WCN36XX_DBG_TESTMODE,
++		    "testmode cmd wmi msg_id 0x%04X msg_len %d buf %pK buf_len %d\n",
++		   msg->msg_id, msg->msg_body_length,
++		   buf, buf_len);
++
++	wcn36xx_dbg_dump(WCN36XX_DBG_TESTMODE_DUMP, "REQ ", buf, buf_len);
++
++	if (msg->msg_id == MSG_GET_BUILD_RELEASE_NUMBER) {
++		struct build_release_number *body =
++				(struct build_release_number *)
++				msg->msg_response;
++
++		body->drv_major = wcn->fw_major;
++		body->drv_minor = wcn->fw_minor;
++		body->drv_patch = wcn->fw_version;
++		body->drv_build = wcn->fw_revision;
++		body->ptt_max = 10;
++		body->ptt_min = 0;
++
++		rsp = msg;
++		rsp->resp_status = 0;
++	} else {
++		wcn36xx_dbg(WCN36XX_DBG_TESTMODE,
++			    "PPT Request >> HAL size %d\n",
++				msg->msg_body_length);
++
++		msg->resp_status = wcn36xx_smd_process_ptt_msg(wcn, vif, msg,
++							       msg->msg_body_length, (void *)(&rsp));
++
++		wcn36xx_dbg(WCN36XX_DBG_TESTMODE,
++			    "Response status = %d\n",
++				msg->resp_status);
++		if (rsp)
++			wcn36xx_dbg(WCN36XX_DBG_TESTMODE,
++				    "PPT Response << HAL size %d\n",
++					rsp->msg_body_length);
++	}
++
++	if (!rsp) {
++		rsp = msg;
++		wcn36xx_warn("No response! Echoing request with response status %d\n",
++			     rsp->resp_status);
++	}
++	wcn36xx_dbg_dump(WCN36XX_DBG_TESTMODE_DUMP, "RSP ",
++			 rsp, rsp->msg_body_length);
++
++	skb = cfg80211_testmode_alloc_reply_skb(wcn->hw->wiphy,
++						nla_total_size(msg->msg_body_length));
++	if (!skb) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	ret = nla_put(skb, WCN36XX_TM_ATTR_DATA, rsp->msg_body_length, rsp);
++	if (ret) {
++		kfree_skb(skb);
++		goto out;
++	}
++
++	ret = cfg80211_testmode_reply(skb);
++
++out:
++	if (rsp != msg)
++		kfree(rsp);
++
++	return ret;
++}
++
++int wcn36xx_tm_cmd(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++		   void *data, int len)
++{
++	struct wcn36xx *wcn = hw->priv;
++	struct nlattr *tb[WCN36XX_TM_ATTR_MAX + 1];
++	int ret = 0;
++	unsigned short attr;
++
++	wcn36xx_dbg_dump(WCN36XX_DBG_TESTMODE_DUMP, "Data:", data, len);
++	ret = nla_parse(tb, WCN36XX_TM_ATTR_MAX, data, len,
++			wcn36xx_tm_policy, NULL);
++	if (ret)
++		return ret;
++
++	if (!tb[WCN36XX_TM_ATTR_CMD])
++		return -EINVAL;
++
++	attr = nla_get_u16(tb[WCN36XX_TM_ATTR_CMD]);
++
++	if (attr != WCN36XX_TM_CMD_PTT)
++		return -EOPNOTSUPP;
++
++	return wcn36xx_tm_cmd_ptt(wcn, vif, tb);
++}
+diff --git a/drivers/net/wireless/ath/wcn36xx/testmode.h b/drivers/net/wireless/ath/wcn36xx/testmode.h
+new file mode 100644
+index 000000000000..4c6cfdb46580
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/testmode.h
+@@ -0,0 +1,46 @@
++/*
++ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include "wcn36xx.h"
++
++struct ftm_rsp_msg {
++	u16 msg_id;
++	u16 msg_body_length;
++	u32 resp_status;
++	u8 msg_response[0];
++} __packed;
++
++/* The request buffer of FTM which contains a byte of command and the request */
++struct ftm_payload {
++	u16 ftm_cmd_type;
++	struct ftm_rsp_msg ftm_cmd_msg;
++} __packed;
++
++#define MSG_GET_BUILD_RELEASE_NUMBER 0x32A2
++
++#ifdef CONFIG_NL80211_TESTMODE
++int wcn36xx_tm_cmd(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++		   void *data, int len);
++
++#else
++static inline int wcn36xx_tm_cmd(struct ieee80211_hw *hw,
++				 struct ieee80211_vif *vif,
++				void *data, int len)
++{
++	return 0;
++}
++
++#endif
+diff --git a/drivers/net/wireless/ath/wcn36xx/testmode_i.h b/drivers/net/wireless/ath/wcn36xx/testmode_i.h
+new file mode 100644
+index 000000000000..8a1477ffd5a0
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/testmode_i.h
+@@ -0,0 +1,29 @@
++/*
++ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#define WCN36XX_TM_DATA_MAX_LEN		5000
++
++enum wcn36xx_tm_attr {
++	__WCN36XX_TM_ATTR_INVALID	= 0,
++	WCN36XX_TM_ATTR_CMD		= 1,
++	WCN36XX_TM_ATTR_DATA		= 2,
++
++	/* keep last */
++	__WCN36XX_TM_ATTR_AFTER_LAST,
++	WCN36XX_TM_ATTR_MAX		= __WCN36XX_TM_ATTR_AFTER_LAST - 1,
++};
++
++#define WCN36XX_TM_CMD_PTT 3
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index 5854adf43f3a..547e9a9eb28f 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -56,6 +56,8 @@ enum wcn36xx_debug_mask {
+ 	WCN36XX_DBG_BEACON_DUMP	= 0x00001000,
+ 	WCN36XX_DBG_PMC		= 0x00002000,
+ 	WCN36XX_DBG_PMC_DUMP	= 0x00004000,
++	WCN36XX_DBG_TESTMODE		= 0x00008000,
++	WCN36XX_DBG_TESTMODE_DUMP	= 0x00010000,
+ 	WCN36XX_DBG_ANY		= 0xffffffff,
+ };
+ 
+-- 
+2.17.0
