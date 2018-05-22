@@ -1,141 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35756 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752286AbeEJUJH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 May 2018 16:09:07 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, keescook@chromium.org,
-        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
-        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
-        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
-        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
-        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
-        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        cantabile.desu@gmail.com, khc@pm.waw.pl, arve@android.com,
-        tkjos@android.com, corbet@lwn.net, mchehab+samsung@kernel.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        "Luis R . Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v7 09/14] firmware: add firmware_request_nowarn() - load firmware without warnings
-Date: Thu, 10 May 2018 13:08:45 -0700
-Message-Id: <20180510200850.5958-10-mcgrof@kernel.org> (sfid-20180510_221045_143194_3FE727E0)
-In-Reply-To: <20180510200850.5958-1-mcgrof@kernel.org>
-References: <20180510200850.5958-1-mcgrof@kernel.org>
+Received: from mail-pl0-f46.google.com ([209.85.160.46]:35790 "EHLO
+        mail-pl0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751001AbeEVE7J (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 May 2018 00:59:09 -0400
+Received: by mail-pl0-f46.google.com with SMTP id i5-v6so10129593plt.2
+        for <linux-wireless@vger.kernel.org>; Mon, 21 May 2018 21:59:08 -0700 (PDT)
+Date: Mon, 21 May 2018 21:59:06 -0700
+From: Eric Biggers <ebiggers3@gmail.com>
+To: "Dreyfuss, Haim" <haim.dreyfuss@intel.com>
+Cc: linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [4.17 iwlwifi regression] NULL pointer dereference in
+ reg_query_regdb_wmm()
+Message-ID: <20180522045906.GB987@sol.localdomain> (sfid-20180522_065925_529139_2AAC9F3A)
+References: <20180519183345.GA701@sol.localdomain>
+ <409B2791E285FD41B488E034D9B4719F27E99C58@HASMSX106.ger.corp.intel.com>
+ <20180522044712.GA987@sol.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180522044712.GA987@sol.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andres Rodriguez <andresx7@gmail.com>
+On Mon, May 21, 2018 at 09:47:12PM -0700, Eric Biggers wrote:
+> Hi Haim,
+> 
+> On Mon, May 21, 2018 at 10:10:09AM +0000, Dreyfuss, Haim wrote:
+> > Hello,
+> > 
+> > Can you provide the following information?
+> > 1. The *boot* you mentioned is from clean shutdown or from Sx state?
+> > 2. Do you know which MCC the driver is trying to update?
+> > I will appreciate if you could reproduce it with trace-cmd  (recording at least iwlwifi , iwlwifi_msg -and iwlwifi_ucode)
+> > Or if you can't,  just send dmesg  but make sure to set iwlwifi.debug in the kernel parameters to 0x4000
+> > 
+> 
+> It's a clean boot, from powered off.
+> 
+> I built an v4.17-rc6 kernel with CONFIG_IWLWIFI_DEBUG=y and booted with
+> iwlwifi.debug=0x4000.  I've attached the dmesg output and kernel config.
+> 
+> The crash happens right away, so there's no time to easily run trace-cmd.
+> But if the other stuff still isn't enough, I can try booting with the
+> NetworkManager service disabled, then enabling it at runtime.
+> 
+> - Eric
 
-Currently the firmware loader only exposes one silent path for querying
-optional firmware, and that is firmware_request_direct(). This function
-also disables the sysfs fallback mechanism, which might not always be the
-desired behaviour [0].
+The crash goes away if I replace iwlwifi-7265D-27.ucode in CONFIG_EXTRA_FIRMWARE
+with iwlwifi-7265D-29.ucode.  I don't know how well supported using old iwlwifi
+firmware versions is supposed to be, but it shouldn't crash the kernel.
 
-This patch introduces a variations of request_firmware() that enable the
-caller to disable the undesired warning messages but enables the sysfs
-fallback mechanism. This is equivalent to adding FW_OPT_NO_WARN to the
-old behaviour.
-
-[0]: https://git.kernel.org/linus/c0cc00f250e1
-
-Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
-Reviewed-by: Kees Cook <keescook@chromium.org>
-Acked-by: Luis R. Rodriguez <mcgrof@kernel.org>
-[mcgrof: used the old API calls as the full rename is not done yet, and
- add the caller for when FW_LOADER is disabled, enhance documentation ]
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- .../driver-api/firmware/request_firmware.rst  |  5 ++++
- drivers/base/firmware_loader/main.c           | 27 +++++++++++++++++++
- include/linux/firmware.h                      | 10 +++++++
- 3 files changed, 42 insertions(+)
-
-diff --git a/Documentation/driver-api/firmware/request_firmware.rst b/Documentation/driver-api/firmware/request_firmware.rst
-index d5ec95a7195b..f62bdcbfed5b 100644
---- a/Documentation/driver-api/firmware/request_firmware.rst
-+++ b/Documentation/driver-api/firmware/request_firmware.rst
-@@ -20,6 +20,11 @@ request_firmware
- .. kernel-doc:: drivers/base/firmware_loader/main.c
-    :functions: request_firmware
- 
-+firmware_request_nowarn
-+-----------------------
-+.. kernel-doc:: drivers/base/firmware_loader/main.c
-+   :functions: firmware_request_nowarn
-+
- request_firmware_direct
- -----------------------
- .. kernel-doc:: drivers/base/firmware_loader/main.c
-diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
-index abdc4e4d55f1..0943e7065e0e 100644
---- a/drivers/base/firmware_loader/main.c
-+++ b/drivers/base/firmware_loader/main.c
-@@ -631,6 +631,33 @@ request_firmware(const struct firmware **firmware_p, const char *name,
- }
- EXPORT_SYMBOL(request_firmware);
- 
-+/**
-+ * firmware_request_nowarn() - request for an optional fw module
-+ * @firmware: pointer to firmware image
-+ * @name: name of firmware file
-+ * @device: device for which firmware is being loaded
-+ *
-+ * This function is similar in behaviour to request_firmware(), except
-+ * it doesn't produce warning messages when the file is not found.
-+ * The sysfs fallback mechanism is enabled if direct filesystem lookup fails,
-+ * however, however failures to find the firmware file with it are still
-+ * suppressed. It is therefore up to the driver to check for the return value
-+ * of this call and to decide when to inform the users of errors.
-+ **/
-+int firmware_request_nowarn(const struct firmware **firmware, const char *name,
-+			    struct device *device)
-+{
-+	int ret;
-+
-+	/* Need to pin this module until return */
-+	__module_get(THIS_MODULE);
-+	ret = _request_firmware(firmware, name, device, NULL, 0,
-+				FW_OPT_UEVENT | FW_OPT_NO_WARN);
-+	module_put(THIS_MODULE);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(firmware_request_nowarn);
-+
- /**
-  * request_firmware_direct() - load firmware directly without usermode helper
-  * @firmware_p: pointer to firmware image
-diff --git a/include/linux/firmware.h b/include/linux/firmware.h
-index 41050417cafb..2dd566c91d44 100644
---- a/include/linux/firmware.h
-+++ b/include/linux/firmware.h
-@@ -42,6 +42,8 @@ struct builtin_fw {
- #if defined(CONFIG_FW_LOADER) || (defined(CONFIG_FW_LOADER_MODULE) && defined(MODULE))
- int request_firmware(const struct firmware **fw, const char *name,
- 		     struct device *device);
-+int firmware_request_nowarn(const struct firmware **fw, const char *name,
-+			    struct device *device);
- int request_firmware_nowait(
- 	struct module *module, bool uevent,
- 	const char *name, struct device *device, gfp_t gfp, void *context,
-@@ -59,6 +61,14 @@ static inline int request_firmware(const struct firmware **fw,
- {
- 	return -EINVAL;
- }
-+
-+static inline int firmware_request_nowarn(const struct firmware **fw,
-+					  const char *name,
-+					  struct device *device)
-+{
-+	return -EINVAL;
-+}
-+
- static inline int request_firmware_nowait(
- 	struct module *module, bool uevent,
- 	const char *name, struct device *device, gfp_t gfp, void *context,
--- 
-2.17.0
+- Eric
