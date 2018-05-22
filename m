@@ -1,84 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:40291 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752673AbeEKIO6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 04:14:58 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 19/30] staging: wilc1000: fix line over 80 characters in add_key()
-Date: Fri, 11 May 2018 13:43:20 +0530
-Message-ID: <1526026411-11058-20-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101502_320013_55EBE16D)
-In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
-References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+Received: from mga01.intel.com ([192.55.52.88]:4239 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751656AbeEVH6G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 May 2018 03:58:06 -0400
+From: "Dreyfuss, Haim" <haim.dreyfuss@intel.com>
+To: Eric Biggers <ebiggers3@gmail.com>
+CC: linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Subject: RE: [4.17 iwlwifi regression] NULL pointer dereference in
+ reg_query_regdb_wmm()
+Date: Tue, 22 May 2018 07:58:02 +0000
+Message-ID: <409B2791E285FD41B488E034D9B4719F27E9A568@HASMSX106.ger.corp.intel.com> (sfid-20180522_095828_277837_6D2AF934)
+References: <20180519183345.GA701@sol.localdomain>
+ <409B2791E285FD41B488E034D9B4719F27E99C58@HASMSX106.ger.corp.intel.com>
+ <20180522044712.GA987@sol.localdomain> <20180522045906.GB987@sol.localdomain>
+In-Reply-To: <20180522045906.GB987@sol.localdomain>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix line over 80 character issue found by checkpatch.pl script in
-add_key().
+Thanks Eric,
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 19 +++++++++----------
- 1 file changed, 9 insertions(+), 10 deletions(-)
+I will look into it
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 9684d34..b67a170 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -908,8 +908,7 @@ static int wilc_wfi_cfg_copy_wpa_info(struct wilc_wfi_key *key_info,
- }
- 
- static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
--		   bool pairwise,
--		   const u8 *mac_addr, struct key_params *params)
-+		   bool pairwise, const u8 *mac_addr, struct key_params *params)
- 
- {
- 	s32 ret = 0, keylen = params->key_len;
-@@ -955,6 +954,8 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 	case WLAN_CIPHER_SUITE_CCMP:
- 		if (priv->wdev->iftype == NL80211_IFTYPE_AP ||
- 		    priv->wdev->iftype == NL80211_IFTYPE_P2P_GO) {
-+			struct wilc_wfi_key *key;
-+
- 			ret = wilc_wfi_cfg_allocate_wpa_entry(priv, key_index);
- 			if (ret)
- 				return -ENOMEM;
-@@ -974,21 +975,19 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 
- 				priv->wilc_groupkey = mode;
- 
--				ret = wilc_wfi_cfg_copy_wpa_info(priv->wilc_gtk[key_index],
--								 params);
--				if (ret)
--					return -ENOMEM;
-+				key = priv->wilc_gtk[key_index];
- 			} else {
- 				if (params->cipher == WLAN_CIPHER_SUITE_TKIP)
- 					mode = ENCRYPT_ENABLED | WPA | TKIP;
- 				else
- 					mode = priv->wilc_groupkey | AES;
- 
--				ret = wilc_wfi_cfg_copy_wpa_info(priv->wilc_ptk[key_index],
--								 params);
--				if (ret)
--					return -ENOMEM;
-+				key = priv->wilc_ptk[key_index];
- 			}
-+			ret = wilc_wfi_cfg_copy_wpa_info(key, params);
-+			if (ret)
-+				return -ENOMEM;
-+
- 			op_mode = AP_MODE;
- 		} else {
- 			if (params->key_len > 16 &&
--- 
-2.7.4
+Cheers
+Dreyfuss
+
+-----Original Message-----
+From: Eric Biggers [mailto:ebiggers3@gmail.com] 
+Sent: Tuesday, May 22, 2018 7:59 AM
+To: Dreyfuss, Haim <haim.dreyfuss@intel.com>
+Cc: linuxwifi <linuxwifi@intel.com>; linux-wireless@vger.kernel.org; Coelho, Luciano <luciano.coelho@intel.com>; Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [4.17 iwlwifi regression] NULL pointer dereference in reg_query_regdb_wmm()
+
+On Mon, May 21, 2018 at 09:47:12PM -0700, Eric Biggers wrote:
+> Hi Haim,
+> 
+> On Mon, May 21, 2018 at 10:10:09AM +0000, Dreyfuss, Haim wrote:
+> > Hello,
+> > 
+> > Can you provide the following information?
+> > 1. The *boot* you mentioned is from clean shutdown or from Sx state?
+> > 2. Do you know which MCC the driver is trying to update?
+> > I will appreciate if you could reproduce it with trace-cmd  (recording at least iwlwifi , iwlwifi_msg -and iwlwifi_ucode)
+> > Or if you can't,  just send dmesg  but make sure to set iwlwifi.debug in the kernel parameters to 0x4000
+> > 
+> 
+> It's a clean boot, from powered off.
+> 
+> I built an v4.17-rc6 kernel with CONFIG_IWLWIFI_DEBUG=y and booted with
+> iwlwifi.debug=0x4000.  I've attached the dmesg output and kernel config.
+> 
+> The crash happens right away, so there's no time to easily run trace-cmd.
+> But if the other stuff still isn't enough, I can try booting with the
+> NetworkManager service disabled, then enabling it at runtime.
+> 
+> - Eric
+
+The crash goes away if I replace iwlwifi-7265D-27.ucode in CONFIG_EXTRA_FIRMWARE
+with iwlwifi-7265D-29.ucode.  I don't know how well supported using old iwlwifi
+firmware versions is supposed to be, but it shouldn't crash the kernel.
+
+- Eric
