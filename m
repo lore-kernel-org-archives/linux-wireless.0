@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f65.google.com ([209.85.160.65]:39525 "EHLO
-        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752583AbeEOJWh (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:40180 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751114AbeEVKdN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 May 2018 05:22:37 -0400
-Received: by mail-pl0-f65.google.com with SMTP id c19-v6so9068741pls.6
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2018 02:22:37 -0700 (PDT)
-From: Sushant Kumar Mishra <sushant2k1513@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>,
-        linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sanjay Konduri <sanjay.konduri@redpinesignals.com>
-Subject: [PATCH 2/2] rsi: add fix for corruption of auto rate table
-Date: Tue, 15 May 2018 14:34:31 +0530
-Message-Id: <1526375071-7010-2-git-send-email-sushant2k1513@gmail.com> (sfid-20180515_112310_166360_06E2958C)
-In-Reply-To: <1526375071-7010-1-git-send-email-sushant2k1513@gmail.com>
-References: <1526375071-7010-1-git-send-email-sushant2k1513@gmail.com>
+        Tue, 22 May 2018 06:33:13 -0400
+Received: by mail-io0-f196.google.com with SMTP id g14-v6so17849976ioc.7
+        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2018 03:33:12 -0700 (PDT)
+Received: from mail-it0-f54.google.com (mail-it0-f54.google.com. [209.85.214.54])
+        by smtp.gmail.com with ESMTPSA id z88-v6sm9573913ioi.25.2018.05.22.03.33.12
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 22 May 2018 03:33:12 -0700 (PDT)
+Received: by mail-it0-f54.google.com with SMTP id j186-v6so24676033ita.5
+        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2018 03:33:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5B03CC75.7060908@broadcom.com>
+References: <20180522004602.19370-1-andrew.zaborowski@intel.com> <5B03CC75.7060908@broadcom.com>
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
+Date: Tue, 22 May 2018 12:33:11 +0200
+Message-ID: <CAOq732+LheV0qx2yJF3j-b514cqa8hfRQBVVh=Epr1_W4UUnGA@mail.gmail.com> (sfid-20180522_123316_194430_C94358DD)
+Subject: Re: [PATCH] nl80211: Reject disconnect commands except from conn_owner
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sanjay Konduri <sanjay.konduri@redpinesignals.com>
+On 22 May 2018 at 09:53, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+> On 5/22/2018 2:46 AM, Andrew Zaborowski wrote:
+>> Reject NL80211_CMD_DISCONNECT, NL80211_CMD_DISASSOCIATE,
+>> NL80211_CMD_DEAUTHENTICATE and NL80211_CMD_ASSOCIATE commands
+>> from clients other than the connection owner set in the connect,
+>> authenticate or associate commands, if it was set.
+>>
+>> The main point of this check is to prevent chaos when two processes
+>> try to use nl80211 at the same time, it's not a security measure.
+>> The same thing should possibly be done for JOIN_IBSS/LEAVE_IBSS and
+>> START_AP/STOP_AP.
+>
+> Isn't this V2? What has changed since last time?
 
-Auto rate table sent to firmware is getting corrupted
-as memset to zeros is not done. Added memset to skb
-data before filling auto rate table.
+It's only a resend to include the Signed-off-by that I forgot the first time.
 
-Signed-off-by: Sanjay Konduri <sanjay.konduri@redpinesignals.com>
-Signed-off-by: Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_mgmt.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 0757adc..d0e5937 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -1190,6 +1190,7 @@ static int rsi_send_auto_rate_request(struct rsi_common *common,
- 		return -ENOMEM;
- 	}
- 
-+	memset(skb->data, 0, frame_len);
- 	selected_rates = kzalloc(2 * RSI_TBL_SZ, GFP_KERNEL);
- 	if (!selected_rates) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of mem\n",
--- 
-2.1.0
+Best regards
