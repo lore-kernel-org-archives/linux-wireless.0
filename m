@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50430 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933715AbeEIKZM (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:54222 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751177AbeEVKax (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 06:25:12 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 22 May 2018 06:30:53 -0400
+Received: by mail-wm0-f65.google.com with SMTP id a67-v6so30306935wmf.3
+        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2018 03:30:53 -0700 (PDT)
+Subject: Re: [PATCH] nl80211: Reject disconnect commands except from
+ conn_owner
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        linux-wireless@vger.kernel.org
+References: <20180522004602.19370-1-andrew.zaborowski@intel.com>
+ <5B03CC75.7060908@broadcom.com> <1526977281.6787.8.camel@sipsolutions.net>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B03F15B.90904@broadcom.com> (sfid-20180522_123057_581130_BB485132)
+Date: Tue, 22 May 2018 12:30:51 +0200
 MIME-Version: 1.0
-Subject: Re: brcmfmac: Add support for bcm43364 wireless chipset
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1525416503-832-1-git-send-email-sean@lano.id.au>
-References: <1525416503-832-1-git-send-email-sean@lano.id.au>
-To: Sean Lanigan <sean@lano.id.au>
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com, ulf.hansson@linaro.org,
-        ian@mnementh.co.uk, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list@cypress.com, linux-mmc@vger.kernel.org,
-        Sean Lanigan <sean@lano.id.au>
-Message-Id: <20180509102511.E97F160FA8@smtp.codeaurora.org> (sfid-20180509_122516_089907_0C55CA5B)
-Date: Wed,  9 May 2018 10:25:11 +0000 (UTC)
+In-Reply-To: <1526977281.6787.8.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sean Lanigan <sean@lano.id.au> wrote:
+On 5/22/2018 10:21 AM, Johannes Berg wrote:
+> On Tue, 2018-05-22 at 09:53 +0200, Arend van Spriel wrote:
+>> On 5/22/2018 2:46 AM, Andrew Zaborowski wrote:
+>>> Reject NL80211_CMD_DISCONNECT, NL80211_CMD_DISASSOCIATE,
+>>> NL80211_CMD_DEAUTHENTICATE and NL80211_CMD_ASSOCIATE commands
+>>> from clients other than the connection owner set in the connect,
+>>> authenticate or associate commands, if it was set.
+>>>
+>>> The main point of this check is to prevent chaos when two processes
+>>> try to use nl80211 at the same time, it's not a security measure.
+>>> The same thing should possibly be done for JOIN_IBSS/LEAVE_IBSS and
+>>> START_AP/STOP_AP.
+>>
+>> Isn't this V2? What has changed since last time?
+>
+> It was RFC before I guess.
 
-> Add support for the BCM43364 chipset via an SDIO interface, as used in 
-> e.g. the Murata 1FX module. 
-> 
-> The BCM43364 uses the same firmware as the BCM43430 (which is already 
-> included), the only difference is the omission of Bluetooth. 
-> 
-> However, the SDIO_ID for the BCM43364 is 02D0:A9A4, giving it a MODALIAS 
-> of sdio:c00v02D0dA9A4, which doesn't get recognised and hence doesn't 
-> load the brcmfmac module. Adding the 'A9A4' ID in the appropriate place 
-> triggers the brcmfmac driver to load, and then correctly use the 
-> firmware file 'brcmfmac43430-sdio.bin'. 
-> 
-> 
-> Signed-off-by: Sean Lanigan <sean@lano.id.au>
-> Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
+Ah, yes. That's it.
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-9c4a121e8263 brcmfmac: Add support for bcm43364 wireless chipset
-
--- 
-https://patchwork.kernel.org/patch/10380047/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Thanks,
+Arend
