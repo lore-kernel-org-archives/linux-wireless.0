@@ -1,105 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:45510 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932226AbeE3UPl (ORCPT
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:37586 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751575AbeEVVGo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 16:15:41 -0400
-Received: by mail-lf0-f68.google.com with SMTP id n3-v6so6255094lfe.12
-        for <linux-wireless@vger.kernel.org>; Wed, 30 May 2018 13:15:40 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH V2 1/3] brcmfmac: allow specifying features per firmware version
-Date: Wed, 30 May 2018 22:12:59 +0200
-Message-Id: <20180530201301.4648-1-zajec5@gmail.com> (sfid-20180530_221554_632421_6F36B8CF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Tue, 22 May 2018 17:06:44 -0400
+Received: by mail-ot0-f196.google.com with SMTP id 77-v6so22692888otd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2018 14:06:44 -0700 (PDT)
+Content-Type: text/plain; charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH] cfg80211: Fix support for flushing old scan results
+From: Denis Kenzior <denkenz@gmail.com>
+In-Reply-To: <1527022332.6787.51.camel@sipsolutions.net>
+Date: Tue, 22 May 2018 16:00:47 -0500
+Cc: Tim Kourt <tim.a.kourt@linux.intel.com>,
+        linux-wireless@vger.kernel.org
+Message-Id: <D2E91785-58E3-46FA-94B9-879E621D5049@gmail.com> (sfid-20180522_230648_621431_C04F3518)
+References: <20180511164835.40161-1-tim.a.kourt@linux.intel.com>
+ <1526631206.3805.1.camel@sipsolutions.net>
+ <d12d4d4d-25d6-3cd0-1399-27de09c7f8c5@gmail.com>
+ <1527019967.6787.45.camel@sipsolutions.net>
+ <114ca20b-7b20-7a3e-75bd-8c336d26b9c0@gmail.com>
+ <1527021608.6787.47.camel@sipsolutions.net>
+ <2036335b-ca8f-d63f-8142-11d81cfb9a22@gmail.com>
+ <1527022332.6787.51.camel@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+Hi Johannes,
 
-Some features supported by firmware aren't advertised and there is no
-way for a driver to query them. This includes e.g. monitor mode details.
-Some firmwares support tagging monitor frames, some build radiotap
-header but there is no way to detect it. Such features often depend on
-used firmware compilation options.
+> On May 22, 2018, at 3:52 PM, Johannes Berg <johannes@sipsolutions.net> =
+wrote:
+>=20
+> On Tue, 2018-05-22 at 15:49 -0500, Denis Kenzior wrote:
+>=20
+>> Okay, so we need to use NL80211_BSS_PRESP_DATA if we want to filter =
+out=20
+>> scan results that are coming from beacons, right?
+>=20
+> You could do that, yes. In non-hidden cases you get the beacon/probe
+> response data combined, in hidden cases you may get the beacon data
+> separately and the (second, third, ...) entry with probe response data
+> will come with beacon data too.
+>=20
+> I'm not really sure what value that would have though. In general, you
+> might want to not display hidden SSIDs as such or at all in the UI.
 
-This commit adds table that will allow specifying features like:
-{ "01-abcdef01", BIT(BRCMF_FEAT_FOO) }
+Right.  The intent here is to handle auto-connect to hidden networks.  =
+So if we have provisioned a network that is hidden, and we see hidden =
+networks via beacons, we want to scan for our provisioned hidden SSIDs =
+and only get the probe response results.
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
-V2: Rename struct field to "feat_flags"
-    Rename function to the brcmf_feat_firmware_overrides()
-    Print enabled features
-    Rename variable to "drv"
-    Update commit message body (mention compilation time options)
----
- .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 34 ++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
+>=20
+>> So what's the practical use of the flush flag?  Or is that something=20=
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-index 800a423c7bc2..2712bfcb2864 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-@@ -91,6 +91,38 @@ static int brcmf_feat_debugfs_read(struct seq_file *seq, void *data)
- }
- #endif /* DEBUG */
- 
-+struct brcmf_feat_fwfeat {
-+	const char * const fwid;
-+	u32 feat_flags;
-+};
-+
-+static const struct brcmf_feat_fwfeat brcmf_feat_fwfeat_map[] = {
-+};
-+
-+static void brcmf_feat_firmware_overrides(struct brcmf_pub *drv)
-+{
-+	const struct brcmf_feat_fwfeat *e;
-+	u32 feat_flags = 0;
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(brcmf_feat_fwfeat_map); i++) {
-+		e = &brcmf_feat_fwfeat_map[i];
-+		if (!strcmp(e->fwid, drv->fwver)) {
-+			feat_flags = e->feat_flags;
-+			break;
-+		}
-+	}
-+
-+	if (!feat_flags)
-+		return;
-+
-+	for (i = 0; i < BRCMF_FEAT_LAST; i++)
-+		if (feat_flags & BIT(i))
-+			brcmf_dbg(INFO, "enabling firmware feature: %s\n",
-+				  brcmf_feat_names[i]);
-+	drv->feat_flags |= feat_flags;
-+}
-+
- /**
-  * brcmf_feat_iovar_int_get() - determine feature through iovar query.
-  *
-@@ -251,6 +283,8 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
- 	}
- 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_FWSUP, "sup_wpa");
- 
-+	brcmf_feat_firmware_overrides(drvr);
-+
- 	/* set chip related quirks */
- 	switch (drvr->bus_if->chip) {
- 	case BRCM_CC_43236_CHIP_ID:
--- 
-2.13.6
+>> that was meant to be 'for-testing-only'?
+>=20
+> I think you misunderstand? The value is that it ensures that nothing =
+is
+> present in the list that was received *before* the scan.
+>=20
+
+We misunderstood how it was supposed to work, but no, I get how things =
+work now.  I=E2=80=99m just curious what other potential uses this flag =
+might have.
+
+Regards,
+-Denis
