@@ -1,94 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:38282 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751252AbeEFHdc (ORCPT
+Received: from mail-pl0-f68.google.com ([209.85.160.68]:41517 "EHLO
+        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752785AbeEVV3h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 6 May 2018 03:33:32 -0400
-From: Nathan Chancellor <natechancellor@gmail.com>
-To: devel@driverdev.osuosl.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH 2/3] staging: wilc1000: Remove useless function
-Date: Sun,  6 May 2018 00:33:32 -0700
-Message-Id: <20180506073333.3770-2-natechancellor@gmail.com> (sfid-20180506_093448_043222_545BAD77)
-In-Reply-To: <20180506073333.3770-1-natechancellor@gmail.com>
-References: <20180506073333.3770-1-natechancellor@gmail.com>
+        Tue, 22 May 2018 17:29:37 -0400
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: linux@endlessm.com,
+        =?UTF-8?q?Micha=C5=82=20K=C4=99pie=C5=84?= <kernel@kempniu.pl>,
+        =?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] rfkill: Create rfkill-none LED trigger
+Date: Tue, 22 May 2018 14:29:32 -0700
+Message-Id: <20180522212932.5357-2-jprvita@endlessm.com> (sfid-20180522_233041_511890_47C141F4)
+In-Reply-To: <20180522212932.5357-1-jprvita@endlessm.com>
+References: <20180522212932.5357-1-jprvita@endlessm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-GCC warns that 'wid' is unused in wilc_remove_key and it's correct; the
-variable is only local. Get rid of the function (since it just returns
-zero) and shuffle the remaining code into one if statement.
+Creates a new trigger rfkill-none, as a complement to rfkill-any, which
+drives LEDs when any radio is enabled. The new trigger is meant to turn
+a LED ON whenever all radios are OFF, and turn it OFF otherwise.
 
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
 ---
- drivers/staging/wilc1000/host_interface.c         | 12 ------------
- drivers/staging/wilc1000/host_interface.h         |  1 -
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++++---------
- 3 files changed, 5 insertions(+), 22 deletions(-)
+ net/rfkill/core.c | 27 ++++++++++++++++++++-------
+ 1 file changed, 20 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 3fd4c8e62da6..b5f3829e9903 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2606,18 +2606,6 @@ static void timer_connect_cb(struct timer_list *t)
- 	wilc_enqueue_cmd(&msg);
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 6d64d14f4b0a..07235520b00f 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -178,6 +178,7 @@ static void rfkill_led_trigger_unregister(struct rfkill *rfkill)
  }
  
--s32 wilc_remove_key(struct host_if_drv *hif_drv, const u8 *sta_addr)
+ static struct led_trigger rfkill_any_led_trigger;
++static struct led_trigger rfkill_none_led_trigger;
+ static struct work_struct rfkill_global_led_trigger_work;
+ 
+ static void rfkill_global_led_trigger_worker(struct work_struct *work)
+@@ -195,6 +196,8 @@ static void rfkill_global_led_trigger_worker(struct work_struct *work)
+ 	mutex_unlock(&rfkill_global_mutex);
+ 
+ 	led_trigger_event(&rfkill_any_led_trigger, brightness);
++	led_trigger_event(&rfkill_none_led_trigger, brightness == LED_OFF ?
++							LED_FULL : LED_OFF);
+ }
+ 
+ static void rfkill_global_led_trigger_event(void)
+@@ -202,22 +205,32 @@ static void rfkill_global_led_trigger_event(void)
+ 	schedule_work(&rfkill_global_led_trigger_work);
+ }
+ 
+-static void rfkill_global_led_trigger_activate(struct led_classdev *led_cdev)
 -{
--	struct wid wid;
--
--	wid.id = (u16)WID_REMOVE_KEY;
--	wid.type = WID_STR;
--	wid.val = (s8 *)sta_addr;
--	wid.size = 6;
--
--	return 0;
+-	rfkill_global_led_trigger_event();
 -}
 -
- int wilc_remove_wep_key(struct wilc_vif *vif, u8 index)
+ static int rfkill_global_led_trigger_register(void)
  {
- 	int result = 0;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 7a26f341e0ba..08b3ba7df8b4 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -303,7 +303,6 @@ struct add_sta_param {
- };
++	int ret;
++
+ 	INIT_WORK(&rfkill_global_led_trigger_work,
+ 			rfkill_global_led_trigger_worker);
++
+ 	rfkill_any_led_trigger.name = "rfkill-any";
+-	rfkill_any_led_trigger.activate = rfkill_global_led_trigger_activate;
+-	return led_trigger_register(&rfkill_any_led_trigger);
++	ret = led_trigger_register(&rfkill_any_led_trigger);
++	if (ret)
++		return ret;
++
++	rfkill_none_led_trigger.name = "rfkill-none";
++	ret = led_trigger_register(&rfkill_none_led_trigger);
++	if (ret)
++		led_trigger_unregister(&rfkill_any_led_trigger);
++	else
++		/* Delay activation until all global triggers are registered */
++		rfkill_global_led_trigger_event();
++
++	return ret;
+ }
  
- struct wilc_vif;
--s32 wilc_remove_key(struct host_if_drv *hif_drv, const u8 *sta_addr);
- int wilc_remove_wep_key(struct wilc_vif *vif, u8 index);
- int wilc_set_wep_default_keyid(struct wilc_vif *vif, u8 index);
- int wilc_add_wep_key_bss_sta(struct wilc_vif *vif, const u8 *key, u8 len,
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 76b4afaef423..b499fb987395 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1054,15 +1054,11 @@ static int del_key(struct wiphy *wiphy, struct net_device *netdev,
- 		}
- 	}
- 
--	if (key_index >= 0 && key_index <= 3) {
--		if (priv->wep_key_len[key_index]) {
--			memset(priv->wep_key[key_index], 0,
--			       priv->wep_key_len[key_index]);
--			priv->wep_key_len[key_index] = 0;
--			wilc_remove_wep_key(vif, key_index);
--		}
--	} else {
--		wilc_remove_key(priv->hif_drv, mac_addr);
-+	if (key_index >= 0 && key_index <= 3 && priv->wep_key_len[key_index]) {
-+		memset(priv->wep_key[key_index], 0,
-+		       priv->wep_key_len[key_index]);
-+		priv->wep_key_len[key_index] = 0;
-+		wilc_remove_wep_key(vif, key_index);
- 	}
- 
- 	return 0;
+ static void rfkill_global_led_trigger_unregister(void)
+ {
++	led_trigger_unregister(&rfkill_none_led_trigger);
+ 	led_trigger_unregister(&rfkill_any_led_trigger);
+ 	cancel_work_sync(&rfkill_global_led_trigger_work);
+ }
 -- 
 2.17.0
