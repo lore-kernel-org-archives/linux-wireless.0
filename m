@@ -1,81 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46534 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751158AbeE2HZY (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:54398 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751101AbeEVAqJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 May 2018 03:25:24 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: emmanuel.grumbach@intel.com, jadit2@gmail.com,
-        linux-wireless@vger.kernel.org, Hao Wei Tee <angelsl@in04.sg>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 29 May 2018 10:25:17 +0300
-Message-Id: <20180529072517.30135-1-luca@coelho.fi> (sfid-20180529_092528_348020_4F98B06D)
-Subject: [PATCH] iwlwifi: pcie: compare with number of IRQs requested for, not number of CPUs
+        Mon, 21 May 2018 20:46:09 -0400
+Received: by mail-wm0-f66.google.com with SMTP id f6-v6so28078653wmc.4
+        for <linux-wireless@vger.kernel.org>; Mon, 21 May 2018 17:46:09 -0700 (PDT)
+Received: from iss.ger.corp.intel.com ([139.47.106.244])
+        by smtp.gmail.com with ESMTPSA id h10-v6sm26123513wrf.83.2018.05.21.17.46.07
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 21 May 2018 17:46:07 -0700 (PDT)
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] nl80211: Reject disconnect commands except from conn_owner
+Date: Tue, 22 May 2018 02:46:02 +0200
+Message-Id: <20180522004602.19370-1-andrew.zaborowski@intel.com> (sfid-20180522_024612_553067_045404DA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hao Wei Tee <angelsl@in04.sg>
+Reject NL80211_CMD_DISCONNECT, NL80211_CMD_DISASSOCIATE,
+NL80211_CMD_DEAUTHENTICATE and NL80211_CMD_ASSOCIATE commands
+from clients other than the connection owner set in the connect,
+authenticate or associate commands, if it was set.
 
-When there are 16 or more logical CPUs, we request for
-`IWL_MAX_RX_HW_QUEUES` (16) IRQs only as we limit to that number of
-IRQs, but later on we compare the number of IRQs returned to
-nr_online_cpus+2 instead of max_irqs, the latter being what we
-actually asked for. This ends up setting num_rx_queues to 17 which
-causes lots of out-of-bounds array accesses later on.
+The main point of this check is to prevent chaos when two processes
+try to use nl80211 at the same time, it's not a security measure.
+The same thing should possibly be done for JOIN_IBSS/LEAVE_IBSS and
+START_AP/STOP_AP.
 
-Compare to max_irqs instead, and also add an assertion in case
-num_rx_queues > IWM_MAX_RX_HW_QUEUES.
-
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=199551
-
-Signed-off-by: Hao Wei Tee <angelsl@in04.sg>
-Tested-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ net/wireless/nl80211.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index f8a0234d332c..5517ea4c2aa0 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1590,14 +1590,13 @@ static void iwl_pcie_set_interrupt_capa(struct pci_dev *pdev,
- 					struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	int max_irqs, num_irqs, i, ret, nr_online_cpus;
-+	int max_irqs, num_irqs, i, ret;
- 	u16 pci_cmd;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e4a52a2b5e..85f094a564 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8506,6 +8506,10 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
+ 	const u8 *bssid, *ssid;
+ 	int err, ssid_len = 0;
  
- 	if (!trans->cfg->mq_rx_supported)
- 		goto enable_msi;
++	if (dev->ieee80211_ptr->conn_owner_nlportid &&
++	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
++		return -EPERM;
++
+ 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+ 		return -EINVAL;
  
--	nr_online_cpus = num_online_cpus();
--	max_irqs = min_t(u32, nr_online_cpus + 2, IWL_MAX_RX_HW_QUEUES);
-+	max_irqs = min_t(u32, num_online_cpus() + 2, IWL_MAX_RX_HW_QUEUES);
- 	for (i = 0; i < max_irqs; i++)
- 		trans_pcie->msix_entries[i].entry = i;
+@@ -8628,6 +8632,10 @@ static int nl80211_deauthenticate(struct sk_buff *skb, struct genl_info *info)
+ 	u16 reason_code;
+ 	bool local_state_change;
  
-@@ -1623,16 +1622,17 @@ static void iwl_pcie_set_interrupt_capa(struct pci_dev *pdev,
- 	 * Two interrupts less: non rx causes shared with FBQ and RSS.
- 	 * More than two interrupts: we will use fewer RSS queues.
- 	 */
--	if (num_irqs <= nr_online_cpus) {
-+	if (num_irqs <= max_irqs - 2) {
- 		trans_pcie->trans->num_rx_queues = num_irqs + 1;
- 		trans_pcie->shared_vec_mask = IWL_SHARED_IRQ_NON_RX |
- 			IWL_SHARED_IRQ_FIRST_RSS;
--	} else if (num_irqs == nr_online_cpus + 1) {
-+	} else if (num_irqs == max_irqs - 1) {
- 		trans_pcie->trans->num_rx_queues = num_irqs;
- 		trans_pcie->shared_vec_mask = IWL_SHARED_IRQ_NON_RX;
- 	} else {
- 		trans_pcie->trans->num_rx_queues = num_irqs - 1;
- 	}
-+	WARN_ON(trans_pcie->trans->num_rx_queues > IWL_MAX_RX_HW_QUEUES);
++	if (dev->ieee80211_ptr->conn_owner_nlportid &&
++	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
++		return -EPERM;
++
+ 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+ 		return -EINVAL;
  
- 	trans_pcie->alloc_vecs = num_irqs;
- 	trans_pcie->msix_enabled = true;
+@@ -8675,6 +8683,10 @@ static int nl80211_disassociate(struct sk_buff *skb, struct genl_info *info)
+ 	u16 reason_code;
+ 	bool local_state_change;
+ 
++	if (dev->ieee80211_ptr->conn_owner_nlportid &&
++	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
++		return -EPERM;
++
+ 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+ 		return -EINVAL;
+ 
+@@ -9451,6 +9463,10 @@ static int nl80211_disconnect(struct sk_buff *skb, struct genl_info *info)
+ 	u16 reason;
+ 	int ret;
+ 
++	if (dev->ieee80211_ptr->conn_owner_nlportid &&
++	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
++		return -EPERM;
++
+ 	if (!info->attrs[NL80211_ATTR_REASON_CODE])
+ 		reason = WLAN_REASON_DEAUTH_LEAVING;
+ 	else
 -- 
-2.17.0
+2.14.1
