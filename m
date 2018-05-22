@@ -1,73 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:3905 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751286AbeEBHP2 (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:33280 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751495AbeEVITr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 May 2018 03:15:28 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 11/21] staging: wilc1000: rename WILC_WFI_init_mon_interface to avoid uppercase in function name
-Date: Wed, 2 May 2018 12:43:37 +0530
-Message-ID: <1525245227-3924-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180502_092102_234584_19FBAC6C)
-In-Reply-To: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
-References: <1525245227-3924-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 22 May 2018 04:19:47 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        Eylon Pedinovsky <eylon.pedinovsky@broadcom.com>,
+        Jithu Jance <jithu.jance@broadcom.com>,
+        Vidyullatha Kanchanapally <vidyullatha@codeaurora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 3/3] nl80211: Update ERP info using NL80211_CMD_UPDATE_CONNECT_PARAMS
+Date: Tue, 22 May 2018 10:19:08 +0200
+Message-Id: <1526977148-11600-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180522_102009_754040_AC5D66E9)
+In-Reply-To: <1526977148-11600-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1526977148-11600-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes to avoid the use of uppercase for function name.
+From: Vidyullatha Kanchanapally <vidyullatha@codeaurora.org>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Use NL80211_CMD_UPDATE_CONNECT_PARAMS to update new ERP information,
+Association IEs and the Authentication type to driver / firmware which
+will be used in subsequent roamings.
+
+Signed-off-by: Vidyullatha Kanchanapally <vidyullatha@codeaurora.org>
+[arend: extended fils-sk kernel doc and added check in wiphy_register()]
+Reviewed-by: Jithu Jance <jithu.jance@broadcom.com>
+Reviewed-by: Eylon Pedinovsky <eylon.pedinovsky@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/staging/wilc1000/linux_mon.c              | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.h | 3 ++-
- 3 files changed, 4 insertions(+), 3 deletions(-)
+ include/net/cfg80211.h       |  5 +++++
+ include/uapi/linux/nl80211.h |  3 ++-
+ net/wireless/core.c          |  4 ++++
+ net/wireless/nl80211.c       | 52 ++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 63 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index d5af736..1ee9ca3 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -222,7 +222,7 @@ static const struct net_device_ops wilc_wfi_netdev_ops = {
- 
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 266d25a..d6e2231 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2225,9 +2225,14 @@ struct cfg80211_connect_params {
+  * have to be updated as part of update_connect_params() call.
+  *
+  * @UPDATE_ASSOC_IES: Indicates whether association request IEs are updated
++ * @UPDATE_FILS_ERP_INFO: Indicates that FILS connection parameters (realm,
++ *	username, erp sequence number and rrk) are updated
++ * @UPDATE_AUTH_TYPE: Indicates that authentication type is updated
+  */
+ enum cfg80211_connect_params_changed {
+ 	UPDATE_ASSOC_IES		= BIT(0),
++	UPDATE_FILS_ERP_INFO		= BIT(1),
++	UPDATE_AUTH_TYPE		= BIT(2),
  };
- 
--struct net_device *WILC_WFI_init_mon_interface(const char *name,
-+struct net_device *wilc_wfi_init_mon_interface(const char *name,
- 					       struct net_device *real_dev)
- {
- 	struct wilc_wfi_mon_priv *priv;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 827afe9..579e04a2 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2065,7 +2065,7 @@ static struct wireless_dev *add_virtual_intf(struct wiphy *wiphy,
- 	vif = netdev_priv(priv->wdev->netdev);
- 
- 	if (type == NL80211_IFTYPE_MONITOR) {
--		new_ifc = WILC_WFI_init_mon_interface(name, vif->ndev);
-+		new_ifc = wilc_wfi_init_mon_interface(name, vif->ndev);
- 		if (new_ifc) {
- 			vif = netdev_priv(priv->wdev->netdev);
- 			vif->monitor_flag = 1;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-index a0a07b4..f41ce84 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.h
-@@ -9,7 +9,8 @@ int wilc_deinit_host_int(struct net_device *net);
- int wilc_init_host_int(struct net_device *net);
- void wilc_wfi_monitor_rx(u8 *buff, u32 size);
- int WILC_WFI_deinit_mon_interface(void);
--struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_device *real_dev);
-+struct net_device *wilc_wfi_init_mon_interface(const char *name,
-+					       struct net_device *real_dev);
- void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			      u16 frame_type, bool reg);
- 
--- 
-2.7.4
+
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 18fea06..b678573e4 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -204,7 +204,8 @@
+  * FILS shared key authentication offload should be able to construct the
+  * authentication and association frames for FILS shared key authentication and
+  * eventually do a key derivation as per IEEE 802.11ai. The below additional
+- * parameters should be given to driver in %NL80211_CMD_CONNECT.
++ * parameters should be given to driver in %NL80211_CMD_CONNECT and/or in
++ * %NL80211_CMD_UPDATE_CONNECT_PARAMS.
+  *	%NL80211_ATTR_FILS_ERP_USERNAME - used to construct keyname_nai
+  *	%NL80211_ATTR_FILS_ERP_REALM - used to construct keyname_nai
+  *	%NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM - used to construct erp message
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index a6f3cac..772f197 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -722,6 +722,10 @@ int wiphy_register(struct wiphy *wiphy)
+ 		    (!rdev->ops->set_pmk || !rdev->ops->del_pmk)))
+ 		return -EINVAL;
+
++	if (WARN_ON(!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_FW_ROAM) &&
++		    rdev->ops->update_connect_params))
++		return -EINVAL;
++
+ 	if (wiphy->addresses)
+ 		memcpy(wiphy->perm_addr, wiphy->addresses[0].addr, ETH_ALEN);
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 66be69f..907d9b4 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -9420,6 +9420,8 @@ static int nl80211_update_connect_params(struct sk_buff *skb,
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct net_device *dev = info->user_ptr[1];
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	bool fils_sk_offload;
++	u32 auth_type;
+ 	u32 changed = 0;
+ 	int ret;
+
+@@ -9434,6 +9436,56 @@ static int nl80211_update_connect_params(struct sk_buff *skb,
+ 		changed |= UPDATE_ASSOC_IES;
+ 	}
+
++	fils_sk_offload = wiphy_ext_feature_isset(&rdev->wiphy,
++						  NL80211_EXT_FEATURE_FILS_SK_OFFLOAD);
++
++	/*
++	 * when driver supports fils-sk offload all attributes must be
++	 * provided. So the else covers "fils-sk-not-all" and
++	 * "no-fils-sk-any".
++	 */
++	if (fils_sk_offload &&
++	    info->attrs[NL80211_ATTR_FILS_ERP_USERNAME] &&
++	    info->attrs[NL80211_ATTR_FILS_ERP_REALM] &&
++	    info->attrs[NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM] &&
++	    info->attrs[NL80211_ATTR_FILS_ERP_RRK]) {
++		connect.fils_erp_username =
++			nla_data(info->attrs[NL80211_ATTR_FILS_ERP_USERNAME]);
++		connect.fils_erp_username_len =
++			nla_len(info->attrs[NL80211_ATTR_FILS_ERP_USERNAME]);
++		connect.fils_erp_realm =
++			nla_data(info->attrs[NL80211_ATTR_FILS_ERP_REALM]);
++		connect.fils_erp_realm_len =
++			nla_len(info->attrs[NL80211_ATTR_FILS_ERP_REALM]);
++		connect.fils_erp_next_seq_num =
++			nla_get_u16(
++			   info->attrs[NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM]);
++		connect.fils_erp_rrk =
++			nla_data(info->attrs[NL80211_ATTR_FILS_ERP_RRK]);
++		connect.fils_erp_rrk_len =
++			nla_len(info->attrs[NL80211_ATTR_FILS_ERP_RRK]);
++		changed |= UPDATE_FILS_ERP_INFO;
++	} else if (info->attrs[NL80211_ATTR_FILS_ERP_USERNAME] ||
++		   info->attrs[NL80211_ATTR_FILS_ERP_REALM] ||
++		   info->attrs[NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM] ||
++		   info->attrs[NL80211_ATTR_FILS_ERP_RRK]) {
++		return -EINVAL;
++	}
++
++	if (info->attrs[NL80211_ATTR_AUTH_TYPE]) {
++		auth_type = nla_get_u32(info->attrs[NL80211_ATTR_AUTH_TYPE]);
++		if (!nl80211_valid_auth_type(rdev, auth_type,
++					     NL80211_CMD_CONNECT))
++			return -EINVAL;
++
++		if (auth_type == NL80211_AUTHTYPE_FILS_SK &&
++		    fils_sk_offload && !(changed & UPDATE_FILS_ERP_INFO))
++			return -EINVAL;
++
++		connect.auth_type = auth_type;
++		changed |= UPDATE_AUTH_TYPE;
++	}
++
+ 	wdev_lock(dev->ieee80211_ptr);
+ 	if (!wdev->current_bss)
+ 		ret = -ENOLINK;
+--
+1.9.1
