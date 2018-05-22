@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:35086 "EHLO
-        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752081AbeEDUKG (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:57414 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751196AbeEVOuO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 May 2018 16:10:06 -0400
-Date: Fri, 4 May 2018 22:09:53 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: linux-kernel@vger.kernel.org, tglx@linutronix.de,
-        Ingo Molnar <mingo@redhat.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Alexander Aring <alex.aring@gmail.com>,
-        Stefan Schmidt <stefan@osg.samsung.com>,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-wpan@vger.kernel.org,
-        Anna-Maria Gleixner <anna-maria@linutronix.de>
-Subject: Re: [RFC PATCH 2/2] net: mac808211: mac802154: use
- lockdep_assert_in_softirq() instead own warning
-Message-ID: <20180504200953.GW12217@hirez.programming.kicks-ass.net> (sfid-20180504_221041_435999_C72D1D63)
-References: <20180504175144.12179-1-bigeasy@linutronix.de>
- <20180504175144.12179-3-bigeasy@linutronix.de>
- <20180504183249.GU12217@hirez.programming.kicks-ass.net>
- <20180504184538.gavk7e2vtm73e32w@linutronix.de>
- <20180504185132.GV12217@hirez.programming.kicks-ass.net>
- <20180504190735.izmzibhb66gjb5wr@linutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180504190735.izmzibhb66gjb5wr@linutronix.de>
+        Tue, 22 May 2018 10:50:14 -0400
+Message-ID: <1527000610.6787.14.camel@sipsolutions.net> (sfid-20180522_165017_766861_D4036905)
+Subject: Re: [PATCH] cfg80211: Fix support for flushing old scan results
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Tim Kourt <tim.a.kourt@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 22 May 2018 16:50:10 +0200
+In-Reply-To: <c8f3d9a7-b978-8af8-6594-d0ae66652956@gmail.com> (sfid-20180522_164839_367773_27F91548)
+References: <20180511164835.40161-1-tim.a.kourt@linux.intel.com>
+         <1526631206.3805.1.camel@sipsolutions.net>
+         <d12d4d4d-25d6-3cd0-1399-27de09c7f8c5@gmail.com>
+         <5AFF2169.4010003@broadcom.com>
+         <51c56faf-267d-c204-243a-31fc91976c5e@gmail.com>
+         <5B03C5BA.50804@broadcom.com>
+         <c8f3d9a7-b978-8af8-6594-d0ae66652956@gmail.com>
+         (sfid-20180522_164839_367773_27F91548)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 04, 2018 at 09:07:35PM +0200, Sebastian Andrzej Siewior wrote:
-> On 2018-05-04 20:51:32 [+0200], Peter Zijlstra wrote:
-
-> > softirqs disabled, ack that is exactly what it checks.
-> > 
-> > But afaict the assertion you introduced tests that we are _in_ softirq
-> > context, which is not the same.
+On Tue, 2018-05-22 at 09:48 -0500, Denis Kenzior wrote:
+> Hi Arend,
 > 
-> indeed, now it clicked. Given what I wrote in the cover letter would you
-> be in favour of (a proper) lockdep_assert_BH_disabled() or the cheaper
-> local_bh_enable() (assuming the network folks don't mind the cheaper
-> version)?
+> > > Are you saying the first result is from the Beacon and the other is from
+> > > the Probe Response?  Then why are the 'Information elements from Probe
+> > > Response frame' the way they are?
+> > 
+> > Nope. I am not saying that. I am saying that there are two probe 
+> > requests being sent. One with broadcast ssid, ie. ssid_len == 0, and 
+> > with ssid 'myssid'. But it is speculation without a sniffer capture.
+> 
+> Ah I see what you mean now.  No, we traced this down to hostapd itself 
+> and it was receiving a single Probe Request with the ssid set and 
+> replying to it per spec.  So I'm pretty confident this scenario isn't 
+> what is happening.  Let me try to get some actual packet captures...
 
-Depends a bit on what the code wants I suppose. If the code is in fact
-fine with the stronger in-softirq assertion, that'd be best. Otherwise I
-don't object to a lockdep_assert_bh_disabled() to accompany the
-lockdep_assert_irq_disabled() we already have either.
+Was "myssid" the real SSID, or did you hide that from us and it was
+really 9 characters long in the original?
+
+If it was really 9 characters long I could imagine that there's a
+different bug with a beacon with all-zero-bytes having been received
+(and getting stuck into the probe response buffer for some reason), and
+then you *should* see both entries.
+
+johannes
