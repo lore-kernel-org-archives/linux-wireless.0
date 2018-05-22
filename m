@@ -1,70 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40986 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932874AbeEHSNC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 May 2018 14:13:02 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, keescook@chromium.org,
-        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
-        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
-        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
-        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
-        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
-        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        cantabile.desu@gmail.com, ast@fb.com, hare@suse.com,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl,
-        davem@davemloft.net, arve@android.com, tkjos@android.com,
-        corbet@lwn.net, mchehab+samsung@kernel.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v6 07/13] firmware_loader: make firmware_fallback_sysfs() print more useful
-Date: Tue,  8 May 2018 11:12:41 -0700
-Message-Id: <20180508181247.19431-8-mcgrof@kernel.org> (sfid-20180508_201627_163755_3F99BE45)
-In-Reply-To: <20180508181247.19431-1-mcgrof@kernel.org>
-References: <20180508181247.19431-1-mcgrof@kernel.org>
+Received: from s3.sipsolutions.net ([144.76.63.242]:51274 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751275AbeEVIVX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 May 2018 04:21:23 -0400
+Message-ID: <1526977281.6787.8.camel@sipsolutions.net> (sfid-20180522_102142_731728_90542AC8)
+Subject: Re: [PATCH] nl80211: Reject disconnect commands except from
+ conn_owner
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        linux-wireless@vger.kernel.org
+Date: Tue, 22 May 2018 10:21:21 +0200
+In-Reply-To: <5B03CC75.7060908@broadcom.com> (sfid-20180522_095331_635148_CE4BF2A3)
+References: <20180522004602.19370-1-andrew.zaborowski@intel.com>
+         <5B03CC75.7060908@broadcom.com> (sfid-20180522_095331_635148_CE4BF2A3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we resort to using the sysfs fallback mechanism we don't print
-the filename. This can be deceiving given we could have a series of
-callers intertwined and it'd be unclear exactly for what firmware
-this was meant for.
+On Tue, 2018-05-22 at 09:53 +0200, Arend van Spriel wrote:
+> On 5/22/2018 2:46 AM, Andrew Zaborowski wrote:
+> > Reject NL80211_CMD_DISCONNECT, NL80211_CMD_DISASSOCIATE,
+> > NL80211_CMD_DEAUTHENTICATE and NL80211_CMD_ASSOCIATE commands
+> > from clients other than the connection owner set in the connect,
+> > authenticate or associate commands, if it was set.
+> > 
+> > The main point of this check is to prevent chaos when two processes
+> > try to use nl80211 at the same time, it's not a security measure.
+> > The same thing should possibly be done for JOIN_IBSS/LEAVE_IBSS and
+> > START_AP/STOP_AP.
+> 
+> Isn't this V2? What has changed since last time?
 
-Additionally, although we don't currently use FW_OPT_NO_WARN when
-dealing with the fallback mechanism, we will soon, so just respect
-its use consistently.
+It was RFC before I guess.
 
-And even if you *don't* want to print always on failure, you may
-want to print when debugging so enable dynamic debug print when
-FW_OPT_NO_WARN is used.
+Doesn't look different to me.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- drivers/base/firmware_loader/fallback.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
-index 9169e7b9800c..b676a99c469c 100644
---- a/drivers/base/firmware_loader/fallback.c
-+++ b/drivers/base/firmware_loader/fallback.c
-@@ -690,6 +690,11 @@ int firmware_fallback_sysfs(struct firmware *fw, const char *name,
- 	if (!fw_run_sysfs_fallback(opt_flags))
- 		return ret;
- 
--	dev_warn(device, "Falling back to user helper\n");
-+	if (!(opt_flags & FW_OPT_NO_WARN))
-+		dev_warn(device, "Falling back to syfs fallback for: %s\n",
-+				 name);
-+	else
-+		dev_dbg(device, "Falling back to sysfs fallback for: %s\n",
-+				name);
- 	return fw_load_from_user_helper(fw, name, device, opt_flags);
- }
--- 
-2.17.0
+johannes
