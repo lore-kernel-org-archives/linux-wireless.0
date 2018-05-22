@@ -1,46 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:38691 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752513AbeEGIoR (ORCPT
+Received: from fllnx210.ext.ti.com ([198.47.19.17]:31538 "EHLO
+        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751279AbeEVOFa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 04:44:17 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 11/30] staging: wilc1000: use sizeof(*wdev) to allocate memory in wilc_wfi_cfg_alloc()
-Date: Mon, 7 May 2018 14:13:15 +0530
-Message-ID: <1525682614-3824-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104421_676075_3D9D3DF8)
-In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 22 May 2018 10:05:30 -0400
+From: "Reizer, Eyal" <eyalr@ti.com>
+To: Tony Lindgren <tony@atomide.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        KISHON VIJAY ABRAHAM <kishon@ti.com>,
+        "Mishol, Guy" <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        "Hahn, Maital" <maitalm@ti.com>,
+        "Altshul, Maxim" <maxim.altshul@ti.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+        "Loewy, Chen" <c-loewy@ti.com>
+Subject: RE: [EXTERNAL] [PATCHv2 0/5] Runtime PM support for wlcore
+Date: Tue, 22 May 2018 14:05:22 +0000
+Message-ID: <92eff64ea59740bfa395b53ff22c07d3@ti.com> (sfid-20180522_160534_430175_77838A73)
+References: <20180517185029.71716-1-tony@atomide.com>
+ <bff51dcc6fd441d9ab42db273219aaf4@ti.com>
+ <20180521163830.GZ98604@atomide.com> <20180521224339.GD98604@atomide.com>
+ <38ddca4c73bb4dbf835a84133035dbfb@ti.com>
+ <20180522133158.GE98604@atomide.com>
+ <eae7c720c09549f0b4ff83f88ad6959b@ti.com>
+ <20180522135511.GI98604@atomide.com>
+In-Reply-To: <20180522135511.GI98604@atomide.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix below reported checkpatch issues in wilc_wfi_cfg_alloc().
-kzalloc(sizeof(*wdev)...) over kzalloc(sizeof(struct wireless_dev)
+> > >
+> > > OK try replacing the pm_runtime_put_noidle() above with just
+> > > pm_runtime_put_sync(). The reason why I put noidle there was the
+> > > wlcore_fw_sleep() call, with that gone put_sync should do the trick.
+> > >
+> >
+> > I have tried that already. Same problem. The last call to:
+> > ret =3D wlcore_raw_write32(wl, HW_ACCESS_ELP_CTRL_REG, ELPCTRL_SLEEP)
+> >
+> > which allows the firmware to get into ELP state during wowlan suspend i=
+s
+> > only completing after system resume for some unknown reason...
+>=20
+> Hmm maybe try also adding wl1271_power_off(wl) after put_sync()?
+>=20
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+No, we don't want to power off the chip in wowlan mode.
+We power it of only during standard suspend.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 8be3c4c..102facd 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2194,7 +2194,7 @@ static struct wireless_dev *wilc_wfi_cfg_alloc(void)
- {
- 	struct wireless_dev *wdev;
- 
--	wdev = kzalloc(sizeof(struct wireless_dev), GFP_KERNEL);
-+	wdev = kzalloc(sizeof(*wdev), GFP_KERNEL);
- 	if (!wdev)
- 		goto _fail_;
- 
--- 
-2.7.4
+The trick is that it stays on during suspend and can be used=20
+As a wakeup source to the host on specific packets received by
+The firmware over the air.
+
+BR,
+Eyal
