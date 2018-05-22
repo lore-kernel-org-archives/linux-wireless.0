@@ -1,87 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 9pmail.ess.barracuda.com ([64.235.154.211]:36720 "EHLO
-        9pmail.ess.barracuda.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935346AbeEJKti (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34124 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751236AbeEVN5P (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 May 2018 06:49:38 -0400
-Subject: Re: Regression caused by commit 882164a4a928
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-CC: =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-References: <7bbc067a-c412-3d2e-174a-abc31b46e246@lwfinger.net>
- <CACna6rxb9KSQfGwi__xxSMACAxh-bOV9SR1NsnUVe8ASdA0Liw@mail.gmail.com>
-From: Matt Redfearn <matt.redfearn@mips.com>
-Message-ID: <6e64abf4-a8c1-21db-e740-79f031b4560e@mips.com> (sfid-20180510_124951_961791_2731398D)
-Date: Thu, 10 May 2018 11:49:52 +0100
+        Tue, 22 May 2018 09:57:15 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Ramon Fried <ramon.fried@gmail.com>
+Cc: jjohnson@codeaurora.org, linux-kernel@vger.kernel.org,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, Eyal Ilsar <eilsar@codeaurora.org>,
+        Ramon Fried <ramon.fried@linaro.org>
+Subject: Re: [PATCH v2] wcn36xx: Add support for Factory Test Mode (FTM)
+References: <20180518103122.28439-1-ramon.fried@gmail.com>
+Date: Tue, 22 May 2018 16:57:09 +0300
+In-Reply-To: <20180518103122.28439-1-ramon.fried@gmail.com> (Ramon Fried's
+        message of "Fri, 18 May 2018 13:31:22 +0300")
+Message-ID: <87a7srvlmy.fsf@purkki.adurom.net> (sfid-20180522_155734_567591_CDD3163A)
 MIME-Version: 1.0
-In-Reply-To: <CACna6rxb9KSQfGwi__xxSMACAxh-bOV9SR1NsnUVe8ASdA0Liw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rafał,
+Ramon Fried <ramon.fried@gmail.com> writes:
 
-On 10/05/18 11:41, Rafał Miłecki wrote:
-> On 7 May 2018 at 17:44, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->> Although commit 882164a4a928 ("ssb: Prevent build of PCI host features in
->> module") appeared to be harmless, it leads to complete failure of drivers
->> b43. and b43legacy, and likely affects b44 as well. The problem is that
->> CONFIG_SSB_PCIHOST is undefined, which prevents the compilation of the code
->> that controls the PCI cores of the device. See
->> https://bugzilla.redhat.com/show_bug.cgi?id=1572349 for details.
->>
->> As the underlying errors ("pcibios_enable_device" undefined, and
->> "register_pci_controller" undefined) do not appear on the architectures that
->> I have tested (x86_64, x86, and ppc), I suspect something in the
->> arch-specific code for your setup (MIPS?). As I have no idea on how to fix
->> that problem, would the following patch work for you?
->>
->> diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
->> index 9371651d8017..3743533c8057 100644
->> --- a/drivers/ssb/Kconfig
->> +++ b/drivers/ssb/Kconfig
->> @@ -117,7 +117,7 @@ config SSB_SERIAL
->>
->>   config SSB_DRIVER_PCICORE_POSSIBLE
->>          bool
->> -       depends on SSB_PCIHOST && SSB = y
->> +       depends on SSB_PCIHOST && (SSB = y || !MIPS)
->>          default y
->>
->>   config SSB_DRIVER_PCICORE
-> 
-> I strongly suggest we take a step back, slow down a bit and look at
-> the original problem.
-> 
-> In driver_pcicore.c there is MIPS specific code. It's protected using
-> #ifdef CONFIG_SSB_PCICORE_HOSTMODE
-> (...)
-> #endif
-> 
-> If anyone has ever seen
-> ERROR: "pcibios_enable_device" [drivers/ssb/ssb.ko] undefined!
-> ERROR: "register_pci_controller" [drivers/ssb/ssb.ko] undefined!
-> make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
-> it means he managed to get CONFIG_SSB_PCICORE_HOSTMODE set on non-MIPS system.
+> From: Eyal Ilsar <eilsar@codeaurora.org>
+>
+> Introduce infrastructure for supporting Factory Test Mode (FTM) of the
+> wireless LAN subsystem. In order for the user space to access the
+> firmware in test mode the relevant netlink channel needs to be exposed
+> from the kernel driver.
+>
+> The above is achieved as follows:
+> 1) Register wcn36xx driver to testmode callback from netlink
+> 2) Add testmode callback implementation to handle incoming FTM commands
+> 3) Add FTM command packet structure
+> 4) Add handling for GET_BUILD_RELEASE_NUMBER (msgid=0x32A2)
+> 5) Add generic handling for all PTT_MSG packets
+>
+> Signed-off-by: Eyal Ilsar <eilsar@codeaurora.org>
+> Signed-off-by: Ramon Fried <ramon.fried@linaro.org>
 
-I saw this on a MIPS system (to my knowledge, this does not happen on 
-other arches due to the Kconfig rules you describe), which is what my 
-original patch was attempting to fix, but appears to have caused 
-problems on other arches.
+kbuild bot reported a warning:
 
-Thanks,
-Matt
+drivers/net/wireless/ath/wcn36xx/testmode.c:122:5: warning: 'msg' may be used uninitialized in this function [-Wmaybe-uninitialized]
 
-
-> 
-> We should rather answer how did that happen and fix it.
-> 
-> SSB_PCICORE_HOSTMODE depends on SSB_DRIVER_MIPS
-> SSB_DRIVER_MIPS depends on MIPS
-> 
-> How is that possible to set SSB_PCICORE_HOSTMODE with non-MIPS config?
-> Is there some mistake in Kconfig I can't see?
-> 
+-- 
+Kalle Valo
