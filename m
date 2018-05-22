@@ -1,88 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:41547 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938294AbeE1L31 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55416 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751160AbeEVJQF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 May 2018 07:29:27 -0400
-Received: by mail-wr0-f196.google.com with SMTP id u12-v6so19713270wrn.8
-        for <linux-wireless@vger.kernel.org>; Mon, 28 May 2018 04:29:26 -0700 (PDT)
-From: Loic Poulain <loic.poulain@linaro.org>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        Loic Poulain <loic.poulain@linaro.org>
-Subject: [PATCH 2/3] wcn36xx: Track associated stations
-Date: Mon, 28 May 2018 13:29:19 +0200
-Message-Id: <1527506960-13358-2-git-send-email-loic.poulain@linaro.org> (sfid-20180528_132947_186037_6336DE3A)
-In-Reply-To: <1527506960-13358-1-git-send-email-loic.poulain@linaro.org>
-References: <1527506960-13358-1-git-send-email-loic.poulain@linaro.org>
+        Tue, 22 May 2018 05:16:05 -0400
+From: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Venkateswara Naralasetty <vnaralas@codeaurora.org>
+Subject: [PATCH] cfg80211: Add cumulative channel survey dump support.
+Date: Tue, 22 May 2018 14:45:56 +0530
+Message-Id: <1526980556-26707-1-git-send-email-vnaralas@codeaurora.org> (sfid-20180522_111610_168903_E351497E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add list of associated stations(STA, AP, peer...) per vif.
+This patch provides support to send accumulated survey data to
+user if low level drivers provides non-accumulated survey data.
 
-Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
 ---
- drivers/net/wireless/ath/wcn36xx/main.c    | 5 +++++
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 3 +++
- 2 files changed, 8 insertions(+)
+ include/net/cfg80211.h |  5 +++++
+ net/wireless/core.c    | 21 +++++++++++++++++++++
+ net/wireless/nl80211.c | 34 +++++++++++++++++++++++++++++++++-
+ 3 files changed, 59 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 4648a78..6fd0bf6 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -567,6 +567,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 				key_conf->keyidx,
- 				key_conf->keylen,
- 				key);
-+
- 			if ((WLAN_CIPHER_SUITE_WEP40 == key_conf->cipher) ||
- 			    (WLAN_CIPHER_SUITE_WEP104 == key_conf->cipher)) {
- 				sta_priv->is_data_encrypted = true;
-@@ -984,6 +985,7 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
- 	mutex_lock(&wcn->conf_mutex);
- 
- 	vif_priv->bss_index = WCN36XX_HAL_BSS_INVALID_IDX;
-+	INIT_LIST_HEAD(&vif_priv->sta_list);
- 	list_add(&vif_priv->list, &wcn->vif_list);
- 	wcn36xx_smd_add_sta_self(wcn, vif);
- 
-@@ -1005,6 +1007,8 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 
- 	spin_lock_init(&sta_priv->ampdu_lock);
- 	sta_priv->vif = vif_priv;
-+	list_add(&sta_priv->list, &vif_priv->sta_list);
-+
- 	/*
- 	 * For STA mode HW will be configured on BSS_CHANGED_ASSOC because
- 	 * at this stage AID is not available yet.
-@@ -1032,6 +1036,7 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&wcn->conf_mutex);
- 
-+	list_del(&sta_priv->list);
- 	wcn36xx_smd_delete_sta(wcn, sta_priv->sta_index);
- 	sta_priv->vif = NULL;
- 
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index 11e7401..a58f313 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -129,6 +129,8 @@ struct wcn36xx_vif {
- 	u8 self_sta_index;
- 	u8 self_dpu_desc_index;
- 	u8 self_ucast_dpu_sign;
-+
-+	struct list_head sta_list;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index fc40843..e0ecd7d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -580,6 +580,7 @@ ieee80211_chandef_max_power(struct cfg80211_chan_def *chandef)
+  * @SURVEY_INFO_TIME_RX: receive time was filled in
+  * @SURVEY_INFO_TIME_TX: transmit time was filled in
+  * @SURVEY_INFO_TIME_SCAN: scan time was filled in
++ * @SURVEY_INFO_NON_ACC_DATA: non accumulated survey data filled in
+  *
+  * Used by the driver to indicate which info in &struct survey_info
+  * it has filled in during the get_survey().
+@@ -593,6 +594,7 @@ enum survey_info_flags {
+ 	SURVEY_INFO_TIME_RX		= BIT(5),
+ 	SURVEY_INFO_TIME_TX		= BIT(6),
+ 	SURVEY_INFO_TIME_SCAN		= BIT(7),
++	SURVEY_INFO_NON_ACC_DATA        = BIT(8),
  };
  
  /**
-@@ -154,6 +156,7 @@ struct wcn36xx_vif {
-  * |______________|_____________|_______________|
+@@ -3787,6 +3789,7 @@ struct wiphy_iftype_ext_capab {
+  *	bitmap of &enum nl80211_band values.  For instance, for
+  *	NL80211_BAND_2GHZ, bit 0 would be set
+  *	(i.e. BIT(NL80211_BAND_2GHZ)).
++ * @cumulative_survey: cumulated survey information for all channels.
   */
- struct wcn36xx_sta {
-+	struct list_head list;
- 	struct wcn36xx_vif *vif;
- 	u16 aid;
- 	u16 tid;
+ struct wiphy {
+ 	/* assign these fields before you register the wiphy */
+@@ -3921,6 +3924,8 @@ struct wiphy {
+ 
+ 	u8 nan_supported_bands;
+ 
++	struct survey_info *cumulative_survey;
++
+ 	char priv[0] __aligned(NETDEV_ALIGN);
+ };
+ 
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 670aa229..4646769 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -633,6 +633,9 @@ int wiphy_register(struct wiphy *wiphy)
+ 	struct ieee80211_supported_band *sband;
+ 	bool have_band = false;
+ 	int i;
++	int n_channels = 0;
++	int idx = 0;
++
+ 	u16 ifmodes = wiphy->interface_modes;
+ 
+ #ifdef CONFIG_PM
+@@ -782,6 +785,7 @@ int wiphy_register(struct wiphy *wiphy)
+ 		}
+ 
+ 		have_band = true;
++		n_channels += sband->n_channels;
+ 	}
+ 
+ 	if (!have_band) {
+@@ -866,6 +870,21 @@ int wiphy_register(struct wiphy *wiphy)
+ 		}
+ 	}
+ 
++	wiphy->cumulative_survey = kcalloc(n_channels,
++					   sizeof(struct survey_info),
++					   GFP_KERNEL);
++	if (!wiphy->cumulative_survey)
++		return -ENOMEM;
++
++	for (band = 0; band < NUM_NL80211_BANDS; band++) {
++		sband = wiphy->bands[band];
++		if (!sband)
++			continue;
++		for (i = 0; i < sband->n_channels; i++)
++			wiphy->cumulative_survey[idx++].channel =
++				&sband->channels[i];
++	}
++
+ 	rdev->wiphy.registered = true;
+ 	rtnl_unlock();
+ 
+@@ -955,6 +974,8 @@ void wiphy_unregister(struct wiphy *wiphy)
+ #endif
+ 	cfg80211_rdev_free_wowlan(rdev);
+ 	cfg80211_rdev_free_coalesce(rdev);
++
++	kfree(wiphy->cumulative_survey);
+ }
+ EXPORT_SYMBOL(wiphy_unregister);
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index fe27ab4..2f22d74 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8024,11 +8024,13 @@ static int nl80211_dump_survey(struct sk_buff *skb, struct netlink_callback *cb)
+ {
+ 	struct nlattr **attrbuf = genl_family_attrbuf(&nl80211_fam);
+ 	struct survey_info survey;
++	struct survey_info *survey_data = &survey;
+ 	struct cfg80211_registered_device *rdev;
+ 	struct wireless_dev *wdev;
+ 	int survey_idx = cb->args[2];
+ 	int res;
+ 	bool radio_stats;
++	int n_channels;
+ 
+ 	rtnl_lock();
+ 	res = nl80211_prepare_wdev_dump(skb, cb, &rdev, &wdev);
+@@ -8048,7 +8050,12 @@ static int nl80211_dump_survey(struct sk_buff *skb, struct netlink_callback *cb)
+ 		goto out_err;
+ 	}
+ 
++	n_channels = ieee80211_get_num_supported_channels(wdev->wiphy);
++
+ 	while (1) {
++		if (n_channels <= survey_idx)
++			break;
++
+ 		res = rdev_dump_survey(rdev, wdev->netdev, survey_idx, &survey);
+ 		if (res == -ENOENT)
+ 			break;
+@@ -8062,10 +8069,35 @@ static int nl80211_dump_survey(struct sk_buff *skb, struct netlink_callback *cb)
+ 			continue;
+ 		}
+ 
++		if (survey.filled & SURVEY_INFO_NON_ACC_DATA) {
++			struct survey_info *cumulative_survey =
++				&wdev->wiphy->cumulative_survey[survey_idx];
++
++			if (cumulative_survey->channel->center_freq !=
++					survey.channel->center_freq) {
++				survey_idx++;
++				continue;
++			}
++			if (survey.filled & SURVEY_INFO_NOISE_DBM)
++				cumulative_survey->noise = survey.noise;
++			if (survey.filled & SURVEY_INFO_TIME)
++				cumulative_survey->time += survey.time;
++			if (survey.filled & SURVEY_INFO_TIME_BUSY)
++				cumulative_survey->time_busy +=
++							survey.time_busy;
++			if (survey.filled & SURVEY_INFO_TIME_RX)
++				cumulative_survey->time_rx += survey.time_rx;
++			if (survey.filled & SURVEY_INFO_TIME_TX)
++				cumulative_survey->time_tx += survey.time_tx;
++
++			cumulative_survey->filled |= survey.filled;
++			survey_data = cumulative_survey;
++		}
++
+ 		if (nl80211_send_survey(skb,
+ 				NETLINK_CB(cb->skb).portid,
+ 				cb->nlh->nlmsg_seq, NLM_F_MULTI,
+-				wdev->netdev, radio_stats, &survey) < 0)
++				wdev->netdev, radio_stats, survey_data) < 0)
+ 			goto out;
+ 		survey_idx++;
+ 	}
 -- 
 2.7.4
