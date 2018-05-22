@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-he1eur01on0094.outbound.protection.outlook.com ([104.47.0.94]:43894
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S937995AbeE1MvH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 May 2018 08:51:07 -0400
-From: Jean-Pierre TOSONI <jp.tosoni@acksys.fr>
-To: Ahmad Zainudin <zai@pens.ac.id>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: hostapd.config file for ACS Configuration
-Date: Mon, 28 May 2018 12:51:04 +0000
-Message-ID: <AM4PR0101MB230538A7175CB7DE393B1E3EE46E0@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com> (sfid-20180528_145155_773828_95803B95)
-References: <cc7169c6-2204-4ba0-9e68-7446f5b7d11a@mail.eepis-its.edu>
-In-Reply-To: <cc7169c6-2204-4ba0-9e68-7446f5b7d11a@mail.eepis-its.edu>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:39476 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751160AbeEVAVw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 May 2018 20:21:52 -0400
+Received: by mail-ot0-f193.google.com with SMTP id l12-v6so18916408oth.6
+        for <linux-wireless@vger.kernel.org>; Mon, 21 May 2018 17:21:52 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: johannes@sipsolutions.net, arend.vanspriel@broadcom.com,
+        linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [PATCH] nl80211: Fix compilation
+Date: Mon, 21 May 2018 19:21:42 -0500
+Message-Id: <20180522002142.26149-1-denkenz@gmail.com> (sfid-20180522_022156_146393_E44B7BAC)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiAtLS0tLU1lc3NhZ2UgZCdvcmlnaW5lLS0tLS0NCj4gRGXCoDogbGludXgtd2lyZWxlc3Mtb3du
-ZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJu
-ZWwub3JnXSBEZSBsYSBwYXJ0IGRlDQo+IEFobWFkIFphaW51ZGluDQo+IEVudm95w6nCoDogbHVu
-ZGkgMjggbWFpIDIwMTggMDQ6MzINCj4gw4DCoDogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwu
-b3JnDQo+IE9iamV0wqA6IGhvc3RhcGQuY29uZmlnIGZpbGUgZm9yIEFDUyBDb25maWd1cmF0aW9u
-DQo+IA0KPiBIZWxsbyBhbGwsDQo+IA0KPiBJIGluc3RhbGwgaG9zdGFwZCB1c2UgYXB0LWdldCBp
-bnN0YWxsDQo+IA0KPiBGcm9tIHR1dG9yaWFsIGZvciBBQ1MgKEF1dG9tYXRpYyBDaGFubmVsIFNl
-bGVjdGlvbikgY29uZmlndXJhdGlvbiwgSSBtdXN0IGVuYWJsZSBBQ1MgaW4gaG9zdGFwZCdzDQo+
-IC5jb25maWcgZmlsZSA6DQo+IA0KPiBDT05GSUdfQUNTPXkNCj4gDQo+IEkgaGF2ZSB0cm91Ymxl
-IGZpbmRpbmcgIGhvc3RhcGQuY29uZmlnIGZpbGUgdG9vIGVuYWJsZSBDT05GSUdfQUNTPXkuIEkg
-aGF2ZSBmaW5pc2ggY29uZmlndXJlDQo+IGNoYW5uZWw9YWNzX3N1cnZleSBpbiBob3N0YXBkLmNv
-bmYgZmlsZS4NCj4gDQoNCmhvc3RhcGQuY29uZmlnIGlzIHVzZWQgd2hlbiBjb21waWxpbmcgdGhl
-IHNvdXJjZSBjb2RlIG9mIGhvc3RhcGQuIEl0IGlzIG5vdCBhIHJ1bnRpbWUgY29uZmlndXJhdGlv
-biBmaWxlLg0KDQo+IEFyZSB0aGUgaG9zdGFwZC5jb25maWcgYW5kIGhvc3RhcGQuY29uZiBkaWZm
-ZXJlbnQgZmlsZXM/LCBhbmQgSSBhbSBub3QgeWV0IGZvdW5kIHRoZSAgaG9zdGFwZC5jb25maWcN
-Cj4gZmlsZS4NCg0KWWVzIHRoZXkgYXJlIGRpZmZlcmVudC4gSG9zdGFwZC5jb25mIGlzIGZvciBy
-dW50aW1lIGNvbmZpZ3VyYXRpb24sIGhvc3RhcGQuY29uZmlnIGlzIGZvciBjb21waWxhdGlvbiBv
-cHRpb25zLg0KDQo+IA0KPiBDYW4gaGVscCBtZT8NCg0KSSBndWVzcyB5b3Ugd2lsbCBnZXQgbW9y
-ZSBoZWxwIG9uIGEgZGViaWFuIGZvcnVtLCBvciBtYXliZSBvbiB0aGUgaG9zdGFwIG1haWxpbmcg
-bGlzdC4gVGhpcyBvbmUgaXMgbWFpbmx5IGZvciBrZXJuZWwtc2lkZSB3aXJlbGVzcyBtYXR0ZXJz
-Lg0KDQo+IFRoYW5rIHlvdSwsDQo+IA0KPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gQWhtYWQgWmFpbnVkaW4NCj4gRGln
-aXRhbCBTaWduYWwgUHJvY2Vzc2luZyBMYWIuIEUtMjA2DQo+IFRlbGVjb21tdW5pY2F0aW9uIEVu
-Z2luZWVyaW5nIERlcGFydG1lbnQNCj4gRWxlY3Ryb25pYyBFbmdpbmVlcmluZyBQb2x5dGVjaG5p
-YyBJbnN0aXR1dGUgb2YgU3VyYWJheWEgKEVFUElTKQ0KPiBodHRwOi8vemFpLmxlY3R1cmVyLnBl
-bnMuYWMuaWQNCj4gDQo+IA0KPiANCj4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IFBFTlMvRUVQSVMgLSBCcmlk
-Z2UgVG8gVGhlIEZ1dHVyZQ0KPiBQb2xpdGVrbmlrIEVsZWt0cm9uaWthIE5lZ2VyaSBTdXJhYmF5
-YSAoUEVOUykNCj4gRWxlY3Ryb25pYyBFbmdpbmVlcmluZyBQb2x5dGVjaG5pYyBJbnN0aXR1dGUg
-b2YgU3VyYWJheWEgKEVFUElTKQ0KPiBodHRwOi8vd3d3LnBlbnMuYWMuaWQNCg==
+Commit 7ea3e110f2f8ba23f330c2f702f556acd539bcb8 seems to have
+introduced:
+
+net/wireless/nl80211.c: In function ‘nl80211_get_station’:
+net/wireless/nl80211.c:4802:34: error: incompatible type for argument 1 of ‘cfg80211_sinfo_release_content’
+   cfg80211_sinfo_release_content(sinfo);
+                                  ^~~~~
+In file included from net/wireless/nl80211.c:24:0:
+./include/net/cfg80211.h:5721:20: note: expected ‘struct station_info *’ but argument is of type ‘struct station_info’
+ static inline void cfg80211_sinfo_release_content(struct station_info *sinfo)
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+---
+ net/wireless/nl80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index fd2b1646e81a..376cb66d164c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4799,7 +4799,7 @@ static int nl80211_get_station(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+ 	if (!msg) {
+-		cfg80211_sinfo_release_content(sinfo);
++		cfg80211_sinfo_release_content(&sinfo);
+ 		return -ENOMEM;
+ 	}
+ 
+-- 
+2.13.5
