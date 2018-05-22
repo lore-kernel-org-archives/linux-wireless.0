@@ -1,323 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:64122 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751140AbeECOAj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 May 2018 10:00:39 -0400
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
-To: seth.forshee@canonical.com
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-        johannes.berg@intel.com, Haim Dreyfuss <haim.dreyfuss@intel.com>
-Subject: [PATCH v2 2/2] wireless-regdb: Parse wmm rule data
-Date: Thu,  3 May 2018 18:58:23 +0300
-Message-Id: <1525363103-8620-2-git-send-email-haim.dreyfuss@intel.com> (sfid-20180503_160051_451186_6540A839)
-In-Reply-To: <1525363103-8620-1-git-send-email-haim.dreyfuss@intel.com>
-References: <1525363103-8620-1-git-send-email-haim.dreyfuss@intel.com>
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:34639 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750859AbeEVAoW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 May 2018 20:44:22 -0400
+Received: by mail-pg0-f68.google.com with SMTP id k2-v6so7086554pgc.1
+        for <linux-wireless@vger.kernel.org>; Mon, 21 May 2018 17:44:22 -0700 (PDT)
+Received: from iss.ger.corp.intel.com ([192.55.54.41])
+        by smtp.gmail.com with ESMTPSA id r80-v6sm32204756pfe.44.2018.05.21.17.44.19
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 21 May 2018 17:44:20 -0700 (PDT)
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211_hwsim: Fix radio dump for radio idx 0
+Date: Tue, 22 May 2018 02:43:56 +0200
+Message-Id: <20180522004356.19306-1-andrew.zaborowski@intel.com> (sfid-20180522_024425_679876_3ADCDA21)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add code to parse wmm rule data.
-Also write it to the the regulatory.db fw file
+Since 6335698e24ec11e1324b916177da6721df724dd8 the radio with idx of 0
+will not get dumped in HWSIM_CMD_GET_RADIO because of the last_idx
+checks.  Offset cb->args[0] by 1 similarly to what is done in nl80211.c.
 
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
 ---
-Changes in v2:
-  - Rebase to latest master.
-  - Adapt the code according to latset changes (python 3 etc...)
-  - Remove unused function.
----
- db2fw.py   |  31 ++++++++++++++++--
- dbparse.py | 109 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 134 insertions(+), 6 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/db2fw.py b/db2fw.py
-index 91b88d3..2693256 100755
---- a/db2fw.py
-+++ b/db2fw.py
-@@ -5,6 +5,7 @@ import struct
- import hashlib
- from dbparse import DBParser
- import sys
-+from math import log
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 7bfbc5916e..32d590f4f5 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -3340,7 +3340,7 @@ static int hwsim_get_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ static int hwsim_dump_radio_nl(struct sk_buff *skb,
+ 			       struct netlink_callback *cb)
+ {
+-	int last_idx = cb->args[0];
++	int last_idx = cb->args[0] - 1;
+ 	struct mac80211_hwsim_data *data = NULL;
+ 	int res = 0;
+ 	void *hdr;
+@@ -3368,7 +3368,7 @@ static int hwsim_dump_radio_nl(struct sk_buff *skb,
+ 		last_idx = data->idx;
+ 	}
  
- MAGIC = 0x52474442
- VERSION = 20
-@@ -26,6 +27,13 @@ def create_collections(countries):
-         result[(c.permissions, c.dfs_region)] = 1
-     return list(result)
+-	cb->args[0] = last_idx;
++	cb->args[0] = last_idx + 1;
  
-+def create_wmms(countries):
-+    result = {}
-+    for c in countries.itervalues():
-+        for rule in c.permissions:
-+            if rule.wmmrule is not None:
-+                result[rule.wmmrule] = 1
-+    return list(result)
- 
- def be32(output, val):
-     output.write(struct.pack('>I', val))
-@@ -63,6 +71,8 @@ rules = create_rules(countries)
- rules.sort()
- collections = create_collections(countries)
- collections.sort()
-+wmms = create_wmms(countries)
-+wmms.sort()
- 
- output = BytesIO()
- 
-@@ -79,10 +89,19 @@ for alpha2 in countrynames:
-     country_ptrs[alpha2] = PTR(output)
- output.write(b'\x00' * 4)
- 
-+wmmdb = {}
-+for w in wmms:
-+    assert output.tell() & 3 == 0
-+    wmmdb[w] = output.tell() >> 2
-+    for r in w._as_tuple():
-+        ecw = int(log(r[0] + 1, 2)) << 4 | int(log(r[1] + 1, 2))
-+        ac = (ecw, r[2],r[3])
-+        output.write(struct.pack('>BBH', *ac))
-+
- reg_rules = {}
- flags = 0
- for reg_rule in rules:
--    freq_range, power_rule = reg_rule.freqband, reg_rule.power
-+    freq_range, power_rule, wmm_rule = reg_rule.freqband, reg_rule.power, reg_rule.wmmrule
-     reg_rules[reg_rule] = output.tell()
-     assert power_rule.max_ant_gain == 0
-     flags = 0
-@@ -102,13 +121,19 @@ for reg_rule in rules:
-     cac_timeout = 0 # TODO
-     if not (flags & 1<<2):
-         cac_timeout = 0
--    if cac_timeout:
-+    if cac_timeout or wmm_rule:
-+        rule_len += 2
-+    if wmm_rule is not None:
-         rule_len += 2
-     output.write(struct.pack('>BBHIII', rule_len, flags, int(power_rule.max_eirp * 100),
-                              int(freq_range.start * 1000), int(freq_range.end * 1000), int(freq_range.maxbw * 1000),
-                              ))
--    if cac_timeout:
-+    if rule_len > 16:
-         output.write(struct.pack('>H', cac_timeout))
-+
-+    if rule_len > 18:
-+        be16(output, wmmdb[wmm_rule])
-+
-     while rule_len % 4:
-         output.write('\0')
-         rule_len += 1
-diff --git a/dbparse.py b/dbparse.py
-index d73d1bd..5cb8b3f 100755
---- a/dbparse.py
-+++ b/dbparse.py
-@@ -3,6 +3,9 @@
- from builtins import bytes
- from functools import total_ordering
- import sys, math
-+from math import ceil, log
-+from collections import defaultdict, OrderedDict
-+import attr
- 
- # must match <linux/nl80211.h> enum nl80211_reg_rule_flags
- 
-@@ -28,6 +31,22 @@ dfs_regions = {
- }
- 
- @total_ordering
-+
-+@attr.s(frozen=True)
-+class WmmRule(object):
-+    vo_c = attr.ib()
-+    vi_c = attr.ib()
-+    be_c = attr.ib()
-+    bk_c = attr.ib()
-+    vo_ap = attr.ib()
-+    vi_ap = attr.ib()
-+    be_ap = attr.ib()
-+    bk_ap = attr.ib()
-+
-+    def _as_tuple(self):
-+        return (self.vo_c, self.vi_c, self.be_c, self.bk_c,
-+                self.vo_ap, self.vi_ap, self.be_ap, self.bk_ap)
-+
- class FreqBand(object):
-     def __init__(self, start, end, bw, comments=None):
-         self.start = start
-@@ -89,11 +108,13 @@ class FlagError(Exception):
- 
- @total_ordering
- class Permission(object):
--    def __init__(self, freqband, power, flags):
-+    def __init__(self, freqband, power, flags, wmmrule):
-         assert isinstance(freqband, FreqBand)
-         assert isinstance(power, PowerRestriction)
-+        assert isinstance(wmmrule, WmmRule) or wmmrule is None
-         self.freqband = freqband
-         self.power = power
-+        self.wmmrule = wmmrule
-         self.flags = 0
-         for flag in flags:
-             if not flag in flag_definitions:
-@@ -102,7 +123,7 @@ class Permission(object):
-         self.textflags = flags
- 
-     def _as_tuple(self):
--        return (self.freqband, self.power, self.flags)
-+        return (self.freqband, self.power, self.flags, self.wmmrule)
- 
-     def __eq__(self, other):
-         return (self._as_tuple() == other._as_tuple())
-@@ -116,6 +137,9 @@ class Permission(object):
-     def __hash__(self):
-         return hash(self._as_tuple())
- 
-+    def __str__(self):
-+        return str(self.freqband) + str(self.power) + str(self.wmmrule)
-+
- class Country(object):
-     def __init__(self, dfs_region, permissions=None, comments=None):
-         self._permissions = permissions or []
-@@ -249,6 +273,61 @@ class DBParser(object):
-         self._powerrev[p] = pname
-         self._powerline[pname] = self._lineno
- 
-+    def _parse_wmmrule(self, line):
-+        regions = line[:-1].strip()
-+        if not regions:
-+            self._syntax_error("'wmmrule' keyword must be followed by region")
-+
-+        regions = regions.split(',')
-+
-+        self._current_regions = {}
-+        for region in regions:
-+            if region in self._wmm_rules:
-+                self._warn("region %s was added already to wmm rules" % region)
-+            self._current_regions[region] = 1
-+        self._comments = []
-+
-+    def _validate_input(self, cw_min, cw_max, aifsn, cot):
-+        if  cw_min < 1:
-+            self._syntax_error("Invalid cw_min value (%d)" % cw_min)
-+        if cw_max < 1:
-+            self._syntax_error("Invalid cw_max value (%d)" % cw_max)
-+        if cw_min > cw_max:
-+            self._syntax_error("Inverted contention window (%d - %d)" %
-+                    (cw_min, cw_max))
-+        if not (bin(cw_min + 1).count('1') == 1 and cw_min < 2**15):
-+            self._syntax_error("Invalid cw_min value should be power of 2 - 1 (%d)"
-+                    % cw_min)
-+        if not (bin(cw_max + 1).count('1') == 1 and cw_max < 2**15):
-+            self._syntax_error("Invalid cw_max value should be power of 2 - 1 (%d)"
-+                    % cw_max)
-+        if aifsn < 1:
-+            self._syntax_error("Invalid aifsn value (%d)" % aifsn)
-+        if cot < 0:
-+            self._syntax_error("Invalid cot value (%d)" % cot)
-+
-+
-+    def _validate_size(self, var, bytcnt):
-+        return bytcnt < ceil(len(bin(var)[2:]) / 8.0)
-+
-+    def _parse_wmmrule_item(self, line):
-+        bytcnt = (2.0, 2.0, 1.0, 2.0)
-+        try:
-+            ac, cval = line.split(':')
-+            if not ac:
-+                self._syntax_error("wmm item must have ac prefix")
-+        except ValueError:
-+                self._syntax_error("access category must be followed by colon")
-+        p = tuple([int(v.split('=', 1)[1]) for v in cval.split(',')])
-+        self._validate_input(*p)
-+        for v, b in zip(p, bytcnt):
-+            if self._validate_size(v, b):
-+                self._syntax_error("unexpected input size expect %d got %d"
-+                        % (b, v))
-+
-+            for r in self._current_regions:
-+                self._wmm_rules[r][ac] = p
-+
-     def _parse_country(self, line):
-         try:
-             cname, cvals= line.split(':', 1)
-@@ -307,6 +386,15 @@ class DBParser(object):
-             line = line.split(',')
-             pname = line[0]
-             flags = line[1:]
-+        w = None
-+        if flags and 'wmmrule' in flags[-1]:
-+            try:
-+                region = flags.pop().split('=', 1)[1]
-+                if region not in self._wmm_rules.keys():
-+                    self._syntax_error("No wmm rule for %s" % region)
-+            except IndexError:
-+                self._syntax_error("flags is empty list or no region was found")
-+            w = WmmRule(*self._wmm_rules[region].values())
- 
-         if not bname in self._bands:
-             self._syntax_error("band does not exist")
-@@ -320,7 +408,7 @@ class DBParser(object):
-         b = self._bands[bname]
-         p = self._power[pname]
-         try:
--            perm = Permission(b, p, flags)
-+            perm = Permission(b, p, flags, w)
-         except FlagError as e:
-             self._syntax_error("Invalid flag '%s'" % e.flag)
-         for cname, c in self._current_countries.items():
-@@ -332,6 +420,7 @@ class DBParser(object):
- 
-     def parse(self, f):
-         self._current_countries = None
-+        self._current_regions = None
-         self._bands = {}
-         self._power = {}
-         self._countries = {}
-@@ -343,6 +432,7 @@ class DBParser(object):
-         self._powerdup = {}
-         self._bandline = {}
-         self._powerline = {}
-+        self._wmm_rules = defaultdict(lambda: OrderedDict())
- 
-         self._comments = []
- 
-@@ -354,6 +444,7 @@ class DBParser(object):
-                 self._comments.append(line[1:].strip())
-             line = line.replace(' ', '').replace('\t', '')
-             if not line:
-+                self._current_regions = None
-                 self._comments = []
-             line = line.split('#')[0]
-             if not line:
-@@ -361,17 +452,29 @@ class DBParser(object):
-             if line[0:4] == 'band':
-                 self._parse_band(line[4:])
-                 self._current_countries = None
-+                self._current_regions = None
-                 self._comments = []
-             elif line[0:5] == 'power':
-                 self._parse_power(line[5:])
-                 self._current_countries = None
-+                self._current_regions = None
-                 self._comments = []
-             elif line[0:7] == 'country':
-                 self._parse_country(line[7:])
-                 self._comments = []
-+                self._current_regions = None
-             elif self._current_countries is not None:
-+                self._current_regions = None
-                 self._parse_country_item(line)
-                 self._comments = []
-+            elif line[0:7] == 'wmmrule':
-+                self._parse_wmmrule(line[7:])
-+                self._current_countries = None
-+                self._comments = []
-+            elif self._current_regions is not None:
-+                self._parse_wmmrule_item(line)
-+                self._current_countries = None
-+                self._comments = []
-             else:
-                 self._syntax_error("Expected band, power or country definition")
- 
+ 	/* list changed, but no new element sent, set interrupted flag */
+ 	if (skb->len == 0 && cb->prev_seq && cb->seq != cb->prev_seq) {
 -- 
-2.7.4
+2.14.1
