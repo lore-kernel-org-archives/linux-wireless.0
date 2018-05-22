@@ -1,38 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:47085 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754408AbeEHKX4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 May 2018 06:23:56 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:46499 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752764AbeEVUti (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 May 2018 16:49:38 -0400
+Received: by mail-ot0-f195.google.com with SMTP id t1-v6so22585185ott.13
+        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2018 13:49:38 -0700 (PDT)
+Subject: Re: [PATCH] cfg80211: Fix support for flushing old scan results
 To: Johannes Berg <johannes@sipsolutions.net>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/3] cfg80211: Expose TXQ stats and parameters to userspace
-In-Reply-To: <1525774746.14830.4.camel@sipsolutions.net>
-References: <20180219170224.14816-1-toke@toke.dk> <20180219170224.14816-2-toke@toke.dk> <1525720384.22388.2.camel@sipsolutions.net> <87in7y5u3h.fsf@toke.dk> <1525774746.14830.4.camel@sipsolutions.net>
-Date: Tue, 08 May 2018 12:23:55 +0200
-Message-ID: <87fu325ttw.fsf@toke.dk> (sfid-20180508_122400_630626_8057FAE4)
+        Tim Kourt <tim.a.kourt@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+References: <20180511164835.40161-1-tim.a.kourt@linux.intel.com>
+ <1526631206.3805.1.camel@sipsolutions.net>
+ <d12d4d4d-25d6-3cd0-1399-27de09c7f8c5@gmail.com>
+ <1527019967.6787.45.camel@sipsolutions.net>
+ <114ca20b-7b20-7a3e-75bd-8c336d26b9c0@gmail.com>
+ <1527021608.6787.47.camel@sipsolutions.net>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <2036335b-ca8f-d63f-8142-11d81cfb9a22@gmail.com> (sfid-20180522_224942_527955_394100FA)
+Date: Tue, 22 May 2018 15:49:35 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1527021608.6787.47.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Hi Johannes,
 
-> On Tue, 2018-05-08 at 12:18 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> Johannes Berg <johannes@sipsolutions.net> writes:
->>=20
->> > net/mac80211/cfg.c:3762:12: warning: context imbalance in
->> > 'ieee80211_get_txq_stats' - different lock contexts for basic block
->>=20
->> Found and fixed all the other warnings, but I'm not seeing this one. And
->> I don't really see what is wrong with the locking in that function? What
->> am I missing?
->
-> Oh and what's wrong is that you "return 1" from the function with a lock
-> held in one place, IIRC.
+On 05/22/2018 03:40 PM, Johannes Berg wrote:
+> Hi,
+> 
+>> So I need to absorb all of this some more, but I'm still wondering why
+>> we are seeing two separate scan entries (with hidden & plain ssid) when
+>> we requested a flush?  Is there a way to force the kernel to only show
+>> us the probe responses.
+> 
+> Oh. I didn't even think about this part, but that's just a consequence
+> of having a hidden SSID. We need one entry to track the beacon, and then
+> we add another entry for each hidden SSID it may have. Some APs
+> implement multiple SSIDs that way (old Cisco equipment, IIRC, though
+> then with zero-length SSID instead of zero-bytes), so you can't lump
+> them together into a single BSS entry.
+> 
+>> It would seem that even with the flush flag set, there could still be
+>> spurious beacons getting in causing these results to appear in the scan
+>> result set, right?
+> 
+> In general anything can, there's no filtering. So you might do a flush
+> scan for a specific SSID and still get 20 (different) results, if 20
+> beacons happened to be received while you were scanning.
+> 
 
-Ohhh, right... I already fixed that in my local branch, which is why I
-can't find it I guess :D
+Okay, so we need to use NL80211_BSS_PRESP_DATA if we want to filter out 
+scan results that are coming from beacons, right?
 
--Toke
+So what's the practical use of the flush flag?  Or is that something 
+that was meant to be 'for-testing-only'?
+
+Regards,
+-Denis
