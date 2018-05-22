@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:46902 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752834AbeE3HUN (ORCPT
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:42348 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751114AbeEVKjz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 03:20:13 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 30 May 2018 10:19:56 +0300
-Message-Id: <20180530072005.633-2-luca@coelho.fi> (sfid-20180530_092019_551167_DB11340E)
-In-Reply-To: <20180530072005.633-1-luca@coelho.fi>
-References: <20180530072005.633-1-luca@coelho.fi>
-Subject: [PATCH 01/10] iwlwifi: add csr configuration for 6300 devices
+        Tue, 22 May 2018 06:39:55 -0400
+Received: by mail-qt0-f195.google.com with SMTP id c2-v6so22714449qtn.9
+        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2018 03:39:55 -0700 (PDT)
+Subject: Re: [PATCH] nl80211: Reject disconnect commands except from
+ conn_owner
+To: Andrew Zaborowski <andrew.zaborowski@intel.com>
+References: <20180522004602.19370-1-andrew.zaborowski@intel.com>
+ <5B03CC75.7060908@broadcom.com>
+ <CAOq732+LheV0qx2yJF3j-b514cqa8hfRQBVVh=Epr1_W4UUnGA@mail.gmail.com>
+Cc: linux-wireless@vger.kernel.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B03F379.5000904@broadcom.com> (sfid-20180522_123959_683696_24C6B6F8)
+Date: Tue, 22 May 2018 12:39:53 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAOq732+LheV0qx2yJF3j-b514cqa8hfRQBVVh=Epr1_W4UUnGA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+On 5/22/2018 12:33 PM, Andrew Zaborowski wrote:
+> On 22 May 2018 at 09:53, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+>> On 5/22/2018 2:46 AM, Andrew Zaborowski wrote:
+>>> Reject NL80211_CMD_DISCONNECT, NL80211_CMD_DISASSOCIATE,
+>>> NL80211_CMD_DEAUTHENTICATE and NL80211_CMD_ASSOCIATE commands
+>>> from clients other than the connection owner set in the connect,
+>>> authenticate or associate commands, if it was set.
+>>>
+>>> The main point of this check is to prevent chaos when two processes
+>>> try to use nl80211 at the same time, it's not a security measure.
+>>> The same thing should possibly be done for JOIN_IBSS/LEAVE_IBSS and
+>>> START_AP/STOP_AP.
+>>
+>> Isn't this V2? What has changed since last time?
+>
+> It's only a resend to include the Signed-off-by that I forgot the first time.
 
-Recently we have switched the csr addresses and values configuration
-from a single configuration to all devices to a per-device configuration.
-Doing that, the configuration for 6300 devices wasn't set.
-This missing definition introduced a kernel panic once trying to access
-the csr's.
+That could also be it ;-)
 
-Add the missing 6300 csr configuration.
-
-While at it, add a checker that the csr values were indeed
-configured, and bail out more gracefully if not.
-
-Fixes: a8cbb46f831d ("iwlwifi: allow different csr flags for different device families")
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/cfg/6000.c | 1 +
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 3 +++
- 2 files changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/6000.c b/drivers/net/wireless/intel/iwlwifi/cfg/6000.c
-index 51cec0bb75fc..dbcec7ce7863 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/6000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/6000.c
-@@ -373,6 +373,7 @@ const struct iwl_cfg iwl6000_3agn_cfg = {
- 	.eeprom_params = &iwl6000_eeprom_params,
- 	.ht_params = &iwl6000_ht_params,
- 	.led_mode = IWL_LED_BLINK,
-+	.csr = &iwl_csr_v1,
- };
- 
- MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 959de2f8bb28..38234bda9017 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -836,6 +836,9 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	struct iwl_trans *iwl_trans;
- 	int ret;
- 
-+	if (WARN_ONCE(!cfg->csr, "CSR addresses aren't configured\n"))
-+		return -EINVAL;
-+
- 	iwl_trans = iwl_trans_pcie_alloc(pdev, ent, cfg);
- 	if (IS_ERR(iwl_trans))
- 		return PTR_ERR(iwl_trans);
--- 
-2.17.0
+Thanks,
+Arend
