@@ -1,83 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:43922 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751605AbeEDTU7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 May 2018 15:20:59 -0400
-Date: Fri, 4 May 2018 21:20:57 +0200
-From: =?UTF-8?B?TXlsw6huZQ==?= Josserand <mylene.josserand@bootlin.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        =?UTF-8?B?TXlsw6hu?= =?UTF-8?B?ZQ==?= Josserand
-        <mylene.josserand@bootlin.com>
-Subject: rtl8188eu: link is not ready error on lm816
-Message-ID: <20180504212057.2edaa658@dell-desktop.home> (sfid-20180504_212103_624087_DEDE1081)
+Received: from mail-ot0-f172.google.com ([74.125.82.172]:36946 "EHLO
+        mail-ot0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751229AbeEVOsi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 May 2018 10:48:38 -0400
+Received: by mail-ot0-f172.google.com with SMTP id 77-v6so21285764otd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2018 07:48:38 -0700 (PDT)
+Subject: Re: [PATCH] cfg80211: Fix support for flushing old scan results
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Tim Kourt <tim.a.kourt@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+References: <20180511164835.40161-1-tim.a.kourt@linux.intel.com>
+ <1526631206.3805.1.camel@sipsolutions.net>
+ <d12d4d4d-25d6-3cd0-1399-27de09c7f8c5@gmail.com>
+ <5AFF2169.4010003@broadcom.com>
+ <51c56faf-267d-c204-243a-31fc91976c5e@gmail.com>
+ <5B03C5BA.50804@broadcom.com>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <c8f3d9a7-b978-8af8-6594-d0ae66652956@gmail.com> (sfid-20180522_164842_551857_7F70ECC4)
+Date: Tue, 22 May 2018 09:48:36 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <5B03C5BA.50804@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello everyone,
+Hi Arend,
 
-I am currently testing a USB Wifi dongle LM816 [1] on a custom platform
-based on an IMX6.
+>> Are you saying the first result is from the Beacon and the other is from
+>> the Probe Response?  Then why are the 'Information elements from Probe
+>> Response frame' the way they are?
+> 
+> Nope. I am not saying that. I am saying that there are two probe 
+> requests being sent. One with broadcast ssid, ie. ssid_len == 0, and 
+> with ssid 'myssid'. But it is speculation without a sniffer capture.
 
-My configuration:
-	kernel from mainline: v4.14
-	driver: staging R8188EU
-	firmware: rtl8188eu from linux-firmware, last commit
-	a3a26af24e29c818ef9b5661856018e21a5c49fb
+Ah I see what you mean now.  No, we traced this down to hostapd itself 
+and it was receiving a single Probe Request with the ssid set and 
+replying to it per spec.  So I'm pretty confident this scenario isn't 
+what is happening.  Let me try to get some actual packet captures...
 
-When I tried to set the wlan interface up, it says that "link is not
-ready" and that's all. Because of that, it fails to scan available
-networks.
-
-Here are commands used and their output:
-
-# dmesg
-[...]
-[   14.690152] r8188eu: module is from the staging directory, the
-quality is unknown, you have been warned. 
-[   14.703105] Chip Version
-Info: CHIP_8188E_Normal_Chip_TSMC_D_CUT_1T1R_RomVer(0)
-[...]
-
-# lsusb
-Bus 002 Device 004: ID 0bda:8179  <-- LM816
-Bus 002 Device 003: ID 0424:9e00  
-Bus 002 Device 002: ID 0424:2517  
-Bus 002 Device 001: ID 1d6b:0002  
-Bus 001 Device 001: ID 1d6b:0002  
-
-# lsmod
-Module                  Size  Used by    Tainted: G  
-dw_hdmi_ahb_audio      16384  0 
-r8188eu               401408  0 
-coda                   61440  0 
-imx_vdoa               16384  1 coda
-v4l2_mem2mem           24576  1 coda
-videobuf2_vmalloc      16384  1 coda
-evbug                  16384  0 
-
-# ifconfig wlan0 up
-[  447.639524] MAC Address = 5c:f3:70:3d:5c:71
-[  447.653636] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-# 
-# 
-# iw wlan0 scan
-command failed: No such device (-19)
-
-
-Does anyone already have this issue with this dongle? 
-If it is not the case, what is your setup? Which firmware? Which driver?
-Any help will be very appreciated.
-
-Thanks in advance,
-Best regards,
-
-[1]:
-https://www.lm-technologies.com/product/wifi-usb-nano-adapter-150mbps-lm816/
-
--- 
-Mylène Josserand, Bootlin (formerly Free Electrons)
-Embedded Linux and Kernel engineering
-http://bootlin.com
+Regards
+-Denis
