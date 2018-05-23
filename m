@@ -1,130 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53886 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751507AbeEDRoE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 May 2018 13:44:04 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, keescook@chromium.org,
-        josh@joshtriplett.org, teg@jklm.no, wagi@monom.org,
-        hdegoede@redhat.com, andresx7@gmail.com, zohar@linux.vnet.ibm.com,
-        kubakici@wp.pl, shuah@kernel.org, mfuzzey@parkeon.com,
-        dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de,
-        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        bjorn.andersson@linaro.org, jewalt@lgsinnovations.com,
-        oneukum@suse.com, cantabile.desu@gmail.com, ast@fb.com,
-        hare@suse.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
-        khc@pm.waw.pl, davem@davemloft.net, maco@android.com,
-        arve@android.com, tkjos@android.com, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        "Luis R . Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v5 3/6] firmware: rename fw_sysfs_fallback to firmware_fallback_sysfs()
-Date: Fri,  4 May 2018 10:43:52 -0700
-Message-Id: <20180504174356.13227-4-mcgrof@kernel.org> (sfid-20180504_194620_743094_DC0AE52E)
-In-Reply-To: <20180504174356.13227-1-mcgrof@kernel.org>
-References: <20180504174356.13227-1-mcgrof@kernel.org>
+Received: from s3.sipsolutions.net ([144.76.63.242]:40750 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932221AbeEWJsF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 23 May 2018 05:48:05 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2018-05-23
+Date: Wed, 23 May 2018 11:47:57 +0200
+Message-Id: <20180523094758.8892-1-johannes@sipsolutions.net> (sfid-20180523_114857_158962_5F13B356)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andres Rodriguez <andresx7@gmail.com>
+Hi Dave,
 
-This is done since this call is now exposed through kernel-doc,
-and since this also paves the way for different future types of
-fallback mechanims.
+Just another handful of fixes as we wind down towards the
+merge window.
 
-Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
-Acked-by: Luis R. Rodriguez <mcgrof@kernel.org>
-[mcgrof: small coding style changes]
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- drivers/base/firmware_loader/fallback.c |  8 ++++----
- drivers/base/firmware_loader/fallback.h | 16 ++++++++--------
- drivers/base/firmware_loader/firmware.h |  2 +-
- drivers/base/firmware_loader/main.c     |  2 +-
- 4 files changed, 14 insertions(+), 14 deletions(-)
+Please pull and let me know if there's any problem.
 
-diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
-index 529f7013616f..3db9e0f225ac 100644
---- a/drivers/base/firmware_loader/fallback.c
-+++ b/drivers/base/firmware_loader/fallback.c
-@@ -662,10 +662,10 @@ static bool fw_run_sysfs_fallback(enum fw_opt opt_flags)
- 	return fw_force_sysfs_fallback(opt_flags);
- }
- 
--int fw_sysfs_fallback(struct firmware *fw, const char *name,
--		      struct device *device,
--		      enum fw_opt opt_flags,
--		      int ret)
-+int firmware_fallback_sysfs(struct firmware *fw, const char *name,
-+			    struct device *device,
-+			    enum fw_opt opt_flags,
-+			    int ret)
- {
- 	if (!fw_run_sysfs_fallback(opt_flags))
- 		return ret;
-diff --git a/drivers/base/firmware_loader/fallback.h b/drivers/base/firmware_loader/fallback.h
-index a3b73a09db6c..21063503e4ea 100644
---- a/drivers/base/firmware_loader/fallback.h
-+++ b/drivers/base/firmware_loader/fallback.h
-@@ -31,10 +31,10 @@ struct firmware_fallback_config {
- };
- 
- #ifdef CONFIG_FW_LOADER_USER_HELPER
--int fw_sysfs_fallback(struct firmware *fw, const char *name,
--		      struct device *device,
--		      enum fw_opt opt_flags,
--		      int ret);
-+int firmware_fallback_sysfs(struct firmware *fw, const char *name,
-+			    struct device *device,
-+			    enum fw_opt opt_flags,
-+			    int ret);
- void kill_pending_fw_fallback_reqs(bool only_kill_custom);
- 
- void fw_fallback_set_cache_timeout(void);
-@@ -43,10 +43,10 @@ void fw_fallback_set_default_timeout(void);
- int register_sysfs_loader(void);
- void unregister_sysfs_loader(void);
- #else /* CONFIG_FW_LOADER_USER_HELPER */
--static inline int fw_sysfs_fallback(struct firmware *fw, const char *name,
--				    struct device *device,
--				    enum fw_opt opt_flags,
--				    int ret)
-+static inline int firmware_fallback_sysfs(struct firmware *fw, const char *name,
-+					  struct device *device,
-+					  enum fw_opt opt_flags,
-+					  int ret)
- {
- 	/* Keep carrying over the same error */
- 	return ret;
-diff --git a/drivers/base/firmware_loader/firmware.h b/drivers/base/firmware_loader/firmware.h
-index 4f433b447367..4c1395f8e7ed 100644
---- a/drivers/base/firmware_loader/firmware.h
-+++ b/drivers/base/firmware_loader/firmware.h
-@@ -20,7 +20,7 @@
-  * @FW_OPT_NOWAIT: Used to describe the firmware request is asynchronous.
-  * @FW_OPT_USERHELPER: Enable the fallback mechanism, in case the direct
-  *	filesystem lookup fails at finding the firmware.  For details refer to
-- *	fw_sysfs_fallback().
-+ *	firmware_fallback_sysfs().
-  * @FW_OPT_NO_WARN: Quiet, avoid printing warning messages.
-  * @FW_OPT_NOCACHE: Disables firmware caching. Firmware caching is used to
-  *	cache the firmware upon suspend, so that upon resume races against the
-diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
-index 7f2bc7e8e3c0..d951af29017a 100644
---- a/drivers/base/firmware_loader/main.c
-+++ b/drivers/base/firmware_loader/main.c
-@@ -581,7 +581,7 @@ _request_firmware(const struct firmware **firmware_p, const char *name,
- 			dev_warn(device,
- 				 "Direct firmware load for %s failed with error %d\n",
- 				 name, ret);
--		ret = fw_sysfs_fallback(fw, name, device, opt_flags, ret);
-+		ret = firmware_fallback_sysfs(fw, name, device, opt_flags, ret);
- 	} else
- 		ret = assign_fw(fw, device, opt_flags);
- 
--- 
-2.17.0
+Thanks,
+johannes
+
+
+
+The following changes since commit 6caf9fb3bda17df59de4ed6ed4950c43ca1361e3:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf (2018-05-17 23:33:52 -0400)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2018-05-23
+
+for you to fetch changes up to fed4825096cfbbfd654cb292ab6eb193911aef01:
+
+  mac80211_hwsim: Fix radio dump for radio idx 0 (2018-05-22 10:24:17 +0200)
+
+----------------------------------------------------------------
+A handful of fixes:
+ * hwsim radio dump wasn't working for the first radio
+ * mesh was updating statistics incorrectly
+ * a netlink message allocation was possibly too short
+ * wiphy name limit was still too long
+ * in certain cases regdb query could find a NULL pointer
+
+----------------------------------------------------------------
+Andrew Zaborowski (1):
+      mac80211_hwsim: Fix radio dump for radio idx 0
+
+Bob Copeland (1):
+      mac80211: mesh: fix premature update of rc stats
+
+Dedy Lansky (1):
+      nl80211: fix nlmsg allocation in cfg80211_ft_event
+
+Eric Biggers (1):
+      cfg80211: further limit wiphy names to 64 bytes
+
+Haim Dreyfuss (1):
+      cfg80211: fix NULL pointer derference when querying regdb
+
+ drivers/net/wireless/mac80211_hwsim.c | 4 ++--
+ include/uapi/linux/nl80211.h          | 2 +-
+ net/mac80211/mesh_plink.c             | 8 ++++----
+ net/wireless/nl80211.c                | 3 ++-
+ net/wireless/reg.c                    | 3 +++
+ 5 files changed, 12 insertions(+), 8 deletions(-)
