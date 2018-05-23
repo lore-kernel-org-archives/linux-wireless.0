@@ -1,51 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:41036 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751180AbeEFN0A (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59618 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754054AbeEWH4k (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 6 May 2018 09:26:00 -0400
-Received: by mail-lf0-f68.google.com with SMTP id o123-v6so36889215lfe.8
-        for <linux-wireless@vger.kernel.org>; Sun, 06 May 2018 06:25:59 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [PATCH] ath10k: fix return value check in wake_tx_q op
-Date: Sun,  6 May 2018 15:25:00 +0200
-Message-Id: <20180506132500.16888-1-erik.stromdahl@gmail.com> (sfid-20180506_152607_464991_2424AC96)
+        Wed, 23 May 2018 03:56:40 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mt76x2: apply coverage class on slot time too
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180515100814.491-1-lorenzo.bianconi@redhat.com>
+References: <20180515100814.491-1-lorenzo.bianconi@redhat.com>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: nbd@nbd.name, linux-wireless@vger.kernel.org, luca.bisti@gmail.com,
+        gaetano.catalli@gmail.com
+Message-Id: <20180523075639.900F360314@smtp.codeaurora.org> (sfid-20180523_095736_932795_D077D723)
+Date: Wed, 23 May 2018 07:56:39 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath10k_mac_tx_push_txq returns either a postive integer (length) on
-success or a negative error code on error.
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> wrote:
 
-The "if (ret) break;" statement will thus always break out of the loop
-immediately after ath10k_mac_tx_push_txq has returned (making the loop
-pointless).
+> According to 802.11-2007 17.3.8.6 (slot time), the slot time should
+> be increased by 3 us * coverage class. Taking into account coverage
+> class in slot time configuration allows to increase by an order of
+> magnitude the throughput on a 4Km link in a noisy environment
+> 
+> Tested-by: Luca Bisti <luca.bisti@gmail.com>
+> Tested-by: Gaetano Catalli <gaetano.catalli@gmail.com>
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> Acked-by: Felix Fietkau <nbd@nbd.name>
 
-A side effect of this fix is that we will iterate the queue until
-ath10k_mac_tx_push_txq returns -ENOENT. This will make sure the queue is
-not added back to ar->txqs when it is empty. This could potentially
-improve performance somewhat (I have seen a small improvement with SDIO
-devices).
+Patch applied to wireless-drivers-next.git, thanks.
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+0d45d3fe42ef mt76x2: apply coverage class on slot time too
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 3d7119ad7c7a..487a7a7380fd 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4290,7 +4290,7 @@ static void ath10k_mac_op_wake_tx_queue(struct ieee80211_hw *hw,
- 
- 	while (ath10k_mac_tx_can_push(hw, f_txq) && max--) {
- 		ret = ath10k_mac_tx_push_txq(hw, f_txq);
--		if (ret)
-+		if (ret < 0)
- 			break;
- 	}
- 	if (ret != -ENOENT)
 -- 
-2.17.0
+https://patchwork.kernel.org/patch/10400771/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
