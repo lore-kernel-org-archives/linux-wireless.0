@@ -1,76 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39380 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:59840 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966566AbeEYMPA (ORCPT
+        with ESMTP id S1753986AbeEWH5w (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 May 2018 08:15:00 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Maya Erez <merez@codeaurora.org>
-Cc: Gidon Studinski <gidons@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com
-Subject: Re: [PATCH 3/7] wil6210: initialize TX and RX enhanced DMA rings
-References: <1526227375-31881-1-git-send-email-merez@codeaurora.org>
-        <1526227375-31881-4-git-send-email-merez@codeaurora.org>
-        <87muwokki3.fsf@purkki.adurom.net>
-Date: Fri, 25 May 2018 15:14:55 +0300
-In-Reply-To: <87muwokki3.fsf@purkki.adurom.net> (Kalle Valo's message of "Fri,
-        25 May 2018 15:06:12 +0300")
-Message-ID: <87in7ckk3k.fsf@purkki.adurom.net> (sfid-20180525_141634_786602_456FE00F)
+        Wed, 23 May 2018 03:57:52 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [1/2] mt76: fix sending encrypted broadcast packets for secondary
+ interfaces
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180515123323.24702-1-nbd@nbd.name>
+References: <20180515123323.24702-1-nbd@nbd.name>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: linux-wireless@vger.kernel.org
+Message-Id: <20180523075751.8A89C60618@smtp.codeaurora.org> (sfid-20180523_095755_458160_4CE0EFEA)
+Date: Wed, 23 May 2018 07:57:51 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+Felix Fietkau <nbd@nbd.name> wrote:
 
-> Maya Erez <merez@codeaurora.org> writes:
->
->> From: Gidon Studinski <gidons@codeaurora.org>
->>
->> Enhanced DMA design includes the following rings:
->> - Single RX descriptor ring is used for all VIFs
->> - Multiple RX status rings are supported, to allow RSS
->> - TX descriptor ring is allocated per connection
->> - A single TX status ring is used for all TX descriptor rings
->>
->> This patch initializes and frees the above descriptor and
->> status rings.
->>
->> The RX SKBs are handled by a new entity of RX buffers manager,
->> which handles RX buffers, each one points to an allocated SKB.
->> During Rx completion processing, the driver extracts a buffer
->> ID which is used as an index to the buffers array.
->> After the SKB is freed the buffer is moved from the 'active'
->> list to the 'free' list, indicating it can be used for another
->> descriptor. During Rx refill, SKBs are allocated and attached
->> to 'free' buffers. Those buffers are attached to new descriptors
->> and moved to the 'active' list.
->>
->> Signed-off-by: Gidon Studinski <gidons@codeaurora.org>
->> Signed-off-by: Maya Erez <merez@codeaurora.org>
->
-> [...]
->
->> --- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
->> +++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
->> @@ -32,6 +32,10 @@
->>  module_param(ftm_mode, bool, 0444);
->>  MODULE_PARM_DESC(ftm_mode, " Set factory test mode, default - false");
->>  
->> +static bool use_enhanced_dma_hw = true;
->> +module_param(use_enhanced_dma_hw, bool, 0444);
->> +MODULE_PARM_DESC(use_enhanced_dma_hw, " Use enhanced or legacy DMA HW. Default: true when available");
->
-> Similarly as with debugfs, please document in the commit log any changes
-> in module parameters.
+> For encryption to work properly, the BSS index needs to be initialized
+> for the WCID entry used for the interface.
+> 
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
 
-Oh, and in this patch there are even more new module parameters and no
-mention them in the commit log.
+2 patches applied to wireless-drivers-next.git, thanks.
 
-But a bigger problem is that wil6210 has now 24 module parameters (with
-this patchset included). That is quite a lot, are those all really
-needed? Module parameters are bad user experience and there should be
-good reasons before adding them.
+d98fb328ad10 mt76: fix sending encrypted broadcast packets for secondary interfaces
+66a77cbe63eb mt76: discard early received packets if not running yet
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/10400931/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
