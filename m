@@ -1,44 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47406 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754366AbeEHKGl (ORCPT
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:35137 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933791AbeEWVzC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 May 2018 06:06:41 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-        Joe Perches <joe@perches.com>,
-        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: Re: [PATCH 4.17] bcma: fix buffer size caused crash in bcma_core_mips_print_irq()
-References: <20180508093104.27018-1-zajec5@gmail.com>
-Date: Tue, 08 May 2018 13:06:35 +0300
-In-Reply-To: <20180508093104.27018-1-zajec5@gmail.com> (=?utf-8?Q?=22Rafa?=
- =?utf-8?Q?=C5=82_Mi=C5=82ecki=22's?=
-        message of "Tue, 8 May 2018 11:31:04 +0200")
-Message-ID: <87zi1a1mxg.fsf@kamboji.qca.qualcomm.com> (sfid-20180508_120646_156730_939A06E6)
+        Wed, 23 May 2018 17:55:02 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <87po221j08.fsf@purkki.adurom.net>
+References: <20180509145624.643d2e56@canb.auug.org.au> <87po221j08.fsf@purkki.adurom.net>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 23 May 2018 23:55:00 +0200
+Message-ID: <CAK8P3a1tdhO6FX76vMXdpd6FxN87RjhLeKW4ws8GgOHqAwr4qA@mail.gmail.com> (sfid-20180523_235618_214617_75B07B19)
+Subject: Re: linux-next: build warning after merge of the mac80211-next tree
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
-
-> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+On Fri, May 11, 2018 at 2:20 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Stephen Rothwell <sfr@canb.auug.org.au> writes:
 >
-> Used buffer wasn't big enough to hold whole strings. Example output of
-> this function is:
-> [    0.180892] bcma: bus0: core 0x0800, irq: 2(S)* 3  4  5  6  D  I
-> [    0.180948] bcma: bus0: core 0x0812, irq: 2(S)  3* 4  5  6  D  I
-> [    0.180998] bcma: bus0: core 0x082d, irq: 2(S)  3  4* 5  6  D  I
-> [    0.181046] bcma: bus0: core 0x082c, irq: 2(S)  3  4  5  6  D  I*
-> which means we need to store up to 24 chars.
+>> After merging the mac80211-next tree, today's linux-next build (arm_multi
+>> v7_defconfig) produced this warning:
+>>
+>> drivers/net/wireless/marvell/mwifiex/uap_event.c: In function 'mwifiex_process_uap_event':
+>> drivers/net/wireless/marvell/mwifiex/uap_event.c:333:1: warning: the frame size of 1680 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+>>  }
+>>  ^
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c: In function 'brcmf_notify_connect_status_ap':
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:5530:1: warning: the frame size of 1680 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+>>  }
+>>  ^
+>>
+>> Maybe introduced by commit
+>>
+>>   52539ca89f36 ("cfg80211: Expose TXQ stats and parameters to userspace")
 >
-> Fixes: 758f7e06063a8 ("bcma: Use bcma_debug and not pr_cont in MIPS drive=
-r")
-> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
-> Cc: stable@vger.kernel.org # v4.15+
+> Btw Stephen for mac80211 reports it would be a good idea to also cc
+> linux-wireless list, in case Johannes is not around etc.
 
-I'll queue this for 4.17.
+I also bisected this new warning to the same commit above:
 
---=20
-Kalle Valo
+net/batman-adv/bat_v_elp.c: In function 'batadv_v_elp_get_throughput':
+net/batman-adv/bat_v_elp.c:154:1: warning: the frame size of 1736
+bytes is larger than 1024 bytes [-Wframe-larger-than=]
+
+      Arnd
