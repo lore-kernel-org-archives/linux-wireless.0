@@ -1,41 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33924 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754289AbeEWIBF (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:33200 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933926AbeEWSqO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 May 2018 04:01:05 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: mwifiex: correct histogram data with appropriate index
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1526629134-10049-1-git-send-email-huxm@marvell.com>
-References: <1526629134-10049-1-git-send-email-huxm@marvell.com>
-To: Xinming Hu <huxm@marvell.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Message-Id: <20180523080104.A5D4760618@smtp.codeaurora.org> (sfid-20180523_100310_408365_BB1496F8)
-Date: Wed, 23 May 2018 08:01:04 +0000 (UTC)
+        Wed, 23 May 2018 14:46:14 -0400
+Date: Wed, 23 May 2018 14:46:13 -0400 (EDT)
+Message-Id: <20180523.144613.431928393088002427.davem@davemloft.net> (sfid-20180523_204839_883476_50C04DDF)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers 2018-05-22
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87603fg3yc.fsf@kamboji.qca.qualcomm.com>
+References: <87603fg3yc.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Xinming Hu <huxm@marvell.com> wrote:
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Tue, 22 May 2018 17:28:11 +0300
 
-> Correct snr/nr/rssi data index to avoid possible buffer underflow.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> here's a pull request to net tree for 4.17. Please let me know if you
+> have any problems.
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-30bfce0b63fa mwifiex: correct histogram data with appropriate index
-
--- 
-https://patchwork.kernel.org/patch/10408353/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Pulled, thanks Kalle.
