@@ -1,63 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36086 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752343AbeEJUJP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 May 2018 16:09:15 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, keescook@chromium.org,
-        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
-        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
-        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
-        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
-        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
-        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        cantabile.desu@gmail.com, khc@pm.waw.pl, arve@android.com,
-        tkjos@android.com, corbet@lwn.net, mchehab+samsung@kernel.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v7 14/14] Documentation: clarify firmware_class provenance and why we can't rename the module
-Date: Thu, 10 May 2018 13:08:50 -0700
-Message-Id: <20180510200850.5958-15-mcgrof@kernel.org> (sfid-20180510_221038_777104_46BA6EEA)
-In-Reply-To: <20180510200850.5958-1-mcgrof@kernel.org>
-References: <20180510200850.5958-1-mcgrof@kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:42698 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754130AbeEWIRo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 23 May 2018 04:17:44 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Ganapathi Bhat <gbhat@marvell.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: Re: [EXT] Re: [PATCH V2 3/6] mwifiex: support sysfs initiated device coredump
+References: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
+        <1526472723-15758-4-git-send-email-arend.vanspriel@broadcom.com>
+        <87h8n7lnfx.fsf@kamboji.qca.qualcomm.com>
+        <5AFC7E01.3070503@broadcom.com>
+        <d9414fb243bf4a8daecfef11fe6cdc65@SC-EXCH02.marvell.com>
+        <87po1mu7s2.fsf@purkki.adurom.net> <5B052248.5020805@broadcom.com>
+Date: Wed, 23 May 2018 11:17:39 +0300
+In-Reply-To: <5B052248.5020805@broadcom.com> (Arend van Spriel's message of
+        "Wed, 23 May 2018 10:11:52 +0200")
+Message-ID: <87d0xmeqfw.fsf@kamboji.qca.qualcomm.com> (sfid-20180523_101827_244900_68963445)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Clarify the provenance of the firmware loader firmware_class module name
-and why we cannot rename the module in the future.
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-Reviewed-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Reviewed-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- .../driver-api/firmware/fallback-mechanisms.rst          | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+> On 5/23/2018 9:54 AM, Kalle Valo wrote:
+>> Ganapathi Bhat <gbhat@marvell.com> writes:
+>>
+>>> In V2:
+>>>
+>>>          return ret;
+>>>   }
+>>> +EXPORT_SYMBOL_GPL(mwifiex_send_cmd);
+>>>
+>>> Instead of exporting 'mwifiex_send_cmd' we can prepare a wrapper for
+>>> the command 'MWIFIEX_IFACE_WORK_DEVICE_DUMP' in mwifiex module. Let me
+>>> know if we can send a follow up.
+>>
+>> So what's the plan? Can I apply this patch or should I drop it?
+>
+> Sorry. Had to reply that earlier. When adding the export I figured it
+> might not be desirable. If Ganapathi can fix it with a follow up patch
+> that would ok, right?
 
-diff --git a/Documentation/driver-api/firmware/fallback-mechanisms.rst b/Documentation/driver-api/firmware/fallback-mechanisms.rst
-index a39323ef7d29..d35fed65eae9 100644
---- a/Documentation/driver-api/firmware/fallback-mechanisms.rst
-+++ b/Documentation/driver-api/firmware/fallback-mechanisms.rst
-@@ -72,9 +72,12 @@ the firmware requested, and establishes it in the device hierarchy by
- associating the device used to make the request as the device's parent.
- The sysfs directory's file attributes are defined and controlled through
- the new device's class (firmware_class) and group (fw_dev_attr_groups).
--This is actually where the original firmware_class.c file name comes from,
--as originally the only firmware loading mechanism available was the
--mechanism we now use as a fallback mechanism.
-+This is actually where the original firmware_class module name came from,
-+given that originally the only firmware loading mechanism available was the
-+mechanism we now use as a fallback mechanism, which registers a struct class
-+firmware_class. Because the attributes exposed are part of the module name, the
-+module name firmware_class cannot be renamed in the future, to ensure backward
-+compatibility with old userspace.
- 
- To load firmware using the sysfs interface we expose a loading indicator,
- and a file upload firmware into:
+A follow up patch sounds good to me.
+
+> Than you can apply it, I would say.
+
+Good, thanks.
+
 -- 
-2.17.0
+Kalle Valo
