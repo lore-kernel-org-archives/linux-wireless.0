@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:33112 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750733AbeEVIT1 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33924 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754289AbeEWIBF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 04:19:27 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Eylon Pedinovsky <eylon.pedinovsky@broadcom.com>,
-        Jithu Jance <jithu.jance@broadcom.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 0/3] nl80211: support offloading FILS-SK roaming scenarios
-Date: Tue, 22 May 2018 10:19:05 +0200
-Message-Id: <1526977148-11600-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180522_101931_125869_EF8CD352)
+        Wed, 23 May 2018 04:01:05 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: correct histogram data with appropriate index
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1526629134-10049-1-git-send-email-huxm@marvell.com>
+References: <1526629134-10049-1-git-send-email-huxm@marvell.com>
+To: Xinming Hu <huxm@marvell.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Ellie Reeves <ellierevves@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Message-Id: <20180523080104.A5D4760618@smtp.codeaurora.org> (sfid-20180523_100310_408365_BB1496F8)
+Date: Wed, 23 May 2018 08:01:04 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This small patch series is based on patch originally submitted by Vidyullatha
-to support driver/firmware roaming for FILS-SK offload. It also reworks the
-connection response code to reuse the fils parameter structure for the ROAM
-event.
+Xinming Hu <huxm@marvell.com> wrote:
 
-The series is intended for 4.18 and applies to the master branch of the
-mac80211-next repository.
+> Correct snr/nr/rssi data index to avoid possible buffer underflow.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
 
-Arend van Spriel (2):
-  cfg80211: use separate struct for fils parameters
-  nl80211: add FILS related parameters to ROAM event
+Patch applied to wireless-drivers-next.git, thanks.
 
-Vidyullatha Kanchanapally (1):
-  nl80211: Update ERP info using NL80211_CMD_UPDATE_CONNECT_PARAMS
+30bfce0b63fa mwifiex: correct histogram data with appropriate index
 
- include/net/cfg80211.h       | 51 ++++++++++++++++---------
- include/uapi/linux/nl80211.h |  6 ++-
- net/wireless/core.c          |  4 ++
- net/wireless/nl80211.c       | 90 +++++++++++++++++++++++++++++++++++++-------
- net/wireless/sme.c           | 88 ++++++++++++++++++++++++++++++-------------
- 5 files changed, 180 insertions(+), 59 deletions(-)
+-- 
+https://patchwork.kernel.org/patch/10408353/
 
---
-1.9.1
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
