@@ -1,141 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:52090 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752357AbeEOCC6 (ORCPT
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:45209 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934575AbeEWWP1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 May 2018 22:02:58 -0400
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w4F1sewo054040
-        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2018 22:02:57 -0400
-Received: from e06smtp13.uk.ibm.com (e06smtp13.uk.ibm.com [195.75.94.109])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2hyjrky387-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2018 22:02:57 -0400
-Received: from localhost
-        by e06smtp13.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-wireless@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
-        Tue, 15 May 2018 03:02:54 +0100
-Subject: Re: [PATCH 3/6] firmware: differentiate between signed
- regulatory.db and other firmware
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Harald Hoyer <harald@redhat.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>,
-        Casey Schaufler <casey@schaufler-ca.com>,
-        Alexei Starovoitov <ast@kernel.org>,
-        David Miller <davem@davemloft.net>,
-        Jessica Yu <jeyu@kernel.org>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>,
-        Matthew Garrett <mjg59@srcf.ucam.org>,
-        Peter Jones <pjones@redhat.com>,
-        "AKASHI, Takahiro" <takahiro.akashi@linaro.org>,
-        David Howells <dhowells@redhat.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Seth Forshee <seth.forshee@canonical.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        linux-integrity@vger.kernel.org,
-        Hans de Goede <hdegoede@redhat.com>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        linux-security-module@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Andres Rodriguez <andresx7@gmail.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Andy Lutomirski <luto@kernel.org>
-Date: Mon, 14 May 2018 22:02:31 -0400
-In-Reply-To: <20180514192853.GM27853@wotan.suse.de>
-References: <20180509191508.GR27853@wotan.suse.de>
-         <1525895838.3551.247.camel@linux.vnet.ibm.com>
-         <20180509212212.GX27853@wotan.suse.de>
-         <1525903617.3551.281.camel@linux.vnet.ibm.com>
-         <20180509234814.GY27853@wotan.suse.de>
-         <1525917658.3551.322.camel@linux.vnet.ibm.com>
-         <20180510232639.GF27853@wotan.suse.de>
-         <1526014826.3414.46.camel@linux.vnet.ibm.com>
-         <20180511215250.GJ27853@wotan.suse.de>
-         <1526302692.3898.145.camel@linux.vnet.ibm.com>
-         <20180514192853.GM27853@wotan.suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Message-Id: <1526349751.3937.78.camel@linux.vnet.ibm.com> (sfid-20180515_040315_047124_F154028F)
+        Wed, 23 May 2018 18:15:27 -0400
+Received: by mail-wr0-f195.google.com with SMTP id w3-v6so21486290wrl.12
+        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2018 15:15:27 -0700 (PDT)
+From: Niklas Cassel <niklas.cassel@linaro.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: Niklas Cassel <niklas.cassel@linaro.org>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3] ath10k: transmit queued frames after processing rx packets
+Date: Thu, 24 May 2018 00:15:08 +0200
+Message-Id: <20180523221508.26391-1-niklas.cassel@linaro.org> (sfid-20180524_001609_053743_AFCE769E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-05-14 at 19:28 +0000, Luis R. Rodriguez wrote:
+When running iperf on ath10k SDIO, TX can stop working:
 
-[...] 
+iperf -c 192.168.1.1 -i 1 -t 20 -w 10K
+[  3]  0.0- 1.0 sec  2.00 MBytes  16.8 Mbits/sec
+[  3]  1.0- 2.0 sec  3.12 MBytes  26.2 Mbits/sec
+[  3]  2.0- 3.0 sec  3.25 MBytes  27.3 Mbits/sec
+[  3]  3.0- 4.0 sec   655 KBytes  5.36 Mbits/sec
+[  3]  4.0- 5.0 sec  0.00 Bytes  0.00 bits/sec
+[  3]  5.0- 6.0 sec  0.00 Bytes  0.00 bits/sec
+[  3]  6.0- 7.0 sec  0.00 Bytes  0.00 bits/sec
+[  3]  7.0- 8.0 sec  0.00 Bytes  0.00 bits/sec
+[  3]  8.0- 9.0 sec  0.00 Bytes  0.00 bits/sec
+[  3]  9.0-10.0 sec  0.00 Bytes  0.00 bits/sec
+[  3]  0.0-10.3 sec  9.01 MBytes  7.32 Mbits/sec
 
-> > At runtime, in the case
-> > that regdb is enabled and a custom policy requires IMA-appraisal
-> > firmware signature verification, then both signature verification
-> > methods will verify the signatures.  If either fails, then the
-> > signature verification will fail.
-> 
-> OK so you're saying that if CONFIG_IMA_APPRAISE_FIRMWARE is disabled you can
-> still end up with CONFIG_CFG80211_REQUIRE_SIGNED_REGDB as enabled *and* a
-> custom policy which requires IMA-appraisal for the certain firmware signature
-> verifications?
+There are frames in the ieee80211_txq and there are frames that have
+been removed from from this queue, but haven't yet been sent on the wire
+(num_pending_tx).
 
-Right
+When num_pending_tx reaches max_num_pending_tx, we will stop the queues
+by calling ieee80211_stop_queues().
 
+As frames that have previously been sent for transmission
+(num_pending_tx) are completed, we will decrease num_pending_tx and wake
+the queues by calling ieee80211_wake_queue(). ieee80211_wake_queue()
+does not call wake_tx_queue, so we might still have frames in the
+queue at this point.
 
+While the queues were stopped, the socket buffer might have filled up,
+and in order for user space to write more, we need to free the frames
+in the queue, since they are accounted to the socket. In order to free
+them, we first need to transmit them.
 
-> > There are two problems:
-> > - there's no way of configuring a builtin policy to verify firmware
-> > signatures.
-> 
-> I'm not too familiar with IMA however it sounds like you can extend the IMA
-> built-in policy on the boot command line.
+This problem cannot be reproduced on low-latency devices, e.g. pci,
+since they call ath10k_mac_tx_push_pending() from
+ath10k_htt_txrx_compl_task(). ath10k_htt_txrx_compl_task() is not called
+on high-latency devices.
+Fix the problem by calling ath10k_mac_tx_push_pending(), after
+processing rx packets, just like for low-latency devices, also in the
+SDIO case. Since we are calling ath10k_mac_tx_push_pending() directly,
+we also need to export it.
 
-No, there are a couple of policies predefined in the kernel that can
-be loaded by specifying them on the boot command line.  A custom
-policy can be loaded later.  Only after specifying a policy on the
-boot command line or loading a custom policy, does IMA do anything.
+Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
+---
+Changes since V2:
+Moved ath10k_mac_tx_push_pending() call to ath10k_sdio_irq_handler().
 
+ drivers/net/wireless/ath/ath10k/mac.c  | 1 +
+ drivers/net/wireless/ath/ath10k/sdio.c | 3 +++
+ 2 files changed, 4 insertions(+)
 
-> > - CONFIG_IMA_APPRAISE is not fine enough grained.
-> > 
-> > The CONFIG_IMA_APPRAISE_FIRMWARE will be a Kconfig option.  Similar
-> > Kconfig options will require kernel modules, kexec'ed image, and the
-> > IMA policy to be signed.
-> 
-> Sure, it is still unclear to me if CONFIG_IMA_APPRAISE_FIRMWARE will be
-> doing firmware verification in userspace or in the kernel.
-
-The kernel is verifying signatures.
-
-
-
-> > There are a number of reasons that the kernel should be verifying
-> > firmware signatures (eg. requiring a specific version of the firmware,
-> > that was locally signed).
-> 
-> Oh I agree, Linux enterprise distributions also have a strong reason to
-> have this, so that for instance we only trust and run vendor-approved
-> signed firmware. Otherwise the driver should reject the firmware. Every
-> now and then enterprise distros may run into cases were certain customers
-> may run oddball firmwares, and its unclear if we expect proper functionality
-> with that firmware. Having some form of firmware signing would help with
-> this pipeline, but this is currently dealt with at the packaging, and
-> noting other than logs ensures the driver is using an intended firmware.
-> But these needs *IMHO* have not been enough to push to generalize a kernel
-> firmware signing facility.
-
-In order for IMA-appraisal to verify firmware signatures, the
-signatures need to be distributed with the firmware.  Perhaps this
-will be enough of an incentive for distros to start including firmware
-signatures in the packages.
-
-> If CONFIG_IMA_APPRAISE_FIRMWARE is going to provide this functionality somehow
-> I'm happy to hear it.
-
-The functionality has been there since commit 5a9196d ("ima: add
-support for measuring and appraising firmware").  The
-security_kernel_fw_from_file() hook was later replaced with the
-generic security_kernel_read_file() hook.
-
-Mimi
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 487a7a7380fd..bfcd9705ed54 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4038,6 +4038,7 @@ void ath10k_mac_tx_push_pending(struct ath10k *ar)
+ 	rcu_read_unlock();
+ 	spin_unlock_bh(&ar->txqs_lock);
+ }
++EXPORT_SYMBOL(ath10k_mac_tx_push_pending);
+ 
+ /************/
+ /* Scanning */
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index d612ce8c9cff..2856c75f9011 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -30,6 +30,7 @@
+ #include "debug.h"
+ #include "hif.h"
+ #include "htc.h"
++#include "mac.h"
+ #include "targaddrs.h"
+ #include "trace.h"
+ #include "sdio.h"
+@@ -1342,6 +1343,8 @@ static void ath10k_sdio_irq_handler(struct sdio_func *func)
+ 			break;
+ 	} while (time_before(jiffies, timeout) && !done);
+ 
++	ath10k_mac_tx_push_pending(ar);
++
+ 	sdio_claim_host(ar_sdio->func);
+ 
+ 	if (ret && ret != -ECANCELED)
+-- 
+2.17.0
