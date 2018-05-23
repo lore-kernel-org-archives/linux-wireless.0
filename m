@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:30337 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752172AbeEGInx (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:38632 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932071AbeEWLYV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 04:43:53 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 04/30] staging: wilc1000: fix line over 80 characters issue in handle_connect()
-Date: Mon, 7 May 2018 14:13:08 +0530
-Message-ID: <1525682614-3824-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104356_576413_010E6B80)
-In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+        Wed, 23 May 2018 07:24:21 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: RE: [EXT] Re: [PATCH V2 3/6] mwifiex: support sysfs initiated device
+ coredump
+Date: Wed, 23 May 2018 11:24:13 +0000
+Message-ID: <6c419785be0e4e89a62f3b81c36971ce@SC-EXCH02.marvell.com> (sfid-20180523_132430_197852_C14D0971)
+References: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
+        <1526472723-15758-4-git-send-email-arend.vanspriel@broadcom.com>
+        <87h8n7lnfx.fsf@kamboji.qca.qualcomm.com>       <5AFC7E01.3070503@broadcom.com>
+        <d9414fb243bf4a8daecfef11fe6cdc65@SC-EXCH02.marvell.com>
+        <87po1mu7s2.fsf@purkki.adurom.net> <5B052248.5020805@broadcom.com>
+ <87d0xmeqfw.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87d0xmeqfw.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix line over 80 character issue found by checkpatch.pl script by
-aligning the input argument in function call.
+Hi Kalle,
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 29f9907..55a61d5 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1117,10 +1117,8 @@ static s32 handle_connect(struct wilc_vif *vif,
- 			}
- 
- 			conn_attr->result(CONN_DISCONN_EVENT_CONN_RESP,
--							       &conn_info,
--							       MAC_STATUS_DISCONNECTED,
--							       NULL,
--							       conn_attr->arg);
-+					  &conn_info, MAC_STATUS_DISCONNECTED,
-+					  NULL, conn_attr->arg);
- 			hif_drv->hif_state = HOST_IF_IDLE;
- 			kfree(conn_info.req_ies);
- 			conn_info.req_ies = NULL;
--- 
-2.7.4
+> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+>
+> > On 5/23/2018 9:54 AM, Kalle Valo wrote:
+> >> Ganapathi Bhat <gbhat@marvell.com> writes:
+> >>
+> >>> In V2:
+> >>>
+> >>>          return ret;
+> >>>   }
+> >>> +EXPORT_SYMBOL_GPL(mwifiex_send_cmd);
+> >>>
+> >>> Instead of exporting 'mwifiex_send_cmd' we can prepare a wrapper for
+> >>> the command 'MWIFIEX_IFACE_WORK_DEVICE_DUMP' in mwifiex
+> module. Let
+> >>> me know if we can send a follow up.
+> >>
+> >> So what's the plan? Can I apply this patch or should I drop it?
+> >
+> > Sorry. Had to reply that earlier. When adding the export I figured it
+> > might not be desirable. If Ganapathi can fix it with a follow up patch
+> > that would ok, right?
+>
+> A follow up patch sounds good to me.
+Sorry for confusions. I assume you will be margining the original patch and want me to send the follow-up right?
+>
+Regards,
+Ganapathi
