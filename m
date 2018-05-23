@@ -1,106 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:37266 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754739AbeEWQ0u (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33446 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754214AbeEWH73 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 May 2018 12:26:50 -0400
-Subject: Re: [PATCH v2] ath10k: transmit queued frames after waking queues
-To: Niklas Cassel <niklas.cassel@linaro.org>,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-References: <20180521204359.23884-1-niklas.cassel@linaro.org>
- <8195be7603a8cd659d25a9c3d898b891@codeaurora.org>
- <20180522211521.GA26123@localhost.localdomain>
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-Message-ID: <c131da6e-6479-3a40-fbd3-9c61d6690ba8@gmail.com> (sfid-20180523_182738_304110_CD6ED000)
-Date: Wed, 23 May 2018 18:25:49 +0200
+        Wed, 23 May 2018 03:59:29 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180522211521.GA26123@localhost.localdomain>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [1/5] mt76: only stop tx queues on offchannel,
+ not during the entire scan
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180520054349.49422-1-nbd@nbd.name>
+References: <20180520054349.49422-1-nbd@nbd.name>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: linux-wireless@vger.kernel.org
+Message-Id: <20180523075929.2356E60618@smtp.codeaurora.org> (sfid-20180523_100309_778386_9138E90C)
+Date: Wed, 23 May 2018 07:59:29 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Felix Fietkau <nbd@nbd.name> wrote:
 
-
-On 05/22/2018 11:15 PM, Niklas Cassel wrote:
-
-<snip>
->>
->> Earlier we observed performance issues in calling push_pending from each
->> tx completion. IMHO this change may introduce the same problem again.
+> During scans, mac80211 frequently switches back to the home channel to
+> minimize interruption of ongoing traffic. Keep regular tx queues active
+> during that time.
 > 
-> I prefer functional TX over performance issues,
-> but I agree that it is unfortunate that SDIO doesn't use
-> ath10k_htt_txrx_compl_task().
-> Erik, is there a reason for this?
-The reason is that the SDIO code has been derived mainly from qcacld and ath6kl
-and they don't implement napi.
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
 
-ath10k_htt_txrx_compl_task is currently only called from the napi poll function,
-and the sdio bus driver doesn't have such a function.
+5 patches applied to wireless-drivers-next.git, thanks.
 
-> 
-> Perhaps it would be possible to call ath10k_mac_tx_push_pending()
-> from the equivalent to ath10k_htt_txrx_compl_task(),
-> but from SDIO's point of view.
-An equivalent for SDIO would most likely be *ath10k_htt_htc_t2h_msg_handler*
-or any of the other functions called from this function.
+89bc67e3a93a mt76: only stop tx queues on offchannel, not during the entire scan
+a164a94212ce mt76: prevent tx scheduling during channel change
+a85b590cf55f mt76: move ieee80211_hw allocation to common core
+26e40d4c0b52 mt76: wait for pending tx to complete before switching channel
+cbec83d40cc7 mt76: use udelay instead of usleep_range in mt76x2_mac_stop
 
-*ath10k_txrx_tx_unref* is actually called from *ath10k_htt_htc_t2h_msg_handler*,
-so that function could be viewed as an equivalent.
+-- 
+https://patchwork.kernel.org/patch/10413117/
 
-If the call should be added in the bus driver (sdio.c) it should most likely be
-placed in *ath10k_sdio_mbox_rx_process_packets*
-
-		if (!pkt->trailer_only) {
-			ep->ep_ops.ep_rx_complete(ar_sdio->ar, pkt->skb);
-			ath10k_mac_tx_push_pending(ar_sdio->ar);
-		} else {
-			kfree_skb(pkt->skb)
-		}
-
-The above call would of course result in lot's of calls to *ath10k_mac_tx_push_pending*
-Adding a htt_num_pending check here wouldn't look nice.
-
-The HL RX path differs from the LL path in that the t2h_msg_handler returns
-false indicating that it has consumed the skb.
-
-This is because it is the HL RX indication handler that delivers the skb's
-to mac80211.
-
-Another solution could be to add an *else-statement* as a part of the *if (release)*
-in *ath10k_htt_htc_t2h_msg_handler*, where *ath10k_mac_tx_push_pending* could be called.
-
-Something like this perhaps:
-
-	/* Free the indication buffer */
-	if (release)
-		dev_kfree_skb_any(skb);
-	else if (!ar->htt.num_pending_tx)
-		ath10k_mac_tx_push_pending(ar);
-
-I think I prefer your original patch though.
-> 
-> Another solution might be to change so that we only call
-> ath10k_mac_tx_push_pending() from ath10k_txrx_tx_unref()
-> if (htt->num_pending_tx == 0). That should decrease the number
-> of calls to ath10k_mac_tx_push_pending(), while still avoiding
-> a "TX deadlock" scenario for SDIO.
-Just out of curiosity, where did the limit of 3 come from?
-If it works with a limit of 0, I think it should be used instead.
-
-Another intersting thing that I stumbled upon when looking into the
-code (while writing this email) is the *wake_up(&htt->empty_tx_wq);*
-
-For some reason I have considered it not to be applicable for HL devices.
-
-The queue is waited for in the flush op (*ath10k_flush*).
-I am unsure what it is used for, but I don't think it affects the TX
-deadlock scenario.
-
---
-Erik
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
