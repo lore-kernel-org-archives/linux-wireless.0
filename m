@@ -1,45 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42996 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750749AbeELJBx (ORCPT
+Received: from mail-qt0-f180.google.com ([209.85.216.180]:39883 "EHLO
+        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754356AbeEWILz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 May 2018 05:01:53 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 23 May 2018 04:11:55 -0400
+Received: by mail-qt0-f180.google.com with SMTP id f1-v6so26959314qtj.6
+        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2018 01:11:55 -0700 (PDT)
+Subject: Re: [EXT] Re: [PATCH V2 3/6] mwifiex: support sysfs initiated device
+ coredump
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Ganapathi Bhat <gbhat@marvell.com>
+References: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1526472723-15758-4-git-send-email-arend.vanspriel@broadcom.com>
+ <87h8n7lnfx.fsf@kamboji.qca.qualcomm.com> <5AFC7E01.3070503@broadcom.com>
+ <d9414fb243bf4a8daecfef11fe6cdc65@SC-EXCH02.marvell.com>
+ <87po1mu7s2.fsf@purkki.adurom.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B052248.5020805@broadcom.com> (sfid-20180523_101559_595815_AFADBA3B)
+Date: Wed, 23 May 2018 10:11:52 +0200
 MIME-Version: 1.0
-Subject: Re: ath10k: add quiet mode support for QCA6174/QCA9377
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1525327285-15392-2-git-send-email-yyuwang@codeaurora.org>
-References: <1525327285-15392-2-git-send-email-yyuwang@codeaurora.org>
-To: Yu Wang <yyuwang@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Message-Id: <20180512090152.BCA146022C@smtp.codeaurora.org> (sfid-20180512_110157_508136_F4FAF01E)
-Date: Sat, 12 May 2018 09:01:52 +0000 (UTC)
+In-Reply-To: <87po1mu7s2.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yu Wang <yyuwang@codeaurora.org> wrote:
+On 5/23/2018 9:54 AM, Kalle Valo wrote:
+> Ganapathi Bhat <gbhat@marvell.com> writes:
+>
+>> In V2:
+>>
+>>          return ret;
+>>   }
+>> +EXPORT_SYMBOL_GPL(mwifiex_send_cmd);
+>>
+>> Instead of exporting 'mwifiex_send_cmd' we can prepare a wrapper for
+>> the command 'MWIFIEX_IFACE_WORK_DEVICE_DUMP' in mwifiex module. Let me
+>> know if we can send a follow up.
+>
+> So what's the plan? Can I apply this patch or should I drop it?
 
-> To enable thermal throttling for QCA6174 and QCA9377,
-> implement gen_pdev_set_quiet_mode for them.
-> With this change, quiet period for QCA6174/QCA9377 can
-> be also set/get via debugfs.
-> Usage:
-> To set quiet period:
->  echo <period> > /sys/kernel/debug/ieee80211/phyX/ath10k/quiet_period
-> To get the current quiet period:
->  cat /sys/kernel/debug/ieee80211/phyX/ath10k/quiet_period
-> 
-> This change has been verified with
-> QCA6174 hw3.2(fw: WLAN_RM.4.4.1-00102-QCARMSWP-1).
-> 
-> Signed-off-by: Yu Wang <yyuwang@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Sorry. Had to reply that earlier. When adding the export I figured it 
+might not be desirable. If Ganapathi can fix it with a follow up patch 
+that would ok, right? Than you can apply it, I would say.
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-cfb353c0dc05 ath10k: add quiet mode support for QCA6174/QCA9377
-
--- 
-https://patchwork.kernel.org/patch/10377083/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Regards,
+Arend
