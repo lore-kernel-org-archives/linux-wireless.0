@@ -1,77 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.11.71.1]:36647 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750854AbeELD57 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 23:57:59 -0400
-Date: Sat, 12 May 2018 13:57:57 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Toke =?UTF-8?B?SMO4aWxhbmQt?= =?UTF-8?B?SsO4cmdlbnNlbg==?=
-        <toke@toke.dk>, Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: linux-next: build warning after merge of the mac80211-next tree
-Message-ID: <20180512135757.7c4e3bc7@canb.auug.org.au> (sfid-20180512_055812_972727_E3149DC1)
-In-Reply-To: <20180509145624.643d2e56@canb.auug.org.au>
-References: <20180509145624.643d2e56@canb.auug.org.au>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/4NiqZE+n7_0ITHj05L_/v63"; protocol="application/pgp-signature"
+Received: from s3.sipsolutions.net ([144.76.63.242]:40776 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932206AbeEWJuW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 23 May 2018 05:50:22 -0400
+Message-ID: <1527069018.3759.15.camel@sipsolutions.net> (sfid-20180523_115133_024406_36D07658)
+Subject: Re: [PATCH] ath10k: add dynamic vlan support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Date: Wed, 23 May 2018 11:50:18 +0200
+In-Reply-To: <59ff8201-fc1b-8579-d5a9-f4b08621f5ec@codeaurora.org>
+References: <1524232653-22573-1-git-send-email-mpubbise@codeaurora.org>
+         <87r2n5auvq.fsf@kamboji.qca.qualcomm.com>
+         <aa04534d-9677-f42e-a239-b230093ef2f5@dd-wrt.com>
+         <f8d6d13943ccac22f363d7d4f53d645c@codeaurora.org>
+         <1526637270.3805.15.camel@sipsolutions.net>
+         <59ff8201-fc1b-8579-d5a9-f4b08621f5ec@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/4NiqZE+n7_0ITHj05L_/v63
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Mon, 2018-05-21 at 12:12 +0530, Manikanta Pubbisetty wrote:
+> > Do you know why it actually broke it? I mean, we should've turned off
+> > the strict requirement for sw crypto control only for the GTK, and that
+> > shouldn't matter so much?
+> 
+> With the change db3bdcb9c3ff, AP/VLAN support is advertised by the 
+> driver conditionally; the primary reason for doing this is to support 
+> VLAN operations on sw crypto controlled devices.
 
-Hi all,
+Right, or, well *not* supporting it.
 
-Just cc'ing the wireless list at Kalle's suggestion.
+> AP also creates AP/VLAN devices for supporting 4-addr clients and since 
+> the driver now advertises AP/VLAN support conditionally, the 4-addr 
+> operation which has no relation to the VLANs(Per VLAN GTKs) was broken 
+> on some ath10k devices.
 
-On Wed, 9 May 2018 14:56:24 +1000 Stephen Rothwell <sfr@canb.auug.org.au> w=
-rote:
->
-> Hi Johannes,
->=20
-> After merging the mac80211-next tree, today's linux-next build (arm_multi
-> v7_defconfig) produced this warning:
->=20
-> drivers/net/wireless/marvell/mwifiex/uap_event.c: In function 'mwifiex_pr=
-ocess_uap_event':
-> drivers/net/wireless/marvell/mwifiex/uap_event.c:333:1: warning: the fram=
-e size of 1680 bytes is larger than 1024 bytes [-Wframe-larger-than=3D]
->  }
->  ^
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c: In function =
-'brcmf_notify_connect_status_ap':
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:5530:1: warni=
-ng: the frame size of 1680 bytes is larger than 1024 bytes [-Wframe-larger-=
-than=3D]
->  }
->  ^
->=20
-> Maybe introduced by commit
->=20
->   52539ca89f36 ("cfg80211: Expose TXQ stats and parameters to userspace")
+Right. Like I said, splitting those two capabilities somehow would be
+best.
 
---=20
-Cheers,
-Stephen Rothwell
+> > > + * @IEEE80211_HW_SUPPORTS_SW_ENCRYPT: Device is capable of transmitting
+> > > + *     frames encrypted in software, only valid when SW_CRYPTO_CONTROL
+> > > + *     is enabled. Based on this flag, mac80211 can allow/disallow VLAN
+> > > + *     operations in the BSS.
+> > 
+> > Based on the name and initial description, this sounds equivalent to
+> > just turning off SW_CRYPTO_CONTROL. I think that's not the intent, but
+> > would need some renaming.
+> 
+> I can rename it to something which is very specific to VLAN support on 
+> sw crypto controlled devices if that is okay.
 
---Sig_/4NiqZE+n7_0ITHj05L_/v63
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+I don't think that makes sense. If we split the capability of AP_VLAN
+and AP_VLAN_FOR_4ADDR at the "root", then we don't need to play with all
+these things. Yes, this is slightly awkward for userspace, and perhaps
+with the interface combination checks, but I'd like you to look at that.
 
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlr2ZkUACgkQAVBC80lX
-0Gz0mQf/VZUkfeVvkvAWDWJDLTYgq5Yk9Q64iaVZDnVFlxOYVjsBUyGrxPylIMFo
-AQ5ubLlp7+M0NUqBCXtjoeq8ivRMvKLFuuUxFUW5ywy6hfI2Hzai7x7IxaRo7lRC
-2VXRMWBHsqpVh2gsPLZwm4rO1humWvl4xIE7u80hfqhZmnlNybxQF4D+1oe8jD5H
-4Hsp80sNIaRqAJnqfISq8FwGKQcGRLW2Xr2aKdqTS7ALGqTwqqBx4k2+p3nq+p4l
-WO9fNPutkIzvV7oO91HkkG9W6d3N9sxJ3kSVhYT+DuYKKrZVM/xn8b3VeXPeA+EF
-m9c2VKNdSZ5T5ry/BTIxZxyVQVtCZg==
-=P+Kz
------END PGP SIGNATURE-----
-
---Sig_/4NiqZE+n7_0ITHj05L_/v63--
+johannes
