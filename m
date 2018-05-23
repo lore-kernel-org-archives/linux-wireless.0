@@ -1,62 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48602 "EHLO mail.kernel.org"
+Received: from mga06.intel.com ([134.134.136.31]:62761 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751980AbeEGNLE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 09:11:04 -0400
-Received: from mail-qt0-f176.google.com (mail-qt0-f176.google.com [209.85.216.176])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8F8C2204EE
-        for <linux-wireless@vger.kernel.org>; Mon,  7 May 2018 13:11:03 +0000 (UTC)
-Received: by mail-qt0-f176.google.com with SMTP id c2-v6so36082539qtn.9
-        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2018 06:11:03 -0700 (PDT)
+        id S932306AbeEWKbO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 23 May 2018 06:31:14 -0400
+Date: Wed, 23 May 2018 18:30:42 +0800
+From: kbuild test robot <lkp@intel.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: kbuild-all@01.org, Kalle Valo <kvalo@codeaurora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Subject: Re: [PATCH 2/3] brcmfmac: handle monitor mode marked msgbuf packets
+Message-ID: <201805231801.hzr4coEN%fengguang.wu@intel.com> (sfid-20180523_123118_894554_0A6B636B)
+References: <20180522131836.26858-2-zajec5@gmail.com>
 MIME-Version: 1.0
-References: <9481d7f7694345f2966e78c2284ee4a0@SC-EXCH02.marvell.com>
-In-Reply-To: <9481d7f7694345f2966e78c2284ee4a0@SC-EXCH02.marvell.com>
-From: Josh Boyer <jwboyer@kernel.org>
-Date: Mon, 07 May 2018 13:10:51 +0000
-Message-ID: <CA+5PVA6k+a=7Z9zOZktK_=J5ST9j8x7EVgaptGE0yX7qCeGxow@mail.gmail.com> (sfid-20180507_151118_250293_CEF871EF)
-Subject: Re: pull-request mwifiex-firmware 2018-05-07
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: Linux Firmware <linux-firmware@kernel.org>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        James Cao <jcao@marvell.com>, mmangesh@marvell.com,
-        spatki@marvell.com, rprashk@marvell.com, mayur@marvell.com,
-        jayrao@marvell.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180522131836.26858-2-zajec5@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 7, 2018 at 8:31 AM Ganapathi Bhat <gbhat@marvell.com> wrote:
+Hi Rafał,
 
-> The following changes since commit
-5446916b53de395245d89400dea566055ec4502c:
+I love your patch! Perhaps something to improve:
 
->    linux-firmware: update Marvell PCIe-USB8897/8997 firmware image to add
-WPA2 vulnerability fix (2018-01-16 01:45:00 -0800)
+[auto build test WARNING on wireless-drivers-next/master]
+[also build test WARNING on v4.17-rc6 next-20180517]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
-> are available in the git repository at:
+url:    https://github.com/0day-ci/linux/commits/Rafa-Mi-ecki/brcmfmac-allow-specifying-features-per-firmware-version/20180523-160546
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
 
->    git://git.marvell.com/mwifiex-firmware.git
 
-> for you to fetch changes up to e1abab618308110789a4c27db543d132fd62e89f:
+sparse warnings: (new ones prefixed by >>)
 
->    linux-firmware: update Marvell USB8997 firmware image to add WPA2
-vulnerability fix (2018-05-07 17:54:42 +0530)
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c:304:30: sparse: expression using sizeof(void)
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c:417:34: sparse: incorrect type in assignment (different base types) @@    expected restricted __le16 [usertype] it_len @@    got 6 [usertype] it_len @@
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c:417:34:    expected restricted __le16 [usertype] it_len
+   drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c:417:34:    got unsigned long
 
-> ----------------------------------------------------------------
-> Ganapathi Bhat (2):
->        linux-firmware: update Marvell SD8897-B0 firmware image to add WPA2
-vulnerability fix
->        linux-firmware: update Marvell USB8997 firmware image to add WPA2
-vulnerability fix
+vim +417 drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
 
->   WHENCE                       |   4 ++--
->   mrvl/sd8897_uapsta.bin       | Bin 814048 -> 821024 bytes
->   mrvl/usbusb8997_combo_v4.bin | Bin 602100 -> 604536 bytes
->   3 files changed, 2 insertions(+), 2 deletions(-)
+   264	
+   265	static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
+   266						   struct net_device *ndev)
+   267	{
+   268		int ret;
+   269		struct brcmf_if *ifp = netdev_priv(ndev);
+   270		struct brcmf_pub *drvr = ifp->drvr;
+   271		struct ethhdr *eh;
+   272		int head_delta;
+   273	
+   274		brcmf_dbg(DATA, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
+   275	
+   276		/* Can the device send data? */
+   277		if (drvr->bus_if->state != BRCMF_BUS_UP) {
+   278			brcmf_err("xmit rejected state=%d\n", drvr->bus_if->state);
+   279			netif_stop_queue(ndev);
+   280			dev_kfree_skb(skb);
+   281			ret = -ENODEV;
+   282			goto done;
+   283		}
+   284	
+   285		/* Some recent Broadcom's firmwares disassociate STA when they receive
+   286		 * an 802.11f ADD frame. This behavior can lead to a local DoS security
+   287		 * issue. Attacker may trigger disassociation of any STA by sending a
+   288		 * proper Ethernet frame to the wireless interface.
+   289		 *
+   290		 * Moreover this feature may break AP interfaces in some specific
+   291		 * setups. This applies e.g. to the bridge with hairpin mode enabled and
+   292		 * IFLA_BRPORT_MCAST_TO_UCAST set. IAPP packet generated by a firmware
+   293		 * will get passed back to the wireless interface and cause immediate
+   294		 * disassociation of a just-connected STA.
+   295		 */
+   296		if (!drvr->settings->iapp && brcmf_skb_is_iapp(skb)) {
+   297			dev_kfree_skb(skb);
+   298			ret = -EINVAL;
+   299			goto done;
+   300		}
+   301	
+   302		/* Make sure there's enough writeable headroom */
+   303		if (skb_headroom(skb) < drvr->hdrlen || skb_header_cloned(skb)) {
+ > 304			head_delta = max_t(int, drvr->hdrlen - skb_headroom(skb), 0);
+   305	
+   306			brcmf_dbg(INFO, "%s: insufficient headroom (%d)\n",
+   307				  brcmf_ifname(ifp), head_delta);
+   308			atomic_inc(&drvr->bus_if->stats.pktcowed);
+   309			ret = pskb_expand_head(skb, ALIGN(head_delta, NET_SKB_PAD), 0,
+   310					       GFP_ATOMIC);
+   311			if (ret < 0) {
+   312				brcmf_err("%s: failed to expand headroom\n",
+   313					  brcmf_ifname(ifp));
+   314				atomic_inc(&drvr->bus_if->stats.pktcow_failed);
+   315				goto done;
+   316			}
+   317		}
+   318	
+   319		/* validate length for ether packet */
+   320		if (skb->len < sizeof(*eh)) {
+   321			ret = -EINVAL;
+   322			dev_kfree_skb(skb);
+   323			goto done;
+   324		}
+   325	
+   326		eh = (struct ethhdr *)(skb->data);
+   327	
+   328		if (eh->h_proto == htons(ETH_P_PAE))
+   329			atomic_inc(&ifp->pend_8021x_cnt);
+   330	
+   331		/* determine the priority */
+   332		if ((skb->priority == 0) || (skb->priority > 7))
+   333			skb->priority = cfg80211_classify8021d(skb, NULL);
+   334	
+   335		ret = brcmf_proto_tx_queue_data(drvr, ifp->ifidx, skb);
+   336		if (ret < 0)
+   337			brcmf_txfinalize(ifp, skb, false);
+   338	
+   339	done:
+   340		if (ret) {
+   341			ndev->stats.tx_dropped++;
+   342		} else {
+   343			ndev->stats.tx_packets++;
+   344			ndev->stats.tx_bytes += skb->len;
+   345		}
+   346	
+   347		/* Return ok: we always eat the packet */
+   348		return NETDEV_TX_OK;
+   349	}
+   350	
+   351	void brcmf_txflowblock_if(struct brcmf_if *ifp,
+   352				  enum brcmf_netif_stop_reason reason, bool state)
+   353	{
+   354		unsigned long flags;
+   355	
+   356		if (!ifp || !ifp->ndev)
+   357			return;
+   358	
+   359		brcmf_dbg(TRACE, "enter: bsscfgidx=%d stop=0x%X reason=%d state=%d\n",
+   360			  ifp->bsscfgidx, ifp->netif_stop, reason, state);
+   361	
+   362		spin_lock_irqsave(&ifp->netif_stop_lock, flags);
+   363		if (state) {
+   364			if (!ifp->netif_stop)
+   365				netif_stop_queue(ifp->ndev);
+   366			ifp->netif_stop |= reason;
+   367		} else {
+   368			ifp->netif_stop &= ~reason;
+   369			if (!ifp->netif_stop)
+   370				netif_wake_queue(ifp->ndev);
+   371		}
+   372		spin_unlock_irqrestore(&ifp->netif_stop_lock, flags);
+   373	}
+   374	
+   375	void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb)
+   376	{
+   377		/* Most of Broadcom's firmwares send 802.11f ADD frame every time a new
+   378		 * STA connects to the AP interface. This is an obsoleted standard most
+   379		 * users don't use, so don't pass these frames up unless requested.
+   380		 */
+   381		if (!ifp->drvr->settings->iapp && brcmf_skb_is_iapp(skb)) {
+   382			brcmu_pkt_buf_free_skb(skb);
+   383			return;
+   384		}
+   385	
+   386		if (skb->pkt_type == PACKET_MULTICAST)
+   387			ifp->ndev->stats.multicast++;
+   388	
+   389		if (!(ifp->ndev->flags & IFF_UP)) {
+   390			brcmu_pkt_buf_free_skb(skb);
+   391			return;
+   392		}
+   393	
+   394		ifp->ndev->stats.rx_bytes += skb->len;
+   395		ifp->ndev->stats.rx_packets++;
+   396	
+   397		brcmf_dbg(DATA, "rx proto=0x%X\n", ntohs(skb->protocol));
+   398		if (in_interrupt())
+   399			netif_rx(skb);
+   400		else
+   401			/* If the receive is not processed inside an ISR,
+   402			 * the softirqd must be woken explicitly to service
+   403			 * the NET_RX_SOFTIRQ.  This is handled by netif_rx_ni().
+   404			 */
+   405			netif_rx_ni(skb);
+   406	}
+   407	
+   408	void brcmf_netif_mon_rx(struct brcmf_if *ifp, struct sk_buff *skb)
+   409	{
+   410		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MON_FMT_RADIOTAP)) {
+   411			/* Do nothing */
+   412		} else {
+   413			struct ieee80211_radiotap_header *radiotap;
+   414	
+   415			radiotap = skb_push(skb, sizeof(*radiotap));
+   416			memset(radiotap, 0, sizeof(*radiotap));
+ > 417			radiotap->it_len = sizeof(*radiotap);
+   418	
+   419			/* TODO: what are these extra 4 bytes? */
+   420			skb->len -= 4;
+   421		}
+   422	
+   423		skb->dev = ifp->ndev;
+   424		skb_reset_mac_header(skb);
+   425		skb->pkt_type = PACKET_OTHERHOST;
+   426		skb->protocol = htons(ETH_P_802_2);
+   427	
+   428		brcmf_netif_rx(ifp, skb);
+   429	}
+   430	
 
-Thanks.  Pulled and pushed out.
-
-josh
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
