@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:56654 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754989AbeEZPAX (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33920 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751201AbeEWPyj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 26 May 2018 11:00:23 -0400
-From: Colin King <colin.king@canonical.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] rsi: fix spelling mistake "Uknown" -> "Unknown"
-Date: Sat, 26 May 2018 16:00:19 +0100
-Message-Id: <20180526150019.10288-1-colin.king@canonical.com> (sfid-20180526_170035_546267_6C78C510)
-MIME-Version: 1.0
+        Wed, 23 May 2018 11:54:39 -0400
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [V2,1/6] brcmfmac: move ALLFFMAC variable in flowring module
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1526472723-15758-2-git-send-email-arend.vanspriel@broadcom.com>
+References: <1526472723-15758-2-git-send-email-arend.vanspriel@broadcom.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-Id: <20180523155439.31449601E8@smtp.codeaurora.org> (sfid-20180523_175551_515479_5D229EF7)
+Date: Wed, 23 May 2018 15:54:39 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
 
-Trivial fix to spelling mistake in rsi_dbg message text
+> The only user of ALLFFMAC is the flowring module so no need to
+> expose it in a header file.
+> 
+> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+6 patches applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index bfa7569c85bb..2ca7464b7fa3 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -1103,7 +1103,7 @@ static int rsi_mac80211_ampdu_action(struct ieee80211_hw *hw,
- 		break;
- 
- 	default:
--		rsi_dbg(ERR_ZONE, "%s: Uknown AMPDU action\n", __func__);
-+		rsi_dbg(ERR_ZONE, "%s: Unknown AMPDU action\n", __func__);
- 		break;
- 	}
- 
+f8793c26fe58 brcmfmac: move ALLFFMAC variable in flowring module
+8e072168f75e brcmfmac: add support for sysfs initiated coredump
+21c5c83ce833 mwifiex: support sysfs initiated device coredump
+d2af9b566554 brcmfmac: validate user provided data for memdump before copying
+8a3ab2f38f16 brcmfmac: trigger memory dump upon firmware halt signal
+b8248236e927 brcmfmac: trigger memory dump on SDIO firmware halt message
+
 -- 
-2.17.0
+https://patchwork.kernel.org/patch/10403713/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
