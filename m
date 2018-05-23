@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:58084 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752915AbeEOJPH (ORCPT
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:44972 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934512AbeEWWUG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 May 2018 05:15:07 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Franky Lin <franky.lin@broadcom.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 6/8] brcmfmac: validate user provided data for memdump before copying
-Date: Tue, 15 May 2018 11:14:49 +0200
-Message-Id: <1526375691-31789-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180515_111600_419787_8A302FAA)
-In-Reply-To: <1526375691-31789-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1526375691-31789-1-git-send-email-arend.vanspriel@broadcom.com>
+        Wed, 23 May 2018 18:20:06 -0400
+Received: by mail-wr0-f196.google.com with SMTP id y15-v6so29205667wrg.11
+        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2018 15:20:06 -0700 (PDT)
+Date: Thu, 24 May 2018 00:20:02 +0200
+From: Niklas Cassel <niklas.cassel@linaro.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] ath10k: transmit queued frames after processing rx
+ packets
+Message-ID: <20180523222002.GA26565@localhost.localdomain> (sfid-20180524_002111_850399_E6725E3C)
+References: <20180523221508.26391-1-niklas.cassel@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180523221508.26391-1-niklas.cassel@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <franky.lin@broadcom.com>
+On Thu, May 24, 2018 at 12:15:08AM +0200, Niklas Cassel wrote:
+> This problem cannot be reproduced on low-latency devices, e.g. pci,
+> since they call ath10k_mac_tx_push_pending() from
+> ath10k_htt_txrx_compl_task(). ath10k_htt_txrx_compl_task() is not called
+> on high-latency devices.
+> Fix the problem by calling ath10k_mac_tx_push_pending(), after
+> processing rx packets, just like for low-latency devices, also in the
+> SDIO case. Since we are calling ath10k_mac_tx_push_pending() directly,
+> we also need to export it.
+> 
 
-In patch "brcmfmac: add support for sysfs initiated coredump", a new
-scenario of brcmf_debug_create_memdump was added in which the user of
-the function might not necessarily provide prefix data. Hence the
-function should not assume the data is always valid and should perform a
-check before copying.
+Even if we are now calling ath10k_mac_tx_push_pending each time we process rx packets,
+the number of packets we actually queue from ath10k_mac_tx_push_pending are quite few:
 
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+>From running iperf for 20 seconds:
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
-index 5048320..489b5df 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
-@@ -40,7 +40,8 @@ int brcmf_debug_create_memdump(struct brcmf_bus *bus, const void *data,
- 	if (!dump)
- 		return -ENOMEM;
- 
--	memcpy(dump, data, len);
-+	if (data && len > 0)
-+		memcpy(dump, data, len);
- 	err = brcmf_bus_get_memdump(bus, dump + len, ramsize);
- 	if (err) {
- 		vfree(dump);
--- 
-1.9.1
+# grep ath10k_mac_tx_push_txq /sys/kernel/debug/tracing/trace | grep -v ath10k_mac_op_wake_tx_queue | wc -l
+233
+number of times ath10k_mac_tx_push_txq was called, but not from ath10k_mac_op_wake_tx_queue,
+i.e. number of times ath10k_mac_tx_push_txq was called from ath10k_mac_tx_push_pending.
+
+
+# grep ath10k_mac_tx_push_txq /sys/kernel/debug/tracing/trace | grep -v ath10k_mac_tx_push_pending | wc -l
+28415
+number of times ath10k_mac_tx_push_txq was called, but not from ath10k_mac_tx_push_pending,
+i.e number of times ath10k_mac_tx_push_txq was called from ath10k_mac_op_wake_tx_queue.
+
+
+Regards,
+Niklas
