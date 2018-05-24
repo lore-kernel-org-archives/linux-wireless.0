@@ -1,112 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:37008 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1033540AbeE1P3N (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:53719 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965241AbeEXHwK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 May 2018 11:29:13 -0400
-Received: by mail-wr0-f195.google.com with SMTP id i12-v6so20904788wrc.4
-        for <linux-wireless@vger.kernel.org>; Mon, 28 May 2018 08:29:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAHp75VcC_cisfVTKU0bVm3+=NFLt3P0EkXh3uC4hWCA7y_7G3w@mail.gmail.com>
-References: <1527493857-2220-1-git-send-email-michael@amarulasolutions.com>
- <5B0BD13D.8000809@broadcom.com> <CAOf5uw=mPOgngZW8UcPfvtxH+5nCR-36ovjYPH7AvO99y1M_xA@mail.gmail.com>
- <CAHp75VcC_cisfVTKU0bVm3+=NFLt3P0EkXh3uC4hWCA7y_7G3w@mail.gmail.com>
-From: Michael Nazzareno Trimarchi <michael@amarulasolutions.com>
-Date: Mon, 28 May 2018 17:29:11 +0200
-Message-ID: <CAOf5uw=G5iYfuoRBCOWU-PkEGpm1_qMwB+1=MjRQgxB+e_0w=g@mail.gmail.com> (sfid-20180528_172956_253486_C1CA10C3)
-Subject: Re: [PATCH] brcmfmac: stop watchdog before detach and free everything
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
+        Thu, 24 May 2018 03:52:10 -0400
+Received: by mail-wm0-f66.google.com with SMTP id a67-v6so2351209wmf.3
+        for <linux-wireless@vger.kernel.org>; Thu, 24 May 2018 00:52:09 -0700 (PDT)
+Subject: Re: [PATCH 1/3] brcmfmac: allow specifying features per firmware
+ version
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20180522131836.26858-1-zajec5@gmail.com>
+ <5B051F2A.9090501@broadcom.com>
+ <f79ad17d-5d7f-ceac-19e6-2e55d9bb20bf@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
         Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
         Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Ian Molton <ian@mnementh.co.uk>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        brcm80211-dev-list@cypress.com, netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B066F28.5070706@broadcom.com> (sfid-20180524_095218_299202_A2142A91)
+Date: Thu, 24 May 2018 09:52:08 +0200
+MIME-Version: 1.0
+In-Reply-To: <f79ad17d-5d7f-ceac-19e6-2e55d9bb20bf@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
-
-On Mon, May 28, 2018 at 5:25 PM, Andy Shevchenko
-<andy.shevchenko@gmail.com> wrote:
-> On Mon, May 28, 2018 at 12:54 PM, Michael Nazzareno Trimarchi
-> <michael@amarulasolutions.com> wrote:
->> Hi Arend
+On 5/24/2018 7:27 AM, Rafał Miłecki wrote:
+> On 23.05.2018 09:58, Arend van Spriel wrote:
+>> On 5/22/2018 3:18 PM, Rafał Miłecki wrote:
+>>> From: Rafał Miłecki <rafal@milecki.pl>
+>>>
+>>> Some features supported by firmware aren't advertised and there is no
+>>> way for a driver to query them. This includes e.g. monitor mode details.
+>>> Some firmwares support tagging monitor frames, some build radiotap
+>>> header but there is no way to detect it.
+>>>
+>>> This commit adds table that will allow specifying features like:
+>>> { "01-abcdef01", BIT(BRCMF_FEAT_FOO) }
 >>
->> On Mon, May 28, 2018 at 11:51 AM, Arend van Spriel
->> <arend.vanspriel@broadcom.com> wrote:
->>> On 5/28/2018 9:50 AM, Michael Trimarchi wrote:
->>>>
->>>> Watchdog need to be stopped in brcmf_sdio_remove to avoid
->>>> i
->>>> The system is going down NOW!
->>>> [ 1348.110759] Unable to handle kernel NULL pointer dereference at virtual
->>>> address 000002f8
->>>> Sent SIGTERM to all processes
->>>> [ 1348.121412] Mem abort info:
->>>> [ 1348.126962]   ESR = 0x96000004
->>>> [ 1348.130023]   Exception class = DABT (current EL), IL = 32 bits
->>>> [ 1348.135948]   SET = 0, FnV = 0
->>>> [ 1348.138997]   EA = 0, S1PTW = 0
->>>> [ 1348.142154] Data abort info:
->>>> [ 1348.145045]   ISV = 0, ISS = 0x00000004
->>>> [ 1348.148884]   CM = 0, WnR = 0
->>>> [ 1348.151861] user pgtable: 4k pages, 48-bit VAs, pgdp = (____ptrval____)
->>>> [ 1348.158475] [00000000000002f8] pgd=0000000000000000
->>>> [ 1348.163364] Internal error: Oops: 96000004 [#1] PREEMPT SMP
->>>> [ 1348.168927] Modules linked in: ipv6
->>>> [ 1348.172421] CPU: 3 PID: 1421 Comm: brcmf_wdog/mmc0 Not tainted
->>>> 4.17.0-rc5-next-20180517 #18
->>>> [ 1348.180757] Hardware name: Amarula A64-Relic (DT)
->>>> [ 1348.185455] pstate: 60000005 (nZCv daif -PAN -UAO)
->>>> [ 1348.190251] pc : brcmf_sdiod_freezer_count+0x0/0x20
->>>> [ 1348.195124] lr : brcmf_sdio_watchdog_thread+0x64/0x290
->>>
->>>
->>> Hi Michael,
->>>
->>> Thanks for the patch. In normal scenario the callstack looks like this:
->>>
->>> brcmf_sdio_remove()
->>>         -> brcmf_detach()
->>>                 -> brcmf_bus_stop()
->>>                         -> brcmf_sdio_bus_stop()
->>>
->>> In brcmf_sdio_bus_stop() the watchdog is terminated. So in what scenario did
->>> you encounter this null pointer deref?
+>> I have my reservations taking this route. Full-dongle monitor mode is
+>> not very reliable especially when running it next to regular STA/AP
+>> interface due to memory constraints. So enabling a feature from host
+>> side could cause issues that are hard to debug.
+>
+> I was using this *really* intensively on BCM4366 and didn't notice any
+> problems. My use case is listening to the air traffic for 300 ms every
+> few seconds (and I got that running for months!).
+
+I understand. I am just saying that we have quite a variety of devices 
+that we support with brcmfmac and this allows enabling features from the 
+host driver. So any patch adding an entry will need to be reviewed with 
+more scrutiny.
+
+>  > So I think it would be better if the cap iovar would get a new flag
+> for this. Please hold this patch and let me discuss internally.
+>
+> That would be a pretty big limitation to have to wait for and use a
+> special firmware for this feature. Also considering time it takes to
+> release brcmfmac4366c-pcie.bin, Broadcom vs. Cypress, licensing issues
+> with Cypress, we will likely never get all firmwares updated properly.
+>
+> As for me (!) it seems rather unacceptable (no offence!). I believe we
+> should have a free choice to use that discovered feature even if
+> Broadcom didn't test it for host machine purposes (just internal fw
+> purposes as I get it).
+
+Not sure if "unacceptable" is the right word here. Having it 
+discoverable from the firmware itself seems preferred to me regardless. 
+For the 4366 firmware you are right it is taking a lot of time. It has 
+passed verification. It needed to pass sensitive topic of radar 
+detection for FCC and ETSI. So I am preparing that release. So I just 
+have to discuss this monitor feature tomorrow. That is not too long, is it?
+
+>> some more specific comments below...
 >>
->> Is this happen even when there is not wifi firmware?
->> boot without any firmware in the filesystem and then trigger a reboot
+>>> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+>>> ---
+>>>   .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 24
+>>> ++++++++++++++++++++++
+>>>   1 file changed, 24 insertions(+)
+>>>
+>>> diff --git
+>>> a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+>>> index 876731c57bf5..1194d31d3902 100644
+>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+>>> @@ -91,6 +91,28 @@ static int brcmf_feat_debugfs_read(struct seq_file
+>>> *seq, void *data)
+>>>   }
+>>>   #endif /* DEBUG */
+>>>
+>>> +struct brcmf_feat_fwfeat {
+>>> +    const char * const fwid;
+>>> +    u32 flags;
+>>
+>> For consistency call this feat_flags as well.
 >
-> Something like the above I had noticed for a long (couple of kernel
-> releases?) time, but wasn't a big priority to me.
-> Though, I can test this on my side.
+> Sure.
 >
-> P.S. I think rmmod or echo > unbind will trigger that as well.
 >
+>>> +};
+>>> +
+>>> +static const struct brcmf_feat_fwfeat brcmf_feat_fwfeat_map[] = {
+>>> +};
+>>> +
+>>> +static void brcmf_feat_firmware_features(struct brcmf_pub *pub)
+>>
+>> Try to keep name of the struct brcmf_pub instance 'drvr'.
+>
+> Wait, doesn't "pub" make more sense for "struct brcmf_pub" than "drvr"?
+> :) I'm sure I also saw "pub" variables all over the code, so this isn't
+> some new/mine convention.
 
-Right now the module is compiled in the kernel. I can dig down tonight
-on this if needed
+We used to have a private and public structure long ago and we collapsed 
+it into brcmf_pub. So not all places changed the variable to 'drvr' and 
+I do not care that much for existing stuff. Could put the rename task on 
+TODO list on wireless wiki, but not sure if newbies would look there. 
+For new stuff let's try to stick with 'drvr'.
 
-Michael
-
-> --
-> With Best Regards,
-> Andy Shevchenko
-
-
-
--- 
-| Michael Nazzareno Trimarchi                     Amarula Solutions BV |
-| COO  -  Founder                                      Cruquiuskade 47 |
-| +31(0)851119172                                 Amsterdam 1018 AM NL |
-|                  [`as] http://www.amarulasolutions.com               |
+Regards,
+Arend
