@@ -1,47 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:14273 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752188AbeEGIpZ (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49940 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1032653AbeEXLGm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 04:45:25 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
+        Thu, 24 May 2018 07:06:42 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
 To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 25/30] staging: wilc1000: fix line over 80 chars in wilc_sdio struct
-Date: Mon, 7 May 2018 14:13:29 +0530
-Message-ID: <1525682614-3824-26-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104720_677766_E894E0B0)
-In-Reply-To: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH] mwifiex: avoid exporting mwifiex_send_cmd
+Date: Thu, 24 May 2018 16:36:28 +0530
+Message-ID: <1527159988-20624-1-git-send-email-gbhat@marvell.com> (sfid-20180524_130741_113459_C6708047)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix line over 80 chars issue found by checkpatch.pl script by placing
-the comment message above the macro preprocessor.
+This is a follow-up patch for commit 21c5c83ce833
+("mwifiex: support sysfs initiated device coredump").
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Let us avoid exporting mwifiex_send_cmd and instead use a utility
+function mwifiex_fw_dump_event to achive the work.
+
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 ---
- drivers/staging/wilc1000/wilc_sdio.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c | 1 -
+ drivers/net/wireless/marvell/mwifiex/main.h   | 1 +
+ drivers/net/wireless/marvell/mwifiex/usb.c    | 5 ++---
+ drivers/net/wireless/marvell/mwifiex/util.c   | 7 +++++++
+ 4 files changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index 211be73..4ab43f9 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -26,7 +26,8 @@ struct wilc_sdio {
- 	bool irq_gpio;
- 	u32 block_size;
- 	int nint;
--#define MAX_NUN_INT_THRPT_ENH2 (5) /* Max num interrupts allowed in registers 0xf7, 0xf8 */
-+/* Max num interrupts allowed in registers 0xf7, 0xf8 */
-+#define MAX_NUN_INT_THRPT_ENH2 (5)
- 	int has_thrpt_enh3;
- };
+diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+index 8be1e69..9cfcdf6 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+@@ -674,7 +674,6 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
  
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(mwifiex_send_cmd);
+ 
+ /*
+  * This function queues a command to the command pending queue.
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 8ae74ed..69ac0a2 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -1691,6 +1691,7 @@ u8 mwifiex_adjust_data_rate(struct mwifiex_private *priv,
+ void mwifiex_prepare_fw_dump_info(struct mwifiex_adapter *adapter);
+ void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter);
+ void *mwifiex_alloc_dma_align_buf(int rx_len, gfp_t flags);
++void mwifiex_fw_dump_event(struct mwifiex_private *priv);
+ void mwifiex_queue_main_work(struct mwifiex_adapter *adapter);
+ int mwifiex_get_wakeup_reason(struct mwifiex_private *priv, u16 action,
+ 			      int cmd_type,
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 7aa39878..bc475b8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -658,9 +658,8 @@ static void mwifiex_usb_coredump(struct device *dev)
+ 	struct usb_interface *intf = to_usb_interface(dev);
+ 	struct usb_card_rec *card = usb_get_intfdata(intf);
+ 
+-	mwifiex_send_cmd(mwifiex_get_priv(card->adapter, MWIFIEX_BSS_ROLE_ANY),
+-			 HostCmd_CMD_FW_DUMP_EVENT, HostCmd_ACT_GEN_SET, 0,
+-			 NULL, true);
++	mwifiex_fw_dump_event(mwifiex_get_priv(card->adapter,
++					       MWIFIEX_BSS_ROLE_ANY));
+ }
+ 
+ static struct usb_driver mwifiex_usb_driver = {
+diff --git a/drivers/net/wireless/marvell/mwifiex/util.c b/drivers/net/wireless/marvell/mwifiex/util.c
+index 51ccf10..6dd2128 100644
+--- a/drivers/net/wireless/marvell/mwifiex/util.c
++++ b/drivers/net/wireless/marvell/mwifiex/util.c
+@@ -757,3 +757,10 @@ void *mwifiex_alloc_dma_align_buf(int rx_len, gfp_t flags)
+ 	return skb;
+ }
+ EXPORT_SYMBOL_GPL(mwifiex_alloc_dma_align_buf);
++
++void mwifiex_fw_dump_event(struct mwifiex_private *priv)
++{
++	mwifiex_send_cmd(priv, HostCmd_CMD_FW_DUMP_EVENT, HostCmd_ACT_GEN_SET,
++			 0, NULL, true);
++}
++EXPORT_SYMBOL_GPL(mwifiex_fw_dump_event);
 -- 
-2.7.4
+1.9.1
