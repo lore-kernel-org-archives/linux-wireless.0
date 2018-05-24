@@ -1,64 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:45028 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965391AbeE2SGU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 May 2018 14:06:20 -0400
-From: Tony Lindgren <tony@atomide.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
-        Guy Mishol <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Maital Hahn <maitalm@ti.com>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org
-Subject: [RFT 4/6] wlcore: Fix misplaced PM call for scan_complete_work()
-Date: Tue, 29 May 2018 11:06:03 -0700
-Message-Id: <20180529180605.73622-5-tony@atomide.com> (sfid-20180529_200652_241278_30EAC307)
-In-Reply-To: <20180529180605.73622-1-tony@atomide.com>
-References: <20180529180605.73622-1-tony@atomide.com>
+Received: from mail-pl0-f65.google.com ([209.85.160.65]:39727 "EHLO
+        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755280AbeEXX2n (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 May 2018 19:28:43 -0400
+Date: Thu, 24 May 2018 16:28:39 -0700
+From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Alexei Starovoitov <ast@kernel.org>, davem@davemloft.net,
+        daniel@iogearbox.net, torvalds@linux-foundation.org,
+        peterz@infradead.org, rostedt@goodmis.org,
+        mathieu.desnoyers@efficios.com, netdev@vger.kernel.org,
+        kernel-team@fb.com, linux-api@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [v8, bpf-next, 4/9] net/wireless/iwlwifi: fix
+ iwlwifi_dev_ucode_error tracepoint
+Message-ID: <20180524232837.24jvdsdiohkpj7fs@ast-mbp> (sfid-20180525_012921_999146_222A90ED)
+References: <20180328190540.370956-5-ast@kernel.org>
+ <1527073388.3759.21.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1527073388.3759.21.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With runtime PM enabled, we now need to have wlcore enabled longer
-until after we're done calling wlcore_cmd_regdomain_config_locked():
+On Wed, May 23, 2018 at 01:03:08PM +0200, Johannes Berg wrote:
+> On Wed, 2018-03-28 at 12:05 -0700, Alexei Starovoitov wrote:
+> > fix iwlwifi_dev_ucode_error tracepoint to pass pointer to a table
+> > instead of all 17 arguments by value.
+> > dvm/main.c and mvm/utils.c have 'struct iwl_error_event_table'
+> > defined with very similar yet subtly different fields and offsets.
+> > tracepoint is still common and using definition of 'struct iwl_error_event_table'
+> > from dvm/commands.h while copying fields.
+> > Long term this tracepoint probably should be split into two.
+> 
+> It would've been nice to CC the wireless list for wireless related
+> patches ...
 
-scan_complete_work()
- wlcore_cmd_regdomain_config_locked()
-   wlcore_cmd_send_failsafe()
-     wl12xx_sdio_raw_read()
+Ohh. I didn't realize that networking wireless doesn't fall under netdev.
+I thought wireless folks are silent because they are embarrassed
+by a function with 17 arguments.
 
-Note that this is not needed before runtime PM support as the
-custom PM code had it's own timer. We have not yet enabled runtime
-PM autosuspend for wlcore and this is why this issue now shows up.
+> > --- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c
+> > +++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c
+> > @@ -30,6 +30,7 @@
+> >  #ifndef __CHECKER__
+> >  #include "iwl-trans.h"
+> >  
+> > +#include "dvm/commands.h"
+> 
+> In particular, this breaks the whole driver abstraction.
+> 
+> > +++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+> > @@ -549,12 +549,7 @@ static void iwl_mvm_dump_lmac_error_log(struct iwl_mvm *mvm, u32 base)
+> >  
+> >         IWL_ERR(mvm, "Loaded firmware version: %s\n", mvm->fw->fw_version);
+> >  
+> > -       trace_iwlwifi_dev_ucode_error(trans->dev, table.error_id, table.tsf_low,
+> > -                                     table.data1, table.data2, table.data3,
+> > -                                     table.blink2, table.ilink1,
+> > -                                     table.ilink2, table.bcon_time, table.gp1,
+> > -                                     table.gp2, table.fw_rev_type, table.major,
+> > -                                     table.minor, table.hw_ver, table.brd_ver);
+> > +       trace_iwlwifi_dev_ucode_error(trans->dev, &table, table.hw_ver, table.brd_ver);
+> 
+> This is also utterly wrong because mvm has - for better or worse - a
+> different type "struct iwl_error_event_table" in this file ...
 
-Let's fix the issues first before we enable runtime PM autosuspend.
-
-Signed-off-by: Tony Lindgren <tony@atomide.com>
----
- drivers/net/wireless/ti/wlcore/scan.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/scan.c b/drivers/net/wireless/ti/wlcore/scan.c
---- a/drivers/net/wireless/ti/wlcore/scan.c
-+++ b/drivers/net/wireless/ti/wlcore/scan.c
-@@ -78,8 +78,6 @@ void wl1271_scan_complete_work(struct work_struct *work)
- 		wl1271_cmd_build_ap_probe_req(wl, wlvif, wlvif->probereq);
- 	}
- 
--	pm_runtime_put(wl->dev);
--
- 	if (wl->scan.failed) {
- 		wl1271_info("Scan completed due to error.");
- 		wl12xx_queue_recovery_work(wl);
-@@ -87,6 +85,8 @@ void wl1271_scan_complete_work(struct work_struct *work)
- 
- 	wlcore_cmd_regdomain_config_locked(wl);
- 
-+	pm_runtime_put(wl->dev);
-+
- 	ieee80211_scan_completed(wl->hw, &info);
- 
- out:
--- 
-2.17.0
+As I was trying to explain in the commit log the single struct
+is used in both places, but differences in two
+"struct iwl_error_event_table" are carefully matched
+field and by field. For two extra fields it was not
+possible and they are passed separately as you can see above.
+I still believe that tracepoint output is still exactly
+the same before and after the patch.
+I guess you see the breakage because new fields got
+added into one "struct iwl_error_event_table",
+but were not added to its evil twin "struct iwl_error_event_table"
+with the same name after the patch landed ?
+imo wireless folks need to avoid such naming conflicts.
+I suggest to isolate common fields into separate base struct and
+give two children structs different names.
