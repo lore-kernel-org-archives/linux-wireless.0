@@ -1,110 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-co1nam03on0092.outbound.protection.outlook.com ([104.47.40.92]:37328
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753186AbeE3H3K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 03:29:10 -0400
-Reply-To: chi-hsien.lin@cypress.com
-Subject: Re: [PATCH V3 0/5] Update brcm firmware files
-To: Hans de Goede <hdegoede@redhat.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Josh Boyer <jwboyer@kernel.org>
-Cc: Linux Firmware <linux-firmware@kernel.org>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, wright.feng@cypress.com
-References: <1521209329-59441-1-git-send-email-chi-hsien.lin@cypress.com>
- <5AF960B6.2010709@broadcom.com>
- <CA+5PVA7m3wWHyi12rTcpAozj=en9BtnsVAKAbQyvKvPRh_jC4A@mail.gmail.com>
- <5AFA9DB0.7060703@broadcom.com>
- <e2b71216-dc95-6d16-47c3-6b50da03a716@redhat.com>
- <1aeb2068-1630-b554-2117-3aa68bdf0eea@redhat.com>
-From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Message-ID: <8688d1c7-8222-d51f-4bc7-400786b27526@cypress.com> (sfid-20180530_093032_038956_54744492)
-Date: Wed, 30 May 2018 15:28:49 +0800
+Received: from smtp.codeaurora.org ([198.145.29.96]:50286 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030220AbeEXSni (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 May 2018 14:43:38 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Cc: linux-wireless@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: Re: [PATCH 00/52] ath: Synchronize regd mappings with qcacld-2.0 4.0.11.181
+References: <20180301141902.24824-1-sven.eckelmann@openmesh.com>
+        <874lixno06.fsf@purkki.adurom.net>
+Date: Thu, 24 May 2018 21:43:31 +0300
+In-Reply-To: <874lixno06.fsf@purkki.adurom.net> (Kalle Valo's message of "Thu,
+        24 May 2018 17:10:01 +0300")
+Message-ID: <87k1rsnbcc.fsf@purkki.adurom.net> (sfid-20180524_204352_682503_6BD84B2F)
 MIME-Version: 1.0
-In-Reply-To: <1aeb2068-1630-b554-2117-3aa68bdf0eea@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Kalle Valo <kvalo@codeaurora.org> writes:
 
+> Sven Eckelmann <sven.eckelmann@openmesh.com> writes:
+>
+>> The mappings from ath was not synced with the QCA driver since 2009. Only
+>> two minor fixes were integrated in 2011. Since then, a lot of regd changes
+>> were integrated in the close source QCA driver which are now used but not
+>> supported by the Open Source driver. This either prevents the use of the
+>> OSS driver on such devices or the wrong conformance test limits (CTLs) may
+>> be used.
+>>
+>> To get the integrated we would first get access to the closed source QCA
+>> driver and a special OSS-NDA with QCA. This doesn't seem to be possible at
+>> the moment and thus other sources for the changes have to be found. One of
+>> them is the qcacld-2.0 source repository [1] which contains the QCA
+>> regdomain.h and regdomain_common.h which was relicensed by QCA as ISC. It
+>> isn't the newest version from the QCA driver but at least received some
+>> updates which are not present in ath's regd.
+>>
+>> This repository [1] (commit 48f9ab5d5c161549be098997fa0e3602c1547213 to be
+>> more precise) was now used to find differences and ad some missing
+>> mappings.
+>>
+>> The title of the mappings describe what exactly was changed. The "Add
+>> regulatory mapping for" patches introduce new country codes/mappings and
+>> thus don't change old mappings. The "Add regulatory mapping for" patches
+>> are similar but for regulatory code mappings instead of country code
+>> mappings.
+>>
+>> More interesting might be the "Map XXXX to YYYY" patches because they
+>> modify already existing mappings. The result are following changes to the
+>> selected CTLs:
+>>
+>> * CTRY_ALBANIA:             5GHz: NO_CTL -> ETSI
+>> * CTRY_ALGERIA:             5GHz: NO_CTL -> ETSI
+>> * CTRY_BANGLADESH:          5GHz: NO_CTL -> FCC
+>> * CTRY_BRUNEI_DARUSSALAM:   5GHz: FCC -> ETSI
+>> * CTRY_HONDURAS:            5GHz: NO_CTL -> FCC
+>> * CTRY_INDONESIA:           5GHz: NO_CTL -> FCC
+>> * CTRY_ISRAEL:              5GHz: NO_CTL -> ETSI
+>> * CTRY_KOREA_NORTH:       2.4GHz: ETSI -> MKK
+>> * CTRY_KOREA_ROC:         2.4GHz: ETSI -> MKK
+>> * CTRY_KOREA_ROC3:        2.4GHz: ETSI -> MKK
+>> * CTRY_LEBANON:             5GHz: NO_CTL -> FCC
+>> * CTRY_MACEDONIA:           5GHz: NO_CTL -> ETSI
+>> * CTRY_MALAYSIA:            5GHz: ETSI -> FCC
+>> * CTRY_MEXICO:            2.4GHz: FCC-> ETSI
+>> * CTRY_PAKISTAN:            5GHz: NO_CTL -> FCC
+>> * CTRY_ROMANIA:             5GHz: NO_CTL -> ETSI
+>> * CTRY_RUSSIA:              5GHz: NO_CTL -> ETSI
+>> * CTRY_SAUDI_ARABIA:        5GHz: NO_CTL -> FCC
+>> * CTRY_SINGAPORE:           5GHz: ETSI -> FCC
+>> * CTRY_UKRAINE:             5GHz: NO_CTL -> ETSI
+>> * CTRY_UAE:                 5GHz: NO_CTL -> ETSI
+>> * CTRY_VIET_NAM:            5GHz: NO_CTL -> ETSI
+>> * CTRY_ZIMBABWE:            5GHz: NO_CTL -> ETSI
+>>
+>>
+>> Btw. I have not removed CTRY_SERBIA_MONTENEGRO, CTRY_KOREA_ROC2 or
+>> APL2_APLD because this might break devices which have these programmed in
+>> the EEPROM. And I have not added APL11_FCCA, APL12_WORLD and CTRY_MALDIVES
+>> because only the code was in the qcacld-2.0 source code but not the actual
+>> mapping.
+>>
+>> I am relative confident that QCA also has following extra countries:
+>>
+>> * Afghanistan
+>> * American Samoa
+>> * Anguilla
+>> * Bhutan
+>> * Burkina Faso
+>> * Cayman Islands
+>> * Central Africa Republic
+>> * Chad
+>> * Christmas Islands
+>> * Dominica
+>> * Ethiopia
+>> * French Guiana
+>> * French Polynesia
+>> * Ghana
+>> * Guadeloupe
+>> * Guyana
+>> * Cote d'Ivoire
+>> * Lesotho
+>> * Malawi
+>> * Maldives
+>> * Marshall Islands
+>> * Martinique
+>> * Mauitania
+>> * Mayotte
+>> * Micronesia
+>> * Moldova
+>> * Mongolia
+>> * Namibia
+>> * Nigeria
+>> * Northern Mariana Islands
+>> * Palau
+>> * Reunion
+>> * St Barthelemy
+>> * St Kitts Nevis
+>> * St Lucia
+>> * St Martin
+>> * St Pierre Miquelon
+>> * St Vincent Grenadiens
+>> * Samoa
+>> * Senegal
+>> * Suriname
+>> * Togo
+>> * Turks Caicos
+>> * Vanuatu
+>> * Virgin Islands
+>> * Wallis Futuna
+>>
+>> + a lot of extra regdomain codes (0x15, 0x16, 0x17, 0x18, 0x19, 0x3c, 0x4f,
+>> 0x51, 0x57, 0x59) and the corresponding mappings.
+>
+> I asked about this and indeed qcacld-2.0 has few old mappings. I was
+> told these patches are not current so I dropped them for now:
+>
+> [03/52] ath: Add regulatory mapping for Japan (J56)          2018-03-01
+> [04/52] ath: Add regulatory mapping for Japan KDDI           2018-03-01
+> [10/52] ath: Add regulatory mapping for Rwanda               2018-03-01
+> [14/52] ath: Add regulatory mapping for United States for AP 2018-03-01
+> [16/52] ath: Add regulatory mapping for APL10_MKKC           2018-03-01
+> [21/52] ath: Switch APL9_WORLD to 2.4GHz MKK CTL             2018-03-01
+> [31/52] ath: Map Indonesia to APL2_WORLD                     2018-03-01
+> [33/52] ath: Map Japan to MKK5_MKKA2                         2018-03-01
+> [34/52] ath: Map South Korea to APL10_MKKC                   2018-03-01
+> [35/52] ath: Map Lebanon to APL1_WORLD                       2018-03-01
+> [38/52] ath: Map Mexico to FCC1_WORLD                        2018-03-01
+> [40/52] ath: Map Pakistan to APL1_WORLD                      2018-03-01
+> [45/52] ath: Map Saudi Arabia to FCC2_WORLD                  2018-03-01
+> [47/52] ath: Map Taiwan to APL7_FCCA                         2018-03-01
+> [49/52] ath: Map U.A.E. to ETSI1_WORLD                       2018-03-01
+> [50/52] ath: Map Venezuela to FCC1_WORLD                     2018-03-01
+> [51/52] ath: Map Vietnam to ETSI3_WORLD                      2018-03-01
+>
+> Rest of the patches are now in the pending branch and I'm hoping to
+> apply them soon:
+>
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/log/?h=pending
 
-On 05/27/2018 10:37, Hans de Goede wrote:
-> Hi,
-> 
-> On 18-05-18 09:04, Hans de Goede wrote:
->> Hi,
->>
->> On 15-05-18 10:43, Arend van Spriel wrote:
->>> On 5/14/2018 2:05 PM, Josh Boyer wrote:
->>>> n Mon, May 14, 2018 at 6:11 AM Arend van Spriel <
->>>> arend.vanspriel@broadcom.com> wrote:
->>>>
->>>>> On 3/16/2018 3:08 PM, Chi-Hsien Lin wrote:
->>>>>> Update brcm firmware files and WHENCE accordingly.
->>>>
->>>>> Hi firmware-maintainers,
->>>>
->>>>> It seems this series somehow got lost. Can these still be applied. 
->>>>> They
->>>>> can be found in the linux-wireless patchwork database. I provided 
->>>>> links
->>>>> below.
->>>>
->>>> All 5 of these move the respective firmware files under the Cypress
->>>> license.  It has been pointed out that the Cypress license has some
->>>> questionable language in it and that people have been in touch to 
->>>> try and
->>>> get this resolved.  I'm personally waiting on applying them until the
->>>> licence issue is sorted out.
->>>
->>> Thanks, Josh
->>>
->>> I could not find any such response. Has it been taken off-list? Seems 
->>> like 2 months is quite some time, but maybe there are lawyers 
->>> involved ;-)
->>
->> Yes the discussion about this has been happening off-list. IANAL but
->> the gist of it is (AFAIK) that:
->>
->> https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/tree/LICENCE.cypress 
->>
->>
->> has a clause which allows Cypress to retro-actively revoke the LICENSE:
->>
->> "either party may terminate this Agreement at any time with or without 
->> cause."
->> ...
->> "Upon termination, you must destroy all copies of Software in your 
->> possession or
->> control."
->>
->> So upon revokation we would have to remove the files from linux-firmware
->> (rewrite git history?) and since distros get their redistribution rights
->> from this license too they would also need to remove it from their 
->> packages
->> including all mirrors and archives of older versions. Which simply is not
->> feasible and no other license in linux-firmware has such a clause.
-> 
-> Chi-Hsien or other people from Cypress, any progress on getting the license
-> updated to remove the troublesome termination without cause clause?
-Hi all,
+Forgot to mention that there was a trivial conflict due to dropping some
+of the patches:
 
-I have received the updated license from the Legal department today. 
-Have just submitted a V4 with the updated license.
+Pushing patch "ath-map-russia-to-etsi8_world" ... done (conflict)
+Error: 1 merge conflict(s)
+       CONFLICT (content): Merge conflict in
+       drivers/net/wireless/ath/regd_common.h
+Now at patch "ath-map-russia-to-etsi8_world"
 
-Regards,
-Chi-hsien Lin
+I fixed it like this:
 
-> 
-> Non of the other vendors with firmware in Linux firmware deem it necessary
-> to have such a patch.
-> 
-> Given that the proposed firmware updates which this is blocking are
-> *SECURITY* fixes it would be good to get this resolved ASAP.
-> 
-> Regards,
-> 
-> Hans
+diff --cc drivers/net/wireless/ath/regd_common.h
+index 3afce206e049,dcb4fe28e76a..000000000000
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@@ -459,7 -465,8 +459,7 @@@ static struct country_code_to_enum_rd a
+        {CTRY_PUERTO_RICO, FCC1_FCCA, "PR"},
+        {CTRY_QATAR, APL1_WORLD, "QA"},
+        {CTRY_ROMANIA, ETSI1_WORLD, "RO"},
+-       {CTRY_RUSSIA, NULL1_WORLD, "RU"},
++       {CTRY_RUSSIA, ETSI8_WORLD, "RU"},
+ -      {CTRY_RWANDA, APL1_WORLD, "RW"},
+        {CTRY_SAUDI_ARABIA, NULL1_WORLD, "SA"},
+        {CTRY_SERBIA, ETSI1_WORLD, "RS"},
+        {CTRY_SERBIA_MONTENEGRO, ETSI1_WORLD, "CS"},
+
+-- 
+Kalle Valo
