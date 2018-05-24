@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41434 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750778AbeELIzI (ORCPT
+Received: from dnvrco-outbound-snat.email.rr.com ([107.14.73.227]:7616 "EHLO
+        dnvrco-cmomta02.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S966192AbeEXW3n (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 May 2018 04:55:08 -0400
-Content-Type: text/plain; charset="utf-8"
+        Thu, 24 May 2018 18:29:43 -0400
+Message-ID: <20180524222942.533WK.32712.root@dnvrco-web06> (sfid-20180525_002947_762541_7353D9F7)
+Date: Thu, 24 May 2018 22:29:42 +0000
+From: <mgreger@cinci.rr.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Can no one help me? (Nevermind)
+In-Reply-To: <20180524002814.0LYFB.99550.root@dnvrco-web07>
 MIME-Version: 1.0
-Subject: Re: rsi: fix spelling mistake: "thead" -> "thread"
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180510143217.23488-1-colin.king@canonical.com>
-References: <20180510143217.23488-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: "David S . Miller" <davem@davemloft.net>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20180512085508.173276019F@smtp.codeaurora.org> (sfid-20180512_105521_581196_03AE663D)
-Date: Sat, 12 May 2018 08:55:07 +0000 (UTC)
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
+Nevermind.
 
-> From: Colin Ian King <colin.king@canonical.com>
+I tried several different AR9462 cards in a completely different laptop running MS Windows 10 (Privacy Invasion Edition) with the exact same results.
+
+Conclusion: Atheros is complete crap.
+
+Can anyone recommend a dual-band adapter that ACTUALLY WORKS in linux with an open driver and without proprietary firmware (M.2 NGFF format A keyed or A-E keyed)? 
+
+Thanks
+
+
+---- mgreger@cinci.rr.com wrote: 
+> I realize this is a development mailinglist and not a support forum, but I'm really at the end of my rope here.
 > 
-> Trivial fix to spelling mistake in rsi_dbg debug message text
+> If someone can get this working, I'll buy them a nice lunch if they're ever near Cincinnati.
 > 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-
-Patch applied to wireless-drivers-next.git, thanks.
-
-b41c39367669 rsi: fix spelling mistake: "thead" -> "thread"
-
--- 
-https://patchwork.kernel.org/patch/10391879/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> I've tried booting alternative distros to see if it is a software problem, but no distro I've tried will work. I've even replaced the AR9462 card with another one, thinking maybe the hardware was bad...but no change.
+> 
+> Surely someone here has a clue as to what's going on?
+> 
+> Many thanks in advance for any help.
