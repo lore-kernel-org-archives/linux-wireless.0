@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:35608 "EHLO mail.bugwerft.de"
+Received: from muru.com ([72.249.23.125]:44410 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752253AbeEPOIq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 May 2018 10:08:46 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
-        rfried@codeaurora.org, bjorn.andersson@linaro.org,
-        nicolas.dechesne@linaro.org, loic.poulain@linaro.org,
-        Daniel Mack <daniel@zonque.org>
-Subject: [PATCH 09/10] wcn36xx: simplify wcn36xx_smd_open()
-Date: Wed, 16 May 2018 16:08:19 +0200
-Message-Id: <20180516140820.1636-10-daniel@zonque.org> (sfid-20180516_160855_606041_DA79FEF6)
-In-Reply-To: <20180516140820.1636-1-daniel@zonque.org>
-References: <20180516140820.1636-1-daniel@zonque.org>
+        id S965042AbeEXNVf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 May 2018 09:21:35 -0400
+Date: Thu, 24 May 2018 06:21:32 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Eyal Reizer <eyalreizer@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
+Subject: Re: [EXTERNAL] Re: [PATCH] wlcore: use generic runtime pm calls for
+ wowlan elp configuration
+Message-ID: <20180524132132.GZ98604@atomide.com> (sfid-20180524_152158_731783_D02496BE)
+References: <1527146337-17562-1-git-send-email-eyalr@ti.com>
+ <87fu2hiilx.fsf@codeaurora.org>
+ <06f0b1b5243a4ab7befad7b9109bf5a5@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <06f0b1b5243a4ab7befad7b9109bf5a5@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drop the extra warning about failed allocations, both the core and the
-only caller of this function will warn loud enough in such cases.
+* Reizer, Eyal <eyalr@ti.com> [180524 08:20]:
+> > 
+> > > With runtime PM enabled, we can now use generic calls to
+> > > pm_generic_runtime_suspend and pm_generic_runtime_resume for
+> > enabling elp
+> > > during suspend when wowlan is enabled and waking the chip from elp
+> > > on resume.
+> > > remove the custom API that was used to ensure that the command
+> > > that is used to allow ELP during suspend is completed before the system
+> > > suspend.
+> > >
+> > > Signed-off-by: Eyal Reizer <eyalr@ti.com>
+> > > ---
+> > > Dependent on the Runtime PM support for wlcore patch set that was
+> > submitted
+> > > by Tony Lindgren <tony@atomide.com>
+> > 
+> > Ok, I'll drop this from my queue. Please resubmit once Tony's patches
+> > are ready to apply (or Tony can include this patch in his patchset).
+> > 
+> > BTW, for me it would be a lot easier if you could mark patches like this
+> > as RFT (Request For Test) or RFC (Request For Comments). That way I can
+> > automatically drop the patch without sending any emails.
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
----
- drivers/net/wireless/ath/wcn36xx/smd.c | 12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
+Sorry for the noise, what seemed like a trivial change to use generic
+runtime PM exposed few unexpected issues :) I'll do one more revision
+of all the patches with RFT. Then when we are happy with that series,
+I'll do one more patch to enable runtime PM autosuspend support to
+avoid enabling and disabing the hardware constantly. And then after
+that we should have the patches finally ready for merging.
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 0a505b5e038b..43c8aa79fad4 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -2494,21 +2494,15 @@ static void wcn36xx_ind_smd_work(struct work_struct *work)
- }
- int wcn36xx_smd_open(struct wcn36xx *wcn)
- {
--	int ret = 0;
- 	wcn->hal_ind_wq = create_freezable_workqueue("wcn36xx_smd_ind");
--	if (!wcn->hal_ind_wq) {
--		wcn36xx_err("failed to allocate wq\n");
--		ret = -ENOMEM;
--		goto out;
--	}
-+	if (!wcn->hal_ind_wq)
-+		return -ENOMEM;
-+
- 	INIT_WORK(&wcn->hal_ind_work, wcn36xx_ind_smd_work);
- 	INIT_LIST_HEAD(&wcn->hal_ind_queue);
- 	spin_lock_init(&wcn->hal_ind_lock);
- 
- 	return 0;
--
--out:
--	return ret;
- }
- 
- void wcn36xx_smd_close(struct wcn36xx *wcn)
--- 
-2.14.3
+Regards,
+
+Tony
