@@ -1,78 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45646 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:39194 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932115AbeEIDuP (ORCPT
+        with ESMTP id S1751180AbeEXELc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 May 2018 23:50:15 -0400
+        Thu, 24 May 2018 00:11:32 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgens?= =?utf-8?Q?en?=
+        <toke@toke.dk>, linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: linux-next: build warning after merge of the mac80211-next tree
+References: <20180509145624.643d2e56@canb.auug.org.au>
+        <87po221j08.fsf@purkki.adurom.net>
+        <CAK8P3a1tdhO6FX76vMXdpd6FxN87RjhLeKW4ws8GgOHqAwr4qA@mail.gmail.com>
+Date: Thu, 24 May 2018 07:11:25 +0300
+In-Reply-To: <CAK8P3a1tdhO6FX76vMXdpd6FxN87RjhLeKW4ws8GgOHqAwr4qA@mail.gmail.com>
+        (Arnd Bergmann's message of "Wed, 23 May 2018 23:55:00 +0200")
+Message-ID: <87muwpd76a.fsf@kamboji.qca.qualcomm.com> (sfid-20180524_061241_559016_60F8D32B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 09 May 2018 09:20:14 +0530
-From: Govind Singh <govinds@codeaurora.org>
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: Andy Gross <andy.gross@linaro.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 06/12] firmware: qcom: scm: Add WLAN VMID for Qualcomm SCM
- interface
-In-Reply-To: <20180507204236.GI2259@tuxbook-pro>
-References: <1522042819-25916-1-git-send-email-govinds@codeaurora.org>
- <20180507204236.GI2259@tuxbook-pro>
-Message-ID: <55ee4bf22e6557a37cbd46691816bef5@codeaurora.org> (sfid-20180509_055018_809819_A38FC813)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-05-08 02:12, Bjorn Andersson wrote:
-> On Sun 25 Mar 22:40 PDT 2018, Govind Singh wrote:
-> 
->> Add WLAN related VMID's to support wlan driver to set up
->> the remote's permissions call via TrustZone.
->> 
->> Signed-off-by: Govind Singh <govinds@codeaurora.org>
-> 
-> Please use ./scripts/get_maintainer.pl for each patch to get a hint
-> about whom to send your patches to.
-> 
-> While I think it's okay that Kalle picks it through his tree Andy 
-> should
-> give his ack first.
-> 
-> 
-> Acked-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-> 
-> Regards,
-> Bjorn
-> 
+Arnd Bergmann <arnd@arndb.de> writes:
 
-Thanks Bjorn for the review.
-I will take care this point while sending the next version of the qmi 
-patch set.
+> On Fri, May 11, 2018 at 2:20 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Stephen Rothwell <sfr@canb.auug.org.au> writes:
+>>
+>>> After merging the mac80211-next tree, today's linux-next build (arm_multi
+>>> v7_defconfig) produced this warning:
+>>>
+>>> drivers/net/wireless/marvell/mwifiex/uap_event.c: In function 'mwifiex_process_uap_event':
+>>> drivers/net/wireless/marvell/mwifiex/uap_event.c:333:1: warning: the frame size of 1680 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+>>>  }
+>>>  ^
+>>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c: In function 'brcmf_notify_connect_status_ap':
+>>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:5530:1: warning: the frame size of 1680 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+>>>  }
+>>>  ^
+>>>
+>>> Maybe introduced by commit
+>>>
+>>>   52539ca89f36 ("cfg80211: Expose TXQ stats and parameters to userspace")
+>>
+>> Btw Stephen for mac80211 reports it would be a good idea to also cc
+>> linux-wireless list, in case Johannes is not around etc.
+>
+> I also bisected this new warning to the same commit above:
+>
+> net/batman-adv/bat_v_elp.c: In function 'batadv_v_elp_get_throughput':
+> net/batman-adv/bat_v_elp.c:154:1: warning: the frame size of 1736
+> bytes is larger than 1024 bytes [-Wframe-larger-than=]
 
->> ---
->>  include/linux/qcom_scm.h | 4 +++-
->>  1 file changed, 3 insertions(+), 1 deletion(-)
->> 
->> diff --git a/include/linux/qcom_scm.h b/include/linux/qcom_scm.h
->> index b401b96..da63d84 100644
->> --- a/include/linux/qcom_scm.h
->> +++ b/include/linux/qcom_scm.h
->> @@ -1,4 +1,4 @@
->> -/* Copyright (c) 2010-2015, The Linux Foundation. All rights 
->> reserved.
->> +/* Copyright (c) 2010-2015, 2018, The Linux Foundation. All rights 
->> reserved.
->>   * Copyright (C) 2015 Linaro Ltd.
->>   *
->>   * This program is free software; you can redistribute it and/or 
->> modify
->> @@ -33,6 +33,8 @@ struct qcom_scm_vmperm {
->> 
->>  #define QCOM_SCM_VMID_HLOS       0x3
->>  #define QCOM_SCM_VMID_MSS_MSA    0xF
->> +#define QCOM_SCM_VMID_WLAN       0x18
->> +#define QCOM_SCM_VMID_WLAN_CE    0x19
->>  #define QCOM_SCM_PERM_READ       0x4
->>  #define QCOM_SCM_PERM_WRITE      0x2
->>  #define QCOM_SCM_PERM_EXEC       0x1
->> --
->> 1.9.1
->> 
+This should fix it:
+
+8689c051a201 cfg80211: dynamically allocate per-tid stats for station info
+
+https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git/commit/?id=8689c051a20195b228e19acb155c7d6e48a86753
+
+-- 
+Kalle Valo
