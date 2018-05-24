@@ -1,98 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50550 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751046AbeEPJ1y (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:37984 "EHLO
+        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030220AbeEXSrU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 May 2018 05:27:54 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Michael Nazzareno Trimarchi <michael@amarulasolutions.com>
-Cc: Tony Lindgren <tony@atomide.com>, Eyal Reizer <eyalr@ti.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Guy Mishol <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Maital Hahn <maitalm@ti.com>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
-        Linux OMAP Mailing List <linux-omap@vger.kernel.org>
-Subject: Re: [PATCH 2/2] wlcore: Add support runtime PM
-References: <20180515161315.1997-1-tony@atomide.com>
-        <20180515161315.1997-3-tony@atomide.com>
-        <CAOf5uwkT4Vg1kQn5k=_z9XjXOLWbA0vioqH6KSdikZbCwyaYbA@mail.gmail.com>
-Date: Wed, 16 May 2018 12:27:46 +0300
-In-Reply-To: <CAOf5uwkT4Vg1kQn5k=_z9XjXOLWbA0vioqH6KSdikZbCwyaYbA@mail.gmail.com>
-        (Michael Nazzareno Trimarchi's message of "Tue, 15 May 2018 18:17:39
-        +0200")
-Message-ID: <87a7t0lzl9.fsf@kamboji.qca.qualcomm.com> (sfid-20180516_112758_726372_FDBD901C)
+        Thu, 24 May 2018 14:47:20 -0400
+Received: by mail-wm0-f51.google.com with SMTP id m129-v6so8083722wmb.3
+        for <linux-wireless@vger.kernel.org>; Thu, 24 May 2018 11:47:19 -0700 (PDT)
+Subject: Re: [PATCH 1/3] brcmfmac: allow specifying features per firmware
+ version
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+References: <20180522131836.26858-1-zajec5@gmail.com>
+ <5B051F2A.9090501@broadcom.com>
+ <f79ad17d-5d7f-ceac-19e6-2e55d9bb20bf@gmail.com>
+ <5B066F28.5070706@broadcom.com> <cacf02df5ce961891e33344ab14a4629@milecki.pl>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B0708B4.5020901@broadcom.com> (sfid-20180524_204827_340289_AF72D457)
+Date: Thu, 24 May 2018 20:47:16 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <cacf02df5ce961891e33344ab14a4629@milecki.pl>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Nazzareno Trimarchi <michael@amarulasolutions.com> writes:
-
->> @@ -315,15 +319,17 @@ static ssize_t dynamic_fw_traces_write(struct file *file,
->>         if (unlikely(wl->state != WLCORE_STATE_ON))
->>                 goto out;
->>
->> -       ret = wl1271_ps_elp_wakeup(wl);
->> -       if (ret < 0)
->> +       ret = pm_runtime_get_sync(wl->dev);
->> +       if (ret < 0) {
->> +               pm_runtime_put_noidle(wl->dev);
->>                 goto out;
->> +       }
->>
+On 5/24/2018 10:21 AM, Rafał Miłecki wrote:
 >
-> Can you just change ps_elp_wakeup with
->        ret = pm_runtime_get_sync(wl->dev);
->        if (ret < 0) {
->                pm_runtime_put_noidle(wl->dev);
->                  goto out;
->        }
->
->>         ret = wl18xx_acx_dynamic_fw_traces(wl);
->>         if (ret < 0)
->>                 count = ret;
->>
->> -       wl1271_ps_elp_sleep(wl);
->> +       pm_runtime_put(wl->dev);
->
-> and elp_sleep with this one
->
->>  out:
->>         mutex_unlock(&wl->mutex);
->>         return count;
->> @@ -374,9 +380,11 @@ static ssize_t radar_debug_mode_write(struct file *file,
->>         if (unlikely(wl->state != WLCORE_STATE_ON))
->>                 goto out;
->>
->> -       ret = wl1271_ps_elp_wakeup(wl);
->> -       if (ret < 0)
->> +       ret = pm_runtime_get_sync(wl->dev);
->> +       if (ret < 0) {
->> +               pm_runtime_put_noidle(wl->dev);
->>                 goto out;
->> +       }
->>
->>         wl12xx_for_each_wlvif_ap(wl, wlvif) {
->>                 wlcore_cmd_generic_cfg(wl, wlvif,
->> @@ -384,7 +392,7 @@ static ssize_t radar_debug_mode_write(struct file *file,
->>                                        wl->radar_debug_mode, 0);
->>         }
->>
->> -       wl1271_ps_elp_sleep(wl);
->> +       pm_runtime_put(wl->dev);
->
-> Michael
+> OT: is your brcmfmac4366c-pcie.bin going to include BCM4366E support?
 
-<over 1600 lines of unnecessary quotation cut out>
+I would think so. I actually tested with 4366E before passing the 
+firmware for verification.
 
-PLEASE edit your quotes, your behaviour makes use of patchwork really
-annoying:
-
-https://patchwork.kernel.org/patch/10401591/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#do_not_top_post_and_edit_your_quotes
-
--- 
-Kalle Valo
+Regards,
+Arend
