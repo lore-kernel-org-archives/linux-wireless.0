@@ -1,74 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:35182 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752584AbeEPNcy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 May 2018 09:32:54 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: sameo@linux.intel.com, davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH 1/2] NFC: st95hf: initialize semaphore and mutex earlier
-Date: Wed, 16 May 2018 15:32:46 +0200
-Message-Id: <20180516133247.25986-1-daniel@zonque.org> (sfid-20180516_153355_993307_BD36918D)
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:37664 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967464AbeEXLfp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 May 2018 07:35:45 -0400
+Received: by mail-wr0-f194.google.com with SMTP id i12-v6so2488948wrc.4
+        for <linux-wireless@vger.kernel.org>; Thu, 24 May 2018 04:35:44 -0700 (PDT)
+From: Eyal Reizer <eyalreizer@gmail.com>
+To: kvalo@codeaurora.org, tony@atomide.com, nsekhar@ti.com,
+        linux-wireless@vger.kernel.org
+Cc: Eyal Reizer <eyalr@ti.com>
+Subject: [PATCH] wlcore: sdio: check for valid platform device data before suspend
+Date: Thu, 24 May 2018 14:35:30 +0300
+Message-Id: <1527161730-9044-1-git-send-email-eyalr@ti.com> (sfid-20180524_133621_141069_FD03788D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-'rm_lock' and 'exchange_lock' need to be ready before the IRQ handler has a
-chance to fire.
+the wl pointer can be null In case only wlcore_sdio is probed while
+no WiLink module is successfully probed, as in the case of mounting a
+wl12xx module while using a device tree file configured with wl18xx
+related settings.
+In this case the system was crashing in wl1271_suspend() as platform
+device data is not set.
+Make sure wl the pointer is valid before using it.
 
-This fixes the oops below.
-
-[    1.040255] Internal error: Oops: 96000004 [#1] PREEMPT SMP
-[...]
-[    1.181564] Call trace:
-[    1.188591] Exception stack(0xffff00000a473c40 to 0xffff00000a473d80)
-[    1.190943] 3c40: ffff80003673b118 0000000000000000 ffff800036374380 0000000000000000
-[    1.197542] 3c60: 0000000000000000 0000000000000000 00000000044b2ac5 0000000000000001
-[    1.205354] 3c80: ffff800036374d60 ffff00000a473d70 0000000000000980 0000000000000000
-[    1.213166] 3ca0: 0000000000000001 0000000000000000 000000000000004c 0000000000000033
-[    1.217590] st95hf spi2.0: err: por seq failed for st95hf
-[    1.228788] 3cc0: 0000000000000019 0000000000000001 0000000000000007 ffff80003673b118
-[    1.234175] 3ce0: ffff800009f27000 0000000000000000 ffff80003673b1c8 ffff80003673b1b0
-[    1.241986] 3d00: ffff0000080f0000 ffff800009f716a4 ffff00000894bb40 0000000000000000
-[    1.249800] 3d20: 0000000000000000 ffff00000a473d80 ffff0000084268c0 ffff00000a473d80
-[    1.257611] 3d40: ffff0000084268c4 0000000040000005 ffff00000a473d60 ffff0000080e5688
-[    1.265424] 3d60: ffffffffffffffff ffff0000084268a4 ffff00000a473d80 ffff0000084268c4
-[    1.273239] [<ffff0000084268c4>] st95hf_irq_thread_handler+0x44/0x3a0
-[    1.281048] [<ffff0000080f00b0>] irq_thread_fn+0x28/0x68
-[    1.287468] [<ffff0000080f035c>] irq_thread+0x10c/0x1a0
-[    1.292850] [<ffff0000080c50bc>] kthread+0x12c/0x130
-[    1.297799] [<ffff000008084b88>] ret_from_fork+0x10/0x18
-[    1.303008] Code: aa1603e0 f9403675 940d010f aa1303e0 (f94066a1)
-[    1.308307] ---[ end trace d058c1b88aad74d8 ]---
-
-Signed-off-by: Daniel Mack <daniel@zonque.org>
+Signed-off-by: Eyal Reizer <eyalr@ti.com>mamai
 ---
- drivers/nfc/st95hf/core.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ti/wlcore/sdio.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
-index 2b26f762fbc3..394bdc7b0cf2 100644
---- a/drivers/nfc/st95hf/core.c
-+++ b/drivers/nfc/st95hf/core.c
-@@ -1112,8 +1112,10 @@ static int st95hf_probe(struct spi_device *nfc_spi_dev)
- 		}
- 	}
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index da701cd..aec6225 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -406,6 +406,11 @@ static int wl1271_suspend(struct device *dev)
+ 	mmc_pm_flag_t sdio_flags;
+ 	int ret = 0;
  
-+	sema_init(&st95context->exchange_lock, 1);
- 	init_completion(&spicontext->done);
- 	mutex_init(&spicontext->spi_lock);
-+	mutex_init(&st95context->rm_lock);
++	if (!wl) {
++		dev_err(dev, "no wilink module was probed\n");
++		goto out;
++	}
++
+ 	dev_dbg(dev, "wl1271 suspend. wow_enabled: %d\n",
+ 		wl->wow_enabled);
  
- 	/*
- 	 * Store spicontext in spi device object for using it in
-@@ -1197,9 +1199,6 @@ static int st95hf_probe(struct spi_device *nfc_spi_dev)
- 	/* store st95context in nfc device object */
- 	nfc_digital_set_drvdata(st95context->ddev, st95context);
- 
--	sema_init(&st95context->exchange_lock, 1);
--	mutex_init(&st95context->rm_lock);
--
- 	return ret;
- 
- err_free_digital_device:
 -- 
-2.14.3
+2.7.4
