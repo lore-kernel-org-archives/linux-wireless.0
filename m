@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44966 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935598AbeEXIFg (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:40236 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S966066AbeEXNse (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 May 2018 04:05:36 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Eyal Reizer <eyalreizer@gmail.com>
-Cc: tony@atomide.com, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org, Eyal Reizer <eyalr@ti.com>
-Subject: Re: [PATCH] wlcore: use generic runtime pm calls for wowlan elp configuration
-References: <1527146337-17562-1-git-send-email-eyalr@ti.com>
-Date: Thu, 24 May 2018 11:05:30 +0300
-In-Reply-To: <1527146337-17562-1-git-send-email-eyalr@ti.com> (Eyal Reizer's
-        message of "Thu, 24 May 2018 10:18:57 +0300")
-Message-ID: <87fu2hiilx.fsf@codeaurora.org> (sfid-20180524_100543_458111_FA5844D8)
+        Thu, 24 May 2018 09:48:34 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH] mwifiex: handle race during mwifiex_usb_disconnect
+Date: Thu, 24 May 2018 19:18:27 +0530
+Message-ID: <1527169707-27317-1-git-send-email-gbhat@marvell.com> (sfid-20180524_154953_907328_1211896F)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Eyal Reizer <eyalreizer@gmail.com> writes:
+Race condition is observed during rmmod of mwifiex_usb:
 
-> With runtime PM enabled, we can now use generic calls to
-> pm_generic_runtime_suspend and pm_generic_runtime_resume for enabling elp
-> during suspend when wowlan is enabled and waking the chip from elp
-> on resume.
-> remove the custom API that was used to ensure that the command
-> that is used to allow ELP during suspend is completed before the system
-> suspend.
->
-> Signed-off-by: Eyal Reizer <eyalr@ti.com>
-> ---
-> Dependent on the Runtime PM support for wlcore patch set that was submitted 
-> by Tony Lindgren <tony@atomide.com>
+1. The rmmod thread will call mwifiex_usb_disconnect(), download
+   SHUTDOWN command and do wait_event_interruptible_timeout(),
+   waiting for response.
 
-Ok, I'll drop this from my queue. Please resubmit once Tony's patches
-are ready to apply (or Tony can include this patch in his patchset).
+2. The main thread will handle the response and will do a
+   wake_up_interruptible(), unblocking rmmod thread.
 
-BTW, for me it would be a lot easier if you could mark patches like this
-as RFT (Request For Test) or RFC (Request For Comments). That way I can
-automatically drop the patch without sending any emails.
+3. On getting unblocked, rmmod thread  will make rx_cmd.urb = NULL in
+   mwifiex_usb_free().
 
+4. The main thread will try to resubmit rx_cmd.urb in
+   mwifiex_usb_submit_rx_urb(), which is NULL.
+
+To fix, wait for main thread to complete before calling
+mwifiex_usb_free().
+
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/usb.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index bc475b8..6e3cf98 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -644,6 +644,9 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
+ 					 MWIFIEX_FUNC_SHUTDOWN);
+ 	}
+ 
++	if (adapter->workqueue)
++		flush_workqueue(adapter->workqueue);
++
+ 	mwifiex_usb_free(card);
+ 
+ 	mwifiex_dbg(adapter, FATAL,
 -- 
-Kalle Valo
+1.9.1
