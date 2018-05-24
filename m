@@ -1,57 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:48298 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752482AbeEPMMc (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:51158 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1032744AbeEXSya (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 May 2018 08:12:32 -0400
+        Thu, 24 May 2018 14:54:30 -0400
+Received: by mail-wm0-f67.google.com with SMTP id t11-v6so7951042wmt.0
+        for <linux-wireless@vger.kernel.org>; Thu, 24 May 2018 11:54:30 -0700 (PDT)
 From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Franky Lin <franky.lin@broadcom.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 5/6] brcmfmac: trigger memory dump upon firmware halt signal
-Date: Wed, 16 May 2018 14:12:02 +0200
-Message-Id: <1526472723-15758-6-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180516_141242_084146_5FF059B4)
-In-Reply-To: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1526472723-15758-1-git-send-email-arend.vanspriel@broadcom.com>
+Subject: Re: [PATCH 2/3] brcmfmac: handle monitor mode marked msgbuf packets
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20180522131836.26858-1-zajec5@gmail.com>
+ <20180522131836.26858-2-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Message-ID: <5B070A5D.3080400@broadcom.com> (sfid-20180524_205524_594651_A3E593C9)
+Date: Thu, 24 May 2018 20:54:21 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180522131836.26858-2-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <franky.lin@broadcom.com>
+On 5/22/2018 3:18 PM, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+>
+> New Broadcom firmwares mark monitor mode packets using a newly defined
+> bit in the flags field. Use it to filter them out and pass to the
+> monitor interface. These defines were found in bcmmsgbuf.h from SDK.
+>
+> As not every firmware generates radiotap header this commit introduces
+> BRCMF_FEAT_MON_FMT_RADIOTAP that has to be set per firmware version. If
+> not present brcmf_netif_mon_rx() assumed packet being a raw 802.11 frame
+> and prepends it with an empty radiotap header.
+>
+> It's limited to the msgbuf protocol. Adding support for SDIO/USB devices
+> will require some extra research.
 
-PCIe dongle firmware signals a halt/trap through mailbox interrupt.
-Trigger a memory dump upon receiving such signal could help to provide
-useful information for issue debug.
+So I went looking on my shelf and found the patch I made for SDIO a 
+while back. It relies on firmware change and I did not introduce a 
+firmware flag for it. I will send the patch as RFT so you can have a 
+look at it.
 
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 5 +++++
- 1 file changed, 5 insertions(+)
+I checked our internal driver and it turns out the raw vs. radiotap is a 
+compilation option. So depending on customer they would get either 
+firmware doing the radiotap header generation or the host driver, 
+without any run-time way to determine it. Not nice for brcmfmac.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 5baa837..45928b5 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -182,6 +182,7 @@ enum brcmf_pcie_state {
- #define BRCMF_D2H_DEV_D3_ACK			0x00000001
- #define BRCMF_D2H_DEV_DS_ENTER_REQ		0x00000002
- #define BRCMF_D2H_DEV_DS_EXIT_NOTE		0x00000004
-+#define BRCMF_D2H_DEV_FWHALT			0x10000000
- 
- #define BRCMF_H2D_HOST_D3_INFORM		0x00000001
- #define BRCMF_H2D_HOST_DS_ACK			0x00000002
-@@ -717,6 +718,10 @@ static void brcmf_pcie_handle_mb_data(struct brcmf_pciedev_info *devinfo)
- 		devinfo->mbdata_completed = true;
- 		wake_up(&devinfo->mbdata_resp_wait);
- 	}
-+	if (dtoh_mb_data & BRCMF_D2H_DEV_FWHALT) {
-+		brcmf_dbg(PCIE, "D2H_MB_DATA: FW HALT\n");
-+		brcmf_dev_coredump(&devinfo->pdev->dev);
-+	}
- }
- 
- 
--- 
-1.9.1
+Regards,
+Arend
+
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+>   .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 24 ++++++++++++++++++++++
+>   .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  2 ++
+>   .../wireless/broadcom/brcm80211/brcmfmac/feature.h |  6 +++++-
+>   .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  | 17 +++++++++++++++
+>   4 files changed, 48 insertions(+), 1 deletion(-)
+>
