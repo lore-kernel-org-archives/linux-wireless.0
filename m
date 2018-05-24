@@ -1,53 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:46778 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751445AbeEDSvq (ORCPT
+Received: from gateway32.websitewelcome.com ([192.185.145.122]:45871 "EHLO
+        gateway32.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755104AbeEXXXZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 May 2018 14:51:46 -0400
-Date: Fri, 4 May 2018 20:51:32 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: linux-kernel@vger.kernel.org, tglx@linutronix.de,
-        Ingo Molnar <mingo@redhat.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Alexander Aring <alex.aring@gmail.com>,
-        Stefan Schmidt <stefan@osg.samsung.com>,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-wpan@vger.kernel.org,
-        Anna-Maria Gleixner <anna-maria@linutronix.de>
-Subject: Re: [RFC PATCH 2/2] net: mac808211: mac802154: use
- lockdep_assert_in_softirq() instead own warning
-Message-ID: <20180504185132.GV12217@hirez.programming.kicks-ass.net> (sfid-20180504_205203_567791_4F3E2A4B)
-References: <20180504175144.12179-1-bigeasy@linutronix.de>
- <20180504175144.12179-3-bigeasy@linutronix.de>
- <20180504183249.GU12217@hirez.programming.kicks-ass.net>
- <20180504184538.gavk7e2vtm73e32w@linutronix.de>
+        Thu, 24 May 2018 19:23:25 -0400
+Received: from cm17.websitewelcome.com (cm17.websitewelcome.com [100.42.49.20])
+        by gateway32.websitewelcome.com (Postfix) with ESMTP id 7C8E93EB923
+        for <linux-wireless@vger.kernel.org>; Thu, 24 May 2018 17:59:30 -0500 (CDT)
+Date: Thu, 24 May 2018 17:59:28 -0500
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] ath10k: htt_tx: mark expected switch fall-throughs
+Message-ID: <20180524225928.GA19570@embeddedor.com> (sfid-20180525_012718_172853_AB4F75B9)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180504184538.gavk7e2vtm73e32w@linutronix.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 04, 2018 at 08:45:39PM +0200, Sebastian Andrzej Siewior wrote:
-> On 2018-05-04 20:32:49 [+0200], Peter Zijlstra wrote:
-> > On Fri, May 04, 2018 at 07:51:44PM +0200, Sebastian Andrzej Siewior wrote:
-> > > From: Anna-Maria Gleixner <anna-maria@linutronix.de>
-> > > 
-> > > The warning in ieee802154_rx() and ieee80211_rx_napi() is there to ensure
-> > > the softirq context for the subsequent netif_receive_skb() call. 
-> > 
-> > That's not in fact what it does though; so while that might indeed be
-> > the intent that's not what it does.
-> 
-> It was introduced in commit d20ef63d3246 ("mac80211: document
-> ieee80211_rx() context requirement"):
-> 
->     mac80211: document ieee80211_rx() context requirement
->     
->     ieee80211_rx() must be called with softirqs disabled
+In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+where we are expecting to fall through.
 
-softirqs disabled, ack that is exactly what it checks.
+Notice that in this particular case, I replaced "pass through" with
+a proper "fall through" comment, which is what GCC is expecting
+to find.
 
-But afaict the assertion you introduced tests that we are _in_ softirq
-context, which is not the same.
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 5d8b97a..89157c5 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -1202,7 +1202,7 @@ static int ath10k_htt_tx_32(struct ath10k_htt *htt,
+ 	case ATH10K_HW_TXRX_RAW:
+ 	case ATH10K_HW_TXRX_NATIVE_WIFI:
+ 		flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
+-		/* pass through */
++		/* fall through */
+ 	case ATH10K_HW_TXRX_ETHERNET:
+ 		if (ar->hw_params.continuous_frag_desc) {
+ 			ext_desc_t = htt->frag_desc.vaddr_desc_32;
+@@ -1404,7 +1404,7 @@ static int ath10k_htt_tx_64(struct ath10k_htt *htt,
+ 	case ATH10K_HW_TXRX_RAW:
+ 	case ATH10K_HW_TXRX_NATIVE_WIFI:
+ 		flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
+-		/* pass through */
++		/* fall through */
+ 	case ATH10K_HW_TXRX_ETHERNET:
+ 		if (ar->hw_params.continuous_frag_desc) {
+ 			ext_desc_t = htt->frag_desc.vaddr_desc_64;
+-- 
+2.7.4
