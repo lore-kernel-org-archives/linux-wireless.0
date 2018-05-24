@@ -1,38 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38298 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752264AbeEKKPy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 06:15:54 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Taketo Kabe <kabe@sra-tohoku.co.jp>
-Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] drivers/net/wireless/broadcom/b43: fix transmit failure when VT is switched
-References: <5AF2DE73.20608@sra-tohoku.co.jp> <20180509185101.0888bd7a@wiggum>
-        <5AF41F55.4060606@sra-tohoku.co.jp>
-Date: Fri, 11 May 2018 13:15:49 +0300
-In-Reply-To: <5AF41F55.4060606@sra-tohoku.co.jp> (Taketo Kabe's message of
-        "Thu, 10 May 2018 19:30:45 +0900")
-Message-ID: <877eoacxbe.fsf@codeaurora.org> (sfid-20180511_121557_157439_397612C0)
+Received: from muru.com ([72.249.23.125]:44488 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1031196AbeEXOYn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 May 2018 10:24:43 -0400
+Date: Thu, 24 May 2018 07:24:40 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Eyal Reizer <eyalreizer@gmail.com>
+Cc: kvalo@codeaurora.org, nsekhar@ti.com,
+        linux-wireless@vger.kernel.org, Eyal Reizer <eyalr@ti.com>
+Subject: Re: [PATCH] wlcore: sdio: check for valid platform device data
+ before suspend
+Message-ID: <20180524142440.GY77025@atomide.com> (sfid-20180524_162717_124739_C5674C47)
+References: <1527161730-9044-1-git-send-email-eyalr@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1527161730-9044-1-git-send-email-eyalr@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Taketo Kabe <kabe@sra-tohoku.co.jp> writes:
+* Eyal Reizer <eyalreizer@gmail.com> [180524 11:38]:
+> the wl pointer can be null In case only wlcore_sdio is probed while
+> no WiLink module is successfully probed, as in the case of mounting a
+> wl12xx module while using a device tree file configured with wl18xx
+> related settings.
+> In this case the system was crashing in wl1271_suspend() as platform
+> device data is not set.
+> Make sure wl the pointer is valid before using it.
 
-> From: Taketo Kabe <kabe@sra-tohoku.co.jp>
->
-> Fix for b43 wireless card stopping transmission when switching VTs.
+Just checking.. It seems like this fix is separate from the PM
+runtime conversion, right?
 
-The title is wrong, it should be:
+> Signed-off-by: Eyal Reizer <eyalr@ti.com>mamai
 
-b43: fix transmit failure when VT is switched
+Looks like you have some extra characters ^^^^^ here.
 
-I can fix that during commit.
+Regards,
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#commit_title_is_wrong
-
-
--- 
-Kalle Valo
+Tony
