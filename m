@@ -1,159 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:45388 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753340AbeERJaj (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35653 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751385AbeEXF2m (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 05:30:39 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 08/14] rtlwifi: Add hal_op c2h_ra_report_handler for special process
-Date: Fri, 18 May 2018 17:30:01 +0800
-Message-ID: <20180518093007.23594-9-pkshih@realtek.com> (sfid-20180518_113135_602445_DC275E1C)
-In-Reply-To: <20180518093007.23594-1-pkshih@realtek.com>
-References: <20180518093007.23594-1-pkshih@realtek.com>
+        Thu, 24 May 2018 01:28:42 -0400
+Received: by mail-wm0-f66.google.com with SMTP id o78-v6so1525414wmg.0
+        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2018 22:28:41 -0700 (PDT)
+Subject: Re: [PATCH 1/3] brcmfmac: allow specifying features per firmware
+ version
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+References: <20180522131836.26858-1-zajec5@gmail.com>
+ <5B051F2A.9090501@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <f79ad17d-5d7f-ceac-19e6-2e55d9bb20bf@gmail.com> (sfid-20180524_072852_807676_F124A80C)
+Date: Thu, 24 May 2018 07:27:07 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5B051F2A.9090501@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On 23.05.2018 09:58, Arend van Spriel wrote:
+> On 5/22/2018 3:18 PM, Rafał Miłecki wrote:
+>> From: Rafał Miłecki <rafal@milecki.pl>
+>>
+>> Some features supported by firmware aren't advertised and there is no
+>> way for a driver to query them. This includes e.g. monitor mode details.
+>> Some firmwares support tagging monitor frames, some build radiotap
+>> header but there is no way to detect it.
+>>
+>> This commit adds table that will allow specifying features like:
+>> { "01-abcdef01", BIT(BRCMF_FEAT_FOO) }
+> 
+> I have my reservations taking this route. Full-dongle monitor mode is not very reliable especially when running it next to regular STA/AP interface due to memory constraints. So enabling a feature from host side could cause issues that are hard to debug.
 
-We're going to merge C2H handler into one, but one special case is to
-handle RA_REPORT that implements in individual IC folder. So this commit
-adds a hal_op for caller in common code.
+I was using this *really* intensively on BCM4366 and didn't notice any
+problems. My use case is listening to the air traffic for 300 ms every
+few seconds (and I got that running for months!).
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c | 7 ++++---
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c | 1 +
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c | 5 +++--
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h | 2 ++
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 1 +
- drivers/net/wireless/realtek/rtlwifi/wifi.h         | 2 ++
- 7 files changed, 15 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-index 25d6c32f66c3..a2d9e217bc65 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-@@ -876,8 +876,8 @@ void rtl92ee_set_p2p_ps_offload_cmd(struct ieee80211_hw *hw, u8 p2p_ps_state)
- 			     (u8 *)p2p_ps_offload);
- }
- 
--static void _rtl92ee_c2h_ra_report_handler(struct ieee80211_hw *hw,
--					   u8 *cmd_buf, u8 cmd_len)
-+void rtl92ee_c2h_ra_report_handler(struct ieee80211_hw *hw,
-+				   u8 *cmd_buf, u8 cmd_len)
- {
- 	u8 rate = cmd_buf[0] & 0x3F;
- 	bool collision_state = cmd_buf[3] & BIT(0);
-@@ -889,6 +889,7 @@ void rtl92ee_c2h_content_parsing(struct ieee80211_hw *hw, u8 c2h_cmd_id,
- 				 u8 c2h_cmd_len, u8 *tmp_buf)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_hal_ops *hal_ops = rtlpriv->cfg->ops;
- 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
- 
- 	switch (c2h_cmd_id) {
-@@ -920,7 +921,7 @@ void rtl92ee_c2h_content_parsing(struct ieee80211_hw *hw, u8 c2h_cmd_id,
- 						     c2h_cmd_len);
- 		break;
- 	case C2H_RA_RPT:
--		_rtl92ee_c2h_ra_report_handler(hw, tmp_buf, c2h_cmd_len);
-+		hal_ops->c2h_ra_report_handler(hw, tmp_buf, c2h_cmd_len);
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h
-index 8325adaa9663..e5fae0a86a27 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h
-@@ -182,4 +182,6 @@ void rtl92ee_set_p2p_ps_offload_cmd(struct ieee80211_hw *hw, u8 p2p_ps_state);
- void rtl92ee_c2h_packet_handler(struct ieee80211_hw *hw, u8 *buffer, u8 len);
- void rtl92ee_c2h_content_parsing(struct ieee80211_hw *hw, u8 c2h_cmd_id,
- 				 u8 c2h_cmd_len, u8 *tmp_buf);
-+void rtl92ee_c2h_ra_report_handler(struct ieee80211_hw *hw,
-+				   u8 *cmd_buf, u8 cmd_len);
- #endif
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-index ef92a789871d..c5c26b537cd2 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-@@ -252,6 +252,7 @@ static struct rtl_hal_ops rtl8192ee_hal_ops = {
- 	.get_btc_status = rtl92ee_get_btc_status,
- 	.rx_command_packet = rtl92ee_rx_command_packet,
- 	.c2h_content_parsing = rtl92ee_c2h_content_parsing,
-+	.c2h_ra_report_handler = rtl92ee_c2h_ra_report_handler,
- };
- 
- static struct rtl_mod_params rtl92ee_mod_params = {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-index 5c7e58fbc07e..bf37c428c682 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-@@ -1907,7 +1907,7 @@ void rtl8821ae_set_p2p_ps_offload_cmd(struct ieee80211_hw *hw, u8 p2p_ps_state)
- 			H2C_8821AE_P2P_PS_OFFLOAD, 1, (u8 *)p2p_ps_offload);
- }
- 
--static void rtl8821ae_c2h_ra_report_handler(struct ieee80211_hw *hw,
-+void rtl8821ae_c2h_ra_report_handler(struct ieee80211_hw *hw,
- 				     u8 *cmd_buf, u8 cmd_len)
- {
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-@@ -1923,6 +1923,7 @@ void rtl8821ae_c2h_content_parsing(struct ieee80211_hw *hw,
- 				   u8 *tmp_buf)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_hal_ops *hal_ops = rtlpriv->cfg->ops;
- 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
- 
- 	switch (c2h_cmd_id) {
-@@ -1933,7 +1934,7 @@ void rtl8821ae_c2h_content_parsing(struct ieee80211_hw *hw,
- 		rtl_tx_report_handler(hw, tmp_buf, c2h_cmd_len);
- 		break;
- 	case C2H_RA_RPT:
--		rtl8821ae_c2h_ra_report_handler(hw, tmp_buf, c2h_cmd_len);
-+		hal_ops->c2h_ra_report_handler(hw, tmp_buf, c2h_cmd_len);
- 		break;
- 	case C2H_BT_INFO:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h
-index 48c72a26c7e8..a69448be7c26 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h
-@@ -322,4 +322,6 @@ void rtl8821ae_c2h_packet_handler(struct ieee80211_hw *hw,
- void rtl8821ae_c2h_content_parsing(struct ieee80211_hw *hw,
- 				   u8 c2h_cmd_id, u8 c2h_cmd_len,
- 				   u8 *tmp_buf);
-+void rtl8821ae_c2h_ra_report_handler(struct ieee80211_hw *hw,
-+				     u8 *cmd_buf, u8 cmd_len);
- #endif
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-index 9bb3d9dfce79..4b2cb6bda4f1 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
-@@ -305,6 +305,7 @@ static struct rtl_hal_ops rtl8821ae_hal_ops = {
- 	.get_btc_status = rtl8821ae_get_btc_status,
- 	.rx_command_packet = rtl8821ae_rx_command_packet,
- 	.c2h_content_parsing = rtl8821ae_c2h_content_parsing,
-+	.c2h_ra_report_handler = rtl8821ae_c2h_ra_report_handler,
- 	.add_wowlan_pattern = rtl8821ae_add_wowlan_pattern,
- };
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 3da8e2a6084a..392b3e84db7e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2348,6 +2348,8 @@ struct rtl_hal_ops {
- 	u16 (*get_available_desc)(struct ieee80211_hw *hw, u8 q_idx);
- 	void (*c2h_content_parsing)(struct ieee80211_hw *hw, u8 tag, u8 len,
- 				    u8 *val);
-+	void (*c2h_ra_report_handler)(struct ieee80211_hw *hw,
-+				      u8 *cmd_buf, u8 cmd_len);
- };
- 
- struct rtl_intf_ops {
--- 
-2.15.1
+ > So I think it would be better if the cap iovar would get a new flag for this. Please hold this patch and let me discuss internally.
+
+That would be a pretty big limitation to have to wait for and use a
+special firmware for this feature. Also considering time it takes to
+release brcmfmac4366c-pcie.bin, Broadcom vs. Cypress, licensing issues
+with Cypress, we will likely never get all firmwares updated properly.
+
+As for me (!) it seems rather unacceptable (no offence!). I believe we
+should have a free choice to use that discovered feature even if
+Broadcom didn't test it for host machine purposes (just internal fw
+purposes as I get it).
+
+
+> some more specific comments below...
+> 
+>> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+>> ---
+>>   .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 24 ++++++++++++++++++++++
+>>   1 file changed, 24 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+>> index 876731c57bf5..1194d31d3902 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+>> @@ -91,6 +91,28 @@ static int brcmf_feat_debugfs_read(struct seq_file *seq, void *data)
+>>   }
+>>   #endif /* DEBUG */
+>>
+>> +struct brcmf_feat_fwfeat {
+>> +    const char * const fwid;
+>> +    u32 flags;
+> 
+> For consistency call this feat_flags as well.
+
+Sure.
+
+
+>> +};
+>> +
+>> +static const struct brcmf_feat_fwfeat brcmf_feat_fwfeat_map[] = {
+>> +};
+>> +
+>> +static void brcmf_feat_firmware_features(struct brcmf_pub *pub)
+> 
+> Try to keep name of the struct brcmf_pub instance 'drvr'.
+
+Wait, doesn't "pub" make more sense for "struct brcmf_pub" than "drvr"?
+:) I'm sure I also saw "pub" variables all over the code, so this isn't
+some new/mine convention.
+
+
+ > Maybe the function name could be brcmf_feat_firmware_overrides() instead.
+
+Sure!
