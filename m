@@ -1,39 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:45020 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752574AbeEPIs5 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 May 2018 04:48:57 -0400
-Date: Wed, 16 May 2018 11:48:37 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
-Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] cfg80211: Use correct GFP_ mask in cfg80211_del_sta_sinfo()
-Message-ID: <20180516084836.GB23043@mwanda> (sfid-20180516_104917_940347_F56166B9)
+Received: from mail.bugwerft.de ([46.23.86.59]:43434 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966128AbeEXJlB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 May 2018 05:41:01 -0400
+Subject: Re: [PATCH 00/10] Some more patches for wcn36xx
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: loic.poulain@linaro.org, linux-wireless@vger.kernel.org,
+        bjorn.andersson@linaro.org, nicolas.dechesne@linaro.org,
+        wcn36xx@lists.infradead.org, rfried@codeaurora.org
+References: <20180516140820.1636-1-daniel@zonque.org>
+ <95b89ceb-cc25-023e-9fa2-e45b2deb5027@zonque.org>
+ <874lj5jj96.fsf@kamboji.qca.qualcomm.com>
+ <65b0f1d0-0c74-0efb-c7ca-c0fbae681810@zonque.org>
+ <877entigth.fsf@codeaurora.org>
+From: Daniel Mack <daniel@zonque.org>
+Message-ID: <00f05d66-3076-0e49-f4af-74c797210948@zonque.org> (sfid-20180524_142339_453752_D347DCAE)
+Date: Thu, 24 May 2018 11:40:58 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <877entigth.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch complains that we should use the passed in "gfp" instead of hard
-coding GFP_KERNEL.  I looked at some of the callers and this would
-probably be a bug for rtw_cfg80211_indicate_sta_disassoc() which uses
-GFP_ATOMIC and a NULL "sinfo".
+Hi Kalle,
 
-Fixes: 52539ca89f36 ("cfg80211: Expose TXQ stats and parameters to userspace")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+On Thursday, May 24, 2018 10:44 AM, Kalle Valo wrote:
+> Daniel Mack <daniel@zonque.org> writes:
+>> On Friday, May 18, 2018 01:28 PM, Kalle Valo wrote:
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index afbe5105bf7f..3eb645b81777 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -14644,7 +14644,7 @@ void cfg80211_del_sta_sinfo(struct net_device *dev, const u8 *mac_addr,
- 	struct station_info *empty_sinfo = NULL;
- 
- 	if (!sinfo) {
--		empty_sinfo = kzalloc(sizeof(*empty_sinfo), GFP_KERNEL);
-+		empty_sinfo = kzalloc(sizeof(*empty_sinfo), gfp);
- 		if (!empty_sinfo)
- 			return;
- 		sinfo = empty_sinfo;
+>>> Also I would recommend to file a bug to bugzilla.kernel.org so that all
+>>> the information is one place and it can be easily updated. Now it's
+>>> pretty difficult to get the big picture from various emails on the list.
+>>
+>> Yes, I agree it's a bit convoluted. However, there's already the bug
+>> report on 96board.org that Bjorn opened some time back, and I
+>> considered that sufficient. IMO, it has all the information needed,
+>> plus a link to a tool to reproduce the issue.
+>>
+>>    https://bugs.96boards.org/show_bug.cgi?id=538
+> 
+> Yeah, bugs.96boards.org is fine. As long as there's one place which
+> collects all the information about the bug.
+> 
+> But IMHO the bug report is not telling much, all I get is that TX frames
+> get stuck but not even that is confirmed. After reading it I have at
+> least these questions:
+> 
+> * Is it really confirmed that the issue is that TX frames are stuck? For
+>    example, using a wireless sniffer would confirm that.
+
+Yes, that's confirmed. I have a 2nd machine tuned to the same channel 
+than the network I use for testing, and once the timeouts happen, I 
+cannot see any frame anymore from the MAC of the wcn36xx. No probe 
+requests for scans, no authentication attempts, nothing.
+
+As my test constantly connects and disconnects, the last thing I see in 
+wireshark is a deauthentication frame.
+
+> * Are only management frames stuck or does it also involve data frames?
+
+It seems that once a network is successfully joined, the network 
+stability is fine. I haven't seen any starvation of streams lately, at 
+least not with the the patches in this series which I'm running since a 
+while. That is, until a disconnect/reconnect attempt is made, and at 
+this point, only management frames are involved.
+
+> * Based on the bug report the TX stuck issue seems to happen during
+>    authentication, but what happens before that? Does wcn36xx get
+>    disconnected from AP or what?
+
+As I said, my test setup includes repeated disconnections to make the 
+bug appear. It sometimes happens at the first attempt after a fresh 
+boot, however, so the stress test only makes debugging a bit easier by 
+increasing the likeliness.
+
+> * Any wcn36xx logs about the issue (with or without debug logs)? Also
+>    matching wpasupplicant logs would help.
+
+The problem with this is that it's not exactly clear what kind of effect 
+we're looking at. With all the debug flags of the driver enabled, it 
+produces so much log output that wpa_supplicant gives up due to 
+timeouts. The other weird issue is that with WCN36XX_DBG_MAC and/or 
+WCN36XX_DBG_SMD enabled, the effect is _much_ harder to trigger.
+
+> * Does this only happen with encryption or also in open mode?
+
+That's a good question. I'll go check with an open network.
+
+> * How long does it take with qconnman-stress to reproduce the issue?
+
+Usually less than 10 minutes.
+
+> * Does the radio environment make any difference on reproducibility? For
+>    example, clear enviroment vs lots of traffic/interference?
+
+It seems it does, yes. Tests at night seem to take a bit more time to 
+make the effect happen. But then again, it could also be unrelated. I 
+can't be certain at this point.
+
+I'll submit some more information to the bug report. What would help me 
+is if other people tried to reproduce the effect using the stress tool 
+and confirm my findings. Chances are I've been staring at this for too 
+long :)
+
+
+Thanks again,
+Daniel
