@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr20043.outbound.protection.outlook.com ([40.107.2.43]:14240
-        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752389AbeEGU2W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 16:28:22 -0400
-Subject: Re: [PATCH] mesh: don't process mesh channel switch unless csa ie
- provided
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-References: <1524857196-29399-1-git-send-email-peter.oh@bowerswilkins.com>
- <1525722286.22388.5.camel@sipsolutions.net>
- <81cf6620-d7f6-50f7-23c5-e1ba693f2907@bowerswilkins.com>
- <1525723602.1080.0.camel@sipsolutions.net>
-From: Peter Oh <peter.oh@bowerswilkins.com>
-Message-ID: <8b2352e3-d551-055e-8d33-4a6a5d76a6a4@bowerswilkins.com> (sfid-20180507_222826_278910_7CCF1FE1)
-Date: Mon, 7 May 2018 13:28:08 -0700
+Received: from gateway24.websitewelcome.com ([192.185.51.162]:41721 "EHLO
+        gateway24.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755048AbeEXX1W (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 May 2018 19:27:22 -0400
+Received: from cm12.websitewelcome.com (cm12.websitewelcome.com [100.42.49.8])
+        by gateway24.websitewelcome.com (Postfix) with ESMTP id B97404000A
+        for <linux-wireless@vger.kernel.org>; Thu, 24 May 2018 18:07:03 -0500 (CDT)
+Date: Thu, 24 May 2018 18:07:00 -0500
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Jiri Slaby <jirislaby@gmail.com>,
+        Nick Kossifidis <mickflemm@gmail.com>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] ath5k: mark expected switch fall-through
+Message-ID: <20180524230700.GA21433@embeddedor.com> (sfid-20180525_012829_324704_522DBE07)
 MIME-Version: 1.0
-In-Reply-To: <1525723602.1080.0.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+where we are expecting to fall through.
 
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/net/wireless/ath/ath5k/pcu.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-On 05/07/2018 01:06 PM, Johannes Berg wrote:
-> On Mon, 2018-05-07 at 13:04 -0700, Peter Oh wrote:
->> On 05/07/2018 12:44 PM, Johannes Berg wrote:
->>> On Fri, 2018-04-27 at 12:26 -0700, peter.oh@bowerswilkins.com wrote:
->>>> From: Peter Oh <peter.oh@bowerswilkins.com>
->>>>
->>>> There is no meaning to call ieee80211_mesh_process_chnswitch
->>>> without CSA IE provided, since the function will always return error.
->>> I'm not convinced, an extended channel switch element might be present
->>> instead?
->> I expected the comment. Yes, extended channel switch element could be
->> present instead of channel switch element which I missed to take care
->> of. So you can ignore the patch for now and I'll get back with right
->> patch for it.
-> Heh. Well, but then why bother at all? I mean, the inner function will
-> do the check and fail, and nothing will happen, so why bother?
->
-My real concern is that ieee80211_mesh_process_chnswitch function could 
-process at certain level of channel switch procedure although mesh 
-channel switch parameter element is not given which is mandatory of CSA 
-for mesh.
-However the reason I didn't use mesh_chansw_params_ie to check is 
-because even though it is correct for standard, I'm not sure if it's 
-practically right. IMPO, sending CSA means devices (ap or mesh) detected 
-radar, so the ultimate goal to achieve is to evacuate the channel 
-although there is something missed in frames.
-
-Peter
+diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
+index f23c851..05140d8 100644
+--- a/drivers/net/wireless/ath/ath5k/pcu.c
++++ b/drivers/net/wireless/ath/ath5k/pcu.c
+@@ -670,6 +670,7 @@ ath5k_hw_init_beacon_timers(struct ath5k_hw *ah, u32 next_beacon, u32 interval)
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 		AR5K_REG_ENABLE_BITS(ah, AR5K_TXCFG, AR5K_TXCFG_ADHOC_BCN_ATIM);
++		/* fall through */
+ 	default:
+ 		/* On non-STA modes timer1 is used as next DMA
+ 		 * beacon alert (DBA) timer and timer2 as next
+-- 
+2.7.4
