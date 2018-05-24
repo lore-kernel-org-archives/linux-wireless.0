@@ -1,67 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:42128 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752453AbeEOQZu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 May 2018 12:25:50 -0400
-Date: Tue, 15 May 2018 09:25:46 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: Michael Nazzareno Trimarchi <michael@amarulasolutions.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, Eyal Reizer <eyalr@ti.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Guy Mishol <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Maital Hahn <maitalm@ti.com>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
-        Linux OMAP Mailing List <linux-omap@vger.kernel.org>
-Subject: Re: [PATCH 2/2] wlcore: Add support runtime PM
-Message-ID: <20180515162546.GO98604@atomide.com> (sfid-20180515_182601_931848_B421561B)
-References: <20180515161315.1997-1-tony@atomide.com>
- <20180515161315.1997-3-tony@atomide.com>
- <CAOf5uwkT4Vg1kQn5k=_z9XjXOLWbA0vioqH6KSdikZbCwyaYbA@mail.gmail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:39792 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031216AbeEXKIo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 May 2018 06:08:44 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgens?= =?utf-8?Q?en?=
+        <toke@toke.dk>, linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: linux-next: build warning after merge of the mac80211-next tree
+References: <20180509145624.643d2e56@canb.auug.org.au>
+        <87po221j08.fsf@purkki.adurom.net>
+        <CAK8P3a1tdhO6FX76vMXdpd6FxN87RjhLeKW4ws8GgOHqAwr4qA@mail.gmail.com>
+        <87muwpd76a.fsf@kamboji.qca.qualcomm.com>
+        <CAK8P3a3MMjg5oDVM_OAZ_nKeJ4zKK5PrDE+6UgQQfNxwEhRbMA@mail.gmail.com>
+Date: Thu, 24 May 2018 13:08:38 +0300
+In-Reply-To: <CAK8P3a3MMjg5oDVM_OAZ_nKeJ4zKK5PrDE+6UgQQfNxwEhRbMA@mail.gmail.com>
+        (Arnd Bergmann's message of "Thu, 24 May 2018 10:51:17 +0200")
+Message-ID: <87efi1cqmx.fsf@kamboji.qca.qualcomm.com> (sfid-20180524_121935_135187_F35C396F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAOf5uwkT4Vg1kQn5k=_z9XjXOLWbA0vioqH6KSdikZbCwyaYbA@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Michael Nazzareno Trimarchi <michael@amarulasolutions.com> [180515 16:19]:
-> On Tue, May 15, 2018 at 6:13 PM, Tony Lindgren <tony@atomide.com> wrote:
-> > @@ -315,15 +319,17 @@ static ssize_t dynamic_fw_traces_write(struct file *file,
-> >         if (unlikely(wl->state != WLCORE_STATE_ON))
-> >                 goto out;
-> >
-> > -       ret = wl1271_ps_elp_wakeup(wl);
-> > -       if (ret < 0)
-> > +       ret = pm_runtime_get_sync(wl->dev);
-> > +       if (ret < 0) {
-> > +               pm_runtime_put_noidle(wl->dev);
-> >                 goto out;
-> > +       }
-> >
-> 
-> Can you just change ps_elp_wakeup with
->        ret = pm_runtime_get_sync(wl->dev);
->        if (ret < 0) {
->                pm_runtime_put_noidle(wl->dev);
->                  goto out;
->        }
-> 
-> >         ret = wl18xx_acx_dynamic_fw_traces(wl);
-> >         if (ret < 0)
-> >                 count = ret;
-> >
-> > -       wl1271_ps_elp_sleep(wl);
-> > +       pm_runtime_put(wl->dev);
-> 
-> and elp_sleep with this one
+Arnd Bergmann <arnd@arndb.de> writes:
 
-That's what I started with, but they really behave in a different way. And
-there is no usage count. It's really best to just get rid of the custom PM
-calls in favor of generic calls. That's because then we have much better
-control for future changes in the driver with pm_runtime_use_autosuspend()
-and pm_runtime_put_sync() for example.
+> On Thu, May 24, 2018 at 6:11 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Arnd Bergmann <arnd@arndb.de> writes:
+>>> I also bisected this new warning to the same commit above:
+>>>
+>>> net/batman-adv/bat_v_elp.c: In function 'batadv_v_elp_get_throughput':
+>>> net/batman-adv/bat_v_elp.c:154:1: warning: the frame size of 1736
+>>> bytes is larger than 1024 bytes [-Wframe-larger-than=]
+>>
+>> This should fix it:
+>>
+>> 8689c051a201 cfg80211: dynamically allocate per-tid stats for station info
+>>
+>> https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git/commit/?id=8689c051a20195b228e19acb155c7d6e48a86753
+>
+> Thanks for the pointer, I'll just wait for that to make it into
+> linux-next (which hasn't been released in a few days now) then.
 
-Regards,
+Yeah, Stephen announced that he won't be making linux-next builds this
+week. I think he will be back next week.
 
-Tony
+-- 
+Kalle Valo
