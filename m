@@ -1,35 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53682 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:43336 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751036AbeEVMiG (ORCPT
+        with ESMTP id S1754859AbeEYJVB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 08:38:06 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/3] MAINTAINERS: update Kalle's email address
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1526659693-32546-1-git-send-email-kvalo@codeaurora.org>
-References: <1526659693-32546-1-git-send-email-kvalo@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <20180522123806.107366028C@smtp.codeaurora.org> (sfid-20180522_143810_117084_10696351)
-Date: Tue, 22 May 2018 12:38:05 +0000 (UTC)
+        Fri, 25 May 2018 05:21:01 -0400
+From: Balaji Pothunoori <bpothuno@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Balaji Pothunoori <bpothuno@codeaurora.org>
+Subject: [PATCH 2/2] mac80211: last ack singal support in station dump
+Date: Fri, 25 May 2018 14:50:05 +0530
+Message-Id: <1527240005-8508-3-git-send-email-bpothuno@codeaurora.org> (sfid-20180525_112110_355178_8D950FDF)
+In-Reply-To: <1527240005-8508-1-git-send-email-bpothuno@codeaurora.org>
+References: <1527240005-8508-1-git-send-email-bpothuno@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> wrote:
+This patch adds "last ack signal" and "avg ack signal" support
+in station dump for valid ack rssi.
 
-> I switched to use my codeaurora.org address.
-> 
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
+---
+ net/mac80211/sta_info.c | 20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
 
-3 patches applied to wireless-drivers.git, thanks.
-
-c76700ab337a MAINTAINERS: update Kalle's email address
-b561290995b2 MAINTAINERS: change Kalle as ath.ko maintainer
-813477aa49aa MAINTAINERS: change Kalle as wcn36xx maintainer
-
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 6428f1a..12b618e 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -2310,13 +2310,21 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ 		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL);
+ 	}
+ 
+-	if (ieee80211_hw_check(&sta->local->hw, REPORTS_TX_ACK_STATUS) &&
+-	    !(sinfo->filled & BIT_ULL(NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG))) {
+-		sinfo->avg_ack_signal =
+-			-(s8)ewma_avg_signal_read(
++	if (ieee80211_hw_check(&sta->local->hw, REPORTS_TX_ACK_STATUS)) {
++		if (sta->status_stats.ack_signal_filled && ((!(sinfo->filled &
++		    BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL))) ||
++		    (!(sinfo->filled &
++		    BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL_AVG))))) {
++			sinfo->ack_signal =
++				sta->status_stats.last_ack_signal;
++			sinfo->filled |=
++				BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL);
++			sinfo->avg_ack_signal =
++				-(s8)ewma_avg_signal_read(
+ 				&sta->status_stats.avg_ack_signal);
+-		sinfo->filled |=
+-			BIT_ULL(NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG);
++			sinfo->filled |=
++				BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL_AVG);
++		}
+ 	}
+ }
+ 
 -- 
-https://patchwork.kernel.org/patch/10411095/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
