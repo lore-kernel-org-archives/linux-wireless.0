@@ -1,70 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:60574 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752786AbeEKIPS (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53156 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935965AbeEYKSr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 04:15:18 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 25/30] staging: wilc1000: added #define for setting radiotap header
-Date: Fri, 11 May 2018 13:43:26 +0530
-Message-ID: <1526026411-11058-26-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101523_238477_136A4DB0)
-In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
-References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+        Fri, 25 May 2018 06:18:47 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [v3] wcn36xx: Add support for Factory Test Mode (FTM)
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180522190256.32136-1-ramon.fried@gmail.com>
+References: <20180522190256.32136-1-ramon.fried@gmail.com>
+To: Ramon Fried <ramon.fried@gmail.com>
+Cc: linux-kernel@vger.kernel.org, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Eyal Ilsar <eilsar@codeaurora.org>,
+        Ramon Fried <ramon.fried@linaro.org>
+Message-Id: <20180525101847.498DC6076C@smtp.codeaurora.org> (sfid-20180525_122104_334795_97AE0352)
+Date: Fri, 25 May 2018 10:18:47 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added new macro to resolve below checkpatch issues in linux_mon.
+Ramon Fried <ramon.fried@gmail.com> wrote:
 
-"Lines should not end with a '('"
+> Introduce infrastructure for supporting Factory Test Mode (FTM) of the
+> wireless LAN subsystem. In order for the user space to access the
+> firmware in test mode the relevant netlink channel needs to be exposed
+> from the kernel driver.
+> 
+> The above is achieved as follows:
+> 1) Register wcn36xx driver to testmode callback from netlink
+> 2) Add testmode callback implementation to handle incoming FTM commands
+> 3) Add FTM command packet structure
+> 4) Add handling for GET_BUILD_RELEASE_NUMBER (msgid=0x32A2)
+> 5) Add generic handling for all PTT_MSG packets
+> 
+> Signed-off-by: Eyal Ilsar <eilsar@codeaurora.org>
+> Signed-off-by: Ramon Fried <ramon.fried@linaro.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/linux_mon.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+Patch applied to ath-next branch of ath.git, thanks.
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index c372e0f..1c7e6e1 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -22,6 +22,9 @@ static u8 bssid[6];
- #define IEEE80211_RADIOTAP_F_TX_FAIL	0x0001  /* failed due to excessive*/
- #define GET_PKT_OFFSET(a) (((a) >> 22) & 0x1ff)
- 
-+#define TX_RADIOTAP_PRESENT ((1 << IEEE80211_RADIOTAP_RATE) |	\
-+			     (1 << IEEE80211_RADIOTAP_TX_FLAGS))
-+
- void wilc_wfi_monitor_rx(u8 *buff, u32 size)
- {
- 	u32 header, pkt_offset;
-@@ -59,9 +62,7 @@ void wilc_wfi_monitor_rx(u8 *buff, u32 size)
- 
- 		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(*cb_hdr));
- 
--		cb_hdr->hdr.it_present = cpu_to_le32(
--				(1 << IEEE80211_RADIOTAP_RATE) |
--				(1 << IEEE80211_RADIOTAP_TX_FLAGS));
-+		cb_hdr->hdr.it_present = cpu_to_le32(TX_RADIOTAP_PRESENT);
- 
- 		cb_hdr->rate = 5; /* txrate->bitrate / 5; */
- 
-@@ -177,9 +178,7 @@ static netdev_tx_t wilc_wfi_mon_xmit(struct sk_buff *skb,
- 
- 		cb_hdr->hdr.it_len = cpu_to_le16(sizeof(*cb_hdr));
- 
--		cb_hdr->hdr.it_present = cpu_to_le32(
--				(1 << IEEE80211_RADIOTAP_RATE) |
--				(1 << IEEE80211_RADIOTAP_TX_FLAGS));
-+		cb_hdr->hdr.it_present = cpu_to_le32(TX_RADIOTAP_PRESENT);
- 
- 		cb_hdr->rate = 5; /* txrate->bitrate / 5; */
- 		cb_hdr->tx_flags = 0x0004;
+87f825e6e246 wcn36xx: Add support for Factory Test Mode (FTM)
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/10419423/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
