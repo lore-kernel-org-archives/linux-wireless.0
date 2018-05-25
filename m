@@ -1,276 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:45386 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753334AbeERJai (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:57826 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S968315AbeEYUj3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 05:30:38 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 05/14] rtlwifi: remove duplicate C2H definition
-Date: Fri, 18 May 2018 17:29:58 +0800
-Message-ID: <20180518093007.23594-6-pkshih@realtek.com> (sfid-20180518_113127_104285_28ED9EE1)
-In-Reply-To: <20180518093007.23594-1-pkshih@realtek.com>
-References: <20180518093007.23594-1-pkshih@realtek.com>
+        Fri, 25 May 2018 16:39:29 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Shrenik Shikhare <shrenik@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH] mwifiex: skip sending GT_REKEY_OFFLOAD_CFG if firmware has no support
+Date: Sat, 26 May 2018 02:09:22 +0530
+Message-ID: <1527280762-5648-1-git-send-email-gbhat@marvell.com> (sfid-20180525_223950_152590_AF504903)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+If firmware does not support embedded supplicant, then it in turn
+will not support GT rekey offloading. If this is the case, then
+driver must not advertise WOWLAN flags related to GTK rekey and
+it must also skip sending the GT_REKEY_OFFLOAD_CFG command.
 
-Move C2H definition to wifi.h, because the definitions of 8192ee, 8723be
-and 8821ae are the same.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Shrenik Shikhare <shrenik@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c | 16 ++++++++--------
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h | 11 -----------
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c | 12 ++++++------
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h | 10 ----------
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c | 12 ++++++------
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h | 14 --------------
- drivers/net/wireless/realtek/rtlwifi/wifi.h         | 19 +++++++++++++++++++
- 7 files changed, 39 insertions(+), 55 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c  | 18 +++++++++++++++++-
+ drivers/net/wireless/marvell/mwifiex/fw.h        |  1 +
+ drivers/net/wireless/marvell/mwifiex/sta_event.c |  3 +++
+ 3 files changed, 21 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-index f9563ae301ad..25d6c32f66c3 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-@@ -892,34 +892,34 @@ void rtl92ee_c2h_content_parsing(struct ieee80211_hw *hw, u8 c2h_cmd_id,
- 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 54a2297..d04a599 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -3555,6 +3555,9 @@ static int mwifiex_set_rekey_data(struct wiphy *wiphy, struct net_device *dev,
+ {
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
  
- 	switch (c2h_cmd_id) {
--	case C2H_8192E_DBG:
-+	case C2H_DBG:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
- 			 "[C2H], C2H_8723BE_DBG!!\n");
- 		break;
--	case C2H_8192E_TXBF:
-+	case C2H_TXBF:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
- 			 "[C2H], C2H_8192E_TXBF!!\n");
- 		break;
--	case C2H_8192E_TX_REPORT:
-+	case C2H_TX_REPORT:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE ,
- 			 "[C2H], C2H_8723BE_TX_REPORT!\n");
- 		rtl_tx_report_handler(hw, tmp_buf, c2h_cmd_len);
- 		break;
--	case C2H_8192E_BT_INFO:
-+	case C2H_BT_INFO:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
- 			 "[C2H], C2H_8723BE_BT_INFO!!\n");
- 		if (rtlpriv->cfg->ops->get_btc_status())
- 			btc_ops->btc_btinfo_notify(rtlpriv, tmp_buf,
- 						   c2h_cmd_len);
- 		break;
--	case C2H_8192E_BT_MP:
-+	case C2H_BT_MP:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
- 			 "[C2H], C2H_8723BE_BT_MP!!\n");
- 		if (rtlpriv->cfg->ops->get_btc_status())
- 			btc_ops->btc_btmpinfo_notify(rtlpriv, tmp_buf,
- 						     c2h_cmd_len);
- 		break;
--	case C2H_8192E_RA_RPT:
-+	case C2H_RA_RPT:
- 		_rtl92ee_c2h_ra_report_handler(hw, tmp_buf, c2h_cmd_len);
- 		break;
- 	default:
-@@ -948,8 +948,8 @@ void rtl92ee_c2h_packet_handler(struct ieee80211_hw *hw, u8 *buffer, u8 len)
- 		      "[C2H packet], Content Hex:\n", tmp_buf, c2h_cmd_len);
- 
- 	switch (c2h_cmd_id) {
--	case C2H_8192E_BT_INFO:
--	case C2H_8192E_BT_MP:
-+	case C2H_BT_INFO:
-+	case C2H_BT_MP:
- 		rtl_c2hcmd_enqueue(hw, c2h_cmd_id, c2h_cmd_len, tmp_buf);
- 		break;
- 	default:
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h
-index b770f722daa6..8325adaa9663 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.h
-@@ -128,17 +128,6 @@ enum rtl8192e_h2c_cmd {
- 	MAX_92E_H2CCMD
- };
- 
--enum rtl8192e_c2h_evt {
--	C2H_8192E_DBG = 0,
--	C2H_8192E_LB = 1,
--	C2H_8192E_TXBF = 2,
--	C2H_8192E_TX_REPORT = 3,
--	C2H_8192E_BT_INFO = 9,
--	C2H_8192E_BT_MP = 11,
--	C2H_8192E_RA_RPT = 12,
--	MAX_8192E_C2HEVENT
--};
--
- #define pagenum_128(_len)	\
- 	(u32)(((_len) >> 7) + ((_len) & 0x7F ? 1 : 0))
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
-index 4b963fd27d64..34703b9cf5e8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
-@@ -712,23 +712,23 @@ void rtl8723be_c2h_content_parsing(struct ieee80211_hw *hw,
- 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
- 
- 	switch (c2h_cmd_id) {
--	case C2H_8723B_DBG:
-+	case C2H_DBG:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
- 			 "[C2H], C2H_8723BE_DBG!!\n");
- 		break;
--	case C2H_8723B_TX_REPORT:
-+	case C2H_TX_REPORT:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
- 			 "[C2H], C2H_8723BE_TX_REPORT!\n");
- 		rtl_tx_report_handler(hw, tmp_buf, c2h_cmd_len);
- 		break;
--	case C2H_8723B_BT_INFO:
-+	case C2H_BT_INFO:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
- 			 "[C2H], C2H_8723BE_BT_INFO!!\n");
- 		if (rtlpriv->cfg->ops->get_btc_status())
- 			btc_ops->btc_btinfo_notify(rtlpriv, tmp_buf,
- 						   c2h_cmd_len);
- 		break;
--	case C2H_8723B_BT_MP:
-+	case C2H_BT_MP:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
- 			 "[C2H], C2H_8723BE_BT_MP!!\n");
- 		if (rtlpriv->cfg->ops->get_btc_status())
-@@ -761,8 +761,8 @@ void rtl8723be_c2h_packet_handler(struct ieee80211_hw *hw, u8 *buffer, u8 len)
- 		      "[C2H packet], Content Hex:\n", tmp_buf, c2h_cmd_len);
- 
- 	switch (c2h_cmd_id) {
--	case C2H_8723B_BT_INFO:
--	case C2H_8723B_BT_MP:
-+	case C2H_BT_INFO:
-+	case C2H_BT_MP:
- 		rtl_c2hcmd_enqueue(hw, c2h_cmd_id, c2h_cmd_len, tmp_buf);
- 		break;
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h
-index 2de4edb62bca..8f49941028f4 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.h
-@@ -100,16 +100,6 @@ enum rtl8723b_h2c_cmd {
- 	MAX_8723B_H2CCMD
- };
- 
--enum rtl8723b_c2h_evt {
--	C2H_8723B_DBG = 0,
--	C2H_8723B_LB = 1,
--	C2H_8723B_TXBF = 2,
--	C2H_8723B_TX_REPORT = 3,
--	C2H_8723B_BT_INFO = 9,
--	C2H_8723B_BT_MP = 11,
--	MAX_8723B_C2HEVENT
--};
--
- #define pagenum_128(_len) (u32)(((_len)>>7) + ((_len)&0x7F ? 1 : 0))
- 
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-index f2b2c549e5b2..5c7e58fbc07e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-@@ -1926,23 +1926,23 @@ void rtl8821ae_c2h_content_parsing(struct ieee80211_hw *hw,
- 	struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
- 
- 	switch (c2h_cmd_id) {
--	case C2H_8812_DBG:
-+	case C2H_DBG:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "[C2H], C2H_8812_DBG!!\n");
- 		break;
--	case C2H_8812_TX_REPORT:
-+	case C2H_TX_REPORT:
- 		rtl_tx_report_handler(hw, tmp_buf, c2h_cmd_len);
- 		break;
--	case C2H_8812_RA_RPT:
-+	case C2H_RA_RPT:
- 		rtl8821ae_c2h_ra_report_handler(hw, tmp_buf, c2h_cmd_len);
- 		break;
--	case C2H_8812_BT_INFO:
-+	case C2H_BT_INFO:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD,
- 			 "[C2H], C2H_8812_BT_INFO!!\n");
- 		if (rtlpriv->cfg->ops->get_btc_status())
- 			btc_ops->btc_btinfo_notify(rtlpriv, tmp_buf,
- 						   c2h_cmd_len);
- 		break;
--	case C2H_8812_BT_MP:
-+	case C2H_BT_MP:
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
- 			 "[C2H], C2H_8812_BT_MP!!\n");
- 		if (rtlpriv->cfg->ops->get_btc_status())
-@@ -1974,7 +1974,7 @@ void rtl8821ae_c2h_packet_handler(struct ieee80211_hw *hw, u8 *buffer,
- 		      "[C2H packet], Content Hex:\n", tmp_buf, c2h_cmd_len);
- 
- 	switch (c2h_cmd_id) {
--	case C2H_8812_BT_INFO:
-+	case C2H_BT_INFO:
- 		rtl_c2hcmd_enqueue(hw, c2h_cmd_id, c2h_cmd_len, tmp_buf);
- 		break;
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h
-index 32d46d7128f5..48c72a26c7e8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.h
-@@ -137,20 +137,6 @@
- #define	FW_PWR_STATE_ACTIVE	((FW_PS_RF_ON) | (FW_PS_REGISTER_ACTIVE))
- #define	FW_PWR_STATE_RF_OFF	0
- 
--enum rtl8812_c2h_evt {
--	C2H_8812_DBG = 0,
--	C2H_8812_LB = 1,
--	C2H_8812_TXBF = 2,
--	C2H_8812_TX_REPORT = 3,
--	C2H_8812_BT_INFO = 9,
--	C2H_8812_BT_MP = 11,
--	C2H_8812_RA_RPT = 12,
--
--	C2H_8812_FW_SWCHNL = 0x10,
--	C2H_8812_IQK_FINISH = 0x11,
--	MAX_8812_C2HEVENT
--};
--
- enum rtl8821a_h2c_cmd {
- 	H2C_8821AE_RSVDPAGE = 0,
- 	H2C_8821AE_MSRRPT = 1,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 81ac036760fc..3da8e2a6084a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -158,6 +158,25 @@ enum {
- 	H2C_BT_PORT_ID = 0x71,
- };
- 
-+enum rtl_c2h_evt_v1 {
-+	C2H_DBG = 0,
-+	C2H_LB = 1,
-+	C2H_TXBF = 2,
-+	C2H_TX_REPORT = 3,
-+	C2H_BT_INFO = 9,
-+	C2H_BT_MP = 11,
-+	C2H_RA_RPT = 12,
++	if (!ISSUPP_FIRMWARE_SUPPLICANT(priv->adapter->fw_cap_info))
++		return -EOPNOTSUPP;
 +
-+	C2H_FW_SWCHNL = 0x10,
-+	C2H_IQK_FINISH = 0x11,
+ 	return mwifiex_send_cmd(priv, HostCmd_CMD_GTK_REKEY_OFFLOAD_CFG,
+ 				HostCmd_ACT_GEN_SET, 0, data, true);
+ }
+@@ -4190,6 +4193,16 @@ static int mwifiex_tm_cmd(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	.max_pkt_offset = MWIFIEX_MAX_OFFSET_LEN,
+ 	.max_nd_match_sets = MWIFIEX_MAX_ND_MATCH_SETS,
+ };
 +
-+	C2H_EXT_V2 = 0xFF,
++static const struct wiphy_wowlan_support mwifiex_wowlan_support_no_gtk = {
++	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT |
++		 WIPHY_WOWLAN_NET_DETECT,
++	.n_patterns = MWIFIEX_MEF_MAX_FILTERS,
++	.pattern_min_len = 1,
++	.pattern_max_len = MWIFIEX_MAX_PATTERN_LEN,
++	.max_pkt_offset = MWIFIEX_MAX_OFFSET_LEN,
++	.max_nd_match_sets = MWIFIEX_MAX_ND_MATCH_SETS,
 +};
+ #endif
+ 
+ static bool mwifiex_is_valid_alpha2(const char *alpha2)
+@@ -4308,7 +4321,10 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
+ 				WIPHY_FLAG_TDLS_EXTERNAL_SETUP;
+ 
+ #ifdef CONFIG_PM
+-	wiphy->wowlan = &mwifiex_wowlan_support;
++	if (ISSUPP_FIRMWARE_SUPPLICANT(priv->adapter->fw_cap_info))
++		wiphy->wowlan = &mwifiex_wowlan_support;
++	else
++		wiphy->wowlan = &mwifiex_wowlan_support_no_gtk;
+ #endif
+ 
+ 	wiphy->coalesce = &mwifiex_coalesce_support;
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index c5dc518..b73f99d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -249,6 +249,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define ISSUPP_SDIO_SPA_ENABLED(FwCapInfo) (FwCapInfo & BIT(16))
+ #define ISSUPP_ADHOC_ENABLED(FwCapInfo) (FwCapInfo & BIT(25))
+ #define ISSUPP_RANDOM_MAC(FwCapInfo) (FwCapInfo & BIT(27))
++#define ISSUPP_FIRMWARE_SUPPLICANT(FwCapInfo) (FwCapInfo & BIT(21))
+ 
+ #define MWIFIEX_DEF_HT_CAP	(IEEE80211_HT_CAP_DSSSCCK40 | \
+ 				 (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT) | \
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+index 93dfb76..03a6492 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+@@ -241,6 +241,9 @@ void mwifiex_reset_connect_state(struct mwifiex_private *priv, u16 reason_code,
+ 	if (netif_carrier_ok(priv->netdev))
+ 		netif_carrier_off(priv->netdev);
+ 
++	if (!ISSUPP_FIRMWARE_SUPPLICANT(priv->adapter->fw_cap_info))
++		return;
 +
-+enum rtl_c2h_evt_v2 {
-+	C2H_V2_CCX_RPT = 0x0F,
-+};
-+
- #define GET_TX_REPORT_SN_V1(c2h)	(c2h[6])
- #define GET_TX_REPORT_ST_V1(c2h)	(c2h[0] & 0xC0)
- #define GET_TX_REPORT_RETRY_V1(c2h)	(c2h[2] & 0x3F)
+ 	mwifiex_send_cmd(priv, HostCmd_CMD_GTK_REKEY_OFFLOAD_CFG,
+ 			 HostCmd_ACT_GEN_REMOVE, 0, NULL, false);
+ }
 -- 
-2.15.1
+1.9.1
