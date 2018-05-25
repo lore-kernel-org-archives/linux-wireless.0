@@ -1,64 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:42663 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752747AbeEKIOv (ORCPT
+Received: from gateway23.websitewelcome.com ([192.185.50.161]:12236 "EHLO
+        gateway23.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S967518AbeEYSXR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 04:14:51 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 15/30] staging: wilc1000: fix line over 80 charas in wilc_wfi_remain_on_channel_expired()
-Date: Fri, 11 May 2018 13:43:16 +0530
-Message-ID: <1526026411-11058-16-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101545_372765_8FD3166B)
-In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
-References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
+        Fri, 25 May 2018 14:23:17 -0400
+Received: from cm17.websitewelcome.com (cm17.websitewelcome.com [100.42.49.20])
+        by gateway23.websitewelcome.com (Postfix) with ESMTP id F37D3112F5
+        for <linux-wireless@vger.kernel.org>; Fri, 25 May 2018 13:23:12 -0500 (CDT)
+Date: Fri, 25 May 2018 13:23:11 -0500
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH v2] ath6kl: mark expected switch fall-throughs
+Message-ID: <20180525182311.GA3000@embeddedor.com> (sfid-20180525_202333_341012_8EA4094E)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Refactor wilc_wfi_remain_on_channel_expired() to avoid line over 80
-character issue reported by checkpatch.pl script. Also assigned value in the
-variable at the time of declaration.
+In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+where we are expecting to fall through.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 16 +++++++---------
- 1 file changed, 7 insertions(+), 9 deletions(-)
+Changes in v2:
+ - Place code comments on a line of their own.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 32bdefb..93511de 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1487,18 +1487,16 @@ static void wilc_wfi_remain_on_channel_ready(void *priv_data)
- 
- static void wilc_wfi_remain_on_channel_expired(void *data, u32 session_id)
- {
--	struct wilc_priv *priv;
-+	struct wilc_priv *priv = data;
-+	struct wilc_wfi_p2p_listen_params *params = &priv->remain_on_ch_params;
- 
--	priv = data;
-+	if (session_id != params->listen_session_id)
-+		return;
- 
--	if (session_id == priv->remain_on_ch_params.listen_session_id) {
--		priv->p2p_listen_state = false;
-+	priv->p2p_listen_state = false;
- 
--		cfg80211_remain_on_channel_expired(priv->wdev,
--						   priv->remain_on_ch_params.listen_cookie,
--						   priv->remain_on_ch_params.listen_ch,
--						   GFP_KERNEL);
--	}
-+	cfg80211_remain_on_channel_expired(priv->wdev, params->listen_cookie,
-+					   params->listen_ch, GFP_KERNEL);
- }
- 
- static int remain_on_channel(struct wiphy *wiphy,
+ drivers/net/wireless/ath/ath6kl/cfg80211.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 2ba8cf3..a16ee5d 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -3899,16 +3899,19 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
+ 	switch (ar->hw.cap) {
+ 	case WMI_11AN_CAP:
+ 		ht = true;
++		/* fall through */
+ 	case WMI_11A_CAP:
+ 		band_5gig = true;
+ 		break;
+ 	case WMI_11GN_CAP:
+ 		ht = true;
++		/* fall through */
+ 	case WMI_11G_CAP:
+ 		band_2gig = true;
+ 		break;
+ 	case WMI_11AGN_CAP:
+ 		ht = true;
++		/* fall through */
+ 	case WMI_11AG_CAP:
+ 		band_2gig = true;
+ 		band_5gig = true;
 -- 
 2.7.4
