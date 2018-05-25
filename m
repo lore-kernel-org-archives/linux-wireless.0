@@ -1,46 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:35578 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752535AbeEPOIl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 May 2018 10:08:41 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
-        rfried@codeaurora.org, bjorn.andersson@linaro.org,
-        nicolas.dechesne@linaro.org, loic.poulain@linaro.org,
-        Daniel Mack <daniel@zonque.org>
-Subject: [PATCH 06/10] wcn36xx: consider CTRL_EOP bit when looking for valid descriptors
-Date: Wed, 16 May 2018 16:08:16 +0200
-Message-Id: <20180516140820.1636-7-daniel@zonque.org> (sfid-20180516_160844_081953_25895A56)
-In-Reply-To: <20180516140820.1636-1-daniel@zonque.org>
-References: <20180516140820.1636-1-daniel@zonque.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:46992 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965661AbeEYKCG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 May 2018 06:02:06 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [01/52] ath: Add regulatory mapping for Bahamas
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180301141902.24824-2-sven.eckelmann@openmesh.com>
+References: <20180301141902.24824-2-sven.eckelmann@openmesh.com>
+To: Sven Eckelmann <sven.eckelmann@openmesh.com>
+Cc: linux-wireless@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Sven Eckelmann <sven.eckelmann@openmesh.com>
+Message-Id: <20180525100205.D614360C4F@smtp.codeaurora.org> (sfid-20180525_120344_489027_8C19E811)
+Date: Fri, 25 May 2018 10:02:05 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In reap_tx_dxes(), when we iterate over the linked descriptors, only
-consider such valid that have WCN36xx_DXE_CTRL_EOP set.
+Sven Eckelmann <sven.eckelmann@openmesh.com> wrote:
 
-This is what the prima downstream driver is doing as well.
+> The country code is used by the ath to detect the ISO 3166-1 alpha-2 name
+> and to select the correct conformance test limits (CTL) for a country. If
+> the country isn't available and it is still programmed in the EEPROM then
+> it will cause an error and stop the initialization with:
+> 
+>   Invalid EEPROM contents
+> 
+> The current CTL mappings for this country are:
+> 
+> * 2.4GHz: ETSI
+> * 5GHz: FCC
+> 
+> Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
----
- drivers/net/wireless/ath/wcn36xx/dxe.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+35 patches applied to ath-next branch of ath.git, thanks.
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index 8c64e05ca3b7..06cfe8d311f3 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -370,7 +370,9 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
- 	do {
- 		if (READ_ONCE(ctl->desc->ctrl) & WCN36xx_DXE_CTRL_VLD)
- 			break;
--		if (ctl->skb) {
-+
-+		if (ctl->skb &&
-+		    READ_ONCE(ctl->desc->ctrl) & WCN36xx_DXE_CTRL_EOP) {
- 			dma_unmap_single(wcn->dev, ctl->desc->src_addr_l,
- 					 ctl->skb->len, DMA_TO_DEVICE);
- 			info = IEEE80211_SKB_CB(ctl->skb);
+699e2302c286 ath: Add regulatory mapping for Bahamas
+9c790f2d234f ath: Add regulatory mapping for Bermuda
+b840fa912308 ath: Add regulatory mapping for Kenya
+a71c984bc4e5 ath: Add regulatory mapping for Mauritius
+a0a6f2a916dc ath: Add regulatory mapping for Montenegro
+a20f1338c5de ath: Add regulatory mapping for Nicaragua
+67a956682472 ath: Add regulatory mapping for Paraguya
+2a3169a54bb5 ath: Add regulatory mapping for Serbia
+667ddac5745f ath: Add regulatory mapping for Tanzania
+1ea3986ad2bc ath: Add regulatory mapping for Uganda
+4f183687e3fa ath: Add regulatory mapping for APL2_FCCA
+9ba8df0c52b3 ath: Add regulatory mapping for APL13_WORLD
+45faf6e096da ath: Add regulatory mapping for ETSI8_WORLD
+897fab6c5d90 ath: Add regulatory mapping for ETSI9_WORLD
+01fb2994a98d ath: Add regulatory mapping for FCC3_ETSIC
+fed8f5e83037 ath: Map Albania to ETSI1_WORLD
+485daee92bde ath: Map Algeria to APL13_WORLD
+8120cc0b215c ath: Map Australia to FCC3_WORLD
+1507b32891c0 ath: Map Bangladesh to APL1_WORLD
+37090d944705 ath: Map Brunei Darussalam to APL6_WORLD
+fed60f81a2d0 ath: Map Bulgaria to ETSI1_WORLD
+515e968624b2 ath: Map Colombia to FCC1_FCCA
+0fa31a86998b ath: Map Czech to ETSI1_WORLD
+143a9b9bd7ee ath: Map Honduras to FCC3_WORLD
+62ba2b22d120 ath: Map Isreal to ETSI3_WORLD
+64874ed2a73a ath: Map Macedonia to ETSI1_WORLD
+823a64065adf ath: Map Malasia to FCC1_WORLD
+9bfc2bb32e01 ath: Map New Zealand to FCC3_ETSIC
+b5c11e474406 ath: Map Peru to APL1_WORLD
+c454d4c25844 ath: Map Philippines to FCC3_WORLD
+12f415566fb4 ath: Map Romania to ETSI1_WORLD
+b7e015132d85 ath: Map Russia to ETSI8_WORLD
+054e07788002 ath: Map Singapore to FCC3_WORLD
+4e78075c4821 ath: Map Ukraine to ETSI9_WORLD
+f1abff21acc5 ath: Map Zimbabwe to ETSI1_WORLD
+
 -- 
-2.14.3
+https://patchwork.kernel.org/patch/10251529/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
