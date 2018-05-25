@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:55219 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751204AbeEFNHN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 6 May 2018 09:07:13 -0400
-Message-ID: <0f8aaff5ecad8af6d146453d4d3a5d4dd145977b.camel@intel.com> (sfid-20180506_150725_149806_6B649849)
-Subject: Re: [linux-firmware] Version in WHENCE file
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: sedat.dilek@gmail.com
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Sun, 06 May 2018 16:07:10 +0300
-In-Reply-To: <CA+icZUXrHmOJPKT0gnym9yOs6Erm3wDOZU3sbr_MGB8pYjfuzA@mail.gmail.com>
-References: <CA+icZUXrHmOJPKT0gnym9yOs6Erm3wDOZU3sbr_MGB8pYjfuzA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from gateway24.websitewelcome.com ([192.185.50.71]:31248 "EHLO
+        gateway24.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S967453AbeEYSiZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 May 2018 14:38:25 -0400
+Received: from cm13.websitewelcome.com (cm13.websitewelcome.com [100.42.49.6])
+        by gateway24.websitewelcome.com (Postfix) with ESMTP id 5690B21CBE
+        for <linux-wireless@vger.kernel.org>; Fri, 25 May 2018 13:14:07 -0500 (CDT)
+Subject: Re: [PATCH] ath6kl: mark expected switch fall-throughs
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20180524231322.GA22704@embeddedor.com>
+ <060f93a0-7210-79b6-37a7-cd8900719d40@cogentembedded.com>
+ <871sdzc16l.fsf@kamboji.qca.qualcomm.com>
+ <e777af5c-8d56-aef7-a4b6-f93f12378049@embeddedor.com>
+ <87k1rr8v3l.fsf@kamboji.qca.qualcomm.com>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Message-ID: <b43bfff8-889d-c167-a902-bc44518bf1f3@embeddedor.com> (sfid-20180525_203829_023684_85D70A58)
+Date: Fri, 25 May 2018 13:14:03 -0500
+MIME-Version: 1.0
+In-Reply-To: <87k1rr8v3l.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2018-05-06 at 14:46 +0200, Sedat Dilek wrote:
-> Hi Luca,
-> 
-> I hope I catched the correct MLs (not sure if linux-firmware has a
-> ML,
-> I did not found any in the MAINTAINERS file).
-> 
-> I have seen that in the WHENCE file there is "Version" with and
-> without ":", mostly iwlwifi ucodes.
-> 
-> As an example:
-> 
->  File: iwlwifi-8265-36.ucode
-> -Version 36.e91976c0.0
-> +Version: 36.e91976c0.0
-> 
-> I don't know the workflow: Do you want to fix it in your tree or
-> directly in linux-firmware.git upstream?
-> My attached patch is against upstream.
 
-Thanks, Sedat!
 
-I'm going to send a new pull-request this week, so I can include your
-patch in my tree and as part of the pull-request.
+On 05/25/2018 01:10 PM, Kalle Valo wrote:
+>>> Yeah, I was wondering the same. Was there a particular reason for this?
+>>>
+>>
+>> Sometimes people use this style for a one-line code block.
+>>
+>> I can change it to the traditional style. No problem.
+> 
+> I would prefer that. So if you can send v2 that would be great.
+> 
 
+Yep. No problem. I'll send it shortly.
+
+Thanks
 --
-Cheers,
-Luca.
+Gustavo
