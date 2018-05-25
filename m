@@ -1,81 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41356 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933362AbeEHSNJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 May 2018 14:13:09 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, keescook@chromium.org,
-        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
-        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
-        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
-        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
-        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
-        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        cantabile.desu@gmail.com, ast@fb.com, hare@suse.com,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl,
-        davem@davemloft.net, arve@android.com, tkjos@android.com,
-        corbet@lwn.net, mchehab+samsung@kernel.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v6 11/13] Documentation: fix few typos and clarifications for the firmware loader
-Date: Tue,  8 May 2018 11:12:45 -0700
-Message-Id: <20180508181247.19431-12-mcgrof@kernel.org> (sfid-20180508_201514_034496_1F1AF902)
-In-Reply-To: <20180508181247.19431-1-mcgrof@kernel.org>
-References: <20180508181247.19431-1-mcgrof@kernel.org>
+Received: from mail-it0-f66.google.com ([209.85.214.66]:52843 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967628AbeEYS2h (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 May 2018 14:28:37 -0400
+MIME-Version: 1.0
+References: <20180525182311.GA3000@embeddedor.com>
+In-Reply-To: <20180525182311.GA3000@embeddedor.com>
+From: Steve deRosier <derosier@gmail.com>
+Date: Fri, 25 May 2018 11:27:59 -0700
+Message-ID: <CALLGbRLFU5xH7PogXmjNSFkayLyo2Q1w1+8hQWgOSDYxS_GgUQ@mail.gmail.com> (sfid-20180525_202855_234891_6D9361A2)
+Subject: Re: [PATCH v2] ath6kl: mark expected switch fall-throughs
+To: gustavo@embeddedor.com
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, davem@davemloft.net,
+        sergei.shtylyov@cogentembedded.com,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix a few typos, and clarify a few sentences.
+On Fri, May 25, 2018 at 11:23 AM Gustavo A. R. Silva
+<gustavo@embeddedor.com>
+wrote:
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- Documentation/driver-api/firmware/fallback-mechanisms.rst | 5 +++--
- Documentation/driver-api/firmware/firmware_cache.rst      | 4 ++--
- 2 files changed, 5 insertions(+), 4 deletions(-)
+> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+> where we are expecting to fall through.
 
-diff --git a/Documentation/driver-api/firmware/fallback-mechanisms.rst b/Documentation/driver-api/firmware/fallback-mechanisms.rst
-index f353783ae0be..a39323ef7d29 100644
---- a/Documentation/driver-api/firmware/fallback-mechanisms.rst
-+++ b/Documentation/driver-api/firmware/fallback-mechanisms.rst
-@@ -83,7 +83,7 @@ and a file upload firmware into:
-   * /sys/$DEVPATH/data
- 
- To upload firmware you will echo 1 onto the loading file to indicate
--you are loading firmware. You then cat the firmware into the data file,
-+you are loading firmware. You then write the firmware into the data file,
- and you notify the kernel the firmware is ready by echo'ing 0 onto
- the loading file.
- 
-@@ -136,7 +136,8 @@ by kobject uevents. This is specially exacerbated due to the fact that most
- distributions today disable CONFIG_FW_LOADER_USER_HELPER_FALLBACK.
- 
- Refer to do_firmware_uevent() for details of the kobject event variables
--setup. Variables passwdd with a kobject add event:
-+setup. The variables currently passed to userspace with a "kobject add"
-+event are:
- 
- * FIRMWARE=firmware name
- * TIMEOUT=timeout value
-diff --git a/Documentation/driver-api/firmware/firmware_cache.rst b/Documentation/driver-api/firmware/firmware_cache.rst
-index 2210e5bfb332..c2e69d9c6bf1 100644
---- a/Documentation/driver-api/firmware/firmware_cache.rst
-+++ b/Documentation/driver-api/firmware/firmware_cache.rst
-@@ -29,8 +29,8 @@ Some implementation details about the firmware cache setup:
- * If an asynchronous call is used the firmware cache is only set up for a
-   device if if the second argument (uevent) to request_firmware_nowait() is
-   true. When uevent is true it requests that a kobject uevent be sent to
--  userspace for the firmware request. For details refer to the Fackback
--  mechanism documented below.
-+  userspace for the firmware request through the sysfs fallback mechanism
-+  if the firmware file is not found.
- 
- * If the firmware cache is determined to be needed as per the above two
-   criteria the firmware cache is setup by adding a devres entry for the
--- 
-2.17.0
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> ---
+> Changes in v2:
+>    - Place code comments on a line of their own.
+
+>    drivers/net/wireless/ath/ath6kl/cfg80211.c | 3 +++
+>    1 file changed, 3 insertions(+)
+
+> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> index 2ba8cf3..a16ee5d 100644
+> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> @@ -3899,16 +3899,19 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
+>           switch (ar->hw.cap) {
+>           case WMI_11AN_CAP:
+>                   ht = true;
+> +               /* fall through */
+>           case WMI_11A_CAP:
+>                   band_5gig = true;
+>                   break;
+>           case WMI_11GN_CAP:
+>                   ht = true;
+> +               /* fall through */
+>           case WMI_11G_CAP:
+>                   band_2gig = true;
+>                   break;
+>           case WMI_11AGN_CAP:
+>                   ht = true;
+> +               /* fall through */
+>           case WMI_11AG_CAP:
+>                   band_2gig = true;
+>                   band_5gig = true;
+> --
+> 2.7.4
+
+
+Gustavo,
+
+Thanks for the adjustment.  It now looks good to me.
+
+Reviewed-by: Steve deRosier <derosier@cal-sierra.com>
