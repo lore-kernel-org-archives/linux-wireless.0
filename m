@@ -1,84 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42198 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751858AbeERHma (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37146 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935638AbeEYKI6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 03:42:30 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w4I7eRQw032099
-        for <linux-wireless@vger.kernel.org>; Fri, 18 May 2018 00:42:29 -0700
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-        by mx0b-0016f401.pphosted.com with ESMTP id 2j0fs2fgeb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Fri, 18 May 2018 00:42:29 -0700
-From: Xinming Hu <huxm@marvell.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Cathy Luo" <cluo@marvell.com>, James Cao <jcao@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: Re: [bug report] mwifiex: add rx histogram statistics support
-Date: Fri, 18 May 2018 07:42:27 +0000
-Message-ID: <1526629347198.90308@marvell.com> (sfid-20180518_094233_876894_65758E5F)
-References: <20180517092707.GA5900@mwanda>
-In-Reply-To: <20180517092707.GA5900@mwanda>
-Content-Type: text/plain; charset="iso-8859-1"
+        Fri, 25 May 2018 06:08:58 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: [01/10] wcn36xx: fix buffer commit logic on TX path
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180516140820.1636-2-daniel@zonque.org>
+References: <20180516140820.1636-2-daniel@zonque.org>
+To: Daniel Mack <daniel@zonque.org>
+Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+        rfried@codeaurora.org, bjorn.andersson@linaro.org,
+        nicolas.dechesne@linaro.org, loic.poulain@linaro.org,
+        Daniel Mack <daniel@zonque.org>
+Message-Id: <20180525100858.6251560618@smtp.codeaurora.org> (sfid-20180525_120949_362618_892842BD)
+Date: Fri, 25 May 2018 10:08:58 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+Daniel Mack <daniel@zonque.org> wrote:
 
-Thanks for the report!
-We also notice it recently, and have already fix it.
-Just upstream the below fix
-https://patchwork.kernel.org/patch/10408353/
+> When wcn36xx_dxe_tx_frame() is entered while the device is still processing
+> the queue asyncronously, we are racing against the firmware code with
+> updates to the buffer descriptors. Presumably, the firmware scans the ring
+> buffer that holds the descriptors and scans for a valid control descriptor,
+> and then assumes that the next descriptor contains the payload. If, however,
+> the control descriptor is marked valid, but the payload descriptor isn't,
+> the packet is not sent out.
+> 
+> Another issue with the current code is that is lacks memory barriers before
+> descriptors are marked valid. This is important because the CPU may reorder
+> writes to memory, even if it is allocated as coherent DMA area, and hence
+> the device may see incompletely written data.
+> 
+> To fix this, the code in wcn36xx_dxe_tx_frame() was restructured a bit so
+> that the payload descriptor is made valid before the control descriptor.
+> Memory barriers are added to ensure coherency of shared memory areas.
+> 
+> Signed-off-by: Daniel Mack <daniel@zonque.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Regards,
-Simon
-________________________________________
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Sent: Thursday, May 17, 2018 17:27
-To: Xinming Hu
-Cc: linux-wireless@vger.kernel.org
-Subject: [EXT] [bug report] mwifiex: add rx histogram statistics support
+10 patches applied to ath-next branch of ath.git, thanks.
 
-External Email
+9a81cc23dfef wcn36xx: fix buffer commit logic on TX path
+57e06e0e2a86 wcn36xx: set DMA mask explicitly
+ba437e72378c wcn36xx: don't disable RX IRQ from handler
+edd23ab403cf wcn36xx: clear all masks in RX interrupt
+ce1d4be82b10 wcn36xx: only handle packets when ED or DONE bit is set
+18c7ed138824 wcn36xx: consider CTRL_EOP bit when looking for valid descriptors
+2a46c829a926 wcn36xx: set PREASSOC and IDLE stated when BSS info changes
+773f9a28bcda wcn36xx: drain pending indicator messages on shutdown
+a50c6c8412f7 wcn36xx: simplify wcn36xx_smd_open()
+ffbc9197b472 wcn36xx: improve debug and error messages for SMD
 
-----------------------------------------------------------------------
-Hello Xinming Hu,
+-- 
+https://patchwork.kernel.org/patch/10404031/
 
-The patch cbf6e05527a7: "mwifiex: add rx histogram statistics
-support" from Dec 23, 2014, leads to the following static checker
-warning:
-
-        drivers/net/wireless/marvell/mwifiex/util.c:714 mwifiex_hist_data_set()
-        error: buffer underflow 'phist_data->snr' '(-128)-127'
-
-drivers/net/wireless/marvell/mwifiex/util.c
-   706  /* function to add histogram record */
-   707  void mwifiex_hist_data_set(struct mwifiex_private *priv, u8 rx_rate, s8 snr,
-                                                                             ^^^^^^
-   708                             s8 nflr)
-   709  {
-   710          struct mwifiex_histogram_data *phist_data = priv->hist_data;
-   711
-   712          atomic_inc(&phist_data->num_samples);
-   713          atomic_inc(&phist_data->rx_rate[rx_rate]);
-   714          atomic_inc(&phist_data->snr[snr]);
-   715          atomic_inc(&phist_data->noise_flr[128 + nflr]);
-   716          atomic_inc(&phist_data->sig_str[nflr - snr]);
-
-Smatch complains that "snr" comes from skb->data so it's untrusted and
-it can be less than zero and underflow the ->snr array.
-
-->snr, ->noise_flr and ->sig_str all have 256 elements.  Obviously it
-seems like "snr" should be declared as a u8 instead of an s8.  But I'm
-not totally sure what to do about the ->noise_flr and ->sig_str[]
-arrays.
-
-   717  }
-
-regards,
-dan carpenter
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
