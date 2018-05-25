@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47166 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753740AbeEaGax (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.130]:43825 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755169AbeEYJVb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 May 2018 02:30:53 -0400
-Message-ID: <3a0d36e025325f873f6db2651c6d576b3b14c36d.camel@coelho.fi> (sfid-20180531_083057_727839_0024DEF0)
-From: Luca Coelho <luca@coelho.fi>
-To: Alexander Wetzel <alexander.wetzel@web.de>, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>
-Date: Thu, 31 May 2018 09:30:48 +0300
-In-Reply-To: <8ac31eb3-17cd-c4ee-fdf6-49aea171a667@web.de>
-References: <20180422082745.9743-1-luca@coelho.fi>
-         <20180422082745.9743-2-luca@coelho.fi>
-         <8ac31eb3-17cd-c4ee-fdf6-49aea171a667@web.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: iwlwifi: regression due to: allow different csr flags for
- different device families
+        Fri, 25 May 2018 05:21:31 -0400
+Subject: Re: Fwd: [PATCH V3 1/5] brcm: update firmware for bcm43430
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Josh Boyer <jwboyer@kernel.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        "brcm80211-dev-list.pdl@broadcom.com"
+        <brcm80211-dev-list.pdl@broadcom.com>, linux-firmware@kernel.org
+References: <1521209329-59441-2-git-send-email-chi-hsien.lin@cypress.com>
+ <5AF95EF8.3020504@broadcom.com>
+From: Stefan Wahren <stefan.wahren@i2se.com>
+Message-ID: <6d010b79-e335-7c8d-dc14-198d345b9607@i2se.com> (sfid-20180525_112145_593028_D36CCC55)
+Date: Fri, 25 May 2018 11:21:25 +0200
+MIME-Version: 1.0
+In-Reply-To: <5AF95EF8.3020504@broadcom.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2018-05-27 at 14:08 +0200, Alexander Wetzel wrote:
-> > From: Golan Ben Ami <golan.ben.ami@intel.com>
-> > 
-> > Different device families may have different flag values
-> > for passing a message to the fw (i.e. SW_RESET).
-> > In order to keep the code readable, and avoid conditioning
-> > upon the family, store a value for each flag, which indicates
-> > the bit that needs to be enabled.
-> > 
-> > Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> 
-> This patch generates a Null pointer exception for my Ultimate-N 6300
-> card when loading the driver, making the card unusable.
-> (Bisecting linked it to commit
-> a8cbb46f831d2c101feccdd0e0daf3627b8c1dca.)
-> 
-> Sine the commit could not be simply reverted I applied this commit to
-> my
-> distribution kernel - basically 4.16.12 - and can confirm it is
-> indeed
-> causing the issue.
+Hi Arend,
 
-It seems that I forgot to reply to this, even though we looked into it
-and provided a fix[1].  This fix will hopefully be included in 4.17
-final.
+[add Josh]
 
-Thanks a lot for reporting and bisecting!
+Am 14.05.2018 um 12:03 schrieb Arend van Spriel:
+> Hi Stefan,
+>
+> Your query kept nagging as I recalled firmware patches earlier *this* 
+> year, not november last year. Searched my mailing list archive and 
+> found this. Apparently, it got lost in the cracks. Let's ping the 
+> firmware maintainers...
 
-[1] https://patchwork.kernel.org/patch/10437773/
+could you please resend instead forward?
 
---
-Cheers,
-Luca.
+Thanks
+Stefan
+
+>
+> Regards,
+> Arend
