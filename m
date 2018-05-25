@@ -1,186 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58414 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750820AbeEDGuj (ORCPT
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:41914 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933107AbeEYMhA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 May 2018 02:50:39 -0400
+        Fri, 25 May 2018 08:37:00 -0400
+Received: by mail-wr0-f193.google.com with SMTP id u12-v6so8954205wrn.8
+        for <linux-wireless@vger.kernel.org>; Fri, 25 May 2018 05:36:59 -0700 (PDT)
+Date: Fri, 25 May 2018 14:36:56 +0200
+From: Niklas Cassel <niklas.cassel@linaro.org>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Adrian Chadd <adrian.chadd@gmail.com>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        David Miller <davem@davemloft.net>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: transmit queued frames after waking queues
+Message-ID: <20180525123656.GB8780@localhost.localdomain> (sfid-20180525_143717_189301_8E7B259B)
+References: <20180517231512.13085-1-niklas.cassel@linaro.org>
+ <CAJ-Vmon1ybhWs_8Nv=w62pmhSizDdDeYCgK8_HTTwPZ=EEC46g@mail.gmail.com>
+ <20180521203701.GA7619@localhost.localdomain>
+ <20180524155034.xse7cfm5figfktuj@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Fri, 04 May 2018 12:20:38 +0530
-From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: Kalle Valo <kvalo@codeaurora.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Subject: Re: [PATCH] ath10k: add dynamic vlan support
-In-Reply-To: <aa04534d-9677-f42e-a239-b230093ef2f5@dd-wrt.com>
-References: <1524232653-22573-1-git-send-email-mpubbise@codeaurora.org>
- <87r2n5auvq.fsf@kamboji.qca.qualcomm.com>
- <aa04534d-9677-f42e-a239-b230093ef2f5@dd-wrt.com>
-Message-ID: <f8d6d13943ccac22f363d7d4f53d645c@codeaurora.org> (sfid-20180504_085043_843334_F7E01383)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180524155034.xse7cfm5figfktuj@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
-
-It seems like commit db3bdcb9c3ff ("mac80211: allow AP_VLAN operation on 
-crypto controlled devices") has broken 4-addr operation on crypto 
-controlled devices as reported by sebastian.
-The commit was mainly focused in addressing the problem in supporting 
-VLANs on crypto controlled devices but since 4-addr mode is also 
-dependent on AP_VLAN interface, this commit breaks the 4-addr AP mode.
-
-I have couple of ideas on how to address the problem,
-
-1) Add a new hw_flag and based on the hardware flag, allow/disallow the 
-creation of AP_VLAN interface.
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index d2279b2..301d9c38 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2084,6 +2084,11 @@ struct ieee80211_txq {
-   * @IEEE80211_HW_DOESNT_SUPPORT_QOS_NDP: The driver (or firmware) 
-doesn't
-   *     support QoS NDP for AP probing - that's most likely a driver 
-bug.
-   *
-+ * @IEEE80211_HW_SUPPORTS_SW_ENCRYPT: Device is capable of transmitting
-+ *     frames encrypted in software, only valid when SW_CRYPTO_CONTROL
-+ *     is enabled. Based on this flag, mac80211 can allow/disallow VLAN
-+ *     operations in the BSS.
-+ *
-   * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing 
-arrays
-   */
-  enum ieee80211_hw_flags {
-@@ -2129,6 +2134,7 @@ enum ieee80211_hw_flags {
-         IEEE80211_HW_SUPPORTS_TDLS_BUFFER_STA,
-         IEEE80211_HW_DEAUTH_NEED_MGD_TX_PREP,
-         IEEE80211_HW_DOESNT_SUPPORT_QOS_NDP,
-+       IEEE80211_HW_SUPPORTS_SW_ENCRYPT,
-
-         /* keep last, obviously */
-         NUM_IEEE80211_HW_FLAGS
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 555e389..c825d27 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1736,6 +1736,11 @@ int ieee80211_if_add(struct ieee80211_local 
-*local, const char *name,
-
-         ASSERT_RTNL();
-
-+       if ((type == NL80211_IFTYPE_AP_VLAN) && !params->use_4addr &&
-+           ieee80211_hw_check(local->hw, SW_CRYPTO_CONTROL) &&
-+           !ieee80211_hw_check(local->hw, SUPPORTS_SW_ENCRYPT))
-+              return -EOPNOTSUPP;
-+
-         if (type == NL80211_IFTYPE_P2P_DEVICE || type == 
-NL80211_IFTYPE_NAN) {
-                 struct wireless_dev *wdev;
-
-2) Allow mac80211 to call set_key for GTKs on AP_VLAN interfaces for 
-crypto controlled devices, let the driver decide whether to return '1' 
-or some error code based on their support for transmitting sw encrypted 
-frames. I am little skeptical with this approach as drivers are totally 
-unaware of AP_VLAN interfaces.
-
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index ee0d0cc..0ff5597 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -167,7 +167,8 @@ static int ieee80211_key_enable_hw_accel(struct 
-ieee80211_key *key)
-                  * The driver doesn't know anything about VLAN 
-interfaces.
-                  * Hence, don't send GTKs for VLAN interfaces to the 
-driver.
-                  */
--               if (!(key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE))
-+               if ((!(key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE) &&
-+                   !ieee80211_hw_check(&key->local->hw, 
-SW_CRYPTO_CONTROL)))
-                         goto out_unsupported;
-         }
-
-Please let me know which is the better way to deal the problem.
-
-Thanks,
-Manikanta
-
-
-On 2018-04-24 14:39, Sebastian Gottschall wrote:
-> consider my comment regarding vlan_ap.
-> this patch will break wds ap / wds sta support with latest mac80211
-> (see also my post on the wireless mailing list about the breaking
-> patch in mac80211)
-> so AP_VLAN must be masked always for all chipsets. otherwise wds
-> breaks and this is not just a guess. i tested it yesterday using this
-> patch and found
-> the cause of the issue
+On Thu, May 24, 2018 at 11:50:34AM -0400, Bob Copeland wrote:
+> On Mon, May 21, 2018 at 10:37:01PM +0200, Niklas Cassel wrote:
+> > On Thu, May 17, 2018 at 03:26:25PM -0700, Adrian Chadd wrote:
+> > > On Thu, 17 May 2018 at 16:16, Niklas Cassel <niklas.cassel@linaro.org>
+> > > wrote:
+> > > 
+> > > > diff --git a/drivers/net/wireless/ath/ath10k/txrx.c
+> > > b/drivers/net/wireless/ath/ath10k/txrx.c
+> > > > index cda164f6e9f6..1d3b2d2c3fee 100644
+> > > > --- a/drivers/net/wireless/ath/ath10k/txrx.c
+> > > > +++ b/drivers/net/wireless/ath/ath10k/txrx.c
+> > > > @@ -95,6 +95,9 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+> > > >                  wake_up(&htt->empty_tx_wq);
+> > > >          spin_unlock_bh(&htt->tx_lock);
+> > > 
+> > > > +       if (htt->num_pending_tx <= 3 && !list_empty(&ar->txqs))
+> > > > +               ath10k_mac_tx_push_pending(ar);
+> > > > +
+> > > 
+> > > Just sanity checking - what's protecting htt->num_pending_tx? or is it
+> > > serialised some other way?
+> [...]
+> > I can't see that any of the examples applies, but let's add READ_ONCE(),
+> > to make sure that the compiler doesn't try to optimize this.
 > 
-> the following lines
-> 
->   +    if (test_bit(WMI_SERVICE_PER_PACKET_SW_ENCRYPT, 
-> ar->wmi.svc_map)) {
-> +        ar->hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
-> +        ar->hw->wiphy->software_iftypes |= 
-> BIT(NL80211_IFTYPE_AP_VLAN);
-> +    }
-> 
-> 
-> must be just
-> 
-> +        ar->hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
-> +        ar->hw->wiphy->software_iftypes |= 
-> BIT(NL80211_IFTYPE_AP_VLAN);
-> 
-> everthing else will cause a regression
-> 
-> Am 24.04.2018 um 10:09 schrieb Kalle Valo:
->> Manikanta Pubbisetty <mpubbise@codeaurora.org> writes:
->> 
->>> Mutlicast/broadcast traffic destined for a particular vlan group will
->>> always be encrypted in software. To enable dynamic VLANs, it requires
->>> driver support for sending software encrypted packets.
->>> 
->>> In ath10k, sending sw encrypted frames is allowed only when we insmod
->>> the driver with cryptmode param set to 1, this configuration disables
->>> hardware crypto and enables RAW mode implicitly. Since, enabling raw
->>> mode has performance impact, this cannot be considered as an ideal
->>> solution for supporting VLANs in the driver.
->>> 
->>> As an alternative take, in this approach, cryptographic keys for
->>> unicast traffic(per peer PTKs) and keys for non-vlan group traffic
->>> will be configured in hardware, allowing hardware encryption for 
->>> unicast
->>> and non-vlan group traffic. Only vlan group traffic will be encrypted 
->>> in
->>> software and pushed to the target with encap mode set to RAW in the 
->>> TX
->>> descriptors.
->>> 
->>> Not all firmwares can support this type of key configuration(having 
->>> few
->>> keys installed in hardware and few only in software); for this 
->>> purpose a
->>> new WMI service flag "WMI_SERVICE_PER_PACKET_SW_ENCRYPT" is 
->>> introduced to
->>> advertise this support.
->>> 
->>> Also, adding the logic required to send sw encrypted frames in raw 
->>> mode.
->>> 
->>> Tested this change on QCA9984(firmware version 10.4-3.5.3-00057).
->>> 
->>> Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
->> Your name in patchwork is wrong and hence my script uses the wrong
->> name. Please fix it by registering to patchwork[1] where it's possible
->> to change your name during registration, but only one time. If that
->> doesn't work then send a request to helpdesk@kernel.org and the admins
->> can fix it.
->> 
->> [1] https://patchwork.kernel.org/register/
->> 
+> Couldn't you just move the num_pending_tx read inside tx_lock which is 2 lines
+> above?  I think all the other manipulations are protected by tx_lock.
+
+Hello Bob,
+
+There is both a V2 and V3 of this patchset, V3 moves this to a sdio.c and
+calls ath10k_mac_tx_push_pending() unconditionally.
+
+
+But to answer your question,
+it shouldn't matter if the read is done while holding the lock or not.
+
+Sure, the compiler could do things so that the code path is always or never
+executed, but that is why I added READ_ONCE() in V2.
+
+A spin lock does have the advantage of ordering: memory operations issued
+before the spin_unlock_bh() will be completed before the spin_unlock_bh()
+operation has completed.
+
+However, ath10k_htt_tx_dec_pending() was called earlier in the same function,
+which decreases htt->num_pending_tx, so that write will be completed before
+our read. That is the only ordering we care about here (if we should call
+ath10k_mac_tx_push_pending() or not).
+
+
+Kind regards,
+Niklas
