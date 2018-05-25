@@ -1,134 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:29463 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964827AbeEITCE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 15:02:04 -0400
-Date: Thu, 10 May 2018 00:29:50 +0530
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <gregkh@linuxfoundation.org>, <ganesh.krishna@microchip.com>,
-        <venkateswara.kaja@microchip.com>, <aditya.shankar@microchip.com>,
-        <adham.abozaeid@Microchip.com>
-Subject: Re: [PATCH 05/30] staging: wilc1000: fix line over 80 chars in
- host_int_parse_assoc_resp_info()
-Message-ID: <20180510002950.16b475d9@ajaysk-VirtualBox> (sfid-20180509_210207_944466_1AA30254)
-In-Reply-To: <e7165eb4-584d-370c-7d5d-cca93ab34fc7@microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
- <1525682614-3824-6-git-send-email-ajay.kathat@microchip.com>
- <e7165eb4-584d-370c-7d5d-cca93ab34fc7@microchip.com>
+Received: from mail.toke.dk ([52.28.52.200]:60365 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966497AbeEYM3Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 May 2018 08:29:24 -0400
+Subject: [PATCH] mac80211: Move up init of TXQs
+From: Toke =?utf-8?q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: linux-wireless@vger.kernel.org
+Cc: Niklas Cassel <niklas.cassel@linaro.org>
+Date: Fri, 25 May 2018 14:29:21 +0200
+Message-ID: <152725136177.14483.16708750819293583562.stgit@alrua-kau> (sfid-20180525_142943_783332_DD5B80F9)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 9 May 2018 16:44:38 +0300
-Claudiu Beznea <Claudiu.Beznea@microchip.com> wrote:
+On init, ieee80211_if_add() dumps the interface. Since that now includes a
+dump of the TXQ state, we need to initialise that before the dump happens.
+So move up the TXQ initialisation to to before the call to
+ieee80211_if_add().
 
-> On 07.05.2018 11:43, Ajay Singh wrote:
-> > Fix line over 80 characters issue reported by checkpatch.pl in
-> > host_int_parse_assoc_resp_info().
-> > 
-> > Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> > ---
-> >  drivers/staging/wilc1000/host_interface.c | 37
-> > ++++++++++++++++++------------- 1 file changed, 21 insertions(+),
-> > 16 deletions(-)
-> > 
-> > diff --git a/drivers/staging/wilc1000/host_interface.c
-> > b/drivers/staging/wilc1000/host_interface.c index 55a61d5..a341ff1
-> > 100644 --- a/drivers/staging/wilc1000/host_interface.c
-> > +++ b/drivers/staging/wilc1000/host_interface.c
-> > @@ -1293,6 +1293,23 @@ static inline void
-> > host_int_free_user_conn_req(struct host_if_drv *hif_drv)
-> > hif_drv->usr_conn_req.ies = NULL; }
-> >  
-> > +static void host_int_copy_conn_info(struct connect_resp_info
-> > *conn_resp_info,
-> > +				    struct connect_info *conn_info)
-> > +{
-> > +	conn_info->status = conn_resp_info->status;
-> > +
-> > +	if (conn_info->status == SUCCESSFUL_STATUSCODE &&
-> > conn_resp_info->ies) {
-> > +		conn_info->resp_ies = kmemdup(conn_resp_info->ies,
-> > +
-> > conn_resp_info->ies_len,
-> > +					      GFP_KERNEL);
-> > +		if (conn_info->resp_ies)
-> > +			conn_info->resp_ies_len =
-> > conn_resp_info->ies_len;
-> > +	}
-> > +
-> > +	kfree(conn_resp_info->ies);
-> > +	kfree(conn_resp_info);
-> > +}
-> > +  
-> 
-> Instead of adding new function why not using
-> wilc_parse_assoc_resp_info() to return you the conn_info that you are
-> copying it here? The connect_resp_info object that you are passing to
-> wilc_parse_assoc_resp_info() is not used anywhere in
-> host_int_parse_assoc_resp_info() it is used only to copy again from
-> it to conn_info object.
+Fixes: 52539ca89f36 ("cfg80211: Expose TXQ stats and parameters to userspace")
+Reported-by: Niklas Cassel <niklas.cassel@linaro.org>
+Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+---
+ net/mac80211/main.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Yes, there are different function because the purpose is different.
-Primarily wilc_parse_assoc_resp_info() is to take care of parsing and
-filing the response info and later connect_resp_info is used to fill
-conn_info values. The elements in conn_info and connect_resp_info are
-different, but now most of the fields are not used in connect_resp_info.
-Returning 'conn_info' from wilc_parse_assoc_resp_info() might not be
-correct. I will check if we can go away with connect_resp_info
-structure itself as most of the field are not used in it.
-
-> 
-> Also, in wilc_parse_assoc_resp_info() you can get rid of these lines:
-> connect_resp_info->capability = get_assoc_resp_cap_info(buffer);
-> connect_resp_info->assoc_id = get_asoc_id(buffer);              
-> 
-
-With above changes it can be taken care.
-
-> 
-> >  static inline void host_int_parse_assoc_resp_info(struct wilc_vif
-> > *vif, u8 mac_status)
-> >  {
-> > @@ -1316,25 +1333,13 @@ static inline void
-> > host_int_parse_assoc_resp_info(struct wilc_vif *vif, 
-> >  			err =
-> > wilc_parse_assoc_resp_info(rcv_assoc_resp,
-> > rcvd_assoc_resp_info_len, &connect_resp_info);
-> > -			if (err) {
-> > +			if (err)
-> >  				netdev_err(vif->ndev,
-> >  					   "wilc_parse_assoc_resp_info()
-> > returned error %d\n", err);
-> > -			} else {
-> > -				conn_info.status =
-> > connect_resp_info->status; -
-> > -				if (conn_info.status ==
-> > SUCCESSFUL_STATUSCODE &&
-> > -				    connect_resp_info->ies) {
-> > -					conn_info.resp_ies =
-> > kmemdup(connect_resp_info->ies,
-> > -
-> > connect_resp_info->ies_len,
-> > -
-> > GFP_KERNEL);
-> > -					if (conn_info.resp_ies)
-> > -
-> > conn_info.resp_ies_len = connect_resp_info->ies_len;
-> > -				}
-> > -
-> > -				kfree(connect_resp_info->ies);
-> > -				kfree(connect_resp_info);
-> > -			}
-> > +			else
-> > +
-> > host_int_copy_conn_info(connect_resp_info,
-> > +
-> > &conn_info); }
-> >  	}
-> >  
-> >   
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 4d2e797e3f16..722f3d9fb416 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1098,6 +1098,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 
+ 	ieee80211_led_init(local);
+ 
++	result = ieee80211_txq_setup_flows(local);
++	if (result)
++		goto fail_flows;
++
+ 	rtnl_lock();
+ 
+ 	result = ieee80211_init_rate_ctrl_alg(local,
+@@ -1120,10 +1124,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 
+ 	rtnl_unlock();
+ 
+-	result = ieee80211_txq_setup_flows(local);
+-	if (result)
+-		goto fail_flows;
+-
+ #ifdef CONFIG_INET
+ 	local->ifa_notifier.notifier_call = ieee80211_ifa_changed;
+ 	result = register_inetaddr_notifier(&local->ifa_notifier);
+@@ -1149,8 +1149,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ #if defined(CONFIG_INET) || defined(CONFIG_IPV6)
+  fail_ifa:
+ #endif
+-	ieee80211_txq_teardown_flows(local);
+- fail_flows:
+ 	rtnl_lock();
+ 	rate_control_deinitialize(local);
+ 	ieee80211_remove_interfaces(local);
+@@ -1158,6 +1156,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	rtnl_unlock();
+ 	ieee80211_led_exit(local);
+ 	ieee80211_wep_free(local);
++	ieee80211_txq_teardown_flows(local);
++ fail_flows:
+ 	destroy_workqueue(local->workqueue);
+  fail_workqueue:
+ 	wiphy_unregister(local->hw.wiphy);
