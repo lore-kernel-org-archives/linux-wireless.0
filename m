@@ -1,54 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:42550 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750862AbeEPQRz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 May 2018 12:17:55 -0400
-Date: Wed, 16 May 2018 09:17:52 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
-        Guy Mishol <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Maital Hahn <maitalm@ti.com>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org
-Subject: Re: [PATCH 1/2] wlcore: Make sure PM calls are paired
-Message-ID: <20180516161751.GH98604@atomide.com> (sfid-20180516_181800_319872_CC2C9C27)
-References: <20180515161315.1997-1-tony@atomide.com>
- <20180515161315.1997-2-tony@atomide.com>
+Received: from gateway21.websitewelcome.com ([192.185.45.140]:34901 "EHLO
+        gateway21.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S967385AbeEYSPp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 May 2018 14:15:45 -0400
+Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
+        by gateway21.websitewelcome.com (Postfix) with ESMTP id 1E7E4401220C0
+        for <linux-wireless@vger.kernel.org>; Fri, 25 May 2018 12:50:20 -0500 (CDT)
+Subject: Re: [PATCH] ath6kl: mark expected switch fall-throughs
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20180524231322.GA22704@embeddedor.com>
+ <060f93a0-7210-79b6-37a7-cd8900719d40@cogentembedded.com>
+ <871sdzc16l.fsf@kamboji.qca.qualcomm.com>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Message-ID: <e777af5c-8d56-aef7-a4b6-f93f12378049@embeddedor.com> (sfid-20180525_201808_115411_C70B4ABA)
+Date: Fri, 25 May 2018 12:50:10 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180515161315.1997-2-tony@atomide.com>
+In-Reply-To: <871sdzc16l.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Tony Lindgren <tony@atomide.com> [180515 16:15]:
-> The call to wl1271_ps_elp_wakeup() in wl12xx_queue_recovery_work() is
-> unpaired. Let's remove it and add paired calls to wl1271_recovery_work()
-> instead in preparation for changing things to use runtime PM.
+
+
+On 05/25/2018 08:30 AM, Kalle Valo wrote:
+> Sergei Shtylyov <sergei.shtylyov@cogentembedded.com> writes:
 > 
-> Signed-off-by: Tony Lindgren <tony@atomide.com>
-> ---
->  drivers/net/wireless/ti/wlcore/main.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
+>> On 5/25/2018 2:13 AM, Gustavo A. R. Silva wrote:
+>>
+>>> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+>>> where we are expecting to fall through.
+>>>
+>>> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+>>> ---
+>>>    drivers/net/wireless/ath/ath6kl/cfg80211.c | 6 +++---
+>>>    1 file changed, 3 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+>>> index 2ba8cf3..29e32cd 100644
+>>> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+>>> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+>>> @@ -3898,17 +3898,17 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
+>>>    	wiphy->max_scan_ie_len = 1000; /* FIX: what is correct limit? */
+>>>    	switch (ar->hw.cap) {
+>>>    	case WMI_11AN_CAP:
+>>> -		ht = true;
+>>> +		ht = true; /* fall through */
+>>>    	case WMI_11A_CAP:
+>>>    		band_5gig = true;
+>>>    		break;
+>>>    	case WMI_11GN_CAP:
+>>> -		ht = true;
+>>> +		ht = true; /* fall through */
+>>>    	case WMI_11G_CAP:
+>>>    		band_2gig = true;
+>>>    		break;
+>>>    	case WMI_11AGN_CAP:
+>>> -		ht = true;
+>>> +		ht = true; /* fall through */
+>>>    	case WMI_11AG_CAP:
+>>>    		band_2gig = true;
+>>>    		band_5gig = true;
+>>
+>>     Hm, typically such comments are done on a line of their own, have
+>> never seen this style...
 > 
-> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-> --- a/drivers/net/wireless/ti/wlcore/main.c
-> +++ b/drivers/net/wireless/ti/wlcore/main.c
-> @@ -796,7 +796,6 @@ void wl12xx_queue_recovery_work(struct wl1271 *wl)
->  
->  		wl->state = WLCORE_STATE_RESTARTING;
->  		set_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags);
-> -		wl1271_ps_elp_wakeup(wl);
->  		wlcore_disable_interrupts_nosync(wl);
->  		ieee80211_queue_work(wl->hw, &wl->recovery_work);
->  	}
+> Yeah, I was wondering the same. Was there a particular reason for this?
+> 
 
-OK found it, we need to move wlcore_disable_interrupts_nosync(wl) to
-wl1271_recovery_work() below also as otherwise wl1271_ps_elp_wakeup()
-times out.
+Sometimes people use this style for a one-line code block.
 
-Regards,
+I can change it to the traditional style. No problem.
 
-Tony
+Thanks
+--
+Gustavo
