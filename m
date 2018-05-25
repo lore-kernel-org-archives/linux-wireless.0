@@ -1,106 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:39374 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752320AbeERJrq (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45478 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936185AbeEYOok (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 05:47:46 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/2] cfg80211: release station info tidstats where needed
-Date: Fri, 18 May 2018 11:47:42 +0200
-Message-Id: <20180518094742.10669-2-johannes@sipsolutions.net> (sfid-20180518_114804_035410_760F1375)
-In-Reply-To: <20180518094742.10669-1-johannes@sipsolutions.net>
-References: <20180518094742.10669-1-johannes@sipsolutions.net>
+        Fri, 25 May 2018 10:44:40 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Cc: Ben Greear <greearb@candelatech.com>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v1] ath10k: fix band_center_freq handling for VHT160 in recent firmwares
+References: <20180426094357.24358-1-s.gottschall@dd-wrt.com>
+        <19b8766e-d474-31d3-ff38-993498ee670d@candelatech.com>
+        <da5c7c56-9a41-99f0-28be-3a2c8e9fabbf@dd-wrt.com>
+Date: Fri, 25 May 2018 17:44:34 +0300
+In-Reply-To: <da5c7c56-9a41-99f0-28be-3a2c8e9fabbf@dd-wrt.com> (Sebastian
+        Gottschall's message of "Thu, 26 Apr 2018 17:12:11 +0200")
+Message-ID: <87wovr94ml.fsf@kamboji.qca.qualcomm.com> (sfid-20180525_164608_084123_99181AAE)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
 
-This fixes memory leaks in cases where we got the station
-info but failed sending it out properly.
+> Am 26.04.2018 um 15:44 schrieb Ben Greear:
+>>
+>>
+>> On 04/26/2018 02:43 AM, s.gottschall@dd-wrt.com wrote:
+>>> From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+>>>
+>>> starting with firmware 10.4.3.4.x series QCA changed the handling
+>>> of the channel property band_center_freq1 and band_center_freq2 in
+>>> vht160 operation mode
+>>> likelly for backward compatiblity with vht80 only capable clients.
+>>> this patch adjusts the handling to get vht160 to work again with
+>>> official qca firmwares newer than 3.3
+>>> consider that this patch will not work with older firmwares
+>>> anymore. to avoid undefined behaviour this we disable vht160
+>>> capability for outdated firmwares
+>>
+>> We should be able to use a feature-flag or otherwise determine if
+>> the firmware needs the old or new
+>> API and make the driver able to handle both.
+>
+> the new firmware must be used as is and it works. the old firmware can
+> be detected on the missing vht cap flag.
+> but thats not my task. i can only use feature flags if they are
+> included within the qca firmwares. but they arent
+> the old pre 3.3 firmwares should be treated as obsolete. they are more
+> than 2 years old and do not announce vht160 capability
+> even if it works with some ignorance, but on the other side the it has
+> backward incompatiblies with older vht80 only clients.
+> this is why the new way was introduced
 
-Fixes: 8689c051a201 ("cfg80211: dynamically allocate per-tid stats for station info")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h | 13 +++++++++++++
- net/wireless/nl80211.c | 11 ++++++++---
- 2 files changed, 21 insertions(+), 3 deletions(-)
+I was told ath10k could check for WMI_SERVICE_EXTENDED_NSS_SUPPORT flag.
+Can someone test and verify that?
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8984d24d68b7..1c6364591856 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5710,6 +5710,19 @@ void cfg80211_remain_on_channel_expired(struct wireless_dev *wdev, u64 cookie,
-  */
- int cfg80211_sinfo_alloc_tid_stats(struct station_info *sinfo, gfp_t gfp);
- 
-+/**
-+ * cfg80211_sinfo_release_sinfo - release contents of station info
-+ * @sinfo: the station information
-+ *
-+ * Releases any potentially allocated sub-information of the station
-+ * information, but not the struct itself (since it's typically on
-+ * the stack.)
-+ */
-+static inline void cfg80211_sinfo_release_sinfo(struct station_info *sinfo)
-+{
-+	kfree(sinfo->pertid);
-+}
-+
- /**
-  * cfg80211_new_sta - notify userspace about station
-  *
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7daceb1f253d..0996fdc002e0 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4702,7 +4702,6 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 		}
- 
- 		nla_nest_end(msg, tidsattr);
--		kfree(sinfo->pertid);
- 	}
- 
- 	nla_nest_end(msg, sinfoattr);
-@@ -4712,10 +4711,12 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 		    sinfo->assoc_req_ies))
- 		goto nla_put_failure;
- 
-+	cfg80211_sinfo_release_sinfo(sinfo);
- 	genlmsg_end(msg, hdr);
- 	return 0;
- 
-  nla_put_failure:
-+	cfg80211_sinfo_release_sinfo(sinfo);
- 	genlmsg_cancel(msg, hdr);
- 	return -EMSGSIZE;
- }
-@@ -4797,8 +4798,10 @@ static int nl80211_get_station(struct sk_buff *skb, struct genl_info *info)
- 		return err;
- 
- 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
--	if (!msg)
-+	if (!msg) {
-+		cfg80211_sinfo_release_sinfo(sinfo);
- 		return -ENOMEM;
-+	}
- 
- 	if (nl80211_send_station(msg, NL80211_CMD_NEW_STATION,
- 				 info->snd_portid, info->snd_seq, 0,
-@@ -14624,8 +14627,10 @@ void cfg80211_del_sta_sinfo(struct net_device *dev, const u8 *mac_addr,
- 	trace_cfg80211_del_sta(dev, mac_addr);
- 
- 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
--	if (!msg)
-+	if (!msg) {
-+		cfg80211_sinfo_release_sinfo(sinfo);
- 		return;
-+	}
- 
- 	if (nl80211_send_station(msg, NL80211_CMD_DEL_STATION, 0, 0, 0,
- 				 rdev, dev, mac_addr, sinfo) < 0) {
 -- 
-2.14.3
+Kalle Valo
