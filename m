@@ -1,73 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:45010 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936850AbeE2SGM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 May 2018 14:06:12 -0400
-From: Tony Lindgren <tony@atomide.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
-        Guy Mishol <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Maital Hahn <maitalm@ti.com>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org
-Subject: [RFT 2/6] wlcore: Make sure PM calls are paired
-Date: Tue, 29 May 2018 11:06:01 -0700
-Message-Id: <20180529180605.73622-3-tony@atomide.com> (sfid-20180529_200650_521663_AEF12669)
-In-Reply-To: <20180529180605.73622-1-tony@atomide.com>
-References: <20180529180605.73622-1-tony@atomide.com>
+Received: from gateway33.websitewelcome.com ([192.185.145.9]:36652 "EHLO
+        gateway33.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1030216AbeEYVWM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 May 2018 17:22:12 -0400
+Received: from cm15.websitewelcome.com (cm15.websitewelcome.com [100.42.49.9])
+        by gateway33.websitewelcome.com (Postfix) with ESMTP id 0E54C3550
+        for <linux-wireless@vger.kernel.org>; Fri, 25 May 2018 16:22:12 -0500 (CDT)
+Date: Fri, 25 May 2018 16:22:07 -0500
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] ath9k: mark expected switch fall-throughs
+Message-ID: <20180525212207.GA10681@embeddedor.com> (sfid-20180525_232442_973597_6A142BE6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The call to wl1271_ps_elp_wakeup() in wl12xx_queue_recovery_work() is
-unpaired. Let's remove it and add paired calls to wl1271_recovery_work()
-instead in preparation for changing things to use runtime PM.
+In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+where we are expecting to fall through.
 
-Signed-off-by: Tony Lindgren <tony@atomide.com>
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/net/wireless/ti/wlcore/main.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c | 2 ++
+ drivers/net/wireless/ath/ath9k/ar9002_phy.c | 1 +
+ drivers/net/wireless/ath/ath9k/main.c       | 1 +
+ 3 files changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -796,8 +796,6 @@ void wl12xx_queue_recovery_work(struct wl1271 *wl)
- 
- 		wl->state = WLCORE_STATE_RESTARTING;
- 		set_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags);
--		wl1271_ps_elp_wakeup(wl);
--		wlcore_disable_interrupts_nosync(wl);
- 		ieee80211_queue_work(wl->hw, &wl->recovery_work);
- 	}
- }
-@@ -919,12 +917,18 @@ static void wl1271_recovery_work(struct work_struct *work)
- 		container_of(work, struct wl1271, recovery_work);
- 	struct wl12xx_vif *wlvif;
- 	struct ieee80211_vif *vif;
-+	int error;
- 
- 	mutex_lock(&wl->mutex);
- 
- 	if (wl->state == WLCORE_STATE_OFF || wl->plt)
- 		goto out_unlock;
- 
-+	error = wl1271_ps_elp_wakeup(wl);
-+	if (error < 0)
-+		wl1271_warning("Enable for recovery failed");
-+	wlcore_disable_interrupts_nosync(wl);
-+
- 	if (!test_bit(WL1271_FLAG_INTENDED_FW_RECOVERY, &wl->flags)) {
- 		if (wl->conf.fwlog.output == WL12XX_FWLOG_OUTPUT_HOST)
- 			wl12xx_read_fwlog_panic(wl);
-@@ -967,6 +971,8 @@ static void wl1271_recovery_work(struct work_struct *work)
- 	 */
- 	wlcore_wake_queues(wl, WLCORE_QUEUE_STOP_REASON_FW_RESTART);
- 
-+	wl1271_ps_elp_sleep(wl);
-+
- out_unlock:
- 	wl->watchdog_recovery = false;
- 	clear_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags);
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index 7922550..ef2dd68 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -583,12 +583,14 @@ static void ar5008_hw_init_chain_masks(struct ath_hw *ah)
+ 	case 0x5:
+ 		REG_SET_BIT(ah, AR_PHY_ANALOG_SWAP,
+ 			    AR_PHY_SWAP_ALT_CHAIN);
++		/* fall through */
+ 	case 0x3:
+ 		if (ah->hw_version.macVersion == AR_SREV_REVISION_5416_10) {
+ 			REG_WRITE(ah, AR_PHY_RX_CHAINMASK, 0x7);
+ 			REG_WRITE(ah, AR_PHY_CAL_CHAINMASK, 0x7);
+ 			break;
+ 		}
++		/* else: fall through */
+ 	case 0x1:
+ 	case 0x2:
+ 	case 0x7:
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+index 61a9b85..7132918 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+@@ -119,6 +119,7 @@ static int ar9002_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+ 				aModeRefSel = 2;
+ 			if (aModeRefSel)
+ 				break;
++			/* else: fall through */
+ 		case 1:
+ 		default:
+ 			aModeRefSel = 0;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a3be8ad..11d84f4 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1928,6 +1928,7 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
+ 	case IEEE80211_AMPDU_TX_STOP_FLUSH:
+ 	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+ 		flush = true;
++		/* fall through */
+ 	case IEEE80211_AMPDU_TX_STOP_CONT:
+ 		ath9k_ps_wakeup(sc);
+ 		ath_tx_aggr_stop(sc, sta, tid);
 -- 
-2.17.0
+2.7.4
