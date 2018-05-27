@@ -1,90 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0088.outbound.protection.outlook.com ([104.47.42.88]:23410
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933391AbeE2MA1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 May 2018 08:00:27 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Dmitry Lebed <dlebed@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 2/9] qtnfmac: simplify notation
-Date: Tue, 29 May 2018 14:59:58 +0300
-Message-Id: <20180529120005.21498-3-sergey.matyukevich.os@quantenna.com> (sfid-20180529_140035_087644_357BA1B2)
-In-Reply-To: <20180529120005.21498-1-sergey.matyukevich.os@quantenna.com>
-References: <20180529120005.21498-1-sergey.matyukevich.os@quantenna.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:41879 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751439AbeE0VRJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 27 May 2018 17:17:09 -0400
+From: Colin King <colin.king@canonical.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath10k: fix memory leak of tpc_stats
+Date: Sun, 27 May 2018 22:17:02 +0100
+Message-Id: <20180527211702.23778-1-colin.king@canonical.com> (sfid-20180527_231728_285366_57C26BAA)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Shorten line lengths using a more compact notation to access mac info.
+From: Colin Ian King <colin.king@canonical.com>
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Currently tpc_stats is allocated and is leaked on the return
+path if num_tx_chain is greater than WMI_TPC_TX_N_CHAIN. Avoid
+this leak by performing the check on num_tx_chain before the
+allocation of tpc_stats.
+
+Detected by CoverityScan, CID#1469422 ("Resource Leak")
+Fixes: 4b190675ad06 ("ath10k: fix kernel panic while reading tpc_stats")
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 25 ++++++++++++-----------
- 1 file changed, 13 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 5122dc798064..bf624d975953 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -955,6 +955,7 @@ qtnf_wiphy_setup_if_comb(struct wiphy *wiphy, struct qtnf_mac_info *mac_info)
- int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
- {
- 	struct wiphy *wiphy = priv_to_wiphy(mac);
-+	struct qtnf_mac_info *macinfo = &mac->macinfo;
- 	int ret;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 46fb96ee5852..694f46fa9e14 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4470,10 +4470,6 @@ void ath10k_wmi_event_pdev_tpc_config(struct ath10k *ar, struct sk_buff *skb)
  
- 	if (!wiphy) {
-@@ -962,20 +963,20 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
- 		return -EFAULT;
+ 	ev = (struct wmi_pdev_tpc_config_event *)skb->data;
+ 
+-	tpc_stats = kzalloc(sizeof(*tpc_stats), GFP_ATOMIC);
+-	if (!tpc_stats)
+-		return;
+-
+ 	num_tx_chain = __le32_to_cpu(ev->num_tx_chain);
+ 
+ 	if (num_tx_chain > WMI_TPC_TX_N_CHAIN) {
+@@ -4482,6 +4478,10 @@ void ath10k_wmi_event_pdev_tpc_config(struct ath10k *ar, struct sk_buff *skb)
+ 		return;
  	}
  
--	wiphy->frag_threshold = mac->macinfo.frag_thr;
--	wiphy->rts_threshold = mac->macinfo.rts_thr;
--	wiphy->retry_short = mac->macinfo.sretry_limit;
--	wiphy->retry_long = mac->macinfo.lretry_limit;
--	wiphy->coverage_class = mac->macinfo.coverage_class;
-+	wiphy->frag_threshold = macinfo->frag_thr;
-+	wiphy->rts_threshold = macinfo->rts_thr;
-+	wiphy->retry_short = macinfo->sretry_limit;
-+	wiphy->retry_long = macinfo->lretry_limit;
-+	wiphy->coverage_class = macinfo->coverage_class;
- 
- 	wiphy->max_scan_ssids = QTNF_MAX_SSID_LIST_LENGTH;
- 	wiphy->max_scan_ie_len = QTNF_MAX_VSIE_LEN;
- 	wiphy->mgmt_stypes = qtnf_mgmt_stypes;
- 	wiphy->max_remain_on_channel_duration = 5000;
--	wiphy->max_acl_mac_addrs = mac->macinfo.max_acl_mac_addrs;
-+	wiphy->max_acl_mac_addrs = macinfo->max_acl_mac_addrs;
- 	wiphy->max_num_csa_counters = 2;
- 
--	ret = qtnf_wiphy_setup_if_comb(wiphy, &mac->macinfo);
-+	ret = qtnf_wiphy_setup_if_comb(wiphy, macinfo);
- 	if (ret)
- 		goto out;
- 
-@@ -994,12 +995,12 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
- 	wiphy->probe_resp_offload = NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS |
- 				    NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2;
- 
--	wiphy->available_antennas_tx = mac->macinfo.num_tx_chain;
--	wiphy->available_antennas_rx = mac->macinfo.num_rx_chain;
-+	wiphy->available_antennas_tx = macinfo->num_tx_chain;
-+	wiphy->available_antennas_rx = macinfo->num_rx_chain;
- 
--	wiphy->max_ap_assoc_sta = mac->macinfo.max_ap_assoc_sta;
--	wiphy->ht_capa_mod_mask = &mac->macinfo.ht_cap_mod_mask;
--	wiphy->vht_capa_mod_mask = &mac->macinfo.vht_cap_mod_mask;
-+	wiphy->max_ap_assoc_sta = macinfo->max_ap_assoc_sta;
-+	wiphy->ht_capa_mod_mask = &macinfo->ht_cap_mod_mask;
-+	wiphy->vht_capa_mod_mask = &macinfo->vht_cap_mod_mask;
- 
- 	ether_addr_copy(wiphy->perm_addr, mac->macaddr);
++	tpc_stats = kzalloc(sizeof(*tpc_stats), GFP_ATOMIC);
++	if (!tpc_stats)
++		return;
++
+ 	ath10k_wmi_tpc_config_get_rate_code(rate_code, pream_table,
+ 					    num_tx_chain);
  
 -- 
-2.11.0
+2.17.0
