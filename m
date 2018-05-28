@@ -1,102 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:39244 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750735AbeE3KZR (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:45336 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S939128AbeE1Nrq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 06:25:17 -0400
-Received: by mail-wm0-f67.google.com with SMTP id f8-v6so46789619wmc.4
-        for <linux-wireless@vger.kernel.org>; Wed, 30 May 2018 03:25:16 -0700 (PDT)
-MIME-Version: 1.0
-References: <20180522131836.26858-1-zajec5@gmail.com> <20180522131836.26858-2-zajec5@gmail.com>
- <5B070A5D.3080400@broadcom.com> <CAGRGNgXMUTBhjGA_Rk=_ASaOcYNM+udAN8=HhutxFP5kwQYLww@mail.gmail.com>
- <5B0E7783.7070309@broadcom.com>
-In-Reply-To: <5B0E7783.7070309@broadcom.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 30 May 2018 20:25:01 +1000
-Message-ID: <CAGRGNgXCgp=b97KDGdfGiQEujQk2duJz=SqiwHYYt_v3Kut2RQ@mail.gmail.com> (sfid-20180530_122522_420828_9550A5C7)
-Subject: Re: [PATCH 2/3] brcmfmac: handle monitor mode marked msgbuf packets
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        stanley.hsu@cypress.com,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, rafal@milecki.pl
-Content-Type: text/plain; charset="UTF-8"
+        Mon, 28 May 2018 09:47:46 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/5] mac80211: split ieee80211_send_probe_req()
+Date: Mon, 28 May 2018 15:47:39 +0200
+Message-Id: <20180528134741.10386-4-johannes@sipsolutions.net> (sfid-20180528_154821_521211_A1749A39)
+In-Reply-To: <20180528134741.10386-1-johannes@sipsolutions.net>
+References: <20180528134741.10386-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Wed, May 30, 2018 at 8:05 PM Arend van Spriel <
-arend.vanspriel@broadcom.com> wrote:
+This function is passed many more parameters in the scan case
+than in the MLME case, and differentiates the two cases inside.
+Split it up and make both versions static to simplify things.
 
-> On 5/27/2018 7:34 AM, Julian Calaby wrote:
-> > Hi Arend,
-> > On Fri, May 25, 2018 at 12:38 PM Arend van Spriel <
-> > arend.vanspriel@broadcom.com> wrote:
-> >
-> >> On 5/22/2018 3:18 PM, Rafa=C5=82 Mi=C5=82ecki wrote:
-> >>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
-> >>>
-> >>> New Broadcom firmwares mark monitor mode packets using a newly define=
-d
-> >>> bit in the flags field. Use it to filter them out and pass to the
-> >>> monitor interface. These defines were found in bcmmsgbuf.h from SDK.
-> >>>
-> >>> As not every firmware generates radiotap header this commit introduce=
-s
-> >>> BRCMF_FEAT_MON_FMT_RADIOTAP that has to be set per firmware version.
-If
-> >>> not present brcmf_netif_mon_rx() assumed packet being a raw 802.11
-frame
-> >>> and prepends it with an empty radiotap header.
-> >>>
-> >>> It's limited to the msgbuf protocol. Adding support for SDIO/USB
-devices
-> >>> will require some extra research.
-> >
-> >> So I went looking on my shelf and found the patch I made for SDIO a
-> >> while back. It relies on firmware change and I did not introduce a
-> >> firmware flag for it. I will send the patch as RFT so you can have a
-> >> look at it.
-> >
-> >> I checked our internal driver and it turns out the raw vs. radiotap is
-a
-> >> compilation option. So depending on customer they would get either
-> >> firmware doing the radiotap header generation or the host driver,
-> >> without any run-time way to determine it. Not nice for brcmfmac.
-> >
-> > I pretty sure I know what the answer to this is going to be, however I
-> > still have to ask:
-> >
-> > Is it possible to open up _any_ part of the firmware? (Even if it's jus=
-t
-> > the host-interface end and the hardware end is a big ugly blob) It'd
-make
-> > dealing with stuff like this so much easier if we can just toggle a fla=
-g
-> > and recompile. (I'm also sure that we'd be more than happy to pass some
-> > flag through telling us/you that it's unofficial firmware and has
-probably
-> > broken the hardware, etc.)
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |  7 -------
+ net/mac80211/mlme.c        | 22 +++++++++++++++++-----
+ net/mac80211/scan.c        | 22 ++++++++++++++++++++--
+ net/mac80211/util.c        | 21 ---------------------
+ 4 files changed, 37 insertions(+), 35 deletions(-)
 
-> Hah. Yeah, with next to nil uncertainty I know the answer to this as
-> well. If you know how long it took before we committed to supporting the
-> upstream drivers. Despite my better judgement I will pass your idea, but
-> it is not something that is going to fall in the timeframe that Rafa=C5=
-=82
-> had in mind.
-
-Fair enough, I can't ask for more than that.
-
-Good Luck!
-
---=20
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ee2a25d6ecf2..2851245c569a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2050,13 +2050,6 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
+ 					  const u8 *ssid, size_t ssid_len,
+ 					  const u8 *ie, size_t ie_len,
+ 					  u32 flags);
+-void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata,
+-			      const u8 *src, const u8 *dst,
+-			      const u8 *ssid, size_t ssid_len,
+-			      const u8 *ie, size_t ie_len,
+-			      u32 ratemask, u32 flags, u32 tx_flags,
+-			      struct ieee80211_channel *channel, bool scan);
+-
+ u32 ieee80211_sta_get_rates(struct ieee80211_sub_if_data *sdata,
+ 			    struct ieee802_11_elems *elems,
+ 			    enum nl80211_band band, u32 *basic_rates);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c3f2883cc0ec..a44e5b4aaeda 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2219,6 +2219,20 @@ void ieee80211_sta_tx_notify(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_sta_reset_conn_monitor(sdata);
+ }
+ 
++static void ieee80211_mlme_send_probe_req(struct ieee80211_sub_if_data *sdata,
++					  const u8 *src, const u8 *dst,
++					  const u8 *ssid, size_t ssid_len,
++					  struct ieee80211_channel *channel)
++{
++	struct sk_buff *skb;
++
++	skb = ieee80211_build_probe_req(sdata, src, dst, (u32)-1, channel,
++					ssid, ssid_len, NULL, 0,
++					IEEE80211_PROBE_FLAG_DIRECTED);
++	if (skb)
++		ieee80211_tx_skb(sdata, skb);
++}
++
+ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+@@ -2265,11 +2279,9 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ 		else
+ 			ssid_len = ssid[1];
+ 
+-		ieee80211_send_probe_req(sdata, sdata->vif.addr, dst,
+-					 ssid + 2, ssid_len, NULL,
+-					 0, (u32) -1,
+-					 IEEE80211_PROBE_FLAG_DIRECTED, 0,
+-					 ifmgd->associated->channel, false);
++		ieee80211_mlme_send_probe_req(sdata, sdata->vif.addr, dst,
++					      ssid + 2, ssid_len,
++					      ifmgd->associated->channel);
+ 		rcu_read_unlock();
+ 	}
+ 
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 8e28d8de26aa..03f66f31c5b4 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -528,6 +528,24 @@ void ieee80211_run_deferred_scan(struct ieee80211_local *local)
+ 				     round_jiffies_relative(0));
+ }
+ 
++static void ieee80211_send_scan_probe_req(struct ieee80211_sub_if_data *sdata,
++					  const u8 *src, const u8 *dst,
++					  const u8 *ssid, size_t ssid_len,
++					  const u8 *ie, size_t ie_len,
++					  u32 ratemask, u32 flags, u32 tx_flags,
++					  struct ieee80211_channel *channel)
++{
++	struct sk_buff *skb;
++
++	skb = ieee80211_build_probe_req(sdata, src, dst, ratemask, channel,
++					ssid, ssid_len,
++					ie, ie_len, flags);
++	if (skb) {
++		IEEE80211_SKB_CB(skb)->flags |= tx_flags;
++		ieee80211_tx_skb_tid_band(sdata, skb, 7, channel->band);
++	}
++}
++
+ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
+ 					    unsigned long *next_delay)
+ {
+@@ -548,12 +566,12 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
+ 					  lockdep_is_held(&local->mtx));
+ 
+ 	for (i = 0; i < scan_req->n_ssids; i++)
+-		ieee80211_send_probe_req(
++		ieee80211_send_scan_probe_req(
+ 			sdata, local->scan_addr, scan_req->bssid,
+ 			scan_req->ssids[i].ssid, scan_req->ssids[i].ssid_len,
+ 			scan_req->ie, scan_req->ie_len,
+ 			scan_req->rates[band], 0,
+-			tx_flags, local->hw.conf.chandef.chan, true);
++			tx_flags, local->hw.conf.chandef.chan);
+ 
+ 	/*
+ 	 * After sending probe requests, wait for probe responses
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index fb7264edecad..0325133552ad 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1607,27 +1607,6 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
+ 	return skb;
+ }
+ 
+-void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata,
+-			      const u8 *src, const u8 *dst,
+-			      const u8 *ssid, size_t ssid_len,
+-			      const u8 *ie, size_t ie_len,
+-			      u32 ratemask, u32 flags, u32 tx_flags,
+-			      struct ieee80211_channel *channel, bool scan)
+-{
+-	struct sk_buff *skb;
+-
+-	skb = ieee80211_build_probe_req(sdata, src, dst, ratemask, channel,
+-					ssid, ssid_len,
+-					ie, ie_len, flags);
+-	if (skb) {
+-		IEEE80211_SKB_CB(skb)->flags |= tx_flags;
+-		if (scan)
+-			ieee80211_tx_skb_tid_band(sdata, skb, 7, channel->band);
+-		else
+-			ieee80211_tx_skb(sdata, skb);
+-	}
+-}
+-
+ u32 ieee80211_sta_get_rates(struct ieee80211_sub_if_data *sdata,
+ 			    struct ieee802_11_elems *elems,
+ 			    enum nl80211_band band, u32 *basic_rates)
+-- 
+2.14.3
