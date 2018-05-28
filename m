@@ -1,37 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:46581 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751046AbeEPJZI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 May 2018 05:25:08 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Dan Carpenter <dan.carpenter@oracle.com>,
-        Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] cfg80211: Use correct GFP_ mask in cfg80211_del_sta_sinfo()
-In-Reply-To: <20180516084836.GB23043@mwanda>
-References: <20180516084836.GB23043@mwanda>
-Date: Wed, 16 May 2018 11:25:07 +0200
-Message-ID: <87lgckymto.fsf@toke.dk> (sfid-20180516_112514_083132_1AAED641)
+Received: from mail-qt0-f174.google.com ([209.85.216.174]:40251 "EHLO
+        mail-qt0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754230AbeE1JFg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 May 2018 05:05:36 -0400
+Received: by mail-qt0-f174.google.com with SMTP id h2-v6so14107889qtp.7
+        for <linux-wireless@vger.kernel.org>; Mon, 28 May 2018 02:05:36 -0700 (PDT)
+Subject: Re: [RFC 1/3] cfg80211: Add support for HE
+To: Luca Coelho <luca@coelho.fi>, johannes@sipsolutions.net
+References: <20180518140543.13620-1-luca@coelho.fi>
+ <20180518140543.13620-2-luca@coelho.fi> <5B032249.2020900@broadcom.com>
+ <b1d344f5f5fa2797fa5b931f019bb7f3bd18b904.camel@coelho.fi>
+ <37100d5380fcea97bfc83b92d4e1d89dbf52d674.camel@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Ilan Peer <ilan.peer@intel.com>,
+        Ido Yariv <idox.yariv@intel.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B0BC65C.5010800@broadcom.com> (sfid-20180528_110721_692628_D76E2ED1)
+Date: Mon, 28 May 2018 11:05:32 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <37100d5380fcea97bfc83b92d4e1d89dbf52d674.camel@coelho.fi>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
-
-> Smatch complains that we should use the passed in "gfp" instead of hard
-> coding GFP_KERNEL.  I looked at some of the callers and this would
-> probably be a bug for rtw_cfg80211_indicate_sta_disassoc() which uses
-> GFP_ATOMIC and a NULL "sinfo".
+On 5/25/2018 9:51 PM, Luca Coelho wrote:
+> Arend,
 >
-> Fixes: 52539ca89f36 ("cfg80211: Expose TXQ stats and parameters to usersp=
-ace")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> On Fri, 2018-05-25 at 13:11 +0300, Luca Coelho wrote:
+>> On Mon, 2018-05-21 at 21:47 +0200, Arend van Spriel wrote:
+>>> On 5/18/2018 4:05 PM, Luca Coelho wrote:
+>>>> @@ -781,6 +783,23 @@ int wiphy_register(struct wiphy *wiphy)
+>>>>    			sband->channels[i].band = band;
+>>>>    		}
+>>>>
+>>>> +		for (i = 0; i < sband->n_iftype_data; i++) {
+>>>> +			const struct ieee80211_sband_iftype_data
+>>>> *iftd;
+>>>> +
+>>>> +			iftd = &sband->iftype_data[i];
+>>>> +
+>>>> +			if (WARN_ON(!iftd->types))
+>>>> +				return -EINVAL;
+>>>> +			if (WARN_ON(types & iftd->types))
+>>>> +				return -EINVAL;
+>>>
+>>> I suspected the types mask was not allowed to overlap for the
+>>> iftype_data entries, but may be worth documenting that in struct
+>>> ieee80211_sband_iftype_data kerneldoc.
+>>
+>> Sure, I'll add it.
+>
+> Actually, looking into this again, I'm not sure I understand your
+> comment.  AFAICT this prevents the same type from appearing twice,
+> right? I don't get the "not allowed to overlap"... Can you clarify?
 
-Ah, right, didn't notice that that was supposed to be a gfp value.
-Thanks for the fix :)
+I mean that iftdata entries can not overlap by having the same iftypes 
+set in their mask. So yes, a particular iftype may only be used in a 
+single entry (yet another way to say it ;-) ).
 
-Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
-
-
--Toke
+Gr. AvS
