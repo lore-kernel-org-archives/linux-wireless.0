@@ -1,129 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:46797 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934630AbeEINov (ORCPT
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:33594 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754173AbeE1JwT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 09:44:51 -0400
-Subject: Re: [PATCH 03/30] staging: wilc1000: fix line over 80 chars in
- handle_key()
-To: Ajay Singh <ajay.kathat@microchip.com>,
-        <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <adham.abozaeid@Microchip.com>
-References: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com>
- <1525682614-3824-4-git-send-email-ajay.kathat@microchip.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <1c7fbd1f-a655-a96a-5d2c-50cca9087023@microchip.com> (sfid-20180509_154454_029947_8AD36CEF)
-Date: Wed, 9 May 2018 16:44:47 +0300
+        Mon, 28 May 2018 05:52:19 -0400
+Received: by mail-qk0-f196.google.com with SMTP id h7-v6so1592145qkm.0
+        for <linux-wireless@vger.kernel.org>; Mon, 28 May 2018 02:52:18 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: stop watchdog before detach and free everything
+To: Michael Trimarchi <michael@amarulasolutions.com>
+References: <1527493857-2220-1-git-send-email-michael@amarulasolutions.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Ian Molton <ian@mnementh.co.uk>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B0BD13D.8000809@broadcom.com> (sfid-20180528_115412_185427_F7E3BA19)
+Date: Mon, 28 May 2018 11:51:57 +0200
 MIME-Version: 1.0
-In-Reply-To: <1525682614-3824-4-git-send-email-ajay.kathat@microchip.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1527493857-2220-1-git-send-email-michael@amarulasolutions.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 5/28/2018 9:50 AM, Michael Trimarchi wrote:
+> Watchdog need to be stopped in brcmf_sdio_remove to avoid
+> i
+> The system is going down NOW!
+> [ 1348.110759] Unable to handle kernel NULL pointer dereference at virtual address 000002f8
+> Sent SIGTERM to all processes
+> [ 1348.121412] Mem abort info:
+> [ 1348.126962]   ESR = 0x96000004
+> [ 1348.130023]   Exception class = DABT (current EL), IL = 32 bits
+> [ 1348.135948]   SET = 0, FnV = 0
+> [ 1348.138997]   EA = 0, S1PTW = 0
+> [ 1348.142154] Data abort info:
+> [ 1348.145045]   ISV = 0, ISS = 0x00000004
+> [ 1348.148884]   CM = 0, WnR = 0
+> [ 1348.151861] user pgtable: 4k pages, 48-bit VAs, pgdp = (____ptrval____)
+> [ 1348.158475] [00000000000002f8] pgd=0000000000000000
+> [ 1348.163364] Internal error: Oops: 96000004 [#1] PREEMPT SMP
+> [ 1348.168927] Modules linked in: ipv6
+> [ 1348.172421] CPU: 3 PID: 1421 Comm: brcmf_wdog/mmc0 Not tainted 4.17.0-rc5-next-20180517 #18
+> [ 1348.180757] Hardware name: Amarula A64-Relic (DT)
+> [ 1348.185455] pstate: 60000005 (nZCv daif -PAN -UAO)
+> [ 1348.190251] pc : brcmf_sdiod_freezer_count+0x0/0x20
+> [ 1348.195124] lr : brcmf_sdio_watchdog_thread+0x64/0x290
 
+Hi Michael,
 
-On 07.05.2018 11:43, Ajay Singh wrote:
-> Fix checkpatch reported issue of line over 80 char in handle_key().
-> Introduced new functions by spliting existing function to address the
-> checkpatch issue.
-> 
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> ---
->  drivers/staging/wilc1000/host_interface.c | 59 +++++++++++++++++++------------
->  1 file changed, 37 insertions(+), 22 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-> index 4ba868c..29f9907 100644
-> --- a/drivers/staging/wilc1000/host_interface.c
-> +++ b/drivers/staging/wilc1000/host_interface.c
-> @@ -1498,12 +1498,45 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
->  	return result;
->  }
->  
-> +static int wilc_pmksa_key_copy(struct wilc_vif *vif, struct key_attr *hif_key)
-> +{
-> +	int i;
-> +	int ret;
-> +	struct wid wid;
-> +	u8 *key_buf;
-> +
-> +	key_buf = kmalloc((hif_key->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1,
-> +			  GFP_KERNEL);
-> +	if (!key_buf)
-> +		return -ENOMEM;
-> +
-> +	key_buf[0] = hif_key->attr.pmkid.numpmkid;
-> +
-> +	for (i = 0; i < hif_key->attr.pmkid.numpmkid; i++) {
-> +		memcpy(key_buf + ((PMKSA_KEY_LEN * i) + 1),
-> +		       hif_key->attr.pmkid.pmkidlist[i].bssid, ETH_ALEN);
-> +		memcpy(key_buf + ((PMKSA_KEY_LEN * i) + ETH_ALEN + 1),
-> +		       hif_key->attr.pmkid.pmkidlist[i].pmkid, PMKID_LEN);
-> +	}
-> +
-> +	wid.id = (u16)WID_PMKID_INFO;
-> +	wid.type = WID_STR;
-> +	wid.val = (s8 *)key_buf;
+Thanks for the patch. In normal scenario the callstack looks like this:
 
-Is this cast really needed?
+brcmf_sdio_remove()
+	-> brcmf_detach()
+		-> brcmf_bus_stop()
+			-> brcmf_sdio_bus_stop()
 
-> +	wid.size = (hif_key->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1;
-> +
-> +	ret = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
-> +				   wilc_get_vif_idx(vif));
-> +
-> +	kfree(key_buf);
-> +
-> +	return ret;
-> +}
-> +
->  static int handle_key(struct wilc_vif *vif, struct key_attr *hif_key)
->  {
->  	int result = 0;
->  	struct wid wid;
->  	struct wid wid_list[5];
-> -	u8 i;
->  	u8 *key_buf;
->  	s8 s8idxarray[1];
->  	struct host_if_drv *hif_drv = vif->hif_drv;
-> @@ -1547,7 +1580,8 @@ static int handle_key(struct wilc_vif *vif, struct key_attr *hif_key)
->  						      wilc_get_vif_idx(vif));
->  			kfree(key_buf);
->  		} else if (hif_key->action & ADDKEY) {
-> -			key_buf = kmalloc(hif_key->attr.wep.key_len + 2, GFP_KERNEL);
-> +			key_buf = kmalloc(hif_key->attr.wep.key_len + 2,
-> +					  GFP_KERNEL);
->  			if (!key_buf) {
->  				result = -ENOMEM;
->  				goto out_wep;
-> @@ -1715,26 +1749,7 @@ static int handle_key(struct wilc_vif *vif, struct key_attr *hif_key)
->  		break;
->  
->  	case PMKSA:
-> -		key_buf = kmalloc((hif_key->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1, GFP_KERNEL);
-> -		if (!key_buf)
-> -			return -ENOMEM;
-> -
-> -		key_buf[0] = hif_key->attr.pmkid.numpmkid;
-> -
-> -		for (i = 0; i < hif_key->attr.pmkid.numpmkid; i++) {
-> -			memcpy(key_buf + ((PMKSA_KEY_LEN * i) + 1), hif_key->attr.pmkid.pmkidlist[i].bssid, ETH_ALEN);
-> -			memcpy(key_buf + ((PMKSA_KEY_LEN * i) + ETH_ALEN + 1), hif_key->attr.pmkid.pmkidlist[i].pmkid, PMKID_LEN);
-> -		}
-> -
-> -		wid.id = (u16)WID_PMKID_INFO;
-> -		wid.type = WID_STR;
-> -		wid.val = (s8 *)key_buf;
-> -		wid.size = (hif_key->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1;
-> -
-> -		result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
-> -					      wilc_get_vif_idx(vif));
-> -
-> -		kfree(key_buf);
-> +		result = wilc_pmksa_key_copy(vif, hif_key);
->  		break;
->  	}
->  
-> 
+In brcmf_sdio_bus_stop() the watchdog is terminated. So in what scenario 
+did you encounter this null pointer deref?
+
+Regards,
+Arend
