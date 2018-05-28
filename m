@@ -1,40 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:32857 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752921AbeEVUlr (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 16:41:47 -0400
-MIME-Version: 1.0
-In-Reply-To: <63a78572-b7d3-9cc7-9e22-5bd19cad3333@huawei.com>
-References: <1526903890-35761-1-git-send-email-xieyisheng1@huawei.com>
- <1526903890-35761-8-git-send-email-xieyisheng1@huawei.com>
- <CAHp75VeFiEMN+q0FPuk4qTVEW_1oovHzVkV_Ydcm22SEMarvUA@mail.gmail.com> <63a78572-b7d3-9cc7-9e22-5bd19cad3333@huawei.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Tue, 22 May 2018 23:41:45 +0300
-Message-ID: <CAHp75VeHBXiWGo6dX=8eYZQCixs_dnN10AUeSJdSsSTxXPDVDQ@mail.gmail.com> (sfid-20180522_224200_646824_85B36B06)
-Subject: Re: [PATCH 07/33] iwlwifi: mvm: use match_string() helper
-To: Yisheng Xie <xieyisheng1@huawei.com>, Luca Coelho <luca@coelho.fi>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:35996 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1424585AbeE1LZJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 May 2018 07:25:09 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 4D31D818BAFE
+        for <linux-wireless@vger.kernel.org>; Mon, 28 May 2018 11:25:08 +0000 (UTC)
+Received: from localhost (unknown [10.40.205.127])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id F39F22166BB2
+        for <linux-wireless@vger.kernel.org>; Mon, 28 May 2018 11:25:07 +0000 (UTC)
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] Revert "rt2800: use TXOP_BACKOFF for probe frames"
+Date: Mon, 28 May 2018 13:25:06 +0200
+Message-Id: <1527506706-6488-1-git-send-email-sgruszka@redhat.com> (sfid-20180528_132550_602489_191D3A12)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 22, 2018 at 6:30 AM, Yisheng Xie <xieyisheng1@huawei.com> wrote:
+This reverts commit fb47ada8dc3c30c8e7b415da155742b49536c61e.
 
->> But it's up tu Loca.
+In some situations when we set TXOP_BACKOFF, the probe frame is
+not sent at all. What it worse then sending probe frame as part
+of AMPDU and can degrade 11n performance to 11g rates.
 
-Shame on me. I meant Luca, of course!
-Luca, sorry.
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2x00queue.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-> OK, I will change it if Loca agree your opinion.
-
-
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+index a6884e73d2ab..7ddee980048b 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+@@ -372,16 +372,15 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
+ 
+ 	/*
+ 	 * Determine IFS values
+-	 * - Use TXOP_BACKOFF for probe and management frames except beacons
++	 * - Use TXOP_BACKOFF for management frames except beacons
+ 	 * - Use TXOP_SIFS for fragment bursts
+ 	 * - Use TXOP_HTTXOP for everything else
+ 	 *
+ 	 * Note: rt2800 devices won't use CTS protection (if used)
+ 	 * for frames not transmitted with TXOP_HTTXOP
+ 	 */
+-	if ((ieee80211_is_mgmt(hdr->frame_control) &&
+-	     !ieee80211_is_beacon(hdr->frame_control)) ||
+-	    (tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE))
++	if (ieee80211_is_mgmt(hdr->frame_control) &&
++	    !ieee80211_is_beacon(hdr->frame_control))
+ 		txdesc->u.ht.txop = TXOP_BACKOFF;
+ 	else if (!(tx_info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT))
+ 		txdesc->u.ht.txop = TXOP_SIFS;
 -- 
-With Best Regards,
-Andy Shevchenko
+2.7.5
