@@ -1,83 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga18.intel.com ([134.134.136.126]:57937 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751701AbeECKUs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 May 2018 06:20:48 -0400
-Message-ID: <1525342843.21176.635.camel@linux.intel.com> (sfid-20180503_122106_891331_71A1B20C)
-Subject: Re: [PATCH v2 3/3] NFC: fdp: Fix possible buffer overflow in
- WCS4000 NFC driver
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Amit Pundir <amit.pundir@linaro.org>,
-        lkml <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Cc: Suren Baghdasaryan <surenb@google.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Christophe Ricard <christophe.ricard@gmail.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        John Stultz <john.stultz@linaro.org>,
-        Dmitry Shmidt <dimitrysh@google.com>,
-        Todd Kjos <tkjos@google.com>,
-        Android Kernel Team <kernel-team@android.com>
-Date: Thu, 03 May 2018 13:20:43 +0300
-In-Reply-To: <1525283288-7027-4-git-send-email-amit.pundir@linaro.org>
-References: <1525283288-7027-1-git-send-email-amit.pundir@linaro.org>
-         <1525283288-7027-4-git-send-email-amit.pundir@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:55758 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934008AbeE1KIL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 May 2018 06:08:11 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 28 May 2018 13:08:04 +0300
+From: merez@codeaurora.org
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Gidon Studinski <gidons@codeaurora.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com
+Subject: Re: [PATCH 5/7] wil6210: add support for enhanced DMA RX data flows
+In-Reply-To: <87efhzlxwe.fsf@purkki.adurom.net>
+References: <1526227375-31881-1-git-send-email-merez@codeaurora.org>
+ <1526227375-31881-6-git-send-email-merez@codeaurora.org>
+ <87efhzlxwe.fsf@purkki.adurom.net>
+Message-ID: <1acfc0dc335d86eadfdd8c009265957e@codeaurora.org> (sfid-20180528_120844_434151_1948D5CC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-05-02 at 23:18 +0530, Amit Pundir wrote:
-> From: Suren Baghdasaryan <surenb@google.com>
+On 2018-05-25 15:31, Kalle Valo wrote:
+> Maya Erez <merez@codeaurora.org> writes:
 > 
-> Possible buffer overflow when reading next_read_size bytes into
-> tmp buffer after next_read_size was extracted from a previous packet.
+>> From: Gidon Studinski <gidons@codeaurora.org>
+>> 
+>> Enhanced DMA RX data path is handled using a single
+>> RX descriptor ring for all VIFs.
+>> Multiple RX status rings are supported, to allow RSS
+>> and multi MSI support.
+>> The driver gets the RX completions via the RX status rings.
+>> The RX status message includes the completed RX buffer ID,
+>> which points to the allocated SKB.
+>> 
+>> The enhanced DMA RX data flow supports RX chaining, where
+>> multiple SKBs are merged into a single packet.
+>> 
+>> Enhanced DMA HW supports RX HW reorder offload, enabled by
+>> default and can be disabled via module parameter.
+>> 
+>> Signed-off-by: Gidon Studinski <gidons@codeaurora.org>
+>> Signed-off-by: Maya Erez <merez@codeaurora.org>
 > 
-> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-> Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
-> ---
-> v2:
-> Remove redundant __func__ from dev_dgb().
+> kbuild bot reported a warning but not sure if it's valid, please take a
+> look:
 > 
->  drivers/nfc/fdp/i2c.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
-> 
-> diff --git a/drivers/nfc/fdp/i2c.c b/drivers/nfc/fdp/i2c.c
-> index c4da50e..b80d1ad 100644
-> --- a/drivers/nfc/fdp/i2c.c
-> +++ b/drivers/nfc/fdp/i2c.c
-> @@ -176,6 +176,15 @@ static int fdp_nci_i2c_read(struct fdp_i2c_phy
-> *phy, struct sk_buff **skb)
->  		/* Packet that contains a length */
->  		if (tmp[0] == 0 && tmp[1] == 0) {
->  			phy->next_read_size = (tmp[2] << 8) + tmp[3]
-> + 3;
-> +			/*
-> +			 * Ensure next_read_size does not exceed
-> sizeof(tmp)
-> +			 * for reading that many bytes during next
-> iteration
-> +			 */
-> +			if (phy->next_read_size >
-> FDP_NCI_I2C_MAX_PAYLOAD) {
-> +				dev_dbg(&client->dev, "corrupted
-> packet\n");
+>    drivers/net/wireless/ath/wil6210/txrx_edma.c: In function
+>    'wil_rx_handle_edma':
+>>> drivers/net/wireless/ath/wil6210/txrx_edma.c:815:7: warning: 'stats'
+>    may be used uninitialized in this function [-Wmaybe-uninitialized]
+>      stats->rx_non_data_frame++;
+>      ~~~~~^~~~~~~~~~~~~~~~~~~
+>    drivers/net/wireless/ath/wil6210/txrx_edma.c:908:24: note: 'stats'
+>    was declared here
+>      struct wil_net_stats *stats;
+>                            ^~~~~
 
-> +				phy->next_read_size = 5;
-
-Shouldn't be this magic replaced by
-
-	phy->next_read_size = FDP_NCI_I2C_MIN_PAYLOAD;
-
-? 
-
-> +				goto flush;
-> +			}
->  		} else {
->  			phy->next_read_size =
-> FDP_NCI_I2C_MIN_PAYLOAD;
->  
+This is false alarm but looking again on the code I think it is better 
+to initialize stats.
+I'll upload a fix.
 
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+Maya Erez
+Qualcomm Israel, Inc. on behalf of Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
