@@ -1,62 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:32792 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752427AbeEOKhw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 May 2018 06:37:52 -0400
-Received: by mail-wm0-f66.google.com with SMTP id x12-v6so15326076wmc.0
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2018 03:37:51 -0700 (PDT)
-Subject: Re: [PATCH 5/8] btmrvl: support sysfs initiated firmware coredump
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <1526375691-31789-1-git-send-email-arend.vanspriel@broadcom.com>
- <1526375691-31789-6-git-send-email-arend.vanspriel@broadcom.com>
- <87bmdhp8os.fsf@kamboji.qca.qualcomm.com> <5AFAAF05.2020207@broadcom.com>
- <8736ytp78j.fsf@kamboji.qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Linux Bluetooth mailing list
-        <linux-bluetooth@vger.kernel.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AFAB87E.7050205@broadcom.com> (sfid-20180515_123757_371054_C3CC9AEF)
-Date: Tue, 15 May 2018 12:37:50 +0200
+Received: from mga17.intel.com ([192.55.52.151]:11586 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1165991AbeE1OrW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 May 2018 10:47:22 -0400
+Date: Mon, 28 May 2018 16:46:56 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Daniel Mack <daniel@zonque.org>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] NFC: st95hf: initialize semaphore and mutex earlier
+Message-ID: <20180528144656.GB29700@zurbaran.ger.intel.com> (sfid-20180528_164730_649894_9CC5990E)
+References: <20180516133247.25986-1-daniel@zonque.org>
+ <6eed2f2f-b3cc-0582-220c-e4ccd2175fd7@zonque.org>
 MIME-Version: 1.0
-In-Reply-To: <8736ytp78j.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6eed2f2f-b3cc-0582-220c-e4ccd2175fd7@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/15/2018 12:02 PM, Kalle Valo wrote:
-> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
->
->> + Marcel, bt-list
->>
->> On 5/15/2018 11:30 AM, Kalle Valo wrote:
->>> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
->>>
->>>> Since commit 3c47d19ff4dc ("drivers: base: add coredump driver ops")
->>>> it is possible to initiate a device coredump from user-space. This
->>>> patch adds support for it in btmrvl_sdio adding the .coredump()
->>>> driver callback. This makes dump through debugfs obsolete so removing
->>>> it.
->>>>
->>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>>> ---
->>>>    drivers/bluetooth/btmrvl_debugfs.c | 31 -------------------------------
->>>>    drivers/bluetooth/btmrvl_drv.h     |  2 --
->>>>    drivers/bluetooth/btmrvl_main.c    |  6 ------
->>>>    drivers/bluetooth/btmrvl_sdio.c    | 11 ++++++++---
->>>>    4 files changed, 8 insertions(+), 42 deletions(-)
->>>
->>> Shouldn't this go via bluetooth tree?
->>
->> Ah, yes. I should at least have added bt-list to Cc: I can submit this
->> separately so you can drop it or can you coordinate with Marcel how to
->> deal with it. Maybe it is fine to take this to w-d tree?
->
-> I prefer submitting this patch separately to the bluetooth tree (and
-> I'll drop this version from my queue).
+Hi Daniel,
 
-Fine by me.
+On Mon, May 28, 2018 at 04:35:15PM +0200, Daniel Mack wrote:
+> On Wednesday, May 16, 2018 03:32 PM, Daniel Mack wrote:
+> > 'rm_lock' and 'exchange_lock' need to be ready before the IRQ handler has a
+> > chance to fire.
+> > 
+> > This fixes the oops below.
+> 
+> Nobody seems to be interested in these. Davem, can you take them through
+> your tree or is there anyone else I can ping?
+I'm going to gather all pending NFC patches this week. I'll take that
+one.
 
-Regards,
-Arend
+Cheers,
+Samuel.
