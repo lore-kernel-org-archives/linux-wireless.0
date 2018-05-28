@@ -1,45 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0136.outbound.protection.outlook.com ([104.47.38.136]:43569
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S935905AbeE3Gyl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 02:54:41 -0400
-From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-To: linux-firmware@kernel.org
-Cc: linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, Josh Boyer <jwboyer@kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Subject: [PATCH V4 0/6] Cypress license and firmware update
-Date: Wed, 30 May 2018 01:54:21 -0500
-Message-Id: <1527663267-71412-1-git-send-email-chi-hsien.lin@cypress.com> (sfid-20180530_085518_930581_D5AF7E55)
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:53737 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754440AbeE1Jyd (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 May 2018 05:54:33 -0400
+Received: by mail-wm0-f66.google.com with SMTP id a67-v6so30471325wmf.3
+        for <linux-wireless@vger.kernel.org>; Mon, 28 May 2018 02:54:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5B0BD13D.8000809@broadcom.com>
+References: <1527493857-2220-1-git-send-email-michael@amarulasolutions.com> <5B0BD13D.8000809@broadcom.com>
+From: Michael Nazzareno Trimarchi <michael@amarulasolutions.com>
+Date: Mon, 28 May 2018 11:54:31 +0200
+Message-ID: <CAOf5uw=mPOgngZW8UcPfvtxH+5nCR-36ovjYPH7AvO99y1M_xA@mail.gmail.com> (sfid-20180528_115558_641817_DCE2CAAF)
+Subject: Re: [PATCH] brcmfmac: stop watchdog before detach and free everything
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Ian Molton <ian@mnementh.co.uk>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update Cypress license termination clause and several firmware files.
+Hi Arend
 
-Chi-Hsien Lin (6):
-  Update Cypress license termination clause
-  brcm: update firmware for bcm43430 sdio
-  brcm: update firmware for bcm43340 sdio
-  brcm: update firmware for bcm43362 sdio
-  brcm: update firmware for bcm4354 sdio
-  brcm: update firmware for bcm4356 pcie
+On Mon, May 28, 2018 at 11:51 AM, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 5/28/2018 9:50 AM, Michael Trimarchi wrote:
+>>
+>> Watchdog need to be stopped in brcmf_sdio_remove to avoid
+>> i
+>> The system is going down NOW!
+>> [ 1348.110759] Unable to handle kernel NULL pointer dereference at virtual
+>> address 000002f8
+>> Sent SIGTERM to all processes
+>> [ 1348.121412] Mem abort info:
+>> [ 1348.126962]   ESR = 0x96000004
+>> [ 1348.130023]   Exception class = DABT (current EL), IL = 32 bits
+>> [ 1348.135948]   SET = 0, FnV = 0
+>> [ 1348.138997]   EA = 0, S1PTW = 0
+>> [ 1348.142154] Data abort info:
+>> [ 1348.145045]   ISV = 0, ISS = 0x00000004
+>> [ 1348.148884]   CM = 0, WnR = 0
+>> [ 1348.151861] user pgtable: 4k pages, 48-bit VAs, pgdp = (____ptrval____)
+>> [ 1348.158475] [00000000000002f8] pgd=0000000000000000
+>> [ 1348.163364] Internal error: Oops: 96000004 [#1] PREEMPT SMP
+>> [ 1348.168927] Modules linked in: ipv6
+>> [ 1348.172421] CPU: 3 PID: 1421 Comm: brcmf_wdog/mmc0 Not tainted
+>> 4.17.0-rc5-next-20180517 #18
+>> [ 1348.180757] Hardware name: Amarula A64-Relic (DT)
+>> [ 1348.185455] pstate: 60000005 (nZCv daif -PAN -UAO)
+>> [ 1348.190251] pc : brcmf_sdiod_freezer_count+0x0/0x20
+>> [ 1348.195124] lr : brcmf_sdio_watchdog_thread+0x64/0x290
+>
+>
+> Hi Michael,
+>
+> Thanks for the patch. In normal scenario the callstack looks like this:
+>
+> brcmf_sdio_remove()
+>         -> brcmf_detach()
+>                 -> brcmf_bus_stop()
+>                         -> brcmf_sdio_bus_stop()
+>
+> In brcmf_sdio_bus_stop() the watchdog is terminated. So in what scenario did
+> you encounter this null pointer deref?
 
- LICENCE.cypress             |   5 ++---
- WHENCE                      |  10 +++++-----
- brcm/brcmfmac43340-sdio.bin | Bin 402210 -> 400864 bytes
- brcm/brcmfmac43362-sdio.bin | Bin 219557 -> 200801 bytes
- brcm/brcmfmac43430-sdio.bin | Bin 369577 -> 388739 bytes
- brcm/brcmfmac4354-sdio.bin  | Bin 626589 -> 605388 bytes
- brcm/brcmfmac4356-pcie.bin  | Bin 661999 -> 648770 bytes
- 7 files changed, 7 insertions(+), 8 deletions(-)
+Is this happen even when there is not wifi firmware?
+boot without any firmware in the filesystem and then trigger a reboot
+
+Michael
+
+>
+> Regards,
+> Arend
+
+
 
 -- 
-2.1.0
+| Michael Nazzareno Trimarchi                     Amarula Solutions BV |
+| COO  -  Founder                                      Cruquiuskade 47 |
+| +31(0)851119172                                 Amsterdam 1018 AM NL |
+|                  [`as] http://www.amarulasolutions.com               |
