@@ -1,147 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 1.mo68.mail-out.ovh.net ([46.105.41.146]:53509 "EHLO
-        1.mo68.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965787AbeEXJkz (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:45340 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S939139AbeE1Nrq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 May 2018 05:40:55 -0400
-Received: from player774.ha.ovh.net (unknown [10.109.122.56])
-        by mo68.mail-out.ovh.net (Postfix) with ESMTP id 4E244E176F
-        for <linux-wireless@vger.kernel.org>; Thu, 24 May 2018 10:21:39 +0200 (CEST)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Thu, 24 May 2018 10:21:25 +0200
-From: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-Subject: Re: [PATCH 1/3] brcmfmac: allow specifying features per firmware
- version
-In-Reply-To: <5B066F28.5070706@broadcom.com>
-References: <20180522131836.26858-1-zajec5@gmail.com>
- <5B051F2A.9090501@broadcom.com>
- <f79ad17d-5d7f-ceac-19e6-2e55d9bb20bf@gmail.com>
- <5B066F28.5070706@broadcom.com>
-Message-ID: <cacf02df5ce961891e33344ab14a4629@milecki.pl> (sfid-20180524_142443_426523_9ADFA569)
+        Mon, 28 May 2018 09:47:46 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/5] nl80211: add scan features for improved scan privacy
+Date: Mon, 28 May 2018 15:47:40 +0200
+Message-Id: <20180528134741.10386-5-johannes@sipsolutions.net> (sfid-20180528_154820_913413_D32D75F7)
+In-Reply-To: <20180528134741.10386-1-johannes@sipsolutions.net>
+References: <20180528134741.10386-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-05-24 09:52, Arend van Spriel wrote:
-> On 5/24/2018 7:27 AM, Rafał Miłecki wrote:
->> On 23.05.2018 09:58, Arend van Spriel wrote:
->>> On 5/22/2018 3:18 PM, Rafał Miłecki wrote:
->>>> From: Rafał Miłecki <rafal@milecki.pl>
->>>> 
->>>> Some features supported by firmware aren't advertised and there is 
->>>> no
->>>> way for a driver to query them. This includes e.g. monitor mode 
->>>> details.
->>>> Some firmwares support tagging monitor frames, some build radiotap
->>>> header but there is no way to detect it.
->>>> 
->>>> This commit adds table that will allow specifying features like:
->>>> { "01-abcdef01", BIT(BRCMF_FEAT_FOO) }
->>> 
->>> I have my reservations taking this route. Full-dongle monitor mode is
->>> not very reliable especially when running it next to regular STA/AP
->>> interface due to memory constraints. So enabling a feature from host
->>> side could cause issues that are hard to debug.
->> 
->> I was using this *really* intensively on BCM4366 and didn't notice any
->> problems. My use case is listening to the air traffic for 300 ms every
->> few seconds (and I got that running for months!).
-> 
-> I understand. I am just saying that we have quite a variety of devices
-> that we support with brcmfmac and this allows enabling features from
-> the host driver. So any patch adding an entry will need to be reviewed
-> with more scrutiny.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Sounds OK to me!
+Add the scan flags for randomized SN and minimized probe request
+content for improved scan privacy.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/uapi/linux/nl80211.h | 15 +++++++++++++++
+ net/wireless/nl80211.c       |  8 +++++++-
+ 2 files changed, 22 insertions(+), 1 deletion(-)
 
->>  > So I think it would be better if the cap iovar would get a new flag
->> for this. Please hold this patch and let me discuss internally.
->> 
->> That would be a pretty big limitation to have to wait for and use a
->> special firmware for this feature. Also considering time it takes to
->> release brcmfmac4366c-pcie.bin, Broadcom vs. Cypress, licensing issues
->> with Cypress, we will likely never get all firmwares updated properly.
->> 
->> As for me (!) it seems rather unacceptable (no offence!). I believe we
->> should have a free choice to use that discovered feature even if
->> Broadcom didn't test it for host machine purposes (just internal fw
->> purposes as I get it).
-> 
-> Not sure if "unacceptable" is the right word here. Having it
-> discoverable from the firmware itself seems preferred to me
-> regardless. For the 4366 firmware you are right it is taking a lot of
-> time. It has passed verification. It needed to pass sensitive topic of
-> radar detection for FCC and ETSI. So I am preparing that release.
-
-OT: is your brcmfmac4366c-pcie.bin going to include BCM4366E support?
-
-
-> So I
-> just have to discuss this monitor feature tomorrow. That is not too
-> long, is it?
-
-Sure thing, let us know when you know some details :)
-
-
->>> some more specific comments below...
->>> 
->>>> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
->>>> ---
->>>>   .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 24
->>>> ++++++++++++++++++++++
->>>>   1 file changed, 24 insertions(+)
->>>> 
->>>> diff --git
->>>> a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
->>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
->>>> index 876731c57bf5..1194d31d3902 100644
->>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
->>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
->>>> @@ -91,6 +91,28 @@ static int brcmf_feat_debugfs_read(struct 
->>>> seq_file
->>>> *seq, void *data)
->>>>   }
->>>>   #endif /* DEBUG */
->>>> 
->>>> +struct brcmf_feat_fwfeat {
->>>> +    const char * const fwid;
->>>> +    u32 flags;
->>> 
->>> For consistency call this feat_flags as well.
->> 
->> Sure.
->> 
->> 
->>>> +};
->>>> +
->>>> +static const struct brcmf_feat_fwfeat brcmf_feat_fwfeat_map[] = {
->>>> +};
->>>> +
->>>> +static void brcmf_feat_firmware_features(struct brcmf_pub *pub)
->>> 
->>> Try to keep name of the struct brcmf_pub instance 'drvr'.
->> 
->> Wait, doesn't "pub" make more sense for "struct brcmf_pub" than 
->> "drvr"?
->> :) I'm sure I also saw "pub" variables all over the code, so this 
->> isn't
->> some new/mine convention.
-> 
-> We used to have a private and public structure long ago and we
-> collapsed it into brcmf_pub. So not all places changed the variable to
-> 'drvr' and I do not care that much for existing stuff. Could put the
-> rename task on TODO list on wireless wiki, but not sure if newbies
-> would look there. For new stuff let's try to stick with 'drvr'.
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 06f9af23156b..3c06b45f564c 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -5133,6 +5133,11 @@ enum nl80211_feature_flags {
+  *	support to nl80211.
+  * @NL80211_EXT_FEATURE_TXQS: Driver supports FQ-CoDel-enabled intermediate
+  *      TXQs.
++ * @NL80211_EXT_FEATURE_SCAN_RANDOM_SN: Driver/device supports randomizing the
++ *	SN in probe request frames if requested by %NL80211_SCAN_FLAG_RANDOM_SN.
++ * @NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT: Driver/device can omit all data
++ *	except for supported rates from the probe request content if requested
++ *	by the %NL80211_SCAN_FLAG_MIN_PREQ_CONTENT flag.
+  *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+@@ -5167,6 +5172,8 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211,
+ 	NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT,
+ 	NL80211_EXT_FEATURE_TXQS,
++	NL80211_EXT_FEATURE_SCAN_RANDOM_SN,
++	NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+@@ -5272,6 +5279,12 @@ enum nl80211_timeout_reason {
+  *	possible scan results. This flag hints the driver to use the best
+  *	possible scan configuration to improve the accuracy in scanning.
+  *	Latency and power use may get impacted with this flag.
++ * @NL80211_SCAN_FLAG_RANDOM_SN: randomize the sequence number in probe
++ *	request frames from this scan to avoid correlation/tracking being
++ *	possible.
++ * @NL80211_SCAN_FLAG_MIN_PREQ_CONTENT: minimize probe request content to
++ *	only have supported rates and no additional capabilities (unless
++ *	added by userspace explicitly.)
+  */
+ enum nl80211_scan_flags {
+ 	NL80211_SCAN_FLAG_LOW_PRIORITY				= 1<<0,
+@@ -5285,6 +5298,8 @@ enum nl80211_scan_flags {
+ 	NL80211_SCAN_FLAG_LOW_SPAN				= 1<<8,
+ 	NL80211_SCAN_FLAG_LOW_POWER				= 1<<9,
+ 	NL80211_SCAN_FLAG_HIGH_ACCURACY				= 1<<10,
++	NL80211_SCAN_FLAG_RANDOM_SN				= 1<<11,
++	NL80211_SCAN_FLAG_MIN_PREQ_CONTENT			= 1<<12,
+ };
+ 
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 384fdad9825d..3af3921e6de9 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6925,7 +6925,13 @@ nl80211_check_scan_flags(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 				     NL80211_EXT_FEATURE_OCE_PROBE_REQ_DEFERRAL_SUPPRESSION) ||
+ 	    !nl80211_check_scan_feat(wiphy, *flags,
+ 				     NL80211_SCAN_FLAG_OCE_PROBE_REQ_HIGH_TX_RATE,
+-				     NL80211_EXT_FEATURE_OCE_PROBE_REQ_HIGH_TX_RATE))
++				     NL80211_EXT_FEATURE_OCE_PROBE_REQ_HIGH_TX_RATE) ||
++	    !nl80211_check_scan_feat(wiphy, *flags,
++				     NL80211_SCAN_FLAG_RANDOM_SN,
++				     NL80211_EXT_FEATURE_SCAN_RANDOM_SN) ||
++	    !nl80211_check_scan_feat(wiphy, *flags,
++				     NL80211_SCAN_FLAG_MIN_PREQ_CONTENT,
++				     NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT))
+ 		return -EOPNOTSUPP;
+ 
+ 	if (*flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
+-- 
+2.14.3
