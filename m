@@ -1,141 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:45758 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750869AbeETIPj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 May 2018 04:15:39 -0400
-Received: by mail-wr0-f194.google.com with SMTP id w3-v6so5323848wrl.12
-        for <linux-wireless@vger.kernel.org>; Sun, 20 May 2018 01:15:39 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [RFC v2 04/18] mt76x2: introduce mt76x2_init_device routine
-Date: Sun, 20 May 2018 10:15:08 +0200
-Message-Id: <20180520081522.10163-5-lorenzo.bianconi@redhat.com> (sfid-20180520_101549_657562_1D790677)
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:40114 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S938914AbeE1Mun (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 May 2018 08:50:43 -0400
+Date: Mon, 28 May 2018 14:50:40 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Kofi Agor <nenekofi@gmail.com>
+Cc: Enrico Mioso <mrkiko.rs@gmail.com>,
+        Craig Matsuura <cmatsuura@vivint.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Mathias Kresin <dev@kresin.me>,
+        Tom Psyborg <pozega.tomislav@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Arnd Bergmann <arnd@arndb.de>, John Crispin <john@phrozen.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        Jamie Stuart <jamie@onebillion.org>
+Subject: Re: ieee80211 phy0: rt2x00queue_write_tx_frame: Error - Dropping
+ frame due to full tx queue...?
+Message-ID: <20180528125039.GA22122@redhat.com> (sfid-20180528_145059_943808_057B59A8)
+References: <20180327171815.GA31338@redhat.com>
+ <20180327174302.GB1206@makrotopia.org>
+ <alpine.LNX.2.21.99.1803280605580.2911@mStation.localdomain>
+ <CAOt++SeSQ2j1KuVkbqt77LfznXN7JV0Lx5O8d7-m2VBrz8=85g@mail.gmail.com>
+ <alpine.LNX.2.21.99.1803301642110.31428@mStation.localdomain>
+ <MWHPR02MB3326233159B021143D7278F5D4A10@MWHPR02MB3326.namprd02.prod.outlook.com>
+ <alpine.LNX.2.21.99.1803301931300.5692@mStation.localdomain>
+ <CAOt++SeLh_NxcmM=YEMQSv4y9PabS_dT7k4yTxUiqXbac-=iUQ@mail.gmail.com>
+ <20180417194255.GA17067@redhat.com>
+ <CAOt++SeNt=4RUTvAR1y_WjC=a-YyYa3YBSmoAmv+7uK71U+3+A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAOt++SeNt=4RUTvAR1y_WjC=a-YyYa3YBSmoAmv+7uK71U+3+A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add mt76x2_init_device routine in order to reuse common pcie/usb mac80211
-initialization code supporting mt76x2u based device
+I have some updates here.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x2.h      |  1 +
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 58 +++++++++++++-----------
- 2 files changed, 33 insertions(+), 26 deletions(-)
+First thing is that printing messages by printk can cause few seconds 
+of cpu hang on my mt7620 hardware, what result on wifi disconnects.
+I realized that when added debug patch like this:
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-index ec4396583a94..f83910c1e20d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-@@ -210,6 +210,7 @@ extern const struct ieee80211_ops mt76x2_ops;
- struct mt76x2_dev *mt76x2_alloc_device(struct device *pdev);
- int mt76x2_register_device(struct mt76x2_dev *dev);
- void mt76x2_init_debugfs(struct mt76x2_dev *dev);
-+void mt76x2_init_device(struct mt76x2_dev *dev);
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 595c662a61e8..de2643f7189f 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -135,6 +135,8 @@ void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn)
+ 	bar->control = cpu_to_le16(bar_control);
+ 	bar->start_seq_num = cpu_to_le16(ssn);
  
- irqreturn_t mt76x2_irq_handler(int irq, void *dev_instance);
- void mt76x2_phy_power_on(struct mt76x2_dev *dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index 0aedd507f856..d678675a0b91 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -536,11 +536,6 @@ int mt76x2_init_hardware(struct mt76x2_dev *dev)
- 	tasklet_init(&dev->pre_tbtt_tasklet, mt76x2_pre_tbtt_tasklet,
- 		     (unsigned long) dev);
- 
--	dev->chainmask = 0x202;
--	dev->global_wcid.idx = 255;
--	dev->global_wcid.hw_key_idx = -1;
--	dev->slottime = 9;
++	printk("%s tid %d ssn %04x %d\n", __func__, tid, ssn , ssn >> 4);
++
+ 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT |
+ 					IEEE80211_TX_CTL_REQ_TX_STATUS;
+ 	ieee80211_tx_skb_tid(sdata, skb, tid);
+
+This patch alone cause wifi disconnects. I don't know where problem is, but
+remove printing i.e. rt2x00_warn() messages can be thing to check if you
+observe wifi disconnects.
+
+Another issue is BA ssn mishmashes which I can observe. Those were
+causing by older rt2800 usb hardware not responding correctly to BAR
+frame. I.e for BAR frame with SSN 0x0060 (6), it responded BA with
+SSN 7fe0 (2046). Removing of posting BAR by this patch:
+
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+index 357c0941aaad..7e2786464bcf 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+@@ -382,9 +382,6 @@ static void rt2x00lib_fill_tx_status(struct rt2x00_dev *rt2x00dev,
+ 				  IEEE80211_TX_CTL_AMPDU;
+ 		tx_info->status.ampdu_len = 1;
+ 		tx_info->status.ampdu_ack_len = success ? 1 : 0;
 -
- 	val = mt76_rr(dev, MT_WPDMA_GLO_CFG);
- 	val &= MT_WPDMA_GLO_CFG_DMA_BURST_SIZE |
- 	       MT_WPDMA_GLO_CFG_BIG_ENDIAN |
-@@ -769,6 +764,34 @@ mt76x2_init_txpower(struct mt76x2_dev *dev,
+-		if (!success)
+-			tx_info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
  	}
- }
  
-+void mt76x2_init_device(struct mt76x2_dev *dev)
-+{
-+	struct ieee80211_hw *hw = mt76_hw(dev);
-+
-+	hw->queues = 4;
-+	hw->max_rates = 1;
-+	hw->max_report_rates = 7;
-+	hw->max_rate_tries = 1;
-+	hw->extra_tx_headroom = 2;
-+
-+	hw->sta_data_size = sizeof(struct mt76x2_sta);
-+	hw->vif_data_size = sizeof(struct mt76x2_vif);
-+
-+	ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
-+	ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
-+
-+	dev->mt76.sband_2g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
-+	dev->mt76.sband_5g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
-+
-+	dev->chainmask = 0x202;
-+	dev->global_wcid.idx = 255;
-+	dev->global_wcid.hw_key_idx = -1;
-+	dev->slottime = 9;
-+
-+	/* init antenna configuration */
-+	dev->mt76.antenna_mask = 3;
-+}
-+
- int mt76x2_register_device(struct mt76x2_dev *dev)
- {
- 	struct ieee80211_hw *hw = mt76_hw(dev);
-@@ -783,20 +806,15 @@ int mt76x2_register_device(struct mt76x2_dev *dev)
- 		return -ENOMEM;
- 
- 	kfifo_init(&dev->txstatus_fifo, status_fifo, fifo_size);
-+	INIT_DELAYED_WORK(&dev->cal_work, mt76x2_phy_calibrate);
-+	INIT_DELAYED_WORK(&dev->mac_work, mt76x2_mac_work);
-+
-+	mt76x2_init_device(dev);
- 
- 	ret = mt76x2_init_hardware(dev);
- 	if (ret)
- 		return ret;
- 
--	hw->queues = 4;
--	hw->max_rates = 1;
--	hw->max_report_rates = 7;
--	hw->max_rate_tries = 1;
--	hw->extra_tx_headroom = 2;
--
--	hw->sta_data_size = sizeof(struct mt76x2_sta);
--	hw->vif_data_size = sizeof(struct mt76x2_vif);
--
- 	for (i = 0; i < ARRAY_SIZE(dev->macaddr_list); i++) {
- 		u8 *addr = dev->macaddr_list[i].addr;
- 
-@@ -818,24 +836,12 @@ int mt76x2_register_device(struct mt76x2_dev *dev)
- 
- 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
- 
--	ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
--	ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
--
--	INIT_DELAYED_WORK(&dev->cal_work, mt76x2_phy_calibrate);
--	INIT_DELAYED_WORK(&dev->mac_work, mt76x2_mac_work);
--
--	dev->mt76.sband_2g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
--	dev->mt76.sband_5g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
--
- 	mt76x2_dfs_init_detector(dev);
- 
- 	/* init led callbacks */
- 	dev->mt76.led_cdev.brightness_set = mt76x2_led_set_brightness;
- 	dev->mt76.led_cdev.blink_set = mt76x2_led_set_blink;
- 
--	/* init antenna configuration */
--	dev->mt76.antenna_mask = 3;
--
- 	ret = mt76_register_device(&dev->mt76, true, mt76x2_rates,
- 				   ARRAY_SIZE(mt76x2_rates));
- 	if (ret)
--- 
-2.16.3
+ 	if (rate_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
+
+solved the problem and improved performance when connecting with this
+older rt2800 usb device. Even if other rt2800 usb devices respond with
+correct solicit BA SSN this change is beneficial when connecting two
+rt2800 devices. Unfortunately sending BAR seems to be needed for
+some stations, so this need to be investigated a bit more.
+
+Another issue is that sometimes we do not sent rate probe frames,
+I posted fix for that (revert of my older change):
+https://marc.info/?l=linux-wireless&m=152750671715369&w=2 
+This patch improve performance when mt7620 is connected with Intel iwl7265
+device. With the patch I have 70 Mbits/sec compared to about 17 Mbits/sec
+before. Perhaps it also fix stability issues.
+
+Stanislaw
