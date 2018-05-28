@@ -1,111 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f50.google.com ([209.85.215.50]:40551 "EHLO
-        mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751180AbeEFMqe (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41434 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932523AbeE1P6t (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 6 May 2018 08:46:34 -0400
+        Mon, 28 May 2018 11:58:49 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Revert "rt2800: use TXOP_BACKOFF for probe frames"
+References: <1527506706-6488-1-git-send-email-sgruszka@redhat.com>
+Date: Mon, 28 May 2018 18:58:45 +0300
+In-Reply-To: <1527506706-6488-1-git-send-email-sgruszka@redhat.com> (Stanislaw
+        Gruszka's message of "Mon, 28 May 2018 13:25:06 +0200")
+Message-ID: <87bmczkc0a.fsf@purkki.adurom.net> (sfid-20180528_180030_987784_138EB2D4)
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-From: Sedat Dilek <sedat.dilek@gmail.com>
-Date: Sun, 6 May 2018 14:46:32 +0200
-Message-ID: <CA+icZUXrHmOJPKT0gnym9yOs6Erm3wDOZU3sbr_MGB8pYjfuzA@mail.gmail.com> (sfid-20180506_144710_246407_59D28F60)
-Subject: [linux-firmware] Version in WHENCE file
-To: Luca Coelho <luciano.coelho@intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: multipart/mixed; boundary="00000000000063ed1c056b88f161"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---00000000000063ed1c056b88f161
-Content-Type: text/plain; charset="UTF-8"
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-Hi Luca,
+> This reverts commit fb47ada8dc3c30c8e7b415da155742b49536c61e.
+>
+> In some situations when we set TXOP_BACKOFF, the probe frame is
+> not sent at all. What it worse then sending probe frame as part
+> of AMPDU and can degrade 11n performance to 11g rates.
+>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-I hope I catched the correct MLs (not sure if linux-firmware has a ML,
-I did not found any in the MAINTAINERS file).
+I'll try to get to this to final 4.17 still (scheduled for next Sunday),
+but no promises if it makes it.
 
-I have seen that in the WHENCE file there is "Version" with and
-without ":", mostly iwlwifi ucodes.
-
-As an example:
-
- File: iwlwifi-8265-36.ucode
--Version 36.e91976c0.0
-+Version: 36.e91976c0.0
-
-I don't know the workflow: Do you want to fix it in your tree or
-directly in linux-firmware.git upstream?
-My attached patch is against upstream.
-
-Thanks.
-
-Regards,
-- Sedat -
-
-
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git/commit/?id=1f4dbd8cb94ec37497e58627a127058d53c5968f
-
---00000000000063ed1c056b88f161
-Content-Type: text/x-patch; charset="US-ASCII"; name="0001-WHENCE-Fix-typo-Version.patch"
-Content-Disposition: attachment;
-	filename="0001-WHENCE-Fix-typo-Version.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_jgut91xm0
-
-RnJvbSA1NzZkMzBhY2U4MTQwY2E3YjVjOGEyNzZmNjdkYTFjYjJlYmZiMGMyIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBTZWRhdCBEaWxlayA8c2VkYXQuZGlsZWtAY3JlZGF0aXYuZGU+
-CkRhdGU6IFN1biwgNiBNYXkgMjAxOCAxNDo0NDo1NCArMDIwMApTdWJqZWN0OiBbUEFUQ0hdIFdI
-RU5DRTogRml4IHR5cG8gVmVyc2lvbgoKLS0tCiBXSEVOQ0UgfCA1OCArKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCiAxIGZpbGUgY2hhbmdl
-ZCwgMjkgaW5zZXJ0aW9ucygrKSwgMjkgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvV0hFTkNF
-IGIvV0hFTkNFCmluZGV4IDY5MGE2YTVkNDE0OS4uYWI5MTVlZTZiMjRmIDEwMDY0NAotLS0gYS9X
-SEVOQ0UKKysrIGIvV0hFTkNFCkBAIC04NjYsMTAgKzg2NiwxMCBAQCBGaWxlOiBpd2x3aWZpLTcy
-NjAtMTMudWNvZGUKIFZlcnNpb246IDI1LjMwLjEzLjAKIAogRmlsZTogaXdsd2lmaS03MjYwLTE2
-LnVjb2RlCi1WZXJzaW9uIDE2LjI0MjQxNC4wCitWZXJzaW9uOiAxNi4yNDI0MTQuMAogCiBGaWxl
-OiBpd2x3aWZpLTcyNjAtMTcudWNvZGUKLVZlcnNpb24gMTcuMzg4ZjExMWYuMAorVmVyc2lvbjog
-MTcuMzg4ZjExMWYuMAogCiBGaWxlOiBpd2x3aWZpLTMxNjAtNy51Y29kZQogVmVyc2lvbjogMjIu
-MS43LjAKQEAgLTg5MCwxMCArODkwLDEwIEBAIEZpbGU6IGl3bHdpZmktMzE2MC0xMy51Y29kZQog
-VmVyc2lvbjogMjUuMzAuMTMuMAogCiBGaWxlOiBpd2x3aWZpLTMxNjAtMTYudWNvZGUKLVZlcnNp
-b24gMTYuMjQyNDE0LjAKK1ZlcnNpb246IDE2LjI0MjQxNC4wCiAKIEZpbGU6IGl3bHdpZmktMzE2
-MC0xNy51Y29kZQotVmVyc2lvbiAxNy4zODhmMTExZi4wCitWZXJzaW9uOiAxNy4zODhmMTExZi4w
-CiAKIEZpbGU6IGl3bHdpZmktNzI2NS04LnVjb2RlCiBWZXJzaW9uOiAyMi4yNC44LjAKQEAgLTkx
-MSwxMCArOTExLDEwIEBAIEZpbGU6IGl3bHdpZmktNzI2NS0xMy51Y29kZQogVmVyc2lvbjogMjUu
-MzAuMTMuMAogCiBGaWxlOiBpd2x3aWZpLTcyNjUtMTYudWNvZGUKLVZlcnNpb24gMTYuMjQyNDE0
-LjAKK1ZlcnNpb246IDE2LjI0MjQxNC4wCiAKIEZpbGU6IGl3bHdpZmktNzI2NS0xNy51Y29kZQot
-VmVyc2lvbiAxNy4zODhmMTExZi4wCitWZXJzaW9uOiAxNy4zODhmMTExZi4wCiAKIEZpbGU6IGl3
-bHdpZmktNzI2NUQtMTAudWNvZGUKIFZlcnNpb246IDIzLjE1LjEwLjAKQEAgLTkyNiw3NiArOTI2
-LDc2IEBAIEZpbGU6IGl3bHdpZmktNzI2NUQtMTMudWNvZGUKIFZlcnNpb246IDI1LjMwLjEzLjAK
-IAogRmlsZTogaXdsd2lmaS03MjY1RC0xNi51Y29kZQotVmVyc2lvbiAxNi4yNDI0MTQuMAorVmVy
-c2lvbjogMTYuMjQyNDE0LjAKIAogRmlsZTogaXdsd2lmaS03MjY1RC0xNy51Y29kZQotVmVyc2lv
-biAxNy4zNTI3MzguMAorVmVyc2lvbjogMTcuMzUyNzM4LjAKIAogRmlsZTogaXdsd2lmaS03MjY1
-RC0yMS51Y29kZQotVmVyc2lvbiAyMS4zMDI4MDAuMAorVmVyc2lvbjogMjEuMzAyODAwLjAKIAog
-RmlsZTogaXdsd2lmaS03MjY1RC0yMi51Y29kZQotVmVyc2lvbiAyMi4zOTE3NDAuMAorVmVyc2lv
-bjogMjIuMzkxNzQwLjAKIAogRmlsZTogaXdsd2lmaS03MjY1RC0yNy51Y29kZQotVmVyc2lvbiAy
-Ny41NDEwMzMuMAorVmVyc2lvbjogMjcuNTQxMDMzLjAKIAogRmlsZTogaXdsd2lmaS03MjY1RC0y
-OS51Y29kZQotVmVyc2lvbiAyOS4zZTNiNGRlNS4wCitWZXJzaW9uOiAyOS4zZTNiNGRlNS4wCiAK
-IEZpbGU6IGl3bHdpZmktMzE2OC0yMS51Y29kZQotVmVyc2lvbiAyMS4zMDI4MDAuMAorVmVyc2lv
-bjogMjEuMzAyODAwLjAKIAogRmlsZTogaXdsd2lmaS0zMTY4LTIyLnVjb2RlCi1WZXJzaW9uIDIy
-LjM5MTc0MC4wCitWZXJzaW9uOiAyMi4zOTE3NDAuMAogCiBGaWxlOiBpd2x3aWZpLTMxNjgtMjcu
-dWNvZGUKLVZlcnNpb24gMjcuNTQxMDMzLjAKK1ZlcnNpb246IDI3LjU0MTAzMy4wCiAKIEZpbGU6
-IGl3bHdpZmktMzE2OC0yOS51Y29kZQotVmVyc2lvbiAyOS4zZTNiNGRlNS4wCitWZXJzaW9uOiAy
-OS4zZTNiNGRlNS4wCiAKIEZpbGU6IGl3bHdpZmktODAwMEMtMTMudWNvZGUKIFZlcnNpb246IDI1
-LjMwLjEzLjAKIAogRmlsZTogaXdsd2lmaS04MDAwQy0xNi51Y29kZQotVmVyc2lvbiAxNi4yNDI0
-MTQuMAorVmVyc2lvbjogMTYuMjQyNDE0LjAKIAogRmlsZTogaXdsd2lmaS04MDAwQy0yMS51Y29k
-ZQotVmVyc2lvbiAyMS4zMDI4MDAuMAorVmVyc2lvbjogMjEuMzAyODAwLjAKIAogRmlsZTogaXds
-d2lmaS04MDAwQy0yMi51Y29kZQotVmVyc2lvbiAyMi4zOTE3NDAuMAorVmVyc2lvbjogMjIuMzkx
-NzQwLjAKIAogRmlsZTogaXdsd2lmaS04MDAwQy0yNy51Y29kZQotVmVyc2lvbiAyNy41NDEwMzMu
-MAorVmVyc2lvbjogMjcuNTQxMDMzLjAKIAogRmlsZTogaXdsd2lmaS04MDAwQy0zMS51Y29kZQot
-VmVyc2lvbiAzMS41NjA0ODQuMAorVmVyc2lvbjogMzEuNTYwNDg0LjAKIAogRmlsZTogaXdsd2lm
-aS04MDAwQy0zNC51Y29kZQotVmVyc2lvbiAzNC42MTAyODguMAorVmVyc2lvbjogMzQuNjEwMjg4
-LjAKIAogRmlsZTogaXdsd2lmaS04MDAwQy0zNi51Y29kZQotVmVyc2lvbiAzNi5lOTE5NzZjMC4w
-CitWZXJzaW9uOiAzNi5lOTE5NzZjMC4wCiAKIEZpbGU6IGl3bHdpZmktODI2NS0yMS51Y29kZQot
-VmVyc2lvbiAyMS4zMDI4MDAuMAorVmVyc2lvbjogMjEuMzAyODAwLjAKIAogRmlsZTogaXdsd2lm
-aS04MjY1LTIyLnVjb2RlCi1WZXJzaW9uIDIyLjM5MTc0MC4wCitWZXJzaW9uOiAyMi4zOTE3NDAu
-MAogCiBGaWxlOiBpd2x3aWZpLTgyNjUtMjcudWNvZGUKLVZlcnNpb24gMjcuNTQxMDMzLjAKK1Zl
-cnNpb246IDI3LjU0MTAzMy4wCiAKIEZpbGU6IGl3bHdpZmktODI2NS0zMS51Y29kZQotVmVyc2lv
-biAzMS41NjA0ODQuMAorVmVyc2lvbjogMzEuNTYwNDg0LjAKIAogRmlsZTogaXdsd2lmaS04MjY1
-LTM0LnVjb2RlCi1WZXJzaW9uIDM0LjYxMDI4OC4wCitWZXJzaW9uOiAzNC42MTAyODguMAogCiBG
-aWxlOiBpd2x3aWZpLTgyNjUtMzYudWNvZGUKLVZlcnNpb24gMzYuZTkxOTc2YzAuMAorVmVyc2lv
-bjogMzYuZTkxOTc2YzAuMAogCiBGaWxlOiBpd2x3aWZpLTkwMDAtcHUtYjAtamYtYjAtMzMudWNv
-ZGUKIFZlcnNpb246IDMzLjYxMDI5NC4wCi0tIAoyLjE3LjAKCg==
---00000000000063ed1c056b88f161--
+-- 
+Kalle Valo
