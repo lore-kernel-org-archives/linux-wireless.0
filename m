@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:42808 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932747AbeEWMxp (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:53327 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938132AbeE1L3Y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 May 2018 08:53:45 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: use better order for kcalloc() arguments
-Date: Wed, 23 May 2018 14:53:41 +0200
-Message-Id: <20180523125341.15495-1-johannes@sipsolutions.net> (sfid-20180523_145351_961633_1A11B1E0)
+        Mon, 28 May 2018 07:29:24 -0400
+Received: by mail-wm0-f66.google.com with SMTP id a67-v6so31163749wmf.3
+        for <linux-wireless@vger.kernel.org>; Mon, 28 May 2018 04:29:24 -0700 (PDT)
+From: Loic Poulain <loic.poulain@linaro.org>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        Loic Poulain <loic.poulain@linaro.org>
+Subject: [PATCH 1/3] wcn36xx: Fix WEP104 encryption type
+Date: Mon, 28 May 2018 13:29:18 +0200
+Message-Id: <1527506960-13358-1-git-send-email-loic.poulain@linaro.org> (sfid-20180528_132946_532504_1358BA38)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-The arguments should be (# of elements, size of each) instead
-of the other way around, which really ends up being mostly
-equivalent but smatch complains about it, so swap them.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
 ---
- net/wireless/util.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index b5bb1c309914..b91597a8baa2 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1789,8 +1789,9 @@ bool cfg80211_does_bw_fit_range(const struct ieee80211_freq_range *freq_range,
- 
- int cfg80211_sinfo_alloc_tid_stats(struct station_info *sinfo, gfp_t gfp)
- {
--	sinfo->pertid = kcalloc(sizeof(*(sinfo->pertid)),
--				IEEE80211_NUM_TIDS + 1, gfp);
-+	sinfo->pertid = kcalloc(IEEE80211_NUM_TIDS + 1,
-+				sizeof(*(sinfo->pertid)),
-+				gfp);
- 	if (!sinfo->pertid)
- 		return -ENOMEM;
- 
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index aeb5e6e..4648a78 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -512,7 +512,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		vif_priv->encrypt_type = WCN36XX_HAL_ED_WEP40;
+ 		break;
+ 	case WLAN_CIPHER_SUITE_WEP104:
+-		vif_priv->encrypt_type = WCN36XX_HAL_ED_WEP40;
++		vif_priv->encrypt_type = WCN36XX_HAL_ED_WEP104;
+ 		break;
+ 	case WLAN_CIPHER_SUITE_CCMP:
+ 		vif_priv->encrypt_type = WCN36XX_HAL_ED_CCMP;
 -- 
-2.14.3
+2.7.4
