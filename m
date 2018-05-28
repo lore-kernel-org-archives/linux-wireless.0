@@ -1,75 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:45393 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753381AbeERJal (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 05:30:41 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 14/14] rtlwifi: fix btmpinfo timeout while processing C2H_BT_INFO
-Date: Fri, 18 May 2018 17:30:07 +0800
-Message-ID: <20180518093007.23594-15-pkshih@realtek.com> (sfid-20180518_113100_081069_53557335)
-In-Reply-To: <20180518093007.23594-1-pkshih@realtek.com>
-References: <20180518093007.23594-1-pkshih@realtek.com>
+Received: from mail.pens.ac.id ([202.9.85.49]:45636 "EHLO mail.pens.ac.id"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752973AbeE1Cng (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 27 May 2018 22:43:36 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by mail.pens.ac.id (Postfix) with ESMTP id D1EA72D4002
+        for <linux-wireless@vger.kernel.org>; Mon, 28 May 2018 09:31:41 +0700 (WIT)
+Received: from mail.pens.ac.id ([127.0.0.1])
+        by localhost (mail.pens.ac.id [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 8s+1rRofP5Pd for <linux-wireless@vger.kernel.org>;
+        Mon, 28 May 2018 09:31:39 +0700 (WIT)
+Received: from mail.pens.ac.id (mail.pens.ac.id [202.9.85.49])
+        by mail.pens.ac.id (Postfix) with ESMTP id D83942D4001
+        for <linux-wireless@vger.kernel.org>; Mon, 28 May 2018 09:31:39 +0700 (WIT)
+Date: Mon, 28 May 2018 09:31:39 +0700 (WIT)
+From: Ahmad Zainudin <zai@pens.ac.id>
+To: linux-wireless@vger.kernel.org
+Subject: hostapd.config file for ACS Configuration
+Message-ID: <cc7169c6-2204-4ba0-9e68-7446f5b7d11a@mail.eepis-its.edu> (sfid-20180528_044528_155729_194846E9)
+Content-Type: text/plain; charset=utf-8
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Hello all,
 
-In former patch, I enqueu all C2H commands and processed by a workqueue.
-In case C2H_BT_INFO will issue a H2C command to set BT reg, and wait for
-a C2H ack. But it is totally impossible that C2H workqueue waits for a
-C2H command, so kernel log warn
-	rtlwifi: :<0> btmpinfo wait (req_num=0) timeout
+I install hostapd use apt-get install
 
-Since the C2H ack command C2H_BT_MP can be safely processed in interrupt
-context, add a fast command path to deal with the command.
+>From tutorial for ACS (Automatic Channel Selection) configuration, I must enable ACS in hostapd's .config file :
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+CONFIG_ACS=y
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index a5939ddfa9cb..39c817eddd78 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -2262,11 +2262,33 @@ void rtl_fwevt_wq_callback(void *data)
- 	rtlpriv->cfg->ops->c2h_command_handle(hw);
- }
- 
-+static void rtl_c2h_content_parsing(struct ieee80211_hw *hw,
-+				    struct sk_buff *skb);
-+
-+static bool rtl_c2h_fast_cmd(struct ieee80211_hw *hw, struct sk_buff *skb)
-+{
-+	u8 cmd_id = GET_C2H_CMD_ID(skb->data);
-+
-+	switch (cmd_id) {
-+	case C2H_BT_MP:
-+		return true;
-+	default:
-+		break;
-+	}
-+
-+	return false;
-+}
-+
- void rtl_c2hcmd_enqueue(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	unsigned long flags;
- 
-+	if (rtl_c2h_fast_cmd(hw, skb)) {
-+		rtl_c2h_content_parsing(hw, skb);
-+		return;
-+	}
-+
- 	/* enqueue */
- 	spin_lock_irqsave(&rtlpriv->locks.c2hcmd_lock, flags);
- 
--- 
-2.15.1
+I have trouble finding  hostapd.config file too enable CONFIG_ACS=y. I have finish configure  channel=acs_survey in hostapd.conf file.
+
+Are the hostapd.config and hostapd.conf different files?, and I am not yet found the  hostapd.config file.
+
+Can help me?
+Thank you,,
+
+---------------------------------------------------------------
+Ahmad Zainudin
+Digital Signal Processing Lab. E-206
+Telecommunication Engineering Department
+Electronic Engineering Polytechnic Institute of Surabaya (EEPIS)
+http://zai.lecturer.pens.ac.id
+
+
+
+---------------------------------------------------------------------
+PENS/EEPIS - Bridge To The Future
+Politeknik Elektronika Negeri Surabaya (PENS)
+Electronic Engineering Polytechnic Institute of Surabaya (EEPIS)
+http://www.pens.ac.id
