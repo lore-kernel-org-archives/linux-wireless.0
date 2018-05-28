@@ -1,308 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:4615 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751584AbeEMQDx (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:37088 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1032788AbeE1Pd6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 13 May 2018 12:03:53 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH 7/7] wil6210: add support for Talyn-MB boot flow
-Date: Sun, 13 May 2018 19:02:55 +0300
-Message-Id: <1526227375-31881-8-git-send-email-merez@codeaurora.org> (sfid-20180513_180358_582030_7A6767E7)
-In-Reply-To: <1526227375-31881-1-git-send-email-merez@codeaurora.org>
-References: <1526227375-31881-1-git-send-email-merez@codeaurora.org>
+        Mon, 28 May 2018 11:33:58 -0400
+Received: by mail-wm0-f67.google.com with SMTP id l1-v6so33156569wmb.2
+        for <linux-wireless@vger.kernel.org>; Mon, 28 May 2018 08:33:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAOf5uw=G5iYfuoRBCOWU-PkEGpm1_qMwB+1=MjRQgxB+e_0w=g@mail.gmail.com>
+References: <1527493857-2220-1-git-send-email-michael@amarulasolutions.com>
+ <5B0BD13D.8000809@broadcom.com> <CAOf5uw=mPOgngZW8UcPfvtxH+5nCR-36ovjYPH7AvO99y1M_xA@mail.gmail.com>
+ <CAHp75VcC_cisfVTKU0bVm3+=NFLt3P0EkXh3uC4hWCA7y_7G3w@mail.gmail.com> <CAOf5uw=G5iYfuoRBCOWU-PkEGpm1_qMwB+1=MjRQgxB+e_0w=g@mail.gmail.com>
+From: Michael Nazzareno Trimarchi <michael@amarulasolutions.com>
+Date: Mon, 28 May 2018 17:33:56 +0200
+Message-ID: <CAOf5uwkLT_-esTkqj-Mhbsn_f-JETs+XF+vd8v=U+FQSoSPcQA@mail.gmail.com> (sfid-20180528_173639_287477_608AAA96)
+Subject: Re: [PATCH] brcmfmac: stop watchdog before detach and free everything
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Ian Molton <ian@mnementh.co.uk>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com, netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Talyn-MB introduces various of FW download options:
-FW download via PCIe, SPI or PBL for secured access.
-The boot and FW download path is determined based on the
-OTP HW register. Driver reads this register as part of the
-SW reset flow and performs the appropriate initialization
-sequence.
+Hi Andy
 
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/main.c    | 194 ++++++++++++++++++++++++-----
- drivers/net/wireless/ath/wil6210/wil6210.h |  10 +-
- 2 files changed, 172 insertions(+), 32 deletions(-)
+The problem seems really easy to solve:
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 995b332..ba5ebcb 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -112,9 +112,29 @@ static int ring_order_set(const char *val, const struct kernel_param *kp)
- module_param_cb(bcast_ring_order, &ring_order_ops, &bcast_ring_order, 0444);
- MODULE_PARM_DESC(bcast_ring_order, " Bcast ring order; size = 1 << order");
- 
--#define RST_DELAY (20) /* msec, for loop in @wil_target_reset */
-+enum {
-+	WIL_BOOT_ERR,
-+	WIL_BOOT_VANILLA,
-+	WIL_BOOT_PRODUCTION,
-+	WIL_BOOT_DEVELOPMENT,
-+};
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 412a05b..ba60b151 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -4227,13 +4227,7 @@ struct brcmf_sdio *brcmf_sdio_probe(struct
+brcmf_sdio_dev *sdiodev)
+        timer_setup(&bus->timer, brcmf_sdio_watchdog, 0);
+        /* Initialize watchdog thread */
+        init_completion(&bus->watchdog_wait);
+-       bus->watchdog_tsk = kthread_run(brcmf_sdio_watchdog_thread,
+-                                       bus, "brcmf_wdog/%s",
+-                                       dev_name(&sdiodev->func1->dev));
+-       if (IS_ERR(bus->watchdog_tsk)) {
+-               pr_warn("brcmf_watchdog thread failed to start\n");
+-               bus->watchdog_tsk = NULL;
+-       }
 +
-+enum {
-+	WIL_SIG_STATUS_VANILLA = 0x0,
-+	WIL_SIG_STATUS_DEVELOPMENT = 0x1,
-+	WIL_SIG_STATUS_PRODUCTION = 0x2,
-+	WIL_SIG_STATUS_CORRUPTED_PRODUCTION = 0x3,
-+};
+        /* Initialize DPC thread */
+        bus->dpc_triggered = false;
+        bus->dpc_running = false;
+@@ -4281,6 +4275,14 @@ struct brcmf_sdio *brcmf_sdio_probe(struct
+brcmf_sdio_dev *sdiodev)
+                goto fail;
+        }
+
++       bus->watchdog_tsk = kthread_run(brcmf_sdio_watchdog_thread,
++                                       bus, "brcmf_wdog/%s",
++                                       dev_name(&sdiodev->func1->dev));
++       if (IS_ERR(bus->watchdog_tsk)) {
++               pr_warn("brcmf_watchdog thread failed to start\n");
++               bus->watchdog_tsk = NULL;
++       }
 +
-+#define RST_DELAY (20) /* msec, for loop in @wil_wait_device_ready */
- #define RST_COUNT (1 + 1000/RST_DELAY) /* round up to be above 1 sec total */
- 
-+#define PMU_READY_DELAY_MS (4) /* ms, for sleep in @wil_wait_device_ready */
-+
-+#define OTP_HW_DELAY (200) /* usec, loop in @wil_wait_device_ready_talyn_mb */
-+/* round up to be above 2 ms total */
-+#define OTP_HW_COUNT (1 + 2000 / OTP_HW_DELAY)
-+
- /*
-  * Due to a hardware issue,
-  * one has to read/write to/from NIC in 32-bit chunks;
-@@ -815,11 +835,146 @@ static void wil_set_oob_mode(struct wil6210_priv *wil, u8 mode)
- 	}
- }
- 
--static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
-+static int wil_wait_device_ready(struct wil6210_priv *wil, int no_flash)
- {
- 	int delay = 0;
- 	u32 x, x1 = 0;
- 
-+	/* wait until device ready. */
-+	if (no_flash) {
-+		msleep(PMU_READY_DELAY_MS);
-+
-+		wil_dbg_misc(wil, "Reset completed\n");
-+	} else {
-+		do {
-+			msleep(RST_DELAY);
-+			x = wil_r(wil, RGF_USER_BL +
-+				  offsetof(struct bl_dedicated_registers_v0,
-+					   boot_loader_ready));
-+			if (x1 != x) {
-+				wil_dbg_misc(wil, "BL.ready 0x%08x => 0x%08x\n",
-+					     x1, x);
-+				x1 = x;
-+			}
-+			if (delay++ > RST_COUNT) {
-+				wil_err(wil, "Reset not completed, bl.ready 0x%08x\n",
-+					x);
-+				return -ETIME;
-+			}
-+		} while (x != BL_READY);
-+
-+		wil_dbg_misc(wil, "Reset completed in %d ms\n",
-+			     delay * RST_DELAY);
-+	}
-+
-+	return 0;
-+}
-+
-+static int wil_wait_device_ready_talyn_mb(struct wil6210_priv *wil)
-+{
-+	u32 otp_hw;
-+	u8 signature_status;
-+	bool otp_signature_err;
-+	bool hw_section_done;
-+	u32 otp_qc_secured;
-+	int delay = 0;
-+
-+	/* Wait for OTP signature test to complete */
-+	usleep_range(2000, 2200);
-+
-+	wil->boot_config = WIL_BOOT_ERR;
-+
-+	/* Poll until OTP signature status is valid.
-+	 * In vanilla and development modes, when signature test is complete
-+	 * HW sets BIT_OTP_SIGNATURE_ERR_TALYN_MB.
-+	 * In production mode BIT_OTP_SIGNATURE_ERR_TALYN_MB remains 0, poll
-+	 * for signature status change to 2 or 3.
-+	 */
-+	do {
-+		otp_hw = wil_r(wil, RGF_USER_OTP_HW_RD_MACHINE_1);
-+		signature_status = WIL_GET_BITS(otp_hw, 8, 9);
-+		otp_signature_err = otp_hw & BIT_OTP_SIGNATURE_ERR_TALYN_MB;
-+
-+		if (otp_signature_err &&
-+		    signature_status == WIL_SIG_STATUS_VANILLA) {
-+			wil->boot_config = WIL_BOOT_VANILLA;
-+			break;
-+		}
-+		if (otp_signature_err &&
-+		    signature_status == WIL_SIG_STATUS_DEVELOPMENT) {
-+			wil->boot_config = WIL_BOOT_DEVELOPMENT;
-+			break;
-+		}
-+		if (!otp_signature_err &&
-+		    signature_status == WIL_SIG_STATUS_PRODUCTION) {
-+			wil->boot_config = WIL_BOOT_PRODUCTION;
-+			break;
-+		}
-+		if  (!otp_signature_err &&
-+		     signature_status ==
-+		     WIL_SIG_STATUS_CORRUPTED_PRODUCTION) {
-+			/* Unrecognized OTP signature found. Possibly a
-+			 * corrupted production signature, access control
-+			 * is applied as in production mode, therefore
-+			 * do not fail
-+			 */
-+			wil->boot_config = WIL_BOOT_PRODUCTION;
-+			break;
-+		}
-+		if (delay++ > OTP_HW_COUNT)
-+			break;
-+
-+		usleep_range(OTP_HW_DELAY, OTP_HW_DELAY + 10);
-+	} while (!otp_signature_err && signature_status == 0);
-+
-+	if (wil->boot_config == WIL_BOOT_ERR) {
-+		wil_err(wil,
-+			"invalid boot config, signature_status %d otp_signature_err %d\n",
-+			signature_status, otp_signature_err);
-+		return -ETIME;
-+	}
-+
-+	wil_dbg_misc(wil,
-+		     "signature test done in %d usec, otp_hw 0x%x, boot_config %d\n",
-+		     delay * OTP_HW_DELAY, otp_hw, wil->boot_config);
-+
-+	if (wil->boot_config == WIL_BOOT_VANILLA)
-+		/* Assuming not SPI boot (currently not supported) */
-+		goto out;
-+
-+	hw_section_done = otp_hw & BIT_OTP_HW_SECTION_DONE_TALYN_MB;
-+	delay = 0;
-+
-+	while (!hw_section_done) {
-+		msleep(RST_DELAY);
-+
-+		otp_hw = wil_r(wil, RGF_USER_OTP_HW_RD_MACHINE_1);
-+		hw_section_done = otp_hw & BIT_OTP_HW_SECTION_DONE_TALYN_MB;
-+
-+		if (delay++ > RST_COUNT) {
-+			wil_err(wil, "TO waiting for hw_section_done\n");
-+			return -ETIME;
-+		}
-+	}
-+
-+	wil_dbg_misc(wil, "HW section done in %d ms\n", delay * RST_DELAY);
-+
-+	otp_qc_secured = wil_r(wil, RGF_OTP_QC_SECURED);
-+	wil->secured_boot = otp_qc_secured & BIT_BOOT_FROM_ROM ? 1 : 0;
-+	wil_dbg_misc(wil, "secured boot is %sabled\n",
-+		     wil->secured_boot ? "en" : "dis");
-+
-+out:
-+	wil_dbg_misc(wil, "Reset completed\n");
-+
-+	return 0;
-+}
-+
-+static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
-+{
-+	u32 x;
-+	int rc;
-+
- 	wil_dbg_misc(wil, "Resetting \"%s\"...\n", wil->hw_name);
- 
- 	/* Clear MAC link up */
-@@ -885,34 +1040,12 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
- 
- 	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0);
- 
--	/* wait until device ready. typical time is 20..80 msec */
--	if (no_flash)
--		do {
--			msleep(RST_DELAY);
--			x = wil_r(wil, USER_EXT_USER_PMU_3);
--			if (delay++ > RST_COUNT) {
--				wil_err(wil, "Reset not completed, PMU_3 0x%08x\n",
--					x);
--				return -ETIME;
--			}
--		} while ((x & BIT_PMU_DEVICE_RDY) == 0);
-+	if (wil->hw_version == HW_VER_TALYN_MB)
-+		rc = wil_wait_device_ready_talyn_mb(wil);
- 	else
--		do {
--			msleep(RST_DELAY);
--			x = wil_r(wil, RGF_USER_BL +
--				  offsetof(struct bl_dedicated_registers_v0,
--					   boot_loader_ready));
--			if (x1 != x) {
--				wil_dbg_misc(wil, "BL.ready 0x%08x => 0x%08x\n",
--					     x1, x);
--				x1 = x;
--			}
--			if (delay++ > RST_COUNT) {
--				wil_err(wil, "Reset not completed, bl.ready 0x%08x\n",
--					x);
--				return -ETIME;
--			}
--		} while (x != BL_READY);
-+		rc = wil_wait_device_ready(wil, no_flash);
-+	if (rc)
-+		return rc;
- 
- 	wil_c(wil, RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_RST_PWGD);
- 
-@@ -920,7 +1053,7 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
- 	wil_s(wil, RGF_DMA_OFUL_NID_0, BIT_DMA_OFUL_NID_0_RX_EXT_TR_EN |
- 	      BIT_DMA_OFUL_NID_0_RX_EXT_A3_SRC);
- 
--	if (no_flash) {
-+	if (wil->hw_version < HW_VER_TALYN_MB && no_flash) {
- 		/* Reset OTP HW vectors to fit 40MHz */
- 		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME1, 0x60001);
- 		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME2, 0x20027);
-@@ -935,7 +1068,6 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
- 		wil_w(wil, RGF_USER_XPM_RD_DOUT_SAMPLE_TIME, 0x57);
- 	}
- 
--	wil_dbg_misc(wil, "Reset completed in %d ms\n", delay * RST_DELAY);
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index b645fcf..81d982f 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -212,7 +212,9 @@ struct RGF_ICR {
- #define RGF_USER_SPARROW_M_4			(0x880c50) /* Sparrow */
- 	#define BIT_SPARROW_M_4_SEL_SLEEP_OR_REF	BIT(2)
- #define RGF_USER_OTP_HW_RD_MACHINE_1	(0x880ce0)
--	#define BIT_NO_FLASH_INDICATION		BIT(8)
-+	#define BIT_OTP_SIGNATURE_ERR_TALYN_MB		BIT(0)
-+	#define BIT_OTP_HW_SECTION_DONE_TALYN_MB	BIT(2)
-+	#define BIT_NO_FLASH_INDICATION			BIT(8)
- #define RGF_USER_XPM_IFC_RD_TIME1	(0x880cec)
- #define RGF_USER_XPM_IFC_RD_TIME2	(0x880cf0)
- #define RGF_USER_XPM_IFC_RD_TIME3	(0x880cf4)
-@@ -314,6 +316,9 @@ struct RGF_ICR {
- #define RGF_CAF_PLL_LOCK_STATUS		(0x88afec)
- 	#define BIT_CAF_OSC_DIG_XTAL_STABLE	BIT(0)
- 
-+#define RGF_OTP_QC_SECURED		(0x8a0038)
-+	#define BIT_BOOT_FROM_ROM		BIT(31)
-+
- /* eDMA */
- #define RGF_INT_COUNT_ON_SPECIAL_EVT	(0x8b62d8)
- 
-@@ -961,6 +966,9 @@ struct wil6210_priv {
- 	u32 rgf_fw_assert_code_addr;
- 	u32 rgf_ucode_assert_code_addr;
- 	u32 iccm_base;
-+
-+	bool secured_boot;
-+	u8 boot_config;
- };
- 
- #define wil_to_wiphy(i) (i->wiphy)
+        return bus;
+
+Just look here
+
+        ret = brcmf_fw_get_firmwares(sdiodev->dev, fwreq,
+                                     brcmf_sdio_firmware_callback);
+        if (ret != 0) {
+                brcmf_err("async firmware request failed: %d\n", ret);
+                kfree(fwreq);
+                goto fail;
+        }
+
+        bus->watchdog_tsk = kthread_run(brcmf_sdio_watchdog_thread,
+                                        bus, "brcmf_wdog/%s",
+                                        dev_name(&sdiodev->func1->dev));
+        if (IS_ERR(bus->watchdog_tsk)) {
+                pr_warn("brcmf_watchdog thread failed to start\n");
+                bus->watchdog_tsk = NULL;
+        }
+
+        return bus;
+
+fail:
+        brcmf_sdio_remove(bus);
+        return NULL;
+
+
+On Mon, May 28, 2018 at 5:29 PM, Michael Nazzareno Trimarchi
+<michael@amarulasolutions.com> wrote:
+> Hi
+>
+> On Mon, May 28, 2018 at 5:25 PM, Andy Shevchenko
+> <andy.shevchenko@gmail.com> wrote:
+>> On Mon, May 28, 2018 at 12:54 PM, Michael Nazzareno Trimarchi
+>> <michael@amarulasolutions.com> wrote:
+>>> Hi Arend
+>>>
+>>> On Mon, May 28, 2018 at 11:51 AM, Arend van Spriel
+>>> <arend.vanspriel@broadcom.com> wrote:
+>>>> On 5/28/2018 9:50 AM, Michael Trimarchi wrote:
+>>>>>
+>>>>> Watchdog need to be stopped in brcmf_sdio_remove to avoid
+>>>>> i
+>>>>> The system is going down NOW!
+>>>>> [ 1348.110759] Unable to handle kernel NULL pointer dereference at virtual
+>>>>> address 000002f8
+>>>>> Sent SIGTERM to all processes
+>>>>> [ 1348.121412] Mem abort info:
+>>>>> [ 1348.126962]   ESR = 0x96000004
+>>>>> [ 1348.130023]   Exception class = DABT (current EL), IL = 32 bits
+>>>>> [ 1348.135948]   SET = 0, FnV = 0
+>>>>> [ 1348.138997]   EA = 0, S1PTW = 0
+>>>>> [ 1348.142154] Data abort info:
+>>>>> [ 1348.145045]   ISV = 0, ISS = 0x00000004
+>>>>> [ 1348.148884]   CM = 0, WnR = 0
+>>>>> [ 1348.151861] user pgtable: 4k pages, 48-bit VAs, pgdp = (____ptrval____)
+>>>>> [ 1348.158475] [00000000000002f8] pgd=0000000000000000
+>>>>> [ 1348.163364] Internal error: Oops: 96000004 [#1] PREEMPT SMP
+>>>>> [ 1348.168927] Modules linked in: ipv6
+>>>>> [ 1348.172421] CPU: 3 PID: 1421 Comm: brcmf_wdog/mmc0 Not tainted
+>>>>> 4.17.0-rc5-next-20180517 #18
+>>>>> [ 1348.180757] Hardware name: Amarula A64-Relic (DT)
+>>>>> [ 1348.185455] pstate: 60000005 (nZCv daif -PAN -UAO)
+>>>>> [ 1348.190251] pc : brcmf_sdiod_freezer_count+0x0/0x20
+>>>>> [ 1348.195124] lr : brcmf_sdio_watchdog_thread+0x64/0x290
+>>>>
+>>>>
+>>>> Hi Michael,
+>>>>
+>>>> Thanks for the patch. In normal scenario the callstack looks like this:
+>>>>
+>>>> brcmf_sdio_remove()
+>>>>         -> brcmf_detach()
+>>>>                 -> brcmf_bus_stop()
+>>>>                         -> brcmf_sdio_bus_stop()
+>>>>
+>>>> In brcmf_sdio_bus_stop() the watchdog is terminated. So in what scenario did
+>>>> you encounter this null pointer deref?
+>>>
+>>> Is this happen even when there is not wifi firmware?
+>>> boot without any firmware in the filesystem and then trigger a reboot
+>>
+>> Something like the above I had noticed for a long (couple of kernel
+>> releases?) time, but wasn't a big priority to me.
+>> Though, I can test this on my side.
+>>
+>> P.S. I think rmmod or echo > unbind will trigger that as well.
+>>
+>
+> Right now the module is compiled in the kernel. I can dig down tonight
+> on this if needed
+>
+> Michael
+>
+>> --
+>> With Best Regards,
+>> Andy Shevchenko
+>
+>
+>
+> --
+> | Michael Nazzareno Trimarchi                     Amarula Solutions BV |
+> | COO  -  Founder                                      Cruquiuskade 47 |
+> | +31(0)851119172                                 Amsterdam 1018 AM NL |
+> |                  [`as] http://www.amarulasolutions.com               |
+
+
+
 -- 
-1.9.1
+| Michael Nazzareno Trimarchi                     Amarula Solutions BV |
+| COO  -  Founder                                      Cruquiuskade 47 |
+| +31(0)851119172                                 Amsterdam 1018 AM NL |
+|                  [`as] http://www.amarulasolutions.com               |
