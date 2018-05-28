@@ -1,81 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 9pmail.ess.barracuda.com ([64.235.154.210]:32955 "EHLO
-        9pmail.ess.barracuda.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934328AbeEIMz2 (ORCPT
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:45631 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753998AbeE1Igu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 May 2018 08:55:28 -0400
-Subject: Re: Regression caused by commit 882164a4a928
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-References: <7bbc067a-c412-3d2e-174a-abc31b46e246@lwfinger.net>
-From: Matt Redfearn <matt.redfearn@mips.com>
-Message-ID: <372d149c-c34c-56a0-4e1a-5ab2c1e16e73@mips.com> (sfid-20180509_145541_508510_29F30881)
-Date: Wed, 9 May 2018 13:55:43 +0100
-MIME-Version: 1.0
-In-Reply-To: <7bbc067a-c412-3d2e-174a-abc31b46e246@lwfinger.net>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+        Mon, 28 May 2018 04:36:50 -0400
+Received: by mail-wr0-f195.google.com with SMTP id w3-v6so18899259wrl.12
+        for <linux-wireless@vger.kernel.org>; Mon, 28 May 2018 01:36:50 -0700 (PDT)
+From: Eyal Reizer <eyalreizer@gmail.com>
+To: kvalo@codeaurora.org, tony@atomide.com, nsekhar@ti.com,
+        linux-wireless@vger.kernel.org
+Cc: Eyal Reizer <eyalr@ti.com>
+Subject: [PATCH v2] wlcore: sdio: check for valid platform device data before suspend
+Date: Mon, 28 May 2018 11:36:42 +0300
+Message-Id: <1527496602-25214-1-git-send-email-eyalr@ti.com> (sfid-20180528_103705_164323_CB083787)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry
+the wl pointer can be null In case only wlcore_sdio is probed while
+no WiLink module is successfully probed, as in the case of mounting a
+wl12xx module while using a device tree file configured with wl18xx
+related settings.
+In this case the system was crashing in wl1271_suspend() as platform
+device data is not set.
+Make sure wl the pointer is valid before using it.
 
-On 07/05/18 16:44, Larry Finger wrote:
-> Matt,
-> 
-> Although commit 882164a4a928 ("ssb: Prevent build of PCI host features 
-> in module") appeared to be harmless, it leads to complete failure of 
-> drivers b43. and b43legacy, and likely affects b44 as well. The problem 
-> is that CONFIG_SSB_PCIHOST is undefined, which prevents the compilation 
-> of the code that controls the PCI cores of the device. See 
-> https://bugzilla.redhat.com/show_bug.cgi?id=1572349 for details.
+Signed-off-by: Eyal Reizer <eyalr@ti.com>
+---
+Changes since v1: Remove extra characters after signed-of-by
 
-Sorry for the breakage :-/
+ drivers/net/wireless/ti/wlcore/sdio.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-> 
-> As the underlying errors ("pcibios_enable_device" undefined, and 
-> "register_pci_controller" undefined) do not appear on the architectures 
-> that I have tested (x86_64, x86, and ppc), I suspect something in the 
-> arch-specific code for your setup (MIPS?). As I have no idea on how to 
-> fix that problem, would the following patch work for you?
-> 
-> diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
-> index 9371651d8017..3743533c8057 100644
-> --- a/drivers/ssb/Kconfig
-> +++ b/drivers/ssb/Kconfig
-> @@ -117,7 +117,7 @@ config SSB_SERIAL
-> 
->   config SSB_DRIVER_PCICORE_POSSIBLE
->          bool
-> -       depends on SSB_PCIHOST && SSB = y
-> +       depends on SSB_PCIHOST && (SSB = y || !MIPS)
->          default y
-> 
->   config SSB_DRIVER_PCICORE
-
-I believe that the problem stems from these drivers being used for some 
-wireless AP functionality built into some MIPS based SoCs. The Kconfig 
-rules sort out building this additional functionality when configured 
-for MIPS (in a round about sort of way), but it allowed it even when SSB 
-is a module, leading to build failures. My patch was intended to prevent 
-that.
-
-There was a similar issue in the same Kconfig file, introduced by 
-c5611df96804 and fixed by a9e6d44ddecc. It was fixed the same way as you 
-suggest. I've tested the above patch and it does work for MIPS 
-(preventing the PCICORE being built into the module).
-
-Tested-by: Matt Redfearn <matt.redfearn@mips.com>
-
-Thanks & sorry again for the breakage,
-Matt
-
-
-
-> 
-> Thanks,
-> 
-> Larry
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index da701cd..aec6225 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -406,6 +406,11 @@ static int wl1271_suspend(struct device *dev)
+ 	mmc_pm_flag_t sdio_flags;
+ 	int ret = 0;
+ 
++	if (!wl) {
++		dev_err(dev, "no wilink module was probed\n");
++		goto out;
++	}
++
+ 	dev_dbg(dev, "wl1271 suspend. wow_enabled: %d\n",
+ 		wl->wow_enabled);
+ 
+-- 
+2.7.4
