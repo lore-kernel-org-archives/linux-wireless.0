@@ -1,45 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:35126 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933052AbeE2KBL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 May 2018 06:01:11 -0400
-Date: Tue, 29 May 2018 13:00:49 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Colin King <colin.king@canonical.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] mac80211_hwsim: add error check to call to
- rhashtable_init
-Message-ID: <20180529100049.up6wzjkzmd5a3v2q@mwanda> (sfid-20180529_120145_208291_E0B1CED6)
-References: <20180529091412.8530-1-colin.king@canonical.com>
- <1527585428.6955.7.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1527585428.6955.7.camel@sipsolutions.net>
+Received: from muru.com ([72.249.23.125]:44998 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S936850AbeE2SGJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 May 2018 14:06:09 -0400
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: [RFTv3 0/6] Runtime PM support for wlcore
+Date: Tue, 29 May 2018 11:05:59 -0700
+Message-Id: <20180529180605.73622-1-tony@atomide.com> (sfid-20180529_200649_947065_CB2E4A6F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 29, 2018 at 11:17:08AM +0200, Johannes Berg wrote:
-> On Tue, 2018-05-29 at 10:14 +0100, Colin King wrote:
-> > 
-> > @@ -3573,7 +3573,9 @@ static int __init init_mac80211_hwsim(void)
-> >  	hwsim_wq = alloc_workqueue("hwsim_wq", 0, 0);
-> >  	if (!hwsim_wq)
-> >  		return -ENOMEM;
-> > -	rhashtable_init(&hwsim_radios_rht, &hwsim_rht_params);
-> > +	err = rhashtable_init(&hwsim_radios_rht, &hwsim_rht_params);
-> > +	if (err)
-> > +		return err;
-> 
-> That's missing a workqueue free, but I can fix that while applying if
-> you prefer.
-> 
+Hi all,
 
-And we don't free the hashtable on error either.
+Here's the third version of wlcore runtime PM changes. Things
+seem to be working for me just fine now after few fixes listed
+below. Please do test again though, and then I'll post this
+series and one more patch after v4.18-rc1 to enable runtime PM
+autosuspend support. So hopefully we can have these merged early
+on for v4.19.
 
-regards,
-dan carpenter
+For testing, please make sure you have also applied patch
+"[PATCHv2] wlcore: sdio: Fix flakey SDIO runtime PM handling"
+to avoid bogus errors.
+
+Regards,
+
+Tony
+
+Changes since v2:
+
+- Add fix "wclore: Fix timout errors after recovery" that is not needed
+  before runtime PM conversion
+
+- Add fix from Eyal for "wlcore: Use generic runtime pm calls for wowlan
+  elp configuration" that is also not needed before runtime PM conversion
+
+- Return early from wlcore_runtime_resume() on ELP timeout to avoid
+  clearing WL1271_FLAG_IN_ELP bit
+
+- Tag as RFT as we still need to do more testing and add runtime PM
+  autosuspend support before merging
+
+- Drop "wlcore: sdio: Warn about runtime PM suspend errors" that should
+  no longer be needed
+
+Changes since v1:
+
+- Fix issues reported by Eyal for recovery
+
+- Add few patches for enable/disable issues found when using runtime PM
+
+- Remove unused ps.h includes
+
+
+Eyal Reizer (1):
+  wlcore: Use generic runtime pm calls for wowlan elp configuration
+
+Tony Lindgren (5):
+  wlcore: Add missing PM call for wlcore_cmd_wait_for_event_or_timeout()
+  wlcore: Make sure PM calls are paired
+  wlcore: Add support for runtime PM
+  wlcore: Fix misplaced PM call for scan_complete_work()
+  wclore: Fix timout errors after recovery
+
+ drivers/net/wireless/ti/wl18xx/debugfs.c    |  26 +-
+ drivers/net/wireless/ti/wlcore/acx.c        |   1 -
+ drivers/net/wireless/ti/wlcore/cmd.c        |   9 +
+ drivers/net/wireless/ti/wlcore/debugfs.c    |  79 ++--
+ drivers/net/wireless/ti/wlcore/main.c       | 464 +++++++++++++-------
+ drivers/net/wireless/ti/wlcore/ps.c         | 146 ------
+ drivers/net/wireless/ti/wlcore/ps.h         |   3 -
+ drivers/net/wireless/ti/wlcore/scan.c       |  12 +-
+ drivers/net/wireless/ti/wlcore/sysfs.c      |  12 +-
+ drivers/net/wireless/ti/wlcore/testmode.c   |  18 +-
+ drivers/net/wireless/ti/wlcore/tx.c         |   9 +-
+ drivers/net/wireless/ti/wlcore/vendor_cmd.c |  27 +-
+ drivers/net/wireless/ti/wlcore/wlcore.h     |   1 -
+ drivers/net/wireless/ti/wlcore/wlcore_i.h   |   1 -
+ 14 files changed, 436 insertions(+), 372 deletions(-)
+
+-- 
+2.17.0
