@@ -1,35 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52906 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:44616 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752803AbeEUQ2d (ORCPT
+        with ESMTP id S932404AbeE2JT4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 May 2018 12:28:33 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Dreyfuss\, Haim" <haim.dreyfuss@intel.com>
-Cc: Eric Biggers <ebiggers3@gmail.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Coelho\, Luciano" <luciano.coelho@intel.com>
-Subject: Re: [4.17 iwlwifi regression] NULL pointer dereference in reg_query_regdb_wmm()
-References: <20180519183345.GA701@sol.localdomain>
-        <409B2791E285FD41B488E034D9B4719F27E99C58@HASMSX106.ger.corp.intel.com>
-Date: Mon, 21 May 2018 19:28:29 +0300
-In-Reply-To: <409B2791E285FD41B488E034D9B4719F27E99C58@HASMSX106.ger.corp.intel.com>
-        (Haim Dreyfuss's message of "Mon, 21 May 2018 10:10:09 +0000")
-Message-ID: <87muwtezwy.fsf@kamboji.qca.qualcomm.com> (sfid-20180521_182836_927102_97C3439D)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 29 May 2018 05:19:56 -0400
+From: Srinivas Dasari <dasaris@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Srinivas Dasari <dasaris@codeaurora.org>
+Subject: [PATCH] nl80211: Include ies_len for nlmsg from ft_event
+Date: Tue, 29 May 2018 14:49:41 +0530
+Message-Id: <1527585581-23277-1-git-send-email-dasaris@codeaurora.org> (sfid-20180529_112025_151237_4826D15A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Dreyfuss, Haim" <haim.dreyfuss@intel.com> writes:
+Length of the ies is not considered while allocating nl
+message for ft_event, though they are filled.
+Hence, consider the length also for nl_msg.
 
-> Can you provide the following information?
-> 1. The *boot* you mentioned is from clean shutdown or from Sx state?
-> 2. Do you know which MCC the driver is trying to update?
+Signed-off-by: Srinivas Dasari <dasaris@codeaurora.org>
+---
+ net/wireless/nl80211.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-You could also give some hints how to find the MCC and even tell what it
-means. Is it Mobile Country Code or what?
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index bc40a78..8ad0bc0 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -15817,7 +15817,8 @@ void cfg80211_ft_event(struct net_device *netdev,
+ 	if (!ft_event->target_ap)
+ 		return;
+ 
+-	msg = nlmsg_new(100 + ft_event->ric_ies_len, GFP_KERNEL);
++	msg = nlmsg_new(100 + ft_event->ric_ies_len + ft_event->ies_len,
++			GFP_KERNEL);
+ 	if (!msg)
+ 		return;
+ 
 -- 
-Kalle Valo
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
