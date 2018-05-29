@@ -1,178 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:44519 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751934AbeEHLWP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 May 2018 07:22:15 -0400
-Subject: [PATCH v2 2/2] iw: Add getting and setting of TXQ params for phy
-From: Toke =?utf-8?q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: linux-wireless@vger.kernel.org
-Cc: make-wifi-fast@lists.bufferbloat.net
-Date: Tue, 08 May 2018 13:22:11 +0200
-Message-ID: <152577853191.32130.8121936914570715577.stgit@alrua-kau> (sfid-20180508_132221_528153_5F2CFF96)
-In-Reply-To: <152577853186.32130.16532617444736581736.stgit@alrua-kau>
-References: <152577853186.32130.16532617444736581736.stgit@alrua-kau>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:40819 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932404AbeE2JXC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 May 2018 05:23:02 -0400
+Received: by mail-qt0-f193.google.com with SMTP id h2-v6so17755114qtp.7
+        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2018 02:23:02 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: stop watchdog before detach and free everything
+To: Michael Nazzareno Trimarchi <michael@amarulasolutions.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+References: <1527493857-2220-1-git-send-email-michael@amarulasolutions.com>
+ <5B0BD13D.8000809@broadcom.com>
+ <CAOf5uw=mPOgngZW8UcPfvtxH+5nCR-36ovjYPH7AvO99y1M_xA@mail.gmail.com>
+ <CAHp75VcC_cisfVTKU0bVm3+=NFLt3P0EkXh3uC4hWCA7y_7G3w@mail.gmail.com>
+ <CAOf5uw=G5iYfuoRBCOWU-PkEGpm1_qMwB+1=MjRQgxB+e_0w=g@mail.gmail.com>
+ <CAOf5uwkLT_-esTkqj-Mhbsn_f-JETs+XF+vd8v=U+FQSoSPcQA@mail.gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Ian Molton <ian@mnementh.co.uk>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com, netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B0D1BF1.7070105@broadcom.com> (sfid-20180529_112324_866424_A3EB35EE)
+Date: Tue, 29 May 2018 11:22:57 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAOf5uwkLT_-esTkqj-Mhbsn_f-JETs+XF+vd8v=U+FQSoSPcQA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds commands to get and set the per-phy TXQ parameters for drivers
-that use the intermediate TXQs. These are the settings and statistics that
-are also available through /sys/kernel/debug/ieee80211/phyX/aqm.
+On 5/28/2018 5:33 PM, Michael Nazzareno Trimarchi wrote:
+> Hi Andy
+>
+> The problem seems really easy to solve:
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> index 412a05b..ba60b151 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> @@ -4227,13 +4227,7 @@ struct brcmf_sdio *brcmf_sdio_probe(struct
+> brcmf_sdio_dev *sdiodev)
+>          timer_setup(&bus->timer, brcmf_sdio_watchdog, 0);
+>          /* Initialize watchdog thread */
+>          init_completion(&bus->watchdog_wait);
+> -       bus->watchdog_tsk = kthread_run(brcmf_sdio_watchdog_thread,
+> -                                       bus, "brcmf_wdog/%s",
+> -                                       dev_name(&sdiodev->func1->dev));
+> -       if (IS_ERR(bus->watchdog_tsk)) {
+> -               pr_warn("brcmf_watchdog thread failed to start\n");
+> -               bus->watchdog_tsk = NULL;
+> -       }
+> +
+>          /* Initialize DPC thread */
+>          bus->dpc_triggered = false;
+>          bus->dpc_running = false;
+> @@ -4281,6 +4275,14 @@ struct brcmf_sdio *brcmf_sdio_probe(struct
+> brcmf_sdio_dev *sdiodev)
+>                  goto fail;
+>          }
+>
+> +       bus->watchdog_tsk = kthread_run(brcmf_sdio_watchdog_thread,
+> +                                       bus, "brcmf_wdog/%s",
+> +                                       dev_name(&sdiodev->func1->dev));
+> +       if (IS_ERR(bus->watchdog_tsk)) {
+> +               pr_warn("brcmf_watchdog thread failed to start\n");
+> +               bus->watchdog_tsk = NULL;
+> +       }
+> +
+>          return bus;
 
-Sample output:
+Hi Michael,
 
-$ iw phy phy0 get txq
-Packet limit:		8192 pkts
-Memory limit:		4194304 bytes
-Quantum:		300 bytes
-Number of queues:	4096
-Backlog:		12 pkts
-Memory usage:		52224 bytes
-Packet limit overflows:	0
-Memory limit overflows:	0
-Hash collisions:	1
+That makes no sense. Or are you saying the function 
+brcmf_fw_get_firmwares() fails for you? Oh wait, you mentioned the 
+driver was built-in, right? The above change does not solve the issue. 
+It just makes it less likely to occur. So I think your initial fix is 
+the best solution for this.
 
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
----
- info.c |    2 +
- phy.c  |  116 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 118 insertions(+)
-
-diff --git a/info.c b/info.c
-index be68571..fbf3ee0 100644
---- a/info.c
-+++ b/info.c
-@@ -686,6 +686,8 @@ broken_combination:
- 		ext_feat_print(tb, NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211,
- 			       "CONTROL_PORT_OVER_NL80211",
- 			       "control port over nl80211");
-+		ext_feat_print(tb, NL80211_EXT_FEATURE_TXQS,
-+			       "TXQS", "FQ-CoDel-enabled intermediate TXQs");
- 	}
- 
- 	if (tb_msg[NL80211_ATTR_COALESCE_RULE]) {
-diff --git a/phy.c b/phy.c
-index be31820..77df7a7 100644
---- a/phy.c
-+++ b/phy.c
-@@ -727,3 +727,119 @@ COMMAND(set, antenna, "<bitmap> | all | <tx bitmap> <rx bitmap>",
- 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_antenna,
- 	"Set a bitmap of allowed antennas to use for TX and RX.\n"
- 	"The driver may reject antenna configurations it cannot support.");
-+
-+static int handle_set_txq(struct nl80211_state *state,
-+			  struct nl_msg *msg,
-+			  int argc, char **argv,
-+			  enum id_input id)
-+{
-+	unsigned int argval;
-+	char *end;
-+
-+	if (argc != 2)
-+		return 1;
-+
-+	if (!*argv[0] || !*argv[1])
-+		return 1;
-+
-+	argval = strtoul(argv[1], &end, 10);
-+
-+	if (*end)
-+		return 1;
-+
-+	if (!argval)
-+		return 1;
-+
-+	if (strcmp("limit", argv[0]) == 0)
-+		NLA_PUT_U32(msg, NL80211_ATTR_TXQ_LIMIT, argval);
-+	else if (strcmp("memory_limit", argv[0]) == 0)
-+		NLA_PUT_U32(msg, NL80211_ATTR_TXQ_MEMORY_LIMIT, argval);
-+	else if (strcmp("quantum", argv[0]) == 0)
-+		NLA_PUT_U32(msg, NL80211_ATTR_TXQ_QUANTUM, argval);
-+	else
-+		return -1;
-+
-+	return 0;
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+COMMAND(set, txq, "limit <packets> | memory_limit <bytes> | quantum <bytes>",
-+	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_set_txq,
-+	"Set TXQ parameters. The limit and memory_limit are global queue limits\n"
-+	"for the whole phy. The quantum is the DRR scheduler quantum setting.\n"
-+	"Valid values: 1 - 2**32");
-+
-+static int print_txq_handler(struct nl_msg *msg, void *arg)
-+{
-+	struct nlattr *attrs[NL80211_ATTR_MAX + 1];
-+	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
-+	struct nlattr *txqstats_info[NL80211_TXQ_STATS_MAX + 1], *txqinfo;
-+	static struct nla_policy txqstats_policy[NL80211_TXQ_STATS_MAX + 1] = {
-+		[NL80211_TXQ_STATS_BACKLOG_PACKETS] = { .type = NLA_U32 },
-+		[NL80211_TXQ_STATS_BACKLOG_BYTES] = { .type = NLA_U32 },
-+		[NL80211_TXQ_STATS_OVERLIMIT] = { .type = NLA_U32 },
-+		[NL80211_TXQ_STATS_OVERMEMORY] = { .type = NLA_U32 },
-+		[NL80211_TXQ_STATS_COLLISIONS] = { .type = NLA_U32 },
-+		[NL80211_TXQ_STATS_MAX_FLOWS] = { .type = NLA_U32 },
-+	};
-+
-+	nla_parse(attrs, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
-+		  genlmsg_attrlen(gnlh, 0), NULL);
-+
-+
-+	if (attrs[NL80211_ATTR_TXQ_LIMIT])
-+		printf("Packet limit:\t\t%u pkts\n",
-+			nla_get_u32(attrs[NL80211_ATTR_TXQ_LIMIT]));
-+	if (attrs[NL80211_ATTR_TXQ_MEMORY_LIMIT])
-+		printf("Memory limit:\t\t%u bytes\n",
-+			nla_get_u32(attrs[NL80211_ATTR_TXQ_MEMORY_LIMIT]));
-+	if (attrs[NL80211_ATTR_TXQ_QUANTUM])
-+		printf("Quantum:\t\t%u bytes\n",
-+			nla_get_u32(attrs[NL80211_ATTR_TXQ_QUANTUM]));
-+
-+	if (attrs[NL80211_ATTR_TXQ_STATS]) {
-+		if (nla_parse_nested(txqstats_info, NL80211_TXQ_STATS_MAX,
-+				     attrs[NL80211_ATTR_TXQ_STATS],
-+				     txqstats_policy)) {
-+			printf("failed to parse nested TXQ stats attributes!");
-+			return 0;
-+		}
-+		txqinfo = txqstats_info[NL80211_TXQ_STATS_MAX_FLOWS];
-+		if (txqinfo)
-+			printf("Number of queues:\t%u\n", nla_get_u32(txqinfo));
-+
-+		txqinfo = txqstats_info[NL80211_TXQ_STATS_BACKLOG_PACKETS];
-+		if (txqinfo)
-+			printf("Backlog:\t\t%u pkts\n", nla_get_u32(txqinfo));
-+
-+		txqinfo = txqstats_info[NL80211_TXQ_STATS_BACKLOG_BYTES];
-+		if (txqinfo)
-+			printf("Memory usage:\t\t%u bytes\n", nla_get_u32(txqinfo));
-+
-+		txqinfo = txqstats_info[NL80211_TXQ_STATS_OVERLIMIT];
-+		if (txqinfo)
-+			printf("Packet limit overflows:\t%u\n", nla_get_u32(txqinfo));
-+
-+		txqinfo = txqstats_info[NL80211_TXQ_STATS_OVERMEMORY];
-+		if (txqinfo)
-+			printf("Memory limit overflows:\t%u\n", nla_get_u32(txqinfo));
-+		txqinfo = txqstats_info[NL80211_TXQ_STATS_COLLISIONS];
-+		if (txqinfo)
-+			printf("Hash collisions:\t%u\n", nla_get_u32(txqinfo));
-+	}
-+	return NL_SKIP;
-+}
-+
-+static int handle_get_txq(struct nl80211_state *state,
-+			  struct nl_msg *msg,
-+			  int argc, char **argv,
-+			  enum id_input id)
-+{
-+	nla_put_flag(msg, NL80211_ATTR_SPLIT_WIPHY_DUMP);
-+	nlmsg_hdr(msg)->nlmsg_flags |= NLM_F_DUMP;
-+	register_handler(print_txq_handler, NULL);
-+	return 0;
-+}
-+COMMAND(get, txq, "",
-+	NL80211_CMD_GET_WIPHY, 0, CIB_PHY, handle_get_txq,
-+	"Get TXQ parameters.");
+Regards,
+Arend
