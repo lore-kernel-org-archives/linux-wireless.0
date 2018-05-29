@@ -1,64 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:37562 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751557AbeEVBuN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 May 2018 21:50:13 -0400
-From: Pkshih <pkshih@realtek.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "nostrad@gmail.com" <nostrad@gmail.com>
-Subject: Re: rtl8723be signal strength loss, and possibly a OOPS/BUG
-Date: Tue, 22 May 2018 01:50:08 +0000
-Message-ID: <1526982602.2667.17.camel@realtek.com> (sfid-20180522_035136_840186_6ADC42CA)
-References: <CAMZeTPn=oTcbDsYFLg+F4CxopmL1SP0xryC9mAzZPe+cqV5cCA@mail.gmail.com>
-In-Reply-To: <CAMZeTPn=oTcbDsYFLg+F4CxopmL1SP0xryC9mAzZPe+cqV5cCA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-by2nam03on0088.outbound.protection.outlook.com ([104.47.42.88]:23410
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933410AbeE2MAX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 May 2018 08:00:23 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>,
+        Dmitry Lebed <dlebed@quantenna.com>
+Subject: [PATCH 0/9] qtnfmac: bugfixes and cleanups
+Date: Tue, 29 May 2018 14:59:56 +0300
+Message-Id: <20180529120005.21498-1-sergey.matyukevich.os@quantenna.com> (sfid-20180529_140032_343331_88510439)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gU2F0LCAyMDE4LTA1LTE5IGF0IDIwOjQzICswMDAwLCBNYXR0aWFzIEplcm5iZXJnIHdyb3Rl
-Og0KPiBIaQ0KPsKgDQo+IFdpdGgga2VybmVsIDQuMTYgSSBleHBlcmllbmNlIGEgbG9zcyBpbiBz
-aWduYWwgc3RyZW5ndGggb24gcnRsODcyM2JlLA0KPiBpdCBpcyB2ZXJ5IHNpbWlsYXIgdG8gaGF2
-aW5nIHRoZSBhbnRfc2VsIHBhcmFtZXRlciB3cm9uZyAob3IgbWlzc2luZyksDQo+IGl3IHNjYW4g
-c2hvd3Mgb25seSBteSBvd24gYWNjZXNzIHBvaW50IG5leHQgdG8gbWUgYW5kIHdpdGggYSBzaWdu
-YWwNCj4gc3RyZW5ndGggb2YgdW5kZXIgLTYwIHJhdGhlciB0aGFuIGFib3ZlIC0zMC4NCj7CoA0K
-PiBJIGJpc2VjdGVkIHRoaXMgZG93biB0byA4NzRlODM3ZDY3ZDBkYjE3OWM5NzcxZjM4ZmQyMWRm
-MDdjNzAzZTkzIGJlaW5nDQo+IHRoZSBvZmZlbmRpbmcgY29tbWl0Lg0KPsKgDQpUaGUgY29tbWl0
-IDg3NGU4MzdkNjdkMCAoInJ0bHdpZmk6IGZpbGwgRlcgdmVyc2lvbiBhbmQgc3VidmVyc2lvbiIp
-IHNldA0KY29ycmVjdCBmaXJtd2FyZSB2ZXJzaW9uIHRoYXQgaXMgdXNlZCBieSBidGNvZXggdG8g
-Y29sbGFib3JhdGUgd2l0aCANCmZpcm13YXJlIHByb3Blcmx5Lg0KDQo+IEkgaGF2ZSBhbHNvIHNl
-ZW4gdGhyZWUgQlVHcyB0aGF0IG1pZ2h0IGJlIHJlbGF0ZWQuIFRoZXkgYXBwZWFyIHdoZW4NCj4g
-c2V0dGluZyBhbnRfc2VsPTENCj7CoA0KPiAqIFRoZSBmaXJzdCBvbmUgb2NjdXJyZWQgKGJvdGgg
-b24gRGViaWFucyA0LjE2LjUga2VybmVsIGFuZCBvbg0KPiBtYWlubGluZSA0LjE3LXJjNSkgd2hl
-biBJIGRpZCBtb2Rwcm9iZSBydGw4NzIzYmUgYW50X3NlbD0xLCBhZnRlciBhDQo+IG1vZHByb2Jl
-IC1yIHJ0bDg3MjNiZS4NCj4gKiBUaGUgc2Vjb25kIG9uZSB3aGVuIGJvb3Rpbmcgd2l0aCBhbnRf
-c2VsPTEgaW4gL2V0Yy9tb2Rwcm9iZS5kLg0KPiAqIFRoZSB0aGlyZCBvbmUgaXMgd2hlbiBib290
-aW5nDQo+IDg3NGU4MzdkNjdkMGRiMTc5Yzk3NzFmMzhmZDIxZGYwN2M3MDNlOTMgYW5kIGhhdmlu
-ZyBhbnRfc2VsPTEuDQo+wqANCj4gQ29ycmVjdCAoYXQgbGVhc3Qgb24gNC4xNS4wKSBmb3IgdGhp
-cyBsYXB0b3AgaXMgYW50X3NlbD0yLg0KPsKgDQoNCldpdGggYW50X3NlbD0xLCBpdCB3aWxsIHJ1
-biBpbnRvIGV4X2J0Yzg3MjNiMWFudF9idF9pbmZvX25vdGlmeSgpwqBvZsKgDQpidGNvZXhpc3Qv
-aGFsYnRjODcyM2IxYW50LmMsIGFuZCBjYXVzZSB0aGUgYnVncyB5b3UgcmVwb3J0ZWQuDQpXaXRo
-IGFudF9zZWw9MiwgYW5vdGhlciBmdW5jdGlvbiBjb3JyZXNwb25kaW5nIHRvIDJhbnQgaXMgZXhl
-Y3V0ZWQsIHNvDQp0aGVyZSBpcyBubyBidWcgbWVzc2FnZS4NCkkgaGF2ZSBzZW50IGEgcGF0Y2hz
-ZXQgdG8gbGludXgtd2lyZWxlc3MgdGhhdCB3aWxsIGFsc28gZml4IHRoaXMgYnVnLg0KSWYgeW91
-IHdhbnQgdG8gZml4IGl0IGxvY2FsbHksIHBsZWFzZSB0cnkgYmVsb3cgcGF0Y2ggYmFzZWQgb27C
-oA0KY29tbWl0IGJmNTE2ZTdkOGIxYyAoInJ0bHdpZmk6IHJlbW92ZSBkdXBsaWNhdGUgZGVmaW5p
-dGlvbiBvZiBhbnRlbm5hwqANCm51bWJlciBmb3IgYnRjb2V4Iikgb2Ygd2lyZWxlc3MtZHJpdmVy
-cy1uZXh0IHRyZWUuDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVr
-L3J0bHdpZmkvcnRsODcyM2JlL2Z3LmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0
-bHdpZmkvcnRsODcyM2JlL2Z3LmMNCmluZGV4IDRiOTYzZmQyN2Q2NC4uODY4ZTc4ODcwMDI5IDEw
-MDY0NA0KLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3J0bDg3MjNi
-ZS9mdy5jDQorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvcnRsODcy
-M2JlL2Z3LmMNCkBAIC03NjIsMTAgKzc2MiwxMCBAQCB2b2lkIHJ0bDg3MjNiZV9jMmhfcGFja2V0
-X2hhbmRsZXIoc3RydWN0IGllZWU4MDIxMV9odyAqaHcsIHU4ICpidWZmZXIsIHU4IGxlbikNCsKg
-DQrCoMKgwqDCoMKgwqDCoMKgc3dpdGNoIChjMmhfY21kX2lkKSB7DQrCoMKgwqDCoMKgwqDCoMKg
-Y2FzZSBDMkhfODcyM0JfQlRfSU5GTzoNCi3CoMKgwqDCoMKgwqDCoGNhc2UgQzJIXzg3MjNCX0JU
-X01QOg0KwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBydGxfYzJoY21kX2VucXVldWUo
-aHcsIGMyaF9jbWRfaWQsIGMyaF9jbWRfbGVuLCB0bXBfYnVmKTsNCsKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgYnJlYWs7DQrCoA0KK8KgwqDCoMKgwqDCoMKgY2FzZSBDMkhfODcyM0Jf
-QlRfTVA6DQrCoMKgwqDCoMKgwqDCoMKgZGVmYXVsdDoNCsKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgcnRsODcyM2JlX2MyaF9jb250ZW50X3BhcnNpbmcoaHcsIGMyaF9jbWRfaWQsIGMy
-aF9jbWRfbGVuLA0KwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqB0bXBfYnVmKTsN
-Cg0KDQpSZWdhcmRzDQpQSw0KDQo=
+Hello Kalle and all,
+
+Here is a patch set with various minor fixes and enhancments for qtnfmac driver.
+
+Regards,
+Sergey
+
+Andrey Shevchenko (3)
+  qtnfmac: cancel scan on disconnect
+  qtnfmac: fix bg_scan_period parameter processing
+  qtnfmac: remove unused function declarations
+
+Dmitry Lebed (2)
+  qtnfmac: fix firmware command error path
+  qtnfmac: improve control path timeout handling
+
+Igor Mitsyanko (1)
+  qtnfmac: decode error codes from firmware replies
+
+Sergey Matyukevich (3)
+  qtnfmac: fix invalid STA state on EAPOL failure
+  qtnfmac: cleanup wdev structure between its uses
+  qtnfmac: simplify notation
+
+
+ bus.h        |    3 ++-
+ cfg80211.c   |   56 ++++++++++++++++++++++++++++++++------------------------
+ commands.c   |   35 ++++++++++++++++++++++++++++-------
+ commands.h   |    5 -----
+ core.c       |    3 +--
+ core.h       |    2 --
+ event.c      |    8 +++-----
+ pearl/pcie.c |   15 ++++++++++++---
+ qlink.h      |    2 ++
+ trans.c      |    4 +++-
+ 10 files changed, 83 insertions(+), 50 deletions(-)
