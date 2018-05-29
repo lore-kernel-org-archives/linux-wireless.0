@@ -1,88 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:38330 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751036AbeEVNUI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 09:20:08 -0400
-Received: by mail-wr0-f194.google.com with SMTP id 94-v6so20134386wrf.5
-        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2018 06:20:07 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Received: from muru.com ([72.249.23.125]:45010 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S936850AbeE2SGM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 May 2018 14:06:12 -0400
+From: Tony Lindgren <tony@atomide.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH 1/3] brcmfmac: allow specifying features per firmware version
-Date: Tue, 22 May 2018 15:18:34 +0200
-Message-Id: <20180522131836.26858-1-zajec5@gmail.com> (sfid-20180522_152012_391086_1D895D1A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: [RFT 2/6] wlcore: Make sure PM calls are paired
+Date: Tue, 29 May 2018 11:06:01 -0700
+Message-Id: <20180529180605.73622-3-tony@atomide.com> (sfid-20180529_200650_521663_AEF12669)
+In-Reply-To: <20180529180605.73622-1-tony@atomide.com>
+References: <20180529180605.73622-1-tony@atomide.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+The call to wl1271_ps_elp_wakeup() in wl12xx_queue_recovery_work() is
+unpaired. Let's remove it and add paired calls to wl1271_recovery_work()
+instead in preparation for changing things to use runtime PM.
 
-Some features supported by firmware aren't advertised and there is no
-way for a driver to query them. This includes e.g. monitor mode details.
-Some firmwares support tagging monitor frames, some build radiotap
-header but there is no way to detect it.
-
-This commit adds table that will allow specifying features like:
-{ "01-abcdef01", BIT(BRCMF_FEAT_FOO) }
-
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Signed-off-by: Tony Lindgren <tony@atomide.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 24 ++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ drivers/net/wireless/ti/wlcore/main.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-index 876731c57bf5..1194d31d3902 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-@@ -91,6 +91,28 @@ static int brcmf_feat_debugfs_read(struct seq_file *seq, void *data)
- }
- #endif /* DEBUG */
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -796,8 +796,6 @@ void wl12xx_queue_recovery_work(struct wl1271 *wl)
  
-+struct brcmf_feat_fwfeat {
-+	const char * const fwid;
-+	u32 flags;
-+};
-+
-+static const struct brcmf_feat_fwfeat brcmf_feat_fwfeat_map[] = {
-+};
-+
-+static void brcmf_feat_firmware_features(struct brcmf_pub *pub)
-+{
-+	const struct brcmf_feat_fwfeat *e;
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(brcmf_feat_fwfeat_map); i++) {
-+		e = &brcmf_feat_fwfeat_map[i];
-+		if (!strcmp(e->fwid, pub->fwver)) {
-+			pub->feat_flags |= e->flags;
-+			break;
-+		}
-+	}
-+}
-+
- /**
-  * brcmf_feat_iovar_int_get() - determine feature through iovar query.
-  *
-@@ -216,6 +238,8 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+ 		wl->state = WLCORE_STATE_RESTARTING;
+ 		set_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags);
+-		wl1271_ps_elp_wakeup(wl);
+-		wlcore_disable_interrupts_nosync(wl);
+ 		ieee80211_queue_work(wl->hw, &wl->recovery_work);
  	}
- 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_FWSUP, "sup_wpa");
+ }
+@@ -919,12 +917,18 @@ static void wl1271_recovery_work(struct work_struct *work)
+ 		container_of(work, struct wl1271, recovery_work);
+ 	struct wl12xx_vif *wlvif;
+ 	struct ieee80211_vif *vif;
++	int error;
  
-+	brcmf_feat_firmware_features(drvr);
+ 	mutex_lock(&wl->mutex);
+ 
+ 	if (wl->state == WLCORE_STATE_OFF || wl->plt)
+ 		goto out_unlock;
+ 
++	error = wl1271_ps_elp_wakeup(wl);
++	if (error < 0)
++		wl1271_warning("Enable for recovery failed");
++	wlcore_disable_interrupts_nosync(wl);
 +
- 	/* set chip related quirks */
- 	switch (drvr->bus_if->chip) {
- 	case BRCM_CC_43236_CHIP_ID:
+ 	if (!test_bit(WL1271_FLAG_INTENDED_FW_RECOVERY, &wl->flags)) {
+ 		if (wl->conf.fwlog.output == WL12XX_FWLOG_OUTPUT_HOST)
+ 			wl12xx_read_fwlog_panic(wl);
+@@ -967,6 +971,8 @@ static void wl1271_recovery_work(struct work_struct *work)
+ 	 */
+ 	wlcore_wake_queues(wl, WLCORE_QUEUE_STOP_REASON_FW_RESTART);
+ 
++	wl1271_ps_elp_sleep(wl);
++
+ out_unlock:
+ 	wl->watchdog_recovery = false;
+ 	clear_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags);
 -- 
-2.13.6
+2.17.0
