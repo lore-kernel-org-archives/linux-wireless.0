@@ -1,128 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:45376 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753283AbeERJai (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:35601 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932284AbeE2JOT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 05:30:38 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 03/14] rtlwifi: remove duplicate rx_packet_type definition
-Date: Fri, 18 May 2018 17:29:56 +0800
-Message-ID: <20180518093007.23594-4-pkshih@realtek.com> (sfid-20180518_113058_437161_3E8B9FF6)
-In-Reply-To: <20180518093007.23594-1-pkshih@realtek.com>
-References: <20180518093007.23594-1-pkshih@realtek.com>
+        Tue, 29 May 2018 05:14:19 -0400
+From: Colin King <colin.king@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] mac80211_hwsim: add error check to call to rhashtable_init
+Date: Tue, 29 May 2018 10:14:12 +0100
+Message-Id: <20180529091412.8530-1-colin.king@canonical.com> (sfid-20180529_111554_128803_44C33AA7)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-Move duplicate definitions from def.h of ic folder to wifi.h
+The call to rhashtable_init is missing an error return check, it is
+possible for this to fail various different ways, so fix this by adding
+an error check.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Detected by: CoverityScan, CID#1469446 ("Unchecked return value")
+
+Fixes: c6509cc3b3e8 ("mac80211_hwsim: add hashtable with mac address keys for faster lookup")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/def.h | 7 -------
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/def.h | 8 --------
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/def.h | 8 --------
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/def.h | 8 --------
- drivers/net/wireless/realtek/rtlwifi/wifi.h          | 8 ++++++++
- 5 files changed, 8 insertions(+), 31 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/def.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/def.h
-index 0532b9852444..32492d64d685 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/def.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/def.h
-@@ -137,13 +137,6 @@ enum version_8188e {
- 	VERSION_UNKNOWN = 0xFF,
- };
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 89fc22520d40..f4b4f5690b16 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -3573,7 +3573,9 @@ static int __init init_mac80211_hwsim(void)
+ 	hwsim_wq = alloc_workqueue("hwsim_wq", 0, 0);
+ 	if (!hwsim_wq)
+ 		return -ENOMEM;
+-	rhashtable_init(&hwsim_radios_rht, &hwsim_rht_params);
++	err = rhashtable_init(&hwsim_radios_rht, &hwsim_rht_params);
++	if (err)
++		return err;
  
--enum rx_packet_type {
--	NORMAL_RX,
--	TX_REPORT1,
--	TX_REPORT2,
--	HIS_REPORT,
--};
--
- enum rtl819x_loopback_e {
- 	RTL819X_NO_LOOPBACK = 0,
- 	RTL819X_MAC_LOOPBACK = 1,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/def.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/def.h
-index 60f5728b4e2d..9f7e7bb8610b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/def.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/def.h
-@@ -47,14 +47,6 @@ enum version_8192e {
- 	VERSION_UNKNOWN = 0xFF,
- };
- 
--enum rx_packet_type {
--	NORMAL_RX,
--	TX_REPORT1,
--	TX_REPORT2,
--	HIS_REPORT,
--	C2H_PACKET,
--};
--
- enum rtl_desc_qsel {
- 	QSLT_BK = 0x2,
- 	QSLT_BE = 0x0,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/def.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/def.h
-index 025ea5c0f3f6..5e5403d69220 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/def.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/def.h
-@@ -38,14 +38,6 @@
- /* Currently only for RTL8723B */
- #define EXT_VENDOR_ID				(BIT(18) | BIT(19))
- 
--enum rx_packet_type {
--	NORMAL_RX,
--	TX_REPORT1,
--	TX_REPORT2,
--	HIS_REPORT,
--	C2H_PACKET,
--};
--
- enum rtl_desc_qsel {
- 	QSLT_BK = 0x2,
- 	QSLT_BE = 0x0,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/def.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/def.h
-index dfbdf539de1a..498f716bfc73 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/def.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/def.h
-@@ -332,14 +332,6 @@ enum rtl_desc_qsel {
- 	QSLT_CMD = 0x13,
- };
- 
--enum rx_packet_type {
--	NORMAL_RX,
--	TX_REPORT1,
--	TX_REPORT2,
--	HIS_REPORT,
--	C2H_PACKET,
--};
--
- struct phy_sts_cck_8821ae_t {
- 	u8 adc_pwdb_X[4];
- 	u8 sq_rpt;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 1259d2b66d17..81ac036760fc 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -1010,6 +1010,14 @@ enum dm_info_query {
- 	DM_INFO_SIZE,
- };
- 
-+enum rx_packet_type {
-+	NORMAL_RX,
-+	TX_REPORT1,
-+	TX_REPORT2,
-+	HIS_REPORT,
-+	C2H_PACKET,
-+};
-+
- struct rtlwifi_tx_info {
- 	int sn;
- 	unsigned long send_time;
+ 	err = register_pernet_device(&hwsim_net_ops);
+ 	if (err)
 -- 
-2.15.1
+2.17.0
