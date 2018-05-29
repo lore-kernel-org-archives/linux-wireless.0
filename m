@@ -1,83 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f65.google.com ([209.85.160.65]:39727 "EHLO
-        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755280AbeEXX2n (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 May 2018 19:28:43 -0400
-Date: Thu, 24 May 2018 16:28:39 -0700
-From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Alexei Starovoitov <ast@kernel.org>, davem@davemloft.net,
-        daniel@iogearbox.net, torvalds@linux-foundation.org,
-        peterz@infradead.org, rostedt@goodmis.org,
-        mathieu.desnoyers@efficios.com, netdev@vger.kernel.org,
-        kernel-team@fb.com, linux-api@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [v8, bpf-next, 4/9] net/wireless/iwlwifi: fix
- iwlwifi_dev_ucode_error tracepoint
-Message-ID: <20180524232837.24jvdsdiohkpj7fs@ast-mbp> (sfid-20180525_012921_999146_222A90ED)
-References: <20180328190540.370956-5-ast@kernel.org>
- <1527073388.3759.21.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1527073388.3759.21.camel@sipsolutions.net>
+Received: from muru.com ([72.249.23.125]:45036 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965797AbeE2SGW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 May 2018 14:06:22 -0400
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: [RFT 5/6] wclore: Fix timout errors after recovery
+Date: Tue, 29 May 2018 11:06:04 -0700
+Message-Id: <20180529180605.73622-6-tony@atomide.com> (sfid-20180529_200651_656107_9872545E)
+In-Reply-To: <20180529180605.73622-1-tony@atomide.com>
+References: <20180529180605.73622-1-tony@atomide.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 23, 2018 at 01:03:08PM +0200, Johannes Berg wrote:
-> On Wed, 2018-03-28 at 12:05 -0700, Alexei Starovoitov wrote:
-> > fix iwlwifi_dev_ucode_error tracepoint to pass pointer to a table
-> > instead of all 17 arguments by value.
-> > dvm/main.c and mvm/utils.c have 'struct iwl_error_event_table'
-> > defined with very similar yet subtly different fields and offsets.
-> > tracepoint is still common and using definition of 'struct iwl_error_event_table'
-> > from dvm/commands.h while copying fields.
-> > Long term this tracepoint probably should be split into two.
-> 
-> It would've been nice to CC the wireless list for wireless related
-> patches ...
+After enabling runtime PM, if we force hardware reset multiple times with:
 
-Ohh. I didn't realize that networking wireless doesn't fall under netdev.
-I thought wireless folks are silent because they are embarrassed
-by a function with 17 arguments.
+# echo 1 > /sys/kernel/debug/ieee80211/phy0/wlcore/start_recovery
 
-> > --- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c
-> > +++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c
-> > @@ -30,6 +30,7 @@
-> >  #ifndef __CHECKER__
-> >  #include "iwl-trans.h"
-> >  
-> > +#include "dvm/commands.h"
-> 
-> In particular, this breaks the whole driver abstraction.
-> 
-> > +++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-> > @@ -549,12 +549,7 @@ static void iwl_mvm_dump_lmac_error_log(struct iwl_mvm *mvm, u32 base)
-> >  
-> >         IWL_ERR(mvm, "Loaded firmware version: %s\n", mvm->fw->fw_version);
-> >  
-> > -       trace_iwlwifi_dev_ucode_error(trans->dev, table.error_id, table.tsf_low,
-> > -                                     table.data1, table.data2, table.data3,
-> > -                                     table.blink2, table.ilink1,
-> > -                                     table.ilink2, table.bcon_time, table.gp1,
-> > -                                     table.gp2, table.fw_rev_type, table.major,
-> > -                                     table.minor, table.hw_ver, table.brd_ver);
-> > +       trace_iwlwifi_dev_ucode_error(trans->dev, &table, table.hw_ver, table.brd_ver);
-> 
-> This is also utterly wrong because mvm has - for better or worse - a
-> different type "struct iwl_error_event_table" in this file ...
+We will after few tries get the following error:
 
-As I was trying to explain in the commit log the single struct
-is used in both places, but differences in two
-"struct iwl_error_event_table" are carefully matched
-field and by field. For two extra fields it was not
-possible and they are passed separately as you can see above.
-I still believe that tracepoint output is still exactly
-the same before and after the patch.
-I guess you see the breakage because new fields got
-added into one "struct iwl_error_event_table",
-but were not added to its evil twin "struct iwl_error_event_table"
-with the same name after the patch landed ?
-imo wireless folks need to avoid such naming conflicts.
-I suggest to isolate common fields into separate base struct and
-give two children structs different names.
+wlcore: ERROR timeout waiting for the hardware to complete initialization
+
+And then wlcore is unable to reconnect until after the wlcore related modules
+are reloaded.
+
+Let's fix this by moving pm_runtime_put() earlier before we restart the hardware.
+And let's use the sync version to make sure we're done before we restart.
+
+Note that we still will get -EBUSY warning from wl12xx_sdio_set_power() but let's
+fix that separately once we know exactly why we get the warning.
+
+Reported-by: Eyal Reizer <eyalr@ti.com>
+Signed-off-by: Tony Lindgren <tony@atomide.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -977,6 +977,7 @@ static void wl1271_recovery_work(struct work_struct *work)
+ 	}
+ 
+ 	wlcore_op_stop_locked(wl);
++	pm_runtime_put_sync(wl->dev);
+ 
+ 	ieee80211_restart_hw(wl->hw);
+ 
+@@ -986,8 +987,6 @@ static void wl1271_recovery_work(struct work_struct *work)
+ 	 */
+ 	wlcore_wake_queues(wl, WLCORE_QUEUE_STOP_REASON_FW_RESTART);
+ 
+-	pm_runtime_put(wl->dev);
+-
+ out_unlock:
+ 	wl->watchdog_recovery = false;
+ 	clear_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags);
+-- 
+2.17.0
