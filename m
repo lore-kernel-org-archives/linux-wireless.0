@@ -1,167 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:45336 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S939128AbeE1Nrq (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52356 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750831AbeE2HVU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 May 2018 09:47:46 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/5] mac80211: split ieee80211_send_probe_req()
-Date: Mon, 28 May 2018 15:47:39 +0200
-Message-Id: <20180528134741.10386-4-johannes@sipsolutions.net> (sfid-20180528_154821_521211_A1749A39)
-In-Reply-To: <20180528134741.10386-1-johannes@sipsolutions.net>
-References: <20180528134741.10386-1-johannes@sipsolutions.net>
+        Tue, 29 May 2018 03:21:20 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2] wlcore: sdio: check for valid platform device data before
+ suspend
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1527496602-25214-1-git-send-email-eyalr@ti.com>
+References: <1527496602-25214-1-git-send-email-eyalr@ti.com>
+To: Eyal Reizer <eyalreizer@gmail.com>
+Cc: tony@atomide.com, nsekhar@ti.com, linux-wireless@vger.kernel.org,
+        Eyal Reizer <eyalr@ti.com>
+Message-Id: <20180529072120.1F825603D2@smtp.codeaurora.org> (sfid-20180529_092136_327415_2811BFB1)
+Date: Tue, 29 May 2018 07:21:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Eyal Reizer <eyalreizer@gmail.com> wrote:
 
-This function is passed many more parameters in the scan case
-than in the MLME case, and differentiates the two cases inside.
-Split it up and make both versions static to simplify things.
+> the wl pointer can be null In case only wlcore_sdio is probed while
+> no WiLink module is successfully probed, as in the case of mounting a
+> wl12xx module while using a device tree file configured with wl18xx
+> related settings.
+> In this case the system was crashing in wl1271_suspend() as platform
+> device data is not set.
+> Make sure wl the pointer is valid before using it.
+> 
+> Signed-off-by: Eyal Reizer <eyalr@ti.com>
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h |  7 -------
- net/mac80211/mlme.c        | 22 +++++++++++++++++-----
- net/mac80211/scan.c        | 22 ++++++++++++++++++++--
- net/mac80211/util.c        | 21 ---------------------
- 4 files changed, 37 insertions(+), 35 deletions(-)
+Patch applied to wireless-drivers-next.git, thanks.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ee2a25d6ecf2..2851245c569a 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -2050,13 +2050,6 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
- 					  const u8 *ssid, size_t ssid_len,
- 					  const u8 *ie, size_t ie_len,
- 					  u32 flags);
--void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata,
--			      const u8 *src, const u8 *dst,
--			      const u8 *ssid, size_t ssid_len,
--			      const u8 *ie, size_t ie_len,
--			      u32 ratemask, u32 flags, u32 tx_flags,
--			      struct ieee80211_channel *channel, bool scan);
--
- u32 ieee80211_sta_get_rates(struct ieee80211_sub_if_data *sdata,
- 			    struct ieee802_11_elems *elems,
- 			    enum nl80211_band band, u32 *basic_rates);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c3f2883cc0ec..a44e5b4aaeda 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2219,6 +2219,20 @@ void ieee80211_sta_tx_notify(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_sta_reset_conn_monitor(sdata);
- }
- 
-+static void ieee80211_mlme_send_probe_req(struct ieee80211_sub_if_data *sdata,
-+					  const u8 *src, const u8 *dst,
-+					  const u8 *ssid, size_t ssid_len,
-+					  struct ieee80211_channel *channel)
-+{
-+	struct sk_buff *skb;
-+
-+	skb = ieee80211_build_probe_req(sdata, src, dst, (u32)-1, channel,
-+					ssid, ssid_len, NULL, 0,
-+					IEEE80211_PROBE_FLAG_DIRECTED);
-+	if (skb)
-+		ieee80211_tx_skb(sdata, skb);
-+}
-+
- static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-@@ -2265,11 +2279,9 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
- 		else
- 			ssid_len = ssid[1];
- 
--		ieee80211_send_probe_req(sdata, sdata->vif.addr, dst,
--					 ssid + 2, ssid_len, NULL,
--					 0, (u32) -1,
--					 IEEE80211_PROBE_FLAG_DIRECTED, 0,
--					 ifmgd->associated->channel, false);
-+		ieee80211_mlme_send_probe_req(sdata, sdata->vif.addr, dst,
-+					      ssid + 2, ssid_len,
-+					      ifmgd->associated->channel);
- 		rcu_read_unlock();
- 	}
- 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 8e28d8de26aa..03f66f31c5b4 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -528,6 +528,24 @@ void ieee80211_run_deferred_scan(struct ieee80211_local *local)
- 				     round_jiffies_relative(0));
- }
- 
-+static void ieee80211_send_scan_probe_req(struct ieee80211_sub_if_data *sdata,
-+					  const u8 *src, const u8 *dst,
-+					  const u8 *ssid, size_t ssid_len,
-+					  const u8 *ie, size_t ie_len,
-+					  u32 ratemask, u32 flags, u32 tx_flags,
-+					  struct ieee80211_channel *channel)
-+{
-+	struct sk_buff *skb;
-+
-+	skb = ieee80211_build_probe_req(sdata, src, dst, ratemask, channel,
-+					ssid, ssid_len,
-+					ie, ie_len, flags);
-+	if (skb) {
-+		IEEE80211_SKB_CB(skb)->flags |= tx_flags;
-+		ieee80211_tx_skb_tid_band(sdata, skb, 7, channel->band);
-+	}
-+}
-+
- static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
- 					    unsigned long *next_delay)
- {
-@@ -548,12 +566,12 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
- 					  lockdep_is_held(&local->mtx));
- 
- 	for (i = 0; i < scan_req->n_ssids; i++)
--		ieee80211_send_probe_req(
-+		ieee80211_send_scan_probe_req(
- 			sdata, local->scan_addr, scan_req->bssid,
- 			scan_req->ssids[i].ssid, scan_req->ssids[i].ssid_len,
- 			scan_req->ie, scan_req->ie_len,
- 			scan_req->rates[band], 0,
--			tx_flags, local->hw.conf.chandef.chan, true);
-+			tx_flags, local->hw.conf.chandef.chan);
- 
- 	/*
- 	 * After sending probe requests, wait for probe responses
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index fb7264edecad..0325133552ad 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1607,27 +1607,6 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
- 	return skb;
- }
- 
--void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata,
--			      const u8 *src, const u8 *dst,
--			      const u8 *ssid, size_t ssid_len,
--			      const u8 *ie, size_t ie_len,
--			      u32 ratemask, u32 flags, u32 tx_flags,
--			      struct ieee80211_channel *channel, bool scan)
--{
--	struct sk_buff *skb;
--
--	skb = ieee80211_build_probe_req(sdata, src, dst, ratemask, channel,
--					ssid, ssid_len,
--					ie, ie_len, flags);
--	if (skb) {
--		IEEE80211_SKB_CB(skb)->flags |= tx_flags;
--		if (scan)
--			ieee80211_tx_skb_tid_band(sdata, skb, 7, channel->band);
--		else
--			ieee80211_tx_skb(sdata, skb);
--	}
--}
--
- u32 ieee80211_sta_get_rates(struct ieee80211_sub_if_data *sdata,
- 			    struct ieee802_11_elems *elems,
- 			    enum nl80211_band band, u32 *basic_rates)
+6e91d48371e7 wlcore: sdio: check for valid platform device data before suspend
+
 -- 
-2.14.3
+https://patchwork.kernel.org/patch/10430043/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
