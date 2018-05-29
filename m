@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:34639 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750859AbeEVAoW (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49208 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751910AbeE2HQE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 May 2018 20:44:22 -0400
-Received: by mail-pg0-f68.google.com with SMTP id k2-v6so7086554pgc.1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 May 2018 17:44:22 -0700 (PDT)
-Received: from iss.ger.corp.intel.com ([192.55.54.41])
-        by smtp.gmail.com with ESMTPSA id r80-v6sm32204756pfe.44.2018.05.21.17.44.19
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 21 May 2018 17:44:20 -0700 (PDT)
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211_hwsim: Fix radio dump for radio idx 0
-Date: Tue, 22 May 2018 02:43:56 +0200
-Message-Id: <20180522004356.19306-1-andrew.zaborowski@intel.com> (sfid-20180522_024425_679876_3ADCDA21)
+        Tue, 29 May 2018 03:16:04 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [PATCHv2] wlcore: sdio: Fix flakey SDIO runtime PM handling
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180517182950.60807-1-tony@atomide.com>
+References: <20180517182950.60807-1-tony@atomide.com>
+To: Tony Lindgren <tony@atomide.com>
+Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Message-Id: <20180529071603.4DFD260541@smtp.codeaurora.org> (sfid-20180529_091638_090443_710C8B38)
+Date: Tue, 29 May 2018 07:16:03 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since 6335698e24ec11e1324b916177da6721df724dd8 the radio with idx of 0
-will not get dumped in HWSIM_CMD_GET_RADIO because of the last_idx
-checks.  Offset cb->args[0] by 1 similarly to what is done in nl80211.c.
+Tony Lindgren <tony@atomide.com> wrote:
 
-Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> We can have pm_runtime_get_sync() return 1, and we can have
+> pm_runtime_put_sync() return -EBUSY. See rpm_suspend() and
+> rpm_resume() for more information.
+> 
+> Fix the issue by returning 0 from wl12xx_sdio_power_on() on success.
+> And use pm_runtime_put() instead of pm_runtime_put_sync() for
+> wl12xx_sdio_power_off(), then the MMC subsystem will idle the bus
+> when suitable.
+> 
+> Otherwise wlcore can sometimes get confused and may report bogus
+> errors and WLAN connection can fail.
+> 
+> Note that while wlcore checks the return value for wl1271_power_on(),
+> the return value is ignored for wl1271_power_off(). Let's fix them
+> both though to avoid further confusion in the future.
+> 
+> Fixes: 60f36637bbbd ("wlcore: sdio: allow pm to handle sdio power")
+> Signed-off-by: Tony Lindgren <tony@atomide.com>
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 7bfbc5916e..32d590f4f5 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -3340,7 +3340,7 @@ static int hwsim_get_radio_nl(struct sk_buff *msg, struct genl_info *info)
- static int hwsim_dump_radio_nl(struct sk_buff *skb,
- 			       struct netlink_callback *cb)
- {
--	int last_idx = cb->args[0];
-+	int last_idx = cb->args[0] - 1;
- 	struct mac80211_hwsim_data *data = NULL;
- 	int res = 0;
- 	void *hdr;
-@@ -3368,7 +3368,7 @@ static int hwsim_dump_radio_nl(struct sk_buff *skb,
- 		last_idx = data->idx;
- 	}
- 
--	cb->args[0] = last_idx;
-+	cb->args[0] = last_idx + 1;
- 
- 	/* list changed, but no new element sent, set interrupted flag */
- 	if (skb->len == 0 && cb->prev_seq && cb->seq != cb->prev_seq) {
+Patch applied to wireless-drivers-next.git, thanks.
+
+728a9dc61f13 wlcore: sdio: Fix flakey SDIO runtime PM handling
+
 -- 
-2.14.1
+https://patchwork.kernel.org/patch/10407569/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
