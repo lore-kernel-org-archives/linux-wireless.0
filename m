@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga06-in.huawei.com ([45.249.212.32]:35753 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932261AbeEWKfZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 May 2018 06:35:25 -0400
-From: YueHaibing <yuehaibing@huawei.com>
-To: <simon@thekelleys.org.uk>, <kvalo@codeaurora.org>,
-        <davem@davemloft.net>
-CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-        YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH] atmel: Add missing call to pci_disable_device()
-Date: Wed, 23 May 2018 18:34:45 +0800
-Message-ID: <20180523103445.8372-1-yuehaibing@huawei.com> (sfid-20180523_123529_508073_D472540E)
+Received: from smtp.codeaurora.org ([198.145.29.96]:55174 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750831AbeE2H0p (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 May 2018 03:26:45 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: mwifiex: mark expected switch fall-throughs
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180525213854.GA13392@embeddedor.com>
+References: <20180525213854.GA13392@embeddedor.com>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Message-Id: <20180529072644.C5679603D2@smtp.codeaurora.org> (sfid-20180529_092707_437393_BDEAE4E7)
+Date: Tue, 29 May 2018 07:26:44 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-add pci_disable_device in error handling while init_atmel_card failed.
+"Gustavo A. R. Silva" <gustavo@embeddedor.com> wrote:
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- drivers/net/wireless/atmel/atmel_pci.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+> where we are expecting to fall through.
+> 
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 
-diff --git a/drivers/net/wireless/atmel/atmel_pci.c b/drivers/net/wireless/atmel/atmel_pci.c
-index bcf1f27..30df58a 100644
---- a/drivers/net/wireless/atmel/atmel_pci.c
-+++ b/drivers/net/wireless/atmel/atmel_pci.c
-@@ -61,8 +61,10 @@ static int atmel_pci_probe(struct pci_dev *pdev,
- 	dev = init_atmel_card(pdev->irq, pdev->resource[1].start,
- 			      ATMEL_FW_TYPE_506,
- 			      &pdev->dev, NULL, NULL);
--	if (!dev)
-+	if (!dev) {
-+		pci_disable_device(pdev);
- 		return -ENODEV;
-+	}
- 
- 	pci_set_drvdata(pdev, dev);
- 	return 0;
+Patch applied to wireless-drivers-next.git, thanks.
+
+666cc438f369 mwifiex: mark expected switch fall-throughs
+
 -- 
-2.7.0
+https://patchwork.kernel.org/patch/10428577/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
