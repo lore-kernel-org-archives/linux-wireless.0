@@ -1,130 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35382 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752160AbeEJUI7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 May 2018 16:08:59 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, keescook@chromium.org,
-        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
-        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
-        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
-        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
-        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
-        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        cantabile.desu@gmail.com, khc@pm.waw.pl, arve@android.com,
-        tkjos@android.com, corbet@lwn.net, mchehab+samsung@kernel.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        "Luis R . Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v7 03/14] firmware: rename fw_sysfs_fallback to firmware_fallback_sysfs()
-Date: Thu, 10 May 2018 13:08:39 -0700
-Message-Id: <20180510200850.5958-4-mcgrof@kernel.org> (sfid-20180510_221259_991186_C11C6B57)
-In-Reply-To: <20180510200850.5958-1-mcgrof@kernel.org>
-References: <20180510200850.5958-1-mcgrof@kernel.org>
+Received: from paleale.coelho.fi ([176.9.41.70]:46534 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751158AbeE2HZY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 May 2018 03:25:24 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: emmanuel.grumbach@intel.com, jadit2@gmail.com,
+        linux-wireless@vger.kernel.org, Hao Wei Tee <angelsl@in04.sg>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 29 May 2018 10:25:17 +0300
+Message-Id: <20180529072517.30135-1-luca@coelho.fi> (sfid-20180529_092528_348020_4F98B06D)
+Subject: [PATCH] iwlwifi: pcie: compare with number of IRQs requested for, not number of CPUs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andres Rodriguez <andresx7@gmail.com>
+From: Hao Wei Tee <angelsl@in04.sg>
 
-This is done since this call is now exposed through kernel-doc,
-and since this also paves the way for different future types of
-fallback mechanims.
+When there are 16 or more logical CPUs, we request for
+`IWL_MAX_RX_HW_QUEUES` (16) IRQs only as we limit to that number of
+IRQs, but later on we compare the number of IRQs returned to
+nr_online_cpus+2 instead of max_irqs, the latter being what we
+actually asked for. This ends up setting num_rx_queues to 17 which
+causes lots of out-of-bounds array accesses later on.
 
-Signed-off-by: Andres Rodriguez <andresx7@gmail.com>
-Reviewed-by: Kees Cook <keescook@chromium.org>
-Acked-by: Luis R. Rodriguez <mcgrof@kernel.org>
-[mcgrof: small coding style changes]
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Compare to max_irqs instead, and also add an assertion in case
+num_rx_queues > IWM_MAX_RX_HW_QUEUES.
+
+This fixes https://bugzilla.kernel.org/show_bug.cgi?id=199551
+
+Signed-off-by: Hao Wei Tee <angelsl@in04.sg>
+Tested-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/base/firmware_loader/fallback.c |  8 ++++----
- drivers/base/firmware_loader/fallback.h | 16 ++++++++--------
- drivers/base/firmware_loader/firmware.h |  2 +-
- drivers/base/firmware_loader/main.c     |  2 +-
- 4 files changed, 14 insertions(+), 14 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
-index 529f7013616f..3db9e0f225ac 100644
---- a/drivers/base/firmware_loader/fallback.c
-+++ b/drivers/base/firmware_loader/fallback.c
-@@ -662,10 +662,10 @@ static bool fw_run_sysfs_fallback(enum fw_opt opt_flags)
- 	return fw_force_sysfs_fallback(opt_flags);
- }
- 
--int fw_sysfs_fallback(struct firmware *fw, const char *name,
--		      struct device *device,
--		      enum fw_opt opt_flags,
--		      int ret)
-+int firmware_fallback_sysfs(struct firmware *fw, const char *name,
-+			    struct device *device,
-+			    enum fw_opt opt_flags,
-+			    int ret)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index f8a0234d332c..5517ea4c2aa0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1590,14 +1590,13 @@ static void iwl_pcie_set_interrupt_capa(struct pci_dev *pdev,
+ 					struct iwl_trans *trans)
  {
- 	if (!fw_run_sysfs_fallback(opt_flags))
- 		return ret;
-diff --git a/drivers/base/firmware_loader/fallback.h b/drivers/base/firmware_loader/fallback.h
-index a3b73a09db6c..21063503e4ea 100644
---- a/drivers/base/firmware_loader/fallback.h
-+++ b/drivers/base/firmware_loader/fallback.h
-@@ -31,10 +31,10 @@ struct firmware_fallback_config {
- };
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	int max_irqs, num_irqs, i, ret, nr_online_cpus;
++	int max_irqs, num_irqs, i, ret;
+ 	u16 pci_cmd;
  
- #ifdef CONFIG_FW_LOADER_USER_HELPER
--int fw_sysfs_fallback(struct firmware *fw, const char *name,
--		      struct device *device,
--		      enum fw_opt opt_flags,
--		      int ret);
-+int firmware_fallback_sysfs(struct firmware *fw, const char *name,
-+			    struct device *device,
-+			    enum fw_opt opt_flags,
-+			    int ret);
- void kill_pending_fw_fallback_reqs(bool only_kill_custom);
+ 	if (!trans->cfg->mq_rx_supported)
+ 		goto enable_msi;
  
- void fw_fallback_set_cache_timeout(void);
-@@ -43,10 +43,10 @@ void fw_fallback_set_default_timeout(void);
- int register_sysfs_loader(void);
- void unregister_sysfs_loader(void);
- #else /* CONFIG_FW_LOADER_USER_HELPER */
--static inline int fw_sysfs_fallback(struct firmware *fw, const char *name,
--				    struct device *device,
--				    enum fw_opt opt_flags,
--				    int ret)
-+static inline int firmware_fallback_sysfs(struct firmware *fw, const char *name,
-+					  struct device *device,
-+					  enum fw_opt opt_flags,
-+					  int ret)
- {
- 	/* Keep carrying over the same error */
- 	return ret;
-diff --git a/drivers/base/firmware_loader/firmware.h b/drivers/base/firmware_loader/firmware.h
-index 4f433b447367..4c1395f8e7ed 100644
---- a/drivers/base/firmware_loader/firmware.h
-+++ b/drivers/base/firmware_loader/firmware.h
-@@ -20,7 +20,7 @@
-  * @FW_OPT_NOWAIT: Used to describe the firmware request is asynchronous.
-  * @FW_OPT_USERHELPER: Enable the fallback mechanism, in case the direct
-  *	filesystem lookup fails at finding the firmware.  For details refer to
-- *	fw_sysfs_fallback().
-+ *	firmware_fallback_sysfs().
-  * @FW_OPT_NO_WARN: Quiet, avoid printing warning messages.
-  * @FW_OPT_NOCACHE: Disables firmware caching. Firmware caching is used to
-  *	cache the firmware upon suspend, so that upon resume races against the
-diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
-index 4d11efadb3a4..abdc4e4d55f1 100644
---- a/drivers/base/firmware_loader/main.c
-+++ b/drivers/base/firmware_loader/main.c
-@@ -581,7 +581,7 @@ _request_firmware(const struct firmware **firmware_p, const char *name,
- 			dev_warn(device,
- 				 "Direct firmware load for %s failed with error %d\n",
- 				 name, ret);
--		ret = fw_sysfs_fallback(fw, name, device, opt_flags, ret);
-+		ret = firmware_fallback_sysfs(fw, name, device, opt_flags, ret);
- 	} else
- 		ret = assign_fw(fw, device, opt_flags);
+-	nr_online_cpus = num_online_cpus();
+-	max_irqs = min_t(u32, nr_online_cpus + 2, IWL_MAX_RX_HW_QUEUES);
++	max_irqs = min_t(u32, num_online_cpus() + 2, IWL_MAX_RX_HW_QUEUES);
+ 	for (i = 0; i < max_irqs; i++)
+ 		trans_pcie->msix_entries[i].entry = i;
  
+@@ -1623,16 +1622,17 @@ static void iwl_pcie_set_interrupt_capa(struct pci_dev *pdev,
+ 	 * Two interrupts less: non rx causes shared with FBQ and RSS.
+ 	 * More than two interrupts: we will use fewer RSS queues.
+ 	 */
+-	if (num_irqs <= nr_online_cpus) {
++	if (num_irqs <= max_irqs - 2) {
+ 		trans_pcie->trans->num_rx_queues = num_irqs + 1;
+ 		trans_pcie->shared_vec_mask = IWL_SHARED_IRQ_NON_RX |
+ 			IWL_SHARED_IRQ_FIRST_RSS;
+-	} else if (num_irqs == nr_online_cpus + 1) {
++	} else if (num_irqs == max_irqs - 1) {
+ 		trans_pcie->trans->num_rx_queues = num_irqs;
+ 		trans_pcie->shared_vec_mask = IWL_SHARED_IRQ_NON_RX;
+ 	} else {
+ 		trans_pcie->trans->num_rx_queues = num_irqs - 1;
+ 	}
++	WARN_ON(trans_pcie->trans->num_rx_queues > IWL_MAX_RX_HW_QUEUES);
+ 
+ 	trans_pcie->alloc_vecs = num_irqs;
+ 	trans_pcie->msix_enabled = true;
 -- 
 2.17.0
