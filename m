@@ -1,35 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga06-in.huawei.com ([45.249.212.32]:55134 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751319AbeEPMLg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 May 2018 08:11:36 -0400
-Subject: Re: [PATCH net-next] ath10k: Remove useless test before
- clk_disable_unprepare
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <20180516105454.30212-1-yuehaibing@huawei.com>
- <87d0xvyggc.fsf@purkki.adurom.net>
-CC: <davem@davemloft.net>, <netdev@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>
-From: YueHaibing <yuehaibing@huawei.com>
-Message-ID: <7968969a-f70a-dbdc-0a88-f49aff64bb97@huawei.com> (sfid-20180516_141140_889860_C76BA777)
-Date: Wed, 16 May 2018 20:10:52 +0800
-MIME-Version: 1.0
-In-Reply-To: <87d0xvyggc.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="windows-1252"
+Received: from smtp.codeaurora.org ([198.145.29.96]:44218 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932949AbeE2Lb1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 May 2018 07:31:27 -0400
+From: Karthikeyan Periyasamy <periyasa@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Karthikeyan Periyasamy <periyasa@codeaurora.org>
+Subject: [PATCH] ath10k: fix spectral scan for QCA9984 and QCA9888 chipsets
+Date: Tue, 29 May 2018 17:01:13 +0530
+Message-Id: <1527593473-15976-1-git-send-email-periyasa@codeaurora.org> (sfid-20180529_133137_016504_FC1C3919)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018/5/16 19:42, Kalle Valo wrote:
-> YueHaibing <yuehaibing@huawei.com> writes:
-> 
->> clk_disable_unprepare() already checks that the clock pointer is valid.
->> No need to test it before calling it.
->>
->> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> 
-> Just a note that ath10k patches are applied to my ath.git tree, not to
-> net-next. So adding net-next to the subject is wrong, but no need to
-> resend just because of that.
-> 
+The spectral scan has been always broken on QCA9984 and QCA9888.
 
-OK, got it, thank you
+Introduce a hardware parameter 'spectral_bin_offset' to resolve this issue for
+QCA9984 and QCA9888 chipsets. For other chipsets, the hardware parameter
+'spectral_bin_offset' is zero so that existing behaviour is retained as it is.
+
+In QCA9984 and QCA9888 chipsets, hardware param value 'spectral_bin_discard'
+is 12 bytes. This 12 bytes is derived as the sum of segment index (4 bytes),
+extra bins before the actual data (4 bytes) and extra bins after the actual
+data (4 bytes). Always discarding (12 bytes) happens at end of the samples and
+incorrect samples got dumped, so that user can find incorrect arrangement
+samples in spectral scan dump.
+
+To fix this issue, we have to discard first 8 bytes and last 4 bytes in every
+samples, so totally 12 bytes are discarded. In every sample we need to consider
+the offset while taking the actual spectral data. For QCA9984, QCA9888 the
+offset is 8 bytes (segment index + extra bins before actual data).
+
+Hardware tested: QCA9984 and QCA9888
+Firmware tested: 10.4-3.5.3-00053
+
+Signed-off-by: Karthikeyan Periyasamy <periyasa@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/core.c     | 13 +++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h       |  3 +++
+ drivers/net/wireless/ath/ath10k/spectral.c |  2 +-
+ 3 files changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 4cf54a7..25ecf74 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -82,6 +82,7 @@
+ 		.hw_ops = &qca988x_ops,
+ 		.decap_align_bytes = 4,
+ 		.spectral_bin_discard = 0,
++		.spectral_bin_offset = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
+@@ -113,6 +114,7 @@
+ 		.hw_ops = &qca988x_ops,
+ 		.decap_align_bytes = 4,
+ 		.spectral_bin_discard = 0,
++		.spectral_bin_offset = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
+@@ -145,6 +147,7 @@
+ 		.hw_ops = &qca988x_ops,
+ 		.decap_align_bytes = 4,
+ 		.spectral_bin_discard = 0,
++		.spectral_bin_offset = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
+@@ -176,6 +179,7 @@
+ 		.hw_ops = &qca988x_ops,
+ 		.decap_align_bytes = 4,
+ 		.spectral_bin_discard = 0,
++		.spectral_bin_offset = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
+@@ -207,6 +211,7 @@
+ 		.hw_ops = &qca988x_ops,
+ 		.decap_align_bytes = 4,
+ 		.spectral_bin_discard = 0,
++		.spectral_bin_offset = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
+@@ -238,6 +243,7 @@
+ 		.hw_ops = &qca988x_ops,
+ 		.decap_align_bytes = 4,
+ 		.spectral_bin_discard = 0,
++		.spectral_bin_offset = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
+@@ -272,6 +278,7 @@
+ 		.target_cpu_freq = 176000000,
+ 		.decap_align_bytes = 4,
+ 		.spectral_bin_discard = 0,
++		.spectral_bin_offset = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
+@@ -309,6 +316,7 @@
+ 		.hw_ops = &qca99x0_ops,
+ 		.decap_align_bytes = 1,
+ 		.spectral_bin_discard = 4,
++		.spectral_bin_offset = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 11,
+@@ -347,6 +355,7 @@
+ 		.hw_ops = &qca99x0_ops,
+ 		.decap_align_bytes = 1,
+ 		.spectral_bin_discard = 12,
++		.spectral_bin_offset = 8,
+ 
+ 		/* Can do only 2x2 VHT160 or 80+80. 1560Mbps is 4x4 80Mhz
+ 		 * or 2x2 160Mhz, long-guard-interval.
+@@ -388,6 +397,7 @@
+ 		.hw_ops = &qca99x0_ops,
+ 		.decap_align_bytes = 1,
+ 		.spectral_bin_discard = 12,
++		.spectral_bin_offset = 8,
+ 
+ 		/* Can do only 1x1 VHT160 or 80+80. 780Mbps is 2x2 80Mhz or
+ 		 * 1x1 160Mhz, long-guard-interval.
+@@ -423,6 +433,7 @@
+ 		.hw_ops = &qca988x_ops,
+ 		.decap_align_bytes = 4,
+ 		.spectral_bin_discard = 0,
++		.spectral_bin_offset = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
+@@ -456,6 +467,7 @@
+ 		.target_cpu_freq = 176000000,
+ 		.decap_align_bytes = 4,
+ 		.spectral_bin_discard = 0,
++		.spectral_bin_offset = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 8,
+@@ -494,6 +506,7 @@
+ 		.hw_ops = &qca99x0_ops,
+ 		.decap_align_bytes = 1,
+ 		.spectral_bin_discard = 4,
++		.spectral_bin_offset = 0,
+ 		.vht160_mcs_rx_highest = 0,
+ 		.vht160_mcs_tx_highest = 0,
+ 		.n_cipher_suites = 11,
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 23467e9..a274bd8 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -586,6 +586,9 @@ struct ath10k_hw_params {
+ 
+ 	/* target supporting retention restore on ddr */
+ 	bool rri_on_ddr;
++
++	/* Number of bytes to be the offset for each FFT sample */
++	int spectral_bin_offset;
+ };
+ 
+ struct htt_rx_desc;
+diff --git a/drivers/net/wireless/ath/ath10k/spectral.c b/drivers/net/wireless/ath/ath10k/spectral.c
+index af6995d..653b6d0 100644
+--- a/drivers/net/wireless/ath/ath10k/spectral.c
++++ b/drivers/net/wireless/ath/ath10k/spectral.c
+@@ -145,7 +145,7 @@ int ath10k_spectral_process_fft(struct ath10k *ar,
+ 	fft_sample->noise = __cpu_to_be16(phyerr->nf_chains[chain_idx]);
+ 
+ 	bins = (u8 *)fftr;
+-	bins += sizeof(*fftr);
++	bins += sizeof(*fftr) + ar->hw_params.spectral_bin_offset;
+ 
+ 	fft_sample->tsf = __cpu_to_be64(tsf);
+ 
+-- 
+1.9.1
