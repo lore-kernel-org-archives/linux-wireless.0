@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33414 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750932AbeETKsA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 May 2018 06:48:00 -0400
-Subject: Re: [RFC v2 17/18] mt76: add usb support to mt76 layer
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-References: <20180520081522.10163-18-lorenzo.bianconi@redhat.com>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <89bfbabd-d4a3-07d0-d0af-7fc86c9ac406@nbd.name> (sfid-20180520_124804_387515_C7B6CFF7)
-Date: Sun, 20 May 2018 12:47:58 +0200
+Received: from mail-by2nam03on0088.outbound.protection.outlook.com ([104.47.42.88]:23410
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933381AbeE2MAZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 May 2018 08:00:25 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>,
+        Dmitry Lebed <dlebed@quantenna.com>
+Subject: [PATCH 1/9] qtnfmac: remove unused function declarations
+Date: Tue, 29 May 2018 14:59:57 +0300
+Message-Id: <20180529120005.21498-2-sergey.matyukevich.os@quantenna.com> (sfid-20180529_140033_710725_4DCDE874)
+In-Reply-To: <20180529120005.21498-1-sergey.matyukevich.os@quantenna.com>
+References: <20180529120005.21498-1-sergey.matyukevich.os@quantenna.com>
 MIME-Version: 1.0
-In-Reply-To: <20180520081522.10163-18-lorenzo.bianconi@redhat.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-05-20 10:15, Lorenzo Bianconi wrote:
-> This will be used by drivers for MT76x2u based devices
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-> ---
->  drivers/net/wireless/mediatek/mt76/Makefile |   3 +-
->  drivers/net/wireless/mediatek/mt76/dma.h    |   5 +
->  drivers/net/wireless/mediatek/mt76/mt76.h   | 115 +++++-
->  drivers/net/wireless/mediatek/mt76/usb.c    | 610 ++++++++++++++++++++++++++++
->  4 files changed, 731 insertions(+), 2 deletions(-)
->  create mode 100644 drivers/net/wireless/mediatek/mt76/usb.c
-> 
-> diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
-> index e1bc229e4aad..4f7f6021d79c 100644
-> --- a/drivers/net/wireless/mediatek/mt76/Makefile
-> +++ b/drivers/net/wireless/mediatek/mt76/Makefile
-> @@ -3,7 +3,8 @@ obj-$(CONFIG_MT76x2_COMMON) += mt76x2-common.o
->  obj-$(CONFIG_MT76x2E) += mt76x2e.o
->  
->  mt76-y := \
-> -	mmio.o util.o trace.o dma.o mac80211.o debugfs.o eeprom.o tx.o agg-rx.o
-> +	mmio.o util.o trace.o dma.o mac80211.o debugfs.o eeprom.o \
-> +	tx.o agg-rx.o usb.o
-Please don't make the mt76 core module depend on USB.
+From: Andrey Shevchenko <ashevchenko@quantenna.com>
 
-- Felix
+Functions qtnf_cmd_resp_parse and qtnf_cmd_resp_check have
+been removed. Remove their declarations as well.
+
+Signed-off-by: Andrey Shevchenko <ashevchenko@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/commands.h | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.h b/drivers/net/wireless/quantenna/qtnfmac/commands.h
+index 69a7d56f7e58..cf9274add26d 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.h
+@@ -58,11 +58,6 @@ int qtnf_cmd_send_change_sta(struct qtnf_vif *vif, const u8 *mac,
+ 			     struct station_parameters *params);
+ int qtnf_cmd_send_del_sta(struct qtnf_vif *vif,
+ 			  struct station_del_parameters *params);
+-
+-int qtnf_cmd_resp_parse(struct qtnf_bus *bus, struct sk_buff *resp_skb);
+-int qtnf_cmd_resp_check(const struct qtnf_vif *vif,
+-			const struct sk_buff *resp_skb, u16 cmd_id,
+-			u16 *result, const u8 **payload, size_t *payload_size);
+ int qtnf_cmd_send_scan(struct qtnf_wmac *mac);
+ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
+ 			  struct cfg80211_connect_params *sme);
+-- 
+2.11.0
