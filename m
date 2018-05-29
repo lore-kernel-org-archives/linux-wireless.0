@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39468 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750852AbeEKKSf (ORCPT
+Received: from aserp2120.oracle.com ([141.146.126.78]:35126 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933052AbeE2KBL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 06:18:35 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Michael =?utf-8?Q?B=C3=BCsch?= <m@bues.ch>,
-        Matt Redfearn <matt.redfearn@mips.com>,
-        linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-        LKML <linux-kernel@vger.kernel.org>,
-        =?utf-8?Q?Rafa?= =?utf-8?Q?=C5=82_Mi=C5=82ecki?=
-        <rafal@milecki.pl>
-Subject: Re: [PATCH 4.17 2/2] ssb: make SSB_PCICORE_HOSTMODE depend on SSB = y
-References: <20180510111401.1161-1-zajec5@gmail.com>
-        <20180510111401.1161-2-zajec5@gmail.com>
-        <ff18cb0a-e878-dff4-777b-134f0f3fe2e5@lwfinger.net>
-Date: Fri, 11 May 2018 13:18:30 +0300
-In-Reply-To: <ff18cb0a-e878-dff4-777b-134f0f3fe2e5@lwfinger.net> (Larry
-        Finger's message of "Thu, 10 May 2018 11:07:09 -0500")
-Message-ID: <8736yycx6x.fsf@codeaurora.org> (sfid-20180511_121902_760584_62B3D542)
+        Tue, 29 May 2018 06:01:11 -0400
+Date: Tue, 29 May 2018 13:00:49 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Colin King <colin.king@canonical.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] mac80211_hwsim: add error check to call to
+ rhashtable_init
+Message-ID: <20180529100049.up6wzjkzmd5a3v2q@mwanda> (sfid-20180529_120145_208291_E0B1CED6)
+References: <20180529091412.8530-1-colin.king@canonical.com>
+ <1527585428.6955.7.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1527585428.6955.7.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+On Tue, May 29, 2018 at 11:17:08AM +0200, Johannes Berg wrote:
+> On Tue, 2018-05-29 at 10:14 +0100, Colin King wrote:
+> > 
+> > @@ -3573,7 +3573,9 @@ static int __init init_mac80211_hwsim(void)
+> >  	hwsim_wq = alloc_workqueue("hwsim_wq", 0, 0);
+> >  	if (!hwsim_wq)
+> >  		return -ENOMEM;
+> > -	rhashtable_init(&hwsim_radios_rht, &hwsim_rht_params);
+> > +	err = rhashtable_init(&hwsim_radios_rht, &hwsim_rht_params);
+> > +	if (err)
+> > +		return err;
+> 
+> That's missing a workqueue free, but I can fix that while applying if
+> you prefer.
+> 
 
-> On 05/10/2018 06:14 AM, Rafa=C5=82 Mi=C5=82ecki wrote:
->> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->>
->> SSB_PCICORE_HOSTMODE protects MIPS specific code that calls not exported
->> symbols pcibios_enable_device and register_pci_controller. This code is
->> supposed to be compiled only with ssb builtin.
->>
->> This fixes:
->> ERROR: "pcibios_enable_device" [drivers/ssb/ssb.ko] undefined!
->> ERROR: "register_pci_controller" [drivers/ssb/ssb.ko] undefined!
->> make[1]: *** [scripts/Makefile.modpost:92: __modpost] Error 1
->>
->> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->
-> This patch needs a "Reported-by: Matt Redfearn <matt.redfearn@mips.com>".
->
-> Applying both patches leads to a correct configuration for PCI. I
-> cannot test on my present hardware, but the patches seem to be
-> correct.
->
-> Reviewed-by: Larry Finger <Larry.Finger@lwfinger.net>
->
-> @Kalle: Please drop my patch from yesterday. This solution is much better.
+And we don't free the hashtable on error either.
 
-Dropped, thanks for letting me know.
-
---=20
-Kalle Valo
+regards,
+dan carpenter
