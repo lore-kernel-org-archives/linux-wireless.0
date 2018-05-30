@@ -1,108 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:62393 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752357AbeEKIN6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54104 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932140AbeE3TLF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 04:13:58 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH v2 02/30] staging: wilc1000: remove 'ret' variable in handle_key()
-Date: Fri, 11 May 2018 13:43:03 +0530
-Message-ID: <1526026411-11058-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180511_101402_156317_179FB557)
-In-Reply-To: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
-References: <1526026411-11058-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 30 May 2018 15:11:05 -0400
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [RFCv3 2/4] mac80211: Add api to configure low and high txrate threshold
+Date: Thu, 31 May 2018 00:40:48 +0530
+Message-Id: <1527707450-2985-3-git-send-email-tamizhr@codeaurora.org> (sfid-20180530_211110_000441_0E3924DF)
+In-Reply-To: <1527707450-2985-1-git-send-email-tamizhr@codeaurora.org>
+References: <1527707450-2985-1-git-send-email-tamizhr@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the use of unnecessary 'ret' variable and use existing 'result'
-variable to hold the status. Also changed type of 'result' from s32 to
-int to confirm with the function return type.
+Add set_sta_mon_txrate_config api to configure low and high
+txrate threshold for a connected station. The configuration
+will be represented in 100kbps.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
 ---
- drivers/staging/wilc1000/host_interface.c | 17 +++++------------
- 1 file changed, 5 insertions(+), 12 deletions(-)
+ net/mac80211/cfg.c      | 35 +++++++++++++++++++++++++++++++++++
+ net/mac80211/sta_info.h |  7 +++++++
+ 2 files changed, 42 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 652f51c..13c5ae2 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1488,13 +1488,12 @@ static s32 handle_rcvd_gnrl_async_info(struct wilc_vif *vif,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 5cdd8a3..649f5c7 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3876,6 +3876,40 @@ static int ieee80211_set_sta_mon_rssi_range_cfg(struct wiphy *wiphy,
+ 	return 0;
+ }
  
- static int handle_key(struct wilc_vif *vif, struct key_attr *hif_key)
- {
--	s32 result = 0;
-+	int result = 0;
- 	struct wid wid;
- 	struct wid wid_list[5];
- 	u8 i;
- 	u8 *key_buf;
- 	s8 s8idxarray[1];
--	s8 ret = 0;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
++static int ieee80211_set_sta_mon_txrate_config(struct wiphy *wiphy,
++					       struct net_device *dev,
++					       const u8 *peer,
++					       u32 low_txrate_thold,
++					       u32 high_txrate_thold)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct sta_info *sta;
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP &&
++	    !wiphy_ext_feature_isset(sdata->local->hw.wiphy,
++				NL80211_EXT_FEATURE_STA_MON_TXRATE_CONFIG))
++		return -EOPNOTSUPP;
++
++	mutex_lock(&sdata->local->sta_mtx);
++
++	sta = sta_info_get_bss(sdata, peer);
++	if (!sta) {
++		mutex_unlock(&sdata->local->sta_mtx);
++		return -ENOENT;
++	}
++
++	if (sta->txrate_low == low_txrate_thold &&
++	    sta->txrate_high == high_txrate_thold)
++		goto unlock;
++
++	sta->txrate_low = low_txrate_thold;
++	sta->txrate_high = high_txrate_thold;
++
++unlock:
++	mutex_unlock(&sdata->local->sta_mtx);
++	return 0;
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -3972,4 +4006,5 @@ static int ieee80211_set_sta_mon_rssi_range_cfg(struct wiphy *wiphy,
+ 	.get_txq_stats = ieee80211_get_txq_stats,
+ 	.set_sta_mon_rssi_config = ieee80211_set_sta_mon_rssi_config,
+ 	.set_sta_mon_rssi_range_config = ieee80211_set_sta_mon_rssi_range_cfg,
++	.set_sta_mon_txrate_config = ieee80211_set_sta_mon_txrate_config,
+ };
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 05d68f8..a71f50c 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -497,6 +497,10 @@ struct ieee80211_sta_rx_stats {
+  * @count_rx_signal: Number of data frames used in averaging station signal.
+  *	This can be used to avoid generating less reliable station rssi cross
+  *	events that would be based only on couple of received frames
++ * @txrate_low: TXRATE lower threshold for a station to monitor, this will be
++ *	in 100Kbps
++ * @txrate_high: TXRATE upper threshold for a station to monitor, this will be
++ *	in 100Kbps
+  */
+ struct sta_info {
+ 	/* General information, mostly static */
+@@ -605,6 +609,9 @@ struct sta_info {
+ 	int last_sta_mon_event_signal;
+ 	unsigned int count_rx_signal;
  
- 	switch (hif_key->type) {
-@@ -1585,7 +1584,7 @@ static int handle_key(struct wilc_vif *vif, struct key_attr *hif_key)
- 		if (hif_key->action & ADDKEY_AP) {
- 			key_buf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
- 			if (!key_buf) {
--				ret = -ENOMEM;
-+				result = -ENOMEM;
- 				goto out_wpa_rx_gtk;
- 			}
- 
-@@ -1615,7 +1614,7 @@ static int handle_key(struct wilc_vif *vif, struct key_attr *hif_key)
- 		} else if (hif_key->action & ADDKEY) {
- 			key_buf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
- 			if (!key_buf) {
--				ret = -ENOMEM;
-+				result = -ENOMEM;
- 				goto out_wpa_rx_gtk;
- 			}
- 
-@@ -1645,16 +1644,13 @@ static int handle_key(struct wilc_vif *vif, struct key_attr *hif_key)
- 		complete(&hif_drv->comp_test_key_block);
- 		kfree(hif_key->attr.wpa.key);
- 		kfree(hif_key->attr.wpa.seq);
--		if (ret)
--			return ret;
--
- 		break;
- 
- 	case WPA_PTK:
- 		if (hif_key->action & ADDKEY_AP) {
- 			key_buf = kmalloc(PTK_KEY_MSG_LEN + 1, GFP_KERNEL);
- 			if (!key_buf) {
--				ret = -ENOMEM;
-+				result = -ENOMEM;
- 				goto out_wpa_ptk;
- 			}
- 
-@@ -1681,7 +1677,7 @@ static int handle_key(struct wilc_vif *vif, struct key_attr *hif_key)
- 		} else if (hif_key->action & ADDKEY) {
- 			key_buf = kmalloc(PTK_KEY_MSG_LEN, GFP_KERNEL);
- 			if (!key_buf) {
--				ret = -ENOMEM;
-+				result = -ENOMEM;
- 				goto out_wpa_ptk;
- 			}
- 
-@@ -1704,9 +1700,6 @@ static int handle_key(struct wilc_vif *vif, struct key_attr *hif_key)
- out_wpa_ptk:
- 		complete(&hif_drv->comp_test_key_block);
- 		kfree(hif_key->attr.wpa.key);
--		if (ret)
--			return ret;
--
- 		break;
- 
- 	case PMKSA:
++	u32 txrate_low;
++	u32 txrate_high;
++
+ 	/* keep last! */
+ 	struct ieee80211_sta sta;
+ };
 -- 
-2.7.4
+1.9.1
