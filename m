@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:33977 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935358AbeEYMuZ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:46958 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S935179AbeE3HUS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 May 2018 08:50:25 -0400
-Received: by mail-io0-f195.google.com with SMTP id p124-v6so6263666iod.1
-        for <linux-wireless@vger.kernel.org>; Fri, 25 May 2018 05:50:24 -0700 (PDT)
-Date: Fri, 25 May 2018 08:50:23 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Niklas Cassel <niklas.cassel@linaro.org>
-Cc: Adrian Chadd <adrian.chadd@gmail.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        David Miller <davem@davemloft.net>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: transmit queued frames after waking queues
-Message-ID: <20180525125023.alc42lkgehc6iodg@localhost> (sfid-20180525_145043_151253_9B156146)
-References: <20180517231512.13085-1-niklas.cassel@linaro.org>
- <CAJ-Vmon1ybhWs_8Nv=w62pmhSizDdDeYCgK8_HTTwPZ=EEC46g@mail.gmail.com>
- <20180521203701.GA7619@localhost.localdomain>
- <20180524155034.xse7cfm5figfktuj@localhost>
- <20180525123656.GB8780@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180525123656.GB8780@localhost.localdomain>
+        Wed, 30 May 2018 03:20:18 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 30 May 2018 10:20:03 +0300
+Message-Id: <20180530072005.633-9-luca@coelho.fi> (sfid-20180530_092030_310801_84413100)
+In-Reply-To: <20180530072005.633-1-luca@coelho.fi>
+References: <20180530072005.633-1-luca@coelho.fi>
+Subject: [PATCH 08/10] iwlwifi: mvm: honor the max_amsdu_subframes limit
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 25, 2018 at 02:36:56PM +0200, Niklas Cassel wrote:
-> A spin lock does have the advantage of ordering: memory operations issued
-> before the spin_unlock_bh() will be completed before the spin_unlock_bh()
-> operation has completed.
-> 
-> However, ath10k_htt_tx_dec_pending() was called earlier in the same function,
-> which decreases htt->num_pending_tx, so that write will be completed before
-> our read. That is the only ordering we care about here (if we should call
-> ath10k_mac_tx_push_pending() or not).
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Sure.  I also understand that reading inside a lock and operating on the
-value outside the lock isn't really the definition of synchronization
-(doesn't really matter in this case though).
+A peer can limit the number of subframes it can handle in a
+single A-MSDU.  Honor this limit.
 
-I was just suggesting that the implicit memory barrier in the spin unlock
-that we are already paying for would be sufficient here too, and it matches
-the semantic of "tx fields under tx_lock."  On the other hand, maybe it's
-just me, but I tend to look askance at just-in-case READ_ONCEs sprinkled
-about.
+Note that the smallest limit is 8, and we are very unlikely to reach
+that limit. So this isn't really a big deal.
 
+Fixes: a6d5e32f247c ("iwlwifi: mvm: send large SKBs to the transport")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 0b7f98d00298..cf2591f2ac23 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -844,6 +844,10 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	 */
+ 	num_subframes = (max_amsdu_len + pad) / (subf_len + pad);
+ 
++	if (sta->max_amsdu_subframes &&
++	    num_subframes > sta->max_amsdu_subframes)
++		num_subframes = sta->max_amsdu_subframes;
++
+ 	tcp_payload_len = skb_tail_pointer(skb) - skb_transport_header(skb) -
+ 		tcp_hdrlen(skb) + skb->data_len;
+ 
 -- 
-Bob Copeland %% https://bobcopeland.com/
+2.17.0
