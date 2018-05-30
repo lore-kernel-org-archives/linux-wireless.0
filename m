@@ -1,76 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:39028 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751626AbeEOMoI (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:52753 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964984AbeE3JGj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 May 2018 08:44:08 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w4FCdf1i008364
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2018 08:44:07 -0400
-Received: from e06smtp12.uk.ibm.com (e06smtp12.uk.ibm.com [195.75.94.108])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2hyy6fswng-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2018 08:44:06 -0400
-Received: from localhost
-        by e06smtp12.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-wireless@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
-        Tue, 15 May 2018 13:44:04 +0100
-Subject: Re: [PATCH 3/6] firmware: differentiate between signed
- regulatory.db and other firmware
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-To: Josh Boyer <jwboyer@kernel.org>, mcgrof@kernel.org
-Cc: Harald Hoyer <harald@redhat.com>, Hannes Reinecke <hare@suse.de>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        Casey Schaufler <casey@schaufler-ca.com>, ast@kernel.org,
-        David Miller <davem@davemloft.net>, jeyu@kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>,
-        Matthew Garrett <mjg59@srcf.ucam.org>,
-        Peter Jones <pjones@redhat.com>, takahiro.akashi@linaro.org,
-        David Howells <dhowells@redhat.com>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Wed, 30 May 2018 05:06:39 -0400
+Received: by mail-wm0-f66.google.com with SMTP id 18-v6so40851349wml.2
+        for <linux-wireless@vger.kernel.org>; Wed, 30 May 2018 02:06:39 -0700 (PDT)
+Date: Wed, 30 May 2018 11:06:34 +0200
+From: Michael Trimarchi <michael@amarulasolutions.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Seth Forshee <seth.forshee@canonical.com>,
-        johannes.berg@intel.com, linux-integrity@vger.kernel.org,
-        Hans de Goede <hdegoede@redhat.com>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        linux-security-module <linux-security-module@vger.kernel.org>,
-        "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Greg KH <gregkh@linuxfoundation.org>, andresx7@gmail.com,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        luto@kernel.org, Justin Forbes <jforbes@redhat.com>,
-        Laura Abbott <labbott@redhat.com>
-Date: Tue, 15 May 2018 08:43:39 -0400
-In-Reply-To: <CA+5PVA7QU0k91zvoBTAFzG+unkh-=-s9Lhk3hn3eTJhHo4ovCQ@mail.gmail.com>
-References: <20180509212212.GX27853@wotan.suse.de>
-         <1525903617.3551.281.camel@linux.vnet.ibm.com>
-         <20180509234814.GY27853@wotan.suse.de>
-         <1525917658.3551.322.camel@linux.vnet.ibm.com>
-         <20180510232639.GF27853@wotan.suse.de>
-         <1526014826.3414.46.camel@linux.vnet.ibm.com>
-         <20180511215250.GJ27853@wotan.suse.de>
-         <1526302692.3898.145.camel@linux.vnet.ibm.com>
-         <20180514192853.GM27853@wotan.suse.de>
-         <1526349751.3937.78.camel@linux.vnet.ibm.com>
-         <20180515032656.GR27853@wotan.suse.de>
-         <CA+5PVA7QU0k91zvoBTAFzG+unkh-=-s9Lhk3hn3eTJhHo4ovCQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Message-Id: <1526388219.3937.137.camel@linux.vnet.ibm.com> (sfid-20180515_144413_208161_9BE7375C)
+        "David S. Miller" <davem@davemloft.net>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Ian Molton <ian@mnementh.co.uk>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH V2] brcmfmac: stop watchdog before detach and free everything
+Message-ID: <20180530090633.GA15390@panicking> (sfid-20180530_110758_733867_9C106B67)
+References: <1527493857-2220-1-git-send-email-michael@amarulasolutions.com>
+ <5B0D1C9E.4000800@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5B0D1C9E.4000800@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-05-15 at 08:32 -0400, Josh Boyer wrote:
+Using built-in in kernel image without a firmware in filesystem
+or in the kernel image can lead to a kernel NULL pointer deference.
+Watchdog need to be stopped in brcmf_sdio_remove
 
-> One aspect that was always a concern to some is whether the firmware files
-> were modified directly to have the signature attached to them.  That may
-> run afoul of the "no modification" license that most blobs are shipped
-> under.  Does IMA have the signatures for the files stored in xattrs or in
-> some other detached manner?
+The system is going down NOW!
+[ 1348.110759] Unable to handle kernel NULL pointer dereference at virtual address 000002f8
+Sent SIGTERM to all processes
+[ 1348.121412] Mem abort info:
+[ 1348.126962]   ESR = 0x96000004
+[ 1348.130023]   Exception class = DABT (current EL), IL = 32 bits
+[ 1348.135948]   SET = 0, FnV = 0
+[ 1348.138997]   EA = 0, S1PTW = 0
+[ 1348.142154] Data abort info:
+[ 1348.145045]   ISV = 0, ISS = 0x00000004
+[ 1348.148884]   CM = 0, WnR = 0
+[ 1348.151861] user pgtable: 4k pages, 48-bit VAs, pgdp = (____ptrval____)
+[ 1348.158475] [00000000000002f8] pgd=0000000000000000
+[ 1348.163364] Internal error: Oops: 96000004 [#1] PREEMPT SMP
+[ 1348.168927] Modules linked in: ipv6
+[ 1348.172421] CPU: 3 PID: 1421 Comm: brcmf_wdog/mmc0 Not tainted 4.17.0-rc5-next-20180517 #18
+[ 1348.180757] Hardware name: Amarula A64-Relic (DT)
+[ 1348.185455] pstate: 60000005 (nZCv daif -PAN -UAO)
+[ 1348.190251] pc : brcmf_sdiod_freezer_count+0x0/0x20
+[ 1348.195124] lr : brcmf_sdio_watchdog_thread+0x64/0x290
+[ 1348.200253] sp : ffff00000b85be30
+[ 1348.203561] x29: ffff00000b85be30 x28: 0000000000000000
+[ 1348.208868] x27: ffff00000b6cb918 x26: ffff80003b990638
+[ 1348.214176] x25: ffff0000087b1a20 x24: ffff80003b94f800
+[ 1348.219483] x23: ffff000008e620c8 x22: ffff000008f0b660
+[ 1348.224790] x21: ffff000008c6a858 x20: 00000000fffffe00
+[ 1348.230097] x19: ffff80003b94f800 x18: 0000000000000001
+[ 1348.235404] x17: 0000ffffab2e8a74 x16: ffff0000080d7de8
+[ 1348.240711] x15: 0000000000000000 x14: 0000000000000400
+[ 1348.246018] x13: 0000000000000400 x12: 0000000000000001
+[ 1348.251324] x11: 00000000000002c4 x10: 0000000000000a10
+[ 1348.256631] x9 : ffff00000b85bc40 x8 : ffff80003be11870
+[ 1348.261937] x7 : ffff80003dfc7308 x6 : 000000078ff08b55
+[ 1348.267243] x5 : 00000139e1058400 x4 : 0000000000000000
+[ 1348.272550] x3 : dead000000000100 x2 : 958f2788d6618100
+[ 1348.277856] x1 : 00000000fffffe00 x0 : 0000000000000000
 
-They're stored as xattrs.  RPM has support for including file
-signatures in the RPM header.
+Signed-off-by: Michael Trimarchi <michael@amarulasolutions.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Mimi
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 412a05b..061f69d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -4294,6 +4294,13 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+ 	if (bus) {
++		/* Stop watchdog task */
++		if (bus->watchdog_tsk) {
++			send_sig(SIGTERM, bus->watchdog_tsk, 1);
++			kthread_stop(bus->watchdog_tsk);
++			bus->watchdog_tsk = NULL;
++		}
++
+ 		/* De-register interrupt handler */
+ 		brcmf_sdiod_intr_unregister(bus->sdiodev);
+ 
+-- 
+2.7.4
