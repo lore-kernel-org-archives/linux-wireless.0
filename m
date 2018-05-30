@@ -1,74 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dnvrco-outbound-snat.email.rr.com ([107.14.73.226]:47141 "EHLO
-        dnvrco-cmomta01.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1754842AbeEZOdK (ORCPT
+Received: from userp2120.oracle.com ([156.151.31.85]:55716 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753537AbeE3L3Y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 26 May 2018 10:33:10 -0400
-Message-ID: <20180526143308.CO49W.49588.root@dnvrco-web22> (sfid-20180526_163403_925778_19982813)
-Date: Sat, 26 May 2018 14:33:08 +0000
-From: <mgreger@cinci.rr.com>
-To: sedat.dilek@gmail.com
-Subject: Re: Atheros AR9462 - 5Ghz not working
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CA+icZUX+p2feWOnXSA=m3i+r560Mo2kHsadT4qFhx8VvUv_k8A@mail.gmail.com>
+        Wed, 30 May 2018 07:29:24 -0400
+Date: Wed, 30 May 2018 14:29:04 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Thibaut Robert <thibaut.robert@gmail.com>
+Cc: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/1] staging: wilc1000: Use common structs to parse ip
+ packets
+Message-ID: <20180530112904.x4vcpkdmqhpc7xll@mwanda> (sfid-20180530_133043_373640_78C9D28E)
+References: <20180529190839.12818-1-thibaut.robert@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180529190839.12818-1-thibaut.robert@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, May 29, 2018 at 09:08:39PM +0200, Thibaut Robert wrote:
+>  static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+>  {
+> -	u8 *eth_hdr_ptr;
+> +	const struct ethhdr *eth_hdr_ptr = (const struct ethhdr *)tqe->buffer;
+> +
+>  	u8 *buffer = tqe->buffer;
 
----- Sedat Dilek <sedat.dilek@gmail.com> wrote: 
-> On Tue, May 22, 2018 at 7:21 PM,  <mgreger@cinci.rr.com> wrote:
-> > I've run out of ideas and am hoping someone here can help.
-> >
-> > All I want to do is connect a client to my 5Ghz network.
-> >
-> > My client:
-> >   OS is Debian stable "Stretch" with sysvinit instead of systemd
-> >   Atheros AR9462 (World roaming 0x64 regdomain in EEPROM)
-> >   "iw reg set US"
-> >   "iw list" shows both 2.4Ghz and 5Ghz bands available.
-> >   "iw wlp3s0 survey dump" shows received traffic on 5Ghz bands.
-> >
-> > There are oodles of 5Ghz AP's within range, but scans (including passive scans) reveal only 2.4Ghz networks. My only guess was that it won't transmit due to regulatory requirements, but I cannot make it work.
-> >
-> > What I've tried:
-> >   Running with and without CRDA
-> >   Running latest mainline kernel
-> >   Hacking around on the ath9k driver and nl80211 to remove all regulatory enforcement.
-> >
-> > Nothing works and I'm pulling my hair out. Any help would be greatly appreciated.
-> 
-> Hi,
-> 
-> I try to give some initial help.
-> 
-> The linux-wireless driver is supported by ath9k driver see [1] and [2].
-> 
-> Unfortunately, you have not sent any log-files at least your dmesg-log.
-> No output of the above userspace commands or userspace-tools versions.
-> No information to VendorID/ProductID (PCI, USB, whatever).
-> It's not clear to me if this is a kernelspace (ath9k-driver) or
-> userspace (CRDA/regulatory) problem.
-> How should someone help you effectively?
-> 
-> The linux-wireless wiki has somne informations on how to debug
-> Atheros/Qualcomm ath9k-driver, see [3].
-> 
-> As a debianist I say try Linux v4.16 Debian packages from
-> stretch-backports (and maybe a higher version of wireless-regdb).
-> 
-> Try to ask questions the smart way [4] :-).
-> 
-> Hope this helps.
-> 
-> Regards,
-> - Sedat -
-> 
-> [1] https://wireless.wiki.kernel.org/en/users/drivers/ath9k
-> [2] https://wireless.wiki.kernel.org/en/users/drivers/ath9k/devices
-> [3] https://wireless.wiki.kernel.org/en/users/drivers/ath9k/debug
-> [4] http://www.catb.org/esr/faqs/smart-questions.html
+No blank line, please.
+
+> -	unsigned short h_proto;
+>  	int i;
+>  	unsigned long flags;
+>  	struct wilc_vif *vif;
+> @@ -197,37 +199,25 @@ static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+>  
+>  	spin_lock_irqsave(&wilc->txq_spinlock, flags);
+>  
+> -	eth_hdr_ptr = &buffer[0];
+> -	h_proto = ntohs(*((unsigned short *)&eth_hdr_ptr[12]));
+> -	if (h_proto == ETH_P_IP) {
+> -		u8 *ip_hdr_ptr;
+> -		u8 protocol;
+> -
+> -		ip_hdr_ptr = &buffer[ETHERNET_HDR_LEN];
+> -		protocol = ip_hdr_ptr[9];
+> +	if (eth_hdr_ptr->h_proto == htons(ETH_P_IP)) {
+> +		const struct iphdr *ip_hdr_ptr = (const struct iphdr *)
+> +		  (buffer + ETH_HLEN);
+
+If you declared buffer as a void pointer you could remove this cast.
+
+		const struct iphdr *ip_hdr_ptr = buf + ETH_HLEN;
 
 
-Oops, in my first reply I listed base_eeprom twice. The second one should read modal_eeprom. The data is correct, the file name is not.
+>  
+> -		if (protocol == 0x06) {
+> -			u8 *tcp_hdr_ptr;
+> +		if (ip_hdr_ptr->protocol == IPPROTO_TCP) {
+> +			const struct tcphdr *tcp_hdr_ptr;
+>  			u32 IHL, total_length, data_offset;
+>  
+> -			tcp_hdr_ptr = &ip_hdr_ptr[IP_HDR_LEN];
+> -			IHL = (ip_hdr_ptr[0] & 0xf) << 2;
+> -			total_length = ((u32)ip_hdr_ptr[2] << 8) +
+> -					(u32)ip_hdr_ptr[3];
+> -			data_offset = ((u32)tcp_hdr_ptr[12] & 0xf0) >> 2;
+> +			IHL = ip_hdr_ptr->ihl << 2;
+> +			tcp_hdr_ptr = (const struct tcphdr *)
+> +			  ((u8 *)ip_hdr_ptr + IHL);
+
+This alignment is a bit unfortunate...  Perhaps?
+
+			tcp_hdr_ptr = buf + ETH_HLEN + IHL;
+
+regards,
+dan carpenter
