@@ -1,116 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www262.sakura.ne.jp ([202.181.97.72]:19968 "EHLO
-        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751968AbeEGKK5 (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:45514 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932242AbeE3UPn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 06:10:57 -0400
-Subject: Re: WARNING in kernfs_add_one
-To: Greg KH <gregkh@linuxfoundation.org>,
-        Eric Dumazet <eric.dumazet@gmail.com>,
-        syzbot <syzbot+df47f81c226b31d89fb1@syzkaller.appspotmail.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, syzkaller-bugs@googlegroups.com,
-        tj@kernel.org, Johannes Berg <johannes@sipsolutions.net>
-References: <0000000000000390eb056b77596d@google.com>
- <20180505164041.GD7746@kroah.com>
- <095bc684-0029-0b2e-5e28-23376174ca02@gmail.com>
- <20180505220721.GA10829@kroah.com>
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Message-ID: <7e25235d-0a11-87fb-cf81-56d6c13f40b0@I-love.SAKURA.ne.jp> (sfid-20180507_121101_136709_901E5733)
-Date: Mon, 7 May 2018 19:10:31 +0900
+        Wed, 30 May 2018 16:15:43 -0400
+Received: by mail-lf0-f67.google.com with SMTP id n3-v6so6255230lfe.12
+        for <linux-wireless@vger.kernel.org>; Wed, 30 May 2018 13:15:42 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V2 2/3] brcmfmac: handle monitor mode marked msgbuf packets
+Date: Wed, 30 May 2018 22:13:00 +0200
+Message-Id: <20180530201301.4648-2-zajec5@gmail.com> (sfid-20180530_221555_277051_6E4F207D)
+In-Reply-To: <20180530201301.4648-1-zajec5@gmail.com>
+References: <20180530201301.4648-1-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180505220721.GA10829@kroah.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018/05/06 7:07, Greg KH wrote:
->> More likely wireless territory
-> 
-> Ugh, that's what I get for writing emails before coffee in the
-> morning...
-> 
-> Yes, you are right, this looks like a wireless issue.
-> 
-> Now cc: linux-wireless.
-> 
-Nope, if you look at previous fault injection messages...
+From: Rafał Miłecki <rafal@milecki.pl>
 
+New Broadcom firmwares mark monitor mode packets using a newly defined
+bit in the flags field. Use it to filter them out and pass to the
+monitor interface. These defines were found in bcmmsgbuf.h from SDK.
 
+As not every firmware generates radiotap header this commit introduces
+BRCMF_FEAT_MON_FMT_RADIOTAP that has to be set per firmware version. If
+not present brcmf_netif_mon_rx() assumed packet being a raw 802.11 frame
+and prepends it with an empty radiotap header.
 
->From 7ddcaa3d4327d4f29d11053bd2011bf77ecf72af Mon Sep 17 00:00:00 2001
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Date: Mon, 7 May 2018 14:19:50 +0900
-Subject: [PATCH] driver core: Don't ignore class_dir_create_and_add() failure.
+It's limited to the msgbuf protocol. Adding support for SDIO/USB devices
+will require some extra research.
 
-syzbot is hitting WARN() at kernfs_add_one() [1].
-This is because kernfs_create_link() is confused by previous device_add()
-call which continued without setting dev->kobj.parent field when
-get_device_parent() failed by memory allocation fault injection.
-Fix this by propagating the error from class_dir_create_and_add() to
-the calllers of get_device_parent().
-
-[1] https://syzkaller.appspot.com/bug?id=fae0fb607989ea744526d1c082a5b8de6529116f
-
-Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Reported-by: syzbot <syzbot+df47f81c226b31d89fb1@syzkaller.appspotmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
- drivers/base/core.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+V2: Use cpu_to_le16 when setting it_len
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 24 ++++++++++++++++++++++
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  2 ++
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.h |  6 +++++-
+ .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  | 17 +++++++++++++++
+ 4 files changed, 48 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index b610816..d680fd0 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -1467,7 +1467,7 @@ class_dir_create_and_add(struct class *class, struct kobject *parent_kobj)
- 
- 	dir = kzalloc(sizeof(*dir), GFP_KERNEL);
- 	if (!dir)
--		return NULL;
-+		return ERR_PTR(-ENOMEM);
- 
- 	dir->class = class;
- 	kobject_init(&dir->kobj, &class_dir_ktype);
-@@ -1477,7 +1477,7 @@ class_dir_create_and_add(struct class *class, struct kobject *parent_kobj)
- 	retval = kobject_add(&dir->kobj, parent_kobj, "%s", class->name);
- 	if (retval < 0) {
- 		kobject_put(&dir->kobj);
--		return NULL;
-+		return ERR_PTR(retval);
- 	}
- 	return &dir->kobj;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 72954fd6df3b..c9e1f6fcc57b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -21,6 +21,7 @@
+ #include <net/cfg80211.h>
+ #include <net/rtnetlink.h>
+ #include <net/addrconf.h>
++#include <net/ieee80211_radiotap.h>
+ #include <net/ipv6.h>
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
+@@ -404,6 +405,29 @@ void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb)
+ 		netif_rx_ni(skb);
  }
-@@ -1784,6 +1784,10 @@ int device_add(struct device *dev)
  
- 	parent = get_device(dev->parent);
- 	kobj = get_device_parent(dev, parent);
-+	if (IS_ERR(kobj)) {
-+		error = PTR_ERR(kobj);
-+		goto parent_error;
++void brcmf_netif_mon_rx(struct brcmf_if *ifp, struct sk_buff *skb)
++{
++	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MON_FMT_RADIOTAP)) {
++		/* Do nothing */
++	} else {
++		struct ieee80211_radiotap_header *radiotap;
++
++		radiotap = skb_push(skb, sizeof(*radiotap));
++		memset(radiotap, 0, sizeof(*radiotap));
++		radiotap->it_len = cpu_to_le16(sizeof(*radiotap));
++
++		/* TODO: what are these extra 4 bytes? */
++		skb->len -= 4;
 +	}
- 	if (kobj)
- 		dev->kobj.parent = kobj;
++
++	skb->dev = ifp->ndev;
++	skb_reset_mac_header(skb);
++	skb->pkt_type = PACKET_OTHERHOST;
++	skb->protocol = htons(ETH_P_802_2);
++
++	brcmf_netif_rx(ifp, skb);
++}
++
+ static int brcmf_rx_hdrpull(struct brcmf_pub *drvr, struct sk_buff *skb,
+ 			    struct brcmf_if **ifp)
+ {
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+index 401f50458686..dcf6e27cc16f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+@@ -121,6 +121,7 @@ struct brcmf_pub {
  
-@@ -1882,6 +1886,7 @@ int device_add(struct device *dev)
- 	kobject_del(&dev->kobj);
-  Error:
- 	cleanup_glue_dir(dev, glue_dir);
-+parent_error:
- 	put_device(parent);
- name_error:
- 	kfree(dev->p);
-@@ -2701,6 +2706,11 @@ int device_move(struct device *dev, struct device *new_parent,
- 	device_pm_lock();
- 	new_parent = get_device(new_parent);
- 	new_parent_kobj = get_device_parent(dev, new_parent);
-+	if (IS_ERR(new_parent_kobj)) {
-+		error = PTR_ERR(new_parent_kobj);
-+		put_device(new_parent);
-+		goto out;
+ 	struct brcmf_if *iflist[BRCMF_MAX_IFS];
+ 	s32 if2bss[BRCMF_MAX_IFS];
++	struct brcmf_if *mon_if;
+ 
+ 	struct mutex proto_block;
+ 	unsigned char proto_buf[BRCMF_DCMD_MAXLEN];
+@@ -216,6 +217,7 @@ void brcmf_txflowblock_if(struct brcmf_if *ifp,
+ 			  enum brcmf_netif_stop_reason reason, bool state);
+ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success);
+ void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb);
++void brcmf_netif_mon_rx(struct brcmf_if *ifp, struct sk_buff *skb);
+ void brcmf_net_setcarrier(struct brcmf_if *ifp, bool on);
+ int __init brcmf_core_init(void);
+ void __exit brcmf_core_exit(void);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+index d1193825e559..6e417d104b7f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+@@ -33,6 +33,8 @@
+  * MFP: 802.11w Management Frame Protection.
+  * GSCAN: enhanced scan offload feature.
+  * FWSUP: Firmware supplicant.
++ * MON_802_11_FLAG: monitor packets flagged as 802.11
++ * MON_FMT_RADIOTAP: monitor packets include radiotap header
+  */
+ #define BRCMF_FEAT_LIST \
+ 	BRCMF_FEAT_DEF(MBSS) \
+@@ -48,7 +50,9 @@
+ 	BRCMF_FEAT_DEF(WOWL_ARP_ND) \
+ 	BRCMF_FEAT_DEF(MFP) \
+ 	BRCMF_FEAT_DEF(GSCAN) \
+-	BRCMF_FEAT_DEF(FWSUP)
++	BRCMF_FEAT_DEF(FWSUP) \
++	BRCMF_FEAT_DEF(MON_802_11_FLAG) \
++	BRCMF_FEAT_DEF(MON_FMT_RADIOTAP)
+ 
+ /*
+  * Quirks:
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+index 49d37ad96958..47a9318cccb8 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+@@ -69,6 +69,8 @@
+ #define BRCMF_MSGBUF_MAX_EVENTBUF_POST		8
+ 
+ #define BRCMF_MSGBUF_PKT_FLAGS_FRAME_802_3	0x01
++#define BRCMF_MSGBUF_PKT_FLAGS_FRAME_802_11	0x02
++#define BRCMF_MSGBUF_PKT_FLAGS_FRAME_MASK	0x07
+ #define BRCMF_MSGBUF_PKT_FLAGS_PRIO_SHIFT	5
+ 
+ #define BRCMF_MSGBUF_TX_FLUSH_CNT1		32
+@@ -1128,6 +1130,7 @@ brcmf_msgbuf_process_rx_complete(struct brcmf_msgbuf *msgbuf, void *buf)
+ 	struct sk_buff *skb;
+ 	u16 data_offset;
+ 	u16 buflen;
++	u16 flags;
+ 	u32 idx;
+ 	struct brcmf_if *ifp;
+ 
+@@ -1137,6 +1140,7 @@ brcmf_msgbuf_process_rx_complete(struct brcmf_msgbuf *msgbuf, void *buf)
+ 	data_offset = le16_to_cpu(rx_complete->data_offset);
+ 	buflen = le16_to_cpu(rx_complete->data_len);
+ 	idx = le32_to_cpu(rx_complete->msg.request_id);
++	flags = le16_to_cpu(rx_complete->flags);
+ 
+ 	skb = brcmf_msgbuf_get_pktid(msgbuf->drvr->bus_if->dev,
+ 				     msgbuf->rx_pktids, idx);
+@@ -1150,6 +1154,19 @@ brcmf_msgbuf_process_rx_complete(struct brcmf_msgbuf *msgbuf, void *buf)
+ 
+ 	skb_trim(skb, buflen);
+ 
++	if ((flags & BRCMF_MSGBUF_PKT_FLAGS_FRAME_MASK) ==
++	    BRCMF_MSGBUF_PKT_FLAGS_FRAME_802_11) {
++		ifp = msgbuf->drvr->mon_if;
++
++		if (!ifp) {
++			brcmf_err("Received unexpected monitor pkt\n");
++			brcmu_pkt_buf_free_skb(skb);
++		}
++
++		brcmf_netif_mon_rx(ifp, skb);
++		return;
 +	}
- 
- 	pr_debug("device: '%s': %s: moving to '%s'\n", dev_name(dev),
- 		 __func__, new_parent ? dev_name(new_parent) : "<NULL>");
++
+ 	ifp = brcmf_get_ifp(msgbuf->drvr, rx_complete->msg.ifidx);
+ 	if (!ifp || !ifp->ndev) {
+ 		brcmf_err("Received pkt for invalid ifidx %d\n",
 -- 
-1.8.3.1
+2.13.6
