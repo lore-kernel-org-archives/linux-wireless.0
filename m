@@ -1,77 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam01on0071.outbound.protection.outlook.com ([104.47.34.71]:24955
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0136.outbound.protection.outlook.com ([104.47.38.136]:43569
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754093AbeEaJLS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 May 2018 05:11:18 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>
-Subject: [PATCH 1/6] qtnfmac: implement net_device_ops callback to set MAC address
-Date: Thu, 31 May 2018 12:10:57 +0300
-Message-Id: <20180531091102.28666-2-sergey.matyukevich.os@quantenna.com> (sfid-20180531_111123_571395_3D4A8726)
-In-Reply-To: <20180531091102.28666-1-sergey.matyukevich.os@quantenna.com>
-References: <20180531091102.28666-1-sergey.matyukevich.os@quantenna.com>
+        id S935905AbeE3Gyl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 May 2018 02:54:41 -0400
+From: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+To: linux-firmware@kernel.org
+Cc: linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, Josh Boyer <jwboyer@kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Subject: [PATCH V4 0/6] Cypress license and firmware update
+Date: Wed, 30 May 2018 01:54:21 -0500
+Message-Id: <1527663267-71412-1-git-send-email-chi-hsien.lin@cypress.com> (sfid-20180530_085518_930581_D5AF7E55)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Update Cypress license termination clause and several firmware files.
 
-Implement net_device_ops::ndo_set_mac_address callback to allow for
-setting interface MAC address. Implementation is done through existing
-CHANGE_INTF firmware command. All validation is to be done by firmware.
+Chi-Hsien Lin (6):
+  Update Cypress license termination clause
+  brcm: update firmware for bcm43430 sdio
+  brcm: update firmware for bcm43340 sdio
+  brcm: update firmware for bcm43362 sdio
+  brcm: update firmware for bcm4354 sdio
+  brcm: update firmware for bcm4356 pcie
 
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/core.c | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+ LICENCE.cypress             |   5 ++---
+ WHENCE                      |  10 +++++-----
+ brcm/brcmfmac43340-sdio.bin | Bin 402210 -> 400864 bytes
+ brcm/brcmfmac43362-sdio.bin | Bin 219557 -> 200801 bytes
+ brcm/brcmfmac43430-sdio.bin | Bin 369577 -> 388739 bytes
+ brcm/brcmfmac4354-sdio.bin  | Bin 626589 -> 605388 bytes
+ brcm/brcmfmac4356-pcie.bin  | Bin 661999 -> 648770 bytes
+ 7 files changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
-index a6a450984f9a..c318340e1bd5 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/core.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
-@@ -179,6 +179,30 @@ static void qtnf_netdev_tx_timeout(struct net_device *ndev)
- 	}
- }
- 
-+static int qtnf_netdev_set_mac_address(struct net_device *ndev, void *addr)
-+{
-+	struct qtnf_vif *vif = qtnf_netdev_get_priv(ndev);
-+	struct sockaddr *sa = addr;
-+	int ret;
-+	unsigned char old_addr[ETH_ALEN];
-+
-+	memcpy(old_addr, sa->sa_data, sizeof(old_addr));
-+
-+	ret = eth_mac_addr(ndev, sa);
-+	if (ret)
-+		return ret;
-+
-+	qtnf_scan_done(vif->mac, true);
-+
-+	ret = qtnf_cmd_send_change_intf_type(vif, vif->wdev.iftype,
-+					     sa->sa_data);
-+
-+	if (ret)
-+		memcpy(ndev->dev_addr, old_addr, ETH_ALEN);
-+
-+	return ret;
-+}
-+
- /* Network device ops handlers */
- const struct net_device_ops qtnf_netdev_ops = {
- 	.ndo_open = qtnf_netdev_open,
-@@ -186,6 +210,7 @@ const struct net_device_ops qtnf_netdev_ops = {
- 	.ndo_start_xmit = qtnf_netdev_hard_start_xmit,
- 	.ndo_tx_timeout = qtnf_netdev_tx_timeout,
- 	.ndo_get_stats64 = qtnf_netdev_get_stats64,
-+	.ndo_set_mac_address = qtnf_netdev_set_mac_address,
- };
- 
- static int qtnf_mac_init_single_band(struct wiphy *wiphy,
 -- 
-2.11.0
+2.1.0
