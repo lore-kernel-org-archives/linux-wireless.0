@@ -1,241 +1,299 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:45392 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753378AbeERJal (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48392 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932168AbeE3TI6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 May 2018 05:30:41 -0400
-From: <pkshih@realtek.com>
-To: <kvalo@codeaurora.org>
-CC: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 12/14] rtlwifi: use sk_buff to queue C2H commands
-Date: Fri, 18 May 2018 17:30:05 +0800
-Message-ID: <20180518093007.23594-13-pkshih@realtek.com> (sfid-20180518_113100_687573_F17F45F0)
-In-Reply-To: <20180518093007.23594-1-pkshih@realtek.com>
-References: <20180518093007.23594-1-pkshih@realtek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 30 May 2018 15:08:58 -0400
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [RFCv3 1/7] wireless: Change single cqm_config to rssi config list
+Date: Thu, 31 May 2018 00:38:40 +0530
+Message-Id: <1527707326-2822-2-git-send-email-tamizhr@codeaurora.org> (sfid-20180530_210904_480904_D251F9E3)
+In-Reply-To: <1527707326-2822-1-git-send-email-tamizhr@codeaurora.org>
+References: <1527707326-2822-1-git-send-email-tamizhr@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+This patch changes single cqm_config into mac address based
+rssi config list. This way the same structure can be
+utilized by AP mode as well.
 
-We use 'struct rtl_c2hcmd' to store C2H commands originally, and the code
-is slightly complex to enqueue and dequeue and also wastes time to
-allocate and memcpy data. Since C2H commands are asynchronous events,
-they can be processed in work queue, so RX ISR enqueues C2H result in
-removal of rtl_c2h_packet_handler().
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/base.c | 96 +++++++----------------------
- drivers/net/wireless/realtek/rtlwifi/base.h |  5 +-
- drivers/net/wireless/realtek/rtlwifi/pci.c  |  3 +-
- drivers/net/wireless/realtek/rtlwifi/wifi.h |  2 +-
- 4 files changed, 25 insertions(+), 81 deletions(-)
+ include/net/cfg80211.h |  7 +++--
+ net/wireless/core.c    | 29 ++++++++++++++++----
+ net/wireless/core.h    |  6 ++--
+ net/wireless/nl80211.c | 74 +++++++++++++++++++++++++++++++++-----------------
+ 4 files changed, 81 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 927b7d231576..61f12f86fcd4 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -571,9 +571,9 @@ int rtl_init_core(struct ieee80211_hw *hw)
- 	spin_lock_init(&rtlpriv->locks.iqk_lock);
- 	/* <5> init list */
- 	INIT_LIST_HEAD(&rtlpriv->entry_list);
--	INIT_LIST_HEAD(&rtlpriv->c2hcmd_list);
- 	INIT_LIST_HEAD(&rtlpriv->scan_list.list);
- 	skb_queue_head_init(&rtlpriv->tx_report.queue);
-+	skb_queue_head_init(&rtlpriv->c2hcmd_queue);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 5fbfe61..656031e 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4139,7 +4139,7 @@ static inline struct wiphy *wiphy_new(const struct cfg80211_ops *ops,
+ struct cfg80211_conn;
+ struct cfg80211_internal_bss;
+ struct cfg80211_cached_keys;
+-struct cfg80211_cqm_config;
++struct cfg80211_rssi_config;
  
- 	rtlmac->link_state = MAC80211_NOLINK;
+ /**
+  * struct wireless_dev - wireless device state
+@@ -4204,7 +4204,7 @@ static inline struct wiphy *wiphy_new(const struct cfg80211_ops *ops,
+  * @event_lock: (private) lock for event list
+  * @owner_nlportid: (private) owner socket port ID
+  * @nl_owner_dead: (private) owner socket went away
+- * @cqm_config: (private) nl80211 RSSI monitor state
++ * @rssi_config: (private) nl80211 RSSI monitor state
+  */
+ struct wireless_dev {
+ 	struct wiphy *wiphy;
+@@ -4275,7 +4275,8 @@ struct wireless_dev {
+ 	} wext;
+ #endif
  
-@@ -2262,56 +2262,36 @@ void rtl_fwevt_wq_callback(void *data)
- 	rtlpriv->cfg->ops->c2h_command_handle(hw);
+-	struct cfg80211_cqm_config *cqm_config;
++	struct cfg80211_rssi_config *rssi_config;
++	struct list_head rssi_config_list;
+ };
+ 
+ static inline u8 *wdev_address(struct wireless_dev *wdev)
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 5fe35aa..62e496e 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -994,10 +994,28 @@ void wiphy_rfkill_set_hw_state(struct wiphy *wiphy, bool blocked)
  }
+ EXPORT_SYMBOL(wiphy_rfkill_set_hw_state);
  
--void rtl_c2hcmd_enqueue(struct ieee80211_hw *hw, u8 tag, u8 len, u8 *val)
-+void rtl_c2hcmd_enqueue(struct ieee80211_hw *hw, struct sk_buff *skb)
+-void cfg80211_cqm_config_free(struct wireless_dev *wdev)
++void cfg80211_rssi_config_free(struct wireless_dev *wdev, const u8 *peer)
  {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	unsigned long flags;
--	struct rtl_c2hcmd *c2hcmd;
--
--	c2hcmd = kmalloc(sizeof(*c2hcmd),
--			 in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
--
--	if (!c2hcmd)
--		goto label_err;
--
--	c2hcmd->val = kmalloc(len,
--			      in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
--
--	if (!c2hcmd->val)
--		goto label_err2;
--
--	/* fill data */
--	c2hcmd->tag = tag;
--	c2hcmd->len = len;
--	memcpy(c2hcmd->val, val, len);
- 
- 	/* enqueue */
- 	spin_lock_irqsave(&rtlpriv->locks.c2hcmd_lock, flags);
- 
--	list_add_tail(&c2hcmd->list, &rtlpriv->c2hcmd_list);
-+	__skb_queue_tail(&rtlpriv->c2hcmd_queue, skb);
- 
- 	spin_unlock_irqrestore(&rtlpriv->locks.c2hcmd_lock, flags);
- 
- 	/* wake up wq */
- 	queue_delayed_work(rtlpriv->works.rtl_wq, &rtlpriv->works.c2hcmd_wq, 0);
--
--	return;
--
--label_err2:
--	kfree(c2hcmd);
--
--label_err:
--	RT_TRACE(rtlpriv, COMP_CMD, DBG_WARNING,
--		 "C2H cmd enqueue fail.\n");
- }
- EXPORT_SYMBOL(rtl_c2hcmd_enqueue);
- 
--void rtl_c2h_content_parsing(struct ieee80211_hw *hw, u8 cmd_id,
--			     u8 cmd_len, u8 *cmd_buf)
-+static void rtl_c2h_content_parsing(struct ieee80211_hw *hw,
-+				    struct sk_buff *skb)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal_ops *hal_ops = rtlpriv->cfg->ops;
- 	const struct rtl_btc_ops *btc_ops = rtlpriv->btcoexist.btc_ops;
-+	u8 cmd_id, cmd_seq, cmd_len;
-+	u8 *cmd_buf = NULL;
+-	kfree(wdev->cqm_config);
+-	wdev->cqm_config = NULL;
++	struct cfg80211_rssi_config *rssi_config, *tmp;
 +
-+	cmd_id = skb->data[0];
-+	cmd_seq = skb->data[1];
-+	cmd_len = skb->len - 2;
-+	cmd_buf = skb->data + 2;
- 
- 	switch (cmd_id) {
- 	case C2H_DBG:
-@@ -2347,67 +2327,35 @@ void rtl_c2h_content_parsing(struct ieee80211_hw *hw, u8 cmd_id,
- 	}
++	if (list_empty(&wdev->rssi_config_list))
++		goto free;
++
++	list_for_each_entry_safe(rssi_config, tmp, &wdev->rssi_config_list,
++				 list) {
++		if (peer && memcmp(rssi_config->addr, peer, ETH_ALEN))
++			continue;
++
++		list_del(&rssi_config->list);
++		kfree(rssi_config);
++		if (list_empty(&wdev->rssi_config_list) || peer)
++			goto out;
++	}
++
++free:
++	kfree(wdev->rssi_config);
++out:
++	wdev->rssi_config = NULL;
  }
  
--void rtl_c2h_packet_handler(struct ieee80211_hw *hw, u8 *buffer, u8 len)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	u8 c2h_cmd_id = 0, c2h_cmd_seq = 0, c2h_cmd_len = 0;
--	u8 *tmp_buf = NULL;
--
--	c2h_cmd_id = buffer[0];
--	c2h_cmd_seq = buffer[1];
--	c2h_cmd_len = len - 2;
--	tmp_buf = buffer + 2;
--
--	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
--		 "[C2H packet], c2hCmdId=0x%x, c2hCmdSeq=0x%x, c2hCmdLen=%d\n",
--		 c2h_cmd_id, c2h_cmd_seq, c2h_cmd_len);
--
--	RT_PRINT_DATA(rtlpriv, COMP_FW, DBG_TRACE,
--		      "[C2H packet], Content Hex:\n", tmp_buf, c2h_cmd_len);
--
--	switch (c2h_cmd_id) {
--	case C2H_BT_INFO:
--	case C2H_BT_MP:
--		rtl_c2hcmd_enqueue(hw, c2h_cmd_id, c2h_cmd_len, tmp_buf);
--		break;
--	default:
--		rtl_c2h_content_parsing(hw, c2h_cmd_id, c2h_cmd_len, tmp_buf);
--		break;
--	}
--}
--EXPORT_SYMBOL_GPL(rtl_c2h_packet_handler);
--
- void rtl_c2hcmd_launcher(struct ieee80211_hw *hw, int exec)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct sk_buff *skb;
- 	unsigned long flags;
--	struct rtl_c2hcmd *c2hcmd;
- 	int i;
+ void cfg80211_unregister_wdev(struct wireless_dev *wdev)
+@@ -1027,7 +1045,7 @@ void cfg80211_unregister_wdev(struct wireless_dev *wdev)
+ 		break;
+ 	}
  
- 	for (i = 0; i < 200; i++) {
- 		/* dequeue a task */
- 		spin_lock_irqsave(&rtlpriv->locks.c2hcmd_lock, flags);
+-	cfg80211_cqm_config_free(wdev);
++	cfg80211_rssi_config_free(wdev, NULL);
+ }
+ EXPORT_SYMBOL(cfg80211_unregister_wdev);
  
--		c2hcmd = list_first_entry_or_null(&rtlpriv->c2hcmd_list,
--						  struct rtl_c2hcmd, list);
--
--		if (c2hcmd)
--			list_del(&c2hcmd->list);
-+		skb = __skb_dequeue(&rtlpriv->c2hcmd_queue);
+@@ -1163,6 +1181,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		spin_lock_init(&wdev->event_lock);
+ 		INIT_LIST_HEAD(&wdev->mgmt_registrations);
+ 		spin_lock_init(&wdev->mgmt_registrations_lock);
++		INIT_LIST_HEAD(&wdev->rssi_config_list);
  
- 		spin_unlock_irqrestore(&rtlpriv->locks.c2hcmd_lock, flags);
+ 		/*
+ 		 * We get here also when the interface changes network namespaces,
+@@ -1292,7 +1311,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 			kzfree(wdev->wext.keys);
+ #endif
+ 			flush_work(&wdev->disconnect_wk);
+-			cfg80211_cqm_config_free(wdev);
++			cfg80211_rssi_config_free(wdev, NULL);
+ 		}
+ 		/*
+ 		 * synchronise (so that we won't find this netdev
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 63eb1b5..170a31b 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -260,10 +260,12 @@ struct cfg80211_beacon_registration {
+ 	u32 nlportid;
+ };
  
- 		/* do it */
--		if (!c2hcmd)
-+		if (!skb)
+-struct cfg80211_cqm_config {
++struct cfg80211_rssi_config {
++	struct list_head list;
+ 	u32 rssi_hyst;
+ 	s32 last_rssi_event_value;
+ 	int n_rssi_thresholds;
++	u8 addr[ETH_ALEN];
+ 	s32 rssi_thresholds[0];
+ };
+ 
+@@ -514,6 +516,6 @@ void cfg80211_stop_nan(struct cfg80211_registered_device *rdev,
+ #define CFG80211_DEV_WARN_ON(cond)	({bool __r = (cond); __r; })
+ #endif
+ 
+-void cfg80211_cqm_config_free(struct wireless_dev *wdev);
++void cfg80211_rssi_config_free(struct wireless_dev *wdev, const u8 *peer);
+ 
+ #endif /* __NET_WIRELESS_CORE_H */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 07514ca..2fb2e97 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3200,6 +3200,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 		spin_lock_init(&wdev->event_lock);
+ 		INIT_LIST_HEAD(&wdev->mgmt_registrations);
+ 		spin_lock_init(&wdev->mgmt_registrations_lock);
++		INIT_LIST_HEAD(&wdev->rssi_config_list);
+ 
+ 		wdev->identifier = ++rdev->wdev_id;
+ 		list_add_rcu(&wdev->list, &rdev->wiphy.wdev_list);
+@@ -10140,7 +10141,7 @@ static int cfg80211_cqm_rssi_update(struct cfg80211_registered_device *rdev,
+ 	int err;
+ 
+ 	/* RSSI reporting disabled? */
+-	if (!wdev->cqm_config)
++	if (!wdev->rssi_config)
+ 		return rdev_set_cqm_rssi_range_config(rdev, dev, 0, 0);
+ 
+ 	/*
+@@ -10149,7 +10150,7 @@ static int cfg80211_cqm_rssi_update(struct cfg80211_registered_device *rdev,
+ 	 * connection is established and enough beacons received to calculate
+ 	 * the average.
+ 	 */
+-	if (!wdev->cqm_config->last_rssi_event_value && wdev->current_bss &&
++	if (!wdev->rssi_config->last_rssi_event_value && wdev->current_bss &&
+ 	    rdev->ops->get_station) {
+ 		struct station_info sinfo = {};
+ 		u8 *mac_addr;
+@@ -10161,26 +10162,56 @@ static int cfg80211_cqm_rssi_update(struct cfg80211_registered_device *rdev,
+ 			return err;
+ 
+ 		if (sinfo.filled & BIT(NL80211_STA_INFO_BEACON_SIGNAL_AVG))
+-			wdev->cqm_config->last_rssi_event_value =
++			wdev->rssi_config->last_rssi_event_value =
+ 				(s8) sinfo.rx_beacon_signal_avg;
+ 	}
+ 
+-	last = wdev->cqm_config->last_rssi_event_value;
+-	hyst = wdev->cqm_config->rssi_hyst;
+-	n = wdev->cqm_config->n_rssi_thresholds;
++	last = wdev->rssi_config->last_rssi_event_value;
++	hyst = wdev->rssi_config->rssi_hyst;
++	n = wdev->rssi_config->n_rssi_thresholds;
+ 
+ 	for (i = 0; i < n; i++)
+-		if (last < wdev->cqm_config->rssi_thresholds[i])
++		if (last < wdev->rssi_config->rssi_thresholds[i])
  			break;
  
-+		RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG, "C2H rx_desc_shift=%d\n",
-+			 *((u8 *)skb->cb));
-+		RT_PRINT_DATA(rtlpriv, COMP_FW, DBG_DMESG,
-+			      "C2H data: ", skb->data, skb->len);
-+
- 		if (exec)
--			rtl_c2h_content_parsing(hw, c2hcmd->tag,
--						c2hcmd->len, c2hcmd->val);
-+			rtl_c2h_content_parsing(hw, skb);
+ 	low = i > 0 ?
+-		(wdev->cqm_config->rssi_thresholds[i - 1] - hyst) : S32_MIN;
++		(wdev->rssi_config->rssi_thresholds[i - 1] - hyst) : S32_MIN;
+ 	high = i < n ?
+-		(wdev->cqm_config->rssi_thresholds[i] + hyst - 1) : S32_MAX;
++		(wdev->rssi_config->rssi_thresholds[i] + hyst - 1) : S32_MAX;
  
- 		/* free */
--		kfree(c2hcmd->val);
--
--		kfree(c2hcmd);
-+		dev_kfree_skb_any(skb);
- 	}
+ 	return rdev_set_cqm_rssi_range_config(rdev, dev, low, high);
  }
  
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.h b/drivers/net/wireless/realtek/rtlwifi/base.h
-index 3bf174e5b07e..912f205779c3 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.h
-@@ -161,10 +161,7 @@ void rtl_watchdog_wq_callback(void *data);
- void rtl_fwevt_wq_callback(void *data);
- void rtl_c2hcmd_wq_callback(void *data);
- void rtl_c2hcmd_launcher(struct ieee80211_hw *hw, int exec);
--void rtl_c2hcmd_enqueue(struct ieee80211_hw *hw, u8 tag, u8 len, u8 *val);
--void rtl_c2h_content_parsing(struct ieee80211_hw *hw, u8 c2h_cmd_id,
--			     u8 c2h_cmd_len, u8 *tmp_buf);
--void rtl_c2h_packet_handler(struct ieee80211_hw *hw, u8 *buffer, u8 len);
-+void rtl_c2hcmd_enqueue(struct ieee80211_hw *hw, struct sk_buff *skb);
++static struct cfg80211_rssi_config *
++cfg80211_get_rssi_config(struct wireless_dev *wdev, const s32 *thresholds,
++			 int n_thresholds, u32 hysteresis, const u8 *peer)
++{
++	struct cfg80211_rssi_config *rssi_config;
++
++	if (!peer)
++		return NULL;
++
++	if (list_empty(&wdev->rssi_config_list))
++		goto new;
++
++	list_for_each_entry(rssi_config, &wdev->rssi_config_list, list) {
++		if (!memcmp(rssi_config->addr, peer, ETH_ALEN))
++			goto found;
++	}
++
++new:
++	rssi_config = kzalloc(sizeof(struct cfg80211_rssi_config) +
++			      n_thresholds * sizeof(s32), GFP_KERNEL);
++	list_add(&rssi_config->list, &wdev->rssi_config_list);
++found:
++	rssi_config->rssi_hyst = hysteresis;
++	rssi_config->n_rssi_thresholds = n_thresholds;
++	memcpy(rssi_config->addr, peer, ETH_ALEN);
++	memcpy(rssi_config->rssi_thresholds, thresholds,
++	       n_thresholds * sizeof(s32));
++	return rssi_config;
++}
++
+ static int nl80211_set_cqm_rssi(struct genl_info *info,
+ 				const s32 *thresholds, int n_thresholds,
+ 				u32 hysteresis)
+@@ -10204,7 +10235,7 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
+ 		return -EOPNOTSUPP;
  
- u8 rtl_mrate_idx_to_arfr_id(struct ieee80211_hw *hw, u8 rate_index,
- 			    enum wireless_mode wirelessmode);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-index dd51c67c09fa..ae13bcfb3bf0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -831,8 +831,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+ 	wdev_lock(wdev);
+-	cfg80211_cqm_config_free(wdev);
++	cfg80211_rssi_config_free(wdev, NULL);
+ 	wdev_unlock(wdev);
+ 
+ 	if (n_thresholds <= 1 && rdev->ops->set_cqm_rssi_config) {
+@@ -10224,21 +10255,14 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
+ 
+ 	wdev_lock(wdev);
+ 	if (n_thresholds) {
+-		struct cfg80211_cqm_config *cqm_config;
+-
+-		cqm_config = kzalloc(sizeof(struct cfg80211_cqm_config) +
+-				     n_thresholds * sizeof(s32), GFP_KERNEL);
+-		if (!cqm_config) {
++		wdev->rssi_config = cfg80211_get_rssi_config(
++						wdev, thresholds,
++						n_thresholds, hysteresis,
++						wdev->current_bss->pub.bssid);
++		if (!wdev->rssi_config) {
+ 			err = -ENOMEM;
+ 			goto unlock;
  		}
- 		/* handle command packet here */
- 		if (stats.packet_report_type == C2H_PACKET) {
--			rtl_c2h_packet_handler(hw, skb->data, (u8)skb->len);
--			dev_kfree_skb_any(skb);
-+			rtl_c2hcmd_enqueue(hw, skb);
- 			goto new_trx_end;
- 		}
+-
+-		cqm_config->rssi_hyst = hysteresis;
+-		cqm_config->n_rssi_thresholds = n_thresholds;
+-		memcpy(cqm_config->rssi_thresholds, thresholds,
+-		       n_thresholds * sizeof(s32));
+-
+-		wdev->cqm_config = cqm_config;
+ 	}
  
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 930e1ec2280f..9e620b943f8c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2791,7 +2791,7 @@ struct rtl_priv {
- 	struct list_head entry_list;
+ 	err = cfg80211_cqm_rssi_update(rdev, dev);
+@@ -15053,13 +15077,13 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
+ 		    rssi_event != NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH))
+ 		return;
  
- 	/* c2hcmd list for kthread level access */
--	struct list_head c2hcmd_list;
-+	struct sk_buff_head c2hcmd_queue;
+-	if (wdev->cqm_config) {
+-		wdev->cqm_config->last_rssi_event_value = rssi_level;
++	if (wdev->rssi_config) {
++		wdev->rssi_config->last_rssi_event_value = rssi_level;
  
- 	struct rtl_debug dbg;
- 	int max_fw_size;
+ 		cfg80211_cqm_rssi_update(rdev, dev);
+ 
+ 		if (rssi_level == 0)
+-			rssi_level = wdev->cqm_config->last_rssi_event_value;
++			rssi_level = wdev->rssi_config->last_rssi_event_value;
+ 	}
+ 
+ 	msg = cfg80211_prepare_cqm(dev, NULL, gfp);
 -- 
-2.15.1
+1.9.1
