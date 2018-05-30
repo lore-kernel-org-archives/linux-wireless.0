@@ -1,224 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:34636 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965614AbeE2TLu (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:53246 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932278AbeE3UwF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 May 2018 15:11:50 -0400
-From: Thibaut Robert <thibaut.robert@gmail.com>
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org,
-        Thibaut Robert <thibaut.robert@gmail.com>
-Subject: [PATCH 1/2] staging: wilc1000: fix some endianness sparse warnings
-Date: Tue, 29 May 2018 21:11:43 +0200
-Message-Id: <20180529191143.13081-1-thibaut.robert@gmail.com> (sfid-20180529_211156_050361_93D065E4)
+        Wed, 30 May 2018 16:52:05 -0400
+Received: by mail-wm0-f66.google.com with SMTP id 18-v6so44593997wml.2
+        for <linux-wireless@vger.kernel.org>; Wed, 30 May 2018 13:52:04 -0700 (PDT)
+Subject: Re: [PATCH V2 2/3] brcmfmac: handle monitor mode marked msgbuf
+ packets
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20180530201301.4648-1-zajec5@gmail.com>
+ <20180530201301.4648-2-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B0F0EF2.20102@broadcom.com> (sfid-20180530_225214_557596_984D542C)
+Date: Wed, 30 May 2018 22:52:02 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180530201301.4648-2-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This commit fix a few sparse warnings. It mostly consists of fixing the type declarations
-and avoiding the use of variables with mixed endianness values.
+On 5/30/2018 10:13 PM, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+>
+> New Broadcom firmwares mark monitor mode packets using a newly defined
+> bit in the flags field. Use it to filter them out and pass to the
+> monitor interface. These defines were found in bcmmsgbuf.h from SDK.
+>
+> As not every firmware generates radiotap header this commit introduces
+> BRCMF_FEAT_MON_FMT_RADIOTAP that has to be set per firmware version. If
+> not present brcmf_netif_mon_rx() assumed packet being a raw 802.11 frame
+> and prepends it with an empty radiotap header.
+>
+> It's limited to the msgbuf protocol. Adding support for SDIO/USB devices
+> will require some extra research.
 
-Signed-off-by: Thibaut Robert <thibaut.robert@gmail.com>
----
- drivers/staging/wilc1000/wilc_spi.c           | 15 ++++++-----
- .../staging/wilc1000/wilc_wfi_cfgoperations.c |  2 +-
- drivers/staging/wilc1000/wilc_wlan.c          | 26 +++++++++----------
- drivers/staging/wilc1000/wilc_wlan_cfg.c      |  8 +++---
- drivers/staging/wilc1000/wilc_wlan_cfg.h      |  4 +--
- 5 files changed, 27 insertions(+), 28 deletions(-)
+No just extra research but actual firmware change.
 
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 647526387784..e51f0d91a376 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -666,11 +666,11 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
- static int spi_internal_write(struct wilc *wilc, u32 adr, u32 dat)
- {
- 	struct spi_device *spi = to_spi_device(wilc->dev);
-+	__le32 le32dat = cpu_to_le32(dat);
- 	int result;
- 
--	dat = cpu_to_le32(dat);
--	result = spi_cmd_complete(wilc, CMD_INTERNAL_WRITE, adr, (u8 *)&dat, 4,
--				  0);
-+	result = spi_cmd_complete(wilc, CMD_INTERNAL_WRITE, adr, (u8 *)&le32dat,
-+				  4, 0);
- 	if (result != N_OK)
- 		dev_err(&spi->dev, "Failed internal write cmd...\n");
- 
-@@ -689,7 +689,7 @@ static int spi_internal_read(struct wilc *wilc, u32 adr, u32 *data)
- 		return 0;
- 	}
- 
--	*data = cpu_to_le32(*data);
-+	le32_to_cpus(data);
- 
- 	return 1;
- }
-@@ -706,15 +706,16 @@ static int wilc_spi_write_reg(struct wilc *wilc, u32 addr, u32 data)
- 	int result = N_OK;
- 	u8 cmd = CMD_SINGLE_WRITE;
- 	u8 clockless = 0;
-+	__le32 le32data = cpu_to_le32(data);
- 
--	data = cpu_to_le32(data);
- 	if (addr < 0x30) {
- 		/* Clockless register */
- 		cmd = CMD_INTERNAL_WRITE;
- 		clockless = 1;
- 	}
- 
--	result = spi_cmd_complete(wilc, cmd, addr, (u8 *)&data, 4, clockless);
-+	result = spi_cmd_complete(wilc, cmd, addr, (u8 *)&le32data, 4,
-+				  clockless);
- 	if (result != N_OK)
- 		dev_err(&spi->dev, "Failed cmd, write reg (%08x)...\n", addr);
- 
-@@ -769,7 +770,7 @@ static int wilc_spi_read_reg(struct wilc *wilc, u32 addr, u32 *data)
- 		return 0;
- 	}
- 
--	*data = cpu_to_le32(*data);
-+	le32_to_cpus(data);
- 
- 	return 1;
- }
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index e248702ee519..745bf5ca2622 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1431,7 +1431,7 @@ void wilc_wfi_p2p_rx(struct net_device *dev, u8 *buff, u32 size)
- 
- 	freq = ieee80211_channel_to_frequency(curr_channel, NL80211_BAND_2GHZ);
- 
--	if (!ieee80211_is_action(buff[FRAME_TYPE_ID])) {
-+	if (!ieee80211_is_action(cpu_to_le16(buff[FRAME_TYPE_ID]))) {
- 		cfg80211_rx_mgmt(priv->wdev, freq, 0, buff, size, 0);
- 		return;
- 	}
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 28c93f3f846e..a5ac1d26590b 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -560,7 +560,8 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 	int ret = 0;
- 	int counter;
- 	int timeout;
--	u32 vmm_table[WILC_VMM_TBL_SIZE];
-+	__le32 vmm_table[WILC_VMM_TBL_SIZE];
-+	u32 table_entry;
- 	struct wilc_vif *vif;
- 	struct wilc *wilc;
- 	const struct wilc_hif_func *func;
-@@ -598,10 +599,10 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 			if ((sum + vmm_sz) > LINUX_TX_SIZE)
- 				break;
- 
--			vmm_table[i] = vmm_sz / 4;
-+			table_entry = vmm_sz / 4;
- 			if (tqe->type == WILC_CFG_PKT)
--				vmm_table[i] |= BIT(10);
--			vmm_table[i] = cpu_to_le32(vmm_table[i]);
-+				table_entry |= BIT(10);
-+			vmm_table[i] = cpu_to_le32(table_entry);
- 
- 			i++;
- 			sum += vmm_sz;
-@@ -704,8 +705,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 		if (vmm_table[i] == 0)
- 			break;
- 
--		vmm_table[i] = cpu_to_le32(vmm_table[i]);
--		vmm_sz = (vmm_table[i] & 0x3ff);
-+		vmm_sz = (le32_to_cpu(vmm_table[i]) & 0x3ff);
- 		vmm_sz *= 4;
- 		header = (tqe->type << 31) |
- 			 (tqe->buffer_size << 15) |
-@@ -715,8 +715,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 		else
- 			header &= ~BIT(30);
- 
--		header = cpu_to_le32(header);
--		memcpy(&txb[offset], &header, 4);
-+		*((__le32 *)&txb[offset]) = cpu_to_le32(header);
- 		if (tqe->type == WILC_CFG_PKT) {
- 			buffer_offset = ETH_CONFIG_PKT_HDR_OFFSET;
- 		} else if (tqe->type == WILC_NET_PKT) {
-@@ -770,8 +769,7 @@ static void wilc_wlan_handle_rx_buff(struct wilc *wilc, u8 *buffer, int size)
- 
- 	do {
- 		buff_ptr = buffer + offset;
--		memcpy(&header, buff_ptr, 4);
--		header = cpu_to_le32(header);
-+		header = le32_to_cpup((__le32 *)buff_ptr);
- 
- 		is_cfg_packet = (header >> 31) & 0x1;
- 		pkt_offset = (header >> 22) & 0x1ff;
-@@ -942,6 +940,7 @@ int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
- 	u32 offset;
- 	u32 addr, size, size2, blksz;
- 	u8 *dma_buffer;
-+	const __le32 *header;
- 	int ret = 0;
- 
- 	blksz = BIT(12);
-@@ -952,10 +951,9 @@ int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
- 
- 	offset = 0;
- 	do {
--		memcpy(&addr, &buffer[offset], 4);
--		memcpy(&size, &buffer[offset + 4], 4);
--		addr = cpu_to_le32(addr);
--		size = cpu_to_le32(size);
-+		header = (__le32 *)buffer + offset;
-+		addr = le32_to_cpu(header[0]);
-+		size = le32_to_cpu(header[1]);
- 		acquire_bus(wilc, ACQUIRE_ONLY);
- 		offset += 8;
- 		while (((int)size) && (offset < buffer_size)) {
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index c0b9b700f4d7..4a914d8572aa 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -275,14 +275,14 @@ static int wilc_wlan_cfg_set_bin(u8 *frame, u32 offset, u16 id, u8 *b, u32 size)
- 
- static void wilc_wlan_parse_response_frame(u8 *info, int size)
- {
--	u32 wid, len = 0, i = 0;
-+	u32 wid;
-+	int len = 0, i = 0;
- 
- 	while (size > 0) {
- 		i = 0;
--		wid = info[0] | (info[1] << 8);
--		wid = cpu_to_le32(wid);
-+		wid = le16_to_cpup((__le16 *)info);
- 
--		switch ((wid >> 12) & 0x7) {
-+		switch (info[1] >> 4) {
- 		case WID_CHAR:
- 			do {
- 				if (g_cfg_byte[i].id == WID_NIL)
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-index 08092a551840..9e029338bcab 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-@@ -18,12 +18,12 @@ struct wilc_cfg_byte {
- 
- struct wilc_cfg_hword {
- 	u16 id;
--	u16 val;
-+	__le16 val;
- };
- 
- struct wilc_cfg_word {
- 	u32 id;
--	u32 val;
-+	__le32 val;
- };
- 
- struct wilc_cfg_str {
--- 
-2.17.0
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+> V2: Use cpu_to_le16 when setting it_len
+> ---
+>   .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 24 ++++++++++++++++++++++
+>   .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  2 ++
+>   .../wireless/broadcom/brcm80211/brcmfmac/feature.h |  6 +++++-
+>   .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  | 17 +++++++++++++++
+>   4 files changed, 48 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> index 72954fd6df3b..c9e1f6fcc57b 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> @@ -21,6 +21,7 @@
+>   #include <net/cfg80211.h>
+>   #include <net/rtnetlink.h>
+>   #include <net/addrconf.h>
+> +#include <net/ieee80211_radiotap.h>
+>   #include <net/ipv6.h>
+>   #include <brcmu_utils.h>
+>   #include <brcmu_wifi.h>
+> @@ -404,6 +405,29 @@ void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb)
+>   		netif_rx_ni(skb);
+>   }
+>
+> +void brcmf_netif_mon_rx(struct brcmf_if *ifp, struct sk_buff *skb)
+> +{
+> +	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MON_FMT_RADIOTAP)) {
+> +		/* Do nothing */
+> +	} else {
+> +		struct ieee80211_radiotap_header *radiotap;
+> +
+> +		radiotap = skb_push(skb, sizeof(*radiotap));
+> +		memset(radiotap, 0, sizeof(*radiotap));
+> +		radiotap->it_len = cpu_to_le16(sizeof(*radiotap));
+> +
+> +		/* TODO: what are these extra 4 bytes? */
+> +		skb->len -= 4;
+
+This could be dongle memory location holding receive status needed to 
+build radiotap header on the host. Will look into this.
+
+> +	}
+
+[snip]
+
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+> index d1193825e559..6e417d104b7f 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+> @@ -33,6 +33,8 @@
+>    * MFP: 802.11w Management Frame Protection.
+>    * GSCAN: enhanced scan offload feature.
+>    * FWSUP: Firmware supplicant.
+> + * MON_802_11_FLAG: monitor packets flagged as 802.11
+> + * MON_FMT_RADIOTAP: monitor packets include radiotap header
+>    */
+>   #define BRCMF_FEAT_LIST \
+>   	BRCMF_FEAT_DEF(MBSS) \
+> @@ -48,7 +50,9 @@
+>   	BRCMF_FEAT_DEF(WOWL_ARP_ND) \
+>   	BRCMF_FEAT_DEF(MFP) \
+>   	BRCMF_FEAT_DEF(GSCAN) \
+> -	BRCMF_FEAT_DEF(FWSUP)
+> +	BRCMF_FEAT_DEF(FWSUP) \
+> +	BRCMF_FEAT_DEF(MON_802_11_FLAG) \
+
+On branch I created for 4366c0 release firmware includes 'monitor' in 
+the 'cap' iovar.
+
+> +	BRCMF_FEAT_DEF(MON_FMT_RADIOTAP)
+
+I intend to add this to the 'cap' iovar as well for 4366c0 release if I 
+get green light for it. Either 'rtap' or just 'radiotap'.
+
+As it turns out the 'cap' iovar returns worst case (or best if you are a 
+sucker for features) a string of 566 characters, but brcmfmac uses 512 
+bytes right now. Better increase that to 768 or so.
+
+Regards,
+Arend
