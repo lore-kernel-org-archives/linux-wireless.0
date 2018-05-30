@@ -1,55 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:36729 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934880AbeEJLP6 (ORCPT
+Received: from dnvrco-outbound-snat.email.rr.com ([107.14.73.232]:38503 "EHLO
+        dnvrco-cmomta03.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751746AbeE3OFr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 May 2018 07:15:58 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        =?UTF-8?q?Michael=20B=C3=BCsch?= <m@bues.ch>,
-        Larry Finger <larry.finger@lwfinger.net>,
-        Matt Redfearn <matt.redfearn@mips.com>
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-        LKML <linux-kernel@vger.kernel.org>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH 4.17 1/2] Revert "ssb: Prevent build of PCI host features in module"
-Date: Thu, 10 May 2018 13:14:00 +0200
-Message-Id: <20180510111401.1161-1-zajec5@gmail.com> (sfid-20180510_131629_516198_666BA092)
+        Wed, 30 May 2018 10:05:47 -0400
+Message-ID: <20180530140546.7KP70.72041.root@dnvrco-web22> (sfid-20180530_160552_592492_EB6B2789)
+Date: Wed, 30 May 2018 14:05:46 +0000
+From: <mgreger@cinci.rr.com>
+To: sedat.dilek@gmail.com
+Subject: Re: Atheros AR9462 - 5Ghz not working
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CA+icZUX+p2feWOnXSA=m3i+r560Mo2kHsadT4qFhx8VvUv_k8A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
 
-This reverts commit 882164a4a928bcaa53280940436ca476e6b1db8e.
+---- Sedat Dilek <sedat.dilek@gmail.com> wrote: 
+> On Tue, May 22, 2018 at 7:21 PM,  <mgreger@cinci.rr.com> wrote:
+> > I've run out of ideas and am hoping someone here can help.
+> >
+> > All I want to do is connect a client to my 5Ghz network.
+> >
+> > My client:
+> >   OS is Debian stable "Stretch" with sysvinit instead of systemd
+> >   Atheros AR9462 (World roaming 0x64 regdomain in EEPROM)
+> >   "iw reg set US"
+> >   "iw list" shows both 2.4Ghz and 5Ghz bands available.
+> >   "iw wlp3s0 survey dump" shows received traffic on 5Ghz bands.
+> >
+> > There are oodles of 5Ghz AP's within range, but scans (including passive scans) reveal only 2.4Ghz networks. My only guess was that it won't transmit due to regulatory requirements, but I cannot make it work.
+> >
+> > What I've tried:
+> >   Running with and without CRDA
+> >   Running latest mainline kernel
+> >   Hacking around on the ath9k driver and nl80211 to remove all regulatory enforcement.
+> >
+> > Nothing works and I'm pulling my hair out. Any help would be greatly appreciated.
+> 
+> Hi,
+> 
+> I try to give some initial help.
+> 
+> The linux-wireless driver is supported by ath9k driver see [1] and [2].
+> 
+> Unfortunately, you have not sent any log-files at least your dmesg-log.
+> No output of the above userspace commands or userspace-tools versions.
+> No information to VendorID/ProductID (PCI, USB, whatever).
+> It's not clear to me if this is a kernelspace (ath9k-driver) or
+> userspace (CRDA/regulatory) problem.
+> How should someone help you effectively?
+> 
+> The linux-wireless wiki has somne informations on how to debug
+> Atheros/Qualcomm ath9k-driver, see [3].
+> 
+> As a debianist I say try Linux v4.16 Debian packages from
+> stretch-backports (and maybe a higher version of wireless-regdb).
+> 
+> Try to ask questions the smart way [4] :-).
+> 
+> Hope this helps.
+> 
+> Regards,
+> - Sedat -
+> 
+> [1] https://wireless.wiki.kernel.org/en/users/drivers/ath9k
+> [2] https://wireless.wiki.kernel.org/en/users/drivers/ath9k/devices
+> [3] https://wireless.wiki.kernel.org/en/users/drivers/ath9k/debug
+> [4] http://www.catb.org/esr/faqs/smart-questions.html
 
-Above commit added "SSB = y" dependency to the wrong symbol
-SSB_DRIVER_PCICORE_POSSIBLE and prevented SSB_DRIVER_PCICORE from being
-selected when needed. PCI core driver for core running in clienthost
-mode is important for bus initialization. It's perfectly valid scenario
-to have ssb built as module and use it with buses on PCI cards.
 
-This fixes regression that affected all *module* users with PCI cards.
-
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1572349
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
- drivers/ssb/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ssb/Kconfig b/drivers/ssb/Kconfig
-index 9371651d8017..b3f5cae98ea6 100644
---- a/drivers/ssb/Kconfig
-+++ b/drivers/ssb/Kconfig
-@@ -117,7 +117,7 @@ config SSB_SERIAL
- 
- config SSB_DRIVER_PCICORE_POSSIBLE
- 	bool
--	depends on SSB_PCIHOST && SSB = y
-+	depends on SSB_PCIHOST
- 	default y
- 
- config SSB_DRIVER_PCICORE
--- 
-2.13.6
+I have also built the latest wireless-regdb and crda, but it made no difference.
