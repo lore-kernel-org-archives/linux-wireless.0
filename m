@@ -1,81 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2-smtp.messagingengine.com ([66.111.4.26]:54303 "EHLO
-        out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752614AbeEOJE2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:58598 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932076AbeE3TSn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 May 2018 05:04:28 -0400
-Received: from compute6.internal (compute6.nyi.internal [10.202.2.46])
-        by mailout.nyi.internal (Postfix) with ESMTP id 52801224FA
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2018 05:04:28 -0400 (EDT)
-Message-Id: <1526375068.3635953.1372486632.0BF16E64@webmail.messagingengine.com> (sfid-20180515_110504_737280_398D432C)
-From: Bruno Bischofberger <bischofberger@fastmail.com>
-To: linux-wireless@vger.kernel.org
+        Wed, 30 May 2018 15:18:43 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com,
+        david.e.box@intel.com, joe.konno@intel.com
+Subject: Re: pull-request: iwlwifi-next 2018-05-30
+References: <259624aff894846a91f47a5fd3758dc97566a1e3.camel@coelho.fi>
+Date: Wed, 30 May 2018 22:18:37 +0300
+In-Reply-To: <259624aff894846a91f47a5fd3758dc97566a1e3.camel@coelho.fi> (Luca
+        Coelho's message of "Wed, 30 May 2018 16:33:09 +0300")
+Message-ID: <87o9gx0x6a.fsf@kamboji.qca.qualcomm.com> (sfid-20180530_211852_567859_7DBEE02D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Date: Tue, 15 May 2018 11:04:28 +0200
-Subject: BCM4356 still does not initalize after firmware update
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear list 
+Luca Coelho <luca@coelho.fi> writes:
 
-I'm still having trouble with bcm4356 on a Lenovo L460 previously reported here [1] (a Arch Linux bug report including the responsible git commit can also be found here [2]). The last working firmware version was 20170907. With all newer including the latest 20180507 I get
+> Hi Kalle,
+>
+> This is the final batch of patches intended for v4.18.  As discussed,
+> it is focused on bugfixes.  More details about the contents in the tag
+> description.
+>
+> I have sent this out before and kbuildbot this morning, but I didn't
+> get any replies from it yet.
+>
+> Please let me know if there are any issues.
+>
+> Cheers,
+> Luca.
+>
+>
+> The following changes since commit 06895b1627fe36f0bea49d4c9fd0e27f0f7498b1:
+>
+>   rtlwifi: remove duplicate code (2018-05-29 10:28:24 +0300)
+>
+> are available in the Git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2018-05-30
+>
+> for you to fetch changes up to 506247825c5e877741f33a2c657d351e5c7943ba:
+>
+>   iwlwifi: fix non_shared_ant for 9000 devices (2018-05-30 10:05:12 +0300)
+>
+> ----------------------------------------------------------------
+> Final batch of iwlwifi patches for 4.18
+>
+> * Some bugzilla fixes;
+> * Some kernel warning fixes;
+> * Fix for an (ETSI) WMM limits bug;
+> * Fix for a Bluetooth coexistence problem on 9000 devices;
+> * Fix for an interoperability bug related to block-ack sessions;
+>
+> ----------------------------------------------------------------
 
-[    6.170608] brcmfmac: brcmf_fw_map_chip_to_name: using brcm/brcmfmac4356-pcie.bin for chip 0x004356(17238) rev 0x000002
-[    6.195769] brcmfmac 0000:03:00.0: Direct firmware load for brcm/brcmfmac4356-pcie.txt failed with error -2
-...
-[    8.800086] brcmfmac: brcmf_msgbuf_query_dcmd: Timeout on response for query command
-[    8.800239] brcmfmac: brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -5
-[    8.800368] brcmfmac: brcmf_bus_started: failed: -5
-[    8.800467] brcmfmac: brcmf_pcie_attach_bus: dongle is not responding
+Pulled, thanks.
 
-
-
-Including the proposed nvram-File in [1] doesn't help. With this file I get
-
-[    4.860528] brcmfmac: brcmf_fw_map_chip_to_name: using brcm/brcmfmac4356-pcie.bin for chip 0x004356(17238) rev 0x000002
-...
-[    7.620082] brcmfmac: brcmf_pcie_download_fw_nvram: FW failed to initialize
-
-
-
-Here is my "cat /sys/kernel/debug/brcmfmac/0000:03:00.0/revinfo"
-
-vendorid: 0x14e4
-deviceid: 0x43ec
-radiorev: 0.41.32.105
-chipnum: 17238 (4356)
-chiprev: 2
-chippkg: 2
-corerev: 48
-boardid: 0x0777
-boardvendor: 0x14e4
-boardrev: P307
-driverrev: 7.35.180.119
-ucoderev: 0
-bus: 0
-phytype: 11
-phyrev: 17
-anarev: 0
-nvramrev: 00000000
-clmver: API: 12.1
-Data: 7.10.16
-Compiler: 1.21.1
-ClmImport: 1.21.1
-Creation: 2014-02-13 17:00:38
-Inc Data: 9.4.0
-Inc Compiler: 1.27.1
-Inc ClmImport: 1.29.22
-Creation: 2015-10-22 06:04:56
-
-
-Thanks for any help.
-
-Bruno
-
-
-
-
-
-[1] https://marc.info/?l=linux-wireless&m=151318162616627&w=2
-[2] https://bugs.archlinux.org/task/56719?project=1&pagenum=3
+-- 
+Kalle Valo
