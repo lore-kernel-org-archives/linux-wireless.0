@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:42370 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751558AbeEDRwF (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:46930 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752800AbeE3HUQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 May 2018 13:52:05 -0400
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: linux-kernel@vger.kernel.org
-Cc: tglx@linutronix.de, Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Alexander Aring <alex.aring@gmail.com>,
-        Stefan Schmidt <stefan@osg.samsung.com>,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-wpan@vger.kernel.org
-Subject: [RFC PATCH 0/2] Introduce assert_in_softirq()
-Date: Fri,  4 May 2018 19:51:42 +0200
-Message-Id: <20180504175144.12179-1-bigeasy@linutronix.de> (sfid-20180504_195255_653358_177BDD5D)
-MIME-Version: 1.0
+        Wed, 30 May 2018 03:20:16 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Shaul Triebitz <shaul.triebitz@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 30 May 2018 10:20:00 +0300
+Message-Id: <20180530072005.633-6-luca@coelho.fi> (sfid-20180530_092024_253057_6EE68FE3)
+In-Reply-To: <20180530072005.633-1-luca@coelho.fi>
+References: <20180530072005.633-1-luca@coelho.fi>
+Subject: [PATCH 05/10] iwlwifi: pcie: fix race in Rx buffer allocator
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_rx_napi() has a check to ensure that it is invoked in softirq
-context / with BH disabled. It is there because it invokes
-netif_receive_skb() which has this requirement.
-On -RT this check does not work as expected so there is always this
-warning.
-Tree wide there are two users of this check: ieee80211_rx_napi() and
-ieee802154_rx(). This approach introduces assert_in_softirq() which does
-the check if lockdep is enabled. This check could then become a nop on
--RT.
+From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-As an alternative netif_receive_skb() (or ieee80211_rx_napi() could do
-local_bh_disable() / local_bh_enable() unconditionally. The _disable()
-part is very cheap. The _enable() part is more expensive because it
-includes a function call. We could avoid that jump in the likely case
-when BH was already disabled by something like:
+Make sure the rx_allocator worker is canceled before running the
+rx_init routine.  rx_init frees and re-allocates all rxb's pages.  The
+rx_allocator worker also allocates pages for the used rxb's.  Running
+rx_init and rx_allocator simultaniously causes a kernel panic.  Fix
+that by canceling the work in rx_init.
 
- static inline void local_bh_enable(void)
- {
-         if (softirq_count() =3D=3D SOFTIRQ_DISABLE_OFFSET)
-                 __local_bh_enable_ip(_THIS_IP_, SOFTIRQ_DISABLE_OFFSET);
-         else
-                 preempt_count_sub(SOFTIRQ_DISABLE_OFFSET);
- }
+Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Which would make bh_enable() cheaper for everyone.
-
-Sebastian
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index f772d70a65e4..d15f5ba2dc77 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -902,6 +902,8 @@ static int _iwl_pcie_rx_init(struct iwl_trans *trans)
+ 	}
+ 	def_rxq = trans_pcie->rxq;
+ 
++	cancel_work_sync(&rba->rx_alloc);
++
+ 	spin_lock(&rba->lock);
+ 	atomic_set(&rba->req_pending, 0);
+ 	atomic_set(&rba->req_ready, 0);
+-- 
+2.17.0
