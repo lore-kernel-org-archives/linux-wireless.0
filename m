@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0088.outbound.protection.outlook.com ([104.47.42.88]:23410
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933381AbeE2MAZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 May 2018 08:00:25 -0400
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Dmitry Lebed <dlebed@quantenna.com>
-Subject: [PATCH 1/9] qtnfmac: remove unused function declarations
-Date: Tue, 29 May 2018 14:59:57 +0300
-Message-Id: <20180529120005.21498-2-sergey.matyukevich.os@quantenna.com> (sfid-20180529_140033_710725_4DCDE874)
-In-Reply-To: <20180529120005.21498-1-sergey.matyukevich.os@quantenna.com>
-References: <20180529120005.21498-1-sergey.matyukevich.os@quantenna.com>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50240 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S935981AbeE3HUp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 May 2018 03:20:45 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: Brian Norris <briannorris@chromium.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>
+Subject: RE: [EXT] Re: [PATCH] mwifiex: handle race during
+ mwifiex_usb_disconnect
+Date: Wed, 30 May 2018 07:20:41 +0000
+Message-ID: <5c016c46c5fb41cda4ef59fdac8b5fd8@SC-EXCH02.marvell.com> (sfid-20180530_092049_962250_62E2B6EF)
+References: <1527169707-27317-1-git-send-email-gbhat@marvell.com>
+ <20180529215906.GA108046@rodete-desktop-imager.corp.google.com>
+In-Reply-To: <20180529215906.GA108046@rodete-desktop-imager.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrey Shevchenko <ashevchenko@quantenna.com>
+Hi Brian,
 
-Functions qtnf_cmd_resp_parse and qtnf_cmd_resp_check have
-been removed. Remove their declarations as well.
-
-Signed-off-by: Andrey Shevchenko <ashevchenko@quantenna.com>
----
- drivers/net/wireless/quantenna/qtnfmac/commands.h | 5 -----
- 1 file changed, 5 deletions(-)
-
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.h b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-index 69a7d56f7e58..cf9274add26d 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-@@ -58,11 +58,6 @@ int qtnf_cmd_send_change_sta(struct qtnf_vif *vif, const u8 *mac,
- 			     struct station_parameters *params);
- int qtnf_cmd_send_del_sta(struct qtnf_vif *vif,
- 			  struct station_del_parameters *params);
--
--int qtnf_cmd_resp_parse(struct qtnf_bus *bus, struct sk_buff *resp_skb);
--int qtnf_cmd_resp_check(const struct qtnf_vif *vif,
--			const struct sk_buff *resp_skb, u16 cmd_id,
--			u16 *result, const u8 **payload, size_t *payload_size);
- int qtnf_cmd_send_scan(struct qtnf_wmac *mac);
- int qtnf_cmd_send_connect(struct qtnf_vif *vif,
- 			  struct cfg80211_connect_params *sme);
--- 
-2.11.0
+> > @@ -644,6 +644,9 @@ static void mwifiex_usb_disconnect(struct
+> usb_interface *intf)
+> >                                      MWIFIEX_FUNC_SHUTDOWN);
+> >     }
+> >
+> > +   if (adapter->workqueue)
+> > +           flush_workqueue(adapter->workqueue);
+>
+> This seems like a bad fix. I'm fairly sure there's another race in here
+> somewhere, and at a minimum, this is fragile code.
+Ok. Did you mean there can be some RX work pending at this point, which can
+cause a similar race for rx URBs?
+>
+> Instead, can't you just move the mwifiex_usb_free() into a .cleanup_if()
+> or .unregister_dev() callback? That's what your other drivers (PCIe and
+> SDIO) use to clean up old buffers and stop bus activity; those are
+> called after the appropriate synchronization points; and I'm pretty sure
+> I've already audited those to be more or less safe.
+Ok. Yes, this is a better fix for this issue. I will revert the earlier fix and upstream this version.
+>
+> Brian
+>
+> > +
+> >     mwifiex_usb_free(card);
+> >
+> >     mwifiex_dbg(adapter, FATAL,
+> > --
+> > 1.9.1
+> >
+Thanks,
+Ganapathi
