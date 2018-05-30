@@ -1,64 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37374 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751844AbeE3ORz (ORCPT
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:33477 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750711AbeE3KF7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 May 2018 10:17:55 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2018-05-30
-Date: Wed, 30 May 2018 17:17:51 +0300
-Message-ID: <87vab52po0.fsf@kamboji.qca.qualcomm.com> (sfid-20180530_161801_881214_39CBF7F3)
+        Wed, 30 May 2018 06:05:59 -0400
+Received: by mail-qt0-f194.google.com with SMTP id e8-v6so22490547qth.0
+        for <linux-wireless@vger.kernel.org>; Wed, 30 May 2018 03:05:59 -0700 (PDT)
+Subject: Re: [PATCH 2/3] brcmfmac: handle monitor mode marked msgbuf packets
+To: Julian Calaby <julian.calaby@gmail.com>
+References: <20180522131836.26858-1-zajec5@gmail.com>
+ <20180522131836.26858-2-zajec5@gmail.com> <5B070A5D.3080400@broadcom.com>
+ <CAGRGNgXMUTBhjGA_Rk=_ASaOcYNM+udAN8=HhutxFP5kwQYLww@mail.gmail.com>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
+        wright.feng@cypress.com,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        stanley.hsu@cypress.com,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, rafal@milecki.pl
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B0E7783.7070309@broadcom.com> (sfid-20180530_120603_719153_324CD3A7)
+Date: Wed, 30 May 2018 12:05:55 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAGRGNgXMUTBhjGA_Rk=_ASaOcYNM+udAN8=HhutxFP5kwQYLww@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On 5/27/2018 7:34 AM, Julian Calaby wrote:
+> Hi Arend,
+> On Fri, May 25, 2018 at 12:38 PM Arend van Spriel <
+> arend.vanspriel@broadcom.com> wrote:
+>
+>> On 5/22/2018 3:18 PM, Rafał Miłecki wrote:
+>>> From: Rafał Miłecki <rafal@milecki.pl>
+>>>
+>>> New Broadcom firmwares mark monitor mode packets using a newly defined
+>>> bit in the flags field. Use it to filter them out and pass to the
+>>> monitor interface. These defines were found in bcmmsgbuf.h from SDK.
+>>>
+>>> As not every firmware generates radiotap header this commit introduces
+>>> BRCMF_FEAT_MON_FMT_RADIOTAP that has to be set per firmware version. If
+>>> not present brcmf_netif_mon_rx() assumed packet being a raw 802.11 frame
+>>> and prepends it with an empty radiotap header.
+>>>
+>>> It's limited to the msgbuf protocol. Adding support for SDIO/USB devices
+>>> will require some extra research.
+>
+>> So I went looking on my shelf and found the patch I made for SDIO a
+>> while back. It relies on firmware change and I did not introduce a
+>> firmware flag for it. I will send the patch as RFT so you can have a
+>> look at it.
+>
+>> I checked our internal driver and it turns out the raw vs. radiotap is a
+>> compilation option. So depending on customer they would get either
+>> firmware doing the radiotap header generation or the host driver,
+>> without any run-time way to determine it. Not nice for brcmfmac.
+>
+> I pretty sure I know what the answer to this is going to be, however I
+> still have to ask:
+>
+> Is it possible to open up _any_ part of the firmware? (Even if it's just
+> the host-interface end and the hardware end is a big ugly blob) It'd make
+> dealing with stuff like this so much easier if we can just toggle a flag
+> and recompile. (I'm also sure that we'd be more than happy to pass some
+> flag through telling us/you that it's unofficial firmware and has probably
+> broken the hardware, etc.)
 
-I now this is late but hopefully this pull request can make it to net
-tree and to the final 4.17 release still. But if not, please let me know
-and I'll pull this to wireless-drivers-next instead.
+Hah. Yeah, with next to nil uncertainty I know the answer to this as 
+well. If you know how long it took before we committed to supporting the 
+upstream drivers. Despite my better judgement I will pass your idea, but 
+it is not something that is going to fall in the timeframe that Rafał 
+had in mind.
 
-More info in the signed tag below, and please let me know if there are
-any problems.
-
-Kalle
-
-The following changes since commit 813477aa49aac5deba04eb4956360dde58a0e807:
-
-  MAINTAINERS: change Kalle as wcn36xx maintainer (2018-05-22 15:36:41 +0300)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2018-05-30
-
-for you to fetch changes up to ab1068d6866e28bf6427ceaea681a381e5870a4a:
-
-  iwlwifi: pcie: compare with number of IRQs requested for, not number of CPUs (2018-05-29 10:40:25 +0300)
-
-----------------------------------------------------------------
-wireless-drivers fixes for 4.17
-
-Two last minute fixes, hopefully they make it to 4.17 still.
-
-rt2x00
-
-* revert a fix which caused even more problems
-
-iwlwifi
-
-* fix a crash when there are 16 or more logical CPUs
-
-----------------------------------------------------------------
-Hao Wei Tee (1):
-      iwlwifi: pcie: compare with number of IRQs requested for, not number of CPUs
-
-Stanislaw Gruszka (1):
-      Revert "rt2800: use TXOP_BACKOFF for probe frames"
-
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c  | 10 +++++-----
- drivers/net/wireless/ralink/rt2x00/rt2x00queue.c |  7 +++----
- 2 files changed, 8 insertions(+), 9 deletions(-)
+Regards,
+Arend
