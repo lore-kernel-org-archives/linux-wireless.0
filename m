@@ -1,112 +1,313 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51960 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750936AbeETFnw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 May 2018 01:43:52 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 3/5] mt76: move ieee80211_hw allocation to common core
-Date: Sun, 20 May 2018 07:43:47 +0200
-Message-Id: <20180520054349.49422-3-nbd@nbd.name> (sfid-20180520_074406_012586_BA2DF188)
-In-Reply-To: <20180520054349.49422-1-nbd@nbd.name>
-References: <20180520054349.49422-1-nbd@nbd.name>
+Received: from paleale.coelho.fi ([176.9.41.70]:46946 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752834AbeE3HUS (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 May 2018 03:20:18 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 30 May 2018 10:20:02 +0300
+Message-Id: <20180530072005.633-8-luca@coelho.fi> (sfid-20180530_092031_212304_7FFF6B2F)
+In-Reply-To: <20180530072005.633-1-luca@coelho.fi>
+References: <20180530072005.633-1-luca@coelho.fi>
+Subject: [PATCH 07/10] iwlwifi: mvm: open BA session only when sta is authorized
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allows it to be shared between different drivers and locks to be
-initialized earlier
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Currently, a BA session is opened when the tx traffic exceeds
+10 frames per second. As a result of inter-op problems with some
+APs, add a condition to open BA session only when station is
+already authorized.
+
+Fixes: 482e48440a0e ("iwlwifi: mvm: change open and close criteria of a BA session")
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/mediatek/mt76/mac80211.c | 22 +++++++++++++++++--
- drivers/net/wireless/mediatek/mt76/mt76.h     |  2 ++
- .../net/wireless/mediatek/mt76/mt76x2_init.c  | 14 +++++-------
- 3 files changed, 28 insertions(+), 10 deletions(-)
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  8 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c   | 38 +++++++++----------
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.h   |  7 +---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c  |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h  | 10 ++---
+ 5 files changed, 29 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index d862e5efd094..d1044e5b25db 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -268,6 +268,26 @@ mt76_check_sband(struct mt76_dev *dev, int band)
- 	dev->hw->wiphy->bands[band] = NULL;
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 5f0701c992a4..f3cab26f81b5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2685,7 +2685,7 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
  
-+struct mt76_dev *
-+mt76_alloc_device(unsigned int size, const struct ieee80211_ops *ops)
-+{
-+	struct ieee80211_hw *hw;
-+	struct mt76_dev *dev;
-+
-+	hw = ieee80211_alloc_hw(size, ops);
-+	if (!hw)
-+		return NULL;
-+
-+	dev = hw->priv;
-+	dev->hw = hw;
-+	spin_lock_init(&dev->rx_lock);
-+	spin_lock_init(&dev->lock);
-+	spin_lock_init(&dev->cc_lock);
-+
-+	return dev;
-+}
-+EXPORT_SYMBOL_GPL(mt76_alloc_device);
-+
- int mt76_register_device(struct mt76_dev *dev, bool vht,
- 			 struct ieee80211_rate *rates, int n_rates)
+ 	mutex_lock(&mvm->mutex);
+ 	/* track whether or not the station is associated */
+-	mvm_sta->associated = new_state >= IEEE80211_STA_ASSOC;
++	mvm_sta->sta_state = new_state;
+ 
+ 	if (old_state == IEEE80211_STA_NOTEXIST &&
+ 	    new_state == IEEE80211_STA_NONE) {
+@@ -2737,8 +2737,7 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
+ 			iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
+ 		}
+ 
+-		iwl_mvm_rs_rate_init(mvm, sta, mvmvif->phy_ctxt->channel->band,
+-				     true);
++		iwl_mvm_rs_rate_init(mvm, sta, mvmvif->phy_ctxt->channel->band);
+ 		ret = iwl_mvm_update_sta(mvm, vif, sta);
+ 	} else if (old_state == IEEE80211_STA_ASSOC &&
+ 		   new_state == IEEE80211_STA_AUTHORIZED) {
+@@ -2754,8 +2753,7 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
+ 		/* enable beacon filtering */
+ 		WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, 0));
+ 
+-		iwl_mvm_rs_rate_init(mvm, sta, mvmvif->phy_ctxt->channel->band,
+-				     false);
++		iwl_mvm_rs_rate_init(mvm, sta, mvmvif->phy_ctxt->channel->band);
+ 
+ 		ret = 0;
+ 	} else if (old_state == IEEE80211_STA_AUTHORIZED &&
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index af7bc3b7b0c3..642da10b0b7f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -3,6 +3,7 @@
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify it
+  * under the terms of version 2 of the GNU General Public License as
+@@ -13,10 +14,6 @@
+  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+  * more details.
+  *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+- *
+  * The full GNU General Public License is included in this distribution in the
+  * file called LICENSE.
+  *
+@@ -651,9 +648,10 @@ static void rs_tl_turn_on_agg(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta,
+ 	}
+ 
+ 	tid_data = &mvmsta->tid_data[tid];
+-	if ((tid_data->state == IWL_AGG_OFF) &&
++	if (mvmsta->sta_state >= IEEE80211_STA_AUTHORIZED &&
++	    tid_data->state == IWL_AGG_OFF &&
+ 	    (lq_sta->tx_agg_tid_en & BIT(tid)) &&
+-	    (tid_data->tx_count_last >= IWL_MVM_RS_AGG_START_THRESHOLD)) {
++	    tid_data->tx_count_last >= IWL_MVM_RS_AGG_START_THRESHOLD) {
+ 		IWL_DEBUG_RATE(mvm, "try to aggregate tid %d\n", tid);
+ 		if (rs_tl_turn_on_agg_for_tid(mvm, lq_sta, tid, sta) == 0)
+ 			tid_data->state = IWL_AGG_QUEUED;
+@@ -1257,7 +1255,7 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 		       (unsigned long)(lq_sta->last_tx +
+ 				       (IWL_MVM_RS_IDLE_TIMEOUT * HZ)))) {
+ 		IWL_DEBUG_RATE(mvm, "Tx idle for too long. reinit rs\n");
+-		iwl_mvm_rs_rate_init(mvm, sta, info->band, false);
++		iwl_mvm_rs_rate_init(mvm, sta, info->band);
+ 		return;
+ 	}
+ 	lq_sta->last_tx = jiffies;
+@@ -2690,9 +2688,9 @@ static void rs_get_initial_rate(struct iwl_mvm *mvm,
+ 				struct ieee80211_sta *sta,
+ 				struct iwl_lq_sta *lq_sta,
+ 				enum nl80211_band band,
+-				struct rs_rate *rate,
+-				bool init)
++				struct rs_rate *rate)
  {
-@@ -277,8 +297,6 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
++	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+ 	int i, nentries;
+ 	unsigned long active_rate;
+ 	s8 best_rssi = S8_MIN;
+@@ -2754,7 +2752,8 @@ static void rs_get_initial_rate(struct iwl_mvm *mvm,
+ 		 * bandwidth rate, and after authorization, when the phy context
+ 		 * is already up-to-date, re-init rs with the correct bw.
+ 		 */
+-		u32 bw = init ? RATE_MCS_CHAN_WIDTH_20 : rs_bw_from_sta_bw(sta);
++		u32 bw = mvmsta->sta_state < IEEE80211_STA_AUTHORIZED ?
++				RATE_MCS_CHAN_WIDTH_20 : rs_bw_from_sta_bw(sta);
  
- 	dev_set_drvdata(dev->dev, dev);
+ 		switch (bw) {
+ 		case RATE_MCS_CHAN_WIDTH_40:
+@@ -2839,9 +2838,9 @@ void rs_update_last_rssi(struct iwl_mvm *mvm,
+ static void rs_initialize_lq(struct iwl_mvm *mvm,
+ 			     struct ieee80211_sta *sta,
+ 			     struct iwl_lq_sta *lq_sta,
+-			     enum nl80211_band band,
+-			     bool init)
++			     enum nl80211_band band)
+ {
++	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+ 	struct iwl_scale_tbl_info *tbl;
+ 	struct rs_rate *rate;
+ 	u8 active_tbl = 0;
+@@ -2857,7 +2856,7 @@ static void rs_initialize_lq(struct iwl_mvm *mvm,
+ 	tbl = &(lq_sta->lq_info[active_tbl]);
+ 	rate = &tbl->rate;
  
--	spin_lock_init(&dev->lock);
--	spin_lock_init(&dev->cc_lock);
- 	INIT_LIST_HEAD(&dev->txwi_cache);
+-	rs_get_initial_rate(mvm, sta, lq_sta, band, rate, init);
++	rs_get_initial_rate(mvm, sta, lq_sta, band, rate);
+ 	rs_init_optimal_rate(mvm, sta, lq_sta);
  
- 	SET_IEEE80211_DEV(hw, dev->dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 2d098fac6147..bb158f867d7c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -377,6 +377,8 @@ mt76_channel_state(struct mt76_dev *dev, struct ieee80211_channel *c)
- 	return &msband->chan[idx];
+ 	WARN_ONCE(rate->ant != ANT_A && rate->ant != ANT_B,
+@@ -2870,7 +2869,8 @@ static void rs_initialize_lq(struct iwl_mvm *mvm,
+ 	rs_set_expected_tpt_table(lq_sta, tbl);
+ 	rs_fill_lq_cmd(mvm, sta, lq_sta, rate);
+ 	/* TODO restore station should remember the lq cmd */
+-	iwl_mvm_send_lq_cmd(mvm, &lq_sta->lq, init);
++	iwl_mvm_send_lq_cmd(mvm, &lq_sta->lq,
++			    mvmsta->sta_state < IEEE80211_STA_AUTHORIZED);
  }
  
-+struct mt76_dev *mt76_alloc_device(unsigned int size,
-+				   const struct ieee80211_ops *ops);
- int mt76_register_device(struct mt76_dev *dev, bool vht,
- 			 struct ieee80211_rate *rates, int n_rates);
- void mt76_unregister_device(struct mt76_dev *dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index aeee0b3de136..7096256c7f50 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -635,20 +635,18 @@ struct mt76x2_dev *mt76x2_alloc_device(struct device *pdev)
- 		.rx_poll_complete = mt76x2_rx_poll_complete,
- 		.sta_ps = mt76x2_sta_ps,
- 	};
--	struct ieee80211_hw *hw;
- 	struct mt76x2_dev *dev;
-+	struct mt76_dev *mdev;
- 
--	hw = ieee80211_alloc_hw(sizeof(*dev), &mt76x2_ops);
--	if (!hw)
-+	mdev = mt76_alloc_device(sizeof(*dev), &mt76x2_ops);
-+	if (!mdev)
- 		return NULL;
- 
--	dev = hw->priv;
--	dev->mt76.dev = pdev;
--	dev->mt76.hw = hw;
--	dev->mt76.drv = &drv_ops;
-+	dev = container_of(mdev, struct mt76x2_dev, mt76);
-+	mdev->dev = pdev;
-+	mdev->drv = &drv_ops;
- 	mutex_init(&dev->mutex);
- 	spin_lock_init(&dev->irq_lock);
--	spin_lock_init(&dev->mt76.rx_lock);
- 
- 	return dev;
+ static void rs_drv_get_rate(void *mvm_r, struct ieee80211_sta *sta,
+@@ -3123,7 +3123,7 @@ void iwl_mvm_update_frame_stats(struct iwl_mvm *mvm, u32 rate, bool agg)
+  * Called after adding a new station to initialize rate scaling
+  */
+ static void rs_drv_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+-			     enum nl80211_band band, bool init)
++			     enum nl80211_band band)
+ {
+ 	int i, j;
+ 	struct ieee80211_hw *hw = mvm->hw;
+@@ -3203,7 +3203,7 @@ static void rs_drv_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	iwl_mvm_reset_frame_stats(mvm);
+ #endif
+-	rs_initialize_lq(mvm, sta, lq_sta, band, init);
++	rs_initialize_lq(mvm, sta, lq_sta, band);
  }
+ 
+ static void rs_drv_rate_update(void *mvm_r,
+@@ -3223,7 +3223,7 @@ static void rs_drv_rate_update(void *mvm_r,
+ 	for (tid = 0; tid < IWL_MAX_TID_COUNT; tid++)
+ 		ieee80211_stop_tx_ba_session(sta, tid);
+ 
+-	iwl_mvm_rs_rate_init(mvm, sta, sband->band, false);
++	iwl_mvm_rs_rate_init(mvm, sta, sband->band);
+ }
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
+@@ -4069,12 +4069,12 @@ static const struct rate_control_ops rs_mvm_ops_drv = {
+ };
+ 
+ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+-			  enum nl80211_band band, bool init)
++			  enum nl80211_band band)
+ {
+ 	if (iwl_mvm_has_tlc_offload(mvm))
+ 		rs_fw_rate_init(mvm, sta, band);
+ 	else
+-		rs_drv_rate_init(mvm, sta, band, init);
++		rs_drv_rate_init(mvm, sta, band);
+ }
+ 
+ int iwl_mvm_rate_control_register(void)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
+index 5e89141656c0..cffb8c852934 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
+@@ -3,6 +3,7 @@
+  * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify it
+  * under the terms of version 2 of the GNU General Public License as
+@@ -13,10 +14,6 @@
+  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+  * more details.
+  *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+- *
+  * The full GNU General Public License is included in this distribution in the
+  * file called LICENSE.
+  *
+@@ -410,7 +407,7 @@ struct iwl_lq_sta {
+ 
+ /* Initialize station's rate scaling information after adding station */
+ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+-			  enum nl80211_band band, bool init);
++			  enum nl80211_band band);
+ 
+ /* Notify RS about Tx status */
+ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 4ddd2c427b83..9263b9aa8b72 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -216,7 +216,7 @@ int iwl_mvm_sta_send_to_fw(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 		cpu_to_le32(agg_size << STA_FLG_MAX_AGG_SIZE_SHIFT);
+ 	add_sta_cmd.station_flags |=
+ 		cpu_to_le32(mpdu_dens << STA_FLG_AGG_MPDU_DENS_SHIFT);
+-	if (mvm_sta->associated)
++	if (mvm_sta->sta_state >= IEEE80211_STA_ASSOC)
+ 		add_sta_cmd.assoc_id = cpu_to_le16(sta->aid);
+ 
+ 	if (sta->wme) {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+index 60502c81dfce..1c43ea8dd8cc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+@@ -8,6 +8,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+  * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -18,11 +19,6 @@
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * General Public License for more details.
+  *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
+- * USA
+- *
+  * The full GNU General Public License is included in this distribution
+  * in the file called COPYING.
+  *
+@@ -35,6 +31,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+  * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -376,6 +373,7 @@ struct iwl_mvm_rxq_dup_data {
+  *	tid.
+  * @max_agg_bufsize: the maximal size of the AGG buffer for this station
+  * @sta_type: station type
++ * @sta_state: station state according to enum %ieee80211_sta_state
+  * @bt_reduced_txpower: is reduced tx power enabled for this station
+  * @next_status_eosp: the next reclaimed packet is a PS-Poll response and
+  *	we need to signal the EOSP
+@@ -416,6 +414,7 @@ struct iwl_mvm_sta {
+ 	u16 tid_disable_agg;
+ 	u8 max_agg_bufsize;
+ 	enum iwl_sta_type sta_type;
++	enum ieee80211_sta_state sta_state;
+ 	bool bt_reduced_txpower;
+ 	bool next_status_eosp;
+ 	spinlock_t lock;
+@@ -441,7 +440,6 @@ struct iwl_mvm_sta {
+ 	u16 amsdu_enabled;
+ 	u16 max_amsdu_len;
+ 	bool sleeping;
+-	bool associated;
+ 	u8 agg_tids;
+ 	u8 sleep_tx_count;
+ 	u8 avg_energy;
 -- 
 2.17.0
