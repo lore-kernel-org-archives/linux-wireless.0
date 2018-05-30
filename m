@@ -1,85 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:58086 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752917AbeEOJPH (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:46966 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S935605AbeE3HUT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 May 2018 05:15:07 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
+        Wed, 30 May 2018 03:20:19 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 2/8] brcmfmac: move ALLFFMAC variable in flowring module
-Date: Tue, 15 May 2018 11:14:45 +0200
-Message-Id: <1526375691-31789-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180515_111601_082494_2F1D6529)
-In-Reply-To: <1526375691-31789-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1526375691-31789-1-git-send-email-arend.vanspriel@broadcom.com>
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 30 May 2018 10:20:04 +0300
+Message-Id: <20180530072005.633-10-luca@coelho.fi> (sfid-20180530_092031_813889_FFBA9410)
+In-Reply-To: <20180530072005.633-1-luca@coelho.fi>
+References: <20180530072005.633-1-luca@coelho.fi>
+Subject: [PATCH 09/10] iwlwifi: mvm: fix race in queue notification wait
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The only user of ALLFFMAC is the flowring module so no need to
-expose it in a header file.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Initially in this code, the race didn't matter since it didn't
+do anything. Latest with the commit I marked this as fixing it
+started to matter as something got done here that needed other
+data that got freed as soon as the queue notification wait was
+returning.
+
+In the scenario we saw, apparently the IWL_MVM_RXQ_NOTIF_DEL_BA
+event was sent to all queues, but processing the last event we
+returned from iwl_mvm_sync_rx_queues_internal() and then from
+iwl_mvm_free_reorder() and continued some processing before
+wl_mvm_del_ba() was even invoked on the other CPU. Thus, when
+the latter finally ran, it found that mvm->baid_map[baid] was
+no longer valid.
+
+Correct the race by moving the counter decrement and wake_up()
+to be done only after all the per-event processing completed.
+Note that in the commit I marked as being fixed the wake_up()
+didn't exist yet (and the code was otherwise problematic) but
+this particular problem already existed in a way.
+
+Fixes: b915c10174fb ("iwlwifi: mvm: add reorder buffer per queue")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
-Hi Kalle,
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-I recall Joe Perches posted patches dealing with broadcast address declarations,
-but don't know what happened with those. In patchwork [1] is says 'Not Applicable'
-whatever that means. I noticed Johannes set similar mac80211 change to
-'Awaiting Upstream'. Anyway, when applying this patch the patch in [1] needs to
-be reworked.
-
-Regards,
-Arend
-
-[1] https://patchwork.kernel.org/patch/10318857/
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c   | 2 --
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h   | 2 --
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c | 2 ++
- 3 files changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 105b877..cd36510 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -36,8 +36,6 @@
- MODULE_DESCRIPTION("Broadcom 802.11 wireless LAN fullmac driver.");
- MODULE_LICENSE("Dual BSD/GPL");
-
--const u8 ALLFFMAC[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
--
- #define BRCMF_DEFAULT_SCAN_CHANNEL_TIME	40
- #define BRCMF_DEFAULT_SCAN_UNASSOC_TIME	40
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-index ef91461..a34642c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-@@ -19,8 +19,6 @@
- #include <linux/platform_data/brcmfmac.h>
- #include "fwil_types.h"
-
--extern const u8 ALLFFMAC[ETH_ALEN];
--
- #define BRCMF_FW_ALTPATH_LEN			256
-
- /* Definitions for the module global and device specific settings are defined
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
-index d0b738d..d0d8b32 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
-@@ -46,6 +46,8 @@
- 	3
- };
-
-+static const u8 ALLFFMAC[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 2b1f0dc73c25..129c4c09648d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -590,14 +590,10 @@ void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
+ 	notif = (void *)pkt->data;
+ 	internal_notif = (void *)notif->payload;
+ 
+-	if (internal_notif->sync) {
+-		if (mvm->queue_sync_cookie != internal_notif->cookie) {
+-			WARN_ONCE(1,
+-				  "Received expired RX queue sync message\n");
+-			return;
+-		}
+-		if (!atomic_dec_return(&mvm->queue_sync_counter))
+-			wake_up(&mvm->rx_sync_waitq);
++	if (internal_notif->sync &&
++	    mvm->queue_sync_cookie != internal_notif->cookie) {
++		WARN_ONCE(1, "Received expired RX queue sync message\n");
++		return;
+ 	}
+ 
+ 	switch (internal_notif->type) {
+@@ -609,6 +605,10 @@ void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
+ 	default:
+ 		WARN_ONCE(1, "Invalid identifier %d", internal_notif->type);
+ 	}
 +
-
- static bool
- brcmf_flowring_is_tdls_mac(struct brcmf_flowring *flow, u8 mac[ETH_ALEN])
---
-1.9.1
++	if (internal_notif->sync &&
++	    !atomic_dec_return(&mvm->queue_sync_counter))
++		wake_up(&mvm->rx_sync_waitq);
+ }
+ 
+ /*
+-- 
+2.17.0
