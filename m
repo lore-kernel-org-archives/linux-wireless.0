@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36774 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752044AbeEOFS1 (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:59146 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964877AbeE3JZI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 May 2018 01:18:27 -0400
-From: Sriram R <srirrama@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Sriram R <srirrama@codeaurora.org>
-Subject: [RFC 0/2] nl80211/mac80211 Add support for per-rate rx statistics
-Date: Tue, 15 May 2018 10:47:59 +0530
-Message-Id: <1526361481-7159-1-git-send-email-srirrama@codeaurora.org> (sfid-20180515_071835_449483_BBA9A04F)
+        Wed, 30 May 2018 05:25:08 -0400
+From: Colin King <colin.king@canonical.com>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath9k: debug: fix spelling mistake "WATHDOG" -> "WATCHDOG"
+Date: Wed, 30 May 2018 10:25:03 +0100
+Message-Id: <20180530092503.10481-1-colin.king@canonical.com> (sfid-20180530_112543_259098_253F48AF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds support for the collection and propagating of
-per-rate, per-station rx statistics when enabled by a userspace application.
+From: Colin Ian King <colin.king@canonical.com>
 
-These statistics can be useful in understanding the quality of 
-communication with our peers and in evaluating how different peers
-are communicating in different MCS/BW/NSS during different time periods and environment.
+Trivial fix to spelling mistake in PR_IS message text.
 
-Sriram R (2):
-  nl80211: Add support for collection of per rate rx statistics
-  mac80211: Add support for per-rate rx statistics
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- include/net/cfg80211.h       |  25 +++++++
- include/uapi/linux/nl80211.h |  50 +++++++++++++
- net/mac80211/cfg.c           |  47 ++++++++++++
- net/mac80211/rx.c            |  10 ++-
- net/mac80211/sta_info.c      | 165 +++++++++++++++++++++++++++++++++++++++++
- net/mac80211/sta_info.h      |  17 +++++
- net/wireless/nl80211.c       | 172 +++++++++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      |  30 ++++++++
- net/wireless/trace.h         |  26 +++++++
- 9 files changed, 540 insertions(+), 2 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index f685843a2ff3..0a6eb8a8c1ed 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -538,7 +538,7 @@ static int read_file_interrupt(struct seq_file *file, void *data)
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
+ 		PR_IS("RXLP", rxlp);
+ 		PR_IS("RXHP", rxhp);
+-		PR_IS("WATHDOG", bb_watchdog);
++		PR_IS("WATCHDOG", bb_watchdog);
+ 	} else {
+ 		PR_IS("RX", rxok);
+ 	}
 -- 
-2.7.4
+2.17.0
