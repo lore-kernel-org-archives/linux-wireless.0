@@ -1,57 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:39517 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753143AbeEKOzC (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:46916 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753271AbeE3HUP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 May 2018 10:55:02 -0400
-Received: by mail-pf0-f196.google.com with SMTP id a22-v6so2848857pfn.6
-        for <linux-wireless@vger.kernel.org>; Fri, 11 May 2018 07:55:02 -0700 (PDT)
-From: Sushant Kumar Mishra <sushant2k1513@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
+        Wed, 30 May 2018 03:20:15 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
-Subject: [PATCH 3/3] rsi: Set wowlan flag while writing wowlan config parameters
-Date: Fri, 11 May 2018 20:27:53 +0530
-Message-Id: <1526050673-7026-4-git-send-email-sushant2k1513@gmail.com> (sfid-20180511_165505_464368_C3145124)
-In-Reply-To: <1526050673-7026-1-git-send-email-sushant2k1513@gmail.com>
-References: <1526050673-7026-1-git-send-email-sushant2k1513@gmail.com>
+        Aviya Erenfeld <aviya.erenfeld@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 30 May 2018 10:19:58 +0300
+Message-Id: <20180530072005.633-4-luca@coelho.fi> (sfid-20180530_092040_515864_7700D5DD)
+In-Reply-To: <20180530072005.633-1-luca@coelho.fi>
+References: <20180530072005.633-1-luca@coelho.fi>
+Subject: [PATCH 03/10] iwlmvm: tdls: Check TDLS channel switch support
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+From: Aviya Erenfeld <aviya.erenfeld@intel.com>
 
-As wowlan enable flag did not set, while writing wowlan parameters to
-card using rsi_send_vap_dynamic_update, which results firmware is unable to
-set wowlan configurations. Hence, setting wowlan flag before sending
-parameters.
+Some versions of the FW don't support channel switch in TDLS.
+Add a condition that checks it.
 
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Signed-off-by: Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
+Fixes: 307e47235a10 ("iwlwifi: mvm: configure TDLS peers to FW")
+Signed-off-by: Aviya Erenfeld <aviya.erenfeld@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/tdls.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 743706e..3faa044 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -1818,6 +1818,7 @@ int rsi_config_wowlan(struct rsi_hw *adapter, struct cfg80211_wowlan *wowlan)
- 		return -EINVAL;
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tdls.c b/drivers/net/wireless/intel/iwlwifi/mvm/tdls.c
+index 3d97436bbdf5..67f360c0d17e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tdls.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tdls.c
+@@ -7,6 +7,7 @@
+  *
+  * Copyright(c) 2014 Intel Mobile Communications GmbH
+  * Copyright(c) 2017 Intel Deutschland GmbH
++ * Copyright(C) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -18,9 +19,7 @@
+  * General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
+- * USA
++ * along with this program.
+  *
+  * The full GNU General Public License is included in this distribution
+  * in the file called COPYING.
+@@ -33,6 +32,7 @@
+  *
+  * Copyright(c) 2014 Intel Mobile Communications GmbH
+  * Copyright(c) 2017 Intel Deutschland GmbH
++ * Copyright(C) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -188,8 +188,14 @@ void iwl_mvm_recalc_tdls_state(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	if (tdls_sta_cnt == 1 && sta_added)
+ 		iwl_mvm_power_update_mac(mvm);
  
-+	common->wow_flags |= RSI_WOW_ENABLED;
- 	triggers = rsi_wow_map_triggers(common, wowlan);
- 	if (!triggers) {
- 		rsi_dbg(ERR_ZONE, "%s:No valid WoW triggers\n", __func__);
-@@ -1840,7 +1841,6 @@ int rsi_config_wowlan(struct rsi_hw *adapter, struct cfg80211_wowlan *wowlan)
+-	/* configure the FW with TDLS peer info */
+-	iwl_mvm_tdls_config(mvm, vif);
++	/* Configure the FW with TDLS peer info only if TDLS channel switch
++	 * capability is set.
++	 * TDLS config data is used currently only in TDLS channel switch code.
++	 * Supposed to serve also TDLS buffer station which is not implemneted
++	 * yet in FW*/
++	if (fw_has_capa(&mvm->fw->ucode_capa,
++			IWL_UCODE_TLV_CAPA_TDLS_CHANNEL_SWITCH))
++		iwl_mvm_tdls_config(mvm, vif);
  
- 	rx_filter_word = (ALLOW_DATA_ASSOC_PEER | DISALLOW_BEACONS);
- 	rsi_send_rx_filter_frame(common, rx_filter_word);
--	common->wow_flags |= RSI_WOW_ENABLED;
- 
- 	return 0;
- }
+ 	/* when the last peer leaves, send a power update last */
+ 	if (tdls_sta_cnt == 0 && !sta_added)
 -- 
-2.5.5
+2.17.0
