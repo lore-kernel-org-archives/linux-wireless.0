@@ -1,92 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from osg.samsung.com ([64.30.133.232]:61717 "EHLO osg.samsung.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752167AbeEGJgD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 05:36:03 -0400
-From: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-To: Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Cc: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
-        Mauro Carvalho Chehab <mchehab@infradead.org>,
-        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        linux-wireless@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-fbdev@vger.kernel.org, linux-can@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-iio@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-crypto@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-pm@vger.kernel.org
-Subject: [PATCH 00/18] Fix some build warnings/errors with Sphinx
-Date: Mon,  7 May 2018 06:35:36 -0300
-Message-Id: <cover.1525684985.git.mchehab+samsung@kernel.org> (sfid-20180507_113853_452809_8074FE6B)
+Received: from mail-by2nam01on0071.outbound.protection.outlook.com ([104.47.34.71]:24955
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754093AbeEaJLS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 31 May 2018 05:11:18 -0400
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>
+Subject: [PATCH 1/6] qtnfmac: implement net_device_ops callback to set MAC address
+Date: Thu, 31 May 2018 12:10:57 +0300
+Message-Id: <20180531091102.28666-2-sergey.matyukevich.os@quantenna.com> (sfid-20180531_111123_571395_3D4A8726)
+In-Reply-To: <20180531091102.28666-1-sergey.matyukevich.os@quantenna.com>
+References: <20180531091102.28666-1-sergey.matyukevich.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I decided to give a try with Sphinx last stable version
-(1.17.4), and noticed several issues. The worse one was
-with the networking book: a non-standard footnote there
-with [*] instead of a number causes it to break PDF building.
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-So, I took some spare time to address some warnings all over
-the tree, and moved a few text documents to a book. I with
-I had more time to move the other ones and to solve other
-warnings.
+Implement net_device_ops::ndo_set_mac_address callback to allow for
+setting interface MAC address. Implementation is done through existing
+CHANGE_INTF firmware command. All validation is to be done by firmware.
 
-Mauro Carvalho Chehab (18):
-  docs: can.rst: fix a footnote reference
-  docs: fix location of request_firmware & friends
-  docs: */index.rst: Add newer documents to their respective index.rst
-  docs: admin-guide: add bcache documentation
-  docs: core-api: add cachetlb documentation
-  docs: core-api: add cgroup-v2 documentation
-  docs: core-api: add circular-buffers documentation
-  docs: driver-api: add clk documentation
-  net: mac80211.h: fix a bad comment line
-  rcu: rcupdate.h: get rid of Sphinx warnings at rcu_pointer_handoff()
-  docs: crypto_engine.rst: Fix two parse warnings
-  time: timer.c: adjust a kernel-doc comment
-  wait: wait.h: Get rid of a kernel-doc/Sphinx warnings
-  fbdev: modedb.c: fix a kernel-doc markup
-  iio: iio.h: use nested struct support on kernel-doc markup
-  mtd: rawnand.h: use nested union kernel-doc markups
-  docs: uio-howto.rst: use a code block to solve a warning
-  w1: w1_io.c: fix a kernel-doc warning
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/core.c | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
- Documentation/00-INDEX                        | 10 -------
- .../{bcache.txt => admin-guide/bcache.rst}    |  0
- .../cgroup-v2.rst}                            |  0
- Documentation/admin-guide/index.rst           |  2 ++
- .../admin-guide/kernel-parameters.txt         |  2 +-
- .../{cachetlb.txt => core-api/cachetlb.rst}   |  0
- .../circular-buffers.rst}                     |  0
- Documentation/core-api/index.rst              |  2 ++
- Documentation/crypto/crypto_engine.rst        |  8 +++---
- Documentation/crypto/index.rst                |  1 +
- Documentation/dell_rbu.txt                    |  4 +--
- Documentation/{clk.txt => driver-api/clk.rst} |  0
- .../firmware/fallback-mechanisms.rst          |  2 +-
- .../driver-api/firmware/request_firmware.rst  | 17 +++++++-----
- Documentation/driver-api/index.rst            |  2 ++
- Documentation/driver-api/infrastructure.rst   |  2 +-
- Documentation/driver-api/uio-howto.rst        |  3 ++-
- Documentation/memory-barriers.txt             |  4 +--
- Documentation/networking/can.rst              |  4 +--
- .../power/suspend-and-cpuhotplug.txt          |  2 +-
- Documentation/process/index.rst               |  1 +
- Documentation/security/index.rst              |  2 ++
- .../translations/ko_KR/memory-barriers.txt    |  4 +--
- drivers/video/fbdev/core/modedb.c             | 22 ++++++++--------
- drivers/w1/w1_io.c                            |  1 +
- include/linux/iio/iio.h                       | 24 ++++++++---------
- include/linux/mtd/rawnand.h                   | 26 +++++++++++++------
- include/linux/rcupdate.h                      |  5 ++--
- include/linux/wait.h                          |  2 +-
- include/net/mac80211.h                        |  2 +-
- kernel/time/timer.c                           | 14 +++++-----
- 31 files changed, 93 insertions(+), 75 deletions(-)
- rename Documentation/{bcache.txt => admin-guide/bcache.rst} (100%)
- rename Documentation/{cgroup-v2.txt => admin-guide/cgroup-v2.rst} (100%)
- rename Documentation/{cachetlb.txt => core-api/cachetlb.rst} (100%)
- rename Documentation/{circular-buffers.txt => core-api/circular-buffers.rst} (100%)
- rename Documentation/{clk.txt => driver-api/clk.rst} (100%)
-
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wireless/quantenna/qtnfmac/core.c
+index a6a450984f9a..c318340e1bd5 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
+@@ -179,6 +179,30 @@ static void qtnf_netdev_tx_timeout(struct net_device *ndev)
+ 	}
+ }
+ 
++static int qtnf_netdev_set_mac_address(struct net_device *ndev, void *addr)
++{
++	struct qtnf_vif *vif = qtnf_netdev_get_priv(ndev);
++	struct sockaddr *sa = addr;
++	int ret;
++	unsigned char old_addr[ETH_ALEN];
++
++	memcpy(old_addr, sa->sa_data, sizeof(old_addr));
++
++	ret = eth_mac_addr(ndev, sa);
++	if (ret)
++		return ret;
++
++	qtnf_scan_done(vif->mac, true);
++
++	ret = qtnf_cmd_send_change_intf_type(vif, vif->wdev.iftype,
++					     sa->sa_data);
++
++	if (ret)
++		memcpy(ndev->dev_addr, old_addr, ETH_ALEN);
++
++	return ret;
++}
++
+ /* Network device ops handlers */
+ const struct net_device_ops qtnf_netdev_ops = {
+ 	.ndo_open = qtnf_netdev_open,
+@@ -186,6 +210,7 @@ const struct net_device_ops qtnf_netdev_ops = {
+ 	.ndo_start_xmit = qtnf_netdev_hard_start_xmit,
+ 	.ndo_tx_timeout = qtnf_netdev_tx_timeout,
+ 	.ndo_get_stats64 = qtnf_netdev_get_stats64,
++	.ndo_set_mac_address = qtnf_netdev_set_mac_address,
+ };
+ 
+ static int qtnf_mac_init_single_band(struct wiphy *wiphy,
 -- 
-2.17.0
+2.11.0
