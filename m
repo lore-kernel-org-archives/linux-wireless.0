@@ -1,91 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:41089 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752115AbeEGInk (ORCPT
+Received: from rtits2.realtek.com ([211.75.126.72]:55618 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932657AbeEaCgs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 04:43:40 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 00/30] staging: wilc1000: checkpatch fixes and code cleanup 
-Date: Mon, 7 May 2018 14:13:04 +0530
-Message-ID: <1525682614-3824-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180507_104346_366139_C54EE603)
+        Wed, 30 May 2018 22:36:48 -0400
+From: Pkshih <pkshih@realtek.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH v4 0/9] rtlwifi: btcoex: Add 8822b btcoex support
+Date: Thu, 31 May 2018 02:36:38 +0000
+Message-ID: <1527734181.8418.13.camel@realtek.com> (sfid-20180531_043652_209564_79AE440C)
+References: <20180413061613.8569-1-pkshih@realtek.com>
+In-Reply-To: <20180413061613.8569-1-pkshih@realtek.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series contains modification to remove checkpatch related issues,
-mainly related to 'line over 80 chars'.
-
-We are left with around '5' checkpatch warnings in WILC1000.
-
-Also code cleanup related change to follow as per linux coding style are
-included in this patch series.
-
-Ajay Singh (30):
-  staging: wilc1000: added complete() call for error scenario in
-    handle_key()
-  staging: wilc1000: remove 'ret' variable in handle_key()
-  staging: wilc1000: fix line over 80 chars in handle_key()
-  staging: wilc1000: fix line over 80 characters issue in
-    handle_connect()
-  staging: wilc1000: fix line over 80 chars in
-    host_int_parse_assoc_resp_info()
-  staging: wilc1000: fix line over 80 chars issue in
-    host_int_handle_disconnect()
-  staging: wilc1000: fix line over 80 characters in
-    host_int_parse_join_bss_param()
-  staging: wilc1000: fix line over 80 chars in
-    host_int_parse_assoc_resp_info()
-  staging: wilc1000: rename kmalloc with kmemdup() in
-    handle_connect_timeout()
-  staging: wilc1000: fix line over 80 chars in linux_mon
-  staging: wilc1000: use sizeof(*wdev) to allocate memory in
-    wilc_wfi_cfg_alloc()
-  staging: wilc1000: use kmalloc(sizeof(*mgmt_tx)...) in mgmt_tx()
-  staging: wilc1000: rename clear_duringIP() to avoid camelCase issue
-  staging: wilc1000: fix line over 80 chars in add_network_to_shadow()
-  staging: wilc1000: use kmemdup instead of kmalloc in
-    add_network_to_shadow()
-  staging: wilc1000: fix line over 80 charas in
-    wilc_wfi_remain_on_channel_expired()
-  staging: wilc1000: fix line over 80 chars in
-    wilc_wfi_cfg_tx_vendor_spec()
-  staging: wilc1000: fix line over 80 chars in get_station()
-  staging: wilc1000: fix line over 80 chars in wilc_create_wiphy()
-    declaration
-  staging: wilc1000: fix line over 80 characters in add_key()
-  staging: wilc1000: fix line over 80 chars in scan()
-  staging: wilc1000: fix line over 80 chars issue in connect()
-  staging: wilc1000: rename u8security to avoid datatype in variable
-    name
-  staging: wilc1000: refactor del_station() to avoid parenthesis
-    misalignment
-  staging: wilc1000: fix line over 80 chars in wilc_sdio struct
-  staging: wilc1000: added #define for setting radiotap header
-  staging: wilc1000: remove 'flag' argument from wilc_mac_indicate()
-  staging: wilc1000: added comments for mutex and spinlock_t
-  staging: wilc1000: remove unused 'lock' varible in 'wilc_priv'
-    structure
-  staging: wilc1000: rename s8idxarray to avoid datatype in variable
-    name
-
- drivers/staging/wilc1000/host_interface.c         | 417 ++++++++++++----------
- drivers/staging/wilc1000/host_interface.h         |   2 +-
- drivers/staging/wilc1000/linux_mon.c              |  25 +-
- drivers/staging/wilc1000/linux_wlan.c             |  17 +-
- drivers/staging/wilc1000/wilc_sdio.c              |   3 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 187 +++++-----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.h |   3 +-
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     |   8 +-
- drivers/staging/wilc1000/wilc_wlan.c              |   7 +-
- drivers/staging/wilc1000/wilc_wlan_if.h           |   3 -
- 10 files changed, 350 insertions(+), 322 deletions(-)
-
--- 
-2.7.4
+T24gRnJpLCAyMDE4LTA0LTEzIGF0IDE0OjE2ICswODAwLCBwa3NoaWhAcmVhbHRlay5jb20gd3Jv
+dGU6DQo+IEZyb206IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPg0KPiANCj4gdjQ6
+IHN3YXAgdGhlIG9yZGVyIG9mIHBhdGNoIDQvOSBhbmQgNS85LCBiZWNhdXNlIGtidWlsZCB0ZXN0
+IHJvYm90IHJlcG9ydHMNCj4gwqDCoMKgwqB1bmRlZmluZWQgcmVmZXJlbmNlLiBObyBzb3VyY2Ug
+Y29kZSBjaGFuZ2UuDQo+IHYzOiBmb3JnZXQgdG8gQ0Mgd2lyZWxlc3MgbWFpbGluZyBsaXN0LCBz
+byByZXNlbmQgYWdhaW4uIE5vIGFueSBjaGFuZ2UuDQo+IHYyOiBmaXggbWlzc3BlbGxpbmcgYW5k
+IGJvb2xlYW4gZXhwcmVzc2lvbiBpbiBwYXRjaCAxLzkNCj4gDQo+IFBhdGNoZXMgMS0yIGFyZSBy
+ZXZpc2VkIGJ5IHBhdGNoZXMgMTIgb2YgcHJldmlvdXMgcGF0Y2hzZXQuIDg4MjJiIGNvZXgNCj4g
+ZmlsZXMgYXJlIHNwbGl0IGludG8gdHdvIHBhdGNoZXMsIGFuZCBJIHJlbW92ZSBzb21lIGNvbW1l
+bnRzIGFuZCBhcHBseQ0KPiAnc3RhdGljIGNvbnN0JyB0byB2ZXJzaW9uIHJlbGF0ZWQgdmFyaWFi
+bGVzLg0KPiBQYXRjaGVzIDMtNCBhcmVuJ3QgY2hhbmdlZC4gKGlkZW50aWNhbCB0byBwYXRjaGVz
+IDEzLTE1IG9mIHByZXZpb3VzIHBhdGNoc2V0KQ0KPiBQYXRjaGVzIDYtNyByZW1vdmUgY29tbWVu
+dHMgYW5kIGFwcGx5ICdzdGF0aWMgY29uc3QnIHRvIGV4aXN0aW5nIGZpbGVzLg0KPiBQYXRjaGVz
+IDgtOSByZW1vdmUgZ2xvYmFsIHZhcmlhYmxlcywgYW5kIHVzZSBsb2NhbCB2YXJpYWJsZXMgaW5z
+dGVhZC4NCj4gDQo+IFBpbmctS2UgU2hpaCAoOSk6DQo+IMKgIHJ0bHdpZmk6IGJ0Y29leDogQWRk
+IDg4MjJiMWFudCBjb2V4IGZpbGVzDQo+IMKgIHJ0bHdpZmk6IGJ0Y29leDogQWRkIDg4MjJiMmFu
+dCBjb2V4IGZpbGVzDQo+IMKgIHJ0bHdpZmk6IGJ0Y29leDogQWRkIDg4MjJiIGhlYWRlciBmaWxl
+cyB0byBwcmVjb21wLmgNCj4gwqAgcnRsd2lmaTogYnRjb2V4OiBBZGQgODgyMmIgdG8gTWFrZWZp
+bGUNCj4gwqAgcnRsd2lmaTogYnRjb2V4OiBBZGQgODgyMmIgcm91dGluZSB0byBidGMgaW50ZXJm
+YWNlcw0KPiDCoCBydGx3aWZpOiBidGNvZXg6IHJlbW92ZSBjb21tZW50cyB0aGF0IGFyZSBub3Qg
+bWVhbmluZ2Z1bA0KPiDCoCBydGx3aWZpOiBidGNvZXg6IEFkZCBtb2RpZmllciBjb25zdCB0byB2
+ZXJzaW9uIHJlbGF0ZWQgdmFyaWFibGVzDQo+IMKgIHJ0bHdpZmk6IGJ0Y29leDogQWRkIHN0cnVj
+dCBtZW1iZXJzIHRvIHJlcGxhY2UgZ2xvYmFsIHZhcmFpYmxlcw0KPiDCoCBydGx3aWZpOiBidGNv
+ZXg6IFJlbW92ZSBnbG9iYWwgdmFyaWFibGVzIG9mIGNoaXAgc3BlY2lmaWMgY29udGV4dA0KPiAN
+Cg0KSGkgS2FsbGUsDQoNCkkgd291bGQgbGlrZSB0byBzZW5kIHY1IHRvIGNoYW5nZSB0aGUgb3Jk
+ZXIgb2YgdGhpcyBwYXRjaHNldCBsaWtlOg0KwqAgcnRsd2lmaTogYnRjb2V4OiByZW1vdmUgY29t
+bWVudHMgdGhhdCBhcmUgbm90IG1lYW5pbmdmdWwNCsKgIHJ0bHdpZmk6IGJ0Y29leDogQWRkIG1v
+ZGlmaWVyIGNvbnN0IHRvIHZlcnNpb24gcmVsYXRlZCB2YXJpYWJsZXMNCsKgIHJ0bHdpZmk6IGJ0
+Y29leDogQWRkIHN0cnVjdCBtZW1iZXJzIHRvIHJlcGxhY2UgZ2xvYmFsIHZhcmFpYmxlcw0KwqAg
+cnRsd2lmaTogYnRjb2V4OiBSZW1vdmUgZ2xvYmFsIHZhcmlhYmxlcyBvZiBjaGlwIHNwZWNpZmlj
+IGNvbnRleHQNCg0KwqAgcnRsd2lmaTogYnRjb2V4OiBBZGQgODgyMmIxYW50IGNvZXggZmlsZXMN
+CsKgIHJ0bHdpZmk6IGJ0Y29leDogQWRkIDg4MjJiMmFudCBjb2V4IGZpbGVzDQrCoCBydGx3aWZp
+OiBidGNvZXg6IEFkZCA4ODIyYiBoZWFkZXIgZmlsZXMgdG8gcHJlY29tcC5oDQrCoCBydGx3aWZp
+OiBidGNvZXg6IEFkZCA4ODIyYiB0byBNYWtlZmlsZQ0KwqAgcnRsd2lmaTogYnRjb2V4OiBBZGQg
+ODgyMmIgcm91dGluZSB0byBidGMgaW50ZXJmYWNlcw0KDQpUaGVuLCB5b3UgY2FuIHJldmlldyBw
+YXRjaGVzIDEvOSAtIDQvOSB0aGF0IHJlZmluZSBidGNvZXgsIGFuZA0KdGhlIHJlbWFpbmluZyA4
+ODIyYidzIGJ0Y29leCBjYW4gcmV2aWV3IGxhdGVyLg0KRG9lcyBpdCB3b3JrIGZvciB5b3U/DQoN
+ClRoYW5rcw0KUEsNCg==
