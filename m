@@ -1,159 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:33280 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751495AbeEVITr (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 04:19:47 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Eylon Pedinovsky <eylon.pedinovsky@broadcom.com>,
-        Jithu Jance <jithu.jance@broadcom.com>,
-        Vidyullatha Kanchanapally <vidyullatha@codeaurora.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 3/3] nl80211: Update ERP info using NL80211_CMD_UPDATE_CONNECT_PARAMS
-Date: Tue, 22 May 2018 10:19:08 +0200
-Message-Id: <1526977148-11600-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180522_102009_754040_AC5D66E9)
-In-Reply-To: <1526977148-11600-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1526977148-11600-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from muru.com ([72.249.23.125]:45610 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755678AbeEaRRo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 31 May 2018 13:17:44 -0400
+Date: Thu, 31 May 2018 10:17:40 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: [RFT 7/6] wlcore: Make sure firmware is initialized in
+ wl1271_op_add_interface()
+Message-ID: <20180531171740.GR5705@atomide.com> (sfid-20180531_191748_787728_65A67BA8)
+References: <20180529180605.73622-1-tony@atomide.com>
+ <20180529180605.73622-2-tony@atomide.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180529180605.73622-2-tony@atomide.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vidyullatha Kanchanapally <vidyullatha@codeaurora.org>
+We have wl12xx_boot() call wl12xx_enable_interrupts() and if we have
+wl1271_op_add_interface() call pm_runtime_get_sync() before the interrupts
+are enabled. And then we get the following error during boot:
 
-Use NL80211_CMD_UPDATE_CONNECT_PARAMS to update new ERP information,
-Association IEs and the Authentication type to driver / firmware which
-will be used in subsequent roamings.
+wlcore: ERROR ELP wakeup timeout!
 
-Signed-off-by: Vidyullatha Kanchanapally <vidyullatha@codeaurora.org>
-[arend: extended fils-sk kernel doc and added check in wiphy_register()]
-Reviewed-by: Jithu Jance <jithu.jance@broadcom.com>
-Reviewed-by: Eylon Pedinovsky <eylon.pedinovsky@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Let's fix this by first checking if we need to boot the firmware. And
+only after that call pm_runtime_get_sync() when interrupts are enabled.
+And only after that do the check for wl12xx_need_fw_change().
+
+Signed-off-by: Tony Lindgren <tony@atomide.com>
 ---
- include/net/cfg80211.h       |  5 +++++
- include/uapi/linux/nl80211.h |  3 ++-
- net/wireless/core.c          |  4 ++++
- net/wireless/nl80211.c       | 52 ++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 63 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 266d25a..d6e2231 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2225,9 +2225,14 @@ struct cfg80211_connect_params {
-  * have to be updated as part of update_connect_params() call.
-  *
-  * @UPDATE_ASSOC_IES: Indicates whether association request IEs are updated
-+ * @UPDATE_FILS_ERP_INFO: Indicates that FILS connection parameters (realm,
-+ *	username, erp sequence number and rrk) are updated
-+ * @UPDATE_AUTH_TYPE: Indicates that authentication type is updated
-  */
- enum cfg80211_connect_params_changed {
- 	UPDATE_ASSOC_IES		= BIT(0),
-+	UPDATE_FILS_ERP_INFO		= BIT(1),
-+	UPDATE_AUTH_TYPE		= BIT(2),
- };
+Here's one more patch to test for this series.
 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 18fea06..b678573e4 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -204,7 +204,8 @@
-  * FILS shared key authentication offload should be able to construct the
-  * authentication and association frames for FILS shared key authentication and
-  * eventually do a key derivation as per IEEE 802.11ai. The below additional
-- * parameters should be given to driver in %NL80211_CMD_CONNECT.
-+ * parameters should be given to driver in %NL80211_CMD_CONNECT and/or in
-+ * %NL80211_CMD_UPDATE_CONNECT_PARAMS.
-  *	%NL80211_ATTR_FILS_ERP_USERNAME - used to construct keyname_nai
-  *	%NL80211_ATTR_FILS_ERP_REALM - used to construct keyname_nai
-  *	%NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM - used to construct erp message
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index a6f3cac..772f197 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -722,6 +722,10 @@ int wiphy_register(struct wiphy *wiphy)
- 		    (!rdev->ops->set_pmk || !rdev->ops->del_pmk)))
- 		return -EINVAL;
+---
+ drivers/net/wireless/ti/wlcore/main.c | 31 ++++++++++++++++-----------
+ 1 file changed, 18 insertions(+), 13 deletions(-)
 
-+	if (WARN_ON(!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_FW_ROAM) &&
-+		    rdev->ops->update_connect_params))
-+		return -EINVAL;
-+
- 	if (wiphy->addresses)
- 		memcpy(wiphy->perm_addr, wiphy->addresses[0].addr, ETH_ALEN);
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 66be69f..907d9b4 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -9420,6 +9420,8 @@ static int nl80211_update_connect_params(struct sk_buff *skb,
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct net_device *dev = info->user_ptr[1];
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	bool fils_sk_offload;
-+	u32 auth_type;
- 	u32 changed = 0;
- 	int ret;
-
-@@ -9434,6 +9436,56 @@ static int nl80211_update_connect_params(struct sk_buff *skb,
- 		changed |= UPDATE_ASSOC_IES;
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -2537,11 +2537,6 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 	wl12xx_get_vif_count(hw, vif, &vif_count);
+ 
+ 	mutex_lock(&wl->mutex);
+-	ret = pm_runtime_get_sync(wl->dev);
+-	if (ret < 0) {
+-		pm_runtime_put_noidle(wl->dev);
+-		goto out_unlock;
+-	}
+ 
+ 	/*
+ 	 * in some very corner case HW recovery scenarios its possible to
+@@ -2570,14 +2565,6 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	if (wl12xx_need_fw_change(wl, vif_count, true)) {
+-		wl12xx_force_active_psm(wl);
+-		set_bit(WL1271_FLAG_INTENDED_FW_RECOVERY, &wl->flags);
+-		mutex_unlock(&wl->mutex);
+-		wl1271_recovery_work(&wl->recovery_work);
+-		return 0;
+-	}
+-
+ 	/*
+ 	 * TODO: after the nvs issue will be solved, move this block
+ 	 * to start(), and make sure here the driver is ON.
+@@ -2594,6 +2581,24 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 			goto out;
  	}
-
-+	fils_sk_offload = wiphy_ext_feature_isset(&rdev->wiphy,
-+						  NL80211_EXT_FEATURE_FILS_SK_OFFLOAD);
-+
+ 
 +	/*
-+	 * when driver supports fils-sk offload all attributes must be
-+	 * provided. So the else covers "fils-sk-not-all" and
-+	 * "no-fils-sk-any".
++	 * Call runtime PM only after possible wl12xx_init_fw() above
++	 * is done. Otherwise we do not have interrupts enabled.
 +	 */
-+	if (fils_sk_offload &&
-+	    info->attrs[NL80211_ATTR_FILS_ERP_USERNAME] &&
-+	    info->attrs[NL80211_ATTR_FILS_ERP_REALM] &&
-+	    info->attrs[NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM] &&
-+	    info->attrs[NL80211_ATTR_FILS_ERP_RRK]) {
-+		connect.fils_erp_username =
-+			nla_data(info->attrs[NL80211_ATTR_FILS_ERP_USERNAME]);
-+		connect.fils_erp_username_len =
-+			nla_len(info->attrs[NL80211_ATTR_FILS_ERP_USERNAME]);
-+		connect.fils_erp_realm =
-+			nla_data(info->attrs[NL80211_ATTR_FILS_ERP_REALM]);
-+		connect.fils_erp_realm_len =
-+			nla_len(info->attrs[NL80211_ATTR_FILS_ERP_REALM]);
-+		connect.fils_erp_next_seq_num =
-+			nla_get_u16(
-+			   info->attrs[NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM]);
-+		connect.fils_erp_rrk =
-+			nla_data(info->attrs[NL80211_ATTR_FILS_ERP_RRK]);
-+		connect.fils_erp_rrk_len =
-+			nla_len(info->attrs[NL80211_ATTR_FILS_ERP_RRK]);
-+		changed |= UPDATE_FILS_ERP_INFO;
-+	} else if (info->attrs[NL80211_ATTR_FILS_ERP_USERNAME] ||
-+		   info->attrs[NL80211_ATTR_FILS_ERP_REALM] ||
-+		   info->attrs[NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM] ||
-+		   info->attrs[NL80211_ATTR_FILS_ERP_RRK]) {
-+		return -EINVAL;
++	ret = pm_runtime_get_sync(wl->dev);
++	if (ret < 0) {
++		pm_runtime_put_noidle(wl->dev);
++		goto out_unlock;
 +	}
 +
-+	if (info->attrs[NL80211_ATTR_AUTH_TYPE]) {
-+		auth_type = nla_get_u32(info->attrs[NL80211_ATTR_AUTH_TYPE]);
-+		if (!nl80211_valid_auth_type(rdev, auth_type,
-+					     NL80211_CMD_CONNECT))
-+			return -EINVAL;
-+
-+		if (auth_type == NL80211_AUTHTYPE_FILS_SK &&
-+		    fils_sk_offload && !(changed & UPDATE_FILS_ERP_INFO))
-+			return -EINVAL;
-+
-+		connect.auth_type = auth_type;
-+		changed |= UPDATE_AUTH_TYPE;
++	if (wl12xx_need_fw_change(wl, vif_count, true)) {
++		wl12xx_force_active_psm(wl);
++		set_bit(WL1271_FLAG_INTENDED_FW_RECOVERY, &wl->flags);
++		mutex_unlock(&wl->mutex);
++		wl1271_recovery_work(&wl->recovery_work);
++		return 0;
 +	}
 +
- 	wdev_lock(dev->ieee80211_ptr);
- 	if (!wdev->current_bss)
- 		ret = -ENOLINK;
---
-1.9.1
+ 	if (!wlcore_is_p2p_mgmt(wlvif)) {
+ 		ret = wl12xx_cmd_role_enable(wl, vif->addr,
+ 					     role_type, &wlvif->role_id);
+-- 
+2.17.0
