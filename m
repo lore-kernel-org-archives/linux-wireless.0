@@ -1,68 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:38336 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751108AbeEUUhF (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40376 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754040AbeEaIov (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 May 2018 16:37:05 -0400
-Received: by mail-lf0-f66.google.com with SMTP id z142-v6so25802287lff.5
-        for <linux-wireless@vger.kernel.org>; Mon, 21 May 2018 13:37:05 -0700 (PDT)
-Date: Mon, 21 May 2018 22:37:01 +0200
-From: Niklas Cassel <niklas.cassel@linaro.org>
-To: Adrian Chadd <adrian.chadd@gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        David Miller <davem@davemloft.net>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: transmit queued frames after waking queues
-Message-ID: <20180521203701.GA7619@localhost.localdomain> (sfid-20180521_223728_285923_023C6B64)
-References: <20180517231512.13085-1-niklas.cassel@linaro.org>
- <CAJ-Vmon1ybhWs_8Nv=w62pmhSizDdDeYCgK8_HTTwPZ=EEC46g@mail.gmail.com>
+        Thu, 31 May 2018 04:44:51 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Alexander Wetzel <alexander.wetzel@web.de>,
+        linux-wireless@vger.kernel.org,
+        Golan Ben Ami <golan.ben.ami@intel.com>
+Subject: Re: iwlwifi: regression due to: allow different csr flags for different device families
+References: <20180422082745.9743-1-luca@coelho.fi>
+        <20180422082745.9743-2-luca@coelho.fi>
+        <8ac31eb3-17cd-c4ee-fdf6-49aea171a667@web.de>
+        <3a0d36e025325f873f6db2651c6d576b3b14c36d.camel@coelho.fi>
+Date: Thu, 31 May 2018 11:44:46 +0300
+In-Reply-To: <3a0d36e025325f873f6db2651c6d576b3b14c36d.camel@coelho.fi> (Luca
+        Coelho's message of "Thu, 31 May 2018 09:30:48 +0300")
+Message-ID: <87k1rk1af5.fsf@kamboji.qca.qualcomm.com> (sfid-20180531_104457_411245_2B844214)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJ-Vmon1ybhWs_8Nv=w62pmhSizDdDeYCgK8_HTTwPZ=EEC46g@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 17, 2018 at 03:26:25PM -0700, Adrian Chadd wrote:
-> On Thu, 17 May 2018 at 16:16, Niklas Cassel <niklas.cassel@linaro.org>
-> wrote:
-> 
-> > diff --git a/drivers/net/wireless/ath/ath10k/txrx.c
-> b/drivers/net/wireless/ath/ath10k/txrx.c
-> > index cda164f6e9f6..1d3b2d2c3fee 100644
-> > --- a/drivers/net/wireless/ath/ath10k/txrx.c
-> > +++ b/drivers/net/wireless/ath/ath10k/txrx.c
-> > @@ -95,6 +95,9 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
-> >                  wake_up(&htt->empty_tx_wq);
-> >          spin_unlock_bh(&htt->tx_lock);
-> 
-> > +       if (htt->num_pending_tx <= 3 && !list_empty(&ar->txqs))
-> > +               ath10k_mac_tx_push_pending(ar);
-> > +
-> 
-> Just sanity checking - what's protecting htt->num_pending_tx? or is it
-> serialised some other way?
+Luca Coelho <luca@coelho.fi> writes:
 
-Hello Adrian,
+> On Sun, 2018-05-27 at 14:08 +0200, Alexander Wetzel wrote:
+>> > From: Golan Ben Ami <golan.ben.ami@intel.com>
+>> > 
+>> > Different device families may have different flag values
+>> > for passing a message to the fw (i.e. SW_RESET).
+>> > In order to keep the code readable, and avoid conditioning
+>> > upon the family, store a value for each flag, which indicates
+>> > the bit that needs to be enabled.
+>> > 
+>> > Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
+>> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+>> 
+>> This patch generates a Null pointer exception for my Ultimate-N 6300
+>> card when loading the driver, making the card unusable.
+>> (Bisecting linked it to commit
+>> a8cbb46f831d2c101feccdd0e0daf3627b8c1dca.)
+>> 
+>> Sine the commit could not be simply reverted I applied this commit to
+>> my
+>> distribution kernel - basically 4.16.12 - and can confirm it is
+>> indeed
+>> causing the issue.
+>
+> It seems that I forgot to reply to this, even though we looked into it
+> and provided a fix[1].  This fix will hopefully be included in 4.17
+> final.
+>
+> Thanks a lot for reporting and bisecting!
+>
+> [1] https://patchwork.kernel.org/patch/10437773/
 
-I did not take the htt->tx_lock lock for this since it should not be
-needed.
+Something is not right, commit 0513c083d1f4 is in wireless-drivers-next
+so it will be in 4.18. Are we mixing commits or releases or did I pull
+it to wrong tree?
 
-There are however some compiler optimizations that you have to look out
-for:
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/memory-barriers.txt?h=v4.17-rc6#n1547
+0513c083d1f4 iwlwifi: add csr configuration for 6300 devices
 
-I can't see that any of the examples applies, but let's add READ_ONCE(),
-to make sure that the compiler doesn't try to optimize this.
-
-Will send a V2 for this.
-
-Regards,
-Niklas
-
-> 
-> >          dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
-> 
-> >          ath10k_report_offchan_tx(htt->ar, msdu);
-> > --
-> > 2.17.0
+-- 
+Kalle Valo
