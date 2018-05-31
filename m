@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:42239 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750733AbeEVKjE (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:59696 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755036AbeEaPJz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 May 2018 06:39:04 -0400
-Received: by mail-qt0-f196.google.com with SMTP id c2-v6so22712059qtn.9
-        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2018 03:39:04 -0700 (PDT)
-Subject: Re: [PATCH] nl80211: Reject disconnect commands except from
- conn_owner
-To: Denis Kenzior <denkenz@gmail.com>
-References: <20180428014732.4018-1-andrew.zaborowski@intel.com>
- <87in8b8ooy.fsf@purkki.adurom.net>
- <CAOq732JPfbJWyR0RROY-t67p7dOuoHoHS6eaMrZ1j39F1Q0zmg@mail.gmail.com>
- <1525720752.22388.3.camel@sipsolutions.net> <5AF1959E.6020605@broadcom.com>
- <1525781970.14830.11.camel@sipsolutions.net> <5AF1995D.3040204@broadcom.com>
- <A996D5EE-1279-4DEC-832F-FC4D5FD7FC61@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Andrew Zaborowski <andrew.zaborowski@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5B03F345.70809@broadcom.com> (sfid-20180522_123910_301916_2ACAF5E4)
-Date: Tue, 22 May 2018 12:39:01 +0200
+        Thu, 31 May 2018 11:09:55 -0400
+Received: from mail-io0-f199.google.com ([209.85.223.199])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1fOPD8-0003bX-6n
+        for linux-wireless@vger.kernel.org; Thu, 31 May 2018 15:09:54 +0000
+Received: by mail-io0-f199.google.com with SMTP id k21-v6so18455580ioj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 31 May 2018 08:09:54 -0700 (PDT)
+Date: Thu, 31 May 2018 10:09:50 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [ANN] wireless-regdb: master-2018-05-31
+Message-ID: <20180531150950.GI3401@ubuntu-xps13> (sfid-20180531_171017_264336_F1096CDF)
 MIME-Version: 1.0
-In-Reply-To: <A996D5EE-1279-4DEC-832F-FC4D5FD7FC61@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/8/2018 5:05 PM, Denis Kenzior wrote:
-> Hi Arend,
->
->>
->> Sure. I guess we all have been there kicking of wpa_s and discovering
->> there is already one running in the background. I am just a bit
->> squeamish to change the behavior like this. Hmmmm. Is wpa_s already
->> using SOCKET_OWNER. If so, I might create a patch to opt-out for that
->> so people can knowingly choose chaos ;-)
->>
->
-> wpa_s is using SOCKET_OWNER these days.  However, with the introduction
-> of Control Port over NL80211, just getting rid of SOCKET_OWNER might not
-> be that easy.
+A new release of wireless-regdb (master-2018-05-31) is available at:
 
-I have a regression test script employing py80211 which listens for 
-connect event. Right now I am using an older wpa_s, but the above will 
-screw it up.
+https://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2018.05.31.tar.gz
 
-If I recall correctly the mlme notification needed to be unicast, 
-because multicast was not 100% reliable, right? Would it be acceptable 
-to send unicast to the socket owner and still do the multicast or are we 
-already doing that? If not, that would fix my imminent issue.
+The short log of changes since the 2018-05-09 release is below.
 
-Regards,
-Arend
+Thanks,
+Seth
+
+---
+
+Seth Forshee (6):
+      wireless-regdb: Add 5725-5875 MHz rule for France (FR)
+      wireless-regdb: Update rules for Panama (PA) and add 60 GHz rule
+      wireless-regdb: Fix comparison of WmmRule with NoneType in python 3
+      wireless-regdb: Fix iteration in create_wmms() for python 3
+      wireless-regdb: Fix power limit in 5725-5785 GHz rule for France
+      wireless-regdb: update regulatory database based on preceding changes
