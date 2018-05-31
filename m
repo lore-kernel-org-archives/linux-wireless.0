@@ -1,74 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40758 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933292AbeEHSM5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 May 2018 14:12:57 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: akpm@linux-foundation.org, keescook@chromium.org,
-        josh@joshtriplett.org, maco@android.com, andy.gross@linaro.org,
-        david.brown@linaro.org, bjorn.andersson@linaro.org, teg@jklm.no,
-        wagi@monom.org, hdegoede@redhat.com, andresx7@gmail.com,
-        zohar@linux.vnet.ibm.com, kubakici@wp.pl, shuah@kernel.org,
-        mfuzzey@parkeon.com, dhowells@redhat.com, pali.rohar@gmail.com,
-        tiwai@suse.de, kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        jewalt@lgsinnovations.com, oneukum@suse.com,
-        cantabile.desu@gmail.com, ast@fb.com, hare@suse.com,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, khc@pm.waw.pl,
-        davem@davemloft.net, arve@android.com, tkjos@android.com,
-        corbet@lwn.net, mchehab+samsung@kernel.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v6 04/13] firmware_loader: document firmware_sysfs_fallback()
-Date: Tue,  8 May 2018 11:12:38 -0700
-Message-Id: <20180508181247.19431-5-mcgrof@kernel.org> (sfid-20180508_202220_291792_EC3CE180)
-In-Reply-To: <20180508181247.19431-1-mcgrof@kernel.org>
-References: <20180508181247.19431-1-mcgrof@kernel.org>
+Received: from shards.monkeyblade.net ([184.105.139.130]:33638 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754067AbeEaT2n (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 31 May 2018 15:28:43 -0400
+Date: Thu, 31 May 2018 15:28:41 -0400 (EDT)
+Message-Id: <20180531.152841.1420970245080020907.davem@davemloft.net> (sfid-20180531_212847_365073_ADE084BC)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers 2018-05-30
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87vab52po0.fsf@kamboji.qca.qualcomm.com>
+References: <87vab52po0.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This also sets the expecations for future fallback interfaces, even
-if they are not exported.
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Wed, 30 May 2018 17:17:51 +0300
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- drivers/base/firmware_loader/fallback.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+> I now this is late but hopefully this pull request can make it to net
+> tree and to the final 4.17 release still. But if not, please let me know
+> and I'll pull this to wireless-drivers-next instead.
+> 
+> More info in the signed tag below, and please let me know if there are
+> any problems.
 
-diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
-index 3db9e0f225ac..9169e7b9800c 100644
---- a/drivers/base/firmware_loader/fallback.c
-+++ b/drivers/base/firmware_loader/fallback.c
-@@ -662,6 +662,26 @@ static bool fw_run_sysfs_fallback(enum fw_opt opt_flags)
- 	return fw_force_sysfs_fallback(opt_flags);
- }
- 
-+/**
-+ * firmware_fallback_sysfs() - use the fallback mechanism to find firmware
-+ * @fw: pointer to firmware image
-+ * @name: name of firmware file to look for
-+ * @device: device for which firmware is being loaded
-+ * @opt_flags: options to control firmware loading behaviour
-+ * @ret: return value from direct lookup which triggered the fallback mechanism
-+ *
-+ * This function is called if direct lookup for the firmware failed, it enables
-+ * a fallback mechanism through userspace by exposing a sysfs loading
-+ * interface. Userspace is in charge of loading the firmware through the syfs
-+ * loading interface. This syfs fallback mechanism may be disabled completely
-+ * on a system by setting the proc sysctl value ignore_sysfs_fallback to true.
-+ * If this false we check if the internal API caller set the @FW_OPT_NOFALLBACK
-+ * flag, if so it would also disable the fallback mechanism. A system may want
-+ * to enfoce the sysfs fallback mechanism at all times, it can do this by
-+ * setting ignore_sysfs_fallback to false and force_sysfs_fallback to true.
-+ * Enabling force_sysfs_fallback is functionally equivalent to build a kernel
-+ * with CONFIG_FW_LOADER_USER_HELPER_FALLBACK.
-+ **/
- int firmware_fallback_sysfs(struct firmware *fw, const char *name,
- 			    struct device *device,
- 			    enum fw_opt opt_flags,
--- 
-2.17.0
+Pulled, thanks Kalle.
