@@ -1,77 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53445 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753627AbeEHAU6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 May 2018 20:20:58 -0400
-Date: Tue, 8 May 2018 00:20:55 +0000
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Andres Rodriguez <andresx7@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org,
-        alexdeucher@gmail.com, christian.koenig@amd.com,
-        kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        hdegoede@redhat.com, Kees Cook <keescook@chromium.org>,
-        Mimi Zohar <zohar@linux.vnet.ibm.com>
-Subject: Re: [PATCH 6/9] firmware: print firmware name on fallback path
-Message-ID: <20180508002055.GY27853@wotan.suse.de> (sfid-20180508_022113_250258_651E3A17)
-References: <20180423201205.20533-1-andresx7@gmail.com>
- <20180423201205.20533-7-andresx7@gmail.com>
- <20180503234235.GX27853@wotan.suse.de>
- <e79fe68b-7dc5-b65a-e483-287c91d67bc2@gmail.com>
+Received: from szxga05-in.huawei.com ([45.249.212.191]:8226 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754723AbeEaLWl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 31 May 2018 07:22:41 -0400
+From: Yisheng Xie <xieyisheng1@huawei.com>
+To: <linux-kernel@vger.kernel.org>
+CC: <andy.shevchenko@gmail.com>, Yisheng Xie <xieyisheng1@huawei.com>,
+        "Kalle Valo" <kvalo@codeaurora.org>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Subject: [PATCH v2 06/21] iwlwifi: mvm: use match_string() helper
+Date: Thu, 31 May 2018 19:11:11 +0800
+Message-ID: <1527765086-19873-7-git-send-email-xieyisheng1@huawei.com> (sfid-20180531_132749_318224_80C54F89)
+In-Reply-To: <1527765086-19873-1-git-send-email-xieyisheng1@huawei.com>
+References: <1527765086-19873-1-git-send-email-xieyisheng1@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <e79fe68b-7dc5-b65a-e483-287c91d67bc2@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 04, 2018 at 10:57:26PM -0400, Andres Rodriguez wrote:
-> On 2018-05-03 07:42 PM, Luis R. Rodriguez wrote:
-> > On Mon, Apr 23, 2018 at 04:12:02PM -0400, Andres Rodriguez wrote:
-> > > Previously, one could assume the firmware name from the preceding
-> > > message: "Direct firmware load for {name} failed with error %d".
-> > > 
-> > > However, with the new firmware_request_nowarn() entrypoint, the message
-> > > outlined above will not always be printed.
-> > 
-> > I though the whole point was to not print an error message. What if
-> > we want later to disable this error message? This would prove a bit
-> > pointless.
-> > 
-> > Let's discuss the exact semantics desired here. Why would only the
-> > fallback be desirable here?
-> > 
-> > Andres, Kalle?
-> > 
-> > After we address this I'll address resubmitting this lat patch
-> > along with the last one. For now I'll skip it.
-> 
-> You are correct. I initially thought it would be useful to know that the
-> usermode fallback was being triggered. And for that message to be useful we
-> would need a fw name.
-> 
-> But now that you point it out, this behaviour is inconsistent with the
-> _nowarn() definition. We shouldn't have a message in the first place.
-> 
-> So it might be better to instead have:
-> 
-> if (!(opt_flags & FW_OPT_NO_WARN) )
->     dev_warn(device, "Falling back to user helper\n");
-> 
-> No need to add the firmware name, cause we either:
->     a) FW_OPT_NO_WARN is set and no messages are printed, or
->     b) FW_OPT_NO_WARN is not set and we get both messages.
-> 
-> Yay, nay?
+match_string() returns the index of an array for a matching string,
+which can be used instead of open coded variant.
 
-I welcome such a new warning but not for any of the reasons stated.
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: Intel Linux Wireless <linuxwifi@intel.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
+---
+v2:
+ - let ret get return value of match_string  - per Andy
 
-It make sense if FW_OPT_NO_WARN is not set and only because the fallback
-mechanism can fail for a slew of different firmware files, and just getting
-informed a failure with a fallback occurred does not tell us for which file it
-failed for.
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
 
-I'll add such a patch to my queue and send it off soon prior to your own
-new API nowarn call.
-
-  Luis
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 0e6401c..d7ac511 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -671,16 +671,11 @@ static ssize_t iwl_dbgfs_bt_cmd_read(struct file *file, char __user *user_buf,
+ 	};
+ 	int ret, bt_force_ant_mode;
+ 
+-	for (bt_force_ant_mode = 0;
+-	     bt_force_ant_mode < ARRAY_SIZE(modes_str);
+-	     bt_force_ant_mode++) {
+-		if (!strcmp(buf, modes_str[bt_force_ant_mode]))
+-			break;
+-	}
+-
+-	if (bt_force_ant_mode >= ARRAY_SIZE(modes_str))
+-		return -EINVAL;
++	ret = match_string(modes_str, ARRAY_SIZE(modes_str), buf);
++	if (ret < 0)
++		return ret;
+ 
++	bt_force_ant_mode = ret;
+ 	ret = 0;
+ 	mutex_lock(&mvm->mutex);
+ 	if (mvm->bt_force_ant_mode == bt_force_ant_mode)
+-- 
+1.7.12.4
