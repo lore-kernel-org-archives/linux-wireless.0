@@ -1,59 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:50734 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751219AbeENKLF (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54294 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754586AbeEaLMU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 May 2018 06:11:05 -0400
-Received: by mail-wm0-f66.google.com with SMTP id t11-v6so12445223wmt.0
-        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2018 03:11:04 -0700 (PDT)
-Subject: Re: [PATCH V3 0/5] Update brcm firmware files
-To: linux-firmware@kernel.org
-References: <1521209329-59441-1-git-send-email-chi-hsien.lin@cypress.com>
-Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Wright Feng <wright.feng@cypress.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5AF960B6.2010709@broadcom.com> (sfid-20180514_121108_809658_1E9A316C)
-Date: Mon, 14 May 2018 12:11:02 +0200
+        Thu, 31 May 2018 07:12:20 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>
+Subject: Re: [PATCH 0/6] qtnfmac: enable more features
+References: <20180531091102.28666-1-sergey.matyukevich.os@quantenna.com>
+        <876034i2ug.fsf@purkki.adurom.net>
+        <20180531103506.wskh5fyat2ildmp5@bars>
+Date: Thu, 31 May 2018 14:12:15 +0300
+In-Reply-To: <20180531103506.wskh5fyat2ildmp5@bars> (Sergey Matyukevich's
+        message of "Thu, 31 May 2018 13:35:07 +0300")
+Message-ID: <87bmcw13lc.fsf@kamboji.qca.qualcomm.com> (sfid-20180531_131224_050819_20276253)
 MIME-Version: 1.0
-In-Reply-To: <1521209329-59441-1-git-send-email-chi-hsien.lin@cypress.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/16/2018 3:08 PM, Chi-Hsien Lin wrote:
-> Update brcm firmware files and WHENCE accordingly.
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
 
-Hi firmware-maintainers,
+> Hello Kalle,
+>
+>> > Here is the next update for qtnfmac driver which enables more wireless
+>> > features. The major changes include the following items:
+>> > - cfg80211 power management callback
+>> > - net_device_ops set MAC addr callback
+>> > - advanced scan features: multiple SSIDs and randomized source MACs
+>> > - basic WoWLAN support: disconnect/magic/pattern triggers
+>> >   -- not yet: PCIe backend suspend/resume, reporting wakeup reason
+>> 
+>> BTW, most likely the merge window will start on Sunday and I'm planning
+>> to send the last w-d-next pull request to Dave today. So you just missed
+>> the window to get these to 4.18 by a day.
+>
+> Ok. Thanks for letting us know. I assume that our previous 'fixes' patch
+> series (which you applied today) will be included into your
+> 4.18 pull request. Correct ?
 
-It seems this series somehow got lost. Can these still be applied. They 
-can be found in the linux-wireless patchwork database. I provided links 
-below.
+Correct. Everything in w-d-next as of now will be included to the pull
+request.
 
-Regards,
-Arend
----
-> Chi-Hsien Lin (5):
->    brcm: update firmware for bcm43430
-
-https://patchwork.kernel.org/patch/10287495/
-
->    brcm: update firmware for bcm43340
-
-https://patchwork.kernel.org/patch/10287497/
-
->    brcm: update firmware for bcm43362
-
-https://patchwork.kernel.org/patch/10287493/
-
->    brcm: update firmware for bcm4354
-
-https://patchwork.kernel.org/patch/10287499/
-
->    brcm: update firmware for bcm4356 pcie
-
-https://patchwork.kernel.org/patch/10287501/
+-- 
+Kalle Valo
