@@ -1,54 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.pens.ac.id ([202.9.85.49]:45636 "EHLO mail.pens.ac.id"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752973AbeE1Cng (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 27 May 2018 22:43:36 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by mail.pens.ac.id (Postfix) with ESMTP id D1EA72D4002
-        for <linux-wireless@vger.kernel.org>; Mon, 28 May 2018 09:31:41 +0700 (WIT)
-Received: from mail.pens.ac.id ([127.0.0.1])
-        by localhost (mail.pens.ac.id [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 8s+1rRofP5Pd for <linux-wireless@vger.kernel.org>;
-        Mon, 28 May 2018 09:31:39 +0700 (WIT)
-Received: from mail.pens.ac.id (mail.pens.ac.id [202.9.85.49])
-        by mail.pens.ac.id (Postfix) with ESMTP id D83942D4001
-        for <linux-wireless@vger.kernel.org>; Mon, 28 May 2018 09:31:39 +0700 (WIT)
-Date: Mon, 28 May 2018 09:31:39 +0700 (WIT)
-From: Ahmad Zainudin <zai@pens.ac.id>
-To: linux-wireless@vger.kernel.org
-Subject: hostapd.config file for ACS Configuration
-Message-ID: <cc7169c6-2204-4ba0-9e68-7446f5b7d11a@mail.eepis-its.edu> (sfid-20180528_044528_155729_194846E9)
-Content-Type: text/plain; charset=utf-8
+Received: from mail2.candelatech.com ([208.74.158.173]:37812 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932708AbeEaPxE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 31 May 2018 11:53:04 -0400
+Subject: Re: [PATCH] cfg80211: Add cumulative channel survey dump support.
+To: vnaralas@codeaurora.org, Johannes Berg <johannes@sipsolutions.net>
+References: <1526980556-26707-1-git-send-email-vnaralas@codeaurora.org>
+ <1527069282.3759.16.camel@sipsolutions.net>
+ <ebf1c95acb34649b3d2a5435142dc06a@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        linux-wireless-owner@vger.kernel.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <7afee956-9f91-37f5-52d2-7cdc0686f213@candelatech.com> (sfid-20180531_175308_144480_831AD032)
+Date: Thu, 31 May 2018 08:52:56 -0700
 MIME-Version: 1.0
+In-Reply-To: <ebf1c95acb34649b3d2a5435142dc06a@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
-
-I install hostapd use apt-get install
-
->From tutorial for ACS (Automatic Channel Selection) configuration, I must enable ACS in hostapd's .config file :
-
-CONFIG_ACS=y
-
-I have trouble finding  hostapd.config file too enable CONFIG_ACS=y. I have finish configure  channel=acs_survey in hostapd.conf file.
-
-Are the hostapd.config and hostapd.conf different files?, and I am not yet found the  hostapd.config file.
-
-Can help me?
-Thank you,,
-
----------------------------------------------------------------
-Ahmad Zainudin
-Digital Signal Processing Lab. E-206
-Telecommunication Engineering Department
-Electronic Engineering Polytechnic Institute of Surabaya (EEPIS)
-http://zai.lecturer.pens.ac.id
 
 
+On 05/31/2018 02:06 AM, vnaralas@codeaurora.org wrote:
+> On 2018-05-23 15:24, Johannes Berg wrote:
+>> On Tue, 2018-05-22 at 14:45 +0530, Venkateswara Naralasetty wrote:
+>>> This patch provides support to send accumulated survey data to
+>>> user if low level drivers provides non-accumulated survey data.
+>>
+>> I think the commit log should say what you need this for?
+>>
+>> It's simultaneously a new flag, and a lot of code, but it's not clear
+>> what the point is?
+>>
+>> johannes
+>
+> I will sent next version of patch with updated commit log.
+>
+> Providing you the earlier discussion of this patch to give quick overview about this patch.
+> https://patchwork.kernel.org/patch/9701459/
 
----------------------------------------------------------------------
-PENS/EEPIS - Bridge To The Future
-Politeknik Elektronika Negeri Surabaya (PENS)
-Electronic Engineering Polytechnic Institute of Surabaya (EEPIS)
-http://www.pens.ac.id
+It is simple to fix the firmware, it just has several bugs related to clearing the
+accumulator as well as the 'real' values.  If you can find a QCA firmware engineer
+that will accept patches I can show them how to fix this easily.  I recently
+fixed this in my wave-1 firmware.  I posted patches to the ath10k driver to
+support this a week or so ago, but not sure if Kalle will apply them.
+
+And, it is likely that even if you don't use the 'clear' option, you are going to
+get wraps in the firmware and that will just be other harder to debug bugs.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
