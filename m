@@ -1,84 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:37744 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935642AbeFMN2X (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:33107 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750715AbeFAEGf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jun 2018 09:28:23 -0400
-Received: by mail-lf0-f65.google.com with SMTP id g21-v6so3967778lfb.4
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2018 06:28:22 -0700 (PDT)
-Date: Wed, 13 Jun 2018 15:28:19 +0200
-From: Niklas Cassel <niklas.cassel@linaro.org>
-To: Govind Singh <govinds@codeaurora.org>, bjorn.andersson@linaro.org
-Cc: kvalo@codeaurora.org, davem@davemloft.net, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: FW: [PATCH 2/2] ath10k: allow ATH10K_SNOC with COMPILE_TEST
-Message-ID: <20180613132819.GA12603@centauri.ideon.se> (sfid-20180613_152848_926053_B6BBECED)
-References: <20180612113907.15043-1-niklas.cassel@linaro.org>
- <20180612113907.15043-2-niklas.cassel@linaro.org>
- <7058492257914633b55fcd423e4c0b59@aphydexm01b.ap.qualcomm.com>
- <47cf8ec1b11d727ea928a307a431d4a2@codeaurora.org>
- <20180612124403.GA26986@centauri.lan>
+        Fri, 1 Jun 2018 00:06:35 -0400
+Date: Thu, 31 May 2018 21:06:32 -0700
+From: Mark Greer <mgreer@animalcreek.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Johan Hovold <johan@kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Carlos Manuel Santos <cmmpsantos@gmail.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v4] NFC: pn533: don't send USB data off of the stack
+Message-ID: <20180601040632.GA14834@animalcreek.com> (sfid-20180601_061131_466753_5918D009)
+References: <20180520131946.GA7325@kroah.com>
+ <20180521083825.GO30172@localhost>
+ <20180531103848.GB31952@kroah.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180612124403.GA26986@centauri.lan>
+In-Reply-To: <20180531103848.GB31952@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 12, 2018 at 02:44:03PM +0200, Niklas Cassel wrote:
-> On Tue, Jun 12, 2018 at 06:02:48PM +0530, Govind Singh wrote:
-> > On 2018-06-12 17:45, Govind Singh wrote:
-> > > -----Original Message-----
-> > > From: ath10k <ath10k-bounces@lists.infradead.org> On Behalf Of Niklas
-> > > Cassel
-> > > Sent: Tuesday, June 12, 2018 5:09 PM
-> > > To: Kalle Valo <kvalo@codeaurora.org>; David S. Miller
-> > > <davem@davemloft.net>
-> > > Cc: Niklas Cassel <niklas.cassel@linaro.org>; netdev@vger.kernel.org;
-> > > linux-wireless@vger.kernel.org; linux-kernel@vger.kernel.org;
-> > > ath10k@lists.infradead.org
-> > > Subject: [PATCH 2/2] ath10k: allow ATH10K_SNOC with COMPILE_TEST
+On Thu, May 31, 2018 at 12:38:48PM +0200, Greg Kroah-Hartman wrote:
+> On Mon, May 21, 2018 at 10:38:25AM +0200, Johan Hovold wrote:
+> > On Sun, May 20, 2018 at 03:19:46PM +0200, Greg Kroah-Hartman wrote:
+> > > It's amazing that this driver ever worked, but now that x86 doesn't
+> > > allow USB data to be sent off of the stack, it really does not work at
+> > > all.  Fix this up by properly allocating the data for the small
+> > > "commands" that get sent to the device off of the stack.
 > > > 
-> > > ATH10K_SNOC builds just fine with COMPILE_TEST, so make that possible.
+> > > We do this for one command by having a whole urb just for ack messages,
+> > > as they can be submitted in interrupt context, so we can not use
+> > > usb_bulk_msg().  But the poweron command can sleep (and does), so use
+> > > usb_bulk_msg() for that transfer.
 > > > 
-> > > Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
+> > > Reported-by: Carlos Manuel Santos <cmmpsantos@gmail.com>
+> > > Cc: Samuel Ortiz <sameo@linux.intel.com>
+> > > Cc: Stephen Hemminger <stephen@networkplumber.org>
+> > > Cc: stable <stable@vger.kernel.org>
+> > > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 > > > ---
-> > >  drivers/net/wireless/ath/ath10k/Kconfig | 3 ++-
-> > >  1 file changed, 2 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/ath/ath10k/Kconfig
-> > > b/drivers/net/wireless/ath/ath10k/Kconfig
-> > > index 54ff5930126c..6572a43590a8 100644
-> > > --- a/drivers/net/wireless/ath/ath10k/Kconfig
-> > > +++ b/drivers/net/wireless/ath/ath10k/Kconfig
-> > > @@ -42,7 +42,8 @@ config ATH10K_USB
-> > > 
-> > >  config ATH10K_SNOC
-> > >  	tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
-> > > -	depends on ATH10K && ARCH_QCOM
-> > > +	depends on ATH10K
-> > > +	depends on ARCH_QCOM || COMPILE_TEST
-> > >  	---help---
-> > >  	  This module adds support for integrated WCN3990 chip connected
-> > >  	  to system NOC(SNOC). Currently work in progress and will not
+> > > v4: don't use urb transfer buffer flags as the memory is tied to the urb
+> > >     (thanks to Johan)  Now we have a new static urb, and we use
+> > >     usb_bulk_msg() for the other message.
+> > > v3: actually use the correct buffer (thanks to Arend van Spriel)
+> > >     use kmemdup (thanks to Johannes Berg and Julia Lawall)
+> > > v2: set the urb flags correctly
 > > 
-> > Thanks Niklas for enabling COMPILE_TEST. With QMI set of
-> > changes(https://patchwork.kernel.org/patch/10448183/), we need to enable
-> > COMPILE_TEST for
-> > QCOM_SCM/QMI_HELPERS which seems broken today. Are you planning to fix the
-> > same.
+> > Your changes look correct now so feel free to add:
+> > 
+> > Reviewed-by: Johan Hovold <johan@kernel.org>
 > 
+> Thanks for the review.
 > 
+> > It seems we could end up returning an errno from probe with active urbs
+> > (if pn533_finalize_setup() fails) in which case the ack buffer would
+> > leak. But freeing the urbs while active would then be the bigger
+> > problem, and that wasn't introduced by this patch.
+> 
+> Yeah, this whole thing is a mess and I really don't want to do much more
+> to the driver without having the hardware to test with it.  So I'll just
+> leave it as-is for now :)
 
-This patch is good as is.
+Hi Greg.
 
-However, Govind's QMI patch set together with this patch
-resulted in build errors.
+I have a pn533 USB stick, a trf7970-based board, and some nfc tags so I
+can help you test as long as you don't mind multi-day turn-around times.
+Alternatively, I can set something up and give you remote access, if you
+prefer that.
 
-FTR, these are fixed by:
-https://marc.info/?l=linux-kernel&m=152880985402356
-https://marc.info/?l=linux-kernel&m=152889452326350
+Let me know.
 
-
-Regards,
-Niklas
+Mark
+--
