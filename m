@@ -1,48 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33368 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S937554AbeFSKkz (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:51086 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751346AbeFAKlh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Jun 2018 06:40:55 -0400
+        Fri, 1 Jun 2018 06:41:37 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH 2/2] mwifiex: handle race during mwifiex_usb_disconnect
+Date: Fri, 1 Jun 2018 16:11:20 +0530
+Message-ID: <1527849680-31445-2-git-send-email-gbhat@marvell.com> (sfid-20180601_124145_156612_15E7EC42)
+In-Reply-To: <1527849680-31445-1-git-send-email-gbhat@marvell.com>
+References: <1527849680-31445-1-git-send-email-gbhat@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <20180618151142.1214422-3-arnd@arndb.de>
-References: <20180618151142.1214422-1-arnd@arndb.de> <20180618151142.1214422-3-arnd@arndb.de>
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Date: Tue, 19 Jun 2018 14:40:53 +0400
-Message-ID: <CA++WF2NRGtCKr=Q=+zmA7otu64J6JBfrnK9vB-Nyqk6oYivWDA@mail.gmail.com> (sfid-20180619_124118_666093_0FD9A9DD)
-Subject: Re: [PATCH 3/4] ipw2x00: track time using boottime
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>, y2038@lists.linaro.org,
-        Arvind Yadav <arvind.yadav.cs@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18/06/2018, Arnd Bergmann <arnd@arndb.de> wrote:
-> The ipw2x00 driver family uses get_seconds() to read the current time
-> for various purposes. This function is deprecated because of the 32-bit
-> time_t overflow, and it can cause unexpected behavior when the time
-> changes due to settimeofday() calls or leap second updates.
->
-> In many cases, we want to use monotonic time instead, however ipw2x00
-> explicitly tracks the time spent in suspend, so this changes the
-> driver over to use ktime_get_boottime_seconds(), which is slightly
-> slower, but not used in a fastpath here.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/net/wireless/intel/ipw2x00/ipw2100.c | 18 +++++++++---------
->  drivers/net/wireless/intel/ipw2x00/ipw2100.h | 12 ++++++------
->  drivers/net/wireless/intel/ipw2x00/ipw2200.c |  4 ++--
->  drivers/net/wireless/intel/ipw2x00/ipw2200.h |  6 +++---
->  4 files changed, 20 insertions(+), 20 deletions(-)
->
+Race condition is observed during rmmod of mwifiex_usb:
 
-Acked-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+1. The rmmod thread will call mwifiex_usb_disconnect(), download
+   SHUTDOWN command and do wait_event_interruptible_timeout(),
+   waiting for response.
 
-Looks fine, thanks!
+2. The main thread will handle the response and will do a
+   wake_up_interruptible(), unblocking rmmod thread.
 
-Stanislav.
+3. On getting unblocked, rmmod thread  will make rx_cmd.urb = NULL in
+   mwifiex_usb_free().
+
+4. The main thread will try to resubmit rx_cmd.urb in
+   mwifiex_usb_submit_rx_urb(), which is NULL.
+
+To fix this, move mwifiex_usb_free() from mwifiex_usb_disconnect
+to mwifiex_unregister_dev(). Function mwifiex_unregister_dev() is
+called after flushing the command and RX work queues.
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/usb.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index bc475b8..88f4c89 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -644,8 +644,6 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
+ 					 MWIFIEX_FUNC_SHUTDOWN);
+ 	}
+ 
+-	mwifiex_usb_free(card);
+-
+ 	mwifiex_dbg(adapter, FATAL,
+ 		    "%s: removing card\n", __func__);
+ 	mwifiex_remove_card(adapter);
+@@ -1353,6 +1351,8 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+ {
+ 	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
+ 
++	mwifiex_usb_free(card);
++
+ 	mwifiex_usb_cleanup_tx_aggr(adapter);
+ 
+ 	card->adapter = NULL;
+-- 
+1.9.1
