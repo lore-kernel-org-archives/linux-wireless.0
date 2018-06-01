@@ -1,74 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:52114 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933567AbeFFRE0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Jun 2018 13:04:26 -0400
-Subject: Re: How to let devcoredump know data has been read?
-To: Brian Norris <briannorris@chromium.org>
-References: <6f54d11c-74a5-568a-ba1e-3f37edb28384@candelatech.com>
- <20180605225324.GA195207@rodete-desktop-imager.corp.google.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <aspriel@gmail.com>,
-        Johannes Berg <johannes.berg@intel.com>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <cc4346a9-7eb9-3ac1-5568-8fae4ba7a82b@candelatech.com> (sfid-20180606_190436_658895_A07B20CC)
-Date: Wed, 6 Jun 2018 10:04:23 -0700
+Received: from mail.kernel.org ([198.145.29.99]:54242 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752036AbeFAQTl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Jun 2018 12:19:41 -0400
+Date: Fri, 1 Jun 2018 18:19:18 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Samuel Ortiz <sameo@linux.intel.com>, linux-usb@vger.kernel.org,
+        =?utf-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>,
+        Michael Thalmeier <michael.thalmeier@hale.at>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH resend 0/2] NFC: pn533: Fix DMA related USB errors
+Message-ID: <20180601161918.GA10471@kroah.com> (sfid-20180601_181948_507946_53649AA7)
+References: <20180601132200.25973-1-hdegoede@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20180605225324.GA195207@rodete-desktop-imager.corp.google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180601132200.25973-1-hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/05/2018 03:53 PM, Brian Norris wrote:
-> Hi,
->
-> On Tue, Jun 05, 2018 at 03:27:28PM -0700, Ben Greear wrote:
->> I have been testing ath10k on 4.16, which uses the devcoredump API
->> to notify about dumps.
->>
->> I am able to see the binary crash dump at /sys/class/devcoredump/devcd2/data,
->> for instance, but if I do another crash quickly, I get no new uevent sent
->> and no new crash.
->>
->> I see there is a 5 minute timer on the coredump data, but it also seems to indicate
->> that if I read the crash, the data should be cleared and ready to be
->> recreated again?  How do you notify the system that the crash data has
->> been read?
->>
->> I tried 'cat' on the data file, but that did not seem to clear anything.
->
-> Try *writing* to it?
->
-> https://elixir.bootlin.com/linux/v4.16/source/drivers/base/devcoredump.c#L91
->
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=833c95456a70826d1384883b73fd23aff24d366f
->
-> <quote>
-> The dumped data will be readable in sysfs in the virtual device's
-> data file under /sys/class/devcoredump/devcd*/. Writing to it will
-> free the data and remove the device, as does a 5-minute timeout.
-> </quote>
->
-> e.g.:
->
-> # ls -l /sys/class/devcoredump/devcd1
-> lrwxrwxrwx. 1 root root 0 Jun  5 15:49 /sys/class/devcoredump/devcd1 -> ../../devices/virtual/devcoredump/devcd1
-> # echo 1 > /sys/class/devcoredump/devcd1/data
-> # ls -l /sys/class/devcoredump/devcd1
-> ls: cannot access '/sys/class/devcoredump/devcd1': No such file or directory
+On Fri, Jun 01, 2018 at 03:21:58PM +0200, Hans de Goede wrote:
+> Hi All,
+> 
+> These 2 simple bug-fixes seem to have fallen through the cracks,
+> hence this resend.
+> 
+> Greg (gkh) despite a ping to Samuel about a month ago I still have not
+> had any response from the NFC people to these fixes. Since these are
+> really fixes for USB urb mis-handling, perhaps you can take these
+> upstream through the USB tree?
 
-Thanks to all who responded.  That indeed works just fine.
+Can you respin these against my usb-next branch of usb.git?  I applied a
+big pn533 fix to make it actually work again, which causes your patches
+to not be able to be applied at all :(
 
-Just in case you know a quick answer:  I opened a netlink socket to listen
-to uevents so I would know when FW crashed.  It receives the kernel messages,
-but also receives 'libudev' events which seem to have some binary header in
-them (which I could not google any info about how to decode it).  Is there
-an easy way to tell the socket to not send the libudev events?
+If you do that, I'll be glad to take them.
 
-Thanks,
-Ben
+thanks,
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+greg k-h
