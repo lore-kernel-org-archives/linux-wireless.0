@@ -1,59 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:33942 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933177AbeF2Hs7 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34376 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752663AbeFAPw5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 03:48:59 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2018-06-29
-Date: Fri, 29 Jun 2018 09:48:51 +0200
-Message-Id: <20180629074852.20096-1-johannes@sipsolutions.net> (sfid-20180629_094906_744764_8F25C54C)
+        Fri, 1 Jun 2018 11:52:57 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] qtnfmac: fix NULL pointer dereference
+References: <20180601132408.GA2572@embeddedor.com>
+Date: Fri, 01 Jun 2018 18:52:51 +0300
+In-Reply-To: <20180601132408.GA2572@embeddedor.com> (Gustavo A. R. Silva's
+        message of "Fri, 1 Jun 2018 08:24:08 -0500")
+Message-ID: <87muwezep8.fsf@kamboji.qca.qualcomm.com> (sfid-20180601_175653_507812_CC073337)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+"Gustavo A. R. Silva" <gustavo@embeddedor.com> writes:
 
-For the current release, I have a few fixes. No sense waiting
-for more, and most of these have been around for a while.
+> In case *vif* is NULL at 655: if (!vif), the execution path jumps to
+> label out, where *vif* is dereferenced at 679:
+>
+> if (vif->sta_state == QTNF_STA_CONNECTING)
+>
+> Fix this by immediately returning when *vif* is NULL instead of
+> jumping to label out.
+>
+> Addresses-Coverity-ID: 1469567 ("Dereference after null check")
+> Fixes: 480daa9cb62c ("qtnfmac: fix invalid STA state on EAPOL failure")
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 
-Please pull and let me know if there's any problem.
+As commit 480daa9cb62c was recently applied to wireless-drivers-next
+I'll queue this to 4.18.
 
-Thanks,
-johannes
-
-
-
-The following changes since commit 4205c88eaf17b5f3ee30032d68df55cd5d9077a1:
-
-  net: stmmac: Set DMA buffer size in HW (2018-06-28 22:24:25 +0900)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2018-06-29
-
-for you to fetch changes up to 95bca62fb723a121954fc7ae5473bb2c1f0d5986:
-
-  nl80211: check nla_parse_nested() return values (2018-06-29 09:44:51 +0200)
-
-----------------------------------------------------------------
-Just three fixes:
- * fix HT operation in mesh mode
- * disable preemption in control frame TX
- * check nla_parse_nested() return values
-   where missing (two places)
-
-----------------------------------------------------------------
-Bob Copeland (1):
-      nl80211: relax ht operation checks for mesh
-
-Denis Kenzior (1):
-      mac80211: disable BHs/preemption in ieee80211_tx_control_port()
-
-Johannes Berg (1):
-      nl80211: check nla_parse_nested() return values
-
- net/mac80211/tx.c      |  2 ++
- net/wireless/nl80211.c | 35 ++++++++++++++---------------------
- 2 files changed, 16 insertions(+), 21 deletions(-)
+-- 
+Kalle Valo
