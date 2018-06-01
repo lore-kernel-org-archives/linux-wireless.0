@@ -1,34 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36894 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932288AbeF2KUk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 06:20:40 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 29 Jun 2018 15:50:39 +0530
-From: Balaji Pothunoori <bpothuno@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4] iw: ack signal support for tx ack packets
-In-Reply-To: <1530265719.3481.57.camel@sipsolutions.net>
-References: <1527246406-25475-1-git-send-email-bpothuno@codeaurora.org>
- <1530265719.3481.57.camel@sipsolutions.net>
-Message-ID: <feb08d873546a730f414ba56f764d44a@codeaurora.org> (sfid-20180629_122054_589330_0ECA68E6)
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:38690 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751293AbeFANWG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Jun 2018 09:22:06 -0400
+From: Hans de Goede <hdegoede@redhat.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Samuel Ortiz <sameo@linux.intel.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-usb@vger.kernel.org,
+        =?UTF-8?q?Micha=C5=82=20Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>,
+        Michael Thalmeier <michael.thalmeier@hale.at>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH resend 2/2] NFC: pn533: Fix wrong GFP flag usage
+Date: Fri,  1 Jun 2018 15:22:00 +0200
+Message-Id: <20180601132200.25973-3-hdegoede@redhat.com> (sfid-20180601_152218_476722_F705512F)
+In-Reply-To: <20180601132200.25973-1-hdegoede@redhat.com>
+References: <20180601132200.25973-1-hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-06-29 15:18, Johannes Berg wrote:
-> On Fri, 2018-05-25 at 16:36 +0530, Balaji Pothunoori wrote:
->> This patch is to display the average ack signal,
->> last ack signal of tx ack packets.
-> 
-> Please resend this with the required kernel changes.
-> 
-> johannes
+pn533_recv_response() is an urb completion handler, so it must use
+GFP_ATOMIC. pn533_usb_send_frame() OTOH runs from a regular sleeping
+context, so the pn533_submit_urb_for_response() there (and only there)
+can use the regular GFP_KERNEL flags.
 
-Sure Johannes.
+BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1514134
+Fixes: 9815c7cf22da ("NFC: pn533: Separate physical layer from ...")
+Cc: Michael Thalmeier <michael.thalmeier@hale.at>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/nfc/pn533/usb.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Regards,
-Balaji.
+diff --git a/drivers/nfc/pn533/usb.c b/drivers/nfc/pn533/usb.c
+index c9398712ba31..2aff1ddadc1d 100644
+--- a/drivers/nfc/pn533/usb.c
++++ b/drivers/nfc/pn533/usb.c
+@@ -75,7 +75,7 @@ static void pn533_recv_response(struct urb *urb)
+ 	struct sk_buff *skb = NULL;
+ 
+ 	if (!urb->status) {
+-		skb = alloc_skb(urb->actual_length, GFP_KERNEL);
++		skb = alloc_skb(urb->actual_length, GFP_ATOMIC);
+ 		if (!skb) {
+ 			nfc_err(&phy->udev->dev, "failed to alloc memory\n");
+ 		} else {
+@@ -185,7 +185,7 @@ static int pn533_usb_send_frame(struct pn533 *dev,
+ 
+ 	if (dev->protocol_type == PN533_PROTO_REQ_RESP) {
+ 		/* request for response for sent packet directly */
+-		rc = pn533_submit_urb_for_response(phy, GFP_ATOMIC);
++		rc = pn533_submit_urb_for_response(phy, GFP_KERNEL);
+ 		if (rc)
+ 			goto error;
+ 	} else if (dev->protocol_type == PN533_PROTO_REQ_ACK_RESP) {
+-- 
+2.17.0
