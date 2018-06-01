@@ -1,40 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:35527 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751723AbeF1BxW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Jun 2018 21:53:22 -0400
-From: Pkshih <pkshih@realtek.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] rtlwifi: rtl8821ae: fix firmware is not ready to run
-Date: Thu, 28 Jun 2018 01:53:10 +0000
-Message-ID: <1530150790.5655.0.camel@realtek.com> (sfid-20180628_035326_026076_D99B9E0A)
-References: <20180627080130.12195-1-pkshih@realtek.com>
-         <834573bf-fb52-2476-fb35-96127532924d@lwfinger.net>
-In-Reply-To: <834573bf-fb52-2476-fb35-96127532924d@lwfinger.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:55242 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751502AbeFANWG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 Jun 2018 09:22:06 -0400
+From: Hans de Goede <hdegoede@redhat.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Samuel Ortiz <sameo@linux.intel.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-usb@vger.kernel.org,
+        =?UTF-8?q?Micha=C5=82=20Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>,
+        Michael Thalmeier <michael.thalmeier@hale.at>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH resend 1/2] NFC: pn533: Use kmalloc-ed memory for USB transfer buffers
+Date: Fri,  1 Jun 2018 15:21:59 +0200
+Message-Id: <20180601132200.25973-2-hdegoede@redhat.com> (sfid-20180601_152217_825472_CE9E1BA6)
+In-Reply-To: <20180601132200.25973-1-hdegoede@redhat.com>
+References: <20180601132200.25973-1-hdegoede@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCAyMDE4LTA2LTI3IGF0IDA4OjM2IC0wNTAwLCBMYXJyeSBGaW5nZXIgd3JvdGU6DQo+
-IE9uIDA2LzI3LzIwMTggMDM6MDEgQU0sIHBrc2hpaEByZWFsdGVrLmNvbSB3cm90ZToNCj4gPiBG
-cm9tOiBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4NCj4gPsKgDQo+ID4gcnRsODgy
-MWFlIHVzZXMgdHdvIGtpbmRzIG9mIGZpcm13YXJlcyBmb3Igbm9ybWFsIGFuZCBXb1dsYW4gY2Fz
-ZXMsIGFuZA0KPiA+IGVhY2ggZmlybXdhcmUgaGFzIGZpcm13YXJlIGRhdGEgYnVmZmVyIGFuZCBz
-aXplIGluZGl2aWR1YWxseS4gT3JpZ2luYWwNCj4gPiBjb2RlIGFsd2F5cyBvdmVyd3JpdGUgc2l6
-ZSBvZiBub3JtYWwgZmlybXdhcmUgcnRscHJpdi0+cnRsaGFsLmZ3c2l6ZSwgYW5kDQo+ID4gdGhp
-cyBtaXNtYXRjaCBjYXVzZXMgZmlybXdhcmUgY2hlY2tzdW0gZXJyb3IsIHRoZW4gZmlybXdhcmUg
-Y2FuJ3Qgc3RhcnQuDQo+ID7CoA0KPiA+IEluIHRoaXMgc2l0dWF0aW9uLCBkcml2ZXIgZ2l2ZXMg
-bWVzc2FnZSAiRmlybXdhcmUgaXMgbm90IHJlYWR5IHRvIHJ1biEiLg0KPiA+wqANCj4gPiBGaXhl
-czogZmU4OTcwN2YwYWZhICgicnRsd2lmaTogcnRsODgyMWFlOiBTaW1wbGlmeSBsb2FkaW5nIG9m
-IFdPV0xBTiBmaXJtd2FyZSIpDQo+ID4gU2lnbmVkLW9mZi1ieTogUGluZy1LZSBTaGloIDxwa3No
-aWhAcmVhbHRlay5jb20+DQo+ID4gLS0tDQo+ID4gdjI6IGZpeCBjb21taXQgbG9nIHR5cG8uDQo+
-ID4gLS0tDQo+ID7CoMKgwqBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bHdpZmkvY29y
-ZS5jIHwgMSAtDQo+ID7CoMKgwqAxIGZpbGUgY2hhbmdlZCwgMSBkZWxldGlvbigtKQ0KPiANCj4g
-VGhpcyBjaGFuZ2UgaXMgYSBnb29kIG9uZSwgYW5kIEkgYXBwcm92ZSBvZiBpdC4gVGhlIG9ubHkg
-Y2hhbmdlIGlzIHRoYXQgaXTCoA0KPiBzaG91bGQgaGF2ZSBhIENjIHRvIHN0YWJsZSBhcyB0aGlz
-IGNvZGUgd2FzIGFkZGVkIGluIGtlcm5lbCA0LjAhDQo+IA0KSSdsbCBDYyB0byBzdGFibGUgaW4g
-djMuDQoNClRoYW5rcw0KUEsNCg0K
+Commit 8b55d7581fc5 ("NFC: pn533: use constant off-stack buffer for sending
+acks"), fixed the ack case of using on stack mem for the transfer_buffer,
+by making the ack buffer "static const", which is an unusual solution for
+this and I wonder if this is not a problem wrt buffer alignment. It also
+misses fixing the same problem for the cmd buffer in the
+pn533_acr122_poweron_rdr() function.
+
+This commit introduces an out_buf which gets kmalloc-ed on probe and
+then memcpy-s the ack / cmd buffer into that buffer before submitting
+the out urb. Fixing the use of on stack memory for the cmd buffer and
+moving the ack code-path over to more conventional ways.
+
+While at it this commit also changes the kmalloc of the in_buf to
+devm_kmalloc, to avoid the need to introduce a new goto in the error-
+handling of the kmalloc of the introduced out_buf.
+
+BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1514134
+Fixes: 8b55d7581fc5 ("NFC: pn533: use constant off-stack buffer ...")
+Cc: Michał Mirosław <mirq-linux@rere.qmqm.pl>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/nfc/pn533/usb.c | 22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/nfc/pn533/usb.c b/drivers/nfc/pn533/usb.c
+index e153e8b64bb8..c9398712ba31 100644
+--- a/drivers/nfc/pn533/usb.c
++++ b/drivers/nfc/pn533/usb.c
+@@ -42,6 +42,9 @@
+ #define ACS_VENDOR_ID 0x072f
+ #define ACR122U_PRODUCT_ID 0x2200
+ 
++/* Large enough to hold an ack or the power-on CCID command */
++#define OUT_BUF_LEN 16
++
+ static const struct usb_device_id pn533_usb_table[] = {
+ 	{ USB_DEVICE(PN533_VENDOR_ID, PN533_PRODUCT_ID),
+ 	  .driver_info = PN533_DEVICE_STD },
+@@ -61,6 +64,7 @@ struct pn533_usb_phy {
+ 
+ 	struct urb *out_urb;
+ 	struct urb *in_urb;
++	u8 *out_buf;
+ 
+ 	struct pn533 *priv;
+ };
+@@ -152,7 +156,8 @@ static int pn533_usb_send_ack(struct pn533 *dev, gfp_t flags)
+ 	/* spec 7.1.1.3:  Preamble, SoPC (2), ACK Code (2), Postamble */
+ 	int rc;
+ 
+-	phy->out_urb->transfer_buffer = (u8 *)ack;
++	memcpy(phy->out_buf, ack, sizeof(ack));
++	phy->out_urb->transfer_buffer = phy->out_buf;
+ 	phy->out_urb->transfer_buffer_length = sizeof(ack);
+ 	rc = usb_submit_urb(phy->out_urb, flags);
+ 
+@@ -373,8 +378,8 @@ static void pn533_acr122_poweron_rdr_resp(struct urb *urb)
+ static int pn533_acr122_poweron_rdr(struct pn533_usb_phy *phy)
+ {
+ 	/* Power on th reader (CCID cmd) */
+-	u8 cmd[10] = {PN533_ACR122_PC_TO_RDR_ICCPOWERON,
+-		      0, 0, 0, 0, 0, 0, 3, 0, 0};
++	static const u8 cmd[10] = { PN533_ACR122_PC_TO_RDR_ICCPOWERON,
++				    0, 0, 0, 0, 0, 0, 3, 0, 0 };
+ 	int rc;
+ 	void *cntx;
+ 	struct pn533_acr122_poweron_rdr_arg arg;
+@@ -387,7 +392,8 @@ static int pn533_acr122_poweron_rdr(struct pn533_usb_phy *phy)
+ 	phy->in_urb->complete = pn533_acr122_poweron_rdr_resp;
+ 	phy->in_urb->context = &arg;
+ 
+-	phy->out_urb->transfer_buffer = cmd;
++	memcpy(phy->out_buf, cmd, sizeof(cmd));
++	phy->out_urb->transfer_buffer = phy->out_buf;
+ 	phy->out_urb->transfer_buffer_length = sizeof(cmd);
+ 
+ 	print_hex_dump_debug("ACR122 TX: ", DUMP_PREFIX_NONE, 16, 1,
+@@ -463,10 +469,14 @@ static int pn533_usb_probe(struct usb_interface *interface,
+ 	if (!phy)
+ 		return -ENOMEM;
+ 
+-	in_buf = kzalloc(in_buf_len, GFP_KERNEL);
++	in_buf = devm_kzalloc(&interface->dev, in_buf_len, GFP_KERNEL);
+ 	if (!in_buf)
+ 		return -ENOMEM;
+ 
++	phy->out_buf = devm_kzalloc(&interface->dev, OUT_BUF_LEN, GFP_KERNEL);
++	if (!phy->out_buf)
++		return -ENOMEM;
++
+ 	phy->udev = usb_get_dev(interface_to_usbdev(interface));
+ 	phy->interface = interface;
+ 
+@@ -555,7 +565,6 @@ static int pn533_usb_probe(struct usb_interface *interface,
+ 	usb_free_urb(phy->in_urb);
+ 	usb_free_urb(phy->out_urb);
+ 	usb_put_dev(phy->udev);
+-	kfree(in_buf);
+ 
+ 	return rc;
+ }
+@@ -574,7 +583,6 @@ static void pn533_usb_disconnect(struct usb_interface *interface)
+ 	usb_kill_urb(phy->in_urb);
+ 	usb_kill_urb(phy->out_urb);
+ 
+-	kfree(phy->in_urb->transfer_buffer);
+ 	usb_free_urb(phy->in_urb);
+ 	usb_free_urb(phy->out_urb);
+ 
+-- 
+2.17.0
