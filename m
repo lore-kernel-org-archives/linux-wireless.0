@@ -1,62 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:49862 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755598AbeFOLlP (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:45801 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750991AbeFCSWT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Jun 2018 07:41:15 -0400
-Message-ID: <1529062873.10037.9.camel@sipsolutions.net> (sfid-20180615_134118_686678_45310791)
-Subject: Re: [PATCH v2 1/2] cfg80211: last ack signal support in station dump
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Balaji Pothunoori <bpothuno@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 15 Jun 2018 13:41:13 +0200
-In-Reply-To: <1528121469-16450-2-git-send-email-bpothuno@codeaurora.org>
-References: <1528121469-16450-1-git-send-email-bpothuno@codeaurora.org>
-         <1528121469-16450-2-git-send-email-bpothuno@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Sun, 3 Jun 2018 14:22:19 -0400
+Received: by mail-lf0-f66.google.com with SMTP id n3-v6so21785904lfe.12
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Jun 2018 11:22:18 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v5 10/12] ath10k: htt: High latency TX support
+Date: Sun,  3 Jun 2018 20:20:27 +0200
+Message-Id: <20180603182029.8914-11-erik.stromdahl@gmail.com> (sfid-20180603_202234_737925_5DD41C4F)
+In-Reply-To: <20180603182029.8914-1-erik.stromdahl@gmail.com>
+References: <20180603182029.8914-1-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-06-04 at 19:41 +0530, Balaji Pothunoori wrote:
-> 
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -3000,8 +3000,8 @@ enum nl80211_sta_bss_param {
->   *	received from the station (u64, usec)
->   * @NL80211_STA_INFO_PAD: attribute used for padding for 64-bit alignment
->   * @NL80211_STA_INFO_ACK_SIGNAL: signal strength of the last ACK frame(u8, dBm)
-> - * @NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG: avg signal strength of (data)
-> - *	ACK frame (s8, dBm)
-> + * @NL80211_STA_INFO_ACK_SIGNAL_AVG: avg signal strength of data or management
-> + *	ACK frames(s8, dBm)
->   * @__NL80211_STA_INFO_AFTER_LAST: internal
->   * @NL80211_STA_INFO_MAX: highest possible station info attribute
->   */
-> @@ -3041,7 +3041,7 @@ enum nl80211_sta_info {
->  	NL80211_STA_INFO_RX_DURATION,
->  	NL80211_STA_INFO_PAD,
->  	NL80211_STA_INFO_ACK_SIGNAL,
-> -	NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG,
-> +	NL80211_STA_INFO_ACK_SIGNAL_AVG,
+Add HTT TX function for HL interfaces.
+Intended for SDIO and USB.
 
-Wait, what happened here? You can't remove old API.
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 92 ++++++++++++++++++++++++
+ 1 file changed, 92 insertions(+)
 
-> @@ -5128,9 +5128,9 @@ enum nl80211_feature_flags {
->   *	"radar detected" event.
->   * @NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211: Driver supports sending and
->   *	receiving control port frames over nl80211 instead of the netdevice.
-> - * @NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT: This Driver support data ack
-> - *	rssi if firmware support, this flag is to intimate about ack rssi
-> - *	support to nl80211.
-> + * @NL80211_EXT_FEATURE_ACK_SIGNAL_SUPPORT: This Driver support ack rssi if
-> + *	firmware support, this flag is to intimate about ack rssi support
-> + *	to nl80211.
-
-Same here, why are you removing the data-ack-signal API?
-
-Is that just a rebase error or something?
-
-Or is it intentional, but then please explain what you're trying to do
-and I can help find a correct solutions.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 740e8740844e..87f7b221b6a8 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -495,6 +495,9 @@ int ath10k_htt_tx_start(struct ath10k_htt *htt)
+ 	if (htt->tx_mem_allocated)
+ 		return 0;
+ 
++	if (ar->dev_type == ATH10K_DEV_TYPE_HL)
++		return 0;
++
+ 	ret = ath10k_htt_tx_alloc_buf(htt);
+ 	if (ret)
+ 		goto free_idr_pending_tx;
+@@ -1188,6 +1191,94 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	return res;
+ }
+ 
++#define HTT_TX_HL_NEEDED_HEADROOM \
++	(unsigned int)(sizeof(struct htt_cmd_hdr) + \
++	sizeof(struct htt_data_tx_desc) + \
++	sizeof(struct ath10k_htc_hdr))
++
++static int ath10k_htt_tx_hl(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
++			    struct sk_buff *msdu)
++{
++	struct ath10k *ar = htt->ar;
++	int res, data_len;
++	struct htt_cmd_hdr *cmd_hdr;
++	struct htt_data_tx_desc *tx_desc;
++	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
++	struct sk_buff *tmp_skb;
++	bool is_eth = (txmode == ATH10K_HW_TXRX_ETHERNET);
++	u8 vdev_id = ath10k_htt_tx_get_vdev_id(ar, msdu);
++	u8 tid = ath10k_htt_tx_get_tid(msdu, is_eth);
++	u8 flags0 = 0;
++	u16 flags1 = 0;
++
++	data_len = msdu->len;
++
++	switch (txmode) {
++	case ATH10K_HW_TXRX_RAW:
++	case ATH10K_HW_TXRX_NATIVE_WIFI:
++		flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
++		/* fall through */
++	case ATH10K_HW_TXRX_ETHERNET:
++		flags0 |= SM(txmode, HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
++		break;
++	case ATH10K_HW_TXRX_MGMT:
++		flags0 |= SM(ATH10K_HW_TXRX_MGMT,
++			     HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
++		flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
++		break;
++	}
++
++	if (skb_cb->flags & ATH10K_SKB_F_NO_HWCRYPT)
++		flags0 |= HTT_DATA_TX_DESC_FLAGS0_NO_ENCRYPT;
++
++	flags1 |= SM((u16)vdev_id, HTT_DATA_TX_DESC_FLAGS1_VDEV_ID);
++	flags1 |= SM((u16)tid, HTT_DATA_TX_DESC_FLAGS1_EXT_TID);
++	if (msdu->ip_summed == CHECKSUM_PARTIAL &&
++	    !test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
++		flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L3_OFFLOAD;
++		flags1 |= HTT_DATA_TX_DESC_FLAGS1_CKSUM_L4_OFFLOAD;
++	}
++
++	/* Prepend the HTT header and TX desc struct to the data message
++	 * and realloc the skb if it does not have enough headroom.
++	 */
++	if (skb_headroom(msdu) < HTT_TX_HL_NEEDED_HEADROOM) {
++		tmp_skb = msdu;
++
++		ath10k_dbg(htt->ar, ATH10K_DBG_HTT,
++			   "Not enough headroom in skb. Current headroom: %u, needed: %u. Reallocating...\n",
++			   skb_headroom(msdu), HTT_TX_HL_NEEDED_HEADROOM);
++		msdu = skb_realloc_headroom(msdu, HTT_TX_HL_NEEDED_HEADROOM);
++		kfree_skb(tmp_skb);
++		if (!msdu) {
++			ath10k_warn(htt->ar, "htt hl tx: Unable to realloc skb!\n");
++			res = -ENOMEM;
++			goto out;
++		}
++	}
++
++	skb_push(msdu, sizeof(*cmd_hdr));
++	skb_push(msdu, sizeof(*tx_desc));
++	cmd_hdr = (struct htt_cmd_hdr *)msdu->data;
++	tx_desc = (struct htt_data_tx_desc *)(msdu->data + sizeof(*cmd_hdr));
++
++	cmd_hdr->msg_type = HTT_H2T_MSG_TYPE_TX_FRM;
++	tx_desc->flags0 = flags0;
++	tx_desc->flags1 = __cpu_to_le16(flags1);
++	tx_desc->len = __cpu_to_le16(data_len);
++	tx_desc->id = 0;
++	tx_desc->frags_paddr = 0; /* always zero */
++	/* Initialize peer_id to INVALID_PEER because this is NOT
++	 * Reinjection path
++	 */
++	tx_desc->peerid = __cpu_to_le32(HTT_INVALID_PEERID);
++
++	res = ath10k_htc_send(&htt->ar->htc, htt->eid, msdu);
++
++out:
++	return res;
++}
++
+ static int ath10k_htt_tx_32(struct ath10k_htt *htt,
+ 			    enum ath10k_hw_txrx_mode txmode,
+ 			    struct sk_buff *msdu)
+@@ -1622,6 +1713,7 @@ static const struct ath10k_htt_tx_ops htt_tx_ops_64 = {
+ static const struct ath10k_htt_tx_ops htt_tx_ops_hl = {
+ 	.htt_send_rx_ring_cfg = ath10k_htt_send_rx_ring_cfg_hl,
+ 	.htt_send_frag_desc_bank_cfg = ath10k_htt_send_frag_desc_bank_cfg_32,
++	.htt_tx = ath10k_htt_tx_hl,
+ };
+ 
+ void ath10k_htt_set_tx_ops(struct ath10k_htt *htt)
+-- 
+2.17.0
