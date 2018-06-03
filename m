@@ -1,91 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:33907 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932884AbeFYM4D (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:43448 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750991AbeFCSWO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Jun 2018 08:56:03 -0400
-Received: by mail-pl0-f66.google.com with SMTP id g20-v6so6786408plq.1
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2018 05:56:03 -0700 (PDT)
-MIME-Version: 1.0
-References: <20180409141032.GA9247@redhat.com> <20180409142640.GA5680@localhost.localdomain>
- <20180409144819.GA9253@redhat.com> <20180625120816.GA2072@redhat.com>
-In-Reply-To: <20180625120816.GA2072@redhat.com>
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Date: Mon, 25 Jun 2018 14:55:51 +0200
-Message-ID: <CAA2SeNJjHCrO5NyznK+EJt5K6SRVRr_FPZA2i53Z-FnqzkKz_g@mail.gmail.com> (sfid-20180625_145642_093320_AAD264BC)
-Subject: Re: [ANN] mt76x0 usb driver
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>, moorray3@wp.pl,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        mschmidt@redhat.com, linux-mediatek@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+        Sun, 3 Jun 2018 14:22:14 -0400
+Received: by mail-lf0-f65.google.com with SMTP id n15-v6so4484062lfn.10
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Jun 2018 11:22:13 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v5 05/12] ath10k: add per target config of max_num_peers
+Date: Sun,  3 Jun 2018 20:20:22 +0200
+Message-Id: <20180603182029.8914-6-erik.stromdahl@gmail.com> (sfid-20180603_202233_647026_ACE82F51)
+In-Reply-To: <20180603182029.8914-1-erik.stromdahl@gmail.com>
+References: <20180603182029.8914-1-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> Hi all,
+This patch makes sure the value of max_num_peers matches
+num_peers in hw_params (if set to a non zero value).
 
-Hi Stanislaw,
+hw_params->num_peers is used in the TLV WMI init command.
+If ar->max_num_peers is not set to the same value, there is a risk
+that the user creates more peers than the maximum number of peers
+supported by the device.
 
->
-> On Mon, Apr 09, 2018 at 04:48:19PM +0200, Stanislaw Gruszka wrote:
-> > On Mon, Apr 09, 2018 at 04:26:42PM +0200, Lorenzo Bianconi wrote:
-> > > > I would like to integrate the driver to kernel via mt76 driver, i.e.
-> > > > add USB hooks and mt76x0 mac/phy code to mt76. This will open
-> > > > possibility to develop support for mt76x2 USB devices as well as mt76x0
-> > > > PCIe devices in mt76.
-> > > >
-> > >
-> > > I have already started supporting mt76x2 USB devices in mt76 since register map
-> > > is pretty similar to PCIe devices:
-> > > https://github.com/LorenzoBianconi/wireless-drivers-next/tree/mt76x2u
-> > > I added some usb utility routines so I think we can integrate mt76x0 in mt76 as
-> > > well
-> >
-> > Great, I'll start to integrate mt76x0 on top of your tree.
->
-> So I started to do integration here:
-> https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft
->
-> However since driver is self containging, I think better would be just
-> submit the driver into mt76/mt76x0/ dir upstream and do code merging work as
-> follow-up patches posted on the mailing list. Patches then could be reviewed
-> on regular basic. This will provide support for new mt76x0 devices in kernel
-> quicker. Conflicts with mt76x2u and not yet upstreamed mt7603 could be resolved
-> on the fly.
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-I did a quick review of the code and it seems (please correct me if I
-am wrong) there is
-a lot of duplicated code with mt76/mt76x2u and mt7601u drivers (i.e:
-mcu/eeprom/mac code
-is quite the same of the ones used in mt76x2u). Moreover mt76/mt76x2u has been
-refactored in order to expose usb and mt76x2_common modules where you
-can use better
-802.11 aggregation (using mac80211 per-sta queuing) and A-MSDU support (using
-tx/rx usb scatter-gather). Moreover mt76x2u has been tested/used by
-various users till now.
-So since mt76x0 will be deeply modified I guess it would be better to
-start integrating the driver with
-mt76/mt76x2u before been merged upstream otherwise will end-up with a
-lot of integration commits.
-What do you think?
-
->
-> Another issue is firmware submission, how it was done for mt7601u and mt76x2 ?
->
-
-I guess the fw submission has to be approved by mtk before been pushed
-to linux-firmware
-
-> Thanks
-> Stanislaw
-
-Regards,
-Lorenzo
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index a146c83d6ff9..8244e9184760 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1986,6 +1986,7 @@ static void ath10k_core_set_coverage_class_work(struct work_struct *work)
+ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ {
+ 	struct ath10k_fw_file *fw_file = &ar->normal_mode_fw.fw_file;
++	int max_num_peers;
+ 
+ 	if (test_bit(ATH10K_FW_FEATURE_WMI_10_2, fw_file->fw_features) &&
+ 	    !test_bit(ATH10K_FW_FEATURE_WMI_10X, fw_file->fw_features)) {
+@@ -2065,7 +2066,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 
+ 	switch (fw_file->wmi_op_version) {
+ 	case ATH10K_FW_WMI_OP_VERSION_MAIN:
+-		ar->max_num_peers = TARGET_NUM_PEERS;
++		max_num_peers = TARGET_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_NUM_STATIONS;
+ 		ar->max_num_vdevs = TARGET_NUM_VDEVS;
+ 		ar->htt.max_num_pending_tx = TARGET_NUM_MSDU_DESC;
+@@ -2077,10 +2078,10 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2:
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
+ 		if (ath10k_peer_stats_enabled(ar)) {
+-			ar->max_num_peers = TARGET_10X_TX_STATS_NUM_PEERS;
++			max_num_peers = TARGET_10X_TX_STATS_NUM_PEERS;
+ 			ar->max_num_stations = TARGET_10X_TX_STATS_NUM_STATIONS;
+ 		} else {
+-			ar->max_num_peers = TARGET_10X_NUM_PEERS;
++			max_num_peers = TARGET_10X_NUM_PEERS;
+ 			ar->max_num_stations = TARGET_10X_NUM_STATIONS;
+ 		}
+ 		ar->max_num_vdevs = TARGET_10X_NUM_VDEVS;
+@@ -2089,7 +2090,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_TLV:
+-		ar->max_num_peers = TARGET_TLV_NUM_PEERS;
++		max_num_peers = TARGET_TLV_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_TLV_NUM_STATIONS;
+ 		ar->max_num_vdevs = TARGET_TLV_NUM_VDEVS;
+ 		ar->max_num_tdls_vdevs = TARGET_TLV_NUM_TDLS_VDEVS;
+@@ -2100,7 +2101,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_10_4:
+-		ar->max_num_peers = TARGET_10_4_NUM_PEERS;
++		max_num_peers = TARGET_10_4_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_10_4_NUM_STATIONS;
+ 		ar->num_active_peers = TARGET_10_4_ACTIVE_PEERS;
+ 		ar->max_num_vdevs = TARGET_10_4_NUM_VDEVS;
+@@ -2119,10 +2120,16 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
+ 	case ATH10K_FW_WMI_OP_VERSION_MAX:
++	default:
+ 		WARN_ON(1);
+ 		return -EINVAL;
+ 	}
+ 
++	if (ar->hw_params.num_peers)
++		ar->max_num_peers = ar->hw_params.num_peers;
++	else
++		ar->max_num_peers = max_num_peers;
++
+ 	/* Backwards compatibility for firmwares without
+ 	 * ATH10K_FW_IE_HTT_OP_VERSION.
+ 	 */
 -- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+2.17.0
