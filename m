@@ -1,266 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:29536 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S937881AbeFSNMB (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:45049 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750991AbeFCSWL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Jun 2018 09:12:01 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH v3 1/8] wil6210: add support for Talyn-MB (Talyn ver 2.0) device
-Date: Tue, 19 Jun 2018 16:11:46 +0300
-Message-Id: <1529413913-22224-2-git-send-email-merez@codeaurora.org> (sfid-20180619_151516_253244_A32F2615)
-In-Reply-To: <1529413913-22224-1-git-send-email-merez@codeaurora.org>
-References: <1529413913-22224-1-git-send-email-merez@codeaurora.org>
+        Sun, 3 Jun 2018 14:22:11 -0400
+Received: by mail-lf0-f68.google.com with SMTP id 36-v6so19834385lfr.11
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Jun 2018 11:22:10 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v5 01/12] ath10k: add struct ath10k_bus_params
+Date: Sun,  3 Jun 2018 20:20:18 +0200
+Message-Id: <20180603182029.8914-2-erik.stromdahl@gmail.com> (sfid-20180603_202218_232732_6D4B775C)
+In-Reply-To: <20180603182029.8914-1-erik.stromdahl@gmail.com>
+References: <20180603182029.8914-1-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add changes to support initialization of Talyn-MB wil6210
-device:
-- Add definition for Talyn-MB new JTAG id
-- Define talyn_mb_fw_mapping array
-- Add Talyn-MB reset sequence
+This struct is used as argument to ath10k_core_register in order to
+make it easier to add more bus parameters in the future.
 
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c     | 48 +++++++++++++++++++------
- drivers/net/wireless/ath/wil6210/pcie_bus.c | 11 +++++-
- drivers/net/wireless/ath/wil6210/wil6210.h  | 11 +++++-
- drivers/net/wireless/ath/wil6210/wmi.c      | 55 +++++++++++++++++++++++++++++
- 4 files changed, 113 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath10k/ahb.c  |  8 ++++----
+ drivers/net/wireless/ath/ath10k/core.c |  5 +++--
+ drivers/net/wireless/ath/ath10k/core.h |  7 ++++++-
+ drivers/net/wireless/ath/ath10k/pci.c  | 12 ++++++------
+ drivers/net/wireless/ath/ath10k/sdio.c |  7 ++++---
+ drivers/net/wireless/ath/ath10k/snoc.c |  4 +++-
+ drivers/net/wireless/ath/ath10k/usb.c  |  6 +++---
+ 7 files changed, 29 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index e7006c2..1282e1a 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -736,14 +736,24 @@ static void wil_bl_prepare_halt(struct wil6210_priv *wil)
+diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
+index fa39ffffd34d..5e272e940efd 100644
+--- a/drivers/net/wireless/ath/ath10k/ahb.c
++++ b/drivers/net/wireless/ath/ath10k/ahb.c
+@@ -755,7 +755,7 @@ static int ath10k_ahb_probe(struct platform_device *pdev)
+ 	enum ath10k_hw_rev hw_rev;
+ 	size_t size;
+ 	int ret;
+-	u32 chip_id;
++	struct ath10k_bus_params bus_params;
  
- static inline void wil_halt_cpu(struct wil6210_priv *wil)
- {
--	wil_w(wil, RGF_USER_USER_CPU_0, BIT_USER_USER_CPU_MAN_RST);
--	wil_w(wil, RGF_USER_MAC_CPU_0,  BIT_USER_MAC_CPU_MAN_RST);
-+	if (wil->hw_version >= HW_VER_TALYN_MB) {
-+		wil_w(wil, RGF_USER_USER_CPU_0_TALYN_MB,
-+		      BIT_USER_USER_CPU_MAN_RST);
-+		wil_w(wil, RGF_USER_MAC_CPU_0_TALYN_MB,
-+		      BIT_USER_MAC_CPU_MAN_RST);
-+	} else {
-+		wil_w(wil, RGF_USER_USER_CPU_0, BIT_USER_USER_CPU_MAN_RST);
-+		wil_w(wil, RGF_USER_MAC_CPU_0,  BIT_USER_MAC_CPU_MAN_RST);
-+	}
+ 	of_id = of_match_device(ath10k_ahb_of_match, &pdev->dev);
+ 	if (!of_id) {
+@@ -811,14 +811,14 @@ static int ath10k_ahb_probe(struct platform_device *pdev)
+ 
+ 	ath10k_pci_ce_deinit(ar);
+ 
+-	chip_id = ath10k_ahb_soc_read32(ar, SOC_CHIP_ID_ADDRESS);
+-	if (chip_id == 0xffffffff) {
++	bus_params.chip_id = ath10k_ahb_soc_read32(ar, SOC_CHIP_ID_ADDRESS);
++	if (bus_params.chip_id == 0xffffffff) {
+ 		ath10k_err(ar, "failed to get chip id\n");
+ 		ret = -ENODEV;
+ 		goto err_halt_device;
+ 	}
+ 
+-	ret = ath10k_core_register(ar, chip_id);
++	ret = ath10k_core_register(ar, &bus_params);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to register driver core: %d\n", ret);
+ 		goto err_halt_device;
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 4cf54a7ef09a..eee6e39e4e99 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -2702,9 +2702,10 @@ static void ath10k_core_register_work(struct work_struct *work)
+ 	return;
  }
  
- static inline void wil_release_cpu(struct wil6210_priv *wil)
+-int ath10k_core_register(struct ath10k *ar, u32 chip_id)
++int ath10k_core_register(struct ath10k *ar,
++			 const struct ath10k_bus_params *bus_params)
  {
- 	/* Start CPU */
--	wil_w(wil, RGF_USER_USER_CPU_0, 1);
-+	if (wil->hw_version >= HW_VER_TALYN_MB)
-+		wil_w(wil, RGF_USER_USER_CPU_0_TALYN_MB, 1);
-+	else
-+		wil_w(wil, RGF_USER_USER_CPU_0, 1);
- }
+-	ar->chip_id = chip_id;
++	ar->chip_id = bus_params->chip_id;
+ 	queue_work(ar->workqueue, &ar->register_work);
  
- static void wil_set_oob_mode(struct wil6210_priv *wil, u8 mode)
-@@ -811,10 +821,17 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
- 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_0, 0x3ff81f);
- 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1, 0xf);
- 
--	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0xFE000000);
--	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0x0000003F);
--	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0x000000f0);
--	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0xFFE7FE00);
-+	if (wil->hw_version >= HW_VER_TALYN_MB) {
-+		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0x7e000000);
-+		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0x0000003f);
-+		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0xc00000f0);
-+		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0xffe7fe00);
-+	} else {
-+		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0xfe000000);
-+		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0x0000003f);
-+		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0x000000f0);
-+		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0xffe7fe00);
-+	}
- 
- 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_0, 0x0);
- 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1, 0x0);
-@@ -1042,8 +1059,14 @@ static int wil_get_otp_info(struct wil6210_priv *wil)
- 	struct net_device *ndev = wil->main_ndev;
- 	struct wiphy *wiphy = wil_to_wiphy(wil);
- 	u8 mac[8];
-+	int mac_addr;
-+
-+	if (wil->hw_version >= HW_VER_TALYN_MB)
-+		mac_addr = RGF_OTP_MAC_TALYN_MB;
-+	else
-+		mac_addr = RGF_OTP_MAC;
- 
--	wil_memcpy_fromio_32(mac, wil->csr + HOSTADDR(RGF_OTP_MAC),
-+	wil_memcpy_fromio_32(mac, wil->csr + HOSTADDR(mac_addr),
- 			     sizeof(mac));
- 	if (!is_valid_ether_addr(mac)) {
- 		wil_err(wil, "Invalid MAC %pM\n", mac);
-@@ -1147,8 +1170,13 @@ static void wil_pre_fw_config(struct wil6210_priv *wil)
- 	/* it is W1C, clear by writing back same value */
- 	wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
- 	wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
--	/* clear PAL_UNIT_ICR (potential D0->D3 leftover) */
--	wil_s(wil, RGF_PAL_UNIT_ICR + offsetof(struct RGF_ICR, ICR), 0);
-+	/* clear PAL_UNIT_ICR (potential D0->D3 leftover)
-+	 * In Talyn-MB host cannot access this register due to
-+	 * access control, hence PAL_UNIT_ICR is cleared by the FW
-+	 */
-+	if (wil->hw_version < HW_VER_TALYN_MB)
-+		wil_s(wil, RGF_PAL_UNIT_ICR + offsetof(struct RGF_ICR, ICR),
-+		      0);
- 
- 	if (wil->fw_calib_result > 0) {
- 		__le32 val = cpu_to_le32(wil->fw_calib_result |
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index 19cbc6a..3a7e406 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -85,7 +85,7 @@ int wil_set_capabilities(struct wil6210_priv *wil)
- 		wil->rgf_ucode_assert_code_addr = SPARROW_RGF_UCODE_ASSERT_CODE;
- 		break;
- 	case JTAG_DEV_ID_TALYN:
--		wil->hw_name = "Talyn";
-+		wil->hw_name = "Talyn-MA";
- 		wil->hw_version = HW_VER_TALYN;
- 		memcpy(fw_mapping, talyn_fw_mapping, sizeof(talyn_fw_mapping));
- 		wil->rgf_fw_assert_code_addr = TALYN_RGF_FW_ASSERT_CODE;
-@@ -94,6 +94,15 @@ int wil_set_capabilities(struct wil6210_priv *wil)
- 		    BIT_NO_FLASH_INDICATION)
- 			set_bit(hw_capa_no_flash, wil->hw_capa);
- 		break;
-+	case JTAG_DEV_ID_TALYN_MB:
-+		wil->hw_name = "Talyn-MB";
-+		wil->hw_version = HW_VER_TALYN_MB;
-+		memcpy(fw_mapping, talyn_mb_fw_mapping,
-+		       sizeof(talyn_mb_fw_mapping));
-+		wil->rgf_fw_assert_code_addr = TALYN_RGF_FW_ASSERT_CODE;
-+		wil->rgf_ucode_assert_code_addr = TALYN_RGF_UCODE_ASSERT_CODE;
-+		set_bit(hw_capa_no_flash, wil->hw_capa);
-+		break;
- 	default:
- 		wil_err(wil, "Unknown board hardware, chip_id 0x%08x, chip_revision 0x%08x\n",
- 			jtag_id, chip_revision);
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index b623510c..4cd8e40 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -311,14 +311,20 @@ struct RGF_ICR {
- #define RGF_USER_JTAG_DEV_ID	(0x880b34) /* device ID */
- 	#define JTAG_DEV_ID_SPARROW	(0x2632072f)
- 	#define JTAG_DEV_ID_TALYN	(0x7e0e1)
-+	#define JTAG_DEV_ID_TALYN_MB	(0x1007e0e1)
- 
- #define RGF_USER_REVISION_ID		(0x88afe4)
- #define RGF_USER_REVISION_ID_MASK	(3)
- 	#define REVISION_ID_SPARROW_B0	(0x0)
- 	#define REVISION_ID_SPARROW_D0	(0x3)
- 
-+#define RGF_OTP_MAC_TALYN_MB		(0x8a0304)
- #define RGF_OTP_MAC			(0x8a0620)
- 
-+/* Talyn-MB */
-+#define RGF_USER_USER_CPU_0_TALYN_MB	(0x8c0138)
-+#define RGF_USER_MAC_CPU_0_TALYN_MB	(0x8c0154)
-+
- /* crash codes for FW/Ucode stored here */
- 
- /* ASSERT RGFs */
-@@ -332,6 +338,7 @@ enum {
- 	HW_VER_SPARROW_B0, /* REVISION_ID_SPARROW_B0 */
- 	HW_VER_SPARROW_D0, /* REVISION_ID_SPARROW_D0 */
- 	HW_VER_TALYN,	/* JTAG_DEV_ID_TALYN */
-+	HW_VER_TALYN_MB	/* JTAG_DEV_ID_TALYN_MB */
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 951dbdd1c9eb..6dd68df104e4 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -874,6 +874,10 @@ struct ath10k_per_peer_tx_stats {
+ 	u32	reserved2;
  };
  
- /* popular locations */
-@@ -349,7 +356,8 @@ enum {
- /* Hardware definitions end */
- #define SPARROW_FW_MAPPING_TABLE_SIZE 10
- #define TALYN_FW_MAPPING_TABLE_SIZE 13
--#define MAX_FW_MAPPING_TABLE_SIZE 13
-+#define TALYN_MB_FW_MAPPING_TABLE_SIZE 19
-+#define MAX_FW_MAPPING_TABLE_SIZE 19
- 
- struct fw_map {
- 	u32 from; /* linker address - from, inclusive */
-@@ -363,6 +371,7 @@ struct fw_map {
- extern const struct fw_map sparrow_fw_mapping[SPARROW_FW_MAPPING_TABLE_SIZE];
- extern const struct fw_map sparrow_d0_mac_rgf_ext;
- extern const struct fw_map talyn_fw_mapping[TALYN_FW_MAPPING_TABLE_SIZE];
-+extern const struct fw_map talyn_mb_fw_mapping[TALYN_MB_FW_MAPPING_TABLE_SIZE];
- extern struct fw_map fw_mapping[MAX_FW_MAPPING_TABLE_SIZE];
- 
- /**
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 5d99124..5509f94 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -164,6 +164,61 @@
- 	{0x800000, 0x808000, 0xa78000, "uc_data", false},
- };
- 
-+/**
-+ * @talyn_mb_fw_mapping provides memory remapping table for Talyn-MB
-+ *
-+ * array size should be in sync with the declaration in the wil6210.h
-+ *
-+ * Talyn MB memory mapping:
-+ * Linker address         PCI/Host address
-+ *                        0x880000 .. 0xc80000  4Mb BAR0
-+ * 0x800000 .. 0x820000   0xa00000 .. 0xa20000  128k DCCM
-+ * 0x840000 .. 0x858000   0xa20000 .. 0xa38000  96k PERIPH
-+ */
-+const struct fw_map talyn_mb_fw_mapping[] = {
-+	/* FW code RAM 768k */
-+	{0x000000, 0x0c0000, 0x900000, "fw_code", true},
-+	/* FW data RAM 128k */
-+	{0x800000, 0x820000, 0xa00000, "fw_data", true},
-+	/* periph. data RAM 96k */
-+	{0x840000, 0x858000, 0xa20000, "fw_peri", true},
-+	/* various RGF 40k */
-+	{0x880000, 0x88a000, 0x880000, "rgf", true},
-+	/* AGC table 4k */
-+	{0x88a000, 0x88b000, 0x88a000, "AGC_tbl", true},
-+	/* Pcie_ext_rgf 4k */
-+	{0x88b000, 0x88c000, 0x88b000, "rgf_ext", true},
-+	/* mac_ext_rgf 2256b */
-+	{0x88c000, 0x88c8d0, 0x88c000, "mac_rgf_ext", true},
-+	/* ext USER RGF 4k */
-+	{0x88d000, 0x88e000, 0x88d000, "ext_user_rgf", true},
-+	/* SEC PKA 16k */
-+	{0x890000, 0x894000, 0x890000, "sec_pka", true},
-+	/* SEC KDF RGF 3096b */
-+	{0x898000, 0x898c18, 0x898000, "sec_kdf_rgf", true},
-+	/* SEC MAIN 2124b */
-+	{0x89a000, 0x89a84c, 0x89a000, "sec_main", true},
-+	/* OTP 4k */
-+	{0x8a0000, 0x8a1000, 0x8a0000, "otp", true},
-+	/* DMA EXT RGF 64k */
-+	{0x8b0000, 0x8c0000, 0x8b0000, "dma_ext_rgf", true},
-+	/* DUM USER RGF 528b */
-+	{0x8c0000, 0x8c0210, 0x8c0000, "dum_user_rgf", true},
-+	/* DMA OFU 296b */
-+	{0x8c2000, 0x8c2128, 0x8c2000, "dma_ofu", true},
-+	/* ucode debug 4k */
-+	{0x8c3000, 0x8c4000, 0x8c3000, "ucode_debug", true},
-+	/* upper area 1536k */
-+	{0x900000, 0xa80000, 0x900000, "upper", true},
-+	/* UCODE areas - accessible by debugfs blobs but not by
-+	 * wmi_addr_remap. UCODE areas MUST be added AFTER FW areas!
-+	 */
-+	/* ucode code RAM 256k */
-+	{0x000000, 0x040000, 0xa38000, "uc_code", false},
-+	/* ucode data RAM 32k */
-+	{0x800000, 0x808000, 0xa78000, "uc_data", false},
++struct ath10k_bus_params {
++	u32 chip_id;
 +};
 +
- struct fw_map fw_mapping[MAX_FW_MAPPING_TABLE_SIZE];
+ struct ath10k {
+ 	struct ath_common ath_common;
+ 	struct ieee80211_hw *hw;
+@@ -1161,7 +1165,8 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 		      const struct ath10k_fw_components *fw_components);
+ int ath10k_wait_for_suspend(struct ath10k *ar, u32 suspend_opt);
+ void ath10k_core_stop(struct ath10k *ar);
+-int ath10k_core_register(struct ath10k *ar, u32 chip_id);
++int ath10k_core_register(struct ath10k *ar,
++			 const struct ath10k_bus_params *bus_params);
+ void ath10k_core_unregister(struct ath10k *ar);
  
- struct blink_on_off_time led_blink_time[] = {
+ #endif /* _CORE_H_ */
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index af2cf55c4c1e..7b5b93f48ba2 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -3482,7 +3482,7 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 	struct ath10k *ar;
+ 	struct ath10k_pci *ar_pci;
+ 	enum ath10k_hw_rev hw_rev;
+-	u32 chip_id;
++	struct ath10k_bus_params bus_params;
+ 	bool pci_ps;
+ 	int (*pci_soft_reset)(struct ath10k *ar);
+ 	int (*pci_hard_reset)(struct ath10k *ar);
+@@ -3618,19 +3618,19 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 		goto err_free_irq;
+ 	}
+ 
+-	chip_id = ath10k_pci_soc_read32(ar, SOC_CHIP_ID_ADDRESS);
+-	if (chip_id == 0xffffffff) {
++	bus_params.chip_id = ath10k_pci_soc_read32(ar, SOC_CHIP_ID_ADDRESS);
++	if (bus_params.chip_id == 0xffffffff) {
+ 		ath10k_err(ar, "failed to get chip id\n");
+ 		goto err_free_irq;
+ 	}
+ 
+-	if (!ath10k_pci_chip_is_supported(pdev->device, chip_id)) {
++	if (!ath10k_pci_chip_is_supported(pdev->device, bus_params.chip_id)) {
+ 		ath10k_err(ar, "device %04x with chip_id %08x isn't supported\n",
+-			   pdev->device, chip_id);
++			   pdev->device, bus_params.chip_id);
+ 		goto err_free_irq;
+ 	}
+ 
+-	ret = ath10k_core_register(ar, chip_id);
++	ret = ath10k_core_register(ar, &bus_params);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to register driver core: %d\n", ret);
+ 		goto err_free_irq;
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index d612ce8c9cff..be61d868edcf 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -1931,7 +1931,8 @@ static int ath10k_sdio_probe(struct sdio_func *func,
+ 	struct ath10k_sdio *ar_sdio;
+ 	struct ath10k *ar;
+ 	enum ath10k_hw_rev hw_rev;
+-	u32 chip_id, dev_id_base;
++	u32 dev_id_base;
++	struct ath10k_bus_params bus_params;
+ 	int ret, i;
+ 
+ 	/* Assumption: All SDIO based chipsets (so far) are QCA6174 based.
+@@ -2026,8 +2027,8 @@ static int ath10k_sdio_probe(struct sdio_func *func,
+ 	}
+ 
+ 	/* TODO: don't know yet how to get chip_id with SDIO */
+-	chip_id = 0;
+-	ret = ath10k_core_register(ar, chip_id);
++	bus_params.chip_id = 0;
++	ret = ath10k_core_register(ar, &bus_params);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to register driver core: %d\n", ret);
+ 		goto err_free_wq;
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index a3a7042fe13a..46d2a7a21efb 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -1273,6 +1273,7 @@ static int ath10k_snoc_probe(struct platform_device *pdev)
+ 	struct ath10k *ar;
+ 	int ret;
+ 	u32 i;
++	struct ath10k_bus_params bus_params;
+ 
+ 	of_id = of_match_device(ath10k_snoc_dt_match, &pdev->dev);
+ 	if (!of_id) {
+@@ -1340,7 +1341,8 @@ static int ath10k_snoc_probe(struct platform_device *pdev)
+ 		goto err_free_irq;
+ 	}
+ 
+-	ret = ath10k_core_register(ar, drv_data->hw_rev);
++	bus_params.chip_id = drv_data->hw_rev;
++	ret = ath10k_core_register(ar, &bus_params);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to register driver core: %d\n", ret);
+ 		goto err_hw_power_off;
+diff --git a/drivers/net/wireless/ath/ath10k/usb.c b/drivers/net/wireless/ath/ath10k/usb.c
+index d4803ff5a78a..275e00bafcb1 100644
+--- a/drivers/net/wireless/ath/ath10k/usb.c
++++ b/drivers/net/wireless/ath/ath10k/usb.c
+@@ -983,7 +983,7 @@ static int ath10k_usb_probe(struct usb_interface *interface,
+ 	struct usb_device *dev = interface_to_usbdev(interface);
+ 	int ret, vendor_id, product_id;
+ 	enum ath10k_hw_rev hw_rev;
+-	u32 chip_id;
++	struct ath10k_bus_params bus_params;
+ 
+ 	/* Assumption: All USB based chipsets (so far) are QCA9377 based.
+ 	 * If there will be newer chipsets that does not use the hw reg
+@@ -1017,8 +1017,8 @@ static int ath10k_usb_probe(struct usb_interface *interface,
+ 	ar->id.device = product_id;
+ 
+ 	/* TODO: don't know yet how to get chip_id with USB */
+-	chip_id = 0;
+-	ret = ath10k_core_register(ar, chip_id);
++	bus_params.chip_id = 0;
++	ret = ath10k_core_register(ar, &bus_params);
+ 	if (ret) {
+ 		ath10k_warn(ar, "failed to register driver core: %d\n", ret);
+ 		goto err;
 -- 
-1.9.1
+2.17.0
