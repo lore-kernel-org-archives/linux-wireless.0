@@ -1,65 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:50170 "EHLO v3-1039.vlinux.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932263AbeFFIyO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Jun 2018 04:54:14 -0400
-From: Sven Eckelmann <sven@narfation.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Matthias Fritzsche <txt.file@txtfile.eu>,
-        Thomas Lauer <holminateur@gmail.com>,
-        Marcel Schmidt <ff.z-casparistrasse@mailbox.org>,
-        Antonio Quartulli <a@unstable.cc>,
-        Sven Eckelmann <sven@narfation.org>,
-        b.a.t.m.a.n@lists.open-mesh.org
-Subject: [PATCH v2] cfg80211: initialize sinfo in cfg80211_get_station
-Date: Wed,  6 Jun 2018 10:53:55 +0200
-Message-Id: <20180606085355.21952-1-sven@narfation.org> (sfid-20180606_105443_254656_688EA6D3)
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:33924 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751354AbeFDMEF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 4 Jun 2018 08:04:05 -0400
+Received: by mail-lf0-f68.google.com with SMTP id o9-v6so24779038lfk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Jun 2018 05:04:04 -0700 (PDT)
+Date: Mon, 4 Jun 2018 14:04:00 +0200
+From: Niklas Cassel <niklas.cassel@linaro.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Wei Yongjun <weiyongjun1@huawei.com>,
+        kernel-janitors@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        bjorn.andersson@linaro.org
+Subject: Re: [PATCH net-next] ath10k: make some functions static
+Message-ID: <20180604120400.GA6240@centauri.lan> (sfid-20180604_140408_855158_40B34C3A)
+References: <1527733994-149212-1-git-send-email-weiyongjun1@huawei.com>
+ <87a7sazw0w.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87a7sazw0w.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Most of the implementations behind cfg80211_get_station will not initialize
-sinfo to zero before manipulating it. For example, the member "filled",
-which indicates the filled in parts of this struct, is often only modified
-by enabling certain bits in the bitfield while keeping the remaining bits
-in their original state. A caller without a preinitialized sinfo.filled can
-then no longer decide which parts of sinfo were filled in by
-cfg80211_get_station (or actually the underlying implementations).
+On Mon, Jun 04, 2018 at 01:27:43PM +0300, Kalle Valo wrote:
+> Wei Yongjun <weiyongjun1@huawei.com> writes:
+> 
+> > Fixes the following sparse warnings:
+> >
+> > drivers/net/wireless/ath/ath10k/snoc.c:823:5: warning:
+> >  symbol 'ath10k_snoc_get_ce_id_from_irq' was not declared. Should it be static?
+> > drivers/net/wireless/ath/ath10k/snoc.c:871:6: warning:
+> >  symbol 'ath10k_snoc_init_napi' was not declared. Should it be static?
+> >
+> > Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+> 
+> BTW this goes to my ath.git tree, not to net-next.
+> 
+> I had missed these as I can't enable ATH10K_SNOC on x86 and hence I
+> don't test compile snoc.c at all. Bjorn&Govind, is there a way to solve
+> that? IIRC we had a similar problem with wcn36xx but I don't remember
+> anymore how it was fixed.
+> 
 
-cfg80211_get_station must therefore take care that sinfo is initialized to
-zero. Otherwise, the caller may tries to read information which was not
-filled in and which must therefore also be considered uninitialized. In
-batadv_v_elp_get_throughput's case, an invalid "random" expected throughput
-may be stored for this neighbor and thus the B.A.T.M.A.N V algorithm may
-switch to non-optimal neighbors for certain destinations.
+Perhaps something like:
 
-Fixes: 7406353d43c8 ("cfg80211: implement cfg80211_get_station cfg80211 API")
-Reported-by: Thomas Lauer <holminateur@gmail.com>
-Reported-by: Marcel Schmidt <ff.z-casparistrasse@mailbox.org>
-Cc: b.a.t.m.a.n@lists.open-mesh.org
-Signed-off-by: Sven Eckelmann <sven@narfation.org>
----
-v2:
- - do a complete memset of sinfo, requested by Johannes Berg
-
-txt.file, you may want to take care that this is integrated in your
-firmware.
----
- net/wireless/util.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index b5bb1c309914..3c654cd7ba56 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1746,6 +1746,8 @@ int cfg80211_get_station(struct net_device *dev, const u8 *mac_addr,
- 	if (!rdev->ops->get_station)
- 		return -EOPNOTSUPP;
+--- a/drivers/net/wireless/ath/ath10k/Kconfig
++++ b/drivers/net/wireless/ath/ath10k/Kconfig
+@@ -42,7 +42,8 @@ config ATH10K_USB
  
-+	memset(sinfo, 0, sizeof(*sinfo));
-+
- 	return rdev_get_station(rdev, dev, mac_addr, sinfo);
- }
- EXPORT_SYMBOL(cfg80211_get_station);
--- 
-2.11.0
+ config ATH10K_SNOC
+         tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
+-        depends on ATH10K && ARCH_QCOM
++        depends on ATH10K
++        depends on ARCH_QCOM || COMPILE_TEST
+         ---help---
+           This module adds support for integrated WCN3990 chip connected
+           to system NOC(SNOC). Currently work in progress and will not
+
+
+Regards,
+Niklas
+
+
+> -- 
+> Kalle Valo
+> 
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
