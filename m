@@ -1,38 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37962 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934298AbeF1J6n (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Jun 2018 05:58:43 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mga17.intel.com ([192.55.52.151]:61758 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751444AbeFDEQs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 4 Jun 2018 00:16:48 -0400
+Date: Mon, 4 Jun 2018 06:16:47 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Colin King <colin.king@canonical.com>
+Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] nfc: st21nfca: use setup_timer instead of init_timer
+Message-ID: <20180604041647.GA8977@zurbaran.ger.intel.com> (sfid-20180604_061854_919182_CD7B603F)
+References: <20171124133741.32371-1-colin.king@canonical.com>
 MIME-Version: 1.0
-Subject: Re: [1/2] ath10k: rename HTC_HOST_MAX_MSG_PER_BUNDLE define
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180615120423.4963-1-erik.stromdahl@gmail.com>
-References: <20180615120423.4963-1-erik.stromdahl@gmail.com>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org,
-        Erik Stromdahl <erik.stromdahl@gmail.com>
-Message-Id: <20180628095842.AA0D760234@smtp.codeaurora.org> (sfid-20180628_115851_228531_535183A4)
-Date: Thu, 28 Jun 2018 09:58:42 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171124133741.32371-1-colin.king@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Erik Stromdahl <erik.stromdahl@gmail.com> wrote:
+Hi Colin,
 
-> This define is only used for RX bundling so it is more descriptive if
-> RX is added to the define-name.
+On Fri, Nov 24, 2017 at 01:37:41PM +0000, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> Use setup_timer function instead of initializing timer with the
+> function and data fields.
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/nfc/st21nfca/se.c | 10 ++++------
+>  1 file changed, 4 insertions(+), 6 deletions(-)
+Applied to nfc-next, thanks.
 
-2 patches applied to ath-next branch of ath.git, thanks.
-
-ab687de9535c ath10k: rename HTC_HOST_MAX_MSG_PER_BUNDLE define
-e4568eac0464 ath10k: replace hardcoded constant with define
-
--- 
-https://patchwork.kernel.org/patch/10466281/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Cheers,
+Samuel.
