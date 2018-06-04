@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48128 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965431AbeFNOYX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Jun 2018 10:24:23 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Loic Poulain <loic.poulain@linaro.org>
-Cc: linux-wireless@vger.kernel.org, linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH 1/3] wcn36xx: Fix WEP104 encryption type
-References: <1527506960-13358-1-git-send-email-loic.poulain@linaro.org>
-Date: Thu, 14 Jun 2018 17:24:19 +0300
-In-Reply-To: <1527506960-13358-1-git-send-email-loic.poulain@linaro.org> (Loic
-        Poulain's message of "Mon, 28 May 2018 13:29:18 +0200")
-Message-ID: <87k1r18mzw.fsf@kamboji.qca.qualcomm.com> (sfid-20180614_162439_756533_4E7B2E2C)
+Received: from mail-co1nam03on0073.outbound.protection.outlook.com ([104.47.40.73]:33559
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752066AbeFDMue (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 4 Jun 2018 08:50:34 -0400
+Date: Mon, 4 Jun 2018 15:50:23 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Andrey Shevchenko <ashevchenko@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>
+Subject: Re: [PATCH 3/6] qtnfmac: implement cfg80211 power management callback
+Message-ID: <20180604125021.pvcbnqexrkgqd72q@bars> (sfid-20180604_145039_740941_6069220D)
+References: <20180531091102.28666-1-sergey.matyukevich.os@quantenna.com>
+ <20180531091102.28666-4-sergey.matyukevich.os@quantenna.com>
+ <0303f713-9e0d-5180-035f-ea78ffe56d67@quantenna.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0303f713-9e0d-5180-035f-ea78ffe56d67@quantenna.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Loic Poulain <loic.poulain@linaro.org> writes:
+Hello Igor,
 
-> Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
-> ---
->  drivers/net/wireless/ath/wcn36xx/main.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-> index aeb5e6e..4648a78 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/main.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/main.c
-> @@ -512,7 +512,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
->  		vif_priv->encrypt_type = WCN36XX_HAL_ED_WEP40;
->  		break;
->  	case WLAN_CIPHER_SUITE_WEP104:
-> -		vif_priv->encrypt_type = WCN36XX_HAL_ED_WEP40;
-> +		vif_priv->encrypt_type = WCN36XX_HAL_ED_WEP104;
->  		break;
->  	case WLAN_CIPHER_SUITE_CCMP:
->  		vif_priv->encrypt_type = WCN36XX_HAL_ED_CCMP;
+> > Implement set_power_mgmt() callback that forwards power saving
+> > settings to the device firmware.
+> > 
+> > Signed-off-by: Sergei Maksimenko <smaksimenko@quantenna.com>
+> > ---
+> >   static void qtnf_cfg80211_reg_notifier(struct wiphy *wiphy_in,
+> > @@ -922,6 +939,9 @@ struct wiphy *qtnf_wiphy_allocate(struct qtnf_bus *bus)
+> >   	if (bus->hw_info.hw_capab & QLINK_HW_CAPAB_DFS_OFFLOAD)
+> >   		qtn_cfg80211_ops.start_radar_detection = NULL;
+> > +	if (!(bus->hw_info.hw_capab & QLINK_HW_CAPAB_PWR_MGMT))
+> > +		qtn_cfg80211_ops.set_power_mgmt	= NULL;
+> > +
+> 
+> I think it's better be moved somewhere out of qtnf_wiphy_allocate() as OPS
+> are global for all MACs, while qtnf_wiphy_allocate() is called for each MAC
+> separately.
 
-No empty commit logs, please. I'll add "This is an obvious copy&paste
-bug".
+Consider the case of splitting hardware capabilities into two groups:
+global and per-wmac. In this case we may need to register different
+subsets of cfg80211 operations for each wmac. In such a case, function
+qtnf_wiphy_allocate looks like a reasonable point where to merge both
+capability groups and customize cfg80211_ops structure for each wmac.
 
--- 
-Kalle Valo
+Regards,
+Sergey
