@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40048 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752937AbeF0Plw (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:33739 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750868AbeFDJTw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Jun 2018 11:41:52 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [5/8] wclore: Fix timout errors after recovery
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180619094342.81831-6-tony@atomide.com>
-References: <20180619094342.81831-6-tony@atomide.com>
-To: Tony Lindgren <tony@atomide.com>
-Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
-        Guy Mishol <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Maital Hahn <maitalm@ti.com>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org
-Message-Id: <20180627154152.7434960791@smtp.codeaurora.org> (sfid-20180627_174157_377005_7DC80E5B)
-Date: Wed, 27 Jun 2018 15:41:52 +0000 (UTC)
+        Mon, 4 Jun 2018 05:19:52 -0400
+Received: by mail-wm0-f66.google.com with SMTP id z6-v6so13387714wma.0
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Jun 2018 02:19:51 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76x2: fix mrr idx/count estimation in mt76x2_mac_fill_tx_status()
+Date: Mon,  4 Jun 2018 11:19:41 +0200
+Message-Id: <b69193d3a01564778b9824ebb07cb4e677e3462a.1528098972.git.lorenzo.bianconi@redhat.com> (sfid-20180604_111956_083497_B1427A83)
+In-Reply-To: <cover.1528098972.git.lorenzo.bianconi@redhat.com>
+References: <cover.1528098972.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tony Lindgren <tony@atomide.com> wrote:
+Fix mcs and attempt count estimation in mt76x2_mac_fill_tx_status routine
+if the number of tx retries reported by the hw is grater than
+IEEE80211_TX_MAX_RATES
 
-> After enabling runtime PM, if we force hardware reset multiple times with:
-> 
-> # echo 1 > /sys/kernel/debug/ieee80211/phy0/wlcore/start_recovery
-> 
-> We will after few tries get the following error:
-> 
-> wlcore: ERROR timeout waiting for the hardware to complete initialization
-> 
-> And then wlcore is unable to reconnect until after the wlcore related modules
-> are reloaded.
-> 
-> Let's fix this by moving pm_runtime_put() earlier before we restart the hardware.
-> And let's use the sync version to make sure we're done before we restart.
-> 
-> Note that we still will get -EBUSY warning from wl12xx_sdio_set_power() but let's
-> fix that separately once we know exactly why we get the warning.
-> 
-> Reported-by: Eyal Reizer <eyalr@ti.com>
-> Signed-off-by: Tony Lindgren <tony@atomide.com>
+Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x2_mac.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-I'll do s/wclore/wlcore/ to the title.
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+index b49aea4da2d6..8985446570bd 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+@@ -439,15 +439,13 @@ mt76x2_mac_fill_tx_status(struct mt76x2_dev *dev,
+ 	if (last_rate < IEEE80211_TX_MAX_RATES - 1)
+ 		rate[last_rate + 1].idx = -1;
+ 
+-	cur_idx = rate[last_rate].idx + st->retry;
++	cur_idx = rate[last_rate].idx + last_rate;
+ 	for (i = 0; i <= last_rate; i++) {
+ 		rate[i].flags = rate[last_rate].flags;
+ 		rate[i].idx = max_t(int, 0, cur_idx - i);
+ 		rate[i].count = 1;
+ 	}
+-
+-	if (last_rate > 0)
+-		rate[last_rate - 1].count = st->retry + 1 - last_rate;
++	rate[last_rate].count = st->retry + 1 - last_rate;
+ 
+ 	info->status.ampdu_len = n_frames;
+ 	info->status.ampdu_ack_len = st->success ? n_frames : 0;
 -- 
-https://patchwork.kernel.org/patch/10473897/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.14.4
