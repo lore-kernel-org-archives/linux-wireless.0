@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:39115 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935695AbeFMTgm (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:45134 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750731AbeFDF3P (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jun 2018 15:36:42 -0400
-Received: by mail-wm0-f66.google.com with SMTP id p11-v6so7539213wmc.4
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2018 12:36:41 -0700 (PDT)
+        Mon, 4 Jun 2018 01:29:15 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 0/4] staging: wilc1000: modification to use list_head data structure
+Date: Mon, 4 Jun 2018 10:59:06 +0530
+Message-ID: <1528090150-5397-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180604_073032_760381_C0443A7C)
 MIME-Version: 1.0
-In-Reply-To: <20180613180321.16745-1-ryan@edited.us>
-References: <20180613180321.16745-1-ryan@edited.us>
-From: John Stultz <john.stultz@linaro.org>
-Date: Wed, 13 Jun 2018 12:36:40 -0700
-Message-ID: <CALAqxLWuUJYfXszaO01KODbom8WykKQKm0X3fzPTwSRK+G3zqw@mail.gmail.com> (sfid-20180613_213705_414001_202595F8)
-Subject: Re: [PATCH] arm64: dts: hikey960: Define wl1837 power capabilities
-To: Ryan Grachek <ryan@edited.us>, Wei Xu <xuwei5@hisilicon.com>
-Cc: Mark Rutland <mark.rutland@arm.com>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
-        <devicetree@vger.kernel.org>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        lkml <linux-kernel@vger.kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Valentin Schneider <valentin.schneider@arm.com>,
-        linux-arm-kernel@lists.infradead.org, Eyal Reizer <eyalr@ti.com>,
-        Tony Lindgren <tony@atomide.com>,
-        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 13, 2018 at 11:03 AM, Ryan Grachek <ryan@edited.us> wrote:
-> These properties are required for compatibility with runtime PM.
-> Without these properties, MMC host controller will not be aware
-> of power capabilities. When the wlcore driver attempts to power
-> on the device, it will erroneously fail with -EACCES. This fixes
-> a regression found here: https://lkml.org/lkml/2018/6/12/930
->
-> Signed-off-by: Ryan Grachek <ryan@edited.us>
+Instead of having own linked list implementation to maintain buffer queue change
+to use list_head. Also removed the few elements from 'wilc' struct as it's not
+required to be part of 'wilc' struct.
 
-Fixes: 60f36637bbbd ("wlcore: sdio: allow pm to handle sdio power")
-Tested-by: John Stultz <john.stultz@linaro.org>
-Acked-by: John Stultz <john.stultz@linaro.org>
+Ajay Singh (4):
+  staging: wilc1000: use list_head to maintain 'txq_entry_t' elements of
+    tx queue
+  staging: wilc1000: use list_head to maintain 'rxq_entry_t elements in
+    rx queue
+  staging: wilc1000: remove 'rxq_entries' from 'wilc' struct
+  staging: wilc1000: move 'txq_spinlock_flags' from 'wilc' structure to
+    local variable
 
-Wei Xu: This also fixes a functional regression with wifi on the
-HiKey960 board that was introduced in 4.18-rc with commit 60f36637bbbd
-("wlcore: sdio: allow pm to handle sdio power").
+ drivers/staging/wilc1000/linux_wlan.c         |   2 +
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |   9 +--
+ drivers/staging/wilc1000/wilc_wlan.c          | 101 ++++++++------------------
+ drivers/staging/wilc1000/wilc_wlan.h          |   5 +-
+ 4 files changed, 37 insertions(+), 80 deletions(-)
 
-Could you please be sure to queue this for the 4.18-rc too?
-
-thanks
--john
+-- 
+2.7.4
