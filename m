@@ -1,106 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52586 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935275AbeFMK7j (ORCPT
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:8556 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751155AbeFDF32 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jun 2018 06:59:39 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCH 2/4] mac80211: Add api to configure low and high txrate threshold
-Date: Wed, 13 Jun 2018 16:28:57 +0530
-Message-Id: <1528887539-26821-3-git-send-email-tamizhr@codeaurora.org> (sfid-20180613_125952_917007_88328018)
-In-Reply-To: <1528887539-26821-1-git-send-email-tamizhr@codeaurora.org>
-References: <1528887539-26821-1-git-send-email-tamizhr@codeaurora.org>
+        Mon, 4 Jun 2018 01:29:28 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 4/4] staging: wilc1000: move 'txq_spinlock_flags' from 'wilc' structure to local variable
+Date: Mon, 4 Jun 2018 10:59:10 +0530
+Message-ID: <1528090150-5397-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180604_073035_081990_D804DD0F)
+In-Reply-To: <1528090150-5397-1-git-send-email-ajay.kathat@microchip.com>
+References: <1528090150-5397-1-git-send-email-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add set_sta_mon_txrate_config api to configure low and high
-txrate threshold for a connected station. The configuration
-will be represented in 100kbps.
+Cleanup patch to remove 'txq_spinlock_flags' element in 'wilc' and used
+local variable 'flag' in wilc_wlan_txq_filter_dup_tcp_ack().
 
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- net/mac80211/cfg.c      |   35 +++++++++++++++++++++++++++++++++++
- net/mac80211/sta_info.h |    7 +++++++
- 2 files changed, 42 insertions(+)
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 2 --
+ drivers/staging/wilc1000/wilc_wlan.c          | 5 +++--
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 5cdd8a3..649f5c7 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3876,6 +3876,40 @@ static int ieee80211_set_sta_mon_rssi_range_cfg(struct wiphy *wiphy,
- 	return 0;
- }
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index afba372..fe18ae9 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -155,8 +155,6 @@ struct wilc {
+ 	u32 rx_buffer_offset;
+ 	u8 *tx_buffer;
  
-+static int ieee80211_set_sta_mon_txrate_config(struct wiphy *wiphy,
-+					       struct net_device *dev,
-+					       const u8 *peer,
-+					       u32 low_txrate_thold,
-+					       u32 high_txrate_thold)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct sta_info *sta;
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_AP &&
-+	    !wiphy_ext_feature_isset(sdata->local->hw.wiphy,
-+				NL80211_EXT_FEATURE_STA_MON_TXRATE_CONFIG))
-+		return -EOPNOTSUPP;
-+
-+	mutex_lock(&sdata->local->sta_mtx);
-+
-+	sta = sta_info_get_bss(sdata, peer);
-+	if (!sta) {
-+		mutex_unlock(&sdata->local->sta_mtx);
-+		return -ENOENT;
-+	}
-+
-+	if (sta->txrate_low == low_txrate_thold &&
-+	    sta->txrate_high == high_txrate_thold)
-+		goto unlock;
-+
-+	sta->txrate_low = low_txrate_thold;
-+	sta->txrate_high = high_txrate_thold;
-+
-+unlock:
-+	mutex_unlock(&sdata->local->sta_mtx);
-+	return 0;
-+}
-+
- const struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -3972,4 +4006,5 @@ static int ieee80211_set_sta_mon_rssi_range_cfg(struct wiphy *wiphy,
- 	.get_txq_stats = ieee80211_get_txq_stats,
- 	.set_sta_mon_rssi_config = ieee80211_set_sta_mon_rssi_config,
- 	.set_sta_mon_rssi_range_config = ieee80211_set_sta_mon_rssi_range_cfg,
-+	.set_sta_mon_txrate_config = ieee80211_set_sta_mon_txrate_config,
- };
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 05d68f8..a71f50c 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -497,6 +497,10 @@ struct ieee80211_sta_rx_stats {
-  * @count_rx_signal: Number of data frames used in averaging station signal.
-  *	This can be used to avoid generating less reliable station rssi cross
-  *	events that would be based only on couple of received frames
-+ * @txrate_low: TXRATE lower threshold for a station to monitor, this will be
-+ *	in 100Kbps
-+ * @txrate_high: TXRATE upper threshold for a station to monitor, this will be
-+ *	in 100Kbps
-  */
- struct sta_info {
- 	/* General information, mostly static */
-@@ -605,6 +609,9 @@ struct sta_info {
- 	int last_sta_mon_event_signal;
- 	unsigned int count_rx_signal;
+-	unsigned long txq_spinlock_flags;
+-
+ 	struct txq_entry_t txq_head;
+ 	int txq_entries;
+ 	int txq_exit;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 26252d1..55755d7 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -219,11 +219,12 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
+ 	struct wilc *wilc;
+ 	u32 i = 0;
+ 	u32 dropped = 0;
++	unsigned long flags;
  
-+	u32 txrate_low;
-+	u32 txrate_high;
-+
- 	/* keep last! */
- 	struct ieee80211_sta sta;
- };
+ 	vif = netdev_priv(dev);
+ 	wilc = vif->wilc;
+ 
+-	spin_lock_irqsave(&wilc->txq_spinlock, wilc->txq_spinlock_flags);
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
+ 	for (i = pending_base; i < (pending_base + pending_acks); i++) {
+ 		u32 session_index;
+ 		u32 bigger_ack_num;
+@@ -261,7 +262,7 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
+ 	else
+ 		pending_base = 0;
+ 
+-	spin_unlock_irqrestore(&wilc->txq_spinlock, wilc->txq_spinlock_flags);
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
+ 
+ 	while (dropped > 0) {
+ 		wait_for_completion_timeout(&wilc->txq_event,
 -- 
-1.7.9.5
+2.7.4
