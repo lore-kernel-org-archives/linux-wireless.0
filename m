@@ -1,46 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:44262 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932086AbeF1HvZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Jun 2018 03:51:25 -0400
-Message-ID: <1530172269.4988.1.camel@sipsolutions.net> (sfid-20180628_095139_288382_FD8F9E88)
-Subject: Re: linux-next: manual merge of the xarray tree with the
- wireless-drivers-next tree
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stephen Rothwell <sfr@canb.auug.org.au>,
-        Matthew Wilcox <willy@infradead.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Wireless <linux-wireless@vger.kernel.org>
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date: Thu, 28 Jun 2018 09:51:09 +0200
-In-Reply-To: <20180628145900.4ca1e648@canb.auug.org.au>
-References: <20180628145900.4ca1e648@canb.auug.org.au>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from muru.com ([72.249.23.125]:46090 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751507AbeFEKoI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 Jun 2018 06:44:08 -0400
+Date: Tue, 5 Jun 2018 03:44:04 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        KISHON VIJAY ABRAHAM <kishon@ti.com>,
+        "Mishol, Guy" <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        "Hahn, Maital" <maitalm@ti.com>,
+        "Altshul, Maxim" <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
+Subject: Re: [EXTERNAL] Re: [RFT 3/6] wlcore: Add support for runtime PM
+Message-ID: <20180605104404.GD5738@atomide.com> (sfid-20180605_124412_883234_C279E102)
+References: <20180529180605.73622-1-tony@atomide.com>
+ <20180529180605.73622-4-tony@atomide.com>
+ <20180531171420.GQ5705@atomide.com>
+ <fe42f9d6bb744cd39e38db8f51c0b74e@ti.com>
+ <20180605042000.GA5738@atomide.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180605042000.GA5738@atomide.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-06-28 at 14:59 +1000, Stephen Rothwell wrote:
-> Hi all,
+* Tony Lindgren <tony@atomide.com> [180605 04:22]:
+> * Reizer, Eyal <eyalr@ti.com> [180603 06:07]:
+> > I have noticed the following recovery a couple of times on my setup when the board was 
+> > just sitting for a long time with just pings
+> > It starts with a firmware recovery started from the interrupt handler but the recovery fails 
 > 
-> Today's linux-next merge of the xarray tree got a conflict in:
+> Sounds like the recovery needs some more work :)
 > 
->   lib/Kconfig.debug
+> > leaving the sdio stuck.
+> > At this stage the only way to get out of it is unload/load of the driver modules.
+> > Have you seen this on your side as well?
 > 
-> between commit:
+> Hmm I don't think I've seen this one yet.
 > 
->   0e2dc70e3d0d ("bitfield: add tests")
+> > 64 bytes from 192.168.100.1: seq=32772 ttl=64 time=9.644 ms
+> > 64 bytes from 192.168.100.1: seq=32773 ttl=64 time=9.572 ms
+> > 64 bytes from 192.168.100.1: seq=32774 ttl=64 time=10.974 ms
+> > 64 bytes from 192.168.100.1: seq=32775 ttl=64 time=9.618 ms
+> > [127899.040526] wlcore: ERROR SW watchdog interrupt received! starting recovery.
 > 
-> from the wireless-drivers-next tree and commit:
-> 
->   d968f529e39f ("xarray: Add XArray load operation")
-> 
-> from the xarray tree.
+> Do you know what does the SW watchdog means here? Does it mean the
+> interrupt did not get delivered to wlcore? Or a spurious IRQ to wlcore?
+> Or a timeout waiting for the ELP wake interrupt?
 
-Thanks for the heads-up! Not really sure where/how we'll be able to get
-that resolved before it hits Linus, but as the conflict seems rather
-easy (overlapping additions), I guess it's not such a big deal.
+Also, can you check if patch "[RFT 7/6] wlcore: Make sure firmware is initialized
+in wl1271_op_add_interface()" already fixes this issue if you did not have it
+already applied?
 
-johannes
+Regards,
+
+Tony
