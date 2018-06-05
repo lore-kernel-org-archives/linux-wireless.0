@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:40547 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932547AbeFTImu (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:36099 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752365AbeFEW7t (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Jun 2018 04:42:50 -0400
-Received: by mail-lf0-f65.google.com with SMTP id q11-v6so3686575lfc.7
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2018 01:42:49 -0700 (PDT)
-From: Niklas Cassel <niklas.cassel@linaro.org>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: alagusankar@silex-india.com,
-        Niklas Cassel <niklas.cassel@linaro.org>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 3/3] ath10k: sdio: set skb len for all rx packets
-Date: Wed, 20 Jun 2018 10:42:22 +0200
-Message-Id: <20180620084222.3521-4-niklas.cassel@linaro.org> (sfid-20180620_104453_889922_AA5AD43C)
-In-Reply-To: <20180620084222.3521-1-niklas.cassel@linaro.org>
-References: <20180620084222.3521-1-niklas.cassel@linaro.org>
+        Tue, 5 Jun 2018 18:59:49 -0400
+Received: by mail-pg0-f67.google.com with SMTP id m5-v6so1965734pgd.3
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jun 2018 15:59:49 -0700 (PDT)
+Date: Tue, 5 Jun 2018 15:59:45 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: andy.gross@linaro.org, bjorn.andersson@linaro.org,
+        david.brown@linaro.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH v2 0/6]  *** Add support for wifi QMI client driver ***
+Message-ID: <20180605225944.GA194157@rodete-desktop-imager.corp.google.com> (sfid-20180606_005953_496628_05AA105C)
+References: <20180605123304.31969-1-govinds@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180605123304.31969-1-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Without this, packets larger than 1500 will silently be dropped.
-Easily reproduced by sending a ping packet with a size larger
-than 1500.
+On Tue, Jun 05, 2018 at 06:03:04PM +0530, Govind Singh wrote:
+> Add QMI client driver for Q6 integrated WLAN connectivity subsystem.
+> This module is responsible for communicating WLAN control messages to FW
+> over QMI interface.
+...
 
-Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
-Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
----
- drivers/net/wireless/ath/ath10k/sdio.c | 1 +
- 1 file changed, 1 insertion(+)
+You still don't have the threading correct. Your patches should be
+In-Reply-To the cover letter, so they get threaded by mail clients.
 
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index 0c57d6aaa437..8ac47b04a17e 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -396,6 +396,7 @@ static int ath10k_sdio_mbox_rx_process_packet(struct ath10k *ar,
- 	int ret;
- 
- 	payload_len = le16_to_cpu(htc_hdr->len);
-+	skb->len = payload_len + sizeof(struct ath10k_htc_hdr);
- 
- 	if (trailer_present) {
- 		trailer = skb->data + sizeof(*htc_hdr) +
--- 
-2.17.1
+See, for instance, how the threaded view for your last version doesn't
+show any of your patches:
+
+https://www.mail-archive.com/linux-wireless@vger.kernel.org/msg44199.html
+
+(And Bjorn complained about this last time too.)
+
+It looks like you're already using git-send-email, which should handle
+this for you...just make sure you're sending all emails in one go (e.g.,
+'git send-email <args> 0000-foo.patch 0001-bar.patch 0002-baz.patch
+...').
+
+Brian
