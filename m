@@ -1,54 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.11.71.1]:52363 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932741AbeFPMal (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Jun 2018 08:30:41 -0400
-Date: Sat, 16 Jun 2018 22:30:36 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Wireless <linux-wireless@vger.kernel.org>
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: linux-next: Signed-off-by missing for commit in the mac80211-next
- tree
-Message-ID: <20180616223036.46abefcb@canb.auug.org.au> (sfid-20180616_143055_768996_5F1AE989)
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:33852 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752758AbeFEXST (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 Jun 2018 19:18:19 -0400
+Received: by mail-pg0-f68.google.com with SMTP id q4-v6so931070pgr.1
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jun 2018 16:18:19 -0700 (PDT)
+Date: Tue, 5 Jun 2018 16:18:16 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: devicetree@vger.kernel.org, andy.gross@linaro.org,
+        bjorn.andersson@linaro.org, david.brown@linaro.org,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        Rob Herring <robh+dt@kernel.org>
+Subject: Re: [PATCH v2 3/6] dt: bindings: add bindings for msa memory region
+Message-ID: <20180605231814.GB194157@rodete-desktop-imager.corp.google.com> (sfid-20180606_011825_596901_7FD6ABC4)
+References: <20180605123616.528-1-govinds@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/.XiUKwHyEa9LHmLz4WHSqN/"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180605123616.528-1-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/.XiUKwHyEa9LHmLz4WHSqN/
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
++ Rob
 
-Hi all,
+On Tue, Jun 05, 2018 at 06:06:16PM +0530, Govind Singh wrote:
+> Add device tree binding documentation details of msa
+> memory region for ath10k qmi client for SDM845/APQ8098
+> SoC into "qcom,ath10k.txt".
+> 
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> ---
+>  .../devicetree/bindings/net/wireless/qcom,ath10k.txt          | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> index 7fd4e8ce4149..0efc47f4ba34 100644
+> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> @@ -56,6 +56,8 @@ Optional properties:
+>  				     the length can vary between hw versions.
+>  - <supply-name>-supply: handle to the regulator device tree node
+>  			   optional "supply-name" is "vdd-0.8-cx-mx".
+> +- msa-fixed-region: phandle, specifier to children of reserved MSA memory.
 
-Commit
+As in reserved-memory/reserved-memory.txt? Might refer to that doc here.
+Or is this some other kind of reserved memory?
 
-  f9444b499f68 ("ieee80211: bump IEEE80211_MAX_AMPDU_BUF to support HE")
+If the former, it's normally called just "memory-region", although
+that does seem somewhat non-descriptive...
 
-is missing a Signed-off-by from its author.
+> +- msa-size: MSA memory size for fw internal use.
 
---=20
-Cheers,
-Stephen Rothwell
+Do you really need both of these? It seems like your code uses one or
+the other, not both. In which case, this is not a very good description,
+because it sounds like they would go together.
 
---Sig_/.XiUKwHyEa9LHmLz4WHSqN/
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+Also, if you're not using standard/generic properties (e.g., the
+aforementioned "memory-region" binding), you typically should use a
+vendor prefix, like "qcom,msa-size".
 
------BEGIN PGP SIGNATURE-----
+Brian
 
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlslAuwACgkQAVBC80lX
-0GxKcwf+MX+sT8jbymxo0849bfiGi2jN25ncj6uIkpOFATN/Sq3W+Emb5P1bjlXg
-sr0uF9Ymk29SdWDgxCdEgOdKqCHBNKy+2nJ5NrCBL+Ni8t8Txy1v2LpDs14B2cWr
-x1SLKuIlrpea0KPgWiCN7CRKCq0aAJt5ioc2UyPJT93lo8A6CsC+Hl28zrG69a83
-RITu8QlZfO9qS1WAuovTU/Bdb6bdFz0lWhCFk1h0If514zskIjVZ178l/5AHFBwD
-OLpX7O5p/WOriJ0I8RuS7vUqLS7fTcqzwE2KU98M90y3pjjq1cIvTf4AuH5U2pBR
-F4KWC78e5XYmH5c9w9IIUk1z0I9JJg==
-=2S2s
------END PGP SIGNATURE-----
-
---Sig_/.XiUKwHyEa9LHmLz4WHSqN/--
+>  
+>  Example (to supply the calibration data alone):
+>  
+> @@ -133,6 +135,8 @@ wifi@18000000 {
+>  		compatible = "qcom,wcn3990-wifi";
+>  		reg = <0x18800000 0x800000>;
+>  		reg-names = "membase";
+> +		msa-fixed-region = <&wlan_msa_mem>;
+> +		msa-size = <0x100000>;
+>  		clocks = <&clock_gcc clk_aggre2_noc_clk>;
+>  		clock-names = "smmu_aggre2_noc_clk"
+>  		interrupts =
+> -- 
+> 2.17.0
+> 
