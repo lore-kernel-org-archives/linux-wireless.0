@@ -1,79 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50242 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754343AbeFMFDp (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:55307 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751539AbeFEKfj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jun 2018 01:03:45 -0400
-From: Surabhi Vishnoi <svishnoi@codeaurora.org>
-To: ath10k@lists.infradead.org
+        Tue, 5 Jun 2018 06:35:39 -0400
+Received: by mail-wm0-f68.google.com with SMTP id v16-v6so3910172wmh.5
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jun 2018 03:35:38 -0700 (PDT)
+Subject: Re: [PATCH 0/3] nl80211: support offloading FILS-SK roaming scenarios
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <1526977148-11600-1-git-send-email-arend.vanspriel@broadcom.com>
 Cc: linux-wireless@vger.kernel.org,
-        Surabhi Vishnoi <svishnoi@codeaurora.org>
-Subject: [PATCH] ath10k: Skip data calibration for non-bmi target
-Date: Wed, 13 Jun 2018 10:33:35 +0530
-Message-Id: <1528866215-24754-1-git-send-email-svishnoi@codeaurora.org> (sfid-20180613_070354_423155_CF92D285)
+        Eylon Pedinovsky <eylon.pedinovsky@broadcom.com>,
+        Jithu Jance <jithu.jance@broadcom.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B166778.5020807@broadcom.com> (sfid-20180605_123544_088123_692EBCDD)
+Date: Tue, 5 Jun 2018 12:35:36 +0200
+MIME-Version: 1.0
+In-Reply-To: <1526977148-11600-1-git-send-email-arend.vanspriel@broadcom.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In non-bmi target ex. WCN3990, data calibration
-is handled via QMI.
+On 5/22/2018 10:19 AM, Arend van Spriel wrote:
+> This small patch series is based on patch originally submitted by Vidyullatha
+> to support driver/firmware roaming for FILS-SK offload. It also reworks the
+> connection response code to reuse the fils parameter structure for the ROAM
+> event.
+>
+> The series is intended for 4.18 and applies to the master branch of the
+> mac80211-next repository.
 
-Skip data calibration in debug routine to enable ath10k
-debugfs for non bmi targets.
+Hi Johannes,
 
-Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/debug.c | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
+Did you miss this series? Any comments?
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 181fd8e..20a465d 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1965,7 +1965,9 @@ int ath10k_debug_start(struct ath10k *ar)
- 			ath10k_warn(ar, "failed to disable pktlog: %d\n", ret);
- 	}
- 
--	if (ar->debug.nf_cal_period) {
-+	if (ar->debug.nf_cal_period &&
-+	    !test_bit(ATH10K_FW_FEATURE_NON_BMI,
-+		      ar->normal_mode_fw.fw_file.fw_features)) {
- 		ret = ath10k_wmi_pdev_set_param(ar,
- 						ar->wmi.pdev_param->cal_period,
- 						ar->debug.nf_cal_period);
-@@ -1982,7 +1984,9 @@ void ath10k_debug_stop(struct ath10k *ar)
- {
- 	lockdep_assert_held(&ar->conf_mutex);
- 
--	ath10k_debug_cal_data_fetch(ar);
-+	if (!test_bit(ATH10K_FW_FEATURE_NON_BMI,
-+		      ar->normal_mode_fw.fw_file.fw_features))
-+		ath10k_debug_cal_data_fetch(ar);
- 
- 	/* Must not use _sync to avoid deadlock, we do that in
- 	 * ath10k_debug_destroy(). The check for htt_stats_mask is to avoid
-@@ -2484,15 +2488,18 @@ int ath10k_debug_register(struct ath10k *ar)
- 	debugfs_create_file("fw_dbglog", 0600, ar->debug.debugfs_phy, ar,
- 			    &fops_fw_dbglog);
- 
--	debugfs_create_file("cal_data", 0400, ar->debug.debugfs_phy, ar,
--			    &fops_cal_data);
-+	if (!test_bit(ATH10K_FW_FEATURE_NON_BMI,
-+		      ar->normal_mode_fw.fw_file.fw_features)) {
-+		debugfs_create_file("cal_data", 0400, ar->debug.debugfs_phy, ar,
-+				    &fops_cal_data);
-+
-+		debugfs_create_file("nf_cal_period", 0600, ar->debug.debugfs_phy, ar,
-+				    &fops_nf_cal_period);
-+	}
- 
- 	debugfs_create_file("ani_enable", 0600, ar->debug.debugfs_phy, ar,
- 			    &fops_ani_enable);
- 
--	debugfs_create_file("nf_cal_period", 0600, ar->debug.debugfs_phy, ar,
--			    &fops_nf_cal_period);
--
- 	if (IS_ENABLED(CONFIG_ATH10K_DFS_CERTIFIED)) {
- 		debugfs_create_file("dfs_simulate_radar", 0200, ar->debug.debugfs_phy,
- 				    ar, &fops_simulate_radar);
--- 
-1.9.1
+Regards,
+Arend
+
+> Arend van Spriel (2):
+>    cfg80211: use separate struct for fils parameters
+>    nl80211: add FILS related parameters to ROAM event
+>
+> Vidyullatha Kanchanapally (1):
+>    nl80211: Update ERP info using NL80211_CMD_UPDATE_CONNECT_PARAMS
+>
+>   include/net/cfg80211.h       | 51 ++++++++++++++++---------
+>   include/uapi/linux/nl80211.h |  6 ++-
+>   net/wireless/core.c          |  4 ++
+>   net/wireless/nl80211.c       | 90 +++++++++++++++++++++++++++++++++++++-------
+>   net/wireless/sme.c           | 88 ++++++++++++++++++++++++++++++-------------
+>   5 files changed, 180 insertions(+), 59 deletions(-)
+>
+> --
+> 1.9.1
+>
