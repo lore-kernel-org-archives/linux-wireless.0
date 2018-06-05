@@ -1,137 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35552 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S934334AbeFVSne (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53964 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751865AbeFEMe4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Jun 2018 14:43:34 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 3/6] brcmfmac: fix for proper support of 160MHz bandwidth
-Date: Fri, 22 Jun 2018 20:43:21 +0200
-Message-Id: <1529693004-20569-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180622_204349_703219_8CEC71B7)
-In-Reply-To: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
+        Tue, 5 Jun 2018 08:34:56 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: andy.gross@linaro.org, bjorn.andersson@linaro.org,
+        david.brown@linaro.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Rakesh Pillai <pillair@codeaurora.org>,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH v2 2/6] ath10k: Add support to create boardname for non-bmi target
+Date: Tue,  5 Jun 2018 18:04:48 +0530
+Message-Id: <20180605123448.32331-1-govinds@codeaurora.org> (sfid-20180605_143501_137117_75E08916)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Decoding of firmware channel information was not complete for 160MHz
-support. This resulted in the following warning:
+From: Rakesh Pillai <pillair@codeaurora.org>
 
-  WARNING: CPU: 2 PID: 2222 at .../broadcom/brcm80211/brcmutil/d11.c:196
-	brcmu_d11ac_decchspec+0x2e/0x100 [brcmutil]
-  Modules linked in: brcmfmac(O) brcmutil(O) sha256_generic cfg80211 ...
-  CPU: 2 PID: 2222 Comm: kworker/2:0 Tainted: G           O
-  4.17.0-wt-testing-x64-00002-gf1bed50 #1
-  Hardware name: Dell Inc. Latitude E6410/07XJP9, BIOS A07 02/15/2011
-  Workqueue: events request_firmware_work_func
-  RIP: 0010:brcmu_d11ac_decchspec+0x2e/0x100 [brcmutil]
-  RSP: 0018:ffffc90000047bd0 EFLAGS: 00010206
-  RAX: 000000000000e832 RBX: ffff8801146fe910 RCX: ffff8801146fd3c0
-  RDX: 0000000000002800 RSI: 0000000000000070 RDI: ffffc90000047c30
-  RBP: ffffc90000047bd0 R08: 0000000000000000 R09: ffffffffa0798c80
-  R10: ffff88012bca55e0 R11: ffff880110a4ea00 R12: ffff8801146f8000
-  R13: ffffc90000047c30 R14: ffff8801146fe930 R15: ffff8801138e02e0
-  FS:  0000000000000000(0000) GS:ffff88012bc80000(0000) knlGS:0000000000000000
-  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-  CR2: 00007f18ce8b8070 CR3: 000000000200a003 CR4: 00000000000206e0
-  Call Trace:
-   brcmf_setup_wiphybands+0x212/0x780 [brcmfmac]
-   brcmf_cfg80211_attach+0xae2/0x11a0 [brcmfmac]
-   brcmf_attach+0x1fc/0x4b0 [brcmfmac]
-   ? __kmalloc+0x13c/0x1c0
-   brcmf_pcie_setup+0x99b/0xe00 [brcmfmac]
-   brcmf_fw_request_done+0x16a/0x1f0 [brcmfmac]
-   request_firmware_work_func+0x36/0x60
-   process_one_work+0x146/0x350
-   worker_thread+0x4a/0x3b0
-   kthread+0x102/0x140
-   ? process_one_work+0x350/0x350
-   ? kthread_bind+0x20/0x20
-   ret_from_fork+0x35/0x40
-  Code: 66 90 0f b7 07 55 48 89 e5 89 c2 88 47 02 88 47 03 66 81 e2 00 38
-	66 81 fa 00 18 74 6e 66 81 fa 00 20 74 39 66 81 fa 00 10 74 14 <0f>
-	0b 66 25 00 c0 74 20 66 3d 00 c0 75 20 c6 47 04 01 5d c3 66
-  ---[ end trace 550c46682415b26d ]---
-  brcmfmac: brcmf_construct_chaninfo: Ignoring unexpected firmware channel 50
+Add support to create the boardname for non-bmi targets
+like WCN3990, which uses qmi for bdf download. This
+boardname is used to parse the board data from board-2.bin.
 
-This patch adds the missing stuff to properly handle this.
-
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
 ---
- .../net/wireless/broadcom/brcm80211/brcmutil/d11.c | 34 +++++++++++++++++++++-
- .../broadcom/brcm80211/include/brcmu_wifi.h        |  2 ++
- 2 files changed, 35 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/core.c | 14 ++++++++++++++
+ drivers/net/wireless/ath/ath10k/core.h |  2 ++
+ 2 files changed, 16 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmutil/d11.c b/drivers/net/wireless/broadcom/brcm80211/brcmutil/d11.c
-index d8b79cb..e7584b8 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmutil/d11.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmutil/d11.c
-@@ -77,6 +77,8 @@ static u16 d11ac_bw(enum brcmu_chan_bw bw)
- 		return BRCMU_CHSPEC_D11AC_BW_40;
- 	case BRCMU_CHAN_BW_80:
- 		return BRCMU_CHSPEC_D11AC_BW_80;
-+	case BRCMU_CHAN_BW_160:
-+		return BRCMU_CHSPEC_D11AC_BW_160;
- 	default:
- 		WARN_ON(1);
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 4cf54a7ef09a..8a592019cc4d 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1429,6 +1429,20 @@ static int ath10k_core_create_board_name(struct ath10k *ar, char *name,
+ 		goto out;
  	}
-@@ -190,8 +192,38 @@ static void brcmu_d11ac_decchspec(struct brcmu_chan *ch)
- 			break;
- 		}
- 		break;
--	case BRCMU_CHSPEC_D11AC_BW_8080:
- 	case BRCMU_CHSPEC_D11AC_BW_160:
-+		switch (ch->sb) {
-+		case BRCMU_CHAN_SB_LLL:
-+			ch->control_ch_num -= CH_70MHZ_APART;
-+			break;
-+		case BRCMU_CHAN_SB_LLU:
-+			ch->control_ch_num -= CH_50MHZ_APART;
-+			break;
-+		case BRCMU_CHAN_SB_LUL:
-+			ch->control_ch_num -= CH_30MHZ_APART;
-+			break;
-+		case BRCMU_CHAN_SB_LUU:
-+			ch->control_ch_num -= CH_10MHZ_APART;
-+			break;
-+		case BRCMU_CHAN_SB_ULL:
-+			ch->control_ch_num += CH_10MHZ_APART;
-+			break;
-+		case BRCMU_CHAN_SB_ULU:
-+			ch->control_ch_num += CH_30MHZ_APART;
-+			break;
-+		case BRCMU_CHAN_SB_UUL:
-+			ch->control_ch_num += CH_50MHZ_APART;
-+			break;
-+		case BRCMU_CHAN_SB_UUU:
-+			ch->control_ch_num += CH_70MHZ_APART;
-+			break;
-+		default:
-+			WARN_ON_ONCE(1);
-+			break;
-+		}
-+		break;
-+	case BRCMU_CHSPEC_D11AC_BW_8080:
- 	default:
- 		WARN_ON_ONCE(1);
- 		break;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/include/brcmu_wifi.h b/drivers/net/wireless/broadcom/brcm80211/include/brcmu_wifi.h
-index 7b9a779..75b2a04 100644
---- a/drivers/net/wireless/broadcom/brcm80211/include/brcmu_wifi.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/include/brcmu_wifi.h
-@@ -29,6 +29,8 @@
- #define CH_UPPER_SB			0x01
- #define CH_LOWER_SB			0x02
- #define CH_EWA_VALID			0x04
-+#define CH_70MHZ_APART			14
-+#define CH_50MHZ_APART			10
- #define CH_30MHZ_APART			6
- #define CH_20MHZ_APART			4
- #define CH_10MHZ_APART			2
+ 
++	if (ar->id.qmi_ids_valid) {
++		if (ar->id.qmi_board_id > 0x99)
++			scnprintf(name, name_len,
++				  "bus=%s,qmi-board-id=%03x",
++				  ath10k_bus_str(ar->hif.bus),
++				  ar->id.qmi_board_id);
++		else
++			scnprintf(name, name_len,
++				  "bus=%s,qmi-board-id=b%02x",
++				  ath10k_bus_str(ar->hif.bus),
++				  ar->id.qmi_board_id);
++		goto out;
++	}
++
+ 	scnprintf(name, name_len,
+ 		  "bus=%s,vendor=%04x,device=%04x,subsystem-vendor=%04x,subsystem-device=%04x%s",
+ 		  ath10k_bus_str(ar->hif.bus),
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 951dbdd1c9eb..0a2e4a5c3612 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -940,7 +940,9 @@ struct ath10k {
+ 		u32 subsystem_device;
+ 
+ 		bool bmi_ids_valid;
++		bool qmi_ids_valid;
+ 		u8 bmi_board_id;
++		u8 qmi_board_id;
+ 		u8 bmi_chip_id;
+ 
+ 		char bdf_ext[ATH10K_SMBIOS_BDF_EXT_STR_LENGTH];
 -- 
-1.9.1
+2.17.0
