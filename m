@@ -1,129 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:39124 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935798AbeF2L7M (ORCPT
+Received: from aserp2130.oracle.com ([141.146.126.79]:35796 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751554AbeFEIgJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 07:59:12 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next 2018-06-29
-Date: Fri, 29 Jun 2018 13:59:05 +0200
-Message-Id: <20180629115906.2045-1-johannes@sipsolutions.net> (sfid-20180629_135922_860219_9A4B4067)
+        Tue, 5 Jun 2018 04:36:09 -0400
+Date: Tue, 5 Jun 2018 11:35:51 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Thibaut Robert <thibaut.robert@gmail.com>
+Cc: Ajay Singh <ajay.kathat@microchip.com>, devel@driverdev.osuosl.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Aditya Shankar <aditya.shankar@microchip.com>
+Subject: Re: [PATCH 1/1] staging: wilc1000: Use common structs to parse ip
+ packets
+Message-ID: <20180605083551.n6kmljbfxfc7vv2c@mwanda> (sfid-20180605_103729_886914_2DB95D14)
+References: <20180529190839.12818-1-thibaut.robert@gmail.com>
+ <20180530112904.x4vcpkdmqhpc7xll@mwanda>
+ <20180604105549.04031722@ajaysk-VirtualBox>
+ <20180604192702.GA32753@L80496>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20180604192702.GA32753@L80496>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Mon, Jun 04, 2018 at 09:27:02PM +0200, Thibaut Robert wrote:
+> Le lundi 04 juin 2018 à 10:55:49 (+0530), Ajay Singh a écrit :
+> > 
+> > Thank you for submitting the patches.
+> > 
+> > The modification in this patch looks okay to me.
+> > Please resend this by including changes as suggested by Dan.
+> > I can do the modification and resubmit this patch by including review
+> > comments, if its okay with you.
+> > 
+> Sorry, I would like to address the comments, but still had no time to do it correctly. I
+> am doing this as a hobby and am still learning so forgive me for the delay. 
+> If you can wait a little bit more, I'll resend an updated version.
+> 
+> Thanks for your time !
 
-Here's the next round of -next updates. This includes the promised
-HE stuff but it's not all that big in the end, most of it is just
-additions to the protocol header file :-)
+When you're a kernel dev, you sometimes do get the feeling that everyone
+is waiting for you.  We're not.  There is no rush.  We read through your
+email and reply and then it's gone from our mind like dust in the wind.
+There is never a rush and you will never run out of more work to do.
 
-Please pull and let me know if there's any problem.
+Plus the merge window is open so Greg won't even look at it for the next
+several weeks.
 
-Thanks,
-johannes
+Take all the time you need.
 
+I normally write a patch, then wait until morning so I can review it
+with fresh eyes before sending it.  If I wait longer than a day, though,
+I forget what the issue is and I have to retest it from scratch.  After
+one day in my outbox a patch gets old and boring so those are low
+quality.  If it's a cleanup patch, I'll probably just delete it instead.
 
-
-The following changes since commit f0dc7f9c6dd99891611fca5849cbc4c6965b690e:
-
-  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2018-06-10 19:25:23 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2018-06-29
-
-for you to fetch changes up to a4217750586975dee7d6dd8829a1be24a7678b3d:
-
-  mac80211: use BIT_ULL for NL80211_STA_INFO_* attribute types (2018-06-29 09:53:09 +0200)
-
-----------------------------------------------------------------
-This round's updates:
- * finally some of the promised HE code, but it turns
-   out to be small - but everything kept changing, so
-   one part I did in the driver was >30 patches for
-   what was ultimately <200 lines of code ... similar
-   here for this code.
- * improved scan privacy support - can now specify scan
-   flags for randomizing the sequence number as well as
-   reducing the probe request element content
- * rfkill cleanups
- * a timekeeping cleanup from Arnd
- * various other cleanups
-
-----------------------------------------------------------------
-Antonio Quartulli (1):
-      nl80211: report 4ADDR status with GET_INTERFACE
-
-Arnd Bergmann (1):
-      cfg80211: track time using boottime
-
-Gustavo A. R. Silva (1):
-      mac80211: fix potential null pointer dereference
-
-Johannes Berg (9):
-      cfg80211: use better order for kcalloc() arguments
-      nl80211: refactor common code in scan flags checks
-      mac80211: add probe request building flags
-      mac80211: split ieee80211_send_probe_req()
-      nl80211: add scan features for improved scan privacy
-      mac80211: support scan features for improved scan privacy
-      ieee80211: bump IEEE80211_MAX_AMPDU_BUF to support HE
-      rfkill: add header files to MAINTAINERS
-      mac80211: remove unnecessary NULL check
-
-Luca Coelho (3):
-      cfg80211: Add support for HE
-      radiotap: add structs for HE
-      mac80211: add support for HE
-
-Omer Efrat (2):
-      cfg80211: use BIT_ULL for NL80211_STA_INFO_* attribute types
-      mac80211: use BIT_ULL for NL80211_STA_INFO_* attribute types
-
-Peter Meerwald (3):
-      rfkill: Correctly document rkill subfolder range as >= 0 in sysfs-class-rfkill
-      rfkill: Fix several typos in documentation
-      rfkill: Fixes and cleanup of kernel-doc in the header file
-
- Documentation/ABI/stable/sysfs-class-rfkill |   6 +-
- Documentation/rfkill.txt                    |  18 +-
- MAINTAINERS                                 |   2 +
- drivers/net/wireless/realtek/rtlwifi/base.c |   2 +-
- drivers/staging/rtl8188eu/include/wifi.h    |   1 -
- drivers/staging/rtl8712/wifi.h              |   1 -
- drivers/staging/rtl8723bs/include/wifi.h    |   1 -
- drivers/staging/rtlwifi/base.c              |   2 +-
- include/linux/ieee80211.h                   | 437 +++++++++++++++++++++++++++-
- include/linux/rfkill.h                      |  20 +-
- include/net/cfg80211.h                      | 106 ++++++-
- include/net/ieee80211_radiotap.h            | 123 ++++++++
- include/net/mac80211.h                      |  64 +++-
- include/uapi/linux/nl80211.h                | 102 ++++++-
- net/mac80211/Makefile                       |   1 +
- net/mac80211/agg-rx.c                       |  10 +-
- net/mac80211/agg-tx.c                       |  19 +-
- net/mac80211/cfg.c                          |   7 +-
- net/mac80211/ethtool.c                      |   6 +-
- net/mac80211/he.c                           |  55 ++++
- net/mac80211/ht.c                           |   2 +-
- net/mac80211/ieee80211_i.h                  |  47 ++-
- net/mac80211/main.c                         |  36 ++-
- net/mac80211/mlme.c                         | 312 ++++++++++++++++++--
- net/mac80211/offchannel.c                   |   2 +-
- net/mac80211/rx.c                           | 129 +++++++-
- net/mac80211/scan.c                         |  56 +++-
- net/mac80211/sta_info.c                     | 101 ++++---
- net/mac80211/sta_info.h                     |  20 +-
- net/mac80211/trace.h                        |   2 +-
- net/mac80211/tx.c                           |  21 +-
- net/mac80211/util.c                         | 159 ++++++++--
- net/wireless/core.c                         |  21 +-
- net/wireless/core.h                         |   2 +-
- net/wireless/nl80211.c                      | 194 +++++++++---
- net/wireless/sysfs.c                        |   4 +-
- net/wireless/util.c                         |  87 +++++-
- net/wireless/wext-compat.c                  |  10 +-
- 38 files changed, 1939 insertions(+), 249 deletions(-)
- create mode 100644 net/mac80211/he.c
+regards,
+dan carpenter
