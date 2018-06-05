@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:43865 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754106AbeFTQWq (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:36898 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751894AbeFEW1b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Jun 2018 12:22:46 -0400
-Received: by mail-oi0-f67.google.com with SMTP id t133-v6so117738oif.10
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2018 09:22:46 -0700 (PDT)
+        Tue, 5 Jun 2018 18:27:31 -0400
+Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail2.candelatech.com (Postfix) with ESMTPSA id 862C940A5ED
+        for <linux-wireless@vger.kernel.org>; Tue,  5 Jun 2018 15:27:28 -0700 (PDT)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Subject: How to let devcoredump know data has been read?
+Message-ID: <6f54d11c-74a5-568a-ba1e-3f37edb28384@candelatech.com> (sfid-20180606_002735_887335_A07EC74D)
+Date: Tue, 5 Jun 2018 15:27:28 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180502093922.GA2677@redhat.com>
-References: <1525094357-24782-1-git-send-email-sgruszka@redhat.com>
- <1525094357-24782-2-git-send-email-sgruszka@redhat.com> <CAOt++SdXt6YQKDZEdNxxEQOZ+sHyw2xjdUQm1DTGWdff-faJUw@mail.gmail.com>
- <20180502093922.GA2677@redhat.com>
-From: Tom Psyborg <pozega.tomislav@gmail.com>
-Date: Wed, 20 Jun 2018 18:22:45 +0200
-Message-ID: <CAKR_QVJUPOujZbo8N55JM8ZMDv3k2syrj2pBHwYJ60bPgHL2XA@mail.gmail.com> (sfid-20180620_182250_342849_C9456F4B)
-Subject: Re: [PATCH 2/2] rt2x00: check against flushing empty queue
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Kofi Agor <nenekofi@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-does it fix mt7620 bug?
+I have been testing ath10k on 4.16, which uses the devcoredump API
+to notify about dumps.
 
-On 02/05/2018, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> Hi
->
-> On Tue, May 01, 2018 at 06:27:17AM -0600, Kofi Agor wrote:
->> I haven't had a chance to test your patch yet, but does it resolve the tx
->> queue flush issues? What platform are you developing/testing on?
->
-> I'm not sure about the issue, but most likely the patch
-> does not fix it. I tested the patch on RT3062 pcie device an
-> RT3071 usb dongle.
->
-> Regards
-> Stanislaw
->
+I am able to see the binary crash dump at /sys/class/devcoredump/devcd2/data,
+for instance, but if I do another crash quickly, I get no new uevent sent
+and no new crash.
+
+I see there is a 5 minute timer on the coredump data, but it also seems to indicate
+that if I read the crash, the data should be cleared and ready to be
+recreated again?  How do you notify the system that the crash data has
+been read?
+
+I tried 'cat' on the data file, but that did not seem to clear anything.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
