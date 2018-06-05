@@ -1,74 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:45748 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932373AbeFLLjh (ORCPT
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:37438 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751775AbeFENTV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Jun 2018 07:39:37 -0400
-Received: by mail-lf0-f68.google.com with SMTP id n3-v6so35484000lfe.12
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2018 04:39:37 -0700 (PDT)
-From: Niklas Cassel <niklas.cassel@linaro.org>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: Niklas Cassel <niklas.cassel@linaro.org>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] ath10k: do not mix spaces and tabs in Kconfig
-Date: Tue, 12 Jun 2018 13:39:05 +0200
-Message-Id: <20180612113907.15043-1-niklas.cassel@linaro.org> (sfid-20180612_133956_598770_235491BB)
+        Tue, 5 Jun 2018 09:19:21 -0400
+MIME-Version: 1.0
+In-Reply-To: <1527765086-19873-7-git-send-email-xieyisheng1@huawei.com>
+References: <1527765086-19873-1-git-send-email-xieyisheng1@huawei.com> <1527765086-19873-7-git-send-email-xieyisheng1@huawei.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Tue, 5 Jun 2018 16:19:20 +0300
+Message-ID: <CAHp75VfDznN0p5pAvVGaR-ntQmpi9kmXyMLhyXT-4XPaFMSV1g@mail.gmail.com> (sfid-20180605_151943_173044_23AA5379)
+Subject: Re: [PATCH v2 06/21] iwlwifi: mvm: use match_string() helper
+To: Yisheng Xie <xieyisheng1@huawei.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not mix spaces and tabs in Kconfig.
+On Thu, May 31, 2018 at 2:11 PM, Yisheng Xie <xieyisheng1@huawei.com> wrote:
+> match_string() returns the index of an array for a matching string,
+> which can be used instead of open coded variant.
+>
 
-Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
----
- drivers/net/wireless/ath/ath10k/Kconfig | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
-index 84f071ac0d84..54ff5930126c 100644
---- a/drivers/net/wireless/ath/ath10k/Kconfig
-+++ b/drivers/net/wireless/ath/ath10k/Kconfig
-@@ -1,15 +1,15 @@
- config ATH10K
--        tristate "Atheros 802.11ac wireless cards support"
--        depends on MAC80211 && HAS_DMA
-+	tristate "Atheros 802.11ac wireless cards support"
-+	depends on MAC80211 && HAS_DMA
- 	select ATH_COMMON
- 	select CRC32
- 	select WANT_DEV_COREDUMP
- 	select ATH10K_CE
--        ---help---
--          This module adds support for wireless adapters based on
--          Atheros IEEE 802.11ac family of chipsets.
-+	---help---
-+	  This module adds support for wireless adapters based on
-+	  Atheros IEEE 802.11ac family of chipsets.
- 
--          If you choose to build a module, it'll be called ath10k.
-+	  If you choose to build a module, it'll be called ath10k.
- 
- config ATH10K_CE
- 	bool
-@@ -41,12 +41,12 @@ config ATH10K_USB
- 	  work in progress and will not fully work.
- 
- config ATH10K_SNOC
--        tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
--        depends on ATH10K && ARCH_QCOM
--        ---help---
--          This module adds support for integrated WCN3990 chip connected
--          to system NOC(SNOC). Currently work in progress and will not
--          fully work.
-+	tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
-+	depends on ATH10K && ARCH_QCOM
-+	---help---
-+	  This module adds support for integrated WCN3990 chip connected
-+	  to system NOC(SNOC). Currently work in progress and will not
-+	  fully work.
- 
- config ATH10K_DEBUG
- 	bool "Atheros ath10k debugging"
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: Intel Linux Wireless <linuxwifi@intel.com>
+> Cc: Johannes Berg <johannes.berg@intel.com>
+> Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
+> ---
+> v2:
+>  - let ret get return value of match_string  - per Andy
+>
+>  drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 13 ++++---------
+>  1 file changed, 4 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+> index 0e6401c..d7ac511 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+> @@ -671,16 +671,11 @@ static ssize_t iwl_dbgfs_bt_cmd_read(struct file *file, char __user *user_buf,
+>         };
+>         int ret, bt_force_ant_mode;
+>
+> -       for (bt_force_ant_mode = 0;
+> -            bt_force_ant_mode < ARRAY_SIZE(modes_str);
+> -            bt_force_ant_mode++) {
+> -               if (!strcmp(buf, modes_str[bt_force_ant_mode]))
+> -                       break;
+> -       }
+> -
+> -       if (bt_force_ant_mode >= ARRAY_SIZE(modes_str))
+> -               return -EINVAL;
+> +       ret = match_string(modes_str, ARRAY_SIZE(modes_str), buf);
+> +       if (ret < 0)
+> +               return ret;
+>
+> +       bt_force_ant_mode = ret;
+>         ret = 0;
+>         mutex_lock(&mvm->mutex);
+>         if (mvm->bt_force_ant_mode == bt_force_ant_mode)
+> --
+> 1.7.12.4
+>
+
+
+
 -- 
-2.17.1
+With Best Regards,
+Andy Shevchenko
