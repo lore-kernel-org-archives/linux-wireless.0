@@ -1,36 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:39500 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754251AbeFPP4a (ORCPT
+Received: from userp2130.oracle.com ([156.151.31.86]:57534 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751622AbeFELkL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Jun 2018 11:56:30 -0400
-Received: by mail-wm0-f66.google.com with SMTP id p11-v6so8502372wmc.4
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Jun 2018 08:56:30 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
+        Tue, 5 Jun 2018 07:40:11 -0400
+Date: Tue, 5 Jun 2018 14:40:01 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: eyalreizer@gmail.com
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/4] add dfs sw pattern detector to mt76x2 driver
-Date: Sat, 16 Jun 2018 17:56:17 +0200
-Message-Id: <20180616155621.30539-1-lorenzo.bianconi@redhat.com> (sfid-20180616_175634_630115_5CC229DA)
+Subject: [bug report] wlcore: sdio: check for valid platform device data
+ before suspend
+Message-ID: <20180605114001.surh4nfayfj7vs4l@kili.mountain> (sfid-20180605_134014_535393_073FE673)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add sw DFS pattern detector support for mt76x2 based devices.
-Dfs pattern supported:
-- short pulse radar patterns
-- staggered radar patterns
+Hello Eyal Reizer,
 
-Lorenzo Bianconi (4):
-  mt76: introduce mt76_{incr,decr} utility routines
-  mt76x2: dfs: add sw event ring buffer
-  mt76x2: dfs: add sw pattern detector
-  mt76x2: debugfs: add sw pulse statistics to dfs debugfs
+The patch 6e91d48371e7: "wlcore: sdio: check for valid platform
+device data before suspend" from May 28, 2018, leads to the following
+static checker warning:
 
- drivers/net/wireless/mediatek/mt76/mt76.h     |  12 +
- .../wireless/mediatek/mt76/mt76x2_debugfs.c   |   8 +
- .../net/wireless/mediatek/mt76/mt76x2_dfs.c   | 378 +++++++++++++++++-
- .../net/wireless/mediatek/mt76/mt76x2_dfs.h   |  60 +++
- 4 files changed, 455 insertions(+), 3 deletions(-)
+	drivers/net/wireless/ti/wlcore/sdio.c:404 wl1271_suspend()
+	warn: missing error code here? 'platform_get_drvdata()' failed. 'ret' = '0'
 
--- 
-2.17.1
+drivers/net/wireless/ti/wlcore/sdio.c
+   391  #ifdef CONFIG_PM
+   392  static int wl1271_suspend(struct device *dev)
+   393  {
+   394          /* Tell MMC/SDIO core it's OK to power down the card
+   395           * (if it isn't already), but not to remove it completely */
+   396          struct sdio_func *func = dev_to_sdio_func(dev);
+   397          struct wl12xx_sdio_glue *glue = sdio_get_drvdata(func);
+   398          struct wl1271 *wl = platform_get_drvdata(glue->core);
+   399          mmc_pm_flag_t sdio_flags;
+   400          int ret = 0;
+   401  
+   402          if (!wl) {
+   403                  dev_err(dev, "no wilink module was probed\n");
+   404                  goto out;
+
+We should set -ENOMEM or something?
+
+   405          }
+   406  
+   407          dev_dbg(dev, "wl1271 suspend. wow_enabled: %d\n",
+   408                  wl->wow_enabled);
+   409  
+   410          /* check whether sdio should keep power */
+   411          if (wl->wow_enabled) {
+   412                  sdio_flags = sdio_get_host_pm_caps(func);
+   413  
+   414                  if (!(sdio_flags & MMC_PM_KEEP_POWER)) {
+   415                          dev_err(dev, "can't keep power while host "
+   416                                       "is suspended\n");
+   417                          ret = -EINVAL;
+   418                          goto out;
+   419                  }
+   420  
+   421                  /* keep power while host suspended */
+   422                  ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
+   423                  if (ret) {
+   424                          dev_err(dev, "error while trying to keep power\n");
+   425                          goto out;
+   426                  }
+   427          }
+   428  out:
+   429          return ret;
+   430  }
+
+regards,
+dan carpenter
