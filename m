@@ -1,93 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:36716 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751915AbeFXOXG (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:53618 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752055AbeFFTC0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Jun 2018 10:23:06 -0400
-Received: by mail-wr0-f194.google.com with SMTP id f16-v6so11043631wrm.3
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jun 2018 07:23:06 -0700 (PDT)
+        Wed, 6 Jun 2018 15:02:26 -0400
+Received: by mail-wm0-f65.google.com with SMTP id x6-v6so13387921wmc.3
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2018 12:02:26 -0700 (PDT)
+Subject: Re: How to let devcoredump know data has been read?
+To: Ben Greear <greearb@candelatech.com>,
+        Brian Norris <briannorris@chromium.org>
+References: <6f54d11c-74a5-568a-ba1e-3f37edb28384@candelatech.com>
+ <20180605225324.GA195207@rodete-desktop-imager.corp.google.com>
+ <cc4346a9-7eb9-3ac1-5568-8fae4ba7a82b@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <aspriel@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B182FC0.3060300@broadcom.com> (sfid-20180606_210231_069158_C06A04A9)
+Date: Wed, 6 Jun 2018 21:02:24 +0200
 MIME-Version: 1.0
-References: <20180619154809.25698-1-zajec5@gmail.com> <5B2960FD.9010604@broadcom.com>
- <779e159dc406dc16b004798756f6ee23@milecki.pl> <5B2D4717.4000509@broadcom.com>
-In-Reply-To: <5B2D4717.4000509@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Sun, 24 Jun 2018 16:20:56 +0200
-Message-ID: <CACna6ry8DZDGMG2DANAxi=rK2qhg2TFvcDniaGrfO3kyK_hxPQ@mail.gmail.com> (sfid-20180624_162312_594184_E3B8DC07)
-Subject: Re: [PATCH V3 0/2] brcmfmac: initial work for adding monitor mode
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
-        <brcm80211-dev-list.pdl@broadcom.com>,"
-        <brcm80211-dev-list@cypress.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <cc4346a9-7eb9-3ac1-5568-8fae4ba7a82b@candelatech.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 22 Jun 2018 at 20:59, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 6/19/2018 10:25 PM, Rafa=C5=82 Mi=C5=82ecki wrote:
-> > On 2018-06-19 22:01, Arend van Spriel wrote:
-> >> On 6/19/2018 5:48 PM, Rafa=C5=82 Mi=C5=82ecki wrote:
-> >>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
-> >>>
-> >>> After a bit long discussions in various e-mail threads I'm coming wit=
-h
-> >>> this simple & small patchset. It isn't complete support for monitor m=
-ode
-> >>> but just a pair of preparing patches that should be clear & well
-> >>> discussed by now to make them acceptable.
-> >>>
-> >>> The main missing bit is code setting MONITOR_FMT_RADIOTAP which I exp=
-ect
-> >>> Arend to handle soon, as he already has a patch using "sta_monitor"
-> >>> iovar for that. Then we have to discuss a flag for marking firmwares
-> >>> which are capable for tagging monitor frames.
-> >>>
-> >>> While still incomplete, I believe that with my previous patches, we c=
-an
-> >>> agree this is a good direction.
-> >>>
-> >>> Arend: if you find these 2 patches OK, could you ack them, to make it
-> >>> clear for Kalle if they look OK now (or not yet)? I'd be great if you
-> >>> could sent your "sta_monitor" work on top of this.
-> >>
-> >> I acked them and I will submit my changes later. Either after these
-> >> are applied or simply indicate the dependency.
-> >>
-> >> Now as for where we are with this. With what we have here we know
-> >> firmware can monitor packets with and without radiotap. However, we do
-> >> not have an indication whether firmware can transport these monitor
-> >> packets to the host. What I need to look into next is whether the
-> >> 802.11 flag in msgbuf is linked to a particular version of the
-> >> protocol, but we may need to resort to the fwid table.
-> >
-> > Being able to detect if firmware tags monitor packets would be great.
+On 6/6/2018 7:04 PM, Ben Greear wrote:
+> On 06/05/2018 03:53 PM, Brian Norris wrote:
+>> Hi,
+>>
+>> On Tue, Jun 05, 2018 at 03:27:28PM -0700, Ben Greear wrote:
+>>> I have been testing ath10k on 4.16, which uses the devcoredump API
+>>> to notify about dumps.
+>>>
+>>> I am able to see the binary crash dump at
+>>> /sys/class/devcoredump/devcd2/data,
+>>> for instance, but if I do another crash quickly, I get no new uevent
+>>> sent
+>>> and no new crash.
+>>>
+>>> I see there is a 5 minute timer on the coredump data, but it also
+>>> seems to indicate
+>>> that if I read the crash, the data should be cleared and ready to be
+>>> recreated again?  How do you notify the system that the crash data has
+>>> been read?
+>>>
+>>> I tried 'cat' on the data file, but that did not seem to clear anything.
+>>
+>> Try *writing* to it?
+>>
+>> https://elixir.bootlin.com/linux/v4.16/source/drivers/base/devcoredump.c#L91
+>>
+>>
+>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=833c95456a70826d1384883b73fd23aff24d366f
+>>
+>>
+>> <quote>
+>> The dumped data will be readable in sysfs in the virtual device's
+>> data file under /sys/class/devcoredump/devcd*/. Writing to it will
+>> free the data and remove the device, as does a 5-minute timeout.
+>> </quote>
+>>
+>> e.g.:
+>>
+>> # ls -l /sys/class/devcoredump/devcd1
+>> lrwxrwxrwx. 1 root root 0 Jun  5 15:49 /sys/class/devcoredump/devcd1
+>> -> ../../devices/virtual/devcoredump/devcd1
+>> # echo 1 > /sys/class/devcoredump/devcd1/data
+>> # ls -l /sys/class/devcoredump/devcd1
+>> ls: cannot access '/sys/class/devcoredump/devcd1': No such file or
+>> directory
 >
-> The 802.11 tag as opposed the 802.3 tag is specified in the PCIe host
-> interface spec. The brcmfmac driver support rev 5 and 6 of that spec and
-> both specify the tags. I did some digging and I believe it is safe to
-> say that firmware that includes the "monitor" tag in the "cap" iovar
-> does support these packets tags as well.
+> Thanks to all who responded.  That indeed works just fine.
+>
+> Just in case you know a quick answer:  I opened a netlink socket to listen
+> to uevents so I would know when FW crashed.  It receives the kernel
+> messages,
+> but also receives 'libudev' events which seem to have some binary header in
+> them (which I could not google any info about how to decode it).  Is there
+> an easy way to tell the socket to not send the libudev events?
 
-OK, this is nice. The problem is we still need some fallback for the
-old firmwares. Only the newest ones specify "monitor" tag in the "cap"
-iovar. Older firmwares don't specify it but they still may include
-support for monitor mode and radiotap header.
+Hi Ben,
 
-> Unfortunately, the
-> BRCMF_C_MONITOR command support does not guarantee. So I just sent a
-> patch to remove the fall-back mechanism for detecting monitor mode suppor=
-t.
+When I was playing with..eh..implementing devcoredump functionality in 
+brcmfmac, I created a small app for it based on [1]. I should have put 
+it under version control so I can not make it easier for you.
 
---
-Rafa=C5=82
+Regards,
+Arend
+
+[1] http://www.signal11.us/oss/udev/
