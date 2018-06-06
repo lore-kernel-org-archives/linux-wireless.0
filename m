@@ -1,32 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([23.128.96.9]:44998 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933132AbeF2NJz (ORCPT
+Received: from mail-pl0-f68.google.com ([209.85.160.68]:34108 "EHLO
+        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752304AbeFFTsX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 09:09:55 -0400
-Date: Fri, 29 Jun 2018 22:09:52 +0900 (KST)
-Message-Id: <20180629.220952.489245164496325184.davem@davemloft.net> (sfid-20180629_151004_975288_F1C3A509)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2018-06-29
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20180629074852.20096-1-johannes@sipsolutions.net>
-References: <20180629074852.20096-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Wed, 6 Jun 2018 15:48:23 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180522212932.5357-2-jprvita@endlessm.com>
+References: <20180522212932.5357-1-jprvita@endlessm.com> <20180522212932.5357-2-jprvita@endlessm.com>
+From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
+Date: Wed, 6 Jun 2018 12:47:42 -0700
+Message-ID: <CA+A7VXVcvhU293-hhGfkjL1evxVju_XednQySxytjF1gNOFehg@mail.gmail.com> (sfid-20180606_214848_133825_387A78BA)
+Subject: Re: [PATCH 2/2] rfkill: Create rfkill-none LED trigger
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: linux@endlessm.com,
+        =?UTF-8?B?TWljaGHFgiBLxJlwaWXFhA==?= <kernel@kempniu.pl>,
+        =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Fri, 29 Jun 2018 09:48:51 +0200
+On Tue, May 22, 2018 at 2:29 PM, Jo=C3=A3o Paulo Rechi Vita
+<jprvita@gmail.com> wrote:
+> Creates a new trigger rfkill-none, as a complement to rfkill-any, which
+> drives LEDs when any radio is enabled. The new trigger is meant to turn
+> a LED ON whenever all radios are OFF, and turn it OFF otherwise.
+>
 
-> Hi Dave,
-> 
-> For the current release, I have a few fixes. No sense waiting
-> for more, and most of these have been around for a while.
-> 
-> Please pull and let me know if there's any problem.
- ...
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2018-06-29
+Johannes, do you have any feedback here? This will be used by
+asus-wireless in the same way fujitsu-laptop uses rfkill-any.
 
-Pulled, thanks a lot.
+--
+Jo=C3=A3o Paulo Rechi Vita
+http://about.me/jprvita
