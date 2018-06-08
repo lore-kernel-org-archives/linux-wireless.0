@@ -1,61 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59220 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753062AbeFIOCD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Jun 2018 10:02:03 -0400
-Date: Sat, 9 Jun 2018 16:01:39 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Carlos Manuel Santos <cmmpsantos@gmail.com>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4] NFC: pn533: don't send USB data off of the stack
-Message-ID: <20180609140139.GA28854@kroah.com> (sfid-20180609_160206_985404_14B16EE2)
-References: <20180520131946.GA7325@kroah.com>
- <20180609095401.GB25115@caravaggio.jf.intel.com>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:38250 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752981AbeFHVkj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Jun 2018 17:40:39 -0400
+Received: by mail-wm0-f67.google.com with SMTP id 69-v6so6070549wmf.3
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jun 2018 14:40:38 -0700 (PDT)
+Subject: Re: [PATCH v2] net-fq: Add WARN_ON check for null flow.
+To: Ben Greear <greearb@candelatech.com>,
+        =?UTF-8?Q?Micha=c5=82_Kazior?= <kazikcz@gmail.com>
+References: <1528415316-6379-1-git-send-email-greearb@candelatech.com>
+ <CAM_iQpULrWMNtgDcrZkc-uLtB0XOVFeZxQ6cFgpXwv7DtA9jzA@mail.gmail.com>
+ <1f11144f-7580-03f4-72bd-76b0907d7ed1@candelatech.com>
+Cc: Cong Wang <xiyou.wangcong@gmail.com>,
+        Linux Kernel Network Developers <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B1AF7D4.9080700@broadcom.com> (sfid-20180608_234042_424710_4AEB8467)
+Date: Fri, 8 Jun 2018 23:40:36 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180609095401.GB25115@caravaggio.jf.intel.com>
+In-Reply-To: <1f11144f-7580-03f4-72bd-76b0907d7ed1@candelatech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 09, 2018 at 11:54:01AM +0200, Samuel Ortiz wrote:
-> Greg,
-> 
-> On Sun, May 20, 2018 at 03:19:46PM +0200, Greg Kroah-Hartman wrote:
-> > It's amazing that this driver ever worked, but now that x86 doesn't
-> > allow USB data to be sent off of the stack, it really does not work at
-> > all.  Fix this up by properly allocating the data for the small
-> > "commands" that get sent to the device off of the stack.
-> > 
-> > We do this for one command by having a whole urb just for ack messages,
-> > as they can be submitted in interrupt context, so we can not use
-> > usb_bulk_msg().  But the poweron command can sleep (and does), so use
-> > usb_bulk_msg() for that transfer.
-> > 
-> > Reported-by: Carlos Manuel Santos <cmmpsantos@gmail.com>
-> > Cc: Samuel Ortiz <sameo@linux.intel.com>
-> > Cc: Stephen Hemminger <stephen@networkplumber.org>
-> > Cc: stable <stable@vger.kernel.org>
-> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > ---
-> > v4: don't use urb transfer buffer flags as the memory is tied to the urb
-> >     (thanks to Johan)  Now we have a new static urb, and we use
-> >     usb_bulk_msg() for the other message.
-> > v3: actually use the correct buffer (thanks to Arend van Spriel)
-> >     use kmemdup (thanks to Johannes Berg and Julia Lawall)
-> > v2: set the urb flags correctly
-> > 
-> >  drivers/nfc/pn533/usb.c |   42 ++++++++++++++++++++++++++++++------------
-> >  1 file changed, 30 insertions(+), 12 deletions(-)
-> I can take that one through nfc-next, and the few subsequent patches
-> from Hans and Julia. Please let me know what's more convenient for you.
+On 6/8/2018 5:17 PM, Ben Greear wrote:
 
-This patch is already in Linus's tree, along with whatever applied from
-Julia's patch series.  Hans needs to rebase and resend anyway, so either
-tree is fine once 4.18-rc1 is out.
+I recalled an email from Michał leaving tieto so adding his alternate 
+email he provided back then.
 
-thanks,
+Gr. AvS
 
-greg k-h
+> On 06/07/2018 04:59 PM, Cong Wang wrote:
+>> On Thu, Jun 7, 2018 at 4:48 PM,  <greearb@candelatech.com> wrote:
+>>> diff --git a/include/net/fq_impl.h b/include/net/fq_impl.h
+>>> index be7c0fa..cb911f0 100644
+>>> --- a/include/net/fq_impl.h
+>>> +++ b/include/net/fq_impl.h
+>>> @@ -78,7 +78,10 @@ static struct sk_buff *fq_tin_dequeue(struct fq *fq,
+>>>                         return NULL;
+>>>         }
+>>>
+>>> -       flow = list_first_entry(head, struct fq_flow, flowchain);
+>>> +       flow = list_first_entry_or_null(head, struct fq_flow,
+>>> flowchain);
+>>> +
+>>> +       if (WARN_ON_ONCE(!flow))
+>>> +               return NULL;
+>>
+>> This does not make sense either. list_first_entry_or_null()
+>> returns NULL only when the list is empty, but we already check
+>> list_empty() right before this code, and it is protected by fq->lock.
+>>
+>
+> Hello Michal,
+>
+> git blame shows you as the author of the fq_impl.h code.
+>
+> I saw a crash when debugging funky ath10k firmware in a 4.16 + hacks
+> kernel.  There was an apparent
+> mostly-null deref in the fq_tin_dequeue method.  According to gdb, it
+> was within
+> 1 line of the dereference of 'flow'.
+>
+> My hack above is probably not that useful.  Cong thinks maybe the
+> locking is bad.
+>
+> If you get a chance, please review this thread and see if you have any
+> ideas for
+> a better fix (or better debugging code).
+>
+> As always, if you would like me to generate you a buggy firmware that
+> will crash
+> in the tx path and cause all sorts of mayhem in the ath10k driver and
+> wifi stack,
+> I will be happy to do so.
+>
+> https://www.mail-archive.com/netdev@vger.kernel.org/msg239738.html
+>
+> Thanks,
+> Ben
+>
