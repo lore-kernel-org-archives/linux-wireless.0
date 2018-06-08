@@ -1,100 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:33147 "EHLO
-        mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751509AbeFWRdP (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50272 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752697AbeFHSeN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Jun 2018 13:33:15 -0400
-Received: by mail-oi0-f46.google.com with SMTP id c6-v6so8929983oiy.0
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Jun 2018 10:33:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAFED-jkt6yoRjvAAJNs2Ob5Rq53s7qa1Ydpy-G2A7gkLDT7V2Q@mail.gmail.com>
-References: <CAFED-jkby2sk9OQnuH5PD8isr0n_CM6Eufs7Ds5fhavYfYdLBw@mail.gmail.com>
- <20180622144809.GA9773@redhat.com> <CAFED-jkt6yoRjvAAJNs2Ob5Rq53s7qa1Ydpy-G2A7gkLDT7V2Q@mail.gmail.com>
-From: Tom Psyborg <pozega.tomislav@gmail.com>
-Date: Sat, 23 Jun 2018 19:33:14 +0200
-Message-ID: <CAKR_QV+c-z_A+8Miikd-zMhShkFT_8UMuZ-wmVRaQ=2C7yb5TA@mail.gmail.com> (sfid-20180623_193320_003109_9B3B3E1F)
-Subject: Re: mt76x2e MCU message 31 timed out
-To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 8 Jun 2018 14:34:13 -0400
+From: Ryan Hsu <ryanhsu@codeaurora.org>
+To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: timur.kristof@gmail.com
+Subject: [PATCH v2] ath10k: Update the phymode along with bandwidth change request
+Date: Fri,  8 Jun 2018 11:32:39 -0700
+Message-Id: <1528482759-12604-1-git-send-email-ryanhsu@codeaurora.org> (sfid-20180608_203416_882362_E25CBD54)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do they sell dual-band version with ext amplifiers? I saw there is
-5GHz version with 25dBm power modification...
+In the case of Station connects to AP with narrower bandwidth at beginning.
+And later the AP changes the bandwidth to winder bandwidth, the AP will
+beacon with wider bandwidth IE, eg VHT20->VHT40->VHT80 or VHT40->VHT80.
 
-On 22/06/2018, Janusz Dziedzic <janusz.dziedzic@gmail.com> wrote:
-> 2018-06-22 16:48 GMT+02:00 Stanislaw Gruszka <sgruszka@redhat.com>:
->> Hi
->>
->> On Fri, Jun 22, 2018 at 10:37:35AM +0200, Janusz Dziedzic wrote:
->>> Have this card in my laptop:
->>> 02:00.0 Network controller: MEDIATEK Corp. Device 7612
->>>
->>> [    8.478104] mt76x2e 0000:02:00.0: ASIC revision: 76120044
->>> [    8.489582] mt76x2e 0000:02:00.0: ROM patch already applied
->>> [    8.833476] mt76x2e 0000:02:00.0: Firmware Version: 0.0.00
->>> [    8.833477] mt76x2e 0000:02:00.0: Build: 1
->>> [    8.833479] mt76x2e 0000:02:00.0: Build Time: 201507311614____
->>> [    8.856115] mt76x2e 0000:02:00.0: Firmware running!
->>> [    9.558075] mt76x2e 0000:02:00.0 wlp2s0: renamed from wlan1
->>
->> I'm just curious. Does the card was installed in the laptop by default?
->> If so what is the model of the laptop?
->>
-> No, I just buy this card on aliexpress and put into some dell (MTK
-> MT7612 2x2 half miniPCIE).
->
->>> Linux test4 4.17.0-rc7+ #5 SMP Mon May 28 12:35:22 CEST 2018 x86_64
->>> GNU/Linux
->>>
->>> Seems iw scan works correctly and first assoc. After will run some
->>> traffic (iperf in such case) get:
->>>
->>> [  432.372081] wlp2s0: associate with 52:b4:f7:f0:16:c2 (try 2/3)
->>> [  432.375255] wlp2s0: RX AssocResp from 52:b4:f7:f0:16:c2
->>> (capab=0x511 status=0 aid=2)
->>> [  432.375336] wlp2s0: associated
->>> [  432.451097] IPv6: ADDRCONF(NETDEV_CHANGE): wlp2s0: link becomes ready
->>> [  522.562157] mt76x2e 0000:02:00.0: MCU message 31 (seq 13) timed out
->>> [  524.610281] mt76x2e 0000:02:00.0: MCU message 31 (seq 14) timed out
->>> [  526.658384] mt76x2e 0000:02:00.0: MCU message 31 (seq 15) timed out
->>> [  528.258455] mt76x2e 0000:02:00.0: MCU message 30 (seq 1) timed out
->>> [  529.282499] mt76x2e 0000:02:00.0: MCU message 30 (seq 2) timed out
->>> [  530.402544] mt76x2e 0000:02:00.0: MCU message 30 (seq 3) timed out
->>> [  531.426587] mt76x2e 0000:02:00.0: MCU message 30 (seq 4) timed out
->>> [  531.427444] wlp2s0: authenticate with 52:b4:f7:f0:14:ac
->>> [  532.450624] mt76x2e 0000:02:00.0: MCU message 30 (seq 5) timed out
->>> [  533.474666] mt76x2e 0000:02:00.0: MCU message 30 (seq 6) timed out
->>> [  534.498709] mt76x2e 0000:02:00.0: MCU message 30 (seq 7) timed out
->>> [  535.522736] mt76x2e 0000:02:00.0: MCU message 30 (seq 8) timed out
->>> [  535.522807] wlp2s0: send auth to 52:b4:f7:f0:14:ac (try 1/3)
->>> [  535.726740] wlp2s0: send auth to 52:b4:f7:f0:14:ac (try 2/3)
->>> [  535.930742] wlp2s0: send auth to 52:b4:f7:f0:14:ac (try 3/3)
->>> [  536.134747] wlp2s0: authentication with 52:b4:f7:f0:14:ac timed out
->>
->> I observed quite similar issue on some rt2800 devices when
->> I applied  this patch:
->> https://github.com/sgruszka/wireless-drivers-next/commit/846d205edd8c36d1b7828fee54bf4cf40bf8cb1a
->> It works on some devices and does not work on others with similar
->> symptoms - correctly associate but stop to work as soon as some
->> data traffic is performed.
->>
->> So, I would check if send IEEE80211_TX_CTL_RATE_CTRL_PROBE frames
->> with qsel = MT_QSEL_EDCA would help.
->>
-> Thanks, will check this.
->
->> Another thing to try is checkout vendor driver and see if there is need
->> to add extra code if device is_mt7612() .
->>
->> Regards
->> Stanislaw
->
->
->
-> --
-> Janusz Dziedzic
->
+Since the supported BANDWIDTH will be limited by the PHYMODE, so while
+Station receives the bandwidth change request, it will also need to
+reconfigure the PHYMODE setting to firmware instead of just configuring
+the BANDWIDTH info, otherwise it'll trigger a firmware crash with
+non-support bandwidth.
+
+The issue was observed in WLAN.RM.4.4.1-00051-QCARMSWP-1, QCA6174 with
+below scenario.
+---
+AP xxx changed bandwidth, new config is 5200 MHz, width 2 (5190/0 MHz)
+disconnect from AP xxx for new auth to yyy
+RX ReassocResp from xxx (capab=0x1111 status=0 aid=102)
+associated
+
+....
+
+AP xxx changed bandwidth, new config is 5200 MHz, width 2 (5190/0 MHz)
+AP xxx changed bandwidth, new config is 5200 MHz, width 3 (5210/0 MHz)
+
+....
+
+firmware register dump:
+[00]: 0x05030000 0x000015B3 0x00987291 0x00955B31
+[04]: 0x00987291 0x00060730 0x00000004 0x00000001
+[08]: 0x004089F0 0x00955A00 0x000A0B00 0x00400000
+[12]: 0x00000009 0x00000000 0x00952CD0 0x00952CE6
+[16]: 0x00952CC4 0x0098E25F 0x00000000 0x0091080D
+[20]: 0x40987291 0x0040E7A8 0x00000000 0x0041EE3C
+[24]: 0x809ABF05 0x0040E808 0x00000000 0xC0987291
+[28]: 0x809A650C 0x0040E948 0x0041FE40 0x004345C4
+[32]: 0x809A5C63 0x0040E988 0x0040E9AC 0x0042D1A8
+[36]: 0x8091D252 0x0040E9A8 0x00000002 0x00000001
+[40]: 0x809FDA9D 0x0040EA58 0x0043D554 0x0042D554
+[44]: 0x809F8B22 0x0040EA78 0x0043D554 0x00000001
+[48]: 0x80911210 0x0040EAC8 0x00000010 0x004041D0
+[52]: 0x80911154 0x0040EB28 0x00400000 0x00000000
+[56]: 0x8091122D 0x0040EB48 0x00000000 0x00400600
+--
+
+Reported-by: Rouven Czerwinski <rouven@czerwinskis.de>
+Signed-off-by: Ryan Hsu <ryanhsu@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 16 ++++++++++++++--
+ drivers/net/wireless/ath/ath10k/wmi.h |  1 +
+ 2 files changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index e9c2fb3..836e0a4 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -6058,8 +6058,19 @@ static void ath10k_sta_rc_update_wk(struct work_struct *wk)
+ 			   ath10k_mac_max_vht_nss(vht_mcs_mask)));
+ 
+ 	if (changed & IEEE80211_RC_BW_CHANGED) {
+-		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac update sta %pM peer bw %d\n",
+-			   sta->addr, bw);
++		enum wmi_phy_mode mode;
++
++		mode = chan_to_phymode(&def);
++		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac update sta %pM peer bw %d phymode %d\n",
++				sta->addr, bw, mode);
++
++		err = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
++				WMI_PEER_PHYMODE, mode);
++		if (err) {
++			ath10k_warn(ar, "failed to update STA %pM peer phymode %d: %d\n",
++					sta->addr, mode, err);
++			goto exit;
++		}
+ 
+ 		err = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
+ 						WMI_PEER_CHAN_WIDTH, bw);
+@@ -6100,6 +6111,7 @@ static void ath10k_sta_rc_update_wk(struct work_struct *wk)
+ 				    sta->addr);
+ 	}
+ 
++exit:
+ 	mutex_unlock(&ar->conf_mutex);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index b48db54..d68afb6 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -6144,6 +6144,7 @@ enum wmi_peer_param {
+ 	WMI_PEER_NSS        = 0x5,
+ 	WMI_PEER_USE_4ADDR  = 0x6,
+ 	WMI_PEER_DEBUG      = 0xa,
++	WMI_PEER_PHYMODE    = 0xd,
+ 	WMI_PEER_DUMMY_VAR  = 0xff, /* dummy parameter for STA PS workaround */
+ };
+ 
+-- 
+1.9.1
