@@ -1,63 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:43126 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751448AbeFZGoZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Jun 2018 02:44:25 -0400
-Subject: Re: [PATCH] NFC: llcp: fix nfc_llcp_send_ui_frame() lockup
-To: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Dmitry Vyukov <dvyukov@google.com>
-Cc: Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Petr Mladek <pmladek@suse.com>,
-        syzkaller-bugs <syzkaller-bugs@googlegroups.com>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        syzbot <syzbot+d29d18215e477cfbfbdd@syzkaller.appspotmail.com>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-References: <20180626044119.30118-1-sergey.senozhatsky@gmail.com>
- <CACT4Y+ZvLqzEwXgdB25MrmAS_j2_HsS8NFaJaMojzMV3prXypg@mail.gmail.com>
- <20180626051221.GC31439@jagdpanzerIV>
-From: Eric Dumazet <eric.dumazet@gmail.com>
-Message-ID: <8c410102-43ab-dfdb-0d71-2ee5951e1af8@gmail.com> (sfid-20180626_084445_698478_0413C805)
-Date: Mon, 25 Jun 2018 23:44:22 -0700
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:35650 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751676AbeFIKKq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 9 Jun 2018 06:10:46 -0400
+Date: Sat, 9 Jun 2018 12:10:44 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Jakub Kicinski <kubakici@wp.pl>, linux-wireless@vger.kernel.org
+Cc: Adam Borowski <kilobyte@angband.pl>
+Subject: [PATCH] mt7601u: remove warning when avg_rssi is zero
+Message-ID: <20180609101043.GA28502@redhat.com> (sfid-20180609_121051_216783_933A0EF6)
 MIME-Version: 1.0
-In-Reply-To: <20180626051221.GC31439@jagdpanzerIV>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+It turned out that we can run calibration without already received
+frames with RSSI data. In such case just don't update AGC register
+and don't print the warning.
 
+Fixes: b305a6ab0247 ("mt7601u: use EWMA to calculate avg_rssi")
+Reported-by: Adam Borowski <kilobyte@angband.pl>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt7601u/phy.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-On 06/25/2018 10:12 PM, Sergey Senozhatsky wrote:
-> On (06/26/18 07:07), Dmitry Vyukov wrote:
-> [..]
->>>  #include <net/nfc/nfc.h>
->>> @@ -755,7 +756,8 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
->>>                 pdu = nfc_alloc_send_skb(sock->dev, &sock->sk, MSG_DONTWAIT,
->>>                                          frag_len + LLCP_HEADER_SIZE, &err);
->>>                 if (pdu == NULL) {
->>> -                       pr_err("Could not allocate PDU\n");
->>> +                       pr_err_ratelimited("Could not allocate PDU\n");
->>> +                       cond_resched();
->>>                         continue;
->>>                 }
->>
->>
->> But this thread is still in an infinite (unkillable?) loop? If yes, we
->> are waiting for the next syzbot report ;)
-> 
-> The loop is still infinite, correct, but we have a preemption point now.
-> Sure, net people can come with a much better solution, I'll be happy to
-> scratch my patch.
-> 
-
-This can not be the right solution, think about current thread being real time,
-cond_resched() might be a nop.
-
-We should probably not loop at all, or not use MSG_DONTWAIT.
-
-(And remove this useless "Could not allocate PDU" message)
-
-NFC maintainers should really take a look at this.
+diff --git a/drivers/net/wireless/mediatek/mt7601u/phy.c b/drivers/net/wireless/mediatek/mt7601u/phy.c
+index d440c550bdb1..3ffc8d19285b 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/phy.c
++++ b/drivers/net/wireless/mediatek/mt7601u/phy.c
+@@ -985,13 +985,15 @@ static void mt7601u_agc_tune(struct mt7601u_dev *dev)
+ 	 */
+ 	spin_lock_bh(&dev->con_mon_lock);
+ 	avg_rssi = ewma_rssi_read(&dev->avg_rssi);
+-	WARN_ON_ONCE(avg_rssi == 0);
++	spin_unlock_bh(&dev->con_mon_lock);
++	if (avg_rssi == 0)
++		return;
++
+ 	avg_rssi = -avg_rssi;
+ 	if (avg_rssi <= -70)
+ 		val -= 0x20;
+ 	else if (avg_rssi <= -60)
+ 		val -= 0x10;
+-	spin_unlock_bh(&dev->con_mon_lock);
+ 
+ 	if (val != mt7601u_bbp_rr(dev, 66))
+ 		mt7601u_bbp_wr(dev, 66, val);
+-- 
+1.9.3
