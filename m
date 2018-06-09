@@ -1,119 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55062 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935798AbeF2L54 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 07:57:56 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mga12.intel.com ([192.55.52.136]:39320 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751344AbeFIJyP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 9 Jun 2018 05:54:15 -0400
+Date: Sat, 9 Jun 2018 11:54:01 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Carlos Manuel Santos <cmmpsantos@gmail.com>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v4] NFC: pn533: don't send USB data off of the stack
+Message-ID: <20180609095401.GB25115@caravaggio.jf.intel.com> (sfid-20180609_115418_991856_9AFF1919)
+References: <20180520131946.GA7325@kroah.com>
 MIME-Version: 1.0
-Subject: Re: ath10k: use locked skb_dequeue for rx completions
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180621122548.23863-1-me@bobcopeland.com>
-References: <20180621122548.23863-1-me@bobcopeland.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        kernel-team@fb.com, Bob Copeland <me@bobcopeland.com>,
-        Bob Copeland <bobcopeland@fb.com>
-Message-Id: <20180629115755.C42BD60274@smtp.codeaurora.org> (sfid-20180629_135801_291030_DB8EC856)
-Date: Fri, 29 Jun 2018 11:57:55 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180520131946.GA7325@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland <me@bobcopeland.com> wrote:
+Greg,
 
-> In our environment we are occasionally seeing the following stack trace
-> in ath10k:
+On Sun, May 20, 2018 at 03:19:46PM +0200, Greg Kroah-Hartman wrote:
+> It's amazing that this driver ever worked, but now that x86 doesn't
+> allow USB data to be sent off of the stack, it really does not work at
+> all.  Fix this up by properly allocating the data for the small
+> "commands" that get sent to the device off of the stack.
 > 
-> Unable to handle kernel paging request at virtual address 0000a800
-> pgd = c0204000
-> [0000a800] *pgd=00000000
-> Internal error: Oops: 17 [#1] SMP ARM
-> Modules linked in: dwc3 dwc3_of_simple phy_qcom_dwc3 nf_nat xt_connmark
-> CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.9.31 #2
-> Hardware name: Generic DT based system
-> task: c09f4f40 task.stack: c09ee000
-> PC is at kfree_skb_list+0x1c/0x2c
-> LR is at skb_release_data+0x6c/0x108
-> pc : [<c065dcc4>]    lr : [<c065da5c>]    psr: 200f0113
-> sp : c09efb68  ip : c09efb80  fp : c09efb7c
-> r10: 00000000  r9 : 00000000  r8 : 043fddd1
-> r7 : bf15d160  r6 : 00000000  r5 : d4ca2f00  r4 : ca7c6480
-> r3 : 000000a0  r2 : 01000000  r1 : c0a57470  r0 : 0000a800
-> Flags: nzCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment none
-> Control: 10c5787d  Table: 56e6006a  DAC: 00000051
-> Process swapper/0 (pid: 0, stack limit = 0xc09ee210)
-> Stack: (0xc09efb68 to 0xc09f0000)
-> fb60:                   ca7c6480 d4ca2f00 c09efb9c c09efb80 c065da5c c065dcb4
-> fb80: d4ca2f00 00000000 dcbf8400 bf15d160 c09efbb4 c09efba0 c065db28 c065d9fc
-> fba0: d4ca2f00 00000000 c09efbcc c09efbb8 c065db48 c065db04 d4ca2f00 00000000
-> fbc0: c09efbe4 c09efbd0 c065ddd0 c065db38 d4ca2f00 00000000 c09efc64 c09efbe8
-> fbe0: bf09bd00 c065dd10 00000003 7fffffff c09efc24 dcbfc9c0 01200000 00000000
-> fc00: 00000000 00000000 ddb7e440 c09e9440 c09efc48 1d195000 c09efc7c c09efc28
-> fc20: c027bb68 c028aa00 ddb7e4f8 bf13231c ddb7e454 0004091f bf154571 d4ca2f00
-> fc40: dcbf8d00 ca7c5df6 bf154538 01200000 00000000 bf154538 c09efd1c c09efc68
-> fc60: bf132458 bf09bbbc ca7c5dec 00000041 bf154538 bf154539 000007bf bf154545
-> fc80: bf154538 bf154538 bf154538 bf154538 bf154538 00000000 00000000 000016c1
-> fca0: 00000001 c09efcb0 01200000 00000000 00000000 00000000 00000000 00000001
-> fcc0: bf154539 00000041 00000000 00000007 00000000 000000d0 ffffffff 3160ffff
-> fce0: 9ad93e97 3e973160 7bf09ad9 0004091f d4ca2f00 c09efdb0 dcbf94e8 00000000
-> fd00: dcbf8d00 01200000 00000000 dcbf8d00 c09efd44 c09efd20 bf132544 bf132130
-> fd20: dcbf8d00 00000000 d4ca2f00 c09efdb0 00000001 d4ca2f00 c09efdec c09efd48
-> fd40: bf133630 bf1324d0 ca7c5cc0 000007c0 c09efd88 c09efd70 c0764230 c02277d8
-> fd60: 200f0113 ffffffff dcbf94c8 bf000000 dcbf93b0 dcbf8d00 00000040 dcbf945c
-> fd80: dcbf94e8 00000000 c09efdcc 00000000 c09efd90 c09efd90 00000000 00000024
-> fda0: dcbf8d00 00000000 00000005 dcbf8d00 c09efdb0 c09efdb0 00000000 00000040
-> fdc0: c09efdec dcbf8d00 dcbfc9c0 c09ed140 00000040 00000000 00000100 00000040
-> fde0: c09efe14 c09efdf0 bf1739b4 bf132840 dcbfc9c0 ddb82140 c09ed140 1d195000
-> fe00: 00000001 00000100 c09efe64 c09efe18 c067136c bf173958 ddb7fac8 c09f0d00
-> fe20: 001df678 0000012c c09efe28 c09efe28 c09efe30 c09efe30 c0a7fb28 ffffe000
-> fe40: c09f008c 00000003 00000008 c0a598c0 00000100 c09f0080 c09efeb4 c09efe68
-> fe60: c02096e0 c0671278 c0494584 00000080 dd5c3300 c09f0d00 00000004 001df677
-> fe80: 0000000a 00200100 dd5c3300 00000000 00000000 c09eaa70 00000060 dd410800
-> fea0: c09ee000 00000000 c09efecc c09efeb8 c0227944 c02094c4 00000000 00000000
-> fec0: c09efef4 c09efed0 c0268b64 c02278ac de802000 c09f1b1c c09eff20 c0a16cc0
-> fee0: de803000 c09ee000 c09eff1c c09efef8 c020947c c0268ae0 c02103dc 600f0013
-> ff00: ffffffff c09eff54 ffffe000 c09ee000 c09eff7c c09eff20 c021448c c0209424
-> ff20: 00000001 00000000 00000000 c021ddc0 00000000 00000000 c09f1024 00000001
-> ff40: ffffe000 c09f1078 00000000 c09eff7c c09eff80 c09eff70 c02103ec c02103dc
-> ff60: 600f0013 ffffffff 00000051 00000000 c09eff8c c09eff80 c0763cc4 c02103bc
-> ff80: c09effa4 c09eff90 c025f0e4 c0763c98 c0a59040 c09f1000 c09effb4 c09effa8
-> ffa0: c075efe0 c025efd4 c09efff4 c09effb8 c097dcac c075ef7c ffffffff ffffffff
-> ffc0: 00000000 c097d6c4 00000000 c09c1a28 c0a59294 c09f101c c09c1a24 c09f61c0
-> ffe0: 4220406a 512f04d0 00000000 c09efff8 4220807c c097d95c 00000000 00000000
-> [<c065dcc4>] (kfree_skb_list) from [<c065da5c>] (skb_release_data+0x6c/0x108)
-> [<c065da5c>] (skb_release_data) from [<c065db28>] (skb_release_all+0x30/0x34)
-> [<c065db28>] (skb_release_all) from [<c065db48>] (__kfree_skb+0x1c/0x9c)
-> [<c065db48>] (__kfree_skb) from [<c065ddd0>] (consume_skb+0xcc/0xd8)
-> [<c065ddd0>] (consume_skb) from [<bf09bd00>] (ieee80211_rx_napi+0x150/0x82c [mac80211])
-> [<bf09bd00>] (ieee80211_rx_napi [mac80211]) from [<bf132458>] (ath10k_htt_t2h_msg_handler+0x15e8/0x19c4 [ath10k_core])
-> [<bf132458>] (ath10k_htt_t2h_msg_handler [ath10k_core]) from [<bf132544>] (ath10k_htt_t2h_msg_handler+0x16d4/0x19c4 [ath10k_core])
-> [<bf132544>] (ath10k_htt_t2h_msg_handler [ath10k_core]) from [<bf133630>] (ath10k_htt_txrx_compl_task+0xdfc/0x12cc [ath10k_core])
-> [<bf133630>] (ath10k_htt_txrx_compl_task [ath10k_core]) from [<bf1739b4>] (ath10k_pci_napi_poll+0x68/0xf4 [ath10k_pci])
-> [<bf1739b4>] (ath10k_pci_napi_poll [ath10k_pci]) from [<c067136c>] (net_rx_action+0x100/0x33c)
-> [<c067136c>] (net_rx_action) from [<c02096e0>] (__do_softirq+0x228/0x31c)
-> [<c02096e0>] (__do_softirq) from [<c0227944>] (irq_exit+0xa4/0x114)
+> We do this for one command by having a whole urb just for ack messages,
+> as they can be submitted in interrupt context, so we can not use
+> usb_bulk_msg().  But the poweron command can sleep (and does), so use
+> usb_bulk_msg() for that transfer.
 > 
-> The trace points to a corrupt skb inside kfree_skb(), seemingly because
-> one of the shared skb queues is getting corrupted.  Most of the skb queues
-> ath10k uses are local to a single call stack, but three are shared among
-> multiple codepaths:
+> Reported-by: Carlos Manuel Santos <cmmpsantos@gmail.com>
+> Cc: Samuel Ortiz <sameo@linux.intel.com>
+> Cc: Stephen Hemminger <stephen@networkplumber.org>
+> Cc: stable <stable@vger.kernel.org>
+> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> ---
+> v4: don't use urb transfer buffer flags as the memory is tied to the urb
+>     (thanks to Johan)  Now we have a new static urb, and we use
+>     usb_bulk_msg() for the other message.
+> v3: actually use the correct buffer (thanks to Arend van Spriel)
+>     use kmemdup (thanks to Johannes Berg and Julia Lawall)
+> v2: set the urb flags correctly
 > 
->  - rx_msdus_q,
->  - rx_in_ord_compl_q, and
->  - tx_fetch_ind_q
-> 
-> Of the three, the first two are manipulated using the unlocked skb_queue
-> functions without any additional lock protecting them.  Use the locked
-> variants of skb_queue_* functions to protect these manipulations.
-> 
-> Signed-off-by: Bob Copeland <bobcopeland@fb.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+>  drivers/nfc/pn533/usb.c |   42 ++++++++++++++++++++++++++++++------------
+>  1 file changed, 30 insertions(+), 12 deletions(-)
+I can take that one through nfc-next, and the few subsequent patches
+from Hans and Julia. Please let me know what's more convenient for you.
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-62652555c616 ath10k: use locked skb_dequeue for rx completions
-
--- 
-https://patchwork.kernel.org/patch/10479827/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Cheers,
+Samuel.
