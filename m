@@ -1,48 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr60108.outbound.protection.outlook.com ([40.107.6.108]:35568
-        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754764AbeFNKMY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Jun 2018 06:12:24 -0400
-From: Omer Efrat <omer.efrat@tandemg.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, b.a.t.m.a.n@lists.open-mesh.org,
-        Omer Efrat <omer.efrat@tandemg.com>
-Subject: [PATCH v2 3/5] batman: use BIT_ULL for NL80211_STA_INFO_* attribute types
-Date: Thu, 14 Jun 2018 13:12:17 +0300
-Message-Id: <1528971137-432-1-git-send-email-omer.efrat@tandemg.com> (sfid-20180614_121232_343151_20D9026F)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from paleale.coelho.fi ([176.9.41.70]:48138 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751505AbeFIGOz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 9 Jun 2018 02:14:55 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, arend.vanspriel@broadcom.com,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Ilan Peer <ilan.peer@intel.com>,
+        Ido Yariv <idox.yariv@intel.com>
+Date: Sat,  9 Jun 2018 09:14:43 +0300
+Message-Id: <20180609061444.2859-3-luca@coelho.fi> (sfid-20180609_081610_140792_A09B227D)
+In-Reply-To: <20180609061444.2859-1-luca@coelho.fi>
+References: <20180609061444.2859-1-luca@coelho.fi>
+Subject: [PATCH V3 2/3] radiotap: add structs for HE
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since 'filled' member in station_info changed to u64, BIT_ULL macro
-should be used with NL80211_STA_INFO_* attribute types instead of BIT.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-The BIT macro uses unsigned long type which some architectures handle as 32bit
-and this results in compilation warnings such as:
+Add radiotap structures for HE.
 
-net/mac80211/sta_info.c:2223:2: warning: left shift count >= width of type
-  sinfo->filled |= BIT(NL80211_STA_INFO_TID_STATS);
-  ^
-
-Signed-off-by: Omer Efrat <omer.efrat@tandemg.com>
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Ido Yariv <idox.yariv@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/batman-adv/bat_v_elp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/net/ieee80211_radiotap.h | 111 +++++++++++++++++++++++++++++++
+ 1 file changed, 111 insertions(+)
 
-diff --git a/net/batman-adv/bat_v_elp.c b/net/batman-adv/bat_v_elp.c
-index 71c20c1..71e6474 100644
---- a/net/batman-adv/bat_v_elp.c
-+++ b/net/batman-adv/bat_v_elp.c
-@@ -114,7 +114,7 @@ static u32 batadv_v_elp_get_throughput(struct batadv_hardif_neigh_node *neigh)
- 		}
- 		if (ret)
- 			goto default_throughput;
--		if (!(sinfo.filled & BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
-+		if (!(sinfo.filled & BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
- 			goto default_throughput;
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index 960236fb1681..2117b2cea598 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2017		Intel Deutschland GmbH
++ * Copyright (c) 2018		Intel Corporation
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -72,6 +73,8 @@ enum ieee80211_radiotap_presence {
+ 	IEEE80211_RADIOTAP_AMPDU_STATUS = 20,
+ 	IEEE80211_RADIOTAP_VHT = 21,
+ 	IEEE80211_RADIOTAP_TIMESTAMP = 22,
++	IEEE80211_RADIOTAP_HE = 23,
++	IEEE80211_RADIOTAP_HE_MU = 24,
  
- 		return sinfo.expected_throughput / 100;
+ 	/* valid in every it_present bitmap, even vendor namespaces */
+ 	IEEE80211_RADIOTAP_RADIOTAP_NAMESPACE = 29,
+@@ -202,6 +205,114 @@ enum ieee80211_radiotap_timestamp_flags {
+ 	IEEE80211_RADIOTAP_TIMESTAMP_FLAG_ACCURACY = 0x02,
+ };
+ 
++struct ieee80211_radiotap_he {
++	__le16 data1, data2, data3, data4, data5, data6;
++};
++
++enum ieee80211_radiotap_he_bits {
++	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_MASK		= 3,
++	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_SU		= 0,
++	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_EXT_SU	= 1,
++	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_MU		= 2,
++	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_TRIG		= 3,
++
++	IEEE80211_RADIOTAP_HE_DATA1_BSS_COLOR_KNOWN	= 0x0004,
++	IEEE80211_RADIOTAP_HE_DATA1_BEAM_CHANGE_KNOWN	= 0x0008,
++	IEEE80211_RADIOTAP_HE_DATA1_UL_DL_KNOWN		= 0x0010,
++	IEEE80211_RADIOTAP_HE_DATA1_DATA_MCS_KNOWN	= 0x0020,
++	IEEE80211_RADIOTAP_HE_DATA1_DATA_DCM_KNOWN	= 0x0040,
++	IEEE80211_RADIOTAP_HE_DATA1_CODING_KNOWN	= 0x0080,
++	IEEE80211_RADIOTAP_HE_DATA1_LDPC_XSYMSEG_KNOWN	= 0x0100,
++	IEEE80211_RADIOTAP_HE_DATA1_STBC_KNOWN		= 0x0200,
++	IEEE80211_RADIOTAP_HE_DATA1_SPTL_REUSE_KNOWN	= 0x0400,
++	IEEE80211_RADIOTAP_HE_DATA1_SPTL_REUSE2_KNOWN	= 0x0800,
++	IEEE80211_RADIOTAP_HE_DATA1_SPTL_REUSE3_KNOWN	= 0x1000,
++	IEEE80211_RADIOTAP_HE_DATA1_SPTL_REUSE4_KNOWN	= 0x2000,
++	IEEE80211_RADIOTAP_HE_DATA1_BW_RU_ALLOC_KNOWN	= 0x4000,
++	IEEE80211_RADIOTAP_HE_DATA1_DOPPLER_KNOWN	= 0x8000,
++
++	IEEE80211_RADIOTAP_HE_DATA2_PRISEC_80_KNOWN	= 0x0001,
++	IEEE80211_RADIOTAP_HE_DATA2_GI_KNOWN		= 0x0002,
++	IEEE80211_RADIOTAP_HE_DATA2_NUM_LTF_SYMS_KNOWN	= 0x0004,
++	IEEE80211_RADIOTAP_HE_DATA2_PRE_FEC_PAD_KNOWN	= 0x0008,
++	IEEE80211_RADIOTAP_HE_DATA2_TXBF_KNOWN		= 0x0010,
++	IEEE80211_RADIOTAP_HE_DATA2_PE_DISAMBIG_KNOWN	= 0x0020,
++	IEEE80211_RADIOTAP_HE_DATA2_TXOP_KNOWN		= 0x0040,
++	IEEE80211_RADIOTAP_HE_DATA2_MIDAMBLE_KNOWN	= 0x0080,
++	IEEE80211_RADIOTAP_HE_DATA2_RU_OFFSET		= 0x3f00,
++	IEEE80211_RADIOTAP_HE_DATA2_RU_OFFSET_KNOWN	= 0x4000,
++	IEEE80211_RADIOTAP_HE_DATA2_PRISEC_80_SEC	= 0x8000,
++
++	IEEE80211_RADIOTAP_HE_DATA3_BSS_COLOR		= 0x003f,
++	IEEE80211_RADIOTAP_HE_DATA3_BEAM_CHANGE		= 0x0040,
++	IEEE80211_RADIOTAP_HE_DATA3_UL_DL		= 0x0080,
++	IEEE80211_RADIOTAP_HE_DATA3_DATA_MCS		= 0x0f00,
++	IEEE80211_RADIOTAP_HE_DATA3_DATA_DCM		= 0x1000,
++	IEEE80211_RADIOTAP_HE_DATA3_CODING		= 0x2000,
++	IEEE80211_RADIOTAP_HE_DATA3_LDPC_XSYMSEG	= 0x4000,
++	IEEE80211_RADIOTAP_HE_DATA3_STBC		= 0x8000,
++
++	IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC	= 0x000f,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_20MHZ	= 0,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_40MHZ	= 1,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_80MHZ	= 2,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_160MHZ	= 3,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_26T	= 4,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_52T	= 5,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_106T	= 6,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_242T	= 7,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_484T	= 8,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_996T	= 9,
++		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_2x996T	= 10,
++
++	IEEE80211_RADIOTAP_HE_DATA5_GI			= 0x0030,
++		IEEE80211_RADIOTAP_HE_DATA5_GI_0_8			= 0,
++		IEEE80211_RADIOTAP_HE_DATA5_GI_1_6			= 1,
++		IEEE80211_RADIOTAP_HE_DATA5_GI_3_2			= 2,
++
++	IEEE80211_RADIOTAP_HE_DATA5_NUM_LTF_SYMS	= 0x0700,
++	IEEE80211_RADIOTAP_HE_DATA5_PRE_FEC_PAD		= 0x3000,
++	IEEE80211_RADIOTAP_HE_DATA5_TXBF		= 0x4000,
++	IEEE80211_RADIOTAP_HE_DATA5_PE_DISAMBIG		= 0x8000,
++
++	IEEE80211_RADIOTAP_HE_DATA6_NSTS		= 0x000f,
++	IEEE80211_RADIOTAP_HE_DATA6_DOPPLER		= 0x0010,
++	IEEE80211_RADIOTAP_HE_DATA6_TXOP		= 0x7f00,
++	IEEE80211_RADIOTAP_HE_DATA6_MIDAMBLE_PDCTY	= 0x8000,
++};
++
++struct ieee80211_radiotap_he_mu {
++	__le16 flags1, flags2;
++	u8 ru_ch1[4];
++	u8 ru_ch2[4];
++};
++
++enum ieee80211_radiotap_he_mu_bits {
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_MCS		= 0x000f,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_MCS_KNOWN		= 0x0010,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_DCM		= 0x0020,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_DCM_KNOWN		= 0x0040,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH2_CTR_26T_RU_KNOWN	= 0x0080,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH1_RU_KNOWN		= 0x0100,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH2_RU_KNOWN		= 0x0200,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH1_CTR_26T_RU_KNOWN	= 0x1000,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH1_CTR_26T_RU		= 0x2000,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_COMP_KNOWN	= 0x4000,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_SYMS_USERS_KNOWN	= 0x8000,
++
++	IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW	= 0x0003,
++		IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_20MHZ	= 0x0000,
++		IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_40MHZ	= 0x0001,
++		IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_80MHZ	= 0x0002,
++		IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_160MHZ	= 0x0003,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_KNOWN	= 0x0004,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS2_SIG_B_COMP		= 0x0008,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS2_SIG_B_SYMS_USERS	= 0x00f0,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS2_PUNC_FROM_SIG_A_BW	= 0x0300,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS2_PUNC_FROM_SIG_A_BW_KNOWN= 0x0400,
++	IEEE80211_RADIOTAP_HE_MU_FLAGS2_CH2_CTR_26T_RU		= 0x0800,
++};
++
+ /**
+  * ieee80211_get_radiotap_len - get radiotap header length
+  */
 -- 
-2.7.4
+2.17.1
