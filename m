@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52484 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934466AbeFMK7g (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jun 2018 06:59:36 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCH 0/4] cfg80211/mac80211: Add support to configure and monitor txrate threshold
-Date: Wed, 13 Jun 2018 16:28:55 +0530
-Message-Id: <1528887539-26821-1-git-send-email-tamizhr@codeaurora.org> (sfid-20180613_125951_371810_F0A8C5A0)
+Received: from mga14.intel.com ([192.55.52.115]:28350 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751757AbeFIJwC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 9 Jun 2018 05:52:02 -0400
+Date: Sat, 9 Jun 2018 11:51:46 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Amit Pundir <amit.pundir@linaro.org>
+Cc: lkml <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org,
+        Suren Baghdasaryan <surenb@google.com>,
+        Christophe Ricard <christophe.ricard@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        John Stultz <john.stultz@linaro.org>,
+        Dmitry Shmidt <dimitrysh@google.com>,
+        Todd Kjos <tkjos@google.com>,
+        Android Kernel Team <kernel-team@android.com>,
+        Stable <stable@vger.kernel.org>
+Subject: Re: [PATCH v3 1/4] NFC: st21nfca: Fix out of bounds kernel access
+ when handling ATR_REQ
+Message-ID: <20180609095146.GA25115@caravaggio.jf.intel.com> (sfid-20180609_115220_619331_F7B5EE66)
+References: <1525372736-25094-1-git-send-email-amit.pundir@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1525372736-25094-1-git-send-email-amit.pundir@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchsets introduced new NL command and api to support
-configuring txrate threshold for the connected stations and api to
-notify userspace application upon crossing the configured txrate threshold.
-This will be useful for the application which requires
-station's current capability change information.
+Hi Amit,
 
-Tamizh chelvam (4):
-  cfg80211: Add support to configure station specific txrate threshold
-  mac80211: Add api to configure low and high txrate threshold
-  cfg80211: Add support to notify station's txrate crossing event
-  mac80211: Implement functionality to monitor txrate cross event for a
-    station
+On Fri, May 04, 2018 at 12:08:53AM +0530, Amit Pundir wrote:
+> From: Suren Baghdasaryan <surenb@google.com>
+> 
+> Out of bounds kernel accesses in st21nfca's NFC HCI layer
+> might happen when handling ATR_REQ events if user-specified
+> atr_req->length is bigger than the buffer size. In
+> that case memcpy() inside st21nfca_tm_send_atr_res() will
+> read extra bytes resulting in OOB read from the kernel heap.
+> 
+> cc: Stable <stable@vger.kernel.org>
+> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+> Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
+> Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+> v3..v1:
+> Resend. No changes.
+> 
+>  drivers/nfc/st21nfca/dep.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+All 4 patches applied to nfc-next, thanks.
 
-Note:
-  * This patchset rebased on top of below patchset
-    [PATCH 0/7] cfg80211/mac80211: Add support to configure and monitor rssi threshold
-
- include/net/cfg80211.h       |   26 ++++++++++++++
- include/net/mac80211.h       |    5 +++
- include/uapi/linux/nl80211.h |   34 ++++++++++++++++++
- net/mac80211/cfg.c           |   36 +++++++++++++++++++
- net/mac80211/sta_info.h      |   17 +++++++++
- net/mac80211/status.c        |   40 +++++++++++++++++++++-
- net/wireless/nl80211.c       |   78 ++++++++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      |   17 +++++++++
- net/wireless/trace.h         |   50 +++++++++++++++++++++++++++
- 9 files changed, 302 insertions(+), 1 deletion(-)
-
--- 
-1.7.9.5
+Cheers,
+Samuel.
