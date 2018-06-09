@@ -1,196 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52142 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752242AbeF3NXp (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Jun 2018 09:23:45 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 30 Jun 2018 16:23:24 +0300
-Message-Id: <20180630132330.14928-10-luca@coelho.fi> (sfid-20180630_152353_343900_DD8266D5)
-In-Reply-To: <20180630132330.14928-1-luca@coelho.fi>
-References: <20180630132330.14928-1-luca@coelho.fi>
-Subject: [PATCH 09/15] iwlwifi: update gen3 interrupts - sw error and image response
+Received: from mail.kernel.org ([198.145.29.99]:59220 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753062AbeFIOCD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 9 Jun 2018 10:02:03 -0400
+Date: Sat, 9 Jun 2018 16:01:39 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Carlos Manuel Santos <cmmpsantos@gmail.com>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v4] NFC: pn533: don't send USB data off of the stack
+Message-ID: <20180609140139.GA28854@kroah.com> (sfid-20180609_160206_985404_14B16EE2)
+References: <20180520131946.GA7325@kroah.com>
+ <20180609095401.GB25115@caravaggio.jf.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180609095401.GB25115@caravaggio.jf.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+On Sat, Jun 09, 2018 at 11:54:01AM +0200, Samuel Ortiz wrote:
+> Greg,
+> 
+> On Sun, May 20, 2018 at 03:19:46PM +0200, Greg Kroah-Hartman wrote:
+> > It's amazing that this driver ever worked, but now that x86 doesn't
+> > allow USB data to be sent off of the stack, it really does not work at
+> > all.  Fix this up by properly allocating the data for the small
+> > "commands" that get sent to the device off of the stack.
+> > 
+> > We do this for one command by having a whole urb just for ack messages,
+> > as they can be submitted in interrupt context, so we can not use
+> > usb_bulk_msg().  But the poweron command can sleep (and does), so use
+> > usb_bulk_msg() for that transfer.
+> > 
+> > Reported-by: Carlos Manuel Santos <cmmpsantos@gmail.com>
+> > Cc: Samuel Ortiz <sameo@linux.intel.com>
+> > Cc: Stephen Hemminger <stephen@networkplumber.org>
+> > Cc: stable <stable@vger.kernel.org>
+> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > ---
+> > v4: don't use urb transfer buffer flags as the memory is tied to the urb
+> >     (thanks to Johan)  Now we have a new static urb, and we use
+> >     usb_bulk_msg() for the other message.
+> > v3: actually use the correct buffer (thanks to Arend van Spriel)
+> >     use kmemdup (thanks to Johannes Berg and Julia Lawall)
+> > v2: set the urb flags correctly
+> > 
+> >  drivers/nfc/pn533/usb.c |   42 ++++++++++++++++++++++++++++++------------
+> >  1 file changed, 30 insertions(+), 12 deletions(-)
+> I can take that one through nfc-next, and the few subsequent patches
+> from Hans and Julia. Please let me know what's more convenient for you.
 
-In 22560 devices the ROM sendis an interrupt to the host
-once the IML reading is done.
-Handle this interrupt, and indicate sw error in case the
-value is fail.
+This patch is already in Linus's tree, along with whatever applied from
+Julia's patch series.  Hans needs to rebase and resend anyway, so either
+tree is fine once 4.18-rc1 is out.
 
-Additionally, the cause for sw error in 22560 devices
-have been changed, so update the cause list.
+thanks,
 
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../intel/iwlwifi/iwl-context-info-gen3.h     |  1 +
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h  |  2 ++
- .../wireless/intel/iwlwifi/pcie/internal.h    | 12 +++++++
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  | 21 +++++++++---
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 33 ++++++++++++++++---
- 5 files changed, 59 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h b/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
-index 8969dcc0d2db..ebea99189ca9 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
-@@ -57,6 +57,7 @@
- #define CSR_CTXT_INFO_ADDR              0x118
- #define CSR_IML_DATA_ADDR               0x120
- #define CSR_IML_SIZE_ADDR               0x128
-+#define CSR_IML_RESP_ADDR               0x12c
- 
- /* Set bit for enabling automatic function boot */
- #define CSR_AUTO_FUNC_BOOT_ENA          BIT(1)
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-index 3ef71c22bcaa..9019de99f077 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
-@@ -595,6 +595,8 @@ enum msix_fh_int_causes {
- enum msix_hw_int_causes {
- 	MSIX_HW_INT_CAUSES_REG_ALIVE		= BIT(0),
- 	MSIX_HW_INT_CAUSES_REG_WAKEUP		= BIT(1),
-+	MSIX_HW_INT_CAUSES_REG_IPC		= BIT(1),
-+	MSIX_HW_INT_CAUSES_REG_SW_ERR_V2	= BIT(5),
- 	MSIX_HW_INT_CAUSES_REG_CT_KILL		= BIT(6),
- 	MSIX_HW_INT_CAUSES_REG_RF_KILL		= BIT(7),
- 	MSIX_HW_INT_CAUSES_REG_PERIODIC		= BIT(8),
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index e14d2003244f..76fd3ee61720 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -323,6 +323,18 @@ enum iwl_shared_irq_flags {
- 	IWL_SHARED_IRQ_FIRST_RSS	= BIT(1),
- };
- 
-+/**
-+ * enum iwl_image_response_code - image response values
-+ * @IWL_IMAGE_RESP_DEF: the default value of the register
-+ * @IWL_IMAGE_RESP_SUCCESS: iml was read successfully
-+ * @IWL_IMAGE_RESP_FAIL: iml reading failed
-+ */
-+enum iwl_image_response_code {
-+	IWL_IMAGE_RESP_DEF		= 0,
-+	IWL_IMAGE_RESP_SUCCESS		= 1,
-+	IWL_IMAGE_RESP_FAIL		= 2,
-+};
-+
- /**
-  * struct iwl_dram_data
-  * @physical: page phy pointer
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 24ce2d6beb0f..707242f1ff0b 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -18,8 +18,7 @@
-  * more details.
-  *
-  * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ * this program.
-  *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-@@ -37,6 +36,7 @@
- #include "iwl-io.h"
- #include "internal.h"
- #include "iwl-op-mode.h"
-+#include "iwl-context-info-gen3.h"
- 
- /******************************************************************************
-  *
-@@ -2009,7 +2009,8 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
- 
- 	/* Error detected by uCode */
- 	if ((inta_fh & MSIX_FH_INT_CAUSES_FH_ERR) ||
--	    (inta_hw & MSIX_HW_INT_CAUSES_REG_SW_ERR)) {
-+	    (inta_hw & MSIX_HW_INT_CAUSES_REG_SW_ERR) ||
-+	    (inta_hw & MSIX_HW_INT_CAUSES_REG_SW_ERR_V2)) {
- 		IWL_ERR(trans,
- 			"Microcode SW error detected. Restarting 0x%X.\n",
- 			inta_fh);
-@@ -2034,8 +2035,18 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
- 		}
- 	}
- 
--	/* uCode wakes up after power-down sleep */
--	if (inta_hw & MSIX_HW_INT_CAUSES_REG_WAKEUP) {
-+	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560 &&
-+	    inta_hw & MSIX_HW_INT_CAUSES_REG_IPC) {
-+		/* Reflect IML transfer status */
-+		int res = iwl_read32(trans, CSR_IML_RESP_ADDR);
-+
-+		IWL_DEBUG_ISR(trans, "IML transfer status: %d\n", res);
-+		if (res == IWL_IMAGE_RESP_FAIL) {
-+			isr_stats->sw++;
-+			iwl_pcie_irq_handle_error(trans);
-+		}
-+	} else if (inta_hw & MSIX_HW_INT_CAUSES_REG_WAKEUP) {
-+		/* uCode wakes up after power-down sleep */
- 		IWL_DEBUG_ISR(trans, "Wakeup interrupt\n");
- 		iwl_pcie_rxq_check_wrptr(trans);
- 		iwl_pcie_txq_check_wrptrs(trans);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index bc14227c95ac..efde21580166 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1132,21 +1132,44 @@ static struct iwl_causes_list causes_list[] = {
- 	{MSIX_HW_INT_CAUSES_REG_HAP,		CSR_MSIX_HW_INT_MASK_AD, 0x2E},
- };
- 
-+static struct iwl_causes_list causes_list_v2[] = {
-+	{MSIX_FH_INT_CAUSES_D2S_CH0_NUM,	CSR_MSIX_FH_INT_MASK_AD, 0},
-+	{MSIX_FH_INT_CAUSES_D2S_CH1_NUM,	CSR_MSIX_FH_INT_MASK_AD, 0x1},
-+	{MSIX_FH_INT_CAUSES_S2D,		CSR_MSIX_FH_INT_MASK_AD, 0x3},
-+	{MSIX_FH_INT_CAUSES_FH_ERR,		CSR_MSIX_FH_INT_MASK_AD, 0x5},
-+	{MSIX_HW_INT_CAUSES_REG_ALIVE,		CSR_MSIX_HW_INT_MASK_AD, 0x10},
-+	{MSIX_HW_INT_CAUSES_REG_IPC,		CSR_MSIX_HW_INT_MASK_AD, 0x11},
-+	{MSIX_HW_INT_CAUSES_REG_SW_ERR_V2,	CSR_MSIX_HW_INT_MASK_AD, 0x15},
-+	{MSIX_HW_INT_CAUSES_REG_CT_KILL,	CSR_MSIX_HW_INT_MASK_AD, 0x16},
-+	{MSIX_HW_INT_CAUSES_REG_RF_KILL,	CSR_MSIX_HW_INT_MASK_AD, 0x17},
-+	{MSIX_HW_INT_CAUSES_REG_PERIODIC,	CSR_MSIX_HW_INT_MASK_AD, 0x18},
-+	{MSIX_HW_INT_CAUSES_REG_SCD,		CSR_MSIX_HW_INT_MASK_AD, 0x2A},
-+	{MSIX_HW_INT_CAUSES_REG_FH_TX,		CSR_MSIX_HW_INT_MASK_AD, 0x2B},
-+	{MSIX_HW_INT_CAUSES_REG_HW_ERR,		CSR_MSIX_HW_INT_MASK_AD, 0x2D},
-+	{MSIX_HW_INT_CAUSES_REG_HAP,		CSR_MSIX_HW_INT_MASK_AD, 0x2E},
-+};
-+
- static void iwl_pcie_map_non_rx_causes(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie =  IWL_TRANS_GET_PCIE_TRANS(trans);
- 	int val = trans_pcie->def_irq | MSIX_NON_AUTO_CLEAR_CAUSE;
--	int i;
-+	int i, arr_size =
-+		(trans->cfg->device_family < IWL_DEVICE_FAMILY_22560) ?
-+		ARRAY_SIZE(causes_list) : ARRAY_SIZE(causes_list_v2);
- 
- 	/*
- 	 * Access all non RX causes and map them to the default irq.
- 	 * In case we are missing at least one interrupt vector,
- 	 * the first interrupt vector will serve non-RX and FBQ causes.
- 	 */
--	for (i = 0; i < ARRAY_SIZE(causes_list); i++) {
--		iwl_write8(trans, CSR_MSIX_IVAR(causes_list[i].addr), val);
--		iwl_clear_bit(trans, causes_list[i].mask_reg,
--			      causes_list[i].cause_num);
-+	for (i = 0; i < arr_size; i++) {
-+		struct iwl_causes_list *causes =
-+			(trans->cfg->device_family < IWL_DEVICE_FAMILY_22560) ?
-+			causes_list : causes_list_v2;
-+
-+		iwl_write8(trans, CSR_MSIX_IVAR(causes[i].addr), val);
-+		iwl_clear_bit(trans, causes[i].mask_reg,
-+			      causes[i].cause_num);
- 	}
- }
- 
--- 
-2.18.0
+greg k-h
