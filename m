@@ -1,61 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:50356 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755749AbeFOMTe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Jun 2018 08:19:34 -0400
-Message-ID: <1529065171.10037.16.camel@sipsolutions.net> (sfid-20180615_141940_332912_5A6E6E07)
-Subject: Re: [RFCv2 1/2] nl80211: support per-rate/per-station statistics
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sriram R <srirrama@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 15 Jun 2018 14:19:31 +0200
-In-Reply-To: <1527514479-6696-2-git-send-email-srirrama@codeaurora.org>
-References: <1527514479-6696-1-git-send-email-srirrama@codeaurora.org>
-         <1527514479-6696-2-git-send-email-srirrama@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from bues.ch ([80.190.117.144]:50348 "EHLO bues.ch"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753449AbeFIUCl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 9 Jun 2018 16:02:41 -0400
+Date: Sat, 9 Jun 2018 22:01:30 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Wirz <spam@lukas-wirz.de>
+Cc: b43-dev@lists.infradead.org,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: b43 crashes on rmmod (bcm4331)
+Message-ID: <20180609220130.3ceb834f@wiggum> (sfid-20180609_220244_869458_E964F42E)
+In-Reply-To: <6a78c68e-1062-5ad8-876c-f7d4c49ea492@lukas-wirz.de>
+References: <75e4b424-4c75-5abd-1ef0-c2537d329b10@lukas-wirz.de>
+        <d9896c10-87bb-8362-f302-8b1888c3421c@lukas-wirz.de>
+        <20180609171159.59b5209c@wiggum>
+        <6a78c68e-1062-5ad8-876c-f7d4c49ea492@lukas-wirz.de>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ boundary="Sig_/mgEmzvzjbh2z+x1l_7N0bJv"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-05-28 at 19:04 +0530, Sriram R wrote:
-> Per-rate/per-station statistics can be desirable to have but they're
-> quite expensive (keeping the four counters for each rate would take
-> close to 4k of memory per station only for VHT MCSes for a moderately
-> capable VHT chip (with 2 spatial streams and 80MHz support) so it's
-> not a good idea to keep all of this in the kernel.
-> 
-> Instead, this API provides a way for interested clients in userspace
-> to subscribe to such statistics. When supported by a driver, it can
-> then start collecting the data only when subscribers exist. To avoid
-> the kernel's data collection becoming too big, it can send out the
-> data at any point in time, for example to limit the counters to u16
-> internally and send it out when they're close to reaching the limit,
-> or to keep a hash table and sending it out when too many collisions
-> occur. Userspace can then keep track of the full state.
-> 
-> Based on below implementation by Johannes Berg <johannes@sipsolutions.net>
-> http://thread.gmane.org/gmane.linux.kernel.wireless.general/133172
-> with following changes,
+--Sig_/mgEmzvzjbh2z+x1l_7N0bJv
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Err, that's pretty much an exact copy of my patch ...
+On Sat, 9 Jun 2018 22:46:58 +0300
+Wirz <spam@lukas-wirz.de> wrote:
 
-You should keep the author attribution and signed-off-by, and if you
-want your work to be separately attributed then just put the changes you
-made into (a) separate patch(es).
+> > Is is possible for you to create a git bisect to find the change that
+> > actually broke this?
+> > That would be really helpful. =20
+>=20
+> I can try that.  What is the most efficient way to unload/recompile/load
+> a single module without rebooting the machine too often?  And it'll be a
+> lot of hard resets ...
 
->  1. Allow rx bytes stats to be collected
 
-This seems OK.
 
->  2. Rate info sent to userspace is encoded into 32bit value
+A git bisect is really only possible in the full kernel tree.
+But it won't take a lot of steps to get a result, because you already
+narrowed it down to 4.14-4.15. It might take 10 iterations or so (git
+will tell you). Due to incremental builds that can be done pretty
+quickly. As the whole kernel is searched for a change, a reboot is
+usually needed after each iteration step.
 
-This I don't like at all. It's fine for the internal representation, and
-I know I did something like that in mac80211 (though I guess at the time
-it was only 16 bit), but it's not OK for the userspace representation.
+There are a couple of howtos on the web regarding git bisect:
+https://duckduckgo.com/?q=3Dgit+bisect+kernel
 
-I just merged patches to support HE in the userspace representation, and
-that's properly taken into account in struct rate_info which I had here
-in my version of the patch.
 
-johannes
+--=20
+Michael
+
+--Sig_/mgEmzvzjbh2z+x1l_7N0bJv
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlscMhsACgkQ9TK+HZCN
+iw5tcA//f2OlAyDgMPBGgPDZvWRe5gxe8jI6TAG5WMcWZMdXzx344G5zL6rZHoCp
+5BLE9lh3VZZjh4t3HP8mFVhoaDMsoT1osPu0dlaLFnQPjzDHLCRLlbYtAoj9ewSm
+k30ua+WY52MLaH/Yj8MstAFzVZNh3c9J0JDV3ECq9G0w503wIMAV7Y2S2vFqxw4s
+FT14gBpKFLU0aJ4DiD6lWVeYnQ3ixBvjSpatMspEkmpWS3YBww6JDL2WU7N4nvnD
+4J1PiUqdmPfjTbcRuZg9xBV4TNYlVvaN3JuYe79zrsAqEU8PSIQiqyv0uvxo+62R
+Od2DCX6HgMnIEMMaPLBjqg9UNx+G1ZTHctk4iMCU9L/Mq5ja59poV7SAwOJ7j1on
+o5XHqP5VCmpP8u0dkOVUHDK4DIXqyUi3liHVxvDBQ2Eda1hi+GPmzjjjxb5rQnlr
+nth7yjgJ8kliWWJ+a7t0MhRyh2kPKIiKgRKTFA2vgbcwZ7jHPew7FQXHpTTtRMO0
+Qmttm8gua2a0NS5pir6AdsTlHelHtoNOugBFiVjx+i+oaLnC0FpqhVrzlu4jn6RY
+k1yGTYsBhZM3M9Zwt38b6hY/JSTB9uR5RAYTV5VKew6JhpBcEdWeP4JR888bLam+
+9X0kOXNiFbfV4x/RS8GjAi8eDwWA3hC2oym70LEtrQ217rMTBFA=
+=EQD5
+-----END PGP SIGNATURE-----
+
+--Sig_/mgEmzvzjbh2z+x1l_7N0bJv--
