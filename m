@@ -1,45 +1,266 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:34852 "EHLO
-        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932478AbeFQIhU (ORCPT
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:14346 "EHLO
+        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753572AbeFJU3l (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 17 Jun 2018 04:37:20 -0400
-Received: by mail-io0-f196.google.com with SMTP id u4-v6so14300641iof.2
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jun 2018 01:37:20 -0700 (PDT)
-MIME-Version: 1.0
-From: Fabio Coatti <fabio.coatti@gmail.com>
-Date: Sun, 17 Jun 2018 10:37:09 +0200
-Message-ID: <CADpTngU_gzFp3y5Nmv3niwUgLSK5zAUwNUgM5NEPkiM552Cjww@mail.gmail.com> (sfid-20180617_103834_536273_3108D6B1)
-Subject: 4.17.X iwlwifi: probe of 0000:04:00.0 failed with error -12
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Sun, 10 Jun 2018 16:29:41 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com
+Subject: [PATCH v2 1/7] wil6210: add support for Talyn-MB (Talyn ver 2.0) device
+Date: Sun, 10 Jun 2018 23:29:29 +0300
+Message-Id: <1528662575-7746-2-git-send-email-merez@codeaurora.org> (sfid-20180610_222958_386250_B847D806)
+In-Reply-To: <1528662575-7746-1-git-send-email-merez@codeaurora.org>
+References: <1528662575-7746-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Add changes to support initialization of Talyn-MB wil6210
+device:
+- Add definition for Talyn-MB new JTAG id
+- Define talyn_mb_fw_mapping array
+- Add Talyn-MB reset sequence
 
-I'm trying out 4.17 (.0 .1 .2) and I'm getting, on boot, this dmesg line:
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/main.c     | 48 +++++++++++++++++++------
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 11 +++++-
+ drivers/net/wireless/ath/wil6210/wil6210.h  | 11 +++++-
+ drivers/net/wireless/ath/wil6210/wmi.c      | 55 +++++++++++++++++++++++++++++
+ 4 files changed, 113 insertions(+), 12 deletions(-)
 
-iwlwifi: probe of 0000:04:00.0 failed with error -12
-
-The wifi system is then unavailable.
-
-On the very same hardware and configuration, kernel 4.16.3 works just fine.
-
-Hardware: Lenovo P50
-04:00.0 Network controller: Intel Corporation Wireless 8260 (rev 3a)
-
-Linux firmware provided by gentoo, version 20180606
-
-I'm willing to provide more info if needed, just let me know.
-If you don't mind, please CC: me if answering as I'm not subscribed to
-this list.
-
-Many thanks in advance.
-(I'm using gentoo with vanilla kernels, no distro patch applied)
-
-
-
-
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index e7006c2..1282e1a 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -736,14 +736,24 @@ static void wil_bl_prepare_halt(struct wil6210_priv *wil)
+ 
+ static inline void wil_halt_cpu(struct wil6210_priv *wil)
+ {
+-	wil_w(wil, RGF_USER_USER_CPU_0, BIT_USER_USER_CPU_MAN_RST);
+-	wil_w(wil, RGF_USER_MAC_CPU_0,  BIT_USER_MAC_CPU_MAN_RST);
++	if (wil->hw_version >= HW_VER_TALYN_MB) {
++		wil_w(wil, RGF_USER_USER_CPU_0_TALYN_MB,
++		      BIT_USER_USER_CPU_MAN_RST);
++		wil_w(wil, RGF_USER_MAC_CPU_0_TALYN_MB,
++		      BIT_USER_MAC_CPU_MAN_RST);
++	} else {
++		wil_w(wil, RGF_USER_USER_CPU_0, BIT_USER_USER_CPU_MAN_RST);
++		wil_w(wil, RGF_USER_MAC_CPU_0,  BIT_USER_MAC_CPU_MAN_RST);
++	}
+ }
+ 
+ static inline void wil_release_cpu(struct wil6210_priv *wil)
+ {
+ 	/* Start CPU */
+-	wil_w(wil, RGF_USER_USER_CPU_0, 1);
++	if (wil->hw_version >= HW_VER_TALYN_MB)
++		wil_w(wil, RGF_USER_USER_CPU_0_TALYN_MB, 1);
++	else
++		wil_w(wil, RGF_USER_USER_CPU_0, 1);
+ }
+ 
+ static void wil_set_oob_mode(struct wil6210_priv *wil, u8 mode)
+@@ -811,10 +821,17 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
+ 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_0, 0x3ff81f);
+ 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1, 0xf);
+ 
+-	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0xFE000000);
+-	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0x0000003F);
+-	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0x000000f0);
+-	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0xFFE7FE00);
++	if (wil->hw_version >= HW_VER_TALYN_MB) {
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0x7e000000);
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0x0000003f);
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0xc00000f0);
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0xffe7fe00);
++	} else {
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0xfe000000);
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0x0000003f);
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0x000000f0);
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0xffe7fe00);
++	}
+ 
+ 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_0, 0x0);
+ 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1, 0x0);
+@@ -1042,8 +1059,14 @@ static int wil_get_otp_info(struct wil6210_priv *wil)
+ 	struct net_device *ndev = wil->main_ndev;
+ 	struct wiphy *wiphy = wil_to_wiphy(wil);
+ 	u8 mac[8];
++	int mac_addr;
++
++	if (wil->hw_version >= HW_VER_TALYN_MB)
++		mac_addr = RGF_OTP_MAC_TALYN_MB;
++	else
++		mac_addr = RGF_OTP_MAC;
+ 
+-	wil_memcpy_fromio_32(mac, wil->csr + HOSTADDR(RGF_OTP_MAC),
++	wil_memcpy_fromio_32(mac, wil->csr + HOSTADDR(mac_addr),
+ 			     sizeof(mac));
+ 	if (!is_valid_ether_addr(mac)) {
+ 		wil_err(wil, "Invalid MAC %pM\n", mac);
+@@ -1147,8 +1170,13 @@ static void wil_pre_fw_config(struct wil6210_priv *wil)
+ 	/* it is W1C, clear by writing back same value */
+ 	wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
+ 	wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
+-	/* clear PAL_UNIT_ICR (potential D0->D3 leftover) */
+-	wil_s(wil, RGF_PAL_UNIT_ICR + offsetof(struct RGF_ICR, ICR), 0);
++	/* clear PAL_UNIT_ICR (potential D0->D3 leftover)
++	 * In Talyn-MB host cannot access this register due to
++	 * access control, hence PAL_UNIT_ICR is cleared by the FW
++	 */
++	if (wil->hw_version < HW_VER_TALYN_MB)
++		wil_s(wil, RGF_PAL_UNIT_ICR + offsetof(struct RGF_ICR, ICR),
++		      0);
+ 
+ 	if (wil->fw_calib_result > 0) {
+ 		__le32 val = cpu_to_le32(wil->fw_calib_result |
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index 19cbc6a..3a7e406 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -85,7 +85,7 @@ int wil_set_capabilities(struct wil6210_priv *wil)
+ 		wil->rgf_ucode_assert_code_addr = SPARROW_RGF_UCODE_ASSERT_CODE;
+ 		break;
+ 	case JTAG_DEV_ID_TALYN:
+-		wil->hw_name = "Talyn";
++		wil->hw_name = "Talyn-MA";
+ 		wil->hw_version = HW_VER_TALYN;
+ 		memcpy(fw_mapping, talyn_fw_mapping, sizeof(talyn_fw_mapping));
+ 		wil->rgf_fw_assert_code_addr = TALYN_RGF_FW_ASSERT_CODE;
+@@ -94,6 +94,15 @@ int wil_set_capabilities(struct wil6210_priv *wil)
+ 		    BIT_NO_FLASH_INDICATION)
+ 			set_bit(hw_capa_no_flash, wil->hw_capa);
+ 		break;
++	case JTAG_DEV_ID_TALYN_MB:
++		wil->hw_name = "Talyn-MB";
++		wil->hw_version = HW_VER_TALYN_MB;
++		memcpy(fw_mapping, talyn_mb_fw_mapping,
++		       sizeof(talyn_mb_fw_mapping));
++		wil->rgf_fw_assert_code_addr = TALYN_RGF_FW_ASSERT_CODE;
++		wil->rgf_ucode_assert_code_addr = TALYN_RGF_UCODE_ASSERT_CODE;
++		set_bit(hw_capa_no_flash, wil->hw_capa);
++		break;
+ 	default:
+ 		wil_err(wil, "Unknown board hardware, chip_id 0x%08x, chip_revision 0x%08x\n",
+ 			jtag_id, chip_revision);
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index b623510c..4cd8e40 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -311,14 +311,20 @@ struct RGF_ICR {
+ #define RGF_USER_JTAG_DEV_ID	(0x880b34) /* device ID */
+ 	#define JTAG_DEV_ID_SPARROW	(0x2632072f)
+ 	#define JTAG_DEV_ID_TALYN	(0x7e0e1)
++	#define JTAG_DEV_ID_TALYN_MB	(0x1007e0e1)
+ 
+ #define RGF_USER_REVISION_ID		(0x88afe4)
+ #define RGF_USER_REVISION_ID_MASK	(3)
+ 	#define REVISION_ID_SPARROW_B0	(0x0)
+ 	#define REVISION_ID_SPARROW_D0	(0x3)
+ 
++#define RGF_OTP_MAC_TALYN_MB		(0x8a0304)
+ #define RGF_OTP_MAC			(0x8a0620)
+ 
++/* Talyn-MB */
++#define RGF_USER_USER_CPU_0_TALYN_MB	(0x8c0138)
++#define RGF_USER_MAC_CPU_0_TALYN_MB	(0x8c0154)
++
+ /* crash codes for FW/Ucode stored here */
+ 
+ /* ASSERT RGFs */
+@@ -332,6 +338,7 @@ enum {
+ 	HW_VER_SPARROW_B0, /* REVISION_ID_SPARROW_B0 */
+ 	HW_VER_SPARROW_D0, /* REVISION_ID_SPARROW_D0 */
+ 	HW_VER_TALYN,	/* JTAG_DEV_ID_TALYN */
++	HW_VER_TALYN_MB	/* JTAG_DEV_ID_TALYN_MB */
+ };
+ 
+ /* popular locations */
+@@ -349,7 +356,8 @@ enum {
+ /* Hardware definitions end */
+ #define SPARROW_FW_MAPPING_TABLE_SIZE 10
+ #define TALYN_FW_MAPPING_TABLE_SIZE 13
+-#define MAX_FW_MAPPING_TABLE_SIZE 13
++#define TALYN_MB_FW_MAPPING_TABLE_SIZE 19
++#define MAX_FW_MAPPING_TABLE_SIZE 19
+ 
+ struct fw_map {
+ 	u32 from; /* linker address - from, inclusive */
+@@ -363,6 +371,7 @@ struct fw_map {
+ extern const struct fw_map sparrow_fw_mapping[SPARROW_FW_MAPPING_TABLE_SIZE];
+ extern const struct fw_map sparrow_d0_mac_rgf_ext;
+ extern const struct fw_map talyn_fw_mapping[TALYN_FW_MAPPING_TABLE_SIZE];
++extern const struct fw_map talyn_mb_fw_mapping[TALYN_MB_FW_MAPPING_TABLE_SIZE];
+ extern struct fw_map fw_mapping[MAX_FW_MAPPING_TABLE_SIZE];
+ 
+ /**
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 5d99124..5509f94 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -164,6 +164,61 @@
+ 	{0x800000, 0x808000, 0xa78000, "uc_data", false},
+ };
+ 
++/**
++ * @talyn_mb_fw_mapping provides memory remapping table for Talyn-MB
++ *
++ * array size should be in sync with the declaration in the wil6210.h
++ *
++ * Talyn MB memory mapping:
++ * Linker address         PCI/Host address
++ *                        0x880000 .. 0xc80000  4Mb BAR0
++ * 0x800000 .. 0x820000   0xa00000 .. 0xa20000  128k DCCM
++ * 0x840000 .. 0x858000   0xa20000 .. 0xa38000  96k PERIPH
++ */
++const struct fw_map talyn_mb_fw_mapping[] = {
++	/* FW code RAM 768k */
++	{0x000000, 0x0c0000, 0x900000, "fw_code", true},
++	/* FW data RAM 128k */
++	{0x800000, 0x820000, 0xa00000, "fw_data", true},
++	/* periph. data RAM 96k */
++	{0x840000, 0x858000, 0xa20000, "fw_peri", true},
++	/* various RGF 40k */
++	{0x880000, 0x88a000, 0x880000, "rgf", true},
++	/* AGC table 4k */
++	{0x88a000, 0x88b000, 0x88a000, "AGC_tbl", true},
++	/* Pcie_ext_rgf 4k */
++	{0x88b000, 0x88c000, 0x88b000, "rgf_ext", true},
++	/* mac_ext_rgf 2256b */
++	{0x88c000, 0x88c8d0, 0x88c000, "mac_rgf_ext", true},
++	/* ext USER RGF 4k */
++	{0x88d000, 0x88e000, 0x88d000, "ext_user_rgf", true},
++	/* SEC PKA 16k */
++	{0x890000, 0x894000, 0x890000, "sec_pka", true},
++	/* SEC KDF RGF 3096b */
++	{0x898000, 0x898c18, 0x898000, "sec_kdf_rgf", true},
++	/* SEC MAIN 2124b */
++	{0x89a000, 0x89a84c, 0x89a000, "sec_main", true},
++	/* OTP 4k */
++	{0x8a0000, 0x8a1000, 0x8a0000, "otp", true},
++	/* DMA EXT RGF 64k */
++	{0x8b0000, 0x8c0000, 0x8b0000, "dma_ext_rgf", true},
++	/* DUM USER RGF 528b */
++	{0x8c0000, 0x8c0210, 0x8c0000, "dum_user_rgf", true},
++	/* DMA OFU 296b */
++	{0x8c2000, 0x8c2128, 0x8c2000, "dma_ofu", true},
++	/* ucode debug 4k */
++	{0x8c3000, 0x8c4000, 0x8c3000, "ucode_debug", true},
++	/* upper area 1536k */
++	{0x900000, 0xa80000, 0x900000, "upper", true},
++	/* UCODE areas - accessible by debugfs blobs but not by
++	 * wmi_addr_remap. UCODE areas MUST be added AFTER FW areas!
++	 */
++	/* ucode code RAM 256k */
++	{0x000000, 0x040000, 0xa38000, "uc_code", false},
++	/* ucode data RAM 32k */
++	{0x800000, 0x808000, 0xa78000, "uc_data", false},
++};
++
+ struct fw_map fw_mapping[MAX_FW_MAPPING_TABLE_SIZE];
+ 
+ struct blink_on_off_time led_blink_time[] = {
 -- 
-Fabio
+1.9.1
