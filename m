@@ -1,58 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:50000 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753873AbeFKRPr (ORCPT
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:43828 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932337AbeFJKvo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Jun 2018 13:15:47 -0400
-From: Colin King <colin.king@canonical.com>
-To: Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] iwlwifi: pcie: make array prop static, shrinks object size
-Date: Mon, 11 Jun 2018 18:15:37 +0100
-Message-Id: <20180611171537.14597-1-colin.king@canonical.com> (sfid-20180611_191606_778694_EE267F77)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        Sun, 10 Jun 2018 06:51:44 -0400
+Received: by mail-wr0-f193.google.com with SMTP id d2-v6so17411500wrm.10
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2018 03:51:44 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [RFC v3 10/19] mt76: introduce tx_queue_skb function pointer in mt76_bus_ops
+Date: Sun, 10 Jun 2018 12:51:17 +0200
+Message-Id: <20180610105126.28425-11-lorenzo.bianconi@redhat.com> (sfid-20180610_125149_554619_CDDD2AC3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Add tx_queue_skb function pointer in mt76_bus_ops since mt76x2u based
+devices do not map mt76x2_txwi on dma buffers and it is not possible
+to reuse mt76_dma_tx_queue_skb() routine to enqueue tx frames to
+hw buffers
 
-Don't populate the read-only array 'prop' on the stack but
-instead make it static. Makes the object code smaller by 20 bytes:
-
-Before:
-   text    data     bss     dec     hex filename
-  71659   14614     576   86849   15341 trans.o
-
-After:
-   text    data     bss     dec     hex filename
-  71479   14774     576   86829   1532d trans.o
-
-(gcc version 7.3.0 x86_64)
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/dma.c  | 1 +
+ drivers/net/wireless/mediatek/mt76/mt76.h | 5 +++++
+ drivers/net/wireless/mediatek/mt76/tx.c   | 9 +++++----
+ 3 files changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 7229991ae70d..c4626ebe5da1 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1946,7 +1946,7 @@ static void iwl_trans_pcie_removal_wk(struct work_struct *wk)
- 	struct iwl_trans_pcie_removal *removal =
- 		container_of(wk, struct iwl_trans_pcie_removal, work);
- 	struct pci_dev *pdev = removal->pdev;
--	char *prop[] = {"EVENT=INACCESSIBLE", NULL};
-+	static char *prop[] = {"EVENT=INACCESSIBLE", NULL};
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index 6293f21856da..c51da2205b93 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -510,6 +510,7 @@ static const struct mt76_queue_ops mt76_dma_ops = {
+ 	.init = mt76_dma_init,
+ 	.alloc = mt76_dma_alloc_queue,
+ 	.add_buf = mt76_dma_add_buf,
++	.tx_queue_skb = mt76_dma_tx_queue_skb,
+ 	.tx_cleanup = mt76_dma_tx_cleanup,
+ 	.rx_reset = mt76_dma_rx_reset,
+ 	.kick = mt76_dma_kick_queue,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index f37a6f109bf8..9a89a73fcb0f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -30,6 +30,7 @@
+ #define MT_RX_BUF_SIZE      2048
  
- 	dev_err(&pdev->dev, "Device gone - attempting removal\n");
- 	kobject_uevent_env(&pdev->dev.kobj, KOBJ_CHANGE, prop);
+ struct mt76_dev;
++struct mt76_wcid;
+ 
+ struct mt76_bus_ops {
+ 	u32 (*rr)(struct mt76_dev *dev, u32 offset);
+@@ -110,6 +111,10 @@ struct mt76_queue_ops {
+ 		       struct mt76_queue_buf *buf, int nbufs, u32 info,
+ 		       struct sk_buff *skb, void *txwi);
+ 
++	int (*tx_queue_skb)(struct mt76_dev *dev, struct mt76_queue *q,
++			    struct sk_buff *skb, struct mt76_wcid *wcid,
++			    struct ieee80211_sta *sta);
++
+ 	void *(*dequeue)(struct mt76_dev *dev, struct mt76_queue *q, bool flush,
+ 			 int *len, u32 *info, bool *more);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
+index f86501ecf31a..af48d43bb7dc 100644
+--- a/drivers/net/wireless/mediatek/mt76/tx.c
++++ b/drivers/net/wireless/mediatek/mt76/tx.c
+@@ -111,7 +111,7 @@ mt76_tx(struct mt76_dev *dev, struct ieee80211_sta *sta,
+ 	q = &dev->q_tx[qid];
+ 
+ 	spin_lock_bh(&q->lock);
+-	mt76_dma_tx_queue_skb(dev, q, skb, wcid, sta);
++	dev->queue_ops->tx_queue_skb(dev, q, skb, wcid, sta);
+ 	dev->queue_ops->kick(dev, q);
+ 
+ 	if (q->queued > q->ndesc - 8)
+@@ -167,7 +167,7 @@ mt76_queue_ps_skb(struct mt76_dev *dev, struct ieee80211_sta *sta,
+ 		info->flags |= IEEE80211_TX_STATUS_EOSP;
+ 
+ 	mt76_skb_set_moredata(skb, !last);
+-	mt76_dma_tx_queue_skb(dev, hwq, skb, wcid, sta);
++	dev->queue_ops->tx_queue_skb(dev, hwq, skb, wcid, sta);
+ }
+ 
+ void
+@@ -247,7 +247,7 @@ mt76_txq_send_burst(struct mt76_dev *dev, struct mt76_queue *hwq,
+ 	if (ampdu)
+ 		mt76_check_agg_ssn(mtxq, skb);
+ 
+-	idx = mt76_dma_tx_queue_skb(dev, hwq, skb, wcid, txq->sta);
++	idx = dev->queue_ops->tx_queue_skb(dev, hwq, skb, wcid, txq->sta);
+ 
+ 	if (idx < 0)
+ 		return idx;
+@@ -282,7 +282,8 @@ mt76_txq_send_burst(struct mt76_dev *dev, struct mt76_queue *hwq,
+ 		if (cur_ampdu)
+ 			mt76_check_agg_ssn(mtxq, skb);
+ 
+-		idx = mt76_dma_tx_queue_skb(dev, hwq, skb, wcid, txq->sta);
++		idx = dev->queue_ops->tx_queue_skb(dev, hwq, skb, wcid,
++						   txq->sta);
+ 		if (idx < 0)
+ 			return idx;
+ 
 -- 
-2.17.0
+2.17.1
