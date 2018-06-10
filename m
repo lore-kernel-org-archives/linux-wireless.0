@@ -1,97 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35530 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S934307AbeFVSnd (ORCPT
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:37068 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751815AbeFJKvi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Jun 2018 14:43:33 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 6/6] brcmfmac: fallback mechanism to determine monitor mode features
-Date: Fri, 22 Jun 2018 20:43:24 +0200
-Message-Id: <1529693004-20569-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180622_204348_508537_EDD91D63)
-In-Reply-To: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
+        Sun, 10 Jun 2018 06:51:38 -0400
+Received: by mail-wr0-f193.google.com with SMTP id d8-v6so17442778wro.4
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2018 03:51:37 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [RFC v3 04/19] mt76x2: introduce mt76x2_init_device routine
+Date: Sun, 10 Jun 2018 12:51:11 +0200
+Message-Id: <20180610105126.28425-5-lorenzo.bianconi@redhat.com> (sfid-20180610_125144_891400_3A1EDC41)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmwares may not provide all monitor mode features in the "cap" iovar.
-For those this fallback mechanism uses "sta_monitor" iovar. If firmware
-is compiled with stamon, this iovar will fail with BCME_NOTUP; Otherwise
-it fails with BCME_UNSUPPORTED.
+Add mt76x2_init_device routine in order to reuse common pcie/usb mac80211
+initialization code supporting mt76x2u based device
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/feature.c  | 15 +++++++++++++++
- .../broadcom/brcm80211/brcmfmac/fwil_types.h        | 21 +++++++++++++++++++++
- 2 files changed, 36 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt76x2.h   |  1 +
+ .../net/wireless/mediatek/mt76/mt76x2_init.c  | 58 ++++++++++---------
+ 2 files changed, 33 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-index f70fec6..cb57a4a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-@@ -207,6 +207,7 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
- 	struct brcmf_if *ifp = brcmf_get_ifp(drvr, 0);
- 	struct brcmf_pno_macaddr_le pfn_mac;
- 	struct brcmf_gscan_config gscan_cfg;
-+	struct brcmf_stamon_sta_config stamon_cfg;
- 	u32 wowl_cap;
- 	s32 err;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+index ee22dd4b4e19..52d70a9b9b6f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+@@ -213,6 +213,7 @@ extern const struct ieee80211_ops mt76x2_ops;
+ struct mt76x2_dev *mt76x2_alloc_device(struct device *pdev);
+ int mt76x2_register_device(struct mt76x2_dev *dev);
+ void mt76x2_init_debugfs(struct mt76x2_dev *dev);
++void mt76x2_init_device(struct mt76x2_dev *dev);
  
-@@ -217,6 +218,20 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
- 		brcmf_feat_iovar_data_set(ifp, BRCMF_FEAT_GSCAN,
- 					  "pfn_gscan_cfg",
- 					  &gscan_cfg, sizeof(gscan_cfg));
-+
-+	if (!brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MONITOR) ||
-+	    !brcmf_feat_is_enabled(ifp, BRCMF_FEAT_RADIOTAP)) {
-+		ifp->fwil_fwerr = true;
-+		memset(&stamon_cfg, 0, sizeof(stamon_cfg));
-+		/* fails either way as firmware stack is not up yet */
-+		err = brcmf_fil_iovar_data_set(ifp, "sta_monitor", &stamon_cfg,
-+					       sizeof(stamon_cfg));
-+		if (err != BRCMF_FW_UNSUPPORTED) {
-+			ifp->drvr->feat_flags |= BIT(BRCMF_FEAT_MONITOR);
-+			ifp->drvr->feat_flags |= BIT(BRCMF_FEAT_RADIOTAP);
-+		}
-+		ifp->fwil_fwerr = false;
-+	}
- 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_PNO, "pfn");
- 	if (drvr->bus_if->wowl_supported)
- 		brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-index 4b29070..db56c81 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-@@ -963,4 +963,25 @@ struct brcmf_gscan_config {
- 	struct brcmf_gscan_bucket_config bucket[1];
- };
+ irqreturn_t mt76x2_irq_handler(int irq, void *dev_instance);
+ void mt76x2_phy_power_on(struct mt76x2_dev *dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+index 6a7db3f88153..9c6d180da294 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+@@ -539,11 +539,6 @@ int mt76x2_init_hardware(struct mt76x2_dev *dev)
+ 	tasklet_init(&dev->pre_tbtt_tasklet, mt76x2_pre_tbtt_tasklet,
+ 		     (unsigned long) dev);
  
-+/**
-+ * struct brcmf_stamon_sta_config - configuration data for sta monitor.
-+ *
-+ * @cmd: subcommand for this configuration.
-+ * @mac: mac address of STA for which @cmd is intended.
-+ * @version: version of this configuration structure.
-+ * @length: number of bytes following this field.
-+ * @chanspec: channel of the STA.
-+ * @mon_time: time for which STA's are monitored (ms).
-+ * @offchan_time: timer for which off-channel STA's are monitored.
-+ */
-+struct brcmf_stamon_sta_config {
-+	__le32 cmd;
-+	u8 mac[ETH_ALEN];
-+	__le16 version;
-+	__le16 length;
-+	__le16 chanspec;
-+	__le32 monitor_time;
-+	__le32 offchan_time;
-+};
+-	dev->chainmask = 0x202;
+-	dev->global_wcid.idx = 255;
+-	dev->global_wcid.hw_key_idx = -1;
+-	dev->slottime = 9;
+-
+ 	val = mt76_rr(dev, MT_WPDMA_GLO_CFG);
+ 	val &= MT_WPDMA_GLO_CFG_DMA_BURST_SIZE |
+ 	       MT_WPDMA_GLO_CFG_BIG_ENDIAN |
+@@ -770,6 +765,34 @@ mt76x2_init_txpower(struct mt76x2_dev *dev,
+ 	}
+ }
+ 
++void mt76x2_init_device(struct mt76x2_dev *dev)
++{
++	struct ieee80211_hw *hw = mt76_hw(dev);
 +
- #endif /* FWIL_TYPES_H_ */
++	hw->queues = 4;
++	hw->max_rates = 1;
++	hw->max_report_rates = 7;
++	hw->max_rate_tries = 1;
++	hw->extra_tx_headroom = 2;
++
++	hw->sta_data_size = sizeof(struct mt76x2_sta);
++	hw->vif_data_size = sizeof(struct mt76x2_vif);
++
++	ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
++	ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
++
++	dev->mt76.sband_2g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
++	dev->mt76.sband_5g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
++
++	dev->chainmask = 0x202;
++	dev->global_wcid.idx = 255;
++	dev->global_wcid.hw_key_idx = -1;
++	dev->slottime = 9;
++
++	/* init antenna configuration */
++	dev->mt76.antenna_mask = 3;
++}
++
+ int mt76x2_register_device(struct mt76x2_dev *dev)
+ {
+ 	struct ieee80211_hw *hw = mt76_hw(dev);
+@@ -784,20 +807,15 @@ int mt76x2_register_device(struct mt76x2_dev *dev)
+ 		return -ENOMEM;
+ 
+ 	kfifo_init(&dev->txstatus_fifo, status_fifo, fifo_size);
++	INIT_DELAYED_WORK(&dev->cal_work, mt76x2_phy_calibrate);
++	INIT_DELAYED_WORK(&dev->mac_work, mt76x2_mac_work);
++
++	mt76x2_init_device(dev);
+ 
+ 	ret = mt76x2_init_hardware(dev);
+ 	if (ret)
+ 		return ret;
+ 
+-	hw->queues = 4;
+-	hw->max_rates = 1;
+-	hw->max_report_rates = 7;
+-	hw->max_rate_tries = 1;
+-	hw->extra_tx_headroom = 2;
+-
+-	hw->sta_data_size = sizeof(struct mt76x2_sta);
+-	hw->vif_data_size = sizeof(struct mt76x2_vif);
+-
+ 	for (i = 0; i < ARRAY_SIZE(dev->macaddr_list); i++) {
+ 		u8 *addr = dev->macaddr_list[i].addr;
+ 
+@@ -819,24 +837,12 @@ int mt76x2_register_device(struct mt76x2_dev *dev)
+ 
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
+ 
+-	ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
+-	ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
+-
+-	INIT_DELAYED_WORK(&dev->cal_work, mt76x2_phy_calibrate);
+-	INIT_DELAYED_WORK(&dev->mac_work, mt76x2_mac_work);
+-
+-	dev->mt76.sband_2g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
+-	dev->mt76.sband_5g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
+-
+ 	mt76x2_dfs_init_detector(dev);
+ 
+ 	/* init led callbacks */
+ 	dev->mt76.led_cdev.brightness_set = mt76x2_led_set_brightness;
+ 	dev->mt76.led_cdev.blink_set = mt76x2_led_set_blink;
+ 
+-	/* init antenna configuration */
+-	dev->mt76.antenna_mask = 3;
+-
+ 	ret = mt76_register_device(&dev->mt76, true, mt76x2_rates,
+ 				   ARRAY_SIZE(mt76x2_rates));
+ 	if (ret)
 -- 
-1.9.1
+2.17.1
