@@ -1,144 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:46558 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933056AbeF0HyP (ORCPT
+Received: from dnvrco-outbound-snat.email.rr.com ([107.14.73.225]:52028 "EHLO
+        dnvrco-cmomta01.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753539AbeFJX3o (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Jun 2018 03:54:15 -0400
-Received: by mail-io0-f195.google.com with SMTP id u23-v6so994744ioc.13
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2018 00:54:15 -0700 (PDT)
+        Sun, 10 Jun 2018 19:29:44 -0400
+Message-ID: <20180610232943.IEZG1.148514.root@dnvrco-web22> (sfid-20180611_013313_929094_B7F45AA7)
+Date: Sun, 10 Jun 2018 23:29:43 +0000
+From: <mgreger@cinci.rr.com>
+To: sedat.dilek@gmail.com, mgreger@cinci.rr.com
+Subject: Re: Atheros AR9462 - 5Ghz not working
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20180530140546.7KP70.72041.root@dnvrco-web22>
 MIME-Version: 1.0
-In-Reply-To: <950add1e-ec3a-a179-ff49-b49b3a748bcb@zonque.org>
-References: <20180626204834.14278-1-daniel@zonque.org> <950add1e-ec3a-a179-ff49-b49b3a748bcb@zonque.org>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Wed, 27 Jun 2018 09:54:13 +0200
-Message-ID: <CAPDyKFp-KkHbqR4+vOL2XZnAcXPPCJ7snW=2wFoz82UckPFW1w@mail.gmail.com> (sfid-20180627_095444_862120_3340284D)
-Subject: Re: [PATCH] libertas: fix return codes in if_sdio_suspend()
-To: Daniel Mack <daniel@zonque.org>
-Cc: Chris Ball <chris@printf.net>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 June 2018 at 22:50, Daniel Mack <daniel@zonque.org> wrote:
-> Ah, the subject line of this patch could actually be improved. Let me know
-> if you're happy with the contents of this patch, so I can resend.
->
-> Thanks,
-> Daniel
->
->
->
-> On Tuesday, June 26, 2018 10:48 PM, Daniel Mack wrote:
->>
->> Prior to commit 573185cc7e64 ("mmc: core: Invoke sdio func driver's PM
->> callbacks from the sdio bus"), the MMC core used to call into the power
->> management functions of SDIO clients itself and removed the card if the
->> return code was non-zero. IOW, the mmc handled errors gracefully and
->> didn't
->> upchain them to the pm core.
->>
->> Since this change, the mmc core relies on generic power management
->> functions which treat all errors as a reason to cancel the suspend
->> immediately. This causes suspend attempts to fail when the libertas
->> driver is loaded.
->>
->> To fix this, power down the card explicitly in if_sdio_suspend() when we
->> know we're about to lose power and return success. Also set a flag in
->> these
->> cases, and power up the card again in if_sdio_resume().
->>
->> Signed-off-by: Daniel Mack <daniel@zonque.org>
->> Cc: Ulf Hansson <ulf.hansson@linaro.org>
->> Cc: Chris Ball <chris@printf.net>
->> ---
->>   drivers/net/wireless/marvell/libertas/dev.h   |  1 +
->>   .../net/wireless/marvell/libertas/if_sdio.c   | 28 +++++++++++++++----
->>   2 files changed, 23 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/net/wireless/marvell/libertas/dev.h
->> b/drivers/net/wireless/marvell/libertas/dev.h
->> index dd1ee1f0af48..469134930026 100644
->> --- a/drivers/net/wireless/marvell/libertas/dev.h
->> +++ b/drivers/net/wireless/marvell/libertas/dev.h
->> @@ -104,6 +104,7 @@ struct lbs_private {
->>         u8 fw_ready;
->>         u8 surpriseremoved;
->>         u8 setup_fw_on_resume;
->> +       u8 power_up_on_resume;
->>         int (*hw_host_to_card) (struct lbs_private *priv, u8 type, u8
->> *payload, u16 nb);
->>         void (*reset_card) (struct lbs_private *priv);
->>         int (*power_save) (struct lbs_private *priv);
->> diff --git a/drivers/net/wireless/marvell/libertas/if_sdio.c
->> b/drivers/net/wireless/marvell/libertas/if_sdio.c
->> index 2300e796c6ab..f43807663b1b 100644
->> --- a/drivers/net/wireless/marvell/libertas/if_sdio.c
->> +++ b/drivers/net/wireless/marvell/libertas/if_sdio.c
->> @@ -1290,15 +1290,23 @@ static void if_sdio_remove(struct sdio_func *func)
->>   static int if_sdio_suspend(struct device *dev)
->>   {
->>         struct sdio_func *func = dev_to_sdio_func(dev);
->> -       int ret;
->>         struct if_sdio_card *card = sdio_get_drvdata(func);
->> +       struct lbs_private *priv = card->priv;
->> +       int ret;
->>         mmc_pm_flag_t flags = sdio_get_host_pm_caps(func);
->> +       priv->power_up_on_resume = false;
->>         /* If we're powered off anyway, just let the mmc layer remove the
->>          * card. */
->> -       if (!lbs_iface_active(card->priv))
->> -               return -ENOSYS;
->> +       if (!lbs_iface_active(priv)) {
->> +               if (priv->fw_ready) {
->> +                       priv->power_up_on_resume = true;
->> +                       if_sdio_power_off(card);
->> +               }
->> +
->> +               return 0;
->> +       }
->>         dev_info(dev, "%s: suspend: PM flags = 0x%x\n",
->>                  sdio_func_id(func), flags);
->> @@ -1306,9 +1314,14 @@ static int if_sdio_suspend(struct device *dev)
->>         /* If we aren't being asked to wake on anything, we should bail
->> out
->>          * and let the SD stack power down the card.
->>          */
->> -       if (card->priv->wol_criteria == EHS_REMOVE_WAKEUP) {
->> +       if (priv->wol_criteria == EHS_REMOVE_WAKEUP) {
->>                 dev_info(dev, "Suspend without wake params -- powering
->> down card\n");
->> -               return -ENOSYS;
->> +               if (priv->fw_ready) {
->> +                       priv->power_up_on_resume = true;
->> +                       if_sdio_power_off(card);
->> +               }
->> +
->> +               return 0;
->>         }
->>         if (!(flags & MMC_PM_KEEP_POWER)) {
->> @@ -1321,7 +1334,7 @@ static int if_sdio_suspend(struct device *dev)
->>         if (ret)
->>                 return ret;
->>   -     ret = lbs_suspend(card->priv);
->> +       ret = lbs_suspend(priv);
->>         if (ret)
->>                 return ret;
->>   @@ -1336,6 +1349,9 @@ static int if_sdio_resume(struct device *dev)
->>         dev_info(dev, "%s: resume: we're back\n", sdio_func_id(func));
->>   +     if (card->priv->power_up_on_resume)
->> +               if_sdio_power_on(card);
->> +
 
-To guarantee firmware is loaded, don't you need the below as well?
+---- mgreger@cinci.rr.com wrote: 
+> 
+> ---- Sedat Dilek <sedat.dilek@gmail.com> wrote: 
+> > On Tue, May 22, 2018 at 7:21 PM,  <mgreger@cinci.rr.com> wrote:
+> > > I've run out of ideas and am hoping someone here can help.
+> > >
+> > > All I want to do is connect a client to my 5Ghz network.
+> > >
+> > > My client:
+> > >   OS is Debian stable "Stretch" with sysvinit instead of systemd
+> > >   Atheros AR9462 (World roaming 0x64 regdomain in EEPROM)
+> > >   "iw reg set US"
+> > >   "iw list" shows both 2.4Ghz and 5Ghz bands available.
+> > >   "iw wlp3s0 survey dump" shows received traffic on 5Ghz bands.
+> > >
+> > > There are oodles of 5Ghz AP's within range, but scans (including passive scans) reveal only 2.4Ghz networks. My only guess was that it won't transmit due to regulatory requirements, but I cannot make it work.
+> > >
+> > > What I've tried:
+> > >   Running with and without CRDA
+> > >   Running latest mainline kernel
+> > >   Hacking around on the ath9k driver and nl80211 to remove all regulatory enforcement.
+> > >
+> > > Nothing works and I'm pulling my hair out. Any help would be greatly appreciated.
+> > 
+> > Hi,
+> > 
+> > I try to give some initial help.
+> > 
+> > The linux-wireless driver is supported by ath9k driver see [1] and [2].
+> > 
+> > Unfortunately, you have not sent any log-files at least your dmesg-log.
+> > No output of the above userspace commands or userspace-tools versions.
+> > No information to VendorID/ProductID (PCI, USB, whatever).
+> > It's not clear to me if this is a kernelspace (ath9k-driver) or
+> > userspace (CRDA/regulatory) problem.
+> > How should someone help you effectively?
+> > 
+> > The linux-wireless wiki has somne informations on how to debug
+> > Atheros/Qualcomm ath9k-driver, see [3].
+> > 
+> > As a debianist I say try Linux v4.16 Debian packages from
+> > stretch-backports (and maybe a higher version of wireless-regdb).
+> > 
+> > Try to ask questions the smart way [4] :-).
+> > 
+> > Hope this helps.
+> > 
+> > Regards,
+> > - Sedat -
+> > 
+> > [1] https://wireless.wiki.kernel.org/en/users/drivers/ath9k
+> > [2] https://wireless.wiki.kernel.org/en/users/drivers/ath9k/devices
+> > [3] https://wireless.wiki.kernel.org/en/users/drivers/ath9k/debug
+> > [4] http://www.catb.org/esr/faqs/smart-questions.html
+> 
+> 
+> I have also built the latest wireless-regdb and crda, but it made no difference.
 
-wait_event(card->pwron_waitq, priv->fw_ready);
 
->>         ret = lbs_resume(card->priv);
->>         return ret;
->>
->
 
-Kind regards
-Uffe
+Did any of the information I posted point towards a cause?
