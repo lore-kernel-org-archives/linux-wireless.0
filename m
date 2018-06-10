@@ -1,207 +1,598 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44372 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S937237AbeFSDyc (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:52850 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932213AbeFJKvu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Jun 2018 23:54:32 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 19 Jun 2018 09:24:30 +0530
-From: Govind Singh <govinds@codeaurora.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: andy.gross@linaro.org, bjorn.andersson@linaro.org,
-        david.brown@linaro.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/6]  *** Add support for wifi QMI client driver ***
-In-Reply-To: <20180619021742.GA17220@rodete-desktop-imager.corp.google.com>
-References: <20180605123304.31969-1-govinds@codeaurora.org>
- <20180619021742.GA17220@rodete-desktop-imager.corp.google.com>
-Message-ID: <b0922cebf095db4471adcfb18b750cc5@codeaurora.org> (sfid-20180619_055516_010545_6233F48D)
+        Sun, 10 Jun 2018 06:51:50 -0400
+Received: by mail-wm0-f67.google.com with SMTP id p126-v6so9945009wmb.2
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2018 03:51:50 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [RFC v3 14/19] mt76: add mt76x2_init_common to mt76x2-common module
+Date: Sun, 10 Jun 2018 12:51:21 +0200
+Message-Id: <20180610105126.28425-15-lorenzo.bianconi@redhat.com> (sfid-20180610_125158_160399_78F0D558)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-06-19 07:47, Brian Norris wrote:
-> Hi Govind,
-> 
-> One more side note: this series is called v2, but I see an older v3.
-> What's up with that?
-> 
+Move init related code shared between mt76x2 and mt76x2u in
+mt76x2-common module
 
-Earlier was typo, it was first version.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/Makefile   |   3 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2.h   |   6 +
+ .../net/wireless/mediatek/mt76/mt76x2_init.c  | 232 ----------------
+ .../mediatek/mt76/mt76x2_init_common.c        | 253 ++++++++++++++++++
+ 4 files changed, 261 insertions(+), 233 deletions(-)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c
 
-> On Tue, Jun 05, 2018 at 06:03:04PM +0530, Govind Singh wrote:
->> Add QMI client driver for Q6 integrated WLAN connectivity subsystem.
->> This module is responsible for communicating WLAN control messages to 
->> FW
->> over QMI interface.
->> 
->> QUALCOMM MSM Interface(QMI) provides the control interface between
->> components running b/w remote processors with underlying transport 
->> layer
->> based on integrated chipset(shared memory) or discrete 
->> chipset(PCI/USB/SDIO/UART).
-> 
-> So this seems to imply QMI would work with transports that are not
-> integrated. Except, your code is directly calling SNOC (one of your
-> integrated chipset interfaces) code from the QMI driver. Correct? I
-> suppose that's OK for now, but it's a little misleading. If you 
-> actually
-> intend this to support multiple transports, then you might instead want
-> a callback interface for this.
-> 
-
-Agree, As of now there is no road-map to support qmi on discrete 
-chip-set on ath10k tree.
-Probably if required in future we can use some generic callback and 
-opaque structures to
-make it independent to integrated/discrete chip set.
-
->> QMI client driver implementation is based on qmi frmework 
->> https://lwn.net/Articles/729924/.
->> 
->> Below is the sequence of qmi handshake.
->> 
->>        QMI CLIENT(APPS)                                         QMI 
->> SERVER(FW in Q6)
->> 
->>                          <------wlan service discoverd----
->> 
->>                        -----connect to wlam qmi service----->
->> 
->>                        ------------wlan info request----->
->> 
->>                        <------------wlan info resp------------
->> 
->>                        ------------msa info req-------->
->> 
->>                      <------------msa info resp------------
->> 
->>                      ------------msa ready req-------->
->> 
->>                      <------------msa ready resp------------
->> 
->>                      <------------msa ready indication-------
->> 
->>                      ------------capability req------->
->> 
->>                     <------------capability resp------------
->> 
->>                     ------------qmi bdf req--------->
->> 
->>                      <------------qmi bdf resp------------
->> 
->>                       ------------qmi cal trigger------->
->> 
->>                   <------------ QMI FW ready indication-------
-> 
-> Let's see if I'm interpreting this right:
-> 
->  * The above process is just initiating a handshake with the QMI
->    service and doesn't actually do any loading of firmware on its own;
->    it just hands things off to the SNOC client driver (and ath10k core)
->    once the firmware is magically ready (??)
-
-Yes, it is initiating the handshakes once qmi service is up on the 
-target Q6.
-
->  * The ATH10K_FW_FEATURE_NON_BMI flag you added previously basically
->    provides a way for a driver (and now we see which driver; it's this
->    QMI / SNOC driver) to completely sidestep the typicaly in-kernel
->    firmware load implementation; in fact, the kernel only reads the
->    WLAN firmware just to parse some feature flags, not to actually
->    program it to the device
->  * Some yet-unmentioned proprietary app is involved to handle
->    sideloading the actual firmware from user space
-> 
-
-WLAN fw is running in modem Q6 as user PD(protection domain).
-Sequence of user PD loading is given below as per current design of 
-Modem Q6 fw.
-
-1) Remote proc PIL driver loads the modem fw/ROOT PD.
-2) As part of ROOT pd boot-up it queries to a daemon in apps 
-processor(pd_mapper)
-to determine how many usre pd's are getting supported in the remote 
-processor(Q6).
-3)
-
-> Is this correct? If not, please correct me. But if it is:
-> 
->  * When does the user space app actually load the WLAN firmware? I'm 
-> not
->    sure I can place it in the above diagram.
->  * Is there any open source implementation of this? How am I supposed 
-> to
->    actually use this driver, if it relies on proprietary components 
-> that
->    I can't review and aren't really even mentioned?
-> 
-
-
-> I hope I'm sorely wrong on this. But if I'm not, I don't see why this
-> driver should be merged at all. Linux drivers should be self-sufficient
-> wherever possible, and I don't see a good reason why this driver can't
-> manage actually loading the WLAN firmware on its own, similar to how 
-> the
-> BMI component of the ath10k driver loads firmware for other ath10k
-> transports. But even more importantly: I believe this driver is hiding
-> the fact that it relies on undocumented proprietary components to run 
-> on
-> the CPU [1] just to make use of it at all.
-> 
-> Brian
-> 
-> [1] It's an unfortunate fact of life that Wifi (and in this case,
-> modem+Wifi) processors will run proprietary firmware, but it's not
-> accepted that Linux relies on proprietary user space.
-> 
->> Changes in V2:
->> 	Removed qmi client driver and integrated qmi client handshakes in 
->> snoc platform driver.
->> 	Addressed comments v1 version.
->> 	Switched to ath10k bdf download infra(board-2.bin)
->> 	Added MSA fixed region support to support unload use-case.
->> 	Unified logging.
->> 
->> Testing:
->> 	Tested all qmi handshakes, driver load/unload and STA/SAP sanity 
->> testing.
->> 	Tested HW: SDM845(WCN3990)
->> 	Tested FW: WLAN.HL.2.0-01192-QCAHLSWMTPLZ-1
->> 
->> 
->> 
->> Govind Singh (5):
->>   ath10k: Add qmi service helpers for wcn3990 qmi client
->>   dt: bindings: add bindings for msa memory region
->>   ath10k: Add debug mask for QMI layer
->>   firmware: qcom: scm: Add WLAN VMID for Qualcomm SCM interface
->>   ath10k: Add QMI message handshake for wcn3990 client
->> 
->> Rakesh Pillai (1):
->>   ath10k: Add support to create boardname for non-bmi target
->> 
->>  .../bindings/net/wireless/qcom,ath10k.txt     |    4 +
->>  drivers/net/wireless/ath/ath10k/Kconfig       |   13 +-
->>  drivers/net/wireless/ath/ath10k/Makefile      |    4 +-
->>  drivers/net/wireless/ath/ath10k/core.c        |   20 +-
->>  drivers/net/wireless/ath/ath10k/core.h        |    4 +
->>  drivers/net/wireless/ath/ath10k/debug.h       |    1 +
->>  drivers/net/wireless/ath/ath10k/qmi.c         | 1030 ++++++++
->>  drivers/net/wireless/ath/ath10k/qmi.h         |  136 ++
->>  .../net/wireless/ath/ath10k/qmi_wlfw_v01.c    | 2072 
->> +++++++++++++++++
->>  .../net/wireless/ath/ath10k/qmi_wlfw_v01.h    |  677 ++++++
->>  drivers/net/wireless/ath/ath10k/snoc.c        |  209 +-
->>  drivers/net/wireless/ath/ath10k/snoc.h        |    3 +
->>  include/linux/qcom_scm.h                      |    4 +-
->>  13 files changed, 4160 insertions(+), 17 deletions(-)
->>  create mode 100644 drivers/net/wireless/ath/ath10k/qmi.c
->>  create mode 100644 drivers/net/wireless/ath/ath10k/qmi.h
->>  create mode 100644 drivers/net/wireless/ath/ath10k/qmi_wlfw_v01.c
->>  create mode 100644 drivers/net/wireless/ath/ath10k/qmi_wlfw_v01.h
->> 
->> --
->> 2.17.0
->> 
+diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
+index bedb671200ea..8342b4d38220 100644
+--- a/drivers/net/wireless/mediatek/mt76/Makefile
++++ b/drivers/net/wireless/mediatek/mt76/Makefile
+@@ -8,7 +8,8 @@ mt76-y := \
+ CFLAGS_trace.o := -I$(src)
+ 
+ mt76x2-common-y := \
+-	mt76x2_eeprom.o mt76x2_tx_common.o mt76x2_mac_common.o
++	mt76x2_eeprom.o mt76x2_tx_common.o mt76x2_mac_common.o \
++	mt76x2_init_common.o
+ 
+ mt76x2e-y := \
+ 	mt76x2_pci.o mt76x2_dma.o \
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+index c643dc0e19c6..48fbc1f2f1de 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+@@ -210,6 +210,8 @@ static inline bool wait_for_wpdma(struct mt76x2_dev *dev)
+ 
+ extern const struct ieee80211_ops mt76x2_ops;
+ 
++extern struct ieee80211_rate mt76x2_rates[12];
++
+ struct mt76x2_dev *mt76x2_alloc_device(struct device *pdev);
+ int mt76x2_register_device(struct mt76x2_dev *dev);
+ void mt76x2_init_debugfs(struct mt76x2_dev *dev);
+@@ -277,5 +279,9 @@ bool mt76x2_mac_load_tx_status(struct mt76x2_dev *dev,
+ 			       struct mt76x2_tx_status *stat);
+ void mt76x2_send_tx_status(struct mt76x2_dev *dev,
+ 			   struct mt76x2_tx_status *stat, u8 *update);
++void mt76x2_reset_wlan(struct mt76x2_dev *dev, bool enable);
++void mt76x2_init_txpower(struct mt76x2_dev *dev,
++			 struct ieee80211_supported_band *sband);
++void mt76_write_mac_initvals(struct mt76x2_dev *dev);
+ 
+ #endif
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+index 9398da6806e6..b814391f79ac 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+@@ -19,11 +19,6 @@
+ #include "mt76x2_eeprom.h"
+ #include "mt76x2_mcu.h"
+ 
+-struct mt76x2_reg_pair {
+-	u32 reg;
+-	u32 value;
+-};
+-
+ static void
+ mt76x2_mac_pbf_init(struct mt76x2_dev *dev)
+ {
+@@ -42,107 +37,6 @@ mt76x2_mac_pbf_init(struct mt76x2_dev *dev)
+ 	mt76_wr(dev, MT_PBF_RX_MAX_PCNT, 0xfebf);
+ }
+ 
+-static void
+-mt76x2_write_reg_pairs(struct mt76x2_dev *dev,
+-		       const struct mt76x2_reg_pair *data, int len)
+-{
+-	while (len > 0) {
+-		mt76_wr(dev, data->reg, data->value);
+-		len--;
+-		data++;
+-	}
+-}
+-
+-static void
+-mt76_write_mac_initvals(struct mt76x2_dev *dev)
+-{
+-#define DEFAULT_PROT_CFG				\
+-	(FIELD_PREP(MT_PROT_CFG_RATE, 0x2004) |		\
+-	 FIELD_PREP(MT_PROT_CFG_NAV, 1) |			\
+-	 FIELD_PREP(MT_PROT_CFG_TXOP_ALLOW, 0x3f) |	\
+-	 MT_PROT_CFG_RTS_THRESH)
+-
+-#define DEFAULT_PROT_CFG_20				\
+-	(FIELD_PREP(MT_PROT_CFG_RATE, 0x2004) |		\
+-	 FIELD_PREP(MT_PROT_CFG_CTRL, 1) |		\
+-	 FIELD_PREP(MT_PROT_CFG_NAV, 1) |			\
+-	 FIELD_PREP(MT_PROT_CFG_TXOP_ALLOW, 0x17))
+-
+-#define DEFAULT_PROT_CFG_40				\
+-	(FIELD_PREP(MT_PROT_CFG_RATE, 0x2084) |		\
+-	 FIELD_PREP(MT_PROT_CFG_CTRL, 1) |		\
+-	 FIELD_PREP(MT_PROT_CFG_NAV, 1) |			\
+-	 FIELD_PREP(MT_PROT_CFG_TXOP_ALLOW, 0x3f))
+-
+-	static const struct mt76x2_reg_pair vals[] = {
+-		/* Copied from MediaTek reference source */
+-		{ MT_PBF_SYS_CTRL,		0x00080c00 },
+-		{ MT_PBF_CFG,			0x1efebcff },
+-		{ MT_FCE_PSE_CTRL,		0x00000001 },
+-		{ MT_MAC_SYS_CTRL,		0x0000000c },
+-		{ MT_MAX_LEN_CFG,		0x003e3f00 },
+-		{ MT_AMPDU_MAX_LEN_20M1S,	0xaaa99887 },
+-		{ MT_AMPDU_MAX_LEN_20M2S,	0x000000aa },
+-		{ MT_XIFS_TIME_CFG,		0x33a40d0a },
+-		{ MT_BKOFF_SLOT_CFG,		0x00000209 },
+-		{ MT_TBTT_SYNC_CFG,		0x00422010 },
+-		{ MT_PWR_PIN_CFG,		0x00000000 },
+-		{ 0x1238,			0x001700c8 },
+-		{ MT_TX_SW_CFG0,		0x00101001 },
+-		{ MT_TX_SW_CFG1,		0x00010000 },
+-		{ MT_TX_SW_CFG2,		0x00000000 },
+-		{ MT_TXOP_CTRL_CFG,		0x0400583f },
+-		{ MT_TX_RTS_CFG,		0x00100020 },
+-		{ MT_TX_TIMEOUT_CFG,		0x000a2290 },
+-		{ MT_TX_RETRY_CFG,		0x47f01f0f },
+-		{ MT_EXP_ACK_TIME,		0x002c00dc },
+-		{ MT_TX_PROT_CFG6,		0xe3f42004 },
+-		{ MT_TX_PROT_CFG7,		0xe3f42084 },
+-		{ MT_TX_PROT_CFG8,		0xe3f42104 },
+-		{ MT_PIFS_TX_CFG,		0x00060fff },
+-		{ MT_RX_FILTR_CFG,		0x00015f97 },
+-		{ MT_LEGACY_BASIC_RATE,		0x0000017f },
+-		{ MT_HT_BASIC_RATE,		0x00004003 },
+-		{ MT_PN_PAD_MODE,		0x00000003 },
+-		{ MT_TXOP_HLDR_ET,		0x00000002 },
+-		{ 0xa44,			0x00000000 },
+-		{ MT_HEADER_TRANS_CTRL_REG,	0x00000000 },
+-		{ MT_TSO_CTRL,			0x00000000 },
+-		{ MT_AUX_CLK_CFG,		0x00000000 },
+-		{ MT_DACCLK_EN_DLY_CFG,		0x00000000 },
+-		{ MT_TX_ALC_CFG_4,		0x00000000 },
+-		{ MT_TX_ALC_VGA3,		0x00000000 },
+-		{ MT_TX_PWR_CFG_0,		0x3a3a3a3a },
+-		{ MT_TX_PWR_CFG_1,		0x3a3a3a3a },
+-		{ MT_TX_PWR_CFG_2,		0x3a3a3a3a },
+-		{ MT_TX_PWR_CFG_3,		0x3a3a3a3a },
+-		{ MT_TX_PWR_CFG_4,		0x3a3a3a3a },
+-		{ MT_TX_PWR_CFG_7,		0x3a3a3a3a },
+-		{ MT_TX_PWR_CFG_8,		0x0000003a },
+-		{ MT_TX_PWR_CFG_9,		0x0000003a },
+-		{ MT_EFUSE_CTRL,		0x0000d000 },
+-		{ MT_PAUSE_ENABLE_CONTROL1,	0x0000000a },
+-		{ MT_FCE_WLAN_FLOW_CONTROL1,	0x60401c18 },
+-		{ MT_WPDMA_DELAY_INT_CFG,	0x94ff0000 },
+-		{ MT_TX_SW_CFG3,		0x00000004 },
+-		{ MT_HT_FBK_TO_LEGACY,		0x00001818 },
+-		{ MT_VHT_HT_FBK_CFG1,		0xedcba980 },
+-		{ MT_PROT_AUTO_TX_CFG,		0x00830083 },
+-		{ MT_HT_CTRL_CFG,		0x000001ff },
+-	};
+-	struct mt76x2_reg_pair prot_vals[] = {
+-		{ MT_CCK_PROT_CFG,		DEFAULT_PROT_CFG },
+-		{ MT_OFDM_PROT_CFG,		DEFAULT_PROT_CFG },
+-		{ MT_MM20_PROT_CFG,		DEFAULT_PROT_CFG_20 },
+-		{ MT_MM40_PROT_CFG,		DEFAULT_PROT_CFG_40 },
+-		{ MT_GF20_PROT_CFG,		DEFAULT_PROT_CFG_20 },
+-		{ MT_GF40_PROT_CFG,		DEFAULT_PROT_CFG_40 },
+-	};
+-
+-	mt76x2_write_reg_pairs(dev, vals, ARRAY_SIZE(vals));
+-	mt76x2_write_reg_pairs(dev, prot_vals, ARRAY_SIZE(prot_vals));
+-}
+-
+ static void
+ mt76x2_fixup_xtal(struct mt76x2_dev *dev)
+ {
+@@ -435,45 +329,6 @@ void mt76x2_set_tx_ackto(struct mt76x2_dev *dev)
+ 		       MT_TX_TIMEOUT_CFG_ACKTO, ackto);
+ }
+ 
+-static void
+-mt76x2_set_wlan_state(struct mt76x2_dev *dev, bool enable)
+-{
+-	u32 val = mt76_rr(dev, MT_WLAN_FUN_CTRL);
+-
+-	if (enable)
+-		val |= (MT_WLAN_FUN_CTRL_WLAN_EN |
+-			MT_WLAN_FUN_CTRL_WLAN_CLK_EN);
+-	else
+-		val &= ~(MT_WLAN_FUN_CTRL_WLAN_EN |
+-			 MT_WLAN_FUN_CTRL_WLAN_CLK_EN);
+-
+-	mt76_wr(dev, MT_WLAN_FUN_CTRL, val);
+-	udelay(20);
+-}
+-
+-static void
+-mt76x2_reset_wlan(struct mt76x2_dev *dev, bool enable)
+-{
+-	u32 val;
+-
+-	val = mt76_rr(dev, MT_WLAN_FUN_CTRL);
+-
+-	val &= ~MT_WLAN_FUN_CTRL_FRC_WL_ANT_SEL;
+-
+-	if (val & MT_WLAN_FUN_CTRL_WLAN_EN) {
+-		val |= MT_WLAN_FUN_CTRL_WLAN_RESET_RF;
+-		mt76_wr(dev, MT_WLAN_FUN_CTRL, val);
+-		udelay(20);
+-
+-		val &= ~MT_WLAN_FUN_CTRL_WLAN_RESET_RF;
+-	}
+-
+-	mt76_wr(dev, MT_WLAN_FUN_CTRL, val);
+-	udelay(20);
+-
+-	mt76x2_set_wlan_state(dev, enable);
+-}
+-
+ int mt76x2_init_hardware(struct mt76x2_dev *dev)
+ {
+ 	static const u16 beacon_offsets[16] = {
+@@ -595,34 +450,6 @@ static void mt76x2_regd_notifier(struct wiphy *wiphy,
+ 	mt76x2_dfs_set_domain(dev, request->dfs_region);
+ }
+ 
+-#define CCK_RATE(_idx, _rate) {					\
+-	.bitrate = _rate,					\
+-	.flags = IEEE80211_RATE_SHORT_PREAMBLE,			\
+-	.hw_value = (MT_PHY_TYPE_CCK << 8) | _idx,		\
+-	.hw_value_short = (MT_PHY_TYPE_CCK << 8) | (8 + _idx),	\
+-}
+-
+-#define OFDM_RATE(_idx, _rate) {				\
+-	.bitrate = _rate,					\
+-	.hw_value = (MT_PHY_TYPE_OFDM << 8) | _idx,		\
+-	.hw_value_short = (MT_PHY_TYPE_OFDM << 8) | _idx,	\
+-}
+-
+-static struct ieee80211_rate mt76x2_rates[] = {
+-	CCK_RATE(0, 10),
+-	CCK_RATE(1, 20),
+-	CCK_RATE(2, 55),
+-	CCK_RATE(3, 110),
+-	OFDM_RATE(0, 60),
+-	OFDM_RATE(1, 90),
+-	OFDM_RATE(2, 120),
+-	OFDM_RATE(3, 180),
+-	OFDM_RATE(4, 240),
+-	OFDM_RATE(5, 360),
+-	OFDM_RATE(6, 480),
+-	OFDM_RATE(7, 540),
+-};
+-
+ static const struct ieee80211_iface_limit if_limits[] = {
+ 	{
+ 		.max = 1,
+@@ -699,65 +526,6 @@ static void mt76x2_led_set_brightness(struct led_classdev *led_cdev,
+ 		mt76x2_led_set_config(mt76, 0xff, 0);
+ }
+ 
+-static void
+-mt76x2_init_txpower(struct mt76x2_dev *dev,
+-		    struct ieee80211_supported_band *sband)
+-{
+-	struct ieee80211_channel *chan;
+-	struct mt76x2_tx_power_info txp;
+-	struct mt76_rate_power t = {};
+-	int target_power;
+-	int i;
+-
+-	for (i = 0; i < sband->n_channels; i++) {
+-		chan = &sband->channels[i];
+-
+-		mt76x2_get_power_info(dev, &txp, chan);
+-
+-		target_power = max_t(int, (txp.chain[0].target_power +
+-					   txp.chain[0].delta),
+-					  (txp.chain[1].target_power +
+-					   txp.chain[1].delta));
+-
+-		mt76x2_get_rate_power(dev, &t, chan);
+-
+-		chan->max_power = mt76x2_get_max_rate_power(&t) +
+-				  target_power;
+-		chan->max_power /= 2;
+-
+-		/* convert to combined output power on 2x2 devices */
+-		chan->max_power += 3;
+-	}
+-}
+-
+-void mt76x2_init_device(struct mt76x2_dev *dev)
+-{
+-	struct ieee80211_hw *hw = mt76_hw(dev);
+-
+-	hw->queues = 4;
+-	hw->max_rates = 1;
+-	hw->max_report_rates = 7;
+-	hw->max_rate_tries = 1;
+-	hw->extra_tx_headroom = 2;
+-
+-	hw->sta_data_size = sizeof(struct mt76x2_sta);
+-	hw->vif_data_size = sizeof(struct mt76x2_vif);
+-
+-	ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
+-	ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
+-
+-	dev->mt76.sband_2g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
+-	dev->mt76.sband_5g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
+-
+-	dev->chainmask = 0x202;
+-	dev->global_wcid.idx = 255;
+-	dev->global_wcid.hw_key_idx = -1;
+-	dev->slottime = 9;
+-
+-	/* init antenna configuration */
+-	dev->mt76.antenna_mask = 3;
+-}
+-
+ int mt76x2_register_device(struct mt76x2_dev *dev)
+ {
+ 	struct ieee80211_hw *hw = mt76_hw(dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c
+new file mode 100644
+index 000000000000..94ffd131c8ae
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c
+@@ -0,0 +1,253 @@
++/*
++ * Copyright (C) 2016 Felix Fietkau <nbd@nbd.name>
++ * Copyright (C) 2018 Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include "mt76x2.h"
++#include "mt76x2_eeprom.h"
++
++#define CCK_RATE(_idx, _rate) {					\
++	.bitrate = _rate,					\
++	.flags = IEEE80211_RATE_SHORT_PREAMBLE,			\
++	.hw_value = (MT_PHY_TYPE_CCK << 8) | _idx,		\
++	.hw_value_short = (MT_PHY_TYPE_CCK << 8) | (8 + _idx),	\
++}
++
++#define OFDM_RATE(_idx, _rate) {				\
++	.bitrate = _rate,					\
++	.hw_value = (MT_PHY_TYPE_OFDM << 8) | _idx,		\
++	.hw_value_short = (MT_PHY_TYPE_OFDM << 8) | _idx,	\
++}
++
++struct ieee80211_rate mt76x2_rates[] = {
++	CCK_RATE(0, 10),
++	CCK_RATE(1, 20),
++	CCK_RATE(2, 55),
++	CCK_RATE(3, 110),
++	OFDM_RATE(0, 60),
++	OFDM_RATE(1, 90),
++	OFDM_RATE(2, 120),
++	OFDM_RATE(3, 180),
++	OFDM_RATE(4, 240),
++	OFDM_RATE(5, 360),
++	OFDM_RATE(6, 480),
++	OFDM_RATE(7, 540),
++};
++EXPORT_SYMBOL_GPL(mt76x2_rates);
++
++struct mt76x2_reg_pair {
++	u32 reg;
++	u32 value;
++};
++
++static void
++mt76x2_set_wlan_state(struct mt76x2_dev *dev, bool enable)
++{
++	u32 val = mt76_rr(dev, MT_WLAN_FUN_CTRL);
++
++	if (enable)
++		val |= (MT_WLAN_FUN_CTRL_WLAN_EN |
++			MT_WLAN_FUN_CTRL_WLAN_CLK_EN);
++	else
++		val &= ~(MT_WLAN_FUN_CTRL_WLAN_EN |
++			 MT_WLAN_FUN_CTRL_WLAN_CLK_EN);
++
++	mt76_wr(dev, MT_WLAN_FUN_CTRL, val);
++	udelay(20);
++}
++
++void mt76x2_reset_wlan(struct mt76x2_dev *dev, bool enable)
++{
++	u32 val;
++
++	val = mt76_rr(dev, MT_WLAN_FUN_CTRL);
++
++	val &= ~MT_WLAN_FUN_CTRL_FRC_WL_ANT_SEL;
++
++	if (val & MT_WLAN_FUN_CTRL_WLAN_EN) {
++		val |= MT_WLAN_FUN_CTRL_WLAN_RESET_RF;
++		mt76_wr(dev, MT_WLAN_FUN_CTRL, val);
++		udelay(20);
++
++		val &= ~MT_WLAN_FUN_CTRL_WLAN_RESET_RF;
++	}
++
++	mt76_wr(dev, MT_WLAN_FUN_CTRL, val);
++	udelay(20);
++
++	mt76x2_set_wlan_state(dev, enable);
++}
++EXPORT_SYMBOL_GPL(mt76x2_reset_wlan);
++
++static void
++mt76x2_write_reg_pairs(struct mt76x2_dev *dev,
++		       const struct mt76x2_reg_pair *data, int len)
++{
++	while (len > 0) {
++		mt76_wr(dev, data->reg, data->value);
++		len--;
++		data++;
++	}
++}
++
++void mt76_write_mac_initvals(struct mt76x2_dev *dev)
++{
++#define DEFAULT_PROT_CFG				\
++	(FIELD_PREP(MT_PROT_CFG_RATE, 0x2004) |		\
++	 FIELD_PREP(MT_PROT_CFG_NAV, 1) |			\
++	 FIELD_PREP(MT_PROT_CFG_TXOP_ALLOW, 0x3f) |	\
++	 MT_PROT_CFG_RTS_THRESH)
++
++#define DEFAULT_PROT_CFG_20				\
++	(FIELD_PREP(MT_PROT_CFG_RATE, 0x2004) |		\
++	 FIELD_PREP(MT_PROT_CFG_CTRL, 1) |		\
++	 FIELD_PREP(MT_PROT_CFG_NAV, 1) |			\
++	 FIELD_PREP(MT_PROT_CFG_TXOP_ALLOW, 0x17))
++
++#define DEFAULT_PROT_CFG_40				\
++	(FIELD_PREP(MT_PROT_CFG_RATE, 0x2084) |		\
++	 FIELD_PREP(MT_PROT_CFG_CTRL, 1) |		\
++	 FIELD_PREP(MT_PROT_CFG_NAV, 1) |			\
++	 FIELD_PREP(MT_PROT_CFG_TXOP_ALLOW, 0x3f))
++
++	static const struct mt76x2_reg_pair vals[] = {
++		/* Copied from MediaTek reference source */
++		{ MT_PBF_SYS_CTRL,		0x00080c00 },
++		{ MT_PBF_CFG,			0x1efebcff },
++		{ MT_FCE_PSE_CTRL,		0x00000001 },
++		{ MT_MAC_SYS_CTRL,		0x0000000c },
++		{ MT_MAX_LEN_CFG,		0x003e3f00 },
++		{ MT_AMPDU_MAX_LEN_20M1S,	0xaaa99887 },
++		{ MT_AMPDU_MAX_LEN_20M2S,	0x000000aa },
++		{ MT_XIFS_TIME_CFG,		0x33a40d0a },
++		{ MT_BKOFF_SLOT_CFG,		0x00000209 },
++		{ MT_TBTT_SYNC_CFG,		0x00422010 },
++		{ MT_PWR_PIN_CFG,		0x00000000 },
++		{ 0x1238,			0x001700c8 },
++		{ MT_TX_SW_CFG0,		0x00101001 },
++		{ MT_TX_SW_CFG1,		0x00010000 },
++		{ MT_TX_SW_CFG2,		0x00000000 },
++		{ MT_TXOP_CTRL_CFG,		0x0400583f },
++		{ MT_TX_RTS_CFG,		0x00100020 },
++		{ MT_TX_TIMEOUT_CFG,		0x000a2290 },
++		{ MT_TX_RETRY_CFG,		0x47f01f0f },
++		{ MT_EXP_ACK_TIME,		0x002c00dc },
++		{ MT_TX_PROT_CFG6,		0xe3f42004 },
++		{ MT_TX_PROT_CFG7,		0xe3f42084 },
++		{ MT_TX_PROT_CFG8,		0xe3f42104 },
++		{ MT_PIFS_TX_CFG,		0x00060fff },
++		{ MT_RX_FILTR_CFG,		0x00015f97 },
++		{ MT_LEGACY_BASIC_RATE,		0x0000017f },
++		{ MT_HT_BASIC_RATE,		0x00004003 },
++		{ MT_PN_PAD_MODE,		0x00000003 },
++		{ MT_TXOP_HLDR_ET,		0x00000002 },
++		{ 0xa44,			0x00000000 },
++		{ MT_HEADER_TRANS_CTRL_REG,	0x00000000 },
++		{ MT_TSO_CTRL,			0x00000000 },
++		{ MT_AUX_CLK_CFG,		0x00000000 },
++		{ MT_DACCLK_EN_DLY_CFG,		0x00000000 },
++		{ MT_TX_ALC_CFG_4,		0x00000000 },
++		{ MT_TX_ALC_VGA3,		0x00000000 },
++		{ MT_TX_PWR_CFG_0,		0x3a3a3a3a },
++		{ MT_TX_PWR_CFG_1,		0x3a3a3a3a },
++		{ MT_TX_PWR_CFG_2,		0x3a3a3a3a },
++		{ MT_TX_PWR_CFG_3,		0x3a3a3a3a },
++		{ MT_TX_PWR_CFG_4,		0x3a3a3a3a },
++		{ MT_TX_PWR_CFG_7,		0x3a3a3a3a },
++		{ MT_TX_PWR_CFG_8,		0x0000003a },
++		{ MT_TX_PWR_CFG_9,		0x0000003a },
++		{ MT_EFUSE_CTRL,		0x0000d000 },
++		{ MT_PAUSE_ENABLE_CONTROL1,	0x0000000a },
++		{ MT_FCE_WLAN_FLOW_CONTROL1,	0x60401c18 },
++		{ MT_WPDMA_DELAY_INT_CFG,	0x94ff0000 },
++		{ MT_TX_SW_CFG3,		0x00000004 },
++		{ MT_HT_FBK_TO_LEGACY,		0x00001818 },
++		{ MT_VHT_HT_FBK_CFG1,		0xedcba980 },
++		{ MT_PROT_AUTO_TX_CFG,		0x00830083 },
++		{ MT_HT_CTRL_CFG,		0x000001ff },
++	};
++	struct mt76x2_reg_pair prot_vals[] = {
++		{ MT_CCK_PROT_CFG,		DEFAULT_PROT_CFG },
++		{ MT_OFDM_PROT_CFG,		DEFAULT_PROT_CFG },
++		{ MT_MM20_PROT_CFG,		DEFAULT_PROT_CFG_20 },
++		{ MT_MM40_PROT_CFG,		DEFAULT_PROT_CFG_40 },
++		{ MT_GF20_PROT_CFG,		DEFAULT_PROT_CFG_20 },
++		{ MT_GF40_PROT_CFG,		DEFAULT_PROT_CFG_40 },
++	};
++
++	mt76x2_write_reg_pairs(dev, vals, ARRAY_SIZE(vals));
++	mt76x2_write_reg_pairs(dev, prot_vals, ARRAY_SIZE(prot_vals));
++}
++EXPORT_SYMBOL_GPL(mt76_write_mac_initvals);
++
++void mt76x2_init_device(struct mt76x2_dev *dev)
++{
++	struct ieee80211_hw *hw = mt76_hw(dev);
++
++	hw->queues = 4;
++	hw->max_rates = 1;
++	hw->max_report_rates = 7;
++	hw->max_rate_tries = 1;
++	hw->extra_tx_headroom = 2;
++
++	hw->sta_data_size = sizeof(struct mt76x2_sta);
++	hw->vif_data_size = sizeof(struct mt76x2_vif);
++
++	ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
++	ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
++
++	dev->mt76.sband_2g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
++	dev->mt76.sband_5g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
++
++	dev->chainmask = 0x202;
++	dev->global_wcid.idx = 255;
++	dev->global_wcid.hw_key_idx = -1;
++	dev->slottime = 9;
++
++	/* init antenna configuration */
++	dev->mt76.antenna_mask = 3;
++}
++EXPORT_SYMBOL_GPL(mt76x2_init_device);
++
++void mt76x2_init_txpower(struct mt76x2_dev *dev,
++			 struct ieee80211_supported_band *sband)
++{
++	struct ieee80211_channel *chan;
++	struct mt76x2_tx_power_info txp;
++	struct mt76_rate_power t = {};
++	int target_power;
++	int i;
++
++	for (i = 0; i < sband->n_channels; i++) {
++		chan = &sband->channels[i];
++
++		mt76x2_get_power_info(dev, &txp, chan);
++
++		target_power = max_t(int, (txp.chain[0].target_power +
++					   txp.chain[0].delta),
++					  (txp.chain[1].target_power +
++					   txp.chain[1].delta));
++
++		mt76x2_get_rate_power(dev, &t, chan);
++
++		chan->max_power = mt76x2_get_max_rate_power(&t) +
++				  target_power;
++		chan->max_power /= 2;
++
++		/* convert to combined output power on 2x2 devices */
++		chan->max_power += 3;
++	}
++}
++EXPORT_SYMBOL_GPL(mt76x2_init_txpower);
+-- 
+2.17.1
