@@ -1,57 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:38690 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751293AbeFANWG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Jun 2018 09:22:06 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Samuel Ortiz <sameo@linux.intel.com>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-usb@vger.kernel.org,
-        =?UTF-8?q?Micha=C5=82=20Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>,
-        Michael Thalmeier <michael.thalmeier@hale.at>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH resend 2/2] NFC: pn533: Fix wrong GFP flag usage
-Date: Fri,  1 Jun 2018 15:22:00 +0200
-Message-Id: <20180601132200.25973-3-hdegoede@redhat.com> (sfid-20180601_152218_476722_F705512F)
-In-Reply-To: <20180601132200.25973-1-hdegoede@redhat.com>
-References: <20180601132200.25973-1-hdegoede@redhat.com>
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:14346 "EHLO
+        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752723AbeFJU3k (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 10 Jun 2018 16:29:40 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com
+Subject: [PATCH v2 0/7] wil6210 patches
+Date: Sun, 10 Jun 2018 23:29:28 +0300
+Message-Id: <1528662575-7746-1-git-send-email-merez@codeaurora.org> (sfid-20180610_222957_361582_88584028)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pn533_recv_response() is an urb completion handler, so it must use
-GFP_ATOMIC. pn533_usb_send_frame() OTOH runs from a regular sleeping
-context, so the pn533_submit_urb_for_response() there (and only there)
-can use the regular GFP_KERNEL flags.
+Changes from v1:
+- Removal of module parameters
+- Addition of debugfs entries for configuring enhanced DMA
+- Fixing kbuild bot error
+- Enabling AMSDU by default (based on FW support)
+- Fixing L2 translation mode
 
-BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1514134
-Fixes: 9815c7cf22da ("NFC: pn533: Separate physical layer from ...")
-Cc: Michael Thalmeier <michael.thalmeier@hale.at>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/nfc/pn533/usb.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+The following set of patches add support for new wil6210 device (Talyn ver 2.0):
+- Definition of the new device ID and memory areas
+- New boot flow procedure and reset sequence
+- Support new DMA interface - enhanced DMA
+- Support new HW offloads, such as TSO, RX reorder and AMSDU
 
-diff --git a/drivers/nfc/pn533/usb.c b/drivers/nfc/pn533/usb.c
-index c9398712ba31..2aff1ddadc1d 100644
---- a/drivers/nfc/pn533/usb.c
-+++ b/drivers/nfc/pn533/usb.c
-@@ -75,7 +75,7 @@ static void pn533_recv_response(struct urb *urb)
- 	struct sk_buff *skb = NULL;
- 
- 	if (!urb->status) {
--		skb = alloc_skb(urb->actual_length, GFP_KERNEL);
-+		skb = alloc_skb(urb->actual_length, GFP_ATOMIC);
- 		if (!skb) {
- 			nfc_err(&phy->udev->dev, "failed to alloc memory\n");
- 		} else {
-@@ -185,7 +185,7 @@ static int pn533_usb_send_frame(struct pn533 *dev,
- 
- 	if (dev->protocol_type == PN533_PROTO_REQ_RESP) {
- 		/* request for response for sent packet directly */
--		rc = pn533_submit_urb_for_response(phy, GFP_ATOMIC);
-+		rc = pn533_submit_urb_for_response(phy, GFP_KERNEL);
- 		if (rc)
- 			goto error;
- 	} else if (dev->protocol_type == PN533_PROTO_REQ_ACK_RESP) {
+Gidon Studinski (3):
+  wil6210: add support for enhanced DMA structures
+  wil6210: initialize TX and RX enhanced DMA rings
+  wil6210: add support for enhanced DMA RX data flows
+
+Maya Erez (4):
+  wil6210: add support for Talyn-MB (Talyn ver 2.0) device
+  wil6210: add support for enhanced DMA TX data flows
+  wil6210: add support for enhanced DMA debugfs
+  wil6210: add support for Talyn-MB boot flow
+
+ drivers/net/wireless/ath/wil6210/Makefile     |    1 +
+ drivers/net/wireless/ath/wil6210/cfg80211.c   |   12 +-
+ drivers/net/wireless/ath/wil6210/debugfs.c    |  490 ++++++--
+ drivers/net/wireless/ath/wil6210/ethtool.c    |    2 +-
+ drivers/net/wireless/ath/wil6210/interrupt.c  |  225 +++-
+ drivers/net/wireless/ath/wil6210/main.c       |  360 +++++-
+ drivers/net/wireless/ath/wil6210/netdev.c     |   73 +-
+ drivers/net/wireless/ath/wil6210/pcie_bus.c   |   59 +-
+ drivers/net/wireless/ath/wil6210/pm.c         |    6 +-
+ drivers/net/wireless/ath/wil6210/rx_reorder.c |   21 +-
+ drivers/net/wireless/ath/wil6210/trace.h      |   59 +
+ drivers/net/wireless/ath/wil6210/txrx.c       |  649 +++++-----
+ drivers/net/wireless/ath/wil6210/txrx.h       |  105 +-
+ drivers/net/wireless/ath/wil6210/txrx_edma.c  | 1598 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/txrx_edma.h  |  562 +++++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h    |  227 +++-
+ drivers/net/wireless/ath/wil6210/wmi.c        |  454 ++++++-
+ drivers/net/wireless/ath/wil6210/wmi.h        |  167 ++-
+ 18 files changed, 4436 insertions(+), 634 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/wil6210/txrx_edma.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/txrx_edma.h
+
 -- 
-2.17.0
+1.9.1
