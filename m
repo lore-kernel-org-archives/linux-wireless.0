@@ -1,132 +1,307 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:47712 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754974AbeFYJnH (ORCPT
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:14368 "EHLO
+        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753734AbeFJU3q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Jun 2018 05:43:07 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Douglas Anderson <dianders@chromium.org>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH 1/2] mwifiex: replace rx_pkt_lock by rx_reorder_tbl_lock
-Date: Mon, 25 Jun 2018 15:12:54 +0530
-Message-ID: <1529919775-21274-1-git-send-email-gbhat@marvell.com> (sfid-20180625_114345_262069_D6C210D8)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 10 Jun 2018 16:29:46 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com
+Subject: [PATCH v2 7/7] wil6210: add support for Talyn-MB boot flow
+Date: Sun, 10 Jun 2018 23:29:35 +0300
+Message-Id: <1528662575-7746-8-git-send-email-merez@codeaurora.org> (sfid-20180610_223002_624654_1DDCD114)
+In-Reply-To: <1528662575-7746-1-git-send-email-merez@codeaurora.org>
+References: <1528662575-7746-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-At present driver spinlock protects iteration of list
-rx_reorder_tbl_ptr with rx_reorder_tbl_lock. To protect the
-individual items in this list, it uses rx_pkt_lock. But, we can
-use a single rx_reorder_tbl_lock for both purposes. This patch
-replaces rx_pkt_lock by rx_reorder_tbl_lock.
+Talyn-MB introduces various of FW download options:
+FW download via PCIe, SPI or PBL for secured access.
+The boot and FW download path is determined based on the
+OTP HW register. Driver reads this register as part of the
+SW reset flow and performs the appropriate initialization
+sequence.
 
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c | 19 ++++++++++---------
- drivers/net/wireless/marvell/mwifiex/init.c          |  1 -
- drivers/net/wireless/marvell/mwifiex/main.h          |  3 ---
- 3 files changed, 10 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/wil6210/main.c    | 194 ++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/wil6210/wil6210.h |   9 +-
+ 2 files changed, 171 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-index 7ab44cd..5380fba 100644
---- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-@@ -118,18 +118,18 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
- 		      tbl->win_size;
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index e0072b6..4de19bd 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -112,9 +112,29 @@ static int ring_order_set(const char *val, const struct kernel_param *kp)
+ module_param_cb(bcast_ring_order, &ring_order_ops, &bcast_ring_order, 0444);
+ MODULE_PARM_DESC(bcast_ring_order, " Bcast ring order; size = 1 << order");
  
- 	for (i = 0; i < pkt_to_send; ++i) {
--		spin_lock_irqsave(&priv->rx_pkt_lock, flags);
-+		spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
- 		rx_tmp_ptr = NULL;
- 		if (tbl->rx_reorder_ptr[i]) {
- 			rx_tmp_ptr = tbl->rx_reorder_ptr[i];
- 			tbl->rx_reorder_ptr[i] = NULL;
- 		}
--		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
-+		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
- 		if (rx_tmp_ptr)
- 			mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
+-#define RST_DELAY (20) /* msec, for loop in @wil_target_reset */
++enum {
++	WIL_BOOT_ERR,
++	WIL_BOOT_VANILLA,
++	WIL_BOOT_PRODUCTION,
++	WIL_BOOT_DEVELOPMENT,
++};
++
++enum {
++	WIL_SIG_STATUS_VANILLA = 0x0,
++	WIL_SIG_STATUS_DEVELOPMENT = 0x1,
++	WIL_SIG_STATUS_PRODUCTION = 0x2,
++	WIL_SIG_STATUS_CORRUPTED_PRODUCTION = 0x3,
++};
++
++#define RST_DELAY (20) /* msec, for loop in @wil_wait_device_ready */
+ #define RST_COUNT (1 + 1000/RST_DELAY) /* round up to be above 1 sec total */
+ 
++#define PMU_READY_DELAY_MS (4) /* ms, for sleep in @wil_wait_device_ready */
++
++#define OTP_HW_DELAY (200) /* usec, loop in @wil_wait_device_ready_talyn_mb */
++/* round up to be above 2 ms total */
++#define OTP_HW_COUNT (1 + 2000 / OTP_HW_DELAY)
++
+ /*
+  * Due to a hardware issue,
+  * one has to read/write to/from NIC in 32-bit chunks;
+@@ -831,11 +851,146 @@ static void wil_set_oob_mode(struct wil6210_priv *wil, u8 mode)
  	}
- 
--	spin_lock_irqsave(&priv->rx_pkt_lock, flags);
-+	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
- 	/*
- 	 * We don't have a circular buffer, hence use rotation to simulate
- 	 * circular buffer
-@@ -140,7 +140,7 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
- 	}
- 
- 	tbl->start_win = start_win;
--	spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
-+	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
  }
  
- /*
-@@ -160,18 +160,19 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
- 	unsigned long flags;
+-static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
++static int wil_wait_device_ready(struct wil6210_priv *wil, int no_flash)
+ {
+ 	int delay = 0;
+ 	u32 x, x1 = 0;
  
- 	for (i = 0; i < tbl->win_size; ++i) {
--		spin_lock_irqsave(&priv->rx_pkt_lock, flags);
-+		spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
- 		if (!tbl->rx_reorder_ptr[i]) {
--			spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
-+			spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock,
-+					       flags);
- 			break;
- 		}
- 		rx_tmp_ptr = tbl->rx_reorder_ptr[i];
- 		tbl->rx_reorder_ptr[i] = NULL;
--		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
-+		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
- 		mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
++	/* wait until device ready. */
++	if (no_flash) {
++		msleep(PMU_READY_DELAY_MS);
++
++		wil_dbg_misc(wil, "Reset completed\n");
++	} else {
++		do {
++			msleep(RST_DELAY);
++			x = wil_r(wil, RGF_USER_BL +
++				  offsetof(struct bl_dedicated_registers_v0,
++					   boot_loader_ready));
++			if (x1 != x) {
++				wil_dbg_misc(wil, "BL.ready 0x%08x => 0x%08x\n",
++					     x1, x);
++				x1 = x;
++			}
++			if (delay++ > RST_COUNT) {
++				wil_err(wil, "Reset not completed, bl.ready 0x%08x\n",
++					x);
++				return -ETIME;
++			}
++		} while (x != BL_READY);
++
++		wil_dbg_misc(wil, "Reset completed in %d ms\n",
++			     delay * RST_DELAY);
++	}
++
++	return 0;
++}
++
++static int wil_wait_device_ready_talyn_mb(struct wil6210_priv *wil)
++{
++	u32 otp_hw;
++	u8 signature_status;
++	bool otp_signature_err;
++	bool hw_section_done;
++	u32 otp_qc_secured;
++	int delay = 0;
++
++	/* Wait for OTP signature test to complete */
++	usleep_range(2000, 2200);
++
++	wil->boot_config = WIL_BOOT_ERR;
++
++	/* Poll until OTP signature status is valid.
++	 * In vanilla and development modes, when signature test is complete
++	 * HW sets BIT_OTP_SIGNATURE_ERR_TALYN_MB.
++	 * In production mode BIT_OTP_SIGNATURE_ERR_TALYN_MB remains 0, poll
++	 * for signature status change to 2 or 3.
++	 */
++	do {
++		otp_hw = wil_r(wil, RGF_USER_OTP_HW_RD_MACHINE_1);
++		signature_status = WIL_GET_BITS(otp_hw, 8, 9);
++		otp_signature_err = otp_hw & BIT_OTP_SIGNATURE_ERR_TALYN_MB;
++
++		if (otp_signature_err &&
++		    signature_status == WIL_SIG_STATUS_VANILLA) {
++			wil->boot_config = WIL_BOOT_VANILLA;
++			break;
++		}
++		if (otp_signature_err &&
++		    signature_status == WIL_SIG_STATUS_DEVELOPMENT) {
++			wil->boot_config = WIL_BOOT_DEVELOPMENT;
++			break;
++		}
++		if (!otp_signature_err &&
++		    signature_status == WIL_SIG_STATUS_PRODUCTION) {
++			wil->boot_config = WIL_BOOT_PRODUCTION;
++			break;
++		}
++		if  (!otp_signature_err &&
++		     signature_status ==
++		     WIL_SIG_STATUS_CORRUPTED_PRODUCTION) {
++			/* Unrecognized OTP signature found. Possibly a
++			 * corrupted production signature, access control
++			 * is applied as in production mode, therefore
++			 * do not fail
++			 */
++			wil->boot_config = WIL_BOOT_PRODUCTION;
++			break;
++		}
++		if (delay++ > OTP_HW_COUNT)
++			break;
++
++		usleep_range(OTP_HW_DELAY, OTP_HW_DELAY + 10);
++	} while (!otp_signature_err && signature_status == 0);
++
++	if (wil->boot_config == WIL_BOOT_ERR) {
++		wil_err(wil,
++			"invalid boot config, signature_status %d otp_signature_err %d\n",
++			signature_status, otp_signature_err);
++		return -ETIME;
++	}
++
++	wil_dbg_misc(wil,
++		     "signature test done in %d usec, otp_hw 0x%x, boot_config %d\n",
++		     delay * OTP_HW_DELAY, otp_hw, wil->boot_config);
++
++	if (wil->boot_config == WIL_BOOT_VANILLA)
++		/* Assuming not SPI boot (currently not supported) */
++		goto out;
++
++	hw_section_done = otp_hw & BIT_OTP_HW_SECTION_DONE_TALYN_MB;
++	delay = 0;
++
++	while (!hw_section_done) {
++		msleep(RST_DELAY);
++
++		otp_hw = wil_r(wil, RGF_USER_OTP_HW_RD_MACHINE_1);
++		hw_section_done = otp_hw & BIT_OTP_HW_SECTION_DONE_TALYN_MB;
++
++		if (delay++ > RST_COUNT) {
++			wil_err(wil, "TO waiting for hw_section_done\n");
++			return -ETIME;
++		}
++	}
++
++	wil_dbg_misc(wil, "HW section done in %d ms\n", delay * RST_DELAY);
++
++	otp_qc_secured = wil_r(wil, RGF_OTP_QC_SECURED);
++	wil->secured_boot = otp_qc_secured & BIT_BOOT_FROM_ROM ? 1 : 0;
++	wil_dbg_misc(wil, "secured boot is %sabled\n",
++		     wil->secured_boot ? "en" : "dis");
++
++out:
++	wil_dbg_misc(wil, "Reset completed\n");
++
++	return 0;
++}
++
++static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
++{
++	u32 x;
++	int rc;
++
+ 	wil_dbg_misc(wil, "Resetting \"%s\"...\n", wil->hw_name);
+ 
+ 	/* Clear MAC link up */
+@@ -901,34 +1056,12 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
+ 
+ 	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0);
+ 
+-	/* wait until device ready. typical time is 20..80 msec */
+-	if (no_flash)
+-		do {
+-			msleep(RST_DELAY);
+-			x = wil_r(wil, USER_EXT_USER_PMU_3);
+-			if (delay++ > RST_COUNT) {
+-				wil_err(wil, "Reset not completed, PMU_3 0x%08x\n",
+-					x);
+-				return -ETIME;
+-			}
+-		} while ((x & BIT_PMU_DEVICE_RDY) == 0);
++	if (wil->hw_version == HW_VER_TALYN_MB)
++		rc = wil_wait_device_ready_talyn_mb(wil);
+ 	else
+-		do {
+-			msleep(RST_DELAY);
+-			x = wil_r(wil, RGF_USER_BL +
+-				  offsetof(struct bl_dedicated_registers_v0,
+-					   boot_loader_ready));
+-			if (x1 != x) {
+-				wil_dbg_misc(wil, "BL.ready 0x%08x => 0x%08x\n",
+-					     x1, x);
+-				x1 = x;
+-			}
+-			if (delay++ > RST_COUNT) {
+-				wil_err(wil, "Reset not completed, bl.ready 0x%08x\n",
+-					x);
+-				return -ETIME;
+-			}
+-		} while (x != BL_READY);
++		rc = wil_wait_device_ready(wil, no_flash);
++	if (rc)
++		return rc;
+ 
+ 	wil_c(wil, RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_RST_PWGD);
+ 
+@@ -936,7 +1069,7 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
+ 	wil_s(wil, RGF_DMA_OFUL_NID_0, BIT_DMA_OFUL_NID_0_RX_EXT_TR_EN |
+ 	      BIT_DMA_OFUL_NID_0_RX_EXT_A3_SRC);
+ 
+-	if (no_flash) {
++	if (wil->hw_version < HW_VER_TALYN_MB && no_flash) {
+ 		/* Reset OTP HW vectors to fit 40MHz */
+ 		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME1, 0x60001);
+ 		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME2, 0x20027);
+@@ -951,7 +1084,6 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
+ 		wil_w(wil, RGF_USER_XPM_RD_DOUT_SAMPLE_TIME, 0x57);
  	}
  
--	spin_lock_irqsave(&priv->rx_pkt_lock, flags);
-+	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
- 	/*
- 	 * We don't have a circular buffer, hence use rotation to simulate
- 	 * circular buffer
-@@ -184,7 +185,7 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
- 		}
- 	}
- 	tbl->start_win = (tbl->start_win + i) & (MAX_TID_VALUE - 1);
--	spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
-+	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+-	wil_dbg_misc(wil, "Reset completed in %d ms\n", delay * RST_DELAY);
+ 	return 0;
  }
  
- /*
-diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-index d239e92..dab02d7 100644
---- a/drivers/net/wireless/marvell/mwifiex/init.c
-+++ b/drivers/net/wireless/marvell/mwifiex/init.c
-@@ -439,7 +439,6 @@ int mwifiex_init_lock_list(struct mwifiex_adapter *adapter)
- 	for (i = 0; i < adapter->priv_num; i++) {
- 		if (adapter->priv[i]) {
- 			priv = adapter->priv[i];
--			spin_lock_init(&priv->rx_pkt_lock);
- 			spin_lock_init(&priv->wmm.ra_list_spinlock);
- 			spin_lock_init(&priv->curr_bcn_buf_lock);
- 			spin_lock_init(&priv->sta_list_spinlock);
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 69ac0a2..d2b54be 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -616,9 +616,6 @@ struct mwifiex_private {
- 	struct list_head rx_reorder_tbl_ptr;
- 	/* spin lock for rx_reorder_tbl_ptr queue */
- 	spinlock_t rx_reorder_tbl_lock;
--	/* spin lock for Rx packets */
--	spinlock_t rx_pkt_lock;
--
- #define MWIFIEX_ASSOC_RSP_BUF_SIZE  500
- 	u8 assoc_rsp_buf[MWIFIEX_ASSOC_RSP_BUF_SIZE];
- 	u32 assoc_rsp_size;
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index f8d4a2d..e639ba7 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -210,7 +210,9 @@ struct RGF_ICR {
+ #define RGF_USER_SPARROW_M_4			(0x880c50) /* Sparrow */
+ 	#define BIT_SPARROW_M_4_SEL_SLEEP_OR_REF	BIT(2)
+ #define RGF_USER_OTP_HW_RD_MACHINE_1	(0x880ce0)
+-	#define BIT_NO_FLASH_INDICATION		BIT(8)
++	#define BIT_OTP_SIGNATURE_ERR_TALYN_MB		BIT(0)
++	#define BIT_OTP_HW_SECTION_DONE_TALYN_MB	BIT(2)
++	#define BIT_NO_FLASH_INDICATION			BIT(8)
+ #define RGF_USER_XPM_IFC_RD_TIME1	(0x880cec)
+ #define RGF_USER_XPM_IFC_RD_TIME2	(0x880cf0)
+ #define RGF_USER_XPM_IFC_RD_TIME3	(0x880cf4)
+@@ -312,6 +314,9 @@ struct RGF_ICR {
+ #define RGF_CAF_PLL_LOCK_STATUS		(0x88afec)
+ 	#define BIT_CAF_OSC_DIG_XTAL_STABLE	BIT(0)
+ 
++#define RGF_OTP_QC_SECURED		(0x8a0038)
++	#define BIT_BOOT_FROM_ROM		BIT(31)
++
+ /* eDMA */
+ #define RGF_INT_COUNT_ON_SPECIAL_EVT	(0x8b62d8)
+ 
+@@ -969,6 +974,8 @@ struct wil6210_priv {
+ 	u32 rx_buff_id_count;
+ 	bool amsdu_en;
+ 	bool use_rx_hw_reordering;
++	bool secured_boot;
++	u8 boot_config;
+ };
+ 
+ #define wil_to_wiphy(i) (i->wiphy)
 -- 
 1.9.1
