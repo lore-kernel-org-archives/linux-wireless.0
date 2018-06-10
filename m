@@ -1,72 +1,675 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34674 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935708AbeFRU5h (ORCPT
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:34346 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932363AbeFJKvy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Jun 2018 16:57:37 -0400
-Subject: Re: [PATCH] cfg80211: Add cumulative channel survey dump support.
-To: Johannes Berg <johannes@sipsolutions.net>, vnaralas@codeaurora.org
-References: <1526980556-26707-1-git-send-email-vnaralas@codeaurora.org>
- <1527069282.3759.16.camel@sipsolutions.net>
- <ebf1c95acb34649b3d2a5435142dc06a@codeaurora.org>
- <7afee956-9f91-37f5-52d2-7cdc0686f213@candelatech.com>
- <1529354772.3092.41.camel@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <f5d74d35-b4c1-4654-b4d0-9729b9749f16@candelatech.com> (sfid-20180618_225742_875170_480BB808)
-Date: Mon, 18 Jun 2018 13:57:34 -0700
-MIME-Version: 1.0
-In-Reply-To: <1529354772.3092.41.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Sun, 10 Jun 2018 06:51:54 -0400
+Received: by mail-wm0-f46.google.com with SMTP id l15-v6so7521003wmc.1
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2018 03:51:53 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [RFC v3 16/19] mt76: add mt76x2_phy_common to mt76x2-common module
+Date: Sun, 10 Jun 2018 12:51:23 +0200
+Message-Id: <20180610105126.28425-17-lorenzo.bianconi@redhat.com> (sfid-20180610_125211_295477_FB5C5FB8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/18/2018 01:46 PM, Johannes Berg wrote:
-> On Thu, 2018-05-31 at 08:52 -0700, Ben Greear wrote:
->>
->> On 05/31/2018 02:06 AM, vnaralas@codeaurora.org wrote:
->>> On 2018-05-23 15:24, Johannes Berg wrote:
->>>> On Tue, 2018-05-22 at 14:45 +0530, Venkateswara Naralasetty wrote:
->>>>> This patch provides support to send accumulated survey data to
->>>>> user if low level drivers provides non-accumulated survey data.
->>>>
->>>> I think the commit log should say what you need this for?
->>>>
->>>> It's simultaneously a new flag, and a lot of code, but it's not clear
->>>> what the point is?
->>>>
->>>> johannes
->>>
->>> I will sent next version of patch with updated commit log.
->>>
->>> Providing you the earlier discussion of this patch to give quick overview about this patch.
->>> https://patchwork.kernel.org/patch/9701459/
->>
->> It is simple to fix the firmware, it just has several bugs related to clearing the
->> accumulator as well as the 'real' values.  If you can find a QCA firmware engineer
->> that will accept patches I can show them how to fix this easily.  I recently
->> fixed this in my wave-1 firmware.  I posted patches to the ath10k driver to
->> support this a week or so ago, but not sure if Kalle will apply them.
->
-> That would be nicer even, but I guess we still have to worry about older
-> firmware? Perhaps not for survey support? Dunno.
->
-> Obviously less code is better, but I can't really say how easy it would
-> be to get firmware updates rolled out to people who'd need them ...
->
->> And, it is likely that even if you don't use the 'clear' option, you are going to
->> get wraps in the firmware and that will just be other harder to debug bugs.
->
-> You have to use clear if you don't accumulate completely in fw, no?
+Move phy related code shared between mt76x2 and mt76x2u in
+mt76x2-common module
 
-At least some firmware is broken in numerous ways, and there is no clear way to
-tell which firmware is broken how as far as I can tell.  It does appear to be fixed in
-recent 10.4 (wave-2) firmware, so maybe they will fix 10.2 as well.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/Makefile   |   2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2.h   |   8 +
+ .../net/wireless/mediatek/mt76/mt76x2_phy.c   | 281 ----------------
+ .../mediatek/mt76/mt76x2_phy_common.c         | 302 ++++++++++++++++++
+ 4 files changed, 311 insertions(+), 282 deletions(-)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_phy_common.c
 
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
+index a184e16a5d54..5a9f34b14ee4 100644
+--- a/drivers/net/wireless/mediatek/mt76/Makefile
++++ b/drivers/net/wireless/mediatek/mt76/Makefile
+@@ -9,7 +9,7 @@ CFLAGS_trace.o := -I$(src)
+ 
+ mt76x2-common-y := \
+ 	mt76x2_eeprom.o mt76x2_tx_common.o mt76x2_mac_common.o \
+-	mt76x2_init_common.o mt76x2_common.o
++	mt76x2_init_common.o mt76x2_common.o mt76x2_phy_common.o
+ 
+ mt76x2e-y := \
+ 	mt76x2_pci.o mt76x2_dma.o \
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+index 8292e1629d14..7fc038a7dc44 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+@@ -305,4 +305,12 @@ void mt76x2_sta_rate_tbl_update(struct ieee80211_hw *hw,
+ 				struct ieee80211_vif *vif,
+ 				struct ieee80211_sta *sta);
+ 
++void mt76x2_phy_set_txpower_regs(struct mt76x2_dev *dev,
++				 enum nl80211_band band);
++void mt76x2_configure_tx_delay(struct mt76x2_dev *dev,
++			       enum nl80211_band band, u8 bw);
++void mt76x2_phy_set_bw(struct mt76x2_dev *dev, int width, u8 ctrl);
++void mt76x2_phy_set_band(struct mt76x2_dev *dev, int band, bool primary_upper);
++void mt76x2_apply_gain_adj(struct mt76x2_dev *dev);
++
+ #endif
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
+index 62785bea7a6a..9945d2c73164 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
+@@ -19,50 +19,6 @@
+ #include "mt76x2_mcu.h"
+ #include "mt76x2_eeprom.h"
+ 
+-static void
+-mt76x2_adjust_high_lna_gain(struct mt76x2_dev *dev, int reg, s8 offset)
+-{
+-	s8 gain;
+-
+-	gain = FIELD_GET(MT_BBP_AGC_LNA_HIGH_GAIN, mt76_rr(dev, MT_BBP(AGC, reg)));
+-	gain -= offset / 2;
+-	mt76_rmw_field(dev, MT_BBP(AGC, reg), MT_BBP_AGC_LNA_HIGH_GAIN, gain);
+-}
+-
+-static void
+-mt76x2_adjust_agc_gain(struct mt76x2_dev *dev, int reg, s8 offset)
+-{
+-	s8 gain;
+-
+-	gain = FIELD_GET(MT_BBP_AGC_GAIN, mt76_rr(dev, MT_BBP(AGC, reg)));
+-	gain += offset;
+-	mt76_rmw_field(dev, MT_BBP(AGC, reg), MT_BBP_AGC_GAIN, gain);
+-}
+-
+-static void
+-mt76x2_apply_gain_adj(struct mt76x2_dev *dev)
+-{
+-	s8 *gain_adj = dev->cal.rx.high_gain;
+-
+-	mt76x2_adjust_high_lna_gain(dev, 4, gain_adj[0]);
+-	mt76x2_adjust_high_lna_gain(dev, 5, gain_adj[1]);
+-
+-	mt76x2_adjust_agc_gain(dev, 8, gain_adj[0]);
+-	mt76x2_adjust_agc_gain(dev, 9, gain_adj[1]);
+-}
+-
+-static u32
+-mt76x2_tx_power_mask(u8 v1, u8 v2, u8 v3, u8 v4)
+-{
+-	u32 val = 0;
+-
+-	val |= (v1 & (BIT(6) - 1)) << 0;
+-	val |= (v2 & (BIT(6) - 1)) << 8;
+-	val |= (v3 & (BIT(6) - 1)) << 16;
+-	val |= (v4 & (BIT(6) - 1)) << 24;
+-	return val;
+-}
+-
+ int mt76x2_phy_get_rssi(struct mt76x2_dev *dev, s8 rssi, int chain)
+ {
+ 	struct mt76x2_rx_freq_cal *cal = &dev->cal.rx;
+@@ -73,109 +29,6 @@ int mt76x2_phy_get_rssi(struct mt76x2_dev *dev, s8 rssi, int chain)
+ 	return rssi;
+ }
+ 
+-static void
+-mt76x2_add_rate_power_offset(struct mt76_rate_power *r, int offset)
+-{
+-	int i;
+-
+-	for (i = 0; i < sizeof(r->all); i++)
+-		r->all[i] += offset;
+-}
+-
+-static void
+-mt76x2_limit_rate_power(struct mt76_rate_power *r, int limit)
+-{
+-	int i;
+-
+-	for (i = 0; i < sizeof(r->all); i++)
+-		if (r->all[i] > limit)
+-			r->all[i] = limit;
+-}
+-
+-static int
+-mt76x2_get_min_rate_power(struct mt76_rate_power *r)
+-{
+-	int i;
+-	s8 ret = 0;
+-
+-	for (i = 0; i < sizeof(r->all); i++) {
+-		if (!r->all[i])
+-			continue;
+-
+-		if (ret)
+-			ret = min(ret, r->all[i]);
+-		else
+-			ret = r->all[i];
+-	}
+-
+-	return ret;
+-}
+-
+-
+-void mt76x2_phy_set_txpower(struct mt76x2_dev *dev)
+-{
+-	enum nl80211_chan_width width = dev->mt76.chandef.width;
+-	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
+-	struct mt76x2_tx_power_info txp;
+-	int txp_0, txp_1, delta = 0;
+-	struct mt76_rate_power t = {};
+-	int base_power, gain;
+-
+-	mt76x2_get_power_info(dev, &txp, chan);
+-
+-	if (width == NL80211_CHAN_WIDTH_40)
+-		delta = txp.delta_bw40;
+-	else if (width == NL80211_CHAN_WIDTH_80)
+-		delta = txp.delta_bw80;
+-
+-	mt76x2_get_rate_power(dev, &t, chan);
+-	mt76x2_add_rate_power_offset(&t, txp.chain[0].target_power);
+-	mt76x2_limit_rate_power(&t, dev->txpower_conf);
+-	dev->txpower_cur = mt76x2_get_max_rate_power(&t);
+-
+-	base_power = mt76x2_get_min_rate_power(&t);
+-	delta += base_power - txp.chain[0].target_power;
+-	txp_0 = txp.chain[0].target_power + txp.chain[0].delta + delta;
+-	txp_1 = txp.chain[1].target_power + txp.chain[1].delta + delta;
+-
+-	gain = min(txp_0, txp_1);
+-	if (gain < 0) {
+-		base_power -= gain;
+-		txp_0 -= gain;
+-		txp_1 -= gain;
+-	} else if (gain > 0x2f) {
+-		base_power -= gain - 0x2f;
+-		txp_0 = 0x2f;
+-		txp_1 = 0x2f;
+-	}
+-
+-	mt76x2_add_rate_power_offset(&t, -base_power);
+-	dev->target_power = txp.chain[0].target_power;
+-	dev->target_power_delta[0] = txp_0 - txp.chain[0].target_power;
+-	dev->target_power_delta[1] = txp_1 - txp.chain[0].target_power;
+-	dev->rate_power = t;
+-
+-	mt76_rmw_field(dev, MT_TX_ALC_CFG_0, MT_TX_ALC_CFG_0_CH_INIT_0, txp_0);
+-	mt76_rmw_field(dev, MT_TX_ALC_CFG_0, MT_TX_ALC_CFG_0_CH_INIT_1, txp_1);
+-
+-	mt76_wr(dev, MT_TX_PWR_CFG_0,
+-		mt76x2_tx_power_mask(t.cck[0], t.cck[2], t.ofdm[0], t.ofdm[2]));
+-	mt76_wr(dev, MT_TX_PWR_CFG_1,
+-		mt76x2_tx_power_mask(t.ofdm[4], t.ofdm[6], t.ht[0], t.ht[2]));
+-	mt76_wr(dev, MT_TX_PWR_CFG_2,
+-		mt76x2_tx_power_mask(t.ht[4], t.ht[6], t.ht[8], t.ht[10]));
+-	mt76_wr(dev, MT_TX_PWR_CFG_3,
+-		mt76x2_tx_power_mask(t.ht[12], t.ht[14], t.ht[0], t.ht[2]));
+-	mt76_wr(dev, MT_TX_PWR_CFG_4,
+-		mt76x2_tx_power_mask(t.ht[4], t.ht[6], 0, 0));
+-	mt76_wr(dev, MT_TX_PWR_CFG_7,
+-		mt76x2_tx_power_mask(t.ofdm[6], t.vht[8], t.ht[6], t.vht[8]));
+-	mt76_wr(dev, MT_TX_PWR_CFG_8,
+-		mt76x2_tx_power_mask(t.ht[14], t.vht[8], t.vht[8], 0));
+-	mt76_wr(dev, MT_TX_PWR_CFG_9,
+-		mt76x2_tx_power_mask(t.ht[6], t.vht[8], t.vht[8], 0));
+-}
+-
+ static bool
+ mt76x2_phy_tssi_init_cal(struct mt76x2_dev *dev)
+ {
+@@ -234,140 +87,6 @@ mt76x2_phy_channel_calibrate(struct mt76x2_dev *dev, bool mac_stopped)
+ 	dev->cal.channel_cal_done = true;
+ }
+ 
+-static void
+-mt76x2_phy_set_txpower_regs(struct mt76x2_dev *dev, enum nl80211_band band)
+-{
+-	u32 pa_mode[2];
+-	u32 pa_mode_adj;
+-
+-	if (band == NL80211_BAND_2GHZ) {
+-		pa_mode[0] = 0x010055ff;
+-		pa_mode[1] = 0x00550055;
+-
+-		mt76_wr(dev, MT_TX_ALC_CFG_2, 0x35160a00);
+-		mt76_wr(dev, MT_TX_ALC_CFG_3, 0x35160a06);
+-
+-		if (mt76x2_ext_pa_enabled(dev, band)) {
+-			mt76_wr(dev, MT_RF_PA_MODE_ADJ0, 0x0000ec00);
+-			mt76_wr(dev, MT_RF_PA_MODE_ADJ1, 0x0000ec00);
+-		} else {
+-			mt76_wr(dev, MT_RF_PA_MODE_ADJ0, 0xf4000200);
+-			mt76_wr(dev, MT_RF_PA_MODE_ADJ1, 0xfa000200);
+-		}
+-	} else {
+-		pa_mode[0] = 0x0000ffff;
+-		pa_mode[1] = 0x00ff00ff;
+-
+-		if (mt76x2_ext_pa_enabled(dev, band)) {
+-			mt76_wr(dev, MT_TX_ALC_CFG_2, 0x2f0f0400);
+-			mt76_wr(dev, MT_TX_ALC_CFG_3, 0x2f0f0476);
+-		} else {
+-			mt76_wr(dev, MT_TX_ALC_CFG_2, 0x1b0f0400);
+-			mt76_wr(dev, MT_TX_ALC_CFG_3, 0x1b0f0476);
+-		}
+-
+-		if (mt76x2_ext_pa_enabled(dev, band))
+-			pa_mode_adj = 0x04000000;
+-		else
+-			pa_mode_adj = 0;
+-
+-		mt76_wr(dev, MT_RF_PA_MODE_ADJ0, pa_mode_adj);
+-		mt76_wr(dev, MT_RF_PA_MODE_ADJ1, pa_mode_adj);
+-	}
+-
+-	mt76_wr(dev, MT_BB_PA_MODE_CFG0, pa_mode[0]);
+-	mt76_wr(dev, MT_BB_PA_MODE_CFG1, pa_mode[1]);
+-	mt76_wr(dev, MT_RF_PA_MODE_CFG0, pa_mode[0]);
+-	mt76_wr(dev, MT_RF_PA_MODE_CFG1, pa_mode[1]);
+-
+-	if (mt76x2_ext_pa_enabled(dev, band)) {
+-		u32 val;
+-
+-		if (band == NL80211_BAND_2GHZ)
+-			val = 0x3c3c023c;
+-		else
+-			val = 0x363c023c;
+-
+-		mt76_wr(dev, MT_TX0_RF_GAIN_CORR, val);
+-		mt76_wr(dev, MT_TX1_RF_GAIN_CORR, val);
+-		mt76_wr(dev, MT_TX_ALC_CFG_4, 0x00001818);
+-	} else {
+-		if (band == NL80211_BAND_2GHZ) {
+-			u32 val = 0x0f3c3c3c;
+-
+-			mt76_wr(dev, MT_TX0_RF_GAIN_CORR, val);
+-			mt76_wr(dev, MT_TX1_RF_GAIN_CORR, val);
+-			mt76_wr(dev, MT_TX_ALC_CFG_4, 0x00000606);
+-		} else {
+-			mt76_wr(dev, MT_TX0_RF_GAIN_CORR, 0x383c023c);
+-			mt76_wr(dev, MT_TX1_RF_GAIN_CORR, 0x24282e28);
+-			mt76_wr(dev, MT_TX_ALC_CFG_4, 0);
+-		}
+-	}
+-}
+-
+-static void
+-mt76x2_configure_tx_delay(struct mt76x2_dev *dev, enum nl80211_band band, u8 bw)
+-{
+-	u32 cfg0, cfg1;
+-
+-	if (mt76x2_ext_pa_enabled(dev, band)) {
+-		cfg0 = bw ? 0x000b0c01 : 0x00101101;
+-		cfg1 = 0x00011414;
+-	} else {
+-		cfg0 = bw ? 0x000b0b01 : 0x00101001;
+-		cfg1 = 0x00021414;
+-	}
+-	mt76_wr(dev, MT_TX_SW_CFG0, cfg0);
+-	mt76_wr(dev, MT_TX_SW_CFG1, cfg1);
+-
+-	mt76_rmw_field(dev, MT_XIFS_TIME_CFG, MT_XIFS_TIME_CFG_OFDM_SIFS, 15);
+-}
+-
+-static void
+-mt76x2_phy_set_bw(struct mt76x2_dev *dev, int width, u8 ctrl)
+-{
+-	int core_val, agc_val;
+-
+-	switch (width) {
+-	case NL80211_CHAN_WIDTH_80:
+-		core_val = 3;
+-		agc_val = 7;
+-		break;
+-	case NL80211_CHAN_WIDTH_40:
+-		core_val = 2;
+-		agc_val = 3;
+-		break;
+-	default:
+-		core_val = 0;
+-		agc_val = 1;
+-		break;
+-	}
+-
+-	mt76_rmw_field(dev, MT_BBP(CORE, 1), MT_BBP_CORE_R1_BW, core_val);
+-	mt76_rmw_field(dev, MT_BBP(AGC, 0), MT_BBP_AGC_R0_BW, agc_val);
+-	mt76_rmw_field(dev, MT_BBP(AGC, 0), MT_BBP_AGC_R0_CTRL_CHAN, ctrl);
+-	mt76_rmw_field(dev, MT_BBP(TXBE, 0), MT_BBP_TXBE_R0_CTRL_CHAN, ctrl);
+-}
+-
+-static void
+-mt76x2_phy_set_band(struct mt76x2_dev *dev, int band, bool primary_upper)
+-{
+-	switch (band) {
+-	case NL80211_BAND_2GHZ:
+-		mt76_set(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_2G);
+-		mt76_clear(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_5G);
+-		break;
+-	case NL80211_BAND_5GHZ:
+-		mt76_clear(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_2G);
+-		mt76_set(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_5G);
+-		break;
+-	}
+-
+-	mt76_rmw_field(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_UPPER_40M,
+-		       primary_upper);
+-}
+-
+ void mt76x2_phy_set_antenna(struct mt76x2_dev *dev)
+ {
+ 	u32 val;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy_common.c
+new file mode 100644
+index 000000000000..3d2c81110832
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy_common.c
+@@ -0,0 +1,302 @@
++/*
++ * Copyright (C) 2016 Felix Fietkau <nbd@nbd.name>
++ * Copyright (C) 2018 Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include "mt76x2.h"
++#include "mt76x2_eeprom.h"
++
++static void
++mt76x2_adjust_high_lna_gain(struct mt76x2_dev *dev, int reg, s8 offset)
++{
++	s8 gain;
++
++	gain = FIELD_GET(MT_BBP_AGC_LNA_HIGH_GAIN, mt76_rr(dev, MT_BBP(AGC, reg)));
++	gain -= offset / 2;
++	mt76_rmw_field(dev, MT_BBP(AGC, reg), MT_BBP_AGC_LNA_HIGH_GAIN, gain);
++}
++
++static void
++mt76x2_adjust_agc_gain(struct mt76x2_dev *dev, int reg, s8 offset)
++{
++	s8 gain;
++
++	gain = FIELD_GET(MT_BBP_AGC_GAIN, mt76_rr(dev, MT_BBP(AGC, reg)));
++	gain += offset;
++	mt76_rmw_field(dev, MT_BBP(AGC, reg), MT_BBP_AGC_GAIN, gain);
++}
++
++void mt76x2_apply_gain_adj(struct mt76x2_dev *dev)
++{
++	s8 *gain_adj = dev->cal.rx.high_gain;
++
++	mt76x2_adjust_high_lna_gain(dev, 4, gain_adj[0]);
++	mt76x2_adjust_high_lna_gain(dev, 5, gain_adj[1]);
++
++	mt76x2_adjust_agc_gain(dev, 8, gain_adj[0]);
++	mt76x2_adjust_agc_gain(dev, 9, gain_adj[1]);
++}
++EXPORT_SYMBOL_GPL(mt76x2_apply_gain_adj);
++
++void mt76x2_phy_set_txpower_regs(struct mt76x2_dev *dev,
++				 enum nl80211_band band)
++{
++	u32 pa_mode[2];
++	u32 pa_mode_adj;
++
++	if (band == NL80211_BAND_2GHZ) {
++		pa_mode[0] = 0x010055ff;
++		pa_mode[1] = 0x00550055;
++
++		mt76_wr(dev, MT_TX_ALC_CFG_2, 0x35160a00);
++		mt76_wr(dev, MT_TX_ALC_CFG_3, 0x35160a06);
++
++		if (mt76x2_ext_pa_enabled(dev, band)) {
++			mt76_wr(dev, MT_RF_PA_MODE_ADJ0, 0x0000ec00);
++			mt76_wr(dev, MT_RF_PA_MODE_ADJ1, 0x0000ec00);
++		} else {
++			mt76_wr(dev, MT_RF_PA_MODE_ADJ0, 0xf4000200);
++			mt76_wr(dev, MT_RF_PA_MODE_ADJ1, 0xfa000200);
++		}
++	} else {
++		pa_mode[0] = 0x0000ffff;
++		pa_mode[1] = 0x00ff00ff;
++
++		if (mt76x2_ext_pa_enabled(dev, band)) {
++			mt76_wr(dev, MT_TX_ALC_CFG_2, 0x2f0f0400);
++			mt76_wr(dev, MT_TX_ALC_CFG_3, 0x2f0f0476);
++		} else {
++			mt76_wr(dev, MT_TX_ALC_CFG_2, 0x1b0f0400);
++			mt76_wr(dev, MT_TX_ALC_CFG_3, 0x1b0f0476);
++		}
++
++		if (mt76x2_ext_pa_enabled(dev, band))
++			pa_mode_adj = 0x04000000;
++		else
++			pa_mode_adj = 0;
++
++		mt76_wr(dev, MT_RF_PA_MODE_ADJ0, pa_mode_adj);
++		mt76_wr(dev, MT_RF_PA_MODE_ADJ1, pa_mode_adj);
++	}
++
++	mt76_wr(dev, MT_BB_PA_MODE_CFG0, pa_mode[0]);
++	mt76_wr(dev, MT_BB_PA_MODE_CFG1, pa_mode[1]);
++	mt76_wr(dev, MT_RF_PA_MODE_CFG0, pa_mode[0]);
++	mt76_wr(dev, MT_RF_PA_MODE_CFG1, pa_mode[1]);
++
++	if (mt76x2_ext_pa_enabled(dev, band)) {
++		u32 val;
++
++		if (band == NL80211_BAND_2GHZ)
++			val = 0x3c3c023c;
++		else
++			val = 0x363c023c;
++
++		mt76_wr(dev, MT_TX0_RF_GAIN_CORR, val);
++		mt76_wr(dev, MT_TX1_RF_GAIN_CORR, val);
++		mt76_wr(dev, MT_TX_ALC_CFG_4, 0x00001818);
++	} else {
++		if (band == NL80211_BAND_2GHZ) {
++			u32 val = 0x0f3c3c3c;
++
++			mt76_wr(dev, MT_TX0_RF_GAIN_CORR, val);
++			mt76_wr(dev, MT_TX1_RF_GAIN_CORR, val);
++			mt76_wr(dev, MT_TX_ALC_CFG_4, 0x00000606);
++		} else {
++			mt76_wr(dev, MT_TX0_RF_GAIN_CORR, 0x383c023c);
++			mt76_wr(dev, MT_TX1_RF_GAIN_CORR, 0x24282e28);
++			mt76_wr(dev, MT_TX_ALC_CFG_4, 0);
++		}
++	}
++}
++EXPORT_SYMBOL_GPL(mt76x2_phy_set_txpower_regs);
++
++static void
++mt76x2_limit_rate_power(struct mt76_rate_power *r, int limit)
++{
++	int i;
++
++	for (i = 0; i < sizeof(r->all); i++)
++		if (r->all[i] > limit)
++			r->all[i] = limit;
++}
++
++static u32
++mt76x2_tx_power_mask(u8 v1, u8 v2, u8 v3, u8 v4)
++{
++	u32 val = 0;
++
++	val |= (v1 & (BIT(6) - 1)) << 0;
++	val |= (v2 & (BIT(6) - 1)) << 8;
++	val |= (v3 & (BIT(6) - 1)) << 16;
++	val |= (v4 & (BIT(6) - 1)) << 24;
++	return val;
++}
++
++static void
++mt76x2_add_rate_power_offset(struct mt76_rate_power *r, int offset)
++{
++	int i;
++
++	for (i = 0; i < sizeof(r->all); i++)
++		r->all[i] += offset;
++}
++
++static int
++mt76x2_get_min_rate_power(struct mt76_rate_power *r)
++{
++	int i;
++	s8 ret = 0;
++
++	for (i = 0; i < sizeof(r->all); i++) {
++		if (!r->all[i])
++			continue;
++
++		if (ret)
++			ret = min(ret, r->all[i]);
++		else
++			ret = r->all[i];
++	}
++
++	return ret;
++}
++
++void mt76x2_phy_set_txpower(struct mt76x2_dev *dev)
++{
++	enum nl80211_chan_width width = dev->mt76.chandef.width;
++	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
++	struct mt76x2_tx_power_info txp;
++	int txp_0, txp_1, delta = 0;
++	struct mt76_rate_power t = {};
++	int base_power, gain;
++
++	mt76x2_get_power_info(dev, &txp, chan);
++
++	if (width == NL80211_CHAN_WIDTH_40)
++		delta = txp.delta_bw40;
++	else if (width == NL80211_CHAN_WIDTH_80)
++		delta = txp.delta_bw80;
++
++	mt76x2_get_rate_power(dev, &t, chan);
++	mt76x2_add_rate_power_offset(&t, txp.chain[0].target_power);
++	mt76x2_limit_rate_power(&t, dev->txpower_conf);
++	dev->txpower_cur = mt76x2_get_max_rate_power(&t);
++
++	base_power = mt76x2_get_min_rate_power(&t);
++	delta += base_power - txp.chain[0].target_power;
++	txp_0 = txp.chain[0].target_power + txp.chain[0].delta + delta;
++	txp_1 = txp.chain[1].target_power + txp.chain[1].delta + delta;
++
++	gain = min(txp_0, txp_1);
++	if (gain < 0) {
++		base_power -= gain;
++		txp_0 -= gain;
++		txp_1 -= gain;
++	} else if (gain > 0x2f) {
++		base_power -= gain - 0x2f;
++		txp_0 = 0x2f;
++		txp_1 = 0x2f;
++	}
++
++	mt76x2_add_rate_power_offset(&t, -base_power);
++	dev->target_power = txp.chain[0].target_power;
++	dev->target_power_delta[0] = txp_0 - txp.chain[0].target_power;
++	dev->target_power_delta[1] = txp_1 - txp.chain[0].target_power;
++	dev->rate_power = t;
++
++	mt76_rmw_field(dev, MT_TX_ALC_CFG_0, MT_TX_ALC_CFG_0_CH_INIT_0, txp_0);
++	mt76_rmw_field(dev, MT_TX_ALC_CFG_0, MT_TX_ALC_CFG_0_CH_INIT_1, txp_1);
++
++	mt76_wr(dev, MT_TX_PWR_CFG_0,
++		mt76x2_tx_power_mask(t.cck[0], t.cck[2], t.ofdm[0], t.ofdm[2]));
++	mt76_wr(dev, MT_TX_PWR_CFG_1,
++		mt76x2_tx_power_mask(t.ofdm[4], t.ofdm[6], t.ht[0], t.ht[2]));
++	mt76_wr(dev, MT_TX_PWR_CFG_2,
++		mt76x2_tx_power_mask(t.ht[4], t.ht[6], t.ht[8], t.ht[10]));
++	mt76_wr(dev, MT_TX_PWR_CFG_3,
++		mt76x2_tx_power_mask(t.ht[12], t.ht[14], t.ht[0], t.ht[2]));
++	mt76_wr(dev, MT_TX_PWR_CFG_4,
++		mt76x2_tx_power_mask(t.ht[4], t.ht[6], 0, 0));
++	mt76_wr(dev, MT_TX_PWR_CFG_7,
++		mt76x2_tx_power_mask(t.ofdm[6], t.vht[8], t.ht[6], t.vht[8]));
++	mt76_wr(dev, MT_TX_PWR_CFG_8,
++		mt76x2_tx_power_mask(t.ht[14], t.vht[8], t.vht[8], 0));
++	mt76_wr(dev, MT_TX_PWR_CFG_9,
++		mt76x2_tx_power_mask(t.ht[6], t.vht[8], t.vht[8], 0));
++}
++EXPORT_SYMBOL_GPL(mt76x2_phy_set_txpower);
++
++void mt76x2_configure_tx_delay(struct mt76x2_dev *dev,
++			       enum nl80211_band band, u8 bw)
++{
++	u32 cfg0, cfg1;
++
++	if (mt76x2_ext_pa_enabled(dev, band)) {
++		cfg0 = bw ? 0x000b0c01 : 0x00101101;
++		cfg1 = 0x00011414;
++	} else {
++		cfg0 = bw ? 0x000b0b01 : 0x00101001;
++		cfg1 = 0x00021414;
++	}
++	mt76_wr(dev, MT_TX_SW_CFG0, cfg0);
++	mt76_wr(dev, MT_TX_SW_CFG1, cfg1);
++
++	mt76_rmw_field(dev, MT_XIFS_TIME_CFG, MT_XIFS_TIME_CFG_OFDM_SIFS, 15);
++}
++EXPORT_SYMBOL_GPL(mt76x2_configure_tx_delay);
++
++void mt76x2_phy_set_bw(struct mt76x2_dev *dev, int width, u8 ctrl)
++{
++	int core_val, agc_val;
++
++	switch (width) {
++	case NL80211_CHAN_WIDTH_80:
++		core_val = 3;
++		agc_val = 7;
++		break;
++	case NL80211_CHAN_WIDTH_40:
++		core_val = 2;
++		agc_val = 3;
++		break;
++	default:
++		core_val = 0;
++		agc_val = 1;
++		break;
++	}
++
++	mt76_rmw_field(dev, MT_BBP(CORE, 1), MT_BBP_CORE_R1_BW, core_val);
++	mt76_rmw_field(dev, MT_BBP(AGC, 0), MT_BBP_AGC_R0_BW, agc_val);
++	mt76_rmw_field(dev, MT_BBP(AGC, 0), MT_BBP_AGC_R0_CTRL_CHAN, ctrl);
++	mt76_rmw_field(dev, MT_BBP(TXBE, 0), MT_BBP_TXBE_R0_CTRL_CHAN, ctrl);
++}
++EXPORT_SYMBOL_GPL(mt76x2_phy_set_bw);
++
++void mt76x2_phy_set_band(struct mt76x2_dev *dev, int band, bool primary_upper)
++{
++	switch (band) {
++	case NL80211_BAND_2GHZ:
++		mt76_set(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_2G);
++		mt76_clear(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_5G);
++		break;
++	case NL80211_BAND_5GHZ:
++		mt76_clear(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_2G);
++		mt76_set(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_5G);
++		break;
++	}
++
++	mt76_rmw_field(dev, MT_TX_BAND_CFG, MT_TX_BAND_CFG_UPPER_40M,
++		       primary_upper);
++}
++EXPORT_SYMBOL_GPL(mt76x2_phy_set_band);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.17.1
