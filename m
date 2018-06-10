@@ -1,51 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga17.intel.com ([192.55.52.151]:33186 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932750AbeFLOun (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Jun 2018 10:50:43 -0400
-Date: Tue, 12 Jun 2018 22:50:37 +0800
-From: kbuild test robot <fengguang.wu@intel.com>
-To: Niklas Cassel <niklas.cassel@linaro.org>
-Cc: kbuild-all@01.org, Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Niklas Cassel <niklas.cassel@linaro.org>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [RFC PATCH] ath10k: ath10k_snoc_get_ce_id_from_irq() can be static
-Message-ID: <20180612145037.GA95182@lkp-ib03> (sfid-20180612_165254_355206_ADE5C5A3)
-References: <20180612113907.15043-2-niklas.cassel@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180612113907.15043-2-niklas.cassel@linaro.org>
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:33364 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932296AbeFJKvk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 10 Jun 2018 06:51:40 -0400
+Received: by mail-wr0-f193.google.com with SMTP id k16-v6so17441558wro.0
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2018 03:51:39 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [RFC v3 06/19] mt76x2: introduce mt76x2_mac_load_tx_status routine
+Date: Sun, 10 Jun 2018 12:51:13 +0200
+Message-Id: <20180610105126.28425-7-lorenzo.bianconi@redhat.com> (sfid-20180610_125145_842888_253D0416)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add mt76x2_mac_load_tx_status routine since tx stats register map is
+shared between usb and pci based devices but usb devices do not have a
+tx stat irq line as pcie ones and it is necessary to load tx statistics
+using a workqueue
 
-Fixes: aecf55e7df3a ("ath10k: allow ATH10K_SNOC with COMPILE_TEST")
-Signed-off-by: kbuild test robot <fengguang.wu@intel.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- snoc.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ .../net/wireless/mediatek/mt76/mt76x2_mac.c   | 47 ++++++++++++-------
+ 1 file changed, 30 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index a3a7042..92ddb1c 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -820,7 +820,7 @@ static const struct ath10k_bus_ops ath10k_snoc_bus_ops = {
- 	.write32	= ath10k_snoc_write32,
- };
- 
--int ath10k_snoc_get_ce_id_from_irq(struct ath10k *ar, int irq)
-+static int ath10k_snoc_get_ce_id_from_irq(struct ath10k *ar, int irq)
- {
- 	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
- 	int i;
-@@ -868,7 +868,7 @@ static int ath10k_snoc_napi_poll(struct napi_struct *ctx, int budget)
- 	return done;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+index b49aea4da2d6..3f24756b1b6c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
+@@ -517,11 +517,37 @@ mt76x2_send_tx_status(struct mt76x2_dev *dev, struct mt76x2_tx_status *stat,
+ 	rcu_read_unlock();
  }
  
--void ath10k_snoc_init_napi(struct ath10k *ar)
-+static void ath10k_snoc_init_napi(struct ath10k *ar)
++static bool
++mt76x2_mac_load_tx_status(struct mt76x2_dev *dev,
++			  struct mt76x2_tx_status *stat)
++{
++	u32 stat1, stat2;
++
++	stat2 = mt76_rr(dev, MT_TX_STAT_FIFO_EXT);
++	stat1 = mt76_rr(dev, MT_TX_STAT_FIFO);
++
++	stat->valid = !!(stat1 & MT_TX_STAT_FIFO_VALID);
++	if (!stat->valid)
++		return false;
++
++	stat->success = !!(stat1 & MT_TX_STAT_FIFO_SUCCESS);
++	stat->aggr = !!(stat1 & MT_TX_STAT_FIFO_AGGR);
++	stat->ack_req = !!(stat1 & MT_TX_STAT_FIFO_ACKREQ);
++	stat->wcid = FIELD_GET(MT_TX_STAT_FIFO_WCID, stat1);
++	stat->rate = FIELD_GET(MT_TX_STAT_FIFO_RATE, stat1);
++
++	stat->retry = FIELD_GET(MT_TX_STAT_FIFO_EXT_RETRY, stat2);
++	stat->pktid = FIELD_GET(MT_TX_STAT_FIFO_EXT_PKTID, stat2);
++
++	return true;
++}
++
+ void mt76x2_mac_poll_tx_status(struct mt76x2_dev *dev, bool irq)
  {
- 	netif_napi_add(&ar->napi_dev, &ar->napi, ath10k_snoc_napi_poll,
- 		       ATH10K_NAPI_BUDGET);
+ 	struct mt76x2_tx_status stat = {};
+ 	unsigned long flags;
+ 	u8 update = 1;
++	bool ret;
+ 
+ 	if (!test_bit(MT76_STATE_RUNNING, &dev->mt76.state))
+ 		return;
+@@ -529,26 +555,13 @@ void mt76x2_mac_poll_tx_status(struct mt76x2_dev *dev, bool irq)
+ 	trace_mac_txstat_poll(dev);
+ 
+ 	while (!irq || !kfifo_is_full(&dev->txstatus_fifo)) {
+-		u32 stat1, stat2;
+-
+ 		spin_lock_irqsave(&dev->irq_lock, flags);
+-		stat2 = mt76_rr(dev, MT_TX_STAT_FIFO_EXT);
+-		stat1 = mt76_rr(dev, MT_TX_STAT_FIFO);
+-		if (!(stat1 & MT_TX_STAT_FIFO_VALID)) {
+-			spin_unlock_irqrestore(&dev->irq_lock, flags);
+-			break;
+-		}
+-
++		ret = mt76x2_mac_load_tx_status(dev, &stat);
+ 		spin_unlock_irqrestore(&dev->irq_lock, flags);
+ 
+-		stat.valid = 1;
+-		stat.success = !!(stat1 & MT_TX_STAT_FIFO_SUCCESS);
+-		stat.aggr = !!(stat1 & MT_TX_STAT_FIFO_AGGR);
+-		stat.ack_req = !!(stat1 & MT_TX_STAT_FIFO_ACKREQ);
+-		stat.wcid = FIELD_GET(MT_TX_STAT_FIFO_WCID, stat1);
+-		stat.rate = FIELD_GET(MT_TX_STAT_FIFO_RATE, stat1);
+-		stat.retry = FIELD_GET(MT_TX_STAT_FIFO_EXT_RETRY, stat2);
+-		stat.pktid = FIELD_GET(MT_TX_STAT_FIFO_EXT_PKTID, stat2);
++		if (!ret)
++			break;
++
+ 		trace_mac_txstat_fetch(dev, &stat);
+ 
+ 		if (!irq) {
+-- 
+2.17.1
