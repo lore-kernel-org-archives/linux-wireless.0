@@ -1,84 +1,283 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:55467 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932348AbeFJKvw (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:55476 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932213AbeFJKv5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Jun 2018 06:51:52 -0400
-Received: by mail-wm0-f66.google.com with SMTP id v16-v6so9928316wmh.5
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2018 03:51:52 -0700 (PDT)
+        Sun, 10 Jun 2018 06:51:57 -0400
+Received: by mail-wm0-f67.google.com with SMTP id v16-v6so9928473wmh.5
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2018 03:51:56 -0700 (PDT)
 From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 To: nbd@nbd.name
 Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [RFC v3 15/19] mt76: add mt76x2_common to mt76x2-common module
-Date: Sun, 10 Jun 2018 12:51:22 +0200
-Message-Id: <20180610105126.28425-16-lorenzo.bianconi@redhat.com> (sfid-20180610_125205_618545_7F581F37)
+Subject: [RFC v3 18/19] mt76: add usb support to mt76 layer
+Date: Sun, 10 Jun 2018 12:51:25 +0200
+Message-Id: <20180610105126.28425-19-lorenzo.bianconi@redhat.com> (sfid-20180610_125202_088896_15532115)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move core related code shared between mt76x2 and mt76x2u in
-mt76x2-common module
+This will be used by drivers for MT76x2u based devices
 
+Tested-by: <cug_yangyuancong@hotmail.com>
 Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/net/wireless/mediatek/mt76/Makefile   |   2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2.h   |  21 ++
- .../wireless/mediatek/mt76/mt76x2_common.c    | 348 ++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt76x2_dma.c   |  21 --
- .../net/wireless/mediatek/mt76/mt76x2_main.c  | 305 ---------------
- 5 files changed, 370 insertions(+), 327 deletions(-)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_common.c
+ drivers/net/wireless/mediatek/mt76/Kconfig    |   4 +
+ drivers/net/wireless/mediatek/mt76/Makefile   |   7 +-
+ drivers/net/wireless/mediatek/mt76/dma.h      |   5 +
+ drivers/net/wireless/mediatek/mt76/mt76.h     | 123 ++-
+ drivers/net/wireless/mediatek/mt76/usb.c      | 703 ++++++++++++++++++
+ .../net/wireless/mediatek/mt76/usb_trace.c    |  23 +
+ .../net/wireless/mediatek/mt76/usb_trace.h    |  71 ++
+ 7 files changed, 934 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/usb.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/usb_trace.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/usb_trace.h
 
+diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
+index 1e5c6af6afa2..ba17cdd46ea3 100644
+--- a/drivers/net/wireless/mediatek/mt76/Kconfig
++++ b/drivers/net/wireless/mediatek/mt76/Kconfig
+@@ -1,6 +1,10 @@
+ config MT76_CORE
+ 	tristate
+ 
++config MT76_USB
++	tristate
++	depends on MT76_CORE
++
+ config MT76x2_COMMON
+ 	tristate
+ 	depends on MT76_CORE
 diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
-index 8342b4d38220..a184e16a5d54 100644
+index e1bc229e4aad..5b329c2fb987 100644
 --- a/drivers/net/wireless/mediatek/mt76/Makefile
 +++ b/drivers/net/wireless/mediatek/mt76/Makefile
-@@ -9,7 +9,7 @@ CFLAGS_trace.o := -I$(src)
+@@ -1,11 +1,16 @@
+ obj-$(CONFIG_MT76_CORE) += mt76.o
++obj-$(CONFIG_MT76_USB) += mt76-usb.o
+ obj-$(CONFIG_MT76x2_COMMON) += mt76x2-common.o
+ obj-$(CONFIG_MT76x2E) += mt76x2e.o
+ 
+ mt76-y := \
+-	mmio.o util.o trace.o dma.o mac80211.o debugfs.o eeprom.o tx.o agg-rx.o
++	mmio.o util.o trace.o dma.o mac80211.o debugfs.o eeprom.o \
++	tx.o agg-rx.o
++
++mt76-usb-y := usb.o usb_trace.o
+ 
+ CFLAGS_trace.o := -I$(src)
++CFLAGS_usb_trace.o := -I$(src)
  
  mt76x2-common-y := \
  	mt76x2_eeprom.o mt76x2_tx_common.o mt76x2_mac_common.o \
--	mt76x2_init_common.o
-+	mt76x2_init_common.o mt76x2_common.o
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.h b/drivers/net/wireless/mediatek/mt76/dma.h
+index 1dad39697929..89fbb4df1415 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.h
++++ b/drivers/net/wireless/mediatek/mt76/dma.h
+@@ -25,6 +25,11 @@
+ #define MT_DMA_CTL_LAST_SEC0		BIT(30)
+ #define MT_DMA_CTL_DMA_DONE		BIT(31)
  
- mt76x2e-y := \
- 	mt76x2_pci.o mt76x2_dma.o \
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-index 48fbc1f2f1de..8292e1629d14 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-@@ -284,4 +284,25 @@ void mt76x2_init_txpower(struct mt76x2_dev *dev,
- 			 struct ieee80211_supported_band *sband);
- void mt76_write_mac_initvals(struct mt76x2_dev *dev);
++#define MT_DMA_HDR_LEN			4
++#define MT_RX_INFO_LEN			4
++#define MT_FCE_INFO_LEN			4
++#define MT_RX_RXWI_LEN			32
++
+ struct mt76_desc {
+ 	__le32 buf0;
+ 	__le32 ctrl;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 9a89a73fcb0f..f0e223e547d6 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -22,6 +22,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/skbuff.h>
+ #include <linux/leds.h>
++#include <linux/usb.h>
+ #include <net/mac80211.h>
+ #include "util.h"
  
-+int mt76x2_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			struct ieee80211_ampdu_params *params);
-+int mt76x2_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		   struct ieee80211_sta *sta);
-+int mt76x2_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		      struct ieee80211_sta *sta);
-+void mt76x2_remove_interface(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif);
-+int mt76x2_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
-+		   struct ieee80211_vif *vif, struct ieee80211_sta *sta,
-+		   struct ieee80211_key_conf *key);
-+int mt76x2_conf_tx(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		   u16 queue, const struct ieee80211_tx_queue_params *params);
-+void mt76x2_configure_filter(struct ieee80211_hw *hw,
-+			     unsigned int changed_flags,
-+			     unsigned int *total_flags, u64 multicast);
-+void mt76x2_txq_init(struct mt76x2_dev *dev, struct ieee80211_txq *txq);
-+void mt76x2_sta_rate_tbl_update(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif,
-+				struct ieee80211_sta *sta);
+@@ -63,12 +64,22 @@ struct mt76_queue_buf {
+ 	int len;
+ };
+ 
++struct mt76_usb_buf {
++	struct mt76_dev *dev;
++	struct urb *urb;
++	size_t len;
++	bool done;
++};
++
+ struct mt76_queue_entry {
+ 	union {
+ 		void *buf;
+ 		struct sk_buff *skb;
+ 	};
+-	struct mt76_txwi_cache *txwi;
++	union {
++		struct mt76_txwi_cache *txwi;
++		struct mt76_usb_buf ubuf;
++	};
+ 	bool schedule;
+ };
+ 
+@@ -89,6 +100,7 @@ struct mt76_queue {
+ 	struct list_head swq;
+ 	int swq_queued;
+ 
++	u16 first;
+ 	u16 head;
+ 	u16 tail;
+ 	int ndesc;
+@@ -195,6 +207,9 @@ enum {
+ 	MT76_SCANNING,
+ 	MT76_RESET,
+ 	MT76_OFFCHANNEL,
++	MT76_REMOVED,
++	MT76_READING_STATS,
++	MT76_PENDING_STATS,
+ };
+ 
+ struct mt76_hw_cap {
+@@ -234,6 +249,55 @@ struct mt76_sband {
+ 	struct mt76_channel_state *chan;
+ };
+ 
++/* addr req mask */
++#define MT_VEND_TYPE_EEPROM	BIT(31)
++#define MT_VEND_TYPE_CFG	BIT(30)
++#define MT_VEND_TYPE_MASK	(MT_VEND_TYPE_EEPROM | MT_VEND_TYPE_CFG)
++
++#define MT_VEND_ADDR(type, n)	(MT_VEND_TYPE_##type | (n))
++enum mt_vendor_req {
++	MT_VEND_DEV_MODE =	0x1,
++	MT_VEND_WRITE =		0x2,
++	MT_VEND_MULTI_WRITE =	0x6,
++	MT_VEND_MULTI_READ =	0x7,
++	MT_VEND_READ_EEPROM =	0x9,
++	MT_VEND_WRITE_FCE =	0x42,
++	MT_VEND_WRITE_CFG =	0x46,
++	MT_VEND_READ_CFG =	0x47,
++};
++
++enum mt76_usb_in_ep {
++	MT_EP_IN_PKT_RX,
++	MT_EP_IN_CMD_RESP,
++	__MT_EP_IN_MAX,
++};
++
++enum mt76_usb_out_ep {
++	MT_EP_OUT_INBAND_CMD,
++	MT_EP_OUT_AC_BK,
++	MT_EP_OUT_AC_BE,
++	MT_EP_OUT_AC_VI,
++	MT_EP_OUT_AC_VO,
++	MT_EP_OUT_HCCA,
++	__MT_EP_OUT_MAX,
++};
++
++#define MT_SG_MAX_SIZE		8
++#define MT_NUM_TX_ENTRIES	256
++#define MT_NUM_RX_ENTRIES	128
++struct mt76_usb {
++	struct mutex usb_ctrl_mtx;
++	u8 data[32];
++
++	struct tasklet_struct rx_tasklet;
++	struct tasklet_struct tx_tasklet;
++
++	u8 out_ep[__MT_EP_OUT_MAX];
++	u16 out_max_packet;
++	u8 in_ep[__MT_EP_IN_MAX];
++	u16 in_max_packet;
++};
++
+ struct mt76_dev {
+ 	struct ieee80211_hw *hw;
+ 	struct cfg80211_chan_def chandef;
+@@ -276,6 +340,8 @@ struct mt76_dev {
+ 	char led_name[32];
+ 	bool led_al;
+ 	u8 led_pin;
++
++	struct mt76_usb usb;
+ };
+ 
+ enum mt76_phy_type {
+@@ -395,6 +461,14 @@ struct dentry *mt76_register_debugfs(struct mt76_dev *dev);
+ int mt76_eeprom_init(struct mt76_dev *dev, int len);
+ void mt76_eeprom_override(struct mt76_dev *dev);
+ 
++/* Hardware uses mirrored order of queues with Q3
++ * having the highest priority
++ */
++static inline u8 q2hwq(u8 q)
++{
++	return q ^ 0x3;
++}
++
+ static inline struct ieee80211_txq *
+ mtxq_to_txq(struct mt76_txq *mtxq)
+ {
+@@ -455,4 +529,51 @@ void mt76_rx_poll_complete(struct mt76_dev *dev, enum mt76_rxq_id q,
+ 			   struct napi_struct *napi);
+ void mt76_rx_aggr_reorder(struct sk_buff *skb, struct sk_buff_head *frames);
+ 
++/* usb */
++static inline bool mt76_usb_urb_error(struct urb *urb)
++{
++	return urb->status &&
++	       urb->status != -ECONNRESET &&
++	       urb->status != -ESHUTDOWN &&
++	       urb->status != -ENOENT;
++}
++
++/* Map hardware queues to usb endpoints */
++static inline u8 q2ep(u8 qid)
++{
++	/* TODO: take management packets to queue 5 */
++	return qid + 1;
++}
++
++static inline bool mt76_usb_check_sg(struct mt76_dev *dev)
++{
++	struct usb_interface *intf = to_usb_interface(dev->dev);
++	struct usb_device *udev = interface_to_usbdev(intf);
++
++	return (udev->bus->sg_tablesize > 0 &&
++		(udev->bus->no_sg_constraint ||
++		 udev->speed == USB_SPEED_WIRELESS));
++}
++
++int mt76_usb_vendor_request(struct mt76_dev *dev, u8 req,
++			    u8 req_type, u16 val, u16 offset,
++			    void *buf, size_t len);
++void mt76_usb_single_wr(struct mt76_dev *dev, const u8 req,
++			const u16 offset, const u32 val);
++int mt76_usb_init(struct mt76_dev *dev, struct usb_interface *intf);
++void mt76_usb_deinit(struct mt76_dev *dev);
++int mt76_usb_buf_alloc(struct mt76_dev *dev, struct mt76_usb_buf *buf,
++		       int nsgs, int len, int sglen, gfp_t gfp);
++void mt76_usb_buf_free(struct mt76_usb_buf *buf);
++int mt76_usb_submit_buf(struct mt76_dev *dev, int dir, int index,
++			struct mt76_usb_buf *buf, gfp_t gfp,
++			usb_complete_t complete_fn, void *context);
++int mt76_usb_submit_rx_buffers(struct mt76_dev *dev);
++int mt76_usb_alloc_rx(struct mt76_dev *dev);
++int mt76_usb_alloc_tx(struct mt76_dev *dev);
++void mt76_usb_free_rx(struct mt76_dev *dev);
++void mt76_usb_free_tx(struct mt76_dev *dev);
++void mt76_usb_stop_rx(struct mt76_dev *dev);
++void mt76_usb_stop_tx(struct mt76_dev *dev);
 +
  #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
+diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
 new file mode 100644
-index 000000000000..3d0f58c75360
+index 000000000000..5461589f641e
 --- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_common.c
-@@ -0,0 +1,348 @@
++++ b/drivers/net/wireless/mediatek/mt76/usb.c
+@@ -0,0 +1,703 @@
 +/*
-+ * Copyright (C) 2016 Felix Fietkau <nbd@nbd.name>
 + * Copyright (C) 2018 Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 + *
 + * Permission to use, copy, modify, and/or distribute this software for any
@@ -94,719 +293,798 @@ index 000000000000..3d0f58c75360
 + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 + */
 +
-+#include "mt76x2.h"
++#include "mt76.h"
++#include "usb_trace.h"
++#include "dma.h"
 +
-+void mt76x2_txq_init(struct mt76x2_dev *dev, struct ieee80211_txq *txq)
++#define MT_VEND_REQ_MAX_RETRY	10
++#define MT_VEND_REQ_TOUT_MS	300
++
++/* should be called with usb_ctrl_mtx locked */
++static int __mt76_usb_vendor_request(struct mt76_dev *dev, u8 req,
++				     u8 req_type, u16 val, u16 offset,
++				     void *buf, size_t len)
 +{
-+	struct mt76_txq *mtxq;
++	struct usb_interface *intf = to_usb_interface(dev->dev);
++	struct usb_device *udev = interface_to_usbdev(intf);
++	unsigned int pipe;
++	int i, ret;
 +
-+	if (!txq)
-+		return;
++	pipe = (req_type & USB_DIR_IN) ? usb_rcvctrlpipe(udev, 0)
++				       : usb_sndctrlpipe(udev, 0);
++	for (i = 0; i < MT_VEND_REQ_MAX_RETRY; i++) {
++		if (test_bit(MT76_REMOVED, &dev->state))
++			return -EIO;
 +
-+	mtxq = (struct mt76_txq *) txq->drv_priv;
-+	if (txq->sta) {
-+		struct mt76x2_sta *sta;
-+
-+		sta = (struct mt76x2_sta *) txq->sta->drv_priv;
-+		mtxq->wcid = &sta->wcid;
-+	} else {
-+		struct mt76x2_vif *mvif;
-+
-+		mvif = (struct mt76x2_vif *) txq->vif->drv_priv;
-+		mtxq->wcid = &mvif->group_wcid;
++		ret = usb_control_msg(udev, pipe, req, req_type, val,
++				      offset, buf, len, MT_VEND_REQ_TOUT_MS);
++		if (ret == -ENODEV)
++			set_bit(MT76_REMOVED, &dev->state);
++		if (ret >= 0 || ret == -ENODEV)
++			return ret;
++		usleep_range(5000, 10000);
 +	}
 +
-+	mt76_txq_init(&dev->mt76, txq);
++	dev_err(dev->dev, "vendor request req:%02x off:%04x failed:%d\n",
++		req, offset, ret);
++	return ret;
 +}
-+EXPORT_SYMBOL_GPL(mt76x2_txq_init);
 +
-+int mt76x2_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			struct ieee80211_ampdu_params *params)
++int mt76_usb_vendor_request(struct mt76_dev *dev, u8 req,
++			    u8 req_type, u16 val, u16 offset,
++			    void *buf, size_t len)
 +{
-+	enum ieee80211_ampdu_mlme_action action = params->action;
-+	struct ieee80211_sta *sta = params->sta;
-+	struct mt76x2_dev *dev = hw->priv;
-+	struct mt76x2_sta *msta = (struct mt76x2_sta *) sta->drv_priv;
-+	struct ieee80211_txq *txq = sta->txq[params->tid];
-+	u16 tid = params->tid;
-+	u16 *ssn = &params->ssn;
-+	struct mt76_txq *mtxq;
++	int ret;
 +
-+	if (!txq)
-+		return -EINVAL;
-+
-+	mtxq = (struct mt76_txq *)txq->drv_priv;
-+
-+	switch (action) {
-+	case IEEE80211_AMPDU_RX_START:
-+		mt76_rx_aggr_start(&dev->mt76, &msta->wcid, tid, *ssn, params->buf_size);
-+		mt76_set(dev, MT_WCID_ADDR(msta->wcid.idx) + 4, BIT(16 + tid));
-+		break;
-+	case IEEE80211_AMPDU_RX_STOP:
-+		mt76_rx_aggr_stop(&dev->mt76, &msta->wcid, tid);
-+		mt76_clear(dev, MT_WCID_ADDR(msta->wcid.idx) + 4,
-+			   BIT(16 + tid));
-+		break;
-+	case IEEE80211_AMPDU_TX_OPERATIONAL:
-+		mtxq->aggr = true;
-+		mtxq->send_bar = false;
-+		ieee80211_send_bar(vif, sta->addr, tid, mtxq->agg_ssn);
-+		break;
-+	case IEEE80211_AMPDU_TX_STOP_FLUSH:
-+	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
-+		mtxq->aggr = false;
-+		ieee80211_send_bar(vif, sta->addr, tid, mtxq->agg_ssn);
-+		break;
-+	case IEEE80211_AMPDU_TX_START:
-+		mtxq->agg_ssn = *ssn << 4;
-+		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
-+		break;
-+	case IEEE80211_AMPDU_TX_STOP_CONT:
-+		mtxq->aggr = false;
-+		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
-+		break;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_ampdu_action);
-+
-+int mt76x2_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		   struct ieee80211_sta *sta)
-+{
-+	struct mt76x2_dev *dev = hw->priv;
-+	struct mt76x2_sta *msta = (struct mt76x2_sta *) sta->drv_priv;
-+	struct mt76x2_vif *mvif = (struct mt76x2_vif *) vif->drv_priv;
-+	int ret = 0;
-+	int idx = 0;
-+	int i;
-+
-+	mutex_lock(&dev->mutex);
-+
-+	idx = mt76_wcid_alloc(dev->wcid_mask, ARRAY_SIZE(dev->wcid));
-+	if (idx < 0) {
-+		ret = -ENOSPC;
-+		goto out;
-+	}
-+
-+	msta->vif = mvif;
-+	msta->wcid.sta = 1;
-+	msta->wcid.idx = idx;
-+	msta->wcid.hw_key_idx = -1;
-+	mt76x2_mac_wcid_setup(dev, idx, mvif->idx, sta->addr);
-+	mt76x2_mac_wcid_set_drop(dev, idx, false);
-+	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
-+		mt76x2_txq_init(dev, sta->txq[i]);
-+
-+	if (vif->type == NL80211_IFTYPE_AP)
-+		set_bit(MT_WCID_FLAG_CHECK_PS, &msta->wcid.flags);
-+
-+	rcu_assign_pointer(dev->wcid[idx], &msta->wcid);
-+
-+out:
-+	mutex_unlock(&dev->mutex);
++	mutex_lock(&dev->usb.usb_ctrl_mtx);
++	ret = __mt76_usb_vendor_request(dev, req, req_type,
++					val, offset, buf, len);
++	trace_usb_reg_wr(dev, offset, val);
++	mutex_unlock(&dev->usb.usb_ctrl_mtx);
 +
 +	return ret;
 +}
-+EXPORT_SYMBOL_GPL(mt76x2_sta_add);
++EXPORT_SYMBOL_GPL(mt76_usb_vendor_request);
 +
-+int mt76x2_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		      struct ieee80211_sta *sta)
++/* should be called with usb_ctrl_mtx locked */
++static u32 __mt76_usb_rr(struct mt76_dev *dev, u32 addr)
 +{
-+	struct mt76x2_dev *dev = hw->priv;
-+	struct mt76x2_sta *msta = (struct mt76x2_sta *) sta->drv_priv;
-+	int idx = msta->wcid.idx;
-+	int i;
-+
-+	mutex_lock(&dev->mutex);
-+	rcu_assign_pointer(dev->wcid[idx], NULL);
-+	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
-+		mt76_txq_remove(&dev->mt76, sta->txq[i]);
-+	mt76x2_mac_wcid_set_drop(dev, idx, true);
-+	mt76_wcid_free(dev->wcid_mask, idx);
-+	mt76x2_mac_wcid_setup(dev, idx, 0, NULL);
-+	mutex_unlock(&dev->mutex);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_sta_remove);
-+
-+void mt76x2_remove_interface(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif)
-+{
-+	struct mt76x2_dev *dev = hw->priv;
-+
-+	mt76_txq_remove(&dev->mt76, vif->txq);
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_remove_interface);
-+
-+int mt76x2_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
-+		   struct ieee80211_vif *vif, struct ieee80211_sta *sta,
-+		   struct ieee80211_key_conf *key)
-+{
-+	struct mt76x2_dev *dev = hw->priv;
-+	struct mt76x2_vif *mvif = (struct mt76x2_vif *) vif->drv_priv;
-+	struct mt76x2_sta *msta;
-+	struct mt76_wcid *wcid;
-+	int idx = key->keyidx;
++	struct mt76_usb *usb = &dev->usb;
++	u32 data = ~0;
++	u16 offset;
 +	int ret;
++	u8 req;
 +
-+	/* fall back to sw encryption for unsupported ciphers */
-+	switch (key->cipher) {
-+	case WLAN_CIPHER_SUITE_WEP40:
-+	case WLAN_CIPHER_SUITE_WEP104:
-+	case WLAN_CIPHER_SUITE_TKIP:
-+	case WLAN_CIPHER_SUITE_CCMP:
++	switch (addr & MT_VEND_TYPE_MASK) {
++	case MT_VEND_TYPE_EEPROM:
++		req = MT_VEND_READ_EEPROM;
++		break;
++	case MT_VEND_TYPE_CFG:
++		req = MT_VEND_READ_CFG;
 +		break;
 +	default:
-+		return -EOPNOTSUPP;
++		req = MT_VEND_MULTI_READ;
++		break;
 +	}
++	offset = addr & ~MT_VEND_TYPE_MASK;
 +
-+	/*
-+	 * The hardware does not support per-STA RX GTK, fall back
-+	 * to software mode for these.
-+	 */
-+	if ((vif->type == NL80211_IFTYPE_ADHOC ||
-+	     vif->type == NL80211_IFTYPE_MESH_POINT) &&
-+	    (key->cipher == WLAN_CIPHER_SUITE_TKIP ||
-+	     key->cipher == WLAN_CIPHER_SUITE_CCMP) &&
-+	    !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE))
-+		return -EOPNOTSUPP;
++	ret = __mt76_usb_vendor_request(dev, req,
++					USB_DIR_IN | USB_TYPE_VENDOR,
++					0, offset, usb->data, sizeof(__le32));
++	if (ret == sizeof(__le32))
++		data = get_unaligned_le32(usb->data);
++	trace_usb_reg_rr(dev, addr, data);
 +
-+	msta = sta ? (struct mt76x2_sta *) sta->drv_priv : NULL;
-+	wcid = msta ? &msta->wcid : &mvif->group_wcid;
-+
-+	if (cmd == SET_KEY) {
-+		key->hw_key_idx = wcid->idx;
-+		wcid->hw_key_idx = idx;
-+		if (key->flags & IEEE80211_KEY_FLAG_RX_MGMT) {
-+			key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
-+			wcid->sw_iv = true;
-+		}
-+	} else {
-+		if (idx == wcid->hw_key_idx) {
-+			wcid->hw_key_idx = -1;
-+			wcid->sw_iv = true;
-+		}
-+
-+		key = NULL;
-+	}
-+	mt76_wcid_key_setup(&dev->mt76, wcid, key);
-+
-+	if (!msta) {
-+		if (key || wcid->hw_key_idx == idx) {
-+			ret = mt76x2_mac_wcid_set_key(dev, wcid->idx, key);
-+			if (ret)
-+				return ret;
-+		}
-+
-+		return mt76x2_mac_shared_key_setup(dev, mvif->idx, idx, key);
-+	}
-+
-+	return mt76x2_mac_wcid_set_key(dev, msta->wcid.idx, key);
++	return data;
 +}
-+EXPORT_SYMBOL_GPL(mt76x2_set_key);
 +
-+int mt76x2_conf_tx(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		   u16 queue, const struct ieee80211_tx_queue_params *params)
++static u32 mt76_usb_rr(struct mt76_dev *dev, u32 addr)
 +{
-+	struct mt76x2_dev *dev = hw->priv;
-+	u8 cw_min = 5, cw_max = 10, qid;
-+	u32 val;
++	u32 ret;
 +
-+	qid = dev->mt76.q_tx[queue].hw_idx;
++	mutex_lock(&dev->usb.usb_ctrl_mtx);
++	ret = __mt76_usb_rr(dev, addr);
++	mutex_unlock(&dev->usb.usb_ctrl_mtx);
 +
-+	if (params->cw_min)
-+		cw_min = fls(params->cw_min);
-+	if (params->cw_max)
-+		cw_max = fls(params->cw_max);
++	return ret;
++}
 +
-+	val = FIELD_PREP(MT_EDCA_CFG_TXOP, params->txop) |
-+	      FIELD_PREP(MT_EDCA_CFG_AIFSN, params->aifs) |
-+	      FIELD_PREP(MT_EDCA_CFG_CWMIN, cw_min) |
-+	      FIELD_PREP(MT_EDCA_CFG_CWMAX, cw_max);
-+	mt76_wr(dev, MT_EDCA_CFG_AC(qid), val);
++/* should be called with usb_ctrl_mtx locked */
++static void __mt76_usb_wr(struct mt76_dev *dev, u32 addr, u32 val)
++{
++	struct mt76_usb *usb = &dev->usb;
++	u16 offset;
++	u8 req;
 +
-+	val = mt76_rr(dev, MT_WMM_TXOP(qid));
-+	val &= ~(MT_WMM_TXOP_MASK << MT_WMM_TXOP_SHIFT(qid));
-+	val |= params->txop << MT_WMM_TXOP_SHIFT(qid);
-+	mt76_wr(dev, MT_WMM_TXOP(qid), val);
++	switch (addr & MT_VEND_TYPE_MASK) {
++	case MT_VEND_TYPE_CFG:
++		req = MT_VEND_WRITE_CFG;
++		break;
++	default:
++		req = MT_VEND_MULTI_WRITE;
++		break;
++	}
++	offset = addr & ~MT_VEND_TYPE_MASK;
 +
-+	val = mt76_rr(dev, MT_WMM_AIFSN);
-+	val &= ~(MT_WMM_AIFSN_MASK << MT_WMM_AIFSN_SHIFT(qid));
-+	val |= params->aifs << MT_WMM_AIFSN_SHIFT(qid);
-+	mt76_wr(dev, MT_WMM_AIFSN, val);
++	put_unaligned_le32(val, usb->data);
++	__mt76_usb_vendor_request(dev, req,
++				  USB_DIR_OUT | USB_TYPE_VENDOR, 0,
++				  offset, usb->data, sizeof(__le32));
++	trace_usb_reg_wr(dev, addr, val);
++}
 +
-+	val = mt76_rr(dev, MT_WMM_CWMIN);
-+	val &= ~(MT_WMM_CWMIN_MASK << MT_WMM_CWMIN_SHIFT(qid));
-+	val |= cw_min << MT_WMM_CWMIN_SHIFT(qid);
-+	mt76_wr(dev, MT_WMM_CWMIN, val);
++static void mt76_usb_wr(struct mt76_dev *dev, u32 addr, u32 val)
++{
++	mutex_lock(&dev->usb.usb_ctrl_mtx);
++	__mt76_usb_wr(dev, addr, val);
++	mutex_unlock(&dev->usb.usb_ctrl_mtx);
++}
 +
-+	val = mt76_rr(dev, MT_WMM_CWMAX);
-+	val &= ~(MT_WMM_CWMAX_MASK << MT_WMM_CWMAX_SHIFT(qid));
-+	val |= cw_max << MT_WMM_CWMAX_SHIFT(qid);
-+	mt76_wr(dev, MT_WMM_CWMAX, val);
++static u32 mt76_usb_rmw(struct mt76_dev *dev, u32 addr, u32 mask,
++			u32 val)
++{
++	mutex_lock(&dev->usb.usb_ctrl_mtx);
++	val |= __mt76_usb_rr(dev, addr) & ~mask;
++	__mt76_usb_wr(dev, addr, val);
++	mutex_unlock(&dev->usb.usb_ctrl_mtx);
 +
++	return val;
++}
++
++static void mt76_usb_copy(struct mt76_dev *dev, u32 offset, const void *data,
++			  int len)
++{
++	struct mt76_usb *usb = &dev->usb;
++	const __le32 *val = data;
++	int i, ret;
++
++	mutex_lock(&usb->usb_ctrl_mtx);
++	for (i = 0; i < (len / 4); i++) {
++		put_unaligned_le32(val[i], usb->data);
++		ret = __mt76_usb_vendor_request(dev, MT_VEND_MULTI_WRITE,
++						USB_DIR_OUT | USB_TYPE_VENDOR,
++						0, offset + i * 4, usb->data,
++						sizeof(__le32));
++		if (ret < 0)
++			break;
++	}
++	mutex_unlock(&usb->usb_ctrl_mtx);
++}
++
++void mt76_usb_single_wr(struct mt76_dev *dev, const u8 req,
++			const u16 offset, const u32 val)
++{
++	mutex_lock(&dev->usb.usb_ctrl_mtx);
++	__mt76_usb_vendor_request(dev, req,
++				  USB_DIR_OUT | USB_TYPE_VENDOR,
++				  val & 0xffff, offset, NULL, 0);
++	__mt76_usb_vendor_request(dev, req,
++				  USB_DIR_OUT | USB_TYPE_VENDOR,
++				  val >> 16, offset + 2, NULL, 0);
++	mutex_unlock(&dev->usb.usb_ctrl_mtx);
++}
++EXPORT_SYMBOL_GPL(mt76_usb_single_wr);
++
++static int mt76_usb_set_endpoints(struct usb_interface *intf,
++				  struct mt76_usb *usb)
++{
++	struct usb_host_interface *intf_desc = intf->cur_altsetting;
++	struct usb_endpoint_descriptor *ep_desc;
++	int i, in_ep = 0, out_ep = 0;
++
++	for (i = 0; i < intf_desc->desc.bNumEndpoints; i++) {
++		ep_desc = &intf_desc->endpoint[i].desc;
++
++		if (usb_endpoint_is_bulk_in(ep_desc) &&
++		    in_ep < __MT_EP_IN_MAX) {
++			usb->in_ep[in_ep] = usb_endpoint_num(ep_desc);
++			usb->in_max_packet = usb_endpoint_maxp(ep_desc);
++			in_ep++;
++		} else if (usb_endpoint_is_bulk_out(ep_desc) &&
++			   out_ep < __MT_EP_OUT_MAX) {
++			usb->out_ep[out_ep] = usb_endpoint_num(ep_desc);
++			usb->out_max_packet = usb_endpoint_maxp(ep_desc);
++			out_ep++;
++		}
++	}
++
++	if (in_ep != __MT_EP_IN_MAX || out_ep != __MT_EP_OUT_MAX)
++		return -EINVAL;
 +	return 0;
 +}
-+EXPORT_SYMBOL_GPL(mt76x2_conf_tx);
 +
-+void mt76x2_configure_filter(struct ieee80211_hw *hw,
-+			     unsigned int changed_flags,
-+			     unsigned int *total_flags, u64 multicast)
++static int
++mt76_usb_fill_rx_sg(struct mt76_dev *dev, struct mt76_usb_buf *buf,
++		    int nsgs, int len, int sglen)
 +{
-+	struct mt76x2_dev *dev = hw->priv;
-+	u32 flags = 0;
++	struct urb *urb = buf->urb;
++	int i;
 +
-+#define MT76_FILTER(_flag, _hw) do { \
-+		flags |= *total_flags & FIF_##_flag;			\
-+		dev->rxfilter &= ~(_hw);				\
-+		dev->rxfilter |= !(flags & FIF_##_flag) * (_hw);	\
-+	} while (0)
++	for (i = 0; i < nsgs; i++) {
++		struct page *page;
++		void *data;
++		int offset;
 +
-+	mutex_lock(&dev->mutex);
++		data = netdev_alloc_frag(len);
++		if (!data)
++			break;
 +
-+	dev->rxfilter &= ~MT_RX_FILTR_CFG_OTHER_BSS;
-+
-+	MT76_FILTER(FCSFAIL, MT_RX_FILTR_CFG_CRC_ERR);
-+	MT76_FILTER(PLCPFAIL, MT_RX_FILTR_CFG_PHY_ERR);
-+	MT76_FILTER(CONTROL, MT_RX_FILTR_CFG_ACK |
-+			     MT_RX_FILTR_CFG_CTS |
-+			     MT_RX_FILTR_CFG_CFEND |
-+			     MT_RX_FILTR_CFG_CFACK |
-+			     MT_RX_FILTR_CFG_BA |
-+			     MT_RX_FILTR_CFG_CTRL_RSV);
-+	MT76_FILTER(PSPOLL, MT_RX_FILTR_CFG_PSPOLL);
-+
-+	*total_flags = flags;
-+	mt76_wr(dev, MT_RX_FILTR_CFG, dev->rxfilter);
-+
-+	mutex_unlock(&dev->mutex);
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_configure_filter);
-+
-+void mt76x2_sta_rate_tbl_update(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif,
-+				struct ieee80211_sta *sta)
-+{
-+	struct mt76x2_dev *dev = hw->priv;
-+	struct mt76x2_sta *msta = (struct mt76x2_sta *) sta->drv_priv;
-+	struct ieee80211_sta_rates *rates = rcu_dereference(sta->rates);
-+	struct ieee80211_tx_rate rate = {};
-+
-+	if (!rates)
-+		return;
-+
-+	rate.idx = rates->rate[0].idx;
-+	rate.flags = rates->rate[0].flags;
-+	mt76x2_mac_wcid_set_rate(dev, &msta->wcid, &rate);
-+	msta->wcid.max_txpwr_adj = mt76x2_tx_get_max_txpwr_adj(dev, &rate);
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_sta_rate_tbl_update);
-+
-+void mt76x2_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
-+			 struct sk_buff *skb)
-+{
-+	struct mt76x2_dev *dev = container_of(mdev, struct mt76x2_dev, mt76);
-+	void *rxwi = skb->data;
-+
-+	if (q == MT_RXQ_MCU) {
-+		skb_queue_tail(&dev->mcu.res_q, skb);
-+		complete(&dev->mcu.resp_cmpl);
-+		return;
++		page = virt_to_head_page(data);
++		offset = data - page_address(page);
++		sg_set_page(&urb->sg[i], page, sglen, offset);
 +	}
 +
-+	skb_pull(skb, sizeof(struct mt76x2_rxwi));
-+	if (mt76x2_mac_process_rx(dev, skb, rxwi)) {
++	if (i < nsgs) {
++		int j;
++
++		for (j = nsgs; j < urb->num_sgs; j++)
++			skb_free_frag(sg_virt(&urb->sg[j]));
++		urb->num_sgs = i;
++	}
++
++	urb->num_sgs = max_t(int, i, urb->num_sgs);
++	buf->len = urb->num_sgs * sglen,
++	sg_init_marker(urb->sg, urb->num_sgs);
++
++	return i ? : -ENOMEM;
++}
++
++int mt76_usb_buf_alloc(struct mt76_dev *dev, struct mt76_usb_buf *buf,
++		       int nsgs, int len, int sglen, gfp_t gfp)
++{
++	buf->urb = usb_alloc_urb(0, gfp);
++	if (!buf->urb)
++		return -ENOMEM;
++
++	buf->urb->sg = devm_kzalloc(dev->dev, nsgs * sizeof(*buf->urb->sg),
++				    gfp);
++	if (!buf->urb->sg)
++		return -ENOMEM;
++
++	sg_init_table(buf->urb->sg, nsgs);
++	buf->dev = dev;
++
++	return mt76_usb_fill_rx_sg(dev, buf, nsgs, len, sglen);
++}
++EXPORT_SYMBOL_GPL(mt76_usb_buf_alloc);
++
++void mt76_usb_buf_free(struct mt76_usb_buf *buf)
++{
++	struct urb *urb = buf->urb;
++	int i;
++
++	for (i = 0; i < urb->num_sgs; i++)
++		skb_free_frag(sg_virt(&urb->sg[i]));
++	usb_free_urb(buf->urb);
++}
++EXPORT_SYMBOL_GPL(mt76_usb_buf_free);
++
++int mt76_usb_submit_buf(struct mt76_dev *dev, int dir, int index,
++			struct mt76_usb_buf *buf, gfp_t gfp,
++			usb_complete_t complete_fn, void *context)
++{
++	struct usb_interface *intf = to_usb_interface(dev->dev);
++	struct usb_device *udev = interface_to_usbdev(intf);
++	unsigned int pipe;
++
++	if (dir == USB_DIR_IN)
++		pipe = usb_rcvbulkpipe(udev, dev->usb.in_ep[index]);
++	else
++		pipe = usb_sndbulkpipe(udev, dev->usb.out_ep[index]);
++
++	usb_fill_bulk_urb(buf->urb, udev, pipe, NULL, buf->len,
++			  complete_fn, context);
++
++	return usb_submit_urb(buf->urb, gfp);
++}
++EXPORT_SYMBOL_GPL(mt76_usb_submit_buf);
++
++static inline struct mt76_usb_buf
++*mt76_usb_get_next_rx_entry(struct mt76_queue *q)
++{
++	struct mt76_usb_buf *buf = NULL;
++	unsigned long flags;
++
++	spin_lock_irqsave(&q->lock, flags);
++	if (q->queued > 0) {
++		buf = &q->entry[q->head].ubuf;
++		q->head = (q->head + 1) % q->ndesc;
++		q->queued--;
++	}
++	spin_unlock_irqrestore(&q->lock, flags);
++
++	return buf;
++}
++
++static int mt76_usb_get_rx_entry_len(u8 *data, u32 data_len)
++{
++	u16 dma_len, min_len;
++
++	dma_len = get_unaligned_le16(data);
++	min_len = MT_DMA_HDR_LEN + MT_RX_RXWI_LEN +
++		  MT_FCE_INFO_LEN;
++
++	if (data_len < min_len || WARN_ON(!dma_len) ||
++	    WARN_ON(dma_len + MT_DMA_HDR_LEN > data_len) ||
++	    WARN_ON(dma_len & 0x3))
++		return -EINVAL;
++	return dma_len;
++}
++
++static int
++mt76_usb_process_rx_entry(struct mt76_dev *dev, struct urb *urb)
++{
++	struct mt76_queue *q = &dev->q_rx[MT_RXQ_MAIN];
++	u8 *data = sg_virt(&urb->sg[0]);
++	int data_len, len, nsgs = 1;
++	struct sk_buff *skb;
++
++	if (!test_bit(MT76_STATE_INITIALIZED, &dev->state))
++		return 0;
++
++	len = mt76_usb_get_rx_entry_len(data, urb->actual_length);
++	if (len < 0)
++		return 0;
++
++	skb = build_skb(data, q->buf_size);
++	if (!skb)
++		return 0;
++
++	data_len = min_t(int, len, urb->sg[0].length - MT_DMA_HDR_LEN);
++	skb_reserve(skb, MT_DMA_HDR_LEN);
++	if (skb->tail + data_len > skb->end) {
 +		dev_kfree_skb(skb);
-+		return;
++		return 1;
 +	}
 +
-+	mt76_rx(&dev->mt76, q, skb);
++	__skb_put(skb, data_len);
++	len -= data_len;
++
++	while (len > 0) {
++		data_len = min_t(int, len, urb->sg[nsgs].length);
++		skb_add_rx_frag(skb, skb_shinfo(skb)->nr_frags,
++				sg_page(&urb->sg[nsgs]),
++				urb->sg[nsgs].offset,
++				data_len, q->buf_size);
++		len -= data_len;
++		nsgs++;
++	}
++	dev->drv->rx_skb(dev, MT_RXQ_MAIN, skb);
++
++	return nsgs;
 +}
-+EXPORT_SYMBOL_GPL(mt76x2_queue_rx_skb);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
-index ab71b6e6c6dc..c86ac5f0e25c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
-@@ -66,27 +66,6 @@ mt76x2_init_tx_queue(struct mt76x2_dev *dev, struct mt76_queue *q,
- 	return 0;
- }
- 
--void mt76x2_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
--			 struct sk_buff *skb)
--{
--	struct mt76x2_dev *dev = container_of(mdev, struct mt76x2_dev, mt76);
--	void *rxwi = skb->data;
--
--	if (q == MT_RXQ_MCU) {
--		skb_queue_tail(&dev->mcu.res_q, skb);
--		complete(&dev->mcu.resp_cmpl);
--		return;
--	}
--
--	skb_pull(skb, sizeof(struct mt76x2_rxwi));
--	if (mt76x2_mac_process_rx(dev, skb, rxwi)) {
--		dev_kfree_skb(skb);
--		return;
--	}
--
--	mt76_rx(&dev->mt76, q, skb);
--}
--
- static int
- mt76x2_init_rx_queue(struct mt76x2_dev *dev, struct mt76_queue *q,
- 		     int idx, int n_desc, int bufsize)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-index ce90ff999b49..cf06b7b29c2b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-@@ -53,30 +53,6 @@ mt76x2_stop(struct ieee80211_hw *hw)
- 	mutex_unlock(&dev->mutex);
- }
- 
--static void
--mt76x2_txq_init(struct mt76x2_dev *dev, struct ieee80211_txq *txq)
--{
--	struct mt76_txq *mtxq;
--
--	if (!txq)
--		return;
--
--	mtxq = (struct mt76_txq *) txq->drv_priv;
--	if (txq->sta) {
--		struct mt76x2_sta *sta;
--
--		sta = (struct mt76x2_sta *) txq->sta->drv_priv;
--		mtxq->wcid = &sta->wcid;
--	} else {
--		struct mt76x2_vif *mvif;
--
--		mvif = (struct mt76x2_vif *) txq->vif->drv_priv;
--		mtxq->wcid = &mvif->group_wcid;
--	}
--
--	mt76_txq_init(&dev->mt76, txq);
--}
--
- static int
- mt76x2_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- {
-@@ -111,14 +87,6 @@ mt76x2_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 	return 0;
- }
- 
--static void
--mt76x2_remove_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
--{
--	struct mt76x2_dev *dev = hw->priv;
--
--	mt76_txq_remove(&dev->mt76, vif->txq);
--}
--
- static int
- mt76x2_set_channel(struct mt76x2_dev *dev, struct cfg80211_chan_def *chandef)
- {
-@@ -193,39 +161,6 @@ mt76x2_config(struct ieee80211_hw *hw, u32 changed)
- 	return ret;
- }
- 
--static void
--mt76x2_configure_filter(struct ieee80211_hw *hw, unsigned int changed_flags,
--			unsigned int *total_flags, u64 multicast)
--{
--	struct mt76x2_dev *dev = hw->priv;
--	u32 flags = 0;
--
--#define MT76_FILTER(_flag, _hw) do { \
--		flags |= *total_flags & FIF_##_flag;			\
--		dev->rxfilter &= ~(_hw);				\
--		dev->rxfilter |= !(flags & FIF_##_flag) * (_hw);	\
--	} while (0)
--
--	mutex_lock(&dev->mutex);
--
--	dev->rxfilter &= ~MT_RX_FILTR_CFG_OTHER_BSS;
--
--	MT76_FILTER(FCSFAIL, MT_RX_FILTR_CFG_CRC_ERR);
--	MT76_FILTER(PLCPFAIL, MT_RX_FILTR_CFG_PHY_ERR);
--	MT76_FILTER(CONTROL, MT_RX_FILTR_CFG_ACK |
--			     MT_RX_FILTR_CFG_CTS |
--			     MT_RX_FILTR_CFG_CFEND |
--			     MT_RX_FILTR_CFG_CFACK |
--			     MT_RX_FILTR_CFG_BA |
--			     MT_RX_FILTR_CFG_CTRL_RSV);
--	MT76_FILTER(PSPOLL, MT_RX_FILTR_CFG_PSPOLL);
--
--	*total_flags = flags;
--	mt76_wr(dev, MT_RX_FILTR_CFG, dev->rxfilter);
--
--	mutex_unlock(&dev->mutex);
--}
--
- static void
- mt76x2_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			struct ieee80211_bss_conf *info, u32 changed)
-@@ -260,66 +195,6 @@ mt76x2_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	mutex_unlock(&dev->mutex);
- }
- 
--static int
--mt76x2_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
--	       struct ieee80211_sta *sta)
--{
--	struct mt76x2_dev *dev = hw->priv;
--	struct mt76x2_sta *msta = (struct mt76x2_sta *) sta->drv_priv;
--	struct mt76x2_vif *mvif = (struct mt76x2_vif *) vif->drv_priv;
--	int ret = 0;
--	int idx = 0;
--	int i;
--
--	mutex_lock(&dev->mutex);
--
--	idx = mt76_wcid_alloc(dev->wcid_mask, ARRAY_SIZE(dev->wcid));
--	if (idx < 0) {
--		ret = -ENOSPC;
--		goto out;
--	}
--
--	msta->vif = mvif;
--	msta->wcid.sta = 1;
--	msta->wcid.idx = idx;
--	msta->wcid.hw_key_idx = -1;
--	mt76x2_mac_wcid_setup(dev, idx, mvif->idx, sta->addr);
--	mt76x2_mac_wcid_set_drop(dev, idx, false);
--	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
--		mt76x2_txq_init(dev, sta->txq[i]);
--
--	if (vif->type == NL80211_IFTYPE_AP)
--		set_bit(MT_WCID_FLAG_CHECK_PS, &msta->wcid.flags);
--
--	rcu_assign_pointer(dev->wcid[idx], &msta->wcid);
--
--out:
--	mutex_unlock(&dev->mutex);
--
--	return ret;
--}
--
--static int
--mt76x2_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
--		  struct ieee80211_sta *sta)
--{
--	struct mt76x2_dev *dev = hw->priv;
--	struct mt76x2_sta *msta = (struct mt76x2_sta *) sta->drv_priv;
--	int idx = msta->wcid.idx;
--	int i;
--
--	mutex_lock(&dev->mutex);
--	rcu_assign_pointer(dev->wcid[idx], NULL);
--	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
--		mt76_txq_remove(&dev->mt76, sta->txq[i]);
--	mt76x2_mac_wcid_set_drop(dev, idx, true);
--	mt76_wcid_free(dev->wcid_mask, idx);
--	mt76x2_mac_wcid_setup(dev, idx, 0, NULL);
--	mutex_unlock(&dev->mutex);
--
--	return 0;
--}
--
- void
- mt76x2_sta_ps(struct mt76_dev *mdev, struct ieee80211_sta *sta, bool ps)
- {
-@@ -331,117 +206,6 @@ mt76x2_sta_ps(struct mt76_dev *mdev, struct ieee80211_sta *sta, bool ps)
- 	mt76x2_mac_wcid_set_drop(dev, idx, ps);
- }
- 
--static int
--mt76x2_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
--	       struct ieee80211_vif *vif, struct ieee80211_sta *sta,
--	       struct ieee80211_key_conf *key)
--{
--	struct mt76x2_dev *dev = hw->priv;
--	struct mt76x2_vif *mvif = (struct mt76x2_vif *) vif->drv_priv;
--	struct mt76x2_sta *msta;
--	struct mt76_wcid *wcid;
--	int idx = key->keyidx;
--	int ret;
--
--	/* fall back to sw encryption for unsupported ciphers */
--	switch (key->cipher) {
--	case WLAN_CIPHER_SUITE_WEP40:
--	case WLAN_CIPHER_SUITE_WEP104:
--	case WLAN_CIPHER_SUITE_TKIP:
--	case WLAN_CIPHER_SUITE_CCMP:
--		break;
--	default:
--		return -EOPNOTSUPP;
--	}
--
--	/*
--	 * The hardware does not support per-STA RX GTK, fall back
--	 * to software mode for these.
--	 */
--	if ((vif->type == NL80211_IFTYPE_ADHOC ||
--	     vif->type == NL80211_IFTYPE_MESH_POINT) &&
--	    (key->cipher == WLAN_CIPHER_SUITE_TKIP ||
--	     key->cipher == WLAN_CIPHER_SUITE_CCMP) &&
--	    !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE))
--		return -EOPNOTSUPP;
--
--	msta = sta ? (struct mt76x2_sta *) sta->drv_priv : NULL;
--	wcid = msta ? &msta->wcid : &mvif->group_wcid;
--
--	if (cmd == SET_KEY) {
--		key->hw_key_idx = wcid->idx;
--		wcid->hw_key_idx = idx;
--		if (key->flags & IEEE80211_KEY_FLAG_RX_MGMT) {
--			key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
--			wcid->sw_iv = true;
--		}
--	} else {
--		if (idx == wcid->hw_key_idx) {
--			wcid->hw_key_idx = -1;
--			wcid->sw_iv = true;
--		}
--
--		key = NULL;
--	}
--	mt76_wcid_key_setup(&dev->mt76, wcid, key);
--
--	if (!msta) {
--		if (key || wcid->hw_key_idx == idx) {
--			ret = mt76x2_mac_wcid_set_key(dev, wcid->idx, key);
--			if (ret)
--				return ret;
--		}
--
--		return mt76x2_mac_shared_key_setup(dev, mvif->idx, idx, key);
--	}
--
--	return mt76x2_mac_wcid_set_key(dev, msta->wcid.idx, key);
--}
--
--static int
--mt76x2_conf_tx(struct ieee80211_hw *hw, struct ieee80211_vif *vif, u16 queue,
--	       const struct ieee80211_tx_queue_params *params)
--{
--	struct mt76x2_dev *dev = hw->priv;
--	u8 cw_min = 5, cw_max = 10, qid;
--	u32 val;
--
--	qid = dev->mt76.q_tx[queue].hw_idx;
--
--	if (params->cw_min)
--		cw_min = fls(params->cw_min);
--	if (params->cw_max)
--		cw_max = fls(params->cw_max);
--
--	val = FIELD_PREP(MT_EDCA_CFG_TXOP, params->txop) |
--	      FIELD_PREP(MT_EDCA_CFG_AIFSN, params->aifs) |
--	      FIELD_PREP(MT_EDCA_CFG_CWMIN, cw_min) |
--	      FIELD_PREP(MT_EDCA_CFG_CWMAX, cw_max);
--	mt76_wr(dev, MT_EDCA_CFG_AC(qid), val);
--
--	val = mt76_rr(dev, MT_WMM_TXOP(qid));
--	val &= ~(MT_WMM_TXOP_MASK << MT_WMM_TXOP_SHIFT(qid));
--	val |= params->txop << MT_WMM_TXOP_SHIFT(qid);
--	mt76_wr(dev, MT_WMM_TXOP(qid), val);
--
--	val = mt76_rr(dev, MT_WMM_AIFSN);
--	val &= ~(MT_WMM_AIFSN_MASK << MT_WMM_AIFSN_SHIFT(qid));
--	val |= params->aifs << MT_WMM_AIFSN_SHIFT(qid);
--	mt76_wr(dev, MT_WMM_AIFSN, val);
--
--	val = mt76_rr(dev, MT_WMM_CWMIN);
--	val &= ~(MT_WMM_CWMIN_MASK << MT_WMM_CWMIN_SHIFT(qid));
--	val |= cw_min << MT_WMM_CWMIN_SHIFT(qid);
--	mt76_wr(dev, MT_WMM_CWMIN, val);
--
--	val = mt76_rr(dev, MT_WMM_CWMAX);
--	val &= ~(MT_WMM_CWMAX_MASK << MT_WMM_CWMAX_SHIFT(qid));
--	val |= cw_max << MT_WMM_CWMAX_SHIFT(qid);
--	mt76_wr(dev, MT_WMM_CWMAX, val);
--
--	return 0;
--}
--
- static void
- mt76x2_sw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	       const u8 *mac)
-@@ -480,75 +244,6 @@ mt76x2_get_txpower(struct ieee80211_hw *hw, struct ieee80211_vif *vif, int *dbm)
- 	return 0;
- }
- 
--static int
--mt76x2_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
--		    struct ieee80211_ampdu_params *params)
--{
--	enum ieee80211_ampdu_mlme_action action = params->action;
--	struct ieee80211_sta *sta = params->sta;
--	struct mt76x2_dev *dev = hw->priv;
--	struct mt76x2_sta *msta = (struct mt76x2_sta *) sta->drv_priv;
--	struct ieee80211_txq *txq = sta->txq[params->tid];
--	u16 tid = params->tid;
--	u16 *ssn = &params->ssn;
--	struct mt76_txq *mtxq;
--
--	if (!txq)
--		return -EINVAL;
--
--	mtxq = (struct mt76_txq *)txq->drv_priv;
--
--	switch (action) {
--	case IEEE80211_AMPDU_RX_START:
--		mt76_rx_aggr_start(&dev->mt76, &msta->wcid, tid, *ssn, params->buf_size);
--		mt76_set(dev, MT_WCID_ADDR(msta->wcid.idx) + 4, BIT(16 + tid));
--		break;
--	case IEEE80211_AMPDU_RX_STOP:
--		mt76_rx_aggr_stop(&dev->mt76, &msta->wcid, tid);
--		mt76_clear(dev, MT_WCID_ADDR(msta->wcid.idx) + 4,
--			   BIT(16 + tid));
--		break;
--	case IEEE80211_AMPDU_TX_OPERATIONAL:
--		mtxq->aggr = true;
--		mtxq->send_bar = false;
--		ieee80211_send_bar(vif, sta->addr, tid, mtxq->agg_ssn);
--		break;
--	case IEEE80211_AMPDU_TX_STOP_FLUSH:
--	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
--		mtxq->aggr = false;
--		ieee80211_send_bar(vif, sta->addr, tid, mtxq->agg_ssn);
--		break;
--	case IEEE80211_AMPDU_TX_START:
--		mtxq->agg_ssn = *ssn << 4;
--		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
--		break;
--	case IEEE80211_AMPDU_TX_STOP_CONT:
--		mtxq->aggr = false;
--		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
--		break;
--	}
--
--	return 0;
--}
--
--static void
--mt76x2_sta_rate_tbl_update(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
--			   struct ieee80211_sta *sta)
--{
--	struct mt76x2_dev *dev = hw->priv;
--	struct mt76x2_sta *msta = (struct mt76x2_sta *) sta->drv_priv;
--	struct ieee80211_sta_rates *rates = rcu_dereference(sta->rates);
--	struct ieee80211_tx_rate rate = {};
--
--	if (!rates)
--		return;
--
--	rate.idx = rates->rate[0].idx;
--	rate.flags = rates->rate[0].flags;
--	mt76x2_mac_wcid_set_rate(dev, &msta->wcid, &rate);
--	msta->wcid.max_txpwr_adj = mt76x2_tx_get_max_txpwr_adj(dev, &rate);
--}
--
- static void mt76x2_set_coverage_class(struct ieee80211_hw *hw,
- 				      s16 coverage_class)
- {
++
++static void mt76_usb_complete_rx(struct urb *urb)
++{
++	struct mt76_dev *dev = urb->context;
++	struct mt76_queue *q = &dev->q_rx[MT_RXQ_MAIN];
++	unsigned long flags;
++
++	switch (urb->status) {
++	case -ECONNRESET:
++	case -ESHUTDOWN:
++	case -ENOENT:
++		return;
++	default:
++		dev_err(dev->dev, "rx urb failed: %d\n", urb->status);
++		/* fall through */
++	case 0:
++		break;
++	}
++
++	spin_lock_irqsave(&q->lock, flags);
++	if (WARN_ONCE(q->entry[q->tail].ubuf.urb != urb, "rx urb mismatch"))
++		goto out;
++
++	q->tail = (q->tail + 1) % q->ndesc;
++	q->queued++;
++	tasklet_schedule(&dev->usb.rx_tasklet);
++out:
++	spin_unlock_irqrestore(&q->lock, flags);
++}
++
++static void mt76_usb_rx_tasklet(unsigned long data)
++{
++	struct mt76_dev *dev = (struct mt76_dev *)data;
++	struct mt76_queue *q = &dev->q_rx[MT_RXQ_MAIN];
++	int err, nsgs, buf_len = q->buf_size;
++	struct mt76_usb_buf *buf;
++
++	rcu_read_lock();
++
++	while (true) {
++		buf = mt76_usb_get_next_rx_entry(q);
++		if (!buf)
++			break;
++
++		nsgs = mt76_usb_process_rx_entry(dev, buf->urb);
++		if (nsgs > 0) {
++			err = mt76_usb_fill_rx_sg(dev, buf, nsgs,
++						  buf_len,
++						  SKB_WITH_OVERHEAD(buf_len));
++			if (err < 0)
++				break;
++		}
++
++		mt76_usb_submit_buf(dev, USB_DIR_IN, MT_EP_IN_PKT_RX,
++				    buf, GFP_ATOMIC,
++				    mt76_usb_complete_rx, dev);
++	}
++	mt76_rx_poll_complete(dev, MT_RXQ_MAIN, NULL);
++
++	rcu_read_unlock();
++}
++
++int mt76_usb_submit_rx_buffers(struct mt76_dev *dev)
++{
++	struct mt76_queue *q = &dev->q_rx[MT_RXQ_MAIN];
++	unsigned long flags;
++	int i, err = 0;
++
++	spin_lock_irqsave(&q->lock, flags);
++	for (i = 0; i < q->ndesc; i++) {
++		err = mt76_usb_submit_buf(dev, USB_DIR_IN, MT_EP_IN_PKT_RX,
++					  &q->entry[i].ubuf, GFP_ATOMIC,
++					  mt76_usb_complete_rx, dev);
++		if (err < 0)
++			break;
++	}
++	q->head = q->tail = 0;
++	q->queued = 0;
++	spin_unlock_irqrestore(&q->lock, flags);
++
++	return err;
++}
++EXPORT_SYMBOL_GPL(mt76_usb_submit_rx_buffers);
++
++int mt76_usb_alloc_rx(struct mt76_dev *dev)
++{
++	struct mt76_queue *q = &dev->q_rx[MT_RXQ_MAIN];
++	int i, err, nsgs;
++
++	spin_lock_init(&q->lock);
++	q->entry = devm_kzalloc(dev->dev,
++				MT_NUM_RX_ENTRIES * sizeof(*q->entry),
++				GFP_KERNEL);
++	if (!q->entry)
++		return -ENOMEM;
++
++	if (mt76_usb_check_sg(dev)) {
++		q->buf_size = MT_RX_BUF_SIZE;
++		nsgs = MT_SG_MAX_SIZE;
++	} else {
++		q->buf_size = PAGE_SIZE;
++		nsgs = 1;
++	}
++
++	for (i = 0; i < MT_NUM_RX_ENTRIES; i++) {
++		err = mt76_usb_buf_alloc(dev, &q->entry[i].ubuf,
++					 nsgs, q->buf_size,
++					 SKB_WITH_OVERHEAD(q->buf_size),
++					 GFP_KERNEL);
++		if (err < 0)
++			return err;
++	}
++	q->ndesc = MT_NUM_RX_ENTRIES;
++
++	return mt76_usb_submit_rx_buffers(dev);
++}
++EXPORT_SYMBOL_GPL(mt76_usb_alloc_rx);
++
++void mt76_usb_free_rx(struct mt76_dev *dev)
++{
++	struct mt76_queue *q = &dev->q_rx[MT_RXQ_MAIN];
++	int i;
++
++	for (i = 0; i < q->ndesc; i++)
++		mt76_usb_buf_free(&q->entry[i].ubuf);
++}
++EXPORT_SYMBOL_GPL(mt76_usb_free_rx);
++
++void mt76_usb_stop_rx(struct mt76_dev *dev)
++{
++	struct mt76_queue *q = &dev->q_rx[MT_RXQ_MAIN];
++	int i;
++
++	for (i = 0; i < q->ndesc; i++)
++		usb_kill_urb(q->entry[i].ubuf.urb);
++}
++EXPORT_SYMBOL_GPL(mt76_usb_stop_rx);
++
++static void mt76_usb_tx_tasklet(unsigned long data)
++{
++	struct mt76_dev *dev = (struct mt76_dev *)data;
++
++	set_bit(MT76_PENDING_STATS, &dev->state);
++	dev->drv->tx_complete_skb(dev, NULL, NULL, false);
++}
++
++static void mt76_usb_complete_tx(struct urb *urb)
++{
++	struct mt76_usb_buf *buf = urb->context;
++	struct mt76_dev *dev = buf->dev;
++
++	if (mt76_usb_urb_error(urb))
++		dev_err(dev->dev, "tx urb failed: %d\n", urb->status);
++	buf->done = true;
++
++	tasklet_schedule(&dev->usb.tx_tasklet);
++}
++
++static int
++mt76_usb_tx_build_sg(struct sk_buff *skb, struct urb *urb)
++{
++	int nsgs = 1 + skb_shinfo(skb)->nr_frags;
++	struct sk_buff *iter;
++
++	skb_walk_frags(skb, iter)
++		nsgs += 1 + skb_shinfo(iter)->nr_frags;
++
++	memset(urb->sg, 0, sizeof(*urb->sg) * MT_SG_MAX_SIZE);
++
++	nsgs = min_t(int, MT_SG_MAX_SIZE, nsgs);
++	sg_init_marker(urb->sg, nsgs);
++	urb->num_sgs = nsgs;
++
++	return skb_to_sgvec_nomark(skb, urb->sg, 0, skb->len);
++}
++
++static int mt76_usb_tx_queue_skb(struct mt76_dev *dev, struct mt76_queue *q,
++				 struct sk_buff *skb, struct mt76_wcid *wcid,
++				 struct ieee80211_sta *sta)
++{
++	struct usb_interface *intf = to_usb_interface(dev->dev);
++	struct usb_device *udev = interface_to_usbdev(intf);
++	u8 ep = q2ep(q->hw_idx);
++	struct mt76_usb_buf *buf;
++	u16 idx = q->tail;
++	unsigned int pipe;
++	int err;
++
++	if (q->queued == q->ndesc)
++		return -ENOSPC;
++
++	err = dev->drv->tx_prepare_skb(dev, NULL, skb, q, wcid, sta, NULL);
++	if (err < 0)
++		return err;
++
++	buf = &q->entry[idx].ubuf;
++	buf->done = false;
++
++	err = mt76_usb_tx_build_sg(skb, buf->urb);
++	if (err < 0)
++		return err;
++
++	pipe = usb_sndbulkpipe(udev, dev->usb.out_ep[ep]);
++	usb_fill_bulk_urb(buf->urb, udev, pipe, NULL, skb->len,
++			  mt76_usb_complete_tx, buf);
++
++	q->tail = (q->tail + 1) % q->ndesc;
++	q->entry[idx].skb = skb;
++	q->queued++;
++
++	return idx;
++}
++
++static void mt76_usb_tx_kick(struct mt76_dev *dev, struct mt76_queue *q)
++{
++	struct mt76_usb_buf *buf;
++	int err;
++
++	while (q->first != q->tail) {
++		buf = &q->entry[q->first].ubuf;
++		err = usb_submit_urb(buf->urb, GFP_ATOMIC);
++		if (err < 0) {
++			if (err == -ENODEV)
++				set_bit(MT76_REMOVED, &dev->state);
++			else
++				dev_err(dev->dev, "tx urb submit failed:%d\n",
++					err);
++			break;
++		}
++		q->first = (q->first + 1) % q->ndesc;
++	}
++}
++
++int mt76_usb_alloc_tx(struct mt76_dev *dev)
++{
++	struct mt76_usb_buf *buf;
++	struct mt76_queue *q;
++	size_t size;
++	int i, j;
++
++	size = MT_SG_MAX_SIZE * sizeof(struct scatterlist);
++	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
++		q = &dev->q_tx[i];
++		spin_lock_init(&q->lock);
++		INIT_LIST_HEAD(&q->swq);
++		q->hw_idx = q2hwq(i);
++
++		q->entry = devm_kzalloc(dev->dev,
++					MT_NUM_TX_ENTRIES * sizeof(*q->entry),
++					GFP_KERNEL);
++		if (!q->entry)
++			return -ENOMEM;
++
++		q->ndesc = MT_NUM_TX_ENTRIES;
++		for (j = 0; j < q->ndesc; j++) {
++			buf = &q->entry[j].ubuf;
++			buf->dev = dev;
++
++			buf->urb = usb_alloc_urb(0, GFP_KERNEL);
++			if (!buf->urb)
++				return -ENOMEM;
++
++			buf->urb->sg = devm_kzalloc(dev->dev, size, GFP_KERNEL);
++			if (!buf->urb->sg)
++				return -ENOMEM;
++		}
++	}
++	return 0;
++}
++EXPORT_SYMBOL_GPL(mt76_usb_alloc_tx);
++
++void mt76_usb_free_tx(struct mt76_dev *dev)
++{
++	struct mt76_queue *q;
++	int i, j;
++
++	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
++		q = &dev->q_tx[i];
++		for (j = 0; j < q->ndesc; j++)
++			usb_free_urb(q->entry[j].ubuf.urb);
++	}
++}
++EXPORT_SYMBOL_GPL(mt76_usb_free_tx);
++
++void mt76_usb_stop_tx(struct mt76_dev *dev)
++{
++	struct mt76_queue *q;
++	int i, j;
++
++	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
++		q = &dev->q_tx[i];
++		for (j = 0; j < q->ndesc; j++)
++			usb_kill_urb(q->entry[j].ubuf.urb);
++	}
++}
++EXPORT_SYMBOL_GPL(mt76_usb_stop_tx);
++
++static const struct mt76_queue_ops usb_queue_ops = {
++	.tx_queue_skb = mt76_usb_tx_queue_skb,
++	.kick = mt76_usb_tx_kick,
++};
++
++int mt76_usb_init(struct mt76_dev *dev,
++		  struct usb_interface *intf)
++{
++	static const struct mt76_bus_ops mt76_usb_ops = {
++		.rr = mt76_usb_rr,
++		.wr = mt76_usb_wr,
++		.rmw = mt76_usb_rmw,
++		.copy = mt76_usb_copy,
++	};
++	struct mt76_usb *usb = &dev->usb;
++
++	tasklet_init(&usb->rx_tasklet, mt76_usb_rx_tasklet, (unsigned long)dev);
++	tasklet_init(&usb->tx_tasklet, mt76_usb_tx_tasklet, (unsigned long)dev);
++	skb_queue_head_init(&dev->rx_skb[MT_RXQ_MAIN]);
++
++	mutex_init(&usb->usb_ctrl_mtx);
++	dev->bus = &mt76_usb_ops;
++	dev->queue_ops = &usb_queue_ops;
++
++	return mt76_usb_set_endpoints(intf, usb);
++}
++EXPORT_SYMBOL_GPL(mt76_usb_init);
++
++MODULE_AUTHOR("Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>");
++MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/wireless/mediatek/mt76/usb_trace.c b/drivers/net/wireless/mediatek/mt76/usb_trace.c
+new file mode 100644
+index 000000000000..7e1f540f0b7a
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/usb_trace.c
+@@ -0,0 +1,23 @@
++/*
++ * Copyright (C) 2018 Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <linux/module.h>
++
++#ifndef __CHECKER__
++#define CREATE_TRACE_POINTS
++#include "usb_trace.h"
++
++#endif
+diff --git a/drivers/net/wireless/mediatek/mt76/usb_trace.h b/drivers/net/wireless/mediatek/mt76/usb_trace.h
+new file mode 100644
+index 000000000000..52db7012304a
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/usb_trace.h
+@@ -0,0 +1,71 @@
++/*
++ * Copyright (C) 2018 Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#if !defined(__MT76_USB_TRACE_H) || defined(TRACE_HEADER_MULTI_READ)
++#define __MT76_USB_TRACE_H
++
++#include <linux/tracepoint.h>
++#include "mt76.h"
++
++#undef TRACE_SYSTEM
++#define TRACE_SYSTEM mt76_usb
++
++#define MAXNAME		32
++#define DEV_ENTRY   __array(char, wiphy_name, 32)
++#define DEV_ASSIGN  strlcpy(__entry->wiphy_name, wiphy_name(dev->hw->wiphy), MAXNAME)
++#define DEV_PR_FMT  "%s"
++#define DEV_PR_ARG  __entry->wiphy_name
++
++#define REG_ENTRY	__field(u32, reg) __field(u32, val)
++#define REG_ASSIGN	__entry->reg = reg; __entry->val = val
++#define REG_PR_FMT	" %04x=%08x"
++#define REG_PR_ARG	__entry->reg, __entry->val
++
++DECLARE_EVENT_CLASS(dev_reg_evt,
++	TP_PROTO(struct mt76_dev *dev, u32 reg, u32 val),
++	TP_ARGS(dev, reg, val),
++	TP_STRUCT__entry(
++		DEV_ENTRY
++		REG_ENTRY
++	),
++	TP_fast_assign(
++		DEV_ASSIGN;
++		REG_ASSIGN;
++	),
++	TP_printk(
++		DEV_PR_FMT REG_PR_FMT,
++		DEV_PR_ARG, REG_PR_ARG
++	)
++);
++
++DEFINE_EVENT(dev_reg_evt, usb_reg_rr,
++	TP_PROTO(struct mt76_dev *dev, u32 reg, u32 val),
++	TP_ARGS(dev, reg, val)
++);
++
++DEFINE_EVENT(dev_reg_evt, usb_reg_wr,
++	TP_PROTO(struct mt76_dev *dev, u32 reg, u32 val),
++	TP_ARGS(dev, reg, val)
++);
++
++#endif
++
++#undef TRACE_INCLUDE_PATH
++#define TRACE_INCLUDE_PATH .
++#undef TRACE_INCLUDE_FILE
++#define TRACE_INCLUDE_FILE usb_trace
++
++#include <trace/define_trace.h>
 -- 
 2.17.1
