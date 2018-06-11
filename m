@@ -1,155 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:51971 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933186AbeFUM0V (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Jun 2018 08:26:21 -0400
-Received: by mail-it0-f67.google.com with SMTP id n7-v6so4385200itn.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2018 05:26:21 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        kernel-team@fb.com, Bob Copeland <me@bobcopeland.com>,
-        Bob Copeland <bobcopeland@fb.com>
-Subject: [PATCH] ath10k: use locked skb_dequeue for rx completions
-Date: Thu, 21 Jun 2018 08:25:48 -0400
-Message-Id: <20180621122548.23863-1-me@bobcopeland.com> (sfid-20180621_142710_756959_F5189C31)
+Received: from bues.ch ([80.190.117.144]:51462 "EHLO bues.ch"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932468AbeFKUr1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 Jun 2018 16:47:27 -0400
+Date: Mon, 11 Jun 2018 22:46:34 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Wirz <spam@lukas-wirz.de>
+Cc: b43-dev@lists.infradead.org,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: b43 crashes on rmmod (bcm4331)
+Message-ID: <20180611224634.28ccd288@wiggum> (sfid-20180611_224730_557419_06A64F55)
+In-Reply-To: <e72be8db-77ba-408c-c5e5-351d722e09e8@lukas-wirz.de>
+References: <75e4b424-4c75-5abd-1ef0-c2537d329b10@lukas-wirz.de>
+        <d9896c10-87bb-8362-f302-8b1888c3421c@lukas-wirz.de>
+        <20180609171159.59b5209c@wiggum>
+        <6a78c68e-1062-5ad8-876c-f7d4c49ea492@lukas-wirz.de>
+        <20180609220130.3ceb834f@wiggum>
+        <e72be8db-77ba-408c-c5e5-351d722e09e8@lukas-wirz.de>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ boundary="Sig_/ub0oWLgzP3cgDyb/AmsiE90"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In our environment we are occasionally seeing the following stack trace
-in ath10k:
+--Sig_/ub0oWLgzP3cgDyb/AmsiE90
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Unable to handle kernel paging request at virtual address 0000a800
-pgd = c0204000
-[0000a800] *pgd=00000000
-Internal error: Oops: 17 [#1] SMP ARM
-Modules linked in: dwc3 dwc3_of_simple phy_qcom_dwc3 nf_nat xt_connmark
-CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.9.31 #2
-Hardware name: Generic DT based system
-task: c09f4f40 task.stack: c09ee000
-PC is at kfree_skb_list+0x1c/0x2c
-LR is at skb_release_data+0x6c/0x108
-pc : [<c065dcc4>]    lr : [<c065da5c>]    psr: 200f0113
-sp : c09efb68  ip : c09efb80  fp : c09efb7c
-r10: 00000000  r9 : 00000000  r8 : 043fddd1
-r7 : bf15d160  r6 : 00000000  r5 : d4ca2f00  r4 : ca7c6480
-r3 : 000000a0  r2 : 01000000  r1 : c0a57470  r0 : 0000a800
-Flags: nzCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment none
-Control: 10c5787d  Table: 56e6006a  DAC: 00000051
-Process swapper/0 (pid: 0, stack limit = 0xc09ee210)
-Stack: (0xc09efb68 to 0xc09f0000)
-fb60:                   ca7c6480 d4ca2f00 c09efb9c c09efb80 c065da5c c065dcb4
-fb80: d4ca2f00 00000000 dcbf8400 bf15d160 c09efbb4 c09efba0 c065db28 c065d9fc
-fba0: d4ca2f00 00000000 c09efbcc c09efbb8 c065db48 c065db04 d4ca2f00 00000000
-fbc0: c09efbe4 c09efbd0 c065ddd0 c065db38 d4ca2f00 00000000 c09efc64 c09efbe8
-fbe0: bf09bd00 c065dd10 00000003 7fffffff c09efc24 dcbfc9c0 01200000 00000000
-fc00: 00000000 00000000 ddb7e440 c09e9440 c09efc48 1d195000 c09efc7c c09efc28
-fc20: c027bb68 c028aa00 ddb7e4f8 bf13231c ddb7e454 0004091f bf154571 d4ca2f00
-fc40: dcbf8d00 ca7c5df6 bf154538 01200000 00000000 bf154538 c09efd1c c09efc68
-fc60: bf132458 bf09bbbc ca7c5dec 00000041 bf154538 bf154539 000007bf bf154545
-fc80: bf154538 bf154538 bf154538 bf154538 bf154538 00000000 00000000 000016c1
-fca0: 00000001 c09efcb0 01200000 00000000 00000000 00000000 00000000 00000001
-fcc0: bf154539 00000041 00000000 00000007 00000000 000000d0 ffffffff 3160ffff
-fce0: 9ad93e97 3e973160 7bf09ad9 0004091f d4ca2f00 c09efdb0 dcbf94e8 00000000
-fd00: dcbf8d00 01200000 00000000 dcbf8d00 c09efd44 c09efd20 bf132544 bf132130
-fd20: dcbf8d00 00000000 d4ca2f00 c09efdb0 00000001 d4ca2f00 c09efdec c09efd48
-fd40: bf133630 bf1324d0 ca7c5cc0 000007c0 c09efd88 c09efd70 c0764230 c02277d8
-fd60: 200f0113 ffffffff dcbf94c8 bf000000 dcbf93b0 dcbf8d00 00000040 dcbf945c
-fd80: dcbf94e8 00000000 c09efdcc 00000000 c09efd90 c09efd90 00000000 00000024
-fda0: dcbf8d00 00000000 00000005 dcbf8d00 c09efdb0 c09efdb0 00000000 00000040
-fdc0: c09efdec dcbf8d00 dcbfc9c0 c09ed140 00000040 00000000 00000100 00000040
-fde0: c09efe14 c09efdf0 bf1739b4 bf132840 dcbfc9c0 ddb82140 c09ed140 1d195000
-fe00: 00000001 00000100 c09efe64 c09efe18 c067136c bf173958 ddb7fac8 c09f0d00
-fe20: 001df678 0000012c c09efe28 c09efe28 c09efe30 c09efe30 c0a7fb28 ffffe000
-fe40: c09f008c 00000003 00000008 c0a598c0 00000100 c09f0080 c09efeb4 c09efe68
-fe60: c02096e0 c0671278 c0494584 00000080 dd5c3300 c09f0d00 00000004 001df677
-fe80: 0000000a 00200100 dd5c3300 00000000 00000000 c09eaa70 00000060 dd410800
-fea0: c09ee000 00000000 c09efecc c09efeb8 c0227944 c02094c4 00000000 00000000
-fec0: c09efef4 c09efed0 c0268b64 c02278ac de802000 c09f1b1c c09eff20 c0a16cc0
-fee0: de803000 c09ee000 c09eff1c c09efef8 c020947c c0268ae0 c02103dc 600f0013
-ff00: ffffffff c09eff54 ffffe000 c09ee000 c09eff7c c09eff20 c021448c c0209424
-ff20: 00000001 00000000 00000000 c021ddc0 00000000 00000000 c09f1024 00000001
-ff40: ffffe000 c09f1078 00000000 c09eff7c c09eff80 c09eff70 c02103ec c02103dc
-ff60: 600f0013 ffffffff 00000051 00000000 c09eff8c c09eff80 c0763cc4 c02103bc
-ff80: c09effa4 c09eff90 c025f0e4 c0763c98 c0a59040 c09f1000 c09effb4 c09effa8
-ffa0: c075efe0 c025efd4 c09efff4 c09effb8 c097dcac c075ef7c ffffffff ffffffff
-ffc0: 00000000 c097d6c4 00000000 c09c1a28 c0a59294 c09f101c c09c1a24 c09f61c0
-ffe0: 4220406a 512f04d0 00000000 c09efff8 4220807c c097d95c 00000000 00000000
-[<c065dcc4>] (kfree_skb_list) from [<c065da5c>] (skb_release_data+0x6c/0x108)
-[<c065da5c>] (skb_release_data) from [<c065db28>] (skb_release_all+0x30/0x34)
-[<c065db28>] (skb_release_all) from [<c065db48>] (__kfree_skb+0x1c/0x9c)
-[<c065db48>] (__kfree_skb) from [<c065ddd0>] (consume_skb+0xcc/0xd8)
-[<c065ddd0>] (consume_skb) from [<bf09bd00>] (ieee80211_rx_napi+0x150/0x82c [mac80211])
-[<bf09bd00>] (ieee80211_rx_napi [mac80211]) from [<bf132458>] (ath10k_htt_t2h_msg_handler+0x15e8/0x19c4 [ath10k_core])
-[<bf132458>] (ath10k_htt_t2h_msg_handler [ath10k_core]) from [<bf132544>] (ath10k_htt_t2h_msg_handler+0x16d4/0x19c4 [ath10k_core])
-[<bf132544>] (ath10k_htt_t2h_msg_handler [ath10k_core]) from [<bf133630>] (ath10k_htt_txrx_compl_task+0xdfc/0x12cc [ath10k_core])
-[<bf133630>] (ath10k_htt_txrx_compl_task [ath10k_core]) from [<bf1739b4>] (ath10k_pci_napi_poll+0x68/0xf4 [ath10k_pci])
-[<bf1739b4>] (ath10k_pci_napi_poll [ath10k_pci]) from [<c067136c>] (net_rx_action+0x100/0x33c)
-[<c067136c>] (net_rx_action) from [<c02096e0>] (__do_softirq+0x228/0x31c)
-[<c02096e0>] (__do_softirq) from [<c0227944>] (irq_exit+0xa4/0x114)
+On Mon, 11 Jun 2018 23:09:06 +0300
+Wirz <spam@lukas-wirz.de> wrote:
 
-The trace points to a corrupt skb inside kfree_skb(), seemingly because
-one of the shared skb queues is getting corrupted.  Most of the skb queues
-ath10k uses are local to a single call stack, but three are shared among
-multiple codepaths:
+> the bisection leads to
+>=20
+> 142a27f0a731ddcf467546960a5585970ca98e21 is the first bad commit
+> commit 142a27f0a731ddcf467546960a5585970ca98e21
+> Author: PrasannaKumar Muralidharan <prasannatsmkumar@gmail.com>
+> Date:   Fri Oct 27 22:34:04 2017 +0530
+>=20
+>     hwrng: core - Reset user selected rng by writing "" to rng_current
+>=20
+>     User is able to select a chosen rng by writing its name to rng_current
+>     but there is no way to reset it without unbinding the rng. Let user
+>     write "" to rng_current and delesect the chosen rng.
+>=20
+>     Signed-off-by: PrasannaKumar Muralidharan <prasannatsmkumar@gmail.com>
+>     reviewed-by: Harald Freudenberger <freude@linux.vnet.ibm.com>
+>     Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
+>=20
+> :040000 040000 f61e5cc501c99fb09bae5f203528b9f4c3479f8a
+> 785262813cfb02c9606fd72274f0f7b44f2289d7 M	drivers
 
- - rx_msdus_q,
- - rx_in_ord_compl_q, and
- - tx_fetch_ind_q
 
-Of the three, the first two are manipulated using the unlocked skb_queue
-functions without any additional lock protecting them.  Use the locked
-variants of skb_queue_* functions to protect these manipulations.
+Thanks a lot for bisecting this.
 
-Signed-off-by: Bob Copeland <bobcopeland@fb.com>
----
-I may have misunderstood the locking regime here, so please let me know
-if so.  This seems to have fixed the crash, but I don't know a reproducer
-other than "wait a while and see."
+This commit introduces a bug, if b43 is the only RNG in the system. But
+that is unlikely on modern systems and it's fixed by
+0e4b52942b1c76f89e0dcb829f72e123d0678f54, which is in 4.16.
 
- drivers/net/wireless/ath/ath10k/htt_rx.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Other than that I currently can't see why this crashes.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index c72d8af122a2..86accfb8eb88 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1089,7 +1089,7 @@ static void ath10k_htt_rx_h_queue_msdu(struct ath10k *ar,
- 	status = IEEE80211_SKB_RXCB(skb);
- 	*status = *rx_status;
- 
--	__skb_queue_tail(&ar->htt.rx_msdus_q, skb);
-+	skb_queue_tail(&ar->htt.rx_msdus_q, skb);
- }
- 
- static void ath10k_process_rx(struct ath10k *ar, struct sk_buff *skb)
-@@ -2810,7 +2810,7 @@ bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 		break;
- 	}
- 	case HTT_T2H_MSG_TYPE_RX_IN_ORD_PADDR_IND: {
--		__skb_queue_tail(&htt->rx_in_ord_compl_q, skb);
-+		skb_queue_tail(&htt->rx_in_ord_compl_q, skb);
- 		return false;
- 	}
- 	case HTT_T2H_MSG_TYPE_TX_CREDIT_UPDATE_IND:
-@@ -2874,7 +2874,7 @@ static int ath10k_htt_rx_deliver_msdu(struct ath10k *ar, int quota, int budget)
- 		if (skb_queue_empty(&ar->htt.rx_msdus_q))
- 			break;
- 
--		skb = __skb_dequeue(&ar->htt.rx_msdus_q);
-+		skb = skb_dequeue(&ar->htt.rx_msdus_q);
- 		if (!skb)
- 			break;
- 		ath10k_process_rx(ar, skb);
-@@ -2905,7 +2905,7 @@ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget)
- 		goto exit;
- 	}
- 
--	while ((skb = __skb_dequeue(&htt->rx_in_ord_compl_q))) {
-+	while ((skb = skb_dequeue(&htt->rx_in_ord_compl_q))) {
- 		spin_lock_bh(&htt->rx_ring.lock);
- 		ret = ath10k_htt_rx_in_ord_ind(ar, skb);
- 		spin_unlock_bh(&htt->rx_ring.lock);
--- 
-2.11.0
+But the crash should go away, if you disable CONFIG_B43_HWRNG.
+That's not a solution, but it may help, if you would like to get rid of
+the crashes.
+Could you please verify whether disabling CONFIG_B43_HWRNG avoids the
+crash, just to make sure we are not after a red herring here?
+
+Thanks.
+
+--=20
+Michael
+
+--Sig_/ub0oWLgzP3cgDyb/AmsiE90
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlse36oACgkQ9TK+HZCN
+iw4d7A/+PkESdIS6FwNL0LXgbZBCMyuID1ZtlycAcEaM2GTiLIHmtwlZi4HMen9f
+5QRAtaMex6dvb3oMFFuPPw09ZNtFGyS7ebF/JQFTWQd1FYh52uZxkQVFhiHcC2xw
+4o+K9BntgfFXx0o8B++7dNziCarH47puJagk1veHZ0IXRc0uYbBr4jh64/ndtlgx
+GJEC6Hu5vl1tTLK0jELI9LxTuIV88dxWXGo1glIWrwmKU9C4eAhyCxM7mpcnSvNn
+sKuaiR+gTBDs0Xppz7CaFCKSUuCVQngWM6akGl51xx0NAql2tPQfdPEvWatKzqyO
+GanmLwGk3K75MRVWikSEY+hSH1kzBCO98Ar3K4LExlFx3gNAxobS9BefZjqhmtcj
++GeINa2IsSCwSy74HKaP1iuyP3VSrTgtzFq47zl+e/iifTJq2w4Mg7/MZ2/PXm3r
+wlsZNkrGzISk5a7VHpHiMxdbyjtaIJGkcGBBZHKO44Cj7K9iV+0c7/NOYwKW950g
+pPHMpMukVSRqhsHM7ZfH1PqxY4+LPsO9dnMlVC7TQSdgrhyn1eKp7cO7nkdqFET9
+SSm3LKqF52gRt9frvlNdyyohNon8JtDjzWQzW664VPQKN5wDGMKDSxwGYoLBLFsr
+Sb4b9Nfa8YIG9OEP5JP0ZKFv2sxdZGgWbwbfDkh440e1H8uyAhU=
+=ssEF
+-----END PGP SIGNATURE-----
+
+--Sig_/ub0oWLgzP3cgDyb/AmsiE90--
