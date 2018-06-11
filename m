@@ -1,114 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:51462 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S965124AbeFZM5K (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33398 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753123AbeFKQF6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Jun 2018 08:57:10 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com,
-        ilan.peer@intel.com, johannes@sipsolutions.net,
-        liad.kaufman@intel.com, sara.sharon@intel.com,
-        shaul.triebitz@intel.com, Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 26 Jun 2018 15:56:54 +0300
-Message-Id: <20180626125655.11747-4-luca@coelho.fi> (sfid-20180626_145717_986672_8A32943B)
-In-Reply-To: <20180626125655.11747-1-luca@coelho.fi>
-References: <20180626125655.11747-1-luca@coelho.fi>
-Subject: [PATCH 3/4] iwlwifi: add module parameter to disable 802.11ax
+        Mon, 11 Jun 2018 12:05:58 -0400
+Received: by mail-wm0-f65.google.com with SMTP id z6-v6so16287557wma.0
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2018 09:05:57 -0700 (PDT)
+Message-ID: <944989ec907b98716f252524cf55e41807965253.camel@gmail.com> (sfid-20180611_180603_726311_74FAE3C4)
+Subject: Re: [PATCH v2] ath10k: Update the phymode along with bandwidth
+ change request
+From: Timur =?ISO-8859-1?Q?Krist=F3f?= <timur.kristof@gmail.com>
+To: Ryan Hsu <ryanhsu@codeaurora.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Date: Mon, 11 Jun 2018 18:05:53 +0200
+In-Reply-To: <1528482759-12604-1-git-send-email-ryanhsu@codeaurora.org>
+References: <1528482759-12604-1-git-send-email-ryanhsu@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On Fri, 2018-06-08 at 11:32 -0700, Ryan Hsu wrote:
+> In the case of Station connects to AP with narrower bandwidth at
+> beginning.
+> And later the AP changes the bandwidth to winder bandwidth, the AP
+> will
+> beacon with wider bandwidth IE, eg VHT20->VHT40->VHT80 or VHT40-
+> >VHT80.
+> 
+> Since the supported BANDWIDTH will be limited by the PHYMODE, so
+> while
+> Station receives the bandwidth change request, it will also need to
+> reconfigure the PHYMODE setting to firmware instead of just
+> configuring
+> the BANDWIDTH info, otherwise it'll trigger a firmware crash with
+> non-support bandwidth.
+> 
+> The issue was observed in WLAN.RM.4.4.1-00051-QCARMSWP-1, QCA6174
+> with
+> below scenario.
+> ---
+> AP xxx changed bandwidth, new config is 5200 MHz, width 2 (5190/0
+> MHz)
+> disconnect from AP xxx for new auth to yyy
+> RX ReassocResp from xxx (capab=0x1111 status=0 aid=102)
+> associated
+> 
+> ....
+> 
+> AP xxx changed bandwidth, new config is 5200 MHz, width 2 (5190/0
+> MHz)
+> AP xxx changed bandwidth, new config is 5200 MHz, width 3 (5210/0
+> MHz)
+> 
+> ....
+> 
+> firmware register dump:
+> [00]: 0x05030000 0x000015B3 0x00987291 0x00955B31
+> [04]: 0x00987291 0x00060730 0x00000004 0x00000001
+> [08]: 0x004089F0 0x00955A00 0x000A0B00 0x00400000
+> [12]: 0x00000009 0x00000000 0x00952CD0 0x00952CE6
+> [16]: 0x00952CC4 0x0098E25F 0x00000000 0x0091080D
+> [20]: 0x40987291 0x0040E7A8 0x00000000 0x0041EE3C
+> [24]: 0x809ABF05 0x0040E808 0x00000000 0xC0987291
+> [28]: 0x809A650C 0x0040E948 0x0041FE40 0x004345C4
+> [32]: 0x809A5C63 0x0040E988 0x0040E9AC 0x0042D1A8
+> [36]: 0x8091D252 0x0040E9A8 0x00000002 0x00000001
+> [40]: 0x809FDA9D 0x0040EA58 0x0043D554 0x0042D554
+> [44]: 0x809F8B22 0x0040EA78 0x0043D554 0x00000001
+> [48]: 0x80911210 0x0040EAC8 0x00000010 0x004041D0
+> [52]: 0x80911154 0x0040EB28 0x00400000 0x00000000
+> [56]: 0x8091122D 0x0040EB48 0x00000000 0x00400600
+> --
+> 
+> Reported-by: Rouven Czerwinski <rouven@czerwinskis.de>
+> Signed-off-by: Ryan Hsu <ryanhsu@codeaurora.org>
+> ---
+>  drivers/net/wireless/ath/ath10k/mac.c | 16 ++++++++++++++--
+>  drivers/net/wireless/ath/ath10k/wmi.h |  1 +
+>  2 files changed, 15 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c
+> b/drivers/net/wireless/ath/ath10k/mac.c
+> index e9c2fb3..836e0a4 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -6058,8 +6058,19 @@ static void ath10k_sta_rc_update_wk(struct
+> work_struct *wk)
+>  			   ath10k_mac_max_vht_nss(vht_mcs_mask)));
+>  
+>  	if (changed & IEEE80211_RC_BW_CHANGED) {
+> -		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac update sta %pM
+> peer bw %d\n",
+> -			   sta->addr, bw);
+> +		enum wmi_phy_mode mode;
+> +
+> +		mode = chan_to_phymode(&def);
+> +		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac update sta %pM
+> peer bw %d phymode %d\n",
+> +				sta->addr, bw, mode);
+> +
+> +		err = ath10k_wmi_peer_set_param(ar, arvif->vdev_id,
+> sta->addr,
+> +				WMI_PEER_PHYMODE, mode);
+> +		if (err) {
+> +			ath10k_warn(ar, "failed to update STA %pM
+> peer phymode %d: %d\n",
+> +					sta->addr, mode, err);
+> +			goto exit;
+> +		}
+>  
+>  		err = ath10k_wmi_peer_set_param(ar, arvif->vdev_id,
+> sta->addr,
+>  						WMI_PEER_CHAN_WIDTH,
+> bw);
+> @@ -6100,6 +6111,7 @@ static void ath10k_sta_rc_update_wk(struct
+> work_struct *wk)
+>  				    sta->addr);
+>  	}
+>  
+> +exit:
+>  	mutex_unlock(&ar->conf_mutex);
+>  }
+>  
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h
+> b/drivers/net/wireless/ath/ath10k/wmi.h
+> index b48db54..d68afb6 100644
+> --- a/drivers/net/wireless/ath/ath10k/wmi.h
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
+> @@ -6144,6 +6144,7 @@ enum wmi_peer_param {
+>  	WMI_PEER_NSS        = 0x5,
+>  	WMI_PEER_USE_4ADDR  = 0x6,
+>  	WMI_PEER_DEBUG      = 0xa,
+> +	WMI_PEER_PHYMODE    = 0xd,
+>  	WMI_PEER_DUMMY_VAR  = 0xff, /* dummy parameter for STA PS
+> workaround */
+>  };
+>  
 
-Add a module parameter to disable 802.11ax features in supported
-devices.  This is useful for testing or if there are interoperability
-issues with some APs.
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c       | 4 ++++
- drivers/net/wireless/intel/iwlwifi/iwl-modparams.h | 4 ++++
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  | 3 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  | 3 ++-
- 5 files changed, 14 insertions(+), 4 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index c59ce4f8a5ed..650214ff0a1c 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1856,3 +1856,7 @@ module_param_named(remove_when_gone,
- 		   0444);
- MODULE_PARM_DESC(remove_when_gone,
- 		 "Remove dev from PCIe bus if it is deemed inaccessible (default: false)");
-+
-+module_param_named(disable_11ax, iwlwifi_mod_params.disable_11ax, bool,
-+		   S_IRUGO);
-+MODULE_PARM_DESC(disable_11ax, "Disable HE capabilities (default: false)");
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
-index a7dd8a8cddf9..5dd848cb9d20 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
-@@ -144,6 +144,10 @@ struct iwl_mod_params {
- 	bool lar_disable;
- 	bool fw_monitor;
- 	bool disable_11ac;
-+	/**
-+	 * @disable_11ax: disable HE capabilities, default = false
-+	 */
-+	bool disable_11ax;
- 	bool remove_when_gone;
- };
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 941604c24fa1..7bb0360d6807 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -578,7 +578,7 @@ static void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
- 	iwl_init_ht_hw_capab(cfg, data, &sband->ht_cap, NL80211_BAND_2GHZ,
- 			     tx_chains, rx_chains);
- 
--	if (data->sku_cap_11ax_enable)
-+	if (data->sku_cap_11ax_enable && !iwlwifi_mod_params.disable_11ax)
- 		iwl_init_he_hw_capab(sband, tx_chains, rx_chains);
- 
- 	sband = &data->bands[NL80211_BAND_5GHZ];
-@@ -593,7 +593,7 @@ static void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
- 		iwl_init_vht_hw_capab(cfg, data, &sband->vht_cap,
- 				      tx_chains, rx_chains);
- 
--	if (data->sku_cap_11ax_enable)
-+	if (data->sku_cap_11ax_enable && !iwlwifi_mod_params.disable_11ax)
- 		iwl_init_he_hw_capab(sband, tx_chains, rx_chains);
- 
- 	if (n_channels != n_used)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index 362e9b77974d..b3fd20502abb 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -780,7 +780,8 @@ static int iwl_mvm_mac_ctxt_cmd_sta(struct iwl_mvm *mvm,
- 	if (vif->probe_req_reg && vif->bss_conf.assoc && vif->p2p)
- 		cmd.filter_flags |= cpu_to_le32(MAC_FILTER_IN_PROBE_REQUEST);
- 
--	if (vif->bss_conf.assoc && vif->bss_conf.he_support)
-+	if (vif->bss_conf.assoc && vif->bss_conf.he_support &&
-+	    !iwlwifi_mod_params.disable_11ax)
- 		cmd.filter_flags |= cpu_to_le32(MAC_FILTER_IN_11AX);
- 
- 	return iwl_mvm_mac_ctxt_send_cmd(mvm, &cmd);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 6d9a59847621..532487d7e376 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2100,7 +2100,8 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
- 	 * added.
- 	 */
- 	if (changes & BSS_CHANGED_ASSOC && bss_conf->assoc) {
--		if (vif->bss_conf.he_support)
-+		if (vif->bss_conf.he_support &&
-+		    !iwlwifi_mod_params.disable_11ax)
- 			iwl_mvm_cfg_he_sta(mvm, vif, mvmvif->ap_sta_id);
- 
- 		iwl_mvm_mac_ctxt_recalc_tsf_id(mvm, vif);
--- 
-2.18.0
+I can confirm that this patch works on my machine, and prevents the
+crash previously caused by changing the bandwidth. Can it be accepted,
+or is there anything I can help with, to get it accepted?
+
+Thanks,
+Tim
