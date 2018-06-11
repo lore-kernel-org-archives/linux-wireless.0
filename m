@@ -1,39 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50812 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755033AbeFNPTo (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:40707 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754224AbeFKVKG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Jun 2018 11:19:44 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: Skip data calibration for non-bmi target
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1528866215-24754-1-git-send-email-svishnoi@codeaurora.org>
-References: <1528866215-24754-1-git-send-email-svishnoi@codeaurora.org>
-To: Surabhi Vishnoi <svishnoi@codeaurora.org>
+        Mon, 11 Jun 2018 17:10:06 -0400
+Received: by mail-pf0-f196.google.com with SMTP id z24-v6so10884769pfe.7
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2018 14:10:05 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
 Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Surabhi Vishnoi <svishnoi@codeaurora.org>
-Message-Id: <20180614151944.53D11602FC@smtp.codeaurora.org> (sfid-20180614_171947_875895_CBCFB06C)
-Date: Thu, 14 Jun 2018 15:19:44 +0000 (UTC)
+        Govind Singh <govinds@codeaurora.org>,
+        <linux-kernel@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 4/4] ath10k: snoc: sort include files
+Date: Mon, 11 Jun 2018 14:09:46 -0700
+Message-Id: <20180611210946.241341-4-briannorris@chromium.org> (sfid-20180611_231048_347168_FBF292F0)
+In-Reply-To: <20180611210946.241341-1-briannorris@chromium.org>
+References: <20180611210946.241341-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Surabhi Vishnoi <svishnoi@codeaurora.org> wrote:
+Sort these alphabetically, with local includes in a separate section.
 
-> In non-bmi target ex. WCN3990, data calibration
-> is handled via QMI.
-> 
-> Skip data calibration in debug routine to enable ath10k
-> debugfs for non bmi targets.
-> 
-> Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/ath/ath10k/snoc.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-5db98aee93cd ath10k: skip data calibration for non-bmi target
-
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index 61967c2966e6..c88677e0a21c 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -14,18 +14,19 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
+-#include <linux/module.h>
++#include <linux/clk.h>
+ #include <linux/kernel.h>
+-#include "debug.h"
+-#include "hif.h"
+-#include "htc.h"
+-#include "ce.h"
+-#include "snoc.h"
++#include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/of_device.h>
+ #include <linux/platform_device.h>
+ #include <linux/regulator/consumer.h>
+-#include <linux/clk.h>
++
++#include "ce.h"
++#include "debug.h"
++#include "hif.h"
++#include "htc.h"
++#include "snoc.h"
+ 
+ #define ATH10K_SNOC_RX_POST_RETRY_MS 50
+ #define CE_POLL_PIPE 4
 -- 
-https://patchwork.kernel.org/patch/10461559/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.18.0.rc1.242.g61856ae69a-goog
