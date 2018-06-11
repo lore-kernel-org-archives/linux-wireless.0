@@ -1,22 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:37322 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932960AbeFTIpX (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:44394 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754191AbeFKVKC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Jun 2018 04:45:23 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: [PATCH v6 (resend) 0/3] bitfield fixes and tests
-Date: Wed, 20 Jun 2018 08:58:27 +0200
-Message-Id: <20180620065830.6612-1-johannes@sipsolutions.net> (sfid-20180620_104546_631093_B7688832)
+        Mon, 11 Jun 2018 17:10:02 -0400
+Received: by mail-pg0-f67.google.com with SMTP id p21-v6so10342765pgd.11
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2018 14:10:02 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>,
+        <linux-kernel@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 2/4] ath10k: snoc: stop including pci.h
+Date: Mon, 11 Jun 2018 14:09:44 -0700
+Message-Id: <20180611210946.241341-2-briannorris@chromium.org> (sfid-20180611_231024_471948_886B704E)
+In-Reply-To: <20180611210946.241341-1-briannorris@chromium.org>
+References: <20180611210946.241341-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is just a resend of v5, to Cc linux-wireless - we decided that
-since we have the user coming in through the wireless-drivers tree,
-it'll avoid all the usual problems if we'll take these also through
-that tree.
+It's easier to violate abstractions and introduce bugs when snoc.h is
+including pci.h. Let's not do that.
 
-johannes
+I'm not extremely familiar with this driver yet, but several of the
+shared PCI/SNOC bits seem to be related to the Copy Engine, so move them
+to ce.h.
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/ath/ath10k/ce.h   | 42 ++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/pci.h  | 42 --------------------------
+ drivers/net/wireless/ath/ath10k/snoc.h |  1 -
+ 3 files changed, 42 insertions(+), 43 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index dbeffaef6024..b8fb5382dede 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -383,4 +383,46 @@ static inline u32 ath10k_ce_interrupt_summary(struct ath10k *ar)
+ 		return CE_INTERRUPT_SUMMARY;
+ }
+ 
++/* Host software's Copy Engine configuration. */
++#define CE_ATTR_FLAGS 0
++
++/*
++ * Configuration information for a Copy Engine pipe.
++ * Passed from Host to Target during startup (one per CE).
++ *
++ * NOTE: Structure is shared between Host software and Target firmware!
++ */
++struct ce_pipe_config {
++	__le32 pipenum;
++	__le32 pipedir;
++	__le32 nentries;
++	__le32 nbytes_max;
++	__le32 flags;
++	__le32 reserved;
++};
++
++/*
++ * Directions for interconnect pipe configuration.
++ * These definitions may be used during configuration and are shared
++ * between Host and Target.
++ *
++ * Pipe Directions are relative to the Host, so PIPEDIR_IN means
++ * "coming IN over air through Target to Host" as with a WiFi Rx operation.
++ * Conversely, PIPEDIR_OUT means "going OUT from Host through Target over air"
++ * as with a WiFi Tx operation. This is somewhat awkward for the "middle-man"
++ * Target since things that are "PIPEDIR_OUT" are coming IN to the Target
++ * over the interconnect.
++ */
++#define PIPEDIR_NONE    0
++#define PIPEDIR_IN      1  /* Target-->Host, WiFi Rx direction */
++#define PIPEDIR_OUT     2  /* Host->Target, WiFi Tx direction */
++#define PIPEDIR_INOUT   3  /* bidirectional */
++
++/* Establish a mapping between a service/direction and a pipe. */
++struct service_to_pipe {
++	__le32 service_id;
++	__le32 pipedir;
++	__le32 pipenum;
++};
++
+ #endif /* _CE_H_ */
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+index e52fd83156b6..0ed436657108 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.h
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -86,48 +86,6 @@ struct pcie_state {
+ /* PCIE_CONFIG_FLAG definitions */
+ #define PCIE_CONFIG_FLAG_ENABLE_L1  0x0000001
+ 
+-/* Host software's Copy Engine configuration. */
+-#define CE_ATTR_FLAGS 0
+-
+-/*
+- * Configuration information for a Copy Engine pipe.
+- * Passed from Host to Target during startup (one per CE).
+- *
+- * NOTE: Structure is shared between Host software and Target firmware!
+- */
+-struct ce_pipe_config {
+-	__le32 pipenum;
+-	__le32 pipedir;
+-	__le32 nentries;
+-	__le32 nbytes_max;
+-	__le32 flags;
+-	__le32 reserved;
+-};
+-
+-/*
+- * Directions for interconnect pipe configuration.
+- * These definitions may be used during configuration and are shared
+- * between Host and Target.
+- *
+- * Pipe Directions are relative to the Host, so PIPEDIR_IN means
+- * "coming IN over air through Target to Host" as with a WiFi Rx operation.
+- * Conversely, PIPEDIR_OUT means "going OUT from Host through Target over air"
+- * as with a WiFi Tx operation. This is somewhat awkward for the "middle-man"
+- * Target since things that are "PIPEDIR_OUT" are coming IN to the Target
+- * over the interconnect.
+- */
+-#define PIPEDIR_NONE    0
+-#define PIPEDIR_IN      1  /* Target-->Host, WiFi Rx direction */
+-#define PIPEDIR_OUT     2  /* Host->Target, WiFi Tx direction */
+-#define PIPEDIR_INOUT   3  /* bidirectional */
+-
+-/* Establish a mapping between a service/direction and a pipe. */
+-struct service_to_pipe {
+-	__le32 service_id;
+-	__le32 pipedir;
+-	__le32 pipenum;
+-};
+-
+ /* Per-pipe state. */
+ struct ath10k_pci_pipe {
+ 	/* Handle of underlying Copy Engine */
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.h b/drivers/net/wireless/ath/ath10k/snoc.h
+index 05dc98f46ccd..f9e530189d48 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.h
++++ b/drivers/net/wireless/ath/ath10k/snoc.h
+@@ -19,7 +19,6 @@
+ 
+ #include "hw.h"
+ #include "ce.h"
+-#include "pci.h"
+ 
+ struct ath10k_snoc_drv_priv {
+ 	enum ath10k_hw_rev hw_rev;
+-- 
+2.18.0.rc1.242.g61856ae69a-goog
