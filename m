@@ -1,71 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:34372 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751105AbeFZGHr (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:50000 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753873AbeFKRPr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Jun 2018 02:07:47 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 10/12] staging: wilc1000: avoid use of static variable 'inactive_time'
-Date: Tue, 26 Jun 2018 11:37:12 +0530
-Message-ID: <1529993234-27294-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180626_080750_131297_0BD7C8CA)
-In-Reply-To: <1529993234-27294-1-git-send-email-ajay.kathat@microchip.com>
-References: <1529993234-27294-1-git-send-email-ajay.kathat@microchip.com>
+        Mon, 11 Jun 2018 13:15:47 -0400
+From: Colin King <colin.king@canonical.com>
+To: Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] iwlwifi: pcie: make array prop static, shrinks object size
+Date: Mon, 11 Jun 2018 18:15:37 +0100
+Message-Id: <20180611171537.14597-1-colin.king@canonical.com> (sfid-20180611_191606_778694_EE267F77)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoided the use of static variable 'inactive_time' and move it as part of
-'sta_inactive_t' structure.
+From: Colin Ian King <colin.king@canonical.com>
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Don't populate the read-only array 'prop' on the stack but
+instead make it static. Makes the object code smaller by 20 bytes:
+
+Before:
+   text    data     bss     dec     hex filename
+  71659   14614     576   86849   15341 trans.o
+
+After:
+   text    data     bss     dec     hex filename
+  71479   14774     576   86829   1532d trans.o
+
+(gcc version 7.3.0 x86_64)
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 2251c39f..f61a20d 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -110,6 +110,7 @@ struct set_ip_addr {
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 7229991ae70d..c4626ebe5da1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1946,7 +1946,7 @@ static void iwl_trans_pcie_removal_wk(struct work_struct *wk)
+ 	struct iwl_trans_pcie_removal *removal =
+ 		container_of(wk, struct iwl_trans_pcie_removal, work);
+ 	struct pci_dev *pdev = removal->pdev;
+-	char *prop[] = {"EVENT=INACCESSIBLE", NULL};
++	static char *prop[] = {"EVENT=INACCESSIBLE", NULL};
  
- struct sta_inactive_t {
-+	u32 inactive_time;
- 	u8 mac[6];
- };
- 
-@@ -198,7 +199,6 @@ static u8 rcv_assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
- static s8 rssi;
- static u8 set_ip[2][4];
- static u8 get_ip[2][4];
--static u32 inactive_time;
- static u32 clients_count;
- 
- static void *host_int_parse_join_bss_param(struct network_info *info);
-@@ -1927,7 +1927,7 @@ static void handle_get_inactive_time(struct work_struct *work)
- 
- 	wid.id = (u16)WID_GET_INACTIVE_TIME;
- 	wid.type = WID_INT;
--	wid.val = (s8 *)&inactive_time;
-+	wid.val = (s8 *)&hif_sta_inactive->inactive_time;
- 	wid.size = sizeof(u32);
- 
- 	result = wilc_send_config_pkt(vif, GET_CFG, &wid, 1,
-@@ -3095,7 +3095,7 @@ s32 wilc_get_inactive_time(struct wilc_vif *vif, const u8 *mac,
- 	else
- 		wait_for_completion(&msg->work_comp);
- 
--	*out_val = inactive_time;
-+	*out_val = msg->body.mac_info.inactive_time;
- 	kfree(msg);
- 
- 	return result;
+ 	dev_err(&pdev->dev, "Device gone - attempting removal\n");
+ 	kobject_uevent_env(&pdev->dev.kobj, KOBJ_CHANGE, prop);
 -- 
-2.7.4
+2.17.0
