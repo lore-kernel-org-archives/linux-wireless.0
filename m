@@ -1,77 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hermes.aosc.io ([199.195.250.187]:40243 "EHLO hermes.aosc.io"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752149AbeFYHwe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Jun 2018 03:52:34 -0400
-Date: Mon, 25 Jun 2018 15:47:18 +0800
-In-Reply-To: <5B309D37.80207@broadcom.com>
-References: <20180315162510.11669-1-harald@ccbib.org> <20180315162510.11669-6-harald@ccbib.org> <a7011fe78d171658742406bf01d50b7e3d7eaf1d.camel@aosc.io> <E1fX7yK-0000OC-HA@stardust.g4.wien.funkfeuer.at> <5B309D37.80207@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Subject: Re: [PATCHv2 5/5] arm64: allwinner: a64: Add support for TERES-I laptop
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Harald Geyer <harald@ccbib.org>
-CC: Maxime Ripard <maxime.ripard@bootlin.com>,
-        Chen-Yu Tsai <wens@csie.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Andre Przywara <andre.przywara@arm.com>, info@olimex.com,
-        linux-wireless@vger.kernel.org
-From: Icenowy Zheng <icenowy@aosc.io>
-Message-ID: <1CF519CD-D44E-4959-8951-27CE710E0984@aosc.io> (sfid-20180625_095337_033572_E516851F)
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:43549 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932555AbeFLLji (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Jun 2018 07:39:38 -0400
+Received: by mail-lf0-f67.google.com with SMTP id n15-v6so35473933lfn.10
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2018 04:39:38 -0700 (PDT)
+From: Niklas Cassel <niklas.cassel@linaro.org>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: Niklas Cassel <niklas.cassel@linaro.org>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] ath10k: allow ATH10K_SNOC with COMPILE_TEST
+Date: Tue, 12 Jun 2018 13:39:06 +0200
+Message-Id: <20180612113907.15043-2-niklas.cassel@linaro.org> (sfid-20180612_134013_305115_8A1B3361)
+In-Reply-To: <20180612113907.15043-1-niklas.cassel@linaro.org>
+References: <20180612113907.15043-1-niklas.cassel@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+ATH10K_SNOC builds just fine with COMPILE_TEST, so make that possible.
 
+Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
+---
+ drivers/net/wireless/ath/ath10k/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-于 2018年6月25日 GMT+08:00 下午3:43:51, Arend van Spriel <arend.vanspriel@broadcom.com> 写到:
->On 6/24/2018 6:34 PM, Harald Geyer wrote:
->> Icenowy Zheng writes:
->>> >在 2018-03-15四的 16:25 +0000，Harald Geyer写道：
->>>> > >+&mmc1 {
->>>> > >+	pinctrl-names = "default";
->>>> > >+	pinctrl-0 = <&mmc1_pins>;
->>>> > >+	vmmc-supply = <&reg_aldo2>;
->>>> > >+	vqmmc-supply = <&reg_dldo4>;
->>>> > >+	mmc-pwrseq = <&wifi_pwrseq>;
->>>> > >+	bus-width = <4>;
->>>> > >+	non-removable;
->>>> > >+	status = "okay";
->>>> > >+
->>>> > >+	rtl8723bs: wifi@1 {
->>>> > >+		reg = <1>;
->>>> > >+		interrupt-parent = <&r_pio>;
->>>> > >+		interrupts = <0 3 IRQ_TYPE_LEVEL_LOW>; /* PL3 */
->>>> > >+		interrupt-names = "host-wake";
->>>> > >+	};
->
->[...]
->
->>> >- This device node has no binding. The "host-wake" interrupt is
->part of
->>> >  Broadcom SDIO Wi-Fi binding, rather than a generic one.
->> I think the general mmc and interrupts bindings apply. And the mmc
->binding
->> clearly states that for sub-nodes a compatible string is optional.
->>
->> However I just realized that the 'interrupt-names' property is not
->part
->> of the general interrupts binding, so I guess at least this property
->should
->> be removed.
->
->Indeed. If the device just used the SDIO interrupt this is not needed. 
->The Broadcom device can use either SDIO interrupt or a so-called 
->out-of-band host-wake interrupt, which is what the above represents.
-
-RTL8....S is also capable of use OOB interrupt.
-
->
->Regards,
->Arend
+diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
+index 54ff5930126c..6572a43590a8 100644
+--- a/drivers/net/wireless/ath/ath10k/Kconfig
++++ b/drivers/net/wireless/ath/ath10k/Kconfig
+@@ -42,7 +42,8 @@ config ATH10K_USB
+ 
+ config ATH10K_SNOC
+ 	tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
+-	depends on ATH10K && ARCH_QCOM
++	depends on ATH10K
++	depends on ARCH_QCOM || COMPILE_TEST
+ 	---help---
+ 	  This module adds support for integrated WCN3990 chip connected
+ 	  to system NOC(SNOC). Currently work in progress and will not
+-- 
+2.17.1
