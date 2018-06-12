@@ -1,289 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52098 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751891AbeF3NXl (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:45748 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932373AbeFLLjh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Jun 2018 09:23:41 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 30 Jun 2018 16:23:19 +0300
-Message-Id: <20180630132330.14928-5-luca@coelho.fi> (sfid-20180630_152349_110592_2ADC06F2)
-In-Reply-To: <20180630132330.14928-1-luca@coelho.fi>
-References: <20180630132330.14928-1-luca@coelho.fi>
-Subject: [PATCH 04/15] iwlwifi: introduce device family 22560
+        Tue, 12 Jun 2018 07:39:37 -0400
+Received: by mail-lf0-f68.google.com with SMTP id n3-v6so35484000lfe.12
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2018 04:39:37 -0700 (PDT)
+From: Niklas Cassel <niklas.cassel@linaro.org>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: Niklas Cassel <niklas.cassel@linaro.org>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/2] ath10k: do not mix spaces and tabs in Kconfig
+Date: Tue, 12 Jun 2018 13:39:05 +0200
+Message-Id: <20180612113907.15043-1-niklas.cassel@linaro.org> (sfid-20180612_133956_598770_235491BB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+Do not mix spaces and tabs in Kconfig.
 
-Device 22560 have many different hw and sw features than 22000 family,
-so introduce a new family of devices - 22560.
-
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
 ---
- .../net/wireless/intel/iwlwifi/cfg/22000.c    | 104 ++++++++----------
- drivers/net/wireless/intel/iwlwifi/fw/smem.c  |   4 +-
- .../net/wireless/intel/iwlwifi/iwl-config.h   |   1 +
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |   4 +-
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |   2 +-
- 5 files changed, 55 insertions(+), 60 deletions(-)
+ drivers/net/wireless/ath/ath10k/Kconfig | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index 2768c2b15acb..e39df74f49ad 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -116,10 +116,9 @@ static const struct iwl_ht_params iwl_22000_ht_params = {
- 	.ht40_bands = BIT(NL80211_BAND_2GHZ) | BIT(NL80211_BAND_5GHZ),
- };
+diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
+index 84f071ac0d84..54ff5930126c 100644
+--- a/drivers/net/wireless/ath/ath10k/Kconfig
++++ b/drivers/net/wireless/ath/ath10k/Kconfig
+@@ -1,15 +1,15 @@
+ config ATH10K
+-        tristate "Atheros 802.11ac wireless cards support"
+-        depends on MAC80211 && HAS_DMA
++	tristate "Atheros 802.11ac wireless cards support"
++	depends on MAC80211 && HAS_DMA
+ 	select ATH_COMMON
+ 	select CRC32
+ 	select WANT_DEV_COREDUMP
+ 	select ATH10K_CE
+-        ---help---
+-          This module adds support for wireless adapters based on
+-          Atheros IEEE 802.11ac family of chipsets.
++	---help---
++	  This module adds support for wireless adapters based on
++	  Atheros IEEE 802.11ac family of chipsets.
  
--#define IWL_DEVICE_22000						\
-+#define IWL_DEVICE_22000_COMMON						\
- 	.ucode_api_max = IWL_22000_UCODE_API_MAX,			\
- 	.ucode_api_min = IWL_22000_UCODE_API_MIN,			\
--	.device_family = IWL_DEVICE_FAMILY_22000,			\
- 	.base_params = &iwl_22000_base_params,				\
- 	.led_mode = IWL_LED_RF_STATE,					\
- 	.nvm_hw_section_num = NVM_HW_SECTION_NUM_FAMILY_22000,		\
-@@ -135,6 +134,10 @@ static const struct iwl_ht_params iwl_22000_ht_params = {
- 	.mq_rx_supported = true,					\
- 	.vht_mu_mimo_supported = true,					\
- 	.mac_addr_from_csr = true,					\
-+	.ht_params = &iwl_22000_ht_params,				\
-+	.nvm_ver = IWL_22000_NVM_VERSION,				\
-+	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,			\
-+	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,		\
- 	.use_tfh = true,						\
- 	.rf_id = true,							\
- 	.gen2 = true,							\
-@@ -142,60 +145,51 @@ static const struct iwl_ht_params iwl_22000_ht_params = {
- 	.dbgc_supported = true,						\
- 	.min_umac_error_event_table = 0x400000
+-          If you choose to build a module, it'll be called ath10k.
++	  If you choose to build a module, it'll be called ath10k.
  
-+#define IWL_DEVICE_22500						\
-+	IWL_DEVICE_22000_COMMON,					\
-+	.device_family = IWL_DEVICE_FAMILY_22000,			\
-+	.csr = &iwl_csr_v1
-+
-+#define IWL_DEVICE_22560						\
-+	IWL_DEVICE_22000_COMMON,					\
-+	.device_family = IWL_DEVICE_FAMILY_22560,			\
-+	.csr = &iwl_csr_v2
-+
- const struct iwl_cfg iwl22000_2ac_cfg_hr = {
- 	.name = "Intel(R) Dual Band Wireless AC 22000",
- 	.fw_name_pre = IWL_22000_HR_FW_PRE,
--	IWL_DEVICE_22000,
--	.csr = &iwl_csr_v1,
--	.ht_params = &iwl_22000_ht_params,
--	.nvm_ver = IWL_22000_NVM_VERSION,
--	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
--	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+	IWL_DEVICE_22500,
- };
+ config ATH10K_CE
+ 	bool
+@@ -41,12 +41,12 @@ config ATH10K_USB
+ 	  work in progress and will not fully work.
  
- const struct iwl_cfg iwl22000_2ac_cfg_hr_cdb = {
- 	.name = "Intel(R) Dual Band Wireless AC 22000",
- 	.fw_name_pre = IWL_22000_HR_CDB_FW_PRE,
--	IWL_DEVICE_22000,
--	.csr = &iwl_csr_v1,
--	.ht_params = &iwl_22000_ht_params,
--	.nvm_ver = IWL_22000_NVM_VERSION,
--	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
--	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+	IWL_DEVICE_22500,
- 	.cdb = true,
- };
+ config ATH10K_SNOC
+-        tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
+-        depends on ATH10K && ARCH_QCOM
+-        ---help---
+-          This module adds support for integrated WCN3990 chip connected
+-          to system NOC(SNOC). Currently work in progress and will not
+-          fully work.
++	tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
++	depends on ATH10K && ARCH_QCOM
++	---help---
++	  This module adds support for integrated WCN3990 chip connected
++	  to system NOC(SNOC). Currently work in progress and will not
++	  fully work.
  
- const struct iwl_cfg iwl22000_2ac_cfg_jf = {
- 	.name = "Intel(R) Dual Band Wireless AC 22000",
- 	.fw_name_pre = IWL_22000_JF_FW_PRE,
--	IWL_DEVICE_22000,
--	.csr = &iwl_csr_v1,
--	.ht_params = &iwl_22000_ht_params,
--	.nvm_ver = IWL_22000_NVM_VERSION,
--	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
--	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+	IWL_DEVICE_22500,
- };
- 
- const struct iwl_cfg iwl22000_2ax_cfg_hr = {
- 	.name = "Intel(R) Dual Band Wireless AX 22000",
- 	.fw_name_pre = IWL_22000_HR_FW_PRE,
--	IWL_DEVICE_22000,
--	.csr = &iwl_csr_v1,
--	.ht_params = &iwl_22000_ht_params,
--	.nvm_ver = IWL_22000_NVM_VERSION,
--	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
--	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+	IWL_DEVICE_22500,
-+	/*
-+	 * This device doesn't support receiving BlockAck with a large bitmap
-+	 * so we need to restrict the size of transmitted aggregation to the
-+	 * HT size; mac80211 would otherwise pick the HE max (256) by default.
-+	 */
-+	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
- };
- 
- const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_a0_f0 = {
- 	.name = "Intel(R) Dual Band Wireless AX 22000",
- 	.fw_name_pre = IWL_22000_HR_A_F0_FW_PRE,
--	IWL_DEVICE_22000,
--	.csr = &iwl_csr_v1,
--	.ht_params = &iwl_22000_ht_params,
--	.nvm_ver = IWL_22000_NVM_VERSION,
--	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
--	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+	IWL_DEVICE_22500,
- 	/*
- 	 * This device doesn't support receiving BlockAck with a large bitmap
- 	 * so we need to restrict the size of transmitted aggregation to the
-@@ -207,45 +201,43 @@ const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_a0_f0 = {
- const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_b0 = {
- 	.name = "Intel(R) Dual Band Wireless AX 22000",
- 	.fw_name_pre = IWL_22000_HR_B_FW_PRE,
--	IWL_DEVICE_22000,
--	.csr = &iwl_csr_v1,
--	.ht_params = &iwl_22000_ht_params,
--	.nvm_ver = IWL_22000_NVM_VERSION,
--	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
--	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+	IWL_DEVICE_22500,
-+	/*
-+	 * This device doesn't support receiving BlockAck with a large bitmap
-+	 * so we need to restrict the size of transmitted aggregation to the
-+	 * HT size; mac80211 would otherwise pick the HE max (256) by default.
-+	 */
-+	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
- };
- 
- const struct iwl_cfg iwl22000_2ax_cfg_qnj_jf_b0 = {
- 	.name = "Intel(R) Dual Band Wireless AX 22000",
- 	.fw_name_pre = IWL_22000_JF_B0_FW_PRE,
--	IWL_DEVICE_22000,
--	.csr = &iwl_csr_v1,
--	.ht_params = &iwl_22000_ht_params,
--	.nvm_ver = IWL_22000_NVM_VERSION,
--	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
--	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+	IWL_DEVICE_22500,
-+	/*
-+	 * This device doesn't support receiving BlockAck with a large bitmap
-+	 * so we need to restrict the size of transmitted aggregation to the
-+	 * HT size; mac80211 would otherwise pick the HE max (256) by default.
-+	 */
-+	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
- };
- 
- const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_a0 = {
- 	.name = "Intel(R) Dual Band Wireless AX 22000",
- 	.fw_name_pre = IWL_22000_HR_A0_FW_PRE,
--	IWL_DEVICE_22000,
--	.csr = &iwl_csr_v1,
--	.ht_params = &iwl_22000_ht_params,
--	.nvm_ver = IWL_22000_NVM_VERSION,
--	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
--	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+	IWL_DEVICE_22500,
-+	/*
-+	 * This device doesn't support receiving BlockAck with a large bitmap
-+	 * so we need to restrict the size of transmitted aggregation to the
-+	 * HT size; mac80211 would otherwise pick the HE max (256) by default.
-+	 */
-+	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
- };
- 
- const struct iwl_cfg iwl22560_2ax_cfg_su_cdb = {
- 	.name = "Intel(R) Dual Band Wireless AX 22560",
- 	.fw_name_pre = IWL_22000_SU_Z0_FW_PRE,
--	IWL_DEVICE_22000,
--	.csr = &iwl_csr_v2,
--	.ht_params = &iwl_22000_ht_params,
--	.nvm_ver = IWL_22000_NVM_VERSION,
--	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
--	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+	IWL_DEVICE_22560,
- 	.cdb = true,
- 	/*
- 	 * This device doesn't support receiving BlockAck with a large bitmap
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/smem.c b/drivers/net/wireless/intel/iwlwifi/fw/smem.c
-index fb4b6442b4d7..ff85d69c2a8c 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/smem.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/smem.c
-@@ -8,6 +8,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,6 +31,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -143,7 +145,7 @@ void iwl_get_shared_mem_conf(struct iwl_fw_runtime *fwrt)
- 		return;
- 
- 	pkt = cmd.resp_pkt;
--	if (fwrt->trans->cfg->device_family == IWL_DEVICE_FAMILY_22000)
-+	if (fwrt->trans->cfg->device_family >= IWL_DEVICE_FAMILY_22000)
- 		iwl_parse_shared_mem_22000(fwrt, pkt);
- 	else
- 		iwl_parse_shared_mem(fwrt, pkt);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index b7389f1aa3af..c28e550fe3db 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -93,6 +93,7 @@ enum iwl_device_family {
- 	IWL_DEVICE_FAMILY_8000,
- 	IWL_DEVICE_FAMILY_9000,
- 	IWL_DEVICE_FAMILY_22000,
-+	IWL_DEVICE_FAMILY_22560,
- };
- 
- /*
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 866c91c923be..5fe2b460234b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -301,7 +301,7 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
- 	if (ret) {
- 		struct iwl_trans *trans = mvm->trans;
- 
--		if (trans->cfg->device_family == IWL_DEVICE_FAMILY_22000)
-+		if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22000)
- 			IWL_ERR(mvm,
- 				"SecBoot CPU1 Status: 0x%x, CPU2 Status: 0x%x\n",
- 				iwl_read_prph(trans, UMAG_SB_CPU_1_STATUS),
-@@ -1009,7 +1009,7 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
- 	/* Init RSS configuration */
- 	/* TODO - remove 22000 disablement when we have RXQ config API */
- 	if (iwl_mvm_has_new_rx_api(mvm) &&
--	    mvm->trans->cfg->device_family != IWL_DEVICE_FAMILY_22000) {
-+	    mvm->trans->cfg->device_family < IWL_DEVICE_FAMILY_22000) {
- 		ret = iwl_send_rss_cfg_cmd(mvm);
- 		if (ret) {
- 			IWL_ERR(mvm, "Failed to configure RSS queues: %d\n",
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 532487d7e376..201bb9d32621 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -4559,7 +4559,7 @@ void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
- 			   mvm->trans->num_rx_queues);
- 
- 	/* TODO - remove this when we have RXQ config API */
--	if (mvm->trans->cfg->device_family == IWL_DEVICE_FAMILY_22000) {
-+	if (mvm->trans->cfg->device_family >= IWL_DEVICE_FAMILY_22000) {
- 		qmask = BIT(0);
- 		if (notif->sync)
- 			atomic_set(&mvm->queue_sync_counter, 1);
+ config ATH10K_DEBUG
+ 	bool "Atheros ath10k debugging"
 -- 
-2.18.0
+2.17.1
