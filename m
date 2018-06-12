@@ -1,65 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr80098.outbound.protection.outlook.com ([40.107.8.98]:42144
-        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932635AbeFQKGA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 17 Jun 2018 06:06:00 -0400
-From: Omer Efrat <omer.efrat@tandemg.com>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        b.a.t.m.a.n@lists.open-mesh.org, devel@driverdev.osuosl.org
-Cc: Omer Efrat <omer.efrat@tandemg.com>
-Subject: [PATCH v3 0/5] use BIT_ULL for NL80211_STA_INFO_* attribute types
-Date: Sun, 17 Jun 2018 13:05:51 +0300
-Message-Id: <1529229951-17730-1-git-send-email-omer.efrat@tandemg.com> (sfid-20180617_120607_305286_FD9A7637)
+Received: from smtp.codeaurora.org ([198.145.29.96]:48458 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754123AbeFLMct (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Jun 2018 08:32:49 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 12 Jun 2018 18:02:48 +0530
+From: Govind Singh <govinds@codeaurora.org>
+To: niklas.cassel@linaro.org, kvalo@codeaurora.org, davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: FW: [PATCH 2/2] ath10k: allow ATH10K_SNOC with COMPILE_TEST
+In-Reply-To: <7058492257914633b55fcd423e4c0b59@aphydexm01b.ap.qualcomm.com>
+References: <20180612113907.15043-1-niklas.cassel@linaro.org>
+ <20180612113907.15043-2-niklas.cassel@linaro.org>
+ <7058492257914633b55fcd423e4c0b59@aphydexm01b.ap.qualcomm.com>
+Message-ID: <47cf8ec1b11d727ea928a307a431d4a2@codeaurora.org> (sfid-20180612_143304_857529_7B764798)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The BIT macro uses unsigned long which some architectures handle as 32 bit
-and therefore might cause macro's shift to overflow when used on a value
-equals or larger than 32 (NL80211_STA_INFO_RX_DURATION and afterwards).
+On 2018-06-12 17:45, Govind Singh wrote:
+> -----Original Message-----
+> From: ath10k <ath10k-bounces@lists.infradead.org> On Behalf Of Niklas 
+> Cassel
+> Sent: Tuesday, June 12, 2018 5:09 PM
+> To: Kalle Valo <kvalo@codeaurora.org>; David S. Miller 
+> <davem@davemloft.net>
+> Cc: Niklas Cassel <niklas.cassel@linaro.org>; netdev@vger.kernel.org;
+> linux-wireless@vger.kernel.org; linux-kernel@vger.kernel.org;
+> ath10k@lists.infradead.org
+> Subject: [PATCH 2/2] ath10k: allow ATH10K_SNOC with COMPILE_TEST
+> 
+> ATH10K_SNOC builds just fine with COMPILE_TEST, so make that possible.
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
+> ---
+>  drivers/net/wireless/ath/ath10k/Kconfig | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/Kconfig
+> b/drivers/net/wireless/ath/ath10k/Kconfig
+> index 54ff5930126c..6572a43590a8 100644
+> --- a/drivers/net/wireless/ath/ath10k/Kconfig
+> +++ b/drivers/net/wireless/ath/ath10k/Kconfig
+> @@ -42,7 +42,8 @@ config ATH10K_USB
+> 
+>  config ATH10K_SNOC
+>  	tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
+> -	depends on ATH10K && ARCH_QCOM
+> +	depends on ATH10K
+> +	depends on ARCH_QCOM || COMPILE_TEST
+>  	---help---
+>  	  This module adds support for integrated WCN3990 chip connected
+>  	  to system NOC(SNOC). Currently work in progress and will not
 
-Since 'filled' member in station_info changed to u64, BIT_ULL macro
-should be used with all NL80211_STA_INFO_* attribute types instead of BIT
-to prevent future possible bugs when one will use BIT macro for higher
-attributes by mistake.
+Thanks Niklas for enabling COMPILE_TEST. With QMI set of 
+changes(https://patchwork.kernel.org/patch/10448183/), we need to enable 
+COMPILE_TEST for
+QCOM_SCM/QMI_HELPERS which seems broken today. Are you planning to fix 
+the same.
 
-Note: The following patch series only does some code clean up.
-The previous versions mentioned a bug fix but it appears as a mix up
-with some local changes because NL80211_STA_INFO_TID_STATS value actually
-equals 31.
+  config QCOM_SCM
+  	bool
+-	depends on ARM || ARM64
++	depends on ARM || ARM64 || COMPILE_TEST
+  	select RESET_CONTROLLER
 
-Changes in v3:
-  - Better phrasing commit messages due to the above note
-  - Align patches to latest mac80211-next
 
-Omer Efrat (5):
-  cfg80211: use BIT_ULL for NL80211_STA_INFO_* attribute types
-  mac80211: use BIT_ULL for NL80211_STA_INFO_* attribute types
-  batman-adv: use BIT_ULL for NL80211_STA_INFO_* attribute types
-  wireless-drivers: use BIT_ULL for NL80211_STA_INFO_ attribute types
-  staging: use BIT_ULL for NL80211_STA_INFO_* attribute types
+  config QCOM_SCM_64
+  	def_bool y
+-	depends on QCOM_SCM && ARM64
++	depends on QCOM_SCM && ARM64 || COMPILE_TEST
 
- drivers/net/wireless/ath/ath10k/mac.c              |  4 +-
- drivers/net/wireless/ath/ath6kl/cfg80211.c         | 14 ++--
- drivers/net/wireless/ath/wil6210/cfg80211.c        | 18 ++---
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 40 +++++------
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  6 +-
- drivers/net/wireless/marvell/libertas/cfg.c        | 12 ++--
- drivers/net/wireless/marvell/mwifiex/cfg80211.c    | 14 ++--
- drivers/net/wireless/quantenna/qtnfmac/commands.c  | 32 ++++-----
- drivers/net/wireless/rndis_wlan.c                  |  4 +-
- drivers/net/wireless/ti/wlcore/main.c              |  2 +-
- drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c  | 10 +--
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c  | 14 ++--
- drivers/staging/wlan-ng/cfg80211.c                 |  4 +-
- net/batman-adv/bat_v_elp.c                         |  2 +-
- net/mac80211/ethtool.c                             |  6 +-
- net/mac80211/sta_info.c                            | 84 +++++++++++-----------
- net/wireless/nl80211.c                             | 26 +++----
- net/wireless/wext-compat.c                         | 10 +--
- 18 files changed, 151 insertions(+), 151 deletions(-)
+  config QCOM_QMI_HELPERS
+  	tristate
+-	depends on ARCH_QCOM && NET
++	depends on (ARCH_QCOM || COMPILE_TEST) && NET
 
--- 
-2.7.4
+-obj-$(CONFIG_ARCH_QCOM)		+= qcom/
++obj-y				+= qcom/
+
+__qcom_scm_init/qcom_scm_call wrapper to support COMPILE_TEST.
+
+
+
+BR,
+Govind
