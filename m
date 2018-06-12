@@ -1,162 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:38355 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935373AbeFMNHf (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:42748 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754270AbeFLMoH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jun 2018 09:07:35 -0400
-Subject: Re: b43 crashes on rmmod (bcm4331)
-To: =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        b43-dev@lists.infradead.org, Matt Mackall <mpm@selenic.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        linux-crypto@vger.kernel.org
-References: <75e4b424-4c75-5abd-1ef0-c2537d329b10@lukas-wirz.de>
- <d9896c10-87bb-8362-f302-8b1888c3421c@lukas-wirz.de>
- <20180609171159.59b5209c@wiggum>
- <6a78c68e-1062-5ad8-876c-f7d4c49ea492@lukas-wirz.de>
- <20180609220130.3ceb834f@wiggum>
- <e72be8db-77ba-408c-c5e5-351d722e09e8@lukas-wirz.de>
- <20180611224634.28ccd288@wiggum>
- <7d564b8b-2b71-73f6-3ae7-ede0187a4151@lukas-wirz.de>
- <20180613122751.2fe89737@wiggum>
- <538cd7b7-8d63-1795-7bfc-69231d2bf3c0@lukas-wirz.de>
- <20180613130905.420695e7@wiggum> <20180613140148.1b57a566@wiggum>
-From: Wirz <spam@lukas-wirz.de>
-Message-ID: <6b84a788-e11f-91db-309c-4ff79fdcad66@lukas-wirz.de> (sfid-20180613_150740_932748_5C1CE72D)
-Date: Wed, 13 Jun 2018 16:07:02 +0300
+        Tue, 12 Jun 2018 08:44:07 -0400
+Received: by mail-lf0-f65.google.com with SMTP id v135-v6so35782537lfa.9
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2018 05:44:06 -0700 (PDT)
+Date: Tue, 12 Jun 2018 14:44:03 +0200
+From: Niklas Cassel <niklas.cassel@linaro.org>
+To: Govind Singh <govinds@codeaurora.org>, bjorn.andersson@linaro.org
+Cc: kvalo@codeaurora.org, davem@davemloft.net, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: FW: [PATCH 2/2] ath10k: allow ATH10K_SNOC with COMPILE_TEST
+Message-ID: <20180612124403.GA26986@centauri.lan> (sfid-20180612_144424_278041_D07B68D4)
+References: <20180612113907.15043-1-niklas.cassel@linaro.org>
+ <20180612113907.15043-2-niklas.cassel@linaro.org>
+ <7058492257914633b55fcd423e4c0b59@aphydexm01b.ap.qualcomm.com>
+ <47cf8ec1b11d727ea928a307a431d4a2@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <20180613140148.1b57a566@wiggum>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="77YjpeHHDd3wxb83I6cHBbeZrwp96vD0L"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <47cf8ec1b11d727ea928a307a431d4a2@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---77YjpeHHDd3wxb83I6cHBbeZrwp96vD0L
-Content-Type: multipart/mixed; boundary="7bqoPWCYmEXEXUbYW8Xyz7QgmVNP09Ajq";
- protected-headers="v1"
-From: Wirz <spam@lukas-wirz.de>
-To: =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
- b43-dev@lists.infradead.org, Matt Mackall <mpm@selenic.com>,
- Herbert Xu <herbert@gondor.apana.org.au>, linux-crypto@vger.kernel.org
-Message-ID: <6b84a788-e11f-91db-309c-4ff79fdcad66@lukas-wirz.de>
-Subject: Re: b43 crashes on rmmod (bcm4331)
-References: <75e4b424-4c75-5abd-1ef0-c2537d329b10@lukas-wirz.de>
- <d9896c10-87bb-8362-f302-8b1888c3421c@lukas-wirz.de>
- <20180609171159.59b5209c@wiggum>
- <6a78c68e-1062-5ad8-876c-f7d4c49ea492@lukas-wirz.de>
- <20180609220130.3ceb834f@wiggum>
- <e72be8db-77ba-408c-c5e5-351d722e09e8@lukas-wirz.de>
- <20180611224634.28ccd288@wiggum>
- <7d564b8b-2b71-73f6-3ae7-ede0187a4151@lukas-wirz.de>
- <20180613122751.2fe89737@wiggum>
- <538cd7b7-8d63-1795-7bfc-69231d2bf3c0@lukas-wirz.de>
- <20180613130905.420695e7@wiggum> <20180613140148.1b57a566@wiggum>
-In-Reply-To: <20180613140148.1b57a566@wiggum>
-
---7bqoPWCYmEXEXUbYW8Xyz7QgmVNP09Ajq
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-GB
-Content-Transfer-Encoding: quoted-printable
-
-
->>>> CONFIG_B43_HWRNG completely switches off hwrng support in b43.
->>>> I don't see how a change in hwrng core could still lead to a crash i=
-n
->>>> b43 with this option switched off.
->>>>
->>>> What do you mean by "manually in the .config"?   =20
->>>
->>> What I meant is, that I have outcommented the line 'CONFIG_B43_HWRNG=3D=
-y'
->>> in .config.
->>>  =20
->>>> Can you try to properly switch off the setting with make menuconfig =
-and
->>>> then recompile everything from scratch (make clean)?   =20
->>>
->>> I was intending to do that before, but I cannot find the option for
->>> that.  Searching for b43_hwrng in menuconfig only shows the dependenc=
-ies
->>> of that option, and the Kconfig file where it is defined, but not the=
-
->>> path in menuconfig.  Do I indirectly set CONFIG_B43_HWRNG through the=
-
->>> parameters it depends on?  I'm sorry, but this is obviously above my
->>> level of expertise ... =20
->>
->> Whoops, sorry. You are right. This is an automatic config option.
->> That also means your manual editing of .config would be overridden.
->>
->> You can edit drivers/net/wireless/broadcom/b43/Kconfig
->> go to the section config B43_HWRNG
->> and change 'default y' to 'default n'
->>
->> That should disable it.
->=20
->=20
->=20
-> Could you please also try the attached patch?
-> There seems to be a problem in hwrng core in that it does not disable
-> the current RNG, if the new RNG fails to initialize.
-> I don't know if that's the problem here, though.
-
-Ok. Do I apply your patch to the first version that fails for me, and
-revert my change to Kconfig?
-
-At the moment the test without B43_HWRNG compiles, I will test that later=
-=2E
+On Tue, Jun 12, 2018 at 06:02:48PM +0530, Govind Singh wrote:
+> On 2018-06-12 17:45, Govind Singh wrote:
+> > -----Original Message-----
+> > From: ath10k <ath10k-bounces@lists.infradead.org> On Behalf Of Niklas
+> > Cassel
+> > Sent: Tuesday, June 12, 2018 5:09 PM
+> > To: Kalle Valo <kvalo@codeaurora.org>; David S. Miller
+> > <davem@davemloft.net>
+> > Cc: Niklas Cassel <niklas.cassel@linaro.org>; netdev@vger.kernel.org;
+> > linux-wireless@vger.kernel.org; linux-kernel@vger.kernel.org;
+> > ath10k@lists.infradead.org
+> > Subject: [PATCH 2/2] ath10k: allow ATH10K_SNOC with COMPILE_TEST
+> > 
+> > ATH10K_SNOC builds just fine with COMPILE_TEST, so make that possible.
+> > 
+> > Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
+> > ---
+> >  drivers/net/wireless/ath/ath10k/Kconfig | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath/ath10k/Kconfig
+> > b/drivers/net/wireless/ath/ath10k/Kconfig
+> > index 54ff5930126c..6572a43590a8 100644
+> > --- a/drivers/net/wireless/ath/ath10k/Kconfig
+> > +++ b/drivers/net/wireless/ath/ath10k/Kconfig
+> > @@ -42,7 +42,8 @@ config ATH10K_USB
+> > 
+> >  config ATH10K_SNOC
+> >  	tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
+> > -	depends on ATH10K && ARCH_QCOM
+> > +	depends on ATH10K
+> > +	depends on ARCH_QCOM || COMPILE_TEST
+> >  	---help---
+> >  	  This module adds support for integrated WCN3990 chip connected
+> >  	  to system NOC(SNOC). Currently work in progress and will not
+> 
+> Thanks Niklas for enabling COMPILE_TEST. With QMI set of
+> changes(https://patchwork.kernel.org/patch/10448183/), we need to enable
+> COMPILE_TEST for
+> QCOM_SCM/QMI_HELPERS which seems broken today. Are you planning to fix the
+> same.
 
 
-> diff --git a/drivers/char/hw_random/core.c
-> b/drivers/char/hw_random/core.c index 91bb98c42a1c..aaf9e5afaad4 100644=
+Argh..
 
-> --- a/drivers/char/hw_random/core.c
-> +++ b/drivers/char/hw_random/core.c
-> @@ -516,11 +516,18 @@ EXPORT_SYMBOL_GPL(hwrng_register);
-> =20
->  void hwrng_unregister(struct hwrng *rng)
->  {
-> +	int err;
-> +
->  	mutex_lock(&rng_mutex);
-> =20
->  	list_del(&rng->list);
-> -	if (current_rng =3D=3D rng)
-> -		enable_best_rng();
-> +	if (current_rng =3D=3D rng) {
-> +		err =3D enable_best_rng();
-> +		if (err) {
-> +			drop_current_rng();
-> +			cur_rng_set_by_user =3D 0;
-> +		}
-> +	}
-> =20
->  	if (list_empty(&rng_list)) {
->  		mutex_unlock(&rng_mutex);
->=20
->=20
->=20
+qcom_scm seems fine, it is just missing a single definition in the
+#else clause of include/linux/qcom_scm.h.
+
++++ b/include/linux/qcom_scm.h
+@@ -89,6 +89,10 @@ static inline int qcom_scm_pas_mem_setup(u32 peripheral, phys_addr_t addr,                                     
+ static inline int
+ qcom_scm_pas_auth_and_reset(u32 peripheral) { return -ENODEV; }
+ static inline int qcom_scm_pas_shutdown(u32 peripheral) { return -ENODEV; }                                                      
++static inline int qcom_scm_assign_mem(phys_addr_t mem_addr, size_t mem_sz,                                                       
++                                     unsigned int *src,
++                                     struct qcom_scm_vmperm *newvm,                                                              
++                                     int dest_cnt) { return -ENODEV; }                                                           
+ static inline void qcom_scm_cpu_power_down(u32 flags) {}
+ static inline u32 qcom_scm_get_version(void) { return 0; }
 
 
---=20
-Do not believe the naysayers who say it cannot be done.
+
+include/linux/soc/qcom/qmi.h on the other hand doesn't have any
+dummy defintions at all.
+I think that it makes sense to be able to compile test
+the QMI helpers also on other archs..
+
+Bjorn, any opinion?
 
 
---7bqoPWCYmEXEXUbYW8Xyz7QgmVNP09Ajq--
-
---77YjpeHHDd3wxb83I6cHBbeZrwp96vD0L
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iF0EARECAB0WIQQfsLWbEt//FEFwBMDWbaSYbwIjLQUCWyEW9gAKCRDWbaSYbwIj
-LeuFAJ9PGfbpQLElXqhcHE8B3Au8OGRIJQCfboPpx+Ft2Vbgbmzged1PX8ftE6A=
-=Mu/Z
------END PGP SIGNATURE-----
-
---77YjpeHHDd3wxb83I6cHBbeZrwp96vD0L--
+> 
+>  config QCOM_SCM
+>  	bool
+> -	depends on ARM || ARM64
+> +	depends on ARM || ARM64 || COMPILE_TEST
+>  	select RESET_CONTROLLER
+> 
+> 
+>  config QCOM_SCM_64
+>  	def_bool y
+> -	depends on QCOM_SCM && ARM64
+> +	depends on QCOM_SCM && ARM64 || COMPILE_TEST
+> 
+>  config QCOM_QMI_HELPERS
+>  	tristate
+> -	depends on ARCH_QCOM && NET
+> +	depends on (ARCH_QCOM || COMPILE_TEST) && NET
+> 
+> -obj-$(CONFIG_ARCH_QCOM)		+= qcom/
+> +obj-y				+= qcom/
+> 
+> __qcom_scm_init/qcom_scm_call wrapper to support COMPILE_TEST.
+> 
+> 
+> 
+> BR,
+> Govind
