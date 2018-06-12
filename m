@@ -1,70 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48016 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751694AbeFHHMK (ORCPT
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:34591 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754057AbeFLMVX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Jun 2018 03:12:10 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, arend.vanspriel@broadcom.com,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri,  8 Jun 2018 10:12:00 +0300
-Message-Id: <20180608071203.20708-1-luca@coelho.fi> (sfid-20180608_091214_731506_932D31FD)
-Subject: [PATCH 0/3] cfg80211/mac80211: add support for IEEE802.11ax
+        Tue, 12 Jun 2018 08:21:23 -0400
+Received: by mail-wr0-f196.google.com with SMTP id a12-v6so23873097wro.1
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jun 2018 05:21:23 -0700 (PDT)
+Message-ID: <411d1d752811ce2b701d9f3a0d20f05050dc2e09.camel@gmail.com> (sfid-20180612_142127_575426_2F5C18CE)
+Subject: Re: [PATCH v2] ath10k: Update the phymode along with bandwidth
+ change request
+From: Timur =?ISO-8859-1?Q?Krist=F3f?= <timur.kristof@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Ryan Hsu <ryanhsu@codeaurora.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Date: Tue, 12 Jun 2018 14:21:20 +0200
+In-Reply-To: <87muw0cjwq.fsf@kamboji.qca.qualcomm.com>
+References: <1528482759-12604-1-git-send-email-ryanhsu@codeaurora.org>
+         <944989ec907b98716f252524cf55e41807965253.camel@gmail.com>
+         <87muw0cjwq.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On Tue, 2018-06-12 at 14:40 +0300, Kalle Valo wrote:
+> Timur Kristóf <timur.kristof@gmail.com> writes:
+> 
+> > On Fri, 2018-06-08 at 11:32 -0700, Ryan Hsu wrote:
+> > > In the case of Station connects to AP with narrower bandwidth at
+> > > beginning.
+> > > And later the AP changes the bandwidth to winder bandwidth, the
+> > > AP
+> > > will
+> > > beacon with wider bandwidth IE, eg VHT20->VHT40->VHT80 or VHT40-
+> > > > VHT80.
+> > > 
+> > > Since the supported BANDWIDTH will be limited by the PHYMODE, so
+> > > while
+> > > Station receives the bandwidth change request, it will also need
+> > > to
+> > > reconfigure the PHYMODE setting to firmware instead of just
+> > > configuring
+> > > the BANDWIDTH info, otherwise it'll trigger a firmware crash with
+> > > non-support bandwidth.
+> > > 
+> > > The issue was observed in WLAN.RM.4.4.1-00051-QCARMSWP-1, QCA6174
+> > > with
+> > > below scenario.
+> 
+> [...]
+> 
+> > I can confirm that this patch works on my machine, and prevents the
+> > crash previously caused by changing the bandwidth.
+> 
+> Great, thanks a lot for working on this. I'll add your Tested-by to
+> the
+> commit log.
 
-Hi,
+Thanks!
 
-This is the reworked version of the RFC I sent out a couple of weeks
-ago, with modifications according to Arend's comments.
+> > Can it be accepted, or is there anything I can help with, to get it
+> > accepted?
+> 
+> Strangely I can't find Timur's version of the patch from patchwork:
+> 
+> https://patchwork.kernel.org/project/linux-wireless/list/?state=*
+> 
+> Maybe it got dropped due to some UTF-8 problems? patchwork is known
+> to
+> be problematic with UTF-8.
 
-This series contain a squashed version of our internal series of
-patches that add support for IEEE802.11ax draft v2.0.  It is a
-combination of over 40 patches internal patches, which I have squashed
-and split into 3 different ones, one for cfg80211, one for radiotap
-and one for mac80211.
+Not sure. It doesn't really matter now, Ryan's version is fine too.
 
-Please review.
+> Anyway, I'll queue Ryan's v2 to 4.18. It first goes to the pending
+> branch for build testing and from there to ath-current branch.
 
-Cheers,
-Luca.
+Awesome, thank you Kalle!
 
-
-Luca Coelho (3):
-  cfg80211: Add support for HE
-  radiotap: add structs for HE
-  mac80211: add support for HE
-
- drivers/net/wireless/realtek/rtlwifi/base.c |   2 +-
- drivers/staging/rtl8188eu/include/wifi.h    |   1 -
- drivers/staging/rtl8712/wifi.h              |   1 -
- drivers/staging/rtl8723bs/include/wifi.h    |   1 -
- include/linux/ieee80211.h                   | 437 +++++++++++++++++++-
- include/net/cfg80211.h                      | 106 ++++-
- include/net/ieee80211_radiotap.h            | 111 +++++
- include/net/mac80211.h                      |  64 ++-
- include/uapi/linux/nl80211.h                |  87 +++-
- net/mac80211/Makefile                       |   1 +
- net/mac80211/agg-rx.c                       |   8 +-
- net/mac80211/agg-tx.c                       |  19 +-
- net/mac80211/cfg.c                          |   5 +
- net/mac80211/he.c                           |  55 +++
- net/mac80211/ieee80211_i.h                  |  16 +
- net/mac80211/main.c                         |  19 +-
- net/mac80211/mlme.c                         | 285 ++++++++++++-
- net/mac80211/rx.c                           | 127 +++++-
- net/mac80211/sta_info.c                     |  15 +-
- net/mac80211/sta_info.h                     |  20 +-
- net/mac80211/trace.h                        |   2 +-
- net/mac80211/util.c                         | 120 +++++-
- net/wireless/core.c                         |  21 +-
- net/wireless/nl80211.c                      |  99 ++++-
- net/wireless/util.c                         |  82 ++++
- 25 files changed, 1646 insertions(+), 58 deletions(-)
- create mode 100644 net/mac80211/he.c
-
--- 
-2.17.1
+Best regards,
+Tim
