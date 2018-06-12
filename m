@@ -1,147 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52624 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934466AbeFMK7k (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jun 2018 06:59:40 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCH 3/4] cfg80211: Add support to notify station's txrate crossing event
-Date: Wed, 13 Jun 2018 16:28:58 +0530
-Message-Id: <1528887539-26821-4-git-send-email-tamizhr@codeaurora.org> (sfid-20180613_125953_511213_75D9ED46)
-In-Reply-To: <1528887539-26821-1-git-send-email-tamizhr@codeaurora.org>
-References: <1528887539-26821-1-git-send-email-tamizhr@codeaurora.org>
+Received: from mga17.intel.com ([192.55.52.151]:33186 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932750AbeFLOun (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Jun 2018 10:50:43 -0400
+Date: Tue, 12 Jun 2018 22:50:37 +0800
+From: kbuild test robot <fengguang.wu@intel.com>
+To: Niklas Cassel <niklas.cassel@linaro.org>
+Cc: kbuild-all@01.org, Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Niklas Cassel <niklas.cassel@linaro.org>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [RFC PATCH] ath10k: ath10k_snoc_get_ce_id_from_irq() can be static
+Message-ID: <20180612145037.GA95182@lkp-ib03> (sfid-20180612_165254_355206_ADE5C5A3)
+References: <20180612113907.15043-2-niklas.cassel@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180612113907.15043-2-niklas.cassel@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add cfg80211_sta_mon_txrate_notify to update userspace upon
-crossing the configured txrate threshold for a station.
-This uses NL80211_CMD_NOTIFY_STA_MON along with
-NL80211_ATTR_STA_MON_TXRATE_THRESHOLD_EVENT, NL80211_ATTR_MAC
-and NL80211_ATTR_STA_MON_TXRATE_LEVEL. Userspace application can
-make a decision on the station depends on this notification.
 
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+Fixes: aecf55e7df3a ("ath10k: allow ATH10K_SNOC with COMPILE_TEST")
+Signed-off-by: kbuild test robot <fengguang.wu@intel.com>
 ---
- include/net/cfg80211.h |   17 +++++++++++++++++
- net/wireless/nl80211.c |   38 ++++++++++++++++++++++++++++++++++++++
- net/wireless/trace.h   |   25 +++++++++++++++++++++++++
- 3 files changed, 80 insertions(+)
+ snoc.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 5bf0000..c0f8018 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5899,6 +5899,23 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
- 			      s32 rssi_level, gfp_t gfp);
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index a3a7042..92ddb1c 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -820,7 +820,7 @@ static const struct ath10k_bus_ops ath10k_snoc_bus_ops = {
+ 	.write32	= ath10k_snoc_write32,
+ };
  
- /**
-+ * cfg80211_sta_mon_txrate_notify - txrate event for connected stations
-+ * @dev: network device
-+ * @peer: peer's MAC address
-+ * @txrate_event: the triggered TX RATE event
-+ * @txrate_level: new TX RATE level value or 0 if not available
-+ * @gfp: context flags
-+ *
-+ * This function is called when a average of attempted frame txrate crossed
-+ * above configured high txrate or below configured low txrate event
-+ * occurs for a station.
-+ */
-+void
-+cfg80211_sta_mon_txrate_notify(struct net_device *dev, const u8 *peer,
-+		enum nl80211_sta_mon_txrate_threshold_event txrate_event,
-+		u32 txrate_level, gfp_t gfp);
-+
-+/**
-  * cfg80211_cqm_pktloss_notify - notify userspace about packetloss to peer
-  * @dev: network device
-  * @peer: peer's MAC address
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 31680d6..645a9fd 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -15576,6 +15576,44 @@ void cfg80211_sta_mon_rssi_notify(struct net_device *dev, const u8 *peer,
+-int ath10k_snoc_get_ce_id_from_irq(struct ath10k *ar, int irq)
++static int ath10k_snoc_get_ce_id_from_irq(struct ath10k *ar, int irq)
+ {
+ 	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
+ 	int i;
+@@ -868,7 +868,7 @@ static int ath10k_snoc_napi_poll(struct napi_struct *ctx, int budget)
+ 	return done;
  }
- EXPORT_SYMBOL(cfg80211_sta_mon_rssi_notify);
  
-+void
-+cfg80211_sta_mon_txrate_notify(struct net_device *dev, const u8 *peer,
-+		enum nl80211_sta_mon_txrate_threshold_event txrate_event,
-+		u32 txrate_level, gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+
-+	trace_cfg80211_sta_mon_txrate_notify(dev, peer, txrate_event,
-+					     txrate_level);
-+
-+	if (WARN_ON(txrate_event !=
-+			NL80211_STA_MON_TXRATE_THRESHOLD_EVENT_LOW &&
-+		    txrate_event !=
-+			NL80211_STA_MON_TXRATE_THRESHOLD_EVENT_HIGH &&
-+		    txrate_event !=
-+			NL80211_STA_MON_TXRATE_THRESHOLD_IN_RANGE))
-+		return;
-+
-+	msg = cfg80211_prepare_sta_mon(dev, peer, gfp);
-+	if (!msg)
-+		return;
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_STA_MON_TXRATE_THRESHOLD_EVENT,
-+			txrate_event))
-+		goto nla_put_failure;
-+
-+	if (txrate_level && nla_put_u32(msg, NL80211_ATTR_STA_MON_TXRATE_LEVEL,
-+					txrate_level))
-+		goto nla_put_failure;
-+
-+	cfg80211_send_sta_mon(msg, gfp);
-+
-+	return;
-+nla_put_failure:
-+	nlmsg_free(msg);
-+}
-+EXPORT_SYMBOL(cfg80211_sta_mon_txrate_notify);
-+
- static void nl80211_ch_switch_notify(struct cfg80211_registered_device *rdev,
- 				     struct net_device *netdev,
- 				     struct cfg80211_chan_def *chandef,
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index ca985c2..95f4a31 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -3355,6 +3355,31 @@
- 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(peer),
- 		  __entry->low_txrate_thold, __entry->high_txrate_thold)
- );
-+
-+TRACE_EVENT(cfg80211_sta_mon_txrate_notify,
-+	TP_PROTO(struct net_device *netdev, const u8 *peer,
-+		 enum nl80211_sta_mon_txrate_threshold_event txrate_event,
-+		 u32 txrate_level),
-+	TP_ARGS(netdev, peer, txrate_event, txrate_level),
-+	TP_STRUCT__entry(
-+		NETDEV_ENTRY
-+		MAC_ENTRY(peer)
-+		__field(enum nl80211_sta_mon_txrate_threshold_event,
-+			txrate_event)
-+		__field(u32, txrate_level)
-+	),
-+	TP_fast_assign(
-+		NETDEV_ASSIGN;
-+		MAC_ASSIGN(peer, peer);
-+		__entry->txrate_event = txrate_event;
-+		__entry->txrate_level = txrate_level;
-+	),
-+	TP_printk(NETDEV_PR_FMT ", peer: " MAC_PR_FMT
-+		  ", tx_rate event: %d, txrate : %u",
-+		  NETDEV_PR_ARG, MAC_PR_ARG(peer),
-+		  __entry->txrate_event, __entry->txrate_level)
-+);
-+
- #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
- 
- #undef TRACE_INCLUDE_PATH
--- 
-1.7.9.5
+-void ath10k_snoc_init_napi(struct ath10k *ar)
++static void ath10k_snoc_init_napi(struct ath10k *ar)
+ {
+ 	netif_napi_add(&ar->napi_dev, &ar->napi, ath10k_snoc_napi_poll,
+ 		       ATH10K_NAPI_BUDGET);
