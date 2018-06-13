@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51542 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:52484 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965478AbeFNO3A (ORCPT
+        with ESMTP id S934466AbeFMK7g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Jun 2018 10:29:00 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Loic Poulain <loic.poulain@linaro.org>
-Cc: linux-wireless@vger.kernel.org, linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH 3/3] wcn36xx: Fix WEP encryption
-References: <1527506960-13358-1-git-send-email-loic.poulain@linaro.org>
-        <1527506960-13358-3-git-send-email-loic.poulain@linaro.org>
-Date: Thu, 14 Jun 2018 17:28:56 +0300
-In-Reply-To: <1527506960-13358-3-git-send-email-loic.poulain@linaro.org> (Loic
-        Poulain's message of "Mon, 28 May 2018 13:29:20 +0200")
-Message-ID: <87d0wt8ms7.fsf@kamboji.qca.qualcomm.com> (sfid-20180614_162920_489101_7C356FEB)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 13 Jun 2018 06:59:36 -0400
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [PATCH 0/4] cfg80211/mac80211: Add support to configure and monitor txrate threshold
+Date: Wed, 13 Jun 2018 16:28:55 +0530
+Message-Id: <1528887539-26821-1-git-send-email-tamizhr@codeaurora.org> (sfid-20180613_125951_371810_F0A8C5A0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Loic Poulain <loic.poulain@linaro.org> writes:
+This patchsets introduced new NL command and api to support
+configuring txrate threshold for the connected stations and api to
+notify userspace application upon crossing the configured txrate threshold.
+This will be useful for the application which requires
+station's current capability change information.
 
-> In case of WEP encryption, driver has to configure shared key for
-> associated station(s). Note that sta pointer is NULL in case of non
-> pairwise key, causing NULL pointer dereference with existing code
-> (sta_priv->is_data_encrypted). Fix this by using associated sta list
-> instead.
->
-> Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+Tamizh chelvam (4):
+  cfg80211: Add support to configure station specific txrate threshold
+  mac80211: Add api to configure low and high txrate threshold
+  cfg80211: Add support to notify station's txrate crossing event
+  mac80211: Implement functionality to monitor txrate cross event for a
+    station
 
-I guess this fix is for AP mode with WEP encryption? And client mode
-with WEP doesn't have any issues?
+Note:
+  * This patchset rebased on top of below patchset
+    [PATCH 0/7] cfg80211/mac80211: Add support to configure and monitor rssi threshold
 
-If yes, I'll clarify that in the commit log.
+ include/net/cfg80211.h       |   26 ++++++++++++++
+ include/net/mac80211.h       |    5 +++
+ include/uapi/linux/nl80211.h |   34 ++++++++++++++++++
+ net/mac80211/cfg.c           |   36 +++++++++++++++++++
+ net/mac80211/sta_info.h      |   17 +++++++++
+ net/mac80211/status.c        |   40 +++++++++++++++++++++-
+ net/wireless/nl80211.c       |   78 ++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      |   17 +++++++++
+ net/wireless/trace.h         |   50 +++++++++++++++++++++++++++
+ 9 files changed, 302 insertions(+), 1 deletion(-)
 
 -- 
-Kalle Valo
+1.7.9.5
