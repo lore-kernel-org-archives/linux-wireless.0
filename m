@@ -1,26 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:36104 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934328AbeF2Jsm (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52624 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934466AbeFMK7k (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 05:48:42 -0400
-Message-ID: <1530265719.3481.57.camel@sipsolutions.net> (sfid-20180629_114853_410812_82628251)
-Subject: Re: [PATCH v4] iw: ack signal support for tx ack packets
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Balaji Pothunoori <bpothuno@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 29 Jun 2018 11:48:39 +0200
-In-Reply-To: <1527246406-25475-1-git-send-email-bpothuno@codeaurora.org>
-References: <1527246406-25475-1-git-send-email-bpothuno@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 13 Jun 2018 06:59:40 -0400
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [PATCH 3/4] cfg80211: Add support to notify station's txrate crossing event
+Date: Wed, 13 Jun 2018 16:28:58 +0530
+Message-Id: <1528887539-26821-4-git-send-email-tamizhr@codeaurora.org> (sfid-20180613_125953_511213_75D9ED46)
+In-Reply-To: <1528887539-26821-1-git-send-email-tamizhr@codeaurora.org>
+References: <1528887539-26821-1-git-send-email-tamizhr@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2018-05-25 at 16:36 +0530, Balaji Pothunoori wrote:
-> This patch is to display the average ack signal,
-> last ack signal of tx ack packets.
+Add cfg80211_sta_mon_txrate_notify to update userspace upon
+crossing the configured txrate threshold for a station.
+This uses NL80211_CMD_NOTIFY_STA_MON along with
+NL80211_ATTR_STA_MON_TXRATE_THRESHOLD_EVENT, NL80211_ATTR_MAC
+and NL80211_ATTR_STA_MON_TXRATE_LEVEL. Userspace application can
+make a decision on the station depends on this notification.
 
-Please resend this with the required kernel changes.
+Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+---
+ include/net/cfg80211.h |   17 +++++++++++++++++
+ net/wireless/nl80211.c |   38 ++++++++++++++++++++++++++++++++++++++
+ net/wireless/trace.h   |   25 +++++++++++++++++++++++++
+ 3 files changed, 80 insertions(+)
 
-johannes
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 5bf0000..c0f8018 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5899,6 +5899,23 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
+ 			      s32 rssi_level, gfp_t gfp);
+ 
+ /**
++ * cfg80211_sta_mon_txrate_notify - txrate event for connected stations
++ * @dev: network device
++ * @peer: peer's MAC address
++ * @txrate_event: the triggered TX RATE event
++ * @txrate_level: new TX RATE level value or 0 if not available
++ * @gfp: context flags
++ *
++ * This function is called when a average of attempted frame txrate crossed
++ * above configured high txrate or below configured low txrate event
++ * occurs for a station.
++ */
++void
++cfg80211_sta_mon_txrate_notify(struct net_device *dev, const u8 *peer,
++		enum nl80211_sta_mon_txrate_threshold_event txrate_event,
++		u32 txrate_level, gfp_t gfp);
++
++/**
+  * cfg80211_cqm_pktloss_notify - notify userspace about packetloss to peer
+  * @dev: network device
+  * @peer: peer's MAC address
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 31680d6..645a9fd 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -15576,6 +15576,44 @@ void cfg80211_sta_mon_rssi_notify(struct net_device *dev, const u8 *peer,
+ }
+ EXPORT_SYMBOL(cfg80211_sta_mon_rssi_notify);
+ 
++void
++cfg80211_sta_mon_txrate_notify(struct net_device *dev, const u8 *peer,
++		enum nl80211_sta_mon_txrate_threshold_event txrate_event,
++		u32 txrate_level, gfp_t gfp)
++{
++	struct sk_buff *msg;
++
++	trace_cfg80211_sta_mon_txrate_notify(dev, peer, txrate_event,
++					     txrate_level);
++
++	if (WARN_ON(txrate_event !=
++			NL80211_STA_MON_TXRATE_THRESHOLD_EVENT_LOW &&
++		    txrate_event !=
++			NL80211_STA_MON_TXRATE_THRESHOLD_EVENT_HIGH &&
++		    txrate_event !=
++			NL80211_STA_MON_TXRATE_THRESHOLD_IN_RANGE))
++		return;
++
++	msg = cfg80211_prepare_sta_mon(dev, peer, gfp);
++	if (!msg)
++		return;
++
++	if (nla_put_u32(msg, NL80211_ATTR_STA_MON_TXRATE_THRESHOLD_EVENT,
++			txrate_event))
++		goto nla_put_failure;
++
++	if (txrate_level && nla_put_u32(msg, NL80211_ATTR_STA_MON_TXRATE_LEVEL,
++					txrate_level))
++		goto nla_put_failure;
++
++	cfg80211_send_sta_mon(msg, gfp);
++
++	return;
++nla_put_failure:
++	nlmsg_free(msg);
++}
++EXPORT_SYMBOL(cfg80211_sta_mon_txrate_notify);
++
+ static void nl80211_ch_switch_notify(struct cfg80211_registered_device *rdev,
+ 				     struct net_device *netdev,
+ 				     struct cfg80211_chan_def *chandef,
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index ca985c2..95f4a31 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -3355,6 +3355,31 @@
+ 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(peer),
+ 		  __entry->low_txrate_thold, __entry->high_txrate_thold)
+ );
++
++TRACE_EVENT(cfg80211_sta_mon_txrate_notify,
++	TP_PROTO(struct net_device *netdev, const u8 *peer,
++		 enum nl80211_sta_mon_txrate_threshold_event txrate_event,
++		 u32 txrate_level),
++	TP_ARGS(netdev, peer, txrate_event, txrate_level),
++	TP_STRUCT__entry(
++		NETDEV_ENTRY
++		MAC_ENTRY(peer)
++		__field(enum nl80211_sta_mon_txrate_threshold_event,
++			txrate_event)
++		__field(u32, txrate_level)
++	),
++	TP_fast_assign(
++		NETDEV_ASSIGN;
++		MAC_ASSIGN(peer, peer);
++		__entry->txrate_event = txrate_event;
++		__entry->txrate_level = txrate_level;
++	),
++	TP_printk(NETDEV_PR_FMT ", peer: " MAC_PR_FMT
++		  ", tx_rate event: %d, txrate : %u",
++		  NETDEV_PR_ARG, MAC_PR_ARG(peer),
++		  __entry->txrate_event, __entry->txrate_level)
++);
++
+ #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
+ 
+ #undef TRACE_INCLUDE_PATH
+-- 
+1.7.9.5
