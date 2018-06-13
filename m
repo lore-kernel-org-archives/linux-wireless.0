@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:8633 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752579AbeFDMga (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Jun 2018 08:36:30 -0400
-From: YueHaibing <yuehaibing@huawei.com>
-To: <davem@davemloft.net>, <kvalo@codeaurora.org>
-CC: <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>,
-        YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH] ath10k: use dma_zalloc_coherent instead of allocator/memset
-Date: Mon, 4 Jun 2018 20:35:42 +0800
-Message-ID: <20180604123542.24336-1-yuehaibing@huawei.com> (sfid-20180604_143709_683232_DC0B65E0)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtp.codeaurora.org ([198.145.29.96]:47452 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933498AbeFMKqM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 13 Jun 2018 06:46:12 -0400
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [PATCH 0/7] cfg80211/mac80211: Add support to configure and monitor rssi threshold
+Date: Wed, 13 Jun 2018 16:15:40 +0530
+Message-Id: <1528886747-26342-1-git-send-email-tamizhr@codeaurora.org> (sfid-20180613_124617_763223_F378FBB2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use dma_zalloc_coherent instead of dma_alloc_coherent
-followed by memset 0.
+This patchsets introduced new NL command and api to support
+configuring rssi for the connected stations and api to notify
+userspace application upon crossing the configured threshold.
+This will be useful for the application which requires
+station's current capability change information.
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Tamizh chelvam (7):
+  wireless: Change single cqm_config to rssi config list
+  cfg80211: Add new NL command to configure peer specific rssi
+    threshold
+  mac80211: Add api to support configuring station specific rssi
+    threshold
+  cfg80211: Add support to notify station's rssi level crossing
+  mac80211: Implement functionality to monitor station's rssi cross
+    event
+  cfg80211: Accept multiple RSSI threholds for STA_MON command
+  mac80211: Add api to configure low and high RSSI threshold
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index f97ab79..72db3bd 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -5018,13 +5018,11 @@ static int ath10k_wmi_alloc_chunk(struct ath10k *ar, u32 req_id,
- 	void *vaddr;
- 
- 	pool_size = num_units * round_up(unit_len, 4);
--	vaddr = dma_alloc_coherent(ar->dev, pool_size, &paddr, GFP_KERNEL);
-+	vaddr = dma_zalloc_coherent(ar->dev, pool_size, &paddr, GFP_KERNEL);
- 
- 	if (!vaddr)
- 		return -ENOMEM;
- 
--	memset(vaddr, 0, pool_size);
--
- 	ar->wmi.mem_chunks[idx].vaddr = vaddr;
- 	ar->wmi.mem_chunks[idx].paddr = paddr;
- 	ar->wmi.mem_chunks[idx].len = pool_size;
+ include/net/cfg80211.h       |   42 ++++-
+ include/net/mac80211.h       |    6 +
+ include/uapi/linux/nl80211.h |   60 +++++++
+ net/mac80211/cfg.c           |   75 +++++++++
+ net/mac80211/rx.c            |   65 +++++++-
+ net/mac80211/sta_info.h      |   22 +++
+ net/wireless/core.c          |   29 +++-
+ net/wireless/core.h          |    6 +-
+ net/wireless/nl80211.c       |  377 ++++++++++++++++++++++++++++++++++++------
+ net/wireless/rdev-ops.h      |   31 ++++
+ net/wireless/trace.h         |   73 ++++++++
+ 11 files changed, 723 insertions(+), 63 deletions(-)
+
 -- 
-2.7.0
+1.7.9.5
