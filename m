@@ -1,86 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from h1.radempa.de ([176.9.142.194]:40595 "EHLO mail.cosmopool.net"
+Received: from bues.ch ([80.190.117.144]:52480 "EHLO bues.ch"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750864AbeFXQla (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Jun 2018 12:41:30 -0400
-From: Harald Geyer <harald@ccbib.org>
-To: Icenowy Zheng <icenowy@aosc.io>
-cc: Maxime Ripard <maxime.ripard@bootlin.com>,
-        Chen-Yu Tsai <wens@csie.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Andre Przywara <andre.przywara@arm.com>, info@olimex.com,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCHv2 5/5] arm64: allwinner: a64: Add support for TERES-I laptop
-In-reply-to: <a7011fe78d171658742406bf01d50b7e3d7eaf1d.camel@aosc.io>
-References: <20180315162510.11669-1-harald@ccbib.org> <20180315162510.11669-6-harald@ccbib.org> <a7011fe78d171658742406bf01d50b7e3d7eaf1d.camel@aosc.io>
+        id S935611AbeFMN2m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 13 Jun 2018 09:28:42 -0400
+Date: Wed, 13 Jun 2018 15:28:12 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Wirz <spam@lukas-wirz.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        b43-dev@lists.infradead.org, Matt Mackall <mpm@selenic.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        linux-crypto@vger.kernel.org
+Subject: Re: b43 crashes on rmmod (bcm4331)
+Message-ID: <20180613152812.5596b460@wiggum> (sfid-20180613_152849_528217_FD5E13F7)
+In-Reply-To: <6b84a788-e11f-91db-309c-4ff79fdcad66@lukas-wirz.de>
+References: <75e4b424-4c75-5abd-1ef0-c2537d329b10@lukas-wirz.de>
+ <d9896c10-87bb-8362-f302-8b1888c3421c@lukas-wirz.de>
+ <20180609171159.59b5209c@wiggum>
+ <6a78c68e-1062-5ad8-876c-f7d4c49ea492@lukas-wirz.de>
+ <20180609220130.3ceb834f@wiggum>
+ <e72be8db-77ba-408c-c5e5-351d722e09e8@lukas-wirz.de>
+ <20180611224634.28ccd288@wiggum>
+ <7d564b8b-2b71-73f6-3ae7-ede0187a4151@lukas-wirz.de>
+ <20180613122751.2fe89737@wiggum>
+ <538cd7b7-8d63-1795-7bfc-69231d2bf3c0@lukas-wirz.de>
+ <20180613130905.420695e7@wiggum>
+ <20180613140148.1b57a566@wiggum>
+ <6b84a788-e11f-91db-309c-4ff79fdcad66@lukas-wirz.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 24 Jun 2018 18:34:40 +0200
-Message-Id: <E1fX7yK-0000OC-HA@stardust.g4.wien.funkfeuer.at> (sfid-20180624_184145_026329_36A80E0D)
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ boundary="Sig_/A6XghP3Eyitk7O=xe/23hTQ"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Icenowy Zheng writes:
-> 在 2018-03-15四的 16:25 +0000，Harald Geyer写道：
-> > +&mmc1 {
-> > +	pinctrl-names = "default";
-> > +	pinctrl-0 = <&mmc1_pins>;
-> > +	vmmc-supply = <&reg_aldo2>;
-> > +	vqmmc-supply = <&reg_dldo4>;
-> > +	mmc-pwrseq = <&wifi_pwrseq>;
-> > +	bus-width = <4>;
-> > +	non-removable;
-> > +	status = "okay";
-> > +
-> > +	rtl8723bs: wifi@1 {
-> > +		reg = <1>;
-> > +		interrupt-parent = <&r_pio>;
-> > +		interrupts = <0 3 IRQ_TYPE_LEVEL_LOW>; /* PL3 */
-> > +		interrupt-names = "host-wake";
-> > +	};
-> 
-> I think this node has some problem:
+--Sig_/A6XghP3Eyitk7O=xe/23hTQ
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for the heads up! Admittedly, I simply copied this node from
-sun50i-a64-olinuxino.dts and since it worked, didn't look into it in
-too much detail.
+On Wed, 13 Jun 2018 16:07:02 +0300
+Wirz <spam@lukas-wirz.de> wrote:
 
-> - This device node has no binding. The "host-wake" interrupt is part of
->  Broadcom SDIO Wi-Fi binding, rather than a generic one.
+> >>>> CONFIG_B43_HWRNG completely switches off hwrng support in b43.
+> >>>> I don't see how a change in hwrng core could still lead to a crash in
+> >>>> b43 with this option switched off.
+> >>>>
+> >>>> What do you mean by "manually in the .config"?     =20
+> >>>
+> >>> What I meant is, that I have outcommented the line 'CONFIG_B43_HWRNG=
+=3Dy'
+> >>> in .config.
+> >>>    =20
+> >>>> Can you try to properly switch off the setting with make menuconfig =
+and
+> >>>> then recompile everything from scratch (make clean)?     =20
+> >>>
+> >>> I was intending to do that before, but I cannot find the option for
+> >>> that.  Searching for b43_hwrng in menuconfig only shows the dependenc=
+ies
+> >>> of that option, and the Kconfig file where it is defined, but not the
+> >>> path in menuconfig.  Do I indirectly set CONFIG_B43_HWRNG through the
+> >>> parameters it depends on?  I'm sorry, but this is obviously above my
+> >>> level of expertise ...   =20
+> >>
+> >> Whoops, sorry. You are right. This is an automatic config option.
+> >> That also means your manual editing of .config would be overridden.
+> >>
+> >> You can edit drivers/net/wireless/broadcom/b43/Kconfig
+> >> go to the section config B43_HWRNG
+> >> and change 'default y' to 'default n'
+> >>
+> >> That should disable it. =20
+> >=20
+> >=20
+> >=20
+> > Could you please also try the attached patch?
+> > There seems to be a problem in hwrng core in that it does not disable
+> > the current RNG, if the new RNG fails to initialize.
+> > I don't know if that's the problem here, though. =20
+>=20
+> Ok. Do I apply your patch to the first version that fails for me, and
+> revert my change to Kconfig?
 
-I think the general mmc and interrupts bindings apply. And the mmc binding
-clearly states that for sub-nodes a compatible string is optional.
 
-However I just realized that the 'interrupt-names' property is not part
-of the general interrupts binding, so I guess at least this property should
-be removed.
+Yes, please test the patch with a version that would otherwise fail.
+You can use 4.16 or the latest kernel for that. I created it with latest
+linus' version.
 
-> - Without the interrupt this device node isn't needed, as RTL8723BS has
-> MAC eFUSE and doesn't need a MAC in device tree.
 
-Indeed. I wasn't aware of this, but I just tested and the device probes
-fine without the subnode present. I think the devicetree is mainly for
-information which cannot be probed, so maybe the subnode should just get
-removed.
+--=20
+Michael
 
-> In order to solve the problems. I suggest either drop this device node
-> or make a generic "sdio-wifi" device tree binding. Personally I prefer
-> the latter, as it's more accurate device representation.
-> 
-> If such a device tree binding is added, I think it should contain the
-> "host-wake" interrupt and a "local-mac-address" property. Both can be
-> ignored by the driver. (This interrupt can be needed if a more card-
-> ventor-neutral name is found.)
+--Sig_/A6XghP3Eyitk7O=xe/23hTQ
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
-I don't feel qualified to comment on this. If you want to propose such
-a patch and fix above node accordingly, I won't object. Otherwise I'll
-just send a patch to remove the subnode.
+-----BEGIN PGP SIGNATURE-----
 
-Thanks,
-Harald
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlshG+wACgkQ9TK+HZCN
+iw4aCRAA3TAXqp/qPuZTg8yRwFft3N8U/FG6oCQlr3xSYY/mbI9xBwJyTN9Bd4UR
+AnGdxLcA0a6bXUPvfxWohpGeNHYeKTHnO8iMYJ84/Sptu9S5c1QcZnqv6fNVPA2H
+9yfNooThu3HsKPUKChzYhIZ/8nyanqcCq5xHYyNoI6kcPqhxnYKP1nk3NGg1BYKw
+HR3BHuIoEc5iUWCE4oOQBDcKDOusHxkt8ghQxDlUuTYZRYzIVOxXJk5G4Fku+AG4
+lCubifEWJOoG/zAzzM8RfwKlO9KI1vFvjHoDj9DkimbujUK57PoGj+ujv/JFWNYw
+e/pRax3o9Ii7JBdUQL0BIpr2FFKyl1DaxgdS6aAvANNHKHBYRjb8fDzgEXqVyZhV
+tMZAc4t/nVy1oNBaRSx8UPGYcNJwK1puORL72PrnoOgO7xuJPeB/PyJcCel/Bq/F
+V9jiA5QkKMV0sJMM1xz0bA3arAOSJlHrxje+Umo3wYd1t+3NNzJ+EVryTpiDh/Xf
+igkzKEkioh3IPBSJ0hEI7N++rarrS7KUil4+bcUZMQ7c+1abz5AsGkE6qEN9FsUA
+DIx8cPTQv23zwaKrgs86uv5L0Su48CER/DD4HJJ0oq1ggPdk1tUxdxeJF9IuX/Sv
+ZI3x2fc04zqSo5FDlnNJI5lPIqjTDhliJJHebDlY9wO+q81C+8c=
+=8XX9
+-----END PGP SIGNATURE-----
+
+--Sig_/A6XghP3Eyitk7O=xe/23hTQ--
