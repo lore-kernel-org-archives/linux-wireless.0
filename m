@@ -1,307 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:14368 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753734AbeFJU3q (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Jun 2018 16:29:46 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH v2 7/7] wil6210: add support for Talyn-MB boot flow
-Date: Sun, 10 Jun 2018 23:29:35 +0300
-Message-Id: <1528662575-7746-8-git-send-email-merez@codeaurora.org> (sfid-20180610_223002_624654_1DDCD114)
-In-Reply-To: <1528662575-7746-1-git-send-email-merez@codeaurora.org>
-References: <1528662575-7746-1-git-send-email-merez@codeaurora.org>
+Received: from muru.com ([72.249.23.125]:46938 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754398AbeFMGmm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 13 Jun 2018 02:42:42 -0400
+Date: Tue, 12 Jun 2018 23:42:38 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        KISHON VIJAY ABRAHAM <kishon@ti.com>,
+        "Mishol, Guy" <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        "Hahn, Maital" <maitalm@ti.com>,
+        "Altshul, Maxim" <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
+Subject: Re: [EXTERNAL] Re: [RFT 3/6] wlcore: Add support for runtime PM
+Message-ID: <20180613064238.GC112168@atomide.com> (sfid-20180613_084245_657523_73100256)
+References: <20180529180605.73622-1-tony@atomide.com>
+ <20180529180605.73622-4-tony@atomide.com>
+ <20180531171420.GQ5705@atomide.com>
+ <fe42f9d6bb744cd39e38db8f51c0b74e@ti.com>
+ <20180605042000.GA5738@atomide.com>
+ <20180605104404.GD5738@atomide.com>
+ <b55bd6bf93eb4b7884ad05e44eded929@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b55bd6bf93eb4b7884ad05e44eded929@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Talyn-MB introduces various of FW download options:
-FW download via PCIe, SPI or PBL for secured access.
-The boot and FW download path is determined based on the
-OTP HW register. Driver reads this register as part of the
-SW reset flow and performs the appropriate initialization
-sequence.
+Hi,
 
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/main.c    | 194 ++++++++++++++++++++++++-----
- drivers/net/wireless/ath/wil6210/wil6210.h |   9 +-
- 2 files changed, 171 insertions(+), 32 deletions(-)
+* Reizer, Eyal <eyalr@ti.com> [180606 05:22]:
+> Latest wl18xx firmware was running fine for two days without the crash, so it was indeed just a logging issue in this case.
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index e0072b6..4de19bd 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -112,9 +112,29 @@ static int ring_order_set(const char *val, const struct kernel_param *kp)
- module_param_cb(bcast_ring_order, &ring_order_ops, &bcast_ring_order, 0444);
- MODULE_PARM_DESC(bcast_ring_order, " Bcast ring order; size = 1 << order");
+OK good to hear.
+
+> However, trying a wl1281 module and enabling PLT mode it boots ok but after a couple of seconds the below crash is seen.
+> Seems like a similar crash to the one I have seen before,right?
+
+Sorry for the delay, only today had enough time to figure
+this one out, see below.
+
+> sh-4.4# calibrator wlan0 plt power_mode on
+> [   57.198492] wlcore: power up
+> [   57.757871] wlcore: firmware booted in PLT mode PLT_ON (PLT 7.3.10.2.142)
+> sh-4.4#
+> sh-4.4#
+> sh-4.4# ca[   86.485020] ------------[ cut here ]------------
+> [   86.490334] WARNING: CPU: 0 PID: 502 at drivers/net/wireless/ti/wlcore/main.c:806
+
+This happens on runtime_suspend() where we are already in PLT
+and then that error gets stored and then next pm_runtime_get()
+returns -EINVAL. The patch below should fix it. I'll fold it
+into the runtime PM related patch assuming it works for you.
+
+Regards,
+
+Tony
+
+8< -------
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -6677,7 +6677,7 @@ static int __maybe_unused wlcore_runtime_suspend(struct device *dev)
  
--#define RST_DELAY (20) /* msec, for loop in @wil_target_reset */
-+enum {
-+	WIL_BOOT_ERR,
-+	WIL_BOOT_VANILLA,
-+	WIL_BOOT_PRODUCTION,
-+	WIL_BOOT_DEVELOPMENT,
-+};
-+
-+enum {
-+	WIL_SIG_STATUS_VANILLA = 0x0,
-+	WIL_SIG_STATUS_DEVELOPMENT = 0x1,
-+	WIL_SIG_STATUS_PRODUCTION = 0x2,
-+	WIL_SIG_STATUS_CORRUPTED_PRODUCTION = 0x3,
-+};
-+
-+#define RST_DELAY (20) /* msec, for loop in @wil_wait_device_ready */
- #define RST_COUNT (1 + 1000/RST_DELAY) /* round up to be above 1 sec total */
+ 	/* We do not enter elp sleep in PLT mode */
+ 	if (wl->plt)
+-		return -EINVAL;
++		return 0;
  
-+#define PMU_READY_DELAY_MS (4) /* ms, for sleep in @wil_wait_device_ready */
-+
-+#define OTP_HW_DELAY (200) /* usec, loop in @wil_wait_device_ready_talyn_mb */
-+/* round up to be above 2 ms total */
-+#define OTP_HW_COUNT (1 + 2000 / OTP_HW_DELAY)
-+
- /*
-  * Due to a hardware issue,
-  * one has to read/write to/from NIC in 32-bit chunks;
-@@ -831,11 +851,146 @@ static void wil_set_oob_mode(struct wil6210_priv *wil, u8 mode)
- 	}
- }
- 
--static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
-+static int wil_wait_device_ready(struct wil6210_priv *wil, int no_flash)
- {
- 	int delay = 0;
- 	u32 x, x1 = 0;
- 
-+	/* wait until device ready. */
-+	if (no_flash) {
-+		msleep(PMU_READY_DELAY_MS);
-+
-+		wil_dbg_misc(wil, "Reset completed\n");
-+	} else {
-+		do {
-+			msleep(RST_DELAY);
-+			x = wil_r(wil, RGF_USER_BL +
-+				  offsetof(struct bl_dedicated_registers_v0,
-+					   boot_loader_ready));
-+			if (x1 != x) {
-+				wil_dbg_misc(wil, "BL.ready 0x%08x => 0x%08x\n",
-+					     x1, x);
-+				x1 = x;
-+			}
-+			if (delay++ > RST_COUNT) {
-+				wil_err(wil, "Reset not completed, bl.ready 0x%08x\n",
-+					x);
-+				return -ETIME;
-+			}
-+		} while (x != BL_READY);
-+
-+		wil_dbg_misc(wil, "Reset completed in %d ms\n",
-+			     delay * RST_DELAY);
-+	}
-+
-+	return 0;
-+}
-+
-+static int wil_wait_device_ready_talyn_mb(struct wil6210_priv *wil)
-+{
-+	u32 otp_hw;
-+	u8 signature_status;
-+	bool otp_signature_err;
-+	bool hw_section_done;
-+	u32 otp_qc_secured;
-+	int delay = 0;
-+
-+	/* Wait for OTP signature test to complete */
-+	usleep_range(2000, 2200);
-+
-+	wil->boot_config = WIL_BOOT_ERR;
-+
-+	/* Poll until OTP signature status is valid.
-+	 * In vanilla and development modes, when signature test is complete
-+	 * HW sets BIT_OTP_SIGNATURE_ERR_TALYN_MB.
-+	 * In production mode BIT_OTP_SIGNATURE_ERR_TALYN_MB remains 0, poll
-+	 * for signature status change to 2 or 3.
-+	 */
-+	do {
-+		otp_hw = wil_r(wil, RGF_USER_OTP_HW_RD_MACHINE_1);
-+		signature_status = WIL_GET_BITS(otp_hw, 8, 9);
-+		otp_signature_err = otp_hw & BIT_OTP_SIGNATURE_ERR_TALYN_MB;
-+
-+		if (otp_signature_err &&
-+		    signature_status == WIL_SIG_STATUS_VANILLA) {
-+			wil->boot_config = WIL_BOOT_VANILLA;
-+			break;
-+		}
-+		if (otp_signature_err &&
-+		    signature_status == WIL_SIG_STATUS_DEVELOPMENT) {
-+			wil->boot_config = WIL_BOOT_DEVELOPMENT;
-+			break;
-+		}
-+		if (!otp_signature_err &&
-+		    signature_status == WIL_SIG_STATUS_PRODUCTION) {
-+			wil->boot_config = WIL_BOOT_PRODUCTION;
-+			break;
-+		}
-+		if  (!otp_signature_err &&
-+		     signature_status ==
-+		     WIL_SIG_STATUS_CORRUPTED_PRODUCTION) {
-+			/* Unrecognized OTP signature found. Possibly a
-+			 * corrupted production signature, access control
-+			 * is applied as in production mode, therefore
-+			 * do not fail
-+			 */
-+			wil->boot_config = WIL_BOOT_PRODUCTION;
-+			break;
-+		}
-+		if (delay++ > OTP_HW_COUNT)
-+			break;
-+
-+		usleep_range(OTP_HW_DELAY, OTP_HW_DELAY + 10);
-+	} while (!otp_signature_err && signature_status == 0);
-+
-+	if (wil->boot_config == WIL_BOOT_ERR) {
-+		wil_err(wil,
-+			"invalid boot config, signature_status %d otp_signature_err %d\n",
-+			signature_status, otp_signature_err);
-+		return -ETIME;
-+	}
-+
-+	wil_dbg_misc(wil,
-+		     "signature test done in %d usec, otp_hw 0x%x, boot_config %d\n",
-+		     delay * OTP_HW_DELAY, otp_hw, wil->boot_config);
-+
-+	if (wil->boot_config == WIL_BOOT_VANILLA)
-+		/* Assuming not SPI boot (currently not supported) */
-+		goto out;
-+
-+	hw_section_done = otp_hw & BIT_OTP_HW_SECTION_DONE_TALYN_MB;
-+	delay = 0;
-+
-+	while (!hw_section_done) {
-+		msleep(RST_DELAY);
-+
-+		otp_hw = wil_r(wil, RGF_USER_OTP_HW_RD_MACHINE_1);
-+		hw_section_done = otp_hw & BIT_OTP_HW_SECTION_DONE_TALYN_MB;
-+
-+		if (delay++ > RST_COUNT) {
-+			wil_err(wil, "TO waiting for hw_section_done\n");
-+			return -ETIME;
-+		}
-+	}
-+
-+	wil_dbg_misc(wil, "HW section done in %d ms\n", delay * RST_DELAY);
-+
-+	otp_qc_secured = wil_r(wil, RGF_OTP_QC_SECURED);
-+	wil->secured_boot = otp_qc_secured & BIT_BOOT_FROM_ROM ? 1 : 0;
-+	wil_dbg_misc(wil, "secured boot is %sabled\n",
-+		     wil->secured_boot ? "en" : "dis");
-+
-+out:
-+	wil_dbg_misc(wil, "Reset completed\n");
-+
-+	return 0;
-+}
-+
-+static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
-+{
-+	u32 x;
-+	int rc;
-+
- 	wil_dbg_misc(wil, "Resetting \"%s\"...\n", wil->hw_name);
- 
- 	/* Clear MAC link up */
-@@ -901,34 +1056,12 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
- 
- 	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0);
- 
--	/* wait until device ready. typical time is 20..80 msec */
--	if (no_flash)
--		do {
--			msleep(RST_DELAY);
--			x = wil_r(wil, USER_EXT_USER_PMU_3);
--			if (delay++ > RST_COUNT) {
--				wil_err(wil, "Reset not completed, PMU_3 0x%08x\n",
--					x);
--				return -ETIME;
--			}
--		} while ((x & BIT_PMU_DEVICE_RDY) == 0);
-+	if (wil->hw_version == HW_VER_TALYN_MB)
-+		rc = wil_wait_device_ready_talyn_mb(wil);
- 	else
--		do {
--			msleep(RST_DELAY);
--			x = wil_r(wil, RGF_USER_BL +
--				  offsetof(struct bl_dedicated_registers_v0,
--					   boot_loader_ready));
--			if (x1 != x) {
--				wil_dbg_misc(wil, "BL.ready 0x%08x => 0x%08x\n",
--					     x1, x);
--				x1 = x;
--			}
--			if (delay++ > RST_COUNT) {
--				wil_err(wil, "Reset not completed, bl.ready 0x%08x\n",
--					x);
--				return -ETIME;
--			}
--		} while (x != BL_READY);
-+		rc = wil_wait_device_ready(wil, no_flash);
-+	if (rc)
-+		return rc;
- 
- 	wil_c(wil, RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_RST_PWGD);
- 
-@@ -936,7 +1069,7 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
- 	wil_s(wil, RGF_DMA_OFUL_NID_0, BIT_DMA_OFUL_NID_0_RX_EXT_TR_EN |
- 	      BIT_DMA_OFUL_NID_0_RX_EXT_A3_SRC);
- 
--	if (no_flash) {
-+	if (wil->hw_version < HW_VER_TALYN_MB && no_flash) {
- 		/* Reset OTP HW vectors to fit 40MHz */
- 		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME1, 0x60001);
- 		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME2, 0x20027);
-@@ -951,7 +1084,6 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
- 		wil_w(wil, RGF_USER_XPM_RD_DOUT_SAMPLE_TIME, 0x57);
- 	}
- 
--	wil_dbg_misc(wil, "Reset completed in %d ms\n", delay * RST_DELAY);
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index f8d4a2d..e639ba7 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -210,7 +210,9 @@ struct RGF_ICR {
- #define RGF_USER_SPARROW_M_4			(0x880c50) /* Sparrow */
- 	#define BIT_SPARROW_M_4_SEL_SLEEP_OR_REF	BIT(2)
- #define RGF_USER_OTP_HW_RD_MACHINE_1	(0x880ce0)
--	#define BIT_NO_FLASH_INDICATION		BIT(8)
-+	#define BIT_OTP_SIGNATURE_ERR_TALYN_MB		BIT(0)
-+	#define BIT_OTP_HW_SECTION_DONE_TALYN_MB	BIT(2)
-+	#define BIT_NO_FLASH_INDICATION			BIT(8)
- #define RGF_USER_XPM_IFC_RD_TIME1	(0x880cec)
- #define RGF_USER_XPM_IFC_RD_TIME2	(0x880cf0)
- #define RGF_USER_XPM_IFC_RD_TIME3	(0x880cf4)
-@@ -312,6 +314,9 @@ struct RGF_ICR {
- #define RGF_CAF_PLL_LOCK_STATUS		(0x88afec)
- 	#define BIT_CAF_OSC_DIG_XTAL_STABLE	BIT(0)
- 
-+#define RGF_OTP_QC_SECURED		(0x8a0038)
-+	#define BIT_BOOT_FROM_ROM		BIT(31)
-+
- /* eDMA */
- #define RGF_INT_COUNT_ON_SPECIAL_EVT	(0x8b62d8)
- 
-@@ -969,6 +974,8 @@ struct wil6210_priv {
- 	u32 rx_buff_id_count;
- 	bool amsdu_en;
- 	bool use_rx_hw_reordering;
-+	bool secured_boot;
-+	u8 boot_config;
- };
- 
- #define wil_to_wiphy(i) (i->wiphy)
--- 
-1.9.1
+ 	/* Nothing to do if no ELP mode requested */
+ 	if (wl->sleep_auth != WL1271_PSM_ELP)
