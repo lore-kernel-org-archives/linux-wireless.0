@@ -1,70 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dnvrco-outbound-snat.email.rr.com ([107.14.73.227]:9941 "EHLO
-        dnvrco-cmomta03.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751048AbeFUOBm (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52666 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935275AbeFMK7m (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Jun 2018 10:01:42 -0400
-Message-ID: <20180621140140.BQL4E.211759.root@dnvrco-web04> (sfid-20180621_160146_160578_72643943)
-Date: Thu, 21 Jun 2018 14:01:40 +0000
-From: <mgreger@cinci.rr.com>
-To: Tom Psyborg <pozega.tomislav@gmail.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: Atheros AR9462 - 5Ghz not working
-Cc: Janusz Dziedzic <janusz.dziedzic@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        =?utf-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>,
-        sedat.dilek@gmail.com,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-In-Reply-To: <5B280692.2060106@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        Wed, 13 Jun 2018 06:59:42 -0400
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Tamizh chelvam <tamizhr@codeaurora.org>
+Subject: [PATCH 4/4] mac80211: Implement functionality to monitor txrate cross event for a station
+Date: Wed, 13 Jun 2018 16:28:59 +0530
+Message-Id: <1528887539-26821-5-git-send-email-tamizhr@codeaurora.org> (sfid-20180613_125954_086065_32E99E5F)
+In-Reply-To: <1528887539-26821-1-git-send-email-tamizhr@codeaurora.org>
+References: <1528887539-26821-1-git-send-email-tamizhr@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Trigger cfg80211_sta_mon_txrate_notify with the corresponding txrate
+event when the txrate for a station goes out of configured range.
+This event will be useful for the application like steering to take
+decision on any station depends on its current capability.
 
----- Arend van Spriel <arend.vanspriel@broadcom.com> wrote: 
-> + Martin
-> 
-> On 6/18/2018 3:53 PM, mgreger@cinci.rr.com wrote:
-> >
-> > ---- Tom Psyborg <pozega.tomislav@gmail.com> wrote:
-> >> Hi
-> >>
-> >> Your log only show attemps on ch 2447, Can you try connecting to 5GHz
-> >> AP? Connect to Hidden Wireless Network option at the bottom of the
-> >> nm-applet? Running airodump in monitor mode to see if it captures
-> >> anything? Maybe your laptop's antennas were designed for 2.4G card
-> >> only but this just dumb guessing...
-> >>
-> >
-> > It won't connect to any 5GHz AP.
-> > I don't run network manager or Gnome, in fact X11 is not installed on this machine at all.
-> > I don't think there is such a thing as 2.4GHz vs 5GHz antennas.
-> 
-> Actually there is. At least there are 2.4G specific antennas and 
-> dual-band antennas.
-> 
-> In 4.11 there have been a couple eeprom related changes dealing with 
-> endianness of fields in eeprom. Could be those cause a regression for 
-> you. I don't have the exact sha id of those commits, but I added the 
-> author to this thread.
-> 
-> Regards,
-> Arend
-> 
+Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+---
+ include/net/mac80211.h  |    5 +++++
+ net/mac80211/cfg.c      |    1 +
+ net/mac80211/sta_info.h |   10 ++++++++++
+ net/mac80211/status.c   |   40 +++++++++++++++++++++++++++++++++++++++-
+ 4 files changed, 55 insertions(+), 1 deletion(-)
 
-An interesting new development:
-
-I've confirmed it's not the antenna as I was able to acquire some more cards from a different source which work fine.
-
-Ostensibly they are the same card:  Atheros AR9462 : QCNFA222 reference design.
-
-The output from lspci for both working and non-working cards is: "03:00.0 Network controller: Qualcomm Atheros AR9462 Wireless Network Adapter".
-
-However the Subsystem listed in lspci is different. I don't have the exact value at the moment for the working cards, but it lists Dell and the part number DW1802. The non-working cards are AzureWave.
-
-I've seen a lot of similar cards on ebay that I suspect are the AzureWave. A few offers on ebay are for the genuine Dell parts.
-
-What would be the best way to compare and contrast these cards to determine if there is a way to make them work?
-
-Inspect EEPROM? Someone previously mentioned calibration data, but I have no idea if it's possible to inspect or alter that.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 96fb9a8..02714ea 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -808,6 +808,11 @@ enum mac80211_rate_control_flags {
+  */
+ #define IEEE80211_STA_SIGNAL_AVE_MIN_COUNT	4
+ 
++/* Number of txrate count need to have been used in average station's
++ * txrate before checking against the threshold
++ */
++#define IEEE80211_STA_TXRATE_AVE_MIN_COUNT     4
++
+ 
+ /* there are 40 bytes if you don't need the rateset to be kept */
+ #define IEEE80211_TX_INFO_DRIVER_DATA_SIZE 40
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 649f5c7..36ec5fb 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3904,6 +3904,7 @@ static int ieee80211_set_sta_mon_txrate_config(struct wiphy *wiphy,
+ 
+ 	sta->txrate_low = low_txrate_thold;
+ 	sta->txrate_high = high_txrate_thold;
++	sta->last_txrate_event = 0;
+ 
+ unlock:
+ 	mutex_unlock(&sdata->local->sta_mtx);
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index a71f50c..f978e5a 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -419,6 +419,8 @@ struct ieee80211_sta_rx_stats {
+  */
+ #define STA_SLOW_THRESHOLD 6000 /* 6 Mbps */
+ 
++DECLARE_EWMA(sta_txrate, 4, 4)
++
+ /**
+  * struct sta_info - STA information
+  *
+@@ -501,6 +503,11 @@ struct ieee80211_sta_rx_stats {
+  *	in 100Kbps
+  * @txrate_high: TXRATE upper threshold for a station to monitor, this will be
+  *	in 100Kbps
++ * @count_sta_txrate: Number of transmitted data frames used in ave_sta_txrate
++ * @last_txrate_event: Last txrate event that triggered sta_mon event for a
++ *	station
++ * @ave_sta_txrate: Average txrate to check against the txrate_low and
++ *	txrate_high. Values expressed in 100kbps
+  */
+ struct sta_info {
+ 	/* General information, mostly static */
+@@ -611,6 +618,9 @@ struct sta_info {
+ 
+ 	u32 txrate_low;
+ 	u32 txrate_high;
++	unsigned int count_sta_txrate;
++	enum nl80211_sta_mon_txrate_threshold_event last_txrate_event;
++	struct ewma_sta_txrate ave_sta_txrate;
+ 
+ 	/* keep last! */
+ 	struct ieee80211_sta sta;
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 9a6d720..112b18d 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -701,6 +701,40 @@ void ieee80211_tx_monitor(struct ieee80211_local *local, struct sk_buff *skb,
+ 	dev_kfree_skb(skb);
+ }
+ 
++static void ieee80211_sta_mon_txrate_thold_check(struct sta_info *sta)
++{
++	struct rate_info rinfo;
++	enum nl80211_sta_mon_txrate_threshold_event sta_txrate_event;
++	int txrate;
++
++	if (!sta->txrate_high)
++		return;
++
++	sta_set_rate_info_tx(sta, &sta->tx_stats.last_rate, &rinfo);
++	txrate = cfg80211_calculate_bitrate(&rinfo);
++	ewma_sta_txrate_add(&sta->ave_sta_txrate, txrate);
++	sta->count_sta_txrate++;
++
++	if (sta->count_sta_txrate < IEEE80211_STA_TXRATE_AVE_MIN_COUNT)
++		return;
++
++	txrate = ewma_sta_txrate_read(&sta->ave_sta_txrate);
++
++	if (txrate < sta->txrate_low)
++		sta_txrate_event = NL80211_STA_MON_TXRATE_THRESHOLD_EVENT_LOW;
++	else if (txrate > sta->txrate_high)
++		sta_txrate_event = NL80211_STA_MON_TXRATE_THRESHOLD_EVENT_HIGH;
++	else
++		sta_txrate_event = NL80211_STA_MON_TXRATE_THRESHOLD_IN_RANGE;
++
++	if (sta_txrate_event != sta->last_txrate_event) {
++		cfg80211_sta_mon_txrate_notify(sta->sdata->dev, sta->addr,
++					       sta_txrate_event, txrate,
++					       GFP_ATOMIC);
++		sta->last_txrate_event = sta_txrate_event;
++	}
++}
++
+ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+ 				  struct ieee80211_tx_status *status)
+ {
+@@ -750,9 +784,13 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+ 
+ 		if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL) &&
+ 		    (ieee80211_is_data(hdr->frame_control)) &&
+-		    (rates_idx != -1))
++		    (rates_idx != -1)) {
+ 			sta->tx_stats.last_rate =
+ 				info->status.rates[rates_idx];
++			if (wiphy_ext_feature_isset(hw->wiphy,
++				NL80211_EXT_FEATURE_STA_MON_TXRATE_CONFIG))
++				ieee80211_sta_mon_txrate_thold_check(sta);
++		}
+ 
+ 		if ((info->flags & IEEE80211_TX_STAT_AMPDU_NO_BACK) &&
+ 		    (ieee80211_is_data_qos(fc))) {
+-- 
+1.7.9.5
