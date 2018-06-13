@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.73]:46009 "EHLO
+Received: from mout.kundenserver.de ([212.227.126.187]:53471 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934968AbeFMLCM (ORCPT
+        with ESMTP id S1754462AbeFMJZu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jun 2018 07:02:12 -0400
+        Wed, 13 Jun 2018 05:25:50 -0400
 Subject: Re: b43 crashes on rmmod (bcm4331)
 To: =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>
 Cc: b43-dev@lists.infradead.org,
@@ -15,28 +15,26 @@ References: <75e4b424-4c75-5abd-1ef0-c2537d329b10@lukas-wirz.de>
  <20180609220130.3ceb834f@wiggum>
  <e72be8db-77ba-408c-c5e5-351d722e09e8@lukas-wirz.de>
  <20180611224634.28ccd288@wiggum>
- <7d564b8b-2b71-73f6-3ae7-ede0187a4151@lukas-wirz.de>
- <20180613122751.2fe89737@wiggum>
 From: Wirz <spam@lukas-wirz.de>
-Message-ID: <538cd7b7-8d63-1795-7bfc-69231d2bf3c0@lukas-wirz.de> (sfid-20180613_130232_365211_C9BC5C7D)
-Date: Wed, 13 Jun 2018 14:01:53 +0300
+Message-ID: <7d564b8b-2b71-73f6-3ae7-ede0187a4151@lukas-wirz.de> (sfid-20180613_112554_619283_018CB33B)
+Date: Wed, 13 Jun 2018 12:25:16 +0300
 MIME-Version: 1.0
-In-Reply-To: <20180613122751.2fe89737@wiggum>
+In-Reply-To: <20180611224634.28ccd288@wiggum>
 Content-Type: multipart/signed; micalg=pgp-sha1;
  protocol="application/pgp-signature";
- boundary="ODNKjG8uHLjsTEpTPbgGwAILERfqJei3X"
+ boundary="626Bw3exMVx6buUZUV9SZNWmOzjQ26BKt"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---ODNKjG8uHLjsTEpTPbgGwAILERfqJei3X
-Content-Type: multipart/mixed; boundary="j1S88DBBLIG2MH7JzLZLU5MLWHlxXYYv3";
+--626Bw3exMVx6buUZUV9SZNWmOzjQ26BKt
+Content-Type: multipart/mixed; boundary="mPVJdAh4BWeSzqTj3L7BK1Vk72MexYB17";
  protected-headers="v1"
 From: Wirz <spam@lukas-wirz.de>
 To: =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>
 Cc: b43-dev@lists.infradead.org,
  linux-wireless <linux-wireless@vger.kernel.org>
-Message-ID: <538cd7b7-8d63-1795-7bfc-69231d2bf3c0@lukas-wirz.de>
+Message-ID: <7d564b8b-2b71-73f6-3ae7-ede0187a4151@lukas-wirz.de>
 Subject: Re: b43 crashes on rmmod (bcm4331)
 References: <75e4b424-4c75-5abd-1ef0-c2537d329b10@lukas-wirz.de>
  <d9896c10-87bb-8362-f302-8b1888c3421c@lukas-wirz.de>
@@ -45,83 +43,82 @@ References: <75e4b424-4c75-5abd-1ef0-c2537d329b10@lukas-wirz.de>
  <20180609220130.3ceb834f@wiggum>
  <e72be8db-77ba-408c-c5e5-351d722e09e8@lukas-wirz.de>
  <20180611224634.28ccd288@wiggum>
- <7d564b8b-2b71-73f6-3ae7-ede0187a4151@lukas-wirz.de>
- <20180613122751.2fe89737@wiggum>
-In-Reply-To: <20180613122751.2fe89737@wiggum>
+In-Reply-To: <20180611224634.28ccd288@wiggum>
 
---j1S88DBBLIG2MH7JzLZLU5MLWHlxXYYv3
+--mPVJdAh4BWeSzqTj3L7BK1Vk72MexYB17
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-GB
 Content-Transfer-Encoding: quoted-printable
 
-On 13/06/18 13:27, Michael B=C3=BCsch wrote:
-> On Wed, 13 Jun 2018 12:25:16 +0300
+On 11/06/18 23:46, Michael B=C3=BCsch wrote:
+> On Mon, 11 Jun 2018 23:09:06 +0300
 > Wirz <spam@lukas-wirz.de> wrote:
 >=20
->>> This commit introduces a bug, if b43 is the only RNG in the system. B=
-ut
->>> that is unlikely on modern systems and it's fixed by
->>> 0e4b52942b1c76f89e0dcb829f72e123d0678f54, which is in 4.16.
->>>
->>> Other than that I currently can't see why this crashes.
->>>
->>> But the crash should go away, if you disable CONFIG_B43_HWRNG.
->>> That's not a solution, but it may help, if you would like to get rid =
-of
->>> the crashes.
->>> Could you please verify whether disabling CONFIG_B43_HWRNG avoids the=
-
->>> crash, just to make sure we are not after a red herring here? =20
+>> the bisection leads to
 >>
->> It seems the bug I'm seeing is separate from the one you are describin=
-g.
->>  The 4.16 kernels that ship with debian testing crash for me as well. =
- I
->> tested the 142a27f0a version with CONFIG_B43_HWRNG switched off
->> (manually in the .config): it still crashes is the same way.  I also
->> just verified that the version one before that really is good.
+>> 142a27f0a731ddcf467546960a5585970ca98e21 is the first bad commit
+>> commit 142a27f0a731ddcf467546960a5585970ca98e21
+>> Author: PrasannaKumar Muralidharan <prasannatsmkumar@gmail.com>
+>> Date:   Fri Oct 27 22:34:04 2017 +0530
+>>
+>>     hwrng: core - Reset user selected rng by writing "" to rng_current=
+
+>>
+>>     User is able to select a chosen rng by writing its name to rng_cur=
+rent
+>>     but there is no way to reset it without unbinding the rng. Let use=
+r
+>>     write "" to rng_current and delesect the chosen rng.
+>>
+>>     Signed-off-by: PrasannaKumar Muralidharan <prasannatsmkumar@gmail.=
+com>
+>>     reviewed-by: Harald Freudenberger <freude@linux.vnet.ibm.com>
+>>     Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
+>>
+>> :040000 040000 f61e5cc501c99fb09bae5f203528b9f4c3479f8a
+>> 785262813cfb02c9606fd72274f0f7b44f2289d7 M	drivers
 >=20
 >=20
-> CONFIG_B43_HWRNG completely switches off hwrng support in b43.
-> I don't see how a change in hwrng core could still lead to a crash in
-> b43 with this option switched off.
+> Thanks a lot for bisecting this.
 >=20
-> What do you mean by "manually in the .config"?
+> This commit introduces a bug, if b43 is the only RNG in the system. But=
 
-What I meant is, that I have outcommented the line 'CONFIG_B43_HWRNG=3Dy'=
+> that is unlikely on modern systems and it's fixed by
+> 0e4b52942b1c76f89e0dcb829f72e123d0678f54, which is in 4.16.
+>=20
+> Other than that I currently can't see why this crashes.
+>=20
+> But the crash should go away, if you disable CONFIG_B43_HWRNG.
+> That's not a solution, but it may help, if you would like to get rid of=
 
-in .config.
+> the crashes.
+> Could you please verify whether disabling CONFIG_B43_HWRNG avoids the
+> crash, just to make sure we are not after a red herring here?
 
-> Can you try to properly switch off the setting with make menuconfig and=
-
-> then recompile everything from scratch (make clean)?
-
-I was intending to do that before, but I cannot find the option for
-that.  Searching for b43_hwrng in menuconfig only shows the dependencies
-of that option, and the Kconfig file where it is defined, but not the
-path in menuconfig.  Do I indirectly set CONFIG_B43_HWRNG through the
-parameters it depends on?  I'm sorry, but this is obviously above my
-level of expertise ...
+It seems the bug I'm seeing is separate from the one you are describing.
+ The 4.16 kernels that ship with debian testing crash for me as well.  I
+tested the 142a27f0a version with CONFIG_B43_HWRNG switched off
+(manually in the .config): it still crashes is the same way.  I also
+just verified that the version one before that really is good.
 
 cheers, lukas
-
 
 --=20
 Do not believe the naysayers who say it cannot be done.
 
 
---j1S88DBBLIG2MH7JzLZLU5MLWHlxXYYv3--
+--mPVJdAh4BWeSzqTj3L7BK1Vk72MexYB17--
 
---ODNKjG8uHLjsTEpTPbgGwAILERfqJei3X
+--626Bw3exMVx6buUZUV9SZNWmOzjQ26BKt
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: OpenPGP digital signature
 Content-Disposition: attachment; filename="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iF0EARECAB0WIQQfsLWbEt//FEFwBMDWbaSYbwIjLQUCWyD5oQAKCRDWbaSYbwIj
-LVlGAJwMAntoK1mwAaFXpTvGskgZQOC5ewCfQw5zZ0xg/VSPcQ5nCoeh9upui3o=
-=yH9l
+iF0EARECAB0WIQQfsLWbEt//FEFwBMDWbaSYbwIjLQUCWyDjCAAKCRDWbaSYbwIj
+LaP+AJ9kjlSXPlQtypZs0nADvbANJ0ob9wCfSSgBojBcTC93z4X0nrVvGSLM8SQ=
+=y57V
 -----END PGP SIGNATURE-----
 
---ODNKjG8uHLjsTEpTPbgGwAILERfqJei3X--
+--626Bw3exMVx6buUZUV9SZNWmOzjQ26BKt--
