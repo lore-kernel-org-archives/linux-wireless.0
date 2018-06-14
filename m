@@ -1,69 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:52570 "EHLO v3-1039.vlinux.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754794AbeFNKku (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Jun 2018 06:40:50 -0400
-From: Sven Eckelmann <sven@narfation.org>
-To: Omer Efrat <omer.efrat@tandemg.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        b.a.t.m.a.n@lists.open-mesh.org
-Subject: Re: [PATCH v2 3/5] batman: use BIT_ULL for NL80211_STA_INFO_* attribute types
-Date: Thu, 14 Jun 2018 12:40:47 +0200
-Message-ID: <32533954.9n15W0HXMB@bentobox> (sfid-20180614_124058_252010_EDC306E4)
-In-Reply-To: <1528971137-432-1-git-send-email-omer.efrat@tandemg.com>
-References: <1528971137-432-1-git-send-email-omer.efrat@tandemg.com>
+Received: from mout.kundenserver.de ([212.227.17.13]:58701 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754633AbeFNJsB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Jun 2018 05:48:01 -0400
+Subject: Re: b43 crashes on rmmod (bcm4331)
+To: =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        b43-dev@lists.infradead.org, Matt Mackall <mpm@selenic.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        linux-crypto@vger.kernel.org
+References: <75e4b424-4c75-5abd-1ef0-c2537d329b10@lukas-wirz.de>
+ <d9896c10-87bb-8362-f302-8b1888c3421c@lukas-wirz.de>
+ <20180609171159.59b5209c@wiggum>
+ <6a78c68e-1062-5ad8-876c-f7d4c49ea492@lukas-wirz.de>
+ <20180609220130.3ceb834f@wiggum>
+ <e72be8db-77ba-408c-c5e5-351d722e09e8@lukas-wirz.de>
+ <20180611224634.28ccd288@wiggum>
+ <7d564b8b-2b71-73f6-3ae7-ede0187a4151@lukas-wirz.de>
+ <20180613122751.2fe89737@wiggum>
+ <538cd7b7-8d63-1795-7bfc-69231d2bf3c0@lukas-wirz.de>
+ <20180613130905.420695e7@wiggum> <20180613140148.1b57a566@wiggum>
+ <6b84a788-e11f-91db-309c-4ff79fdcad66@lukas-wirz.de>
+ <20180613152812.5596b460@wiggum>
+From: Wirz <spam@lukas-wirz.de>
+Message-ID: <6bef30e0-9405-2ddd-d1eb-612b4d4e3382@lukas-wirz.de> (sfid-20180614_114805_123960_E6919824)
+Date: Thu, 14 Jun 2018 12:47:19 +0300
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart1894910.JER9txcFyR"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+In-Reply-To: <20180613152812.5596b460@wiggum>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="OBDhBlZUsPROum0mA6nbvX4xLQmLEDnxB"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1894910.JER9txcFyR
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--OBDhBlZUsPROum0mA6nbvX4xLQmLEDnxB
+Content-Type: multipart/mixed; boundary="WTbq9za79umExicsbC73n8BmhRPupzKMe";
+ protected-headers="v1"
+From: Wirz <spam@lukas-wirz.de>
+To: =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+ b43-dev@lists.infradead.org, Matt Mackall <mpm@selenic.com>,
+ Herbert Xu <herbert@gondor.apana.org.au>, linux-crypto@vger.kernel.org
+Message-ID: <6bef30e0-9405-2ddd-d1eb-612b4d4e3382@lukas-wirz.de>
+Subject: Re: b43 crashes on rmmod (bcm4331)
+References: <75e4b424-4c75-5abd-1ef0-c2537d329b10@lukas-wirz.de>
+ <d9896c10-87bb-8362-f302-8b1888c3421c@lukas-wirz.de>
+ <20180609171159.59b5209c@wiggum>
+ <6a78c68e-1062-5ad8-876c-f7d4c49ea492@lukas-wirz.de>
+ <20180609220130.3ceb834f@wiggum>
+ <e72be8db-77ba-408c-c5e5-351d722e09e8@lukas-wirz.de>
+ <20180611224634.28ccd288@wiggum>
+ <7d564b8b-2b71-73f6-3ae7-ede0187a4151@lukas-wirz.de>
+ <20180613122751.2fe89737@wiggum>
+ <538cd7b7-8d63-1795-7bfc-69231d2bf3c0@lukas-wirz.de>
+ <20180613130905.420695e7@wiggum> <20180613140148.1b57a566@wiggum>
+ <6b84a788-e11f-91db-309c-4ff79fdcad66@lukas-wirz.de>
+ <20180613152812.5596b460@wiggum>
+In-Reply-To: <20180613152812.5596b460@wiggum>
 
-On Donnerstag, 14. Juni 2018 13:12:17 CEST Omer Efrat wrote:
-> Since 'filled' member in station_info changed to u64, BIT_ULL macro
-> should be used with NL80211_STA_INFO_* attribute types instead of BIT.
-> 
-> The BIT macro uses unsigned long type which some architectures handle as 32bit
-> and this results in compilation warnings such as:
-> 
-> net/mac80211/sta_info.c:2223:2: warning: left shift count >= width of type
->   sinfo->filled |= BIT(NL80211_STA_INFO_TID_STATS);
->   ^
-> 
-> Signed-off-by: Omer Efrat <omer.efrat@tandemg.com>
-> ---
->  net/batman-adv/bat_v_elp.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+--WTbq9za79umExicsbC73n8BmhRPupzKMe
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-GB
+Content-Transfer-Encoding: quoted-printable
 
-It is called "batman-adv" and not "batman". And when (as in commit) did it 
-change to 64 bit?  Shouldn't there be a "Fixed: " line to know which kernels 
-are affected (especially for the stable kernel developers).
 
-Kind regards,
-	Sven
+>>>> You can edit drivers/net/wireless/broadcom/b43/Kconfig
+>>>> go to the section config B43_HWRNG
+>>>> and change 'default y' to 'default n'
+>>>>
+>>>> That should disable it. =20
+>>>
+>>>
+>>>
+>>> Could you please also try the attached patch?
+>>> There seems to be a problem in hwrng core in that it does not disable=
 
---nextPart1894910.JER9txcFyR
+>>> the current RNG, if the new RNG fails to initialize.
+>>> I don't know if that's the problem here, though. =20
+>>
+>> Ok. Do I apply your patch to the first version that fails for me, and
+>> revert my change to Kconfig?
+>=20
+>=20
+> Yes, please test the patch with a version that would otherwise fail.
+> You can use 4.16 or the latest kernel for that. I created it with lates=
+t
+> linus' version.
+
+I tested both suggested cases.  When I disable B43_HWRNG by editing
+Kconfig, 'rmmod b43' succeeds in the first version where it previously
+failed.  When I apply your patch on top of an unmodified 4.16 it also
+succeeds.
+
+cheers, lukas
+
+--=20
+Do not believe the naysayers who say it cannot be done.
+
+
+--WTbq9za79umExicsbC73n8BmhRPupzKMe--
+
+--OBDhBlZUsPROum0mA6nbvX4xLQmLEDnxB
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlsiRi8ACgkQXYcKB8Em
-e0YbyQ/+My4yzF1oi/pXLfsQ5ZowyM1a3YffYUmbjwas2LAli29aMCFeESnB14qO
-bpoiFHbfJw0F3+hBRrJ0+/mc73MBi5V/YStIIamWGpilNaxGjlQ+QzlM2nQWqXGm
-RByQ6/1M/JTsLMc9+QpBy2kNMQC/Upq6kFeMLlramvHO9x1UjudUJx9PFzX/2AnD
-vJzSRwo5wa4+7ugUzgeRiZWRydIXn2kbrwvWjlzFY/Y0z6F/YgdyNOmrW9NGNFLL
-lblfLP81rSFwXi18rxOpHVwAuQ/OLoYwboQwxSQgec1oVHV35vHBQOyqs1qLE1Wz
-RXi3aFi5uKiTXoTwoC7HToU5Hah8M3lJBk+Rp8LrOgp8BNJe2nkxa9QDj2djj2Xi
-cIojNYGWNpeGhxy73IITHwLh+llpRMEBtejmkmRGxMboj+NiIXNRnDqwxkVoksxW
-Hz6zCmNrooFtLhfx8YPzaMjicsuQ9rV2A9aO2pE6mmgqrnaiontXUUyP7I5cMfOf
-PfcO0Eu1BECFDU7EwVJPTn71+6gtP6zIqzrwZQ1+OQ4Tb9txrBseHWqjqiumk5Eu
-dxwkTwYTBqeQO4Vxm+r7GBJse5FdAMrgqvFwjh1taFX4fYkTo6OzddjY2+v6gRec
-6PYZs6YveYYymeNJbUoWbSNzUIWRmGelU/pKapz6d5j/k4a70Cc=
-=e0XQ
+iF0EARECAB0WIQQfsLWbEt//FEFwBMDWbaSYbwIjLQUCWyI5sQAKCRDWbaSYbwIj
+LQfwAJ9uz/BJ752FoL6Q/lS21C6ATbb5bQCfdmUM3fScet/kSyLC84wso4fzEXc=
+=5OLH
 -----END PGP SIGNATURE-----
 
---nextPart1894910.JER9txcFyR--
+--OBDhBlZUsPROum0mA6nbvX4xLQmLEDnxB--
