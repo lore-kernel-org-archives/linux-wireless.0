@@ -1,45 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51968 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:60782 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753760AbeFTSsE (ORCPT
+        with ESMTP id S965329AbeFNOJL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Jun 2018 14:48:04 -0400
+        Thu, 14 Jun 2018 10:09:11 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Niklas Cassel <niklas.cassel@linaro.org>
+Cc: Govind Singh <govinds@codeaurora.org>, bjorn.andersson@linaro.org,
+        davem@davemloft.net, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: FW: [PATCH 2/2] ath10k: allow ATH10K_SNOC with COMPILE_TEST
+References: <20180612113907.15043-1-niklas.cassel@linaro.org>
+        <20180612113907.15043-2-niklas.cassel@linaro.org>
+        <7058492257914633b55fcd423e4c0b59@aphydexm01b.ap.qualcomm.com>
+        <47cf8ec1b11d727ea928a307a431d4a2@codeaurora.org>
+        <20180612124403.GA26986@centauri.lan>
+        <20180613132819.GA12603@centauri.ideon.se>
+Date: Thu, 14 Jun 2018 17:09:04 +0300
+In-Reply-To: <20180613132819.GA12603@centauri.ideon.se> (Niklas Cassel's
+        message of "Wed, 13 Jun 2018 15:28:19 +0200")
+Message-ID: <878t7ha29r.fsf@kamboji.qca.qualcomm.com> (sfid-20180614_163958_765658_C927BFF8)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 20 Jun 2018 11:48:03 -0700
-From: Rajkumar Manoharan <rmanohar@codeaurora.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Manikanta Pubbisetty <mpubbise@codeaurora.org>,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        kvalo@codeaurora.org, linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH] ath10k: Don't allow tx logic when state is not ON.
-In-Reply-To: <3dc5dce6-a8ef-93f6-318f-6ca2e62f8853@candelatech.com>
-References: <1529506583-20204-1-git-send-email-greearb@candelatech.com>
- <9ba64928-a73b-0fe6-9586-65929ca87013@codeaurora.org>
- <3dc5dce6-a8ef-93f6-318f-6ca2e62f8853@candelatech.com>
-Message-ID: <a6bbeef21bb377e1480ca99f4d2c1013@codeaurora.org> (sfid-20180620_204808_437166_A35FEACD)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-06-20 10:42, Ben Greear wrote:
-> On 06/20/2018 10:37 AM, Manikanta Pubbisetty wrote:
->> 
-[...]
->> This case should not be dealt in ath10k, rather we should make sure 
->> packets does not reach the driver during hardware restart after the 
->> firmware crash.
->> Can you please try the RFC patch and see if it fixes the issue? I am 
->> working on the patch and probably send it out after doing some testing 
->> and cleanup.
->> 
->> https://patchwork.kernel.org/patch/10411967/
-> 
-> I did see your patch, but I was not sure it would make it upstream.
-> 
-> I think either way my patch might be useful in case bugs creep back in.
-> 
+Niklas Cassel <niklas.cassel@linaro.org> writes:
 
-ar->state check can not be in hot path as it is protected by mutex lock.
+> On Tue, Jun 12, 2018 at 02:44:03PM +0200, Niklas Cassel wrote:
+>> On Tue, Jun 12, 2018 at 06:02:48PM +0530, Govind Singh wrote:
+>> > On 2018-06-12 17:45, Govind Singh wrote:
+>> > > 
+>> > > ATH10K_SNOC builds just fine with COMPILE_TEST, so make that possible.
+>> > > 
+>> > > Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
+>> > > ---
+>> > >  drivers/net/wireless/ath/ath10k/Kconfig | 3 ++-
+>> > >  1 file changed, 2 insertions(+), 1 deletion(-)
+>> > > 
+>> > > diff --git a/drivers/net/wireless/ath/ath10k/Kconfig
+>> > > b/drivers/net/wireless/ath/ath10k/Kconfig
+>> > > index 54ff5930126c..6572a43590a8 100644
+>> > > --- a/drivers/net/wireless/ath/ath10k/Kconfig
+>> > > +++ b/drivers/net/wireless/ath/ath10k/Kconfig
+>> > > @@ -42,7 +42,8 @@ config ATH10K_USB
+>> > > 
+>> > >  config ATH10K_SNOC
+>> > >  	tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
+>> > > -	depends on ATH10K && ARCH_QCOM
+>> > > +	depends on ATH10K
+>> > > +	depends on ARCH_QCOM || COMPILE_TEST
+>> > >  	---help---
+>> > >  	  This module adds support for integrated WCN3990 chip connected
+>> > >  	  to system NOC(SNOC). Currently work in progress and will not
+>> > 
+>> > Thanks Niklas for enabling COMPILE_TEST. With QMI set of
+>> > changes(https://patchwork.kernel.org/patch/10448183/), we need to enable
+>> > COMPILE_TEST for
+>> > QCOM_SCM/QMI_HELPERS which seems broken today. Are you planning to fix the
+>> > same.
+>
+> This patch is good as is.
+>
+> However, Govind's QMI patch set together with this patch
+> resulted in build errors.
+>
+> FTR, these are fixed by:
+> https://marc.info/?l=linux-kernel&m=152880985402356
+> https://marc.info/?l=linux-kernel&m=152889452326350
 
--Rajkumar
+So the problem is that if I apply this patch I can't apply Govind's QMI
+patchset (due to the build problems) until Niklas' fixes to qcom and
+rpmsg subsystems propogate back to my tree and that might take weeks, or
+even months. But I really would like to apply the QMI patchset ASAP so
+that we can complete the wcn3990 support and not unnecessarily delay it.
+
+So what I propose is that I put this patch 2 as 'Awaiting Upstream' in
+patchwork and apply it once Niklas' patches get to my tree. Does that
+sound good?
+
+-- 
+Kalle Valo
