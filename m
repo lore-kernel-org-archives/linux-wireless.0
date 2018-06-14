@@ -1,123 +1,77 @@
-Return-Path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:36195 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751992AbeENRt4 (ORCPT
+Return-path: <linux-wireless-owner@vger.kernel.org>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:52827 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754860AbeFNL3j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 May 2018 13:49:56 -0400
-Received: by mail-wm0-f68.google.com with SMTP id n10-v6so16738811wmc.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2018 10:49:56 -0700 (PDT)
-Date: Mon, 14 May 2018 18:49:53 +0100
-From: Chris Vine <vine35792468@gmail.com>
-To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Regression: bcm4312 lp-phy device not working in 4.17-rc5 kernel
-Message-Id: <20180514184953.001c06412efcf2b16fdc59ac@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-wireless-owner@vger.kernel.org
-List-ID: <linux-wireless.vger.kernel.org>
-
-I have an old netbook with a Broadcom bcm4312 802.11b/g lp-phy
-[14e4:4315] (rev 01) wifi device.  This works up to and including the
-4.16 kernel, but not with 4.17-rc5.
-
-The b43, mac80211, cfg80211, ssb and mmc_core modules are loaded OK, as
-is the firmware, and the wlan0 interface will come up, but any attempt
-to use the interface fails and it cannot (for example) scan.
-
-No useful error messages are given.  The interface (wlan0) is just
-reported as not being ready.
-
-Chris
->From linux-wireless-owner@vger.kernel.org Mon May 14 20:56:25 2018
-Return-Path: <linux-wireless-owner@vger.kernel.org>
-X-Original-To: j@w1.fi
-Delivered-To: j@w1.fi
-Received: from localhost (localhost [127.0.0.1])
-	by li674-96.members.linode.com (Postfix) with ESMTP id 1F60511A03
-	for <j@w1.fi>; Mon, 14 May 2018 17:56:25 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at w1.fi
-Received: from li674-96.members.linode.com ([127.0.0.1])
-	by localhost (mail.w1.fi [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id oU70Yhi8425U for <j@w1.fi>;
-	Mon, 14 May 2018 17:56:23 +0000 (UTC)
-Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by li674-96.members.linode.com (Postfix) with ESMTP id 6040410F4D
-	for <j@w1.fi>; Mon, 14 May 2018 17:56:23 +0000 (UTC)
-Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1752251AbeENR4S (ORCPT <rfc822;j@w1.fi>);
-        Mon, 14 May 2018 13:56:18 -0400
-Received: from bues.ch ([80.190.117.144]:60014 "EHLO bues.ch"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752024AbeENR4Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 May 2018 13:56:16 -0400
-Date:   Mon, 14 May 2018 19:55:39 +0200
-From:   Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To:     Chris Vine <vine35792468@gmail.com>
-Cc:     linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: Regression: bcm4312 lp-phy device not working in 4.17-rc5
- kernel
-Message-ID: <20180514195539.74686870@wiggum>
-In-Reply-To: <20180514184953.001c06412efcf2b16fdc59ac@gmail.com>
-References: <20180514184953.001c06412efcf2b16fdc59ac@gmail.com>
+        Thu, 14 Jun 2018 07:29:39 -0400
+From: "Reizer, Eyal" <eyalr@ti.com>
+To: Tony Lindgren <tony@atomide.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        KISHON VIJAY ABRAHAM <kishon@ti.com>,
+        "Mishol, Guy" <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        "Hahn, Maital" <maitalm@ti.com>,
+        "Altshul, Maxim" <maxim.altshul@ti.com>,
+        "Shahar Patury" <shaharp@ti.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
+Subject: RE: [EXTERNAL] Re: [RFT 3/6] wlcore: Add support for runtime PM
+Date: Thu, 14 Jun 2018 11:29:32 +0000
+Message-ID: <90db5e5b092a4be6b4390fc5f695b5fe@ti.com> (sfid-20180614_132943_145585_C1EF7182)
+References: <20180529180605.73622-1-tony@atomide.com>
+ <20180529180605.73622-4-tony@atomide.com> <20180531171420.GQ5705@atomide.com>
+ <fe42f9d6bb744cd39e38db8f51c0b74e@ti.com> <20180605042000.GA5738@atomide.com>
+ <20180605104404.GD5738@atomide.com>   
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
- boundary="Sig_/Ji.OWRUI1EkVOiswkG+_pal"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
-Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
-X-Mailing-List: linux-wireless@vger.kernel.org
-Content-Length: 1911
 
---Sig_/Ji.OWRUI1EkVOiswkG+_pal
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 14 May 2018 18:49:53 +0100
-Chris Vine <vine35792468@gmail.com> wrote:
-
-> I have an old netbook with a Broadcom bcm4312 802.11b/g lp-phy
-> [14e4:4315] (rev 01) wifi device.  This works up to and including the
-> 4.16 kernel, but not with 4.17-rc5.
+> >This happens on runtime_suspend() where we are already in PLT
+> >and then that error gets stored and then next pm_runtime_get()
+> >returns -EINVAL. The patch below should fix it. I'll fold it
+> i>nto the runtime PM related patch assuming it works for you.
+> >
+> >Regards,
+> >
+> >Tony
+> >
+> >8< -------
+> >diff --git a/drivers/net/wireless/ti/wlcore/main.c
+> b/drivers/net/wireless/ti/wlcore/main.c
+> >--- a/drivers/net/wireless/ti/wlcore/main.c
+> >+++ b/drivers/net/wireless/ti/wlcore/main.c
+> >@@ -6677,7 +6677,7 @@ static int __maybe_unused
+> wlcore_runtime_suspend(struct device *dev)
+> >
+> > 	/* We do not enter elp sleep in PLT mode */
+> > 	if (wl->plt)
+> >-		return -EINVAL;
+> >+		return 0;
+> >
+> > 	/* Nothing to do if no ELP mode requested */
+> > 	if (wl->sleep_auth !=3D WL1271_PSM_ELP)
 >=20
-> The b43, mac80211, cfg80211, ssb and mmc_core modules are loaded OK, as
-> is the firmware, and the wlan0 interface will come up, but any attempt
-> to use the interface fails and it cannot (for example) scan.
+> Even with this change I still see issues with a wl1281 module plugged in.
+> It take a few seconds for the crash to happen once you turn plt on.
+> Log below.
+> Do you see this on your wl12xx based platform?
 >=20
-> No useful error messages are given.  The interface (wlan0) is just
-> reported as not being ready.
+> sh-4.4#
+> sh-4.4# calibrator wlan0 plt power_mode on
+> [  231.105877] wlcore: power up
+> [  231.667604] wlcore: firmware booted in PLT mode PLT_ON (PLT
+> 7.3.10.2.142)
+> sh-4.4#
+> sh-4.4#
+> sh-4.4# [  236.900817] ------------[ cut here ]------------
+> [  236.906012] WARNING: CPU: 0 PID: 520 at
+> drivers/net/wireless/ti/wlcore/main.c:806
 
-Hi,
+Hold on, I might have edited the wrong version of the file (main.c).=20
+Sorry about that. Working on too many branches/boards... :(
+Applied this change again and things look good now with the wl1281 based mo=
+dule.
 
-thanks for your report.
-
-Can you please provide all kernel log messages anyway?
-And what does "not ready" mean exactly?
-
-It would be extremely helpful if you'd do a git bisect to find the
-commit that broke it.
-
---=20
-Michael
-
---Sig_/Ji.OWRUI1EkVOiswkG+_pal
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlr5zZsACgkQ9TK+HZCN
-iw6QiA//Vh+LV9ZkLUG4zye21fP5i+XPonkuVwy5+vCKzc36akbHeGG/LdOx6gGG
-paikZi4AG+e5vqowE/27Y+MIGX3xUZxETO5m5mfiXrb4AjQ5mTBZoO/MzWHz54sg
-Ths5Ejs9o4QG6Us0/PaMqHsxRdajoR/76aEs8esglrTFtd48caIcJITbXS0t3Fwy
-XOEzmRwx35INHZbLyb+NG7QYt2lBjgMxpFYv7sJ9aTWbJpqpbgrO4Pidg+s4LvLu
-Zvb/an4px9y3v/sqNg2/URLiR6e2nhBbxUKX/hOSp/mg1qLSL2+QUByVQxTM7o5+
-1ClYTUF4FBCPB28F3vZZmJz5lPaqlTanIAKbv1F8ONts7VxhEA77aSvJ3Pq5cHas
-kt+BgK67Ls/MGHBjJNf7rkIdbEpLR9ZllYKCSe7BXPpXNGn+EIohmw0g78O3WE87
-BIwTS9qtmtjnk0cjNEh9eLKqJF8iz0Mk+T8poEKwFmK7H+A6VMLMlpIiw/gl7KiP
-S4nb4qpQXR35uw/RsCnGQIQLZ79ajyQ391d9GLIs5YW/REmLm/6Nff7qGkWy9XBR
-DYbSkmCcwLxU/Xr1+gVc4jTrIoVInBEegyesBxvG7eUFuE2pE+JEF/Dj9nDNc8S0
-M4lGmLMmqlhMpMje4G2iBlVB91hqJ9gAXXEoVBolO+x6SQIeSu8=
-=y6Sh
------END PGP SIGNATURE-----
-
---Sig_/Ji.OWRUI1EkVOiswkG+_pal--
+Best Regards,
+Eyal
