@@ -1,113 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:62563 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752169AbeFZHze (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56264 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965617AbeFNOga (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Jun 2018 03:55:34 -0400
-Subject: Re: [PATCH v2] staging: wilc1000: Use common structs to parse ip
- packets
-To: Thibaut Robert <thibaut.robert@gmail.com>,
-        Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <linux-kernel@vger.kernel.org>
-References: <20180604105549.04031722@ajaysk-VirtualBox>
- <20180619184419.10304-1-thibaut.robert@gmail.com>
-From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
-Message-ID: <333f9414-9541-dc33-9c69-4054b5966eaa@microchip.com> (sfid-20180626_095548_956864_831A2B35)
-Date: Tue, 26 Jun 2018 10:55:30 +0300
+        Thu, 14 Jun 2018 10:36:30 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Joe Perches <joe@perches.com>,
+        Colin King <colin.king@canonical.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: pcie: make array prop static, shrinks object size
+References: <20180611171537.14597-1-colin.king@canonical.com>
+        <7f508dccf95cff7fb8e083666b8939c58f65f894.camel@perches.com>
+        <20180611204506.GA21542@kroah.com>
+Date: Thu, 14 Jun 2018 17:36:23 +0300
+In-Reply-To: <20180611204506.GA21542@kroah.com> (Greg Kroah-Hartman's message
+        of "Mon, 11 Jun 2018 22:45:06 +0200")
+Message-ID: <878t7h8mfs.fsf@kamboji.qca.qualcomm.com> (sfid-20180614_163812_983639_E44C163B)
 MIME-Version: 1.0
-In-Reply-To: <20180619184419.10304-1-thibaut.robert@gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
+Greg Kroah-Hartman <gregkh@linuxfoundation.org> writes:
 
-On 19.06.2018 21:44, Thibaut Robert wrote:
-> Use structs ethhdr, iphdr and tcphdr instead of manual parsing in
-> tcp_process.
-> This commit fix handling of ip packets containing options.
-> It also fixes the following sparse warning:
-> 
-> drivers/staging/wilc1000//wilc_wlan.c:201:19: warning: cast to restricted __be16
-> 
-> Signed-off-by: Thibaut Robert <thibaut.robert@gmail.com>
-> ---
->  drivers/staging/wilc1000/wilc_wlan.c | 43 ++++++++++------------------
->  1 file changed, 15 insertions(+), 28 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-> index 55755d7fbb30..85af36595e69 100644
-> --- a/drivers/staging/wilc1000/wilc_wlan.c
-> +++ b/drivers/staging/wilc1000/wilc_wlan.c
-> @@ -1,4 +1,6 @@
->  // SPDX-License-Identifier: GPL-2.0
-> +#include <linux/if_ether.h>
-> +#include <linux/ip.h>
->  #include "wilc_wfi_netdevice.h"
->  #include "wilc_wlan_cfg.h"
->  
-> @@ -150,9 +152,8 @@ static inline int add_tcp_pending_ack(u32 ack, u32 session_index,
->  
->  static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
->  {
-> -	u8 *eth_hdr_ptr;
-> -	u8 *buffer = tqe->buffer;
-> -	unsigned short h_proto;
-> +	void *buffer = tqe->buffer;
-> +	const struct ethhdr *eth_hdr_ptr = buffer;
->  	int i;
->  	unsigned long flags;
->  	struct wilc_vif *vif;
-> @@ -163,37 +164,23 @@ static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
->  
->  	spin_lock_irqsave(&wilc->txq_spinlock, flags);
->  
-> -	eth_hdr_ptr = &buffer[0];
-> -	h_proto = ntohs(*((unsigned short *)&eth_hdr_ptr[12]));
-> -	if (h_proto == ETH_P_IP) {
-> -		u8 *ip_hdr_ptr;
-> -		u8 protocol;
-> +	if (eth_hdr_ptr->h_proto == htons(ETH_P_IP)) {
-> +		const struct iphdr *ip_hdr_ptr = buffer + ETH_HLEN;
->  
-> -		ip_hdr_ptr = &buffer[ETHERNET_HDR_LEN];
-> -		protocol = ip_hdr_ptr[9];
-> -
-> -		if (protocol == 0x06) {
-> -			u8 *tcp_hdr_ptr;
-> +		if (ip_hdr_ptr->protocol == IPPROTO_TCP) {
-> +			const struct tcphdr *tcp_hdr_ptr;
->  			u32 IHL, total_length, data_offset;
->  
-> -			tcp_hdr_ptr = &ip_hdr_ptr[IP_HDR_LEN];
-> -			IHL = (ip_hdr_ptr[0] & 0xf) << 2;
-> -			total_length = ((u32)ip_hdr_ptr[2] << 8) +
-> -					(u32)ip_hdr_ptr[3];
-> -			data_offset = ((u32)tcp_hdr_ptr[12] & 0xf0) >> 2;
-> +			IHL = ip_hdr_ptr->ihl << 2;
-> +			tcp_hdr_ptr = buffer + ETH_HLEN + IHL;
-> +			total_length = ntohs(ip_hdr_ptr->tot_len);
-> +
-> +			data_offset = tcp_hdr_ptr->doff << 2;
->  			if (total_length == (IHL + data_offset)) {
->  				u32 seq_no, ack_no;
->  
-> -				seq_no = ((u32)tcp_hdr_ptr[4] << 24) +
-> -					 ((u32)tcp_hdr_ptr[5] << 16) +
-> -					 ((u32)tcp_hdr_ptr[6] << 8) +
-> -					 (u32)tcp_hdr_ptr[7];
-> -
-> -				ack_no = ((u32)tcp_hdr_ptr[8] << 24) +
-> -					 ((u32)tcp_hdr_ptr[9] << 16) +
-> -					 ((u32)tcp_hdr_ptr[10] << 8) +
-> -					 (u32)tcp_hdr_ptr[11];
-> -
-> +				seq_no = ntohl(tcp_hdr_ptr->seq);
-> +				ack_no = ntohl(tcp_hdr_ptr->ack_seq);
->  				for (i = 0; i < tcp_session; i++) {
->  					u32 j = ack_session_info[i].seq_num;
->  
-> 
+> On Mon, Jun 11, 2018 at 12:40:55PM -0700, Joe Perches wrote:
+>> (adding Greg KH)
+>> 
+>> Now what is happening is that prop is being reloaded
+>> each invocation with the constant addresses of the strings.
+>> 
+>> It seems the prototype and function for kobject_uevent_env
+>> should change as well to avoid this.
+>> 
+>> Perhaps this should become:
+>> ---
+>>  drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 2 +-
+>>  include/linux/kobject.h                         | 2 +-
+>>  lib/kobject_uevent.c                            | 2 +-
+>>  3 files changed, 3 insertions(+), 3 deletions(-)
+>> 
+>> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+>> index 7229991ae70d..6668a8aad22e 100644
+>> --- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+>> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+>> @@ -1946,7 +1946,7 @@ static void iwl_trans_pcie_removal_wk(struct work_struct *wk)
+>>  	struct iwl_trans_pcie_removal *removal =
+>>  		container_of(wk, struct iwl_trans_pcie_removal, work);
+>>  	struct pci_dev *pdev = removal->pdev;
+>> -	char *prop[] = {"EVENT=INACCESSIBLE", NULL};
+>> +	static const char * const prop[] = {"EVENT=INACCESSIBLE", NULL};
+>>  
+>>  	dev_err(&pdev->dev, "Device gone - attempting removal\n");
+>>  	kobject_uevent_env(&pdev->dev.kobj, KOBJ_CHANGE, prop);
+>> diff --git a/include/linux/kobject.h b/include/linux/kobject.h
+>> index 7f6f93c3df9c..9f5cf553dd1e 100644
+>> --- a/include/linux/kobject.h
+>> +++ b/include/linux/kobject.h
+>> @@ -217,7 +217,7 @@ extern struct kobject *firmware_kobj;
+>>  
+>>  int kobject_uevent(struct kobject *kobj, enum kobject_action action);
+>>  int kobject_uevent_env(struct kobject *kobj, enum kobject_action action,
+>> -			char *envp[]);
+>> +			const char * const envp[]);
+>>  int kobject_synth_uevent(struct kobject *kobj, const char *buf, size_t count);
+>>  
+>>  __printf(2, 3)
+>> diff --git a/lib/kobject_uevent.c b/lib/kobject_uevent.c
+>> index 63d0816ab23b..9107989a0cc8 100644
+>> --- a/lib/kobject_uevent.c
+>> +++ b/lib/kobject_uevent.c
+>> @@ -452,7 +452,7 @@ static void zap_modalias_env(struct kobj_uevent_env *env)
+>>   * corresponding error when it fails.
+>>   */
+>>  int kobject_uevent_env(struct kobject *kobj, enum kobject_action action,
+>> -		       char *envp_ext[])
+>> +		       const char * const envp_ext[])
+>>  {
+>>  	struct kobj_uevent_env *env;
+>>  	const char *action_string = kobject_actions[action];
+>
+> No objection from me, care to make it a real patch so that I can apply
+> it after 4.18-rc1 is out?
+
+For the wireless part:
+
+Acked-by: Kalle Valo <kvalo@codeaurora.org>
+
+-- 
+Kalle Valo
