@@ -1,98 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46700 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753855AbeFDOLd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Jun 2018 10:11:33 -0400
-From: Balaji Pothunoori <bpothuno@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Balaji Pothunoori <bpothuno@codeaurora.org>
-Subject: [PATCH v2 1/2] cfg80211: last ack signal support in station dump
-Date: Mon,  4 Jun 2018 19:41:08 +0530
-Message-Id: <1528121469-16450-2-git-send-email-bpothuno@codeaurora.org> (sfid-20180604_161145_300285_64643662)
-In-Reply-To: <1528121469-16450-1-git-send-email-bpothuno@codeaurora.org>
-References: <1528121469-16450-1-git-send-email-bpothuno@codeaurora.org>
+Received: from narfation.org ([79.140.41.39]:52570 "EHLO v3-1039.vlinux.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754794AbeFNKku (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Jun 2018 06:40:50 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: Omer Efrat <omer.efrat@tandemg.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        b.a.t.m.a.n@lists.open-mesh.org
+Subject: Re: [PATCH v2 3/5] batman: use BIT_ULL for NL80211_STA_INFO_* attribute types
+Date: Thu, 14 Jun 2018 12:40:47 +0200
+Message-ID: <32533954.9n15W0HXMB@bentobox> (sfid-20180614_124058_252010_EDC306E4)
+In-Reply-To: <1528971137-432-1-git-send-email-omer.efrat@tandemg.com>
+References: <1528971137-432-1-git-send-email-omer.efrat@tandemg.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart1894910.JER9txcFyR"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds "last ack signal" support in station dump if
-driver supports.
+--nextPart1894910.JER9txcFyR
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Signed-off-by: Balaji Pothunoori <bpothuno@codeaurora.org>
----
-v2:
- - typo corrected in subject
+On Donnerstag, 14. Juni 2018 13:12:17 CEST Omer Efrat wrote:
+> Since 'filled' member in station_info changed to u64, BIT_ULL macro
+> should be used with NL80211_STA_INFO_* attribute types instead of BIT.
+> 
+> The BIT macro uses unsigned long type which some architectures handle as 32bit
+> and this results in compilation warnings such as:
+> 
+> net/mac80211/sta_info.c:2223:2: warning: left shift count >= width of type
+>   sinfo->filled |= BIT(NL80211_STA_INFO_TID_STATS);
+>   ^
+> 
+> Signed-off-by: Omer Efrat <omer.efrat@tandemg.com>
+> ---
+>  net/batman-adv/bat_v_elp.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
- include/uapi/linux/nl80211.h | 14 +++++++-------
- net/wireless/nl80211.c       |  8 ++++----
- 2 files changed, 11 insertions(+), 11 deletions(-)
+It is called "batman-adv" and not "batman". And when (as in commit) did it 
+change to 64 bit?  Shouldn't there be a "Fixed: " line to know which kernels 
+are affected (especially for the stable kernel developers).
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 28b3654..3514bef 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3000,8 +3000,8 @@ enum nl80211_sta_bss_param {
-  *	received from the station (u64, usec)
-  * @NL80211_STA_INFO_PAD: attribute used for padding for 64-bit alignment
-  * @NL80211_STA_INFO_ACK_SIGNAL: signal strength of the last ACK frame(u8, dBm)
-- * @NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG: avg signal strength of (data)
-- *	ACK frame (s8, dBm)
-+ * @NL80211_STA_INFO_ACK_SIGNAL_AVG: avg signal strength of data or management
-+ *	ACK frames(s8, dBm)
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -3041,7 +3041,7 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_RX_DURATION,
- 	NL80211_STA_INFO_PAD,
- 	NL80211_STA_INFO_ACK_SIGNAL,
--	NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG,
-+	NL80211_STA_INFO_ACK_SIGNAL_AVG,
- 
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-@@ -5128,9 +5128,9 @@ enum nl80211_feature_flags {
-  *	"radar detected" event.
-  * @NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211: Driver supports sending and
-  *	receiving control port frames over nl80211 instead of the netdevice.
-- * @NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT: This Driver support data ack
-- *	rssi if firmware support, this flag is to intimate about ack rssi
-- *	support to nl80211.
-+ * @NL80211_EXT_FEATURE_ACK_SIGNAL_SUPPORT: This Driver support ack rssi if
-+ *	firmware support, this flag is to intimate about ack rssi support
-+ *	to nl80211.
-  * @NL80211_EXT_FEATURE_TXQS: Driver supports FQ-CoDel-enabled intermediate
-  *      TXQs.
-  *
-@@ -5165,7 +5165,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_HIGH_ACCURACY_SCAN,
- 	NL80211_EXT_FEATURE_DFS_OFFLOAD,
- 	NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211,
--	NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT,
-+	NL80211_EXT_FEATURE_ACK_SIGNAL_SUPPORT,
- 	NL80211_EXT_FEATURE_TXQS,
- 
- 	/* add new features before the definition below */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 07514ca..29cf5fd 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4650,11 +4650,11 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 	PUT_SINFO_U64(RX_DROP_MISC, rx_dropped_misc);
- 	PUT_SINFO_U64(BEACON_RX, rx_beacon);
- 	PUT_SINFO(BEACON_SIGNAL_AVG, rx_beacon_signal_avg, u8);
--	PUT_SINFO(ACK_SIGNAL, ack_signal, u8);
- 	if (wiphy_ext_feature_isset(&rdev->wiphy,
--				    NL80211_EXT_FEATURE_DATA_ACK_SIGNAL_SUPPORT))
--		PUT_SINFO(DATA_ACK_SIGNAL_AVG, avg_ack_signal, s8);
--
-+				    NL80211_EXT_FEATURE_ACK_SIGNAL_SUPPORT)) {
-+		PUT_SINFO(ACK_SIGNAL, ack_signal, u8);
-+		PUT_SINFO(ACK_SIGNAL_AVG, avg_ack_signal, s8);
-+	}
- #undef PUT_SINFO
- #undef PUT_SINFO_U64
- 
--- 
-2.7.4
+Kind regards,
+	Sven
+
+--nextPart1894910.JER9txcFyR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlsiRi8ACgkQXYcKB8Em
+e0YbyQ/+My4yzF1oi/pXLfsQ5ZowyM1a3YffYUmbjwas2LAli29aMCFeESnB14qO
+bpoiFHbfJw0F3+hBRrJ0+/mc73MBi5V/YStIIamWGpilNaxGjlQ+QzlM2nQWqXGm
+RByQ6/1M/JTsLMc9+QpBy2kNMQC/Upq6kFeMLlramvHO9x1UjudUJx9PFzX/2AnD
+vJzSRwo5wa4+7ugUzgeRiZWRydIXn2kbrwvWjlzFY/Y0z6F/YgdyNOmrW9NGNFLL
+lblfLP81rSFwXi18rxOpHVwAuQ/OLoYwboQwxSQgec1oVHV35vHBQOyqs1qLE1Wz
+RXi3aFi5uKiTXoTwoC7HToU5Hah8M3lJBk+Rp8LrOgp8BNJe2nkxa9QDj2djj2Xi
+cIojNYGWNpeGhxy73IITHwLh+llpRMEBtejmkmRGxMboj+NiIXNRnDqwxkVoksxW
+Hz6zCmNrooFtLhfx8YPzaMjicsuQ9rV2A9aO2pE6mmgqrnaiontXUUyP7I5cMfOf
+PfcO0Eu1BECFDU7EwVJPTn71+6gtP6zIqzrwZQ1+OQ4Tb9txrBseHWqjqiumk5Eu
+dxwkTwYTBqeQO4Vxm+r7GBJse5FdAMrgqvFwjh1taFX4fYkTo6OzddjY2+v6gRec
+6PYZs6YveYYymeNJbUoWbSNzUIWRmGelU/pKapz6d5j/k4a70Cc=
+=e0XQ
+-----END PGP SIGNATURE-----
+
+--nextPart1894910.JER9txcFyR--
