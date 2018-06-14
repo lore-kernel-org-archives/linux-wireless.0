@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56574 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932526AbeF2HJL (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:52836 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754854AbeFNLFW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 03:09:11 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v3] rtlwifi: rtl8821ae: fix firmware is not ready to run
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180628020227.8776-1-pkshih@realtek.com>
-References: <20180628020227.8776-1-pkshih@realtek.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: <linux-wireless@vger.kernel.org>, <Larry.Finger@lwfinger.net>,
-        <stable@vger.kernel.org>
-Message-Id: <20180629070910.A0CE760791@smtp.codeaurora.org> (sfid-20180629_090914_796479_2E5F7F27)
-Date: Fri, 29 Jun 2018 07:09:10 +0000 (UTC)
+        Thu, 14 Jun 2018 07:05:22 -0400
+Message-ID: <1528974316.26847.0.camel@sipsolutions.net> (sfid-20180614_130540_449813_87A0697F)
+Subject: Re: [B.A.T.M.A.N.] [PATCH v2 3/5] batman: use BIT_ULL for
+ NL80211_STA_INFO_* attribute types
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sven Eckelmann <sven@narfation.org>,
+        b.a.t.m.a.n@lists.open-mesh.org
+Cc: Omer Efrat <omer.efrat@tandemg.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Date: Thu, 14 Jun 2018 13:05:16 +0200
+In-Reply-To: <1567584.jbsRn7ofiA@bentobox> (sfid-20180614_125324_149221_2D722F3B)
+References: <1528971137-432-1-git-send-email-omer.efrat@tandemg.com>
+         <32533954.9n15W0HXMB@bentobox> <1567584.jbsRn7ofiA@bentobox>
+         (sfid-20180614_125324_149221_2D722F3B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ping-Ke Shih <pkshih@realtek.com> wrote:
-
-> From: Ping-Ke Shih <pkshih@realtek.com>
+On Thu, 2018-06-14 at 12:53 +0200, Sven Eckelmann wrote:
+> Hi,
 > 
-> Without this patch, firmware will not run properly on rtl8821ae, and it
-> causes bad user experience. For example, bad connection performance with
-> low rate, higher power consumption, and so on.
+> here are the infos which were missing and which should be included in the 
+> commit message
 > 
-> rtl8821ae uses two kinds of firmwares for normal and WoWlan cases, and
-> each firmware has firmware data buffer and size individually. Original
-> code always overwrite size of normal firmware rtlpriv->rtlhal.fwsize, and
-> this mismatch causes firmware checksum error, then firmware can't start.
+> > > Since 'filled' member in station_info changed to u64
 > 
-> In this situation, driver gives message "Firmware is not ready to run!".
-> 
-> Fixes: fe89707f0afa ("rtlwifi: rtl8821ae: Simplify loading of WOWLAN firmware")
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Cc: Stable <stable@vger.kernel.org> # 4.0+
-> Reviewed-by: Larry Finger <Larry.Finger@lwfinger.net>
+> in commit 739960f128e5 ("cfg80211/nl80211: Add support for 
+> NL80211_STA_INFO_RX_DURATION")
 
-Patch applied to wireless-drivers.git, thanks.
+Yeah, which actually means this patch isn't needed?
 
-9a98302de199 rtlwifi: rtl8821ae: fix firmware is not ready to run
+BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT) is fine since
+NL80211_STA_INFO_EXPECTED_THROUGHPUT is actually == 27.
 
--- 
-https://patchwork.kernel.org/patch/10492933/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
