@@ -1,102 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:33364 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932296AbeFJKvk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Jun 2018 06:51:40 -0400
-Received: by mail-wr0-f193.google.com with SMTP id k16-v6so17441558wro.0
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2018 03:51:39 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [RFC v3 06/19] mt76x2: introduce mt76x2_mac_load_tx_status routine
-Date: Sun, 10 Jun 2018 12:51:13 +0200
-Message-Id: <20180610105126.28425-7-lorenzo.bianconi@redhat.com> (sfid-20180610_125145_842888_253D0416)
+Received: from narfation.org ([79.140.41.39]:52582 "EHLO v3-1039.vlinux.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754888AbeFNKxQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Jun 2018 06:53:16 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: b.a.t.m.a.n@lists.open-mesh.org
+Cc: Omer Efrat <omer.efrat@tandemg.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [B.A.T.M.A.N.] [PATCH v2 3/5] batman: use BIT_ULL for NL80211_STA_INFO_* attribute types
+Date: Thu, 14 Jun 2018 12:53:13 +0200
+Message-ID: <1567584.jbsRn7ofiA@bentobox> (sfid-20180614_125324_149221_2D722F3B)
+In-Reply-To: <32533954.9n15W0HXMB@bentobox>
+References: <1528971137-432-1-git-send-email-omer.efrat@tandemg.com> <32533954.9n15W0HXMB@bentobox>
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart3740938.nihP6Ej3nQ"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add mt76x2_mac_load_tx_status routine since tx stats register map is
-shared between usb and pci based devices but usb devices do not have a
-tx stat irq line as pcie ones and it is necessary to load tx statistics
-using a workqueue
+--nextPart3740938.nihP6Ej3nQ
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- .../net/wireless/mediatek/mt76/mt76x2_mac.c   | 47 ++++++++++++-------
- 1 file changed, 30 insertions(+), 17 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-index b49aea4da2d6..3f24756b1b6c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-@@ -517,11 +517,37 @@ mt76x2_send_tx_status(struct mt76x2_dev *dev, struct mt76x2_tx_status *stat,
- 	rcu_read_unlock();
- }
- 
-+static bool
-+mt76x2_mac_load_tx_status(struct mt76x2_dev *dev,
-+			  struct mt76x2_tx_status *stat)
-+{
-+	u32 stat1, stat2;
-+
-+	stat2 = mt76_rr(dev, MT_TX_STAT_FIFO_EXT);
-+	stat1 = mt76_rr(dev, MT_TX_STAT_FIFO);
-+
-+	stat->valid = !!(stat1 & MT_TX_STAT_FIFO_VALID);
-+	if (!stat->valid)
-+		return false;
-+
-+	stat->success = !!(stat1 & MT_TX_STAT_FIFO_SUCCESS);
-+	stat->aggr = !!(stat1 & MT_TX_STAT_FIFO_AGGR);
-+	stat->ack_req = !!(stat1 & MT_TX_STAT_FIFO_ACKREQ);
-+	stat->wcid = FIELD_GET(MT_TX_STAT_FIFO_WCID, stat1);
-+	stat->rate = FIELD_GET(MT_TX_STAT_FIFO_RATE, stat1);
-+
-+	stat->retry = FIELD_GET(MT_TX_STAT_FIFO_EXT_RETRY, stat2);
-+	stat->pktid = FIELD_GET(MT_TX_STAT_FIFO_EXT_PKTID, stat2);
-+
-+	return true;
-+}
-+
- void mt76x2_mac_poll_tx_status(struct mt76x2_dev *dev, bool irq)
- {
- 	struct mt76x2_tx_status stat = {};
- 	unsigned long flags;
- 	u8 update = 1;
-+	bool ret;
- 
- 	if (!test_bit(MT76_STATE_RUNNING, &dev->mt76.state))
- 		return;
-@@ -529,26 +555,13 @@ void mt76x2_mac_poll_tx_status(struct mt76x2_dev *dev, bool irq)
- 	trace_mac_txstat_poll(dev);
- 
- 	while (!irq || !kfifo_is_full(&dev->txstatus_fifo)) {
--		u32 stat1, stat2;
--
- 		spin_lock_irqsave(&dev->irq_lock, flags);
--		stat2 = mt76_rr(dev, MT_TX_STAT_FIFO_EXT);
--		stat1 = mt76_rr(dev, MT_TX_STAT_FIFO);
--		if (!(stat1 & MT_TX_STAT_FIFO_VALID)) {
--			spin_unlock_irqrestore(&dev->irq_lock, flags);
--			break;
--		}
--
-+		ret = mt76x2_mac_load_tx_status(dev, &stat);
- 		spin_unlock_irqrestore(&dev->irq_lock, flags);
- 
--		stat.valid = 1;
--		stat.success = !!(stat1 & MT_TX_STAT_FIFO_SUCCESS);
--		stat.aggr = !!(stat1 & MT_TX_STAT_FIFO_AGGR);
--		stat.ack_req = !!(stat1 & MT_TX_STAT_FIFO_ACKREQ);
--		stat.wcid = FIELD_GET(MT_TX_STAT_FIFO_WCID, stat1);
--		stat.rate = FIELD_GET(MT_TX_STAT_FIFO_RATE, stat1);
--		stat.retry = FIELD_GET(MT_TX_STAT_FIFO_EXT_RETRY, stat2);
--		stat.pktid = FIELD_GET(MT_TX_STAT_FIFO_EXT_PKTID, stat2);
-+		if (!ret)
-+			break;
-+
- 		trace_mac_txstat_fetch(dev, &stat);
- 
- 		if (!irq) {
--- 
-2.17.1
+here are the infos which were missing and which should be included in the 
+commit message
+
+> > Since 'filled' member in station_info changed to u64
+
+in commit 739960f128e5 ("cfg80211/nl80211: Add support for 
+NL80211_STA_INFO_RX_DURATION")
+
+[...]
+
+Fixes: d62890885efb ("batman-adv: Accept only filled wifi station info")
+
+> > Signed-off-by: Omer Efrat <omer.efrat@tandemg.com>
+
+
+Kind regards,
+	Sven
+--nextPart3740938.nihP6Ej3nQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlsiSRkACgkQXYcKB8Em
+e0Y4ZxAAytrpWBIfkoZ02P4q1NCrvrbhIZYhTgtAycArHZVWHIRJ3JfuXjFNTbN5
+Owhhwe8wnfsNjCaB17dbkb696CCfIGJLfIOxQFkjHTMRb9SoS2fY8ELLJSGvQRrm
+/mjcyY/xvQ2T8nTmN78voKEHFuemYP66qiYRKIsFu1mYHEvkoIWFrH7/rXQw7spM
+hiw3H45IYn6ykASRRDX3S67fahdd/YgYj0sjrROygbbqaZqlZgiJcrJ0EsG/mT6Y
+R3c+LlfQJyA/N4x3sQCzygYgPpiIXOYJ+Q92a6R6b+FEM5EAhQIsF5EaG1IT6ckW
+/1a/dpmxLxi3Iu1lIZ2JFiPvV+xaxsd0i+OzMIj5GBsytzlYptLYKhk+VMadLrXK
+8f1t3ONJvyzmE49OOrPjMqtBwHMqiXK6b8HImFZ13YxuixRM8zdv7BsEqTZMNxqG
+F876sGLBGajzol1MjcUQL3jxKssEHv7uHsq1ndfsQ3KnjbL5X3MFTCRDAMPK1S+8
+zrHDUIG04Ut/jYCoOxVdt7j46bFNCRgaUADGfnFcsI0T4qehHQcRmbL6z/E4NxaD
+CMmWDBT0BIlz9u9LiYh6I1i0sYiphEkjpVMiWuSaFVQHjQfSuBjZWp1DEAHgqquz
+IxEhFoi1cfw6mnRX1kGybECOc1R8vB9iP/Fn2FYoYLP0UPqh0FM=
+=8VwQ
+-----END PGP SIGNATURE-----
+
+--nextPart3740938.nihP6Ej3nQ--
