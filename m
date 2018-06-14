@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-db5eur01on0104.outbound.protection.outlook.com ([104.47.2.104]:45086
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933410AbeFQKHC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 17 Jun 2018 06:07:02 -0400
-From: Omer Efrat <omer.efrat@tandemg.com>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        b.a.t.m.a.n@lists.open-mesh.org
-Cc: Omer Efrat <omer.efrat@tandemg.com>
-Subject: [PATCH v3 3/5] batman-adv: use BIT_ULL for NL80211_STA_INFO_* attribute types
-Date: Sun, 17 Jun 2018 13:06:54 +0300
-Message-Id: <1529230014-17897-1-git-send-email-omer.efrat@tandemg.com> (sfid-20180617_120707_815007_7AC2B13C)
+Received: from smtp.codeaurora.org ([198.145.29.96]:42666 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965572AbeFNOSh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Jun 2018 10:18:37 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Wei Yongjun <weiyongjun1@huawei.com>,
+        Govind Singh <govinds@codeaurora.org>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH net-next] ath10k: make some functions static
+References: <1527733994-149212-1-git-send-email-weiyongjun1@huawei.com>
+        <87lgbhagrz.fsf@kamboji.qca.qualcomm.com>
+        <20180614135515.i47fj4bn47ntn6wb@mwanda>
+Date: Thu, 14 Jun 2018 17:18:32 +0300
+In-Reply-To: <20180614135515.i47fj4bn47ntn6wb@mwanda> (Dan Carpenter's message
+        of "Thu, 14 Jun 2018 16:55:15 +0300")
+Message-ID: <87vaal8n9j.fsf@kamboji.qca.qualcomm.com> (sfid-20180614_161845_072105_39EAEAD4)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The BIT macro uses unsigned long which some architectures handle as 32 bit
-and therefore might cause macro's shift to overflow when used on a value
-equals or larger than 32 (NL80211_STA_INFO_RX_DURATION and afterwards).
+Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-Since 'filled' member in station_info changed to u64, BIT_ULL macro
-should be used with all NL80211_STA_INFO_* attribute types instead of BIT
-to prevent future possible bugs when one will use BIT macro for higher
-attributes by mistake.
+> On Thu, Jun 14, 2018 at 11:55:44AM +0300, Kalle Valo wrote:
+>> Wei Yongjun <weiyongjun1@huawei.com> writes:
+>> 
+>> > Fixes the following sparse warnings:
+>> >
+>> > drivers/net/wireless/ath/ath10k/snoc.c:823:5: warning:
+>> >  symbol 'ath10k_snoc_get_ce_id_from_irq' was not declared. Should it be static?
+>> > drivers/net/wireless/ath/ath10k/snoc.c:871:6: warning:
+>> >  symbol 'ath10k_snoc_init_napi' was not declared. Should it be static?
+>> >
+>> > Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+>> 
+>> Your name in patchwork is wrong[1] and hence my script uses the wrong
+>> name. Please fix it by registering to patchwork[2] where it's possible
+>> to change your name during registration, but only one time. If that
+>> doesn't work then send a request to helpdesk@kernel.org and the admins
+>> can fix it.
+>> 
+>> But no need to resend this patch, I can fix your name manually this
+>> time.
+>> 
+>> [1] "weiyongjun (A)" in https://patchwork.kernel.org/patch/10440159/
+>> 
+>> [2] https://patchwork.kernel.org/register/
+>
+> That's a weird patchwork issue...  It sounds like this is a known bug?
 
-This commit cleans up all usages of BIT macro with the above field
-in batman-adv by changing it to BIT_ULL instead.
+Yeah, it's a known bug. Patchwork stores the name from the first mail it
+sees from the user and it's impossible to change it afterwards (or
+something like that). I think it's fixed in the latest patchwork version
+but kernel.org admins are really slow updating patchwork.kernel.org.
 
-Signed-off-by: Omer Efrat <omer.efrat@tandemg.com>
----
- net/batman-adv/bat_v_elp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+In all these cases I direct the users to contact helpdesk, hopefully
+that eventually gives admins enough motivation to update patchwork :)
 
-diff --git a/net/batman-adv/bat_v_elp.c b/net/batman-adv/bat_v_elp.c
-index 71c20c1..71e6474 100644
---- a/net/batman-adv/bat_v_elp.c
-+++ b/net/batman-adv/bat_v_elp.c
-@@ -114,7 +114,7 @@ static u32 batadv_v_elp_get_throughput(struct batadv_hardif_neigh_node *neigh)
- 		}
- 		if (ret)
- 			goto default_throughput;
--		if (!(sinfo.filled & BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
-+		if (!(sinfo.filled & BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
- 			goto default_throughput;
- 
- 		return sinfo.expected_throughput / 100;
 -- 
-2.7.4
+Kalle Valo
