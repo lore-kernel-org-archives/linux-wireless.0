@@ -1,172 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48138 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751505AbeFIGOz (ORCPT
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:61718 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754540AbeFNIge (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Jun 2018 02:14:55 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, arend.vanspriel@broadcom.com,
+        Thu, 14 Jun 2018 04:36:34 -0400
+From: "Reizer, Eyal" <eyalr@ti.com>
+To: Tony Lindgren <tony@atomide.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        KISHON VIJAY ABRAHAM <kishon@ti.com>,
+        "Mishol, Guy" <guym@ti.com>,
         Luca Coelho <luciano.coelho@intel.com>,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Ilan Peer <ilan.peer@intel.com>,
-        Ido Yariv <idox.yariv@intel.com>
-Date: Sat,  9 Jun 2018 09:14:43 +0300
-Message-Id: <20180609061444.2859-3-luca@coelho.fi> (sfid-20180609_081610_140792_A09B227D)
-In-Reply-To: <20180609061444.2859-1-luca@coelho.fi>
-References: <20180609061444.2859-1-luca@coelho.fi>
-Subject: [PATCH V3 2/3] radiotap: add structs for HE
+        "Hahn, Maital" <maitalm@ti.com>,
+        "Altshul, Maxim" <maxim.altshul@ti.com>,
+        "Shahar Patury" <shaharp@ti.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
+Subject: RE: [EXTERNAL] Re: [RFT 3/6] wlcore: Add support for runtime PM
+Date: Thu, 14 Jun 2018 08:36:28 +0000
+Message-ID: <e653ffeaa6ca48209cbcc42887711969@ti.com> (sfid-20180614_103641_928155_5D5A7E1D)
+References: <20180529180605.73622-1-tony@atomide.com>
+ <20180529180605.73622-4-tony@atomide.com> <20180531171420.GQ5705@atomide.com>
+ <fe42f9d6bb744cd39e38db8f51c0b74e@ti.com> <20180605042000.GA5738@atomide.com>
+ <20180605104404.GD5738@atomide.com>  
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+>> However, trying a wl1281 module and enabling PLT mode it boots ok but af=
+ter a couple of seconds the below crash is seen.
+>> Seems like a similar crash to the one I have seen before,right?
+>
+>Sorry for the delay, only today had enough time to figure
+>this one out, see below.
+>
+>> sh-4.4# calibrator wlan0 plt power_mode on
+>> [   57.198492] wlcore: power up
+>> [   57.757871] wlcore: firmware booted in PLT mode PLT_ON (PLT 7.3.10.2.=
+142)
+>> sh-4.4#
+>> sh-4.4#
+>> sh-4.4# ca[   86.485020] ------------[ cut here ]------------
+>> [   86.490334] WARNING: CPU: 0 PID: 502 at drivers/net/wireless/ti/wlcor=
+e/main.c:806
+>
+>This happens on runtime_suspend() where we are already in PLT
+>and then that error gets stored and then next pm_runtime_get()
+>returns -EINVAL. The patch below should fix it. I'll fold it
+i>nto the runtime PM related patch assuming it works for you.
+>
+>Regards,
+>
+>Tony
+>
+>8< -------
+>diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/=
+ti/wlcore/main.c
+>--- a/drivers/net/wireless/ti/wlcore/main.c
+>+++ b/drivers/net/wireless/ti/wlcore/main.c
+>@@ -6677,7 +6677,7 @@ static int __maybe_unused wlcore_runtime_suspend(str=
+uct device *dev)
+>=20
+> 	/* We do not enter elp sleep in PLT mode */
+> 	if (wl->plt)
+>-		return -EINVAL;
+>+		return 0;
+>=20
+> 	/* Nothing to do if no ELP mode requested */
+> 	if (wl->sleep_auth !=3D WL1271_PSM_ELP)
 
-Add radiotap structures for HE.
+Even with this change I still see issues with a wl1281 module plugged in.
+It take a few seconds for the crash to happen once you turn plt on.
+Log below.
+Do you see this on your wl12xx based platform?
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Ido Yariv <idox.yariv@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/net/ieee80211_radiotap.h | 111 +++++++++++++++++++++++++++++++
- 1 file changed, 111 insertions(+)
+sh-4.4#
+sh-4.4# calibrator wlan0 plt power_mode on
+[  231.105877] wlcore: power up
+[  231.667604] wlcore: firmware booted in PLT mode PLT_ON (PLT 7.3.10.2.142=
+)
+sh-4.4#
+sh-4.4#
+sh-4.4# [  236.900817] ------------[ cut here ]------------
+[  236.906012] WARNING: CPU: 0 PID: 520 at drivers/net/wireless/ti/wlcore/m=
+ain.c:806 wl12xx_queue_recovery_work+0x64/0x6c [wlcore]
+[  236.917783] Modules linked in: ctr aes_arm_bs crypto_simd cryptd ccm arc=
+4 pru_rproc pruss_intc wl12xx wlcore mac80211 cfg80211 pruss musb_dsps musb=
+_hdrc udc_core usbcore phy_am335x phy_generic usb_common phy_am335x_control=
+ ti_am335x_adc ti_am335x_tsc snd_soc_simple_card snd_soc_simple_card_utils =
+pm33xx wkup_m3_ipc wkup_m3_rproc remoteproc omap_aes_driver crypto_engine o=
+map_crypto omap_sham ti_emif_sram pruss_soc_bus wlcore_sdio snd_soc_tlv320a=
+ic3x rtc_omap musb_am335x omap_wdt ti_am335x_tscadc matrix_keypad matrix_ke=
+ymap sch_fq_codel
+[  236.965780] CPU: 0 PID: 520 Comm: irq/71-wl12xx Not tainted 4.14.40-0141=
+5-g47241db-dirty #123
+[  236.974439] Hardware name: Generic AM33XX (Flattened Device Tree)
+[  236.980666] Backtrace:
+[  236.983250] [<c010baf8>] (dump_backtrace) from [<c010bd5c>] (show_stack+=
+0x18/0x1c)
+[  236.990967]  r6:00000000 r5:bf2e25fc r4:00000000 r3:00000000
+[  236.996799] [<c010bd44>] (show_stack) from [<c0805dd0>] (dump_stack+0x20=
+/0x28)
+[  237.004145] [<c0805db0>] (dump_stack) from [<c01287bc>] (__warn+0xdc/0x1=
+04)
+[  237.011339] [<c01286e0>] (__warn) from [<c012880c>] (warn_slowpath_null+=
+0x28/0x30)
+[  237.019099]  r10:c0d4ea79 r8:c0169590 r7:db1bee58 r6:dc726ec8 r5:dc726d3=
+8 r4:dc726d00
+[  237.027285] [<c01287e4>] (warn_slowpath_null) from [<bf2cd468>] (wl12xx_=
+queue_recovery_work+0x64/0x6c [wlcore])
+[  237.037892] [<bf2cd404>] (wl12xx_queue_recovery_work [wlcore]) from [<bf=
+2cda18>] (wlcore_irq+0x21c/0x234 [wlcore])
+[  237.048412]  r4:dc726d00 r3:db2d3810
+[  237.052260] [<bf2cd7fc>] (wlcore_irq [wlcore]) from [<c01695b4>] (irq_th=
+read_fn+0x24/0x3c)
+[  237.060688]  r7:db1bee58 r6:db1bee00 r5:00000001 r4:db1af3c0
+[  237.066481] [<c0169590>] (irq_thread_fn) from [<c0169260>] (irq_thread+0=
+x10c/0x1ec)
+[  237.074242]  r6:db1bee00 r5:00000001 r4:db1af3c0 r3:dc73aa00
+[  237.080069] [<c0169154>] (irq_thread) from [<c014526c>] (kthread+0x11c/0=
+x154)
+[  237.087350]  r10:c0169154 r8:db1af3c0 r7:db1af918 r6:db1af340 r5:0000000=
+0 r4:db1af900
+[  237.095305] [<c0145150>] (kthread) from [<c0107f68>] (ret_from_fork+0x14=
+/0x2c)
+[  237.102673]  r10:00000000 r9:00000000 r8:00000000 r7:00000000 r6:0000000=
+0 r5:c0145150
+[  237.110646]  r4:db1af340 r3:ffffffff
+[  237.114292] ---[ end trace 2c3213a5c8df86b0 ]---
+[  237.856438] sched: RT throttling activated
+[  238.886549] omap_i2c 44e0b000.i2c: controller timed out
+[  242.846592] omap_i2c 44e0b000.i2c: controller timed out
 
-diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
-index 960236fb1681..2117b2cea598 100644
---- a/include/net/ieee80211_radiotap.h
-+++ b/include/net/ieee80211_radiotap.h
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2017		Intel Deutschland GmbH
-+ * Copyright (c) 2018		Intel Corporation
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -72,6 +73,8 @@ enum ieee80211_radiotap_presence {
- 	IEEE80211_RADIOTAP_AMPDU_STATUS = 20,
- 	IEEE80211_RADIOTAP_VHT = 21,
- 	IEEE80211_RADIOTAP_TIMESTAMP = 22,
-+	IEEE80211_RADIOTAP_HE = 23,
-+	IEEE80211_RADIOTAP_HE_MU = 24,
- 
- 	/* valid in every it_present bitmap, even vendor namespaces */
- 	IEEE80211_RADIOTAP_RADIOTAP_NAMESPACE = 29,
-@@ -202,6 +205,114 @@ enum ieee80211_radiotap_timestamp_flags {
- 	IEEE80211_RADIOTAP_TIMESTAMP_FLAG_ACCURACY = 0x02,
- };
- 
-+struct ieee80211_radiotap_he {
-+	__le16 data1, data2, data3, data4, data5, data6;
-+};
-+
-+enum ieee80211_radiotap_he_bits {
-+	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_MASK		= 3,
-+	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_SU		= 0,
-+	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_EXT_SU	= 1,
-+	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_MU		= 2,
-+	IEEE80211_RADIOTAP_HE_DATA1_FORMAT_TRIG		= 3,
-+
-+	IEEE80211_RADIOTAP_HE_DATA1_BSS_COLOR_KNOWN	= 0x0004,
-+	IEEE80211_RADIOTAP_HE_DATA1_BEAM_CHANGE_KNOWN	= 0x0008,
-+	IEEE80211_RADIOTAP_HE_DATA1_UL_DL_KNOWN		= 0x0010,
-+	IEEE80211_RADIOTAP_HE_DATA1_DATA_MCS_KNOWN	= 0x0020,
-+	IEEE80211_RADIOTAP_HE_DATA1_DATA_DCM_KNOWN	= 0x0040,
-+	IEEE80211_RADIOTAP_HE_DATA1_CODING_KNOWN	= 0x0080,
-+	IEEE80211_RADIOTAP_HE_DATA1_LDPC_XSYMSEG_KNOWN	= 0x0100,
-+	IEEE80211_RADIOTAP_HE_DATA1_STBC_KNOWN		= 0x0200,
-+	IEEE80211_RADIOTAP_HE_DATA1_SPTL_REUSE_KNOWN	= 0x0400,
-+	IEEE80211_RADIOTAP_HE_DATA1_SPTL_REUSE2_KNOWN	= 0x0800,
-+	IEEE80211_RADIOTAP_HE_DATA1_SPTL_REUSE3_KNOWN	= 0x1000,
-+	IEEE80211_RADIOTAP_HE_DATA1_SPTL_REUSE4_KNOWN	= 0x2000,
-+	IEEE80211_RADIOTAP_HE_DATA1_BW_RU_ALLOC_KNOWN	= 0x4000,
-+	IEEE80211_RADIOTAP_HE_DATA1_DOPPLER_KNOWN	= 0x8000,
-+
-+	IEEE80211_RADIOTAP_HE_DATA2_PRISEC_80_KNOWN	= 0x0001,
-+	IEEE80211_RADIOTAP_HE_DATA2_GI_KNOWN		= 0x0002,
-+	IEEE80211_RADIOTAP_HE_DATA2_NUM_LTF_SYMS_KNOWN	= 0x0004,
-+	IEEE80211_RADIOTAP_HE_DATA2_PRE_FEC_PAD_KNOWN	= 0x0008,
-+	IEEE80211_RADIOTAP_HE_DATA2_TXBF_KNOWN		= 0x0010,
-+	IEEE80211_RADIOTAP_HE_DATA2_PE_DISAMBIG_KNOWN	= 0x0020,
-+	IEEE80211_RADIOTAP_HE_DATA2_TXOP_KNOWN		= 0x0040,
-+	IEEE80211_RADIOTAP_HE_DATA2_MIDAMBLE_KNOWN	= 0x0080,
-+	IEEE80211_RADIOTAP_HE_DATA2_RU_OFFSET		= 0x3f00,
-+	IEEE80211_RADIOTAP_HE_DATA2_RU_OFFSET_KNOWN	= 0x4000,
-+	IEEE80211_RADIOTAP_HE_DATA2_PRISEC_80_SEC	= 0x8000,
-+
-+	IEEE80211_RADIOTAP_HE_DATA3_BSS_COLOR		= 0x003f,
-+	IEEE80211_RADIOTAP_HE_DATA3_BEAM_CHANGE		= 0x0040,
-+	IEEE80211_RADIOTAP_HE_DATA3_UL_DL		= 0x0080,
-+	IEEE80211_RADIOTAP_HE_DATA3_DATA_MCS		= 0x0f00,
-+	IEEE80211_RADIOTAP_HE_DATA3_DATA_DCM		= 0x1000,
-+	IEEE80211_RADIOTAP_HE_DATA3_CODING		= 0x2000,
-+	IEEE80211_RADIOTAP_HE_DATA3_LDPC_XSYMSEG	= 0x4000,
-+	IEEE80211_RADIOTAP_HE_DATA3_STBC		= 0x8000,
-+
-+	IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC	= 0x000f,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_20MHZ	= 0,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_40MHZ	= 1,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_80MHZ	= 2,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_160MHZ	= 3,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_26T	= 4,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_52T	= 5,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_106T	= 6,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_242T	= 7,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_484T	= 8,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_996T	= 9,
-+		IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_2x996T	= 10,
-+
-+	IEEE80211_RADIOTAP_HE_DATA5_GI			= 0x0030,
-+		IEEE80211_RADIOTAP_HE_DATA5_GI_0_8			= 0,
-+		IEEE80211_RADIOTAP_HE_DATA5_GI_1_6			= 1,
-+		IEEE80211_RADIOTAP_HE_DATA5_GI_3_2			= 2,
-+
-+	IEEE80211_RADIOTAP_HE_DATA5_NUM_LTF_SYMS	= 0x0700,
-+	IEEE80211_RADIOTAP_HE_DATA5_PRE_FEC_PAD		= 0x3000,
-+	IEEE80211_RADIOTAP_HE_DATA5_TXBF		= 0x4000,
-+	IEEE80211_RADIOTAP_HE_DATA5_PE_DISAMBIG		= 0x8000,
-+
-+	IEEE80211_RADIOTAP_HE_DATA6_NSTS		= 0x000f,
-+	IEEE80211_RADIOTAP_HE_DATA6_DOPPLER		= 0x0010,
-+	IEEE80211_RADIOTAP_HE_DATA6_TXOP		= 0x7f00,
-+	IEEE80211_RADIOTAP_HE_DATA6_MIDAMBLE_PDCTY	= 0x8000,
-+};
-+
-+struct ieee80211_radiotap_he_mu {
-+	__le16 flags1, flags2;
-+	u8 ru_ch1[4];
-+	u8 ru_ch2[4];
-+};
-+
-+enum ieee80211_radiotap_he_mu_bits {
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_MCS		= 0x000f,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_MCS_KNOWN		= 0x0010,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_DCM		= 0x0020,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_DCM_KNOWN		= 0x0040,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH2_CTR_26T_RU_KNOWN	= 0x0080,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH1_RU_KNOWN		= 0x0100,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH2_RU_KNOWN		= 0x0200,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH1_CTR_26T_RU_KNOWN	= 0x1000,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_CH1_CTR_26T_RU		= 0x2000,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_COMP_KNOWN	= 0x4000,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_SYMS_USERS_KNOWN	= 0x8000,
-+
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW	= 0x0003,
-+		IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_20MHZ	= 0x0000,
-+		IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_40MHZ	= 0x0001,
-+		IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_80MHZ	= 0x0002,
-+		IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_160MHZ	= 0x0003,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS2_BW_FROM_SIG_A_BW_KNOWN	= 0x0004,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS2_SIG_B_COMP		= 0x0008,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS2_SIG_B_SYMS_USERS	= 0x00f0,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS2_PUNC_FROM_SIG_A_BW	= 0x0300,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS2_PUNC_FROM_SIG_A_BW_KNOWN= 0x0400,
-+	IEEE80211_RADIOTAP_HE_MU_FLAGS2_CH2_CTR_26T_RU		= 0x0800,
-+};
-+
- /**
-  * ieee80211_get_radiotap_len - get radiotap header length
-  */
--- 
-2.17.1
+BR,
+Eyal
