@@ -1,74 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:8556 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751155AbeFDF32 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:52858 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754809AbeFNLII (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Jun 2018 01:29:28 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 4/4] staging: wilc1000: move 'txq_spinlock_flags' from 'wilc' structure to local variable
-Date: Mon, 4 Jun 2018 10:59:10 +0530
-Message-ID: <1528090150-5397-5-git-send-email-ajay.kathat@microchip.com> (sfid-20180604_073035_081990_D804DD0F)
-In-Reply-To: <1528090150-5397-1-git-send-email-ajay.kathat@microchip.com>
-References: <1528090150-5397-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 14 Jun 2018 07:08:08 -0400
+Message-ID: <1528974485.26847.3.camel@sipsolutions.net> (sfid-20180614_130811_796047_F74CC080)
+Subject: Re: [PATCH v2 2/5] mac80211: use BIT_ULL for NL80211_STA_INFO_*
+ attribute types
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Omer Efrat <omer.efrat@tandemg.com>, linux-wireless@vger.kernel.org
+Date: Thu, 14 Jun 2018 13:08:05 +0200
+In-Reply-To: <1528971073-349-1-git-send-email-omer.efrat@tandemg.com> (sfid-20180614_121125_842548_E3DF065D)
+References: <1528971073-349-1-git-send-email-omer.efrat@tandemg.com>
+         (sfid-20180614_121125_842548_E3DF065D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to remove 'txq_spinlock_flags' element in 'wilc' and used
-local variable 'flag' in wilc_wlan_txq_filter_dup_tcp_ack().
+On Thu, 2018-06-14 at 13:11 +0300, Omer Efrat wrote:
+> Since 'filled' member in station_info changed to u64, BIT_ULL macro
+> should be used with NL80211_STA_INFO_* attribute types instead of BIT.
+> 
+> The BIT macro uses unsigned long type which some architectures handle as 32bit
+> and this results in compilation warnings such as:
+> 
+> net/mac80211/sta_info.c:2223:2: warning: left shift count >= width of type
+>   sinfo->filled |= BIT(NL80211_STA_INFO_TID_STATS);
+>   ^
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 2 --
- drivers/staging/wilc1000/wilc_wlan.c          | 5 +++--
- 2 files changed, 3 insertions(+), 4 deletions(-)
+It seems like the only change needed is with
+BIT(NL80211_STA_INFO_TID_STATS), so I'd argue you should restrict the
+patch to that.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index afba372..fe18ae9 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -155,8 +155,6 @@ struct wilc {
- 	u32 rx_buffer_offset;
- 	u8 *tx_buffer;
- 
--	unsigned long txq_spinlock_flags;
--
- 	struct txq_entry_t txq_head;
- 	int txq_entries;
- 	int txq_exit;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 26252d1..55755d7 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -219,11 +219,12 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- 	struct wilc *wilc;
- 	u32 i = 0;
- 	u32 dropped = 0;
-+	unsigned long flags;
- 
- 	vif = netdev_priv(dev);
- 	wilc = vif->wilc;
- 
--	spin_lock_irqsave(&wilc->txq_spinlock, wilc->txq_spinlock_flags);
-+	spin_lock_irqsave(&wilc->txq_spinlock, flags);
- 	for (i = pending_base; i < (pending_base + pending_acks); i++) {
- 		u32 session_index;
- 		u32 bigger_ack_num;
-@@ -261,7 +262,7 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- 	else
- 		pending_base = 0;
- 
--	spin_unlock_irqrestore(&wilc->txq_spinlock, wilc->txq_spinlock_flags);
-+	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
- 
- 	while (dropped > 0) {
- 		wait_for_completion_timeout(&wilc->txq_event,
--- 
-2.7.4
+
+Perhaps, though I'm not sure I see it, there's some value in switching
+them all so that if you copy something and change it to a new value you
+don't run into this problem again, but if anything that should be (a)
+separate patch(es) since this one is a bugfix and the others aren't.
+
+johannes
