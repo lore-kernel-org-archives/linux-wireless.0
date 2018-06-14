@@ -1,53 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:46927 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752187AbeF0M2X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Jun 2018 08:28:23 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Manikanta Pubbisetty <mpubbise@codeaurora.org>,
-        johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: add stop/start logic for software TXQs
-In-Reply-To: <5adc5faf-8af0-7af9-8261-784a7ec0e4f7@codeaurora.org>
-References: <1529997415-20551-1-git-send-email-mpubbise@codeaurora.org> <878t71n611.fsf@toke.dk> <5adc5faf-8af0-7af9-8261-784a7ec0e4f7@codeaurora.org>
-Date: Wed, 27 Jun 2018 14:28:24 +0200
-Message-ID: <87tvpol8gn.fsf@toke.dk> (sfid-20180627_142827_257365_36AA72D1)
+Received: from mail-eopbgr60104.outbound.protection.outlook.com ([40.107.6.104]:11993
+        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754737AbeFNKK5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Jun 2018 06:10:57 -0400
+From: Omer Efrat <omer.efrat@tandemg.com>
+To: linux-wireless@vger.kernel.org
+Cc: Omer Efrat <omer.efrat@tandemg.com>
+Subject: [PATCH v2 0/5] use BIT_ULL for NL80211_STA_INFO_* attribute types
+Date: Thu, 14 Jun 2018 13:08:45 +0300
+Message-Id: <1528970925-32697-1-git-send-email-omer.efrat@tandemg.com> (sfid-20180614_121101_416478_7E600BA0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Manikanta Pubbisetty <mpubbise@codeaurora.org> writes:
+Since 'filled' member in station_info changed to u64, BIT_ULL macro
+should be used with NL80211_STA_INFO_* attribute types instead of BIT.
 
-> On 6/26/2018 4:55 PM, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> Manikanta Pubbisetty <mpubbise@codeaurora.org> writes:
->>
->>> We can still invoke netif stop/wake APIs when wake_tx_queue is
->>> implemented but this could lead to packet drops in network layer;
->>> adding stop/start logic for software TXQs in mac80211 instead makes
->>> more sense; the change proposed adds the same in mac80211.
->> I agree with the approach; having packets queued in mac80211 while the
->> queues are stopped also means that CoDel can react to them when they are
->> resumed again.
->
-> Agreed!!
->
->>
->>> +	list_for_each_entry_rcu(sta, &local->sta_list, list) {
->>> +		if (!atomic_read(&sta->txqs_paused))
->>> +			continue;
->>> +
->>> +		atomic_set(&sta->txqs_paused, 0);
->> I'm not terribly well-versed in the kernel atomics, but doesn't the
->> split of read and set kinda defeat the point of using them? Also, as
->> this is under RCU, why do you need an atomic in the first place?
-> Valid point, txqs_paused is set in ieee80211_tx_dequeue; I was thinking=20
-> a case where tx_dequeue is called without rcu_read_lock but seems that=20
-> is not the case. All drivers using wake_tx_queue seems are using=20
-> rcu_read_lock before tx_dequeue; can there be a case where tx_dequeue is=
-=20
-> called without rcu_read_lock?
+The BIT macro uses unsigned long type which some architectures handle as 32bit
+and this results in compilation warnings such as:
 
-I'm pretty sure we would have other problems if there were... :)
+net/mac80211/sta_info.c:2223:2: warning: left shift count >= width of type
+  sinfo->filled |= BIT(NL80211_STA_INFO_TID_STATS);
+  ^
 
--Toke
+This patch series replaces the described BIT usage with BIT_ULL.
+
+Changes in v2: Split patches so cfg80211, mac80211 and batman will be
+  seperated.
+
+Omer Efrat (5):
+  cfg80211: use BIT_ULL for NL80211_STA_INFO_* attribute types
+  mac80211: use BIT_ULL for NL80211_STA_INFO_* attribute types
+  batman: use BIT_ULL for NL80211_STA_INFO_* attribute types
+  wireless-drivers: use BIT_ULL for NL80211_STA_INFO_* attribute types
+  staging: use BIT_ULL for NL80211_STA_INFO_* attribute types
+
+ drivers/net/wireless/ath/ath6kl/cfg80211.c         | 14 ++--
+ drivers/net/wireless/ath/wil6210/cfg80211.c        | 18 ++---
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 40 +++++------
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  6 +-
+ drivers/net/wireless/marvell/libertas/cfg.c        | 12 ++--
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c    | 14 ++--
+ drivers/net/wireless/quantenna/qtnfmac/commands.c  | 32 ++++-----
+ drivers/net/wireless/rndis_wlan.c                  |  4 +-
+ drivers/net/wireless/ti/wlcore/main.c              |  2 +-
+ drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c  | 10 +--
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c  | 14 ++--
+ drivers/staging/wlan-ng/cfg80211.c                 |  4 +-
+ net/batman-adv/bat_v_elp.c                         |  2 +-
+ net/mac80211/ethtool.c                             |  6 +-
+ net/mac80211/sta_info.c                            | 84 +++++++++++-----------
+ net/wireless/nl80211.c                             | 22 +++---
+ net/wireless/wext-compat.c                         | 10 +--
+ 17 files changed, 147 insertions(+), 147 deletions(-)
+
+-- 
+2.7.4
