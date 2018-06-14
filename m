@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns.pmeerw.net ([84.19.176.117]:42844 "EHLO ns.pmeerw.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751375AbeFDUkw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Jun 2018 16:40:52 -0400
-From: Peter Meerwald-Stadler <pmeerw@pmeerw.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Peter Meerwald-Stadler <pmeerw@pmeerw.net>
-Subject: [PATCH] rfkill: Correctly document rkill subfolder range as >= 0 in sysfs-class-rfkill
-Date: Mon,  4 Jun 2018 22:32:43 +0200
-Message-Id: <20180604203243.28612-1-pmeerw@pmeerw.net> (sfid-20180604_224159_255728_05AEBC8A)
+Received: from smtp.codeaurora.org ([198.145.29.96]:48128 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965431AbeFNOYX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Jun 2018 10:24:23 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Loic Poulain <loic.poulain@linaro.org>
+Cc: linux-wireless@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH 1/3] wcn36xx: Fix WEP104 encryption type
+References: <1527506960-13358-1-git-send-email-loic.poulain@linaro.org>
+Date: Thu, 14 Jun 2018 17:24:19 +0300
+In-Reply-To: <1527506960-13358-1-git-send-email-loic.poulain@linaro.org> (Loic
+        Poulain's message of "Mon, 28 May 2018 13:29:18 +0200")
+Message-ID: <87k1r18mzw.fsf@kamboji.qca.qualcomm.com> (sfid-20180614_162439_756533_4E7B2E2C)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The first subfolder is rfkill0, hence rfkillX (X >= 0).
-Also fix two trivial typos.
+Loic Poulain <loic.poulain@linaro.org> writes:
 
-Signed-off-by: Peter Meerwald-Stadler <pmeerw@pmeerw.net>
----
- Documentation/ABI/stable/sysfs-class-rfkill | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+> ---
+>  drivers/net/wireless/ath/wcn36xx/main.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+> index aeb5e6e..4648a78 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/main.c
+> +++ b/drivers/net/wireless/ath/wcn36xx/main.c
+> @@ -512,7 +512,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+>  		vif_priv->encrypt_type = WCN36XX_HAL_ED_WEP40;
+>  		break;
+>  	case WLAN_CIPHER_SUITE_WEP104:
+> -		vif_priv->encrypt_type = WCN36XX_HAL_ED_WEP40;
+> +		vif_priv->encrypt_type = WCN36XX_HAL_ED_WEP104;
+>  		break;
+>  	case WLAN_CIPHER_SUITE_CCMP:
+>  		vif_priv->encrypt_type = WCN36XX_HAL_ED_CCMP;
 
-diff --git a/Documentation/ABI/stable/sysfs-class-rfkill b/Documentation/ABI/stable/sysfs-class-rfkill
-index e1ba4a104753..80151a409d67 100644
---- a/Documentation/ABI/stable/sysfs-class-rfkill
-+++ b/Documentation/ABI/stable/sysfs-class-rfkill
-@@ -11,7 +11,7 @@ KernelVersion:	v2.6.22
- Contact:	linux-wireless@vger.kernel.org,
- Description: 	The rfkill class subsystem folder.
- 		Each registered rfkill driver is represented by an rfkillX
--		subfolder (X being an integer > 0).
-+		subfolder (X being an integer >= 0).
- 
- 
- What:		/sys/class/rfkill/rfkill[0-9]+/name
-@@ -48,8 +48,8 @@ Contact:	linux-wireless@vger.kernel.org
- Description: 	Current state of the transmitter.
- 		This file was scheduled to be removed in 2014, but due to its
- 		large number of users it will be sticking around for a bit
--		longer. Despite it being marked as stabe, the newer "hard" and
--		"soft" interfaces should be preffered, since it is not possible
-+		longer. Despite it being marked as stable, the newer "hard" and
-+		"soft" interfaces should be preferred, since it is not possible
- 		to express the 'soft and hard block' state of the rfkill driver
- 		through this interface. There will likely be another attempt to
- 		remove it in the future.
+No empty commit logs, please. I'll add "This is an obvious copy&paste
+bug".
+
 -- 
-2.11.0
+Kalle Valo
