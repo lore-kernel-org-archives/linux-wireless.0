@@ -1,45 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:34956 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751528AbeF3UpU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Jun 2018 16:45:20 -0400
-Message-ID: <1530391517.7210.1.camel@sipsolutions.net> (sfid-20180630_224531_626923_17DF05CB)
-Subject: Re: pull-request: mac80211-next 2018-06-29
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Sat, 30 Jun 2018 22:45:17 +0200
-In-Reply-To: <20180630.211728.888180353537471428.davem@davemloft.net>
-References: <20180629115906.2045-1-johannes@sipsolutions.net>
-         <20180630.211728.888180353537471428.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-eopbgr10098.outbound.protection.outlook.com ([40.107.1.98]:22688
+        "EHLO EUR02-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754764AbeFNKNn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Jun 2018 06:13:43 -0400
+From: Omer Efrat <omer.efrat@tandemg.com>
+To: linux-wireless@vger.kernel.org
+Cc: devel@driverdev.osuosl.org, Omer Efrat <omer.efrat@tandemg.com>
+Subject: [PATCH v2 5/5] staging: use BIT_ULL for NL80211_STA_INFO_* attribute types
+Date: Thu, 14 Jun 2018 13:13:37 +0300
+Message-Id: <1528971217-566-1-git-send-email-omer.efrat@tandemg.com> (sfid-20180614_121347_502894_F98D1325)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2018-06-30 at 21:17 +0900, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Fri, 29 Jun 2018 13:59:05 +0200
-> 
-> > Here's the next round of -next updates. This includes the promised
-> > HE stuff but it's not all that big in the end, most of it is just
-> > additions to the protocol header file :-)
-> 
-> :-)
-> 
-> > Please pull and let me know if there's any problem.
-> 
-> There was a small merge conflict in net/mac80211/scan.c, I arranged
-> it such that the kcalloc() conversion was preserved.
+Since 'filled' member in station_info changed to u64, BIT_ULL macro
+should be used with NL80211_STA_INFO_* attribute types instead of BIT.
 
-Huh, sorry, hadn't seen that massive patch, I see it now.
+The BIT macro uses unsigned long type which some architectures handle as 32bit
+and this results in compilation warnings such as:
 
-> Please send me any necessary fixups if I didn't do it properly.
+net/mac80211/sta_info.c:2223:2: warning: left shift count >= width of type
+  sinfo->filled |= BIT(NL80211_STA_INFO_TID_STATS);
+  ^
 
-No need, looks fine. I diffed it to my tree and the only change is the
-kcalloc conversion, as expected.
+Signed-off-by: Omer Efrat <omer.efrat@tandemg.com>
+---
+ drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c | 10 +++++-----
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++++++-------
+ drivers/staging/wlan-ng/cfg80211.c                |  4 ++--
+ 3 files changed, 14 insertions(+), 14 deletions(-)
 
-Thanks!
-
-johannes
+diff --git a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
+index 46bc2e5..d0c5dbd 100644
+--- a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
++++ b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
+@@ -1281,16 +1281,16 @@ static int cfg80211_rtw_get_station(struct wiphy *wiphy,
+ 			goto exit;
+ 		}
+ 
+-		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
+ 		sinfo->signal = translate_percentage_to_dbm(padapter->recvpriv.signal_strength);
+ 
+-		sinfo->filled |= BIT(NL80211_STA_INFO_TX_BITRATE);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
+ 		sinfo->txrate.legacy = rtw_get_cur_max_rate(padapter);
+ 
+-		sinfo->filled |= BIT(NL80211_STA_INFO_RX_PACKETS);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_PACKETS);
+ 		sinfo->rx_packets = sta_rx_data_pkts(psta);
+ 
+-		sinfo->filled |= BIT(NL80211_STA_INFO_TX_PACKETS);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_PACKETS);
+ 		sinfo->tx_packets = psta->sta_stats.tx_pkts;
+ 
+ 	}
+@@ -3021,7 +3021,7 @@ static int	cfg80211_rtw_dump_station(struct wiphy *wiphy, struct net_device *nde
+ 		goto exit;
+ 	}
+ 	memcpy(mac, psta->hwaddr, ETH_ALEN);
+-	sinfo->filled = BIT(NL80211_STA_INFO_SIGNAL);
++	sinfo->filled = BIT_ULL(NL80211_STA_INFO_SIGNAL);
+ 	sinfo->signal = psta->rssi;
+ 
+ exit:
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 730d64f..830b48c 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1184,7 +1184,7 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
+ 			return -ENOENT;
+ 		}
+ 
+-		sinfo->filled |= BIT(NL80211_STA_INFO_INACTIVE_TIME);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_INACTIVE_TIME);
+ 
+ 		wilc_get_inactive_time(vif, mac, &inactive_time);
+ 		sinfo->inactive_time = 1000 * inactive_time;
+@@ -1195,11 +1195,11 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 		wilc_get_statistics(vif, &stats);
+ 
+-		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL) |
+-						BIT(NL80211_STA_INFO_RX_PACKETS) |
+-						BIT(NL80211_STA_INFO_TX_PACKETS) |
+-						BIT(NL80211_STA_INFO_TX_FAILED) |
+-						BIT(NL80211_STA_INFO_TX_BITRATE);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL) |
++						BIT_ULL(NL80211_STA_INFO_RX_PACKETS) |
++						BIT_ULL(NL80211_STA_INFO_TX_PACKETS) |
++						BIT_ULL(NL80211_STA_INFO_TX_FAILED) |
++						BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
+ 
+ 		sinfo->signal = stats.rssi;
+ 		sinfo->rx_packets = stats.rx_cnt;
+@@ -1776,7 +1776,7 @@ static int dump_station(struct wiphy *wiphy, struct net_device *dev,
+ 	priv = wiphy_priv(wiphy);
+ 	vif = netdev_priv(priv->dev);
+ 
+-	sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
++	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
+ 
+ 	wilc_get_rssi(vif, &sinfo->signal);
+ 
+diff --git a/drivers/staging/wlan-ng/cfg80211.c b/drivers/staging/wlan-ng/cfg80211.c
+index 4291225..07c52e3 100644
+--- a/drivers/staging/wlan-ng/cfg80211.c
++++ b/drivers/staging/wlan-ng/cfg80211.c
+@@ -282,9 +282,9 @@ static int prism2_get_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	if (result == 0) {
+ 		sinfo->txrate.legacy = quality.txrate.data;
+-		sinfo->filled |= BIT(NL80211_STA_INFO_TX_BITRATE);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
+ 		sinfo->signal = quality.level.data;
+-		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
+ 	}
+ 
+ 	return result;
+-- 
+2.7.4
