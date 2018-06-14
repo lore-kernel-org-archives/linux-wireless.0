@@ -1,55 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:46486 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752237AbeFYV4D (ORCPT
+Received: from dnvrco-outbound-snat.email.rr.com ([107.14.73.231]:8465 "EHLO
+        dnvrco-cmomta01.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751349AbeFNEPS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Jun 2018 17:56:03 -0400
-Received: by mail-wr0-f196.google.com with SMTP id l14-v6so10074923wrq.13
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2018 14:56:03 -0700 (PDT)
+        Thu, 14 Jun 2018 00:15:18 -0400
+Message-ID: <20180614041517.1GPY0.168676.root@dnvrco-web14> (sfid-20180614_061522_809149_0CA07418)
+Date: Thu, 14 Jun 2018 4:15:17 +0000
+From: <mgreger@cinci.rr.com>
+To: sedat.dilek@gmail.com, mgreger@cinci.rr.com
+Subject: Re: Atheros AR9462 - 5Ghz not working
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20180612181932.KVWU0.184603.root@dnvrco-web01>
 MIME-Version: 1.0
-In-Reply-To: <CANcMJZASEDRxaXwdG96nNeEDPrDm_ap5MjhXonEcg=yHZ8F=qg@mail.gmail.com>
-References: <20180613151305.17240-1-ryan@edited.us> <CANcMJZASEDRxaXwdG96nNeEDPrDm_ap5MjhXonEcg=yHZ8F=qg@mail.gmail.com>
-From: John Stultz <john.stultz@linaro.org>
-Date: Mon, 25 Jun 2018 14:56:02 -0700
-Message-ID: <CALAqxLWjJKsU+XJmANzx-aO2ruszwbBnPV2yV5WoyVStO+5K0A@mail.gmail.com> (sfid-20180625_235624_067561_1F8C6468)
-Subject: Re: [PATCH] arm64: dts: hikey: Define wl1835 power capabilities
-To: Ryan Grachek <ryan@edited.us>
-Cc: Mark Rutland <mark.rutland@arm.com>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
-        <devicetree@vger.kernel.org>, Tony Lindgren <tony@atomide.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Wei Xu <xuwei5@hisilicon.com>, Eyal Reizer <eyalr@ti.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Valentin Schneider <Valentin.Schneider@arm.com>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 13, 2018 at 11:30 AM, John Stultz <john.stultz@linaro.org> wrote:
-> On Wed, Jun 13, 2018 at 8:13 AM, Ryan Grachek <ryan@edited.us> wrote:
->> These properties are required for compatibility with runtime PM.
->> Without these properties, MMC host controller will not be aware
->> of power capabilities. When the wlcore driver attempts to power
->> on the device, it will erroneously fail with -EACCES.
->>
->> Signed-off-by: Ryan Grachek <ryan@edited.us>
->
-> Fixes: 60f36637bbbd ("wlcore: sdio: allow pm to handle sdio power")
-> Tested-by: John Stultz <john.stultz@linaro.org>
-> Acked-by: John Stultz <john.stultz@linaro.org>
->
-> Wei Xu: This fixes a functional regression with wifi on the HiKey
-> board that was introduced in 4.18-rc with commit 60f36637bbbd
-> ("wlcore: sdio: allow pm to handle sdio power").
 
-Wei Xu: Just wanted to follow up to make sure this wasn't missed for
-4.18-rc, as I haven't seen it upstream or in -next, and it fixes a
-recently introduced regression.
+---- mgreger@cinci.rr.com wrote: 
+> 
+> ---- mgreger@cinci.rr.com wrote: 
+> > 
+> > ---- mgreger@cinci.rr.com wrote: 
+> > > 
+> > > ---- Sedat Dilek <sedat.dilek@gmail.com> wrote: 
+> > > > On Tue, May 22, 2018 at 7:21 PM,  <mgreger@cinci.rr.com> wrote:
+> > > > > I've run out of ideas and am hoping someone here can help.
+> > > > >
+> > > > > All I want to do is connect a client to my 5Ghz network.
+> > > > >
+> > > > > My client:
+> > > > >   OS is Debian stable "Stretch" with sysvinit instead of systemd
+> > > > >   Atheros AR9462 (World roaming 0x64 regdomain in EEPROM)
+> > > > >   "iw reg set US"
+> > > > >   "iw list" shows both 2.4Ghz and 5Ghz bands available.
+> > > > >   "iw wlp3s0 survey dump" shows received traffic on 5Ghz bands.
+> > > > >
+> > > > > There are oodles of 5Ghz AP's within range, but scans (including passive scans) reveal only 2.4Ghz networks. My only guess was that it won't transmit due to regulatory requirements, but I cannot make it work.
+> > > > >
+> > > > > What I've tried:
+> > > > >   Running with and without CRDA
+> > > > >   Running latest mainline kernel
+> > > > >   Hacking around on the ath9k driver and nl80211 to remove all regulatory enforcement.
+> > > > >
+> > > > > Nothing works and I'm pulling my hair out. Any help would be greatly appreciated.
+> > > > 
+> > > > Hi,
+> > > > 
+> > > > I try to give some initial help.
+> > > > 
+> > > > The linux-wireless driver is supported by ath9k driver see [1] and [2].
+> > > > 
+> > > > Unfortunately, you have not sent any log-files at least your dmesg-log.
+> > > > No output of the above userspace commands or userspace-tools versions.
+> > > > No information to VendorID/ProductID (PCI, USB, whatever).
+> > > > It's not clear to me if this is a kernelspace (ath9k-driver) or
+> > > > userspace (CRDA/regulatory) problem.
+> > > > How should someone help you effectively?
+> > > > 
+> > > > The linux-wireless wiki has somne informations on how to debug
+> > > > Atheros/Qualcomm ath9k-driver, see [3].
+> > > > 
+> > > > As a debianist I say try Linux v4.16 Debian packages from
+> > > > stretch-backports (and maybe a higher version of wireless-regdb).
+> > > > 
+> > > > Try to ask questions the smart way [4] :-).
+> > > > 
+> > > > Hope this helps.
+> > > > 
+> > > > Regards,
+> > > > - Sedat -
+> > > > 
+> > > > [1] https://wireless.wiki.kernel.org/en/users/drivers/ath9k
+> > > > [2] https://wireless.wiki.kernel.org/en/users/drivers/ath9k/devices
+> > > > [3] https://wireless.wiki.kernel.org/en/users/drivers/ath9k/debug
+> > > > [4] http://www.catb.org/esr/faqs/smart-questions.html
+> > > 
+> > > 
+> > > I have also built the latest wireless-regdb and crda, but it made no difference.
+> > 
+> > 
+> > 
+> > Did any of the information I posted point towards a cause?
+> 
+> 
+> Also, I'll gladly send one of these adapters to someone with ath9k experience if they suspect they can make it work.
+> Just message me.   :)
 
-thanks
--john
+
+I'm surprised at the apparent lack of interest in this by anybody whatsoever.
+
+Are there any other M.2 cards (both A and E keyed) on the market that support dual band with a fully open driver and requiring no proprietary firmware?
+
+Maybe it was too good to be true and there is no such thing?
