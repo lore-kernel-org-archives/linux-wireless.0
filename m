@@ -1,38 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:33834 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933316AbeF2HmX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 03:42:23 -0400
-Message-ID: <1530258140.3481.4.camel@sipsolutions.net> (sfid-20180629_094241_011228_C7069235)
-Subject: Re: [PATCH] cfg80211: use IDA to allocate wiphy indeces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Brian Norris <briannorris@chromium.org>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Date: Fri, 29 Jun 2018 09:42:20 +0200
-In-Reply-To: <20180621012945.185705-1-briannorris@chromium.org> (sfid-20180621_033004_543173_9D94C00F)
-References: <20180621012945.185705-1-briannorris@chromium.org>
-         (sfid-20180621_033004_543173_9D94C00F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from s2.neomailbox.net ([5.148.176.60]:14275 "EHLO s2.neomailbox.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935733AbeFNC0R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 13 Jun 2018 22:26:17 -0400
+From: Antonio Quartulli <a@unstable.cc>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Denis Kenzior <denkenz@gmail.com>,
+        Antonio Quartulli <a@unstable.cc>
+Subject: [PATCH] nl80211: report 4ADDR status with GET_INTERFACE
+Date: Thu, 14 Jun 2018 09:43:06 +0800
+Message-Id: <20180614014306.6702-1-a@unstable.cc> (sfid-20180614_042641_836282_4F87DDDA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Brian,
+User space tools might be interested in knowing the current
+status of the 4ADDR property of an interface (when supported).
 
-On Wed, 2018-06-20 at 18:29 -0700, Brian Norris wrote:
-> It's annoying to see the phy index increase arbitrarily, just because a
-> device got removed and re-probed (e.g., during a device reset, or due to
-> probe testing). We can use the in-kernel index allocator for this,
-> instead of just an increasing counter.
+Send the status along with the other attributes when replying
+to a GET_INTERFACE netlink query.
 
-I can understand that it's somewhat annoying to people, but it was
-actually done on purpose to avoid userspace talking to the wrong device.
+Signed-off-by: Antonio Quartulli <a@unstable.cc>
+---
+ net/wireless/nl80211.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Imagine you have some userspace process running that has remembered the
-wiphy index to use it to talk to nl80211, and now underneath the device
-goes away and reappears. This process should understand that situation,
-and handle it accordingly, rather than being blind to the reset.
-
-johannes
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 07514ca011b2..cfed20dbaa7e 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2757,7 +2757,8 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, wdev_address(wdev)) ||
+ 	    nla_put_u32(msg, NL80211_ATTR_GENERATION,
+ 			rdev->devlist_generation ^
+-			(cfg80211_rdev_list_generation << 2)))
++			(cfg80211_rdev_list_generation << 2)) ||
++	    nla_put_u8(msg, NL80211_ATTR_4ADDR, wdev->use_4addr))
+ 		goto nla_put_failure;
+ 
+ 	if (rdev->ops->get_channel) {
+-- 
+2.17.1
