@@ -1,80 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:33200 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932162AbeFTTg6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47676 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752831AbeFNGU0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Jun 2018 15:36:58 -0400
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: netdev@vger.kernel.org
-Cc: linux-usb@vger.kernel.org, tglx@linutronix.de,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 2/4] libertas_tf: use irqsave() in USB's complete callback
-Date: Wed, 20 Jun 2018 21:36:46 +0200
-Message-Id: <20180620193648.25136-3-bigeasy@linutronix.de> (sfid-20180620_213724_833114_E6C56719)
-In-Reply-To: <20180620193648.25136-1-bigeasy@linutronix.de>
-References: <20180620193648.25136-1-bigeasy@linutronix.de>
+        Thu, 14 Jun 2018 02:20:26 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: John Stultz <john.stultz@linaro.org>
+Cc: Ryan Grachek <ryan@edited.us>, Wei Xu <xuwei5@hisilicon.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        "open list\:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+        <devicetree@vger.kernel.org>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        lkml <linux-kernel@vger.kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Valentin Schneider <valentin.schneider@arm.com>,
+        linux-arm-kernel@lists.infradead.org, Eyal Reizer <eyalr@ti.com>,
+        Tony Lindgren <tony@atomide.com>,
+        linux-wireless@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] arm64: dts: hikey960: Define wl1837 power capabilities
+References: <20180613180321.16745-1-ryan@edited.us>
+        <CALAqxLWuUJYfXszaO01KODbom8WykKQKm0X3fzPTwSRK+G3zqw@mail.gmail.com>
+Date: Thu, 14 Jun 2018 09:20:18 +0300
+In-Reply-To: <CALAqxLWuUJYfXszaO01KODbom8WykKQKm0X3fzPTwSRK+G3zqw@mail.gmail.com>
+        (John Stultz's message of "Wed, 13 Jun 2018 12:36:40 -0700")
+Message-ID: <874li5c2jh.fsf@purkki.adurom.net> (sfid-20180614_082124_467687_5A303668)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The USB completion callback does not disable interrupts while acquiring
-the lock. We want to remove the local_irq_disable() invocation from
-__usb_hcd_giveback_urb() and therefore it is required for the callback
-handler to disable the interrupts while acquiring the lock.
-The callback may be invoked either in IRQ or BH context depending on the
-USB host controller.
-Use the _irqsave() variant of the locking primitives.
+John Stultz <john.stultz@linaro.org> writes:
 
-I am removing the
-	BUG_ON(!in_interrupt());
+> On Wed, Jun 13, 2018 at 11:03 AM, Ryan Grachek <ryan@edited.us> wrote:
+>> These properties are required for compatibility with runtime PM.
+>> Without these properties, MMC host controller will not be aware
+>> of power capabilities. When the wlcore driver attempts to power
+>> on the device, it will erroneously fail with -EACCES. This fixes
+>> a regression found here: https://lkml.org/lkml/2018/6/12/930
+>>
+>> Signed-off-by: Ryan Grachek <ryan@edited.us>
+>
+> Fixes: 60f36637bbbd ("wlcore: sdio: allow pm to handle sdio power")
+> Tested-by: John Stultz <john.stultz@linaro.org>
+> Acked-by: John Stultz <john.stultz@linaro.org>
+>
+> Wei Xu: This also fixes a functional regression with wifi on the
+> HiKey960 board that was introduced in 4.18-rc with commit 60f36637bbbd
+> ("wlcore: sdio: allow pm to handle sdio power").
+>
+> Could you please be sure to queue this for the 4.18-rc too?
 
-check because it serves no purpose. Running the completion callback in
-BH context makes in_interrupt() still return true but the interrupts
-could be enabled. The important part is that ->driver_lock is acquired
-with disabled interrupts which is the case now.
+CCing wireless folks as well.
 
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
----
- drivers/net/wireless/marvell/libertas_tf/if_usb.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/libertas_tf/if_usb.c b/drivers/ne=
-t/wireless/marvell/libertas_tf/if_usb.c
-index 5153922e7ce1..e92fc5001171 100644
---- a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
-+++ b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
-@@ -603,6 +603,8 @@ static inline void process_cmdrequest(int recvlength, u=
-int8_t *recvbuff,
- 				      struct if_usb_card *cardp,
- 				      struct lbtf_private *priv)
- {
-+	unsigned long flags;
-+
- 	if (recvlength > LBS_CMD_BUFFER_SIZE) {
- 		lbtf_deb_usbd(&cardp->udev->dev,
- 			     "The receive buffer is too large\n");
-@@ -610,14 +612,12 @@ static inline void process_cmdrequest(int recvlength,=
- uint8_t *recvbuff,
- 		return;
- 	}
-=20
--	BUG_ON(!in_interrupt());
--
--	spin_lock(&priv->driver_lock);
-+	spin_lock_irqsave(&priv->driver_lock, flags);
- 	memcpy(priv->cmd_resp_buff, recvbuff + MESSAGE_HEADER_LEN,
- 	       recvlength - MESSAGE_HEADER_LEN);
- 	kfree_skb(skb);
- 	lbtf_cmd_response_rx(priv);
--	spin_unlock(&priv->driver_lock);
-+	spin_unlock_irqrestore(&priv->driver_lock, flags);
- }
-=20
- /**
---=20
-2.17.1
+-- 
+Kalle Valo
