@@ -1,70 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:50218 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752250AbeF0WJx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Jun 2018 18:09:53 -0400
-Received: by mail-it0-f67.google.com with SMTP id u4-v6so9820935itg.0
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2018 15:09:52 -0700 (PDT)
+Received: from mail-eopbgr80095.outbound.protection.outlook.com ([40.107.8.95]:45292
+        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755010AbeFNQZM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Jun 2018 12:25:12 -0400
+From: Omer Efrat <omer.efrat@tandemg.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 2/5] mac80211: use BIT_ULL for NL80211_STA_INFO_*
+ attribute types
+Date: Thu, 14 Jun 2018 16:25:09 +0000
+Message-ID: <VI1PR02MB363134497AAC8BFCABF1FCFE9A7D0@VI1PR02MB3631.eurprd02.prod.outlook.com> (sfid-20180614_182516_979482_1C9166CE)
+References: <1528971073-349-1-git-send-email-omer.efrat@tandemg.com>
+         (sfid-20180614_121125_842548_E3DF065D),<1528974485.26847.3.camel@sipsolutions.net>
+        ,<VI1PR02MB3631079EA8E79B0C8900DEE09A7D0@VI1PR02MB3631.eurprd02.prod.outlook.com>
+         <VI1PR02MB3631E24AA7D7E58CEB0E7D889A7D0@VI1PR02MB3631.eurprd02.prod.outlook.com>,<1528992733.26847.6.camel@sipsolutions.net>
+In-Reply-To: <1528992733.26847.6.camel@sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-References: <20180616155621.30539-3-lorenzo.bianconi@redhat.com> <878t709r56.fsf@purkki.adurom.net>
-In-Reply-To: <878t709r56.fsf@purkki.adurom.net>
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Date: Thu, 28 Jun 2018 00:09:42 +0200
-Message-ID: <CAJ0CqmXbePZyu9mopnOvCjnb2X8stNGHZo-T_9YqC1oqH6daTg@mail.gmail.com> (sfid-20180628_000956_758350_A59D0FB1)
-Subject: Re: [PATCH 2/4] mt76x2: dfs: add sw event ring buffer
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Felix Fietkau <nbd@nbd.name>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg wrote:
+>I don't think it is.
 >
-> Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
->
-> > Introduce sw event ring buffer to queue DFS pulses loaded from the hw.
-> > Radar pulses will be used in DFS sw detector
+>The bugfix is certainly legitimate, but I don't want to claim such a
+>long patch as the bugfix, with a single compiler warning to show for.
+
+Understood.
+
+>If you prefer, I can do the bugfix separately myself, and then you can
+>focus on the remaining patches as cleanups for -next.
+
+I will send both as v3.
+
+Omer.
+
+________________________________________
+From: Johannes Berg <johannes@sipsolutions.net>
+Sent: Thursday, June 14, 2018 7:12:13 PM
+To: Omer Efrat; linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 2/5] mac80211: use BIT_ULL for NL80211_STA_INFO_* at=
+tribute types
+
+On Thu, 2018-06-14 at 15:55 +0000, Omer Efrat wrote:
+> Omer Efrat wrote:
+> > Johannes Berg wrote:
+> > > Perhaps, though I'm not sure I see it, there's some value in switchin=
+g
+> > > them all so that if you copy something and change it to a new value y=
+ou
+> > > don't run into this problem again, but if anything that should be (a)
+> > > separate patch(es) since this one is a bugfix and the others aren't.
 > >
-> > Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+> > Exactly my thoughts. I accept the need for the cleanup to be separated
+> > to different patches as well, I will send a v3.
 >
-> [...]
+> Actually, after some more thought, I don't think changing to BIT_ULL for
+> attribute types less than 32 should be in separated patches because of th=
+e claim
+> they are not a bug fix.
+
+I disagree, they aren't a bugfix.
+
+> This enum already has different numbering in different versions (attribut=
+es removed from the middle,
+> i.e. NL80211_STA_INFO_MAX_RSSI).
+
+This must be in some non-upstream tree, because it certainly never
+happened in upstream, nor did that attribute (MAX_RSSI) ever exist
+there.
+
+> Therefore, it's hard to mark each of them as "bug fix" or "cleanup only" =
+change.
+> (Some versions has NL80211_STA_INFO_TID_STATS =3D 32, while others has
+> NL80211_STA_INFO_TID_STATS =3D 31, etc.)
 >
-> > +static bool mt76x2_dfs_fetch_event(struct mt76x2_dev *dev,
-> > +                                struct mt76x2_dfs_event *event)
-> > +{
-> > +     u32 i, data[4];
-> > +
-> > +     for (i = 0; i < ARRAY_SIZE(data); i++) {
-> > +             /* 1st: DFS_R37[31]: 0 (engine 0) - 1 (engine 2)
-> > +              * 2nd: DFS_R37[21:0]: pulse time
-> > +              * 3rd: DFS_R37[11:0]: pulse width
-> > +              * 3rd: DFS_R37[25:16]: phase
-> > +              * 4th: DFS_R37[12:0]: current pwr
-> > +              * 4th: DFS_R37[21:16]: pwr stable counter
-> > +              *
-> > +              * 1st: DFS_R37[31:0] set to 0xffffffff means no event detected
-> > +              */
-> > +             data[i] = mt76_rr(dev, MT_BBP(DFS, 37));
-> > +     }
-> > +
-> > +     if (data[0] == GENMASK(31, 0))
-> > +             return false;
-> > +
-> > +     event->engine = (data[0] & BIT(31)) ? 2 : 0;
-> > +     event->ts = data[1] & GENMASK(21, 0);
-> > +     event->width = data[2] & GENMASK(11, 0);
->
-> No magic values and that data[2] stuff, please. Instead create a proper
-> struct and defines for the GENMASKs.
+> If that's acceptable, I will send a v3 for adding which commit is being f=
+ixed
+> by this patch series.
 
-Hi Kalle,
+I don't think it is.
 
-thx for the review, I will fix your comments in v2
-Regards,
+The bugfix is certainly legitimate, but I don't want to claim such a
+long patch as the bugfix, with a single compiler warning to show for.
 
-Lorenzo
+If you prefer, I can do the bugfix separately myself, and then you can
+focus on the remaining patches as cleanups for -next.
 
->
-> --
-> Kalle Valo
+johannes
