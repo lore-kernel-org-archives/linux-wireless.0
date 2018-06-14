@@ -1,57 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:49948 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755651AbeFOLnl (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47532 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934047AbeFNPMz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Jun 2018 07:43:41 -0400
-Message-ID: <1529063019.10037.12.camel@sipsolutions.net> (sfid-20180615_134344_948459_3F5C74B3)
-Subject: Re: [PATCH v2 2/2] mac80211: last ack signal support in station dump
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Balaji Pothunoori <bpothuno@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 15 Jun 2018 13:43:39 +0200
-In-Reply-To: <1528121469-16450-3-git-send-email-bpothuno@codeaurora.org>
-References: <1528121469-16450-1-git-send-email-bpothuno@codeaurora.org>
-         <1528121469-16450-3-git-send-email-bpothuno@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 14 Jun 2018 11:12:55 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: ath10k: use dma_zalloc_coherent instead of allocator/memset
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180604123542.24336-1-yuehaibing@huawei.com>
+References: <20180604123542.24336-1-yuehaibing@huawei.com>
+To: YueHaibing <yuehaibing@huawei.com>
+Cc: <davem@davemloft.net>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+        YueHaibing <yuehaibing@huawei.com>
+Message-Id: <20180614151255.4FE53606DB@smtp.codeaurora.org> (sfid-20180614_171311_286441_ACDAB04B)
+Date: Thu, 14 Jun 2018 15:12:55 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2018-06-04 at 19:41 +0530, Balaji Pothunoori wrote:
+YueHaibing <yuehaibing@huawei.com> wrote:
+
+> Use dma_zalloc_coherent instead of dma_alloc_coherent
+> followed by memset 0.
 > 
-> +	if (ieee80211_hw_check(&sta->local->hw, REPORTS_TX_ACK_STATUS)) {
-> +		if (sta->status_stats.ack_signal_filled && ((!(sinfo->filled &
-> +		    BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL))) ||
-> +		    (!(sinfo->filled &
-> +		    BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL_AVG))))) {
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Uh, wow, the indentation here is awful - please break with && and || on
-the end of line and indent properly according to the nesting level.
+Patch applied to ath-next branch of ath.git, thanks.
 
-If a line ends up being longer than 80, I think that's better than this
-monster expression :)
+9fb31b66b91f ath10k: use dma_zalloc_coherent instead of allocator/memset
 
-> +			sinfo->ack_signal =
-> +				sta->status_stats.last_ack_signal;
-> +			sinfo->filled |=
-> +				BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL);
-> +			sinfo->avg_ack_signal =
-> +				-(s8)ewma_avg_signal_read(
->  				&sta->status_stats.avg_ack_signal);
-> -		sinfo->filled |=
-> -			BIT_ULL(NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG);
-> +			sinfo->filled |=
-> +				BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL_AVG);
-> +		}
+-- 
+https://patchwork.kernel.org/patch/10446535/
 
-Clearly your previous patch would even break the kernel compile since
-the DATA_ACK_SIGNAL_AVG is still used here.
-
-
-
-Finally, please also explain why you're adding this feature, at least in
-the cover letter ("PATCH 0/2"), I can reuse that as a merge commit
-message if necessary.
-
-johannes
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
