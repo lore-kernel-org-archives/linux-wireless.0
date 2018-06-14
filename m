@@ -1,105 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:36868 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750729AbeFAHyB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Jun 2018 03:54:01 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Dmitry Torokhov <dtor@google.com>, <rajatja@google.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        Tim Song <songtao@marvell.com>, Cathy Luo <cluo@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH] mwifiex: uap: do not chok ethernet header in bridge path
-Date: Fri, 1 Jun 2018 15:53:40 +0800
-Message-ID: <1527839620-1760-1-git-send-email-huxm@marvell.com> (sfid-20180601_095405_492916_31BB64D4)
+Received: from narfation.org ([79.140.41.39]:52592 "EHLO v3-1039.vlinux.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754809AbeFNLUU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 14 Jun 2018 07:20:20 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: b.a.t.m.a.n@lists.open-mesh.org,
+        Omer Efrat <omer.efrat@tandemg.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [B.A.T.M.A.N.] [PATCH v2 3/5] batman: use BIT_ULL for NL80211_STA_INFO_* attribute types
+Date: Thu, 14 Jun 2018 13:20:17 +0200
+Message-ID: <7318287.kp0SrnPS43@bentobox> (sfid-20180614_132027_835665_7C366B44)
+In-Reply-To: <1528974316.26847.0.camel@sipsolutions.net>
+References: <1528971137-432-1-git-send-email-omer.efrat@tandemg.com> <1567584.jbsRn7ofiA@bentobox> <1528974316.26847.0.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; boundary="nextPart12333062.RVHHb7DxTn"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not chock ethernet header for uap bridge data path,
-as it is still needed to send skb to dest station.
+--nextPart12333062.RVHHb7DxTn
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/uap_txrx.c | 52 ++++++++++++-------------
- 1 file changed, 26 insertions(+), 26 deletions(-)
+On Donnerstag, 14. Juni 2018 13:05:16 CEST Johannes Berg wrote:
+[...]
+> > in commit 739960f128e5 ("cfg80211/nl80211: Add support for 
+> > NL80211_STA_INFO_RX_DURATION")
+> 
+> Yeah, which actually means this patch isn't needed?
+> 
+> BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT) is fine since
+> NL80211_STA_INFO_EXPECTED_THROUGHPUT is actually == 27.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-index 1e6a62c..5ce85d5 100644
---- a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-+++ b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-@@ -289,32 +289,6 @@ int mwifiex_uap_recv_packet(struct mwifiex_private *priv,
- 		src_node->stats.rx_packets++;
- 	}
- 
--	skb->dev = priv->netdev;
--	skb->protocol = eth_type_trans(skb, priv->netdev);
--	skb->ip_summed = CHECKSUM_NONE;
--
--	/* This is required only in case of 11n and USB/PCIE as we alloc
--	 * a buffer of 4K only if its 11N (to be able to receive 4K
--	 * AMSDU packets). In case of SD we allocate buffers based
--	 * on the size of packet and hence this is not needed.
--	 *
--	 * Modifying the truesize here as our allocation for each
--	 * skb is 4K but we only receive 2K packets and this cause
--	 * the kernel to start dropping packets in case where
--	 * application has allocated buffer based on 2K size i.e.
--	 * if there a 64K packet received (in IP fragments and
--	 * application allocates 64K to receive this packet but
--	 * this packet would almost double up because we allocate
--	 * each 1.5K fragment in 4K and pass it up. As soon as the
--	 * 64K limit hits kernel will start to drop rest of the
--	 * fragments. Currently we fail the Filesndl-ht.scr script
--	 * for UDP, hence this fix
--	 */
--	if ((adapter->iface_type == MWIFIEX_USB ||
--	     adapter->iface_type == MWIFIEX_PCIE) &&
--	    (skb->truesize > MWIFIEX_RX_DATA_BUF_SIZE))
--		skb->truesize += (skb->len - MWIFIEX_RX_DATA_BUF_SIZE);
--
- 	if (is_multicast_ether_addr(p_ethhdr->h_dest) ||
- 	    mwifiex_get_sta_entry(priv, p_ethhdr->h_dest)) {
- 		if (skb_headroom(skb) < MWIFIEX_MIN_DATA_HEADER_LEN)
-@@ -350,6 +324,32 @@ int mwifiex_uap_recv_packet(struct mwifiex_private *priv,
- 			return 0;
- 	}
- 
-+	skb->dev = priv->netdev;
-+	skb->protocol = eth_type_trans(skb, priv->netdev);
-+	skb->ip_summed = CHECKSUM_NONE;
-+
-+	/* This is required only in case of 11n and USB/PCIE as we alloc
-+	 * a buffer of 4K only if its 11N (to be able to receive 4K
-+	 * AMSDU packets). In case of SD we allocate buffers based
-+	 * on the size of packet and hence this is not needed.
-+	 *
-+	 * Modifying the truesize here as our allocation for each
-+	 * skb is 4K but we only receive 2K packets and this cause
-+	 * the kernel to start dropping packets in case where
-+	 * application has allocated buffer based on 2K size i.e.
-+	 * if there a 64K packet received (in IP fragments and
-+	 * application allocates 64K to receive this packet but
-+	 * this packet would almost double up because we allocate
-+	 * each 1.5K fragment in 4K and pass it up. As soon as the
-+	 * 64K limit hits kernel will start to drop rest of the
-+	 * fragments. Currently we fail the Filesndl-ht.scr script
-+	 * for UDP, hence this fix
-+	 */
-+	if ((adapter->iface_type == MWIFIEX_USB ||
-+	     adapter->iface_type == MWIFIEX_PCIE) &&
-+	    skb->truesize > MWIFIEX_RX_DATA_BUF_SIZE)
-+		skb->truesize += (skb->len - MWIFIEX_RX_DATA_BUF_SIZE);
-+
- 	/* Forward multicast/broadcast packet to upper layer*/
- 	if (in_interrupt())
- 		netif_rx(skb);
--- 
-1.9.1
+Hadn't verified this before but this would make sense. So no fixes here - just 
+some "cleanup" patch to make these tests more consistent. Thanks for checking.
+
+@Omer: If you want it as cleanup patch then make it clear in the patch that 
+the warning you've showed here is not actually not something which you will 
+see in in the modified code.
+
+Kind regards,
+	Sven
+--nextPart12333062.RVHHb7DxTn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlsiT3EACgkQXYcKB8Em
+e0Yw5g//Y9BvteNqSuGyeGLS37NzzUcYYp1zxqyECjxwo9X01HxakgH4warxqL1N
+DCaIjXKRWLoFgd33As/dD7D38LSOIcyWp6Jd1Caku2GnAb3tt2lHwOsj5890hUJu
+OkQ+w3OaVQgTTRUrKhJ8BlEikClyC344mxca5wZdE3v7XnnCl7a/nn3mD9V0BGUI
+v4L9pfDK9L2wPkaPSUIKxTrRzxQXOBPhVNRUiPcOoKipA7h4PwMcWxFmf5gqnYkN
+JSJz1Xv3wWcz21nT3xIjdC2grhYlLQkA8Q7x8ENU7xrC3vPTQv07CFnSIhMFJz5O
+bHpsUXKucMBGb7Hev4w68D2I2PTIAHpQ65Z1qRqOk6jvfGjwHaq5qoQ6jiScpU20
+E1/1pjp+2xEwj2KoETfdVd988weez/TeYMkuuNgH9Nb8Wj6nLlznbTNVjKb+RS8b
+g1zJqtZjYKSP8uOOS4b3GTFa3F4dKf+4OjddHEVC2BExY3nMT6qQ5smY4lwVKtK8
+q2Ez8wwiNKfN2OC3SdGHCXbUYHt+pOOtV9Yrr9rYNxyXfCGhUtvI0TNcqMoYa3vb
+KqdmRwmslerdYw3ih5PnTrtRQDYwKnUwEyTR3+eBS1r/Kyuw1Apa/EPgMd3oV3zd
+fG6JEWeSZIlMoP/AsjCqJA162XoKja8rJZawCq+vZuWxjzZMS9Y=
+=kTAX
+-----END PGP SIGNATURE-----
+
+--nextPart12333062.RVHHb7DxTn--
