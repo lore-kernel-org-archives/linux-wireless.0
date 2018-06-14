@@ -1,81 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fllnx210.ext.ti.com ([198.47.19.17]:42607 "EHLO
-        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751506AbeFEKt6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51542 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965478AbeFNO3A (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Jun 2018 06:49:58 -0400
-From: "Reizer, Eyal" <eyalr@ti.com>
-To: Tony Lindgren <tony@atomide.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>,
-        "Mishol, Guy" <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        "Hahn, Maital" <maitalm@ti.com>,
-        "Altshul, Maxim" <maxim.altshul@ti.com>,
-        "Shahar Patury" <shaharp@ti.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
-Subject: RE: [EXTERNAL] Re: [RFT 3/6] wlcore: Add support for runtime PM
-Date: Tue, 5 Jun 2018 10:49:53 +0000
-Message-ID: <ee4810afed194b20bad0a6cb6fa5ba52@ti.com> (sfid-20180605_125002_286099_333CAA4C)
-References: <20180529180605.73622-1-tony@atomide.com>
- <20180529180605.73622-4-tony@atomide.com> <20180531171420.GQ5705@atomide.com>
- <fe42f9d6bb744cd39e38db8f51c0b74e@ti.com> <20180605042000.GA5738@atomide.com>
- <20180605104404.GD5738@atomide.com>
-In-Reply-To: <20180605104404.GD5738@atomide.com>
-Content-Type: text/plain; charset="us-ascii"
+        Thu, 14 Jun 2018 10:29:00 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Loic Poulain <loic.poulain@linaro.org>
+Cc: linux-wireless@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH 3/3] wcn36xx: Fix WEP encryption
+References: <1527506960-13358-1-git-send-email-loic.poulain@linaro.org>
+        <1527506960-13358-3-git-send-email-loic.poulain@linaro.org>
+Date: Thu, 14 Jun 2018 17:28:56 +0300
+In-Reply-To: <1527506960-13358-3-git-send-email-loic.poulain@linaro.org> (Loic
+        Poulain's message of "Mon, 28 May 2018 13:29:20 +0200")
+Message-ID: <87d0wt8ms7.fsf@kamboji.qca.qualcomm.com> (sfid-20180614_162920_489101_7C356FEB)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->=20
-> * Tony Lindgren <tony@atomide.com> [180605 04:22]:
-> > * Reizer, Eyal <eyalr@ti.com> [180603 06:07]:
-> > > I have noticed the following recovery a couple of times on my setup
-> when the board was
-> > > just sitting for a long time with just pings
-> > > It starts with a firmware recovery started from the interrupt handler=
- but
-> the recovery fails
-> >
-> > Sounds like the recovery needs some more work :)
-> >
-> > > leaving the sdio stuck.
-> > > At this stage the only way to get out of it is unload/load of the dri=
-ver
-> modules.
-> > > Have you seen this on your side as well?
-> >
-> > Hmm I don't think I've seen this one yet.
-> >
-> > > 64 bytes from 192.168.100.1: seq=3D32772 ttl=3D64 time=3D9.644 ms
-> > > 64 bytes from 192.168.100.1: seq=3D32773 ttl=3D64 time=3D9.572 ms
-> > > 64 bytes from 192.168.100.1: seq=3D32774 ttl=3D64 time=3D10.974 ms
-> > > 64 bytes from 192.168.100.1: seq=3D32775 ttl=3D64 time=3D9.618 ms
-> > > [127899.040526] wlcore: ERROR SW watchdog interrupt received! startin=
-g
-> recovery.
-> >
-> > Do you know what does the SW watchdog means here? Does it mean the
-> > interrupt did not get delivered to wlcore? Or a spurious IRQ to wlcore?
-> > Or a timeout waiting for the ELP wake interrupt?
->=20
-> Also, can you check if patch "[RFT 7/6] wlcore: Make sure firmware is
-> initialized
-> in wl1271_op_add_interface()" already fixes this issue if you did not hav=
-e it
-> already applied?
->=20
-Sure will do. The firmware that showed this issue has some extra debugging =
-info
-Enabled in it and this may have been the cause of the recovery (Infernal lo=
-gging error).
-The fact that it didn't recover was the issue itself. I am now running with=
- the latest's=20
-firmware 8.9.0.0.78 and will see if I can still replicate it.
-If I see it, I will try applying patch 7 and see if it helps. Right now I d=
-on't yet have
-It applied.
+Loic Poulain <loic.poulain@linaro.org> writes:
 
-Best Regard,
-Eyal
+> In case of WEP encryption, driver has to configure shared key for
+> associated station(s). Note that sta pointer is NULL in case of non
+> pairwise key, causing NULL pointer dereference with existing code
+> (sta_priv->is_data_encrypted). Fix this by using associated sta list
+> instead.
+>
+> Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+
+I guess this fix is for AP mode with WEP encryption? And client mode
+with WEP doesn't have any issues?
+
+If yes, I'll clarify that in the commit log.
+
+-- 
+Kalle Valo
