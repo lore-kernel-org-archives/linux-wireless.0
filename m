@@ -1,58 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:54754 "EHLO v3-1039.vlinux.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751841AbeFTLeT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Jun 2018 07:34:19 -0400
-From: Sven Eckelmann <sven@narfation.org>
-To: b.a.t.m.a.n@lists.open-mesh.org
-Cc: Omer Efrat <omer.efrat@tandemg.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [B.A.T.M.A.N.] [PATCH v4 3/5] batman-adv: use BIT_ULL for NL80211_STA_INFO_* attribute types
-Date: Wed, 20 Jun 2018 13:34:09 +0200
-Message-ID: <2698334.cOteLZxmq0@bentobox> (sfid-20180620_133428_925593_027D4883)
-In-Reply-To: <1529491616-23222-1-git-send-email-omer.efrat@tandemg.com>
-References: <1529491616-23222-1-git-send-email-omer.efrat@tandemg.com>
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:35856 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964930AbeFOTi2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 15 Jun 2018 15:38:28 -0400
+Received: by mail-lf0-f66.google.com with SMTP id n24-v6so468930lfh.3
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2018 12:38:27 -0700 (PDT)
+Subject: Re: [PATCH] ath10k: fix bug in masking of TID value
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+References: <20180615120153.4677-1-erik.stromdahl@gmail.com>
+ <878t7g6wbg.fsf@kamboji.qca.qualcomm.com>
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-ID: <56e67584-366a-0a1a-916d-f75a54ae1d32@gmail.com> (sfid-20180615_213832_440179_61C2AABA)
+Date: Fri, 15 Jun 2018 21:38:25 +0200
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart14042354.XY0V1bUi97"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+In-Reply-To: <878t7g6wbg.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart14042354.XY0V1bUi97
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Hi Kalle,
 
-On Mittwoch, 20. Juni 2018 13:46:56 CEST Omer Efrat wrote:
-> -               if (!(sinfo.filled & BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
-> +               if (!(sinfo.filled &
-> +                         BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
->                         goto default_throughput;
+On 06/15/2018 02:58 PM, Kalle Valo wrote:
+> Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+> 
+>> Although the TID mask is 0xf, the modulus operation does still not
+>> produce identical results as the bitwise and operator.
+>>
+>> If the TID is 15, the modulus operation will "convert" it to 0, whereas
+>> the bitwise and will keep it as 15.
+>>
+>> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+>> ---
+>>   drivers/net/wireless/ath/ath10k/htt_tx.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+>> index 89157c5b5e5f..be5b52aaffa6 100644
+>> --- a/drivers/net/wireless/ath/ath10k/htt_tx.c
+>> +++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+>> @@ -1056,7 +1056,7 @@ static u8 ath10k_htt_tx_get_tid(struct sk_buff *skb, bool is_eth)
+>>   	if (!is_eth && ieee80211_is_mgmt(hdr->frame_control))
+>>   		return HTT_DATA_TX_EXT_TID_MGMT;
+>>   	else if (cb->flags & ATH10K_SKB_F_QOS)
+>> -		return skb->priority % IEEE80211_QOS_CTL_TID_MASK;
+>> +		return skb->priority & IEEE80211_QOS_CTL_TID_MASK;
+> 
+> I guess you just found this during code review? If yes, I'll add that to
+> the commit log.
+> 
+Correct, I kind of stumbled upon it while working with TX bundling for SDIO.
 
-Please fix the alignment:
-
-* Found wrong alignment at net/batman-adv/bat_v_elp.c:118, was 27 but expected 23
-
-Kind regards,
-	Sven
---nextPart14042354.XY0V1bUi97
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlsqO7EACgkQXYcKB8Em
-e0b8lRAApAL2fVCO1fnV4c7k9WdwjsL/zCSnhCTnfrp6LO4yQg9aMDlnxySsmDlM
-UKFBMmPogfSzNlU8etLsD6BAs9GjGSwo11aynCud15JNzdr1BRWNBWAUvF6Xkavj
-6x8JRk+dl3wOR8wads6X343YorA/xsv/ycwXz1Ao3cM6FQsguvhjwzZJbuoBucNc
-JMRx1ClP/rEt3DQAj78Adpb7kxz3XBLrl3oF04qEasNlrwBJPUhIN1qYAUR+yt10
-lwRNXp3RSSz7S/HN2uMqQC3hM06NM5CwyvnvbfeFCssZi0mhLJJ8ZUku1R180g3i
-wOt4DXqNnnds2jL+47B5tU4N7JUeEKtcJr1Rni0DiWiS2MnEUKWU9uqz4/aNS/Rf
-VQfik2PfRHAp/g+bWQ1XdLsV9bqOoHJcpmVqQws+pSX3ufXrdT7fJ+/k0z6wWjbG
-fsq3oYkjEVGja/KHz9QMOFCKLahKP5cFMAzfvGrtFy3EwD617AQtUWpnQjBIi1n7
-JpM9unkb0hUo0GQhiG73hs1Ah7rGR2cJpeFhFV6noS1//7zBVf6tVg5IBYVkSbgh
-QOSNWrKwJxgUXT9aXyqeIwler6ylZp+lD9P2NWkWrHwdCKSRBxIt2ixyK2tWUzbQ
-FVp3xby6N46PdMV4kX4wu+G/3gAj1OaFz/kYyJc1lCgCwEJZHRo=
-=hxXo
------END PGP SIGNATURE-----
-
---nextPart14042354.XY0V1bUi97--
+--
+Erik
