@@ -1,45 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:59854 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750801AbeFDESN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Jun 2018 00:18:13 -0400
-Date: Mon, 4 Jun 2018 06:18:12 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Colin King <colin.king@canonical.com>
-Cc: "David S . Miller" <davem@davemloft.net>,
-        Johannes Berg <johannes.berg@intel.com>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] NFC: fdp: fix signed less or equal zero check in u8
- max_size
-Message-ID: <20180604041812.GB8977@zurbaran.ger.intel.com> (sfid-20180604_061858_243365_151E8CB2)
-References: <20180130153359.524-1-colin.king@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180130153359.524-1-colin.king@canonical.com>
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:39329 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755749AbeFOMGY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 15 Jun 2018 08:06:24 -0400
+Received: by mail-lf0-f68.google.com with SMTP id t2-v6so7890869lfd.6
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2018 05:06:23 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [PATCH 1/2] ath10k: rename HTC_HOST_MAX_MSG_PER_BUNDLE define
+Date: Fri, 15 Jun 2018 14:04:22 +0200
+Message-Id: <20180615120423.4963-1-erik.stromdahl@gmail.com> (sfid-20180615_140641_127303_155BD358)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Colin,
+This define is only used for RX bundling so it is more descriptive if
+RX is added to the define-name.
 
-On Tue, Jan 30, 2018 at 03:33:59PM +0000, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> The u8 variable max_size is being assigned a return value from the
-> call to nci_conn_max_data_pkt_payload_size that can return a -ve
-> error return. Since max_size is a u8, the -ve check for the error will
-> always be false. Fix this by making max_size an int type.
-> 
-> Detected using Coccinelle:
-> drivers/nfc/fdp/fdp.c:208:5-13: WARNING: Unsigned expression compared
-> with zero: max_size <= 0
-> 
-> Fixes: a06347c04c13 ("NFC: Add Intel Fields Peak NFC solution driver")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/nfc/fdp/fdp.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-Applied to nfc-next, thanks.
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c  | 4 ++--
+ drivers/net/wireless/ath/ath10k/htc.h  | 2 +-
+ drivers/net/wireless/ath/ath10k/sdio.c | 4 ++--
+ drivers/net/wireless/ath/ath10k/sdio.h | 8 ++++----
+ 4 files changed, 9 insertions(+), 9 deletions(-)
 
-Cheers,
-Samuel.
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 8902720b4e49..331b8d558791 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -274,7 +274,7 @@ ath10k_htc_process_lookahead_bundle(struct ath10k_htc *htc,
+ 	struct ath10k *ar = htc->ar;
+ 	int bundle_cnt = len / sizeof(*report);
+ 
+-	if (!bundle_cnt || (bundle_cnt > HTC_HOST_MAX_MSG_PER_BUNDLE)) {
++	if (!bundle_cnt || (bundle_cnt > HTC_HOST_MAX_MSG_PER_RX_BUNDLE)) {
+ 		ath10k_warn(ar, "Invalid lookahead bundle count: %d\n",
+ 			    bundle_cnt);
+ 		return -EINVAL;
+@@ -655,7 +655,7 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
+ 	    sizeof(msg->hdr) + sizeof(msg->ready_ext)) {
+ 		htc->max_msgs_per_htc_bundle =
+ 			min_t(u8, msg->ready_ext.max_msgs_per_htc_bundle,
+-			      HTC_HOST_MAX_MSG_PER_BUNDLE);
++			      HTC_HOST_MAX_MSG_PER_RX_BUNDLE);
+ 		ath10k_dbg(ar, ATH10K_DBG_HTC,
+ 			   "Extended ready message. RX bundle size: %d\n",
+ 			   htc->max_msgs_per_htc_bundle);
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index 34877597dd6a..e60fbea698a9 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -50,7 +50,7 @@ struct ath10k;
+  * 4-byte aligned.
+  */
+ 
+-#define HTC_HOST_MAX_MSG_PER_BUNDLE        8
++#define HTC_HOST_MAX_MSG_PER_RX_BUNDLE        8
+ 
+ enum ath10k_htc_tx_flags {
+ 	ATH10K_HTC_FLAG_NEED_CREDIT_UPDATE = 0x01,
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index d612ce8c9cff..8672588e11eb 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -505,11 +505,11 @@ static int ath10k_sdio_mbox_alloc_pkt_bundle(struct ath10k *ar,
+ 
+ 	*bndl_cnt = FIELD_GET(ATH10K_HTC_FLAG_BUNDLE_MASK, htc_hdr->flags);
+ 
+-	if (*bndl_cnt > HTC_HOST_MAX_MSG_PER_BUNDLE) {
++	if (*bndl_cnt > HTC_HOST_MAX_MSG_PER_RX_BUNDLE) {
+ 		ath10k_warn(ar,
+ 			    "HTC bundle length %u exceeds maximum %u\n",
+ 			    le16_to_cpu(htc_hdr->len),
+-			    HTC_HOST_MAX_MSG_PER_BUNDLE);
++			    HTC_HOST_MAX_MSG_PER_RX_BUNDLE);
+ 		return -ENOMEM;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.h b/drivers/net/wireless/ath/ath10k/sdio.h
+index 4ff7b545293b..453eb6263143 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.h
++++ b/drivers/net/wireless/ath/ath10k/sdio.h
+@@ -96,14 +96,14 @@
+  * way:
+  *
+  * Let's assume that each packet in a bundle of the maximum bundle size
+- * (HTC_HOST_MAX_MSG_PER_BUNDLE) has the HTC header bundle count set
+- * to the maximum value (HTC_HOST_MAX_MSG_PER_BUNDLE).
++ * (HTC_HOST_MAX_MSG_PER_RX_BUNDLE) has the HTC header bundle count set
++ * to the maximum value (HTC_HOST_MAX_MSG_PER_RX_BUNDLE).
+  *
+  * in this case the driver must allocate
+- * (HTC_HOST_MAX_MSG_PER_BUNDLE * HTC_HOST_MAX_MSG_PER_BUNDLE) skb's.
++ * (HTC_HOST_MAX_MSG_PER_RX_BUNDLE * HTC_HOST_MAX_MSG_PER_RX_BUNDLE) skb's.
+  */
+ #define ATH10K_SDIO_MAX_RX_MSGS \
+-	(HTC_HOST_MAX_MSG_PER_BUNDLE * HTC_HOST_MAX_MSG_PER_BUNDLE)
++	(HTC_HOST_MAX_MSG_PER_RX_BUNDLE * HTC_HOST_MAX_MSG_PER_RX_BUNDLE)
+ 
+ #define ATH10K_FIFO_TIMEOUT_AND_CHIP_CONTROL   0x00000868u
+ #define ATH10K_FIFO_TIMEOUT_AND_CHIP_CONTROL_DISABLE_SLEEP_OFF 0xFFFEFFFF
+-- 
+2.17.0
