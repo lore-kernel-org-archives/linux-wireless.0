@@ -1,63 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f178.google.com ([209.85.216.178]:34085 "EHLO
-        mail-qt0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751210AbeFVIhh (ORCPT
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:38804 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755860AbeFOIIO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Jun 2018 04:37:37 -0400
-Received: by mail-qt0-f178.google.com with SMTP id d3-v6so5314074qto.1
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jun 2018 01:37:37 -0700 (PDT)
+        Fri, 15 Jun 2018 04:08:14 -0400
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w5F83wis021127
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2018 04:08:14 -0400
+Received: from e06smtp04.uk.ibm.com (e06smtp04.uk.ibm.com [195.75.94.100])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2jm8kd2nrx-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2018 04:08:14 -0400
+Received: from localhost
+        by e06smtp04.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-wireless@vger.kernel.org> from <freude@linux.ibm.com>;
+        Fri, 15 Jun 2018 09:08:11 +0100
+Subject: Re: [PATCH] hw_random: Always drop the RNG in hwrng_unregister()
+To: =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>,
+        Matt Mackall <mpm@selenic.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Wirz <spam@lukas-wirz.de>, linux-crypto@vger.kernel.org,
+        b43-dev@lists.infradead.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        PrasannaKumar Muralidharan <prasannatsmkumar@gmail.com>,
+        Harald Freudenberger <freude@linux.vnet.ibm.com>
+References: <20180614200811.76401d95@wiggum>
+From: Harald Freudenberger <freude@linux.ibm.com>
+Date: Fri, 15 Jun 2018 10:08:12 +0200
 MIME-Version: 1.0
-From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Date: Fri, 22 Jun 2018 10:37:35 +0200
-Message-ID: <CAFED-jkby2sk9OQnuH5PD8isr0n_CM6Eufs7Ds5fhavYfYdLBw@mail.gmail.com> (sfid-20180622_103743_270083_4EF3A910)
-Subject: mt76x2e MCU message 31 timed out
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-        Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20180614200811.76401d95@wiggum>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <8f1f5be1-979c-7601-1419-907b1980d974@linux.ibm.com> (sfid-20180615_100818_542313_0F2DD722)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 14.06.2018 20:08, Michael Büsch wrote:
+> enable_best_rng() is used in hwrng_unregister() to switch away from the
+> currently active RNG, if that is the one currently being removed.
+> However enable_best_rng() might fail, if the next RNG's init routine
+> fails. In that case enable_best_rng() will return an error code and
+> the currently active RNG will remain active.
+> After unregistering this might lead to crashes due to use-after-free.
+>
+> Fix this by dropping the currently active RNG, if enable_best_rng()
+> failed. This will result in no RNG to be active, if the next-best
+> one failed to initialize.
+>
+> This problem was introduced by 142a27f0a731ddcf467546960a5585970ca98e21
+>
+>
+> Reported-by: Wirz <spam@lukas-wirz.de>
+> Tested-by: Wirz <spam@lukas-wirz.de>
+> Signed-off-by: Michael Büsch <m@bues.ch>
+> Cc: stable@vger.kernel.org
+>
+> ---
+>
+> See this discussion for a crash in b43's hwrng caused by this problem:
+> https://www.spinics.net/lists/linux-wireless/msg173089.html
+>
+>
+>
+> diff --git a/drivers/char/hw_random/core.c b/drivers/char/hw_random/core.c
+> index 91bb98c42a1c..aaf9e5afaad4 100644
+> --- a/drivers/char/hw_random/core.c
+> +++ b/drivers/char/hw_random/core.c
+> @@ -516,11 +516,18 @@ EXPORT_SYMBOL_GPL(hwrng_register);
+>  
+>  void hwrng_unregister(struct hwrng *rng)
+>  {
+> +	int err;
+> +
+>  	mutex_lock(&rng_mutex);
+>  
+>  	list_del(&rng->list);
+> -	if (current_rng == rng)
+> -		enable_best_rng();
+> +	if (current_rng == rng) {
+> +		err = enable_best_rng();
+> +		if (err) {
+> +			drop_current_rng();
+> +			cur_rng_set_by_user = 0;
+> +		}
+> +	}
+>  
+>  	if (list_empty(&rng_list)) {
+>  		mutex_unlock(&rng_mutex);
+>
+>
+>
+Yes, if the hw_init() of the newly chosen rng fails, enable_best_rng() comes
+back with an error and did not drop the current rng. The patch handles
+this case. I did not test it, but the code looks fine.
 
-Have this card in my laptop:
-02:00.0 Network controller: MEDIATEK Corp. Device 7612
-
-[    8.478104] mt76x2e 0000:02:00.0: ASIC revision: 76120044
-[    8.489582] mt76x2e 0000:02:00.0: ROM patch already applied
-[    8.833476] mt76x2e 0000:02:00.0: Firmware Version: 0.0.00
-[    8.833477] mt76x2e 0000:02:00.0: Build: 1
-[    8.833479] mt76x2e 0000:02:00.0: Build Time: 201507311614____
-[    8.856115] mt76x2e 0000:02:00.0: Firmware running!
-[    9.558075] mt76x2e 0000:02:00.0 wlp2s0: renamed from wlan1
-
-Linux test4 4.17.0-rc7+ #5 SMP Mon May 28 12:35:22 CEST 2018 x86_64 GNU/Linux
-
-Seems iw scan works correctly and first assoc. After will run some
-traffic (iperf in such case) get:
-
-[  432.372081] wlp2s0: associate with 52:b4:f7:f0:16:c2 (try 2/3)
-[  432.375255] wlp2s0: RX AssocResp from 52:b4:f7:f0:16:c2
-(capab=0x511 status=0 aid=2)
-[  432.375336] wlp2s0: associated
-[  432.451097] IPv6: ADDRCONF(NETDEV_CHANGE): wlp2s0: link becomes ready
-[  522.562157] mt76x2e 0000:02:00.0: MCU message 31 (seq 13) timed out
-[  524.610281] mt76x2e 0000:02:00.0: MCU message 31 (seq 14) timed out
-[  526.658384] mt76x2e 0000:02:00.0: MCU message 31 (seq 15) timed out
-[  528.258455] mt76x2e 0000:02:00.0: MCU message 30 (seq 1) timed out
-[  529.282499] mt76x2e 0000:02:00.0: MCU message 30 (seq 2) timed out
-[  530.402544] mt76x2e 0000:02:00.0: MCU message 30 (seq 3) timed out
-[  531.426587] mt76x2e 0000:02:00.0: MCU message 30 (seq 4) timed out
-[  531.427444] wlp2s0: authenticate with 52:b4:f7:f0:14:ac
-[  532.450624] mt76x2e 0000:02:00.0: MCU message 30 (seq 5) timed out
-[  533.474666] mt76x2e 0000:02:00.0: MCU message 30 (seq 6) timed out
-[  534.498709] mt76x2e 0000:02:00.0: MCU message 30 (seq 7) timed out
-[  535.522736] mt76x2e 0000:02:00.0: MCU message 30 (seq 8) timed out
-[  535.522807] wlp2s0: send auth to 52:b4:f7:f0:14:ac (try 1/3)
-[  535.726740] wlp2s0: send auth to 52:b4:f7:f0:14:ac (try 2/3)
-[  535.930742] wlp2s0: send auth to 52:b4:f7:f0:14:ac (try 3/3)
-[  536.134747] wlp2s0: authentication with 52:b4:f7:f0:14:ac timed out
-
-Any hints?
-
-BR
-Janusz
+reviewed-by Harald Freudenberger <freude@linux.ibm.com>
