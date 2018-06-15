@@ -1,217 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47618 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933498AbeFMKqS (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:50356 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755749AbeFOMTe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jun 2018 06:46:18 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCH 4/7] cfg80211: Add support to notify station's rssi level crossing
-Date: Wed, 13 Jun 2018 16:15:44 +0530
-Message-Id: <1528886747-26342-5-git-send-email-tamizhr@codeaurora.org> (sfid-20180613_124654_737788_60DAAB49)
-In-Reply-To: <1528886747-26342-1-git-send-email-tamizhr@codeaurora.org>
-References: <1528886747-26342-1-git-send-email-tamizhr@codeaurora.org>
+        Fri, 15 Jun 2018 08:19:34 -0400
+Message-ID: <1529065171.10037.16.camel@sipsolutions.net> (sfid-20180615_141940_332912_5A6E6E07)
+Subject: Re: [RFCv2 1/2] nl80211: support per-rate/per-station statistics
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sriram R <srirrama@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 15 Jun 2018 14:19:31 +0200
+In-Reply-To: <1527514479-6696-2-git-send-email-srirrama@codeaurora.org>
+References: <1527514479-6696-1-git-send-email-srirrama@codeaurora.org>
+         <1527514479-6696-2-git-send-email-srirrama@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add cfg80211_sta_mon_rssi_notify api to update user space upon
-crossing the configured rssi threshold of a station.
-NL80211_CMD_NOTIFY_STA_MON introduced to send this event to
-userspace along with NL80211_ATTR_STA_MON_RSSI_THRESHOLD_EVENT,
-NL80211_ATTR_MAC and NL80211_ATTR_STA_MON_RSSI_LEVEL info.
-Userspace application can make a decision depends on this
-notification.
+On Mon, 2018-05-28 at 19:04 +0530, Sriram R wrote:
+> Per-rate/per-station statistics can be desirable to have but they're
+> quite expensive (keeping the four counters for each rate would take
+> close to 4k of memory per station only for VHT MCSes for a moderately
+> capable VHT chip (with 2 spatial streams and 80MHz support) so it's
+> not a good idea to keep all of this in the kernel.
+> 
+> Instead, this API provides a way for interested clients in userspace
+> to subscribe to such statistics. When supported by a driver, it can
+> then start collecting the data only when subscribers exist. To avoid
+> the kernel's data collection becoming too big, it can send out the
+> data at any point in time, for example to limit the counters to u16
+> internally and send it out when they're close to reaching the limit,
+> or to keep a hash table and sending it out when too many collisions
+> occur. Userspace can then keep track of the full state.
+> 
+> Based on below implementation by Johannes Berg <johannes@sipsolutions.net>
+> http://thread.gmane.org/gmane.linux.kernel.wireless.general/133172
+> with following changes,
 
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
----
- include/net/cfg80211.h       |   16 +++++++
- include/uapi/linux/nl80211.h |    1 +
- net/wireless/nl80211.c       |   98 ++++++++++++++++++++++++++++++++++++++++++
- net/wireless/trace.h         |   22 ++++++++++
- 4 files changed, 137 insertions(+)
+Err, that's pretty much an exact copy of my patch ...
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 584697b..7dcf9b9 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5916,6 +5916,22 @@ void cfg80211_cqm_txe_notify(struct net_device *dev, const u8 *peer,
- void cfg80211_cqm_beacon_loss_notify(struct net_device *dev, gfp_t gfp);
- 
- /**
-+ * cfg80211_sta_mon_rssi_notify - Station's rssi out of range event
-+ * @dev: network device
-+ * @peer: Station's mac address
-+ * @rssi_event: the triggered RSSI event
-+ * @rssi_level: new RSSI level value or 0 if not available
-+ * @gfp: context flags
-+ *
-+ * This function is called when a configured rssi threshold reached event
-+ * occurs for a station.
-+ */
-+void
-+cfg80211_sta_mon_rssi_notify(struct net_device *dev, const u8 *peer,
-+		enum nl80211_sta_mon_rssi_threshold_event rssi_event,
-+		s32 rssi_level, gfp_t gfp);
-+
-+/**
-  * cfg80211_radar_event - radar detection event
-  * @wiphy: the wiphy
-  * @chandef: chandef for the current channel
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f13ad07..9d47ee6 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1249,6 +1249,7 @@ enum nl80211_commands {
- 	NL80211_CMD_CONTROL_PORT_FRAME,
- 
- 	NL80211_CMD_SET_STA_MON,
-+	NL80211_CMD_NOTIFY_STA_MON,
- 
- 	/* add new commands above here */
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 587a5cb1..021e55a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -15364,6 +15364,104 @@ void cfg80211_pmksa_candidate_notify(struct net_device *dev, int index,
- }
- EXPORT_SYMBOL(cfg80211_pmksa_candidate_notify);
- 
-+static struct sk_buff *cfg80211_prepare_sta_mon(struct net_device *dev,
-+						const char *mac, gfp_t gfp)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-+	struct sk_buff *msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	void **cb;
-+
-+	if (!msg)
-+		return NULL;
-+
-+	cb = (void **)msg->cb;
-+
-+	cb[0] = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_NOTIFY_STA_MON);
-+	if (!cb[0]) {
-+		nlmsg_free(msg);
-+		return NULL;
-+	}
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex))
-+		goto nla_put_failure;
-+
-+	if (nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac))
-+		goto nla_put_failure;
-+
-+	cb[1] = nla_nest_start(msg, NL80211_ATTR_STA_MON);
-+	if (!cb[1])
-+		goto nla_put_failure;
-+
-+	cb[2] = rdev;
-+
-+	return msg;
-+nla_put_failure:
-+	nlmsg_free(msg);
-+	return NULL;
-+}
-+
-+static void cfg80211_send_sta_mon(struct sk_buff *msg, gfp_t gfp)
-+{
-+	void **cb = (void **)msg->cb;
-+	struct cfg80211_registered_device *rdev = cb[2];
-+
-+	nla_nest_end(msg, cb[1]);
-+	genlmsg_end(msg, cb[0]);
-+
-+	memset(msg->cb, 0, sizeof(msg->cb));
-+
-+	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
-+				NL80211_MCGRP_MLME, gfp);
-+}
-+
-+void cfg80211_sta_mon_rssi_notify(struct net_device *dev, const u8 *peer,
-+		enum nl80211_sta_mon_rssi_threshold_event rssi_event,
-+		s32 rssi_level, gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_rssi_config *rssi_config;
-+
-+	if (WARN_ON(!peer))
-+		return;
-+
-+	if (WARN_ON(rssi_event != NL80211_STA_MON_RSSI_THRESHOLD_EVENT_LOW &&
-+		    rssi_event != NL80211_STA_MON_RSSI_THRESHOLD_EVENT_HIGH))
-+		return;
-+
-+	trace_cfg80211_sta_mon_rssi_notify(dev, peer, rssi_event, rssi_level);
-+
-+	list_for_each_entry(rssi_config, &wdev->rssi_config_list, list) {
-+		if (!memcmp(rssi_config->addr, peer, ETH_ALEN)) {
-+			wdev->rssi_config = rssi_config;
-+			wdev->rssi_config->last_rssi_event_value = rssi_level;
-+			break;
-+		}
-+	}
-+
-+	msg = cfg80211_prepare_sta_mon(dev, peer, gfp);
-+	if (!msg)
-+		return;
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_STA_MON_RSSI_THRESHOLD_EVENT,
-+			rssi_event))
-+		goto nla_put_failure;
-+
-+	if (rssi_level && nla_put_s32(msg, NL80211_ATTR_STA_MON_RSSI_LEVEL,
-+				      rssi_level))
-+		goto nla_put_failure;
-+
-+	cfg80211_send_sta_mon(msg, gfp);
-+
-+	return;
-+
-+nla_put_failure:
-+	nlmsg_free(msg);
-+}
-+EXPORT_SYMBOL(cfg80211_sta_mon_rssi_notify);
-+
- static void nl80211_ch_switch_notify(struct cfg80211_registered_device *rdev,
- 				     struct net_device *netdev,
- 				     struct cfg80211_chan_def *chandef,
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 361ec08..5454c57 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -3282,6 +3282,28 @@
- 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(peer),
- 		  __entry->rssi_thold, __entry->rssi_hyst)
- );
-+TRACE_EVENT(cfg80211_sta_mon_rssi_notify,
-+	TP_PROTO(struct net_device *netdev, const u8 *peer,
-+		 enum nl80211_sta_mon_rssi_threshold_event rssi_event,
-+		 s32 rssi_level),
-+	TP_ARGS(netdev, peer, rssi_event, rssi_level),
-+	TP_STRUCT__entry(
-+		NETDEV_ENTRY
-+		MAC_ENTRY(peer)
-+		__field(enum nl80211_sta_mon_rssi_threshold_event, rssi_event)
-+		__field(s32, rssi_level)
-+	),
-+	TP_fast_assign(
-+		NETDEV_ASSIGN;
-+		MAC_ASSIGN(peer, peer);
-+		__entry->rssi_event = rssi_event;
-+		__entry->rssi_level = rssi_level;
-+	),
-+	TP_printk(NETDEV_PR_FMT ", peer: " MAC_PR_FMT
-+		  ", rssi event: %d, rssi : %d",
-+		  NETDEV_PR_ARG, MAC_PR_ARG(peer),
-+		  __entry->rssi_event, __entry->rssi_level)
-+);
- #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
- 
- #undef TRACE_INCLUDE_PATH
--- 
-1.7.9.5
+You should keep the author attribution and signed-off-by, and if you
+want your work to be separately attributed then just put the changes you
+made into (a) separate patch(es).
+
+>  1. Allow rx bytes stats to be collected
+
+This seems OK.
+
+>  2. Rate info sent to userspace is encoded into 32bit value
+
+This I don't like at all. It's fine for the internal representation, and
+I know I did something like that in mac80211 (though I guess at the time
+it was only 16 bit), but it's not OK for the userspace representation.
+
+I just merged patches to support HE in the userspace representation, and
+that's properly taken into account in struct rate_info which I had here
+in my version of the patch.
+
+johannes
