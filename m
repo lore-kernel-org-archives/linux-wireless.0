@@ -1,133 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:55242 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751502AbeFANWG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Jun 2018 09:22:06 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Samuel Ortiz <sameo@linux.intel.com>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-usb@vger.kernel.org,
-        =?UTF-8?q?Micha=C5=82=20Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>,
-        Michael Thalmeier <michael.thalmeier@hale.at>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH resend 1/2] NFC: pn533: Use kmalloc-ed memory for USB transfer buffers
-Date: Fri,  1 Jun 2018 15:21:59 +0200
-Message-Id: <20180601132200.25973-2-hdegoede@redhat.com> (sfid-20180601_152217_825472_CE9E1BA6)
-In-Reply-To: <20180601132200.25973-1-hdegoede@redhat.com>
-References: <20180601132200.25973-1-hdegoede@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:39626 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936193AbeFONPE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 15 Jun 2018 09:15:04 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Govind Singh <govinds@codeaurora.org>
+Cc: andy.gross@linaro.org, bjorn.andersson@linaro.org,
+        david.brown@linaro.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH v2 6/6] ath10k: Add QMI message handshake for wcn3990 client
+References: <20180605123732.1993-1-govinds@codeaurora.org>
+Date: Fri, 15 Jun 2018 16:14:59 +0300
+In-Reply-To: <20180605123732.1993-1-govinds@codeaurora.org> (Govind Singh's
+        message of "Tue, 5 Jun 2018 18:07:32 +0530")
+Message-ID: <871sd86vjg.fsf@kamboji.qca.qualcomm.com> (sfid-20180615_151508_954131_A8FFCD68)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 8b55d7581fc5 ("NFC: pn533: use constant off-stack buffer for sending
-acks"), fixed the ack case of using on stack mem for the transfer_buffer,
-by making the ack buffer "static const", which is an unusual solution for
-this and I wonder if this is not a problem wrt buffer alignment. It also
-misses fixing the same problem for the cmd buffer in the
-pn533_acr122_poweron_rdr() function.
+Govind Singh <govinds@codeaurora.org> writes:
 
-This commit introduces an out_buf which gets kmalloc-ed on probe and
-then memcpy-s the ack / cmd buffer into that buffer before submitting
-the out urb. Fixing the use of on stack memory for the cmd buffer and
-moving the ack code-path over to more conventional ways.
+> Add WCN3990 QMI client handshakes for Q6 integrated WLAN connectivity
+> subsystem. This layer is responsible for communicating qmi control
+> messages to wifi fw QMI service using QMI messaging protocol.
+>
+> Qualcomm MSM Interface(QMI) is a messaging format used to communicate
+> between components running between application processor and remote
+> processors with underlying transport layer based on integrated
+> chipset(shared memory) or discrete chipset(PCI/USB/SDIO/UART).
+>
+> With this patch-set basic functionality(STA/SAP) can be tested
+> with WCN3990 chipset. The changes are verified with the firmware
+> WLAN.HL.2.0-01192-QCAHLSWMTPLZ-1 and SDM845 MTP device.
+>
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
 
-While at it this commit also changes the kmalloc of the in_buf to
-devm_kmalloc, to avoid the need to introduce a new goto in the error-
-handling of the kmalloc of the introduced out_buf.
+I applied this patchset to the pending branch to get some build testing:
 
-BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1514134
-Fixes: 8b55d7581fc5 ("NFC: pn533: use constant off-stack buffer ...")
-Cc: Michał Mirosław <mirq-linux@rere.qmqm.pl>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/nfc/pn533/usb.c | 22 +++++++++++++++-------
- 1 file changed, 15 insertions(+), 7 deletions(-)
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=59ff1228bc7ecec5ed2558e0e6d33423da443180
 
-diff --git a/drivers/nfc/pn533/usb.c b/drivers/nfc/pn533/usb.c
-index e153e8b64bb8..c9398712ba31 100644
---- a/drivers/nfc/pn533/usb.c
-+++ b/drivers/nfc/pn533/usb.c
-@@ -42,6 +42,9 @@
- #define ACS_VENDOR_ID 0x072f
- #define ACR122U_PRODUCT_ID 0x2200
- 
-+/* Large enough to hold an ack or the power-on CCID command */
-+#define OUT_BUF_LEN 16
-+
- static const struct usb_device_id pn533_usb_table[] = {
- 	{ USB_DEVICE(PN533_VENDOR_ID, PN533_PRODUCT_ID),
- 	  .driver_info = PN533_DEVICE_STD },
-@@ -61,6 +64,7 @@ struct pn533_usb_phy {
- 
- 	struct urb *out_urb;
- 	struct urb *in_urb;
-+	u8 *out_buf;
- 
- 	struct pn533 *priv;
- };
-@@ -152,7 +156,8 @@ static int pn533_usb_send_ack(struct pn533 *dev, gfp_t flags)
- 	/* spec 7.1.1.3:  Preamble, SoPC (2), ACK Code (2), Postamble */
- 	int rc;
- 
--	phy->out_urb->transfer_buffer = (u8 *)ack;
-+	memcpy(phy->out_buf, ack, sizeof(ack));
-+	phy->out_urb->transfer_buffer = phy->out_buf;
- 	phy->out_urb->transfer_buffer_length = sizeof(ack);
- 	rc = usb_submit_urb(phy->out_urb, flags);
- 
-@@ -373,8 +378,8 @@ static void pn533_acr122_poweron_rdr_resp(struct urb *urb)
- static int pn533_acr122_poweron_rdr(struct pn533_usb_phy *phy)
- {
- 	/* Power on th reader (CCID cmd) */
--	u8 cmd[10] = {PN533_ACR122_PC_TO_RDR_ICCPOWERON,
--		      0, 0, 0, 0, 0, 0, 3, 0, 0};
-+	static const u8 cmd[10] = { PN533_ACR122_PC_TO_RDR_ICCPOWERON,
-+				    0, 0, 0, 0, 0, 0, 3, 0, 0 };
- 	int rc;
- 	void *cntx;
- 	struct pn533_acr122_poweron_rdr_arg arg;
-@@ -387,7 +392,8 @@ static int pn533_acr122_poweron_rdr(struct pn533_usb_phy *phy)
- 	phy->in_urb->complete = pn533_acr122_poweron_rdr_resp;
- 	phy->in_urb->context = &arg;
- 
--	phy->out_urb->transfer_buffer = cmd;
-+	memcpy(phy->out_buf, cmd, sizeof(cmd));
-+	phy->out_urb->transfer_buffer = phy->out_buf;
- 	phy->out_urb->transfer_buffer_length = sizeof(cmd);
- 
- 	print_hex_dump_debug("ACR122 TX: ", DUMP_PREFIX_NONE, 16, 1,
-@@ -463,10 +469,14 @@ static int pn533_usb_probe(struct usb_interface *interface,
- 	if (!phy)
- 		return -ENOMEM;
- 
--	in_buf = kzalloc(in_buf_len, GFP_KERNEL);
-+	in_buf = devm_kzalloc(&interface->dev, in_buf_len, GFP_KERNEL);
- 	if (!in_buf)
- 		return -ENOMEM;
- 
-+	phy->out_buf = devm_kzalloc(&interface->dev, OUT_BUF_LEN, GFP_KERNEL);
-+	if (!phy->out_buf)
-+		return -ENOMEM;
-+
- 	phy->udev = usb_get_dev(interface_to_usbdev(interface));
- 	phy->interface = interface;
- 
-@@ -555,7 +565,6 @@ static int pn533_usb_probe(struct usb_interface *interface,
- 	usb_free_urb(phy->in_urb);
- 	usb_free_urb(phy->out_urb);
- 	usb_put_dev(phy->udev);
--	kfree(in_buf);
- 
- 	return rc;
- }
-@@ -574,7 +583,6 @@ static void pn533_usb_disconnect(struct usb_interface *interface)
- 	usb_kill_urb(phy->in_urb);
- 	usb_kill_urb(phy->out_urb);
- 
--	kfree(phy->in_urb->transfer_buffer);
- 	usb_free_urb(phy->in_urb);
- 	usb_free_urb(phy->out_urb);
- 
+Just FYI I noticed this patch has few simple conflicts due to patches I
+have applied earlier this week:
+
+Hunk #1 FAILED at 41.
+1 out of 1 hunk FAILED -- saving rejects to file drivers/net/wireless/ath/ath10k/Kconfig.rej
+patching file drivers/net/wireless/ath/ath10k/Makefile
+patching file drivers/net/wireless/ath/ath10k/core.c
+Hunk #1 succeeded at 1145 (offset 11 lines).
+Hunk #2 succeeded at 1154 (offset 11 lines).
+Hunk #3 succeeded at 1466 (offset 11 lines).
+Hunk #4 succeeded at 1504 (offset 11 lines).
+patching file drivers/net/wireless/ath/ath10k/core.h
+Hunk #1 succeeded at 1167 (offset 2 lines).
+patching file drivers/net/wireless/ath/ath10k/qmi.c
+patching file drivers/net/wireless/ath/ath10k/qmi.h
+patching file drivers/net/wireless/ath/ath10k/snoc.c
+Hunk #1 succeeded at 68 (offset 1 line).
+Hunk #2 succeeded at 193 (offset 1 line).
+Hunk #3 succeeded at 896 (offset 1 line).
+Hunk #4 succeeded at 1124 (offset 1 line).
+Hunk #5 succeeded at 1538 (offset 1 line).
+Hunk #6 succeeded at 1549 (offset 1 line).
+Hunk #7 succeeded at 1570 (offset 1 line).
+patching file drivers/net/wireless/ath/ath10k/snoc.h
+Hunk #1 FAILED at 20.
+Hunk #2 succeeded at 81 (offset -1 lines).
+Hunk #3 succeeded at 91 (offset -1 lines).
+1 out of 3 hunks FAILED -- saving rejects to file drivers/net/wireless/ath/ath10k/snoc.h.rej
+
 -- 
-2.17.0
+Kalle Valo
