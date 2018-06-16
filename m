@@ -1,56 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:1395 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751105AbeFZGHk (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:37337 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756879AbeFPP4e (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Jun 2018 02:07:40 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 08/12] staging: wilc1000: handle freeing of key data in wilc_add_ptk()
-Date: Tue, 26 Jun 2018 11:37:10 +0530
-Message-ID: <1529993234-27294-9-git-send-email-ajay.kathat@microchip.com> (sfid-20180626_080745_310063_95EBD897)
-In-Reply-To: <1529993234-27294-1-git-send-email-ajay.kathat@microchip.com>
-References: <1529993234-27294-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sat, 16 Jun 2018 11:56:34 -0400
+Received: by mail-wm0-f68.google.com with SMTP id r125-v6so8513568wmg.2
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Jun 2018 08:56:33 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/4] mt76: introduce mt76_{incr,decr} utility routines
+Date: Sat, 16 Jun 2018 17:56:18 +0200
+Message-Id: <20180616155621.30539-2-lorenzo.bianconi@redhat.com> (sfid-20180616_175637_294703_202FD4C3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Handle freeing of memory allocated to store the 'key' in wilc_add_ptk()
-function. Once work completion notification is received, free the
-memory allocated to avoid missing of free in work function sepecially
-for error scenario.
+Add mt76_{incr,decr} utility routines to increment/decrement a value
+with wrap-around (they will be used by mt76x2 DFS sw detector)
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76.h | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 2cc9689..2062f4e 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1724,7 +1724,6 @@ static void handle_key(struct work_struct *work)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index d2166fbf50ff..96e9798bb8a0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -390,6 +390,18 @@ struct dentry *mt76_register_debugfs(struct mt76_dev *dev);
+ int mt76_eeprom_init(struct mt76_dev *dev, int len);
+ void mt76_eeprom_override(struct mt76_dev *dev);
  
- out_wpa_ptk:
- 		complete(&msg->work_comp);
--		kfree(hif_key->attr.wpa.key);
- 		break;
- 
- 	case PMKSA:
-@@ -2735,8 +2734,6 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
- 	}
- 
- 	wait_for_completion(&msg->work_comp);
--	kfree(msg);
--	return 0;
- 
- free_key:
- 	kfree(msg->body.key_info.attr.wpa.key);
++/* increment with wrap-around */
++static inline int mt76_incr(int val, int size)
++{
++	return (val + 1) & (size - 1);
++}
++
++/* decrement with wrap-around */
++static inline int mt76_decr(int val, int size)
++{
++	return (val - 1) & (size - 1);
++}
++
+ static inline struct ieee80211_txq *
+ mtxq_to_txq(struct mt76_txq *mtxq)
+ {
 -- 
-2.7.4
+2.17.1
