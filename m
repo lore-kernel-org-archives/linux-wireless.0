@@ -1,55 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:46036 "EHLO muru.com"
+Received: from ozlabs.org ([203.11.71.1]:52363 "EHLO ozlabs.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750828AbeFEEUJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Jun 2018 00:20:09 -0400
-Date: Mon, 4 Jun 2018 21:20:00 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: "Reizer, Eyal" <eyalr@ti.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>,
-        "Mishol, Guy" <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        "Hahn, Maital" <maitalm@ti.com>,
-        "Altshul, Maxim" <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
-Subject: Re: [EXTERNAL] Re: [RFT 3/6] wlcore: Add support for runtime PM
-Message-ID: <20180605042000.GA5738@atomide.com> (sfid-20180605_062016_529134_72ED263E)
-References: <20180529180605.73622-1-tony@atomide.com>
- <20180529180605.73622-4-tony@atomide.com>
- <20180531171420.GQ5705@atomide.com>
- <fe42f9d6bb744cd39e38db8f51c0b74e@ti.com>
+        id S932741AbeFPMal (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 Jun 2018 08:30:41 -0400
+Date: Sat, 16 Jun 2018 22:30:36 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Wireless <linux-wireless@vger.kernel.org>
+Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: linux-next: Signed-off-by missing for commit in the mac80211-next
+ tree
+Message-ID: <20180616223036.46abefcb@canb.auug.org.au> (sfid-20180616_143055_768996_5F1AE989)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <fe42f9d6bb744cd39e38db8f51c0b74e@ti.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/.XiUKwHyEa9LHmLz4WHSqN/"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Reizer, Eyal <eyalr@ti.com> [180603 06:07]:
-> I have noticed the following recovery a couple of times on my setup when the board was 
-> just sitting for a long time with just pings
-> It starts with a firmware recovery started from the interrupt handler but the recovery fails 
+--Sig_/.XiUKwHyEa9LHmLz4WHSqN/
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Sounds like the recovery needs some more work :)
+Hi all,
 
-> leaving the sdio stuck.
-> At this stage the only way to get out of it is unload/load of the driver modules.
-> Have you seen this on your side as well?
+Commit
 
-Hmm I don't think I've seen this one yet.
+  f9444b499f68 ("ieee80211: bump IEEE80211_MAX_AMPDU_BUF to support HE")
 
-> 64 bytes from 192.168.100.1: seq=32772 ttl=64 time=9.644 ms
-> 64 bytes from 192.168.100.1: seq=32773 ttl=64 time=9.572 ms
-> 64 bytes from 192.168.100.1: seq=32774 ttl=64 time=10.974 ms
-> 64 bytes from 192.168.100.1: seq=32775 ttl=64 time=9.618 ms
-> [127899.040526] wlcore: ERROR SW watchdog interrupt received! starting recovery.
+is missing a Signed-off-by from its author.
 
-Do you know what does the SW watchdog means here? Does it mean the
-interrupt did not get delivered to wlcore? Or a spurious IRQ to wlcore?
-Or a timeout waiting for the ELP wake interrupt?
+--=20
+Cheers,
+Stephen Rothwell
 
-Regards,
+--Sig_/.XiUKwHyEa9LHmLz4WHSqN/
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
-Tony
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlslAuwACgkQAVBC80lX
+0GxKcwf+MX+sT8jbymxo0849bfiGi2jN25ncj6uIkpOFATN/Sq3W+Emb5P1bjlXg
+sr0uF9Ymk29SdWDgxCdEgOdKqCHBNKy+2nJ5NrCBL+Ni8t8Txy1v2LpDs14B2cWr
+x1SLKuIlrpea0KPgWiCN7CRKCq0aAJt5ioc2UyPJT93lo8A6CsC+Hl28zrG69a83
+RITu8QlZfO9qS1WAuovTU/Bdb6bdFz0lWhCFk1h0If514zskIjVZ178l/5AHFBwD
+OLpX7O5p/WOriJ0I8RuS7vUqLS7fTcqzwE2KU98M90y3pjjq1cIvTf4AuH5U2pBR
+F4KWC78e5XYmH5c9w9IIUk1z0I9JJg==
+=2S2s
+-----END PGP SIGNATURE-----
+
+--Sig_/.XiUKwHyEa9LHmLz4WHSqN/--
