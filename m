@@ -1,49 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45442 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965049AbeF0P6C (ORCPT
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:46738 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932582AbeFPP4j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Jun 2018 11:58:02 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: brcmsmac: make function wlc_phy_workarounds_nphy_rev1 static
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180623221531.6396-2-colin.king@canonical.com>
-References: <20180623221531.6396-2-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20180627155802.26F41601EA@smtp.codeaurora.org> (sfid-20180627_175820_998300_24D2D154)
-Date: Wed, 27 Jun 2018 15:58:02 +0000 (UTC)
+        Sat, 16 Jun 2018 11:56:39 -0400
+Received: by mail-wr0-f194.google.com with SMTP id v13-v6so12612196wrp.13
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Jun 2018 08:56:39 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/4] mt76x2: debugfs: add sw pulse statistics to dfs debugfs
+Date: Sat, 16 Jun 2018 17:56:21 +0200
+Message-Id: <20180616155621.30539-5-lorenzo.bianconi@redhat.com> (sfid-20180616_175643_106940_409D5453)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
+Add sw pattern detector statistics to mt76x2 debugfs.
+Moreover track down number of allocated sequence by the detector
 
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> The function wlc_phy_workarounds_nphy_rev1 is local to the source and
-> does not need to be in global scope, so make it static.
-> 
-> Cleans up sparse warning:
-> symbol 'wlc_phy_workarounds_nphy_rev1' was not declared. Should it
-> be static?
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c |  8 ++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c     | 11 ++++++++++-
+ drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h     |  7 +++++++
+ 3 files changed, 25 insertions(+), 1 deletion(-)
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-ab8d904654e2 brcmsmac: make function wlc_phy_workarounds_nphy_rev1 static
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c b/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
+index 955ea3e692dd..bbe5cf1b6b49 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
+@@ -91,12 +91,20 @@ mt76x2_dfs_stat_read(struct seq_file *file, void *data)
+ 	struct mt76x2_dev *dev = file->private;
+ 	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
+ 
++	seq_printf(file, "allocated sequences:\t%d\n",
++		   dfs_pd->seq_stats.seq_pool_len);
++	seq_printf(file, "used sequences:\t\t%d\n",
++		   dfs_pd->seq_stats.seq_len);
++	seq_puts(file, "\n");
++
+ 	for (i = 0; i < MT_DFS_NUM_ENGINES; i++) {
+ 		seq_printf(file, "engine: %d\n", i);
+ 		seq_printf(file, "  hw pattern detected:\t%d\n",
+ 			   dfs_pd->stats[i].hw_pattern);
+ 		seq_printf(file, "  hw pulse discarded:\t%d\n",
+ 			   dfs_pd->stats[i].hw_pulse_discarded);
++		seq_printf(file, "  sw pattern detected:\t%d\n",
++			   dfs_pd->stats[i].sw_pattern);
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
+index 0a53a47d8b14..e8894f75a94a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
+@@ -165,6 +165,9 @@ static void mt76x2_dfs_seq_pool_put(struct mt76x2_dev *dev,
+ 	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
+ 
+ 	list_add(&seq->head, &dfs_pd->seq_pool);
++
++	dfs_pd->seq_stats.seq_pool_len++;
++	dfs_pd->seq_stats.seq_len--;
+ }
+ 
+ static
+@@ -180,7 +183,11 @@ struct mt76x2_dfs_sequence *mt76x2_dfs_seq_pool_get(struct mt76x2_dev *dev)
+ 				       struct mt76x2_dfs_sequence,
+ 				       head);
+ 		list_del(&seq->head);
++		dfs_pd->seq_stats.seq_pool_len--;
+ 	}
++	if (seq)
++		dfs_pd->seq_stats.seq_len++;
++
+ 	return seq;
+ }
+ 
+@@ -556,8 +563,10 @@ static bool mt76x2_dfs_check_detection(struct mt76x2_dev *dev)
+ 		return false;
+ 
+ 	list_for_each_entry(seq, &dfs_pd->sequences, head) {
+-		if (seq->count > MT_DFS_SEQUENCE_TH)
++		if (seq->count > MT_DFS_SEQUENCE_TH) {
++			dfs_pd->stats[seq->engine].sw_pattern++;
+ 			return true;
++		}
+ 	}
+ 	return false;
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
+index 0ce5b62fb74c..72603ca527ee 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
+@@ -105,6 +105,12 @@ struct mt76x2_dfs_sw_detector_params {
+ struct mt76x2_dfs_engine_stats {
+ 	u32 hw_pattern;
+ 	u32 hw_pulse_discarded;
++	u32 sw_pattern;
++};
++
++struct mt76x2_dfs_seq_stats {
++	u32 seq_pool_len;
++	u32 seq_len;
+ };
+ 
+ struct mt76x2_dfs_pattern_detector {
+@@ -118,6 +124,7 @@ struct mt76x2_dfs_pattern_detector {
+ 
+ 	struct list_head sequences;
+ 	struct list_head seq_pool;
++	struct mt76x2_dfs_seq_stats seq_stats;
+ 
+ 	unsigned long last_sw_check;
+ 	u32 last_event_ts;
 -- 
-https://patchwork.kernel.org/patch/10483927/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.17.1
