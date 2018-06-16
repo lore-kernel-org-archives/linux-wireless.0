@@ -1,201 +1,395 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:44936 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751143AbeFZE5K (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:36666 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932439AbeFPP4i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Jun 2018 00:57:10 -0400
-Received: by mail-pf0-f196.google.com with SMTP id j3-v6so153979pfh.11
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2018 21:57:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180626014924.GB11229@jagdpanzerIV>
-References: <000000000000720530056f7f9b63@google.com> <20180626014924.GB11229@jagdpanzerIV>
-From: Dmitry Vyukov <dvyukov@google.com>
-Date: Tue, 26 Jun 2018 06:56:49 +0200
-Message-ID: <CACT4Y+aGZWmBg9nWaWkBukUiP6ZTRH50OT89o+aGGdY8-JO0PQ@mail.gmail.com> (sfid-20180626_065734_240125_AC086C6D)
-Subject: Re: INFO: rcu detected stall in vprintk_emit
-To: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-Cc: syzbot <syzbot+d29d18215e477cfbfbdd@syzkaller.appspotmail.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Petr Mladek <pmladek@suse.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        syzkaller-bugs <syzkaller-bugs@googlegroups.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Sat, 16 Jun 2018 11:56:38 -0400
+Received: by mail-wm0-f68.google.com with SMTP id v131-v6so8529435wma.1
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Jun 2018 08:56:37 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4] mt76x2: dfs: add sw pattern detector
+Date: Sat, 16 Jun 2018 17:56:20 +0200
+Message-Id: <20180616155621.30539-4-lorenzo.bianconi@redhat.com> (sfid-20180616_175642_624083_883D25C7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 26, 2018 at 3:49 AM, Sergey Senozhatsky
-<sergey.senozhatsky.work@gmail.com> wrote:
-> On (06/25/18 16:19), syzbot wrote:
->> Hello,
->>
->> syzbot found the following crash on:
->>
->> HEAD commit:    77072ca59fdd Merge tag 'for-linus-20180623' of git://git.k..
->> git tree:       upstream
->> console output: https://syzkaller.appspot.com/x/log.txt?x=169c7c04400000
->> kernel config:  https://syzkaller.appspot.com/x/.config?x=befbcd7305e41bb0
->> dashboard link: https://syzkaller.appspot.com/bug?extid=d29d18215e477cfbfbdd
->> compiler:       gcc (GCC) 8.0.1 20180413 (experimental)
->> syzkaller repro:https://syzkaller.appspot.com/x/repro.syz?x=1585147f800000
->>
->> IMPORTANT: if you fix the bug, please add the following tag to the commit:
->> Reported-by: syzbot+d29d18215e477cfbfbdd@syzkaller.appspotmail.com
->>
->> llcp: nfc_llcp_send_ui_frame: Could not allocate PDU
->> llcp: nfc_llcp_send_ui_frame: Could not allocate PDU
->> llcp: nfc_llcp_send_ui_frame: Could not allocate PDU
->> llcp: nfc_llcp_send_ui_frame: Could not allocate PDU
->> llcp: nfc_llcp_send_ui_frame: Could not allocate PDU
->
-> Hi,
->
-> Thanks for the report.
->
-> I'll Cc networking people on this.
->
-> I've a strong feeling that we saw it before.
+Add sw DFS pattern detector support for mt76x2 based devices.
+Dfs pattern supported:
+- short pulse radar patterns
+- staggered radar patterns
 
-A very similar bug was reported before:
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ .../net/wireless/mediatek/mt76/mt76x2_dfs.c   | 231 +++++++++++++++++-
+ .../net/wireless/mediatek/mt76/mt76x2_dfs.h   |  30 +++
+ 2 files changed, 260 insertions(+), 1 deletion(-)
 
-https://groups.google.com/d/msg/syzkaller-bugs/Axw2t6DvU60/TfLUoXsjBAAJ
-
-
-
-> The kernel is
-> CONFIG_PREEMPT_VOLUNTARY=y, llcp_sock_sendmsg() stuck in a error
-> reporting loop:
->
->         do {
->         ...
->                 pdu = nfc_alloc_send_skb(sock->dev, &sock->sk, MSG_DONTWAIT,
->                                          frag_len + LLCP_HEADER_SIZE, &err);
->                 if (pdu == NULL) {
->                         pr_err("Could not allocate PDU\n");
->                         continue;
->                 }
->         ...
->         } while (remaining_len > 0);
->
-> [ 1004.674843] llcp: nfc_llcp_send_ui_frame: Could not allocate PDU
-> [ 1004.681035] llcp: nfc_llcp_send_ui_frame: Could not allocate PDU
-> ...
-> [ 1098.508526] llcp: nfc_llcp_send_ui_frame: Could not allocate PDU
-> [ 1098.514698] llcp: nfc_llcp_send_ui_frame: Could not allocate PDU
-> [ 1098.520844] INFO: rcu_sched self-detected stall on CPU
->
-> 94 seconds worth of heavy printing, no preemption:
->
->> INFO: rcu_sched self-detected stall on CPU
->>       1-....: (20918 ticks this GP) idle=55a/1/4611686018427387906
->> softirq=11347/11347 fqs=20240
->>        (t=125005 jiffies g=5572 c=5571 q=149)
->> NMI backtrace for cpu 1
->> CPU: 1 PID: 4811 Comm: syz-executor0 Not tainted 4.18.0-rc1+ #115
->> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS
->> Google 01/01/2011
->> Call Trace:
->>  <IRQ>
->>  __dump_stack lib/dump_stack.c:77 [inline]
->>  dump_stack+0x1c9/0x2b4 lib/dump_stack.c:113
->>  nmi_cpu_backtrace.cold.4+0x19/0xce lib/nmi_backtrace.c:103
->>  nmi_trigger_cpumask_backtrace+0x151/0x192 lib/nmi_backtrace.c:62
->>  arch_trigger_cpumask_backtrace+0x14/0x20 arch/x86/kernel/apic/hw_nmi.c:38
->>  trigger_single_cpu_backtrace include/linux/nmi.h:156 [inline]
->>  rcu_dump_cpu_stacks+0x175/0x1c2 kernel/rcu/tree.c:1336
->>  print_cpu_stall kernel/rcu/tree.c:1485 [inline]
->>  check_cpu_stall.isra.60.cold.78+0x36c/0x5a6 kernel/rcu/tree.c:1553
->>  __rcu_pending kernel/rcu/tree.c:3244 [inline]
->>  rcu_pending kernel/rcu/tree.c:3291 [inline]
->>  rcu_check_callbacks+0x23f/0xcd0 kernel/rcu/tree.c:2646
->>  update_process_times+0x2d/0x70 kernel/time/timer.c:1636
->>  tick_sched_handle+0x9f/0x180 kernel/time/tick-sched.c:164
->>  tick_sched_timer+0x45/0x130 kernel/time/tick-sched.c:1274
->>  __run_hrtimer kernel/time/hrtimer.c:1398 [inline]
->>  __hrtimer_run_queues+0x3eb/0x10c0 kernel/time/hrtimer.c:1460
->>  hrtimer_interrupt+0x2f3/0x750 kernel/time/hrtimer.c:1518
->>  local_apic_timer_interrupt arch/x86/kernel/apic/apic.c:1025 [inline]
->>  smp_apic_timer_interrupt+0x165/0x730 arch/x86/kernel/apic/apic.c:1050
->>  apic_timer_interrupt+0xf/0x20 arch/x86/entry/entry_64.S:863
->>  </IRQ>
->> RIP: 0010:arch_local_irq_restore arch/x86/include/asm/paravirt.h:783
->> [inline]
->> RIP: 0010:console_unlock+0xc84/0x10b0 kernel/printk/printk.c:2397
->> Code: c1 e8 03 42 80 3c 38 00 0f 85 bd 03 00 00 48 83 3d 38 f7 8e 07 00 0f
->> 84 69 02 00 00 e8 45 56 19 00 48 8b bd b0 fe ff ff 57 9d <0f> 1f 44 00 00 e9
->> 96 f5 ff ff e8 2d 56 19 00 48 8b 7d 08 e8 94 cf
->> RSP: 0018:ffff8801aab0f358 EFLAGS: 00000293 ORIG_RAX: ffffffffffffff13
->> RAX: ffff8801aa2802c0 RBX: 0000000000000200 RCX: 1ffff10035450163
->> RDX: 0000000000000000 RSI: ffffffff8162b8fb RDI: 0000000000000293
->> RBP: ffff8801aab0f4c0 R08: ffff8801aa280af8 R09: 0000000000000006
->> R10: ffff8801aa2802c0 R11: 0000000000000000 R12: 0000000000000000
->> R13: ffffffff84ea9880 R14: 0000000000000001 R15: dffffc0000000000
->>  vprintk_emit+0x6c6/0xdf0 kernel/printk/printk.c:1907
->>  vprintk_default+0x28/0x30 kernel/printk/printk.c:1948
->>  vprintk_func+0x7a/0xe7 kernel/printk/printk_safe.c:382
->>  printk+0xa7/0xcf kernel/printk/printk.c:1981
->>  nfc_llcp_send_ui_frame.cold.9+0x18/0x1f net/nfc/llcp_commands.c:758
->>  llcp_sock_sendmsg+0x278/0x350 net/nfc/llcp_sock.c:786
->>  sock_sendmsg_nosec net/socket.c:645 [inline]
->>  sock_sendmsg+0xd5/0x120 net/socket.c:655
->>  ___sys_sendmsg+0x51d/0x930 net/socket.c:2161
->>  __sys_sendmmsg+0x240/0x6f0 net/socket.c:2256
->>  __do_sys_sendmmsg net/socket.c:2285 [inline]
->>  __se_sys_sendmmsg net/socket.c:2282 [inline]
->>  __x64_sys_sendmmsg+0x9d/0x100 net/socket.c:2282
->>  do_syscall_64+0x1b9/0x820 arch/x86/entry/common.c:290
->>  entry_SYSCALL_64_after_hwframe+0x49/0xbe
->
->
-> So we can try switching to ratelimited error reporting
-> [that would be option A]:
->
-> ---
->
-> diff --git a/net/nfc/llcp_commands.c b/net/nfc/llcp_commands.c
-> index 2ceefa183cee..2f3becb709b8 100644
-> --- a/net/nfc/llcp_commands.c
-> +++ b/net/nfc/llcp_commands.c
-> @@ -755,7 +755,7 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
->                 pdu = nfc_alloc_send_skb(sock->dev, &sock->sk, MSG_DONTWAIT,
->                                          frag_len + LLCP_HEADER_SIZE, &err);
->                 if (pdu == NULL) {
-> -                       pr_err("Could not allocate PDU\n");
-> +                       pr_err_ratelimited("Could not allocate PDU\n");
->                         continue;
->                 }
->
-> ---
->
->
-> Or ratelimited error reporting and cond_resched()
-> [that would be option B]:
->
-> ---
->
-> diff --git a/net/nfc/llcp_commands.c b/net/nfc/llcp_commands.c
-> index 2ceefa183cee..61741db4c4e6 100644
-> --- a/net/nfc/llcp_commands.c
-> +++ b/net/nfc/llcp_commands.c
-> @@ -755,7 +755,8 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
->                 pdu = nfc_alloc_send_skb(sock->dev, &sock->sk, MSG_DONTWAIT,
->                                          frag_len + LLCP_HEADER_SIZE, &err);
->                 if (pdu == NULL) {
-> -                       pr_err("Could not allocate PDU\n");
-> +                       pr_err_ratelimited("Could not allocate PDU\n");
-> +                       cond_resched();
->                         continue;
->                 }
->
-> ---
->
->         -ss
->
-> --
-> You received this message because you are subscribed to the Google Groups "syzkaller-bugs" group.
-> To unsubscribe from this group and stop receiving emails from it, send an email to syzkaller-bugs+unsubscribe@googlegroups.com.
-> To view this discussion on the web visit https://groups.google.com/d/msgid/syzkaller-bugs/20180626014924.GB11229%40jagdpanzerIV.
-> For more options, visit https://groups.google.com/d/optout.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
+index 3117569c26d5..0a53a47d8b14 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
+@@ -159,9 +159,57 @@ static void mt76x2_dfs_set_capture_mode_ctrl(struct mt76x2_dev *dev,
+ 	mt76_wr(dev, MT_BBP(DFS, 36), data);
+ }
+ 
++static void mt76x2_dfs_seq_pool_put(struct mt76x2_dev *dev,
++				    struct mt76x2_dfs_sequence *seq)
++{
++	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
++
++	list_add(&seq->head, &dfs_pd->seq_pool);
++}
++
++static
++struct mt76x2_dfs_sequence *mt76x2_dfs_seq_pool_get(struct mt76x2_dev *dev)
++{
++	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
++	struct mt76x2_dfs_sequence *seq;
++
++	if (list_empty(&dfs_pd->seq_pool)) {
++		seq = devm_kzalloc(dev->mt76.dev, sizeof(*seq), GFP_ATOMIC);
++	} else {
++		seq = list_first_entry(&dfs_pd->seq_pool,
++				       struct mt76x2_dfs_sequence,
++				       head);
++		list_del(&seq->head);
++	}
++	return seq;
++}
++
++static int mt76x2_dfs_get_multiple(int val, int frac, int margin)
++{
++	int remainder, factor;
++
++	if (!frac)
++		return 0;
++
++	if (abs(val - frac) <= margin)
++		return 1;
++
++	factor = val / frac;
++	remainder = val % frac;
++
++	if (remainder > margin) {
++		if ((frac - remainder) <= margin)
++			factor++;
++		else
++			factor = 0;
++	}
++	return factor;
++}
++
+ static void mt76x2_dfs_detector_reset(struct mt76x2_dev *dev)
+ {
+ 	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
++	struct mt76x2_dfs_sequence *seq, *tmp_seq;
+ 	int i;
+ 
+ 	/* reset hw detector */
+@@ -172,6 +220,11 @@ static void mt76x2_dfs_detector_reset(struct mt76x2_dev *dev)
+ 		dfs_pd->event_rb[i].h_rb = 0;
+ 		dfs_pd->event_rb[i].t_rb = 0;
+ 	}
++
++	list_for_each_entry_safe(seq, tmp_seq, &dfs_pd->sequences, head) {
++		list_del_init(&seq->head);
++		mt76x2_dfs_seq_pool_put(dev, seq);
++	}
+ }
+ 
+ static bool mt76x2_dfs_check_chirp(struct mt76x2_dev *dev)
+@@ -375,11 +428,145 @@ static void mt76x2_dfs_queue_event(struct mt76x2_dev *dev,
+ 					     MT_DFS_EVENT_BUFLEN);
+ }
+ 
++static int mt76x2_dfs_create_sequence(struct mt76x2_dev *dev,
++				      struct mt76x2_dfs_event *event,
++				      u16 cur_len)
++{
++	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
++	struct mt76x2_dfs_sw_detector_params *sw_params;
++	u32 width_delta, with_sum, factor, cur_pri;
++	struct mt76x2_dfs_sequence seq, *seq_p;
++	struct mt76x2_dfs_event_rb *event_rb;
++	struct mt76x2_dfs_event *cur_event;
++	int i, j, end, pri;
++
++	event_rb = event->engine == 2 ? &dfs_pd->event_rb[1]
++				      : &dfs_pd->event_rb[0];
++
++	i = mt76_decr(event_rb->t_rb, MT_DFS_EVENT_BUFLEN);
++	end = mt76_decr(event_rb->h_rb, MT_DFS_EVENT_BUFLEN);
++
++	while (i != end) {
++		cur_event = &event_rb->data[i];
++		with_sum = event->width + cur_event->width;
++
++		sw_params = &dfs_pd->sw_dpd_params;
++		switch (dev->dfs_pd.region) {
++		case NL80211_DFS_FCC:
++		case NL80211_DFS_JP:
++			if (with_sum < 600)
++				width_delta = 8;
++			else
++				width_delta = with_sum >> 3;
++			break;
++		case NL80211_DFS_ETSI:
++			if (event->engine == 2)
++				width_delta = with_sum >> 6;
++			else if (with_sum < 620)
++				width_delta = 24;
++			else
++				width_delta = 8;
++			break;
++		case NL80211_DFS_UNSET:
++		default:
++			return -EINVAL;
++		}
++
++		pri = event->ts - cur_event->ts;
++		if (abs(event->width - cur_event->width) > width_delta ||
++		    pri < sw_params->min_pri)
++			goto next;
++
++		if (pri > sw_params->max_pri)
++			break;
++
++		seq.pri = event->ts - cur_event->ts;
++		seq.first_ts = cur_event->ts;
++		seq.last_ts = event->ts;
++		seq.engine = event->engine;
++		seq.count = 2;
++
++		j = mt76_decr(i, MT_DFS_EVENT_BUFLEN);
++		while (j != end) {
++			cur_event = &event_rb->data[j];
++			cur_pri = event->ts - cur_event->ts;
++			factor = mt76x2_dfs_get_multiple(cur_pri, seq.pri,
++						sw_params->pri_margin);
++			if (factor > 0) {
++				seq.first_ts = cur_event->ts;
++				seq.count++;
++			}
++
++			j = mt76_decr(j, MT_DFS_EVENT_BUFLEN);
++		}
++		if (seq.count <= cur_len)
++			goto next;
++
++		seq_p = mt76x2_dfs_seq_pool_get(dev);
++		if (!seq_p)
++			return -ENOMEM;
++
++		*seq_p = seq;
++		INIT_LIST_HEAD(&seq_p->head);
++		list_add(&seq_p->head, &dfs_pd->sequences);
++next:
++		i = mt76_decr(i, MT_DFS_EVENT_BUFLEN);
++	}
++	return 0;
++}
++
++static u16 mt76x2_dfs_add_event_to_sequence(struct mt76x2_dev *dev,
++					    struct mt76x2_dfs_event *event)
++{
++	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
++	struct mt76x2_dfs_sw_detector_params *sw_params;
++	struct mt76x2_dfs_sequence *seq, *tmp_seq;
++	u16 max_seq_len = 0;
++	u32 factor, pri;
++
++	sw_params = &dfs_pd->sw_dpd_params;
++	list_for_each_entry_safe(seq, tmp_seq, &dfs_pd->sequences, head) {
++		if (event->ts > seq->first_ts + MT_DFS_SEQUENCE_WINDOW) {
++			list_del_init(&seq->head);
++			mt76x2_dfs_seq_pool_put(dev, seq);
++			continue;
++		}
++
++		if (event->engine != seq->engine)
++			continue;
++
++		pri = event->ts - seq->last_ts;
++		factor = mt76x2_dfs_get_multiple(pri, seq->pri,
++						 sw_params->pri_margin);
++		if (factor > 0) {
++			seq->last_ts = event->ts;
++			seq->count++;
++			max_seq_len = max_t(u16, max_seq_len, seq->count);
++		}
++	}
++	return max_seq_len;
++}
++
++static bool mt76x2_dfs_check_detection(struct mt76x2_dev *dev)
++{
++	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
++	struct mt76x2_dfs_sequence *seq;
++
++	if (list_empty(&dfs_pd->sequences))
++		return false;
++
++	list_for_each_entry(seq, &dfs_pd->sequences, head) {
++		if (seq->count > MT_DFS_SEQUENCE_TH)
++			return true;
++	}
++	return false;
++}
++
+ static void mt76x2_dfs_add_events(struct mt76x2_dev *dev)
+ {
+ 	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
+ 	struct mt76x2_dfs_event event;
+-	int i;
++	int i, seq_len;
+ 
+ 	/* disable debug mode */
+ 	mt76x2_dfs_set_capture_mode_ctrl(dev, false);
+@@ -394,6 +581,9 @@ static void mt76x2_dfs_add_events(struct mt76x2_dev *dev)
+ 		if (!mt76x2_dfs_check_event(dev, &event))
+ 			continue;
+ 
++		seq_len = mt76x2_dfs_add_event_to_sequence(dev, &event);
++		mt76x2_dfs_create_sequence(dev, &event, seq_len);
++
+ 		mt76x2_dfs_queue_event(dev, &event);
+ 	}
+ 	mt76x2_dfs_set_capture_mode_ctrl(dev, true);
+@@ -434,9 +624,19 @@ static void mt76x2_dfs_tasklet(unsigned long arg)
+ 
+ 	if (time_is_before_jiffies(dfs_pd->last_sw_check +
+ 				   MT_DFS_SW_TIMEOUT)) {
++		bool radar_detected;
++
+ 		dfs_pd->last_sw_check = jiffies;
+ 
+ 		mt76x2_dfs_add_events(dev);
++		radar_detected = mt76x2_dfs_check_detection(dev);
++		if (radar_detected) {
++			/* sw detector rx radar pattern */
++			ieee80211_radar_detected(dev->mt76.hw);
++			mt76x2_dfs_detector_reset(dev);
++
++			return;
++		}
+ 		mt76x2_dfs_check_event_window(dev);
+ 	}
+ 
+@@ -473,6 +673,32 @@ static void mt76x2_dfs_tasklet(unsigned long arg)
+ 	mt76x2_irq_enable(dev, MT_INT_GPTIMER);
+ }
+ 
++static void mt76x2_dfs_init_sw_detector(struct mt76x2_dev *dev)
++{
++	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
++
++	switch (dev->dfs_pd.region) {
++	case NL80211_DFS_FCC:
++		dfs_pd->sw_dpd_params.max_pri = MT_DFS_FCC_MAX_PRI;
++		dfs_pd->sw_dpd_params.min_pri = MT_DFS_FCC_MIN_PRI;
++		dfs_pd->sw_dpd_params.pri_margin = MT_DFS_PRI_MARGIN;
++		break;
++	case NL80211_DFS_ETSI:
++		dfs_pd->sw_dpd_params.max_pri = MT_DFS_ETSI_MAX_PRI;
++		dfs_pd->sw_dpd_params.min_pri = MT_DFS_ETSI_MIN_PRI;
++		dfs_pd->sw_dpd_params.pri_margin = MT_DFS_PRI_MARGIN << 2;
++		break;
++	case NL80211_DFS_JP:
++		dfs_pd->sw_dpd_params.max_pri = MT_DFS_JP_MAX_PRI;
++		dfs_pd->sw_dpd_params.min_pri = MT_DFS_JP_MIN_PRI;
++		dfs_pd->sw_dpd_params.pri_margin = MT_DFS_PRI_MARGIN;
++		break;
++	case NL80211_DFS_UNSET:
++	default:
++		break;
++	}
++}
++
+ static void mt76x2_dfs_set_bbp_params(struct mt76x2_dev *dev)
+ {
+ 	u32 data;
+@@ -595,6 +821,7 @@ void mt76x2_dfs_init_params(struct mt76x2_dev *dev)
+ 
+ 	if ((chandef->chan->flags & IEEE80211_CHAN_RADAR) &&
+ 	    dev->dfs_pd.region != NL80211_DFS_UNSET) {
++		mt76x2_dfs_init_sw_detector(dev);
+ 		mt76x2_dfs_set_bbp_params(dev);
+ 		/* enable debug mode */
+ 		mt76x2_dfs_set_capture_mode_ctrl(dev, true);
+@@ -619,6 +846,8 @@ void mt76x2_dfs_init_detector(struct mt76x2_dev *dev)
+ {
+ 	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
+ 
++	INIT_LIST_HEAD(&dfs_pd->sequences);
++	INIT_LIST_HEAD(&dfs_pd->seq_pool);
+ 	dfs_pd->region = NL80211_DFS_UNSET;
+ 	dfs_pd->last_sw_check = jiffies;
+ 	tasklet_init(&dfs_pd->dfs_tasklet, mt76x2_dfs_tasklet,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
+index 56f09eb5d6d0..0ce5b62fb74c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
+@@ -37,7 +37,17 @@
+ #define MT_DFS_EVENT_LOOP		64
+ #define MT_DFS_SW_TIMEOUT		(HZ / 20)
+ #define MT_DFS_EVENT_WINDOW		(HZ / 5)
++#define MT_DFS_SEQUENCE_WINDOW		(200 * (1 << 20))
+ #define MT_DFS_EVENT_TIME_MARGIN	2000
++#define MT_DFS_PRI_MARGIN		4
++#define MT_DFS_SEQUENCE_TH		6
++
++#define MT_DFS_FCC_MAX_PRI		((28570 << 1) + 1000)
++#define MT_DFS_FCC_MIN_PRI		(3000 - 2)
++#define MT_DFS_JP_MAX_PRI		((80000 << 1) + 1000)
++#define MT_DFS_JP_MIN_PRI		(28500 - 2)
++#define MT_DFS_ETSI_MAX_PRI		(133333 + 125000 + 117647 + 1000)
++#define MT_DFS_ETSI_MIN_PRI		(4500 - 20)
+ 
+ struct mt76x2_radar_specs {
+ 	u8 mode;
+@@ -69,6 +79,15 @@ struct mt76x2_dfs_event_rb {
+ 	int h_rb, t_rb;
+ };
+ 
++struct mt76x2_dfs_sequence {
++	struct list_head head;
++	u32 first_ts;
++	u32 last_ts;
++	u32 pri;
++	u16 count;
++	u8 engine;
++};
++
+ struct mt76x2_dfs_hw_pulse {
+ 	u8 engine;
+ 	u32 period;
+@@ -77,6 +96,12 @@ struct mt76x2_dfs_hw_pulse {
+ 	u32 burst;
+ };
+ 
++struct mt76x2_dfs_sw_detector_params {
++	u32 min_pri;
++	u32 max_pri;
++	u32 pri_margin;
++};
++
+ struct mt76x2_dfs_engine_stats {
+ 	u32 hw_pattern;
+ 	u32 hw_pulse_discarded;
+@@ -88,7 +113,12 @@ struct mt76x2_dfs_pattern_detector {
+ 	u8 chirp_pulse_cnt;
+ 	u32 chirp_pulse_ts;
+ 
++	struct mt76x2_dfs_sw_detector_params sw_dpd_params;
+ 	struct mt76x2_dfs_event_rb event_rb[2];
++
++	struct list_head sequences;
++	struct list_head seq_pool;
++
+ 	unsigned long last_sw_check;
+ 	u32 last_event_ts;
+ 
+-- 
+2.17.1
