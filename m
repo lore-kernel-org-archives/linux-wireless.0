@@ -1,90 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45480 "EHLO mx1.redhat.com"
+Received: from mail-db5eur01on0104.outbound.protection.outlook.com ([104.47.2.104]:45086
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S934011AbeFYNyX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Jun 2018 09:54:23 -0400
-Date: Mon, 25 Jun 2018 15:54:20 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>, moorray3@wp.pl,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        mschmidt@redhat.com, linux-mediatek@lists.infradead.org
-Subject: Re: [ANN] mt76x0 usb driver
-Message-ID: <20180625135419.GA3282@redhat.com> (sfid-20180625_155430_689473_CD173AB4)
-References: <20180409141032.GA9247@redhat.com>
- <20180409142640.GA5680@localhost.localdomain>
- <20180409144819.GA9253@redhat.com>
- <20180625120816.GA2072@redhat.com>
- <CAA2SeNJjHCrO5NyznK+EJt5K6SRVRr_FPZA2i53Z-FnqzkKz_g@mail.gmail.com>
+        id S933410AbeFQKHC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 17 Jun 2018 06:07:02 -0400
+From: Omer Efrat <omer.efrat@tandemg.com>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        b.a.t.m.a.n@lists.open-mesh.org
+Cc: Omer Efrat <omer.efrat@tandemg.com>
+Subject: [PATCH v3 3/5] batman-adv: use BIT_ULL for NL80211_STA_INFO_* attribute types
+Date: Sun, 17 Jun 2018 13:06:54 +0300
+Message-Id: <1529230014-17897-1-git-send-email-omer.efrat@tandemg.com> (sfid-20180617_120707_815007_7AC2B13C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAA2SeNJjHCrO5NyznK+EJt5K6SRVRr_FPZA2i53Z-FnqzkKz_g@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 25, 2018 at 02:55:51PM +0200, Lorenzo Bianconi wrote:
-> >
-> > Hi all,
-> 
-> Hi Stanislaw,
-> 
-> >
-> > On Mon, Apr 09, 2018 at 04:48:19PM +0200, Stanislaw Gruszka wrote:
-> > > On Mon, Apr 09, 2018 at 04:26:42PM +0200, Lorenzo Bianconi wrote:
-> > > > > I would like to integrate the driver to kernel via mt76 driver, i.e.
-> > > > > add USB hooks and mt76x0 mac/phy code to mt76. This will open
-> > > > > possibility to develop support for mt76x2 USB devices as well as mt76x0
-> > > > > PCIe devices in mt76.
-> > > > >
-> > > >
-> > > > I have already started supporting mt76x2 USB devices in mt76 since register map
-> > > > is pretty similar to PCIe devices:
-> > > > https://github.com/LorenzoBianconi/wireless-drivers-next/tree/mt76x2u
-> > > > I added some usb utility routines so I think we can integrate mt76x0 in mt76 as
-> > > > well
-> > >
-> > > Great, I'll start to integrate mt76x0 on top of your tree.
-> >
-> > So I started to do integration here:
-> > https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft
-> >
-> > However since driver is self containging, I think better would be just
-> > submit the driver into mt76/mt76x0/ dir upstream and do code merging work as
-> > follow-up patches posted on the mailing list. Patches then could be reviewed
-> > on regular basic. This will provide support for new mt76x0 devices in kernel
-> > quicker. Conflicts with mt76x2u and not yet upstreamed mt7603 could be resolved
-> > on the fly.
-> 
-> I did a quick review of the code and it seems (please correct me if I
-> am wrong) there is
-> a lot of duplicated code with mt76/mt76x2u and mt7601u drivers (i.e:
-> mcu/eeprom/mac code
+The BIT macro uses unsigned long which some architectures handle as 32 bit
+and therefore might cause macro's shift to overflow when used on a value
+equals or larger than 32 (NL80211_STA_INFO_RX_DURATION and afterwards).
 
-Yes, however there are some subtle differences too.
+Since 'filled' member in station_info changed to u64, BIT_ULL macro
+should be used with all NL80211_STA_INFO_* attribute types instead of BIT
+to prevent future possible bugs when one will use BIT macro for higher
+attributes by mistake.
 
-> is quite the same of the ones used in mt76x2u). Moreover mt76/mt76x2u has been
-> refactored in order to expose usb and mt76x2_common modules where you
-> can use better
-> 802.11 aggregation (using mac80211 per-sta queuing) and A-MSDU support (using
-> tx/rx usb scatter-gather). Moreover mt76x2u has been tested/used by
-> various users till now.
-> So since mt76x0 will be deeply modified I guess it would be better to
-> start integrating the driver with
-> mt76/mt76x2u before been merged upstream otherwise will end-up with a
-> lot of integration commits.
+This commit cleans up all usages of BIT macro with the above field
+in batman-adv by changing it to BIT_ULL instead.
 
-Not sure why many integration commits in upstream is a problem. I think
-having patches posted on mailing list is better than doing them in my
-"private" tree without any review.
+Signed-off-by: Omer Efrat <omer.efrat@tandemg.com>
+---
+ net/batman-adv/bat_v_elp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> What do you think?
-
-I was thinking about posting mt76x0 driver in a subdir (there is sill 
-some cleanup work need to be done there), wait for upstream mt76x2u
-integration, then post patches that remove duplication between mt76x2
-and mt76x0 and add support for mt76x0e on the way.
-
-Thanks
-Stanislaw
+diff --git a/net/batman-adv/bat_v_elp.c b/net/batman-adv/bat_v_elp.c
+index 71c20c1..71e6474 100644
+--- a/net/batman-adv/bat_v_elp.c
++++ b/net/batman-adv/bat_v_elp.c
+@@ -114,7 +114,7 @@ static u32 batadv_v_elp_get_throughput(struct batadv_hardif_neigh_node *neigh)
+ 		}
+ 		if (ret)
+ 			goto default_throughput;
+-		if (!(sinfo.filled & BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
++		if (!(sinfo.filled & BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
+ 			goto default_throughput;
+ 
+ 		return sinfo.expected_throughput / 100;
+-- 
+2.7.4
