@@ -1,56 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:9186 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752523AbeF3Gav (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Jun 2018 02:30:51 -0400
-Subject: Re: [PATCH] atmel: using strlcpy() to avoid possible buffer overflows
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-References: <20180629025135.12236-1-yuehaibing@huawei.com>
- <CAHp75Vet-vTz_Ld=Lturmm8NSpK1etvoj-7Wzn4-h=bM2FQgZg@mail.gmail.com>
- <CAHp75VcTVtzLuwH=Ff6DBKJyQE4t=HT7hB2O=gvgN+V-38LH5g@mail.gmail.com>
-CC: <simon@thekelleys.org.uk>, Kalle Valo <kvalo@codeaurora.org>,
-        "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        "David S. Miller" <davem@davemloft.net>
-From: YueHaibing <yuehaibing@huawei.com>
-Message-ID: <1639a6d7-622a-99fc-9321-989661e4b923@huawei.com> (sfid-20180630_083124_066722_C59FBA0B)
-Date: Sat, 30 Jun 2018 14:30:34 +0800
+Received: from mail-qt0-f174.google.com ([209.85.216.174]:43440 "EHLO
+        mail-qt0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933278AbeFQKIX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 17 Jun 2018 06:08:23 -0400
+Received: by mail-qt0-f174.google.com with SMTP id y89-v6so12841274qtd.10
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Jun 2018 03:08:23 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAHp75VcTVtzLuwH=Ff6DBKJyQE4t=HT7hB2O=gvgN+V-38LH5g@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20180615172335.VSLI7.207164.root@dnvrco-web09>
+References: <20180615165838.QFYTH.206966.root@dnvrco-web09> <20180615172335.VSLI7.207164.root@dnvrco-web09>
+From: =?UTF-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>
+Date: Sun, 17 Jun 2018 12:08:22 +0200
+Message-ID: <CABvG-CWroH_u35=PbkWaL6YxB4DNX2vhcjAAwPq=bRQoKWWQDA@mail.gmail.com> (sfid-20180617_120826_953167_514B5EAB)
+Subject: Re: Atheros AR9462 - 5Ghz not working
+To: mgreger@cinci.rr.com
+Cc: Janusz Dziedzic <janusz.dziedzic@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        sedat.dilek@gmail.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On 2018/6/30 5:51, Andy Shevchenko wrote:
-> On Sat, Jun 30, 2018 at 12:47 AM, Andy Shevchenko
-> <andy.shevchenko@gmail.com> wrote:
->> On Fri, Jun 29, 2018 at 5:51 AM, YueHaibing <yuehaibing@huawei.com> wrote:
->>> 'firmware' is a module param which may been longer than firmware_id,
->>> so using strlcpy() to guard against overflows
+On 15 June 2018 at 19:23,  <mgreger@cinci.rr.com> wrote:
+> ---- mgreger@cinci.rr.com wrote:
+>> ---- "Micha=C5=82 Kazior" <kazikcz@gmail.com> wrote:
+>> > Your noise floor readout in survey dump is terribly bad for 5GHz. It
+>> > ain't stellar for 2.4GHz either but within reason nonetheless.
+>> >
+>> > Did you try using the card in a different device? I wonder if the
+>> > device you're trying to use it in has some sort of internal noise on
+>> > those frequencies and/or ath9k's ANI isn't able to deal with it.
+>> >
+>> >
+>> > Micha=C5=82
+>> >
+>> > On 15 June 2018 at 15:31,  <mgreger@cinci.rr.com> wrote:
 >>
->> strncat() is against overflow, this does a bit more.
->>
->>>         priv->firmware_id[0] = '\0';
->> ...
->>>         if (firmware) /* module parameter */
->>> -               strcpy(priv->firmware_id, firmware);
->>> +               strlcpy(priv->firmware_id, firmware, sizeof(priv->firmware_id));
->>
->> In either case the above '\0' is not needed.
->> But it looks like the intention was to use strncat() / strlcat().
-> 
-> Ah, this is under condition, yes. If no parameter supplied, this needs
-> to be clean, but
-> priv is allocated with zeroed memory
-> https://elixir.bootlin.com/linux/latest/source/net/core/dev.c#L8369
+>> I did.
+>> I took it out of the Penguin-Z notebook and put it in a Dell XPS15 9560 =
+running Windows 10. Only 2.4Ghz networks were visible from there as well. N=
+ot exactly apples-to-apples, but consistent results.
 
-so just remove this line:
-	 priv->firmware_id[0] = '\0';
+This reduces likeliness this is tied to a os/driver issue. Maybe
+calibration data on the device eeprom is broken? Or maybe it's a
+hardware defect?
 
-and using strlcpy while 'firmware' NOT null is enough.
 
-Will send v2.
+> Could it be antenna related (in multiple devices)?
 
-> 
+Antennas can be designed to work better on certain frequency ranges. I
+wouldn't expect such a dramatic effect though.
+
+
+> On wikidevi.com I see some M.2 cards listed with an antenna connector of =
+U.FL and others with MHF4. I can't find anything describing the difference,=
+ if any. The connectors seemed to fit OK. Also, what's the deal with 'main'=
+ and 'aux' antenna connectors? I've seen people suggest swapping them has h=
+elped in some cases with poor signal, while others insist that it makes no =
+difference. I have not tried swapping the connectors.
+
+I think it's not a connector problem because 2.4GHz scan results
+report reasonable signal strength for found APs (-60dBm). My
+experience is that if you use a wrong (but seemingly fitting)
+connector you'd get near 0 results or below -90dBm across the board.
+
+
+Micha=C5=82
