@@ -1,139 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:38252 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966469AbeFSPuw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Jun 2018 11:50:52 -0400
-Received: by mail-lf0-f67.google.com with SMTP id i83-v6so246462lfh.5
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2018 08:50:51 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH V3 1/2] brcmfmac: detect firmware support for monitor interface
-Date: Tue, 19 Jun 2018 17:48:08 +0200
-Message-Id: <20180619154809.25698-2-zajec5@gmail.com> (sfid-20180619_175056_480872_B0806B16)
-In-Reply-To: <20180619154809.25698-1-zajec5@gmail.com>
-References: <20180619154809.25698-1-zajec5@gmail.com>
+Received: from narfation.org ([79.140.41.39]:53890 "EHLO v3-1039.vlinux.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932994AbeFQK5F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 17 Jun 2018 06:57:05 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: b.a.t.m.a.n@lists.open-mesh.org
+Cc: Omer Efrat <omer.efrat@tandemg.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [B.A.T.M.A.N.] [PATCH v3 3/5] batman-adv: use BIT_ULL for NL80211_STA_INFO_* attribute types
+Date: Sun, 17 Jun 2018 12:57:02 +0200
+Message-ID: <2054994.kXe2AJMHxt@sven-edge> (sfid-20180617_125724_593681_420E32F9)
+In-Reply-To: <1529230014-17897-1-git-send-email-omer.efrat@tandemg.com>
+References: <1529230014-17897-1-git-send-email-omer.efrat@tandemg.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; boundary="nextPart4792148.4axvnBOdMb"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+--nextPart4792148.4axvnBOdMb
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Most of firmwares support creating monitor interface. The newest ones
-explicitly /announce/ it using a "monitor" entry in the list of
-capabilities.
+On Sonntag, 17. Juni 2018 12:06:54 CEST Omer Efrat wrote:
+[...]
+> --- a/net/batman-adv/bat_v_elp.c
+> +++ b/net/batman-adv/bat_v_elp.c
+> @@ -114,7 +114,7 @@ static u32 batadv_v_elp_get_throughput(struct batadv_hardif_neigh_node *neigh)
+>  		}
+>  		if (ret)
+>  			goto default_throughput;
+> -		if (!(sinfo.filled & BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
+> +		if (!(sinfo.filled & BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
+>  			goto default_throughput;
+>  
+>  		return sinfo.expected_throughput / 100;
+> 
 
-Check (and store) internally info about monitor mode support using a
-new feature flag. Once we sort out all details of handling monitor
-interface it will be used when reporting available interfaces to the
-cfg80211.
+WARNING: line over 80 characters
+#32: FILE: net/batman-adv/bat_v_elp.c:117:
++               if (!(sinfo.filled & BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
-V3: Patch added to the series
----
- .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 26 ++++++++++++++++++++++
- .../wireless/broadcom/brcm80211/brcmfmac/feature.h |  4 +++-
- .../wireless/broadcom/brcm80211/brcmfmac/fwil.h    |  2 ++
- 3 files changed, 31 insertions(+), 1 deletion(-)
+total: 0 errors, 1 warnings, 0 checks, 8 lines checked
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-index 800a423c7bc2..48d7978497b5 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-@@ -48,6 +48,7 @@ static const struct brcmf_feat_fwcap brcmf_fwcap_map[] = {
- 	{ BRCMF_FEAT_MBSS, "mbss" },
- 	{ BRCMF_FEAT_MCHAN, "mchan" },
- 	{ BRCMF_FEAT_P2P, "p2p" },
-+	{ BRCMF_FEAT_MONITOR, "monitor" },
- };
- 
- #ifdef DEBUG
-@@ -91,6 +92,26 @@ static int brcmf_feat_debugfs_read(struct seq_file *seq, void *data)
- }
- #endif /* DEBUG */
- 
-+static void brcmf_feat_cmd_int_get(struct brcmf_if *ifp, enum brcmf_feat_id id,
-+				   u32 cmd)
-+{
-+	u32 data;
-+	int err;
-+
-+	ifp->fwil_fwerr = true;
-+
-+	err = brcmf_fil_cmd_int_get(ifp, cmd, &data);
-+	if (err == 0) {
-+		brcmf_dbg(INFO, "enabling feature: %s\n", brcmf_feat_names[id]);
-+		ifp->drvr->feat_flags |= BIT(id);
-+	} else {
-+		brcmf_dbg(TRACE, "%s feature check failed: %d\n",
-+			  brcmf_feat_names[id], err);
-+	}
-+
-+	ifp->fwil_fwerr = false;
-+}
-+
- /**
-  * brcmf_feat_iovar_int_get() - determine feature through iovar query.
-  *
-@@ -251,6 +272,11 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
- 	}
- 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_FWSUP, "sup_wpa");
- 
-+	/* Fallback detection for older firmwares */
-+	if (!brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MONITOR))
-+		brcmf_feat_cmd_int_get(ifp, BRCMF_FEAT_MONITOR,
-+				       BRCMF_C_GET_MONITOR);
-+
- 	/* set chip related quirks */
- 	switch (drvr->bus_if->chip) {
- 	case BRCM_CC_43236_CHIP_ID:
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
-index d1193825e559..6eddb19ca48d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
-@@ -33,6 +33,7 @@
-  * MFP: 802.11w Management Frame Protection.
-  * GSCAN: enhanced scan offload feature.
-  * FWSUP: Firmware supplicant.
-+ * MONITOR: monitor interface
-  */
- #define BRCMF_FEAT_LIST \
- 	BRCMF_FEAT_DEF(MBSS) \
-@@ -48,7 +49,8 @@
- 	BRCMF_FEAT_DEF(WOWL_ARP_ND) \
- 	BRCMF_FEAT_DEF(MFP) \
- 	BRCMF_FEAT_DEF(GSCAN) \
--	BRCMF_FEAT_DEF(FWSUP)
-+	BRCMF_FEAT_DEF(FWSUP) \
-+	BRCMF_FEAT_DEF(MONITOR)
- 
- /*
-  * Quirks:
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
-index 63b1287e2e6d..0d9492fd758d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
-@@ -60,6 +60,8 @@
- #define BRCMF_C_GET_PM				85
- #define BRCMF_C_SET_PM				86
- #define BRCMF_C_GET_REVINFO			98
-+#define BRCMF_C_GET_MONITOR			107
-+#define BRCMF_C_SET_MONITOR			108
- #define BRCMF_C_GET_CURR_RATESET		114
- #define BRCMF_C_GET_AP				117
- #define BRCMF_C_SET_AP				118
--- 
-2.13.7
+
+Kind regards,
+	Sven
+
+--nextPart4792148.4axvnBOdMb
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlsmPn4ACgkQXYcKB8Em
+e0Yp3xAArwkMnHjoJe08hCYQJydAWHOvNR1MN3dbny/CcZ5GjYRmPXBKZNFDVpbe
+BPn1NOU1p65iOvdCfNyoefZoi4VqDm45k8c4sTjLwre979hm0DNoDJ26x69vx9iQ
+rhWvXvtgXKIMvjh0PFyB1EU0DDkL7r05AR3taKACRrhaiB/qhWVbZkHLwDtueQnq
+hQlOd5W2shw8QMskb7PbuaHAmb8cXQ4RKG2GMpDG/5mYwoABazRIa+Xz8+9GHkAj
+3borNFemZB5AVkX7JzGhmgS66Q/R49L2AAvLgr4k3iW8Fwp06xWAYP3tv1p6f30C
+kTAigjRmj3Awk4zPEf9bpqxWK5wIcu6b2MppdnBZJcudCyxb9LePL3BY3JNDfJ+I
+cIEcEQPPf1h9qncP6qy3LviuwG+je59InbAyKfrI3gjyQlTqGOqNaL4zOGI+vab6
+qlH5qH0Apmd1k3uehnSFlR9A4N2S4mISi+PR8HHydDyBSHdKe40EnwMneWOZjlw8
+Gi/4MLVmZ0ULII71RyAOTTYLS8SKCLZXlWrw3cXL0xzIVsjihARX48dnlIeOZARD
+WttfhgBax7zf42OPlw2d2s07daVT1NcqW61b0ZOJeeNYl3EUfuQ5QdVdo0eiBDza
+sVeQw0SJqSq5zmDTVsipMyEgLDkJmGn1+b5ofecvuBwNPHEGeTk=
+=F3iS
+-----END PGP SIGNATURE-----
+
+--nextPart4792148.4axvnBOdMb--
