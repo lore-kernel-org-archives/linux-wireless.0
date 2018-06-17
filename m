@@ -1,107 +1,254 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns.pmeerw.net ([84.19.176.117]:44792 "EHLO ns.pmeerw.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751093AbeFDVCI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Jun 2018 17:02:08 -0400
-From: Peter Meerwald-Stadler <pmeerw@pmeerw.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, corbet@lwn.net,
-        Peter Meerwald-Stadler <pmeerw@pmeerw.net>
-Subject: [PATCH] rfkill: Fix several typos in documentation
-Date: Mon,  4 Jun 2018 23:02:03 +0200
-Message-Id: <20180604210203.29684-1-pmeerw@pmeerw.net> (sfid-20180604_230253_073037_E2CE3C90)
+Received: from mail-eopbgr140130.outbound.protection.outlook.com ([40.107.14.130]:48192
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933351AbeFQKGe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 17 Jun 2018 06:06:34 -0400
+From: Omer Efrat <omer.efrat@tandemg.com>
+To: linux-wireless@vger.kernel.org
+Cc: Omer Efrat <omer.efrat@tandemg.com>
+Subject: [PATCH v3 2/5] mac80211: use BIT_ULL for NL80211_STA_INFO_* attribute types
+Date: Sun, 17 Jun 2018 13:06:25 +0300
+Message-Id: <1529229985-17840-1-git-send-email-omer.efrat@tandemg.com> (sfid-20180617_120637_586069_0C181749)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Peter Meerwald-Stadler <pmeerw@pmeerw.net>
----
- Documentation/rfkill.txt | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+The BIT macro uses unsigned long which some architectures handle as 32 bit
+and therefore might cause macro's shift to overflow when used on a value
+equals or larger than 32 (NL80211_STA_INFO_RX_DURATION and afterwards).
 
-diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
-index a289285d2412..7d3684e81df6 100644
---- a/Documentation/rfkill.txt
-+++ b/Documentation/rfkill.txt
-@@ -9,7 +9,7 @@ rfkill - RF kill switch support
- Introduction
- ============
- 
--The rfkill subsystem provides a generic interface to disabling any radio
-+The rfkill subsystem provides a generic interface for disabling any radio
- transmitter in the system. When a transmitter is blocked, it shall not
- radiate any power.
- 
-@@ -45,7 +45,7 @@ The rfkill subsystem is composed of three main components:
-  * the rfkill drivers.
- 
- The rfkill core provides API for kernel drivers to register their radio
--transmitter with the kernel, methods for turning it on and off and, letting
-+transmitter with the kernel, methods for turning it on and off, and letting
- the system know about hardware-disabled states that may be implemented on
- the device.
- 
-@@ -54,7 +54,7 @@ ways for userspace to query the current states. See the "Userspace support"
- section below.
- 
- When the device is hard-blocked (either by a call to rfkill_set_hw_state()
--or from query_hw_block) set_block() will be invoked for additional software
-+or from query_hw_block), set_block() will be invoked for additional software
- block, but drivers can ignore the method call since they can use the return
- value of the function rfkill_set_hw_state() to sync the software state
- instead of keeping track of calls to set_block(). In fact, drivers should
-@@ -65,7 +65,6 @@ keeps track of soft and hard block separately.
- Kernel API
- ==========
- 
--
- Drivers for radio transmitters normally implement an rfkill driver.
- 
- Platform drivers might implement input devices if the rfkill button is just
-@@ -75,14 +74,14 @@ a way to turn on/off the transmitter(s).
- 
- For some platforms, it is possible that the hardware state changes during
- suspend/hibernation, in which case it will be necessary to update the rfkill
--core with the current state is at resume time.
-+core with the current state at resume time.
- 
- To create an rfkill driver, driver's Kconfig needs to have::
- 
- 	depends on RFKILL || !RFKILL
- 
- to ensure the driver cannot be built-in when rfkill is modular. The !RFKILL
--case allows the driver to be built when rfkill is not configured, which
-+case allows the driver to be built when rfkill is not configured, in which
- case all rfkill API can still be used but will be provided by static inlines
- which compile to almost nothing.
- 
-@@ -91,7 +90,7 @@ rfkill drivers that control devices that can be hard-blocked unless they also
- assign the poll_hw_block() callback (then the rfkill core will poll the
- device). Don't do this unless you cannot get the event in any other way.
- 
--RFKill provides per-switch LED triggers, which can be used to drive LEDs
-+rfkill provides per-switch LED triggers, which can be used to drive LEDs
- according to the switch state (LED_FULL when blocked, LED_OFF otherwise).
+Since 'filled' member in station_info changed to u64, BIT_ULL macro
+should be used with all NL80211_STA_INFO_* attribute types instead of BIT
+to prevent future possible bugs when one will use BIT macro for higher
+attributes by mistake.
+
+This commit cleans up all usages of BIT macro with the above field
+in mac80211 by changing it to BIT_ULL instead.
+
+Signed-off-by: Omer Efrat <omer.efrat@tandemg.com>
+---
+ net/mac80211/ethtool.c  |  6 ++--
+ net/mac80211/sta_info.c | 84 ++++++++++++++++++++++++-------------------------
+ 2 files changed, 45 insertions(+), 45 deletions(-)
+
+diff --git a/net/mac80211/ethtool.c b/net/mac80211/ethtool.c
+index 690c142..5ac7438 100644
+--- a/net/mac80211/ethtool.c
++++ b/net/mac80211/ethtool.c
+@@ -116,16 +116,16 @@ static void ieee80211_get_stats(struct net_device *dev,
+ 		data[i++] = sta->sta_state;
  
  
-@@ -114,7 +113,7 @@ a specified type) into a state which also updates the default state for
- hotplugged devices.
+-		if (sinfo.filled & BIT(NL80211_STA_INFO_TX_BITRATE))
++		if (sinfo.filled & BIT_ULL(NL80211_STA_INFO_TX_BITRATE))
+ 			data[i] = 100000ULL *
+ 				cfg80211_calculate_bitrate(&sinfo.txrate);
+ 		i++;
+-		if (sinfo.filled & BIT(NL80211_STA_INFO_RX_BITRATE))
++		if (sinfo.filled & BIT_ULL(NL80211_STA_INFO_RX_BITRATE))
+ 			data[i] = 100000ULL *
+ 				cfg80211_calculate_bitrate(&sinfo.rxrate);
+ 		i++;
  
- After an application opens /dev/rfkill, it can read the current state of all
--devices. Changes can be either obtained by either polling the descriptor for
-+devices. Changes can be obtained by either polling the descriptor for
- hotplug or state change events or by listening for uevents emitted by the
- rfkill core framework.
+-		if (sinfo.filled & BIT(NL80211_STA_INFO_SIGNAL_AVG))
++		if (sinfo.filled & BIT_ULL(NL80211_STA_INFO_SIGNAL_AVG))
+ 			data[i] = (u8)sinfo.signal_avg;
+ 		i++;
+ 	} else {
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index aa8fe77..f342022 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -2114,38 +2114,38 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
  
-@@ -127,8 +126,7 @@ environment variables set::
- 	RFKILL_STATE
- 	RFKILL_TYPE
+ 	drv_sta_statistics(local, sdata, &sta->sta, sinfo);
  
--The contents of these variables corresponds to the "name", "state" and
-+The content of these variables corresponds to the "name", "state" and
- "type" sysfs files explained above.
+-	sinfo->filled |= BIT(NL80211_STA_INFO_INACTIVE_TIME) |
+-			 BIT(NL80211_STA_INFO_STA_FLAGS) |
+-			 BIT(NL80211_STA_INFO_BSS_PARAM) |
+-			 BIT(NL80211_STA_INFO_CONNECTED_TIME) |
+-			 BIT(NL80211_STA_INFO_RX_DROP_MISC);
++	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_INACTIVE_TIME) |
++			 BIT_ULL(NL80211_STA_INFO_STA_FLAGS) |
++			 BIT_ULL(NL80211_STA_INFO_BSS_PARAM) |
++			 BIT_ULL(NL80211_STA_INFO_CONNECTED_TIME) |
++			 BIT_ULL(NL80211_STA_INFO_RX_DROP_MISC);
  
--
- For further details consult Documentation/ABI/stable/sysfs-class-rfkill.
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 		sinfo->beacon_loss_count = sdata->u.mgd.beacon_loss_count;
+-		sinfo->filled |= BIT(NL80211_STA_INFO_BEACON_LOSS);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_BEACON_LOSS);
+ 	}
+ 
+ 	sinfo->connected_time = ktime_get_seconds() - sta->last_connected;
+ 	sinfo->inactive_time =
+ 		jiffies_to_msecs(jiffies - ieee80211_sta_last_active(sta));
+ 
+-	if (!(sinfo->filled & (BIT(NL80211_STA_INFO_TX_BYTES64) |
+-			       BIT(NL80211_STA_INFO_TX_BYTES)))) {
++	if (!(sinfo->filled & (BIT_ULL(NL80211_STA_INFO_TX_BYTES64) |
++			       BIT_ULL(NL80211_STA_INFO_TX_BYTES)))) {
+ 		sinfo->tx_bytes = 0;
+ 		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
+ 			sinfo->tx_bytes += sta->tx_stats.bytes[ac];
+-		sinfo->filled |= BIT(NL80211_STA_INFO_TX_BYTES64);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BYTES64);
+ 	}
+ 
+-	if (!(sinfo->filled & BIT(NL80211_STA_INFO_TX_PACKETS))) {
++	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_PACKETS))) {
+ 		sinfo->tx_packets = 0;
+ 		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
+ 			sinfo->tx_packets += sta->tx_stats.packets[ac];
+-		sinfo->filled |= BIT(NL80211_STA_INFO_TX_PACKETS);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_PACKETS);
+ 	}
+ 
+-	if (!(sinfo->filled & (BIT(NL80211_STA_INFO_RX_BYTES64) |
+-			       BIT(NL80211_STA_INFO_RX_BYTES)))) {
++	if (!(sinfo->filled & (BIT_ULL(NL80211_STA_INFO_RX_BYTES64) |
++			       BIT_ULL(NL80211_STA_INFO_RX_BYTES)))) {
+ 		sinfo->rx_bytes += sta_get_stats_bytes(&sta->rx_stats);
+ 
+ 		if (sta->pcpu_rx_stats) {
+@@ -2157,10 +2157,10 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ 			}
+ 		}
+ 
+-		sinfo->filled |= BIT(NL80211_STA_INFO_RX_BYTES64);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_BYTES64);
+ 	}
+ 
+-	if (!(sinfo->filled & BIT(NL80211_STA_INFO_RX_PACKETS))) {
++	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_RX_PACKETS))) {
+ 		sinfo->rx_packets = sta->rx_stats.packets;
+ 		if (sta->pcpu_rx_stats) {
+ 			for_each_possible_cpu(cpu) {
+@@ -2170,17 +2170,17 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ 				sinfo->rx_packets += cpurxs->packets;
+ 			}
+ 		}
+-		sinfo->filled |= BIT(NL80211_STA_INFO_RX_PACKETS);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_PACKETS);
+ 	}
+ 
+-	if (!(sinfo->filled & BIT(NL80211_STA_INFO_TX_RETRIES))) {
++	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_RETRIES))) {
+ 		sinfo->tx_retries = sta->status_stats.retry_count;
+-		sinfo->filled |= BIT(NL80211_STA_INFO_TX_RETRIES);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_RETRIES);
+ 	}
+ 
+-	if (!(sinfo->filled & BIT(NL80211_STA_INFO_TX_FAILED))) {
++	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_FAILED))) {
+ 		sinfo->tx_failed = sta->status_stats.retry_failed;
+-		sinfo->filled |= BIT(NL80211_STA_INFO_TX_FAILED);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_FAILED);
+ 	}
+ 
+ 	sinfo->rx_dropped_misc = sta->rx_stats.dropped;
+@@ -2195,23 +2195,23 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+ 	    !(sdata->vif.driver_flags & IEEE80211_VIF_BEACON_FILTER)) {
+-		sinfo->filled |= BIT(NL80211_STA_INFO_BEACON_RX) |
+-				 BIT(NL80211_STA_INFO_BEACON_SIGNAL_AVG);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_BEACON_RX) |
++				 BIT_ULL(NL80211_STA_INFO_BEACON_SIGNAL_AVG);
+ 		sinfo->rx_beacon_signal_avg = ieee80211_ave_rssi(&sdata->vif);
+ 	}
+ 
+ 	if (ieee80211_hw_check(&sta->local->hw, SIGNAL_DBM) ||
+ 	    ieee80211_hw_check(&sta->local->hw, SIGNAL_UNSPEC)) {
+-		if (!(sinfo->filled & BIT(NL80211_STA_INFO_SIGNAL))) {
++		if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_SIGNAL))) {
+ 			sinfo->signal = (s8)last_rxstats->last_signal;
+-			sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
++			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
+ 		}
+ 
+ 		if (!sta->pcpu_rx_stats &&
+-		    !(sinfo->filled & BIT(NL80211_STA_INFO_SIGNAL_AVG))) {
++		    !(sinfo->filled & BIT_ULL(NL80211_STA_INFO_SIGNAL_AVG))) {
+ 			sinfo->signal_avg =
+ 				-ewma_signal_read(&sta->rx_stats_avg.signal);
+-			sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL_AVG);
++			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL_AVG);
+ 		}
+ 	}
+ 
+@@ -2220,11 +2220,11 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ 	 * pcpu statistics
+ 	 */
+ 	if (last_rxstats->chains &&
+-	    !(sinfo->filled & (BIT(NL80211_STA_INFO_CHAIN_SIGNAL) |
+-			       BIT(NL80211_STA_INFO_CHAIN_SIGNAL_AVG)))) {
+-		sinfo->filled |= BIT(NL80211_STA_INFO_CHAIN_SIGNAL);
++	    !(sinfo->filled & (BIT_ULL(NL80211_STA_INFO_CHAIN_SIGNAL) |
++			       BIT_ULL(NL80211_STA_INFO_CHAIN_SIGNAL_AVG)))) {
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_CHAIN_SIGNAL);
+ 		if (!sta->pcpu_rx_stats)
+-			sinfo->filled |= BIT(NL80211_STA_INFO_CHAIN_SIGNAL_AVG);
++			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_CHAIN_SIGNAL_AVG);
+ 
+ 		sinfo->chains = last_rxstats->chains;
+ 
+@@ -2236,15 +2236,15 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ 		}
+ 	}
+ 
+-	if (!(sinfo->filled & BIT(NL80211_STA_INFO_TX_BITRATE))) {
++	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_BITRATE))) {
+ 		sta_set_rate_info_tx(sta, &sta->tx_stats.last_rate,
+ 				     &sinfo->txrate);
+-		sinfo->filled |= BIT(NL80211_STA_INFO_TX_BITRATE);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
+ 	}
+ 
+-	if (!(sinfo->filled & BIT(NL80211_STA_INFO_RX_BITRATE))) {
++	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_RX_BITRATE))) {
+ 		if (sta_set_rate_info_rx(sta, &sinfo->rxrate) == 0)
+-			sinfo->filled |= BIT(NL80211_STA_INFO_RX_BITRATE);
++			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_BITRATE);
+ 	}
+ 
+ 	if (tidstats && !cfg80211_sinfo_alloc_tid_stats(sinfo, GFP_KERNEL)) {
+@@ -2257,18 +2257,18 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ 
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+-		sinfo->filled |= BIT(NL80211_STA_INFO_LLID) |
+-				 BIT(NL80211_STA_INFO_PLID) |
+-				 BIT(NL80211_STA_INFO_PLINK_STATE) |
+-				 BIT(NL80211_STA_INFO_LOCAL_PM) |
+-				 BIT(NL80211_STA_INFO_PEER_PM) |
+-				 BIT(NL80211_STA_INFO_NONPEER_PM);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_LLID) |
++				 BIT_ULL(NL80211_STA_INFO_PLID) |
++				 BIT_ULL(NL80211_STA_INFO_PLINK_STATE) |
++				 BIT_ULL(NL80211_STA_INFO_LOCAL_PM) |
++				 BIT_ULL(NL80211_STA_INFO_PEER_PM) |
++				 BIT_ULL(NL80211_STA_INFO_NONPEER_PM);
+ 
+ 		sinfo->llid = sta->mesh->llid;
+ 		sinfo->plid = sta->mesh->plid;
+ 		sinfo->plink_state = sta->mesh->plink_state;
+ 		if (test_sta_flag(sta, WLAN_STA_TOFFSET_KNOWN)) {
+-			sinfo->filled |= BIT(NL80211_STA_INFO_T_OFFSET);
++			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_T_OFFSET);
+ 			sinfo->t_offset = sta->mesh->t_offset;
+ 		}
+ 		sinfo->local_pm = sta->mesh->local_pm;
+@@ -2313,7 +2313,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ 	thr = sta_get_expected_throughput(sta);
+ 
+ 	if (thr != 0) {
+-		sinfo->filled |= BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
+ 		sinfo->expected_throughput = thr;
+ 	}
+ 
 -- 
-2.11.0
+2.7.4
