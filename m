@@ -1,240 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:13891 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750915AbeFVFuV (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:39856 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935923AbeFRTg7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Jun 2018 01:50:21 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH v4 8/8] wil6210: remove crash dump collection from OTP section
-Date: Fri, 22 Jun 2018 08:49:23 +0300
-Message-Id: <1529646563-18221-9-git-send-email-merez@codeaurora.org> (sfid-20180622_075026_526123_1A9C89BE)
-In-Reply-To: <1529646563-18221-1-git-send-email-merez@codeaurora.org>
-References: <1529646563-18221-1-git-send-email-merez@codeaurora.org>
+        Mon, 18 Jun 2018 15:36:59 -0400
+Received: by mail-wm0-f44.google.com with SMTP id p11-v6so17716659wmc.4
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2018 12:36:58 -0700 (PDT)
+Subject: Re: Research + questions on brcmfmac and support for monitor mode
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <986bbf4c-8fa1-4367-db9e-76a209594b81@gmail.com>
+ <66e43eb5-2bc9-2ec3-af48-03248eecb727@gmail.com>
+ <5B1E537F.2080502@broadcom.com>
+ <CACna6rw9BnZvUM47-GEUpWp34eaDYeUz3yAyDpo6z+Z0TpKD8A@mail.gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B2809D7.9050503@broadcom.com> (sfid-20180618_213703_526226_FA213CB2)
+Date: Mon, 18 Jun 2018 21:36:55 +0200
+MIME-Version: 1.0
+In-Reply-To: <CACna6rw9BnZvUM47-GEUpWp34eaDYeUz3yAyDpo6z+Z0TpKD8A@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some cases where the device is stuck, reading from OTP
-can timeout. As OTP section is known there is no need to read
-it during device crash dump collection.
-Adding a new field to struct fw_map to indicate if to include
-this section in crash dump collection.
+On 6/18/2018 1:54 PM, Rafał Miłecki wrote:
+> On Mon, 11 Jun 2018 at 12:48, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> On 5/30/2018 1:52 PM, Rafał Miłecki wrote:
+>>> I'm providing extra version info of tested firmware images as requested
+>>> by Arend in another e-mail thread.
+>>
+>> Looking into our firmware repo it there are two flags, ie. WL_MONITOR
+>> and WL_RADIOTAP. It seems both are set for firmware containing -stamon-
+>> feature. Your list below confirms that. I still plan to add indication
+>> for WL_RADIOTAP in the "cap" iovar, but a stamon feature check could be
+>> used for older firmwares.
+>
+> The problem is that there isn't a direct mapping between what's
+> visible with the "tail" command and what firmware returns for the
+> "cap" iovar. Just to be sure I bumped #define MAX_CAPS_BUFFER_SIZE to
+> 1024. Firmware that has "stamon" when checked with "tail" command
+> doesn't report "stamon" over "cap" iovar. So I can't detect if
+> firmware was compiled with WL_MONITOR and WL_RADIOTAP using "cap"
+> iovar.
 
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/wil6210.h        |  1 +
- drivers/net/wireless/ath/wil6210/wil_crash_dump.c |  5 +-
- drivers/net/wireless/ath/wil6210/wmi.c            | 86 +++++++++++------------
- 3 files changed, 47 insertions(+), 45 deletions(-)
+All true. My suggestion is to look for "monitor" and "rtap" in the "cap" 
+iovar response to detect if firmware is compiled with WL_MONITOR and 
+WL_RADIOTAP respectively. When one (or both) of these is not detected, 
+we could fallback to try a stamon iovar and if it is supported enable 
+both WL_MONITOR and WL_RADIOTAP. I am looking into a good candidate for 
+the stamon iovar so I can prepare a patch.
 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index e639ba7..d963c76 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -403,6 +403,7 @@ struct fw_map {
- 	u32 host; /* PCI/Host address - BAR0 + 0x880000 */
- 	const char *name; /* for debugfs */
- 	bool fw; /* true if FW mapping, false if UCODE mapping */
-+	bool crash_dump; /* true if should be dumped during crash dump */
- };
- 
- /* array size should be in sync with actual definition in the wmi.c */
-diff --git a/drivers/net/wireless/ath/wil6210/wil_crash_dump.c b/drivers/net/wireless/ath/wil6210/wil_crash_dump.c
-index 1ed3306..dc33a0b 100644
---- a/drivers/net/wireless/ath/wil6210/wil_crash_dump.c
-+++ b/drivers/net/wireless/ath/wil6210/wil_crash_dump.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2015,2017 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -36,7 +37,7 @@ static int wil_fw_get_crash_dump_bounds(struct wil6210_priv *wil,
- 	for (i = 1; i < ARRAY_SIZE(fw_mapping); i++) {
- 		map = &fw_mapping[i];
- 
--		if (!map->fw)
-+		if (!map->crash_dump)
- 			continue;
- 
- 		if (map->host < host_min)
-@@ -85,7 +86,7 @@ int wil_fw_copy_crash_dump(struct wil6210_priv *wil, void *dest, u32 size)
- 	for (i = 0; i < ARRAY_SIZE(fw_mapping); i++) {
- 		map = &fw_mapping[i];
- 
--		if (!map->fw)
-+		if (!map->crash_dump)
- 			continue;
- 
- 		data = (void * __force)wil->csr + HOSTADDR(map->host);
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 0370b7e..71056c8 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -89,28 +89,28 @@
-  */
- const struct fw_map sparrow_fw_mapping[] = {
- 	/* FW code RAM 256k */
--	{0x000000, 0x040000, 0x8c0000, "fw_code", true},
-+	{0x000000, 0x040000, 0x8c0000, "fw_code", true, true},
- 	/* FW data RAM 32k */
--	{0x800000, 0x808000, 0x900000, "fw_data", true},
-+	{0x800000, 0x808000, 0x900000, "fw_data", true, true},
- 	/* periph data 128k */
--	{0x840000, 0x860000, 0x908000, "fw_peri", true},
-+	{0x840000, 0x860000, 0x908000, "fw_peri", true, true},
- 	/* various RGF 40k */
--	{0x880000, 0x88a000, 0x880000, "rgf", true},
-+	{0x880000, 0x88a000, 0x880000, "rgf", true, true},
- 	/* AGC table   4k */
--	{0x88a000, 0x88b000, 0x88a000, "AGC_tbl", true},
-+	{0x88a000, 0x88b000, 0x88a000, "AGC_tbl", true, true},
- 	/* Pcie_ext_rgf 4k */
--	{0x88b000, 0x88c000, 0x88b000, "rgf_ext", true},
-+	{0x88b000, 0x88c000, 0x88b000, "rgf_ext", true, true},
- 	/* mac_ext_rgf 512b */
--	{0x88c000, 0x88c200, 0x88c000, "mac_rgf_ext", true},
-+	{0x88c000, 0x88c200, 0x88c000, "mac_rgf_ext", true, true},
- 	/* upper area 548k */
--	{0x8c0000, 0x949000, 0x8c0000, "upper", true},
-+	{0x8c0000, 0x949000, 0x8c0000, "upper", true, true},
- 	/* UCODE areas - accessible by debugfs blobs but not by
- 	 * wmi_addr_remap. UCODE areas MUST be added AFTER FW areas!
- 	 */
- 	/* ucode code RAM 128k */
--	{0x000000, 0x020000, 0x920000, "uc_code", false},
-+	{0x000000, 0x020000, 0x920000, "uc_code", false, false},
- 	/* ucode data RAM 16k */
--	{0x800000, 0x804000, 0x940000, "uc_data", false},
-+	{0x800000, 0x804000, 0x940000, "uc_data", false, false},
- };
- 
- /**
-@@ -118,7 +118,7 @@
-  * it is a bit larger to support extra features
-  */
- const struct fw_map sparrow_d0_mac_rgf_ext = {
--	0x88c000, 0x88c500, 0x88c000, "mac_rgf_ext", true
-+	0x88c000, 0x88c500, 0x88c000, "mac_rgf_ext", true, true
- };
- 
- /**
-@@ -134,34 +134,34 @@
-  */
- const struct fw_map talyn_fw_mapping[] = {
- 	/* FW code RAM 1M */
--	{0x000000, 0x100000, 0x900000, "fw_code", true},
-+	{0x000000, 0x100000, 0x900000, "fw_code", true, true},
- 	/* FW data RAM 128k */
--	{0x800000, 0x820000, 0xa00000, "fw_data", true},
-+	{0x800000, 0x820000, 0xa00000, "fw_data", true, true},
- 	/* periph. data RAM 96k */
--	{0x840000, 0x858000, 0xa20000, "fw_peri", true},
-+	{0x840000, 0x858000, 0xa20000, "fw_peri", true, true},
- 	/* various RGF 40k */
--	{0x880000, 0x88a000, 0x880000, "rgf", true},
-+	{0x880000, 0x88a000, 0x880000, "rgf", true, true},
- 	/* AGC table 4k */
--	{0x88a000, 0x88b000, 0x88a000, "AGC_tbl", true},
-+	{0x88a000, 0x88b000, 0x88a000, "AGC_tbl", true, true},
- 	/* Pcie_ext_rgf 4k */
--	{0x88b000, 0x88c000, 0x88b000, "rgf_ext", true},
-+	{0x88b000, 0x88c000, 0x88b000, "rgf_ext", true, true},
- 	/* mac_ext_rgf 1344b */
--	{0x88c000, 0x88c540, 0x88c000, "mac_rgf_ext", true},
-+	{0x88c000, 0x88c540, 0x88c000, "mac_rgf_ext", true, true},
- 	/* ext USER RGF 4k */
--	{0x88d000, 0x88e000, 0x88d000, "ext_user_rgf", true},
-+	{0x88d000, 0x88e000, 0x88d000, "ext_user_rgf", true, true},
- 	/* OTP 4k */
--	{0x8a0000, 0x8a1000, 0x8a0000, "otp", true},
-+	{0x8a0000, 0x8a1000, 0x8a0000, "otp", true, false},
- 	/* DMA EXT RGF 64k */
--	{0x8b0000, 0x8c0000, 0x8b0000, "dma_ext_rgf", true},
-+	{0x8b0000, 0x8c0000, 0x8b0000, "dma_ext_rgf", true, true},
- 	/* upper area 1536k */
--	{0x900000, 0xa80000, 0x900000, "upper", true},
-+	{0x900000, 0xa80000, 0x900000, "upper", true, true},
- 	/* UCODE areas - accessible by debugfs blobs but not by
- 	 * wmi_addr_remap. UCODE areas MUST be added AFTER FW areas!
- 	 */
- 	/* ucode code RAM 256k */
--	{0x000000, 0x040000, 0xa38000, "uc_code", false},
-+	{0x000000, 0x040000, 0xa38000, "uc_code", false, false},
- 	/* ucode data RAM 32k */
--	{0x800000, 0x808000, 0xa78000, "uc_data", false},
-+	{0x800000, 0x808000, 0xa78000, "uc_data", false, false},
- };
- 
- /**
-@@ -177,46 +177,46 @@
-  */
- const struct fw_map talyn_mb_fw_mapping[] = {
- 	/* FW code RAM 768k */
--	{0x000000, 0x0c0000, 0x900000, "fw_code", true},
-+	{0x000000, 0x0c0000, 0x900000, "fw_code", true, true},
- 	/* FW data RAM 128k */
--	{0x800000, 0x820000, 0xa00000, "fw_data", true},
-+	{0x800000, 0x820000, 0xa00000, "fw_data", true, true},
- 	/* periph. data RAM 96k */
--	{0x840000, 0x858000, 0xa20000, "fw_peri", true},
-+	{0x840000, 0x858000, 0xa20000, "fw_peri", true, true},
- 	/* various RGF 40k */
--	{0x880000, 0x88a000, 0x880000, "rgf", true},
-+	{0x880000, 0x88a000, 0x880000, "rgf", true, true},
- 	/* AGC table 4k */
--	{0x88a000, 0x88b000, 0x88a000, "AGC_tbl", true},
-+	{0x88a000, 0x88b000, 0x88a000, "AGC_tbl", true, true},
- 	/* Pcie_ext_rgf 4k */
--	{0x88b000, 0x88c000, 0x88b000, "rgf_ext", true},
-+	{0x88b000, 0x88c000, 0x88b000, "rgf_ext", true, true},
- 	/* mac_ext_rgf 2256b */
--	{0x88c000, 0x88c8d0, 0x88c000, "mac_rgf_ext", true},
-+	{0x88c000, 0x88c8d0, 0x88c000, "mac_rgf_ext", true, true},
- 	/* ext USER RGF 4k */
--	{0x88d000, 0x88e000, 0x88d000, "ext_user_rgf", true},
-+	{0x88d000, 0x88e000, 0x88d000, "ext_user_rgf", true, true},
- 	/* SEC PKA 16k */
--	{0x890000, 0x894000, 0x890000, "sec_pka", true},
-+	{0x890000, 0x894000, 0x890000, "sec_pka", true, true},
- 	/* SEC KDF RGF 3096b */
--	{0x898000, 0x898c18, 0x898000, "sec_kdf_rgf", true},
-+	{0x898000, 0x898c18, 0x898000, "sec_kdf_rgf", true, true},
- 	/* SEC MAIN 2124b */
--	{0x89a000, 0x89a84c, 0x89a000, "sec_main", true},
-+	{0x89a000, 0x89a84c, 0x89a000, "sec_main", true, true},
- 	/* OTP 4k */
--	{0x8a0000, 0x8a1000, 0x8a0000, "otp", true},
-+	{0x8a0000, 0x8a1000, 0x8a0000, "otp", true, false},
- 	/* DMA EXT RGF 64k */
--	{0x8b0000, 0x8c0000, 0x8b0000, "dma_ext_rgf", true},
-+	{0x8b0000, 0x8c0000, 0x8b0000, "dma_ext_rgf", true, true},
- 	/* DUM USER RGF 528b */
--	{0x8c0000, 0x8c0210, 0x8c0000, "dum_user_rgf", true},
-+	{0x8c0000, 0x8c0210, 0x8c0000, "dum_user_rgf", true, true},
- 	/* DMA OFU 296b */
--	{0x8c2000, 0x8c2128, 0x8c2000, "dma_ofu", true},
-+	{0x8c2000, 0x8c2128, 0x8c2000, "dma_ofu", true, true},
- 	/* ucode debug 4k */
--	{0x8c3000, 0x8c4000, 0x8c3000, "ucode_debug", true},
-+	{0x8c3000, 0x8c4000, 0x8c3000, "ucode_debug", true, true},
- 	/* upper area 1536k */
--	{0x900000, 0xa80000, 0x900000, "upper", true},
-+	{0x900000, 0xa80000, 0x900000, "upper", true, true},
- 	/* UCODE areas - accessible by debugfs blobs but not by
- 	 * wmi_addr_remap. UCODE areas MUST be added AFTER FW areas!
- 	 */
- 	/* ucode code RAM 256k */
--	{0x000000, 0x040000, 0xa38000, "uc_code", false},
-+	{0x000000, 0x040000, 0xa38000, "uc_code", false, false},
- 	/* ucode data RAM 32k */
--	{0x800000, 0x808000, 0xa78000, "uc_data", false},
-+	{0x800000, 0x808000, 0xa78000, "uc_data", false, false},
- };
- 
- struct fw_map fw_mapping[MAX_FW_MAPPING_TABLE_SIZE];
--- 
-1.9.1
+Regards,
+Arend
