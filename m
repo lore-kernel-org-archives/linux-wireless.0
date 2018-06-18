@@ -1,125 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr10098.outbound.protection.outlook.com ([40.107.1.98]:22688
-        "EHLO EUR02-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754764AbeFNKNn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Jun 2018 06:13:43 -0400
-From: Omer Efrat <omer.efrat@tandemg.com>
+Received: from smtpcmd0986.aruba.it ([62.149.156.86]:35390 "EHLO
+        smtpcmd0986.aruba.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935052AbeFROgN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Jun 2018 10:36:13 -0400
 To: linux-wireless@vger.kernel.org
-Cc: devel@driverdev.osuosl.org, Omer Efrat <omer.efrat@tandemg.com>
-Subject: [PATCH v2 5/5] staging: use BIT_ULL for NL80211_STA_INFO_* attribute types
-Date: Thu, 14 Jun 2018 13:13:37 +0300
-Message-Id: <1528971217-566-1-git-send-email-omer.efrat@tandemg.com> (sfid-20180614_121347_502894_F98D1325)
+From: Mauro Ziliani <mauro@faresoftware.it>
+Subject: rtl8192cu with Edimax 7811UN and IMX6
+Message-ID: <6b5f7f08-8fcf-0423-0307-03d75425998d@faresoftware.it> (sfid-20180618_163619_285879_B239AF9A)
+Date: Mon, 18 Jun 2018 16:29:10 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since 'filled' member in station_info changed to u64, BIT_ULL macro
-should be used with NL80211_STA_INFO_* attribute types instead of BIT.
+Goodmorning.
+My name's Mauro Ziliani and I write from Parma, Italy.
+I need to plug he dongle Edimax 7811UN into a IMX6DLSABRESD board, using 
+kerne 4.1.15  (Yocto Krogoth)
 
-The BIT macro uses unsigned long type which some architectures handle as 32bit
-and this results in compilation warnings such as:
+I have the following problem.
+I switch on the board wth dongle plugged.
+I try a sftp transfer from my PC and the board. All works fine.
 
-net/mac80211/sta_info.c:2223:2: warning: left shift count >= width of type
-  sinfo->filled |= BIT(NL80211_STA_INFO_TID_STATS);
-  ^
+I wait for some minute, I retry the transfer, but the board doesn't 
+start to receive the file, and the file stay for some minuti waiting to 
+start.
+Than the PC goes in timeout
 
-Signed-off-by: Omer Efrat <omer.efrat@tandemg.com>
----
- drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c | 10 +++++-----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++++++-------
- drivers/staging/wlan-ng/cfg80211.c                |  4 ++--
- 3 files changed, 14 insertions(+), 14 deletions(-)
+This is what I do
 
-diff --git a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
-index 46bc2e5..d0c5dbd 100644
---- a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
-+++ b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
-@@ -1281,16 +1281,16 @@ static int cfg80211_rtw_get_station(struct wiphy *wiphy,
- 			goto exit;
- 		}
- 
--		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
- 		sinfo->signal = translate_percentage_to_dbm(padapter->recvpriv.signal_strength);
- 
--		sinfo->filled |= BIT(NL80211_STA_INFO_TX_BITRATE);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
- 		sinfo->txrate.legacy = rtw_get_cur_max_rate(padapter);
- 
--		sinfo->filled |= BIT(NL80211_STA_INFO_RX_PACKETS);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_PACKETS);
- 		sinfo->rx_packets = sta_rx_data_pkts(psta);
- 
--		sinfo->filled |= BIT(NL80211_STA_INFO_TX_PACKETS);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_PACKETS);
- 		sinfo->tx_packets = psta->sta_stats.tx_pkts;
- 
- 	}
-@@ -3021,7 +3021,7 @@ static int	cfg80211_rtw_dump_station(struct wiphy *wiphy, struct net_device *nde
- 		goto exit;
- 	}
- 	memcpy(mac, psta->hwaddr, ETH_ALEN);
--	sinfo->filled = BIT(NL80211_STA_INFO_SIGNAL);
-+	sinfo->filled = BIT_ULL(NL80211_STA_INFO_SIGNAL);
- 	sinfo->signal = psta->rssi;
- 
- exit:
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 730d64f..830b48c 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1184,7 +1184,7 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
- 			return -ENOENT;
- 		}
- 
--		sinfo->filled |= BIT(NL80211_STA_INFO_INACTIVE_TIME);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_INACTIVE_TIME);
- 
- 		wilc_get_inactive_time(vif, mac, &inactive_time);
- 		sinfo->inactive_time = 1000 * inactive_time;
-@@ -1195,11 +1195,11 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
- 
- 		wilc_get_statistics(vif, &stats);
- 
--		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL) |
--						BIT(NL80211_STA_INFO_RX_PACKETS) |
--						BIT(NL80211_STA_INFO_TX_PACKETS) |
--						BIT(NL80211_STA_INFO_TX_FAILED) |
--						BIT(NL80211_STA_INFO_TX_BITRATE);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL) |
-+						BIT_ULL(NL80211_STA_INFO_RX_PACKETS) |
-+						BIT_ULL(NL80211_STA_INFO_TX_PACKETS) |
-+						BIT_ULL(NL80211_STA_INFO_TX_FAILED) |
-+						BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
- 
- 		sinfo->signal = stats.rssi;
- 		sinfo->rx_packets = stats.rx_cnt;
-@@ -1776,7 +1776,7 @@ static int dump_station(struct wiphy *wiphy, struct net_device *dev,
- 	priv = wiphy_priv(wiphy);
- 	vif = netdev_priv(priv->dev);
- 
--	sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
-+	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
- 
- 	wilc_get_rssi(vif, &sinfo->signal);
- 
-diff --git a/drivers/staging/wlan-ng/cfg80211.c b/drivers/staging/wlan-ng/cfg80211.c
-index 4291225..07c52e3 100644
---- a/drivers/staging/wlan-ng/cfg80211.c
-+++ b/drivers/staging/wlan-ng/cfg80211.c
-@@ -282,9 +282,9 @@ static int prism2_get_station(struct wiphy *wiphy, struct net_device *dev,
- 
- 	if (result == 0) {
- 		sinfo->txrate.legacy = quality.txrate.data;
--		sinfo->filled |= BIT(NL80211_STA_INFO_TX_BITRATE);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
- 		sinfo->signal = quality.level.data;
--		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
- 	}
- 
- 	return result;
--- 
-2.7.4
+1. scp app_1.0_armhf.deb root@imx6dlsabresd:/home/root
+The transfer is completed. The progress bar is shown and the amount of 
+transfered data
+
+2. I wait some minutes
+...
+...
+I retry the transfer
+scp app_1.0_armhf.deb root@imx6dlsabresd:/home/root
+
+the PC wait for 5 minute about and then it goes to timeout.
+
+On the imx6dlsabresd board dmesg tells nothing of interesting
+
+Looking with iwconfig wlan0 I get this
+
+
+wlan0     IEEE 802.11bgn  ESSID:"STUDIO"
+           Mode:Managed  Frequency:2.437 GHz  Access Point: 
+00:0C:E6:0A:3E:CA
+           Bit Rate=72.2 Mb/s   Tx-Power=20 dBm
+           Retry short limit:7   RTS thr=2347 B   Fragment thr:off
+           Encryption key:off
+           Power Management:off
+           Link Quality=62/70  Signal level=-48 dBm
+           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+           Tx excessive retries:0  Invalid misc:240   Missed beacon:0
+
+The power management is always off
+
+
+Where I can look to get some more information on this strange behaviour?
+
+There is a mini-cd sold with the dongle Edimax, but the linux driver is 
+for kernel 3.x
+
+
+Best regards,
+   Mauro Ziliani
