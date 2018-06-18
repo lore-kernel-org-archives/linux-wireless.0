@@ -1,80 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dnvrco-outbound-snat.email.rr.com ([107.14.73.225]:52028 "EHLO
-        dnvrco-cmomta01.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753539AbeFJX3o (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38860 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933118AbeFRKZj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Jun 2018 19:29:44 -0400
-Message-ID: <20180610232943.IEZG1.148514.root@dnvrco-web22> (sfid-20180611_013313_929094_B7F45AA7)
-Date: Sun, 10 Jun 2018 23:29:43 +0000
-From: <mgreger@cinci.rr.com>
-To: sedat.dilek@gmail.com, mgreger@cinci.rr.com
-Subject: Re: Atheros AR9462 - 5Ghz not working
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20180530140546.7KP70.72041.root@dnvrco-web22>
+        Mon, 18 Jun 2018 06:25:39 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 18 Jun 2018 15:55:39 +0530
+From: Balaji Pothunoori <bpothuno@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] mac80211: last ack signal support in station dump
+In-Reply-To: <1529063019.10037.12.camel@sipsolutions.net>
+References: <1528121469-16450-1-git-send-email-bpothuno@codeaurora.org>
+ <1528121469-16450-3-git-send-email-bpothuno@codeaurora.org>
+ <1529063019.10037.12.camel@sipsolutions.net>
+Message-ID: <658776f067af9968adcc51bf8baad687@codeaurora.org> (sfid-20180618_122545_446383_C4AB1116)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
----- mgreger@cinci.rr.com wrote: 
+On 2018-06-15 17:13, Johannes Berg wrote:
+> On Mon, 2018-06-04 at 19:41 +0530, Balaji Pothunoori wrote:
+>> 
+>> +	if (ieee80211_hw_check(&sta->local->hw, REPORTS_TX_ACK_STATUS)) {
+>> +		if (sta->status_stats.ack_signal_filled && ((!(sinfo->filled &
+>> +		    BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL))) ||
+>> +		    (!(sinfo->filled &
+>> +		    BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL_AVG))))) {
 > 
-> ---- Sedat Dilek <sedat.dilek@gmail.com> wrote: 
-> > On Tue, May 22, 2018 at 7:21 PM,  <mgreger@cinci.rr.com> wrote:
-> > > I've run out of ideas and am hoping someone here can help.
-> > >
-> > > All I want to do is connect a client to my 5Ghz network.
-> > >
-> > > My client:
-> > >   OS is Debian stable "Stretch" with sysvinit instead of systemd
-> > >   Atheros AR9462 (World roaming 0x64 regdomain in EEPROM)
-> > >   "iw reg set US"
-> > >   "iw list" shows both 2.4Ghz and 5Ghz bands available.
-> > >   "iw wlp3s0 survey dump" shows received traffic on 5Ghz bands.
-> > >
-> > > There are oodles of 5Ghz AP's within range, but scans (including passive scans) reveal only 2.4Ghz networks. My only guess was that it won't transmit due to regulatory requirements, but I cannot make it work.
-> > >
-> > > What I've tried:
-> > >   Running with and without CRDA
-> > >   Running latest mainline kernel
-> > >   Hacking around on the ath9k driver and nl80211 to remove all regulatory enforcement.
-> > >
-> > > Nothing works and I'm pulling my hair out. Any help would be greatly appreciated.
-> > 
-> > Hi,
-> > 
-> > I try to give some initial help.
-> > 
-> > The linux-wireless driver is supported by ath9k driver see [1] and [2].
-> > 
-> > Unfortunately, you have not sent any log-files at least your dmesg-log.
-> > No output of the above userspace commands or userspace-tools versions.
-> > No information to VendorID/ProductID (PCI, USB, whatever).
-> > It's not clear to me if this is a kernelspace (ath9k-driver) or
-> > userspace (CRDA/regulatory) problem.
-> > How should someone help you effectively?
-> > 
-> > The linux-wireless wiki has somne informations on how to debug
-> > Atheros/Qualcomm ath9k-driver, see [3].
-> > 
-> > As a debianist I say try Linux v4.16 Debian packages from
-> > stretch-backports (and maybe a higher version of wireless-regdb).
-> > 
-> > Try to ask questions the smart way [4] :-).
-> > 
-> > Hope this helps.
-> > 
-> > Regards,
-> > - Sedat -
-> > 
-> > [1] https://wireless.wiki.kernel.org/en/users/drivers/ath9k
-> > [2] https://wireless.wiki.kernel.org/en/users/drivers/ath9k/devices
-> > [3] https://wireless.wiki.kernel.org/en/users/drivers/ath9k/debug
-> > [4] http://www.catb.org/esr/faqs/smart-questions.html
+> Uh, wow, the indentation here is awful - please break with && and || on
+> the end of line and indent properly according to the nesting level.
+> 
+> If a line ends up being longer than 80, I think that's better than this
+> monster expression :)
+
+Sure , i will modify in v3.
+
+> 
+>> +			sinfo->ack_signal =
+>> +				sta->status_stats.last_ack_signal;
+>> +			sinfo->filled |=
+>> +				BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL);
+>> +			sinfo->avg_ack_signal =
+>> +				-(s8)ewma_avg_signal_read(
+>>  				&sta->status_stats.avg_ack_signal);
+>> -		sinfo->filled |=
+>> -			BIT_ULL(NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG);
+>> +			sinfo->filled |=
+>> +				BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL_AVG);
+>> +		}
+> 
+> Clearly your previous patch would even break the kernel compile since
+> the DATA_ACK_SIGNAL_AVG is still used here.
+
+Here i have used "NL80211_STA_INFO_ACK_SIGNAL_AVG" not as 
+"NL80211_STA_INFO_DATA_ACK_SIGNAL_AVG".
+
 > 
 > 
-> I have also built the latest wireless-regdb and crda, but it made no difference.
+> 
+> Finally, please also explain why you're adding this feature, at least 
+> in
+> the cover letter ("PATCH 0/2"), I can reuse that as a merge commit
+> message if necessary.
 
+Sure, i will update in v3.
 
+> 
+> johannes
 
-Did any of the information I posted point towards a cause?
+Regards,
+Balaji.
