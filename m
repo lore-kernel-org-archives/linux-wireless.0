@@ -1,62 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f68.google.com ([209.85.160.68]:40066 "EHLO
-        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750711AbeFACOg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 May 2018 22:14:36 -0400
-From: Varsha Rao <rvarsha016@gmail.com>
-To: Nicholas Mc Guire <der.herr@hofr.at>,
-        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Varsha Rao <rvarsha016@gmail.com>
-Subject: [PATCH] net: wireless: brcmsmac: Remove unnecessary parentheses
-Date: Fri,  1 Jun 2018 07:44:12 +0530
-Message-Id: <20180601021413.4031-1-rvarsha016@gmail.com> (sfid-20180601_041440_706513_83A37D21)
+Received: from s2.neomailbox.net ([5.148.176.60]:15608 "EHLO s2.neomailbox.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752890AbeFREVF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 Jun 2018 00:21:05 -0400
+From: Antonio Quartulli <a@unstable.cc>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Antonio Quartulli <a@unstable.cc>
+Subject: [PATCH] iw: print 4ADDR attribute when dumping interface
+Date: Mon, 18 Jun 2018 12:20:47 +0800
+Message-Id: <20180618042047.30608-1-a@unstable.cc> (sfid-20180618_062109_246967_5C9D2E9C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the clang warning of extraneous parentheses, with the
-following coccinelle script.
+Print the value of the 4ADDr attribute when dumping the interface
+status.
 
-@@
-identifier i;
-expression e;
-statement s;
-@@
-if (
--(i == e)
-+i == e
- )
-s
-
-Suggested-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
-Signed-off-by: Varsha Rao <rvarsha016@gmail.com>
+Signed-off-by: Antonio Quartulli <a@unstable.cc>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ interface.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c
-index 3a13d176b221..35e3b101e5cf 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c
-@@ -159,7 +159,7 @@ u16 read_radio_reg(struct brcms_phy *pi, u16 addr)
- {
- 	u16 data;
+diff --git a/interface.c b/interface.c
+index 712bbdc..678955d 100644
+--- a/interface.c
++++ b/interface.c
+@@ -447,6 +447,11 @@ static int print_iface_handler(struct nl_msg *msg, void *arg)
+ 		printf("%s\tmulticast TXQ:%s\n", indent, buf);
+ 	}
  
--	if ((addr == RADIO_IDCODE))
-+	if (addr == RADIO_IDCODE)
- 		return 0xffff;
++	if (tb_msg[NL80211_ATTR_4ADDR]) {
++		uint8_t use_4addr = nla_get_u8(tb_msg[NL80211_ATTR_4ADDR]);
++		printf("%s\t4addr: %d\n", indent, use_4addr);
++	}
++
+ 	return NL_SKIP;
+ }
  
- 	switch (pi->pubpi.phy_type) {
 -- 
-2.17.0
+2.17.1
