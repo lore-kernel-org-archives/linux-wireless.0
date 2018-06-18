@@ -1,164 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:38900 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932213AbeFJKvp (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:56634 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933182AbeFRNWe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Jun 2018 06:51:45 -0400
-Received: by mail-wm0-f42.google.com with SMTP id 69-v6so11186204wmf.3
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2018 03:51:45 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [RFC v3 11/19] mt76: introduce mt76x2-common module
-Date: Sun, 10 Jun 2018 12:51:18 +0200
-Message-Id: <20180610105126.28425-12-lorenzo.bianconi@redhat.com> (sfid-20180610_125150_972812_F05A4D23)
+        Mon, 18 Jun 2018 09:22:34 -0400
+Date: Mon, 18 Jun 2018 15:22:31 +0200
+From: Greg KH <greg@kroah.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Omer Efrat <omer.efrat@tandemg.com>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: Re: [PATCH v3 5/5] staging: use BIT_ULL for NL80211_STA_INFO_*
+ attribute types
+Message-ID: <20180618132231.GA15122@kroah.com> (sfid-20180618_152237_552011_6CD50C05)
+References: <1529230056-18004-1-git-send-email-omer.efrat@tandemg.com>
+ <20180617102424.GA5705@kroah.com>
+ <87wouwa6xk.fsf@purkki.adurom.net>
+ <20180618074018.GA17683@kroah.com>
+ <87zhzsdyso.fsf@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87zhzsdyso.fsf@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to remove usb dependency from pcie code, add mt76x2-common as
-a container of shared code between mt76x2 and mt76x2u. Add eeprom code
-to mt76x2-common module
+On Mon, Jun 18, 2018 at 04:11:51PM +0300, Kalle Valo wrote:
+> Greg KH <greg@kroah.com> writes:
+> 
+> > On Mon, Jun 18, 2018 at 10:29:43AM +0300, Kalle Valo wrote:
+> >> Greg KH <greg@kroah.com> writes:
+> >> 
+> >> > On Sun, Jun 17, 2018 at 01:07:36PM +0300, Omer Efrat wrote:
+> >> >> The BIT macro uses unsigned long which some architectures handle as 32 bit
+> >> >> and therefore might cause macro's shift to overflow when used on a value
+> >> >> equals or larger than 32 (NL80211_STA_INFO_RX_DURATION and afterwards).
+> >> >> 
+> >> >> Since 'filled' member in station_info changed to u64, BIT_ULL macro
+> >> >> should be used with all NL80211_STA_INFO_* attribute types instead of BIT
+> >> >> to prevent future possible bugs when one will use BIT macro for higher
+> >> >> attributes by mistake.
+> >> >> 
+> >> >> This commit cleans up all usages of BIT macro with the above field
+> >> >> in cfg80211 by changing it to BIT_ULL instead.
+> >> >> 
+> >> >> Signed-off-by: Omer Efrat <omer.efrat@tandemg.com>
+> >> >
+> >> > Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> >> 
+> >> Via which tree is this supposed to go?
+> >
+> > Not mine :)
+> >
+> > Have fun with it!
+> 
+> Hehe :)
+> 
+> But I don't see why this patch 5 should go either to mac80211 or
+> wireless-drivers trees as there's no dependency or anything like that,
+> AFAIK it's just cleanup. So it would simplest to get this patch 5 to
+> staging tree, less conflicts that way.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/Kconfig         |  5 +++++
- drivers/net/wireless/mediatek/mt76/Makefile        |  6 +++++-
- drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c | 13 +++++++++++--
- drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h |  1 +
- 4 files changed, 22 insertions(+), 3 deletions(-)
+Sorry, I thought it was dependant on the previous patches, given that
+the first time I tried to apply it, it failed.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
-index fc05d79c80d0..1e5c6af6afa2 100644
---- a/drivers/net/wireless/mediatek/mt76/Kconfig
-+++ b/drivers/net/wireless/mediatek/mt76/Kconfig
-@@ -1,9 +1,14 @@
- config MT76_CORE
- 	tristate
- 
-+config MT76x2_COMMON
-+	tristate
-+	depends on MT76_CORE
-+
- config MT76x2E
- 	tristate "MediaTek MT76x2E (PCIe) support"
- 	select MT76_CORE
-+	select MT76x2_COMMON
- 	depends on MAC80211
- 	depends on PCI
- 	---help---
-diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
-index a0156bc01dea..57feda501a51 100644
---- a/drivers/net/wireless/mediatek/mt76/Makefile
-+++ b/drivers/net/wireless/mediatek/mt76/Makefile
-@@ -1,4 +1,5 @@
- obj-$(CONFIG_MT76_CORE) += mt76.o
-+obj-$(CONFIG_MT76x2_COMMON) += mt76x2-common.o
- obj-$(CONFIG_MT76x2E) += mt76x2e.o
- 
- mt76-y := \
-@@ -6,10 +7,13 @@ mt76-y := \
- 
- CFLAGS_trace.o := -I$(src)
- 
-+mt76x2-common-y := \
-+	mt76x2_eeprom.o
-+
- mt76x2e-y := \
- 	mt76x2_pci.o mt76x2_dma.o \
- 	mt76x2_main.o mt76x2_init.o mt76x2_debugfs.o mt76x2_tx.o \
--	mt76x2_core.o mt76x2_mac.o mt76x2_eeprom.o mt76x2_mcu.o mt76x2_phy.o \
-+	mt76x2_core.o mt76x2_mac.o mt76x2_mcu.o mt76x2_phy.o \
- 	mt76x2_dfs.o mt76x2_trace.o
- 
- CFLAGS_mt76x2_trace.o := -I$(src)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-index 95d5f7d888f0..1753bcb36356 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
-@@ -40,8 +40,7 @@ mt76x2_eeprom_get_macaddr(struct mt76x2_dev *dev)
- 	return 0;
- }
- 
--static void
--mt76x2_eeprom_parse_hw_cap(struct mt76x2_dev *dev)
-+void mt76x2_eeprom_parse_hw_cap(struct mt76x2_dev *dev)
- {
- 	u16 val = mt76x2_eeprom_get(dev, MT_EE_NIC_CONF_0);
- 
-@@ -58,6 +57,7 @@ mt76x2_eeprom_parse_hw_cap(struct mt76x2_dev *dev)
- 		break;
- 	}
- }
-+EXPORT_SYMBOL_GPL(mt76x2_eeprom_parse_hw_cap);
- 
- static int
- mt76x2_efuse_read(struct mt76x2_dev *dev, u16 addr, u8 *data)
-@@ -415,6 +415,7 @@ void mt76x2_read_rx_gain(struct mt76x2_dev *dev)
- 
- 	dev->cal.rx.lna_gain = mt76x2_sign_extend(lna, 8);
- }
-+EXPORT_SYMBOL_GPL(mt76x2_read_rx_gain);
- 
- static s8
- mt76x2_rate_power_val(u8 val)
-@@ -482,6 +483,7 @@ void mt76x2_get_rate_power(struct mt76x2_dev *dev, struct mt76_rate_power *t,
- 		val >>= 8;
- 	t->vht[8] = t->vht[9] = mt76x2_rate_power_val(val >> 8);
- }
-+EXPORT_SYMBOL_GPL(mt76x2_get_rate_power);
- 
- int mt76x2_get_max_rate_power(struct mt76_rate_power *r)
- {
-@@ -493,6 +495,7 @@ int mt76x2_get_max_rate_power(struct mt76_rate_power *r)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(mt76x2_get_max_rate_power);
- 
- static void
- mt76x2_get_power_info_2g(struct mt76x2_dev *dev, struct mt76x2_tx_power_info *t,
-@@ -600,6 +603,7 @@ void mt76x2_get_power_info(struct mt76x2_dev *dev,
- 	t->delta_bw40 = mt76x2_rate_power_val(bw40);
- 	t->delta_bw80 = mt76x2_rate_power_val(bw80);
- }
-+EXPORT_SYMBOL_GPL(mt76x2_get_power_info);
- 
- int mt76x2_get_temp_comp(struct mt76x2_dev *dev, struct mt76x2_temp_comp *t)
- {
-@@ -632,6 +636,7 @@ int mt76x2_get_temp_comp(struct mt76x2_dev *dev, struct mt76x2_temp_comp *t)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(mt76x2_get_temp_comp);
- 
- bool mt76x2_ext_pa_enabled(struct mt76x2_dev *dev, enum nl80211_band band)
- {
-@@ -642,6 +647,7 @@ bool mt76x2_ext_pa_enabled(struct mt76x2_dev *dev, enum nl80211_band band)
- 	else
- 		return !(conf0 & MT_EE_NIC_CONF_0_PA_INT_2G);
- }
-+EXPORT_SYMBOL_GPL(mt76x2_ext_pa_enabled);
- 
- int mt76x2_eeprom_init(struct mt76x2_dev *dev)
- {
-@@ -658,3 +664,6 @@ int mt76x2_eeprom_init(struct mt76x2_dev *dev)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(mt76x2_eeprom_init);
-+
-+MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
-index aa0b0c040375..0f3e4d2f4fee 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
-@@ -155,6 +155,7 @@ void mt76x2_get_power_info(struct mt76x2_dev *dev,
- int mt76x2_get_temp_comp(struct mt76x2_dev *dev, struct mt76x2_temp_comp *t);
- bool mt76x2_ext_pa_enabled(struct mt76x2_dev *dev, enum nl80211_band band);
- void mt76x2_read_rx_gain(struct mt76x2_dev *dev);
-+void mt76x2_eeprom_parse_hw_cap(struct mt76x2_dev *dev);
- 
- static inline bool
- mt76x2_temp_tx_alc_enabled(struct mt76x2_dev *dev)
--- 
-2.17.1
+Omer, can you just resend this single patch to me and I will be glad to
+apply it to the staging tree, if it really is stand-alone.
+
+thanks,
+
+greg k-h
