@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from orcrist.hmeau.com ([104.223.48.154]:57892 "EHLO
-        deadmen.hmeau.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935695AbeFOPPV (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:58184 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935389AbeFRUpG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Jun 2018 11:15:21 -0400
-Date: Fri, 15 Jun 2018 23:15:03 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Michael =?iso-8859-1?Q?B=FCsch?= <m@bues.ch>
-Cc: mpm@selenic.com, spam@lukas-wirz.de, linux-crypto@vger.kernel.org,
-        b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        prasannatsmkumar@gmail.com, freude@linux.vnet.ibm.com
-Subject: Re: [PATCH] hw_random: Always drop the RNG in hwrng_unregister()
-Message-ID: <20180615151503.ryml5ixzv66stwge@gondor.apana.org.au> (sfid-20180615_171524_370280_DBA1820C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20180614200811.76401d95@wiggum>
+        Mon, 18 Jun 2018 16:45:06 -0400
+Message-ID: <1529354704.3092.39.camel@sipsolutions.net> (sfid-20180618_224531_135826_D4735EDD)
+Subject: Re: [PATCH] cfg80211: Add cumulative channel survey dump support.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: vnaralas@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        linux-wireless-owner@vger.kernel.org
+Date: Mon, 18 Jun 2018 22:45:04 +0200
+In-Reply-To: <ebf1c95acb34649b3d2a5435142dc06a@codeaurora.org>
+References: <1526980556-26707-1-git-send-email-vnaralas@codeaurora.org>
+         <1527069282.3759.16.camel@sipsolutions.net>
+         <ebf1c95acb34649b3d2a5435142dc06a@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Büsch <m@bues.ch> wrote:
-> [-- text/plain, encoding quoted-printable, charset: UTF-8, 57 lines --]
+On Thu, 2018-05-31 at 14:36 +0530, vnaralas@codeaurora.org wrote:
+> On 2018-05-23 15:24, Johannes Berg wrote:
+> > On Tue, 2018-05-22 at 14:45 +0530, Venkateswara Naralasetty wrote:
+> > > This patch provides support to send accumulated survey data to
+> > > user if low level drivers provides non-accumulated survey data.
+> > 
+> > I think the commit log should say what you need this for?
+> > 
+> > It's simultaneously a new flag, and a lot of code, but it's not clear
+> > what the point is?
+> > 
+> > johannes
 > 
-> enable_best_rng() is used in hwrng_unregister() to switch away from the
-> currently active RNG, if that is the one currently being removed.
-> However enable_best_rng() might fail, if the next RNG's init routine
-> fails. In that case enable_best_rng() will return an error code and
-> the currently active RNG will remain active.
-> After unregistering this might lead to crashes due to use-after-free.
+> I will sent next version of patch with updated commit log.
 > 
-> Fix this by dropping the currently active RNG, if enable_best_rng()
-> failed. This will result in no RNG to be active, if the next-best
-> one failed to initialize.
-> 
-> This problem was introduced by 142a27f0a731ddcf467546960a5585970ca98e21
-> 
-> 
-> Reported-by: Wirz <spam@lukas-wirz.de>
-> Tested-by: Wirz <spam@lukas-wirz.de>
-> Signed-off-by: Michael Büsch <m@bues.ch>
-> Cc: stable@vger.kernel.org
+> Providing you the earlier discussion of this patch to give quick 
+> overview about this patch.
+> https://patchwork.kernel.org/patch/9701459/
 
-Patch applied.  Thanks.
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Haha. I guess it's too long ago :)
+
+johannes
