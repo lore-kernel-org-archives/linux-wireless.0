@@ -1,81 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:45591 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932875AbeFUPOp (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46690 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932843AbeFRNMC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Jun 2018 11:14:45 -0400
-Received: by mail-oi0-f66.google.com with SMTP id 188-v6so3235792oid.12
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jun 2018 08:14:44 -0700 (PDT)
-Subject: Re: [PATCH] rtlwifi: Fix kernel Oops "Fw download fail!!"
-To: pkshih@realtek.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-References: <20180621070635.8217-1-pkshih@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <b8a27a7a-1eef-b20f-2684-a1aa4c25aeae@lwfinger.net> (sfid-20180621_171449_196094_48DD40DB)
-Date: Thu, 21 Jun 2018 10:14:43 -0500
+        Mon, 18 Jun 2018 09:12:02 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Greg KH <greg@kroah.com>
+Cc: Omer Efrat <omer.efrat@tandemg.com>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: Re: [PATCH v3 5/5] staging: use BIT_ULL for NL80211_STA_INFO_* attribute types
+References: <1529230056-18004-1-git-send-email-omer.efrat@tandemg.com>
+        <20180617102424.GA5705@kroah.com> <87wouwa6xk.fsf@purkki.adurom.net>
+        <20180618074018.GA17683@kroah.com>
+Date: Mon, 18 Jun 2018 16:11:51 +0300
+In-Reply-To: <20180618074018.GA17683@kroah.com> (Greg KH's message of "Mon, 18
+        Jun 2018 09:40:18 +0200")
+Message-ID: <87zhzsdyso.fsf@codeaurora.org> (sfid-20180618_151207_251585_280221DA)
 MIME-Version: 1.0
-In-Reply-To: <20180621070635.8217-1-pkshih@realtek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/21/2018 02:06 AM, pkshih@realtek.com wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> When connecting to AP, mac80211 asks driver to enter and leave PS quickly,
-> but driver deinit doesn't wait for delayed work complete when entering PS,
-> then driver reinit procedure and delay work are running simultaneously.
-> This will cause unpredictable kernel oops or crash like
-> 
-> rtl8723be: error H2C cmd because of Fw download fail!!!
-> WARNING: CPU: 3 PID: 159 at drivers/net/wireless/realtek/rtlwifi/
-> 	 rtl8723be/fw.c:227 rtl8723be_fill_h2c_cmd+0x182/0x510 [rtl8723be]
-> CPU: 3 PID: 159 Comm: kworker/3:2 Tainted: G       O     4.16.13-2-ARCH #1
-> Hardware name: ASUSTeK COMPUTER INC. X556UF/X556UF, BIOS X556UF.406
-> 	       10/21/2016
-> Workqueue: rtl8723be_pci rtl_c2hcmd_wq_callback [rtlwifi]
-> RIP: 0010:rtl8723be_fill_h2c_cmd+0x182/0x510 [rtl8723be]
-> RSP: 0018:ffffa6ab01e1bd70 EFLAGS: 00010282
-> RAX: 0000000000000000 RBX: ffffa26069071520 RCX: 0000000000000001
-> RDX: 0000000080000001 RSI: ffffffff8be70e9c RDI: 00000000ffffffff
-> RBP: 0000000000000000 R08: 0000000000000048 R09: 0000000000000348
-> R10: 0000000000000000 R11: 0000000000000001 R12: 0000000000000000
-> R13: ffffa26069071520 R14: 0000000000000000 R15: ffffa2607d205f70
-> FS:  0000000000000000(0000) GS:ffffa26081d80000(0000) knlGS:000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 00000443b39d3000 CR3: 000000037700a005 CR4: 00000000003606e0
-> Call Trace:
->   ? halbtc_send_bt_mp_operation.constprop.17+0xd5/0xe0 [btcoexist]
->   ? ex_btc8723b1ant_bt_info_notify+0x3b8/0x820 [btcoexist]
->   ? rtl_c2hcmd_launcher+0xab/0x110 [rtlwifi]
->   ? process_one_work+0x1d1/0x3b0
->   ? worker_thread+0x2b/0x3d0
->   ? process_one_work+0x3b0/0x3b0
->   ? kthread+0x112/0x130
->   ? kthread_create_on_node+0x60/0x60
->   ? ret_from_fork+0x35/0x40
-> Code: 00 76 b4 e9 e2 fe ff ff 4c 89 ee 4c 89 e7 e8 56 22 86 ca e9 5e ...
-> 
-> This patch ensures all delayed works done before entering PS to satisfy
-> our expectation, so use cancel_delayed_work_sync() instead. An exception
-> is delayed work ips_nic_off_wq because running task may be itself, so add
-> a parameter ips_wq to deinit function to handle this case.
-> 
-> This issue is reported and fixed in below threads:
-> https://github.com/lwfinger/rtlwifi_new/issues/367
-> https://github.com/lwfinger/rtlwifi_new/issues/366
-> 
-> Tested-by: Evgeny Kapun <abacabadabacaba@gmail.com> # 8723DE
-> Tested-by: Shivam Kakkar <shivam543@gmail.com> # 8723BE on 4.18-rc1
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> ---
-> Hi Kalle,
-> 
-> I'd like to queue this fix to 4.18, because kernel oops in users' laptop.
+Greg KH <greg@kroah.com> writes:
 
-Reviewed by Larry Finger <Larry.Finger@lwfinger.net>
+> On Mon, Jun 18, 2018 at 10:29:43AM +0300, Kalle Valo wrote:
+>> Greg KH <greg@kroah.com> writes:
+>> 
+>> > On Sun, Jun 17, 2018 at 01:07:36PM +0300, Omer Efrat wrote:
+>> >> The BIT macro uses unsigned long which some architectures handle as 32 bit
+>> >> and therefore might cause macro's shift to overflow when used on a value
+>> >> equals or larger than 32 (NL80211_STA_INFO_RX_DURATION and afterwards).
+>> >> 
+>> >> Since 'filled' member in station_info changed to u64, BIT_ULL macro
+>> >> should be used with all NL80211_STA_INFO_* attribute types instead of BIT
+>> >> to prevent future possible bugs when one will use BIT macro for higher
+>> >> attributes by mistake.
+>> >> 
+>> >> This commit cleans up all usages of BIT macro with the above field
+>> >> in cfg80211 by changing it to BIT_ULL instead.
+>> >> 
+>> >> Signed-off-by: Omer Efrat <omer.efrat@tandemg.com>
+>> >
+>> > Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>> 
+>> Via which tree is this supposed to go?
+>
+> Not mine :)
+>
+> Have fun with it!
 
-Is is sufficient for this patch to go to 4.18, or should it be sent to stable, 
-as well.
+Hehe :)
 
-Larry
+But I don't see why this patch 5 should go either to mac80211 or
+wireless-drivers trees as there's no dependency or anything like that,
+AFAIK it's just cleanup. So it would simplest to get this patch 5 to
+staging tree, less conflicts that way.
+
+Patches 1 and 2 of course go to mac80211 tree and patch 4 goes to
+wireless-drivers.
+
+-- 
+Kalle Valo
