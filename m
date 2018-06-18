@@ -1,355 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52108 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752145AbeF3NXm (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.13]:42161 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754601AbeFRPM5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Jun 2018 09:23:42 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 30 Jun 2018 16:23:20 +0300
-Message-Id: <20180630132330.14928-6-luca@coelho.fi> (sfid-20180630_152351_513966_8871BF95)
-In-Reply-To: <20180630132330.14928-1-luca@coelho.fi>
-References: <20180630132330.14928-1-luca@coelho.fi>
-Subject: [PATCH 05/15] iwlwifi: pcie: allocate and free rx cr's and tr's tails
+        Mon, 18 Jun 2018 11:12:57 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: y2038@lists.linaro.org, Arnd Bergmann <arnd@arndb.de>,
+        Denis Kenzior <denkenz@gmail.com>,
+        Avraham Stern <avraham.stern@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 1/4] cfg80211: track time using boottime
+Date: Mon, 18 Jun 2018 17:11:14 +0200
+Message-Id: <20180618151142.1214422-1-arnd@arndb.de> (sfid-20180618_171440_482149_77843FD4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+The cfg80211 layer uses get_seconds() to read the current time
+in its supend handling. This function is deprecated because of the 32-bit
+time_t overflow, and it can cause unexpected behavior when the time
+changes due to settimeofday() calls or leap second updates.
 
-The hw now refers to two new blocks:
-* rx tr tail - The Tail index on the free buffers queue TR,
-which is update by the device after reading the free buffer
-from the tr.
-* rx cr tail - Updated by the driver when completing
-processing a new completion descriptor in the cr.
+In many cases, we want to use monotonic time instead, however cfg80211
+explicitly tracks the time spent in suspend, so this changes the
+driver over to use ktime_get_boottime_seconds(), which is slightly
+slower, but not used in a fastpath here.
 
-Add these two new struct to the rxq, allocate and free them
-when needed.
-
-In addition, the register for rx write pointer had been changed
-to HBUS_TARG_WRPTR. The way to differentiate tx from rx is the
-queue number. TX range is 0-511, and RX's is 512-527.
-
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- .../wireless/intel/iwlwifi/pcie/internal.h    |  13 +-
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  | 201 +++++++++++-------
- 2 files changed, 131 insertions(+), 83 deletions(-)
+ net/wireless/core.h  | 2 +-
+ net/wireless/sysfs.c | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 45ea32796cda..d944c6ec0b87 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -3,6 +3,7 @@
-  * Copyright(c) 2003 - 2015 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018 Intel Corporation
-  *
-  * Portions of this file are derived from the ipw3945 project, as well
-  * as portions of the ieee80211 subsystem header files.
-@@ -17,8 +18,7 @@
-  * more details.
-  *
-  * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ * this program.
-  *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-@@ -59,6 +59,7 @@
- #define RX_POST_REQ_ALLOC 2
- #define RX_CLAIM_REQ_ALLOC 8
- #define RX_PENDING_WATERMARK 16
-+#define FIRST_RX_QUEUE 512
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 63eb1b5fdd04..7f52ef569320 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -76,7 +76,7 @@ struct cfg80211_registered_device {
+ 	struct cfg80211_scan_request *scan_req; /* protected by RTNL */
+ 	struct sk_buff *scan_msg;
+ 	struct list_head sched_scan_req_list;
+-	unsigned long suspend_at;
++	time64_t suspend_at;
+ 	struct work_struct scan_done_wk;
  
- struct iwl_host_cmd;
+ 	struct genl_info *cur_cmd_info;
+diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
+index 570a2b67ca10..6ab32f6a1961 100644
+--- a/net/wireless/sysfs.c
++++ b/net/wireless/sysfs.c
+@@ -102,7 +102,7 @@ static int wiphy_suspend(struct device *dev)
+ 	struct cfg80211_registered_device *rdev = dev_to_rdev(dev);
+ 	int ret = 0;
  
-@@ -106,6 +107,10 @@ struct isr_statistics {
-  * @bd_dma: bus address of buffer of receive buffer descriptors (rbd)
-  * @ubd: driver's pointer to buffer of used receive buffer descriptors (rbd)
-  * @ubd_dma: physical address of buffer of used receive buffer descriptors (rbd)
-+ * @tr_tail: driver's pointer to the transmission ring tail buffer
-+ * @tr_tail_dma: physical address of the buffer for the transmission ring tail
-+ * @cr_tail: driver's pointer to the completion ring tail buffer
-+ * @cr_tail_dma: physical address of the buffer for the completion ring tail
-  * @read: Shared index to newest available Rx buffer
-  * @write: Shared index to oldest written Rx packet
-  * @free_count: Number of pre-allocated buffers in rx_free
-@@ -127,6 +132,10 @@ struct iwl_rxq {
- 	dma_addr_t bd_dma;
- 	__le32 *used_bd;
- 	dma_addr_t used_bd_dma;
-+	__le16 *tr_tail;
-+	dma_addr_t tr_tail_dma;
-+	__le16 *cr_tail;
-+	dma_addr_t cr_tail_dma;
- 	u32 read;
- 	u32 write;
- 	u32 free_count;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index d15f5ba2dc77..24ce2d6beb0f 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -209,7 +209,11 @@ static void iwl_pcie_rxq_inc_wr_ptr(struct iwl_trans *trans,
- 	}
+-	rdev->suspend_at = get_seconds();
++	rdev->suspend_at = ktime_get_boottime_seconds();
  
- 	rxq->write_actual = round_down(rxq->write, 8);
--	if (trans->cfg->mq_rx_supported)
-+	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
-+		iwl_write32(trans, HBUS_TARG_WRPTR,
-+			    (rxq->write_actual |
-+			     ((FIRST_RX_QUEUE + rxq->id) << 16)));
-+	else if (trans->cfg->mq_rx_supported)
- 		iwl_write32(trans, RFH_Q_FRBDCB_WIDX_TRG(rxq->id),
- 			    rxq->write_actual);
- 	else
-@@ -608,89 +612,146 @@ void iwl_pcie_rx_allocator_work(struct work_struct *data)
- 	iwl_pcie_rx_allocator(trans_pcie->trans);
- }
+ 	rtnl_lock();
+ 	if (rdev->wiphy.registered) {
+@@ -130,7 +130,7 @@ static int wiphy_resume(struct device *dev)
+ 	int ret = 0;
  
--static int iwl_pcie_rx_alloc(struct iwl_trans *trans)
-+static void iwl_pcie_free_rxq_dma(struct iwl_trans *trans,
-+				  struct iwl_rxq *rxq)
-+{
-+	struct device *dev = trans->dev;
-+	int free_size = trans->cfg->mq_rx_supported ? sizeof(__le64) :
-+						      sizeof(__le32);
-+
-+	if (rxq->bd)
-+		dma_free_coherent(dev, free_size * rxq->queue_size,
-+				  rxq->bd, rxq->bd_dma);
-+	rxq->bd_dma = 0;
-+	rxq->bd = NULL;
-+
-+	if (rxq->rb_stts)
-+		dma_free_coherent(trans->dev,
-+				  sizeof(struct iwl_rb_status),
-+				  rxq->rb_stts, rxq->rb_stts_dma);
-+	rxq->rb_stts_dma = 0;
-+	rxq->rb_stts = NULL;
-+
-+	if (rxq->used_bd)
-+		dma_free_coherent(dev, sizeof(__le32) * rxq->queue_size,
-+				  rxq->used_bd, rxq->used_bd_dma);
-+	rxq->used_bd_dma = 0;
-+	rxq->used_bd = NULL;
-+
-+	if (trans->cfg->device_family < IWL_DEVICE_FAMILY_22560)
-+		return;
-+
-+	if (rxq->tr_tail)
-+		dma_free_coherent(dev, sizeof(__le16),
-+				  rxq->tr_tail, rxq->tr_tail_dma);
-+	rxq->tr_tail_dma = 0;
-+	rxq->tr_tail = NULL;
-+
-+	if (rxq->cr_tail)
-+		dma_free_coherent(dev, sizeof(__le16),
-+				  rxq->cr_tail, rxq->cr_tail_dma);
-+	rxq->cr_tail_dma = 0;
-+	rxq->cr_tail = NULL;
-+}
-+
-+static int iwl_pcie_alloc_rxq_dma(struct iwl_trans *trans,
-+				  struct iwl_rxq *rxq)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	struct iwl_rb_allocator *rba = &trans_pcie->rba;
- 	struct device *dev = trans->dev;
- 	int i;
- 	int free_size = trans->cfg->mq_rx_supported ? sizeof(__le64) :
- 						      sizeof(__le32);
+ 	/* Age scan results with time spent in suspend */
+-	cfg80211_bss_age(rdev, get_seconds() - rdev->suspend_at);
++	cfg80211_bss_age(rdev, ktime_get_boottime_seconds() - rdev->suspend_at);
  
--	if (WARN_ON(trans_pcie->rxq))
--		return -EINVAL;
-+	spin_lock_init(&rxq->lock);
-+	if (trans->cfg->mq_rx_supported)
-+		rxq->queue_size = MQ_RX_TABLE_SIZE;
-+	else
-+		rxq->queue_size = RX_QUEUE_SIZE;
- 
--	trans_pcie->rxq = kcalloc(trans->num_rx_queues, sizeof(struct iwl_rxq),
--				  GFP_KERNEL);
--	if (!trans_pcie->rxq)
--		return -EINVAL;
-+	/*
-+	 * Allocate the circular buffer of Read Buffer Descriptors
-+	 * (RBDs)
-+	 */
-+	rxq->bd = dma_zalloc_coherent(dev,
-+				      free_size * rxq->queue_size,
-+				      &rxq->bd_dma, GFP_KERNEL);
-+	if (!rxq->bd)
-+		goto err;
- 
--	spin_lock_init(&rba->lock);
-+	if (trans->cfg->mq_rx_supported) {
-+		rxq->used_bd = dma_zalloc_coherent(dev,
-+						   sizeof(__le32) *
-+						   rxq->queue_size,
-+						   &rxq->used_bd_dma,
-+						   GFP_KERNEL);
-+		if (!rxq->used_bd)
-+			goto err;
-+	}
- 
--	for (i = 0; i < trans->num_rx_queues; i++) {
--		struct iwl_rxq *rxq = &trans_pcie->rxq[i];
-+	/* Allocate the driver's pointer to receive buffer status */
-+	rxq->rb_stts = dma_zalloc_coherent(dev, sizeof(*rxq->rb_stts),
-+					   &rxq->rb_stts_dma,
-+					   GFP_KERNEL);
-+	if (!rxq->rb_stts)
-+		goto err;
- 
--		spin_lock_init(&rxq->lock);
--		if (trans->cfg->mq_rx_supported)
--			rxq->queue_size = MQ_RX_TABLE_SIZE;
--		else
--			rxq->queue_size = RX_QUEUE_SIZE;
-+	if (trans->cfg->device_family < IWL_DEVICE_FAMILY_22560)
-+		return 0;
- 
--		/*
--		 * Allocate the circular buffer of Read Buffer Descriptors
--		 * (RBDs)
--		 */
--		rxq->bd = dma_zalloc_coherent(dev,
--					     free_size * rxq->queue_size,
--					     &rxq->bd_dma, GFP_KERNEL);
--		if (!rxq->bd)
--			goto err;
-+	/* Allocate the driver's pointer to TR tail */
-+	rxq->tr_tail = dma_zalloc_coherent(dev, sizeof(__le16),
-+					   &rxq->tr_tail_dma,
-+					   GFP_KERNEL);
-+	if (!rxq->tr_tail)
-+		goto err;
- 
--		if (trans->cfg->mq_rx_supported) {
--			rxq->used_bd = dma_zalloc_coherent(dev,
--							   sizeof(__le32) *
--							   rxq->queue_size,
--							   &rxq->used_bd_dma,
--							   GFP_KERNEL);
--			if (!rxq->used_bd)
--				goto err;
--		}
-+	/* Allocate the driver's pointer to CR tail */
-+	rxq->cr_tail = dma_zalloc_coherent(dev, sizeof(__le16),
-+					   &rxq->cr_tail_dma,
-+					   GFP_KERNEL);
-+	if (!rxq->cr_tail)
-+		goto err;
- 
--		/*Allocate the driver's pointer to receive buffer status */
--		rxq->rb_stts = dma_zalloc_coherent(dev, sizeof(*rxq->rb_stts),
--						   &rxq->rb_stts_dma,
--						   GFP_KERNEL);
--		if (!rxq->rb_stts)
--			goto err;
--	}
- 	return 0;
- 
- err:
- 	for (i = 0; i < trans->num_rx_queues; i++) {
- 		struct iwl_rxq *rxq = &trans_pcie->rxq[i];
- 
--		if (rxq->bd)
--			dma_free_coherent(dev, free_size * rxq->queue_size,
--					  rxq->bd, rxq->bd_dma);
--		rxq->bd_dma = 0;
--		rxq->bd = NULL;
--
--		if (rxq->rb_stts)
--			dma_free_coherent(trans->dev,
--					  sizeof(struct iwl_rb_status),
--					  rxq->rb_stts, rxq->rb_stts_dma);
--
--		if (rxq->used_bd)
--			dma_free_coherent(dev, sizeof(__le32) * rxq->queue_size,
--					  rxq->used_bd, rxq->used_bd_dma);
--		rxq->used_bd_dma = 0;
--		rxq->used_bd = NULL;
-+		iwl_pcie_free_rxq_dma(trans, rxq);
- 	}
- 	kfree(trans_pcie->rxq);
- 
- 	return -ENOMEM;
- }
- 
-+static int iwl_pcie_rx_alloc(struct iwl_trans *trans)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	struct iwl_rb_allocator *rba = &trans_pcie->rba;
-+	int i, ret;
-+
-+	if (WARN_ON(trans_pcie->rxq))
-+		return -EINVAL;
-+
-+	trans_pcie->rxq = kcalloc(trans->num_rx_queues, sizeof(struct iwl_rxq),
-+				  GFP_KERNEL);
-+	if (!trans_pcie->rxq)
-+		return -EINVAL;
-+
-+	spin_lock_init(&rba->lock);
-+
-+	for (i = 0; i < trans->num_rx_queues; i++) {
-+		struct iwl_rxq *rxq = &trans_pcie->rxq[i];
-+
-+		ret = iwl_pcie_alloc_rxq_dma(trans, rxq);
-+		if (ret)
-+			return ret;
-+	}
-+	return 0;
-+}
-+
- static void iwl_pcie_rx_hw_init(struct iwl_trans *trans, struct iwl_rxq *rxq)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-@@ -1002,8 +1063,6 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_rb_allocator *rba = &trans_pcie->rba;
--	int free_size = trans->cfg->mq_rx_supported ? sizeof(__le64) :
--					      sizeof(__le32);
- 	int i;
- 
- 	/*
-@@ -1022,27 +1081,7 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
- 	for (i = 0; i < trans->num_rx_queues; i++) {
- 		struct iwl_rxq *rxq = &trans_pcie->rxq[i];
- 
--		if (rxq->bd)
--			dma_free_coherent(trans->dev,
--					  free_size * rxq->queue_size,
--					  rxq->bd, rxq->bd_dma);
--		rxq->bd_dma = 0;
--		rxq->bd = NULL;
--
--		if (rxq->rb_stts)
--			dma_free_coherent(trans->dev,
--					  sizeof(struct iwl_rb_status),
--					  rxq->rb_stts, rxq->rb_stts_dma);
--		else
--			IWL_DEBUG_INFO(trans,
--				       "Free rxq->rb_stts which is NULL\n");
--
--		if (rxq->used_bd)
--			dma_free_coherent(trans->dev,
--					  sizeof(__le32) * rxq->queue_size,
--					  rxq->used_bd, rxq->used_bd_dma);
--		rxq->used_bd_dma = 0;
--		rxq->used_bd = NULL;
-+		iwl_pcie_free_rxq_dma(trans, rxq);
- 
- 		if (rxq->napi.poll)
- 			netif_napi_del(&rxq->napi);
+ 	rtnl_lock();
+ 	if (rdev->wiphy.registered && rdev->ops->resume)
 -- 
-2.18.0
+2.9.0
