@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:45743 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932503AbeFGN0T (ORCPT
+Received: from mout.kundenserver.de ([217.72.192.74]:42417 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754321AbeFRPMM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Jun 2018 09:26:19 -0400
-Received: by mail-wr0-f196.google.com with SMTP id o12-v6so9834441wrm.12
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jun 2018 06:26:18 -0700 (PDT)
-Subject: Re: [PATCH resend 0/2] NFC: pn533: Fix DMA related USB errors
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Samuel Ortiz <sameo@linux.intel.com>, linux-usb@vger.kernel.org,
-        =?UTF-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>,
-        Michael Thalmeier <michael.thalmeier@hale.at>,
-        linux-wireless@vger.kernel.org
-References: <20180601132200.25973-1-hdegoede@redhat.com>
- <20180601161918.GA10471@kroah.com>
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <b1e88495-a5a9-5290-f901-95520afa1d70@redhat.com> (sfid-20180607_152624_413873_9DF68C76)
-Date: Thu, 7 Jun 2018 15:26:16 +0200
-MIME-Version: 1.0
-In-Reply-To: <20180601161918.GA10471@kroah.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 18 Jun 2018 11:12:12 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: y2038@lists.linaro.org, Arnd Bergmann <arnd@arndb.de>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 2/4] zd1211rw: stop using deprecated get_seconds()
+Date: Mon, 18 Jun 2018 17:11:15 +0200
+Message-Id: <20180618151142.1214422-2-arnd@arndb.de> (sfid-20180618_171439_283063_83F0A68A)
+In-Reply-To: <20180618151142.1214422-1-arnd@arndb.de>
+References: <20180618151142.1214422-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The get_seconds() function is deprecated because of the y2038 overflow.
+In zd1211rw we don't even care about the absolute value, so this is
+not a problem, but it's equally trivial to change to the non-deprecated
+ktime_get_seconds().
 
-On 01-06-18 18:19, Greg Kroah-Hartman wrote:
-> On Fri, Jun 01, 2018 at 03:21:58PM +0200, Hans de Goede wrote:
->> Hi All,
->>
->> These 2 simple bug-fixes seem to have fallen through the cracks,
->> hence this resend.
->>
->> Greg (gkh) despite a ping to Samuel about a month ago I still have not
->> had any response from the NFC people to these fixes. Since these are
->> really fixes for USB urb mis-handling, perhaps you can take these
->> upstream through the USB tree?
-> 
-> Can you respin these against my usb-next branch of usb.git?  I applied a
-> big pn533 fix to make it actually work again, which causes your patches
-> to not be able to be applied at all :(
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/zydas/zd1211rw/zd_chip.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Right, so it looks like your patch:
-https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git/commit?id=dbafc28955fa6779dc23d1607a0fee5e509a278b
-
-More or less duplicates my first patch, so that one can be dropped.
-
-There still is an issue of wrong GFP flags triggering an oops.
-
-I will send a rebased v2 of that.
-
-Regards,
-
-Hans
+diff --git a/drivers/net/wireless/zydas/zd1211rw/zd_chip.c b/drivers/net/wireless/zydas/zd1211rw/zd_chip.c
+index 07b94eda9604..dd6a86b899eb 100644
+--- a/drivers/net/wireless/zydas/zd1211rw/zd_chip.c
++++ b/drivers/net/wireless/zydas/zd1211rw/zd_chip.c
+@@ -1341,7 +1341,7 @@ int zd_chip_control_leds(struct zd_chip *chip, enum led_status status)
+ 	case ZD_LED_SCANNING:
+ 		ioreqs[0].value = FW_LINK_OFF;
+ 		ioreqs[1].value = v[1] & ~other_led;
+-		if (get_seconds() % 3 == 0) {
++		if ((u32)ktime_get_seconds() % 3 == 0) {
+ 			ioreqs[1].value &= ~chip->link_led;
+ 		} else {
+ 			ioreqs[1].value |= chip->link_led;
+-- 
+2.9.0
