@@ -1,45 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46268 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:55322 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754982AbeFRH3r (ORCPT
+        with ESMTP id S966567AbeFRI5U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Jun 2018 03:29:47 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Greg KH <greg@kroah.com>
-Cc: Omer Efrat <omer.efrat@tandemg.com>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: Re: [PATCH v3 5/5] staging: use BIT_ULL for NL80211_STA_INFO_* attribute types
-References: <1529230056-18004-1-git-send-email-omer.efrat@tandemg.com>
-        <20180617102424.GA5705@kroah.com>
-Date: Mon, 18 Jun 2018 10:29:43 +0300
-In-Reply-To: <20180617102424.GA5705@kroah.com> (Greg KH's message of "Sun, 17
-        Jun 2018 12:24:24 +0200")
-Message-ID: <87wouwa6xk.fsf@purkki.adurom.net> (sfid-20180618_092951_457906_BD69737C)
+        Mon, 18 Jun 2018 04:57:20 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: MAINTAINERS: update Xinming's email address
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1528681972-16422-1-git-send-email-huxm@marvell.com>
+References: <1528681972-16422-1-git-send-email-huxm@marvell.com>
+To: Xinming Hu <huxm@marvell.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Message-Id: <20180618085719.D22F860227@smtp.codeaurora.org> (sfid-20180618_105746_248835_D40D49D1)
+Date: Mon, 18 Jun 2018 08:57:19 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greg KH <greg@kroah.com> writes:
+Xinming Hu <huxm@marvell.com> wrote:
 
-> On Sun, Jun 17, 2018 at 01:07:36PM +0300, Omer Efrat wrote:
->> The BIT macro uses unsigned long which some architectures handle as 32 bit
->> and therefore might cause macro's shift to overflow when used on a value
->> equals or larger than 32 (NL80211_STA_INFO_RX_DURATION and afterwards).
->> 
->> Since 'filled' member in station_info changed to u64, BIT_ULL macro
->> should be used with all NL80211_STA_INFO_* attribute types instead of BIT
->> to prevent future possible bugs when one will use BIT macro for higher
->> attributes by mistake.
->> 
->> This commit cleans up all usages of BIT macro with the above field
->> in cfg80211 by changing it to BIT_ULL instead.
->> 
->> Signed-off-by: Omer Efrat <omer.efrat@tandemg.com>
->
-> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> I'd like to use this new gmail from now on.
+> 
+> Cc: Ganapathi Bhat <gbhat@marvell.com>
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
 
-Via which tree is this supposed to go?
+Patch applied to wireless-drivers.git, thanks.
+
+755abd247a3d MAINTAINERS: update Xinming's email address
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/10456899/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
