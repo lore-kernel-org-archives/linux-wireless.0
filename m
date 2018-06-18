@@ -1,55 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:35827 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752830AbeFKVKA (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:42412 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754519AbeFRUBX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Jun 2018 17:10:00 -0400
-Received: by mail-pl0-f67.google.com with SMTP id k1-v6so4624611plt.2
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2018 14:10:00 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>,
-        <linux-kernel@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH 1/4] ath10k: snoc: use correct bus-specific pointer in RX retry
-Date: Mon, 11 Jun 2018 14:09:43 -0700
-Message-Id: <20180611210946.241341-1-briannorris@chromium.org> (sfid-20180611_231106_141393_C1A17A55)
+        Mon, 18 Jun 2018 16:01:23 -0400
+Received: by mail-oi0-f68.google.com with SMTP id k190-v6so15997789oib.9
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2018 13:01:23 -0700 (PDT)
+MIME-Version: 1.0
+References: <20180618135329.N2TLO.197792.root@dnvrco-web12> <5B280692.2060106@broadcom.com>
+In-Reply-To: <5B280692.2060106@broadcom.com>
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date: Mon, 18 Jun 2018 22:01:11 +0200
+Message-ID: <CAFBinCBe=d-z-uzCm0Smn5Ee3btj_YNOH-s8jFzNX7qX=4ug8g@mail.gmail.com> (sfid-20180618_220127_258448_D24A7474)
+Subject: Re: Atheros AR9462 - 5Ghz not working
+To: arend.vanspriel@broadcom.com
+Cc: mgreger@cinci.rr.com, pozega.tomislav@gmail.com,
+        janusz.dziedzic@gmail.com, linux-wireless@vger.kernel.org,
+        sedat.dilek@gmail.com, kazikcz@gmail.com, bvermeul@blackstar.nl
+Content-Type: multipart/mixed; boundary="0000000000009ebd7e056ef00720"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We're 'ath10k_snoc', not 'ath10k_pci'. This probably means we're
-accessing junk data in ath10k_snoc_rx_replenish_retry(), unless
-'ath10k_snoc' and 'ath10k_pci' happen to have very similar struct
-layouts.
+--0000000000009ebd7e056ef00720
+Content-Type: text/plain; charset="UTF-8"
 
-Noticed by inspection.
+Hi Arend,
 
-Fixes: d915105231ca ("ath10k: add hif rx methods for wcn3990")
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-It's possible this would be a for-4.18 target, since the buggy patch is
-in the -rc1 merge. But this driver is not fully operational yet. Also,
-I'm sending some companion refactorings to help avoid this bug. They
-probably aren't 4.18 material.
+On Mon, Jun 18, 2018 at 9:23 PM Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+>
+> + Martin
+thank you for CC'ing me!
 
-Let me know if I should do anything differently.
+> On 6/18/2018 3:53 PM, mgreger@cinci.rr.com wrote:
+> >
+> > ---- Tom Psyborg <pozega.tomislav@gmail.com> wrote:
+> >> Hi
+> >>
+> >> Your log only show attemps on ch 2447, Can you try connecting to 5GHz
+> >> AP? Connect to Hidden Wireless Network option at the bottom of the
+> >> nm-applet? Running airodump in monitor mode to see if it captures
+> >> anything? Maybe your laptop's antennas were designed for 2.4G card
+> >> only but this just dumb guessing...
+> >>
+> >
+> > It won't connect to any 5GHz AP.
+> > I don't run network manager or Gnome, in fact X11 is not installed on this machine at all.
+> > I don't think there is such a thing as 2.4GHz vs 5GHz antennas.
+>
+> Actually there is. At least there are 2.4G specific antennas and
+> dual-band antennas.
+>
+> In 4.11 there have been a couple eeprom related changes dealing with
+> endianness of fields in eeprom. Could be those cause a regression for
+> you. I don't have the exact sha id of those commits, but I added the
+> author to this thread.
+I couldn't find the whole thread in a mailing list archive somewhere
+could the original reporter please send a kernel log (dmesg) and some
+information about the host system?
 
- drivers/net/wireless/ath/ath10k/snoc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+if the host system uses devicetree (maybe because it's an ARM based
+system or some PowerMac, etc.) then please keep reading
 
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index ee74e0060504..c7cfc9c9b3d7 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -449,7 +449,7 @@ static void ath10k_snoc_htt_rx_cb(struct ath10k_ce_pipe *ce_state)
- 
- static void ath10k_snoc_rx_replenish_retry(struct timer_list *t)
- {
--	struct ath10k_pci *ar_snoc = from_timer(ar_snoc, t, rx_post_retry);
-+	struct ath10k_snoc *ar_snoc = from_timer(ar_snoc, t, rx_post_retry);
- 	struct ath10k *ar = ar_snoc->ar;
- 
- 	ath10k_snoc_rx_post(ar);
--- 
-2.18.0.rc1.242.g61856ae69a-goog
+Bas Vermeulen (I added him to this thread *in case* we find out that
+it's the same issue) reported that a AR9278 card refused to work in
+his "PowerMac G5"
+he posted a patch here: [0]
+back then I asked if he could test and send a modified version of his
+patch - I included that below
+(if someone is interested in the cause: whenever there is a devicetree
+node for the ath9k card then the driver-internal flag AH_NO_EEP_SWAP
+is set unconditionally. this flag is *NOT* set if there's no
+devicetree node. if it is set then the driver doesn't try to swap the
+EEPROM data as this breaks some OpenWrt based devices. however, since
+all OpenWrt devices set the "qca,no-eeprom" property we can move
+setting the AH_NO_EEP_SWAP flag into the existing if-block and
+hopefully solve all issues)
+
+
+Regards
+Martin
+
+
+[0] https://patchwork.kernel.org/patch/10241731/
+
+--0000000000009ebd7e056ef00720
+Content-Type: application/x-patch;
+	name="ath9k-no-eep-swap-only-with-of-no-eeprom.patch"
+Content-Disposition: attachment;
+	filename="ath9k-no-eep-swap-only-with-of-no-eeprom.patch"
+Content-Transfer-Encoding: base64
+Content-ID: <f_jikokrmm0>
+X-Attachment-Id: f_jikokrmm0
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9pbml0LmMgYi9kcml2
+ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvaW5pdC5jCmluZGV4IGMwNzBhOWU1MWViZi4uZmFl
+NTcyYjM4NDE2IDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvaW5p
+dC5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9pbml0LmMKQEAgLTYzNiwx
+NSArNjM2LDE1IEBAIHN0YXRpYyBpbnQgYXRoOWtfb2ZfaW5pdChzdHJ1Y3QgYXRoX3NvZnRjICpz
+YykKIAkJcmV0ID0gYXRoOWtfZWVwcm9tX3JlcXVlc3Qoc2MsIGVlcHJvbV9uYW1lKTsKIAkJaWYg
+KHJldCkKIAkJCXJldHVybiByZXQ7CisKKwkJYWgtPmFoX2ZsYWdzICY9IH5BSF9VU0VfRUVQUk9N
+OworCQlhaC0+YWhfZmxhZ3MgfD0gQUhfTk9fRUVQX1NXQVA7CiAJfQogCiAJbWFjID0gb2ZfZ2V0
+X21hY19hZGRyZXNzKG5wKTsKIAlpZiAobWFjKQogCQlldGhlcl9hZGRyX2NvcHkoY29tbW9uLT5t
+YWNhZGRyLCBtYWMpOwogCi0JYWgtPmFoX2ZsYWdzICY9IH5BSF9VU0VfRUVQUk9NOwotCWFoLT5h
+aF9mbGFncyB8PSBBSF9OT19FRVBfU1dBUDsKLQogCXJldHVybiAwOwogfQogCg==
+--0000000000009ebd7e056ef00720--
