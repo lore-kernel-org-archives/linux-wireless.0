@@ -1,124 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:37769 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751155AbeFDF3W (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34674 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935708AbeFRU5h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Jun 2018 01:29:22 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 2/4] staging: wilc1000: use list_head to maintain 'rxq_entry_t elements in rx queue
-Date: Mon, 4 Jun 2018 10:59:08 +0530
-Message-ID: <1528090150-5397-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180604_073033_868546_F92B1A3A)
-In-Reply-To: <1528090150-5397-1-git-send-email-ajay.kathat@microchip.com>
-References: <1528090150-5397-1-git-send-email-ajay.kathat@microchip.com>
+        Mon, 18 Jun 2018 16:57:37 -0400
+Subject: Re: [PATCH] cfg80211: Add cumulative channel survey dump support.
+To: Johannes Berg <johannes@sipsolutions.net>, vnaralas@codeaurora.org
+References: <1526980556-26707-1-git-send-email-vnaralas@codeaurora.org>
+ <1527069282.3759.16.camel@sipsolutions.net>
+ <ebf1c95acb34649b3d2a5435142dc06a@codeaurora.org>
+ <7afee956-9f91-37f5-52d2-7cdc0686f213@candelatech.com>
+ <1529354772.3092.41.camel@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        linux-wireless-owner@vger.kernel.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <f5d74d35-b4c1-4654-b4d0-9729b9749f16@candelatech.com> (sfid-20180618_225742_875170_480BB808)
+Date: Mon, 18 Jun 2018 13:57:34 -0700
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1529354772.3092.41.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make use of 'list_head' data structure to maintain the rx buffer queue.
-Modified wilc_wlan_rxq_add() to add the element at the tail by using
-list_head API and wilc_wlan_rxq_remove() to remove the element from
-head.
+On 06/18/2018 01:46 PM, Johannes Berg wrote:
+> On Thu, 2018-05-31 at 08:52 -0700, Ben Greear wrote:
+>>
+>> On 05/31/2018 02:06 AM, vnaralas@codeaurora.org wrote:
+>>> On 2018-05-23 15:24, Johannes Berg wrote:
+>>>> On Tue, 2018-05-22 at 14:45 +0530, Venkateswara Naralasetty wrote:
+>>>>> This patch provides support to send accumulated survey data to
+>>>>> user if low level drivers provides non-accumulated survey data.
+>>>>
+>>>> I think the commit log should say what you need this for?
+>>>>
+>>>> It's simultaneously a new flag, and a lot of code, but it's not clear
+>>>> what the point is?
+>>>>
+>>>> johannes
+>>>
+>>> I will sent next version of patch with updated commit log.
+>>>
+>>> Providing you the earlier discussion of this patch to give quick overview about this patch.
+>>> https://patchwork.kernel.org/patch/9701459/
+>>
+>> It is simple to fix the firmware, it just has several bugs related to clearing the
+>> accumulator as well as the 'real' values.  If you can find a QCA firmware engineer
+>> that will accept patches I can show them how to fix this easily.  I recently
+>> fixed this in my wave-1 firmware.  I posted patches to the ath10k driver to
+>> support this a week or so ago, but not sure if Kalle will apply them.
+>
+> That would be nicer even, but I guess we still have to worry about older
+> firmware? Perhaps not for survey support? Dunno.
+>
+> Obviously less code is better, but I can't really say how easy it would
+> be to get firmware updates rolled out to people who'd need them ...
+>
+>> And, it is likely that even if you don't use the 'clear' option, you are going to
+>> get wraps in the firmware and that will just be other harder to debug bugs.
+>
+> You have to use clear if you don't accumulate completely in fw, no?
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/linux_wlan.c         |  1 +
- drivers/staging/wilc1000/wilc_wfi_netdevice.h |  3 +--
- drivers/staging/wilc1000/wilc_wlan.c          | 26 +++++++++-----------------
- drivers/staging/wilc1000/wilc_wlan.h          |  2 +-
- 4 files changed, 12 insertions(+), 20 deletions(-)
+At least some firmware is broken in numerous ways, and there is no clear way to
+tell which firmware is broken how as far as I can tell.  It does appear to be fixed in
+recent 10.4 (wave-2) firmware, so maybe they will fix 10.2 as well.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index eac719b..0019bb8 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1119,6 +1119,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 	wl->gpio = gpio;
- 	wl->hif_func = ops;
- 	INIT_LIST_HEAD(&wl->txq_head.list);
-+	INIT_LIST_HEAD(&wl->rxq_head.list);
- 
- 	register_inetaddr_notifier(&g_dev_notifier);
- 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index e1fab73..ba57f42 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -161,8 +161,7 @@ struct wilc {
- 	int txq_entries;
- 	int txq_exit;
- 
--	struct rxq_entry_t *rxq_head;
--	struct rxq_entry_t *rxq_tail;
-+	struct rxq_entry_t rxq_head;
- 	int rxq_entries;
- 	int rxq_exit;
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 857cc38..059c5c7 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -404,15 +404,7 @@ static int wilc_wlan_rxq_add(struct wilc *wilc, struct rxq_entry_t *rqe)
- 		return 0;
- 
- 	mutex_lock(&wilc->rxq_cs);
--	if (!wilc->rxq_head) {
--		rqe->next = NULL;
--		wilc->rxq_head = rqe;
--		wilc->rxq_tail = rqe;
--	} else {
--		wilc->rxq_tail->next = rqe;
--		rqe->next = NULL;
--		wilc->rxq_tail = rqe;
--	}
-+	list_add_tail(&rqe->list, &wilc->rxq_head.list);
- 	wilc->rxq_entries += 1;
- 	mutex_unlock(&wilc->rxq_cs);
- 	return wilc->rxq_entries;
-@@ -420,17 +412,17 @@ static int wilc_wlan_rxq_add(struct wilc *wilc, struct rxq_entry_t *rqe)
- 
- static struct rxq_entry_t *wilc_wlan_rxq_remove(struct wilc *wilc)
- {
--	if (wilc->rxq_head) {
--		struct rxq_entry_t *rqe;
-+	struct rxq_entry_t *rqe = NULL;
- 
--		mutex_lock(&wilc->rxq_cs);
--		rqe = wilc->rxq_head;
--		wilc->rxq_head = wilc->rxq_head->next;
-+	mutex_lock(&wilc->rxq_cs);
-+	if (!list_empty(&wilc->rxq_head.list)) {
-+		rqe = list_first_entry(&wilc->rxq_head.list, struct rxq_entry_t,
-+				       list);
-+		list_del(&rqe->list);
- 		wilc->rxq_entries -= 1;
--		mutex_unlock(&wilc->rxq_cs);
--		return rqe;
- 	}
--	return NULL;
-+	mutex_unlock(&wilc->rxq_cs);
-+	return rqe;
- }
- 
- void chip_allow_sleep(struct wilc *wilc)
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index e0ff3e8..dbdebf0 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -218,7 +218,7 @@ struct txq_entry_t {
- };
- 
- struct rxq_entry_t {
--	struct rxq_entry_t *next;
-+	struct list_head list;
- 	u8 *buffer;
- 	int buffer_size;
- };
+Thanks,
+Ben
+
 -- 
-2.7.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
