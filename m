@@ -1,482 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:11808 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S937921AbeFSNMJ (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:46022 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966469AbeFSPuz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Jun 2018 09:12:09 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com, Gidon Studinski <gidons@codeaurora.org>
-Subject: [PATCH v3 6/8] wil6210: add support for enhanced DMA debugfs
-Date: Tue, 19 Jun 2018 16:11:51 +0300
-Message-Id: <1529413913-22224-7-git-send-email-merez@codeaurora.org> (sfid-20180619_151430_990348_1641D911)
-In-Reply-To: <1529413913-22224-1-git-send-email-merez@codeaurora.org>
-References: <1529413913-22224-1-git-send-email-merez@codeaurora.org>
+        Tue, 19 Jun 2018 11:50:55 -0400
+Received: by mail-lf0-f68.google.com with SMTP id a13-v6so206479lfk.12
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2018 08:50:54 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V3 2/2] brcmfmac: handle monitor mode marked msgbuf packets
+Date: Tue, 19 Jun 2018 17:48:09 +0200
+Message-Id: <20180619154809.25698-3-zajec5@gmail.com> (sfid-20180619_175059_962967_113F9D23)
+In-Reply-To: <20180619154809.25698-1-zajec5@gmail.com>
+References: <20180619154809.25698-1-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add debugfs support for enhanced DMA TX and RX descriptor rings,
-TX and RX status rings and RX buffer management.
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Run the following command to print the TX and RX status rings:
-cat srings
+New Broadcom firmwares mark monitor mode packets using a newly defined
+bit in the flags field. Use it to filter them out and pass to the
+monitor interface. These defines were found in bcmmsgbuf.h from SDK.
 
-Run the following command in order to select the status ring:
-echo STATUS_RING_IDX > dbg_sring_index
+As not every firmware generates radiotap header this commit introduces
+BRCMF_FEAT_MONITOR_FMT_RADIOTAP flag. It has to be has based on firmware
+capabilities. If not present brcmf_netif_mon_rx() will assume packet is
+a raw 802.11 frame and will prepend it with an empty radiotap header.
 
-Run the following command in order to select the status message:
-echo STATUS_MSG_IDX > dbg_status_msg_index
+This new code is limited to the msgbuf protocol at this point. Adding
+support for SDIO/USB devices will require some extra work (possibly a
+new firmware release).
 
-Run the following command in order to print the selected status
-message from the selected status ring:
-cat status_msg
-
-Run the following command in order to print the RX buffer management
-debug information:
-cat rx_buff_mgmt
-
-Signed-off-by: Gidon Studinski <gidons@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
- drivers/net/wireless/ath/wil6210/debugfs.c | 347 +++++++++++++++++++++++++----
- 1 file changed, 307 insertions(+), 40 deletions(-)
+V2: Use cpu_to_le16 when setting it_len
+V3: Update TODO comments
+    Rename flag (after adding MONITOR)
+    Update commit message
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 25 ++++++++++++++++++++++
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  2 ++
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.h |  4 +++-
+ .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  | 17 +++++++++++++++
+ 4 files changed, 47 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 8232fdd..58ce044 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -30,6 +30,9 @@
- static u32 mem_addr;
- static u32 dbg_txdesc_index;
- static u32 dbg_ring_index; /* 24+ for Rx, 0..23 for Tx */
-+static u32 dbg_status_msg_index;
-+/* 0..wil->num_rx_status_rings-1 for Rx, wil->tx_sring_idx for Tx */
-+static u32 dbg_sring_index;
- 
- enum dbg_off_type {
- 	doff_u32 = 0,
-@@ -47,6 +50,36 @@ struct dbg_off {
- 	enum dbg_off_type type;
- };
- 
-+static void wil_print_desc_edma(struct seq_file *s, struct wil6210_priv *wil,
-+				struct wil_ring *ring,
-+				char _s, char _h, int idx)
-+{
-+	u8 num_of_descs;
-+	bool has_skb = false;
-+
-+	if (ring->is_rx) {
-+		struct wil_rx_enhanced_desc *rx_d =
-+			(struct wil_rx_enhanced_desc *)
-+			&ring->va[idx].rx.enhanced;
-+		u16 buff_id = le16_to_cpu(rx_d->mac.buff_id);
-+
-+		has_skb = wil->rx_buff_mgmt.buff_arr[buff_id].skb;
-+		seq_printf(s, "%c", (has_skb) ? _h : _s);
-+	} else {
-+		struct wil_tx_enhanced_desc *d =
-+			(struct wil_tx_enhanced_desc *)
-+			&ring->va[idx].tx.enhanced;
-+
-+		num_of_descs = (u8)d->mac.d[2];
-+		has_skb = ring->ctx[idx].skb;
-+		if (num_of_descs >= 1)
-+			seq_printf(s, "%c", ring->ctx[idx].skb ? _h : _s);
-+		else
-+			/* num_of_descs == 0, it's a frag in a list of descs */
-+			seq_printf(s, "%c", has_skb ? 'h' : _s);
-+	}
-+}
-+
- static void wil_print_ring(struct seq_file *s, struct wil6210_priv *wil,
- 			   const char *name, struct wil_ring *ring,
- 			   char _s, char _h)
-@@ -58,7 +91,10 @@ static void wil_print_ring(struct seq_file *s, struct wil6210_priv *wil,
- 	seq_printf(s, "  pa     = %pad\n", &ring->pa);
- 	seq_printf(s, "  va     = 0x%p\n", ring->va);
- 	seq_printf(s, "  size   = %d\n", ring->size);
--	seq_printf(s, "  swtail = %d\n", ring->swtail);
-+	if (wil->use_enhanced_dma_hw && ring->is_rx)
-+		seq_printf(s, "  swtail = %u\n", *ring->edma_rx_swtail.va);
-+	else
-+		seq_printf(s, "  swtail = %d\n", ring->swtail);
- 	seq_printf(s, "  swhead = %d\n", ring->swhead);
- 	seq_printf(s, "  hwtail = [0x%08x] -> ", ring->hwtail);
- 	if (x) {
-@@ -72,13 +108,16 @@ static void wil_print_ring(struct seq_file *s, struct wil6210_priv *wil,
- 		uint i;
- 
- 		for (i = 0; i < ring->size; i++) {
--			volatile struct vring_tx_desc *d =
--				&ring->va[i].tx.legacy;
--
--			if ((i % 128) == 0 && (i != 0))
-+			if ((i % 128) == 0 && i != 0)
- 				seq_puts(s, "\n");
--			seq_printf(s, "%c", (d->dma.status & BIT(0)) ?
--					_s : (ring->ctx[i].skb ? _h : 'h'));
-+			if (wil->use_enhanced_dma_hw) {
-+				wil_print_desc_edma(s, wil, ring, _s, _h, i);
-+			} else {
-+				volatile struct vring_tx_desc *d =
-+					&ring->va[i].tx.legacy;
-+				seq_printf(s, "%c", (d->dma.status & BIT(0)) ?
-+					   _s : (ring->ctx[i].skb ? _h : 'h'));
-+			}
- 		}
- 		seq_puts(s, "\n");
- 	}
-@@ -157,6 +196,74 @@ static int wil_ring_seq_open(struct inode *inode, struct file *file)
- 	.llseek		= seq_lseek,
- };
- 
-+static void wil_print_sring(struct seq_file *s, struct wil6210_priv *wil,
-+			    struct wil_status_ring *sring)
-+{
-+	void __iomem *x = wmi_addr(wil, sring->hwtail);
-+	int sring_idx = sring - wil->srings;
-+	u32 v;
-+
-+	seq_printf(s, "Status Ring %s [ %d ] = {\n",
-+		   sring->is_rx ? "RX" : "TX", sring_idx);
-+	seq_printf(s, "  pa     = %pad\n", &sring->pa);
-+	seq_printf(s, "  va     = 0x%pK\n", sring->va);
-+	seq_printf(s, "  size   = %d\n", sring->size);
-+	seq_printf(s, "  elem_size   = %zu\n", sring->elem_size);
-+	seq_printf(s, "  swhead = %d\n", sring->swhead);
-+	seq_printf(s, "  hwtail = [0x%08x] -> ", sring->hwtail);
-+	if (x) {
-+		v = readl_relaxed(x);
-+		seq_printf(s, "0x%08x = %d\n", v, v);
-+	} else {
-+		seq_puts(s, "???\n");
-+	}
-+	seq_printf(s, "  desc_rdy_pol   = %d\n", sring->desc_rdy_pol);
-+
-+	if (sring->va && (sring->size <= (1 << WIL_RING_SIZE_ORDER_MAX))) {
-+		uint i;
-+
-+		for (i = 0; i < sring->size; i++) {
-+			u32 *sdword_0 =
-+				(u32 *)(sring->va + (sring->elem_size * i));
-+
-+			if ((i % 128) == 0 && i != 0)
-+				seq_puts(s, "\n");
-+			if (i == sring->swhead)
-+				seq_printf(s, "%c", (*sdword_0 & BIT(31)) ?
-+					   'X' : 'x');
-+			else
-+				seq_printf(s, "%c", (*sdword_0 & BIT(31)) ?
-+					   '1' : '0');
-+		}
-+		seq_puts(s, "\n");
-+	}
-+	seq_puts(s, "}\n");
-+}
-+
-+static int wil_srings_debugfs_show(struct seq_file *s, void *data)
-+{
-+	struct wil6210_priv *wil = s->private;
-+	int i = 0;
-+
-+	for (i = 0; i < WIL6210_MAX_STATUS_RINGS; i++)
-+		if (wil->srings[i].va)
-+			wil_print_sring(s, wil, &wil->srings[i]);
-+
-+	return 0;
-+}
-+
-+static int wil_srings_seq_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, wil_srings_debugfs_show, inode->i_private);
-+}
-+
-+static const struct file_operations fops_srings = {
-+	.open		= wil_srings_seq_open,
-+	.release	= single_release,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+};
-+
- static void wil_seq_hexdump(struct seq_file *s, void *p, int len,
- 			    const char *prefix)
- {
-@@ -974,53 +1081,92 @@ static int wil_txdesc_debugfs_show(struct seq_file *s, void *data)
- {
- 	struct wil6210_priv *wil = s->private;
- 	struct wil_ring *ring;
--	bool tx = (dbg_ring_index < WIL6210_MAX_TX_RINGS);
-+	bool tx;
-+	int ring_idx = dbg_ring_index;
-+	int txdesc_idx = dbg_txdesc_index;
-+	volatile struct vring_tx_desc *d;
-+	volatile u32 *u;
-+	struct sk_buff *skb;
-+
-+	if (wil->use_enhanced_dma_hw) {
-+		/* RX ring index == 0 */
-+		if (ring_idx >= WIL6210_MAX_TX_RINGS) {
-+			seq_printf(s, "invalid ring index %d\n", ring_idx);
-+			return 0;
-+		}
-+		tx = ring_idx > 0; /* desc ring 0 is reserved for RX */
-+	} else {
-+		/* RX ring index == WIL6210_MAX_TX_RINGS */
-+		if (ring_idx > WIL6210_MAX_TX_RINGS) {
-+			seq_printf(s, "invalid ring index %d\n", ring_idx);
-+			return 0;
-+		}
-+		tx = (ring_idx < WIL6210_MAX_TX_RINGS);
-+	}
- 
--	ring = tx ? &wil->ring_tx[dbg_ring_index] : &wil->ring_rx;
-+	ring = tx ? &wil->ring_tx[ring_idx] : &wil->ring_rx;
- 
- 	if (!ring->va) {
- 		if (tx)
--			seq_printf(s, "No Tx[%2d] VRING\n", dbg_ring_index);
-+			seq_printf(s, "No Tx[%2d] RING\n", ring_idx);
- 		else
--			seq_puts(s, "No Rx VRING\n");
-+			seq_puts(s, "No Rx RING\n");
- 		return 0;
- 	}
- 
--	if (dbg_txdesc_index < ring->size) {
--		/* use struct vring_tx_desc for Rx as well,
--		 * only field used, .dma.length, is the same
--		 */
--		volatile struct vring_tx_desc *d =
--				&ring->va[dbg_txdesc_index].tx.legacy;
--		volatile u32 *u = (volatile u32 *)d;
--		struct sk_buff *skb = ring->ctx[dbg_txdesc_index].skb;
--
-+	if (txdesc_idx >= ring->size) {
- 		if (tx)
--			seq_printf(s, "Tx[%2d][%3d] = {\n", dbg_ring_index,
--				   dbg_txdesc_index);
-+			seq_printf(s, "[%2d] TxDesc index (%d) >= size (%d)\n",
-+				   ring_idx, txdesc_idx, ring->size);
- 		else
--			seq_printf(s, "Rx[%3d] = {\n", dbg_txdesc_index);
--		seq_printf(s, "  MAC = 0x%08x 0x%08x 0x%08x 0x%08x\n",
--			   u[0], u[1], u[2], u[3]);
--		seq_printf(s, "  DMA = 0x%08x 0x%08x 0x%08x 0x%08x\n",
--			   u[4], u[5], u[6], u[7]);
--		seq_printf(s, "  SKB = 0x%p\n", skb);
-+			seq_printf(s, "RxDesc index (%d) >= size (%d)\n",
-+				   txdesc_idx, ring->size);
-+		return 0;
-+	}
-+
-+	/* use struct vring_tx_desc for Rx as well,
-+	 * only field used, .dma.length, is the same
-+	 */
-+	d = &ring->va[txdesc_idx].tx.legacy;
-+	u = (volatile u32 *)d;
-+	skb = NULL;
- 
--		if (skb) {
--			skb_get(skb);
--			wil_seq_print_skb(s, skb);
--			kfree_skb(skb);
-+	if (wil->use_enhanced_dma_hw) {
-+		if (tx) {
-+			skb = ring->ctx[txdesc_idx].skb;
-+		} else {
-+			struct wil_rx_enhanced_desc *rx_d =
-+				(struct wil_rx_enhanced_desc *)
-+				&ring->va[txdesc_idx].rx.enhanced;
-+			u16 buff_id = le16_to_cpu(rx_d->mac.buff_id);
-+
-+			if (!wil_val_in_range(buff_id, 0,
-+					      wil->rx_buff_mgmt.size)) {
-+				seq_printf(s, "invalid buff_id %d\n", buff_id);
-+				return 0;
-+			}
-+			skb = wil->rx_buff_mgmt.buff_arr[buff_id].skb;
- 		}
--		seq_puts(s, "}\n");
- 	} else {
--		if (tx)
--			seq_printf(s, "[%2d] TxDesc index (%d) >= size (%d)\n",
--				   dbg_ring_index, dbg_txdesc_index,
--				   ring->size);
--		else
--			seq_printf(s, "RxDesc index (%d) >= size (%d)\n",
--				   dbg_txdesc_index, ring->size);
-+		skb = ring->ctx[txdesc_idx].skb;
-+	}
-+	if (tx)
-+		seq_printf(s, "Tx[%2d][%3d] = {\n", ring_idx,
-+			   txdesc_idx);
-+	else
-+		seq_printf(s, "Rx[%3d] = {\n", txdesc_idx);
-+	seq_printf(s, "  MAC = 0x%08x 0x%08x 0x%08x 0x%08x\n",
-+		   u[0], u[1], u[2], u[3]);
-+	seq_printf(s, "  DMA = 0x%08x 0x%08x 0x%08x 0x%08x\n",
-+		   u[4], u[5], u[6], u[7]);
-+	seq_printf(s, "  SKB = 0x%p\n", skb);
-+
-+	if (skb) {
-+		skb_get(skb);
-+		wil_seq_print_skb(s, skb);
-+		kfree_skb(skb);
- 	}
-+	seq_puts(s, "}\n");
- 
- 	return 0;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 72954fd6df3b..b1f702faff4f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -21,6 +21,7 @@
+ #include <net/cfg80211.h>
+ #include <net/rtnetlink.h>
+ #include <net/addrconf.h>
++#include <net/ieee80211_radiotap.h>
+ #include <net/ipv6.h>
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
+@@ -404,6 +405,30 @@ void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb)
+ 		netif_rx_ni(skb);
  }
-@@ -1037,6 +1183,115 @@ static int wil_txdesc_seq_open(struct inode *inode, struct file *file)
- 	.llseek		= seq_lseek,
- };
  
-+/*---------Tx/Rx status message------------*/
-+static int wil_status_msg_debugfs_show(struct seq_file *s, void *data)
++void brcmf_netif_mon_rx(struct brcmf_if *ifp, struct sk_buff *skb)
 +{
-+	struct wil6210_priv *wil = s->private;
-+	int sring_idx = dbg_sring_index;
-+	struct wil_status_ring *sring;
-+	bool tx = sring_idx == wil->tx_sring_idx ? 1 : 0;
-+	u32 status_msg_idx = dbg_status_msg_index;
-+	u32 *u;
++	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MONITOR_FMT_RADIOTAP)) {
++		/* Do nothing */
++	} else {
++		struct ieee80211_radiotap_header *radiotap;
 +
-+	if (sring_idx >= WIL6210_MAX_STATUS_RINGS) {
-+		seq_printf(s, "invalid status ring index %d\n", sring_idx);
-+		return 0;
++		/* TODO: use RX status to fill some radiotap data */
++		radiotap = skb_push(skb, sizeof(*radiotap));
++		memset(radiotap, 0, sizeof(*radiotap));
++		radiotap->it_len = cpu_to_le16(sizeof(*radiotap));
++
++		/* TODO: 4 bytes with receive status? */
++		skb->len -= 4;
 +	}
 +
-+	sring = &wil->srings[sring_idx];
++	skb->dev = ifp->ndev;
++	skb_reset_mac_header(skb);
++	skb->pkt_type = PACKET_OTHERHOST;
++	skb->protocol = htons(ETH_P_802_2);
 +
-+	if (!sring->va) {
-+		seq_printf(s, "No %cX status ring\n", tx ? 'T' : 'R');
-+		return 0;
-+	}
-+
-+	if (status_msg_idx >= sring->size) {
-+		seq_printf(s, "%cxDesc index (%d) >= size (%d)\n",
-+			   tx ? 'T' : 'R', status_msg_idx, sring->size);
-+		return 0;
-+	}
-+
-+	u = sring->va + (sring->elem_size * status_msg_idx);
-+
-+	seq_printf(s, "%cx[%d][%3d] = {\n",
-+		   tx ? 'T' : 'R', sring_idx, status_msg_idx);
-+
-+	seq_printf(s, "  0x%08x 0x%08x 0x%08x 0x%08x\n",
-+		   u[0], u[1], u[2], u[3]);
-+	if (!tx && !wil->use_compressed_rx_status)
-+		seq_printf(s, "  0x%08x 0x%08x 0x%08x 0x%08x\n",
-+			   u[4], u[5], u[6], u[7]);
-+
-+	seq_puts(s, "}\n");
-+
-+	return 0;
++	brcmf_netif_rx(ifp, skb);
 +}
 +
-+static int wil_status_msg_seq_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, wil_status_msg_debugfs_show,
-+			   inode->i_private);
-+}
-+
-+static const struct file_operations fops_status_msg = {
-+	.open		= wil_status_msg_seq_open,
-+	.release	= single_release,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+};
-+
-+static int wil_print_rx_buff(struct seq_file *s, struct list_head *lh)
-+{
-+	struct wil_rx_buff *it;
-+	int i = 0;
-+
-+	list_for_each_entry(it, lh, list) {
-+		if ((i % 16) == 0 && i != 0)
-+			seq_puts(s, "\n    ");
-+		seq_printf(s, "[%4d] ", it->id);
-+		i++;
-+	}
-+	seq_printf(s, "\nNumber of buffers: %u\n", i);
-+
-+	return i;
-+}
-+
-+static int wil_rx_buff_mgmt_debugfs_show(struct seq_file *s, void *data)
-+{
-+	struct wil6210_priv *wil = s->private;
-+	struct wil_rx_buff_mgmt *rbm = &wil->rx_buff_mgmt;
-+	int num_active;
-+	int num_free;
-+
-+	seq_printf(s, "  size = %zu\n", rbm->size);
-+	seq_printf(s, "  free_list_empty_cnt = %lu\n",
-+		   rbm->free_list_empty_cnt);
-+
-+	/* Print active list */
-+	seq_puts(s, "  Active list:\n");
-+	num_active = wil_print_rx_buff(s, &rbm->active);
-+	seq_puts(s, "\n  Free list:\n");
-+	num_free = wil_print_rx_buff(s, &rbm->free);
-+
-+	seq_printf(s, "  Total number of buffers: %u\n",
-+		   num_active + num_free);
-+
-+	return 0;
-+}
-+
-+static int wil_rx_buff_mgmt_seq_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, wil_rx_buff_mgmt_debugfs_show,
-+			   inode->i_private);
-+}
-+
-+static const struct file_operations fops_rx_buff_mgmt = {
-+	.open		= wil_rx_buff_mgmt_seq_open,
-+	.release	= single_release,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+};
-+
- /*---------beamforming------------*/
- static char *wil_bfstatus_str(u32 status)
+ static int brcmf_rx_hdrpull(struct brcmf_pub *drvr, struct sk_buff *skb,
+ 			    struct brcmf_if **ifp)
  {
-@@ -1479,6 +1734,13 @@ static int wil_sta_debugfs_show(struct seq_file *s, void *data)
- 				   p->stats.rx_large_frame,
- 				   p->stats.rx_replay);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+index 401f50458686..dcf6e27cc16f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+@@ -121,6 +121,7 @@ struct brcmf_pub {
  
-+			if (wil->use_enhanced_dma_hw)
-+				seq_printf(s,
-+					   "mic error  %lu, key error %lu, amsdu error %lu\n",
-+					   p->stats.rx_mic_error,
-+					   p->stats.rx_key_error,
-+					   p->stats.rx_amsdu_error);
+ 	struct brcmf_if *iflist[BRCMF_MAX_IFS];
+ 	s32 if2bss[BRCMF_MAX_IFS];
++	struct brcmf_if *mon_if;
+ 
+ 	struct mutex proto_block;
+ 	unsigned char proto_buf[BRCMF_DCMD_MAXLEN];
+@@ -216,6 +217,7 @@ void brcmf_txflowblock_if(struct brcmf_if *ifp,
+ 			  enum brcmf_netif_stop_reason reason, bool state);
+ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success);
+ void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb);
++void brcmf_netif_mon_rx(struct brcmf_if *ifp, struct sk_buff *skb);
+ void brcmf_net_setcarrier(struct brcmf_if *ifp, bool on);
+ int __init brcmf_core_init(void);
+ void __exit brcmf_core_exit(void);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+index 6eddb19ca48d..0782f2aa3767 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+@@ -34,6 +34,7 @@
+  * GSCAN: enhanced scan offload feature.
+  * FWSUP: Firmware supplicant.
+  * MONITOR: monitor interface
++ * MONITOR_FMT_RADIOTAP: monitor packets include radiotap header
+  */
+ #define BRCMF_FEAT_LIST \
+ 	BRCMF_FEAT_DEF(MBSS) \
+@@ -50,7 +51,8 @@
+ 	BRCMF_FEAT_DEF(MFP) \
+ 	BRCMF_FEAT_DEF(GSCAN) \
+ 	BRCMF_FEAT_DEF(FWSUP) \
+-	BRCMF_FEAT_DEF(MONITOR)
++	BRCMF_FEAT_DEF(MONITOR) \
++	BRCMF_FEAT_DEF(MONITOR_FMT_RADIOTAP)
+ 
+ /*
+  * Quirks:
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+index c40ba8855cd5..6abf9795930e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+@@ -69,6 +69,8 @@
+ #define BRCMF_MSGBUF_MAX_EVENTBUF_POST		8
+ 
+ #define BRCMF_MSGBUF_PKT_FLAGS_FRAME_802_3	0x01
++#define BRCMF_MSGBUF_PKT_FLAGS_FRAME_802_11	0x02
++#define BRCMF_MSGBUF_PKT_FLAGS_FRAME_MASK	0x07
+ #define BRCMF_MSGBUF_PKT_FLAGS_PRIO_SHIFT	5
+ 
+ #define BRCMF_MSGBUF_TX_FLUSH_CNT1		32
+@@ -1128,6 +1130,7 @@ brcmf_msgbuf_process_rx_complete(struct brcmf_msgbuf *msgbuf, void *buf)
+ 	struct sk_buff *skb;
+ 	u16 data_offset;
+ 	u16 buflen;
++	u16 flags;
+ 	u32 idx;
+ 	struct brcmf_if *ifp;
+ 
+@@ -1137,6 +1140,7 @@ brcmf_msgbuf_process_rx_complete(struct brcmf_msgbuf *msgbuf, void *buf)
+ 	data_offset = le16_to_cpu(rx_complete->data_offset);
+ 	buflen = le16_to_cpu(rx_complete->data_len);
+ 	idx = le32_to_cpu(rx_complete->msg.request_id);
++	flags = le16_to_cpu(rx_complete->flags);
+ 
+ 	skb = brcmf_msgbuf_get_pktid(msgbuf->drvr->bus_if->dev,
+ 				     msgbuf->rx_pktids, idx);
+@@ -1150,6 +1154,19 @@ brcmf_msgbuf_process_rx_complete(struct brcmf_msgbuf *msgbuf, void *buf)
+ 
+ 	skb_trim(skb, buflen);
+ 
++	if ((flags & BRCMF_MSGBUF_PKT_FLAGS_FRAME_MASK) ==
++	    BRCMF_MSGBUF_PKT_FLAGS_FRAME_802_11) {
++		ifp = msgbuf->drvr->mon_if;
 +
- 			seq_puts(s, "Rx/MCS:");
- 			for (mcs = 0; mcs < ARRAY_SIZE(p->stats.rx_per_mcs);
- 			     mcs++)
-@@ -1869,6 +2131,9 @@ static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
- 	{"fw_version",	0444,		&fops_fw_version},
- 	{"suspend_stats",	0644,	&fops_suspend_stats},
- 	{"compressed_rx_status", 0644,	&fops_compressed_rx_status},
-+	{"srings",	0444,		&fops_srings},
-+	{"status_msg",	0444,		&fops_status_msg},
-+	{"rx_buff_mgmt",	0444,	&fops_rx_buff_mgmt},
- };
- 
- static void wil6210_debugfs_init_files(struct wil6210_priv *wil,
-@@ -1936,6 +2201,8 @@ static void wil6210_debugfs_init_isr(struct wil6210_priv *wil,
- 	{"ring_index",	0644, (ulong)&dbg_ring_index, doff_u32},
- 	{"mem_addr",	0644, (ulong)&mem_addr, doff_u32},
- 	{"led_polarity", 0644, (ulong)&led_polarity, doff_u8},
-+	{"status_index", 0644, (ulong)&dbg_status_msg_index, doff_u32},
-+	{"sring_index",	0644, (ulong)&dbg_sring_index, doff_u32},
- 	{},
- };
- 
++		if (!ifp) {
++			brcmf_err("Received unexpected monitor pkt\n");
++			brcmu_pkt_buf_free_skb(skb);
++		}
++
++		brcmf_netif_mon_rx(ifp, skb);
++		return;
++	}
++
+ 	ifp = brcmf_get_ifp(msgbuf->drvr, rx_complete->msg.ifidx);
+ 	if (!ifp || !ifp->ndev) {
+ 		brcmf_err("Received pkt for invalid ifidx %d\n",
 -- 
-1.9.1
+2.13.7
