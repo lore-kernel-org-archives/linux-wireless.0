@@ -1,55 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36318 "EHLO mail.kernel.org"
+Received: from muru.com ([72.249.23.125]:48176 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965216AbeFZORP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Jun 2018 10:17:15 -0400
-Date: Tue, 26 Jun 2018 10:17:12 -0400
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Petr Mladek <pmladek@suse.com>,
-        syzkaller-bugs <syzkaller-bugs@googlegroups.com>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        syzbot <syzbot+d29d18215e477cfbfbdd@syzkaller.appspotmail.com>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Subject: Re: [PATCH] NFC: llcp: fix nfc_llcp_send_ui_frame() lockup
-Message-ID: <20180626101712.0fe57ba1@gandalf.local.home> (sfid-20180626_161731_526284_15308FE4)
-In-Reply-To: <8c410102-43ab-dfdb-0d71-2ee5951e1af8@gmail.com>
-References: <20180626044119.30118-1-sergey.senozhatsky@gmail.com>
-        <CACT4Y+ZvLqzEwXgdB25MrmAS_j2_HsS8NFaJaMojzMV3prXypg@mail.gmail.com>
-        <20180626051221.GC31439@jagdpanzerIV>
-        <8c410102-43ab-dfdb-0d71-2ee5951e1af8@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        id S936748AbeFSJnu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Jun 2018 05:43:50 -0400
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: [PATCHv4 0/8] Runtime PM support for wlcore
+Date: Tue, 19 Jun 2018 02:43:34 -0700
+Message-Id: <20180619094342.81831-1-tony@atomide.com> (sfid-20180619_114355_328478_85C598AE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 25 Jun 2018 23:44:22 -0700
-Eric Dumazet <eric.dumazet@gmail.com> wrote:
+Hi all,
 
-> > The loop is still infinite, correct, but we have a preemption point now.
-> > Sure, net people can come with a much better solution, I'll be happy to
-> > scratch my patch.
-> >   
-> 
-> This can not be the right solution, think about current thread being real time,
-> cond_resched() might be a nop.
+Here's the fourth version of wlcore runtime PM changes. Please
+test one more time.
 
-Good point! Bah, as one of the RT maintainers, I should have noticed
-that too :-p
+For testing, please make sure you have also applied patch
+"[PATCHv2] wlcore: sdio: Fix flakey SDIO runtime PM handling"
+to avoid bogus errors.
 
-I'm losing my touch.
+Regards,
 
--- Steve
+Tony
+
+Changes since v3:
+
+- Fixed remaining known issues caused by changes to runtime PM
+
+- Enabled autosuspend
+
+Changes since v2:
+
+- Add fix "wclore: Fix timout errors after recovery" that is not needed
+  before runtime PM conversion
+
+- Add fix from Eyal for "wlcore: Use generic runtime pm calls for wowlan
+  elp configuration" that is also not needed before runtime PM conversion
+
+- Return early from wlcore_runtime_resume() on ELP timeout to avoid
+  clearing WL1271_FLAG_IN_ELP bit
+
+- Tag as RFT as we still need to do more testing and add runtime PM
+  autosuspend support before merging
+
+- Drop "wlcore: sdio: Warn about runtime PM suspend errors" that should
+  no longer be needed
+
+Changes since v1:
+
+- Fix issues reported by Eyal for recovery
+
+- Add few patches for enable/disable issues found when using runtime PM
+
+- Remove unused ps.h includes
 
 
-> 
-> We should probably not loop at all, or not use MSG_DONTWAIT.
-> 
-> (And remove this useless "Could not allocate PDU" message)
-> 
-> NFC maintainers should really take a look at this.
+Eyal Reizer (1):
+  wlcore: Use generic runtime pm calls for wowlan elp configuration
+
+Tony Lindgren (7):
+  wlcore: Add missing PM call for wlcore_cmd_wait_for_event_or_timeout()
+  wlcore: Make sure PM calls are paired
+  wlcore: Add support for runtime PM
+  wlcore: Fix misplaced PM call for scan_complete_work()
+  wclore: Fix timout errors after recovery
+  wlcore: Make sure firmware is initialized in wl1271_op_add_interface()
+  wlcore: Enable runtime PM autosuspend support
+
+ drivers/net/wireless/ti/wl18xx/debugfs.c    |  29 +-
+ drivers/net/wireless/ti/wlcore/acx.c        |   1 -
+ drivers/net/wireless/ti/wlcore/cmd.c        |  10 +
+ drivers/net/wireless/ti/wlcore/debugfs.c    |  90 ++--
+ drivers/net/wireless/ti/wlcore/main.c       | 526 ++++++++++++++------
+ drivers/net/wireless/ti/wlcore/ps.c         | 146 ------
+ drivers/net/wireless/ti/wlcore/ps.h         |   3 -
+ drivers/net/wireless/ti/wlcore/scan.c       |  13 +-
+ drivers/net/wireless/ti/wlcore/sysfs.c      |  13 +-
+ drivers/net/wireless/ti/wlcore/testmode.c   |  20 +-
+ drivers/net/wireless/ti/wlcore/tx.c         |  10 +-
+ drivers/net/wireless/ti/wlcore/vendor_cmd.c |  30 +-
+ drivers/net/wireless/ti/wlcore/wlcore.h     |   1 -
+ drivers/net/wireless/ti/wlcore/wlcore_i.h   |   1 -
+ 14 files changed, 512 insertions(+), 381 deletions(-)
+
+-- 
+2.17.1
