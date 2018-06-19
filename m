@@ -1,395 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:36666 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932439AbeFPP4i (ORCPT
+Received: from mail-wr0-f179.google.com ([209.85.128.179]:36906 "EHLO
+        mail-wr0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S937279AbeFSHAf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Jun 2018 11:56:38 -0400
-Received: by mail-wm0-f68.google.com with SMTP id v131-v6so8529435wma.1
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Jun 2018 08:56:37 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/4] mt76x2: dfs: add sw pattern detector
-Date: Sat, 16 Jun 2018 17:56:20 +0200
-Message-Id: <20180616155621.30539-4-lorenzo.bianconi@redhat.com> (sfid-20180616_175642_624083_883D25C7)
+        Tue, 19 Jun 2018 03:00:35 -0400
+Received: by mail-wr0-f179.google.com with SMTP id d8-v6so19301961wro.4
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2018 00:00:34 -0700 (PDT)
+MIME-Version: 1.0
+References: <986bbf4c-8fa1-4367-db9e-76a209594b81@gmail.com>
+ <66e43eb5-2bc9-2ec3-af48-03248eecb727@gmail.com> <5B1E537F.2080502@broadcom.com>
+ <CACna6rw9BnZvUM47-GEUpWp34eaDYeUz3yAyDpo6z+Z0TpKD8A@mail.gmail.com>
+ <5B2809D7.9050503@broadcom.com> <CACna6rym2f3i6MvRPJNAgyoWVeUcsaxRGUqsL0wCNrmErKDQZQ@mail.gmail.com>
+ <CACna6rwF+DEA10eUBL18U-Yt67LgdgVRRzOXe2Ms1d+OH=CdbA@mail.gmail.com>
+In-Reply-To: <CACna6rwF+DEA10eUBL18U-Yt67LgdgVRRzOXe2Ms1d+OH=CdbA@mail.gmail.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Tue, 19 Jun 2018 08:58:31 +0200
+Message-ID: <CACna6rzNmm1rqY7QAarKY3FQxobdqO7CHNU9Cmhn0FNxqOZwVA@mail.gmail.com> (sfid-20180619_090039_193674_4A689350)
+Subject: Re: Research + questions on brcmfmac and support for monitor mode
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
+        <brcm80211-dev-list.pdl@broadcom.com>,"
+        <brcm80211-dev-list@cypress.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add sw DFS pattern detector support for mt76x2 based devices.
-Dfs pattern supported:
-- short pulse radar patterns
-- staggered radar patterns
+On Tue, 19 Jun 2018 at 07:36, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wr=
+ote:
+> On Mon, 18 Jun 2018 at 23:46, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> =
+wrote:
+> > On Mon, 18 Jun 2018 at 21:36, Arend van Spriel
+> > <arend.vanspriel@broadcom.com> wrote:
+> > >
+> > > On 6/18/2018 1:54 PM, Rafa=C5=82 Mi=C5=82ecki wrote:
+> > > > On Mon, 11 Jun 2018 at 12:48, Arend van Spriel
+> > > > <arend.vanspriel@broadcom.com> wrote:
+> > > >> On 5/30/2018 1:52 PM, Rafa=C5=82 Mi=C5=82ecki wrote:
+> > > >>> I'm providing extra version info of tested firmware images as req=
+uested
+> > > >>> by Arend in another e-mail thread.
+> > > >>
+> > > >> Looking into our firmware repo it there are two flags, ie. WL_MONI=
+TOR
+> > > >> and WL_RADIOTAP. It seems both are set for firmware containing -st=
+amon-
+> > > >> feature. Your list below confirms that. I still plan to add indica=
+tion
+> > > >> for WL_RADIOTAP in the "cap" iovar, but a stamon feature check cou=
+ld be
+> > > >> used for older firmwares.
+> > > >
+> > > > The problem is that there isn't a direct mapping between what's
+> > > > visible with the "tail" command and what firmware returns for the
+> > > > "cap" iovar. Just to be sure I bumped #define MAX_CAPS_BUFFER_SIZE =
+to
+> > > > 1024. Firmware that has "stamon" when checked with "tail" command
+> > > > doesn't report "stamon" over "cap" iovar. So I can't detect if
+> > > > firmware was compiled with WL_MONITOR and WL_RADIOTAP using "cap"
+> > > > iovar.
+> > >
+> > > All true. My suggestion is to look for "monitor" and "rtap" in the "c=
+ap"
+> > > iovar response to detect if firmware is compiled with WL_MONITOR and
+> > > WL_RADIOTAP respectively. When one (or both) of these is not detected=
+,
+> > > we could fallback to try a stamon iovar and if it is supported enable
+> > > both WL_MONITOR and WL_RADIOTAP. I am looking into a good candidate f=
+or
+> > > the stamon iovar so I can prepare a patch.
+> >
+> > Oh, I wasn't aware of the "stamon" iovar (or missed that in your
+> > e-mails). If that works, it'll be a very nice fallback way of
+> > detecting WL_MONITOR and WL_RADIOTAP!
+>
+> I just tried "stamon" iovar and it doesn't work. Following call:
+> u32 var;
+> brcmf_fil_iovar_int_get(ifp, "stamon", &var);
+> returns -52
+>
+> Can you look at that "stamon" iovar again, please?
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- .../net/wireless/mediatek/mt76/mt76x2_dfs.c   | 231 +++++++++++++++++-
- .../net/wireless/mediatek/mt76/mt76x2_dfs.h   |  30 +++
- 2 files changed, 260 insertions(+), 1 deletion(-)
+I kept looking around and noticed that "wl" user space tool supports
+"sta_monitor" command. I tried "sta_monitor" iovar and it worked! I
+guess that's the iovar you meant...
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
-index 3117569c26d5..0a53a47d8b14 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
-@@ -159,9 +159,57 @@ static void mt76x2_dfs_set_capture_mode_ctrl(struct mt76x2_dev *dev,
- 	mt76_wr(dev, MT_BBP(DFS, 36), data);
- }
- 
-+static void mt76x2_dfs_seq_pool_put(struct mt76x2_dev *dev,
-+				    struct mt76x2_dfs_sequence *seq)
-+{
-+	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
-+
-+	list_add(&seq->head, &dfs_pd->seq_pool);
-+}
-+
-+static
-+struct mt76x2_dfs_sequence *mt76x2_dfs_seq_pool_get(struct mt76x2_dev *dev)
-+{
-+	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
-+	struct mt76x2_dfs_sequence *seq;
-+
-+	if (list_empty(&dfs_pd->seq_pool)) {
-+		seq = devm_kzalloc(dev->mt76.dev, sizeof(*seq), GFP_ATOMIC);
-+	} else {
-+		seq = list_first_entry(&dfs_pd->seq_pool,
-+				       struct mt76x2_dfs_sequence,
-+				       head);
-+		list_del(&seq->head);
-+	}
-+	return seq;
-+}
-+
-+static int mt76x2_dfs_get_multiple(int val, int frac, int margin)
-+{
-+	int remainder, factor;
-+
-+	if (!frac)
-+		return 0;
-+
-+	if (abs(val - frac) <= margin)
-+		return 1;
-+
-+	factor = val / frac;
-+	remainder = val % frac;
-+
-+	if (remainder > margin) {
-+		if ((frac - remainder) <= margin)
-+			factor++;
-+		else
-+			factor = 0;
-+	}
-+	return factor;
-+}
-+
- static void mt76x2_dfs_detector_reset(struct mt76x2_dev *dev)
- {
- 	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
-+	struct mt76x2_dfs_sequence *seq, *tmp_seq;
- 	int i;
- 
- 	/* reset hw detector */
-@@ -172,6 +220,11 @@ static void mt76x2_dfs_detector_reset(struct mt76x2_dev *dev)
- 		dfs_pd->event_rb[i].h_rb = 0;
- 		dfs_pd->event_rb[i].t_rb = 0;
- 	}
-+
-+	list_for_each_entry_safe(seq, tmp_seq, &dfs_pd->sequences, head) {
-+		list_del_init(&seq->head);
-+		mt76x2_dfs_seq_pool_put(dev, seq);
-+	}
- }
- 
- static bool mt76x2_dfs_check_chirp(struct mt76x2_dev *dev)
-@@ -375,11 +428,145 @@ static void mt76x2_dfs_queue_event(struct mt76x2_dev *dev,
- 					     MT_DFS_EVENT_BUFLEN);
- }
- 
-+static int mt76x2_dfs_create_sequence(struct mt76x2_dev *dev,
-+				      struct mt76x2_dfs_event *event,
-+				      u16 cur_len)
-+{
-+	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
-+	struct mt76x2_dfs_sw_detector_params *sw_params;
-+	u32 width_delta, with_sum, factor, cur_pri;
-+	struct mt76x2_dfs_sequence seq, *seq_p;
-+	struct mt76x2_dfs_event_rb *event_rb;
-+	struct mt76x2_dfs_event *cur_event;
-+	int i, j, end, pri;
-+
-+	event_rb = event->engine == 2 ? &dfs_pd->event_rb[1]
-+				      : &dfs_pd->event_rb[0];
-+
-+	i = mt76_decr(event_rb->t_rb, MT_DFS_EVENT_BUFLEN);
-+	end = mt76_decr(event_rb->h_rb, MT_DFS_EVENT_BUFLEN);
-+
-+	while (i != end) {
-+		cur_event = &event_rb->data[i];
-+		with_sum = event->width + cur_event->width;
-+
-+		sw_params = &dfs_pd->sw_dpd_params;
-+		switch (dev->dfs_pd.region) {
-+		case NL80211_DFS_FCC:
-+		case NL80211_DFS_JP:
-+			if (with_sum < 600)
-+				width_delta = 8;
-+			else
-+				width_delta = with_sum >> 3;
-+			break;
-+		case NL80211_DFS_ETSI:
-+			if (event->engine == 2)
-+				width_delta = with_sum >> 6;
-+			else if (with_sum < 620)
-+				width_delta = 24;
-+			else
-+				width_delta = 8;
-+			break;
-+		case NL80211_DFS_UNSET:
-+		default:
-+			return -EINVAL;
-+		}
-+
-+		pri = event->ts - cur_event->ts;
-+		if (abs(event->width - cur_event->width) > width_delta ||
-+		    pri < sw_params->min_pri)
-+			goto next;
-+
-+		if (pri > sw_params->max_pri)
-+			break;
-+
-+		seq.pri = event->ts - cur_event->ts;
-+		seq.first_ts = cur_event->ts;
-+		seq.last_ts = event->ts;
-+		seq.engine = event->engine;
-+		seq.count = 2;
-+
-+		j = mt76_decr(i, MT_DFS_EVENT_BUFLEN);
-+		while (j != end) {
-+			cur_event = &event_rb->data[j];
-+			cur_pri = event->ts - cur_event->ts;
-+			factor = mt76x2_dfs_get_multiple(cur_pri, seq.pri,
-+						sw_params->pri_margin);
-+			if (factor > 0) {
-+				seq.first_ts = cur_event->ts;
-+				seq.count++;
-+			}
-+
-+			j = mt76_decr(j, MT_DFS_EVENT_BUFLEN);
-+		}
-+		if (seq.count <= cur_len)
-+			goto next;
-+
-+		seq_p = mt76x2_dfs_seq_pool_get(dev);
-+		if (!seq_p)
-+			return -ENOMEM;
-+
-+		*seq_p = seq;
-+		INIT_LIST_HEAD(&seq_p->head);
-+		list_add(&seq_p->head, &dfs_pd->sequences);
-+next:
-+		i = mt76_decr(i, MT_DFS_EVENT_BUFLEN);
-+	}
-+	return 0;
-+}
-+
-+static u16 mt76x2_dfs_add_event_to_sequence(struct mt76x2_dev *dev,
-+					    struct mt76x2_dfs_event *event)
-+{
-+	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
-+	struct mt76x2_dfs_sw_detector_params *sw_params;
-+	struct mt76x2_dfs_sequence *seq, *tmp_seq;
-+	u16 max_seq_len = 0;
-+	u32 factor, pri;
-+
-+	sw_params = &dfs_pd->sw_dpd_params;
-+	list_for_each_entry_safe(seq, tmp_seq, &dfs_pd->sequences, head) {
-+		if (event->ts > seq->first_ts + MT_DFS_SEQUENCE_WINDOW) {
-+			list_del_init(&seq->head);
-+			mt76x2_dfs_seq_pool_put(dev, seq);
-+			continue;
-+		}
-+
-+		if (event->engine != seq->engine)
-+			continue;
-+
-+		pri = event->ts - seq->last_ts;
-+		factor = mt76x2_dfs_get_multiple(pri, seq->pri,
-+						 sw_params->pri_margin);
-+		if (factor > 0) {
-+			seq->last_ts = event->ts;
-+			seq->count++;
-+			max_seq_len = max_t(u16, max_seq_len, seq->count);
-+		}
-+	}
-+	return max_seq_len;
-+}
-+
-+static bool mt76x2_dfs_check_detection(struct mt76x2_dev *dev)
-+{
-+	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
-+	struct mt76x2_dfs_sequence *seq;
-+
-+	if (list_empty(&dfs_pd->sequences))
-+		return false;
-+
-+	list_for_each_entry(seq, &dfs_pd->sequences, head) {
-+		if (seq->count > MT_DFS_SEQUENCE_TH)
-+			return true;
-+	}
-+	return false;
-+}
-+
- static void mt76x2_dfs_add_events(struct mt76x2_dev *dev)
- {
- 	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
- 	struct mt76x2_dfs_event event;
--	int i;
-+	int i, seq_len;
- 
- 	/* disable debug mode */
- 	mt76x2_dfs_set_capture_mode_ctrl(dev, false);
-@@ -394,6 +581,9 @@ static void mt76x2_dfs_add_events(struct mt76x2_dev *dev)
- 		if (!mt76x2_dfs_check_event(dev, &event))
- 			continue;
- 
-+		seq_len = mt76x2_dfs_add_event_to_sequence(dev, &event);
-+		mt76x2_dfs_create_sequence(dev, &event, seq_len);
-+
- 		mt76x2_dfs_queue_event(dev, &event);
- 	}
- 	mt76x2_dfs_set_capture_mode_ctrl(dev, true);
-@@ -434,9 +624,19 @@ static void mt76x2_dfs_tasklet(unsigned long arg)
- 
- 	if (time_is_before_jiffies(dfs_pd->last_sw_check +
- 				   MT_DFS_SW_TIMEOUT)) {
-+		bool radar_detected;
-+
- 		dfs_pd->last_sw_check = jiffies;
- 
- 		mt76x2_dfs_add_events(dev);
-+		radar_detected = mt76x2_dfs_check_detection(dev);
-+		if (radar_detected) {
-+			/* sw detector rx radar pattern */
-+			ieee80211_radar_detected(dev->mt76.hw);
-+			mt76x2_dfs_detector_reset(dev);
-+
-+			return;
-+		}
- 		mt76x2_dfs_check_event_window(dev);
- 	}
- 
-@@ -473,6 +673,32 @@ static void mt76x2_dfs_tasklet(unsigned long arg)
- 	mt76x2_irq_enable(dev, MT_INT_GPTIMER);
- }
- 
-+static void mt76x2_dfs_init_sw_detector(struct mt76x2_dev *dev)
-+{
-+	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
-+
-+	switch (dev->dfs_pd.region) {
-+	case NL80211_DFS_FCC:
-+		dfs_pd->sw_dpd_params.max_pri = MT_DFS_FCC_MAX_PRI;
-+		dfs_pd->sw_dpd_params.min_pri = MT_DFS_FCC_MIN_PRI;
-+		dfs_pd->sw_dpd_params.pri_margin = MT_DFS_PRI_MARGIN;
-+		break;
-+	case NL80211_DFS_ETSI:
-+		dfs_pd->sw_dpd_params.max_pri = MT_DFS_ETSI_MAX_PRI;
-+		dfs_pd->sw_dpd_params.min_pri = MT_DFS_ETSI_MIN_PRI;
-+		dfs_pd->sw_dpd_params.pri_margin = MT_DFS_PRI_MARGIN << 2;
-+		break;
-+	case NL80211_DFS_JP:
-+		dfs_pd->sw_dpd_params.max_pri = MT_DFS_JP_MAX_PRI;
-+		dfs_pd->sw_dpd_params.min_pri = MT_DFS_JP_MIN_PRI;
-+		dfs_pd->sw_dpd_params.pri_margin = MT_DFS_PRI_MARGIN;
-+		break;
-+	case NL80211_DFS_UNSET:
-+	default:
-+		break;
-+	}
-+}
-+
- static void mt76x2_dfs_set_bbp_params(struct mt76x2_dev *dev)
- {
- 	u32 data;
-@@ -595,6 +821,7 @@ void mt76x2_dfs_init_params(struct mt76x2_dev *dev)
- 
- 	if ((chandef->chan->flags & IEEE80211_CHAN_RADAR) &&
- 	    dev->dfs_pd.region != NL80211_DFS_UNSET) {
-+		mt76x2_dfs_init_sw_detector(dev);
- 		mt76x2_dfs_set_bbp_params(dev);
- 		/* enable debug mode */
- 		mt76x2_dfs_set_capture_mode_ctrl(dev, true);
-@@ -619,6 +846,8 @@ void mt76x2_dfs_init_detector(struct mt76x2_dev *dev)
- {
- 	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
- 
-+	INIT_LIST_HEAD(&dfs_pd->sequences);
-+	INIT_LIST_HEAD(&dfs_pd->seq_pool);
- 	dfs_pd->region = NL80211_DFS_UNSET;
- 	dfs_pd->last_sw_check = jiffies;
- 	tasklet_init(&dfs_pd->dfs_tasklet, mt76x2_dfs_tasklet,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
-index 56f09eb5d6d0..0ce5b62fb74c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
-@@ -37,7 +37,17 @@
- #define MT_DFS_EVENT_LOOP		64
- #define MT_DFS_SW_TIMEOUT		(HZ / 20)
- #define MT_DFS_EVENT_WINDOW		(HZ / 5)
-+#define MT_DFS_SEQUENCE_WINDOW		(200 * (1 << 20))
- #define MT_DFS_EVENT_TIME_MARGIN	2000
-+#define MT_DFS_PRI_MARGIN		4
-+#define MT_DFS_SEQUENCE_TH		6
-+
-+#define MT_DFS_FCC_MAX_PRI		((28570 << 1) + 1000)
-+#define MT_DFS_FCC_MIN_PRI		(3000 - 2)
-+#define MT_DFS_JP_MAX_PRI		((80000 << 1) + 1000)
-+#define MT_DFS_JP_MIN_PRI		(28500 - 2)
-+#define MT_DFS_ETSI_MAX_PRI		(133333 + 125000 + 117647 + 1000)
-+#define MT_DFS_ETSI_MIN_PRI		(4500 - 20)
- 
- struct mt76x2_radar_specs {
- 	u8 mode;
-@@ -69,6 +79,15 @@ struct mt76x2_dfs_event_rb {
- 	int h_rb, t_rb;
- };
- 
-+struct mt76x2_dfs_sequence {
-+	struct list_head head;
-+	u32 first_ts;
-+	u32 last_ts;
-+	u32 pri;
-+	u16 count;
-+	u8 engine;
-+};
-+
- struct mt76x2_dfs_hw_pulse {
- 	u8 engine;
- 	u32 period;
-@@ -77,6 +96,12 @@ struct mt76x2_dfs_hw_pulse {
- 	u32 burst;
- };
- 
-+struct mt76x2_dfs_sw_detector_params {
-+	u32 min_pri;
-+	u32 max_pri;
-+	u32 pri_margin;
-+};
-+
- struct mt76x2_dfs_engine_stats {
- 	u32 hw_pattern;
- 	u32 hw_pulse_discarded;
-@@ -88,7 +113,12 @@ struct mt76x2_dfs_pattern_detector {
- 	u8 chirp_pulse_cnt;
- 	u32 chirp_pulse_ts;
- 
-+	struct mt76x2_dfs_sw_detector_params sw_dpd_params;
- 	struct mt76x2_dfs_event_rb event_rb[2];
-+
-+	struct list_head sequences;
-+	struct list_head seq_pool;
-+
- 	unsigned long last_sw_check;
- 	u32 last_event_ts;
- 
--- 
-2.17.1
+--=20
+Rafa=C5=82
