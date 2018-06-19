@@ -1,62 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kmu-office.ch ([178.209.48.109]:44294 "EHLO
-        mail.kmu-office.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753976AbeFQKeT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 17 Jun 2018 06:34:19 -0400
-From: Stefan Agner <stefan@agner.ch>
+Received: from muru.com ([72.249.23.125]:48216 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S937515AbeFSJoD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Jun 2018 05:44:03 -0400
+From: Tony Lindgren <tony@atomide.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Stefan Agner <stefan@agner.ch>,
-        Tobias Regnery <tobias.regnery@gmail.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] brcm80211: fix wrap around in conversion from constant to s16
-Date: Sun, 17 Jun 2018 12:33:50 +0200
-Message-Id: <20180617103407.27819-1-stefan@agner.ch> (sfid-20180617_123452_181733_9FC6BCB2)
+Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: [PATCH 5/8] wclore: Fix timout errors after recovery
+Date: Tue, 19 Jun 2018 02:43:39 -0700
+Message-Id: <20180619094342.81831-6-tony@atomide.com> (sfid-20180619_114409_606237_9B8ABCFD)
+In-Reply-To: <20180619094342.81831-1-tony@atomide.com>
+References: <20180619094342.81831-1-tony@atomide.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The last value in the log_table wraps around to a negative value
-since s16 has a value range of -32768 to 32767. This is not what
-the table intends to represent. Use the closest positive value
-32767.
+After enabling runtime PM, if we force hardware reset multiple times with:
 
-This fixes a warning seen with clang:
-drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_qmath.c:216:2: warning:
-      implicit conversion from 'int' to 's16' (aka 'short') changes
-value from 32768
-      to -32768 [-Wconstant-conversion]
-        32768
-        ^~~~~
-1 warning generated.
+# echo 1 > /sys/kernel/debug/ieee80211/phy0/wlcore/start_recovery
 
-Fixes: 4c0bfeaae9f9 ("brcmsmac: fix array out-of-bounds access in qm_log10")
-Cc: Tobias Regnery <tobias.regnery@gmail.com>
-Signed-off-by: Stefan Agner <stefan@agner.ch>
+We will after few tries get the following error:
+
+wlcore: ERROR timeout waiting for the hardware to complete initialization
+
+And then wlcore is unable to reconnect until after the wlcore related modules
+are reloaded.
+
+Let's fix this by moving pm_runtime_put() earlier before we restart the hardware.
+And let's use the sync version to make sure we're done before we restart.
+
+Note that we still will get -EBUSY warning from wl12xx_sdio_set_power() but let's
+fix that separately once we know exactly why we get the warning.
+
+Reported-by: Eyal Reizer <eyalr@ti.com>
+Signed-off-by: Tony Lindgren <tony@atomide.com>
 ---
- .../net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_qmath.c    | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ti/wlcore/main.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_qmath.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_qmath.c
-index b9672da24a9d..b24bc57ca91b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_qmath.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_qmath.c
-@@ -213,7 +213,7 @@ static const s16 log_table[] = {
- 	30498,
- 	31267,
- 	32024,
--	32768
-+	32767
- };
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -977,6 +977,7 @@ static void wl1271_recovery_work(struct work_struct *work)
+ 	}
  
- #define LOG_TABLE_SIZE 32       /* log_table size */
+ 	wlcore_op_stop_locked(wl);
++	pm_runtime_put_sync(wl->dev);
+ 
+ 	ieee80211_restart_hw(wl->hw);
+ 
+@@ -986,8 +987,6 @@ static void wl1271_recovery_work(struct work_struct *work)
+ 	 */
+ 	wlcore_wake_queues(wl, WLCORE_QUEUE_STOP_REASON_FW_RESTART);
+ 
+-	pm_runtime_put(wl->dev);
+-
+ out_unlock:
+ 	wl->watchdog_recovery = false;
+ 	clear_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags);
 -- 
 2.17.1
