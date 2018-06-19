@@ -1,391 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:33742 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753154AbeF2Mhw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 08:37:52 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org, kvalo@codeaurora.org,
-        rfried@codeaurora.org, bjorn.andersson@linaro.org,
-        nicolas.dechesne@linaro.org, loic.poulain@linaro.org,
-        Daniel Mack <daniel@zonque.org>
-Subject: [PATCH] wcn36xx: drop unnecessary initialization of variables
-Date: Fri, 29 Jun 2018 14:37:45 +0200
-Message-Id: <20180629123745.29557-1-daniel@zonque.org> (sfid-20180629_143756_940782_6ED5D6AC)
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35237 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030305AbeFSTdm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Jun 2018 15:33:42 -0400
+Received: by mail-wm0-f68.google.com with SMTP id j15-v6so2573003wme.0
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2018 12:33:41 -0700 (PDT)
+Subject: Re: [PATCH V3 1/2] brcmfmac: detect firmware support for monitor
+ interface
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20180619154809.25698-1-zajec5@gmail.com>
+ <20180619154809.25698-2-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B295A93.10801@broadcom.com> (sfid-20180619_213346_218353_A2B70233)
+Date: Tue, 19 Jun 2018 21:33:39 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180619154809.25698-2-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initialization is unneccessary when the variable is written before it is
-read. There were some occasions in which the driver would initialize `ret'
-during declaration without need.
+On 6/19/2018 5:48 PM, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+>
+> Most of firmwares support creating monitor interface. The newest ones
+> explicitly /announce/ it using a "monitor" entry in the list of
+> capabilities.
+>
+> Check (and store) internally info about monitor mode support using a
+> new feature flag. Once we sort out all details of handling monitor
+> interface it will be used when reporting available interfaces to the
+> cfg80211.
 
-Purely a cosmetic change with no functional impact.
-
-Signed-off-by: Daniel Mack <daniel@zonque.org>
----
- drivers/net/wireless/ath/wcn36xx/main.c |  4 +-
- drivers/net/wireless/ath/wcn36xx/smd.c  | 75 ++++++++++++-------------
- 2 files changed, 38 insertions(+), 41 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index e38443ecaab4..79998a3ddb7a 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -1161,8 +1161,6 @@ static const struct ieee80211_ops wcn36xx_ops = {
- 
- static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
- {
--	int ret = 0;
--
- 	static const u32 cipher_suites[] = {
- 		WLAN_CIPHER_SUITE_WEP40,
- 		WLAN_CIPHER_SUITE_WEP104,
-@@ -1209,7 +1207,7 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
- 	wiphy_ext_feature_set(wcn->hw->wiphy,
- 			      NL80211_EXT_FEATURE_CQM_RSSI_LIST);
- 
--	return ret;
-+	return 0;
- }
- 
- static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 304a86c7dcd2..00098f24116d 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -250,7 +250,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
- 
- static int wcn36xx_smd_send_and_wait(struct wcn36xx *wcn, size_t len)
- {
--	int ret = 0;
-+	int ret;
- 	unsigned long start;
- 	struct wcn36xx_hal_msg_header *hdr =
- 		(struct wcn36xx_hal_msg_header *)wcn->hal_buf;
-@@ -446,7 +446,7 @@ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
- int wcn36xx_smd_start(struct wcn36xx *wcn)
- {
- 	struct wcn36xx_hal_mac_start_req_msg msg_body, *body;
--	int ret = 0;
-+	int ret;
- 	int i;
- 	size_t len;
- 
-@@ -493,7 +493,7 @@ int wcn36xx_smd_start(struct wcn36xx *wcn)
- int wcn36xx_smd_stop(struct wcn36xx *wcn)
- {
- 	struct wcn36xx_hal_mac_stop_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_STOP_REQ);
-@@ -520,7 +520,7 @@ int wcn36xx_smd_stop(struct wcn36xx *wcn)
- int wcn36xx_smd_init_scan(struct wcn36xx *wcn, enum wcn36xx_hal_sys_mode mode)
- {
- 	struct wcn36xx_hal_init_scan_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_INIT_SCAN_REQ);
-@@ -549,7 +549,7 @@ int wcn36xx_smd_init_scan(struct wcn36xx *wcn, enum wcn36xx_hal_sys_mode mode)
- int wcn36xx_smd_start_scan(struct wcn36xx *wcn, u8 scan_channel)
- {
- 	struct wcn36xx_hal_start_scan_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_START_SCAN_REQ);
-@@ -579,7 +579,7 @@ int wcn36xx_smd_start_scan(struct wcn36xx *wcn, u8 scan_channel)
- int wcn36xx_smd_end_scan(struct wcn36xx *wcn, u8 scan_channel)
- {
- 	struct wcn36xx_hal_end_scan_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_END_SCAN_REQ);
-@@ -610,7 +610,7 @@ int wcn36xx_smd_finish_scan(struct wcn36xx *wcn,
- 			    enum wcn36xx_hal_sys_mode mode)
- {
- 	struct wcn36xx_hal_finish_scan_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_FINISH_SCAN_REQ);
-@@ -732,7 +732,7 @@ int wcn36xx_smd_stop_hw_scan(struct wcn36xx *wcn)
- static int wcn36xx_smd_switch_channel_rsp(void *buf, size_t len)
- {
- 	struct wcn36xx_hal_switch_channel_rsp_msg *rsp;
--	int ret = 0;
-+	int ret;
- 
- 	ret = wcn36xx_smd_rsp_status_check(buf, len);
- 	if (ret)
-@@ -747,7 +747,7 @@ int wcn36xx_smd_switch_channel(struct wcn36xx *wcn,
- 			       struct ieee80211_vif *vif, int ch)
- {
- 	struct wcn36xx_hal_switch_channel_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_CH_SWITCH_REQ);
-@@ -860,7 +860,7 @@ int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn,
- 				   u8 *channels, size_t channel_count)
- {
- 	struct wcn36xx_hal_update_scan_params_req_ex msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_UPDATE_SCAN_PARAM_REQ);
-@@ -931,7 +931,7 @@ static int wcn36xx_smd_add_sta_self_rsp(struct wcn36xx *wcn,
- int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, struct ieee80211_vif *vif)
- {
- 	struct wcn36xx_hal_add_sta_self_req msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_ADD_STA_SELF_REQ);
-@@ -965,7 +965,7 @@ int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, struct ieee80211_vif *vif)
- int wcn36xx_smd_delete_sta_self(struct wcn36xx *wcn, u8 *addr)
- {
- 	struct wcn36xx_hal_del_sta_self_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DEL_STA_SELF_REQ);
-@@ -993,7 +993,7 @@ int wcn36xx_smd_delete_sta_self(struct wcn36xx *wcn, u8 *addr)
- int wcn36xx_smd_delete_sta(struct wcn36xx *wcn, u8 sta_index)
- {
- 	struct wcn36xx_hal_delete_sta_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DELETE_STA_REQ);
-@@ -1040,7 +1040,7 @@ static int wcn36xx_smd_join_rsp(void *buf, size_t len)
- int wcn36xx_smd_join(struct wcn36xx *wcn, const u8 *bssid, u8 *vif, u8 ch)
- {
- 	struct wcn36xx_hal_join_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_JOIN_REQ);
-@@ -1089,7 +1089,7 @@ int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, const u8 *bssid,
- 			    enum wcn36xx_hal_link_state state)
- {
- 	struct wcn36xx_hal_set_link_state_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SET_LINK_ST_REQ);
-@@ -1215,7 +1215,7 @@ int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- {
- 	struct wcn36xx_hal_config_sta_req_msg msg;
- 	struct wcn36xx_hal_config_sta_params *sta_params;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg, WCN36XX_HAL_CONFIG_STA_REQ);
-@@ -1414,7 +1414,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 	struct wcn36xx_hal_config_bss_params *bss;
- 	struct wcn36xx_hal_config_sta_params *sta_params;
- 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg, WCN36XX_HAL_CONFIG_BSS_REQ);
-@@ -1579,7 +1579,7 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 			    u16 p2p_off)
- {
- 	struct wcn36xx_hal_send_beacon_req_msg msg_body;
--	int ret = 0, pad, pvm_len;
-+	int ret, pad, pvm_len;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SEND_BEACON_REQ);
-@@ -1653,7 +1653,7 @@ int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn,
- 				      struct sk_buff *skb)
- {
- 	struct wcn36xx_hal_send_probe_resp_req_msg msg;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg, WCN36XX_HAL_UPDATE_PROBE_RSP_TEMPLATE_REQ);
-@@ -1700,7 +1700,7 @@ int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
- 			   u8 sta_index)
- {
- 	struct wcn36xx_hal_set_sta_key_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SET_STAKEY_REQ);
-@@ -1749,7 +1749,7 @@ int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
- 			   u8 *key)
- {
- 	struct wcn36xx_hal_set_bss_key_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SET_BSSKEY_REQ);
-@@ -1786,7 +1786,7 @@ int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
- 			      u8 sta_index)
- {
- 	struct wcn36xx_hal_remove_sta_key_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_RMV_STAKEY_REQ);
-@@ -1818,7 +1818,7 @@ int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
- 			      u8 keyidx)
- {
- 	struct wcn36xx_hal_remove_bss_key_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_RMV_BSSKEY_REQ);
-@@ -1847,7 +1847,7 @@ int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif)
- {
- 	struct wcn36xx_hal_enter_bmps_req_msg msg_body;
- 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_ENTER_BMPS_REQ);
-@@ -1877,7 +1877,7 @@ int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif)
- {
- 	struct wcn36xx_hal_exit_bmps_req_msg msg_body;
- 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_EXIT_BMPS_REQ);
-@@ -1903,7 +1903,7 @@ int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif)
- int wcn36xx_smd_set_power_params(struct wcn36xx *wcn, bool ignore_dtim)
- {
- 	struct wcn36xx_hal_set_power_params_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SET_POWER_PARAMS_REQ);
-@@ -1938,7 +1938,7 @@ int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn,
- {
- 	struct wcn36xx_hal_keep_alive_req_msg msg_body;
- 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_KEEP_ALIVE_REQ);
-@@ -1976,7 +1976,7 @@ int wcn36xx_smd_dump_cmd_req(struct wcn36xx *wcn, u32 arg1, u32 arg2,
- 			     u32 arg3, u32 arg4, u32 arg5)
- {
- 	struct wcn36xx_hal_dump_cmd_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DUMP_COMMAND_REQ);
-@@ -2021,7 +2021,6 @@ void set_feat_caps(u32 *bitmap, enum place_holder_in_cap_bitmap cap)
- int get_feat_caps(u32 *bitmap, enum place_holder_in_cap_bitmap cap)
- {
- 	int arr_idx, bit_idx;
--	int ret = 0;
- 
- 	if (cap < 0 || cap > 127) {
- 		wcn36xx_warn("error cap idx %d\n", cap);
-@@ -2030,8 +2029,8 @@ int get_feat_caps(u32 *bitmap, enum place_holder_in_cap_bitmap cap)
- 
- 	arr_idx = cap / 32;
- 	bit_idx = cap % 32;
--	ret = (bitmap[arr_idx] & (1 << bit_idx)) ? 1 : 0;
--	return ret;
-+
-+	return (bitmap[arr_idx] & (1 << bit_idx)) ? 1 : 0;
- }
- 
- void clear_feat_caps(u32 *bitmap, enum place_holder_in_cap_bitmap cap)
-@@ -2051,7 +2050,7 @@ void clear_feat_caps(u32 *bitmap, enum place_holder_in_cap_bitmap cap)
- int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn)
- {
- 	struct wcn36xx_hal_feat_caps_msg msg_body, *rsp;
--	int ret = 0, i;
-+	int ret, i;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_FEATURE_CAPS_EXCHANGE_REQ);
-@@ -2087,7 +2086,7 @@ int wcn36xx_smd_add_ba_session(struct wcn36xx *wcn,
- 		u8 sta_index)
- {
- 	struct wcn36xx_hal_add_ba_session_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_ADD_BA_SESSION_REQ);
-@@ -2125,7 +2124,7 @@ int wcn36xx_smd_add_ba_session(struct wcn36xx *wcn,
- int wcn36xx_smd_add_ba(struct wcn36xx *wcn)
- {
- 	struct wcn36xx_hal_add_ba_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_ADD_BA_REQ);
-@@ -2153,7 +2152,7 @@ int wcn36xx_smd_add_ba(struct wcn36xx *wcn)
- int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid, u8 sta_index)
- {
- 	struct wcn36xx_hal_del_ba_req_msg msg_body;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DEL_BA_REQ);
-@@ -2193,7 +2192,7 @@ int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index)
- {
- 	struct wcn36xx_hal_trigger_ba_req_msg msg_body;
- 	struct wcn36xx_hal_trigger_ba_req_candidate *candidate;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_TRIGGER_BA_REQ);
-@@ -2372,7 +2371,7 @@ int wcn36xx_smd_update_cfg(struct wcn36xx *wcn, u32 cfg_id, u32 value)
- {
- 	struct wcn36xx_hal_update_cfg_req_msg msg_body, *body;
- 	size_t len;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_UPDATE_CFG_REQ);
-@@ -2407,7 +2406,7 @@ int wcn36xx_smd_set_mc_list(struct wcn36xx *wcn,
- {
- 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
- 	struct wcn36xx_hal_rcv_flt_pkt_set_mc_list_req_msg *msg_body = NULL;
--	int ret = 0;
-+	int ret;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 
--- 
-2.17.1
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+> V3: Patch added to the series
+> ---
+>   .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 26 ++++++++++++++++++++++
+>   .../wireless/broadcom/brcm80211/brcmfmac/feature.h |  4 +++-
+>   .../wireless/broadcom/brcm80211/brcmfmac/fwil.h    |  2 ++
+>   3 files changed, 31 insertions(+), 1 deletion(-)
