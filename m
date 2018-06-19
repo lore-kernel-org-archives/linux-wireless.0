@@ -1,112 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52174 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752729AbeF3NX6 (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:53659 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030448AbeFSUBD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Jun 2018 09:23:58 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 30 Jun 2018 16:23:25 +0300
-Message-Id: <20180630132330.14928-11-luca@coelho.fi> (sfid-20180630_152405_246985_B1F09EDB)
-In-Reply-To: <20180630132330.14928-1-luca@coelho.fi>
-References: <20180630132330.14928-1-luca@coelho.fi>
-Subject: [PATCH 10/15] iwlwifi: cancel the injective function between hw pointers to tfd entry index
+        Tue, 19 Jun 2018 16:01:03 -0400
+Received: by mail-wm0-f66.google.com with SMTP id x6-v6so2300123wmc.3
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2018 13:01:02 -0700 (PDT)
+Subject: Re: [PATCH V3 0/2] brcmfmac: initial work for adding monitor mode
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20180619154809.25698-1-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B2960FD.9010604@broadcom.com> (sfid-20180619_220108_515873_099252C5)
+Date: Tue, 19 Jun 2018 22:01:01 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180619154809.25698-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+On 6/19/2018 5:48 PM, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+>
+> After a bit long discussions in various e-mail threads I'm coming with
+> this simple & small patchset. It isn't complete support for monitor mode
+> but just a pair of preparing patches that should be clear & well
+> discussed by now to make them acceptable.
+>
+> The main missing bit is code setting MONITOR_FMT_RADIOTAP which I expect
+> Arend to handle soon, as he already has a patch using "sta_monitor"
+> iovar for that. Then we have to discuss a flag for marking firmwares
+> which are capable for tagging monitor frames.
+>
+> While still incomplete, I believe that with my previous patches, we can
+> agree this is a good direction.
+>
+> Arend: if you find these 2 patches OK, could you ack them, to make it
+> clear for Kalle if they look OK now (or not yet)? I'd be great if you
+> could sent your "sta_monitor" work on top of this.
 
-Nowadays, the tfd queue max size is 2^8, and the reserved size in the
-command header sequence field for the tfd entry index is 8 bits,
-allowing an injective function from the hw pointers to the tfd entry index
-in the sequence field.
+I acked them and I will submit my changes later. Either after these are 
+applied or simply indicate the dependency.
 
-In 22560 devices the tfd queue max size is 2^16, meaning that
-the hw pointers are 16 bit long (allowing to point to each entry
-in the tfd queue). However, the reserved space in the sequence field for
-the tfd entry doesn't change, and we are limited to 8 bit.
-This requires cancelling the injective function from hw pointer to
-tfd entry in the sequence number.
+Now as for where we are with this. With what we have here we know 
+firmware can monitor packets with and without radiotap. However, we do 
+not have an indication whether firmware can transport these monitor 
+packets to the host. What I need to look into next is whether the 802.11 
+flag in msgbuf is linked to a particular version of the protocol, but we 
+may need to resort to the fwid table.
 
-Use iwl_pcie_get_cmd_index to wrap the hw pointer's to the n_window
-size, which is maximum 256 in tx queues, and so, keep the injective
-function between the window wrapped hw pointers to tfd entry index in
-the sequence.
-
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 12 ++++++++----
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 11 ++++++++---
- 2 files changed, 16 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 76fd3ee61720..b4e998747e04 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -749,7 +749,7 @@ static inline void iwl_enable_fw_load_int(struct iwl_trans *trans)
- 	}
- }
- 
--static inline u8 iwl_pcie_get_cmd_index(struct iwl_txq *q, u32 index)
-+static inline u8 iwl_pcie_get_cmd_index(const struct iwl_txq *q, u32 index)
- {
- 	return index & (q->n_window - 1);
- }
-@@ -819,9 +819,13 @@ static inline void iwl_stop_queue(struct iwl_trans *trans,
- 
- static inline bool iwl_queue_used(const struct iwl_txq *q, int i)
- {
--	return q->write_ptr >= q->read_ptr ?
--		(i >= q->read_ptr && i < q->write_ptr) :
--		!(i < q->read_ptr && i >= q->write_ptr);
-+	int index = iwl_pcie_get_cmd_index(q, i);
-+	int r = iwl_pcie_get_cmd_index(q, q->read_ptr);
-+	int w = iwl_pcie_get_cmd_index(q, q->write_ptr);
-+
-+	return w >= r ?
-+		(index >= r && index < w) :
-+		!(index < r && index >= w);
- }
- 
- static inline bool iwl_is_rfkill_set(struct iwl_trans *trans)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 473fe7ccb07c..11bd7ce2be8e 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -1225,9 +1225,13 @@ static void iwl_pcie_cmdq_reclaim(struct iwl_trans *trans, int txq_id, int idx)
- 	struct iwl_txq *txq = trans_pcie->txq[txq_id];
- 	unsigned long flags;
- 	int nfreed = 0;
-+	u16 r;
- 
- 	lockdep_assert_held(&txq->lock);
- 
-+	idx = iwl_pcie_get_cmd_index(txq, idx);
-+	r = iwl_pcie_get_cmd_index(txq, txq->read_ptr);
-+
- 	if ((idx >= TFD_QUEUE_SIZE_MAX) || (!iwl_queue_used(txq, idx))) {
- 		IWL_ERR(trans,
- 			"%s: Read index for DMA queue txq id (%d), index %d is out of range [0-%d] %d %d.\n",
-@@ -1236,12 +1240,13 @@ static void iwl_pcie_cmdq_reclaim(struct iwl_trans *trans, int txq_id, int idx)
- 		return;
- 	}
- 
--	for (idx = iwl_queue_inc_wrap(idx); txq->read_ptr != idx;
--	     txq->read_ptr = iwl_queue_inc_wrap(txq->read_ptr)) {
-+	for (idx = iwl_queue_inc_wrap(idx); r != idx;
-+	     r = iwl_queue_inc_wrap(r)) {
-+		txq->read_ptr = iwl_queue_inc_wrap(txq->read_ptr);
- 
- 		if (nfreed++ > 0) {
- 			IWL_ERR(trans, "HCMD skipped: index (%d) %d %d\n",
--				idx, txq->write_ptr, txq->read_ptr);
-+				idx, txq->write_ptr, r);
- 			iwl_force_nmi(trans);
- 		}
- 	}
--- 
-2.18.0
+Regards,
+Arend
