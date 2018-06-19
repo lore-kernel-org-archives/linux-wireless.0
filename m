@@ -1,120 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:38426 "EHLO mail.bugwerft.de"
+Received: from muru.com ([72.249.23.125]:48234 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933472AbeFZUsl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Jun 2018 16:48:41 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: ulf.hansson@linaro.org
-Cc: chris@printf.net, linux-mmc@vger.kernel.org,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Daniel Mack <daniel@zonque.org>
-Subject: [PATCH] libertas: fix return codes in if_sdio_suspend()
-Date: Tue, 26 Jun 2018 22:48:34 +0200
-Message-Id: <20180626204834.14278-1-daniel@zonque.org> (sfid-20180626_224844_361743_19CDC862)
+        id S1756270AbeFSJoG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 Jun 2018 05:44:06 -0400
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: [PATCH 7/8] wlcore: Make sure firmware is initialized in wl1271_op_add_interface()
+Date: Tue, 19 Jun 2018 02:43:41 -0700
+Message-Id: <20180619094342.81831-8-tony@atomide.com> (sfid-20180619_114414_381728_D84AD795)
+In-Reply-To: <20180619094342.81831-1-tony@atomide.com>
+References: <20180619094342.81831-1-tony@atomide.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prior to commit 573185cc7e64 ("mmc: core: Invoke sdio func driver's PM
-callbacks from the sdio bus"), the MMC core used to call into the power
-management functions of SDIO clients itself and removed the card if the
-return code was non-zero. IOW, the mmc handled errors gracefully and didn't
-upchain them to the pm core.
+We have wl12xx_boot() call wl12xx_enable_interrupts() and if we have
+wl1271_op_add_interface() call pm_runtime_get_sync() before the interrupts
+are enabled. And then we get the following error during boot:
 
-Since this change, the mmc core relies on generic power management
-functions which treat all errors as a reason to cancel the suspend
-immediately. This causes suspend attempts to fail when the libertas
-driver is loaded.
+wlcore: ERROR ELP wakeup timeout!
 
-To fix this, power down the card explicitly in if_sdio_suspend() when we
-know we're about to lose power and return success. Also set a flag in these
-cases, and power up the card again in if_sdio_resume().
+Let's fix this by first checking if we need to boot the firmware. And
+only after that call pm_runtime_get_sync() when interrupts are enabled.
+And only after that do the check for wl12xx_need_fw_change().
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
-Cc: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: Chris Ball <chris@printf.net>
+Signed-off-by: Tony Lindgren <tony@atomide.com>
 ---
- drivers/net/wireless/marvell/libertas/dev.h   |  1 +
- .../net/wireless/marvell/libertas/if_sdio.c   | 28 +++++++++++++++----
- 2 files changed, 23 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ti/wlcore/main.c | 31 ++++++++++++++++-----------
+ 1 file changed, 18 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/libertas/dev.h b/drivers/net/wireless/marvell/libertas/dev.h
-index dd1ee1f0af48..469134930026 100644
---- a/drivers/net/wireless/marvell/libertas/dev.h
-+++ b/drivers/net/wireless/marvell/libertas/dev.h
-@@ -104,6 +104,7 @@ struct lbs_private {
- 	u8 fw_ready;
- 	u8 surpriseremoved;
- 	u8 setup_fw_on_resume;
-+	u8 power_up_on_resume;
- 	int (*hw_host_to_card) (struct lbs_private *priv, u8 type, u8 *payload, u16 nb);
- 	void (*reset_card) (struct lbs_private *priv);
- 	int (*power_save) (struct lbs_private *priv);
-diff --git a/drivers/net/wireless/marvell/libertas/if_sdio.c b/drivers/net/wireless/marvell/libertas/if_sdio.c
-index 2300e796c6ab..f43807663b1b 100644
---- a/drivers/net/wireless/marvell/libertas/if_sdio.c
-+++ b/drivers/net/wireless/marvell/libertas/if_sdio.c
-@@ -1290,15 +1290,23 @@ static void if_sdio_remove(struct sdio_func *func)
- static int if_sdio_suspend(struct device *dev)
- {
- 	struct sdio_func *func = dev_to_sdio_func(dev);
--	int ret;
- 	struct if_sdio_card *card = sdio_get_drvdata(func);
-+	struct lbs_private *priv = card->priv;
-+	int ret;
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -2537,11 +2537,6 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 	wl12xx_get_vif_count(hw, vif, &vif_count);
  
- 	mmc_pm_flag_t flags = sdio_get_host_pm_caps(func);
-+	priv->power_up_on_resume = false;
+ 	mutex_lock(&wl->mutex);
+-	ret = pm_runtime_get_sync(wl->dev);
+-	if (ret < 0) {
+-		pm_runtime_put_noidle(wl->dev);
+-		goto out_unlock;
+-	}
  
- 	/* If we're powered off anyway, just let the mmc layer remove the
- 	 * card. */
--	if (!lbs_iface_active(card->priv))
--		return -ENOSYS;
-+	if (!lbs_iface_active(priv)) {
-+		if (priv->fw_ready) {
-+			priv->power_up_on_resume = true;
-+			if_sdio_power_off(card);
-+		}
-+
-+		return 0;
-+	}
+ 	/*
+ 	 * in some very corner case HW recovery scenarios its possible to
+@@ -2570,14 +2565,6 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
  
- 	dev_info(dev, "%s: suspend: PM flags = 0x%x\n",
- 		 sdio_func_id(func), flags);
-@@ -1306,9 +1314,14 @@ static int if_sdio_suspend(struct device *dev)
- 	/* If we aren't being asked to wake on anything, we should bail out
- 	 * and let the SD stack power down the card.
- 	 */
--	if (card->priv->wol_criteria == EHS_REMOVE_WAKEUP) {
-+	if (priv->wol_criteria == EHS_REMOVE_WAKEUP) {
- 		dev_info(dev, "Suspend without wake params -- powering down card\n");
--		return -ENOSYS;
-+		if (priv->fw_ready) {
-+			priv->power_up_on_resume = true;
-+			if_sdio_power_off(card);
-+		}
-+
-+		return 0;
+-	if (wl12xx_need_fw_change(wl, vif_count, true)) {
+-		wl12xx_force_active_psm(wl);
+-		set_bit(WL1271_FLAG_INTENDED_FW_RECOVERY, &wl->flags);
+-		mutex_unlock(&wl->mutex);
+-		wl1271_recovery_work(&wl->recovery_work);
+-		return 0;
+-	}
+-
+ 	/*
+ 	 * TODO: after the nvs issue will be solved, move this block
+ 	 * to start(), and make sure here the driver is ON.
+@@ -2594,6 +2581,24 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 			goto out;
  	}
  
- 	if (!(flags & MMC_PM_KEEP_POWER)) {
-@@ -1321,7 +1334,7 @@ static int if_sdio_suspend(struct device *dev)
- 	if (ret)
- 		return ret;
- 
--	ret = lbs_suspend(card->priv);
-+	ret = lbs_suspend(priv);
- 	if (ret)
- 		return ret;
- 
-@@ -1336,6 +1349,9 @@ static int if_sdio_resume(struct device *dev)
- 
- 	dev_info(dev, "%s: resume: we're back\n", sdio_func_id(func));
- 
-+	if (card->priv->power_up_on_resume)
-+		if_sdio_power_on(card);
++	/*
++	 * Call runtime PM only after possible wl12xx_init_fw() above
++	 * is done. Otherwise we do not have interrupts enabled.
++	 */
++	ret = pm_runtime_get_sync(wl->dev);
++	if (ret < 0) {
++		pm_runtime_put_noidle(wl->dev);
++		goto out_unlock;
++	}
 +
- 	ret = lbs_resume(card->priv);
- 
- 	return ret;
++	if (wl12xx_need_fw_change(wl, vif_count, true)) {
++		wl12xx_force_active_psm(wl);
++		set_bit(WL1271_FLAG_INTENDED_FW_RECOVERY, &wl->flags);
++		mutex_unlock(&wl->mutex);
++		wl1271_recovery_work(&wl->recovery_work);
++		return 0;
++	}
++
+ 	if (!wlcore_is_p2p_mgmt(wlvif)) {
+ 		ret = wl12xx_cmd_role_enable(wl, vif->addr,
+ 					     role_type, &wlvif->role_id);
 -- 
 2.17.1
