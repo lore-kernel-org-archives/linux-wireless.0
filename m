@@ -1,82 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([211.75.126.72]:35215 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933864AbeFVC1K (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:14464 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755463AbeFSHTz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Jun 2018 22:27:10 -0400
-From: Pkshih <pkshih@realtek.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rtlwifi: Fix kernel Oops "Fw download fail!!"
-Date: Fri, 22 Jun 2018 02:26:56 +0000
-Message-ID: <1529634409.3075.11.camel@realtek.com> (sfid-20180622_042721_274966_D599582C)
-References: <20180621070635.8217-1-pkshih@realtek.com>
-         <b8a27a7a-1eef-b20f-2684-a1aa4c25aeae@lwfinger.net>
-In-Reply-To: <b8a27a7a-1eef-b20f-2684-a1aa4c25aeae@lwfinger.net>
-Content-Type: text/plain; charset="utf-8"
+        Tue, 19 Jun 2018 03:19:55 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Govind Singh <govinds@codeaurora.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "bjorn.andersson@linaro.org" <bjorn.andersson@linaro.org>,
+        "david.brown@linaro.org" <david.brown@linaro.org>,
+        "andy.gross@linaro.org" <andy.gross@linaro.org>
+Subject: Re: [PATCH v2 0/6]  *** Add support for wifi QMI client driver ***
+Date: Tue, 19 Jun 2018 07:13:37 +0000
+Message-ID: <87muvrdza9.fsf@qca.qualcomm.com> (sfid-20180619_092011_977161_8E483D74)
+References: <20180605123304.31969-1-govinds@codeaurora.org>
+        <20180619021742.GA17220@rodete-desktop-imager.corp.google.com>
+        <974e34efd334d921e49d08df879c1b97@codeaurora.org>
+In-Reply-To: <974e34efd334d921e49d08df879c1b97@codeaurora.org> (Govind Singh's
+        message of "Tue, 19 Jun 2018 09:36:05 +0530")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCAyMDE4LTA2LTIxIGF0IDEwOjE0IC0wNTAwLCBMYXJyeSBGaW5nZXIgd3JvdGU6DQo+
-IE9uIDA2LzIxLzIwMTggMDI6MDYgQU0sIHBrc2hpaEByZWFsdGVrLmNvbSB3cm90ZToNCj4gPiBG
-cm9tOiBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4NCj4gPsKgDQo+ID4gV2hlbiBj
-b25uZWN0aW5nIHRvIEFQLCBtYWM4MDIxMSBhc2tzIGRyaXZlciB0byBlbnRlciBhbmQgbGVhdmUg
-UFMgcXVpY2tseSwNCj4gPiBidXQgZHJpdmVyIGRlaW5pdCBkb2Vzbid0IHdhaXQgZm9yIGRlbGF5
-ZWQgd29yayBjb21wbGV0ZSB3aGVuIGVudGVyaW5nIFBTLA0KPiA+IHRoZW4gZHJpdmVyIHJlaW5p
-dCBwcm9jZWR1cmUgYW5kIGRlbGF5IHdvcmsgYXJlIHJ1bm5pbmcgc2ltdWx0YW5lb3VzbHkuDQo+
-ID4gVGhpcyB3aWxsIGNhdXNlIHVucHJlZGljdGFibGUga2VybmVsIG9vcHMgb3IgY3Jhc2ggbGlr
-ZQ0KPiA+wqANCj4gPiBydGw4NzIzYmU6IGVycm9yIEgyQyBjbWQgYmVjYXVzZSBvZiBGdyBkb3du
-bG9hZCBmYWlsISEhDQo+ID4gV0FSTklORzogQ1BVOiAzIFBJRDogMTU5IGF0IGRyaXZlcnMvbmV0
-L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS8NCj4gPsKgCcKgcnRsODcyM2JlL2Z3LmM6MjI3IHJ0
-bDg3MjNiZV9maWxsX2gyY19jbWQrMHgxODIvMHg1MTAgW3J0bDg3MjNiZV0NCj4gPiBDUFU6IDMg
-UElEOiAxNTkgQ29tbToga3dvcmtlci8zOjIgVGFpbnRlZDogR8KgwqDCoMKgwqDCoMKgT8KgwqDC
-oMKgwqA0LjE2LjEzLTItQVJDSCAjMQ0KPiA+IEhhcmR3YXJlIG5hbWU6IEFTVVNUZUsgQ09NUFVU
-RVIgSU5DLiBYNTU2VUYvWDU1NlVGLCBCSU9TIFg1NTZVRi40MDYNCj4gPsKgCcKgwqDCoMKgwqDC
-oMKgMTAvMjEvMjAxNg0KPiA+IFdvcmtxdWV1ZTogcnRsODcyM2JlX3BjaSBydGxfYzJoY21kX3dx
-X2NhbGxiYWNrIFtydGx3aWZpXQ0KPiA+IFJJUDogMDAxMDpydGw4NzIzYmVfZmlsbF9oMmNfY21k
-KzB4MTgyLzB4NTEwIFtydGw4NzIzYmVdDQo+ID4gUlNQOiAwMDE4OmZmZmZhNmFiMDFlMWJkNzAg
-RUZMQUdTOiAwMDAxMDI4Mg0KPiA+IFJBWDogMDAwMDAwMDAwMDAwMDAwMCBSQlg6IGZmZmZhMjYw
-NjkwNzE1MjAgUkNYOiAwMDAwMDAwMDAwMDAwMDAxDQo+ID4gUkRYOiAwMDAwMDAwMDgwMDAwMDAx
-IFJTSTogZmZmZmZmZmY4YmU3MGU5YyBSREk6IDAwMDAwMDAwZmZmZmZmZmYNCj4gPiBSQlA6IDAw
-MDAwMDAwMDAwMDAwMDAgUjA4OiAwMDAwMDAwMDAwMDAwMDQ4IFIwOTogMDAwMDAwMDAwMDAwMDM0
-OA0KPiA+IFIxMDogMDAwMDAwMDAwMDAwMDAwMCBSMTE6IDAwMDAwMDAwMDAwMDAwMDEgUjEyOiAw
-MDAwMDAwMDAwMDAwMDAwDQo+ID4gUjEzOiBmZmZmYTI2MDY5MDcxNTIwIFIxNDogMDAwMDAwMDAw
-MDAwMDAwMCBSMTU6IGZmZmZhMjYwN2QyMDVmNzANCj4gPiBGUzrCoMKgMDAwMDAwMDAwMDAwMDAw
-MCgwMDAwKSBHUzpmZmZmYTI2MDgxZDgwMDAwKDAwMDApIGtubEdTOjAwMDAwMDAwMDAwMDAwMA0K
-PiA+IENTOsKgwqAwMDEwIERTOiAwMDAwIEVTOiAwMDAwIENSMDogMDAwMDAwMDA4MDA1MDAzMw0K
-PiA+IENSMjogMDAwMDA0NDNiMzlkMzAwMCBDUjM6IDAwMDAwMDAzNzcwMGEwMDUgQ1I0OiAwMDAw
-MDAwMDAwMzYwNmUwDQo+ID4gQ2FsbCBUcmFjZToNCj4gPsKgwqDCoD8gaGFsYnRjX3NlbmRfYnRf
-bXBfb3BlcmF0aW9uLmNvbnN0cHJvcC4xNysweGQ1LzB4ZTAgW2J0Y29leGlzdF0NCj4gPsKgwqDC
-oD8gZXhfYnRjODcyM2IxYW50X2J0X2luZm9fbm90aWZ5KzB4M2I4LzB4ODIwIFtidGNvZXhpc3Rd
-DQo+ID7CoMKgwqA/IHJ0bF9jMmhjbWRfbGF1bmNoZXIrMHhhYi8weDExMCBbcnRsd2lmaV0NCj4g
-PsKgwqDCoD8gcHJvY2Vzc19vbmVfd29yaysweDFkMS8weDNiMA0KPiA+wqDCoMKgPyB3b3JrZXJf
-dGhyZWFkKzB4MmIvMHgzZDANCj4gPsKgwqDCoD8gcHJvY2Vzc19vbmVfd29yaysweDNiMC8weDNi
-MA0KPiA+wqDCoMKgPyBrdGhyZWFkKzB4MTEyLzB4MTMwDQo+ID7CoMKgwqA/IGt0aHJlYWRfY3Jl
-YXRlX29uX25vZGUrMHg2MC8weDYwDQo+ID7CoMKgwqA/IHJldF9mcm9tX2ZvcmsrMHgzNS8weDQw
-DQo+ID4gQ29kZTogMDAgNzYgYjQgZTkgZTIgZmUgZmYgZmYgNGMgODkgZWUgNGMgODkgZTcgZTgg
-NTYgMjIgODYgY2EgZTkgNWUgLi4uDQo+ID7CoA0KPiA+IFRoaXMgcGF0Y2ggZW5zdXJlcyBhbGwg
-ZGVsYXllZCB3b3JrcyBkb25lIGJlZm9yZSBlbnRlcmluZyBQUyB0byBzYXRpc2Z5DQo+ID4gb3Vy
-IGV4cGVjdGF0aW9uLCBzbyB1c2UgY2FuY2VsX2RlbGF5ZWRfd29ya19zeW5jKCkgaW5zdGVhZC4g
-QW4gZXhjZXB0aW9uDQo+ID4gaXMgZGVsYXllZCB3b3JrIGlwc19uaWNfb2ZmX3dxIGJlY2F1c2Ug
-cnVubmluZyB0YXNrIG1heSBiZSBpdHNlbGYsIHNvIGFkZA0KPiA+IGEgcGFyYW1ldGVyIGlwc193
-cSB0byBkZWluaXQgZnVuY3Rpb24gdG8gaGFuZGxlIHRoaXMgY2FzZS4NCj4gPsKgDQo+ID4gVGhp
-cyBpc3N1ZSBpcyByZXBvcnRlZCBhbmQgZml4ZWQgaW4gYmVsb3cgdGhyZWFkczoNCj4gPiBodHRw
-czovL2dpdGh1Yi5jb20vbHdmaW5nZXIvcnRsd2lmaV9uZXcvaXNzdWVzLzM2Nw0KPiA+IGh0dHBz
-Oi8vZ2l0aHViLmNvbS9sd2Zpbmdlci9ydGx3aWZpX25ldy9pc3N1ZXMvMzY2DQo+ID7CoA0KPiA+
-IFRlc3RlZC1ieTogRXZnZW55IEthcHVuIDxhYmFjYWJhZGFiYWNhYmFAZ21haWwuY29tPiAjIDg3
-MjNERQ0KPiA+IFRlc3RlZC1ieTogU2hpdmFtIEtha2thciA8c2hpdmFtNTQzQGdtYWlsLmNvbT4g
-IyA4NzIzQkUgb24gNC4xOC1yYzENCj4gPiBTaWduZWQtb2ZmLWJ5OiBQaW5nLUtlIFNoaWggPHBr
-c2hpaEByZWFsdGVrLmNvbT4NCj4gPiAtLS0NCj4gPiBIaSBLYWxsZSwNCj4gPsKgDQo+ID4gSSdk
-IGxpa2UgdG8gcXVldWUgdGhpcyBmaXggdG8gNC4xOCwgYmVjYXVzZSBrZXJuZWwgb29wcyBpbiB1
-c2VycycgbGFwdG9wLg0KPiANCj4gUmV2aWV3ZWQgYnkgTGFycnkgRmluZ2VyIDxMYXJyeS5GaW5n
-ZXJAbHdmaW5nZXIubmV0Pg0KPiANCj4gSXMgaXMgc3VmZmljaWVudCBmb3IgdGhpcyBwYXRjaCB0
-byBnbyB0byA0LjE4LCBvciBzaG91bGQgaXQgYmUgc2VudCB0byBzdGFibGUswqANCj4gYXMgd2Vs
-bC4NCj4gDQoNCllvdSdyZSByaWdodCwgaXQgc2hvdWxkIGJlIHNlbnQgdG8gc3RhYmxlLg0KSXQg
-aGFkIGJlZW4gYSBwb3RlbnRpYWwgcmFjZSBjb25kaXRpb24gaXNzdWUgZm9yIGEgbG9uZyB0aW1l
-LCBidXQgaXQgZXhwb3NlZA0Kd2hlbiBkZWxheWVkIHdvcmsgdGFrZSBhIGxvbmcgdGltZSB0byBw
-cm9jZXNzIG9yIHdhaXQgZm9yIGV2ZW50Lg0KSSB0aGluayB0aGlzIGlzc3VlIHdvdWxkIGJlIHBv
-c3NpYmx5IGhhcHBlbmVkIHNpbmNlIHY0LjExIHdoZW4gSSBtb3ZlIEMySCBoYW5kbGVyDQp0byBk
-ZWxheWVkIHdvcmsuDQoNCkNjOiBTdGFibGUgPHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmc+ICMgNC4x
-MSsNCg0KUEsNCg0K
+Govind Singh <govinds@codeaurora.org> writes:
+
+> 3) once supported pd info in known to Q6, tftp client in Q6
+> establishes the connection with tftp server in Q6 for user pd loading.
+
+This sentence doesn't make sense, should it be that the tftp client in
+Q6 establishes the connection with the tftp server in user space?
+
+--=20
+Kalle Valo=
