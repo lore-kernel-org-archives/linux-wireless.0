@@ -1,106 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53068 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:50920 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751788AbeFEMd3 (ORCPT
+        with ESMTP id S1030505AbeFSTGu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Jun 2018 08:33:29 -0400
-From: Govind Singh <govinds@codeaurora.org>
-To: andy.gross@linaro.org, bjorn.andersson@linaro.org,
-        david.brown@linaro.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH v2 0/6]  *** Add support for wifi QMI client driver ***
-Date: Tue,  5 Jun 2018 18:03:04 +0530
-Message-Id: <20180605123304.31969-1-govinds@codeaurora.org> (sfid-20180605_143343_099223_3851A176)
+        Tue, 19 Jun 2018 15:06:50 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Michael Trimarchi <michael@amarulasolutions.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Ian Molton <ian@mnementh.co.uk>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V2] brcmfmac: stop watchdog before detach and free everything
+References: <1527493857-2220-1-git-send-email-michael@amarulasolutions.com>
+        <5B0D1C9E.4000800@broadcom.com> <20180530090633.GA15390@panicking>
+        <5B294920.5050909@broadcom.com>
+Date: Tue, 19 Jun 2018 22:06:43 +0300
+In-Reply-To: <5B294920.5050909@broadcom.com> (Arend van Spriel's message of
+        "Tue, 19 Jun 2018 20:19:12 +0200")
+Message-ID: <87fu1izjcs.fsf@kamboji.qca.qualcomm.com> (sfid-20180619_210708_171388_DD8C0FF7)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add QMI client driver for Q6 integrated WLAN connectivity subsystem.
-This module is responsible for communicating WLAN control messages to FW
-over QMI interface.
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-QUALCOMM MSM Interface(QMI) provides the control interface between
-components running b/w remote processors with underlying transport layer
-based on integrated chipset(shared memory) or discrete chipset(PCI/USB/SDIO/UART).
+> On 5/30/2018 11:06 AM, Michael Trimarchi wrote:
+>> Using built-in in kernel image without a firmware in filesystem
+>> or in the kernel image can lead to a kernel NULL pointer deference.
+>> Watchdog need to be stopped in brcmf_sdio_remove
+>>
+>> The system is going down NOW!
+>> [ 1348.110759] Unable to handle kernel NULL pointer dereference at
+>> virtual address 000002f8
+>> Sent SIGTERM to all processes
+>> [ 1348.121412] Mem abort info:
+>> [ 1348.126962]   ESR = 0x96000004
+>> [ 1348.130023]   Exception class = DABT (current EL), IL = 32 bits
+>> [ 1348.135948]   SET = 0, FnV = 0
+>> [ 1348.138997]   EA = 0, S1PTW = 0
+>> [ 1348.142154] Data abort info:
+>> [ 1348.145045]   ISV = 0, ISS = 0x00000004
+>> [ 1348.148884]   CM = 0, WnR = 0
+>> [ 1348.151861] user pgtable: 4k pages, 48-bit VAs, pgdp = (____ptrval____)
+>> [ 1348.158475] [00000000000002f8] pgd=0000000000000000
+>> [ 1348.163364] Internal error: Oops: 96000004 [#1] PREEMPT SMP
+>> [ 1348.168927] Modules linked in: ipv6
+>> [ 1348.172421] CPU: 3 PID: 1421 Comm: brcmf_wdog/mmc0 Not tainted
+>> 4.17.0-rc5-next-20180517 #18
+>> [ 1348.180757] Hardware name: Amarula A64-Relic (DT)
+>> [ 1348.185455] pstate: 60000005 (nZCv daif -PAN -UAO)
+>> [ 1348.190251] pc : brcmf_sdiod_freezer_count+0x0/0x20
+>> [ 1348.195124] lr : brcmf_sdio_watchdog_thread+0x64/0x290
+>> [ 1348.200253] sp : ffff00000b85be30
+>> [ 1348.203561] x29: ffff00000b85be30 x28: 0000000000000000
+>> [ 1348.208868] x27: ffff00000b6cb918 x26: ffff80003b990638
+>> [ 1348.214176] x25: ffff0000087b1a20 x24: ffff80003b94f800
+>> [ 1348.219483] x23: ffff000008e620c8 x22: ffff000008f0b660
+>> [ 1348.224790] x21: ffff000008c6a858 x20: 00000000fffffe00
+>> [ 1348.230097] x19: ffff80003b94f800 x18: 0000000000000001
+>> [ 1348.235404] x17: 0000ffffab2e8a74 x16: ffff0000080d7de8
+>> [ 1348.240711] x15: 0000000000000000 x14: 0000000000000400
+>> [ 1348.246018] x13: 0000000000000400 x12: 0000000000000001
+>> [ 1348.251324] x11: 00000000000002c4 x10: 0000000000000a10
+>> [ 1348.256631] x9 : ffff00000b85bc40 x8 : ffff80003be11870
+>> [ 1348.261937] x7 : ffff80003dfc7308 x6 : 000000078ff08b55
+>> [ 1348.267243] x5 : 00000139e1058400 x4 : 0000000000000000
+>> [ 1348.272550] x3 : dead000000000100 x2 : 958f2788d6618100
+>> [ 1348.277856] x1 : 00000000fffffe00 x0 : 0000000000000000
+>
+> Forgot about this one.
+>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-QMI client driver implementation is based on qmi frmework https://lwn.net/Articles/729924/.
-
-Below is the sequence of qmi handshake.
-
-       QMI CLIENT(APPS)                                         QMI SERVER(FW in Q6)
-
-                         <------wlan service discoverd----
-
-                       -----connect to wlam qmi service----->
-
-                       ------------wlan info request----->
-
-                       <------------wlan info resp------------
-
-                       ------------msa info req-------->
-
-                     <------------msa info resp------------
-
-                     ------------msa ready req-------->
-
-                     <------------msa ready resp------------
-
-                     <------------msa ready indication-------
-
-                     ------------capability req------->
-
-                    <------------capability resp------------
-
-                    ------------qmi bdf req--------->
-
-                     <------------qmi bdf resp------------
-
-                      ------------qmi cal trigger------->
-
-                  <------------ QMI FW ready indication-------
-
-Changes in V2:
-	Removed qmi client driver and integrated qmi client handshakes in snoc platform driver.
-	Addressed comments v1 version.
-	Switched to ath10k bdf download infra(board-2.bin)
-	Added MSA fixed region support to support unload use-case.
-	Unified logging.
-
-Testing:
-	Tested all qmi handshakes, driver load/unload and STA/SAP sanity testing.
-	Tested HW: SDM845(WCN3990)
-	Tested FW: WLAN.HL.2.0-01192-QCAHLSWMTPLZ-1
-
-
-
-Govind Singh (5):
-  ath10k: Add qmi service helpers for wcn3990 qmi client
-  dt: bindings: add bindings for msa memory region
-  ath10k: Add debug mask for QMI layer
-  firmware: qcom: scm: Add WLAN VMID for Qualcomm SCM interface
-  ath10k: Add QMI message handshake for wcn3990 client
-
-Rakesh Pillai (1):
-  ath10k: Add support to create boardname for non-bmi target
-
- .../bindings/net/wireless/qcom,ath10k.txt     |    4 +
- drivers/net/wireless/ath/ath10k/Kconfig       |   13 +-
- drivers/net/wireless/ath/ath10k/Makefile      |    4 +-
- drivers/net/wireless/ath/ath10k/core.c        |   20 +-
- drivers/net/wireless/ath/ath10k/core.h        |    4 +
- drivers/net/wireless/ath/ath10k/debug.h       |    1 +
- drivers/net/wireless/ath/ath10k/qmi.c         | 1030 ++++++++
- drivers/net/wireless/ath/ath10k/qmi.h         |  136 ++
- .../net/wireless/ath/ath10k/qmi_wlfw_v01.c    | 2072 +++++++++++++++++
- .../net/wireless/ath/ath10k/qmi_wlfw_v01.h    |  677 ++++++
- drivers/net/wireless/ath/ath10k/snoc.c        |  209 +-
- drivers/net/wireless/ath/ath10k/snoc.h        |    3 +
- include/linux/qcom_scm.h                      |    4 +-
- 13 files changed, 4160 insertions(+), 17 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath10k/qmi.c
- create mode 100644 drivers/net/wireless/ath/ath10k/qmi.h
- create mode 100644 drivers/net/wireless/ath/ath10k/qmi_wlfw_v01.c
- create mode 100644 drivers/net/wireless/ath/ath10k/qmi_wlfw_v01.h
+Should this go to 4.18?
 
 -- 
-2.17.0
+Kalle Valo
