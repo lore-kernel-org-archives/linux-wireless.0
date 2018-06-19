@@ -1,101 +1,307 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49398 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751970AbeFDLKq (ORCPT
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:29536 "EHLO
+        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S937922AbeFSNMK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Jun 2018 07:10:46 -0400
-Date: Mon, 4 Jun 2018 14:10:33 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: huxm@marvell.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [bug report] mwifiex: process rxba_sync event
-Message-ID: <20180604111033.5sqt6wtfkennxv3v@kili.mountain> (sfid-20180604_131050_520469_1410B854)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Tue, 19 Jun 2018 09:12:10 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com
+Subject: [PATCH v3 7/8] wil6210: add support for Talyn-MB boot flow
+Date: Tue, 19 Jun 2018 16:11:52 +0300
+Message-Id: <1529413913-22224-8-git-send-email-merez@codeaurora.org> (sfid-20180619_151451_196127_39CC312C)
+In-Reply-To: <1529413913-22224-1-git-send-email-merez@codeaurora.org>
+References: <1529413913-22224-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Xinming Hu,
+Talyn-MB introduces various of FW download options:
+FW download via PCIe, SPI or PBL for secured access.
+The boot and FW download path is determined based on the
+OTP HW register. Driver reads this register as part of the
+SW reset flow and performs the appropriate initialization
+sequence.
 
-The patch 99ffe72cdae4: "mwifiex: process rxba_sync event" from Jul
-25, 2016, leads to the following static checker warning:
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/main.c    | 194 ++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/wil6210/wil6210.h |   9 +-
+ 2 files changed, 171 insertions(+), 32 deletions(-)
 
-	drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c:941 mwifiex_11n_rxba_sync_event()
-	warn: 'tlv_buf_left' can be negative (type promoted to high)
-
-drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-   927  void mwifiex_11n_rxba_sync_event(struct mwifiex_private *priv,
-   928                                   u8 *event_buf, u16 len)
-   929  {
-   930          struct mwifiex_ie_types_rxba_sync *tlv_rxba = (void *)event_buf;
-   931          u16 tlv_type, tlv_len;
-   932          struct mwifiex_rx_reorder_tbl *rx_reor_tbl_ptr;
-   933          u8 i, j;
-   934          u16 seq_num, tlv_seq_num, tlv_bitmap_len;
-   935          int tlv_buf_left = len;
-   936          int ret;
-   937          u8 *tmp;
-   938  
-   939          mwifiex_dbg_dump(priv->adapter, EVT_D, "RXBA_SYNC event:",
-   940                           event_buf, len);
-   941          while (tlv_buf_left >= sizeof(*tlv_rxba)) {
-   942                  tlv_type = le16_to_cpu(tlv_rxba->header.type);
-   943                  tlv_len  = le16_to_cpu(tlv_rxba->header.len);
-   944                  if (tlv_type != TLV_TYPE_RXBA_SYNC) {
-   945                          mwifiex_dbg(priv->adapter, ERROR,
-   946                                      "Wrong TLV id=0x%x\n", tlv_type);
-   947                          return;
-   948                  }
-   949  
-   950                  tlv_seq_num = le16_to_cpu(tlv_rxba->seq_num);
-   951                  tlv_bitmap_len = le16_to_cpu(tlv_rxba->bitmap_len);
-   952                  mwifiex_dbg(priv->adapter, INFO,
-   953                              "%pM tid=%d seq_num=%d bitmap_len=%d\n",
-   954                              tlv_rxba->mac, tlv_rxba->tid, tlv_seq_num,
-   955                              tlv_bitmap_len);
-   956  
-   957                  rx_reor_tbl_ptr =
-   958                          mwifiex_11n_get_rx_reorder_tbl(priv, tlv_rxba->tid,
-   959                                                         tlv_rxba->mac);
-   960                  if (!rx_reor_tbl_ptr) {
-   961                          mwifiex_dbg(priv->adapter, ERROR,
-   962                                      "Can not find rx_reorder_tbl!");
-   963                          return;
-   964                  }
-   965  
-   966                  for (i = 0; i < tlv_bitmap_len; i++) {
-   967                          for (j = 0 ; j < 8; j++) {
-   968                                  if (tlv_rxba->bitmap[i] & (1 << j)) {
-   969                                          seq_num = (MAX_TID_VALUE - 1) &
-   970                                                  (tlv_seq_num + i * 8 + j);
-   971  
-   972                                          mwifiex_dbg(priv->adapter, ERROR,
-   973                                                      "drop packet,seq=%d\n",
-   974                                                      seq_num);
-   975  
-   976                                          ret = mwifiex_11n_rx_reorder_pkt
-   977                                          (priv, seq_num, tlv_rxba->tid,
-   978                                           tlv_rxba->mac, 0, NULL);
-   979  
-   980                                          if (ret)
-   981                                                  mwifiex_dbg(priv->adapter,
-   982                                                              ERROR,
-   983                                                              "Fail to drop packet");
-   984                                  }
-   985                          }
-   986                  }
-   987  
-   988                  tlv_buf_left -= (sizeof(*tlv_rxba) + tlv_len);
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This could theoretically underflow to negative.  We should probably
-check "sizeof(*tlv_rxba) + tlv_len" at the start of the loop and
-tlv_bitmap_len as well to avoid a theoretical read beyond the end of
-the array.
-
-   989                  tmp = (u8 *)tlv_rxba + tlv_len + sizeof(*tlv_rxba);
-   990                  tlv_rxba = (struct mwifiex_ie_types_rxba_sync *)tmp;
-   991          }
-   992  }
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index e0072b6..4de19bd 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -112,9 +112,29 @@ static int ring_order_set(const char *val, const struct kernel_param *kp)
+ module_param_cb(bcast_ring_order, &ring_order_ops, &bcast_ring_order, 0444);
+ MODULE_PARM_DESC(bcast_ring_order, " Bcast ring order; size = 1 << order");
+ 
+-#define RST_DELAY (20) /* msec, for loop in @wil_target_reset */
++enum {
++	WIL_BOOT_ERR,
++	WIL_BOOT_VANILLA,
++	WIL_BOOT_PRODUCTION,
++	WIL_BOOT_DEVELOPMENT,
++};
++
++enum {
++	WIL_SIG_STATUS_VANILLA = 0x0,
++	WIL_SIG_STATUS_DEVELOPMENT = 0x1,
++	WIL_SIG_STATUS_PRODUCTION = 0x2,
++	WIL_SIG_STATUS_CORRUPTED_PRODUCTION = 0x3,
++};
++
++#define RST_DELAY (20) /* msec, for loop in @wil_wait_device_ready */
+ #define RST_COUNT (1 + 1000/RST_DELAY) /* round up to be above 1 sec total */
+ 
++#define PMU_READY_DELAY_MS (4) /* ms, for sleep in @wil_wait_device_ready */
++
++#define OTP_HW_DELAY (200) /* usec, loop in @wil_wait_device_ready_talyn_mb */
++/* round up to be above 2 ms total */
++#define OTP_HW_COUNT (1 + 2000 / OTP_HW_DELAY)
++
+ /*
+  * Due to a hardware issue,
+  * one has to read/write to/from NIC in 32-bit chunks;
+@@ -831,11 +851,146 @@ static void wil_set_oob_mode(struct wil6210_priv *wil, u8 mode)
+ 	}
+ }
+ 
+-static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
++static int wil_wait_device_ready(struct wil6210_priv *wil, int no_flash)
+ {
+ 	int delay = 0;
+ 	u32 x, x1 = 0;
+ 
++	/* wait until device ready. */
++	if (no_flash) {
++		msleep(PMU_READY_DELAY_MS);
++
++		wil_dbg_misc(wil, "Reset completed\n");
++	} else {
++		do {
++			msleep(RST_DELAY);
++			x = wil_r(wil, RGF_USER_BL +
++				  offsetof(struct bl_dedicated_registers_v0,
++					   boot_loader_ready));
++			if (x1 != x) {
++				wil_dbg_misc(wil, "BL.ready 0x%08x => 0x%08x\n",
++					     x1, x);
++				x1 = x;
++			}
++			if (delay++ > RST_COUNT) {
++				wil_err(wil, "Reset not completed, bl.ready 0x%08x\n",
++					x);
++				return -ETIME;
++			}
++		} while (x != BL_READY);
++
++		wil_dbg_misc(wil, "Reset completed in %d ms\n",
++			     delay * RST_DELAY);
++	}
++
++	return 0;
++}
++
++static int wil_wait_device_ready_talyn_mb(struct wil6210_priv *wil)
++{
++	u32 otp_hw;
++	u8 signature_status;
++	bool otp_signature_err;
++	bool hw_section_done;
++	u32 otp_qc_secured;
++	int delay = 0;
++
++	/* Wait for OTP signature test to complete */
++	usleep_range(2000, 2200);
++
++	wil->boot_config = WIL_BOOT_ERR;
++
++	/* Poll until OTP signature status is valid.
++	 * In vanilla and development modes, when signature test is complete
++	 * HW sets BIT_OTP_SIGNATURE_ERR_TALYN_MB.
++	 * In production mode BIT_OTP_SIGNATURE_ERR_TALYN_MB remains 0, poll
++	 * for signature status change to 2 or 3.
++	 */
++	do {
++		otp_hw = wil_r(wil, RGF_USER_OTP_HW_RD_MACHINE_1);
++		signature_status = WIL_GET_BITS(otp_hw, 8, 9);
++		otp_signature_err = otp_hw & BIT_OTP_SIGNATURE_ERR_TALYN_MB;
++
++		if (otp_signature_err &&
++		    signature_status == WIL_SIG_STATUS_VANILLA) {
++			wil->boot_config = WIL_BOOT_VANILLA;
++			break;
++		}
++		if (otp_signature_err &&
++		    signature_status == WIL_SIG_STATUS_DEVELOPMENT) {
++			wil->boot_config = WIL_BOOT_DEVELOPMENT;
++			break;
++		}
++		if (!otp_signature_err &&
++		    signature_status == WIL_SIG_STATUS_PRODUCTION) {
++			wil->boot_config = WIL_BOOT_PRODUCTION;
++			break;
++		}
++		if  (!otp_signature_err &&
++		     signature_status ==
++		     WIL_SIG_STATUS_CORRUPTED_PRODUCTION) {
++			/* Unrecognized OTP signature found. Possibly a
++			 * corrupted production signature, access control
++			 * is applied as in production mode, therefore
++			 * do not fail
++			 */
++			wil->boot_config = WIL_BOOT_PRODUCTION;
++			break;
++		}
++		if (delay++ > OTP_HW_COUNT)
++			break;
++
++		usleep_range(OTP_HW_DELAY, OTP_HW_DELAY + 10);
++	} while (!otp_signature_err && signature_status == 0);
++
++	if (wil->boot_config == WIL_BOOT_ERR) {
++		wil_err(wil,
++			"invalid boot config, signature_status %d otp_signature_err %d\n",
++			signature_status, otp_signature_err);
++		return -ETIME;
++	}
++
++	wil_dbg_misc(wil,
++		     "signature test done in %d usec, otp_hw 0x%x, boot_config %d\n",
++		     delay * OTP_HW_DELAY, otp_hw, wil->boot_config);
++
++	if (wil->boot_config == WIL_BOOT_VANILLA)
++		/* Assuming not SPI boot (currently not supported) */
++		goto out;
++
++	hw_section_done = otp_hw & BIT_OTP_HW_SECTION_DONE_TALYN_MB;
++	delay = 0;
++
++	while (!hw_section_done) {
++		msleep(RST_DELAY);
++
++		otp_hw = wil_r(wil, RGF_USER_OTP_HW_RD_MACHINE_1);
++		hw_section_done = otp_hw & BIT_OTP_HW_SECTION_DONE_TALYN_MB;
++
++		if (delay++ > RST_COUNT) {
++			wil_err(wil, "TO waiting for hw_section_done\n");
++			return -ETIME;
++		}
++	}
++
++	wil_dbg_misc(wil, "HW section done in %d ms\n", delay * RST_DELAY);
++
++	otp_qc_secured = wil_r(wil, RGF_OTP_QC_SECURED);
++	wil->secured_boot = otp_qc_secured & BIT_BOOT_FROM_ROM ? 1 : 0;
++	wil_dbg_misc(wil, "secured boot is %sabled\n",
++		     wil->secured_boot ? "en" : "dis");
++
++out:
++	wil_dbg_misc(wil, "Reset completed\n");
++
++	return 0;
++}
++
++static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
++{
++	u32 x;
++	int rc;
++
+ 	wil_dbg_misc(wil, "Resetting \"%s\"...\n", wil->hw_name);
+ 
+ 	/* Clear MAC link up */
+@@ -901,34 +1056,12 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
+ 
+ 	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0);
+ 
+-	/* wait until device ready. typical time is 20..80 msec */
+-	if (no_flash)
+-		do {
+-			msleep(RST_DELAY);
+-			x = wil_r(wil, USER_EXT_USER_PMU_3);
+-			if (delay++ > RST_COUNT) {
+-				wil_err(wil, "Reset not completed, PMU_3 0x%08x\n",
+-					x);
+-				return -ETIME;
+-			}
+-		} while ((x & BIT_PMU_DEVICE_RDY) == 0);
++	if (wil->hw_version == HW_VER_TALYN_MB)
++		rc = wil_wait_device_ready_talyn_mb(wil);
+ 	else
+-		do {
+-			msleep(RST_DELAY);
+-			x = wil_r(wil, RGF_USER_BL +
+-				  offsetof(struct bl_dedicated_registers_v0,
+-					   boot_loader_ready));
+-			if (x1 != x) {
+-				wil_dbg_misc(wil, "BL.ready 0x%08x => 0x%08x\n",
+-					     x1, x);
+-				x1 = x;
+-			}
+-			if (delay++ > RST_COUNT) {
+-				wil_err(wil, "Reset not completed, bl.ready 0x%08x\n",
+-					x);
+-				return -ETIME;
+-			}
+-		} while (x != BL_READY);
++		rc = wil_wait_device_ready(wil, no_flash);
++	if (rc)
++		return rc;
+ 
+ 	wil_c(wil, RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_RST_PWGD);
+ 
+@@ -936,7 +1069,7 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
+ 	wil_s(wil, RGF_DMA_OFUL_NID_0, BIT_DMA_OFUL_NID_0_RX_EXT_TR_EN |
+ 	      BIT_DMA_OFUL_NID_0_RX_EXT_A3_SRC);
+ 
+-	if (no_flash) {
++	if (wil->hw_version < HW_VER_TALYN_MB && no_flash) {
+ 		/* Reset OTP HW vectors to fit 40MHz */
+ 		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME1, 0x60001);
+ 		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME2, 0x20027);
+@@ -951,7 +1084,6 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
+ 		wil_w(wil, RGF_USER_XPM_RD_DOUT_SAMPLE_TIME, 0x57);
+ 	}
+ 
+-	wil_dbg_misc(wil, "Reset completed in %d ms\n", delay * RST_DELAY);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index f8d4a2d..e639ba7 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -210,7 +210,9 @@ struct RGF_ICR {
+ #define RGF_USER_SPARROW_M_4			(0x880c50) /* Sparrow */
+ 	#define BIT_SPARROW_M_4_SEL_SLEEP_OR_REF	BIT(2)
+ #define RGF_USER_OTP_HW_RD_MACHINE_1	(0x880ce0)
+-	#define BIT_NO_FLASH_INDICATION		BIT(8)
++	#define BIT_OTP_SIGNATURE_ERR_TALYN_MB		BIT(0)
++	#define BIT_OTP_HW_SECTION_DONE_TALYN_MB	BIT(2)
++	#define BIT_NO_FLASH_INDICATION			BIT(8)
+ #define RGF_USER_XPM_IFC_RD_TIME1	(0x880cec)
+ #define RGF_USER_XPM_IFC_RD_TIME2	(0x880cf0)
+ #define RGF_USER_XPM_IFC_RD_TIME3	(0x880cf4)
+@@ -312,6 +314,9 @@ struct RGF_ICR {
+ #define RGF_CAF_PLL_LOCK_STATUS		(0x88afec)
+ 	#define BIT_CAF_OSC_DIG_XTAL_STABLE	BIT(0)
+ 
++#define RGF_OTP_QC_SECURED		(0x8a0038)
++	#define BIT_BOOT_FROM_ROM		BIT(31)
++
+ /* eDMA */
+ #define RGF_INT_COUNT_ON_SPECIAL_EVT	(0x8b62d8)
+ 
+@@ -969,6 +974,8 @@ struct wil6210_priv {
+ 	u32 rx_buff_id_count;
+ 	bool amsdu_en;
+ 	bool use_rx_hw_reordering;
++	bool secured_boot;
++	u8 boot_config;
+ };
+ 
+ #define wil_to_wiphy(i) (i->wiphy)
+-- 
+1.9.1
