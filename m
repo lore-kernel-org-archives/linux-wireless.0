@@ -1,42 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:32862 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752141AbeFDK1t (ORCPT
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:51990 "EHLO
+        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S937880AbeFSNMA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Jun 2018 06:27:49 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Wei Yongjun <weiyongjun1@huawei.com>
-Cc: Govind Singh <govinds@codeaurora.org>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        ath10k@lists.infradead.org, bjorn.andersson@linaro.org
-Subject: Re: [PATCH net-next] ath10k: make some functions static
-References: <1527733994-149212-1-git-send-email-weiyongjun1@huawei.com>
-Date: Mon, 04 Jun 2018 13:27:43 +0300
-In-Reply-To: <1527733994-149212-1-git-send-email-weiyongjun1@huawei.com> (Wei
-        Yongjun's message of "Thu, 31 May 2018 02:33:14 +0000")
-Message-ID: <87a7sazw0w.fsf@kamboji.qca.qualcomm.com> (sfid-20180604_122759_676187_1CCCDB42)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 19 Jun 2018 09:12:00 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com
+Subject: [PATCH v3 0/8] wil6210 patches
+Date: Tue, 19 Jun 2018 16:11:45 +0300
+Message-Id: <1529413913-22224-1-git-send-email-merez@codeaurora.org> (sfid-20180619_151512_027407_A4D49FC1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wei Yongjun <weiyongjun1@huawei.com> writes:
+Changes from v2:
+- Fix amsdu setting in BA response
+- Remove crash dump collection from OTP sectionas it can cause PCIe halt
 
-> Fixes the following sparse warnings:
->
-> drivers/net/wireless/ath/ath10k/snoc.c:823:5: warning:
->  symbol 'ath10k_snoc_get_ce_id_from_irq' was not declared. Should it be static?
-> drivers/net/wireless/ath/ath10k/snoc.c:871:6: warning:
->  symbol 'ath10k_snoc_init_napi' was not declared. Should it be static?
->
-> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+Changes from v1:
+- Removal of module parameters
+- Addition of debugfs entries for configuring enhanced DMA
+- Fixing kbuild bot error
+- Enabling AMSDU by default (based on FW support)
+- Fixing L2 translation mode
 
-BTW this goes to my ath.git tree, not to net-next.
+The following set of patches add support for new wil6210 device (Talyn ver 2.0):
+- Definition of the new device ID and memory areas
+- New boot flow procedure and reset sequence
+- Support new DMA interface - enhanced DMA
+- Support new HW offloads, such as TSO, RX reorder and AMSDU
 
-I had missed these as I can't enable ATH10K_SNOC on x86 and hence I
-don't test compile snoc.c at all. Bjorn&Govind, is there a way to solve
-that? IIRC we had a similar problem with wcn36xx but I don't remember
-anymore how it was fixed.
+Gidon Studinski (3):
+  wil6210: add support for enhanced DMA structures
+  wil6210: initialize TX and RX enhanced DMA rings
+  wil6210: add support for enhanced DMA RX data flows
+
+Maya Erez (5):
+  wil6210: add support for Talyn-MB (Talyn ver 2.0) device
+  wil6210: add support for enhanced DMA TX data flows
+  wil6210: add support for enhanced DMA debugfs
+  wil6210: add support for Talyn-MB boot flow
+  wil6210: remove crash dump collection from OTP section
+
+ drivers/net/wireless/ath/wil6210/Makefile         |    1 +
+ drivers/net/wireless/ath/wil6210/cfg80211.c       |   12 +-
+ drivers/net/wireless/ath/wil6210/debugfs.c        |  490 +++++--
+ drivers/net/wireless/ath/wil6210/ethtool.c        |    2 +-
+ drivers/net/wireless/ath/wil6210/interrupt.c      |  225 ++-
+ drivers/net/wireless/ath/wil6210/main.c           |  360 ++++-
+ drivers/net/wireless/ath/wil6210/netdev.c         |   73 +-
+ drivers/net/wireless/ath/wil6210/pcie_bus.c       |   59 +-
+ drivers/net/wireless/ath/wil6210/pm.c             |    6 +-
+ drivers/net/wireless/ath/wil6210/rx_reorder.c     |   26 +-
+ drivers/net/wireless/ath/wil6210/trace.h          |   59 +
+ drivers/net/wireless/ath/wil6210/txrx.c           |  649 ++++-----
+ drivers/net/wireless/ath/wil6210/txrx.h           |  105 +-
+ drivers/net/wireless/ath/wil6210/txrx_edma.c      | 1598 +++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/txrx_edma.h      |  562 ++++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h        |  228 ++-
+ drivers/net/wireless/ath/wil6210/wil_crash_dump.c |    4 +-
+ drivers/net/wireless/ath/wil6210/wmi.c            |  502 ++++++-
+ drivers/net/wireless/ath/wil6210/wmi.h            |  167 ++-
+ 19 files changed, 4467 insertions(+), 661 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/wil6210/txrx_edma.c
+ create mode 100644 drivers/net/wireless/ath/wil6210/txrx_edma.h
 
 -- 
-Kalle Valo
+1.9.1
