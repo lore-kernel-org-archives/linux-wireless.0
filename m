@@ -1,151 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52202 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752832AbeF3NYM (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:38829 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S937314AbeFSIes (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Jun 2018 09:24:12 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 30 Jun 2018 16:23:28 +0300
-Message-Id: <20180630132330.14928-14-luca@coelho.fi> (sfid-20180630_152417_002885_A8ED2004)
-In-Reply-To: <20180630132330.14928-1-luca@coelho.fi>
-References: <20180630132330.14928-1-luca@coelho.fi>
-Subject: [PATCH 13/15] iwlwifi: introduce new rx structures used by 22560 RFH
+        Tue, 19 Jun 2018 04:34:48 -0400
+Received: by mail-lf0-f68.google.com with SMTP id i83-v6so28824332lfh.5
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2018 01:34:47 -0700 (PDT)
+Subject: Re: Research + questions on brcmfmac and support for monitor mode
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <986bbf4c-8fa1-4367-db9e-76a209594b81@gmail.com>
+ <66e43eb5-2bc9-2ec3-af48-03248eecb727@gmail.com>
+ <5B1E537F.2080502@broadcom.com>
+ <CACna6rxa4+UEOs1FjQUGnHpFJn4n_TO6v=Vx3SqNA32QvzQEGQ@mail.gmail.com>
+ <5B28B68F.8070505@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <a0eff73c-cccf-5226-992f-2a892cee5c57@gmail.com> (sfid-20180619_103514_407395_B2FE027D)
+Date: Tue, 19 Jun 2018 10:32:51 +0200
+MIME-Version: 1.0
+In-Reply-To: <5B28B68F.8070505@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+On 19.06.2018 09:53, Arend van Spriel wrote:
+> On 6/19/2018 9:27 AM, Rafał Miłecki wrote:
+>> On Mon, 11 Jun 2018 at 12:48, Arend van Spriel
+>> <arend.vanspriel@broadcom.com> wrote:
+>>> On 5/30/2018 1:52 PM, Rafał Miłecki wrote:
+>>>> I'm providing extra version info of tested firmware images as requested
+>>>> by Arend in another e-mail thread.
+>>>
+>>> Looking into our firmware repo it there are two flags, ie. WL_MONITOR
+>>> and WL_RADIOTAP. It seems both are set for firmware containing -stamon-
+>>> feature. Your list below confirms that. I still plan to add indication
+>>> for WL_RADIOTAP in the "cap" iovar, but a stamon feature check could be
+>>> used for older firmwares.
+>>
+>> I just checked wl.mk (it's an open source file) and found following line:
+>> WLFILES_SRC_HI += src/wl/sys/wlc_stamon.c
+>> not guarded by any ifeq.
+> 
+> wl.mk is used for NIC driver (softmac) so it is not used for fullmac firmware.
 
-22560 devices RFH uses different structures, which act similar
-to the legacy rxq management lists - free and used list.
+Weird. I see a few rte references in wl.mk which suggests it's used for
+both (softmac & fullmac firmware).
 
-The iwl_rx_transfer_desc struct is part of the free list,
-and consists of pointers to the empty rb's the driver wants to
-pass to the fw.
 
-The iwl_rx_completion_desc struct is part of the used list,
-and consists of pointers to the buffer the fw filled up
-with new rx, both commands and data, for the host.
+>> It appears wlc_stamon.c is always being compiled in. Are you 100% sure
+>> that wlc_stamon.c depends & uses radiotap? Are you sure it's
+>> impossible to include stamon support without radiotap support?
+>>
+>> I'm asking because we're going to check "sta_monitor" iovar to find
+>> out if radiotap support is included. I'd like to be sure it's 100%
+>> reliable.
+> 
+> I have already created a patch for this (see below). I will submit it this week.
 
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../wireless/intel/iwlwifi/pcie/internal.h    | 100 ++++++++++++++++++
- 1 file changed, 100 insertions(+)
+Just to be clear could you also answer my above question, please?
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 3b86e50965f4..11687dc4039d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -99,6 +99,106 @@ struct isr_statistics {
- 	u32 unhandled;
- };
- 
-+#define IWL_CD_STTS_OPTIMIZED_POS	0
-+#define IWL_CD_STTS_OPTIMIZED_MSK	0x01
-+#define IWL_CD_STTS_TRANSFER_STATUS_POS	1
-+#define IWL_CD_STTS_TRANSFER_STATUS_MSK	0x0E
-+#define IWL_CD_STTS_WIFI_STATUS_POS	4
-+#define IWL_CD_STTS_WIFI_STATUS_MSK	0xF0
-+
-+/**
-+ * enum iwl_completion_desc_transfer_status -  transfer status (bits 1-3)
-+ * @IWL_CD_STTS_END_TRANSFER: successful transfer complete.
-+ *	In sniffer mode, when split is used, set in last CD completion. (RX)
-+ * @IWL_CD_STTS_OVERFLOW: In sniffer mode, when using split - used for
-+ *	all CD completion. (RX)
-+ * @IWL_CD_STTS_ABORTED: CR abort / close flow. (RX)
-+ */
-+enum iwl_completion_desc_transfer_status {
-+	IWL_CD_STTS_UNUSED,
-+	IWL_CD_STTS_UNUSED_2,
-+	IWL_CD_STTS_END_TRANSFER,
-+	IWL_CD_STTS_OVERFLOW,
-+	IWL_CD_STTS_ABORTED,
-+	IWL_CD_STTS_ERROR,
-+};
-+
-+/**
-+ * enum iwl_completion_desc_wifi_status - wifi status (bits 4-7)
-+ * @IWL_CD_STTS_VALID: the packet is valid (RX)
-+ * @IWL_CD_STTS_FCS_ERR: frame check sequence error (RX)
-+ * @IWL_CD_STTS_SEC_KEY_ERR: error handling the security key of rx (RX)
-+ * @IWL_CD_STTS_DECRYPTION_ERR: error decrypting the frame (RX)
-+ * @IWL_CD_STTS_DUP: duplicate packet (RX)
-+ * @IWL_CD_STTS_ICV_MIC_ERR: MIC error (RX)
-+ * @IWL_CD_STTS_INTERNAL_SNAP_ERR: problems removing the snap (RX)
-+ * @IWL_CD_STTS_SEC_PORT_FAIL: security port fail (RX)
-+ * @IWL_CD_STTS_BA_OLD_SN: block ack received old SN (RX)
-+ * @IWL_CD_STTS_QOS_NULL: QoS null packet (RX)
-+ * @IWL_CD_STTS_MAC_HDR_ERR: MAC header conversion error (RX)
-+ * @IWL_CD_STTS_MAX_RETRANS: reached max number of retransmissions (TX)
-+ * @IWL_CD_STTS_EX_LIFETIME: exceeded lifetime (TX)
-+ * @IWL_CD_STTS_NOT_USED: completed but not used (RX)
-+ * @IWL_CD_STTS_REPLAY_ERR: pn check failed, replay error (RX)
-+ */
-+enum iwl_completion_desc_wifi_status {
-+	IWL_CD_STTS_VALID,
-+	IWL_CD_STTS_FCS_ERR,
-+	IWL_CD_STTS_SEC_KEY_ERR,
-+	IWL_CD_STTS_DECRYPTION_ERR,
-+	IWL_CD_STTS_DUP,
-+	IWL_CD_STTS_ICV_MIC_ERR,
-+	IWL_CD_STTS_INTERNAL_SNAP_ERR,
-+	IWL_CD_STTS_SEC_PORT_FAIL,
-+	IWL_CD_STTS_BA_OLD_SN,
-+	IWL_CD_STTS_QOS_NULL,
-+	IWL_CD_STTS_MAC_HDR_ERR,
-+	IWL_CD_STTS_MAX_RETRANS,
-+	IWL_CD_STTS_EX_LIFETIME,
-+	IWL_CD_STTS_NOT_USED,
-+	IWL_CD_STTS_REPLAY_ERR,
-+};
-+
-+#define IWL_RX_TD_TYPE		0xff000000
-+#define IWL_RX_TD_SIZE		0x00ffffff
-+
-+/**
-+ * struct iwl_rx_transfer_desc - transfer descriptor
-+ * @type_n_size: buffer type (bit 0: external buff valid,
-+ *	bit 1: optional footer valid, bit 2-7: reserved)
-+ *	and buffer size
-+ * @addr: ptr to free buffer start address
-+ * @rbid: unique tag of the buffer
-+ * @reserved: reserved
-+ */
-+struct iwl_rx_transfer_desc {
-+	__le32 type_n_size;
-+	__le64 addr;
-+	__le16 rbid;
-+	__le16 reserved;
-+} __packed;
-+
-+#define IWL_RX_CD_SIZE		0xffffff00
-+
-+/**
-+ * struct iwl_rx_completion_desc - completion descriptor
-+ * @type: buffer type (bit 0: external buff valid,
-+ *	bit 1: optional footer valid, bit 2-7: reserved)
-+ * @status: status of the completion
-+ * @reserved1: reserved
-+ * @rbid: unique tag of the received buffer
-+ * @size: buffer size, masked by IWL_RX_CD_SIZE
-+ * @reserved2: reserved
-+ */
-+struct iwl_rx_completion_desc {
-+	u8 type;
-+	u8 status;
-+	__le16 reserved1;
-+	__le16 rbid;
-+	__le32 size;
-+	u8 reserved2[22];
-+} __packed;
-+
- /**
-  * struct iwl_rxq - Rx queue
-  * @id: queue index
--- 
-2.18.0
+Did you check if it's impossible to build firmware *with* stamon.c (and
+sta_monitor iovar) and *without WL_RADIOTAP?
+
+
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+> index f70fec6..67d7fc7 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+> @@ -207,6 +207,7 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+>       struct brcmf_if *ifp = brcmf_get_ifp(drvr, 0);
+>       struct brcmf_pno_macaddr_le pfn_mac;
+>       struct brcmf_gscan_config gscan_cfg;
+> +    struct brcmf_stamon_sta_config stamon_cfg;
+>       u32 wowl_cap;
+>       s32 err;
+> 
+> @@ -217,6 +218,20 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+>           brcmf_feat_iovar_data_set(ifp, BRCMF_FEAT_GSCAN,
+>                         "pfn_gscan_cfg",
+>                         &gscan_cfg, sizeof(gscan_cfg));
+> +
+> +    if (!brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MONITOR) ||
+> +        !brcmf_feat_is_enabled(ifp, BRCMF_FEAT_RADIOTAP)) {
+> +        ifp->fwil_fwerr = true;
+> +        memset(&stamon_cfg, 0, sizeof(stamon_cfg));
+> +        /* iovar requires IOVF_SET_UP so this fails either way */
+> +        err = brcmf_fil_iovar_data_set(ifp, "sta_monitor", &stamon_cfg,
+> +                           sizeof(stamon_cfg));
+
+I think it may be simpler (and maybe less invasive) to use
+brcmf_fil_iovar_data_get.
+
+
+> +        if (err != BRCMF_FW_UNSUPPORTED) {
+> +            ifp->drvr->feat_flags |= BRCMF_FEAT_MONITOR;
+> +            ifp->drvr->feat_flags |= BRCMF_FEAT_RADIOTAP;
+> +        }
+> +        ifp->fwil_fwerr = false;
+> +    }
