@@ -1,72 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48132 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751505AbeFIGOx (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:37322 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933004AbeFTIpO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Jun 2018 02:14:53 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, arend.vanspriel@broadcom.com,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat,  9 Jun 2018 09:14:41 +0300
-Message-Id: <20180609061444.2859-1-luca@coelho.fi> (sfid-20180609_081608_521521_EF1C7C6D)
-Subject: [PATCH V3 0/3] cfg80211/mac80211: add support for IEEE802.11ax
+        Wed, 20 Jun 2018 04:45:14 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: [PATCH v6 (resend) 1/3] bitfield: fix *_encode_bits()
+Date: Wed, 20 Jun 2018 08:58:28 +0200
+Message-Id: <20180620065830.6612-2-johannes@sipsolutions.net> (sfid-20180620_105131_758118_F9F4A3E7)
+In-Reply-To: <20180620065830.6612-1-johannes@sipsolutions.net>
+References: <20180620065830.6612-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+There's a bug in *_encode_bits() in using ~field_multiplier() for
+the check whether or not the constant value fits into the field,
+this is wrong and clearly ~field_mask() was intended. This was
+triggering for me for both constant and non-constant values.
 
-Hi,
+Additionally, make this case actually into an compile error.
+Declaring the extern function that will never exist with just a
+warning is pointless as then later we'll just get a link error.
 
-This is the third version of the patchset (there is no v2 for the cfg
-and radiotap patches, since I just sent mac80211's out).  I just moved
-one change (from ift to iftype) that I accidentally amended into the
-wrong patch.  The rest is the same as v1 (cfg/radiotap) plus v2 (mac).
+While at it, also fix the indentation in those lines I'm touching.
 
-This series contain a squashed version of our internal series of
-patches that add support for IEEE802.11ax draft v2.0.  It is a
-combination of over 40 patches internal patches, which I have squashed
-and split into 3 different ones, one for cfg80211, one for radiotap
-and one for mac80211.
+Finally, as suggested by Andy Shevchenko, add some tests and for
+that introduce also u8 helpers. The tests don't compile without
+the fix, showing that it's necessary.
 
-Please review.
+Fixes: 00b0c9b82663 ("Add primitives for manipulating bitfields both in host- and fixed-endian.")
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+v2: replace stray tab by space
+v3: u8 helpers, tests
+v4: minor cleanup (Andy)
+    split into two patches (Andy)
+---
+ include/linux/bitfield.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Cheers,
-Luca.
-
-
-Luca Coelho (3):
-  cfg80211: Add support for HE
-  radiotap: add structs for HE
-  mac80211: add support for HE
-
- drivers/net/wireless/realtek/rtlwifi/base.c |   2 +-
- drivers/staging/rtl8188eu/include/wifi.h    |   1 -
- drivers/staging/rtl8712/wifi.h              |   1 -
- drivers/staging/rtl8723bs/include/wifi.h    |   1 -
- include/linux/ieee80211.h                   | 437 +++++++++++++++++++-
- include/net/cfg80211.h                      | 106 ++++-
- include/net/ieee80211_radiotap.h            | 111 +++++
- include/net/mac80211.h                      |  64 ++-
- include/uapi/linux/nl80211.h                |  87 +++-
- net/mac80211/Makefile                       |   1 +
- net/mac80211/agg-rx.c                       |   8 +-
- net/mac80211/agg-tx.c                       |  19 +-
- net/mac80211/cfg.c                          |   5 +
- net/mac80211/he.c                           |  55 +++
- net/mac80211/ieee80211_i.h                  |  16 +
- net/mac80211/main.c                         |  19 +-
- net/mac80211/mlme.c                         | 288 ++++++++++++-
- net/mac80211/rx.c                           | 127 +++++-
- net/mac80211/sta_info.c                     |  15 +-
- net/mac80211/sta_info.h                     |  20 +-
- net/mac80211/trace.h                        |   2 +-
- net/mac80211/util.c                         | 120 +++++-
- net/wireless/core.c                         |  21 +-
- net/wireless/nl80211.c                      |  99 ++++-
- net/wireless/util.c                         |  82 ++++
- 25 files changed, 1649 insertions(+), 58 deletions(-)
- create mode 100644 net/mac80211/he.c
-
+diff --git a/include/linux/bitfield.h b/include/linux/bitfield.h
+index cf2588d81148..147a7bb341dd 100644
+--- a/include/linux/bitfield.h
++++ b/include/linux/bitfield.h
+@@ -104,7 +104,7 @@
+ 		(typeof(_mask))(((_reg) & (_mask)) >> __bf_shf(_mask));	\
+ 	})
+ 
+-extern void __compiletime_warning("value doesn't fit into mask")
++extern void __compiletime_error("value doesn't fit into mask")
+ __field_overflow(void);
+ extern void __compiletime_error("bad bitfield mask")
+ __bad_mask(void);
+@@ -121,8 +121,8 @@ static __always_inline u64 field_mask(u64 field)
+ #define ____MAKE_OP(type,base,to,from)					\
+ static __always_inline __##type type##_encode_bits(base v, base field)	\
+ {									\
+-        if (__builtin_constant_p(v) &&	(v & ~field_multiplier(field)))	\
+-			    __field_overflow();				\
++	if (__builtin_constant_p(v) && (v & ~field_mask(field)))	\
++		__field_overflow();					\
+ 	return to((v & field_mask(field)) * field_multiplier(field));	\
+ }									\
+ static __always_inline __##type type##_replace_bits(__##type old,	\
 -- 
-2.17.1
+2.14.4
