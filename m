@@ -1,49 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47452 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933498AbeFMKqM (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:50989 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754614AbeFTI6V (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jun 2018 06:46:12 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCH 0/7] cfg80211/mac80211: Add support to configure and monitor rssi threshold
-Date: Wed, 13 Jun 2018 16:15:40 +0530
-Message-Id: <1528886747-26342-1-git-send-email-tamizhr@codeaurora.org> (sfid-20180613_124617_763223_F378FBB2)
+        Wed, 20 Jun 2018 04:58:21 -0400
+Received: by mail-wm0-f65.google.com with SMTP id e16-v6so4693250wmd.0
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2018 01:58:20 -0700 (PDT)
+Subject: Re: [PATCH] mac80211: Fix oops in ieee80211_tx_control_port
+To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org,
+        johannes@sipsolutions.net
+References: <20180619153950.28903-1-denkenz@gmail.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B2A0772.4060200@broadcom.com> (sfid-20180620_105902_442195_34CAAD79)
+Date: Wed, 20 Jun 2018 09:51:14 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180619153950.28903-1-denkenz@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchsets introduced new NL command and api to support
-configuring rssi for the connected stations and api to notify
-userspace application upon crossing the configured threshold.
-This will be useful for the application which requires
-station's current capability change information.
+On 6/19/2018 5:39 PM, Denis Kenzior wrote:
+> On pre-emption enabled kernels the following oops was being seen due
+> to missing local_bh_disable/local_bh_enable calls.  mac80211 assumes
+> that pre-emption is disabled in the data path.
 
-Tamizh chelvam (7):
-  wireless: Change single cqm_config to rssi config list
-  cfg80211: Add new NL command to configure peer specific rssi
-    threshold
-  mac80211: Add api to support configuring station specific rssi
-    threshold
-  cfg80211: Add support to notify station's rssi level crossing
-  mac80211: Implement functionality to monitor station's rssi cross
-    event
-  cfg80211: Accept multiple RSSI threholds for STA_MON command
-  mac80211: Add api to configure low and high RSSI threshold
+No sure if "assumes" is the right term here. It seems like it is
+required and there is probably a good reason for that. Would be nice to
+know what that reason is.
 
- include/net/cfg80211.h       |   42 ++++-
- include/net/mac80211.h       |    6 +
- include/uapi/linux/nl80211.h |   60 +++++++
- net/mac80211/cfg.c           |   75 +++++++++
- net/mac80211/rx.c            |   65 +++++++-
- net/mac80211/sta_info.h      |   22 +++
- net/wireless/core.c          |   29 +++-
- net/wireless/core.h          |    6 +-
- net/wireless/nl80211.c       |  377 ++++++++++++++++++++++++++++++++++++------
- net/wireless/rdev-ops.h      |   31 ++++
- net/wireless/trace.h         |   73 ++++++++
- 11 files changed, 723 insertions(+), 63 deletions(-)
-
--- 
-1.7.9.5
+Regards,
+Arend
