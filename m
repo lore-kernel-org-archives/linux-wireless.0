@@ -1,116 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:44678 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934563AbeFMQIg (ORCPT
+Received: from mail-wr0-f182.google.com ([209.85.128.182]:35409 "EHLO
+        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754690AbeFTIrM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jun 2018 12:08:36 -0400
-Date: Wed, 13 Jun 2018 18:08:34 +0200
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Christian Lamparter <chunkeey@gmail.com>
-Cc: linux-wireless@vger.kernel.org, tglx@linutronix.de
-Subject: Re: Locking in carl9170
-Message-ID: <20180613160834.e7rnjyesi4sqaofo@linutronix.de> (sfid-20180613_180842_946926_930F0A93)
-References: <20180611202156.ts3ldjvmjqpsi56o@linutronix.de>
- <6375081.rDYi7Ll9gj@debian64>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <6375081.rDYi7Ll9gj@debian64>
+        Wed, 20 Jun 2018 04:47:12 -0400
+Received: by mail-wr0-f182.google.com with SMTP id l8-v6so825152wrr.2
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2018 01:47:11 -0700 (PDT)
+From: Loic Poulain <loic.poulain@linaro.org>
+To: kvalo@codeaurora.org
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        Loic Poulain <loic.poulain@linaro.org>
+Subject: [PATCH v2 3/3] wcn36xx: Fix WEP encryption
+Date: Wed, 20 Jun 2018 09:58:00 +0200
+Message-Id: <1529481480-13247-3-git-send-email-loic.poulain@linaro.org> (sfid-20180620_104718_833179_64E14F18)
+In-Reply-To: <1529481480-13247-1-git-send-email-loic.poulain@linaro.org>
+References: <1529481480-13247-1-git-send-email-loic.poulain@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-06-12 18:56:28 [+0200], Christian Lamparter wrote:
-> Hello,
-Hi,
+In case of WEP encryption, driver has to configure shared key for
+associated station(s). Note that sta pointer is NULL in case of non
+pairwise key, causing NULL pointer dereference with existing code
+(sta_priv->is_data_encrypted). Fix this by using associated sta list
+instead. This enables WEP support as client, WEP AP is non-functional.
 
-> On Monday, June 11, 2018 10:21:56 PM CEST Sebastian Andrzej Siewior wrote:
-> > I've been locking at the USB completion handler and stumbled upon this
-> > driver. The code path:
-> >  carl9170_usb_rx_irq_complete()
-> >  -> carl9170_handle_command_response()
-> >   -> carl9170_cmd_callback()
-> >      spin_lock(&ar->cmd_lock);
-> > 
-> >   -> carl9170_update_beacon()
-> >       spin_lock_bh(&ar->beacon_lock);
-> > 
-> >   -> carl9170_tx_process_status()
-> >    -> __carl9170_tx_process_status()
-> >     -> carl9170_get_queued_skb()
-> >        spin_lock_bh(&queue->lock);
-> > 
-> >       -> carl9170_release_dev_space()
-> >          spin_lock_bh(&ar->mem_lock);
-> > …
-> > 
-> > I planned to make all locks use spin_lock_irqsave().
-> > carl9170_usb_rx_irq_complete() is called by HCD's completion handler
-> > which is invoked mostly in IRQ context except for EHCI/DWC2 which invoke
-> > the completion callback in tasklet/BH context. Currently there is a
-> > local_irq_save() before invoking the ->complete callback which I plan to
-> > remove, therefore the push-down. The _irqsave() would reflect the
-> > current status. 
-> > The locks I mentioned use only the _bh() suffix in other places. I
-> > *think* lockdep is not complaining about this on EHCI but should
-> > complain on other controllers which really complete in IRQ-context.
-> > Could you please check if this is the case?
-> 
-> Oh, something else is going on here. First, please take a closer
-> look at the comment in carl9170_usb_rx_irq_complete(), just right
-> before the carl9170_handle_command_response() call [0].
-> 
-> |	/*
-> |	 * While the carl9170 firmware does not use this EP, the
-> |	 * firmware loader in the EEPROM unfortunately does.
-> |	 * Therefore we need to be ready to handle out-of-band
-> |	 * responses and traps in case the firmware crashed and
-> |	 * the loader took over again.
-> |	 */
-> |	carl9170_handle_command_response(ar, urb->transfer_buffer,
-> |					 urb->actual_length);
-> | ...
-> 
-> Incoming urbs/data/... on this EP are all out-of-band and will
-> cause the driver to issue a usb reset and this causes the driver
-> to unbind from the unresponsive/crashed/dead device.
+Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+---
+ v2: Commit reword, clarify Client/AP WEP status
 
-Are you saing that carl9170_handle_command_response() is invoked but
-does not do much and a call chain such as:
- carl9170_usb_rx_irq_complete()
-  -> carl9170_handle_command_response()
-    -> carl9170_cmd_callback()
-      -> spin_lock(&ar->cmd_lock);
+ drivers/net/wireless/ath/wcn36xx/main.c | 19 +++++++++++--------
+ drivers/net/wireless/ath/wcn36xx/smd.c  | 20 ++++++++++++++------
+ 2 files changed, 25 insertions(+), 14 deletions(-)
 
-is not likely?
-
-> as for the locking in carl9170:
-> carl9170_handle_command_response() main callee is the 
-> carl9170_rx_untie_cmds() function, which gets called from the 
-> carl9170_usb_rx_work() tasklet context. Hence the locking in
-> carl9170's rx path and its related functions is mostly done by
-> spin_lock[_bh]. (So, it should be fine in this context).
-
-Okay. If this called from tasklet then _bh() is fine. But as I pointed
-out above, we have a IRQ-context caller of cmd_lock. And the other
-locks.
-
-> Now, the driver could be vulnerable to a malicious device
-> - after all, Apple only recently tried to fix the iPhone
-> USB holes (GrayKey) with iOS 12 and from what I know Sony's
-> PS4 have been pwned through usb as well -. So what could help
-> would be to replace the carl9170_handle_command_response() in
-> carl9170_usb_rx_irq_complete() with
-> 
->      carl9170_restart(ar, CARL9170_RR_INVALID_RSP);
-> 
-> This will cut out the middle man and be much safer against 
-> such attacks. So, what do you think?
-
-I don't get this part. If you are saying you can get rid of
-carl9170_handle_command_response() in carl9170_usb_rx_irq_complete()
-without breaking the driver, then yes, go for it please. Because as by
-the call chains I pointed you could acquire the locks in a wrong way.
-
-> Regards,
-> Christian
-
-Sebastian
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 6fd0bf6..e38443e 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -493,7 +493,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ {
+ 	struct wcn36xx *wcn = hw->priv;
+ 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
+-	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
++	struct wcn36xx_sta *sta_priv = sta ? wcn36xx_sta_to_priv(sta) : NULL;
+ 	int ret = 0;
+ 	u8 key[WLAN_MAX_KEY_LEN];
+ 
+@@ -570,13 +570,16 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 
+ 			if ((WLAN_CIPHER_SUITE_WEP40 == key_conf->cipher) ||
+ 			    (WLAN_CIPHER_SUITE_WEP104 == key_conf->cipher)) {
+-				sta_priv->is_data_encrypted = true;
+-				wcn36xx_smd_set_stakey(wcn,
+-					vif_priv->encrypt_type,
+-					key_conf->keyidx,
+-					key_conf->keylen,
+-					key,
+-					get_sta_index(vif, sta_priv));
++				list_for_each_entry(sta_priv,
++						    &vif_priv->sta_list, list) {
++					sta_priv->is_data_encrypted = true;
++					wcn36xx_smd_set_stakey(wcn,
++						vif_priv->encrypt_type,
++						key_conf->keyidx,
++						key_conf->keylen,
++						key,
++						get_sta_index(vif, sta_priv));
++				}
+ 			}
+ 		}
+ 		break;
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index b4dadf7..304a86c 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -1708,12 +1708,20 @@ int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
+ 	msg_body.set_sta_key_params.sta_index = sta_index;
+ 	msg_body.set_sta_key_params.enc_type = enc_type;
+ 
+-	msg_body.set_sta_key_params.key[0].id = keyidx;
+-	msg_body.set_sta_key_params.key[0].unicast = 1;
+-	msg_body.set_sta_key_params.key[0].direction = WCN36XX_HAL_TX_RX;
+-	msg_body.set_sta_key_params.key[0].pae_role = 0;
+-	msg_body.set_sta_key_params.key[0].length = keylen;
+-	memcpy(msg_body.set_sta_key_params.key[0].key, key, keylen);
++	if (enc_type == WCN36XX_HAL_ED_WEP104 ||
++	    enc_type == WCN36XX_HAL_ED_WEP40) {
++		/* Use bss key for wep (static) */
++		msg_body.set_sta_key_params.def_wep_idx = keyidx;
++		msg_body.set_sta_key_params.wep_type = 0;
++	} else {
++		msg_body.set_sta_key_params.key[0].id = keyidx;
++		msg_body.set_sta_key_params.key[0].unicast = 1;
++		msg_body.set_sta_key_params.key[0].direction = WCN36XX_HAL_TX_RX;
++		msg_body.set_sta_key_params.key[0].pae_role = 0;
++		msg_body.set_sta_key_params.key[0].length = keylen;
++		memcpy(msg_body.set_sta_key_params.key[0].key, key, keylen);
++	}
++
+ 	msg_body.set_sta_key_params.single_tid_rc = 1;
+ 
+ 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
+-- 
+2.7.4
