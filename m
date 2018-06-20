@@ -1,307 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:59004 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751052AbeFVFuU (ORCPT
+Received: from Galois.linutronix.de ([146.0.238.70]:33203 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932077AbeFTTg7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Jun 2018 01:50:20 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH v4 7/8] wil6210: add support for Talyn-MB boot flow
-Date: Fri, 22 Jun 2018 08:49:22 +0300
-Message-Id: <1529646563-18221-8-git-send-email-merez@codeaurora.org> (sfid-20180622_075032_693344_D18817EF)
-In-Reply-To: <1529646563-18221-1-git-send-email-merez@codeaurora.org>
-References: <1529646563-18221-1-git-send-email-merez@codeaurora.org>
+        Wed, 20 Jun 2018 15:36:59 -0400
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: netdev@vger.kernel.org
+Cc: linux-usb@vger.kernel.org, tglx@linutronix.de,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        Daniel Drake <dsd@gentoo.org>,
+        Ulrich Kunitz <kune@deine-taler.de>
+Subject: [PATCH 4/4] zd1211rw: use irqsave() in USB's complete callback
+Date: Wed, 20 Jun 2018 21:36:48 +0200
+Message-Id: <20180620193648.25136-5-bigeasy@linutronix.de> (sfid-20180620_213736_096227_8E5E2E54)
+In-Reply-To: <20180620193648.25136-1-bigeasy@linutronix.de>
+References: <20180620193648.25136-1-bigeasy@linutronix.de>
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Talyn-MB introduces various of FW download options:
-FW download via PCIe, SPI or PBL for secured access.
-The boot and FW download path is determined based on the
-OTP HW register. Driver reads this register as part of the
-SW reset flow and performs the appropriate initialization
-sequence.
+The USB completion callback does not disable interrupts while acquiring
+the lock. We want to remove the local_irq_disable() invocation from
+__usb_hcd_giveback_urb() and therefore it is required for the callback
+handler to disable the interrupts while acquiring the lock.
+The callback may be invoked either in IRQ or BH context depending on the
+USB host controller.
+Use the _irqsave() variant of the locking primitives.
 
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Cc: Daniel Drake <dsd@gentoo.org>
+Cc: Ulrich Kunitz <kune@deine-taler.de>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
- drivers/net/wireless/ath/wil6210/main.c    | 194 ++++++++++++++++++++++++-----
- drivers/net/wireless/ath/wil6210/wil6210.h |   9 +-
- 2 files changed, 171 insertions(+), 32 deletions(-)
+ drivers/net/wireless/zydas/zd1211rw/zd_usb.c | 21 +++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index e0072b6..4de19bd 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -112,9 +112,29 @@ static int ring_order_set(const char *val, const struct kernel_param *kp)
- module_param_cb(bcast_ring_order, &ring_order_ops, &bcast_ring_order, 0444);
- MODULE_PARM_DESC(bcast_ring_order, " Bcast ring order; size = 1 << order");
- 
--#define RST_DELAY (20) /* msec, for loop in @wil_target_reset */
-+enum {
-+	WIL_BOOT_ERR,
-+	WIL_BOOT_VANILLA,
-+	WIL_BOOT_PRODUCTION,
-+	WIL_BOOT_DEVELOPMENT,
-+};
-+
-+enum {
-+	WIL_SIG_STATUS_VANILLA = 0x0,
-+	WIL_SIG_STATUS_DEVELOPMENT = 0x1,
-+	WIL_SIG_STATUS_PRODUCTION = 0x2,
-+	WIL_SIG_STATUS_CORRUPTED_PRODUCTION = 0x3,
-+};
-+
-+#define RST_DELAY (20) /* msec, for loop in @wil_wait_device_ready */
- #define RST_COUNT (1 + 1000/RST_DELAY) /* round up to be above 1 sec total */
- 
-+#define PMU_READY_DELAY_MS (4) /* ms, for sleep in @wil_wait_device_ready */
-+
-+#define OTP_HW_DELAY (200) /* usec, loop in @wil_wait_device_ready_talyn_mb */
-+/* round up to be above 2 ms total */
-+#define OTP_HW_COUNT (1 + 2000 / OTP_HW_DELAY)
-+
- /*
-  * Due to a hardware issue,
-  * one has to read/write to/from NIC in 32-bit chunks;
-@@ -831,11 +851,146 @@ static void wil_set_oob_mode(struct wil6210_priv *wil, u8 mode)
- 	}
- }
- 
--static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
-+static int wil_wait_device_ready(struct wil6210_priv *wil, int no_flash)
+diff --git a/drivers/net/wireless/zydas/zd1211rw/zd_usb.c b/drivers/net/wir=
+eless/zydas/zd1211rw/zd_usb.c
+index c30bf118c67d..c2cda3acd4af 100644
+--- a/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
+@@ -371,25 +371,27 @@ static inline void handle_regs_int_override(struct ur=
+b *urb)
  {
- 	int delay = 0;
- 	u32 x, x1 = 0;
- 
-+	/* wait until device ready. */
-+	if (no_flash) {
-+		msleep(PMU_READY_DELAY_MS);
-+
-+		wil_dbg_misc(wil, "Reset completed\n");
-+	} else {
-+		do {
-+			msleep(RST_DELAY);
-+			x = wil_r(wil, RGF_USER_BL +
-+				  offsetof(struct bl_dedicated_registers_v0,
-+					   boot_loader_ready));
-+			if (x1 != x) {
-+				wil_dbg_misc(wil, "BL.ready 0x%08x => 0x%08x\n",
-+					     x1, x);
-+				x1 = x;
-+			}
-+			if (delay++ > RST_COUNT) {
-+				wil_err(wil, "Reset not completed, bl.ready 0x%08x\n",
-+					x);
-+				return -ETIME;
-+			}
-+		} while (x != BL_READY);
-+
-+		wil_dbg_misc(wil, "Reset completed in %d ms\n",
-+			     delay * RST_DELAY);
-+	}
-+
-+	return 0;
-+}
-+
-+static int wil_wait_device_ready_talyn_mb(struct wil6210_priv *wil)
-+{
-+	u32 otp_hw;
-+	u8 signature_status;
-+	bool otp_signature_err;
-+	bool hw_section_done;
-+	u32 otp_qc_secured;
-+	int delay = 0;
-+
-+	/* Wait for OTP signature test to complete */
-+	usleep_range(2000, 2200);
-+
-+	wil->boot_config = WIL_BOOT_ERR;
-+
-+	/* Poll until OTP signature status is valid.
-+	 * In vanilla and development modes, when signature test is complete
-+	 * HW sets BIT_OTP_SIGNATURE_ERR_TALYN_MB.
-+	 * In production mode BIT_OTP_SIGNATURE_ERR_TALYN_MB remains 0, poll
-+	 * for signature status change to 2 or 3.
-+	 */
-+	do {
-+		otp_hw = wil_r(wil, RGF_USER_OTP_HW_RD_MACHINE_1);
-+		signature_status = WIL_GET_BITS(otp_hw, 8, 9);
-+		otp_signature_err = otp_hw & BIT_OTP_SIGNATURE_ERR_TALYN_MB;
-+
-+		if (otp_signature_err &&
-+		    signature_status == WIL_SIG_STATUS_VANILLA) {
-+			wil->boot_config = WIL_BOOT_VANILLA;
-+			break;
-+		}
-+		if (otp_signature_err &&
-+		    signature_status == WIL_SIG_STATUS_DEVELOPMENT) {
-+			wil->boot_config = WIL_BOOT_DEVELOPMENT;
-+			break;
-+		}
-+		if (!otp_signature_err &&
-+		    signature_status == WIL_SIG_STATUS_PRODUCTION) {
-+			wil->boot_config = WIL_BOOT_PRODUCTION;
-+			break;
-+		}
-+		if  (!otp_signature_err &&
-+		     signature_status ==
-+		     WIL_SIG_STATUS_CORRUPTED_PRODUCTION) {
-+			/* Unrecognized OTP signature found. Possibly a
-+			 * corrupted production signature, access control
-+			 * is applied as in production mode, therefore
-+			 * do not fail
-+			 */
-+			wil->boot_config = WIL_BOOT_PRODUCTION;
-+			break;
-+		}
-+		if (delay++ > OTP_HW_COUNT)
-+			break;
-+
-+		usleep_range(OTP_HW_DELAY, OTP_HW_DELAY + 10);
-+	} while (!otp_signature_err && signature_status == 0);
-+
-+	if (wil->boot_config == WIL_BOOT_ERR) {
-+		wil_err(wil,
-+			"invalid boot config, signature_status %d otp_signature_err %d\n",
-+			signature_status, otp_signature_err);
-+		return -ETIME;
-+	}
-+
-+	wil_dbg_misc(wil,
-+		     "signature test done in %d usec, otp_hw 0x%x, boot_config %d\n",
-+		     delay * OTP_HW_DELAY, otp_hw, wil->boot_config);
-+
-+	if (wil->boot_config == WIL_BOOT_VANILLA)
-+		/* Assuming not SPI boot (currently not supported) */
-+		goto out;
-+
-+	hw_section_done = otp_hw & BIT_OTP_HW_SECTION_DONE_TALYN_MB;
-+	delay = 0;
-+
-+	while (!hw_section_done) {
-+		msleep(RST_DELAY);
-+
-+		otp_hw = wil_r(wil, RGF_USER_OTP_HW_RD_MACHINE_1);
-+		hw_section_done = otp_hw & BIT_OTP_HW_SECTION_DONE_TALYN_MB;
-+
-+		if (delay++ > RST_COUNT) {
-+			wil_err(wil, "TO waiting for hw_section_done\n");
-+			return -ETIME;
-+		}
-+	}
-+
-+	wil_dbg_misc(wil, "HW section done in %d ms\n", delay * RST_DELAY);
-+
-+	otp_qc_secured = wil_r(wil, RGF_OTP_QC_SECURED);
-+	wil->secured_boot = otp_qc_secured & BIT_BOOT_FROM_ROM ? 1 : 0;
-+	wil_dbg_misc(wil, "secured boot is %sabled\n",
-+		     wil->secured_boot ? "en" : "dis");
-+
-+out:
-+	wil_dbg_misc(wil, "Reset completed\n");
-+
-+	return 0;
-+}
-+
-+static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
-+{
-+	u32 x;
-+	int rc;
-+
- 	wil_dbg_misc(wil, "Resetting \"%s\"...\n", wil->hw_name);
- 
- 	/* Clear MAC link up */
-@@ -901,34 +1056,12 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
- 
- 	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0);
- 
--	/* wait until device ready. typical time is 20..80 msec */
--	if (no_flash)
--		do {
--			msleep(RST_DELAY);
--			x = wil_r(wil, USER_EXT_USER_PMU_3);
--			if (delay++ > RST_COUNT) {
--				wil_err(wil, "Reset not completed, PMU_3 0x%08x\n",
--					x);
--				return -ETIME;
--			}
--		} while ((x & BIT_PMU_DEVICE_RDY) == 0);
-+	if (wil->hw_version == HW_VER_TALYN_MB)
-+		rc = wil_wait_device_ready_talyn_mb(wil);
- 	else
--		do {
--			msleep(RST_DELAY);
--			x = wil_r(wil, RGF_USER_BL +
--				  offsetof(struct bl_dedicated_registers_v0,
--					   boot_loader_ready));
--			if (x1 != x) {
--				wil_dbg_misc(wil, "BL.ready 0x%08x => 0x%08x\n",
--					     x1, x);
--				x1 = x;
--			}
--			if (delay++ > RST_COUNT) {
--				wil_err(wil, "Reset not completed, bl.ready 0x%08x\n",
--					x);
--				return -ETIME;
--			}
--		} while (x != BL_READY);
-+		rc = wil_wait_device_ready(wil, no_flash);
-+	if (rc)
-+		return rc;
- 
- 	wil_c(wil, RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_RST_PWGD);
- 
-@@ -936,7 +1069,7 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
- 	wil_s(wil, RGF_DMA_OFUL_NID_0, BIT_DMA_OFUL_NID_0_RX_EXT_TR_EN |
- 	      BIT_DMA_OFUL_NID_0_RX_EXT_A3_SRC);
- 
--	if (no_flash) {
-+	if (wil->hw_version < HW_VER_TALYN_MB && no_flash) {
- 		/* Reset OTP HW vectors to fit 40MHz */
- 		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME1, 0x60001);
- 		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME2, 0x20027);
-@@ -951,7 +1084,6 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
- 		wil_w(wil, RGF_USER_XPM_RD_DOUT_SAMPLE_TIME, 0x57);
+ 	struct zd_usb *usb =3D urb->context;
+ 	struct zd_usb_interrupt *intr =3D &usb->intr;
++	unsigned long flags;
+=20
+-	spin_lock(&intr->lock);
++	spin_lock_irqsave(&intr->lock, flags);
+ 	if (atomic_read(&intr->read_regs_enabled)) {
+ 		atomic_set(&intr->read_regs_enabled, 0);
+ 		intr->read_regs_int_overridden =3D 1;
+ 		complete(&intr->read_regs.completion);
  	}
- 
--	wil_dbg_misc(wil, "Reset completed in %d ms\n", delay * RST_DELAY);
- 	return 0;
+-	spin_unlock(&intr->lock);
++	spin_unlock_irqrestore(&intr->lock, flags);
  }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index f8d4a2d..e639ba7 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -210,7 +210,9 @@ struct RGF_ICR {
- #define RGF_USER_SPARROW_M_4			(0x880c50) /* Sparrow */
- 	#define BIT_SPARROW_M_4_SEL_SLEEP_OR_REF	BIT(2)
- #define RGF_USER_OTP_HW_RD_MACHINE_1	(0x880ce0)
--	#define BIT_NO_FLASH_INDICATION		BIT(8)
-+	#define BIT_OTP_SIGNATURE_ERR_TALYN_MB		BIT(0)
-+	#define BIT_OTP_HW_SECTION_DONE_TALYN_MB	BIT(2)
-+	#define BIT_NO_FLASH_INDICATION			BIT(8)
- #define RGF_USER_XPM_IFC_RD_TIME1	(0x880cec)
- #define RGF_USER_XPM_IFC_RD_TIME2	(0x880cf0)
- #define RGF_USER_XPM_IFC_RD_TIME3	(0x880cf4)
-@@ -312,6 +314,9 @@ struct RGF_ICR {
- #define RGF_CAF_PLL_LOCK_STATUS		(0x88afec)
- 	#define BIT_CAF_OSC_DIG_XTAL_STABLE	BIT(0)
- 
-+#define RGF_OTP_QC_SECURED		(0x8a0038)
-+	#define BIT_BOOT_FROM_ROM		BIT(31)
-+
- /* eDMA */
- #define RGF_INT_COUNT_ON_SPECIAL_EVT	(0x8b62d8)
- 
-@@ -969,6 +974,8 @@ struct wil6210_priv {
- 	u32 rx_buff_id_count;
- 	bool amsdu_en;
- 	bool use_rx_hw_reordering;
-+	bool secured_boot;
-+	u8 boot_config;
- };
- 
- #define wil_to_wiphy(i) (i->wiphy)
--- 
-1.9.1
+=20
+ static inline void handle_regs_int(struct urb *urb)
+ {
+ 	struct zd_usb *usb =3D urb->context;
+ 	struct zd_usb_interrupt *intr =3D &usb->intr;
++	unsigned long flags;
+ 	int len;
+ 	u16 int_num;
+=20
+ 	ZD_ASSERT(in_interrupt());
+-	spin_lock(&intr->lock);
++	spin_lock_irqsave(&intr->lock, flags);
+=20
+ 	int_num =3D le16_to_cpu(*(__le16 *)(urb->transfer_buffer+2));
+ 	if (int_num =3D=3D CR_INTERRUPT) {
+@@ -425,7 +427,7 @@ static inline void handle_regs_int(struct urb *urb)
+ 	}
+=20
+ out:
+-	spin_unlock(&intr->lock);
++	spin_unlock_irqrestore(&intr->lock, flags);
+=20
+ 	/* CR_INTERRUPT might override read_reg too. */
+ 	if (int_num =3D=3D CR_INTERRUPT && atomic_read(&intr->read_regs_enabled))
+@@ -665,6 +667,7 @@ static void rx_urb_complete(struct urb *urb)
+ 	struct zd_usb_rx *rx;
+ 	const u8 *buffer;
+ 	unsigned int length;
++	unsigned long flags;
+=20
+ 	switch (urb->status) {
+ 	case 0:
+@@ -693,14 +696,14 @@ static void rx_urb_complete(struct urb *urb)
+ 		/* If there is an old first fragment, we don't care. */
+ 		dev_dbg_f(urb_dev(urb), "*** first fragment ***\n");
+ 		ZD_ASSERT(length <=3D ARRAY_SIZE(rx->fragment));
+-		spin_lock(&rx->lock);
++		spin_lock_irqsave(&rx->lock, flags);
+ 		memcpy(rx->fragment, buffer, length);
+ 		rx->fragment_length =3D length;
+-		spin_unlock(&rx->lock);
++		spin_unlock_irqrestore(&rx->lock, flags);
+ 		goto resubmit;
+ 	}
+=20
+-	spin_lock(&rx->lock);
++	spin_lock_irqsave(&rx->lock, flags);
+ 	if (rx->fragment_length > 0) {
+ 		/* We are on a second fragment, we believe */
+ 		ZD_ASSERT(length + rx->fragment_length <=3D
+@@ -710,9 +713,9 @@ static void rx_urb_complete(struct urb *urb)
+ 		handle_rx_packet(usb, rx->fragment,
+ 			         rx->fragment_length + length);
+ 		rx->fragment_length =3D 0;
+-		spin_unlock(&rx->lock);
++		spin_unlock_irqrestore(&rx->lock, flags);
+ 	} else {
+-		spin_unlock(&rx->lock);
++		spin_unlock_irqrestore(&rx->lock, flags);
+ 		handle_rx_packet(usb, buffer, length);
+ 	}
+=20
+--=20
+2.17.1
