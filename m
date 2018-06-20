@@ -1,41 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:52836 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754854AbeFNLFW (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:45452 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933053AbeFTRmp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Jun 2018 07:05:22 -0400
-Message-ID: <1528974316.26847.0.camel@sipsolutions.net> (sfid-20180614_130540_449813_87A0697F)
-Subject: Re: [B.A.T.M.A.N.] [PATCH v2 3/5] batman: use BIT_ULL for
- NL80211_STA_INFO_* attribute types
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sven Eckelmann <sven@narfation.org>,
-        b.a.t.m.a.n@lists.open-mesh.org
-Cc: Omer Efrat <omer.efrat@tandemg.com>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Date: Thu, 14 Jun 2018 13:05:16 +0200
-In-Reply-To: <1567584.jbsRn7ofiA@bentobox> (sfid-20180614_125324_149221_2D722F3B)
-References: <1528971137-432-1-git-send-email-omer.efrat@tandemg.com>
-         <32533954.9n15W0HXMB@bentobox> <1567584.jbsRn7ofiA@bentobox>
-         (sfid-20180614_125324_149221_2D722F3B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 20 Jun 2018 13:42:45 -0400
+Subject: Re: [PATCH] ath10k: Don't allow tx logic when state is not ON.
+To: Manikanta Pubbisetty <mpubbise@codeaurora.org>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        kvalo@codeaurora.org
+References: <1529506583-20204-1-git-send-email-greearb@candelatech.com>
+ <9ba64928-a73b-0fe6-9586-65929ca87013@codeaurora.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <3dc5dce6-a8ef-93f6-318f-6ca2e62f8853@candelatech.com> (sfid-20180620_194338_040140_7D29CE83)
+Date: Wed, 20 Jun 2018 10:42:42 -0700
+MIME-Version: 1.0
+In-Reply-To: <9ba64928-a73b-0fe6-9586-65929ca87013@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2018-06-14 at 12:53 +0200, Sven Eckelmann wrote:
-> Hi,
-> 
-> here are the infos which were missing and which should be included in the 
-> commit message
-> 
-> > > Since 'filled' member in station_info changed to u64
-> 
-> in commit 739960f128e5 ("cfg80211/nl80211: Add support for 
-> NL80211_STA_INFO_RX_DURATION")
+On 06/20/2018 10:37 AM, Manikanta Pubbisetty wrote:
+>
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> This is against the 4.16 kernel, likely applies to later kernels
+>> as well.  Firmware is beta ath10k-ct firmware for 9984 NIC.  The
+>> patch is not firmware or chipset specific.
+>>
+>> When firmware crashes, packets can still be sent from the
+>> mac80211 stack, and that can cause crashes in the ath10k
+>> tx path.
+>
+> Yes, this is what I had observed and explained in the RFC patch which I have sent some time back. In my case the device never comes up and the entire system
+> crashes; I hope you have observed the same behavior.
+>
+>> After adding this patch, I saw cases where the tx path was
+>> called in state ATH10K_STATE_RESTARTED.
+>>
+>> I have not tested the tx_64 path, but assume it has similar
+>> issues, so same patch was added to it.
+>
+> This case should not be dealt in ath10k, rather we should make sure packets does not reach the driver during hardware restart after the firmware crash.
+> Can you please try the RFC patch and see if it fixes the issue? I am working on the patch and probably send it out after doing some testing and cleanup.
+>
+> https://patchwork.kernel.org/patch/10411967/
 
-Yeah, which actually means this patch isn't needed?
+I did see your patch, but I was not sure it would make it upstream.
 
-BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT) is fine since
-NL80211_STA_INFO_EXPECTED_THROUGHPUT is actually == 27.
+I think either way my patch might be useful in case bugs creep back in.
 
-johannes
+And yes, I did see full system crash in this case.
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
