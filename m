@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:34648 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756377AbeFSH3V (ORCPT
+Received: from Galois.linutronix.de ([146.0.238.70]:33219 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932154AbeFTTjV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Jun 2018 03:29:21 -0400
-Received: by mail-wm0-f51.google.com with SMTP id l15-v6so17719643wmc.1
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2018 00:29:20 -0700 (PDT)
+        Wed, 20 Jun 2018 15:39:21 -0400
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: linux-wireless@vger.kernel.org
+Cc: linux-usb@vger.kernel.org, tglx@linutronix.de,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH] NFC: nfcmrvl_usb: use irqsave() in USB's complete callback
+Date: Wed, 20 Jun 2018 21:39:06 +0200
+Message-Id: <20180620193906.25227-1-bigeasy@linutronix.de> (sfid-20180620_213926_692660_EB97BFFE)
 MIME-Version: 1.0
-References: <986bbf4c-8fa1-4367-db9e-76a209594b81@gmail.com>
- <66e43eb5-2bc9-2ec3-af48-03248eecb727@gmail.com> <5B1E537F.2080502@broadcom.com>
-In-Reply-To: <5B1E537F.2080502@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Tue, 19 Jun 2018 09:27:17 +0200
-Message-ID: <CACna6rxa4+UEOs1FjQUGnHpFJn4n_TO6v=Vx3SqNA32QvzQEGQ@mail.gmail.com> (sfid-20180619_092937_803930_ECCE5574)
-Subject: Re: Research + questions on brcmfmac and support for monitor mode
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
-        <brcm80211-dev-list.pdl@broadcom.com>,"
-        <brcm80211-dev-list@cypress.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 11 Jun 2018 at 12:48, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 5/30/2018 1:52 PM, Rafa=C5=82 Mi=C5=82ecki wrote:
-> > I'm providing extra version info of tested firmware images as requested
-> > by Arend in another e-mail thread.
->
-> Looking into our firmware repo it there are two flags, ie. WL_MONITOR
-> and WL_RADIOTAP. It seems both are set for firmware containing -stamon-
-> feature. Your list below confirms that. I still plan to add indication
-> for WL_RADIOTAP in the "cap" iovar, but a stamon feature check could be
-> used for older firmwares.
+The USB completion callback does not disable interrupts while acquiring
+the lock. We want to remove the local_irq_disable() invocation from
+__usb_hcd_giveback_urb() and therefore it is required for the callback
+handler to disable the interrupts while acquiring the lock.
+The callback may be invoked either in IRQ or BH context depending on the
+USB host controller.
+Use the _irqsave() variant of the locking primitives.
 
-I just checked wl.mk (it's an open source file) and found following line:
-WLFILES_SRC_HI +=3D src/wl/sys/wlc_stamon.c
-not guarded by any ifeq.
+Cc: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+---
+ drivers/nfc/nfcmrvl/usb.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-It appears wlc_stamon.c is always being compiled in. Are you 100% sure
-that wlc_stamon.c depends & uses radiotap? Are you sure it's
-impossible to include stamon support without radiotap support?
-
-I'm asking because we're going to check "sta_monitor" iovar to find
-out if radiotap support is included. I'd like to be sure it's 100%
-reliable.
+diff --git a/drivers/nfc/nfcmrvl/usb.c b/drivers/nfc/nfcmrvl/usb.c
+index bd35eab652be..945cc903d8f1 100644
+--- a/drivers/nfc/nfcmrvl/usb.c
++++ b/drivers/nfc/nfcmrvl/usb.c
+@@ -160,13 +160,14 @@ static void nfcmrvl_tx_complete(struct urb *urb)
+ 	struct nci_dev *ndev =3D (struct nci_dev *)skb->dev;
+ 	struct nfcmrvl_private *priv =3D nci_get_drvdata(ndev);
+ 	struct nfcmrvl_usb_drv_data *drv_data =3D priv->drv_data;
++	unsigned long flags;
+=20
+ 	nfc_info(priv->dev, "urb %p status %d count %d\n",
+ 		 urb, urb->status, urb->actual_length);
+=20
+-	spin_lock(&drv_data->txlock);
++	spin_lock_irqsave(&drv_data->txlock, flags);
+ 	drv_data->tx_in_flight--;
+-	spin_unlock(&drv_data->txlock);
++	spin_unlock_irqrestore(&drv_data->txlock, flags);
+=20
+ 	kfree(urb->setup_packet);
+ 	kfree_skb(skb);
+--=20
+2.17.1
