@@ -1,105 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:53120 "EHLO bues.ch"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754660AbeFNSJD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Jun 2018 14:09:03 -0400
-Date: Thu, 14 Jun 2018 20:08:11 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Matt Mackall <mpm@selenic.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Wirz <spam@lukas-wirz.de>, linux-crypto@vger.kernel.org,
-        b43-dev@lists.infradead.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        PrasannaKumar Muralidharan <prasannatsmkumar@gmail.com>,
-        Harald Freudenberger <freude@linux.vnet.ibm.com>
-Subject: [PATCH] hw_random: Always drop the RNG in hwrng_unregister()
-Message-ID: <20180614200811.76401d95@wiggum> (sfid-20180614_200907_362327_7C33FA36)
+Received: from mail-vk0-f68.google.com ([209.85.213.68]:39032 "EHLO
+        mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754055AbeFTNPe (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Jun 2018 09:15:34 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
- boundary="Sig_/o9MEtdgag/F_5GhvuON5aV9"; protocol="application/pgp-signature"
+In-Reply-To: <20180530090633.GA15390@panicking>
+References: <1527493857-2220-1-git-send-email-michael@amarulasolutions.com>
+ <5B0D1C9E.4000800@broadcom.com> <20180530090633.GA15390@panicking>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Wed, 20 Jun 2018 16:15:32 +0300
+Message-ID: <CAHp75VfZoUV7u5JhquPrfE8qMWH8dv4WBaSvsy9H0DOS6vW6BA@mail.gmail.com> (sfid-20180620_151605_993506_8D56574D)
+Subject: Re: [PATCH V2] brcmfmac: stop watchdog before detach and free everything
+To: Michael Trimarchi <michael@amarulasolutions.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Ian Molton <ian@mnementh.co.uk>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list@cypress.com, netdev <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/o9MEtdgag/F_5GhvuON5aV9
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Wed, May 30, 2018 at 12:06 PM, Michael Trimarchi
+<michael@amarulasolutions.com> wrote:
+> Using built-in in kernel image without a firmware in filesystem
+> or in the kernel image can lead to a kernel NULL pointer deference.
+> Watchdog need to be stopped in brcmf_sdio_remove
+>
+> The system is going down NOW!
+> [ 1348.110759] Unable to handle kernel NULL pointer dereference at virtual address 000002f8
+> Sent SIGTERM to all processes
+> [ 1348.121412] Mem abort info:
+> [ 1348.126962]   ESR = 0x96000004
+> [ 1348.130023]   Exception class = DABT (current EL), IL = 32 bits
+> [ 1348.135948]   SET = 0, FnV = 0
+> [ 1348.138997]   EA = 0, S1PTW = 0
+> [ 1348.142154] Data abort info:
+> [ 1348.145045]   ISV = 0, ISS = 0x00000004
+> [ 1348.148884]   CM = 0, WnR = 0
+> [ 1348.151861] user pgtable: 4k pages, 48-bit VAs, pgdp = (____ptrval____)
+> [ 1348.158475] [00000000000002f8] pgd=0000000000000000
+> [ 1348.163364] Internal error: Oops: 96000004 [#1] PREEMPT SMP
+> [ 1348.168927] Modules linked in: ipv6
+> [ 1348.172421] CPU: 3 PID: 1421 Comm: brcmf_wdog/mmc0 Not tainted 4.17.0-rc5-next-20180517 #18
+> [ 1348.180757] Hardware name: Amarula A64-Relic (DT)
+> [ 1348.185455] pstate: 60000005 (nZCv daif -PAN -UAO)
+> [ 1348.190251] pc : brcmf_sdiod_freezer_count+0x0/0x20
+> [ 1348.195124] lr : brcmf_sdio_watchdog_thread+0x64/0x290
+> [ 1348.200253] sp : ffff00000b85be30
+> [ 1348.203561] x29: ffff00000b85be30 x28: 0000000000000000
+> [ 1348.208868] x27: ffff00000b6cb918 x26: ffff80003b990638
+> [ 1348.214176] x25: ffff0000087b1a20 x24: ffff80003b94f800
+> [ 1348.219483] x23: ffff000008e620c8 x22: ffff000008f0b660
+> [ 1348.224790] x21: ffff000008c6a858 x20: 00000000fffffe00
+> [ 1348.230097] x19: ffff80003b94f800 x18: 0000000000000001
+> [ 1348.235404] x17: 0000ffffab2e8a74 x16: ffff0000080d7de8
+> [ 1348.240711] x15: 0000000000000000 x14: 0000000000000400
+> [ 1348.246018] x13: 0000000000000400 x12: 0000000000000001
+> [ 1348.251324] x11: 00000000000002c4 x10: 0000000000000a10
+> [ 1348.256631] x9 : ffff00000b85bc40 x8 : ffff80003be11870
+> [ 1348.261937] x7 : ffff80003dfc7308 x6 : 000000078ff08b55
+> [ 1348.267243] x5 : 00000139e1058400 x4 : 0000000000000000
+> [ 1348.272550] x3 : dead000000000100 x2 : 958f2788d6618100
+> [ 1348.277856] x1 : 00000000fffffe00 x0 : 0000000000000000
+>
 
-enable_best_rng() is used in hwrng_unregister() to switch away from the
-currently active RNG, if that is the one currently being removed.
-However enable_best_rng() might fail, if the next RNG's init routine
-fails. In that case enable_best_rng() will return an error code and
-the currently active RNG will remain active.
-After unregistering this might lead to crashes due to use-after-free.
+It was a 100% (or so) reproducible on Intel Edison with vanilla kernel
+and linux-firmware package, while calibration file (*.txt) is not in
+distribution.
 
-Fix this by dropping the currently active RNG, if enable_best_rng()
-failed. This will result in no RNG to be active, if the next-best
-one failed to initialize.
+The system is going down NOW!
+Sent SIGTERM to all processes
+[  118.695900] PGD 800000003bc3f067 P4D 800000003bc3f067 PUD 3bc5b067 PMD 0
+[  118.695935] Oops: 0002 [#1] SMP PTI
+[  118.711905] CPU: 1 PID: 1255 Comm: brcmf_wdog/mmc2 Not tainted
+4.18.0-rc1-next-20180618+ #59
+[  118.720354] Hardware name: Intel Corporation Merrifield/BODEGA BAY,
+BIOS 542 2015.01.21:18.19.48
+[  118.729181] RIP: 0010:brcmf_sdiod_freezer_count+0x7/0x10 [brcmfmac]
 
-This problem was introduced by 142a27f0a731ddcf467546960a5585970ca98e21
+After this patch applied problem was gone
 
+Tested-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 
-Reported-by: Wirz <spam@lukas-wirz.de>
-Tested-by: Wirz <spam@lukas-wirz.de>
-Signed-off-by: Michael B=C3=BCsch <m@bues.ch>
-Cc: stable@vger.kernel.org
+P.S. Sorry it took a bit longer.
 
----
-
-See this discussion for a crash in b43's hwrng caused by this problem:
-https://www.spinics.net/lists/linux-wireless/msg173089.html
-
-
-
-diff --git a/drivers/char/hw_random/core.c b/drivers/char/hw_random/core.c
-index 91bb98c42a1c..aaf9e5afaad4 100644
---- a/drivers/char/hw_random/core.c
-+++ b/drivers/char/hw_random/core.c
-@@ -516,11 +516,18 @@ EXPORT_SYMBOL_GPL(hwrng_register);
-=20
- void hwrng_unregister(struct hwrng *rng)
- {
-+	int err;
-+
- 	mutex_lock(&rng_mutex);
-=20
- 	list_del(&rng->list);
--	if (current_rng =3D=3D rng)
--		enable_best_rng();
-+	if (current_rng =3D=3D rng) {
-+		err =3D enable_best_rng();
-+		if (err) {
-+			drop_current_rng();
-+			cur_rng_set_by_user =3D 0;
-+		}
-+	}
-=20
- 	if (list_empty(&rng_list)) {
- 		mutex_unlock(&rng_mutex);
+> Signed-off-by: Michael Trimarchi <michael@amarulasolutions.com>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> index 412a05b..061f69d 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> @@ -4294,6 +4294,13 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
+>         brcmf_dbg(TRACE, "Enter\n");
+>
+>         if (bus) {
+> +               /* Stop watchdog task */
+> +               if (bus->watchdog_tsk) {
+> +                       send_sig(SIGTERM, bus->watchdog_tsk, 1);
+> +                       kthread_stop(bus->watchdog_tsk);
+> +                       bus->watchdog_tsk = NULL;
+> +               }
+> +
+>                 /* De-register interrupt handler */
+>                 brcmf_sdiod_intr_unregister(bus->sdiodev);
+>
+> --
+> 2.7.4
 
 
 
---=20
-Michael
-
---Sig_/o9MEtdgag/F_5GhvuON5aV9
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIyBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlsirwsACgkQ9TK+HZCN
-iw5T9w/4+1M/VDTJNOP7sEdhmZfMTp/NoSmvCH8FvmAXDkEonyR/G3TP+aesR4JW
-dQ0nOOlqF6Op1tTh7CFg7fyRmXNRoDohVdrxfrnyWHGXNO7r7Lj2XfCDy4hsH34b
-mp14uD0vBtHtG8xe8hr8wYlAMapD+Jxjo+LkcXJ6/DFaHe6qYX0jQxifzWx/rkMw
-kjAoTqjpEYlTxKBqnVbx+9xandTli1URdz/QhurVYvq2cRsLx2iHkPioTZh49B4x
-uwNvPUraIc6t8YG4wUBS1j32IjtBfT2pDrUfBOAnqnCKoMI1SDBJg4k7svFmTRZ/
-B2TzybVNBQCFjnHwOy7MRTtQpcJL3Q9o/jrcxOwD3cA1ey9/6r0jwlEk2AVv0t/t
-hNSUDyr5kyDbtqmkUf9zypQc+qMhAO14axNtlVXDF9NKwSyO3ernQIK06aVkNutq
-924ozy1sLVZ5AjcXR0KG6/K0vjY83w9NOKVMBJu/hATVzvcPVImDvaMkgcVJzINj
-5yLNDVfBMBczVQfZ/Ka6uTRqxLrsDtzlrWpTydS54q+lPAYwaRpboz8Lyud3B5Ub
-EpXnDTbiCbTEoK+Tn6yblszQjUWqex13rwBXrYviE1oKybWUSsLM2WmosTRljI/v
-V5PsGO5iAt5pvajPpFPlK7mxXI1FD3CEcYijhrKFBIwjhD+OPg==
-=c2eY
------END PGP SIGNATURE-----
-
---Sig_/o9MEtdgag/F_5GhvuON5aV9--
+-- 
+With Best Regards,
+Andy Shevchenko
