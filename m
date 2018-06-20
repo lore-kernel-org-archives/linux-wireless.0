@@ -1,66 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57268 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:46244 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934508AbeFMNnF (ORCPT
+        with ESMTP id S932953AbeFTVQV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jun 2018 09:43:05 -0400
-Received: from DLANSKY (unknown [185.23.60.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: dlansky@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 826BE602FC
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jun 2018 13:43:04 +0000 (UTC)
-From: "Dedy Lansky" <dlansky@codeaurora.org>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] cfg80211: fix rcu in cfg80211_unregister_wdev
-Date: Wed, 13 Jun 2018 16:43:01 +0300
-Message-ID: <001501d4031c$74710ac0$5d532040$@codeaurora.org> (sfid-20180613_154309_869062_57D69970)
+        Wed, 20 Jun 2018 17:16:21 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="US-ASCII"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 20 Jun 2018 14:16:20 -0700
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Manikanta Pubbisetty <mpubbise@codeaurora.org>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        kvalo@codeaurora.org, linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH] ath10k: Don't allow tx logic when state is not ON.
+In-Reply-To: <a624d36c-409a-c2d5-d1d9-8cb857eab2fb@candelatech.com>
+References: <1529506583-20204-1-git-send-email-greearb@candelatech.com>
+ <9ba64928-a73b-0fe6-9586-65929ca87013@codeaurora.org>
+ <3dc5dce6-a8ef-93f6-318f-6ca2e62f8853@candelatech.com>
+ <a6bbeef21bb377e1480ca99f4d2c1013@codeaurora.org>
+ <a624d36c-409a-c2d5-d1d9-8cb857eab2fb@candelatech.com>
+Message-ID: <14a066cc39a22b204c206440faab9b26@codeaurora.org> (sfid-20180620_231624_685683_75927D3A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 2018-06-20 11:51, Ben Greear wrote:
+> On 06/20/2018 11:48 AM, Rajkumar Manoharan wrote:
+>> On 2018-06-20 10:42, Ben Greear wrote:
+>>> On 06/20/2018 10:37 AM, Manikanta Pubbisetty wrote:
+>>>> 
+>> [...]
+>>>> This case should not be dealt in ath10k, rather we should make sure 
+>>>> packets does not reach the driver during hardware restart after the 
+>>>> firmware crash.
+>>>> Can you please try the RFC patch and see if it fixes the issue? I am 
+>>>> working on the patch and probably send it out after doing some 
+>>>> testing and cleanup.
+>>>> 
+>>>> https://patchwork.kernel.org/patch/10411967/
+>>> 
+>>> I did see your patch, but I was not sure it would make it upstream.
+>>> 
+>>> I think either way my patch might be useful in case bugs creep back 
+>>> in.
+>>> 
+>> 
+>> ar->state check can not be in hot path as it is protected by mutex 
+>> lock.
+> 
+> If the tx logic is ever called while state is changing, that would seem
+> to be a bug as well?
+> 
+Thats true. The assumption is that packets should not be given to driver
+after ieee80211_stop_queues is called. Isn't it? Manikanta is trying to 
+fix
+some cases where packets are still continued to sent even after queue 
+stop.
+Worth trying that.
 
-We are seeing intermittent crashes when calling cfg80211_unregister_wdev()
-and then immediately free'ing the wdev object, like is done in wil6210 (see
-[1]).
-We believe this is due to cfg80211_unregister_wdev doing list_del_rcu()
-without synchronize_cpu() afterwards.
-
-====================================
-
-From: Dedy Lansky <dlansky@codeaurora.org>
-Subject: [PATCH] cfg80211: fix rcu in cfg80211_unregister_wdev
-
-Callers of cfg80211_unregister_wdev can free the wdev object
-immediately after this function returns. This may crash the kernel
-because this wdev object is still in use by other threads.
-Add synchronize_rcu() after list_del_rcu to make sure wdev object can
-be safely freed.
-
-Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
----
- net/wireless/core.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 5fe35aa..48e80973 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -1012,6 +1012,7 @@ void cfg80211_unregister_wdev(struct wireless_dev
-*wdev)
-        nl80211_notify_iface(rdev, wdev, NL80211_CMD_DEL_INTERFACE);
-
-        list_del_rcu(&wdev->list);
-+       synchronize_rcu();
-        rdev->devlist_generation++;
-
-        switch (wdev->iftype) {
---
-1.9.1
-
-[1]
-https://elixir.bootlin.com/linux/latest/source/drivers/net/wireless/ath/wil6
-210/cfg80211.c#L2234
+-Rajkumar
