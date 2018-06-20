@@ -1,237 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52210 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752832AbeF3NYQ (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:34497 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750877AbeFTImd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Jun 2018 09:24:16 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 30 Jun 2018 16:23:27 +0300
-Message-Id: <20180630132330.14928-13-luca@coelho.fi> (sfid-20180630_152419_769148_6EFBD131)
-In-Reply-To: <20180630132330.14928-1-luca@coelho.fi>
-References: <20180630132330.14928-1-luca@coelho.fi>
-Subject: [PATCH 12/15] iwlwifi: support new tx api
+        Wed, 20 Jun 2018 04:42:33 -0400
+Received: by mail-lf0-f67.google.com with SMTP id e13-v6so3401790lfc.1
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2018 01:42:32 -0700 (PDT)
+From: Niklas Cassel <niklas.cassel@linaro.org>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: alagusankar@silex-india.com,
+        Niklas Cassel <niklas.cassel@linaro.org>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/3] ath10k: sdio: use same endpoint id for all packets in a bundle
+Date: Wed, 20 Jun 2018 10:42:20 +0200
+Message-Id: <20180620084222.3521-2-niklas.cassel@linaro.org> (sfid-20180620_110322_714920_185B7F16)
+In-Reply-To: <20180620084222.3521-1-niklas.cassel@linaro.org>
+References: <20180620084222.3521-1-niklas.cassel@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+All packets in a bundle should use the same endpoint id as the
+first lookahead.
 
-22560 devices use a new tx cmd api. Update the code to use
-the new api.
+This matches how things are done is ath6kl, however,
+this patch can theoretically handle several bundles
+in ath10k_sdio_mbox_rx_process_packets().
 
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Without this patch we get lots of errors about invalid endpoint id:
+
+ath10k_sdio mmc2:0001:1: invalid endpoint in look-ahead: 224
+ath10k_sdio mmc2:0001:1: failed to get pending recv messages: -12
+ath10k_sdio mmc2:0001:1: failed to process pending SDIO interrupts: -12
+
+Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
 ---
- .../wireless/intel/iwlwifi/fw/api/commands.h  |  3 +-
- .../net/wireless/intel/iwlwifi/fw/api/tx.h    | 25 ++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c   | 48 +++++++++++++------
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 26 ++++++++--
- 4 files changed, 83 insertions(+), 19 deletions(-)
+ drivers/net/wireless/ath/ath10k/sdio.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
-index f285bacc8726..d71a6a837ec5 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
-@@ -193,7 +193,8 @@ enum iwl_legacy_cmds {
- 	FW_GET_ITEM_CMD = 0x1a,
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index d612ce8c9cff..d46523b0472c 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -434,12 +434,14 @@ static int ath10k_sdio_mbox_rx_process_packets(struct ath10k *ar,
+ 	enum ath10k_htc_ep_id id;
+ 	int ret, i, *n_lookahead_local;
+ 	u32 *lookaheads_local;
++	int lookahead_idx = 0;
  
- 	/**
--	 * @TX_CMD: uses &struct iwl_tx_cmd or &struct iwl_tx_cmd_gen2,
-+	 * @TX_CMD: uses &struct iwl_tx_cmd or &struct iwl_tx_cmd_gen2 or
-+	 *	&struct iwl_tx_cmd_gen3,
- 	 *	response in &struct iwl_mvm_tx_resp or
- 	 *	&struct iwl_mvm_tx_resp_v3
- 	 */
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-index a2a40b515a3c..514b86123d3d 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-@@ -7,6 +7,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -28,6 +29,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -320,6 +322,29 @@ struct iwl_tx_cmd_gen2 {
- 	struct ieee80211_hdr hdr[0];
- } __packed; /* TX_CMD_API_S_VER_7 */
+ 	for (i = 0; i < ar_sdio->n_rx_pkts; i++) {
+ 		lookaheads_local = lookaheads;
+ 		n_lookahead_local = n_lookahead;
  
-+/**
-+ * struct iwl_tx_cmd_gen3 - TX command struct to FW for 22560 devices
-+ * ( TX_CMD = 0x1c )
-+ * @len: in bytes of the payload, see below for details
-+ * @flags: combination of &enum iwl_tx_cmd_flags
-+ * @offload_assist: TX offload configuration
-+ * @dram_info: FW internal DRAM storage
-+ * @rate_n_flags: rate for *all* Tx attempts, if TX_CMD_FLG_STA_RATE_MSK is
-+ *	cleared. Combination of RATE_MCS_*
-+ * @ttl: time to live - packet lifetime limit. The FW should drop if
-+ *	passed.
-+ * @hdr: 802.11 header
-+ */
-+struct iwl_tx_cmd_gen3 {
-+	__le16 len;
-+	__le16 flags;
-+	__le32 offload_assist;
-+	struct iwl_dram_sec_info dram_info;
-+	__le32 rate_n_flags;
-+	__le64 ttl;
-+	struct ieee80211_hdr hdr[0];
-+} __packed; /* TX_CMD_API_S_VER_8 */
-+
- /*
-  * TX response related data
-  */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index cf2591f2ac23..ff193dca2020 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -484,13 +484,15 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
+-		id = ((struct ath10k_htc_hdr *)&lookaheads[i])->eid;
++		id = ((struct ath10k_htc_hdr *)
++		      &lookaheads[lookahead_idx++])->eid;
  
- 	/* Make sure we zero enough of dev_cmd */
- 	BUILD_BUG_ON(sizeof(struct iwl_tx_cmd_gen2) > sizeof(*tx_cmd));
-+	BUILD_BUG_ON(sizeof(struct iwl_tx_cmd_gen3) > sizeof(*tx_cmd));
- 
- 	memset(dev_cmd, 0, sizeof(dev_cmd->hdr) + sizeof(*tx_cmd));
- 	dev_cmd->hdr.cmd = TX_CMD;
- 
- 	if (iwl_mvm_has_new_tx_api(mvm)) {
--		struct iwl_tx_cmd_gen2 *cmd = (void *)dev_cmd->payload;
- 		u16 offload_assist = 0;
-+		u32 rate_n_flags = 0;
-+		u16 flags = 0;
- 
- 		if (ieee80211_is_data_qos(hdr->frame_control)) {
- 			u8 *qc = ieee80211_get_qos_ctl(hdr);
-@@ -507,25 +509,43 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
- 		    !(offload_assist & BIT(TX_CMD_OFFLD_AMSDU)))
- 			offload_assist |= BIT(TX_CMD_OFFLD_PAD);
- 
--		cmd->offload_assist |= cpu_to_le16(offload_assist);
-+		if (!info->control.hw_key)
-+			flags |= IWL_TX_FLAGS_ENCRYPT_DIS;
- 
--		/* Total # bytes to be transmitted */
--		cmd->len = cpu_to_le16((u16)skb->len);
-+		/* For data packets rate info comes from the fw */
-+		if (!(ieee80211_is_data(hdr->frame_control) && sta)) {
-+			flags |= IWL_TX_FLAGS_CMD_RATE;
-+			rate_n_flags = iwl_mvm_get_tx_rate(mvm, info, sta);
-+		}
- 
--		/* Copy MAC header from skb into command buffer */
--		memcpy(cmd->hdr, hdr, hdrlen);
-+		if (mvm->trans->cfg->device_family >=
-+		    IWL_DEVICE_FAMILY_22560) {
-+			struct iwl_tx_cmd_gen3 *cmd = (void *)dev_cmd->payload;
- 
--		if (!info->control.hw_key)
--			cmd->flags |= cpu_to_le32(IWL_TX_FLAGS_ENCRYPT_DIS);
-+			cmd->offload_assist |= cpu_to_le32(offload_assist);
- 
--		/* For data packets rate info comes from the fw */
--		if (ieee80211_is_data(hdr->frame_control) && sta)
--			goto out;
-+			/* Total # bytes to be transmitted */
-+			cmd->len = cpu_to_le16((u16)skb->len);
- 
--		cmd->flags |= cpu_to_le32(IWL_TX_FLAGS_CMD_RATE);
--		cmd->rate_n_flags =
--			cpu_to_le32(iwl_mvm_get_tx_rate(mvm, info, sta));
-+			/* Copy MAC header from skb into command buffer */
-+			memcpy(cmd->hdr, hdr, hdrlen);
- 
-+			cmd->flags = cpu_to_le16(flags);
-+			cmd->rate_n_flags = cpu_to_le32(rate_n_flags);
-+		} else {
-+			struct iwl_tx_cmd_gen2 *cmd = (void *)dev_cmd->payload;
-+
-+			cmd->offload_assist |= cpu_to_le16(offload_assist);
-+
-+			/* Total # bytes to be transmitted */
-+			cmd->len = cpu_to_le16((u16)skb->len);
-+
-+			/* Copy MAC header from skb into command buffer */
-+			memcpy(cmd->hdr, hdr, hdrlen);
-+
-+			cmd->flags = cpu_to_le32(flags);
-+			cmd->rate_n_flags = cpu_to_le32(rate_n_flags);
-+		}
- 		goto out;
- 	}
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index 70dfa80b3d60..e3ae7f91206b 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -402,8 +402,14 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
- 	 * (This calculation modifies the TX command, so do it before the
- 	 * setup of the first TB)
- 	 */
--	len = sizeof(struct iwl_tx_cmd_gen2) + sizeof(struct iwl_cmd_header) +
--	      ieee80211_hdrlen(hdr->frame_control) - IWL_FIRST_TB_SIZE;
-+	if (trans->cfg->device_family < IWL_DEVICE_FAMILY_22560)
-+		len = sizeof(struct iwl_tx_cmd_gen2);
-+	else
-+		len = sizeof(struct iwl_tx_cmd_gen3);
-+
-+	len += sizeof(struct iwl_cmd_header) +
-+		ieee80211_hdrlen(hdr->frame_control) -
-+		IWL_FIRST_TB_SIZE;
- 
- 	/* do not align A-MSDU to dword as the subframe header aligns it */
- 	if (amsdu)
-@@ -480,9 +486,9 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 			   struct iwl_device_cmd *dev_cmd, int txq_id)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	struct iwl_tx_cmd_gen2 *tx_cmd = (void *)dev_cmd->payload;
- 	struct iwl_cmd_meta *out_meta;
- 	struct iwl_txq *txq = trans_pcie->txq[txq_id];
-+	u16 cmd_len;
- 	int idx;
- 	void *tfd;
- 
-@@ -497,6 +503,18 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 
- 	spin_lock(&txq->lock);
- 
-+	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560) {
-+		struct iwl_tx_cmd_gen3 *tx_cmd_gen3 =
-+			(void *)dev_cmd->payload;
-+
-+		cmd_len = le16_to_cpu(tx_cmd_gen3->len);
-+	} else {
-+		struct iwl_tx_cmd_gen2 *tx_cmd_gen2 =
-+			(void *)dev_cmd->payload;
-+
-+		cmd_len = le16_to_cpu(tx_cmd_gen2->len);
-+	}
-+
- 	if (iwl_queue_space(trans, txq) < txq->high_mark) {
- 		iwl_stop_queue(trans, txq);
- 
-@@ -535,7 +553,7 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 	}
- 
- 	/* Set up entry for this TFD in Tx byte-count array */
--	iwl_pcie_gen2_update_byte_tbl(trans_pcie, txq, le16_to_cpu(tx_cmd->len),
-+	iwl_pcie_gen2_update_byte_tbl(trans_pcie, txq, cmd_len,
- 				      iwl_pcie_gen2_get_num_tbs(trans, tfd));
- 
- 	/* start timer if queue currently empty */
+ 		if (id >= ATH10K_HTC_EP_COUNT) {
+ 			ath10k_warn(ar, "invalid endpoint in look-ahead: %d\n",
+@@ -462,6 +464,7 @@ static int ath10k_sdio_mbox_rx_process_packets(struct ath10k *ar,
+ 			/* Only read lookahead's from RX trailers
+ 			 * for the last packet in a bundle.
+ 			 */
++			lookahead_idx--;
+ 			lookaheads_local = NULL;
+ 			n_lookahead_local = NULL;
+ 		}
 -- 
-2.18.0
+2.17.1
