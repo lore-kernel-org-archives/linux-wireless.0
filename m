@@ -1,57 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0078.outbound.protection.outlook.com ([104.47.37.78]:55776
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754720AbeF2MDw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 08:03:52 -0400
-Date: Fri, 29 Jun 2018 15:03:38 +0300
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>
-Subject: Re: [1/6] qtnfmac: implement net_device_ops callback to set MAC
- address
-Message-ID: <20180629120337.kcwa4vf7ycdihzqq@bars> (sfid-20180629_140356_684032_830B7EFF)
-References: <20180531091102.28666-2-sergey.matyukevich.os@quantenna.com>
- <20180627155439.481E76034E@smtp.codeaurora.org>
- <20180629092654.shzir2mfmlp5luf5@bars>
- <87d0waexm2.fsf@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87d0waexm2.fsf@codeaurora.org>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:36230 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932224AbeFTIsZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 Jun 2018 04:48:25 -0400
+Received: by mail-wm0-f67.google.com with SMTP id v131-v6so5295259wma.1
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2018 01:48:25 -0700 (PDT)
+From: Loic Poulain <loic.poulain@linaro.org>
+To: kvalo@codeaurora.org
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        Loic Poulain <loic.poulain@linaro.org>
+Subject: [PATCH v2 2/3] wcn36xx: Track associated stations
+Date: Wed, 20 Jun 2018 09:57:59 +0200
+Message-Id: <1529481480-13247-2-git-send-email-loic.poulain@linaro.org> (sfid-20180620_104830_393709_54AE3026)
+In-Reply-To: <1529481480-13247-1-git-send-email-loic.poulain@linaro.org>
+References: <1529481480-13247-1-git-send-email-loic.poulain@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
-> 
-> >> Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
-> >>
-> >> > From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-> >> >
-> >> > Implement net_device_ops::ndo_set_mac_address callback to allow for
-> >> > setting interface MAC address. Implementation is done through existing
-> >> > CHANGE_INTF firmware command. All validation is to be done by firmware.
-> >> >
-> >> > Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-> >>
-> >> 2 patches applied to wireless-drivers-next.git, thanks.
-> >>
-> >> ed9f34bb9d33 qtnfmac: implement net_device_ops callback to set MAC address
-> >> 6fbef9540af0 qtnfmac: enable source MAC address randomization support
-> >
-> > Hello Kalle,
-> >
-> > I see the other 4 patches in this series are in 'Deferred' state. Could you
-> > please clarify what that means. Do you have any concerns about those
-> > remaining patches or any actions are needed from our side ?
-> 
-> I saw there was a comment on one patch and other patch used vendor
-> commands which I need to review carefully. I didn't have time at the
-> time so I put them to deferred and try to get back soon.
+Add list of associated stations(STA, AP, peer...) per vif.
 
-Ok, understood.
+Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+---
+ v2: no change
 
-Regards,
-Sergey
+ drivers/net/wireless/ath/wcn36xx/main.c    | 5 +++++
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 3 +++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 4648a78..6fd0bf6 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -567,6 +567,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 				key_conf->keyidx,
+ 				key_conf->keylen,
+ 				key);
++
+ 			if ((WLAN_CIPHER_SUITE_WEP40 == key_conf->cipher) ||
+ 			    (WLAN_CIPHER_SUITE_WEP104 == key_conf->cipher)) {
+ 				sta_priv->is_data_encrypted = true;
+@@ -984,6 +985,7 @@ static int wcn36xx_add_interface(struct ieee80211_hw *hw,
+ 	mutex_lock(&wcn->conf_mutex);
+ 
+ 	vif_priv->bss_index = WCN36XX_HAL_BSS_INVALID_IDX;
++	INIT_LIST_HEAD(&vif_priv->sta_list);
+ 	list_add(&vif_priv->list, &wcn->vif_list);
+ 	wcn36xx_smd_add_sta_self(wcn, vif);
+ 
+@@ -1005,6 +1007,8 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 
+ 	spin_lock_init(&sta_priv->ampdu_lock);
+ 	sta_priv->vif = vif_priv;
++	list_add(&sta_priv->list, &vif_priv->sta_list);
++
+ 	/*
+ 	 * For STA mode HW will be configured on BSS_CHANGED_ASSOC because
+ 	 * at this stage AID is not available yet.
+@@ -1032,6 +1036,7 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&wcn->conf_mutex);
+ 
++	list_del(&sta_priv->list);
+ 	wcn36xx_smd_delete_sta(wcn, sta_priv->sta_index);
+ 	sta_priv->vif = NULL;
+ 
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index 11e7401..a58f313 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -129,6 +129,8 @@ struct wcn36xx_vif {
+ 	u8 self_sta_index;
+ 	u8 self_dpu_desc_index;
+ 	u8 self_ucast_dpu_sign;
++
++	struct list_head sta_list;
+ };
+ 
+ /**
+@@ -154,6 +156,7 @@ struct wcn36xx_vif {
+  * |______________|_____________|_______________|
+  */
+ struct wcn36xx_sta {
++	struct list_head list;
+ 	struct wcn36xx_vif *vif;
+ 	u16 aid;
+ 	u16 tid;
+-- 
+2.7.4
