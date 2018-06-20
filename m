@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:45406 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753918AbeFSWq1 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39572 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754185AbeFTRh3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Jun 2018 18:46:27 -0400
-Received: by mail-lf0-f67.google.com with SMTP id a13-v6so1917268lfk.12
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2018 15:46:26 -0700 (PDT)
-Date: Wed, 20 Jun 2018 00:46:23 +0200
-From: Niklas Cassel <niklas.cassel@linaro.org>
-To: Govind Singh <govinds@codeaurora.org>
-Cc: andy.gross@linaro.org, bjorn.andersson@linaro.org,
-        david.brown@linaro.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH v2 4/6] ath10k: Add debug mask for QMI layer
-Message-ID: <20180619224623.GC1635@centauri.lan> (sfid-20180620_004638_296063_2E98C850)
-References: <20180605123651.1589-1-govinds@codeaurora.org>
+        Wed, 20 Jun 2018 13:37:29 -0400
+Subject: Re: [PATCH] ath10k: Don't allow tx logic when state is not ON.
+To: greearb@candelatech.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org, kvalo@codeaurora.org
+References: <1529506583-20204-1-git-send-email-greearb@candelatech.com>
+From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Message-ID: <9ba64928-a73b-0fe6-9586-65929ca87013@codeaurora.org> (sfid-20180620_193732_764054_4325BCC1)
+Date: Wed, 20 Jun 2018 23:07:23 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180605123651.1589-1-govinds@codeaurora.org>
+In-Reply-To: <1529506583-20204-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Acked-by: Niklas Cassel <niklas.cassel@linaro.org>
 
-On Tue, Jun 05, 2018 at 06:06:51PM +0530, Govind Singh wrote:
-> Add debug mask to control debug info of ath10k qmi
-> messaging layer.
-> 
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
-> ---
->  drivers/net/wireless/ath/ath10k/debug.h | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-> index 0afca5c106b6..a2f84fdb9131 100644
-> --- a/drivers/net/wireless/ath/ath10k/debug.h
-> +++ b/drivers/net/wireless/ath/ath10k/debug.h
-> @@ -44,6 +44,7 @@ enum ath10k_debug_mask {
->  	ATH10K_DBG_USB		= 0x00040000,
->  	ATH10K_DBG_USB_BULK	= 0x00080000,
->  	ATH10K_DBG_SNOC		= 0x00100000,
-> +	ATH10K_DBG_QMI		= 0x00200000,
->  	ATH10K_DBG_ANY		= 0xffffffff,
->  };
->  
-> -- 
-> 2.17.0
-> 
-> 
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+> From: Ben Greear <greearb@candelatech.com>
+>
+> This is against the 4.16 kernel, likely applies to later kernels
+> as well.  Firmware is beta ath10k-ct firmware for 9984 NIC.  The
+> patch is not firmware or chipset specific.
+>
+> When firmware crashes, packets can still be sent from the
+> mac80211 stack, and that can cause crashes in the ath10k
+> tx path.
+
+Yes, this is what I had observed and explained in the RFC patch which I 
+have sent some time back. In my case the device never comes up and the 
+entire system crashes; I hope you have observed the same behavior.
+
+> After adding this patch, I saw cases where the tx path was
+> called in state ATH10K_STATE_RESTARTED.
+>
+> I have not tested the tx_64 path, but assume it has similar
+> issues, so same patch was added to it.
+
+This case should not be dealt in ath10k, rather we should make sure 
+packets does not reach the driver during hardware restart after the 
+firmware crash.
+Can you please try the RFC patch and see if it fixes the issue? I am 
+working on the patch and probably send it out after doing some testing 
+and cleanup.
+
+https://patchwork.kernel.org/patch/10411967/
+
+Thanks,
+Manikanta
