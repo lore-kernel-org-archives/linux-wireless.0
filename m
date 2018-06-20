@@ -1,75 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52218 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752832AbeF3NYU (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:42634 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753933AbeFTIme (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Jun 2018 09:24:20 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 30 Jun 2018 16:23:29 +0300
-Message-Id: <20180630132330.14928-15-luca@coelho.fi> (sfid-20180630_152423_123314_50ACB042)
-In-Reply-To: <20180630132330.14928-1-luca@coelho.fi>
-References: <20180630132330.14928-1-luca@coelho.fi>
-Subject: [PATCH 14/15] iwlwifi: update registers changed for 22560 devices
+        Wed, 20 Jun 2018 04:42:34 -0400
+Received: by mail-lf0-f65.google.com with SMTP id z207-v6so3671382lff.9
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2018 01:42:33 -0700 (PDT)
+From: Niklas Cassel <niklas.cassel@linaro.org>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: alagusankar@silex-india.com,
+        Niklas Cassel <niklas.cassel@linaro.org>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/3] ath10k: sdio: allocate correct size for RECV_1MORE_BLOCK rx packets
+Date: Wed, 20 Jun 2018 10:42:21 +0200
+Message-Id: <20180620084222.3521-3-niklas.cassel@linaro.org> (sfid-20180620_110439_338445_41ABB339)
+In-Reply-To: <20180620084222.3521-1-niklas.cassel@linaro.org>
+References: <20180620084222.3521-1-niklas.cassel@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+Without this, when receiving a packet that has this flag set
+from firmware, we will read invalid trailer data from the packet,
+which will be shown as various errors, e.g. "sdio mbox lookahead
+is zero" or "invalid rx packet" or "payload length x exceeds max
+htc length".
 
-In 22560 devices the firmware will do all the hw configurations,
-but that's not ready yet.
-Update the correct registers in the driver until the FW is ready
-and does it by itself.
-
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-fh.h  | 6 ++++--
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 7 ++++++-
- 2 files changed, 10 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/htc.h  | 1 +
+ drivers/net/wireless/ath/ath10k/sdio.c | 3 +++
+ 2 files changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-index f286fc7db7fd..df0e9ffff706 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-@@ -434,13 +434,15 @@ static inline unsigned int FH_MEM_CBBC_QUEUE(struct iwl_trans *trans,
-  * RXF to DRAM.
-  * Once the RXF-to-DRAM DMA is active, this flag is immediately turned off.
-  */
--#define RFH_GEN_STATUS 0xA09808
-+#define RFH_GEN_STATUS		0xA09808
-+#define RFH_GEN_STATUS_GEN3	0xA07824
- #define RBD_FETCH_IDLE	BIT(29)
- #define SRAM_DMA_IDLE	BIT(30)
- #define RXF_DMA_IDLE	BIT(31)
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index 34877597dd6a..cf1068dc3254 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -58,6 +58,7 @@ enum ath10k_htc_tx_flags {
+ };
  
- /* DMA configuration */
--#define RFH_RXF_DMA_CFG 0xA09820
-+#define RFH_RXF_DMA_CFG		0xA09820
-+#define RFH_RXF_DMA_CFG_GEN3	0xA07880
- /* RB size */
- #define RFH_RXF_DMA_RB_SIZE_MASK (0x000F0000) /* bits 16-19 */
- #define RFH_RXF_DMA_RB_SIZE_POS 16
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 707242f1ff0b..8cd0c3dac0ab 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -167,7 +167,12 @@ static inline __le32 iwl_pcie_dma_addr2rbd_ptr(dma_addr_t dma_addr)
-  */
- int iwl_pcie_rx_stop(struct iwl_trans *trans)
- {
--	if (trans->cfg->mq_rx_supported) {
-+	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560) {
-+		/* TODO: remove this for 22560 once fw does it */
-+		iwl_write_prph(trans, RFH_RXF_DMA_CFG_GEN3, 0);
-+		return iwl_poll_prph_bit(trans, RFH_GEN_STATUS_GEN3,
-+					 RXF_DMA_IDLE, RXF_DMA_IDLE, 1000);
-+	} else if (trans->cfg->mq_rx_supported) {
- 		iwl_write_prph(trans, RFH_RXF_DMA_CFG, 0);
- 		return iwl_poll_prph_bit(trans, RFH_GEN_STATUS,
- 					   RXF_DMA_IDLE, RXF_DMA_IDLE, 1000);
+ enum ath10k_htc_rx_flags {
++	ATH10K_HTC_FLAGS_RECV_1MORE_BLOCK = 0x01,
+ 	ATH10K_HTC_FLAG_TRAILER_PRESENT = 0x02,
+ 	ATH10K_HTC_FLAG_BUNDLE_MASK     = 0xF0
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index d46523b0472c..0c57d6aaa437 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -603,6 +603,9 @@ static int ath10k_sdio_mbox_rx_alloc(struct ath10k *ar,
+ 		 * ATH10K_HTC_FLAG_BUNDLE_MASK flag set, all bundled
+ 		 * packet skb's have been allocated in the previous step.
+ 		 */
++		if (htc_hdr->flags & ATH10K_HTC_FLAGS_RECV_1MORE_BLOCK)
++			full_len += ATH10K_HIF_MBOX_BLOCK_SIZE;
++
+ 		ret = ath10k_sdio_mbox_alloc_rx_pkt(&ar_sdio->rx_pkts[i],
+ 						    act_len,
+ 						    full_len,
 -- 
-2.18.0
+2.17.1
