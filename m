@@ -1,37 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45620 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755058AbeFNPJD (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:37322 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933053AbeFTIpY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Jun 2018 11:09:03 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: Support use of channel 173
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1514940661-13590-1-git-send-email-greearb@candelatech.com>
-References: <1514940661-13590-1-git-send-email-greearb@candelatech.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        Ben Greear <greearb@candelatech.com>
-Message-Id: <20180614150902.B75A76055D@smtp.codeaurora.org> (sfid-20180614_170907_789669_6D96B748)
-Date: Thu, 14 Jun 2018 15:09:02 +0000 (UTC)
+        Wed, 20 Jun 2018 04:45:24 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: [PATCH v6 (resend) 2/3] bitfield: add u8 helpers
+Date: Wed, 20 Jun 2018 08:58:29 +0200
+Message-Id: <20180620065830.6612-3-johannes@sipsolutions.net> (sfid-20180620_104619_939582_8FB5EE88)
+In-Reply-To: <20180620065830.6612-1-johannes@sipsolutions.net>
+References: <20180620065830.6612-1-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> wrote:
+There's no reason why we shouldn't pack/unpack bits into/from
+u8 values/registers/etc., so add u8 helpers.
 
-> The India regulatory domain allows CH 173, so add that to the
-> available channel list.  I verified basic connectivity between
-> a 9880 and 9984 NIC.
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Use the ____MAKE_OP() macro directly to avoid having nonsense
+le8_encode_bits() and similar functions.
 
-Patch applied to ath-next branch of ath.git, thanks.
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/linux/bitfield.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-38441fb6fcbb ath10k: support use of channel 173
-
+diff --git a/include/linux/bitfield.h b/include/linux/bitfield.h
+index 147a7bb341dd..65a6981eef7b 100644
+--- a/include/linux/bitfield.h
++++ b/include/linux/bitfield.h
+@@ -143,6 +143,7 @@ static __always_inline base type##_get_bits(__##type v, base field)	\
+ 	____MAKE_OP(le##size,u##size,cpu_to_le##size,le##size##_to_cpu)	\
+ 	____MAKE_OP(be##size,u##size,cpu_to_be##size,be##size##_to_cpu)	\
+ 	____MAKE_OP(u##size,u##size,,)
++____MAKE_OP(u8,u8,,)
+ __MAKE_OP(16)
+ __MAKE_OP(32)
+ __MAKE_OP(64)
 -- 
-https://patchwork.kernel.org/patch/10141515/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.14.4
