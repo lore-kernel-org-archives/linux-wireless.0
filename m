@@ -1,383 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr20124.outbound.protection.outlook.com ([40.107.2.124]:55648
-        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932509AbeFFI1J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Jun 2018 04:27:09 -0400
-From: Omer Efrat <omer.efrat@tandemg.com>
-To: linux-wireless@vger.kernel.org
-Cc: Omer Efrat <omer.efrat@tandemg.com>
-Subject: [PATCH 1/3] net: use BIT_ULL for NL80211_STA_INFO_* attribute types
-Date: Wed,  6 Jun 2018 11:26:59 +0300
-Message-Id: <1528273621-28116-1-git-send-email-omer.efrat@tandemg.com> (sfid-20180606_102723_958302_FE904769)
+Received: from rtits2.realtek.com ([211.75.126.72]:38310 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751147AbeFUHGv (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 21 Jun 2018 03:06:51 -0400
+From: <pkshih@realtek.com>
+To: <kvalo@codeaurora.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] rtlwifi: Fix kernel Oops "Fw download fail!!"
+Date: Thu, 21 Jun 2018 15:06:35 +0800
+Message-ID: <20180621070635.8217-1-pkshih@realtek.com> (sfid-20180621_090658_537647_073FBD7A)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since 'filled' member in station_info changed to u64, BIT_ULL macro
-should be used with NL80211_STA_INFO_* attribute types instead of BIT.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-The BIT macro uses unsigned long type which some architectures handle as 32bit
-and this results in compilation warnings such as:
+When connecting to AP, mac80211 asks driver to enter and leave PS quickly,
+but driver deinit doesn't wait for delayed work complete when entering PS,
+then driver reinit procedure and delay work are running simultaneously.
+This will cause unpredictable kernel oops or crash like
 
-net/mac80211/sta_info.c:2223:2: warning: left shift count >= width of type
-  sinfo->filled |= BIT(NL80211_STA_INFO_TID_STATS);
-  ^
+rtl8723be: error H2C cmd because of Fw download fail!!!
+WARNING: CPU: 3 PID: 159 at drivers/net/wireless/realtek/rtlwifi/
+	 rtl8723be/fw.c:227 rtl8723be_fill_h2c_cmd+0x182/0x510 [rtl8723be]
+CPU: 3 PID: 159 Comm: kworker/3:2 Tainted: G       O     4.16.13-2-ARCH #1
+Hardware name: ASUSTeK COMPUTER INC. X556UF/X556UF, BIOS X556UF.406
+	       10/21/2016
+Workqueue: rtl8723be_pci rtl_c2hcmd_wq_callback [rtlwifi]
+RIP: 0010:rtl8723be_fill_h2c_cmd+0x182/0x510 [rtl8723be]
+RSP: 0018:ffffa6ab01e1bd70 EFLAGS: 00010282
+RAX: 0000000000000000 RBX: ffffa26069071520 RCX: 0000000000000001
+RDX: 0000000080000001 RSI: ffffffff8be70e9c RDI: 00000000ffffffff
+RBP: 0000000000000000 R08: 0000000000000048 R09: 0000000000000348
+R10: 0000000000000000 R11: 0000000000000001 R12: 0000000000000000
+R13: ffffa26069071520 R14: 0000000000000000 R15: ffffa2607d205f70
+FS:  0000000000000000(0000) GS:ffffa26081d80000(0000) knlGS:000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00000443b39d3000 CR3: 000000037700a005 CR4: 00000000003606e0
+Call Trace:
+ ? halbtc_send_bt_mp_operation.constprop.17+0xd5/0xe0 [btcoexist]
+ ? ex_btc8723b1ant_bt_info_notify+0x3b8/0x820 [btcoexist]
+ ? rtl_c2hcmd_launcher+0xab/0x110 [rtlwifi]
+ ? process_one_work+0x1d1/0x3b0
+ ? worker_thread+0x2b/0x3d0
+ ? process_one_work+0x3b0/0x3b0
+ ? kthread+0x112/0x130
+ ? kthread_create_on_node+0x60/0x60
+ ? ret_from_fork+0x35/0x40
+Code: 00 76 b4 e9 e2 fe ff ff 4c 89 ee 4c 89 e7 e8 56 22 86 ca e9 5e ...
 
-Signed-off-by: Omer Efrat <omer.efrat@tandemg.com>
+This patch ensures all delayed works done before entering PS to satisfy
+our expectation, so use cancel_delayed_work_sync() instead. An exception
+is delayed work ips_nic_off_wq because running task may be itself, so add
+a parameter ips_wq to deinit function to handle this case.
 
-diff --git a/net/batman-adv/bat_v_elp.c b/net/batman-adv/bat_v_elp.c
-index 71c20c1..71e6474 100644
---- a/net/batman-adv/bat_v_elp.c
-+++ b/net/batman-adv/bat_v_elp.c
-@@ -114,7 +114,7 @@ static u32 batadv_v_elp_get_throughput(struct batadv_hardif_neigh_node *neigh)
- 		}
- 		if (ret)
- 			goto default_throughput;
--		if (!(sinfo.filled & BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
-+		if (!(sinfo.filled & BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
- 			goto default_throughput;
+This issue is reported and fixed in below threads:
+https://github.com/lwfinger/rtlwifi_new/issues/367
+https://github.com/lwfinger/rtlwifi_new/issues/366
+
+Tested-by: Evgeny Kapun <abacabadabacaba@gmail.com> # 8723DE
+Tested-by: Shivam Kakkar <shivam543@gmail.com> # 8723BE on 4.18-rc1
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+Hi Kalle,
+
+I'd like to queue this fix to 4.18, because kernel oops in users' laptop.
+
+Thanks
+PK
+
+---
+ drivers/net/wireless/realtek/rtlwifi/base.c | 17 ++++++++++-------
+ drivers/net/wireless/realtek/rtlwifi/base.h |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/core.c |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/pci.c  |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/ps.c   |  4 ++--
+ drivers/net/wireless/realtek/rtlwifi/usb.c  |  2 +-
+ 6 files changed, 16 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 39c817eddd78..54c9f6ab0c8c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -484,18 +484,21 @@ static void _rtl_init_deferred_work(struct ieee80211_hw *hw)
  
- 		return sinfo.expected_throughput / 100;
-diff --git a/net/mac80211/ethtool.c b/net/mac80211/ethtool.c
-index 690c142..5ac7438 100644
---- a/net/mac80211/ethtool.c
-+++ b/net/mac80211/ethtool.c
-@@ -116,16 +116,16 @@ static void ieee80211_get_stats(struct net_device *dev,
- 		data[i++] = sta->sta_state;
+ }
  
+-void rtl_deinit_deferred_work(struct ieee80211_hw *hw)
++void rtl_deinit_deferred_work(struct ieee80211_hw *hw, bool ips_wq)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
  
--		if (sinfo.filled & BIT(NL80211_STA_INFO_TX_BITRATE))
-+		if (sinfo.filled & BIT_ULL(NL80211_STA_INFO_TX_BITRATE))
- 			data[i] = 100000ULL *
- 				cfg80211_calculate_bitrate(&sinfo.txrate);
- 		i++;
--		if (sinfo.filled & BIT(NL80211_STA_INFO_RX_BITRATE))
-+		if (sinfo.filled & BIT_ULL(NL80211_STA_INFO_RX_BITRATE))
- 			data[i] = 100000ULL *
- 				cfg80211_calculate_bitrate(&sinfo.rxrate);
- 		i++;
+ 	del_timer_sync(&rtlpriv->works.watchdog_timer);
  
--		if (sinfo.filled & BIT(NL80211_STA_INFO_SIGNAL_AVG))
-+		if (sinfo.filled & BIT_ULL(NL80211_STA_INFO_SIGNAL_AVG))
- 			data[i] = (u8)sinfo.signal_avg;
- 		i++;
+-	cancel_delayed_work(&rtlpriv->works.watchdog_wq);
+-	cancel_delayed_work(&rtlpriv->works.ips_nic_off_wq);
+-	cancel_delayed_work(&rtlpriv->works.ps_work);
+-	cancel_delayed_work(&rtlpriv->works.ps_rfon_wq);
+-	cancel_delayed_work(&rtlpriv->works.fwevt_wq);
+-	cancel_delayed_work(&rtlpriv->works.c2hcmd_wq);
++	cancel_delayed_work_sync(&rtlpriv->works.watchdog_wq);
++	if (ips_wq)
++		cancel_delayed_work(&rtlpriv->works.ips_nic_off_wq);
++	else
++		cancel_delayed_work_sync(&rtlpriv->works.ips_nic_off_wq);
++	cancel_delayed_work_sync(&rtlpriv->works.ps_work);
++	cancel_delayed_work_sync(&rtlpriv->works.ps_rfon_wq);
++	cancel_delayed_work_sync(&rtlpriv->works.fwevt_wq);
++	cancel_delayed_work_sync(&rtlpriv->works.c2hcmd_wq);
+ }
+ EXPORT_SYMBOL_GPL(rtl_deinit_deferred_work);
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.h b/drivers/net/wireless/realtek/rtlwifi/base.h
+index 912f205779c3..a7ae40eaa3cd 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.h
++++ b/drivers/net/wireless/realtek/rtlwifi/base.h
+@@ -121,7 +121,7 @@ void rtl_init_rfkill(struct ieee80211_hw *hw);
+ void rtl_deinit_rfkill(struct ieee80211_hw *hw);
+ 
+ void rtl_watch_dog_timer_callback(struct timer_list *t);
+-void rtl_deinit_deferred_work(struct ieee80211_hw *hw);
++void rtl_deinit_deferred_work(struct ieee80211_hw *hw, bool ips_wq);
+ 
+ bool rtl_action_proc(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx);
+ int rtlwifi_rate_mapping(struct ieee80211_hw *hw, bool isht,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index cfea57efa7f4..a3f46203ee7a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -196,7 +196,7 @@ static void rtl_op_stop(struct ieee80211_hw *hw)
+ 		/* reset sec info */
+ 		rtl_cam_reset_sec_info(hw);
+ 
+-		rtl_deinit_deferred_work(hw);
++		rtl_deinit_deferred_work(hw, false);
+ 	}
+ 	rtlpriv->intf_ops->adapter_stop(hw);
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index ae13bcfb3bf0..5d1fda16fc8c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -2377,7 +2377,7 @@ void rtl_pci_disconnect(struct pci_dev *pdev)
+ 		ieee80211_unregister_hw(hw);
+ 		rtlmac->mac80211_registered = 0;
  	} else {
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 6428f1a..656a838 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -2101,38 +2101,38 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 
- 	drv_sta_statistics(local, sdata, &sta->sta, sinfo);
- 
--	sinfo->filled |= BIT(NL80211_STA_INFO_INACTIVE_TIME) |
--			 BIT(NL80211_STA_INFO_STA_FLAGS) |
--			 BIT(NL80211_STA_INFO_BSS_PARAM) |
--			 BIT(NL80211_STA_INFO_CONNECTED_TIME) |
--			 BIT(NL80211_STA_INFO_RX_DROP_MISC);
-+	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_INACTIVE_TIME) |
-+			 BIT_ULL(NL80211_STA_INFO_STA_FLAGS) |
-+			 BIT_ULL(NL80211_STA_INFO_BSS_PARAM) |
-+			 BIT_ULL(NL80211_STA_INFO_CONNECTED_TIME) |
-+			 BIT_ULL(NL80211_STA_INFO_RX_DROP_MISC);
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
- 		sinfo->beacon_loss_count = sdata->u.mgd.beacon_loss_count;
--		sinfo->filled |= BIT(NL80211_STA_INFO_BEACON_LOSS);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_BEACON_LOSS);
+-		rtl_deinit_deferred_work(hw);
++		rtl_deinit_deferred_work(hw, false);
+ 		rtlpriv->intf_ops->adapter_stop(hw);
  	}
+ 	rtlpriv->cfg->ops->disable_interrupt(hw);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
+index 71af24e2e051..479a4cfc245d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/ps.c
++++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
+@@ -71,7 +71,7 @@ bool rtl_ps_disable_nic(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
  
- 	sinfo->connected_time = ktime_get_seconds() - sta->last_connected;
- 	sinfo->inactive_time =
- 		jiffies_to_msecs(jiffies - ieee80211_sta_last_active(sta));
+ 	/*<1> Stop all timer */
+-	rtl_deinit_deferred_work(hw);
++	rtl_deinit_deferred_work(hw, true);
  
--	if (!(sinfo->filled & (BIT(NL80211_STA_INFO_TX_BYTES64) |
--			       BIT(NL80211_STA_INFO_TX_BYTES)))) {
-+	if (!(sinfo->filled & (BIT_ULL(NL80211_STA_INFO_TX_BYTES64) |
-+			       BIT_ULL(NL80211_STA_INFO_TX_BYTES)))) {
- 		sinfo->tx_bytes = 0;
- 		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
- 			sinfo->tx_bytes += sta->tx_stats.bytes[ac];
--		sinfo->filled |= BIT(NL80211_STA_INFO_TX_BYTES64);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BYTES64);
+ 	/*<2> Disable Interrupt */
+ 	rtlpriv->cfg->ops->disable_interrupt(hw);
+@@ -292,7 +292,7 @@ void rtl_ips_nic_on(struct ieee80211_hw *hw)
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+ 	enum rf_pwrstate rtstate;
+ 
+-	cancel_delayed_work(&rtlpriv->works.ips_nic_off_wq);
++	cancel_delayed_work_sync(&rtlpriv->works.ips_nic_off_wq);
+ 
+ 	mutex_lock(&rtlpriv->locks.ips_mutex);
+ 	if (ppsc->inactiveps) {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+index f9faffc498bc..2ac5004d7a40 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/usb.c
++++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+@@ -1132,7 +1132,7 @@ void rtl_usb_disconnect(struct usb_interface *intf)
+ 		ieee80211_unregister_hw(hw);
+ 		rtlmac->mac80211_registered = 0;
+ 	} else {
+-		rtl_deinit_deferred_work(hw);
++		rtl_deinit_deferred_work(hw, false);
+ 		rtlpriv->intf_ops->adapter_stop(hw);
  	}
- 
--	if (!(sinfo->filled & BIT(NL80211_STA_INFO_TX_PACKETS))) {
-+	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_PACKETS))) {
- 		sinfo->tx_packets = 0;
- 		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
- 			sinfo->tx_packets += sta->tx_stats.packets[ac];
--		sinfo->filled |= BIT(NL80211_STA_INFO_TX_PACKETS);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_PACKETS);
- 	}
- 
--	if (!(sinfo->filled & (BIT(NL80211_STA_INFO_RX_BYTES64) |
--			       BIT(NL80211_STA_INFO_RX_BYTES)))) {
-+	if (!(sinfo->filled & (BIT_ULL(NL80211_STA_INFO_RX_BYTES64) |
-+			       BIT_ULL(NL80211_STA_INFO_RX_BYTES)))) {
- 		sinfo->rx_bytes += sta_get_stats_bytes(&sta->rx_stats);
- 
- 		if (sta->pcpu_rx_stats) {
-@@ -2144,10 +2144,10 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 			}
- 		}
- 
--		sinfo->filled |= BIT(NL80211_STA_INFO_RX_BYTES64);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_BYTES64);
- 	}
- 
--	if (!(sinfo->filled & BIT(NL80211_STA_INFO_RX_PACKETS))) {
-+	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_RX_PACKETS))) {
- 		sinfo->rx_packets = sta->rx_stats.packets;
- 		if (sta->pcpu_rx_stats) {
- 			for_each_possible_cpu(cpu) {
-@@ -2157,17 +2157,17 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 				sinfo->rx_packets += cpurxs->packets;
- 			}
- 		}
--		sinfo->filled |= BIT(NL80211_STA_INFO_RX_PACKETS);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_PACKETS);
- 	}
- 
--	if (!(sinfo->filled & BIT(NL80211_STA_INFO_TX_RETRIES))) {
-+	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_RETRIES))) {
- 		sinfo->tx_retries = sta->status_stats.retry_count;
--		sinfo->filled |= BIT(NL80211_STA_INFO_TX_RETRIES);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_RETRIES);
- 	}
- 
--	if (!(sinfo->filled & BIT(NL80211_STA_INFO_TX_FAILED))) {
-+	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_FAILED))) {
- 		sinfo->tx_failed = sta->status_stats.retry_failed;
--		sinfo->filled |= BIT(NL80211_STA_INFO_TX_FAILED);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_FAILED);
- 	}
- 
- 	sinfo->rx_dropped_misc = sta->rx_stats.dropped;
-@@ -2182,23 +2182,23 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
- 	    !(sdata->vif.driver_flags & IEEE80211_VIF_BEACON_FILTER)) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_BEACON_RX) |
--				 BIT(NL80211_STA_INFO_BEACON_SIGNAL_AVG);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_BEACON_RX) |
-+				 BIT_ULL(NL80211_STA_INFO_BEACON_SIGNAL_AVG);
- 		sinfo->rx_beacon_signal_avg = ieee80211_ave_rssi(&sdata->vif);
- 	}
- 
- 	if (ieee80211_hw_check(&sta->local->hw, SIGNAL_DBM) ||
- 	    ieee80211_hw_check(&sta->local->hw, SIGNAL_UNSPEC)) {
--		if (!(sinfo->filled & BIT(NL80211_STA_INFO_SIGNAL))) {
-+		if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_SIGNAL))) {
- 			sinfo->signal = (s8)last_rxstats->last_signal;
--			sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
-+			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
- 		}
- 
- 		if (!sta->pcpu_rx_stats &&
--		    !(sinfo->filled & BIT(NL80211_STA_INFO_SIGNAL_AVG))) {
-+		    !(sinfo->filled & BIT_ULL(NL80211_STA_INFO_SIGNAL_AVG))) {
- 			sinfo->signal_avg =
- 				-ewma_signal_read(&sta->rx_stats_avg.signal);
--			sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL_AVG);
-+			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL_AVG);
- 		}
- 	}
- 
-@@ -2207,11 +2207,11 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 	 * pcpu statistics
- 	 */
- 	if (last_rxstats->chains &&
--	    !(sinfo->filled & (BIT(NL80211_STA_INFO_CHAIN_SIGNAL) |
--			       BIT(NL80211_STA_INFO_CHAIN_SIGNAL_AVG)))) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_CHAIN_SIGNAL);
-+	    !(sinfo->filled & (BIT_ULL(NL80211_STA_INFO_CHAIN_SIGNAL) |
-+			       BIT_ULL(NL80211_STA_INFO_CHAIN_SIGNAL_AVG)))) {
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_CHAIN_SIGNAL);
- 		if (!sta->pcpu_rx_stats)
--			sinfo->filled |= BIT(NL80211_STA_INFO_CHAIN_SIGNAL_AVG);
-+			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_CHAIN_SIGNAL_AVG);
- 
- 		sinfo->chains = last_rxstats->chains;
- 
-@@ -2223,15 +2223,15 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 		}
- 	}
- 
--	if (!(sinfo->filled & BIT(NL80211_STA_INFO_TX_BITRATE))) {
-+	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_BITRATE))) {
- 		sta_set_rate_info_tx(sta, &sta->tx_stats.last_rate,
- 				     &sinfo->txrate);
--		sinfo->filled |= BIT(NL80211_STA_INFO_TX_BITRATE);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
- 	}
- 
--	if (!(sinfo->filled & BIT(NL80211_STA_INFO_RX_BITRATE))) {
-+	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_RX_BITRATE))) {
- 		if (sta_set_rate_info_rx(sta, &sinfo->rxrate) == 0)
--			sinfo->filled |= BIT(NL80211_STA_INFO_RX_BITRATE);
-+			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_BITRATE);
- 	}
- 
- 	if (tidstats && !cfg80211_sinfo_alloc_tid_stats(sinfo, GFP_KERNEL)) {
-@@ -2244,18 +2244,18 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- #ifdef CONFIG_MAC80211_MESH
--		sinfo->filled |= BIT(NL80211_STA_INFO_LLID) |
--				 BIT(NL80211_STA_INFO_PLID) |
--				 BIT(NL80211_STA_INFO_PLINK_STATE) |
--				 BIT(NL80211_STA_INFO_LOCAL_PM) |
--				 BIT(NL80211_STA_INFO_PEER_PM) |
--				 BIT(NL80211_STA_INFO_NONPEER_PM);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_LLID) |
-+				 BIT_ULL(NL80211_STA_INFO_PLID) |
-+				 BIT_ULL(NL80211_STA_INFO_PLINK_STATE) |
-+				 BIT_ULL(NL80211_STA_INFO_LOCAL_PM) |
-+				 BIT_ULL(NL80211_STA_INFO_PEER_PM) |
-+				 BIT_ULL(NL80211_STA_INFO_NONPEER_PM);
- 
- 		sinfo->llid = sta->mesh->llid;
- 		sinfo->plid = sta->mesh->plid;
- 		sinfo->plink_state = sta->mesh->plink_state;
- 		if (test_sta_flag(sta, WLAN_STA_TOFFSET_KNOWN)) {
--			sinfo->filled |= BIT(NL80211_STA_INFO_T_OFFSET);
-+			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_T_OFFSET);
- 			sinfo->t_offset = sta->mesh->t_offset;
- 		}
- 		sinfo->local_pm = sta->mesh->local_pm;
-@@ -2300,7 +2300,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 	thr = sta_get_expected_throughput(sta);
- 
- 	if (thr != 0) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
- 		sinfo->expected_throughput = thr;
- 	}
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 07514ca..abe838f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4561,14 +4561,14 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 	PUT_SINFO(CONNECTED_TIME, connected_time, u32);
- 	PUT_SINFO(INACTIVE_TIME, inactive_time, u32);
- 
--	if (sinfo->filled & (BIT(NL80211_STA_INFO_RX_BYTES) |
--			     BIT(NL80211_STA_INFO_RX_BYTES64)) &&
-+	if (sinfo->filled & (BIT_ULL(NL80211_STA_INFO_RX_BYTES) |
-+			     BIT_ULL(NL80211_STA_INFO_RX_BYTES64)) &&
- 	    nla_put_u32(msg, NL80211_STA_INFO_RX_BYTES,
- 			(u32)sinfo->rx_bytes))
- 		goto nla_put_failure;
- 
--	if (sinfo->filled & (BIT(NL80211_STA_INFO_TX_BYTES) |
--			     BIT(NL80211_STA_INFO_TX_BYTES64)) &&
-+	if (sinfo->filled & (BIT_ULL(NL80211_STA_INFO_TX_BYTES) |
-+			     BIT_ULL(NL80211_STA_INFO_TX_BYTES64)) &&
- 	    nla_put_u32(msg, NL80211_STA_INFO_TX_BYTES,
- 			(u32)sinfo->tx_bytes))
- 		goto nla_put_failure;
-@@ -4588,24 +4588,24 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 	default:
- 		break;
- 	}
--	if (sinfo->filled & BIT(NL80211_STA_INFO_CHAIN_SIGNAL)) {
-+	if (sinfo->filled & BIT_ULL(NL80211_STA_INFO_CHAIN_SIGNAL)) {
- 		if (!nl80211_put_signal(msg, sinfo->chains,
- 					sinfo->chain_signal,
- 					NL80211_STA_INFO_CHAIN_SIGNAL))
- 			goto nla_put_failure;
- 	}
--	if (sinfo->filled & BIT(NL80211_STA_INFO_CHAIN_SIGNAL_AVG)) {
-+	if (sinfo->filled & BIT_ULL(NL80211_STA_INFO_CHAIN_SIGNAL_AVG)) {
- 		if (!nl80211_put_signal(msg, sinfo->chains,
- 					sinfo->chain_signal_avg,
- 					NL80211_STA_INFO_CHAIN_SIGNAL_AVG))
- 			goto nla_put_failure;
- 	}
--	if (sinfo->filled & BIT(NL80211_STA_INFO_TX_BITRATE)) {
-+	if (sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_BITRATE)) {
- 		if (!nl80211_put_sta_rate(msg, &sinfo->txrate,
- 					  NL80211_STA_INFO_TX_BITRATE))
- 			goto nla_put_failure;
- 	}
--	if (sinfo->filled & BIT(NL80211_STA_INFO_RX_BITRATE)) {
-+	if (sinfo->filled & BIT_ULL(NL80211_STA_INFO_RX_BITRATE)) {
- 		if (!nl80211_put_sta_rate(msg, &sinfo->rxrate,
- 					  NL80211_STA_INFO_RX_BITRATE))
- 			goto nla_put_failure;
-@@ -4621,7 +4621,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 	PUT_SINFO(PEER_PM, peer_pm, u32);
- 	PUT_SINFO(NONPEER_PM, nonpeer_pm, u32);
- 
--	if (sinfo->filled & BIT(NL80211_STA_INFO_BSS_PARAM)) {
-+	if (sinfo->filled & BIT_ULL(NL80211_STA_INFO_BSS_PARAM)) {
- 		bss_param = nla_nest_start(msg, NL80211_STA_INFO_BSS_PARAM);
- 		if (!bss_param)
- 			goto nla_put_failure;
-@@ -4640,7 +4640,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 
- 		nla_nest_end(msg, bss_param);
- 	}
--	if ((sinfo->filled & BIT(NL80211_STA_INFO_STA_FLAGS)) &&
-+	if ((sinfo->filled & BIT_ULL(NL80211_STA_INFO_STA_FLAGS)) &&
- 	    nla_put(msg, NL80211_STA_INFO_STA_FLAGS,
- 		    sizeof(struct nl80211_sta_flag_update),
- 		    &sinfo->sta_flags))
-@@ -10160,7 +10160,7 @@ static int cfg80211_cqm_rssi_update(struct cfg80211_registered_device *rdev,
- 		if (err)
- 			return err;
- 
--		if (sinfo.filled & BIT(NL80211_STA_INFO_BEACON_SIGNAL_AVG))
-+		if (sinfo.filled & BIT_ULL(NL80211_STA_INFO_BEACON_SIGNAL_AVG))
- 			wdev->cqm_config->last_rssi_event_value =
- 				(s8) sinfo.rx_beacon_signal_avg;
- 	}
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index 05186a4..167f702 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -1278,7 +1278,7 @@ static int cfg80211_wext_giwrate(struct net_device *dev,
- 	if (err)
- 		return err;
- 
--	if (!(sinfo.filled & BIT(NL80211_STA_INFO_TX_BITRATE)))
-+	if (!(sinfo.filled & BIT_ULL(NL80211_STA_INFO_TX_BITRATE)))
- 		return -EOPNOTSUPP;
- 
- 	rate->value = 100000 * cfg80211_calculate_bitrate(&sinfo.txrate);
-@@ -1320,7 +1320,7 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
- 
- 	switch (rdev->wiphy.signal_type) {
- 	case CFG80211_SIGNAL_TYPE_MBM:
--		if (sinfo.filled & BIT(NL80211_STA_INFO_SIGNAL)) {
-+		if (sinfo.filled & BIT_ULL(NL80211_STA_INFO_SIGNAL)) {
- 			int sig = sinfo.signal;
- 			wstats.qual.updated |= IW_QUAL_LEVEL_UPDATED;
- 			wstats.qual.updated |= IW_QUAL_QUAL_UPDATED;
-@@ -1334,7 +1334,7 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
- 			break;
- 		}
- 	case CFG80211_SIGNAL_TYPE_UNSPEC:
--		if (sinfo.filled & BIT(NL80211_STA_INFO_SIGNAL)) {
-+		if (sinfo.filled & BIT_ULL(NL80211_STA_INFO_SIGNAL)) {
- 			wstats.qual.updated |= IW_QUAL_LEVEL_UPDATED;
- 			wstats.qual.updated |= IW_QUAL_QUAL_UPDATED;
- 			wstats.qual.level = sinfo.signal;
-@@ -1347,9 +1347,9 @@ static struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
- 	}
- 
- 	wstats.qual.updated |= IW_QUAL_NOISE_INVALID;
--	if (sinfo.filled & BIT(NL80211_STA_INFO_RX_DROP_MISC))
-+	if (sinfo.filled & BIT_ULL(NL80211_STA_INFO_RX_DROP_MISC))
- 		wstats.discard.misc = sinfo.rx_dropped_misc;
--	if (sinfo.filled & BIT(NL80211_STA_INFO_TX_FAILED))
-+	if (sinfo.filled & BIT_ULL(NL80211_STA_INFO_TX_FAILED))
- 		wstats.discard.retries = sinfo.tx_failed;
- 
- 	return &wstats;
+ 	/*deinit rfkill */
 -- 
-2.7.4
+2.15.1
