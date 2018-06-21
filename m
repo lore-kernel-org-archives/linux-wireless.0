@@ -1,49 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49968 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752928AbeFNIzt (ORCPT
+Received: from dnvrco-outbound-snat.email.rr.com ([107.14.73.227]:9941 "EHLO
+        dnvrco-cmomta03.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751048AbeFUOBm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Jun 2018 04:55:49 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Wei Yongjun <weiyongjun1@huawei.com>
-Cc: Govind Singh <govinds@codeaurora.org>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH net-next] ath10k: make some functions static
-References: <1527733994-149212-1-git-send-email-weiyongjun1@huawei.com>
-Date: Thu, 14 Jun 2018 11:55:44 +0300
-In-Reply-To: <1527733994-149212-1-git-send-email-weiyongjun1@huawei.com> (Wei
-        Yongjun's message of "Thu, 31 May 2018 02:33:14 +0000")
-Message-ID: <87lgbhagrz.fsf@kamboji.qca.qualcomm.com> (sfid-20180614_105554_838078_F3171B9B)
+        Thu, 21 Jun 2018 10:01:42 -0400
+Message-ID: <20180621140140.BQL4E.211759.root@dnvrco-web04> (sfid-20180621_160146_160578_72643943)
+Date: Thu, 21 Jun 2018 14:01:40 +0000
+From: <mgreger@cinci.rr.com>
+To: Tom Psyborg <pozega.tomislav@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: Re: Atheros AR9462 - 5Ghz not working
+Cc: Janusz Dziedzic <janusz.dziedzic@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        =?utf-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>,
+        sedat.dilek@gmail.com,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+In-Reply-To: <5B280692.2060106@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wei Yongjun <weiyongjun1@huawei.com> writes:
 
-> Fixes the following sparse warnings:
->
-> drivers/net/wireless/ath/ath10k/snoc.c:823:5: warning:
->  symbol 'ath10k_snoc_get_ce_id_from_irq' was not declared. Should it be static?
-> drivers/net/wireless/ath/ath10k/snoc.c:871:6: warning:
->  symbol 'ath10k_snoc_init_napi' was not declared. Should it be static?
->
-> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+---- Arend van Spriel <arend.vanspriel@broadcom.com> wrote: 
+> + Martin
+> 
+> On 6/18/2018 3:53 PM, mgreger@cinci.rr.com wrote:
+> >
+> > ---- Tom Psyborg <pozega.tomislav@gmail.com> wrote:
+> >> Hi
+> >>
+> >> Your log only show attemps on ch 2447, Can you try connecting to 5GHz
+> >> AP? Connect to Hidden Wireless Network option at the bottom of the
+> >> nm-applet? Running airodump in monitor mode to see if it captures
+> >> anything? Maybe your laptop's antennas were designed for 2.4G card
+> >> only but this just dumb guessing...
+> >>
+> >
+> > It won't connect to any 5GHz AP.
+> > I don't run network manager or Gnome, in fact X11 is not installed on this machine at all.
+> > I don't think there is such a thing as 2.4GHz vs 5GHz antennas.
+> 
+> Actually there is. At least there are 2.4G specific antennas and 
+> dual-band antennas.
+> 
+> In 4.11 there have been a couple eeprom related changes dealing with 
+> endianness of fields in eeprom. Could be those cause a regression for 
+> you. I don't have the exact sha id of those commits, but I added the 
+> author to this thread.
+> 
+> Regards,
+> Arend
+> 
 
-Your name in patchwork is wrong[1] and hence my script uses the wrong
-name. Please fix it by registering to patchwork[2] where it's possible
-to change your name during registration, but only one time. If that
-doesn't work then send a request to helpdesk@kernel.org and the admins
-can fix it.
+An interesting new development:
 
-But no need to resend this patch, I can fix your name manually this
-time.
+I've confirmed it's not the antenna as I was able to acquire some more cards from a different source which work fine.
 
-[1] "weiyongjun (A)" in https://patchwork.kernel.org/patch/10440159/
+Ostensibly they are the same card:  Atheros AR9462 : QCNFA222 reference design.
 
-[2] https://patchwork.kernel.org/register/
+The output from lspci for both working and non-working cards is: "03:00.0 Network controller: Qualcomm Atheros AR9462 Wireless Network Adapter".
 
+However the Subsystem listed in lspci is different. I don't have the exact value at the moment for the working cards, but it lists Dell and the part number DW1802. The non-working cards are AzureWave.
 
--- 
-Kalle Valo
+I've seen a lot of similar cards on ebay that I suspect are the AzureWave. A few offers on ebay are for the genuine Dell parts.
+
+What would be the best way to compare and contrast these cards to determine if there is a way to make them work?
+
+Inspect EEPROM? Someone previously mentioned calibration data, but I have no idea if it's possible to inspect or alter that.
