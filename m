@@ -1,79 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tartarus.angband.pl ([89.206.35.136]:41872 "EHLO
-        tartarus.angband.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751220AbeFHKn0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Jun 2018 06:43:26 -0400
-Date: Fri, 8 Jun 2018 12:43:23 +0200
-From: Adam Borowski <kilobyte@angband.pl>
-To: Jakub Kicinski <kubakici@wp.pl>, linux-wireless@vger.kernel.org
-Subject: WARNING: drivers/net/wireless/mediatek/mt7601u/phy.c:989
-Message-ID: <20180608104323.vaw6vtbmxdut6yld@angband.pl> (sfid-20180608_124330_733976_F56990B7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from nbd.name ([46.4.11.11]:55528 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932892AbeFUJSF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 21 Jun 2018 05:18:05 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 7/9] mt76: add a debugfs file to dump agc calibration information
+Date: Thu, 21 Jun 2018 11:17:59 +0200
+Message-Id: <20180621091801.41184-7-nbd@nbd.name> (sfid-20180621_111820_220239_72B01870)
+In-Reply-To: <20180621091801.41184-1-nbd@nbd.name>
+References: <20180621091801.41184-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
-In mid-merge-window kernel I'm getting this warning in mt7601.  My tree,
-skipping certainly irrelevant extra patches, has merge-base with master at
-289cf155d95df07ac1e692dfaa7036f10235c77c.
+Useful for debugging gain adjustment issues triggered by signal strength
+changes.
 
-static void mt7601u_agc_tune(struct mt7601u_dev *dev)
-{
-        u8 val = mt7601u_agc_default(dev);
-        long avg_rssi;
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x2.h        |  1 +
+ .../net/wireless/mediatek/mt76/mt76x2_debugfs.c    | 14 ++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x2_phy.c    |  1 +
+ 3 files changed, 16 insertions(+)
 
-        if (test_bit(MT7601U_STATE_SCANNING, &dev->state))
-                return;
-
-        /* Note: only in STA mode and not dozing; perhaps do this only if
-         *       there is enough rssi updates since last run?
-         *       Rssi updates are only on beacons and U2M so should work...
-         */
-        spin_lock_bh(&dev->con_mon_lock);
-        avg_rssi = ewma_rssi_read(&dev->avg_rssi);
-====>   WARN_ON_ONCE(avg_rssi == 0);
-        avg_rssi = -avg_rssi;
-
-
-WARNING: CPU: 4 PID: 109 at drivers/net/wireless/mediatek/mt7601u/phy.c:989 mt7601u_phy_calibrate+0x58b/0xaa0 [mt7601u]
-Modules linked in: arc4 mt7601u mac80211 sha256_generic snd_usb_audio snd_usbmidi_lib cfg80211 rfkill nouveau video ttm
-CPU: 4 PID: 109 Comm: kworker/u12:7 Not tainted 4.17.0-debug-07836-ga3643eb8ca3a #1
-Hardware name: System manufacturer System Product Name/M4A77T, BIOS 2401    05/18/2011
-Workqueue: phy0 mt7601u_phy_calibrate [mt7601u]
-RIP: 0010:mt7601u_phy_calibrate+0x58b/0xaa0 [mt7601u]
-Code: be b2 00 00 00 48 89 ef 0f 84 da 00 00 00 e8 1c f2 ff
-  ff 83 f8 01 19 c0 25 00 e0 ff ff 45 8d bc 07 66 46 00 00 e9 93 fc ff ff <0f>
-  0b e9 ba fe ff ff 8b 83 f0 07 00 00 e9 5d fc ff ff c0 e8 04 4d
-RSP: 0018:ffffc90001febe10 EFLAGS: 00010256
-RAX: 0000000000000000 RBX: ffff8802200f95d0 RCX: ffff88022700c020
-RDX: 0000000000000001 RSI: ffff88021ffac0b0 RDI: ffff8802200f9d20
-RBP: ffff8802200f9500 R08: 8080808080808080 R09: fefefefefefefeff
-R10: ffffffff8287baf0 R11: 000000000000001f R12: 0000000000000034
-R13: ffff8802200f9d20 R14: ffff88021f80de00 R15: 0000000000000000
-FS:  0000000000000000(0000) GS:ffff88022fd00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000563bf575c168 CR3: 00000002259ed000 CR4: 00000000000006e0
-Call Trace:
- ? process_one_work+0x239/0x680
- ? pwq_activate_delayed_work+0x5c/0x100
- ? worker_thread+0x4a/0x4b0
- ? process_one_work+0x680/0x680
- ? kthread+0x16b/0x220
- ? kthread_create_worker_on_cpu+0x40/0x40
- ? ret_from_fork+0x22/0x40
----[ end trace e40c73f71a371719 ]---
-
-As bisecting on real metal is more involved than a VM, I'm reporting first
--- in case you already have a fix pending.  If not, how may I help?  Bisect? 
-Some extra debug data?  Or, would you prefer to wait until the merge window
-is over?
-
-
-Meow!
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+index 06ca5a77dfdf..21de1168076d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+@@ -72,6 +72,7 @@ struct mt76x2_calibration {
+ 	int avg_rssi[MT_MAX_CHAINS];
+ 	int avg_rssi_all;
+ 
++	u16 false_cca;
+ 	s8 agc_gain_adjust;
+ 	s8 low_gain;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c b/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
+index 955ea3e692dd..3f86e01049f3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
+@@ -115,6 +115,18 @@ static const struct file_operations fops_dfs_stat = {
+ 	.release = single_release,
+ };
+ 
++static int read_agc(struct seq_file *file, void *data)
++{
++	struct mt76x2_dev *dev = dev_get_drvdata(file->private);
++
++	seq_printf(file, "avg_rssi: %d\n", dev->cal.avg_rssi_all);
++	seq_printf(file, "low_gain: %d\n", dev->cal.low_gain);
++	seq_printf(file, "false_cca: %d\n", dev->cal.false_cca);
++	seq_printf(file, "agc_gain_adjust: %d\n", dev->cal.agc_gain_adjust);
++
++	return 0;
++}
++
+ void mt76x2_init_debugfs(struct mt76x2_dev *dev)
+ {
+ 	struct dentry *dir;
+@@ -130,4 +142,6 @@ void mt76x2_init_debugfs(struct mt76x2_dev *dev)
+ 	debugfs_create_file("dfs_stats", 0400, dir, dev, &fops_dfs_stat);
+ 	debugfs_create_devm_seqfile(dev->mt76.dev, "txpower", dir,
+ 				    read_txpower);
++
++	debugfs_create_devm_seqfile(dev->mt76.dev, "agc", dir, read_agc);
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
+index 9c7b19ce73f2..94943aeb249d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
+@@ -488,6 +488,7 @@ mt76x2_phy_adjust_vga_gain(struct mt76x2_dev *dev)
+ 	u8 limit = dev->cal.low_gain > 0 ? 16 : 4;
+ 
+ 	false_cca = FIELD_GET(MT_RX_STAT_1_CCA_ERRORS, mt76_rr(dev, MT_RX_STAT_1));
++	dev->cal.false_cca = false_cca;
+ 	if (false_cca > 800 && dev->cal.agc_gain_adjust < limit)
+ 		dev->cal.agc_gain_adjust += 2;
+ 	else if (false_cca < 10 && dev->cal.agc_gain_adjust > 0)
 -- 
-⢀⣴⠾⠻⢶⣦⠀ I've read an article about how lively happy music boosts
-⣾⠁⢰⠒⠀⣿⡁ productivity.  You can read it, too, you just need the
-⢿⡄⠘⠷⠚⠋⠀ right music while doing so.  I recommend Skepticism
-⠈⠳⣄⠀⠀⠀⠀ (funeral doom metal).
+2.17.0
