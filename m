@@ -1,119 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55516 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:55504 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932899AbeFUJSF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S932534AbeFUJSF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 21 Jun 2018 05:18:05 -0400
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: kvalo@codeaurora.org
-Subject: [PATCH 1/9] mt76: fix beacon timer drift
-Date: Thu, 21 Jun 2018 11:17:53 +0200
-Message-Id: <20180621091801.41184-1-nbd@nbd.name> (sfid-20180621_111825_036519_3BB539FD)
+Subject: [PATCH 6/9] mt76: fix variable gain adjustment range
+Date: Thu, 21 Jun 2018 11:17:58 +0200
+Message-Id: <20180621091801.41184-6-nbd@nbd.name> (sfid-20180621_111810_530171_B5868441)
+In-Reply-To: <20180621091801.41184-1-nbd@nbd.name>
+References: <20180621091801.41184-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The beacon timer drifts by 1 microsecond every TBTT. After 20 minutes
-with a beacon interval of 100, the drift will be almost 12 ms, enough to
-cause weird issues for devices in powersave mode.
-
-Since the beacon timer is configured in units of 1/16 TU (64 us), we
-need to adjust it once every 64 beacons and only for one beacon.
+The range should only be limited to 4 for really weak signals, for all
+other gain settings the range is 16.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2.h   |  5 ++-
- .../net/wireless/mediatek/mt76/mt76x2_main.c  |  5 ++-
- .../net/wireless/mediatek/mt76/mt76x2_tx.c    | 33 +++++++++++++++++++
- 3 files changed, 41 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x2_phy.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-index dc12bbdbb2ee..06ca5a77dfdf 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-@@ -120,10 +120,13 @@ struct mt76x2_dev {
- 	u8 beacon_mask;
- 	u8 beacon_data_mask;
- 
--	u32 rxfilter;
-+	u8 tbtt_count;
-+	u16 beacon_int;
- 
- 	u16 chainmask;
- 
-+	u32 rxfilter;
-+
- 	struct mt76x2_calibration cal;
- 
- 	s8 target_power;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-index ce90ff999b49..e4e41faf6739 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_main.c
-@@ -238,10 +238,13 @@ mt76x2_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	if (changed & BSS_CHANGED_BSSID)
- 		mt76x2_mac_set_bssid(dev, mvif->idx, info->bssid);
- 
--	if (changed & BSS_CHANGED_BEACON_INT)
-+	if (changed & BSS_CHANGED_BEACON_INT) {
- 		mt76_rmw_field(dev, MT_BEACON_TIME_CFG,
- 			       MT_BEACON_TIME_CFG_INTVAL,
- 			       info->beacon_int << 4);
-+		dev->beacon_int = info->beacon_int;
-+		dev->tbtt_count = 0;
-+	}
- 
- 	if (changed & BSS_CHANGED_BEACON_ENABLED) {
- 		tasklet_disable(&dev->pre_tbtt_tasklet);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-index e46eafc4c436..560376dd1133 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-@@ -218,6 +218,37 @@ mt76x2_add_buffered_bc(void *priv, u8 *mac, struct ieee80211_vif *vif)
- 	data->tail[mvif->idx] = skb;
- }
- 
-+static void
-+mt76x2_resync_beacon_timer(struct mt76x2_dev *dev)
-+{
-+	u32 timer_val = dev->beacon_int << 4;
-+
-+	dev->tbtt_count++;
-+
-+	/*
-+	 * Beacon timer drifts by 1us every tick, the timer is configured
-+	 * in 1/16 TU (64us) units.
-+	 */
-+	if (dev->tbtt_count < 62)
-+		return;
-+
-+	if (dev->tbtt_count >= 64) {
-+		dev->tbtt_count = 0;
-+		return;
-+	}
-+
-+	/*
-+	 * The updated beacon interval takes effect after two TBTT, because
-+	 * at this point the original interval has already been loaded into
-+	 * the next TBTT_TIMER value
-+	 */
-+	if (dev->tbtt_count == 62)
-+		timer_val -= 1;
-+
-+	mt76_rmw_field(dev, MT_BEACON_TIME_CFG,
-+		       MT_BEACON_TIME_CFG_INTVAL, timer_val);
-+}
-+
- void mt76x2_pre_tbtt_tasklet(unsigned long arg)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
+index 51fd7ddfa8f5..9c7b19ce73f2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
+@@ -485,7 +485,7 @@ static void
+ mt76x2_phy_adjust_vga_gain(struct mt76x2_dev *dev)
  {
- 	struct mt76x2_dev *dev = (struct mt76x2_dev *) arg;
-@@ -226,6 +257,8 @@ void mt76x2_pre_tbtt_tasklet(unsigned long arg)
- 	struct sk_buff *skb;
- 	int i, nframes;
+ 	u32 false_cca;
+-	u8 limit = dev->cal.low_gain > 1 ? 4 : 16;
++	u8 limit = dev->cal.low_gain > 0 ? 16 : 4;
  
-+	mt76x2_resync_beacon_timer(dev);
-+
- 	data.dev = dev;
- 	__skb_queue_head_init(&data.q);
- 
+ 	false_cca = FIELD_GET(MT_RX_STAT_1_CCA_ERRORS, mt76_rr(dev, MT_RX_STAT_1));
+ 	if (false_cca > 800 && dev->cal.agc_gain_adjust < limit)
 -- 
 2.17.0
