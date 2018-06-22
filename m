@@ -1,266 +1,482 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:14346 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753572AbeFJU3l (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:51364 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750759AbeFVFuT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Jun 2018 16:29:41 -0400
+        Fri, 22 Jun 2018 01:50:19 -0400
 From: Maya Erez <merez@codeaurora.org>
 To: Kalle Valo <kvalo@codeaurora.org>
 Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH v2 1/7] wil6210: add support for Talyn-MB (Talyn ver 2.0) device
-Date: Sun, 10 Jun 2018 23:29:29 +0300
-Message-Id: <1528662575-7746-2-git-send-email-merez@codeaurora.org> (sfid-20180610_222958_386250_B847D806)
-In-Reply-To: <1528662575-7746-1-git-send-email-merez@codeaurora.org>
-References: <1528662575-7746-1-git-send-email-merez@codeaurora.org>
+        wil6210@qti.qualcomm.com, Gidon Studinski <gidons@codeaurora.org>
+Subject: [PATCH v4 6/8] wil6210: add support for enhanced DMA debugfs
+Date: Fri, 22 Jun 2018 08:49:21 +0300
+Message-Id: <1529646563-18221-7-git-send-email-merez@codeaurora.org> (sfid-20180622_075033_277591_4E41E41D)
+In-Reply-To: <1529646563-18221-1-git-send-email-merez@codeaurora.org>
+References: <1529646563-18221-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add changes to support initialization of Talyn-MB wil6210
-device:
-- Add definition for Talyn-MB new JTAG id
-- Define talyn_mb_fw_mapping array
-- Add Talyn-MB reset sequence
+Add debugfs support for enhanced DMA TX and RX descriptor rings,
+TX and RX status rings and RX buffer management.
 
+Run the following command to print the TX and RX status rings:
+cat srings
+
+Run the following command in order to select the status ring:
+echo STATUS_RING_IDX > dbg_sring_index
+
+Run the following command in order to select the status message:
+echo STATUS_MSG_IDX > dbg_status_msg_index
+
+Run the following command in order to print the selected status
+message from the selected status ring:
+cat status_msg
+
+Run the following command in order to print the RX buffer management
+debug information:
+cat rx_buff_mgmt
+
+Signed-off-by: Gidon Studinski <gidons@codeaurora.org>
 Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/ath/wil6210/main.c     | 48 +++++++++++++++++++------
- drivers/net/wireless/ath/wil6210/pcie_bus.c | 11 +++++-
- drivers/net/wireless/ath/wil6210/wil6210.h  | 11 +++++-
- drivers/net/wireless/ath/wil6210/wmi.c      | 55 +++++++++++++++++++++++++++++
- 4 files changed, 113 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/wil6210/debugfs.c | 347 +++++++++++++++++++++++++----
+ 1 file changed, 307 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index e7006c2..1282e1a 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -736,14 +736,24 @@ static void wil_bl_prepare_halt(struct wil6210_priv *wil)
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 8232fdd..58ce044 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -30,6 +30,9 @@
+ static u32 mem_addr;
+ static u32 dbg_txdesc_index;
+ static u32 dbg_ring_index; /* 24+ for Rx, 0..23 for Tx */
++static u32 dbg_status_msg_index;
++/* 0..wil->num_rx_status_rings-1 for Rx, wil->tx_sring_idx for Tx */
++static u32 dbg_sring_index;
  
- static inline void wil_halt_cpu(struct wil6210_priv *wil)
- {
--	wil_w(wil, RGF_USER_USER_CPU_0, BIT_USER_USER_CPU_MAN_RST);
--	wil_w(wil, RGF_USER_MAC_CPU_0,  BIT_USER_MAC_CPU_MAN_RST);
-+	if (wil->hw_version >= HW_VER_TALYN_MB) {
-+		wil_w(wil, RGF_USER_USER_CPU_0_TALYN_MB,
-+		      BIT_USER_USER_CPU_MAN_RST);
-+		wil_w(wil, RGF_USER_MAC_CPU_0_TALYN_MB,
-+		      BIT_USER_MAC_CPU_MAN_RST);
-+	} else {
-+		wil_w(wil, RGF_USER_USER_CPU_0, BIT_USER_USER_CPU_MAN_RST);
-+		wil_w(wil, RGF_USER_MAC_CPU_0,  BIT_USER_MAC_CPU_MAN_RST);
-+	}
- }
- 
- static inline void wil_release_cpu(struct wil6210_priv *wil)
- {
- 	/* Start CPU */
--	wil_w(wil, RGF_USER_USER_CPU_0, 1);
-+	if (wil->hw_version >= HW_VER_TALYN_MB)
-+		wil_w(wil, RGF_USER_USER_CPU_0_TALYN_MB, 1);
-+	else
-+		wil_w(wil, RGF_USER_USER_CPU_0, 1);
- }
- 
- static void wil_set_oob_mode(struct wil6210_priv *wil, u8 mode)
-@@ -811,10 +821,17 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
- 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_0, 0x3ff81f);
- 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1, 0xf);
- 
--	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0xFE000000);
--	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0x0000003F);
--	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0x000000f0);
--	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0xFFE7FE00);
-+	if (wil->hw_version >= HW_VER_TALYN_MB) {
-+		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0x7e000000);
-+		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0x0000003f);
-+		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0xc00000f0);
-+		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0xffe7fe00);
-+	} else {
-+		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0xfe000000);
-+		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0x0000003f);
-+		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0x000000f0);
-+		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0xffe7fe00);
-+	}
- 
- 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_0, 0x0);
- 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1, 0x0);
-@@ -1042,8 +1059,14 @@ static int wil_get_otp_info(struct wil6210_priv *wil)
- 	struct net_device *ndev = wil->main_ndev;
- 	struct wiphy *wiphy = wil_to_wiphy(wil);
- 	u8 mac[8];
-+	int mac_addr;
-+
-+	if (wil->hw_version >= HW_VER_TALYN_MB)
-+		mac_addr = RGF_OTP_MAC_TALYN_MB;
-+	else
-+		mac_addr = RGF_OTP_MAC;
- 
--	wil_memcpy_fromio_32(mac, wil->csr + HOSTADDR(RGF_OTP_MAC),
-+	wil_memcpy_fromio_32(mac, wil->csr + HOSTADDR(mac_addr),
- 			     sizeof(mac));
- 	if (!is_valid_ether_addr(mac)) {
- 		wil_err(wil, "Invalid MAC %pM\n", mac);
-@@ -1147,8 +1170,13 @@ static void wil_pre_fw_config(struct wil6210_priv *wil)
- 	/* it is W1C, clear by writing back same value */
- 	wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
- 	wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
--	/* clear PAL_UNIT_ICR (potential D0->D3 leftover) */
--	wil_s(wil, RGF_PAL_UNIT_ICR + offsetof(struct RGF_ICR, ICR), 0);
-+	/* clear PAL_UNIT_ICR (potential D0->D3 leftover)
-+	 * In Talyn-MB host cannot access this register due to
-+	 * access control, hence PAL_UNIT_ICR is cleared by the FW
-+	 */
-+	if (wil->hw_version < HW_VER_TALYN_MB)
-+		wil_s(wil, RGF_PAL_UNIT_ICR + offsetof(struct RGF_ICR, ICR),
-+		      0);
- 
- 	if (wil->fw_calib_result > 0) {
- 		__le32 val = cpu_to_le32(wil->fw_calib_result |
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index 19cbc6a..3a7e406 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -85,7 +85,7 @@ int wil_set_capabilities(struct wil6210_priv *wil)
- 		wil->rgf_ucode_assert_code_addr = SPARROW_RGF_UCODE_ASSERT_CODE;
- 		break;
- 	case JTAG_DEV_ID_TALYN:
--		wil->hw_name = "Talyn";
-+		wil->hw_name = "Talyn-MA";
- 		wil->hw_version = HW_VER_TALYN;
- 		memcpy(fw_mapping, talyn_fw_mapping, sizeof(talyn_fw_mapping));
- 		wil->rgf_fw_assert_code_addr = TALYN_RGF_FW_ASSERT_CODE;
-@@ -94,6 +94,15 @@ int wil_set_capabilities(struct wil6210_priv *wil)
- 		    BIT_NO_FLASH_INDICATION)
- 			set_bit(hw_capa_no_flash, wil->hw_capa);
- 		break;
-+	case JTAG_DEV_ID_TALYN_MB:
-+		wil->hw_name = "Talyn-MB";
-+		wil->hw_version = HW_VER_TALYN_MB;
-+		memcpy(fw_mapping, talyn_mb_fw_mapping,
-+		       sizeof(talyn_mb_fw_mapping));
-+		wil->rgf_fw_assert_code_addr = TALYN_RGF_FW_ASSERT_CODE;
-+		wil->rgf_ucode_assert_code_addr = TALYN_RGF_UCODE_ASSERT_CODE;
-+		set_bit(hw_capa_no_flash, wil->hw_capa);
-+		break;
- 	default:
- 		wil_err(wil, "Unknown board hardware, chip_id 0x%08x, chip_revision 0x%08x\n",
- 			jtag_id, chip_revision);
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index b623510c..4cd8e40 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -311,14 +311,20 @@ struct RGF_ICR {
- #define RGF_USER_JTAG_DEV_ID	(0x880b34) /* device ID */
- 	#define JTAG_DEV_ID_SPARROW	(0x2632072f)
- 	#define JTAG_DEV_ID_TALYN	(0x7e0e1)
-+	#define JTAG_DEV_ID_TALYN_MB	(0x1007e0e1)
- 
- #define RGF_USER_REVISION_ID		(0x88afe4)
- #define RGF_USER_REVISION_ID_MASK	(3)
- 	#define REVISION_ID_SPARROW_B0	(0x0)
- 	#define REVISION_ID_SPARROW_D0	(0x3)
- 
-+#define RGF_OTP_MAC_TALYN_MB		(0x8a0304)
- #define RGF_OTP_MAC			(0x8a0620)
- 
-+/* Talyn-MB */
-+#define RGF_USER_USER_CPU_0_TALYN_MB	(0x8c0138)
-+#define RGF_USER_MAC_CPU_0_TALYN_MB	(0x8c0154)
-+
- /* crash codes for FW/Ucode stored here */
- 
- /* ASSERT RGFs */
-@@ -332,6 +338,7 @@ enum {
- 	HW_VER_SPARROW_B0, /* REVISION_ID_SPARROW_B0 */
- 	HW_VER_SPARROW_D0, /* REVISION_ID_SPARROW_D0 */
- 	HW_VER_TALYN,	/* JTAG_DEV_ID_TALYN */
-+	HW_VER_TALYN_MB	/* JTAG_DEV_ID_TALYN_MB */
+ enum dbg_off_type {
+ 	doff_u32 = 0,
+@@ -47,6 +50,36 @@ struct dbg_off {
+ 	enum dbg_off_type type;
  };
  
- /* popular locations */
-@@ -349,7 +356,8 @@ enum {
- /* Hardware definitions end */
- #define SPARROW_FW_MAPPING_TABLE_SIZE 10
- #define TALYN_FW_MAPPING_TABLE_SIZE 13
--#define MAX_FW_MAPPING_TABLE_SIZE 13
-+#define TALYN_MB_FW_MAPPING_TABLE_SIZE 19
-+#define MAX_FW_MAPPING_TABLE_SIZE 19
++static void wil_print_desc_edma(struct seq_file *s, struct wil6210_priv *wil,
++				struct wil_ring *ring,
++				char _s, char _h, int idx)
++{
++	u8 num_of_descs;
++	bool has_skb = false;
++
++	if (ring->is_rx) {
++		struct wil_rx_enhanced_desc *rx_d =
++			(struct wil_rx_enhanced_desc *)
++			&ring->va[idx].rx.enhanced;
++		u16 buff_id = le16_to_cpu(rx_d->mac.buff_id);
++
++		has_skb = wil->rx_buff_mgmt.buff_arr[buff_id].skb;
++		seq_printf(s, "%c", (has_skb) ? _h : _s);
++	} else {
++		struct wil_tx_enhanced_desc *d =
++			(struct wil_tx_enhanced_desc *)
++			&ring->va[idx].tx.enhanced;
++
++		num_of_descs = (u8)d->mac.d[2];
++		has_skb = ring->ctx[idx].skb;
++		if (num_of_descs >= 1)
++			seq_printf(s, "%c", ring->ctx[idx].skb ? _h : _s);
++		else
++			/* num_of_descs == 0, it's a frag in a list of descs */
++			seq_printf(s, "%c", has_skb ? 'h' : _s);
++	}
++}
++
+ static void wil_print_ring(struct seq_file *s, struct wil6210_priv *wil,
+ 			   const char *name, struct wil_ring *ring,
+ 			   char _s, char _h)
+@@ -58,7 +91,10 @@ static void wil_print_ring(struct seq_file *s, struct wil6210_priv *wil,
+ 	seq_printf(s, "  pa     = %pad\n", &ring->pa);
+ 	seq_printf(s, "  va     = 0x%p\n", ring->va);
+ 	seq_printf(s, "  size   = %d\n", ring->size);
+-	seq_printf(s, "  swtail = %d\n", ring->swtail);
++	if (wil->use_enhanced_dma_hw && ring->is_rx)
++		seq_printf(s, "  swtail = %u\n", *ring->edma_rx_swtail.va);
++	else
++		seq_printf(s, "  swtail = %d\n", ring->swtail);
+ 	seq_printf(s, "  swhead = %d\n", ring->swhead);
+ 	seq_printf(s, "  hwtail = [0x%08x] -> ", ring->hwtail);
+ 	if (x) {
+@@ -72,13 +108,16 @@ static void wil_print_ring(struct seq_file *s, struct wil6210_priv *wil,
+ 		uint i;
  
- struct fw_map {
- 	u32 from; /* linker address - from, inclusive */
-@@ -363,6 +371,7 @@ struct fw_map {
- extern const struct fw_map sparrow_fw_mapping[SPARROW_FW_MAPPING_TABLE_SIZE];
- extern const struct fw_map sparrow_d0_mac_rgf_ext;
- extern const struct fw_map talyn_fw_mapping[TALYN_FW_MAPPING_TABLE_SIZE];
-+extern const struct fw_map talyn_mb_fw_mapping[TALYN_MB_FW_MAPPING_TABLE_SIZE];
- extern struct fw_map fw_mapping[MAX_FW_MAPPING_TABLE_SIZE];
- 
- /**
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 5d99124..5509f94 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -164,6 +164,61 @@
- 	{0x800000, 0x808000, 0xa78000, "uc_data", false},
+ 		for (i = 0; i < ring->size; i++) {
+-			volatile struct vring_tx_desc *d =
+-				&ring->va[i].tx.legacy;
+-
+-			if ((i % 128) == 0 && (i != 0))
++			if ((i % 128) == 0 && i != 0)
+ 				seq_puts(s, "\n");
+-			seq_printf(s, "%c", (d->dma.status & BIT(0)) ?
+-					_s : (ring->ctx[i].skb ? _h : 'h'));
++			if (wil->use_enhanced_dma_hw) {
++				wil_print_desc_edma(s, wil, ring, _s, _h, i);
++			} else {
++				volatile struct vring_tx_desc *d =
++					&ring->va[i].tx.legacy;
++				seq_printf(s, "%c", (d->dma.status & BIT(0)) ?
++					   _s : (ring->ctx[i].skb ? _h : 'h'));
++			}
+ 		}
+ 		seq_puts(s, "\n");
+ 	}
+@@ -157,6 +196,74 @@ static int wil_ring_seq_open(struct inode *inode, struct file *file)
+ 	.llseek		= seq_lseek,
  };
  
-+/**
-+ * @talyn_mb_fw_mapping provides memory remapping table for Talyn-MB
-+ *
-+ * array size should be in sync with the declaration in the wil6210.h
-+ *
-+ * Talyn MB memory mapping:
-+ * Linker address         PCI/Host address
-+ *                        0x880000 .. 0xc80000  4Mb BAR0
-+ * 0x800000 .. 0x820000   0xa00000 .. 0xa20000  128k DCCM
-+ * 0x840000 .. 0x858000   0xa20000 .. 0xa38000  96k PERIPH
-+ */
-+const struct fw_map talyn_mb_fw_mapping[] = {
-+	/* FW code RAM 768k */
-+	{0x000000, 0x0c0000, 0x900000, "fw_code", true},
-+	/* FW data RAM 128k */
-+	{0x800000, 0x820000, 0xa00000, "fw_data", true},
-+	/* periph. data RAM 96k */
-+	{0x840000, 0x858000, 0xa20000, "fw_peri", true},
-+	/* various RGF 40k */
-+	{0x880000, 0x88a000, 0x880000, "rgf", true},
-+	/* AGC table 4k */
-+	{0x88a000, 0x88b000, 0x88a000, "AGC_tbl", true},
-+	/* Pcie_ext_rgf 4k */
-+	{0x88b000, 0x88c000, 0x88b000, "rgf_ext", true},
-+	/* mac_ext_rgf 2256b */
-+	{0x88c000, 0x88c8d0, 0x88c000, "mac_rgf_ext", true},
-+	/* ext USER RGF 4k */
-+	{0x88d000, 0x88e000, 0x88d000, "ext_user_rgf", true},
-+	/* SEC PKA 16k */
-+	{0x890000, 0x894000, 0x890000, "sec_pka", true},
-+	/* SEC KDF RGF 3096b */
-+	{0x898000, 0x898c18, 0x898000, "sec_kdf_rgf", true},
-+	/* SEC MAIN 2124b */
-+	{0x89a000, 0x89a84c, 0x89a000, "sec_main", true},
-+	/* OTP 4k */
-+	{0x8a0000, 0x8a1000, 0x8a0000, "otp", true},
-+	/* DMA EXT RGF 64k */
-+	{0x8b0000, 0x8c0000, 0x8b0000, "dma_ext_rgf", true},
-+	/* DUM USER RGF 528b */
-+	{0x8c0000, 0x8c0210, 0x8c0000, "dum_user_rgf", true},
-+	/* DMA OFU 296b */
-+	{0x8c2000, 0x8c2128, 0x8c2000, "dma_ofu", true},
-+	/* ucode debug 4k */
-+	{0x8c3000, 0x8c4000, 0x8c3000, "ucode_debug", true},
-+	/* upper area 1536k */
-+	{0x900000, 0xa80000, 0x900000, "upper", true},
-+	/* UCODE areas - accessible by debugfs blobs but not by
-+	 * wmi_addr_remap. UCODE areas MUST be added AFTER FW areas!
-+	 */
-+	/* ucode code RAM 256k */
-+	{0x000000, 0x040000, 0xa38000, "uc_code", false},
-+	/* ucode data RAM 32k */
-+	{0x800000, 0x808000, 0xa78000, "uc_data", false},
++static void wil_print_sring(struct seq_file *s, struct wil6210_priv *wil,
++			    struct wil_status_ring *sring)
++{
++	void __iomem *x = wmi_addr(wil, sring->hwtail);
++	int sring_idx = sring - wil->srings;
++	u32 v;
++
++	seq_printf(s, "Status Ring %s [ %d ] = {\n",
++		   sring->is_rx ? "RX" : "TX", sring_idx);
++	seq_printf(s, "  pa     = %pad\n", &sring->pa);
++	seq_printf(s, "  va     = 0x%pK\n", sring->va);
++	seq_printf(s, "  size   = %d\n", sring->size);
++	seq_printf(s, "  elem_size   = %zu\n", sring->elem_size);
++	seq_printf(s, "  swhead = %d\n", sring->swhead);
++	seq_printf(s, "  hwtail = [0x%08x] -> ", sring->hwtail);
++	if (x) {
++		v = readl_relaxed(x);
++		seq_printf(s, "0x%08x = %d\n", v, v);
++	} else {
++		seq_puts(s, "???\n");
++	}
++	seq_printf(s, "  desc_rdy_pol   = %d\n", sring->desc_rdy_pol);
++
++	if (sring->va && (sring->size <= (1 << WIL_RING_SIZE_ORDER_MAX))) {
++		uint i;
++
++		for (i = 0; i < sring->size; i++) {
++			u32 *sdword_0 =
++				(u32 *)(sring->va + (sring->elem_size * i));
++
++			if ((i % 128) == 0 && i != 0)
++				seq_puts(s, "\n");
++			if (i == sring->swhead)
++				seq_printf(s, "%c", (*sdword_0 & BIT(31)) ?
++					   'X' : 'x');
++			else
++				seq_printf(s, "%c", (*sdword_0 & BIT(31)) ?
++					   '1' : '0');
++		}
++		seq_puts(s, "\n");
++	}
++	seq_puts(s, "}\n");
++}
++
++static int wil_srings_debugfs_show(struct seq_file *s, void *data)
++{
++	struct wil6210_priv *wil = s->private;
++	int i = 0;
++
++	for (i = 0; i < WIL6210_MAX_STATUS_RINGS; i++)
++		if (wil->srings[i].va)
++			wil_print_sring(s, wil, &wil->srings[i]);
++
++	return 0;
++}
++
++static int wil_srings_seq_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, wil_srings_debugfs_show, inode->i_private);
++}
++
++static const struct file_operations fops_srings = {
++	.open		= wil_srings_seq_open,
++	.release	= single_release,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
 +};
 +
- struct fw_map fw_mapping[MAX_FW_MAPPING_TABLE_SIZE];
+ static void wil_seq_hexdump(struct seq_file *s, void *p, int len,
+ 			    const char *prefix)
+ {
+@@ -974,53 +1081,92 @@ static int wil_txdesc_debugfs_show(struct seq_file *s, void *data)
+ {
+ 	struct wil6210_priv *wil = s->private;
+ 	struct wil_ring *ring;
+-	bool tx = (dbg_ring_index < WIL6210_MAX_TX_RINGS);
++	bool tx;
++	int ring_idx = dbg_ring_index;
++	int txdesc_idx = dbg_txdesc_index;
++	volatile struct vring_tx_desc *d;
++	volatile u32 *u;
++	struct sk_buff *skb;
++
++	if (wil->use_enhanced_dma_hw) {
++		/* RX ring index == 0 */
++		if (ring_idx >= WIL6210_MAX_TX_RINGS) {
++			seq_printf(s, "invalid ring index %d\n", ring_idx);
++			return 0;
++		}
++		tx = ring_idx > 0; /* desc ring 0 is reserved for RX */
++	} else {
++		/* RX ring index == WIL6210_MAX_TX_RINGS */
++		if (ring_idx > WIL6210_MAX_TX_RINGS) {
++			seq_printf(s, "invalid ring index %d\n", ring_idx);
++			return 0;
++		}
++		tx = (ring_idx < WIL6210_MAX_TX_RINGS);
++	}
  
- struct blink_on_off_time led_blink_time[] = {
+-	ring = tx ? &wil->ring_tx[dbg_ring_index] : &wil->ring_rx;
++	ring = tx ? &wil->ring_tx[ring_idx] : &wil->ring_rx;
+ 
+ 	if (!ring->va) {
+ 		if (tx)
+-			seq_printf(s, "No Tx[%2d] VRING\n", dbg_ring_index);
++			seq_printf(s, "No Tx[%2d] RING\n", ring_idx);
+ 		else
+-			seq_puts(s, "No Rx VRING\n");
++			seq_puts(s, "No Rx RING\n");
+ 		return 0;
+ 	}
+ 
+-	if (dbg_txdesc_index < ring->size) {
+-		/* use struct vring_tx_desc for Rx as well,
+-		 * only field used, .dma.length, is the same
+-		 */
+-		volatile struct vring_tx_desc *d =
+-				&ring->va[dbg_txdesc_index].tx.legacy;
+-		volatile u32 *u = (volatile u32 *)d;
+-		struct sk_buff *skb = ring->ctx[dbg_txdesc_index].skb;
+-
++	if (txdesc_idx >= ring->size) {
+ 		if (tx)
+-			seq_printf(s, "Tx[%2d][%3d] = {\n", dbg_ring_index,
+-				   dbg_txdesc_index);
++			seq_printf(s, "[%2d] TxDesc index (%d) >= size (%d)\n",
++				   ring_idx, txdesc_idx, ring->size);
+ 		else
+-			seq_printf(s, "Rx[%3d] = {\n", dbg_txdesc_index);
+-		seq_printf(s, "  MAC = 0x%08x 0x%08x 0x%08x 0x%08x\n",
+-			   u[0], u[1], u[2], u[3]);
+-		seq_printf(s, "  DMA = 0x%08x 0x%08x 0x%08x 0x%08x\n",
+-			   u[4], u[5], u[6], u[7]);
+-		seq_printf(s, "  SKB = 0x%p\n", skb);
++			seq_printf(s, "RxDesc index (%d) >= size (%d)\n",
++				   txdesc_idx, ring->size);
++		return 0;
++	}
++
++	/* use struct vring_tx_desc for Rx as well,
++	 * only field used, .dma.length, is the same
++	 */
++	d = &ring->va[txdesc_idx].tx.legacy;
++	u = (volatile u32 *)d;
++	skb = NULL;
+ 
+-		if (skb) {
+-			skb_get(skb);
+-			wil_seq_print_skb(s, skb);
+-			kfree_skb(skb);
++	if (wil->use_enhanced_dma_hw) {
++		if (tx) {
++			skb = ring->ctx[txdesc_idx].skb;
++		} else {
++			struct wil_rx_enhanced_desc *rx_d =
++				(struct wil_rx_enhanced_desc *)
++				&ring->va[txdesc_idx].rx.enhanced;
++			u16 buff_id = le16_to_cpu(rx_d->mac.buff_id);
++
++			if (!wil_val_in_range(buff_id, 0,
++					      wil->rx_buff_mgmt.size)) {
++				seq_printf(s, "invalid buff_id %d\n", buff_id);
++				return 0;
++			}
++			skb = wil->rx_buff_mgmt.buff_arr[buff_id].skb;
+ 		}
+-		seq_puts(s, "}\n");
+ 	} else {
+-		if (tx)
+-			seq_printf(s, "[%2d] TxDesc index (%d) >= size (%d)\n",
+-				   dbg_ring_index, dbg_txdesc_index,
+-				   ring->size);
+-		else
+-			seq_printf(s, "RxDesc index (%d) >= size (%d)\n",
+-				   dbg_txdesc_index, ring->size);
++		skb = ring->ctx[txdesc_idx].skb;
++	}
++	if (tx)
++		seq_printf(s, "Tx[%2d][%3d] = {\n", ring_idx,
++			   txdesc_idx);
++	else
++		seq_printf(s, "Rx[%3d] = {\n", txdesc_idx);
++	seq_printf(s, "  MAC = 0x%08x 0x%08x 0x%08x 0x%08x\n",
++		   u[0], u[1], u[2], u[3]);
++	seq_printf(s, "  DMA = 0x%08x 0x%08x 0x%08x 0x%08x\n",
++		   u[4], u[5], u[6], u[7]);
++	seq_printf(s, "  SKB = 0x%p\n", skb);
++
++	if (skb) {
++		skb_get(skb);
++		wil_seq_print_skb(s, skb);
++		kfree_skb(skb);
+ 	}
++	seq_puts(s, "}\n");
+ 
+ 	return 0;
+ }
+@@ -1037,6 +1183,115 @@ static int wil_txdesc_seq_open(struct inode *inode, struct file *file)
+ 	.llseek		= seq_lseek,
+ };
+ 
++/*---------Tx/Rx status message------------*/
++static int wil_status_msg_debugfs_show(struct seq_file *s, void *data)
++{
++	struct wil6210_priv *wil = s->private;
++	int sring_idx = dbg_sring_index;
++	struct wil_status_ring *sring;
++	bool tx = sring_idx == wil->tx_sring_idx ? 1 : 0;
++	u32 status_msg_idx = dbg_status_msg_index;
++	u32 *u;
++
++	if (sring_idx >= WIL6210_MAX_STATUS_RINGS) {
++		seq_printf(s, "invalid status ring index %d\n", sring_idx);
++		return 0;
++	}
++
++	sring = &wil->srings[sring_idx];
++
++	if (!sring->va) {
++		seq_printf(s, "No %cX status ring\n", tx ? 'T' : 'R');
++		return 0;
++	}
++
++	if (status_msg_idx >= sring->size) {
++		seq_printf(s, "%cxDesc index (%d) >= size (%d)\n",
++			   tx ? 'T' : 'R', status_msg_idx, sring->size);
++		return 0;
++	}
++
++	u = sring->va + (sring->elem_size * status_msg_idx);
++
++	seq_printf(s, "%cx[%d][%3d] = {\n",
++		   tx ? 'T' : 'R', sring_idx, status_msg_idx);
++
++	seq_printf(s, "  0x%08x 0x%08x 0x%08x 0x%08x\n",
++		   u[0], u[1], u[2], u[3]);
++	if (!tx && !wil->use_compressed_rx_status)
++		seq_printf(s, "  0x%08x 0x%08x 0x%08x 0x%08x\n",
++			   u[4], u[5], u[6], u[7]);
++
++	seq_puts(s, "}\n");
++
++	return 0;
++}
++
++static int wil_status_msg_seq_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, wil_status_msg_debugfs_show,
++			   inode->i_private);
++}
++
++static const struct file_operations fops_status_msg = {
++	.open		= wil_status_msg_seq_open,
++	.release	= single_release,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++};
++
++static int wil_print_rx_buff(struct seq_file *s, struct list_head *lh)
++{
++	struct wil_rx_buff *it;
++	int i = 0;
++
++	list_for_each_entry(it, lh, list) {
++		if ((i % 16) == 0 && i != 0)
++			seq_puts(s, "\n    ");
++		seq_printf(s, "[%4d] ", it->id);
++		i++;
++	}
++	seq_printf(s, "\nNumber of buffers: %u\n", i);
++
++	return i;
++}
++
++static int wil_rx_buff_mgmt_debugfs_show(struct seq_file *s, void *data)
++{
++	struct wil6210_priv *wil = s->private;
++	struct wil_rx_buff_mgmt *rbm = &wil->rx_buff_mgmt;
++	int num_active;
++	int num_free;
++
++	seq_printf(s, "  size = %zu\n", rbm->size);
++	seq_printf(s, "  free_list_empty_cnt = %lu\n",
++		   rbm->free_list_empty_cnt);
++
++	/* Print active list */
++	seq_puts(s, "  Active list:\n");
++	num_active = wil_print_rx_buff(s, &rbm->active);
++	seq_puts(s, "\n  Free list:\n");
++	num_free = wil_print_rx_buff(s, &rbm->free);
++
++	seq_printf(s, "  Total number of buffers: %u\n",
++		   num_active + num_free);
++
++	return 0;
++}
++
++static int wil_rx_buff_mgmt_seq_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, wil_rx_buff_mgmt_debugfs_show,
++			   inode->i_private);
++}
++
++static const struct file_operations fops_rx_buff_mgmt = {
++	.open		= wil_rx_buff_mgmt_seq_open,
++	.release	= single_release,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++};
++
+ /*---------beamforming------------*/
+ static char *wil_bfstatus_str(u32 status)
+ {
+@@ -1479,6 +1734,13 @@ static int wil_sta_debugfs_show(struct seq_file *s, void *data)
+ 				   p->stats.rx_large_frame,
+ 				   p->stats.rx_replay);
+ 
++			if (wil->use_enhanced_dma_hw)
++				seq_printf(s,
++					   "mic error  %lu, key error %lu, amsdu error %lu\n",
++					   p->stats.rx_mic_error,
++					   p->stats.rx_key_error,
++					   p->stats.rx_amsdu_error);
++
+ 			seq_puts(s, "Rx/MCS:");
+ 			for (mcs = 0; mcs < ARRAY_SIZE(p->stats.rx_per_mcs);
+ 			     mcs++)
+@@ -1869,6 +2131,9 @@ static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
+ 	{"fw_version",	0444,		&fops_fw_version},
+ 	{"suspend_stats",	0644,	&fops_suspend_stats},
+ 	{"compressed_rx_status", 0644,	&fops_compressed_rx_status},
++	{"srings",	0444,		&fops_srings},
++	{"status_msg",	0444,		&fops_status_msg},
++	{"rx_buff_mgmt",	0444,	&fops_rx_buff_mgmt},
+ };
+ 
+ static void wil6210_debugfs_init_files(struct wil6210_priv *wil,
+@@ -1936,6 +2201,8 @@ static void wil6210_debugfs_init_isr(struct wil6210_priv *wil,
+ 	{"ring_index",	0644, (ulong)&dbg_ring_index, doff_u32},
+ 	{"mem_addr",	0644, (ulong)&mem_addr, doff_u32},
+ 	{"led_polarity", 0644, (ulong)&led_polarity, doff_u8},
++	{"status_index", 0644, (ulong)&dbg_status_msg_index, doff_u32},
++	{"sring_index",	0644, (ulong)&dbg_sring_index, doff_u32},
+ 	{},
+ };
+ 
 -- 
 1.9.1
