@@ -1,35 +1,240 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga17.intel.com ([192.55.52.151]:61758 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751444AbeFDEQs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Jun 2018 00:16:48 -0400
-Date: Mon, 4 Jun 2018 06:16:47 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Colin King <colin.king@canonical.com>
-Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] nfc: st21nfca: use setup_timer instead of init_timer
-Message-ID: <20180604041647.GA8977@zurbaran.ger.intel.com> (sfid-20180604_061854_919182_CD7B603F)
-References: <20171124133741.32371-1-colin.king@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171124133741.32371-1-colin.king@canonical.com>
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:13891 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750915AbeFVFuV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Jun 2018 01:50:21 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com
+Subject: [PATCH v4 8/8] wil6210: remove crash dump collection from OTP section
+Date: Fri, 22 Jun 2018 08:49:23 +0300
+Message-Id: <1529646563-18221-9-git-send-email-merez@codeaurora.org> (sfid-20180622_075026_526123_1A9C89BE)
+In-Reply-To: <1529646563-18221-1-git-send-email-merez@codeaurora.org>
+References: <1529646563-18221-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Colin,
+In some cases where the device is stuck, reading from OTP
+can timeout. As OTP section is known there is no need to read
+it during device crash dump collection.
+Adding a new field to struct fw_map to indicate if to include
+this section in crash dump collection.
 
-On Fri, Nov 24, 2017 at 01:37:41PM +0000, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Use setup_timer function instead of initializing timer with the
-> function and data fields.
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/nfc/st21nfca/se.c | 10 ++++------
->  1 file changed, 4 insertions(+), 6 deletions(-)
-Applied to nfc-next, thanks.
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/wil6210.h        |  1 +
+ drivers/net/wireless/ath/wil6210/wil_crash_dump.c |  5 +-
+ drivers/net/wireless/ath/wil6210/wmi.c            | 86 +++++++++++------------
+ 3 files changed, 47 insertions(+), 45 deletions(-)
 
-Cheers,
-Samuel.
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index e639ba7..d963c76 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -403,6 +403,7 @@ struct fw_map {
+ 	u32 host; /* PCI/Host address - BAR0 + 0x880000 */
+ 	const char *name; /* for debugfs */
+ 	bool fw; /* true if FW mapping, false if UCODE mapping */
++	bool crash_dump; /* true if should be dumped during crash dump */
+ };
+ 
+ /* array size should be in sync with actual definition in the wmi.c */
+diff --git a/drivers/net/wireless/ath/wil6210/wil_crash_dump.c b/drivers/net/wireless/ath/wil6210/wil_crash_dump.c
+index 1ed3306..dc33a0b 100644
+--- a/drivers/net/wireless/ath/wil6210/wil_crash_dump.c
++++ b/drivers/net/wireless/ath/wil6210/wil_crash_dump.c
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2015,2017 Qualcomm Atheros, Inc.
++ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -36,7 +37,7 @@ static int wil_fw_get_crash_dump_bounds(struct wil6210_priv *wil,
+ 	for (i = 1; i < ARRAY_SIZE(fw_mapping); i++) {
+ 		map = &fw_mapping[i];
+ 
+-		if (!map->fw)
++		if (!map->crash_dump)
+ 			continue;
+ 
+ 		if (map->host < host_min)
+@@ -85,7 +86,7 @@ int wil_fw_copy_crash_dump(struct wil6210_priv *wil, void *dest, u32 size)
+ 	for (i = 0; i < ARRAY_SIZE(fw_mapping); i++) {
+ 		map = &fw_mapping[i];
+ 
+-		if (!map->fw)
++		if (!map->crash_dump)
+ 			continue;
+ 
+ 		data = (void * __force)wil->csr + HOSTADDR(map->host);
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 0370b7e..71056c8 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -89,28 +89,28 @@
+  */
+ const struct fw_map sparrow_fw_mapping[] = {
+ 	/* FW code RAM 256k */
+-	{0x000000, 0x040000, 0x8c0000, "fw_code", true},
++	{0x000000, 0x040000, 0x8c0000, "fw_code", true, true},
+ 	/* FW data RAM 32k */
+-	{0x800000, 0x808000, 0x900000, "fw_data", true},
++	{0x800000, 0x808000, 0x900000, "fw_data", true, true},
+ 	/* periph data 128k */
+-	{0x840000, 0x860000, 0x908000, "fw_peri", true},
++	{0x840000, 0x860000, 0x908000, "fw_peri", true, true},
+ 	/* various RGF 40k */
+-	{0x880000, 0x88a000, 0x880000, "rgf", true},
++	{0x880000, 0x88a000, 0x880000, "rgf", true, true},
+ 	/* AGC table   4k */
+-	{0x88a000, 0x88b000, 0x88a000, "AGC_tbl", true},
++	{0x88a000, 0x88b000, 0x88a000, "AGC_tbl", true, true},
+ 	/* Pcie_ext_rgf 4k */
+-	{0x88b000, 0x88c000, 0x88b000, "rgf_ext", true},
++	{0x88b000, 0x88c000, 0x88b000, "rgf_ext", true, true},
+ 	/* mac_ext_rgf 512b */
+-	{0x88c000, 0x88c200, 0x88c000, "mac_rgf_ext", true},
++	{0x88c000, 0x88c200, 0x88c000, "mac_rgf_ext", true, true},
+ 	/* upper area 548k */
+-	{0x8c0000, 0x949000, 0x8c0000, "upper", true},
++	{0x8c0000, 0x949000, 0x8c0000, "upper", true, true},
+ 	/* UCODE areas - accessible by debugfs blobs but not by
+ 	 * wmi_addr_remap. UCODE areas MUST be added AFTER FW areas!
+ 	 */
+ 	/* ucode code RAM 128k */
+-	{0x000000, 0x020000, 0x920000, "uc_code", false},
++	{0x000000, 0x020000, 0x920000, "uc_code", false, false},
+ 	/* ucode data RAM 16k */
+-	{0x800000, 0x804000, 0x940000, "uc_data", false},
++	{0x800000, 0x804000, 0x940000, "uc_data", false, false},
+ };
+ 
+ /**
+@@ -118,7 +118,7 @@
+  * it is a bit larger to support extra features
+  */
+ const struct fw_map sparrow_d0_mac_rgf_ext = {
+-	0x88c000, 0x88c500, 0x88c000, "mac_rgf_ext", true
++	0x88c000, 0x88c500, 0x88c000, "mac_rgf_ext", true, true
+ };
+ 
+ /**
+@@ -134,34 +134,34 @@
+  */
+ const struct fw_map talyn_fw_mapping[] = {
+ 	/* FW code RAM 1M */
+-	{0x000000, 0x100000, 0x900000, "fw_code", true},
++	{0x000000, 0x100000, 0x900000, "fw_code", true, true},
+ 	/* FW data RAM 128k */
+-	{0x800000, 0x820000, 0xa00000, "fw_data", true},
++	{0x800000, 0x820000, 0xa00000, "fw_data", true, true},
+ 	/* periph. data RAM 96k */
+-	{0x840000, 0x858000, 0xa20000, "fw_peri", true},
++	{0x840000, 0x858000, 0xa20000, "fw_peri", true, true},
+ 	/* various RGF 40k */
+-	{0x880000, 0x88a000, 0x880000, "rgf", true},
++	{0x880000, 0x88a000, 0x880000, "rgf", true, true},
+ 	/* AGC table 4k */
+-	{0x88a000, 0x88b000, 0x88a000, "AGC_tbl", true},
++	{0x88a000, 0x88b000, 0x88a000, "AGC_tbl", true, true},
+ 	/* Pcie_ext_rgf 4k */
+-	{0x88b000, 0x88c000, 0x88b000, "rgf_ext", true},
++	{0x88b000, 0x88c000, 0x88b000, "rgf_ext", true, true},
+ 	/* mac_ext_rgf 1344b */
+-	{0x88c000, 0x88c540, 0x88c000, "mac_rgf_ext", true},
++	{0x88c000, 0x88c540, 0x88c000, "mac_rgf_ext", true, true},
+ 	/* ext USER RGF 4k */
+-	{0x88d000, 0x88e000, 0x88d000, "ext_user_rgf", true},
++	{0x88d000, 0x88e000, 0x88d000, "ext_user_rgf", true, true},
+ 	/* OTP 4k */
+-	{0x8a0000, 0x8a1000, 0x8a0000, "otp", true},
++	{0x8a0000, 0x8a1000, 0x8a0000, "otp", true, false},
+ 	/* DMA EXT RGF 64k */
+-	{0x8b0000, 0x8c0000, 0x8b0000, "dma_ext_rgf", true},
++	{0x8b0000, 0x8c0000, 0x8b0000, "dma_ext_rgf", true, true},
+ 	/* upper area 1536k */
+-	{0x900000, 0xa80000, 0x900000, "upper", true},
++	{0x900000, 0xa80000, 0x900000, "upper", true, true},
+ 	/* UCODE areas - accessible by debugfs blobs but not by
+ 	 * wmi_addr_remap. UCODE areas MUST be added AFTER FW areas!
+ 	 */
+ 	/* ucode code RAM 256k */
+-	{0x000000, 0x040000, 0xa38000, "uc_code", false},
++	{0x000000, 0x040000, 0xa38000, "uc_code", false, false},
+ 	/* ucode data RAM 32k */
+-	{0x800000, 0x808000, 0xa78000, "uc_data", false},
++	{0x800000, 0x808000, 0xa78000, "uc_data", false, false},
+ };
+ 
+ /**
+@@ -177,46 +177,46 @@
+  */
+ const struct fw_map talyn_mb_fw_mapping[] = {
+ 	/* FW code RAM 768k */
+-	{0x000000, 0x0c0000, 0x900000, "fw_code", true},
++	{0x000000, 0x0c0000, 0x900000, "fw_code", true, true},
+ 	/* FW data RAM 128k */
+-	{0x800000, 0x820000, 0xa00000, "fw_data", true},
++	{0x800000, 0x820000, 0xa00000, "fw_data", true, true},
+ 	/* periph. data RAM 96k */
+-	{0x840000, 0x858000, 0xa20000, "fw_peri", true},
++	{0x840000, 0x858000, 0xa20000, "fw_peri", true, true},
+ 	/* various RGF 40k */
+-	{0x880000, 0x88a000, 0x880000, "rgf", true},
++	{0x880000, 0x88a000, 0x880000, "rgf", true, true},
+ 	/* AGC table 4k */
+-	{0x88a000, 0x88b000, 0x88a000, "AGC_tbl", true},
++	{0x88a000, 0x88b000, 0x88a000, "AGC_tbl", true, true},
+ 	/* Pcie_ext_rgf 4k */
+-	{0x88b000, 0x88c000, 0x88b000, "rgf_ext", true},
++	{0x88b000, 0x88c000, 0x88b000, "rgf_ext", true, true},
+ 	/* mac_ext_rgf 2256b */
+-	{0x88c000, 0x88c8d0, 0x88c000, "mac_rgf_ext", true},
++	{0x88c000, 0x88c8d0, 0x88c000, "mac_rgf_ext", true, true},
+ 	/* ext USER RGF 4k */
+-	{0x88d000, 0x88e000, 0x88d000, "ext_user_rgf", true},
++	{0x88d000, 0x88e000, 0x88d000, "ext_user_rgf", true, true},
+ 	/* SEC PKA 16k */
+-	{0x890000, 0x894000, 0x890000, "sec_pka", true},
++	{0x890000, 0x894000, 0x890000, "sec_pka", true, true},
+ 	/* SEC KDF RGF 3096b */
+-	{0x898000, 0x898c18, 0x898000, "sec_kdf_rgf", true},
++	{0x898000, 0x898c18, 0x898000, "sec_kdf_rgf", true, true},
+ 	/* SEC MAIN 2124b */
+-	{0x89a000, 0x89a84c, 0x89a000, "sec_main", true},
++	{0x89a000, 0x89a84c, 0x89a000, "sec_main", true, true},
+ 	/* OTP 4k */
+-	{0x8a0000, 0x8a1000, 0x8a0000, "otp", true},
++	{0x8a0000, 0x8a1000, 0x8a0000, "otp", true, false},
+ 	/* DMA EXT RGF 64k */
+-	{0x8b0000, 0x8c0000, 0x8b0000, "dma_ext_rgf", true},
++	{0x8b0000, 0x8c0000, 0x8b0000, "dma_ext_rgf", true, true},
+ 	/* DUM USER RGF 528b */
+-	{0x8c0000, 0x8c0210, 0x8c0000, "dum_user_rgf", true},
++	{0x8c0000, 0x8c0210, 0x8c0000, "dum_user_rgf", true, true},
+ 	/* DMA OFU 296b */
+-	{0x8c2000, 0x8c2128, 0x8c2000, "dma_ofu", true},
++	{0x8c2000, 0x8c2128, 0x8c2000, "dma_ofu", true, true},
+ 	/* ucode debug 4k */
+-	{0x8c3000, 0x8c4000, 0x8c3000, "ucode_debug", true},
++	{0x8c3000, 0x8c4000, 0x8c3000, "ucode_debug", true, true},
+ 	/* upper area 1536k */
+-	{0x900000, 0xa80000, 0x900000, "upper", true},
++	{0x900000, 0xa80000, 0x900000, "upper", true, true},
+ 	/* UCODE areas - accessible by debugfs blobs but not by
+ 	 * wmi_addr_remap. UCODE areas MUST be added AFTER FW areas!
+ 	 */
+ 	/* ucode code RAM 256k */
+-	{0x000000, 0x040000, 0xa38000, "uc_code", false},
++	{0x000000, 0x040000, 0xa38000, "uc_code", false, false},
+ 	/* ucode data RAM 32k */
+-	{0x800000, 0x808000, 0xa78000, "uc_data", false},
++	{0x800000, 0x808000, 0xa78000, "uc_data", false, false},
+ };
+ 
+ struct fw_map fw_mapping[MAX_FW_MAPPING_TABLE_SIZE];
+-- 
+1.9.1
