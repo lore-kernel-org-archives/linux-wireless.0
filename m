@@ -1,46 +1,266 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59730 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754644AbeF0QQB (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:51364 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750826AbeFVFuN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Jun 2018 12:16:01 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/9] mt76: fix beacon timer drift
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180621091801.41184-1-nbd@nbd.name>
-References: <20180621091801.41184-1-nbd@nbd.name>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <20180627161601.33DF36024C@smtp.codeaurora.org> (sfid-20180627_181605_426758_EF752F3E)
-Date: Wed, 27 Jun 2018 16:16:01 +0000 (UTC)
+        Fri, 22 Jun 2018 01:50:13 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com
+Subject: [PATCH v4 1/8] wil6210: add support for Talyn-MB (Talyn ver 2.0) device
+Date: Fri, 22 Jun 2018 08:49:16 +0300
+Message-Id: <1529646563-18221-2-git-send-email-merez@codeaurora.org> (sfid-20180622_075019_100286_C2761396)
+In-Reply-To: <1529646563-18221-1-git-send-email-merez@codeaurora.org>
+References: <1529646563-18221-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> wrote:
+Add changes to support initialization of Talyn-MB wil6210
+device:
+- Add definition for Talyn-MB new JTAG id
+- Define talyn_mb_fw_mapping array
+- Add Talyn-MB reset sequence
 
-> The beacon timer drifts by 1 microsecond every TBTT. After 20 minutes
-> with a beacon interval of 100, the drift will be almost 12 ms, enough to
-> cause weird issues for devices in powersave mode.
-> 
-> Since the beacon timer is configured in units of 1/16 TU (64 us), we
-> need to adjust it once every 64 beacons and only for one beacon.
-> 
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/main.c     | 48 +++++++++++++++++++------
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 11 +++++-
+ drivers/net/wireless/ath/wil6210/wil6210.h  | 11 +++++-
+ drivers/net/wireless/ath/wil6210/wmi.c      | 55 +++++++++++++++++++++++++++++
+ 4 files changed, 113 insertions(+), 12 deletions(-)
 
-9 patches applied to wireless-drivers-next.git, thanks.
-
-aea38272920c mt76: fix beacon timer drift
-9afef0fddaa1 mt76: fix threshold for gain adjustment
-6cdb9614a818 mt76: fix swapped values for RXO-18 in gain control
-929211687197 mt76: adjust AGC control register 26 based on gain for VHT80
-fa967b586031 mt76: clear false CCA counters after changing gain settings
-8e31f0d35a88 mt76: fix variable gain adjustment range
-108ec4dafd61 mt76: add a debugfs file to dump agc calibration information
-32e49efe0f15 mt76: track ewma rssi for gain adjustment per station
-c3ae2103e069 mt76: improve gain adjustment in noisy environments
-
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index e7006c2..1282e1a 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -736,14 +736,24 @@ static void wil_bl_prepare_halt(struct wil6210_priv *wil)
+ 
+ static inline void wil_halt_cpu(struct wil6210_priv *wil)
+ {
+-	wil_w(wil, RGF_USER_USER_CPU_0, BIT_USER_USER_CPU_MAN_RST);
+-	wil_w(wil, RGF_USER_MAC_CPU_0,  BIT_USER_MAC_CPU_MAN_RST);
++	if (wil->hw_version >= HW_VER_TALYN_MB) {
++		wil_w(wil, RGF_USER_USER_CPU_0_TALYN_MB,
++		      BIT_USER_USER_CPU_MAN_RST);
++		wil_w(wil, RGF_USER_MAC_CPU_0_TALYN_MB,
++		      BIT_USER_MAC_CPU_MAN_RST);
++	} else {
++		wil_w(wil, RGF_USER_USER_CPU_0, BIT_USER_USER_CPU_MAN_RST);
++		wil_w(wil, RGF_USER_MAC_CPU_0,  BIT_USER_MAC_CPU_MAN_RST);
++	}
+ }
+ 
+ static inline void wil_release_cpu(struct wil6210_priv *wil)
+ {
+ 	/* Start CPU */
+-	wil_w(wil, RGF_USER_USER_CPU_0, 1);
++	if (wil->hw_version >= HW_VER_TALYN_MB)
++		wil_w(wil, RGF_USER_USER_CPU_0_TALYN_MB, 1);
++	else
++		wil_w(wil, RGF_USER_USER_CPU_0, 1);
+ }
+ 
+ static void wil_set_oob_mode(struct wil6210_priv *wil, u8 mode)
+@@ -811,10 +821,17 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
+ 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_0, 0x3ff81f);
+ 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1, 0xf);
+ 
+-	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0xFE000000);
+-	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0x0000003F);
+-	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0x000000f0);
+-	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0xFFE7FE00);
++	if (wil->hw_version >= HW_VER_TALYN_MB) {
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0x7e000000);
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0x0000003f);
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0xc00000f0);
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0xffe7fe00);
++	} else {
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0xfe000000);
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0x0000003f);
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0x000000f0);
++		wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0xffe7fe00);
++	}
+ 
+ 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_0, 0x0);
+ 	wil_w(wil, RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1, 0x0);
+@@ -1042,8 +1059,14 @@ static int wil_get_otp_info(struct wil6210_priv *wil)
+ 	struct net_device *ndev = wil->main_ndev;
+ 	struct wiphy *wiphy = wil_to_wiphy(wil);
+ 	u8 mac[8];
++	int mac_addr;
++
++	if (wil->hw_version >= HW_VER_TALYN_MB)
++		mac_addr = RGF_OTP_MAC_TALYN_MB;
++	else
++		mac_addr = RGF_OTP_MAC;
+ 
+-	wil_memcpy_fromio_32(mac, wil->csr + HOSTADDR(RGF_OTP_MAC),
++	wil_memcpy_fromio_32(mac, wil->csr + HOSTADDR(mac_addr),
+ 			     sizeof(mac));
+ 	if (!is_valid_ether_addr(mac)) {
+ 		wil_err(wil, "Invalid MAC %pM\n", mac);
+@@ -1147,8 +1170,13 @@ static void wil_pre_fw_config(struct wil6210_priv *wil)
+ 	/* it is W1C, clear by writing back same value */
+ 	wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
+ 	wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
+-	/* clear PAL_UNIT_ICR (potential D0->D3 leftover) */
+-	wil_s(wil, RGF_PAL_UNIT_ICR + offsetof(struct RGF_ICR, ICR), 0);
++	/* clear PAL_UNIT_ICR (potential D0->D3 leftover)
++	 * In Talyn-MB host cannot access this register due to
++	 * access control, hence PAL_UNIT_ICR is cleared by the FW
++	 */
++	if (wil->hw_version < HW_VER_TALYN_MB)
++		wil_s(wil, RGF_PAL_UNIT_ICR + offsetof(struct RGF_ICR, ICR),
++		      0);
+ 
+ 	if (wil->fw_calib_result > 0) {
+ 		__le32 val = cpu_to_le32(wil->fw_calib_result |
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index 19cbc6a..3a7e406 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -85,7 +85,7 @@ int wil_set_capabilities(struct wil6210_priv *wil)
+ 		wil->rgf_ucode_assert_code_addr = SPARROW_RGF_UCODE_ASSERT_CODE;
+ 		break;
+ 	case JTAG_DEV_ID_TALYN:
+-		wil->hw_name = "Talyn";
++		wil->hw_name = "Talyn-MA";
+ 		wil->hw_version = HW_VER_TALYN;
+ 		memcpy(fw_mapping, talyn_fw_mapping, sizeof(talyn_fw_mapping));
+ 		wil->rgf_fw_assert_code_addr = TALYN_RGF_FW_ASSERT_CODE;
+@@ -94,6 +94,15 @@ int wil_set_capabilities(struct wil6210_priv *wil)
+ 		    BIT_NO_FLASH_INDICATION)
+ 			set_bit(hw_capa_no_flash, wil->hw_capa);
+ 		break;
++	case JTAG_DEV_ID_TALYN_MB:
++		wil->hw_name = "Talyn-MB";
++		wil->hw_version = HW_VER_TALYN_MB;
++		memcpy(fw_mapping, talyn_mb_fw_mapping,
++		       sizeof(talyn_mb_fw_mapping));
++		wil->rgf_fw_assert_code_addr = TALYN_RGF_FW_ASSERT_CODE;
++		wil->rgf_ucode_assert_code_addr = TALYN_RGF_UCODE_ASSERT_CODE;
++		set_bit(hw_capa_no_flash, wil->hw_capa);
++		break;
+ 	default:
+ 		wil_err(wil, "Unknown board hardware, chip_id 0x%08x, chip_revision 0x%08x\n",
+ 			jtag_id, chip_revision);
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index b623510c..4cd8e40 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -311,14 +311,20 @@ struct RGF_ICR {
+ #define RGF_USER_JTAG_DEV_ID	(0x880b34) /* device ID */
+ 	#define JTAG_DEV_ID_SPARROW	(0x2632072f)
+ 	#define JTAG_DEV_ID_TALYN	(0x7e0e1)
++	#define JTAG_DEV_ID_TALYN_MB	(0x1007e0e1)
+ 
+ #define RGF_USER_REVISION_ID		(0x88afe4)
+ #define RGF_USER_REVISION_ID_MASK	(3)
+ 	#define REVISION_ID_SPARROW_B0	(0x0)
+ 	#define REVISION_ID_SPARROW_D0	(0x3)
+ 
++#define RGF_OTP_MAC_TALYN_MB		(0x8a0304)
+ #define RGF_OTP_MAC			(0x8a0620)
+ 
++/* Talyn-MB */
++#define RGF_USER_USER_CPU_0_TALYN_MB	(0x8c0138)
++#define RGF_USER_MAC_CPU_0_TALYN_MB	(0x8c0154)
++
+ /* crash codes for FW/Ucode stored here */
+ 
+ /* ASSERT RGFs */
+@@ -332,6 +338,7 @@ enum {
+ 	HW_VER_SPARROW_B0, /* REVISION_ID_SPARROW_B0 */
+ 	HW_VER_SPARROW_D0, /* REVISION_ID_SPARROW_D0 */
+ 	HW_VER_TALYN,	/* JTAG_DEV_ID_TALYN */
++	HW_VER_TALYN_MB	/* JTAG_DEV_ID_TALYN_MB */
+ };
+ 
+ /* popular locations */
+@@ -349,7 +356,8 @@ enum {
+ /* Hardware definitions end */
+ #define SPARROW_FW_MAPPING_TABLE_SIZE 10
+ #define TALYN_FW_MAPPING_TABLE_SIZE 13
+-#define MAX_FW_MAPPING_TABLE_SIZE 13
++#define TALYN_MB_FW_MAPPING_TABLE_SIZE 19
++#define MAX_FW_MAPPING_TABLE_SIZE 19
+ 
+ struct fw_map {
+ 	u32 from; /* linker address - from, inclusive */
+@@ -363,6 +371,7 @@ struct fw_map {
+ extern const struct fw_map sparrow_fw_mapping[SPARROW_FW_MAPPING_TABLE_SIZE];
+ extern const struct fw_map sparrow_d0_mac_rgf_ext;
+ extern const struct fw_map talyn_fw_mapping[TALYN_FW_MAPPING_TABLE_SIZE];
++extern const struct fw_map talyn_mb_fw_mapping[TALYN_MB_FW_MAPPING_TABLE_SIZE];
+ extern struct fw_map fw_mapping[MAX_FW_MAPPING_TABLE_SIZE];
+ 
+ /**
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 5d99124..5509f94 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -164,6 +164,61 @@
+ 	{0x800000, 0x808000, 0xa78000, "uc_data", false},
+ };
+ 
++/**
++ * @talyn_mb_fw_mapping provides memory remapping table for Talyn-MB
++ *
++ * array size should be in sync with the declaration in the wil6210.h
++ *
++ * Talyn MB memory mapping:
++ * Linker address         PCI/Host address
++ *                        0x880000 .. 0xc80000  4Mb BAR0
++ * 0x800000 .. 0x820000   0xa00000 .. 0xa20000  128k DCCM
++ * 0x840000 .. 0x858000   0xa20000 .. 0xa38000  96k PERIPH
++ */
++const struct fw_map talyn_mb_fw_mapping[] = {
++	/* FW code RAM 768k */
++	{0x000000, 0x0c0000, 0x900000, "fw_code", true},
++	/* FW data RAM 128k */
++	{0x800000, 0x820000, 0xa00000, "fw_data", true},
++	/* periph. data RAM 96k */
++	{0x840000, 0x858000, 0xa20000, "fw_peri", true},
++	/* various RGF 40k */
++	{0x880000, 0x88a000, 0x880000, "rgf", true},
++	/* AGC table 4k */
++	{0x88a000, 0x88b000, 0x88a000, "AGC_tbl", true},
++	/* Pcie_ext_rgf 4k */
++	{0x88b000, 0x88c000, 0x88b000, "rgf_ext", true},
++	/* mac_ext_rgf 2256b */
++	{0x88c000, 0x88c8d0, 0x88c000, "mac_rgf_ext", true},
++	/* ext USER RGF 4k */
++	{0x88d000, 0x88e000, 0x88d000, "ext_user_rgf", true},
++	/* SEC PKA 16k */
++	{0x890000, 0x894000, 0x890000, "sec_pka", true},
++	/* SEC KDF RGF 3096b */
++	{0x898000, 0x898c18, 0x898000, "sec_kdf_rgf", true},
++	/* SEC MAIN 2124b */
++	{0x89a000, 0x89a84c, 0x89a000, "sec_main", true},
++	/* OTP 4k */
++	{0x8a0000, 0x8a1000, 0x8a0000, "otp", true},
++	/* DMA EXT RGF 64k */
++	{0x8b0000, 0x8c0000, 0x8b0000, "dma_ext_rgf", true},
++	/* DUM USER RGF 528b */
++	{0x8c0000, 0x8c0210, 0x8c0000, "dum_user_rgf", true},
++	/* DMA OFU 296b */
++	{0x8c2000, 0x8c2128, 0x8c2000, "dma_ofu", true},
++	/* ucode debug 4k */
++	{0x8c3000, 0x8c4000, 0x8c3000, "ucode_debug", true},
++	/* upper area 1536k */
++	{0x900000, 0xa80000, 0x900000, "upper", true},
++	/* UCODE areas - accessible by debugfs blobs but not by
++	 * wmi_addr_remap. UCODE areas MUST be added AFTER FW areas!
++	 */
++	/* ucode code RAM 256k */
++	{0x000000, 0x040000, 0xa38000, "uc_code", false},
++	/* ucode data RAM 32k */
++	{0x800000, 0x808000, 0xa78000, "uc_data", false},
++};
++
+ struct fw_map fw_mapping[MAX_FW_MAPPING_TABLE_SIZE];
+ 
+ struct blink_on_off_time led_blink_time[] = {
 -- 
-https://patchwork.kernel.org/patch/10479537/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
