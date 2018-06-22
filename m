@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga06-in.huawei.com ([45.249.212.32]:59719 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751861AbeF3Gfo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Jun 2018 02:35:44 -0400
-From: YueHaibing <yuehaibing@huawei.com>
-To: <simon@thekelleys.org.uk>, <kvalo@codeaurora.org>
-CC: <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>, <davem@davemloft.net>,
-        <andy.shevchenko@gmail.com>, YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH v2] atmel: using strlcpy() to avoid possible buffer overflows
-Date: Sat, 30 Jun 2018 14:33:41 +0800
-Message-ID: <20180630063341.9900-1-yuehaibing@huawei.com> (sfid-20180630_083627_106412_CAC0082F)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35516 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933878AbeFVSnc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Jun 2018 14:43:32 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 0/6] brcmfmac: fix 160MHz support and monitor mode
+Date: Fri, 22 Jun 2018 20:43:18 +0200
+Message-Id: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180622_204347_330242_E762E733)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-'firmware' is a module param which may been longer than firmware_id,
-so using strlcpy() to guard against overflows. Also priv is allocated
-with zeroed memory,no need to set firmware_id[0] to '\0'.
+Here a couple of patches in preparation of monitor mode support. It
+is mostly about querying firmware for support. While at it I stumbled
+upon the fact that 160MHz was not completely implemented in the driver
+so there is a patch for that as well.
 
-v1 -> v2: remove priv->firmware_id[0] = '\0';
+The first two patches are actually some changes to the patches that
+Rafal submitted. So this series depend on:
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- drivers/net/wireless/atmel/atmel.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+[V3,2/2] brcmfmac: handle monitor mode marked msgbuf packets [1]
 
-diff --git a/drivers/net/wireless/atmel/atmel.c b/drivers/net/wireless/atmel/atmel.c
-index b01dc34..cec715b 100644
---- a/drivers/net/wireless/atmel/atmel.c
-+++ b/drivers/net/wireless/atmel/atmel.c
-@@ -1516,10 +1516,9 @@ struct net_device *init_atmel_card(unsigned short irq, unsigned long port,
- 	priv->present_callback = card_present;
- 	priv->card = card;
- 	priv->firmware = NULL;
--	priv->firmware_id[0] = '\0';
- 	priv->firmware_type = fw_type;
- 	if (firmware) /* module parameter */
--		strcpy(priv->firmware_id, firmware);
-+		strlcpy(priv->firmware_id, firmware, sizeof(priv->firmware_id));
- 	priv->bus_type = card_present ? BUS_TYPE_PCCARD : BUS_TYPE_PCI;
- 	priv->station_state = STATION_STATE_DOWN;
- 	priv->do_rx_crc = 0;
+These apply to the master branch of the wireless-drivers-next repository.
+
+[1] https://patchwork.kernel.org/patch/10474799/
+
+Arend van Spriel (6):
+  brcmfmac: remove fallback mechanism for BRCMF_FEAT_MONITOR
+  brcmfmac: rename BRCMF_FEAT_MONITOR_FMT_RADIOTAP to
+    BRCMF_FEAT_RADIOTAP
+  brcmfmac: fix for proper support of 160MHz bandwidth
+  brcmfmac: increase buffer for obtaining firmware capabilities
+  brcmfmac: add new feature flags for monitor mode operation
+  brcmfmac: fallback mechanism to determine monitor mode features
+
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    |  2 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 43 +++++++++-------------
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.h |  6 +--
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 21 +++++++++++
+ .../net/wireless/broadcom/brcm80211/brcmutil/d11.c | 34 ++++++++++++++++-
+ .../broadcom/brcm80211/include/brcmu_wifi.h        |  2 +
+ 6 files changed, 77 insertions(+), 31 deletions(-)
+
 -- 
-2.7.0
+1.9.1
