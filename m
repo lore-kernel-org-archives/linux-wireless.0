@@ -1,77 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:32360 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751956AbeFZGHu (ORCPT
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35538 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S934313AbeFVSnd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Jun 2018 02:07:50 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 11/12] staging: wilc1000: avoid use of static variable 'rssi'
-Date: Tue, 26 Jun 2018 11:37:13 +0530
-Message-ID: <1529993234-27294-12-git-send-email-ajay.kathat@microchip.com> (sfid-20180626_080753_858873_FA801120)
-In-Reply-To: <1529993234-27294-1-git-send-email-ajay.kathat@microchip.com>
-References: <1529993234-27294-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 22 Jun 2018 14:43:33 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 1/6] brcmfmac: remove fallback mechanism for BRCMF_FEAT_MONITOR
+Date: Fri, 22 Jun 2018 20:43:19 +0200
+Message-Id: <1529693004-20569-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180622_204347_918452_4565BFDD)
+In-Reply-To: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of static variable now allocating the data and passing to
-handle_get_rssi() to fill the rssi information.
+Commit 19f505aa3ae0 ("brcmfmac: detect firmware support for monitor
+interface") introduced a fallback mechanism attempting BRCMF_C_MONITOR
+command. However, that does not indicate firmware support. Unfortunately,
+it only indicates the core part of the stack supports it, but not whether
+it is supported in full-dongle mode, ie. firmware has means to transfer
+the monitor packets to the host. Firmwares that return the "monitor"
+flag in the "cap" iovar are able to send the packets to the host.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 25 ----------------------
+ 1 file changed, 25 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index f61a20d..52c0c10 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -196,7 +196,6 @@ u8 wilc_multicast_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+index 48d7978..a78b9ba 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+@@ -92,26 +92,6 @@ static int brcmf_feat_debugfs_read(struct seq_file *seq, void *data)
+ }
+ #endif /* DEBUG */
  
- static u8 rcv_assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
- 
--static s8 rssi;
- static u8 set_ip[2][4];
- static u8 get_ip[2][4];
- static u32 clients_count;
-@@ -1829,7 +1828,7 @@ static void handle_get_rssi(struct work_struct *work)
- 
- 	wid.id = (u16)WID_RSSI;
- 	wid.type = WID_CHAR;
--	wid.val = &rssi;
-+	wid.val = msg->body.data;
- 	wid.size = sizeof(char);
- 
- 	result = wilc_send_config_pkt(vif, GET_CFG, &wid, 1,
-@@ -3115,14 +3114,21 @@ int wilc_get_rssi(struct wilc_vif *vif, s8 *rssi_level)
- 	if (IS_ERR(msg))
- 		return PTR_ERR(msg);
- 
-+	msg->body.data = kzalloc(sizeof(s8), GFP_KERNEL);
-+	if (!msg->body.data) {
-+		kfree(msg);
-+		return -ENOMEM;
-+	}
-+
- 	result = wilc_enqueue_work(msg);
- 	if (result) {
- 		netdev_err(vif->ndev, "Failed to send get host ch param\n");
- 	} else {
- 		wait_for_completion(&msg->work_comp);
--		*rssi_level = rssi;
-+		*rssi_level = *msg->body.data;
+-static void brcmf_feat_cmd_int_get(struct brcmf_if *ifp, enum brcmf_feat_id id,
+-				   u32 cmd)
+-{
+-	u32 data;
+-	int err;
+-
+-	ifp->fwil_fwerr = true;
+-
+-	err = brcmf_fil_cmd_int_get(ifp, cmd, &data);
+-	if (err == 0) {
+-		brcmf_dbg(INFO, "enabling feature: %s\n", brcmf_feat_names[id]);
+-		ifp->drvr->feat_flags |= BIT(id);
+-	} else {
+-		brcmf_dbg(TRACE, "%s feature check failed: %d\n",
+-			  brcmf_feat_names[id], err);
+-	}
+-
+-	ifp->fwil_fwerr = false;
+-}
+-
+ /**
+  * brcmf_feat_iovar_int_get() - determine feature through iovar query.
+  *
+@@ -272,11 +252,6 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
  	}
+ 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_FWSUP, "sup_wpa");
  
-+	kfree(msg->body.data);
- 	kfree(msg);
- 
- 	return result;
+-	/* Fallback detection for older firmwares */
+-	if (!brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MONITOR))
+-		brcmf_feat_cmd_int_get(ifp, BRCMF_FEAT_MONITOR,
+-				       BRCMF_C_GET_MONITOR);
+-
+ 	/* set chip related quirks */
+ 	switch (drvr->bus_if->chip) {
+ 	case BRCM_CC_43236_CHIP_ID:
 -- 
-2.7.4
+1.9.1
