@@ -1,49 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:42729 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751814AbeFDKeO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Jun 2018 06:34:14 -0400
-From: YueHaibing <yuehaibing@huawei.com>
-To: <davem@davemloft.net>, <kvalo@codeaurora.org>
-CC: <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>,
-        YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH] atmel: use memdup_user to simplify the code
-Date: Mon, 4 Jun 2018 18:32:10 +0800
-Message-ID: <20180604103210.23984-1-yuehaibing@huawei.com> (sfid-20180604_123624_235865_DD480B05)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:35550 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S934331AbeFVSne (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Jun 2018 14:43:34 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Rafal Milecki <rafal@milecki.pl>
+Subject: [PATCH 5/6] brcmfmac: add new feature flags for monitor mode operation
+Date: Fri, 22 Jun 2018 20:43:23 +0200
+Message-Id: <1529693004-20569-6-git-send-email-arend.vanspriel@broadcom.com> (sfid-20180622_204349_108945_896D3939)
+In-Reply-To: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-use existing memdup_user() helper function instead of open-coding
+Add two new feature flags to be used for monitor mode. One indicating
+support to enable packet capture and one indicating captured packets
+from firmware already include radiotap header.
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+Signed-off-by: Rafal Milecki <rafal@milecki.pl>
+[arend: change flags and description]
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/atmel/atmel.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c | 1 +
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h | 4 ++--
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/atmel/atmel.c b/drivers/net/wireless/atmel/atmel.c
-index d122386..30b479a 100644
---- a/drivers/net/wireless/atmel/atmel.c
-+++ b/drivers/net/wireless/atmel/atmel.c
-@@ -2657,14 +2657,9 @@ static int atmel_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
- 			break;
- 		}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+index 0ee3a25..f70fec6 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+@@ -49,6 +49,7 @@ struct brcmf_feat_fwcap {
+ 	{ BRCMF_FEAT_MCHAN, "mchan" },
+ 	{ BRCMF_FEAT_P2P, "p2p" },
+ 	{ BRCMF_FEAT_MONITOR, "monitor" },
++	{ BRCMF_FEAT_RADIOTAP, "rtap" },
+ };
  
--		if (!(new_firmware = kmalloc(com.len, GFP_KERNEL))) {
--			rc = -ENOMEM;
--			break;
--		}
--
--		if (copy_from_user(new_firmware, com.data, com.len)) {
--			kfree(new_firmware);
--			rc = -EFAULT;
-+		new_firmware = memdup_user(com.data, com.len);
-+		if (IS_ERR(new_firmware)) {
-+			rc = PTR_ERR(new_firmware);
- 			break;
- 		}
- 
+ #ifdef DEBUG
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+index 31a746b..31198d0 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+@@ -33,8 +33,8 @@
+  * MFP: 802.11w Management Frame Protection.
+  * GSCAN: enhanced scan offload feature.
+  * FWSUP: Firmware supplicant.
+- * MONITOR: monitor interface
+- * RADIOTAP: monitor packets include radiotap header
++ * MONITOR: firmware can pass monitor packets to host.
++ * RADIOTAP: firmware provides monitor packets including radiotap header
+  */
+ #define BRCMF_FEAT_LIST \
+ 	BRCMF_FEAT_DEF(MBSS) \
 -- 
-2.7.0
+1.9.1
