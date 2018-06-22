@@ -1,344 +1,270 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:38603 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932348AbeFJKvr (ORCPT
+Received: from smtprelay0194.hostedemail.com ([216.40.44.194]:38956 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S933414AbeFVRvM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Jun 2018 06:51:47 -0400
-Received: by mail-wm0-f66.google.com with SMTP id 69-v6so11186269wmf.3
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2018 03:51:46 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [RFC v3 12/19] mt76: add mt76x2_tx_common to mt76x2-common module
-Date: Sun, 10 Jun 2018 12:51:19 +0200
-Message-Id: <20180610105126.28425-13-lorenzo.bianconi@redhat.com> (sfid-20180610_125154_423397_08EEB120)
+        Fri, 22 Jun 2018 13:51:12 -0400
+From: Joe Perches <joe@perches.com>
+To: Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Yisen Zhuang <yisen.zhuang@huawei.com>,
+        Salil Mehta <salil.mehta@huawei.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Bryan Whitehead <bryan.whitehead@microchip.com>,
+        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>,
+        Harish Patil <harish.patil@cavium.com>,
+        Manish Chopra <manish.chopra@cavium.com>,
+        Dept-GELinuxNICDev@cavium.com,
+        Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+        Edward Cree <ecree@solarflare.com>,
+        Bert Kenward <bkenward@solarflare.com>,
+        Grygorii Strashko <grygorii.strashko@ti.com>,
+        Wingman Kwok <w-kwok2@ti.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Woojung Huh <woojung.huh@microchip.com>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Marek Lindner <mareklindner@neomailbox.ch>,
+        Simon Wunderlich <sw@simonwunderlich.de>,
+        Antonio Quartulli <a@unstable.cc>
+Cc: Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        intel-wired-lan@lists.osuosl.org, linux-omap@vger.kernel.org,
+        linux-ntb@googlegroups.com, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, b.a.t.m.a.n@lists.open-mesh.org
+Subject: [PATCH] net: drivers/net: Convert random_ether_addr to eth_random_addr
+Date: Fri, 22 Jun 2018 10:51:00 -0700
+Message-Id: <c558b59181756dfe647bcdeaf659c386701c0948.1529689773.git.joe@perches.com> (sfid-20180622_195203_132013_7BF48137)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move tx related code shared between mt76x2 and mt76x2u in mt76x2-common
-module
+random_ether_addr is a #define for eth_random_addr which is
+generally preferred in kernel code by ~3:1
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Convert the uses of random_ether_addr to enable removing the #define
+
+Miscellanea:
+
+o Convert &vfmac[0] to equivalent vfmac and avoid unnecessary line wrap
+
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/net/wireless/mediatek/mt76/Makefile   |   2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2.h   |   2 +
- .../net/wireless/mediatek/mt76/mt76x2_tx.c    | 123 ---------------
- .../wireless/mediatek/mt76/mt76x2_tx_common.c | 149 ++++++++++++++++++
- 4 files changed, 152 insertions(+), 124 deletions(-)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
+ drivers/net/ethernet/cavium/liquidio/lio_main.c          | 5 ++---
+ drivers/net/ethernet/cortina/gemini.c                    | 2 +-
+ drivers/net/ethernet/hisilicon/hip04_eth.c               | 2 +-
+ drivers/net/ethernet/intel/i40e/i40e_main.c              | 2 +-
+ drivers/net/ethernet/microchip/lan743x_main.c            | 2 +-
+ drivers/net/ethernet/qlogic/qlcnic/qlcnic_sriov_common.c | 2 +-
+ drivers/net/ethernet/qualcomm/rmnet/rmnet_vnd.c          | 2 +-
+ drivers/net/ethernet/sfc/ef10_sriov.c                    | 2 +-
+ drivers/net/ethernet/ti/cpsw.c                           | 2 +-
+ drivers/net/ethernet/ti/netcp_core.c                     | 4 ++--
+ drivers/net/ntb_netdev.c                                 | 2 +-
+ drivers/net/usb/lan78xx.c                                | 2 +-
+ drivers/net/wireless/ath/ath9k/hw.c                      | 2 +-
+ net/batman-adv/bridge_loop_avoidance.c                   | 2 +-
+ 14 files changed, 16 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
-index 57feda501a51..e1226aae82fa 100644
---- a/drivers/net/wireless/mediatek/mt76/Makefile
-+++ b/drivers/net/wireless/mediatek/mt76/Makefile
-@@ -8,7 +8,7 @@ mt76-y := \
- CFLAGS_trace.o := -I$(src)
+diff --git a/drivers/net/ethernet/cavium/liquidio/lio_main.c b/drivers/net/ethernet/cavium/liquidio/lio_main.c
+index 8a815bb57177..7cb4e753829b 100644
+--- a/drivers/net/ethernet/cavium/liquidio/lio_main.c
++++ b/drivers/net/ethernet/cavium/liquidio/lio_main.c
+@@ -3569,9 +3569,8 @@ static int setup_nic_devices(struct octeon_device *octeon_dev)
+ 		for (j = 0; j < octeon_dev->sriov_info.max_vfs; j++) {
+ 			u8 vfmac[ETH_ALEN];
  
- mt76x2-common-y := \
--	mt76x2_eeprom.o
-+	mt76x2_eeprom.o mt76x2_tx_common.o
+-			random_ether_addr(&vfmac[0]);
+-			if (__liquidio_set_vf_mac(netdev, j,
+-						  &vfmac[0], false)) {
++			eth_random_addr(vfmac);
++			if (__liquidio_set_vf_mac(netdev, j, vfmac, false)) {
+ 				dev_err(&octeon_dev->pci_dev->dev,
+ 					"Error setting VF%d MAC address\n",
+ 					j);
+diff --git a/drivers/net/ethernet/cortina/gemini.c b/drivers/net/ethernet/cortina/gemini.c
+index 6d7404f66f84..ce1f04fdbf70 100644
+--- a/drivers/net/ethernet/cortina/gemini.c
++++ b/drivers/net/ethernet/cortina/gemini.c
+@@ -2435,7 +2435,7 @@ static int gemini_ethernet_port_probe(struct platform_device *pdev)
+ 			port->mac_addr[0], port->mac_addr[1],
+ 			port->mac_addr[2]);
+ 		dev_info(dev, "using a random ethernet address\n");
+-		random_ether_addr(netdev->dev_addr);
++		eth_random_addr(netdev->dev_addr);
+ 	}
+ 	gmac_write_mac_address(netdev);
  
- mt76x2e-y := \
- 	mt76x2_pci.o mt76x2_dma.o \
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-index 52d70a9b9b6f..60691503e12d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-@@ -271,4 +271,6 @@ s8 mt76x2_tx_get_max_txpwr_adj(struct mt76x2_dev *dev,
- s8 mt76x2_tx_get_txpwr_adj(struct mt76x2_dev *dev, s8 txpwr, s8 max_txpwr_adj);
- void mt76x2_tx_set_txpwr_auto(struct mt76x2_dev *dev, s8 txpwr);
+diff --git a/drivers/net/ethernet/hisilicon/hip04_eth.c b/drivers/net/ethernet/hisilicon/hip04_eth.c
+index 340e28211135..14374a856d30 100644
+--- a/drivers/net/ethernet/hisilicon/hip04_eth.c
++++ b/drivers/net/ethernet/hisilicon/hip04_eth.c
+@@ -904,7 +904,7 @@ static int hip04_mac_probe(struct platform_device *pdev)
+ 		hip04_config_port(ndev, SPEED_100, DUPLEX_FULL);
  
-+int mt76x2_insert_hdr_pad(struct sk_buff *skb);
-+
- #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-index 77b750976c74..477cd5c8404f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-@@ -23,129 +23,6 @@ struct beacon_bc_data {
- 	struct sk_buff *tail[8];
- };
+ 	hip04_config_fifo(priv);
+-	random_ether_addr(ndev->dev_addr);
++	eth_random_addr(ndev->dev_addr);
+ 	hip04_update_mac_address(ndev);
  
--void mt76x2_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
--	     struct sk_buff *skb)
--{
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	struct mt76x2_dev *dev = hw->priv;
--	struct ieee80211_vif *vif = info->control.vif;
--	struct mt76_wcid *wcid = &dev->global_wcid;
--
--	if (control->sta) {
--		struct mt76x2_sta *msta;
--
--		msta = (struct mt76x2_sta *) control->sta->drv_priv;
--		wcid = &msta->wcid;
--		/* sw encrypted frames */
--		if (!info->control.hw_key && wcid->hw_key_idx != -1)
--			control->sta = NULL;
--	}
--
--	if (vif && !control->sta) {
--		struct mt76x2_vif *mvif;
--
--		mvif = (struct mt76x2_vif *) vif->drv_priv;
--		wcid = &mvif->group_wcid;
--	}
--
--	mt76_tx(&dev->mt76, control->sta, wcid, skb);
--}
--
--void mt76x2_tx_complete(struct mt76x2_dev *dev, struct sk_buff *skb)
--{
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--
--	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
--		ieee80211_free_txskb(mt76_hw(dev), skb);
--	} else {
--		ieee80211_tx_info_clear_status(info);
--		info->status.rates[0].idx = -1;
--		info->flags |= IEEE80211_TX_STAT_ACK;
--		ieee80211_tx_status(mt76_hw(dev), skb);
--	}
--}
--
--s8 mt76x2_tx_get_max_txpwr_adj(struct mt76x2_dev *dev,
--			       const struct ieee80211_tx_rate *rate)
--{
--	s8 max_txpwr;
--
--	if (rate->flags & IEEE80211_TX_RC_VHT_MCS) {
--		u8 mcs = ieee80211_rate_get_vht_mcs(rate);
--
--		if (mcs == 8 || mcs == 9) {
--			max_txpwr = dev->rate_power.vht[8];
--		} else {
--			u8 nss, idx;
--
--			nss = ieee80211_rate_get_vht_nss(rate);
--			idx = ((nss - 1) << 3) + mcs;
--			max_txpwr = dev->rate_power.ht[idx & 0xf];
--		}
--	} else if (rate->flags & IEEE80211_TX_RC_MCS) {
--		max_txpwr = dev->rate_power.ht[rate->idx & 0xf];
--	} else {
--		enum nl80211_band band = dev->mt76.chandef.chan->band;
--
--		if (band == NL80211_BAND_2GHZ) {
--			const struct ieee80211_rate *r;
--			struct wiphy *wiphy = mt76_hw(dev)->wiphy;
--			struct mt76_rate_power *rp = &dev->rate_power;
--
--			r = &wiphy->bands[band]->bitrates[rate->idx];
--			if (r->flags & IEEE80211_RATE_SHORT_PREAMBLE)
--				max_txpwr = rp->cck[r->hw_value & 0x3];
--			else
--				max_txpwr = rp->ofdm[r->hw_value & 0x7];
--		} else {
--			max_txpwr = dev->rate_power.ofdm[rate->idx & 0x7];
--		}
--	}
--
--	return max_txpwr;
--}
--
--s8 mt76x2_tx_get_txpwr_adj(struct mt76x2_dev *dev, s8 txpwr, s8 max_txpwr_adj)
--{
--	txpwr = min_t(s8, txpwr, dev->txpower_conf);
--	txpwr -= (dev->target_power + dev->target_power_delta[0]);
--	txpwr = min_t(s8, txpwr, max_txpwr_adj);
--
--	if (!dev->enable_tpc)
--		return 0;
--	else if (txpwr >= 0)
--		return min_t(s8, txpwr, 7);
--	else
--		return (txpwr < -16) ? 8 : (txpwr + 32) / 2;
--}
--
--void mt76x2_tx_set_txpwr_auto(struct mt76x2_dev *dev, s8 txpwr)
--{
--	s8 txpwr_adj;
--
--	txpwr_adj = mt76x2_tx_get_txpwr_adj(dev, txpwr,
--					    dev->rate_power.ofdm[4]);
--	mt76_rmw_field(dev, MT_PROT_AUTO_TX_CFG,
--		       MT_PROT_AUTO_TX_CFG_PROT_PADJ, txpwr_adj);
--	mt76_rmw_field(dev, MT_PROT_AUTO_TX_CFG,
--		       MT_PROT_AUTO_TX_CFG_AUTO_PADJ, txpwr_adj);
--}
--
--static int mt76x2_insert_hdr_pad(struct sk_buff *skb)
--{
--	int len = ieee80211_get_hdrlen_from_skb(skb);
--
--	if (len % 4 == 0)
--		return 0;
--
--	skb_push(skb, 2);
--	memmove(skb->data, skb->data + 2, len);
--
--	skb->data[len] = 0;
--	skb->data[len + 1] = 0;
--	return 2;
--}
--
- int mt76x2_tx_prepare_skb(struct mt76_dev *mdev, void *txwi,
- 			  struct sk_buff *skb, struct mt76_queue *q,
- 			  struct mt76_wcid *wcid, struct ieee80211_sta *sta,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
-new file mode 100644
-index 000000000000..36afb166fa3f
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
-@@ -0,0 +1,149 @@
-+/*
-+ * Copyright (C) 2016 Felix Fietkau <nbd@nbd.name>
-+ * Copyright (C) 2018 Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include "mt76x2.h"
-+#include "mt76x2_dma.h"
-+
-+void mt76x2_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
-+	       struct sk_buff *skb)
-+{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct mt76x2_dev *dev = hw->priv;
-+	struct ieee80211_vif *vif = info->control.vif;
-+	struct mt76_wcid *wcid = &dev->global_wcid;
-+
-+	if (control->sta) {
-+		struct mt76x2_sta *msta;
-+
-+		msta = (struct mt76x2_sta *)control->sta->drv_priv;
-+		wcid = &msta->wcid;
-+		/* sw encrypted frames */
-+		if (!info->control.hw_key && wcid->hw_key_idx != -1)
-+			control->sta = NULL;
-+	}
-+
-+	if (vif && !control->sta) {
-+		struct mt76x2_vif *mvif;
-+
-+		mvif = (struct mt76x2_vif *)vif->drv_priv;
-+		wcid = &mvif->group_wcid;
-+	}
-+
-+	mt76_tx(&dev->mt76, control->sta, wcid, skb);
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_tx);
-+
-+int mt76x2_insert_hdr_pad(struct sk_buff *skb)
-+{
-+	int len = ieee80211_get_hdrlen_from_skb(skb);
-+
-+	if (len % 4 == 0)
-+		return 0;
-+
-+	skb_push(skb, 2);
-+	memmove(skb->data, skb->data + 2, len);
-+
-+	skb->data[len] = 0;
-+	skb->data[len + 1] = 0;
-+	return 2;
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_insert_hdr_pad);
-+
-+s8 mt76x2_tx_get_max_txpwr_adj(struct mt76x2_dev *dev,
-+			       const struct ieee80211_tx_rate *rate)
-+{
-+	s8 max_txpwr;
-+
-+	if (rate->flags & IEEE80211_TX_RC_VHT_MCS) {
-+		u8 mcs = ieee80211_rate_get_vht_mcs(rate);
-+
-+		if (mcs == 8 || mcs == 9) {
-+			max_txpwr = dev->rate_power.vht[8];
-+		} else {
-+			u8 nss, idx;
-+
-+			nss = ieee80211_rate_get_vht_nss(rate);
-+			idx = ((nss - 1) << 3) + mcs;
-+			max_txpwr = dev->rate_power.ht[idx & 0xf];
-+		}
-+	} else if (rate->flags & IEEE80211_TX_RC_MCS) {
-+		max_txpwr = dev->rate_power.ht[rate->idx & 0xf];
-+	} else {
-+		enum nl80211_band band = dev->mt76.chandef.chan->band;
-+
-+		if (band == NL80211_BAND_2GHZ) {
-+			const struct ieee80211_rate *r;
-+			struct wiphy *wiphy = mt76_hw(dev)->wiphy;
-+			struct mt76_rate_power *rp = &dev->rate_power;
-+
-+			r = &wiphy->bands[band]->bitrates[rate->idx];
-+			if (r->flags & IEEE80211_RATE_SHORT_PREAMBLE)
-+				max_txpwr = rp->cck[r->hw_value & 0x3];
-+			else
-+				max_txpwr = rp->ofdm[r->hw_value & 0x7];
-+		} else {
-+			max_txpwr = dev->rate_power.ofdm[rate->idx & 0x7];
-+		}
-+	}
-+
-+	return max_txpwr;
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_tx_get_max_txpwr_adj);
-+
-+s8 mt76x2_tx_get_txpwr_adj(struct mt76x2_dev *dev, s8 txpwr, s8 max_txpwr_adj)
-+{
-+	txpwr = min_t(s8, txpwr, dev->txpower_conf);
-+	txpwr -= (dev->target_power + dev->target_power_delta[0]);
-+	txpwr = min_t(s8, txpwr, max_txpwr_adj);
-+
-+	if (!dev->enable_tpc)
-+		return 0;
-+	else if (txpwr >= 0)
-+		return min_t(s8, txpwr, 7);
-+	else
-+		return (txpwr < -16) ? 8 : (txpwr + 32) / 2;
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_tx_get_txpwr_adj);
-+
-+void mt76x2_tx_set_txpwr_auto(struct mt76x2_dev *dev, s8 txpwr)
-+{
-+	s8 txpwr_adj;
-+
-+	txpwr_adj = mt76x2_tx_get_txpwr_adj(dev, txpwr,
-+					    dev->rate_power.ofdm[4]);
-+	mt76_rmw_field(dev, MT_PROT_AUTO_TX_CFG,
-+		       MT_PROT_AUTO_TX_CFG_PROT_PADJ, txpwr_adj);
-+	mt76_rmw_field(dev, MT_PROT_AUTO_TX_CFG,
-+		       MT_PROT_AUTO_TX_CFG_AUTO_PADJ, txpwr_adj);
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_tx_set_txpwr_auto);
-+
-+void mt76x2_tx_complete(struct mt76x2_dev *dev, struct sk_buff *skb)
-+{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+
-+	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
-+		ieee80211_free_txskb(mt76_hw(dev), skb);
-+	} else {
-+		ieee80211_tx_info_clear_status(info);
-+		info->status.rates[0].idx = -1;
-+		info->flags |= IEEE80211_TX_STAT_ACK;
-+		ieee80211_tx_status(mt76_hw(dev), skb);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_tx_complete);
-+
+ 	ret = hip04_alloc_ring(ndev, d);
+diff --git a/drivers/net/ethernet/intel/i40e/i40e_main.c b/drivers/net/ethernet/intel/i40e/i40e_main.c
+index c944bd10b03d..95e9dfbe9839 100644
+--- a/drivers/net/ethernet/intel/i40e/i40e_main.c
++++ b/drivers/net/ethernet/intel/i40e/i40e_main.c
+@@ -11978,7 +11978,7 @@ static int i40e_config_netdev(struct i40e_vsi *vsi)
+ 		snprintf(netdev->name, IFNAMSIZ, "%.*sv%%d",
+ 			 IFNAMSIZ - 4,
+ 			 pf->vsi[pf->lan_vsi]->netdev->name);
+-		random_ether_addr(mac_addr);
++		eth_random_addr(mac_addr);
+ 
+ 		spin_lock_bh(&vsi->mac_filter_hash_lock);
+ 		i40e_add_mac_filter(vsi, mac_addr);
+diff --git a/drivers/net/ethernet/microchip/lan743x_main.c b/drivers/net/ethernet/microchip/lan743x_main.c
+index dd947e4dd3ce..e1747a490066 100644
+--- a/drivers/net/ethernet/microchip/lan743x_main.c
++++ b/drivers/net/ethernet/microchip/lan743x_main.c
+@@ -828,7 +828,7 @@ static int lan743x_mac_init(struct lan743x_adapter *adapter)
+ 	}
+ 
+ 	if (!mac_address_valid)
+-		random_ether_addr(adapter->mac_address);
++		eth_random_addr(adapter->mac_address);
+ 	lan743x_mac_set_address(adapter, adapter->mac_address);
+ 	ether_addr_copy(netdev->dev_addr, adapter->mac_address);
+ 	return 0;
+diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_sriov_common.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_sriov_common.c
+index 0c744b9c6e0a..77e386ebff09 100644
+--- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_sriov_common.c
++++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_sriov_common.c
+@@ -212,7 +212,7 @@ int qlcnic_sriov_init(struct qlcnic_adapter *adapter, int num_vfs)
+ 			vp->max_tx_bw = MAX_BW;
+ 			vp->min_tx_bw = MIN_BW;
+ 			vp->spoofchk = false;
+-			random_ether_addr(vp->mac);
++			eth_random_addr(vp->mac);
+ 			dev_info(&adapter->pdev->dev,
+ 				 "MAC Address %pM is configured for VF %d\n",
+ 				 vp->mac, i);
+diff --git a/drivers/net/ethernet/qualcomm/rmnet/rmnet_vnd.c b/drivers/net/ethernet/qualcomm/rmnet/rmnet_vnd.c
+index b9a7548ec6a0..0afc3d335d56 100644
+--- a/drivers/net/ethernet/qualcomm/rmnet/rmnet_vnd.c
++++ b/drivers/net/ethernet/qualcomm/rmnet/rmnet_vnd.c
+@@ -210,7 +210,7 @@ void rmnet_vnd_setup(struct net_device *rmnet_dev)
+ 	rmnet_dev->netdev_ops = &rmnet_vnd_ops;
+ 	rmnet_dev->mtu = RMNET_DFLT_PACKET_SIZE;
+ 	rmnet_dev->needed_headroom = RMNET_NEEDED_HEADROOM;
+-	random_ether_addr(rmnet_dev->dev_addr);
++	eth_random_addr(rmnet_dev->dev_addr);
+ 	rmnet_dev->tx_queue_len = RMNET_TX_QUEUE_LEN;
+ 
+ 	/* Raw IP mode */
+diff --git a/drivers/net/ethernet/sfc/ef10_sriov.c b/drivers/net/ethernet/sfc/ef10_sriov.c
+index 019cef1d3cf7..8820be83ce85 100644
+--- a/drivers/net/ethernet/sfc/ef10_sriov.c
++++ b/drivers/net/ethernet/sfc/ef10_sriov.c
+@@ -199,7 +199,7 @@ static int efx_ef10_sriov_alloc_vf_vswitching(struct efx_nic *efx)
+ 		return -ENOMEM;
+ 
+ 	for (i = 0; i < efx->vf_count; i++) {
+-		random_ether_addr(nic_data->vf[i].mac);
++		eth_random_addr(nic_data->vf[i].mac);
+ 		nic_data->vf[i].efx = NULL;
+ 		nic_data->vf[i].vlan = EFX_EF10_NO_VLAN;
+ 
+diff --git a/drivers/net/ethernet/ti/cpsw.c b/drivers/net/ethernet/ti/cpsw.c
+index 358edab9e72e..093998124149 100644
+--- a/drivers/net/ethernet/ti/cpsw.c
++++ b/drivers/net/ethernet/ti/cpsw.c
+@@ -2927,7 +2927,7 @@ static int cpsw_probe_dual_emac(struct cpsw_priv *priv)
+ 		dev_info(cpsw->dev, "cpsw: Detected MACID = %pM\n",
+ 			 priv_sl2->mac_addr);
+ 	} else {
+-		random_ether_addr(priv_sl2->mac_addr);
++		eth_random_addr(priv_sl2->mac_addr);
+ 		dev_info(cpsw->dev, "cpsw: Random MACID = %pM\n",
+ 			 priv_sl2->mac_addr);
+ 	}
+diff --git a/drivers/net/ethernet/ti/netcp_core.c b/drivers/net/ethernet/ti/netcp_core.c
+index e40aa3e31af2..6ebf110cd594 100644
+--- a/drivers/net/ethernet/ti/netcp_core.c
++++ b/drivers/net/ethernet/ti/netcp_core.c
+@@ -2052,7 +2052,7 @@ static int netcp_create_interface(struct netcp_device *netcp_device,
+ 		if (is_valid_ether_addr(efuse_mac_addr))
+ 			ether_addr_copy(ndev->dev_addr, efuse_mac_addr);
+ 		else
+-			random_ether_addr(ndev->dev_addr);
++			eth_random_addr(ndev->dev_addr);
+ 
+ 		devm_iounmap(dev, efuse);
+ 		devm_release_mem_region(dev, res.start, size);
+@@ -2061,7 +2061,7 @@ static int netcp_create_interface(struct netcp_device *netcp_device,
+ 		if (mac_addr)
+ 			ether_addr_copy(ndev->dev_addr, mac_addr);
+ 		else
+-			random_ether_addr(ndev->dev_addr);
++			eth_random_addr(ndev->dev_addr);
+ 	}
+ 
+ 	ret = of_property_read_string(node_interface, "rx-channel",
+diff --git a/drivers/net/ntb_netdev.c b/drivers/net/ntb_netdev.c
+index 306a662eba94..df8d49ad48c3 100644
+--- a/drivers/net/ntb_netdev.c
++++ b/drivers/net/ntb_netdev.c
+@@ -430,7 +430,7 @@ static int ntb_netdev_probe(struct device *client_dev)
+ 	ndev->hw_features = ndev->features;
+ 	ndev->watchdog_timeo = msecs_to_jiffies(NTB_TX_TIMEOUT_MS);
+ 
+-	random_ether_addr(ndev->perm_addr);
++	eth_random_addr(ndev->perm_addr);
+ 	memcpy(ndev->dev_addr, ndev->perm_addr, ndev->addr_len);
+ 
+ 	ndev->netdev_ops = &ntb_netdev_ops;
+diff --git a/drivers/net/usb/lan78xx.c b/drivers/net/usb/lan78xx.c
+index 8dff87ec6d99..a89570f34937 100644
+--- a/drivers/net/usb/lan78xx.c
++++ b/drivers/net/usb/lan78xx.c
+@@ -1720,7 +1720,7 @@ static void lan78xx_init_mac_address(struct lan78xx_net *dev)
+ 				  "MAC address read from EEPROM");
+ 		} else {
+ 			/* generate random MAC */
+-			random_ether_addr(addr);
++			eth_random_addr(addr);
+ 			netif_dbg(dev, ifup, dev->net,
+ 				  "MAC address set to random addr");
+ 		}
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index e60bea4604e4..1665066f4e24 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -496,7 +496,7 @@ static void ath9k_hw_init_macaddr(struct ath_hw *ah)
+ 	ath_err(common, "eeprom contains invalid mac address: %pM\n",
+ 		common->macaddr);
+ 
+-	random_ether_addr(common->macaddr);
++	eth_random_addr(common->macaddr);
+ 	ath_err(common, "random mac address will be used: %pM\n",
+ 		common->macaddr);
+ 
+diff --git a/net/batman-adv/bridge_loop_avoidance.c b/net/batman-adv/bridge_loop_avoidance.c
+index a2de5a44bd41..ff9659af6b91 100644
+--- a/net/batman-adv/bridge_loop_avoidance.c
++++ b/net/batman-adv/bridge_loop_avoidance.c
+@@ -1449,7 +1449,7 @@ static void batadv_bla_periodic_work(struct work_struct *work)
+ 		 * detection frames. Set the locally administered bit to avoid
+ 		 * collisions with users mac addresses.
+ 		 */
+-		random_ether_addr(bat_priv->bla.loopdetect_addr);
++		eth_random_addr(bat_priv->bla.loopdetect_addr);
+ 		bat_priv->bla.loopdetect_addr[0] = 0xba;
+ 		bat_priv->bla.loopdetect_addr[1] = 0xbe;
+ 		bat_priv->bla.loopdetect_lasttime = jiffies;
 -- 
-2.17.1
+2.15.0
