@@ -1,154 +1,307 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:46044 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966503AbeF2Pjs (ORCPT
+Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:59004 "EHLO
+        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751052AbeFVFuU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 11:39:48 -0400
-Received: by mail-io0-f194.google.com with SMTP id l25-v6so8808798ioh.12
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Jun 2018 08:39:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180627185845.31799-1-daniel@zonque.org>
-References: <20180627185845.31799-1-daniel@zonque.org>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Fri, 29 Jun 2018 17:39:47 +0200
-Message-ID: <CAPDyKFr7snWsk=194u4nKs4301tUARByuEPSFop_fzxn6HVQDQ@mail.gmail.com> (sfid-20180629_173955_605827_32E4DAD2)
-Subject: Re: [PATCH v2] libertas: fix suspend and resume for SDIO connected cards
-To: Daniel Mack <daniel@zonque.org>
-Cc: Chris Ball <chris@printf.net>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 22 Jun 2018 01:50:20 -0400
+From: Maya Erez <merez@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com
+Subject: [PATCH v4 7/8] wil6210: add support for Talyn-MB boot flow
+Date: Fri, 22 Jun 2018 08:49:22 +0300
+Message-Id: <1529646563-18221-8-git-send-email-merez@codeaurora.org> (sfid-20180622_075032_693344_D18817EF)
+In-Reply-To: <1529646563-18221-1-git-send-email-merez@codeaurora.org>
+References: <1529646563-18221-1-git-send-email-merez@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 June 2018 at 20:58, Daniel Mack <daniel@zonque.org> wrote:
-> Prior to commit 573185cc7e64 ("mmc: core: Invoke sdio func driver's PM
-> callbacks from the sdio bus"), the MMC core used to call into the power
-> management functions of SDIO clients itself and removed the card if the
-> return code was non-zero. IOW, the mmc handled errors gracefully and didn=
-'t
-> upchain them to the pm core.
->
-> Since this change, the mmc core relies on generic power management
-> functions which treat all errors as a reason to cancel the suspend
-> immediately. This causes suspend attempts to fail when the libertas
-> driver is loaded.
->
-> To fix this, power down the card explicitly in if_sdio_suspend() when we
-> know we're about to lose power and return success. Also set a flag in the=
-se
-> cases, and power up the card again in if_sdio_resume().
->
-> Signed-off-by: Daniel Mack <daniel@zonque.org>
-> Cc: Ulf Hansson <ulf.hansson@linaro.org>
-> Cc: Chris Ball <chris@printf.net>
+Talyn-MB introduces various of FW download options:
+FW download via PCIe, SPI or PBL for secured access.
+The boot and FW download path is determined based on the
+OTP HW register. Driver reads this register as part of the
+SW reset flow and performs the appropriate initialization
+sequence.
 
-Looks good to me! Should be a candidate for stable as well!?
+Signed-off-by: Maya Erez <merez@codeaurora.org>
+---
+ drivers/net/wireless/ath/wil6210/main.c    | 194 ++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/wil6210/wil6210.h |   9 +-
+ 2 files changed, 171 insertions(+), 32 deletions(-)
 
-Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
-
-I have some additional related changes in mind for the libertas SDIO
-driver, however let me post patches for us to discuss around instead.
-
-Kind regards
-Uffe
-
-> ---
-> v1 =E2=86=92 v2:
-> * Reworded patch subject
-> * Added wait_event(card->pwron_waitq, card->priv->fw_ready)
->
->  drivers/net/wireless/marvell/libertas/dev.h   |  1 +
->  .../net/wireless/marvell/libertas/if_sdio.c   | 30 +++++++++++++++----
->  2 files changed, 25 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/net/wireless/marvell/libertas/dev.h b/drivers/net/wi=
-reless/marvell/libertas/dev.h
-> index dd1ee1f0af48..469134930026 100644
-> --- a/drivers/net/wireless/marvell/libertas/dev.h
-> +++ b/drivers/net/wireless/marvell/libertas/dev.h
-> @@ -104,6 +104,7 @@ struct lbs_private {
->         u8 fw_ready;
->         u8 surpriseremoved;
->         u8 setup_fw_on_resume;
-> +       u8 power_up_on_resume;
->         int (*hw_host_to_card) (struct lbs_private *priv, u8 type, u8 *pa=
-yload, u16 nb);
->         void (*reset_card) (struct lbs_private *priv);
->         int (*power_save) (struct lbs_private *priv);
-> diff --git a/drivers/net/wireless/marvell/libertas/if_sdio.c b/drivers/ne=
-t/wireless/marvell/libertas/if_sdio.c
-> index 2300e796c6ab..43743c26c071 100644
-> --- a/drivers/net/wireless/marvell/libertas/if_sdio.c
-> +++ b/drivers/net/wireless/marvell/libertas/if_sdio.c
-> @@ -1290,15 +1290,23 @@ static void if_sdio_remove(struct sdio_func *func=
-)
->  static int if_sdio_suspend(struct device *dev)
->  {
->         struct sdio_func *func =3D dev_to_sdio_func(dev);
-> -       int ret;
->         struct if_sdio_card *card =3D sdio_get_drvdata(func);
-> +       struct lbs_private *priv =3D card->priv;
-> +       int ret;
->
->         mmc_pm_flag_t flags =3D sdio_get_host_pm_caps(func);
-> +       priv->power_up_on_resume =3D false;
->
->         /* If we're powered off anyway, just let the mmc layer remove the
->          * card. */
-> -       if (!lbs_iface_active(card->priv))
-> -               return -ENOSYS;
-> +       if (!lbs_iface_active(priv)) {
-> +               if (priv->fw_ready) {
-> +                       priv->power_up_on_resume =3D true;
-> +                       if_sdio_power_off(card);
-> +               }
-> +
-> +               return 0;
-> +       }
->
->         dev_info(dev, "%s: suspend: PM flags =3D 0x%x\n",
->                  sdio_func_id(func), flags);
-> @@ -1306,9 +1314,14 @@ static int if_sdio_suspend(struct device *dev)
->         /* If we aren't being asked to wake on anything, we should bail o=
-ut
->          * and let the SD stack power down the card.
->          */
-> -       if (card->priv->wol_criteria =3D=3D EHS_REMOVE_WAKEUP) {
-> +       if (priv->wol_criteria =3D=3D EHS_REMOVE_WAKEUP) {
->                 dev_info(dev, "Suspend without wake params -- powering do=
-wn card\n");
-> -               return -ENOSYS;
-> +               if (priv->fw_ready) {
-> +                       priv->power_up_on_resume =3D true;
-> +                       if_sdio_power_off(card);
-> +               }
-> +
-> +               return 0;
->         }
->
->         if (!(flags & MMC_PM_KEEP_POWER)) {
-> @@ -1321,7 +1334,7 @@ static int if_sdio_suspend(struct device *dev)
->         if (ret)
->                 return ret;
->
-> -       ret =3D lbs_suspend(card->priv);
-> +       ret =3D lbs_suspend(priv);
->         if (ret)
->                 return ret;
->
-> @@ -1336,6 +1349,11 @@ static int if_sdio_resume(struct device *dev)
->
->         dev_info(dev, "%s: resume: we're back\n", sdio_func_id(func));
->
-> +       if (card->priv->power_up_on_resume) {
-> +               if_sdio_power_on(card);
-> +               wait_event(card->pwron_waitq, card->priv->fw_ready);
-> +       }
-> +
->         ret =3D lbs_resume(card->priv);
->
->         return ret;
-> --
-> 2.17.1
->
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index e0072b6..4de19bd 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -112,9 +112,29 @@ static int ring_order_set(const char *val, const struct kernel_param *kp)
+ module_param_cb(bcast_ring_order, &ring_order_ops, &bcast_ring_order, 0444);
+ MODULE_PARM_DESC(bcast_ring_order, " Bcast ring order; size = 1 << order");
+ 
+-#define RST_DELAY (20) /* msec, for loop in @wil_target_reset */
++enum {
++	WIL_BOOT_ERR,
++	WIL_BOOT_VANILLA,
++	WIL_BOOT_PRODUCTION,
++	WIL_BOOT_DEVELOPMENT,
++};
++
++enum {
++	WIL_SIG_STATUS_VANILLA = 0x0,
++	WIL_SIG_STATUS_DEVELOPMENT = 0x1,
++	WIL_SIG_STATUS_PRODUCTION = 0x2,
++	WIL_SIG_STATUS_CORRUPTED_PRODUCTION = 0x3,
++};
++
++#define RST_DELAY (20) /* msec, for loop in @wil_wait_device_ready */
+ #define RST_COUNT (1 + 1000/RST_DELAY) /* round up to be above 1 sec total */
+ 
++#define PMU_READY_DELAY_MS (4) /* ms, for sleep in @wil_wait_device_ready */
++
++#define OTP_HW_DELAY (200) /* usec, loop in @wil_wait_device_ready_talyn_mb */
++/* round up to be above 2 ms total */
++#define OTP_HW_COUNT (1 + 2000 / OTP_HW_DELAY)
++
+ /*
+  * Due to a hardware issue,
+  * one has to read/write to/from NIC in 32-bit chunks;
+@@ -831,11 +851,146 @@ static void wil_set_oob_mode(struct wil6210_priv *wil, u8 mode)
+ 	}
+ }
+ 
+-static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
++static int wil_wait_device_ready(struct wil6210_priv *wil, int no_flash)
+ {
+ 	int delay = 0;
+ 	u32 x, x1 = 0;
+ 
++	/* wait until device ready. */
++	if (no_flash) {
++		msleep(PMU_READY_DELAY_MS);
++
++		wil_dbg_misc(wil, "Reset completed\n");
++	} else {
++		do {
++			msleep(RST_DELAY);
++			x = wil_r(wil, RGF_USER_BL +
++				  offsetof(struct bl_dedicated_registers_v0,
++					   boot_loader_ready));
++			if (x1 != x) {
++				wil_dbg_misc(wil, "BL.ready 0x%08x => 0x%08x\n",
++					     x1, x);
++				x1 = x;
++			}
++			if (delay++ > RST_COUNT) {
++				wil_err(wil, "Reset not completed, bl.ready 0x%08x\n",
++					x);
++				return -ETIME;
++			}
++		} while (x != BL_READY);
++
++		wil_dbg_misc(wil, "Reset completed in %d ms\n",
++			     delay * RST_DELAY);
++	}
++
++	return 0;
++}
++
++static int wil_wait_device_ready_talyn_mb(struct wil6210_priv *wil)
++{
++	u32 otp_hw;
++	u8 signature_status;
++	bool otp_signature_err;
++	bool hw_section_done;
++	u32 otp_qc_secured;
++	int delay = 0;
++
++	/* Wait for OTP signature test to complete */
++	usleep_range(2000, 2200);
++
++	wil->boot_config = WIL_BOOT_ERR;
++
++	/* Poll until OTP signature status is valid.
++	 * In vanilla and development modes, when signature test is complete
++	 * HW sets BIT_OTP_SIGNATURE_ERR_TALYN_MB.
++	 * In production mode BIT_OTP_SIGNATURE_ERR_TALYN_MB remains 0, poll
++	 * for signature status change to 2 or 3.
++	 */
++	do {
++		otp_hw = wil_r(wil, RGF_USER_OTP_HW_RD_MACHINE_1);
++		signature_status = WIL_GET_BITS(otp_hw, 8, 9);
++		otp_signature_err = otp_hw & BIT_OTP_SIGNATURE_ERR_TALYN_MB;
++
++		if (otp_signature_err &&
++		    signature_status == WIL_SIG_STATUS_VANILLA) {
++			wil->boot_config = WIL_BOOT_VANILLA;
++			break;
++		}
++		if (otp_signature_err &&
++		    signature_status == WIL_SIG_STATUS_DEVELOPMENT) {
++			wil->boot_config = WIL_BOOT_DEVELOPMENT;
++			break;
++		}
++		if (!otp_signature_err &&
++		    signature_status == WIL_SIG_STATUS_PRODUCTION) {
++			wil->boot_config = WIL_BOOT_PRODUCTION;
++			break;
++		}
++		if  (!otp_signature_err &&
++		     signature_status ==
++		     WIL_SIG_STATUS_CORRUPTED_PRODUCTION) {
++			/* Unrecognized OTP signature found. Possibly a
++			 * corrupted production signature, access control
++			 * is applied as in production mode, therefore
++			 * do not fail
++			 */
++			wil->boot_config = WIL_BOOT_PRODUCTION;
++			break;
++		}
++		if (delay++ > OTP_HW_COUNT)
++			break;
++
++		usleep_range(OTP_HW_DELAY, OTP_HW_DELAY + 10);
++	} while (!otp_signature_err && signature_status == 0);
++
++	if (wil->boot_config == WIL_BOOT_ERR) {
++		wil_err(wil,
++			"invalid boot config, signature_status %d otp_signature_err %d\n",
++			signature_status, otp_signature_err);
++		return -ETIME;
++	}
++
++	wil_dbg_misc(wil,
++		     "signature test done in %d usec, otp_hw 0x%x, boot_config %d\n",
++		     delay * OTP_HW_DELAY, otp_hw, wil->boot_config);
++
++	if (wil->boot_config == WIL_BOOT_VANILLA)
++		/* Assuming not SPI boot (currently not supported) */
++		goto out;
++
++	hw_section_done = otp_hw & BIT_OTP_HW_SECTION_DONE_TALYN_MB;
++	delay = 0;
++
++	while (!hw_section_done) {
++		msleep(RST_DELAY);
++
++		otp_hw = wil_r(wil, RGF_USER_OTP_HW_RD_MACHINE_1);
++		hw_section_done = otp_hw & BIT_OTP_HW_SECTION_DONE_TALYN_MB;
++
++		if (delay++ > RST_COUNT) {
++			wil_err(wil, "TO waiting for hw_section_done\n");
++			return -ETIME;
++		}
++	}
++
++	wil_dbg_misc(wil, "HW section done in %d ms\n", delay * RST_DELAY);
++
++	otp_qc_secured = wil_r(wil, RGF_OTP_QC_SECURED);
++	wil->secured_boot = otp_qc_secured & BIT_BOOT_FROM_ROM ? 1 : 0;
++	wil_dbg_misc(wil, "secured boot is %sabled\n",
++		     wil->secured_boot ? "en" : "dis");
++
++out:
++	wil_dbg_misc(wil, "Reset completed\n");
++
++	return 0;
++}
++
++static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
++{
++	u32 x;
++	int rc;
++
+ 	wil_dbg_misc(wil, "Resetting \"%s\"...\n", wil->hw_name);
+ 
+ 	/* Clear MAC link up */
+@@ -901,34 +1056,12 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
+ 
+ 	wil_w(wil, RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0);
+ 
+-	/* wait until device ready. typical time is 20..80 msec */
+-	if (no_flash)
+-		do {
+-			msleep(RST_DELAY);
+-			x = wil_r(wil, USER_EXT_USER_PMU_3);
+-			if (delay++ > RST_COUNT) {
+-				wil_err(wil, "Reset not completed, PMU_3 0x%08x\n",
+-					x);
+-				return -ETIME;
+-			}
+-		} while ((x & BIT_PMU_DEVICE_RDY) == 0);
++	if (wil->hw_version == HW_VER_TALYN_MB)
++		rc = wil_wait_device_ready_talyn_mb(wil);
+ 	else
+-		do {
+-			msleep(RST_DELAY);
+-			x = wil_r(wil, RGF_USER_BL +
+-				  offsetof(struct bl_dedicated_registers_v0,
+-					   boot_loader_ready));
+-			if (x1 != x) {
+-				wil_dbg_misc(wil, "BL.ready 0x%08x => 0x%08x\n",
+-					     x1, x);
+-				x1 = x;
+-			}
+-			if (delay++ > RST_COUNT) {
+-				wil_err(wil, "Reset not completed, bl.ready 0x%08x\n",
+-					x);
+-				return -ETIME;
+-			}
+-		} while (x != BL_READY);
++		rc = wil_wait_device_ready(wil, no_flash);
++	if (rc)
++		return rc;
+ 
+ 	wil_c(wil, RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_RST_PWGD);
+ 
+@@ -936,7 +1069,7 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
+ 	wil_s(wil, RGF_DMA_OFUL_NID_0, BIT_DMA_OFUL_NID_0_RX_EXT_TR_EN |
+ 	      BIT_DMA_OFUL_NID_0_RX_EXT_A3_SRC);
+ 
+-	if (no_flash) {
++	if (wil->hw_version < HW_VER_TALYN_MB && no_flash) {
+ 		/* Reset OTP HW vectors to fit 40MHz */
+ 		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME1, 0x60001);
+ 		wil_w(wil, RGF_USER_XPM_IFC_RD_TIME2, 0x20027);
+@@ -951,7 +1084,6 @@ static int wil_target_reset(struct wil6210_priv *wil, int no_flash)
+ 		wil_w(wil, RGF_USER_XPM_RD_DOUT_SAMPLE_TIME, 0x57);
+ 	}
+ 
+-	wil_dbg_misc(wil, "Reset completed in %d ms\n", delay * RST_DELAY);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index f8d4a2d..e639ba7 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -210,7 +210,9 @@ struct RGF_ICR {
+ #define RGF_USER_SPARROW_M_4			(0x880c50) /* Sparrow */
+ 	#define BIT_SPARROW_M_4_SEL_SLEEP_OR_REF	BIT(2)
+ #define RGF_USER_OTP_HW_RD_MACHINE_1	(0x880ce0)
+-	#define BIT_NO_FLASH_INDICATION		BIT(8)
++	#define BIT_OTP_SIGNATURE_ERR_TALYN_MB		BIT(0)
++	#define BIT_OTP_HW_SECTION_DONE_TALYN_MB	BIT(2)
++	#define BIT_NO_FLASH_INDICATION			BIT(8)
+ #define RGF_USER_XPM_IFC_RD_TIME1	(0x880cec)
+ #define RGF_USER_XPM_IFC_RD_TIME2	(0x880cf0)
+ #define RGF_USER_XPM_IFC_RD_TIME3	(0x880cf4)
+@@ -312,6 +314,9 @@ struct RGF_ICR {
+ #define RGF_CAF_PLL_LOCK_STATUS		(0x88afec)
+ 	#define BIT_CAF_OSC_DIG_XTAL_STABLE	BIT(0)
+ 
++#define RGF_OTP_QC_SECURED		(0x8a0038)
++	#define BIT_BOOT_FROM_ROM		BIT(31)
++
+ /* eDMA */
+ #define RGF_INT_COUNT_ON_SPECIAL_EVT	(0x8b62d8)
+ 
+@@ -969,6 +974,8 @@ struct wil6210_priv {
+ 	u32 rx_buff_id_count;
+ 	bool amsdu_en;
+ 	bool use_rx_hw_reordering;
++	bool secured_boot;
++	u8 boot_config;
+ };
+ 
+ #define wil_to_wiphy(i) (i->wiphy)
+-- 
+1.9.1
