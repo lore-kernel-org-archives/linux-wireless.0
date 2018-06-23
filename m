@@ -1,83 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:38250 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752981AbeFHVkj (ORCPT
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:33147 "EHLO
+        mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751509AbeFWRdP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Jun 2018 17:40:39 -0400
-Received: by mail-wm0-f67.google.com with SMTP id 69-v6so6070549wmf.3
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Jun 2018 14:40:38 -0700 (PDT)
-Subject: Re: [PATCH v2] net-fq: Add WARN_ON check for null flow.
-To: Ben Greear <greearb@candelatech.com>,
-        =?UTF-8?Q?Micha=c5=82_Kazior?= <kazikcz@gmail.com>
-References: <1528415316-6379-1-git-send-email-greearb@candelatech.com>
- <CAM_iQpULrWMNtgDcrZkc-uLtB0XOVFeZxQ6cFgpXwv7DtA9jzA@mail.gmail.com>
- <1f11144f-7580-03f4-72bd-76b0907d7ed1@candelatech.com>
-Cc: Cong Wang <xiyou.wangcong@gmail.com>,
-        Linux Kernel Network Developers <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5B1AF7D4.9080700@broadcom.com> (sfid-20180608_234042_424710_4AEB8467)
-Date: Fri, 8 Jun 2018 23:40:36 +0200
+        Sat, 23 Jun 2018 13:33:15 -0400
+Received: by mail-oi0-f46.google.com with SMTP id c6-v6so8929983oiy.0
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jun 2018 10:33:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1f11144f-7580-03f4-72bd-76b0907d7ed1@candelatech.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <CAFED-jkt6yoRjvAAJNs2Ob5Rq53s7qa1Ydpy-G2A7gkLDT7V2Q@mail.gmail.com>
+References: <CAFED-jkby2sk9OQnuH5PD8isr0n_CM6Eufs7Ds5fhavYfYdLBw@mail.gmail.com>
+ <20180622144809.GA9773@redhat.com> <CAFED-jkt6yoRjvAAJNs2Ob5Rq53s7qa1Ydpy-G2A7gkLDT7V2Q@mail.gmail.com>
+From: Tom Psyborg <pozega.tomislav@gmail.com>
+Date: Sat, 23 Jun 2018 19:33:14 +0200
+Message-ID: <CAKR_QV+c-z_A+8Miikd-zMhShkFT_8UMuZ-wmVRaQ=2C7yb5TA@mail.gmail.com> (sfid-20180623_193320_003109_9B3B3E1F)
+Subject: Re: mt76x2e MCU message 31 timed out
+To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6/8/2018 5:17 PM, Ben Greear wrote:
+Do they sell dual-band version with ext amplifiers? I saw there is
+5GHz version with 25dBm power modification...
 
-I recalled an email from Michał leaving tieto so adding his alternate 
-email he provided back then.
-
-Gr. AvS
-
-> On 06/07/2018 04:59 PM, Cong Wang wrote:
->> On Thu, Jun 7, 2018 at 4:48 PM,  <greearb@candelatech.com> wrote:
->>> diff --git a/include/net/fq_impl.h b/include/net/fq_impl.h
->>> index be7c0fa..cb911f0 100644
->>> --- a/include/net/fq_impl.h
->>> +++ b/include/net/fq_impl.h
->>> @@ -78,7 +78,10 @@ static struct sk_buff *fq_tin_dequeue(struct fq *fq,
->>>                         return NULL;
->>>         }
+On 22/06/2018, Janusz Dziedzic <janusz.dziedzic@gmail.com> wrote:
+> 2018-06-22 16:48 GMT+02:00 Stanislaw Gruszka <sgruszka@redhat.com>:
+>> Hi
+>>
+>> On Fri, Jun 22, 2018 at 10:37:35AM +0200, Janusz Dziedzic wrote:
+>>> Have this card in my laptop:
+>>> 02:00.0 Network controller: MEDIATEK Corp. Device 7612
 >>>
->>> -       flow = list_first_entry(head, struct fq_flow, flowchain);
->>> +       flow = list_first_entry_or_null(head, struct fq_flow,
->>> flowchain);
->>> +
->>> +       if (WARN_ON_ONCE(!flow))
->>> +               return NULL;
+>>> [    8.478104] mt76x2e 0000:02:00.0: ASIC revision: 76120044
+>>> [    8.489582] mt76x2e 0000:02:00.0: ROM patch already applied
+>>> [    8.833476] mt76x2e 0000:02:00.0: Firmware Version: 0.0.00
+>>> [    8.833477] mt76x2e 0000:02:00.0: Build: 1
+>>> [    8.833479] mt76x2e 0000:02:00.0: Build Time: 201507311614____
+>>> [    8.856115] mt76x2e 0000:02:00.0: Firmware running!
+>>> [    9.558075] mt76x2e 0000:02:00.0 wlp2s0: renamed from wlan1
 >>
->> This does not make sense either. list_first_entry_or_null()
->> returns NULL only when the list is empty, but we already check
->> list_empty() right before this code, and it is protected by fq->lock.
+>> I'm just curious. Does the card was installed in the laptop by default?
+>> If so what is the model of the laptop?
 >>
+> No, I just buy this card on aliexpress and put into some dell (MTK
+> MT7612 2x2 half miniPCIE).
 >
-> Hello Michal,
+>>> Linux test4 4.17.0-rc7+ #5 SMP Mon May 28 12:35:22 CEST 2018 x86_64
+>>> GNU/Linux
+>>>
+>>> Seems iw scan works correctly and first assoc. After will run some
+>>> traffic (iperf in such case) get:
+>>>
+>>> [  432.372081] wlp2s0: associate with 52:b4:f7:f0:16:c2 (try 2/3)
+>>> [  432.375255] wlp2s0: RX AssocResp from 52:b4:f7:f0:16:c2
+>>> (capab=0x511 status=0 aid=2)
+>>> [  432.375336] wlp2s0: associated
+>>> [  432.451097] IPv6: ADDRCONF(NETDEV_CHANGE): wlp2s0: link becomes ready
+>>> [  522.562157] mt76x2e 0000:02:00.0: MCU message 31 (seq 13) timed out
+>>> [  524.610281] mt76x2e 0000:02:00.0: MCU message 31 (seq 14) timed out
+>>> [  526.658384] mt76x2e 0000:02:00.0: MCU message 31 (seq 15) timed out
+>>> [  528.258455] mt76x2e 0000:02:00.0: MCU message 30 (seq 1) timed out
+>>> [  529.282499] mt76x2e 0000:02:00.0: MCU message 30 (seq 2) timed out
+>>> [  530.402544] mt76x2e 0000:02:00.0: MCU message 30 (seq 3) timed out
+>>> [  531.426587] mt76x2e 0000:02:00.0: MCU message 30 (seq 4) timed out
+>>> [  531.427444] wlp2s0: authenticate with 52:b4:f7:f0:14:ac
+>>> [  532.450624] mt76x2e 0000:02:00.0: MCU message 30 (seq 5) timed out
+>>> [  533.474666] mt76x2e 0000:02:00.0: MCU message 30 (seq 6) timed out
+>>> [  534.498709] mt76x2e 0000:02:00.0: MCU message 30 (seq 7) timed out
+>>> [  535.522736] mt76x2e 0000:02:00.0: MCU message 30 (seq 8) timed out
+>>> [  535.522807] wlp2s0: send auth to 52:b4:f7:f0:14:ac (try 1/3)
+>>> [  535.726740] wlp2s0: send auth to 52:b4:f7:f0:14:ac (try 2/3)
+>>> [  535.930742] wlp2s0: send auth to 52:b4:f7:f0:14:ac (try 3/3)
+>>> [  536.134747] wlp2s0: authentication with 52:b4:f7:f0:14:ac timed out
+>>
+>> I observed quite similar issue on some rt2800 devices when
+>> I applied  this patch:
+>> https://github.com/sgruszka/wireless-drivers-next/commit/846d205edd8c36d1b7828fee54bf4cf40bf8cb1a
+>> It works on some devices and does not work on others with similar
+>> symptoms - correctly associate but stop to work as soon as some
+>> data traffic is performed.
+>>
+>> So, I would check if send IEEE80211_TX_CTL_RATE_CTRL_PROBE frames
+>> with qsel = MT_QSEL_EDCA would help.
+>>
+> Thanks, will check this.
 >
-> git blame shows you as the author of the fq_impl.h code.
+>> Another thing to try is checkout vendor driver and see if there is need
+>> to add extra code if device is_mt7612() .
+>>
+>> Regards
+>> Stanislaw
 >
-> I saw a crash when debugging funky ath10k firmware in a 4.16 + hacks
-> kernel.  There was an apparent
-> mostly-null deref in the fq_tin_dequeue method.  According to gdb, it
-> was within
-> 1 line of the dereference of 'flow'.
 >
-> My hack above is probably not that useful.  Cong thinks maybe the
-> locking is bad.
 >
-> If you get a chance, please review this thread and see if you have any
-> ideas for
-> a better fix (or better debugging code).
->
-> As always, if you would like me to generate you a buggy firmware that
-> will crash
-> in the tx path and cause all sorts of mayhem in the ath10k driver and
-> wifi stack,
-> I will be happy to do so.
->
-> https://www.mail-archive.com/netdev@vger.kernel.org/msg239738.html
->
-> Thanks,
-> Ben
+> --
+> Janusz Dziedzic
 >
