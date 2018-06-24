@@ -1,99 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dnvrco-outbound-snat.email.rr.com ([107.14.73.225]:9353 "EHLO
-        dnvrco-cmomta02.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752835AbeFRNxa (ORCPT
+Received: from mail-lj1-f195.google.com ([209.85.208.195]:41624 "EHLO
+        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751728AbeFXTqy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Jun 2018 09:53:30 -0400
-Message-ID: <20180618135329.N2TLO.197792.root@dnvrco-web12> (sfid-20180618_155333_999904_D3F903AA)
-Date: Mon, 18 Jun 2018 13:53:29 +0000
-From: <mgreger@cinci.rr.com>
-To: Tom Psyborg <pozega.tomislav@gmail.com>
-Subject: Re: Atheros AR9462 - 5Ghz not working
-Cc: Janusz Dziedzic <janusz.dziedzic@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        sedat.dilek@gmail.com,
-        =?utf-8?Q?Micha=C5=82_Kazior?= <kazikcz@gmail.com>
-In-Reply-To: <CAKR_QV+pfv3sWCQzgFKB8k1MEad2NUWv==9+0z9T6radmDzQGw@mail.gmail.com>
+        Sun, 24 Jun 2018 15:46:54 -0400
+Received: by mail-lj1-f195.google.com with SMTP id v12-v6so4451335ljj.8
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Jun 2018 12:46:54 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V4 1/3] brcmfmac: detect firmware support for monitor interface
+Date: Sun, 24 Jun 2018 21:44:35 +0200
+Message-Id: <20180624194437.28766-1-zajec5@gmail.com> (sfid-20180624_214754_242705_EF42846D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Rafał Miłecki <rafal@milecki.pl>
 
----- Tom Psyborg <pozega.tomislav@gmail.com> wrote: 
-> Hi
-> 
-> Your log only show attemps on ch 2447, Can you try connecting to 5GHz
-> AP? Connect to Hidden Wireless Network option at the bottom of the
-> nm-applet? Running airodump in monitor mode to see if it captures
-> anything? Maybe your laptop's antennas were designed for 2.4G card
-> only but this just dumb guessing...
-> 
+Many/most of firmwares support creating monitor interface but only the
+most recent ones explicitly /announce/ it using a "monitor" entry in the
+list of capabilities.
 
-It won't connect to any 5GHz AP.
-I don't run network manager or Gnome, in fact X11 is not installed on this machine at all.
-I don't think there is such a thing as 2.4GHz vs 5GHz antennas.
+Check for that entry and store internally info about monitor mode
+support using a new feature flag. Once we sort out all details of
+handling monitor interface it will be used when reporting available
+interfaces to the cfg80211.
 
+Later some fallback detecion method may be added for older firmwares.
+For now just stick to the "monitor" capability which should be 100%
+reliable.
 
-> On 17/06/2018, mgreger@cinci.rr.com <mgreger@cinci.rr.com> wrote:
-> >
-> > ---- "Michał Kazior" <kazikcz@gmail.com> wrote:
-> >> On 15 June 2018 at 19:23,  <mgreger@cinci.rr.com> wrote:
-> >> > ---- mgreger@cinci.rr.com wrote:
-> >> >> ---- "Michał Kazior" <kazikcz@gmail.com> wrote:
-> >> >> > Your noise floor readout in survey dump is terribly bad for 5GHz. It
-> >> >> > ain't stellar for 2.4GHz either but within reason nonetheless.
-> >> >> >
-> >> >> > Did you try using the card in a different device? I wonder if the
-> >> >> > device you're trying to use it in has some sort of internal noise on
-> >> >> > those frequencies and/or ath9k's ANI isn't able to deal with it.
-> >> >> >
-> >> >> >
-> >> >> > Michał
-> >> >> >
-> >> >> > On 15 June 2018 at 15:31,  <mgreger@cinci.rr.com> wrote:
-> >> >>
-> >> >> I did.
-> >> >> I took it out of the Penguin-Z notebook and put it in a Dell XPS15 9560
-> >> >> running Windows 10. Only 2.4Ghz networks were visible from there as
-> >> >> well. Not exactly apples-to-apples, but consistent results.
-> >>
-> >> This reduces likeliness this is tied to a os/driver issue. Maybe
-> >> calibration data on the device eeprom is broken? Or maybe it's a
-> >> hardware defect?
-> >
-> >
-> >
-> >
-> > I have three of these cards all with the same problem, so if it's a hardware
-> > defect then it's pretty much game over and these cards are all useless.
-> > Forgive my ignorance, but is there any way to check/fix calibration data?
-> >
-> >
-> >
-> >
-> >>
-> >>
-> >> > Could it be antenna related (in multiple devices)?
-> >>
-> >> Antennas can be designed to work better on certain frequency ranges. I
-> >> wouldn't expect such a dramatic effect though.
-> >>
-> >>
-> >> > On wikidevi.com I see some M.2 cards listed with an antenna connector of
-> >> > U.FL and others with MHF4. I can't find anything describing the
-> >> > difference, if any. The connectors seemed to fit OK. Also, what's the
-> >> > deal with 'main' and 'aux' antenna connectors? I've seen people suggest
-> >> > swapping them has helped in some cases with poor signal, while others
-> >> > insist that it makes no difference. I have not tried swapping the
-> >> > connectors.
-> >>
-> >> I think it's not a connector problem because 2.4GHz scan results
-> >> report reasonable signal strength for found APs (-60dBm). My
-> >> experience is that if you use a wrong (but seemingly fitting)
-> >> connector you'd get near 0 results or below -90dBm across the board.
-> >>
-> >>
-> >> Michał
-> >
-> >
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+V3: Patch added to the series
+V4: Dropped fallback code as it was reported to be incorrect
+    Updated new feature flag description as preferred by Arend
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c | 1 +
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h | 4 +++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+index 800a423c7bc2..a78b9bae44e0 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+@@ -48,6 +48,7 @@ static const struct brcmf_feat_fwcap brcmf_fwcap_map[] = {
+ 	{ BRCMF_FEAT_MBSS, "mbss" },
+ 	{ BRCMF_FEAT_MCHAN, "mchan" },
+ 	{ BRCMF_FEAT_P2P, "p2p" },
++	{ BRCMF_FEAT_MONITOR, "monitor" },
+ };
+ 
+ #ifdef DEBUG
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+index d1193825e559..3415d5d4d6b5 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+@@ -33,6 +33,7 @@
+  * MFP: 802.11w Management Frame Protection.
+  * GSCAN: enhanced scan offload feature.
+  * FWSUP: Firmware supplicant.
++ * MONITOR: firmware can pass monitor packets to host.
+  */
+ #define BRCMF_FEAT_LIST \
+ 	BRCMF_FEAT_DEF(MBSS) \
+@@ -48,7 +49,8 @@
+ 	BRCMF_FEAT_DEF(WOWL_ARP_ND) \
+ 	BRCMF_FEAT_DEF(MFP) \
+ 	BRCMF_FEAT_DEF(GSCAN) \
+-	BRCMF_FEAT_DEF(FWSUP)
++	BRCMF_FEAT_DEF(FWSUP) \
++	BRCMF_FEAT_DEF(MONITOR)
+ 
+ /*
+  * Quirks:
+-- 
+2.13.7
