@@ -1,50 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:37337 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756879AbeFPP4e (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38130 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751603AbeFXQ6v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Jun 2018 11:56:34 -0400
-Received: by mail-wm0-f68.google.com with SMTP id r125-v6so8513568wmg.2
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Jun 2018 08:56:33 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] mt76: introduce mt76_{incr,decr} utility routines
-Date: Sat, 16 Jun 2018 17:56:18 +0200
-Message-Id: <20180616155621.30539-2-lorenzo.bianconi@redhat.com> (sfid-20180616_175637_294703_202FD4C3)
+        Sun, 24 Jun 2018 12:58:51 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [V2] brcmfmac: stop watchdog before detach and free everything
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180530090633.GA15390@panicking>
+References: <20180530090633.GA15390@panicking>
+To: Michael Trimarchi <michael@amarulasolutions.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Ian Molton <ian@mnementh.co.uk>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <20180624165850.C890E60711@smtp.codeaurora.org> (sfid-20180624_185902_912719_8ECFF0F5)
+Date: Sun, 24 Jun 2018 16:58:50 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add mt76_{incr,decr} utility routines to increment/decrement a value
-with wrap-around (they will be used by mt76x2 DFS sw detector)
+Michael Trimarchi <michael@amarulasolutions.com> wrote:
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76.h | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+> Using built-in in kernel image without a firmware in filesystem
+> or in the kernel image can lead to a kernel NULL pointer deference.
+> Watchdog need to be stopped in brcmf_sdio_remove
+> 
+> The system is going down NOW!
+> [ 1348.110759] Unable to handle kernel NULL pointer dereference at virtual address 000002f8
+> Sent SIGTERM to all processes
+> [ 1348.121412] Mem abort info:
+> [ 1348.126962]   ESR = 0x96000004
+> [ 1348.130023]   Exception class = DABT (current EL), IL = 32 bits
+> [ 1348.135948]   SET = 0, FnV = 0
+> [ 1348.138997]   EA = 0, S1PTW = 0
+> [ 1348.142154] Data abort info:
+> [ 1348.145045]   ISV = 0, ISS = 0x00000004
+> [ 1348.148884]   CM = 0, WnR = 0
+> [ 1348.151861] user pgtable: 4k pages, 48-bit VAs, pgdp = (____ptrval____)
+> [ 1348.158475] [00000000000002f8] pgd=0000000000000000
+> [ 1348.163364] Internal error: Oops: 96000004 [#1] PREEMPT SMP
+> [ 1348.168927] Modules linked in: ipv6
+> [ 1348.172421] CPU: 3 PID: 1421 Comm: brcmf_wdog/mmc0 Not tainted 4.17.0-rc5-next-20180517 #18
+> [ 1348.180757] Hardware name: Amarula A64-Relic (DT)
+> [ 1348.185455] pstate: 60000005 (nZCv daif -PAN -UAO)
+> [ 1348.190251] pc : brcmf_sdiod_freezer_count+0x0/0x20
+> [ 1348.195124] lr : brcmf_sdio_watchdog_thread+0x64/0x290
+> [ 1348.200253] sp : ffff00000b85be30
+> [ 1348.203561] x29: ffff00000b85be30 x28: 0000000000000000
+> [ 1348.208868] x27: ffff00000b6cb918 x26: ffff80003b990638
+> [ 1348.214176] x25: ffff0000087b1a20 x24: ffff80003b94f800
+> [ 1348.219483] x23: ffff000008e620c8 x22: ffff000008f0b660
+> [ 1348.224790] x21: ffff000008c6a858 x20: 00000000fffffe00
+> [ 1348.230097] x19: ffff80003b94f800 x18: 0000000000000001
+> [ 1348.235404] x17: 0000ffffab2e8a74 x16: ffff0000080d7de8
+> [ 1348.240711] x15: 0000000000000000 x14: 0000000000000400
+> [ 1348.246018] x13: 0000000000000400 x12: 0000000000000001
+> [ 1348.251324] x11: 00000000000002c4 x10: 0000000000000a10
+> [ 1348.256631] x9 : ffff00000b85bc40 x8 : ffff80003be11870
+> [ 1348.261937] x7 : ffff80003dfc7308 x6 : 000000078ff08b55
+> [ 1348.267243] x5 : 00000139e1058400 x4 : 0000000000000000
+> [ 1348.272550] x3 : dead000000000100 x2 : 958f2788d6618100
+> [ 1348.277856] x1 : 00000000fffffe00 x0 : 0000000000000000
+> 
+> Signed-off-by: Michael Trimarchi <michael@amarulasolutions.com>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Tested-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index d2166fbf50ff..96e9798bb8a0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -390,6 +390,18 @@ struct dentry *mt76_register_debugfs(struct mt76_dev *dev);
- int mt76_eeprom_init(struct mt76_dev *dev, int len);
- void mt76_eeprom_override(struct mt76_dev *dev);
- 
-+/* increment with wrap-around */
-+static inline int mt76_incr(int val, int size)
-+{
-+	return (val + 1) & (size - 1);
-+}
-+
-+/* decrement with wrap-around */
-+static inline int mt76_decr(int val, int size)
-+{
-+	return (val - 1) & (size - 1);
-+}
-+
- static inline struct ieee80211_txq *
- mtxq_to_txq(struct mt76_txq *mtxq)
- {
+Patch applied to wireless-drivers.git, thanks.
+
+373c83a801f1 brcmfmac: stop watchdog before detach and free everything
+
 -- 
-2.17.1
+https://patchwork.kernel.org/patch/10437931/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
