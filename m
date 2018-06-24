@@ -1,54 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:37733 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751013AbeFCLMF (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40442 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751823AbeFXRCC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 3 Jun 2018 07:12:05 -0400
-From: Varsha Rao <rvarsha016@gmail.com>
-To: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Nicholas Mc Guire <der.herr@hofr.at>,
-        Lukas Bulwahn <lukas.bulwahn@gmail.com>
-Cc: Varsha Rao <rvarsha016@gmail.com>
-Subject: [PATCH] net: ipw2x00: Replace NULL comparison with !priv
-Date: Sun,  3 Jun 2018 16:41:35 +0530
-Message-Id: <20180603111136.4262-1-rvarsha016@gmail.com> (sfid-20180603_131232_828370_4B90D151)
+        Sun, 24 Jun 2018 13:02:02 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mt7601u: remove warning when avg_rssi is zero
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180609101043.GA28502@redhat.com>
+References: <20180609101043.GA28502@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Jakub Kicinski <kubakici@wp.pl>, linux-wireless@vger.kernel.org,
+        Adam Borowski <kilobyte@angband.pl>
+Message-Id: <20180624170201.D38DE607EB@smtp.codeaurora.org> (sfid-20180624_190205_545116_B1695959)
+Date: Sun, 24 Jun 2018 17:02:01 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove extra parentheses and replace NULL comparison with !priv, to fix
-clang warning of extraneous parentheses and check patch issue. Following
-coccinelle script is used to fix it.
+Stanislaw Gruszka <sgruszka@redhat.com> wrote:
 
-@disable is_null,paren@
-expression e;
-statement s;
-@@
-if (
-- (e==NULL)
-+!e
- )
-s
+> It turned out that we can run calibration without already received
+> frames with RSSI data. In such case just don't update AGC register
+> and don't print the warning.
+> 
+> Fixes: b305a6ab0247 ("mt7601u: use EWMA to calculate avg_rssi")
+> Reported-by: Adam Borowski <kilobyte@angband.pl>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> Acked-by: Jakub Kicinski <kubakici@wp.pl>
 
-Signed-off-by: Varsha Rao <rvarsha016@gmail.com>
----
- drivers/net/wireless/intel/ipw2x00/ipw2200.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Patch applied to wireless-drivers.git, thanks.
 
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-index 87a5e414c2f7..7d55bb09413b 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-@@ -7112,7 +7112,7 @@ static u32 ipw_qos_get_burst_duration(struct ipw_priv *priv)
- {
- 	u32 ret = 0;
- 
--	if ((priv == NULL))
-+	if (!priv)
- 		return 0;
- 
- 	if (!(priv->ieee->modulation & LIBIPW_OFDM_MODULATION))
+92963318a255 mt7601u: remove warning when avg_rssi is zero
+
 -- 
-2.17.0
+https://patchwork.kernel.org/patch/10455479/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
