@@ -1,59 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51604 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:39710 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934708AbeF0QHU (ORCPT
+        with ESMTP id S1751666AbeFXRBI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Jun 2018 12:07:20 -0400
+        Sun, 24 Jun 2018 13:01:08 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: rndis_wlan: potential buffer overflow in
- rndis_wlan_auth_indication()
+Subject: Re: [1/2] Revert "mwifiex: handle race during mwifiex_usb_disconnect"
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180605113139.m65jc2hlisa62deu@kili.mountain>
-References: <20180605113139.m65jc2hlisa62deu@kili.mountain>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Jussi Kivilinna <jussi.kivilinna@iki.fi>,
-        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Message-Id: <20180627160719.8B1B360791@smtp.codeaurora.org> (sfid-20180627_180727_156286_75026B34)
-Date: Wed, 27 Jun 2018 16:07:19 +0000 (UTC)
+In-Reply-To: <1527849680-31445-1-git-send-email-gbhat@marvell.com>
+References: <1527849680-31445-1-git-send-email-gbhat@marvell.com>
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Message-Id: <20180624170107.C9EDB605A5@smtp.codeaurora.org> (sfid-20180624_190111_874465_0D1824C5)
+Date: Sun, 24 Jun 2018 17:01:07 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
+Ganapathi Bhat <gbhat@marvell.com> wrote:
 
-> This is a static checker fix, not something I have tested.  The issue
-> is that on the second iteration through the loop, we jump forward by
-> le32_to_cpu(auth_req->length) bytes.  The problem is that if the length
-> is more than "buflen" then we end up with a negative "buflen".  A
-> negative buflen is type promoted to a high positive value and the loop
-> continues but it's accessing beyond the end of the buffer.
+> This reverts commit b817047ae70c0bd67b677b65d0d69d72cd6e9728.
 > 
-> I believe the "auth_req->length" comes from the firmware and if the
-> firmware is malicious or buggy, you're already toasted so the impact of
-> this bug is probably not very severe.
+> We have a better fix for this issue, which will be sent on top
+> of this revert.
 > 
-> Fixes: 030645aceb3d ("rndis_wlan: handle 802.11 indications from device")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-> index 9935bd09db1f..d4947e3a909e 100644
-> --- a/drivers/net/wireless/rndis_wlan.c
-> +++ b/drivers/net/wireless/rndis_wlan.c
-> @@ -2928,6 +2928,8 @@ static void rndis_wlan_auth_indication(struct usbnet *usbdev,
->  
->  	while (buflen >= sizeof(*auth_req)) {
->  		auth_req = (void *)buf;
-> +		if (buflen < le32_to_cpu(auth_req->length))
-> +			return;
->  		type = "unknown";
->  		flags = le32_to_cpu(auth_req->flags);
->  		pairwise_error = false;
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
+2 patches applied to wireless-drivers.git, thanks.
 
-ae636fb15548 rndis_wlan: potential buffer overflow in rndis_wlan_auth_indication()
+7e58e741c001 Revert "mwifiex: handle race during mwifiex_usb_disconnect"
+f8c095f67962 mwifiex: handle race during mwifiex_usb_disconnect
 
 -- 
-https://patchwork.kernel.org/patch/10448061/
+https://patchwork.kernel.org/patch/10442949/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
