@@ -1,41 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:58152 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933834AbeFRUo0 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49940 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754866AbeFYKES (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Jun 2018 16:44:26 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] rfkill: add header files to MAINTAINERS
-Date: Mon, 18 Jun 2018 22:44:23 +0200
-Message-Id: <20180618204423.29746-1-johannes@sipsolutions.net> (sfid-20180618_224431_848245_CF1D58DD)
+        Mon, 25 Jun 2018 06:04:18 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Douglas Anderson <dianders@chromium.org>
+Subject: RE: [PATCH 1/2] mwifiex: replace rx_pkt_lock by rx_reorder_tbl_lock
+Date: Mon, 25 Jun 2018 10:04:13 +0000
+Message-ID: <9b323465fb694ed5b0b4fbe33cddbbab@SC-EXCH02.marvell.com> (sfid-20180625_120424_924747_245C1B57)
+References: <1529919775-21274-1-git-send-email-gbhat@marvell.com>
+In-Reply-To: <1529919775-21274-1-git-send-email-gbhat@marvell.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+For reference, detailed discussion could be found in below thread:
+https://patchwork.kernel.org/patch/10033789/
 
-These files weren't covered by the MAINTAINERS file,
-add them.
-
-Reported-by: Peter Meerwald-Stadler <pmeerw@pmeerw.net>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- MAINTAINERS | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 2c7069037a15..1fe2aac28177 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -12155,6 +12155,8 @@ S:	Maintained
- F:	Documentation/rfkill.txt
- F:	Documentation/ABI/stable/sysfs-class-rfkill
- F:	net/rfkill/
-+F:	include/linux/rfkill.h
-+F:	include/uapi/linux/rfkill.h
- 
- RHASHTABLE
- M:	Thomas Graf <tgraf@suug.ch>
--- 
-2.14.4
+Regards,
+Ganapathi
+> -----Original Message-----
+> From: Ganapathi Bhat [mailto:gbhat@marvell.com]
+> Sent: Monday, June 25, 2018 3:13 PM
+> To: linux-wireless@vger.kernel.org
+> Cc: Brian Norris; Cathy Luo; Xinming Hu; Zhiyuan Yang; James Cao; Mangesh
+> Malusare; Douglas Anderson; Ganapathi Bhat
+> Subject: [PATCH 1/2] mwifiex: replace rx_pkt_lock by rx_reorder_tbl_lock
+>
+> At present driver spinlock protects iteration of list
+> rx_reorder_tbl_ptr with rx_reorder_tbl_lock. To protect the
+> individual items in this list, it uses rx_pkt_lock. But, we can
+> use a single rx_reorder_tbl_lock for both purposes. This patch
+> replaces rx_pkt_lock by rx_reorder_tbl_lock.
+>
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c | 19 ++++++++++----
+> -----
+>  drivers/net/wireless/marvell/mwifiex/init.c          |  1 -
+>  drivers/net/wireless/marvell/mwifiex/main.h          |  3 ---
+>  3 files changed, 10 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+> b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+> index 7ab44cd..5380fba 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+> @@ -118,18 +118,18 @@ static int mwifiex_11n_dispatch_pkt(struct
+> mwifiex_private *priv, void *payload)
+>                     tbl->win_size;
+>
+>       for (i = 0; i < pkt_to_send; ++i) {
+> -             spin_lock_irqsave(&priv->rx_pkt_lock, flags);
+> +             spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+>               rx_tmp_ptr = NULL;
+>               if (tbl->rx_reorder_ptr[i]) {
+>                       rx_tmp_ptr = tbl->rx_reorder_ptr[i];
+>                       tbl->rx_reorder_ptr[i] = NULL;
+>               }
+> -             spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
+> +             spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+>               if (rx_tmp_ptr)
+>                       mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
+>       }
+>
+> -     spin_lock_irqsave(&priv->rx_pkt_lock, flags);
+> +     spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+>       /*
+>        * We don't have a circular buffer, hence use rotation to simulate
+>        * circular buffer
+> @@ -140,7 +140,7 @@ static int mwifiex_11n_dispatch_pkt(struct
+> mwifiex_private *priv, void *payload)
+>       }
+>
+>       tbl->start_win = start_win;
+> -     spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
+> +     spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+>  }
+>
+>  /*
+> @@ -160,18 +160,19 @@ static int mwifiex_11n_dispatch_pkt(struct
+> mwifiex_private *priv, void *payload)
+>       unsigned long flags;
+>
+>       for (i = 0; i < tbl->win_size; ++i) {
+> -             spin_lock_irqsave(&priv->rx_pkt_lock, flags);
+> +             spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+>               if (!tbl->rx_reorder_ptr[i]) {
+> -                     spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
+> +                     spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock,
+> +                                            flags);
+>                       break;
+>               }
+>               rx_tmp_ptr = tbl->rx_reorder_ptr[i];
+>               tbl->rx_reorder_ptr[i] = NULL;
+> -             spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
+> +             spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+>               mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
+>       }
+>
+> -     spin_lock_irqsave(&priv->rx_pkt_lock, flags);
+> +     spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+>       /*
+>        * We don't have a circular buffer, hence use rotation to simulate
+>        * circular buffer
+> @@ -184,7 +185,7 @@ static int mwifiex_11n_dispatch_pkt(struct
+> mwifiex_private *priv, void *payload)
+>               }
+>       }
+>       tbl->start_win = (tbl->start_win + i) & (MAX_TID_VALUE - 1);
+> -     spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
+> +     spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+>  }
+>
+>  /*
+> diff --git a/drivers/net/wireless/marvell/mwifiex/init.c
+> b/drivers/net/wireless/marvell/mwifiex/init.c
+> index d239e92..dab02d7 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/init.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/init.c
+> @@ -439,7 +439,6 @@ int mwifiex_init_lock_list(struct mwifiex_adapter
+> *adapter)
+>       for (i = 0; i < adapter->priv_num; i++) {
+>               if (adapter->priv[i]) {
+>                       priv = adapter->priv[i];
+> -                     spin_lock_init(&priv->rx_pkt_lock);
+>                       spin_lock_init(&priv->wmm.ra_list_spinlock);
+>                       spin_lock_init(&priv->curr_bcn_buf_lock);
+>                       spin_lock_init(&priv->sta_list_spinlock);
+> diff --git a/drivers/net/wireless/marvell/mwifiex/main.h
+> b/drivers/net/wireless/marvell/mwifiex/main.h
+> index 69ac0a2..d2b54be 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/main.h
+> +++ b/drivers/net/wireless/marvell/mwifiex/main.h
+> @@ -616,9 +616,6 @@ struct mwifiex_private {
+>       struct list_head rx_reorder_tbl_ptr;
+>       /* spin lock for rx_reorder_tbl_ptr queue */
+>       spinlock_t rx_reorder_tbl_lock;
+> -     /* spin lock for Rx packets */
+> -     spinlock_t rx_pkt_lock;
+> -
+>  #define MWIFIEX_ASSOC_RSP_BUF_SIZE  500
+>       u8 assoc_rsp_buf[MWIFIEX_ASSOC_RSP_BUF_SIZE];
+>       u32 assoc_rsp_size;
+> --
+> 1.9.1
