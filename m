@@ -1,62 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:40707 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754224AbeFKVKG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Jun 2018 17:10:06 -0400
-Received: by mail-pf0-f196.google.com with SMTP id z24-v6so10884769pfe.7
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jun 2018 14:10:05 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>,
-        <linux-kernel@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH 4/4] ath10k: snoc: sort include files
-Date: Mon, 11 Jun 2018 14:09:46 -0700
-Message-Id: <20180611210946.241341-4-briannorris@chromium.org> (sfid-20180611_231048_347168_FBF292F0)
-In-Reply-To: <20180611210946.241341-1-briannorris@chromium.org>
-References: <20180611210946.241341-1-briannorris@chromium.org>
+Received: from hermes.aosc.io ([199.195.250.187]:40243 "EHLO hermes.aosc.io"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752149AbeFYHwe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Jun 2018 03:52:34 -0400
+Date: Mon, 25 Jun 2018 15:47:18 +0800
+In-Reply-To: <5B309D37.80207@broadcom.com>
+References: <20180315162510.11669-1-harald@ccbib.org> <20180315162510.11669-6-harald@ccbib.org> <a7011fe78d171658742406bf01d50b7e3d7eaf1d.camel@aosc.io> <E1fX7yK-0000OC-HA@stardust.g4.wien.funkfeuer.at> <5B309D37.80207@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
+Subject: Re: [PATCHv2 5/5] arm64: allwinner: a64: Add support for TERES-I laptop
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Harald Geyer <harald@ccbib.org>
+CC: Maxime Ripard <maxime.ripard@bootlin.com>,
+        Chen-Yu Tsai <wens@csie.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Andre Przywara <andre.przywara@arm.com>, info@olimex.com,
+        linux-wireless@vger.kernel.org
+From: Icenowy Zheng <icenowy@aosc.io>
+Message-ID: <1CF519CD-D44E-4959-8951-27CE710E0984@aosc.io> (sfid-20180625_095337_033572_E516851F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sort these alphabetically, with local includes in a separate section.
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
- drivers/net/wireless/ath/ath10k/snoc.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index 61967c2966e6..c88677e0a21c 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -14,18 +14,19 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
--#include <linux/module.h>
-+#include <linux/clk.h>
- #include <linux/kernel.h>
--#include "debug.h"
--#include "hif.h"
--#include "htc.h"
--#include "ce.h"
--#include "snoc.h"
-+#include <linux/module.h>
- #include <linux/of.h>
- #include <linux/of_device.h>
- #include <linux/platform_device.h>
- #include <linux/regulator/consumer.h>
--#include <linux/clk.h>
-+
-+#include "ce.h"
-+#include "debug.h"
-+#include "hif.h"
-+#include "htc.h"
-+#include "snoc.h"
- 
- #define ATH10K_SNOC_RX_POST_RETRY_MS 50
- #define CE_POLL_PIPE 4
--- 
-2.18.0.rc1.242.g61856ae69a-goog
+于 2018年6月25日 GMT+08:00 下午3:43:51, Arend van Spriel <arend.vanspriel@broadcom.com> 写到:
+>On 6/24/2018 6:34 PM, Harald Geyer wrote:
+>> Icenowy Zheng writes:
+>>> >在 2018-03-15四的 16:25 +0000，Harald Geyer写道：
+>>>> > >+&mmc1 {
+>>>> > >+	pinctrl-names = "default";
+>>>> > >+	pinctrl-0 = <&mmc1_pins>;
+>>>> > >+	vmmc-supply = <&reg_aldo2>;
+>>>> > >+	vqmmc-supply = <&reg_dldo4>;
+>>>> > >+	mmc-pwrseq = <&wifi_pwrseq>;
+>>>> > >+	bus-width = <4>;
+>>>> > >+	non-removable;
+>>>> > >+	status = "okay";
+>>>> > >+
+>>>> > >+	rtl8723bs: wifi@1 {
+>>>> > >+		reg = <1>;
+>>>> > >+		interrupt-parent = <&r_pio>;
+>>>> > >+		interrupts = <0 3 IRQ_TYPE_LEVEL_LOW>; /* PL3 */
+>>>> > >+		interrupt-names = "host-wake";
+>>>> > >+	};
+>
+>[...]
+>
+>>> >- This device node has no binding. The "host-wake" interrupt is
+>part of
+>>> >  Broadcom SDIO Wi-Fi binding, rather than a generic one.
+>> I think the general mmc and interrupts bindings apply. And the mmc
+>binding
+>> clearly states that for sub-nodes a compatible string is optional.
+>>
+>> However I just realized that the 'interrupt-names' property is not
+>part
+>> of the general interrupts binding, so I guess at least this property
+>should
+>> be removed.
+>
+>Indeed. If the device just used the SDIO interrupt this is not needed. 
+>The Broadcom device can use either SDIO interrupt or a so-called 
+>out-of-band host-wake interrupt, which is what the above represents.
+
+RTL8....S is also capable of use OOB interrupt.
+
+>
+>Regards,
+>Arend
