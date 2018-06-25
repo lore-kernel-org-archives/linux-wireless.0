@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36752 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751283AbeF2Jn4 (ORCPT
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:46193 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754373AbeFYIpy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 05:43:56 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Cc: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Andrey Shevchenko <ashevchenko@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>
-Subject: Re: [1/6] qtnfmac: implement net_device_ops callback to set MAC address
-References: <20180531091102.28666-2-sergey.matyukevich.os@quantenna.com>
-        <20180627155439.481E76034E@smtp.codeaurora.org>
-        <20180629092654.shzir2mfmlp5luf5@bars>
-Date: Fri, 29 Jun 2018 12:43:49 +0300
-In-Reply-To: <20180629092654.shzir2mfmlp5luf5@bars> (Sergey Matyukevich's
-        message of "Fri, 29 Jun 2018 12:26:56 +0300")
-Message-ID: <87d0waexm2.fsf@codeaurora.org> (sfid-20180629_114447_906308_9A1F405A)
+        Mon, 25 Jun 2018 04:45:54 -0400
+Received: by mail-wr0-f194.google.com with SMTP id l14-v6so7684207wrq.13
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2018 01:45:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
+ <CACna6rwzS-KXZ80wudpNEcrtnPd7fUWYKbT93hfFMfQi-V-hhg@mail.gmail.com> <5B30A542.7090400@broadcom.com>
+In-Reply-To: <5B30A542.7090400@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Mon, 25 Jun 2018 10:43:36 +0200
+Message-ID: <CACna6rxg4GHkN_65c2RHBGrWw5NK=ocqY2JTTfWFX0HJmKW6xA@mail.gmail.com> (sfid-20180625_104704_039637_D3CEBAB7)
+Subject: Re: [PATCH 0/6] brcmfmac: fix 160MHz support and monitor mode
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> writes:
-
->> Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
->> 
->> > From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
->> >
->> > Implement net_device_ops::ndo_set_mac_address callback to allow for
->> > setting interface MAC address. Implementation is done through existing
->> > CHANGE_INTF firmware command. All validation is to be done by firmware.
->> >
->> > Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
->> 
->> 2 patches applied to wireless-drivers-next.git, thanks.
->> 
->> ed9f34bb9d33 qtnfmac: implement net_device_ops callback to set MAC address
->> 6fbef9540af0 qtnfmac: enable source MAC address randomization support
+On Mon, 25 Jun 2018 at 10:18, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 6/24/2018 1:48 PM, Rafa=C5=82 Mi=C5=82ecki wrote:
+> > On Fri, 22 Jun 2018 at 20:45, Arend van Spriel
+> > <arend.vanspriel@broadcom.com> wrote:
+> >> Here a couple of patches in preparation of monitor mode support. It
+> >> is mostly about querying firmware for support. While at it I stumbled
+> >> upon the fact that 160MHz was not completely implemented in the driver
+> >> so there is a patch for that as well.
+> >>
+> >> The first two patches are actually some changes to the patches that
+> >> Rafal submitted. So this series depend on:
+> >>
+> >> [V3,2/2] brcmfmac: handle monitor mode marked msgbuf packets [1]
+> >>
+> >> These apply to the master branch of the wireless-drivers-next reposito=
+ry.
+> >>
+> >> [1] https://patchwork.kernel.org/patch/10474799/
+> >
+> > I find it pointless to submit fixes for patches that weren't accepted
+> > yet. Let's work on improving original patches while they are still
+> > pending.
 >
-> Hello Kalle,
->
-> I see the other 4 patches in this series are in 'Deferred' state. Could you
-> please clarify what that means. Do you have any concerns about those
-> remaining patches or any actions are needed from our side ?
+> It is not unprecedented. There are enough patch series sent in the past
+> that relied on other still pending series. I was unsure how to deal with
+> it as I acked your changes already and did not exactly know when Kalle
+> would start applying the patches. I am fine either way.
 
-I saw there was a comment on one patch and other patch used vendor
-commands which I need to review carefully. I didn't have time at the
-time so I put them to deferred and try to get back soon.
+Well, things happen, I don't mind if you un-ack my patch, after
+discovering some problem with it :)
 
--- 
-Kalle Valo
+--=20
+Rafa=C5=82
