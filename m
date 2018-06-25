@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:51090 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751622AbeFELcB (ORCPT
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:34007 "EHLO
+        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752755AbeFYIVM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Jun 2018 07:32:01 -0400
-Date: Tue, 5 Jun 2018 14:31:39 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Jussi Kivilinna <jussi.kivilinna@iki.fi>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: [PATCH] rndis_wlan: potential buffer overflow in
- rndis_wlan_auth_indication()
-Message-ID: <20180605113139.m65jc2hlisa62deu@kili.mountain> (sfid-20180605_133205_245870_07C60E0F)
+        Mon, 25 Jun 2018 04:21:12 -0400
+Received: by mail-ed1-f65.google.com with SMTP id q24-v6so3178585edr.1
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2018 01:21:12 -0700 (PDT)
+Subject: Re: [PATCH 6/6] brcmfmac: fallback mechanism to determine monitor
+ mode features
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1529693004-20569-7-git-send-email-arend.vanspriel@broadcom.com>
+ <CACna6rxi88e6oek8zt_7KG6PY4ih_ehpsd67hK2DXGHKQZhSSg@mail.gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B30A5F5.9080404@broadcom.com> (sfid-20180625_102151_452894_FAF1DCD2)
+Date: Mon, 25 Jun 2018 10:21:09 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CACna6rxi88e6oek8zt_7KG6PY4ih_ehpsd67hK2DXGHKQZhSSg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a static checker fix, not something I have tested.  The issue
-is that on the second iteration through the loop, we jump forward by
-le32_to_cpu(auth_req->length) bytes.  The problem is that if the length
-is more than "buflen" then we end up with a negative "buflen".  A
-negative buflen is type promoted to a high positive value and the loop
-continues but it's accessing beyond the end of the buffer.
+On 6/24/2018 4:08 PM, Rafał Miłecki wrote:
+> On Fri, 22 Jun 2018 at 20:45, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> Firmwares may not provide all monitor mode features in the "cap" iovar.
+>> For those this fallback mechanism uses "sta_monitor" iovar. If firmware
+>> is compiled with stamon, this iovar will fail with BCME_NOTUP; Otherwise
+>> it fails with BCME_UNSUPPORTED.
+>
+> It's probably not the first time ever, but it appears your research
+> (theory) doesn't match my experience (practice) ;) I'm afraid you
+> missed some important check when analyzing firmware code.
 
-I believe the "auth_req->length" comes from the firmware and if the
-firmware is malicious or buggy, you're already toasted so the impact of
-this bug is probably not very severe.
+It was not all theory ;-) but apparently I did not cover all bases. I 
+only checked with 4366c0 (actually with 43664 aka 4366E) on the release 
+branch I am working on.
 
-Fixes: 030645aceb3d ("rndis_wlan: handle 802.11 indications from device")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> I've just tested all firmwares I got (for 43602a1, 4366b1 and 4366c0)
+> and all of them return -4 (BCME_NOTUP) for "sta_monitor" when
+> firmware/interface is down. It appears this test requires bringing
+> firmware/interface up to make it reliable. Apparently even firmwares
+> *without* sta_monitor return -4 (BCME_NOTUP) when firmware/interface
+> is down.
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 9935bd09db1f..d4947e3a909e 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -2928,6 +2928,8 @@ static void rndis_wlan_auth_indication(struct usbnet *usbdev,
- 
- 	while (buflen >= sizeof(*auth_req)) {
- 		auth_req = (void *)buf;
-+		if (buflen < le32_to_cpu(auth_req->length))
-+			return;
- 		type = "unknown";
- 		flags = le32_to_cpu(auth_req->flags);
- 		pairwise_error = false;
+That is crap. So back to the drawing board. Thanks for keeping the taps 
+on this.
+
+Regards,
+Arend
