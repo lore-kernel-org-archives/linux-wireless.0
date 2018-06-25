@@ -1,111 +1,386 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55520 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932898AbeFUJSF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Jun 2018 05:18:05 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 9/9] mt76: improve gain adjustment in noisy environments
-Date: Thu, 21 Jun 2018 11:18:01 +0200
-Message-Id: <20180621091801.41184-9-nbd@nbd.name> (sfid-20180621_111821_155971_2B1281BC)
-In-Reply-To: <20180621091801.41184-1-nbd@nbd.name>
-References: <20180621091801.41184-1-nbd@nbd.name>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:49506 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1754985AbeFYJnI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Jun 2018 05:43:08 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Douglas Anderson <dianders@chromium.org>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH 2/2] mwifiex: restructure rx_reorder_tbl_lock usage
+Date: Mon, 25 Jun 2018 15:12:55 +0530
+Message-ID: <1529919775-21274-2-git-send-email-gbhat@marvell.com> (sfid-20180625_114345_979801_A3E53378)
+In-Reply-To: <1529919775-21274-1-git-send-email-gbhat@marvell.com>
+References: <1529919775-21274-1-git-send-email-gbhat@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When switching between low gain (high RSSI) and high gain settings, it
-can take a few seconds to adjust to the current environment.
-This can lead to short periods of time with extreme packet loss.
+Driver must ensure that whenever it holds a pointer to the list
+entry mwifiex_rx_reorder_tbl, it must protect the same with
+rx_reorder_tbl_lock. At present there are many places where
+driver does not ensure this. To cover all cases, spinlocks in
+below funcions are moved out and made sure that the caller will
+hold the spinlock:
+mwifiex_11n_dispatch_pkt_until_start_win()
+mwifiex_11n_scan_and_dispatch()
+mwifiex_del_rx_reorder_entry()
+mwifiex_11n_get_rx_reorder_tbl()
+mwifiex_11n_find_last_seq_num()
 
-When switching from low_gain=1 to low_gain=2, start with the same gain
-adjustment value instead of the lowest to avoid spikes of huge numbers
-of false CCA events
-
-Also avoid resetting adjustment values on switching between low_gain
-values 0 and 1, since it affects only the upper limit of vga adjustment
-
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 ---
- .../net/wireless/mediatek/mt76/mt76x2_phy.c   | 26 ++++++++++++-------
- 1 file changed, 16 insertions(+), 10 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/11n.c         |  5 +-
+ .../net/wireless/marvell/mwifiex/11n_rxreorder.c   | 80 ++++++++++------------
+ drivers/net/wireless/marvell/mwifiex/uap_txrx.c    |  3 +
+ 3 files changed, 42 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-index 14aedc3ef731..20ffa6a40d39 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-@@ -491,7 +491,8 @@ mt76x2_phy_adjust_vga_gain(struct mt76x2_dev *dev)
- 	dev->cal.false_cca = false_cca;
- 	if (false_cca > 800 && dev->cal.agc_gain_adjust < limit)
- 		dev->cal.agc_gain_adjust += 2;
--	else if (false_cca < 10 && dev->cal.agc_gain_adjust > 0)
-+	else if ((false_cca < 10 && dev->cal.agc_gain_adjust > 0) ||
-+		 (dev->cal.agc_gain_adjust >= limit && false_cca < 500))
- 		dev->cal.agc_gain_adjust -= 2;
- 	else
- 		return;
-@@ -550,7 +551,8 @@ static void
- mt76x2_phy_update_channel_gain(struct mt76x2_dev *dev)
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n.c b/drivers/net/wireless/marvell/mwifiex/11n.c
+index 5d75c97..e2addd8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n.c
+@@ -696,10 +696,11 @@ void mwifiex_11n_delba(struct mwifiex_private *priv, int tid)
+ 				"Send delba to tid=%d, %pM\n",
+ 				tid, rx_reor_tbl_ptr->ta);
+ 			mwifiex_send_delba(priv, tid, rx_reor_tbl_ptr->ta, 0);
+-			goto exit;
++			spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock,
++					       flags);
++			return;
+ 		}
+ 	}
+-exit:
+ 	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ }
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+index 5380fba..e0d0998 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+@@ -111,25 +111,21 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
  {
- 	u8 *gain = dev->cal.agc_gain_init;
--	u8 gain_delta;
-+	u8 low_gain_delta, gain_delta;
-+	bool gain_change;
- 	int low_gain;
- 	u32 val;
+ 	int pkt_to_send, i;
+ 	void *rx_tmp_ptr;
+-	unsigned long flags;
  
-@@ -559,13 +561,14 @@ mt76x2_phy_update_channel_gain(struct mt76x2_dev *dev)
- 	low_gain = (dev->cal.avg_rssi_all > mt76x2_get_rssi_gain_thresh(dev)) +
- 		   (dev->cal.avg_rssi_all > mt76x2_get_low_rssi_gain_thresh(dev));
+ 	pkt_to_send = (start_win > tbl->start_win) ?
+ 		      min((start_win - tbl->start_win), tbl->win_size) :
+ 		      tbl->win_size;
  
--	if (dev->cal.low_gain == low_gain) {
-+	gain_change = (dev->cal.low_gain & 2) ^ (low_gain & 2);
-+	dev->cal.low_gain = low_gain;
-+
-+	if (!gain_change) {
- 		mt76x2_phy_adjust_vga_gain(dev);
+ 	for (i = 0; i < pkt_to_send; ++i) {
+-		spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 		rx_tmp_ptr = NULL;
+ 		if (tbl->rx_reorder_ptr[i]) {
+ 			rx_tmp_ptr = tbl->rx_reorder_ptr[i];
+ 			tbl->rx_reorder_ptr[i] = NULL;
+ 		}
+-		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 		if (rx_tmp_ptr)
+ 			mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
+ 	}
+ 
+-	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 	/*
+ 	 * We don't have a circular buffer, hence use rotation to simulate
+ 	 * circular buffer
+@@ -140,7 +136,6 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
+ 	}
+ 
+ 	tbl->start_win = start_win;
+-	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ }
+ 
+ /*
+@@ -160,7 +155,6 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
+ 	unsigned long flags;
+ 
+ 	for (i = 0; i < tbl->win_size; ++i) {
+-		spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 		if (!tbl->rx_reorder_ptr[i]) {
+ 			spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock,
+ 					       flags);
+@@ -168,11 +162,9 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
+ 		}
+ 		rx_tmp_ptr = tbl->rx_reorder_ptr[i];
+ 		tbl->rx_reorder_ptr[i] = NULL;
+-		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 		mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
+ 	}
+ 
+-	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 	/*
+ 	 * We don't have a circular buffer, hence use rotation to simulate
+ 	 * circular buffer
+@@ -185,7 +177,6 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
+ 		}
+ 	}
+ 	tbl->start_win = (tbl->start_win + i) & (MAX_TID_VALUE - 1);
+-	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ }
+ 
+ /*
+@@ -218,11 +209,7 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
+ 
+ 	del_timer_sync(&tbl->timer_context.timer);
+ 	tbl->timer_context.timer_is_set = false;
+-
+-	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 	list_del(&tbl->list);
+-	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+-
+ 	kfree(tbl->rx_reorder_ptr);
+ 	kfree(tbl);
+ 
+@@ -240,17 +227,10 @@ struct mwifiex_rx_reorder_tbl *
+ mwifiex_11n_get_rx_reorder_tbl(struct mwifiex_private *priv, int tid, u8 *ta)
+ {
+ 	struct mwifiex_rx_reorder_tbl *tbl;
+-	unsigned long flags;
+ 
+-	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+-	list_for_each_entry(tbl, &priv->rx_reorder_tbl_ptr, list) {
+-		if (!memcmp(tbl->ta, ta, ETH_ALEN) && tbl->tid == tid) {
+-			spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock,
+-					       flags);
++	list_for_each_entry(tbl, &priv->rx_reorder_tbl_ptr, list)
++		if (!memcmp(tbl->ta, ta, ETH_ALEN) && tbl->tid == tid)
+ 			return tbl;
+-		}
+-	}
+-	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 
+ 	return NULL;
+ }
+@@ -267,14 +247,9 @@ void mwifiex_11n_del_rx_reorder_tbl_by_ta(struct mwifiex_private *priv, u8 *ta)
+ 		return;
+ 
+ 	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+-	list_for_each_entry_safe(tbl, tmp, &priv->rx_reorder_tbl_ptr, list) {
+-		if (!memcmp(tbl->ta, ta, ETH_ALEN)) {
+-			spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock,
+-					       flags);
++	list_for_each_entry_safe(tbl, tmp, &priv->rx_reorder_tbl_ptr, list)
++		if (!memcmp(tbl->ta, ta, ETH_ALEN))
+ 			mwifiex_del_rx_reorder_entry(priv, tbl);
+-			spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+-		}
+-	}
+ 	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 
+ 	return;
+@@ -288,19 +263,11 @@ void mwifiex_11n_del_rx_reorder_tbl_by_ta(struct mwifiex_private *priv, u8 *ta)
+ mwifiex_11n_find_last_seq_num(struct reorder_tmr_cnxt *ctx)
+ {
+ 	struct mwifiex_rx_reorder_tbl *rx_reorder_tbl_ptr = ctx->ptr;
+-	struct mwifiex_private *priv = ctx->priv;
+-	unsigned long flags;
+ 	int i;
+ 
+-	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+-	for (i = rx_reorder_tbl_ptr->win_size - 1; i >= 0; --i) {
+-		if (rx_reorder_tbl_ptr->rx_reorder_ptr[i]) {
+-			spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock,
+-					       flags);
++	for (i = rx_reorder_tbl_ptr->win_size - 1; i >= 0; --i)
++		if (rx_reorder_tbl_ptr->rx_reorder_ptr[i])
+ 			return i;
+-		}
+-	}
+-	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 
+ 	return -1;
+ }
+@@ -318,17 +285,22 @@ void mwifiex_11n_del_rx_reorder_tbl_by_ta(struct mwifiex_private *priv, u8 *ta)
+ 	struct reorder_tmr_cnxt *ctx =
+ 		from_timer(ctx, t, timer);
+ 	int start_win, seq_num;
++	unsigned long flags;
+ 
+ 	ctx->timer_is_set = false;
++	spin_lock_irqsave(&ctx->priv->rx_reorder_tbl_lock, flags);
+ 	seq_num = mwifiex_11n_find_last_seq_num(ctx);
+ 
+-	if (seq_num < 0)
++	if (seq_num < 0) {
++		spin_unlock_irqrestore(&ctx->priv->rx_reorder_tbl_lock, flags);
+ 		return;
++	}
+ 
+ 	mwifiex_dbg(ctx->priv->adapter, INFO, "info: flush data %d\n", seq_num);
+ 	start_win = (ctx->ptr->start_win + seq_num + 1) & (MAX_TID_VALUE - 1);
+ 	mwifiex_11n_dispatch_pkt_until_start_win(ctx->priv, ctx->ptr,
+ 						 start_win);
++	spin_unlock_irqrestore(&ctx->priv->rx_reorder_tbl_lock, flags);
+ }
+ 
+ /*
+@@ -355,11 +327,14 @@ void mwifiex_11n_del_rx_reorder_tbl_by_ta(struct mwifiex_private *priv, u8 *ta)
+ 	 * If we get a TID, ta pair which is already present dispatch all the
+ 	 * the packets and move the window size until the ssn
+ 	 */
++	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 	tbl = mwifiex_11n_get_rx_reorder_tbl(priv, tid, ta);
+ 	if (tbl) {
+ 		mwifiex_11n_dispatch_pkt_until_start_win(priv, tbl, seq_num);
++		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
  		return;
  	}
++	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 	/* if !tbl then create one */
+ 	new_node = kzalloc(sizeof(struct mwifiex_rx_reorder_tbl), GFP_KERNEL);
+ 	if (!new_node)
+@@ -570,16 +545,20 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
+ 	int prev_start_win, start_win, end_win, win_size;
+ 	u16 pkt_index;
+ 	bool init_window_shift = false;
++	unsigned long flags;
+ 	int ret = 0;
  
--	dev->cal.low_gain = low_gain;
--
- 	if (dev->mt76.chandef.width == NL80211_CHAN_WIDTH_80) {
- 		mt76_wr(dev, MT_BBP(RXO, 14), 0x00560211);
- 		val = mt76_rr(dev, MT_BBP(AGC, 26)) & ~0xf;
-@@ -578,14 +581,17 @@ mt76x2_phy_update_channel_gain(struct mt76x2_dev *dev)
- 		mt76_wr(dev, MT_BBP(RXO, 14), 0x00560423);
++	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 	tbl = mwifiex_11n_get_rx_reorder_tbl(priv, tid, ta);
+ 	if (!tbl) {
++		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 		if (pkt_type != PKT_TYPE_BAR)
+ 			mwifiex_11n_dispatch_pkt(priv, payload);
+ 		return ret;
  	}
  
-+	if (mt76x2_has_ext_lna(dev))
-+		low_gain_delta = 10;
-+	else
-+		low_gain_delta = 14;
+ 	if ((pkt_type == PKT_TYPE_AMSDU) && !tbl->amsdu) {
++		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 		mwifiex_11n_dispatch_pkt(priv, payload);
+ 		return ret;
+ 	}
+@@ -666,6 +645,8 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
+ 	if (!tbl->timer_context.timer_is_set ||
+ 	    prev_start_win != tbl->start_win)
+ 		mwifiex_11n_rxreorder_timer_restart(tbl);
 +
- 	if (low_gain == 2) {
- 		mt76_wr(dev, MT_BBP(RXO, 18), 0xf000a990);
- 		mt76_wr(dev, MT_BBP(AGC, 35), 0x08080808);
- 		mt76_wr(dev, MT_BBP(AGC, 37), 0x08080808);
--		if (mt76x2_has_ext_lna(dev))
--			gain_delta = 10;
--		else
--			gain_delta = 14;
-+		gain_delta = low_gain_delta;
-+		dev->cal.agc_gain_adjust = 0;
++	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 	return ret;
+ }
+ 
+@@ -694,14 +675,18 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
+ 		    peer_mac, tid, initiator);
+ 
+ 	if (cleanup_rx_reorder_tbl) {
++		spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 		tbl = mwifiex_11n_get_rx_reorder_tbl(priv, tid,
+ 								 peer_mac);
+ 		if (!tbl) {
++			spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock,
++					       flags);
+ 			mwifiex_dbg(priv->adapter, EVENT,
+ 				    "event: TID, TA not found in table\n");
+ 			return;
+ 		}
+ 		mwifiex_del_rx_reorder_entry(priv, tbl);
++		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
  	} else {
- 		mt76_wr(dev, MT_BBP(RXO, 18), 0xf000a991);
- 		if (dev->mt76.chandef.width == NL80211_CHAN_WIDTH_80)
-@@ -594,11 +600,11 @@ mt76x2_phy_update_channel_gain(struct mt76x2_dev *dev)
- 			mt76_wr(dev, MT_BBP(AGC, 35), 0x11111116);
- 		mt76_wr(dev, MT_BBP(AGC, 37), 0x2121262C);
- 		gain_delta = 0;
-+		dev->cal.agc_gain_adjust = low_gain_delta;
+ 		ptx_tbl = mwifiex_get_ba_tbl(priv, tid, peer_mac);
+ 		if (!ptx_tbl) {
+@@ -735,6 +720,7 @@ int mwifiex_ret_11n_addba_resp(struct mwifiex_private *priv,
+ 	int tid, win_size;
+ 	struct mwifiex_rx_reorder_tbl *tbl;
+ 	uint16_t block_ack_param_set;
++	unsigned long flags;
+ 
+ 	block_ack_param_set = le16_to_cpu(add_ba_rsp->block_ack_param_set);
+ 
+@@ -748,17 +734,20 @@ int mwifiex_ret_11n_addba_resp(struct mwifiex_private *priv,
+ 		mwifiex_dbg(priv->adapter, ERROR, "ADDBA RSP: failed %pM tid=%d)\n",
+ 			    add_ba_rsp->peer_mac_addr, tid);
+ 
++		spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 		tbl = mwifiex_11n_get_rx_reorder_tbl(priv, tid,
+ 						     add_ba_rsp->peer_mac_addr);
+ 		if (tbl)
+ 			mwifiex_del_rx_reorder_entry(priv, tbl);
+ 
++		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 		return 0;
  	}
  
- 	dev->cal.agc_gain_cur[0] = gain[0] - gain_delta;
- 	dev->cal.agc_gain_cur[1] = gain[1] - gain_delta;
--	dev->cal.agc_gain_adjust = 0;
- 	mt76x2_phy_set_gain_val(dev);
+ 	win_size = (block_ack_param_set & IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK)
+ 		    >> BLOCKACKPARAM_WINSIZE_POS;
  
- 	/* clear false CCA counters */
++	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 	tbl = mwifiex_11n_get_rx_reorder_tbl(priv, tid,
+ 					     add_ba_rsp->peer_mac_addr);
+ 	if (tbl) {
+@@ -769,6 +758,7 @@ int mwifiex_ret_11n_addba_resp(struct mwifiex_private *priv,
+ 		else
+ 			tbl->amsdu = false;
+ 	}
++	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 
+ 	mwifiex_dbg(priv->adapter, CMD,
+ 		    "cmd: ADDBA RSP: %pM tid=%d ssn=%d win_size=%d\n",
+@@ -808,11 +798,8 @@ void mwifiex_11n_cleanup_reorder_tbl(struct mwifiex_private *priv)
+ 
+ 	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 	list_for_each_entry_safe(del_tbl_ptr, tmp_node,
+-				 &priv->rx_reorder_tbl_ptr, list) {
+-		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
++				 &priv->rx_reorder_tbl_ptr, list)
+ 		mwifiex_del_rx_reorder_entry(priv, del_tbl_ptr);
+-		spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+-	}
+ 	INIT_LIST_HEAD(&priv->rx_reorder_tbl_ptr);
+ 	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 
+@@ -936,6 +923,7 @@ void mwifiex_11n_rxba_sync_event(struct mwifiex_private *priv,
+ 	int tlv_buf_left = len;
+ 	int ret;
+ 	u8 *tmp;
++	unsigned long flags;
+ 
+ 	mwifiex_dbg_dump(priv->adapter, EVT_D, "RXBA_SYNC event:",
+ 			 event_buf, len);
+@@ -955,14 +943,18 @@ void mwifiex_11n_rxba_sync_event(struct mwifiex_private *priv,
+ 			    tlv_rxba->mac, tlv_rxba->tid, tlv_seq_num,
+ 			    tlv_bitmap_len);
+ 
++		spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 		rx_reor_tbl_ptr =
+ 			mwifiex_11n_get_rx_reorder_tbl(priv, tlv_rxba->tid,
+ 						       tlv_rxba->mac);
+ 		if (!rx_reor_tbl_ptr) {
++			spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock,
++					       flags);
+ 			mwifiex_dbg(priv->adapter, ERROR,
+ 				    "Can not find rx_reorder_tbl!");
+ 			return;
+ 		}
++		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 
+ 		for (i = 0; i < tlv_bitmap_len; i++) {
+ 			for (j = 0 ; j < 8; j++) {
+diff --git a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+index 1e6a62c..99cfaee 100644
+--- a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+@@ -421,12 +421,15 @@ int mwifiex_process_uap_rx_packet(struct mwifiex_private *priv,
+ 		spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
+ 	}
+ 
++	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 	if (!priv->ap_11n_enabled ||
+ 	    (!mwifiex_11n_get_rx_reorder_tbl(priv, uap_rx_pd->priority, ta) &&
+ 	    (le16_to_cpu(uap_rx_pd->rx_pkt_type) != PKT_TYPE_AMSDU))) {
+ 		ret = mwifiex_handle_uap_rx_forward(priv, skb);
++		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 		return ret;
+ 	}
++	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 
+ 	/* Reorder and send to kernel */
+ 	pkt_type = (u8)le16_to_cpu(uap_rx_pd->rx_pkt_type);
 -- 
-2.17.0
+1.9.1
