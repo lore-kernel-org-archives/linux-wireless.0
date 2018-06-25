@@ -1,63 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-db5eur01on0130.outbound.protection.outlook.com ([104.47.2.130]:14849
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754914AbeFNMaa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Jun 2018 08:30:30 -0400
-From: Omer Efrat <omer.efrat@tandemg.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:39610 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754021AbeFYIb2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Jun 2018 04:31:28 -0400
+Received: by mail-qt0-f194.google.com with SMTP id c23-v6so2308170qtn.6
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2018 01:31:28 -0700 (PDT)
+Subject: Re: [PATCH 0/6] brcmfmac: fix 160MHz support and monitor mode
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
+ <CACna6rwzS-KXZ80wudpNEcrtnPd7fUWYKbT93hfFMfQi-V-hhg@mail.gmail.com>
+ <CACna6rzpUDWBR_SXciEo8Z3Fsa6VZT0-KL2=WCzz9v8ww6tZVA@mail.gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 2/5] mac80211: use BIT_ULL for NL80211_STA_INFO_*
- attribute types
-Date: Thu, 14 Jun 2018 12:30:27 +0000
-Message-ID: <VI1PR02MB3631079EA8E79B0C8900DEE09A7D0@VI1PR02MB3631.eurprd02.prod.outlook.com> (sfid-20180614_143035_120151_15F63EA3)
-References: <1528971073-349-1-git-send-email-omer.efrat@tandemg.com>
-         (sfid-20180614_121125_842548_E3DF065D),<1528974485.26847.3.camel@sipsolutions.net>
-In-Reply-To: <1528974485.26847.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset="iso-8859-1"
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B30A85C.5080105@broadcom.com> (sfid-20180625_103309_610615_D08115D8)
+Date: Mon, 25 Jun 2018 10:31:24 +0200
 MIME-Version: 1.0
+In-Reply-To: <CACna6rzpUDWBR_SXciEo8Z3Fsa6VZT0-KL2=WCzz9v8ww6tZVA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
->Perhaps, though I'm not sure I see it, there's some value in switching
->them all so that if you copy something and change it to a new value you
->don't run into this problem again, but if anything that should be (a)
->separate patch(es) since this one is a bugfix and the others aren't.
-
-Exactly my thoughts. I accept the need for the cleanup to be separated
-to different patches as well, I will send a v3.
-
-Omer Efrat.
-
-________________________________________
-From: Johannes Berg <johannes@sipsolutions.net>
-Sent: Thursday, June 14, 2018 2:08:05 PM
-To: Omer Efrat; linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/5] mac80211: use BIT_ULL for NL80211_STA_INFO_* at=
-tribute types
-
-On Thu, 2018-06-14 at 13:11 +0300, Omer Efrat wrote:
-> Since 'filled' member in station_info changed to u64, BIT_ULL macro
-> should be used with NL80211_STA_INFO_* attribute types instead of BIT.
+On 6/25/2018 6:40 AM, Rafał Miłecki wrote:
+> On Sun, 24 Jun 2018 at 13:48, Rafał Miłecki <zajec5@gmail.com> wrote:
+>> On Fri, 22 Jun 2018 at 20:45, Arend van Spriel
+>> <arend.vanspriel@broadcom.com> wrote:
+>>> Here a couple of patches in preparation of monitor mode support. It
+>>> is mostly about querying firmware for support. While at it I stumbled
+>>> upon the fact that 160MHz was not completely implemented in the driver
+>>> so there is a patch for that as well.
+>>>
+>>> The first two patches are actually some changes to the patches that
+>>> Rafal submitted. So this series depend on:
+>>>
+>>> [V3,2/2] brcmfmac: handle monitor mode marked msgbuf packets [1]
+>>>
+>>> These apply to the master branch of the wireless-drivers-next repository.
+>>>
+>>> [1] https://patchwork.kernel.org/patch/10474799/
+>>
+>> I find it pointless to submit fixes for patches that weren't accepted
+>> yet. Let's work on improving original patches while they are still
+>> pending.
 >
-> The BIT macro uses unsigned long type which some architectures handle as =
-32bit
-> and this results in compilation warnings such as:
+> I sent V4 with changes pointed our by Arend. That obsoletes all (?)
+> monitor patches from this patchset. I believe it was cleaner to
+> improve original patchset (not pushed yet).
 >
-> net/mac80211/sta_info.c:2223:2: warning: left shift count >=3D width of t=
-ype
->   sinfo->filled |=3D BIT(NL80211_STA_INFO_TID_STATS);
->   ^
+> My suggestion is to apply patches 3/6 and 4/6 (they aren't monitor
+> related) and drop the others.
 
-It seems like the only change needed is with
-BIT(NL80211_STA_INFO_TID_STATS), so I'd argue you should restrict the
-patch to that.
+Well. Given that Kalle prefers applying "all-or-nothing" I will resubmit 
+the series addressing the issues you found.
 
-
-Perhaps, though I'm not sure I see it, there's some value in switching
-them all so that if you copy something and change it to a new value you
-don't run into this problem again, but if anything that should be (a)
-separate patch(es) since this one is a bugfix and the others aren't.
-
-johannes
+Regards,
+Arend
