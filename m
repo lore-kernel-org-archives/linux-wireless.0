@@ -1,39 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:36010 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753518AbeF2JpY (ORCPT
+Received: from mail-pl0-f68.google.com ([209.85.160.68]:43022 "EHLO
+        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752293AbeFYFye (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 05:45:24 -0400
-Message-ID: <1530265522.3481.52.camel@sipsolutions.net> (sfid-20180629_114529_366809_BCF950B4)
-Subject: Re: [PATCH 2/4] mac80211: Add api to configure low and high txrate
- threshold
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tamizh chelvam <tamizhr@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 29 Jun 2018 11:45:22 +0200
-In-Reply-To: <1528887539-26821-3-git-send-email-tamizhr@codeaurora.org>
-References: <1528887539-26821-1-git-send-email-tamizhr@codeaurora.org>
-         <1528887539-26821-3-git-send-email-tamizhr@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Mon, 25 Jun 2018 01:54:34 -0400
+Received: by mail-pl0-f68.google.com with SMTP id c41-v6so6283053plj.10
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Jun 2018 22:54:34 -0700 (PDT)
+Subject: Re: [PATCH] nl80211: relax ht operation checks for mesh
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, kernel-team@fb.com,
+        Bob Copeland <bobcopeland@fb.com>
+References: <20180625011049.23768-1-me@bobcopeland.com>
+From: Masashi Honma <masashi.honma@gmail.com>
+Message-ID: <b79e6cd2-febd-ba6e-f76c-aa78aac2bb42@gmail.com> (sfid-20180625_075441_792556_62498441)
+Date: Mon, 25 Jun 2018 14:54:30 +0900
+MIME-Version: 1.0
+In-Reply-To: <20180625011049.23768-1-me@bobcopeland.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2018-06-13 at 16:28 +0530, Tamizh chelvam wrote:
-> +	if (sta->txrate_low == low_txrate_thold &&
-> +	    sta->txrate_high == high_txrate_thold)
-> +		goto unlock;
-> +
-> +	sta->txrate_low = low_txrate_thold;
-> +	sta->txrate_high = high_txrate_thold;
+On 2018/06/25 10:10, Bob Copeland wrote:
+> The latter bit is actually reserved for mesh BSSes
+> according to Table 9-168 in 802.11-2016, so in fact it should not
+> be set.
 
-You don't really do anything here so what do you gain by doing the ==
-comparison and jumping over the assignment?
+Good catch !
+Indeed the bit is reserved at non-AP case.
 
-I'd understand if you did some calculations here or whatever, but as it
-is it reads more like something was missed than like it was intended
-this way?
-
-Again, I think you need to squash this with patch 4.
-
-johannes
+Reviewed-by: Masashi Honma <masashi.honma@gmail.com>
