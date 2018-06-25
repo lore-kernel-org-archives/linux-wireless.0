@@ -1,300 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47482 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933498AbeFMKqN (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:35254 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934597AbeFYPAu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jun 2018 06:46:13 -0400
-From: Tamizh chelvam <tamizhr@codeaurora.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Tamizh chelvam <tamizhr@codeaurora.org>
-Subject: [PATCH 1/7] wireless: Change single cqm_config to rssi config list
-Date: Wed, 13 Jun 2018 16:15:41 +0530
-Message-Id: <1528886747-26342-2-git-send-email-tamizhr@codeaurora.org> (sfid-20180613_124622_685891_F302CEF7)
-In-Reply-To: <1528886747-26342-1-git-send-email-tamizhr@codeaurora.org>
-References: <1528886747-26342-1-git-send-email-tamizhr@codeaurora.org>
+        Mon, 25 Jun 2018 11:00:50 -0400
+Received: by mail-io0-f196.google.com with SMTP id q4-v6so12856377iob.2
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2018 08:00:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <b8a41e3a-7100-ae17-1275-d1b40a026201@zonque.org>
+References: <b8a41e3a-7100-ae17-1275-d1b40a026201@zonque.org>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Mon, 25 Jun 2018 17:00:48 +0200
+Message-ID: <CAPDyKFrgcFrah34+eFMsBQYWr03bTSMMUuYw61jYfpffSQrQAg@mail.gmail.com> (sfid-20180625_170119_182554_990B844B)
+Subject: Re: Suspend of SDIO function devices
+To: Daniel Mack <daniel@zonque.org>
+Cc: Chris Ball <chris@printf.net>,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        "libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
+        linux-wireless@vger.kernel.org,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes single cqm_config into mac address based
-rssi config list. This way the same structure can be
-utilized by AP mode as well.
+On 24 June 2018 at 22:46, Daniel Mack <daniel@zonque.org> wrote:
+> Hi,
+>
+> I'm currently looking into the suspend callbacks of drivers of hardware that
+> use an SDIO interface, specifically the libertas_sdio driver:
+>
+>    drivers/net/wireless/marvell/libertas/if_sdio.c
 
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
----
- include/net/cfg80211.h |    8 ++++--
- net/wireless/core.c    |   29 +++++++++++++++----
- net/wireless/core.h    |    6 ++--
- net/wireless/nl80211.c |   74 ++++++++++++++++++++++++++++++++----------------
- 4 files changed, 82 insertions(+), 35 deletions(-)
+Great news, I am happy to help!
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 5fbfe61..3e123a3 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4139,7 +4139,7 @@ static inline struct wiphy *wiphy_new(const struct cfg80211_ops *ops,
- struct cfg80211_conn;
- struct cfg80211_internal_bss;
- struct cfg80211_cached_keys;
--struct cfg80211_cqm_config;
-+struct cfg80211_rssi_config;
- 
- /**
-  * struct wireless_dev - wireless device state
-@@ -4204,7 +4204,8 @@ static inline struct wiphy *wiphy_new(const struct cfg80211_ops *ops,
-  * @event_lock: (private) lock for event list
-  * @owner_nlportid: (private) owner socket port ID
-  * @nl_owner_dead: (private) owner socket went away
-- * @cqm_config: (private) nl80211 RSSI monitor state
-+ * @rssi_config: (private) nl80211 RSSI monitor state
-+ * @rssi_config_list: (private) peer based list for rssi config
-  */
- struct wireless_dev {
- 	struct wiphy *wiphy;
-@@ -4275,7 +4276,8 @@ struct wireless_dev {
- 	} wext;
- #endif
- 
--	struct cfg80211_cqm_config *cqm_config;
-+	struct cfg80211_rssi_config *rssi_config;
-+	struct list_head rssi_config_list;
- };
- 
- static inline u8 *wdev_address(struct wireless_dev *wdev)
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 5fe35aa..62e496e 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -994,10 +994,28 @@ void wiphy_rfkill_set_hw_state(struct wiphy *wiphy, bool blocked)
- }
- EXPORT_SYMBOL(wiphy_rfkill_set_hw_state);
- 
--void cfg80211_cqm_config_free(struct wireless_dev *wdev)
-+void cfg80211_rssi_config_free(struct wireless_dev *wdev, const u8 *peer)
- {
--	kfree(wdev->cqm_config);
--	wdev->cqm_config = NULL;
-+	struct cfg80211_rssi_config *rssi_config, *tmp;
-+
-+	if (list_empty(&wdev->rssi_config_list))
-+		goto free;
-+
-+	list_for_each_entry_safe(rssi_config, tmp, &wdev->rssi_config_list,
-+				 list) {
-+		if (peer && memcmp(rssi_config->addr, peer, ETH_ALEN))
-+			continue;
-+
-+		list_del(&rssi_config->list);
-+		kfree(rssi_config);
-+		if (list_empty(&wdev->rssi_config_list) || peer)
-+			goto out;
-+	}
-+
-+free:
-+	kfree(wdev->rssi_config);
-+out:
-+	wdev->rssi_config = NULL;
- }
- 
- void cfg80211_unregister_wdev(struct wireless_dev *wdev)
-@@ -1027,7 +1045,7 @@ void cfg80211_unregister_wdev(struct wireless_dev *wdev)
- 		break;
- 	}
- 
--	cfg80211_cqm_config_free(wdev);
-+	cfg80211_rssi_config_free(wdev, NULL);
- }
- EXPORT_SYMBOL(cfg80211_unregister_wdev);
- 
-@@ -1163,6 +1181,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		spin_lock_init(&wdev->event_lock);
- 		INIT_LIST_HEAD(&wdev->mgmt_registrations);
- 		spin_lock_init(&wdev->mgmt_registrations_lock);
-+		INIT_LIST_HEAD(&wdev->rssi_config_list);
- 
- 		/*
- 		 * We get here also when the interface changes network namespaces,
-@@ -1292,7 +1311,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 			kzfree(wdev->wext.keys);
- #endif
- 			flush_work(&wdev->disconnect_wk);
--			cfg80211_cqm_config_free(wdev);
-+			cfg80211_rssi_config_free(wdev, NULL);
- 		}
- 		/*
- 		 * synchronise (so that we won't find this netdev
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 63eb1b5..170a31b 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -260,10 +260,12 @@ struct cfg80211_beacon_registration {
- 	u32 nlportid;
- };
- 
--struct cfg80211_cqm_config {
-+struct cfg80211_rssi_config {
-+	struct list_head list;
- 	u32 rssi_hyst;
- 	s32 last_rssi_event_value;
- 	int n_rssi_thresholds;
-+	u8 addr[ETH_ALEN];
- 	s32 rssi_thresholds[0];
- };
- 
-@@ -514,6 +516,6 @@ void cfg80211_stop_nan(struct cfg80211_registered_device *rdev,
- #define CFG80211_DEV_WARN_ON(cond)	({bool __r = (cond); __r; })
- #endif
- 
--void cfg80211_cqm_config_free(struct wireless_dev *wdev);
-+void cfg80211_rssi_config_free(struct wireless_dev *wdev, const u8 *peer);
- 
- #endif /* __NET_WIRELESS_CORE_H */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 07514ca..2fb2e97 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3200,6 +3200,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 		spin_lock_init(&wdev->event_lock);
- 		INIT_LIST_HEAD(&wdev->mgmt_registrations);
- 		spin_lock_init(&wdev->mgmt_registrations_lock);
-+		INIT_LIST_HEAD(&wdev->rssi_config_list);
- 
- 		wdev->identifier = ++rdev->wdev_id;
- 		list_add_rcu(&wdev->list, &rdev->wiphy.wdev_list);
-@@ -10140,7 +10141,7 @@ static int cfg80211_cqm_rssi_update(struct cfg80211_registered_device *rdev,
- 	int err;
- 
- 	/* RSSI reporting disabled? */
--	if (!wdev->cqm_config)
-+	if (!wdev->rssi_config)
- 		return rdev_set_cqm_rssi_range_config(rdev, dev, 0, 0);
- 
- 	/*
-@@ -10149,7 +10150,7 @@ static int cfg80211_cqm_rssi_update(struct cfg80211_registered_device *rdev,
- 	 * connection is established and enough beacons received to calculate
- 	 * the average.
- 	 */
--	if (!wdev->cqm_config->last_rssi_event_value && wdev->current_bss &&
-+	if (!wdev->rssi_config->last_rssi_event_value && wdev->current_bss &&
- 	    rdev->ops->get_station) {
- 		struct station_info sinfo = {};
- 		u8 *mac_addr;
-@@ -10161,26 +10162,56 @@ static int cfg80211_cqm_rssi_update(struct cfg80211_registered_device *rdev,
- 			return err;
- 
- 		if (sinfo.filled & BIT(NL80211_STA_INFO_BEACON_SIGNAL_AVG))
--			wdev->cqm_config->last_rssi_event_value =
-+			wdev->rssi_config->last_rssi_event_value =
- 				(s8) sinfo.rx_beacon_signal_avg;
- 	}
- 
--	last = wdev->cqm_config->last_rssi_event_value;
--	hyst = wdev->cqm_config->rssi_hyst;
--	n = wdev->cqm_config->n_rssi_thresholds;
-+	last = wdev->rssi_config->last_rssi_event_value;
-+	hyst = wdev->rssi_config->rssi_hyst;
-+	n = wdev->rssi_config->n_rssi_thresholds;
- 
- 	for (i = 0; i < n; i++)
--		if (last < wdev->cqm_config->rssi_thresholds[i])
-+		if (last < wdev->rssi_config->rssi_thresholds[i])
- 			break;
- 
- 	low = i > 0 ?
--		(wdev->cqm_config->rssi_thresholds[i - 1] - hyst) : S32_MIN;
-+		(wdev->rssi_config->rssi_thresholds[i - 1] - hyst) : S32_MIN;
- 	high = i < n ?
--		(wdev->cqm_config->rssi_thresholds[i] + hyst - 1) : S32_MAX;
-+		(wdev->rssi_config->rssi_thresholds[i] + hyst - 1) : S32_MAX;
- 
- 	return rdev_set_cqm_rssi_range_config(rdev, dev, low, high);
- }
- 
-+static struct cfg80211_rssi_config *
-+cfg80211_get_rssi_config(struct wireless_dev *wdev, const s32 *thresholds,
-+			 int n_thresholds, u32 hysteresis, const u8 *peer)
-+{
-+	struct cfg80211_rssi_config *rssi_config;
-+
-+	if (!peer)
-+		return NULL;
-+
-+	if (list_empty(&wdev->rssi_config_list))
-+		goto new;
-+
-+	list_for_each_entry(rssi_config, &wdev->rssi_config_list, list) {
-+		if (!memcmp(rssi_config->addr, peer, ETH_ALEN))
-+			goto found;
-+	}
-+
-+new:
-+	rssi_config = kzalloc(sizeof(struct cfg80211_rssi_config) +
-+			      n_thresholds * sizeof(s32), GFP_KERNEL);
-+	list_add(&rssi_config->list, &wdev->rssi_config_list);
-+found:
-+	rssi_config->rssi_hyst = hysteresis;
-+	rssi_config->n_rssi_thresholds = n_thresholds;
-+	memcpy(rssi_config->addr, peer, ETH_ALEN);
-+	memcpy(rssi_config->rssi_thresholds, thresholds,
-+	       n_thresholds * sizeof(s32));
-+	return rssi_config;
-+}
-+
- static int nl80211_set_cqm_rssi(struct genl_info *info,
- 				const s32 *thresholds, int n_thresholds,
- 				u32 hysteresis)
-@@ -10204,7 +10235,7 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
- 		return -EOPNOTSUPP;
- 
- 	wdev_lock(wdev);
--	cfg80211_cqm_config_free(wdev);
-+	cfg80211_rssi_config_free(wdev, NULL);
- 	wdev_unlock(wdev);
- 
- 	if (n_thresholds <= 1 && rdev->ops->set_cqm_rssi_config) {
-@@ -10224,21 +10255,14 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
- 
- 	wdev_lock(wdev);
- 	if (n_thresholds) {
--		struct cfg80211_cqm_config *cqm_config;
--
--		cqm_config = kzalloc(sizeof(struct cfg80211_cqm_config) +
--				     n_thresholds * sizeof(s32), GFP_KERNEL);
--		if (!cqm_config) {
-+		wdev->rssi_config = cfg80211_get_rssi_config(
-+						wdev, thresholds,
-+						n_thresholds, hysteresis,
-+						wdev->current_bss->pub.bssid);
-+		if (!wdev->rssi_config) {
- 			err = -ENOMEM;
- 			goto unlock;
- 		}
--
--		cqm_config->rssi_hyst = hysteresis;
--		cqm_config->n_rssi_thresholds = n_thresholds;
--		memcpy(cqm_config->rssi_thresholds, thresholds,
--		       n_thresholds * sizeof(s32));
--
--		wdev->cqm_config = cqm_config;
- 	}
- 
- 	err = cfg80211_cqm_rssi_update(rdev, dev);
-@@ -15053,13 +15077,13 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
- 		    rssi_event != NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH))
- 		return;
- 
--	if (wdev->cqm_config) {
--		wdev->cqm_config->last_rssi_event_value = rssi_level;
-+	if (wdev->rssi_config) {
-+		wdev->rssi_config->last_rssi_event_value = rssi_level;
- 
- 		cfg80211_cqm_rssi_update(rdev, dev);
- 
- 		if (rssi_level == 0)
--			rssi_level = wdev->cqm_config->last_rssi_event_value;
-+			rssi_level = wdev->rssi_config->last_rssi_event_value;
- 	}
- 
- 	msg = cfg80211_prepare_cqm(dev, NULL, gfp);
--- 
-1.7.9.5
+>
+> The comments in if_sdio_suspend() suggest that by returning -ENOSYS due to
+> runtime-dependant circumstances, the MMC core will remove the card entirely
+> at suspend time. I then searched for the bits that do that and failed, until
+> I came across this old commit, which first appeared in 3.16:
+>
+>    573185cc7e6 mmc: core: Invoke sdio func driver's PM callbacks from the
+> sdio bus
+
+Oh, so it's been broken for quite some time. :-(
+
+My bad!
+
+>
+> Before that commit, the mmc core did in fact invoke the card's .suspend()
+> callback manually and if it returned a non-zero result, it would remove the
+> card. Now that the generic pm functions are in place, this does no longer
+> happen because the host and its clients are independent entities.
+> Consequently, systems fail to suspend when the libertas_sdio module is
+> loaded.
+>
+> The pm notifier code in drivers/mmc/core/core.c does still handle cases
+> where no pm functions are provided at all (in which case it removes the
+> card), but it doesn't handle -ENOSYS return values at runtime.
+
+Correctly observed!
+
+>
+> Now I'm wondering how this is supposed to work, and which end needs fixing.
+> The mmc/sdio core by restoring the old logic from before 573185cc7e6, or the
+> libertas driver.
+
+I believe the proper solution is to fix the libertas driver. At least
+we don't want to go back to the previous solution of returning -ENOSYS
+from SDIO drivers.
+
+However, let's see what fits best here.
+
+>
+> The platform I'm working on does not retain power for the SDIO slaves, so a
+> complete re-init is necessary after resume.
+
+Right.
+
+>
+> Please advise, I'm happy to test approaches and send patches.
+
+>From a top level point of view, I think this needs to be changed:
+
+1)
+In cases when the libertas sdio driver's ->suspend() callback, thinks
+of returning -ENOSYS, it should instead call if_sdio_power_off().
+Depending if if_sdio_power_save() has already been called, this shall
+be skipped.
+
+The important thing here is to disable the SDIO func device and to
+release the SDIO irq.
+
+2)
+During resume, depending on whether the earlier ->suspend() callback
+invoked if_sdio_power_off(),  libertas sdio driver's ->resume()
+callback should call if_sdio_power_on().
+
+This should re-initiate the libertas sdio device and re-program the
+firmware. To complete these actions, the firmware file also needs to
+be fetched, which requires file system accesses also to be resumed.
+
+We also need to wait for the firmware programming to be completed,
+hence also do a "wait_event(card->pwron_waitq, priv->fw_ready);" from
+somewhere.
+
+Kind regards
+Uffe
