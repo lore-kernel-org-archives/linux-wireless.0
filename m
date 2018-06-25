@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:36994 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752898AbeF0NgY (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34040 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750903AbeFYEnL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Jun 2018 09:36:24 -0400
-Received: by mail-ot0-f195.google.com with SMTP id q11-v6so2404otk.4
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2018 06:36:23 -0700 (PDT)
-Subject: Re: [PATCH v2] rtlwifi: rtl8821ae: fix firmware is not ready to run
-To: pkshih@realtek.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-References: <20180627080130.12195-1-pkshih@realtek.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <834573bf-fb52-2476-fb35-96127532924d@lwfinger.net> (sfid-20180627_153628_245781_7B71B8A4)
-Date: Wed, 27 Jun 2018 08:36:22 -0500
+        Mon, 25 Jun 2018 00:43:11 -0400
+Received: by mail-wm0-f67.google.com with SMTP id l15-v6so11261076wmc.1
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Jun 2018 21:43:11 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20180627080130.12195-1-pkshih@realtek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+References: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com> <CACna6rwzS-KXZ80wudpNEcrtnPd7fUWYKbT93hfFMfQi-V-hhg@mail.gmail.com>
+In-Reply-To: <CACna6rwzS-KXZ80wudpNEcrtnPd7fUWYKbT93hfFMfQi-V-hhg@mail.gmail.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Mon, 25 Jun 2018 06:40:55 +0200
+Message-ID: <CACna6rzpUDWBR_SXciEo8Z3Fsa6VZT0-KL2=WCzz9v8ww6tZVA@mail.gmail.com> (sfid-20180625_064323_219919_5F131107)
+Subject: Re: [PATCH 0/6] brcmfmac: fix 160MHz support and monitor mode
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/27/2018 03:01 AM, pkshih@realtek.com wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> rtl8821ae uses two kinds of firmwares for normal and WoWlan cases, and
-> each firmware has firmware data buffer and size individually. Original
-> code always overwrite size of normal firmware rtlpriv->rtlhal.fwsize, and
-> this mismatch causes firmware checksum error, then firmware can't start.
-> 
-> In this situation, driver gives message "Firmware is not ready to run!".
-> 
-> Fixes: fe89707f0afa ("rtlwifi: rtl8821ae: Simplify loading of WOWLAN firmware")
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> ---
-> v2: fix commit log typo.
-> ---
->   drivers/net/wireless/realtek/rtlwifi/core.c | 1 -
->   1 file changed, 1 deletion(-)
+On Sun, 24 Jun 2018 at 13:48, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wr=
+ote:
+> On Fri, 22 Jun 2018 at 20:45, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+> > Here a couple of patches in preparation of monitor mode support. It
+> > is mostly about querying firmware for support. While at it I stumbled
+> > upon the fact that 160MHz was not completely implemented in the driver
+> > so there is a patch for that as well.
+> >
+> > The first two patches are actually some changes to the patches that
+> > Rafal submitted. So this series depend on:
+> >
+> > [V3,2/2] brcmfmac: handle monitor mode marked msgbuf packets [1]
+> >
+> > These apply to the master branch of the wireless-drivers-next repositor=
+y.
+> >
+> > [1] https://patchwork.kernel.org/patch/10474799/
+>
+> I find it pointless to submit fixes for patches that weren't accepted
+> yet. Let's work on improving original patches while they are still
+> pending.
 
-This change is a good one, and I approve of it. The only change is that it 
-should have a Cc to stable as this code was added in kernel 4.0!
+I sent V4 with changes pointed our by Arend. That obsoletes all (?)
+monitor patches from this patchset. I believe it was cleaner to
+improve original patchset (not pushed yet).
 
-Larry
+My suggestion is to apply patches 3/6 and 4/6 (they aren't monitor
+related) and drop the others.
+
+--=20
+Rafa=C5=82
