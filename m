@@ -1,64 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:42634 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753933AbeFTIme (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:38226 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752576AbeFYIqN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Jun 2018 04:42:34 -0400
-Received: by mail-lf0-f65.google.com with SMTP id z207-v6so3671382lff.9
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jun 2018 01:42:33 -0700 (PDT)
-From: Niklas Cassel <niklas.cassel@linaro.org>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: alagusankar@silex-india.com,
-        Niklas Cassel <niklas.cassel@linaro.org>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/3] ath10k: sdio: allocate correct size for RECV_1MORE_BLOCK rx packets
-Date: Wed, 20 Jun 2018 10:42:21 +0200
-Message-Id: <20180620084222.3521-3-niklas.cassel@linaro.org> (sfid-20180620_110439_338445_41ABB339)
-In-Reply-To: <20180620084222.3521-1-niklas.cassel@linaro.org>
-References: <20180620084222.3521-1-niklas.cassel@linaro.org>
+        Mon, 25 Jun 2018 04:46:13 -0400
+Received: by mail-wm0-f65.google.com with SMTP id 69-v6so8981505wmf.3
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2018 01:46:13 -0700 (PDT)
+MIME-Version: 1.0
+References: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
+ <CACna6rwzS-KXZ80wudpNEcrtnPd7fUWYKbT93hfFMfQi-V-hhg@mail.gmail.com>
+ <CACna6rzpUDWBR_SXciEo8Z3Fsa6VZT0-KL2=WCzz9v8ww6tZVA@mail.gmail.com> <5B30A85C.5080105@broadcom.com>
+In-Reply-To: <5B30A85C.5080105@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Mon, 25 Jun 2018 10:43:55 +0200
+Message-ID: <CACna6rwGrcJ6iEv6+Bh+qC0T-yGfjvs8AweQ-4gM5JcO+JC0Dg@mail.gmail.com> (sfid-20180625_104704_599053_8B779090)
+Subject: Re: [PATCH 0/6] brcmfmac: fix 160MHz support and monitor mode
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Without this, when receiving a packet that has this flag set
-from firmware, we will read invalid trailer data from the packet,
-which will be shown as various errors, e.g. "sdio mbox lookahead
-is zero" or "invalid rx packet" or "payload length x exceeds max
-htc length".
+On Mon, 25 Jun 2018 at 10:31, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+>
+> On 6/25/2018 6:40 AM, Rafa=C5=82 Mi=C5=82ecki wrote:
+> > On Sun, 24 Jun 2018 at 13:48, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com=
+> wrote:
+> >> On Fri, 22 Jun 2018 at 20:45, Arend van Spriel
+> >> <arend.vanspriel@broadcom.com> wrote:
+> >>> Here a couple of patches in preparation of monitor mode support. It
+> >>> is mostly about querying firmware for support. While at it I stumbled
+> >>> upon the fact that 160MHz was not completely implemented in the drive=
+r
+> >>> so there is a patch for that as well.
+> >>>
+> >>> The first two patches are actually some changes to the patches that
+> >>> Rafal submitted. So this series depend on:
+> >>>
+> >>> [V3,2/2] brcmfmac: handle monitor mode marked msgbuf packets [1]
+> >>>
+> >>> These apply to the master branch of the wireless-drivers-next reposit=
+ory.
+> >>>
+> >>> [1] https://patchwork.kernel.org/patch/10474799/
+> >>
+> >> I find it pointless to submit fixes for patches that weren't accepted
+> >> yet. Let's work on improving original patches while they are still
+> >> pending.
+> >
+> > I sent V4 with changes pointed our by Arend. That obsoletes all (?)
+> > monitor patches from this patchset. I believe it was cleaner to
+> > improve original patchset (not pushed yet).
+> >
+> > My suggestion is to apply patches 3/6 and 4/6 (they aren't monitor
+> > related) and drop the others.
+>
+> Well. Given that Kalle prefers applying "all-or-nothing" I will resubmit
+> the series addressing the issues you found.
 
-Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
-Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
----
- drivers/net/wireless/ath/ath10k/htc.h  | 1 +
- drivers/net/wireless/ath/ath10k/sdio.c | 3 +++
- 2 files changed, 4 insertions(+)
+I wasn't aware of this, good to know, thanks!
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index 34877597dd6a..cf1068dc3254 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -58,6 +58,7 @@ enum ath10k_htc_tx_flags {
- };
- 
- enum ath10k_htc_rx_flags {
-+	ATH10K_HTC_FLAGS_RECV_1MORE_BLOCK = 0x01,
- 	ATH10K_HTC_FLAG_TRAILER_PRESENT = 0x02,
- 	ATH10K_HTC_FLAG_BUNDLE_MASK     = 0xF0
- };
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index d46523b0472c..0c57d6aaa437 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -603,6 +603,9 @@ static int ath10k_sdio_mbox_rx_alloc(struct ath10k *ar,
- 		 * ATH10K_HTC_FLAG_BUNDLE_MASK flag set, all bundled
- 		 * packet skb's have been allocated in the previous step.
- 		 */
-+		if (htc_hdr->flags & ATH10K_HTC_FLAGS_RECV_1MORE_BLOCK)
-+			full_len += ATH10K_HIF_MBOX_BLOCK_SIZE;
-+
- 		ret = ath10k_sdio_mbox_alloc_rx_pkt(&ar_sdio->rx_pkts[i],
- 						    act_len,
- 						    full_len,
--- 
-2.17.1
+--=20
+Rafa=C5=82
