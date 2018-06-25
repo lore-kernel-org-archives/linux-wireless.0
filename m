@@ -1,99 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-he1eur01on0115.outbound.protection.outlook.com ([104.47.0.115]:8689
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754950AbeFNPzi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Jun 2018 11:55:38 -0400
-From: Omer Efrat <omer.efrat@tandemg.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 2/5] mac80211: use BIT_ULL for NL80211_STA_INFO_*
- attribute types
-Date: Thu, 14 Jun 2018 15:55:34 +0000
-Message-ID: <VI1PR02MB3631E24AA7D7E58CEB0E7D889A7D0@VI1PR02MB3631.eurprd02.prod.outlook.com> (sfid-20180614_175542_383081_E4FA3289)
-References: <1528971073-349-1-git-send-email-omer.efrat@tandemg.com>
-         (sfid-20180614_121125_842548_E3DF065D),<1528974485.26847.3.camel@sipsolutions.net>,<VI1PR02MB3631079EA8E79B0C8900DEE09A7D0@VI1PR02MB3631.eurprd02.prod.outlook.com>
-In-Reply-To: <VI1PR02MB3631079EA8E79B0C8900DEE09A7D0@VI1PR02MB3631.eurprd02.prod.outlook.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from hermes.aosc.io ([199.195.250.187]:45153 "EHLO hermes.aosc.io"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755200AbeFYKnI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Jun 2018 06:43:08 -0400
+Date: Mon, 25 Jun 2018 18:42:30 +0800
+In-Reply-To: <5B30A40D.3070509@broadcom.com>
+References: <20180315162510.11669-1-harald@ccbib.org> <20180315162510.11669-6-harald@ccbib.org> <a7011fe78d171658742406bf01d50b7e3d7eaf1d.camel@aosc.io> <E1fX7yK-0000OC-HA@stardust.g4.wien.funkfeuer.at> <5B309D37.80207@broadcom.com> <1CF519CD-D44E-4959-8951-27CE710E0984@aosc.io> <5B30A40D.3070509@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
+Subject: Re: [PATCHv2 5/5] arm64: allwinner: a64: Add support for TERES-I laptop
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Harald Geyer <harald@ccbib.org>
+CC: Maxime Ripard <maxime.ripard@bootlin.com>,
+        Chen-Yu Tsai <wens@csie.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Andre Przywara <andre.przywara@arm.com>, info@olimex.com,
+        linux-wireless@vger.kernel.org
+From: Icenowy Zheng <icenowy@aosc.io>
+Message-ID: <C9EE9283-66CB-4B0F-853E-3D6DC746C20E@aosc.io> (sfid-20180625_124433_871196_A5AD462F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Omer Efrat wrote:
->Johannes Berg wrote:
->>Perhaps, though I'm not sure I see it, there's some value in switching
->>them all so that if you copy something and change it to a new value you
->>don't run into this problem again, but if anything that should be (a)
->>separate patch(es) since this one is a bugfix and the others aren't.
+
+
+于 2018年6月25日 GMT+08:00 下午4:13:01, Arend van Spriel <arend.vanspriel@broadcom.com> 写到:
+>On 6/25/2018 9:47 AM, Icenowy Zheng wrote:
+>>
+>>
+>> 于 2018年6月25日 GMT+08:00 下午3:43:51, Arend van Spriel
+><arend.vanspriel@broadcom.com> 写到:
+>>> On 6/24/2018 6:34 PM, Harald Geyer wrote:
+>>>> Icenowy Zheng writes:
+>>>>>> 在 2018-03-15四的 16:25 +0000，Harald Geyer写道：
+>>>>>>>> +&mmc1 {
+>>>>>>>> +	pinctrl-names = "default";
+>>>>>>>> +	pinctrl-0 = <&mmc1_pins>;
+>>>>>>>> +	vmmc-supply = <&reg_aldo2>;
+>>>>>>>> +	vqmmc-supply = <&reg_dldo4>;
+>>>>>>>> +	mmc-pwrseq = <&wifi_pwrseq>;
+>>>>>>>> +	bus-width = <4>;
+>>>>>>>> +	non-removable;
+>>>>>>>> +	status = "okay";
+>>>>>>>> +
+>>>>>>>> +	rtl8723bs: wifi@1 {
+>>>>>>>> +		reg = <1>;
+>>>>>>>> +		interrupt-parent = <&r_pio>;
+>>>>>>>> +		interrupts = <0 3 IRQ_TYPE_LEVEL_LOW>; /* PL3 */
+>>>>>>>> +		interrupt-names = "host-wake";
+>>>>>>>> +	};
+>>>
+>>> [...]
+>>>
+>>>>>> - This device node has no binding. The "host-wake" interrupt is
+>>> part of
+>>>>>>   Broadcom SDIO Wi-Fi binding, rather than a generic one.
+>>>> I think the general mmc and interrupts bindings apply. And the mmc
+>>> binding
+>>>> clearly states that for sub-nodes a compatible string is optional.
+>>>>
+>>>> However I just realized that the 'interrupt-names' property is not
+>>> part
+>>>> of the general interrupts binding, so I guess at least this
+>property
+>>> should
+>>>> be removed.
+>>>
+>>> Indeed. If the device just used the SDIO interrupt this is not
+>needed.
+>>> The Broadcom device can use either SDIO interrupt or a so-called
+>>> out-of-band host-wake interrupt, which is what the above represents.
+>>
+>> RTL8....S is also capable of use OOB interrupt.
 >
->Exactly my thoughts. I accept the need for the cleanup to be separated
->to different patches as well, I will send a v3.
+>Ok. Is it also in-place in this TERES-I laptop? Anyway, if RTL8...S
 
-Actually, after some more thought, I don't think changing to BIT_ULL for
-attribute types less than 32 should be in separated patches because of the =
-claim
-they are not a bug fix.
-This enum already has different numbering in different versions (attributes=
- removed from the middle,
-i.e. NL80211_STA_INFO_MAX_RSSI).
-Therefore, it's hard to mark each of them as "bug fix" or "cleanup only" ch=
-ange.
-(Some versions has NL80211_STA_INFO_TID_STATS =3D 32, while others has
-NL80211_STA_INFO_TID_STATS =3D 31, etc.)
+In fact it's a regexp here, mean Realtek SDIO WLAN NICs.
 
-If that's acceptable, I will send a v3 for adding which commit is being fix=
-ed
-by this patch series.
-
-Best Regards,
-Omer Efrat.
-
-________________________________________
-From: Omer Efrat
-Sent: Thursday, June 14, 2018 3:30:27 PM
-To: Johannes Berg; linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/5] mac80211: use BIT_ULL for NL80211_STA_INFO_* at=
-tribute types
-
-Johannes Berg wrote:
->Perhaps, though I'm not sure I see it, there's some value in switching
->them all so that if you copy something and change it to a new value you
->don't run into this problem again, but if anything that should be (a)
->separate patch(es) since this one is a bugfix and the others aren't.
-
-Exactly my thoughts. I accept the need for the cleanup to be separated
-to different patches as well, I will send a v3.
-
-Omer Efrat.
-
-________________________________________
-From: Johannes Berg <johannes@sipsolutions.net>
-Sent: Thursday, June 14, 2018 2:08:05 PM
-To: Omer Efrat; linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/5] mac80211: use BIT_ULL for NL80211_STA_INFO_* at=
-tribute types
-
-On Thu, 2018-06-14 at 13:11 +0300, Omer Efrat wrote:
-> Since 'filled' member in station_info changed to u64, BIT_ULL macro
-> should be used with NL80211_STA_INFO_* attribute types instead of BIT.
+>does 
+>not have a binding specification there is not much to do about it. In
+>my 
+>opinion it does not make sense to add it to the generic mmc/sdio
+>binding 
+>as this interrupt does not involve the mmc/sdio hardware hence the term
 >
-> The BIT macro uses unsigned long type which some architectures handle as =
-32bit
-> and this results in compilation warnings such as:
+>OOB. There is generic wifi binding net/wireless/ieee80211.txt in which 
+
+It seems ok. Maybe it can be used for all interfaces, not
+SDIO, although I don't think there's any other interfaces
+that can use OOB IRQ except SPI and SDIO, maybe UART? :-)
+
+>this could be added. Obviously it would just be a binding and no 
+>guarantee that the actual device driver supports it so the RTL driver 
+>would need modification for that.
+
+Yes. Currently OOB interrupt is not used at all.
+
 >
-> net/mac80211/sta_info.c:2223:2: warning: left shift count >=3D width of t=
-ype
->   sinfo->filled |=3D BIT(NL80211_STA_INFO_TID_STATS);
->   ^
-
-It seems like the only change needed is with
-BIT(NL80211_STA_INFO_TID_STATS), so I'd argue you should restrict the
-patch to that.
-
-
-Perhaps, though I'm not sure I see it, there's some value in switching
-them all so that if you copy something and change it to a new value you
-don't run into this problem again, but if anything that should be (a)
-separate patch(es) since this one is a bugfix and the others aren't.
-
-johannes
+>Regards,
+>Arend
