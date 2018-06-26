@@ -1,174 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:36618 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932266AbeF2KMa (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 06:12:30 -0400
-Message-ID: <1530267147.3481.78.camel@sipsolutions.net> (sfid-20180629_121235_477634_29C88F76)
-Subject: Re: [PATCH v2] mac80211: Fix wlan freezes under load at rekey
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexander Wetzel <alexander.wetzel@web.de>
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-        s.gottschall@dd-wrt.com
-Date: Fri, 29 Jun 2018 12:12:27 +0200
-In-Reply-To: <2de1493a-5439-b9ef-6d06-3895333f01c3@web.de>
-References: <1523258757.3076.5.camel@sipsolutions.net>
-         <20180515102202.2021-1-alexander.wetzel@web.de>
-         <1529062392.10037.7.camel@sipsolutions.net>
-         <bc327c9b-d5f4-2343-9ca5-932e9295c546@web.de>
-         <1529357234.3092.57.camel@sipsolutions.net>
-         <2de1493a-5439-b9ef-6d06-3895333f01c3@web.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.bugwerft.de ([46.23.86.59]:38426 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933472AbeFZUsl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Jun 2018 16:48:41 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: ulf.hansson@linaro.org
+Cc: chris@printf.net, linux-mmc@vger.kernel.org,
+        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Daniel Mack <daniel@zonque.org>
+Subject: [PATCH] libertas: fix return codes in if_sdio_suspend()
+Date: Tue, 26 Jun 2018 22:48:34 +0200
+Message-Id: <20180626204834.14278-1-daniel@zonque.org> (sfid-20180626_224844_361743_19CDC862)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Prior to commit 573185cc7e64 ("mmc: core: Invoke sdio func driver's PM
+callbacks from the sdio bus"), the MMC core used to call into the power
+management functions of SDIO clients itself and removed the card if the
+return code was non-zero. IOW, the mmc handled errors gracefully and didn't
+upchain them to the pm core.
 
-On Tue, 2018-06-19 at 22:12 +0200, Alexander Wetzel wrote:
-> > Am I understanding correctly that in the latter (outgoing) case this
-> > might cause unencrypted packets to be transmitted?
-> 
-> Yes, if we have a driver handling the keys similar to ath9k which is not
-> implementing drv_flush (correctly) this is a possibility.
+Since this change, the mmc core relies on generic power management
+functions which treat all errors as a reason to cancel the suspend
+immediately. This causes suspend attempts to fail when the libertas
+driver is loaded.
 
-Sadly, I think many drivers fall into this category, so I'm not sure we
-should "fix the bug" for them at the expense of a potential security
-risk? So maybe we need to have an opt-in flag for drivers.
+To fix this, power down the card explicitly in if_sdio_suspend() when we
+know we're about to lose power and return success. Also set a flag in these
+cases, and power up the card again in if_sdio_resume().
 
-> This ties somewhat into the discussion what to handle in mac80211 and
-> what delegate to the drivers. mac80211 itself should drop any packets
-> trying to use the old outgoing key till the new key is rolled out
-> correctly with the patch.
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+Cc: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Chris Ball <chris@printf.net>
+---
+ drivers/net/wireless/marvell/libertas/dev.h   |  1 +
+ .../net/wireless/marvell/libertas/if_sdio.c   | 28 +++++++++++++++----
+ 2 files changed, 23 insertions(+), 6 deletions(-)
 
-Yeah, but it can't do it for packets already queued to the
-driver/hardware, and it can't know how the hardware behaves wrt.
-encryption: old-iwlwifi style (key material in descriptor) vs. ath9k
-style (key material in on-chip table).
-
-> > > We can now decrypt and get incoming packets while mac80211 is still on
-> > > the old key, but the worst (and most likely) case is now, that the
-> > > replay detection will drop those packets till mac80211 also switch over.
-> > 
-> > This actually is somewhat problematic, at least for TKIP it could cause
-> > countermeasures. Should we exclude TKIP here somehow?
-> > 
-> > I don't think we can disable countermeasures because then we could be
-> > attacked in this time window without starting them, and we have a really
-> > hard time distinguishing attacks and "fake" replays.
-> > 
-> 
-> Yes, that is a definitely a possibility. But excluding TKIP seems to be
-> counterproductive for my understanding: TKIP is due to the weaker cipher
-> more likely to have unicast rekeying enabled.
-> So far I was hesitant to add new per packet check for that, but I guess
-> we have to... I'll add that in the next version, so we can discuss that
-> with some code.
-
-Ok.
-
-> > Btw - perhaps that means we should avoid the complicated mechanisms like
-> > TX aggregation shutdown for keys that the driver marks as being safe?
-> > Clearly for iwlwifi (at least CCMP and before, not with the longer keys
-> > in GCMP-256) the race can't possibly happen.
-> 
-> Sounds like that should work and I think I'll just try it out. We'll
-> lose the side benefit that shutting down TX aggregation will reduce the
-> risk that a unpatched remote sta freezes the connection, though.
-
-Fair point.
-
-> And since I started out to first patch ath9k to drop packets for an
-> outgoing key: That looks to become either be ugly (delayed work to
-> complete the key clean up after a given time) or need some API change.
-
-Ok.
-
-> Remember we'll still have to shut down RX aggregation or drop all frames
-> of a session running during the rekey. We are not able to tell which key
-> was used to encrypt the frames and which have "old" PNs we can't allow
-> mac80211 to process after switching to the new key. So I'm not sure that
-> keeping TX up and running is worth it.
-
-Yeah, good point, and TX is less interesting because we control when/how
-it's set up.
-
-> That said I have another working patch which is delaying mac80211 key
-> deletion from my first misguided attempts to at this issue.
-> I could repurpose that and keep RX aggregation also up and running,
-> allowing us to first check if the packet would have been accepted by the
-> old key and only switch to the new PN counter once it's not. But that
-> seems to be kind of invasive and overkill.
-
-Yeah, let's not go there for now. Also if HW crypto is involved it
-usually won't work unless you (a) get the packet and (b) re-encrypt the
-packet with the wrong key, and then decrypt it with the correct key ...
-
-> Yes, that is part of the reason I had to add the call to drv_flush for
-> ath9k. I've experimented with an additional "retire_key" command on top
-> of the existing to add and delete keys but came to the conclusion that
-> "replace_key" would make more sense for ath9k at least.
-
-Ok.
-
-> But in order of my preference I see this options:
-> 1) removing a key in HW must also grantee that any packets queued for
-> this key has either been send or will be dropped after the call returns
-> to mac80211. (Simply sleeping the max queue and retransmit time would be
-> an ugly but simple way to implement that)
-
-This works but we have to consider a lot of drivers. I guess we're back
-to some form of "opt-in" scheme then?
-
-> 2) we add a new function/call like "replace_key" for this special case.
-> But in that case we have to sort out how to handle drivers not
-> implementing it. Thy only secure way would be to disconnect if someone
-> tries to rekey...
-
-Maybe that's not so bad.
-
-> 3) Is what I implemented. We try what we can with the existing API and
-> any driver not working with that has to be considered buggy.
-
-I don't think we can really do this though. We break - in a potentially
-security-relevant way - the older drivers. We can't just say that's
-driver bugs, IMHO.
-
-> > > I tried to minimize the changes, but if we can consider an API change I
-> > > would ask the drivers to provide a new function to switch directly from
-> > > one key to another, without the need to delete it first. And to
-> > > guarantee there, that after the function returns no packets with
-> > > prepared for the old key can be sent out. Including retransmissions.
-> > 
-> > This would be pretty tricky for most drivers though.
-> 
-> I do not see any real alternative. Sleeping some reasonable time should
-> be acceptable here, to allow the hw to flush out queued packets. (100ms
-> should probably acceptable here, especially compared to complete
-> connection loss..
-
-You have no guarantee that even 100ms is enough to get all packets out.
-They could be sitting on a BK queue and waiting for all BE/VI traffic in
-the vicinity ... basically forever.
-
-> Only other idea I have is to lock down TX for all but EAPOL packets
-> sooner, e.g. during the key handshake. But that's more or less only a
-> variant of the sleep above.
-
-Yeah, doesn't really fully address this issue anyway, since EAPOL are on
-VO and others might get way more delayed on HW queues due to contention.
-
-I think our best bet is some form of opt-in scheme. Perhaps (2), which
-drivers can implement also to get like the "best" behaviour. They could
-also implement there the flushing if they can, for example. Others would
-get a disconnect, but they probably effectively do already?
-
-Obviously if SW crypto is used none of this is a concern, so that's
-another factor to take into account in this decision logic of whether to
-disconnect or not?
-
-IOW - I'd rather get bugs that we now force a disconnect (if anyone even
-notices), rather than potentially having a bug that causes unencrypted
-packets to be sent.
-
-johannes
+diff --git a/drivers/net/wireless/marvell/libertas/dev.h b/drivers/net/wireless/marvell/libertas/dev.h
+index dd1ee1f0af48..469134930026 100644
+--- a/drivers/net/wireless/marvell/libertas/dev.h
++++ b/drivers/net/wireless/marvell/libertas/dev.h
+@@ -104,6 +104,7 @@ struct lbs_private {
+ 	u8 fw_ready;
+ 	u8 surpriseremoved;
+ 	u8 setup_fw_on_resume;
++	u8 power_up_on_resume;
+ 	int (*hw_host_to_card) (struct lbs_private *priv, u8 type, u8 *payload, u16 nb);
+ 	void (*reset_card) (struct lbs_private *priv);
+ 	int (*power_save) (struct lbs_private *priv);
+diff --git a/drivers/net/wireless/marvell/libertas/if_sdio.c b/drivers/net/wireless/marvell/libertas/if_sdio.c
+index 2300e796c6ab..f43807663b1b 100644
+--- a/drivers/net/wireless/marvell/libertas/if_sdio.c
++++ b/drivers/net/wireless/marvell/libertas/if_sdio.c
+@@ -1290,15 +1290,23 @@ static void if_sdio_remove(struct sdio_func *func)
+ static int if_sdio_suspend(struct device *dev)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(dev);
+-	int ret;
+ 	struct if_sdio_card *card = sdio_get_drvdata(func);
++	struct lbs_private *priv = card->priv;
++	int ret;
+ 
+ 	mmc_pm_flag_t flags = sdio_get_host_pm_caps(func);
++	priv->power_up_on_resume = false;
+ 
+ 	/* If we're powered off anyway, just let the mmc layer remove the
+ 	 * card. */
+-	if (!lbs_iface_active(card->priv))
+-		return -ENOSYS;
++	if (!lbs_iface_active(priv)) {
++		if (priv->fw_ready) {
++			priv->power_up_on_resume = true;
++			if_sdio_power_off(card);
++		}
++
++		return 0;
++	}
+ 
+ 	dev_info(dev, "%s: suspend: PM flags = 0x%x\n",
+ 		 sdio_func_id(func), flags);
+@@ -1306,9 +1314,14 @@ static int if_sdio_suspend(struct device *dev)
+ 	/* If we aren't being asked to wake on anything, we should bail out
+ 	 * and let the SD stack power down the card.
+ 	 */
+-	if (card->priv->wol_criteria == EHS_REMOVE_WAKEUP) {
++	if (priv->wol_criteria == EHS_REMOVE_WAKEUP) {
+ 		dev_info(dev, "Suspend without wake params -- powering down card\n");
+-		return -ENOSYS;
++		if (priv->fw_ready) {
++			priv->power_up_on_resume = true;
++			if_sdio_power_off(card);
++		}
++
++		return 0;
+ 	}
+ 
+ 	if (!(flags & MMC_PM_KEEP_POWER)) {
+@@ -1321,7 +1334,7 @@ static int if_sdio_suspend(struct device *dev)
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = lbs_suspend(card->priv);
++	ret = lbs_suspend(priv);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -1336,6 +1349,9 @@ static int if_sdio_resume(struct device *dev)
+ 
+ 	dev_info(dev, "%s: resume: we're back\n", sdio_func_id(func));
+ 
++	if (card->priv->power_up_on_resume)
++		if_sdio_power_on(card);
++
+ 	ret = lbs_resume(card->priv);
+ 
+ 	return ret;
+-- 
+2.17.1
