@@ -1,63 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:50154 "EHLO v3-1039.vlinux.de"
+Received: from mail.kernel.org ([198.145.29.99]:60994 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932577AbeFFIr2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Jun 2018 04:47:28 -0400
-From: Sven Eckelmann <sven@narfation.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Matthias Fritzsche <txt.file@txtfile.eu>,
-        Thomas Lauer <holminateur@gmail.com>,
-        Marcel Schmidt <ff.z-casparistrasse@mailbox.org>,
-        Antonio Quartulli <a@unstable.cc>,
-        Sven Eckelmann <sven@narfation.org>,
-        b.a.t.m.a.n@lists.open-mesh.org
-Subject: [PATCH] cfg80211: initialize sinfo.filled in cfg80211_get_station
-Date: Wed,  6 Jun 2018 10:47:02 +0200
-Message-Id: <20180606084702.19825-1-sven@narfation.org> (sfid-20180606_104735_264206_D48BB1B6)
+        id S965232AbeFZC7l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Jun 2018 22:59:41 -0400
+Date: Mon, 25 Jun 2018 22:59:37 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+Cc: syzbot <syzbot+d29d18215e477cfbfbdd@syzkaller.appspotmail.com>,
+        linux-kernel@vger.kernel.org, pmladek@suse.com,
+        sergey.senozhatsky@gmail.com, syzkaller-bugs@googlegroups.com,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: INFO: rcu detected stall in vprintk_emit
+Message-ID: <20180625225937.43aee76c@vmware.local.home> (sfid-20180626_050244_058171_03F1925A)
+In-Reply-To: <20180626014924.GB11229@jagdpanzerIV>
+References: <000000000000720530056f7f9b63@google.com>
+        <20180626014924.GB11229@jagdpanzerIV>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Most of the implementations behind cfg80211_get_station will not initialize
-sinfo to zero before manipulating it. The member "filled", which indicates
-the filled in parts of this struct, is often only modified by enabling
-certain bits in the bitfield while keeping the remaining bits in their
-original state. A caller without a preinitialized sinfo.filled can then no
-longer decide which parts of sinfo were filled in by cfg80211_get_station
-(or actually the underlying implementations).
+On Tue, 26 Jun 2018 10:49:24 +0900
+Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com> wrote:
 
-cfg80211_get_station must therefore take care that sinfo.filled is
-initialized to zero. Otherwise, the caller may tries to read information
-which was not filled in and which must therefore also be considered
-uninitialized. In batadv_v_elp_get_throughput's case, an invalid "random"
-expected throughput may be stored for this neighbor and thus the
-B.A.T.M.A.N V algorithm may switch to non-optimal neighbors for certain
-destinations.
+> So we can try switching to ratelimited error reporting
+> [that would be option A]:
+> 
+> ---
+> 
+> diff --git a/net/nfc/llcp_commands.c b/net/nfc/llcp_commands.c
+> index 2ceefa183cee..2f3becb709b8 100644
+> --- a/net/nfc/llcp_commands.c
+> +++ b/net/nfc/llcp_commands.c
+> @@ -755,7 +755,7 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
+>  		pdu = nfc_alloc_send_skb(sock->dev, &sock->sk, MSG_DONTWAIT,
+>  					 frag_len + LLCP_HEADER_SIZE, &err);
+>  		if (pdu == NULL) {
+> -			pr_err("Could not allocate PDU\n");
+> +			pr_err_ratelimited("Could not allocate PDU\n");
+>  			continue;
+>  		}
+>  
+> ---
+> 
+> 
+> Or ratelimited error reporting and cond_resched()
+> [that would be option B]:
 
-Fixes: 7406353d43c8 ("cfg80211: implement cfg80211_get_station cfg80211 API")
-Reported-by: Thomas Lauer <holminateur@gmail.com>
-Reported-by: Marcel Schmidt <ff.z-casparistrasse@mailbox.org>
-Cc: b.a.t.m.a.n@lists.open-mesh.org
-Signed-off-by: Sven Eckelmann <sven@narfation.org>
----
-Matthias, you may want to take care that this is integrated in your
-firmware.
----
- net/wireless/util.c | 2 ++
- 1 file changed, 2 insertions(+)
+I don't think this is a printk() issue per se, so I think Option B is
+the only option. You should not get stuck in an infinite loop if we run
+short on memory. Perhaps we could have an Option C which would exit
+this loop gracefully with some kind of error. But I haven't looked at
+the surrounding code to be sure if that is possible.
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index b5bb1c309914..cd6a695d1230 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1746,6 +1746,8 @@ int cfg80211_get_station(struct net_device *dev, const u8 *mac_addr,
- 	if (!rdev->ops->get_station)
- 		return -EOPNOTSUPP;
- 
-+	sinfo->filled = 0;
-+
- 	return rdev_get_station(rdev, dev, mac_addr, sinfo);
- }
- EXPORT_SYMBOL(cfg80211_get_station);
--- 
-2.11.0
+-- Steve
+
+> 
+> ---
+> 
+> diff --git a/net/nfc/llcp_commands.c b/net/nfc/llcp_commands.c
+> index 2ceefa183cee..61741db4c4e6 100644
+> --- a/net/nfc/llcp_commands.c
+> +++ b/net/nfc/llcp_commands.c
+> @@ -755,7 +755,8 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
+>  		pdu = nfc_alloc_send_skb(sock->dev, &sock->sk, MSG_DONTWAIT,
+>  					 frag_len + LLCP_HEADER_SIZE, &err);
+>  		if (pdu == NULL) {
+> -			pr_err("Could not allocate PDU\n");
+> +			pr_err_ratelimited("Could not allocate PDU\n");
+> +			cond_resched();
+>  			continue;
+>  		}
+>  
+> ---
