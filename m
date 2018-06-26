@@ -1,134 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:56188 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752038AbeF0GNu (ORCPT
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:41369 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751025AbeFZHAi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Jun 2018 02:13:50 -0400
-From: Ganapathi Bhat <gbhat@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Brian Norris <briannorris@chromium.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Zhiyuan Yang <yangzy@marvell.com>,
-        James Cao <jcao@marvell.com>,
-        Mangesh Malusare <mmangesh@marvell.com>,
-        Douglas Anderson <dianders@chromium.org>,
-        Ganapathi Bhat <gbhat@marvell.com>
-Subject: [PATCH v2 1/2] mwifiex: replace rx_pkt_lock by rx_reorder_tbl_lock
-Date: Wed, 27 Jun 2018 11:43:38 +0530
-Message-ID: <1530080019-20108-1-git-send-email-gbhat@marvell.com> (sfid-20180627_081409_697310_2FAB7C8D)
+        Tue, 26 Jun 2018 03:00:38 -0400
+Date: Tue, 26 Jun 2018 16:00:33 +0900
+From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Petr Mladek <pmladek@suse.com>,
+        syzkaller-bugs <syzkaller-bugs@googlegroups.com>,
+        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        syzbot <syzbot+d29d18215e477cfbfbdd@syzkaller.appspotmail.com>,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Subject: Re: [PATCH] NFC: llcp: fix nfc_llcp_send_ui_frame() lockup
+Message-ID: <20180626070033.GA25715@jagdpanzerIV> (sfid-20180626_090107_411164_0497F065)
+References: <20180626044119.30118-1-sergey.senozhatsky@gmail.com>
+ <CACT4Y+ZvLqzEwXgdB25MrmAS_j2_HsS8NFaJaMojzMV3prXypg@mail.gmail.com>
+ <20180626051221.GC31439@jagdpanzerIV>
+ <8c410102-43ab-dfdb-0d71-2ee5951e1af8@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8c410102-43ab-dfdb-0d71-2ee5951e1af8@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-At present driver spinlock protects iteration of list
-rx_reorder_tbl_ptr with rx_reorder_tbl_lock. To protect the
-individual items in this list, it uses rx_pkt_lock. But, we can
-use a single rx_reorder_tbl_lock for both purposes. This patch
-replaces rx_pkt_lock by rx_reorder_tbl_lock.
+On (06/25/18 23:44), Eric Dumazet wrote:
+> > The loop is still infinite, correct, but we have a preemption point now.
+> > Sure, net people can come with a much better solution, I'll be happy to
+> > scratch my patch.
+> > 
+> 
+> This can not be the right solution, think about current thread being real time,
+> cond_resched() might be a nop.
+> NFC maintainers should really take a look at this.
 
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
----
-v2: same as v1
----
- drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c | 19 ++++++++++---------
- drivers/net/wireless/marvell/mwifiex/init.c          |  1 -
- drivers/net/wireless/marvell/mwifiex/main.h          |  3 ---
- 3 files changed, 10 insertions(+), 13 deletions(-)
+I'm all for it.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-index 7ab44cd..5380fba 100644
---- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-@@ -118,18 +118,18 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
- 		      tbl->win_size;
- 
- 	for (i = 0; i < pkt_to_send; ++i) {
--		spin_lock_irqsave(&priv->rx_pkt_lock, flags);
-+		spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
- 		rx_tmp_ptr = NULL;
- 		if (tbl->rx_reorder_ptr[i]) {
- 			rx_tmp_ptr = tbl->rx_reorder_ptr[i];
- 			tbl->rx_reorder_ptr[i] = NULL;
- 		}
--		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
-+		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
- 		if (rx_tmp_ptr)
- 			mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
- 	}
- 
--	spin_lock_irqsave(&priv->rx_pkt_lock, flags);
-+	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
- 	/*
- 	 * We don't have a circular buffer, hence use rotation to simulate
- 	 * circular buffer
-@@ -140,7 +140,7 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
- 	}
- 
- 	tbl->start_win = start_win;
--	spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
-+	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
- }
- 
- /*
-@@ -160,18 +160,19 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
- 	unsigned long flags;
- 
- 	for (i = 0; i < tbl->win_size; ++i) {
--		spin_lock_irqsave(&priv->rx_pkt_lock, flags);
-+		spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
- 		if (!tbl->rx_reorder_ptr[i]) {
--			spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
-+			spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock,
-+					       flags);
- 			break;
- 		}
- 		rx_tmp_ptr = tbl->rx_reorder_ptr[i];
- 		tbl->rx_reorder_ptr[i] = NULL;
--		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
-+		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
- 		mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
- 	}
- 
--	spin_lock_irqsave(&priv->rx_pkt_lock, flags);
-+	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
- 	/*
- 	 * We don't have a circular buffer, hence use rotation to simulate
- 	 * circular buffer
-@@ -184,7 +185,7 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
- 		}
- 	}
- 	tbl->start_win = (tbl->start_win + i) & (MAX_TID_VALUE - 1);
--	spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
-+	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
- }
- 
- /*
-diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-index d239e92..dab02d7 100644
---- a/drivers/net/wireless/marvell/mwifiex/init.c
-+++ b/drivers/net/wireless/marvell/mwifiex/init.c
-@@ -439,7 +439,6 @@ int mwifiex_init_lock_list(struct mwifiex_adapter *adapter)
- 	for (i = 0; i < adapter->priv_num; i++) {
- 		if (adapter->priv[i]) {
- 			priv = adapter->priv[i];
--			spin_lock_init(&priv->rx_pkt_lock);
- 			spin_lock_init(&priv->wmm.ra_list_spinlock);
- 			spin_lock_init(&priv->curr_bcn_buf_lock);
- 			spin_lock_init(&priv->sta_list_spinlock);
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 69ac0a2..d2b54be 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -616,9 +616,6 @@ struct mwifiex_private {
- 	struct list_head rx_reorder_tbl_ptr;
- 	/* spin lock for rx_reorder_tbl_ptr queue */
- 	spinlock_t rx_reorder_tbl_lock;
--	/* spin lock for Rx packets */
--	spinlock_t rx_pkt_lock;
--
- #define MWIFIEX_ASSOC_RSP_BUF_SIZE  500
- 	u8 assoc_rsp_buf[MWIFIEX_ASSOC_RSP_BUF_SIZE];
- 	u32 assoc_rsp_size;
--- 
-1.9.1
+	-ss
