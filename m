@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52400 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751898AbeFMSxj (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:30051 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752007AbeFZGHx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jun 2018 14:53:39 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: John Stultz <john.stultz@linaro.org>
-Cc: Ryan Grachek <ryan@edited.us>, Wei Xu <xuwei5@hisilicon.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Eyal Reizer <eyalr@ti.com>, Tony Lindgren <tony@atomide.com>,
-        Valentin Schneider <Valentin.Schneider@arm.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] arm64: dts: hikey: Define wl1835 power capabilities
-References: <20180613151305.17240-1-ryan@edited.us>
-        <CANcMJZASEDRxaXwdG96nNeEDPrDm_ap5MjhXonEcg=yHZ8F=qg@mail.gmail.com>
-Date: Wed, 13 Jun 2018 21:53:32 +0300
-In-Reply-To: <CANcMJZASEDRxaXwdG96nNeEDPrDm_ap5MjhXonEcg=yHZ8F=qg@mail.gmail.com>
-        (John Stultz's message of "Wed, 13 Jun 2018 11:30:00 -0700")
-Message-ID: <87tvq6a577.fsf@kamboji.qca.qualcomm.com> (sfid-20180613_205409_075919_B340C86C)
+        Tue, 26 Jun 2018 02:07:53 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 12/12] staging: wilc1000: updated TODO file
+Date: Tue, 26 Jun 2018 11:37:14 +0530
+Message-ID: <1529993234-27294-13-git-send-email-ajay.kathat@microchip.com> (sfid-20180626_080756_852407_2A4CCAF7)
+In-Reply-To: <1529993234-27294-1-git-send-email-ajay.kathat@microchip.com>
+References: <1529993234-27294-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John Stultz <john.stultz@linaro.org> writes:
+Item [1] in TODO list is already addressed, so removed it from TODO file.
 
-> On Wed, Jun 13, 2018 at 8:13 AM, Ryan Grachek <ryan@edited.us> wrote:
->> These properties are required for compatibility with runtime PM.
->> Without these properties, MMC host controller will not be aware
->> of power capabilities. When the wlcore driver attempts to power
->> on the device, it will erroneously fail with -EACCES.
->>
->> Signed-off-by: Ryan Grachek <ryan@edited.us>
->
-> Fixes: 60f36637bbbd ("wlcore: sdio: allow pm to handle sdio power")
-> Tested-by: John Stultz <john.stultz@linaro.org>
-> Acked-by: John Stultz <john.stultz@linaro.org>
->
-> Wei Xu: This fixes a functional regression with wifi on the HiKey
-> board that was introduced in 4.18-rc with commit 60f36637bbbd
-> ("wlcore: sdio: allow pm to handle sdio power").
->
-> Could you please be sure to queue this for the 4.18-rc ?
+[1]. Move handling for each individual members of 'union message_body' out
+into a separate 'struct work_struct' and completely remove the
+multiplexerthat is currently part of host_if_work(), allowing movement
+of the implementation of each message handler into the callsite of the
+function that currently queues the 'host_if_msg'.
 
-Adding linux-wireless so that wireless folks are aware of this wlcore
-regression fix as well.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/TODO | 5 -----
+ 1 file changed, 5 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/TODO b/drivers/staging/wilc1000/TODO
+index d123324..725bede 100644
+--- a/drivers/staging/wilc1000/TODO
++++ b/drivers/staging/wilc1000/TODO
+@@ -1,10 +1,5 @@
+ TODO:
+ - rework comments and function headers(also coding style)
+-- Move handling for each individual members of 'union message_body' out
+-  into a separate 'struct work_struct' and completely remove the multiplexer
+-  that is currently part of host_if_work(), allowing movement of the
+-  implementation of each message handler into the callsite of the function
+-  that currently queues the 'host_if_msg'.
+ - make spi and sdio components coexist in one build
+ - support soft-ap and p2p mode
+ - support resume/suspend function
 -- 
-Kalle Valo
+2.7.4
