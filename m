@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:40290 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752951AbeFSWqu (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:44354 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750907AbeFZFM0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Jun 2018 18:46:50 -0400
-Received: by mail-lf0-f66.google.com with SMTP id q11-v6so1946392lfc.7
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2018 15:46:49 -0700 (PDT)
-Date: Wed, 20 Jun 2018 00:46:46 +0200
-From: Niklas Cassel <niklas.cassel@linaro.org>
-To: Govind Singh <govinds@codeaurora.org>
-Cc: andy.gross@linaro.org, bjorn.andersson@linaro.org,
-        david.brown@linaro.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH v2 5/6] firmware: qcom: scm: Add WLAN VMID for Qualcomm
- SCM interface
-Message-ID: <20180619224646.GD1635@centauri.lan> (sfid-20180620_004714_180880_D070670E)
-References: <20180605123709.1882-1-govinds@codeaurora.org>
+        Tue, 26 Jun 2018 01:12:26 -0400
+Date: Tue, 26 Jun 2018 14:12:21 +0900
+From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+To: Dmitry Vyukov <dvyukov@google.com>
+Cc: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Petr Mladek <pmladek@suse.com>,
+        syzkaller-bugs <syzkaller-bugs@googlegroups.com>,
+        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        syzbot <syzbot+d29d18215e477cfbfbdd@syzkaller.appspotmail.com>,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Subject: Re: [PATCH] NFC: llcp: fix nfc_llcp_send_ui_frame() lockup
+Message-ID: <20180626051221.GC31439@jagdpanzerIV> (sfid-20180626_071245_533817_41E2A7D4)
+References: <20180626044119.30118-1-sergey.senozhatsky@gmail.com>
+ <CACT4Y+ZvLqzEwXgdB25MrmAS_j2_HsS8NFaJaMojzMV3prXypg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180605123709.1882-1-govinds@codeaurora.org>
+In-Reply-To: <CACT4Y+ZvLqzEwXgdB25MrmAS_j2_HsS8NFaJaMojzMV3prXypg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Acked-by: Niklas Cassel <niklas.cassel@linaro.org>
+On (06/26/18 07:07), Dmitry Vyukov wrote:
+[..]
+> >  #include <net/nfc/nfc.h>
+> > @@ -755,7 +756,8 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
+> >                 pdu = nfc_alloc_send_skb(sock->dev, &sock->sk, MSG_DONTWAIT,
+> >                                          frag_len + LLCP_HEADER_SIZE, &err);
+> >                 if (pdu == NULL) {
+> > -                       pr_err("Could not allocate PDU\n");
+> > +                       pr_err_ratelimited("Could not allocate PDU\n");
+> > +                       cond_resched();
+> >                         continue;
+> >                 }
+> 
+> 
+> But this thread is still in an infinite (unkillable?) loop? If yes, we
+> are waiting for the next syzbot report ;)
 
-On Tue, Jun 05, 2018 at 06:07:09PM +0530, Govind Singh wrote:
-> Add WLAN related VMID's to support wlan driver to set up
-> the remote's permissions call via TrustZone.
-> 
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
-> ---
->  include/linux/qcom_scm.h | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/include/linux/qcom_scm.h b/include/linux/qcom_scm.h
-> index b401b962afff..da63d84e1e91 100644
-> --- a/include/linux/qcom_scm.h
-> +++ b/include/linux/qcom_scm.h
-> @@ -1,4 +1,4 @@
-> -/* Copyright (c) 2010-2015, The Linux Foundation. All rights reserved.
-> +/* Copyright (c) 2010-2015, 2018, The Linux Foundation. All rights reserved.
->   * Copyright (C) 2015 Linaro Ltd.
->   *
->   * This program is free software; you can redistribute it and/or modify
-> @@ -33,6 +33,8 @@ struct qcom_scm_vmperm {
->  
->  #define QCOM_SCM_VMID_HLOS       0x3
->  #define QCOM_SCM_VMID_MSS_MSA    0xF
-> +#define QCOM_SCM_VMID_WLAN       0x18
-> +#define QCOM_SCM_VMID_WLAN_CE    0x19
->  #define QCOM_SCM_PERM_READ       0x4
->  #define QCOM_SCM_PERM_WRITE      0x2
->  #define QCOM_SCM_PERM_EXEC       0x1
-> -- 
-> 2.17.0
-> 
-> 
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+The loop is still infinite, correct, but we have a preemption point now.
+Sure, net people can come with a much better solution, I'll be happy to
+scratch my patch.
+
+	-ss
