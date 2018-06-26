@@ -1,96 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:38804 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755860AbeFOIIO (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:43126 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751448AbeFZGoZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Jun 2018 04:08:14 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w5F83wis021127
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2018 04:08:14 -0400
-Received: from e06smtp04.uk.ibm.com (e06smtp04.uk.ibm.com [195.75.94.100])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2jm8kd2nrx-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2018 04:08:14 -0400
-Received: from localhost
-        by e06smtp04.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-wireless@vger.kernel.org> from <freude@linux.ibm.com>;
-        Fri, 15 Jun 2018 09:08:11 +0100
-Subject: Re: [PATCH] hw_random: Always drop the RNG in hwrng_unregister()
-To: =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>,
-        Matt Mackall <mpm@selenic.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Wirz <spam@lukas-wirz.de>, linux-crypto@vger.kernel.org,
-        b43-dev@lists.infradead.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        PrasannaKumar Muralidharan <prasannatsmkumar@gmail.com>,
-        Harald Freudenberger <freude@linux.vnet.ibm.com>
-References: <20180614200811.76401d95@wiggum>
-From: Harald Freudenberger <freude@linux.ibm.com>
-Date: Fri, 15 Jun 2018 10:08:12 +0200
+        Tue, 26 Jun 2018 02:44:25 -0400
+Subject: Re: [PATCH] NFC: llcp: fix nfc_llcp_send_ui_frame() lockup
+To: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        Dmitry Vyukov <dvyukov@google.com>
+Cc: Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Petr Mladek <pmladek@suse.com>,
+        syzkaller-bugs <syzkaller-bugs@googlegroups.com>,
+        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        syzbot <syzbot+d29d18215e477cfbfbdd@syzkaller.appspotmail.com>,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+References: <20180626044119.30118-1-sergey.senozhatsky@gmail.com>
+ <CACT4Y+ZvLqzEwXgdB25MrmAS_j2_HsS8NFaJaMojzMV3prXypg@mail.gmail.com>
+ <20180626051221.GC31439@jagdpanzerIV>
+From: Eric Dumazet <eric.dumazet@gmail.com>
+Message-ID: <8c410102-43ab-dfdb-0d71-2ee5951e1af8@gmail.com> (sfid-20180626_084445_698478_0413C805)
+Date: Mon, 25 Jun 2018 23:44:22 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180614200811.76401d95@wiggum>
+In-Reply-To: <20180626051221.GC31439@jagdpanzerIV>
 Content-Type: text/plain; charset=utf-8
-Message-Id: <8f1f5be1-979c-7601-1419-907b1980d974@linux.ibm.com> (sfid-20180615_100818_542313_0F2DD722)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14.06.2018 20:08, Michael Büsch wrote:
-> enable_best_rng() is used in hwrng_unregister() to switch away from the
-> currently active RNG, if that is the one currently being removed.
-> However enable_best_rng() might fail, if the next RNG's init routine
-> fails. In that case enable_best_rng() will return an error code and
-> the currently active RNG will remain active.
-> After unregistering this might lead to crashes due to use-after-free.
->
-> Fix this by dropping the currently active RNG, if enable_best_rng()
-> failed. This will result in no RNG to be active, if the next-best
-> one failed to initialize.
->
-> This problem was introduced by 142a27f0a731ddcf467546960a5585970ca98e21
->
->
-> Reported-by: Wirz <spam@lukas-wirz.de>
-> Tested-by: Wirz <spam@lukas-wirz.de>
-> Signed-off-by: Michael Büsch <m@bues.ch>
-> Cc: stable@vger.kernel.org
->
-> ---
->
-> See this discussion for a crash in b43's hwrng caused by this problem:
-> https://www.spinics.net/lists/linux-wireless/msg173089.html
->
->
->
-> diff --git a/drivers/char/hw_random/core.c b/drivers/char/hw_random/core.c
-> index 91bb98c42a1c..aaf9e5afaad4 100644
-> --- a/drivers/char/hw_random/core.c
-> +++ b/drivers/char/hw_random/core.c
-> @@ -516,11 +516,18 @@ EXPORT_SYMBOL_GPL(hwrng_register);
->  
->  void hwrng_unregister(struct hwrng *rng)
->  {
-> +	int err;
-> +
->  	mutex_lock(&rng_mutex);
->  
->  	list_del(&rng->list);
-> -	if (current_rng == rng)
-> -		enable_best_rng();
-> +	if (current_rng == rng) {
-> +		err = enable_best_rng();
-> +		if (err) {
-> +			drop_current_rng();
-> +			cur_rng_set_by_user = 0;
-> +		}
-> +	}
->  
->  	if (list_empty(&rng_list)) {
->  		mutex_unlock(&rng_mutex);
->
->
->
-Yes, if the hw_init() of the newly chosen rng fails, enable_best_rng() comes
-back with an error and did not drop the current rng. The patch handles
-this case. I did not test it, but the code looks fine.
 
-reviewed-by Harald Freudenberger <freude@linux.ibm.com>
+
+On 06/25/2018 10:12 PM, Sergey Senozhatsky wrote:
+> On (06/26/18 07:07), Dmitry Vyukov wrote:
+> [..]
+>>>  #include <net/nfc/nfc.h>
+>>> @@ -755,7 +756,8 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
+>>>                 pdu = nfc_alloc_send_skb(sock->dev, &sock->sk, MSG_DONTWAIT,
+>>>                                          frag_len + LLCP_HEADER_SIZE, &err);
+>>>                 if (pdu == NULL) {
+>>> -                       pr_err("Could not allocate PDU\n");
+>>> +                       pr_err_ratelimited("Could not allocate PDU\n");
+>>> +                       cond_resched();
+>>>                         continue;
+>>>                 }
+>>
+>>
+>> But this thread is still in an infinite (unkillable?) loop? If yes, we
+>> are waiting for the next syzbot report ;)
+> 
+> The loop is still infinite, correct, but we have a preemption point now.
+> Sure, net people can come with a much better solution, I'll be happy to
+> scratch my patch.
+> 
+
+This can not be the right solution, think about current thread being real time,
+cond_resched() might be a nop.
+
+We should probably not loop at all, or not use MSG_DONTWAIT.
+
+(And remove this useless "Could not allocate PDU" message)
+
+NFC maintainers should really take a look at this.
