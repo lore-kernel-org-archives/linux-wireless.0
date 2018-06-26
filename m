@@ -1,55 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:44814 "EHLO mail.kernel.org"
+Received: from mail.bugwerft.de ([46.23.86.59]:38360 "EHLO mail.bugwerft.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751856AbeFFM1r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 Jun 2018 08:27:47 -0400
-Received: from mail-qt0-f181.google.com (mail-qt0-f181.google.com [209.85.216.181])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 80F7720870
-        for <linux-wireless@vger.kernel.org>; Wed,  6 Jun 2018 12:27:46 +0000 (UTC)
-Received: by mail-qt0-f181.google.com with SMTP id i18-v6so6055141qtp.12
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jun 2018 05:27:46 -0700 (PDT)
+        id S1754597AbeFZUel (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Jun 2018 16:34:41 -0400
+Subject: Re: Suspend of SDIO function devices
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Chris Ball <chris@printf.net>,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        "libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
+        linux-wireless@vger.kernel.org,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+References: <b8a41e3a-7100-ae17-1275-d1b40a026201@zonque.org>
+ <CAPDyKFrgcFrah34+eFMsBQYWr03bTSMMUuYw61jYfpffSQrQAg@mail.gmail.com>
+From: Daniel Mack <daniel@zonque.org>
+Message-ID: <fcec2b1b-e2ab-3404-d958-b62d6d91583a@zonque.org> (sfid-20180626_223449_643944_363A4371)
+Date: Tue, 26 Jun 2018 22:34:39 +0200
 MIME-Version: 1.0
-References: <1527663267-71412-1-git-send-email-chi-hsien.lin@cypress.com>
-In-Reply-To: <1527663267-71412-1-git-send-email-chi-hsien.lin@cypress.com>
-From: Josh Boyer <jwboyer@kernel.org>
-Date: Wed, 6 Jun 2018 08:27:34 -0400
-Message-ID: <CA+5PVA65=65m+xFnXPEXWx4_xVjv-cMGStvx07=yo7B_ZdN_TA@mail.gmail.com> (sfid-20180606_142752_161078_3F901EA6)
-Subject: Re: [PATCH V4 0/6] Cypress license and firmware update
-To: chi-hsien.lin@cypress.com
-Cc: Linux Firmware <linux-firmware@kernel.org>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        franky.lin@broadcom.com, hante.meuleman@broadcom.com,
-        wright.feng@cypress.com
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CAPDyKFrgcFrah34+eFMsBQYWr03bTSMMUuYw61jYfpffSQrQAg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 30, 2018 at 3:27 AM Chi-Hsien Lin <chi-hsien.lin@cypress.com> wrote:
->
-> Update Cypress license termination clause and several firmware files.
->
-> Chi-Hsien Lin (6):
->   Update Cypress license termination clause
->   brcm: update firmware for bcm43430 sdio
->   brcm: update firmware for bcm43340 sdio
->   brcm: update firmware for bcm43362 sdio
->   brcm: update firmware for bcm4354 sdio
->   brcm: update firmware for bcm4356 pcie
->
->  LICENCE.cypress             |   5 ++---
->  WHENCE                      |  10 +++++-----
->  brcm/brcmfmac43340-sdio.bin | Bin 402210 -> 400864 bytes
->  brcm/brcmfmac43362-sdio.bin | Bin 219557 -> 200801 bytes
->  brcm/brcmfmac43430-sdio.bin | Bin 369577 -> 388739 bytes
->  brcm/brcmfmac4354-sdio.bin  | Bin 626589 -> 605388 bytes
->  brcm/brcmfmac4356-pcie.bin  | Bin 661999 -> 648770 bytes
->  7 files changed, 7 insertions(+), 8 deletions(-)
+Hi Ulf,
 
-I've applied the series and pushed it out.  Thank you!
+Thanks for the prompt reply!
 
-josh
+On Monday, June 25, 2018 05:00 PM, Ulf Hansson wrote:
+> On 24 June 2018 at 22:46, Daniel Mack <daniel@zonque.org> wrote:
+>> Please advise, I'm happy to test approaches and send patches.
+> 
+>  From a top level point of view, I think this needs to be changed:
+> 
+> 1)
+> In cases when the libertas sdio driver's ->suspend() callback, thinks
+> of returning -ENOSYS, it should instead call if_sdio_power_off().
+> Depending if if_sdio_power_save() has already been called, this shall
+> be skipped.
+> 
+> The important thing here is to disable the SDIO func device and to
+> release the SDIO irq.
+> 
+> 2)
+> During resume, depending on whether the earlier ->suspend() callback
+> invoked if_sdio_power_off(),  libertas sdio driver's ->resume()
+> callback should call if_sdio_power_on().
+> 
+> This should re-initiate the libertas sdio device and re-program the
+> firmware. To complete these actions, the firmware file also needs to
+> be fetched, which requires file system accesses also to be resumed.
+> 
+> We also need to wait for the firmware programming to be completed,
+> hence also do a "wait_event(card->pwron_waitq, priv->fw_ready);" from
+> somewhere.
+
+Great, thanks, that helped a lot! I have something that does the job ob 
+my board. Will send out a patch shortly.
+
+
+Best regards,
+Daniel
