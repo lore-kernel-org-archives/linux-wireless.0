@@ -1,74 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:57534 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751622AbeFELkL (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:62563 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752169AbeFZHze (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Jun 2018 07:40:11 -0400
-Date: Tue, 5 Jun 2018 14:40:01 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: eyalreizer@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [bug report] wlcore: sdio: check for valid platform device data
- before suspend
-Message-ID: <20180605114001.surh4nfayfj7vs4l@kili.mountain> (sfid-20180605_134014_535393_073FE673)
+        Tue, 26 Jun 2018 03:55:34 -0400
+Subject: Re: [PATCH v2] staging: wilc1000: Use common structs to parse ip
+ packets
+To: Thibaut Robert <thibaut.robert@gmail.com>,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <linux-kernel@vger.kernel.org>
+References: <20180604105549.04031722@ajaysk-VirtualBox>
+ <20180619184419.10304-1-thibaut.robert@gmail.com>
+From: Claudiu Beznea <Claudiu.Beznea@microchip.com>
+Message-ID: <333f9414-9541-dc33-9c69-4054b5966eaa@microchip.com> (sfid-20180626_095548_956864_831A2B35)
+Date: Tue, 26 Jun 2018 10:55:30 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180619184419.10304-1-thibaut.robert@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Eyal Reizer,
+Reviewed-by: Claudiu Beznea <claudiu.beznea@microchip.com>
 
-The patch 6e91d48371e7: "wlcore: sdio: check for valid platform
-device data before suspend" from May 28, 2018, leads to the following
-static checker warning:
-
-	drivers/net/wireless/ti/wlcore/sdio.c:404 wl1271_suspend()
-	warn: missing error code here? 'platform_get_drvdata()' failed. 'ret' = '0'
-
-drivers/net/wireless/ti/wlcore/sdio.c
-   391  #ifdef CONFIG_PM
-   392  static int wl1271_suspend(struct device *dev)
-   393  {
-   394          /* Tell MMC/SDIO core it's OK to power down the card
-   395           * (if it isn't already), but not to remove it completely */
-   396          struct sdio_func *func = dev_to_sdio_func(dev);
-   397          struct wl12xx_sdio_glue *glue = sdio_get_drvdata(func);
-   398          struct wl1271 *wl = platform_get_drvdata(glue->core);
-   399          mmc_pm_flag_t sdio_flags;
-   400          int ret = 0;
-   401  
-   402          if (!wl) {
-   403                  dev_err(dev, "no wilink module was probed\n");
-   404                  goto out;
-
-We should set -ENOMEM or something?
-
-   405          }
-   406  
-   407          dev_dbg(dev, "wl1271 suspend. wow_enabled: %d\n",
-   408                  wl->wow_enabled);
-   409  
-   410          /* check whether sdio should keep power */
-   411          if (wl->wow_enabled) {
-   412                  sdio_flags = sdio_get_host_pm_caps(func);
-   413  
-   414                  if (!(sdio_flags & MMC_PM_KEEP_POWER)) {
-   415                          dev_err(dev, "can't keep power while host "
-   416                                       "is suspended\n");
-   417                          ret = -EINVAL;
-   418                          goto out;
-   419                  }
-   420  
-   421                  /* keep power while host suspended */
-   422                  ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
-   423                  if (ret) {
-   424                          dev_err(dev, "error while trying to keep power\n");
-   425                          goto out;
-   426                  }
-   427          }
-   428  out:
-   429          return ret;
-   430  }
-
-regards,
-dan carpenter
+On 19.06.2018 21:44, Thibaut Robert wrote:
+> Use structs ethhdr, iphdr and tcphdr instead of manual parsing in
+> tcp_process.
+> This commit fix handling of ip packets containing options.
+> It also fixes the following sparse warning:
+> 
+> drivers/staging/wilc1000//wilc_wlan.c:201:19: warning: cast to restricted __be16
+> 
+> Signed-off-by: Thibaut Robert <thibaut.robert@gmail.com>
+> ---
+>  drivers/staging/wilc1000/wilc_wlan.c | 43 ++++++++++------------------
+>  1 file changed, 15 insertions(+), 28 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+> index 55755d7fbb30..85af36595e69 100644
+> --- a/drivers/staging/wilc1000/wilc_wlan.c
+> +++ b/drivers/staging/wilc1000/wilc_wlan.c
+> @@ -1,4 +1,6 @@
+>  // SPDX-License-Identifier: GPL-2.0
+> +#include <linux/if_ether.h>
+> +#include <linux/ip.h>
+>  #include "wilc_wfi_netdevice.h"
+>  #include "wilc_wlan_cfg.h"
+>  
+> @@ -150,9 +152,8 @@ static inline int add_tcp_pending_ack(u32 ack, u32 session_index,
+>  
+>  static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+>  {
+> -	u8 *eth_hdr_ptr;
+> -	u8 *buffer = tqe->buffer;
+> -	unsigned short h_proto;
+> +	void *buffer = tqe->buffer;
+> +	const struct ethhdr *eth_hdr_ptr = buffer;
+>  	int i;
+>  	unsigned long flags;
+>  	struct wilc_vif *vif;
+> @@ -163,37 +164,23 @@ static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+>  
+>  	spin_lock_irqsave(&wilc->txq_spinlock, flags);
+>  
+> -	eth_hdr_ptr = &buffer[0];
+> -	h_proto = ntohs(*((unsigned short *)&eth_hdr_ptr[12]));
+> -	if (h_proto == ETH_P_IP) {
+> -		u8 *ip_hdr_ptr;
+> -		u8 protocol;
+> +	if (eth_hdr_ptr->h_proto == htons(ETH_P_IP)) {
+> +		const struct iphdr *ip_hdr_ptr = buffer + ETH_HLEN;
+>  
+> -		ip_hdr_ptr = &buffer[ETHERNET_HDR_LEN];
+> -		protocol = ip_hdr_ptr[9];
+> -
+> -		if (protocol == 0x06) {
+> -			u8 *tcp_hdr_ptr;
+> +		if (ip_hdr_ptr->protocol == IPPROTO_TCP) {
+> +			const struct tcphdr *tcp_hdr_ptr;
+>  			u32 IHL, total_length, data_offset;
+>  
+> -			tcp_hdr_ptr = &ip_hdr_ptr[IP_HDR_LEN];
+> -			IHL = (ip_hdr_ptr[0] & 0xf) << 2;
+> -			total_length = ((u32)ip_hdr_ptr[2] << 8) +
+> -					(u32)ip_hdr_ptr[3];
+> -			data_offset = ((u32)tcp_hdr_ptr[12] & 0xf0) >> 2;
+> +			IHL = ip_hdr_ptr->ihl << 2;
+> +			tcp_hdr_ptr = buffer + ETH_HLEN + IHL;
+> +			total_length = ntohs(ip_hdr_ptr->tot_len);
+> +
+> +			data_offset = tcp_hdr_ptr->doff << 2;
+>  			if (total_length == (IHL + data_offset)) {
+>  				u32 seq_no, ack_no;
+>  
+> -				seq_no = ((u32)tcp_hdr_ptr[4] << 24) +
+> -					 ((u32)tcp_hdr_ptr[5] << 16) +
+> -					 ((u32)tcp_hdr_ptr[6] << 8) +
+> -					 (u32)tcp_hdr_ptr[7];
+> -
+> -				ack_no = ((u32)tcp_hdr_ptr[8] << 24) +
+> -					 ((u32)tcp_hdr_ptr[9] << 16) +
+> -					 ((u32)tcp_hdr_ptr[10] << 8) +
+> -					 (u32)tcp_hdr_ptr[11];
+> -
+> +				seq_no = ntohl(tcp_hdr_ptr->seq);
+> +				ack_no = ntohl(tcp_hdr_ptr->ack_seq);
+>  				for (i = 0; i < tcp_session; i++) {
+>  					u32 j = ack_session_info[i].seq_num;
+>  
+> 
