@@ -1,87 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50920 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1030505AbeFSTGu (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:2558 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751682AbeFZGHT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Jun 2018 15:06:50 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Michael Trimarchi <michael@amarulasolutions.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Ian Molton <ian@mnementh.co.uk>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V2] brcmfmac: stop watchdog before detach and free everything
-References: <1527493857-2220-1-git-send-email-michael@amarulasolutions.com>
-        <5B0D1C9E.4000800@broadcom.com> <20180530090633.GA15390@panicking>
-        <5B294920.5050909@broadcom.com>
-Date: Tue, 19 Jun 2018 22:06:43 +0300
-In-Reply-To: <5B294920.5050909@broadcom.com> (Arend van Spriel's message of
-        "Tue, 19 Jun 2018 20:19:12 +0200")
-Message-ID: <87fu1izjcs.fsf@kamboji.qca.qualcomm.com> (sfid-20180619_210708_171388_DD8C0FF7)
+        Tue, 26 Jun 2018 02:07:19 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 02/12] staging: wilc1000: remove unused marco related to HIF commands
+Date: Tue, 26 Jun 2018 11:37:04 +0530
+Message-ID: <1529993234-27294-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180626_080728_038683_E3D16249)
+In-Reply-To: <1529993234-27294-1-git-send-email-ajay.kathat@microchip.com>
+References: <1529993234-27294-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+After removing the multiplexing of hif commands in hif_if_work()
+macros prefix with 'HOST_IF_MSG_' are not required. Also 'id' field in
+host_if_msg is not required anymore.
 
-> On 5/30/2018 11:06 AM, Michael Trimarchi wrote:
->> Using built-in in kernel image without a firmware in filesystem
->> or in the kernel image can lead to a kernel NULL pointer deference.
->> Watchdog need to be stopped in brcmf_sdio_remove
->>
->> The system is going down NOW!
->> [ 1348.110759] Unable to handle kernel NULL pointer dereference at
->> virtual address 000002f8
->> Sent SIGTERM to all processes
->> [ 1348.121412] Mem abort info:
->> [ 1348.126962]   ESR = 0x96000004
->> [ 1348.130023]   Exception class = DABT (current EL), IL = 32 bits
->> [ 1348.135948]   SET = 0, FnV = 0
->> [ 1348.138997]   EA = 0, S1PTW = 0
->> [ 1348.142154] Data abort info:
->> [ 1348.145045]   ISV = 0, ISS = 0x00000004
->> [ 1348.148884]   CM = 0, WnR = 0
->> [ 1348.151861] user pgtable: 4k pages, 48-bit VAs, pgdp = (____ptrval____)
->> [ 1348.158475] [00000000000002f8] pgd=0000000000000000
->> [ 1348.163364] Internal error: Oops: 96000004 [#1] PREEMPT SMP
->> [ 1348.168927] Modules linked in: ipv6
->> [ 1348.172421] CPU: 3 PID: 1421 Comm: brcmf_wdog/mmc0 Not tainted
->> 4.17.0-rc5-next-20180517 #18
->> [ 1348.180757] Hardware name: Amarula A64-Relic (DT)
->> [ 1348.185455] pstate: 60000005 (nZCv daif -PAN -UAO)
->> [ 1348.190251] pc : brcmf_sdiod_freezer_count+0x0/0x20
->> [ 1348.195124] lr : brcmf_sdio_watchdog_thread+0x64/0x290
->> [ 1348.200253] sp : ffff00000b85be30
->> [ 1348.203561] x29: ffff00000b85be30 x28: 0000000000000000
->> [ 1348.208868] x27: ffff00000b6cb918 x26: ffff80003b990638
->> [ 1348.214176] x25: ffff0000087b1a20 x24: ffff80003b94f800
->> [ 1348.219483] x23: ffff000008e620c8 x22: ffff000008f0b660
->> [ 1348.224790] x21: ffff000008c6a858 x20: 00000000fffffe00
->> [ 1348.230097] x19: ffff80003b94f800 x18: 0000000000000001
->> [ 1348.235404] x17: 0000ffffab2e8a74 x16: ffff0000080d7de8
->> [ 1348.240711] x15: 0000000000000000 x14: 0000000000000400
->> [ 1348.246018] x13: 0000000000000400 x12: 0000000000000001
->> [ 1348.251324] x11: 00000000000002c4 x10: 0000000000000a10
->> [ 1348.256631] x9 : ffff00000b85bc40 x8 : ffff80003be11870
->> [ 1348.261937] x7 : ffff80003dfc7308 x6 : 000000078ff08b55
->> [ 1348.267243] x5 : 00000139e1058400 x4 : 0000000000000000
->> [ 1348.272550] x3 : dead000000000100 x2 : 958f2788d6618100
->> [ 1348.277856] x1 : 00000000fffffe00 x0 : 0000000000000000
->
-> Forgot about this one.
->
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 36 -------------------------------
+ 1 file changed, 36 deletions(-)
 
-Should this go to 4.18?
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 4f6008e..998e0ab 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1,41 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0
+ #include "wilc_wfi_netdevice.h"
+ 
+-#define HOST_IF_MSG_SCAN                        0
+-#define HOST_IF_MSG_CONNECT                     1
+-#define HOST_IF_MSG_RCVD_GNRL_ASYNC_INFO        2
+-#define HOST_IF_MSG_KEY                         3
+-#define HOST_IF_MSG_RCVD_NTWRK_INFO             4
+-#define HOST_IF_MSG_RCVD_SCAN_COMPLETE          5
+-#define HOST_IF_MSG_CFG_PARAMS                  6
+-#define HOST_IF_MSG_SET_CHANNEL                 7
+-#define HOST_IF_MSG_DISCONNECT                  8
+-#define HOST_IF_MSG_GET_RSSI                    9
+-#define HOST_IF_MSG_ADD_BEACON                  11
+-#define HOST_IF_MSG_DEL_BEACON                  12
+-#define HOST_IF_MSG_ADD_STATION                 13
+-#define HOST_IF_MSG_DEL_STATION                 14
+-#define HOST_IF_MSG_EDIT_STATION                15
+-#define HOST_IF_MSG_SCAN_TIMER_FIRED            16
+-#define HOST_IF_MSG_CONNECT_TIMER_FIRED         17
+-#define HOST_IF_MSG_POWER_MGMT                  18
+-#define HOST_IF_MSG_GET_INACTIVETIME            19
+-#define HOST_IF_MSG_REMAIN_ON_CHAN              20
+-#define HOST_IF_MSG_REGISTER_FRAME              21
+-#define HOST_IF_MSG_LISTEN_TIMER_FIRED          22
+-#define HOST_IF_MSG_SET_WFIDRV_HANDLER          24
+-#define HOST_IF_MSG_GET_MAC_ADDRESS             26
+-#define HOST_IF_MSG_SET_OPERATION_MODE          27
+-#define HOST_IF_MSG_SET_IPADDRESS               28
+-#define HOST_IF_MSG_GET_IPADDRESS               29
+-#define HOST_IF_MSG_GET_STATISTICS              31
+-#define HOST_IF_MSG_SET_MULTICAST_FILTER        32
+-#define HOST_IF_MSG_DEL_BA_SESSION              34
+-#define HOST_IF_MSG_DEL_ALL_STA                 36
+-#define HOST_IF_MSG_SET_TX_POWER		38
+-#define HOST_IF_MSG_GET_TX_POWER		39
+-#define HOST_IF_MSG_EXIT                        100
+-
+ #define HOST_IF_SCAN_TIMEOUT                    4000
+ #define HOST_IF_CONNECT_TIMEOUT                 9500
+ 
+@@ -180,7 +145,6 @@ union message_body {
+ };
+ 
+ struct host_if_msg {
+-	u16 id;
+ 	union message_body body;
+ 	struct wilc_vif *vif;
+ 	struct work_struct work;
 -- 
-Kalle Valo
+2.7.4
