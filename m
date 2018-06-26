@@ -1,39 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55504 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932534AbeFUJSF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Jun 2018 05:18:05 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 6/9] mt76: fix variable gain adjustment range
-Date: Thu, 21 Jun 2018 11:17:58 +0200
-Message-Id: <20180621091801.41184-6-nbd@nbd.name> (sfid-20180621_111810_530171_B5868441)
-In-Reply-To: <20180621091801.41184-1-nbd@nbd.name>
-References: <20180621091801.41184-1-nbd@nbd.name>
+Received: from szxga05-in.huawei.com ([45.249.212.191]:8733 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752506AbeFZI0J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Jun 2018 04:26:09 -0400
+Subject: Re: [PATCH] arm64: dts: hikey: Define wl1835 power capabilities
+To: John Stultz <john.stultz@linaro.org>, Ryan Grachek <ryan@edited.us>
+References: <20180613151305.17240-1-ryan@edited.us>
+ <CANcMJZASEDRxaXwdG96nNeEDPrDm_ap5MjhXonEcg=yHZ8F=qg@mail.gmail.com>
+ <CALAqxLWjJKsU+XJmANzx-aO2ruszwbBnPV2yV5WoyVStO+5K0A@mail.gmail.com>
+CC: Mark Rutland <mark.rutland@arm.com>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+        <devicetree@vger.kernel.org>, Tony Lindgren <tony@atomide.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Eyal Reizer <eyalr@ti.com>, Rob Herring <robh+dt@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Valentin Schneider <Valentin.Schneider@arm.com>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        <linux-wireless@vger.kernel.org>
+From: Wei Xu <xuwei5@hisilicon.com>
+Message-ID: <5B31F888.7010403@hisilicon.com> (sfid-20180626_102648_300592_99F81056)
+Date: Tue, 26 Jun 2018 09:25:44 +0100
+MIME-Version: 1.0
+In-Reply-To: <CALAqxLWjJKsU+XJmANzx-aO2ruszwbBnPV2yV5WoyVStO+5K0A@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The range should only be limited to 4 for really weak signals, for all
-other gain settings the range is 16.
+Hi John,
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mt76x2_phy.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 2018/6/25 22:56, John Stultz wrote:
+> On Wed, Jun 13, 2018 at 11:30 AM, John Stultz <john.stultz@linaro.org> wrote:
+>> On Wed, Jun 13, 2018 at 8:13 AM, Ryan Grachek <ryan@edited.us> wrote:
+>>> These properties are required for compatibility with runtime PM.
+>>> Without these properties, MMC host controller will not be aware
+>>> of power capabilities. When the wlcore driver attempts to power
+>>> on the device, it will erroneously fail with -EACCES.
+>>>
+>>> Signed-off-by: Ryan Grachek <ryan@edited.us>
+>>
+>> Fixes: 60f36637bbbd ("wlcore: sdio: allow pm to handle sdio power")
+>> Tested-by: John Stultz <john.stultz@linaro.org>
+>> Acked-by: John Stultz <john.stultz@linaro.org>
+>>
+>> Wei Xu: This fixes a functional regression with wifi on the HiKey
+>> board that was introduced in 4.18-rc with commit 60f36637bbbd
+>> ("wlcore: sdio: allow pm to handle sdio power").
+> 
+> Wei Xu: Just wanted to follow up to make sure this wasn't missed for
+> 4.18-rc, as I haven't seen it upstream or in -next, and it fixes a
+> recently introduced regression.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-index 51fd7ddfa8f5..9c7b19ce73f2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-@@ -485,7 +485,7 @@ static void
- mt76x2_phy_adjust_vga_gain(struct mt76x2_dev *dev)
- {
- 	u32 false_cca;
--	u8 limit = dev->cal.low_gain > 1 ? 4 : 16;
-+	u8 limit = dev->cal.low_gain > 0 ? 16 : 4;
- 
- 	false_cca = FIELD_GET(MT_RX_STAT_1_CCA_ERRORS, mt76_rr(dev, MT_RX_STAT_1));
- 	if (false_cca > 800 && dev->cal.agc_gain_adjust < limit)
--- 
-2.17.0
+Thanks!
+I will send out the fix pull request in these two days if no problem.
+
+Best Regards,
+Wei
+
+> 
+> thanks
+> -john
+> 
+> .
+> 
