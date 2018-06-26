@@ -1,41 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f194.google.com ([209.85.217.194]:33447 "EHLO
-        mail-ua0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936356AbeF2VrQ (ORCPT
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:34372 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751105AbeFZGHr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 17:47:16 -0400
+        Tue, 26 Jun 2018 02:07:47 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 10/12] staging: wilc1000: avoid use of static variable 'inactive_time'
+Date: Tue, 26 Jun 2018 11:37:12 +0530
+Message-ID: <1529993234-27294-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180626_080750_131297_0BD7C8CA)
+In-Reply-To: <1529993234-27294-1-git-send-email-ajay.kathat@microchip.com>
+References: <1529993234-27294-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-In-Reply-To: <20180629025135.12236-1-yuehaibing@huawei.com>
-References: <20180629025135.12236-1-yuehaibing@huawei.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Sat, 30 Jun 2018 00:47:15 +0300
-Message-ID: <CAHp75Vet-vTz_Ld=Lturmm8NSpK1etvoj-7Wzn4-h=bM2FQgZg@mail.gmail.com> (sfid-20180629_234749_619811_5C5F9E23)
-Subject: Re: [PATCH] atmel: using strlcpy() to avoid possible buffer overflows
-To: YueHaibing <yuehaibing@huawei.com>
-Cc: simon@thekelleys.org.uk, Kalle Valo <kvalo@codeaurora.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        "David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 29, 2018 at 5:51 AM, YueHaibing <yuehaibing@huawei.com> wrote:
-> 'firmware' is a module param which may been longer than firmware_id,
-> so using strlcpy() to guard against overflows
+Avoided the use of static variable 'inactive_time' and move it as part of
+'sta_inactive_t' structure.
 
-strncat() is against overflow, this does a bit more.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
->         priv->firmware_id[0] = '\0';
-...
->         if (firmware) /* module parameter */
-> -               strcpy(priv->firmware_id, firmware);
-> +               strlcpy(priv->firmware_id, firmware, sizeof(priv->firmware_id));
-
-In either case the above '\0' is not needed.
-But it looks like the intention was to use strncat() / strlcat().
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 2251c39f..f61a20d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -110,6 +110,7 @@ struct set_ip_addr {
+ };
+ 
+ struct sta_inactive_t {
++	u32 inactive_time;
+ 	u8 mac[6];
+ };
+ 
+@@ -198,7 +199,6 @@ static u8 rcv_assoc_resp[MAX_ASSOC_RESP_FRAME_SIZE];
+ static s8 rssi;
+ static u8 set_ip[2][4];
+ static u8 get_ip[2][4];
+-static u32 inactive_time;
+ static u32 clients_count;
+ 
+ static void *host_int_parse_join_bss_param(struct network_info *info);
+@@ -1927,7 +1927,7 @@ static void handle_get_inactive_time(struct work_struct *work)
+ 
+ 	wid.id = (u16)WID_GET_INACTIVE_TIME;
+ 	wid.type = WID_INT;
+-	wid.val = (s8 *)&inactive_time;
++	wid.val = (s8 *)&hif_sta_inactive->inactive_time;
+ 	wid.size = sizeof(u32);
+ 
+ 	result = wilc_send_config_pkt(vif, GET_CFG, &wid, 1,
+@@ -3095,7 +3095,7 @@ s32 wilc_get_inactive_time(struct wilc_vif *vif, const u8 *mac,
+ 	else
+ 		wait_for_completion(&msg->work_comp);
+ 
+-	*out_val = inactive_time;
++	*out_val = msg->body.mac_info.inactive_time;
+ 	kfree(msg);
+ 
+ 	return result;
 -- 
-With Best Regards,
-Andy Shevchenko
+2.7.4
