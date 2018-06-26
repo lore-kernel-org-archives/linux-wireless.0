@@ -1,88 +1,279 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:40860 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932327AbeFJKvm (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:51472 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S965052AbeFZM5L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Jun 2018 06:51:42 -0400
-Received: by mail-wr0-f193.google.com with SMTP id l41-v6so17427709wre.7
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2018 03:51:41 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [RFC v3 08/19] mt76x2: add buffer len to mt76x2_mac_write_txwi signature
-Date: Sun, 10 Jun 2018 12:51:15 +0200
-Message-Id: <20180610105126.28425-9-lorenzo.bianconi@redhat.com> (sfid-20180610_125148_553054_FCC6FB1C)
+        Tue, 26 Jun 2018 08:57:11 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com,
+        ilan.peer@intel.com, johannes@sipsolutions.net,
+        liad.kaufman@intel.com, sara.sharon@intel.com,
+        shaul.triebitz@intel.com, Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 26 Jun 2018 15:56:55 +0300
+Message-Id: <20180626125655.11747-5-luca@coelho.fi> (sfid-20180626_145716_277982_43B9B1C9)
+In-Reply-To: <20180626125655.11747-1-luca@coelho.fi>
+References: <20180626125655.11747-1-luca@coelho.fi>
+Subject: [PATCH 4/4] iwlwifi: mvm: add radiotap data for HE
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add frame length to mt76x2_mac_write_txwi routine signature and do not
-fetch it from skb since txwi data structure is added at the beginning of
-the skb for usb based devices and mt76x2_mac_write_txwi will be shared
-between pci and usb related code
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Add HE information to the radiotap data.
+
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.c | 6 +++---
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.h | 2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_tx.c  | 2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 169 +++++++++++++++++-
+ 1 file changed, 163 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-index 3f24756b1b6c..21f0b1536401 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
-@@ -167,7 +167,7 @@ void mt76x2_mac_wcid_set_rate(struct mt76x2_dev *dev, struct mt76_wcid *wcid,
- 
- void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
- 			   struct sk_buff *skb, struct mt76_wcid *wcid,
--			   struct ieee80211_sta *sta)
-+			   struct ieee80211_sta *sta, int len)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 0d66cb232cf1..d82eeb7e0de7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -198,10 +198,20 @@ static void iwl_mvm_pass_packet_to_mac80211(struct iwl_mvm *mvm,
+ 					    struct sk_buff *skb, int queue,
+ 					    struct ieee80211_sta *sta)
  {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_tx_rate *rate = &info->control.rates[0];
-@@ -254,7 +254,7 @@ void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
- 		txwi_flags |= MT_TXWI_FLAGS_TS;
- 
- 	txwi->flags |= cpu_to_le16(txwi_flags);
--	txwi->len_ctl = cpu_to_le16(skb->len);
-+	txwi->len_ctl = cpu_to_le16(len);
+-	if (iwl_mvm_check_pn(mvm, skb, queue, sta))
++	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
++
++	if (iwl_mvm_check_pn(mvm, skb, queue, sta)) {
+ 		kfree_skb(skb);
+-	else
++	} else {
++		unsigned int radiotap_len = 0;
++
++		if (rx_status->flag & RX_FLAG_RADIOTAP_HE)
++			radiotap_len += sizeof(struct ieee80211_radiotap_he);
++		if (rx_status->flag & RX_FLAG_RADIOTAP_HE_MU)
++			radiotap_len += sizeof(struct ieee80211_radiotap_he_mu);
++		__skb_push(skb, radiotap_len);
+ 		ieee80211_rx_napi(mvm->hw, sta, skb, napi);
++	}
  }
  
- static void mt76x2_remove_hdr_pad(struct sk_buff *skb, int len)
-@@ -717,7 +717,7 @@ mt76_write_beacon(struct mt76x2_dev *dev, int offset, struct sk_buff *skb)
- 	if (WARN_ON_ONCE(beacon_len < skb->len + sizeof(struct mt76x2_txwi)))
- 		return -ENOSPC;
+ static void iwl_mvm_get_signal_strength(struct iwl_mvm *mvm,
+@@ -859,6 +869,8 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	struct ieee80211_sta *sta = NULL;
+ 	struct sk_buff *skb;
+ 	u8 crypt_len = 0;
++	struct ieee80211_radiotap_he *he = NULL;
++	struct ieee80211_radiotap_he_mu *he_mu = NULL;
+ 	u32 he_type = 0xffffffff;
+ 	/* this is invalid e.g. because puncture type doesn't allow 0b11 */
+ #define HE_PHY_DATA_INVAL ((u64)-1)
+@@ -889,10 +901,43 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	rx_status = IEEE80211_SKB_RXCB(skb);
  
--	mt76x2_mac_write_txwi(dev, &txwi, skb, NULL, NULL);
-+	mt76x2_mac_write_txwi(dev, &txwi, skb, NULL, NULL, skb->len);
+ 	if (rate_n_flags & RATE_MCS_HE_MSK) {
+-		if (phy_info & IWL_RX_MPDU_PHY_TSF_OVERLOAD)
++		static const struct ieee80211_radiotap_he known = {
++			.data1 = cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA1_DATA_MCS_KNOWN |
++					     IEEE80211_RADIOTAP_HE_DATA1_DATA_DCM_KNOWN |
++					     IEEE80211_RADIOTAP_HE_DATA1_STBC_KNOWN |
++					     IEEE80211_RADIOTAP_HE_DATA1_CODING_KNOWN),
++			.data2 = cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA2_GI_KNOWN |
++					     IEEE80211_RADIOTAP_HE_DATA2_TXBF_KNOWN),
++		};
++		static const struct ieee80211_radiotap_he_mu mu_known = {
++			.flags1 = cpu_to_le16(IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_MCS_KNOWN |
++					      IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_DCM_KNOWN |
++					      IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_SYMS_USERS_KNOWN |
++					      IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_COMP_KNOWN),
++			.flags2 = cpu_to_le16(IEEE80211_RADIOTAP_HE_MU_FLAGS2_PUNC_FROM_SIG_A_BW_KNOWN),
++		};
++		unsigned int radiotap_len = 0;
++
++		he = skb_put_data(skb, &known, sizeof(known));
++		radiotap_len += sizeof(known);
++		rx_status->flag |= RX_FLAG_RADIOTAP_HE;
++
++		he_type = rate_n_flags & RATE_MCS_HE_TYPE_MSK;
++
++		if (phy_info & IWL_RX_MPDU_PHY_TSF_OVERLOAD) {
+ 			he_phy_data =
+ 				le64_to_cpu(desc->he_phy_data);
+-		he_type = rate_n_flags & RATE_MCS_HE_TYPE_MSK;
++
++			if (he_type == RATE_MCS_HE_TYPE_MU) {
++				he_mu = skb_put_data(skb, &mu_known,
++						     sizeof(mu_known));
++				radiotap_len += sizeof(mu_known);
++				rx_status->flag |= RX_FLAG_RADIOTAP_HE_MU;
++			}
++		}
++
++		/* temporarily hide the radiotap data */
++		__skb_pull(skb, radiotap_len);
+ 	}
  
- 	mt76_wr_copy(dev, offset, &txwi, sizeof(txwi));
- 	offset += sizeof(txwi);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
-index c048cd06df6b..5af0107ba748 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
-@@ -166,7 +166,7 @@ int mt76x2_mac_process_rx(struct mt76x2_dev *dev, struct sk_buff *skb,
- 			  void *rxi);
- void mt76x2_mac_write_txwi(struct mt76x2_dev *dev, struct mt76x2_txwi *txwi,
- 			   struct sk_buff *skb, struct mt76_wcid *wcid,
--			   struct ieee80211_sta *sta);
-+			   struct ieee80211_sta *sta, int len);
- void mt76x2_mac_wcid_setup(struct mt76x2_dev *dev, u8 idx, u8 vif_idx, u8 *mac);
- int mt76x2_mac_wcid_set_key(struct mt76x2_dev *dev, u8 idx,
- 			    struct ieee80211_key_conf *key);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-index e46eafc4c436..d16d438173e4 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-@@ -159,7 +159,7 @@ int mt76x2_tx_prepare_skb(struct mt76_dev *mdev, void *txwi,
- 	if (q == &dev->mt76.q_tx[MT_TXQ_PSD] && wcid && wcid->idx < 128)
- 		mt76x2_mac_wcid_set_drop(dev, wcid->idx, false);
+ 	if (iwl_mvm_rx_crypto(mvm, hdr, rx_status, phy_info, desc,
+@@ -921,6 +966,13 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 		/* TSF as indicated by the firmware is at INA time */
+ 		rx_status->flag |= RX_FLAG_MACTIME_PLCP_START;
+ 	} else if (he_type == RATE_MCS_HE_TYPE_SU) {
++		he->data1 |=
++			cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA1_UL_DL_KNOWN);
++		if (FIELD_GET(IWL_RX_HE_PHY_UPLINK,
++			      le64_to_cpu(desc->he_phy_data)))
++			he->data3 |=
++				cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA3_UL_DL);
++
+ 		if (!queue && !(phy_info & IWL_RX_MPDU_PHY_AMPDU)) {
+ 			rx_status->ampdu_reference = mvm->ampdu_ref;
+ 			mvm->ampdu_ref++;
+@@ -931,8 +983,28 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 				      le64_to_cpu(desc->he_phy_data)))
+ 				rx_status->flag |= RX_FLAG_AMPDU_EOF_BIT;
+ 		}
++	} else if (he_mu && he_phy_data != HE_PHY_DATA_INVAL) {
++		he_mu->flags1 |=
++			le16_encode_bits(FIELD_GET(IWL_RX_HE_PHY_SIBG_SYM_OR_USER_NUM_MASK,
++						   he_phy_data),
++					 IEEE80211_RADIOTAP_HE_MU_FLAGS2_SIG_B_SYMS_USERS);
++		he_mu->flags1 |=
++			le16_encode_bits(FIELD_GET(IWL_RX_HE_PHY_SIGB_DCM,
++						   he_phy_data),
++					 IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_DCM);
++		he_mu->flags1 |=
++			le16_encode_bits(FIELD_GET(IWL_RX_HE_PHY_SIGB_MCS_MASK,
++						   he_phy_data),
++					 IEEE80211_RADIOTAP_HE_MU_FLAGS1_SIG_B_MCS);
++		he_mu->flags2 |=
++			le16_encode_bits(FIELD_GET(IWL_RX_HE_PHY_SIGB_COMPRESSION,
++						   he_phy_data),
++					 IEEE80211_RADIOTAP_HE_MU_FLAGS2_SIG_B_COMP);
++		he_mu->flags2 |=
++			le16_encode_bits(FIELD_GET(IWL_RX_HE_PHY_PREAMBLE_PUNC_TYPE_MASK,
++						   he_phy_data),
++					 IEEE80211_RADIOTAP_HE_MU_FLAGS2_PUNC_FROM_SIG_A_BW);
+ 	}
+-
+ 	rx_status->device_timestamp = le32_to_cpu(desc->gp2_on_air_rise);
+ 	rx_status->band = desc->channel > 14 ? NL80211_BAND_5GHZ :
+ 					       NL80211_BAND_2GHZ;
+@@ -1132,6 +1204,17 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			rx_status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_2x996;
+ 			break;
+ 		}
++		he->data2 |=
++			le16_encode_bits(offs,
++					 IEEE80211_RADIOTAP_HE_DATA2_RU_OFFSET);
++		he->data2 |=
++			cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA2_PRISEC_80_KNOWN);
++		if (he_phy_data & IWL_RX_HE_PHY_RU_ALLOC_SEC80)
++			he->data2 |=
++				cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA2_PRISEC_80_SEC);
++	} else if (he) {
++		he->data1 |=
++			cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA1_BW_RU_ALLOC_KNOWN);
+ 	}
  
--	mt76x2_mac_write_txwi(dev, txwi, skb, wcid, sta);
-+	mt76x2_mac_write_txwi(dev, txwi, skb, wcid, sta, skb->len);
+ 	if (!(rate_n_flags & RATE_MCS_CCK_MSK) &&
+@@ -1158,7 +1241,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 		rx_status->enc_flags |= stbc << RX_ENC_FLAG_STBC_SHIFT;
+ 		if (rate_n_flags & RATE_MCS_BF_MSK)
+ 			rx_status->enc_flags |= RX_ENC_FLAG_BF;
+-	} else if (rate_n_flags & RATE_MCS_HE_MSK) {
++	} else if (he) {
+ 		u8 stbc = (rate_n_flags & RATE_MCS_STBC_MSK) >>
+ 				RATE_MCS_STBC_POS;
+ 		rx_status->nss =
+@@ -1173,6 +1256,20 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 		rx_status->he_dcm =
+ 			!!(rate_n_flags & RATE_HE_DUAL_CARRIER_MODE_MSK);
  
- 	ret = mt76x2_insert_hdr_pad(skb);
- 	if (ret < 0)
++#define CHECK_TYPE(F)							\
++	BUILD_BUG_ON(IEEE80211_RADIOTAP_HE_DATA1_FORMAT_ ## F !=	\
++		     (RATE_MCS_HE_TYPE_ ## F >> RATE_MCS_HE_TYPE_POS))
++
++		CHECK_TYPE(SU);
++		CHECK_TYPE(EXT_SU);
++		CHECK_TYPE(MU);
++		CHECK_TYPE(TRIG);
++
++		he->data1 |= cpu_to_le16(he_type >> RATE_MCS_HE_TYPE_POS);
++
++		if (rate_n_flags & RATE_MCS_BF_POS)
++			he->data5 |= cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA5_TXBF);
++
+ 		switch ((rate_n_flags & RATE_MCS_HE_GI_LTF_MSK) >>
+ 			RATE_MCS_HE_GI_LTF_POS) {
+ 		case 0:
+@@ -1191,6 +1288,65 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 				rx_status->he_gi = NL80211_RATE_INFO_HE_GI_3_2;
+ 			break;
+ 		}
++
++		switch (he_type) {
++		case RATE_MCS_HE_TYPE_SU: {
++			u16 val;
++
++			/* LTF syms correspond to streams */
++			he->data2 |=
++				cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA2_NUM_LTF_SYMS_KNOWN);
++			switch (rx_status->nss) {
++			case 1:
++				val = 0;
++				break;
++			case 2:
++				val = 1;
++				break;
++			case 3:
++			case 4:
++				val = 2;
++				break;
++			case 5:
++			case 6:
++				val = 3;
++				break;
++			case 7:
++			case 8:
++				val = 4;
++				break;
++			default:
++				WARN_ONCE(1, "invalid nss: %d\n",
++					  rx_status->nss);
++				val = 0;
++			}
++			he->data5 |=
++				le16_encode_bits(val,
++						 IEEE80211_RADIOTAP_HE_DATA5_NUM_LTF_SYMS);
++			}
++			break;
++		case RATE_MCS_HE_TYPE_MU: {
++			u16 val;
++
++			if (he_phy_data == HE_PHY_DATA_INVAL)
++				break;
++
++			val = FIELD_GET(IWL_RX_HE_PHY_HE_LTF_NUM_MASK,
++					le64_to_cpu(desc->he_phy_data));
++
++			he->data2 |=
++				cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA2_NUM_LTF_SYMS_KNOWN);
++			he->data5 |=
++				cpu_to_le16(FIELD_PREP(
++					IEEE80211_RADIOTAP_HE_DATA5_NUM_LTF_SYMS,
++					val));
++			}
++			break;
++		case RATE_MCS_HE_TYPE_EXT_SU:
++		case RATE_MCS_HE_TYPE_TRIG:
++			/* not supported yet */
++			break;
++		}
+ 	} else {
+ 		int rate = iwl_mvm_legacy_rate_to_mac80211_idx(rate_n_flags,
+ 							       rx_status->band);
+@@ -1202,6 +1358,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			goto out;
+ 		}
+ 		rx_status->rate_idx = rate;
++
+ 	}
+ 
+ 	/* management stuff on default queue */
 -- 
-2.17.1
+2.18.0
