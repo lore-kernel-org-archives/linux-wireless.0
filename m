@@ -1,88 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:2558 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751682AbeFZGHT (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:43696 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750873AbeFZFER (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Jun 2018 02:07:19 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@Microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 02/12] staging: wilc1000: remove unused marco related to HIF commands
-Date: Tue, 26 Jun 2018 11:37:04 +0530
-Message-ID: <1529993234-27294-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180626_080728_038683_E3D16249)
-In-Reply-To: <1529993234-27294-1-git-send-email-ajay.kathat@microchip.com>
-References: <1529993234-27294-1-git-send-email-ajay.kathat@microchip.com>
+        Tue, 26 Jun 2018 01:04:17 -0400
+Received: by mail-pf0-f194.google.com with SMTP id y8-v6so7518453pfm.10
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2018 22:04:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180625225937.43aee76c@vmware.local.home>
+References: <000000000000720530056f7f9b63@google.com> <20180626014924.GB11229@jagdpanzerIV>
+ <20180625225937.43aee76c@vmware.local.home>
+From: Dmitry Vyukov <dvyukov@google.com>
+Date: Tue, 26 Jun 2018 07:03:56 +0200
+Message-ID: <CACT4Y+YWFhUk9cdpSR5+yR3+D6mNFUz2WwRcHULCNpj0-4qXyg@mail.gmail.com> (sfid-20180626_070431_873592_32EE007F)
+Subject: Re: INFO: rcu detected stall in vprintk_emit
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        syzbot <syzbot+d29d18215e477cfbfbdd@syzkaller.appspotmail.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Petr Mladek <pmladek@suse.com>,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
+        syzkaller-bugs <syzkaller-bugs@googlegroups.com>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After removing the multiplexing of hif commands in hif_if_work()
-macros prefix with 'HOST_IF_MSG_' are not required. Also 'id' field in
-host_if_msg is not required anymore.
+On Tue, Jun 26, 2018 at 4:59 AM, Steven Rostedt <rostedt@goodmis.org> wrote:
+> On Tue, 26 Jun 2018 10:49:24 +0900
+> Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com> wrote:
+>
+>> So we can try switching to ratelimited error reporting
+>> [that would be option A]:
+>>
+>> ---
+>>
+>> diff --git a/net/nfc/llcp_commands.c b/net/nfc/llcp_commands.c
+>> index 2ceefa183cee..2f3becb709b8 100644
+>> --- a/net/nfc/llcp_commands.c
+>> +++ b/net/nfc/llcp_commands.c
+>> @@ -755,7 +755,7 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
+>>               pdu = nfc_alloc_send_skb(sock->dev, &sock->sk, MSG_DONTWAIT,
+>>                                        frag_len + LLCP_HEADER_SIZE, &err);
+>>               if (pdu == NULL) {
+>> -                     pr_err("Could not allocate PDU\n");
+>> +                     pr_err_ratelimited("Could not allocate PDU\n");
+>>                       continue;
+>>               }
+>>
+>> ---
+>>
+>>
+>> Or ratelimited error reporting and cond_resched()
+>> [that would be option B]:
+>
+> I don't think this is a printk() issue per se, so I think Option B is
+> the only option. You should not get stuck in an infinite loop if we run
+> short on memory. Perhaps we could have an Option C which would exit
+> this loop gracefully with some kind of error. But I haven't looked at
+> the surrounding code to be sure if that is possible.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.c | 36 -------------------------------
- 1 file changed, 36 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 4f6008e..998e0ab 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1,41 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0
- #include "wilc_wfi_netdevice.h"
- 
--#define HOST_IF_MSG_SCAN                        0
--#define HOST_IF_MSG_CONNECT                     1
--#define HOST_IF_MSG_RCVD_GNRL_ASYNC_INFO        2
--#define HOST_IF_MSG_KEY                         3
--#define HOST_IF_MSG_RCVD_NTWRK_INFO             4
--#define HOST_IF_MSG_RCVD_SCAN_COMPLETE          5
--#define HOST_IF_MSG_CFG_PARAMS                  6
--#define HOST_IF_MSG_SET_CHANNEL                 7
--#define HOST_IF_MSG_DISCONNECT                  8
--#define HOST_IF_MSG_GET_RSSI                    9
--#define HOST_IF_MSG_ADD_BEACON                  11
--#define HOST_IF_MSG_DEL_BEACON                  12
--#define HOST_IF_MSG_ADD_STATION                 13
--#define HOST_IF_MSG_DEL_STATION                 14
--#define HOST_IF_MSG_EDIT_STATION                15
--#define HOST_IF_MSG_SCAN_TIMER_FIRED            16
--#define HOST_IF_MSG_CONNECT_TIMER_FIRED         17
--#define HOST_IF_MSG_POWER_MGMT                  18
--#define HOST_IF_MSG_GET_INACTIVETIME            19
--#define HOST_IF_MSG_REMAIN_ON_CHAN              20
--#define HOST_IF_MSG_REGISTER_FRAME              21
--#define HOST_IF_MSG_LISTEN_TIMER_FIRED          22
--#define HOST_IF_MSG_SET_WFIDRV_HANDLER          24
--#define HOST_IF_MSG_GET_MAC_ADDRESS             26
--#define HOST_IF_MSG_SET_OPERATION_MODE          27
--#define HOST_IF_MSG_SET_IPADDRESS               28
--#define HOST_IF_MSG_GET_IPADDRESS               29
--#define HOST_IF_MSG_GET_STATISTICS              31
--#define HOST_IF_MSG_SET_MULTICAST_FILTER        32
--#define HOST_IF_MSG_DEL_BA_SESSION              34
--#define HOST_IF_MSG_DEL_ALL_STA                 36
--#define HOST_IF_MSG_SET_TX_POWER		38
--#define HOST_IF_MSG_GET_TX_POWER		39
--#define HOST_IF_MSG_EXIT                        100
--
- #define HOST_IF_SCAN_TIMEOUT                    4000
- #define HOST_IF_CONNECT_TIMEOUT                 9500
- 
-@@ -180,7 +145,6 @@ union message_body {
- };
- 
- struct host_if_msg {
--	u16 id;
- 	union message_body body;
- 	struct wilc_vif *vif;
- 	struct work_struct work;
--- 
-2.7.4
+I suspect this is not even OOM. This is probably some persistent
+logical condition that makes the allocation function fail, either we
+ask for too much, or socket in some bad state. Potentially this is
+even triggerable remotely because there are some remove variables
+involved in size calculation.
