@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:51690 "EHLO mail.bugwerft.de"
+Received: from mail.toke.dk ([52.28.52.200]:50403 "EHLO mail.toke.dk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751352AbeFXUql (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Jun 2018 16:46:41 -0400
-From: Daniel Mack <daniel@zonque.org>
-Subject: Suspend of SDIO function devices
-To: Ulf Hansson <ulf.hansson@linaro.org>, Chris Ball <chris@printf.net>
-Cc: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        "libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
-        linux-wireless@vger.kernel.org,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Message-ID: <b8a41e3a-7100-ae17-1275-d1b40a026201@zonque.org> (sfid-20180624_224658_086402_B7589870)
-Date: Sun, 24 Jun 2018 22:46:39 +0200
+        id S1752730AbeFZLZn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Jun 2018 07:25:43 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Manikanta Pubbisetty <mpubbise@codeaurora.org>,
+        johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Subject: Re: [PATCH] mac80211: add stop/start logic for software TXQs
+In-Reply-To: <1529997415-20551-1-git-send-email-mpubbise@codeaurora.org>
+References: <1529997415-20551-1-git-send-email-mpubbise@codeaurora.org>
+Date: Tue, 26 Jun 2018 13:25:46 +0200
+Message-ID: <878t71n611.fsf@toke.dk> (sfid-20180626_132547_513469_667A84A7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Manikanta Pubbisetty <mpubbise@codeaurora.org> writes:
 
-I'm currently looking into the suspend callbacks of drivers of hardware 
-that use an SDIO interface, specifically the libertas_sdio driver:
+> We can still invoke netif stop/wake APIs when wake_tx_queue is
+> implemented but this could lead to packet drops in network layer;
+> adding stop/start logic for software TXQs in mac80211 instead makes
+> more sense; the change proposed adds the same in mac80211.
 
-    drivers/net/wireless/marvell/libertas/if_sdio.c
-
-The comments in if_sdio_suspend() suggest that by returning -ENOSYS due 
-to runtime-dependant circumstances, the MMC core will remove the card 
-entirely at suspend time. I then searched for the bits that do that and 
-failed, until I came across this old commit, which first appeared in 3.16:
-
-    573185cc7e6 mmc: core: Invoke sdio func driver's PM callbacks from 
-the sdio bus
-
-Before that commit, the mmc core did in fact invoke the card's 
-.suspend() callback manually and if it returned a non-zero result, it 
-would remove the card. Now that the generic pm functions are in place, 
-this does no longer happen because the host and its clients are 
-independent entities. Consequently, systems fail to suspend when the 
-libertas_sdio module is loaded.
-
-The pm notifier code in drivers/mmc/core/core.c does still handle cases 
-where no pm functions are provided at all (in which case it removes the 
-card), but it doesn't handle -ENOSYS return values at runtime.
-
-Now I'm wondering how this is supposed to work, and which end needs 
-fixing. The mmc/sdio core by restoring the old logic from before 
-573185cc7e6, or the libertas driver.
-
-The platform I'm working on does not retain power for the SDIO slaves, 
-so a complete re-init is necessary after resume.
-
-Please advise, I'm happy to test approaches and send patches.
+I agree with the approach; having packets queued in mac80211 while the
+queues are stopped also means that CoDel can react to them when they are
+resumed again.
 
 
-Thanks,
-Daniel
+> +	list_for_each_entry_rcu(sta, &local->sta_list, list) {
+> +		if (!atomic_read(&sta->txqs_paused))
+> +			continue;
+> +
+> +		atomic_set(&sta->txqs_paused, 0);
+
+I'm not terribly well-versed in the kernel atomics, but doesn't the
+split of read and set kinda defeat the point of using them? Also, as
+this is under RCU, why do you need an atomic in the first place?
+
+-Toke
