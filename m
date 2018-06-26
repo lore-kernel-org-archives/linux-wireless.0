@@ -1,85 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:39524 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751590AbeFEIda (ORCPT
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:1395 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751105AbeFZGHk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Jun 2018 04:33:30 -0400
-Date: Tue, 5 Jun 2018 10:33:25 +0200
-From: Thibaut Robert <thibaut.robert@gmail.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] staging: wilc1000: fix some endianness sparse
- warnings
-Message-ID: <20180605083325.GA6965@L80496> (sfid-20180605_103344_512702_2D5514EC)
-References: <20180529191143.13081-1-thibaut.robert@gmail.com>
- <20180530111725.gmigyddsp2i6mgzw@mwanda>
- <20180604193250.GB32753@L80496>
- <20180605073631.cvp2iuef4yb636jz@mwanda>
+        Tue, 26 Jun 2018 02:07:40 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH 08/12] staging: wilc1000: handle freeing of key data in wilc_add_ptk()
+Date: Tue, 26 Jun 2018 11:37:10 +0530
+Message-ID: <1529993234-27294-9-git-send-email-ajay.kathat@microchip.com> (sfid-20180626_080745_310063_95EBD897)
+In-Reply-To: <1529993234-27294-1-git-send-email-ajay.kathat@microchip.com>
+References: <1529993234-27294-1-git-send-email-ajay.kathat@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20180605073631.cvp2iuef4yb636jz@mwanda>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le mardi 05 juin 2018 à 10:36:31 (+0300), Dan Carpenter a écrit :
-> On Mon, Jun 04, 2018 at 09:32:50PM +0200, Thibaut Robert wrote:
-> > Le mercredi 30 mai 2018 à 14:17:25 (+0300), Dan Carpenter a écrit :
-> > > On Tue, May 29, 2018 at 09:11:43PM +0200, Thibaut Robert wrote:
-> > > > diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> > > > index e248702ee519..745bf5ca2622 100644
-> > > > --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> > > > +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> > > > @@ -1431,7 +1431,7 @@ void wilc_wfi_p2p_rx(struct net_device *dev, u8 *buff, u32 size)
-> > > >  
-> > > >  	freq = ieee80211_channel_to_frequency(curr_channel, NL80211_BAND_2GHZ);
-> > > >  
-> > > > -	if (!ieee80211_is_action(buff[FRAME_TYPE_ID])) {
-> > > > +	if (!ieee80211_is_action(cpu_to_le16(buff[FRAME_TYPE_ID]))) {
-> > > 
-> > > "buff" comes from the network, it's going to be little endian, not cpu
-> > > endian.  The rest of the function treats it as CPU endian but I'm pretty
-> > > sure it's wrong...
-> > buff comes from the network but we are looking at single byte here.
-> > ieee80211_is_action expects an le16, so we I added this to extend an u8
-> > to an le16. Is this incorrect ?
-> > 
-> > Or maybe we the buff has the second byte ? but that I can't tell. 
-> 
-> You raise a good point that I hadn't seen. The original code is clearly
-> buggy.  But your fix isn't correct either...  The other thing to
-> consider is that cpu_to_le16() is basically a cast to u16 on x86 so it's
-> a no-op here.
-The sparse warning is clearly spotting a real issue. I tried to at least
-have big endian handle correctly the 0-255 case. I am willing to drop
-the change (since I agree it's not very satisfying and will mask an issue), 
-but may I ask you to explain how it is wrong ? How would you correctly expand 
-an u8 to __le16 ? I think in big endian we need to swap the bytes.
+Handle freeing of memory allocated to store the 'key' in wilc_add_ptk()
+function. Once work completion notification is received, free the
+memory allocated to avoid missing of free in work function sepecially
+for error scenario.
 
-> 
-> Really the right thing is to not treat buff as an array of u8 but a
-> struct.  The code assumes that frame_type is 0-255 but probably it's
-> supposed to go up to U16_MAX.
-> 
-> struct whatever {
-> 	__le16 frame_type;
-> 	...
-> 
-> There probably is already a struct like that, but I don't know what it
-> is.  I don't know this code at all, I'm just guessing.
-> 
-I was thinking the same. I don't know whether this buf contains a
-standard struct or something hw-specific. I'll try to dig further and
-submit a separate patch if I can. Maybe Aditya can give more information
-?
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-
-> regards,
-> dan carpenter
-> 
-
-Regards,
-Thibaut
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 2cc9689..2062f4e 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1724,7 +1724,6 @@ static void handle_key(struct work_struct *work)
+ 
+ out_wpa_ptk:
+ 		complete(&msg->work_comp);
+-		kfree(hif_key->attr.wpa.key);
+ 		break;
+ 
+ 	case PMKSA:
+@@ -2735,8 +2734,6 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
+ 	}
+ 
+ 	wait_for_completion(&msg->work_comp);
+-	kfree(msg);
+-	return 0;
+ 
+ free_key:
+ 	kfree(msg->body.key_info.attr.wpa.key);
+-- 
+2.7.4
