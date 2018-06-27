@@ -1,61 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:46090 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751507AbeFEKoI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Jun 2018 06:44:08 -0400
-Date: Tue, 5 Jun 2018 03:44:04 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: "Reizer, Eyal" <eyalr@ti.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>,
-        "Mishol, Guy" <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        "Hahn, Maital" <maitalm@ti.com>,
-        "Altshul, Maxim" <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
-Subject: Re: [EXTERNAL] Re: [RFT 3/6] wlcore: Add support for runtime PM
-Message-ID: <20180605104404.GD5738@atomide.com> (sfid-20180605_124412_883234_C279E102)
-References: <20180529180605.73622-1-tony@atomide.com>
- <20180529180605.73622-4-tony@atomide.com>
- <20180531171420.GQ5705@atomide.com>
- <fe42f9d6bb744cd39e38db8f51c0b74e@ti.com>
- <20180605042000.GA5738@atomide.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:38776 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934130AbeF0PiA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Jun 2018 11:38:00 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc: nbd@nbd.name, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/4] mt76x2: dfs: add sw event ring buffer
+References: <20180616155621.30539-3-lorenzo.bianconi@redhat.com>
+Date: Wed, 27 Jun 2018 18:37:57 +0300
+In-Reply-To: <20180616155621.30539-3-lorenzo.bianconi@redhat.com> (Lorenzo
+        Bianconi's message of "Sat, 16 Jun 2018 17:56:19 +0200")
+Message-ID: <878t709r56.fsf@purkki.adurom.net> (sfid-20180627_173804_866370_656B97F9)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180605042000.GA5738@atomide.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Tony Lindgren <tony@atomide.com> [180605 04:22]:
-> * Reizer, Eyal <eyalr@ti.com> [180603 06:07]:
-> > I have noticed the following recovery a couple of times on my setup when the board was 
-> > just sitting for a long time with just pings
-> > It starts with a firmware recovery started from the interrupt handler but the recovery fails 
-> 
-> Sounds like the recovery needs some more work :)
-> 
-> > leaving the sdio stuck.
-> > At this stage the only way to get out of it is unload/load of the driver modules.
-> > Have you seen this on your side as well?
-> 
-> Hmm I don't think I've seen this one yet.
-> 
-> > 64 bytes from 192.168.100.1: seq=32772 ttl=64 time=9.644 ms
-> > 64 bytes from 192.168.100.1: seq=32773 ttl=64 time=9.572 ms
-> > 64 bytes from 192.168.100.1: seq=32774 ttl=64 time=10.974 ms
-> > 64 bytes from 192.168.100.1: seq=32775 ttl=64 time=9.618 ms
-> > [127899.040526] wlcore: ERROR SW watchdog interrupt received! starting recovery.
-> 
-> Do you know what does the SW watchdog means here? Does it mean the
-> interrupt did not get delivered to wlcore? Or a spurious IRQ to wlcore?
-> Or a timeout waiting for the ELP wake interrupt?
+Lorenzo Bianconi <lorenzo.bianconi@redhat.com> writes:
 
-Also, can you check if patch "[RFT 7/6] wlcore: Make sure firmware is initialized
-in wl1271_op_add_interface()" already fixes this issue if you did not have it
-already applied?
+> Introduce sw event ring buffer to queue DFS pulses loaded from the hw.
+> Radar pulses will be used in DFS sw detector
+>
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-Regards,
+[...]
 
-Tony
+> +static bool mt76x2_dfs_fetch_event(struct mt76x2_dev *dev,
+> +				   struct mt76x2_dfs_event *event)
+> +{
+> +	u32 i, data[4];
+> +
+> +	for (i = 0; i < ARRAY_SIZE(data); i++) {
+> +		/* 1st: DFS_R37[31]: 0 (engine 0) - 1 (engine 2)
+> +		 * 2nd: DFS_R37[21:0]: pulse time
+> +		 * 3rd: DFS_R37[11:0]: pulse width
+> +		 * 3rd: DFS_R37[25:16]: phase
+> +		 * 4th: DFS_R37[12:0]: current pwr
+> +		 * 4th: DFS_R37[21:16]: pwr stable counter
+> +		 *
+> +		 * 1st: DFS_R37[31:0] set to 0xffffffff means no event detected
+> +		 */
+> +		data[i] = mt76_rr(dev, MT_BBP(DFS, 37));
+> +	}
+> +
+> +	if (data[0] == GENMASK(31, 0))
+> +		return false;
+> +
+> +	event->engine = (data[0] & BIT(31)) ? 2 : 0;
+> +	event->ts = data[1] & GENMASK(21, 0);
+> +	event->width = data[2] & GENMASK(11, 0);
+
+No magic values and that data[2] stuff, please. Instead create a proper
+struct and defines for the GENMASKs.
+
+-- 
+Kalle Valo
