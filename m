@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:35881 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750923AbeFZEWN (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42984 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751177AbeF0Pyj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Jun 2018 00:22:13 -0400
-Date: Tue, 26 Jun 2018 13:22:08 +0900
-From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        syzbot <syzbot+d29d18215e477cfbfbdd@syzkaller.appspotmail.com>,
-        linux-kernel@vger.kernel.org, pmladek@suse.com,
-        sergey.senozhatsky@gmail.com, syzkaller-bugs@googlegroups.com,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: INFO: rcu detected stall in vprintk_emit
-Message-ID: <20180626042208.GA31439@jagdpanzerIV> (sfid-20180626_062257_730863_1A0D7454)
-References: <000000000000720530056f7f9b63@google.com>
- <20180626014924.GB11229@jagdpanzerIV>
- <20180625225937.43aee76c@vmware.local.home>
+        Wed, 27 Jun 2018 11:54:39 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180625225937.43aee76c@vmware.local.home>
+Subject: Re: [1/6] qtnfmac: implement net_device_ops callback to set MAC
+ address
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180531091102.28666-2-sergey.matyukevich.os@quantenna.com>
+References: <20180531091102.28666-2-sergey.matyukevich.os@quantenna.com>
+To: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>
+Message-Id: <20180627155439.35FE96071C@smtp.codeaurora.org> (sfid-20180627_175443_207042_66F79849)
+Date: Wed, 27 Jun 2018 15:54:39 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On (06/25/18 22:59), Steven Rostedt wrote:
-> > Or ratelimited error reporting and cond_resched()
-> > [that would be option B]:
+Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
+
+> From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 > 
-> I don't think this is a printk() issue per se, so I think Option B is
-> the only option. You should not get stuck in an infinite loop if we run
-> short on memory. Perhaps we could have an Option C which would exit
-> this loop gracefully with some kind of error. But I haven't looked at
-> the surrounding code to be sure if that is possible.
+> Implement net_device_ops::ndo_set_mac_address callback to allow for
+> setting interface MAC address. Implementation is done through existing
+> CHANGE_INTF firmware command. All validation is to be done by firmware.
+> 
+> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
 
-Agree. I like Option B - an endless loop is the root cause, at the same
-time filling up logbuf with useless data is useless. Can't tell if Option C
-is feasible, up to networking people.
+2 patches applied to wireless-drivers-next.git, thanks.
 
-	-ss
+ed9f34bb9d33 qtnfmac: implement net_device_ops callback to set MAC address
+6fbef9540af0 qtnfmac: enable source MAC address randomization support
+
+-- 
+https://patchwork.kernel.org/patch/10440557/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
