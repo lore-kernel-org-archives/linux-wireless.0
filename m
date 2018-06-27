@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:14346 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752723AbeFJU3k (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:49832 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S965204AbeF0PAc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Jun 2018 16:29:40 -0400
-From: Maya Erez <merez@codeaurora.org>
+        Wed, 27 Jun 2018 11:00:32 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH v2 0/7] wil6210 patches
-Date: Sun, 10 Jun 2018 23:29:28 +0300
-Message-Id: <1528662575-7746-1-git-send-email-merez@codeaurora.org> (sfid-20180610_222957_361582_88584028)
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Brian Norris" <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, 'Xinming Hu' <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>
+Subject: RE: [EXT] Re: [PATCH] mwifiex: fix nested rtnl locking on
+ BG_SCAN_STOPPED
+Date: Wed, 27 Jun 2018 15:00:26 +0000
+Message-ID: <b534bd7a3e6a43baa7593a493f18e6fa@SC-EXCH02.marvell.com> (sfid-20180627_170036_365884_731EF693)
+References: <1524633572-5588-1-git-send-email-gbhat@marvell.com>
+ <87in8fbvrr.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes from v1:
-- Removal of module parameters
-- Addition of debugfs entries for configuring enhanced DMA
-- Fixing kbuild bot error
-- Enabling AMSDU by default (based on FW support)
-- Fixing L2 translation mode
+Hi Kalle,
 
-The following set of patches add support for new wil6210 device (Talyn ver 2.0):
-- Definition of the new device ID and memory areas
-- New boot flow procedure and reset sequence
-- Support new DMA interface - enhanced DMA
-- Support new HW offloads, such as TSO, RX reorder and AMSDU
+> > >
+> > >   case EVENT_BG_SCAN_STOPPED:
+> > >           dev_dbg(adapter->dev, "event: BGS_STOPPED\n");
+> > > -         cfg80211_sched_scan_stopped(priv->wdev.wiphy, 0);
+> > > +         if (rtnl_is_locked())
+> > > +                 cfg80211_sched_scan_stopped_rtnl(priv-
+> > >wdev.wiphy, 0);
+> > > +         else
+> > > +                 cfg80211_sched_scan_stopped(priv->wdev.wiphy,
+> > 0);
+> >
+> > IMHO checking if a lock is taking is rather ugly and an indication there's a
+> > problem with the locking. Instead making an ugly workaround like this I
+> > would rather investigate who is holding the rtnl and solve that.
+> There can be applications trying to access driver(via cfg80211), holding
+> rtnl_lock.
+> For example(in our case):
+> 1. "iw dev"  was called, when BG_SCAN was active.
+> 2. NL80211_CMD_GET_INTERFACE requires rtnl_lock to be hold(specified in
+> internal_flags)
+> 3. cfg80211 will  hold rtnl_lock before calling "get_tx_power"(in pre_doit).
+> 4. mwifiex will download RF_TX_PWR command to firmware
+> 5. firmware will send BG_SCAN_STOPPED event(since BG_SCAN was active).
+> 6. mwifiex will call "cfg80211_sched_scan_stopped" causing nested rtnl
+> locking.
+>
+> Please share your comments further.
+Let us know your thoughts on above sequence.
 
-Gidon Studinski (3):
-  wil6210: add support for enhanced DMA structures
-  wil6210: initialize TX and RX enhanced DMA rings
-  wil6210: add support for enhanced DMA RX data flows
-
-Maya Erez (4):
-  wil6210: add support for Talyn-MB (Talyn ver 2.0) device
-  wil6210: add support for enhanced DMA TX data flows
-  wil6210: add support for enhanced DMA debugfs
-  wil6210: add support for Talyn-MB boot flow
-
- drivers/net/wireless/ath/wil6210/Makefile     |    1 +
- drivers/net/wireless/ath/wil6210/cfg80211.c   |   12 +-
- drivers/net/wireless/ath/wil6210/debugfs.c    |  490 ++++++--
- drivers/net/wireless/ath/wil6210/ethtool.c    |    2 +-
- drivers/net/wireless/ath/wil6210/interrupt.c  |  225 +++-
- drivers/net/wireless/ath/wil6210/main.c       |  360 +++++-
- drivers/net/wireless/ath/wil6210/netdev.c     |   73 +-
- drivers/net/wireless/ath/wil6210/pcie_bus.c   |   59 +-
- drivers/net/wireless/ath/wil6210/pm.c         |    6 +-
- drivers/net/wireless/ath/wil6210/rx_reorder.c |   21 +-
- drivers/net/wireless/ath/wil6210/trace.h      |   59 +
- drivers/net/wireless/ath/wil6210/txrx.c       |  649 +++++-----
- drivers/net/wireless/ath/wil6210/txrx.h       |  105 +-
- drivers/net/wireless/ath/wil6210/txrx_edma.c  | 1598 +++++++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/txrx_edma.h  |  562 +++++++++
- drivers/net/wireless/ath/wil6210/wil6210.h    |  227 +++-
- drivers/net/wireless/ath/wil6210/wmi.c        |  454 ++++++-
- drivers/net/wireless/ath/wil6210/wmi.h        |  167 ++-
- 18 files changed, 4436 insertions(+), 634 deletions(-)
- create mode 100644 drivers/net/wireless/ath/wil6210/txrx_edma.c
- create mode 100644 drivers/net/wireless/ath/wil6210/txrx_edma.h
-
--- 
-1.9.1
+Regards,
+Ganapathi
