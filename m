@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:37322 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932960AbeFTIpT (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46228 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934246AbeF0QAK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Jun 2018 04:45:19 -0400
-Message-ID: <1529478069.3130.1.camel@sipsolutions.net> (sfid-20180620_104525_661966_DC831A36)
-Subject: Re: [BUG] mac80211: Using smp_processor_id() in preemptible code:
- iwd
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>
-Cc: "McGinn, Dan" <dan.mcginn@imperial.ac.uk>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 20 Jun 2018 09:01:09 +0200
-In-Reply-To: <C7853888-5B20-4695-BD6F-4438B7ADF58D@gmail.com> (sfid-20180620_050502_120486_A63637FB)
-References: <DB5PR06MB106451FE83810B8A129CE1E4A47C0@DB5PR06MB1064.eurprd06.prod.outlook.com>
-         <1529065843.10037.22.camel@sipsolutions.net>
-         <C7853888-5B20-4695-BD6F-4438B7ADF58D@gmail.com>
-         (sfid-20180620_050502_120486_A63637FB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Wed, 27 Jun 2018 12:00:10 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v6,(resend),1/3] bitfield: fix *_encode_bits()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180620065830.6612-2-johannes@sipsolutions.net>
+References: <20180620065830.6612-2-johannes@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+Message-Id: <20180627160009.7F9BC606FA@smtp.codeaurora.org> (sfid-20180627_180025_701928_49215CB0)
+Date: Wed, 27 Jun 2018 16:00:09 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-06-19 at 22:04 -0500, Denis Kenzior wrote:
+Johannes Berg <johannes@sipsolutions.net> wrote:
+
+> There's a bug in *_encode_bits() in using ~field_multiplier() for
+> the check whether or not the constant value fits into the field,
+> this is wrong and clearly ~field_mask() was intended. This was
+> triggering for me for both constant and non-constant values.
 > 
-> Right, but you’re much more aware of all the locking issues than I am.
-
-:-)
-
-> > Clearly this comes from cfg80211 without any locking other than rtnl, so
-> > you don't have preemption disabled. That's the minimum needed to get rid
-> > of the warning you found.
+> Additionally, make this case actually into an compile error.
+> Declaring the extern function that will never exist with just a
+> warning is pointless as then later we'll just get a link error.
 > 
-> In my defense, I did ask you whether there are any potential locking
-> issues in the RFC and you didn’t think there were any.
+> While at it, also fix the indentation in those lines I'm touching.
+> 
+> Finally, as suggested by Andy Shevchenko, add some tests and for
+> that introduce also u8 helpers. The tests don't compile without
+> the fix, showing that it's necessary.
+> 
+> Fixes: 00b0c9b82663 ("Add primitives for manipulating bitfields both in host- and fixed-endian.")
+> Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Yep, I missed that too. More precisely, ISTR actually thinking about it
-and deciding it was fine, so ... my bad for sure.
+3 patches applied to wireless-drivers-next.git, thanks.
 
-> I posted a fix for this.  Could you please review?
+e7d4a95da86e bitfield: fix *_encode_bits()
+37a3862e1238 bitfield: add u8 helpers
+0e2dc70e3d0d bitfield: add tests
 
-I think it's fine. I'll make a pass later today/this week and send
-patches upstream.
+-- 
+https://patchwork.kernel.org/patch/10476545/
 
-johannes
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
