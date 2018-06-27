@@ -1,68 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51318 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:56046 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753909AbeFLLY5 (ORCPT
+        with ESMTP id S934364AbeF0PWw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Jun 2018 07:24:57 -0400
+        Wed, 27 Jun 2018 11:22:52 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Govind Singh <govinds@codeaurora.org>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH] ath10k: snoc: use module_platform_driver() macro
-References: <20180611193540.190255-1-briannorris@chromium.org>
-Date: Tue, 12 Jun 2018 14:24:51 +0300
-In-Reply-To: <20180611193540.190255-1-briannorris@chromium.org> (Brian
-        Norris's message of "Mon, 11 Jun 2018 12:35:40 -0700")
-Message-ID: <87sh5sckn0.fsf@kamboji.qca.qualcomm.com> (sfid-20180612_132517_090870_DF65F03E)
+To: Ganapathi Bhat <gbhat@marvell.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Brian Norris" <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, 'Xinming Hu' <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>
+Subject: Re: [EXT] Re: [PATCH] mwifiex: fix nested rtnl locking on BG_SCAN_STOPPED
+References: <1524633572-5588-1-git-send-email-gbhat@marvell.com>
+        <87in8fbvrr.fsf@purkki.adurom.net>
+        <b534bd7a3e6a43baa7593a493f18e6fa@SC-EXCH02.marvell.com>
+Date: Wed, 27 Jun 2018 18:22:45 +0300
+In-Reply-To: <b534bd7a3e6a43baa7593a493f18e6fa@SC-EXCH02.marvell.com>
+        (Ganapathi Bhat's message of "Wed, 27 Jun 2018 15:00:26 +0000")
+Message-ID: <87zhzgs18a.fsf@kamboji.qca.qualcomm.com> (sfid-20180627_172303_048203_4242E583)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> writes:
+Ganapathi Bhat <gbhat@marvell.com> writes:
 
-> ath10k_snoc_init()/ath10k_snoc_exit() don't add much value;
-> module_platform_driver() can remove the boilerplate.
+> Hi Kalle,
 >
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> ---
->  drivers/net/wireless/ath/ath10k/snoc.c | 20 +-------------------
->  1 file changed, 1 insertion(+), 19 deletions(-)
+>> > >
+>> > >   case EVENT_BG_SCAN_STOPPED:
+>> > >           dev_dbg(adapter->dev, "event: BGS_STOPPED\n");
+>> > > -         cfg80211_sched_scan_stopped(priv->wdev.wiphy, 0);
+>> > > +         if (rtnl_is_locked())
+>> > > +                 cfg80211_sched_scan_stopped_rtnl(priv-
+>> > >wdev.wiphy, 0);
+>> > > +         else
+>> > > +                 cfg80211_sched_scan_stopped(priv->wdev.wiphy,
+>> > 0);
+>> >
+>> > IMHO checking if a lock is taking is rather ugly and an indication there's a
+>> > problem with the locking. Instead making an ugly workaround like this I
+>> > would rather investigate who is holding the rtnl and solve that.
+>> There can be applications trying to access driver(via cfg80211), holding
+>> rtnl_lock.
+>> For example(in our case):
+>> 1. "iw dev"  was called, when BG_SCAN was active.
+>> 2. NL80211_CMD_GET_INTERFACE requires rtnl_lock to be hold(specified in
+>> internal_flags)
+>> 3. cfg80211 will  hold rtnl_lock before calling "get_tx_power"(in pre_doit).
+>> 4. mwifiex will download RF_TX_PWR command to firmware
+>> 5. firmware will send BG_SCAN_STOPPED event(since BG_SCAN was active).
+>> 6. mwifiex will call "cfg80211_sched_scan_stopped" causing nested rtnl
+>> locking.
+>>
+>> Please share your comments further.
 >
-> diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-> index a3a7042fe13a..ee74e0060504 100644
-> --- a/drivers/net/wireless/ath/ath10k/snoc.c
-> +++ b/drivers/net/wireless/ath/ath10k/snoc.c
-> @@ -1388,25 +1388,7 @@ static struct platform_driver ath10k_snoc_driver = {
->  			.of_match_table = ath10k_snoc_dt_match,
->  		},
->  };
-> -
-> -static int __init ath10k_snoc_init(void)
-> -{
-> -	int ret;
-> -
-> -	ret = platform_driver_register(&ath10k_snoc_driver);
-> -	if (ret)
-> -		pr_err("failed to register ath10k snoc driver: %d\n",
-> -		       ret);
-> -
-> -	return ret;
-> -}
-> -module_init(ath10k_snoc_init);
-> -
-> -static void __exit ath10k_snoc_exit(void)
-> -{
-> -	platform_driver_unregister(&ath10k_snoc_driver);
-> -}
-> -module_exit(ath10k_snoc_exit);
-> +module_platform_driver(ath10k_snoc_driver);
+> Let us know your thoughts on above sequence.
 
-Yeah, makes sense. And I also checked that this shouldn't conflict with
-Govind's qmi patch:
-
-https://patchwork.kernel.org/patch/10448183/
+Sorry, I don't have time to help with this. Hopefully someone else can.
 
 -- 
 Kalle Valo
