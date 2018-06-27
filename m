@@ -1,55 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:51900 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751588AbeFWWPh (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41290 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752937AbeF0Pq5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 23 Jun 2018 18:15:37 -0400
-From: Colin King <colin.king@canonical.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] brcmsmac: make function wlc_phy_workarounds_nphy_rev1 static
-Date: Sat, 23 Jun 2018 23:15:30 +0100
-Message-Id: <20180623221531.6396-1-colin.king@canonical.com> (sfid-20180624_001613_825334_05E40A11)
-MIME-Version: 1.0
+        Wed, 27 Jun 2018 11:46:57 -0400
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/8] wlcore: Add missing PM call for
+ wlcore_cmd_wait_for_event_or_timeout()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180619094342.81831-2-tony@atomide.com>
+References: <20180619094342.81831-2-tony@atomide.com>
+To: Tony Lindgren <tony@atomide.com>
+Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Message-Id: <20180627154656.9E51960714@smtp.codeaurora.org> (sfid-20180627_174700_986805_33677A33)
+Date: Wed, 27 Jun 2018 15:46:56 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Tony Lindgren <tony@atomide.com> wrote:
 
-The function wlc_phy_workarounds_nphy_rev1 is local to the source and
-does not need to be in global scope, so make it static.
+> Otherwise we can get:
+> 
+> WARNING: CPU: 0 PID: 55 at drivers/net/wireless/ti/wlcore/io.h:84
+> 
+> I've only seen this few times with the runtime PM patches enabled
+> so this one is probably not needed before that. This seems to
+> work currently based on the current PM implementation timer. Let's
+> apply this separately though in case others are hitting this issue.
+> 
+> Signed-off-by: Tony Lindgren <tony@atomide.com>
 
-Cleans up sparse warning:
-symbol 'wlc_phy_workarounds_nphy_rev1' was not declared. Should it
-be static?
+8 patches applied to wireless-drivers-next.git, thanks.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+4ec7cece87b3 wlcore: Add missing PM call for wlcore_cmd_wait_for_event_or_timeout()
+02edf81362fe wlcore: Make sure PM calls are paired
+fa2648a34e73 wlcore: Add support for runtime PM
+3ebbabea4219 wlcore: Fix misplaced PM call for scan_complete_work()
+db68052bdf58 wlcore: Fix timout errors after recovery
+45aa7f071b06 wlcore: Use generic runtime pm calls for wowlan elp configuration
+c40aad28a3cf wlcore: Make sure firmware is initialized in wl1271_op_add_interface()
+9b71578de087 wlcore: Enable runtime PM autosuspend support
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-index 1a187557982e..bedec1606caa 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-@@ -16904,7 +16904,7 @@ static void wlc_phy_workarounds_nphy_rev3(struct brcms_phy *pi)
- 	}
- }
- 
--void wlc_phy_workarounds_nphy_rev1(struct brcms_phy *pi)
-+static void wlc_phy_workarounds_nphy_rev1(struct brcms_phy *pi)
- {
- 	static const u8 rfseq_rx2tx_events[] = {
- 		NPHY_RFSEQ_CMD_NOP,
 -- 
-2.17.0
+https://patchwork.kernel.org/patch/10473893/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
