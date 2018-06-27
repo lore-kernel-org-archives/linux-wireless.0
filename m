@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54408 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:57730 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934246AbeF0QIX (ORCPT
+        with ESMTP id S965650AbeF0QN5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Jun 2018 12:08:23 -0400
+        Wed, 27 Jun 2018 12:13:57 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [v3,
- 4/5] wireless-drivers: use BIT_ULL for NL80211_STA_INFO_ attribute
- types
+Subject: Re: [2/4] libertas_tf: use irqsave() in USB's complete callback
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1529230033-17948-1-git-send-email-omer.efrat@tandemg.com>
-References: <1529230033-17948-1-git-send-email-omer.efrat@tandemg.com>
-To: Omer Efrat <omer.efrat@tandemg.com>
-Cc: linux-wireless@vger.kernel.org, Omer Efrat <omer.efrat@tandemg.com>
-Message-Id: <20180627160822.8FF6160B18@smtp.codeaurora.org> (sfid-20180627_180826_773820_17EA37F1)
-Date: Wed, 27 Jun 2018 16:08:22 +0000 (UTC)
+In-Reply-To: <20180620193648.25136-3-bigeasy@linutronix.de>
+References: <20180620193648.25136-3-bigeasy@linutronix.de>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: netdev@vger.kernel.org, linux-usb@vger.kernel.org,
+        tglx@linutronix.de, "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Message-Id: <20180627161357.103F360791@smtp.codeaurora.org> (sfid-20180627_181413_404072_293079FA)
+Date: Wed, 27 Jun 2018 16:13:57 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Omer Efrat <omer.efrat@tandemg.com> wrote:
+Sebastian Andrzej Siewior <bigeasy@linutronix.de> wrote:
 
-> The BIT macro uses unsigned long which some architectures handle as 32 bit
-> and therefore might cause macro's shift to overflow when used on a value
-> equals or larger than 32 (NL80211_STA_INFO_RX_DURATION and afterwards).
+> The USB completion callback does not disable interrupts while acquiring
+> the lock. We want to remove the local_irq_disable() invocation from
+> __usb_hcd_giveback_urb() and therefore it is required for the callback
+> handler to disable the interrupts while acquiring the lock.
+> The callback may be invoked either in IRQ or BH context depending on the
+> USB host controller.
+> Use the _irqsave() variant of the locking primitives.
 > 
-> Since 'filled' member in station_info changed to u64, BIT_ULL macro
-> should be used with all NL80211_STA_INFO_* attribute types instead of BIT
-> to prevent future possible bugs when one will use BIT macro for higher
-> attributes by mistake.
+> I am removing the
+> 	BUG_ON(!in_interrupt());
 > 
-> This commit cleans up all usages of BIT macro with the above field
-> in wireless-drivers by changing it to BIT_ULL instead. In addition, there are
-> some places which don't use BIT nor BIT_ULL macros so align those as well.
+> check because it serves no purpose. Running the completion callback in
+> BH context makes in_interrupt() still return true but the interrupts
+> could be enabled. The important part is that ->driver_lock is acquired
+> with disabled interrupts which is the case now.
 > 
-> Signed-off-by: Omer Efrat <omer.efrat@tandemg.com>
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: linux-wireless@vger.kernel.org
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-Patch applied to wireless-drivers-next.git, thanks.
+3 patches applied to wireless-drivers-next.git, thanks.
 
-22d0d2fafca9 wireless-drivers: use BIT_ULL for NL80211_STA_INFO_ attribute types
+fc75122fabb5 libertas_tf: use irqsave() in USB's complete callback
+a3128feef6d5 libertas: use irqsave() in USB's complete callback
+81454b8405f2 zd1211rw: use irqsave() in USB's complete callback
 
 -- 
-https://patchwork.kernel.org/patch/10468745/
+https://patchwork.kernel.org/patch/10478609/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
