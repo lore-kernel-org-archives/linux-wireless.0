@@ -1,104 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:43448 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750991AbeFCSWO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 3 Jun 2018 14:22:14 -0400
-Received: by mail-lf0-f65.google.com with SMTP id n15-v6so4484062lfn.10
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Jun 2018 11:22:13 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v5 05/12] ath10k: add per target config of max_num_peers
-Date: Sun,  3 Jun 2018 20:20:22 +0200
-Message-Id: <20180603182029.8914-6-erik.stromdahl@gmail.com> (sfid-20180603_202233_647026_ACE82F51)
-In-Reply-To: <20180603182029.8914-1-erik.stromdahl@gmail.com>
-References: <20180603182029.8914-1-erik.stromdahl@gmail.com>
+Received: from mail.bugwerft.de ([46.23.86.59]:50952 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965984AbeF0S6w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 Jun 2018 14:58:52 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: ulf.hansson@linaro.org
+Cc: chris@printf.net, linux-mmc@vger.kernel.org,
+        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Daniel Mack <daniel@zonque.org>
+Subject: [PATCH v2] libertas: fix suspend and resume for SDIO connected cards
+Date: Wed, 27 Jun 2018 20:58:45 +0200
+Message-Id: <20180627185845.31799-1-daniel@zonque.org> (sfid-20180627_205856_221925_A44F89B1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch makes sure the value of max_num_peers matches
-num_peers in hw_params (if set to a non zero value).
+Prior to commit 573185cc7e64 ("mmc: core: Invoke sdio func driver's PM
+callbacks from the sdio bus"), the MMC core used to call into the power
+management functions of SDIO clients itself and removed the card if the
+return code was non-zero. IOW, the mmc handled errors gracefully and didn't
+upchain them to the pm core.
 
-hw_params->num_peers is used in the TLV WMI init command.
-If ar->max_num_peers is not set to the same value, there is a risk
-that the user creates more peers than the maximum number of peers
-supported by the device.
+Since this change, the mmc core relies on generic power management
+functions which treat all errors as a reason to cancel the suspend
+immediately. This causes suspend attempts to fail when the libertas
+driver is loaded.
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+To fix this, power down the card explicitly in if_sdio_suspend() when we
+know we're about to lose power and return success. Also set a flag in these
+cases, and power up the card again in if_sdio_resume().
+
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+Cc: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Chris Ball <chris@printf.net>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+v1 → v2:
+* Reworded patch subject
+* Added wait_event(card->pwron_waitq, card->priv->fw_ready)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index a146c83d6ff9..8244e9184760 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1986,6 +1986,7 @@ static void ath10k_core_set_coverage_class_work(struct work_struct *work)
- static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ drivers/net/wireless/marvell/libertas/dev.h   |  1 +
+ .../net/wireless/marvell/libertas/if_sdio.c   | 30 +++++++++++++++----
+ 2 files changed, 25 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/libertas/dev.h b/drivers/net/wireless/marvell/libertas/dev.h
+index dd1ee1f0af48..469134930026 100644
+--- a/drivers/net/wireless/marvell/libertas/dev.h
++++ b/drivers/net/wireless/marvell/libertas/dev.h
+@@ -104,6 +104,7 @@ struct lbs_private {
+ 	u8 fw_ready;
+ 	u8 surpriseremoved;
+ 	u8 setup_fw_on_resume;
++	u8 power_up_on_resume;
+ 	int (*hw_host_to_card) (struct lbs_private *priv, u8 type, u8 *payload, u16 nb);
+ 	void (*reset_card) (struct lbs_private *priv);
+ 	int (*power_save) (struct lbs_private *priv);
+diff --git a/drivers/net/wireless/marvell/libertas/if_sdio.c b/drivers/net/wireless/marvell/libertas/if_sdio.c
+index 2300e796c6ab..43743c26c071 100644
+--- a/drivers/net/wireless/marvell/libertas/if_sdio.c
++++ b/drivers/net/wireless/marvell/libertas/if_sdio.c
+@@ -1290,15 +1290,23 @@ static void if_sdio_remove(struct sdio_func *func)
+ static int if_sdio_suspend(struct device *dev)
  {
- 	struct ath10k_fw_file *fw_file = &ar->normal_mode_fw.fw_file;
-+	int max_num_peers;
+ 	struct sdio_func *func = dev_to_sdio_func(dev);
+-	int ret;
+ 	struct if_sdio_card *card = sdio_get_drvdata(func);
++	struct lbs_private *priv = card->priv;
++	int ret;
  
- 	if (test_bit(ATH10K_FW_FEATURE_WMI_10_2, fw_file->fw_features) &&
- 	    !test_bit(ATH10K_FW_FEATURE_WMI_10X, fw_file->fw_features)) {
-@@ -2065,7 +2066,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 	mmc_pm_flag_t flags = sdio_get_host_pm_caps(func);
++	priv->power_up_on_resume = false;
  
- 	switch (fw_file->wmi_op_version) {
- 	case ATH10K_FW_WMI_OP_VERSION_MAIN:
--		ar->max_num_peers = TARGET_NUM_PEERS;
-+		max_num_peers = TARGET_NUM_PEERS;
- 		ar->max_num_stations = TARGET_NUM_STATIONS;
- 		ar->max_num_vdevs = TARGET_NUM_VDEVS;
- 		ar->htt.max_num_pending_tx = TARGET_NUM_MSDU_DESC;
-@@ -2077,10 +2078,10 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 	case ATH10K_FW_WMI_OP_VERSION_10_2:
- 	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
- 		if (ath10k_peer_stats_enabled(ar)) {
--			ar->max_num_peers = TARGET_10X_TX_STATS_NUM_PEERS;
-+			max_num_peers = TARGET_10X_TX_STATS_NUM_PEERS;
- 			ar->max_num_stations = TARGET_10X_TX_STATS_NUM_STATIONS;
- 		} else {
--			ar->max_num_peers = TARGET_10X_NUM_PEERS;
-+			max_num_peers = TARGET_10X_NUM_PEERS;
- 			ar->max_num_stations = TARGET_10X_NUM_STATIONS;
- 		}
- 		ar->max_num_vdevs = TARGET_10X_NUM_VDEVS;
-@@ -2089,7 +2090,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_TLV:
--		ar->max_num_peers = TARGET_TLV_NUM_PEERS;
-+		max_num_peers = TARGET_TLV_NUM_PEERS;
- 		ar->max_num_stations = TARGET_TLV_NUM_STATIONS;
- 		ar->max_num_vdevs = TARGET_TLV_NUM_VDEVS;
- 		ar->max_num_tdls_vdevs = TARGET_TLV_NUM_TDLS_VDEVS;
-@@ -2100,7 +2101,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_10_4:
--		ar->max_num_peers = TARGET_10_4_NUM_PEERS;
-+		max_num_peers = TARGET_10_4_NUM_PEERS;
- 		ar->max_num_stations = TARGET_10_4_NUM_STATIONS;
- 		ar->num_active_peers = TARGET_10_4_ACTIVE_PEERS;
- 		ar->max_num_vdevs = TARGET_10_4_NUM_VDEVS;
-@@ -2119,10 +2120,16 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
- 	case ATH10K_FW_WMI_OP_VERSION_MAX:
-+	default:
- 		WARN_ON(1);
- 		return -EINVAL;
+ 	/* If we're powered off anyway, just let the mmc layer remove the
+ 	 * card. */
+-	if (!lbs_iface_active(card->priv))
+-		return -ENOSYS;
++	if (!lbs_iface_active(priv)) {
++		if (priv->fw_ready) {
++			priv->power_up_on_resume = true;
++			if_sdio_power_off(card);
++		}
++
++		return 0;
++	}
+ 
+ 	dev_info(dev, "%s: suspend: PM flags = 0x%x\n",
+ 		 sdio_func_id(func), flags);
+@@ -1306,9 +1314,14 @@ static int if_sdio_suspend(struct device *dev)
+ 	/* If we aren't being asked to wake on anything, we should bail out
+ 	 * and let the SD stack power down the card.
+ 	 */
+-	if (card->priv->wol_criteria == EHS_REMOVE_WAKEUP) {
++	if (priv->wol_criteria == EHS_REMOVE_WAKEUP) {
+ 		dev_info(dev, "Suspend without wake params -- powering down card\n");
+-		return -ENOSYS;
++		if (priv->fw_ready) {
++			priv->power_up_on_resume = true;
++			if_sdio_power_off(card);
++		}
++
++		return 0;
  	}
  
-+	if (ar->hw_params.num_peers)
-+		ar->max_num_peers = ar->hw_params.num_peers;
-+	else
-+		ar->max_num_peers = max_num_peers;
+ 	if (!(flags & MMC_PM_KEEP_POWER)) {
+@@ -1321,7 +1334,7 @@ static int if_sdio_suspend(struct device *dev)
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = lbs_suspend(card->priv);
++	ret = lbs_suspend(priv);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -1336,6 +1349,11 @@ static int if_sdio_resume(struct device *dev)
+ 
+ 	dev_info(dev, "%s: resume: we're back\n", sdio_func_id(func));
+ 
++	if (card->priv->power_up_on_resume) {
++		if_sdio_power_on(card);
++		wait_event(card->pwron_waitq, card->priv->fw_ready);
++	}
 +
- 	/* Backwards compatibility for firmwares without
- 	 * ATH10K_FW_IE_HTT_OP_VERSION.
- 	 */
+ 	ret = lbs_resume(card->priv);
+ 
+ 	return ret;
 -- 
-2.17.0
+2.17.1
