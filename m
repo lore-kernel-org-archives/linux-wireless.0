@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:36099 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752365AbeFEW7t (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54408 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934246AbeF0QIX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Jun 2018 18:59:49 -0400
-Received: by mail-pg0-f67.google.com with SMTP id m5-v6so1965734pgd.3
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jun 2018 15:59:49 -0700 (PDT)
-Date: Tue, 5 Jun 2018 15:59:45 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Govind Singh <govinds@codeaurora.org>
-Cc: andy.gross@linaro.org, bjorn.andersson@linaro.org,
-        david.brown@linaro.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH v2 0/6]  *** Add support for wifi QMI client driver ***
-Message-ID: <20180605225944.GA194157@rodete-desktop-imager.corp.google.com> (sfid-20180606_005953_496628_05AA105C)
-References: <20180605123304.31969-1-govinds@codeaurora.org>
+        Wed, 27 Jun 2018 12:08:23 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180605123304.31969-1-govinds@codeaurora.org>
+Subject: Re: [v3,
+ 4/5] wireless-drivers: use BIT_ULL for NL80211_STA_INFO_ attribute
+ types
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1529230033-17948-1-git-send-email-omer.efrat@tandemg.com>
+References: <1529230033-17948-1-git-send-email-omer.efrat@tandemg.com>
+To: Omer Efrat <omer.efrat@tandemg.com>
+Cc: linux-wireless@vger.kernel.org, Omer Efrat <omer.efrat@tandemg.com>
+Message-Id: <20180627160822.8FF6160B18@smtp.codeaurora.org> (sfid-20180627_180826_773820_17EA37F1)
+Date: Wed, 27 Jun 2018 16:08:22 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 05, 2018 at 06:03:04PM +0530, Govind Singh wrote:
-> Add QMI client driver for Q6 integrated WLAN connectivity subsystem.
-> This module is responsible for communicating WLAN control messages to FW
-> over QMI interface.
-...
+Omer Efrat <omer.efrat@tandemg.com> wrote:
 
-You still don't have the threading correct. Your patches should be
-In-Reply-To the cover letter, so they get threaded by mail clients.
+> The BIT macro uses unsigned long which some architectures handle as 32 bit
+> and therefore might cause macro's shift to overflow when used on a value
+> equals or larger than 32 (NL80211_STA_INFO_RX_DURATION and afterwards).
+> 
+> Since 'filled' member in station_info changed to u64, BIT_ULL macro
+> should be used with all NL80211_STA_INFO_* attribute types instead of BIT
+> to prevent future possible bugs when one will use BIT macro for higher
+> attributes by mistake.
+> 
+> This commit cleans up all usages of BIT macro with the above field
+> in wireless-drivers by changing it to BIT_ULL instead. In addition, there are
+> some places which don't use BIT nor BIT_ULL macros so align those as well.
+> 
+> Signed-off-by: Omer Efrat <omer.efrat@tandemg.com>
 
-See, for instance, how the threaded view for your last version doesn't
-show any of your patches:
+Patch applied to wireless-drivers-next.git, thanks.
 
-https://www.mail-archive.com/linux-wireless@vger.kernel.org/msg44199.html
+22d0d2fafca9 wireless-drivers: use BIT_ULL for NL80211_STA_INFO_ attribute types
 
-(And Bjorn complained about this last time too.)
+-- 
+https://patchwork.kernel.org/patch/10468745/
 
-It looks like you're already using git-send-email, which should handle
-this for you...just make sure you're sending all emails in one go (e.g.,
-'git send-email <args> 0000-foo.patch 0001-bar.patch 0002-baz.patch
-...').
-
-Brian
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
