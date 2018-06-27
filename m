@@ -1,154 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:34444 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753877AbeFJKvg (ORCPT
+Received: from mail-it0-f67.google.com ([209.85.214.67]:56281 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932350AbeF0Iuk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Jun 2018 06:51:36 -0400
-Received: by mail-wr0-f196.google.com with SMTP id a12-v6so17440231wro.1
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Jun 2018 03:51:36 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [RFC v3 03/19] mt76x2: move utility routines in mt76x2.h
-Date: Sun, 10 Jun 2018 12:51:10 +0200
-Message-Id: <20180610105126.28425-4-lorenzo.bianconi@redhat.com> (sfid-20180610_131506_091133_C6651BE6)
+        Wed, 27 Jun 2018 04:50:40 -0400
+Received: by mail-it0-f67.google.com with SMTP id 16-v6so6367384itl.5
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jun 2018 01:50:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <3f91c902-4aef-77cb-6fa1-d90cb1bc4aab@zonque.org>
+References: <20180626204834.14278-1-daniel@zonque.org> <950add1e-ec3a-a179-ff49-b49b3a748bcb@zonque.org>
+ <CAPDyKFp-KkHbqR4+vOL2XZnAcXPPCJ7snW=2wFoz82UckPFW1w@mail.gmail.com> <3f91c902-4aef-77cb-6fa1-d90cb1bc4aab@zonque.org>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Wed, 27 Jun 2018 10:50:39 +0200
+Message-ID: <CAPDyKFrns=_H=9L2vwH+oZ=mdL6QrqbDtGtVDZMOdtW7=K6kJg@mail.gmail.com> (sfid-20180627_105045_694561_EC825CFC)
+Subject: Re: [PATCH] libertas: fix return codes in if_sdio_suspend()
+To: Daniel Mack <daniel@zonque.org>
+Cc: Chris Ball <chris@printf.net>,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to reuse them supporting mt76x2u based devices, move
-mt76x2_wait_for_mac, wait_for_wpdma and mt76x2_channel_silent in
-mt76x2.h
+On 27 June 2018 at 10:31, Daniel Mack <daniel@zonque.org> wrote:
+> On Wednesday, June 27, 2018 09:54 AM, Ulf Hansson wrote:
+>>
+>> On 26 June 2018 at 22:50, Daniel Mack <daniel@zonque.org> wrote:
+>>>
+>>> On Tuesday, June 26, 2018 10:48 PM, Daniel Mack wrote:
+>
+>
+>>>> @@ -1321,7 +1334,7 @@ static int if_sdio_suspend(struct device *dev)
+>>>>          if (ret)
+>>>>                  return ret;
+>>>>    -     ret = lbs_suspend(card->priv);
+>>>> +       ret = lbs_suspend(priv);
+>>>>          if (ret)
+>>>>                  return ret;
+>>>>    @@ -1336,6 +1349,9 @@ static int if_sdio_resume(struct device *dev)
+>>>>          dev_info(dev, "%s: resume: we're back\n", sdio_func_id(func));
+>>>>    +     if (card->priv->power_up_on_resume)
+>>>> +               if_sdio_power_on(card);
+>>>> +
+>>
+>>
+>> To guarantee firmware is loaded, don't you need the below as well?
+>>
+>> wait_event(card->pwron_waitq, priv->fw_ready);
+>
+>
+> Hmm, yes. I should probably just be calling into if_sdio_power_restore().
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mt76x2.h   | 40 +++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt76x2_init.c  | 28 -------------
- .../net/wireless/mediatek/mt76/mt76x2_phy.c   |  9 -----
- 3 files changed, 40 insertions(+), 37 deletions(-)
+You don't want to mess up the runtime PM counter though.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-index a0a2f7727df9..ee22dd4b4e19 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-@@ -151,6 +151,23 @@ struct mt76x2_sta {
- 	int n_frames;
- };
- 
-+static inline bool mt76x2_wait_for_mac(struct mt76x2_dev *dev)
-+{
-+	int i;
-+
-+	for (i = 0; i < 500; i++) {
-+		switch (mt76_rr(dev, MT_MAC_CSR0)) {
-+		case 0:
-+		case ~0:
-+			break;
-+		default:
-+			return true;
-+		}
-+		usleep_range(5000, 10000);
-+	}
-+	return false;
-+}
-+
- static inline bool is_mt7612(struct mt76x2_dev *dev)
- {
- 	return mt76_chip(&dev->mt76) == 0x7612;
-@@ -158,6 +175,14 @@ static inline bool is_mt7612(struct mt76x2_dev *dev)
- 
- void mt76x2_set_irq_mask(struct mt76x2_dev *dev, u32 clear, u32 set);
- 
-+static inline bool mt76x2_channel_silent(struct mt76x2_dev *dev)
-+{
-+	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
-+
-+	return ((chan->flags & IEEE80211_CHAN_RADAR) &&
-+		chan->dfs_state != NL80211_DFS_AVAILABLE);
-+}
-+
- static inline void mt76x2_irq_enable(struct mt76x2_dev *dev, u32 mask)
- {
- 	mt76x2_set_irq_mask(dev, 0, mask);
-@@ -168,6 +193,21 @@ static inline void mt76x2_irq_disable(struct mt76x2_dev *dev, u32 mask)
- 	mt76x2_set_irq_mask(dev, mask, 0);
- }
- 
-+static inline bool mt76x2_wait_for_bbp(struct mt76x2_dev *dev)
-+{
-+	return mt76_poll_msec(dev, MT_MAC_STATUS,
-+			      MT_MAC_STATUS_TX | MT_MAC_STATUS_RX,
-+			      0, 100);
-+}
-+
-+static inline bool wait_for_wpdma(struct mt76x2_dev *dev)
-+{
-+	return mt76_poll(dev, MT_WPDMA_GLO_CFG,
-+			 MT_WPDMA_GLO_CFG_TX_DMA_BUSY |
-+			 MT_WPDMA_GLO_CFG_RX_DMA_BUSY,
-+			 0, 1000);
-+}
-+
- extern const struct ieee80211_ops mt76x2_ops;
- 
- struct mt76x2_dev *mt76x2_alloc_device(struct device *pdev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index 79ab93613e06..6a7db3f88153 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -24,34 +24,6 @@ struct mt76x2_reg_pair {
- 	u32 value;
- };
- 
--static bool
--mt76x2_wait_for_mac(struct mt76x2_dev *dev)
--{
--	int i;
--
--	for (i = 0; i < 500; i++) {
--		switch (mt76_rr(dev, MT_MAC_CSR0)) {
--		case 0:
--		case ~0:
--			break;
--		default:
--			return true;
--		}
--		usleep_range(5000, 10000);
--	}
--
--	return false;
--}
--
--static bool
--wait_for_wpdma(struct mt76x2_dev *dev)
--{
--	return mt76_poll(dev, MT_WPDMA_GLO_CFG,
--			 MT_WPDMA_GLO_CFG_TX_DMA_BUSY |
--			 MT_WPDMA_GLO_CFG_RX_DMA_BUSY,
--			 0, 1000);
--}
--
- static void
- mt76x2_mac_pbf_init(struct mt76x2_dev *dev)
- {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-index c1c38ca3330a..62785bea7a6a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-@@ -176,15 +176,6 @@ void mt76x2_phy_set_txpower(struct mt76x2_dev *dev)
- 		mt76x2_tx_power_mask(t.ht[6], t.vht[8], t.vht[8], 0));
- }
- 
--static bool
--mt76x2_channel_silent(struct mt76x2_dev *dev)
--{
--	struct ieee80211_channel *chan = dev->mt76.chandef.chan;
--
--	return ((chan->flags & IEEE80211_CHAN_RADAR) &&
--		chan->dfs_state != NL80211_DFS_AVAILABLE);
--}
--
- static bool
- mt76x2_phy_tssi_init_cal(struct mt76x2_dev *dev)
- {
--- 
-2.17.1
+>
+> I'll test that and resend the patch.
+
+Great!
+
+Kind regards
+Uffe
