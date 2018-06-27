@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51212 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:43442 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934972AbeFMKAg (ORCPT
+        with ESMTP id S934746AbeF0Pzs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jun 2018 06:00:36 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Timur =?utf-8?Q?Krist=C3=B3f?= <timur.kristof@gmail.com>
-Cc: Ryan Hsu <ryanhsu@codeaurora.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] ath10k: Update the phymode along with bandwidth change request
-References: <1528482759-12604-1-git-send-email-ryanhsu@codeaurora.org>
-        <944989ec907b98716f252524cf55e41807965253.camel@gmail.com>
-        <87muw0cjwq.fsf@kamboji.qca.qualcomm.com>
-        <411d1d752811ce2b701d9f3a0d20f05050dc2e09.camel@gmail.com>
-Date: Wed, 13 Jun 2018 13:00:32 +0300
-In-Reply-To: <411d1d752811ce2b701d9f3a0d20f05050dc2e09.camel@gmail.com>
-        ("Timur \=\?utf-8\?Q\?Krist\=C3\=B3f\=22's\?\= message of "Tue, 12 Jun 2018 14:21:20
- +0200")
-Message-ID: <878t7jatvj.fsf@kamboji.qca.qualcomm.com> (sfid-20180613_120040_680871_95CDDBAE)
+        Wed, 27 Jun 2018 11:55:48 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Subject: Re: brcmsmac: Remove unnecessary parentheses
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180601021413.4031-1-rvarsha016@gmail.com>
+References: <20180601021413.4031-1-rvarsha016@gmail.com>
+To: Varsha Rao <rvarsha016@gmail.com>
+Cc: Nicholas Mc Guire <der.herr@hofr.at>,
+        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Varsha Rao <rvarsha016@gmail.com>
+Message-Id: <20180627155548.0D0CF60AD8@smtp.codeaurora.org> (sfid-20180627_175633_315984_96871149)
+Date: Wed, 27 Jun 2018 15:55:47 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Timur Krist=C3=B3f <timur.kristof@gmail.com> writes:
+Varsha Rao <rvarsha016@gmail.com> wrote:
 
->> > Can it be accepted, or is there anything I can help with, to get it
->> > accepted?
->>=20
->> Strangely I can't find Timur's version of the patch from patchwork:
->>=20
->> https://patchwork.kernel.org/project/linux-wireless/list/?state=3D*
->>=20
->> Maybe it got dropped due to some UTF-8 problems? patchwork is known
->> to
->> be problematic with UTF-8.
->
-> Not sure. It doesn't really matter now, Ryan's version is fine too.
+> This patch fixes the clang warning of extraneous parentheses, with the
+> following coccinelle script.
+> 
+> @@
+> identifier i;
+> expression e;
+> statement s;
+> @@
+> if (
+> -(i == e)
+> +i == e
+>  )
+> s
+> 
+> Suggested-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
+> Signed-off-by: Varsha Rao <rvarsha016@gmail.com>
 
-Sure but try to remember this if you are planning to submit more
-wireless patches in the future. Johannes and me take patches directly
-from patchwork, and if the patch isn't there we won't see it.
+Patch applied to wireless-drivers-next.git, thanks.
 
---=20
-Kalle Valo
+eb5d2f3afc0f brcmsmac: Remove unnecessary parentheses
+
+-- 
+https://patchwork.kernel.org/patch/10442401/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
