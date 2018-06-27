@@ -1,43 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35167 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751876AbeFXOLK (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:56188 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752038AbeF0GNu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Jun 2018 10:11:10 -0400
-Received: by mail-wm0-f68.google.com with SMTP id z137-v6so1501523wmc.0
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jun 2018 07:11:10 -0700 (PDT)
+        Wed, 27 Jun 2018 02:13:50 -0400
+From: Ganapathi Bhat <gbhat@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Brian Norris <briannorris@chromium.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Zhiyuan Yang <yangzy@marvell.com>,
+        James Cao <jcao@marvell.com>,
+        Mangesh Malusare <mmangesh@marvell.com>,
+        Douglas Anderson <dianders@chromium.org>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: [PATCH v2 1/2] mwifiex: replace rx_pkt_lock by rx_reorder_tbl_lock
+Date: Wed, 27 Jun 2018 11:43:38 +0530
+Message-ID: <1530080019-20108-1-git-send-email-gbhat@marvell.com> (sfid-20180627_081409_697310_2FAB7C8D)
 MIME-Version: 1.0
-References: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com> <1529693004-20569-7-git-send-email-arend.vanspriel@broadcom.com>
-In-Reply-To: <1529693004-20569-7-git-send-email-arend.vanspriel@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Sun, 24 Jun 2018 16:08:59 +0200
-Message-ID: <CACna6rxi88e6oek8zt_7KG6PY4ih_ehpsd67hK2DXGHKQZhSSg@mail.gmail.com> (sfid-20180624_161143_390809_0ACCB2A6)
-Subject: Re: [PATCH 6/6] brcmfmac: fallback mechanism to determine monitor
- mode features
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 22 Jun 2018 at 20:45, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> Firmwares may not provide all monitor mode features in the "cap" iovar.
-> For those this fallback mechanism uses "sta_monitor" iovar. If firmware
-> is compiled with stamon, this iovar will fail with BCME_NOTUP; Otherwise
-> it fails with BCME_UNSUPPORTED.
+At present driver spinlock protects iteration of list
+rx_reorder_tbl_ptr with rx_reorder_tbl_lock. To protect the
+individual items in this list, it uses rx_pkt_lock. But, we can
+use a single rx_reorder_tbl_lock for both purposes. This patch
+replaces rx_pkt_lock by rx_reorder_tbl_lock.
 
-It's probably not the first time ever, but it appears your research
-(theory) doesn't match my experience (practice) ;) I'm afraid you
-missed some important check when analyzing firmware code.
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+---
+v2: same as v1
+---
+ drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c | 19 ++++++++++---------
+ drivers/net/wireless/marvell/mwifiex/init.c          |  1 -
+ drivers/net/wireless/marvell/mwifiex/main.h          |  3 ---
+ 3 files changed, 10 insertions(+), 13 deletions(-)
 
-I've just tested all firmwares I got (for 43602a1, 4366b1 and 4366c0)
-and all of them return -4 (BCME_NOTUP) for "sta_monitor" when
-firmware/interface is down. It appears this test requires bringing
-firmware/interface up to make it reliable. Apparently even firmwares
-*without* sta_monitor return -4 (BCME_NOTUP) when firmware/interface
-is down.
-
---=20
-Rafa=C5=82
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+index 7ab44cd..5380fba 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+@@ -118,18 +118,18 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
+ 		      tbl->win_size;
+ 
+ 	for (i = 0; i < pkt_to_send; ++i) {
+-		spin_lock_irqsave(&priv->rx_pkt_lock, flags);
++		spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 		rx_tmp_ptr = NULL;
+ 		if (tbl->rx_reorder_ptr[i]) {
+ 			rx_tmp_ptr = tbl->rx_reorder_ptr[i];
+ 			tbl->rx_reorder_ptr[i] = NULL;
+ 		}
+-		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
++		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 		if (rx_tmp_ptr)
+ 			mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
+ 	}
+ 
+-	spin_lock_irqsave(&priv->rx_pkt_lock, flags);
++	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 	/*
+ 	 * We don't have a circular buffer, hence use rotation to simulate
+ 	 * circular buffer
+@@ -140,7 +140,7 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
+ 	}
+ 
+ 	tbl->start_win = start_win;
+-	spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
++	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ }
+ 
+ /*
+@@ -160,18 +160,19 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
+ 	unsigned long flags;
+ 
+ 	for (i = 0; i < tbl->win_size; ++i) {
+-		spin_lock_irqsave(&priv->rx_pkt_lock, flags);
++		spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 		if (!tbl->rx_reorder_ptr[i]) {
+-			spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
++			spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock,
++					       flags);
+ 			break;
+ 		}
+ 		rx_tmp_ptr = tbl->rx_reorder_ptr[i];
+ 		tbl->rx_reorder_ptr[i] = NULL;
+-		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
++		spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ 		mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
+ 	}
+ 
+-	spin_lock_irqsave(&priv->rx_pkt_lock, flags);
++	spin_lock_irqsave(&priv->rx_reorder_tbl_lock, flags);
+ 	/*
+ 	 * We don't have a circular buffer, hence use rotation to simulate
+ 	 * circular buffer
+@@ -184,7 +185,7 @@ static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
+ 		}
+ 	}
+ 	tbl->start_win = (tbl->start_win + i) & (MAX_TID_VALUE - 1);
+-	spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
++	spin_unlock_irqrestore(&priv->rx_reorder_tbl_lock, flags);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+index d239e92..dab02d7 100644
+--- a/drivers/net/wireless/marvell/mwifiex/init.c
++++ b/drivers/net/wireless/marvell/mwifiex/init.c
+@@ -439,7 +439,6 @@ int mwifiex_init_lock_list(struct mwifiex_adapter *adapter)
+ 	for (i = 0; i < adapter->priv_num; i++) {
+ 		if (adapter->priv[i]) {
+ 			priv = adapter->priv[i];
+-			spin_lock_init(&priv->rx_pkt_lock);
+ 			spin_lock_init(&priv->wmm.ra_list_spinlock);
+ 			spin_lock_init(&priv->curr_bcn_buf_lock);
+ 			spin_lock_init(&priv->sta_list_spinlock);
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 69ac0a2..d2b54be 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -616,9 +616,6 @@ struct mwifiex_private {
+ 	struct list_head rx_reorder_tbl_ptr;
+ 	/* spin lock for rx_reorder_tbl_ptr queue */
+ 	spinlock_t rx_reorder_tbl_lock;
+-	/* spin lock for Rx packets */
+-	spinlock_t rx_pkt_lock;
+-
+ #define MWIFIEX_ASSOC_RSP_BUF_SIZE  500
+ 	u8 assoc_rsp_buf[MWIFIEX_ASSOC_RSP_BUF_SIZE];
+ 	u32 assoc_rsp_size;
+-- 
+1.9.1
