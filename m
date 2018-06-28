@@ -1,54 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35237 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1030305AbeFSTdm (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37962 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934298AbeF1J6n (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Jun 2018 15:33:42 -0400
-Received: by mail-wm0-f68.google.com with SMTP id j15-v6so2573003wme.0
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jun 2018 12:33:41 -0700 (PDT)
-Subject: Re: [PATCH V3 1/2] brcmfmac: detect firmware support for monitor
- interface
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20180619154809.25698-1-zajec5@gmail.com>
- <20180619154809.25698-2-zajec5@gmail.com>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5B295A93.10801@broadcom.com> (sfid-20180619_213346_218353_A2B70233)
-Date: Tue, 19 Jun 2018 21:33:39 +0200
+        Thu, 28 Jun 2018 05:58:43 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180619154809.25698-2-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [1/2] ath10k: rename HTC_HOST_MAX_MSG_PER_BUNDLE define
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180615120423.4963-1-erik.stromdahl@gmail.com>
+References: <20180615120423.4963-1-erik.stromdahl@gmail.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org,
+        Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-Id: <20180628095842.AA0D760234@smtp.codeaurora.org> (sfid-20180628_115851_228531_535183A4)
+Date: Thu, 28 Jun 2018 09:58:42 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6/19/2018 5:48 PM, Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
->
-> Most of firmwares support creating monitor interface. The newest ones
-> explicitly /announce/ it using a "monitor" entry in the list of
-> capabilities.
->
-> Check (and store) internally info about monitor mode support using a
-> new feature flag. Once we sort out all details of handling monitor
-> interface it will be used when reporting available interfaces to the
-> cfg80211.
+Erik Stromdahl <erik.stromdahl@gmail.com> wrote:
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> ---
-> V3: Patch added to the series
-> ---
->   .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 26 ++++++++++++++++++++++
->   .../wireless/broadcom/brcm80211/brcmfmac/feature.h |  4 +++-
->   .../wireless/broadcom/brcm80211/brcmfmac/fwil.h    |  2 ++
->   3 files changed, 31 insertions(+), 1 deletion(-)
+> This define is only used for RX bundling so it is more descriptive if
+> RX is added to the define-name.
+> 
+> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+
+2 patches applied to ath-next branch of ath.git, thanks.
+
+ab687de9535c ath10k: rename HTC_HOST_MAX_MSG_PER_BUNDLE define
+e4568eac0464 ath10k: replace hardcoded constant with define
+
+-- 
+https://patchwork.kernel.org/patch/10466281/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
