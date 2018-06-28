@@ -1,40 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:35964 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754021AbeF2LlC (ORCPT
+Received: from alexa-out-blr-02.qualcomm.com ([103.229.18.198]:42510 "EHLO
+        alexa-out-blr.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S935097AbeF1JZZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 07:41:02 -0400
-Received: by mail-wr0-f193.google.com with SMTP id f16-v6so8545760wrm.3
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Jun 2018 04:41:02 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org
-Subject: [PATCH v2 0/4] add dfs sw pattern detector to mt76x2 driver
-Date: Fri, 29 Jun 2018 13:40:51 +0200
-Message-Id: <cover.1530260731.git.lorenzo.bianconi@redhat.com> (sfid-20180629_134106_879712_793BC194)
+        Thu, 28 Jun 2018 05:25:25 -0400
+From: Rakesh Pillai <pillair@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Surabhi Vishnoi <svishnoi@codeaurora.org>,
+        Rakesh Pillai <pillair@codeaurora.org>
+Subject: [PATCH 1/2] ath10k: Disable bundle mgmt tx completion event support
+Date: Thu, 28 Jun 2018 14:48:56 +0530
+Message-Id: <1530177537-18487-2-git-send-email-pillair@codeaurora.org> (sfid-20180628_112529_977343_FF257A97)
+In-Reply-To: <1530177537-18487-1-git-send-email-pillair@codeaurora.org>
+References: <1530177537-18487-1-git-send-email-pillair@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add sw DFS pattern detector support for mt76x2 based devices.
-Dfs pattern supported:
-- short pulse radar patterns
-- staggered radar patterns
+From: Surabhi Vishnoi <svishnoi@codeaurora.org>
 
-Changes since v1:
-- improve code readability of mt76x2_dfs_fetch_event()
-  adding macros for event fields
+The tx completion of multiple mgmt frames can be bundled
+in a single event and sent by the firmware to host, if this
+capability is not disabled explicitly by the host. If the host
+cannot handle the bundled mgmt tx completion, this capability
+support needs to be disabled in the wmi init cmd, sent to the firmware.
 
-Lorenzo Bianconi (4):
-  mt76: introduce mt76_{incr,decr} utility routines
-  mt76x2: dfs: add sw event ring buffer
-  mt76x2: dfs: add sw pattern detector
-  mt76x2: debugfs: add sw pulse statistics to dfs debugfs
+Add the host capability indication flag in the wmi ready command,
+to let firmware know the features supported by the host driver.
+This field is ignored if it is not supported by firmware.
 
- drivers/net/wireless/mediatek/mt76/mt76.h     |  12 +
- .../wireless/mediatek/mt76/mt76x2_debugfs.c   |   8 +
- .../net/wireless/mediatek/mt76/mt76x2_dfs.c   | 377 +++++++++++++++++-
- .../net/wireless/mediatek/mt76/mt76x2_dfs.h   |  64 +++
- 4 files changed, 458 insertions(+), 3 deletions(-)
+Set the host capability indication flag(i.e. host_capab) to zero,
+for disabling the support of bundle mgmt tx completion. This will
+indicate the firmware to send completion event for every mgmt tx
+completion, instead of bundling them together and sending in a single
+event.
 
+Tested HW: WCN3990
+Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
+
+Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 5 +++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h | 5 +++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 8c49a26..21eb3a5 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1584,6 +1584,11 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
+ 	cfg->keep_alive_pattern_size = __cpu_to_le32(0);
+ 	cfg->max_tdls_concurrent_sleep_sta = __cpu_to_le32(1);
+ 	cfg->max_tdls_concurrent_buffer_sta = __cpu_to_le32(1);
++	cfg->wmi_send_separate = __cpu_to_le32(0);
++	cfg->num_ocb_vdevs = __cpu_to_le32(0);
++	cfg->num_ocb_channels = __cpu_to_le32(0);
++	cfg->num_ocb_schedules = __cpu_to_le32(0);
++	cfg->host_capab = __cpu_to_le32(0);
+ 
+ 	ath10k_wmi_put_host_mem_chunks(ar, chunks);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+index 3e1e340..1cb93d0 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+@@ -1670,6 +1670,11 @@ struct wmi_tlv_resource_config {
+ 	__le32 keep_alive_pattern_size;
+ 	__le32 max_tdls_concurrent_sleep_sta;
+ 	__le32 max_tdls_concurrent_buffer_sta;
++	__le32 wmi_send_separate;
++	__le32 num_ocb_vdevs;
++	__le32 num_ocb_channels;
++	__le32 num_ocb_schedules;
++	__le32 host_capab;
+ } __packed;
+ 
+ struct wmi_tlv_init_cmd {
 -- 
-2.17.1
+2.7.4
