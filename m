@@ -1,97 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:46702 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755143AbeF2N43 (ORCPT
+Received: from alexa-out-blr-02.qualcomm.com ([103.229.18.198]:29472 "EHLO
+        alexa-out-blr.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S935097AbeF1JZ1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 09:56:29 -0400
-Received: by mail-lf0-f66.google.com with SMTP id l16-v6so4584825lfc.13
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Jun 2018 06:56:28 -0700 (PDT)
-Date: Fri, 29 Jun 2018 15:56:25 +0200
-From: Niklas Cassel <niklas.cassel@linaro.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: alagusankar@silex-india.com, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ath10k@lists.infradead.org, "David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH 1/3] ath10k: sdio: use same endpoint id for all packets
- in a bundle
-Message-ID: <20180629135625.GA19076@centauri.lan> (sfid-20180629_155652_256486_C763E625)
-References: <20180620084222.3521-1-niklas.cassel@linaro.org>
- <20180620084222.3521-2-niklas.cassel@linaro.org>
- <87zhzdersm.fsf@codeaurora.org>
- <87vaa1erlj.fsf@codeaurora.org>
- <20180629131141.GA26446@centauri.lan>
- <87r2kpem4o.fsf@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87r2kpem4o.fsf@codeaurora.org>
+        Thu, 28 Jun 2018 05:25:27 -0400
+From: Rakesh Pillai <pillair@codeaurora.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Rakesh Pillai <pillair@codeaurora.org>
+Subject: [PATCH 0/2] ath10k: Handle mgmt tx completion event
+Date: Thu, 28 Jun 2018 14:48:55 +0530
+Message-Id: <1530177537-18487-1-git-send-email-pillair@codeaurora.org> (sfid-20180628_112538_061819_0D9B8647)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 29, 2018 at 04:51:51PM +0300, Kalle Valo wrote:
-> Niklas Cassel <niklas.cassel@linaro.org> writes:
-> 
-> > On Fri, Jun 29, 2018 at 02:53:44PM +0300, Kalle Valo wrote:
-> >> Kalle Valo <kvalo@codeaurora.org> writes:
-> >> 
-> >> > Niklas Cassel <niklas.cassel@linaro.org> writes:
-> >> >
-> >> >> All packets in a bundle should use the same endpoint id as the
-> >> >> first lookahead.
-> >> >>
-> >> >> This matches how things are done is ath6kl, however,
-> >> >> this patch can theoretically handle several bundles
-> >> >> in ath10k_sdio_mbox_rx_process_packets().
-> >> >>
-> >> >> Without this patch we get lots of errors about invalid endpoint id:
-> >> >>
-> >> >> ath10k_sdio mmc2:0001:1: invalid endpoint in look-ahead: 224
-> >> >> ath10k_sdio mmc2:0001:1: failed to get pending recv messages: -12
-> >> >> ath10k_sdio mmc2:0001:1: failed to process pending SDIO interrupts: -12
-> >> >>
-> >> >> Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
-> >> >> Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
-> >> >
-> >> > You have Alagu's s-o-b first so that implies Alagu is the author. So
-> >> > should I add From header for Alagu and add you (Niklas) as
-> >> > Co-Developed-by? Or vice versa?
-> >
-> > Hello Kalle,
-> >
-> > It is not always obvious how the combination of git-author
-> > and Co-Developed-by should be:
-> > http://lkml.iu.edu/hypermail/linux/kernel/1801.2/00988.html
-> 
-> Yeah, that's true.
-> 
-> > Alagu deserves most credit, since I have simply taken parts
-> > of a very big patch and split it into smaller pieces.
-> > I tried to do the right thing by having his Signed-off-by first.
-> >
-> > Let's go with your suggestion and add a From: header with
-> > Alagu's email, and a Co-Developed-by tag with my email.
-> > (Note that both Signed-off-bys are still needed according to
-> > submitting-patches.rst)
-> 
-> Ok.
-> 
-> > Do you want me to resend the patches with these two lines
-> > added, or can you fix them up manually?
-> 
-> No need, I did that already in the pending branch. Please check:
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=6b23bd067990df1cc1e9a4c28327393a7a3ba718
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=bf83a5c572e0737e59e026c989b190b4e52d2ef4
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=218f924d80b76520a4e60eead5e89f3ebd2e86c1
+The transmitted management frame completion can be
+sent by the firmware as one completion per event or it can
+bundle the completion of a bunch of management frames and
+send it in one single event.
 
-Hello Kalle
+Disable the bundle tx completion for management frames
+and handle the tx completion event for management frames to
+free these frames.
 
-It looks good :)
+Tested HW: WCN3990
+Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
 
-Regards,
-Niklas
+Rakesh Pillai (1):
+  ath10k: Handle mgmt tx completion event
 
-> 
-> -- 
-> Kalle Valo
+Surabhi Vishnoi (1):
+  ath10k: Disable bundle mgmt tx completion event support
+
+ drivers/net/wireless/ath/ath10k/core.c    |  1 +
+ drivers/net/wireless/ath/ath10k/core.h    |  5 ++
+ drivers/net/wireless/ath/ath10k/hw.h      |  1 +
+ drivers/net/wireless/ath/ath10k/wmi-ops.h | 12 +++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 70 +++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h | 17 +++++++
+ drivers/net/wireless/ath/ath10k/wmi.c     | 84 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h     |  7 +++
+ 8 files changed, 195 insertions(+), 2 deletions(-)
+
+-- 
+2.7.4
