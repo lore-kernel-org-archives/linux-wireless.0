@@ -1,97 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52126 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752173AbeF3NXn (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33108 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933194AbeF1J2B (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Jun 2018 09:23:43 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 30 Jun 2018 16:23:22 +0300
-Message-Id: <20180630132330.14928-8-luca@coelho.fi> (sfid-20180630_152359_100218_48A47110)
-In-Reply-To: <20180630132330.14928-1-luca@coelho.fi>
-References: <20180630132330.14928-1-luca@coelho.fi>
-Subject: [PATCH 07/15] iwlwifi: pcie: update bytes in the byte count table
+        Thu, 28 Jun 2018 05:28:01 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2] ath10k: Update the phymode along with bandwidth change
+ request
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1528482759-12604-1-git-send-email-ryanhsu@codeaurora.org>
+References: <1528482759-12604-1-git-send-email-ryanhsu@codeaurora.org>
+To: Ryan Hsu <ryanhsu@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        timur.kristof@gmail.com
+Message-Id: <20180628092800.AB68E60B10@smtp.codeaurora.org> (sfid-20180628_112804_707333_26D2ACFD)
+Date: Thu, 28 Jun 2018 09:28:00 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+Ryan Hsu <ryanhsu@codeaurora.org> wrote:
 
-For devices which use the image loader image, the length of the frame
-must be updated in the byte count in bytes, and not dwords as today.
-Avoid dividing the input length by 4.
+> In the case of Station connects to AP with narrower bandwidth at beginning.
+> And later the AP changes the bandwidth to winder bandwidth, the AP will
+> beacon with wider bandwidth IE, eg VHT20->VHT40->VHT80 or VHT40->VHT80.
+> 
+> Since the supported BANDWIDTH will be limited by the PHYMODE, so while
+> Station receives the bandwidth change request, it will also need to
+> reconfigure the PHYMODE setting to firmware instead of just configuring
+> the BANDWIDTH info, otherwise it'll trigger a firmware crash with
+> non-support bandwidth.
+> 
+> The issue was observed in WLAN.RM.4.4.1-00051-QCARMSWP-1, QCA6174 with
+> below scenario:
+> 
+> AP xxx changed bandwidth, new config is 5200 MHz, width 2 (5190/0 MHz)
+> disconnect from AP xxx for new auth to yyy
+> RX ReassocResp from xxx (capab=0x1111 status=0 aid=102)
+> associated
+> 
+> ....
+> 
+> AP xxx changed bandwidth, new config is 5200 MHz, width 2 (5190/0 MHz)
+> AP xxx changed bandwidth, new config is 5200 MHz, width 3 (5210/0 MHz)
+> 
+> ....
+> 
+> firmware register dump:
+> [00]: 0x05030000 0x000015B3 0x00987291 0x00955B31
+> [04]: 0x00987291 0x00060730 0x00000004 0x00000001
+> [08]: 0x004089F0 0x00955A00 0x000A0B00 0x00400000
+> [12]: 0x00000009 0x00000000 0x00952CD0 0x00952CE6
+> [16]: 0x00952CC4 0x0098E25F 0x00000000 0x0091080D
+> [20]: 0x40987291 0x0040E7A8 0x00000000 0x0041EE3C
+> [24]: 0x809ABF05 0x0040E808 0x00000000 0xC0987291
+> [28]: 0x809A650C 0x0040E948 0x0041FE40 0x004345C4
+> [32]: 0x809A5C63 0x0040E988 0x0040E9AC 0x0042D1A8
+> [36]: 0x8091D252 0x0040E9A8 0x00000002 0x00000001
+> [40]: 0x809FDA9D 0x0040EA58 0x0043D554 0x0042D554
+> [44]: 0x809F8B22 0x0040EA78 0x0043D554 0x00000001
+> [48]: 0x80911210 0x0040EAC8 0x00000010 0x004041D0
+> [52]: 0x80911154 0x0040EB28 0x00400000 0x00000000
+> [56]: 0x8091122D 0x0040EB48 0x00000000 0x00400600
+> 
+> Reported-by: Rouven Czerwinski <rouven@czerwinskis.de>
+> Tested-by: Timur Kristóf <timur.kristof@gmail.com>
+> Signed-off-by: Ryan Hsu <ryanhsu@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c      |  3 ++-
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 10 +++++++---
- 2 files changed, 9 insertions(+), 4 deletions(-)
+Patch applied to ath-current branch of ath.git, thanks.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index aa11b35d6f51..5d9b9306ea1c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -708,7 +708,8 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 		trans_cfg.rx_buf_size = IWL_AMSDU_4K;
- 
- 	trans->wide_cmd_header = true;
--	trans_cfg.bc_table_dword = true;
-+	trans_cfg.bc_table_dword =
-+		mvm->trans->cfg->device_family < IWL_DEVICE_FAMILY_22560;
- 
- 	trans_cfg.command_groups = iwl_mvm_groups;
- 	trans_cfg.command_groups_size = ARRAY_SIZE(iwl_mvm_groups);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index 48890a1c825f..5f05bcb26776 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -6,6 +6,7 @@
-  * GPL LICENSE SUMMARY
-  *
-  * Copyright(c) 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018        Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -19,6 +20,7 @@
-  * BSD LICENSE
-  *
-  * Copyright(c) 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2018        Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -84,7 +86,8 @@ void iwl_pcie_gen2_tx_stop(struct iwl_trans *trans)
- /*
-  * iwl_pcie_txq_update_byte_tbl - Set up entry in Tx byte-count array
-  */
--static void iwl_pcie_gen2_update_byte_tbl(struct iwl_txq *txq, u16 byte_cnt,
-+static void iwl_pcie_gen2_update_byte_tbl(struct iwl_trans_pcie *trans_pcie,
-+					  struct iwl_txq *txq, u16 byte_cnt,
- 					  int num_tbs)
- {
- 	struct iwlagn_scd_bc_tbl *scd_bc_tbl = txq->bc_tbl.addr;
-@@ -93,7 +96,8 @@ static void iwl_pcie_gen2_update_byte_tbl(struct iwl_txq *txq, u16 byte_cnt,
- 	u16 len = byte_cnt;
- 	__le16 bc_ent;
- 
--	len = DIV_ROUND_UP(len, 4);
-+	if (trans_pcie->bc_table_dword)
-+		len = DIV_ROUND_UP(len, 4);
- 
- 	if (WARN_ON(len > 0xFFF || idx >= txq->n_window))
- 		return;
-@@ -526,7 +530,7 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 	}
- 
- 	/* Set up entry for this TFD in Tx byte-count array */
--	iwl_pcie_gen2_update_byte_tbl(txq, le16_to_cpu(tx_cmd->len),
-+	iwl_pcie_gen2_update_byte_tbl(trans_pcie, txq, le16_to_cpu(tx_cmd->len),
- 				      iwl_pcie_gen2_get_num_tbs(trans, tfd));
- 
- 	/* start timer if queue currently empty */
+9191fc2a431b ath10k: update the phymode along with bandwidth change request
+
 -- 
-2.18.0
+https://patchwork.kernel.org/patch/10454965/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
