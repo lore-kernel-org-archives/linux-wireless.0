@@ -1,64 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:48206 "EHLO muru.com"
+Received: from ozlabs.org ([203.11.71.1]:52089 "EHLO ozlabs.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S937505AbeFSJoB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Jun 2018 05:44:01 -0400
-From: Tony Lindgren <tony@atomide.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
-        Guy Mishol <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Maital Hahn <maitalm@ti.com>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org
-Subject: [PATCH 4/8] wlcore: Fix misplaced PM call for scan_complete_work()
-Date: Tue, 19 Jun 2018 02:43:38 -0700
-Message-Id: <20180619094342.81831-5-tony@atomide.com> (sfid-20180619_114406_345929_DA1C05C2)
-In-Reply-To: <20180619094342.81831-1-tony@atomide.com>
-References: <20180619094342.81831-1-tony@atomide.com>
+        id S1751100AbeF1E7Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 28 Jun 2018 00:59:16 -0400
+Date: Thu, 28 Jun 2018 14:59:00 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Matthew Wilcox <willy@infradead.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Wireless <linux-wireless@vger.kernel.org>
+Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>
+Subject: linux-next: manual merge of the xarray tree with the
+ wireless-drivers-next tree
+Message-ID: <20180628145900.4ca1e648@canb.auug.org.au> (sfid-20180628_065931_010759_000443E4)
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/w0UTs=DoWUojtQpEhHHC5tx"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With runtime PM enabled, we now need to have wlcore enabled longer
-until after we're done calling wlcore_cmd_regdomain_config_locked():
+--Sig_/w0UTs=DoWUojtQpEhHHC5tx
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-scan_complete_work()
- wlcore_cmd_regdomain_config_locked()
-   wlcore_cmd_send_failsafe()
-     wl12xx_sdio_raw_read()
+Hi all,
 
-Note that this is not needed before runtime PM support as the
-custom PM code had it's own timer. We have not yet enabled runtime
-PM autosuspend for wlcore and this is why this issue now shows up.
+Today's linux-next merge of the xarray tree got a conflict in:
 
-Let's fix the issues first before we enable runtime PM autosuspend.
+  lib/Kconfig.debug
 
-Signed-off-by: Tony Lindgren <tony@atomide.com>
----
- drivers/net/wireless/ti/wlcore/scan.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+between commit:
 
-diff --git a/drivers/net/wireless/ti/wlcore/scan.c b/drivers/net/wireless/ti/wlcore/scan.c
---- a/drivers/net/wireless/ti/wlcore/scan.c
-+++ b/drivers/net/wireless/ti/wlcore/scan.c
-@@ -78,8 +78,6 @@ void wl1271_scan_complete_work(struct work_struct *work)
- 		wl1271_cmd_build_ap_probe_req(wl, wlvif, wlvif->probereq);
- 	}
- 
--	pm_runtime_put(wl->dev);
--
- 	if (wl->scan.failed) {
- 		wl1271_info("Scan completed due to error.");
- 		wl12xx_queue_recovery_work(wl);
-@@ -87,6 +85,8 @@ void wl1271_scan_complete_work(struct work_struct *work)
- 
- 	wlcore_cmd_regdomain_config_locked(wl);
- 
-+	pm_runtime_put(wl->dev);
-+
- 	ieee80211_scan_completed(wl->hw, &info);
- 
- out:
--- 
-2.17.1
+  0e2dc70e3d0d ("bitfield: add tests")
+
+from the wireless-drivers-next tree and commit:
+
+  d968f529e39f ("xarray: Add XArray load operation")
+
+from the xarray tree.
+
+I fixed it up (see below) and can carry the fix as necessary. This
+is now fixed as far as linux-next is concerned, but any non trivial
+conflicts should be mentioned to your upstream maintainer when your tree
+is submitted for merging.  You may also want to consider cooperating
+with the maintainer of the conflicting tree to minimise any particularly
+complex conflicts.
+
+--=20
+Cheers,
+Stephen Rothwell
+
+diff --cc lib/Kconfig.debug
+index f2be7503f87c,df1ea92d924c..000000000000
+--- a/lib/Kconfig.debug
++++ b/lib/Kconfig.debug
+@@@ -1802,13 -1802,9 +1802,16 @@@ config TEST_BITMA
+ =20
+  	  If unsure, say N.
+ =20
+ +config TEST_BITFIELD
+ +	tristate "Test bitfield functions at runtime"
+ +	help
+ +	  Enable this option to test the bitfield functions at boot.
+ +
+ +	  If unsure, say N.
+ +
++ config TEST_XARRAY
++ 	tristate "Test the XArray code at runtime"
++=20
+  config TEST_UUID
+  	tristate "Test functions located in the uuid module at runtime"
+ =20
+
+--Sig_/w0UTs=DoWUojtQpEhHHC5tx
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAls0axQACgkQAVBC80lX
+0Gxt7wf+NCxfGPR4S0spDyVUqdi2K48ZHk3jqA+yYRzhX025g0bRG1in3ZO7H74n
+AIFM5rgATSQPlGuXa4qgZzzKhRHvDAPYf4LuFL3M/Usqa3M187AVt6cgFZBf78QA
+oD6ypzvECVpShj5tZQihwdEegBxib9ZdQOXu+8m6VFMaZiPVeCsNQ5nOh7q7zyR5
+RpzUbTbEwAB6K8fZuW2Y/HomKyJruhkMbJ1CCBSi6eGQhKAuh+A5OMdQ8AXxfIAG
+1Cg83FHhb/az1YwyzQQHLr3mVyFee54SXTyLmzbw2QKcluH6QEHQ4Hw1A7Szzv2+
+Nf88LhwOs0NorXjVw4iCrwioOqAKVQ==
+=AT++
+-----END PGP SIGNATURE-----
+
+--Sig_/w0UTs=DoWUojtQpEhHHC5tx--
