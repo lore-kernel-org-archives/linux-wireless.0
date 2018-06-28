@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:42580 "EHLO
-        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752553AbeFYISO (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50434 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932581AbeF1JTZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Jun 2018 04:18:14 -0400
-Received: by mail-ed1-f68.google.com with SMTP id g12-v6so207675edi.9
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2018 01:18:13 -0700 (PDT)
-Subject: Re: [PATCH 0/6] brcmfmac: fix 160MHz support and monitor mode
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-References: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
- <CACna6rwzS-KXZ80wudpNEcrtnPd7fUWYKbT93hfFMfQi-V-hhg@mail.gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5B30A542.7090400@broadcom.com> (sfid-20180625_101837_150743_D4691605)
-Date: Mon, 25 Jun 2018 10:18:10 +0200
+        Thu, 28 Jun 2018 05:19:25 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Tony Lindgren <tony@atomide.com>
+Cc: Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: Re: [5/8] wclore: Fix timout errors after recovery
+References: <20180619094342.81831-6-tony@atomide.com>
+        <20180627154152.BCECB60714@smtp.codeaurora.org>
+        <20180628090739.GM112168@atomide.com>
+Date: Thu, 28 Jun 2018 12:19:21 +0300
+In-Reply-To: <20180628090739.GM112168@atomide.com> (Tony Lindgren's message of
+        "Thu, 28 Jun 2018 02:07:39 -0700")
+Message-ID: <8736x79skm.fsf@purkki.adurom.net> (sfid-20180628_111929_818730_E9BE99CF)
 MIME-Version: 1.0
-In-Reply-To: <CACna6rwzS-KXZ80wudpNEcrtnPd7fUWYKbT93hfFMfQi-V-hhg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6/24/2018 1:48 PM, Rafał Miłecki wrote:
-> On Fri, 22 Jun 2018 at 20:45, Arend van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->> Here a couple of patches in preparation of monitor mode support. It
->> is mostly about querying firmware for support. While at it I stumbled
->> upon the fact that 160MHz was not completely implemented in the driver
->> so there is a patch for that as well.
->>
->> The first two patches are actually some changes to the patches that
->> Rafal submitted. So this series depend on:
->>
->> [V3,2/2] brcmfmac: handle monitor mode marked msgbuf packets [1]
->>
->> These apply to the master branch of the wireless-drivers-next repository.
->>
->> [1] https://patchwork.kernel.org/patch/10474799/
+Tony Lindgren <tony@atomide.com> writes:
+
+> * Kalle Valo <kvalo@codeaurora.org> [180627 15:44]:
+>> 
+>> I'll do s/wclore/wlcore/ to the title.
 >
-> I find it pointless to submit fixes for patches that weren't accepted
-> yet. Let's work on improving original patches while they are still
-> pending.
+> OK thanks and sorry about that one.
 
-It is not unprecedented. There are enough patch series sent in the past 
-that relied on other still pending series. I was unsure how to deal with 
-it as I acked your changes already and did not exactly know when Kalle 
-would start applying the patches. I am fine either way.
+No problem. I would not have even noticed the typo but I did 'list -s
+new wlcore' (which prints all patches in new state with wlcore on the
+subject) on my patchwork script and started to wonder where did the
+patch 5 go :)
 
-Regards,
-Arend
+-- 
+Kalle Valo
