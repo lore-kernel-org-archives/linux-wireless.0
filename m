@@ -1,107 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:42412 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754519AbeFRUBX (ORCPT
+Received: from mail-io0-f193.google.com ([209.85.223.193]:38977 "EHLO
+        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934375AbeF1R07 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Jun 2018 16:01:23 -0400
-Received: by mail-oi0-f68.google.com with SMTP id k190-v6so15997789oib.9
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jun 2018 13:01:23 -0700 (PDT)
+        Thu, 28 Jun 2018 13:26:59 -0400
+Received: by mail-io0-f193.google.com with SMTP id e13-v6so5974092iof.6
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jun 2018 10:26:59 -0700 (PDT)
 MIME-Version: 1.0
-References: <20180618135329.N2TLO.197792.root@dnvrco-web12> <5B280692.2060106@broadcom.com>
-In-Reply-To: <5B280692.2060106@broadcom.com>
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date: Mon, 18 Jun 2018 22:01:11 +0200
-Message-ID: <CAFBinCBe=d-z-uzCm0Smn5Ee3btj_YNOH-s8jFzNX7qX=4ug8g@mail.gmail.com> (sfid-20180618_220127_258448_D24A7474)
-Subject: Re: Atheros AR9462 - 5Ghz not working
-To: arend.vanspriel@broadcom.com
-Cc: mgreger@cinci.rr.com, pozega.tomislav@gmail.com,
-        janusz.dziedzic@gmail.com, linux-wireless@vger.kernel.org,
-        sedat.dilek@gmail.com, kazikcz@gmail.com, bvermeul@blackstar.nl
-Content-Type: multipart/mixed; boundary="0000000000009ebd7e056ef00720"
+References: <20180409141032.GA9247@redhat.com> <20180409142640.GA5680@localhost.localdomain>
+ <20180409144819.GA9253@redhat.com> <20180625120816.GA2072@redhat.com>
+ <CAA2SeNJjHCrO5NyznK+EJt5K6SRVRr_FPZA2i53Z-FnqzkKz_g@mail.gmail.com> <20180625135419.GA3282@redhat.com>
+In-Reply-To: <20180625135419.GA3282@redhat.com>
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Date: Thu, 28 Jun 2018 19:26:48 +0200
+Message-ID: <CAJ0CqmXE7hF8UAe2iAZ7GhYWb7Uf3zJ+Fg_ervfyK1ojS1Oh=w@mail.gmail.com> (sfid-20180628_192705_725944_389DACE7)
+Subject: Re: [ANN] mt76x0 usb driver
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: lorenzo.bianconi83@gmail.com, Felix Fietkau <nbd@nbd.name>,
+        =?UTF-8?Q?Jakub_Kici=C5=84ski?= <moorray3@wp.pl>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---0000000000009ebd7e056ef00720
-Content-Type: text/plain; charset="UTF-8"
-
-Hi Arend,
-
-On Mon, Jun 18, 2018 at 9:23 PM Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
 >
-> + Martin
-thank you for CC'ing me!
-
-> On 6/18/2018 3:53 PM, mgreger@cinci.rr.com wrote:
+> On Mon, Jun 25, 2018 at 02:55:51PM +0200, Lorenzo Bianconi wrote:
+> > >
+> > > Hi all,
 > >
-> > ---- Tom Psyborg <pozega.tomislav@gmail.com> wrote:
-> >> Hi
-> >>
-> >> Your log only show attemps on ch 2447, Can you try connecting to 5GHz
-> >> AP? Connect to Hidden Wireless Network option at the bottom of the
-> >> nm-applet? Running airodump in monitor mode to see if it captures
-> >> anything? Maybe your laptop's antennas were designed for 2.4G card
-> >> only but this just dumb guessing...
-> >>
+> > Hi Stanislaw,
 > >
-> > It won't connect to any 5GHz AP.
-> > I don't run network manager or Gnome, in fact X11 is not installed on this machine at all.
-> > I don't think there is such a thing as 2.4GHz vs 5GHz antennas.
+> > >
+> > > On Mon, Apr 09, 2018 at 04:48:19PM +0200, Stanislaw Gruszka wrote:
+> > > > On Mon, Apr 09, 2018 at 04:26:42PM +0200, Lorenzo Bianconi wrote:
+> > > > > > I would like to integrate the driver to kernel via mt76 driver, i.e.
+> > > > > > add USB hooks and mt76x0 mac/phy code to mt76. This will open
+> > > > > > possibility to develop support for mt76x2 USB devices as well as mt76x0
+> > > > > > PCIe devices in mt76.
+> > > > > >
+> > > > >
+> > > > > I have already started supporting mt76x2 USB devices in mt76 since register map
+> > > > > is pretty similar to PCIe devices:
+> > > > > https://github.com/LorenzoBianconi/wireless-drivers-next/tree/mt76x2u
+> > > > > I added some usb utility routines so I think we can integrate mt76x0 in mt76 as
+> > > > > well
+> > > >
+> > > > Great, I'll start to integrate mt76x0 on top of your tree.
+> > >
+> > > So I started to do integration here:
+> > > https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft
+> > >
+> > > However since driver is self containging, I think better would be just
+> > > submit the driver into mt76/mt76x0/ dir upstream and do code merging work as
+> > > follow-up patches posted on the mailing list. Patches then could be reviewed
+> > > on regular basic. This will provide support for new mt76x0 devices in kernel
+> > > quicker. Conflicts with mt76x2u and not yet upstreamed mt7603 could be resolved
+> > > on the fly.
+> >
+> > I did a quick review of the code and it seems (please correct me if I
+> > am wrong) there is
+> > a lot of duplicated code with mt76/mt76x2u and mt7601u drivers (i.e:
+> > mcu/eeprom/mac code
 >
-> Actually there is. At least there are 2.4G specific antennas and
-> dual-band antennas.
+> Yes, however there are some subtle differences too.
 >
-> In 4.11 there have been a couple eeprom related changes dealing with
-> endianness of fields in eeprom. Could be those cause a regression for
-> you. I don't have the exact sha id of those commits, but I added the
-> author to this thread.
-I couldn't find the whole thread in a mailing list archive somewhere
-could the original reporter please send a kernel log (dmesg) and some
-information about the host system?
+> > is quite the same of the ones used in mt76x2u). Moreover mt76/mt76x2u has been
+> > refactored in order to expose usb and mt76x2_common modules where you
+> > can use better
+> > 802.11 aggregation (using mac80211 per-sta queuing) and A-MSDU support (using
+> > tx/rx usb scatter-gather). Moreover mt76x2u has been tested/used by
+> > various users till now.
+> > So since mt76x0 will be deeply modified I guess it would be better to
+> > start integrating the driver with
+> > mt76/mt76x2u before been merged upstream otherwise will end-up with a
+> > lot of integration commits.
+>
+> Not sure why many integration commits in upstream is a problem. I think
+> having patches posted on mailing list is better than doing them in my
+> "private" tree without any review.
+>
+> > What do you think?
+>
+> I was thinking about posting mt76x0 driver in a subdir (there is sill
+> some cleanup work need to be done there), wait for upstream mt76x2u
+> integration, then post patches that remove duplication between mt76x2
+> and mt76x0 and add support for mt76x0e on the way.
+>
 
-if the host system uses devicetree (maybe because it's an ARM based
-system or some PowerMac, etc.) then please keep reading
+Ack, fine. I modified a little bit mt76x2u/usb architecture moving
+some parts in common with mt76x0u
+in mt76-usb module (e.g. mt76_queue management in tx_status data path,
+tx_stats workqueue,
+some mcu utility routines). In this way the integration will be easier I guess
 
-Bas Vermeulen (I added him to this thread *in case* we find out that
-it's the same issue) reported that a AR9278 card refused to work in
-his "PowerMac G5"
-he posted a patch here: [0]
-back then I asked if he could test and send a modified version of his
-patch - I included that below
-(if someone is interested in the cause: whenever there is a devicetree
-node for the ath9k card then the driver-internal flag AH_NO_EEP_SWAP
-is set unconditionally. this flag is *NOT* set if there's no
-devicetree node. if it is set then the driver doesn't try to swap the
-EEPROM data as this breaks some OpenWrt based devices. however, since
-all OpenWrt devices set the "qca,no-eeprom" property we can move
-setting the AH_NO_EEP_SWAP flag into the existing if-block and
-hopefully solve all issues)
+Regards,
+Lorenzo
 
-
-Regards
-Martin
-
-
-[0] https://patchwork.kernel.org/patch/10241731/
-
---0000000000009ebd7e056ef00720
-Content-Type: application/x-patch;
-	name="ath9k-no-eep-swap-only-with-of-no-eeprom.patch"
-Content-Disposition: attachment;
-	filename="ath9k-no-eep-swap-only-with-of-no-eeprom.patch"
-Content-Transfer-Encoding: base64
-Content-ID: <f_jikokrmm0>
-X-Attachment-Id: f_jikokrmm0
-
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9pbml0LmMgYi9kcml2
-ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvaW5pdC5jCmluZGV4IGMwNzBhOWU1MWViZi4uZmFl
-NTcyYjM4NDE2IDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvaW5p
-dC5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9pbml0LmMKQEAgLTYzNiwx
-NSArNjM2LDE1IEBAIHN0YXRpYyBpbnQgYXRoOWtfb2ZfaW5pdChzdHJ1Y3QgYXRoX3NvZnRjICpz
-YykKIAkJcmV0ID0gYXRoOWtfZWVwcm9tX3JlcXVlc3Qoc2MsIGVlcHJvbV9uYW1lKTsKIAkJaWYg
-KHJldCkKIAkJCXJldHVybiByZXQ7CisKKwkJYWgtPmFoX2ZsYWdzICY9IH5BSF9VU0VfRUVQUk9N
-OworCQlhaC0+YWhfZmxhZ3MgfD0gQUhfTk9fRUVQX1NXQVA7CiAJfQogCiAJbWFjID0gb2ZfZ2V0
-X21hY19hZGRyZXNzKG5wKTsKIAlpZiAobWFjKQogCQlldGhlcl9hZGRyX2NvcHkoY29tbW9uLT5t
-YWNhZGRyLCBtYWMpOwogCi0JYWgtPmFoX2ZsYWdzICY9IH5BSF9VU0VfRUVQUk9NOwotCWFoLT5h
-aF9mbGFncyB8PSBBSF9OT19FRVBfU1dBUDsKLQogCXJldHVybiAwOwogfQogCg==
---0000000000009ebd7e056ef00720--
+> Thanks
+> Stanislaw
