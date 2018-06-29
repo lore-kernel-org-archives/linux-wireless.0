@@ -1,516 +1,397 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-db5eur01on0120.outbound.protection.outlook.com ([104.47.2.120]:45082
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933278AbeFQKHW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 17 Jun 2018 06:07:22 -0400
-From: Omer Efrat <omer.efrat@tandemg.com>
-To: linux-wireless@vger.kernel.org
-Cc: Omer Efrat <omer.efrat@tandemg.com>
-Subject: [PATCH v3 4/5] wireless-drivers: use BIT_ULL for NL80211_STA_INFO_ attribute types
-Date: Sun, 17 Jun 2018 13:07:13 +0300
-Message-Id: <1529230033-17948-1-git-send-email-omer.efrat@tandemg.com> (sfid-20180617_120727_067030_3F1A31A1)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:35882 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936112AbeF2LlK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Jun 2018 07:41:10 -0400
+Received: by mail-wm0-f65.google.com with SMTP id u18-v6so1759083wmc.1
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Jun 2018 04:41:09 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org
+Subject: [PATCH v2 3/4] mt76x2: dfs: add sw pattern detector
+Date: Fri, 29 Jun 2018 13:40:54 +0200
+Message-Id: <8e1df57615f718def79deff06a11e292d60053ed.1530260731.git.lorenzo.bianconi@redhat.com> (sfid-20180629_134115_337987_6811518D)
+In-Reply-To: <cover.1530260731.git.lorenzo.bianconi@redhat.com>
+References: <cover.1530260731.git.lorenzo.bianconi@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The BIT macro uses unsigned long which some architectures handle as 32 bit
-and therefore might cause macro's shift to overflow when used on a value
-equals or larger than 32 (NL80211_STA_INFO_RX_DURATION and afterwards).
+Add sw DFS pattern detector support for mt76x2 based devices.
+Dfs pattern supported:
+- short pulse radar patterns
+- staggered radar patterns
 
-Since 'filled' member in station_info changed to u64, BIT_ULL macro
-should be used with all NL80211_STA_INFO_* attribute types instead of BIT
-to prevent future possible bugs when one will use BIT macro for higher
-attributes by mistake.
-
-This commit cleans up all usages of BIT macro with the above field
-in wireless-drivers by changing it to BIT_ULL instead. In addition, there are
-some places which don't use BIT nor BIT_ULL macros so align those as well.
-
-Signed-off-by: Omer Efrat <omer.efrat@tandemg.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c              |  4 +--
- drivers/net/wireless/ath/ath6kl/cfg80211.c         | 14 ++++----
- drivers/net/wireless/ath/wil6210/cfg80211.c        | 18 +++++-----
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 40 +++++++++++-----------
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  6 ++--
- drivers/net/wireless/marvell/libertas/cfg.c        | 12 +++----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c    | 14 ++++----
- drivers/net/wireless/quantenna/qtnfmac/commands.c  | 32 ++++++++---------
- drivers/net/wireless/rndis_wlan.c                  |  4 +--
- drivers/net/wireless/ti/wlcore/main.c              |  2 +-
- 10 files changed, 73 insertions(+), 73 deletions(-)
+ .../net/wireless/mediatek/mt76/mt76x2_dfs.c   | 231 +++++++++++++++++-
+ .../net/wireless/mediatek/mt76/mt76x2_dfs.h   |  30 +++
+ 2 files changed, 260 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index e9c2fb3..0d9f70f 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -7725,7 +7725,7 @@ static void ath10k_sta_statistics(struct ieee80211_hw *hw,
- 		return;
- 
- 	sinfo->rx_duration = arsta->rx_duration;
--	sinfo->filled |= 1ULL << NL80211_STA_INFO_RX_DURATION;
-+	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_DURATION);
- 
- 	if (!arsta->txrate.legacy && !arsta->txrate.nss)
- 		return;
-@@ -7738,7 +7738,7 @@ static void ath10k_sta_statistics(struct ieee80211_hw *hw,
- 		sinfo->txrate.bw = arsta->txrate.bw;
- 	}
- 	sinfo->txrate.flags = arsta->txrate.flags;
--	sinfo->filled |= 1ULL << NL80211_STA_INFO_TX_BITRATE;
-+	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
+index 606202fe1851..38c1d5dc47ec 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.c
+@@ -159,9 +159,57 @@ static void mt76x2_dfs_set_capture_mode_ctrl(struct mt76x2_dev *dev,
+ 	mt76_wr(dev, MT_BBP(DFS, 36), data);
  }
  
- static const struct ieee80211_ops ath10k_ops = {
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 2ba8cf3..360c8d1 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1811,20 +1811,20 @@ static int ath6kl_get_station(struct wiphy *wiphy, struct net_device *dev,
- 
- 	if (vif->target_stats.rx_byte) {
- 		sinfo->rx_bytes = vif->target_stats.rx_byte;
--		sinfo->filled |= BIT(NL80211_STA_INFO_RX_BYTES64);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_BYTES64);
- 		sinfo->rx_packets = vif->target_stats.rx_pkt;
--		sinfo->filled |= BIT(NL80211_STA_INFO_RX_PACKETS);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_PACKETS);
- 	}
- 
- 	if (vif->target_stats.tx_byte) {
- 		sinfo->tx_bytes = vif->target_stats.tx_byte;
--		sinfo->filled |= BIT(NL80211_STA_INFO_TX_BYTES64);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BYTES64);
- 		sinfo->tx_packets = vif->target_stats.tx_pkt;
--		sinfo->filled |= BIT(NL80211_STA_INFO_TX_PACKETS);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_PACKETS);
- 	}
- 
- 	sinfo->signal = vif->target_stats.cs_rssi;
--	sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
-+	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
- 
- 	rate = vif->target_stats.tx_ucast_rate;
- 
-@@ -1857,12 +1857,12 @@ static int ath6kl_get_station(struct wiphy *wiphy, struct net_device *dev,
- 		return 0;
- 	}
- 
--	sinfo->filled |= BIT(NL80211_STA_INFO_TX_BITRATE);
-+	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
- 
- 	if (test_bit(CONNECTED, &vif->flags) &&
- 	    test_bit(DTIM_PERIOD_AVAIL, &vif->flags) &&
- 	    vif->nw_type == INFRA_NETWORK) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_BSS_PARAM);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_BSS_PARAM);
- 		sinfo->bss_param.flags = 0;
- 		sinfo->bss_param.dtim_period = vif->assoc_bss_dtim_period;
- 		sinfo->bss_param.beacon_interval = vif->assoc_bss_beacon_int;
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 78946f2..013d056 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -302,14 +302,14 @@ int wil_cid_fill_sinfo(struct wil6210_vif *vif, int cid,
- 
- 	sinfo->generation = wil->sinfo_gen;
- 
--	sinfo->filled = BIT(NL80211_STA_INFO_RX_BYTES) |
--			BIT(NL80211_STA_INFO_TX_BYTES) |
--			BIT(NL80211_STA_INFO_RX_PACKETS) |
--			BIT(NL80211_STA_INFO_TX_PACKETS) |
--			BIT(NL80211_STA_INFO_RX_BITRATE) |
--			BIT(NL80211_STA_INFO_TX_BITRATE) |
--			BIT(NL80211_STA_INFO_RX_DROP_MISC) |
--			BIT(NL80211_STA_INFO_TX_FAILED);
-+	sinfo->filled = BIT_ULL(NL80211_STA_INFO_RX_BYTES) |
-+			BIT_ULL(NL80211_STA_INFO_TX_BYTES) |
-+			BIT_ULL(NL80211_STA_INFO_RX_PACKETS) |
-+			BIT_ULL(NL80211_STA_INFO_TX_PACKETS) |
-+			BIT_ULL(NL80211_STA_INFO_RX_BITRATE) |
-+			BIT_ULL(NL80211_STA_INFO_TX_BITRATE) |
-+			BIT_ULL(NL80211_STA_INFO_RX_DROP_MISC) |
-+			BIT_ULL(NL80211_STA_INFO_TX_FAILED);
- 
- 	sinfo->txrate.flags = RATE_INFO_FLAGS_60G;
- 	sinfo->txrate.mcs = le16_to_cpu(reply.evt.bf_mcs);
-@@ -322,7 +322,7 @@ int wil_cid_fill_sinfo(struct wil6210_vif *vif, int cid,
- 	sinfo->tx_failed = stats->tx_errors;
- 
- 	if (test_bit(wil_vif_fwconnected, vif->status)) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
- 		if (test_bit(WMI_FW_CAPABILITY_RSSI_REPORTING,
- 			     wil->fw_capabilities))
- 			sinfo->signal = reply.evt.rssi;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index b6122aa..24c4e18 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -2434,7 +2434,7 @@ static void brcmf_convert_sta_flags(u32 fw_sta_flags, struct station_info *si)
- 	struct nl80211_sta_flag_update *sfu;
- 
- 	brcmf_dbg(TRACE, "flags %08x\n", fw_sta_flags);
--	si->filled |= BIT(NL80211_STA_INFO_STA_FLAGS);
-+	si->filled |= BIT_ULL(NL80211_STA_INFO_STA_FLAGS);
- 	sfu = &si->sta_flags;
- 	sfu->mask = BIT(NL80211_STA_FLAG_WME) |
- 		    BIT(NL80211_STA_FLAG_AUTHENTICATED) |
-@@ -2470,7 +2470,7 @@ static void brcmf_fill_bss_param(struct brcmf_if *ifp, struct station_info *si)
- 		brcmf_err("Failed to get bss info (%d)\n", err);
- 		goto out_kfree;
- 	}
--	si->filled |= BIT(NL80211_STA_INFO_BSS_PARAM);
-+	si->filled |= BIT_ULL(NL80211_STA_INFO_BSS_PARAM);
- 	si->bss_param.beacon_interval = le16_to_cpu(buf->bss_le.beacon_period);
- 	si->bss_param.dtim_period = buf->bss_le.dtim_period;
- 	capability = le16_to_cpu(buf->bss_le.capability);
-@@ -2501,7 +2501,7 @@ brcmf_cfg80211_get_station_ibss(struct brcmf_if *ifp,
- 		brcmf_err("BRCMF_C_GET_RATE error (%d)\n", err);
- 		return err;
- 	}
--	sinfo->filled |= BIT(NL80211_STA_INFO_TX_BITRATE);
-+	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
- 	sinfo->txrate.legacy = rate * 5;
- 
- 	memset(&scbval, 0, sizeof(scbval));
-@@ -2512,7 +2512,7 @@ brcmf_cfg80211_get_station_ibss(struct brcmf_if *ifp,
- 		return err;
- 	}
- 	rssi = le32_to_cpu(scbval.val);
--	sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
-+	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
- 	sinfo->signal = rssi;
- 
- 	err = brcmf_fil_cmd_data_get(ifp, BRCMF_C_GET_GET_PKTCNTS, &pktcnt,
-@@ -2521,10 +2521,10 @@ brcmf_cfg80211_get_station_ibss(struct brcmf_if *ifp,
- 		brcmf_err("BRCMF_C_GET_GET_PKTCNTS error (%d)\n", err);
- 		return err;
- 	}
--	sinfo->filled |= BIT(NL80211_STA_INFO_RX_PACKETS) |
--			 BIT(NL80211_STA_INFO_RX_DROP_MISC) |
--			 BIT(NL80211_STA_INFO_TX_PACKETS) |
--			 BIT(NL80211_STA_INFO_TX_FAILED);
-+	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_PACKETS) |
-+			 BIT_ULL(NL80211_STA_INFO_RX_DROP_MISC) |
-+			 BIT_ULL(NL80211_STA_INFO_TX_PACKETS) |
-+			 BIT_ULL(NL80211_STA_INFO_TX_FAILED);
- 	sinfo->rx_packets = le32_to_cpu(pktcnt.rx_good_pkt);
- 	sinfo->rx_dropped_misc = le32_to_cpu(pktcnt.rx_bad_pkt);
- 	sinfo->tx_packets = le32_to_cpu(pktcnt.tx_good_pkt);
-@@ -2571,7 +2571,7 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
- 		}
- 	}
- 	brcmf_dbg(TRACE, "version %d\n", le16_to_cpu(sta_info_le.ver));
--	sinfo->filled = BIT(NL80211_STA_INFO_INACTIVE_TIME);
-+	sinfo->filled = BIT_ULL(NL80211_STA_INFO_INACTIVE_TIME);
- 	sinfo->inactive_time = le32_to_cpu(sta_info_le.idle) * 1000;
- 	sta_flags = le32_to_cpu(sta_info_le.flags);
- 	brcmf_convert_sta_flags(sta_flags, sinfo);
-@@ -2581,33 +2581,33 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
- 	else
- 		sinfo->sta_flags.set &= ~BIT(NL80211_STA_FLAG_TDLS_PEER);
- 	if (sta_flags & BRCMF_STA_ASSOC) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_CONNECTED_TIME);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_CONNECTED_TIME);
- 		sinfo->connected_time = le32_to_cpu(sta_info_le.in);
- 		brcmf_fill_bss_param(ifp, sinfo);
- 	}
- 	if (sta_flags & BRCMF_STA_SCBSTATS) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_TX_FAILED);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_FAILED);
- 		sinfo->tx_failed = le32_to_cpu(sta_info_le.tx_failures);
--		sinfo->filled |= BIT(NL80211_STA_INFO_TX_PACKETS);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_PACKETS);
- 		sinfo->tx_packets = le32_to_cpu(sta_info_le.tx_pkts);
- 		sinfo->tx_packets += le32_to_cpu(sta_info_le.tx_mcast_pkts);
--		sinfo->filled |= BIT(NL80211_STA_INFO_RX_PACKETS);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_PACKETS);
- 		sinfo->rx_packets = le32_to_cpu(sta_info_le.rx_ucast_pkts);
- 		sinfo->rx_packets += le32_to_cpu(sta_info_le.rx_mcast_pkts);
- 		if (sinfo->tx_packets) {
--			sinfo->filled |= BIT(NL80211_STA_INFO_TX_BITRATE);
-+			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
- 			sinfo->txrate.legacy =
- 				le32_to_cpu(sta_info_le.tx_rate) / 100;
- 		}
- 		if (sinfo->rx_packets) {
--			sinfo->filled |= BIT(NL80211_STA_INFO_RX_BITRATE);
-+			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_BITRATE);
- 			sinfo->rxrate.legacy =
- 				le32_to_cpu(sta_info_le.rx_rate) / 100;
- 		}
- 		if (le16_to_cpu(sta_info_le.ver) >= 4) {
--			sinfo->filled |= BIT(NL80211_STA_INFO_TX_BYTES);
-+			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BYTES);
- 			sinfo->tx_bytes = le64_to_cpu(sta_info_le.tx_tot_bytes);
--			sinfo->filled |= BIT(NL80211_STA_INFO_RX_BYTES);
-+			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_BYTES);
- 			sinfo->rx_bytes = le64_to_cpu(sta_info_le.rx_tot_bytes);
- 		}
- 		total_rssi = 0;
-@@ -2623,10 +2623,10 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
- 			}
- 		}
- 		if (count_rssi) {
--			sinfo->filled |= BIT(NL80211_STA_INFO_CHAIN_SIGNAL);
-+			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_CHAIN_SIGNAL);
- 			sinfo->chains = count_rssi;
- 
--			sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
-+			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
- 			total_rssi /= count_rssi;
- 			sinfo->signal = total_rssi;
- 		} else if (test_bit(BRCMF_VIF_STATUS_CONNECTED,
-@@ -2639,7 +2639,7 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
- 				goto done;
- 			} else {
- 				rssi = le32_to_cpu(scb_val.val);
--				sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
-+				sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
- 				sinfo->signal = rssi;
- 				brcmf_dbg(CONN, "RSSI %d dBm\n", rssi);
- 			}
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index a6e0722..26021bc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -4216,7 +4216,7 @@ static void iwl_mvm_mac_sta_statistics(struct ieee80211_hw *hw,
- 
- 	if (mvmsta->avg_energy) {
- 		sinfo->signal_avg = mvmsta->avg_energy;
--		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL_AVG);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL_AVG);
- 	}
- 
- 	if (!fw_has_capa(&mvm->fw->ucode_capa,
-@@ -4240,11 +4240,11 @@ static void iwl_mvm_mac_sta_statistics(struct ieee80211_hw *hw,
- 
- 	sinfo->rx_beacon = mvmvif->beacon_stats.num_beacons +
- 			   mvmvif->beacon_stats.accu_num_beacons;
--	sinfo->filled |= BIT(NL80211_STA_INFO_BEACON_RX);
-+	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_BEACON_RX);
- 	if (mvmvif->beacon_stats.avg_signal) {
- 		/* firmware only reports a value after RXing a few beacons */
- 		sinfo->rx_beacon_signal_avg = mvmvif->beacon_stats.avg_signal;
--		sinfo->filled |= BIT(NL80211_STA_INFO_BEACON_SIGNAL_AVG);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_BEACON_SIGNAL_AVG);
- 	}
-  unlock:
- 	mutex_unlock(&mvm->mutex);
-diff --git a/drivers/net/wireless/marvell/libertas/cfg.c b/drivers/net/wireless/marvell/libertas/cfg.c
-index f99031c..57edfad 100644
---- a/drivers/net/wireless/marvell/libertas/cfg.c
-+++ b/drivers/net/wireless/marvell/libertas/cfg.c
-@@ -1559,10 +1559,10 @@ static int lbs_cfg_get_station(struct wiphy *wiphy, struct net_device *dev,
- 	int ret;
- 	size_t i;
- 
--	sinfo->filled |= BIT(NL80211_STA_INFO_TX_BYTES) |
--			 BIT(NL80211_STA_INFO_TX_PACKETS) |
--			 BIT(NL80211_STA_INFO_RX_BYTES) |
--			 BIT(NL80211_STA_INFO_RX_PACKETS);
-+	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BYTES) |
-+			 BIT_ULL(NL80211_STA_INFO_TX_PACKETS) |
-+			 BIT_ULL(NL80211_STA_INFO_RX_BYTES) |
-+			 BIT_ULL(NL80211_STA_INFO_RX_PACKETS);
- 	sinfo->tx_bytes = priv->dev->stats.tx_bytes;
- 	sinfo->tx_packets = priv->dev->stats.tx_packets;
- 	sinfo->rx_bytes = priv->dev->stats.rx_bytes;
-@@ -1572,14 +1572,14 @@ static int lbs_cfg_get_station(struct wiphy *wiphy, struct net_device *dev,
- 	ret = lbs_get_rssi(priv, &signal, &noise);
- 	if (ret == 0) {
- 		sinfo->signal = signal;
--		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
- 	}
- 
- 	/* Convert priv->cur_rate from hw_value to NL80211 value */
- 	for (i = 0; i < ARRAY_SIZE(lbs_rates); i++) {
- 		if (priv->cur_rate == lbs_rates[i].hw_value) {
- 			sinfo->txrate.legacy = lbs_rates[i].bitrate;
--			sinfo->filled |= BIT(NL80211_STA_INFO_TX_BITRATE);
-+			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
- 			break;
- 		}
- 	}
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index a67e2d6..d39f34d 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -1353,17 +1353,17 @@ mwifiex_dump_station_info(struct mwifiex_private *priv,
++static void mt76x2_dfs_seq_pool_put(struct mt76x2_dev *dev,
++				    struct mt76x2_dfs_sequence *seq)
++{
++	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
++
++	list_add(&seq->head, &dfs_pd->seq_pool);
++}
++
++static
++struct mt76x2_dfs_sequence *mt76x2_dfs_seq_pool_get(struct mt76x2_dev *dev)
++{
++	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
++	struct mt76x2_dfs_sequence *seq;
++
++	if (list_empty(&dfs_pd->seq_pool)) {
++		seq = devm_kzalloc(dev->mt76.dev, sizeof(*seq), GFP_ATOMIC);
++	} else {
++		seq = list_first_entry(&dfs_pd->seq_pool,
++				       struct mt76x2_dfs_sequence,
++				       head);
++		list_del(&seq->head);
++	}
++	return seq;
++}
++
++static int mt76x2_dfs_get_multiple(int val, int frac, int margin)
++{
++	int remainder, factor;
++
++	if (!frac)
++		return 0;
++
++	if (abs(val - frac) <= margin)
++		return 1;
++
++	factor = val / frac;
++	remainder = val % frac;
++
++	if (remainder > margin) {
++		if ((frac - remainder) <= margin)
++			factor++;
++		else
++			factor = 0;
++	}
++	return factor;
++}
++
+ static void mt76x2_dfs_detector_reset(struct mt76x2_dev *dev)
  {
- 	u32 rate;
+ 	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
++	struct mt76x2_dfs_sequence *seq, *tmp_seq;
+ 	int i;
  
--	sinfo->filled = BIT(NL80211_STA_INFO_RX_BYTES) | BIT(NL80211_STA_INFO_TX_BYTES) |
--			BIT(NL80211_STA_INFO_RX_PACKETS) | BIT(NL80211_STA_INFO_TX_PACKETS) |
--			BIT(NL80211_STA_INFO_TX_BITRATE) |
--			BIT(NL80211_STA_INFO_SIGNAL) | BIT(NL80211_STA_INFO_SIGNAL_AVG);
-+	sinfo->filled = BIT_ULL(NL80211_STA_INFO_RX_BYTES) | BIT_ULL(NL80211_STA_INFO_TX_BYTES) |
-+			BIT_ULL(NL80211_STA_INFO_RX_PACKETS) | BIT_ULL(NL80211_STA_INFO_TX_PACKETS) |
-+			BIT_ULL(NL80211_STA_INFO_TX_BITRATE) |
-+			BIT_ULL(NL80211_STA_INFO_SIGNAL) | BIT_ULL(NL80211_STA_INFO_SIGNAL_AVG);
- 
- 	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) {
- 		if (!node)
- 			return -ENOENT;
- 
--		sinfo->filled |= BIT(NL80211_STA_INFO_INACTIVE_TIME) |
--				BIT(NL80211_STA_INFO_TX_FAILED);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_INACTIVE_TIME) |
-+				BIT_ULL(NL80211_STA_INFO_TX_FAILED);
- 		sinfo->inactive_time =
- 			jiffies_to_msecs(jiffies - node->stats.last_rx);
- 
-@@ -1413,7 +1413,7 @@ mwifiex_dump_station_info(struct mwifiex_private *priv,
- 	sinfo->txrate.legacy = rate * 5;
- 
- 	if (priv->bss_mode == NL80211_IFTYPE_STATION) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_BSS_PARAM);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_BSS_PARAM);
- 		sinfo->bss_param.flags = 0;
- 		if (priv->curr_bss_params.bss_descriptor.cap_info_bitmap &
- 						WLAN_CAPABILITY_SHORT_PREAMBLE)
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index 5eb1436..4c9c431 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -640,83 +640,83 @@ qtnf_cmd_sta_info_parse(struct station_info *sinfo,
- 		return;
- 
- 	if (qtnf_sta_stat_avail(inactive_time, QLINK_STA_INFO_INACTIVE_TIME)) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_INACTIVE_TIME);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_INACTIVE_TIME);
- 		sinfo->inactive_time = le32_to_cpu(stats->inactive_time);
+ 	/* reset hw detector */
+@@ -172,6 +220,11 @@ static void mt76x2_dfs_detector_reset(struct mt76x2_dev *dev)
+ 		dfs_pd->event_rb[i].h_rb = 0;
+ 		dfs_pd->event_rb[i].t_rb = 0;
  	}
- 
- 	if (qtnf_sta_stat_avail(connected_time,
- 				QLINK_STA_INFO_CONNECTED_TIME)) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_CONNECTED_TIME);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_CONNECTED_TIME);
- 		sinfo->connected_time = le32_to_cpu(stats->connected_time);
- 	}
- 
- 	if (qtnf_sta_stat_avail(signal, QLINK_STA_INFO_SIGNAL)) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
- 		sinfo->signal = stats->signal - QLINK_RSSI_OFFSET;
- 	}
- 
- 	if (qtnf_sta_stat_avail(signal_avg, QLINK_STA_INFO_SIGNAL_AVG)) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL_AVG);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL_AVG);
- 		sinfo->signal_avg = stats->signal_avg - QLINK_RSSI_OFFSET;
- 	}
- 
- 	if (qtnf_sta_stat_avail(rxrate, QLINK_STA_INFO_RX_BITRATE)) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_RX_BITRATE);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_BITRATE);
- 		qtnf_sta_info_parse_rate(&sinfo->rxrate, &stats->rxrate);
- 	}
- 
- 	if (qtnf_sta_stat_avail(txrate, QLINK_STA_INFO_TX_BITRATE)) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_TX_BITRATE);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
- 		qtnf_sta_info_parse_rate(&sinfo->txrate, &stats->txrate);
- 	}
- 
- 	if (qtnf_sta_stat_avail(sta_flags, QLINK_STA_INFO_STA_FLAGS)) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_STA_FLAGS);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_STA_FLAGS);
- 		qtnf_sta_info_parse_flags(&sinfo->sta_flags, &stats->sta_flags);
- 	}
- 
- 	if (qtnf_sta_stat_avail(rx_bytes, QLINK_STA_INFO_RX_BYTES)) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_RX_BYTES);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_BYTES);
- 		sinfo->rx_bytes = le64_to_cpu(stats->rx_bytes);
- 	}
- 
- 	if (qtnf_sta_stat_avail(tx_bytes, QLINK_STA_INFO_TX_BYTES)) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_TX_BYTES);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BYTES);
- 		sinfo->tx_bytes = le64_to_cpu(stats->tx_bytes);
- 	}
- 
- 	if (qtnf_sta_stat_avail(rx_bytes, QLINK_STA_INFO_RX_BYTES64)) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_RX_BYTES64);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_BYTES64);
- 		sinfo->rx_bytes = le64_to_cpu(stats->rx_bytes);
- 	}
- 
- 	if (qtnf_sta_stat_avail(tx_bytes, QLINK_STA_INFO_TX_BYTES64)) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_TX_BYTES64);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BYTES64);
- 		sinfo->tx_bytes = le64_to_cpu(stats->tx_bytes);
- 	}
- 
- 	if (qtnf_sta_stat_avail(rx_packets, QLINK_STA_INFO_RX_PACKETS)) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_RX_PACKETS);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_PACKETS);
- 		sinfo->rx_packets = le32_to_cpu(stats->rx_packets);
- 	}
- 
- 	if (qtnf_sta_stat_avail(tx_packets, QLINK_STA_INFO_TX_PACKETS)) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_TX_PACKETS);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_PACKETS);
- 		sinfo->tx_packets = le32_to_cpu(stats->tx_packets);
- 	}
- 
- 	if (qtnf_sta_stat_avail(rx_beacon, QLINK_STA_INFO_BEACON_RX)) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_BEACON_RX);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_BEACON_RX);
- 		sinfo->rx_beacon = le64_to_cpu(stats->rx_beacon);
- 	}
- 
- 	if (qtnf_sta_stat_avail(rx_dropped_misc, QLINK_STA_INFO_RX_DROP_MISC)) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_RX_DROP_MISC);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_DROP_MISC);
- 		sinfo->rx_dropped_misc = le32_to_cpu(stats->rx_dropped_misc);
- 	}
- 
- 	if (qtnf_sta_stat_avail(tx_failed, QLINK_STA_INFO_TX_FAILED)) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_TX_FAILED);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_FAILED);
- 		sinfo->tx_failed = le32_to_cpu(stats->tx_failed);
- 	}
- 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 9935bd0..1650df6 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -2480,7 +2480,7 @@ static void rndis_fill_station_info(struct usbnet *usbdev,
- 	ret = rndis_query_oid(usbdev, RNDIS_OID_GEN_LINK_SPEED, &linkspeed, &len);
- 	if (ret == 0) {
- 		sinfo->txrate.legacy = le32_to_cpu(linkspeed) / 1000;
--		sinfo->filled |= BIT(NL80211_STA_INFO_TX_BITRATE);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
- 	}
- 
- 	len = sizeof(rssi);
-@@ -2488,7 +2488,7 @@ static void rndis_fill_station_info(struct usbnet *usbdev,
- 			      &rssi, &len);
- 	if (ret == 0) {
- 		sinfo->signal = level_to_qual(le32_to_cpu(rssi));
--		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
-+		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
- 	}
++
++	list_for_each_entry_safe(seq, tmp_seq, &dfs_pd->sequences, head) {
++		list_del_init(&seq->head);
++		mt76x2_dfs_seq_pool_put(dev, seq);
++	}
  }
  
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 3a51ab1..2c727f6 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5727,7 +5727,7 @@ static void wlcore_op_sta_statistics(struct ieee80211_hw *hw,
- 	if (ret < 0)
- 		goto out_sleep;
+ static bool mt76x2_dfs_check_chirp(struct mt76x2_dev *dev)
+@@ -374,11 +427,145 @@ static void mt76x2_dfs_queue_event(struct mt76x2_dev *dev,
+ 					     MT_DFS_EVENT_BUFLEN);
+ }
  
--	sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
-+	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
- 	sinfo->signal = rssi_dbm;
++static int mt76x2_dfs_create_sequence(struct mt76x2_dev *dev,
++				      struct mt76x2_dfs_event *event,
++				      u16 cur_len)
++{
++	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
++	struct mt76x2_dfs_sw_detector_params *sw_params;
++	u32 width_delta, with_sum, factor, cur_pri;
++	struct mt76x2_dfs_sequence seq, *seq_p;
++	struct mt76x2_dfs_event_rb *event_rb;
++	struct mt76x2_dfs_event *cur_event;
++	int i, j, end, pri;
++
++	event_rb = event->engine == 2 ? &dfs_pd->event_rb[1]
++				      : &dfs_pd->event_rb[0];
++
++	i = mt76_decr(event_rb->t_rb, MT_DFS_EVENT_BUFLEN);
++	end = mt76_decr(event_rb->h_rb, MT_DFS_EVENT_BUFLEN);
++
++	while (i != end) {
++		cur_event = &event_rb->data[i];
++		with_sum = event->width + cur_event->width;
++
++		sw_params = &dfs_pd->sw_dpd_params;
++		switch (dev->dfs_pd.region) {
++		case NL80211_DFS_FCC:
++		case NL80211_DFS_JP:
++			if (with_sum < 600)
++				width_delta = 8;
++			else
++				width_delta = with_sum >> 3;
++			break;
++		case NL80211_DFS_ETSI:
++			if (event->engine == 2)
++				width_delta = with_sum >> 6;
++			else if (with_sum < 620)
++				width_delta = 24;
++			else
++				width_delta = 8;
++			break;
++		case NL80211_DFS_UNSET:
++		default:
++			return -EINVAL;
++		}
++
++		pri = event->ts - cur_event->ts;
++		if (abs(event->width - cur_event->width) > width_delta ||
++		    pri < sw_params->min_pri)
++			goto next;
++
++		if (pri > sw_params->max_pri)
++			break;
++
++		seq.pri = event->ts - cur_event->ts;
++		seq.first_ts = cur_event->ts;
++		seq.last_ts = event->ts;
++		seq.engine = event->engine;
++		seq.count = 2;
++
++		j = mt76_decr(i, MT_DFS_EVENT_BUFLEN);
++		while (j != end) {
++			cur_event = &event_rb->data[j];
++			cur_pri = event->ts - cur_event->ts;
++			factor = mt76x2_dfs_get_multiple(cur_pri, seq.pri,
++						sw_params->pri_margin);
++			if (factor > 0) {
++				seq.first_ts = cur_event->ts;
++				seq.count++;
++			}
++
++			j = mt76_decr(j, MT_DFS_EVENT_BUFLEN);
++		}
++		if (seq.count <= cur_len)
++			goto next;
++
++		seq_p = mt76x2_dfs_seq_pool_get(dev);
++		if (!seq_p)
++			return -ENOMEM;
++
++		*seq_p = seq;
++		INIT_LIST_HEAD(&seq_p->head);
++		list_add(&seq_p->head, &dfs_pd->sequences);
++next:
++		i = mt76_decr(i, MT_DFS_EVENT_BUFLEN);
++	}
++	return 0;
++}
++
++static u16 mt76x2_dfs_add_event_to_sequence(struct mt76x2_dev *dev,
++					    struct mt76x2_dfs_event *event)
++{
++	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
++	struct mt76x2_dfs_sw_detector_params *sw_params;
++	struct mt76x2_dfs_sequence *seq, *tmp_seq;
++	u16 max_seq_len = 0;
++	u32 factor, pri;
++
++	sw_params = &dfs_pd->sw_dpd_params;
++	list_for_each_entry_safe(seq, tmp_seq, &dfs_pd->sequences, head) {
++		if (event->ts > seq->first_ts + MT_DFS_SEQUENCE_WINDOW) {
++			list_del_init(&seq->head);
++			mt76x2_dfs_seq_pool_put(dev, seq);
++			continue;
++		}
++
++		if (event->engine != seq->engine)
++			continue;
++
++		pri = event->ts - seq->last_ts;
++		factor = mt76x2_dfs_get_multiple(pri, seq->pri,
++						 sw_params->pri_margin);
++		if (factor > 0) {
++			seq->last_ts = event->ts;
++			seq->count++;
++			max_seq_len = max_t(u16, max_seq_len, seq->count);
++		}
++	}
++	return max_seq_len;
++}
++
++static bool mt76x2_dfs_check_detection(struct mt76x2_dev *dev)
++{
++	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
++	struct mt76x2_dfs_sequence *seq;
++
++	if (list_empty(&dfs_pd->sequences))
++		return false;
++
++	list_for_each_entry(seq, &dfs_pd->sequences, head) {
++		if (seq->count > MT_DFS_SEQUENCE_TH)
++			return true;
++	}
++	return false;
++}
++
+ static void mt76x2_dfs_add_events(struct mt76x2_dev *dev)
+ {
+ 	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
+ 	struct mt76x2_dfs_event event;
+-	int i;
++	int i, seq_len;
  
- out_sleep:
+ 	/* disable debug mode */
+ 	mt76x2_dfs_set_capture_mode_ctrl(dev, false);
+@@ -393,6 +580,9 @@ static void mt76x2_dfs_add_events(struct mt76x2_dev *dev)
+ 		if (!mt76x2_dfs_check_event(dev, &event))
+ 			continue;
+ 
++		seq_len = mt76x2_dfs_add_event_to_sequence(dev, &event);
++		mt76x2_dfs_create_sequence(dev, &event, seq_len);
++
+ 		mt76x2_dfs_queue_event(dev, &event);
+ 	}
+ 	mt76x2_dfs_set_capture_mode_ctrl(dev, true);
+@@ -433,9 +623,19 @@ static void mt76x2_dfs_tasklet(unsigned long arg)
+ 
+ 	if (time_is_before_jiffies(dfs_pd->last_sw_check +
+ 				   MT_DFS_SW_TIMEOUT)) {
++		bool radar_detected;
++
+ 		dfs_pd->last_sw_check = jiffies;
+ 
+ 		mt76x2_dfs_add_events(dev);
++		radar_detected = mt76x2_dfs_check_detection(dev);
++		if (radar_detected) {
++			/* sw detector rx radar pattern */
++			ieee80211_radar_detected(dev->mt76.hw);
++			mt76x2_dfs_detector_reset(dev);
++
++			return;
++		}
+ 		mt76x2_dfs_check_event_window(dev);
+ 	}
+ 
+@@ -472,6 +672,32 @@ static void mt76x2_dfs_tasklet(unsigned long arg)
+ 	mt76x2_irq_enable(dev, MT_INT_GPTIMER);
+ }
+ 
++static void mt76x2_dfs_init_sw_detector(struct mt76x2_dev *dev)
++{
++	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
++
++	switch (dev->dfs_pd.region) {
++	case NL80211_DFS_FCC:
++		dfs_pd->sw_dpd_params.max_pri = MT_DFS_FCC_MAX_PRI;
++		dfs_pd->sw_dpd_params.min_pri = MT_DFS_FCC_MIN_PRI;
++		dfs_pd->sw_dpd_params.pri_margin = MT_DFS_PRI_MARGIN;
++		break;
++	case NL80211_DFS_ETSI:
++		dfs_pd->sw_dpd_params.max_pri = MT_DFS_ETSI_MAX_PRI;
++		dfs_pd->sw_dpd_params.min_pri = MT_DFS_ETSI_MIN_PRI;
++		dfs_pd->sw_dpd_params.pri_margin = MT_DFS_PRI_MARGIN << 2;
++		break;
++	case NL80211_DFS_JP:
++		dfs_pd->sw_dpd_params.max_pri = MT_DFS_JP_MAX_PRI;
++		dfs_pd->sw_dpd_params.min_pri = MT_DFS_JP_MIN_PRI;
++		dfs_pd->sw_dpd_params.pri_margin = MT_DFS_PRI_MARGIN;
++		break;
++	case NL80211_DFS_UNSET:
++	default:
++		break;
++	}
++}
++
+ static void mt76x2_dfs_set_bbp_params(struct mt76x2_dev *dev)
+ {
+ 	u32 data;
+@@ -594,6 +820,7 @@ void mt76x2_dfs_init_params(struct mt76x2_dev *dev)
+ 
+ 	if ((chandef->chan->flags & IEEE80211_CHAN_RADAR) &&
+ 	    dev->dfs_pd.region != NL80211_DFS_UNSET) {
++		mt76x2_dfs_init_sw_detector(dev);
+ 		mt76x2_dfs_set_bbp_params(dev);
+ 		/* enable debug mode */
+ 		mt76x2_dfs_set_capture_mode_ctrl(dev, true);
+@@ -618,6 +845,8 @@ void mt76x2_dfs_init_detector(struct mt76x2_dev *dev)
+ {
+ 	struct mt76x2_dfs_pattern_detector *dfs_pd = &dev->dfs_pd;
+ 
++	INIT_LIST_HEAD(&dfs_pd->sequences);
++	INIT_LIST_HEAD(&dfs_pd->seq_pool);
+ 	dfs_pd->region = NL80211_DFS_UNSET;
+ 	dfs_pd->last_sw_check = jiffies;
+ 	tasklet_init(&dfs_pd->dfs_tasklet, mt76x2_dfs_tasklet,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
+index 49a49e999fed..83d2ff0b7e1f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_dfs.h
+@@ -37,7 +37,17 @@
+ #define MT_DFS_EVENT_LOOP		64
+ #define MT_DFS_SW_TIMEOUT		(HZ / 20)
+ #define MT_DFS_EVENT_WINDOW		(HZ / 5)
++#define MT_DFS_SEQUENCE_WINDOW		(200 * (1 << 20))
+ #define MT_DFS_EVENT_TIME_MARGIN	2000
++#define MT_DFS_PRI_MARGIN		4
++#define MT_DFS_SEQUENCE_TH		6
++
++#define MT_DFS_FCC_MAX_PRI		((28570 << 1) + 1000)
++#define MT_DFS_FCC_MIN_PRI		(3000 - 2)
++#define MT_DFS_JP_MAX_PRI		((80000 << 1) + 1000)
++#define MT_DFS_JP_MIN_PRI		(28500 - 2)
++#define MT_DFS_ETSI_MAX_PRI		(133333 + 125000 + 117647 + 1000)
++#define MT_DFS_ETSI_MIN_PRI		(4500 - 20)
+ 
+ struct mt76x2_radar_specs {
+ 	u8 mode;
+@@ -73,6 +83,15 @@ struct mt76x2_dfs_event_rb {
+ 	int h_rb, t_rb;
+ };
+ 
++struct mt76x2_dfs_sequence {
++	struct list_head head;
++	u32 first_ts;
++	u32 last_ts;
++	u32 pri;
++	u16 count;
++	u8 engine;
++};
++
+ struct mt76x2_dfs_hw_pulse {
+ 	u8 engine;
+ 	u32 period;
+@@ -81,6 +100,12 @@ struct mt76x2_dfs_hw_pulse {
+ 	u32 burst;
+ };
+ 
++struct mt76x2_dfs_sw_detector_params {
++	u32 min_pri;
++	u32 max_pri;
++	u32 pri_margin;
++};
++
+ struct mt76x2_dfs_engine_stats {
+ 	u32 hw_pattern;
+ 	u32 hw_pulse_discarded;
+@@ -92,7 +117,12 @@ struct mt76x2_dfs_pattern_detector {
+ 	u8 chirp_pulse_cnt;
+ 	u32 chirp_pulse_ts;
+ 
++	struct mt76x2_dfs_sw_detector_params sw_dpd_params;
+ 	struct mt76x2_dfs_event_rb event_rb[2];
++
++	struct list_head sequences;
++	struct list_head seq_pool;
++
+ 	unsigned long last_sw_check;
+ 	u32 last_event_ts;
+ 
 -- 
-2.7.4
+2.17.1
