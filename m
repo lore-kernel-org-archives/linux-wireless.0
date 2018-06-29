@@ -1,191 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:39073 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754601AbeFRPMo (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41230 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752231AbeF2HaO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Jun 2018 11:12:44 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: y2038@lists.linaro.org, Arnd Bergmann <arnd@arndb.de>,
-        Arvind Yadav <arvind.yadav.cs@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 3/4] ipw2x00: track time using boottime
-Date: Mon, 18 Jun 2018 17:11:16 +0200
-Message-Id: <20180618151142.1214422-3-arnd@arndb.de> (sfid-20180618_171439_887299_773DB9B7)
-In-Reply-To: <20180618151142.1214422-1-arnd@arndb.de>
-References: <20180618151142.1214422-1-arnd@arndb.de>
+        Fri, 29 Jun 2018 03:30:14 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Pkshih <pkshih@realtek.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 13/14] rtlwifi: access skb->data to get C2H data by macro
+References: <20180518093007.23594-1-pkshih@realtek.com>
+        <20180518093007.23594-14-pkshih@realtek.com>
+        <87po1fhwfd.fsf@purkki.adurom.net>
+        <1527732798.8418.7.camel@realtek.com>
+Date: Fri, 29 Jun 2018 10:30:08 +0300
+In-Reply-To: <1527732798.8418.7.camel@realtek.com> (pkshih@realtek.com's
+        message of "Thu, 31 May 2018 02:13:35 +0000")
+Message-ID: <87sh56f3sv.fsf@codeaurora.org> (sfid-20180629_093018_333953_910D4CF2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ipw2x00 driver family uses get_seconds() to read the current time
-for various purposes. This function is deprecated because of the 32-bit
-time_t overflow, and it can cause unexpected behavior when the time
-changes due to settimeofday() calls or leap second updates.
+Pkshih <pkshih@realtek.com> writes:
 
-In many cases, we want to use monotonic time instead, however ipw2x00
-explicitly tracks the time spent in suspend, so this changes the
-driver over to use ktime_get_boottime_seconds(), which is slightly
-slower, but not used in a fastpath here.
+> On Tue, 2018-05-29 at 08:18 +0300, Kalle Valo wrote:
+>> <pkshih@realtek.com> writes:
+>>=C2=A0
+>> > From: Ping-Ke Shih <pkshih@realtek.com>
+>> >
+>> > The format of C2H data is ID(1 byte) + Length(1 byte) + value, and it =
+is
+>> > more readable to use macros to access C2H data.
+>> >
+>> > Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+>>=C2=A0
+>> [...]
+>>=C2=A0
+>> > --- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
+>> > +++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+>> > @@ -177,6 +177,11 @@ enum rtl_c2h_evt_v2 {
+>> >=C2=A0=C2=A0	C2H_V2_CCX_RPT =3D 0x0F,
+>> >=C2=A0=C2=A0};
+>> >=C2=A0=C2=A0
+>> > +#define GET_C2H_CMD_ID(c2h)	({u8 *__c2h =3D c2h; __c2h[0]; })
+>> > +#define GET_C2H_SEQ(c2h)	({u8 *__c2h =3D c2h; __c2h[1]; })
+>> > +#define C2H_DATA_OFFSET		2
+>> > +#define GET_C2H_DATA_PTR(c2h)	({u8 *__c2h =3D c2h; &__c2h[C2H_DATA_OF=
+FSET]; })
+>>=C2=A0
+>> These macros are not really pretty, a proper static inline function
+>> would be a much better choise. But I'm planning to apply this patch
+>> anyway, I don't think it's a blocker but a good idea to cleanup later.
+>>=C2=A0
+>> And rtlwifi really should get away with this foo[0] and foo[1] style of
+>> buffers and switch to proper structs (foo->bar and foo->koo).
+>
+> Thanks for your review and suggestion.
+>
+> Because C2H data is little endian order, the struct will look like
+> struct foo {
+> #ifdef=C2=A0__LITTLE_ENDIAN
+> 	u8 bar:4;
+> 	u8 koo:4;
+> #else
+> 	u8 koo:4;
+> 	u8 bar:4;
+> #endif
+> }
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/intel/ipw2x00/ipw2100.c | 18 +++++++++---------
- drivers/net/wireless/intel/ipw2x00/ipw2100.h | 12 ++++++------
- drivers/net/wireless/intel/ipw2x00/ipw2200.c |  4 ++--
- drivers/net/wireless/intel/ipw2x00/ipw2200.h |  6 +++---
- 4 files changed, 20 insertions(+), 20 deletions(-)
+With u8 you don't need endian check, right? I would assume that with
+both little and big endian bar and koo would be in the same place.
 
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-index b8fd3cc90634..1ad83ef5f202 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-@@ -692,7 +692,7 @@ static void printk_buf(int level, const u8 * data, u32 len)
- 
- static void schedule_reset(struct ipw2100_priv *priv)
- {
--	unsigned long now = get_seconds();
-+	time64_t now = ktime_get_boottime_seconds();
- 
- 	/* If we haven't received a reset request within the backoff period,
- 	 * then we can reset the backoff interval so this reset occurs
-@@ -701,10 +701,10 @@ static void schedule_reset(struct ipw2100_priv *priv)
- 	    (now - priv->last_reset > priv->reset_backoff))
- 		priv->reset_backoff = 0;
- 
--	priv->last_reset = get_seconds();
-+	priv->last_reset = now;
- 
- 	if (!(priv->status & STATUS_RESET_PENDING)) {
--		IPW_DEBUG_INFO("%s: Scheduling firmware restart (%ds).\n",
-+		IPW_DEBUG_INFO("%s: Scheduling firmware restart (%llds).\n",
- 			       priv->net_dev->name, priv->reset_backoff);
- 		netif_carrier_off(priv->net_dev);
- 		netif_stop_queue(priv->net_dev);
-@@ -2079,7 +2079,7 @@ static void isr_indicate_associated(struct ipw2100_priv *priv, u32 status)
- 	memcpy(priv->bssid, bssid, ETH_ALEN);
- 
- 	priv->status |= STATUS_ASSOCIATING;
--	priv->connect_start = get_seconds();
-+	priv->connect_start = ktime_get_boottime_seconds();
- 
- 	schedule_delayed_work(&priv->wx_event_work, HZ / 10);
- }
-@@ -4070,8 +4070,8 @@ static ssize_t show_internals(struct device *d, struct device_attribute *attr,
- #define DUMP_VAR(x,y) len += sprintf(buf + len, # x ": %" y "\n", priv-> x)
- 
- 	if (priv->status & STATUS_ASSOCIATED)
--		len += sprintf(buf + len, "connected: %lu\n",
--			       get_seconds() - priv->connect_start);
-+		len += sprintf(buf + len, "connected: %llu\n",
-+			       ktime_get_boottime_seconds() - priv->connect_start);
- 	else
- 		len += sprintf(buf + len, "not connected\n");
- 
-@@ -4108,7 +4108,7 @@ static ssize_t show_internals(struct device *d, struct device_attribute *attr,
- 	DUMP_VAR(txq_stat.lo, "d");
- 
- 	DUMP_VAR(ieee->scans, "d");
--	DUMP_VAR(reset_backoff, "d");
-+	DUMP_VAR(reset_backoff, "lld");
- 
- 	return len;
- }
-@@ -6437,7 +6437,7 @@ static int ipw2100_suspend(struct pci_dev *pci_dev, pm_message_t state)
- 	pci_disable_device(pci_dev);
- 	pci_set_power_state(pci_dev, PCI_D3hot);
- 
--	priv->suspend_at = get_seconds();
-+	priv->suspend_at = ktime_get_boottime_seconds();
- 
- 	mutex_unlock(&priv->action_mutex);
- 
-@@ -6482,7 +6482,7 @@ static int ipw2100_resume(struct pci_dev *pci_dev)
- 	 * the queue of needed */
- 	netif_device_attach(dev);
- 
--	priv->suspend_time = get_seconds() - priv->suspend_at;
-+	priv->suspend_time = ktime_get_boottime_seconds() - priv->suspend_at;
- 
- 	/* Bring the device back up */
- 	if (!(priv->status & STATUS_RF_KILL_SW))
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.h b/drivers/net/wireless/intel/ipw2x00/ipw2100.h
-index ce3e35f6b60f..8c11c7fa2eef 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2100.h
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.h
-@@ -491,7 +491,7 @@ struct ipw2100_priv {
- 
- 	/* Statistics */
- 	int resets;
--	int reset_backoff;
-+	time64_t reset_backoff;
- 
- 	/* Context */
- 	u8 essid[IW_ESSID_MAX_SIZE];
-@@ -500,8 +500,8 @@ struct ipw2100_priv {
- 	u8 channel;
- 	int last_mode;
- 
--	unsigned long connect_start;
--	unsigned long last_reset;
-+	time64_t connect_start;
-+	time64_t last_reset;
- 
- 	u32 channel_mask;
- 	u32 fatal_error;
-@@ -581,9 +581,9 @@ struct ipw2100_priv {
- 
- 	int user_requested_scan;
- 
--	/* Track time in suspend */
--	unsigned long suspend_at;
--	unsigned long suspend_time;
-+	/* Track time in suspend, using CLOCK_BOOTTIME */
-+	time64_t suspend_at;
-+	time64_t suspend_time;
- 
- 	u32 interrupts;
- 	int tx_interrupts;
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-index 8a858f7e36f4..33186a6b28c0 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-@@ -11888,7 +11888,7 @@ static int ipw_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- 	pci_disable_device(pdev);
- 	pci_set_power_state(pdev, pci_choose_state(pdev, state));
- 
--	priv->suspend_at = get_seconds();
-+	priv->suspend_at = ktime_get_boottime_seconds();
- 
- 	return 0;
- }
-@@ -11925,7 +11925,7 @@ static int ipw_pci_resume(struct pci_dev *pdev)
- 	 * the queue of needed */
- 	netif_device_attach(dev);
- 
--	priv->suspend_time = get_seconds() - priv->suspend_at;
-+	priv->suspend_time = ktime_get_boottime_seconds() - priv->suspend_at;
- 
- 	/* Bring the device back up */
- 	schedule_work(&priv->up);
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.h b/drivers/net/wireless/intel/ipw2x00/ipw2200.h
-index aa301d1eee3c..f98ab1f71edd 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2200.h
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.h
-@@ -1343,9 +1343,9 @@ struct ipw_priv {
- 
- 	s8 tx_power;
- 
--	/* Track time in suspend */
--	unsigned long suspend_at;
--	unsigned long suspend_time;
-+	/* Track time in suspend using CLOCK_BOOTIME */
-+	time64_t suspend_at;
-+	time64_t suspend_time;
- 
- #ifdef CONFIG_PM
- 	u32 pm_state[16];
--- 
-2.9.0
+> Is this a linux convention?
+
+Earlier bitfields were disliked but nowadays they seem to be have become
+more acceptable. But I think the preferred way still is something like
+this (using u32 and 16 bit fields):
+
+struct foo {
+        __le32 koobar;
+}
+
+#define RTLWIFI_BAR_MASK GENMASK(15, 0)
+#define RTLWIFI_KOO_MASK GENMASK(31, 16)
+
+bar =3D FIELD_GET(RTLWIFI_BAR_MASK, __le32_to_cpu(foo->koobar));
+koo =3D FIELD_GET(RTLWIFI_KOO_MASK, __le32_to_cpu(foo->koobar));
+
+Of course there can be other good ways to do the same, others can chime
+in about those, but this is how I would do it.
+
+--=20
+Kalle Valo
