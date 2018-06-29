@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:41369 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751025AbeFZHAi (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:36010 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753518AbeF2JpY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Jun 2018 03:00:38 -0400
-Date: Tue, 26 Jun 2018 16:00:33 +0900
-From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Petr Mladek <pmladek@suse.com>,
-        syzkaller-bugs <syzkaller-bugs@googlegroups.com>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        syzbot <syzbot+d29d18215e477cfbfbdd@syzkaller.appspotmail.com>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Subject: Re: [PATCH] NFC: llcp: fix nfc_llcp_send_ui_frame() lockup
-Message-ID: <20180626070033.GA25715@jagdpanzerIV> (sfid-20180626_090107_411164_0497F065)
-References: <20180626044119.30118-1-sergey.senozhatsky@gmail.com>
- <CACT4Y+ZvLqzEwXgdB25MrmAS_j2_HsS8NFaJaMojzMV3prXypg@mail.gmail.com>
- <20180626051221.GC31439@jagdpanzerIV>
- <8c410102-43ab-dfdb-0d71-2ee5951e1af8@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8c410102-43ab-dfdb-0d71-2ee5951e1af8@gmail.com>
+        Fri, 29 Jun 2018 05:45:24 -0400
+Message-ID: <1530265522.3481.52.camel@sipsolutions.net> (sfid-20180629_114529_366809_BCF950B4)
+Subject: Re: [PATCH 2/4] mac80211: Add api to configure low and high txrate
+ threshold
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tamizh chelvam <tamizhr@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 29 Jun 2018 11:45:22 +0200
+In-Reply-To: <1528887539-26821-3-git-send-email-tamizhr@codeaurora.org>
+References: <1528887539-26821-1-git-send-email-tamizhr@codeaurora.org>
+         <1528887539-26821-3-git-send-email-tamizhr@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On (06/25/18 23:44), Eric Dumazet wrote:
-> > The loop is still infinite, correct, but we have a preemption point now.
-> > Sure, net people can come with a much better solution, I'll be happy to
-> > scratch my patch.
-> > 
-> 
-> This can not be the right solution, think about current thread being real time,
-> cond_resched() might be a nop.
-> NFC maintainers should really take a look at this.
+On Wed, 2018-06-13 at 16:28 +0530, Tamizh chelvam wrote:
+> +	if (sta->txrate_low == low_txrate_thold &&
+> +	    sta->txrate_high == high_txrate_thold)
+> +		goto unlock;
+> +
+> +	sta->txrate_low = low_txrate_thold;
+> +	sta->txrate_high = high_txrate_thold;
 
-I'm all for it.
+You don't really do anything here so what do you gain by doing the ==
+comparison and jumping over the assignment?
 
-	-ss
+I'd understand if you did some calculations here or whatever, but as it
+is it reads more like something was missed than like it was intended
+this way?
+
+Again, I think you need to squash this with patch 4.
+
+johannes
