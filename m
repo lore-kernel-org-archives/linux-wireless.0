@@ -1,47 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49674 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:36894 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755158AbeFNPQr (ORCPT
+        with ESMTP id S932288AbeF2KUk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Jun 2018 11:16:47 -0400
-Content-Type: text/plain; charset="utf-8"
+        Fri, 29 Jun 2018 06:20:40 -0400
 MIME-Version: 1.0
-Subject: Re: [1/4] ath10k: snoc: use correct bus-specific pointer in RX retry
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180611210946.241341-1-briannorris@chromium.org>
-References: <20180611210946.241341-1-briannorris@chromium.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>,
-        <linux-kernel@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>
-Message-Id: <20180614151647.26CB36022C@smtp.codeaurora.org> (sfid-20180614_171702_038284_760126CE)
-Date: Thu, 14 Jun 2018 15:16:47 +0000 (UTC)
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 29 Jun 2018 15:50:39 +0530
+From: Balaji Pothunoori <bpothuno@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v4] iw: ack signal support for tx ack packets
+In-Reply-To: <1530265719.3481.57.camel@sipsolutions.net>
+References: <1527246406-25475-1-git-send-email-bpothuno@codeaurora.org>
+ <1530265719.3481.57.camel@sipsolutions.net>
+Message-ID: <feb08d873546a730f414ba56f764d44a@codeaurora.org> (sfid-20180629_122054_589330_0ECA68E6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> wrote:
-
-> We're 'ath10k_snoc', not 'ath10k_pci'. This probably means we're
-> accessing junk data in ath10k_snoc_rx_replenish_retry(), unless
-> 'ath10k_snoc' and 'ath10k_pci' happen to have very similar struct
-> layouts.
+On 2018-06-29 15:18, Johannes Berg wrote:
+> On Fri, 2018-05-25 at 16:36 +0530, Balaji Pothunoori wrote:
+>> This patch is to display the average ack signal,
+>> last ack signal of tx ack packets.
 > 
-> Noticed by inspection.
+> Please resend this with the required kernel changes.
 > 
-> Fixes: d915105231ca ("ath10k: add hif rx methods for wcn3990")
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> johannes
 
-4 patches applied to ath-next branch of ath.git, thanks.
+Sure Johannes.
 
-426a0f0b5a2f ath10k: snoc: use correct bus-specific pointer in RX retry
-8ac5fe8e3d11 ath10k: snoc: stop including pci.h
-13e6cc0bd4ef ath10k: snoc: drop unused WCN3990_CE_ATTR_FLAGS
-c9f3e7fa8bcb ath10k: snoc: sort include files
-
--- 
-https://patchwork.kernel.org/patch/10458863/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Regards,
+Balaji.
