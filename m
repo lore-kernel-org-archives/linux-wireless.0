@@ -1,57 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 3.mo68.mail-out.ovh.net ([46.105.58.60]:34741 "EHLO
-        3.mo68.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753194AbeF2KqU (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52738 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751106AbeF2G6y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 06:46:20 -0400
-Received: from player761.ha.ovh.net (unknown [10.109.120.40])
-        by mo68.mail-out.ovh.net (Postfix) with ESMTP id 79747E6702
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Jun 2018 09:06:57 +0200 (CEST)
+        Fri, 29 Jun 2018 02:58:54 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/6] brcmfmac: fix 160MHz support and monitor mode
+References: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
+        <CACna6rwzS-KXZ80wudpNEcrtnPd7fUWYKbT93hfFMfQi-V-hhg@mail.gmail.com>
+        <CACna6rzpUDWBR_SXciEo8Z3Fsa6VZT0-KL2=WCzz9v8ww6tZVA@mail.gmail.com>
+        <5B30A85C.5080105@broadcom.com>
+        <CACna6rwGrcJ6iEv6+Bh+qC0T-yGfjvs8AweQ-4gM5JcO+JC0Dg@mail.gmail.com>
+Date: Fri, 29 Jun 2018 09:58:49 +0300
+In-Reply-To: <CACna6rwGrcJ6iEv6+Bh+qC0T-yGfjvs8AweQ-4gM5JcO+JC0Dg@mail.gmail.com>
+        (=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Mon, 25 Jun 2018
+ 10:43:55 +0200")
+Message-ID: <871scqgjti.fsf@codeaurora.org> (sfid-20180629_085857_793823_7CAF65B7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Fri, 29 Jun 2018 09:06:44 +0200
-From: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
-Subject: Re: [PATCH V4 2/3] brcmfmac: detect firmware support for radiotap
- monitor frames
-In-Reply-To: <87wouif51j.fsf@codeaurora.org>
-References: <20180624194437.28766-1-zajec5@gmail.com>
- <20180624194437.28766-2-zajec5@gmail.com> <87wouif51j.fsf@codeaurora.org>
-Message-ID: <a7f592acd7664f619d3f37b77d14bafe@milecki.pl> (sfid-20180629_124624_606316_D9B26261)
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-06-29 09:03, Kalle Valo wrote:
-> Rafał Miłecki <zajec5@gmail.com> writes:
-> 
->> From: Rafał Miłecki <rafal@milecki.pl>
->> 
->> Depending on used build-time options some firmwares may already 
->> include
->> radiotap header in passed monitor frames. Add a new feature flag to
->> store info about it. It's needed for proper handling of received 
->> frames
->> before passing them up.
->> 
->> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
->> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> 
-> BTW, we now have Co-Developed-by:
-> 
-> https://www.kernel.org/doc/html/latest/process/submitting-patches.html#when-to-use-acked-by-cc-and-co-developed-by
-> 
-> But no need to change this patch, just a tip for the future. I assume
-> this patchset is good to go and will apply it soon.
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
 
-Nice to know, thanks!
+> On Mon, 25 Jun 2018 at 10:31, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>>
+>> On 6/25/2018 6:40 AM, Rafa=C5=82 Mi=C5=82ecki wrote:
+>> > On Sun, 24 Jun 2018 at 13:48, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.co=
+m> wrote:
+>> >> On Fri, 22 Jun 2018 at 20:45, Arend van Spriel
+>> >> <arend.vanspriel@broadcom.com> wrote:
+>> >>> Here a couple of patches in preparation of monitor mode support. It
+>> >>> is mostly about querying firmware for support. While at it I stumbled
+>> >>> upon the fact that 160MHz was not completely implemented in the driv=
+er
+>> >>> so there is a patch for that as well.
+>> >>>
+>> >>> The first two patches are actually some changes to the patches that
+>> >>> Rafal submitted. So this series depend on:
+>> >>>
+>> >>> [V3,2/2] brcmfmac: handle monitor mode marked msgbuf packets [1]
+>> >>>
+>> >>> These apply to the master branch of the wireless-drivers-next reposi=
+tory.
+>> >>>
+>> >>> [1] https://patchwork.kernel.org/patch/10474799/
+>> >>
+>> >> I find it pointless to submit fixes for patches that weren't accepted
+>> >> yet. Let's work on improving original patches while they are still
+>> >> pending.
+>> >
+>> > I sent V4 with changes pointed our by Arend. That obsoletes all (?)
+>> > monitor patches from this patchset. I believe it was cleaner to
+>> > improve original patchset (not pushed yet).
+>> >
+>> > My suggestion is to apply patches 3/6 and 4/6 (they aren't monitor
+>> > related) and drop the others.
+>>
+>> Well. Given that Kalle prefers applying "all-or-nothing" I will resubmit
+>> the series addressing the issues you found.
+>
+> I wasn't aware of this, good to know, thanks!
+
+Yes, "all-or-nothing" method is both fastest and less error prone,
+that's why I prefer that. I got a bit lost with your discussion so
+please check carefully that I haven't dropped anything wrong.
+
+--=20
+Kalle Valo
