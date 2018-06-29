@@ -1,82 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55528 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932892AbeFUJSF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Jun 2018 05:18:05 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 7/9] mt76: add a debugfs file to dump agc calibration information
-Date: Thu, 21 Jun 2018 11:17:59 +0200
-Message-Id: <20180621091801.41184-7-nbd@nbd.name> (sfid-20180621_111820_220239_72B01870)
-In-Reply-To: <20180621091801.41184-1-nbd@nbd.name>
-References: <20180621091801.41184-1-nbd@nbd.name>
+Received: from 3.mo68.mail-out.ovh.net ([46.105.58.60]:34741 "EHLO
+        3.mo68.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753194AbeF2KqU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Jun 2018 06:46:20 -0400
+Received: from player761.ha.ovh.net (unknown [10.109.120.40])
+        by mo68.mail-out.ovh.net (Postfix) with ESMTP id 79747E6702
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Jun 2018 09:06:57 +0200 (CEST)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Fri, 29 Jun 2018 09:06:44 +0200
+From: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Subject: Re: [PATCH V4 2/3] brcmfmac: detect firmware support for radiotap
+ monitor frames
+In-Reply-To: <87wouif51j.fsf@codeaurora.org>
+References: <20180624194437.28766-1-zajec5@gmail.com>
+ <20180624194437.28766-2-zajec5@gmail.com> <87wouif51j.fsf@codeaurora.org>
+Message-ID: <a7f592acd7664f619d3f37b77d14bafe@milecki.pl> (sfid-20180629_124624_606316_D9B26261)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Useful for debugging gain adjustment issues triggered by signal strength
-changes.
+On 2018-06-29 09:03, Kalle Valo wrote:
+> Rafał Miłecki <zajec5@gmail.com> writes:
+> 
+>> From: Rafał Miłecki <rafal@milecki.pl>
+>> 
+>> Depending on used build-time options some firmwares may already 
+>> include
+>> radiotap header in passed monitor frames. Add a new feature flag to
+>> store info about it. It's needed for proper handling of received 
+>> frames
+>> before passing them up.
+>> 
+>> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> 
+> BTW, we now have Co-Developed-by:
+> 
+> https://www.kernel.org/doc/html/latest/process/submitting-patches.html#when-to-use-acked-by-cc-and-co-developed-by
+> 
+> But no need to change this patch, just a tip for the future. I assume
+> this patchset is good to go and will apply it soon.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mt76x2.h        |  1 +
- .../net/wireless/mediatek/mt76/mt76x2_debugfs.c    | 14 ++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_phy.c    |  1 +
- 3 files changed, 16 insertions(+)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-index 06ca5a77dfdf..21de1168076d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-@@ -72,6 +72,7 @@ struct mt76x2_calibration {
- 	int avg_rssi[MT_MAX_CHAINS];
- 	int avg_rssi_all;
- 
-+	u16 false_cca;
- 	s8 agc_gain_adjust;
- 	s8 low_gain;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c b/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
-index 955ea3e692dd..3f86e01049f3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
-@@ -115,6 +115,18 @@ static const struct file_operations fops_dfs_stat = {
- 	.release = single_release,
- };
- 
-+static int read_agc(struct seq_file *file, void *data)
-+{
-+	struct mt76x2_dev *dev = dev_get_drvdata(file->private);
-+
-+	seq_printf(file, "avg_rssi: %d\n", dev->cal.avg_rssi_all);
-+	seq_printf(file, "low_gain: %d\n", dev->cal.low_gain);
-+	seq_printf(file, "false_cca: %d\n", dev->cal.false_cca);
-+	seq_printf(file, "agc_gain_adjust: %d\n", dev->cal.agc_gain_adjust);
-+
-+	return 0;
-+}
-+
- void mt76x2_init_debugfs(struct mt76x2_dev *dev)
- {
- 	struct dentry *dir;
-@@ -130,4 +142,6 @@ void mt76x2_init_debugfs(struct mt76x2_dev *dev)
- 	debugfs_create_file("dfs_stats", 0400, dir, dev, &fops_dfs_stat);
- 	debugfs_create_devm_seqfile(dev->mt76.dev, "txpower", dir,
- 				    read_txpower);
-+
-+	debugfs_create_devm_seqfile(dev->mt76.dev, "agc", dir, read_agc);
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-index 9c7b19ce73f2..94943aeb249d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
-@@ -488,6 +488,7 @@ mt76x2_phy_adjust_vga_gain(struct mt76x2_dev *dev)
- 	u8 limit = dev->cal.low_gain > 0 ? 16 : 4;
- 
- 	false_cca = FIELD_GET(MT_RX_STAT_1_CCA_ERRORS, mt76_rr(dev, MT_RX_STAT_1));
-+	dev->cal.false_cca = false_cca;
- 	if (false_cca > 800 && dev->cal.agc_gain_adjust < limit)
- 		dev->cal.agc_gain_adjust += 2;
- 	else if (false_cca < 10 && dev->cal.agc_gain_adjust > 0)
--- 
-2.17.0
+Nice to know, thanks!
