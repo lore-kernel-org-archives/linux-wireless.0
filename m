@@ -1,37 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-blr-02.qualcomm.com ([103.229.18.198]:43373 "EHLO
-        alexa-out-blr.qualcomm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S935560AbeFMOcJ (ORCPT
+Received: from shards.monkeyblade.net ([23.128.96.9]:44998 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933132AbeF2NJz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jun 2018 10:32:09 -0400
-From: Tamizh Chelvam Raja <tamizhr@qti.qualcomm.com>
-To: =?iso-8859-1?Q?Toke_H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        Tamizh chelvam <tamizhr@codeaurora.org>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Tamizh chelvam" <tamizhr@codeaurora.org>
-Subject: RE: [PATCH 0/4] cfg80211/mac80211: Add support to configure and
- monitor txrate threshold
-Date: Wed, 13 Jun 2018 14:24:04 +0000
-Message-ID: <9fd8762e9d2f4b93b299ab859e389b46@aphydexm01b.ap.qualcomm.com> (sfid-20180613_163213_382010_2F0C3F26)
-References: <1528887539-26821-1-git-send-email-tamizhr@codeaurora.org>
- <87fu1q7uq5.fsf@toke.dk>
-In-Reply-To: <87fu1q7uq5.fsf@toke.dk>
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+        Fri, 29 Jun 2018 09:09:55 -0400
+Date: Fri, 29 Jun 2018 22:09:52 +0900 (KST)
+Message-Id: <20180629.220952.489245164496325184.davem@davemloft.net> (sfid-20180629_151004_975288_F1C3A509)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2018-06-29
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20180629074852.20096-1-johannes@sipsolutions.net>
+References: <20180629074852.20096-1-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> This patchsets introduced new NL command and api to support=20
-> configuring txrate threshold for the connected stations and api to=20
-> notify userspace application upon crossing the configured txrate threshol=
-d.
-> This will be useful for the application which requires station's=20
-> current capability change information.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 29 Jun 2018 09:48:51 +0200
 
-What is the intended use case? Asking mostly out of curiosity :)
-[Tamizh] This is to monitor txrate change for a station. By notifying users=
-pace when the txrate for a station goes out of configured threshold, It can=
- take steering decisions on the particular station.
+> Hi Dave,
+> 
+> For the current release, I have a few fixes. No sense waiting
+> for more, and most of these have been around for a while.
+> 
+> Please pull and let me know if there's any problem.
+ ...
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2018-06-29
 
--Toke
+Pulled, thanks a lot.
