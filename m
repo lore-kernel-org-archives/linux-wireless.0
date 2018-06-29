@@ -1,85 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38130 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751603AbeFXQ6v (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:33942 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933177AbeF2Hs7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Jun 2018 12:58:51 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [V2] brcmfmac: stop watchdog before detach and free everything
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180530090633.GA15390@panicking>
-References: <20180530090633.GA15390@panicking>
-To: Michael Trimarchi <michael@amarulasolutions.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Ian Molton <ian@mnementh.co.uk>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Message-Id: <20180624165850.C890E60711@smtp.codeaurora.org> (sfid-20180624_185902_912719_8ECFF0F5)
-Date: Sun, 24 Jun 2018 16:58:50 +0000 (UTC)
+        Fri, 29 Jun 2018 03:48:59 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2018-06-29
+Date: Fri, 29 Jun 2018 09:48:51 +0200
+Message-Id: <20180629074852.20096-1-johannes@sipsolutions.net> (sfid-20180629_094906_744764_8F25C54C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Trimarchi <michael@amarulasolutions.com> wrote:
+Hi Dave,
 
-> Using built-in in kernel image without a firmware in filesystem
-> or in the kernel image can lead to a kernel NULL pointer deference.
-> Watchdog need to be stopped in brcmf_sdio_remove
-> 
-> The system is going down NOW!
-> [ 1348.110759] Unable to handle kernel NULL pointer dereference at virtual address 000002f8
-> Sent SIGTERM to all processes
-> [ 1348.121412] Mem abort info:
-> [ 1348.126962]   ESR = 0x96000004
-> [ 1348.130023]   Exception class = DABT (current EL), IL = 32 bits
-> [ 1348.135948]   SET = 0, FnV = 0
-> [ 1348.138997]   EA = 0, S1PTW = 0
-> [ 1348.142154] Data abort info:
-> [ 1348.145045]   ISV = 0, ISS = 0x00000004
-> [ 1348.148884]   CM = 0, WnR = 0
-> [ 1348.151861] user pgtable: 4k pages, 48-bit VAs, pgdp = (____ptrval____)
-> [ 1348.158475] [00000000000002f8] pgd=0000000000000000
-> [ 1348.163364] Internal error: Oops: 96000004 [#1] PREEMPT SMP
-> [ 1348.168927] Modules linked in: ipv6
-> [ 1348.172421] CPU: 3 PID: 1421 Comm: brcmf_wdog/mmc0 Not tainted 4.17.0-rc5-next-20180517 #18
-> [ 1348.180757] Hardware name: Amarula A64-Relic (DT)
-> [ 1348.185455] pstate: 60000005 (nZCv daif -PAN -UAO)
-> [ 1348.190251] pc : brcmf_sdiod_freezer_count+0x0/0x20
-> [ 1348.195124] lr : brcmf_sdio_watchdog_thread+0x64/0x290
-> [ 1348.200253] sp : ffff00000b85be30
-> [ 1348.203561] x29: ffff00000b85be30 x28: 0000000000000000
-> [ 1348.208868] x27: ffff00000b6cb918 x26: ffff80003b990638
-> [ 1348.214176] x25: ffff0000087b1a20 x24: ffff80003b94f800
-> [ 1348.219483] x23: ffff000008e620c8 x22: ffff000008f0b660
-> [ 1348.224790] x21: ffff000008c6a858 x20: 00000000fffffe00
-> [ 1348.230097] x19: ffff80003b94f800 x18: 0000000000000001
-> [ 1348.235404] x17: 0000ffffab2e8a74 x16: ffff0000080d7de8
-> [ 1348.240711] x15: 0000000000000000 x14: 0000000000000400
-> [ 1348.246018] x13: 0000000000000400 x12: 0000000000000001
-> [ 1348.251324] x11: 00000000000002c4 x10: 0000000000000a10
-> [ 1348.256631] x9 : ffff00000b85bc40 x8 : ffff80003be11870
-> [ 1348.261937] x7 : ffff80003dfc7308 x6 : 000000078ff08b55
-> [ 1348.267243] x5 : 00000139e1058400 x4 : 0000000000000000
-> [ 1348.272550] x3 : dead000000000100 x2 : 958f2788d6618100
-> [ 1348.277856] x1 : 00000000fffffe00 x0 : 0000000000000000
-> 
-> Signed-off-by: Michael Trimarchi <michael@amarulasolutions.com>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Tested-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+For the current release, I have a few fixes. No sense waiting
+for more, and most of these have been around for a while.
 
-Patch applied to wireless-drivers.git, thanks.
+Please pull and let me know if there's any problem.
 
-373c83a801f1 brcmfmac: stop watchdog before detach and free everything
+Thanks,
+johannes
 
--- 
-https://patchwork.kernel.org/patch/10437931/
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
+The following changes since commit 4205c88eaf17b5f3ee30032d68df55cd5d9077a1:
+
+  net: stmmac: Set DMA buffer size in HW (2018-06-28 22:24:25 +0900)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2018-06-29
+
+for you to fetch changes up to 95bca62fb723a121954fc7ae5473bb2c1f0d5986:
+
+  nl80211: check nla_parse_nested() return values (2018-06-29 09:44:51 +0200)
+
+----------------------------------------------------------------
+Just three fixes:
+ * fix HT operation in mesh mode
+ * disable preemption in control frame TX
+ * check nla_parse_nested() return values
+   where missing (two places)
+
+----------------------------------------------------------------
+Bob Copeland (1):
+      nl80211: relax ht operation checks for mesh
+
+Denis Kenzior (1):
+      mac80211: disable BHs/preemption in ieee80211_tx_control_port()
+
+Johannes Berg (1):
+      nl80211: check nla_parse_nested() return values
+
+ net/mac80211/tx.c      |  2 ++
+ net/wireless/nl80211.c | 35 ++++++++++++++---------------------
+ 2 files changed, 16 insertions(+), 21 deletions(-)
