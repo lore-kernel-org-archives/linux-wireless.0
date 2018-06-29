@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:39325 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751254AbeFCSWR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 3 Jun 2018 14:22:17 -0400
-Received: by mail-lf0-f68.google.com with SMTP id t134-v6so21772592lff.6
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Jun 2018 11:22:16 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v5 08/12] ath10k: add HTT RX HL ops
-Date: Sun,  3 Jun 2018 20:20:25 +0200
-Message-Id: <20180603182029.8914-9-erik.stromdahl@gmail.com> (sfid-20180603_202226_896952_D5FB7718)
-In-Reply-To: <20180603182029.8914-1-erik.stromdahl@gmail.com>
-References: <20180603182029.8914-1-erik.stromdahl@gmail.com>
+Received: from mail.bugwerft.de ([46.23.86.59]:33800 "EHLO mail.bugwerft.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935084AbeF2MrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Jun 2018 08:47:24 -0400
+From: Daniel Mack <daniel@zonque.org>
+To: sameo@linux.intel.com, davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, Daniel Mack <daniel@zonque.org>
+Subject: [PATCH 2/2] nfc: st95hf: drop another illegal kfree_skb()
+Date: Fri, 29 Jun 2018 14:47:17 +0200
+Message-Id: <20180629124717.2011-2-daniel@zonque.org> (sfid-20180629_144731_537203_FD7B1E19)
+In-Reply-To: <20180629124717.2011-1-daniel@zonque.org>
+References: <20180629124717.2011-1-daniel@zonque.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initial (empty) HTT RX ops for high latency devices.
+In the error path of the IRQ handler, don't free the skb in flight. The
+callback in the digital core will do that for us, so this is another
+double-free that leads to memory corruptions.
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+The assignment of 'wtx' doesn't make sense as the variable is not read
+after it is written. Drop it.
+
+Signed-off-by: Daniel Mack <daniel@zonque.org>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/nfc/st95hf/core.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index bd23f6940488..ae90ddfdb466 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2983,11 +2983,16 @@ static const struct ath10k_htt_rx_ops htt_rx_ops_64 = {
- 	.htt_reset_paddrs_ring = ath10k_htt_reset_paddrs_ring_64,
- };
+diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
+index ef91ca8b53a4..e651e1aae5a3 100644
+--- a/drivers/nfc/st95hf/core.c
++++ b/drivers/nfc/st95hf/core.c
+@@ -868,8 +868,6 @@ static irqreturn_t st95hf_irq_thread_handler(int irq, void  *st95hfcontext)
+ 	return IRQ_HANDLED;
  
-+static const struct ath10k_htt_rx_ops htt_rx_ops_hl = {
-+};
-+
- void ath10k_htt_set_rx_ops(struct ath10k_htt *htt)
- {
- 	struct ath10k *ar = htt->ar;
- 
--	if (ar->hw_params.target_64bit)
-+	if (ar->dev_type == ATH10K_DEV_TYPE_HL)
-+		htt->rx_ops = &htt_rx_ops_hl;
-+	else if (ar->hw_params.target_64bit)
- 		htt->rx_ops = &htt_rx_ops_64;
- 	else
- 		htt->rx_ops = &htt_rx_ops_32;
+ end:
+-	kfree_skb(skb_resp);
+-	wtx = false;
+ 	cb_arg->rats = false;
+ 	skb_resp = ERR_PTR(result);
+ 	/* call of callback with error */
 -- 
-2.17.0
+2.17.1
