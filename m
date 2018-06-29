@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53424 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:56574 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752281AbeF1Ivv (ORCPT
+        with ESMTP id S932526AbeF2HJL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Jun 2018 04:51:51 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-        Matthew Wilcox <willy@infradead.org>,
-        Wireless <linux-wireless@vger.kernel.org>,
-        Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: linux-next: manual merge of the xarray tree with the wireless-drivers-next tree
-References: <20180628145900.4ca1e648@canb.auug.org.au>
-        <1530172269.4988.1.camel@sipsolutions.net>
-Date: Thu, 28 Jun 2018 11:51:40 +0300
-In-Reply-To: <1530172269.4988.1.camel@sipsolutions.net> (Johannes Berg's
-        message of "Thu, 28 Jun 2018 09:51:09 +0200")
-Message-ID: <87in63s38j.fsf@kamboji.qca.qualcomm.com> (sfid-20180628_105210_168969_033F012C)
+        Fri, 29 Jun 2018 03:09:11 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [v3] rtlwifi: rtl8821ae: fix firmware is not ready to run
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180628020227.8776-1-pkshih@realtek.com>
+References: <20180628020227.8776-1-pkshih@realtek.com>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: <linux-wireless@vger.kernel.org>, <Larry.Finger@lwfinger.net>,
+        <stable@vger.kernel.org>
+Message-Id: <20180629070910.A0CE760791@smtp.codeaurora.org> (sfid-20180629_090914_796479_2E5F7F27)
+Date: Fri, 29 Jun 2018 07:09:10 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-> On Thu, 2018-06-28 at 14:59 +1000, Stephen Rothwell wrote:
->> Hi all,
->> 
->> Today's linux-next merge of the xarray tree got a conflict in:
->> 
->>   lib/Kconfig.debug
->> 
->> between commit:
->> 
->>   0e2dc70e3d0d ("bitfield: add tests")
->> 
->> from the wireless-drivers-next tree and commit:
->> 
->>   d968f529e39f ("xarray: Add XArray load operation")
->> 
->> from the xarray tree.
->
-> Thanks for the heads-up! Not really sure where/how we'll be able to get
-> that resolved before it hits Linus, but as the conflict seems rather
-> easy (overlapping additions), I guess it's not such a big deal.
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> Without this patch, firmware will not run properly on rtl8821ae, and it
+> causes bad user experience. For example, bad connection performance with
+> low rate, higher power consumption, and so on.
+> 
+> rtl8821ae uses two kinds of firmwares for normal and WoWlan cases, and
+> each firmware has firmware data buffer and size individually. Original
+> code always overwrite size of normal firmware rtlpriv->rtlhal.fwsize, and
+> this mismatch causes firmware checksum error, then firmware can't start.
+> 
+> In this situation, driver gives message "Firmware is not ready to run!".
+> 
+> Fixes: fe89707f0afa ("rtlwifi: rtl8821ae: Simplify loading of WOWLAN firmware")
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Cc: Stable <stable@vger.kernel.org> # 4.0+
+> Reviewed-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Yeah, I would assume this is business as usual for Linus and we don't
-need to do anything. But please do let me know if that's not the case.
+Patch applied to wireless-drivers.git, thanks.
+
+9a98302de199 rtlwifi: rtl8821ae: fix firmware is not ready to run
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/10492933/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
