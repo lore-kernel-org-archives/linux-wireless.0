@@ -1,71 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:44240 "EHLO
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:46702 "EHLO
         mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932360AbeFOMGZ (ORCPT
+        with ESMTP id S1755143AbeF2N43 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Jun 2018 08:06:25 -0400
-Received: by mail-lf0-f66.google.com with SMTP id p23-v6so2588140lfh.11
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jun 2018 05:06:24 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [PATCH 2/2] ath10k: replace hardcoded constant with define
-Date: Fri, 15 Jun 2018 14:04:23 +0200
-Message-Id: <20180615120423.4963-2-erik.stromdahl@gmail.com> (sfid-20180615_140629_849366_0881DD08)
-In-Reply-To: <20180615120423.4963-1-erik.stromdahl@gmail.com>
-References: <20180615120423.4963-1-erik.stromdahl@gmail.com>
+        Fri, 29 Jun 2018 09:56:29 -0400
+Received: by mail-lf0-f66.google.com with SMTP id l16-v6so4584825lfc.13
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Jun 2018 06:56:28 -0700 (PDT)
+Date: Fri, 29 Jun 2018 15:56:25 +0200
+From: Niklas Cassel <niklas.cassel@linaro.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: alagusankar@silex-india.com, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ath10k@lists.infradead.org, "David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH 1/3] ath10k: sdio: use same endpoint id for all packets
+ in a bundle
+Message-ID: <20180629135625.GA19076@centauri.lan> (sfid-20180629_155652_256486_C763E625)
+References: <20180620084222.3521-1-niklas.cassel@linaro.org>
+ <20180620084222.3521-2-niklas.cassel@linaro.org>
+ <87zhzdersm.fsf@codeaurora.org>
+ <87vaa1erlj.fsf@codeaurora.org>
+ <20180629131141.GA26446@centauri.lan>
+ <87r2kpem4o.fsf@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87r2kpem4o.fsf@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The hardcoded values used in ath10k_mac_tx_push_pending and
-ath10k_mac_op_wake_tx_queue set an upper limit of how many packets that
-can be consumed from the TX queue.
+On Fri, Jun 29, 2018 at 04:51:51PM +0300, Kalle Valo wrote:
+> Niklas Cassel <niklas.cassel@linaro.org> writes:
+> 
+> > On Fri, Jun 29, 2018 at 02:53:44PM +0300, Kalle Valo wrote:
+> >> Kalle Valo <kvalo@codeaurora.org> writes:
+> >> 
+> >> > Niklas Cassel <niklas.cassel@linaro.org> writes:
+> >> >
+> >> >> All packets in a bundle should use the same endpoint id as the
+> >> >> first lookahead.
+> >> >>
+> >> >> This matches how things are done is ath6kl, however,
+> >> >> this patch can theoretically handle several bundles
+> >> >> in ath10k_sdio_mbox_rx_process_packets().
+> >> >>
+> >> >> Without this patch we get lots of errors about invalid endpoint id:
+> >> >>
+> >> >> ath10k_sdio mmc2:0001:1: invalid endpoint in look-ahead: 224
+> >> >> ath10k_sdio mmc2:0001:1: failed to get pending recv messages: -12
+> >> >> ath10k_sdio mmc2:0001:1: failed to process pending SDIO interrupts: -12
+> >> >>
+> >> >> Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
+> >> >> Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
+> >> >
+> >> > You have Alagu's s-o-b first so that implies Alagu is the author. So
+> >> > should I add From header for Alagu and add you (Niklas) as
+> >> > Co-Developed-by? Or vice versa?
+> >
+> > Hello Kalle,
+> >
+> > It is not always obvious how the combination of git-author
+> > and Co-Developed-by should be:
+> > http://lkml.iu.edu/hypermail/linux/kernel/1801.2/00988.html
+> 
+> Yeah, that's true.
+> 
+> > Alagu deserves most credit, since I have simply taken parts
+> > of a very big patch and split it into smaller pieces.
+> > I tried to do the right thing by having his Signed-off-by first.
+> >
+> > Let's go with your suggestion and add a From: header with
+> > Alagu's email, and a Co-Developed-by tag with my email.
+> > (Note that both Signed-off-bys are still needed according to
+> > submitting-patches.rst)
+> 
+> Ok.
+> 
+> > Do you want me to resend the patches with these two lines
+> > added, or can you fix them up manually?
+> 
+> No need, I did that already in the pending branch. Please check:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=6b23bd067990df1cc1e9a4c28327393a7a3ba718
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=bf83a5c572e0737e59e026c989b190b4e52d2ef4
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=218f924d80b76520a4e60eead5e89f3ebd2e86c1
 
-HTC_HOST_MAX_MSG_PER_TX_BUNDLE is a proper name for this constant, as
-the value effectively limits the number of messages that can be consumed
-in one step. Thus, the value is an upper limit of the number of messages
-that can be added to a TX message bundle.
+Hello Kalle
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htc.h | 1 +
- drivers/net/wireless/ath/ath10k/mac.c | 4 ++--
- 2 files changed, 3 insertions(+), 2 deletions(-)
+It looks good :)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index e60fbea698a9..d69bb83049c4 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -51,6 +51,7 @@ struct ath10k;
-  */
- 
- #define HTC_HOST_MAX_MSG_PER_RX_BUNDLE        8
-+#define HTC_HOST_MAX_MSG_PER_TX_BUNDLE        16
- 
- enum ath10k_htc_tx_flags {
- 	ATH10K_HTC_FLAG_NEED_CREDIT_UPDATE = 0x01,
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index f31ae3be4778..e36ca4145572 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4026,7 +4026,7 @@ void ath10k_mac_tx_push_pending(struct ath10k *ar)
- 				   drv_priv);
- 
- 		/* Prevent aggressive sta/tid taking over tx queue */
--		max = 16;
-+		max = HTC_HOST_MAX_MSG_PER_TX_BUNDLE;
- 		ret = 0;
- 		while (ath10k_mac_tx_can_push(hw, txq) && max--) {
- 			ret = ath10k_mac_tx_push_txq(hw, txq);
-@@ -4287,7 +4287,7 @@ static void ath10k_mac_op_wake_tx_queue(struct ieee80211_hw *hw,
- 	struct ieee80211_txq *f_txq;
- 	struct ath10k_txq *f_artxq;
- 	int ret = 0;
--	int max = 16;
-+	int max = HTC_HOST_MAX_MSG_PER_TX_BUNDLE;
- 
- 	spin_lock_bh(&ar->txqs_lock);
- 	if (list_empty(&artxq->list))
--- 
-2.17.0
+Regards,
+Niklas
+
+> 
+> -- 
+> Kalle Valo
