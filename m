@@ -1,34 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.63.242]:34176 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933949AbeF2H6D (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51998 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933005AbeF2Lxu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Jun 2018 03:58:03 -0400
-Message-ID: <1530259080.3481.7.camel@sipsolutions.net> (sfid-20180629_095807_076424_FD033236)
-Subject: Re: [PATCH] mac80211: add stop/start logic for software TXQs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Manikanta Pubbisetty <mpubbise@codeaurora.org>,
-        Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 29 Jun 2018 09:58:00 +0200
-In-Reply-To: <5adc5faf-8af0-7af9-8261-784a7ec0e4f7@codeaurora.org>
-References: <1529997415-20551-1-git-send-email-mpubbise@codeaurora.org>
-         <878t71n611.fsf@toke.dk>
-         <5adc5faf-8af0-7af9-8261-784a7ec0e4f7@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Fri, 29 Jun 2018 07:53:50 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Niklas Cassel <niklas.cassel@linaro.org>
+Cc: alagusankar@silex-india.com, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ath10k@lists.infradead.org, "David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH 1/3] ath10k: sdio: use same endpoint id for all packets in a bundle
+References: <20180620084222.3521-1-niklas.cassel@linaro.org>
+        <20180620084222.3521-2-niklas.cassel@linaro.org>
+        <87zhzdersm.fsf@codeaurora.org>
+Date: Fri, 29 Jun 2018 14:53:44 +0300
+In-Reply-To: <87zhzdersm.fsf@codeaurora.org> (Kalle Valo's message of "Fri, 29
+        Jun 2018 14:49:29 +0300")
+Message-ID: <87vaa1erlj.fsf@codeaurora.org> (sfid-20180629_135408_739687_47FBD1B3)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2018-06-26 at 18:01 +0530, Manikanta Pubbisetty wrote:
-> 
-> Valid point, txqs_paused is set in ieee80211_tx_dequeue; I was thinking 
-> a case where tx_dequeue is called without rcu_read_lock but seems that 
-> is not the case. All drivers using wake_tx_queue seems are using 
-> rcu_read_lock before tx_dequeue; can there be a case where tx_dequeue is 
-> called without rcu_read_lock?
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-FWIW, the rcu_read_lock() isn't relevant at all - multiple threads can
-well (and will for sure!) enter it.
+> Niklas Cassel <niklas.cassel@linaro.org> writes:
+>
+>> All packets in a bundle should use the same endpoint id as the
+>> first lookahead.
+>>
+>> This matches how things are done is ath6kl, however,
+>> this patch can theoretically handle several bundles
+>> in ath10k_sdio_mbox_rx_process_packets().
+>>
+>> Without this patch we get lots of errors about invalid endpoint id:
+>>
+>> ath10k_sdio mmc2:0001:1: invalid endpoint in look-ahead: 224
+>> ath10k_sdio mmc2:0001:1: failed to get pending recv messages: -12
+>> ath10k_sdio mmc2:0001:1: failed to process pending SDIO interrupts: -12
+>>
+>> Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
+>> Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
+>
+> You have Alagu's s-o-b first so that implies Alagu is the author. So
+> should I add From header for Alagu and add you (Niklas) as
+> Co-Developed-by? Or vice versa?
 
-johannes
+Ah, the same issue is with all three patches. So whatever we decide,
+I'll do the same changes on all three.
+
+-- 
+Kalle Valo
