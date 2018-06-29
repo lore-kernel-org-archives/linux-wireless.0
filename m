@@ -1,65 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:52582 "EHLO v3-1039.vlinux.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754888AbeFNKxQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Jun 2018 06:53:16 -0400
-From: Sven Eckelmann <sven@narfation.org>
-To: b.a.t.m.a.n@lists.open-mesh.org
-Cc: Omer Efrat <omer.efrat@tandemg.com>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [B.A.T.M.A.N.] [PATCH v2 3/5] batman: use BIT_ULL for NL80211_STA_INFO_* attribute types
-Date: Thu, 14 Jun 2018 12:53:13 +0200
-Message-ID: <1567584.jbsRn7ofiA@bentobox> (sfid-20180614_125324_149221_2D722F3B)
-In-Reply-To: <32533954.9n15W0HXMB@bentobox>
-References: <1528971137-432-1-git-send-email-omer.efrat@tandemg.com> <32533954.9n15W0HXMB@bentobox>
+Received: from mail-eopbgr720059.outbound.protection.outlook.com ([40.107.72.59]:15116
+        "EHLO NAM05-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752515AbeF2J1J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Jun 2018 05:27:09 -0400
+Date: Fri, 29 Jun 2018 12:26:56 +0300
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Andrey Shevchenko <ashevchenko@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>
+Subject: Re: [1/6] qtnfmac: implement net_device_ops callback to set MAC
+ address
+Message-ID: <20180629092654.shzir2mfmlp5luf5@bars> (sfid-20180629_112715_942571_3A249DFF)
+References: <20180531091102.28666-2-sergey.matyukevich.os@quantenna.com>
+ <20180627155439.481E76034E@smtp.codeaurora.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart3740938.nihP6Ej3nQ"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180627155439.481E76034E@smtp.codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3740938.nihP6Ej3nQ
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+> Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
+> 
+> > From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+> >
+> > Implement net_device_ops::ndo_set_mac_address callback to allow for
+> > setting interface MAC address. Implementation is done through existing
+> > CHANGE_INTF firmware command. All validation is to be done by firmware.
+> >
+> > Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+> 
+> 2 patches applied to wireless-drivers-next.git, thanks.
+> 
+> ed9f34bb9d33 qtnfmac: implement net_device_ops callback to set MAC address
+> 6fbef9540af0 qtnfmac: enable source MAC address randomization support
 
-Hi,
+Hello Kalle,
 
-here are the infos which were missing and which should be included in the 
-commit message
+I see the other 4 patches in this series are in 'Deferred' state. Could you
+please clarify what that means. Do you have any concerns about those
+remaining patches or any actions are needed from our side ?
 
-> > Since 'filled' member in station_info changed to u64
-
-in commit 739960f128e5 ("cfg80211/nl80211: Add support for 
-NL80211_STA_INFO_RX_DURATION")
-
-[...]
-
-Fixes: d62890885efb ("batman-adv: Accept only filled wifi station info")
-
-> > Signed-off-by: Omer Efrat <omer.efrat@tandemg.com>
-
-
-Kind regards,
-	Sven
---nextPart3740938.nihP6Ej3nQ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlsiSRkACgkQXYcKB8Em
-e0Y4ZxAAytrpWBIfkoZ02P4q1NCrvrbhIZYhTgtAycArHZVWHIRJ3JfuXjFNTbN5
-Owhhwe8wnfsNjCaB17dbkb696CCfIGJLfIOxQFkjHTMRb9SoS2fY8ELLJSGvQRrm
-/mjcyY/xvQ2T8nTmN78voKEHFuemYP66qiYRKIsFu1mYHEvkoIWFrH7/rXQw7spM
-hiw3H45IYn6ykASRRDX3S67fahdd/YgYj0sjrROygbbqaZqlZgiJcrJ0EsG/mT6Y
-R3c+LlfQJyA/N4x3sQCzygYgPpiIXOYJ+Q92a6R6b+FEM5EAhQIsF5EaG1IT6ckW
-/1a/dpmxLxi3Iu1lIZ2JFiPvV+xaxsd0i+OzMIj5GBsytzlYptLYKhk+VMadLrXK
-8f1t3ONJvyzmE49OOrPjMqtBwHMqiXK6b8HImFZ13YxuixRM8zdv7BsEqTZMNxqG
-F876sGLBGajzol1MjcUQL3jxKssEHv7uHsq1ndfsQ3KnjbL5X3MFTCRDAMPK1S+8
-zrHDUIG04Ut/jYCoOxVdt7j46bFNCRgaUADGfnFcsI0T4qehHQcRmbL6z/E4NxaD
-CMmWDBT0BIlz9u9LiYh6I1i0sYiphEkjpVMiWuSaFVQHjQfSuBjZWp1DEAHgqquz
-IxEhFoi1cfw6mnRX1kGybECOc1R8vB9iP/Fn2FYoYLP0UPqh0FM=
-=8VwQ
------END PGP SIGNATURE-----
-
---nextPart3740938.nihP6Ej3nQ--
+Regards,
+Sergey
