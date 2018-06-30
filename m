@@ -1,76 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52088 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:52174 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751861AbeF3NXk (ORCPT
+        with ESMTP id S1752729AbeF3NX6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Jun 2018 09:23:40 -0400
+        Sat, 30 Jun 2018 09:23:58 -0400
 From: Luca Coelho <luca@coelho.fi>
 To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
         Golan Ben Ami <golan.ben.ami@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 30 Jun 2018 16:23:18 +0300
-Message-Id: <20180630132330.14928-4-luca@coelho.fi> (sfid-20180630_152347_288245_8056EA50)
+Date: Sat, 30 Jun 2018 16:23:25 +0300
+Message-Id: <20180630132330.14928-11-luca@coelho.fi> (sfid-20180630_152405_246985_B1F09EDB)
 In-Reply-To: <20180630132330.14928-1-luca@coelho.fi>
 References: <20180630132330.14928-1-luca@coelho.fi>
-Subject: [PATCH 03/15] iwlwifi: allow different csr flags for different device families
+Subject: [PATCH 10/15] iwlwifi: cancel the injective function between hw pointers to tfd entry index
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Golan Ben Ami <golan.ben.ami@intel.com>
 
-Different device families may have different flag values
-for passing a message to the fw (i.e. SW_RESET).
-In order to keep the code readable, and avoid conditioning
-upon the family, store a value for each flag, which indicates
-the bit that needs to be enabled.
+Nowadays, the tfd queue max size is 2^8, and the reserved size in the
+command header sequence field for the tfd entry index is 8 bits,
+allowing an injective function from the hw pointers to the tfd entry index
+in the sequence field.
 
-Additionally, support 22560 device csr flags and addresses.
+In 22560 devices the tfd queue max size is 2^16, meaning that
+the hw pointers are 16 bit long (allowing to point to each entry
+in the tfd queue). However, the reserved space in the sequence field for
+the tfd entry doesn't change, and we are limited to 8 bit.
+This requires cancelling the injective function from hw pointer to
+tfd entry in the sequence number.
+
+Use iwl_pcie_get_cmd_index to wrap the hw pointer's to the n_window
+size, which is maximum 256 in tx queues, and so, keep the injective
+function between the window wrapped hw pointers to tfd entry index in
+the sequence.
 
 Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c  | 4 +++-
- drivers/net/wireless/intel/iwlwifi/iwl-config.h | 2 +-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 12 ++++++++----
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 11 ++++++++---
+ 2 files changed, 16 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index aafd8cab86b0..2768c2b15acb 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -191,6 +191,7 @@ const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_a0_f0 = {
- 	.name = "Intel(R) Dual Band Wireless AX 22000",
- 	.fw_name_pre = IWL_22000_HR_A_F0_FW_PRE,
- 	IWL_DEVICE_22000,
-+	.csr = &iwl_csr_v1,
- 	.ht_params = &iwl_22000_ht_params,
- 	.nvm_ver = IWL_22000_NVM_VERSION,
- 	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
-@@ -236,10 +237,11 @@ const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_a0 = {
- 	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index 76fd3ee61720..b4e998747e04 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -749,7 +749,7 @@ static inline void iwl_enable_fw_load_int(struct iwl_trans *trans)
+ 	}
+ }
  
--const struct iwl_cfg iwl22000_2ax_cfg_hr_cdb = {
-+const struct iwl_cfg iwl22560_2ax_cfg_su_cdb = {
- 	.name = "Intel(R) Dual Band Wireless AX 22560",
- 	.fw_name_pre = IWL_22000_SU_Z0_FW_PRE,
- 	IWL_DEVICE_22000,
-+	.csr = &iwl_csr_v2,
- 	.ht_params = &iwl_22000_ht_params,
- 	.nvm_ver = IWL_22000_NVM_VERSION,
- 	.nvm_calib_ver = IWL_22000_TX_POWER_VERSION,
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index ede491be7aac..b7389f1aa3af 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -570,7 +570,7 @@ extern const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_a0_f0;
- extern const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_b0;
- extern const struct iwl_cfg iwl22000_2ax_cfg_qnj_jf_b0;
- extern const struct iwl_cfg iwl22000_2ax_cfg_qnj_hr_a0;
--extern const struct iwl_cfg iwl22000_2ax_cfg_hr_cdb;
-+extern const struct iwl_cfg iwl22560_2ax_cfg_su_cdb;
- #endif /* CONFIG_IWLMVM */
+-static inline u8 iwl_pcie_get_cmd_index(struct iwl_txq *q, u32 index)
++static inline u8 iwl_pcie_get_cmd_index(const struct iwl_txq *q, u32 index)
+ {
+ 	return index & (q->n_window - 1);
+ }
+@@ -819,9 +819,13 @@ static inline void iwl_stop_queue(struct iwl_trans *trans,
  
- #endif /* __IWL_CONFIG_H__ */
+ static inline bool iwl_queue_used(const struct iwl_txq *q, int i)
+ {
+-	return q->write_ptr >= q->read_ptr ?
+-		(i >= q->read_ptr && i < q->write_ptr) :
+-		!(i < q->read_ptr && i >= q->write_ptr);
++	int index = iwl_pcie_get_cmd_index(q, i);
++	int r = iwl_pcie_get_cmd_index(q, q->read_ptr);
++	int w = iwl_pcie_get_cmd_index(q, q->write_ptr);
++
++	return w >= r ?
++		(index >= r && index < w) :
++		!(index < r && index >= w);
+ }
+ 
+ static inline bool iwl_is_rfkill_set(struct iwl_trans *trans)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 473fe7ccb07c..11bd7ce2be8e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -1225,9 +1225,13 @@ static void iwl_pcie_cmdq_reclaim(struct iwl_trans *trans, int txq_id, int idx)
+ 	struct iwl_txq *txq = trans_pcie->txq[txq_id];
+ 	unsigned long flags;
+ 	int nfreed = 0;
++	u16 r;
+ 
+ 	lockdep_assert_held(&txq->lock);
+ 
++	idx = iwl_pcie_get_cmd_index(txq, idx);
++	r = iwl_pcie_get_cmd_index(txq, txq->read_ptr);
++
+ 	if ((idx >= TFD_QUEUE_SIZE_MAX) || (!iwl_queue_used(txq, idx))) {
+ 		IWL_ERR(trans,
+ 			"%s: Read index for DMA queue txq id (%d), index %d is out of range [0-%d] %d %d.\n",
+@@ -1236,12 +1240,13 @@ static void iwl_pcie_cmdq_reclaim(struct iwl_trans *trans, int txq_id, int idx)
+ 		return;
+ 	}
+ 
+-	for (idx = iwl_queue_inc_wrap(idx); txq->read_ptr != idx;
+-	     txq->read_ptr = iwl_queue_inc_wrap(txq->read_ptr)) {
++	for (idx = iwl_queue_inc_wrap(idx); r != idx;
++	     r = iwl_queue_inc_wrap(r)) {
++		txq->read_ptr = iwl_queue_inc_wrap(txq->read_ptr);
+ 
+ 		if (nfreed++ > 0) {
+ 			IWL_ERR(trans, "HCMD skipped: index (%d) %d %d\n",
+-				idx, txq->write_ptr, txq->read_ptr);
++				idx, txq->write_ptr, r);
+ 			iwl_force_nmi(trans);
+ 		}
+ 	}
 -- 
 2.18.0
