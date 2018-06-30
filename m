@@ -1,57 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:46193 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754373AbeFYIpy (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:51998 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S933845AbeF3InE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Jun 2018 04:45:54 -0400
-Received: by mail-wr0-f194.google.com with SMTP id l14-v6so7684207wrq.13
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jun 2018 01:45:53 -0700 (PDT)
-MIME-Version: 1.0
-References: <1529693004-20569-1-git-send-email-arend.vanspriel@broadcom.com>
- <CACna6rwzS-KXZ80wudpNEcrtnPd7fUWYKbT93hfFMfQi-V-hhg@mail.gmail.com> <5B30A542.7090400@broadcom.com>
-In-Reply-To: <5B30A542.7090400@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Mon, 25 Jun 2018 10:43:36 +0200
-Message-ID: <CACna6rxg4GHkN_65c2RHBGrWw5NK=ocqY2JTTfWFX0HJmKW6xA@mail.gmail.com> (sfid-20180625_104704_039637_D3CEBAB7)
-Subject: Re: [PATCH 0/6] brcmfmac: fix 160MHz support and monitor mode
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Sat, 30 Jun 2018 04:43:04 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com,
+        ilan.peer@intel.com, johannes@sipsolutions.net,
+        liad.kaufman@intel.com, sara.sharon@intel.com,
+        shaul.triebitz@intel.com, Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 30 Jun 2018 11:42:49 +0300
+Message-Id: <20180630084253.30660-1-luca@coelho.fi> (sfid-20180630_104311_804717_D8922042)
+Subject: [PATCH v2 0/4] iwlwifi: updates intended for v4.19 2018-06-26
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 25 Jun 2018 at 10:18, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 6/24/2018 1:48 PM, Rafa=C5=82 Mi=C5=82ecki wrote:
-> > On Fri, 22 Jun 2018 at 20:45, Arend van Spriel
-> > <arend.vanspriel@broadcom.com> wrote:
-> >> Here a couple of patches in preparation of monitor mode support. It
-> >> is mostly about querying firmware for support. While at it I stumbled
-> >> upon the fact that 160MHz was not completely implemented in the driver
-> >> so there is a patch for that as well.
-> >>
-> >> The first two patches are actually some changes to the patches that
-> >> Rafal submitted. So this series depend on:
-> >>
-> >> [V3,2/2] brcmfmac: handle monitor mode marked msgbuf packets [1]
-> >>
-> >> These apply to the master branch of the wireless-drivers-next reposito=
-ry.
-> >>
-> >> [1] https://patchwork.kernel.org/patch/10474799/
-> >
-> > I find it pointless to submit fixes for patches that weren't accepted
-> > yet. Let's work on improving original patches while they are still
-> > pending.
->
-> It is not unprecedented. There are enough patch series sent in the past
-> that relied on other still pending series. I was unsure how to deal with
-> it as I acked your changes already and did not exactly know when Kalle
-> would start applying the patches. I am fine either way.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Well, things happen, I don't mind if you un-ack my patch, after
-discovering some problem with it :)
+Hi,
 
---=20
-Rafa=C5=82
+Here's v2 of the patches I sent out Tuesday.  It fixes some bitfield.h
+warnings reported by kbuildbot in .../iwlwifi/fw/api/rx.h.
+
+There is still one compiler warning in this series, but that's
+actually a bug in bitfield.h itself.  Johannes has sent a fix for
+that[1] but it has not been applied yet.
+
+These patches implement 802.11ax in the iwlwifi driver.  They are a
+combination of over 40 patches from our internal tree and represent
+the result of an evolution from the first drafts up to version D2.0.
+
+This is exceptionally based on mac80211-next/master as of today,
+commit a42177505869 ("mac80211: use BIT_ULL for NL80211_STA_INFO_*
+attribute types"), because Johannes sent a pull request with the
+changes I need yesterday, but DaveM hasn't pulled it yet.  Hopefully
+that will happen soon, and then I'll ask you to pull from Dave's tree
+so the dependencies will all be in before I send the pull request.
+
+The only change this time:
+
+* Implement 802.11ax D2.0;
+
+Many people worked on the original patches in the internal tree, so
+I'll name them here (rather than having many s-o-b tags in the actual
+patches):
+
+Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Ilan Peer <ilan.peer@intel.com>
+Johannes Berg <johannes.berg@intel.com>
+Liad Kaufman <liad.kaufman@intel.com>
+Sara Sharon <sara.sharon@intel.com>
+Shaul Triebitz <shaul.triebitz@intel.com>
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Luca Coelho (4):
+  iwlwifi: fw: add FW APIs for HE
+  iwlwifi: add support for IEEE802.11ax
+  iwlwifi: add module parameter to disable 802.11ax
+  iwlwifi: mvm: add radiotap data for HE
+
+ .../wireless/intel/iwlwifi/fw/api/datapath.h  |   5 +
+ .../net/wireless/intel/iwlwifi/fw/api/mac.h   | 172 +++++++++++
+ .../wireless/intel/iwlwifi/fw/api/nvm-reg.h   |   4 +-
+ .../net/wireless/intel/iwlwifi/fw/api/rs.h    |  36 ++-
+ .../net/wireless/intel/iwlwifi/fw/api/rx.h    |  53 +++-
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |   4 +
+ .../wireless/intel/iwlwifi/iwl-modparams.h    |   4 +
+ .../wireless/intel/iwlwifi/iwl-nvm-parse.c    | 103 +++++++
+ .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |   4 +
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 198 +++++++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |   1 +
+ .../net/wireless/intel/iwlwifi/mvm/rs-fw.c    |  44 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c   |  39 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.h   |  21 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 281 +++++++++++++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c  |   8 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h  |   6 +-
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   |   2 +-
+ 19 files changed, 950 insertions(+), 37 deletions(-)
+
+-- 
+2.18.0
