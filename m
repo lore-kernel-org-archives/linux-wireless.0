@@ -1,47 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34110 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754571AbeFNJH1 (ORCPT
+Received: from shards.monkeyblade.net ([23.128.96.9]:38140 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936875AbeF3MRb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Jun 2018 05:07:27 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Ryan Hsu <ryanhsu@codeaurora.org>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        timur.kristof@gmail.com
-Subject: Re: [PATCH v2] ath10k: Update the phymode along with bandwidth change request
-References: <1528482759-12604-1-git-send-email-ryanhsu@codeaurora.org>
-Date: Thu, 14 Jun 2018 12:07:22 +0300
-In-Reply-To: <1528482759-12604-1-git-send-email-ryanhsu@codeaurora.org> (Ryan
-        Hsu's message of "Fri, 8 Jun 2018 11:32:39 -0700")
-Message-ID: <87h8m5ag8l.fsf@kamboji.qca.qualcomm.com> (sfid-20180614_110731_429140_05AC2E4A)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sat, 30 Jun 2018 08:17:31 -0400
+Date: Sat, 30 Jun 2018 21:17:28 +0900 (KST)
+Message-Id: <20180630.211728.888180353537471428.davem@davemloft.net> (sfid-20180630_141735_935713_64DD25D6)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2018-06-29
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20180629115906.2045-1-johannes@sipsolutions.net>
+References: <20180629115906.2045-1-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ryan Hsu <ryanhsu@codeaurora.org> writes:
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 29 Jun 2018 13:59:05 +0200
 
-> In the case of Station connects to AP with narrower bandwidth at beginning.
-> And later the AP changes the bandwidth to winder bandwidth, the AP will
-> beacon with wider bandwidth IE, eg VHT20->VHT40->VHT80 or VHT40->VHT80.
->
-> Since the supported BANDWIDTH will be limited by the PHYMODE, so while
-> Station receives the bandwidth change request, it will also need to
-> reconfigure the PHYMODE setting to firmware instead of just configuring
-> the BANDWIDTH info, otherwise it'll trigger a firmware crash with
-> non-support bandwidth.
->
-> The issue was observed in WLAN.RM.4.4.1-00051-QCARMSWP-1, QCA6174 with
-> below scenario.
-> ---
+> Here's the next round of -next updates. This includes the promised
+> HE stuff but it's not all that big in the end, most of it is just
+> additions to the protocol header file :-)
 
-BTW, I don't recommend using "---" or similar delimeters in the actual
-commit log. Git uses that string as a separator between the commit log
-and actual patch and that broke my patchwork script. I fixed the commit
-log manually in the pending branch, and added Timur's Tested-by, please
-check (I hope I got UTF-8 correct!):
+:-)
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=master-pending&id=5aee6aeda5dae74e1c79256fc1df2e7599038fa7
+> Please pull and let me know if there's any problem.
 
--- 
-Kalle Valo
+There was a small merge conflict in net/mac80211/scan.c, I arranged
+it such that the kcalloc() conversion was preserved.
+
+Please send me any necessary fixups if I didn't do it properly.
+
+Thanks.
