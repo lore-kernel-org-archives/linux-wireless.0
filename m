@@ -1,174 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:55404 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750879AbeFDTcy (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:52142 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752242AbeF3NXp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Jun 2018 15:32:54 -0400
-Date: Mon, 4 Jun 2018 21:32:50 +0200
-From: Thibaut Robert <thibaut.robert@gmail.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] staging: wilc1000: fix some endianness sparse
- warnings
-Message-ID: <20180604193250.GB32753@L80496> (sfid-20180604_213310_711999_6EC2FBC3)
-References: <20180529191143.13081-1-thibaut.robert@gmail.com>
- <20180530111725.gmigyddsp2i6mgzw@mwanda>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20180530111725.gmigyddsp2i6mgzw@mwanda>
+        Sat, 30 Jun 2018 09:23:45 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Golan Ben Ami <golan.ben.ami@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 30 Jun 2018 16:23:24 +0300
+Message-Id: <20180630132330.14928-10-luca@coelho.fi> (sfid-20180630_152353_343900_DD8266D5)
+In-Reply-To: <20180630132330.14928-1-luca@coelho.fi>
+References: <20180630132330.14928-1-luca@coelho.fi>
+Subject: [PATCH 09/15] iwlwifi: update gen3 interrupts - sw error and image response
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le mercredi 30 mai 2018 à 14:17:25 (+0300), Dan Carpenter a écrit :
-> On Tue, May 29, 2018 at 09:11:43PM +0200, Thibaut Robert wrote:
-> > diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> > index e248702ee519..745bf5ca2622 100644
-> > --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> > +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> > @@ -1431,7 +1431,7 @@ void wilc_wfi_p2p_rx(struct net_device *dev, u8 *buff, u32 size)
-> >  
-> >  	freq = ieee80211_channel_to_frequency(curr_channel, NL80211_BAND_2GHZ);
-> >  
-> > -	if (!ieee80211_is_action(buff[FRAME_TYPE_ID])) {
-> > +	if (!ieee80211_is_action(cpu_to_le16(buff[FRAME_TYPE_ID]))) {
-> 
-> "buff" comes from the network, it's going to be little endian, not cpu
-> endian.  The rest of the function treats it as CPU endian but I'm pretty
-> sure it's wrong...
-buff comes from the network but we are looking at single byte here.
-ieee80211_is_action expects an le16, so we I added this to extend an u8
-to an le16. Is this incorrect ?
+From: Golan Ben Ami <golan.ben.ami@intel.com>
 
-Or maybe we the buff has the second byte ? but that I can't tell. 
+In 22560 devices the ROM sendis an interrupt to the host
+once the IML reading is done.
+Handle this interrupt, and indicate sw error in case the
+value is fail.
 
-> 
-> >  		cfg80211_rx_mgmt(priv->wdev, freq, 0, buff, size, 0);
-> >  		return;
-> >  	}
-> 
-> 
-> > diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-> > index 28c93f3f846e..a5ac1d26590b 100644
-> > --- a/drivers/staging/wilc1000/wilc_wlan.c
-> > +++ b/drivers/staging/wilc1000/wilc_wlan.c
-> > @@ -560,7 +560,8 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
-> >  	int ret = 0;
-> >  	int counter;
-> >  	int timeout;
-> > -	u32 vmm_table[WILC_VMM_TBL_SIZE];
-> > +	__le32 vmm_table[WILC_VMM_TBL_SIZE];
-> > +	u32 table_entry;
-> >  	struct wilc_vif *vif;
-> >  	struct wilc *wilc;
-> >  	const struct wilc_hif_func *func;
-> > @@ -598,10 +599,10 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
-> >  			if ((sum + vmm_sz) > LINUX_TX_SIZE)
-> >  				break;
-> >  
-> > -			vmm_table[i] = vmm_sz / 4;
-> > +			table_entry = vmm_sz / 4;
-> >  			if (tqe->type == WILC_CFG_PKT)
-> > -				vmm_table[i] |= BIT(10);
-> > -			vmm_table[i] = cpu_to_le32(vmm_table[i]);
-> > +				table_entry |= BIT(10);
-> > +			vmm_table[i] = cpu_to_le32(table_entry);
-> >  
-> >  			i++;
-> >  			sum += vmm_sz;
-> > @@ -704,8 +705,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
-> >  		if (vmm_table[i] == 0)
-> >  			break;
-> >  
-> > -		vmm_table[i] = cpu_to_le32(vmm_table[i]);
-> > -		vmm_sz = (vmm_table[i] & 0x3ff);
-> > +		vmm_sz = (le32_to_cpu(vmm_table[i]) & 0x3ff);
-> >  		vmm_sz *= 4;
-> >  		header = (tqe->type << 31) |
-> >  			 (tqe->buffer_size << 15) |
-> > @@ -715,8 +715,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
-> >  		else
-> >  			header &= ~BIT(30);
-> >  
-> > -		header = cpu_to_le32(header);
-> > -		memcpy(&txb[offset], &header, 4);
-> > +		*((__le32 *)&txb[offset]) = cpu_to_le32(header);
-> 
-> I worry about alignment issues here.  That might be the reason for the
-> memcpy().  (I'm reading as fast as I can and don't the code so I may
-> be wrong).
-> 
-> >  		if (tqe->type == WILC_CFG_PKT) {
-> >  			buffer_offset = ETH_CONFIG_PKT_HDR_OFFSET;
-> >  		} else if (tqe->type == WILC_NET_PKT) {
-> > @@ -770,8 +769,7 @@ static void wilc_wlan_handle_rx_buff(struct wilc *wilc, u8 *buffer, int size)
-> >  
-> >  	do {
-> >  		buff_ptr = buffer + offset;
-> > -		memcpy(&header, buff_ptr, 4);
-> > -		header = cpu_to_le32(header);
-> > +		header = le32_to_cpup((__le32 *)buff_ptr);
-> 
-> Maybe the same, whenever you see a memcpy().
-> 
-> >  
-> >  		is_cfg_packet = (header >> 31) & 0x1;
-> >  		pkt_offset = (header >> 22) & 0x1ff;
-> > @@ -942,6 +940,7 @@ int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
-> >  	u32 offset;
-> >  	u32 addr, size, size2, blksz;
-> >  	u8 *dma_buffer;
-> > +	const __le32 *header;
-> >  	int ret = 0;
-> >  
-> >  	blksz = BIT(12);
-> > @@ -952,10 +951,9 @@ int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
-> >  
-> >  	offset = 0;
-> >  	do {
-> > -		memcpy(&addr, &buffer[offset], 4);
-> > -		memcpy(&size, &buffer[offset + 4], 4);
-> > -		addr = cpu_to_le32(addr);
-> > -		size = cpu_to_le32(size);
-> > +		header = (__le32 *)buffer + offset;
-> > +		addr = le32_to_cpu(header[0]);
-> > +		size = le32_to_cpu(header[1]);
-> >  		acquire_bus(wilc, ACQUIRE_ONLY);
-> >  		offset += 8;
-> >  		while (((int)size) && (offset < buffer_size)) {
-> > diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-> > index c0b9b700f4d7..4a914d8572aa 100644
-> > --- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-> > +++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-> > @@ -275,14 +275,14 @@ static int wilc_wlan_cfg_set_bin(u8 *frame, u32 offset, u16 id, u8 *b, u32 size)
-> >  
-> >  static void wilc_wlan_parse_response_frame(u8 *info, int size)
-> >  {
-> > -	u32 wid, len = 0, i = 0;
-> > +	u32 wid;
-> > +	int len = 0, i = 0;
-> 
-> Why did we make these int now?
-> 
-> >  
-> >  	while (size > 0) {
-> >  		i = 0;
-> > -		wid = info[0] | (info[1] << 8);
-> > -		wid = cpu_to_le32(wid);
-> > +		wid = le16_to_cpup((__le16 *)info);
-> >  
-> > -		switch ((wid >> 12) & 0x7) {
-> > +		switch (info[1] >> 4) {
-> 
-> Why do we not need to mask by 0x7?  Anyway, I feel like this isn't
-> beautiful.  We should be using a macro and "wid" instead of magically
-> poking into info[1].
-> 
-> 		switch(SOME_MACRO(wid)) {
-> 
-> 
-> regards,
-> dan carpenter
+Additionally, the cause for sw error in 22560 devices
+have been changed, so update the cause list.
+
+Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../intel/iwlwifi/iwl-context-info-gen3.h     |  1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h  |  2 ++
+ .../wireless/intel/iwlwifi/pcie/internal.h    | 12 +++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c  | 21 +++++++++---
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   | 33 ++++++++++++++++---
+ 5 files changed, 59 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h b/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
+index 8969dcc0d2db..ebea99189ca9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
+@@ -57,6 +57,7 @@
+ #define CSR_CTXT_INFO_ADDR              0x118
+ #define CSR_IML_DATA_ADDR               0x120
+ #define CSR_IML_SIZE_ADDR               0x128
++#define CSR_IML_RESP_ADDR               0x12c
+ 
+ /* Set bit for enabling automatic function boot */
+ #define CSR_AUTO_FUNC_BOOT_ENA          BIT(1)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+index 3ef71c22bcaa..9019de99f077 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-csr.h
+@@ -595,6 +595,8 @@ enum msix_fh_int_causes {
+ enum msix_hw_int_causes {
+ 	MSIX_HW_INT_CAUSES_REG_ALIVE		= BIT(0),
+ 	MSIX_HW_INT_CAUSES_REG_WAKEUP		= BIT(1),
++	MSIX_HW_INT_CAUSES_REG_IPC		= BIT(1),
++	MSIX_HW_INT_CAUSES_REG_SW_ERR_V2	= BIT(5),
+ 	MSIX_HW_INT_CAUSES_REG_CT_KILL		= BIT(6),
+ 	MSIX_HW_INT_CAUSES_REG_RF_KILL		= BIT(7),
+ 	MSIX_HW_INT_CAUSES_REG_PERIODIC		= BIT(8),
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index e14d2003244f..76fd3ee61720 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -323,6 +323,18 @@ enum iwl_shared_irq_flags {
+ 	IWL_SHARED_IRQ_FIRST_RSS	= BIT(1),
+ };
+ 
++/**
++ * enum iwl_image_response_code - image response values
++ * @IWL_IMAGE_RESP_DEF: the default value of the register
++ * @IWL_IMAGE_RESP_SUCCESS: iml was read successfully
++ * @IWL_IMAGE_RESP_FAIL: iml reading failed
++ */
++enum iwl_image_response_code {
++	IWL_IMAGE_RESP_DEF		= 0,
++	IWL_IMAGE_RESP_SUCCESS		= 1,
++	IWL_IMAGE_RESP_FAIL		= 2,
++};
++
+ /**
+  * struct iwl_dram_data
+  * @physical: page phy pointer
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 24ce2d6beb0f..707242f1ff0b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -18,8 +18,7 @@
+  * more details.
+  *
+  * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ * this program.
+  *
+  * The full GNU General Public License is included in this distribution in the
+  * file called LICENSE.
+@@ -37,6 +36,7 @@
+ #include "iwl-io.h"
+ #include "internal.h"
+ #include "iwl-op-mode.h"
++#include "iwl-context-info-gen3.h"
+ 
+ /******************************************************************************
+  *
+@@ -2009,7 +2009,8 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
+ 
+ 	/* Error detected by uCode */
+ 	if ((inta_fh & MSIX_FH_INT_CAUSES_FH_ERR) ||
+-	    (inta_hw & MSIX_HW_INT_CAUSES_REG_SW_ERR)) {
++	    (inta_hw & MSIX_HW_INT_CAUSES_REG_SW_ERR) ||
++	    (inta_hw & MSIX_HW_INT_CAUSES_REG_SW_ERR_V2)) {
+ 		IWL_ERR(trans,
+ 			"Microcode SW error detected. Restarting 0x%X.\n",
+ 			inta_fh);
+@@ -2034,8 +2035,18 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
+ 		}
+ 	}
+ 
+-	/* uCode wakes up after power-down sleep */
+-	if (inta_hw & MSIX_HW_INT_CAUSES_REG_WAKEUP) {
++	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560 &&
++	    inta_hw & MSIX_HW_INT_CAUSES_REG_IPC) {
++		/* Reflect IML transfer status */
++		int res = iwl_read32(trans, CSR_IML_RESP_ADDR);
++
++		IWL_DEBUG_ISR(trans, "IML transfer status: %d\n", res);
++		if (res == IWL_IMAGE_RESP_FAIL) {
++			isr_stats->sw++;
++			iwl_pcie_irq_handle_error(trans);
++		}
++	} else if (inta_hw & MSIX_HW_INT_CAUSES_REG_WAKEUP) {
++		/* uCode wakes up after power-down sleep */
+ 		IWL_DEBUG_ISR(trans, "Wakeup interrupt\n");
+ 		iwl_pcie_rxq_check_wrptr(trans);
+ 		iwl_pcie_txq_check_wrptrs(trans);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index bc14227c95ac..efde21580166 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1132,21 +1132,44 @@ static struct iwl_causes_list causes_list[] = {
+ 	{MSIX_HW_INT_CAUSES_REG_HAP,		CSR_MSIX_HW_INT_MASK_AD, 0x2E},
+ };
+ 
++static struct iwl_causes_list causes_list_v2[] = {
++	{MSIX_FH_INT_CAUSES_D2S_CH0_NUM,	CSR_MSIX_FH_INT_MASK_AD, 0},
++	{MSIX_FH_INT_CAUSES_D2S_CH1_NUM,	CSR_MSIX_FH_INT_MASK_AD, 0x1},
++	{MSIX_FH_INT_CAUSES_S2D,		CSR_MSIX_FH_INT_MASK_AD, 0x3},
++	{MSIX_FH_INT_CAUSES_FH_ERR,		CSR_MSIX_FH_INT_MASK_AD, 0x5},
++	{MSIX_HW_INT_CAUSES_REG_ALIVE,		CSR_MSIX_HW_INT_MASK_AD, 0x10},
++	{MSIX_HW_INT_CAUSES_REG_IPC,		CSR_MSIX_HW_INT_MASK_AD, 0x11},
++	{MSIX_HW_INT_CAUSES_REG_SW_ERR_V2,	CSR_MSIX_HW_INT_MASK_AD, 0x15},
++	{MSIX_HW_INT_CAUSES_REG_CT_KILL,	CSR_MSIX_HW_INT_MASK_AD, 0x16},
++	{MSIX_HW_INT_CAUSES_REG_RF_KILL,	CSR_MSIX_HW_INT_MASK_AD, 0x17},
++	{MSIX_HW_INT_CAUSES_REG_PERIODIC,	CSR_MSIX_HW_INT_MASK_AD, 0x18},
++	{MSIX_HW_INT_CAUSES_REG_SCD,		CSR_MSIX_HW_INT_MASK_AD, 0x2A},
++	{MSIX_HW_INT_CAUSES_REG_FH_TX,		CSR_MSIX_HW_INT_MASK_AD, 0x2B},
++	{MSIX_HW_INT_CAUSES_REG_HW_ERR,		CSR_MSIX_HW_INT_MASK_AD, 0x2D},
++	{MSIX_HW_INT_CAUSES_REG_HAP,		CSR_MSIX_HW_INT_MASK_AD, 0x2E},
++};
++
+ static void iwl_pcie_map_non_rx_causes(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie =  IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	int val = trans_pcie->def_irq | MSIX_NON_AUTO_CLEAR_CAUSE;
+-	int i;
++	int i, arr_size =
++		(trans->cfg->device_family < IWL_DEVICE_FAMILY_22560) ?
++		ARRAY_SIZE(causes_list) : ARRAY_SIZE(causes_list_v2);
+ 
+ 	/*
+ 	 * Access all non RX causes and map them to the default irq.
+ 	 * In case we are missing at least one interrupt vector,
+ 	 * the first interrupt vector will serve non-RX and FBQ causes.
+ 	 */
+-	for (i = 0; i < ARRAY_SIZE(causes_list); i++) {
+-		iwl_write8(trans, CSR_MSIX_IVAR(causes_list[i].addr), val);
+-		iwl_clear_bit(trans, causes_list[i].mask_reg,
+-			      causes_list[i].cause_num);
++	for (i = 0; i < arr_size; i++) {
++		struct iwl_causes_list *causes =
++			(trans->cfg->device_family < IWL_DEVICE_FAMILY_22560) ?
++			causes_list : causes_list_v2;
++
++		iwl_write8(trans, CSR_MSIX_IVAR(causes[i].addr), val);
++		iwl_clear_bit(trans, causes[i].mask_reg,
++			      causes[i].cause_num);
+ 	}
+ }
+ 
+-- 
+2.18.0
