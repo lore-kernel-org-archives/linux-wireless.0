@@ -1,78 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:58604 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932748AbeFVOsN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Jun 2018 10:48:13 -0400
-Date: Fri, 22 Jun 2018 16:48:10 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Felix Fietkau <nbd@openwrt.org>
-Subject: Re: mt76x2e MCU message 31 timed out
-Message-ID: <20180622144809.GA9773@redhat.com> (sfid-20180622_164819_714036_348E7AFB)
-References: <CAFED-jkby2sk9OQnuH5PD8isr0n_CM6Eufs7Ds5fhavYfYdLBw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAFED-jkby2sk9OQnuH5PD8isr0n_CM6Eufs7Ds5fhavYfYdLBw@mail.gmail.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:52052 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1755208AbeF3Ltj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 30 Jun 2018 07:49:39 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 30 Jun 2018 14:49:30 +0300
+Message-Id: <20180630114930.25738-1-luca@coelho.fi> (sfid-20180630_134946_334701_0F2B2807)
+Subject: [PATCH] mac80211_hwsim: Add support for HE
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+From: Ilan Peer <ilan.peer@intel.com>
 
-On Fri, Jun 22, 2018 at 10:37:35AM +0200, Janusz Dziedzic wrote:
-> Have this card in my laptop:
-> 02:00.0 Network controller: MEDIATEK Corp. Device 7612
-> 
-> [    8.478104] mt76x2e 0000:02:00.0: ASIC revision: 76120044
-> [    8.489582] mt76x2e 0000:02:00.0: ROM patch already applied
-> [    8.833476] mt76x2e 0000:02:00.0: Firmware Version: 0.0.00
-> [    8.833477] mt76x2e 0000:02:00.0: Build: 1
-> [    8.833479] mt76x2e 0000:02:00.0: Build Time: 201507311614____
-> [    8.856115] mt76x2e 0000:02:00.0: Firmware running!
-> [    9.558075] mt76x2e 0000:02:00.0 wlp2s0: renamed from wlan1
+Add support for HE in mac8011_hwsim, conforming with P802.11ax_D2.0.
 
-I'm just curious. Does the card was installed in the laptop by default?
-If so what is the model of the laptop?
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 123 ++++++++++++++++++++++++++
+ 1 file changed, 123 insertions(+)
 
-> Linux test4 4.17.0-rc7+ #5 SMP Mon May 28 12:35:22 CEST 2018 x86_64 GNU/Linux
-> 
-> Seems iw scan works correctly and first assoc. After will run some
-> traffic (iperf in such case) get:
-> 
-> [  432.372081] wlp2s0: associate with 52:b4:f7:f0:16:c2 (try 2/3)
-> [  432.375255] wlp2s0: RX AssocResp from 52:b4:f7:f0:16:c2
-> (capab=0x511 status=0 aid=2)
-> [  432.375336] wlp2s0: associated
-> [  432.451097] IPv6: ADDRCONF(NETDEV_CHANGE): wlp2s0: link becomes ready
-> [  522.562157] mt76x2e 0000:02:00.0: MCU message 31 (seq 13) timed out
-> [  524.610281] mt76x2e 0000:02:00.0: MCU message 31 (seq 14) timed out
-> [  526.658384] mt76x2e 0000:02:00.0: MCU message 31 (seq 15) timed out
-> [  528.258455] mt76x2e 0000:02:00.0: MCU message 30 (seq 1) timed out
-> [  529.282499] mt76x2e 0000:02:00.0: MCU message 30 (seq 2) timed out
-> [  530.402544] mt76x2e 0000:02:00.0: MCU message 30 (seq 3) timed out
-> [  531.426587] mt76x2e 0000:02:00.0: MCU message 30 (seq 4) timed out
-> [  531.427444] wlp2s0: authenticate with 52:b4:f7:f0:14:ac
-> [  532.450624] mt76x2e 0000:02:00.0: MCU message 30 (seq 5) timed out
-> [  533.474666] mt76x2e 0000:02:00.0: MCU message 30 (seq 6) timed out
-> [  534.498709] mt76x2e 0000:02:00.0: MCU message 30 (seq 7) timed out
-> [  535.522736] mt76x2e 0000:02:00.0: MCU message 30 (seq 8) timed out
-> [  535.522807] wlp2s0: send auth to 52:b4:f7:f0:14:ac (try 1/3)
-> [  535.726740] wlp2s0: send auth to 52:b4:f7:f0:14:ac (try 2/3)
-> [  535.930742] wlp2s0: send auth to 52:b4:f7:f0:14:ac (try 3/3)
-> [  536.134747] wlp2s0: authentication with 52:b4:f7:f0:14:ac timed out
-
-I observed quite similar issue on some rt2800 devices when
-I applied  this patch:
-https://github.com/sgruszka/wireless-drivers-next/commit/846d205edd8c36d1b7828fee54bf4cf40bf8cb1a
-It works on some devices and does not work on others with similar
-symptoms - correctly associate but stop to work as soon as some
-data traffic is performed.
-
-So, I would check if send IEEE80211_TX_CTL_RATE_CTRL_PROBE frames
-with qsel = MT_QSEL_EDCA would help. 
-
-Another thing to try is checkout vendor driver and see if there is need
-to add extra code if device is_mt7612() .
-
-Regards
-Stanislaw
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 9825bfd42abc..026a9c209545 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2,6 +2,7 @@
+  * mac80211_hwsim - software simulator of 802.11 radio(s) for mac80211
+  * Copyright (c) 2008, Jouni Malinen <j@w1.fi>
+  * Copyright (c) 2011, Javier Lopez <jlopex@gmail.com>
++ * Copyright (c) 2016 - 2017 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -2517,6 +2518,123 @@ static void hwsim_mcast_new_radio(int id, struct genl_info *info,
+ 	nlmsg_free(mcast_skb);
+ }
+ 
++static const struct ieee80211_sband_iftype_data he_capa_2ghz = {
++	/* TODO: should we support other types, e.g., P2P?*/
++	.types = BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_AP),
++	.he_cap = {
++		.has_he = true,
++		.he_cap_elem = {
++			.mac_cap_info[0] =
++				IEEE80211_HE_MAC_CAP0_HTC_HE,
++			.mac_cap_info[1] =
++				IEEE80211_HE_MAC_CAP1_TF_MAC_PAD_DUR_16US |
++				IEEE80211_HE_MAC_CAP1_MULTI_TID_AGG_QOS_8,
++			.mac_cap_info[2] =
++				IEEE80211_HE_MAC_CAP2_BSR |
++				IEEE80211_HE_MAC_CAP2_MU_CASCADING |
++				IEEE80211_HE_MAC_CAP2_ACK_EN,
++			.mac_cap_info[3] =
++				IEEE80211_HE_MAC_CAP3_GRP_ADDR_MULTI_STA_BA_DL_MU |
++				IEEE80211_HE_MAC_CAP3_OMI_CONTROL |
++				IEEE80211_HE_MAC_CAP3_MAX_A_AMPDU_LEN_EXP_VHT_2,
++			.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_AMDSU_IN_AMPDU,
++			.phy_cap_info[0] =
++				IEEE80211_HE_PHY_CAP0_DUAL_BAND,
++			.phy_cap_info[1] =
++				IEEE80211_HE_PHY_CAP1_PREAMBLE_PUNC_RX_MASK |
++				IEEE80211_HE_PHY_CAP1_DEVICE_CLASS_A |
++				IEEE80211_HE_PHY_CAP1_LDPC_CODING_IN_PAYLOAD |
++				IEEE80211_HE_PHY_CAP1_MIDAMBLE_RX_MAX_NSTS,
++			.phy_cap_info[2] =
++				IEEE80211_HE_PHY_CAP2_NDP_4x_LTF_AND_3_2US |
++				IEEE80211_HE_PHY_CAP2_STBC_TX_UNDER_80MHZ |
++				IEEE80211_HE_PHY_CAP2_STBC_RX_UNDER_80MHZ |
++				IEEE80211_HE_PHY_CAP2_UL_MU_FULL_MU_MIMO |
++				IEEE80211_HE_PHY_CAP2_UL_MU_PARTIAL_MU_MIMO,
++
++			/* Leave all the other PHY capability bytes unset, as
++			 * DCM, beam forming, RU and PPE threshold information
++			 * are not supported
++			 */
++		},
++		.he_mcs_nss_supp = {
++			.rx_msc_80 = cpu_to_le16(0xfffa),
++			.tx_msc_80 = cpu_to_le16(0xfffa),
++			.rx_msc_160 = cpu_to_le16(0xffff),
++			.tx_msc_160 = cpu_to_le16(0xffff),
++			.rx_msc_80p80 = cpu_to_le16(0xffff),
++			.tx_msc_80p80 = cpu_to_le16(0xffff),
++		},
++	},
++};
++
++static const struct ieee80211_sband_iftype_data he_capa_5ghz = {
++	/* TODO: should we support other types, e.g., P2P?*/
++	.types = BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_AP),
++	.he_cap = {
++		.has_he = true,
++		.he_cap_elem = {
++			.mac_cap_info[0] =
++				IEEE80211_HE_MAC_CAP0_HTC_HE,
++			.mac_cap_info[1] =
++				IEEE80211_HE_MAC_CAP1_TF_MAC_PAD_DUR_16US |
++				IEEE80211_HE_MAC_CAP1_MULTI_TID_AGG_QOS_8,
++			.mac_cap_info[2] =
++				IEEE80211_HE_MAC_CAP2_BSR |
++				IEEE80211_HE_MAC_CAP2_MU_CASCADING |
++				IEEE80211_HE_MAC_CAP2_ACK_EN,
++			.mac_cap_info[3] =
++				IEEE80211_HE_MAC_CAP3_GRP_ADDR_MULTI_STA_BA_DL_MU |
++				IEEE80211_HE_MAC_CAP3_OMI_CONTROL |
++				IEEE80211_HE_MAC_CAP3_MAX_A_AMPDU_LEN_EXP_VHT_2,
++			.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_AMDSU_IN_AMPDU,
++			.phy_cap_info[0] =
++				IEEE80211_HE_PHY_CAP0_DUAL_BAND |
++				IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G |
++				IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G |
++				IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G,
++			.phy_cap_info[1] =
++				IEEE80211_HE_PHY_CAP1_PREAMBLE_PUNC_RX_MASK |
++				IEEE80211_HE_PHY_CAP1_DEVICE_CLASS_A |
++				IEEE80211_HE_PHY_CAP1_LDPC_CODING_IN_PAYLOAD |
++				IEEE80211_HE_PHY_CAP1_MIDAMBLE_RX_MAX_NSTS,
++			.phy_cap_info[2] =
++				IEEE80211_HE_PHY_CAP2_NDP_4x_LTF_AND_3_2US |
++				IEEE80211_HE_PHY_CAP2_STBC_TX_UNDER_80MHZ |
++				IEEE80211_HE_PHY_CAP2_STBC_RX_UNDER_80MHZ |
++				IEEE80211_HE_PHY_CAP2_UL_MU_FULL_MU_MIMO |
++				IEEE80211_HE_PHY_CAP2_UL_MU_PARTIAL_MU_MIMO,
++
++			/* Leave all the other PHY capability bytes unset, as
++			 * DCM, beam forming, RU and PPE threshold information
++			 * are not supported
++			 */
++		},
++		.he_mcs_nss_supp = {
++			.rx_msc_80 = cpu_to_le16(0xfffa),
++			.tx_msc_80 = cpu_to_le16(0xfffa),
++			.rx_msc_160 = cpu_to_le16(0xfffa),
++			.tx_msc_160 = cpu_to_le16(0xfffa),
++			.rx_msc_80p80 = cpu_to_le16(0xfffa),
++			.tx_msc_80p80 = cpu_to_le16(0xfffa),
++		},
++	},
++};
++
++static void mac80211_hswim_he_capab(struct ieee80211_supported_band *sband)
++{
++	if (sband->band == NL80211_BAND_2GHZ)
++		sband->iftype_data =
++			(struct ieee80211_sband_iftype_data *)&he_capa_2ghz;
++	else if (sband->band == NL80211_BAND_5GHZ)
++		sband->iftype_data =
++			(struct ieee80211_sband_iftype_data *)&he_capa_5ghz;
++	else
++		return;
++
++	sband->n_iftype_data = 1;
++}
++
+ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 				    struct hwsim_new_radio_params *param)
+ {
+@@ -2678,6 +2796,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 
+ 	for (band = NL80211_BAND_2GHZ; band < NUM_NL80211_BANDS; band++) {
+ 		struct ieee80211_supported_band *sband = &data->bands[band];
++
++		sband->band = band;
++
+ 		switch (band) {
+ 		case NL80211_BAND_2GHZ:
+ 			sband->channels = data->channels_2ghz;
+@@ -2734,6 +2855,8 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 		sband->ht_cap.mcs.rx_mask[1] = 0xff;
+ 		sband->ht_cap.mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
+ 
++		mac80211_hswim_he_capab(sband);
++
+ 		hw->wiphy->bands[band] = sband;
+ 	}
+ 
+-- 
+2.18.0
