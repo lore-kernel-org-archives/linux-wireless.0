@@ -1,46 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55106 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751502AbeFEMhQ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:52202 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752832AbeF3NYM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Jun 2018 08:37:16 -0400
-From: Govind Singh <govinds@codeaurora.org>
-To: andy.gross@linaro.org, bjorn.andersson@linaro.org,
-        david.brown@linaro.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH v2 5/6] firmware: qcom: scm: Add WLAN VMID for Qualcomm SCM interface
-Date: Tue,  5 Jun 2018 18:07:09 +0530
-Message-Id: <20180605123709.1882-1-govinds@codeaurora.org> (sfid-20180605_143719_785997_0778F839)
+        Sat, 30 Jun 2018 09:24:12 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Golan Ben Ami <golan.ben.ami@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 30 Jun 2018 16:23:28 +0300
+Message-Id: <20180630132330.14928-14-luca@coelho.fi> (sfid-20180630_152417_002885_A8ED2004)
+In-Reply-To: <20180630132330.14928-1-luca@coelho.fi>
+References: <20180630132330.14928-1-luca@coelho.fi>
+Subject: [PATCH 13/15] iwlwifi: introduce new rx structures used by 22560 RFH
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add WLAN related VMID's to support wlan driver to set up
-the remote's permissions call via TrustZone.
+From: Golan Ben Ami <golan.ben.ami@intel.com>
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
+22560 devices RFH uses different structures, which act similar
+to the legacy rxq management lists - free and used list.
+
+The iwl_rx_transfer_desc struct is part of the free list,
+and consists of pointers to the empty rb's the driver wants to
+pass to the fw.
+
+The iwl_rx_completion_desc struct is part of the used list,
+and consists of pointers to the buffer the fw filled up
+with new rx, both commands and data, for the host.
+
+Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/linux/qcom_scm.h | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ .../wireless/intel/iwlwifi/pcie/internal.h    | 100 ++++++++++++++++++
+ 1 file changed, 100 insertions(+)
 
-diff --git a/include/linux/qcom_scm.h b/include/linux/qcom_scm.h
-index b401b962afff..da63d84e1e91 100644
---- a/include/linux/qcom_scm.h
-+++ b/include/linux/qcom_scm.h
-@@ -1,4 +1,4 @@
--/* Copyright (c) 2010-2015, The Linux Foundation. All rights reserved.
-+/* Copyright (c) 2010-2015, 2018, The Linux Foundation. All rights reserved.
-  * Copyright (C) 2015 Linaro Ltd.
-  *
-  * This program is free software; you can redistribute it and/or modify
-@@ -33,6 +33,8 @@ struct qcom_scm_vmperm {
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index 3b86e50965f4..11687dc4039d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -99,6 +99,106 @@ struct isr_statistics {
+ 	u32 unhandled;
+ };
  
- #define QCOM_SCM_VMID_HLOS       0x3
- #define QCOM_SCM_VMID_MSS_MSA    0xF
-+#define QCOM_SCM_VMID_WLAN       0x18
-+#define QCOM_SCM_VMID_WLAN_CE    0x19
- #define QCOM_SCM_PERM_READ       0x4
- #define QCOM_SCM_PERM_WRITE      0x2
- #define QCOM_SCM_PERM_EXEC       0x1
++#define IWL_CD_STTS_OPTIMIZED_POS	0
++#define IWL_CD_STTS_OPTIMIZED_MSK	0x01
++#define IWL_CD_STTS_TRANSFER_STATUS_POS	1
++#define IWL_CD_STTS_TRANSFER_STATUS_MSK	0x0E
++#define IWL_CD_STTS_WIFI_STATUS_POS	4
++#define IWL_CD_STTS_WIFI_STATUS_MSK	0xF0
++
++/**
++ * enum iwl_completion_desc_transfer_status -  transfer status (bits 1-3)
++ * @IWL_CD_STTS_END_TRANSFER: successful transfer complete.
++ *	In sniffer mode, when split is used, set in last CD completion. (RX)
++ * @IWL_CD_STTS_OVERFLOW: In sniffer mode, when using split - used for
++ *	all CD completion. (RX)
++ * @IWL_CD_STTS_ABORTED: CR abort / close flow. (RX)
++ */
++enum iwl_completion_desc_transfer_status {
++	IWL_CD_STTS_UNUSED,
++	IWL_CD_STTS_UNUSED_2,
++	IWL_CD_STTS_END_TRANSFER,
++	IWL_CD_STTS_OVERFLOW,
++	IWL_CD_STTS_ABORTED,
++	IWL_CD_STTS_ERROR,
++};
++
++/**
++ * enum iwl_completion_desc_wifi_status - wifi status (bits 4-7)
++ * @IWL_CD_STTS_VALID: the packet is valid (RX)
++ * @IWL_CD_STTS_FCS_ERR: frame check sequence error (RX)
++ * @IWL_CD_STTS_SEC_KEY_ERR: error handling the security key of rx (RX)
++ * @IWL_CD_STTS_DECRYPTION_ERR: error decrypting the frame (RX)
++ * @IWL_CD_STTS_DUP: duplicate packet (RX)
++ * @IWL_CD_STTS_ICV_MIC_ERR: MIC error (RX)
++ * @IWL_CD_STTS_INTERNAL_SNAP_ERR: problems removing the snap (RX)
++ * @IWL_CD_STTS_SEC_PORT_FAIL: security port fail (RX)
++ * @IWL_CD_STTS_BA_OLD_SN: block ack received old SN (RX)
++ * @IWL_CD_STTS_QOS_NULL: QoS null packet (RX)
++ * @IWL_CD_STTS_MAC_HDR_ERR: MAC header conversion error (RX)
++ * @IWL_CD_STTS_MAX_RETRANS: reached max number of retransmissions (TX)
++ * @IWL_CD_STTS_EX_LIFETIME: exceeded lifetime (TX)
++ * @IWL_CD_STTS_NOT_USED: completed but not used (RX)
++ * @IWL_CD_STTS_REPLAY_ERR: pn check failed, replay error (RX)
++ */
++enum iwl_completion_desc_wifi_status {
++	IWL_CD_STTS_VALID,
++	IWL_CD_STTS_FCS_ERR,
++	IWL_CD_STTS_SEC_KEY_ERR,
++	IWL_CD_STTS_DECRYPTION_ERR,
++	IWL_CD_STTS_DUP,
++	IWL_CD_STTS_ICV_MIC_ERR,
++	IWL_CD_STTS_INTERNAL_SNAP_ERR,
++	IWL_CD_STTS_SEC_PORT_FAIL,
++	IWL_CD_STTS_BA_OLD_SN,
++	IWL_CD_STTS_QOS_NULL,
++	IWL_CD_STTS_MAC_HDR_ERR,
++	IWL_CD_STTS_MAX_RETRANS,
++	IWL_CD_STTS_EX_LIFETIME,
++	IWL_CD_STTS_NOT_USED,
++	IWL_CD_STTS_REPLAY_ERR,
++};
++
++#define IWL_RX_TD_TYPE		0xff000000
++#define IWL_RX_TD_SIZE		0x00ffffff
++
++/**
++ * struct iwl_rx_transfer_desc - transfer descriptor
++ * @type_n_size: buffer type (bit 0: external buff valid,
++ *	bit 1: optional footer valid, bit 2-7: reserved)
++ *	and buffer size
++ * @addr: ptr to free buffer start address
++ * @rbid: unique tag of the buffer
++ * @reserved: reserved
++ */
++struct iwl_rx_transfer_desc {
++	__le32 type_n_size;
++	__le64 addr;
++	__le16 rbid;
++	__le16 reserved;
++} __packed;
++
++#define IWL_RX_CD_SIZE		0xffffff00
++
++/**
++ * struct iwl_rx_completion_desc - completion descriptor
++ * @type: buffer type (bit 0: external buff valid,
++ *	bit 1: optional footer valid, bit 2-7: reserved)
++ * @status: status of the completion
++ * @reserved1: reserved
++ * @rbid: unique tag of the received buffer
++ * @size: buffer size, masked by IWL_RX_CD_SIZE
++ * @reserved2: reserved
++ */
++struct iwl_rx_completion_desc {
++	u8 type;
++	u8 status;
++	__le16 reserved1;
++	__le16 rbid;
++	__le32 size;
++	u8 reserved2[22];
++} __packed;
++
+ /**
+  * struct iwl_rxq - Rx queue
+  * @id: queue index
 -- 
-2.17.0
+2.18.0
