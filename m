@@ -1,377 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hermes.aosc.io ([199.195.250.187]:35373 "EHLO hermes.aosc.io"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934203AbeFVQaG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Jun 2018 12:30:06 -0400
-Message-ID: <a7011fe78d171658742406bf01d50b7e3d7eaf1d.camel@aosc.io> (sfid-20180622_183021_262039_FED75F80)
-Subject: Re: [PATCHv2 5/5] arm64: allwinner: a64: Add support for TERES-I
- laptop
-From: Icenowy Zheng <icenowy@aosc.io>
-To: Harald Geyer <harald@ccbib.org>,
-        Maxime Ripard <maxime.ripard@bootlin.com>,
-        Chen-Yu Tsai <wens@csie.org>, Kalle Valo <kvalo@codeaurora.org>
-Cc: Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Andre Przywara <andre.przywara@arm.com>, info@olimex.com,
-        linux-wireless@vger.kernel.org
-Date: Sat, 23 Jun 2018 00:27:21 +0800
-In-Reply-To: <20180315162510.11669-6-harald@ccbib.org>
-References: <20180315162510.11669-1-harald@ccbib.org>
-         <20180315162510.11669-6-harald@ccbib.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:52012 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932190AbeF3InG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 30 Jun 2018 04:43:06 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com,
+        ilan.peer@intel.com, johannes@sipsolutions.net,
+        liad.kaufman@intel.com, sara.sharon@intel.com,
+        shaul.triebitz@intel.com, Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 30 Jun 2018 11:42:52 +0300
+Message-Id: <20180630084253.30660-4-luca@coelho.fi> (sfid-20180630_104335_603967_3D0DE204)
+In-Reply-To: <20180630084253.30660-1-luca@coelho.fi>
+References: <20180630084253.30660-1-luca@coelho.fi>
+Subject: [PATCH v2 3/4] iwlwifi: add module parameter to disable 802.11ax
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-在 2018-03-15四的 16:25 +0000，Harald Geyer写道：
-> The TERES-I is an open hardware laptop built by Olimex using the
-> Allwinner A64 SoC.
-> 
-> Add the board specific .dts file, which includes the A64 .dtsi and
-> enables the peripherals that we support so far.
-> 
-> Signed-off-by: Harald Geyer <harald@ccbib.org>
-> ---
-> changes since v1:
->  * use SPDX header instead of license text
->  * change model string to match compatible string
->  * removed node labes from leds
->  * added label properties ot led nodes
->  * add a comment about the purpose of i2c0
-> 
->  arch/arm64/boot/dts/allwinner/Makefile             |   1 +
->  .../boot/dts/allwinner/sun50i-a64-teres-i.dts      | 279
-> +++++++++++++++++++++
->  2 files changed, 280 insertions(+)
->  create mode 100644 arch/arm64/boot/dts/allwinner/sun50i-a64-teres-
-> i.dts
-> 
-> diff --git a/arch/arm64/boot/dts/allwinner/Makefile
-> b/arch/arm64/boot/dts/allwinner/Makefile
-> index f505227b0250..5f073f7423b7 100644
-> --- a/arch/arm64/boot/dts/allwinner/Makefile
-> +++ b/arch/arm64/boot/dts/allwinner/Makefile
-> @@ -5,6 +5,7 @@ dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-olinuxino.dtb
->  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-orangepi-win.dtb
->  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-pine64-plus.dtb sun50i-a64-
-> pine64.dtb
->  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-sopine-baseboard.dtb
-> +dtb-$(CONFIG_ARCH_SUNXI) += sun50i-a64-teres-i.dtb
->  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h5-orangepi-pc2.dtb
->  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h5-orangepi-prime.dtb
->  dtb-$(CONFIG_ARCH_SUNXI) += sun50i-h5-orangepi-zero-plus2.dtb
-> diff --git a/arch/arm64/boot/dts/allwinner/sun50i-a64-teres-i.dts
-> b/arch/arm64/boot/dts/allwinner/sun50i-a64-teres-i.dts
-> new file mode 100644
-> index 000000000000..b105430e0368
-> --- /dev/null
-> +++ b/arch/arm64/boot/dts/allwinner/sun50i-a64-teres-i.dts
-> @@ -0,0 +1,279 @@
-> +/*
-> + * Copyright (C) Harald Geyer <harald@ccbib.org>
-> + * based on sun50i-a64-olinuxino.dts by Jagan Teki <jteki@openedev.c
-> om>
-> + *
-> + * SPDX-License-Identifier: (GPL-2.0 OR MIT)
-> + */
-> +
-> +/dts-v1/;
-> +
-> +#include "sun50i-a64.dtsi"
-> +
-> +#include <dt-bindings/gpio/gpio.h>
-> +#include <dt-bindings/input/input.h>
-> +#include <dt-bindings/pwm/pwm.h>
-> +
-> +/ {
-> +	model = "Olimex A64 Teres-I";
-> +	compatible = "olimex,a64-teres-i", "allwinner,sun50i-a64";
-> +
-> +	aliases {
-> +		serial0 = &uart0;
-> +	};
-> +
-> +	backlight: backlight {
-> +		compatible = "pwm-backlight";
-> +		pwms = <&pwm 0 50000 0>;
-> +		brightness-levels = <0 10 20 30 40 50 60 70 100>;
-> +		default-brightness-level = <3>;
-> +		enable-gpios = <&pio 3 23 GPIO_ACTIVE_HIGH>; /* PD23
-> */
-> +	};
-> +
-> +	chosen {
-> +		stdout-path = "serial0:115200n8";
-> +
-> +		framebuffer-lcd {
-> +			eDP25-supply = <&reg_dldo2>;
-> +			eDP12-supply = <&reg_dldo3>;
-> +		};
-> +	};
-> +
-> +	gpio-keys {
-> +		compatible = "gpio-keys";
-> +
-> +		lid-switch {
-> +			label = "Lid Switch";
-> +			gpios = <&r_pio 0 8 GPIO_ACTIVE_LOW>; /* PL8
-> */
-> +			linux,input-type = <EV_SW>;
-> +			linux,code = <SW_LID>;
-> +		};
-> +	};
-> +
-> +	leds {
-> +		compatible = "gpio-leds";
-> +
-> +		capslock {
-> +			label = "leds:green:capslock";
-> +			gpios = <&pio 2 7 GPIO_ACTIVE_HIGH>; /* PC7
-> */
-> +		};
-> +
-> +		numlock {
-> +			label = "leds:green:numlock";
-> +			gpios = <&pio 2 4 GPIO_ACTIVE_HIGH>; /* PC4
-> */
-> +		};
-> +	};
-> +
-> +	reg_usb1_vbus: usb1-vbus {
-> +		compatible = "regulator-fixed";
-> +		regulator-name = "usb1-vbus";
-> +		regulator-min-microvolt = <5000000>;
-> +		regulator-max-microvolt = <5000000>;
-> +		enable-active-high;
-> +		gpio = <&r_pio 0 7 GPIO_ACTIVE_HIGH>; /* PL7 */
-> +		status = "okay";
-> +	};
-> +
-> +	wifi_pwrseq: wifi_pwrseq {
-> +		compatible = "mmc-pwrseq-simple";
-> +		reset-gpios = <&r_pio 0 2 GPIO_ACTIVE_LOW>; /* PL2
-> */
-> +	};
-> +};
-> +
-> +&ehci1 {
-> +	status = "okay";
-> +};
-> +
-> +
-> +/* The ANX6345 eDP-bridge is on i2c0. There is no linux (mainline)
-> + * driver for this chip at the moment, the bootloader initializes
-> it.
-> + * However it can be accessed with the i2c-dev driver from user
-> space.
-> + */
-> +&i2c0 {
-> +	clock-frequency = <100000>;
-> +	pinctrl-names = "default";
-> +	pinctrl-0 = <&i2c0_pins>;
-> +	status = "okay";
-> +};
-> +
-> +&mmc0 {
-> +	pinctrl-names = "default";
-> +	pinctrl-0 = <&mmc0_pins>;
-> +	vmmc-supply = <&reg_dcdc1>;
-> +	cd-gpios = <&pio 5 6 GPIO_ACTIVE_LOW>;
-> +	disable-wp;
-> +	bus-width = <4>;
-> +	status = "okay";
-> +};
-> +
-> +&mmc1 {
-> +	pinctrl-names = "default";
-> +	pinctrl-0 = <&mmc1_pins>;
-> +	vmmc-supply = <&reg_aldo2>;
-> +	vqmmc-supply = <&reg_dldo4>;
-> +	mmc-pwrseq = <&wifi_pwrseq>;
-> +	bus-width = <4>;
-> +	non-removable;
-> +	status = "okay";
-> +
-> +	rtl8723bs: wifi@1 {
-> +		reg = <1>;
-> +		interrupt-parent = <&r_pio>;
-> +		interrupts = <0 3 IRQ_TYPE_LEVEL_LOW>; /* PL3 */
-> +		interrupt-names = "host-wake";
-> +	};
+From: Luca Coelho <luciano.coelho@intel.com>
 
-I think this node has some problem:
+Add a module parameter to disable 802.11ax features in supported
+devices.  This is useful for testing or if there are interoperability
+issues with some APs.
 
-- This device node has no binding. The "host-wake" interrupt is part of
- Broadcom SDIO Wi-Fi binding, rather than a generic one.
-- Without the interrupt this device node isn't needed, as RTL8723BS has
-MAC eFUSE and doesn't need a MAC in device tree.
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c       | 4 ++++
+ drivers/net/wireless/intel/iwlwifi/iwl-modparams.h | 4 ++++
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  | 3 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  | 3 ++-
+ 5 files changed, 14 insertions(+), 4 deletions(-)
 
-In order to solve the problems. I suggest either drop this device node
-or make a generic "sdio-wifi" device tree binding. Personally I prefer
-the latter, as it's more accurate device representation.
-
-If such a device tree binding is added, I think it should contain the
-"host-wake" interrupt and a "local-mac-address" property. Both can be
-ignored by the driver. (This interrupt can be needed if a more card-
-ventor-neutral name is found.)
-
-> +};
-> +
-> +&mmc2 {
-> +	pinctrl-names = "default";
-> +	pinctrl-0 = <&mmc2_pins>;
-> +	vmmc-supply = <&reg_dcdc1>;
-> +	vqmmc-supply = <&reg_dcdc1>;
-> +	bus-width = <8>;
-> +	non-removable;
-> +	cap-mmc-hw-reset;
-> +	status = "okay";
-> +};
-> +
-> +&pwm {
-> +	pinctrl-names = "default";
-> +	pinctrl-0 = <&pwm_pin>;
-> +	status = "okay";
-> +};
-> +
-> +&ohci1 {
-> +	status = "okay";
-> +};
-> +
-> +&r_rsb {
-> +	status = "okay";
-> +
-> +	axp803: pmic@3a3 {
-> +		compatible = "x-powers,axp803";
-> +		reg = <0x3a3>;
-> +		interrupt-parent = <&r_intc>;
-> +		interrupts = <0 IRQ_TYPE_LEVEL_LOW>;
-> +		wakeup-source;
-> +	};
-> +};
-> +
-> +#include "axp803.dtsi"
-> +
-> +&reg_aldo1 {
-> +	regulator-always-on;
-> +	regulator-min-microvolt = <2800000>;
-> +	regulator-max-microvolt = <2800000>;
-> +	regulator-name = "vcc-pe";
-> +};
-> +
-> +&reg_aldo2 {
-> +	regulator-always-on;
-> +	regulator-min-microvolt = <3300000>;
-> +	regulator-max-microvolt = <3300000>;
-> +	regulator-name = "vcc-pl";
-> +};
-> +
-> +&reg_aldo3 {
-> +	regulator-always-on;
-> +	regulator-min-microvolt = <3000000>;
-> +	regulator-max-microvolt = <3000000>;
-> +	regulator-name = "vcc-pll-avcc";
-> +};
-> +
-> +&reg_dcdc1 {
-> +	regulator-always-on;
-> +	regulator-min-microvolt = <3300000>;
-> +	regulator-max-microvolt = <3300000>;
-> +	regulator-name = "vcc-3v3";
-> +};
-> +
-> +&reg_dcdc2 {
-> +	regulator-always-on;
-> +	regulator-min-microvolt = <1040000>;
-> +	regulator-max-microvolt = <1300000>;
-> +	regulator-name = "vdd-cpux";
-> +};
-> +
-> +/* DCDC3 is polyphased with DCDC2 */
-> +
-> +&reg_dcdc5 {
-> +	regulator-always-on;
-> +	regulator-min-microvolt = <1500000>;
-> +	regulator-max-microvolt = <1500000>;
-> +	regulator-name = "vcc-ddr3";
-> +};
-> +
-> +&reg_dcdc6 {
-> +	regulator-always-on;
-> +	regulator-min-microvolt = <1100000>;
-> +	regulator-max-microvolt = <1100000>;
-> +	regulator-name = "vdd-sys";
-> +};
-> +
-> +&reg_dldo1 {
-> +	regulator-min-microvolt = <3300000>;
-> +	regulator-max-microvolt = <3300000>;
-> +	regulator-name = "vcc-hdmi";
-> +};
-> +
-> +&reg_dldo2 {
-> +	regulator-min-microvolt = <2500000>;
-> +	regulator-max-microvolt = <2500000>;
-> +	regulator-name = "vcc-pd";
-> +};
-> +
-> +&reg_dldo3 {
-> +	regulator-min-microvolt = <1200000>;
-> +	regulator-max-microvolt = <1200000>;
-> +	regulator-name = "eDP12";
-> +};
-> +
-> +&reg_dldo4 {
-> +	regulator-min-microvolt = <3300000>;
-> +	regulator-max-microvolt = <3300000>;
-> +	regulator-name = "vcc-wifi-io";
-> +};
-> +
-> +&reg_eldo1 {
-> +	regulator-min-microvolt = <1800000>;
-> +	regulator-max-microvolt = <1800000>;
-> +	regulator-name = "cpvdd";
-> +};
-> +
-> +&reg_eldo2 {
-> +	regulator-min-microvolt = <1800000>;
-> +	regulator-max-microvolt = <1800000>;
-> +	regulator-name = "vcc-dvdd-csi";
-> +};
-> +
-> +&reg_fldo1 {
-> +	regulator-min-microvolt = <1200000>;
-> +	regulator-max-microvolt = <1200000>;
-> +	regulator-name = "vcc-1v2-hsic";
-> +};
-> +
-> +/*
-> + * The A64 chip cannot work without this regulator off, although
-> + * it seems to be only driving the AR100 core.
-> + * Maybe we don't still know well about CPUs domain.
-> + */
-> +&reg_fldo2 {
-> +	regulator-always-on;
-> +	regulator-min-microvolt = <1100000>;
-> +	regulator-max-microvolt = <1100000>;
-> +	regulator-name = "vdd-cpus";
-> +};
-> +
-> +&reg_rtc_ldo {
-> +	regulator-name = "vcc-rtc";
-> +};
-> +
-> +&uart0 {
-> +	pinctrl-names = "default";
-> +	pinctrl-0 = <&uart0_pins_a>;
-> +	status = "okay";
-> +};
-> +
-> +&usbphy {
-> +	usb1_vbus-supply = <&reg_usb1_vbus>;
-> +	status = "okay";
-> +};
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index c59ce4f8a5ed..650214ff0a1c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1856,3 +1856,7 @@ module_param_named(remove_when_gone,
+ 		   0444);
+ MODULE_PARM_DESC(remove_when_gone,
+ 		 "Remove dev from PCIe bus if it is deemed inaccessible (default: false)");
++
++module_param_named(disable_11ax, iwlwifi_mod_params.disable_11ax, bool,
++		   S_IRUGO);
++MODULE_PARM_DESC(disable_11ax, "Disable HE capabilities (default: false)");
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
+index a7dd8a8cddf9..5dd848cb9d20 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
+@@ -144,6 +144,10 @@ struct iwl_mod_params {
+ 	bool lar_disable;
+ 	bool fw_monitor;
+ 	bool disable_11ac;
++	/**
++	 * @disable_11ax: disable HE capabilities, default = false
++	 */
++	bool disable_11ax;
+ 	bool remove_when_gone;
+ };
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 941604c24fa1..7bb0360d6807 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -578,7 +578,7 @@ static void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
+ 	iwl_init_ht_hw_capab(cfg, data, &sband->ht_cap, NL80211_BAND_2GHZ,
+ 			     tx_chains, rx_chains);
+ 
+-	if (data->sku_cap_11ax_enable)
++	if (data->sku_cap_11ax_enable && !iwlwifi_mod_params.disable_11ax)
+ 		iwl_init_he_hw_capab(sband, tx_chains, rx_chains);
+ 
+ 	sband = &data->bands[NL80211_BAND_5GHZ];
+@@ -593,7 +593,7 @@ static void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
+ 		iwl_init_vht_hw_capab(cfg, data, &sband->vht_cap,
+ 				      tx_chains, rx_chains);
+ 
+-	if (data->sku_cap_11ax_enable)
++	if (data->sku_cap_11ax_enable && !iwlwifi_mod_params.disable_11ax)
+ 		iwl_init_he_hw_capab(sband, tx_chains, rx_chains);
+ 
+ 	if (n_channels != n_used)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index 362e9b77974d..b3fd20502abb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -780,7 +780,8 @@ static int iwl_mvm_mac_ctxt_cmd_sta(struct iwl_mvm *mvm,
+ 	if (vif->probe_req_reg && vif->bss_conf.assoc && vif->p2p)
+ 		cmd.filter_flags |= cpu_to_le32(MAC_FILTER_IN_PROBE_REQUEST);
+ 
+-	if (vif->bss_conf.assoc && vif->bss_conf.he_support)
++	if (vif->bss_conf.assoc && vif->bss_conf.he_support &&
++	    !iwlwifi_mod_params.disable_11ax)
+ 		cmd.filter_flags |= cpu_to_le32(MAC_FILTER_IN_11AX);
+ 
+ 	return iwl_mvm_mac_ctxt_send_cmd(mvm, &cmd);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 6d9a59847621..532487d7e376 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2100,7 +2100,8 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 	 * added.
+ 	 */
+ 	if (changes & BSS_CHANGED_ASSOC && bss_conf->assoc) {
+-		if (vif->bss_conf.he_support)
++		if (vif->bss_conf.he_support &&
++		    !iwlwifi_mod_params.disable_11ax)
+ 			iwl_mvm_cfg_he_sta(mvm, vif, mvmvif->ap_sta_id);
+ 
+ 		iwl_mvm_mac_ctxt_recalc_tsf_id(mvm, vif);
+-- 
+2.18.0
