@@ -1,75 +1,237 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:46938 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754398AbeFMGmm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jun 2018 02:42:42 -0400
-Date: Tue, 12 Jun 2018 23:42:38 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: "Reizer, Eyal" <eyalr@ti.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>,
-        "Mishol, Guy" <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        "Hahn, Maital" <maitalm@ti.com>,
-        "Altshul, Maxim" <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
-Subject: Re: [EXTERNAL] Re: [RFT 3/6] wlcore: Add support for runtime PM
-Message-ID: <20180613064238.GC112168@atomide.com> (sfid-20180613_084245_657523_73100256)
-References: <20180529180605.73622-1-tony@atomide.com>
- <20180529180605.73622-4-tony@atomide.com>
- <20180531171420.GQ5705@atomide.com>
- <fe42f9d6bb744cd39e38db8f51c0b74e@ti.com>
- <20180605042000.GA5738@atomide.com>
- <20180605104404.GD5738@atomide.com>
- <b55bd6bf93eb4b7884ad05e44eded929@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b55bd6bf93eb4b7884ad05e44eded929@ti.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:52210 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752832AbeF3NYQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 30 Jun 2018 09:24:16 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Golan Ben Ami <golan.ben.ami@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Sat, 30 Jun 2018 16:23:27 +0300
+Message-Id: <20180630132330.14928-13-luca@coelho.fi> (sfid-20180630_152419_769148_6EFBD131)
+In-Reply-To: <20180630132330.14928-1-luca@coelho.fi>
+References: <20180630132330.14928-1-luca@coelho.fi>
+Subject: [PATCH 12/15] iwlwifi: support new tx api
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Golan Ben Ami <golan.ben.ami@intel.com>
 
-* Reizer, Eyal <eyalr@ti.com> [180606 05:22]:
-> Latest wl18xx firmware was running fine for two days without the crash, so it was indeed just a logging issue in this case.
+22560 devices use a new tx cmd api. Update the code to use
+the new api.
 
-OK good to hear.
+Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../wireless/intel/iwlwifi/fw/api/commands.h  |  3 +-
+ .../net/wireless/intel/iwlwifi/fw/api/tx.h    | 25 ++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c   | 48 +++++++++++++------
+ .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 26 ++++++++--
+ 4 files changed, 83 insertions(+), 19 deletions(-)
 
-> However, trying a wl1281 module and enabling PLT mode it boots ok but after a couple of seconds the below crash is seen.
-> Seems like a similar crash to the one I have seen before,right?
-
-Sorry for the delay, only today had enough time to figure
-this one out, see below.
-
-> sh-4.4# calibrator wlan0 plt power_mode on
-> [   57.198492] wlcore: power up
-> [   57.757871] wlcore: firmware booted in PLT mode PLT_ON (PLT 7.3.10.2.142)
-> sh-4.4#
-> sh-4.4#
-> sh-4.4# ca[   86.485020] ------------[ cut here ]------------
-> [   86.490334] WARNING: CPU: 0 PID: 502 at drivers/net/wireless/ti/wlcore/main.c:806
-
-This happens on runtime_suspend() where we are already in PLT
-and then that error gets stored and then next pm_runtime_get()
-returns -EINVAL. The patch below should fix it. I'll fold it
-into the runtime PM related patch assuming it works for you.
-
-Regards,
-
-Tony
-
-8< -------
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -6677,7 +6677,7 @@ static int __maybe_unused wlcore_runtime_suspend(struct device *dev)
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
+index f285bacc8726..d71a6a837ec5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
+@@ -193,7 +193,8 @@ enum iwl_legacy_cmds {
+ 	FW_GET_ITEM_CMD = 0x1a,
  
- 	/* We do not enter elp sleep in PLT mode */
- 	if (wl->plt)
--		return -EINVAL;
-+		return 0;
+ 	/**
+-	 * @TX_CMD: uses &struct iwl_tx_cmd or &struct iwl_tx_cmd_gen2,
++	 * @TX_CMD: uses &struct iwl_tx_cmd or &struct iwl_tx_cmd_gen2 or
++	 *	&struct iwl_tx_cmd_gen3,
+ 	 *	response in &struct iwl_mvm_tx_resp or
+ 	 *	&struct iwl_mvm_tx_resp_v3
+ 	 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+index a2a40b515a3c..514b86123d3d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+@@ -7,6 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -28,6 +29,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
++ * Copyright(c) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -320,6 +322,29 @@ struct iwl_tx_cmd_gen2 {
+ 	struct ieee80211_hdr hdr[0];
+ } __packed; /* TX_CMD_API_S_VER_7 */
  
- 	/* Nothing to do if no ELP mode requested */
- 	if (wl->sleep_auth != WL1271_PSM_ELP)
++/**
++ * struct iwl_tx_cmd_gen3 - TX command struct to FW for 22560 devices
++ * ( TX_CMD = 0x1c )
++ * @len: in bytes of the payload, see below for details
++ * @flags: combination of &enum iwl_tx_cmd_flags
++ * @offload_assist: TX offload configuration
++ * @dram_info: FW internal DRAM storage
++ * @rate_n_flags: rate for *all* Tx attempts, if TX_CMD_FLG_STA_RATE_MSK is
++ *	cleared. Combination of RATE_MCS_*
++ * @ttl: time to live - packet lifetime limit. The FW should drop if
++ *	passed.
++ * @hdr: 802.11 header
++ */
++struct iwl_tx_cmd_gen3 {
++	__le16 len;
++	__le16 flags;
++	__le32 offload_assist;
++	struct iwl_dram_sec_info dram_info;
++	__le32 rate_n_flags;
++	__le64 ttl;
++	struct ieee80211_hdr hdr[0];
++} __packed; /* TX_CMD_API_S_VER_8 */
++
+ /*
+  * TX response related data
+  */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index cf2591f2ac23..ff193dca2020 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -484,13 +484,15 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 
+ 	/* Make sure we zero enough of dev_cmd */
+ 	BUILD_BUG_ON(sizeof(struct iwl_tx_cmd_gen2) > sizeof(*tx_cmd));
++	BUILD_BUG_ON(sizeof(struct iwl_tx_cmd_gen3) > sizeof(*tx_cmd));
+ 
+ 	memset(dev_cmd, 0, sizeof(dev_cmd->hdr) + sizeof(*tx_cmd));
+ 	dev_cmd->hdr.cmd = TX_CMD;
+ 
+ 	if (iwl_mvm_has_new_tx_api(mvm)) {
+-		struct iwl_tx_cmd_gen2 *cmd = (void *)dev_cmd->payload;
+ 		u16 offload_assist = 0;
++		u32 rate_n_flags = 0;
++		u16 flags = 0;
+ 
+ 		if (ieee80211_is_data_qos(hdr->frame_control)) {
+ 			u8 *qc = ieee80211_get_qos_ctl(hdr);
+@@ -507,25 +509,43 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 		    !(offload_assist & BIT(TX_CMD_OFFLD_AMSDU)))
+ 			offload_assist |= BIT(TX_CMD_OFFLD_PAD);
+ 
+-		cmd->offload_assist |= cpu_to_le16(offload_assist);
++		if (!info->control.hw_key)
++			flags |= IWL_TX_FLAGS_ENCRYPT_DIS;
+ 
+-		/* Total # bytes to be transmitted */
+-		cmd->len = cpu_to_le16((u16)skb->len);
++		/* For data packets rate info comes from the fw */
++		if (!(ieee80211_is_data(hdr->frame_control) && sta)) {
++			flags |= IWL_TX_FLAGS_CMD_RATE;
++			rate_n_flags = iwl_mvm_get_tx_rate(mvm, info, sta);
++		}
+ 
+-		/* Copy MAC header from skb into command buffer */
+-		memcpy(cmd->hdr, hdr, hdrlen);
++		if (mvm->trans->cfg->device_family >=
++		    IWL_DEVICE_FAMILY_22560) {
++			struct iwl_tx_cmd_gen3 *cmd = (void *)dev_cmd->payload;
+ 
+-		if (!info->control.hw_key)
+-			cmd->flags |= cpu_to_le32(IWL_TX_FLAGS_ENCRYPT_DIS);
++			cmd->offload_assist |= cpu_to_le32(offload_assist);
+ 
+-		/* For data packets rate info comes from the fw */
+-		if (ieee80211_is_data(hdr->frame_control) && sta)
+-			goto out;
++			/* Total # bytes to be transmitted */
++			cmd->len = cpu_to_le16((u16)skb->len);
+ 
+-		cmd->flags |= cpu_to_le32(IWL_TX_FLAGS_CMD_RATE);
+-		cmd->rate_n_flags =
+-			cpu_to_le32(iwl_mvm_get_tx_rate(mvm, info, sta));
++			/* Copy MAC header from skb into command buffer */
++			memcpy(cmd->hdr, hdr, hdrlen);
+ 
++			cmd->flags = cpu_to_le16(flags);
++			cmd->rate_n_flags = cpu_to_le32(rate_n_flags);
++		} else {
++			struct iwl_tx_cmd_gen2 *cmd = (void *)dev_cmd->payload;
++
++			cmd->offload_assist |= cpu_to_le16(offload_assist);
++
++			/* Total # bytes to be transmitted */
++			cmd->len = cpu_to_le16((u16)skb->len);
++
++			/* Copy MAC header from skb into command buffer */
++			memcpy(cmd->hdr, hdr, hdrlen);
++
++			cmd->flags = cpu_to_le32(flags);
++			cmd->rate_n_flags = cpu_to_le32(rate_n_flags);
++		}
+ 		goto out;
+ 	}
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 70dfa80b3d60..e3ae7f91206b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -402,8 +402,14 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
+ 	 * (This calculation modifies the TX command, so do it before the
+ 	 * setup of the first TB)
+ 	 */
+-	len = sizeof(struct iwl_tx_cmd_gen2) + sizeof(struct iwl_cmd_header) +
+-	      ieee80211_hdrlen(hdr->frame_control) - IWL_FIRST_TB_SIZE;
++	if (trans->cfg->device_family < IWL_DEVICE_FAMILY_22560)
++		len = sizeof(struct iwl_tx_cmd_gen2);
++	else
++		len = sizeof(struct iwl_tx_cmd_gen3);
++
++	len += sizeof(struct iwl_cmd_header) +
++		ieee80211_hdrlen(hdr->frame_control) -
++		IWL_FIRST_TB_SIZE;
+ 
+ 	/* do not align A-MSDU to dword as the subframe header aligns it */
+ 	if (amsdu)
+@@ -480,9 +486,9 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 			   struct iwl_device_cmd *dev_cmd, int txq_id)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	struct iwl_tx_cmd_gen2 *tx_cmd = (void *)dev_cmd->payload;
+ 	struct iwl_cmd_meta *out_meta;
+ 	struct iwl_txq *txq = trans_pcie->txq[txq_id];
++	u16 cmd_len;
+ 	int idx;
+ 	void *tfd;
+ 
+@@ -497,6 +503,18 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 
+ 	spin_lock(&txq->lock);
+ 
++	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560) {
++		struct iwl_tx_cmd_gen3 *tx_cmd_gen3 =
++			(void *)dev_cmd->payload;
++
++		cmd_len = le16_to_cpu(tx_cmd_gen3->len);
++	} else {
++		struct iwl_tx_cmd_gen2 *tx_cmd_gen2 =
++			(void *)dev_cmd->payload;
++
++		cmd_len = le16_to_cpu(tx_cmd_gen2->len);
++	}
++
+ 	if (iwl_queue_space(trans, txq) < txq->high_mark) {
+ 		iwl_stop_queue(trans, txq);
+ 
+@@ -535,7 +553,7 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 	}
+ 
+ 	/* Set up entry for this TFD in Tx byte-count array */
+-	iwl_pcie_gen2_update_byte_tbl(trans_pcie, txq, le16_to_cpu(tx_cmd->len),
++	iwl_pcie_gen2_update_byte_tbl(trans_pcie, txq, cmd_len,
+ 				      iwl_pcie_gen2_get_num_tbs(trans, tfd));
+ 
+ 	/* start timer if queue currently empty */
+-- 
+2.18.0
