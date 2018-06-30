@@ -1,346 +1,402 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:50339 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729224AbeGaJsp (ORCPT
+Received: from 16.mo5.mail-out.ovh.net ([87.98.174.144]:60959 "EHLO
+        16.mo5.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751712AbeF3WLM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 05:48:45 -0400
-Received: by mail-wm0-f66.google.com with SMTP id s12-v6so2031978wmc.0
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2018 01:09:36 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [PATCH v2 12/19] mt76: add mt76x2_tx_common to mt76x2-common module
-Date: Tue, 31 Jul 2018 10:09:13 +0200
-Message-Id: <0ec0d7a7605b90f0d7a378d36410a43e6dda3d3a.1533023328.git.lorenzo.bianconi@redhat.com> (sfid-20180731_100957_899730_6445875E)
-In-Reply-To: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
-References: <cover.1533023328.git.lorenzo.bianconi@redhat.com>
+        Sat, 30 Jun 2018 18:11:12 -0400
+Received: from player793.ha.ovh.net (unknown [10.109.120.38])
+        by mo5.mail-out.ovh.net (Postfix) with ESMTP id E121B1C6847
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Jun 2018 23:32:04 +0200 (CEST)
+From: Alexander Wetzel <alexander.wetzel@web.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+        s.gottschall@dd-wrt.com, Alexander Wetzel <alexander.wetzel@web.de>
+Subject: [PATCH v3] mac80211: Fix PTK rekey freezes and cleartext leaks
+Date: Sat, 30 Jun 2018 23:27:35 +0200
+Message-Id: <20180630212735.1964-1-alexander.wetzel@web.de> (sfid-20180701_001515_405750_6D622209)
+In-Reply-To: <1530267147.3481.78.camel@sipsolutions.net>
+References: <1530267147.3481.78.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move tx related code shared between mt76x2 and mt76x2u in mt76x2-common
-module
+Rekeying a pairwise key with encryption offload and only keyid 0 has
+multiple races. Two of them can can freeze the wlan connection till
+rekeyed again and the third can send out packets in clear which should
+have been encrypted.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+ 1) Freeze caused by incoming packets:
+    If the local STA installs the key prior to the remote STA we still
+    have the old key active in the hardware for a short time after
+    mac80211 switched to the new key.
+    The card can still hand over packets decoded with the old key to
+    mac80211, bumping the new PN (IV) value to an incorrect high number
+    and tricking the local replay detection to drop all packets really
+    sent with the new key.
+
+ 2) Freeze caused by outgoing packets:
+    If mac80211 is providing the PN (IV) and hands over the cleartext
+    packets for encryption to the hardware immediately prior to a key
+    change the driver/card may process the queued packets after
+    switching to the new key.
+    This will immediately bump the PN (IV) value on the remote STA to
+    an incorrect high number, also freezing the connection.
+
+ 3) Clear text leak:
+    Removing encryption offload from the card clears the encryption
+    offload flag only after the card has removed the key.
+
+All three issues can be prevented by making sure we do not send out any
+packets while replacing the key, replace the key first in the HW and
+only after that in mac80211 and stop running/block new aggregation
+sessions during the rekey.
+
+This changes the old unicast key install sequence from:
+ - atomic switch over to the new key in mac80211 (TX still active!)
+ - remove the old key in the HW (stop encryption offloading)
+ - delete the now inactive old key in mac80211 (staring software
+   encryption after a potential clear text packet leak)
+ - add new key in the hw for encryption offloading (ending software
+   encryption)
+
+to:
+ - mark the old key as tainted to drop TX packets with the outgoing key
+ - replace the key in HW with the new one using the new driver callback
+   "replace_key"
+ - atomic switch over to the new key in mac80211 (allow TX again)
+ - delete the now inactive old key in mac80211
+
+For drivers not implementing the new callback "replace_key" it's
+unknown if the driver can replace the key without leaking cleartext
+packets. Mac80211 will therefore log an error message when trying to
+update the PTK key and refuse cooperation. This will disconnect the STA.
+
+With the new sequence the HW will be already unable to decode packets
+still encrypted with the old key prior to switching to the new key in
+mac80211. Locking down TX during the rekey makes sure that there are no
+outgoing packets while the driver and card are switching to the new key.
+
+The driver is allowed to hand over packets decrypted with either the new
+or the old key till "replace_key" returns. But all packets queued prior
+to calling the callback must be either still be send out encrypted with
+the old key or be dropped.
+
+A RX aggregation session started prior to the rekey and which completes
+after can still dump frames received with the old key at mac80211 after
+we switched over to the new key. This is currently avoided by stopping
+all RX and TX aggregation sessions when we replace a PTK key and are
+using key offloading.
+
+Signed-off-by: Alexander Wetzel <alexander.wetzel@web.de>
 ---
- drivers/net/wireless/mediatek/mt76/Makefile   |   2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2.h   |   2 +
- .../net/wireless/mediatek/mt76/mt76x2_tx.c    | 123 ---------------
- .../wireless/mediatek/mt76/mt76x2_tx_common.c | 149 ++++++++++++++++++
- 4 files changed, 152 insertions(+), 124 deletions(-)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
+ include/net/mac80211.h    |  12 +++++
+ net/mac80211/driver-ops.h |  20 ++++++++
+ net/mac80211/key.c        | 102 +++++++++++++++++++++++++++++++-------
+ net/mac80211/trace.h      |  39 +++++++++++++++
+ net/mac80211/tx.c         |   4 ++
+ 5 files changed, 159 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
-index 57feda501a51..e1226aae82fa 100644
---- a/drivers/net/wireless/mediatek/mt76/Makefile
-+++ b/drivers/net/wireless/mediatek/mt76/Makefile
-@@ -8,7 +8,7 @@ mt76-y := \
- CFLAGS_trace.o := -I$(src)
- 
- mt76x2-common-y := \
--	mt76x2_eeprom.o
-+	mt76x2_eeprom.o mt76x2_tx_common.o
- 
- mt76x2e-y := \
- 	mt76x2_pci.o mt76x2_dma.o \
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-index 896549c2fcbb..af9259cd6d42 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
-@@ -280,4 +280,6 @@ s8 mt76x2_tx_get_max_txpwr_adj(struct mt76x2_dev *dev,
- s8 mt76x2_tx_get_txpwr_adj(struct mt76x2_dev *dev, s8 txpwr, s8 max_txpwr_adj);
- void mt76x2_tx_set_txpwr_auto(struct mt76x2_dev *dev, s8 txpwr);
- 
-+int mt76x2_insert_hdr_pad(struct sk_buff *skb);
-+
- #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-index 84a3448ca163..4c907882e8b0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
-@@ -23,129 +23,6 @@ struct beacon_bc_data {
- 	struct sk_buff *tail[8];
- };
- 
--void mt76x2_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
--	     struct sk_buff *skb)
--{
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	struct mt76x2_dev *dev = hw->priv;
--	struct ieee80211_vif *vif = info->control.vif;
--	struct mt76_wcid *wcid = &dev->global_wcid;
--
--	if (control->sta) {
--		struct mt76x2_sta *msta;
--
--		msta = (struct mt76x2_sta *) control->sta->drv_priv;
--		wcid = &msta->wcid;
--		/* sw encrypted frames */
--		if (!info->control.hw_key && wcid->hw_key_idx != -1)
--			control->sta = NULL;
--	}
--
--	if (vif && !control->sta) {
--		struct mt76x2_vif *mvif;
--
--		mvif = (struct mt76x2_vif *) vif->drv_priv;
--		wcid = &mvif->group_wcid;
--	}
--
--	mt76_tx(&dev->mt76, control->sta, wcid, skb);
--}
--
--void mt76x2_tx_complete(struct mt76x2_dev *dev, struct sk_buff *skb)
--{
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--
--	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
--		ieee80211_free_txskb(mt76_hw(dev), skb);
--	} else {
--		ieee80211_tx_info_clear_status(info);
--		info->status.rates[0].idx = -1;
--		info->flags |= IEEE80211_TX_STAT_ACK;
--		ieee80211_tx_status(mt76_hw(dev), skb);
--	}
--}
--
--s8 mt76x2_tx_get_max_txpwr_adj(struct mt76x2_dev *dev,
--			       const struct ieee80211_tx_rate *rate)
--{
--	s8 max_txpwr;
--
--	if (rate->flags & IEEE80211_TX_RC_VHT_MCS) {
--		u8 mcs = ieee80211_rate_get_vht_mcs(rate);
--
--		if (mcs == 8 || mcs == 9) {
--			max_txpwr = dev->rate_power.vht[8];
--		} else {
--			u8 nss, idx;
--
--			nss = ieee80211_rate_get_vht_nss(rate);
--			idx = ((nss - 1) << 3) + mcs;
--			max_txpwr = dev->rate_power.ht[idx & 0xf];
--		}
--	} else if (rate->flags & IEEE80211_TX_RC_MCS) {
--		max_txpwr = dev->rate_power.ht[rate->idx & 0xf];
--	} else {
--		enum nl80211_band band = dev->mt76.chandef.chan->band;
--
--		if (band == NL80211_BAND_2GHZ) {
--			const struct ieee80211_rate *r;
--			struct wiphy *wiphy = mt76_hw(dev)->wiphy;
--			struct mt76_rate_power *rp = &dev->rate_power;
--
--			r = &wiphy->bands[band]->bitrates[rate->idx];
--			if (r->flags & IEEE80211_RATE_SHORT_PREAMBLE)
--				max_txpwr = rp->cck[r->hw_value & 0x3];
--			else
--				max_txpwr = rp->ofdm[r->hw_value & 0x7];
--		} else {
--			max_txpwr = dev->rate_power.ofdm[rate->idx & 0x7];
--		}
--	}
--
--	return max_txpwr;
--}
--
--s8 mt76x2_tx_get_txpwr_adj(struct mt76x2_dev *dev, s8 txpwr, s8 max_txpwr_adj)
--{
--	txpwr = min_t(s8, txpwr, dev->txpower_conf);
--	txpwr -= (dev->target_power + dev->target_power_delta[0]);
--	txpwr = min_t(s8, txpwr, max_txpwr_adj);
--
--	if (!dev->enable_tpc)
--		return 0;
--	else if (txpwr >= 0)
--		return min_t(s8, txpwr, 7);
--	else
--		return (txpwr < -16) ? 8 : (txpwr + 32) / 2;
--}
--
--void mt76x2_tx_set_txpwr_auto(struct mt76x2_dev *dev, s8 txpwr)
--{
--	s8 txpwr_adj;
--
--	txpwr_adj = mt76x2_tx_get_txpwr_adj(dev, txpwr,
--					    dev->rate_power.ofdm[4]);
--	mt76_rmw_field(dev, MT_PROT_AUTO_TX_CFG,
--		       MT_PROT_AUTO_TX_CFG_PROT_PADJ, txpwr_adj);
--	mt76_rmw_field(dev, MT_PROT_AUTO_TX_CFG,
--		       MT_PROT_AUTO_TX_CFG_AUTO_PADJ, txpwr_adj);
--}
--
--static int mt76x2_insert_hdr_pad(struct sk_buff *skb)
--{
--	int len = ieee80211_get_hdrlen_from_skb(skb);
--
--	if (len % 4 == 0)
--		return 0;
--
--	skb_push(skb, 2);
--	memmove(skb->data, skb->data + 2, len);
--
--	skb->data[len] = 0;
--	skb->data[len + 1] = 0;
--	return 2;
--}
--
- int mt76x2_tx_prepare_skb(struct mt76_dev *mdev, void *txwi,
- 			  struct sk_buff *skb, struct mt76_queue *q,
- 			  struct mt76_wcid *wcid, struct ieee80211_sta *sta,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
-new file mode 100644
-index 000000000000..36afb166fa3f
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
-@@ -0,0 +1,149 @@
-+/*
-+ * Copyright (C) 2016 Felix Fietkau <nbd@nbd.name>
-+ * Copyright (C) 2018 Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5790f55c241d..a8673d653e7d 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3137,6 +3137,14 @@ enum ieee80211_reconfig_type {
+  *	Returns a negative error code if the key can't be added.
+  *	The callback can sleep.
+  *
++ * @replace_key: Replace a PTK key in the HW for a running association with a
++ *      new one.
++ *      Implementing this callback confirms that the driver/card supports
++ *      replacing the key without leaking cleartext packets, will no longer hand
++ *      over packets decrypted with the old key and not send out any packet
++ *      queued prior to this call with the new key after the callback has
++ *      returned.
 + *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include "mt76x2.h"
-+#include "mt76x2_dma.h"
-+
-+void mt76x2_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
-+	       struct sk_buff *skb)
+  * @update_tkip_key: See the section "Hardware crypto acceleration"
+  * 	This callback will be called in the context of Rx. Called for drivers
+  * 	which set IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY.
+@@ -3585,6 +3593,10 @@ struct ieee80211_ops {
+ 	int (*set_key)(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		       struct ieee80211_vif *vif, struct ieee80211_sta *sta,
+ 		       struct ieee80211_key_conf *key);
++	int (*replace_key)(struct ieee80211_hw *hw,
++		       struct ieee80211_vif *vif, struct ieee80211_sta *sta,
++		       struct ieee80211_key_conf *old,
++		       struct ieee80211_key_conf *new);
+ 	void (*update_tkip_key)(struct ieee80211_hw *hw,
+ 				struct ieee80211_vif *vif,
+ 				struct ieee80211_key_conf *conf,
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 8f6998091d26..ebd7f1463336 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -255,6 +255,26 @@ static inline int drv_set_key(struct ieee80211_local *local,
+ 	return ret;
+ }
+ 
++static inline int drv_replace_key(struct ieee80211_local *local,
++			      struct ieee80211_sub_if_data *sdata,
++			      struct ieee80211_sta *sta,
++			      struct ieee80211_key_conf *old_key,
++			      struct ieee80211_key_conf *new_key)
 +{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct mt76x2_dev *dev = hw->priv;
-+	struct ieee80211_vif *vif = info->control.vif;
-+	struct mt76_wcid *wcid = &dev->global_wcid;
++	int ret;
 +
-+	if (control->sta) {
-+		struct mt76x2_sta *msta;
++	might_sleep();
 +
-+		msta = (struct mt76x2_sta *)control->sta->drv_priv;
-+		wcid = &msta->wcid;
-+		/* sw encrypted frames */
-+		if (!info->control.hw_key && wcid->hw_key_idx != -1)
-+			control->sta = NULL;
-+	}
++	sdata = get_bss_sdata(sdata);
++	if (!check_sdata_in_driver(sdata))
++		return -EIO;
 +
-+	if (vif && !control->sta) {
-+		struct mt76x2_vif *mvif;
-+
-+		mvif = (struct mt76x2_vif *)vif->drv_priv;
-+		wcid = &mvif->group_wcid;
-+	}
-+
-+	mt76_tx(&dev->mt76, control->sta, wcid, skb);
++	trace_drv_replace_key(local, sdata, sta, old_key, new_key);
++	ret = local->ops->replace_key(&local->hw, &sdata->vif, sta, old_key, new_key);
++	trace_drv_return_int(local, ret);
++	return ret;
 +}
-+EXPORT_SYMBOL_GPL(mt76x2_tx);
 +
-+int mt76x2_insert_hdr_pad(struct sk_buff *skb)
+ static inline void drv_update_tkip_key(struct ieee80211_local *local,
+ 				       struct ieee80211_sub_if_data *sdata,
+ 				       struct ieee80211_key_conf *conf,
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index ee0d0cc8dc3b..b148f90b209c 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -248,6 +248,7 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+ 	      (key->conf.flags & IEEE80211_KEY_FLAG_RESERVE_TAILROOM)))
+ 		increment_tailroom_need_count(sdata);
+ 
++	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
+ 	ret = drv_set_key(key->local, DISABLE_KEY, sdata,
+ 			  sta ? &sta->sta : NULL, &key->conf);
+ 
+@@ -257,7 +258,60 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+ 			  key->conf.keyidx,
+ 			  sta ? sta->sta.addr : bcast_addr, ret);
+ 
+-	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
++}
++
++static int ieee80211_hw_ptk_replace(struct ieee80211_key *old_key,
++				    struct ieee80211_key *new_key)
 +{
-+	int len = ieee80211_get_hdrlen_from_skb(skb);
++	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_local *local;
++	struct sta_info *sta;
++	int ret;
 +
-+	if (len % 4 == 0)
++	if (!old_key || !new_key || !old_key->sta)
++		return -EINVAL;
++
++	/* Running on software encryption */
++	if (!(old_key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
 +		return 0;
 +
-+	skb_push(skb, 2);
-+	memmove(skb->data, skb->data + 2, len);
++	assert_key_lock(old_key->local);
 +
-+	skb->data[len] = 0;
-+	skb->data[len + 1] = 0;
-+	return 2;
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_insert_hdr_pad);
++	sta = old_key->sta;
++	local = old_key->local;
++	sdata = old_key->sdata;
 +
-+s8 mt76x2_tx_get_max_txpwr_adj(struct mt76x2_dev *dev,
-+			       const struct ieee80211_tx_rate *rate)
-+{
-+	s8 max_txpwr;
-+
-+	if (rate->flags & IEEE80211_TX_RC_VHT_MCS) {
-+		u8 mcs = ieee80211_rate_get_vht_mcs(rate);
-+
-+		if (mcs == 8 || mcs == 9) {
-+			max_txpwr = dev->rate_power.vht[8];
-+		} else {
-+			u8 nss, idx;
-+
-+			nss = ieee80211_rate_get_vht_nss(rate);
-+			idx = ((nss - 1) << 3) + mcs;
-+			max_txpwr = dev->rate_power.ht[idx & 0xf];
-+		}
-+	} else if (rate->flags & IEEE80211_TX_RC_MCS) {
-+		max_txpwr = dev->rate_power.ht[rate->idx & 0xf];
-+	} else {
-+		enum nl80211_band band = dev->mt76.chandef.chan->band;
-+
-+		if (band == NL80211_BAND_2GHZ) {
-+			const struct ieee80211_rate *r;
-+			struct wiphy *wiphy = mt76_hw(dev)->wiphy;
-+			struct mt76_rate_power *rp = &dev->rate_power;
-+
-+			r = &wiphy->bands[band]->bitrates[rate->idx];
-+			if (r->flags & IEEE80211_RATE_SHORT_PREAMBLE)
-+				max_txpwr = rp->cck[r->hw_value & 0x3];
-+			else
-+				max_txpwr = rp->ofdm[r->hw_value & 0x7];
-+		} else {
-+			max_txpwr = dev->rate_power.ofdm[rate->idx & 0x7];
-+		}
++	if (!old_key->local->ops->replace_key) {
++		sdata_err(sdata,
++			  "Driver is not supporting save PTK key replacement. "
++			  "Insecure rekey attempt for STA %pM denied.\n",
++			  sta->sta.addr);
++		return -EINVAL;
 +	}
 +
-+	return max_txpwr;
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_tx_get_max_txpwr_adj);
++	/* Stop TX till we are on the new key */
++	old_key->flags |= KEY_FLAG_TAINTED;
++	ieee80211_clear_fast_xmit(sta);
 +
-+s8 mt76x2_tx_get_txpwr_adj(struct mt76x2_dev *dev, s8 txpwr, s8 max_txpwr_adj)
-+{
-+	txpwr = min_t(s8, txpwr, dev->txpower_conf);
-+	txpwr -= (dev->target_power + dev->target_power_delta[0]);
-+	txpwr = min_t(s8, txpwr, max_txpwr_adj);
++	if (ieee80211_hw_check(&local->hw, AMPDU_AGGREGATION)) {
++		set_sta_flag(sta, WLAN_STA_BLOCK_BA);
++		ieee80211_sta_tear_down_BA_sessions(sta, AGG_STOP_LOCAL_REQUEST);
++	}
++	ret = drv_replace_key(old_key->local, sdata,
++			      &sta->sta, &old_key->conf, &new_key->conf);
 +
-+	if (!dev->enable_tpc)
-+		return 0;
-+	else if (txpwr >= 0)
-+		return min_t(s8, txpwr, 7);
++	if (!ret)
++		new_key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
 +	else
-+		return (txpwr < -16) ? 8 : (txpwr + 32) / 2;
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_tx_get_txpwr_adj);
++		sdata_err(sdata,
++			  "failed to replace key (%d) with key " \
++			  "(%d) for STA, %pM in hardware (%d)\n",
++			  old_key->conf.keyidx,
++			  new_key->conf.keyidx,
++			  sta ? sta->sta.addr : bcast_addr, ret);
 +
-+void mt76x2_tx_set_txpwr_auto(struct mt76x2_dev *dev, s8 txpwr)
-+{
-+	s8 txpwr_adj;
-+
-+	txpwr_adj = mt76x2_tx_get_txpwr_adj(dev, txpwr,
-+					    dev->rate_power.ofdm[4]);
-+	mt76_rmw_field(dev, MT_PROT_AUTO_TX_CFG,
-+		       MT_PROT_AUTO_TX_CFG_PROT_PADJ, txpwr_adj);
-+	mt76_rmw_field(dev, MT_PROT_AUTO_TX_CFG,
-+		       MT_PROT_AUTO_TX_CFG_AUTO_PADJ, txpwr_adj);
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_tx_set_txpwr_auto);
-+
-+void mt76x2_tx_complete(struct mt76x2_dev *dev, struct sk_buff *skb)
-+{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+
-+	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
-+		ieee80211_free_txskb(mt76_hw(dev), skb);
++	old_key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
++	return (ret);
+ }
+ 
+ static void __ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata,
+@@ -316,38 +370,55 @@ void ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ 
+-static void ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
++static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
+ 				  struct sta_info *sta,
+ 				  bool pairwise,
+ 				  struct ieee80211_key *old,
+ 				  struct ieee80211_key *new)
+ {
+ 	int idx;
++	int ret;
+ 	bool defunikey, defmultikey, defmgmtkey;
+ 
+ 	/* caller must provide at least one old/new */
+ 	if (WARN_ON(!new && !old))
+-		return;
++		return 0;
+ 
+ 	if (new)
+ 		list_add_tail_rcu(&new->list, &sdata->key_list);
+ 
+ 	WARN_ON(new && old && new->conf.keyidx != old->conf.keyidx);
+ 
+-	if (old)
++	if (old) {
+ 		idx = old->conf.keyidx;
+-	else
++		if(new && sta && pairwise) {
++			ret = ieee80211_hw_ptk_replace(old, new);
++			if (ret)
++				return ret;
++		}
 +	} else {
-+		ieee80211_tx_info_clear_status(info);
-+		info->status.rates[0].idx = -1;
-+		info->flags |= IEEE80211_TX_STAT_ACK;
-+		ieee80211_tx_status(mt76_hw(dev), skb);
+ 		idx = new->conf.keyidx;
 +	}
-+}
-+EXPORT_SYMBOL_GPL(mt76x2_tx_complete);
 +
++	if (new && !new->local->wowlan && (!sta || !old )) {
++		ret = ieee80211_key_enable_hw_accel(new);
++		if (ret)
++			return ret;
++	}
+ 
+ 	if (sta) {
+ 		if (pairwise) {
+ 			rcu_assign_pointer(sta->ptk[idx], new);
+ 			sta->ptk_idx = idx;
+-			ieee80211_check_fast_xmit(sta);
++			if (new) {
++				clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
++				ieee80211_check_fast_xmit(sta);
++			}
+ 		} else {
+ 			rcu_assign_pointer(sta->gtk[idx], new);
+ 		}
+-		ieee80211_check_fast_rx(sta);
++		if (new)
++			ieee80211_check_fast_rx(sta);
+ 	} else {
+ 		defunikey = old &&
+ 			old == key_mtx_dereference(sdata->local,
+@@ -380,6 +451,7 @@ static void ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (old)
+ 		list_del_rcu(&old->list);
++	return 0;
+ }
+ 
+ struct ieee80211_key *
+@@ -654,7 +726,6 @@ int ieee80211_key_link(struct ieee80211_key *key,
+ 		       struct ieee80211_sub_if_data *sdata,
+ 		       struct sta_info *sta)
+ {
+-	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_key *old_key;
+ 	int idx, ret;
+ 	bool pairwise;
+@@ -687,19 +758,14 @@ int ieee80211_key_link(struct ieee80211_key *key,
+ 
+ 	increment_tailroom_need_count(sdata);
+ 
+-	ieee80211_key_replace(sdata, sta, pairwise, old_key, key);
+-	ieee80211_key_destroy(old_key, true);
++	ret = ieee80211_key_replace(sdata, sta, pairwise, old_key, key);
+ 
+-	ieee80211_debugfs_key_add(key);
+-
+-	if (!local->wowlan) {
+-		ret = ieee80211_key_enable_hw_accel(key);
+-		if (ret)
+-			ieee80211_key_free(key, true);
++	if (!ret) {
++		ieee80211_debugfs_key_add(key);
++		ieee80211_key_destroy(old_key, true);
+ 	} else {
+-		ret = 0;
++		ieee80211_key_free(key, true);
+ 	}
+-
+  out:
+ 	mutex_unlock(&sdata->local->key_mtx);
+ 
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 0ab69a1964f8..f93e00f1ae4d 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -603,6 +603,45 @@ TRACE_EVENT(drv_set_key,
+ 	)
+ );
+ 
++TRACE_EVENT(drv_replace_key,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct ieee80211_sta *sta,
++		 struct ieee80211_key_conf *old_key,
++		 struct ieee80211_key_conf *new_key),
++
++	TP_ARGS(local, sdata, sta, old_key, new_key),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		STA_ENTRY
++		KEY_ENTRY
++		__field(u32, cipher2)
++		__field(u8, hw_key_idx2)
++		__field(u8, flags2)
++		__field(s8, keyidx2)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		STA_ASSIGN;
++		KEY_ASSIGN(old_key);
++		__entry->cipher2 = new_key->cipher;
++		__entry->flags2 = new_key->flags;
++		__entry->keyidx2 = new_key->keyidx;
++		__entry->hw_key_idx2 = new_key->hw_key_idx;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT  STA_PR_FMT KEY_PR_FMT
++		" cipher2:0x%x, flags2=%#x, keyidx2=%d, hw_key_idx2=%d",
++		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, KEY_PR_ARG,
++		__entry->cipher2, __entry->flags2, __entry->keyidx2, __entry->hw_key_idx2
++	)
++);
++
+ TRACE_EVENT(drv_update_tkip_key,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 5b93bde248fd..f897de5dcf83 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2951,6 +2951,10 @@ void ieee80211_check_fast_xmit(struct sta_info *sta)
+ 		if (!(build.key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
+ 			goto out;
+ 
++		/* Key is beeing removed */
++		if (build.key->flags & KEY_FLAG_TAINTED)
++			goto out;
++
+ 		switch (build.key->conf.cipher) {
+ 		case WLAN_CIPHER_SUITE_CCMP:
+ 		case WLAN_CIPHER_SUITE_CCMP_256:
 -- 
 2.17.1
