@@ -1,100 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:52134 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752207AbeF3NXo (ORCPT
+Received: from mail-ed1-f41.google.com ([209.85.208.41]:45772 "EHLO
+        mail-ed1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751318AbeF3S4J (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Jun 2018 09:23:44 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
+        Sat, 30 Jun 2018 14:56:09 -0400
+Received: by mail-ed1-f41.google.com with SMTP id g15-v6so4709492edr.12
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Jun 2018 11:56:09 -0700 (PDT)
+Subject: Re: [PATCH] mac80211_hwsim: Add support for HE
+To: kbuild test robot <lkp@intel.com>, Luca Coelho <luca@coelho.fi>
+References: <20180630114930.25738-1-luca@coelho.fi>
+ <201806302128.sZFW1pVY%fengguang.wu@intel.com>
+Cc: kbuild-all@01.org, johannes@sipsolutions.net,
+        linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
+        Liad Kaufman <liad.kaufman@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Sat, 30 Jun 2018 16:23:23 +0300
-Message-Id: <20180630132330.14928-9-luca@coelho.fi> (sfid-20180630_152357_200641_CAB8325C)
-In-Reply-To: <20180630132330.14928-1-luca@coelho.fi>
-References: <20180630132330.14928-1-luca@coelho.fi>
-Subject: [PATCH 08/15] iwlwifi: pcie: start early debug for 22560 devices
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5B37D248.6040008@broadcom.com> (sfid-20180630_205613_922683_F10CCC82)
+Date: Sat, 30 Jun 2018 20:56:08 +0200
+MIME-Version: 1.0
+In-Reply-To: <201806302128.sZFW1pVY%fengguang.wu@intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+On 6/30/2018 5:42 PM, kbuild test robot wrote:
+>    2560			.he_mcs_nss_supp = {
+>> >2561				.rx_msc_80 = cpu_to_le16(0xfffa),
+>> >2562				.tx_msc_80 = cpu_to_le16(0xfffa),
+>> >2563				.rx_msc_160 = cpu_to_le16(0xffff),
+>> >2564				.tx_msc_160 = cpu_to_le16(0xffff),
+>> >2565				.rx_msc_80p80 = cpu_to_le16(0xffff),
+>> >2566				.tx_msc_80p80 = cpu_to_le16(0xffff),
+>    2567			},
 
-In 22560 devices we can start debug using context info gen3. Configure
-the fw to start collecting logs to the dram before init.
+I believe I commented in earlier version that those fields in the type 
+defintion should be mcs iso msc and this initializer did not get fixed?
 
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c  | 15 ++++++++++-----
- .../net/wireless/intel/iwlwifi/pcie/internal.h    |  3 +++
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c   |  2 +-
- 3 files changed, 14 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-index fc926354e573..2146fda8da2f 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-@@ -84,13 +84,22 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
- 	control_flags = IWL_PRPH_SCRATCH_RB_SIZE_4K |
- 			IWL_PRPH_SCRATCH_MTR_MODE |
- 			(IWL_PRPH_MTR_FORMAT_256B &
--			 IWL_PRPH_SCRATCH_MTR_FORMAT);
-+			 IWL_PRPH_SCRATCH_MTR_FORMAT) |
-+			IWL_PRPH_SCRATCH_EARLY_DEBUG_EN |
-+			IWL_PRPH_SCRATCH_EDBG_DEST_DRAM;
- 	prph_sc_ctrl->control.control_flags = cpu_to_le32(control_flags);
- 
- 	/* initialize RX default queue */
- 	prph_sc_ctrl->rbd_cfg.free_rbd_addr =
- 		cpu_to_le64(trans_pcie->rxq->bd_dma);
- 
-+	/* Configure debug, for integration */
-+	iwl_pcie_alloc_fw_monitor(trans, 0);
-+	prph_sc_ctrl->hwm_cfg.hwm_base_addr =
-+		cpu_to_le64(trans_pcie->fw_mon_phys);
-+	prph_sc_ctrl->hwm_cfg.hwm_size =
-+		cpu_to_le32(trans_pcie->fw_mon_size);
-+
- 	/* allocate ucode sections in dram and set addresses */
- 	ret = iwl_pcie_init_fw_sec(trans, fw, &prph_scratch->dram);
- 	if (ret) {
-@@ -157,10 +166,6 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
- 
- 	iwl_enable_interrupts(trans);
- 
--	/* Configure debug, if exists */
--	if (trans->dbg_dest_tlv)
--		iwl_pcie_apply_destination(trans);
--
- 	/* kick FW self load */
- 	iwl_write64(trans, CSR_CTXT_INFO_ADDR,
- 		    trans_pcie->ctxt_info_dma_addr);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 5db9ded4bb23..e14d2003244f 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -895,6 +895,9 @@ void iwl_pcie_free_tso_page(struct iwl_trans_pcie *trans_pcie,
- struct iwl_tso_hdr_page *get_page_hdr(struct iwl_trans *trans, size_t len);
- #endif
- 
-+/* common functions that are used by gen3 transport */
-+void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans, u8 max_power);
-+
- /* transport gen 2 exported functions */
- int iwl_trans_pcie_gen2_start_fw(struct iwl_trans *trans,
- 				 const struct fw_img *fw, bool run_in_rfkill);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index e0398ef07388..bc14227c95ac 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -203,7 +203,7 @@ static void iwl_pcie_free_fw_monitor(struct iwl_trans *trans)
- 	trans_pcie->fw_mon_size = 0;
- }
- 
--static void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans, u8 max_power)
-+void iwl_pcie_alloc_fw_monitor(struct iwl_trans *trans, u8 max_power)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct page *page = NULL;
--- 
-2.18.0
+Regards,
+Arend
