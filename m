@@ -1,78 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:33107 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750715AbeFAEGf (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36581 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751154AbeF3N4g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Jun 2018 00:06:35 -0400
-Date: Thu, 31 May 2018 21:06:32 -0700
-From: Mark Greer <mgreer@animalcreek.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Johan Hovold <johan@kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Carlos Manuel Santos <cmmpsantos@gmail.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4] NFC: pn533: don't send USB data off of the stack
-Message-ID: <20180601040632.GA14834@animalcreek.com> (sfid-20180601_061131_466753_5918D009)
-References: <20180520131946.GA7325@kroah.com>
- <20180521083825.GO30172@localhost>
- <20180531103848.GB31952@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180531103848.GB31952@kroah.com>
+        Sat, 30 Jun 2018 09:56:36 -0400
+Received: by mail-wm0-f65.google.com with SMTP id u18-v6so4623969wmc.1
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Jun 2018 06:56:35 -0700 (PDT)
+Message-ID: <45265cf5224d8d5e12e2eddc8968a879008657e5.camel@gmail.com> (sfid-20180630_155640_972329_DE6D4EF4)
+Subject: Re: [v2] ath10k: Update the phymode along with bandwidth change
+ request
+From: Timur =?ISO-8859-1?Q?Krist=F3f?= <timur.kristof@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Ryan Hsu <ryanhsu@codeaurora.org>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Date: Sat, 30 Jun 2018 15:56:33 +0200
+In-Reply-To: <20180628092800.6517B608C8@smtp.codeaurora.org>
+References: <1528482759-12604-1-git-send-email-ryanhsu@codeaurora.org>
+         <20180628092800.6517B608C8@smtp.codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 31, 2018 at 12:38:48PM +0200, Greg Kroah-Hartman wrote:
-> On Mon, May 21, 2018 at 10:38:25AM +0200, Johan Hovold wrote:
-> > On Sun, May 20, 2018 at 03:19:46PM +0200, Greg Kroah-Hartman wrote:
-> > > It's amazing that this driver ever worked, but now that x86 doesn't
-> > > allow USB data to be sent off of the stack, it really does not work at
-> > > all.  Fix this up by properly allocating the data for the small
-> > > "commands" that get sent to the device off of the stack.
-> > > 
-> > > We do this for one command by having a whole urb just for ack messages,
-> > > as they can be submitted in interrupt context, so we can not use
-> > > usb_bulk_msg().  But the poweron command can sleep (and does), so use
-> > > usb_bulk_msg() for that transfer.
-> > > 
-> > > Reported-by: Carlos Manuel Santos <cmmpsantos@gmail.com>
-> > > Cc: Samuel Ortiz <sameo@linux.intel.com>
-> > > Cc: Stephen Hemminger <stephen@networkplumber.org>
-> > > Cc: stable <stable@vger.kernel.org>
-> > > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > > ---
-> > > v4: don't use urb transfer buffer flags as the memory is tied to the urb
-> > >     (thanks to Johan)  Now we have a new static urb, and we use
-> > >     usb_bulk_msg() for the other message.
-> > > v3: actually use the correct buffer (thanks to Arend van Spriel)
-> > >     use kmemdup (thanks to Johannes Berg and Julia Lawall)
-> > > v2: set the urb flags correctly
+On Thu, 2018-06-28 at 09:28 +0000, Kalle Valo wrote:
+> Ryan Hsu <ryanhsu@codeaurora.org> wrote:
+> 
+> > In the case of Station connects to AP with narrower bandwidth at
+> > beginning.
+> > And later the AP changes the bandwidth to winder bandwidth, the AP
+> > will
+> > beacon with wider bandwidth IE, eg VHT20->VHT40->VHT80 or VHT40-
+> > >VHT80.
 > > 
-> > Your changes look correct now so feel free to add:
+> > Since the supported BANDWIDTH will be limited by the PHYMODE, so
+> > while
+> > Station receives the bandwidth change request, it will also need to
+> > reconfigure the PHYMODE setting to firmware instead of just
+> > configuring
+> > the BANDWIDTH info, otherwise it'll trigger a firmware crash with
+> > non-support bandwidth.
 > > 
-> > Reviewed-by: Johan Hovold <johan@kernel.org>
+> > The issue was observed in WLAN.RM.4.4.1-00051-QCARMSWP-1, QCA6174
+> > with
+> > below scenario:
+> > 
+> > AP xxx changed bandwidth, new config is 5200 MHz, width 2 (5190/0
+> > MHz)
+> > disconnect from AP xxx for new auth to yyy
+> > RX ReassocResp from xxx (capab=0x1111 status=0 aid=102)
+> > associated
+> > 
+> > ....
+> > 
+> > AP xxx changed bandwidth, new config is 5200 MHz, width 2 (5190/0
+> > MHz)
+> > AP xxx changed bandwidth, new config is 5200 MHz, width 3 (5210/0
+> > MHz)
+> > 
+> > ....
+> > 
+> > firmware register dump:
+> > [00]: 0x05030000 0x000015B3 0x00987291 0x00955B31
+> > [04]: 0x00987291 0x00060730 0x00000004 0x00000001
+> > [08]: 0x004089F0 0x00955A00 0x000A0B00 0x00400000
+> > [12]: 0x00000009 0x00000000 0x00952CD0 0x00952CE6
+> > [16]: 0x00952CC4 0x0098E25F 0x00000000 0x0091080D
+> > [20]: 0x40987291 0x0040E7A8 0x00000000 0x0041EE3C
+> > [24]: 0x809ABF05 0x0040E808 0x00000000 0xC0987291
+> > [28]: 0x809A650C 0x0040E948 0x0041FE40 0x004345C4
+> > [32]: 0x809A5C63 0x0040E988 0x0040E9AC 0x0042D1A8
+> > [36]: 0x8091D252 0x0040E9A8 0x00000002 0x00000001
+> > [40]: 0x809FDA9D 0x0040EA58 0x0043D554 0x0042D554
+> > [44]: 0x809F8B22 0x0040EA78 0x0043D554 0x00000001
+> > [48]: 0x80911210 0x0040EAC8 0x00000010 0x004041D0
+> > [52]: 0x80911154 0x0040EB28 0x00400000 0x00000000
+> > [56]: 0x8091122D 0x0040EB48 0x00000000 0x00400600
+> > 
+> > Reported-by: Rouven Czerwinski <rouven@czerwinskis.de>
+> > Tested-by: Timur Kristóf <timur.kristof@gmail.com>
+> > Signed-off-by: Ryan Hsu <ryanhsu@codeaurora.org>
+> > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 > 
-> Thanks for the review.
+> Patch applied to ath-current branch of ath.git, thanks.
 > 
-> > It seems we could end up returning an errno from probe with active urbs
-> > (if pn533_finalize_setup() fails) in which case the ack buffer would
-> > leak. But freeing the urbs while active would then be the bigger
-> > problem, and that wasn't introduced by this patch.
-> 
-> Yeah, this whole thing is a mess and I really don't want to do much more
-> to the driver without having the hardware to test with it.  So I'll just
-> leave it as-is for now :)
+> 9191fc2a431b ath10k: update the phymode along with bandwidth change
+> request
 
-Hi Greg.
+Thank you Kalle.
+Does this mean that the patch will get into kernel 4.18?
 
-I have a pn533 USB stick, a trf7970-based board, and some nfc tags so I
-can help you test as long as you don't mind multi-day turn-around times.
-Alternatively, I can set something up and give you remote access, if you
-prefer that.
-
-Let me know.
-
-Mark
---
+Best regards,
+Tim
