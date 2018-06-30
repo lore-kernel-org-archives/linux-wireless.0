@@ -1,56 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:55307 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751539AbeFEKfj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Jun 2018 06:35:39 -0400
-Received: by mail-wm0-f68.google.com with SMTP id v16-v6so3910172wmh.5
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jun 2018 03:35:38 -0700 (PDT)
-Subject: Re: [PATCH 0/3] nl80211: support offloading FILS-SK roaming scenarios
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <1526977148-11600-1-git-send-email-arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-        Eylon Pedinovsky <eylon.pedinovsky@broadcom.com>,
-        Jithu Jance <jithu.jance@broadcom.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5B166778.5020807@broadcom.com> (sfid-20180605_123544_088123_692EBCDD)
-Date: Tue, 5 Jun 2018 12:35:36 +0200
+Received: from szxga05-in.huawei.com ([45.249.212.191]:9186 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752523AbeF3Gav (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 30 Jun 2018 02:30:51 -0400
+Subject: Re: [PATCH] atmel: using strlcpy() to avoid possible buffer overflows
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+References: <20180629025135.12236-1-yuehaibing@huawei.com>
+ <CAHp75Vet-vTz_Ld=Lturmm8NSpK1etvoj-7Wzn4-h=bM2FQgZg@mail.gmail.com>
+ <CAHp75VcTVtzLuwH=Ff6DBKJyQE4t=HT7hB2O=gvgN+V-38LH5g@mail.gmail.com>
+CC: <simon@thekelleys.org.uk>, Kalle Valo <kvalo@codeaurora.org>,
+        "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        "David S. Miller" <davem@davemloft.net>
+From: YueHaibing <yuehaibing@huawei.com>
+Message-ID: <1639a6d7-622a-99fc-9321-989661e4b923@huawei.com> (sfid-20180630_083124_066722_C59FBA0B)
+Date: Sat, 30 Jun 2018 14:30:34 +0800
 MIME-Version: 1.0
-In-Reply-To: <1526977148-11600-1-git-send-email-arend.vanspriel@broadcom.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <CAHp75VcTVtzLuwH=Ff6DBKJyQE4t=HT7hB2O=gvgN+V-38LH5g@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/22/2018 10:19 AM, Arend van Spriel wrote:
-> This small patch series is based on patch originally submitted by Vidyullatha
-> to support driver/firmware roaming for FILS-SK offload. It also reworks the
-> connection response code to reuse the fils parameter structure for the ROAM
-> event.
->
-> The series is intended for 4.18 and applies to the master branch of the
-> mac80211-next repository.
 
-Hi Johannes,
+On 2018/6/30 5:51, Andy Shevchenko wrote:
+> On Sat, Jun 30, 2018 at 12:47 AM, Andy Shevchenko
+> <andy.shevchenko@gmail.com> wrote:
+>> On Fri, Jun 29, 2018 at 5:51 AM, YueHaibing <yuehaibing@huawei.com> wrote:
+>>> 'firmware' is a module param which may been longer than firmware_id,
+>>> so using strlcpy() to guard against overflows
+>>
+>> strncat() is against overflow, this does a bit more.
+>>
+>>>         priv->firmware_id[0] = '\0';
+>> ...
+>>>         if (firmware) /* module parameter */
+>>> -               strcpy(priv->firmware_id, firmware);
+>>> +               strlcpy(priv->firmware_id, firmware, sizeof(priv->firmware_id));
+>>
+>> In either case the above '\0' is not needed.
+>> But it looks like the intention was to use strncat() / strlcat().
+> 
+> Ah, this is under condition, yes. If no parameter supplied, this needs
+> to be clean, but
+> priv is allocated with zeroed memory
+> https://elixir.bootlin.com/linux/latest/source/net/core/dev.c#L8369
 
-Did you miss this series? Any comments?
+so just remove this line:
+	 priv->firmware_id[0] = '\0';
 
-Regards,
-Arend
+and using strlcpy while 'firmware' NOT null is enough.
 
-> Arend van Spriel (2):
->    cfg80211: use separate struct for fils parameters
->    nl80211: add FILS related parameters to ROAM event
->
-> Vidyullatha Kanchanapally (1):
->    nl80211: Update ERP info using NL80211_CMD_UPDATE_CONNECT_PARAMS
->
->   include/net/cfg80211.h       | 51 ++++++++++++++++---------
->   include/uapi/linux/nl80211.h |  6 ++-
->   net/wireless/core.c          |  4 ++
->   net/wireless/nl80211.c       | 90 +++++++++++++++++++++++++++++++++++++-------
->   net/wireless/sme.c           | 88 ++++++++++++++++++++++++++++++-------------
->   5 files changed, 180 insertions(+), 59 deletions(-)
->
-> --
-> 1.9.1
->
+Will send v2.
+
+> 
