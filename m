@@ -1,86 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:32733 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726625AbeGSGqb (ORCPT
+Received: from 20.mo4.mail-out.ovh.net ([46.105.33.73]:49419 "EHLO
+        20.mo4.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751628AbeGAKro (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jul 2018 02:46:31 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 13/23] staging: wilc1000: use lowercase for 'IFC_UP' struct element name
-Date: Thu, 19 Jul 2018 04:15:09 +0530
-Message-ID: <1531953919-20804-14-git-send-email-ajay.kathat@microchip.com> (sfid-20180719_080509_475249_0D3E9CD0)
-In-Reply-To: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
-References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
+        Sun, 1 Jul 2018 06:47:44 -0400
+Received: from player770.ha.ovh.net (unknown [10.109.108.3])
+        by mo4.mail-out.ovh.net (Postfix) with ESMTP id 6F03C187CB4
+        for <linux-wireless@vger.kernel.org>; Sun,  1 Jul 2018 08:01:49 +0200 (CEST)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Sun, 01 Jul 2018 08:01:36 +0200
+From: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, brcm80211-dev-list@cypress.com
+Subject: Re: [PATCH] brcmfmac: update STA info struct to the v5
+In-Reply-To: <5B37D08B.9050008@broadcom.com>
+References: <20180628103623.29103-1-zajec5@gmail.com>
+ <5B37D08B.9050008@broadcom.com>
+Message-ID: <5d9c879c39864733cbbbc31af0f3ffd8@milecki.pl> (sfid-20180701_124749_149722_6213CB49)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to use lowercase for structure element name to follow
-linux coding style.
+On 2018-06-30 20:48, Arend van Spriel wrote:
+> On 6/28/2018 12:36 PM, Rafał Miłecki wrote:
+>> From: Rafał Miłecki <rafal@milecki.pl>
+>> 
+>> That struct is used when querying firmware for the STA. It seem is has
+>> been changing during the time. Luckily its format seems to be backward
+>> compatible starting with v2 (the only breakage was v1 -> v2).
+>> 
+>> The version that was supported by brcmfmac so far was v4. It was what
+>> 43602a1 and 4366b1 firmwares (7.35.177.56 and 10.10.69.3309 
+>> accordingly)
+>> were using. It also seems to be used by early 4366c0 firmwares
+>> (10.10.69.6908 and 10.10.69.69017).
+>> 
+>> The problem appears when switching to the 10.10.122.20 firmware. It 
+>> uses
+>> v5 and instead of falling back to v4 when submitted buffer isn't big
+>> enough it fallbacks to the v3.
+>> 
+>> To receive all v4 specific info with the newest firmware we have to
+>> submit a struct (buffer) that matches v5.
+> 
+> So do you have firmware that actually return v5 in the 'ver' field. I
+> am asking because I see a comment that version 5 is obsoleted and in
+> recent branch we are at version 7. Just curious what the actual
+> version is. If you do not explicitly need version 5 I would prefer to
+> skip it and move to version 6 struct. Otherwise it is...
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/host_interface.h         | 2 +-
- drivers/staging/wilc1000/linux_wlan.c             | 4 ++--
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
- 3 files changed, 5 insertions(+), 5 deletions(-)
+Yes. As stated in the commit message, firmware 10.10.122.20 uses v5.
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 79166a5..9a016c5 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -277,7 +277,7 @@ struct host_if_drv {
- 	struct timer_list remain_on_ch_timer;
- 	struct wilc_vif *remain_on_ch_timer_vif;
- 
--	bool IFC_UP;
-+	bool ifc_up;
- 	int driver_handler_id;
- };
- 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 032afc2..84d3145 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -45,7 +45,7 @@ static int dev_state_ev_handler(struct notifier_block *this,
- 	switch (event) {
- 	case NETDEV_UP:
- 		if (vif->iftype == STATION_MODE || vif->iftype == CLIENT_MODE) {
--			hif_drv->IFC_UP = 1;
-+			hif_drv->ifc_up = 1;
- 			wilc_optaining_ip = false;
- 			del_timer(&wilc_during_ip_timer);
- 		}
-@@ -65,7 +65,7 @@ static int dev_state_ev_handler(struct notifier_block *this,
- 
- 	case NETDEV_DOWN:
- 		if (vif->iftype == STATION_MODE || vif->iftype == CLIENT_MODE) {
--			hif_drv->IFC_UP = 0;
-+			hif_drv->ifc_up = 0;
- 			wilc_optaining_ip = false;
- 		}
- 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index e561dce..ebe7adc2 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -535,9 +535,9 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
- 
- 		if (!wfi_drv->p2p_connect)
- 			wlan_channel = INVALID_CHANNEL;
--		if (wfi_drv->IFC_UP && dev == wl->vif[1]->ndev)
-+		if (wfi_drv->ifc_up && dev == wl->vif[1]->ndev)
- 			disconn_info->reason = 3;
--		else if (!wfi_drv->IFC_UP && dev == wl->vif[1]->ndev)
-+		else if (!wfi_drv->ifc_up && dev == wl->vif[1]->ndev)
- 			disconn_info->reason = 1;
- 
- 		cfg80211_disconnected(dev, disconn_info->reason,
--- 
-2.7.4
+I didn't list vendors using that firmware, but if you take a look at the
+side thread "Research + questions on brcmfmac and support for monitor
+mode", you'll see that 10.10.122.20 is used in:
+1) FW_EA9500v2_EA9500S_2.1.1.183171_prod.img
+2) GT-AC5300_3.0.0.4_382_15984-gf481f58_cferom_ubi_0824.w
+3) ArcherC5400X(US)_171023.bin
+
+That means I explicitly need v5 to make brcmfmac work with any
+10.10.122.20 firmware from above images.
+
+Unfortunately I didn't find any vendor release their GPL package with
+Broadcom's SDK using v6 or v7. I hope it's backward compatible and
+maybe you'll be able to provide patch on top of mine?
+
+
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+
+Thanks!
