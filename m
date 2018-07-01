@@ -1,73 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:62081 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725934AbeGSGp5 (ORCPT
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:35089 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752398AbeGAONJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jul 2018 02:45:57 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 03/23] staging: wilc1000: remove extra enum defined for data rates
-Date: Thu, 19 Jul 2018 04:14:59 +0530
-Message-ID: <1531953919-20804-4-git-send-email-ajay.kathat@microchip.com> (sfid-20180719_080435_136703_91C7E2A9)
-In-Reply-To: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
-References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 1 Jul 2018 10:13:09 -0400
+Received: by mail-wr0-f196.google.com with SMTP id h40-v6so1911226wrh.2
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Jul 2018 07:13:08 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [PATCH 05/19] mt76x2: move interface_modes definition in mt76x2_init
+Date: Sun,  1 Jul 2018 16:12:17 +0200
+Message-Id: <20180701141231.25323-6-lorenzo.bianconi@redhat.com> (sfid-20180701_161326_421123_5B77EB6C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to remove extra enum defined to handle data rates.
+Move  wiphy interface_modes definition in mt76x2_init in order to
+reuse mt76_register_device routine supporting mt76x2u based chipsets
+since mt76x2u currently supports just sta mode
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c   |  2 +-
- drivers/staging/wilc1000/wilc_wlan_if.h | 16 ----------------
- 2 files changed, 1 insertion(+), 17 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mac80211.c    | 8 --------
+ drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 8 ++++++++
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 0019bb8..032afc2 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -378,7 +378,7 @@ static int linux_wlan_init_test_config(struct net_device *dev,
- 	if (!wilc_wlan_cfg_set(vif, 0, WID_BSS_TYPE, c_val, 1, 0, 0))
- 		goto fail;
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index d62e34e7eadf..6a0b6f4403a8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -303,14 +303,6 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
+ 	SET_IEEE80211_DEV(hw, dev->dev);
+ 	SET_IEEE80211_PERM_ADDR(hw, dev->macaddr);
  
--	c_val[0] = RATE_AUTO;
-+	c_val[0] = AUTORATE;
- 	if (!wilc_wlan_cfg_set(vif, 0, WID_CURRENT_TX_RATE, c_val, 1, 0, 0))
- 		goto fail;
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 85ac878..b23f86c 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -88,22 +88,6 @@ enum bss_types {
- };
- 
- enum {
--	RATE_AUTO		= 0,
--	RATE_1MB		= 1,
--	RATE_2MB		= 2,
--	RATE_5MB		= 5,
--	RATE_6MB		= 6,
--	RATE_9MB		= 9,
--	RATE_11MB		= 11,
--	RATE_12MB		= 12,
--	RATE_18MB		= 18,
--	RATE_24MB		= 24,
--	RATE_26MB		= 36,
--	RATE_48MB		= 48,
--	RATE_54MB		= 54
--};
+-	wiphy->interface_modes =
+-		BIT(NL80211_IFTYPE_STATION) |
+-		BIT(NL80211_IFTYPE_AP) |
+-#ifdef CONFIG_MAC80211_MESH
+-		BIT(NL80211_IFTYPE_MESH_POINT) |
+-#endif
+-		BIT(NL80211_IFTYPE_ADHOC);
 -
--enum {
- 	B_ONLY_MODE		= 0,    /* 1, 2 M, otherwise 5, 11 M */
- 	G_ONLY_MODE,			/* 6,12,24 otherwise 9,18,36,48,54 */
- 	G_MIXED_11B_1_MODE,		/* 1,2,5.5,11 otherwise all on */
+ 	wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
+ 
+ 	wiphy->available_antennas_tx = dev->antenna_mask;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+index 9c6d180da294..ef6c92471453 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+@@ -835,6 +835,14 @@ int mt76x2_register_device(struct mt76x2_dev *dev)
+ 
+ 	wiphy->reg_notifier = mt76x2_regd_notifier;
+ 
++	wiphy->interface_modes =
++		BIT(NL80211_IFTYPE_STATION) |
++		BIT(NL80211_IFTYPE_AP) |
++#ifdef CONFIG_MAC80211_MESH
++		BIT(NL80211_IFTYPE_MESH_POINT) |
++#endif
++		BIT(NL80211_IFTYPE_ADHOC);
++
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
+ 
+ 	mt76x2_dfs_init_detector(dev);
 -- 
-2.7.4
+2.18.0
