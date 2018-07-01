@@ -1,88 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34188 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934194AbeGCSGU (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:33486 "EHLO
+        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752461AbeGAONQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Jul 2018 14:06:20 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Govind Singh <govinds@codeaurora.org>
-Cc: andy.gross@linaro.org, bjorn.andersson@linaro.org,
-        david.brown@linaro.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH v2 6/6] ath10k: Add QMI message handshake for wcn3990 client
-References: <20180605123732.1993-1-govinds@codeaurora.org>
-Date: Tue, 03 Jul 2018 21:06:15 +0300
-In-Reply-To: <20180605123732.1993-1-govinds@codeaurora.org> (Govind Singh's
-        message of "Tue, 5 Jun 2018 18:07:32 +0530")
-Message-ID: <877emcnqi0.fsf@kamboji.qca.qualcomm.com> (sfid-20180703_200625_991250_DC3DE6AC)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 1 Jul 2018 10:13:16 -0400
+Received: by mail-wm0-f47.google.com with SMTP id z6-v6so5710567wma.0
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Jul 2018 07:13:16 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [PATCH 11/19] mt76: introduce mt76x2-common module
+Date: Sun,  1 Jul 2018 16:12:23 +0200
+Message-Id: <20180701141231.25323-12-lorenzo.bianconi@redhat.com> (sfid-20180701_161330_163194_CA97DF4C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Govind Singh <govinds@codeaurora.org> writes:
+In order to remove usb dependency from pcie code, add mt76x2-common as
+a container of shared code between mt76x2 and mt76x2u. Add eeprom code
+to mt76x2-common module
 
-> Add WCN3990 QMI client handshakes for Q6 integrated WLAN connectivity
-> subsystem. This layer is responsible for communicating qmi control
-> messages to wifi fw QMI service using QMI messaging protocol.
->
-> Qualcomm MSM Interface(QMI) is a messaging format used to communicate
-> between components running between application processor and remote
-> processors with underlying transport layer based on integrated
-> chipset(shared memory) or discrete chipset(PCI/USB/SDIO/UART).
->
-> With this patch-set basic functionality(STA/SAP) can be tested
-> with WCN3990 chipset. The changes are verified with the firmware
-> WLAN.HL.2.0-01192-QCAHLSWMTPLZ-1 and SDM845 MTP device.
->
-> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/Kconfig         |  5 +++++
+ drivers/net/wireless/mediatek/mt76/Makefile        |  6 +++++-
+ drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c | 13 +++++++++++--
+ drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h |  1 +
+ 4 files changed, 22 insertions(+), 3 deletions(-)
 
-[...]
-
-> +static void ath10k_qmi_driver_event_work(struct work_struct *work)
-> +{
-> +	struct ath10k_qmi *qmi = container_of(work, struct ath10k_qmi,
-> +					      event_work);
-> +	struct ath10k_qmi_driver_event *event;
-> +	struct ath10k *ar = qmi->ar;
-> +
-> +	spin_lock(&qmi->event_lock);
-> +	while (!list_empty(&qmi->event_list)) {
-> +		event = list_first_entry(&qmi->event_list,
-> +					 struct ath10k_qmi_driver_event, list);
-> +		list_del(&event->list);
-> +		spin_unlock(&qmi->event_lock);
-> +
-> +		switch (event->type) {
-> +		case ATH10K_QMI_EVENT_SERVER_ARRIVE:
-> +			ath10k_qmi_event_server_arrive(qmi);
-> +			break;
-> +		case ATH10K_QMI_EVENT_SERVER_EXIT:
-> +			ath10k_qmi_event_server_exit(qmi);
-> +			break;
-> +		case ATH10K_QMI_EVENT_FW_READY_IND:
-> +			ath10k_qmi_event_fw_ready_ind(qmi);
-> +			break;
-> +		case ATH10K_QMI_EVENT_MSA_READY_IND:
-> +			ath10k_qmi_event_msa_ready(qmi);
-> +			break;
-> +		default:
-> +			ath10k_err(ar, "invalid event type: %d", event->type);
-> +			break;
-> +		}
-> +		kfree(event);
-> +		spin_lock(&qmi->event_lock);
-> +	}
-> +	spin_unlock(&qmi->event_lock);
-> +}
-
-BTW, do you really need this event loop? It's quite awkward, it would be
-much cleaner to call the code directly. Or if you need a work queue for
-a certain function call, create a specific workqueue. Don't add a
-generic loop like this.
-
-Didn't Bjorn mention something along the lines of that it's not needed
-in earlier review?
-
+diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
+index fc05d79c80d0..1e5c6af6afa2 100644
+--- a/drivers/net/wireless/mediatek/mt76/Kconfig
++++ b/drivers/net/wireless/mediatek/mt76/Kconfig
+@@ -1,9 +1,14 @@
+ config MT76_CORE
+ 	tristate
+ 
++config MT76x2_COMMON
++	tristate
++	depends on MT76_CORE
++
+ config MT76x2E
+ 	tristate "MediaTek MT76x2E (PCIe) support"
+ 	select MT76_CORE
++	select MT76x2_COMMON
+ 	depends on MAC80211
+ 	depends on PCI
+ 	---help---
+diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
+index a0156bc01dea..57feda501a51 100644
+--- a/drivers/net/wireless/mediatek/mt76/Makefile
++++ b/drivers/net/wireless/mediatek/mt76/Makefile
+@@ -1,4 +1,5 @@
+ obj-$(CONFIG_MT76_CORE) += mt76.o
++obj-$(CONFIG_MT76x2_COMMON) += mt76x2-common.o
+ obj-$(CONFIG_MT76x2E) += mt76x2e.o
+ 
+ mt76-y := \
+@@ -6,10 +7,13 @@ mt76-y := \
+ 
+ CFLAGS_trace.o := -I$(src)
+ 
++mt76x2-common-y := \
++	mt76x2_eeprom.o
++
+ mt76x2e-y := \
+ 	mt76x2_pci.o mt76x2_dma.o \
+ 	mt76x2_main.o mt76x2_init.o mt76x2_debugfs.o mt76x2_tx.o \
+-	mt76x2_core.o mt76x2_mac.o mt76x2_eeprom.o mt76x2_mcu.o mt76x2_phy.o \
++	mt76x2_core.o mt76x2_mac.o mt76x2_mcu.o mt76x2_phy.o \
+ 	mt76x2_dfs.o mt76x2_trace.o
+ 
+ CFLAGS_mt76x2_trace.o := -I$(src)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
+index 95d5f7d888f0..1753bcb36356 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
+@@ -40,8 +40,7 @@ mt76x2_eeprom_get_macaddr(struct mt76x2_dev *dev)
+ 	return 0;
+ }
+ 
+-static void
+-mt76x2_eeprom_parse_hw_cap(struct mt76x2_dev *dev)
++void mt76x2_eeprom_parse_hw_cap(struct mt76x2_dev *dev)
+ {
+ 	u16 val = mt76x2_eeprom_get(dev, MT_EE_NIC_CONF_0);
+ 
+@@ -58,6 +57,7 @@ mt76x2_eeprom_parse_hw_cap(struct mt76x2_dev *dev)
+ 		break;
+ 	}
+ }
++EXPORT_SYMBOL_GPL(mt76x2_eeprom_parse_hw_cap);
+ 
+ static int
+ mt76x2_efuse_read(struct mt76x2_dev *dev, u16 addr, u8 *data)
+@@ -415,6 +415,7 @@ void mt76x2_read_rx_gain(struct mt76x2_dev *dev)
+ 
+ 	dev->cal.rx.lna_gain = mt76x2_sign_extend(lna, 8);
+ }
++EXPORT_SYMBOL_GPL(mt76x2_read_rx_gain);
+ 
+ static s8
+ mt76x2_rate_power_val(u8 val)
+@@ -482,6 +483,7 @@ void mt76x2_get_rate_power(struct mt76x2_dev *dev, struct mt76_rate_power *t,
+ 		val >>= 8;
+ 	t->vht[8] = t->vht[9] = mt76x2_rate_power_val(val >> 8);
+ }
++EXPORT_SYMBOL_GPL(mt76x2_get_rate_power);
+ 
+ int mt76x2_get_max_rate_power(struct mt76_rate_power *r)
+ {
+@@ -493,6 +495,7 @@ int mt76x2_get_max_rate_power(struct mt76_rate_power *r)
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(mt76x2_get_max_rate_power);
+ 
+ static void
+ mt76x2_get_power_info_2g(struct mt76x2_dev *dev, struct mt76x2_tx_power_info *t,
+@@ -600,6 +603,7 @@ void mt76x2_get_power_info(struct mt76x2_dev *dev,
+ 	t->delta_bw40 = mt76x2_rate_power_val(bw40);
+ 	t->delta_bw80 = mt76x2_rate_power_val(bw80);
+ }
++EXPORT_SYMBOL_GPL(mt76x2_get_power_info);
+ 
+ int mt76x2_get_temp_comp(struct mt76x2_dev *dev, struct mt76x2_temp_comp *t)
+ {
+@@ -632,6 +636,7 @@ int mt76x2_get_temp_comp(struct mt76x2_dev *dev, struct mt76x2_temp_comp *t)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(mt76x2_get_temp_comp);
+ 
+ bool mt76x2_ext_pa_enabled(struct mt76x2_dev *dev, enum nl80211_band band)
+ {
+@@ -642,6 +647,7 @@ bool mt76x2_ext_pa_enabled(struct mt76x2_dev *dev, enum nl80211_band band)
+ 	else
+ 		return !(conf0 & MT_EE_NIC_CONF_0_PA_INT_2G);
+ }
++EXPORT_SYMBOL_GPL(mt76x2_ext_pa_enabled);
+ 
+ int mt76x2_eeprom_init(struct mt76x2_dev *dev)
+ {
+@@ -658,3 +664,6 @@ int mt76x2_eeprom_init(struct mt76x2_dev *dev)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(mt76x2_eeprom_init);
++
++MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
+index aa0b0c040375..0f3e4d2f4fee 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
+@@ -155,6 +155,7 @@ void mt76x2_get_power_info(struct mt76x2_dev *dev,
+ int mt76x2_get_temp_comp(struct mt76x2_dev *dev, struct mt76x2_temp_comp *t);
+ bool mt76x2_ext_pa_enabled(struct mt76x2_dev *dev, enum nl80211_band band);
+ void mt76x2_read_rx_gain(struct mt76x2_dev *dev);
++void mt76x2_eeprom_parse_hw_cap(struct mt76x2_dev *dev);
+ 
+ static inline bool
+ mt76x2_temp_tx_alc_enabled(struct mt76x2_dev *dev)
 -- 
-Kalle Valo
+2.18.0
