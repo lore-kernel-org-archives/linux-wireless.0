@@ -1,359 +1,344 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:39653 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727837AbeGVIqJ (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:40897 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752398AbeGAONS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Jul 2018 04:46:09 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Dedy Lansky <dlansky@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 03/20] wil6210: add TX latency statistics
-Date: Sun, 22 Jul 2018 10:47:28 +0300
-Message-Id: <1532245665-15249-4-git-send-email-merez@codeaurora.org> (sfid-20180722_095026_106965_2C0239C7)
-In-Reply-To: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
-References: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
+        Sun, 1 Jul 2018 10:13:18 -0400
+Received: by mail-wm0-f65.google.com with SMTP id z13-v6so6222478wma.5
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Jul 2018 07:13:17 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [PATCH 12/19] mt76: add mt76x2_tx_common to mt76x2-common module
+Date: Sun,  1 Jul 2018 16:12:24 +0200
+Message-Id: <20180701141231.25323-13-lorenzo.bianconi@redhat.com> (sfid-20180701_161328_553437_F340C204)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <dlansky@codeaurora.org>
+Move tx related code shared between mt76x2 and mt76x2u in mt76x2-common
+module
 
-Collect statistics of TX latency. The latency is measured from the time
-the HW gets aware of new SKB to transmit until the HW indicates tx
-complete for this SKB.
-The statistics are shown via new "tx_latency" debugfs.
-
-Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/net/wireless/ath/wil6210/debugfs.c   | 125 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/main.c      |   1 +
- drivers/net/wireless/ath/wil6210/txrx.c      |  38 ++++++++
- drivers/net/wireless/ath/wil6210/txrx.h      |   2 +
- drivers/net/wireless/ath/wil6210/txrx_edma.c |   8 ++
- drivers/net/wireless/ath/wil6210/wil6210.h   |  14 +++
- 6 files changed, 188 insertions(+)
+ drivers/net/wireless/mediatek/mt76/Makefile   |   2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x2.h   |   2 +
+ .../net/wireless/mediatek/mt76/mt76x2_tx.c    | 123 ---------------
+ .../wireless/mediatek/mt76/mt76x2_tx_common.c | 149 ++++++++++++++++++
+ 4 files changed, 152 insertions(+), 124 deletions(-)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 99b1fc5..5d1e48d 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -1800,6 +1800,126 @@ static int wil_mids_seq_open(struct inode *inode, struct file *file)
- 	.llseek		= seq_lseek,
+diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
+index 57feda501a51..e1226aae82fa 100644
+--- a/drivers/net/wireless/mediatek/mt76/Makefile
++++ b/drivers/net/wireless/mediatek/mt76/Makefile
+@@ -8,7 +8,7 @@ mt76-y := \
+ CFLAGS_trace.o := -I$(src)
+ 
+ mt76x2-common-y := \
+-	mt76x2_eeprom.o
++	mt76x2_eeprom.o mt76x2_tx_common.o
+ 
+ mt76x2e-y := \
+ 	mt76x2_pci.o mt76x2_dma.o \
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+index 5719deb78c5c..522d18ee7723 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+@@ -279,4 +279,6 @@ s8 mt76x2_tx_get_max_txpwr_adj(struct mt76x2_dev *dev,
+ s8 mt76x2_tx_get_txpwr_adj(struct mt76x2_dev *dev, s8 txpwr, s8 max_txpwr_adj);
+ void mt76x2_tx_set_txpwr_auto(struct mt76x2_dev *dev, s8 txpwr);
+ 
++int mt76x2_insert_hdr_pad(struct sk_buff *skb);
++
+ #endif
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
+index 84a3448ca163..4c907882e8b0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
+@@ -23,129 +23,6 @@ struct beacon_bc_data {
+ 	struct sk_buff *tail[8];
  };
  
-+static int wil_tx_latency_debugfs_show(struct seq_file *s, void *data)
-+__acquires(&p->tid_rx_lock) __releases(&p->tid_rx_lock)
+-void mt76x2_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
+-	     struct sk_buff *skb)
+-{
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct mt76x2_dev *dev = hw->priv;
+-	struct ieee80211_vif *vif = info->control.vif;
+-	struct mt76_wcid *wcid = &dev->global_wcid;
+-
+-	if (control->sta) {
+-		struct mt76x2_sta *msta;
+-
+-		msta = (struct mt76x2_sta *) control->sta->drv_priv;
+-		wcid = &msta->wcid;
+-		/* sw encrypted frames */
+-		if (!info->control.hw_key && wcid->hw_key_idx != -1)
+-			control->sta = NULL;
+-	}
+-
+-	if (vif && !control->sta) {
+-		struct mt76x2_vif *mvif;
+-
+-		mvif = (struct mt76x2_vif *) vif->drv_priv;
+-		wcid = &mvif->group_wcid;
+-	}
+-
+-	mt76_tx(&dev->mt76, control->sta, wcid, skb);
+-}
+-
+-void mt76x2_tx_complete(struct mt76x2_dev *dev, struct sk_buff *skb)
+-{
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-
+-	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
+-		ieee80211_free_txskb(mt76_hw(dev), skb);
+-	} else {
+-		ieee80211_tx_info_clear_status(info);
+-		info->status.rates[0].idx = -1;
+-		info->flags |= IEEE80211_TX_STAT_ACK;
+-		ieee80211_tx_status(mt76_hw(dev), skb);
+-	}
+-}
+-
+-s8 mt76x2_tx_get_max_txpwr_adj(struct mt76x2_dev *dev,
+-			       const struct ieee80211_tx_rate *rate)
+-{
+-	s8 max_txpwr;
+-
+-	if (rate->flags & IEEE80211_TX_RC_VHT_MCS) {
+-		u8 mcs = ieee80211_rate_get_vht_mcs(rate);
+-
+-		if (mcs == 8 || mcs == 9) {
+-			max_txpwr = dev->rate_power.vht[8];
+-		} else {
+-			u8 nss, idx;
+-
+-			nss = ieee80211_rate_get_vht_nss(rate);
+-			idx = ((nss - 1) << 3) + mcs;
+-			max_txpwr = dev->rate_power.ht[idx & 0xf];
+-		}
+-	} else if (rate->flags & IEEE80211_TX_RC_MCS) {
+-		max_txpwr = dev->rate_power.ht[rate->idx & 0xf];
+-	} else {
+-		enum nl80211_band band = dev->mt76.chandef.chan->band;
+-
+-		if (band == NL80211_BAND_2GHZ) {
+-			const struct ieee80211_rate *r;
+-			struct wiphy *wiphy = mt76_hw(dev)->wiphy;
+-			struct mt76_rate_power *rp = &dev->rate_power;
+-
+-			r = &wiphy->bands[band]->bitrates[rate->idx];
+-			if (r->flags & IEEE80211_RATE_SHORT_PREAMBLE)
+-				max_txpwr = rp->cck[r->hw_value & 0x3];
+-			else
+-				max_txpwr = rp->ofdm[r->hw_value & 0x7];
+-		} else {
+-			max_txpwr = dev->rate_power.ofdm[rate->idx & 0x7];
+-		}
+-	}
+-
+-	return max_txpwr;
+-}
+-
+-s8 mt76x2_tx_get_txpwr_adj(struct mt76x2_dev *dev, s8 txpwr, s8 max_txpwr_adj)
+-{
+-	txpwr = min_t(s8, txpwr, dev->txpower_conf);
+-	txpwr -= (dev->target_power + dev->target_power_delta[0]);
+-	txpwr = min_t(s8, txpwr, max_txpwr_adj);
+-
+-	if (!dev->enable_tpc)
+-		return 0;
+-	else if (txpwr >= 0)
+-		return min_t(s8, txpwr, 7);
+-	else
+-		return (txpwr < -16) ? 8 : (txpwr + 32) / 2;
+-}
+-
+-void mt76x2_tx_set_txpwr_auto(struct mt76x2_dev *dev, s8 txpwr)
+-{
+-	s8 txpwr_adj;
+-
+-	txpwr_adj = mt76x2_tx_get_txpwr_adj(dev, txpwr,
+-					    dev->rate_power.ofdm[4]);
+-	mt76_rmw_field(dev, MT_PROT_AUTO_TX_CFG,
+-		       MT_PROT_AUTO_TX_CFG_PROT_PADJ, txpwr_adj);
+-	mt76_rmw_field(dev, MT_PROT_AUTO_TX_CFG,
+-		       MT_PROT_AUTO_TX_CFG_AUTO_PADJ, txpwr_adj);
+-}
+-
+-static int mt76x2_insert_hdr_pad(struct sk_buff *skb)
+-{
+-	int len = ieee80211_get_hdrlen_from_skb(skb);
+-
+-	if (len % 4 == 0)
+-		return 0;
+-
+-	skb_push(skb, 2);
+-	memmove(skb->data, skb->data + 2, len);
+-
+-	skb->data[len] = 0;
+-	skb->data[len + 1] = 0;
+-	return 2;
+-}
+-
+ int mt76x2_tx_prepare_skb(struct mt76_dev *mdev, void *txwi,
+ 			  struct sk_buff *skb, struct mt76_queue *q,
+ 			  struct mt76_wcid *wcid, struct ieee80211_sta *sta,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
+new file mode 100644
+index 000000000000..36afb166fa3f
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
+@@ -0,0 +1,149 @@
++/*
++ * Copyright (C) 2016 Felix Fietkau <nbd@nbd.name>
++ * Copyright (C) 2018 Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include "mt76x2.h"
++#include "mt76x2_dma.h"
++
++void mt76x2_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
++	       struct sk_buff *skb)
 +{
-+	struct wil6210_priv *wil = s->private;
-+	int i, bin;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct mt76x2_dev *dev = hw->priv;
++	struct ieee80211_vif *vif = info->control.vif;
++	struct mt76_wcid *wcid = &dev->global_wcid;
 +
-+	for (i = 0; i < ARRAY_SIZE(wil->sta); i++) {
-+		struct wil_sta_info *p = &wil->sta[i];
-+		char *status = "unknown";
-+		u8 aid = 0;
-+		u8 mid;
++	if (control->sta) {
++		struct mt76x2_sta *msta;
 +
-+		if (!p->tx_latency_bins)
-+			continue;
++		msta = (struct mt76x2_sta *)control->sta->drv_priv;
++		wcid = &msta->wcid;
++		/* sw encrypted frames */
++		if (!info->control.hw_key && wcid->hw_key_idx != -1)
++			control->sta = NULL;
++	}
 +
-+		switch (p->status) {
-+		case wil_sta_unused:
-+			status = "unused   ";
-+			break;
-+		case wil_sta_conn_pending:
-+			status = "pending  ";
-+			break;
-+		case wil_sta_connected:
-+			status = "connected";
-+			aid = p->aid;
-+			break;
++	if (vif && !control->sta) {
++		struct mt76x2_vif *mvif;
++
++		mvif = (struct mt76x2_vif *)vif->drv_priv;
++		wcid = &mvif->group_wcid;
++	}
++
++	mt76_tx(&dev->mt76, control->sta, wcid, skb);
++}
++EXPORT_SYMBOL_GPL(mt76x2_tx);
++
++int mt76x2_insert_hdr_pad(struct sk_buff *skb)
++{
++	int len = ieee80211_get_hdrlen_from_skb(skb);
++
++	if (len % 4 == 0)
++		return 0;
++
++	skb_push(skb, 2);
++	memmove(skb->data, skb->data + 2, len);
++
++	skb->data[len] = 0;
++	skb->data[len + 1] = 0;
++	return 2;
++}
++EXPORT_SYMBOL_GPL(mt76x2_insert_hdr_pad);
++
++s8 mt76x2_tx_get_max_txpwr_adj(struct mt76x2_dev *dev,
++			       const struct ieee80211_tx_rate *rate)
++{
++	s8 max_txpwr;
++
++	if (rate->flags & IEEE80211_TX_RC_VHT_MCS) {
++		u8 mcs = ieee80211_rate_get_vht_mcs(rate);
++
++		if (mcs == 8 || mcs == 9) {
++			max_txpwr = dev->rate_power.vht[8];
++		} else {
++			u8 nss, idx;
++
++			nss = ieee80211_rate_get_vht_nss(rate);
++			idx = ((nss - 1) << 3) + mcs;
++			max_txpwr = dev->rate_power.ht[idx & 0xf];
 +		}
-+		mid = (p->status != wil_sta_unused) ? p->mid : U8_MAX;
-+		seq_printf(s, "[%d] %pM %s MID %d AID %d\n", i, p->addr, status,
-+			   mid, aid);
++	} else if (rate->flags & IEEE80211_TX_RC_MCS) {
++		max_txpwr = dev->rate_power.ht[rate->idx & 0xf];
++	} else {
++		enum nl80211_band band = dev->mt76.chandef.chan->band;
 +
-+		if (p->status == wil_sta_connected) {
-+			u64 num_packets = 0;
-+			u64 tx_latency_avg = p->stats.tx_latency_total_us;
++		if (band == NL80211_BAND_2GHZ) {
++			const struct ieee80211_rate *r;
++			struct wiphy *wiphy = mt76_hw(dev)->wiphy;
++			struct mt76_rate_power *rp = &dev->rate_power;
 +
-+			seq_puts(s, "Tx/Latency bin:");
-+			for (bin = 0; bin < WIL_NUM_LATENCY_BINS; bin++) {
-+				seq_printf(s, " %lld",
-+					   p->tx_latency_bins[bin]);
-+				num_packets += p->tx_latency_bins[bin];
-+			}
-+			seq_puts(s, "\n");
-+			if (!num_packets)
-+				continue;
-+			do_div(tx_latency_avg, num_packets);
-+			seq_printf(s, "Tx/Latency min/avg/max (us): %d/%lld/%d",
-+				   p->stats.tx_latency_min_us,
-+				   tx_latency_avg,
-+				   p->stats.tx_latency_max_us);
-+
-+			seq_puts(s, "\n");
++			r = &wiphy->bands[band]->bitrates[rate->idx];
++			if (r->flags & IEEE80211_RATE_SHORT_PREAMBLE)
++				max_txpwr = rp->cck[r->hw_value & 0x3];
++			else
++				max_txpwr = rp->ofdm[r->hw_value & 0x7];
++		} else {
++			max_txpwr = dev->rate_power.ofdm[rate->idx & 0x7];
 +		}
 +	}
 +
-+	return 0;
++	return max_txpwr;
 +}
++EXPORT_SYMBOL_GPL(mt76x2_tx_get_max_txpwr_adj);
 +
-+static int wil_tx_latency_seq_open(struct inode *inode, struct file *file)
++s8 mt76x2_tx_get_txpwr_adj(struct mt76x2_dev *dev, s8 txpwr, s8 max_txpwr_adj)
 +{
-+	return single_open(file, wil_tx_latency_debugfs_show,
-+			   inode->i_private);
-+}
++	txpwr = min_t(s8, txpwr, dev->txpower_conf);
++	txpwr -= (dev->target_power + dev->target_power_delta[0]);
++	txpwr = min_t(s8, txpwr, max_txpwr_adj);
 +
-+static ssize_t wil_tx_latency_write(struct file *file, const char __user *buf,
-+				    size_t len, loff_t *ppos)
++	if (!dev->enable_tpc)
++		return 0;
++	else if (txpwr >= 0)
++		return min_t(s8, txpwr, 7);
++	else
++		return (txpwr < -16) ? 8 : (txpwr + 32) / 2;
++}
++EXPORT_SYMBOL_GPL(mt76x2_tx_get_txpwr_adj);
++
++void mt76x2_tx_set_txpwr_auto(struct mt76x2_dev *dev, s8 txpwr)
 +{
-+	struct seq_file *s = file->private_data;
-+	struct wil6210_priv *wil = s->private;
-+	int val, rc, i;
-+	bool enable;
++	s8 txpwr_adj;
 +
-+	rc = kstrtoint_from_user(buf, len, 0, &val);
-+	if (rc) {
-+		wil_err(wil, "Invalid argument\n");
-+		return rc;
-+	}
-+	if (val == 1)
-+		/* default resolution */
-+		val = 500;
-+	if (val && (val < 50 || val > 1000)) {
-+		wil_err(wil, "Invalid resolution %d\n", val);
-+		return -EINVAL;
-+	}
-+
-+	enable = !!val;
-+	if (wil->tx_latency == enable)
-+		return len;
-+
-+	wil_info(wil, "%s TX latency measurements (resolution %dusec)\n",
-+		 enable ? "Enabling" : "Disabling", val);
-+
-+	if (enable) {
-+		size_t sz = sizeof(u64) * WIL_NUM_LATENCY_BINS;
-+
-+		wil->tx_latency_res = val;
-+		for (i = 0; i < ARRAY_SIZE(wil->sta); i++) {
-+			struct wil_sta_info *sta = &wil->sta[i];
-+
-+			kfree(sta->tx_latency_bins);
-+			sta->tx_latency_bins = kzalloc(sz, GFP_KERNEL);
-+			if (!sta->tx_latency_bins)
-+				return -ENOMEM;
-+			sta->stats.tx_latency_min_us = U32_MAX;
-+			sta->stats.tx_latency_max_us = 0;
-+			sta->stats.tx_latency_total_us = 0;
-+		}
-+	}
-+	wil->tx_latency = enable;
-+
-+	return len;
++	txpwr_adj = mt76x2_tx_get_txpwr_adj(dev, txpwr,
++					    dev->rate_power.ofdm[4]);
++	mt76_rmw_field(dev, MT_PROT_AUTO_TX_CFG,
++		       MT_PROT_AUTO_TX_CFG_PROT_PADJ, txpwr_adj);
++	mt76_rmw_field(dev, MT_PROT_AUTO_TX_CFG,
++		       MT_PROT_AUTO_TX_CFG_AUTO_PADJ, txpwr_adj);
 +}
++EXPORT_SYMBOL_GPL(mt76x2_tx_set_txpwr_auto);
 +
-+static const struct file_operations fops_tx_latency = {
-+	.open		= wil_tx_latency_seq_open,
-+	.release	= single_release,
-+	.read		= seq_read,
-+	.write		= wil_tx_latency_write,
-+	.llseek		= seq_lseek,
-+};
-+
- static ssize_t wil_read_file_led_cfg(struct file *file, char __user *user_buf,
- 				     size_t count, loff_t *ppos)
- {
-@@ -2133,6 +2253,7 @@ static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
- 	{"srings",	0444,		&fops_srings},
- 	{"status_msg",	0444,		&fops_status_msg},
- 	{"rx_buff_mgmt",	0444,	&fops_rx_buff_mgmt},
-+	{"tx_latency",	0644,		&fops_tx_latency},
- };
- 
- static void wil6210_debugfs_init_files(struct wil6210_priv *wil,
-@@ -2249,10 +2370,14 @@ int wil6210_debugfs_init(struct wil6210_priv *wil)
- 
- void wil6210_debugfs_remove(struct wil6210_priv *wil)
- {
-+	int i;
-+
- 	debugfs_remove_recursive(wil->debug);
- 	wil->debug = NULL;
- 
- 	kfree(wil->dbg_data.data_arr);
-+	for (i = 0; i < ARRAY_SIZE(wil->sta); i++)
-+		kfree(wil->sta[i].tx_latency_bins);
- 
- 	/* free pmc memory without sending command to fw, as it will
- 	 * be reset on the way down anyway
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 4de19bd..7e4ccd9 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -278,6 +278,7 @@ static void wil_disconnect_cid(struct wil6210_vif *vif, int cid,
- 	}
- 	/* statistics */
- 	memset(&sta->stats, 0, sizeof(sta->stats));
-+	sta->stats.tx_latency_min_us = U32_MAX;
- }
- 
- static bool wil_vif_is_connected(struct wil6210_priv *wil, u8 mid)
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 9ac8674..6707af6 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -1693,6 +1693,11 @@ static int __wil_tx_vring_tso(struct wil6210_priv *wil, struct wil6210_vif *vif,
- 	 */
- 	wmb();
- 
-+	if (wil->tx_latency)
-+		*(ktime_t *)&skb->cb = ktime_get();
-+	else
-+		memset(skb->cb, 0, sizeof(ktime_t));
-+
- 	wil_w(wil, vring->hwtail, vring->swhead);
- 	return 0;
- 
-@@ -1844,6 +1849,11 @@ static int __wil_tx_ring(struct wil6210_priv *wil, struct wil6210_vif *vif,
- 	 */
- 	wmb();
- 
-+	if (wil->tx_latency)
-+		*(ktime_t *)&skb->cb = ktime_get();
-+	else
-+		memset(skb->cb, 0, sizeof(ktime_t));
-+
- 	wil_w(wil, ring->hwtail, ring->swhead);
- 
- 	return 0;
-@@ -2065,6 +2075,31 @@ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
- 	return NET_XMIT_DROP;
- }
- 
-+void wil_tx_latency_calc(struct wil6210_priv *wil, struct sk_buff *skb,
-+			 struct wil_sta_info *sta)
++void mt76x2_tx_complete(struct mt76x2_dev *dev, struct sk_buff *skb)
 +{
-+	int skb_time_us;
-+	int bin;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
 +
-+	if (!wil->tx_latency)
-+		return;
-+
-+	if (ktime_to_ms(*(ktime_t *)&skb->cb) == 0)
-+		return;
-+
-+	skb_time_us = ktime_us_delta(ktime_get(), *(ktime_t *)&skb->cb);
-+	bin = skb_time_us / wil->tx_latency_res;
-+	bin = min_t(int, bin, WIL_NUM_LATENCY_BINS - 1);
-+
-+	wil_dbg_txrx(wil, "skb time %dus => bin %d\n", skb_time_us, bin);
-+	sta->tx_latency_bins[bin]++;
-+	sta->stats.tx_latency_total_us += skb_time_us;
-+	if (skb_time_us < sta->stats.tx_latency_min_us)
-+		sta->stats.tx_latency_min_us = skb_time_us;
-+	if (skb_time_us > sta->stats.tx_latency_max_us)
-+		sta->stats.tx_latency_max_us = skb_time_us;
++	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
++		ieee80211_free_txskb(mt76_hw(dev), skb);
++	} else {
++		ieee80211_tx_info_clear_status(info);
++		info->status.rates[0].idx = -1;
++		info->flags |= IEEE80211_TX_STAT_ACK;
++		ieee80211_tx_status(mt76_hw(dev), skb);
++	}
 +}
++EXPORT_SYMBOL_GPL(mt76x2_tx_complete);
 +
- /**
-  * Clean up transmitted skb's from the Tx VRING
-  *
-@@ -2151,6 +2186,9 @@ int wil_tx_complete(struct wil6210_vif *vif, int ringid)
- 					if (stats) {
- 						stats->tx_packets++;
- 						stats->tx_bytes += skb->len;
-+
-+						wil_tx_latency_calc(wil, skb,
-+							&wil->sta[cid]);
- 					}
- 				} else {
- 					ndev->stats.tx_errors++;
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.h b/drivers/net/wireless/ath/wil6210/txrx.h
-index 3dfd7f9..9d83be4 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.h
-+++ b/drivers/net/wireless/ath/wil6210/txrx.h
-@@ -620,5 +620,7 @@ void wil_tid_ampdu_rx_free(struct wil6210_priv *wil,
- 			   struct wil_tid_ampdu_rx *r);
- void wil_tx_data_init(struct wil_ring_tx_data *txdata);
- void wil_init_txrx_ops_legacy_dma(struct wil6210_priv *wil);
-+void wil_tx_latency_calc(struct wil6210_priv *wil, struct sk_buff *skb,
-+			 struct wil_sta_info *sta);
- 
- #endif /* WIL6210_TXRX_H */
-diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.c b/drivers/net/wireless/ath/wil6210/txrx_edma.c
-index b5d399f..2ea9767 100644
---- a/drivers/net/wireless/ath/wil6210/txrx_edma.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx_edma.c
-@@ -1217,6 +1217,9 @@ int wil_tx_sring_handler(struct wil6210_priv *wil,
- 					if (stats) {
- 						stats->tx_packets++;
- 						stats->tx_bytes += skb->len;
-+
-+						wil_tx_latency_calc(wil, skb,
-+							&wil->sta[cid]);
- 					}
- 				} else {
- 					ndev->stats.tx_errors++;
-@@ -1467,6 +1470,11 @@ static int __wil_tx_ring_tso_edma(struct wil6210_priv *wil,
- 	 */
- 	wmb();
- 
-+	if (wil->tx_latency)
-+		*(ktime_t *)&skb->cb = ktime_get();
-+	else
-+		memset(skb->cb, 0, sizeof(ktime_t));
-+
- 	wil_w(wil, ring->hwtail, ring->swhead);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 002d336..1a7a1ad 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -55,6 +55,8 @@
- #define WIL_DEFAULT_BUS_REQUEST_KBPS 128000 /* ~1Gbps */
- #define WIL_MAX_BUS_REQUEST_KBPS 800000 /* ~6.1Gbps */
- 
-+#define WIL_NUM_LATENCY_BINS 200
-+
- /* maximum number of virtual interfaces the driver supports
-  * (including the main interface)
-  */
-@@ -552,6 +554,9 @@ struct wil_net_stats {
- 	unsigned long	rx_bytes;
- 	unsigned long	tx_bytes;
- 	unsigned long	tx_errors;
-+	u32 tx_latency_min_us;
-+	u32 tx_latency_max_us;
-+	u64 tx_latency_total_us;
- 	unsigned long	rx_dropped;
- 	unsigned long	rx_non_data_frame;
- 	unsigned long	rx_short_frame;
-@@ -712,6 +717,13 @@ struct wil_sta_info {
- 	u8 mid;
- 	enum wil_sta_status status;
- 	struct wil_net_stats stats;
-+	/**
-+	 * 20 latency bins. 1st bin counts packets with latency
-+	 * of 0..tx_latency_res, last bin counts packets with latency
-+	 * of 19*tx_latency_res and above.
-+	 * tx_latency_res is configured from "tx_latency" debug-fs.
-+	 */
-+	u64 *tx_latency_bins;
- 	/* Rx BACK */
- 	struct wil_tid_ampdu_rx *tid_rx[WIL_STA_TID_NUM];
- 	spinlock_t tid_rx_lock; /* guarding tid_rx array */
-@@ -943,6 +955,8 @@ struct wil6210_priv {
- 	u8 wakeup_trigger;
- 	struct wil_suspend_stats suspend_stats;
- 	struct wil_debugfs_data dbg_data;
-+	bool tx_latency; /* collect TX latency measurements */
-+	size_t tx_latency_res; /* bin resolution in usec */
- 
- 	void *platform_handle;
- 	struct wil_platform_ops platform_ops;
 -- 
-1.9.1
+2.18.0
