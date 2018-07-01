@@ -1,51 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:43608 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753605AbeGEJp7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jul 2018 05:45:59 -0400
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Boris Brezillon <boris.brezillon@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org
-Cc: David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 18/27] mtd: rawnand: nuc900: Allow selection of this driver when COMPILE_TEST=y
-Date: Thu,  5 Jul 2018 11:45:13 +0200
-Message-Id: <20180705094522.12138-19-boris.brezillon@bootlin.com> (sfid-20180705_114647_096824_22AAD390)
-In-Reply-To: <20180705094522.12138-1-boris.brezillon@bootlin.com>
-References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:36376 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752386AbeGAONI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 1 Jul 2018 10:13:08 -0400
+Received: by mail-wr0-f196.google.com with SMTP id f16-v6so13003732wrm.3
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Jul 2018 07:13:07 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+To: nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Subject: [PATCH 04/19] mt76x2: introduce mt76x2_init_device routine
+Date: Sun,  1 Jul 2018 16:12:16 +0200
+Message-Id: <20180701141231.25323-5-lorenzo.bianconi@redhat.com> (sfid-20180701_161318_986904_32CDE905)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It just makes NAND maintainers' life easier by allowing them to
-compile-test this driver without having ARCH_W90X900 enabled.
+Add mt76x2_init_device routine in order to reuse common pcie/usb mac80211
+initialization code supporting mt76x2u based device
 
-We also need to add a dependency on HAS_IOMEM to make sure the driver
-compiles correctly.
-
-Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 ---
- drivers/mtd/nand/raw/Kconfig | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt76x2.h   |  1 +
+ .../net/wireless/mediatek/mt76/mt76x2_init.c  | 58 ++++++++++---------
+ 2 files changed, 33 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
-index 245f1b56b94f..5a24b0fc03f1 100644
---- a/drivers/mtd/nand/raw/Kconfig
-+++ b/drivers/mtd/nand/raw/Kconfig
-@@ -482,7 +482,8 @@ config MTD_NAND_SOCRATES
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2.h b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+index 8824c617cbd2..5719deb78c5c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2.h
+@@ -221,6 +221,7 @@ extern const struct ieee80211_ops mt76x2_ops;
+ struct mt76x2_dev *mt76x2_alloc_device(struct device *pdev);
+ int mt76x2_register_device(struct mt76x2_dev *dev);
+ void mt76x2_init_debugfs(struct mt76x2_dev *dev);
++void mt76x2_init_device(struct mt76x2_dev *dev);
  
- config MTD_NAND_NUC900
- 	tristate "Support for NAND on Nuvoton NUC9xx/w90p910 evaluation boards."
--	depends on ARCH_W90X900
-+	depends on ARCH_W90X900 || COMPILE_TEST
-+	depends on HAS_IOMEM
- 	help
- 	  This enables the driver for the NAND Flash on evaluation board based
- 	  on w90p910 / NUC9xx.
+ irqreturn_t mt76x2_irq_handler(int irq, void *dev_instance);
+ void mt76x2_phy_power_on(struct mt76x2_dev *dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+index 6a7db3f88153..9c6d180da294 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
+@@ -539,11 +539,6 @@ int mt76x2_init_hardware(struct mt76x2_dev *dev)
+ 	tasklet_init(&dev->pre_tbtt_tasklet, mt76x2_pre_tbtt_tasklet,
+ 		     (unsigned long) dev);
+ 
+-	dev->chainmask = 0x202;
+-	dev->global_wcid.idx = 255;
+-	dev->global_wcid.hw_key_idx = -1;
+-	dev->slottime = 9;
+-
+ 	val = mt76_rr(dev, MT_WPDMA_GLO_CFG);
+ 	val &= MT_WPDMA_GLO_CFG_DMA_BURST_SIZE |
+ 	       MT_WPDMA_GLO_CFG_BIG_ENDIAN |
+@@ -770,6 +765,34 @@ mt76x2_init_txpower(struct mt76x2_dev *dev,
+ 	}
+ }
+ 
++void mt76x2_init_device(struct mt76x2_dev *dev)
++{
++	struct ieee80211_hw *hw = mt76_hw(dev);
++
++	hw->queues = 4;
++	hw->max_rates = 1;
++	hw->max_report_rates = 7;
++	hw->max_rate_tries = 1;
++	hw->extra_tx_headroom = 2;
++
++	hw->sta_data_size = sizeof(struct mt76x2_sta);
++	hw->vif_data_size = sizeof(struct mt76x2_vif);
++
++	ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
++	ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
++
++	dev->mt76.sband_2g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
++	dev->mt76.sband_5g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
++
++	dev->chainmask = 0x202;
++	dev->global_wcid.idx = 255;
++	dev->global_wcid.hw_key_idx = -1;
++	dev->slottime = 9;
++
++	/* init antenna configuration */
++	dev->mt76.antenna_mask = 3;
++}
++
+ int mt76x2_register_device(struct mt76x2_dev *dev)
+ {
+ 	struct ieee80211_hw *hw = mt76_hw(dev);
+@@ -784,20 +807,15 @@ int mt76x2_register_device(struct mt76x2_dev *dev)
+ 		return -ENOMEM;
+ 
+ 	kfifo_init(&dev->txstatus_fifo, status_fifo, fifo_size);
++	INIT_DELAYED_WORK(&dev->cal_work, mt76x2_phy_calibrate);
++	INIT_DELAYED_WORK(&dev->mac_work, mt76x2_mac_work);
++
++	mt76x2_init_device(dev);
+ 
+ 	ret = mt76x2_init_hardware(dev);
+ 	if (ret)
+ 		return ret;
+ 
+-	hw->queues = 4;
+-	hw->max_rates = 1;
+-	hw->max_report_rates = 7;
+-	hw->max_rate_tries = 1;
+-	hw->extra_tx_headroom = 2;
+-
+-	hw->sta_data_size = sizeof(struct mt76x2_sta);
+-	hw->vif_data_size = sizeof(struct mt76x2_vif);
+-
+ 	for (i = 0; i < ARRAY_SIZE(dev->macaddr_list); i++) {
+ 		u8 *addr = dev->macaddr_list[i].addr;
+ 
+@@ -819,24 +837,12 @@ int mt76x2_register_device(struct mt76x2_dev *dev)
+ 
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
+ 
+-	ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
+-	ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
+-
+-	INIT_DELAYED_WORK(&dev->cal_work, mt76x2_phy_calibrate);
+-	INIT_DELAYED_WORK(&dev->mac_work, mt76x2_mac_work);
+-
+-	dev->mt76.sband_2g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
+-	dev->mt76.sband_5g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
+-
+ 	mt76x2_dfs_init_detector(dev);
+ 
+ 	/* init led callbacks */
+ 	dev->mt76.led_cdev.brightness_set = mt76x2_led_set_brightness;
+ 	dev->mt76.led_cdev.blink_set = mt76x2_led_set_blink;
+ 
+-	/* init antenna configuration */
+-	dev->mt76.antenna_mask = 3;
+-
+ 	ret = mt76_register_device(&dev->mt76, true, mt76x2_rates,
+ 				   ARRAY_SIZE(mt76x2_rates));
+ 	if (ret)
 -- 
-2.14.1
+2.18.0
