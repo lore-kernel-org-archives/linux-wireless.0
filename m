@@ -1,26 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f47.google.com ([209.85.214.47]:52937 "EHLO
-        mail-it0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732252AbeGaSny (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60404 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933423AbeGBJfC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 14:43:54 -0400
-Received: by mail-it0-f47.google.com with SMTP id d9-v6so5512937itf.2
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2018 10:02:42 -0700 (PDT)
+        Mon, 2 Jul 2018 05:35:02 -0400
+Subject: Re: [PATCH] mac80211: add stop/start logic for software TXQs
+To: Johannes Berg <johannes@sipsolutions.net>,
+        =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>
+Cc: linux-wireless@vger.kernel.org
+References: <1529997415-20551-1-git-send-email-mpubbise@codeaurora.org>
+ <878t71n611.fsf@toke.dk> <1530259024.3481.6.camel@sipsolutions.net>
+From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Message-ID: <a86045cf-598d-a508-87ef-aedb367efa79@codeaurora.org> (sfid-20180702_113511_468754_32CC6BAE)
+Date: Mon, 2 Jul 2018 15:04:57 +0530
 MIME-Version: 1.0
-From: Sergiy Vovk <sergiyvovk69@gmail.com>
-Date: Tue, 31 Jul 2018 20:02:41 +0300
-Message-ID: <CAG2VQQ=HhOcpyOBNDEc7-LAo64=U4gAYJ2rqLPy=1npk5spWLg@mail.gmail.com> (sfid-20180731_190252_481662_3E339D2B)
-Subject: Kernel bug
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1530259024.3481.6.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
-Please look at this problem:
-https://forums.fedoraforum.org/showthread.php?318910-Driver-for-realtek-RTL8723BS-wifi-bluetooth-chip
-There may be a bug in the r8723bs module.
-Also I'm suprising very much why I can see the ttyS4 initializing in
-dmesg but the /dev/ttyS4 does not exist.
-Thank in advance.
-Best regards, Segiy Vovk. Developer and sysadmin.
+
+> I'll also review the rest of the patch now, but I'll already note you
+> should fix the kernel-doc complaint from the kbuild test robot.
+
+Sure, I will take care of this in the next revision of the patch.
+
+Thanks,
+Manikanta
