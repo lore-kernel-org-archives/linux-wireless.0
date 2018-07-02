@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37360 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729906AbeGYVF2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Jul 2018 17:05:28 -0400
-Subject: [PATCH v1 0/4] PCI: Remove unnecessary includes of
- <linux/pci-aspm.h>
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        ath9k-devel@qca.qualcomm.com, linuxwifi@intel.com,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Wed, 25 Jul 2018 14:52:08 -0500
-Message-ID: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com> (sfid-20180725_215229_415766_4BC8EE7D)
-MIME-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:55642 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752326AbeGBOXU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Jul 2018 10:23:20 -0400
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/3] ath10k: sdio: use same endpoint id for all packets in a
+ bundle
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180620084222.3521-2-niklas.cassel@linaro.org>
+References: <20180620084222.3521-2-niklas.cassel@linaro.org>
+To: Niklas Cassel <niklas.cassel@linaro.org>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        alagusankar@silex-india.com,
+        Niklas Cassel <niklas.cassel@linaro.org>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20180702142319.E93FC6037C@smtp.codeaurora.org> (sfid-20180702_162337_317306_1B155F26)
+Date: Mon,  2 Jul 2018 14:23:19 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove includes of <linux/pci-aspm.h> from files that don't need
-it.  I'll apply all these via the PCI tree unless there's objection.
+Niklas Cassel <niklas.cassel@linaro.org> wrote:
 
----
+> All packets in a bundle should use the same endpoint id as the
+> first lookahead.
+> 
+> This matches how things are done is ath6kl, however,
+> this patch can theoretically handle several bundles
+> in ath10k_sdio_mbox_rx_process_packets().
+> 
+> Without this patch we get lots of errors about invalid endpoint id:
+> 
+> ath10k_sdio mmc2:0001:1: invalid endpoint in look-ahead: 224
+> ath10k_sdio mmc2:0001:1: failed to get pending recv messages: -12
+> ath10k_sdio mmc2:0001:1: failed to process pending SDIO interrupts: -12
+> 
+> Co-Developed-by: Niklas Cassel <niklas.cassel@linaro.org>
+> Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
+> Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Bjorn Helgaas (4):
-      igb: Remove unnecessary include of <linux/pci-aspm.h>
-      ath9k: Remove unnecessary include of <linux/pci-aspm.h>
-      iwlwifi: Remove unnecessary include of <linux/pci-aspm.h>
-      PCI: Remove unnecessary include of <linux/pci-aspm.h>
+3 patches applied to ath-next branch of ath.git, thanks.
 
+679e1f07c862 ath10k: sdio: use same endpoint id for all packets in a bundle
+d1d061b1395a ath10k: sdio: allocate correct size for RECV_1MORE_BLOCK rx packets
+8530b4e7b22b ath10k: sdio: set skb len for all rx packets
 
- drivers/net/ethernet/intel/igb/igb_main.c     |    1 -
- drivers/net/wireless/ath/ath9k/pci.c          |    1 -
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c |    1 -
- drivers/pci/pci-sysfs.c                       |    1 -
- drivers/pci/pci.c                             |    1 -
- drivers/pci/probe.c                           |    1 -
- drivers/pci/remove.c                          |    1 -
- 7 files changed, 7 deletions(-)
+-- 
+https://patchwork.kernel.org/patch/10476637/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
