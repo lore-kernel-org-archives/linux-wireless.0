@@ -1,64 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:52642 "EHLO v3-1039.vlinux.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730062AbeGZPZN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Jul 2018 11:25:13 -0400
-From: Sven Eckelmann <sven@narfation.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Sven Eckelmann <sven.eckelmann@openmesh.com>,
-        Simon Wunderlich <simon.wunderlich@openmesh.com>,
-        Marek Puzyniak <marek.puzyniak@tieto.com>
-Subject: [PATCH RESENT] ath10k: Prevent active scans on potential unusable channels
-Date: Thu, 26 Jul 2018 15:59:48 +0200
-Message-Id: <20180726135948.29160-1-sven@narfation.org> (sfid-20180726_160815_008243_C8C42FE9)
+Received: from userp2120.oracle.com ([156.151.31.85]:35550 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932254AbeGBHVg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Jul 2018 03:21:36 -0400
+Date: Mon, 2 Jul 2018 10:21:15 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Pkshih <pkshih@realtek.com>,
+        "briselec@gmail.com" <briselec@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        "chaitanya.mgit@gmail.com" <chaitanya.mgit@gmail.com>
+Subject: Re: New realtek 11ac driver
+Message-ID: <20180702072115.5gg2t7ey57bulbd2@mwanda> (sfid-20180702_092224_917681_1806193E)
+References: <5B2DA6FDDF928F4E855344EE0A5C39D13BEBF231@RTITMBSV07.realtek.com.tw>
+ <20180427224156.GA18163@thinktank.home.org>
+ <5B2DA6FDDF928F4E855344EE0A5C39D13BEBFD30@RTITMBSV07.realtek.com.tw>
+ <CABPxzYKfZVA8RTADEG5TCu0SXRSVEGWEn+Ym6AkMuFzHC5iSVg@mail.gmail.com>
+ <1526371717.12375.8.camel@realtek.com>
+ <871sebkcad.fsf@codeaurora.org>
+ <1526646826.1942.1.camel@realtek.com>
+ <87bmd5ihm1.fsf@codeaurora.org>
+ <1528162350.2800.3.camel@realtek.com>
+ <87h8lmf0n5.fsf_-_@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <87h8lmf0n5.fsf_-_@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+On Fri, Jun 29, 2018 at 11:38:22AM +0300, Kalle Valo wrote:
+> (Was "Re: [PATCH v3 00/19] rtlwifi: halmac: Add new module halmac",
+> changing the title to reflect what we are discussing)
+> 
+> Pkshih <pkshih@realtek.com> writes:
+> 
+> > On Thu, 2018-05-24 at 11:27 +0300, Kalle Valo wrote:
+> >> 
+> >> You are missing my point: I don't even have time to review huge rtlwifi
+> >> patches when they are not even ready for upstream. I cannot start
+> >> working on cleaning up rtlwifi code and doing multiple iterations of
+> >> reviews on these kind of huge patchsets. Either you need to
+> >> significantly scale down the size of patchsets (especially LOC) or you
+> >> need to get review help from someone else. But the current way of
+> >> working is not doable for me.
+> >> 
+> >
+> > Is there a proper way to look for "someone else" you mentioned?
+> 
+> I don't know, I think there might a project somewhere which helps with
+> patch review for new people but not sure about that. Adding Dan in case
+> he has some ideas.
 
-The QCA4019 hw1.0 firmware 10.4-3.2.1-00050 and 10.4-3.5.3-00053 (and most
-likely all other) seem to ignore the WMI_CHAN_FLAG_DFS flag during the
-scan. This results in transmission (probe requests) on channels which are
-not "available" for transmissions.
+It's just heart breaking to look at that driver.  It's over 64k line of
+code.  As a reviewer, it's easy to glance at the first few lines and say
+get rid of halmac_ret_status and use normal kernel return codes instead
+but just implementing that small thing would take months because there
+is so much code.
 
-Since the firmware is closed source and nothing can be done from our side
-to fix the problem in it, the driver has to work around this problem. The
-WMI_CHAN_FLAG_PASSIVE seems to be interpreted by the firmware to not
-scan actively on a channel unless an AP was detected on it. Simple probe
-requests will then be transmitted by the STA on the channel.
+It doesn't even look like terrible code, it's just not linux code.
 
-ath10k must therefore also use this flag when it queues a radar channel for
-scanning. This should reduce the chance of an active scan when the channel
-might be "unusable" for transmissions.
+There is no way I'm touching these patches because it's just miles and
+miles of sadness.
 
-Fixes: e8a50f8ba44b ("ath10k: introduce DFS implementation")
-Signed-off-by: Sven Eckelmann <sven.eckelmann@openmesh.com>
----
-Cc: Simon Wunderlich <simon.wunderlich@openmesh.com>
-Cc: Marek Puzyniak <marek.puzyniak@tieto.com>
----
+> > We plan to rewrite a new driver excluding agnostic OS layer to support 
+> > new generation 11AC chips, because they're very different from the chips
+> > existed in rtlwifi and rtl8xxxu. 
 
- drivers/net/wireless/ath/ath10k/mac.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+That's good news.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 95243b48a179..76e9c6eaa051 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3085,6 +3085,13 @@ static int ath10k_update_channel_list(struct ath10k *ar)
- 			passive = channel->flags & IEEE80211_CHAN_NO_IR;
- 			ch->passive = passive;
- 
-+			/* the firmware is ignoring the "radar" flag of the
-+			 * channel and is scanning actively using Probe Requests
-+			 * on "Radar detection"/DFS channels which are not
-+			 * marked as "available"
-+			 */
-+			ch->passive |= ch->chan_radar;
-+
- 			ch->freq = channel->center_freq;
- 			ch->band_center_freq1 = channel->center_freq;
- 			ch->min_power = 0;
--- 
-2.11.0
+The OS layer was a failed experiment.  It was supposed to give us one
+driver for everything but instead of that we have at least 7 drivers
+just within the Linux kernel.  We abstracted the wrong thing.
+
+regards,
+dan carpenter
