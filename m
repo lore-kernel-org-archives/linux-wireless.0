@@ -1,61 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:40012 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729626AbeGMQ6c (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59832 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934015AbeGBKKZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jul 2018 12:58:32 -0400
-Subject: Re: [PATCH] hostap: hide unused procfs helpers
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        YueHaibing <yuehaibing@huawei.com>, j@w1.fi, kvalo@codeaurora.org
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, davem@davemloft.net
-References: <20180713070317.6724-1-yuehaibing@huawei.com>
- <5B485441.1080305@broadcom.com>
-From: Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <7a2dee6c-eca3-ca0f-8af6-2ecc14f6d0a9@infradead.org> (sfid-20180713_184320_169060_32810EED)
-Date: Fri, 13 Jul 2018 09:43:05 -0700
-MIME-Version: 1.0
-In-Reply-To: <5B485441.1080305@broadcom.com>
-Content-Type: text/plain; charset=utf-8
+        Mon, 2 Jul 2018 06:10:25 -0400
+From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Subject: [PATCH] mac80211: add stations tied to AP_VLANs during hw reconfig
+Date: Mon,  2 Jul 2018 15:40:14 +0530
+Message-Id: <1530526214-25086-1-git-send-email-mpubbise@codeaurora.org> (sfid-20180702_121029_751871_4827DE38)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/13/2018 12:26 AM, Arend van Spriel wrote:
-> + Randy
-> 
-> On 7/13/2018 9:03 AM, YueHaibing wrote:
->> When CONFIG_PROC_FS isn't set, gcc warning this:
->>
->> drivers/net/wireless/intersil/hostap/hostap_hw.c:2901:12: warning: ‘prism2_registers_proc_show’ defined but not used [-Wunused-function]
->>   static int prism2_registers_proc_show(struct seq_file *m, void *v)
->>
->> drivers/net/wireless/intersil/hostap/hostap_proc.c:16:12: warning: ‘prism2_debug_proc_show’ defined but not used [-Wunused-function]
->>   static int prism2_debug_proc_show(struct seq_file *m, void *v)
->>              ^
->> drivers/net/wireless/intersil/hostap/hostap_proc.c:49:12: warning: ‘prism2_stats_proc_show’ defined but not used [-Wunused-function]
->>   static int prism2_stats_proc_show(struct seq_file *m, void *v)
->>              ^
->> drivers/net/wireless/intersil/hostap/hostap_proc.c:177:12: warning: ‘prism2_crypt_proc_show’ defined but not used [-Wunused-function]
->>   static int prism2_crypt_proc_show(struct seq_file *m, void *v)
->>              ^
->>
->> fix this by adding #ifdef around them.
->> hfa384x_read_reg is only used by prism2_registers_proc_show,so move it
->> into #ifdef.
-> 
-> There was already a fix for this posted by Randy Dunlap taking a different approach, ie. use __maybe_unused classifier. To be honest I prefer the ifdef approach as it is more explicit and does not feel like a cheat.
+As part of hw reconfig, only stations linked to AP interfaces are added
+back to the driver ignoring those which are tied to AP_VLAN interfaces.
 
-Hi,
-You are welcome to merge (or ack or have someone else merge) either of them.
-I'm not counting patches, just trying to help out (in this case by reducing noise).
+It is true that there could be stations tied to the AP_VLAN interface while
+serving 4addr clients or when using AP_VLAN for VLAN operations; we should
+be adding these stations back to the driver as part of hw reconfig, failing
+to do so can cause functional issues.
 
+In the case of ath10k driver, the following errors were observed.
 
+ath10k_pci : failed to install key for non-existent peer XX:XX:XX:XX:XX:XX
+Workqueue: events_freezable ieee80211_restart_work [mac80211]
+(unwind_backtrace) from (show_stack+0x10/0x14)
+(show_stack) (dump_stack+0x80/0xa0)
+(dump_stack) (warn_slowpath_common+0x68/0x8c)
+(warn_slowpath_common) (warn_slowpath_null+0x18/0x20)
+(warn_slowpath_null) (ieee80211_enable_keys+0x88/0x154 [mac80211])
+(ieee80211_enable_keys) (ieee80211_reconfig+0xc90/0x19c8 [mac80211])
+(ieee80211_reconfig]) (ieee80211_restart_work+0x8c/0xa0 [mac80211])
+(ieee80211_restart_work) (process_one_work+0x284/0x488)
+(process_one_work) (worker_thread+0x228/0x360)
+(worker_thread) (kthread+0xd8/0xec)
+(kthread) (ret_from_fork+0x14/0x24)
 
-> Actually some of the functions are between a flag already PRISM2_NO_PROCFS_DEBUG which is in a private header file hostap_config.h. Seems like this would be better placed in Kconfig and depend on CONFIG_PROCFS. Anyway, this driver is old cruft. Maybe some people are still running it, but it is probably not worth the effort so fine with either fix.
-> 
-> Regards,
-> Arend
+Also while bringing down the AP VAP, WARN_ONs and errors related to peer
+removal were observed.
 
+ath10k_pci : failed to clear all peer wep keys for vdev 0: -2
+ath10k_pci : failed to disassociate station: 8c:fd:f0:0a:8c:f5 vdev 0: -2
+(unwind_backtrace) (show_stack+0x10/0x14)
+(show_stack) (dump_stack+0x80/0xa0)
+(dump_stack) (warn_slowpath_common+0x68/0x8c)
+(warn_slowpath_common) (warn_slowpath_null+0x18/0x20)
+(warn_slowpath_null) (sta_set_sinfo+0xb98/0xc9c [mac80211])
+(sta_set_sinfo [mac80211]) (__sta_info_flush+0xf0/0x134 [mac80211])
+(__sta_info_flush [mac80211]) (ieee80211_stop_ap+0xe8/0x390 [mac80211])
+(ieee80211_stop_ap [mac80211]) (__cfg80211_stop_ap+0xe0/0x3dc [cfg80211])
+(__cfg80211_stop_ap [cfg80211]) (cfg80211_stop_ap+0x30/0x44 [cfg80211])
+(cfg80211_stop_ap [cfg80211]) (genl_rcv_msg+0x274/0x30c)
+(genl_rcv_msg) (netlink_rcv_skb+0x58/0xac)
+(netlink_rcv_skb) (genl_rcv+0x20/0x34)
+(genl_rcv) (netlink_unicast+0x11c/0x204)
+(netlink_unicast) (netlink_sendmsg+0x30c/0x370)
+(netlink_sendmsg) (sock_sendmsg+0x70/0x84)
+(sock_sendmsg) (___sys_sendmsg.part.3+0x188/0x228)
+(___sys_sendmsg.part.3) (__sys_sendmsg+0x4c/0x70)
+(__sys_sendmsg) (ret_fast_syscall+0x0/0x44)
 
+These issues got fixed by adding the stations which are
+tied to AP_VLANs back to the driver.
+
+Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+---
+ net/mac80211/util.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 3e68132..88efda7 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2140,7 +2140,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		if (!sta->uploaded)
+ 			continue;
+ 
+-		if (sta->sdata->vif.type != NL80211_IFTYPE_AP)
++		if (sta->sdata->vif.type != NL80211_IFTYPE_AP &&
++		    sta->sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
+ 			continue;
+ 
+ 		for (state = IEEE80211_STA_NOTEXIST;
 -- 
-~Randy
+2.7.4
