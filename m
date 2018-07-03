@@ -1,131 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:1269 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725934AbeGSGpx (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:33324 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934004AbeGCS0n (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jul 2018 02:45:53 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 02/23] staging: wilc1000: remove enum connect_status instead use ieee80211_statuscode
-Date: Thu, 19 Jul 2018 04:14:58 +0530
-Message-ID: <1531953919-20804-3-git-send-email-ajay.kathat@microchip.com> (sfid-20180719_080430_960538_14AE624C)
-In-Reply-To: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
-References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 3 Jul 2018 14:26:43 -0400
+Received: by mail-oi0-f65.google.com with SMTP id c6-v6so5786732oiy.0
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jul 2018 11:26:43 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [PATCH] nl80211/mac80211: Fix cfg80211_rx_control_port
+Date: Tue,  3 Jul 2018 13:26:26 -0500
+Message-Id: <20180703182626.26782-1-denkenz@gmail.com> (sfid-20180703_202648_128897_1F74A20A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleanup patch to remove the use of enum 'connect_status' and instead use
-predefined 'ieee80211_statuscode' for error code values.
+The current implementation of cfg80211_rx_control_port assumed that the
+caller could provide a contiguous region of memory for the control port
+frame to be sent up to userspace.  Unfortunately, many drivers produce
+non-linear skbs, especially for data frames.  This resulted in userspace
+getting notified of control port frames with correct metadata (from
+address, port, etc) yet garbage / nonsense contents, resulting in bad
+handshakes, disconnections, etc.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+mac80211 linearizes skbs containing management frames.  But it didn't
+seem worthwhile to do this for control port frames.  Thus the signature
+of cfg80211_rx_control_port was changed to take the skb directly.
+nl80211 then takes care of obtaining control port frame data directly
+from the (linear | non-linear) skb.
+
+The caller is still responsible for freeing the skb,
+cfg80211_rx_control_port does not take ownership of it.
+
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c       |  4 +++-
- drivers/staging/wilc1000/coreconfigurator.h       | 20 --------------------
- drivers/staging/wilc1000/host_interface.c         |  6 +++---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  2 +-
- 4 files changed, 7 insertions(+), 25 deletions(-)
+ include/net/cfg80211.h | 11 +++++------
+ net/mac80211/rx.c      |  5 +----
+ net/wireless/nl80211.c | 24 +++++++++++++++---------
+ net/wireless/trace.h   | 26 +++++++++++++++++---------
+ 4 files changed, 38 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 0063895..a987953 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -1,4 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0
-+#include <linux/ieee80211.h>
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9ba1f289c439..94842c2a2f73 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5937,10 +5937,10 @@ void cfg80211_mgmt_tx_status(struct wireless_dev *wdev, u64 cookie,
+ /**
+  * cfg80211_rx_control_port - notification about a received control port frame
+  * @dev: The device the frame matched to
+- * @buf: control port frame
+- * @len: length of the frame data
+- * @addr: The peer from which the frame was received
+- * @proto: frame protocol, typically PAE or Pre-authentication
++ * @skb: The skbuf with the control port frame.  It is assumed that the skbuf
++ * is 802.3 formatted (with 802.3 header).  The skb can be non-linear.  This
++ * function does not take ownership of the skb, so the caller is responsible
++ * for any cleanup.
+  * @unencrypted: Whether the frame was received unencrypted
+  *
+  * This function is used to inform userspace about a received control port
+@@ -5953,8 +5953,7 @@ void cfg80211_mgmt_tx_status(struct wireless_dev *wdev, u64 cookie,
+  * Return: %true if the frame was passed to userspace
+  */
+ bool cfg80211_rx_control_port(struct net_device *dev,
+-			      const u8 *buf, size_t len,
+-			      const u8 *addr, u16 proto, bool unencrypted);
++			      struct sk_buff *skb, bool unencrypted);
+ 
+ /**
+  * cfg80211_cqm_rssi_notify - connection quality monitoring rssi event
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index a16ba568e2a3..64742f2765c4 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2370,11 +2370,8 @@ static void ieee80211_deliver_skb_to_local_stack(struct sk_buff *skb,
+ 		     sdata->control_port_over_nl80211)) {
+ 		struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 		bool noencrypt = status->flag & RX_FLAG_DECRYPTED;
+-		struct ethhdr *ehdr = eth_hdr(skb);
+ 
+-		cfg80211_rx_control_port(dev, skb->data, skb->len,
+-					 ehdr->h_source,
+-					 be16_to_cpu(skb->protocol), noencrypt);
++		cfg80211_rx_control_port(dev, skb, noencrypt);
+ 		dev_kfree_skb(skb);
+ 	} else {
+ 		/* deliver to local stack */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8db59129c095..b75a0144c0a5 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -15036,20 +15036,24 @@ void cfg80211_mgmt_tx_status(struct wireless_dev *wdev, u64 cookie,
+ EXPORT_SYMBOL(cfg80211_mgmt_tx_status);
+ 
+ static int __nl80211_rx_control_port(struct net_device *dev,
+-				     const u8 *buf, size_t len,
+-				     const u8 *addr, u16 proto,
++				     struct sk_buff *skb,
+ 				     bool unencrypted, gfp_t gfp)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
++	struct ethhdr *ehdr = eth_hdr(skb);
++	const u8 *addr = ehdr->h_source;
++	u16 proto = be16_to_cpu(skb->protocol);
+ 	struct sk_buff *msg;
+ 	void *hdr;
++	struct nlattr *frame;
 +
- #include "coreconfigurator.h"
+ 	u32 nlportid = READ_ONCE(wdev->conn_owner_nlportid);
  
- #define TAG_PARAM_OFFSET	(MAC_HDR_LEN + TIME_STAMP_LEN + \
-@@ -316,7 +318,7 @@ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
- 	u16 ies_len = 0;
+ 	if (!nlportid)
+ 		return -ENOENT;
  
- 	ret_conn_info->status = get_asoc_status(buffer);
--	if (ret_conn_info->status == SUCCESSFUL_STATUSCODE) {
-+	if (ret_conn_info->status == WLAN_STATUS_SUCCESS) {
- 		ies = &buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
- 		ies_len = buffer_len - (CAP_INFO_LEN + STATUS_CODE_LEN +
- 					AID_LEN);
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 55b5531..90d3d65 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -24,26 +24,6 @@
- #define MAKE_WORD16(lsb, msb) ((((u16)(msb) << 8) & 0xFF00) | (lsb))
- #define MAKE_WORD32(lsw, msw) ((((u32)(msw) << 16) & 0xFFFF0000) | (lsw))
+-	msg = nlmsg_new(100 + len, gfp);
++	msg = nlmsg_new(100 + skb->len, gfp);
+ 	if (!msg)
+ 		return -ENOMEM;
  
--enum connect_status {
--	SUCCESSFUL_STATUSCODE    = 0,
--	UNSPEC_FAIL              = 1,
--	UNSUP_CAP                = 10,
--	REASOC_NO_ASOC           = 11,
--	FAIL_OTHER               = 12,
--	UNSUPT_ALG               = 13,
--	AUTH_SEQ_FAIL            = 14,
--	CHLNG_FAIL               = 15,
--	AUTH_TIMEOUT             = 16,
--	AP_FULL                  = 17,
--	UNSUP_RATE               = 18,
--	SHORT_PREAMBLE_UNSUP     = 19,
--	PBCC_UNSUP               = 20,
--	CHANNEL_AGIL_UNSUP       = 21,
--	SHORT_SLOT_UNSUP         = 25,
--	OFDM_DSSS_UNSUP          = 26,
--	CONNECT_STS_FORCE_16_BIT = 0xFFFF
--};
--
- struct rssi_history_buffer {
- 	bool full;
- 	u8 index;
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 918d06e..9b5bf3c 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1336,7 +1336,7 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
- 	}
+@@ -15063,13 +15067,17 @@ static int __nl80211_rx_control_port(struct net_device *dev,
+ 	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
+ 	    nla_put_u64_64bit(msg, NL80211_ATTR_WDEV, wdev_id(wdev),
+ 			      NL80211_ATTR_PAD) ||
+-	    nla_put(msg, NL80211_ATTR_FRAME, len, buf) ||
+ 	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, addr) ||
+ 	    nla_put_u16(msg, NL80211_ATTR_CONTROL_PORT_ETHERTYPE, proto) ||
+ 	    (unencrypted && nla_put_flag(msg,
+ 					 NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT)))
+ 		goto nla_put_failure;
  
- 	if (mac_status == MAC_STATUS_CONNECTED &&
--	    conn_info.status != SUCCESSFUL_STATUSCODE) {
-+	    conn_info.status != WLAN_STATUS_SUCCESS) {
- 		netdev_err(vif->ndev,
- 			   "Received MAC status is MAC_STATUS_CONNECTED while the received status code in Asoc Resp is not SUCCESSFUL_STATUSCODE\n");
- 		eth_zero_addr(wilc_connected_ssid);
-@@ -1349,7 +1349,7 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
- 		memcpy(conn_info.bssid, hif_drv->usr_conn_req.bssid, 6);
++	frame = nla_reserve(msg, NL80211_ATTR_FRAME, skb->len);
++	if (!frame)
++		goto nla_put_failure;
++
++	skb_copy_bits(skb, 0, nla_data(frame), skb->len);
+ 	genlmsg_end(msg, hdr);
  
- 		if (mac_status == MAC_STATUS_CONNECTED &&
--		    conn_info.status == SUCCESSFUL_STATUSCODE) {
-+		    conn_info.status == WLAN_STATUS_SUCCESS) {
- 			memcpy(hif_drv->assoc_bssid,
- 			       hif_drv->usr_conn_req.bssid, ETH_ALEN);
- 		}
-@@ -1369,7 +1369,7 @@ static inline void host_int_parse_assoc_resp_info(struct wilc_vif *vif,
- 					  hif_drv->usr_conn_req.arg);
+ 	return genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, nlportid);
+@@ -15080,14 +15088,12 @@ static int __nl80211_rx_control_port(struct net_device *dev,
+ }
  
- 	if (mac_status == MAC_STATUS_CONNECTED &&
--	    conn_info.status == SUCCESSFUL_STATUSCODE) {
-+	    conn_info.status == WLAN_STATUS_SUCCESS) {
- 		wilc_set_power_mgmt(vif, 0, 0);
+ bool cfg80211_rx_control_port(struct net_device *dev,
+-			      const u8 *buf, size_t len,
+-			      const u8 *addr, u16 proto, bool unencrypted)
++			      struct sk_buff *skb, bool unencrypted)
+ {
+ 	int ret;
  
- 		hif_drv->hif_state = HOST_IF_CONNECTED;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index e96163f..f90b9b6 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -489,7 +489,7 @@ static void cfg_connect_result(enum conn_event conn_disconn_evt,
- 		connect_status = conn_info->status;
+-	trace_cfg80211_rx_control_port(dev, buf, len, addr, proto, unencrypted);
+-	ret = __nl80211_rx_control_port(dev, buf, len, addr, proto,
+-					unencrypted, GFP_ATOMIC);
++	trace_cfg80211_rx_control_port(dev, skb, unencrypted);
++	ret = __nl80211_rx_control_port(dev, skb, unencrypted, GFP_ATOMIC);
+ 	trace_cfg80211_return_bool(ret == 0);
+ 	return ret == 0;
+ }
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 2b417a2fe63f..e18a8b0176e2 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -2627,24 +2627,32 @@ TRACE_EVENT(cfg80211_mgmt_tx_status,
+ );
  
- 		if (mac_status == MAC_STATUS_DISCONNECTED &&
--		    conn_info->status == SUCCESSFUL_STATUSCODE) {
-+		    conn_info->status == WLAN_STATUS_SUCCESS) {
- 			connect_status = WLAN_STATUS_UNSPECIFIED_FAILURE;
- 			wilc_wlan_set_bssid(priv->dev, null_bssid,
- 					    STATION_MODE);
+ TRACE_EVENT(cfg80211_rx_control_port,
+-	TP_PROTO(struct net_device *netdev, const u8 *buf, size_t len,
+-		 const u8 *addr, u16 proto, bool unencrypted),
+-	TP_ARGS(netdev, buf, len, addr, proto, unencrypted),
++	TP_PROTO(struct net_device *netdev, struct sk_buff *skb,
++		 bool unencrypted),
++	TP_ARGS(netdev, skb, unencrypted),
+ 	TP_STRUCT__entry(
+ 		NETDEV_ENTRY
+-		MAC_ENTRY(addr)
++		__field(const void *, skbaddr)
++		__field(int, len)
++		MAC_ENTRY(from)
+ 		__field(u16, proto)
+ 		__field(bool, unencrypted)
+ 	),
+ 	TP_fast_assign(
+ 		NETDEV_ASSIGN;
+-		MAC_ASSIGN(addr, addr);
+-		__entry->proto = proto;
++		__entry->skbaddr = skb;
++		__entry->len = skb->len;
++		do {
++			struct ethhdr *ehdr = eth_hdr(skb);
++			memcpy(__entry->from, ehdr->h_source, ETH_ALEN);
++		} while (0);
++		__entry->proto = be16_to_cpu(skb->protocol);
+ 		__entry->unencrypted = unencrypted;
+ 	),
+-	TP_printk(NETDEV_PR_FMT ", " MAC_PR_FMT " proto: 0x%x, unencrypted: %s",
+-		  NETDEV_PR_ARG, MAC_PR_ARG(addr),
+-		  __entry->proto, BOOL_TO_STR(__entry->unencrypted))
++	TP_printk(NETDEV_PR_FMT ", skbaddr=%p, len=%d, " MAC_PR_FMT ", proto: 0x%x, unencrypted: %s",
++		  NETDEV_PR_ARG, __entry->skbaddr, __entry->len,
++		  MAC_PR_ARG(from), __entry->proto,
++		  BOOL_TO_STR(__entry->unencrypted))
+ );
+ 
+ TRACE_EVENT(cfg80211_cqm_rssi_notify,
 -- 
-2.7.4
+2.13.5
