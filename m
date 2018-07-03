@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:46236 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754039AbeGFKhC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jul 2018 06:37:02 -0400
-Date: Fri, 6 Jul 2018 12:36:58 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Jakub Kicinski <kubakici@wp.pl>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH 00/11] Add mt76x0 driver
-Message-ID: <20180706103657.GB2033@redhat.com> (sfid-20180706_123706_192006_7F80364D)
-References: <1530771142-4118-1-git-send-email-sgruszka@redhat.com>
- <20180705153216.GE17524@localhost.localdomain>
+Received: from smtp.codeaurora.org ([198.145.29.96]:42262 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932392AbeGCPp5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Jul 2018 11:45:57 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: andy.gross@linaro.org
+Cc: Govind Singh <govinds@codeaurora.org>, bjorn.andersson@linaro.org,
+        david.brown@linaro.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH v2 5/6] firmware: qcom: scm: Add WLAN VMID for Qualcomm SCM interface
+References: <20180605123709.1882-1-govinds@codeaurora.org>
+Date: Tue, 03 Jul 2018 18:45:52 +0300
+In-Reply-To: <20180605123709.1882-1-govinds@codeaurora.org> (Govind Singh's
+        message of "Tue, 5 Jun 2018 18:07:09 +0530")
+Message-ID: <87k1qcnwzz.fsf@kamboji.qca.qualcomm.com> (sfid-20180703_174602_279213_8A9B408E)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180705153216.GE17524@localhost.localdomain>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 05, 2018 at 05:32:17PM +0200, Lorenzo Bianconi wrote:
-> > My integration efforts can be traced here:
-> > https://github.com/sgruszka/wireless-drivers-next/commits/mt76x0-draft
-> > 
-> 
-> I just had a brief review of the code and I compiled the driver since at
-> the moment I had no adapter for that chipset.
-> As a remainder for future improvements/integration most of the code in 
-> dma.c, usb.c (except probe/disconnect functions) and tx.c can use the related
-> routines in the mt76-usb layer (we need to fill function pointer for chipset
-> related stuff if there are differences with mt76x2u, not looked yet).
-> Moreover mcu code can use utility routines in usb-mcu.c
-> I have not looked at mt76x2 common code yet.
+Govind Singh <govinds@codeaurora.org> writes:
 
-That's my plan. So far I started to unify common mac/wcid code. If
-someone want to work on some area i.e. dma/tx, usb or mcu, please
-let me know to do not duplicate work.  
+> Add WLAN related VMID's to support wlan driver to set up
+> the remote's permissions call via TrustZone.
+>
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> ---
+>  include/linux/qcom_scm.h | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+>
+> diff --git a/include/linux/qcom_scm.h b/include/linux/qcom_scm.h
+> index b401b962afff..da63d84e1e91 100644
+> --- a/include/linux/qcom_scm.h
+> +++ b/include/linux/qcom_scm.h
+> @@ -1,4 +1,4 @@
+> -/* Copyright (c) 2010-2015, The Linux Foundation. All rights reserved.
+> +/* Copyright (c) 2010-2015, 2018, The Linux Foundation. All rights reserved.
+>   * Copyright (C) 2015 Linaro Ltd.
+>   *
+>   * This program is free software; you can redistribute it and/or modify
+> @@ -33,6 +33,8 @@ struct qcom_scm_vmperm {
+>  
+>  #define QCOM_SCM_VMID_HLOS       0x3
+>  #define QCOM_SCM_VMID_MSS_MSA    0xF
+> +#define QCOM_SCM_VMID_WLAN       0x18
+> +#define QCOM_SCM_VMID_WLAN_CE    0x19
 
-Thanks for review!
-Stanislaw
+Andy, it would be easiest if I can apply this directly to my ath.git
+tree. Can I get your ack for this?
+
+BTW, I didn't find include/linux/qcom_scm.h from MAINTAINERS file. It
+would be good to add that.
+
+-- 
+Kalle Valo
