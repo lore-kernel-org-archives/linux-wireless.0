@@ -1,40 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:56646 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388280AbeGXKAH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 06:00:07 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: sameo@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
-        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH v2 03/10] NFC: st95hf: drop illegal kfree_skb() in IRQ handler
-Date: Tue, 24 Jul 2018 10:54:19 +0200
-Message-Id: <20180724085426.23999-4-daniel@zonque.org> (sfid-20180724_105447_793788_8E4AB31A)
-In-Reply-To: <20180724085426.23999-1-daniel@zonque.org>
-References: <20180724085426.23999-1-daniel@zonque.org>
+Received: from mail-eopbgr60062.outbound.protection.outlook.com ([40.107.6.62]:18624
+        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753049AbeGCUkZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Jul 2018 16:40:25 -0400
+Subject: Re: [PATCH] mac80211: don't put null-data frames on the normal TXQ
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20180703124725.30917-1-johannes@sipsolutions.net>
+Cc: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
+        Felix Fietkau <nbd@nbd.name>,
+        Johannes Berg <johannes.berg@intel.com>
+From: Peter Oh <peter.oh@bowerswilkins.com>
+Message-ID: <e9813f60-5cf5-a4bf-5906-623282319991@bowerswilkins.com> (sfid-20180703_224041_754627_93E3AE1D)
+Date: Tue, 3 Jul 2018 13:40:08 -0700
+MIME-Version: 1.0
+In-Reply-To: <20180703124725.30917-1-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the error path of the IRQ handler, don't free the skb in flight. The
-callback in the digital core will do that for us. Doing it from both
-places causes a memory corruption.
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
----
- drivers/nfc/st95hf/core.c | 1 -
- 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
-index d58424ab5c48..d857197ec7b2 100644
---- a/drivers/nfc/st95hf/core.c
-+++ b/drivers/nfc/st95hf/core.c
-@@ -863,7 +863,6 @@ static irqreturn_t st95hf_irq_thread_handler(int irq, void  *st95hfcontext)
- 	return IRQ_HANDLED;
- 
- end:
--	kfree_skb(skb_resp);
- 	wtx = false;
- 	cb_arg->rats = false;
- 	skb_resp = ERR_PTR(result);
--- 
-2.17.1
+On 07/03/2018 05:47 AM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Since (QoS) NDP frames shouldn't be put into aggregation nor are
+> assigned real sequence numbers, etc. it's better to treat them as
+> non-data packets and not put them on the normal TXQs, for example
+> when building A-MPDUs they need to be treated specially,
+To be treated specially at which layer, mac80211 or drivers?
+Are you seeing any issues other than complexity of handling NDP or is it 
+just improvement?
+
+Thanks,
+Peter
