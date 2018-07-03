@@ -1,47 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:50475 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753168AbeGJM60 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jul 2018 08:58:26 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Manikanta Pubbisetty <mpubbise@codeaurora.org>,
-        johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Subject: Re: [PATCHv2] mac80211: add stop/start logic for software TXQs
-In-Reply-To: <1531225597-4736-1-git-send-email-mpubbise@codeaurora.org>
-References: <1531225597-4736-1-git-send-email-mpubbise@codeaurora.org>
-Date: Tue, 10 Jul 2018 14:58:18 +0200
-Message-ID: <87o9ffcknp.fsf@toke.dk> (sfid-20180710_145829_561983_5C35EC5A)
+Received: from mail-io0-f193.google.com ([209.85.223.193]:45602 "EHLO
+        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753613AbeGCEv2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Jul 2018 00:51:28 -0400
+Received: by mail-io0-f193.google.com with SMTP id l25-v6so547414ioh.12
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Jul 2018 21:51:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87o9fp8z2o.fsf@purkki.adurom.net>
+References: <20180627185845.31799-1-daniel@zonque.org> <CAPDyKFr7snWsk=194u4nKs4301tUARByuEPSFop_fzxn6HVQDQ@mail.gmail.com>
+ <dac693d9-b6f4-fac6-3cfa-ccfc4a6172c6@zonque.org> <87o9fp8z2o.fsf@purkki.adurom.net>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Tue, 3 Jul 2018 06:51:26 +0200
+Message-ID: <CAPDyKFo9M0jbAy=trp8NAUSRpi85P=QWpy2mTL7yzeKcbQhS7w@mail.gmail.com> (sfid-20180703_065137_766602_0A8B43AB)
+Subject: Re: [PATCH v2] libertas: fix suspend and resume for SDIO connected cards
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Daniel Mack <daniel@zonque.org>, Chris Ball <chris@printf.net>,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-> index 172aeae..d07f7f9 100644
-> --- a/net/mac80211/ieee80211_i.h
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -818,6 +818,7 @@ enum txq_info_flags {
->  	IEEE80211_TXQ_STOP,
->  	IEEE80211_TXQ_AMPDU,
->  	IEEE80211_TXQ_NO_AMSDU,
-> +	IEEE80211_TXQ_PAUSED,
->  };
+On 2 July 2018 at 16:57, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Daniel Mack <daniel@zonque.org> writes:
+>
+>> On Friday, June 29, 2018 05:39 PM, Ulf Hansson wrote:
+>>> On 27 June 2018 at 20:58, Daniel Mack <daniel@zonque.org> wrote:
+>>>> Prior to commit 573185cc7e64 ("mmc: core: Invoke sdio func driver's PM
+>>>> callbacks from the sdio bus"), the MMC core used to call into the power
+>>>> management functions of SDIO clients itself and removed the card if the
+>>>> return code was non-zero. IOW, the mmc handled errors gracefully and didn't
+>>>> upchain them to the pm core.
+>>>>
+>>>> Since this change, the mmc core relies on generic power management
+>>>> functions which treat all errors as a reason to cancel the suspend
+>>>> immediately. This causes suspend attempts to fail when the libertas
+>>>> driver is loaded.
+>>>>
+>>>> To fix this, power down the card explicitly in if_sdio_suspend() when we
+>>>> know we're about to lose power and return success. Also set a flag in these
+>>>> cases, and power up the card again in if_sdio_resume().
+>>>>
+>>>> Signed-off-by: Daniel Mack <daniel@zonque.org>
+>>>> Cc: Ulf Hansson <ulf.hansson@linaro.org>
+>>>> Cc: Chris Ball <chris@printf.net>
+>>>
+>>> Looks good to me! Should be a candidate for stable as well!?
+>>
+>> Thanks!
+>>
+>> Yeah, it should probably get a
+>>
+>> Fixes: 573185cc7e64 ("mmc: core: Invoke sdio func driver's PM
+>> callbacks from the sdio bus")
+>>
+>> as well.
+>
+> So I'll queue this for wireless-drivers-next and add:
+>
+> Fixes: 573185cc7e64 ("mmc: core: Invoke sdio func driver's PM callbacks from the sdio bus")
+> Cc: <stable@vger.kernel.org
+>
+> Ok?
 
-I think it would be a good idea to either rename the flags, or at least
-add an explanation somewhere of the difference between a paused and a
-stopped queue...
+That's fine by me.
 
->  /**
-> @@ -1226,6 +1227,7 @@ struct ieee80211_local {
->  
->  	struct sk_buff_head pending[IEEE80211_MAX_QUEUES];
->  	struct tasklet_struct tx_pending_tasklet;
-> +	struct tasklet_struct wake_txqs_tasklet;
-
-It's not quite clear to me why a tasklet is needed? Couldn't you just
-call the ieee80211_wake_txqs() function at the same place where you
-currently schedule the tasklet?
-
--Toke
+Kind regards
+Uffe
