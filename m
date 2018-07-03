@@ -1,61 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:34754 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388097AbeGTS5I (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jul 2018 14:57:08 -0400
-From: Colin King <colin.king@canonical.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ray_cs: remove redundant pointer 'p'
-Date: Fri, 20 Jul 2018 19:07:40 +0100
-Message-Id: <20180720180740.21018-1-colin.king@canonical.com> (sfid-20180720_200801_758481_8B8AD94F)
+Received: from foss.arm.com ([217.140.101.70]:51782 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933157AbeGCQB1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Jul 2018 12:01:27 -0400
+Date: Tue, 3 Jul 2018 17:01:22 +0100
+From: Mark Rutland <mark.rutland@arm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Brian Norris <briannorris@chromium.org>,
+        Govind Singh <govinds@codeaurora.org>,
+        devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org, bjorn.andersson@linaro.org,
+        david.brown@linaro.org, Rob Herring <robh+dt@kernel.org>,
+        andy.gross@linaro.org
+Subject: Re: [PATCH v2 3/6] dt: bindings: add bindings for msa memory region
+Message-ID: <20180703160122.w54lq7mr2uectjea@lakrids.cambridge.arm.com> (sfid-20180703_180137_401885_6E668AFD)
+References: <20180605123616.528-1-govinds@codeaurora.org>
+ <20180605231814.GB194157@rodete-desktop-imager.corp.google.com>
+ <87o9fonx5r.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87o9fonx5r.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+On Tue, Jul 03, 2018 at 06:42:24PM +0300, Kalle Valo wrote:
+> Brian Norris <briannorris@chromium.org> writes:
+> 
+> > + Rob
+> >
+> > On Tue, Jun 05, 2018 at 06:06:16PM +0530, Govind Singh wrote:
+> >> Add device tree binding documentation details of msa
+> >> memory region for ath10k qmi client for SDM845/APQ8098
+> >> SoC into "qcom,ath10k.txt".
+> >> 
+> >> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> >> ---
+> >>  .../devicetree/bindings/net/wireless/qcom,ath10k.txt          | 4 ++++
+> >>  1 file changed, 4 insertions(+)
+> >> 
+> >> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> >> index 7fd4e8ce4149..0efc47f4ba34 100644
+> >> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> >> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> >> @@ -56,6 +56,8 @@ Optional properties:
+> >>  				     the length can vary between hw versions.
+> >>  - <supply-name>-supply: handle to the regulator device tree node
+> >>  			   optional "supply-name" is "vdd-0.8-cx-mx".
+> >> +- msa-fixed-region: phandle, specifier to children of reserved MSA memory.
+> >
+> > As in reserved-memory/reserved-memory.txt? Might refer to that doc here.
+> > Or is this some other kind of reserved memory?
+> >
+> > If the former, it's normally called just "memory-region", although
+> > that does seem somewhat non-descriptive...
+> >
+> >> +- msa-size: MSA memory size for fw internal use.
+> >
+> > Do you really need both of these? It seems like your code uses one or
+> > the other, not both. In which case, this is not a very good description,
+> > because it sounds like they would go together.
+> >
+> > Also, if you're not using standard/generic properties (e.g., the
+> > aforementioned "memory-region" binding), you typically should use a
+> > vendor prefix, like "qcom,msa-size".
+> 
+> Devicetree folks, any comments? I would like to apply this via my
+> ath.git tree but need help with the review.
 
-Pointer 'p' is being assigned but is never used hence it is
-redundant and can be removed. Also re-work if statement to remove
-redundant assignment of p.
+I think Brian's comments w.r.t msa-size and msa-fixed-region both stand.
+It would be good if Govind could answer his questions.
 
-Cleans up clang warning:
-warning: variable 'p' set but not used [-Wunused-but-set-variable]
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/ray_cs.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
-index a7e0a17aa7e8..08c607c031bc 100644
---- a/drivers/net/wireless/ray_cs.c
-+++ b/drivers/net/wireless/ray_cs.c
-@@ -470,7 +470,6 @@ static inline struct rcs __iomem *rcs_base(ray_dev_t *dev)
- static int ray_init(struct net_device *dev)
- {
- 	int i;
--	UCHAR *p;
- 	struct ccs __iomem *pccs;
- 	ray_dev_t *local = netdev_priv(dev);
- 	struct pcmcia_device *link = local->finder;
-@@ -513,12 +512,9 @@ static int ray_init(struct net_device *dev)
- 	init_startup_params(local);
- 
- 	/* copy mac address to startup parameters */
--	if (parse_addr(phy_addr, local->sparm.b4.a_mac_addr)) {
--		p = local->sparm.b4.a_mac_addr;
--	} else {
-+	if (!parse_addr(phy_addr, local->sparm.b4.a_mac_addr)) {
- 		memcpy(&local->sparm.b4.a_mac_addr,
- 		       &local->startup_res.station_addr, ADDRLEN);
--		p = local->sparm.b4.a_mac_addr;
- 	}
- 
- 	clear_interrupt(local);	/* Clear any interrupt from the card */
--- 
-2.17.1
+Thanks,
+Mark.
