@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:37524 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726034AbeG0KLp (ORCPT
+Received: from s3.sipsolutions.net ([144.76.63.242]:42230 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754469AbeGCJpV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jul 2018 06:11:45 -0400
-From: Jia-Ju Bai <baijiaju1990@gmail.com>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [PATCH] net: wireless: realtek: rtl8225se: Replace mdelay() with msleep() in rtl8225se_rf_init
-Date: Fri, 27 Jul 2018 16:50:45 +0800
-Message-Id: <20180727085045.3949-1-baijiaju1990@gmail.com> (sfid-20180727_105108_139455_A94EAF08)
+        Tue, 3 Jul 2018 05:45:21 -0400
+Message-ID: <1530611118.4735.13.camel@sipsolutions.net> (sfid-20180703_114524_793674_7B5F3D61)
+Subject: Re: [PATCH] mac80211: add stop/start logic for software TXQs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 03 Jul 2018 11:45:18 +0200
+In-Reply-To: <87345305-94d2-7c5e-379e-757670b7e59f@codeaurora.org>
+References: <1529997415-20551-1-git-send-email-mpubbise@codeaurora.org>
+         <1530263375.3481.23.camel@sipsolutions.net>
+         <87345305-94d2-7c5e-379e-757670b7e59f@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rtl8225se_rf_init() is never called in atomic context.
-It calls mdelay() to busily wait, which is not necessary.
-mdelay() can be replaced with msleep().
-This patch only replaces the mdelay() that has >20ms time to wait.
+On Mon, 2018-07-02 at 14:48 +0530, Manikanta Pubbisetty wrote:
+> > 
+> > > @@ -298,10 +354,15 @@ static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
+> > >   	if (local->q_stop_reasons[queue][reason] == 0)
+> > >   		__clear_bit(reason, &local->queue_stop_reasons[queue]);
+> > >   
+> > > +	if (local->ops->wake_tx_queue)
+> > > +		__clear_bit(reason, &local->txqs_stopped);
+> > > +
+> > >   	if (local->queue_stop_reasons[queue] != 0)
+> > >   		/* someone still has this queue stopped */
+> > >   		return;
+> > >   
+> > > +	ieee80211_wake_txqs(local);
+> > 
+> > I'm not sure this is the right place to hook in?
+> > 
+> > This might interact really strangely with drivers - which also get here.
+> > Perhaps we should make this conditional on reason != DRIVER?
+> 
+> Good point!  IMO the condition (reason != DRIVER) does not fit well; if 
+> the reason for stop queues is DRIVER then we don't get a chance to wake 
+> them again. May be deferring the wake_txqs by scheduling a tasklet 
+> should help?
 
-This is found by a static analysis tool named DCNS written by myself.
+Not sure what you mean? But I see what I said was also confusing.
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
----
- drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+What I meant is that we should just not allow the driver to stop the
+TXQs this way - if it's a TXQ driver then it should just stop scheduling
+if it needs to, it shouldn't continue scheduling and rely on us blocking
+it.
 
-diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c b/drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c
-index fde89866fa8d..51e32df6120b 100644
---- a/drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c
-+++ b/drivers/net/wireless/realtek/rtl818x/rtl8180/rtl8225se.c
-@@ -363,7 +363,7 @@ void rtl8225se_rf_init(struct ieee80211_hw *dev)
- 	rtl8187se_rf_writereg(dev, 0x00, 0x0037); mdelay(11);
- 	rtl8187se_rf_writereg(dev, 0x04, 0x0160); mdelay(11);
- 	rtl8187se_rf_writereg(dev, 0x07, 0x0080); mdelay(11);
--	rtl8187se_rf_writereg(dev, 0x02, 0x088D); mdelay(221);
-+	rtl8187se_rf_writereg(dev, 0x02, 0x088D); msleep(221);
- 	rtl8187se_rf_writereg(dev, 0x00, 0x0137); mdelay(11);
- 	rtl8187se_rf_writereg(dev, 0x07, 0x0000); mdelay(1);
- 	rtl8187se_rf_writereg(dev, 0x07, 0x0180); mdelay(1);
-@@ -386,7 +386,7 @@ void rtl8225se_rf_init(struct ieee80211_hw *dev)
- 	rtl8187se_rf_writereg(dev, 0x00, 0x00BF); mdelay(1);
- 	rtl8187se_rf_writereg(dev, 0x0D, 0x08DF); mdelay(1);
- 	rtl8187se_rf_writereg(dev, 0x02, 0x004D); mdelay(1);
--	rtl8187se_rf_writereg(dev, 0x04, 0x0975); mdelay(31);
-+	rtl8187se_rf_writereg(dev, 0x04, 0x0975); msleep(31);
- 	rtl8187se_rf_writereg(dev, 0x00, 0x0197); mdelay(1);
- 	rtl8187se_rf_writereg(dev, 0x05, 0x05AB); mdelay(1);
- 
--- 
-2.17.0
+We, for mac80211's purposes, need to stop, cannot influence scheduling
+and want to unify it with the 'normal' queue stop - so my thought would
+be that we should only set the TXQ to stopped if the reason isn't
+DRIVER.
+
+johannes
