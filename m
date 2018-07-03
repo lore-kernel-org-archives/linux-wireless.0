@@ -1,42 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46526 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:36386 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727020AbeGaJer (ORCPT
+        with ESMTP id S932926AbeGCPkf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 05:34:47 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCH 1/9] ath9k_hw: set spectral scan enable bit on trigger for
- AR9003+
+        Tue, 3 Jul 2018 11:40:35 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180723160300.58024-1-nbd@nbd.name>
-References: <20180723160300.58024-1-nbd@nbd.name>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <20180731075543.2E14060714@smtp.codeaurora.org> (sfid-20180731_095547_172570_1B14F6B0)
-Date: Tue, 31 Jul 2018 07:55:43 +0000 (UTC)
+To: Govind Singh <govinds@codeaurora.org>
+Cc: andy.gross@linaro.org, bjorn.andersson@linaro.org,
+        david.brown@linaro.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org, Rakesh Pillai <pillair@codeaurora.org>
+Subject: Re: [PATCH v2 2/6] ath10k: Add support to create boardname for non-bmi target
+References: <20180605123448.32331-1-govinds@codeaurora.org>
+Date: Tue, 03 Jul 2018 18:40:30 +0300
+In-Reply-To: <20180605123448.32331-1-govinds@codeaurora.org> (Govind Singh's
+        message of "Tue, 5 Jun 2018 18:04:48 +0530")
+Message-ID: <87sh50nx8x.fsf@kamboji.qca.qualcomm.com> (sfid-20180703_174058_646022_8BD01BE6)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> wrote:
+Govind Singh <govinds@codeaurora.org> writes:
 
-> AR9002 code and the QCA AR9003+ reference code do the same.
-> 
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> From: Rakesh Pillai <pillair@codeaurora.org>
+>
+> Add support to create the boardname for non-bmi targets
+> like WCN3990, which uses qmi for bdf download. This
+> boardname is used to parse the board data from board-2.bin.
+>
+> Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> ---
+>  drivers/net/wireless/ath/ath10k/core.c | 14 ++++++++++++++
+>  drivers/net/wireless/ath/ath10k/core.h |  2 ++
+>  2 files changed, 16 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+> index 4cf54a7ef09a..8a592019cc4d 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -1429,6 +1429,20 @@ static int ath10k_core_create_board_name(struct ath10k *ar, char *name,
+>  		goto out;
+>  	}
+>  
+> +	if (ar->id.qmi_ids_valid) {
+> +		if (ar->id.qmi_board_id > 0x99)
+> +			scnprintf(name, name_len,
+> +				  "bus=%s,qmi-board-id=%03x",
+> +				  ath10k_bus_str(ar->hif.bus),
+> +				  ar->id.qmi_board_id);
+> +		else
+> +			scnprintf(name, name_len,
+> +				  "bus=%s,qmi-board-id=b%02x",
+> +				  ath10k_bus_str(ar->hif.bus),
+> +				  ar->id.qmi_board_id);
+> +		goto out;
+> +	}
 
-8 patches applied to ath-next branch of ath.git, thanks.
+Why not just use %d? What benefit would hexadecimal format bring?
 
-a2a49e86b325 ath9k_hw: set spectral scan enable bit on trigger for AR9003+
-3a69dd366866 ath9k: don't run periodic and nf calibation at the same time
-11f7f4f9c0d2 ath9k: fix moredata bit in PS buffered frame release
-e20c7c91ef60 ath9k: clear potentially stale EOSP status bit in intermediate queues
-36e14a787dd0 ath9k: report tx status on EOSP
-1226f9e10296 ath9k: fix block-ack window tracking issues
-461d8a6bb987 ath9k_hw: fix channel maximum power level test
-52d7e0e5339b ath9k: fix more-data flag for buffered multicast packets
+And why %02 and %03? I don't see the need for that.
 
 -- 
-https://patchwork.kernel.org/patch/10540573/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
