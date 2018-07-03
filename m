@@ -1,76 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:37782 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727412AbeGUKqq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 Jul 2018 06:46:46 -0400
-Subject: Re: [PATCH] nfc: st95hf: remove redundant pointers 'dev' and
- 'nfcddev'
-To: Colin King <colin.king@canonical.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        linux-wireless@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20180720182431.24353-1-colin.king@canonical.com>
-From: Daniel Mack <daniel@zonque.org>
-Message-ID: <8599f87b-8d71-37bc-cfbf-278a3359cf0b@zonque.org> (sfid-20180721_115451_518408_DC84B10B)
-Date: Sat, 21 Jul 2018 11:54:35 +0200
+Received: from smtp.codeaurora.org ([198.145.29.96]:52296 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753987AbeGCGO4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Jul 2018 02:14:56 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Pkshih <pkshih@realtek.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 13/14] rtlwifi: access skb->data to get C2H data by macro
+References: <20180518093007.23594-1-pkshih@realtek.com>
+        <20180518093007.23594-14-pkshih@realtek.com>
+        <87po1fhwfd.fsf@purkki.adurom.net>
+        <1527732798.8418.7.camel@realtek.com> <87sh56f3sv.fsf@codeaurora.org>
+        <1530597815.6330.4.camel@realtek.com>
+Date: Tue, 03 Jul 2018 09:14:44 +0300
+In-Reply-To: <1530597815.6330.4.camel@realtek.com> (pkshih@realtek.com's
+        message of "Tue, 3 Jul 2018 06:03:42 +0000")
+Message-ID: <87y3esrgkr.fsf@kamboji.qca.qualcomm.com> (sfid-20180703_081500_717675_CE320020)
 MIME-Version: 1.0
-In-Reply-To: <20180720182431.24353-1-colin.king@canonical.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, July 20, 2018 08:24 PM, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Pointers 'dev' and 'nfcddev' are being assigned but are never used
-> hence they are redundant and can be removed.
-> 
-> Cleans up clang warnings:
-> warning: variable 'dev' set but not used [-Wunused-but-set-variable]
-> warning: variable 'nfcddev' set but not used [-Wunused-but-set-variable]
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Pkshih <pkshih@realtek.com> writes:
 
-This seems correct.
+> On Fri, 2018-06-29 at 10:30 +0300, Kalle Valo wrote:
+>> Pkshih <pkshih@realtek.com> writes:
+>>=20
+>> > On Tue, 2018-05-29 at 08:18 +0300, Kalle Valo wrote:
+>> >> <pkshih@realtek.com> writes:
+>> >>=C2=A0
+>> >
+>> > Because C2H data is little endian order, the struct will look like
+>> > struct foo {
+>> > #ifdef=C2=A0__LITTLE_ENDIAN
+>> >=C2=A0	u8 bar:4;
+>> >=C2=A0	u8 koo:4;
+>> > #else
+>> >=C2=A0	u8 koo:4;
+>> >=C2=A0	u8 bar:4;
+>> > #endif
+>> > }
+>>=20
+>> With u8 you don't need endian check, right? I would assume that with
+>> both little and big endian bar and koo would be in the same place.
+>
+> I think u8 with bitfield would be different between little and big endian
+> machines.
 
-I am currently working on a bigger series of patches for this driver 
-that also touches code in the same area. I plan to post the series next 
-week. If this patch is applied until then, I can rebase my changes upon 
-it before sending.
+To me that does not make any sense, I have never heard about bit
+endianness any of the devices I have worked on.
 
+https://en.wikipedia.org/wiki/Endianness
 
-Thanks,
-Daniel
-
-
-
-
-
-> ---
->   drivers/nfc/st95hf/core.c | 4 ----
->   1 file changed, 4 deletions(-)
-> 
-> diff --git a/drivers/nfc/st95hf/core.c b/drivers/nfc/st95hf/core.c
-> index a50a95cfcfd8..36ef0e905ba3 100644
-> --- a/drivers/nfc/st95hf/core.c
-> +++ b/drivers/nfc/st95hf/core.c
-> @@ -781,9 +781,7 @@ static irqreturn_t st95hf_irq_thread_handler(int irq, void  *st95hfcontext)
->   	int result = 0;
->   	int res_len;
->   	static bool wtx;
-> -	struct device *dev;
->   	struct device *spidevice;
-> -	struct nfc_digital_dev *nfcddev;
->   	struct sk_buff *skb_resp;
->   	struct st95hf_context *stcontext  =
->   		(struct st95hf_context *)st95hfcontext;
-> @@ -828,8 +826,6 @@ static irqreturn_t st95hf_irq_thread_handler(int irq, void  *st95hfcontext)
->   		goto end;
->   	}
->   
-> -	dev = &stcontext->nfcdev->dev;
-> -	nfcddev = stcontext->ddev;
->   	if (skb_resp->data[2] == WTX_REQ_FROM_TAG) {
->   		/* Request for new FWT from tag */
->   		result = st95hf_handle_wtx(stcontext, true, skb_resp->data[3]);
-> 
+--=20
+Kalle Valo
