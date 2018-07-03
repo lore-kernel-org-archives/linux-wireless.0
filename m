@@ -1,65 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-01.qualcomm.com ([185.23.61.162]:25495 "EHLO
-        alexa-out-ams-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2388453AbeGXIt5 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 04:49:57 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Dedy Lansky <dlansky@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-Subject: [PATCH v2 04/19] wil6210: fix temperature debugfs
-Date: Tue, 24 Jul 2018 10:44:25 +0300
-Message-Id: <1532418280-5849-5-git-send-email-merez@codeaurora.org> (sfid-20180724_094450_029318_C118683D)
-In-Reply-To: <1532418280-5849-1-git-send-email-merez@codeaurora.org>
-References: <1532418280-5849-1-git-send-email-merez@codeaurora.org>
+Received: from mail-eopbgr70049.outbound.protection.outlook.com ([40.107.7.49]:2500
+        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932138AbeGCXE3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Jul 2018 19:04:29 -0400
+From: peter.oh@bowerswilkins.com
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Cc: Peter Oh <peter.oh@bowerswilkins.com>, johannes.berg@intel.com
+Subject: [PATCH] cfg80211: inspect off channel operation only when off channel given
+Date: Tue,  3 Jul 2018 16:04:12 -0700
+Message-Id: <1530659052-5834-1-git-send-email-peter.oh@bowerswilkins.com> (sfid-20180704_010433_980964_E312D5E4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <dlansky@codeaurora.org>
+From: Peter Oh <peter.oh@bowerswilkins.com>
 
-For negative temperatures, "temp" debugfs is showing wrong values.
-Use signed types so proper calculations is done for sub zero
-temperatures.
+NL80211_ATTR_OFFCHANNEL_TX_OK does not mean given channel is always
+off channel, but it means the channel given could be off channel.
+Hence it should not block the given channel to be used if given
+channel does not require off channel mgmt tx although regulatory
+domain is non-ETSI.
 
-Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Peter Oh <peter.oh@bowerswilkins.com>
 ---
- drivers/net/wireless/ath/wil6210/debugfs.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ net/wireless/nl80211.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 5d1e48d..4356b32 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -1388,7 +1388,7 @@ static int wil_bf_seq_open(struct inode *inode, struct file *file)
- };
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 4eece06..991042b 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -9915,7 +9915,9 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 		return -EINVAL;
  
- /*---------temp------------*/
--static void print_temp(struct seq_file *s, const char *prefix, u32 t)
-+static void print_temp(struct seq_file *s, const char *prefix, s32 t)
- {
- 	switch (t) {
- 	case 0:
-@@ -1396,7 +1396,8 @@ static void print_temp(struct seq_file *s, const char *prefix, u32 t)
- 		seq_printf(s, "%s N/A\n", prefix);
- 	break;
- 	default:
--		seq_printf(s, "%s %d.%03d\n", prefix, t / 1000, t % 1000);
-+		seq_printf(s, "%s %s%d.%03d\n", prefix, (t < 0 ? "-" : ""),
-+			   abs(t / 1000), abs(t % 1000));
- 		break;
+ 	wdev_lock(wdev);
+-	if (params.offchan && !cfg80211_off_channel_oper_allowed(wdev)) {
++	if (params.offchan &&
++	    !cfg80211_chandef_identical(&chandef, &wdev->chandef) &&
++	    !cfg80211_off_channel_oper_allowed(wdev)) {
+ 		wdev_unlock(wdev);
+ 		return -EBUSY;
  	}
- }
-@@ -1404,7 +1405,7 @@ static void print_temp(struct seq_file *s, const char *prefix, u32 t)
- static int wil_temp_debugfs_show(struct seq_file *s, void *data)
- {
- 	struct wil6210_priv *wil = s->private;
--	u32 t_m, t_r;
-+	s32 t_m, t_r;
- 	int rc = wmi_get_temperature(wil, &t_m, &t_r);
- 
- 	if (rc) {
 -- 
-1.9.1
+2.7.4
