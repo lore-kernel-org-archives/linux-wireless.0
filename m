@@ -1,54 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48058 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731160AbeG0QbN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jul 2018 12:31:13 -0400
-Received: from mail-qt0-f170.google.com (mail-qt0-f170.google.com [209.85.216.170])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C8327208B2
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2018 15:08:52 +0000 (UTC)
-Received: by mail-qt0-f170.google.com with SMTP id e19-v6so5345266qtp.8
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jul 2018 08:08:52 -0700 (PDT)
+Received: from smtp.codeaurora.org ([198.145.29.96]:40642 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932954AbeGCPPr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Jul 2018 11:15:47 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Niklas Cassel <niklas.cassel@linaro.org>
+Cc: Govind Singh <govinds@codeaurora.org>, andy.gross@linaro.org,
+        david.brown@linaro.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org, bjorn.andersson@linaro.org
+Subject: Re: [PATCH v2 6/6] ath10k: Add QMI message handshake for wcn3990 client
+References: <20180605123732.1993-1-govinds@codeaurora.org>
+        <20180619225158.GE1635@centauri.lan>
+Date: Tue, 03 Jul 2018 18:15:42 +0300
+In-Reply-To: <20180619225158.GE1635@centauri.lan> (Niklas Cassel's message of
+        "Wed, 20 Jun 2018 00:51:58 +0200")
+Message-ID: <871sckpcyp.fsf@kamboji.qca.qualcomm.com> (sfid-20180703_171606_814606_88AF3558)
 MIME-Version: 1.0
-References: <fa9898c2c9cf45758c532adc2ddaf378@SC-EXCH02.marvell.com>
-In-Reply-To: <fa9898c2c9cf45758c532adc2ddaf378@SC-EXCH02.marvell.com>
-From: Josh Boyer <jwboyer@kernel.org>
-Date: Fri, 27 Jul 2018 11:08:40 -0400
-Message-ID: <CA+5PVA5kUKfnOyT96+h86gyG39X4MCZrCS70C9Mqq2WxVS2CMw@mail.gmail.com> (sfid-20180727_170856_059978_C339A27D)
-Subject: Re: pull-request mwifiex-firmware 2018-07-20
-To: Ganapathi Bhat <gbhat@marvell.com>
-Cc: Linux Firmware <linux-firmware@kernel.org>,
-        Linux Wireless <linux-wireless@vger.kernel.org>,
-        Sanjay Subbarao <jayrao@marvell.com>, rakeshp@marvell.com,
-        Cathy Luo <cluo@marvell.com>, James Cao <jcao@marvell.com>,
-        spatki@marvell.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 20, 2018 at 1:42 AM Ganapathi Bhat <gbhat@marvell.com> wrote:
->
-> The following changes since commit e1abab618308110789a4c27db543d132fd62e89f:
->
->   linux-firmware: update Marvell USB8997 firmware image to add WPA2 vulnerability fix (2018-05-07 17:54:42 +0530)
->
-> are available in the git repository at:
->
->   git://git.marvell.com/mwifiex-firmware.git
->
-> for you to fetch changes up to 0ced724f6ed564a5e1602808163db7cfa4697f39:
->
->   linux-firmware: update Marvell USB8801 B0 firmware image (2018-07-20 11:00:29 +0530)
->
-> ----------------------------------------------------------------
-> Ganapathi Bhat (1):
->       linux-firmware: update Marvell USB8801 B0 firmware image
->
->  WHENCE                  |   2 +-
->  mrvl/usb8801_uapsta.bin | Bin 255948 -> 250940 bytes
->  2 files changed, 1 insertion(+), 1 deletion(-)
+Niklas Cassel <niklas.cassel@linaro.org> writes:
 
-Pulled and pushed out.  Thanks.
+> On Tue, Jun 05, 2018 at 06:07:32PM +0530, Govind Singh wrote:
+>> Add WCN3990 QMI client handshakes for Q6 integrated WLAN connectivity
+>> subsystem. This layer is responsible for communicating qmi control
+>> messages to wifi fw QMI service using QMI messaging protocol.
+>> 
+>> Qualcomm MSM Interface(QMI) is a messaging format used to communicate
+>> between components running between application processor and remote
+>> processors with underlying transport layer based on integrated
+>> chipset(shared memory) or discrete chipset(PCI/USB/SDIO/UART).
+>> 
+>> With this patch-set basic functionality(STA/SAP) can be tested
+>> with WCN3990 chipset. The changes are verified with the firmware
+>> WLAN.HL.2.0-01192-QCAHLSWMTPLZ-1 and SDM845 MTP device.
+>> 
+>> Signed-off-by: Govind Singh <govinds@codeaurora.org>
 
-josh
+[...]
+
+>> --- a/drivers/net/wireless/ath/ath10k/Kconfig
+>> +++ b/drivers/net/wireless/ath/ath10k/Kconfig
+>> @@ -41,12 +41,13 @@ config ATH10K_USB
+>>  	  work in progress and will not fully work.
+>>  
+>>  config ATH10K_SNOC
+>> -        tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
+>> -        depends on ATH10K && ARCH_QCOM
+>> -        ---help---
+>> -          This module adds support for integrated WCN3990 chip connected
+>> -          to system NOC(SNOC). Currently work in progress and will not
+>> -          fully work.
+>> +	tristate "Qualcomm ath10k SNOC support (EXPERIMENTAL)"
+>> +	depends on ATH10K && ARCH_QCOM
+>> +	select QCOM_QMI_HELPERS
+>> +	---help---
+>> +	This module adds support for integrated WCN3990 chip connected
+>> +	to system NOC(SNOC). Currently work in progress and will not
+>> +	fully work.
+>
+> Hello Govind,
+>
+> Please do clean ups in separate commits.
+> That way is would be easier to see that the only
+> functional change here is that you added
+> select QCOM_QMI_HELPERS.
+>
+> (Also help text should normally be indented by two extra spaces.)
+>
+> I've sent a fix for the mixed tabs/spaces when I tried to
+> add COMPILE_TEST for this, and Kalle has already picked it up
+> in his master branch:
+> https://marc.info/?l=linux-wireless&m=152880359200364
+>
+> So in your next version of this series, this can be reduced to simply
+> select QCOM_QMI_HELPERS.
+
+BTW, I actually already did this on the pending branch:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=0caef5beefb85e6a5aa2a4b60d78253bbe453d7c
+
+> There are some checkpatch warnings on this patch:
+>
+> drivers/net/wireless/ath/ath10k/qmi.c and
+> drivers/net/wireless/ath/ath10k/qmi.h
+> is missing SPDX-License-Identifier tag.
+>
+> Several lines in drivers/net/wireless/ath/ath10k/qmi.c
+> and one line in drivers/net/wireless/ath/ath10k/snoc.c
+> is over 80 characters.
+
+Yeah, but these can be ignored.
+
+> This patch is quite big, I think that it makes sense to split your patch in two.
+> One that adds the ath10k_qmi_* functions, and a follow up patch
+> that actually adds the function calls to snoc.c
+
+Yeah, it's big but IMHO not too big. And splitting it up makes
+functinonal review harder, that's why I prefer it like this.
+
+>> +int ath10k_qmi_wlan_enable(struct ath10k *ar,
+>> +			   struct ath10k_qmi_wlan_enable_cfg *config,
+>> +			   enum ath10k_qmi_driver_mode mode,
+>> +			   const char *version)
+>> +{
+>> +	int ret;
+>> +
+>> +	ath10k_dbg(ar, ATH10K_DBG_QMI, "mode: %d, config: %p:\n",
+>> +		   mode, config);
+>> +
+>> +	ret = ath10k_qmi_cfg_send_sync_msg(ar, config, version);
+>> +	if (ret) {
+>> +		ath10k_err(ar, "wlan qmi config send failed\n");
+>> +		return ret;
+>> +	}
+>> +
+>> +	ret = ath10k_qmi_mode_send_sync_msg(ar, mode);
+>
+> Sparse tells me that you are mixing enum types.
+> If this is really what you want, do an explicit cast.
+>
+> drivers/net/wireless/ath/ath10k//qmi.c:504:49: warning: mixing different enum types
+> drivers/net/wireless/ath/ath10k//qmi.c:504:49:     int enum ath10k_qmi_driver_mode  versus
+> drivers/net/wireless/ath/ath10k//qmi.c:504:49:     int enum wlfw_driver_mode_enum_v01 
+
+Good catch, that can cause subtle bugs. If you really want this, I
+prefer having a separate helper function with a switch statement making
+the conversion. This way it's super clear what's happening.
+
+>> +int ath10k_snoc_fw_indication(struct ath10k *ar, u64 type)
+>> +{
+>> +	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
+>> +	int ret;
+>> +
+>> +	switch (type) {
+>> +	case ATH10K_QMI_EVENT_FW_READY_IND:
+>> +		ret = ath10k_core_register(ar,
+>> +					   ar_snoc->target_info.soc_version);
+>> +		if (ret) {
+>> +			ath10k_err(ar, "Failed to register driver core: %d\n",
+>> +				   ret);
+>> +		}
+>> +		break;
+>> +	case ATH10K_QMI_EVENT_FW_DOWN_IND:
+>> +		break;
+>
+> Perhaps this switch statement should have a default label?
+
+Good idea. And add a warning so that we know there was an unknown event
+which should be added to ath10k.
+
+-- 
+Kalle Valo
