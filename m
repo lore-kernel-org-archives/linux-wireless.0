@@ -1,95 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:49910 "EHLO mail.bugwerft.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388071AbeGWPB7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jul 2018 11:01:59 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: sameo@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
-        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH 04/10] NFC: st95hf: remove logging from spi functions
-Date: Mon, 23 Jul 2018 16:00:09 +0200
-Message-Id: <20180723140015.11663-5-daniel@zonque.org> (sfid-20180723_160038_394729_570B07B3)
-In-Reply-To: <20180723140015.11663-1-daniel@zonque.org>
-References: <20180723140015.11663-1-daniel@zonque.org>
+Received: from s3.sipsolutions.net ([144.76.63.242]:45188 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932209AbeGCOcX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Jul 2018 10:32:23 -0400
+Message-ID: <1530628340.4735.29.camel@sipsolutions.net> (sfid-20180703_163227_516004_57451097)
+Subject: Re: [PATCH] mac80211: don't put null-data frames on the normal TXQ
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@nbd.name>
+Date: Tue, 03 Jul 2018 16:32:20 +0200
+In-Reply-To: <87601wfl1u.fsf@toke.dk>
+References: <20180703124725.30917-1-johannes@sipsolutions.net>
+         <87601wfl1u.fsf@toke.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The callers of these functions already log errors, so there's no need to do
-it from two places.
+On Tue, 2018-07-03 at 16:31 +0200, Toke Høiland-Jørgensen wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> 
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > Since (QoS) NDP frames shouldn't be put into aggregation nor are
+> > assigned real sequence numbers, etc. it's better to treat them as
+> > non-data packets and not put them on the normal TXQs, for example
+> > when building A-MPDUs they need to be treated specially, and they
+> > are more used for management (e.g. to see if the station is alive)
+> > anyway.
+> 
+> No objections to this per se;
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
----
- drivers/nfc/st95hf/spi.c | 19 ++++---------------
- 1 file changed, 4 insertions(+), 15 deletions(-)
+:-)
 
-diff --git a/drivers/nfc/st95hf/spi.c b/drivers/nfc/st95hf/spi.c
-index e2d3bbcc8c34..d5894d4546b1 100644
---- a/drivers/nfc/st95hf/spi.c
-+++ b/drivers/nfc/st95hf/spi.c
-@@ -47,8 +47,6 @@ int st95hf_spi_send(struct st95hf_spi_context *spicontext,
- 
- 	result = spi_sync(spidev, &m);
- 	if (result) {
--		dev_err(&spidev->dev, "error: sending cmd to st95hf using SPI = %d\n",
--			result);
- 		mutex_unlock(&spicontext->spi_lock);
- 		return result;
- 	}
-@@ -62,12 +60,10 @@ int st95hf_spi_send(struct st95hf_spi_context *spicontext,
- 	result = wait_for_completion_timeout(&spicontext->done,
- 					     msecs_to_jiffies(1000));
- 	/* check for timeout or success */
--	if (!result) {
--		dev_err(&spidev->dev, "error: response not ready timeout\n");
-+	if (!result)
- 		result = -ETIMEDOUT;
--	} else {
-+	else
- 		result = 0;
--	}
- 
- 	mutex_unlock(&spicontext->spi_lock);
- 
-@@ -79,7 +75,7 @@ EXPORT_SYMBOL_GPL(st95hf_spi_send);
- int st95hf_spi_recv_response(struct st95hf_spi_context *spicontext,
- 			     unsigned char *receivebuff)
- {
--	int len = 0;
-+	int ret, len;
- 	struct spi_transfer tx_takedata;
- 	struct spi_message m;
- 	struct spi_device *spidev = spicontext->spidev;
-@@ -89,8 +85,6 @@ int st95hf_spi_recv_response(struct st95hf_spi_context *spicontext,
- 		{.rx_buf = receivebuff, .len = 2, .cs_change = 1,},
- 	};
- 
--	int ret = 0;
--
- 	memset(&tx_takedata, 0x0, sizeof(struct spi_transfer));
- 
- 	mutex_lock(&spicontext->spi_lock);
-@@ -102,8 +96,6 @@ int st95hf_spi_recv_response(struct st95hf_spi_context *spicontext,
- 
- 	ret = spi_sync(spidev, &m);
- 	if (ret) {
--		dev_err(&spidev->dev, "spi_recv_resp, data length error = %d\n",
--			ret);
- 		mutex_unlock(&spicontext->spi_lock);
- 		return ret;
- 	}
-@@ -127,11 +119,8 @@ int st95hf_spi_recv_response(struct st95hf_spi_context *spicontext,
- 	ret = spi_sync(spidev, &m);
- 
- 	mutex_unlock(&spicontext->spi_lock);
--	if (ret) {
--		dev_err(&spidev->dev, "spi_recv_resp, data read error = %d\n",
--			ret);
-+	if (ret)
- 		return ret;
--	}
- 
- 	return len;
- }
--- 
-2.17.1
+> but didn't we want to move towards
+> everything going through the TXQs? Any progress on that front? :)
+
+Not really. Yes, I wanted to, but it's some massive surgery. Right now
+I'm working on converting iwlwifi, perhaps I'll learn about it more and
+can then do the mac80211 surgery better later.
+
+johannes
