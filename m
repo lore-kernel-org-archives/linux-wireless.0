@@ -1,133 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lj1-f194.google.com ([209.85.208.194]:38860 "EHLO
-        mail-lj1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729680AbeGaUPj (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52382 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752948AbeGCKyM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jul 2018 16:15:39 -0400
-Received: by mail-lj1-f194.google.com with SMTP id p6-v6so14579030ljc.5
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jul 2018 11:34:03 -0700 (PDT)
+        Tue, 3 Jul 2018 06:54:12 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2018-07-03
+Date: Tue, 03 Jul 2018 13:54:07 +0300
+Message-ID: <87tvpgr3n4.fsf@kamboji.qca.qualcomm.com> (sfid-20180703_125430_131917_8F64DAC0)
 MIME-Version: 1.0
-References: <1533039077-1532-1-git-send-email-vnaralas@codeaurora.org> <3dd6d368-e54e-d8ba-d538-c48617a575b9@candelatech.com>
-In-Reply-To: <3dd6d368-e54e-d8ba-d538-c48617a575b9@candelatech.com>
-From: Jasmine Strong <jas@eero.com>
-Date: Tue, 31 Jul 2018 11:33:50 -0700
-Message-ID: <CAGyitvPa_m-59jOQdRp55ku2LopqGSWucOYSFH-pT28pk3=kAA@mail.gmail.com> (sfid-20180731_203407_953592_3B1AB34B)
-Subject: Re: [PATCHv2] ath10k : Fix channel survey dump
-To: Ben Greear <greearb@candelatech.com>
-Cc: vnaralas@codeaurora.org, ath10k <ath10k@lists.infradead.org>,
-        linux-wireless@vger.kernel.org
-Content-Type: multipart/alternative; boundary="00000000000076154705724fd208"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---00000000000076154705724fd208
-Content-Type: text/plain; charset="UTF-8"
+Hi Dave,
 
-On Tue, Jul 31, 2018 at 10:38 AM Ben Greear <greearb@candelatech.com> wrote:
+this is the first pull request to net tree for 4.18, more info below and
+please let me know if you have any problems.
 
-> On 07/31/2018 05:11 AM, Venkateswara Naralasetty wrote:
-> > Channel active/busy time are showing incorrect(less than previous or
-> > sometimes zero) for successive survey dump command.
-> >
-> > example:
-> > Survey data from wlan0
-> >       frequency:                      5180 MHz [in use]
-> >       channel active time:            54995 ms
-> >       channel busy time:              432 ms
-> >       channel receive time:           0 ms
-> >       channel transmit time:          59 ms
-> > Survey data from wlan0
-> >       frequency:                      5180 MHz [in use]
-> >       channel active time:            32592 ms
-> >       channel busy time:              254 ms
-> >       channel receive time:           0 ms
-> >       channel transmit time:          0 ms
-> >
-> > This patch fix this issue by assigning 'wmi_bss_survey_req_type'
-> > as 'WMI_BSS_SURVEY_REQ_TYPE_READ' which accumulate survey data in
-> > FW and send survey data to driver upon the driver request. Wrap around
-> > is taken care by FW.
-> >
-> > hardware used : QCA9984
-> > firmware ver  : ver 10.4-3.5.3-00057
->
-> Have you tested this on other firmwares?  I am pretty sure that at least
-> some of them, probably 10.2, will have issues.
->
-> Maybe you could make this change specific to certain firmware that
-> is known to work with the change?
->
->
-There are bigger problems with it than that;  even with firmwares that
-behave correctly,
-this changes the behavior that a lot of upper-layer software depends upon,
-and will likely
-make anything that actually uses the channel survey data misbehave.
+Kalle
 
-It is therefore a breaking change for any device that actually implements
-ACS.
+The following changes since commit ce397d215ccd07b8ae3f71db689aedb85d56ab40:
 
--J.
+  Linux 4.18-rc1 (2018-06-17 08:04:49 +0900)
 
---00000000000076154705724fd208
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+are available in the git repository at:
 
-<div dir=3D"ltr"><br><br><div class=3D"gmail_quote"><div dir=3D"ltr">On Tue=
-, Jul 31, 2018 at 10:38 AM Ben Greear &lt;<a href=3D"mailto:greearb@candela=
-tech.com">greearb@candelatech.com</a>&gt; wrote:<br></div><blockquote class=
-=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padd=
-ing-left:1ex">On 07/31/2018 05:11 AM, Venkateswara Naralasetty wrote:<br>
-&gt; Channel active/busy time are showing incorrect(less than previous or<b=
-r>
-&gt; sometimes zero) for successive survey dump command.<br>
-&gt;<br>
-&gt; example:<br>
-&gt; Survey data from wlan0<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0frequency:=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 5180 MHz [in use]<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0channel active time:=C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 54995 ms<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0channel busy time:=C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 432 ms<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0channel receive time:=C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A00 ms<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0channel transmit time:=C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 59 ms<br>
-&gt; Survey data from wlan0<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0frequency:=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 5180 MHz [in use]<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0channel active time:=C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 32592 ms<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0channel busy time:=C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 254 ms<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0channel receive time:=C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A00 ms<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0channel transmit time:=C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 0 ms<br>
-&gt;<br>
-&gt; This patch fix this issue by assigning &#39;wmi_bss_survey_req_type&#3=
-9;<br>
-&gt; as &#39;WMI_BSS_SURVEY_REQ_TYPE_READ&#39; which accumulate survey data=
- in<br>
-&gt; FW and send survey data to driver upon the driver request. Wrap around=
-<br>
-&gt; is taken care by FW.<br>
-&gt;<br>
-&gt; hardware used : QCA9984<br>
-&gt; firmware ver=C2=A0 : ver 10.4-3.5.3-00057<br>
-<br>
-Have you tested this on other firmwares?=C2=A0 I am pretty sure that at lea=
-st<br>
-some of them, probably 10.2, will have issues.<br>
-<br>
-Maybe you could make this change specific to certain firmware that<br>
-is known to work with the change?<br><br></blockquote><div><br></div><div>T=
-here are bigger problems with it than that;=C2=A0 even with firmwares that =
-behave correctly,</div><div>this changes the behavior that a lot of upper-l=
-ayer software depends upon, and will likely</div><div>make anything that ac=
-tually uses the channel survey data misbehave.</div><div><br></div><div>It =
-is therefore a breaking change for any device that actually implements ACS.=
-</div><div><br></div><div>-J.=C2=A0</div></div></div>
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2018-07-03
 
---00000000000076154705724fd208--
+for you to fetch changes up to 4fa9433f950a3df0c180be37f14efe033198aa24:
+
+  Merge ath-current from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git (2018-06-29 13:29:17 +0300)
+
+----------------------------------------------------------------
+wireless-drivers fixes for 4.18
+
+First set of fixes for 4.18 and for numerous drivers. Something to mention
+about is the wcn36xx fix which makes it possible to compile with gcc older than
+4.4 (though I'm not sure if we even support those anymore).
+
+qtnfmac
+
+* coverity fix for a new commit in v4.18-rc1
+
+rtlwifi
+
+* fix kernel oops during driver removal
+
+* fix firmware image corruption for rtl8821ae
+
+brcmfmac
+
+* fix crash if there's no firmware image
+
+mwifiex
+
+* a revert and a better fix for a new commit v4.18-rc1
+
+mt7601u
+
+* fix a recent regression about unnecessary warning about avg_rssi
+
+wcn36xx
+
+* convert testmode.c to plain ASCII
+
+ath10k
+
+* fix a firmware crash during bandwidth change
+
+----------------------------------------------------------------
+Ganapathi Bhat (2):
+      Revert "mwifiex: handle race during mwifiex_usb_disconnect"
+      mwifiex: handle race during mwifiex_usb_disconnect
+
+Geert Uytterhoeven (1):
+      wcn36xx: Remove Unicode Byte Order Mark from testcode
+
+Gustavo A. R. Silva (1):
+      qtnfmac: fix NULL pointer dereference
+
+Kalle Valo (1):
+      Merge ath-current from git://git.kernel.org/.../kvalo/ath.git
+
+Michael Trimarchi (1):
+      brcmfmac: stop watchdog before detach and free everything
+
+Ping-Ke Shih (2):
+      rtlwifi: Fix kernel Oops "Fw download fail!!"
+      rtlwifi: rtl8821ae: fix firmware is not ready to run
+
+Ryan Hsu (1):
+      ath10k: update the phymode along with bandwidth change request
+
+Stanislaw Gruszka (1):
+      mt7601u: remove warning when avg_rssi is zero
+
+Xinming Hu (1):
+      MAINTAINERS: update Xinming's email address
+
+ MAINTAINERS                                             |  2 +-
+ drivers/net/wireless/ath/ath10k/mac.c                   | 16 ++++++++++++++--
+ drivers/net/wireless/ath/ath10k/wmi.h                   |  1 +
+ drivers/net/wireless/ath/wcn36xx/testmode.c             |  2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c |  7 +++++++
+ drivers/net/wireless/marvell/mwifiex/usb.c              |  7 ++-----
+ drivers/net/wireless/mediatek/mt7601u/phy.c             |  6 ++++--
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c       |  3 +--
+ drivers/net/wireless/realtek/rtlwifi/base.c             | 17 ++++++++++-------
+ drivers/net/wireless/realtek/rtlwifi/base.h             |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/core.c             |  3 +--
+ drivers/net/wireless/realtek/rtlwifi/pci.c              |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/ps.c               |  4 ++--
+ drivers/net/wireless/realtek/rtlwifi/usb.c              |  2 +-
+ 14 files changed, 47 insertions(+), 27 deletions(-)
