@@ -1,59 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34212 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752607AbeGDPHO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jul 2018 11:07:14 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from nbd.name ([46.4.11.11]:50736 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932169AbeGCIcE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Jul 2018 04:32:04 -0400
+Subject: Re: [PATCH 13/14] rtlwifi: access skb->data to get C2H data by macro
+To: Kalle Valo <kvalo@codeaurora.org>, Pkshih <pkshih@realtek.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+References: <20180518093007.23594-1-pkshih@realtek.com>
+ <20180518093007.23594-14-pkshih@realtek.com>
+ <87po1fhwfd.fsf@purkki.adurom.net> <1527732798.8418.7.camel@realtek.com>
+ <87sh56f3sv.fsf@codeaurora.org> <1530597815.6330.4.camel@realtek.com>
+ <87y3esrgkr.fsf@kamboji.qca.qualcomm.com>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <b69340e7-b7ae-2b54-9488-c9c7bcffecf2@nbd.name> (sfid-20180703_103209_329021_810946F9)
+Date: Tue, 3 Jul 2018 10:32:00 +0200
 MIME-Version: 1.0
-Subject: Re: [V4,1/3] brcmfmac: detect firmware support for monitor interface
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180624194437.28766-1-zajec5@gmail.com>
-References: <20180624194437.28766-1-zajec5@gmail.com>
-To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Message-Id: <20180704150713.89FE3606FC@smtp.codeaurora.org> (sfid-20180704_170718_938080_D8965B4C)
-Date: Wed,  4 Jul 2018 15:07:13 +0000 (UTC)
+In-Reply-To: <87y3esrgkr.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki wrote:
-
-> From: Rafał Miłecki <rafal@milecki.pl>
+On 2018-07-03 08:14, Kalle Valo wrote:
+> Pkshih <pkshih@realtek.com> writes:
 > 
-> Many/most of firmwares support creating monitor interface but only the
-> most recent ones explicitly /announce/ it using a "monitor" entry in the
-> list of capabilities.
+>> On Fri, 2018-06-29 at 10:30 +0300, Kalle Valo wrote:
+>>> Pkshih <pkshih@realtek.com> writes:
+>>> 
+>>> > On Tue, 2018-05-29 at 08:18 +0300, Kalle Valo wrote:
+>>> >> <pkshih@realtek.com> writes:
+>>> >> 
+>>> >
+>>> > Because C2H data is little endian order, the struct will look like
+>>> > struct foo {
+>>> > #ifdef __LITTLE_ENDIAN
+>>> > 	u8 bar:4;
+>>> > 	u8 koo:4;
+>>> > #else
+>>> > 	u8 koo:4;
+>>> > 	u8 bar:4;
+>>> > #endif
+>>> > }
+>>> 
+>>> With u8 you don't need endian check, right? I would assume that with
+>>> both little and big endian bar and koo would be in the same place.
+>>
+>> I think u8 with bitfield would be different between little and big endian
+>> machines.
 > 
-> Check for that entry and store internally info about monitor mode
-> support using a new feature flag. Once we sort out all details of
-> handling monitor interface it will be used when reporting available
-> interfaces to the cfg80211.
-> 
-> Later some fallback detecion method may be added for older firmwares.
-> For now just stick to the "monitor" capability which should be 100%
-> reliable.
-> 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> To me that does not make any sense, I have never heard about bit
+> endianness any of the devices I have worked on.
+Unfortunately, the order in which these fields are laid out is different
+between big and little endian, even when only dealing with u8.
+That alone is a strong reason to avoid bitfields entirely for anything
+shared between the host and something else.
 
-3 patches applied to wireless-drivers-next.git, thanks.
-
-01f69dfafdbe brcmfmac: detect firmware support for monitor interface
-e63410ac65e0 brcmfmac: detect firmware support for radiotap monitor frames
-a8d7631858af brcmfmac: handle msgbuf packets marked with monitor mode flag
-
--- 
-https://patchwork.kernel.org/patch/10484843/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+- Felix
