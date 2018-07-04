@@ -1,61 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f68.google.com ([209.85.160.68]:46265 "EHLO
-        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388967AbeGXUhx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 16:37:53 -0400
-Received: by mail-pl0-f68.google.com with SMTP id t17-v6so2190845ply.13
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 12:29:56 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: davem@davemloft.net, ericvh@gmail.com, rminnich@sandia.gov,
-        lucho@ionkov.net, ralf@linux-mips.org, jreuter@yaina.de,
-        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
-        alex.aring@gmail.com, stefan@datenfreihafen.org,
-        kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
-        johannes@sipsolutions.net, jhs@mojatatu.com,
-        xiyou.wangcong@gmail.com, jiri@resnulli.us, vyasevich@gmail.com,
-        nhorman@tuxdriver.com, marcelo.leitner@gmail.com,
-        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
-        steffen.klassert@secunet.com, herbert@gondor.apana.org.au
-Cc: netdev@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
-        linux-hams@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-decnet-user@lists.sourceforge.net,
-        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
-        linux-wpan@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-x25@vger.kernel.org,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Stephen Hemminger <stephen@networkplumber.org>
-Subject: [PATCH PATCH net-next 16/18] bpfilter: remove trailing newline
-Date: Tue, 24 Jul 2018 12:29:16 -0700
-Message-Id: <20180724192918.31165-17-sthemmin@microsoft.com> (sfid-20180724_213025_531319_04AC9198)
-In-Reply-To: <20180724192918.31165-1-sthemmin@microsoft.com>
-References: <20180724192918.31165-1-sthemmin@microsoft.com>
+Received: from mail.toke.dk ([52.28.52.200]:50667 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932290AbeGDIZW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Jul 2018 04:25:22 -0400
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Peter Oh <peter.oh@bowerswilkins.com>,
+        linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH] mac80211: don't put null-data frames on the normal TXQ
+In-Reply-To: <1530690856.3324.2.camel@sipsolutions.net>
+References: <20180703124725.30917-1-johannes@sipsolutions.net> <e9813f60-5cf5-a4bf-5906-623282319991@bowerswilkins.com> <1530661681.4735.51.camel@sipsolutions.net> <87zhz7ea1s.fsf@toke.dk> <1530690856.3324.2.camel@sipsolutions.net>
+Date: Wed, 04 Jul 2018 10:25:18 +0200
+Message-ID: <87o9fne7bl.fsf@toke.dk> (sfid-20180704_102539_526927_BDE21214)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
----
- net/bpfilter/Kconfig       | 1 -
- net/ipv4/bpfilter/Makefile | 1 -
- 2 files changed, 2 deletions(-)
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-diff --git a/net/bpfilter/Kconfig b/net/bpfilter/Kconfig
-index 76deb6615883..e558b46596c4 100644
---- a/net/bpfilter/Kconfig
-+++ b/net/bpfilter/Kconfig
-@@ -13,4 +13,3 @@ config BPFILTER_UMH
- 	help
- 	  This builds bpfilter kernel module with embedded user mode helper
- endif
--
-diff --git a/net/ipv4/bpfilter/Makefile b/net/ipv4/bpfilter/Makefile
-index ce262d76cc48..e9e42f99725e 100644
---- a/net/ipv4/bpfilter/Makefile
-+++ b/net/ipv4/bpfilter/Makefile
-@@ -1,2 +1 @@
- obj-$(CONFIG_BPFILTER) += sockopt.o
--
--- 
-2.18.0
+> On Wed, 2018-07-04 at 09:26 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> Johannes Berg <johannes@sipsolutions.net> writes:
+>>=20
+>> > I see no evidence of ath9k doing this correctly, so this might fix a
+>> > bug there, but I may have missed it.
+>>=20
+>> ath9k does check for this, in ath_tx_sched_aggr() and in
+>> ath_tx_form_aggr(); it'll check for the IEEE80211_TX_CTL_AMPDU flag, and
+>> stop building the current aggregate if the flag is not set.
+>
+> Ok, thanks. Nevertheless, I guess it's more efficient to not stop the
+> aggregate on encountering a (QoS-)NDP :-)
+
+Oh, absolutely! :)
+
+-Toke
