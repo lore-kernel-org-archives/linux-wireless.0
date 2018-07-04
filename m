@@ -1,86 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:42968 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726575AbeGLLum (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jul 2018 07:50:42 -0400
-Date: Thu, 12 Jul 2018 13:41:29 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Cc: Sean Wang <sean.wang@mediatek.com>,
-        Jakub Kicinski <kubakici@wp.pl>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH v2 00/12] Add mt76x0 driver
-Message-ID: <20180712114129.GB3149@redhat.com> (sfid-20180712_134135_271250_153D2A58)
-References: <1530875029-26274-1-git-send-email-sgruszka@redhat.com>
- <1531205430.26214.8.camel@mtkswgap22>
- <20180710095222.GA18926@redhat.com>
- <1531230864.26214.20.camel@mtkswgap22>
- <20180711080721.GA3871@localhost.localdomain>
+Received: from aserp2120.oracle.com ([141.146.126.78]:33842 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753248AbeGDNFh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Jul 2018 09:05:37 -0400
+Date: Wed, 4 Jul 2018 16:04:49 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Jian-Hong Pan <jian-hong@endlessm.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        "Frank A. Cancio Bello" <frank@generalsoftwareinc.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        devel@driverdev.osuosl.org, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Linux Kernel <linux-kernel@vger.kernel.org>,
+        Linux Upstreaming Team <linux@endlessm.com>,
+        Colin Ian King <colin.king@canonical.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [BUG] staging: r8822be: RTL8822be can't find any wireless AP
+Message-ID: <20180704130448.pta7t5joj5qrxlpq@mwanda> (sfid-20180704_150554_986487_6472FFC3)
+References: <CAPpJ_ed1oFQW_xmBtetP-ztoL7Z14T6akOSgKJ_8jxogdf3FWg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180711080721.GA3871@localhost.localdomain>
+In-Reply-To: <CAPpJ_ed1oFQW_xmBtetP-ztoL7Z14T6akOSgKJ_8jxogdf3FWg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
-
-On Wed, Jul 11, 2018 at 10:07:25AM +0200, Lorenzo Bianconi wrote:
-> > On Tue, 2018-07-10 at 11:52 +0200, Stanislaw Gruszka wrote:
-> > > On Tue, Jul 10, 2018 at 02:50:30PM +0800, Sean Wang wrote:
-> > > > > For full support mt7610.bin firmware blob is need, hopefully with 
-> > > > > the permission of Mediatek, the blob will be pushed into linux-firmware
-> > > > > git tree.
-> > > > > 
-> > > > 
-> > > > Hi, Stanislaw
-> > > > 
-> > > > You can feel free to add mt7610.bin firmware blob to linux-firmware with
-> > > > the license LICENCE.mediatek I added in [1].
-> > > > 
-> > > > 
-> > > > [1]
-> > > > http://lists.infradead.org/pipermail/linux-mediatek/2018-June/013759.html
-> > > 
-> > > Thank you Sean!
-> > > 
-> > > I guess there is no problem with similar submission for
-> > > mt7662u.bin and mt7662u_rom_patch.bin needed for mt76x2u:
-> > > https://marc.info/?l=linux-wireless&m=153045438821562&w=2
-> > > 
-> > 
+On Wed, Jul 04, 2018 at 04:03:33PM +0800, Jian-Hong Pan wrote:
+> Hi,
 > 
-> Thanks Sean,
+> We have an ASUS X530UN (Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz)
+> laptop equipped with Realtek rtl8822be wireless which cannot find any
+> access point after WiFi is launched.
 > 
-> I will submit mt7662u.bin and mt7662u_rom_patch.bin with LICENCE.mediatek
-> soon
+> Realtek rtl8822be wireless' information:
+> dev@endless:~/linux-eos$ sudo lspci -nnvs 02:00.0
+> 02:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd.
+> Device [10ec:b822] (rev ff) (prog-if ff)
+> !!! Unknown header type 7f
+> Kernel driver in use: r8822be
+> Kernel modules: r8822be
 > 
-> > Sure, there is no any problem for submitting mt7662u.bin and
-> > mt7662u_rom_patch.bin if they are added with LICENCE.mediatek.
-> > 
-> > Do you or Lorenzo have a plan to add MT7668u support to mt76?
-> > MT7668 is a newer wifi device than MT7610u or MT7662u.
+> System always hits the error: "halmac_init_hal failed" in dmesg after
+> WiFi is launched.
+> 
+> [ 8.591333] r8822be: module is from the staging directory, the quality
+> is unknown, you have been warned.
+> [ 8.593122] r8822be 0000:02:00.0: enabling device (0000 -> 0003)
+> [ 8.669163] r8822be: Using firmware rtlwifi/rtl8822befw.bin
+> [ 9.289939] r8822be: rtlwifi: wireless switch is on
+> [ 10.056426] r8822be 0000:02:00.0 wlp2s0: renamed from wlan0
+> ...
+> [ 11.952534] r8822be: halmac_init_hal failed
+> [ 11.955933] r8822be: halmac_init_hal failed
+> [ 11.956227] r8822be: halmac_init_hal failed
+> [ 22.007942] r8822be: halmac_init_hal failed
 
->From my side I haven't yet planed to support this chip, but I consider
-to help working on that after finish work I currently planed to do (i.e.
-support for older MT7630E, MT7610E chips).
+I really prefer to see the whole dmesg instead of an edited ... in the
+middle.
 
-Ultimate goal would be having you guys @Mediatek supporting your
-wifi chips in the mineline, similarly like you do for other
-hardware :-) I hope making mt76 more generic by adding new chips
-support, hence make easier to do that in the future, will
-convince you to support mainline instead of working on your of
-the tree driver. Obviously there are pros and cons of that approach
-and you might have good reasons not to do that too.
- 
-> Cool, I am interested in adding MT7668u support to mt76 driver.
-> Is the adapter available on the market?
+I agree that it feels like the default aspm setting should be 2 (use
+what the chip says).  Although I don't know the device well enough to
+say if that will break anyone's system.  Perhaps someone who knows
+better will be able to respond.
 
-According to https://wikidevi.com/wiki/MediaTek only 4 non-standard
-devices were provided with the MT7668u chip so far. I guess is hard for
-the chip vendor to say how popular will particular product be by OEMs.
-
-Thanks
-Stanislaw
+regards,
+dan carpenter
