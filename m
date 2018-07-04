@@ -1,104 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:40364 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731236AbeGSOFK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jul 2018 10:05:10 -0400
-Subject: Re: Setting tx retry count in ath10k
-To: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>,
-        Jean-Pierre TOSONI <jp.tosoni@acksys.fr>,
-        =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        SEDE <s.deronne@televic.com>,
-        ath10k <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <b0f67dd7-dea9-508e-7ad9-f6db3ac88b90@candelatech.com>
- <e9b42b3d-2d03-ca69-5532-fbae08fdec5d@uni-rostock.de>
- <8b9713fe-7573-f009-d002-13df73315898@televic.com>
- <9dd76e58-b514-26f2-2fe9-0c9a7f798054@candelatech.com>
- <AM4PR0101MB2305917B39A84BBE13FDFAD1E4530@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
- <ea2ff457-e84e-8395-148d-8d90a749a40d@candelatech.com>
- <877els5xax.fsf@toke.dk>
- <AM4PR0101MB230575D91CEE21630A723466E4530@AM4PR0101MB2305.eurprd01.prod.exchangelabs.com>
- <c594f50b-a318-fbe2-847b-b76726eb1472@uni-rostock.de>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <6611a99f-3a0f-ca18-d2ac-1118705bc9be@candelatech.com> (sfid-20180719_152204_779501_9231D00F)
-Date: Thu, 19 Jul 2018 06:21:51 -0700
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36114 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751761AbeGDOAS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Jul 2018 10:00:18 -0400
+Date: Wed, 4 Jul 2018 16:00:13 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Hans Ulli Kroll <ulli.kroll@googlemail.com>
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        lorenzo.bianconi83@gmail.com, Felix Fietkau <nbd@nbd.name>,
+        Jakub =?utf-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [ANN] mt76x0 usb driver
+Message-ID: <20180704140012.GA26399@redhat.com> (sfid-20180704_160023_968359_7D1824A9)
+References: <20180409141032.GA9247@redhat.com>
+ <20180409142640.GA5680@localhost.localdomain>
+ <20180409144819.GA9253@redhat.com>
+ <20180625120816.GA2072@redhat.com>
+ <CAA2SeNJjHCrO5NyznK+EJt5K6SRVRr_FPZA2i53Z-FnqzkKz_g@mail.gmail.com>
+ <20180625135419.GA3282@redhat.com>
+ <CAJ0CqmXE7hF8UAe2iAZ7GhYWb7Uf3zJ+Fg_ervfyK1ojS1Oh=w@mail.gmail.com>
+ <alpine.LNX.2.00.1807031725420.3545@T420s>
 MIME-Version: 1.0
-In-Reply-To: <c594f50b-a318-fbe2-847b-b76726eb1472@uni-rostock.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LNX.2.00.1807031725420.3545@T420s>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi
 
+On Tue, Jul 03, 2018 at 05:31:04PM +0200, Hans Ulli Kroll wrote:
+> > On Mon, Jun 25, 2018 at 02:55:51PM +0200, Lorenzo Bianconi wrote:
+> 
+> > > Not sure why many integration commits in upstream is a problem. I think
+> > > having patches posted on mailing list is better than doing them in my
+> > > "private" tree without any review.
+> > >
+> > > > What do you think?
+> > >
+> > > I was thinking about posting mt76x0 driver in a subdir (there is sill
+> > > some cleanup work need to be done there), wait for upstream mt76x2u
+> > > integration, then post patches that remove duplication between mt76x2
+> > > and mt76x0 and add support for mt76x0e on the way.
+> > >
+> > 
+> > Ack, fine. I modified a little bit mt76x2u/usb architecture moving
+> > some parts in common with mt76x0u
+> > in mt76-usb module (e.g. mt76_queue management in tx_status data path,
+> > tx_stats workqueue,
+> > some mcu utility routines). In this way the integration will be easier I guess
+> > 
+> > Regards,
+> > Lorenzo
+> > 
+> > > Thanks
+> > > Stanislaw
+> > 
+> 
+> I'm currrently working mt76x0u on top of Lorenzo's mt76x2u driver.
 
-On 07/19/2018 05:39 AM, Benjamin Beichler wrote:
-> Am 18.07.2018 um 19:01 schrieb Jean-Pierre TOSONI:
->> Hi Ben,
->>
->> I attached the patch. Please remind that it applies to ath9k.
->>
->> At the end there are 3 comments in French, translation follows:
->> 1) " longretry gives directly the transmit count, the +1 is useless.
->>      Should rather have -1 to account for the first try"
->> 2) " The retries just made for this frame must be added in to know
->>      If the max was overstepped"
->> 3) " Add the 1st try (probably useless).
->>      Upstream version adds 1 to A-MPDU retries but I don't understand why.
->>      Since above I removed the +1 to fix the count, I add +1 here once per
->>      frame in case the "+1" is actually hiding a bug in the upstream version"
->>
->> @Toke: As you can see in the patch, the value 30 was the fixed value defined
->>  in ath9k, I kept it for compatibility only (and that's why I wanted to make
->>  it configurable :-)
->> On another hand, Minstrel in mac80211 seems to vary retries according to what
->> you say, i.e. Minstrel tries to stay below a certain amount of time, but this
->> only applies to short/long retries.
->>
->> Jean-Pierre
-> We also experienced the problems regarding the inconsistencies between
-> documentation and implementation. I will further throw in another set of
-> patches:
-> https://github.com/steinwurf/openwrt-patches/tree/master/openwrt-r41097/mac80211
->
-> I think they have have similarities but also other aspects to really
-> restrict ath9k to the specified retry limits. This problem is as Toke
-> already stated additionally depended on minstrel. It is really sad, that
-> all this stuff is offtree and but there is the illusion of an setting in
-> the mainline kernel, which firstly will not set the value as documented
-> and different drivers will apply them (without warnings) in different ways.
->
->>> For general internet traffic, a retry count of 30 is way too high; that
->>> is up to 120 ms of HOL blocking latency. Better to just drop the packet
->>> at that point.
->>>
->>> Ideally, the retry count should be dynamically calculated in units of
->>> time (which would depend on the rate and aggregate size), and also take
->>> queueing time into account. I've been meaning to experiment with this
->>> for minstrel and ath9k, but haven't gotten around to it...
-> We have running current research on this topic but focused on the
-> effects in 802.11s mesh networks. With multiple(forwarding) wireless
-> links, the retry limit have a bigger impact as only in managed mode
-> setups, since every forwarding step is doing repeated transmissions. But
-> I also totally agree, that the retry count needs to be considered in the
-> bufferbloat/airtime queuing stuff, which Toke proposed.
->
-> Nonetheless, since this ambiguities are known, wouldn't it be nice to
-> clean up all this patches to enable at least ath9k and ath10k to do the
-> right thing, or do anybody can tell why they weren't included the first
-> time ?
+Hmm, I think efforts should be somehow synchronized here.
 
-To change the topic slightly, has anyone even verified that ath10k
-will do hardware (or firmware) retransmits for aggregated frames when doing block-ack?
+I have almost ready for post patches adding mt76x0 driver to the kernel.
+Some cleanup work is probably needed, but I think they can be reviewed
+and merged. They do not conflict with patches currently posted Lorenzo
+except small changes in mt76.h and Makefile files, what can be easy
+to resolve.
 
-I was expecting to find re-queue logic in the firmware when I looked the
-other day, but I only saw it do re-queues for locally generated frames,
-not stuff sent from the driver.  I may have just misread the code, however,
-or maybe the hardware itself somehow magically retransmits dropped
-aggregated frames based on the block-ack packets?
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Thanks
+Stanislaw
