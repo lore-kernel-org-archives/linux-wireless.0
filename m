@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:6993 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728342AbeGVIqS (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38908 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753231AbeGDPP0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Jul 2018 04:46:18 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH 19/20] wil6210: prevent FW download if HW is configured for secured boot
-Date: Sun, 22 Jul 2018 10:47:44 +0300
-Message-Id: <1532245665-15249-20-git-send-email-merez@codeaurora.org> (sfid-20180722_095039_006542_6B3C0C42)
-In-Reply-To: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
-References: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
+        Wed, 4 Jul 2018 11:15:26 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2] atmel: using strlcpy() to avoid possible buffer overflows
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180630063341.9900-1-yuehaibing@huawei.com>
+References: <20180630063341.9900-1-yuehaibing@huawei.com>
+To: YueHaibing <yuehaibing@huawei.com>
+Cc: <simon@thekelleys.org.uk>, <linux-kernel@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+        <davem@davemloft.net>, <andy.shevchenko@gmail.com>,
+        YueHaibing <yuehaibing@huawei.com>
+Message-Id: <20180704151525.62BF460B26@smtp.codeaurora.org> (sfid-20180704_171604_694990_EB53843D)
+Date: Wed,  4 Jul 2018 15:15:25 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the driver doesn't support secured boot flow, hence
-prevent FW download in case HW is configured for such a flow.
+YueHaibing <yuehaibing@huawei.com> wrote:
 
-Signed-off-by: Maya Erez <merez@codeaurora.org>
----
- drivers/net/wireless/ath/wil6210/main.c | 5 +++++
- 1 file changed, 5 insertions(+)
+> 'firmware' is a module param which may been longer than firmware_id,
+> so using strlcpy() to guard against overflows. Also priv is allocated
+> with zeroed memory,no need to set firmware_id[0] to '\0'.
+> 
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 7ad22df..1d4ce8e 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -1560,6 +1560,11 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 	if (load_fw) {
- 		char board_file[WIL_BOARD_FILE_MAX_NAMELEN];
- 
-+		if  (wil->secured_boot) {
-+			wil_err(wil, "secured boot is not supported\n");
-+			return -ENOTSUPP;
-+		}
-+
- 		board_file[0] = '\0';
- 		wil_get_board_file(wil, board_file, sizeof(board_file));
- 		wil_info(wil, "Use firmware <%s> + board <%s>\n",
+Patch applied to wireless-drivers-next.git, thanks.
+
+f9cbaeb52930 atmel: using strlcpy() to avoid possible buffer overflows
+
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/10498009/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
