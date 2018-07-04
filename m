@@ -1,78 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.11.71.1]:46929 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725998AbeGYFaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Jul 2018 01:30:23 -0400
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Arnd Bergmann <arnd@arndb.de>,
-        Andrew Morton <akpm@linux-foundation.org>
-Cc: Joe Perches <joe@perches.com>, Arnd Bergmann <arnd@arndb.de>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Rob Herring <robh+dt@kernel.org>,
-        Jonathan Cameron <jic23@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-iio@vger.kernel.org,
-        linux-pm@vger.kernel.org, lvs-devel@vger.kernel.org,
-        netfilter-devel@vger.kernel.org, coreteam@netfilter.org
-Subject: Re: [PATCH 1/4] treewide: convert ISO_8859-1 text comments to utf-8
-In-Reply-To: <20180724111600.4158975-1-arnd@arndb.de>
-References: <20180724111600.4158975-1-arnd@arndb.de>
-Date: Wed, 25 Jul 2018 14:20:25 +1000
-Message-ID: <87o9ewx7xy.fsf@concordia.ellerman.id.au> (sfid-20180725_062045_957057_C351AA78)
+Received: from mail-io0-f171.google.com ([209.85.223.171]:32964 "EHLO
+        mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752383AbeGDOxq (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Jul 2018 10:53:46 -0400
+Received: by mail-io0-f171.google.com with SMTP id z20-v6so5113915iol.0
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2018 07:53:46 -0700 (PDT)
+From: Jamal Hadi Salim <jhs@mojatatu.com>
+Subject: netdev 0x12 conference update
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netfilter-devel@vger.kernel.org
+Message-ID: <4c122bee-2de9-45e8-1d1c-2c99ad3f3b50@mojatatu.com> (sfid-20180704_165411_703469_404C27AA)
+Date: Wed, 4 Jul 2018 10:53:44 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+Folks,
 
-> Almost all files in the kernel are either plain text or UTF-8
-> encoded. A couple however are ISO_8859-1, usually just a few
-> characters in a C comments, for historic reasons.
->
-> This converts them all to UTF-8 for consistency.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
-...
->  drivers/crypto/vmx/ghashp8-ppc.pl             |  12 +-
-...
-> diff --git a/drivers/crypto/vmx/ghashp8-ppc.pl b/drivers/crypto/vmx/ghashp8-ppc.pl
-> index f746af271460..38b06503ede0 100644
-> --- a/drivers/crypto/vmx/ghashp8-ppc.pl
-> +++ b/drivers/crypto/vmx/ghashp8-ppc.pl
-> @@ -129,9 +129,9 @@ $code=<<___;
->  	 le?vperm	$IN,$IN,$IN,$lemask
->  	vxor		$zero,$zero,$zero
->  
-> -	vpmsumd		$Xl,$IN,$Hl		# H.loXi.lo
-> -	vpmsumd		$Xm,$IN,$H		# H.hiXi.lo+H.loXi.hi
-> -	vpmsumd		$Xh,$IN,$Hh		# H.hiXi.hi
-> +	vpmsumd		$Xl,$IN,$Hl		# H.lo·Xi.lo
-> +	vpmsumd		$Xm,$IN,$H		# H.hi·Xi.lo+H.lo·Xi.hi
-> +	vpmsumd		$Xh,$IN,$Hh		# H.hi·Xi.hi
->  
->  	vpmsumd		$t2,$Xl,$xC2		# 1st phase
->  
-> @@ -187,11 +187,11 @@ $code=<<___;
->  .align	5
->  Loop:
->  	 subic		$len,$len,16
-> -	vpmsumd		$Xl,$IN,$Hl		# H.loXi.lo
-> +	vpmsumd		$Xl,$IN,$Hl		# H.lo·Xi.lo
->  	 subfe.		r0,r0,r0		# borrow?-1:0
-> -	vpmsumd		$Xm,$IN,$H		# H.hiXi.lo+H.loXi.hi
-> +	vpmsumd		$Xm,$IN,$H		# H.hi·Xi.lo+H.lo·Xi.hi
->  	 and		r0,r0,$len
-> -	vpmsumd		$Xh,$IN,$Hh		# H.hiXi.hi
-> +	vpmsumd		$Xh,$IN,$Hh		# H.hi·Xi.hi
->  	 add		$inp,$inp,r0
->  
->  	vpmsumd		$t2,$Xl,$xC2		# 1st phase
+This is a small update to the community on the Netdev 0x12 conference
+(July 11-13, 2018 in Montreal, Canada, https://www.netdevconf.org/0x12).
 
-Acked-by: Michael Ellerman <mpe@ellerman.id.au> (powerpc)
+We still have a week to go - so not too late to register.
 
-cheers
+This email provides a good summary:
+https://lists.netdevconf.org/pipermail/people/2018-June/000067.html
+
+For regular updates, please subscribe to people@lists.netdevconf.org
+(more info at: https://lists.netdevconf.org/cgi-bin/mailman/listinfo/people)
+If twitter is your thing then follow us: @netdev01
+and use hashtag #netdevconf
+
+cheers,
+jamal
