@@ -1,43 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:38724 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730428AbeG0O1j (ORCPT
+Received: from gateway22.websitewelcome.com ([192.185.46.234]:26357 "EHLO
+        gateway22.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752874AbeGDXMH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jul 2018 10:27:39 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 27 Jul 2018 16:05:42 +0300
-Message-Id: <20180727130542.28530-1-luca@coelho.fi> (sfid-20180727_150551_128111_CF7302A0)
-In-Reply-To: <20180727124838.25910-1-luca@coelho.fi>
-References: <20180727124838.25910-1-luca@coelho.fi>
-Subject: [PATCH 14/16] iwlwifi: pcie: include tcp.h implicitly
+        Wed, 4 Jul 2018 19:12:07 -0400
+Received: from cm15.websitewelcome.com (cm15.websitewelcome.com [100.42.49.9])
+        by gateway22.websitewelcome.com (Postfix) with ESMTP id F21614C63
+        for <linux-wireless@vger.kernel.org>; Wed,  4 Jul 2018 17:49:28 -0500 (CDT)
+Date: Wed, 4 Jul 2018 17:48:56 -0500
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] NFC: pn533: mark expected switch fall-through
+Message-ID: <20180704224856.GA19315@embeddedor.com> (sfid-20180705_011211_196059_2CEB3395)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+In preparation to enabling -Wimplicit-fallthrough, mark switch cases
+where we are expecting to fall through.
 
-If CONFIG_IPV6 is not enabled in the kernel, tcp.h is not included
-implicitly from other header files, causing compilation errors.  To
-solve that, explicitly include it in tx-gen2.c.
+Warning level 2 was used: -Wimplicit-fallthrough=2
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/nfc/pn533/pn533.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index e3ae7f91206b..64db540ad605 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -52,6 +52,7 @@
-  *****************************************************************************/
- #include <linux/pm_runtime.h>
- #include <net/tso.h>
-+#include <linux/tcp.h>
+diff --git a/drivers/nfc/pn533/pn533.c b/drivers/nfc/pn533/pn533.c
+index a0cc1cc..1d0eafeb 100644
+--- a/drivers/nfc/pn533/pn533.c
++++ b/drivers/nfc/pn533/pn533.c
+@@ -2147,6 +2147,7 @@ static int pn533_transceive(struct nfc_dev *nfc_dev,
  
- #include "iwl-debug.h"
- #include "iwl-csr.h"
+ 			break;
+ 		}
++		/* else: fall through */
+ 	default:
+ 		/* jumbo frame ? */
+ 		if (skb->len > PN533_CMD_DATAEXCH_DATA_MAXLEN) {
+@@ -2273,6 +2274,7 @@ static void pn533_wq_mi_recv(struct work_struct *work)
+ 
+ 			break;
+ 		}
++		/* else: fall through */
+ 	default:
+ 		skb_put_u8(skb, 1); /*TG*/
+ 
 -- 
-2.18.0
+2.7.4
