@@ -1,76 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:57086 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932328AbeGFLEN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jul 2018 07:04:13 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Jakub Kicinski <kubakici@wp.pl>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v2 12/12] mt76: Kconfig and Makefile for mt76x0 driver
-Date: Fri,  6 Jul 2018 13:03:49 +0200
-Message-Id: <1530875029-26274-13-git-send-email-sgruszka@redhat.com> (sfid-20180706_130426_185387_2FA72825)
-In-Reply-To: <1530875029-26274-1-git-send-email-sgruszka@redhat.com>
-References: <1530875029-26274-1-git-send-email-sgruszka@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:43120 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753608AbeGDGJi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Jul 2018 02:09:38 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 04 Jul 2018 11:39:37 +0530
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/7] cfg80211: Add new NL command to configure peer
+ specific rssi threshold
+In-Reply-To: <1530264578.3481.34.camel@sipsolutions.net>
+References: <1528886747-26342-1-git-send-email-tamizhr@codeaurora.org>
+ <1528886747-26342-3-git-send-email-tamizhr@codeaurora.org>
+ <1530264578.3481.34.camel@sipsolutions.net>
+Message-ID: <5d7f6ec9ffe0272b41102828f37706db@codeaurora.org> (sfid-20180704_080947_703446_F0138B90)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add Kconfig and Makefiles for mt76x0 driver. Now the driver
-can be build.
+On 2018-06-29 14:59, Johannes Berg wrote:
+> On Wed, 2018-06-13 at 16:15 +0530, Tamizh chelvam wrote:
+>> 
+>> + * @NL80211_ATTR_STA_MON: Station's connection monitor configuration 
+>> in a
+>> + *	nested attribute with %NL80211_ATTR_STA_MON_* sub-attributes.
+> 
+> Can't we reuse the existing attributes in this nesting?
+This new attributes introduced as per the previous discussion.
+https://patchwork.kernel.org/patch/10240697/
+Is my understanding correct ?
+> 
+>> +/**
+>> + * enum nl80211_sta_mon_rssi_threshold_event - RSSI threshold event
+>> + * @NL80211_STA_MON_RSSI_THRESHOLD_EVENT_LOW: The RSSI level is lower 
+>> than the
+>> + *	configured threshold
+>> + * @NL80211_STA_MON_RSSI_THRESHOLD_EVENT_HIGH: The RSSI is higher 
+>> than the
+>> + *	configured threshold
+>> + */
+>> +enum nl80211_sta_mon_rssi_threshold_event {
+>> +	NL80211_STA_MON_RSSI_THRESHOLD_EVENT_LOW,
+>> +	NL80211_STA_MON_RSSI_THRESHOLD_EVENT_HIGH,
+>> +};
+> 
+> It seems like this should already exist also for the CQM? Can we not
+> reuse it?
+> 
+>> +static int nl80211_set_sta_mon_rssi(struct genl_info *info,
+>> +				    const u8 *peer, s32 threshold,
+>> +				    u32 hysteresis)
+>> +{
+>> +	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+>> +	struct net_device *dev = info->user_ptr[1];
+>> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
+>> +
+>> +	if (threshold > 0)
+>> +		return -EINVAL;
+>> +
+>> +	if (threshold == 0)
+>> +		hysteresis = 0;
+>> +
+>> +	if (!rdev->ops->set_sta_mon_rssi_config)
+>> +		return -EOPNOTSUPP;
+>> +
+>> +	if ((wdev->iftype != NL80211_IFTYPE_AP &&
+>> +	     wdev->iftype != NL80211_IFTYPE_P2P_GO &&
+>> +	     wdev->iftype != NL80211_IFTYPE_AP_VLAN) ||
+>> +	    !wiphy_ext_feature_isset(&rdev->wiphy,
+>> +				NL80211_EXT_FEATURE_STA_MON_RSSI_CONFIG))
+>> +		return -EOPNOTSUPP;
+>> +
+>> +	return rdev_set_sta_mon_rssi_config(rdev, dev, peer,
+>> +					    threshold, hysteresis);
+>> +}
+> 
+> Wait, you went to all this effort in the first patch and now you don't
+> add this to the list?
+> 
+No, the list and the rssi_config structure is for multi threshold value 
+and not for single threshold.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/Kconfig         | 7 +++++++
- drivers/net/wireless/mediatek/mt76/Makefile        | 1 +
- drivers/net/wireless/mediatek/mt76/mt76x0/Makefile | 7 +++++++
- 3 files changed, 15 insertions(+)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
-
-diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
-index fc05d79c80d0..84854736809a 100644
---- a/drivers/net/wireless/mediatek/mt76/Kconfig
-+++ b/drivers/net/wireless/mediatek/mt76/Kconfig
-@@ -1,6 +1,13 @@
- config MT76_CORE
- 	tristate
- 
-+config MT76x0U
-+	tristate "MediaTek MT76x0U (USB) support"
-+	depends on MAC80211
-+	depends on USB
-+	help
-+	  This adds support for MT7610U-based wireless USB dongles.
-+
- config MT76x2E
- 	tristate "MediaTek MT76x2E (PCIe) support"
- 	select MT76_CORE
-diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
-index a0156bc01dea..08f93127e9e7 100644
---- a/drivers/net/wireless/mediatek/mt76/Makefile
-+++ b/drivers/net/wireless/mediatek/mt76/Makefile
-@@ -1,4 +1,5 @@
- obj-$(CONFIG_MT76_CORE) += mt76.o
-+obj-$(CONFIG_MT76x0U) += mt76x0/
- obj-$(CONFIG_MT76x2E) += mt76x2e.o
- 
- mt76-y := \
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/Makefile b/drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
-new file mode 100644
-index 000000000000..7843908261ba
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/Makefile
-@@ -0,0 +1,7 @@
-+obj-$(CONFIG_MT76x0U)    += mt76x0.o
-+
-+mt76x0-objs	= \
-+	usb.o init.o main.o mcu.o trace.o dma.o eeprom.o phy.o \
-+	mac.o util.o debugfs.o tx.o core.o
-+# ccflags-y := -DDEBUG
-+CFLAGS_trace.o := -I$(src)
--- 
-1.9.3
+Thanks,
+Tamizh.
