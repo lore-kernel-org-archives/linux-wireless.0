@@ -1,72 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36114 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751761AbeGDOAS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jul 2018 10:00:18 -0400
-Date: Wed, 4 Jul 2018 16:00:13 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Hans Ulli Kroll <ulli.kroll@googlemail.com>
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        lorenzo.bianconi83@gmail.com, Felix Fietkau <nbd@nbd.name>,
-        Jakub =?utf-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Michal Schmidt <mschmidt@redhat.com>,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [ANN] mt76x0 usb driver
-Message-ID: <20180704140012.GA26399@redhat.com> (sfid-20180704_160023_968359_7D1824A9)
-References: <20180409141032.GA9247@redhat.com>
- <20180409142640.GA5680@localhost.localdomain>
- <20180409144819.GA9253@redhat.com>
- <20180625120816.GA2072@redhat.com>
- <CAA2SeNJjHCrO5NyznK+EJt5K6SRVRr_FPZA2i53Z-FnqzkKz_g@mail.gmail.com>
- <20180625135419.GA3282@redhat.com>
- <CAJ0CqmXE7hF8UAe2iAZ7GhYWb7Uf3zJ+Fg_ervfyK1ojS1Oh=w@mail.gmail.com>
- <alpine.LNX.2.00.1807031725420.3545@T420s>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LNX.2.00.1807031725420.3545@T420s>
+Received: from s3.sipsolutions.net ([144.76.63.242]:58552 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753046AbeGDHM7 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Jul 2018 03:12:59 -0400
+Message-ID: <1530688374.3324.1.camel@sipsolutions.net> (sfid-20180704_091308_089113_DDB9AB51)
+Subject: Re: [PATCH] mac80211: don't put null-data frames on the normal TXQ
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+        Peter Oh <peter.oh@bowerswilkins.com>,
+        linux-wireless@vger.kernel.org
+Cc: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        Felix Fietkau <nbd@nbd.name>
+Date: Wed, 04 Jul 2018 09:12:54 +0200
+In-Reply-To: <e6812d98-53b4-a593-fc76-69b6e5f7b0fd@candelatech.com>
+References: <20180703124725.30917-1-johannes@sipsolutions.net>
+         <e9813f60-5cf5-a4bf-5906-623282319991@bowerswilkins.com>
+         <1530661681.4735.51.camel@sipsolutions.net>
+         <e6812d98-53b4-a593-fc76-69b6e5f7b0fd@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+On Tue, 2018-07-03 at 21:24 -0700, Ben Greear wrote:
 
-On Tue, Jul 03, 2018 at 05:31:04PM +0200, Hans Ulli Kroll wrote:
-> > On Mon, Jun 25, 2018 at 02:55:51PM +0200, Lorenzo Bianconi wrote:
+> > ath10k appears to not do aggregation in the host, and I guess the data
+> > isn't split over multiple queues so the firmware has to determine/buffer
+> > it some other way. No idea how that would work.
 > 
-> > > Not sure why many integration commits in upstream is a problem. I think
-> > > having patches posted on mailing list is better than doing them in my
-> > > "private" tree without any review.
-> > >
-> > > > What do you think?
-> > >
-> > > I was thinking about posting mt76x0 driver in a subdir (there is sill
-> > > some cleanup work need to be done there), wait for upstream mt76x2u
-> > > integration, then post patches that remove duplication between mt76x2
-> > > and mt76x0 and add support for mt76x0e on the way.
-> > >
-> > 
-> > Ack, fine. I modified a little bit mt76x2u/usb architecture moving
-> > some parts in common with mt76x0u
-> > in mt76-usb module (e.g. mt76_queue management in tx_status data path,
-> > tx_stats workqueue,
-> > some mcu utility routines). In this way the integration will be easier I guess
-> > 
-> > Regards,
-> > Lorenzo
-> > 
-> > > Thanks
-> > > Stanislaw
-> > 
-> 
-> I'm currrently working mt76x0u on top of Lorenzo's mt76x2u driver.
+> This is my current understanding of ath10k..hope it helps.
 
-Hmm, I think efforts should be somehow synchronized here.
+[snip]
 
-I have almost ready for post patches adding mt76x0 driver to the kernel.
-Some cleanup work is probably needed, but I think they can be reviewed
-and merged. They do not conflict with patches currently posted Lorenzo
-except small changes in mt76.h and Makefile files, what can be easy
-to resolve.
+Thanks Ben. I guess we can't really know whether or not it would be
+buggy with (QoS-)NDP, but it shouldn't be since all the frames are
+expected (by firmware) to go through the same path anyhow and it's
+responsible for putting them together into aggregates. And, unlike Intel
+firmware/hardware, it can't necessarily assume that one HW queue
+consists only of packets allowed for aggregation.
 
-Thanks
-Stanislaw
+johannes
