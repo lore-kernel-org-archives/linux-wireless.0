@@ -1,104 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:59145 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726692AbeGKUy0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jul 2018 16:54:26 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Rajkumar Manoharan <rmanohar@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [RFC v2 1/4] mac80211: Add TXQ scheduling API
-In-Reply-To: <361a221dd15e44028fd35440df657a3d@codeaurora.org>
-References: <153115421866.7447.6363834356268564403.stgit@alrua-x1> <153115422491.7447.12479559048433925372.stgit@alrua-x1> <361a221dd15e44028fd35440df657a3d@codeaurora.org>
-Date: Wed, 11 Jul 2018 22:48:17 +0200
-Message-ID: <87lgahbisu.fsf@toke.dk> (sfid-20180711_224822_358715_F2FA6EBA)
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:54212 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753600AbeGDLMw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Jul 2018 07:12:52 -0400
+Received: by mail-wm0-f65.google.com with SMTP id b188-v6so5409358wme.3
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2018 04:12:52 -0700 (PDT)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        kvalo@codeaurora.org
+Subject: Re: [PATCH v8] ath10k: fix crash in recent 3.5.3 9984 firmware due wrong handling of peer_bw_rxnss_override parameter
+Date: Wed, 04 Jul 2018 13:12:47 +0200
+Message-ID: <4756311.uatpdkZPGZ@bentobox> (sfid-20180704_131308_343817_70BF9C97)
+In-Reply-To: <0cff058a-3c4b-6617-a034-3df706ba3a32@dd-wrt.com>
+References: <20180704092953.32572-1-s.gottschall@dd-wrt.com> <5630152.jDWN9V3RzB@bentobox> <0cff058a-3c4b-6617-a034-3df706ba3a32@dd-wrt.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; boundary="nextPart4613126.Xrykp8NhWn"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+--nextPart4613126.Xrykp8NhWn
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-> On 2018-07-09 09:37, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
-> [...]
->> +/**
->> + * ieee80211_schedule_txq - add txq to scheduling loop
->> + *
->> + * @hw: pointer as obtained from ieee80211_alloc_hw()
->> + * @txq: pointer obtained from station or virtual interface
->> + * @reset_seqno: Whether to reset the internal scheduling sequence=20
->> number,
->> + *               allowing this txq to appear again in the current=20
->> scheduling
->> + *               round (see doc for ieee80211_next_txq()).
->> + *
->> + * Returns %true if the txq was actually added to the scheduling,
->> + * %false otherwise.
->> + */
->> +bool ieee80211_schedule_txq(struct ieee80211_hw *hw,
->> +			    struct ieee80211_txq *txq,
->> +			    bool reset_seqno);
->> +
->> +/**
->> + * ieee80211_next_txq - get next tx queue to pull packets from
->> + *
->> + * @hw: pointer as obtained from ieee80211_alloc_hw()
->> + * @ac: filter returned txqs with this AC number. Pass -1 for no=20
->> filtering.
->> + * @inc_seqno: Whether to increase the scheduling sequence number.=20
->> Setting this
->> + *             to true signifies the start of a new scheduling round.=20
->> Each TXQ
->> + *             will only be returned exactly once in each round=20
->> (unless its
->> + *             sequence number is explicitly reset when calling
->> + *             ieee80211_schedule_txq()).
->> + *
-> Toke,
->
-> Seems like seqno is internal to mac80211 and meant for active_txq list
-> manipulation. If so, why would drivers have to worry about increment
-> or resetting seqno?
+On Mittwoch, 4. Juli 2018 12:48:06 CEST Sebastian Gottschall wrote:
+[...]
+> can you explain your request? the macros are unchanged and just 
+> reformated for maximum line length restriction. the values have been 
+> taken from QCA's wmi header
 
-The drivers need to be able to signal when they start a new "scheduling
-round" (which is the parameter to next_txq()), and when a queue should
-be immediately rescheduled (which is the parameter to schedule_txq()).
-See the subsequent patch to ath9k for how this is used; the latter is
-signalled when a TXQ successfully dequeued an aggregate...
+You use long shift and mask statements in your patch. But you didn't use the 
+macros which are there to shorten them. So please check the macros SM and MS 
+from core.h and adjust your code accordingly. The code which I've pasted does 
+this (with an unintentionally added a copy and paste error).
 
-Now, you're right that the choice to track this via a sequence number is
-an implementation detail internal to mac80211... so maybe the parameters
-should be called something different.
+Kind regards,
+	Sven
+--nextPart4613126.Xrykp8NhWn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
 
-> IMHO to avoid over serving same txq, two lists (activeq and waitq) can
-> be used and always add new txq into waitq list. So that driver will
-> not worry about mac80211 txq manipulation. Please correct me If Im
-> wrong.
->
-> ieee80211_schedule_txq
->     - if schedule_order empty, add txq into waitq list tail.
->
-> ieee80211_next_txq
->     - if activeq empty,
->          - move waitq list into activeq
->
->     - if activeq not empty
->          - fetch appropriate txq from activeq
->          - remove txq from activeq list.
->
->     - If txq found, return txq else return NULL
+-----BEGIN PGP SIGNATURE-----
 
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAls8q68ACgkQXYcKB8Em
+e0bf/g//fxPfMA/832a0efxxrOMpj4CKzfuYK7nE0hNB8BmwxptLxbf+IHO2IuYB
+QX4+dPcSf/kJcjPCtg7tv0FaV+BOfQdPfl+O52qclTaiL2IjzNXEyB0pLcXAwk8u
+FtLUj9XSI0+vxhrqJTM2RR7ce1BqZp0cFH39zjxFeJhklE7qGBd0CxvllcWBdl0h
+oOBTFPIcXsp5W2MZ/6U+K/8yHXLgdOVw2A5MUVy+2wvVJgIegfBm7/17jhMZWBUQ
+yO0TBvBTT/CgoEGrSL8wtYHiT0t2c8bX30hKyZ6Ryn7HDB6z1nTLAMSEGqbAXEXj
+3+hQUCtEY0mF4nuXpUQyUpGISrXMtRiH10AuBpsxyUZ+fxxUVWXX9KKrbZtl2XD+
++at1p/YIcR7HfAB/hVrR1RUQa+FJ2yqUpp5EHSjWNFuEICOfKDyTnV/8hKgnDU0g
+/qOQq2Saaqvq+wzqQ6kOX8gFa/bLcSSMlhDIyiSlCua3eaYdja/Ogjq2RCtS73BY
+sdccmOHzhEfC/2FgZZNRTeuUm/JB2MOxU7VPSBiZzftjqu69QwM8N/fzS1DwyVoj
+yl2Y3W8QCJCnBirc5rEhOitgM9vzXB70805dq6AmOowCLbhPUPcdndYyAfdA/wof
+0iPB68l11/8ufvUCNnzh7pYwM57KM89+1KW7A05/DOZWXHjuM1Q=
+=jIJr
+-----END PGP SIGNATURE-----
 
-Erm, how would this prevent an infinite loop? With this scheme, at some
-point, ieee80211_next_txq() removes the last txq from activeq, and
-returns that. Then, when it is called again the next time the driver
-loops, it's back to the first case (activeq empty, waitq non-empty); so
-it'll move waitq back as activeq and start over... Only the driver
-really knows when it is starting a logical "loop through all active
-TXQs".
-
-Also, for airtime fairness, the queues are not scheduled strictly
-round-robin, so the dual-list scheme wouldn't work there either...
-
--Toke
+--nextPart4613126.Xrykp8NhWn--
