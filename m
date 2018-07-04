@@ -1,164 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45682 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733203AbeGLWvu (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:36447 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933465AbeGDLUW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jul 2018 18:51:50 -0400
+        Wed, 4 Jul 2018 07:20:22 -0400
+Received: by mail-lf0-f66.google.com with SMTP id n24-v6so4099016lfh.3
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2018 04:20:21 -0700 (PDT)
+Date: Wed, 4 Jul 2018 13:20:18 +0200
+From: Niklas Cassel <niklas.cassel@linaro.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ath10k@lists.infradead.org,
+        "David S. Miller" <davem@davemloft.net>
+Subject: Re: [2/2] ath10k: allow ATH10K_SNOC with COMPILE_TEST
+Message-ID: <20180704112018.GA15155@centauri.ideon.se> (sfid-20180704_132043_096615_696FC9B5)
+References: <20180612113907.15043-2-niklas.cassel@linaro.org>
+ <20180704095913.772C9606AC@smtp.codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Thu, 12 Jul 2018 15:40:08 -0700
-From: Rajkumar Manoharan <rmanohar@codeaurora.org>
-To: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [RFC v2 1/4] mac80211: Add TXQ scheduling API
-In-Reply-To: <87lgahbisu.fsf@toke.dk>
-References: <153115421866.7447.6363834356268564403.stgit@alrua-x1>
- <153115422491.7447.12479559048433925372.stgit@alrua-x1>
- <361a221dd15e44028fd35440df657a3d@codeaurora.org> <87lgahbisu.fsf@toke.dk>
-Message-ID: <8d8160cd9c804d1b00ba4e234c8f1520@codeaurora.org> (sfid-20180713_004014_142024_05A942E1)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180704095913.772C9606AC@smtp.codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2018-07-11 13:48, Toke Høiland-Jørgensen wrote:
-> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
+On Wed, Jul 04, 2018 at 09:59:13AM +0000, Kalle Valo wrote:
+> Niklas Cassel <niklas.cassel@linaro.org> wrote:
 > 
->> On 2018-07-09 09:37, Toke Høiland-Jørgensen wrote:
->> [...]
->>> +/**
->>> + * ieee80211_schedule_txq - add txq to scheduling loop
->>> + *
->>> + * @hw: pointer as obtained from ieee80211_alloc_hw()
->>> + * @txq: pointer obtained from station or virtual interface
->>> + * @reset_seqno: Whether to reset the internal scheduling sequence
->>> number,
->>> + *               allowing this txq to appear again in the current
->>> scheduling
->>> + *               round (see doc for ieee80211_next_txq()).
->>> + *
->>> + * Returns %true if the txq was actually added to the scheduling,
->>> + * %false otherwise.
->>> + */
->>> +bool ieee80211_schedule_txq(struct ieee80211_hw *hw,
->>> +			    struct ieee80211_txq *txq,
->>> +			    bool reset_seqno);
->>> +
->>> +/**
->>> + * ieee80211_next_txq - get next tx queue to pull packets from
->>> + *
->>> + * @hw: pointer as obtained from ieee80211_alloc_hw()
->>> + * @ac: filter returned txqs with this AC number. Pass -1 for no
->>> filtering.
->>> + * @inc_seqno: Whether to increase the scheduling sequence number.
->>> Setting this
->>> + *             to true signifies the start of a new scheduling 
->>> round.
->>> Each TXQ
->>> + *             will only be returned exactly once in each round
->>> (unless its
->>> + *             sequence number is explicitly reset when calling
->>> + *             ieee80211_schedule_txq()).
->>> + *
->> Toke,
->> 
->> Seems like seqno is internal to mac80211 and meant for active_txq list
->> manipulation. If so, why would drivers have to worry about increment
->> or resetting seqno?
+> > ATH10K_SNOC builds just fine with COMPILE_TEST, so make that possible.
+> > 
+> > Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
 > 
-> The drivers need to be able to signal when they start a new "scheduling
-> round" (which is the parameter to next_txq()), and when a queue should
-> be immediately rescheduled (which is the parameter to schedule_txq()).
-> See the subsequent patch to ath9k for how this is used; the latter is
-> signalled when a TXQ successfully dequeued an aggregate...
+> Note to myself, I see these dependencies in linux-next (but not in Linus' tree yet):
 > 
-> Now, you're right that the choice to track this via a sequence number 
-> is
-> an implementation detail internal to mac80211... so maybe the 
-> parameters
-> should be called something different.
+> 67cd0eec5b62 rpmsg: smd: Add missing include of sizes.h
+> 376e1f304fc7 firmware: qcom: scm: add a dummy qcom_scm_assign_mem()
 > 
->> IMHO to avoid over serving same txq, two lists (activeq and waitq) can
->> be used and always add new txq into waitq list. So that driver will
->> not worry about mac80211 txq manipulation. Please correct me If Im
->> wrong.
->> 
->> ieee80211_schedule_txq
->>     - if schedule_order empty, add txq into waitq list tail.
->> 
->> ieee80211_next_txq
->>     - if activeq empty,
->>          - move waitq list into activeq
->> 
->>     - if activeq not empty
->>          - fetch appropriate txq from activeq
->>          - remove txq from activeq list.
->> 
->>     - If txq found, return txq else return NULL
+> These I don't see in linux-next yet:
+> 
+>   soc: qcom: smem: Add missing include of sizes.h
+>   soc: qcom: smp2p: Add select IRQ_DOMAIN
+>   soc: qcom: smsm: Add select IRQ_DOMAIN
+>   soc: qcom: Remove depends on ARCH_QCOM
+
+Hello Kalle,
+
+You are correct.
+I submitted a v3 of this just yesterday:
+https://marc.info/?l=linux-kernel&m=153060245727472&w=2
+So hopefully it will be in linux-next within 2 weeks.
+
+Regards,
+Niklas
+
+> 
+> -- 
+> https://patchwork.kernel.org/patch/10460103/
+> 
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 > 
 > 
-> Erm, how would this prevent an infinite loop? With this scheme, at some
-> point, ieee80211_next_txq() removes the last txq from activeq, and
-> returns that. Then, when it is called again the next time the driver
-> loops, it's back to the first case (activeq empty, waitq non-empty); so
-> it'll move waitq back as activeq and start over... Only the driver
-> really knows when it is starting a logical "loop through all active
-> TXQs".
-> 
-Oops.. My bad.. The idea is that ieee80211_next_txq process txq from 
-activeq only
-and keep processed txqs separately. Having single list eventually needs 
-tracking
-mechanism. The point is that once activeq becomes empty, splice waitq 
-list and
-return NULL. So that driver can break from the loop.
-
-ieee80211_next_txq
-      - if activeq empty,
-           - move waitq list into activeq
-           - return NULL
-
-      - if activeq not empty
-           - fetch appropriate txq from activeq
-           - remove txq from activeq list.
-
-      - If txq found, return txq else return NULL
-
-> Also, for airtime fairness, the queues are not scheduled strictly
-> round-robin, so the dual-list scheme wouldn't work there either...
-> 
-As you know, ath10k driver will operate in two tx modes (push-only, 
-push-pull).
-These modes will be switched dynamically depends on firmware load or 
-resource
-availability. In push-pull mode, firmware will query N number of frames 
-for set of
-STA, TID. So the driver will directly dequeue N number of frames from 
-given txq.
-In this case txq ordering alone wont help. I am planning to add below 
-changes in
-exiting API and add new API ieee80211_reorder_txq.
-
-ieee80211_txq_get_depth
-      - return deficit status along with frm_cnt
-
-ieee80211_reorder_txq
-      - if txq deficit > 0
-            - return;
-      - if txq is last
-             - return
-      - delete txq from list
-      - move it to tail
-      - update deficit by quantum
-
-ath10k_htt_rx_tx_fetch_ind
-      - get txq deficit status
-      - if txq deficit > 0
-            - dequeue skb
-      - else if deficit < 0
-            - return NULL
-
-Please share your thoughts.
-
--Rajkumar
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
