@@ -1,65 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:9214 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389371AbeG0WLi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jul 2018 18:11:38 -0400
-Message-ID: <29e73810d1806b9733b2a663c4a5bda23c09b065.camel@linux.intel.com> (sfid-20180727_224805_716694_F90F70DA)
-Subject: Re: [PATCH v1] PCI: Add PCI_DEVICE_DATA() macro to fully describe
- device ID entry
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Randy Dunlap <rdunlap@infradead.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
+Received: from smtp.codeaurora.org ([198.145.29.96]:34962 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752277AbeGDPIf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Jul 2018 11:08:35 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: brcmfmac: update STA info struct to the v5
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180628103623.29103-1-zajec5@gmail.com>
+References: <20180628103623.29103-1-zajec5@gmail.com>
+To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
         linux-wireless@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Date: Fri, 27 Jul 2018 23:46:40 +0300
-In-Reply-To: <5c647729-6eab-fbe1-a110-43c7a6bc1207@infradead.org>
-References: <20180727203914.89704-1-andriy.shevchenko@linux.intel.com>
-         <d38f06dccb3bd129bec6d34a5ad3e93e2fa01bec.camel@linux.intel.com>
-         <5c647729-6eab-fbe1-a110-43c7a6bc1207@infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Message-Id: <20180704150835.7D3AD6031A@smtp.codeaurora.org> (sfid-20180704_170935_084964_E806FB7C)
+Date: Wed,  4 Jul 2018 15:08:35 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2018-07-27 at 13:42 -0700, Randy Dunlap wrote:
-> On 07/27/2018 01:41 PM, Andy Shevchenko wrote:
-> > On Fri, 2018-07-27 at 23:39 +0300, Andy Shevchenko wrote:
-> > > There are a lot of examples in the kernel where PCI_VDEVICE() is
-> > > used
-> > > and still
-> > > looks not so convenient due to additional driver_data field
-> > > attached.
-> > > 
-> > > Introduce PCI_DEVICE_DATA() macro to fully describe device ID
-> > > entry in
-> > > shortest
-> > > possible form. For example,
-> > > 
-> > >   before:
-> > > 
-> > >     { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
-> > >       (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
-> > > 
-> > >   after:
-> > > 
-> > >     { PCI_VDEVICE(INTEL, INTEL_MRFLD, &dwc3_pci_mrfld_properties
-> > > },
-> > > 
-> > > Drivers can be converted later on in independent way.
-> > > 
-> > > While here, remove the unused macro with the same name
-> > > from Ralink wireless driver.
-> > 
-> > Skip this, it missed one comma.
+Rafał Miłecki wrote:
+
+> From: Rafał Miłecki <rafal@milecki.pl>
 > 
-> s/comma/right paren/ ??
+> That struct is used when querying firmware for the STA. It seem is has
+> been changing during the time. Luckily its format seems to be backward
+> compatible starting with v2 (the only breakage was v1 -> v2).
+> 
+> The version that was supported by brcmfmac so far was v4. It was what
+> 43602a1 and 4366b1 firmwares (7.35.177.56 and 10.10.69.3309 accordingly)
+> were using. It also seems to be used by early 4366c0 firmwares
+> (10.10.69.6908 and 10.10.69.69017).
+> 
+> The problem appears when switching to the 10.10.122.20 firmware. It uses
+> v5 and instead of falling back to v4 when submitted buffer isn't big
+> enough it fallbacks to the v3.
+> 
+> To receive all v4 specific info with the newest firmware we have to
+> submit a struct (buffer) that matches v5.
+> 
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-comma in the code and you are right about commit message. Btw, it missed
-rename as well there.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Thanks for spotting this!
+07b1ae468749 brcmfmac: update STA info struct to the v5
 
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+https://patchwork.kernel.org/patch/10493539/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
