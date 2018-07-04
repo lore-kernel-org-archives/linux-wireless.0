@@ -1,78 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:35550 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932254AbeGBHVg (ORCPT
+Received: from smtps.newmedia-net.de ([185.84.6.167]:52118 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753046AbeGDJui (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jul 2018 03:21:36 -0400
-Date: Mon, 2 Jul 2018 10:21:15 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Pkshih <pkshih@realtek.com>,
-        "briselec@gmail.com" <briselec@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-        "chaitanya.mgit@gmail.com" <chaitanya.mgit@gmail.com>
-Subject: Re: New realtek 11ac driver
-Message-ID: <20180702072115.5gg2t7ey57bulbd2@mwanda> (sfid-20180702_092224_917681_1806193E)
-References: <5B2DA6FDDF928F4E855344EE0A5C39D13BEBF231@RTITMBSV07.realtek.com.tw>
- <20180427224156.GA18163@thinktank.home.org>
- <5B2DA6FDDF928F4E855344EE0A5C39D13BEBFD30@RTITMBSV07.realtek.com.tw>
- <CABPxzYKfZVA8RTADEG5TCu0SXRSVEGWEn+Ym6AkMuFzHC5iSVg@mail.gmail.com>
- <1526371717.12375.8.camel@realtek.com>
- <871sebkcad.fsf@codeaurora.org>
- <1526646826.1942.1.camel@realtek.com>
- <87bmd5ihm1.fsf@codeaurora.org>
- <1528162350.2800.3.camel@realtek.com>
- <87h8lmf0n5.fsf_-_@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <87h8lmf0n5.fsf_-_@codeaurora.org>
+        Wed, 4 Jul 2018 05:50:38 -0400
+From: s.gottschall@dd-wrt.com
+To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Subject: [PATCH] Starting with firmware 10.4.3.4.x series QCA changed the handling of the channel property band_center_freq1 and band_center_freq2 in vht160 operation mode likelly for backward compatibility with vht80 only capable clients. This patch adjusts the handling to get vht160 to work again with official QCA firmwares newer than 3.3 consider that this patch will not work with older firmwares anymore. to avoid undefined behaviour we disable vht160 capability for outdated firmwares
+Date: Wed,  4 Jul 2018 11:50:31 +0200
+Message-Id: <20180704095031.428-1-s.gottschall@dd-wrt.com> (sfid-20180704_115042_472982_9EB1985D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 29, 2018 at 11:38:22AM +0300, Kalle Valo wrote:
-> (Was "Re: [PATCH v3 00/19] rtlwifi: halmac: Add new module halmac",
-> changing the title to reflect what we are discussing)
-> 
-> Pkshih <pkshih@realtek.com> writes:
-> 
-> > On Thu, 2018-05-24 at 11:27 +0300, Kalle Valo wrote:
-> >> 
-> >> You are missing my point: I don't even have time to review huge rtlwifi
-> >> patches when they are not even ready for upstream. I cannot start
-> >> working on cleaning up rtlwifi code and doing multiple iterations of
-> >> reviews on these kind of huge patchsets. Either you need to
-> >> significantly scale down the size of patchsets (especially LOC) or you
-> >> need to get review help from someone else. But the current way of
-> >> working is not doable for me.
-> >> 
-> >
-> > Is there a proper way to look for "someone else" you mentioned?
-> 
-> I don't know, I think there might a project somewhere which helps with
-> patch review for new people but not sure about that. Adding Dan in case
-> he has some ideas.
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
 
-It's just heart breaking to look at that driver.  It's over 64k line of
-code.  As a reviewer, it's easy to glance at the first few lines and say
-get rid of halmac_ret_status and use normal kernel return codes instead
-but just implementing that small thing would take months because there
-is so much code.
+Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
 
-It doesn't even look like terrible code, it's just not linux code.
+v2: fix trailing whitespace issue and fix some typos within the commit note
+---
+ drivers/net/wireless/ath/ath10k/mac.c |  7 -------
+ drivers/net/wireless/ath/ath10k/wmi.c | 11 ++++++++---
+ 2 files changed, 8 insertions(+), 10 deletions(-)
 
-There is no way I'm touching these patches because it's just miles and
-miles of sadness.
-
-> > We plan to rewrite a new driver excluding agnostic OS layer to support 
-> > new generation 11AC chips, because they're very different from the chips
-> > existed in rtlwifi and rtl8xxxu. 
-
-That's good news.
-
-The OS layer was a failed experiment.  It was supposed to give us one
-driver for everything but instead of that we have at least 7 drivers
-just within the Linux kernel.  We abstracted the wrong thing.
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 95243b48a179..46885b915eb7 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4442,13 +4442,6 @@ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
+ 		vht_cap.cap |= val;
+ 	}
+ 
+-	/* Currently the firmware seems to be buggy, don't enable 80+80
+-	 * mode until that's resolved.
+-	 */
+-	if ((ar->vht_cap_info & IEEE80211_VHT_CAP_SHORT_GI_160) &&
+-	    (ar->vht_cap_info & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK) == 0)
+-		vht_cap.cap |= IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ;
+-
+ 	mcs_map = 0;
+ 	for (i = 0; i < 8; i++) {
+ 		if ((i < ar->num_rf_chains) && (ar->cfg_tx_chainmask & BIT(i)))
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 877249ac6fd4..e2adf34effb3 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1677,13 +1677,18 @@ void ath10k_wmi_put_wmi_channel(struct wmi_channel *ch,
+ 		flags |= WMI_CHAN_FLAG_HT40_PLUS;
+ 	if (arg->chan_radar)
+ 		flags |= WMI_CHAN_FLAG_DFS;
+-
++	ch->band_center_freq2 = 0;
+ 	ch->mhz = __cpu_to_le32(arg->freq);
+ 	ch->band_center_freq1 = __cpu_to_le32(arg->band_center_freq1);
+ 	if (arg->mode == MODE_11AC_VHT80_80)
+ 		ch->band_center_freq2 = __cpu_to_le32(arg->band_center_freq2);
+-	else
+-		ch->band_center_freq2 = 0;
++	if (arg->mode == MODE_11AC_VHT160)  {
++		if (arg->freq < arg->band_center_freq1)
++			ch->band_center_freq1 = __cpu_to_le32(arg->band_center_freq1 - 40);
++		else
++			ch->band_center_freq1 = __cpu_to_le32(arg->band_center_freq1 + 40);
++		ch->band_center_freq2 = __cpu_to_le32(arg->band_center_freq1);
++	}
+ 	ch->min_power = arg->min_power;
+ 	ch->max_power = arg->max_power;
+ 	ch->reg_power = arg->max_reg_power;
+-- 
+2.17.1
