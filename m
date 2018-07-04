@@ -1,61 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:33061 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753432AbeGEVbc (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37324 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752511AbeGDPNt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jul 2018 17:31:32 -0400
-Subject: Re: [PATCH v7 02/16] leds: triggers: let struct
- led_trigger::activate() return an error code
-To: =?UTF-8?Q?Uwe_Kleine-K=c3=b6nig?= <u.kleine-koenig@pengutronix.de>
-Cc: Pavel Machek <pavel@ucw.cz>, kernel@pengutronix.de,
-        linux-leds@vger.kernel.org, kernel-patch-test@lists.linaro.org,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Johan Hedberg <johan.hedberg@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <a9b3548b-09c4-fae4-1bce-abf3392b9ceb@gmail.com>
- <20180702200535.1337-2-u.kleine-koenig@pengutronix.de>
-From: Jacek Anaszewski <jacek.anaszewski@gmail.com>
-Message-ID: <1172a776-a951-28d5-fae4-824969f4a82b@gmail.com> (sfid-20180705_233147_049284_482CF31E)
-Date: Thu, 5 Jul 2018 23:31:28 +0200
+        Wed, 4 Jul 2018 11:13:49 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180702200535.1337-2-u.kleine-koenig@pengutronix.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [v2] libertas: fix suspend and resume for SDIO connected cards
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180627185845.31799-1-daniel@zonque.org>
+References: <20180627185845.31799-1-daniel@zonque.org>
+To: Daniel Mack <daniel@zonque.org>
+Cc: ulf.hansson@linaro.org, chris@printf.net,
+        linux-mmc@vger.kernel.org, libertas-dev@lists.infradead.org,
+        linux-wireless@vger.kernel.org, Daniel Mack <daniel@zonque.org>
+Message-Id: <20180704151349.52E3C6028D@smtp.codeaurora.org> (sfid-20180704_171653_111846_7F6CCCCA)
+Date: Wed,  4 Jul 2018 15:13:49 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Uwe,
+Daniel Mack <daniel@zonque.org> wrote:
 
-On 07/02/2018 10:05 PM, Uwe Kleine-König wrote:
-> Given that activating a trigger can fail, let the callback return an
-> indication. This prevents to have a trigger active according to the
-> "trigger" sysfs attribute but not functional.
+> Prior to commit 573185cc7e64 ("mmc: core: Invoke sdio func driver's PM
+> callbacks from the sdio bus"), the MMC core used to call into the power
+> management functions of SDIO clients itself and removed the card if the
+> return code was non-zero. IOW, the mmc handled errors gracefully and didn't
+> upchain them to the pm core.
 > 
-> All users are changed accordingly to return 0 for now. There is no intended
-> change in behaviour.
+> Since this change, the mmc core relies on generic power management
+> functions which treat all errors as a reason to cancel the suspend
+> immediately. This causes suspend attempts to fail when the libertas
+> driver is loaded.
 > 
-> Acked-by: Pavel Machek <pavel@ucw.cz>
-> Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
-[...]
-> -static void ieee80211_tx_led_activate(struct led_classdev *led_cdev)
-> +static int ieee80211_tx_led_activate(struct led_classdev *led_cdev)
->   {
->   	struct ieee80211_local *local = container_of(led_cdev->trigger,
->   						     struct ieee80211_local,
->   						     tx_led);
->   
->   	atomic_inc(&local->tx_led_active);
-> +
-> +	return 0
-[...]
+> To fix this, power down the card explicitly in if_sdio_suspend() when we
+> know we're about to lose power and return success. Also set a flag in these
+> cases, and power up the card again in if_sdio_resume().
+> 
+> Fixes: 573185cc7e64 ("mmc: core: Invoke sdio func driver's PM callbacks from the sdio bus")
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Daniel Mack <daniel@zonque.org>
+> Reviewed-by: Chris Ball <chris@printf.net>
+> Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
 
-s/return 0/return 0;/
+Patch applied to wireless-drivers-next.git, thanks.
 
-Fixed it up and applied. I'm taking lack of net maintainer feedback
-as a tacit approval (or lack of interest).
+7444a8092906 libertas: fix suspend and resume for SDIO connected cards
 
 -- 
-Best regards,
-Jacek Anaszewski
+https://patchwork.kernel.org/patch/10492407/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
