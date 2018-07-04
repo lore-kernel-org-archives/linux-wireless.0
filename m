@@ -1,58 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52296 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753987AbeGCGO4 (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:42064 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752619AbeGDUbu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Jul 2018 02:14:56 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Pkshih <pkshih@realtek.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Larry.Finger\@lwfinger.net" <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 13/14] rtlwifi: access skb->data to get C2H data by macro
-References: <20180518093007.23594-1-pkshih@realtek.com>
-        <20180518093007.23594-14-pkshih@realtek.com>
-        <87po1fhwfd.fsf@purkki.adurom.net>
-        <1527732798.8418.7.camel@realtek.com> <87sh56f3sv.fsf@codeaurora.org>
-        <1530597815.6330.4.camel@realtek.com>
-Date: Tue, 03 Jul 2018 09:14:44 +0300
-In-Reply-To: <1530597815.6330.4.camel@realtek.com> (pkshih@realtek.com's
-        message of "Tue, 3 Jul 2018 06:03:42 +0000")
-Message-ID: <87y3esrgkr.fsf@kamboji.qca.qualcomm.com> (sfid-20180703_081500_717675_CE320020)
+        Wed, 4 Jul 2018 16:31:50 -0400
+Received: by mail-lf0-f65.google.com with SMTP id u202-v6so5192105lff.9
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jul 2018 13:31:49 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH] brcmfmac: specify some features per firmware version
+Date: Wed,  4 Jul 2018 22:31:30 +0200
+Message-Id: <20180704203130.12086-1-zajec5@gmail.com> (sfid-20180704_223154_282986_A683B608)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pkshih <pkshih@realtek.com> writes:
+From: Rafał Miłecki <rafal@milecki.pl>
 
-> On Fri, 2018-06-29 at 10:30 +0300, Kalle Valo wrote:
->> Pkshih <pkshih@realtek.com> writes:
->>=20
->> > On Tue, 2018-05-29 at 08:18 +0300, Kalle Valo wrote:
->> >> <pkshih@realtek.com> writes:
->> >>=C2=A0
->> >
->> > Because C2H data is little endian order, the struct will look like
->> > struct foo {
->> > #ifdef=C2=A0__LITTLE_ENDIAN
->> >=C2=A0	u8 bar:4;
->> >=C2=A0	u8 koo:4;
->> > #else
->> >=C2=A0	u8 koo:4;
->> >=C2=A0	u8 bar:4;
->> > #endif
->> > }
->>=20
->> With u8 you don't need endian check, right? I would assume that with
->> both little and big endian bar and koo would be in the same place.
->
-> I think u8 with bitfield would be different between little and big endian
-> machines.
+Some features supported by firmware aren't advertised and there is no
+way for a driver to query them. This includes e.g. monitor mode details.
 
-To me that does not make any sense, I have never heard about bit
-endianness any of the devices I have worked on.
+Most firmwares support monitor interface but only the latest ones
+/announce/ it with a "monitor" flag in the "cap" iovar. There isn't any
+reliable detection method for older firmwares (BRCMF_C_MONITOR was tried
+but "it only indicates the core part of the stack supports").
 
-https://en.wikipedia.org/wiki/Endianness
+Similarly support for tagging monitor frames and building radiotap
+headers can't be reliably detected for all firmwares.
 
---=20
-Kalle Valo
+This commit adds table that allows mapping features to firmware version.
+It adds mappings for 43602a1 and 4366b1 firmwares from
+linux-firmware.git. Both were confirmed to be passing monitor frames.
+
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 38 ++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+index 4db4d444407a..ab1d9eb1e9dc 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+@@ -93,6 +93,42 @@ static int brcmf_feat_debugfs_read(struct seq_file *seq, void *data)
+ }
+ #endif /* DEBUG */
+ 
++struct brcmf_feat_fwfeat {
++	const char * const fwid;
++	u32 feat_flags;
++};
++
++static const struct brcmf_feat_fwfeat brcmf_feat_fwfeat_map[] = {
++	/* brcmfmac43602-pcie.ap.bin from linux-firmware.git ea1178515b88 */
++	{ "01-6cb8e269", BIT(BRCMF_FEAT_MONITOR) },
++	/* brcmfmac4366b-pcie.bin from linux-firmware.git 52442afee990 */
++	{ "01-c47a91a4", BIT(BRCMF_FEAT_MONITOR) },
++};
++
++static void brcmf_feat_firmware_overrides(struct brcmf_pub *drv)
++{
++	const struct brcmf_feat_fwfeat *e;
++	u32 feat_flags = 0;
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(brcmf_feat_fwfeat_map); i++) {
++		e = &brcmf_feat_fwfeat_map[i];
++		if (!strcmp(e->fwid, drv->fwver)) {
++			feat_flags = e->feat_flags;
++			break;
++		}
++	}
++
++	if (!feat_flags)
++		return;
++
++	for (i = 0; i < BRCMF_FEAT_LAST; i++)
++		if (feat_flags & BIT(i))
++			brcmf_dbg(INFO, "enabling firmware feature: %s\n",
++				  brcmf_feat_names[i]);
++	drv->feat_flags |= feat_flags;
++}
++
+ /**
+  * brcmf_feat_iovar_int_get() - determine feature through iovar query.
+  *
+@@ -253,6 +289,8 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+ 	}
+ 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_FWSUP, "sup_wpa");
+ 
++	brcmf_feat_firmware_overrides(drvr);
++
+ 	/* set chip related quirks */
+ 	switch (drvr->bus_if->chip) {
+ 	case BRCM_CC_43236_CHIP_ID:
+-- 
+2.13.7
