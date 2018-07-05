@@ -1,58 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:34974 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728037AbeGPODv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Jul 2018 10:03:51 -0400
-Received: by mail-pf0-f196.google.com with SMTP id q7-v6so25192705pff.2
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Jul 2018 06:36:23 -0700 (PDT)
-From: Siva Rebbagondla <siva8118@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Amol Hanwate <amol.hanwate@redpinesignals.com>
-Subject: [PATCH 5/6] rsi: fill rx_params only once.
-Date: Mon, 16 Jul 2018 19:09:36 +0530
-Message-Id: <1531748377-29215-6-git-send-email-siva8118@gmail.com> (sfid-20180716_153636_882273_ECD49187)
-In-Reply-To: <1531748377-29215-1-git-send-email-siva8118@gmail.com>
-References: <1531748377-29215-1-git-send-email-siva8118@gmail.com>
+Received: from mail.bootlin.com ([62.4.15.54]:43505 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753548AbeGEJpr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Jul 2018 05:45:47 -0400
+From: Boris Brezillon <boris.brezillon@bootlin.com>
+To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Boris Brezillon <boris.brezillon@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        linux-mtd@lists.infradead.org
+Cc: David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 08/27] mtd: rawnand: lpc32xx: Allow selection of these drivers when COMPILE_TEST=y
+Date: Thu,  5 Jul 2018 11:45:03 +0200
+Message-Id: <20180705094522.12138-9-boris.brezillon@bootlin.com> (sfid-20180705_114559_775617_E534047E)
+In-Reply-To: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amol Hanwate <amol.hanwate@redpinesignals.com>
+It just makes NAND maintainers' life easier by allowing them to
+compile-test these drivers without having ARCH_LPC32XX enabled.
 
-rx_params are getting updated two times in driver, which is not required.
-Hence, removing duplicate updation of rx_params from rsi_prepare_skb().
+We also need to add a dependency on HAS_IOMEM to make sure the driver
+compiles correctly.
 
-Signed-off-by: Amol Hanwate <amol.hanwate@redpinesignals.com>
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_main.c | 5 -----
- 1 file changed, 5 deletions(-)
+ drivers/mtd/nand/raw/Kconfig | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index 1485a0c..34a5d9c 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -122,7 +122,6 @@ static struct sk_buff *rsi_prepare_skb(struct rsi_common *common,
- 				       u8 extended_desc)
- {
- 	struct ieee80211_tx_info *info;
--	struct skb_info *rx_params;
- 	struct sk_buff *skb = NULL;
- 	u8 payload_offset;
- 	struct ieee80211_vif *vif;
-@@ -149,10 +148,6 @@ static struct sk_buff *rsi_prepare_skb(struct rsi_common *common,
- 	vif = rsi_get_vif(common->priv, wh->addr1);
+diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
+index 4ff21c8e05d4..d396bb69d515 100644
+--- a/drivers/mtd/nand/raw/Kconfig
++++ b/drivers/mtd/nand/raw/Kconfig
+@@ -299,7 +299,8 @@ config MTD_NAND_MARVELL
  
- 	info = IEEE80211_SKB_CB(skb);
--	rx_params = (struct skb_info *)info->driver_data;
--	rx_params->rssi = rsi_get_rssi(buffer);
--	rx_params->channel = rsi_get_connected_channel(vif);
--
- 	return skb;
- }
+ config MTD_NAND_SLC_LPC32XX
+ 	tristate "NXP LPC32xx SLC Controller"
+-	depends on ARCH_LPC32XX
++	depends on ARCH_LPC32XX || COMPILE_TEST
++	depends on HAS_IOMEM
+ 	help
+ 	  Enables support for NXP's LPC32XX SLC (i.e. for Single Level Cell
+ 	  chips) NAND controller. This is the default for the PHYTEC 3250
+@@ -310,7 +311,8 @@ config MTD_NAND_SLC_LPC32XX
  
+ config MTD_NAND_MLC_LPC32XX
+ 	tristate "NXP LPC32xx MLC Controller"
+-	depends on ARCH_LPC32XX
++	depends on ARCH_LPC32XX || COMPILE_TEST
++	depends on HAS_IOMEM
+ 	help
+ 	  Uses the LPC32XX MLC (i.e. for Multi Level Cell chips) NAND
+ 	  controller. This is the default for the WORK92105 controller
 -- 
-2.5.5
+2.14.1
