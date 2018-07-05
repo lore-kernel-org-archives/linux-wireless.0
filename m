@@ -1,77 +1,797 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35608 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726087AbeG3IJ7 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jul 2018 04:09:59 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Randy Dunlap <rdunlap@infradead.org>, joe@perches.com
-Subject: Re: [PATCH v4] PCI: Add PCI_DEVICE_DATA() macro to fully describe device ID entry
-References: <20180729131656.63504-1-andriy.shevchenko@linux.intel.com>
-Date: Mon, 30 Jul 2018 09:36:26 +0300
-In-Reply-To: <20180729131656.63504-1-andriy.shevchenko@linux.intel.com> (Andy
-        Shevchenko's message of "Sun, 29 Jul 2018 16:16:56 +0300")
-Message-ID: <87fu01fcwl.fsf@purkki.adurom.net> (sfid-20180730_083636_559875_7921B609)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:58694 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752906AbeGEGMs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Jul 2018 02:12:48 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Michal Schmidt <mschmidt@redhat.com>,
+        linux-mediatek@lists.infradead.org,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 05/11] mt76x0: mcu files
+Date: Thu,  5 Jul 2018 08:12:16 +0200
+Message-Id: <1530771142-4118-6-git-send-email-sgruszka@redhat.com> (sfid-20180705_081254_894122_A85D2879)
+In-Reply-To: <1530771142-4118-1-git-send-email-sgruszka@redhat.com>
+References: <1530771142-4118-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
+Add mcu files of mt76x0 driver.
 
-> There are a lot of examples in the kernel where PCI_VDEVICE() is used and still
-> looks not so convenient due to additional driver_data field attached.
->
-> Introduce PCI_DEVICE_DATA() macro to fully describe device ID entry in shortest
-> possible form. For example,
->
->   before:
->
->     { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
->       (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
->
->   after:
->
->     { PCI_DEVICE_DATA(INTEL, MRFLD, &dwc3_pci_mrfld_properties) },
->
-> Drivers can be converted later on in independent way.
->
-> While here, remove the unused macro with the same name
-> from Ralink wireless driver.
->
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->
-> - Add vend to the device (Bjorn)
->
-> Bjorn, this also looks good.
->
->  drivers/net/wireless/ralink/rt2x00/rt2x00pci.h |  6 ------
->  include/linux/pci.h                            | 15 +++++++++++++++
->  2 files changed, 15 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-> index bc0ca5f58f38..283e2e607bba 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-> @@ -27,12 +27,6 @@
->  #include <linux/io.h>
->  #include <linux/pci.h>
->  
-> -/*
-> - * This variable should be used with the
-> - * pci_driver structure initialization.
-> - */
-> -#define PCI_DEVICE_DATA(__ops)	.driver_data = (kernel_ulong_t)(__ops)
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c | 650 ++++++++++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h | 101 ++++
+ 2 files changed, 751 insertions(+)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h
 
-For rt2x00:
-
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
+new file mode 100644
+index 000000000000..b23b1fb92d3c
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.c
+@@ -0,0 +1,650 @@
++/*
++ * (c) Copyright 2002-2010, Ralink Technology, Inc.
++ * Copyright (C) 2014 Felix Fietkau <nbd@openwrt.org>
++ * Copyright (C) 2015 Jakub Kicinski <kubakici@wp.pl>
++ * Copyright (C) 2018 Stanislaw Gruszka <stf_xl@wp.pl>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#include <linux/kernel.h>
++#include <linux/firmware.h>
++#include <linux/delay.h>
++#include <linux/usb.h>
++#include <linux/skbuff.h>
++
++#include "mt76x0.h"
++#include "dma.h"
++#include "mcu.h"
++#include "usb.h"
++#include "trace.h"
++
++#define MCU_FW_URB_MAX_PAYLOAD		0x38f8
++#define MCU_FW_URB_SIZE			(MCU_FW_URB_MAX_PAYLOAD + 12)
++#define MCU_RESP_URB_SIZE		1024
++
++static inline int firmware_running(struct mt76x0_dev *dev)
++{
++	return mt76_rr(dev, MT_MCU_COM_REG0) == 1;
++}
++
++static inline void skb_put_le32(struct sk_buff *skb, u32 val)
++{
++	put_unaligned_le32(val, skb_put(skb, 4));
++}
++
++static inline void mt76x0_dma_skb_wrap_cmd(struct sk_buff *skb,
++					    u8 seq, enum mcu_cmd cmd)
++{
++	WARN_ON(mt76x0_dma_skb_wrap(skb, CPU_TX_PORT, DMA_COMMAND,
++				     FIELD_PREP(MT_TXD_CMD_SEQ, seq) |
++				     FIELD_PREP(MT_TXD_CMD_TYPE, cmd)));
++}
++
++static inline void trace_mt_mcu_msg_send_cs(struct mt76_dev *dev,
++					    struct sk_buff *skb, bool need_resp)
++{
++	u32 i, csum = 0;
++
++	for (i = 0; i < skb->len / 4; i++)
++		csum ^= get_unaligned_le32(skb->data + i * 4);
++
++	trace_mt_mcu_msg_send(dev, skb, csum, need_resp);
++}
++
++static struct sk_buff *
++mt76x0_mcu_msg_alloc(struct mt76x0_dev *dev, const void *data, int len)
++{
++	struct sk_buff *skb;
++
++	WARN_ON(len % 4); /* if length is not divisible by 4 we need to pad */
++
++	skb = alloc_skb(len + MT_DMA_HDR_LEN + 4, GFP_KERNEL);
++	skb_reserve(skb, MT_DMA_HDR_LEN);
++	memcpy(skb_put(skb, len), data, len);
++
++	return skb;
++}
++
++static void mt76x0_read_resp_regs(struct mt76x0_dev *dev, int len)
++{
++	int i;
++	int n = dev->mcu.reg_pairs_len;
++	u8 *buf = dev->mcu.resp.buf;
++
++	buf += 4;
++	len -= 8;
++
++	if (dev->mcu.burst_read) {
++		u32 reg = dev->mcu.reg_pairs[0].reg - dev->mcu.reg_base;
++
++		WARN_ON_ONCE(len/4 != n);
++		for (i = 0; i < n; i++) {
++			u32 val = get_unaligned_le32(buf + 4*i);
++
++			dev->mcu.reg_pairs[i].reg = reg++;
++			dev->mcu.reg_pairs[i].value = val;
++		}
++	} else {
++		WARN_ON_ONCE(len/8 != n);
++		for (i = 0; i < n; i++) {
++			u32 reg = get_unaligned_le32(buf + 8*i) - dev->mcu.reg_base;
++			u32 val = get_unaligned_le32(buf + 8*i + 4);
++
++			WARN_ON_ONCE(dev->mcu.reg_pairs[i].reg != reg);
++			dev->mcu.reg_pairs[i].value = val;
++		}
++	}
++}
++
++static int mt76x0_mcu_wait_resp(struct mt76x0_dev *dev, u8 seq)
++{
++	struct urb *urb = dev->mcu.resp.urb;
++	u32 rxfce;
++	int urb_status, ret, try = 5;
++
++	while (try--) {
++		if (!wait_for_completion_timeout(&dev->mcu.resp_cmpl,
++						 msecs_to_jiffies(300))) {
++			dev_warn(dev->mt76.dev, "Warning: %s retrying\n", __func__);
++			continue;
++		}
++
++		/* Make copies of important data before reusing the urb */
++		rxfce = get_unaligned_le32(dev->mcu.resp.buf);
++		urb_status = urb->status * mt76x0_urb_has_error(urb);
++
++		if (urb_status == 0 && dev->mcu.reg_pairs)
++			mt76x0_read_resp_regs(dev, urb->actual_length);
++
++		ret = mt76x0_usb_submit_buf(dev, USB_DIR_IN, MT_EP_IN_CMD_RESP,
++					     &dev->mcu.resp, GFP_KERNEL,
++					     mt76x0_complete_urb,
++					     &dev->mcu.resp_cmpl);
++		if (ret)
++			return ret;
++
++		if (urb_status)
++			dev_err(dev->mt76.dev, "Error: MCU resp urb failed:%d\n",
++				urb_status);
++
++		if (FIELD_GET(MT_RXD_CMD_INFO_CMD_SEQ, rxfce) == seq &&
++		    FIELD_GET(MT_RXD_CMD_INFO_EVT_TYPE, rxfce) == CMD_DONE)
++			return 0;
++
++		dev_err(dev->mt76.dev, "Error: MCU resp evt:%lx seq:%hhx-%lx!\n",
++			FIELD_GET(MT_RXD_CMD_INFO_EVT_TYPE, rxfce),
++			seq, FIELD_GET(MT_RXD_CMD_INFO_CMD_SEQ, rxfce));
++	}
++
++	dev_err(dev->mt76.dev, "Error: %s timed out\n", __func__);
++	return -ETIMEDOUT;
++}
++
++static int
++__mt76x0_mcu_msg_send(struct mt76x0_dev *dev, struct sk_buff *skb,
++		      enum mcu_cmd cmd, bool wait_resp)
++{
++	struct usb_device *usb_dev = mt76x0_to_usb_dev(dev);
++	unsigned cmd_pipe = usb_sndbulkpipe(usb_dev,
++					    dev->out_ep[MT_EP_OUT_INBAND_CMD]);
++	int sent, ret;
++	u8 seq = 0;
++
++	if (wait_resp)
++		while (!seq)
++			seq = ++dev->mcu.msg_seq & 0xf;
++
++	mt76x0_dma_skb_wrap_cmd(skb, seq, cmd);
++
++	if (dev->mcu.resp_cmpl.done)
++		dev_err(dev->mt76.dev, "Error: MCU response pre-completed!\n");
++
++	trace_mt_mcu_msg_send_cs(&dev->mt76, skb, wait_resp);
++	trace_mt_submit_urb_sync(&dev->mt76, cmd_pipe, skb->len);
++
++	ret = usb_bulk_msg(usb_dev, cmd_pipe, skb->data, skb->len, &sent, 500);
++	if (ret) {
++		dev_err(dev->mt76.dev, "Error: send MCU cmd failed:%d\n", ret);
++		goto out;
++	}
++	if (sent != skb->len)
++		dev_err(dev->mt76.dev, "Error: %s sent != skb->len\n", __func__);
++
++	if (wait_resp)
++		ret = mt76x0_mcu_wait_resp(dev, seq);
++
++out:
++	return ret;
++}
++
++static int
++mt76x0_mcu_msg_send(struct mt76x0_dev *dev, struct sk_buff *skb,
++		     enum mcu_cmd cmd, bool wait_resp)
++{
++	int ret;
++
++	if (test_bit(MT76_REMOVED, &dev->mt76.state))
++		return 0;
++
++	mutex_lock(&dev->mcu.mutex);
++	ret = __mt76x0_mcu_msg_send(dev, skb, cmd, wait_resp);
++	mutex_unlock(&dev->mcu.mutex);
++
++	consume_skb(skb);
++
++	return ret;
++}
++
++int mt76x0_mcu_function_select(struct mt76x0_dev *dev,
++			       enum mcu_function func, u32 val)
++{
++	struct sk_buff *skb;
++	struct {
++		__le32 id;
++		__le32 value;
++	} __packed __aligned(4) msg = {
++		.id = cpu_to_le32(func),
++		.value = cpu_to_le32(val),
++	};
++
++	skb = mt76x0_mcu_msg_alloc(dev, &msg, sizeof(msg));
++	return mt76x0_mcu_msg_send(dev, skb, CMD_FUN_SET_OP, func == 5);
++}
++
++int
++mt76x0_mcu_calibrate(struct mt76x0_dev *dev, enum mcu_calibrate cal, u32 val)
++{
++	struct sk_buff *skb;
++	struct {
++		__le32 id;
++		__le32 value;
++	} __packed __aligned(4) msg = {
++		.id = cpu_to_le32(cal),
++		.value = cpu_to_le32(val),
++	};
++
++	skb = mt76x0_mcu_msg_alloc(dev, &msg, sizeof(msg));
++	return mt76x0_mcu_msg_send(dev, skb, CMD_CALIBRATION_OP, true);
++}
++
++int mt76x0_write_reg_pairs(struct mt76x0_dev *dev, u32 base,
++			   const struct mt76_reg_pair *data, int n)
++{
++	const int max_vals_per_cmd = INBAND_PACKET_MAX_LEN / 8;
++	struct sk_buff *skb;
++	int cnt, i, ret;
++
++	if (!n)
++		return 0;
++
++	cnt = min(max_vals_per_cmd, n);
++
++	skb = alloc_skb(cnt * 8 + MT_DMA_HDR_LEN + 4, GFP_KERNEL);
++	if (!skb)
++		return -ENOMEM;
++	skb_reserve(skb, MT_DMA_HDR_LEN);
++
++	for (i = 0; i < cnt; i++) {
++		skb_put_le32(skb, base + data[i].reg);
++		skb_put_le32(skb, data[i].value);
++	}
++
++	ret = mt76x0_mcu_msg_send(dev, skb, CMD_RANDOM_WRITE, cnt == n);
++	if (ret)
++		return ret;
++
++	return mt76x0_write_reg_pairs(dev, base, data + cnt, n - cnt);
++}
++
++int mt76x0_read_reg_pairs(struct mt76x0_dev *dev, u32 base,
++			  struct mt76_reg_pair *data, int n)
++{
++	const int max_vals_per_cmd = INBAND_PACKET_MAX_LEN / 8;
++	struct sk_buff *skb;
++	int cnt, i, ret;
++
++	if (!n)
++		return 0;
++
++	cnt = min(max_vals_per_cmd, n);
++	if (cnt != n)
++		return -EINVAL;
++
++	skb = alloc_skb(cnt * 8 + MT_DMA_HDR_LEN + 4, GFP_KERNEL);
++	if (!skb)
++		return -ENOMEM;
++	skb_reserve(skb, MT_DMA_HDR_LEN);
++
++	for (i = 0; i < cnt; i++) {
++		skb_put_le32(skb, base + data[i].reg);
++		skb_put_le32(skb, data[i].value);
++	}
++
++	mutex_lock(&dev->mcu.mutex);
++
++	dev->mcu.reg_pairs = data;
++	dev->mcu.reg_pairs_len = n;
++	dev->mcu.reg_base = base;
++	dev->mcu.burst_read = false;
++
++	ret = __mt76x0_mcu_msg_send(dev, skb, CMD_RANDOM_READ, true);
++
++	dev->mcu.reg_pairs = NULL;
++
++	mutex_unlock(&dev->mcu.mutex);
++
++	consume_skb(skb);
++
++	return ret;
++
++}
++
++int mt76x0_burst_write_regs(struct mt76x0_dev *dev, u32 offset,
++			     const u32 *data, int n)
++{
++	const int max_regs_per_cmd = INBAND_PACKET_MAX_LEN / 4 - 1;
++	struct sk_buff *skb;
++	int cnt, i, ret;
++
++	if (!n)
++		return 0;
++
++	cnt = min(max_regs_per_cmd, n);
++
++	skb = alloc_skb(cnt * 4 + MT_DMA_HDR_LEN + 4, GFP_KERNEL);
++	if (!skb)
++		return -ENOMEM;
++	skb_reserve(skb, MT_DMA_HDR_LEN);
++
++	skb_put_le32(skb, MT_MCU_MEMMAP_WLAN + offset);
++	for (i = 0; i < cnt; i++)
++		skb_put_le32(skb, data[i]);
++
++	ret = mt76x0_mcu_msg_send(dev, skb, CMD_BURST_WRITE, cnt == n);
++	if (ret)
++		return ret;
++
++	return mt76x0_burst_write_regs(dev, offset + cnt * 4,
++					data + cnt, n - cnt);
++}
++
++int mt76x0_burst_read_regs(struct mt76x0_dev *dev, u32 base,
++			   struct mt76_reg_pair *data, int n)
++{
++	const int max_vals_per_cmd = INBAND_PACKET_MAX_LEN / 4 - 1;
++	struct sk_buff *skb;
++	int cnt, ret;
++
++	if (!n)
++		return 0;
++
++	cnt = min(max_vals_per_cmd, n);
++	if (cnt != n)
++		return -EINVAL;
++
++	skb = alloc_skb(cnt * 4 + MT_DMA_HDR_LEN + 4, GFP_KERNEL);
++	if (!skb)
++		return -ENOMEM;
++	skb_reserve(skb, MT_DMA_HDR_LEN);
++
++	skb_put_le32(skb, base + data[0].reg);
++	skb_put_le32(skb, n);
++
++	mutex_lock(&dev->mcu.mutex);
++
++	dev->mcu.reg_pairs = data;
++	dev->mcu.reg_pairs_len = n;
++	dev->mcu.reg_base = base;
++	dev->mcu.burst_read = true;
++
++	ret = __mt76x0_mcu_msg_send(dev, skb, CMD_BURST_READ, true);
++
++	dev->mcu.reg_pairs = NULL;
++
++	mutex_unlock(&dev->mcu.mutex);
++
++	consume_skb(skb);
++
++	return ret;
++}
++
++
++struct mt76_fw_header {
++	__le32 ilm_len;
++	__le32 dlm_len;
++	__le16 build_ver;
++	__le16 fw_ver;
++	u8 pad[4];
++	char build_time[16];
++};
++
++struct mt76_fw {
++	struct mt76_fw_header hdr;
++	u8 ivb[MT_MCU_IVB_SIZE];
++	u8 ilm[];
++};
++
++static int __mt76x0_dma_fw(struct mt76x0_dev *dev,
++			    const struct mt76x0_dma_buf *dma_buf,
++			    const void *data, u32 len, u32 dst_addr)
++{
++	DECLARE_COMPLETION_ONSTACK(cmpl);
++	struct mt76x0_dma_buf buf = *dma_buf; /* we need to fake length */
++	__le32 reg;
++	u32 val;
++	int ret;
++
++	reg = cpu_to_le32(FIELD_PREP(MT_TXD_INFO_TYPE, DMA_COMMAND) |
++			  FIELD_PREP(MT_TXD_INFO_D_PORT, CPU_TX_PORT) |
++			  FIELD_PREP(MT_TXD_INFO_LEN, len));
++	memcpy(buf.buf, &reg, sizeof(reg));
++	memcpy(buf.buf + sizeof(reg), data, len);
++	memset(buf.buf + sizeof(reg) + len, 0, 8);
++
++	ret = mt76x0_vendor_single_wr(dev, MT_VEND_WRITE_FCE,
++				       MT_FCE_DMA_ADDR, dst_addr);
++	if (ret)
++		return ret;
++	len = roundup(len, 4);
++	ret = mt76x0_vendor_single_wr(dev, MT_VEND_WRITE_FCE,
++				       MT_FCE_DMA_LEN, len << 16);
++	if (ret)
++		return ret;
++
++	buf.len = MT_DMA_HDR_LEN + len + 4;
++	ret = mt76x0_usb_submit_buf(dev, USB_DIR_OUT, MT_EP_OUT_INBAND_CMD,
++				     &buf, GFP_KERNEL,
++				     mt76x0_complete_urb, &cmpl);
++	if (ret)
++		return ret;
++
++	if (!wait_for_completion_timeout(&cmpl, msecs_to_jiffies(1000))) {
++		dev_err(dev->mt76.dev, "Error: firmware upload timed out\n");
++		usb_kill_urb(buf.urb);
++		return -ETIMEDOUT;
++	}
++	if (mt76x0_urb_has_error(buf.urb)) {
++		dev_err(dev->mt76.dev, "Error: firmware upload urb failed:%d\n",
++			buf.urb->status);
++		return buf.urb->status;
++	}
++
++	val = mt76_rr(dev, MT_TX_CPU_FROM_FCE_CPU_DESC_IDX);
++	val++;
++	mt76_wr(dev, MT_TX_CPU_FROM_FCE_CPU_DESC_IDX, val);
++
++	msleep(5);
++
++	return 0;
++}
++
++static int
++mt76x0_dma_fw(struct mt76x0_dev *dev, struct mt76x0_dma_buf *dma_buf,
++	       const void *data, int len, u32 dst_addr)
++{
++	int n, ret;
++
++	if (len == 0)
++		return 0;
++
++	n = min(MCU_FW_URB_MAX_PAYLOAD, len);
++	ret = __mt76x0_dma_fw(dev, dma_buf, data, n, dst_addr);
++	if (ret)
++		return ret;
++
++#if 0
++	if (!mt76_poll_msec(dev, MT_MCU_COM_REG1, BIT(31), BIT(31), 500))
++		return -ETIMEDOUT;
++#endif
++
++	return mt76x0_dma_fw(dev, dma_buf, data + n, len - n, dst_addr + n);
++}
++
++static int
++mt76x0_upload_firmware(struct mt76x0_dev *dev, const struct mt76_fw *fw)
++{
++	struct mt76x0_dma_buf dma_buf;
++	void *ivb;
++	u32 ilm_len, dlm_len;
++	int i, ret;
++
++	ivb = kmemdup(fw->ivb, sizeof(fw->ivb), GFP_KERNEL);
++	if (!ivb)
++		return -ENOMEM;
++	if (mt76x0_usb_alloc_buf(dev, MCU_FW_URB_SIZE, &dma_buf)) {
++		ret = -ENOMEM;
++		goto error;
++	}
++
++	ilm_len = le32_to_cpu(fw->hdr.ilm_len) - sizeof(fw->ivb);
++	dev_dbg(dev->mt76.dev, "loading FW - ILM %u + IVB %zu\n",
++		ilm_len, sizeof(fw->ivb));
++	ret = mt76x0_dma_fw(dev, &dma_buf, fw->ilm, ilm_len, sizeof(fw->ivb));
++	if (ret)
++		goto error;
++
++	dlm_len = le32_to_cpu(fw->hdr.dlm_len);
++	dev_dbg(dev->mt76.dev, "loading FW - DLM %u\n", dlm_len);
++	ret = mt76x0_dma_fw(dev, &dma_buf, fw->ilm + ilm_len,
++			     dlm_len, MT_MCU_DLM_OFFSET);
++	if (ret)
++		goto error;
++
++	ret = mt76x0_vendor_request(dev, MT_VEND_DEV_MODE, USB_DIR_OUT,
++				     0x12, 0, ivb, sizeof(fw->ivb));
++	if (ret < 0)
++		goto error;
++	ret = 0;
++
++	for (i = 100; i && !firmware_running(dev); i--)
++		msleep(10);
++	if (!i) {
++		ret = -ETIMEDOUT;
++		goto error;
++	}
++
++	dev_dbg(dev->mt76.dev, "Firmware running!\n");
++error:
++	kfree(ivb);
++	mt76x0_usb_free_buf(dev, &dma_buf);
++
++	return ret;
++}
++
++static int mt76x0_load_firmware(struct mt76x0_dev *dev)
++{
++	const struct firmware *fw;
++	const struct mt76_fw_header *hdr;
++	int len, ret;
++	u32 val;
++
++	mt76_wr(dev, MT_USB_DMA_CFG, (MT_USB_DMA_CFG_RX_BULK_EN |
++					 MT_USB_DMA_CFG_TX_BULK_EN));
++
++	if (firmware_running(dev))
++		return 0;
++
++	ret = request_firmware(&fw, MT7610_FIRMWARE, dev->mt76.dev);
++	if (ret)
++		return ret;
++
++	if (!fw || !fw->data || fw->size < sizeof(*hdr))
++		goto err_inv_fw;
++
++	hdr = (const struct mt76_fw_header *) fw->data;
++
++	if (le32_to_cpu(hdr->ilm_len) <= MT_MCU_IVB_SIZE)
++		goto err_inv_fw;
++
++	len = sizeof(*hdr);
++	len += le32_to_cpu(hdr->ilm_len);
++	len += le32_to_cpu(hdr->dlm_len);
++
++	if (fw->size != len)
++		goto err_inv_fw;
++
++	val = le16_to_cpu(hdr->fw_ver);
++	dev_dbg(dev->mt76.dev,
++		 "Firmware Version: %d.%d.%02d Build: %x Build time: %.16s\n",
++		 (val >> 12) & 0xf, (val >> 8) & 0xf, val & 0xf,
++		 le16_to_cpu(hdr->build_ver), hdr->build_time);
++
++	len = le32_to_cpu(hdr->ilm_len);
++
++	mt76_wr(dev, 0x1004, 0x2c);
++
++	mt76_set(dev, MT_USB_DMA_CFG, (MT_USB_DMA_CFG_RX_BULK_EN |
++				       MT_USB_DMA_CFG_TX_BULK_EN) |
++				       FIELD_PREP(MT_USB_DMA_CFG_RX_BULK_AGG_TOUT, 0x20));
++	mt76x0_vendor_reset(dev);
++	msleep(5);
++/*
++	mt76x0_rmw(dev, MT_PBF_CFG, 0, (MT_PBF_CFG_TX0Q_EN |
++					 MT_PBF_CFG_TX1Q_EN |
++					 MT_PBF_CFG_TX2Q_EN |
++					 MT_PBF_CFG_TX3Q_EN));
++*/
++
++	mt76_wr(dev, MT_FCE_PSE_CTRL, 1);
++
++	/* FCE tx_fs_base_ptr */
++	mt76_wr(dev, MT_TX_CPU_FROM_FCE_BASE_PTR, 0x400230);
++	/* FCE tx_fs_max_cnt */
++	mt76_wr(dev, MT_TX_CPU_FROM_FCE_MAX_COUNT, 1);
++	/* FCE pdma enable */
++	mt76_wr(dev, MT_FCE_PDMA_GLOBAL_CONF, 0x44);
++	/* FCE skip_fs_en */
++	mt76_wr(dev, MT_FCE_SKIP_FS, 3);
++
++	val = mt76_rr(dev, MT_USB_DMA_CFG);
++	val |= MT_USB_DMA_CFG_TX_WL_DROP;
++	mt76_wr(dev, MT_USB_DMA_CFG, val);
++	val &= ~MT_USB_DMA_CFG_TX_WL_DROP;
++	mt76_wr(dev, MT_USB_DMA_CFG, val);
++
++	ret = mt76x0_upload_firmware(dev, (const struct mt76_fw *)fw->data);
++	release_firmware(fw);
++
++	mt76_wr(dev, MT_FCE_PSE_CTRL, 1);
++
++	return ret;
++
++err_inv_fw:
++	dev_err(dev->mt76.dev, "Invalid firmware image\n");
++	release_firmware(fw);
++	return -ENOENT;
++}
++
++int mt76x0_mcu_init(struct mt76x0_dev *dev)
++{
++	int ret;
++
++	mutex_init(&dev->mcu.mutex);
++
++	ret = mt76x0_load_firmware(dev);
++	if (ret)
++		return ret;
++
++	set_bit(MT76_STATE_MCU_RUNNING, &dev->mt76.state);
++
++	return 0;
++}
++
++int mt76x0_mcu_cmd_init(struct mt76x0_dev *dev)
++{
++	int ret;
++
++	ret = mt76x0_mcu_function_select(dev, Q_SELECT, 1);
++	if (ret)
++		return ret;
++
++	init_completion(&dev->mcu.resp_cmpl);
++	if (mt76x0_usb_alloc_buf(dev, MCU_RESP_URB_SIZE, &dev->mcu.resp)) {
++		mt76x0_usb_free_buf(dev, &dev->mcu.resp);
++		return -ENOMEM;
++	}
++
++	ret = mt76x0_usb_submit_buf(dev, USB_DIR_IN, MT_EP_IN_CMD_RESP,
++				     &dev->mcu.resp, GFP_KERNEL,
++				     mt76x0_complete_urb, &dev->mcu.resp_cmpl);
++	if (ret) {
++		mt76x0_usb_free_buf(dev, &dev->mcu.resp);
++		return ret;
++	}
++
++	return 0;
++}
++
++void mt76x0_mcu_cmd_deinit(struct mt76x0_dev *dev)
++{
++	usb_kill_urb(dev->mcu.resp.urb);
++	mt76x0_usb_free_buf(dev, &dev->mcu.resp);
++}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h
+new file mode 100644
+index 000000000000..8c2f77f4c3f5
+--- /dev/null
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mcu.h
+@@ -0,0 +1,101 @@
++/*
++ * Copyright (C) 2014 Felix Fietkau <nbd@openwrt.org>
++ * Copyright (C) 2015 Jakub Kicinski <kubakici@wp.pl>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#ifndef __MT76X0U_MCU_H
++#define __MT76X0U_MCU_H
++
++struct mt76x0_dev;
++
++/* Register definitions */
++#define MT_MCU_RESET_CTL		0x070C
++#define MT_MCU_INT_LEVEL		0x0718
++#define MT_MCU_COM_REG0			0x0730
++#define MT_MCU_COM_REG1			0x0734
++#define MT_MCU_COM_REG2			0x0738
++#define MT_MCU_COM_REG3			0x073C
++
++#define MT_MCU_IVB_SIZE			0x40
++#define MT_MCU_DLM_OFFSET		0x80000
++
++#define MT_MCU_MEMMAP_WLAN		0x00410000
++/* We use same space for BBP as for MAC regs
++ * #define MT_MCU_MEMMAP_BBP		0x40000000
++ */
++#define MT_MCU_MEMMAP_RF		0x80000000
++
++#define INBAND_PACKET_MAX_LEN		192
++
++enum mcu_cmd {
++	CMD_FUN_SET_OP = 1,
++	CMD_LOAD_CR = 2,
++	CMD_INIT_GAIN_OP = 3,
++	CMD_DYNC_VGA_OP = 6,
++	CMD_TDLS_CH_SW = 7,
++	CMD_BURST_WRITE = 8,
++	CMD_READ_MODIFY_WRITE = 9,
++	CMD_RANDOM_READ = 10,
++	CMD_BURST_READ = 11,
++	CMD_RANDOM_WRITE = 12,
++	CMD_LED_MODE_OP = 16,
++	CMD_POWER_SAVING_OP = 20,
++	CMD_WOW_CONFIG = 21,
++	CMD_WOW_QUERY = 22,
++	CMD_WOW_FEATURE = 24,
++	CMD_CARRIER_DETECT_OP = 28,
++	CMD_RADOR_DETECT_OP = 29,
++	CMD_SWITCH_CHANNEL_OP = 30,
++	CMD_CALIBRATION_OP = 31,
++	CMD_BEACON_OP = 32,
++	CMD_ANTENNA_OP = 33,
++};
++
++enum mcu_function {
++	Q_SELECT = 1,
++	BW_SETTING = 2,
++	ATOMIC_TSSI_SETTING = 5,
++};
++
++enum mcu_power_mode {
++	RADIO_OFF = 0x30,
++	RADIO_ON = 0x31,
++	RADIO_OFF_AUTO_WAKEUP = 0x32,
++	RADIO_OFF_ADVANCE = 0x33,
++	RADIO_ON_ADVANCE = 0x34,
++};
++
++enum mcu_calibrate {
++	MCU_CAL_R = 1,
++	MCU_CAL_RXDCOC,
++	MCU_CAL_LC,
++	MCU_CAL_LOFT,
++	MCU_CAL_TXIQ,
++	MCU_CAL_BW,
++	MCU_CAL_DPD,
++	MCU_CAL_RXIQ,
++	MCU_CAL_TXDCOC,
++	MCU_CAL_RX_GROUP_DELAY,
++	MCU_CAL_TX_GROUP_DELAY,
++};
++
++int mt76x0_mcu_init(struct mt76x0_dev *dev);
++int mt76x0_mcu_cmd_init(struct mt76x0_dev *dev);
++void mt76x0_mcu_cmd_deinit(struct mt76x0_dev *dev);
++
++int
++mt76x0_mcu_calibrate(struct mt76x0_dev *dev, enum mcu_calibrate cal, u32 val);
++
++int
++mt76x0_mcu_function_select(struct mt76x0_dev *dev, enum mcu_function func, u32 val);
++
++#endif
 -- 
-Kalle Valo
+1.9.3
