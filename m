@@ -1,84 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:62492 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728087AbeGSGqU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jul 2018 02:46:20 -0400
-From: Ajay Singh <ajay.kathat@microchip.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
-        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
-        <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>
-Subject: [PATCH 10/23] staging: wilc1000: remove unnecessary elements from 'wilc_priv' struct
-Date: Thu, 19 Jul 2018 04:15:06 +0530
-Message-ID: <1531953919-20804-11-git-send-email-ajay.kathat@microchip.com> (sfid-20180719_080501_177342_D75D18BB)
-In-Reply-To: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
-References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.bootlin.com ([62.4.15.54]:43530 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753560AbeGEJps (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Jul 2018 05:45:48 -0400
+From: Boris Brezillon <boris.brezillon@bootlin.com>
+To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Boris Brezillon <boris.brezillon@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        linux-mtd@lists.infradead.org
+Cc: David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 10/27] mtd: rawnand: orion: Avoid direct inclusion of asm headers
+Date: Thu,  5 Jul 2018 11:45:05 +0200
+Message-Id: <20180705094522.12138-11-boris.brezillon@bootlin.com> (sfid-20180705_114648_783353_E2C16929)
+In-Reply-To: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unused elements from 'wilc_priv' structure.
+Include linux/sizes.h instead of asm/sizes.h to make code completely
+arch independent.
 
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ----
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     | 7 -------
- 2 files changed, 11 deletions(-)
+ drivers/mtd/nand/raw/orion_nand.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 8f1c595..1a27e81 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2276,8 +2276,6 @@ int wilc_init_host_int(struct net_device *net)
- 	}
- 	op_ifcs++;
+diff --git a/drivers/mtd/nand/raw/orion_nand.c b/drivers/mtd/nand/raw/orion_nand.c
+index 7825fd3ce66b..c54d865c1ba1 100644
+--- a/drivers/mtd/nand/raw/orion_nand.c
++++ b/drivers/mtd/nand/raw/orion_nand.c
+@@ -18,7 +18,7 @@
+ #include <linux/clk.h>
+ #include <linux/err.h>
+ #include <linux/io.h>
+-#include <asm/sizes.h>
++#include <linux/sizes.h>
+ #include <linux/platform_data/mtd-orion_nand.h>
  
--	priv->auto_rate_adjusted = false;
--
- 	priv->p2p_listen_state = false;
- 
- 	mutex_init(&priv->scan_req_lock);
-@@ -2297,8 +2295,6 @@ int wilc_deinit_host_int(struct net_device *net)
- 	priv = wdev_priv(net->ieee80211_ptr);
- 	vif = netdev_priv(priv->dev);
- 
--	priv->auto_rate_adjusted = false;
--
- 	priv->p2p_listen_state = false;
- 
- 	op_ifcs--;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 22f3486..87f8cdc 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -74,14 +74,10 @@ struct wilc_priv {
- 
- 	u8 associated_bss[ETH_ALEN];
- 	struct sta_info assoc_stainfo;
--	struct net_device_stats stats;
--	u8 monitor_flag;
--	int status;
- 	struct sk_buff *skb;
- 	struct net_device *dev;
- 	struct host_if_drv *hif_drv;
- 	struct host_if_pmkid_attr pmkid_list;
--	struct wilc_wfi_stats netstats;
- 	u8 wep_key[4][WLAN_KEY_LEN_WEP104];
- 	u8 wep_key_len[4];
- 	/* The real interface that the monitor is on */
-@@ -91,9 +87,6 @@ struct wilc_priv {
- 	u8 wilc_groupkey;
- 	/* mutexes */
- 	struct mutex scan_req_lock;
--	/*  */
--	bool auto_rate_adjusted;
--
- 	bool p2p_listen_state;
- 
- };
+ struct orion_nand_info {
 -- 
-2.7.4
+2.14.1
