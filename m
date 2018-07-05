@@ -1,70 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54590 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728378AbeGZIcM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Jul 2018 04:32:12 -0400
-From: Wen Gong <wgong@qti-qualcomm.corp-partner.google.com>
-To: ath10k@lists.infradead.org, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] mac80211: Save sk_pacing_shift to ieee80211_hw
-Date: Thu, 26 Jul 2018 15:16:32 +0800
-Message-Id: <1532589393-16182-2-git-send-email-wgong@qti-qualcomm.corp-partner.google.com> (sfid-20180726_091646_712949_CE1BBE75)
-In-Reply-To: <1532589393-16182-1-git-send-email-wgong@qti-qualcomm.corp-partner.google.com>
-References: <1532589393-16182-1-git-send-email-wgong@qti-qualcomm.corp-partner.google.com>
+Received: from mail.bootlin.com ([62.4.15.54]:43611 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753606AbeGEJp7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Jul 2018 05:45:59 -0400
+From: Boris Brezillon <boris.brezillon@bootlin.com>
+To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Boris Brezillon <boris.brezillon@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        linux-mtd@lists.infradead.org
+Cc: David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 21/27] bcma: Allow selection of this driver when COMPILE_TEST=y
+Date: Thu,  5 Jul 2018 11:45:16 +0200
+Message-Id: <20180705094522.12138-22-boris.brezillon@bootlin.com> (sfid-20180705_114646_523364_2F066C0B)
+In-Reply-To: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wen Gong <wgong@codeaurora.org>
+This allows us to increase compile-test coverage without having to build
+a kernel for MIPS.  That's particularly interesting for subsystem
+maintainers that want to test as many drivers as possible in a single
+build.
 
-Add the skb_pacing_shirt adjustment, but this change make it
-configurable for other driver. If no other driver set it, then
-mac8011 will use the default value.
+We also add a dependency on HAS_IOMEM in BCMA_HOST_SOC to make sure the
+driver is not selected when the arch does not implement IO accessors.
 
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
+Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
 ---
- include/net/mac80211.h | 1 +
- net/mac80211/main.c    | 2 ++
- net/mac80211/tx.c      | 2 +-
- 3 files changed, 4 insertions(+), 1 deletion(-)
+ drivers/bcma/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 851a5e1..f600d08 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2279,6 +2279,7 @@ struct ieee80211_hw {
- 	u8 n_cipher_schemes;
- 	const struct ieee80211_cipher_scheme *cipher_schemes;
- 	u8 max_nan_de_entries;
-+	u8 tx_sk_pacing_shift;
- };
+diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+index cb0f1aad20b7..b9558ff20830 100644
+--- a/drivers/bcma/Kconfig
++++ b/drivers/bcma/Kconfig
+@@ -30,6 +30,7 @@ config BCMA_HOST_PCI
  
- static inline bool _ieee80211_hw_check(struct ieee80211_hw *hw,
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index fb73451..72dce49 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -584,6 +584,8 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
- 	local->ops = ops;
- 	local->use_chanctx = use_chanctx;
+ config BCMA_HOST_SOC
+ 	bool "Support for BCMA in a SoC"
++	depends on HAS_IOMEM
+ 	help
+ 	  Host interface for a Broadcom AIX bus directly mapped into
+ 	  the memory. This only works with the Broadcom SoCs from the
+@@ -61,7 +62,7 @@ config BCMA_DRIVER_PCI_HOSTMODE
  
-+	local->hw.tx_sk_pacing_shift = 8;
-+
- 	/* set up some defaults */
- 	local->hw.queues = 1;
- 	local->hw.max_rates = 1;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 44b5dfe..a2d61b9 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3596,7 +3596,7 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 		 * second, so 8 is ~4ms of queued data. Only affects local TCP
- 		 * sockets.
- 		 */
--		sk_pacing_shift_update(skb->sk, 8);
-+		sk_pacing_shift_update(skb->sk, sdata->local->hw.tx_sk_pacing_shift);
- 
- 		fast_tx = rcu_dereference(sta->fast_tx);
- 
+ config BCMA_DRIVER_MIPS
+ 	bool "BCMA Broadcom MIPS core driver"
+-	depends on MIPS
++	depends on MIPS || COMPILE_TEST
+ 	help
+ 	  Driver for the Broadcom MIPS core attached to Broadcom specific
+ 	  Advanced Microcontroller Bus.
 -- 
-1.9.1
+2.14.1
