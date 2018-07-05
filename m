@@ -1,113 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:34342 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388774AbeGXUh2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 16:37:28 -0400
-Received: by mail-pl0-f66.google.com with SMTP id f6-v6so2203576plo.1
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 12:29:32 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: davem@davemloft.net, ericvh@gmail.com, rminnich@sandia.gov,
-        lucho@ionkov.net, ralf@linux-mips.org, jreuter@yaina.de,
-        pablo@netfilter.org, kadlec@blackhole.kfki.hu, fw@strlen.de,
-        alex.aring@gmail.com, stefan@datenfreihafen.org,
-        kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
-        johannes@sipsolutions.net, jhs@mojatatu.com,
-        xiyou.wangcong@gmail.com, jiri@resnulli.us, vyasevich@gmail.com,
-        nhorman@tuxdriver.com, marcelo.leitner@gmail.com,
-        trond.myklebust@hammerspace.com, anna.schumaker@netapp.com,
-        steffen.klassert@secunet.com, herbert@gondor.apana.org.au
-Cc: netdev@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
-        linux-hams@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-decnet-user@lists.sourceforge.net,
-        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
-        linux-wpan@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-x25@vger.kernel.org,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Stephen Hemminger <stephen@networkplumber.org>
-Subject: [PATCH PATCH net-next 03/18] rds: remove trailing whitespace and blank lines
-Date: Tue, 24 Jul 2018 12:29:03 -0700
-Message-Id: <20180724192918.31165-4-sthemmin@microsoft.com> (sfid-20180724_213151_128195_17C0BBF3)
-In-Reply-To: <20180724192918.31165-1-sthemmin@microsoft.com>
-References: <20180724192918.31165-1-sthemmin@microsoft.com>
+Received: from mail.bootlin.com ([62.4.15.54]:43583 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753598AbeGEJp5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Jul 2018 05:45:57 -0400
+From: Boris Brezillon <boris.brezillon@bootlin.com>
+To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Boris Brezillon <boris.brezillon@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        linux-mtd@lists.infradead.org
+Cc: David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 15/27] mtd: rawnand: sunxi: Allow selection of this driver when COMPILE_TEST=y
+Date: Thu,  5 Jul 2018 11:45:10 +0200
+Message-Id: <20180705094522.12138-16-boris.brezillon@bootlin.com> (sfid-20180705_114624_715389_919B6A08)
+In-Reply-To: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
----
- net/rds/Kconfig          | 1 -
- net/rds/Makefile         | 1 -
- net/rds/ib.c             | 1 -
- net/rds/message.c        | 1 -
- net/rds/rdma_transport.c | 1 -
- net/rds/tcp.c            | 1 -
- net/rds/transport.c      | 1 -
- 7 files changed, 7 deletions(-)
+It just makes NAND maintainers' life easier by allowing them to
+compile-test this driver without having ARCH_SUNXI enabled.
 
-diff --git a/net/rds/Kconfig b/net/rds/Kconfig
-index bffde4b46c5d..41f75563b54b 100644
---- a/net/rds/Kconfig
-+++ b/net/rds/Kconfig
-@@ -24,4 +24,3 @@ config RDS_DEBUG
-         bool "RDS debugging messages"
- 	depends on RDS
-         default n
--
-diff --git a/net/rds/Makefile b/net/rds/Makefile
-index b5d568bd479c..e647f9de104a 100644
---- a/net/rds/Makefile
-+++ b/net/rds/Makefile
-@@ -15,4 +15,3 @@ rds_tcp-y :=		tcp.o tcp_connect.o tcp_listen.o tcp_recv.o \
- 			tcp_send.o tcp_stats.o
+We also need to add a dependency on HAS_IOMEM to make sure the driver
+compiles correctly.
+
+Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+---
+ drivers/mtd/nand/raw/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
+index c3aa1d79781b..a5edd76e29db 100644
+--- a/drivers/mtd/nand/raw/Kconfig
++++ b/drivers/mtd/nand/raw/Kconfig
+@@ -517,7 +517,8 @@ config MTD_NAND_XWAY
  
- ccflags-$(CONFIG_RDS_DEBUG)	:=	-DRDS_DEBUG
--
-diff --git a/net/rds/ib.c b/net/rds/ib.c
-index 63d95ea7cdff..a4245c42d43b 100644
---- a/net/rds/ib.c
-+++ b/net/rds/ib.c
-@@ -568,4 +568,3 @@ int rds_ib_init(void)
- }
+ config MTD_NAND_SUNXI
+ 	tristate "Support for NAND on Allwinner SoCs"
+-	depends on ARCH_SUNXI
++	depends on ARCH_SUNXI || COMPILE_TEST
++	depends on HAS_IOMEM
+ 	help
+ 	  Enables support for NAND Flash chips on Allwinner SoCs.
  
- MODULE_LICENSE("GPL");
--
-diff --git a/net/rds/message.c b/net/rds/message.c
-index a35f76971984..4b00b1152a5f 100644
---- a/net/rds/message.c
-+++ b/net/rds/message.c
-@@ -514,4 +514,3 @@ void rds_message_unmapped(struct rds_message *rm)
- 	wake_up_interruptible(&rm->m_flush_wait);
- }
- EXPORT_SYMBOL_GPL(rds_message_unmapped);
--
-diff --git a/net/rds/rdma_transport.c b/net/rds/rdma_transport.c
-index bd67e55354f4..ad78929036ef 100644
---- a/net/rds/rdma_transport.c
-+++ b/net/rds/rdma_transport.c
-@@ -281,4 +281,3 @@ module_exit(rds_rdma_exit);
- MODULE_AUTHOR("Oracle Corporation <rds-devel@oss.oracle.com>");
- MODULE_DESCRIPTION("RDS: IB transport");
- MODULE_LICENSE("Dual BSD/GPL");
--
-diff --git a/net/rds/tcp.c b/net/rds/tcp.c
-index 7028d6e51947..f23925af0b8d 100644
---- a/net/rds/tcp.c
-+++ b/net/rds/tcp.c
-@@ -717,4 +717,3 @@ module_init(rds_tcp_init);
- MODULE_AUTHOR("Oracle Corporation <rds-devel@oss.oracle.com>");
- MODULE_DESCRIPTION("RDS: TCP transport");
- MODULE_LICENSE("Dual BSD/GPL");
--
-diff --git a/net/rds/transport.c b/net/rds/transport.c
-index c9788dbce441..46f709a4b577 100644
---- a/net/rds/transport.c
-+++ b/net/rds/transport.c
-@@ -159,4 +159,3 @@ unsigned int rds_trans_stats_info_copy(struct rds_info_iterator *iter,
- 
- 	return total;
- }
--
 -- 
-2.18.0
+2.14.1
