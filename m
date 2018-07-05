@@ -1,30 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:38775 "EHLO mail.toke.dk"
+Received: from mail.bootlin.com ([62.4.15.54]:43588 "EHLO mail.bootlin.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753046AbeGDH03 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jul 2018 03:26:29 -0400
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Peter Oh <peter.oh@bowerswilkins.com>,
+        id S1753547AbeGEJp5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Jul 2018 05:45:57 -0400
+From: Boris Brezillon <boris.brezillon@bootlin.com>
+To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Boris Brezillon <boris.brezillon@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        linux-mtd@lists.infradead.org
+Cc: David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
         linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH] mac80211: don't put null-data frames on the normal TXQ
-In-Reply-To: <1530661681.4735.51.camel@sipsolutions.net>
-References: <20180703124725.30917-1-johannes@sipsolutions.net> <e9813f60-5cf5-a4bf-5906-623282319991@bowerswilkins.com> <1530661681.4735.51.camel@sipsolutions.net>
-Date: Wed, 04 Jul 2018 09:26:23 +0200
-Message-ID: <87zhz7ea1s.fsf@toke.dk> (sfid-20180704_092635_157727_7BBBD804)
-MIME-Version: 1.0
-Content-Type: text/plain
+Subject: [PATCH 17/27] mtd: rawnand: fsmc: Allow selection of this driver when COMPILE_TEST=y
+Date: Thu,  5 Jul 2018 11:45:12 +0200
+Message-Id: <20180705094522.12138-18-boris.brezillon@bootlin.com> (sfid-20180705_114625_285275_C22256B3)
+In-Reply-To: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+It just makes NAND maintainers' life easier by allowing them to
+compile-test this driver without having PLAT_SPEAR, ARCH_NOMADIK,
+ARCH_U8500 or MACH_U300 enabled.
 
-> I see no evidence of ath9k doing this correctly, so this might fix a
-> bug there, but I may have missed it.
+We also need to add a dependency on HAS_IOMEM to make sure the driver
+compiles correctly.
 
-ath9k does check for this, in ath_tx_sched_aggr() and in
-ath_tx_form_aggr(); it'll check for the IEEE80211_TX_CTL_AMPDU flag, and
-stop building the current aggregate if the flag is not set.
+Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+---
+ drivers/mtd/nand/raw/Kconfig | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
--Toke
+diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
+index b89bd94a654c..245f1b56b94f 100644
+--- a/drivers/mtd/nand/raw/Kconfig
++++ b/drivers/mtd/nand/raw/Kconfig
+@@ -502,8 +502,9 @@ config MTD_NAND_JZ4780
+ 
+ config MTD_NAND_FSMC
+ 	tristate "Support for NAND on ST Micros FSMC"
+-	depends on OF
+-	depends on PLAT_SPEAR || ARCH_NOMADIK || ARCH_U8500 || MACH_U300
++	depends on OF && HAS_IOMEM
++	depends on PLAT_SPEAR || ARCH_NOMADIK || ARCH_U8500 || MACH_U300 || \
++		   COMPILE_TEST
+ 	help
+ 	  Enables support for NAND Flash chips on the ST Microelectronics
+ 	  Flexible Static Memory Controller (FSMC)
+-- 
+2.14.1
