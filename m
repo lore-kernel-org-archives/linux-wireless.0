@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:41008 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754071AbeGEM76 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jul 2018 08:59:58 -0400
-Received: by mail-pf0-f196.google.com with SMTP id c21-v6so754106pfn.8
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2018 05:59:58 -0700 (PDT)
-From: Sushant Kumar Mishra <sushant2k1513@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Sanjay Kumar Konduri <sajay.konduri@redpinesignals.com>,
-        Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
-Subject: [PATCH 4/4] rsi: optimize virtual interfaces
-Date: Thu,  5 Jul 2018 18:08:22 +0530
-Message-Id: <1530794302-8833-5-git-send-email-sushant2k1513@gmail.com> (sfid-20180705_150001_747648_3C472AA3)
-In-Reply-To: <1530794302-8833-1-git-send-email-sushant2k1513@gmail.com>
-References: <1530794302-8833-1-git-send-email-sushant2k1513@gmail.com>
+Received: from mail.bootlin.com ([62.4.15.54]:43609 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753604AbeGEJp7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Jul 2018 05:45:59 -0400
+From: Boris Brezillon <boris.brezillon@bootlin.com>
+To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Boris Brezillon <boris.brezillon@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        linux-mtd@lists.infradead.org
+Cc: David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 19/27] memory: fsl_ifc: Allow selection of this driver when COMPILE_TEST=y
+Date: Thu,  5 Jul 2018 11:45:14 +0200
+Message-Id: <20180705094522.12138-20-boris.brezillon@bootlin.com> (sfid-20180705_120226_406338_7328E5FE)
+In-Reply-To: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+It just makes maintainers' life easier by allowing them to compile-test
+this driver without having FSL_SOC, ARCH_LAYERSCAPE or SOC_LS1021A
+enabled.
 
-Due to multiple calls of add interface routine, vif is getting duplicated
-and at certain instance, we are out of vifs, causing the driver to behave
-abnormal.
+We also need to add a dependency on HAS_IOMEM to make sure the
+driver compiles correctly.
 
-Fix: Every vif has a unique mac-id, when we got a vif with same mac-id as
-the previous id's, we will override the respective vif.
-
-Signed-off-by: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-Signed-off-by: Sushant Kumar Mishra <sushant.mishra@redpinesignals.com>
+Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 3 ++-
+ drivers/memory/Kconfig | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index 2ca7464..4e510cb 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -416,7 +416,8 @@ static int rsi_mac80211_add_interface(struct ieee80211_hw *hw,
+diff --git a/drivers/memory/Kconfig b/drivers/memory/Kconfig
+index 8d731d6c3e54..78457ab2cbc4 100644
+--- a/drivers/memory/Kconfig
++++ b/drivers/memory/Kconfig
+@@ -116,7 +116,8 @@ config FSL_CORENET_CF
  
- 	/* Get free vap index */
- 	for (i = 0; i < RSI_MAX_VIFS; i++) {
--		if (!adapter->vifs[i]) {
-+		if (!adapter->vifs[i] ||
-+		    !memcmp(vif->addr, adapter->vifs[i]->addr, ETH_ALEN)) {
- 			vap_idx = i;
- 			break;
- 		}
+ config FSL_IFC
+ 	bool
+-	depends on FSL_SOC || ARCH_LAYERSCAPE || SOC_LS1021A
++	depends on FSL_SOC || ARCH_LAYERSCAPE || SOC_LS1021A || COMPILE_TEST
++	depends on HAS_IOMEM
+ 
+ config JZ4780_NEMC
+ 	bool "Ingenic JZ4780 SoC NEMC driver"
 -- 
-2.5.5
+2.14.1
