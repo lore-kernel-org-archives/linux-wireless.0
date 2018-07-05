@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf1-f66.google.com ([209.85.167.66]:43150 "EHLO
-        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388244AbeGXMyF (ORCPT
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:33061 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753432AbeGEVbc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 08:54:05 -0400
-Received: by mail-lf1-f66.google.com with SMTP id f135-v6so1037249lfg.10
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jul 2018 04:48:00 -0700 (PDT)
-From: roman.stratiienko@globallogic.com
-To: akarwar@marvell.com
-Cc: nishants@marvell.com, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, sergei.shtylyov@cogentembedded.com,
-        Roman Stratiienko <roman.stratiienko@globallogic.com>
-Subject: [PATCH] mwifiex: Fix skipped vendor specific IEs
-Date: Tue, 24 Jul 2018 14:47:27 +0300
-Message-Id: <1532432847-2885-1-git-send-email-roman.stratiienko@globallogic.com> (sfid-20180724_134807_228224_9539F28F)
+        Thu, 5 Jul 2018 17:31:32 -0400
+Subject: Re: [PATCH v7 02/16] leds: triggers: let struct
+ led_trigger::activate() return an error code
+To: =?UTF-8?Q?Uwe_Kleine-K=c3=b6nig?= <u.kleine-koenig@pengutronix.de>
+Cc: Pavel Machek <pavel@ucw.cz>, kernel@pengutronix.de,
+        linux-leds@vger.kernel.org, kernel-patch-test@lists.linaro.org,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Johan Hedberg <johan.hedberg@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <a9b3548b-09c4-fae4-1bce-abf3392b9ceb@gmail.com>
+ <20180702200535.1337-2-u.kleine-koenig@pengutronix.de>
+From: Jacek Anaszewski <jacek.anaszewski@gmail.com>
+Message-ID: <1172a776-a951-28d5-fae4-824969f4a82b@gmail.com> (sfid-20180705_233147_049284_482CF31E)
+Date: Thu, 5 Jul 2018 23:31:28 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180702200535.1337-2-u.kleine-koenig@pengutronix.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roman Stratiienko <roman.stratiienko@globallogic.com>
+Hi Uwe,
 
-Mwifiex firmware inserts only Microsoft information element
-Allow other vendor specific IEs to pass from userspace
+On 07/02/2018 10:05 PM, Uwe Kleine-König wrote:
+> Given that activating a trigger can fail, let the callback return an
+> indication. This prevents to have a trigger active according to the
+> "trigger" sysfs attribute but not functional.
+> 
+> All users are changed accordingly to return 0 for now. There is no intended
+> change in behaviour.
+> 
+> Acked-by: Pavel Machek <pavel@ucw.cz>
+> Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+[...]
+> -static void ieee80211_tx_led_activate(struct led_classdev *led_cdev)
+> +static int ieee80211_tx_led_activate(struct led_classdev *led_cdev)
+>   {
+>   	struct ieee80211_local *local = container_of(led_cdev->trigger,
+>   						     struct ieee80211_local,
+>   						     tx_led);
+>   
+>   	atomic_inc(&local->tx_led_active);
+> +
+> +	return 0
+[...]
 
-Signed-off-by: Roman Stratiienko <roman.stratiienko@globallogic.com>
----
- drivers/net/wireless/marvell/mwifiex/ie.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+s/return 0/return 0;/
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/ie.c b/drivers/net/wireless/marvell/mwifiex/ie.c
-index b10baac..75cbd60 100644
---- a/drivers/net/wireless/marvell/mwifiex/ie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/ie.c
-@@ -355,8 +355,14 @@ static int mwifiex_uap_parse_tail_ies(struct mwifiex_private *priv,
- 		case WLAN_EID_HT_OPERATION:
- 		case WLAN_EID_VHT_CAPABILITY:
- 		case WLAN_EID_VHT_OPERATION:
--		case WLAN_EID_VENDOR_SPECIFIC:
- 			break;
-+		case WLAN_EID_VENDOR_SPECIFIC:
-+			/* Skip only Microsoft WMM IE */
-+			if (cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
-+						    WLAN_OUI_TYPE_MICROSOFT_WMM,
-+						    (const u8 *)hdr,
-+						    hdr->len + sizeof(struct ieee_types_header)))
-+				break;
- 		default:
- 			memcpy(gen_ie->ie_buffer + ie_len, hdr,
- 			       hdr->len + sizeof(struct ieee_types_header));
+Fixed it up and applied. I'm taking lack of net maintainer feedback
+as a tacit approval (or lack of interest).
+
 -- 
-2.7.4
+Best regards,
+Jacek Anaszewski
