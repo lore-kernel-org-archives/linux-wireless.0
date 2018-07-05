@@ -1,127 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:6993 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728151AbeGVIqO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Jul 2018 04:46:14 -0400
-From: Maya Erez <merez@codeaurora.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Ahmad Masri <amasri@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 11/20] wil6210: send L2UF on behalf of newly associated station
-Date: Sun, 22 Jul 2018 10:47:36 +0300
-Message-Id: <1532245665-15249-12-git-send-email-merez@codeaurora.org> (sfid-20180722_095029_900823_BD03869E)
-In-Reply-To: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
-References: <1532245665-15249-1-git-send-email-merez@codeaurora.org>
+Received: from mail.bootlin.com ([62.4.15.54]:43463 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753514AbeGEJph (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Jul 2018 05:45:37 -0400
+From: Boris Brezillon <boris.brezillon@bootlin.com>
+To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Boris Brezillon <boris.brezillon@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        linux-mtd@lists.infradead.org
+Cc: David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 02/27] mtd: rawnand: Add 'depends on HAS_IOMEM' where missing
+Date: Thu,  5 Jul 2018 11:44:57 +0200
+Message-Id: <20180705094522.12138-3-boris.brezillon@bootlin.com> (sfid-20180705_114556_219330_C68063D5)
+In-Reply-To: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ahmad Masri <amasri@codeaurora.org>
+When COMPILE_TEST is allowed and the platform needs uses the iomem API
+we need to add an explicit dependency on HAS_IOMEM to avoid selection
+of these drivers when building for an arch that has no iomem support
+(this is the case of arch/um).
 
-Send L2UF (Level 2 Update Frame) to update forwarding tables in layer 2
-in AP mode. Wil6210 driver creates and sends this frame once a new
-station connects to the AP.
-
-Signed-off-by: Ahmad Masri <amasri@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
 ---
- drivers/net/wireless/ath/wil6210/txrx.c    | 48 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/wil6210/wil6210.h |  2 ++
- drivers/net/wireless/ath/wil6210/wmi.c     |  2 ++
- 3 files changed, 52 insertions(+)
+ drivers/mtd/nand/raw/Kconfig | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 6a7943e..08d61a5 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -43,6 +43,15 @@
- module_param(rx_large_buf, bool, 0444);
- MODULE_PARM_DESC(rx_large_buf, " allocate 8KB RX buffers, default - no");
+diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
+index 58dad80eb174..bfd28c1b72a3 100644
+--- a/drivers/mtd/nand/raw/Kconfig
++++ b/drivers/mtd/nand/raw/Kconfig
+@@ -152,6 +152,7 @@ config MTD_NAND_S3C2410_CLKSTOP
+ config MTD_NAND_TANGO
+ 	tristate "NAND Flash support for Tango chips"
+ 	depends on ARCH_TANGO || COMPILE_TEST
++	depends on HAS_IOMEM
+ 	help
+ 	  Enables the NAND Flash controller on Tango chips.
  
-+/* Layer 2 Update frame (802.2 Type 1 LLC XID Update response) */
-+struct l2_update_frame {
-+	struct ethhdr eh;
-+	u8 dsap;
-+	u8 ssap;
-+	u8 control;
-+	u8 xid_info[3];
-+} __packed;
-+
- static inline uint wil_rx_snaplen(void)
- {
- 	return rx_align_2 ? 6 : 0;
-@@ -72,6 +81,45 @@ static inline int wil_ring_avail_high(struct wil_ring *ring)
- 	return wil_ring_avail_tx(ring) > wil_ring_wmark_high(ring);
- }
+@@ -513,6 +514,7 @@ config MTD_NAND_SUNXI
+ config MTD_NAND_HISI504
+ 	tristate "Support for NAND controller on Hisilicon SoC Hip04"
+ 	depends on ARCH_HISI || COMPILE_TEST
++	depends on HAS_IOMEM
+ 	help
+ 	  Enables support for NAND controller on Hisilicon SoC Hip04.
  
-+/**
-+ * Send Level 2 Update Frame to update forwarding tables in
-+ * layer 2 bridge devices
-+ */
-+void wil_indicate_layer2_update(struct wil6210_vif *vif,
-+				struct wil_sta_info *sta)
-+{
-+	struct l2_update_frame *msg;
-+	struct sk_buff *skb;
-+	struct net_device *ndev = vif_to_ndev(vif);
-+
-+	skb = dev_alloc_skb(sizeof(*msg));
-+	if (!skb)
-+		return;
-+
-+	msg = (struct l2_update_frame *)skb_put(skb, sizeof(*msg));
-+
-+	/* 802.2 Type 1 Logical Link Control (LLC) Exchange Identifier (XID)
-+	 * Update response frame; IEEE Std 802.2-1998, 5.4.1.2.1
-+	 */
-+	eth_broadcast_addr(msg->eh.h_dest);
-+	ether_addr_copy(msg->eh.h_source, sta->addr);
-+	msg->eh.h_proto = htons(skb->len - sizeof(struct ethhdr));
-+	msg->dsap = 0;
-+	msg->ssap = 0; /* NULL LSAP, CR Bit: Response */
-+
-+	/* XID response lsb.1111F101.
-+	 * F=0 (no poll command; unsolicited frame)
-+	 */
-+	msg->control = 0xaf;
-+	msg->xid_info[0] = 0x81; /* XID format identifier */
-+	msg->xid_info[1] = 1; /* LLC types/classes: Type 1 LLC */
-+	msg->xid_info[2] = 0; /* XID sender's receive window size (RW) */
-+
-+	skb->dev = ndev;
-+	skb->protocol = eth_type_trans(skb, ndev);
-+	netif_rx_ni(skb);
-+}
-+
- /* returns true when all tx vrings are empty */
- bool wil_is_tx_idle(struct wil6210_priv *wil)
- {
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index e87c889..1857fb2 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -1308,6 +1308,8 @@ void wil_update_net_queues_bh(struct wil6210_priv *wil, struct wil6210_vif *vif,
- void wil_rx_handle(struct wil6210_priv *wil, int *quota);
- void wil6210_unmask_irq_rx(struct wil6210_priv *wil);
- void wil6210_unmask_irq_rx_edma(struct wil6210_priv *wil);
-+void wil_indicate_layer2_update(struct wil6210_vif *vif,
-+				struct wil_sta_info *sta);
- 
- int wil_iftype_nl2wmi(enum nl80211_iftype type);
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 45a71fd..7fee674 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -1047,6 +1047,8 @@ static void wmi_evt_connect(struct wil6210_vif *vif, int id, void *d, int len)
- 		}
- 
- 		cfg80211_new_sta(ndev, evt->bssid, sinfo, GFP_KERNEL);
-+		if (wdev->iftype == NL80211_IFTYPE_AP)
-+			wil_indicate_layer2_update(vif, &wil->sta[evt->cid]);
- 
- 		kfree(sinfo);
- 	} else {
+@@ -526,6 +528,7 @@ config MTD_NAND_QCOM
+ config MTD_NAND_MTK
+ 	tristate "Support for NAND controller on MTK SoCs"
+ 	depends on ARCH_MEDIATEK || COMPILE_TEST
++	depends on HAS_IOMEM
+ 	help
+ 	  Enables support for NAND controller on MTK SoCs.
+ 	  This controller is found on mt27xx, mt81xx, mt65xx SoCs.
+@@ -533,6 +536,7 @@ config MTD_NAND_MTK
+ config MTD_NAND_TEGRA
+ 	tristate "Support for NAND controller on NVIDIA Tegra"
+ 	depends on ARCH_TEGRA || COMPILE_TEST
++	depends on HAS_IOMEM
+ 	help
+ 	  Enables support for NAND flash controller on NVIDIA Tegra SoC.
+ 	  The driver has been developed and tested on a Tegra 2 SoC. DMA
 -- 
-1.9.1
+2.14.1
