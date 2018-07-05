@@ -1,86 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:45478 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932956AbeGIVFK (ORCPT
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:53696 "EHLO
+        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752458AbeGEIrO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jul 2018 17:05:10 -0400
-Subject: Re: INFO: rcu detected stall in llcp_sock_sendmsg
-To: Dmitry Vyukov <dvyukov@google.com>,
-        syzbot <syzbot+e9f364d3b15ce41d8451@syzkaller.appspotmail.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        David Miller <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        Petr Mladek <pmladek@suse.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        syzkaller-bugs <syzkaller-bugs@googlegroups.com>
-References: <0000000000000cc1f0057096efe6@google.com>
- <CACT4Y+Zc+UKpGwEEMfKOsZ1s+AAFYFrVmjO0-u7NNjODRiJ7tg@mail.gmail.com>
-From: Eric Dumazet <eric.dumazet@gmail.com>
-Message-ID: <6e2e4cfa-2cde-ec28-933d-1ee17c8b1da9@gmail.com> (sfid-20180709_230535_491023_87AF2B83)
-Date: Mon, 9 Jul 2018 14:05:08 -0700
+        Thu, 5 Jul 2018 04:47:14 -0400
+Received: by mail-wm0-f54.google.com with SMTP id b188-v6so9720919wme.3
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jul 2018 01:47:14 -0700 (PDT)
+From: Sven Eckelmann <sven.eckelmann@openmesh.com>
+To: Toke =?ISO-8859-1?Q?H=F8iland=2DJ=F8rgensen?= <toke@toke.dk>
+Cc: simon.wunderlich@openmesh.com,
+        Daniel Bailey <daniel.bailey@openmesh.com>,
+        Shashidhar Lakkavalli <shashidhar.lakkavalli@openmesh.com>,
+        linux-wireless@vger.kernel.org
+Subject: mac80211: AQM and block_tx
+Date: Thu, 05 Jul 2018 10:47:11 +0200
+Message-ID: <2846230.fHgAC8qB8Q@bentobox> (sfid-20180705_104718_382014_511B5C74)
 MIME-Version: 1.0
-In-Reply-To: <CACT4Y+Zc+UKpGwEEMfKOsZ1s+AAFYFrVmjO0-u7NNjODRiJ7tg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; boundary="nextPart10662715.4p9Da4tgGb"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--nextPart10662715.4p9Da4tgGb
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
+Hi Toke,
 
-On 07/09/2018 01:50 PM, Dmitry Vyukov wrote:
-> On Mon, Jul 9, 2018 at 10:34 PM, syzbot
-> <syzbot+e9f364d3b15ce41d8451@syzkaller.appspotmail.com> wrote:
->> Hello,
->>
->> syzbot found the following crash on:
->>
->> HEAD commit:    1e4b044d2251 Linux 4.18-rc4
->> git tree:       upstream
->> console output: https://syzkaller.appspot.com/x/log.txt?x=1414c2c2400000
->> kernel config:  https://syzkaller.appspot.com/x/.config?x=25856fac4e580aa7
->> dashboard link: https://syzkaller.appspot.com/bug?extid=e9f364d3b15ce41d8451
->> compiler:       gcc (GCC) 8.0.1 20180413 (experimental)
->>
->> Unfortunately, I don't have any reproducer for this crash yet.
->>
->> IMPORTANT: if you fix the bug, please add the following tag to the commit:
->> Reported-by: syzbot+e9f364d3b15ce41d8451@syzkaller.appspotmail.com
-> 
-> Looks like the problem is actually in nfc, so +nfc maintainers.
+we are currently testing DFS with ath10k and noticed that AQM seems to ignore 
+cfg80211_csa_settings->block_tx. Problem is now that the channel switch is 
+started on a detected radar
 
-Note this issue was discussed before, maybe we should patch NFC without waiting for nfc maintainer.
+  echo 1 >/sys/kernel/debug/ieee80211/phy1/ath10k/dfs_simulate_radar
 
-----------------------------------------------------
+NL80211_ATTR_CH_SWITCH_BLOCK_TX is set for the channel switch by hostapd but 
+the AP still sends QoS data to the client.
 
-On 06/25/2018 10:12 PM, Sergey Senozhatsky wrote:
-> On (06/26/18 07:07), Dmitry Vyukov wrote:
-> [..]
->>>  #include <net/nfc/nfc.h>
->>> @@ -755,7 +756,8 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
->>>                 pdu = nfc_alloc_send_skb(sock->dev, &sock->sk, MSG_DONTWAIT,
->>>                                          frag_len + LLCP_HEADER_SIZE, &err);
->>>                 if (pdu == NULL) {
->>> -                       pr_err("Could not allocate PDU\n");
->>> +                       pr_err_ratelimited("Could not allocate PDU\n");
->>> +                       cond_resched();
->>>                         continue;
->>>                 }
->>
->>
->> But this thread is still in an infinite (unkillable?) loop? If yes, we
->> are waiting for the next syzbot report 
->
-> The loop is still infinite, correct, but we have a preemption point now.
-> Sure, net people can come with a much better solution, I'll be happy to
-> scratch my patch.
->
+Was there a fix for such a problem which I might have missed? I've just worked 
+around that by setting wake_tx_queue TO NULL in ath10k. This still must be 
+verified but at least I didn't see any packets anymore on a monitor interface.
 
-This can not be the right solution, think about current thread being real time,
-cond_resched() might be a nop.
+Kind regards,
+	Sven
+--nextPart10662715.4p9Da4tgGb
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
 
-We should probably not loop at all, or not use MSG_DONTWAIT.
+-----BEGIN PGP SIGNATURE-----
 
-(And remove this useless "Could not allocate PDU" message)
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAls92w8ACgkQXYcKB8Em
+e0bGOxAAxsbRXPP8K5WtJozcUlUZlK3sg0N47Y6rrlyIKpfZtu9h6+CR0wW+48xQ
+/Byx+MEvPnJHl2Eqs6pH1XRDOc85XFBDH62JxRJVli/yiEoLVIYX3Bjg/QGHTox6
+l0w53qrbTTvCBZULbiZtcCRMcoCSQiElkHAREfdBvfFZsz7qa/iXPmOKnSz8228m
+J8pa+getmtk35QldBUc+tYostxK66JB1JMtEGxidaFoB7+8Z0FoRfEpVvfNx2iSm
+8RjYt7rlhK1r+nqD9CX/zeeDBKUapZZ7XmdkvBJOqSqzW8dbG+wOxKidKcZIS8Cj
+Xyh2P0BRAlb0MeSqBlHHoEnOPgrg24Wc1Ym9sk5dtWObhS7wD3KA7BWXi4o25y3k
+8sHQjSZyNzJ8D4gS+sadmbi2czune+IZQpQTNgKRe9kCEMHBhlgfGwuPB4hURzA/
+fZQIxeYH/nqQe1JzozatzFFSF/zYwJ8XQxXuhXkDOtAHN8izyu/RGa/zowrYuh5m
+BEDjXU31l/sD546+rp7AJw2Sn20JUO42DJgTIKo5IChQvNQyCHoP+UPyhBA9KjSe
+4Llm+8MdwrAvU9EWNVfh4bpaBwtgAfLZJlI53PWqRB2kVN6eH2FLKROg8Ff5p0KI
+BbLR6pEJNpw/2zfXwJRobqjeWnpkh6etIBsK0I/ZJLsnaaa7aJg=
+=PeOp
+-----END PGP SIGNATURE-----
 
-NFC maintainers should really take a look at this.
+--nextPart10662715.4p9Da4tgGb--
