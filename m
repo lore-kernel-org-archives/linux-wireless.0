@@ -1,67 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:35089 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752398AbeGAONJ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34572 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751811AbeGEHhe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 1 Jul 2018 10:13:09 -0400
-Received: by mail-wr0-f196.google.com with SMTP id h40-v6so1911226wrh.2
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jul 2018 07:13:08 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-To: nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
-Subject: [PATCH 05/19] mt76x2: move interface_modes definition in mt76x2_init
-Date: Sun,  1 Jul 2018 16:12:17 +0200
-Message-Id: <20180701141231.25323-6-lorenzo.bianconi@redhat.com> (sfid-20180701_161326_421123_5B77EB6C)
+        Thu, 5 Jul 2018 03:37:34 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 05 Jul 2018 13:07:32 +0530
+From: Tamizh chelvam <tamizhr@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 6/7] cfg80211: Accept multiple RSSI threholds for STA_MON
+ command
+In-Reply-To: <1530265167.3481.45.camel@sipsolutions.net>
+References: <1528886747-26342-1-git-send-email-tamizhr@codeaurora.org>
+ <1528886747-26342-7-git-send-email-tamizhr@codeaurora.org>
+ <1530265167.3481.45.camel@sipsolutions.net>
+Message-ID: <0b97dd04efa70ff1016ae6fd2face3a1@codeaurora.org> (sfid-20180705_093737_751332_0A32A04A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move  wiphy interface_modes definition in mt76x2_init in order to
-reuse mt76_register_device routine supporting mt76x2u based chipsets
-since mt76x2u currently supports just sta mode
+On 2018-06-29 15:09, Johannes Berg wrote:
+> On Wed, 2018-06-13 at 16:15 +0530, Tamizh chelvam wrote:
+>> Change the NL80211_CMD_STA_MON RSSI threshold attribut to
+> 
+> This seems weird - you just introduced it a few patches back, and now
+> you change it and even worry about compatibility and have both cfg80211
+> callbacks etc. Just remove set_sta_mon_rssi_config() and ask that
+> drivers/mac80211 implement set_sta_mon_rssi_range_config?
+> 
+First I've done patch to have single threshold value for AP mode and as 
+per the previous discussion extended to multiple thresholds also. Here 
+the intention is to accept one or more than one RSSI thresholds to 
+monitor. Any thought ?
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
----
- drivers/net/wireless/mediatek/mt76/mac80211.c    | 8 --------
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c | 8 ++++++++
- 2 files changed, 8 insertions(+), 8 deletions(-)
+>>   * @NL80211_EXT_FEATURE_STA_MON_RSSI_CONFIG: With this driver can set
+>>   *	rssi threshold using %NL80211_ATTR_STA_MON_RSSI_THOLD attribute
+>>   *	for a connected station.
+>> + * @NL80211_EXT_FEATURE_STA_MON_RSSI_LIST: With this driver the
+>> + *	%NL80211_ATTR_STA_MON_RSSI_THOLD attribute accepts a list of zero 
+>> or
+>> + *	more RSSI threshold values to monitor rather than exactly one 
+>> threshold.
+> 
+> And maybe not have two bits here either?
+> 
+> Or do you expect somebody to actually really need the single threshold
+> in the near future? It seems you're implementing it for mac80211 only,
+> which doesn't care.
+> 
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index d62e34e7eadf..6a0b6f4403a8 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -303,14 +303,6 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
- 	SET_IEEE80211_DEV(hw, dev->dev);
- 	SET_IEEE80211_PERM_ADDR(hw, dev->macaddr);
- 
--	wiphy->interface_modes =
--		BIT(NL80211_IFTYPE_STATION) |
--		BIT(NL80211_IFTYPE_AP) |
--#ifdef CONFIG_MAC80211_MESH
--		BIT(NL80211_IFTYPE_MESH_POINT) |
--#endif
--		BIT(NL80211_IFTYPE_ADHOC);
--
- 	wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
- 
- 	wiphy->available_antennas_tx = dev->antenna_mask;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-index 9c6d180da294..ef6c92471453 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init.c
-@@ -835,6 +835,14 @@ int mt76x2_register_device(struct mt76x2_dev *dev)
- 
- 	wiphy->reg_notifier = mt76x2_regd_notifier;
- 
-+	wiphy->interface_modes =
-+		BIT(NL80211_IFTYPE_STATION) |
-+		BIT(NL80211_IFTYPE_AP) |
-+#ifdef CONFIG_MAC80211_MESH
-+		BIT(NL80211_IFTYPE_MESH_POINT) |
-+#endif
-+		BIT(NL80211_IFTYPE_ADHOC);
-+
- 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
- 
- 	mt76x2_dfs_init_detector(dev);
--- 
-2.18.0
+Thanks,
+Tamizh.
