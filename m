@@ -1,60 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-eopbgr710098.outbound.protection.outlook.com ([40.107.71.98]:24976
-        "EHLO NAM05-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732280AbeGJSwD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jul 2018 14:52:03 -0400
-Date: Tue, 10 Jul 2018 11:51:38 -0700
-From: Paul Burton <paul.burton@mips.com>
-To: Boris Brezillon <boris.brezillon@bootlin.com>
-Cc: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+Received: from mail.bootlin.com ([62.4.15.54]:43615 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753615AbeGEJp7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Jul 2018 05:45:59 -0400
+From: Boris Brezillon <boris.brezillon@bootlin.com>
+To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Boris Brezillon <boris.brezillon@bootlin.com>,
         Richard Weinberger <richard@nod.at>,
         Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org,
-        David Woodhouse <dwmw2@infradead.org>,
+        linux-mtd@lists.infradead.org
+Cc: David Woodhouse <dwmw2@infradead.org>,
         Brian Norris <computersforpeace@gmail.com>,
         Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2 00/24] mtd: rawnand: Improve compile-test coverage
-Message-ID: <20180710185138.mh564eehyfoaggsu@pburton-laptop> (sfid-20180710_205324_139183_12FADA9B)
-References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180709200945.30116-1-boris.brezillon@bootlin.com>
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 25/27] mtd: rawnand: jz4740: Allow selection of this driver when COMPILE_TEST=y
+Date: Thu,  5 Jul 2018 11:45:20 +0200
+Message-Id: <20180705094522.12138-26-boris.brezillon@bootlin.com> (sfid-20180705_114627_579811_2592B643)
+In-Reply-To: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Boris,
+It just makes NAND maintainers' life easier by allowing them to
+compile-test this driver without having MACH_JZ4740 enabled.
 
-On Mon, Jul 09, 2018 at 10:09:21PM +0200, Boris Brezillon wrote:
->   MIPS: txx9: Move the ndfc.h header to include/linux/platform_data/txx9
->   mtd: rawnand: txx9ndfmc: Allow selection of this driver when
->     COMPILE_TEST=y
->   MIPS: jz4740: Move jz4740_nand.h header to
->     include/linux/platform_data/jz4740
->   mtd: rawnand: jz4740: Allow selection of this driver when
->     COMPILE_TEST=y
->   mtd: rawnand: jz4780: Drop the dependency on MACH_JZ4780
->   memory: jz4780-nemc: Allow selection of this driver when
->     COMPILE_TEST=y
-> 
->  arch/mips/jz4740/board-qi_lb60.c                   |  3 +-
->  arch/mips/txx9/generic/setup.c                     |  2 +-
->  arch/mips/txx9/generic/setup_tx4938.c              |  2 +-
->  arch/mips/txx9/generic/setup_tx4939.c              |  2 +-
->  drivers/memory/Kconfig                             |  6 ++--
->  drivers/mtd/nand/raw/Kconfig                       | 33 ++++++++++++++--------
->  drivers/mtd/nand/raw/jz4740_nand.c                 |  2 +-
->  drivers/mtd/nand/raw/txx9ndfmc.c                   |  2 +-
->  .../linux/platform_data/jz4740}/jz4740_nand.h      |  4 +--
->  .../linux/platform_data}/txx9/ndfmc.h              |  6 ++--
->  rename {arch/mips/include/asm/mach-jz4740 => include/linux/platform_data/jz4740}/jz4740_nand.h (91%)
->  rename {arch/mips/include/asm => include/linux/platform_data}/txx9/ndfmc.h (91%)
+We also need to add a dependency on HAS_IOMEM to make sure the driver
+compiles correctly.
 
-For the MIPS-related patches 19-24:
+Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+---
+ drivers/mtd/nand/raw/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-    Acked-by: Paul Burton <paul.burton@mips.com>
-
-Thanks,
-    Paul
+diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
+index 1579e62d8856..cd2c9f887270 100644
+--- a/drivers/mtd/nand/raw/Kconfig
++++ b/drivers/mtd/nand/raw/Kconfig
+@@ -492,7 +492,8 @@ config MTD_NAND_NUC900
+ 
+ config MTD_NAND_JZ4740
+ 	tristate "Support for JZ4740 SoC NAND controller"
+-	depends on MACH_JZ4740
++	depends on MACH_JZ4740 || COMPILE_TEST
++	depends on HAS_IOMEM
+ 	help
+ 		Enables support for NAND Flash on JZ4740 SoC based boards.
+ 
+-- 
+2.14.1
