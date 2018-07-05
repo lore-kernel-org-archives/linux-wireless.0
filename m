@@ -1,84 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:35788 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726528AbeG3KPW (ORCPT
+Received: from shards.monkeyblade.net ([23.128.96.9]:42530 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753551AbeGEX7h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jul 2018 06:15:22 -0400
-Date: Mon, 30 Jul 2018 11:41:13 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Ajay Singh <ajay.kathat@microchip.com>
-Cc: devel@driverdev.osuosl.org, venkateswara.kaja@microchip.com,
-        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-        ganesh.krishna@microchip.com, adham.abozaeid@microchip.com,
-        aditya.shankar@microchip.com
-Subject: Re: [PATCH 05/23] staging: wilc1000: rename goto to avoid leading
- '_' in label name
-Message-ID: <20180730084113.fixf2zeb5tgbcovj@mwanda> (sfid-20180730_104129_923442_80840A15)
-References: <1531953919-20804-1-git-send-email-ajay.kathat@microchip.com>
- <1531953919-20804-6-git-send-email-ajay.kathat@microchip.com>
- <20180719092744.5gx2ctgj7etvk7uh@mwanda>
- <20180720043524.5a8d1c7e@ajaysk-VirtualBox>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180720043524.5a8d1c7e@ajaysk-VirtualBox>
+        Thu, 5 Jul 2018 19:59:37 -0400
+Date: Fri, 06 Jul 2018 08:59:29 +0900 (KST)
+Message-Id: <20180706.085929.1654233959706132594.davem@davemloft.net> (sfid-20180706_015943_966355_CE3D704A)
+To: netdev@vger.kernel.org
+CC: linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org
+Subject: FINAL Reminder: Linux Plumbers Networking Track CFP
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 20, 2018 at 04:35:24AM +0530, Ajay Singh wrote:
-> Hi Dan,
-> 
-> On Thu, 19 Jul 2018 12:27:44 +0300
-> Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> 
-> > On Thu, Jul 19, 2018 at 04:15:01AM +0530, Ajay Singh wrote:
-> > > diff --git a/drivers/staging/wilc1000/wilc_wlan.c
-> > > b/drivers/staging/wilc1000/wilc_wlan.c index 85af365..8e71c28 100644
-> > > --- a/drivers/staging/wilc1000/wilc_wlan.c
-> > > +++ b/drivers/staging/wilc1000/wilc_wlan.c
-> > > @@ -850,13 +850,13 @@ static void wilc_wlan_handle_isr_ext(struct
-> > > wilc *wilc, u32 int_status) if (wilc->rx_buffer)
-> > >  			buffer = &wilc->rx_buffer[offset];
-> > >  		else
-> > > -			goto _end_;
-> > > +			goto end;  
-> > 
-> > This isn't related to your patch but this goto doesn't appear to make
-> > any sort of sense.  I have no idea what was intended.
-> > 
-> 
-> Thanks for pointing it out. I will include these changes in separate
-> patchset.
-> 
-> Yes, the position of goto label can be moved just before
-> wilc_wlan_handle_rxq(wilc), as 'ret' will always be '0' when goto
-> statement is executed.
-> 
-> Actually earlier there were few more goto statement in this function
-> and single label 'end' was used to handle for different cases. But in
-> previous cleanup patches those cases were removed.
-> Now this function can be further refactor by either moving
-> goto label before wilc_wlan_handle_rxq(wilc) or avoid goto use by
-> adding the rx_buffer validation along with size check.
-> 
-> i.e 
-> 
-> end:
->     wilc_wlan_handle_rxq(wilc)
-> 
-> 
-> OR
-> 
-> 	if (size > 0 && wilc->rx_buffer) {
-> 
-> 	....
-> 	}
->     	wilc_wlan_handle_rxq(wilc)
-> 
 
-Actually looking at it now, you could probably just remove the if
-statement.  Hopefully wilc->rx_buffer is non-NULL at this point? Is
-there really any need to call wilc_wlan_handle_rxq() when we haven't
-called wilc_wlan_rxq_add()?
+This is the final reminder and the deadline is now only 5 days away,
+so if you plan to make a proposal please send it in soon!
 
-regards,
-dan carpenter
+This is a call for proposals for the networking track at the 2018
+edition of the Linux Plumbers Conference which will be held in
+Vancouver on November 13th and November 14th.
+
+The LPC Networking Track is a community event, open to everyone, and
+does not require an invitation.
+
+We are seeking talks of 40 minutes in length, accompanied by papers of
+2 to 10 pages in length.
+
+Although proposals on finished work are perfectly acceptable, there is
+even more value for talks on problems, proposals, and proof-of-concept
+solutions that require face-to-face discussions and debate.
+
+Please submit your proposals to the LPC Networking Technical Committee
+at:
+
+	lpc-netdev@vger.kernel.org
+
+Proposals must be submitted by July 11th, and submitters will be
+notified of acceptance by August 15th.
+
+The format of the submission and other details can be found at:
+
+	http://vger.kernel.org/lpc-networking.html
+
+We are looking forward to seeing everyone in November!
