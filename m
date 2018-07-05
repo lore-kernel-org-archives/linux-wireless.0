@@ -1,102 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34910 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932998AbeGJNQo (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:62829 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753533AbeGELAH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jul 2018 09:16:44 -0400
-From: Rajeev Kumar Sirasanagandla <rsirasan@codeaurora.org>
-To: mcgrof@do-not-panic.com, johannes@sipsolutions.net,
-        linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: sahuja@codeaurora.org, asinghal@codeaurora.org,
-        jouni@codeaurora.org, rmanohar@codeaurora.org,
-        Rajeev Kumar Sirasanagandla <rsirasan@codeaurora.org>
-Subject: [PATCH v1] cfg80211: Avoid regulatory restore when COUNTRY_IE_IGNORE is set
-Date: Tue, 10 Jul 2018 18:46:13 +0530
-Message-Id: <1531228573-20734-1-git-send-email-rsirasan@codeaurora.org> (sfid-20180710_151648_348486_7EF0A9C8)
+        Thu, 5 Jul 2018 07:00:07 -0400
+From: Ajay Singh <ajay.kathat@microchip.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <ganesh.krishna@microchip.com>, <venkateswara.kaja@microchip.com>,
+        <aditya.shankar@microchip.com>, <claudiu.beznea@microchip.com>,
+        <adham.abozaeid@Microchip.com>,
+        Ajay Singh <ajay.kathat@microchip.com>
+Subject: [PATCH v2] staging: wilc1000: fix static checker warning to unlock mutex in wilc_deinit()
+Date: Thu, 5 Jul 2018 14:52:35 +0530
+Message-ID: <1530782555-31493-1-git-send-email-ajay.kathat@microchip.com> (sfid-20180705_130011_128173_A89E187E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When REGULATORY_COUNTRY_IE_IGNORE is set,  __reg_process_hint_country_ie()
-ignores the country code change request from __cfg80211_connect_result()
-via regulatory_hint_country_ie().
+Fix for static checker warning inconsistent returns of
+'hif_deinit_lock'(more details [1]).
 
-After Disconnect, similar to above, country code should not be reset to
-world when country IE ignore is set. But this is violated and restore of
-regulatory settings is invoked by cfg80211_disconnect_work via
-regulatory_hint_disconnect().
+"drivers/staging/wilc1000/host_interface.c:3390 wilc_deinit()
+              warn: inconsistent returns 'hif_deinit_lock'."
 
-To address this, avoid regulatory restore from regulatory_hint_disconnect()
-when COUNTRY_IE_IGNORE is set.
+Fixes: ff52a57a7a42 ("staging: wilc1000: move the allocation of cmd out
+of wilc_enqueue_cmd()")
 
-Note: Currently, restore_regulatory_settings() takes care of clearing
-beacon hints. But in the proposed change, regulatory restore is avoided.
-Therefore, explicitly clear beacon hints when DISABLE_BEACON_HINTS
-is not set.
+[1]. https://www.spinics.net/lists/linux-driver-devel/msg114216.html
 
-Signed-off-by: Rajeev Kumar Sirasanagandla <rsirasan@codeaurora.org>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- net/wireless/reg.c | 46 ++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 46 insertions(+)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index bbe6298..9795e64 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -3271,8 +3271,54 @@ static void restore_regulatory_settings(bool reset_user)
- 	schedule_work(&reg_work);
- }
+Change since v1:
+ - added 'Fixes' tag in commit description.
+
+ drivers/staging/wilc1000/host_interface.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 52c0c10..918d06e 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3370,15 +3370,15 @@ int wilc_deinit(struct wilc_vif *vif)
+ 		struct host_if_msg *msg;
  
-+static bool is_wiphy_all_set_reg_flag(enum ieee80211_regulatory_flags flag)
-+{
-+	struct cfg80211_registered_device *rdev;
-+	struct wireless_dev *wdev;
-+
-+	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
-+		list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
-+			wdev_lock(wdev);
-+			if (!(wdev->wiphy->regulatory_flags & flag)) {
-+				wdev_unlock(wdev);
-+				return false;
-+			}
-+			wdev_unlock(wdev);
+ 		msg = wilc_alloc_work(vif, handle_hif_exit_work, true);
+-		if (IS_ERR(msg))
+-			return PTR_ERR(msg);
+-
+-		result = wilc_enqueue_work(msg);
+-		if (result)
+-			netdev_err(vif->ndev, "deinit : Error(%d)\n", result);
+-		else
+-			wait_for_completion(&msg->work_comp);
+-		kfree(msg);
++		if (!IS_ERR(msg)) {
++			result = wilc_enqueue_work(msg);
++			if (result)
++				netdev_err(vif->ndev, "deinit : Error(%d)\n",
++					   result);
++			else
++				wait_for_completion(&msg->work_comp);
++			kfree(msg);
 +		}
-+	}
-+
-+	return true;
-+}
-+
- void regulatory_hint_disconnect(void)
- {
-+	/* Restore of regulatory settings is not required when wiphy(s)
-+	 * ignore IE from connected access point but clearance of beacon hints
-+	 * is required when wiphy(s) supports beacon hints.
-+	 */
-+	if (is_wiphy_all_set_reg_flag(REGULATORY_COUNTRY_IE_IGNORE)) {
-+		struct reg_beacon *reg_beacon, *btmp;
-+
-+		if (is_wiphy_all_set_reg_flag(REGULATORY_DISABLE_BEACON_HINTS))
-+			return;
-+
-+		spin_lock_bh(&reg_pending_beacons_lock);
-+		list_for_each_entry_safe(reg_beacon, btmp,
-+					 &reg_pending_beacons, list) {
-+			list_del(&reg_beacon->list);
-+			kfree(reg_beacon);
-+		}
-+		spin_unlock_bh(&reg_pending_beacons_lock);
-+
-+		list_for_each_entry_safe(reg_beacon, btmp,
-+					 &reg_beacon_list, list) {
-+			list_del(&reg_beacon->list);
-+			kfree(reg_beacon);
-+		}
-+
-+		return;
-+	}
-+
- 	pr_debug("All devices are disconnected, going to restore regulatory settings\n");
- 	restore_regulatory_settings(false);
- }
+ 		destroy_workqueue(hif_workqueue);
+ 	}
+ 
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+2.7.4
