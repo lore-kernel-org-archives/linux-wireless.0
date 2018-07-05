@@ -1,95 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([46.23.86.59]:56660 "EHLO mail.bugwerft.de"
+Received: from mail.bootlin.com ([62.4.15.54]:43561 "EHLO mail.bootlin.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388145AbeGXKAL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jul 2018 06:00:11 -0400
-From: Daniel Mack <daniel@zonque.org>
-To: sameo@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, colin.king@canonical.com,
-        shikha.singh@st.com, Daniel Mack <daniel@zonque.org>
-Subject: [PATCH v2 04/10] NFC: st95hf: remove logging from spi functions
-Date: Tue, 24 Jul 2018 10:54:20 +0200
-Message-Id: <20180724085426.23999-5-daniel@zonque.org> (sfid-20180724_105448_369695_4F1718C9)
-In-Reply-To: <20180724085426.23999-1-daniel@zonque.org>
-References: <20180724085426.23999-1-daniel@zonque.org>
+        id S1753596AbeGEJp5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Jul 2018 05:45:57 -0400
+From: Boris Brezillon <boris.brezillon@bootlin.com>
+To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Boris Brezillon <boris.brezillon@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        linux-mtd@lists.infradead.org
+Cc: David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 13/27] mtd: rawnand: mxc: Allow selection of this driver when COMPILE_TEST=y
+Date: Thu,  5 Jul 2018 11:45:08 +0200
+Message-Id: <20180705094522.12138-14-boris.brezillon@bootlin.com> (sfid-20180705_114627_009428_4F7AEBE1)
+In-Reply-To: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The callers of these functions already log on errors, and there's no
-need to do it from two places.
+It just makes NAND maintainers' life easier by allowing them to
+compile-test this driver without having ARCH_MXC enabled.
 
-Signed-off-by: Daniel Mack <daniel@zonque.org>
+We also need to add a dependency on HAS_IOMEM to make sure the
+driver compiles correctly.
+
+Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
 ---
- drivers/nfc/st95hf/spi.c | 19 ++++---------------
- 1 file changed, 4 insertions(+), 15 deletions(-)
+ drivers/mtd/nand/raw/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/nfc/st95hf/spi.c b/drivers/nfc/st95hf/spi.c
-index e2d3bbcc8c34..d5894d4546b1 100644
---- a/drivers/nfc/st95hf/spi.c
-+++ b/drivers/nfc/st95hf/spi.c
-@@ -47,8 +47,6 @@ int st95hf_spi_send(struct st95hf_spi_context *spicontext,
+diff --git a/drivers/mtd/nand/raw/Kconfig b/drivers/mtd/nand/raw/Kconfig
+index a28ffc4013b6..71e7542b6522 100644
+--- a/drivers/mtd/nand/raw/Kconfig
++++ b/drivers/mtd/nand/raw/Kconfig
+@@ -446,7 +446,8 @@ config MTD_NAND_VF610_NFC
  
- 	result = spi_sync(spidev, &m);
- 	if (result) {
--		dev_err(&spidev->dev, "error: sending cmd to st95hf using SPI = %d\n",
--			result);
- 		mutex_unlock(&spicontext->spi_lock);
- 		return result;
- 	}
-@@ -62,12 +60,10 @@ int st95hf_spi_send(struct st95hf_spi_context *spicontext,
- 	result = wait_for_completion_timeout(&spicontext->done,
- 					     msecs_to_jiffies(1000));
- 	/* check for timeout or success */
--	if (!result) {
--		dev_err(&spidev->dev, "error: response not ready timeout\n");
-+	if (!result)
- 		result = -ETIMEDOUT;
--	} else {
-+	else
- 		result = 0;
--	}
- 
- 	mutex_unlock(&spicontext->spi_lock);
- 
-@@ -79,7 +75,7 @@ EXPORT_SYMBOL_GPL(st95hf_spi_send);
- int st95hf_spi_recv_response(struct st95hf_spi_context *spicontext,
- 			     unsigned char *receivebuff)
- {
--	int len = 0;
-+	int ret, len;
- 	struct spi_transfer tx_takedata;
- 	struct spi_message m;
- 	struct spi_device *spidev = spicontext->spidev;
-@@ -89,8 +85,6 @@ int st95hf_spi_recv_response(struct st95hf_spi_context *spicontext,
- 		{.rx_buf = receivebuff, .len = 2, .cs_change = 1,},
- 	};
- 
--	int ret = 0;
--
- 	memset(&tx_takedata, 0x0, sizeof(struct spi_transfer));
- 
- 	mutex_lock(&spicontext->spi_lock);
-@@ -102,8 +96,6 @@ int st95hf_spi_recv_response(struct st95hf_spi_context *spicontext,
- 
- 	ret = spi_sync(spidev, &m);
- 	if (ret) {
--		dev_err(&spidev->dev, "spi_recv_resp, data length error = %d\n",
--			ret);
- 		mutex_unlock(&spicontext->spi_lock);
- 		return ret;
- 	}
-@@ -127,11 +119,8 @@ int st95hf_spi_recv_response(struct st95hf_spi_context *spicontext,
- 	ret = spi_sync(spidev, &m);
- 
- 	mutex_unlock(&spicontext->spi_lock);
--	if (ret) {
--		dev_err(&spidev->dev, "spi_recv_resp, data read error = %d\n",
--			ret);
-+	if (ret)
- 		return ret;
--	}
- 
- 	return len;
- }
+ config MTD_NAND_MXC
+ 	tristate "MXC NAND support"
+-	depends on ARCH_MXC
++	depends on ARCH_MXC || COMPILE_TEST
++	depends on HAS_IOMEM
+ 	help
+ 	  This enables the driver for the NAND flash controller on the
+ 	  MXC processors.
 -- 
-2.17.1
+2.14.1
