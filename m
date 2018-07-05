@@ -1,202 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:41744 "EHLO
-        mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732337AbeGJTRN (ORCPT
+Received: from aserp2130.oracle.com ([141.146.126.79]:46664 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753134AbeGEJdn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jul 2018 15:17:13 -0400
-Received: by mail-oi0-f44.google.com with SMTP id k12-v6so44736808oiw.8
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jul 2018 12:16:47 -0700 (PDT)
-Subject: Re: Proper SET_KEY usage?
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-References: <dbca726e-44c8-9a2f-2bb5-8a83c31f98e3@gmail.com>
- <1530266512.3481.68.camel@sipsolutions.net>
- <0ce17959-d930-a563-242c-da24145e39f0@gmail.com>
- <1530879434.3197.32.camel@sipsolutions.net>
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <2195bc60-8e33-b74a-fa27-ffda653ee814@gmail.com> (sfid-20180710_211650_749998_E724F2D1)
-Date: Tue, 10 Jul 2018 14:16:45 -0500
+        Thu, 5 Jul 2018 05:33:43 -0400
+Date: Thu, 5 Jul 2018 12:32:30 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Jian-Hong Pan <jian-hong@endlessm.com>
+Cc: Pkshih <pkshih@realtek.com>,
+        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+        Tony Chuang <yhchuang@realtek.com>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        Steven Ting <steventing@realtek.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Birming Chiu <birming@realtek.com>,
+        "drake@endlessm.com" <drake@endlessm.com>,
+        "sgruszka@redhat.com" <sgruszka@redhat.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "frank@generalsoftwareinc.com" <frank@generalsoftwareinc.com>,
+        "colin.king@canonical.com" <colin.king@canonical.com>,
+        "linux@endlessm.com" <linux@endlessm.com>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+Subject: Re: [BUG] staging: r8822be: RTL8822be can't find any wireless AP
+Message-ID: <20180705093230.byqbk6f5ornezmka@mwanda> (sfid-20180705_113403_338518_171E7309)
+References: <CAPpJ_ed1oFQW_xmBtetP-ztoL7Z14T6akOSgKJ_8jxogdf3FWg@mail.gmail.com>
+ <f3bf0687-76fb-9411-6fa2-e8ef312efb58@lwfinger.net>
+ <20180704140933.3dk2ylbntltz6jqd@mwanda>
+ <7e95bd6a-97bc-b030-26ce-83da66e5f279@lwfinger.net>
+ <CAD8Lp44EG73XQ9omQhH6XiHfm2rMypmndSFyffnf_PVMueTvEA@mail.gmail.com>
+ <1530776154.4156.12.camel@realtek.com>
+ <CAPpJ_ecCzhxEu8gMBFRsCerpeu_Z8TR=Rw5BiFhzVYP6WK-wAw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1530879434.3197.32.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPpJ_ecCzhxEu8gMBFRsCerpeu_Z8TR=Rw5BiFhzVYP6WK-wAw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On Thu, Jul 05, 2018 at 05:26:28PM +0800, Jian-Hong Pan wrote:
+> 2018-07-05 15:36 GMT+08:00 Pkshih <pkshih@realtek.com>:
+> > On Wed, 2018-07-04 at 10:33 -0500, Daniel Drake wrote:
+> >> On Wed, Jul 4, 2018 at 10:13 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> >> > We will have to agree to disagree.
+> >> >
+> >> > I have no idea what the vendors are doing that cause some motherboards to
+> >> > need a different aspm value. What I do know is that we have had to live with
+> >> > the idiocy of some vendors saving a few pennies by only including a single
+> >> > antenna, rather than two, and then making a problem by miscoding the EFUSE
+> >> > bit that indicates which connector is actually in use. As we have no means
+> >> > that I know about to detect which boxes have the problem, a module parameter
+> >> > was created, just as in this case.
+> >> >
+> >> > I agree that drivers should work "out of the box", but finite resources and
+> >> > lack of vendor cooperation make this a goal that may not be attainable.
+> >>
+> >> As you touched on, the ideal situation is that Realtek solve the
+> >> issue. Ping-Ke Shih is on CC and I am adding a few more contacts from
+> >> the commit log. The context is that the r8822 driver fails on several
+> >> platforms unless setting aspm=0 (the default is 1).
+> >
+> > It's hard to have all laptop or motherboards and all rtl8822be modules in my side,
+> > so what I can do is to analyze the issue when user encountered.
+> >
+> >>
+> >> https://gist.github.com/dsd/20c05f0c6d66ee2ef9bfbb17f93f18ba
+> >> https://bugzilla.kernel.org/show_bug.cgi?id=199651
+> >>
+> >>
+> >> If we don't get a timely fix from Realtek though, I think there is a
+> >> key difference between the antenna selection headache and this one. In
+> >> the antenna case, there isn't a good value that you can set that will
+> >> work on all systems. If you change the default behaviour you will
+> >> solve the issue for some users while simultanously introducing the
+> >> problem on other systems that were previously fine.
+> >>
+> >> However in this case, it's highly likely that setting aspm=0 (off) by
+> >> default would work for everyone. It has the disadvantage of using a
+> >> bit more power, but especially with the indications that this issue
+> >> affects a significant number of systems, I think that having the
+> >> driver working out of the box everywhere is more important. The module
+> >> parameter can be left in place so that unaffected users that want to
+> >> save power can set aspm=1.
+> >>
+> >
+> > I think this issue may be due to L1 latency, so below patch would be
+> > helpful but not sure because I don't have the same laptop.
+> > Is there anyone can help to test?
+> 
+> I do not know why I cannot apply this patch directly.  So, I apply
+> each line manually.
+> 
+> However, here is a good news.  I tested this fix, and it works
+> correctly on ASUS X530UN.  System can scan and get the access points
+> list.  Finally, it also connects to the access point.
+> Maybe, you can have a formal patch for this.
+>
 
-On 07/06/2018 07:17 AM, Johannes Berg wrote:
-> Hi,
-> 
->>> Yeah. This stuff grew out of WEXT mostly, and what things wpa_s did at
->>> the time...
->>
->> Right.  My main intent with this was to see if I could understand things
->> enough to actually start fixing some of the docs, see if we need to
->> deprecate some things and/or maybe fix bits inside nl80211.
-> 
-> :-)
-> That'd be very welcome!
-> 
->> So it sounds like SET_KEY is completely unnecessary for a unicast key in
->> an RSN/WPA association for an STA.  Should we update mac80211 (and
->> possibly nl80211, though likely it doesn't have enough info) to issue a
->> warning when someone tries to use set_key on such a key?
-> 
-> I'm not sure I see much point, since we'll have to deal with older wpa_s
-> basically forever?
+That's good news.  What does the "dmesg | grep r8822be" say now?
 
-Do we though?  I can understand not breaking userspace APIs, but it 
-seems like this API had only a single user (up until recently) and it 
-'should' be acceptable to break ancient versions of it.  Whether we can 
-or not is a question for the wider community though...
-
-> 
->> What about AP/IBSS?  Aren't unicast keys also per-station in this case?
->> It sounds like SET_KEY isn't useful in this context either, right?
-> 
-> Yes, same situation really.
-> 
->> What about WEP?
-> 
-> WEP is a special case, you typically use the same key for all traffic,
-> and may switch around between them.
-> 
-> In theory though, and I think this API allows you to do it, you can have
-> multiple WEP keys and use different ones for unicast/multicast TX. Or
-> the same. Or switch them around as you like.
-> 
->> Put another way, should we deprecate the whole
->> NL80211_KEY_DEFAULT_TYPE_UNICAST attribute?
-> 
-> Perhaps. I'm not sure I see much point in it. The WEP case above is
-> pretty fringe, and wext didn't support it, so ... probably not needed?
-
-Should we at least take this out of the driver API then and have it 
-ignored by nl80211?  And maybe mark this deprecated in the docs?
-
-> 
->> And since you went off on a tangent (maybe this needs a separate
->> discussion?) but... Can you elaborate about PTK rekeying with a non-zero
->> key index?  Are you saying that in IBSS/AP mode we can't support PTK rekey?
-> 
-> We can't properly support PTK rekeying in any mode, see Alexander
-> Wetzel's patch and the whole discussion on the different versions I had
-> with him. I'll merge his patch soon I think, but it doesn't really work
-> properly.
-
-I think we had this conversation before.  Up to 802.11-2012, PTK Rekey 
-was not really explicitly mentioned as possible.  There were hints and 
-stuff, but no explicit language.
-
-I think in 802.11-2016 they finally explicitly say that this is possible.
-
-However, we seem to have networks that perform PTK Rekey and even full 
-802.1X re-auth every hour (eduroam for example).  How is this working? 
-Or is it a case of it not always working?
-
-> 
-> Some time relatively recently (802.11-2016 I think) the spec has
-> introduced a method to indicate that you support what was previously not
-> allowed at all: using non-zero key index for a PTK. This way, you can do
-> transparent PTK rekeying like you do with GTK now, by switching to a new
-> key index when you rekey.
-
-And keep the old one for whatever packets are in process, right?  That 
-makes more sense.
-
-> 
-> We don't - currently - support this in mac80211 or even wpa_supplicant,
-> and I expect many devices would have issues with this with hardware
-> offload. I'm also not aware of any certification program for it, but I
-> also haven't followed the WPA3 efforts (but I don't think they're
-> focused here, they're focused on algorithms and higher layers IIRC.)
-> 
-
-Does the recent PMK handshake offload support proposal take into 
-consideration PTK rekeying?
-
->>> (The difference between them is that in IBSS you will have per-station
->>> GTKs, but that's also irrelevant because those are only used for RX -
->>> your own GTK on the netdev/wdev/sdata/vif level is used for TX.)
->>
->> Okay, so for GTKs we would have a per-station RX GTK and a 'default' TX
->> GTK.  So in this case a SET_KEY would be needed only on the 'default' TX
->> GTK index.
->>
->> Okay, maybe a tangent, but this brings up a question: Why do we have
->> separate steps for this operation?  Can't we just issue a NEW_KEY and
->> have the kernel figure this out?
-> 
-> I think the only case would be WEP?
-
-So can we expect all drivers to operate this way?  Or should we maybe 
-also have nl80211 call set_key operation on a key with no associated STA 
-implicitly?
-
-> 
->> Well, that's what I was pointing out earlier, the whole Multicast
->> attribute is ignored and should not be sent in the first place:
->>
->>   >>       Key Default Types: len 4
->>   >>           Multicast: true
->>
->> The proof :) follows:
-> 
-> :)
-> 
->> So while nl80211_new_key actually parses this information (stored in
->> struct key_parse) it never forwards any of it to the driver.  The group
->> key vs pairwise key determination seems to be predicated on presence of
->> NL80211_ATTR_KEY_TYPE and the following fallback:
->>
->>           if (key.type == -1) {
->>                   if (mac_addr)
->>                           key.type = NL80211_KEYTYPE_PAIRWISE;
->>                   else
->>                           key.type = NL80211_KEYTYPE_GROUP;
->>           }
-> 
-> Yeah.
-> 
->> Okay, so the drivers are expected to distinguish between a GTK and IGTK
->> based on the cipher type, right?
-> 
-> Not needed, IGTK also uses key index 4/5, while GTK uses 0-3.
-> 
->> So do we need a driver feature bit for NL80211_ATTR_KEY_DEFAULT_MGMT?
-> 
-> I don't see why, the driver should support it if it has support for IGTK
-> in the first place? And for AP mode, since otherwise it doesn't matter
-> (IGTK like GTK is RX-only for the client)
-> 
->> Okay, so to summarize, SET_KEY should only be called on GTK/IGTK keys
->> which are not per-MAC.  So in IBSS/AP mode we set this for our transmit
->> GTK/IGTK key.
-> 
-> I suspect you don't even *need* SET_KEY on GTK/IGTK since they're set to
-> be TX when installed, I think?
-> 
->> In IBSS mode, SET_KEY on peer's GTK shouldn't be issued.  In fact it may
->> even be an error to do so since we might be messing with the wrong key
->> unintentionally.
-> 
-> I don't think we would mess with the wrong key, since we need to give
-> the station MAC address and then it's not our TX key. But certainly
-> doing SET_KEY for a GTK that you expect to *receive* with isn't useful.
-
-Right.
-
-> 
->> So I'd like to bring up a point I mentioned in the original message,
->> should ieee80211_set_default_key() be made to return an error if
->> userspace is trying to mess with a non-existent key?  That is
->> effectively what happens in the STA log provided...
-> 
-> Perhaps, though that might break wpa_s?
-> 
-
-Doesn't wpa_s ignore most errors anyway? :)
-
-Regards,
--Denis
+regards,
+dan carpenter
