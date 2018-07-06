@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:43611 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753606AbeGEJp7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jul 2018 05:45:59 -0400
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Boris Brezillon <boris.brezillon@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd@lists.infradead.org
-Cc: David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH 21/27] bcma: Allow selection of this driver when COMPILE_TEST=y
-Date: Thu,  5 Jul 2018 11:45:16 +0200
-Message-Id: <20180705094522.12138-22-boris.brezillon@bootlin.com> (sfid-20180705_114646_523364_2F066C0B)
-In-Reply-To: <20180705094522.12138-1-boris.brezillon@bootlin.com>
-References: <20180705094522.12138-1-boris.brezillon@bootlin.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:55422 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753450AbeGFI4z (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jul 2018 04:56:55 -0400
+From: Govind Singh <govinds@codeaurora.org>
+To: bjorn.andersson@linaro.org, david.brown@linaro.org,
+        andy.gross@linaro.org, niklas.cassel@linaro.org,
+        ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: [PATCH v3 4/6] firmware: qcom: scm: Add WLAN VMID for Qualcomm SCM interface
+Date: Fri,  6 Jul 2018 14:26:20 +0530
+Message-Id: <20180706085622.27945-4-govinds@codeaurora.org> (sfid-20180706_105718_952490_782955FA)
+In-Reply-To: <20180706085622.27945-1-govinds@codeaurora.org>
+References: <20180706085622.27945-1-govinds@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows us to increase compile-test coverage without having to build
-a kernel for MIPS.  That's particularly interesting for subsystem
-maintainers that want to test as many drivers as possible in a single
-build.
+Add WLAN related VMID's to support wlan driver to set up
+the remote's permissions call via TrustZone.
 
-We also add a dependency on HAS_IOMEM in BCMA_HOST_SOC to make sure the
-driver is not selected when the arch does not implement IO accessors.
-
-Signed-off-by: Boris Brezillon <boris.brezillon@bootlin.com>
+Signed-off-by: Govind Singh <govinds@codeaurora.org>
 ---
- drivers/bcma/Kconfig | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ include/linux/qcom_scm.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-index cb0f1aad20b7..b9558ff20830 100644
---- a/drivers/bcma/Kconfig
-+++ b/drivers/bcma/Kconfig
-@@ -30,6 +30,7 @@ config BCMA_HOST_PCI
+diff --git a/include/linux/qcom_scm.h b/include/linux/qcom_scm.h
+index b401b962afff..da63d84e1e91 100644
+--- a/include/linux/qcom_scm.h
++++ b/include/linux/qcom_scm.h
+@@ -1,4 +1,4 @@
+-/* Copyright (c) 2010-2015, The Linux Foundation. All rights reserved.
++/* Copyright (c) 2010-2015, 2018, The Linux Foundation. All rights reserved.
+  * Copyright (C) 2015 Linaro Ltd.
+  *
+  * This program is free software; you can redistribute it and/or modify
+@@ -33,6 +33,8 @@ struct qcom_scm_vmperm {
  
- config BCMA_HOST_SOC
- 	bool "Support for BCMA in a SoC"
-+	depends on HAS_IOMEM
- 	help
- 	  Host interface for a Broadcom AIX bus directly mapped into
- 	  the memory. This only works with the Broadcom SoCs from the
-@@ -61,7 +62,7 @@ config BCMA_DRIVER_PCI_HOSTMODE
- 
- config BCMA_DRIVER_MIPS
- 	bool "BCMA Broadcom MIPS core driver"
--	depends on MIPS
-+	depends on MIPS || COMPILE_TEST
- 	help
- 	  Driver for the Broadcom MIPS core attached to Broadcom specific
- 	  Advanced Microcontroller Bus.
+ #define QCOM_SCM_VMID_HLOS       0x3
+ #define QCOM_SCM_VMID_MSS_MSA    0xF
++#define QCOM_SCM_VMID_WLAN       0x18
++#define QCOM_SCM_VMID_WLAN_CE    0x19
+ #define QCOM_SCM_PERM_READ       0x4
+ #define QCOM_SCM_PERM_WRITE      0x2
+ #define QCOM_SCM_PERM_EXEC       0x1
 -- 
-2.14.1
+2.17.0
