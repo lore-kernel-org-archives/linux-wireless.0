@@ -1,73 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:51436 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732420AbeGKNGF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jul 2018 09:06:05 -0400
-Date: Wed, 11 Jul 2018 15:01:48 +0200
-From: Boris Brezillon <boris.brezillon@bootlin.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-        "open list:RALINK MIPS ARCHITECTURE" <linux-mips@linux-mips.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Ralf Baechle <ralf@linux-mips.org>,
-        Richard Weinberger <richard@nod.at>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        linux-mtd <linux-mtd@lists.infradead.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        Brian Norris <computersforpeace@gmail.com>,
-        David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH v2 04/24] mtd: rawnand: s3c2410: Allow selection of this
- driver when COMPILE_TEST=y
-Message-ID: <20180711150148.5ca48df2@bbrezillon> (sfid-20180711_150204_597950_C0EAD950)
-In-Reply-To: <CAK8P3a2Ar0itsfXBMDoJwq106KBYT-mx55znVF5cd478FqzJsQ@mail.gmail.com>
-References: <20180709200945.30116-1-boris.brezillon@bootlin.com>
-        <20180709200945.30116-5-boris.brezillon@bootlin.com>
-        <20180711131626.732967be@bbrezillon>
-        <CAK8P3a1CR_sN2KW4fZjADHrbKyB1ZSi=6+hPAPYoVeAeLGK_3g@mail.gmail.com>
-        <20180711133236.67726256@bbrezillon>
-        <CAK8P3a2Ar0itsfXBMDoJwq106KBYT-mx55znVF5cd478FqzJsQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from s3.sipsolutions.net ([144.76.63.242]:35322 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753648AbeGFLqS (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jul 2018 07:46:18 -0400
+Message-ID: <1530877576.3197.11.camel@sipsolutions.net> (sfid-20180706_134622_401630_85B122D4)
+Subject: Re: [PATCH 1/7] wireless: Change single cqm_config to rssi config
+ list
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tamizh chelvam <tamizhr@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 06 Jul 2018 13:46:16 +0200
+In-Reply-To: <32a52d2ea57526cfe8c6311e6e34aaac@codeaurora.org>
+References: <1528886747-26342-1-git-send-email-tamizhr@codeaurora.org>
+         <1528886747-26342-2-git-send-email-tamizhr@codeaurora.org>
+         <1530264405.3481.31.camel@sipsolutions.net>
+         <32a52d2ea57526cfe8c6311e6e34aaac@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 11 Jul 2018 14:09:19 +0200
-Arnd Bergmann <arnd@arndb.de> wrote:
+On Wed, 2018-07-04 at 23:46 +0530, Tamizh chelvam wrote:
 
-> On Wed, Jul 11, 2018 at 1:32 PM, Boris Brezillon
-> <boris.brezillon@bootlin.com> wrote:
-> > On Wed, 11 Jul 2018 13:27:53 +0200
-> > Arnd Bergmann <arnd@arndb.de> wrote:
-> >  
-> >> On Wed, Jul 11, 2018 at 1:16 PM, Boris Brezillon
-> >> <boris.brezillon@bootlin.com> wrote:  
-> >> > On Mon,  9 Jul 2018 22:09:25 +0200
-> >> > Boris Brezillon <boris.brezillon@bootlin.com> wrote:
-> >> >  
-> >> >> It just makes NAND maintainers' life easier by allowing them to
-> >> >> compile-test this driver without having ARCH_S3C24XX or ARCH_S3C64XX
-> >> >> enabled.
-> >> >>
-> >> >> We add a dependency on HAS_IOMEM to make sure the driver compiles
-> >> >> correctly, and a dependency on !IA64 because the {read,write}s{bwl}()
-> >> >> accessors are not defined for this architecture.  
-> >> >
-> >> > I see that SPARC does not define those accessors either. So I guess we
-> >> > should add depends on !SPARC.
-> >> >
-> >> > Arnd, any other way to know when the platform implements
-> >> > {read,write}s{bwl}() accessors?  
-> >>
-> >> I'd just consider that a bug, and send a patch to fix sparc64 if it's broken.
-> >> sparc32 appears to have these, and when Thierry sent the patch
-> >> to implement them everywhere[1], he said that he tested sparc64 as
-> >> well, so either something regressed since then, or his testing
-> >> was incomplete. Either way, the correct answer IMHO would be to
-> >> make it work rather than to add infrastructure around the broken
-> >> configurations.  
-> >
-> > I guess the same goes for IA64 then.  
+> > > -	struct cfg80211_cqm_config *cqm_config;
+> > > +	struct cfg80211_rssi_config *rssi_config;
+> > > +	struct list_head rssi_config_list;
+> > 
+> > Why do you need both now? Perhaps instead you should allow a NULL/all-
+> > ones MAC address for where you have the direct pointer now, and remove
+> > that? You anyway need to pass something to the peer argument in
+> > 
 > 
-> Right. FWIW, I just tried it out and sent the respective arch patches.
+> In the current cqm/sta_mon implementation the range_config will be 
+> updated before notify event posted to userspace.
+> To update the range config for a specific station we need to have this 
+> peer addr based configuration list which holds the thresholds info
+> to choose the next rssi range.
+> Or do you want me to handle and store the rssi_config structure in 
+> mac80211 and update it in mac80211 itself ? And simply pass the 
+> notification event to userspace application ?
 
-Cool! Thanks for doing that.
+I don't have any issues with storing it in mac80211 - could attach it to
+the station entry there?
+
+Come to think of it, that might also clarify the lifetime rules. As it
+is now, what if the station is removed? What are the lifetime rules for
+a per-station configuration?
+
+It would almost look like it stays here (or maybe I missed when you
+remove it from the list when a station is removed), but that doesn't
+seem like a good idea.
+
+Please document the lifetime rules also in the API, and make sure you
+implement them properly.
+
+> > What's the locking scheme for this? It's way more complex now so 
+> > perhaps stick ASSERT_RTNL() in there or so?
+> > 
+> 
+> Isn't wdev_lock enough ?
+
+I guess it should be :-) Maybe assert on that, also to document the
+locking rules.
+
+> > >  	/* RSSI reporting disabled? */
+> > > -	if (!wdev->cqm_config)
+> > > +	if (!wdev->rssi_config)
+> > >  		return rdev_set_cqm_rssi_range_config(rdev, dev, 0, 0);
+> > 
+> > 
+> > So I guess the wdev->rssi_config is used for the case of "always use
+> > this config for any AP you're connected to" or so - but maybe it'd be
+> > better to track the AP as a station? Then again, I guess we can't force
+> > userspace to change that.
+
+> Sorry I didn't get your point:( I didn't change anything in the station 
+> mode. Functionality remains same for the station mode.
+
+Right, that sort of goes back to my thoughts about lifetime rules too.
+The rule for stations would be to have it deleted when the station is
+deleted, but I guess the rule for client-mode is to keep the config
+active even when roaming?
+
+I was just thinking that you don't need to *store* it like that, you
+could still - in client mode - store the configuration treating the AP
+as a (peer) station, perhaps with an ff:ff:ff:ff:ff:ff MAC address or
+something (instead of using the BSSID, to get lifetime rules adjusted
+right).
+
+But now that I'm thinking about how the lifetime rules differ ... that's
+probably not worth it.
+
+> > >  	wdev_lock(wdev);
+> > >  	if (n_thresholds) {
+> > > -		struct cfg80211_cqm_config *cqm_config;
+> > > -
+> > > -		cqm_config = kzalloc(sizeof(struct cfg80211_cqm_config) +
+> > > -				     n_thresholds * sizeof(s32), GFP_KERNEL);
+> > > -		if (!cqm_config) {
+> > > +		wdev->rssi_config = cfg80211_get_rssi_config(
+> > > +						wdev, thresholds,
+> > > +						n_thresholds, hysteresis,
+> > > +						wdev->current_bss->pub.bssid);
+> > 
+> > Here you link it to the BSSID anyway, but do we always have a
+> > current_bss at this point?
+> > 
+> 
+> Oops! I didn't think about that condition. I'll fix that in the next 
+> version.
+
+Again though - see above. I'm not sure it's even correct to link it to
+the BSSID since until now, I think the configuration would remain across
+roaming?
+
+johannes
